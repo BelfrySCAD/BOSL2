@@ -111,7 +111,7 @@ module bounding_box(excess=0, planar=false) {
 //   p = path, region or VNF to slice.  (Function version)
 //   v = Normal of plane to slice at.  Keeps everything on the side the normal points to.  Default: [0,0,1] (UP)
 //   cp = If given as a scalar, moves the cut plane along the normal by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.   Ignored for function version.   Default: 1000
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.   Ignored for function version.   Default: 100
 //   planar = If true, perform a 2D operation.  When planar, a `v` of `UP` or `DOWN` becomes equivalent of `BACK` and `FWD` respectively.
 //
 // Examples:
@@ -119,7 +119,7 @@ module bounding_box(excess=0, planar=false) {
 //   half_of(DOWN+LEFT, s=200) sphere(d=150);
 // Example(2D):
 //   half_of([1,1], planar=true) circle(d=50);
-module half_of(v=UP, cp, s=1000, planar=false)
+module half_of(v=UP, cp, s=100, planar=false)
 {
     cp = is_vector(v,4)? assert(cp==undef, "Don't use cp with plane definition.") plane_normal(v) * v[3] :
         is_vector(cp)? cp :
@@ -210,7 +210,7 @@ function half_of(p, v=UP, cp) =
 //
 // Arguments:
 //   p = VNF, region or path to slice (function version)
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 100
 //   x = The X coordinate of the cut-plane.  Default: 0
 //   planar = If true, perform a 2D operation.
 //
@@ -219,7 +219,7 @@ function half_of(p, v=UP, cp) =
 //   left_half(x=-8) sphere(r=20);
 // Example(2D):
 //   left_half(planar=true) circle(r=20);
-module left_half(s=1000, x=0, planar=false)
+module left_half(s=100, x=0, planar=false)
 {
     dir = LEFT;
     difference() {
@@ -250,7 +250,7 @@ function left_half(p,x=0) = half_of(p, LEFT, [x,0,0]);
 //
 // Arguments:
 //   p = VNF, region or path to slice (function version)
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 100
 //   x = The X coordinate of the cut-plane.  Default: 0
 //   planar = If true perform a 2D operation.
 //
@@ -259,7 +259,7 @@ function left_half(p,x=0) = half_of(p, LEFT, [x,0,0]);
 //   right_half(x=-5) sphere(r=20);
 // Example(2D):
 //   right_half(planar=true) circle(r=20);
-module right_half(s=1000, x=0, planar=false)
+module right_half(s=100, x=0, planar=false)
 {
     dir = RIGHT;
     difference() {
@@ -290,7 +290,7 @@ function right_half(p,x=0) = half_of(p, RIGHT, [x,0,0]);
 //
 // Arguments:
 //   p = VNF, region or path to slice (function version)
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 100
 //   y = The Y coordinate of the cut-plane.  Default: 0
 //   planar = If true perform a 2D operation.
 //
@@ -299,7 +299,7 @@ function right_half(p,x=0) = half_of(p, RIGHT, [x,0,0]);
 //   front_half(y=5) sphere(r=20);
 // Example(2D):
 //   front_half(planar=true) circle(r=20);
-module front_half(s=1000, y=0, planar=false)
+module front_half(s=100, y=0, planar=false)
 {
     dir = FWD;
     difference() {
@@ -330,7 +330,7 @@ function front_half(p,y=0) = half_of(p, FRONT, [0,y,0]);
 //
 // Arguments:
 //   p = VNF, region or path to slice (function version)
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 100
 //   y = The Y coordinate of the cut-plane.  Default: 0
 //   planar = If true perform a 2D operation.
 //
@@ -339,7 +339,7 @@ function front_half(p,y=0) = half_of(p, FRONT, [0,y,0]);
 //   back_half(y=8) sphere(r=20);
 // Example(2D):
 //   back_half(planar=true) circle(r=20);
-module back_half(s=1000, y=0, planar=false)
+module back_half(s=100, y=0, planar=false)
 {
     dir = BACK;
     difference() {
@@ -369,13 +369,13 @@ function back_half(p,y=0) = half_of(p, BACK, [0,y,0]);
 //
 // Arguments:
 //   p = VNF, region or path to slice (function version)
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 100
 //   z = The Z coordinate of the cut-plane.  Default: 0
 //
 // Examples:
 //   bottom_half() sphere(r=20);
 //   bottom_half(z=-10) sphere(r=20);
-module bottom_half(s=1000, z=0)
+module bottom_half(s=100, z=0)
 {
     dir = DOWN;
     difference() {
@@ -400,13 +400,13 @@ function bottom_half(p,z=0) = half_of(p,BOTTOM,[0,0,z]);
 //
 // Arguments:
 //   p = VNF, region or path to slice (function version)
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 100
 //   z = The Z coordinate of the cut-plane.  Default: 0
 //
 // Examples(Spin,VPD=175):
 //   top_half() sphere(r=20);
 //   top_half(z=5) sphere(r=20);
-module top_half(s=1000, z=0)
+module top_half(s=100, z=0)
 {
     dir = UP;
     difference() {
@@ -770,9 +770,9 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
 // Description:
 //   Extrudes 2D children along a 3D path.  This may be slow.
 // Arguments:
-//   path = array of points for the bezier path to extrude along.
-//   convexity = maximum number of walls a ran can pass through.
-//   clipsize = increase if artifacts are left.  Default: 1000
+//   path = Array of points for the bezier path to extrude along.
+//   convexity = Maximum number of walls a ray can pass through.
+//   clipsize = Increase if artifacts are left.  Default: 100
 // Example(FlatSpin,VPD=600,VPT=[75,16,20]):
 //   path = [ [0, 0, 0], [33, 33, 33], [66, 33, 40], [100, 0, 0], [150,0,0] ];
 //   path_extrude(path) circle(r=10, $fn=6);
