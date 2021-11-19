@@ -156,6 +156,8 @@ function stroke(
     trim, trim1, trim2,
     convexity=10, hull=true
 ) = no_function("stroke");
+
+
 module stroke(
     path, width=1, closed,
     endcaps,       endcap1,        endcap2,        joints,       dots,
@@ -297,9 +299,33 @@ module stroke(
 
         if (len(path) == 1) {
             if (len(path[0]) == 2) {
-                translate(path[0]) circle(d=width[0]);
+                // Endcap1
+                setcolor(endcap_color1) {
+                    translate(path[0]) {
+                        mat = is_undef(endcap_angle1)? ident(3) : zrot(endcap_angle1);
+                        multmatrix(mat) polygon(endcap_shape1);
+                    }
+                }
             } else {
-                translate(path[0]) sphere(d=width[0]);
+                // Endcap1
+                setcolor(endcap_color1) {
+                    translate(path[0]) {
+                        $fn = segs(width[0]/2);
+                        if (is_undef(endcap_angle1)) {
+                            rotate_extrude(convexity=convexity) {
+                                right_half(planar=true) {
+                                    polygon(endcap_shape1);
+                                }
+                            }
+                        } else {
+                            rotate([90,0,endcap_angle1]) {
+                                linear_extrude(height=max(widths[0],0.001), center=true, convexity=convexity) {
+                                    polygon(endcap_shape1);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         } else {
             dummy=assert(trim1<path_length(path)-trim2, "Path is too short for endcap(s).  Try a smaller width, or set endcap_length to a smaller value.");
