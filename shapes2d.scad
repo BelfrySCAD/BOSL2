@@ -179,7 +179,7 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 //   circle(r|d=, ...) { attachables }
 // Usage: As a Function
 //   path = circle(r|d=, ...);
-// See Also: ellipse()
+// See Also: ellipse(), circle_2tangents(), circle_3points()
 // Description:
 //   When called as the builtin module, creates a 2D polygon that approximates a circle of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
@@ -224,13 +224,14 @@ module circle(r, d, anchor=CENTER, spin=0) {
 // Description:
 //   When called as a module, creates a 2D polygon that approximates a circle or ellipse of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle or ellipse of the given size.
-//   Note that the point list or shape is the same as the one you would get by scaling the output of {{circle()}}, but with this module your
-//   attachments to the ellipse will 
+//   By default the point list or shape is the same as the one you would get by scaling the output of {{circle()}}, but with this module your
+//   attachments to the ellipse will retain their dimensions, whereas scaling a circle with attachments will also scale the attachments.
+//   If you set unifom to true then you will get a polygon with congruent sides whose vertices lie on the ellipse.  
 // Arguments:
 //   r = Radius of the circle or pair of semiaxes of ellipse 
 //   ---
 //   d = Diameter of the circle or a pair giving the full X and Y axis lengths.  
-//   realign = If true, rotates the polygon that approximates the circle/ellipse by half of one size.
+//   realign = If false starts the approximate ellipse with a point on the X+ axis.  If true the midpoint of a side is on the X+ axis and the first point of the polygon is below the X+ axis.  This can result in a very different polygon when $fn is small.  Default: false
 //   circum = If true, the polygon that approximates the circle will be upsized slightly to circumscribe the theoretical circle.  If false, it inscribes the theoretical circle.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -244,6 +245,54 @@ module circle(r, d, anchor=CENTER, spin=0) {
 //   ellipse(d=50, anchor=FRONT, spin=45);
 // Example(NORENDER): Called as Function
 //   path = ellipse(d=50, anchor=FRONT, spin=45);
+// Example(2D,NoAxes): Uniformly sampled hexagon at the top, regular non-uniform one at the bottom
+//   r=[10,3];
+//   ydistribute(7){
+//     union(){
+//       stroke([ellipse(r=r, $fn=100)],width=0.05,color="blue");
+//       stroke([ellipse(r=r, $fn=6)],width=0.1,color="red");
+//     }
+//     union(){
+//       stroke([ellipse(r=r, $fn=100)],width=0.05,color="blue");
+//       stroke([ellipse(r=r, $fn=6,uniform=true)],width=0.1,color="red");
+//     }
+//   }
+// Example(2D): The realigned hexagons are even more different
+//   r=[10,3];
+//   ydistribute(7){
+//     union(){
+//       stroke([ellipse(r=r, $fn=100)],width=0.05,color="blue");
+//       stroke([ellipse(r=r, $fn=6,realign=true)],width=0.1,color="red");
+//     }
+//     union(){
+//       stroke([ellipse(r=r, $fn=100)],width=0.05,color="blue");
+//       stroke([ellipse(r=r, $fn=6,realign=true,uniform=true)],width=0.1,color="red");
+//     }
+//   }
+// Example(2D): For odd $fn the result may not look very elliptical:
+//    r=[10,3];
+//    ydistribute(7){
+//      union(){
+//        stroke([ellipse(r=r, $fn=100)],width=0.05,color="blue");
+//        stroke([ellipse(r=r, $fn=5,realign=false)],width=0.1,color="red");
+//      }
+//      union(){
+//        stroke([ellipse(r=r, $fn=100)],width=0.05,color="blue");
+//        stroke([ellipse(r=r, $fn=5,realign=false,uniform=true)],width=0.1,color="red");
+//      }
+//    }
+// Example(2D): The same ellipse, turned 90 deg, gives a very different result:
+//   r=[3,10];
+//   xdistribute(7){
+//     union(){
+//       stroke([ellipse(r=r, $fn=100)],width=0.1,color="blue");
+//       stroke([ellipse(r=r, $fn=5,realign=false)],width=0.2,color="red");
+//     }
+//     union(){
+//       stroke([ellipse(r=r, $fn=100)],width=0.1,color="blue");
+//       stroke([ellipse(r=r, $fn=5,realign=false,uniform=true)],width=0.2,color="red");
+//     }
+//   }
 module ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER, spin=0)
 {
     r = force_list(get_radius(r=r, d=d, dflt=1),2);
@@ -298,13 +347,41 @@ function _ellipse_refine(a,b,N, _theta=[]) =
 
 
 
+
+function _ellipse_refine_realign(a,b,N, _theta=[],i=0) =
+   len(_theta)==0?
+         _ellipse_refine_realign(a,b,N, count(N-1,180/N,360/N))
+   :
+   let(
+       pts = [for(t=_theta) [a*cos(t),b*sin(t)],
+              [a*cos(_theta[0]), -b*sin(_theta[0])]],
+       lenlist= path_segment_lengths(pts,closed=true),
+       meanlen = mean(lenlist),
+       error = lenlist/meanlen
+   )
+   all_equal(error,EPSILON) ? pts
+   :
+   let(
+        dtheta = [each deltas(_theta),
+                  360-last(_theta)-_theta[0],
+                  2*_theta[0]],
+        newdtheta = [for(i=idx(dtheta)) dtheta[i]/error[i]],
+        normdtheta = newdtheta / sum(newdtheta) * 360,
+        adjusted = cumsum([last(normdtheta)/2, each list_head(normdtheta, -3)])
+   )
+   _ellipse_refine_realign(a,b,N,adjusted, i+1);
+
+
+
 function ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER, spin=0) =
     let(
         r = force_list(get_radius(r=r, d=d, dflt=1),2),
         sides = segs(max(r))
     )
     uniform ? assert(!circum, "Circum option not allowed when \"uniform\" is true")
-              reorient(anchor,spin,two_d=true,r=[r.x,r.y],p=_ellipse_refine(r.x,r.y,sides))
+                 reorient(anchor,spin,two_d=true,r=[r.x,r.y],
+                          p=realign ? reverse(_ellipse_refine_realign(r.x,r.y,sides))
+                                    : reverse_polygon(_ellipse_refine(r.x,r.y,sides)))
     :
     let(
         offset = realign? 180/sides : 0,
@@ -336,7 +413,7 @@ function ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
 //   rounding = Radius of rounding for the tips of the polygon.  Default: 0 (no rounding)
-//   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
+//   realign = If false, vertex 0 will lie on the X+ axis.  If true then the midpoint of the last edge will lie on the X+ axis, and vertex 0 will be below the X axis.    Default: false
 //   align_tip = If given as a 2D vector, rotates the whole shape so that the first vertex points in that direction.  This occurs before spin.
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -471,7 +548,7 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
 //   rounding = Radius of rounding for the tips of the polygon.  Default: 0 (no rounding)
-//   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
+//   realign = If false, vertex 0 will lie on the X+ axis.  If true then the midpoint of the last edge will lie on the X+ axis, and vertex 0 will be below the X axis.    Default: false
 //   align_tip = If given as a 2D vector, rotates the whole shape so that the first vertex points in that direction.  This occurs before spin.
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -535,7 +612,7 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
 //   rounding = Radius of rounding for the tips of the polygon.  Default: 0 (no rounding)
-//   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
+//   realign = If false, vertex 0 will lie on the X+ axis.  If true then the midpoint of the last edge will lie on the X+ axis, and vertex 0 will be below the X axis.    Default: false
 //   align_tip = If given as a 2D vector, rotates the whole shape so that the first vertex points in that direction.  This occurs before spin.
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -598,7 +675,7 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
 //   rounding = Radius of rounding for the tips of the polygon.  Default: 0 (no rounding)
-//   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
+//   realign = If false, vertex 0 will lie on the X+ axis.  If true then the midpoint of the last edge will lie on the X+ axis, and vertex 0 will be below the X axis.    Default: false
 //   align_tip = If given as a 2D vector, rotates the whole shape so that the first vertex points in that direction.  This occurs before spin.
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -808,7 +885,7 @@ module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER
 //   d/od = The diameter to the tips of the star.
 //   id = The diameter to the inner corners of the star.
 //   step = Calculates the radius of the inner star corners by virtually drawing a straight line `step` tips around the star.  2 <= step < n/2
-//   realign = If false, a tip is aligned with the Y+ axis.  If true, an inner corner is aligned with the Y+ axis.  Default: false
+//   realign = If false, vertex 0 will lie on the X+ axis.  If true then the midpoint of the last edge will lie on the X+ axis, and vertex 0 will be below the X axis.    Default: false
 //   align_tip = If given as a 2D vector, rotates the whole shape so that the first star tip points in that direction.  This occurs before spin.
 //   align_pit = If given as a 2D vector, rotates the whole shape so that the first inner corner is pointed towards that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`

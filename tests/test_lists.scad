@@ -254,14 +254,6 @@ module test_idx() {
 test_idx();
 
 
-module test_enumerate() {
-    assert(enumerate(["a","b","c"]) == [[0,"a"], [1,"b"], [2,"c"]]);
-    assert(enumerate([[88,"a"],[76,"b"],[21,"c"]], idx=1) == [[0,"a"], [1,"b"], [2,"c"]]);
-    assert(enumerate([["cat","a",12],["dog","b",10],["log","c",14]], idx=[1:2]) == [[0,"a",12], [1,"b",10], [2,"c",14]]);
-}
-test_enumerate();
-
-
 module test_shuffle() {
     nums1 = count(100);
     nums2 = shuffle(nums1,33);
@@ -373,16 +365,6 @@ module test_repeat_entries() {
     assert(repeat_entries(list, [1,1,2,1], exact=false) == [0,1,2,2,3]);
 }
 test_repeat_entries();
-
-
-module test_zip() {
-    v1 = [1,2,3,4];
-    v2 = [5,6,7];
-    v3 = [8,9,10,11];
-    assert(zip(v1,v3) == [[1,8],[2,9],[3,10],[4,11]]);
-    assert(zip([v1,v3]) == [[1,8],[2,9],[3,10],[4,11]]);
-}
-test_zip();
 
 
 module test_list_to_matrix() {

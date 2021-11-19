@@ -822,7 +822,7 @@ function list_remove_values(list,values=[],all=false) =
 //   rng = idx(list, [s=], [e=], [step=]);
 //   for(i=idx(list, [s=], [e=], [step=])) ...
 // Topics: List Handling, Iteration
-// See Also: enumerate(), pair(), triplet(), combinations(), permutations()
+// See Also: pair(), triplet(), combinations(), permutations()
 // Description:
 //   Returns the range of indexes for the given list.
 // Arguments:
@@ -843,39 +843,13 @@ function idx(list, s=0, e=-1, step=1) =
     ) [_s : step : _e];
 
 
-// Function: enumerate()
-// Usage:
-//   arr = enumerate(l, [idx]);
-//   for (x = enumerate(l, [idx])) ... // x[0] is the index number, x[1] is the item.
-// Topics: List Handling, Iteration
-// See Also: idx(), pair(), triplet(), combinations(), permutations()
-// Description:
-//   Returns a list, with each item of the given list `l` numbered in a sublist.
-//   Something like: `[[0,l[0]], [1,l[1]], [2,l[2]], ...]`
-// Arguments:
-//   l = List to enumerate.
-//   idx = If given, enumerates just the given columns items of `l`.
-// Example:
-//   enumerate(["a","b","c"]);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
-//   enumerate([[88,"a"],[76,"b"],[21,"c"]], idx=1);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
-//   enumerate([["cat","a",12],["dog","b",10],["log","c",14]], idx=[1:2]);  // Returns: [[0,"a",12], [1,"b",10], [2,"c",14]]
-// Example(2D):
-//   colors = ["red", "green", "blue"];
-//   for (p=enumerate(colors)) right(20*p[0]) color(p[1]) circle(d=10);
-function enumerate(l,idx=undef) =
-    assert(is_list(l)||is_string(list), "Invalid input." )
-    assert( _valid_idx(idx,0,len(l)), "Invalid index/indices." )
-    (idx==undef)
-    ?   [for (i=[0:1:len(l)-1]) [i,l[i]]]
-    :   [for (i=[0:1:len(l)-1]) [ i, for (j=idx) l[i][j]] ];
-
 
 // Function: pair()
 // Usage:
 //   p = pair(list, [wrap]);
 //   for (p = pair(list, [wrap])) ...  // On each iteration, p contains a list of two adjacent items.
 // Topics: List Handling, Iteration
-// See Also: idx(), enumerate(), triplet(), combinations(), permutations()
+// See Also: idx(), triplet(), combinations(), permutations()
 // Description:
 //   Takes a list, and returns a list of adjacent pairs from it, optionally wrapping back to the front.
 // Arguments:
@@ -907,7 +881,7 @@ function pair(list, wrap=false) =
 //   list = triplet(list, [wrap]);
 //   for (t = triplet(list, [wrap])) ...
 // Topics: List Handling, Iteration
-// See Also: idx(), enumerate(), pair(), combinations(), permutations()
+// See Also: idx(), pair(), combinations(), permutations()
 // Description:
 //   Takes a list, and returns a list of adjacent triplets from it, optionally wrapping back to the front.
 //   If you set `wrap` to true then the first triplet is the one centered on the first list element, so it includes
@@ -945,7 +919,7 @@ function triplet(list, wrap=false) =
 // Usage:
 //   list = combinations(l, [n]);
 // Topics: List Handling, Iteration
-// See Also: idx(), enumerate(), pair(), triplet(), permutations()
+// See Also: idx(), pair(), triplet(), permutations()
 // Description:
 //   Returns a list of all of the (unordered) combinations of `n` items out of the given list `l`.
 //   For the list `[1,2,3,4]`, with `n=2`, this will return `[[1,2], [1,3], [1,4], [2,3], [2,4], [3,4]]`.
@@ -966,11 +940,12 @@ function combinations(l,n=2,_s=0) =
       : [for (i=[_s:1:len(l)-n], p=combinations(l,n=n-1,_s=i+1)) concat([l[i]], p)];
 
 
+
 // Function: permutations()
 // Usage:
 //   list = permutations(l, [n]);
 // Topics: List Handling, Iteration
-// See Also: idx(), enumerate(), pair(), triplet(), combinations()
+// See Also: idx(), pair(), triplet(), combinations()
 // Description:
 //   Returns a list of all of the (ordered) permutation `n` items out of the given list `l`.  
 //   For the list `[1,2,3]`, with `n=2`, this will return `[[1,2],[1,3],[2,1],[2,3],[3,1],[3,2]]`
@@ -986,8 +961,6 @@ function permutations(l,n=2) =
     n==1
       ? [for (i=[0:1:len(l)-1]) [l[i]]] 
       : [for (i=idx(l), p=permutations([for (j=idx(l)) if (i!=j) l[j]], n=n-1)) concat([l[i]], p)];
-
-
 
 
 
@@ -1047,33 +1020,6 @@ function flatten(l) =
 function full_flatten(l) =
     !is_list(l)? l :
     [for (a=l) if (is_list(a)) (each full_flatten(a)) else a];
-
-
-
-// Function: zip()
-// Usage:
-//   pairs = zip(a,b);
-//   triples = zip(a,b,c);
-//   quads = zip([LIST1,LIST2,LIST3,LIST4]);
-// Topics: List Handling, Iteration
-// Description:
-//   Zips together two or more lists into a single list.  For example, if you have two
-//   lists [3,4,5], and [8,7,6], and zip them together, you get [ [3,8],[4,7],[5,6] ].
-//   The list returned will be as long as the shortest list passed to zip().
-// Arguments:
-//   a = The first list, or a list of lists if b and c are not given.
-//   b = The second list, if given.
-//   c = The third list, if given.
-// Example:
-//   a = [9,8,7,6]; b = [1,2,3];
-//   for (p=zip(a,b)) echo(p);
-//   // ECHO: [9,1]
-//   // ECHO: [8,2]
-//   // ECHO: [7,3]
-function zip(a,b,c) =
-    b!=undef? zip([a,b,if (c!=undef) c]) :
-    let(n = min_length(a))
-    [for (i=[0:1:n-1]) [for (x=a) x[i]]];
 
 
 
