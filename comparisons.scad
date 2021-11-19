@@ -620,7 +620,9 @@ function _sort_general(arr, idx=undef, indexed=false) =
     (len(arr)<=1) ? arr :
     ! indexed && is_undef(idx)
     ? _lexical_sort(arr)
-    : let( arrind = _indexed_sort(enumerate(arr,idx)) )
+    : let( labeled = is_undef(idx) ? [for(i=idx(arr)) [i,arr[i]]]
+                                   : [for(i=idx(arr)) [i, for(j=idx) arr[i][j]]],
+           arrind = _indexed_sort(labeled))
       indexed 
       ? arrind
       : [for(i=arrind) arr[i]];
@@ -797,7 +799,7 @@ function group_data(groups, values) =
     assert(is_list(values))
     assert(len(groups)==len(values),
            "The groups and values arguments should be lists of matching length.")
-    let( sorted = _group_sort_by_index(zip(groups,values),0) )
+    let( sorted = _group_sort_by_index([for(i=idx(groups))[groups[i],values[i]]],0) )
     // retrieve values and insert []
     [
         for (i = idx(sorted))

@@ -1047,7 +1047,7 @@ function _is_point_above_plane(plane, point) =
 //   r = radius of circle
 //   ---
 //   d = diameter of circle
-//   line = two points defining the unbounded line
+//   line = two points defining the line
 //   bounded = false for unbounded line, true for a segment, or a vector [false,true] or [true,false] to specify a ray with the first or second end unbounded.  Default: false
 //   eps = epsilon used for identifying the case with one solution.  Default: 1e-9
 function circle_line_intersection(c,r,d,line,bounded=false,eps=EPSILON) =
