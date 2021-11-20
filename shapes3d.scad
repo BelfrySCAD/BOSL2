@@ -101,14 +101,14 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   Negative chamfers and roundings can be applied to create external fillets, but they 
 //   but only apply to edges around the top or bottom faces.  If you specify an edge set other than "ALL"
 //   with such roundings or chamfers then you will get an error.  See
-//   [Specifying Edges](edges.scad#section-specifying-edges) for information on how to specify edge sets.  
+//   [Specifying Edges](attachments.scad#section-specifying-edges) for information on how to specify edge sets.  
 // Arguments:
 //   size = The size of the cube, a number or length 3 vector.  
 //   ---
 //   chamfer = Size of chamfer, inset from sides.  Default: No chamfering.
 //   rounding = Radius of the edge rounding.  Default: No rounding.
-//   edges = Edges to mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: all edges.
-//   except = Edges to explicitly NOT mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: No edges.
+//   edges = Edges to mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: all edges.
+//   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: No edges.
 //   trimcorners = If true, rounds or chamfers corners where three chamfered/rounded edges meet.  Default: `true`
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=FRONT+LEFT+BOTTOM`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
