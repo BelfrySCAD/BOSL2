@@ -285,8 +285,8 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 //   displayed result is the exclusive-or of the polygons listed in the input. 
 // Arguments:
 //   r = region to create as geometry
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
-//   spin = Rotate this many degrees after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
+//   spin = Rotate this many degrees after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 2D point.  Default: "centroid"
 //   atype = Set to "hull" or "intersect to select anchor type.  Default: "hull"
 // Example(2D): Displaying a region
@@ -611,11 +611,11 @@ function region_parts(region) =
 //   scale = The amount to scale the shape, from bottom to top.  Default: 1
 //   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
 //   convexity = Max number of surfaces any single ray could pass through.  Module use only.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example: Extruding a Compound Region.
 //   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
 //   rgn2 = [square(30,center=false)];

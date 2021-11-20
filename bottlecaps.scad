@@ -23,9 +23,9 @@ include <rounding.scad>
 // Arguments:
 //   wall = Wall thickness in mm.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Extra Anchors:
 //   "tamper-ring" = Centered at the top of the anti-tamper ring channel.
 //   "support-ring" = Centered at the bottom of the support ring.
@@ -145,9 +145,9 @@ function  pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 //   wall = Wall thickness in mm.
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Extra Anchors:
 //   "inside-top" = Centered on the inside top of the cap.
 // Examples:
@@ -215,9 +215,9 @@ function pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
 // Arguments:
 //   wall = Wall thickness in mm.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Extra Anchors:
 //   "tamper-ring" = Centered at the top of the anti-tamper ring channel.
 //   "support-ring" = Centered at the bottom of the support ring.
@@ -336,9 +336,9 @@ function pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 // Arguments:
 //   wall = Wall thickness in mm.
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Extra Anchors:
 //   "inside-top" = Centered on the inside top of the cap.
 // Examples:
@@ -405,9 +405,9 @@ function pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
 //   pitch = Thread pitch
 //   round_supp = True to round the lower edge of the support ring
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Extra Anchors:
 //   "support-ring" = Centered at the bottom of the support ring.
 // Example:
@@ -530,9 +530,9 @@ function generic_bottle_neck(
 //   neck_od = Outer diameter of neck in mm.
 //   flank_angle = Angle of taper on threads.
 //   pitch = Thread pitch in mm.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Extra Anchors:
 //   "inside-top" = Centered on the inside top of the cap.
 // Examples:
@@ -972,9 +972,9 @@ function bottle_adapter_neck_to_neck(
 //   id = inner diameter
 //   style = Either "L" or "M" to specify the thread style.  Default: "L"
 //   bead = if true apply a bad to the neck.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   sp_neck(48,400,2);
 //   sp_neck(48,400,2,bead=true);

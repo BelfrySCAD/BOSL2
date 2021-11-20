@@ -38,9 +38,9 @@
 //   rounding = The radius of the rounding on the ends of the cylinder.  Default: none.
 //   rounding1 = The radius of the rounding on the bottom end of the cylinder.
 //   rounding2 = The radius of the rounding on the top end of the cylinder.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples(Med):
 //   knurled_cylinder(l=30, r=20, count=30, profile=120, helix=45);
 //   knurled_cylinder(l=30, r=20, count=30, profile=120, helix=30);
@@ -141,9 +141,9 @@ module knurled_cylinder(
 //   count = The number of grooves to have around the surface of the cylinder.  Default: 30
 //   profile = The angle of the bottom of the groove, in degrees.  Default 120
 //   helix = The helical angle of the grooves, in degrees.  Default: 30
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   knurled_cylinder_mask(l=30, r=20, overage=5, profile=120, helix=30);
 //   knurled_cylinder_mask(l=30, r=20, overage=10, profile=120, helix=30);

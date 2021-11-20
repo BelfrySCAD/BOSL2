@@ -765,7 +765,7 @@ module hulling(a)
 //   Takes a 3D mask shape, and attaches it to the given edges, with the appropriate orientation to be
 //   `diff()`ed away.  The mask shape should be vertically oriented (Z-aligned) with the back-right
 //   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.
-//   For details on specifying the edges to mask see [Specifying Edges](edges.scad#section-specifying-edges).
+//   For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
 //   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Figure: A Typical Edge Rounding Mask
 //   module roundit(l,r) difference() {
@@ -776,8 +776,8 @@ module hulling(a)
 //   }
 //   roundit(l=30,r=10);
 // Arguments:
-//   edges = Edges to mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: All edges.
-//   except = Edges to explicitly NOT mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: No edges.
+//   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
+//   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
 // Side Effects:
 //   Sets `$tags = "mask"` for all children.
 // Example:
@@ -819,11 +819,11 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 // Description:
 //   Takes a 3D mask shape, and attaches it to the specified corners, with the appropriate orientation to
 //   be `diff()`ed away.  The 3D corner mask shape should be designed to mask away the X+Y+Z+ octant.
-//   See [Specifying Corners](edges.scad#section-specifying-corners) for information on how to specify corner sets.  
+//   See [Specifying Corners](attachments.scad#subsection-specifying-corners) for information on how to specify corner sets.  
 //   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   corners = Corners to mask.  See [Specifying Corners](edges.scad#section-specifying-corners).  Default: All corners.
-//   except = Corners to explicitly NOT mask.  See [Specifying Corners](edges.scad#section-specifying-corners).  Default: No corners.
+//   corners = Corners to mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: All corners.
+//   except = Corners to explicitly NOT mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: No corners.
 // Side Effects:
 //   Sets `$tags = "mask"` for all children.
 // Example:
@@ -861,7 +861,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 // See Also: attachable(), position(), attach(), edge_profile(), corner_profile()
 // Description:
 //   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face.
-//   See  [Specifying Faces](edges.scad#section-specifying-faces) for information on specifying faces.  
+//   See  [Specifying Faces](attachments.scad#subsection-specifying-faces) for information on specifying faces.  
 //   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   faces = Faces to mask edges and corners of.
@@ -894,12 +894,12 @@ module face_profile(faces=[], r, d, convexity=10) {
 // Description:
 //   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation and
 //   extruded length to be `diff()`ed away, to give the edge a matching profile.
-//   For details on specifying the edges to mask see [Specifying Edges](edges.scad#section-specifying-edges).
+//   For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
 //   For a step-by-step
 //   explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   edges = Edges to mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: All edges.
-//   except = Edges to explicitly NOT mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: No edges.
+//   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
+//   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
 //   Sets `$tags = "mask"` for all children.
@@ -950,11 +950,11 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 //   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
 //   to the selected corners with the appropriate orientation.  Tags it as a "mask" to allow it to be
 //   `diff()`ed away, to give the corner a matching profile.
-//   See [Specifying Corners](edges.scad#section-specifying-corners) for information on how to specify corner sets.  
+//   See [Specifying Corners](attachments.scad#subsection-specifying-corners) for information on how to specify corner sets.  
 //   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   corners = Corners to mask.  See [Specifying Corners](edges.scad#section-specifying-corners).  Default: All corners.
-//   except = Corners to explicitly NOT mask.  See [Specifying Corners](edges.scad#section-specifying-corners).  Default: No corners.
+//   corners = Corners to mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: All corners.
+//   except = Corners to explicitly NOT mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: No corners.
 //   ---
 //   r = Radius of corner mask.
 //   d = Diameter of corner mask.
@@ -1067,9 +1067,9 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 //
 // Arguments:
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   ---
 //   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
 //   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
@@ -1354,9 +1354,9 @@ function named_anchor(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient
 //   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 //
 // Arguments:
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   ---
 //   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
 //   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
@@ -1705,9 +1705,9 @@ function _attach_geom_size(geom) =
 //   Returns the affine3d transformation matrix needed to `anchor`, `spin`, and `orient`
 //   the given geometry `geom` shape into position.
 // Arguments:
-//   anchor = Anchor point to translate to the origin `[0,0,0]`.  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Anchor point to translate to the origin `[0,0,0]`.  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   geom = The geometry description of the shape.
 //   p = If given as a VNF, path, or point, applies the affine3d transformation matrix to it and returns the result.
 function _attach_transform(anchor, spin, orient, geom, p) =

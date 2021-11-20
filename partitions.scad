@@ -64,8 +64,8 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 //   cutpath = The cutpath to use.  Standard named paths are "flat", "sawtooth", "sinewave", "comb", "finger", "dovetail", "hammerhead", and "jigsaw".  Alternatively, you can give a cutpath as a 2D path, where X is between 0 and 1, and Y is between -0.5 and 0.5.
 //   gap = Empty gaps between cutpath iterations.  Default: 0
 //   inverse = If true, create a cutpath that is meant to mate to a non-inverted cutpath.
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The amount to shrink the mask by, to correct for printer-specific fitting.
 // Examples:
 //   partition_mask(w=50, gap=0, cutpath="jigsaw");
@@ -115,8 +115,8 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
 //   cutsize = The width of the cut pattern to be used.
 //   cutpath = The cutpath to use.  Standard named paths are "flat", "sawtooth", "sinewave", "comb", "finger", "dovetail", "hammerhead", and "jigsaw".  Alternatively, you can give a cutpath as a 2D path, where X is between 0 and 1, and Y is between -0.5 and 0.5.  Default: "jigsaw"
 //   gap = Empty gaps between cutpath iterations.  Default: 0
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The width of the cut mask, to correct for printer-specific fitting.  Min: 0.05.
 // Examples:
 //   partition_cut_mask(gap=0, cutpath="dovetail");
@@ -155,7 +155,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
 //   cutsize = The width of the cut pattern to be used.
 //   cutpath = The cutpath to use.  Standard named paths are "flat", "sawtooth", "sinewave", "comb", "finger", "dovetail", "hammerhead", and "jigsaw".  Alternatively, you can give a cutpath as a 2D path, where X is between 0 and 1, and Y is between -0.5 and 0.5.
 //   gap = Empty gaps between cutpath iterations.  Default: 0
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Examples(Med):
 //   partition(spread=12, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=12, gap=30, cutpath="dovetail") cylinder(h=50, d=80, center=false);
