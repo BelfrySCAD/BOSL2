@@ -76,7 +76,6 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   motors have anchors for `"screw1"`, `"screw2"`, etc. to refer to the various screwholes on the
 //   stepper motor shape.  The names, positions, directions, and spins of these anchors are
 //   specific to the object, and are documented when they exist.
-//   .
 // SubSection: Spin
 //   Spin is specified with the `spin` argument in most shape modules.  Specifying a scalar `spin`
 //   when creating an object will rotate the object counter-clockwise around the Z axis by the given
@@ -84,14 +83,12 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   axes by the number of degrees in each component of the vector.  Spin is always applied after
 //   anchoring, and before orientation.  Since spin is applied after anchoring it is not what
 //   you might think of intuitively as spinning the shape.  To do that, apply `zrot()` to the shape before anchoring.  
-//   .
 // SubSection: Orient
 //   Orientation is specified with the `orient` argument in most shape modules.  Specifying `orient`
 //   when creating an object will rotate the object such that the top of the object will be pointed
 //   at the vector direction given in the `orient` argument.  Orientation is always applied after
 //   anchoring and spin.  The constants `UP`, `DOWN`, `FRONT`, `BACK`, `LEFT`, and `RIGHT` can be
 //   added together to form the directional vector for this.  ie: `LEFT+BACK`
-//   .
 // SubSection: Specifying Directions
 //   You can use direction vectors to specify anchors for objects or to specify edges, faces, and
 //   corners of cubes.  You can simply specify these direction vectors numerically, but another
