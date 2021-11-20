@@ -350,7 +350,7 @@ function max_index(vals, all=false) =
 // Description:
 //   Finds the first item in `list` that matches `val`, returning the index.  Returns `undef` if there is no match.
 // Arguments:
-//   val = The value to search for.  If given a function literal of signature `function (x)`, uses that function to check list items.  Returns true for a match.
+//   val = The value to search for.  
 //   list = The list to search through.
 //   ---
 //   start = The index to start searching from.  Default: 0
