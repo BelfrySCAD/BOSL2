@@ -88,7 +88,7 @@ module echo_matrix(M,description,sig=4,eps=1e-9)
 // Function: column()
 // Usage:
 //   list = column(M, i);
-// Topics: Array Handling, List Handling
+// Topics: Matrices, List Handling
 // See Also: select(), slice()
 // Description:
 //   Extracts entry i from each list in M, or equivalently column i from the matrix M, and returns it as a vector.  
@@ -115,7 +115,7 @@ function column(M, i) =
 // Function: submatrix()
 // Usage:
 //   mat = submatrix(M, idx1, idx2);
-// Topics: Matrices, Array Handling
+// Topics: Matrices
 // See Also: column(), block_matrix(), submatrix_set()
 // Description:
 //   The input must be a list of lists (a matrix or 2d array).  Returns a submatrix by selecting the rows listed in idx1 and columns listed in idx2.
@@ -180,7 +180,7 @@ function ident(n) = [
 // Function: diagonal_matrix()
 // Usage:
 //   mat = diagonal_matrix(diag, [offdiag]);
-// Topics: Matrices, Array Handling
+// Topics: Matrices
 // See Also: column(), submatrix()
 // Description:
 //   Creates a square matrix with the items in the list `diag` on
@@ -197,7 +197,7 @@ function diagonal_matrix(diag, offdiag=0) =
 // Function: transpose()
 // Usage:
 //    M = transpose(M, [reverse]);
-// Topics: Matrices, Array Handling
+// Topics: Matrices
 // See Also: submatrix(), block_matrix(), hstack(), flatten()
 // Description:
 //    Returns the transpose of the given input matrix.  The input can be a matrix with arbitrary entries or
@@ -286,7 +286,7 @@ function outer_product(u,v) =
 // Function: submatrix_set()
 // Usage:
 //   mat = submatrix_set(M, A, [m], [n]);
-// Topics: Matrices, Array Handling
+// Topics: Matrices
 // See Also: column(), submatrix()
 // Description:
 //   Sets a submatrix of M equal to the matrix A.  By default the top left corner of M is set to A, but
@@ -316,7 +316,7 @@ function submatrix_set(M,A,m=0,n=0) =
 //   A = hstack(M1, M2)
 //   A = hstack(M1, M2, M3)
 //   A = hstack([M1, M2, M3, ...])
-// Topics: Matrices, Array Handling
+// Topics: Matrices
 // See Also: column(), submatrix(), block_matrix()
 // Description:
 //   Constructs a matrix by horizontally "stacking" together compatible matrices or vectors.  Vectors are treated as columsn in the stack.
@@ -368,7 +368,7 @@ function hstack(M1, M2, M3) =
 // Function: block_matrix()
 // Usage:
 //    bmat = block_matrix([[M11, M12,...],[M21, M22,...], ... ]);
-// Topics: Matrices, Array Handling
+// Topics: Matrices
 // See Also: column(), submatrix()
 // Description:
 //    Create a block matrix by supplying a matrix of matrices, which will

@@ -513,9 +513,6 @@ function unique_count(list) =
 
 
 
-
-
-
 // Section: Sorting
 
 
@@ -778,7 +775,7 @@ function group_sort(list, idx) =
 // Function: group_data()
 // Usage:
 //   groupings = group_data(groups, values);
-// Topics: Array Handling
+// Topics: List Handling
 // See Also: zip()
 // Description:
 //   Given a list of integer group numbers, and an equal-length list of values,
