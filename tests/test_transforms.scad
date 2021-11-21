@@ -408,10 +408,10 @@ module test_apply() {
     module check_path_apply(mat,path)
         assert_approx(apply(mat,path),path3d([for (p=path) mat*concat(p,1)]));
 
-    check_path_apply(xrot(45), path3d(rect(100,center=true)));
-    check_path_apply(yrot(45), path3d(rect(100,center=true)));
-    check_path_apply(zrot(45), path3d(rect(100,center=true)));
-    check_path_apply(rot([20,30,40])*scale([0.9,1.1,1])*move([10,20,30]), path3d(rect(100,center=true)));
+    check_path_apply(xrot(45), path3d(rect(100)));
+    check_path_apply(yrot(45), path3d(rect(100)));
+    check_path_apply(zrot(45), path3d(rect(100)));
+    check_path_apply(rot([20,30,40])*scale([0.9,1.1,1])*move([10,20,30]), path3d(rect(100)));
 
     module check_patch_apply(mat,patch)
         assert_approx(apply(mat,patch), [for (path=patch) path3d([for (p=path) mat*concat(p,1)])]);

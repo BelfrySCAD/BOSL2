@@ -69,11 +69,11 @@ module square(size=1, center, anchor, spin) {
 
 // Function&Module: rect()
 // Usage: As Module
-//   rect(size, [center], [rounding], [chamfer], ...);
+//   rect(size, [rounding], [chamfer], ...);
 // Usage: With Attachments
-//   rect(size, [center], ...) { attachables }
+//   rect(size, ...) { attachables }
 // Usage: As Function
-//   path = rect(size, [center], [rounding], [chamfer], ...);
+//   path = rect(size, [rounding], [chamfer], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: square()
 // Description:
@@ -83,38 +83,34 @@ module square(size=1, center, anchor, spin) {
 //   size = The size of the rectangle to create.  If given as a scalar, both X and Y will be the same size.
 //   rounding = The rounding radius for the corners.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
 //   chamfer = The chamfer size for the corners.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
-//   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D):
 //   rect(40);
-// Example(2D): Centered
-//   rect([40,30], center=true);
 // Example(2D): Anchored
 //   rect([40,30], anchor=FRONT);
 // Example(2D): Spun
 //   rect([40,30], anchor=FRONT, spin=30);
 // Example(2D): Chamferred Rect
-//   rect([40,30], chamfer=5, center=true);
+//   rect([40,30], chamfer=5);
 // Example(2D): Rounded Rect
-//   rect([40,30], rounding=5, center=true);
+//   rect([40,30], rounding=5);
 // Example(2D): Mixed Chamferring and Rounding
-//   rect([40,30],center=true,rounding=[5,0,10,0],chamfer=[0,8,0,15],$fa=1,$fs=1);
+//   rect([40,30],rounding=[5,0,10,0],chamfer=[0,8,0,15],$fa=1,$fs=1);
 // Example(2D): Called as Function
 //   path = rect([40,30], chamfer=5, anchor=FRONT, spin=30);
 //   stroke(path, closed=true);
 //   move_copies(path) color("blue") circle(d=2,$fn=8);
-module rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) {
+module rect(size=1, rounding=0, chamfer=0, anchor=CENTER, spin=0) {
     size = is_num(size)? [size,size] : point2d(size);
-    anchor = point2d(get_anchor(anchor, center, FRONT+LEFT, CENTER));
     if (rounding==0 && chamfer==0) {
-        attachable(anchor,spin, two_d=true, size=size) {
+        attachable(anchor, spin, two_d=true, size=size) {
             square(size, center=true);
             children();
         }
     } else {
         pts = rect(size=size, rounding=rounding, chamfer=chamfer, center=true);
-        attachable(anchor,spin, two_d=true, path=pts) {
+        attachable(anchor, spin, two_d=true, path=pts) {
             polygon(pts);
             children();
         }
@@ -122,13 +118,14 @@ module rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) {
 }
 
 
-function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
+
+function rect(size=1, rounding=0, chamfer=0, anchor=CENTER, spin=0) =
     assert(is_num(size)     || is_vector(size))
     assert(is_num(chamfer)  || len(chamfer)==4)
     assert(is_num(rounding) || len(rounding)==4)
     let(
+        anchor=point2d(anchor),
         size = is_num(size)? [size,size] : point2d(size),
-        anchor = point2d(get_anchor(anchor, center, FRONT+LEFT, CENTER)),
         complex = rounding!=0 || chamfer!=0
     )
     (rounding==0 && chamfer==0)? let(
@@ -138,7 +135,8 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
             [-size.x/2,  size.y/2],
             [ size.x/2,  size.y/2] 
         ]
-    ) rot(spin, p=move(-v_mul(anchor,size/2), p=path)) :
+    )
+    rot(spin, p=move(-v_mul(anchor,size/2), p=path)) :
     let(
         chamfer = is_list(chamfer)? chamfer : [for (i=[0:3]) chamfer],
         rounding = is_list(rounding)? rounding : [for (i=[0:3]) rounding],
