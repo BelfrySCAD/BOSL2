@@ -273,32 +273,33 @@ module test_str_strip() {
     assert(str_strip("abcdef  ", " ") == "abcdef");
     assert(str_strip(" abcdef  ", " ") == "abcdef");
     assert(str_strip("  abcdef  ", " ") == "abcdef");
+    assert(str_strip("abcdef", " ",start=true) == "abcdef");
+    assert(str_strip(" abcdef", " ",start=true) == "abcdef");
+    assert(str_strip("  abcdef", " ",start=true) == "abcdef");
+    assert(str_strip("abcdef ", " ",start=true) == "abcdef ");
+    assert(str_strip("abcdef  ", " ",start=true) == "abcdef  ");
+    assert(str_strip(" abcdef  ", " ",start=true) == "abcdef  ");
+    assert(str_strip("  abcdef  ", " ",start=true) == "abcdef  ");
+    assert(str_strip("abcdef", " ",end=true) == "abcdef");
+    assert(str_strip(" abcdef", " ",end=true) == " abcdef");
+    assert(str_strip("  abcdef", " ",end=true) == "  abcdef");
+    assert(str_strip("abcdef ", " ",end=true) == "abcdef");
+    assert(str_strip("abcdef  ", " ",end=true) == "abcdef");
+    assert(str_strip(" abcdef  ", " ",end=true) == " abcdef");
+    assert(str_strip("  abcdef  ", " ",end=true) == "  abcdef");
+    assert(str_strip("123abc321","12") == "3abc3");
+    assert(str_strip("123abc321","12",start=true,end=true) == "3abc3");
+    assert(str_strip("123abc321","12",start=true,end=false) == "3abc321");    
+    assert(str_strip("123abc321","12",start=false,end=false) == "123abc321");    
+    assert(str_strip("123abc321","12",start=false,end=true) == "123abc3");    
+    assert(str_strip("123abc321","12",start=false) == "123abc3");    
+    assert(str_strip("123abc321","12",start=true) == "3abc321");    
+    assert(str_strip("123abc321","12",end=false) == "3abc321");
+    assert(str_strip("123abc321","12",end=true) == "123abc3");
+    assert(str_strip("abcde","abcde")=="");
+    assert(str_strip("","abc")=="");
 }
 test_str_strip();
-
-
-module test_str_strip_leading() {
-    assert(str_strip_leading("abcdef", " ") == "abcdef");
-    assert(str_strip_leading(" abcdef", " ") == "abcdef");
-    assert(str_strip_leading("  abcdef", " ") == "abcdef");
-    assert(str_strip_leading("abcdef ", " ") == "abcdef ");
-    assert(str_strip_leading("abcdef  ", " ") == "abcdef  ");
-    assert(str_strip_leading(" abcdef  ", " ") == "abcdef  ");
-    assert(str_strip_leading("  abcdef  ", " ") == "abcdef  ");
-}
-test_str_strip_leading();
-
-
-module test_str_strip_trailing() {
-    assert(str_strip_trailing("abcdef", " ") == "abcdef");
-    assert(str_strip_trailing(" abcdef", " ") == " abcdef");
-    assert(str_strip_trailing("  abcdef", " ") == "  abcdef");
-    assert(str_strip_trailing("abcdef ", " ") == "abcdef");
-    assert(str_strip_trailing("abcdef  ", " ") == "abcdef");
-    assert(str_strip_trailing(" abcdef  ", " ") == " abcdef");
-    assert(str_strip_trailing("  abcdef  ", " ") == "  abcdef");
-}
-test_str_strip_trailing();
 
 
 module test_substr() {
