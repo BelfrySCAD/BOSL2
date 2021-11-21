@@ -134,11 +134,25 @@ module threaded_rod(
 //   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, bevel=true, $slop=0.1, $fa=1, $fs=1);
 module threaded_nut(
     od, id, h,
-    pitch, starts=1, left_handed=false, bevel, bevel1, bevel2, 
+    pitch, starts=1, left_handed=false, bevel, bevel1, bevel2, id1,id2,
     anchor, spin, orient
 ) {
-    depth = pitch * cos(30) * 5/8;
-    profile = [
+    dummy1=
+    assert(all_positive(pitch))
+    assert(all_positive(id))
+    assert(all_positive(h));
+    basic = is_num(id) || is_undef(id) || is_def(id1) || is_def(id2);
+    dummy2 = assert(basic || is_vector(id,3));
+    depth = basic ? cos(30) * 5/8
+                  : (id[2] - id[0])/2/pitch;
+    crestwidth = basic ? 1/8 : 1/2 - (id[2]-id[1])/sqrt(3)/pitch;
+    profile =    [
+                  [-depth/sqrt(3)-crestwidth/2, -depth],
+                  [              -crestwidth/2,      0],
+                  [               crestwidth/2,      0],
+                  [ depth/sqrt(3)+crestwidth/2, -depth]
+                 ];
+    oprofile = [
         [-6/16, -depth/pitch],
         [-1/16,  0],
         [-1/32,  0.02],
@@ -147,7 +161,9 @@ module threaded_nut(
         [ 6/16, -depth/pitch]
     ];
     generic_threaded_nut(
-        od=od, id=id, h=h,
+        od=od,
+        id=basic ? id : id[2], id1=id1, id2=id2,
+        h=h,
         pitch=pitch,
         profile=profile,starts=starts,
         left_handed=left_handed,
