@@ -746,7 +746,10 @@ function _slice_3dpolygons(polys, dir, cuts) =
     )
     flatten([for (poly = polys)
         let(
-            plane = plane_from_polygon(poly),
+            plane = plane_from_polygon(poly)
+        )
+        assert(plane,"Found non-coplanar face.")
+        let(
             normal = point3d(plane),
             pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
         )
