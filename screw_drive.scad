@@ -15,6 +15,7 @@
 //   be lowered to different depths to create different sizes of recess.  
 // Arguments:
 //   size = The size of the bit as a number or string.  "#0", "#1", "#2", "#3", or "#4"
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -29,26 +30,24 @@
 // Specs for phillips recess here:
 //   https://www.fasteners.eu/tech-info/ISO/4757/
 
-_phillips_shaft = [3,4.5,6,8,10];
-_ph_bot_angle = 28.0;
-_ph_side_angle = 26.5;
+function _phillips_shaft(x) = [3,4.5,6,8,10][x];
+function _ph_bot_angle() = 28.0;
+function _ph_side_angle() = 26.5;
 
 module phillips_mask(size="#2", $fn=36, anchor=BOTTOM, spin=0, orient=UP) {
     assert(in_list(size,["#0","#1","#2","#3","#4",0,1,2,3,4]));
     num = is_num(size) ? size : ord(size[1]) - ord("0");
-    shaft = _phillips_shaft[num];
+    shaft = _phillips_shaft(num);
     b =     [0.61, 0.97, 1.47, 2.41, 3.48][num];
     e =     [0.31, 0.435, 0.815, 2.005, 2.415][num];
     g =     [0.81, 1.27, 2.29, 3.81, 5.08][num];
-    //f =     [0.33, 0.53, 0.70, 0.82, 1.23][num];
-    //r =     [0.30, 0.50, 0.60, 0.80, 1.00][num];
     alpha = [ 136,  138,  140,  146,  153][num];
     beta  = [7.00, 7.00, 5.75, 5.75, 7.00][num];
     gamma = 92.0;
-    h1 = adj_ang_to_opp(g/2, _ph_bot_angle);   // height of the small conical tip
-    h2 = adj_ang_to_opp((shaft-g)/2, 90-_ph_side_angle);   // height of larger cone
+    h1 = adj_ang_to_opp(g/2, _ph_bot_angle());   // height of the small conical tip
+    h2 = adj_ang_to_opp((shaft-g)/2, 90-_ph_side_angle());   // height of larger cone
     l = h1+h2;
-    h3 = adj_ang_to_opp(b/2, _ph_bot_angle);   // height where cutout starts
+    h3 = adj_ang_to_opp(b/2, _ph_bot_angle());   // height where cutout starts
     p0 = [0,0];
     p1 = [adj_ang_to_opp(e/2, 90-alpha/2), -e/2];
     p2 = p1 + [adj_ang_to_opp((shaft-e)/2, 90-gamma/2),-(shaft-e)/2];
@@ -92,13 +91,11 @@ function phillips_depth(size, d) =
         num = is_num(size) ? size : ord(size[1]) - ord("0"),
         shaft = [3,4.5,6,8,10][num],
         g =     [0.81, 1.27, 2.29, 3.81, 5.08][num],
-        _ph_bot_angle = 28.0,
-        _ph_side_angle = 26.5,
-        h1 = adj_ang_to_opp(g/2, _ph_bot_angle),   // height of the small conical tip
-        h2 = adj_ang_to_opp((shaft-g)/2, 90-_ph_side_angle)   // height of larger cone
+        h1 = adj_ang_to_opp(g/2, _ph_bot_angle()),   // height of the small conical tip
+        h2 = adj_ang_to_opp((shaft-g)/2, 90-_ph_side_angle())   // height of larger cone
     )
     d>=shaft || d<g ? undef :
-    (d-g) / 2 / tan(_ph_side_angle) + h1;
+    (d-g) / 2 / tan(_ph_side_angle()) + h1;
 
 
 // Function: phillips_diam()
@@ -114,13 +111,13 @@ function phillips_diam(size, depth) =
     assert(in_list(size,["#0","#1","#2","#3","#4",0,1,2,3,4]))
     let(
         num = is_num(size) ? size : ord(size[1]) - ord("0"),
-        shaft = _phillips_shaft[num],
+        shaft = _phillips_shaft(num),
         g =     [0.81, 1.27, 2.29, 3.81, 5.08][num],
-        h1 = adj_ang_to_opp(g/2, _ph_bot_angle),   // height of the small conical tip
-        h2 = adj_ang_to_opp((shaft-g)/2, 90-_ph_side_angle)   // height of larger cone
+        h1 = adj_ang_to_opp(g/2, _ph_bot_angle()),   // height of the small conical tip
+        h2 = adj_ang_to_opp((shaft-g)/2, 90-_ph_side_angle())   // height of larger cone
     )
     depth<h1 || depth>= h1+h2 ? undef :
-    2 * tan(_ph_side_angle)*(depth-h1) + g;
+    2 * tan(_ph_side_angle())*(depth-h1) + g;
 
 
 
@@ -128,6 +125,8 @@ function phillips_diam(size, depth) =
 
 
 // Function: torx_outer_diam()
+// Usage:
+//   diam = torx_outer_diam(size);
 // Description: Get the typical outer diameter of Torx profile.
 // Arguments:
 //   size = Torx size.
@@ -152,6 +151,8 @@ function torx_outer_diam(size) = lookup(size, [
  
 
 // Function: torx_inner_diam()
+// Usage:
+//   diam = torx_inner_diam(size);
 // Description: Get typical inner diameter of Torx profile.
 // Arguments:
 //   size = Torx size.
@@ -176,6 +177,8 @@ function torx_inner_diam(size) = lookup(size, [
  
 
 // Function: torx_depth()
+// Usage:
+//   depth = torx_depth(size);
 // Description: Gets typical drive hole depth.
 // Arguments:
 //   size = Torx size.
@@ -200,6 +203,8 @@ function torx_depth(size) = lookup(size, [
  
 
 // Function: torx_tip_radius()
+// Usage:
+//   rad = torx_tip_radius(size);
 // Description: Gets minor rounding radius of Torx profile.
 // Arguments:
 //   size = Torx size.
@@ -224,6 +229,8 @@ function torx_tip_radius(size) = lookup(size, [
 
 
 // Function: torx_rounding_radius()
+// Usage:
+//   rad = torx_rounding_radius(size);
 // Description: Gets major rounding radius of Torx profile.
 // Arguments:
 //   size = Torx size.
@@ -249,6 +256,8 @@ function torx_rounding_radius(size) = lookup(size, [
 
 
 // Module: torx_mask2d()
+// Usage:
+//   torx_mask2d(size);
 // Description: Creates a torx bit 2D profile.
 // Arguments:
 //   size = Torx size.
@@ -287,11 +296,14 @@ module torx_mask2d(size) {
 
 
 // Module: torx_mask()
+// Usage:
+//   torx_mask(size, l, [center]);
 // Description: Creates a torx bit tip.
 // Arguments:
 //   size = Torx size.
 //   l = Length of bit.
 //   center = If true, centers bit vertically.
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`

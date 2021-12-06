@@ -288,7 +288,7 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
 //   spin = Rotate this many degrees after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 2D point.  Default: "centroid"
-//   atype = Set to "hull" or "intersect to select anchor type.  Default: "hull"
+//   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
 // Example(2D): Displaying a region
 //   region([circle(d=50), square(25,center=true)]);
 // Example(2D): Displaying a list of polygons that intersect each other, which is not a region
@@ -328,10 +328,14 @@ module region(r, anchor="origin", spin=0, cp="centroid", atype="hull")
 //   point = The point to test.
 //   region = The region to test against, as a list of polygon paths.
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-// Example(2D,NoAxes):  Green points are in the region, red ones are outside
-//   region = [for(i=[2:8]) hexagon(r=i)];
-//   region(region);
-//   for(x=[-4.5:4.5],y=[-4.5:4.5]) color(point_in_region([x,y],region)==1?"green":"red") move([x,y])circle(r=.1,$fn=12);
+// Example(2D,Med):  Red points are in the region.
+//   region = [for(i=[2:4:10]) hexagon(r=i)];
+//   color("#ff7") region(region);
+//   for(x=[-10:10], y=[-10:10])
+//     if (point_in_region([x,y], region)>=0)
+//       move([x,y]) color("red") circle(0.15, $fn=12);
+//     else
+//       move([x,y]) color("#ddf") circle(0.1, $fn=12);
 function point_in_region(point, region, eps=EPSILON) =
     let(region=force_region(region))
     assert(is_region(region), "Region given to point_in_region is not a region")

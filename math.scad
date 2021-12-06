@@ -259,6 +259,8 @@ function u_div(a,b) =
 // Section: Hyperbolic Trigonometry
 
 // Function: sinh()
+// Usage:
+//   a = sinh(x);
 // Description: Takes a value `x`, and returns the hyperbolic sine of it.
 function sinh(x) =
     assert(is_finite(x), "The input must be a finite number.")
@@ -266,6 +268,8 @@ function sinh(x) =
 
 
 // Function: cosh()
+// Usage:
+//   a = cosh(x);
 // Description: Takes a value `x`, and returns the hyperbolic cosine of it.
 function cosh(x) =
     assert(is_finite(x), "The input must be a finite number.")
@@ -273,6 +277,8 @@ function cosh(x) =
 
 
 // Function: tanh()
+// Usage:
+//   a = tanh(x);
 // Description: Takes a value `x`, and returns the hyperbolic tangent of it.
 function tanh(x) =
     assert(is_finite(x), "The input must be a finite number.")
@@ -280,6 +286,8 @@ function tanh(x) =
 
 
 // Function: asinh()
+// Usage:
+//   a = asinh(x);
 // Description: Takes a value `x`, and returns the inverse hyperbolic sine of it.
 function asinh(x) =
     assert(is_finite(x), "The input must be a finite number.")
@@ -287,6 +295,8 @@ function asinh(x) =
 
 
 // Function: acosh()
+// Usage:
+//   a = acosh(x);
 // Description: Takes a value `x`, and returns the inverse hyperbolic cosine of it.
 function acosh(x) =
     assert(is_finite(x), "The input must be a finite number.")
@@ -294,6 +304,8 @@ function acosh(x) =
 
 
 // Function: atanh()
+// Usage:
+//   a = atanh(x);
 // Description: Takes a value `x`, and returns the inverse hyperbolic tangent of it.
 function atanh(x) =
     assert(is_finite(x), "The input must be a finite number.")

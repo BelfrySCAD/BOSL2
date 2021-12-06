@@ -244,8 +244,6 @@ module attach(from, to, overlap, norot=false)
 // Description:
 //   Marks all children with the given tags, so that they will `hide()`/`show()`/`diff()`  correctly.
 //   This is especially useful for working with children that are not attachment enhanced, such as:
-//   - `square()`  (or use [`rect()`](shapes2d.scad#rect))
-//   - `circle()`  (or use [`oval()`](shapes2d.scad#oval))
 //   - `polygon()`
 //   - `text()`
 //   - `projection()`
