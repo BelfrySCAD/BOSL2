@@ -164,7 +164,7 @@ circle(d=100);
 circle(d=100, $fn=8);
 ```
 
-The BOSL2 library also provides an enhanced equivalent of `circle()` called `oval()`.
+The BOSL2 library also provides an enhanced equivalent of `circle()` called `ellipse()`.
 You can use it in the same way you use `circle()`, but it also provides extended
 functionality. For example, it allows more control over its size and orientation.
 
@@ -172,22 +172,22 @@ Since a circle in OpenSCAD can only be approximated by a regular polygon with
 a number of straight sides, this can lead to size and shape inaccuracies.
 To counter this, the `realign=` and `circum=` arguments are also provided.
 
-The `realign=` argument, if set `true`, rotates the `oval()` by half the angle
+The `realign=` argument, if set `true`, rotates the `ellipse()` by half the angle
 between the sides:
 
 ```openscad-2D
-oval(d=100, $fn=8, realign=true);
+ellipse(d=100, $fn=8, realign=true);
 ```
 
 The `circum=` argument, if true, makes it so that the polygon forming the
-`oval()` circumscribes the ideal circle instead of inscribing it.
+`ellipse()` circumscribes the ideal circle instead of inscribing it.
 
 Inscribing the ideal circle:
 
 ```openscad-2D
 difference() {
     circle(d=100, $fn=360);
-    oval(d=100, $fn=8);
+    ellipse(d=100, $fn=8);
 }
 ```
 
@@ -195,39 +195,39 @@ Circumscribing the ideal circle:
 
 ```openscad-2D
 difference() {
-    oval(d=100, $fn=8, circum=true);
+    ellipse(d=100, $fn=8, circum=true);
     circle(d=100, $fn=360);
 }
 ```
 
-The `oval()` module, as its name suggests, can be given separate X and Y radii
+The `ellipse()` module, as its name suggests, can be given separate X and Y radii
 or diameters.  To do this, just give `r=` or `d=` with a list of two radii or
 diameters:
 
 ```openscad-2D
-oval(r=[30,20]);
+ellipse(r=[30,20]);
 ```
 
 ```openscad-2D
-oval(d=[60,40]);
+ellipse(d=[60,40]);
 ```
 
-Another way that `oval()` is enhanced over `circle()`, is that you can anchor,
+Another way that `ellipse()` is enhanced over `circle()`, is that you can anchor,
 spin and attach it.
 
 ```openscad-2D
-oval(r=50, anchor=BACK);
+ellipse(r=50, anchor=BACK);
 ```
 
 ```openscad-2D
-oval(r=50, anchor=FRONT+RIGHT);
+ellipse(r=50, anchor=FRONT+RIGHT);
 ```
 
 Using spin on a circle may not make initial sense, until you remember that
 anchoring is performed before spin:
 
 ```openscad-2D
-oval(r=50, anchor=FRONT, spin=-30);
+ellipse(r=50, anchor=FRONT, spin=-30);
 ```
 
 
@@ -349,7 +349,7 @@ They also have somewhat different attachment behavior:
 
 ```openscad-2D
 color("green") stroke(circle(d=50), closed=true);
-oval(d=50,$fn=5)
+ellipse(d=50,$fn=5)
     attach(LEFT) color("blue") anchor_arrow2d();
 ```
 
