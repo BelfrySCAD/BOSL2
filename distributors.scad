@@ -324,13 +324,17 @@ module zcopies(spacing, n, l, sp)
 //           zrot(180/6)
 //               cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
 //   }
-module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero=false)
+module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
 {
+    
     assert(in_list(stagger, [false, true, "alt"]));
     bounds = is_undef(inside)? undef :
         is_path(inside)? pointlist_bounds(inside) :
         assert(is_region(inside))
         pointlist_bounds(flatten(inside));
+    nonzero = is_path(inside) ? default(nonzero,false)
+            : assert(is_undef(nonzero), "nonzero only allowed if inside is a polygon")
+              false;
     size = is_num(size)? [size, size] :
         is_vector(size)? assert(len(size)==2) size :
         bounds!=undef? [
