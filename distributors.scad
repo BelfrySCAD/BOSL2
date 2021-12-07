@@ -359,7 +359,7 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero=false)
                 if (
                     is_undef(inside) ||
                     (is_path(inside) && point_in_polygon(pos, inside, nonzero=nonzero)>=0) ||
-                    (is_region(inside) && point_in_region(pos, inside, nonzero=nonzero)>=0)
+                    (is_region(inside) && point_in_region(pos, inside)>=0)
                 ) {
                     $col = col;
                     $row = row;
@@ -381,7 +381,7 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero=false)
                     pos = v_mul([2*col,row],spacing) + [rowdx,0] - offset;
                     if (
                         is_undef(inside) ||
-                        (is_path(inside) && point_in_polygon(pos, inside)>=0) ||
+                        (is_path(inside) && point_in_polygon(pos, inside, nonzero=nonzero)>=0) ||
                         (is_region(inside) && point_in_region(pos, inside)>=0)
                     ) {
                         $col = col * 2 + ((row%2!=staggermod)? 1 : 0);
