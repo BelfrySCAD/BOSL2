@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/structs.scad>
+// FileGroup: Data Management
+// FileSummary: Structure/Dictionary Manipulation
 //////////////////////////////////////////////////////////////////////
 
 

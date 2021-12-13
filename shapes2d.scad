@@ -10,6 +10,9 @@
 //   function forms that produce a path. 
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Basic Modeling
+// FileSummary: Attachable circles, squares, polygons, teardrop.  Can make geometry or paths.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 use <builtins.scad>

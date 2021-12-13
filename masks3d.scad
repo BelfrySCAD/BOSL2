@@ -4,6 +4,9 @@
 //   edges in three dimensions.  
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Basic Modeling
+// FileSummary: 3D masks for rounding edges and corners.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

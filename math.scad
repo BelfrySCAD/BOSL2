@@ -3,6 +3,9 @@
 //   Math helper functions.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Math
+// FileSummary: General miscellaneous math function.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 // Section: Math Constants

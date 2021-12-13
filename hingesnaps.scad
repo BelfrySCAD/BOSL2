@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/hingesnaps.scad>
+// FileGroup: Parts
+// FileSummary: Foldable, snap-locking parts.
 //////////////////////////////////////////////////////////////////////
 
 // Section: Hinges and Snaps

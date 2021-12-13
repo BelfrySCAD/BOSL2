@@ -3,6 +3,9 @@
 //   File that provides functions to manage versioning.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Data Management
+// FileSummary: Parse and compare semantic versions.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

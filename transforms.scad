@@ -15,6 +15,9 @@
 //   operate on.  The exceptions are rot(), frame_map() and skew().  
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Basic Modeling
+// FileSummary: Shortcuts for translation, rotation, etc.  Can act on geometry, paths, or can return a matrix.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

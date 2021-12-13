@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/linear_bearings.scad>
+// FileGroup: Parts
+// FileSummary: Mounts for LMxUU style linear bearings.
 //////////////////////////////////////////////////////////////////////
 
 

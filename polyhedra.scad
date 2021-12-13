@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/polyhedra.scad>
+// FileGroup: Parts
+// FileSummary: Platonic, Archimidean, Catalan, and stellated polyhedra.
 //////////////////////////////////////////////////////////////////////
 
 

@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/partitions.scad>
+// FileGroup: Advanced Modeling
+// FileSummary: Modules to help partition large objects into smaller assembled parts.
 //////////////////////////////////////////////////////////////////////
 
 

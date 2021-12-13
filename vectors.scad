@@ -3,6 +3,9 @@
 //   Vector math functions.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Math
+// FileSummary: Vector math functions.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

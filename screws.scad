@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/screws.scad>
+// FileGroup: Threaded Parts
+// FileSummary: ISO (metric) and UTS screws and nuts.
 //////////////////////////////////////////////////////////////////////
 
 include <structs.scad>

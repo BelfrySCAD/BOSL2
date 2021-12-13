@@ -4,6 +4,9 @@
 //   all the function relations, or silly acronyms like SOHCAHTOA.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Math
+// FileSummary: Trigonometry shortcuts for when you can't recall the mnemonic SOHCAHTOA.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

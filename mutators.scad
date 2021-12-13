@@ -3,6 +3,9 @@
 //   Functions and modules to mutate children in various ways.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Basic Modeling
+// FileSummary: Modules and Functions to mutate items.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

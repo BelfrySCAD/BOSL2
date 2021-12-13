@@ -3,6 +3,9 @@
 //   Support for Quaternions.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Math
+// FileSummary: Quaternion based rotations that avoid gimbal lock issues.
+// FileFootnotes: STD=Included in std.scad
 ///////////////////////////////////////////
 
 

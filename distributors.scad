@@ -3,6 +3,9 @@
 //   Functions and modules to distribute children or copies of children.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Basic Modeling
+// FileSummary: Shortcuts for translation, rotation, etc.  Can act on geometry, paths, or can return a matrix.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

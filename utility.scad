@@ -3,6 +3,9 @@
 //   Utility functions used in argument processing.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Data Management
+// FileSummary: Helpers for argument processing.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

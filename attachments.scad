@@ -7,6 +7,9 @@
 //   are both written to support attachment.  Also included in this file  are the tools to make your own "attachable" objects.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Basic Modeling
+// FileSummary: Positioning objects on or relative to other objects.  Making your own objects support attachment.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

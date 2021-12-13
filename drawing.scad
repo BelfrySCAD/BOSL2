@@ -8,6 +8,9 @@
 //   and helix() produces helix paths.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Basic Modeling
+// FileSummary: Attachable cubes, cylinders, spheres, ruler, and text.  Many can produce a VNF.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

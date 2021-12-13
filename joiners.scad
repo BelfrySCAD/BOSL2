@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/joiners.scad>
+// FileGroup: Parts
+// FileSummary: Joiner shapes for connecting separately printed objects.
 //////////////////////////////////////////////////////////////////////
 
 

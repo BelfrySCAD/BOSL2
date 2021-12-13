@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/wiring.scad>
+// FileGroup: Parts
+// FileSummary: Routed bundles of wires.
 //////////////////////////////////////////////////////////////////////
 
 

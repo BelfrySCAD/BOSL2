@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/beziers.scad>
+// FileGroup: Advanced Modeling
+// FileSummary: Support for bezier curves and surfaces.
 //////////////////////////////////////////////////////////////////////
 
 // Terminology:

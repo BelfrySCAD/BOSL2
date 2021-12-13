@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/sliders.scad>
+// FileGroup: Parts
+// FileSummary: Simple sliders and rails.
 //////////////////////////////////////////////////////////////////////
 
 

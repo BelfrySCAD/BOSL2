@@ -6,6 +6,9 @@
 //   reversed faces.  
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Advanced Modeling
+// FileSummary: Vertices 'n' Faces structure.  Makes polyhedron() easier to use.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

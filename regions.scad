@@ -8,6 +8,9 @@
 //   region and you can decompose a region into parts.  
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Advanced Modeling
+// FileSummary: Offsets and boolean geometry of 2D paths and regions.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

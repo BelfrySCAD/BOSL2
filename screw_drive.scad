@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/screw_drive.scad>
+// FileGroup: Threaded Parts
+// FileSummary: Masks for Phillips/Torx/etc driver holes.
 //////////////////////////////////////////////////////////////////////
 
 

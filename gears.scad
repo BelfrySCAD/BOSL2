@@ -6,6 +6,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/gears.scad>
+// FileGroup: Parts
+// FileSummary: Gears, racks, worms, and worm gears.
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 

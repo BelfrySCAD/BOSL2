@@ -3,6 +3,9 @@
 //   String manipulation and formatting functions.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Data Management
+// FileSummary: String manipulation functions.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 
