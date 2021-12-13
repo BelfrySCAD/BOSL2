@@ -30,8 +30,8 @@
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.  Default: 0.01
 //   ---
 //   d = Diameter of the roundover.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): 2D Roundover Mask
 //   mask2d_roundover(r=10);
 // Example(2D): 2D Bead Mask
@@ -87,8 +87,8 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.  Default: 0.01
 //   ---
 //   d = Diameter of the cove.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): 2D Cove Mask
 //   mask2d_cove(r=10);
 // Example(2D): 2D Inset Cove Mask
@@ -150,8 +150,8 @@ function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 //   ---
 //   x = The width of the chamfer.
 //   y = The height of the chamfer.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): 2D Chamfer Mask
 //   mask2d_chamfer(x=10);
 // Example(2D): 2D Chamfer Mask by Width.
@@ -213,8 +213,8 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 //   size = The size of the rabbet, either as a scalar or an [X,Y] list.
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape. Default: 0.01
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): 2D Rabbet Mask
 //   mask2d_rabbet(size=10);
 // Example(2D): 2D Asymmetrical Rabbet Mask
@@ -271,8 +271,8 @@ function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
 //   ---
 //   x = The width of the dovetail.
 //   y = The height of the dovetail.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): 2D Dovetail Mask
 //   mask2d_dovetail(x=10);
 // Example(2D): 2D Dovetail Mask by Width.
@@ -338,8 +338,8 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape. Default: 0.01
 //   ---
 //   d = Diameter of the rounding.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): 2D Teardrop Mask
 //   mask2d_teardrop(r=10);
 // Example(2D): Using a Custom Angle
@@ -405,8 +405,8 @@ module mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) {
 //   pattern = A list of pattern pieces to describe the Ogee.
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape. Default: 0.01
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //
 // Example(2D): 2D Ogee Mask
 //   mask2d_ogee([

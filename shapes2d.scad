@@ -33,8 +33,8 @@ use <builtins.scad>
 //   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
 //   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D):
 //   square(40);
 // Example(2D): Centered
@@ -69,11 +69,11 @@ module square(size=1, center, anchor, spin) {
 
 // Function&Module: rect()
 // Usage: As Module
-//   rect(size, [center], [rounding], [chamfer], ...);
+//   rect(size, [rounding], [chamfer], ...);
 // Usage: With Attachments
-//   rect(size, [center], ...) { attachables }
+//   rect(size, ...) { attachables }
 // Usage: As Function
-//   path = rect(size, [center], [rounding], [chamfer], ...);
+//   path = rect(size, [rounding], [chamfer], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: square()
 // Description:
@@ -83,38 +83,34 @@ module square(size=1, center, anchor, spin) {
 //   size = The size of the rectangle to create.  If given as a scalar, both X and Y will be the same size.
 //   rounding = The rounding radius for the corners.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
 //   chamfer = The chamfer size for the corners.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
-//   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D):
 //   rect(40);
-// Example(2D): Centered
-//   rect([40,30], center=true);
 // Example(2D): Anchored
 //   rect([40,30], anchor=FRONT);
 // Example(2D): Spun
 //   rect([40,30], anchor=FRONT, spin=30);
 // Example(2D): Chamferred Rect
-//   rect([40,30], chamfer=5, center=true);
+//   rect([40,30], chamfer=5);
 // Example(2D): Rounded Rect
-//   rect([40,30], rounding=5, center=true);
+//   rect([40,30], rounding=5);
 // Example(2D): Mixed Chamferring and Rounding
-//   rect([40,30],center=true,rounding=[5,0,10,0],chamfer=[0,8,0,15],$fa=1,$fs=1);
+//   rect([40,30],rounding=[5,0,10,0],chamfer=[0,8,0,15],$fa=1,$fs=1);
 // Example(2D): Called as Function
 //   path = rect([40,30], chamfer=5, anchor=FRONT, spin=30);
 //   stroke(path, closed=true);
 //   move_copies(path) color("blue") circle(d=2,$fn=8);
-module rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) {
+module rect(size=1, rounding=0, chamfer=0, anchor=CENTER, spin=0) {
     size = is_num(size)? [size,size] : point2d(size);
-    anchor = point2d(get_anchor(anchor, center, FRONT+LEFT, CENTER));
     if (rounding==0 && chamfer==0) {
-        attachable(anchor,spin, two_d=true, size=size) {
+        attachable(anchor, spin, two_d=true, size=size) {
             square(size, center=true);
             children();
         }
     } else {
         pts = rect(size=size, rounding=rounding, chamfer=chamfer, center=true);
-        attachable(anchor,spin, two_d=true, path=pts) {
+        attachable(anchor, spin, two_d=true, path=pts) {
             polygon(pts);
             children();
         }
@@ -122,13 +118,14 @@ module rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) {
 }
 
 
-function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
+
+function rect(size=1, rounding=0, chamfer=0, anchor=CENTER, spin=0) =
     assert(is_num(size)     || is_vector(size))
     assert(is_num(chamfer)  || len(chamfer)==4)
     assert(is_num(rounding) || len(rounding)==4)
     let(
+        anchor=point2d(anchor),
         size = is_num(size)? [size,size] : point2d(size),
-        anchor = point2d(get_anchor(anchor, center, FRONT+LEFT, CENTER)),
         complex = rounding!=0 || chamfer!=0
     )
     (rounding==0 && chamfer==0)? let(
@@ -138,7 +135,8 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
             [-size.x/2,  size.y/2],
             [ size.x/2,  size.y/2] 
         ]
-    ) rot(spin, p=move(-v_mul(anchor,size/2), p=path)) :
+    )
+    rot(spin, p=move(-v_mul(anchor,size/2), p=path)) :
     let(
         chamfer = is_list(chamfer)? chamfer : [for (i=[0:3]) chamfer],
         rounding = is_list(rounding)? rounding : [for (i=[0:3]) rounding],
@@ -187,8 +185,8 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 //   r = The radius of the circle to create.
 //   d = The diameter of the circle to create.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): By Radius
 //   circle(r=25);
 // Example(2D): By Diameter
@@ -233,8 +231,8 @@ module circle(r, d, anchor=CENTER, spin=0) {
 //   d = Diameter of the circle or a pair giving the full X and Y axis lengths.  
 //   realign = If false starts the approximate ellipse with a point on the X+ axis.  If true the midpoint of a side is on the X+ axis and the first point of the polygon is below the X+ axis.  This can result in a very different polygon when $fn is small.  Default: false
 //   circum = If true, the polygon that approximates the circle will be upsized slightly to circumscribe the theoretical circle.  If false, it inscribes the theoretical circle.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): By Radius
 //   ellipse(r=25);
 // Example(2D): By Diameter
@@ -416,8 +414,8 @@ function ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER
 //   realign = If false, vertex 0 will lie on the X+ axis.  If true then the midpoint of the last edge will lie on the X+ axis, and vertex 0 will be below the X axis.    Default: false
 //   align_tip = If given as a 2D vector, rotates the whole shape so that the first vertex points in that direction.  This occurs before spin.
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Extra Anchors:
 //   "tip0", "tip1", etc. = Each tip has an anchor, pointing outwards.
 //   "side0", "side1", etc. = The center of each side has an anchor, pointing outwards.
@@ -551,8 +549,8 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 //   realign = If false, vertex 0 will lie on the X+ axis.  If true then the midpoint of the last edge will lie on the X+ axis, and vertex 0 will be below the X axis.    Default: false
 //   align_tip = If given as a 2D vector, rotates the whole shape so that the first vertex points in that direction.  This occurs before spin.
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Extra Anchors:
 //   "tip0" ... "tip4" = Each tip has an anchor, pointing outwards.
 //   "side0" ... "side4" = The center of each side has an anchor, pointing outwards.
@@ -615,8 +613,8 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip
 //   realign = If false, vertex 0 will lie on the X+ axis.  If true then the midpoint of the last edge will lie on the X+ axis, and vertex 0 will be below the X axis.    Default: false
 //   align_tip = If given as a 2D vector, rotates the whole shape so that the first vertex points in that direction.  This occurs before spin.
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Extra Anchors:
 //   "tip0" ... "tip5" = Each tip has an anchor, pointing outwards.
 //   "side0" ... "side5" = The center of each side has an anchor, pointing outwards.
@@ -678,8 +676,8 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   realign = If false, vertex 0 will lie on the X+ axis.  If true then the midpoint of the last edge will lie on the X+ axis, and vertex 0 will be below the X axis.    Default: false
 //   align_tip = If given as a 2D vector, rotates the whole shape so that the first vertex points in that direction.  This occurs before spin.
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Extra Anchors:
 //   "tip0" ... "tip7" = Each tip has an anchor, pointing outwards.
 //   "side0" ... "side7" = The center of each side has an anchor, pointing outwards.
@@ -726,8 +724,8 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   size = The width and length of the right triangle, given as a scalar or an XY vector.
 //   center = If true, forces `anchor=CENTER`.  If false, forces `anchor=[-1,-1]`.  Default: undef (use `anchor=`)
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example:
 //   right_triangle([40,30]);
 // Example: With `center=true`
@@ -784,8 +782,8 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 //   shift = Scalar value to shift the back of the trapezoid along the X axis by.  Default: 0
 //   rounding = The rounding radius for the corners.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
 //   chamfer = The Length of the chamfer faces at the corners.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Examples(2D):
 //   trapezoid(h=30, w1=40, w2=20);
 //   trapezoid(h=25, w1=20, w2=35);
@@ -888,8 +886,8 @@ module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER
 //   realign = If false, vertex 0 will lie on the X+ axis.  If true then the midpoint of the last edge will lie on the X+ axis, and vertex 0 will be below the X axis.    Default: false
 //   align_tip = If given as a 2D vector, rotates the whole shape so that the first star tip points in that direction.  This occurs before spin.
 //   align_pit = If given as a 2D vector, rotates the whole shape so that the first inner corner is pointed towards that direction.  This occurs before spin.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   atype = Choose "hull" or "intersect" anchor methods.  Default: "hull"
 // Extra Anchors:
 //   "tip0" ... "tip4" = Each tip has an anchor, pointing outwards.
@@ -1080,8 +1078,8 @@ module jittered_poly(path, dist=1/512) {
 //   cap_h = if given, height above center where the shape will be truncated.
 //   ---
 //   d = diameter of spherical portion of bottom. (Use instead of r)
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //
 // Example(2D): Typical Shape
 //   teardrop2d(r=30, ang=30);
@@ -1143,8 +1141,8 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
 //   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the Y axis.  Default: 30
 //   ---
 //   d = The diameter of the end circles.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Examples(2D):
 //   glued_circles(r=15, spread=40, tangent=45);
 //   glued_circles(d=30, spread=30, tangent=30);
@@ -1221,8 +1219,8 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
 //   ---
 //   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   atype = Select "hull" or "intersect" style anchoring.  Default: "hull". 
 // Example(2D):
 //   supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,r=50);
@@ -1290,8 +1288,8 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
 //   ---
 //   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Extra Anchors:
 //   "tip0", "tip1", etc. = Each tip has an anchor, pointing outwards.
 // Examples(2D):

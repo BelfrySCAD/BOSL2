@@ -6,14 +6,11 @@
 //////////////////////////////////////////////////////////////////////
 
 // Terminology:
-//   **List** = An ordered collection of zero or more items.  ie: `["a", "b", "c"]`
+//   **List** = An ordered collection of zero or more arbitrary items.  ie: `["a", "b", "c"]`, or `[3, "a", [4,5]]`
 //   **Vector** = A list of numbers. ie: `[4, 5, 6]`
-//   **Array** = A nested list of lists, or list of lists of lists, or deeper.  ie: `[[2,3], [4,5], [6,7]]`
 //   **Set** = A list of unique items.
 
-
 // Section: List Query Operations
-
 
 // Function: is_homogeneous()
 // Alias: is_homogenous()
@@ -53,34 +50,34 @@ function _same_type(a,b, depth) =
 
 // Function: min_length()
 // Usage:
-//   llen = min_length(array);
+//   llen = min_length(list);
 // Topics: List Handling
 // See Also: max_length()
 // Description:
 //   Returns the length of the shortest sublist in a list of lists.
 // Arguments:
-//   array = A list of lists.
+//   list = A list of lists.
 // Example:
 //   slen = min_length([[3,4,5],[6,7,8,9]]);  // Returns: 3
-function min_length(array) =
-    assert(is_list(array), "Invalid input." )
-    min([for (v = array) len(v)]);
+function min_length(list) =
+    assert(is_list(list), "Invalid input." )
+    min([for (v = list) len(v)]);
 
 
 // Function: max_length()
 // Usage:
-//   llen = max_length(array);
+//   llen = max_length(list);
 // Topics: List Handling
 // See Also: min_length()
 // Description:
 //   Returns the length of the longest sublist in a list of lists.
 // Arguments:
-//   array = A list of lists.
+//   list = A list of lists.
 // Example:
 //   llen = max_length([[3,4,5],[6,7,8,9]]);  // Returns: 4
-function max_length(array) =
-    assert(is_list(array), "Invalid input." )
-    max([for (v = array) len(v)]);
+function max_length(list) =
+    assert(is_list(list), "Invalid input." )
+    max([for (v = list) len(v)]);
 
 
 
@@ -108,7 +105,7 @@ function _list_shape_recurse(v) =
 // Function: list_shape()
 // Usage:
 //   dims = list_shape(v, [depth]);
-// Topics: Matrices, Array Handling
+// Topics: Matrices, List Handling
 // Description:
 //   Returns the size of a multi-dimensional array, a list of the lengths at each depth.
 //   If the returned value has `dims[i] = j` then it means the ith index ranges of j items.
@@ -329,21 +326,21 @@ function list_tail(list, from=1) =
 
 // Function: bselect()
 // Usage:
-//   array = bselect(array, index);
+//   sublist = bselect(list, index);
 // Topics: List Handling
 // See Also: list_bset()
 // Description:
-//   Returns the items in `array` whose matching element in `index` is true.
+//   Returns the items in `list` whose matching element in `index` is true.
 // Arguments:
-//   array = Initial list to extract items from.
+//   list = Initial list to extract items from.
 //   index = List of booleans.
 // Example:
 //   a = bselect([3,4,5,6,7], [false,true,true,false,true]);  // Returns: [4,5,7]
-function bselect(array,index) =
-    assert(is_list(array)||is_string(array), "Improper array." )
-    assert(is_list(index) && len(index)>=len(array) , "Improper index list." )
-    is_string(array)? str_join(bselect( [for (x=array) x], index)) :
-    [for(i=[0:len(array)-1]) if (index[i]) array[i]];
+function bselect(list,index) =
+    assert(is_list(list)||is_string(list), "Improper list." )
+    assert(is_list(index) && len(index)>=len(list) , "Improper index list." )
+    is_string(list)? str_join(bselect( [for (x=list) x], index)) :
+    [for(i=[0:len(list)-1]) if (index[i]) list[i]];
 
 
 
@@ -358,7 +355,7 @@ function bselect(array,index) =
 // Topics: List Handling
 // See Also: count(), lerpn()
 // Description:
-//   Generates a list or array of `n` copies of the given value `val`.
+//   Generates a list of `n` copies of the given value `val`.
 //   If the count `n` is given as a list of counts, then this creates a
 //   multi-dimensional array, filled with `val`.
 // Arguments:
@@ -480,7 +477,7 @@ function force_list(value, n=1, fill) =
 // Topics: List Handling
 // See Also: select(), list_rotate()
 // Description:
-//   Reverses a list/array or string.
+//   Reverses a list or string.
 // Arguments:
 //   x = The list or string to reverse.
 // Example:
@@ -604,21 +601,21 @@ function repeat_entries(list, N, exact=true) =
 
 // Function: list_pad()
 // Usage:
-//   arr = list_pad(array, minlen, [fill]);
+//   newlist = list_pad(list, minlen, [fill]);
 // Topics: List Handling
 // See Also: force_list(), scalar_vec3()
 // Description:
-//   If the list `array` is shorter than `minlen` length, pad it to length with the value given in `fill`.
+//   If the list `list` is shorter than `minlen` length, pad it to length with the value given in `fill`.
 // Arguments:
-//   array = A list.
+//   list = A list.
 //   minlen = The minimum length to pad the list to.
 //   fill = The value to pad the list with.  Default: `undef`
 // Example:
 //   list = [3,4,5];
 //   nlist = list_pad(list,5,23);  // Returns: [3,4,5,23,23]
-function list_pad(array, minlen, fill) =
-    assert(is_list(array), "Invalid input." )
-    concat(array,repeat(fill,minlen-len(array)));
+function list_pad(list, minlen, fill) =
+    assert(is_list(list), "Invalid input." )
+    concat(list,repeat(fill,minlen-len(list)));
 
 
 // Function: list_set()
@@ -969,22 +966,22 @@ function permutations(l,n=2) =
 
 // Function: list_to_matrix()
 // Usage:
-//   groups = list_to_matrix(v, [cnt], [dflt]);
+//   groups = list_to_matrix(v, cnt, [dflt]);
 // Description:
-//   Takes a flat array of values, and groups items in sets of `cnt` length.
+//   Takes a flat list of values, and groups items in sets of `cnt` length.
 //   The opposite of this is `flatten()`.
-// Topics: Matrices, Array Handling
+// Topics: Matrices, List Handling
 // See Also: column(), submatrix(), hstack(), flatten(), full_flatten()
 // Arguments:
 //   v = The list of items to group.
-//   cnt = The number of items to put in each grouping.  Default:2
-//   dflt = The default value to fill in with if the list is not a multiple of `cnt` items long.  Default: 0
+//   cnt = The number of items to put in each grouping. 
+//   dflt = The default value to fill in with if the list is not a multiple of `cnt` items long.  Default: undef
 // Example:
 //   v = [1,2,3,4,5,6];
 //   a = list_to_matrix(v,2) returns [[1,2], [3,4], [5,6]]
 //   b = list_to_matrix(v,3) returns [[1,2,3], [4,5,6]]
 //   c = list_to_matrix(v,4,0) returns [[1,2,3,4], [5,6,0,0]]
-function list_to_matrix(v, cnt=2, dflt=0) =
+function list_to_matrix(v, cnt, dflt=undef) =
     [for (i = [0:cnt:len(v)-1]) [for (j = [0:1:cnt-1]) default(v[i+j], dflt)]];
 
 
@@ -992,7 +989,7 @@ function list_to_matrix(v, cnt=2, dflt=0) =
 // Function: flatten()
 // Usage:
 //   list = flatten(l);
-// Topics: Matrices, Array Handling
+// Topics: Matrices, List Handling
 // See Also: column(), submatrix(), hstack(), full_flatten()
 // Description:
 //   Takes a list of lists and flattens it by one level.
@@ -1008,7 +1005,7 @@ function flatten(l) =
 // Function: full_flatten()
 // Usage:
 //   list = full_flatten(l);
-// Topics: Matrices, Array Handling
+// Topics: Matrices, List Handling
 // See Also: column(), submatrix(), hstack(), flatten()
 // Description: 
 //   Collects in a list all elements recursively found in any level of the given list.

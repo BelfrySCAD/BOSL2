@@ -103,16 +103,17 @@ module bounding_box(excess=0, planar=false) {
 // Description:
 //   Slices an object at a cut plane, and masks away everything that is on one side.  The v parameter is either a plane specification or
 //   a normal vector.  The s parameter is needed for the module
-//   version to control the size of the masking cube, which affects preview display.
+//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
+//   wrong half, but if it is too small it won't fully mask your model.  
 //   When called as a function, you must supply a vnf, path or region in p.  If planar is set to true for the module version the operation
-//   is performed in  and UP and DOWN are treated as equivalent to BACK and FWD respectively.
+//   is performed in 2D and UP and DOWN are treated as equivalent to BACK and FWD respectively.
 //
 // Arguments:
 //   p = path, region or VNF to slice.  (Function version)
 //   v = Normal of plane to slice at.  Keeps everything on the side the normal points to.  Default: [0,0,1] (UP)
 //   cp = If given as a scalar, moves the cut plane along the normal by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.   Ignored for function version.   Default: 100
-//   planar = If true, perform a 2D operation.  When planar, a `v` of `UP` or `DOWN` becomes equivalent of `BACK` and `FWD` respectively.
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may display the wrong half.  (Module version)  Default: 100
+//   planar = If true, perform a 2D operation.  When planar, a `v` of `UP` or `DOWN` becomes equivalent of `BACK` and `FWD` respectively.  (Module version).  Default: false.  
 //
 // Examples:
 //   half_of(DOWN+BACK, cp=[0,-10,0]) cylinder(h=40, r1=10, r2=0, center=false);
@@ -207,13 +208,15 @@ function half_of(p, v=UP, cp) =
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is right of it.
+//   The s parameter is needed for the module
+//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
+//   wrong half, but if it is too small it won't fully mask your model.  
 //
 // Arguments:
 //   p = VNF, region or path to slice (function version)
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 100
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may display the wrong half.  (Module version)  Default: 100
 //   x = The X coordinate of the cut-plane.  Default: 0
-//   planar = If true, perform a 2D operation.
-//
+//   planar = If true, perform a 2D operation.  (Module version)  Default: false. 
 // Examples:
 //   left_half() sphere(r=20);
 //   left_half(x=-8) sphere(r=20);
@@ -247,13 +250,14 @@ function left_half(p,x=0) = half_of(p, LEFT, [x,0,0]);
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is left of it.
-//
+//   The s parameter is needed for the module
+//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
+//   wrong half, but if it is too small it won't fully mask your model.  
 // Arguments:
 //   p = VNF, region or path to slice (function version)
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 100
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may display the wrong half.  (Module version)  Default: 100
 //   x = The X coordinate of the cut-plane.  Default: 0
-//   planar = If true perform a 2D operation.
-//
+//   planar = If true, perform a 2D operation.  (Module version)  Default: false. 
 // Examples(FlatSpin,VPD=175):
 //   right_half() sphere(r=20);
 //   right_half(x=-5) sphere(r=20);
@@ -287,13 +291,14 @@ function right_half(p,x=0) = half_of(p, RIGHT, [x,0,0]);
 //
 // Description:
 //   Slices an object at a vertical X-Z cut plane, and masks away everything that is behind it.
-//
+//   The s parameter is needed for the module
+//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
+//   wrong half, but if it is too small it won't fully mask your model.  
 // Arguments:
 //   p = VNF, region or path to slice (function version)
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 100
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may display the wrong half.  (Module version)  Default: 100
 //   y = The Y coordinate of the cut-plane.  Default: 0
-//   planar = If true perform a 2D operation.
-//
+//   planar = If true, perform a 2D operation.  (Module version)  Default: false. 
 // Examples(FlatSpin,VPD=175):
 //   front_half() sphere(r=20);
 //   front_half(y=5) sphere(r=20);
@@ -327,13 +332,14 @@ function front_half(p,y=0) = half_of(p, FRONT, [0,y,0]);
 //
 // Description:
 //   Slices an object at a vertical X-Z cut plane, and masks away everything that is in front of it.
-//
+//   The s parameter is needed for the module
+//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
+//   wrong half, but if it is too small it won't fully mask your model.  
 // Arguments:
 //   p = VNF, region or path to slice (function version)
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 100
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may display the wrong half.  (Module version)  Default: 100
 //   y = The Y coordinate of the cut-plane.  Default: 0
-//   planar = If true perform a 2D operation.
-//
+//   planar = If true, perform a 2D operation.  (Module version)  Default: false. 
 // Examples:
 //   back_half() sphere(r=20);
 //   back_half(y=8) sphere(r=20);
@@ -366,12 +372,13 @@ function back_half(p,y=0) = half_of(p, BACK, [0,y,0]);
 //
 // Description:
 //   Slices an object at a horizontal X-Y cut plane, and masks away everything that is above it.
-//
+//   The s parameter is needed for the module
+//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
+//   wrong half, but if it is too small it won't fully mask your model. 
 // Arguments:
 //   p = VNF, region or path to slice (function version)
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 100
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may display the wrong half.  (Module version)  Default: 100
 //   z = The Z coordinate of the cut-plane.  Default: 0
-//
 // Examples:
 //   bottom_half() sphere(r=20);
 //   bottom_half(z=-10) sphere(r=20);
@@ -397,12 +404,13 @@ function bottom_half(p,z=0) = half_of(p,BOTTOM,[0,0,z]);
 //
 // Description:
 //   Slices an object at a horizontal X-Y cut plane, and masks away everything that is below it.
-//
+//   The s parameter is needed for the module
+//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
+//   wrong half, but if it is too small it won't fully mask your model.  
 // Arguments:
 //   p = VNF, region or path to slice (function version)
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 100
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may display the wrong half.  (Module version)  Default: 100
 //   z = The Z coordinate of the cut-plane.  Default: 0
-//
 // Examples(Spin,VPD=175):
 //   top_half() sphere(r=20);
 //   top_half(z=5) sphere(r=20);
@@ -692,9 +700,9 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 //   higbee1 = Taper length at start
 //   higbee2 = Taper length at end
 //   internal = direction to taper the threads with higbee.  If true threads taper outward; if false they taper inward.   Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];

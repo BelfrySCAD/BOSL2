@@ -20,7 +20,6 @@ include <drawing.scad>
 include <masks3d.scad>
 include <masks2d.scad>
 include <paths.scad>
-include <edges.scad>
 include <lists.scad>
 include <comparisons.scad>
 include <math.scad>
