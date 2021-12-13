@@ -137,7 +137,7 @@ hexagon(d=50, anchor=LEFT);
 ```
 
 ```openscad-2D
-oval(d=[50,30], anchor=FRONT);
+ellipse(d=[50,30], anchor=FRONT);
 ```
 
 
@@ -166,7 +166,7 @@ square([40,30], spin=30);
 ```
 
 ```openscad-2D
-oval(d=[40,30], spin=30);
+ellipse(d=[40,30], spin=30);
 ```
 
 
@@ -821,10 +821,10 @@ module ovalish(l,rx1,ry1,rx2,ry2, anchor=CENTER, spin=0, orient=UP) {
         hull() {
             up(l/2-0.005)
                 linear_extrude(height=0.01, center=true)
-                    oval([rx2,ry2]);
+                    ellipse([rx2,ry2]);
             down(l/2-0.005)
                 linear_extrude(height=0.01, center=true)
-                    oval([rx1,ry1]);
+                    ellipse([rx1,ry1]);
         }
         children();
     }

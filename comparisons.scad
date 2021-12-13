@@ -776,7 +776,6 @@ function group_sort(list, idx) =
 // Usage:
 //   groupings = group_data(groups, values);
 // Topics: List Handling
-// See Also: zip()
 // Description:
 //   Given a list of integer group numbers, and an equal-length list of values,
 //   returns a list of groups with the values sorted into the corresponding groups.
