@@ -627,8 +627,8 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
 //   start = Start angle of arc.
 //   wedge = If true, include centerpoint `cp` in output to form pie slice shape.
 //   endpoint = If false exclude the last point (function only).  Default: true
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  (Module only) Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  (Module only) Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  (Module only) Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  (Module only) Default: `0`
 // Examples(2D):
 //   arc(N=4, r=30, angle=30, wedge=true);
 //   arc(r=30, angle=30, wedge=true);

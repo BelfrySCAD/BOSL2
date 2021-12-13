@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: Extracting Substrings
+// Section: Extracting substrings
 
 // Function: substr()
 // Usage:
@@ -51,69 +51,256 @@ function suffix(str,len) =
 
 
 
+// Section: String Searching
 
-// Section: Checking character class
 
-// Function: is_lower()
+// Function: str_find()
 // Usage:
-//   x = is_lower(s);
+//   str_find(str,pattern,[last],[all],[start])
 // Description:
-//   Returns true if all the characters in the given string are lowercase letters. (a-z)
-function is_lower(s) =
-    assert(is_string(s))
-    s==""? false :
-    len(s)>1? all([for (v=s) is_lower(v)]) :
-    let(v = ord(s[0])) (v>=ord("a") && v<=ord("z"));
+//   Searches input string `str` for the string `pattern` and returns the index or indices of the matches in `str`.
+//   By default `str_find()` returns the index of the first match in `str`.  If `last` is true then it returns the index of the last match.
+//   If the pattern is the empty string the first match is at zero and the last match is the last character of the `str`.
+//   If `start` is set then the search begins at index start, working either forward and backward from that position.  If you set `start`
+//   and `last` is true then the search will find the pattern if it begins at index `start`.  If no match exists, returns `undef`.
+//   If you set `all` to true then `str_find()` returns all of the matches in a list, or an empty list if there are no matches.
+// Arguments:
+//   str = String to search.
+//   pattern = string pattern to search for
+//   last = set to true to return the last match. Default: false
+//   all = set to true to return all matches as a list.  Overrides last.  Default: false  
+//   start = index where the search starts
+// Example:
+//   str_find("abc123def123abc","123");   // Returns 3
+//   str_find("abc123def123abc","b");     // Returns 1
+//   str_find("abc123def123abc","1234");  // Returns undef
+//   str_find("abc","");                  // Returns 0
+//   str_find("abc123def123", "123", start=4);     // Returns 9
+//   str_find("abc123def123abc","123",last=true);  // Returns 9
+//   str_find("abc123def123abc","b",last=true);    // Returns 13
+//   str_find("abc123def123abc","1234",last=true); // Returns undef
+//   str_find("abc","",last=true);                 // Returns 3
+//   str_find("abc123def123", "123", start=8, last=true));  // Returns 3
+//   str_find("abc123def123abc","123",all=true);   // Returns [3,9]
+//   str_find("abc123def123abc","b",all=true);     // Returns [1,13]
+//   str_find("abc123def123abc","1234",all=true);  // Returns []
+//   str_find("abc","",all=true);                  // Returns [0,1,2]
+function str_find(str,pattern,start=undef,last=false,all=false) =
+    all? _str_find_all(str,pattern) :
+    let( start = first_defined([start,last?len(str)-len(pattern):0]) )
+    pattern==""? start :
+    last? _str_find_last(str,pattern,start) :
+    _str_find_first(str,pattern,len(str)-len(pattern),start);
+
+function _str_find_first(str,pattern,max_sindex,sindex) = 
+    sindex<=max_sindex && !_str_cmp(str,sindex, pattern)?
+        _str_find_first(str,pattern,max_sindex,sindex+1) :
+        (sindex <= max_sindex ? sindex : undef);
+
+function _str_find_last(str,pattern,sindex) = 
+    sindex>=0 && !_str_cmp(str,sindex, pattern)?
+        _str_find_last(str,pattern,sindex-1) :
+        (sindex >=0 ? sindex : undef);
+
+function _str_find_all(str,pattern) =
+    pattern == "" ? count(len(str)) :
+    [for(i=[0:1:len(str)-len(pattern)]) if (_str_cmp(str,i,pattern)) i];
+
+// _str_cmp(str,sindex,pattern)
+//    returns true if the string pattern matches the string
+//    starting at index position sindex in the string.
+//
+//    This is carefully optimized for speed.  Precomputing the length
+//    cuts run time in half when the string is long.  Two other string
+//    comparison methods were slower.  
+function _str_cmp(str,sindex,pattern) =
+    len(str)-sindex <len(pattern)? false :
+    _str_cmp_recurse(str,sindex,pattern,len(pattern));
+
+function _str_cmp_recurse(str,sindex,pattern,plen,pindex=0,) = 
+    pindex < plen && pattern[pindex]==str[sindex] ? _str_cmp_recurse(str,sindex+1,pattern,plen,pindex+1): (pindex==plen);
 
 
-// Function: is_upper()
+// Function: starts_with()
 // Usage:
-//   x = is_upper(s);
+//    starts_with(str,pattern)
 // Description:
-//   Returns true if all the characters in the given string are uppercase letters. (A-Z)
-function is_upper(s) =
-    assert(is_string(s))
-    s==""? false :
-    len(s)>1? all([for (v=s) is_upper(v)]) :
-    let(v = ord(s[0])) (v>=ord("A") && v<=ord("Z"));
+//    Returns true if the input string `str` starts with the specified string pattern, `pattern`.
+//    Otherwise returns false.   
+// Arguments:
+//   str = String to search.
+//   pattern = String pattern to search for.
+// Example:
+//   starts_with("abcdef","abc");  // Returns true
+//   starts_with("abcdef","def");  // Returns false
+//   starts_with("abcdef","");     // Returns true
+function starts_with(str,pattern) = _str_cmp(str,0,pattern);
 
 
-// Function: is_digit()
+// Function: ends_with()
 // Usage:
-//   x = is_digit(s);
+//    ends_with(str,pattern)
 // Description:
-//   Returns true if all the characters in the given string are digits. (0-9)
-function is_digit(s) =
-    assert(is_string(s))
-    s==""? false :
-    len(s)>1? all([for (v=s) is_digit(v)]) :
-    let(v = ord(s[0])) (v>=ord("0") && v<=ord("9"));
+//    Returns true if the input string `str` ends with the specified string pattern, `pattern`.
+//    Otherwise returns false. 
+// Arguments:
+//   str = String to search.
+//   pattern = String pattern to search for.
+// Example:
+//   ends_with("abcdef","def");  // Returns true
+//   ends_with("abcdef","de");   // Returns false
+//   ends_with("abcdef","");     // Returns true
+function ends_with(str,pattern) = _str_cmp(str,len(str)-len(pattern),pattern);
 
 
-// Function: is_hexdigit()
+
+// Function: str_split()
 // Usage:
-//   x = is_hexdigit(s);
+//   str_split(str, sep, [keep_nulls])
 // Description:
-//   Returns true if all the characters in the given string are valid hexadecimal digits. (0-9 or a-f or A-F))
-function is_hexdigit(s) =
-    assert(is_string(s))
-    s==""? false :
-    len(s)>1? all([for (v=s) is_hexdigit(v)]) :
-    let(v = ord(s[0]))
-    (v>=ord("0") && v<=ord("9")) ||
-    (v>=ord("A") && v<=ord("F")) ||
-    (v>=ord("a") && v<=ord("f"));
+//   Breaks an input string into substrings using a separator or list of separators.  If keep_nulls is true
+//   then two sequential separator characters produce an empty string in the output list.  If keep_nulls is false
+//   then no empty strings are included in the output list.
+//   .
+//   If sep is a single string then each character in sep is treated as a delimiting character and the input string is
+//   split at every delimiting character.  Empty strings can occur whenever two delimiting characters are sequential.
+//   If sep is a list of strings then the input string is split sequentially using each string from the list in order. 
+//   If keep_nulls is true then the output will have length equal to `len(sep)+1`, possibly with trailing null strings
+//   if the string runs out before the separator list.  
+// Arguments:
+//   str = String to split.
+//   sep = a string or list of strings to use for the separator
+//   keep_nulls = boolean value indicating whether to keep null strings in the output list.  Default: true
+// Example:
+//   str_split("abc+def-qrs*iop","*-+");     // Returns ["abc", "def", "qrs", "iop"]
+//   str_split("abc+*def---qrs**iop+","*-+");// Returns ["abc", "", "def", "", "", "qrs", "", "iop", ""]
+//   str_split("abc      def"," ");          // Returns ["abc", "", "", "", "", "", "def"]
+//   str_split("abc      def"," ",keep_nulls=false);  // Returns ["abc", "def"]
+//   str_split("abc+def-qrs*iop",["+","-","*"]);     // Returns ["abc", "def", "qrs", "iop"]
+//   str_split("abc+def-qrs*iop",["-","+","*"]);     // Returns ["abc+def", "qrs*iop", "", ""]
+function str_split(str,sep,keep_nulls=true) =
+    !keep_nulls ? _remove_empty_strs(str_split(str,sep,keep_nulls=true)) :
+    is_list(sep) ? _str_split_recurse(str,sep,i=0,result=[]) :
+    let( cutpts = concat([-1],sort(flatten(search(sep, str,0))),[len(str)]))
+    [for(i=[0:len(cutpts)-2]) substr(str,cutpts[i]+1,cutpts[i+1]-cutpts[i]-1)];
+
+function _str_split_recurse(str,sep,i,result) =
+    i == len(sep) ? concat(result,[str]) :
+    let(
+        pos = search(sep[i], str),
+        end = pos==[] ? len(str) : pos[0]
+    )
+    _str_split_recurse(
+        substr(str,end+1),
+        sep, i+1,
+        concat(result, [substr(str,0,end)])
+    );
+
+function _remove_empty_strs(list) =
+    list_remove(list, search([""], list,0)[0]);
 
 
-// Function: is_letter()
+
+// Section: String modification
+
+
+// Function: str_join()
 // Usage:
-//   x = is_letter(s);
+//   str_join(list, [sep])
 // Description:
-//   Returns true if all the characters in the given string are standard ASCII letters. (A-Z or a-z)
-function is_letter(s) =
-    assert(is_string(s))
-    s==""? false :
-    all([for (v=s) is_lower(v) || is_upper(v)]);
+//   Returns the concatenation of a list of strings, optionally with a
+//   separator string inserted between each string on the list.
+// Arguments:
+//   list = list of strings to concatenate
+//   sep = separator string to insert.  Default: ""
+// Example:
+//   str_join(["abc","def","ghi"]);        // Returns "abcdefghi"
+//   str_join(["abc","def","ghi"], " + ");  // Returns "abc + def + ghi"
+function str_join(list,sep="",_i=0, _result="") =
+    _i >= len(list)-1 ? (_i==len(list) ? _result : str(_result,list[_i])) :
+    str_join(list,sep,_i+1,str(_result,list[_i],sep));
+
+
+
+
+// Function: str_strip()
+// Usage:
+//   str_strip(s,c,[start],[end]);
+// Description:
+//   Takes a string `s` and strips off all leading and/or trailing characters that exist in string `c`.
+//   By default strips both leading and trailing characters.  If you set start or end to true then
+//   it will strip only the leading or trailing characters respectively.  If you set start
+//   or end to false then it will strip only lthe trailing or leading characters.
+// Arguments:
+//   s = The string to strip leading or trailing characters from.
+//   c = The string of characters to strip.
+//   start = if true then strip leading characters
+//   end = if true then strip trailing characters
+// Example:
+//   str_strip("--##--123--##--","#-");  // Returns: "123"
+//   str_strip("--##--123--##--","-");   // Returns: "##--123--##"
+//   str_strip("--##--123--##--","#");   // Returns: "--##--123--##--"
+//   str_strip("--##--123--##--","#-",end=true);  // Returns: "--##--123"
+//   str_strip("--##--123--##--","-",end=true);   // Returns: "--##--123--##"
+//   str_strip("--##--123--##--","#",end=true);   // Returns: "--##--123--##--"
+//   str_strip("--##--123--##--","#-",start=true); // Returns: "123--##--"
+//   str_strip("--##--123--##--","-",start=true);  // Returns: "##--123--##--"
+//   str_strip("--##--123--##--","#",start=true);  // Returns: "--##--123--##--"
+
+function _str_count_leading(s,c,_i=0) =
+    (_i>=len(s)||!in_list(s[_i],[each c]))? _i :
+    _str_count_leading(s,c,_i=_i+1);
+
+function _str_count_trailing(s,c,_i=0) =
+    (_i>=len(s)||!in_list(s[len(s)-1-_i],[each c]))? _i :
+    _str_count_trailing(s,c,_i=_i+1);
+
+function str_strip(s,c,start,end) =
+  let(
+      nstart = (is_undef(start) && !end) ? true : start,
+      nend = (is_undef(end) && !start) ? true : end,
+      startind = nstart ? _str_count_leading(s,c) : 0,
+      endind = len(s) - (nend ? _str_count_trailing(s,c) : 0)
+  )
+  substr(s,startind, endind-startind);
+
+
+
+// Function: str_pad()
+// Usage:
+//   padded = str_pad(str, length, char, [left]);
+// Description:
+//   Pad the given string `str` with to length `length` with the specified character,
+//   which must be a length 1 string.  If left is true then pad on the left, otherwise
+//   pad on the right.  If the string is longer than the specified length the full string
+//   is returned unchanged.  
+// Arguments:
+//   str = string to pad
+//   length = length to pad to
+//   char = character to pad with.  Default: " " (space)
+//   left = if true, pad on the left side.  Default: false
+function str_pad(str,length,char=" ",left=false) =
+  assert(is_str(str))
+  assert(is_str(char) && len(char)==1, "char must be a single character string")
+  assert(is_bool(left))
+  let(
+    padding = str_join(repeat(char,length-len(str)))
+  )
+  left ? str(padding,str) : str(str,padding);
+
+
+
+// Function: str_replace_char()
+// Usage:
+//   newstr = str_replace_char(str, char, replace)
+// Description:
+//   Replace every occurence of `char` in the input string with the string `replace` which
+//   can be any string.  
+function str_replace_char(str,char,replace) =
+   assert(is_str(str))
+   assert(is_str(char) && len(char)==1, "Search pattern 'char' must be a single character string")
+   assert(is_str(replace))
+   str_join([for(c=str) c==char ? replace : c]);
 
 
 // Function: downcase()
@@ -142,6 +329,7 @@ function downcase(str) =
 //   upcase("ABCdef");   // Returns "ABCDEF"
 function upcase(str) =
     str_join([for(char=str) let(code=ord(char)) code>=97 && code<=122 ? chr(code-32) : char]);
+
 
 
 
@@ -368,7 +556,7 @@ function fmt_float(f,sig=12) =
     )
     str_join([
         str(whole),
-        str_strip_trailing(
+        str_strip(end=true,
             str_join([
                 ".",
                 fmt_int(part, mindigits=mv)
@@ -535,263 +723,71 @@ module echofmt(fmt, vals) {
 }
 
 
-// Section: Uncategorized string functions
 
 
-// Function: str_join()
+// Section: Checking character class
+
+// Function: is_lower()
 // Usage:
-//   str_join(list, [sep])
+//   x = is_lower(s);
 // Description:
-//   Returns the concatenation of a list of strings, optionally with a
-//   separator string inserted between each string on the list.
-// Arguments:
-//   list = list of strings to concatenate
-//   sep = separator string to insert.  Default: ""
-// Example:
-//   str_join(["abc","def","ghi"]);        // Returns "abcdefghi"
-//   str_join(["abc","def","ghi"], " + ");  // Returns "abc + def + ghi"
-function str_join(list,sep="",_i=0, _result="") =
-    _i >= len(list)-1 ? (_i==len(list) ? _result : str(_result,list[_i])) :
-    str_join(list,sep,_i+1,str(_result,list[_i],sep));
+//   Returns true if all the characters in the given string are lowercase letters. (a-z)
+function is_lower(s) =
+    assert(is_string(s))
+    s==""? false :
+    len(s)>1? all([for (v=s) is_lower(v)]) :
+    let(v = ord(s[0])) (v>=ord("a") && v<=ord("z"));
 
 
-
-
-// Function: str_split()
+// Function: is_upper()
 // Usage:
-//   str_split(str, sep, [keep_nulls])
+//   x = is_upper(s);
 // Description:
-//   Breaks an input string into substrings using a separator or list of separators.  If keep_nulls is true
-//   then two sequential separator characters produce an empty string in the output list.  If keep_nulls is false
-//   then no empty strings are included in the output list.
-//   .
-//   If sep is a single string then each character in sep is treated as a delimiting character and the input string is
-//   split at every delimiting character.  Empty strings can occur whenever two delimiting characters are sequential.
-//   If sep is a list of strings then the input string is split sequentially using each string from the list in order. 
-//   If keep_nulls is true then the output will have length equal to `len(sep)+1`, possibly with trailing null strings
-//   if the string runs out before the separator list.  
-// Arguments:
-//   str = String to split.
-//   sep = a string or list of strings to use for the separator
-//   keep_nulls = boolean value indicating whether to keep null strings in the output list.  Default: true
-// Example:
-//   str_split("abc+def-qrs*iop","*-+");     // Returns ["abc", "def", "qrs", "iop"]
-//   str_split("abc+*def---qrs**iop+","*-+");// Returns ["abc", "", "def", "", "", "qrs", "", "iop", ""]
-//   str_split("abc      def"," ");          // Returns ["abc", "", "", "", "", "", "def"]
-//   str_split("abc      def"," ",keep_nulls=false);  // Returns ["abc", "def"]
-//   str_split("abc+def-qrs*iop",["+","-","*"]);     // Returns ["abc", "def", "qrs", "iop"]
-//   str_split("abc+def-qrs*iop",["-","+","*"]);     // Returns ["abc+def", "qrs*iop", "", ""]
-function str_split(str,sep,keep_nulls=true) =
-    !keep_nulls ? _remove_empty_strs(str_split(str,sep,keep_nulls=true)) :
-    is_list(sep) ? _str_split_recurse(str,sep,i=0,result=[]) :
-    let( cutpts = concat([-1],sort(flatten(search(sep, str,0))),[len(str)]))
-    [for(i=[0:len(cutpts)-2]) substr(str,cutpts[i]+1,cutpts[i+1]-cutpts[i]-1)];
-
-function _str_split_recurse(str,sep,i,result) =
-    i == len(sep) ? concat(result,[str]) :
-    let(
-        pos = search(sep[i], str),
-        end = pos==[] ? len(str) : pos[0]
-    )
-    _str_split_recurse(
-        substr(str,end+1),
-        sep, i+1,
-        concat(result, [substr(str,0,end)])
-    );
-
-function _remove_empty_strs(list) =
-    list_remove(list, search([""], list,0)[0]);
+//   Returns true if all the characters in the given string are uppercase letters. (A-Z)
+function is_upper(s) =
+    assert(is_string(s))
+    s==""? false :
+    len(s)>1? all([for (v=s) is_upper(v)]) :
+    let(v = ord(s[0])) (v>=ord("A") && v<=ord("Z"));
 
 
-// _str_cmp(str,sindex,pattern)
-//    returns true if the string pattern matches the string
-//    starting at index position sindex in the string.
-//
-//    This is carefully optimized for speed.  Precomputing the length
-//    cuts run time in half when the string is long.  Two other string
-//    comparison methods were slower.  
-function _str_cmp(str,sindex,pattern) =
-    len(str)-sindex <len(pattern)? false :
-    _str_cmp_recurse(str,sindex,pattern,len(pattern));
-
-function _str_cmp_recurse(str,sindex,pattern,plen,pindex=0,) = 
-    pindex < plen && pattern[pindex]==str[sindex] ? _str_cmp_recurse(str,sindex+1,pattern,plen,pindex+1): (pindex==plen);
-
-
-// Function: str_find()
+// Function: is_digit()
 // Usage:
-//   str_find(str,pattern,[last],[all],[start])
+//   x = is_digit(s);
 // Description:
-//   Searches input string `str` for the string `pattern` and returns the index or indices of the matches in `str`.
-//   By default `str_find()` returns the index of the first match in `str`.  If `last` is true then it returns the index of the last match.
-//   If the pattern is the empty string the first match is at zero and the last match is the last character of the `str`.
-//   If `start` is set then the search begins at index start, working either forward and backward from that position.  If you set `start`
-//   and `last` is true then the search will find the pattern if it begins at index `start`.  If no match exists, returns `undef`.
-//   If you set `all` to true then `str_find()` returns all of the matches in a list, or an empty list if there are no matches.
-// Arguments:
-//   str = String to search.
-//   pattern = string pattern to search for
-//   last = set to true to return the last match. Default: false
-//   all = set to true to return all matches as a list.  Overrides last.  Default: false  
-//   start = index where the search starts
-// Example:
-//   str_find("abc123def123abc","123");   // Returns 3
-//   str_find("abc123def123abc","b");     // Returns 1
-//   str_find("abc123def123abc","1234");  // Returns undef
-//   str_find("abc","");                  // Returns 0
-//   str_find("abc123def123", "123", start=4);     // Returns 9
-//   str_find("abc123def123abc","123",last=true);  // Returns 9
-//   str_find("abc123def123abc","b",last=true);    // Returns 13
-//   str_find("abc123def123abc","1234",last=true); // Returns undef
-//   str_find("abc","",last=true);                 // Returns 3
-//   str_find("abc123def123", "123", start=8, last=true));  // Returns 3
-//   str_find("abc123def123abc","123",all=true);   // Returns [3,9]
-//   str_find("abc123def123abc","b",all=true);     // Returns [1,13]
-//   str_find("abc123def123abc","1234",all=true);  // Returns []
-//   str_find("abc","",all=true);                  // Returns [0,1,2]
-function str_find(str,pattern,start=undef,last=false,all=false) =
-    all? _str_find_all(str,pattern) :
-    let( start = first_defined([start,last?len(str)-len(pattern):0]) )
-    pattern==""? start :
-    last? _str_find_last(str,pattern,start) :
-    _str_find_first(str,pattern,len(str)-len(pattern),start);
-
-function _str_find_first(str,pattern,max_sindex,sindex) = 
-    sindex<=max_sindex && !_str_cmp(str,sindex, pattern)?
-        _str_find_first(str,pattern,max_sindex,sindex+1) :
-        (sindex <= max_sindex ? sindex : undef);
-
-function _str_find_last(str,pattern,sindex) = 
-    sindex>=0 && !_str_cmp(str,sindex, pattern)?
-        _str_find_last(str,pattern,sindex-1) :
-        (sindex >=0 ? sindex : undef);
-
-function _str_find_all(str,pattern) =
-    pattern == "" ? count(len(str)) :
-    [for(i=[0:1:len(str)-len(pattern)]) if (_str_cmp(str,i,pattern)) i];
+//   Returns true if all the characters in the given string are digits. (0-9)
+function is_digit(s) =
+    assert(is_string(s))
+    s==""? false :
+    len(s)>1? all([for (v=s) is_digit(v)]) :
+    let(v = ord(s[0])) (v>=ord("0") && v<=ord("9"));
 
 
-// Function: starts_with()
+// Function: is_hexdigit()
 // Usage:
-//    starts_with(str,pattern)
+//   x = is_hexdigit(s);
 // Description:
-//    Returns true if the input string `str` starts with the specified string pattern, `pattern`.
-//    Otherwise returns false.   
-// Arguments:
-//   str = String to search.
-//   pattern = String pattern to search for.
-// Example:
-//   starts_with("abcdef","abc");  // Returns true
-//   starts_with("abcdef","def");  // Returns false
-//   starts_with("abcdef","");     // Returns true
-function starts_with(str,pattern) = _str_cmp(str,0,pattern);
+//   Returns true if all the characters in the given string are valid hexadecimal digits. (0-9 or a-f or A-F))
+function is_hexdigit(s) =
+    assert(is_string(s))
+    s==""? false :
+    len(s)>1? all([for (v=s) is_hexdigit(v)]) :
+    let(v = ord(s[0]))
+    (v>=ord("0") && v<=ord("9")) ||
+    (v>=ord("A") && v<=ord("F")) ||
+    (v>=ord("a") && v<=ord("f"));
 
 
-// Function: ends_with()
+// Function: is_letter()
 // Usage:
-//    ends_with(str,pattern)
+//   x = is_letter(s);
 // Description:
-//    Returns true if the input string `str` ends with the specified string pattern, `pattern`.
-//    Otherwise returns false. 
-// Arguments:
-//   str = String to search.
-//   pattern = String pattern to search for.
-// Example:
-//   ends_with("abcdef","def");  // Returns true
-//   ends_with("abcdef","de");   // Returns false
-//   ends_with("abcdef","");     // Returns true
-function ends_with(str,pattern) = _str_cmp(str,len(str)-len(pattern),pattern);
+//   Returns true if all the characters in the given string are standard ASCII letters. (A-Z or a-z)
+function is_letter(s) =
+    assert(is_string(s))
+    s==""? false :
+    all([for (v=s) is_lower(v) || is_upper(v)]);
 
-
-function _str_count_leading(s,c,_i=0) =
-    (_i>=len(s)||!in_list(s[_i],[each c]))? _i :
-    _str_count_leading(s,c,_i=_i+1);
-
-function _str_count_trailing(s,c,_i=0) =
-    (_i>=len(s)||!in_list(s[len(s)-1-_i],[each c]))? _i :
-    _str_count_trailing(s,c,_i=_i+1);
-
-
-// Function: str_strip_leading()
-// Usage:
-//   str_strip_leading(s,c);
-// Description:
-//   Takes a string `s` and strips off all leading characters that exist in string `c`.
-// Arguments:
-//   s = The string to strip leading characters from.
-//   c = The string of characters to strip.
-// Example:
-//   str_strip_leading("--##--123--##--","#-");  // Returns: "123--##--"
-//   str_strip_leading("--##--123--##--","-");  // Returns: "##--123--##--"
-//   str_strip_leading("--##--123--##--","#");  // Returns: "--##--123--##--"
-function str_strip_leading(s,c) = substr(s,pos=_str_count_leading(s,c));
-
-
-// Function: str_strip_trailing()
-// Usage:
-//   str_strip_trailing(s,c);
-// Description:
-//   Takes a string `s` and strips off all trailing characters that exist in string `c`.
-// Arguments:
-//   s = The string to strip trailing characters from.
-//   c = The string of characters to strip.
-// Example:
-//   str_strip_trailing("--##--123--##--","#-");  // Returns: "--##--123"
-//   str_strip_trailing("--##--123--##--","-");  // Returns: "--##--123--##"
-//   str_strip_trailing("--##--123--##--","#");  // Returns: "--##--123--##--"
-function str_strip_trailing(s,c) = substr(s,len=len(s)-_str_count_trailing(s,c));
-
-
-// Function: str_strip()
-// Usage:
-//   str_strip(s,c);
-// Description:
-//   Takes a string `s` and strips off all leading or trailing characters that exist in string `c`.
-// Arguments:
-//   s = The string to strip leading or trailing characters from.
-//   c = The string of characters to strip.
-// Example:
-//   str_strip("--##--123--##--","#-");  // Returns: "123"
-//   str_strip("--##--123--##--","-");  // Returns: "##--123--##"
-//   str_strip("--##--123--##--","#");  // Returns: "--##--123--##--"
-function str_strip(s,c) = str_strip_trailing(str_strip_leading(s,c),c);
-
-
-
-// Function: str_pad()
-// Usage:
-//   padded = str_pad(str, length, char, [left]);
-// Description:
-//   Pad the given string `str` with to length `length` with the specified character,
-//   which must be a length 1 string.  If left is true then pad on the left, otherwise
-//   pad on the right.  If the string is longer than the specified length the full string
-//   is returned unchanged.  
-// Arguments:
-//   str = string to pad
-//   length = length to pad to
-//   char = character to pad with.  Default: " " (space)
-//   left = if true, pad on the left side.  Default: false
-function str_pad(str,length,char=" ",left=false) =
-  assert(is_str(str))
-  assert(is_str(char) && len(char)==1, "char must be a single character string")
-  assert(is_bool(left))
-  let(
-    padding = str_join(repeat(char,length-len(str)))
-  )
-  left ? str(padding,str) : str(str,padding);
-
-
-// Function: str_replace_char()
-// Usage:
-//   newstr = str_replace_char(str, char, replace)
-// Description:
-//   Replace every occurence of `char` in the input string with the string `replace` which
-//   can be any string.  
-function str_replace_char(str,char,replace) =
-   assert(is_str(str))
-   assert(is_str(char) && len(char)==1, "Search pattern 'char' must be a single character string")
-   assert(is_str(replace))
-   str_join([for(c=str) c==char ? replace : c]);
 
 
 

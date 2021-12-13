@@ -1260,55 +1260,55 @@ function _smooth(data,len,closed=false,angle=false) =
 //   long = resample the "long way" around the rotation, a boolean or list of booleans.  Default: false
 //   turns = add extra turns.  If a scalar adds the turns to every rotation, or give a vector.  Default: 0
 //   closed = if true then the rotation list is treated as closed.  Default: false
-// Example: Resampling the arc from a compound rotation with translations thrown in.  
+// Example(3D): Resampling the arc from a compound rotation with translations thrown in.  
 //   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], N=25);
 //   sweep(circle(r=1,$fn=3), tran);
-// Example: Applying a scale factor
+// Example(3D): Applying a scale factor
 //   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], N=25, scale=2);
 //   sweep(circle(r=1,$fn=3), tran);
-// Example: Applying twist
+// Example(3D): Applying twist
 //   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], N=25, twist=60);
 //   sweep(circle(r=1,$fn=3), tran);
-// Example: Going the long way
+// Example(3D): Going the long way
 //   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], N=25, long=true);
 //   sweep(circle(r=1,$fn=3), tran);
-// Example: Getting transformations from turtle3d
+// Example(3D): Getting transformations from turtle3d
 //   include<BOSL2/turtle3d.scad>
 //   tran=turtle3d(["arcsteps",1,"up", 10, "arczrot", 10,170],transforms=true);
 //   sweep(circle(r=1,$fn=3),rot_resample(tran, N=40));
-// Example: If you specify a larger angle in turtle you need to use the long argument
+// Example(3D): If you specify a larger angle in turtle you need to use the long argument
 //   include<BOSL2/turtle3d.scad>
 //   tran=turtle3d(["arcsteps",1,"up", 10, "arczrot", 10,270],transforms=true);
 //   sweep(circle(r=1,$fn=3),rot_resample(tran, N=40,long=true));
-// Example: And if the angle is over 360 you need to add turns to get the right result.  Note long is false when the remaining angle after subtracting full turns is below 180:
+// Example(3D): And if the angle is over 360 you need to add turns to get the right result.  Note long is false when the remaining angle after subtracting full turns is below 180:
 //   include<BOSL2/turtle3d.scad>
 //   tran=turtle3d(["arcsteps",1,"up", 10, "arczrot", 10,90+360],transforms=true);
 //   sweep(circle(r=1,$fn=3),rot_resample(tran, N=40,long=false,turns=1));
-// Example: Here the remaining angle is 270, so long must be set to true
+// Example(3D): Here the remaining angle is 270, so long must be set to true
 //   include<BOSL2/turtle3d.scad>
 //   tran=turtle3d(["arcsteps",1,"up", 10, "arczrot", 10,270+360],transforms=true);
 //   sweep(circle(r=1,$fn=3),rot_resample(tran, N=40,long=true,turns=1));
-// Example: Note the visible line at the scale transition
+// Example(3D): Note the visible line at the scale transition
 //   include<BOSL2/turtle3d.scad>
 //   tran = turtle3d(["arcsteps",1,"arcup", 10, 90, "arcdown", 10, 90], transforms=true);
 //   rtran = rot_resample(tran,200,scale=[1,6]);
 //   sweep(circle(1,$fn=32),rtran);
-// Example: Observe how using a large smoothlen value eases that transition
+// Example(3D): Observe how using a large smoothlen value eases that transition
 //   include<BOSL2/turtle3d.scad>
 //   tran = turtle3d(["arcsteps",1,"arcup", 10, 90, "arcdown", 10, 90], transforms=true);
 //   rtran = rot_resample(tran,200,scale=[1,6],smoothlen=17);
 //   sweep(circle(1,$fn=32),rtran);
-// Example: A similar issues can arise with twist, where a "line" is visible at the transition
+// Example(3D): A similar issues can arise with twist, where a "line" is visible at the transition
 //   include<BOSL2/turtle3d.scad>
 //   tran = turtle3d(["arcsteps", 1, "arcup", 10, 90, "move", 10], transforms=true,state=[1,-.5,0]);
 //   rtran = rot_resample(tran,100,twist=[0,60],smoothlen=1);
 //   sweep(subdivide_path(rect([3,3]),40),rtran);
-// Example: Here's the smoothed twist transition
+// Example(3D): Here's the smoothed twist transition
 //   include<BOSL2/turtle3d.scad>
 //   tran = turtle3d(["arcsteps", 1, "arcup", 10, 90, "move", 10], transforms=true,state=[1,-.5,0]);
 //   rtran = rot_resample(tran,100,twist=[0,60],smoothlen=17);
 //   sweep(subdivide_path(rect([3,3]),40),rtran);
-// Example: toothed belt based on list-comprehension-demos example.  This version has a smoothed twist transition.  Try changing smoothlen to 1 to see the more abrupt transition that occurs without smoothing.  
+// Example(3D): toothed belt based on list-comprehension-demos example.  This version has a smoothed twist transition.  Try changing smoothlen to 1 to see the more abrupt transition that occurs without smoothing.  
 //   include<BOSL2/turtle3d.scad>
 //   r_small = 19;       // radius of small curve
 //   r_large = 46;       // radius of large curve

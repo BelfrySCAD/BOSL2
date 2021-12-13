@@ -353,7 +353,7 @@ function max_index(vals, all=false) =
 // Description:
 //   Finds the first item in `list` that matches `val`, returning the index.  Returns `undef` if there is no match.
 // Arguments:
-//   val = The value to search for.  If given a function literal of signature `function (x)`, uses that function to check list items.  Returns true for a match.
+//   val = The value to search for.  
 //   list = The list to search through.
 //   ---
 //   start = The index to start searching from.  Default: 0
@@ -513,9 +513,6 @@ function unique_count(list) =
             ind = [0, for(i=[1:1:len(list)-1]) if (list[i]!=list[i-1]) i] 
         )
         [ select(list,ind), deltas( concat(ind,[len(list)]) ) ];
-
-
-
 
 
 
@@ -781,7 +778,7 @@ function group_sort(list, idx) =
 // Function: group_data()
 // Usage:
 //   groupings = group_data(groups, values);
-// Topics: Array Handling
+// Topics: List Handling
 // Description:
 //   Given a list of integer group numbers, and an equal-length list of values,
 //   returns a list of groups with the values sorted into the corresponding groups.

@@ -34,9 +34,9 @@ use <builtins.scad>
 //   size = The size of the cube.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=FRONT+LEFT+BOTTOM`.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example: Simple cube.
 //   cube(40);
 // Example: Rectangular cube.
@@ -104,20 +104,20 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   Negative chamfers and roundings can be applied to create external fillets, but they 
 //   but only apply to edges around the top or bottom faces.  If you specify an edge set other than "ALL"
 //   with such roundings or chamfers then you will get an error.  See
-//   [Specifying Edges](edges.scad#section-specifying-edges) for information on how to specify edge sets.  
+//   [Specifying Edges](attachments.scad#section-specifying-edges) for information on how to specify edge sets.  
 // Arguments:
 //   size = The size of the cube, a number or length 3 vector.  
 //   ---
 //   chamfer = Size of chamfer, inset from sides.  Default: No chamfering.
 //   rounding = Radius of the edge rounding.  Default: No rounding.
-//   edges = Edges to mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: all edges.
-//   except = Edges to explicitly NOT mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: No edges.
+//   edges = Edges to mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: all edges.
+//   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: No edges.
 //   trimcorners = If true, rounds or chamfers corners where three chamfered/rounded edges meet.  Default: `true`
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=FRONT+LEFT+BOTTOM`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example: Simple regular cube.
 //   cuboid(40);
 // Example: Cube with minimum cornerpoint given.
@@ -481,9 +481,9 @@ function cuboid(
 //   chamfer = The chamfer size for the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
 //   chamfer1 = The chamfer size for the bottom of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
 //   chamfer2 = The chamfer size for the top of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // See Also: rounded_prism()
 //
@@ -663,9 +663,9 @@ function prismoid(
 // Arguments:
 //   size = Width of the octahedron, tip to tip.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   octahedron(size=40);
 // Example: Anchors
@@ -741,9 +741,9 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   ichamfer = The chamfer size for the inside edges of the rectangular tube.  Default: Same as `chamfer`
 //   ichamfer1 = The chamfer size for the inside bottom corner of the rectangular tube.
 //   ichamfer2 = The chamfer size for the inside top corner of the rectangular tube.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `BOTTOM`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   rect_tube(size=50, wall=5, h=30);
 //   rect_tube(size=[100,60], wall=5, h=30);
@@ -898,9 +898,9 @@ function rect_tube(
 //   size = [width, thickness, height]
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `FRONT+LEFT+BOTTOM`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `FRONT+LEFT+BOTTOM`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Example: Centered
 //   wedge([20, 40, 15], center=true);
@@ -967,9 +967,9 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 //   d2 = The top diameter of the cylinder.  (Before orientation.)
 //   r = The radius of the cylinder.
 //   d = The diameter of the cylinder.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example: By Radius
 //   xdistribute(30) {
 //       cylinder(h=40, r=10);
@@ -1072,9 +1072,9 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   rounding1 = The radius of the rounding on the bottom end of the cylinder.
 //   rounding2 = The radius of the rounding on the top end of the cylinder.
 //   realign = If true, rotate the cylinder by half the angle of one face.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Example: By Radius
 //   xdistribute(30) {
@@ -1248,7 +1248,7 @@ module cyl(
 //   d = Optional diameter of cylinder. (use instead of `r`)
 //   d1 = Optional diameter of left (X-) end of cylinder.
 //   d2 = Optional diameter of right (X+) end of cylinder.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //
 // Example: By Radius
 //   ydistribute(50) {
@@ -1295,7 +1295,7 @@ module xcyl(h, r, d, r1, r2, d1, d2, l, anchor=CENTER)
 //   d = Diameter of cylinder.
 //   d1 = Diameter of front (Y-) end of one.
 //   d2 = Diameter of back (Y+) end of one.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //
 // Example: By Radius
 //   xdistribute(50) {
@@ -1342,7 +1342,7 @@ module ycyl(h, r, d, r1, r2, d1, d2, l, anchor=CENTER)
 //   d = Diameter of cylinder.
 //   d1 = Diameter of front (Y-) end of one.
 //   d2 = Diameter of back (Y+) end of one.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //
 // Example: By Radius
 //   xdistribute(50) {
@@ -1396,9 +1396,9 @@ module zcyl(h, r, d, r1, r2, d1, d2, l, anchor=CENTER)
 //   id1 = Inner diameter of bottom of tube.
 //   id2 = Inner diameter of top of tube.
 //   realign = If true, rotate the tube by half the angle of one face.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Example: These all Produce the Same Tube
 //   tube(h=30, or=40, wall=5);
@@ -1470,9 +1470,9 @@ module tube(
 //   d = diameter of pie slice.
 //   d1 = bottom diameter of pie slice.
 //   d2 = top diameter of pie slice.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Example: Cylindrical Pie Slice
 //   pie_slice(ang=45, l=20, r=30);
@@ -1525,9 +1525,9 @@ module pie_slice(
 //   d = Diameter of the sphere.
 //   circum = If true, the sphere is made large enough to circumscribe the sphere of the ideal side.  Otherwise inscribes.  Default: false (inscribes)
 //   style = The style of the sphere's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "orig"
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example: By Radius
 //   sphere(r=50);
 // Example: By Diameter
@@ -1598,9 +1598,9 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 //   ---
 //   d = Diameter of the spheroid.
 //   circum = If true, the spheroid is made large enough to circumscribe the sphere of the ideal side.  Otherwise inscribes.  Default: false (inscribes)
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example: By Radius
 //   spheroid(r=50);
 // Example: By Diameter
@@ -1846,8 +1846,8 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 //   ir = inside radius of the torus. (use with 'or', or 'od')
 //   od = outer diameter of the torus. (use with 'ir' or 'id')
 //   id = inside diameter of the torus. (use with 'or' or 'od')
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Example:
 //   // These all produce the same torus.
@@ -1917,9 +1917,9 @@ module torus(
 //   d2 = Diameter of circular portion of the back end of the teardrop shape.
 //   cap_h1 = If given, height above center where the shape will be truncated, on the front side. Default: `undef` (no truncation)
 //   cap_h2 = If given, height above center where the shape will be truncated, on the back side. Default: `undef` (no truncation)
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Extra Anchors:
 //   cap = The center of the top of the cap, oriented with the cap face normal.
@@ -2002,9 +2002,9 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, ancho
 //   cap_h = If given, height above sphere center to truncate teardrop shape.  Default: `undef` (no truncation)
 //   ---
 //   d = diameter of spherical portion of bottom.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Example: Typical Shape
 //   onion(r=30, ang=30);
@@ -2049,9 +2049,9 @@ module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
 //   size = The font size used to create the text block.  Default: 10
 //   font = The name of the font used to create the text block.  Default: "Courier"
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"baseline"`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // See Also: attachable()
 // Extra Anchors:
 //   "baseline" = Anchors at the baseline of the text, at the start of the string.
@@ -2083,7 +2083,7 @@ module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orien
     anch = !any([for (c=anchor) c=="["])? anchor :
         let(
             parts = str_split(str_split(str_split(anchor,"]")[0],"[")[1],","),
-            vec = [for (p=parts) str_float(str_strip_leading(p," "))]
+            vec = [for (p=parts) str_float(str_strip(p," ",start=true))]
         ) vec;
     ha = anchor=="baseline"? "left" :
         anchor==anch && is_string(anchor)? "center" :
@@ -2326,9 +2326,9 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 //   overlap = Overlap size for unioning with faces.
 //   ---
 //   d = Diameter of fillet.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `FRONT+LEFT`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `FRONT+LEFT`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Example:
 //   union() {
@@ -2393,9 +2393,9 @@ module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=FRONT+LEFT, spi
 //   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".  Default: "default"
 //   ---
 //   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   heightfield(size=[100,100], bottom=-20, data=[
 //       for (y=[-180:4:180]) [
@@ -2518,9 +2518,9 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 //   alpha = transparency value.  Default: 1.0
 //   unit = unit to mark.  Scales the ruler marks to a different length.  Default: 1
 //   inch = set to true for a ruler scaled to inches (assuming base dimension is mm).  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `LEFT+BACK+TOP`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `LEFT+BACK+TOP`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples(2D,Big):
 //   ruler(100,depth=3);
 //   ruler(100,depth=3,labels=true);

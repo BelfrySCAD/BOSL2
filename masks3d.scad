@@ -24,9 +24,9 @@
 //   l = Length of mask.
 //   chamfer = Size of chamfer.
 //   excess = The extra amount to add to the length of the mask so that it differences away from other shapes cleanly.  Default: `0.1`
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   chamfer_edge_mask(l=50, chamfer=10);
 // Example:
@@ -58,9 +58,9 @@ module chamfer_edge_mask(l=1, chamfer=1, excess=0.1, anchor=CENTER, spin=0, orie
 // Arguments:
 //   chamfer = Size of chamfer.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   chamfer_corner_mask(chamfer=10);
 // Example:
@@ -96,9 +96,9 @@ module chamfer_corner_mask(chamfer=1, anchor=CENTER, spin=0, orient=UP) {
 //   chamfer = Size of the edge chamfered, inset from edge. (Default: 0.25)
 //   ang = Angle of chamfer in degrees from vertical.  (Default: 45)
 //   from_end = If true, chamfer size is measured from end of cylinder.  If false, chamfer is measured outset from the radius of the cylinder.  (Default: false)
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   difference() {
 //       cylinder(r=50, h=100, center=true);
@@ -144,9 +144,9 @@ module chamfer_cylinder_mask(r, d, chamfer=0.25, ang=45, from_end=false, anchor=
 //   d1 = Bottom diameter of rounding.
 //   d2 = Top diameter of rounding.
 //   excess = Extra size for the mask.  Defaults: 0.1
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example(VPD=200,VPR=[55,0,120]):
 //   rounding_edge_mask(l=50, r1=10, r2=25);
 // Example:
@@ -214,9 +214,9 @@ module rounding_edge_mask(l, r, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, sp
 //   ---
 //   excess = Extra size for the mask.  Defaults: 0.1
 //   style = The style of the sphere cutout's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "octa"
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   rounding_corner_mask(r=20.0);
 // Example:
@@ -267,9 +267,9 @@ module rounding_corner_mask(r, d, style="octa", excess=0.1, anchor=CENTER, spin=
 //   d1 = Bottom diameter of rounding.
 //   d2 = Top diameter of rounding.
 //   ang = Angle that the planes meet at.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   difference() {
 //       pie_slice(ang=70, h=50, d=100, center=true);
@@ -325,9 +325,9 @@ module rounding_angled_edge_mask(h=1.0, r, r1, r2, d, d1, d2, ang=90, anchor=CEN
 //   r = Radius of the rounding.
 //   d = Diameter of the rounding.
 //   ang = Angle between planes that you need to round the corner of.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example(Med):
 //   ang=60;
 //   difference() {
@@ -412,9 +412,9 @@ module rounding_cylinder_mask(r, rounding=0.25, d)
 //   d = Diameter of hole to rounding.
 //   rounding = Radius of the rounding. (Default: 0.25)
 //   excess = The extra thickness of the mask.  Default: `0.1`.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   rounding_hole_mask(r=40, rounding=20, $fa=2, $fs=2);
 // Example(Med):
@@ -456,9 +456,9 @@ module rounding_hole_mask(r, rounding=0.25, excess=0.1, d, anchor=CENTER, spin=0
 //   d = Diameter of the mask rounding.
 //   angle = Maximum angle from vertical. Default: 45
 //   excess = Excess mask size.  Default: 0.1
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example(VPD=50,VPR=[55,0,120]):
 //   teardrop_edge_mask(l=20, r=10, angle=40);
 // Example(VPD=300,VPR=[75,0,25]):
@@ -492,9 +492,9 @@ module teardrop_edge_mask(l, r, angle, excess=0.1, d, anchor=CENTER, spin=0, ori
 //   d = Diameter of the mask rounding.
 //   angle = Maximum angle from vertical. Default: 45
 //   excess = Excess mask size.  Default: 0.1
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   teardrop_corner_mask(r=20, angle=40);
 // Example:

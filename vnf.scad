@@ -749,7 +749,10 @@ function _slice_3dpolygons(polys, dir, cuts) =
     )
     flatten([for (poly = polys)
         let(
-            plane = plane_from_polygon(poly),
+            plane = plane_from_polygon(poly)
+        )
+        assert(plane,"Found non-coplanar face.")
+        let(
             normal = point3d(plane),
             pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
         )
@@ -787,9 +790,9 @@ function _slice_3dpolygons(polys, dir, cuts) =
 //   convexity = Max number of times a line could intersect a wall of the shape.
 //   extent = If true, calculate anchors by extents, rather than intersection.  Default: true.
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   atype = Select "hull" or "intersect" anchor type.  Default: "hull"
 module vnf_polyhedron(vnf, convexity=2, extent=true, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") {
     vnf = is_vnf_list(vnf)? vnf_join(vnf) : vnf;
