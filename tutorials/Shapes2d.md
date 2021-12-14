@@ -28,13 +28,13 @@ You can use it in the same way you use `square()`, but it also provides
 extended functionality. For example, it allows you to round the corners:
 
 ```openscad-2D
-rect([60,40], center=true, rounding=10);
+rect([60,40], rounding=10);
 ```
 
 Or chamfer them:
 
 ```openscad-2D
-rect([60,40], center=true, chamfer=10);
+rect([60,40], chamfer=10);
 ```
 
 You can even specify *which* corners get rounded or chamfered.  If you pass a
@@ -52,18 +52,18 @@ translate([ 50, 50]) text3d("I");
 translate([-50, 50]) text3d("II");
 translate([-50,-50]) text3d("III");
 translate([ 50,-50]) text3d("IV");
-rect([90,80], center=true);
+rect([90,80]);
 ```
 
 If a size is given as `0`, then there is no rounding and/or chamfering for
 that quadrant's corner:
 
 ```openscad-2D
-rect([60,40], center=true, rounding=[0,5,10,15]);
+rect([60,40], rounding=[0,5,10,15]);
 ```
 
 ```openscad-2D
-rect([60,40], center=true, chamfer=[0,5,10,15]);
+rect([60,40], chamfer=[0,5,10,15]);
 ```
 
 You can give both `rounding=` and `chamfer=` arguments to mix rounding and
@@ -71,15 +71,14 @@ chamfering, but only if you specify per corner.  If you want a rounding in
 a corner, specify a 0 chamfer for that corner, and vice versa:
 
 ```openscad-2D
-rect([60,40], center=true, rounding=[5,0,10,0], chamfer=[0,5,0,15]);
+rect([60,40], rounding=[5,0,10,0], chamfer=[0,5,0,15]);
 ```
 
 #### Anchors and Spin
 Another way that `rect()` is enhanced over `square()`, is that you can anchor,
 spin and attach it.
 
-The `anchor=` argument is an alternative to `center=`, which allows more
-alignment options.  It takes a vector as a value, pointing roughly towards
+The `anchor=` argument takes a vector as a value, pointing roughly towards
 the side or corner you want to align to the origin.  For example, to align
 the center of the back edge to the origin, set the anchor to `[0,1]`:
 
@@ -145,7 +144,7 @@ rect([60,40], anchor=BACK, spin=30);
 Anchor points double as attachment points, so that you can attach other shapes:
 
 ```openscad-2D
-rect([60,40],center=true)
+rect([60,40])
     show_anchors();
 ```
 
