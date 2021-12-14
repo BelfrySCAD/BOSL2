@@ -136,7 +136,7 @@ stroke(path, closed=true, endcap2="arrow2");
 ```
 
 ```openscad-2D
-path = rect([40,30], rounding=5, center=true);
+path = rect([40,30], rounding=5);
 stroke(path, closed=true, endcap2="arrow2");
 ```
 
@@ -151,7 +151,7 @@ stroke(path, closed=true, endcap2="arrow2");
 ```
 
 ```openscad-2D
-path = oval(d=[50,30]);
+path = ellipse(d=[50,30]);
 stroke(path, closed=true, endcap2="arrow2");
 ```
 

@@ -5,6 +5,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/rounding.scad>
+// FileGroup: Advanced Modeling
+// FileSummary: Round path corners, rounded prisms, rounded cutouts in tubes.
 //////////////////////////////////////////////////////////////////////
 include <beziers.scad>
 include <structs.scad>

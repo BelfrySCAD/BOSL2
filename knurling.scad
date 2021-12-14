@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/knurling.scad>
+// FileGroup: Parts
+// FileSummary: Masks and shapes to create knurling.
 //////////////////////////////////////////////////////////////////////
 
 

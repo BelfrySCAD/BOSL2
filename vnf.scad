@@ -6,6 +6,9 @@
 //   reversed faces.  
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Advanced Modeling
+// FileSummary: Vertices 'n' Faces structure.  Makes polyhedron() easier to use.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 
@@ -1067,8 +1070,8 @@ function _triangulate_planar_convex_polygons(polys) =
 //   bent2 = vnf_bend(vnf2, axis="Y");
 //   vnf_polyhedron([bent1,bent2]);
 // Example(3D):
-//   rgn = union(rect([100,20],center=true),
-//               rect([20,100],center=true));
+//   rgn = union(rect([100,20]),
+//               rect([20,100]));
 //   vnf0 = linear_sweep(zrot(45,p=rgn), height=10);
 //   vnf1 = up(50, p=vnf0);
 //   vnf2 = down(50, p=vnf0);
@@ -1077,7 +1080,7 @@ function _triangulate_planar_convex_polygons(polys) =
 //   vnf_polyhedron([bent1,bent2]);
 // Example(3D): Bending Around X Axis.
 //   rgnr = union(
-//       rect([20,100],center=true),
+//       rect([20,100]),
 //       back(50, p=trapezoid(w1=40, w2=0, h=20, anchor=FRONT))
 //   );
 //   vnf0 = xrot(00,p=linear_sweep(rgnr, height=10));
@@ -1087,7 +1090,7 @@ function _triangulate_planar_convex_polygons(polys) =
 //   vnf_polyhedron([bent1]);
 // Example(3D): Bending Around Y Axis.
 //   rgn = union(
-//       rect([20,100],center=true),
+//       rect([20,100]),
 //       back(50, p=trapezoid(w1=40, w2=0, h=20, anchor=FRONT))
 //   );
 //   rgnr = zrot(-90, p=rgn);
@@ -1098,7 +1101,7 @@ function _triangulate_planar_convex_polygons(polys) =
 //   vnf_polyhedron([bent1]);
 // Example(3D): Bending Around Z Axis.
 //   rgn = union(
-//       rect([20,100],center=true),
+//       rect([20,100]),
 //       back(50, p=trapezoid(w1=40, w2=0, h=20, anchor=FRONT))
 //   );
 //   rgnr = zrot(90, p=rgn);

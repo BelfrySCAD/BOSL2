@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/threading.scad>
+// FileGroup: Threaded Parts
+// FileSummary: Various types of threaded rods and nuts.
 //////////////////////////////////////////////////////////////////////
 
 

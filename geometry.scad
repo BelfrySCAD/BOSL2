@@ -6,6 +6,9 @@
 //   a single endpoint or as segments, bounded by endpoints at both ends.  
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Math
+// FileSummary: Line and plane intersections, circles from 3 points, etc.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

@@ -5,6 +5,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/turtle3d.scad>
+// FileGroup: Advanced Modeling
+// FileSummary: 3D turtle graphics for making paths or lists of transformations.
 //////////////////////////////////////////////////////////////////////
 include<structs.scad>
 

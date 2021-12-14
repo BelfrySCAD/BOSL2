@@ -3,6 +3,9 @@
 //   Functions and modules to mutate children in various ways.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Basic Modeling
+// FileSummary: Modules and Functions to mutate items.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 
@@ -637,7 +640,7 @@ module cylindrical_extrude(or, ir, od, id, size=1000, convexity=10, spin=0, orie
                             yflip()
                             intersection() {
                                 left(x) children();
-                                rect([quantup(step,pow(2,-15)),size.y],center=true);
+                                rect([quantup(step,pow(2,-15)),size.y]);
                             }
                         }
                     }

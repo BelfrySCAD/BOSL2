@@ -3,6 +3,9 @@
 //   Coordinate transformations and coordinate system conversions.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Math
+// FileSummary: Conversions between coordinate systems.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

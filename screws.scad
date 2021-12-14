@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/screws.scad>
+// FileGroup: Threaded Parts
+// FileSummary: ISO (metric) and UTS screws and nuts.
 //////////////////////////////////////////////////////////////////////
 
 include <structs.scad>
@@ -783,7 +785,7 @@ module screw_head(screw_info,details=false) {
            intersection(){
              arc(points=[[-head_size2/2,0], [0,-base+head_height * (head=="button"?4/3:1)], [head_size2/2,0]]);
              square([head_size2, head_height-base]);
-             }
+           }
    }
    if (head=="pan flat")
      cyl(l=head_height, d=head_size, rounding2=0.2*head_size, anchor=BOTTOM);
@@ -1238,7 +1240,6 @@ module _rod(spec, length, tolerance, orient=UP, spin=0, anchor=CENTER)
 {
       threadspec = thread_specification(spec, internal=false, tolerance=tolerance);
       echo(d_major_mean = mean(struct_val(threadspec, "d_major")));
-      echo(bolt_profile=_thread_profile(threadspec));
 
       threaded_rod([mean(struct_val(threadspec, "d_minor")),
                     mean(struct_val(threadspec, "d_pitch")),

@@ -3,6 +3,9 @@
 //   Functions for comparisons with lists, ordering and sorting
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Data Management
+// FileSummary: Comparisons and sorting.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

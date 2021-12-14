@@ -7,6 +7,9 @@
 //   so you can place it on a curved object.  
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Basic Modeling
+// FileSummary: Attachable cubes, cylinders, spheres, ruler, and text.  Many can produce a VNF.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 use <builtins.scad>

@@ -3,6 +3,9 @@
 //   Vector math functions.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Math
+// FileSummary: Vector math functions.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 
@@ -63,6 +66,8 @@ function add_scalar(v,s) =
 
 
 // Function: v_mul()
+// Usage:
+//   v3 = v_mul(v1, v2);
 // Description:
 //   Element-wise multiplication.  Multiplies each element of `v1` by the corresponding element of `v2`.
 //   Both `v1` and `v2` must be the same length.  Returns a vector of the products.
@@ -77,6 +82,8 @@ function v_mul(v1, v2) =
     
 
 // Function: v_div()
+// Usage:
+//   v3 = v_div(v1, v2);
 // Description:
 //   Element-wise vector division.  Divides each element of vector `v1` by
 //   the corresponding element of vector `v2`.  Returns a vector of the quotients.
@@ -91,6 +98,8 @@ function v_div(v1, v2) =
 
 
 // Function: v_abs()
+// Usage:
+//   v2 = v_abs(v);
 // Description: Returns a vector of the absolute value of each element of vector `v`.
 // Arguments:
 //   v = The vector to get the absolute values of.
@@ -102,6 +111,8 @@ function v_abs(v) =
 
 
 // Function: v_floor()
+// Usage:
+//   v2 = v_floor(v);
 // Description:
 //   Returns the given vector after performing a `floor()` on all items.
 function v_floor(v) =
@@ -110,6 +121,8 @@ function v_floor(v) =
 
 
 // Function: v_ceil()
+// Usage:
+//   v2 = v_ceil(v);
 // Description:
 //   Returns the given vector after performing a `ceil()` on all items.
 function v_ceil(v) =
@@ -118,6 +131,8 @@ function v_ceil(v) =
 
 
 // Function: v_lookup()
+// Usage:
+//   v2 = v_ceil(x, v);
 // Description:
 //   Works just like the built-in function [`lookup()`](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Mathematical_Functions#lookup), except that it can also interpolate between vector result values of the same length.
 // Arguments:
@@ -147,7 +162,7 @@ function v_lookup(x, v) =
 
 // Function: unit()
 // Usage:
-//   unit(v, [error]);
+//   v = unit(v, [error]);
 // Description:
 //   Returns the unit length normalized version of vector v.  If passed a zero-length vector,
 //   asserts an error unless `error` is given, in which case the value of `error` is returned.
@@ -180,10 +195,10 @@ function v_theta(v) =
 
 // Function: vector_angle()
 // Usage:
-//   vector_angle(v1,v2);
-//   vector_angle([v1,v2]);
-//   vector_angle(PT1,PT2,PT3);
-//   vector_angle([PT1,PT2,PT3]);
+//   ang = vector_angle(v1,v2);
+//   ang = vector_angle([v1,v2]);
+//   ang = vector_angle(PT1,PT2,PT3);
+//   ang = vector_angle([PT1,PT2,PT3]);
 // Description:
 //   If given a single list of two vectors, like `vector_angle([V1,V2])`, returns the angle between the two vectors V1 and V2.
 //   If given a single list of three points, like `vector_angle([A,B,C])`, returns the angle between the line segments AB and BC.
@@ -222,10 +237,10 @@ function vector_angle(v1,v2,v3) =
 
 // Function: vector_axis()
 // Usage:
-//   vector_axis(v1,v2);
-//   vector_axis([v1,v2]);
-//   vector_axis(PT1,PT2,PT3);
-//   vector_axis([PT1,PT2,PT3]);
+//   axis = vector_axis(v1,v2);
+//   axis = vector_axis([v1,v2]);
+//   axis = vector_axis(PT1,PT2,PT3);
+//   axis = vector_axis([PT1,PT2,PT3]);
 // Description:
 //   If given a single list of two vectors, like `vector_axis([V1,V2])`, returns the vector perpendicular the two vectors V1 and V2.
 //   If given a single list of three points, like `vector_axis([A,B,C])`, returns the vector perpendicular to the plane through a, B and C.
@@ -487,7 +502,7 @@ function _bt_tree(points, ind, leafsize=25) =
 
 // Function: vector_nearest()
 // Usage:
-//    indices = vector_nearest(query, k, target)
+//    indices = vector_nearest(query, k, target);
 // See Also: vector_search(), vector_search_tree()
 // Description:
 //    Search `target` for the `k` points closest to point `query`.
@@ -560,8 +575,8 @@ function _insert_sorted(list, k, new) =
 
 function _insert_many(list, k, newlist,i=0) =
   i==len(newlist) 
-  ?   list
-  :   assert(is_vector(newlist[i],2), "The tree is invalid.")
+    ? list
+    : assert(is_vector(newlist[i],2), "The tree is invalid.")
       _insert_many(_insert_sorted(list,k,newlist[i]),k,newlist,i+1);
 
 

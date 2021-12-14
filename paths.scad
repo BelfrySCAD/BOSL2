@@ -9,6 +9,9 @@
 //   path tangents and normals, resampling of paths, and cutting paths up into smaller paths.  
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Advanced Modeling
+// FileSummary: Work with arbitrary 2D or 3D paths.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 // Section: Utility Functions

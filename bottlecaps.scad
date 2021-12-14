@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/bottlecaps.scad>
+// FileGroup: Threaded Parts
+// FileSummary: Standard bottle caps and necks.
 //////////////////////////////////////////////////////////////////////
 
 

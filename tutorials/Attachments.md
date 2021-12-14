@@ -958,7 +958,7 @@ stellate_cube() show_anchors(50);
 ```openscad-3D
 $fn=32;
 R = difference(circle(10), right(2, circle(9)));
-linear_sweep(R,height=10,anchor_isect=true)
+linear_sweep(R,height=10,atype="hull")
     attach(RIGHT) anchor_arrow();
 ```
 

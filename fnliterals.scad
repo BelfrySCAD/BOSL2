@@ -4,7 +4,9 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/fnliterals.scad>
-// DefineHeader(Table:Positional|Definition||Named|Definition): FunctionLiteral Args
+// FileGroup: Data Management
+// FileSummary: Function Literal Algorithms, and factories for generating function literals for builtin functions.
+// DefineHeader(Table;Headers=Positional|Definition||Named|Definition): FunctionLiteral Args
 //////////////////////////////////////////////////////////////////////
 
 

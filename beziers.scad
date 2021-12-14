@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/beziers.scad>
+// FileGroup: Advanced Modeling
+// FileSummary: Support for bezier curves and surfaces.
 //////////////////////////////////////////////////////////////////////
 
 // Terminology:
@@ -987,8 +989,8 @@ module trace_bezier(bez, width=1, N=3) {
     color("red") move_copies(bez)
       if ($idx % N !=0)
           if (twodim){
-            rect([width/2, width*3],center=true);
-            rect([width*3, width/2],center=true);
+            rect([width/2, width*3]);
+            rect([width*3, width/2]);
           } else {
            zcyl(d=width/2, h=width*3);
            xcyl(d=width/2, h=width*3);

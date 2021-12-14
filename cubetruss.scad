@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/cubetruss.scad>
+// FileGroup: Parts
+// FileSummary: Modular open-framed trusses and joiners.
 //////////////////////////////////////////////////////////////////////////
 
 $cubetruss_size = 30;

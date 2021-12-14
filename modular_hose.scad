@@ -4,6 +4,8 @@
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/modular_hose.scad>
+// FileGroup: Parts
+// FileSummary: Modular flexible hose parts.
 //////////////////////////////////////////////////////////////////////////
 
 // Section: Modular Hose Parts

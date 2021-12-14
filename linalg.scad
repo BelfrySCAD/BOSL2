@@ -5,6 +5,9 @@
 //   matrix inverse.  
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Math
+// FileSummary: Linear Algebra: solve linear systems, construct and modify matrices.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 // Section: Matrices

@@ -6,6 +6,9 @@
 //   as geometry or as 2D paths.
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Basic Modeling
+// FileSummary: 2D masking shapes for edge profiling: including roundover, cove, teardrop, ogee.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 

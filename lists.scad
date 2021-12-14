@@ -3,6 +3,9 @@
 //   Functions for constructing and manipulating generic lists. 
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Data Management
+// FileSummary: Various list manipulation functions
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 // Terminology:
