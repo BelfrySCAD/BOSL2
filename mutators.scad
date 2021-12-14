@@ -640,7 +640,7 @@ module cylindrical_extrude(or, ir, od, id, size=1000, convexity=10, spin=0, orie
                             yflip()
                             intersection() {
                                 left(x) children();
-                                rect([quantup(step,pow(2,-15)),size.y],center=true);
+                                rect([quantup(step,pow(2,-15)),size.y]);
                             }
                         }
                     }

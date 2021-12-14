@@ -50,7 +50,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   all based on combinations of unit direction vectors.  You can use these for anchoring and orienting
 //   attachable objects.  You can also them to specify edge sets for rounding or chamfering cuboids,
 //   or for placing edge, face and corner masks.  
-// SubSection: Anchor
+// Subsection: Anchor
 //   Anchoring is specified with the `anchor` argument in most shape modules.  Specifying `anchor`
 //   when creating an object will translate the object so that the anchor point is at the origin
 //   (0,0,0).  Anchoring always occurs before spin and orientation are applied.
@@ -79,20 +79,20 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   motors have anchors for `"screw1"`, `"screw2"`, etc. to refer to the various screwholes on the
 //   stepper motor shape.  The names, positions, directions, and spins of these anchors are
 //   specific to the object, and are documented when they exist.
-// SubSection: Spin
+// Subsection: Spin
 //   Spin is specified with the `spin` argument in most shape modules.  Specifying a scalar `spin`
 //   when creating an object will rotate the object counter-clockwise around the Z axis by the given
 //   number of degrees.  If given as a 3D vector, the object will be rotated around each of the X, Y, Z
 //   axes by the number of degrees in each component of the vector.  Spin is always applied after
 //   anchoring, and before orientation.  Since spin is applied after anchoring it is not what
 //   you might think of intuitively as spinning the shape.  To do that, apply `zrot()` to the shape before anchoring.  
-// SubSection: Orient
+// Subsection: Orient
 //   Orientation is specified with the `orient` argument in most shape modules.  Specifying `orient`
 //   when creating an object will rotate the object such that the top of the object will be pointed
 //   at the vector direction given in the `orient` argument.  Orientation is always applied after
 //   anchoring and spin.  The constants `UP`, `DOWN`, `FRONT`, `BACK`, `LEFT`, and `RIGHT` can be
 //   added together to form the directional vector for this.  ie: `LEFT+BACK`
-// SubSection: Specifying Directions
+// Subsection: Specifying Directions
 //   You can use direction vectors to specify anchors for objects or to specify edges, faces, and
 //   corners of cubes.  You can simply specify these direction vectors numerically, but another
 //   option is to use named constants for direction vectors.  These constants define unit vectors
@@ -125,7 +125,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   up(.12)move(TOP)atext("TOP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   move(TOP)atext("UP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   }
-// SubSection: Specifying Faces
+// Subsection: Specifying Faces
 //   Modules operating on faces accept a list of faces to describe the faces to operate on.  Each
 //   face is given by a vector that points to that face.  Attachments of cuboid objects onto their faces also
 //   work by choosing an attachment face with a single vector in the same manner.  
@@ -142,7 +142,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //        _show_cube_faces([LEFT],toplabel=["LEFT"]);  
 //      }  
 //   }
-// SubSection: Specifying Edges
+// Subsection: Specifying Edges
 //   Modules operating on edges use two arguments to describe the edge set they will use: The `edges` argument
 //   is a list of edge set descriptors to include in the edge set, and the `except` argument is a list of
 //   edge set descriptors to remove from the edge set.
@@ -253,7 +253,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //    _show_edges(_edges([1,-1,1]),toplabel=["edges=[1,-1,1]"]);             
 //    _show_edges(_edges([TOP,BOT], TOP+RIGHT+FRONT),toplabel=["edges=[TOP,BOT]","except=TOP+RIGHT+FRONT"]); 
 //   }             
-// SubSection: Specifying Corners
+// Subsection: Specifying Corners
 //   Modules operating on corners use two arguments to describe the corner set they will use: The `corners` argument
 //   is a list of corner set descriptors to include in the corner set, and the `except` argument is a list of
 //   corner set descriptors to remove from the corner set.

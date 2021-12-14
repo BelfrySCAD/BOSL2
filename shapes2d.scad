@@ -112,7 +112,7 @@ module rect(size=1, rounding=0, chamfer=0, anchor=CENTER, spin=0) {
             children();
         }
     } else {
-        pts = rect(size=size, rounding=rounding, chamfer=chamfer, center=true);
+        pts = rect(size=size, rounding=rounding, chamfer=chamfer);
         attachable(anchor, spin, two_d=true, path=pts) {
             polygon(pts);
             children();
