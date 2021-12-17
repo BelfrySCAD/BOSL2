@@ -30,13 +30,12 @@ include <quaternions.scad>
 include <affine.scad>
 include <coords.scad>
 include <geometry.scad>
-include <hull.scad>
 include <regions.scad>
 include <strings.scad>
 include <skin.scad>
 include <vnf.scad>
 include <utility.scad>
-
+include <partitions.scad>
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
 
