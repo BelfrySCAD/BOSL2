@@ -429,7 +429,9 @@ module orient(dir, anchor, spin) {
         assert(is_vector(dir));
         spin = default(spin, 0);
         assert(is_finite(spin));
-        rot(spin, from=UP, to=dir) children();
+        two_d = _attach_geom_2d($parent_geom);
+        fromvec = two_d? BACK : UP;
+        rot(spin, from=fromvec, to=dir) children();
     } else {
         assert(dir==undef, "Only one of dir= or anchor= may be given to orient()");
         assert($parent_geom != undef, "No parent to orient from!");
