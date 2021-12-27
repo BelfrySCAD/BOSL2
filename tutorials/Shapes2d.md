@@ -4,27 +4,251 @@
 
 ## Primitives
 There are two built-in 2D primitive shapes that OpenSCAD provides: `square()`, and `circle()`.
-The BOSL2 library provides alternative to these shapes so that they support more features,
-and more ways to simply reorient them.
-
-
-### 2D Squares
-You can still use the built-in `square()` in the familiar ways that OpenSCAD provides:
-
-```openscad-2D
-square(100, center=false);
-```
-
-```openscad-2D
-square(100, center=true);
-```
+You can still use them in the familiar ways that OpenSCAD provides:
 
 ```openscad-2D
 square([60,40], center=true);
 ```
 
-The BOSL2 library provides an enhanced equivalent to `square()` called `rect()`.
-You can use it in the same way you use `square()`, but it also provides
+```openscad-2D
+circle(r=50);
+```
+
+```openscad-2D
+circle(d=100, $fn=8);
+```
+
+These modules have also been enhanced in the BOSL2 library in three ways: Anchoring, spin, and
+attachability.
+
+#### Anchoring:
+When you create a `square()`, you can specify what corner or side  will be anchored at the
+origin.  This is used in place of the `center=` argument, and is more flexible.  The `anchor=`
+argument takes a vector as a value, pointing roughly towards the side or corner you
+want to align to the origin.  For example, to align the center of the back edge to the
+origin, set the anchor to `[0,1]`:
+
+```openscad-2D
+square([60,40], anchor=[0,1]);
+```
+
+To align the front right corner to the origin:
+
+```openscad-2D
+square([60,40], anchor=[1,-1]);
+```
+
+To center:
+
+```openscad-2D
+square([60,40], anchor=[0,0]);
+```
+
+To make it clearer when giving vectors, there are several standard vector constants defined:
+
+Constant | Direction | Value
+-------- | --------- | -----------
+`LEFT`   | X-        | `[-1, 0, 0]`
+`RIGHT`  | X+        | `[ 1, 0, 0]`
+`FRONT`/`FORWARD`/`FWD` | Y- | `[ 0,-1, 0]`
+`BACK`   | Y+        | `[ 0, 1, 0]`
+`BOTTOM`/`BOT`/`BTM`/`DOWN` | Z- | `[ 0, 0,-1]` (3D only.)
+`TOP`/`UP` | Z+      | `[ 0, 0, 1]` (3D only.)
+`CENTER`/`CTR` | Centered | `[ 0, 0, 0]`
+
+Note that even though these are 3D vectors, you can use most of them,
+(except `UP`/`DOWN`, of course) for anchors in 2D shapes:
+
+```openscad-2D
+square([60,40], anchor=BACK);
+```
+
+```openscad-2D
+square([60,40], anchor=CENTER);
+```
+
+You can add vectors together to point to corners:
+
+```openscad-2D
+square([60,40], anchor=FRONT+RIGHT);
+```
+
+For `circle()`, the anchor vector can point at any part of the circle perimeter:
+
+```openscad-2D
+circle(d=50, anchor=polar_to_xy(1,150));
+```
+
+You can see the typical anchor points by making `show_anchors()` the child of the shape:
+
+```openscad-2D
+square([60,40], center=true)
+    show_anchors();
+```
+
+```openscad-2D
+circle(d=50)
+    show_anchors();
+```
+
+#### Spin:
+The second way that `square()` and `circle()` have been enhanced is with spin.  When you create
+the shape, you can spin it in place with the `spin=` argument.  You just pass it a number of
+degrees to rotate clockwise:
+
+```openscad-2D
+square([60,40], anchor=CENTER, spin=30);
+```
+
+Anchoring or centering is performed before the spin:
+
+```openscad-2D
+square([60,40], anchor=BACK, spin=30);
+```
+
+For circles, spin can be useful when `$fn=` is also given:
+
+```openscad-2D
+circle(d=50, $fn=6, spin=15);
+```
+
+Since anchoring is performed before spin, you can use them together to spin around the anchor:
+
+```openscad-2D
+circle(d=50, $fn=6, anchor=LEFT, spin=15);
+```
+
+
+#### Attachability:
+
+The third way `square()` and `circle()` have been enhanced is that you can attach them together
+at anchoring points in various ways.  This is done by making one shape a child of the shape
+you want to attach to.  By default, just making one shape a child of the other will position
+the child shape at the center of the parent shape.
+
+```openscad-2D
+square(50, center=true)
+    #square(50, spin=45, center=true);
+```
+
+```openscad-2D
+square(50, center=true)
+    #square([30,50], anchor=FWD);
+```
+
+By adding the `position()` module, you can position the child at any anchorpoint on the parent:
+
+```openscad-2D
+square(50, center=true)
+    position(BACK)
+        #square(25, spin=45, center=true);
+```
+
+```openscad-2D
+square(50, center=true)
+    position(FWD+RIGHT)
+        #square(25, spin=45, center=true);
+```
+
+```openscad-2D
+circle(d=50)
+    position(polar_to_xy(1,60))
+        #square(15, center=true);
+```
+
+
+Anchorpoints aren't just positions on the parent, though.  They also have an orientation.  In most
+cases, the orientation of an anchorpoint is outward away from the face of the wall, generally away
+from the center of the shape.  You can see this with the `show_anchors()` module:
+
+```openscad-2D
+square(50, center=true)
+    show_anchors();
+```
+
+```openscad-2D
+circle(d=50)
+    show_anchors();
+```
+
+If you want to orient the child to match the orientation of an anchorpoint, you can use the `orient()`
+module.  It does not position the child.  It only rotates it:
+
+```openscad-2D
+square(50, center=true)
+    orient(anchor=LEFT)
+        #square([10,50], anchor=FWD);
+```
+
+```openscad-2D
+square(50, center=true)
+    orient(anchor=FWD)
+        #square([10,50], anchor=FWD);
+```
+
+```openscad-2D
+square(50, center=true)
+    orient(anchor=RIGHT)
+        #square([10,50], anchor=FWD);
+```
+
+```openscad-2D
+circle(d=50)
+    orient(polar_to_xy(1,30))
+        #square([10,50], center=true);
+```
+
+You can use `position()` and `orient()` together to both position and orient to an anchorpoint:
+
+```openscad-2D
+square(50, center=true)
+    position(RIGHT+BACK)
+        orient(anchor=RIGHT+BACK)
+            #square([10,50], anchor=FWD);
+```
+
+```openscad-2D
+circle(d=50)
+    position(polar_to_xy(1,30))
+        orient(polar_to_xy(1,30))
+            #square([10,50], center=true);
+```
+
+But it's simpler to just use the `attach()` module to do both at once:
+
+```openscad-2D
+square(50, center=true)
+    attach(LEFT+BACK)
+        #square([10,50], anchor=FWD);
+```
+
+```openscad-2D
+circle(d=50)
+    attach(polar_to_xy(1,30))
+        #square([10,50], center=true);
+```
+
+Instead of specifying the `anchor=` in the child, you can pass a second argument to `attach()`
+that tells it which side of the child to attach to the parent:
+
+```openscad-2D
+square([10,50], center=true)
+    attach(BACK, LEFT)
+        #square([10,50], center=true);
+```
+
+```openscad-2D
+circle(d=50)
+    attach(polar_to_xy(1,30), LEFT)
+        #square([10,50], center=true);
+```
+
+
+
+#### `rect()`
+
+The BOSL2 library provides an alternative to `square()`, that support more features.  It is
+called `rect()`.  You can use it in the same way you use `square()`, but it also provides
 extended functionality. For example, it allows you to round the corners:
 
 ```openscad-2D
@@ -74,108 +298,22 @@ a corner, specify a 0 chamfer for that corner, and vice versa:
 rect([60,40], rounding=[5,0,10,0], chamfer=[0,5,0,15]);
 ```
 
-#### Anchors and Spin
-Another way that `rect()` is enhanced over `square()`, is that you can anchor,
-spin and attach it.
-
-The `anchor=` argument takes a vector as a value, pointing roughly towards
-the side or corner you want to align to the origin.  For example, to align
-the center of the back edge to the origin, set the anchor to `[0,1]`:
-
-```openscad-2D
-rect([60,40], anchor=[0,1]);
-```
-
-To align the front right corner to the origin:
-
-```openscad-2D
-rect([60,40], anchor=[1,-1]);
-```
-
-To center:
-
-```openscad-2D
-rect([60,40], anchor=[0,0]);
-```
-
-To make it clearer when giving vectors, there are several standard vector
-constants defined:
-
-Constant | Direction | Value
--------- | --------- | -----------
-`LEFT`   | X-        | `[-1, 0, 0]`
-`RIGHT`  | X+        | `[ 1, 0, 0]`
-`FRONT`/`FORWARD`/`FWD` | Y- | `[ 0,-1, 0]`
-`BACK`   | Y+        | `[ 0, 1, 0]`
-`BOTTOM`/`BOT`/`BTM`/`DOWN` | Z- | `[ 0, 0,-1]` (3D only.)
-`TOP`/`UP` | Z+      | `[ 0, 0, 1]` (3D only.)
-`CENTER`/`CTR` | Centered | `[ 0, 0, 0]`
-
-Note that even though these are 3D vectors, you can use most of them,
-(except `UP`/`DOWN`, of course) for anchors in 2D shapes:
-
-```openscad-2D
-rect([60,40], anchor=BACK);
-```
-
-```openscad-2D
-rect([60,40], anchor=CENTER);
-```
-
-You can add vectors together to point to corners:
-
-```openscad-2D
-rect([60,40], anchor=FRONT+RIGHT);
-```
-
-Finally, the `spin` argument can rotate the shape by a given number of degrees
-clockwise:
-
-```openscad-2D
-rect([60,40], anchor=CENTER, spin=30);
-```
-
-Anchoring or centering is performed before the spin:
-
-```openscad-2D
-rect([60,40], anchor=BACK, spin=30);
-```
-
-Anchor points double as attachment points, so that you can attach other shapes:
-
-```openscad-2D
-rect([60,40])
-    show_anchors();
-```
-
-### 2D Circles and Ovals
-The built-in `circle()` primitive can be used as expected:
-
-```openscad-2D
-circle(r=50);
-```
-
-```openscad-2D
-circle(d=100);
-```
-
-```openscad-2D
-circle(d=100, $fn=8);
-```
+### `ellipse()`
 
 The BOSL2 library also provides an enhanced equivalent of `circle()` called `ellipse()`.
 You can use it in the same way you use `circle()`, but it also provides extended
-functionality. For example, it allows more control over its size and orientation.
+functionality. For example, it allows more control over its size.
 
-Since a circle in OpenSCAD can only be approximated by a regular polygon with
-a number of straight sides, this can lead to size and shape inaccuracies.
-To counter this, the `realign=` and `circum=` arguments are also provided.
+Since a circle in OpenSCAD can only be approximated by a regular polygon with a number
+of straight sides, this can lead to size and shape inaccuracies.  To counter this, the
+`realign=` and `circum=` arguments are also provided.
 
 The `realign=` argument, if set `true`, rotates the `ellipse()` by half the angle
-between the sides:
+between the polygon sides:
 
 ```openscad-2D
-ellipse(d=100, $fn=8, realign=true);
+ellipse(d=100, $fn=8);
+#ellipse(d=100, $fn=8, realign=true);
 ```
 
 The `circum=` argument, if true, makes it so that the polygon forming the
@@ -184,19 +322,15 @@ The `circum=` argument, if true, makes it so that the polygon forming the
 Inscribing the ideal circle:
 
 ```openscad-2D
-difference() {
-    circle(d=100, $fn=360);
-    ellipse(d=100, $fn=8);
-}
+color("green") ellipse(d=100, $fn=360);
+ellipse(d=100, $fn=6);
 ```
 
 Circumscribing the ideal circle:
 
 ```openscad-2D
-difference() {
-    ellipse(d=100, $fn=8, circum=true);
-    circle(d=100, $fn=360);
-}
+ellipse(d=100, $fn=6, circum=true);
+color("green") ellipse(d=100, $fn=360);
 ```
 
 The `ellipse()` module, as its name suggests, can be given separate X and Y radii
@@ -211,22 +345,20 @@ ellipse(r=[30,20]);
 ellipse(d=[60,40]);
 ```
 
-Another way that `ellipse()` is enhanced over `circle()`, is that you can anchor,
-spin and attach it.
+Like `circle()`, you can anchor, spin and attach `ellipse()` shapes:
 
 ```openscad-2D
-ellipse(r=50, anchor=BACK);
+ellipse(d=50, anchor=BACK);
 ```
 
 ```openscad-2D
-ellipse(r=50, anchor=FRONT+RIGHT);
+ellipse(d=50, anchor=FRONT+RIGHT);
 ```
 
-Using spin on a circle may not make initial sense, until you remember that
-anchoring is performed before spin:
-
 ```openscad-2D
-ellipse(r=50, anchor=FRONT, spin=-30);
+ellipse(d=50)
+    attach(BACK+RIGHT, FRONT+LEFT)
+        ellipse(d=40);
 ```
 
 
@@ -278,7 +410,7 @@ trapezoid(w1=50, w2=30, shift=20, h=50);
 ```
 
 You can use `anchor=` and `spin=`, just like with other attachable shapes.  However, the anchor
-points are based on the side angles of the faces, and may not be where you expect them:
+point orientations are based on the side angles of the faces, and may not be what you expect:
 
 ```openscad-2D
 trapezoid(w1=30, w2=50, h=50)
@@ -327,7 +459,7 @@ pentagon(ir=25);
 pentagon(id=50);
 ```
 
-They can be realigned by half a side's angle:
+They can be rotated by half a side:
 
 ```openscad-2D
 left(30)  pentagon(d=50, realign=true);
