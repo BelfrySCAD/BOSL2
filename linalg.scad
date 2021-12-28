@@ -94,11 +94,11 @@ module echo_matrix(M,description,sig=4,eps=1e-9)
 // Topics: Matrices, List Handling
 // See Also: select(), slice()
 // Description:
-//   Extracts entry i from each list in M, or equivalently column i from the matrix M, and returns it as a vector.  
+//   Extracts entry `i` from each list in M, or equivalently column i from the matrix M, and returns it as a vector.  
 //   This function will return `undef` at all entry positions indexed by i not found in M.
 // Arguments:
 //   M = The given list of lists.
-//   idx = The index, list of indices, or range of indices to fetch.
+//   i = The index to fetch
 // Example:
 //   M = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
 //   a = column(M,2);      // Returns [3, 7, 11, 15]
@@ -112,7 +112,6 @@ function column(M, i) =
     assert( is_list(M), "The input is not a list." )
     assert( is_int(i) && i>=0, "Invalid index")
     [for(row=M) row[i]];
-
 
 
 // Function: submatrix()

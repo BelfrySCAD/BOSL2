@@ -988,8 +988,8 @@ function _turtle_command(command, parm, parm2, state, index) =
     command=="jump" ?  list_set(state, path, concat(state[path],[parm])):
     command=="xjump" ? list_set(state, path, concat(state[path],[[parm,lastpt.y]])):
     command=="yjump" ? list_set(state, path, concat(state[path],[[lastpt.x,parm]])):
-    command=="turn" || command=="left" ? list_set(state, step, rot(default(parm,state[angle]),p=state[step],planar=true)) :
-    command=="right" ? list_set(state, step, rot(-default(parm,state[angle]),p=state[step],planar=true)) :
+    command=="turn" || command=="left" ? list_set(state, step, rot(default(parm,state[angle]),p=state[step])) :
+    command=="right" ? list_set(state, step, rot(-default(parm,state[angle]),p=state[step])) :
     command=="angle" ? list_set(state, angle, parm) :
     command=="setdir" ? (
         is_vector(parm) ?
@@ -1020,7 +1020,7 @@ function _turtle_command(command, parm, parm2, state, index) =
         list_set(
             state, [path,step], [
                 concat(state[path], list_tail(arcpath)),
-                rot(lrsign * myangle,p=state[step],planar=true)
+                rot(lrsign * myangle,p=state[step])
             ]
         ) :
     command=="arcleftto" || command=="arcrightto" ?
@@ -1046,7 +1046,7 @@ function _turtle_command(command, parm, parm2, state, index) =
         list_set(
             state, [path,step], [
                 concat(state[path], list_tail(arcpath)),
-                rot(delta_angle,p=state[step],planar=true)
+                rot(delta_angle,p=state[step])
             ]
         ) :
     assert(false,str("Unknown turtle command \"",command,"\" at index",index))
