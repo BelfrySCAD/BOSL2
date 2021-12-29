@@ -1380,14 +1380,13 @@ function _apply(transform,points) =
     assert(datadim==2 || datadim==3,"Data must be 2D or 3D")
     let(
         scale = len(transform)==tdim ? 1 : transform[tdim][tdim],
-        matrix = [for(i=[0:1:tdim]) [for(j=[0:1:datadim-1]) transform[j][i]/scale]]
+        matrix = [for(i=[0:1:tdim]) [for(j=[0:1:datadim-1]) transform[j][i]]] / scale
     )
-    tdim==datadim
-      ? [for(p=points) concat(p,1)] * matrix
-      : tdim == 3 && datadim == 2 ? 
+    tdim==datadim ? [for(p=points) concat(p,1)] * matrix
+  : tdim == 3 && datadim == 2 ? 
             assert(is_2d_transform(transform), str("Transforms is 3D and acts on Z, but points are 2D"))
             [for(p=points) concat(p,[0,1])]*matrix
-      : assert(false, str("Unsupported combination: ",len(transform),"x",len(transform[0])," transform (dimension ",tdim,
+  : assert(false, str("Unsupported combination: ",len(transform),"x",len(transform[0])," transform (dimension ",tdim,
                           "), data of dimension ",datadim));
 
 
