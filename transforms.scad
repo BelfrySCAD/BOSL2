@@ -493,23 +493,21 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p=_NO_ARG, _m) =
                         v_theta(from)
                     ),
                 m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
-                m3 = reverse? matrix_inverse(m2) : m2
+                m3 = reverse? rot_inverse(m2) : m2
             ) m3 : let(
                 from = is_undef(from)? undef : point3d(from),
                 to = is_undef(to)? undef : point3d(to),
                 cp = is_undef(cp)? undef : point3d(cp),
-                m1 = !is_undef(from)? (
+                m1 = !is_undef(from) ?
                         assert(is_num(a))
-                        (from.z == 0 && to.z == 0
-                          ? affine3d_zrot(v_theta(point2d(to)) - v_theta(point2d(from)))
-                          : affine3d_rot_from_to(from,to)
-                        ) * affine3d_rot_by_axis(from,a)
-                    ) :
-                    !is_undef(v)? assert(is_num(a)) affine3d_rot_by_axis(v,a) :
-                    is_num(a)? affine3d_zrot(a) :
-                    affine3d_zrot(a.z) * affine3d_yrot(a.y) * affine3d_xrot(a.x),
+                        affine3d_rot_from_to(from,to) * affine3d_rot_by_axis(from,a)
+                   : !is_undef(v)?
+                        assert(is_num(a))
+                        affine3d_rot_by_axis(v,a)
+                   : is_num(a) ? affine3d_zrot(a)
+                   : affine3d_zrot(a.z) * affine3d_yrot(a.y) * affine3d_xrot(a.x),
                 m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
-                m3 = reverse? matrix_inverse(m2) : m2
+                m3 = reverse? rot_inverse(m2) : m2
             ) m3
     )
     p==_NO_ARG ? m : apply(m, p);
@@ -1381,7 +1379,8 @@ function _apply(transform,points) =
     assert(len(transform)==tdim || len(transform)-1==tdim, "transform matrix height not compatible with width")
     assert(datadim==2 || datadim==3,"Data must be 2D or 3D")
     let(
-        matrix = [for(i=[0:1:tdim]) [for(j=[0:1:datadim-1]) transform[j][i]]]
+        scale = len(transform)==tdim ? 1 : transform[tdim][tdim],
+        matrix = [for(i=[0:1:tdim]) [for(j=[0:1:datadim-1]) transform[j][i]/scale]]
     )
     tdim==datadim
       ? [for(p=points) concat(p,1)] * matrix

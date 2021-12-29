@@ -462,7 +462,7 @@ function matrix_inverse(A) =
 //   B = rot_inverse(A)
 // Description:
 //   Inverts a 2d (3x3) or 3d (4x4) rotation matrix.  The matrix can be a rotation around any center,
-//   so it may include a translation.  
+//   so it may include a translation.  This is faster and likely to be more accurate than using `matrix_inverse()`.  
 function rot_inverse(T) =
     assert(is_matrix(T,square=true),"Matrix must be square")
     let( n = len(T))
