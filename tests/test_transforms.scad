@@ -109,7 +109,7 @@ module test_scale() {
     cb = cube(1);
     vals = [[-1,-2,-3],[1,1,1],[3,6,2],[1,2,3],[243,75,147]];
     for (val=vals) {
-        assert_equal(scale(point2d(val)), [[val.x,0,0],[0,val.y,0],[0,0,1]]);
+        assert_equal(scale(point2d(val)), [[val.x,0,0,0],[0,val.y,0,0],[0,0,1,0],[0,0,0,1]]);
         assert_equal(scale(val), [[val.x,0,0,0],[0,val.y,0,0],[0,0,val.z,0],[0,0,0,1]]);
         assert_equal(scale(val, p=[1,2,3]), v_mul([1,2,3], val));
         scale(val) union(){};

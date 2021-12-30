@@ -344,12 +344,12 @@ module regular_polyhedron(
             $center = -mean(facepts);
             cfacepts = move($center, p=facepts);
             $face = rotate_children
-                      ? path2d(rot(from=face_normals[i], to=[0,0,1], p=cfacepts))
+                      ? path2d(frame_map(z=face_normals[i], x=facepts[0]-facepts[1], reverse=true, p=cfacepts))
                       : cfacepts;
             $faceindex = i;
             translate(-$center)
             if (rotate_children) {
-                rot(from=[0,0,1], to=face_normals[i])
+                frame_map(z=face_normals[i], x=facepts[0]-facepts[1])
                 children(i % $children);
             } else {
                 children(i % $children);

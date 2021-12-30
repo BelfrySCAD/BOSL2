@@ -404,6 +404,8 @@ function affine3d_rot_from_to(from, to) =
         from = unit(point3d(from)),
         to = unit(point3d(to))
     ) approx(from,to)? affine3d_identity() :
+    from.z==0 && to.z==0 ?  affine3d_zrot(v_theta(point2d(to)) - v_theta(point2d(from)))
+    :
     let(
         u = vector_axis(from,to),
         ang = vector_angle(from,to),

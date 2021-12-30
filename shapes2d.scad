@@ -459,10 +459,10 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
     let(
         inset = opp_ang_to_hyp(rounding, (180-360/n)/2),
         mat = !is_undef(_mat) ? _mat :
-            ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
-                !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip), planar=true) :
-                !is_undef(align_side)? rot(from=RIGHT, to=point2d(align_side), planar=true) * rot(180/n, planar=true) :
-                affine2d_identity()
+            ( realign? zrot(-180/n) : ident(4)) * (
+                !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip)) :
+                !is_undef(align_side)? rot(from=RIGHT, to=point2d(align_side)) * zrot(180/n) :
+                1
             ),
         path4 = rounding==0? ellipse(r=r, $fn=n) : (
             let(
@@ -504,10 +504,10 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
     side = is_finite(side)? side/2/sin(180/n) : undef;
     r = get_radius(r1=ir, r2=or, r=r, d1=id, d2=od, d=d, dflt=side);
     assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.");
-    mat = ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
-            !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip), planar=true) :
-            !is_undef(align_side)? rot(from=RIGHT, to=point2d(align_side), planar=true) * rot(180/n, planar=true) :
-            affine2d_identity()
+    mat = ( realign? zrot(-180/n) : ident(4) ) * (
+            !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip)) :
+            !is_undef(align_side)? rot(from=RIGHT, to=point2d(align_side)) * zrot(180/n) :
+            1
         );
     inset = opp_ang_to_hyp(rounding, (180-360/n)/2);
     anchors = [
@@ -930,10 +930,10 @@ function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit
                   : str("Parameter 'step' must be between 2 and ",floor(n/2-1/2)," for ",n," point stars"))
     let(
         mat = !is_undef(_mat) ? _mat :
-            ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
-                !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip), planar=true) :
-                !is_undef(align_pit)? rot(from=RIGHT, to=point2d(align_pit), planar=true) * rot(180/n, planar=true) :
-                affine2d_identity()
+            ( realign? zrot(-180/n) : ident(4) ) * (
+                !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip)) :
+                !is_undef(align_pit)? rot(from=RIGHT, to=point2d(align_pit)) * zrot(180/n) :
+                1
             ),
         stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n),
         ir = get_radius(r=ir, d=id, dflt=stepr),
@@ -967,10 +967,10 @@ module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, 
     r = get_radius(r1=or, d1=od, r=r, d=d, dflt=undef);
     stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n);
     ir = get_radius(r=ir, d=id, dflt=stepr);
-    mat = ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
-            !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip), planar=true) :
-            !is_undef(align_pit)? rot(from=RIGHT, to=point2d(align_pit), planar=true) * rot(180/n, planar=true) :
-            affine2d_identity()
+    mat = ( realign? zrot(-180/n) : ident(4) ) * (
+            !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip)) :
+            !is_undef(align_pit)? rot(from=RIGHT, to=point2d(align_pit)) * zrot(180/n) :
+            1
         );
     anchors = [
         for (i = [0:1:n-1]) let(
