@@ -20,14 +20,56 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+// Section: Affine Transformations
+//   OpenSCAD provides various built-in modules to transform geometry by
+//   translation, scaling, rotation, and mirroring.  All of these operations
+//   are affine transformations.  A three-dimensional affine transformation 
+//   can be represented by a 4x4 matrix.  The transformation shortcuts in this
+//   file generally have three modes of operation.  They can operate
+//   directly on geometry like their OpenSCAD built-in equivalents.  For example,
+//   `left(10) cube()`.  They can operate on a list of points (or various other
+//   types of geometric data).  For example, operating on a list of points: `points = left(10, [[1,2,3],[4,5,6]])`. 
+//   The third option is that the shortcut can return the transformation matrix
+//   corresponding to its action.  For example, `M=left(10)`.  
+//   .
+//   This capability allows you to store and manipulate transformations, and can
+//   be useful in more advanced modeling.  You can multiply these matrices
+//   together, analogously to applying a sequence of operations with the
+//   built-in transformations.  So you can write `zrot(37)left(5)cube()`
+//   to perform two operations on a cube.  You can also store
+//   that same transformation by multiplying the matrices together: `M = zrot(37) * left(5)`.  
+//   Note that the order is exactly the same as the order used to apply the transformation.
+//   .
+//   Suppose you have constructed `M` as above.  What now?  You can use
+//   the OpensCAD built-in `multmatrix` to apply it to some geometry:  `multmatrix(M) cube()`.
+//   Alternative you can use the BOSL2 function `apply` to apply `M` to a point, a list
+//   of points, a bezier patch, or a VNF.  For example, `points = apply(M, [[3,4,5],[5,6,7]])`.
+//   Note that the `apply` function can work on both 2D and 3D data, but if you want to
+//   operate on 2D data, you must choose transformations that don't modify z
+//   .
+//   You can use matrices as described above without understanding the details, just
+//   treating a matrix as a box that stores a transformation.  The OpenSCAD manual section for multmatrix
+//   gives some details of how this works.  We'll elaborate a bit more below.  An affine transformation
+//   matrix for three dimensional data is a 4x4 matrix.  The top left 3x3 portion gives the linear
+//   transformation to apply to the data.  For example, it could be a rotation or scaling, or combination of both.
+//   The 3x1 column at the top right gives the translation to apply.  The bottom row should be `[0,0,0,1]`.  That
+//   bottom row is only present to enable
+//   the matrices to be multiplied together.  OpenSCAD ignores it and in fact `multmatrix` will
+//   accept a 3x4 matrix, where that row is missing.  In order for a matrix to act on a point you have to
+//   augment the point with an extra 1, making it a length 4 vector.  In OpenSCAD you can then compute the
+//   the affine transformed point as `tran_point = M * point`.  However, this syntax hides a complication that
+//   arises if you have a list of points.  A list of points like `[[1,2,3,1],[4,5,6,1],[7,8,9,1]]` has the augmented points
+//   as row vectors on the list.  In order to transform such a list, it needs to be muliplied on the right
+//   side, not the left side.  
 
-//////////////////////////////////////////////////////////////////////
-// Section: Translations
-//////////////////////////////////////////////////////////////////////
 
 
 _NO_ARG = [true,[123232345],false];
 
+
+//////////////////////////////////////////////////////////////////////
+// Section: Translations
+//////////////////////////////////////////////////////////////////////
 
 // Function&Module: move()
 // Aliases: translate()
@@ -98,13 +140,14 @@ _NO_ARG = [true,[123232345],false];
 //   mat3d = move([2,3,4]);  // Returns: [[1,0,0,2],[0,1,0,3],[0,0,1,4],[0,0,0,1]]
 module move(v=[0,0,0], p, x=0, y=0, z=0) {
     assert(is_undef(p), "Module form `move()` does not accept p= argument.");
+    assert(is_vector(v) && (len(v)==3 || len(v)==2), "Invalid value for `v`")
     translate(point3d(v)+[x,y,z]) children();
 }
 
 function move(v=[0,0,0], p=_NO_ARG, x=0, y=0, z=0) =
+    assert(is_vector(v) && (len(v)==3 || len(v)==2), "Invalid value for `v`")
     let(
-        m = len(v)==2? affine2d_translate(v+[x,y]) :
-            affine3d_translate(point3d(v)+[x,y,z])
+        m = affine3d_translate(point3d(v)+[x,y,z])
     )
     p==_NO_ARG ? m : apply(m, p);
 
@@ -143,10 +186,12 @@ function translate(v=[0,0,0], p=_NO_ARG) = move(v=v, p=p);
 //   mat3d = left(4);  // Returns: [[1,0,0,-4],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
 module left(x=0, p) {
     assert(is_undef(p), "Module form `left()` does not accept p= argument.");
+    assert(is_finite(x), "Invalid number")
     translate([-x,0,0]) children();
 }
 
-function left(x=0, p=_NO_ARG) = move([-x,0,0],p=p);
+function left(x=0, p=_NO_ARG) = assert(is_finite(x), "Invalid number")
+                                move([-x,0,0],p=p);
 
 
 // Function&Module: right()
@@ -181,10 +226,12 @@ function left(x=0, p=_NO_ARG) = move([-x,0,0],p=p);
 //   mat3d = right(4);  // Returns: [[1,0,0,4],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
 module right(x=0, p) {
     assert(is_undef(p), "Module form `right()` does not accept p= argument.");
+    assert(is_finite(x), "Invalid number")
     translate([x,0,0]) children();
 }
 
-function right(x=0, p=_NO_ARG) = move([x,0,0],p=p);
+function right(x=0, p=_NO_ARG) = assert(is_finite(x), "Invalid number")
+                                 move([x,0,0],p=p);
 
 
 // Function&Module: fwd()
@@ -219,10 +266,12 @@ function right(x=0, p=_NO_ARG) = move([x,0,0],p=p);
 //   mat3d = fwd(4);  // Returns: [[1,0,0,0],[0,1,0,-4],[0,0,1,0],[0,0,0,1]]
 module fwd(y=0, p) {
     assert(is_undef(p), "Module form `fwd()` does not accept p= argument.");
+    assert(is_finite(y), "Invalid number")        
     translate([0,-y,0]) children();
 }
 
-function fwd(y=0, p=_NO_ARG) = move([0,-y,0],p=p);
+function fwd(y=0, p=_NO_ARG) = assert(is_finite(y), "Invalid number")
+                               move([0,-y,0],p=p);
 
 
 // Function&Module: back()
@@ -257,10 +306,12 @@ function fwd(y=0, p=_NO_ARG) = move([0,-y,0],p=p);
 //   mat3d = back(4);  // Returns: [[1,0,0,0],[0,1,0,4],[0,0,1,0],[0,0,0,1]]
 module back(y=0, p) {
     assert(is_undef(p), "Module form `back()` does not accept p= argument.");
+    assert(is_finite(y), "Invalid number")    
     translate([0,y,0]) children();
 }
 
-function back(y=0,p=_NO_ARG) = move([0,y,0],p=p);
+function back(y=0,p=_NO_ARG) = assert(is_finite(y), "Invalid number")
+                               move([0,y,0],p=p);
 
 
 // Function&Module: down()
@@ -331,10 +382,12 @@ function down(z=0, p=_NO_ARG) = move([0,0,-z],p=p);
 //   mat3d = up(4);  // Returns: [[1,0,0,0],[0,1,0,0],[0,0,1,4],[0,0,0,1]]
 module up(z=0, p) {
     assert(is_undef(p), "Module form `up()` does not accept p= argument.");
+    assert(is_finite(z), "Invalid number");
     translate([0,0,z]) children();
 }
 
-function up(z=0, p=_NO_ARG) = move([0,0,z],p=p);
+function up(z=0, p=_NO_ARG) = assert(is_finite(z), "Invalid number")
+                              move([0,0,z],p=p);
 
 
 
@@ -440,20 +493,21 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p=_NO_ARG, _m) =
                         v_theta(from)
                     ),
                 m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
-                m3 = reverse? matrix_inverse(m2) : m2
+                m3 = reverse? rot_inverse(m2) : m2
             ) m3 : let(
                 from = is_undef(from)? undef : point3d(from),
                 to = is_undef(to)? undef : point3d(to),
                 cp = is_undef(cp)? undef : point3d(cp),
-                m1 = !is_undef(from)? (
+                m1 = !is_undef(from) ?
                         assert(is_num(a))
                         affine3d_rot_from_to(from,to) * affine3d_rot_by_axis(from,a)
-                    ) :
-                    !is_undef(v)? assert(is_num(a)) affine3d_rot_by_axis(v,a) :
-                    is_num(a)? affine3d_zrot(a) :
-                    affine3d_zrot(a.z) * affine3d_yrot(a.y) * affine3d_xrot(a.x),
+                   : !is_undef(v)?
+                        assert(is_num(a))
+                        affine3d_rot_by_axis(v,a)
+                   : is_num(a) ? affine3d_zrot(a)
+                   : affine3d_zrot(a.z) * affine3d_yrot(a.y) * affine3d_xrot(a.x),
                 m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
-                m3 = reverse? matrix_inverse(m2) : m2
+                m3 = reverse? rot_inverse(m2) : m2
             ) m3
     )
     p==_NO_ARG ? m : apply(m, p);
@@ -645,19 +699,11 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
     assert(is_vector(cp))
     let(
         v = is_num(v)? [v,v,v] : v,
-        m = len(v)==2? (
-                cp==[0,0,0] || cp == [0,0] ? affine2d_scale(v) : (
-                    affine2d_translate(point2d(cp)) *
-                    affine2d_scale(v) *
-                    affine2d_translate(point2d(-cp))
-                )
-            ) : (
-                cp==[0,0,0] ? affine3d_scale(v) : (
-                    affine3d_translate(point3d(cp)) *
-                    affine3d_scale(v) *
-                    affine3d_translate(point3d(-cp))
-                )
-            )
+        m = cp==[0,0,0]
+          ? affine3d_scale(v)
+          : affine3d_translate(point3d(cp))
+            * affine3d_scale(v)
+            * affine3d_translate(point3d(-cp))
     )
     p==_NO_ARG? m : apply(m, p) ;
 
@@ -1278,15 +1324,17 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 //   pts = apply(transform, points);
 // Topics: Affine, Matrices, Transforms
 // Description:
-//   Applies the specified transformation matrix to a point, pointlist, bezier patch or VNF.
-//   Both inputs can be 2D or 3D, and it is also allowed to supply 3D transformations with 2D
-//   data as long as the the only action on the z coordinate is a simple scaling.
+//   Applies the specified transformation matrix `transform` to a point, point list, bezier patch or VNF.
+//   When `points` contains 2D or 3D points the transform matrix may be a 4x4 affine matrix or a 3x4 matrix--- 
+//   the 4x4 matrix with its final row removed.  When the data is 2D the matrix must not operate on the Z axis,
+//   except possibly by scaling it.  When points contains 2D data you can also supply the transform as
+//   a 3x3 affine transformation matrix or the corresponding 2x3 matrix with the last row deleted.
 //   .
-//   If you construct your own matrices you can also use a transform that acts like a projection
-//   with fewer rows to produce lower dimensional output.  
+//   Any other combination of matrices will produce an error, including acting with a 2D matrix (3x3) on 3D data.
+//   The output of apply is always the same dimension as the input---projections are not supported.  
 // Arguments:
-//   transform = The 2D or 3D transformation matrix to apply to the point/points.
-//   points = The point, pointlist, bezier patch, or VNF to apply the transformation to.
+//   transform = The 2D (3x3 or 2x3) or 3D (4x4 or 3x4) transformation matrix to apply.
+//   points = The point, point list, bezier patch, or VNF to apply the transformation to.
 // Example(3D):
 //   path1 = path3d(circle(r=40));
 //   tmat = xrot(45);
@@ -1319,30 +1367,27 @@ function apply(transform,points) =
   : _apply(transform,points);
 
 
+
+
 function _apply(transform,points) =
     assert(is_matrix(transform),"Invalid transformation matrix")
     assert(is_matrix(points),"Invalid points list")
     let(
         tdim = len(transform[0])-1,
-        datadim = len(points[0]),
-        outdim = min(datadim,len(transform)),
-        matrix = [for(i=[0:1:tdim]) [for(j=[0:1:outdim-1]) transform[j][i]]]
+        datadim = len(points[0])
     )
-    tdim==datadim && (datadim==3 || datadim==2)
-      ? [for(p=points) concat(p,1)] * matrix
-      : tdim == 3 && datadim == 2 ?
-            assert(is_2d_transform(transform), str("Transforms is 3d but points are 2d"))
+    assert(len(transform)==tdim || len(transform)-1==tdim, "transform matrix height not compatible with width")
+    assert(datadim==2 || datadim==3,"Data must be 2D or 3D")
+    let(
+        scale = len(transform)==tdim ? 1 : transform[tdim][tdim],
+        matrix = [for(i=[0:1:tdim]) [for(j=[0:1:datadim-1]) transform[j][i]]] / scale
+    )
+    tdim==datadim ? [for(p=points) concat(p,1)] * matrix
+  : tdim == 3 && datadim == 2 ? 
+            assert(is_2d_transform(transform), str("Transforms is 3D and acts on Z, but points are 2D"))
             [for(p=points) concat(p,[0,1])]*matrix
-      : tdim == 2 && datadim == 3 ?
-           let(
-                matrix3d =[[ matrix[0][0], matrix[0][1], 0],
-                           [ matrix[1][0], matrix[1][1], 0],
-                           [            0,            0, 1],
-                           [ matrix[2][0], matrix[2][1], 0]]
-           )
-           [for(p=points) concat(p,1)] * matrix3d
-      : assert(false, str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
-
+  : assert(false, str("Unsupported combination: ",len(transform),"x",len(transform[0])," transform (dimension ",tdim,
+                          "), data of dimension ",datadim));
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

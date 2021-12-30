@@ -94,11 +94,11 @@ module echo_matrix(M,description,sig=4,eps=1e-9)
 // Topics: Matrices, List Handling
 // See Also: select(), slice()
 // Description:
-//   Extracts entry i from each list in M, or equivalently column i from the matrix M, and returns it as a vector.  
+//   Extracts entry `i` from each list in M, or equivalently column i from the matrix M, and returns it as a vector.  
 //   This function will return `undef` at all entry positions indexed by i not found in M.
 // Arguments:
 //   M = The given list of lists.
-//   idx = The index, list of indices, or range of indices to fetch.
+//   i = The index to fetch
 // Example:
 //   M = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
 //   a = column(M,2);      // Returns [3, 7, 11, 15]
@@ -112,7 +112,6 @@ function column(M, i) =
     assert( is_list(M), "The input is not a list." )
     assert( is_int(i) && i>=0, "Invalid index")
     [for(row=M) row[i]];
-
 
 
 // Function: submatrix()
@@ -463,7 +462,7 @@ function matrix_inverse(A) =
 //   B = rot_inverse(A)
 // Description:
 //   Inverts a 2d (3x3) or 3d (4x4) rotation matrix.  The matrix can be a rotation around any center,
-//   so it may include a translation.  
+//   so it may include a translation.  This is faster and likely to be more accurate than using `matrix_inverse()`.  
 function rot_inverse(T) =
     assert(is_matrix(T,square=true),"Matrix must be square")
     let( n = len(T))
