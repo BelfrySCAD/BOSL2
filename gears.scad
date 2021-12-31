@@ -476,20 +476,18 @@ function spur_gear2d(
 ) = let(
     pitch = is_undef(mod) ? pitch : pitch_value(mod),
     pr = pitch_radius(pitch=pitch, teeth=teeth),
+    tooth_profile = gear_tooth_profile(
+        pitch = pitch,
+        teeth = teeth,
+        pressure_angle = pressure_angle,
+        clearance = clearance,
+        backlash = backlash,
+        interior = interior,
+        valleys = false
+    ),
     pts = concat(
         [for (tooth = [0:1:teeth-hide-1])
-            each rot(tooth*360/teeth,
-                planar=true,
-                p=gear_tooth_profile(
-                    pitch = pitch,
-                    teeth = teeth,
-                    pressure_angle = pressure_angle,
-                    clearance = clearance,
-                    backlash = backlash,
-                    interior = interior,
-                    valleys = false
-                )
-            )
+            each rot(tooth*360/teeth, p=tooth_profile)
         ],
         hide>0? [[0,0]] : []
     )
