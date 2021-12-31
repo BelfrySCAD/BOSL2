@@ -289,12 +289,11 @@ module test_rot() {
     for (vec1 = vecs2d) {
         for (vec2 = vecs2d) {
             assert_approx(
-                rot(from=vec1, to=vec2, p=pts2d, planar=true),
+                rot(from=vec1, to=vec2, p=pts2d),
                 apply(affine2d_zrot(v_theta(vec2)-v_theta(vec1)), pts2d),
                 info=str(
                     "from = ", vec1, ", ",
                     "to = ", vec2, ", ",
-                    "planar = ", true, ", ",
                     "p=..., 2D"
                 )
             );

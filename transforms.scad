@@ -12,7 +12,7 @@
 //   .
 //   Almost all of the transformation functions take a point, a point
 //   list, bezier patch, or VNF as a second positional argument to
-//   operate on.  The exceptions are rot(), frame_map() and skew().  
+//   operate on.  The exceptions are rot(), frame_map() and skew().
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Basic Modeling
@@ -23,21 +23,21 @@
 // Section: Affine Transformations
 //   OpenSCAD provides various built-in modules to transform geometry by
 //   translation, scaling, rotation, and mirroring.  All of these operations
-//   are affine transformations.  A three-dimensional affine transformation 
+//   are affine transformations.  A three-dimensional affine transformation
 //   can be represented by a 4x4 matrix.  The transformation shortcuts in this
 //   file generally have three modes of operation.  They can operate
 //   directly on geometry like their OpenSCAD built-in equivalents.  For example,
 //   `left(10) cube()`.  They can operate on a list of points (or various other
-//   types of geometric data).  For example, operating on a list of points: `points = left(10, [[1,2,3],[4,5,6]])`. 
+//   types of geometric data).  For example, operating on a list of points: `points = left(10, [[1,2,3],[4,5,6]])`.
 //   The third option is that the shortcut can return the transformation matrix
-//   corresponding to its action.  For example, `M=left(10)`.  
+//   corresponding to its action.  For example, `M=left(10)`.
 //   .
 //   This capability allows you to store and manipulate transformations, and can
 //   be useful in more advanced modeling.  You can multiply these matrices
 //   together, analogously to applying a sequence of operations with the
 //   built-in transformations.  So you can write `zrot(37)left(5)cube()`
 //   to perform two operations on a cube.  You can also store
-//   that same transformation by multiplying the matrices together: `M = zrot(37) * left(5)`.  
+//   that same transformation by multiplying the matrices together: `M = zrot(37) * left(5)`.
 //   Note that the order is exactly the same as the order used to apply the transformation.
 //   .
 //   Suppose you have constructed `M` as above.  What now?  You can use
@@ -60,7 +60,7 @@
 //   the affine transformed point as `tran_point = M * point`.  However, this syntax hides a complication that
 //   arises if you have a list of points.  A list of points like `[[1,2,3,1],[4,5,6,1],[7,8,9,1]]` has the augmented points
 //   as row vectors on the list.  In order to transform such a list, it needs to be muliplied on the right
-//   side, not the left side.  
+//   side, not the left side.
 
 
 
@@ -85,7 +85,7 @@ _NO_ARG = [true,[123232345],false];
 //   mat = move([x=], [y=], [z=]);
 //
 // Topics: Affine, Matrices, Transforms, Translation
-// See Also: left(), right(), fwd(), back(), down(), up(), spherical_to_xyz(), altaz_to_xyz(), cylindrical_to_xyz(), polar_to_xy() 
+// See Also: left(), right(), fwd(), back(), down(), up(), spherical_to_xyz(), altaz_to_xyz(), cylindrical_to_xyz(), polar_to_xy()
 //
 // Description:
 //   Translates position by the given amount.
@@ -190,11 +190,13 @@ module left(x=0, p) {
     translate([-x,0,0]) children();
 }
 
-function left(x=0, p=_NO_ARG) = assert(is_finite(x), "Invalid number")
-                                move([-x,0,0],p=p);
+function left(x=0, p=_NO_ARG) =
+    assert(is_finite(x), "Invalid number")
+    move([-x,0,0],p=p);
 
 
 // Function&Module: right()
+// Aliases: xmove()
 //
 // Usage: As Module
 //   right(x) ...
@@ -230,8 +232,19 @@ module right(x=0, p) {
     translate([x,0,0]) children();
 }
 
-function right(x=0, p=_NO_ARG) = assert(is_finite(x), "Invalid number")
-                                 move([x,0,0],p=p);
+function right(x=0, p=_NO_ARG) =
+    assert(is_finite(x), "Invalid number")
+    move([x,0,0],p=p);
+
+module xmove(x=0, p) {
+    assert(is_undef(p), "Module form `xmove()` does not accept p= argument.");
+    assert(is_finite(x), "Invalid number")
+    translate([x,0,0]) children();
+}
+
+function xmove(x=0, p=_NO_ARG) =
+    assert(is_finite(x), "Invalid number")
+    move([x,0,0],p=p);
 
 
 // Function&Module: fwd()
@@ -266,15 +279,17 @@ function right(x=0, p=_NO_ARG) = assert(is_finite(x), "Invalid number")
 //   mat3d = fwd(4);  // Returns: [[1,0,0,0],[0,1,0,-4],[0,0,1,0],[0,0,0,1]]
 module fwd(y=0, p) {
     assert(is_undef(p), "Module form `fwd()` does not accept p= argument.");
-    assert(is_finite(y), "Invalid number")        
+    assert(is_finite(y), "Invalid number")
     translate([0,-y,0]) children();
 }
 
-function fwd(y=0, p=_NO_ARG) = assert(is_finite(y), "Invalid number")
-                               move([0,-y,0],p=p);
+function fwd(y=0, p=_NO_ARG) =
+    assert(is_finite(y), "Invalid number")
+    move([0,-y,0],p=p);
 
 
 // Function&Module: back()
+// Aliases: ymove()
 //
 // Usage: As Module
 //   back(y) ...
@@ -306,12 +321,23 @@ function fwd(y=0, p=_NO_ARG) = assert(is_finite(y), "Invalid number")
 //   mat3d = back(4);  // Returns: [[1,0,0,0],[0,1,0,4],[0,0,1,0],[0,0,0,1]]
 module back(y=0, p) {
     assert(is_undef(p), "Module form `back()` does not accept p= argument.");
-    assert(is_finite(y), "Invalid number")    
+    assert(is_finite(y), "Invalid number")
     translate([0,y,0]) children();
 }
 
-function back(y=0,p=_NO_ARG) = assert(is_finite(y), "Invalid number")
-                               move([0,y,0],p=p);
+function back(y=0,p=_NO_ARG) =
+    assert(is_finite(y), "Invalid number")
+    move([0,y,0],p=p);
+
+module ymove(y=0, p) {
+    assert(is_undef(p), "Module form `ymove()` does not accept p= argument.");
+    assert(is_finite(y), "Invalid number")
+    translate([0,y,0]) children();
+}
+
+function ymove(y=0,p=_NO_ARG) =
+    assert(is_finite(y), "Invalid number")
+    move([0,y,0],p=p);
 
 
 // Function&Module: down()
@@ -348,10 +374,13 @@ module down(z=0, p) {
     translate([0,0,-z]) children();
 }
 
-function down(z=0, p=_NO_ARG) = move([0,0,-z],p=p);
+function down(z=0, p=_NO_ARG) =
+    assert(is_finite(z), "Invalid number")
+    move([0,0,-z],p=p);
 
 
 // Function&Module: up()
+// Aliases: zmove()
 //
 // Usage: As Module
 //   up(z) ...
@@ -386,8 +415,19 @@ module up(z=0, p) {
     translate([0,0,z]) children();
 }
 
-function up(z=0, p=_NO_ARG) = assert(is_finite(z), "Invalid number")
-                              move([0,0,z],p=p);
+function up(z=0, p=_NO_ARG) =
+    assert(is_finite(z), "Invalid number")
+    move([0,0,z],p=p);
+
+module zmove(z=0, p) {
+    assert(is_undef(p), "Module form `zmove()` does not accept p= argument.");
+    assert(is_finite(z), "Invalid number");
+    translate([0,0,z]) children();
+}
+
+function zmove(z=0, p=_NO_ARG) =
+    assert(is_finite(z), "Invalid number")
+    move([0,0,z],p=p);
 
 
 
@@ -409,10 +449,10 @@ function up(z=0, p=_NO_ARG) = assert(is_finite(z), "Invalid number")
 //   pts = rot(a, v, p=, [cp=], [reverse=]);
 //   pts = rot([a], from=, to=, p=, [reverse=]);
 // Usage: As a Function to return a transform matrix
-//   M = rot(a, [cp=], [reverse=], [planar=]);
-//   M = rot([X,Y,Z], [cp=], [reverse=], [planar=]);
-//   M = rot(a, v, [cp=], [reverse=], [planar=]);
-//   M = rot(from=, to=, [a=], [reverse=], [planar=]);
+//   M = rot(a, [cp=], [reverse=]);
+//   M = rot([X,Y,Z], [cp=], [reverse=]);
+//   M = rot(a, v, [cp=], [reverse=]);
+//   M = rot(from=, to=, [a=], [reverse=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: xrot(), yrot(), zrot()
@@ -424,7 +464,7 @@ function up(z=0, p=_NO_ARG) = assert(is_finite(z), "Invalid number")
 //   * `rot([20,30,40])` or `rot(a=[20,30,40])` rotates 20 degrees around the X axis, then 30 degrees around the Y axis, then 40 degrees around the Z axis.
 //   * `rot(30, [1,1,0])` or `rot(a=30, v=[1,1,0])` rotates 30 degrees around the axis vector `[1,1,0]`.
 //   * `rot(from=[0,0,1], to=[1,0,0])` rotates the `from` vector to line up with the `to` vector, in this case the top to the right and hence equivalent to `rot(a=90,v=[0,1,0]`.
-//   * `rot(from=[0,1,1], to=[1,1,0], a=45)` rotates 45 degrees around the `from` vector ([0,1,1]) and then rotates the `from` vector to align with the `to` vector.  Equivalent to `rot(from=[0,1,1],to=[1,1,0]) rot(a=45,v=[0,1,1])`.  You can also regard `a` as as post-rotation around the `to` vector.  For this form, `a` must be a scalar.  
+//   * `rot(from=[0,1,1], to=[1,1,0], a=45)` rotates 45 degrees around the `from` vector ([0,1,1]) and then rotates the `from` vector to align with the `to` vector.  Equivalent to `rot(from=[0,1,1],to=[1,1,0]) rot(a=45,v=[0,1,1])`.  You can also regard `a` as as post-rotation around the `to` vector.  For this form, `a` must be a scalar.
 //   * If the `cp` centerpoint argument is given, then rotations are performed around that centerpoint.  So `rot(args...,cp=[1,2,3])` is equivalent to `move(-[1,2,3])rot(args...)move([1,2,3])`.
 //   * If the `reverse` argument is true, then the rotations performed will be exactly reversed.
 //   .
@@ -434,19 +474,17 @@ function up(z=0, p=_NO_ARG) = assert(is_finite(z), "Invalid number")
 //   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
 //   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, and `planar` is true, returns the affine2d rotational matrix.  The angle `a` must be a scalar. 
-//   * Called as a function without a `p` argument, and `planar` is false, returns the affine3d rotational matrix.
-//   Note that unlike almost all the other transformations, the `p` argument must be given as a named argument.  
+//   * Called as a function without a `p` argument, returns the affine3d rotational matrix.
+//   Note that unlike almost all the other transformations, the `p` argument must be given as a named argument.
 //
 // Arguments:
-//   a = Scalar angle or vector of XYZ rotation angles to rotate by, in degrees.  If `planar` is true or if `p` holds 2d data, or if you use the `from` and `to` arguments then `a` must be a scalar.  Default: `0`
+//   a = Scalar angle or vector of XYZ rotation angles to rotate by, in degrees.  If you use the `from` and `to` arguments then `a` must be a scalar.  Default: `0`
 //   v = vector for the axis of rotation.  Default: [0,0,1] or UP
 //   ---
 //   cp = centerpoint to rotate around. Default: [0,0,0]
 //   from = Starting vector for vector-based rotations.
 //   to = Target vector for vector-based rotations.
 //   reverse = If true, exactly reverses the rotation, including axis rotation ordering.  Default: false
-//   planar = If called as a function, this specifies if you want to work with 2D points.
 //   p = If called as a function, this contains data to rotate: a point, list of points, bezier patch or VNF.
 //
 // Example:
@@ -467,11 +505,11 @@ function up(z=0, p=_NO_ARG) = assert(is_finite(z), "Invalid number")
 //   stroke(rot(30,p=path), closed=true);
 module rot(a=0, v, cp, from, to, reverse=false)
 {
-    m = rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, planar=false);
+    m = rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse);
     multmatrix(m) children();
 }
 
-function rot(a=0, v, cp, from, to, reverse=false, planar=false, p=_NO_ARG, _m) =
+function rot(a=0, v, cp, from, to, reverse=false, p=_NO_ARG, _m) =
     assert(is_undef(from)==is_undef(to), "from and to must be specified together.")
     assert(is_undef(from) || is_vector(from, zero=false), "'from' must be a non-zero vector.")
     assert(is_undef(to) || is_vector(to, zero=false), "'to' must be a non-zero vector.")
@@ -479,22 +517,8 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p=_NO_ARG, _m) =
     assert(is_undef(cp) || is_vector(cp), "'cp' must be a vector.")
     assert(is_finite(a) || is_vector(a), "'a' must be a finite scalar or a vector.")
     assert(is_bool(reverse))
-    assert(is_bool(planar))
     let(
-        m = planar? let(
-                check = assert(is_num(a)),
-                cp = is_undef(cp)? cp : point2d(cp),
-                m1 = is_undef(from)? affine2d_zrot(a) :
-                    assert(a==0, "'from' and 'to' cannot be used with 'a' when 'planar' is true.")
-                    assert(approx(point3d(from).z, 0), "'from' must be a 2D vector when 'planar' is true.")
-                    assert(approx(point3d(to).z, 0), "'to' must be a 2D vector when 'planar' is true.")
-                    affine2d_zrot(
-                        v_theta(to) -
-                        v_theta(from)
-                    ),
-                m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
-                m3 = reverse? rot_inverse(m2) : m2
-            ) m3 : let(
+        m = let(
                 from = is_undef(from)? undef : point3d(from),
                 to = is_undef(to)? undef : point3d(to),
                 cp = is_undef(cp)? undef : point3d(cp),
@@ -534,8 +558,7 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p=_NO_ARG, _m) =
 //   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
 //   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, and `planar` is true, returns the affine2d rotational matrix.
-//   * Called as a function without a `p` argument, and `planar` is false, returns the affine3d rotational matrix.
+//   * Called as a function without a `p` argument, returns the affine3d rotational matrix.
 //
 // Arguments:
 //   a = angle to rotate by in degrees.
@@ -580,8 +603,7 @@ function xrot(a=0, p=_NO_ARG, cp) = rot([a,0,0], cp=cp, p=p);
 //   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
 //   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, and `planar` is true, returns the affine2d rotational matrix.
-//   * Called as a function without a `p` argument, and `planar` is false, returns the affine3d rotational matrix.
+//   * Called as a function without a `p` argument, returns the affine3d rotational matrix.
 //
 // Arguments:
 //   a = angle to rotate by in degrees.
@@ -626,8 +648,7 @@ function yrot(a=0, p=_NO_ARG, cp) = rot([0,a,0], cp=cp, p=p);
 //   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
 //   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, and `planar` is true, returns the affine2d rotational matrix.
-//   * Called as a function without a `p` argument, and `planar` is false, returns the affine3d rotational matrix.
+//   * Called as a function without a `p` argument, returns the affine3d rotational matrix.
 //
 // Arguments:
 //   a = angle to rotate by in degrees.
@@ -716,7 +737,7 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
 // Usage: Scale Points
 //   scaled = xscale(x, p, [cp=]);
 // Usage: Get Affine Matrix
-//   mat = xscale(x, [cp=], [planar=]);
+//   mat = xscale(x, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Scaling
 // See Also: scale(), yscale(), zscale()
@@ -736,7 +757,6 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
 //   p = A point, path, bezier patch, or VNF to scale, when called as a function.
 //   ---
 //   cp = If given as a point, centers the scaling on the point `cp`.  If given as a scalar, centers scaling on the point `[cp,0,0]`
-//   planar = If true, and `p` is not given, then the matrix returned is an affine2d matrix instead of an affine3d matrix.
 //
 // Example: As Module
 //   xscale(3) sphere(r=10);
@@ -745,9 +765,8 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
 //   path = circle(d=50,$fn=12);
 //   #stroke(path,closed=true);
 //   stroke(xscale(2,p=path),closed=true);
-module xscale(x=1, p, cp=0, planar) {
+module xscale(x=1, p, cp=0) {
     assert(is_undef(p), "Module form `xscale()` does not accept p= argument.");
-    assert(is_undef(planar), "Module form `xscale()` does not accept planar= argument.");
     cp = is_num(cp)? [cp,0,0] : cp;
     if (cp == [0,0,0]) {
         scale([x,1,1]) children();
@@ -756,15 +775,12 @@ module xscale(x=1, p, cp=0, planar) {
     }
 }
 
-function xscale(x=1, p=_NO_ARG, cp=0, planar=false) =
+function xscale(x=1, p=_NO_ARG, cp=0) =
     assert(is_finite(x))
     assert(p==_NO_ARG || is_list(p))
     assert(is_finite(cp) || is_vector(cp))
-    assert(is_bool(planar))
     let( cp = is_num(cp)? [cp,0,0] : cp )
-    (planar || (!is_undef(p) && len(p)==2))
-      ? scale([x,1], cp=cp, p=p)
-      : scale([x,1,1], cp=cp, p=p);
+    scale([x,1,1], cp=cp, p=p);
 
 
 // Function&Module: yscale()
@@ -774,7 +790,7 @@ function xscale(x=1, p=_NO_ARG, cp=0, planar=false) =
 // Usage: Scale Points
 //   scaled = yscale(y, p, [cp=]);
 // Usage: Get Affine Matrix
-//   mat = yscale(y, [cp=], [planar=]);
+//   mat = yscale(y, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Scaling
 // See Also: scale(), xscale(), zscale()
@@ -794,7 +810,6 @@ function xscale(x=1, p=_NO_ARG, cp=0, planar=false) =
 //   p = A point, path, bezier patch, or VNF to scale, when called as a function.
 //   ---
 //   cp = If given as a point, centers the scaling on the point `cp`.  If given as a scalar, centers scaling on the point `[0,cp,0]`
-//   planar = If true, and `p` is not given, then the matrix returned is an affine2d matrix instead of an affine3d matrix.
 //
 // Example: As Module
 //   yscale(3) sphere(r=10);
@@ -803,9 +818,8 @@ function xscale(x=1, p=_NO_ARG, cp=0, planar=false) =
 //   path = circle(d=50,$fn=12);
 //   #stroke(path,closed=true);
 //   stroke(yscale(2,p=path),closed=true);
-module yscale(y=1, p, cp=0, planar) {
+module yscale(y=1, p, cp=0) {
     assert(is_undef(p), "Module form `yscale()` does not accept p= argument.");
-    assert(is_undef(planar), "Module form `yscale()` does not accept planar= argument.");
     cp = is_num(cp)? [0,cp,0] : cp;
     if (cp == [0,0,0]) {
         scale([1,y,1]) children();
@@ -814,15 +828,12 @@ module yscale(y=1, p, cp=0, planar) {
     }
 }
 
-function yscale(y=1, p=_NO_ARG, cp=0, planar=false) =
+function yscale(y=1, p=_NO_ARG, cp=0) =
     assert(is_finite(y))
     assert(p==_NO_ARG || is_list(p))
     assert(is_finite(cp) || is_vector(cp))
-    assert(is_bool(planar))
     let( cp = is_num(cp)? [0,cp,0] : cp )
-    (planar || (!is_undef(p) && len(p)==2))
-      ? scale([1,y], cp=cp, p=p)
-      : scale([1,y,1], cp=cp, p=p);
+    scale([1,y,1], cp=cp, p=p);
 
 
 // Function&Module: zscale()
@@ -958,7 +969,7 @@ function mirror(v, p=_NO_ARG) =
 // Usage: As Function
 //   pt = xflip(p, [x]);
 // Usage: Get Affine Matrix
-//   pt = xflip([x], [planar=]);
+//   pt = xflip([x]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), yflip(), zflip()
@@ -970,14 +981,11 @@ function mirror(v, p=_NO_ARG) =
 //   * Called as a function with a list of points in the `p` argument, returns the list of points, with each one mirrored across the line/plane.
 //   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the mirrored patch.
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the mirrored VNF.
-//   * Called as a function without a `p` argument, and `planar=true`, returns the affine2d 3x3 mirror matrix.
-//   * Called as a function without a `p` argument, and `planar=false`, returns the affine3d 4x4 mirror matrix.
+//   * Called as a function without a `p` argument, returns the affine3d 4x4 mirror matrix.
 //
 // Arguments:
 //   x = The X coordinate of the plane of reflection.  Default: 0
 //   p = If given, the point, path, patch, or VNF to mirror.  Function use only.
-//   ---
-//   planar = If true, and p is not given, returns a 2D affine transformation matrix.  Function use only.  Default: False
 //
 // Example:
 //   xflip() yrot(90) cylinder(d1=10, d2=0, h=20);
@@ -988,26 +996,21 @@ function mirror(v, p=_NO_ARG) =
 //   xflip(x=-5) yrot(90) cylinder(d1=10, d2=0, h=20);
 //   color("blue", 0.25) left(5) cube([0.01,15,15], center=true);
 //   color("red", 0.333) yrot(90) cylinder(d1=10, d2=0, h=20);
-module xflip(p, x=0, planar) {
+module xflip(p, x=0) {
     assert(is_undef(p), "Module form `zflip()` does not accept p= argument.");
-    assert(is_undef(planar), "Module form `zflip()` does not accept planar= argument.");
     translate([x,0,0])
         mirror([1,0,0])
             translate([-x,0,0]) children();
 }
 
-function xflip(p=_NO_ARG, x=0, planar=false) =
+function xflip(p=_NO_ARG, x=0) =
     assert(is_finite(x))
-    assert(is_bool(planar))
     assert(p==_NO_ARG || is_list(p),"Invalid point list")
+    let( v = RIGHT )
+    x == 0 ? mirror(v,p=p) :
     let(
-        v = RIGHT,
-        n = planar? point2d(v) : v
-    )
-    x == 0 ? mirror(n,p=p) :
-    let(
-        cp = x * n,
-        m = move(cp) * mirror(n) * move(-cp)
+        cp = x * v,
+        m = move(cp) * mirror(v) * move(-cp)
     )
     p==_NO_ARG? m : apply(m, p);
 
@@ -1019,7 +1022,7 @@ function xflip(p=_NO_ARG, x=0, planar=false) =
 // Usage: As Function
 //   pt = yflip(p, [y]);
 // Usage: Get Affine Matrix
-//   pt = yflip([y], [planar=]);
+//   pt = yflip([y]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), xflip(), zflip()
@@ -1031,14 +1034,11 @@ function xflip(p=_NO_ARG, x=0, planar=false) =
 //   * Called as a function with a list of points in the `p` argument, returns the list of points, with each one mirrored across the line/plane.
 //   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the mirrored patch.
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the mirrored VNF.
-//   * Called as a function without a `p` argument, and `planar=true`, returns the affine2d 3x3 mirror matrix.
-//   * Called as a function without a `p` argument, and `planar=false`, returns the affine3d 4x4 mirror matrix.
+//   * Called as a function without a `p` argument, returns the affine3d 4x4 mirror matrix.
 //
 // Arguments:
 //   p = If given, the point, path, patch, or VNF to mirror.  Function use only.
 //   y = The Y coordinate of the plane of reflection.  Default: 0
-//   ---
-//   planar = If true, and p is not given, returns a 2D affine transformation matrix.  Function use only.  Default: False
 //
 // Example:
 //   yflip() xrot(90) cylinder(d1=10, d2=0, h=20);
@@ -1049,26 +1049,21 @@ function xflip(p=_NO_ARG, x=0, planar=false) =
 //   yflip(y=5) xrot(90) cylinder(d1=10, d2=0, h=20);
 //   color("blue", 0.25) back(5) cube([15,0.01,15], center=true);
 //   color("red", 0.333) xrot(90) cylinder(d1=10, d2=0, h=20);
-module yflip(p, y=0, planar) {
+module yflip(p, y=0) {
     assert(is_undef(p), "Module form `yflip()` does not accept p= argument.");
-    assert(is_undef(planar), "Module form `yflip()` does not accept planar= argument.");
     translate([0,y,0])
         mirror([0,1,0])
             translate([0,-y,0]) children();
 }
 
-function yflip(p=_NO_ARG, y=0, planar=false) =
+function yflip(p=_NO_ARG, y=0) =
     assert(is_finite(y))
-    assert(is_bool(planar))
     assert(p==_NO_ARG || is_list(p),"Invalid point list")
+    let( v = BACK )
+    y == 0 ? mirror(v,p=p) :
     let(
-        v = BACK,
-        n = planar? point2d(v) : v
-    )
-    y == 0 ? mirror(n,p=p) :
-    let(
-        cp = y * n,
-        m = move(cp) * mirror(n) * move(-cp)
+        cp = y * v,
+        m = move(cp) * mirror(v) * move(-cp)
     )
     p==_NO_ARG? m : apply(m, p);
 
@@ -1148,7 +1143,7 @@ function zflip(p=_NO_ARG, z=0) =
 //   coordinate systems to each other by using the canonical coordinate system as an intermediary.
 //   You cannot use the `reverse` option with non-orthogonal inputs.  Note that only the direction
 //   of the specified vectors matters: the transformation will not apply scaling, though it can
-//   skew if your provide non-orthogonal axes.  
+//   skew if your provide non-orthogonal axes.
 // Arguments:
 //   x = Destination 3D vector for x axis.
 //   y = Destination 3D vector for y axis.
@@ -1169,7 +1164,7 @@ function zflip(p=_NO_ARG, z=0) =
 //   multmatrix(mat) {
 //      color("purple") stroke([[0,0,0],10*[1,1,0]]);
 //      color("green") stroke([[0,0,0],10*[-1,1,0]]);
-//   }       
+//   }
 function frame_map(x,y,z, p=_NO_ARG, reverse=false) =
     p != _NO_ARG
     ? apply(frame_map(x,y,z,reverse=reverse), p)
@@ -1219,7 +1214,7 @@ module frame_map(x,y,z,p,reverse=false)
 // Usage: As Function
 //   pts = skew(p, [sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]);
 // Usage: Get Affine Matrix
-//   mat = skew([sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=], [planar=]);
+//   mat = skew([sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]);
 // Topics: Affine, Matrices, Transforms, Skewing
 //
 // Description:
@@ -1229,8 +1224,7 @@ module frame_map(x,y,z,p,reverse=false)
 //   * Called as a function with a list of points in the `p` argument, returns the list of skewed points.
 //   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the skewed patch.
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the skewed VNF.
-//   * Called as a function without a `p` argument, and with `planar` true, returns the affine2d 3x3 skew matrix.
-//   * Called as a function without a `p` argument, and with `planar` false, returns the affine3d 4x4 skew matrix.
+//   * Called as a function without a `p` argument, returns the affine3d 4x4 skew matrix.
 //   Each skew factor is a multiplier.  For example, if `sxy=2`, then it will skew along the X axis by 2x the value of the Y axis.
 // Arguments:
 //   p = If given, the point, path, patch, or VNF to skew.  Function use only.
@@ -1274,26 +1268,20 @@ module skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0)
     ) children();
 }
 
-function skew(p=_NO_ARG, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0, planar=false) =
+function skew(p=_NO_ARG, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0) =
     assert(is_finite(sxy))
     assert(is_finite(sxz))
     assert(is_finite(syx))
     assert(is_finite(syz))
     assert(is_finite(szx))
     assert(is_finite(szy))
-    assert(is_bool(planar))
     let(
-        planar = planar || (is_list(p) && is_num(p.x) && len(p)==2),
-        m = planar? [
-            [  1, sxy, 0],
-            [syx,   1, 0],
-            [  0,   0, 1]
-        ] : affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
+        m = affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
     )
     p==_NO_ARG? m : apply(m, p);
 
 
-// Section: Applying transformation matrices to 
+// Section: Applying transformation matrices to
 
 
 /// Internal Function: is_2d_transform()
@@ -1325,13 +1313,13 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 // Topics: Affine, Matrices, Transforms
 // Description:
 //   Applies the specified transformation matrix `transform` to a point, point list, bezier patch or VNF.
-//   When `points` contains 2D or 3D points the transform matrix may be a 4x4 affine matrix or a 3x4 matrix--- 
+//   When `points` contains 2D or 3D points the transform matrix may be a 4x4 affine matrix or a 3x4 matrix---
 //   the 4x4 matrix with its final row removed.  When the data is 2D the matrix must not operate on the Z axis,
 //   except possibly by scaling it.  When points contains 2D data you can also supply the transform as
 //   a 3x3 affine transformation matrix or the corresponding 2x3 matrix with the last row deleted.
 //   .
 //   Any other combination of matrices will produce an error, including acting with a 2D matrix (3x3) on 3D data.
-//   The output of apply is always the same dimension as the input---projections are not supported.  
+//   The output of apply is always the same dimension as the input---projections are not supported.
 // Arguments:
 //   transform = The 2D (3x3 or 2x3) or 3D (4x4 or 3x4) transformation matrix to apply.
 //   points = The point, point list, bezier patch, or VNF to apply the transformation to.
@@ -1383,7 +1371,7 @@ function _apply(transform,points) =
         matrix = [for(i=[0:1:tdim]) [for(j=[0:1:datadim-1]) transform[j][i]]] / scale
     )
     tdim==datadim ? [for(p=points) concat(p,1)] * matrix
-  : tdim == 3 && datadim == 2 ? 
+  : tdim == 3 && datadim == 2 ?
             assert(is_2d_transform(transform), str("Transforms is 3D and acts on Z, but points are 2D"))
             [for(p=points) concat(p,[0,1])]*matrix
   : assert(false, str("Unsupported combination: ",len(transform),"x",len(transform[0])," transform (dimension ",tdim,

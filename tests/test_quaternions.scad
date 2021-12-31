@@ -250,8 +250,8 @@ test_q_slerp();
 
 
 module test_q_matrix3() {
-    assert_approx(q_matrix3(quat_z(37)),rot(37,planar=true));
-    assert_approx(q_matrix3(quat_z(-49)),rot(-49,planar=true));
+    assert_approx(q_matrix3(quat_z(37)),affine2d_zrot(37));
+    assert_approx(q_matrix3(quat_z(-49)),affine2d_zrot(-49));
 }
 test_q_matrix3();
 
