@@ -79,8 +79,7 @@ Which outputs Markdown code that renders like:
 > a manual markdown link like [Section: Cuboids](shapes.scad#section-cuboids).
 > The end of the block is denoted by a line without a comment.
 
-You can use `// File:` instead of `// LibFile:`, if it seems more apropriate for
-your particular context::
+You can use `// File:` instead of `// LibFile:`, if it seems more apropriate for your particular context:
 
     // File: Foobar.scad
     //   This file contains a collection of metasyntactical nonsense.
@@ -89,6 +88,44 @@ Which outputs Markdown code that renders like:
 
 > # File: Foobar.scad
 > This file contains a collection of metasyntactical nonsense.
+
+
+FileGroup Block
+---------------
+
+You can specify what group of files this .scad file is a part of with the `// FileGroup:` block:
+
+    // FileGroup: Advanced Modeling
+
+This affects the ordering of files in Table of Contents and CheatSheet files.  This doesn't generate any output text otherwise.
+
+
+FileSummary Block
+-----------------
+
+You can give a short summary of the contents of this .scad file with the `// FileSummary:` block:
+
+    // FileSummary: Various modules to generate Foobar objects.
+
+This summary is used when summarizing this .scad file in the Table of Contents file.  This will result in a line in the Table of Contents that renders like:
+
+> - [Foobar.scad](Foobar.scad): Various modules to generate Foobar objects.
+
+
+FileFootnotes Block
+-------------------
+
+You can specify footnotes that are appended to this .scad file's name wherever the list of files is shown, such as in the Table of Contents.  You can do this with the `// FileFootnotes:` block.  The syntax looks like:
+
+    // FileFootnotes: 1=First Footnote; 2=Second Footnote
+
+Multiple footnotes are separated by semicolons (`;`).  Within each footnote, you specify the footnote symbol and the footnote text separated by an equals sign (`=`).  The footnote symbol may be more than one character, like this:
+
+    // FileFootnotes: STD=Included in std.scad
+
+This will result in footnote markers that render like:
+
+> - Foobar.scad<sup id="fn_std">[STD](#footnote-std "Included in std.scad")</sup>
 
 
 Includes Block
@@ -111,6 +148,7 @@ Which outputs Markdown code that renders like:
 >  include <BOSL2/beziers.scad>
 > ```
 
+
 CommonCode Block
 ----------------
 
@@ -131,6 +169,7 @@ This doesn't have immediately visible markdown output, but you *can* use that co
 
 Section Block
 -------------
+
 Section blocks take a title, and an optional body that will be shown as the description of the Section.  If a body line if just a `.` (dot, period), then that line is treated as a blank line in the output:
 
     // Section: Foobar
@@ -168,6 +207,48 @@ Which outputs Markdown code that renders like:
 > or a line that is unindented after the comment.
 
 Sections can also include Figures; images generated from code that is not shown in a code block.
+
+
+Subsection Block
+----------------
+
+Subsection blocks take a title, and an optional body that will be shown as the description of the Subsection.  A Subsection must be within a declared Section.  If a body line is just a `.` (dot, period), then that line is treated as a blank line in the output:
+
+    // Subsection: Foobar
+    //   You can have several lines of markdown formatted text here.
+    //   You just need to make sure that each line is indented, with
+    //   at least three spaces after the comment marker.  You can
+    //   denote a paragraph break with a comment line with three
+    //   trailing spaces, or just a period.
+    //   .
+    //   You can have links in this text to functions, modules, or
+    //   constants in other files by putting the name in double-
+    //   braces like {{cyl()}} or {{lerp()}} or {{DOWN}}.  If you want to
+    //   link to another file, or section in another file you can use
+    //   a manual markdown link like [Subsection: Foo](shapes.scad#subsection-foo).
+    //   .
+    //   The end of the block is denoted by a line without a comment.
+    //   or a line that is unindented after the comment.
+
+Which outputs Markdown code that renders like:
+
+> ## Subsection: Foobar
+> You can have several lines of markdown formatted text here.
+> You just need to make sure that each line is indented, with
+> at least three spaces after the comment marker.  You can
+> denote a paragraph break with a comment line with three
+> trailing spaces, or just a period.
+>
+> You can have links in this text to functions, modules, or
+> constants in other files by putting the name in double-
+> braces like [cyl()](shapes.scad#functionmodule-cyl) or [lerp()](math.scad#function-lerp) or [DOWN](constants.scad-down).  If you want to
+> link to another file, or section in another file you can use
+> a manual markdown link like [Subsection: Foo](shapes.scad#subsection-foo).
+>
+> The end of the block is denoted by a line without a comment.
+> or a line that is unindented after the comment.
+
+Subsections can also include Figures; images generated from code that is not shown in a code block.
 
 
 Item Blocks
@@ -269,45 +350,45 @@ Which outputs Markdown code that renders like:
 The `Function&Module` header is used to document a function which has a related module of the same name.  It should have a Description sub-block.  It is recommended to also have Usage, Arguments, and Example/Examples sub-blocks. You should have Usage blocks for both calling as a function, and calling as a
 module:
 
-    // Function&Module: ellipse()
+    // Function&Module: oval()
     // Topics: 2D Shapes, Geometry
     // Usage: As a Module
-    //   ellipse(rx,ry);
+    //   oval(rx,ry);
     // Usage: As a Function
-    //   path = ellipse(rx,ry);
+    //   path = oval(rx,ry);
     // Description:
-    //   When called as a function, returns the perimeter path of the ellipse.
-    //   When called as a module, creates a 2D ellipse shape.
+    //   When called as a function, returns the perimeter path of the oval.
+    //   When called as a module, creates a 2D oval shape.
     // Arguments:
     //   rx = X axis radius.
     //   ry = Y axis radius.
     // Example(2D): Called as a Function
-    //   path = ellipse(100,60);
+    //   path = oval(100,60);
     //   polygon(path);
     // Example(2D): Called as a Module
-    //   ellipse(80,60);
-    module ellipse(rx,ry) {
-        polygon(ellipse(rx,ry));
+    //   oval(80,60);
+    module oval(rx,ry) {
+        polygon(oval(rx,ry));
     }
-    function ellipse(rx,ry) =
+    function oval(rx,ry) =
         [for (a=[360:-360/$fn:0.0001]) [rx*cos(a),ry*sin(a)];
 
 Which outputs Markdown code that renders like:
 
-> ### Function&Module: ellipse()
+> ### Function&Module: oval()
 > **Topics:** 2D Shapes, Geometry
 >
 > **Usage:** As a Module
 >
-> - ellipse(rx,ry);
+> - oval(rx,ry);
 >
 > **Usage:** As a Function
 >
-> - path = ellipse(rx,ry);
+> - path = oval(rx,ry);
 >
 > **Description:**
-> When called as a function, returns the perimeter path of the ellipse.
-> When called as a module, creates a 2D ellipse shape.
+> When called as a function, returns the perimeter path of the oval.
+> When called as a module, creates a 2D oval shape.
 >
 > **Arguments:**
 > Positional Arg | What it does
@@ -318,7 +399,7 @@ Which outputs Markdown code that renders like:
 > **Example:** Called as a Function
 >
 > ```openscad
-> path = ellipse(100,60);
+> path = oval(100,60);
 > polygon(path);
 > ```
 > GENERATED IMAGE SHOWN HERE
@@ -326,11 +407,12 @@ Which outputs Markdown code that renders like:
 > **Example:** Called as a Module
 >
 > ```openscad
-> ellipse(80,60);
+> oval(80,60);
 > ```
 > GENERATED IMAGE SHOWN HERE
 
 These Type blocks can have a number of sub-blocks.  Most sub-blocks are optional,  The available standard sub-blocks are:
+
 - `// Aliases: alternatename(), anothername()`
 - `// Status: DEPRECATED`
 - `// Topics: Comma, Delimited, Topic, List`
@@ -385,18 +467,18 @@ Usage Block
 The Usage block describes the various ways that the current function or module can be called, with the names of the arguments.  By convention, the first few arguments that can be called positionally just have their name shown.  The remaining arguments that should be passed by name, will have the name followed by an `=` (equal sign).  Arguments that are optional in the given Usage context are shown in `<` and `>` angle brackets:
 
     // Usage: As a Module
-    //   ellipse(rx, ry, <spin=>);
+    //   oval(rx, ry, <spin=>);
     // Usage: As a Function
-    //   path = ellipse(rx, ry, <spin=>);
+    //   path = oval(rx, ry, <spin=>);
 
 Which outputs Markdown code that renders like:
 
 > **Usage:** As a Module
-> - ellipse(rx, ry, <spin=>);
+> - oval(rx, ry, <spin=>);
 > 
 > **Usage:** As a Function
 > 
-> - path = ellipse(rx, ry, <spin=>);
+> - path = oval(rx, ry, <spin=>);
 
 
 Description Block
@@ -529,6 +611,7 @@ metadata directives:
 - `Render`: Force full rendering from OpenSCAD, instead of the normal preview.
 - `Edges`: Highlight face edges.
 - `NoAxes`: Hides the axes and scales.
+- `NoScales`: Hides the scale numbers along the axes.
 - `ScriptUnder`: Display script text under image, rather than beside it.
 
 
@@ -636,17 +719,24 @@ If you have need of a non-standard documentation block in your docs, you can dec
 
     // DefineHeader(TYPE): NEWBLOCKNAME
 
-Where NEWBLOCKNAME is the name of the new block header, and TYPE defines the behavior of the new block.  TYPE can be one of:
+or:
+
+    // DefineHeader(TYPE;OPTIONS): NEWBLOCKNAME
+
+Where NEWBLOCKNAME is the name of the new block header, OPTIONS is an optional list of zero or more semicolon-separated header options, and TYPE defines the behavior of the new block.  TYPE can be one of:
 
 - `Generic`: Show both the TitleText and body.
 - `Text`: Show the TitleText as the first line of the body.
 - `Label`: Show only the TitleText and no body.
 - `NumList`: Shows TitleText, and the body lines in a numbered list.
-- `BulletListList`: Shows TitleText, and the body lines in a bullet list.
+- `BulletList`: Shows TitleText, and the body lines in a bullet list.
 - `Table`: Shows TitleText, and body lines in a definition table.
 - `Figure`: Shows TitleText, and an image rendered from the script in the Body.
 - `Example`: Like Figure, but also shows the body as an example script.
 
+The OPTIONS are zero or more semicolon separated options for defining the header options.  Some of them only require the option name, like `Foo`, and some have an option name and a value separated by an equals sign, like `Foo=Bar`.  There is currently only one option common to all header types:
+
+- `ItemOnly`: Specify that the new header is only allowed as part of the documentation block for a Constant, Function, or Module.
 
 Generic Block Type
 ------------------
@@ -678,9 +768,7 @@ Which outputs Markdown code that renders like:
 Text Block Type
 ---------------
 
-The Text block header type is similar to the Generic type, except it merges
-the title into the body.  This is useful for allowing single-line or multi-
-line blocks:
+The Text block header type is similar to the Generic type, except it merges the title into the body.  This is useful for allowing single-line or multi- line blocks:
 
     // DefineHeader(Text): Reason
     // Reason: This is a simple reason.
@@ -760,18 +848,11 @@ Which outputs Markdown code that renders like:
 
 
 Table Block Type
-------------------
+----------------
 
-The Table block header type outputs a header block with the title, followed by
-one or more tables.  This is genertally meant for definition lists.  The header
-names are given in the DefineHeader metadata.  Header names are separated by
-`|` (vertical bar, or pipe) characters, and sets of headers (for multiple
-tables) are separated by `||` (two vertical bars).  A header that starts with
-the `^` (hat, or circumflex) character, will cause the items in that column
-to be surrounded by \`foo\` literal markers.  Cells in the body content are
-separated by `=` (equals signs):
+The Table block header type outputs a header block with the title, followed by one or more tables.  This is generally meant for definition lists.  The header names are given as the `Headers=` option in the DefineHeader metadata.  Header names are separated by `|` (vertical bar, or pipe) characters, and sets of headers (for multiple tables) are separated by `||` (two vertical bars).  A header that starts with the `^` (hat, or circumflex) character, will cause the items in that column to be surrounded by \`foo\` literal markers.  Cells in the body content are separated by `=` (equals signs):
 
-    // DefineHeader(Table:^Link Name|Description): Anchors
+    // DefineHeader(Table;Headers=^Link Name|Description): Anchors
     // Anchors: by Name
     //   "link1" = Anchor for the joiner Located at the {{BACK}} side of the shape.
     //   "a"/"b" = Anchor for the joiner Located at the {{FRONT}} side of the shape.
@@ -788,7 +869,7 @@ Which outputs Markdown code that renders like:
 
 You can have multiple subtables, separated by a line with only three dashes: `---`:
 
-    // DefineHeader(Table:^Pos Arg|What it Does||^Names Arg|What it Does): Args
+    // DefineHeader(Table;Headers=^Pos Arg|What it Does||^Names Arg|What it Does): Args
     // Args:
     //   foo = The foo argument.
     //   bar = The bar argument.
@@ -811,40 +892,70 @@ Which outputs Markdown code that renders like:
 > `qux`       | The qux argument.
 >
 
+
 Defaults Configuration
 ======================
 
-The `openscad_decsgen` script looks for an `.openscad_docsgen_rc` file in
-the source code directory it is run in.  In that file, you can give a few
-defaults for what files will be processed, and where to save the generated
-markdown documentation.
+The `openscad_decsgen` script looks for an `.openscad_docsgen_rc` file in the source code directory it is run in.  In that file, you can give a few defaults for what files will be processed, and where to save the generated documentation.
 
-To ignore specific files, to prevent generating documentation for them, you
-can use the IgnoreFiles block.   Note that the commentline prefix is not
-needed in the configuration file:
+---
+
+To specify what directory to write the output documentation to, you can use the DocsDirectory block:
+
+    DocsDirectory: wiki_dir
+
+---
+
+To specify what target profile to output for, use the TargetProfile block.  You must specify either `wiki` or `githubwiki` as the value:
+
+    TargetProfile: githubwiki
+
+---
+
+To specify what the project name is, use the ProjectName block, like this:
+
+    ProjectName: My Project Name
+
+---
+
+To specify what types of files will be generated, you can use the GenerateDocs block.  You give it a comma separated list of docs file types like this:
+
+    GenerateDocs: Files, ToC, Index, Topics, CheatSheet, Sidebar
+
+Where the valid docs file types are as follows:
+
+- `Files`: Generate a documentation file for each .scad input file.  Generates Images.
+- `ToC`: Generate a project-wide Table of Contents file.
+- `Index`: Generate an alphabetically sorted function/module/constants index file.
+- `Topics`: Generate an index file of topics, sorted alphabetically.
+- `CheatSheet`: Generate a CheatSheet summary of function/module Usages.
+- `Cheat`: The same as `CheatSheet`.
+- `Sidebar`: Generate a \_Sidebar index of files.
+
+---
+
+To ignore specific files, to prevent generating documentation for them, you can use the IgnoreFiles block.   Note that the commentline prefix is not needed in the configuration file:
 
     IgnoreFiles:
       ignored1.scad
       ignored2.scad
+      tmp_*.scad
 
-To prioritize the ordering of files when generating the Table of Contents
-and other indices, you can use the PrioritizeFiles block:
+---
+
+To prioritize the ordering of files when generating the Table of Contents and other indices, you can use the PrioritizeFiles block:
 
     PrioritizeFiles:
       file1.scad
       file2.scad
 
-To specify what directory to write the markdown output documentation to, you
-can use the DocsDirectory block:
+---
 
-    DocsDirectory: wiki_dir
+You can also use the DefineHeader block in the config file to make custom block headers:
 
-You can also use the DefineHeader block in the config file to make custom
-block headers:
-
-    DefineHeader(Text): Returns
+    DefineHeader(Text;ItemOnly): Returns
     DefineHeader(BulletList): Side Effects
-    DefineHeader(Table:^Anchor Name|Position): Extra Anchors
+    DefineHeader(Table;Headers=^Anchor Name|Position): Extra Anchors
 
 
 

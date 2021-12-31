@@ -386,7 +386,7 @@ multmatrix(mat) square(50,center=true);
 To apply a compound transformation matrix to a path, you can use the `apply()` function:
 
 ```openscad-2D
-mat = move([5,10]) * rot(30, planar=true) * scale([1.5,0.75]);
+mat = move([5,10]) * rot(30) * scale([1.5,0.75]);
 path = square(50,center=true);
 tpath = apply(mat, path);
 stroke(tpath, endcap2="arrow2");
