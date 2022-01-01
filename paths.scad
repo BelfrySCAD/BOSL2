@@ -727,7 +727,11 @@ function path_torsion(path, closed=false) =
 //   stroke(path2, closed=true);
 function path_chamfer_and_rounding(path, closed=true, chamfer, rounding) =
   let (
-    path = deduplicate(path,closed=true),
+    p = force_path(path)
+  )
+  assert(is_path(p),"Input 'path' is not a path")
+  let(
+    path = deduplicate(p,closed=true),
     lp = len(path),
     chamfer = is_undef(chamfer)? repeat(0,lp) :
       is_vector(chamfer)? list_pad(chamfer,lp,0) :
