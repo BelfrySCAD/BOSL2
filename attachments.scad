@@ -2113,22 +2113,20 @@ module show_anchors(s=10, std=true, custom=true) {
                     anchor_arrow(s, color="cyan");
                 }
                 color("black")
-                tags("anchor-arrow")
-                {
+                tags("anchor-arrow") {
                     xrot(two_d? 0 : 90) {
                         back(s/3) {
                             yrot_copies(n=2)
-                            up(s/30) {
+                            up(two_d? 0.51 : s/30) {
                                 linear_extrude(height=0.01, convexity=12, center=true) {
-                                    text(text=anchor[0], size=s/4, halign="center", valign="center");
+                                    text(text=anchor[0], size=s/4, halign="center", valign="center", font="Helvetica", $fn=36);
                                 }
                             }
                         }
                     }
                 }
                 color([1, 1, 1, 1])
-                tags("anchor-arrow")
-                {
+                tags("anchor-arrow") {
                     xrot(two_d? 0 : 90) {
                         back(s/3) {
                              cube([s/4.5*len(anchor[0]), s/3, 0.01], center=true);
