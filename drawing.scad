@@ -9,7 +9,7 @@
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Basic Modeling
-// FileSummary: Attachable cubes, cylinders, spheres, ruler, and text.  Many can produce a VNF.
+// FileSummary: Create and draw 2D and 3D paths: arc, helix, turtle graphics
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 

@@ -741,6 +741,7 @@ function path_chamfer_and_rounding(path, closed=true, chamfer, rounding) =
       is_vector(rounding)? list_pad(rounding,lp,0) :
       is_num(rounding)? repeat(rounding,lp) :
       assert(false, "Bad rounding value."),
+    
     corner_paths = [
       for (i=(closed? [0:1:lp-1] : [1:1:lp-2])) let(
         p1 = select(path,i-1),

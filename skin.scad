@@ -10,7 +10,7 @@
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Advanced Modeling
-// FileSummary: Construct 3D shapes from a 2D cross sections of the desired shape.
+// FileSummary: Construct 3D shapes from 2D cross sections of the desired shape.
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
