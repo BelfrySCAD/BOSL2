@@ -54,7 +54,8 @@ include <structs.scad>
 //   If you select curves that are too large to fit the function will fail with an error.  You can set `verbose=true` to
 //   get a message showing a list of scale factors you can apply to your rounding parameters so that the
 //   roundovers will fit on the curve.  If the scale factors are larger than one
-//   then they indicate how much you can increase the curve sizes before collisions will occur.
+//   then they indicate how much you can increase the curve sizes before collisions will occur.  Note that for roundings
+//   to fit, you must leave space between them, so you you cannot round a length 10 segment with radius 5 roundings at each end.
 //   .
 //   The parameters `radius`, `cut`, `joint` and `k` can be numbers, which round every corner using the same parameters, or you
 //   can specify a list to round each corner with different parameters.  If the curve is not closed then the first and last points
@@ -292,7 +293,7 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
         ],
         dummy = verbose ? echo("Roundover scale factors:",scalefactors) : 0
     )
-    assert(min(scalefactors)>=1,str("Roundovers are too big for the path.  If you multitply them by this vector they should fit: ",scalefactors))
+    assert(min(scalefactors)>1,str("Roundovers are too big for the path.  If you multitply them by this vector they should fit: ",scalefactors))
     [
         for(i=[0:1:len(path)-1]) each
             (dk[i][0] == 0)? [path[i]] :
