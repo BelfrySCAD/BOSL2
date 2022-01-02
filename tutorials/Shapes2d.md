@@ -153,7 +153,7 @@ square(50, center=true)
 ```openscad-2D
 circle(d=50)
     position(polar_to_xy(1,60))
-        #square(15, center=true);
+        #circle(d=10);
 ```
 
 
@@ -195,7 +195,7 @@ square(50, center=true)
 ```openscad-2D
 circle(d=50)
     orient(polar_to_xy(1,30))
-        #square([10,50], center=true);
+        #square([10,50], anchor=FWD);
 ```
 
 You can use `position()` and `orient()` together to both position and orient to an anchorpoint:
@@ -211,7 +211,7 @@ square(50, center=true)
 circle(d=50)
     position(polar_to_xy(1,30))
         orient(polar_to_xy(1,30))
-            #square([10,50], center=true);
+            #square([10,40], anchor=FWD);
 ```
 
 But it's simpler to just use the `attach()` module to do both at once:
@@ -358,7 +358,7 @@ ellipse(d=50, anchor=FRONT+RIGHT);
 ```openscad-2D
 ellipse(d=50)
     attach(BACK+RIGHT, FRONT+LEFT)
-        ellipse(d=40);
+        ellipse(d=30);
 ```
 
 
@@ -370,7 +370,7 @@ The BOSL2 library can provide all of these shapes with the `trapezoid()` module.
 To make a simple triangle, just make one of the widths zero:
 
 ```openscad-2D
-trapezoid(w1=50, w2=0, h=50);
+trapezoid(w1=50, w2=0, h=40);
 ```
 
 To make a right triangle, you need to use the `shift=` argument, to shift the back of the trapezoid along the X axis:
@@ -426,7 +426,7 @@ While this is concise, it may be less than obvious at first glance:
 circle(d=50, $fn=5);
 ```
 
-The BOSL2 library has modules that are named more clearly:
+The BOSL2 library has modules that are named more clearly, for common N-gons:
 
 ```openscad-2D
 pentagon(d=50);
@@ -444,9 +444,7 @@ octagon(d=50);
 regular_ngon(n=7, d=50);
 ```
 
-These modules also provide you with extra functionality.
-
-They can be sized by side length:
+These modules also provide you with extra functionality.  They can be sized by side length:
 
 ```openscad-2D
 pentagon(side=20);
@@ -476,17 +474,20 @@ pentagon(d=50, rounding=10);
 hexagon(d=50, rounding=10);
 ```
 
-They also have somewhat different attachment behavior:
+They also have somewhat different attachment behavior.  A circle with a small `$fn=` will
+attach things at the ideal circle, not along the created polygon:
 
 ```openscad-2D
 color("green") stroke(circle(d=50), closed=true);
-ellipse(d=50,$fn=5)
-    attach(LEFT) color("blue") anchor_arrow2d();
+circle(d=50,$fn=6)
+    show_anchors();
 ```
 
+While an N-gon will attach along the polygon itself:
+
 ```openscad-2D
-pentagon(d=50)
-    attach(LEFT) color("blue") anchor_arrow2d();
+hexagon(d=50)
+    show_anchors(custom=false);
 ```
 
 You can use `anchor=` and `spin=`, just like with other attachable shapes.  However, the anchor
@@ -500,7 +501,7 @@ pentagon(d=50)
 
 N-gons also have named anchor points for their sides and tips:
 
-```openscad-2D
+```openscad-2D,Med
 pentagon(d=30)
     show_anchors(std=false);
 ```
@@ -543,7 +544,7 @@ right(30) star(n=5, step=2, d=50, realign=true);
 The `align_tip=` argument can be given a vector so that you can align the first point in a specific direction:
 
 ```openscad-2D
-star(n=5, ir=15, or=30, align_tip=BACK+LEFT)
+star(n=5, ir=15, or=30, align_tip=BACK)
     attach("tip0") color("blue") anchor_arrow2d();
 ```
 
@@ -556,7 +557,7 @@ Similarly, the first indentation or pit can be oriented towards a specific vecto
 
 
 ```openscad-2D
-star(n=5, ir=15, or=30, align_pit=BACK+LEFT)
+star(n=5, ir=15, or=30, align_pit=BACK)
     attach("pit0") color("blue") anchor_arrow2d();
 ```
 
@@ -575,7 +576,7 @@ star(n=5, step=2, d=50)
 
 Stars also have named anchor points for their pits, tips, and midpoints between tips:
 
-```openscad-2D
+```openscad-2D,Med
 star(n=5, step=2, d=40)
     show_anchors(std=false);
 ```
