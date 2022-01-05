@@ -221,7 +221,7 @@ module circle(r, d, anchor=CENTER, spin=0) {
 // Usage: As a Function
 //   path = ellipse(r|d=, [realign=], [circum=], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle()
+// See Also: circle(), circle_2tangents(), circle_3points()
 // Description:
 //   When called as a module, creates a 2D polygon that approximates a circle or ellipse of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle or ellipse of the given size.
