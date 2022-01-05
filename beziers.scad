@@ -747,14 +747,16 @@ function bezier_path(bezier, splinesteps=16, N=3, endpoint=true) =
 //   using `path_tangents()` with `uniform=false` by default.  Tangents computed on non-uniform data tend
 //   to display overshoots.  See `smooth_path()` for examples.
 // Arguments:
-//   path = 2D or 3D point list that the curve must pass through
+//   path = 2D or 3D point list or 1-region that the curve must pass through
 //   closed = true if the curve is closed .  Default: false
 //   tangents = tangents constraining curve direction at each point
 //   uniform = set to true to compute tangents with uniform=true.  Default: false
 //   ---
 //   size = absolute size specification for the curve, a number or vector
 //   relsize = relative size specification for the curve, a number or vector.  Default: 0.1. 
-function path_to_bezier(path, closed=false, tangents, uniform=false, size, relsize) =
+function path_to_bezier(path, closed, tangents, uniform=false, size, relsize) =
+    is_1region(path) ? path_to_bezier(path[0], default(closed,true), tangents, uniform, size, relsize) :
+    let(closed=default(closed,false))
     assert(is_bool(closed))
     assert(is_bool(uniform))
     assert(num_defined([size,relsize])<=1, "Can't define both size and relsize")

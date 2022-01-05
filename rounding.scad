@@ -500,9 +500,10 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   stroke(smooth_path(pts, uniform=false, relsize=0.1),width=.1);
 //   color("red")move_copies(pts)circle(r=.15,$fn=12);
 module smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=false, closed=false) {no_module();}
-function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=false, closed=false) =
+function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=false, closed) =
+  is_1region(path) ? smooth_path(path[0], tangents, size, relsize, splinesteps, uniform, default(closed,true)) :
   let (
-     bez = path_to_bezier(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=closed)
+     bez = path_to_bezier(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=default(closed,false))
   )
   bezier_path(bez,splinesteps=splinesteps);
 
