@@ -996,8 +996,8 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
                   ? concat(pin_smooth, reverse(pin_smooth))
                   : let(side_smooth=select(pin_smooth, 0, 2))
                     concat(side_smooth, [socket_smooth], reverse(side_smooth));
-    bez = path_to_bezier(path,relsize=smoothing,tangents=tangent);
-    rounded = bezier_path(bez,splinesteps=splinesteps);
+    bez = path_to_bezpath(path,relsize=smoothing,tangents=tangent);
+    rounded = bezpath_curve(bez,splinesteps=splinesteps);
     bounds = pointlist_bounds(rounded);
     extrapt = is_pin ? [] : [rounded[0] - [0,extra]];
     finalpath = is_pin ? rounded

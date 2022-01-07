@@ -650,7 +650,7 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
 function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true) =
     assert(is_bool(endpoint))
     !endpoint ? assert(!wedge, "endpoint cannot be false if wedge is true")
-               list_head(arc(N+1,r,angle,d,cp,points,width,thickness,start,wedge,long,cw,ccw,true)) :
+               list_head(arc(u_add(N,1),r,angle,d,cp,points,width,thickness,start,wedge,long,cw,ccw,true)) :
     assert(is_undef(N) || (is_integer(N) && N>=2), "Number of points must be an integer 2 or larger")
     // First try for 2D arc specified by width and thickness
     is_def(width) && is_def(thickness)? (

@@ -172,6 +172,10 @@ CENTER = [ 0,  0,  0];  // Centered zero vector.
 CTR = CENTER;
 
 
+// Section: Line specifiers
+//   Used by functions in geometry.scad for specifying whether two points
+//   are treated as an unbounded line, a ray with one endpoint, or a segment
+//   with two endpoints.  
 
 // Constant: SEGMENT
 // Topics: Constants, Lines

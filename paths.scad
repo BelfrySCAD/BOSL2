@@ -10,7 +10,7 @@
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Advanced Modeling
-// FileSummary: Work with arbitrary 2D or 3D paths.
+// FileSummary: Operations on paths: length, resampling, tangents, splitting into subpaths
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
