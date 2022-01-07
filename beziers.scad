@@ -25,7 +25,7 @@
 //   Spline Steps = The number of straight-line segments used to approximate a Bezier curve.  The more spline steps, the better the approximation to the curve, but the slower it will be to generate.  This plays a role analogous to `$fn` for circles.  Usually defaults to 16.
 
 
-// Section: Bezier Curve Functions
+// Section: Bezier Curves
 
 // Function: bezier_points()
 // Usage:
@@ -472,7 +472,7 @@ function bezpath_curve(bezpath, splinesteps=16, N=3, endpoint=true) =
 //   bez = [[0,0], [20,40], [60,-25], [80,0],
 //          [100,25], [140,25], [160,0]];
 //   pos = bezpath_closest_point(bez, pt);
-//   xy = bezpath_point(bez,pos[0],pos[1]);
+//   xy = bezpath_points(bez,pos[0],pos[1]);
 //   trace_bezier(bez, N=3);
 //   color("red") translate(pt) sphere(r=1);
 //   color("blue") translate(xy) sphere(r=1);
@@ -860,7 +860,7 @@ function bez_end(pt,a,r,p) =
 
 
 
-// Section: Patch Functions
+// Section: Bezier Surfaces
 
 
 // Function: bezier_patch_points()
@@ -1452,7 +1452,7 @@ module trace_bezier(bezpath, width=1, N=3) {
       if ($idx % N !=0) circle(d=width/2);
 }
 
-
+h
 // Module: trace_bezier_patches()
 // Usage:
 //   trace_bezier_patches(patches, [size=], [splinesteps=], [showcps=], [showdots=], [showpatch=], [convexity=], [style=]);
