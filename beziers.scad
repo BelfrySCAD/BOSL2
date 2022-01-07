@@ -472,7 +472,7 @@ function bezpath_curve(bezpath, splinesteps=16, N=3, endpoint=true) =
 //   bez = [[0,0], [20,40], [60,-25], [80,0],
 //          [100,25], [140,25], [160,0]];
 //   pos = bezpath_closest_point(bez, pt);
-//   xy = bezier_path_point(bez,pos[0],pos[1]);
+//   xy = bezpath_point(bez,pos[0],pos[1]);
 //   trace_bezier(bez, N=3);
 //   color("red") translate(pt) sphere(r=1);
 //   color("blue") translate(xy) sphere(r=1);
@@ -615,7 +615,7 @@ function path_to_bezpath(path, closed, tangents, uniform=false, size, relsize) =
 // Usage:
 //   bezpath = bezpath_close_to_axis(bezpath, [axis], [N]);
 // Topics: Bezier Paths
-// See Also: bezier_offset()
+// See Also: bezpath_offset()
 // Description:
 //   Takes a 2D bezier path and closes it to the specified axis.
 // Arguments:
@@ -658,7 +658,7 @@ function bezpath_close_to_axis(bezpath, axis="X", N=3) =
 // Usage:
 //   bezpath = bezpath_offset(offset, bezier, [N]);
 // Topics: Bezier Paths
-// See Also: bezier_close_to_axis()
+// See Also: bezpath_close_to_axis()
 // Description:
 //   Takes a 2D bezier path and closes it with a matching reversed path that is offset by the given `offset` [X,Y] distance.
 // Arguments:
@@ -869,7 +869,7 @@ function bez_end(pt,a,r,p) =
 //   ptgrid = bezier_patch_points(patch, LIST, LIST);
 //   ptgrid = bezier_patch_points(patch, RANGE, RANGE);
 // Topics: Bezier Patches
-// See Also: bezier_points(), bezier_curve(), bezier_path(), bezier_triangle_point()
+// See Also: bezier_points(), bezier_curve(), bezpath_curve(), bezier_triangle_point()
 // Description:
 //   Given a square 2-dimensional array of (N+1) by (N+1) points size, that represents a Bezier Patch
 //   of degree N, returns a point on that surface, at positions `u`, and `v`.  A cubic bezier patch
@@ -913,7 +913,7 @@ function bezier_patch_points(patch, u, v) =
 // Usage:
 //   pt = bezier_triangle_point(tri, u, v);
 // Topics: Bezier Patches
-// See Also: bezier_points(), bezier_curve(), bezier_path(), bezier_patch_points()
+// See Also: bezier_points(), bezier_curve(), bezpath_curve(), bezier_patch_points()
 // Description:
 //   Given a triangular 2-dimensional array of N+1 by (for the first row) N+1 points,
 //   that represents a Bezier triangular patch of degree N, returns a point on
@@ -987,7 +987,7 @@ function is_patch(x) =
 // Usage:
 //   vnf = bezier_patch(patch, [splinesteps], [style=]);
 // Topics: Bezier Patches
-// See Also: bezier_points(), bezier_curve(), bezier_path(), bezier_patch_points(), bezier_triangle_point()
+// See Also: bezier_points(), bezier_curve(), bezpath_curve(), bezier_patch_points(), bezier_triangle_point()
 // Description:
 //   Calculate vertices and faces for forming a partial polyhedron from the given bezier rectangular
 //   or triangular patch.  Returns a [VNF structure](vnf.scad): a list containing two elements.  The first is the
@@ -1406,7 +1406,7 @@ function bezier_surface(patches=[], splinesteps=16, style="default") =
 // Usage:
 //   trace_bezier(bez, [size], [N=]);
 // Topics: Bezier Paths, Debugging
-// See Also: bezier_path()
+// See Also: bezpath_curve()
 // Description:
 //   Renders 2D or 3D bezier paths and their associated control points.
 //   Useful for debugging bezier paths.
@@ -1428,7 +1428,7 @@ module trace_bezier(bezpath, width=1, N=3) {
     assert(is_int(N));
     assert(len(bezpath)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
     $fn=8;
-    stroke(bezier_path(bezpath, N=N), width=width, color="cyan");
+    stroke(bezpath_curve(bezpath, N=N), width=width, color="cyan");
     color("green")
       if (N!=3) 
            stroke(bezpath, width=width);

@@ -1,10 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: lists.scad
-//   Functions for constructing and manipulating generic lists. 
+//   Functions for operating on generic lists.  Provides functiosn for indexing lists, changing list
+//   structure, and constructing lists by rearranging or modifying another list. 
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Data Management
-// FileSummary: Various list manipulation functions
+// FileSummary: List indexing, change list structure, rearrange/modify lists
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 

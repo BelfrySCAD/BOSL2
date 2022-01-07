@@ -7,7 +7,7 @@
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Math
-// FileSummary: Line and plane intersections, circles from 3 points, etc.
+// FileSummary: Geometrical calculations including intersections of lines, circles and planes, circle from 3 points
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
