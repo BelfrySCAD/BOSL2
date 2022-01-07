@@ -8,9 +8,7 @@
 // FileSummary: Routed bundles of wires.
 //////////////////////////////////////////////////////////////////////
 
-
-include <beziers.scad>
-
+include <rounding.scad>
 
 // Section: Functions
 
@@ -77,10 +75,10 @@ function hex_offsets(n, d, lev=0, arr=[]) =
 //   wirediam = The diameter of each wire in the bundle.
 //   rounding = The radius that the path corners will be rounded to.
 //   wirenum = The first wire's offset into the color table.
-//   bezsteps = The corner roundings in the path will be converted into this number of segments.
+//   corner_steps = The corner roundings in the path will be converted into this number of segments.
 // Example:
 //   wiring([[50,0,-50], [50,50,-50], [0,50,-50], [0,0,-50], [0,0,0]], rounding=10, wires=13);
-module wiring(path, wires, wirediam=2, rounding=10, wirenum=0, bezsteps=12) {
+module wiring(path, wires, wirediam=2, rounding=10, wirenum=0, corner_steps=12) {
     colors = [
         [0.2, 0.2, 0.2], [1.0, 0.2, 0.2], [0.0, 0.8, 0.0], [1.0, 1.0, 0.2],
         [0.3, 0.3, 1.0], [1.0, 1.0, 1.0], [0.7, 0.5, 0.0], [0.5, 0.5, 0.5],
@@ -89,14 +87,13 @@ module wiring(path, wires, wirediam=2, rounding=10, wirenum=0, bezsteps=12) {
         [0.6, 0.6, 1.0],
     ];
     offsets = hex_offsets(wires, wirediam);
-    bezpath = fillet_path(path, rounding);
-    poly = path_merge_collinear(path3d(bezier_path(bezpath, bezsteps)));
+    rounded_path = round_corners(path, radius=rounding,$fn=(corner_steps+1)*4,closed=false);
     n = max(segs(wirediam), 8);
     r = wirediam/2;
     for (i = [0:1:wires-1]) {
         extpath = [for (j = [0:1:n-1]) let(a=j*360/n) [r*cos(a)+offsets[i][0], r*sin(a)+offsets[i][1]]];
         color(colors[(i+wirenum)%len(colors)]) {
-            path_sweep(extpath, poly);
+            path_sweep(extpath, rounded_path);
         }
     }
 }
