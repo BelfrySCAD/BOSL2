@@ -1126,6 +1126,85 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
 
 
 
+// Function&Module: egg()
+// Usage: As Module
+//   egg(length, r1, r2, R);
+// Usage: As Function
+//   path = egg(length, r1|d2, r2|d2, R|D);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), ellipse(), glued_circles()
+// Description:
+//   Constructs an egg-shaped object by connecting two circles with convex arcs that are tangent to the circles.
+//   You specify the length of the egg, the radii of the two circles, and the desired arc radius.
+//   Note that because the side radius, R, is often much larger than the end radii, you may get better
+//   results using `$fs` and `$fa` to control the number of semgments rather than using `$fn`.
+//   This shape may be useful for creating a cam.  
+// Arguments:
+//   length = length of the egg
+//   r1 = radius of the left-hand circle
+//   r2 = radius of the right-hand circle
+//   R = radius of the joining arcs
+//   ---
+//   d1 = diameter of the left-hand circle
+//   d2 = diameter of the right-hand circle
+//   D = diameter of the joining arcs
+// Extra Anchors:
+//   "left" = center of the left circle
+//   "right" = center of the right circle
+// Example(2D,NoAxes): This first example shows how the egg is constructed from two circles and two joining arcs.
+//   $fn=100;
+//   color("red")stroke(egg(78,25,12, 60),closed=true);
+//   stroke([left(14,circle(25)),
+//           right(27,circle(12))]);
+// Examples(2D,NoAxes):
+//   egg(78,25,12,50,$fn=64);
+//   egg(78,25,12,60,$fn=64);
+//   egg(78,25,12,85,$fs=0.1,$fa=1);
+//   egg(78,25,12,150,$fs=0.1,$fa=1);
+//   egg(78,25,4, 140, $fs=0.1, $fa=1);
+//   stroke(egg(50,15,20, 40, $fs=0.1, $fa=1,anchor=BACK));
+function egg(length, r1, r2, R, d1, d2, D, anchor=CENTER, spin=0) =
+    let(
+        r1 = get_radius(r1=r1,d1=d1),
+        r2 = get_radius(r1=r2,d1=d2),
+        D = get_radius(r1=R, d1=D)
+    )
+    assert(length>0)
+    assert(R>length/2, "Side radius R must be larger than length/2")
+    assert(length>r1+r2, "Length must be longer than 2*(r1+r2)")
+    assert(length>2*r2, "Length must be longer than 2*r2")
+    assert(length>2*r1, "Length must be longer than 2*r1")  
+    let(
+        c1 = [-length/2+r1,0],
+        c2 = [length/2-r2,0],
+        Rmin = (r1+r2+norm(c1-c2))/2,
+        Mlist = circle_circle_intersection(c1,R-r1,c2,R-r2),
+        arcparms = reverse([for(M=Mlist) [M, c1+r1*unit(c1-M), c2+r2*unit(c2-M)]]),
+        path = concat(
+                      arc(r=r2, cp=c2, points=[[length/2,0],arcparms[0][2]],endpoint=false),
+                      arc(r=R, cp=arcparms[0][0], points=select(arcparms[0],[2,1]),endpoint=false),
+                      arc(r=r1, points=[arcparms[0][1], [-length/2,0], arcparms[1][1]],endpoint=false),
+                      arc(r=R, cp=arcparms[1][0], points=select(arcparms[1],[1,2]),endpoint=false),
+                      arc(r=r2, cp=c2, points=[arcparms[1][2], [length/2,0]],endpoint=false)
+        ),
+        anchors = [named_anchor("left", c1, BACK, 0),
+                   named_anchor("right", c2, BACK, 0)]
+    )
+    reorient(anchor, spin, two_d=true, path=path, extent=true, p=path, anchors=anchors);
+
+module egg(length,r1,r2,R,d1,d2,D,anchor=CENTER, spin=0)
+{
+  path = egg(length,r1,r2,R,d1,d2,D);
+  anchors = [named_anchor("left", [-length/2+r1,0], BACK, 0),
+             named_anchor("right", [length/2-r2,0], BACK, 0)];
+  attachable(anchor, spin, two_d=true, path=path, extent=true, anchors=anchors){
+    polygon(path);
+    children();
+  }
+}
+
+
+
 // Function&Module: glued_circles()
 // Usage: As Module
 //   glued_circles(r/d=, [spread=], [tangent=], ...);
@@ -1134,7 +1213,7 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
 // Usage: As Function
 //   path = glued_circles(r/d=, [spread=], [tangent=], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), ellipse()
+// See Also: circle(), ellipse(), egg()
 // Description:
 //   When called as a function, returns a 2D path forming a shape of two circles joined by curved waist.
 //   When called as a module, creates a 2D shape of two circles joined by curved waist.  Uses "hull" style anchoring.  
