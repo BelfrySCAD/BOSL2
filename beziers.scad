@@ -1452,7 +1452,7 @@ module trace_bezier(bezpath, width=1, N=3) {
       if ($idx % N !=0) circle(d=width/2);
 }
 
-h
+
 // Module: trace_bezier_patches()
 // Usage:
 //   trace_bezier_patches(patches, [size=], [splinesteps=], [showcps=], [showdots=], [showpatch=], [convexity=], [style=]);
