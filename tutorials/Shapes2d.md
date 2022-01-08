@@ -133,7 +133,7 @@ square(50, center=true)
 
 ```openscad-2D
 square(50, center=true)
-    #square([30,50], anchor=FWD);
+    #square([20,40], anchor=FWD);
 ```
 
 By adding the `position()` module, you can position the child at any anchorpoint on the parent:
@@ -177,25 +177,25 @@ module.  It does not position the child.  It only rotates it:
 ```openscad-2D
 square(50, center=true)
     orient(anchor=LEFT)
-        #square([10,50], anchor=FWD);
+        #square([10,40], anchor=FWD);
 ```
 
 ```openscad-2D
 square(50, center=true)
     orient(anchor=FWD)
-        #square([10,50], anchor=FWD);
+        #square([10,40], anchor=FWD);
 ```
 
 ```openscad-2D
 square(50, center=true)
     orient(anchor=RIGHT)
-        #square([10,50], anchor=FWD);
+        #square([10,40], anchor=FWD);
 ```
 
 ```openscad-2D
 circle(d=50)
     orient(polar_to_xy(1,30))
-        #square([10,50], anchor=FWD);
+        #square([10,40], anchor=FWD);
 ```
 
 You can use `position()` and `orient()` together to both position and orient to an anchorpoint:
@@ -204,7 +204,7 @@ You can use `position()` and `orient()` together to both position and orient to 
 square(50, center=true)
     position(RIGHT+BACK)
         orient(anchor=RIGHT+BACK)
-            #square([10,50], anchor=FWD);
+            #square([10,40], anchor=FWD);
 ```
 
 ```openscad-2D
@@ -219,13 +219,13 @@ But it's simpler to just use the `attach()` module to do both at once:
 ```openscad-2D
 square(50, center=true)
     attach(LEFT+BACK)
-        #square([10,50], anchor=FWD);
+        #square([10,40], anchor=FWD);
 ```
 
 ```openscad-2D
 circle(d=50)
     attach(polar_to_xy(1,30))
-        #square([10,50], center=true);
+        #square([10,40], center=true);
 ```
 
 Instead of specifying the `anchor=` in the child, you can pass a second argument to `attach()`
@@ -234,18 +234,18 @@ that tells it which side of the child to attach to the parent:
 ```openscad-2D
 square([10,50], center=true)
     attach(BACK, LEFT)
-        #square([10,50], center=true);
+        #square([10,40], center=true);
 ```
 
 ```openscad-2D
 circle(d=50)
     attach(polar_to_xy(1,30), LEFT)
-        #square([10,50], center=true);
+        #square([10,40], center=true);
 ```
 
 
 
-#### `rect()`
+#### Rectangles
 
 The BOSL2 library provides an alternative to `square()`, that support more features.  It is
 called `rect()`.  You can use it in the same way you use `square()`, but it also provides
@@ -298,7 +298,7 @@ a corner, specify a 0 chamfer for that corner, and vice versa:
 rect([60,40], rounding=[5,0,10,0], chamfer=[0,5,0,15]);
 ```
 
-### `ellipse()`
+#### Ellipses
 
 The BOSL2 library also provides an enhanced equivalent of `circle()` called `ellipse()`.
 You can use it in the same way you use `circle()`, but it also provides extended
@@ -362,9 +362,47 @@ ellipse(d=50)
 ```
 
 
-### Trapezoids
+#### Right Triangles
+The BOSL2 library provides a simple way to make a 2D right triangle by using the `right_triangle()` module:
 
-OpenSCAD doesn't provide a simple way to make 2D triangles, trapezoids, or parallelograms.
+```openscad-2D
+right_triangle([40,30]);
+```
+
+You can use `xflip()` and `yflip()` to change which quadrant the triangle is formed in:
+
+```openscad-2D
+xflip() right_triangle([40,30]);
+```
+
+```openscad-2D
+yflip() right_triangle([40,30]);
+```
+
+```openscad-2D
+xflip() yflip() right_triangle([40,30]);
+```
+
+Or, alternatively, just rotate it into the correct quadrant with `spin=`:
+
+```openscad-2D
+right_triangle([40,30], spin=90);
+```
+
+```openscad-2D
+right_triangle([40,30], spin=-90);
+```
+
+You can also use anchoring with right triangles:
+
+```openscad-2D
+right_triangle([40,30], anchor=FWD+RIGHT);
+```
+
+
+#### Trapezoids
+
+OpenSCAD doesn't provide a simple way to make general 2D triangles, trapezoids, or parallelograms.
 The BOSL2 library can provide all of these shapes with the `trapezoid()` module.
 
 To make a simple triangle, just make one of the widths zero:
@@ -417,7 +455,7 @@ trapezoid(w1=30, w2=50, h=50)
     show_anchors();
 ```
 
-### Regular N-Gons
+#### Regular N-Gons
 
 OpenSCAD lets you make regular N-gons (pentagon, hexagon, etc) by using `circle()` with `$fn`.
 While this is concise, it may be less than obvious at first glance:
@@ -507,7 +545,7 @@ pentagon(d=30)
 ```
 
 
-### Stars
+#### Stars
 
 The BOSL2 library has stars as a basic supported shape.  They can have any number of points.
 You can specify a star's shape by point count, inner and outer vertex radius/diameters:
@@ -583,7 +621,7 @@ star(n=5, step=2, d=40)
 
 
 
-### Teardrop2D
+#### Teardrop2D
 
 Often when 3D printing, you may want to make a circular hole in a vertical wall.  If the hole is
 too big, however, the overhang at the top of the hole can cause problems with printing on an
@@ -625,7 +663,7 @@ teardrop2d(d=50, ang=30, cap_h=30)
 ```
 
 
-### Glued Circles
+#### Glued Circles
 
 A more unusal shape that BOSL2 provides is Glued Circles.  It's basically a pair of circles,
 connected by what looks like a gloopy glued miniscus:

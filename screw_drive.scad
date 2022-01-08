@@ -16,7 +16,7 @@
 //   Creates a mask for creating a Phillips drive recess given the Phillips size.  Each mask can
 //   be lowered to different depths to create different sizes of recess.  
 // Arguments:
-//   size = The size of the bit as a number or string.  "#0", "#1", "#2", "#3", or "#4"
+//   size = The size of the bit as an integer or string.  "#0", "#1", "#2", "#3", or "#4"
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -321,6 +321,48 @@ module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
         children();
     }
 }
+
+
+// Section: Robertson/Square Drives
+
+// Module: robertson_mask()
+// Usage:
+//   robertson_mask(size, [extra]);
+// Description:
+//   Creates a mask for creating a Robertson/Square drive recess given the drive size as an integer.
+// Arguments:
+//   size = The size of the square drive, as an integer from 0 to 4.
+//   extra = Extra length of drive mask to create.
+// Example:
+//   robertson_mask(size=2);
+// Example:
+//   difference() {
+//       cyl(d1=2, d2=8, h=4, anchor=TOP);
+//       robertson_mask(size=2);
+//   }
+module robertson_mask(size, extra=1) {
+    assert(is_int(size) && size>=0 && size<=4);
+    Mmin = [0.0696, 0.0900, 0.1110, 0.1315, 0.1895][size];
+    Mmax = [0.0710, 0.0910, 0.1126, 0.1330, 0.1910][size];
+    M = (Mmin + Mmax) / 2 * INCH;
+    Tmin = [0.063, 0.105, 0.119, 0.155, 0.191][size];
+    Tmax = [0.073, 0.113, 0.140, 0.165, 0.201][size];
+    T = (Tmin + Tmax) / 2 * INCH;
+    Fmin = [0.032, 0.057, 0.065, 0.085, 0.090][size];
+    Fmax = [0.038, 0.065, 0.075, 0.095, 0.100][size];
+    F = (Fmin + Fmax) / 2 * INCH;
+    ang = 2;
+    h = T + extra;
+    down(T) {
+        intersection(){
+            Mtop = M + 2*adj_ang_to_opp(F+extra,ang);
+            Mbot = M - 2*adj_ang_to_opp(T-F,ang);
+            prismoid([Mbot,Mbot],[Mtop,Mtop],h=h,anchor=BOT);
+            cyl(d1=0, d2=M/(T-F)*sqrt(2)*h, h=h, anchor=BOT);
+        }
+    }
+}
+
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
