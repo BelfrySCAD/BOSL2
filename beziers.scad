@@ -416,7 +416,7 @@ function bezier_line_intersection(bezier, line) =
 //   u = Parameter values for evaluating the curve, given as a single value, a list or a range.
 //   N = The degree of the Bezier path curves.  Cubic Bezier paths have N=3.  Default: 3
 function bezpath_points(bezpath, seg, u, N=3) =
-    bezpath_points(select(bezpath,seg*N,(seg+1)*N), u);
+    bezier_points(select(bezpath,seg*N,(seg+1)*N), u);
 
 
 // Function: bezpath_curve()
