@@ -48,7 +48,7 @@ PrioritizeFiles:
   bottlecaps.scad
   screw_drive.scad
 DefineHeader(BulletList): Side Effects
-DefineHeader(Table;Headers=Anchor&nbsp;Name|Position): Extra Anchors
+DefineHeader(Table;Headers=Anchor Name|Position): Extra Anchors
 DefineHeader(Table;Headers=Name|Definition): Terminology
 DefineHeader(BulletList): Requirements
 
