@@ -4,7 +4,7 @@
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Basic Modeling
-// FileSummary: Shortcuts for translation, rotation, etc.  Can act on geometry, paths, or can return a matrix.
+// FileSummary: Copy or distribute objects onto a line or grid.  Mirror shortcuts. 
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 

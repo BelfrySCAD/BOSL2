@@ -293,13 +293,14 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
         dummy = verbose ? echo("Roundover scale factors:",scalefactors) : 0
     )
     assert(min(scalefactors)>=1,str("Roundovers are too big for the path.  If you multitply them by this vector they should fit: ",scalefactors))
-    [
+    // duplicates are introduced when roundings fully consume a segment, so remove them
+    deduplicate([
         for(i=[0:1:len(path)-1]) each
             (dk[i][0] == 0)? [path[i]] :
             (method=="smooth")? _bezcorner(select(path,i-1,i+1), dk[i]) :
             (method=="chamfer") ? _chamfcorner(select(path,i-1,i+1), dk[i]) :
             _circlecorner(select(path,i-1,i+1), dk[i])
-    ];
+    ]);
 
 // Computes the continuous curvature control points for a corner when given as
 // input three points in a list defining the corner.  The points must be
@@ -344,7 +345,7 @@ function _bezcorner(points, parm) =
                                 points[1]+k*d*next,
                                 points[1]+d*next
                         ] : _smooth_bez_fill(points,parm),
-                N = max(3,$fn>0 ?$fn : ceil(bezier_segment_length(P)/$fs))
+                N = max(3,$fn>0 ?$fn : ceil(bezier_length(P)/$fs))
         )
         bezier_curve(P,N+1,endpoint=true);
 
@@ -449,7 +450,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   in which case the size parameter specifies the sum of the deviations of the two peaks of the curve.  In 3-space
 //   the bezier curve may have three extrema: two maxima and one minimum.  In this case the size specifies
 //   the sum of the maxima minus the minimum.  At a given segment there is a maximum size: if your size
-//   value is too large it will be rounded down.  See also path_to_bezier().
+//   value is too large it will be rounded down.  See also path_to_bezpath().
 // Arguments:
 //   path = path to smooth
 //   tangents = tangents constraining curve direction at each point.  Default: computed automatically
@@ -499,11 +500,12 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   stroke(smooth_path(pts, uniform=false, relsize=0.1),width=.1);
 //   color("red")move_copies(pts)circle(r=.15,$fn=12);
 module smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=false, closed=false) {no_module();}
-function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=false, closed=false) =
+function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=false, closed) =
+  is_1region(path) ? smooth_path(path[0], tangents, size, relsize, splinesteps, uniform, default(closed,true)) :
   let (
-     bez = path_to_bezier(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=closed)
+     bez = path_to_bezpath(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=default(closed,false))
   )
-  bezier_path(bez,splinesteps=splinesteps);
+  bezpath_curve(bez,splinesteps=splinesteps);
 
 
 
@@ -663,7 +665,7 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
                              loop?"closing the path":str("adding path ",i+1)))
   let(
       bezpts = _smooth_bez_fill([firstcut[0], corner, nextcut[0]],k[i]),
-      N = max(3,$fn>0 ?$fn : ceil(bezier_segment_length(bezpts)/$fs)),
+      N = max(3,$fn>0 ?$fn : ceil(bezier_length(bezpts)/$fs)),
       bezpath = approx(firstcut[0],corner) && approx(corner,nextcut[0])
                   ? []
                   : bezier_curve(bezpts,N),

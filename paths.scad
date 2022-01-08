@@ -10,7 +10,7 @@
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Advanced Modeling
-// FileSummary: Work with arbitrary 2D or 3D paths.
+// FileSummary: Operations on paths: length, resampling, tangents, splitting into subpaths
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
@@ -727,7 +727,11 @@ function path_torsion(path, closed=false) =
 //   stroke(path2, closed=true);
 function path_chamfer_and_rounding(path, closed=true, chamfer, rounding) =
   let (
-    path = deduplicate(path,closed=true),
+    p = force_path(path)
+  )
+  assert(is_path(p),"Input 'path' is not a path")
+  let(
+    path = deduplicate(p,closed=true),
     lp = len(path),
     chamfer = is_undef(chamfer)? repeat(0,lp) :
       is_vector(chamfer)? list_pad(chamfer,lp,0) :
@@ -737,6 +741,7 @@ function path_chamfer_and_rounding(path, closed=true, chamfer, rounding) =
       is_vector(rounding)? list_pad(rounding,lp,0) :
       is_num(rounding)? repeat(rounding,lp) :
       assert(false, "Bad rounding value."),
+    
     corner_paths = [
       for (i=(closed? [0:1:lp-1] : [1:1:lp-2])) let(
         p1 = select(path,i-1),

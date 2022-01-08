@@ -176,7 +176,7 @@ module chain_hull()
 //       trapezoid(w1=10, w2=5, h=10, anchor=BACK);
 // Example:
 //   include <BOSL2/beziers.scad>
-//   path = bezier_path([
+//   path = bezpath_curve([
 //       [-50,0], [-25,50], [0,0], [50,0]
 //   ]);
 //   path_extrude2d(path, caps=false)

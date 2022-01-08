@@ -1274,25 +1274,6 @@ module attachable(
 }
 
 
-
-
-
-// Function: named_anchor()
-// Usage:
-//   a = named_anchor(name, pos, [orient], [spin]);
-// Topics: Attachments
-// See Also: reorient(), attachable()
-// Description:
-//   Creates an anchor data structure.  For a more step-by-step explanation of attachments,
-//   see the [[Attachments Tutorial|Tutorial-Attachments]].
-// Arguments:
-//   name = The string name of the anchor.  Lowercase.  Words separated by single dashes.  No spaces.
-//   pos = The [X,Y,Z] position of the anchor.
-//   orient = A vector pointing in the direction parts should project from the anchor position.
-//   spin = If needed, the angle to rotate the part around the direction vector.
-function named_anchor(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, spin];
-
-
 // Function: reorient()
 //
 // Usage: Square/Trapezoid Geometry
@@ -1416,6 +1397,24 @@ function reorient(
         ),
         $attach_to = undef
     ) _attach_transform(anchor,spin,orient,geom,p);
+
+
+// Function: named_anchor()
+// Usage:
+//   a = named_anchor(name, pos, [orient], [spin]);
+// Topics: Attachments
+// See Also: reorient(), attachable()
+// Description:
+//   Creates an anchor data structure.  For a more step-by-step explanation of attachments,
+//   see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Arguments:
+//   name = The string name of the anchor.  Lowercase.  Words separated by single dashes.  No spaces.
+//   pos = The [X,Y,Z] position of the anchor.
+//   orient = A vector pointing in the direction parts should project from the anchor position.
+//   spin = If needed, the angle to rotate the part around the direction vector.
+function named_anchor(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, spin];
+
+
 
 
 

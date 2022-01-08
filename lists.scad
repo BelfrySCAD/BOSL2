@@ -1,10 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: lists.scad
-//   Functions for constructing and manipulating generic lists. 
+//   Functions for operating on generic lists.  Provides functiosn for indexing lists, changing list
+//   structure, and constructing lists by rearranging or modifying another list. 
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Data Management
-// FileSummary: Various list manipulation functions
+// FileSummary: List indexing, change list structure, rearrange/modify lists
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
@@ -387,6 +388,7 @@ function repeat(val, n, i=0) =
 //   s = The starting value of the list of numbers.
 //   step = The amount to increment successive numbers in the list.
 //   reverse = Reverse the list.  Default: false.
+// See Also: idx()
 // Example:
 //   nl1 = count(5);  // Returns: [0,1,2,3,4]
 //   nl2 = count(5,3);  // Returns: [3,4,5,6,7]
@@ -851,9 +853,10 @@ function idx(list, s=0, e=-1, step=1) =
 // Topics: List Handling, Iteration
 // See Also: idx(), triplet(), combinations(), permutations()
 // Description:
-//   Takes a list, and returns a list of adjacent pairs from it, optionally wrapping back to the front.
+//   Returns a list of all of the pairs of adjacent items from a list, optionally wrapping back to the front.  The pairs overlap, and
+//   are returned in order starting with the first two entries in the list.  If the list has less than two elements, the empty list is returned. 
 // Arguments:
-//   list = The list to iterate.
+//   list = The list to use for making pairs
 //   wrap = If true, wrap back to the start from the end.  ie: return the last and first items as the last pair.  Default: false
 // Example(2D): Does NOT wrap from end to start,
 //   for (p = pair(circle(d=40, $fn=12)))
@@ -883,7 +886,7 @@ function pair(list, wrap=false) =
 // Topics: List Handling, Iteration
 // See Also: idx(), pair(), combinations(), permutations()
 // Description:
-//   Takes a list, and returns a list of adjacent triplets from it, optionally wrapping back to the front.
+//   Returns a list of all adjacent triplets from a list, optionally wrapping back to the front.
 //   If you set `wrap` to true then the first triplet is the one centered on the first list element, so it includes
 //   the last element and the first two elements.  If the list has fewer than three elements then the empty list is returned.
 // Arguments:

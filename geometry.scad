@@ -7,7 +7,7 @@
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Math
-// FileSummary: Line and plane intersections, circles from 3 points, etc.
+// FileSummary: Geometrical calculations including intersections of lines, circles and planes, circle from 3 points
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
@@ -1076,6 +1076,72 @@ function circle_line_intersection(c,r,d,line,bounded=false,eps=EPSILON) =
         && (!bounded[1] || (p-line[1])*(line[0]-line[1])>=0)) p];
 
 
+// Function: circle_circle_intersection()
+// Usage:
+//   pts = circle_circle_tangents(c1, r1|d1, c2, r2|d2, [eps]);
+// Topics: Geometry, Circles
+// Description:
+//   Compute the intersection points of two circles.  Returns a list of the intersection points, which
+//   will contain two points in the general case, one point for tangent circles, or will be empty
+//   if the circles do not intersect.
+// Arguments:
+//   c1 = Center of the first circle.
+//   r1 = Radius of the first circle.
+//   c2 = Center of the second circle.
+//   r2 = Radius of the second circle.
+//   eps = Tolerance for detecting tangent circles.  Default: EPSILON
+//   ---
+//   d1 = Diameter of the first circle.
+//   d2 = Diameter of the second circle.
+// Example(2D,NoAxes): Circles intersect in two points. 
+//   $fn=32;
+//   c1 = [4,4];  r1 = 3;
+//   c2 = [7,7]; r2 = 2;
+//   pts = circle_circle_intersection(c1,r1,c2,r2);
+//   move(c1) stroke(circle(r=r1), width=0.2, closed=true);
+//   move(c2) stroke(circle(r=r2), width=0.2, closed=true);
+//   color("red")move_copies(pts) circle(r=.3);
+// Example(2D,NoAxes): Circles are tangent, so one intersection point:
+//   $fn=32;
+//   c1 = [4,4];  r1 = 4;
+//   c2 = [4,10]; r2 = 2;
+//   pts = circle_circle_intersection(c1,r1,c2,r2);
+//   move(c1) stroke(circle(r=r1), width=0.2, closed=true);
+//   move(c2) stroke(circle(r=r2), width=0.2, closed=true);
+//   color("red")move_copies(pts) circle(r=.3);
+// Example(2D,NoAxes): Another tangent example:
+//   $fn=32;
+//   c1 = [4,4];  r1 = 4;
+//   c2 = [5,5];  r2 = 4-sqrt(2);
+//   pts = circle_circle_intersection(c1,r1,c2,r2);
+//   move(c1) stroke(circle(r=r1), width=0.2, closed=true);
+//   move(c2) stroke(circle(r=r2), width=0.2, closed=true);
+//   color("red")move_copies(pts) circle(r=.3);
+// Example(2D,NoAxes): Circles do not intersect.  Returns empty list. 
+//   $fn=32;
+//   c1 = [3,4];  r1 = 2;
+//   c2 = [7,10]; r2 = 3;
+//   pts = circle_circle_intersection(c1,r1,c2,r2);
+//   move(c1) stroke(circle(r=r1), width=0.2, closed=true);
+//   move(c2) stroke(circle(r=r2), width=0.2, closed=true);
+//   color("red")move_copies(pts) circle(r=.2);     // pts is []
+function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
+    assert( is_path([c1,c2],dim=2), "Invalid center point(s)." )
+    let(
+        r1 = get_radius(r1=r1,d1=d1),
+        r2 = get_radius(r1=r2,d1=d2),
+        d = norm(c2-c1),
+        a = (c2-c1)/d,
+        b = [-a.y,a.x],
+        L = (r1^2-r2^2+d^2)/2/d,
+        hsqr = r1^2-L^2
+    )
+    approx(hsqr,0,eps) ? [L*a+c1]
+  : hsqr<0 ? []
+  : let(h=sqrt(hsqr))
+    [L*a+h*b+c1, L*a-h*b+c1];
+
+
 // Function&Module: circle_2tangents()
 // Usage: As Function
 //   circ = circle_2tangents(pt1, pt2, pt3, r|d, [tangents]);
@@ -1323,6 +1389,7 @@ function circle_point_tangents(r, d, cp, pt) =
 //   r1 = Radius of the first circle.
 //   c2 = Center of the second circle.
 //   r2 = Radius of the second circle.
+//   ---
 //   d1 = Diameter of the first circle.
 //   d2 = Diameter of the second circle.
 // Example(2D,NoAxes): Four tangents, first in green, second in black, third in blue, last in red.

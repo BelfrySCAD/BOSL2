@@ -1281,8 +1281,7 @@ function skew(p=_NO_ARG, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0) =
     p==_NO_ARG? m : apply(m, p);
 
 
-// Section: Applying transformation matrices to
-
+// Section: Applying transformation matrices to data
 
 /// Internal Function: is_2d_transform()
 /// Usage:
