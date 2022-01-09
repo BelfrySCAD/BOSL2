@@ -1829,7 +1829,7 @@ module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot
   {
     if (debug){
         vnf_polyhedron(vnf, convexity=convexity);
-        trace_bezier_patches(result[0], showcps=true, splinesteps=splinesteps, $fn=16, showdots=false, showpatch=false);
+        debug_bezier_patches(result[0], showcps=true, splinesteps=splinesteps, $fn=16, showdots=false, showpatch=false);
     }
     else vnf_polyhedron(vnf,convexity=convexity);
     children();

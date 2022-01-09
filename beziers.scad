@@ -44,24 +44,24 @@
 //   u = Parameter values for evaluating the curve, given as a single value, a list or a range.  
 // Example(2D): Quadratic (Degree 2) Bezier.
 //   bez = [[0,0], [30,30], [80,0]];
-//   trace_bezier(bez, N=len(bez)-1);
+//   debug_bezier(bez, N=len(bez)-1);
 //   translate(bezier_points(bez, 0.3)) color("red") sphere(1);
 // Example(2D): Cubic (Degree 3) Bezier
 //   bez = [[0,0], [5,35], [60,-25], [80,0]];
-//   trace_bezier(bez, N=len(bez)-1);
+//   debug_bezier(bez, N=len(bez)-1);
 //   translate(bezier_points(bez, 0.4)) color("red") sphere(1);
 // Example(2D): Degree 4 Bezier.
 //   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
-//   trace_bezier(bez, N=len(bez)-1);
+//   debug_bezier(bez, N=len(bez)-1);
 //   translate(bezier_points(bez, 0.8)) color("red") sphere(1);
 // Example(2D): Giving a List of `u`
 //   bez = [[0,0], [5,35], [60,-25], [80,0]];
-//   trace_bezier(bez, N=len(bez)-1);
+//   debug_bezier(bez, N=len(bez)-1);
 //   pts = bezier_points(bez, [0, 0.2, 0.3, 0.7, 0.8, 1]);
 //   rainbow(pts) move($item) sphere(1.5, $fn=12);
 // Example(2D): Giving a Range of `u`
 //   bez = [[0,0], [5,35], [60,-25], [80,0]];
-//   trace_bezier(bez, N=len(bez)-1);
+//   debug_bezier(bez, N=len(bez)-1);
 //   pts = bezier_points(bez, [0:0.2:1]);
 //   rainbow(pts) move($item) sphere(1.5, $fn=12);
 
@@ -195,15 +195,15 @@ function _bezier_matrix(N) =
 // Example(2D): Quadratic (Degree 2) Bezier.
 //   bez = [[0,0], [30,30], [80,0]];
 //   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
-//   trace_bezier(bez, N=len(bez)-1);
+//   debug_bezier(bez, N=len(bez)-1);
 // Example(2D): Cubic (Degree 3) Bezier
 //   bez = [[0,0], [5,35], [60,-25], [80,0]];
 //   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
-//   trace_bezier(bez, N=len(bez)-1);
+//   debug_bezier(bez, N=len(bez)-1);
 // Example(2D): Degree 4 Bezier.
 //   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
 //   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
-//   trace_bezier(bez, N=len(bez)-1);
+//   debug_bezier(bez, N=len(bez)-1);
 function bezier_curve(bezier,n,endpoint=true) =
     bezier_points(bezier, lerpn(0,1,n,endpoint));
 
@@ -299,7 +299,7 @@ function bezier_curvature(bezier, u) =
 //   pt = [40,15];
 //   bez = [[0,0], [20,40], [60,-25], [80,0]];
 //   u = bezier_closest_point(bez, pt);
-//   trace_bezier(bez, N=len(bez)-1);
+//   debug_bezier(bez, N=len(bez)-1);
 //   color("red") translate(pt) sphere(r=1);
 //   color("blue") translate(bezier_points(bez,u)) sphere(r=1);
 function bezier_closest_point(bezier, pt, max_err=0.01, u=0, end_u=1) =
@@ -438,7 +438,7 @@ function bezpath_points(bezpath, seg, u, N=3) =
 //       [60,25], [70,0], [80,-25],
 //       [80,-50], [50,-50]
 //   ];
-//   trace_bezier(bez, N=3, width=2);
+//   debug_bezier(bez, N=3, width=2);
 function bezpath_curve(bezpath, splinesteps=16, N=3, endpoint=true) =
     assert(is_path(bezpath))
     assert(is_int(N))
@@ -473,7 +473,7 @@ function bezpath_curve(bezpath, splinesteps=16, N=3, endpoint=true) =
 //          [100,25], [140,25], [160,0]];
 //   pos = bezpath_closest_point(bez, pt);
 //   xy = bezpath_points(bez,pos[0],pos[1]);
-//   trace_bezier(bez, N=3);
+//   debug_bezier(bez, N=3);
 //   color("red") translate(pt) sphere(r=1);
 //   color("blue") translate(xy) sphere(r=1);
 function bezpath_closest_point(bezpath, pt, N=3, max_err=0.01, seg=0, min_seg=undef, min_u=undef, min_dist=undef) =
@@ -626,12 +626,12 @@ function path_to_bezpath(path, closed, tangents, uniform=false, size, relsize) =
 //   bez = [[50,30], [40,10], [10,50], [0,30],
 //          [-10, 10], [-30,10], [-50,20]];
 //   closed = bezpath_close_to_axis(bez);
-//   trace_bezier(closed);
+//   debug_bezier(closed);
 // Example(2D):
 //   bez = [[30,50], [10,40], [50,10], [30,0],
 //          [10, -10], [10,-30], [20,-50]];
 //   closed = bezpath_close_to_axis(bez, axis="Y");
-//   trace_bezier(closed);
+//   debug_bezier(closed);
 function bezpath_close_to_axis(bezpath, axis="X", N=3) =
     assert(is_path(bezpath,2), "bezpath_close_to_axis() can only work on 2D bezier paths.")
     assert(is_int(N))
@@ -668,11 +668,11 @@ function bezpath_close_to_axis(bezpath, axis="X", N=3) =
 // Example(2D):
 //   bez = [[50,30], [40,10], [10,50], [0,30], [-10, 10], [-30,10], [-50,20]];
 //   closed = bezpath_offset([0,-5], bez);
-//   trace_bezier(closed);
+//   debug_bezier(closed);
 // Example(2D):
 //   bez = [[30,50], [10,40], [50,10], [30,0], [10, -10], [10,-30], [20,-50]];
 //   closed = bezpath_offset([-5,0], bez);
-//   trace_bezier(closed);
+//   debug_bezier(closed);
 function bezpath_offset(offset, bezier, N=3) =
     assert(is_vector(offset,2))
     assert(is_path(bezier,2), "bezpath_offset() can only work on 2D bezier paths.")
@@ -712,7 +712,7 @@ function bezpath_offset(offset, bezier, N=3) =
 //       bez_joint([ 20,-25], 135, 90, 10, 15),
 //       bez_end  ([ 50,  0], -90,20),
 //   ]);
-//   trace_bezier(bezpath);
+//   debug_bezier(bezpath);
 // Example(2D): 2D Bezier Path by Vector
 //   bezpath = flatten([
 //       bez_begin([-50,0],[0,-20]),
@@ -720,7 +720,7 @@ function bezpath_offset(offset, bezier, N=3) =
 //       bez_joint([ 20,-25], [-10,10], [0,15]),
 //       bez_end  ([ 50,0],[0, 20]),
 //   ]);
-//   trace_bezier(bezpath);
+//   debug_bezier(bezpath);
 // Example(2D): 2D Bezier Path by Vector and Distance
 //   bezpath = flatten([
 //       bez_begin([-30,0],FWD, 30),
@@ -728,7 +728,7 @@ function bezpath_offset(offset, bezier, N=3) =
 //       bez_joint([ 20,-25], 135, 90, 10, 15),
 //       bez_end  ([ 30,0],BACK,30),
 //   ]);
-//   trace_bezier(bezpath);
+//   debug_bezier(bezpath);
 // Example(3D,FlatSpin,VPD=200): 3D Bezier Path by Angle
 //   bezpath = flatten([
 //       bez_begin([-30,0,0],90,20,p=135),
@@ -736,7 +736,7 @@ function bezpath_offset(offset, bezier, N=3) =
 //       bez_joint([20,-25,0], 135, 90, 15, 10, p1=135, p2=45),
 //       bez_end  ([ 30,0,0],-90,20,p=45),
 //   ]);
-//   trace_bezier(bezpath);
+//   debug_bezier(bezpath);
 // Example(3D,FlatSpin,VPD=225): 3D Bezier Path by Vector
 //   bezpath = flatten([
 //       bez_begin([-30,0,0],[0,-20, 20]),
@@ -744,7 +744,7 @@ function bezpath_offset(offset, bezier, N=3) =
 //       bez_joint([20,-25,0],[0,10,-10],[0,15,15]),
 //       bez_end  ([ 30,0,0],[0,-20,-20]),
 //   ]);
-//   trace_bezier(bezpath);
+//   debug_bezier(bezpath);
 // Example(3D,FlatSpin,VPD=225): 3D Bezier Path by Vector and Distance
 //   bezpath = flatten([
 //       bez_begin([-30,0,0],FWD, 20),
@@ -752,7 +752,7 @@ function bezpath_offset(offset, bezier, N=3) =
 //       bez_joint([20,-25,0],LEFT,DOWN,r1=20,r2=15),
 //       bez_end  ([ 30,0,0],DOWN,20),
 //   ]);
-//   trace_bezier(bezpath);
+//   debug_bezier(bezpath);
 function bez_begin(pt,a,r,p) =
     assert(is_finite(r) || is_vector(a))
     assert(len(pt)==3 || is_undef(p))
@@ -886,7 +886,7 @@ function bez_end(pt,a,r,p) =
 //       [[-50,-16, 20], [-16,-16,  40], [ 16,-16,  40], [50,-16, 20]],
 //       [[-50,-50,  0], [-16,-50,  20], [ 16,-50,  20], [50,-50,  0]]
 //   ];
-//   trace_bezier_patches(patches=[patch], size=1, showcps=true);
+//   debug_bezier_patches(patches=[patch], size=1, showcps=true);
 //   pt = bezier_patch_points(patch, 0.6, 0.75);
 //   translate(pt) color("magenta") sphere(d=3, $fn=12);
 // Example(3D): Getting Multiple Points at Once
@@ -896,7 +896,7 @@ function bez_end(pt,a,r,p) =
 //       [[-50,-16, 20], [-16,-16,  40], [ 16,-16,  40], [50,-16, 20]],
 //       [[-50,-50,  0], [-16,-50,  20], [ 16,-50,  20], [50,-50,  0]]
 //   ];
-//   trace_bezier_patches(patches=[patch], size=1, showcps=true);
+//   debug_bezier_patches(patches=[patch], size=1, showcps=true);
 //   pts = bezier_patch_points(patch, [0:0.2:1], [0:0.2:1]);
 //   for (row=pts) move_copies(row) color("magenta") sphere(d=3, $fn=12);
 function bezier_patch_points(patch, u, v) =
@@ -930,7 +930,7 @@ function bezier_patch_points(patch, u, v) =
 //       [[0,-33,30], [25,16,30]],
 //       [[50,-33,0]]
 //   ];
-//   trace_bezier_patches(patches=[tri], size=1, showcps=true);
+//   debug_bezier_patches(patches=[tri], size=1, showcps=true);
 //   pt = bezier_triangle_point(tri, 0.5, 0.2);
 //   translate(pt) color("magenta") sphere(d=3, $fn=12);
 function bezier_triangle_point(tri, u, v) =
@@ -1336,7 +1336,7 @@ function _bezier_triangle(tri, splinesteps=16) =
 //   trans = Amount to translate patch, after rotating to `orient`.
 // Example(3D):
 //   patch = bezier_patch_flat(size=[100,100], N=3);
-//   trace_bezier_patches([patch], size=1, showcps=true);
+//   debug_bezier_patches([patch], size=1, showcps=true);
 function bezier_patch_flat(size=[100,100], N=4, spin=0, orient=UP, trans=[0,0,0]) =
     let(
         patch = [
@@ -1402,9 +1402,9 @@ function bezier_surface(patches=[], splinesteps=16, style="default") =
 // Section: Debugging Beziers
 
 
-// Module: trace_bezier()
+// Module: debug_bezier()
 // Usage:
-//   trace_bezier(bez, [size], [N=]);
+//   debug_bezier(bez, [size], [N=]);
 // Topics: Bezier Paths, Debugging
 // See Also: bezpath_curve()
 // Description:
@@ -1422,8 +1422,8 @@ function bezier_surface(patches=[], splinesteps=16, style="default") =
 //       [ 14,  -5],  [ 15,   0],  [16,   5],
 //       [  5,  10],  [  0,  10]
 //   ];
-//   trace_bezier(bez, N=3, width=0.5);
-module trace_bezier(bezpath, width=1, N=3) { 
+//   debug_bezier(bez, N=3, width=0.5);
+module debug_bezier(bezpath, width=1, N=3) { 
     assert(is_path(bezpath));
     assert(is_int(N));
     assert(len(bezpath)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
@@ -1453,9 +1453,9 @@ module trace_bezier(bezpath, width=1, N=3) {
 }
 
 
-// Module: trace_bezier_patches()
+// Module: debug_bezier_patches()
 // Usage:
-//   trace_bezier_patches(patches, [size=], [splinesteps=], [showcps=], [showdots=], [showpatch=], [convexity=], [style=]);
+//   debug_bezier_patches(patches, [size=], [splinesteps=], [showcps=], [showdots=], [showpatch=], [convexity=], [style=]);
 // Topics: Bezier Patches, Debugging
 // See Also: bezier_patch_points(), bezier_patch_flat(), bezier_surface()
 // Description:
@@ -1483,8 +1483,8 @@ module trace_bezier(bezpath, width=1, N=3) {
 //       [[ 0,33,0], [33, 33,-50], [ 67, 33,-50], [100, 33,0]],
 //       [[15,15,0], [33,  0,  0], [ 67,  0,  0], [ 85, 15,0]],
 //   ];
-//   trace_bezier_patches(patches=[patch1, patch2], splinesteps=8, showcps=true);
-module trace_bezier_patches(patches=[], size, splinesteps=16, showcps=true, showdots=false, showpatch=true, convexity=10, style="default")
+//   debug_bezier_patches(patches=[patch1, patch2], splinesteps=8, showcps=true);
+module debug_bezier_patches(patches=[], size, splinesteps=16, showcps=true, showdots=false, showpatch=true, convexity=10, style="default")
 {
     assert(is_undef(size)||is_num(size));
     assert(is_int(splinesteps) && splinesteps>0);

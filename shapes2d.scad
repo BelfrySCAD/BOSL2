@@ -1128,9 +1128,9 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
 
 // Function&Module: egg()
 // Usage: As Module
-//   egg(length, r1, r2, R);
+//   egg(length, r1|d1, r2|d2, R|D);
 // Usage: As Function
-//   path = egg(length, r1|d2, r2|d2, R|D);
+//   path = egg(length, r1|d1, r2|d2, R|D);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), ellipse(), glued_circles()
 // Description:
@@ -1151,12 +1151,12 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
 // Extra Anchors:
 //   "left" = center of the left circle
 //   "right" = center of the right circle
-// Example(2D,NoAxes): This first example shows how the egg is constructed from two circles and two joining arcs.
+// Example(2D): This first example shows how the egg is constructed from two circles and two joining arcs.
 //   $fn=100;
 //   color("red")stroke(egg(78,25,12, 60),closed=true);
 //   stroke([left(14,circle(25)),
 //           right(27,circle(12))]);
-// Examples(2D,NoAxes):
+// Examples(2D):
 //   egg(78,25,12,50,$fn=64);
 //   egg(78,25,12,60,$fn=64);
 //   egg(78,25,12,85,$fs=0.1,$fa=1);
