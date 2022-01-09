@@ -20,7 +20,7 @@
 //   Degree = The degree of the polynomial used to make the bezier curve.  A bezier curve of degree N will have N+1 control points.  Most beziers are cubic (degree 3).  The higher the degree, the more the curve can wiggle.  
 //   Bezier Parameter = A parameter, usually `u` below, that ranges from 0 to 1 to trace out the bezier curve.  When `u=0` you get the first control point and when `u=1` you get the last control point. Intermediate points are traced out *non-uniformly*.  
 //   Bezier Path = A list of bezier control points corresponding to a series of Bezier curves that connect together, end to end.  Because they connect, the endpoints are shared between control points and are not repeated, so a degree 3 bezier path representing two bezier curves will have seven entries to represent two sets of four control points.    **NOTE:** A "bezier path" is *NOT* a standard path
-//   Bezier Patch = A two-dimensional arrangement of Bezier control points that generate a bounded curved Bezier surface.  A rectangular patch is a (N+1) by (M+1) grid of control points, which define surface with four edges (in the non-degenerate case).  A triangular patch is a triangular arrangement of control points and it generates a Bezier surface with 3 edges.  
+//   Bezier Patch = A two-dimensional arrangement of Bezier control points that generate a bounded curved Bezier surface.  A Bezier patch is a (N+1) by (M+1) grid of control points, which defines surface with four edges (in the non-degenerate case). 
 //   Bezier Surface = A surface defined by a list of one or more bezier patches.
 //   Spline Steps = The number of straight-line segments used to approximate a Bezier curve.  The more spline steps, the better the approximation to the curve, but the slower it will be to generate.  This plays a role analogous to `$fn` for circles.  Usually defaults to 16.
 
@@ -395,7 +395,7 @@ function bezier_line_intersection(bezier, line) =
 // Section: Bezier Path Functions
 //   To contruct more complicated curves you can connect a sequence of Bezier curves end to end.  
 //   A Bezier path is a flattened list of control points that, along with the degree, represents such a sequence of bezier curves where all of the curves have the same degree.
-//   A Bezier path looks like a regular path, since it is just a list of points, but it is not a regular path.  Use {{bezpath_curve()} to convert a Bezier path to a regular path.
+//   A Bezier path looks like a regular path, since it is just a list of points, but it is not a regular path.  Use {{bezpath_curve()}} to convert a Bezier path to a regular path.
 //   We interpret a degree N Bezier path as groups of N+1 control points that
 //   share endpoints, so they overlap by one point.  So if you have an order 3 bezier path `[p0,p1,p2,p3,p4,p5,p6]` then the first
 //   Bezier curve control point set is `[p0,p1,p2,p3]` and the second one is `[p3,p4,p5,p6]`.  The endpoint, `p3`, is shared between the control point sets.
@@ -857,10 +857,61 @@ function bez_end(pt,a,r,p) =
 
 
 
-
-
-
 // Section: Bezier Surfaces
+
+
+// Function: is_bezier_patch()
+// Usage:
+//   bool = is_bezier_patch(x);
+// Topics: Bezier Patches, Type Checking
+// Description:
+//   Returns true if the given item is a bezier patch.
+// Arguments:
+//   x = The value to check the type of.
+function is_bezier_patch(x) =
+    is_list(x) && is_list(x[0]) && is_vector(x[0][0]) && len(x[0]) == len(x[len(x)-1]);  
+
+
+// Function: bezier_patch_flat()
+// Usage:
+//   patch = bezier_patch_flat(size, [N=], [spin=], [orient=], [trans=]);
+// Topics: Bezier Patches
+// See Also: bezier_patch_points()
+// Description:
+//   Returns a flat rectangular bezier patch of degree `N`, centered on the XY plane.
+// Arguments:
+//   size = 2D XY size of the patch.
+//   ---
+//   N = Degree of the patch to generate.  Since this is flat, a degree of 1 should usually be sufficient.
+//   orient = The orientation to rotate the edge patch into.  Given as an [X,Y,Z] rotation angle list.
+//   trans = Amount to translate patch, after rotating to `orient`.
+// Example(3D):
+//   patch = bezier_patch_flat(size=[100,100], N=3);
+//   debug_bezier_patches([patch], size=1, showcps=true);
+function bezier_patch_flat(size=[100,100], N=4, spin=0, orient=UP, trans=[0,0,0]) =
+    let(
+        patch = [
+            for (x=[0:1:N]) [
+                for (y=[0:1:N])
+                v_mul(point3d(size), [x/N-0.5, 0.5-y/N, 0])
+            ]
+        ],
+        m = move(trans) * rot(a=spin, from=UP, to=orient)
+    ) [for (row=patch) apply(m, row)];
+
+
+
+// Function: bezier_patch_reverse()
+// Usage:
+//   rpatch = bezier_patch_reverse(patch);
+// Topics: Bezier Patches
+// See Also: bezier_patch_points(), bezier_patch_flat()
+// Description:
+//   Reverses the patch, so that the faces generated from it are flipped back to front.
+// Arguments:
+//   patch = The patch to reverse.
+function bezier_patch_reverse(patch) =
+    [for (row=patch) reverse(row)];
 
 
 // Function: bezier_patch_points()
@@ -869,7 +920,7 @@ function bez_end(pt,a,r,p) =
 //   ptgrid = bezier_patch_points(patch, LIST, LIST);
 //   ptgrid = bezier_patch_points(patch, RANGE, RANGE);
 // Topics: Bezier Patches
-// See Also: bezier_points(), bezier_curve(), bezpath_curve(), bezier_triangle_point()
+// See Also: bezier_points(), bezier_curve(), bezpath_curve()
 // Description:
 //   Given a square 2-dimensional array of (N+1) by (N+1) points size, that represents a Bezier Patch
 //   of degree N, returns a point on that surface, at positions `u`, and `v`.  A cubic bezier patch
@@ -909,94 +960,31 @@ function bezier_patch_points(patch, u, v) =
     [for (i = idx(vbezes[0])) bezier_points(column(vbezes,i), is_num(v)? [v] : v)];
 
 
-// Function: bezier_triangle_point()
-// Usage:
-//   pt = bezier_triangle_point(tri, u, v);
-// Topics: Bezier Patches
-// See Also: bezier_points(), bezier_curve(), bezpath_curve(), bezier_patch_points()
-// Description:
-//   Given a triangular 2-dimensional array of N+1 by (for the first row) N+1 points,
-//   that represents a Bezier triangular patch of degree N, returns a point on
-//   that surface, at positions `u`, and `v`.  A cubic bezier triangular patch
-//   will have a list of 4 points in the first row, 3 in the second, 2 in the
-//   third, and 1 in the last row.
-// Arguments:
-//   tri = Triangular bezier patch to get point on.
-//   u = The proportion of the way along the first dimension of the triangular patch to find the point of.  0<=`u`<=1
-//   v = The proportion of the way along the second dimension of the triangular patch to find the point of.  0<=`v`<=(1-`u`)
-// Example(3D):
-//   tri = [
-//       [[-50,-33,0], [-25,16,40], [20,66,20]],
-//       [[0,-33,30], [25,16,30]],
-//       [[50,-33,0]]
-//   ];
-//   debug_bezier_patches(patches=[tri], size=1, showcps=true);
-//   pt = bezier_triangle_point(tri, 0.5, 0.2);
-//   translate(pt) color("magenta") sphere(d=3, $fn=12);
-function bezier_triangle_point(tri, u, v) =
-    len(tri) == 1 ? tri[0][0] :
+function _bezier_rectangle(patch, splinesteps=16, style="default") =
     let(
-        n = len(tri)-1,
-        Pu = [for(i=[0:1:n-1]) [for (j=[1:1:len(tri[i])-1]) tri[i][j]]],
-        Pv = [for(i=[0:1:n-1]) [for (j=[0:1:len(tri[i])-2]) tri[i][j]]],
-        Pw = [for(i=[1:1:len(tri)-1]) tri[i]]
+        uvals = lerpn(0,1,splinesteps.x+1),
+        vvals = lerpn(1,0,splinesteps.y+1),
+        pts = bezier_patch_points(patch, uvals, vvals)
     )
-    bezier_triangle_point(u*Pu + v*Pv + (1-u-v)*Pw, u, v);
+    vnf_vertex_array(pts, style=style, reverse=false);
 
 
-// Function: is_tripatch()
+// Function: bezier_vnf()
 // Usage:
-//   bool = is_tripatch(x);
-// Topics: Bezier Patches, Type Checking
-// See Also: is_rectpatch(), is_patch()
-// Description:
-//   Returns true if the given item is a triangular bezier patch.
-// Arguments:
-//   x = The value to check the type of.
-function is_tripatch(x) =
-    is_list(x) && is_list(x[0]) && is_vector(x[0][0]) && len(x[0])>1 && len(x[len(x)-1])==1;
-
-
-// Function: is_rectpatch()
-// Usage:
-//   bool = is_rectpatch(x);
-// Topics: Bezier Patches, Type Checking
-// See Also: is_tripatch(), is_patch()
-// Description:
-//   Returns true if the given item is a rectangular bezier patch.
-// Arguments:
-//   x = The value to check the type of.
-function is_rectpatch(x) =
-    is_list(x) && is_list(x[0]) && is_vector(x[0][0]) && len(x[0]) == len(x[len(x)-1]);
-
-
-// Function: is_patch()
-// Usage:
-//   bool = is_patch(x);
-// Topics: Bezier Patches, Type Checking
-// See Also: is_tripatch(), is_rectpatch()
-// Description:
-//   Returns true if the given item is a bezier patch.
-// Arguments:
-//   x = The value to check the type of.
-function is_patch(x) =
-    is_tripatch(x) || is_rectpatch(x);
-
-
-// Function: bezier_patch()
-// Usage:
-//   vnf = bezier_patch(patch, [splinesteps], [style=]);
+//   vnf = bezier_vnf(patches, [splinesteps], [style]);
 // Topics: Bezier Patches
-// See Also: bezier_points(), bezier_curve(), bezpath_curve(), bezier_patch_points(), bezier_triangle_point()
+// See Also: bezier_patch_points(), bezier_patch_flat()
 // Description:
-//   Calculate vertices and faces for forming a partial polyhedron from the given bezier rectangular
-//   or triangular patch.  Returns a [VNF structure](vnf.scad): a list containing two elements.  The first is the
-//   list of unique vertices.  The second is the list of faces, where each face is a list of indices into the
-//   list of vertices.  You can use {{vnf_join()}} to stitch together multiple bezier patches or other VNFs into a complete polyhedron. 
+//   Calculate vertices and faces for forming a (possibly partial) polyhedron from the given
+//   bezier patch or list of patches.  Returns a [VNF structure](vnf.scad): a list
+//   containing two elements.  The first is the the list of vertices.  The second is the list
+//   of faces, where each face is a list of indices into the list of vertices.  The splinesteps argument specifies
+//   the number of segments on the borders of the patch or patches.  It can be a scalar or
+//   it can be [XSTEPS, YSTEPS].  Note that the surface you produce maybe
+//   disconnected and is not necessarily a valid polyhedron. 
 // Arguments:
-//   patch = The rectangular or triangular array of endpoints and control points for this bezier patch.
+//   patches = The bezier patch or list of bezier patches to convert into a surface. 
 //   splinesteps = Number of steps to divide each bezier segment into.  For rectangular patches you can specify [XSTEPS,YSTEPS].  Default: 16
-//   ---
 //   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "min_edge", "quincunx", "convex" and "concave".  See {{vnf_vertex_array()}}.  Default: "default"
 // Example(3D):
 //   patch = [
@@ -1007,17 +995,9 @@ function is_patch(x) =
 //       [[-50, 50,  0], [-16, 50, -20], [ 16, 50,  20], [50, 50,  0]],
 //       // u=0,v=1                                         u=1,v=1
 //   ];
-//   vnf = bezier_patch(patch, splinesteps=16);
+//   vnf = bezier_vnf(patch, splinesteps=16);
 //   vnf_polyhedron(vnf);
-// Example(3D):
-//   tri = [
-//       [[-50,-33,0], [-25,16,50], [0,66,0]],
-//       [[0,-33,50], [25,16,50]],
-//       [[50,-33,0]]
-//   ];
-//   vnf = bezier_patch(tri, splinesteps=16);
-//   vnf_polyhedron(vnf);
-// Example(3D,FlatSpin,VPD=444): Merging multiple patches
+// Example(3D,FlatSpin,VPD=444): Combining multiple patches
 //   patch = [
 //       // u=0,v=0                                u=1,v=0
 //       [[0,  0,0], [33,  0,  0], [67,  0,  0], [100,  0,0]],
@@ -1027,15 +1007,30 @@ function is_patch(x) =
 //       // u=0,v=1                                u=1,v=1
 //   ];
 //   tpatch = translate([-50,-50,50], patch);
-//   vnf = vnf_join([
-//                     bezier_patch(tpatch),
-//                     bezier_patch(xrot(90, tpatch)),
-//                     bezier_patch(xrot(-90, tpatch)),
-//                     bezier_patch(xrot(180, tpatch)),
-//                     bezier_patch(yrot(90, tpatch)),
-//                     bezier_patch(yrot(-90, tpatch))]);
+//   vnf = bezier_vnf([
+//                     tpatch,
+//                     xrot(90, tpatch),
+//                     xrot(-90, tpatch),
+//                     xrot(180, tpatch),
+//                     yrot(90, tpatch),
+//                     yrot(-90, tpatch)]);
 //   vnf_polyhedron(vnf);
-// Example(3D): Connecting Patches with Asymmetric Splinesteps
+// Example(3D):
+//   patch1 = [
+//       [[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//       [[ 0,40,0], [ 0,  0,100], [100,  0, 20], [100, 40,0]],
+//       [[ 0,60,0], [ 0,100,100], [100,100, 20], [100, 60,0]],
+//       [[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//   ];
+//   patch2 = [
+//       [[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//       [[ 0,60,0], [ 0,100,-50], [100,100,-50], [100, 60,0]],
+//       [[ 0,40,0], [ 0,  0,-50], [100,  0,-50], [100, 40,0]],
+//       [[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//   ];
+//   vnf = bezier_vnf(patches=[patch1, patch2], splinesteps=16);
+//   vnf_polyhedron(vnf);
+// Example(3D): Connecting Patches with asymmetric splinesteps.  Note it is fastest to join all the VNFs at once, which happens in vnf_polyhedron, rather than generating intermediate joined partial surfaces.  
 //   steps = 8;
 //   edge_patch = [
 //       // u=0, v=0                    u=1,v=0
@@ -1054,65 +1049,58 @@ function is_patch(x) =
 //   face_patch = bezier_patch_flat([120,120],orient=LEFT);
 //   edges = [
 //       for (axrot=[[0,0,0],[0,90,0],[0,0,90]], xang=[-90:90:180])
-//       bezier_patch(
-//           splinesteps=[steps,1],
-//           rot(a=axrot,
-//               p=rot(a=[xang,0,0],
-//                   p=translate(v=[0,-100,100],p=edge_patch)
+//           bezier_vnf(
+//               splinesteps=[steps,1],
+//               rot(a=axrot,
+//                   p=rot(a=[xang,0,0],
+//                       p=translate(v=[0,-100,100],p=edge_patch)
+//                   )
 //               )
 //           )
-//       )
 //   ];
 //   corners = [
 //       for (xang=[0,180], zang=[-90:90:180])
-//       bezier_patch(
-//           splinesteps=steps,
-//           rot(a=[xang,0,zang],
-//               p=translate(v=[-100,-100,100],p=corner_patch)
+//           bezier_vnf(
+//               splinesteps=steps,
+//               rot(a=[xang,0,zang],
+//                   p=translate(v=[-100,-100,100],p=corner_patch)
+//               )
 //           )
-//       )
 //   ];
 //   faces = [
 //       for (axrot=[[0,0,0],[0,90,0],[0,0,90]], zang=[0,180])
-//       bezier_patch(
-//           splinesteps=1,
-//           rot(a=axrot,
-//               p=rot(a=[0,0,zang],
-//                   p=move([-100,0,0], p=face_patch)
+//           bezier_vnf(
+//               splinesteps=1,
+//               rot(a=axrot,
+//                   p=zrot(zang,move([-100,0,0], face_patch))
 //               )
 //           )
-//       )
 //   ];
 //   vnf_polyhedron(concat(edges,corners,faces));
-function bezier_patch(patch, splinesteps=16, style="default") =
+function bezier_vnf(patches=[], splinesteps=16, style="default") =
     assert(is_num(splinesteps) || is_vector(splinesteps,2))
     assert(all_positive(splinesteps))
-    is_tripatch(patch)? _bezier_triangle(patch, splinesteps=splinesteps) :
-    let(
-        splinesteps = is_list(splinesteps) ? splinesteps : [splinesteps,splinesteps],
-        uvals = [
-            for(step=[0:1:splinesteps.x])
-            step/splinesteps.x
-        ],
-        vvals = [
-            for(step=[0:1:splinesteps.y])
-            1-step/splinesteps.y
-        ],
-        pts = bezier_patch_points(patch, uvals, vvals),
-        vnf = vnf_vertex_array(pts, style=style, reverse=false)
-    ) vnf;
+    let(splinesteps = force_list(splinesteps,2))
+    is_bezier_patch(patches)? _bezier_rectangle(patches, splinesteps=splinesteps,style=style)
+  : assert(is_list(patches),"Invalid patch list")
+    vnf_join(
+      [
+        for (patch=patches)
+          is_bezier_patch(patch)? _bezier_rectangle(patch, splinesteps=splinesteps,style=style)
+        : assert(false,"Invalid patch list")
+      ]
+    );
+          
 
 
-
-// Function: bezier_patch_degenerate()
+// Function: bezier_vnf_degenerate_patch()
 // Usage:
-//   vnf = bezier_patch_degenerate(patch, [splinesteps], [reverse]);
-//   vnf_edges = bezier_patch_degenerate(patch, [splinesteps], [reverse], return_edges=true);
+//   vnf = bezier_vnf_degenerate_patch(patch, [splinesteps], [reverse]);
+//   vnf_edges = bezier_vnf_degenerate_patch(patch, [splinesteps], [reverse], return_edges=true);
 // Description:
 //   Returns a VNF for a degenerate rectangular bezier patch where some of the corners of the patch are
 //   equal.  If the resulting patch has no faces then returns an empty VNF.  Note that due to the degeneracy,
-//   the shape of the patch can be triangular even though the actual underlying patch is a rectangle.  This is
-//   a different method for creating triangular bezier patches than the triangular patch.
+//   the shape of the surface can be triangular even though the underlying patch is a rectangle.  
 //   If you specify return_edges then the return is a list whose first element is the vnf and whose second
 //   element lists the edges in the order [left, right, top, bottom], where each list is a list of the actual
 //   point values, but possibly only a single point if that edge is degenerate.
@@ -1133,9 +1121,9 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //          [[0, 10, 8.75], [0, 5, 8.75], [0, 0, 8.75], [-5, 0, 8.75], [-10, 0, 8.75]],
 //          [[0, 10, 2.5], [0, 5, 2.5], [0, 0, 2.5], [-5, 0, 2.5], [-10, 0, 2.5]]
 //         ];
-//   vnf_wireframe((bezier_patch(patch, splinesteps)),width=0.1);
+//   vnf_wireframe((bezier_vnf(patch, splinesteps)),width=0.1);
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
-// Example(3D,NoAxes): With bezier_patch_degenerate the degenerate point does not have excess triangles.  The top half of the patch decreases the number of sampled points by 2 for each row.  
+// Example(3D,NoAxes): With bezier_vnf_degenerate_patch the degenerate point does not have excess triangles.  The top half of the patch decreases the number of sampled points by 2 for each row.  
 //   splinesteps=8;
 //   patch=[
 //          repeat([-12.5, 12.5, 15],5),
@@ -1144,7 +1132,7 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //          [[0, 10, 8.75], [0, 5, 8.75], [0, 0, 8.75], [-5, 0, 8.75], [-10, 0, 8.75]],
 //          [[0, 10, 2.5], [0, 5, 2.5], [0, 0, 2.5], [-5, 0, 2.5], [-10, 0, 2.5]]
 //         ];
-//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
+//   vnf_wireframe(bezier_vnf_degenerate_patch(patch, splinesteps),width=0.1);
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
 // Example(3D,NoAxes): With splinesteps odd you get one "odd" row where the point count decreases by 1 instead of 2.  You may prefer even values for splinesteps to avoid this. 
 //   splinesteps=7;
@@ -1155,7 +1143,7 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //          [[0, 10, 8.75], [0, 5, 8.75], [0, 0, 8.75], [-5, 0, 8.75], [-10, 0, 8.75]],
 //          [[0, 10, 2.5], [0, 5, 2.5], [0, 0, 2.5], [-5, 0, 2.5], [-10, 0, 2.5]]
 //         ];
-//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
+//   vnf_wireframe(bezier_vnf_degenerate_patch(patch, splinesteps),width=0.1);
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
 // Example(3D,NoAxes): A more extreme degeneracy occurs when the top half of a patch is degenerate to a line.  (For odd length patches the middle row must be degenerate to trigger this style.)  In this case the number of points in each row decreases by 1 for every row.  It doesn't matter of splinesteps is odd or even. 
 //   splinesteps=8;
@@ -1165,7 +1153,7 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //            repeat([0,0,5],5),
 //            repeat([0,0,10],5)
 //           ];
-//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
+//   vnf_wireframe(bezier_vnf_degenerate_patch(patch, splinesteps),width=0.1);
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
 // Example(3D,NoScales): Here is a degenerate cubic patch.
 //   splinesteps=8;
@@ -1175,7 +1163,7 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //              repeat([0,0,30],4)
 //               ];
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
-//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
+//   vnf_wireframe(bezier_vnf_degenerate_patch(patch, splinesteps),width=0.1);
 // Example(3D,NoScales): A more extreme degenerate cubic patch, where two rows are equal.
 //   splinesteps=8;
 //   patch = [ [ [-20,0,0], [-10,0,0],[0,10,0],[0,20,0] ],
@@ -1184,13 +1172,13 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //              repeat([-10,10,30],4)          
 //           ];
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
-//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
+//   vnf_wireframe(bezier_vnf_degenerate_patch(patch, splinesteps),width=0.1);
 // Example(3D,NoScales): Quadratic patch degenerate at the right side:
 //   splinesteps=8;
 //   patch = [[[0, -10, 0],[10, -5, 0],[20, 0, 0]],
 //            [[0, 0, 0],  [10, 0, 0], [20, 0, 0]],
 //            [[0, 0, 10], [10, 0, 5], [20, 0, 0]]];
-//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
+//   vnf_wireframe(bezier_vnf_degenerate_patch(patch, splinesteps),width=0.1);
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
 // Example(3D,NoAxes): Cubic patch degenerate at both ends.  In this case the point count changes by 2 at every row.  
 //   splinesteps=8;
@@ -1200,11 +1188,11 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //            [ [-20,0,10], [-10,0,10],[0,10,10],[0,20,10] ],
 //            repeat([-10,10,20],4),
 //           ];
-//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
+//   vnf_wireframe(bezier_vnf_degenerate_patch(patch, splinesteps),width=0.1);
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
-function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_edges=false) =
-    !return_edges ? bezier_patch_degenerate(patch, splinesteps, reverse, true)[0] :
-    assert(is_rectpatch(patch), "Must supply rectangular bezier patch")
+function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, return_edges=false) =
+    !return_edges ? bezier_vnf_degenerate_patch(patch, splinesteps, reverse, true)[0] :
+    assert(_is_rectpatch(patch), "Must supply rectangular bezier patch")
     assert(is_int(splinesteps) && splinesteps>0, "splinesteps must be a positive integer")
     let(
         row_degen = [for(row=patch) all_equal(row)],
@@ -1254,7 +1242,7 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_ed
           ]  :    
     bot_degen ?                                           // only bottom is degenerate
        let(
-           result = bezier_patch_degenerate(reverse(patch), splinesteps=splinesteps, reverse=!reverse, return_edges=true)
+           result = bezier_vnf_degenerate_patch(reverse(patch), splinesteps=splinesteps, reverse=!reverse, return_edges=true)
        )
        [
           result[0],
@@ -1282,121 +1270,13 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_ed
           ] :
       // must have left or right degeneracy, so transpose and recurse
       let(
-          result = bezier_patch_degenerate(transpose(patch), splinesteps=splinesteps, reverse=!reverse, return_edges=true)
+          result = bezier_vnf_degenerate_patch(transpose(patch), splinesteps=splinesteps, reverse=!reverse, return_edges=true)
       )
       [result[0],
        select(result[1],[2,3,0,1])
       ];
 
 
-function _tri_count(n) = (n*(1+n))/2;
-
-
-function _bezier_triangle(tri, splinesteps=16) =
-    assert(is_num(splinesteps))
-    let(
-        pts = [
-            for (
-                u=[0:1:splinesteps],
-                v=[0:1:splinesteps-u]
-            ) bezier_triangle_point(tri, u/splinesteps, v/splinesteps)
-        ],
-        tricnt = _tri_count(splinesteps+1),
-        faces = [
-            for (
-                u=[0:1:splinesteps-1],
-                v=[0:1:splinesteps-u-1]
-            ) let (
-                v1 = v + (tricnt - _tri_count(splinesteps+1-u)),
-                v2 = v1 + 1,
-                v3 = v + (tricnt - _tri_count(splinesteps-u)),
-                v4 = v3 + 1,
-                allfaces = concat(
-                    [[v1,v2,v3]],
-                    ((u<splinesteps-1 && v<splinesteps-u-1)? [[v2,v4,v3]] : [])
-                )
-            )  for (face=allfaces) face
-        ]
-    ) [pts, faces];
-
-
-
-// Function: bezier_patch_flat()
-// Usage:
-//   patch = bezier_patch_flat(size, [N=], [spin=], [orient=], [trans=]);
-// Topics: Bezier Patches
-// See Also: bezier_patch_points()
-// Description:
-//   Returns a flat rectangular bezier patch of degree `N`, centered on the XY plane.
-// Arguments:
-//   size = 2D XY size of the patch.
-//   ---
-//   N = Degree of the patch to generate.  Since this is flat, a degree of 1 should usually be sufficient.
-//   orient = The orientation to rotate the edge patch into.  Given as an [X,Y,Z] rotation angle list.
-//   trans = Amount to translate patch, after rotating to `orient`.
-// Example(3D):
-//   patch = bezier_patch_flat(size=[100,100], N=3);
-//   debug_bezier_patches([patch], size=1, showcps=true);
-function bezier_patch_flat(size=[100,100], N=4, spin=0, orient=UP, trans=[0,0,0]) =
-    let(
-        patch = [
-            for (x=[0:1:N]) [
-                for (y=[0:1:N])
-                v_mul(point3d(size), [x/N-0.5, 0.5-y/N, 0])
-            ]
-        ],
-        m = move(trans) * rot(a=spin, from=UP, to=orient)
-    ) [for (row=patch) apply(m, row)];
-
-
-
-// Function: patch_reverse()
-// Usage:
-//   rpatch = patch_reverse(patch);
-// Topics: Bezier Patches
-// See Also: bezier_patch_points(), bezier_patch_flat()
-// Description:
-//   Reverses the patch, so that the faces generated from it are flipped back to front.
-// Arguments:
-//   patch = The patch to reverse.
-function patch_reverse(patch) =
-    [for (row=patch) reverse(row)];
-
-
-// Section: Bezier Surface Modules
-
-
-// Function: bezier_surface()
-// Usage:
-//   vnf = bezier_surface(patches, [splinesteps], [style]);
-// Topics: Bezier Patches
-// See Also: bezier_patch_points(), bezier_patch_flat()
-// Description:
-//   Calculate vertices and faces for forming a (possibly partial) polyhedron from the given
-//   rectangular and/or triangular bezier patches.  Returns a [VNF structure](vnf.scad): a list
-//   containing two elements.  The first is the the list of vertices.  The second is the list
-//   of faces, where each face is a list of indices into the list of vertices.  
-// Arguments:
-//   patches = A list of triangular and/or rectangular bezier patches.
-//   splinesteps = Number of steps to divide each bezier segment into.  Default: 16
-//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".
-// Example(3D):
-//   patch1 = [
-//       [[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
-//       [[ 0,40,0], [ 0,  0,100], [100,  0, 20], [100, 40,0]],
-//       [[ 0,60,0], [ 0,100,100], [100,100, 20], [100, 60,0]],
-//       [[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
-//   ];
-//   patch2 = [
-//       [[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
-//       [[ 0,60,0], [ 0,100,-50], [100,100,-50], [100, 60,0]],
-//       [[ 0,40,0], [ 0,  0,-50], [100,  0,-50], [100, 40,0]],
-//       [[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
-//   ];
-//   vnf = bezier_surface(patches=[patch1, patch2], splinesteps=16);
-//   polyhedron(points=vnf[0], faces=vnf[1]);
-function bezier_surface(patches=[], splinesteps=16, style="default") =
-    vnf_join([for(patch=patches) bezier_patch(patch, splinesteps=splinesteps, style=style)]);
 
 
 // Section: Debugging Beziers
@@ -1457,7 +1337,7 @@ module debug_bezier(bezpath, width=1, N=3) {
 // Usage:
 //   debug_bezier_patches(patches, [size=], [splinesteps=], [showcps=], [showdots=], [showpatch=], [convexity=], [style=]);
 // Topics: Bezier Patches, Debugging
-// See Also: bezier_patch_points(), bezier_patch_flat(), bezier_surface()
+// See Also: bezier_patch_points(), bezier_patch_flat(), bezier_vnf()
 // Description:
 //   Shows the surface, and optionally, control points of a list of bezier patches.
 // Arguments:
@@ -1488,7 +1368,7 @@ module debug_bezier_patches(patches=[], size, splinesteps=16, showcps=true, show
 {
     assert(is_undef(size)||is_num(size));
     assert(is_int(splinesteps) && splinesteps>0);
-    assert(is_list(patches) && all([for (patch=patches) is_patch(patch)]));
+    assert(is_list(patches) && all([for (patch=patches) is_bezier_patch(patch)]));
     assert(is_bool(showcps));
     assert(is_bool(showdots));
     assert(is_bool(showpatch));
@@ -1500,7 +1380,7 @@ module debug_bezier_patches(patches=[], size, splinesteps=16, showcps=true, show
         if (showcps) {
             move_copies(flatten(patch)) color("red") sphere(d=size*2);
             color("cyan") {
-                    if (is_tripatch(patch)) {
+                    if (_is_tripatch(patch)) {
                             for (i=[0:1:len(patch)-2], j=[0:1:len(patch[i])-2]) {
                                     extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
                                     extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
@@ -1515,7 +1395,7 @@ module debug_bezier_patches(patches=[], size, splinesteps=16, showcps=true, show
             }
         }
         if (showpatch || showdots){
-            vnf = bezier_patch(patch, splinesteps=splinesteps, style=style);
+            vnf = bezier_vnf(patch, splinesteps=splinesteps, style=style);
             if (showpatch) vnf_polyhedron(vnf, convexity=convexity);
             if (showdots) color("blue") move_copies(vnf[0]) sphere(d=size);
         }

@@ -1918,8 +1918,8 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
    let(
      // Entries in the next two lists have the form [edges, vnf] where
      // edges is a list [leftedge, rightedge, topedge, botedge]
-     top_samples = [for(patch=top_patch) bezier_patch_degenerate(patch,splinesteps,reverse=false,return_edges=true) ],
-     bot_samples = [for(patch=bot_patch) bezier_patch_degenerate(patch,splinesteps,reverse=true,return_edges=true) ],
+     top_samples = [for(patch=top_patch) bezier_vnf_degenerate_patch(patch,splinesteps,reverse=false,return_edges=true) ],
+     bot_samples = [for(patch=bot_patch) bezier_vnf_degenerate_patch(patch,splinesteps,reverse=true,return_edges=true) ],
      leftidx=0,
      rightidx=1,
      topidx=2,
