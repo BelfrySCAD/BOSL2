@@ -40,7 +40,7 @@
 //   is best when `u` is a long list and the bezier degree is 10 or less.  The degree of the bezier
 //   curve is `len(bezier)-1`.
 // Arguments:
-//   bezier = The list of endpoints and control points for this bezier segment.
+//   bezier = The list of endpoints and control points for this bezier curve.
 //   u = Parameter values for evaluating the curve, given as a single value, a list or a range.  
 // Example(2D): Quadratic (Degree 2) Bezier.
 //   bez = [[0,0], [30,30], [80,0]];
@@ -177,20 +177,21 @@ function _bezier_matrix(N) =
 
 // Function: bezier_curve()
 // Usage:
-//   path = bezier_curve(bezier, n, [endpoint]);
+//   path = bezier_curve(bezier, [splinesteps], [endpoint]);
 // Topics: Bezier Curves
 // See Also: bezier_curvature(), bezier_tangent(), bezier_derivative(), bezier_points()
 // Description:
-//   Takes a list of bezier control points and generates n points along the bezier curve they define.
+//   Takes a list of bezier control points and generates splinesteps segments (splinesteps+1 points)
+//   along the bezier curve they define.
 //   Points start at the first control point and are sampled uniformly along the bezier parameter.
 //   The endpoints of the output will be *exactly* equal to the first and last bezier control points
 //   when endpoint is true.  If endpoint is false the sampling stops one step before the final point
-//   of the bezier curve, but you still get n, more tightly spaced, points.  
+//   of the bezier curve, but you still get the same number of (more tightly spaced) points.  
 //   The distance between the points will *not* be equidistant.  
 //   The degree of the bezier curve is one less than the number of points in `curve`.
 // Arguments:
 //   bezier = The list of control points that define the Bezier curve. 
-//   n = The number of points to generate along the bezier curve.
+//   splinesteps = The number of segments to create on the bezier curve.  Default: 16
 //   endpoint = if false then exclude the endpoint.  Default: True
 // Example(2D): Quadratic (Degree 2) Bezier.
 //   bez = [[0,0], [30,30], [80,0]];
@@ -204,8 +205,8 @@ function _bezier_matrix(N) =
 //   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
 //   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
 //   debug_bezier(bez, N=len(bez)-1);
-function bezier_curve(bezier,n,endpoint=true) =
-    bezier_points(bezier, lerpn(0,1,n,endpoint));
+function bezier_curve(bezier,splinesteps=16,endpoint=true) =
+    bezier_points(bezier, lerpn(0,1,splinesteps+1,endpoint));
 
 
 // Function: bezier_derivative()
@@ -288,9 +289,9 @@ function bezier_curvature(bezier, u) =
 // Topics: Bezier Curves
 // See Also: bezier_points()
 // Description:
-//   Finds the closest part of the given bezier segment to point `pt`.
+//   Finds the closest part of the given bezier curve to point `pt`.
 //   The degree of the curve, N, is one less than the number of points in `curve`.
-//   Returns `u` for the shortest position on the bezier segment to the given point `pt`.
+//   Returns `u` for the closest position on the bezier curve to the given point `pt`.
 // Arguments:
 //   bezier = The list of control points that define the Bezier curve. 
 //   pt = The point to find the closest curve point to.
@@ -401,22 +402,25 @@ function bezier_line_intersection(bezier, line) =
 //   Bezier curve control point set is `[p0,p1,p2,p3]` and the second one is `[p3,p4,p5,p6]`.  The endpoint, `p3`, is shared between the control point sets.
 //   The Bezier degree, which must be known to interpret the Bezier path, defaults to 3. 
 
+
 // Function: bezpath_points()
 // Usage:
-//   pt = bezpath_points(bezpath, seg, u, [N]);
-//   ptlist = bezpath_points(bezpath, seg, LIST, [N]);
-//   path = bezpath_path_points(bezpath, seg, RANGE, [N]);
+//   pt = bezpath_points(bezpath, curveind, u, [N]);
+//   ptlist = bezpath_points(bezpath, curveind, LIST, [N]);
+//   path = bezpath_points(bezpath, curveind, RANGE, [N]);
 // Topics: Bezier Paths
 // See Also: bezier_points(), bezier_curve()
 // Description:
-//   Returns the coordinates of Bezier path path segment `seg` at parameter `u`.
+//   Extracts from the Bezier path `bezpath` the control points for the Bezier curve whose index is `curveind` and
+//   computes the point or points on the corresponding Bezier curve specified by `u`.  If `curveind` is zero you
+//   get the first curve.  The number of curves is `(len(bezpath)-1)/N` so the maximum index is that number minus one.  
 // Arguments:
-//   path = A Bezier path path to approximate.
-//   seg = Segment number along the path.  Each segment is N points long.
+//   bezpath = A Bezier path path to approximate.
+//   curveind = Curve number along the path.  
 //   u = Parameter values for evaluating the curve, given as a single value, a list or a range.
-//   N = The degree of the Bezier path curves.  Cubic Bezier paths have N=3.  Default: 3
-function bezpath_points(bezpath, seg, u, N=3) =
-    bezier_points(select(bezpath,seg*N,(seg+1)*N), u);
+//   N = The degree of the Bezier path curves.  Default: 3
+function bezpath_points(bezpath, curveind, u, N=3) =
+    bezier_points(select(bezpath,curveind*N,(curveind+1)*N), u);
 
 
 // Function: bezpath_curve()
@@ -428,7 +432,7 @@ function bezpath_points(bezpath, seg, u, N=3) =
 //   Takes a bezier path and converts it into a path of points.
 // Arguments:
 //   bezpath = A bezier path to approximate.
-//   splinesteps = Number of straight lines to split each bezier segment into. default=16
+//   splinesteps = Number of straight lines to split each bezier curve into. default=16
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
 //   endpoint = If true, include the very last point of the bezier path.  Default: true
 // Example(2D):
@@ -975,16 +979,15 @@ function _bezier_rectangle(patch, splinesteps=16, style="default") =
 // Topics: Bezier Patches
 // See Also: bezier_patch_points(), bezier_patch_flat()
 // Description:
-//   Calculate vertices and faces for forming a (possibly partial) polyhedron from the given
-//   bezier patch or list of patches.  Returns a [VNF structure](vnf.scad): a list
-//   containing two elements.  The first is the the list of vertices.  The second is the list
-//   of faces, where each face is a list of indices into the list of vertices.  The splinesteps argument specifies
-//   the number of segments on the borders of the patch or patches.  It can be a scalar or
-//   it can be [XSTEPS, YSTEPS].  Note that the surface you produce maybe
-//   disconnected and is not necessarily a valid polyhedron. 
+//   Convert a patch or list of patches into the corresponding Bezier surface, representing the
+//   result as a [VNF structure](vnf.scad).  The `splinesteps` argument specifies the sampling grid of
+//   the surface for each patch by specifying the number of segments on the borders of the surface.
+//   It can be a scalar, which gives a uniform grid, or
+//   it can be [USTEPS, VSTEPS], which gives difference spacing in the U and V parameters. 
+//   Note that the surface you produce may be disconnected and is not necessarily a valid manifold in OpenSCAD.
 // Arguments:
-//   patches = The bezier patch or list of bezier patches to convert into a surface. 
-//   splinesteps = Number of steps to divide each bezier segment into.  For rectangular patches you can specify [XSTEPS,YSTEPS].  Default: 16
+//   patches = The bezier patch or list of bezier patches to convert into a vnf.
+//   splinesteps = Number of segments on the border of the bezier surface.  You can specify [USTEPS,VSTEPS].  Default: 16
 //   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "min_edge", "quincunx", "convex" and "concave".  See {{vnf_vertex_array()}}.  Default: "default"
 // Example(3D):
 //   patch = [
@@ -1343,7 +1346,7 @@ module debug_bezier(bezpath, width=1, N=3) {
 // Arguments:
 //   patches = A list of rectangular bezier patches.
 //   ---
-//   splinesteps = Number of steps to divide each bezier segment into. default=16
+//   splinesteps = Number of segments to divide each bezier curve into. Default: 16
 //   showcps = If true, show the controlpoints as well as the surface.  Default: true.
 //   showdots = If true, shows the calculated surface vertices.  Default: false.
 //   showpatch = If true, shows the surface faces.  Default: true.
@@ -1383,6 +1386,7 @@ module debug_bezier_patches(patches=[], size, splinesteps=16, showcps=true, show
                 for (i=[0:1:len(patch)-1], j=[0:1:len(patch[i])-1]) {
                         if (i<len(patch)-1) extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
                         if (j<len(patch[i])-1) extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
+                }        
         }
         if (showpatch || showdots){
             vnf = bezier_vnf(patch, splinesteps=splinesteps, style=style);

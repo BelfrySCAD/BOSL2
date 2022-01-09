@@ -347,7 +347,7 @@ function _bezcorner(points, parm) =
                         ] : _smooth_bez_fill(points,parm),
                 N = max(3,$fn>0 ?$fn : ceil(bezier_length(P)/$fs))
         )
-        bezier_curve(P,N+1,endpoint=true);
+        bezier_curve(P,N,endpoint=true);
 
 function _chamfcorner(points, parm) =
         let(
