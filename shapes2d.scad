@@ -1156,13 +1156,21 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
 //   color("red")stroke(egg(78,25,12, 60),closed=true);
 //   stroke([left(14,circle(25)),
 //           right(27,circle(12))]);
-// Examples(2D,NoAxes):
-//   egg(78,25,12,50,$fn=64);
-//   egg(78,25,12,60,$fn=64);
-//   egg(78,25,12,85,$fs=0.1,$fa=1);
-//   egg(78,25,12,150,$fs=0.1,$fa=1);
-//   egg(78,25,4, 140, $fs=0.1, $fa=1);
-//   stroke(egg(50,15,20, 40, $fs=0.1, $fa=1,anchor=BACK));
+// Example(2D,Anim,VPD=250,VPR=[0,0,0]): Varying length between circles
+//   r1 = 25; r2 = 12; R = 65;
+//   length = floor(lookup($t, [[0,55], [0.5,90], [1,55]]));
+//   egg(length,r1,r2,R,$fn=180);
+//   color("black") text(str("length=",length), size=8, halign="center", valign="center");
+// Example(2D,Anim,VPD=250,VPR=[0,0,0]): Varying tangent arc radius R
+//   length = 78; r1 = 25; r2 = 12;
+//   R = floor(lookup($t, [[0,45], [0.5,150], [1,45]]));
+//   egg(length,r1,r2,R,$fn=180);
+//   color("black") text(str("R=",R), size=8, halign="center", valign="center");
+// Example(2D,Anim,VPD=250,VPR=[0,0,0]): Varying circle radius r2
+//   length = 78; r1 = 25; R = 65;
+//   r2 = floor(lookup($t, [[0,5], [0.5,30], [1,5]]));
+//   egg(length,r1,r2,R,$fn=180);
+//   color("black") text(str("r2=",r2), size=8, halign="center", valign="center");
 function egg(length, r1, r2, R, d1, d2, D, anchor=CENTER, spin=0) =
     let(
         r1 = get_radius(r1=r1,d1=d1),
