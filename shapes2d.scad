@@ -729,11 +729,11 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Example:
+// Example(2D):
 //   right_triangle([40,30]);
-// Example: With `center=true`
+// Example(2D): With `center=true`
 //   right_triangle([40,30], center=true);
-// Example: Anchors
+// Example(2D): Anchors
 //   right_triangle([40,30])
 //       show_anchors();
 function right_triangle(size=[1,1], center, anchor, spin=0) =
@@ -1128,9 +1128,9 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
 
 // Function&Module: egg()
 // Usage: As Module
-//   egg(length, r1|d1, r2|d2, R|D);
+//   egg(length, r1, r2, R);
 // Usage: As Function
-//   path = egg(length, r1|d1, r2|d2, R|D);
+//   path = egg(length, r1|d2, r2|d2, R|D);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), ellipse(), glued_circles()
 // Description:
@@ -1151,18 +1151,26 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
 // Extra Anchors:
 //   "left" = center of the left circle
 //   "right" = center of the right circle
-// Example(2D): This first example shows how the egg is constructed from two circles and two joining arcs.
+// Example(2D,NoAxes): This first example shows how the egg is constructed from two circles and two joining arcs.
 //   $fn=100;
 //   color("red")stroke(egg(78,25,12, 60),closed=true);
 //   stroke([left(14,circle(25)),
 //           right(27,circle(12))]);
-// Examples(2D):
-//   egg(78,25,12,50,$fn=64);
-//   egg(78,25,12,60,$fn=64);
-//   egg(78,25,12,85,$fs=0.1,$fa=1);
-//   egg(78,25,12,150,$fs=0.1,$fa=1);
-//   egg(78,25,4, 140, $fs=0.1, $fa=1);
-//   stroke(egg(50,15,20, 40, $fs=0.1, $fa=1,anchor=BACK));
+// Example(2D,Anim,VPD=250,VPR=[0,0,0]): Varying length between circles
+//   r1 = 25; r2 = 12; R = 65;
+//   length = floor(lookup($t, [[0,55], [0.5,90], [1,55]]));
+//   egg(length,r1,r2,R,$fn=180);
+//   color("black") text(str("length=",length), size=8, halign="center", valign="center");
+// Example(2D,Anim,VPD=250,VPR=[0,0,0]): Varying tangent arc radius R
+//   length = 78; r1 = 25; r2 = 12;
+//   R = floor(lookup($t, [[0,45], [0.5,150], [1,45]]));
+//   egg(length,r1,r2,R,$fn=180);
+//   color("black") text(str("R=",R), size=8, halign="center", valign="center");
+// Example(2D,Anim,VPD=250,VPR=[0,0,0]): Varying circle radius r2
+//   length = 78; r1 = 25; R = 65;
+//   r2 = floor(lookup($t, [[0,5], [0.5,30], [1,5]]));
+//   egg(length,r1,r2,R,$fn=180);
+//   color("black") text(str("r2=",r2), size=8, halign="center", valign="center");
 function egg(length, r1, r2, R, d1, d2, D, anchor=CENTER, spin=0) =
     let(
         r1 = get_radius(r1=r1,d1=d1),
