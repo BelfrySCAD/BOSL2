@@ -1192,7 +1192,7 @@ function bezier_vnf(patches=[], splinesteps=16, style="default") =
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
 function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, return_edges=false) =
     !return_edges ? bezier_vnf_degenerate_patch(patch, splinesteps, reverse, true)[0] :
-    assert(_is_rectpatch(patch), "Must supply rectangular bezier patch")
+    assert(is_bezier_patch(patch), "Input is not a Bezier patch")
     assert(is_int(splinesteps) && splinesteps>0, "splinesteps must be a positive integer")
     let(
         row_degen = [for(row=patch) all_equal(row)],
@@ -1379,20 +1379,10 @@ module debug_bezier_patches(patches=[], size, splinesteps=16, showcps=true, show
                max(bounds[1]-bounds[0])*0.01;
         if (showcps) {
             move_copies(flatten(patch)) color("red") sphere(d=size*2);
-            color("cyan") {
-                    if (_is_tripatch(patch)) {
-                            for (i=[0:1:len(patch)-2], j=[0:1:len(patch[i])-2]) {
-                                    extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
-                                    extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
-                                    extrude_from_to(patch[i+1][j], patch[i][j+1]) circle(d=size);
-                            }
-                    } else {
-                            for (i=[0:1:len(patch)-1], j=[0:1:len(patch[i])-1]) {
-                                    if (i<len(patch)-1) extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
-                                    if (j<len(patch[i])-1) extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
-                            }
-                    }
-            }
+            color("cyan") 
+                for (i=[0:1:len(patch)-1], j=[0:1:len(patch[i])-1]) {
+                        if (i<len(patch)-1) extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
+                        if (j<len(patch[i])-1) extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
         }
         if (showpatch || showdots){
             vnf = bezier_vnf(patch, splinesteps=splinesteps, style=style);
