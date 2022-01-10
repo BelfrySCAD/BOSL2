@@ -1803,21 +1803,21 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
 //   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
-//   color("black")   up(3) vnf_debug([path3d(poly),[]],faces=false,size=1);
+//   color("black")   up(3) debug_vnf([path3d(poly),[]],faces=false,size=1);
 // Example(2D,NoAxes): a polygon with a hole and one "contact" edge; see from above
 //   poly = [ [-10,0], [10,0], [0,10], [-10,0], [-4,4], [4,4], [0,2], [-4,4] ];
 //   tris =  polygon_triangulate(poly);
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
 //   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
-//   color("black")   up(3) vnf_debug([path3d(poly),[]],faces=false,size=1);
+//   color("black")   up(3) debug_vnf([path3d(poly),[]],faces=false,size=1);
 // Example(2D,NoAxes): a polygon with "touching" vertices and no holes; see from above
 //   poly = [ [0,0], [5,5], [-5,5], [0,0], [-5,-5], [5,-5] ];
 //   tris =  polygon_triangulate(poly);
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
 //   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
-//   color("black")   up(3) vnf_debug([path3d(poly),[]],faces=false,size=1);
+//   color("black")   up(3) debug_vnf([path3d(poly),[]],faces=false,size=1);
 // Example(2D,NoAxes): a polygon with "contact" edges and no holes; see from above
 //   poly = [ [0,0], [10,0], [10,10], [0,10], [0,0], [3,3], [7,3], 
 //            [7,7], [7,3], [3,3] ];
@@ -1825,7 +1825,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
 //   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
-//   color("black")   up(3) vnf_debug([path3d(poly),[]],faces=false,size=1);
+//   color("black")   up(3) debug_vnf([path3d(poly),[]],faces=false,size=1);
 // Example(3D): 
 //   include <BOSL2/polyhedra.scad>
 //   vnf = regular_polyhedron_info(name="dodecahedron",side=5,info="vnf");

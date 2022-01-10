@@ -347,7 +347,7 @@ function _bezcorner(points, parm) =
                         ] : _smooth_bez_fill(points,parm),
                 N = max(3,$fn>0 ?$fn : ceil(bezier_length(P)/$fs))
         )
-        bezier_curve(P,N+1,endpoint=true);
+        bezier_curve(P,N,endpoint=true);
 
 function _chamfcorner(points, parm) =
         let(
@@ -1829,7 +1829,7 @@ module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot
   {
     if (debug){
         vnf_polyhedron(vnf, convexity=convexity);
-        trace_bezier_patches(result[0], showcps=true, splinesteps=splinesteps, $fn=16, showdots=false, showpatch=false);
+        debug_bezier_patches(result[0], showcps=true, splinesteps=splinesteps, $fn=16, showdots=false, showpatch=false);
     }
     else vnf_polyhedron(vnf,convexity=convexity);
     children();
@@ -1918,8 +1918,8 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
    let(
      // Entries in the next two lists have the form [edges, vnf] where
      // edges is a list [leftedge, rightedge, topedge, botedge]
-     top_samples = [for(patch=top_patch) bezier_patch_degenerate(patch,splinesteps,reverse=false,return_edges=true) ],
-     bot_samples = [for(patch=bot_patch) bezier_patch_degenerate(patch,splinesteps,reverse=true,return_edges=true) ],
+     top_samples = [for(patch=top_patch) bezier_vnf_degenerate_patch(patch,splinesteps,reverse=false,return_edges=true) ],
+     bot_samples = [for(patch=bot_patch) bezier_vnf_degenerate_patch(patch,splinesteps,reverse=true,return_edges=true) ],
      leftidx=0,
      rightidx=1,
      topidx=2,

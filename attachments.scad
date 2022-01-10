@@ -528,65 +528,6 @@ module tags(tags)
 }
 
 
-// Module: recolor()
-// Usage:
-//   recolor(c) {...}
-// Topics: Attachments
-// See Also: tags(), hide(), show(), diff(), intersect()
-// Description:
-//   Sets the color for children that can use the $color special variable.  For a more step-by-step
-//   explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
-// Arguments:
-//   c = Color name or RGBA vector.
-// Example:
-//   recolor("red") cyl(l=20, d=10);
-module recolor(c)
-{
-    $color = c;
-    children();
-}
-
-
-// Module: hide()
-// Usage:
-//   hide(tags) {...}
-// Topics: Attachments
-// See Also: tags(), recolor(), show(), diff(), intersect()
-// Description:
-//   Hides all children with the given tags.  Overrides any previous `hide()` or `show()` calls.
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
-// Example:
-//   hide("A") cube(50, anchor=CENTER, $tags="Main") {
-//       attach(LEFT, BOTTOM) cylinder(d=30, l=30, $tags="A");
-//       attach(RIGHT, BOTTOM) cylinder(d=30, l=30, $tags="B");
-//   }
-module hide(tags="")
-{
-    $tags_hidden = tags==""? [] : str_split(tags, " ");
-    $tags_shown = [];
-    children();
-}
-
-
-// Module: show()
-// Usage:
-//   show(tags) {...}
-// Topics: Attachments
-// See Also: tags(), recolor(), hide(), diff(), intersect()
-// Description:
-//   Shows only children with the given tags.  Overrides any previous `hide()` or `show()` calls.
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
-// Example:
-//   show("A B") cube(50, anchor=CENTER, $tags="Main") {
-//       attach(LEFT, BOTTOM) cylinder(d=30, l=30, $tags="A");
-//       attach(RIGHT, BOTTOM) cylinder(d=30, l=30, $tags="B");
-//   }
-module show(tags="")
-{
-    $tags_shown = tags==""? [] : str_split(tags, " ");
-    $tags_hidden = [];
-    children();
-}
 
 
 // Module: diff()
@@ -752,6 +693,67 @@ module hulling(a)
         hull() show(a) children();
         children();
     }
+}
+
+
+// Module: recolor()
+// Usage:
+//   recolor(c) {...}
+// Topics: Attachments
+// See Also: tags(), hide(), show(), diff(), intersect()
+// Description:
+//   Sets the color for children that can use the $color special variable.  For a more step-by-step
+//   explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Arguments:
+//   c = Color name or RGBA vector.
+// Example:
+//   recolor("red") cyl(l=20, d=10);
+module recolor(c)
+{
+    $color = c;
+    children();
+}
+
+
+// Module: hide()
+// Usage:
+//   hide(tags) {...}
+// Topics: Attachments
+// See Also: tags(), recolor(), show(), diff(), intersect()
+// Description:
+//   Hides all children with the given tags.  Overrides any previous `hide()` or `show()` calls.
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Example:
+//   hide("A") cube(50, anchor=CENTER, $tags="Main") {
+//       attach(LEFT, BOTTOM) cylinder(d=30, l=30, $tags="A");
+//       attach(RIGHT, BOTTOM) cylinder(d=30, l=30, $tags="B");
+//   }
+module hide(tags="")
+{
+    $tags_hidden = tags==""? [] : str_split(tags, " ");
+    $tags_shown = [];
+    children();
+}
+
+
+// Module: show()
+// Usage:
+//   show(tags) {...}
+// Topics: Attachments
+// See Also: tags(), recolor(), hide(), diff(), intersect()
+// Description:
+//   Shows only children with the given tags.  Overrides any previous `hide()` or `show()` calls.
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Example:  Display the attachments but not the parent
+//   show("A B") cube(50, anchor=CENTER, $tags="Main") {
+//       attach(LEFT, BOTTOM) cylinder(d=30, l=30, $tags="A");
+//       attach(RIGHT, BOTTOM) cylinder(d=30, l=30, $tags="B");
+//   }
+module show(tags="")
+{
+    $tags_shown = tags==""? [] : str_split(tags, " ");
+    $tags_hidden = [];
+    children();
 }
 
 

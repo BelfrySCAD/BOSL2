@@ -1240,9 +1240,9 @@ module _show_faces(vertices, faces, size=1) {
 
 
 
-// Module: vnf_debug()
+// Module: debug_vnf()
 // Usage:
-//   vnf_debug(vnfs, [faces], [vertices], [opacity], [size], [convexity]);
+//   debug_vnf(vnfs, [faces], [vertices], [opacity], [size], [convexity]);
 // Description:
 //   A drop-in module to replace `vnf_polyhedron()` to help debug vertices and faces.
 //   Draws all the vertices at their 3D position, numbered in blue by their
@@ -1266,8 +1266,8 @@ module _show_faces(vertices, faces, size=1) {
 // Example(EdgesMed):
 //   verts = [for (z=[-10,10], a=[0:120:359.9]) [10*cos(a),10*sin(a),z]];
 //   faces = [[0,1,2], [5,4,3], [0,3,4], [0,4,1], [1,4,5], [1,5,2], [2,5,3], [2,3,0]];
-//   vnf_debug([verts,faces], size=2);
-module vnf_debug(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=6 ) {
+//   debug_vnf([verts,faces], size=2);
+module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=6 ) {
     no_children($children);
     if (faces)
       _show_faces(vertices=vnf[0], faces=vnf[1], size=size);
