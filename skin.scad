@@ -718,6 +718,8 @@ function spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, hi
 
 module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, internal=false, anchor=CENTER, spin=0, orient=UP) {
     vnf = spiral_sweep(poly, h, r, turns, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, internal);
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=50);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=50);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
         vnf_polyhedron(vnf, convexity=ceil(abs(2*turns)));
         children();
