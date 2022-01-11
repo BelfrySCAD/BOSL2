@@ -584,8 +584,8 @@ module no_module() {
 function _valstr(x) =
     is_string(x)? str("\"",str_replace_char(x, "\"", "\\\""),"\"") :
     is_list(x)? str("[",str_join([for (xx=x) _valstr(xx)],","),"]") :
-    is_num(x) && x==floor(x)? fmt_int(x) :
-    is_finite(x)? fmt_float(x,12) : x;
+    is_num(x) && x==floor(x)? format_int(x) :
+    is_finite(x)? format_float(x,12) : x;
 
 
 // Module: assert_approx()

@@ -77,9 +77,10 @@ _NO_ARG = [true,[123232345],false];
 // Usage: As Module
 //   move([x=], [y=], [z=]) ...
 //   move(v) ...
-// Usage: Translate Points
+// Usage: As a function to translate points, VNF, or Bezier patch
 //   pts = move(v, p);
 //   pts = move([x=], [y=], [z=], p=);
+//   pts = move(STRING, p);
 // Usage: Get Translation Matrix
 //   mat = move(v);
 //   mat = move([x=], [y=], [z=]);
@@ -95,11 +96,12 @@ _NO_ARG = [true,[123232345],false];
 //   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the translated patch.
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the translated VNF.
 //   * Called as a function with the `p` argument, returns the translated point or list of points.
+//   * Called as a function with the `p` argument set to a VNF or a polygon and `v` set to "centroid", "mean" or "box", translates the argument to the centroid, mean, or bounding box center respectively.
 //   * Called as a function without a `p` argument, with a 2D offset vector `v`, returns an affine2d translation matrix.
 //   * Called as a function without a `p` argument, with a 3D offset vector `v`, returns an affine3d translation matrix.
 //
 // Arguments:
-//   v = An [X,Y,Z] vector to translate by.
+//   v = An [X,Y,Z] vector to translate by.  For function form with `p` is a point list or VNF, can be "centroid", "mean" or "box".  
 //   p = Either a point, or a list of points to be translated when used as a function.
 //   ---
 //   x = X axis translation.
@@ -139,12 +141,24 @@ _NO_ARG = [true,[123232345],false];
 //   mat2d = move([2,3]);    // Returns: [[1,0,2],[0,1,3],[0,0,1]]
 //   mat3d = move([2,3,4]);  // Returns: [[1,0,0,2],[0,1,0,3],[0,0,1,4],[0,0,0,1]]
 module move(v=[0,0,0], p, x=0, y=0, z=0) {
+    assert(!is_string(v),"Module form of `move()` does not accept string `v` arguments");
     assert(is_undef(p), "Module form `move()` does not accept p= argument.");
     assert(is_vector(v) && (len(v)==3 || len(v)==2), "Invalid value for `v`")
     translate(point3d(v)+[x,y,z]) children();
 }
 
 function move(v=[0,0,0], p=_NO_ARG, x=0, y=0, z=0) =
+    is_string(v) ? (
+        assert(is_vnf(p) || is_path(p),"String movements only work with point lists and VNFs")
+        let(
+             center = v=="centroid" ? centroid(p)
+                    : v=="mean" ? mean(p)
+                    : v=="box" ? mean(pointlist_bounds(p))
+                    : assert(false,str("Unknown string movement ",v))
+        )
+        move(-center,p=p, x=x,y=y,z=z)
+      )
+    :
     assert(is_vector(v) && (len(v)==3 || len(v)==2), "Invalid value for `v`")
     let(
         m = affine3d_translate(point3d(v)+[x,y,z])

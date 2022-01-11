@@ -16,7 +16,7 @@ module test_HSL() {
                     h<=300? [x,0,c] :
                             [c,0,x]
                 );
-                assert_approx(HSL(h,s,l), rgb, str_format("h={}, s={}, l={}", [h,s,l]));
+                assert_approx(HSL(h,s,l), rgb, format("h={}, s={}, l={}", [h,s,l]));
             }
         }
     }
@@ -39,7 +39,7 @@ module test_HSV() {
                     h<=300? [x,0,c] :
                             [c,0,x]
                 );
-                assert_approx(HSV(h,s,v), rgb, str_format("h={}, s={}, v={}", [h,s,v]));
+                assert_approx(HSV(h,s,v), rgb, format("h={}, s={}, v={}", [h,s,v]));
             }
         }
     }

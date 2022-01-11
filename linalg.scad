@@ -73,9 +73,9 @@ function is_matrix_symmetric(A,eps=1e-12) =
 function echo_matrix(M,description,sig=4,eps=1e-9) =
   let(
       horiz_line = chr(8213),
-      matstr = matrix_strings(M,sig=sig,eps=eps),
+      matstr = _format_matrix(M,sig=sig,eps=eps),
       separator = str_join(repeat(horiz_line,10)),
-      dummy=echo(str(separator,"  ",is_def(description) ? description : ""))
+      dummy=echo(str(separator,is_def(description) ? str("  ",description) : ""))
             [for(row=matstr) echo(row)]
   )
   echo(separator);

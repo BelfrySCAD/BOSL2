@@ -2171,23 +2171,23 @@ function _are_polygons_equal(poly1, poly2, eps, st) =
     max([for(d=poly1-select(poly2,st,st-1)) d*d])<eps*eps;
 
 
-// Function: is_polygon_in_list()
-// Topics: Polygons, Comparators
-// See Also: are_polygons_equal(), are_regions_equal()
-// Usage:
-//   bool = is_polygon_in_list(poly, polys);
-// Description:
-//   Returns true if one of the polygons in `polys` is equivalent to the polygon `poly`.
-// Arguments:
-//   poly = The polygon to search for.
-//   polys = The list of polygons to look for the polygon in.
-function is_polygon_in_list(poly, polys) =
-    __is_polygon_in_list(poly, polys, 0);
+/// Function: _is_polygon_in_list()
+/// Topics: Polygons, Comparators
+/// See Also: are_polygons_equal(), are_regions_equal()
+/// Usage:
+///   bool = _is_polygon_in_list(poly, polys);
+/// Description:
+///   Returns true if one of the polygons in `polys` is equivalent to the polygon `poly`.
+/// Arguments:
+///   poly = The polygon to search for.
+///   polys = The list of polygons to look for the polygon in.
+function _is_polygon_in_list(poly, polys) =
+    ___is_polygon_in_list(poly, polys, 0);
 
-function __is_polygon_in_list(poly, polys, i) =
+function ___is_polygon_in_list(poly, polys, i) =
     i >= len(polys)? false :
     are_polygons_equal(poly, polys[i])? true :
-    __is_polygon_in_list(poly, polys, i+1);
+    ___is_polygon_in_list(poly, polys, i+1);
 
 
 // Section: Convex Hull

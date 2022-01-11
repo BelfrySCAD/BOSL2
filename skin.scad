@@ -501,6 +501,233 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
   reorient(anchor,spin,orient,vnf=vnf,p=vnf,extent=atype=="hull",cp=cp);
 
 
+
+// Function&Module: linear_sweep()
+// Usage:
+//   linear_sweep(region, height, [center], [slices], [twist], [scale], [style], [convexity]) {attachments};
+// Description:
+//   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or polygon.
+//   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
+//   of the given 2D region or polygon.  The benefit of using this, over using `linear_extrude region(rgn)` is
+//   that it supports `anchor`, `spin`, `orient` and attachments.  You can also make more refined
+//   twisted extrusions by using `maxseg` to subsample flat faces.
+//   Note that the center option centers vertically using the named anchor "zcenter" whereas
+//   `anchor=CENTER` centers the entire shape relative to
+//   the shape's centroid, or other centerpoint you specify.  The centerpoint can be "centroid", "mean", "box" or
+//   a custom point location.  
+// Arguments:
+//   region = The 2D [Region](regions.scad) or polygon that is to be extruded.
+//   height = The height to extrude the region.  Default: 1
+//   center = If true, the created polyhedron will be vertically centered.  If false, it will be extruded upwards from the XY plane.  Default: `false`
+//   slices = The number of slices to divide the shape into along the Z axis, to allow refinement of detail, especially when working with a twist.  Default: `twist/5`
+//   maxseg = If given, then any long segments of the region will be subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
+//   twist = The number of degrees to rotate the shape clockwise around the Z axis, as it rises from bottom to top.  Default: 0
+//   scale = The amount to scale the shape, from bottom to top.  Default: 1
+//   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
+//   convexity = Max number of surfaces any single ray could pass through.  Module use only.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
+//   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example: Extruding a Compound Region.
+//   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
+//   rgn2 = [square(30,center=false)];
+//   rgn3 = [for (size=[10:10:20]) move([15,15],p=square(size=size, center=true))];
+//   mrgn = union(rgn1,rgn2);
+//   orgn = difference(mrgn,rgn3);
+//   linear_sweep(orgn,height=20,convexity=16);
+// Example: With Twist, Scale, Slices and Maxseg.
+//   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
+//   rgn2 = [square(30,center=false)];
+//   rgn3 = [for (size=[10:10:20]) move([15,15],p=square(size=size, center=true))];
+//   mrgn = union(rgn1,rgn2);
+//   orgn = difference(mrgn,rgn3);
+//   linear_sweep(orgn,height=50,maxseg=2,slices=40,twist=180,scale=0.5,convexity=16);
+// Example: Anchors on an Extruded Region
+//   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
+//   rgn2 = [square(30,center=false)];
+//   rgn3 = [for (size=[10:10:20]) move([15,15],p=square(size=size, center=true))];
+//   mrgn = union(rgn1,rgn2);
+//   orgn = difference(mrgn,rgn3);
+//   linear_sweep(orgn,height=20,convexity=16) show_anchors();
+module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity,
+                    spin=0, orient=UP, cp="centroid", anchor="origin", atype="hull") {
+    region = force_region(region);
+    dummy=assert(is_region(region),"Input is not a region");
+    anchor = center ? "zcenter" : anchor;
+    anchors = [named_anchor("zcenter", [0,0,height/2], UP)];
+    vnf = linear_sweep(
+        region, height=height,
+        twist=twist, scale=scale,
+        slices=slices, maxseg=maxseg,
+        style=style
+    );
+    attachable(anchor,spin,orient, cp=cp, region=region, h=height, extent=atype=="hull", anchors=anchors) {
+        vnf_polyhedron(vnf, convexity=convexity);
+        children();
+    }
+}
+
+
+function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
+                      maxseg, style="default", cp="centroid", atype="hull", anchor, spin=0, orient=UP) =
+    let(
+        region = force_region(region)
+    )
+    assert(is_region(region), "Input is not a region")
+    let(
+        anchor = center ? "zcenter" : anchor,
+        anchors = [named_anchor("zcenter", [0,0,height/2], UP)],
+        regions = region_parts(region),
+        slices = default(slices, floor(twist/5+1)),
+        step = twist/slices,
+        hstep = height/slices,
+        trgns = [
+            for (rgn=regions) [
+                for (path=rgn) let(
+                    p = cleanup_path(path),
+                    path = is_undef(maxseg)? p : [
+                        for (seg=pair(p,true)) each
+                        let(steps=ceil(norm(seg.y-seg.x)/maxseg))
+                        lerpn(seg.x, seg.y, steps, false)
+                    ]
+                )
+                rot(twist, p=scale([scale,scale],p=path))
+            ]
+        ],
+        vnf = vnf_join([
+            for (rgn = regions)
+            for (pathnum = idx(rgn)) let(
+                p = cleanup_path(rgn[pathnum]),
+                path = is_undef(maxseg)? p : [
+                    for (seg=pair(p,true)) each
+                    let(steps=ceil(norm(seg.y-seg.x)/maxseg))
+                    lerpn(seg.x, seg.y, steps, false)
+                ],
+                verts = [
+                    for (i=[0:1:slices]) let(
+                        sc = lerp(1, scale, i/slices),
+                        ang = i * step,
+                        h = i * hstep //- height/2
+                    ) scale([sc,sc,1], p=rot(ang, p=path3d(path,h)))
+                ]
+            ) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
+            for (rgn = regions) vnf_from_region(rgn, ident(4), reverse=true),
+            for (rgn = trgns) vnf_from_region(rgn, up(height), reverse=false)
+        ])
+    ) reorient(anchor,spin,orient, cp=cp, vnf=vnf, extent=atype=="hull", p=vnf, anchors=anchors);
+
+
+
+// Function&Module: spiral_sweep()
+// Usage:
+//   spiral_sweep(poly, h, r, turns, [higbee], [center], [r1], [r2], [d], [d1], [d2], [higbee1], [higbee2], [internal], [anchor], [spin], [orient]);
+//   vnf = spiral_sweep(poly, h, r, turns, ...);
+// Description:
+//   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a 3D spiral path
+//   of a given radius, height and degrees of rotation.  The origin in the profile traces out the helix of the specified radius.
+//   If turns is positive the path will be right-handed;  if turns is negative the path will be left-handed.
+//   .
+//   Higbee specifies tapering applied to the ends of the extrusion and is given as the linear distance
+//   over which to taper.  
+// Arguments:
+//   poly = Array of points of a polygon path, to be extruded.
+//   h = height of the spiral to extrude along.
+//   r = Radius of the spiral to extrude along. Default: 50
+//   turns = number of revolutions to spiral up along the height.
+//   ---
+//   d = Diameter of the spiral to extrude along.
+//   higbee = Length to taper thread ends over.
+//   higbee1 = Taper length at start
+//   higbee2 = Taper length at end
+//   internal = direction to taper the threads with higbee.  If true threads taper outward; if false they taper inward.   Default: false
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
+// Example:
+//   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
+//   spiral_sweep(poly, h=200, r=50, turns=3, $fn=36);
+function _taperfunc(x) =
+     let(higofs = pow(0.05,2))   // Smallest hig scale is the square root of this value
+     sqrt((1-higofs)*x+higofs);
+function _ss_polygon_r(N,theta) =
+        let( alpha = 360/N )
+        cos(alpha/2)/(cos(posmod(theta,alpha)-alpha/2));
+function spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, internal=false, anchor=CENTER, spin=0, orient=UP) =
+    assert(is_num(turns) && turns != 0)
+    let(
+        twist = 360*turns, 
+        higsample = 10,         // Oversample factor for higbee tapering
+        bounds = pointlist_bounds(poly),
+        yctr = (bounds[0].y+bounds[1].y)/2,
+        xmin = bounds[0].x,
+        xmax = bounds[1].x,
+        poly = path3d(clockwise_polygon(poly)),
+        anchor = get_anchor(anchor,center,BOT,BOT),
+        r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=50),
+        r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=50),
+        sides = segs(max(r1,r2)),
+        dir = sign(twist),
+        ang_step = 360/sides*dir,
+        anglist = [for(ang = [0:ang_step:twist-EPSILON]) ang,
+                   twist],
+        higbee1 = first_defined([higbee1, higbee, 0]),
+        higbee2 = first_defined([higbee2, higbee, 0]),
+        higang1 = 360 * higbee1 / (2 * r1 * PI),
+        higang2 = 360 * higbee2 / (2 * r2 * PI)
+    )
+    assert(higbee1>=0 && higbee2>=0)
+    assert(higang1 < dir*twist/2,"Higbee1 is more than half the threads")
+    assert(higang2 < dir*twist/2,"Higbee2 is more than half the threads")
+    let(
+        interp_ang = [
+                      for(i=idx(anglist,e=-2))
+                          each lerpn(anglist[i],anglist[i+1],
+                                     (higang1>0 && higang1>dir*anglist[i+1]
+                                      || (higang2>0 && higang2>dir*(twist-anglist[i]))) ? ceil((anglist[i+1]-anglist[i])/ang_step*higsample)
+                                                                                        : 1,
+                                     endpoint=false),
+                      last(anglist)
+                     ],
+        skewmat = affine3d_skew_xz(xa=atan2(r2-r1,h)),
+        points = [
+            for (a = interp_ang) let (
+                hsc = dir*a<higang1 ? _taperfunc(dir*a/higang1)
+                    : dir*(twist-a)<higang2 ? _taperfunc(dir*(twist-a)/higang2)
+                    : 1,
+                u = a/twist,
+                r = lerp(r1,r2,u),
+                mat = affine3d_zrot(a)
+                    * affine3d_translate([_ss_polygon_r(sides,a)*r, 0, h * (u-0.5)])
+                    * affine3d_xrot(90)
+                    * skewmat
+                    * scale([hsc,lerp(hsc,1,0.25),1], cp=[internal ? xmax : xmin, yctr, 0]),
+                pts = apply(mat, poly)
+            ) pts
+        ],
+        vnf = vnf_vertex_array(
+            points, col_wrap=true, caps=true, reverse=dir>0?true:false, 
+            style=higbee1>0 || higbee2>0 ? "quincunx" : "alt"
+        )
+    )
+    reorient(anchor,spin,orient, vnf=vnf, r1=r1, r2=r2, l=h, p=vnf);
+
+
+
+module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, internal=false, anchor=CENTER, spin=0, orient=UP) {
+    vnf = spiral_sweep(poly, h, r, turns, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, internal);
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=50);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=50);
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
+        vnf_polyhedron(vnf, convexity=ceil(abs(2*turns)));
+        children();
+    }
+}
+
+
+
 // Function&Module: path_sweep()
 // Usage: As module
 //   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) {attachments};

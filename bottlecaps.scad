@@ -117,7 +117,7 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
                             pitch=thread_pitch,
                             thread_depth=thread_h+0.1,
                             flank_angle=flank_angle,
-                            twist=810,
+                            turns=810/360,
                             higbee=thread_h*2,
                             anchor=TOP
                         );
@@ -195,7 +195,7 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=cap_id, h=tamper_ring_h+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, twist=810, higbee=thread_depth, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, turns=810/360, higbee=thread_depth, internal=true, anchor=BOTTOM);
         }
         children();
     }
@@ -310,7 +310,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
                         pitch=thread_pitch,
                         thread_depth=thread_h+0.1,
                         flank_angle=flank_angle,
-                        twist=650,
+                        turns=650/360,
                         higbee=thread_h*2,
                         anchor=TOP
                     );
@@ -379,7 +379,7 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=28.58, h=11.2+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, flank_angle=15, twist=650, higbee=1.6, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, flank_angle=15, turns=650/360, higbee=1.6, internal=true, anchor=BOTTOM);
         }
         children();
     }
@@ -482,7 +482,7 @@ module generic_bottle_neck(
                         pitch = thread_pitch,
                         thread_depth = thread_h + 0.1 * diamMagMult,
                         flank_angle = flank_angle,
-                        twist = 360 * (height - pitch - lip_roundover_r) * .6167 / pitch,
+                        turns = (height - pitch - lip_roundover_r) * .6167 / pitch,
                         higbee = thread_h * 2,
                         anchor = TOP
                     );
@@ -590,7 +590,7 @@ module generic_bottle_cap(
             }
             difference(){
                 up(wall + pitch / 2) {
-                    thread_helix(d = neckOuterDTol, pitch = pitch, thread_depth = threadDepth, flank_angle = flank_angle, twist = 360 * ((height - pitch) / pitch), higbee = threadDepth, internal = true, anchor = BOTTOM);
+                    thread_helix(d = neckOuterDTol, pitch = pitch, thread_depth = threadDepth, flank_angle = flank_angle, turns = ((height - pitch) / pitch), higbee = threadDepth, internal = true, anchor = BOTTOM);
                 }
             }
         }
@@ -1130,7 +1130,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
         up((H+extra_bot)/2){
             difference(){
                 union(){
-                    thread_helix(d=T-.01, profile=profile, pitch = INCH/tpi, twist=twist+2*higang, higbee=higlen, anchor=TOP);
+                    thread_helix(d=T-.01, profile=profile, pitch = INCH/tpi, turns=(twist+2*higang)/360, higbee=higlen, anchor=TOP);
                     cylinder(d=T-depth*2,l=H,anchor=TOP);
                     if (bead)
                       down(bead_shift)

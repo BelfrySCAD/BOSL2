@@ -334,11 +334,11 @@ function upcase(str) =
 
 
 
-// Section: Converting strings to numbers
+// Section: Parsing strings into numbers
 
-// Function: str_int()
+// Function: parse_int()
 // Usage:
-//   str_int(str, [base])
+//   parse_int(str, [base])
 // Description:
 //   Converts a string into an integer with any base up to 16.  Returns NaN if 
 //   conversion fails.  Digits above 9 are represented using letters A-F in either
@@ -347,62 +347,62 @@ function upcase(str) =
 //   str = String to convert.
 //   base = Base for conversion, from 2-16.  Default: 10
 // Example:
-//   str_int("349");        // Returns 349
-//   str_int("-37");        // Returns -37
-//   str_int("+97");        // Returns 97
-//   str_int("43.9");       // Returns nan
-//   str_int("1011010",2);  // Returns 90
-//   str_int("13",2);       // Returns nan
-//   str_int("dead",16);    // Returns 57005
-//   str_int("CEDE", 16);   // Returns 52958
-//   str_int("");           // Returns 0
-function str_int(str,base=10) =
+//   parse_int("349");        // Returns 349
+//   parse_int("-37");        // Returns -37
+//   parse_int("+97");        // Returns 97
+//   parse_int("43.9");       // Returns nan
+//   parse_int("1011010",2);  // Returns 90
+//   parse_int("13",2);       // Returns nan
+//   parse_int("dead",16);    // Returns 57005
+//   parse_int("CEDE", 16);   // Returns 52958
+//   parse_int("");           // Returns 0
+function parse_int(str,base=10) =
     str==undef ? undef :
     len(str)==0 ? 0 : 
     let(str=downcase(str))
-    str[0] == "-" ? -_str_int_recurse(substr(str,1),base,len(str)-2) :
-    str[0] == "+" ?  _str_int_recurse(substr(str,1),base,len(str)-2) :
-    _str_int_recurse(str,base,len(str)-1);
+    str[0] == "-" ? -_parse_int_recurse(substr(str,1),base,len(str)-2) :
+    str[0] == "+" ?  _parse_int_recurse(substr(str,1),base,len(str)-2) :
+    _parse_int_recurse(str,base,len(str)-1);
 
-function _str_int_recurse(str,base,i) =
+function _parse_int_recurse(str,base,i) =
     let(
         digit = search(str[i],"0123456789abcdef"),
         last_digit = digit == [] || digit[0] >= base ? (0/0) : digit[0]
     ) i==0 ? last_digit : 
-    _str_int_recurse(str,base,i-1)*base + last_digit;
+    _parse_int_recurse(str,base,i-1)*base + last_digit;
 
 
-// Function: str_float()
+// Function: parse_float()
 // Usage:
-//   str_float(str)
+//   parse_float(str)
 // Description:
 //   Converts a string to a floating point number.  Returns NaN if the
 //   conversion fails.
 // Arguments:
 //   str = String to convert.
 // Example:
-//   str_float("44");       // Returns 44
-//   str_float("3.4");      // Returns 3.4
-//   str_float("-99.3332"); // Returns -99.3332
-//   str_float("3.483e2");  // Returns 348.3
-//   str_float("-44.9E2");  // Returns -4490
-//   str_float("7.342e-4"); // Returns 0.0007342
-//   str_float("");         // Returns 0
-function str_float(str) =
+//   parse_float("44");       // Returns 44
+//   parse_float("3.4");      // Returns 3.4
+//   parse_float("-99.3332"); // Returns -99.3332
+//   parse_float("3.483e2");  // Returns 348.3
+//   parse_float("-44.9E2");  // Returns -4490
+//   parse_float("7.342e-4"); // Returns 0.0007342
+//   parse_float("");         // Returns 0
+function parse_float(str) =
     str==undef ? undef :
     len(str) == 0 ? 0 :
     in_list(str[1], ["+","-"]) ? (0/0) : // Don't allow --3, or +-3
-    str[0]=="-" ? -str_float(substr(str,1)) :
-    str[0]=="+" ?  str_float(substr(str,1)) :
+    str[0]=="-" ? -parse_float(substr(str,1)) :
+    str[0]=="+" ?  parse_float(substr(str,1)) :
     let(esplit = str_split(str,"eE") )
-    len(esplit)==2 ? str_float(esplit[0]) * pow(10,str_int(esplit[1])) :
+    len(esplit)==2 ? parse_float(esplit[0]) * pow(10,parse_int(esplit[1])) :
     let( dsplit = str_split(str,["."]))
-    str_int(dsplit[0])+str_int(dsplit[1])/pow(10,len(dsplit[1]));
+    parse_int(dsplit[0])+parse_int(dsplit[1])/pow(10,len(dsplit[1]));
 
 
-// Function: str_frac()
+// Function: parse_frac()
 // Usage:
-//   str_frac(str,[mixed],[improper],[signed])
+//   parse_frac(str,[mixed],[improper],[signed])
 // Description:
 //   Converts a string fraction to a floating point number.  A string fraction has the form `[-][# ][#/#]` where each `#` is one or more of the
 //   digits 0-9, and there is an optional sign character at the beginning. 
@@ -418,64 +418,64 @@ function str_float(str) =
 //   improper = set to true to accept improper fractions, false to reject them.  Default: true
 //   signed = set to true to accept a leading sign character, false to reject.  Default: true  
 // Example:
-//   str_frac("3/4");     // Returns 0.75
-//   str_frac("-77/9");   // Returns -8.55556
-//   str_frac("+1/3");    // Returns 0.33333
-//   str_frac("19");      // Returns 19
-//   str_frac("2 3/4");   // Returns 2.75
-//   str_frac("-2 12/4"); // Returns -5
-//   str_frac("");        // Returns 0
-//   str_frac("3/0");     // Returns inf
-//   str_frac("0/0");     // Returns nan
-//   str_frac("-77/9",improper=false);   // Returns nan
-//   str_frac("-2 12/4",improper=false); // Returns nan
-//   str_frac("-2 12/4",signed=false);   // Returns nan
-//   str_frac("-2 12/4",mixed=false);    // Returns nan
-//   str_frac("2 1/4",mixed=false);      // Returns nan
-function str_frac(str,mixed=true,improper=true,signed=true) =
+//   parse_frac("3/4");     // Returns 0.75
+//   parse_frac("-77/9");   // Returns -8.55556
+//   parse_frac("+1/3");    // Returns 0.33333
+//   parse_frac("19");      // Returns 19
+//   parse_frac("2 3/4");   // Returns 2.75
+//   parse_frac("-2 12/4"); // Returns -5
+//   parse_frac("");        // Returns 0
+//   parse_frac("3/0");     // Returns inf
+//   parse_frac("0/0");     // Returns nan
+//   parse_frac("-77/9",improper=false);   // Returns nan
+//   parse_frac("-2 12/4",improper=false); // Returns nan
+//   parse_frac("-2 12/4",signed=false);   // Returns nan
+//   parse_frac("-2 12/4",mixed=false);    // Returns nan
+//   parse_frac("2 1/4",mixed=false);      // Returns nan
+function parse_frac(str,mixed=true,improper=true,signed=true) =
     str == undef ? undef :
     len(str)==0 ? 0 :
-    signed && str[0]=="-" ? -str_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
-    signed && str[0]=="+" ?  str_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
+    signed && str[0]=="-" ? -parse_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
+    signed && str[0]=="+" ?  parse_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
     mixed ? (                      
         !in_list(str_find(str," "), [undef,0]) || is_undef(str_find(str,"/"))? (
             let(whole = str_split(str,[" "]))
-            _str_int_recurse(whole[0],10,len(whole[0])-1) + str_frac(whole[1], mixed=false, improper=improper, signed=false)
-        ) : str_frac(str,mixed=false, improper=improper)
+            _parse_int_recurse(whole[0],10,len(whole[0])-1) + parse_frac(whole[1], mixed=false, improper=improper, signed=false)
+        ) : parse_frac(str,mixed=false, improper=improper)
     ) : (
         let(split = str_split(str,"/"))
         len(split)!=2 ? (0/0) :
         let(
-            numerator =  _str_int_recurse(split[0],10,len(split[0])-1),
-            denominator = _str_int_recurse(split[1],10,len(split[1])-1)
+            numerator =  _parse_int_recurse(split[0],10,len(split[0])-1),
+            denominator = _parse_int_recurse(split[1],10,len(split[1])-1)
         ) !improper && numerator>=denominator? (0/0) :
         denominator<0 ? (0/0) : numerator/denominator
     );
 
 
-// Function: str_num()
+// Function: parse_num()
 // Usage:
-//   str_num(str)
+//   parse_num(str)
 // Description:
 //   Converts a string to a number.  The string can be either a fraction (two integers separated by a "/") or a floating point number.
 //   Returns NaN if the conversion fails.
 // Example:
-//   str_num("3/4");    // Returns 0.75
-//   str_num("3.4e-2"); // Returns 0.034
-function str_num(str) =
+//   parse_num("3/4");    // Returns 0.75
+//   parse_num("3.4e-2"); // Returns 0.034
+function parse_num(str) =
     str == undef ? undef :
-    let( val = str_frac(str) )
+    let( val = parse_frac(str) )
     val == val ? val :
-    str_float(str);
+    parse_float(str);
 
 
 
 
-// Section: Formatting data
+// Section: Formatting numbers into strings
 
-// Function: fmt_int()
+// Function: format_int()
 // Usage:
-//   fmt_int(i, [mindigits]);
+//   format_int(i, [mindigits]);
 // Description:
 //   Formats an integer number into a string.  This can handle larger numbers than `str()`.
 // Arguments:
@@ -483,10 +483,10 @@ function str_num(str) =
 //   mindigits = If the number has fewer than this many digits, pad the front with zeros until it does.  Default: 1.
 // Example:
 //   str(123456789012345);  // Returns "1.23457e+14"
-//   fmt_int(123456789012345);  // Returns "123456789012345"
-//   fmt_int(-123456789012345);  // Returns "-123456789012345"
-function fmt_int(i,mindigits=1) =
-    i<0? str("-", fmt_int(-i,mindigits)) :
+//   format_int(123456789012345);  // Returns "123456789012345"
+//   format_int(-123456789012345);  // Returns "-123456789012345"
+function format_int(i,mindigits=1) =
+    i<0? str("-", format_int(-i,mindigits)) :
     let(i=floor(i), e=floor(log(i)))
     i==0? str_join([for (j=[0:1:mindigits-1]) "0"]) :
     str_join(
@@ -497,33 +497,33 @@ function fmt_int(i,mindigits=1) =
     );
 
 
-// Function: fmt_fixed()
+// Function: format_fixed()
 // Usage:
-//   s = fmt_fixed(f, [digits]);
+//   s = format_fixed(f, [digits]);
 // Description:
 //   Given a floating point number, formats it into a string with the given number of digits after the decimal point.
 // Arguments:
 //   f = The floating point number to format.
 //   digits = The number of digits after the decimal to show.  Default: 6
-function fmt_fixed(f,digits=6) =
+function format_fixed(f,digits=6) =
     assert(is_int(digits))
     assert(digits>0)
-    is_list(f)? str("[",str_join(sep=", ", [for (g=f) fmt_fixed(g,digits=digits)]),"]") :
+    is_list(f)? str("[",str_join(sep=", ", [for (g=f) format_fixed(g,digits=digits)]),"]") :
     str(f)=="nan"? "nan" :
     str(f)=="inf"? "inf" :
-    f<0? str("-",fmt_fixed(-f,digits=digits)) :
+    f<0? str("-",format_fixed(-f,digits=digits)) :
     assert(is_num(f))
     let(
         sc = pow(10,digits),
         scaled = floor(f * sc + 0.5),
         whole = floor(scaled/sc),
         part = floor(scaled-(whole*sc))
-    ) str(fmt_int(whole),".",fmt_int(part,digits));
+    ) str(format_int(whole),".",format_int(part,digits));
 
 
-// Function: fmt_float()
+// Function: format_float()
 // Usage:
-//   fmt_float(f,[sig]);
+//   format_float(f,[sig]);
 // Description:
 //   Formats the given floating point number `f` into a string with `sig` significant digits.
 //   Strips trailing `0`s after the decimal point.  Strips trailing decimal point.
@@ -533,22 +533,22 @@ function fmt_fixed(f,digits=6) =
 //   f = The floating point number to format.
 //   sig = The number of significant digits to display.  Default: 12
 // Example:
-//   fmt_float(PI,12);  // Returns: "3.14159265359"
-//   fmt_float([PI,-16.75],12);  // Returns: "[3.14159265359, -16.75]"
-function fmt_float(f,sig=12) =
+//   format_float(PI,12);  // Returns: "3.14159265359"
+//   format_float([PI,-16.75],12);  // Returns: "[3.14159265359, -16.75]"
+function format_float(f,sig=12) =
     assert(is_int(sig))
     assert(sig>0)
-    is_list(f)? str("[",str_join(sep=", ", [for (g=f) fmt_float(g,sig=sig)]),"]") :
+    is_list(f)? str("[",str_join(sep=", ", [for (g=f) format_float(g,sig=sig)]),"]") :
     f==0? "0" :
     str(f)=="nan"? "nan" :
     str(f)=="inf"? "inf" :
-    f<0? str("-",fmt_float(-f,sig=sig)) :
+    f<0? str("-",format_float(-f,sig=sig)) :
     assert(is_num(f))
     let(
         e = floor(log(f)),
         mv = sig - e - 1
-    ) mv == 0? fmt_int(floor(f + 0.5)) :
-    (e<-sig/2||mv<0)? str(fmt_float(f*pow(10,-e),sig=sig),"e",e) :
+    ) mv == 0? format_int(floor(f + 0.5)) :
+    (e<-sig/2||mv<0)? str(format_float(f*pow(10,-e),sig=sig),"e",e) :
     let(
         ff = f + pow(10,-mv)*0.5,
         whole = floor(ff),
@@ -559,26 +559,26 @@ function fmt_float(f,sig=12) =
         str_strip(end=true,
             str_join([
                 ".",
-                fmt_int(part, mindigits=mv)
+                format_int(part, mindigits=mv)
             ]),
             "0."
         )
     ]);
 
 
-// Function: matrix_strings()
-// Usage:
-//   matrix_strings(M, [sig], [eps])
-// Description:
-//   Convert a numerical matrix into a matrix of strings where every column
-//   is the same width so it will display in neat columns when printed.
-//   Values below eps will display as zero.  The matrix can include nans, infs
-//   or undefs and the rows can be different lengths.  
-// Arguments:
-//   M = numerical matrix to convert
-//   sig = significant digits to display.  Default: 4
-//   eps = values smaller than this are shown as zero.  Default: 1e-9
-function matrix_strings(M, sig=4, eps=1e-9) = 
+/// Function: _format_matrix()
+/// Usage:
+///   _format_matrix(M, [sig], [eps])
+/// Description:
+///   Convert a numerical matrix into a matrix of strings where every column
+///   is the same width so it will display in neat columns when printed.
+///   Values below eps will display as zero.  The matrix can include nans, infs
+///   or undefs and the rows can be different lengths.  
+/// Arguments:
+///   M = numerical matrix to convert
+///   sig = significant digits to display.  Default: 4
+///   eps = values smaller than this are shown as zero.  Default: 1e-9
+function _format_matrix(M, sig=4, eps=1e-9) = 
    let(
        columngap = 1,
        figure_dash = chr(8210),
@@ -590,7 +590,7 @@ function matrix_strings(M, sig=4, eps=1e-9) =
                  let(
                      text = is_undef(entry) ? "und"
                           : abs(entry) < eps ? "0"             // Replace hyphens with figure dashes
-                          : str_replace_char(fmt_float(entry, sig),"-",figure_dash),
+                          : str_replace_char(format_float(entry, sig),"-",figure_dash),
                      have_dot = is_def(str_find(text, "."))
                  )
                  // If the text lacks a dot we add a space the same width as a dot to
@@ -616,9 +616,9 @@ function matrix_strings(M, sig=4, eps=1e-9) =
 
 
 
-// Function: str_format()
+// Function: format()
 // Usage:
-//   s = str_format(fmt, vals);
+//   s = format(fmt, vals);
 // Description:
 //   Given a format string and a list of values, inserts the values into the placeholders in the format string and returns it.
 //   Formatting placeholders have the following syntax:
@@ -645,13 +645,13 @@ function matrix_strings(M, sig=4, eps=1e-9) =
 //   fmt = The formatting string, with placeholders to format the values into.
 //   vals = The list of values to format.
 // Example(NORENDER):
-//   str_format("The value of {} is {:.14f}.", ["pi", PI]);  // Returns: "The value of pi is 3.14159265358979."
-//   str_format("The value {1:f} is known as {0}.", ["pi", PI]);  // Returns: "The value 3.141593 is known as pi."
-//   str_format("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]);  // Returns: "We use a very small value 1e-9 as EPSILON."
-//   str_format("{:-5s}{:i}{:b}", ["foo", 12e3, 5]);  // Returns: "foo  12000true"
-//   str_format("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostamus27.440"
-//   str_format("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostam 27.440"
-function str_format(fmt, vals) =
+//   format("The value of {} is {:.14f}.", ["pi", PI]);  // Returns: "The value of pi is 3.14159265358979."
+//   format("The value {1:f} is known as {0}.", ["pi", PI]);  // Returns: "The value 3.141593 is known as pi."
+//   format("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]);  // Returns: "We use a very small value 1e-9 as EPSILON."
+//   format("{:-5s}{:i}{:b}", ["foo", 12e3, 5]);  // Returns: "foo  12000true"
+//   format("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostamus27.440"
+//   format("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostam 27.440"
+function format(fmt, vals) =
     let(
         parts = str_split(fmt,"{")
     ) str_join([
@@ -666,7 +666,7 @@ function str_format(fmt, vals) =
             assert(i<99)
             is_undef(fmta)? "" : let(
                 fmtb = str_split(fmta,":"),
-                num = is_digit(fmtb[0])? str_int(fmtb[0]) : (i-1),
+                num = is_digit(fmtb[0])? parse_int(fmtb[0]) : (i-1),
                 left = fmtb[1][0] == "-",
                 fmtb1 = default(fmtb[1],""),
                 fmtc = left? substr(fmtb1,1) : fmtb1,
@@ -676,21 +676,21 @@ function str_format(fmt, vals) =
                 typ = hastyp? lch : "s",
                 fmtd = hastyp? substr(fmtc,0,len(fmtc)-1) : fmtc,
                 fmte = str_split((zero? substr(fmtd,1) : fmtd), "."),
-                wid = str_int(fmte[0]),
-                prec = str_int(fmte[1]),
+                wid = parse_int(fmte[0]),
+                prec = parse_int(fmte[1]),
                 val = assert(num>=0&&num<len(vals)) vals[num],
                 unpad = typ=="s"? (
                         let( sval = str(val) )
                         is_undef(prec)? sval :
                         substr(sval, 0, min(len(sval)-1, prec))
                     ) :
-                    (typ=="d" || typ=="i")? fmt_int(val) :
+                    (typ=="d" || typ=="i")? format_int(val) :
                     typ=="b"? (val? "true" : "false") :
                     typ=="B"? (val? "TRUE" : "FALSE") :
-                    typ=="f"? downcase(fmt_fixed(val,default(prec,6))) :
-                    typ=="F"? upcase(fmt_fixed(val,default(prec,6))) :
-                    typ=="g"? downcase(fmt_float(val,default(prec,6))) :
-                    typ=="G"? upcase(fmt_float(val,default(prec,6))) :
+                    typ=="f"? downcase(format_fixed(val,default(prec,6))) :
+                    typ=="F"? upcase(format_fixed(val,default(prec,6))) :
+                    typ=="g"? downcase(format_float(val,default(prec,6))) :
+                    typ=="G"? upcase(format_float(val,default(prec,6))) :
                     assert(false,str("Unknown format type: ",typ)),
                 padlen = max(0,wid-len(unpad)),
                 padfill = str_join([for (i=[0:1:padlen-1]) zero? "0" : " "]),
@@ -700,29 +700,6 @@ function str_format(fmt, vals) =
         ]
     ]);
     
-
-// Function&Module: echofmt()
-// Usage:
-//   echofmt(fmt,vals);
-// Description:
-//   Formats the given `vals` with the given format string `fmt` using [`str_format()`](#str_format), and echos the resultant string.
-// Arguments:
-//   fmt = The formatting string, with placeholders to format the values into.
-//   vals = The list of values to format.
-// Example(NORENDER):
-//   echofmt("The value of {} is {:.14f}.", ["pi", PI]);  // ECHO: "The value of pi is 3.14159265358979."
-//   echofmt("The value {1:f} is known as {0}.", ["pi", PI]);  // ECHO: "The value 3.141593 is known as pi."
-//   echofmt("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]);  // ECHO: "We use a ver small value 1e-9 as EPSILON."
-//   echofmt("{:-5s}{:i}{:b}", ["foo", 12e3, 5]);  // ECHO: "foo  12000true"
-//   echofmt("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // ECHO: "plecostamus27.440"
-//   echofmt("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // ECHO: "plecostam 27.440"
-function echofmt(fmt, vals) = echo(str_format(fmt,vals));
-module echofmt(fmt, vals) {
-   no_children($children);
-   echo(str_format(fmt,vals));
-}
-
-
 
 
 // Section: Checking character class

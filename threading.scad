@@ -1154,7 +1154,7 @@ module generic_threaded_nut(
 //   pitch = Distance between threads.  Default: 2mm/thread
 //   thread_depth = Depth of threads from top to bottom.
 //   flank_angle = Angle of thread faces to plane perpendicular to screw.  Default: 15 degrees.
-//   twist = Number of degrees to rotate thread around.  Default: 720 degrees.
+//   turns = Number of revolutions to rotate thread around.  Default: 2.
 //   ---
 //   profile = If an asymmetrical thread profile is needed, it can be specified here.
 //   starts = The number of thread starts.  Default: 1
@@ -1203,18 +1203,18 @@ module generic_threaded_nut(
 //       right(14)back(14)text("angle",size=4,halign="center");
 //      }
 // Examples:
-//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=900, $fn=72);
-//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=900, higbee=1, $fn=72);
-//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=720, higbee=2, internal=true, $fn=72);
-//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=360, left_handed=true, higbee=1, $fn=36);
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=2.5, $fn=72);
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=2.5, higbee=1, $fn=72);
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=2, higbee=2, internal=true, $fn=72);
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=1, left_handed=true, higbee=1, $fn=36);
 module thread_helix(
-    d, pitch, thread_depth, flank_angle, twist=720,
+    d, pitch, thread_depth, flank_angle, turns=2,
     profile, starts=1, left_handed=false, internal=false,
     d1, d2, higbee, higbee1, higbee2,
     anchor, spin, orient
 ) {
     dummy1=assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),"Cannot give thread_depth or flank_angle with a profile");
-    h = pitch*starts*twist/360;
+    h = pitch*starts*turns;
     r1 = get_radius(d1=d1, d=d, dflt=10);
     r2 = get_radius(d1=d2, d=d, dflt=10);
     profile = is_def(profile) ? profile :
@@ -1241,7 +1241,7 @@ module thread_helix(
     dir = left_handed? -1 : 1;
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
         zrot_copies(n=starts) {
-            spiral_sweep(pline, h=h, r1=r1, r2=r2, twist=twist*dir, higbee=higbee, higbee1=higbee1, higbee2=higbee2, internal=internal, anchor=CENTER);
+            spiral_sweep(pline, h=h, r1=r1, r2=r2, turns=turns*dir, higbee=higbee, higbee1=higbee1, higbee2=higbee2, internal=internal, anchor=CENTER);
         }
         children();
     }

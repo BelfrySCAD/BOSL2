@@ -398,7 +398,7 @@ function are_regions_equal(region1, region2, either_winding=false) =
 
 function __are_regions_equal(region1, region2, i) =
     i >= len(region1)? true :
-    !is_polygon_in_list(region1[i], region2)? false :
+    !_is_polygon_in_list(region1[i], region2)? false :
     __are_regions_equal(region1, region2, i+1);
 
 
@@ -590,126 +590,6 @@ function region_parts(region) =
          ]
     ];
 
-
-// Section: Region Extrusion and VNFs
-
-
-
-// Function&Module: linear_sweep()
-// Usage:
-//   linear_sweep(region, height, [center], [slices], [twist], [scale], [style], [convexity]) {attachments};
-// Description:
-//   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or polygon.
-//   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
-//   of the given 2D region or polygon.  The benefit of using this, over using `linear_extrude region(rgn)` is
-//   that it supports `anchor`, `spin`, `orient` and attachments.  You can also make more refined
-//   twisted extrusions by using `maxseg` to subsample flat faces.
-//   Note that the center option centers vertically using the named anchor "zcenter" whereas
-//   `anchor=CENTER` centers the entire shape relative to
-//   the shape's centroid, or other centerpoint you specify.  The centerpoint can be "centroid", "mean", "box" or
-//   a custom point location.  
-// Arguments:
-//   region = The 2D [Region](regions.scad) or polygon that is to be extruded.
-//   height = The height to extrude the region.  Default: 1
-//   center = If true, the created polyhedron will be vertically centered.  If false, it will be extruded upwards from the XY plane.  Default: `false`
-//   slices = The number of slices to divide the shape into along the Z axis, to allow refinement of detail, especially when working with a twist.  Default: `twist/5`
-//   maxseg = If given, then any long segments of the region will be subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
-//   twist = The number of degrees to rotate the shape clockwise around the Z axis, as it rises from bottom to top.  Default: 0
-//   scale = The amount to scale the shape, from bottom to top.  Default: 1
-//   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
-//   convexity = Max number of surfaces any single ray could pass through.  Module use only.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
-//   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
-//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example: Extruding a Compound Region.
-//   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
-//   rgn2 = [square(30,center=false)];
-//   rgn3 = [for (size=[10:10:20]) move([15,15],p=square(size=size, center=true))];
-//   mrgn = union(rgn1,rgn2);
-//   orgn = difference(mrgn,rgn3);
-//   linear_sweep(orgn,height=20,convexity=16);
-// Example: With Twist, Scale, Slices and Maxseg.
-//   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
-//   rgn2 = [square(30,center=false)];
-//   rgn3 = [for (size=[10:10:20]) move([15,15],p=square(size=size, center=true))];
-//   mrgn = union(rgn1,rgn2);
-//   orgn = difference(mrgn,rgn3);
-//   linear_sweep(orgn,height=50,maxseg=2,slices=40,twist=180,scale=0.5,convexity=16);
-// Example: Anchors on an Extruded Region
-//   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
-//   rgn2 = [square(30,center=false)];
-//   rgn3 = [for (size=[10:10:20]) move([15,15],p=square(size=size, center=true))];
-//   mrgn = union(rgn1,rgn2);
-//   orgn = difference(mrgn,rgn3);
-//   linear_sweep(orgn,height=20,convexity=16) show_anchors();
-module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity,
-                    spin=0, orient=UP, cp="centroid", anchor="origin", atype="hull") {
-    region = force_region(region);
-    dummy=assert(is_region(region),"Input is not a region");
-    anchor = center ? "zcenter" : anchor;
-    anchors = [named_anchor("zcenter", [0,0,height/2], UP)];
-    vnf = linear_sweep(
-        region, height=height,
-        twist=twist, scale=scale,
-        slices=slices, maxseg=maxseg,
-        style=style
-    );
-    attachable(anchor,spin,orient, cp=cp, region=region, h=height, extent=atype=="hull", anchors=anchors) {
-        vnf_polyhedron(vnf, convexity=convexity);
-        children();
-    }
-}
-
-
-function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
-                      maxseg, style="default", cp="centroid", atype="hull", anchor, spin=0, orient=UP) =
-    let(
-        region = force_region(region)
-    )
-    assert(is_region(region), "Input is not a region")
-    let(
-        anchor = center ? "zcenter" : anchor,
-        anchors = [named_anchor("zcenter", [0,0,height/2], UP)],
-        regions = region_parts(region),
-        slices = default(slices, floor(twist/5+1)),
-        step = twist/slices,
-        hstep = height/slices,
-        trgns = [
-            for (rgn=regions) [
-                for (path=rgn) let(
-                    p = cleanup_path(path),
-                    path = is_undef(maxseg)? p : [
-                        for (seg=pair(p,true)) each
-                        let(steps=ceil(norm(seg.y-seg.x)/maxseg))
-                        lerpn(seg.x, seg.y, steps, false)
-                    ]
-                )
-                rot(twist, p=scale([scale,scale],p=path))
-            ]
-        ],
-        vnf = vnf_join([
-            for (rgn = regions)
-            for (pathnum = idx(rgn)) let(
-                p = cleanup_path(rgn[pathnum]),
-                path = is_undef(maxseg)? p : [
-                    for (seg=pair(p,true)) each
-                    let(steps=ceil(norm(seg.y-seg.x)/maxseg))
-                    lerpn(seg.x, seg.y, steps, false)
-                ],
-                verts = [
-                    for (i=[0:1:slices]) let(
-                        sc = lerp(1, scale, i/slices),
-                        ang = i * step,
-                        h = i * hstep //- height/2
-                    ) scale([sc,sc,1], p=rot(ang, p=path3d(path,h)))
-                ]
-            ) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
-            for (rgn = regions) vnf_from_region(rgn, ident(4), reverse=true),
-            for (rgn = trgns) vnf_from_region(rgn, up(height), reverse=false)
-        ])
-    ) reorient(anchor,spin,orient, cp=cp, vnf=vnf, extent=atype=="hull", p=vnf, anchors=anchors);
 
 
 
