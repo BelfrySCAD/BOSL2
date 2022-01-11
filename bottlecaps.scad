@@ -195,7 +195,7 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=cap_id, h=tamper_ring_h+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, twist=810/360, higbee=thread_depth, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, turns=810/360, higbee=thread_depth, internal=true, anchor=BOTTOM);
         }
         children();
     }
@@ -310,7 +310,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
                         pitch=thread_pitch,
                         thread_depth=thread_h+0.1,
                         flank_angle=flank_angle,
-                        twist=650/360,
+                        turns=650/360,
                         higbee=thread_h*2,
                         anchor=TOP
                     );
@@ -379,7 +379,7 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=28.58, h=11.2+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, flank_angle=15, twist=650/360, higbee=1.6, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, flank_angle=15, turns=650/360, higbee=1.6, internal=true, anchor=BOTTOM);
         }
         children();
     }
