@@ -23,6 +23,10 @@ module test_move() {
     // Verify that module at least doesn't crash.
     move(x=-5) move(y=-5) move(z=-5) move([-5,-5,-5]) union(){};
     move(x=5) move(y=5) move(z=5) move([5,5,5]) union(){};
+    sq = square(10);
+    assert_equal(move("centroid", sq), move(-centroid(sq),sq));
+    assert_equal(move("mean", vals), move(-mean(vals), vals));
+    assert_equal(move("box", vals), move(-mean(pointlist_bounds(vals)),vals));
 }
 test_move();
 
