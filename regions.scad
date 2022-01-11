@@ -971,6 +971,8 @@ function offset(
         sharpcorners = [for(i=[0:len(goodsegs)-1]) _segment_extension(select(goodsegs,i-1), select(goodsegs,i))],
         // If some segments are parallel then the extended segments are undefined.  This case is not handled
         // Note if !closed the last corner doesn't matter, so exclude it
+fd=        echo(sharpcorners=sharpcorners)echo(alldef=all_defined(sharpcorners))echo(goodsegs=goodsegs),
+        
         parallelcheck =
             (len(sharpcorners)==2 && !closed) ||
             all_defined(closed? sharpcorners : select(sharpcorners, 1,-2))

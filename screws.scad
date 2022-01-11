@@ -30,16 +30,16 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 
 function _parse_screw_name(name) =
     let( commasplit = str_split(name,","),
-         length = str_num(commasplit[1]),
+         length = parse_num(commasplit[1]),
          xdash = str_split(commasplit[0], "-x"),
          type = xdash[0],
-         thread = str_float(xdash[1])
+         thread = parse_float(xdash[1])
     )
-    type[0] == "M" || type[0] == "m" ? ["metric", str_float(substr(type,1)), thread, length] :
+    type[0] == "M" || type[0] == "m" ? ["metric", parse_float(substr(type,1)), thread, length] :
     let(
         diam = type[0] == "#" ? type :
-               suffix(type,2)=="''" ? str_float(substr(type,0,len(type)-2)) :
-               let(val=str_num(type))
+               suffix(type,2)=="''" ? parse_float(substr(type,0,len(type)-2)) :
+               let(val=parse_num(type))
                val == floor(val) && val>=0 && val<=12 ? str("#",type) : val
         )
     ["english", diam, thread, u_mul(25.4,length)];
@@ -51,8 +51,8 @@ function _parse_drive(drive=undef, drive_size=undef) =
     is_undef(drive) ? ["none",undef] :
     let(drive = downcase(drive))
     in_list(drive,["hex","phillips", "slot", "torx", "phillips", "none"]) ? [drive, drive_size] :
-    drive[0]=="t" ? ["torx", str_int(substr(drive,1))] :
-    substr(drive,0,2)=="ph" ? ["phillips", str_int(substr(drive,2))] :
+    drive[0]=="t" ? ["torx", parse_int(substr(drive,1))] :
+    substr(drive,0,2)=="ph" ? ["phillips", parse_int(substr(drive,2))] :
     assert(str("Unknown screw drive type ",drive));
 
 
@@ -178,7 +178,7 @@ function screw_info(name, head, thread="coarse", drive, drive_size=undef, oversi
 
 function _screw_info_english(diam, threadcount, head, thread, drive) =
  let(
-   diameter = is_string(diam) ? str_int(substr(diam,1))*0.013 +0.06 :
+   diameter = is_string(diam) ? parse_int(substr(diam,1))*0.013 +0.06 :
               diam,
    pitch =
      is_def(threadcount) ? INCH/threadcount :
@@ -1121,8 +1121,8 @@ function _ISO_thread_tolerance(diameter, pitch, internal=false, tolerance=undef)
   assert(internalok,str("Invalid internal thread tolerance, ",tolerance,".  Must have form <digit><letter>"))
   assert(externalok,str("invalid external thread tolerance, ",tolerance,".  Must have form <digit><letter> or <digit><letter><digit><letter>"))
   let(
-    tol_num_pitch = str_num(tol_str[0]),
-    tol_num_crest = str_num(tol_str[2]),
+    tol_num_pitch = parse_num(tol_str[0]),
+    tol_num_crest = parse_num(tol_str[2]),
     tol_letter = tol_str[1]
   )
   assert(tol_letter==tol_str[3],str("Invalid tolerance, ",tolerance,".  Cannot mix different letters"))

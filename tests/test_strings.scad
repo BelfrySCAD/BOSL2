@@ -46,50 +46,50 @@ module test_ends_with() {
 test_ends_with();
 
 
-module test_fmt_int() {
-    assert(fmt_int(0,6) == "000000");
-    assert(fmt_int(3,6) == "000003");
-    assert(fmt_int(98765,6) == "098765");
-    assert(fmt_int(-3,6) == "-000003");
-    assert(fmt_int(-98765,6) == "-098765");
+module test_format_int() {
+    assert(format_int(0,6) == "000000");
+    assert(format_int(3,6) == "000003");
+    assert(format_int(98765,6) == "098765");
+    assert(format_int(-3,6) == "-000003");
+    assert(format_int(-98765,6) == "-098765");
 }
-test_fmt_int();
+test_format_int();
 
 
-module test_fmt_fixed() {
-    assert(fmt_fixed(-PI*100,8) == "-314.15926536");
-    assert(fmt_fixed(-PI,8) == "-3.14159265");
-    assert(fmt_fixed(-3,8) == "-3.00000000");
-    assert(fmt_fixed(3,8) == "3.00000000");
-    assert(fmt_fixed(PI*100,8) == "314.15926536");
-    assert(fmt_fixed(PI,8) == "3.14159265");
-    assert(fmt_fixed(0,8) == "0.00000000");
-    assert(fmt_fixed(-PI*100,3) == "-314.159");
-    assert(fmt_fixed(-PI,3) == "-3.142");
-    assert(fmt_fixed(-3,3) == "-3.000");
-    assert(fmt_fixed(3,3) == "3.000");
-    assert(fmt_fixed(PI*100,3) == "314.159");
-    assert(fmt_fixed(PI,3) == "3.142");
+module test_format_fixed() {
+    assert(format_fixed(-PI*100,8) == "-314.15926536");
+    assert(format_fixed(-PI,8) == "-3.14159265");
+    assert(format_fixed(-3,8) == "-3.00000000");
+    assert(format_fixed(3,8) == "3.00000000");
+    assert(format_fixed(PI*100,8) == "314.15926536");
+    assert(format_fixed(PI,8) == "3.14159265");
+    assert(format_fixed(0,8) == "0.00000000");
+    assert(format_fixed(-PI*100,3) == "-314.159");
+    assert(format_fixed(-PI,3) == "-3.142");
+    assert(format_fixed(-3,3) == "-3.000");
+    assert(format_fixed(3,3) == "3.000");
+    assert(format_fixed(PI*100,3) == "314.159");
+    assert(format_fixed(PI,3) == "3.142");
 }
-test_fmt_fixed();
+test_format_fixed();
 
 
-module test_fmt_float() {
-    assert(fmt_float(-PI*100,8) == "-314.15927");
-    assert(fmt_float(-PI,8) == "-3.1415927");
-    assert(fmt_float(-3,8) == "-3");
-    assert(fmt_float(3,8) == "3");
-    assert(fmt_float(PI*100,8) == "314.15927");
-    assert(fmt_float(PI,8) == "3.1415927");
-    assert(fmt_float(0,8) == "0");
-    assert(fmt_float(-PI*100,3) == "-314");
-    assert(fmt_float(-PI,3) == "-3.14");
-    assert(fmt_float(-3,3) == "-3");
-    assert(fmt_float(3,3) == "3");
-    assert(fmt_float(PI*100,3) == "314");
-    assert(fmt_float(PI,3) == "3.14");
+module test_format_float() {
+    assert(format_float(-PI*100,8) == "-314.15927");
+    assert(format_float(-PI,8) == "-3.1415927");
+    assert(format_float(-3,8) == "-3");
+    assert(format_float(3,8) == "3");
+    assert(format_float(PI*100,8) == "314.15927");
+    assert(format_float(PI,8) == "3.1415927");
+    assert(format_float(0,8) == "0");
+    assert(format_float(-PI*100,3) == "-314");
+    assert(format_float(-PI,3) == "-3.14");
+    assert(format_float(-3,3) == "-3");
+    assert(format_float(3,3) == "3");
+    assert(format_float(PI*100,3) == "314");
+    assert(format_float(PI,3) == "3.14");
 }
-test_fmt_float();
+test_format_float();
 
 
 module test_is_digit() {
@@ -173,78 +173,78 @@ module test_is_upper() {
 test_is_upper();
 
 
-module test_str_float() {
-    assert(str_float("3.1416") == 3.1416);
-    assert(str_float("-3.1416") == -3.1416);
-    assert(str_float("3.000") == 3.0);
-    assert(str_float("-3.000") == -3.0);
-    assert(str_float("3") == 3.0);
-    assert(str_float("0") == 0.0);
+module test_parse_float() {
+    assert(parse_float("3.1416") == 3.1416);
+    assert(parse_float("-3.1416") == -3.1416);
+    assert(parse_float("3.000") == 3.0);
+    assert(parse_float("-3.000") == -3.0);
+    assert(parse_float("3") == 3.0);
+    assert(parse_float("0") == 0.0);
 }
-test_str_float();
+test_parse_float();
 
 
-module test_str_frac() {
-    assert(str_frac("") == 0);
-    assert(str_frac("1/2") == 1/2);
-    assert(str_frac("+1/2") == 1/2);
-    assert(str_frac("-1/2") == -1/2);
-    assert(str_frac("7/8") == 7/8);
-    assert(str_frac("+7/8") == 7/8);
-    assert(str_frac("-7/8") == -7/8);
-    assert(str_frac("1 1/2") == 1 + 1/2);
-    assert(str_frac("+1 1/2") == 1 + 1/2);
-    assert(str_frac("-1 1/2") == -(1 + 1/2));
-    assert(str_frac("768 3/4") == 768 + 3/4);
-    assert(str_frac("+768 3/4") == 768 + 3/4);
-    assert(str_frac("-768 3/4") == -(768 + 3/4));
-    assert(str_frac("19") == 19);
-    assert(str_frac("+19") == 19);
-    assert(str_frac("-19") == -19);
-    assert(str_frac("3/0") == INF);
-    assert(str_frac("-3/0") == -INF);
-    assert(is_nan(str_frac("0/0")));
+module test_parse_frac() {
+    assert(parse_frac("") == 0);
+    assert(parse_frac("1/2") == 1/2);
+    assert(parse_frac("+1/2") == 1/2);
+    assert(parse_frac("-1/2") == -1/2);
+    assert(parse_frac("7/8") == 7/8);
+    assert(parse_frac("+7/8") == 7/8);
+    assert(parse_frac("-7/8") == -7/8);
+    assert(parse_frac("1 1/2") == 1 + 1/2);
+    assert(parse_frac("+1 1/2") == 1 + 1/2);
+    assert(parse_frac("-1 1/2") == -(1 + 1/2));
+    assert(parse_frac("768 3/4") == 768 + 3/4);
+    assert(parse_frac("+768 3/4") == 768 + 3/4);
+    assert(parse_frac("-768 3/4") == -(768 + 3/4));
+    assert(parse_frac("19") == 19);
+    assert(parse_frac("+19") == 19);
+    assert(parse_frac("-19") == -19);
+    assert(parse_frac("3/0") == INF);
+    assert(parse_frac("-3/0") == -INF);
+    assert(is_nan(parse_frac("0/0")));
 }
-test_str_frac();
+test_parse_frac();
 
 
-module test_str_num() {
-    assert(str_num("") == 0);
-    assert(str_num("1/2") == 1/2);
-    assert(str_num("+1/2") == 1/2);
-    assert(str_num("-1/2") == -1/2);
-    assert(str_num("7/8") == 7/8);
-    assert(str_num("+7/8") == 7/8);
-    assert(str_num("-7/8") == -7/8);
-    assert(str_num("1 1/2") == 1 + 1/2);
-    assert(str_num("+1 1/2") == 1 + 1/2);
-    assert(str_num("-1 1/2") == -(1 + 1/2));
-    assert(str_num("768 3/4") == 768 + 3/4);
-    assert(str_num("+768 3/4") == 768 + 3/4);
-    assert(str_num("-768 3/4") == -(768 + 3/4));
-    assert(str_num("19") == 19);
-    assert(str_num("+19") == 19);
-    assert(str_num("-19") == -19);
-    assert(str_num("3/0") == INF);
-    assert(str_num("-3/0") == -INF);
-    assert(str_num("3.14159") == 3.14159);
-    assert(str_num("-3.14159") == -3.14159);
-    assert(is_nan(str_num("0/0")));
+module test_parse_num() {
+    assert(parse_num("") == 0);
+    assert(parse_num("1/2") == 1/2);
+    assert(parse_num("+1/2") == 1/2);
+    assert(parse_num("-1/2") == -1/2);
+    assert(parse_num("7/8") == 7/8);
+    assert(parse_num("+7/8") == 7/8);
+    assert(parse_num("-7/8") == -7/8);
+    assert(parse_num("1 1/2") == 1 + 1/2);
+    assert(parse_num("+1 1/2") == 1 + 1/2);
+    assert(parse_num("-1 1/2") == -(1 + 1/2));
+    assert(parse_num("768 3/4") == 768 + 3/4);
+    assert(parse_num("+768 3/4") == 768 + 3/4);
+    assert(parse_num("-768 3/4") == -(768 + 3/4));
+    assert(parse_num("19") == 19);
+    assert(parse_num("+19") == 19);
+    assert(parse_num("-19") == -19);
+    assert(parse_num("3/0") == INF);
+    assert(parse_num("-3/0") == -INF);
+    assert(parse_num("3.14159") == 3.14159);
+    assert(parse_num("-3.14159") == -3.14159);
+    assert(is_nan(parse_num("0/0")));
 }
-test_str_num();
+test_parse_num();
 
 
-module test_str_int() {
-    assert(str_int("0") == 0);
-    assert(str_int("3") == 3);
-    assert(str_int("7655") == 7655);
-    assert(str_int("+3") == 3);
-    assert(str_int("+7655") == 7655);
-    assert(str_int("-3") == -3);
-    assert(str_int("-7655") == -7655);
-    assert(str_int("ffff",16) == 65535);
+module test_parse_int() {
+    assert(parse_int("0") == 0);
+    assert(parse_int("3") == 3);
+    assert(parse_int("7655") == 7655);
+    assert(parse_int("+3") == 3);
+    assert(parse_int("+7655") == 7655);
+    assert(parse_int("-3") == -3);
+    assert(parse_int("-7655") == -7655);
+    assert(parse_int("ffff",16) == 65535);
 }
-test_str_int();
+test_parse_int();
 
 
 module test_str_join() {
@@ -342,15 +342,15 @@ module test_str_find() {
 test_str_find();
 
 
-module test_str_format() {
-    assert(str_format("The value of {} is {:.14f}.", ["pi", PI]) == "The value of pi is 3.14159265358979.");
-    assert(str_format("The value {1:f} is known as {0}.", ["pi", PI]) == "The value 3.141593 is known as pi.");
-    assert(str_format("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]) == "We use a very small value 1e-9 as EPSILON.");
-    assert(str_format("{:-5s}{:i}{:b}", ["foo", 12e3, 5]) == "foo  12000true");
-    assert(str_format("{:-10s}{:.3f}", ["plecostamus",27.43982]) == "plecostamus27.440");
-    assert(str_format("{:-10.9s}{:.3f}", ["plecostamus",27.43982]) == "plecostam 27.440");
+module test_format() {
+    assert(format("The value of {} is {:.14f}.", ["pi", PI]) == "The value of pi is 3.14159265358979.");
+    assert(format("The value {1:f} is known as {0}.", ["pi", PI]) == "The value 3.141593 is known as pi.");
+    assert(format("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]) == "We use a very small value 1e-9 as EPSILON.");
+    assert(format("{:-5s}{:i}{:b}", ["foo", 12e3, 5]) == "foo  12000true");
+    assert(format("{:-10s}{:.3f}", ["plecostamus",27.43982]) == "plecostamus27.440");
+    assert(format("{:-10.9s}{:.3f}", ["plecostamus",27.43982]) == "plecostam 27.440");
 }
-test_str_format();
+test_format();
 
 
 /*

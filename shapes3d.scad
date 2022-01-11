@@ -2083,7 +2083,7 @@ module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orien
     anch = !any([for (c=anchor) c=="["])? anchor :
         let(
             parts = str_split(str_split(str_split(anchor,"]")[0],"[")[1],","),
-            vec = [for (p=parts) str_float(str_strip(p," ",start=true))]
+            vec = [for (p=parts) parse_float(str_strip(p," ",start=true))]
         ) vec;
     ha = anchor=="baseline"? "left" :
         anchor==anch && is_string(anchor)? "center" :
