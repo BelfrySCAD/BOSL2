@@ -52,7 +52,7 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 //           cuboid([holesize.x + 2*s, holesize.y + 2*s, h+0.2]);
 //           fwd(w/2-1) xrot(90) linear_extrude(1.1) {
 //             text(
-//               text=fmt_fixed(s,2),
+//               text=format_fixed(s,2),
 //               size=0.4*holesize.x,
 //               halign="center",
 //               valign="center"
