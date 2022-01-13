@@ -100,13 +100,13 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //
 // Description:
 //   Creates a cube or cuboid object, with optional chamfering or rounding of edges and corners.
-//   You cannot mix chamfering and rounding: just one edge treatment with the same size applies to all selected edges.  
-//   Negative chamfers and roundings can be applied to create external fillets, but they 
-//   but only apply to edges around the top or bottom faces.  If you specify an edge set other than "ALL"
-//   with such roundings or chamfers then you will get an error.  See
-//   [Specifying Edges](attachments.scad#section-specifying-edges) for information on how to specify edge sets.  
+//   You cannot mix chamfering and rounding: just one edge treatment with the same size applies to all selected edges.
+//   Negative chamfers and roundings can be applied to create external fillets, but they
+//   only apply to edges around the top or bottom faces.  If you specify an edge set other than "ALL"
+//   with negative roundings or chamfers then you will get an error.  See [Specifying Edges](attachments.scad#section-specifying-edges)
+//   for information on how to specify edge sets.
 // Arguments:
-//   size = The size of the cube, a number or length 3 vector.  
+//   size = The size of the cube, a number or length 3 vector.
 //   ---
 //   chamfer = Size of chamfer, inset from sides.  Default: No chamfering.
 //   rounding = Radius of the edge rounding.  Default: No rounding.
@@ -192,7 +192,7 @@ module cuboid(
         dummy=assert(is_finite(r) && !approx(r,0));
         c = [min(r,size.x/2), min(r,size.y/2), min(r,size.z/2)];
         c2 = v_mul(corner,c/2);
-        $fn = is_finite(chamfer)? 4 : segs(r);
+        $fn = is_finite(chamfer)? 4 : quantup(segs(r),4);
         translate(v_mul(corner, size/2-c)) {
             if (cnt == 0 || approx(r,0)) {
                 translate(c2) cube(c, center=true);
@@ -239,7 +239,7 @@ module cuboid(
     assert(all_positive(size));
     assert(is_undef(chamfer) || is_finite(chamfer),"chamfer must be a finite value");
     assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value");
-    assert(is_undef(rounding) || is_undef(chamfer), "Cannot specify nonzero value for both chamfer and rounding"); 
+    assert(is_undef(rounding) || is_undef(chamfer), "Cannot specify nonzero value for both chamfer and rounding");
     assert(is_undef(p1) || is_vector(p1));
     assert(is_undef(p2) || is_vector(p2));
     assert(is_bool(trimcorners));
