@@ -2012,6 +2012,14 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, ancho
 //   onion(r=30, ang=30, cap_h=40);
 // Example: Close Crop
 //   onion(r=30, ang=30, cap_h=20);
+// Example: Onions are useful for making the tops of large cylingdrical voids.
+//   difference() {
+//       cuboid([100,50,100], anchor=FWD+BOT);
+//       down(0.1)
+//           cylinder(h=50,d=50,anchor=BOT)
+//               attach(TOP)
+//                   onion(d=50, cap_h=30);
+//   }
 // Example: Standard Connectors
 //   onion(r=30, ang=30, cap_h=40) show_anchors();
 module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
