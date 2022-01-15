@@ -1,10 +1,13 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: vectors.scad
-//   Vector math functions.
+//   This file provides some mathematical operations that apply to each
+//   entry in a vector.  It provides normalizatoin and angle computation, and
+//   it provides functions for searching lists of vectors for matches to
+//   a given vector.  
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Math
-// FileSummary: Vector math functions.
+// FileSummary: Vector arithmetic, angle, and searching.
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
