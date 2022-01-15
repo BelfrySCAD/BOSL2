@@ -18,6 +18,7 @@ PrioritizeFiles:
   masks2d.scad
   masks3d.scad
   distributors.scad
+  colors.scad
   partitions.scad
   mutators.scad
   paths.scad
