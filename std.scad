@@ -13,6 +13,7 @@ include <constants.scad>
 include <transforms.scad>
 include <distributors.scad>
 include <mutators.scad>
+include <color.scad>
 include <attachments.scad>
 include <shapes3d.scad>
 include <shapes2d.scad>
