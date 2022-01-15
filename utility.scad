@@ -1,16 +1,17 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: utility.scad
-//   Utility functions used in argument processing.
+//   Functions for type checking, handling undefs, processing function arguments,
+//   and testing. 
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Data Management
-// FileSummary: Helpers for argument processing.
+// FileSummary: Type checking, dealing with undefs, processing function args
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 
 
-// Section: Type handling helpers.
+// Section: Type Checking
 
 
 // Function: typeof()
@@ -403,7 +404,7 @@ function all_defined(v,recursive=false) =
 
 
 
-// Section: Argument Helpers
+// Section: Processing Arguments to Functions and Modules
 
 
 // Function: get_anchor()
