@@ -44,6 +44,8 @@ include <structs.scad>
 //   For circular rounding you can also use the `radius` parameter, which sets a circular rounding
 //   radius.
 //   .
+//   For chamfers you can use the `flat` parameter, which sets the length of the chamfer edge.  
+//   .
 //   The `"smooth"` method rounding also has a parameter that specifies how smooth the curvature match
 //   is.  This parameter, `k`, ranges from 0 to 1, with a default of 0.5.  Larger values give a more
 //   abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
@@ -105,6 +107,7 @@ include <structs.scad>
 //   radius = rounding radius, only compatible with `method="circle"`. Can be a number or vector.
 //   cut = rounding cut distance, compatible with all methods.  Can be a number or vector.
 //   joint = rounding joint distance, compatible with `method="chamfer"` and `method="smooth"`.  Can be a number or vector.
+//   flat = length of the flat edge created by chamfering, compatible with `method="chamfer"`.  Can be a number of vector. 
 //   k = continuous curvature smoothness parameter for `method="smooth"`.  Can be a number or vector.  Default: 0.5
 //   closed = if true treat the path as a closed polygon, otherwise treat it as open.  Default: true.
 //   verbose = if true display rounding scale factors that show how close roundovers are to overlapping.  Default: false
@@ -259,6 +262,23 @@ include <structs.scad>
 //                         cut=chamfcut),
 //           radius=radii);
 //   stroke(path2, closed=true);
+// Example(2D): Specifying by corner index.  Use {{list_set()}} to construct the full chamfer cut list. 
+//   path = star(47, ir=25, or=50);  // long path, lots of corners
+//   chamfind = [8, 28, 60];         // But only want 3 chamfers
+//   chamfcut = list_set([],chamfind,[10,13,15],minlen=len(path)-1);
+//   rpath = round_corners(path, cut=chamfcut, method="chamfer");   
+//   polygon(rpath);
+// Example(2D): Two-pass to chamfer and round by index.  Use {{repeat_entries()}} to correct for first pass chamfers.
+//   $fn=32;
+//   path = star(47, ir=25, or=50);  // long path, lots of corners
+//   chamfind = [8, 28, 60];         // But only want 3 chamfers
+//   roundind = [7,9,27,29,59,61];   // And 6 roundovers
+//   chamfcut = list_set([],chamfind,[10,13,15],minlen=len(path)-1);
+//   roundcut = list_set([],roundind,repeat(8,6),minlen=len(path)-1);
+//   dups = list_set([], chamfind, repeat(2,len(chamfind)), dflt=1, minlen=len(path)-1);
+//   rpath1 = round_corners(path, cut=chamfcut, method="chamfer");
+//   rpath2 = round_corners(rpath1, cut=repeat_entries(roundcut,dups));
+//   polygon(rpath2);
 module round_corners(path, method="circle", radius, cut, joint, flat, k, closed=true, verbose=false) {no_module();}
 function round_corners(path, method="circle", radius, cut, joint, flat, k, closed=true, verbose=false) =
     assert(in_list(method,["circle", "smooth", "chamfer"]), "method must be one of \"circle\", \"smooth\" or \"chamfer\"")
