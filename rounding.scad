@@ -78,21 +78,26 @@ include <structs.scad>
 //   ignored.  Note that $fn is interpreted as the number of points on the roundover curve, which is
 //   not equivalent to its meaning for rounding circles because roundovers are usually small fractions
 //   of a circular arc.  As usual, $fn overrides $fs.  When doing continuous curvature rounding be sure to use lots of segments or the effect
-//   will be hidden by the discretization.  Note that if you use $fn with "smooth" then $fn points are added at each corner, even
-//   if the "corner" is flat, with collinear points, so this guarantees a specific output length.  
+//   will be hidden by the discretization.  Note that if you use $fn with "smooth" then $fn points are added at each corner.
+//   This guarantees a specific output length.  It also means that if
+//   you set `joint` nonzero on a flat "corner", with collinear points, you will get $fn points at that "corner." 
 //
-// Figure(2D,Med):
+// Figure(2D,Med,NoAxes):
 //   h = 18;
 //   w = 12.6;
+//   strokewidth = .3;
 //   example = [[0,0],[w,h],[2*w,0]];
-//   color("red")stroke(round_corners(example, joint=18, method="smooth",closed=false),width=.1);
-//   stroke(example, width=.1);
-//   color("green")stroke([[w,h], [w,h-cos(vector_angle(example)/2) *3/8*h]], width=.1);
+//   stroke(example, width=strokewidth*1.5);
+//   textangle = 90-vector_angle(example)/2;
+//   color("green"){ stroke([[w,h], [w,h-cos(vector_angle(example)/2) *3/8*h]], width=strokewidth, endcaps="arrow2");
+//                   //translate([w-.3,h-4.4])scale(.1)rotate(90)text("cut",size=12); }
+//                   translate([w-1.75,h-5.5])scale(.1)rotate(textangle)text("cut",size=14); }
 //   ll=lerp([w,h], [0,0],18/norm([w,h]-[0,0]) );
-//   color("blue")stroke(_shift_segment([[w,h], ll], -.7), width=.1);
-//   color("green")translate([w-.3,h-4])scale(.1)rotate(90)text("cut");
-//   color("blue")translate([w/2-1.1,h/2+.6])  scale(.1)rotate(90-vector_angle(example)/2)text("joint");
-//
+//   color("blue"){ stroke(_shift_segment([[w,h], ll], -.7), width=strokewidth,endcaps="arrow2");
+//                  translate([w/2-1.3,h/2+.6])  scale(.1)rotate(textangle)text("joint",size=14);}
+//   color("red")stroke(
+//         select(round_corners(example, joint=18, method="smooth",closed=false),1,-2),
+//         width=strokewidth);
 // Arguments:
 //   path = list of 2d or 3d points defining the path to be rounded.
 //   method = rounding method to use.  Set to "chamfer" for chamfers, "circle" for circular rounding and "smooth" for continuous curvature 4th order bezier rounding.  Default: "circle"
@@ -222,18 +227,51 @@ include <structs.scad>
 //   path_len = path_segment_lengths(path,closed=true);
 //   halflen = [for(i=idx(path)) min(select(path_len,i-1,i))/2];
 //   polygon(round_corners(path,joint = halflen, method="circle",verbose=true));
-
-module round_corners(path, method="circle", radius, cut, joint, k, closed=true, verbose=false) {no_module();}
-function round_corners(path, method="circle", radius, cut, joint, k, closed=true, verbose=false) =
+// Example(2D): Chamfering, specifying the flats
+//   path = star(5, step=2, d=100);
+//   path2 = round_corners(path, method="chamfer", flat=5);
+//   polygon(path2);
+// Example(2D): Chamfering, specifying the cut
+//   path = star(5, step=2, d=100);
+//   path2 = round_corners(path, method="chamfer", cut=5);
+//   polygon(path2);
+// Example(2D): Chamfering, specifying joint length
+//   path = star(5, step=2, d=100);
+//   path2 = round_corners(path, method="chamfer", joint=5);
+//   polygon(path2);
+// Example(2D): Two passes to apply chamfers first, and then round the unchamfered corners.  Chamfers always add one point, so it's not hard to keep track of the vertices
+//   $fn=32;
+//   shape = square(10);
+//   chamfered = round_corners(shape, method="chamfer", cut=[2,0,2,0]);
+//   rounded = round_corners(chamfered, 
+//              cut = [0, 0,    // first original veretex, chamfered
+//                     1.5,     // second original vertex
+//                     0, 0,    // third original vertex, chamfered
+//                     2.5]);   // last original vertex
+//   polygon(rounded);
+// Example(2D): Another example of mixing chamfers and roundings with two passes
+//   path = star(5, step=2, d=100);
+//   chamfcut = [for (i=[0:4]) each [7,0]];
+//   radii = [for (i=[0:4]) each [0,0,10]];
+//   path2=round_corners(
+//           round_corners(path,
+//                         method="chamfer",
+//                         cut=chamfcut),
+//           radius=radii);
+//   stroke(path2, closed=true);
+module round_corners(path, method="circle", radius, cut, joint, flat, k, closed=true, verbose=false) {no_module();}
+function round_corners(path, method="circle", radius, cut, joint, flat, k, closed=true, verbose=false) =
     assert(in_list(method,["circle", "smooth", "chamfer"]), "method must be one of \"circle\", \"smooth\" or \"chamfer\"")
     let(
         default_k = 0.5,
-        size=one_defined([radius, cut, joint], "radius,cut,joint"),
+        size=one_defined([radius, cut, joint, flat], "radius,cut,joint,flat"),
         path = force_path(path), 
         size_ok = is_num(size) || len(size)==len(path) || (!closed && len(size)==len(path)-2),
         k_ok = is_undef(k) || (method=="smooth" && (is_num(k) || len(k)==len(path) || (!closed && len(k)==len(path)-2))),
-        measure = is_def(radius) ? "radius" :
-                    is_def(cut) ? "cut" : "joint"
+        measure = is_def(radius) ? "radius"
+                : is_def(cut) ? "cut" 
+                : is_def(joint) ? "joint"
+                : "flat"
     )
     assert(is_path(path,[2,3]), "input path must be a 2d or 3d path")
     assert(len(path)>2,str("Path has length ",len(path),".  Length must be 3 or more."))
@@ -241,6 +279,7 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
     assert(k_ok,method=="smooth" ? str("Input k must be a number or list with length ",len(path), closed?"":str(" or ",len(path)-2)) :
                                    "Input k is only allowed with method=\"smooth\"")
     assert(method=="circle" || measure!="radius", "radius parameter allowed only with method=\"circle\"")
+    assert(method=="chamfer" || measure!="flat", "flat parameter  allowed only with method=\"chamfer\"")
     let(
         parm = is_num(size) ? repeat(size, len(path)) :
                len(size)<len(path) ? [0, each size, 0] :
@@ -263,6 +302,7 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
               for(i=[0:1:len(path)-1])
                   let(
                       pathbit = select(path,i-1,i+1),
+                      // This is the half-angle at the corner
                       angle = approx(pathbit[0],pathbit[1]) || approx(pathbit[1],pathbit[2]) ? undef
                             : vector_angle(select(path,i-1,i+1))/2
                   )
@@ -273,6 +313,7 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
                                                             str("Path turns back on itself at index ",i," with nonzero rounding"))
                   (method=="chamfer" && measure=="joint")? [parm[i]] :
                   (method=="chamfer" && measure=="cut")  ? [parm[i]/cos(angle)] :
+                  (method=="chamfer" && measure=="flat") ? [parm[i]/sin(angle)/2] :
                   (method=="smooth" && measure=="joint") ? [parm[i],k[i]] :
                   (method=="smooth" && measure=="cut")   ? [8*parm[i]/cos(angle)/(1+4*k[i]),k[i]] :
                   (method=="circle" && measure=="radius")? [parm[i]/tan(angle), parm[i]] :
