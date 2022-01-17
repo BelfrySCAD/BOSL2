@@ -386,8 +386,8 @@ module cuboid(
                                 tsphere(r=rounding, $fn=sides);
                             } else {
                                 intersection() {
-                                    xtcyl(r=rounding, h=rounding*2, $fn=sides);
-                                    ytcyl(r=rounding, h=rounding*2, $fn=sides);
+                                    xtcyl(r=rounding, l=rounding*2, $fn=sides);
+                                    ytcyl(r=rounding, l=rounding*2, $fn=sides);
                                     cyl(r=rounding, h=rounding*2, $fn=sides);
                                 }
                             }
