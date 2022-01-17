@@ -84,8 +84,8 @@ module square(size=1, center, anchor, spin) {
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
 // Arguments:
 //   size = The size of the rectangle to create.  If given as a scalar, both X and Y will be the same size.
-//   rounding = The rounding radius for the corners.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
-//   chamfer = The chamfer size for the corners.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
+//   rounding = The rounding radius for the corners.  If negative, produces external roundover spikes on the X axis. If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
+//   chamfer = The chamfer size for the corners.  If negative, produces external chamfer spikes on the X axis. If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D):
@@ -98,6 +98,10 @@ module square(size=1, center, anchor, spin) {
 //   rect([40,30], chamfer=5);
 // Example(2D): Rounded Rect
 //   rect([40,30], rounding=5);
+// Example(2D): Negative-Chamferred Rect
+//   rect([40,30], chamfer=-5);
+// Example(2D): Negative-Rounded Rect
+//   rect([40,30], rounding=-5);
 // Example(2D): Mixed Chamferring and Rounding
 //   rect([40,30],rounding=[5,0,10,0],chamfer=[0,8,0,15],$fa=1,$fs=1);
 // Example(2D): Called as Function
@@ -145,7 +149,8 @@ function rect(size=1, rounding=0, chamfer=0, anchor=CENTER, spin=0) =
         rounding = is_list(rounding)? rounding : [for (i=[0:3]) rounding],
         quadorder = [3,2,1,0],
         quadpos = [[1,1],[-1,1],[-1,-1],[1,-1]],
-        insets = [for (i=[0:3]) chamfer[i]>0? chamfer[i] : rounding[i]>0? rounding[i] : 0],
+        eps = 1e-9,
+        insets = [for (i=[0:3]) abs(chamfer[i])>=eps? chamfer[i] : abs(rounding[i])>=eps? rounding[i] : 0],
         insets_x = max(insets[0]+insets[1],insets[2]+insets[3]),
         insets_y = max(insets[0]+insets[3],insets[1]+insets[2])
     )
@@ -156,16 +161,20 @@ function rect(size=1, rounding=0, chamfer=0, anchor=CENTER, spin=0) =
             for(i = [0:3])
             let(
                 quad = quadorder[i],
-                inset = insets[quad],
-                cverts = quant(segs(inset),4)/4,
-                cp = v_mul(size/2-[inset,inset], quadpos[quad]),
+                qinset = insets[quad],
+                qpos = quadpos[quad],
+                qchamf = chamfer[quad],
+                qround = rounding[quad],
+                cverts = quant(segs(abs(qinset)),4)/4,
                 step = 90/cverts,
-                angs =
-                    chamfer[quad] > 0?  [0,-90]-90*[i,i] :
-                    rounding[quad] > 0? [for (j=[0:1:cverts]) 360-j*step-i*90] :
-                    [0]
+                cp = v_mul(size/2-[qinset,abs(qinset)], qpos),
+                qpts = abs(qchamf) >= eps? [[0,abs(qinset)], [qinset,0]] :
+                    abs(qround) >= eps? [for (j=[0:1:cverts]) let(a=90-j*step) v_mul(polar_to_xy(abs(qinset),a),[sign(qinset),1])] :
+                    [[0,0]],
+                qfpts = [for (p=qpts) v_mul(p,qpos)],
+                qrpts = qpos.x*qpos.y < 0? reverse(qfpts) : qfpts
             )
-            each [for (a = angs) cp + inset*[cos(a),sin(a)]]
+            each move(cp, p=qrpts)
         ]
     ) complex?
         reorient(anchor,spin, two_d=true, path=path, p=path) :
@@ -785,6 +794,7 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 //   shift = Scalar value to shift the back of the trapezoid along the X axis by.  Default: 0
 //   rounding = The rounding radius for the corners.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
 //   chamfer = The Length of the chamfer faces at the corners.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
+//   flip = If true, negative roundings and chamfers will point forward and back instead of left and right.  Default: `false`.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Examples(2D):
@@ -796,15 +806,23 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 //   trapezoid(h=20, w2=10, angle=30);
 //   trapezoid(h=20, w2=30, angle=-30);
 //   trapezoid(w1=30, w2=10, angle=30);
-// Example(2D): Chamferred Trapezoid
+// Example(2D): Chamfered Trapezoid
 //   trapezoid(h=30, w1=60, w2=40, chamfer=5);
+// Example(2D): Negative Chamfered Trapezoid
+//   trapezoid(h=30, w1=60, w2=40, chamfer=-5);
+// Example(2D): Flipped Negative Chamfered Trapezoid
+//   trapezoid(h=30, w1=60, w2=40, chamfer=-5, flip=true);
 // Example(2D): Rounded Trapezoid
 //   trapezoid(h=30, w1=60, w2=40, rounding=5);
+// Example(2D): Negative Rounded Trapezoid
+//   trapezoid(h=30, w1=60, w2=40, rounding=-5);
+// Example(2D): Flipped Negative Rounded Trapezoid
+//   trapezoid(h=30, w1=60, w2=40, rounding=-5, flip=true);
 // Example(2D): Mixed Chamfering and Rounding
-//   trapezoid(h=30, w1=60, w2=40, rounding=[5,0,10,0],chamfer=[0,8,0,15],$fa=1,$fs=1);
+//   trapezoid(h=30, w1=60, w2=40, rounding=[5,0,-10,0],chamfer=[0,8,0,-15],$fa=1,$fs=1);
 // Example(2D): Called as Function
 //   stroke(closed=true, trapezoid(h=30, w1=40, w2=20));
-function trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER, spin=0) =
+function trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0) =
     assert(is_undef(h) || is_finite(h))
     assert(is_undef(w1) || is_finite(w1))
     assert(is_undef(w2) || is_finite(w2))
@@ -817,23 +835,66 @@ function trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENT
         simple = chamfer==0 && rounding==0,
         h  = !is_undef(h)?  h  : opp_ang_to_adj(abs(w2-w1)/2, abs(angle)),
         w1 = !is_undef(w1)? w1 : w2 + 2*(adj_ang_to_opp(h, angle) + shift),
-        w2 = !is_undef(w2)? w2 : w1 - 2*(adj_ang_to_opp(h, angle) + shift)
+        w2 = !is_undef(w2)? w2 : w1 - 2*(adj_ang_to_opp(h, angle) + shift),
+        chamfs = is_num(chamfer)? [for (i=[0:3]) chamfer] :
+            assert(len(chamfer)==4) chamfer,
+        rounds = is_num(rounding)? [for (i=[0:3]) rounding] :
+            assert(len(rounding)==4) rounding,
+        srads = [for (i=[0:3]) rounds[i]? rounds[i] : chamfs[i]],
+        rads = v_abs(srads)
     )
     assert(w1>=0 && w2>=0 && h>0, "Degenerate trapezoid geometry.")
     assert(w1+w2>0, "Degenerate trapezoid geometry.")
     let(
-        base_path = [
-            [w2/2+shift,h/2],
-            [-w2/2+shift,h/2],
+        base = [
+            [ w2/2+shift, h/2],
+            [-w2/2+shift, h/2],
             [-w1/2,-h/2],
-            [w1/2,-h/2],
+            [ w1/2,-h/2],
         ],
-        cpath = simple? base_path :
-            path_chamfer_and_rounding(
-                base_path, closed=true,
-                chamfer=chamfer,
-                rounding=rounding
+        ang1 = v_theta(base[0]-base[3])-90,
+        ang2 = v_theta(base[1]-base[2])-90,
+        angs = [ang1, ang2, ang2, ang1],
+        qdirs = [[1,1], [-1,1], [-1,-1], [1,-1]],
+        hyps = [for (i=[0:3]) adj_ang_to_hyp(rads[i],angs[i])],
+        fluh=echo(),
+        offs = [
+            for (i=[0:3]) let(
+                xoff = adj_ang_to_opp(rads[i],angs[i]),
+                a = [xoff, -rads[i]] * qdirs[i].y * (srads[i]<0 && flip? -1 : 1),
+                b = a + [hyps[i] * qdirs[i].x * (srads[i]<0 && !flip? 1 : -1), 0]
+            ) b
+        ],
+        cpath = [
+            each (
+                let(i = 0)
+                rads[i] == 0? [base[i]] :
+                srads[i] > 0? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i], 90], r=rads[i]) :
+                flip? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i],-90], r=rads[i]) :
+                arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],90], r=rads[i])
             ),
+            each (
+                let(i = 1)
+                rads[i] == 0? [base[i]] :
+                srads[i] > 0? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[90,180+angs[i]], r=rads[i]) :
+                flip? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[270,180+angs[i]], r=rads[i]) :
+                arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[90,angs[i]], r=rads[i])
+            ),
+            each (
+                let(i = 2)
+                rads[i] == 0? [base[i]] :
+                srads[i] > 0? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],270], r=rads[i]) :
+                flip? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],90], r=rads[i]) :
+                arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i],-90], r=rads[i])
+            ),
+            each (
+                let(i = 3)
+                rads[i] == 0? [base[i]] :
+                srads[i] > 0? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[-90,angs[i]], r=rads[i]) :
+                flip? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[90,angs[i]], r=rads[i]) :
+                arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[270,180+angs[i]], r=rads[i])
+            ),
+        ],
         path = reverse(cpath)
     ) simple
       ? reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, shift=shift, p=path)
@@ -841,8 +902,8 @@ function trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENT
 
 
 
-module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER, spin=0) {
-    path = trapezoid(h=h, w1=w1, w2=w2, angle=angle, shift=shift, chamfer=chamfer, rounding=rounding);
+module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0) {
+    path = trapezoid(h=h, w1=w1, w2=w2, angle=angle, shift=shift, chamfer=chamfer, rounding=rounding, flip=flip);
     union() {
         simple = chamfer==0 && rounding==0;
         h  = !is_undef(h)?  h  : opp_ang_to_adj(abs(w2-w1)/2, abs(angle));
@@ -1103,26 +1164,17 @@ module teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0)
 function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
     let(
         r = get_radius(r=r, d=d, dflt=1),
-        tanpt = polar_to_xy(r, ang),
-        tip_y = adj_ang_to_hyp(r, 90-ang),
-        cap_h = min(default(cap_h,tip_y), tip_y),
-        cap_w = tanpt.y >= cap_h
-          ? hyp_opp_to_adj(r, cap_h)
-          : adj_ang_to_opp(tip_y-cap_h, ang),
-        ang2 = min(ang,atan2(cap_h,cap_w)),
-        sa = 180 - ang2,
-        ea = 360 + ang2,
-        steps = ceil(segs(r)*(ea-sa)/360),
-        path = deduplicate(
-            [
-                [ cap_w,cap_h],
-                for (a=lerpn(ea,sa,steps+1)) r*[cos(a),sin(a)],           
-                [-cap_w,cap_h]
-            ], closed=true
-        ),
-        maxx_idx = max_index(column(path,0)),
-        path2 = list_rotate(path,maxx_idx)
-    ) reorient(anchor,spin, two_d=true, path=path2, p=path2, extent=false);
+        ang2 = 90-ang,
+        prepath = zrot(90, p=circle(r=r)),
+        eps=1e-9,
+        prepath2 = [for (p=prepath) let(a=atan2(p.y,p.x)) if(a<=90-ang2+eps || a>=90+ang2-eps) p],
+        hyp = is_undef(cap_h)
+          ? opp_ang_to_hyp(abs(prepath2[0].x), ang)
+          : adj_ang_to_hyp(cap_h-prepath2[0].y, ang),
+        p1 = prepath2[0] + polar_to_xy(hyp, 90+ang),
+        p2 = last(prepath2) + polar_to_xy(hyp, 90-ang),
+        path = deduplicate([p1, each prepath2, p2], closed=true)
+    ) reorient(anchor,spin, two_d=true, path=path, p=path, extent=false);
 
 
 
