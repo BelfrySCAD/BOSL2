@@ -857,7 +857,6 @@ function trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, flip=false,
         angs = [ang1, ang2, ang2, ang1],
         qdirs = [[1,1], [-1,1], [-1,-1], [1,-1]],
         hyps = [for (i=[0:3]) adj_ang_to_hyp(rads[i],angs[i])],
-        fluh=echo(),
         offs = [
             for (i=[0:3]) let(
                 xoff = adj_ang_to_opp(rads[i],angs[i]),
