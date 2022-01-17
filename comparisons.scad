@@ -381,10 +381,12 @@ function __find_approx(val, list, eps, i=0) =
 //   When `eps` is zero, the comparison between consecutive items is exact.
 //   Otherwise, when all list items and subitems are numbers, the comparison is within the tolerance `eps`.
 //   Unlike `unique()` only consecutive duplicates are removed and the list is *not* sorted.
+//   If `closed` is set to true then the first and last entries in `list` are treated as adjacent,
+//   so all trailing items that match `list[0]` are dropped.  
 // Arguments:
 //   list = The list to deduplicate.
-//   closed = If true, drops trailing items if they match the first list item.
-//   eps = The maximum tolerance between items.
+//   closed = If true, treats first and last list entry as adjacent.  Default: false
+//   eps = The maximum tolerance between items.  Default: EPSILON
 // Example:
 //   a = deduplicate([8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3,8]
 //   b = deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3]
