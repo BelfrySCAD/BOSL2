@@ -60,7 +60,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         echo "::add-matcher::.github/openscad_docsgen.json"
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
-        openscad-mdimggen *.scad
+        openscad-mdimggen -T
 
   CheckDocs:
     runs-on: ubuntu-latest
@@ -95,5 +95,5 @@ jobs:
         cd $GITHUB_WORKSPACE
         echo "::add-matcher::.github/openscad_docsgen.json"
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
-        openscad-docsgen -Tmf *.scad
+        openscad-docsgen -Tmf
 
