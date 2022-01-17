@@ -113,6 +113,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   edges = Edges to mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: all edges.
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: No edges.
 //   trimcorners = If true, rounds or chamfers corners where three chamfered/rounded edges meet.  Default: `true`
+//   teardrop = If given as a number, rounding around the bottom edge of the cuboid won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=FRONT+LEFT+BOTTOM`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -181,10 +182,32 @@ module cuboid(
     except=[],
     except_edges,
     trimcorners=true,
+    teardrop=false,
     anchor=CENTER,
     spin=0,
     orient=UP
 ) {
+    module xtcyl(l,r) {
+        if (teardrop) {
+            teardrop(r=r, l=l, cap_h=r, ang=teardrop, spin=90, orient=DOWN);
+        } else {
+            yrot(90) cyl(l=l, r=r);
+        }
+    }
+    module ytcyl(l,r) {
+        if (teardrop) {
+            teardrop(r=r, l=l, cap_h=r, ang=teardrop, spin=0, orient=DOWN);
+        } else {
+            zrot(90) yrot(90) cyl(l=l, r=r);
+        }
+    }
+    module tsphere(r) {
+        if (teardrop) {
+            onion(r=r, cap_h=r, ang=teardrop, orient=DOWN);
+        } else {
+            spheroid(r=r, style="octa", orient=DOWN);
+        }
+    }
     module corner_shape(corner) {
         e = _corner_edges(edges, corner);
         cnt = sum(e);
@@ -197,33 +220,33 @@ module cuboid(
             if (cnt == 0 || approx(r,0)) {
                 translate(c2) cube(c, center=true);
             } else if (cnt == 1) {
-                if (e.x) right(c2.x) xcyl(l=c.x, r=r);
-                if (e.y) back (c2.y) ycyl(l=c.y, r=r);
+                if (e.x) right(c2.x) xtcyl(l=c.x, r=r);
+                if (e.y) back (c2.y) ytcyl(l=c.y, r=r);
                 if (e.z) up   (c2.z) zcyl(l=c.z, r=r);
             } else if (cnt == 2) {
                 if (!e.x) {
                     intersection() {
-                        ycyl(l=c.y*2, r=r);
+                        ytcyl(l=c.y*2, r=r);
                         zcyl(l=c.z*2, r=r);
                     }
                 } else if (!e.y) {
                     intersection() {
-                        xcyl(l=c.x*2, r=r);
+                        xtcyl(l=c.x*2, r=r);
                         zcyl(l=c.z*2, r=r);
                     }
                 } else {
                     intersection() {
-                        xcyl(l=c.x*2, r=r);
-                        ycyl(l=c.y*2, r=r);
+                        xtcyl(l=c.x*2, r=r);
+                        ytcyl(l=c.y*2, r=r);
                     }
                 }
             } else {
                 if (trimcorners) {
-                    spheroid(r=r, style="octa");
+                    tsphere(r=r);
                 } else {
                     intersection() {
-                        xcyl(l=c.x*2, r=r);
-                        ycyl(l=c.y*2, r=r);
+                        xtcyl(l=c.x*2, r=r);
+                        ytcyl(l=c.y*2, r=r);
                         zcyl(l=c.z*2, r=r);
                     }
                 }
@@ -233,6 +256,7 @@ module cuboid(
 
     size = scalar_vec3(size);
     edges = _edges(edges, except=first_defined([except_edges,except]));
+    teardrop = is_bool(teardrop)&&teardrop? 45 : teardrop;
     chamfer = approx(chamfer,0) ? undef : chamfer;
     rounding = approx(rounding,0) ? undef : rounding;
     assert(is_vector(size,3));
@@ -240,6 +264,7 @@ module cuboid(
     assert(is_undef(chamfer) || is_finite(chamfer),"chamfer must be a finite value");
     assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value");
     assert(is_undef(rounding) || is_undef(chamfer), "Cannot specify nonzero value for both chamfer and rounding");
+    assert(teardrop==false || (is_finite(teardrop) && teardrop>0 && teardrop<90), "teardrop must be either false or an angle number between 0 and 90")
     assert(is_undef(p1) || is_vector(p1));
     assert(is_undef(p2) || is_vector(p2));
     assert(is_bool(trimcorners));
@@ -358,12 +383,12 @@ module cuboid(
                         minkowski() {
                             cube(isize, center=true);
                             if (trimcorners) {
-                                spheroid(r=rounding, style="octa", $fn=sides);
+                                tsphere(r=rounding, $fn=sides);
                             } else {
                                 intersection() {
+                                    xtcyl(r=rounding, l=rounding*2, $fn=sides);
+                                    ytcyl(r=rounding, l=rounding*2, $fn=sides);
                                     cyl(r=rounding, h=rounding*2, $fn=sides);
-                                    rotate([90,0,0]) cyl(r=rounding, h=rounding*2, $fn=sides);
-                                    rotate([0,90,0]) cyl(r=rounding, h=rounding*2, $fn=sides);
                                 }
                             }
                         }
