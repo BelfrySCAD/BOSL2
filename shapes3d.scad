@@ -94,7 +94,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 // Usage: Chamfered Cubes
 //   cuboid(size, [chamfer=], [edges=], [except=], [trimcorners=], ...);
 // Usage: Rounded Cubes
-//   cuboid(size, [rounding=], [edges=], [except=], [trimcorners=], ...);
+//   cuboid(size, [rounding=], [teardrop=], [edges=], [except=], [trimcorners=], ...);
 // Usage: Attaching children
 //   cuboid(size, [anchor=], ...) [attachments];
 //
@@ -133,6 +133,8 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   cuboid([30,40,50], chamfer=5, trimcorners=false);
 // Example: Rounded Edges and Corners
 //   cuboid([30,40,50], rounding=10);
+// Example(VPR=[100,0,25],VPD=180): Rounded Edges and Corners with Teardrop Bottoms
+//   cuboid([30,40,50], rounding=10, teardrop=true);
 // Example: Rounded Edges, Untrimmed Corners
 //   cuboid([30,40,50], rounding=10, trimcorners=false);
 // Example: Chamferring Selected Edges
