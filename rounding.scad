@@ -230,9 +230,9 @@ include <structs.scad>
 //   path_len = path_segment_lengths(path,closed=true);
 //   halflen = [for(i=idx(path)) min(select(path_len,i-1,i))/2];
 //   polygon(round_corners(path,joint = halflen, method="circle",verbose=true));
-// Example(2D): Chamfering, specifying the flats
+// Example(2D): Chamfering, specifying the chamfer length
 //   path = star(5, step=2, d=100);
-//   path2 = round_corners(path, method="chamfer", flat=5);
+//   path2 = round_corners(path, method="chamfer", chamfer=5);
 //   polygon(path2);
 // Example(2D): Chamfering, specifying the cut
 //   path = star(5, step=2, d=100);
@@ -279,19 +279,19 @@ include <structs.scad>
 //   rpath1 = round_corners(path, cut=chamfcut, method="chamfer");
 //   rpath2 = round_corners(rpath1, cut=repeat_entries(roundcut,dups));
 //   polygon(rpath2);
-module round_corners(path, method="circle", radius, cut, joint, flat, k, closed=true, verbose=false) {no_module();}
-function round_corners(path, method="circle", radius, cut, joint, flat, k, closed=true, verbose=false) =
+module round_corners(path, method="circle", radius, cut, joint, chamfer, k, closed=true, verbose=false) {no_module();}
+function round_corners(path, method="circle", radius, cut, joint, chamfer, k, closed=true, verbose=false) =
     assert(in_list(method,["circle", "smooth", "chamfer"]), "method must be one of \"circle\", \"smooth\" or \"chamfer\"")
     let(
         default_k = 0.5,
-        size=one_defined([radius, cut, joint, flat], "radius,cut,joint,flat"),
+        size=one_defined([radius, cut, joint, chamfer], "radius,cut,joint,chamfer"),
         path = force_path(path), 
         size_ok = is_num(size) || len(size)==len(path) || (!closed && len(size)==len(path)-2),
         k_ok = is_undef(k) || (method=="smooth" && (is_num(k) || len(k)==len(path) || (!closed && len(k)==len(path)-2))),
         measure = is_def(radius) ? "radius"
                 : is_def(cut) ? "cut" 
                 : is_def(joint) ? "joint"
-                : "flat"
+                : "chamfer"
     )
     assert(is_path(path,[2,3]), "input path must be a 2d or 3d path")
     assert(len(path)>2,str("Path has length ",len(path),".  Length must be 3 or more."))
@@ -299,7 +299,7 @@ function round_corners(path, method="circle", radius, cut, joint, flat, k, close
     assert(k_ok,method=="smooth" ? str("Input k must be a number or list with length ",len(path), closed?"":str(" or ",len(path)-2)) :
                                    "Input k is only allowed with method=\"smooth\"")
     assert(method=="circle" || measure!="radius", "radius parameter allowed only with method=\"circle\"")
-    assert(method=="chamfer" || measure!="flat", "flat parameter  allowed only with method=\"chamfer\"")
+    assert(method=="chamfer" || measure!="chamfer", "chamfer parameter  allowed only with method=\"chamfer\"")
     let(
         parm = is_num(size) ? repeat(size, len(path)) :
                len(size)<len(path) ? [0, each size, 0] :
@@ -333,7 +333,7 @@ function round_corners(path, method="circle", radius, cut, joint, flat, k, close
                                                             str("Path turns back on itself at index ",i," with nonzero rounding"))
                   (method=="chamfer" && measure=="joint")? [parm[i]] :
                   (method=="chamfer" && measure=="cut")  ? [parm[i]/cos(angle)] :
-                  (method=="chamfer" && measure=="flat") ? [parm[i]/sin(angle)/2] :
+                  (method=="chamfer" && measure=="chamfer") ? [parm[i]/sin(angle)/2] :
                   (method=="smooth" && measure=="joint") ? [parm[i],k[i]] :
                   (method=="smooth" && measure=="cut")   ? [8*parm[i]/cos(angle)/(1+4*k[i]),k[i]] :
                   (method=="circle" && measure=="radius")? [parm[i]/tan(angle), parm[i]] :
