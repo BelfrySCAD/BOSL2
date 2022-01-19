@@ -100,30 +100,30 @@ _ANCHOR_TYPES = ["intersect","hull"];
 // Figure(3D,Big,VPD=6): Named constants for direction vectors.  Some directions have more than one name.  
 //   $fn=12;
 //   stroke([[0,0,0],RIGHT], endcap2="arrow2", width=.05);
-//   color("black")right(.05)up(.05)move(RIGHT)atext("RIGHT",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   color("black")right(.05)up(.05)move(RIGHT) text3d("RIGHT",size=.1,h=.01,anchor=LEFT,orient=FRONT);
 //   stroke([[0,0,0],LEFT], endcap2="arrow2", width=.05);
-//   color("black")left(.05)up(.05)move(LEFT)atext("LEFT",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   color("black")left(.05)up(.05)move(LEFT) text3d("LEFT",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   stroke([[0,0,0],FRONT], endcap2="arrow2", width=.05);
 //   color("black")
 //   left(.1){
-//   up(.12)move(FRONT)atext("FRONT",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
-//   move(FRONT)atext("FWD",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
-//   down(.12)move(FRONT)atext("FORWARD",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   up(.12)move(FRONT) text3d("FRONT",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   move(FRONT) text3d("FWD",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   down(.12)move(FRONT) text3d("FORWARD",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   }
 //   stroke([[0,0,0],BACK], endcap2="arrow2", width=.05);
 //   right(.05)
-//   color("black")move(BACK)atext("BACK",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   color("black")move(BACK) text3d("BACK",size=.1,h=.01,anchor=LEFT,orient=FRONT);
 //   stroke([[0,0,0],DOWN], endcap2="arrow2", width=.05);
 //   color("black")
 //   right(.1){
-//   up(.12)move(BOT)atext("DOWN",size=.1,h=.01,anchor=LEFT,orient=FRONT);
-//   move(BOT)atext("BOTTOM",size=.1,h=.01,anchor=LEFT,orient=FRONT);
-//   down(.12)move(BOT)atext("BOT",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   up(.12)move(BOT) text3d("DOWN",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   move(BOT) text3d("BOTTOM",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   down(.12)move(BOT) text3d("BOT",size=.1,h=.01,anchor=LEFT,orient=FRONT);
 //   }
 //   stroke([[0,0,0],TOP], endcap2="arrow2", width=.05);
 //   color("black")left(.05){
-//   up(.12)move(TOP)atext("TOP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
-//   move(TOP)atext("UP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   up(.12)move(TOP) text3d("TOP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   move(TOP) text3d("UP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   }
 // Subsection: Specifying Faces
 //   Modules operating on faces accept a list of faces to describe the faces to operate on.  Each
@@ -2457,7 +2457,7 @@ module _show_edges(edges="ALL", size=20, text, txtsize=3,toplabel) {
     vpr = [55,0,25];
     color("black")
     if (is_def(toplabel))
-      for(h=idx(toplabel)) up(21+6*h)rot(vpr)atext(select(toplabel,-h-1),size=3.3,h=0.1,orient=UP,anchor=FRONT);
+      for(h=idx(toplabel)) up(21+6*h)rot(vpr) text3d(select(toplabel,-h-1),size=3.3,h=0.1,orient=UP,anchor=FRONT);
 }
 
 
@@ -2630,7 +2630,7 @@ module _show_corners(corners="ALL", size=20, text, txtsize=3,toplabel) {
     vpr = [55,0,25];
     color("black")
     if (is_def(toplabel))
-      for(h=idx(toplabel)) up(21+6*h)rot(vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
+      for(h=idx(toplabel)) up(21+6*h)rot(vpr) text3d(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
 }
 
 module _show_cube_faces(faces, size=20, toplabel,botlabel) {
@@ -2643,9 +2643,9 @@ module _show_cube_faces(faces, size=20, toplabel,botlabel) {
    vpr = [55,0,25];
    color("black"){
    if (is_def(toplabel))
-     for(h=idx(toplabel)) up(21+6*h)rot(vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
+     for(h=idx(toplabel)) up(21+6*h)rot(vpr) text3d(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
    if (is_def(botlabel))
-     for(h=idx(botlabel)) down(26+6*h)rot(vpr)atext(botlabel[h],size=3.3,h=.1,orient=UP,anchor=FRONT);
+     for(h=idx(botlabel)) down(26+6*h)rot(vpr) text3d(botlabel[h],size=3.3,h=.1,orient=UP,anchor=FRONT);
    }
    color("yellow",0.7) cuboid(size=size);
 }

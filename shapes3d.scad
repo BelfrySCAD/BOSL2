@@ -1835,7 +1835,6 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 //   Creates a torus shape.
 //
 // Figure(2D,Med):
-//   module text3d(t,size=8) text(text=t,size=size,font="Helvetica", halign="center",valign="center");
 //   module dashcirc(r,start=0,angle=359.9,dashlen=5) let(step=360*dashlen/(2*r*PI)) for(a=[start:step:start+angle]) stroke(arc(r=r,start=a,angle=step/2));
 //   r = 75; r2 = 30;
 //   down(r2+0.1) #torus(r_maj=r, r_min=r2, $fn=72);
@@ -1847,19 +1846,19 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 //   }
 //   rot(240) color("blue") linear_extrude(height=0.01) {
 //       stroke([[0,0],[r+r2,0]], endcaps="arrow2",width=2);
-//       right(r) fwd(9) rot(-240) text3d("or",size=10);
+//       right(r) fwd(9) rot(-240) text("or",size=10,anchor=CENTER);
 //   }
 //   rot(135) color("blue") linear_extrude(height=0.01) {
 //       stroke([[0,0],[r-r2,0]], endcaps="arrow2",width=2);
-//       right((r-r2)/2) back(8) rot(-135) text3d("ir",size=10);
+//       right((r-r2)/2) back(8) rot(-135) text("ir",size=10,anchor=CENTER);
 //   }
 //   rot(45) color("blue") linear_extrude(height=0.01) {
 //       stroke([[0,0],[r,0]], endcaps="arrow2",width=2);
-//       right(r/2) back(8) text3d("r_maj",size=9);
+//       right(r/2) back(8) text("r_maj",size=9,anchor=CENTER);
 //   }
 //   rot(30) color("blue") linear_extrude(height=0.01) {
 //       stroke([[r,0],[r+r2,0]], endcaps="arrow2",width=2);
-//       right(r+r2/2) fwd(8) text3d("r_min",size=7);
+//       right(r+r2/2) fwd(8) text("r_min",size=7,anchor=CENTER);
 //   }
 //
 // Arguments:
@@ -2071,10 +2070,10 @@ module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
 
 // Section: Text
 
-// Module: atext()
+// Module: text3d()
 // Topics: Attachments, Text
 // Usage:
-//   atext(text, [h], [size], [font]);
+//   text3d(text, [h], [size], [font], ...);
 // Description:
 //   Creates a 3D text block that can be attached to other attachable objects.
 //   NOTE: This cannot have children attached to it.
@@ -2082,8 +2081,14 @@ module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
 //   text = The text string to instantiate as an object.
 //   h = The height to which the text should be extruded.  Default: 1
 //   size = The font size used to create the text block.  Default: 10
-//   font = The name of the font used to create the text block.  Default: "Courier"
+//   font = The name of the font used to create the text block.  Default: "Helvetica"
 //   ---
+//   halign = If given, specifies the horizontal alignment of the text.  `"left"`, `"center"`, or `"right"`.  Overrides `anchor=`.
+//   valign = If given, specifies the vertical alignment of the text.  `"top"`, `"center"`, `"baseline"` or `"bottom"`.  Overrides `anchor=`.
+//   spacing = The relative spacing multiplier between characters.  Default: `1.0`
+//   direction = The text direction.  `"ltr"` for left to right.  `"rtl"` for right to left. `"ttb"` for top to bottom. `"btt"` for bottom to top.  Default: `"ltr"`
+//   language = The language the text is in.  Default: `"en"`
+//   script = The script the text is in.  Default: `"latin"`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -2092,20 +2097,20 @@ module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
 //   "baseline" = Anchors at the baseline of the text, at the start of the string.
 //   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
 // Examples:
-//   atext("Foobar", h=3, size=10);
-//   atext("Foobar", h=2, size=12, font="Helvetica");
-//   atext("Foobar", h=2, anchor=CENTER);
-//   atext("Foobar", h=2, anchor=str("baseline",CENTER));
-//   atext("Foobar", h=2, anchor=str("baseline",BOTTOM+RIGHT));
+//   text3d("Foobar", h=3, size=10);
+//   text3d("Foobar", h=2, size=12, font="Helvetica");
+//   text3d("Foobar", h=2, anchor=CENTER);
+//   text3d("Foobar", h=2, anchor=str("baseline",CENTER));
+//   text3d("Foobar", h=2, anchor=str("baseline",BOTTOM+RIGHT));
 // Example: Using line_of() distributor
 //   txt = "This is the string.";
 //   line_of(spacing=[10,-5],n=len(txt))
-//       atext(txt[$idx], size=10, anchor=CENTER);
+//       text3d(txt[$idx], size=10, anchor=CENTER);
 // Example: Using arc_of() distributor
 //   txt = "This is the string";
 //   arc_of(r=50, n=len(txt), sa=0, ea=180)
-//       atext(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
-module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orient=UP) {
+//       text3d(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
+module text3d(text, h=1, size=10, font="Helvetica", halign, valign, spacing=1.0, direction="ltr", language="em", script="latin", anchor="baseline[-1,0,-1]", spin=0, orient=UP) {
     no_children($children);
     dummy1 =
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
@@ -2136,6 +2141,7 @@ module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orien
         anch.z>0? TOP :
         CENTER;
     m = _attach_transform(base,spin,orient,geom);
+    echo(anchor=anchor, anch=anch, base=base);
     multmatrix(m) {
         $parent_anchor = anchor;
         $parent_spin   = spin;
@@ -2145,17 +2151,19 @@ module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orien
         $attach_to   = undef;
         do_show = _attachment_is_shown($tags);
         if (do_show) {
-            if (is_undef($color)) {
+            _color($color) {
                 linear_extrude(height=h, center=true)
-                    text(text=text, size=size, halign=ha, valign=va, font=font);
-            } else color($color) {
-                $color = undef;
-                linear_extrude(height=h, center=true)
-                    text(text=text, size=size, halign=ha, valign=va, font=font);
+                    _text(
+                        text=text, size=size, font=font,
+                        halign=ha, valign=va, spacing=spacing,
+                        direction=direction, language=language,
+                        script=script
+                    );
             }
         }
     }
 }
+
 
 // This could be replaced with _cut_to_seg_u_form
 function _cut_interp(pathcut, path, data) =
@@ -2169,7 +2177,6 @@ function _cut_interp(pathcut, path, data) =
     )
     (1-factor)*data[entry[1]-1]+ factor * data[entry[1]]
   ];
-
 
 
 // Module: path_text()

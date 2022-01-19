@@ -9,6 +9,9 @@
 //////////////////////////////////////////////////////////////////////
 
 
+use <builtins.scad>
+
+
 // Section: Coloring Objects
 
 // Module: rainbow()
@@ -116,3 +119,5 @@ function HSV(h,s=1,v=1) =
 module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
 
 
+
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

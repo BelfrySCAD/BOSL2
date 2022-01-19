@@ -12,12 +12,14 @@ module _square(size,center=false) square(size,center=center);
 
 module _circle(r,d) circle(r=r,d=d);
 
-module _text(t,size,font,halign,valign,spacing,direction,language,script)
-    text(t, size=size, font=font,
+module _text(text,size,font,halign,valign,spacing,direction,language,script)
+    text(text, size=size, font=font,
         halign=halign, valign=valign,
         spacing=spacing, direction=direction,
         language=language, script=script
     );
+
+module _color(color) if (color==undef) children(); else color(color) children();
 
 module _cube(size,center) cube(size,center=center);
 
