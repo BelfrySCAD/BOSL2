@@ -1486,7 +1486,7 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
 // Module: text()
 // Topics: Attachments, Text
 // Usage:
-//   text(text, [size], [font]);
+//   text(text, [size], [font], ...);
 // Description:
 //   Creates a 3D text block that can be attached to other attachable objects.
 //   NOTE: This cannot have children attached to it.
@@ -1495,6 +1495,12 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
 //   size = The font size used to create the text block.  Default: 10
 //   font = The name of the font used to create the text block.  Default: "Helvetica"
 //   ---
+//   halign = If given, specifies the horizontal alignment of the text.  `"left"`, `"center"`, or `"right"`.  Overrides `anchor=`.
+//   valign = If given, specifies the vertical alignment of the text.  `"top"`, `"center"`, `"baseline"` or `"bottom"`.  Overrides `anchor=`.
+//   spacing = The relative spacing multiplier between characters.  Default: `1.0`
+//   direction = The text direction.  `"ltr"` for left to right.  `"rtl"` for right to left. `"ttb"` for top to bottom. `"btt"` for bottom to top.  Default: `"ltr"`
+//   language = The language the text is in.  Default: `"en"`
+//   script = The script the text is in.  Default: `"latin"`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // See Also: attachable()
