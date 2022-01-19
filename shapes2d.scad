@@ -1204,7 +1204,7 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
 //   "right" = center of the right circle
 // Example(2D,NoAxes): This first example shows how the egg is constructed from two circles and two joining arcs.
 //   $fn=100;
-//   color("red")stroke(egg(78,25,12, 60),closed=true);
+//   color("red") stroke(egg(78,25,12, 60),closed=true);
 //   stroke([left(14,circle(25)),
 //           right(27,circle(12))]);
 // Example(2D,Anim,VPD=250,VPR=[0,0,0]): Varying length between circles
@@ -1479,6 +1479,92 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
         ]
     ) reorient(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors, p=path);
 
+
+
+// Section: Text
+
+// Module: text()
+// Topics: Attachments, Text
+// Usage:
+//   text(text, [size], [font]);
+// Description:
+//   Creates a 3D text block that can be attached to other attachable objects.
+//   NOTE: This cannot have children attached to it.
+// Arguments:
+//   text = The text string to instantiate as an object.
+//   size = The font size used to create the text block.  Default: 10
+//   font = The name of the font used to create the text block.  Default: "Helvetica"
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// See Also: attachable()
+// Extra Anchors:
+//   "baseline" = Anchors at the baseline of the text, at the start of the string.
+//   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
+// Examples(2D):
+//   text("Foobar", size=10);
+//   text("Foobar", size=12, font="Helvetica");
+//   text("Foobar", anchor=CENTER);
+//   text("Foobar", anchor=str("baseline",CENTER));
+// Example: Using line_of() distributor
+//   txt = "This is the string.";
+//   line_of(spacing=[10,-5],n=len(txt))
+//       text(txt[$idx], size=10, anchor=CENTER);
+// Example: Using arc_of() distributor
+//   txt = "This is the string";
+//   arc_of(r=50, n=len(txt), sa=0, ea=180)
+//       text(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
+module text(text, size=10, font="Helvetica", halign, valign, spacing=1.0, direction="ltr", language="en", script="latin", anchor="baseline", spin=0) {
+    no_children($children);
+    dummy1 =
+        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
+        assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin));
+    anchor = default(anchor, CENTER);
+    spin =   default(spin,   0);
+    geom = _attach_geom(size=[size,size],two_d=true);
+    anch = !any([for (c=anchor) c=="["])? anchor :
+        let(
+            parts = str_split(str_split(str_split(anchor,"]")[0],"[")[1],","),
+            vec = [for (p=parts) parse_float(str_strip(p," ",start=true))]
+        ) vec;
+    ha = halign!=undef? halign :
+        anchor=="baseline"? "left" :
+        anchor==anch && is_string(anchor)? "center" :
+        anch.x<0? "left" :
+        anch.x>0? "right" :
+        "center";
+    va = valign != undef? valign :
+        starts_with(anchor,"baseline")? "baseline" :
+        anchor==anch && is_string(anchor)? "center" :
+        anch.y<0? "bottom" :
+        anch.y>0? "top" :
+        "center";
+    base = anchor=="baseline"? CENTER :
+        anchor==anch && is_string(anchor)? CENTER :
+        anch.z<0? BOTTOM :
+        anch.z>0? TOP :
+        CENTER;
+    m = _attach_transform(base,spin,undef,geom);
+    multmatrix(m) {
+        $parent_anchor = anchor;
+        $parent_spin   = spin;
+        $parent_orient = undef;
+        $parent_geom   = geom;
+        $parent_size   = _attach_geom_size(geom);
+        $attach_to   = undef;
+        do_show = _attachment_is_shown($tags);
+        if (do_show) {
+            _color($color) {
+                _text(
+                    text=text, size=size, font=font,
+                    halign=ha, valign=va, spacing=spacing,
+                    direction=direction, language=language,
+                    script=script
+                );
+            }
+        }
+    }
+}
 
 
 // Section: Rounding 2D shapes

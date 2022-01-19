@@ -2071,10 +2071,10 @@ module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
 
 // Section: Text
 
-// Module: atext()
+// Module: text3d()
 // Topics: Attachments, Text
 // Usage:
-//   atext(text, [h], [size], [font]);
+//   text3d(text, [h], [size], [font]);
 // Description:
 //   Creates a 3D text block that can be attached to other attachable objects.
 //   NOTE: This cannot have children attached to it.
@@ -2082,7 +2082,7 @@ module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
 //   text = The text string to instantiate as an object.
 //   h = The height to which the text should be extruded.  Default: 1
 //   size = The font size used to create the text block.  Default: 10
-//   font = The name of the font used to create the text block.  Default: "Courier"
+//   font = The name of the font used to create the text block.  Default: "Helvetica"
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -2092,20 +2092,20 @@ module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
 //   "baseline" = Anchors at the baseline of the text, at the start of the string.
 //   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
 // Examples:
-//   atext("Foobar", h=3, size=10);
-//   atext("Foobar", h=2, size=12, font="Helvetica");
-//   atext("Foobar", h=2, anchor=CENTER);
-//   atext("Foobar", h=2, anchor=str("baseline",CENTER));
-//   atext("Foobar", h=2, anchor=str("baseline",BOTTOM+RIGHT));
+//   text3d("Foobar", h=3, size=10);
+//   text3d("Foobar", h=2, size=12, font="Helvetica");
+//   text3d("Foobar", h=2, anchor=CENTER);
+//   text3d("Foobar", h=2, anchor=str("baseline",CENTER));
+//   text3d("Foobar", h=2, anchor=str("baseline",BOTTOM+RIGHT));
 // Example: Using line_of() distributor
 //   txt = "This is the string.";
 //   line_of(spacing=[10,-5],n=len(txt))
-//       atext(txt[$idx], size=10, anchor=CENTER);
+//       text3d(txt[$idx], size=10, anchor=CENTER);
 // Example: Using arc_of() distributor
 //   txt = "This is the string";
 //   arc_of(r=50, n=len(txt), sa=0, ea=180)
-//       atext(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
-module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orient=UP) {
+//       text3d(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
+module text3d(text, h=1, size=10, font="Helvetica", halign, valign, spacing=1.0, direction="ltr", language="em", script="latin", anchor="baseline[-1,0,-1]", spin=0, orient=UP) {
     no_children($children);
     dummy1 =
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
@@ -2136,6 +2136,7 @@ module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orien
         anch.z>0? TOP :
         CENTER;
     m = _attach_transform(base,spin,orient,geom);
+    echo(anchor=anchor, anch=anch, base=base);
     multmatrix(m) {
         $parent_anchor = anchor;
         $parent_spin   = spin;
@@ -2145,17 +2146,19 @@ module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orien
         $attach_to   = undef;
         do_show = _attachment_is_shown($tags);
         if (do_show) {
-            if (is_undef($color)) {
+            _color($color) {
                 linear_extrude(height=h, center=true)
-                    text(text=text, size=size, halign=ha, valign=va, font=font);
-            } else color($color) {
-                $color = undef;
-                linear_extrude(height=h, center=true)
-                    text(text=text, size=size, halign=ha, valign=va, font=font);
+                    _text(
+                        text=text, size=size, font=font,
+                        halign=ha, valign=va, spacing=spacing,
+                        direction=direction, language=language,
+                        script=script
+                    );
             }
         }
     }
 }
+
 
 // This could be replaced with _cut_to_seg_u_form
 function _cut_interp(pathcut, path, data) =
@@ -2169,7 +2172,6 @@ function _cut_interp(pathcut, path, data) =
     )
     (1-factor)*data[entry[1]-1]+ factor * data[entry[1]]
   ];
-
 
 
 // Module: path_text()
