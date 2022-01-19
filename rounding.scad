@@ -44,7 +44,7 @@ include <structs.scad>
 //   For circular rounding you can also use the `radius` parameter, which sets a circular rounding
 //   radius.
 //   .
-//   For chamfers you can use the `flat` parameter, which sets the length of the chamfer edge.  
+//   For chamfers you can use the `length` parameter, which sets the length of the chamfer edge.  
 //   .
 //   The `"smooth"` method rounding also has a parameter that specifies how smooth the curvature match
 //   is.  This parameter, `k`, ranges from 0 to 1, with a default of 0.5.  Larger values give a more
@@ -84,7 +84,28 @@ include <structs.scad>
 //   This guarantees a specific output length.  It also means that if
 //   you set `joint` nonzero on a flat "corner", with collinear points, you will get $fn points at that "corner." 
 //
-// Figure(2D,Med,NoAxes):
+// Figure(2D,Med,NoAxes):  Parameters of a "circle" roundover
+//   h = 18;
+//   w = 12.6;
+//   strokewidth = .3;
+//   example = [[0,0],[w,h],[2*w,0]];
+//   stroke(example, width=strokewidth*1.5);
+//   textangle = 90-vector_angle(example)/2;
+//   theta = vector_angle(example)/2;
+//   color("green"){ stroke([[w,h], [w,h-18*(1-sin(theta))/cos(theta)]], width=strokewidth, endcaps="arrow2");
+//                   translate([w-1.75,h-7])scale(.1)rotate(textangle)text("cut",size=14); }
+//   ll=lerp([w,h], [0,0],18/norm([w,h]-[0,0]) );
+//   color("blue"){ stroke(_shift_segment([[w,h], ll], -.7), width=strokewidth,endcaps="arrow2");
+//                  translate([w/2-1.3,h/2+.6])  scale(.1)rotate(textangle)text("joint",size=14);}
+//   color("red")stroke(
+//         select(round_corners(example, joint=18, method="circle",$fn=64,closed=false),1,-2),
+//         width=strokewidth);
+//   r=18*tan(theta);
+//   color("black"){
+//     stroke([ll, [w,h-r-18*(1-sin(theta))/cos(theta)]], width=strokewidth, endcaps="arrow2");
+//     translate([w/1.6,0])text("radius", size=1.4);
+//   }
+// Figure(2D,Med,NoAxes):  Parameters of a "smooth" roundover
 //   h = 18;
 //   w = 12.6;
 //   strokewidth = .3;
@@ -92,13 +113,33 @@ include <structs.scad>
 //   stroke(example, width=strokewidth*1.5);
 //   textangle = 90-vector_angle(example)/2;
 //   color("green"){ stroke([[w,h], [w,h-cos(vector_angle(example)/2) *3/8*h]], width=strokewidth, endcaps="arrow2");
-//                   //translate([w-.3,h-4.4])scale(.1)rotate(90)text("cut",size=12); }
 //                   translate([w-1.75,h-5.5])scale(.1)rotate(textangle)text("cut",size=14); }
 //   ll=lerp([w,h], [0,0],18/norm([w,h]-[0,0]) );
 //   color("blue"){ stroke(_shift_segment([[w,h], ll], -.7), width=strokewidth,endcaps="arrow2");
 //                  translate([w/2-1.3,h/2+.6])  scale(.1)rotate(textangle)text("joint",size=14);}
 //   color("red")stroke(
 //         select(round_corners(example, joint=18, method="smooth",closed=false),1,-2),
+//         width=strokewidth);
+// Figure(2D,Med,NoAxes):  Parameters of "chamfer"
+//   h = 18;
+//   w = 12.6;
+//   strokewidth = .3;
+//   example = [[0,0],[w,h],[2*w,0]];
+//   stroke(example, width=strokewidth*1.5);
+//   textangle = 90-vector_angle(example)/2;
+//   color("black"){
+//        stroke(fwd(1,
+//         select(round_corners(example, joint=18, method="chamfer",closed=false),1,-2)),
+//         width=strokewidth,endcaps="arrow2");
+//        translate([w,.3])text("length", size=1.4,halign="center");
+//   }     
+//   color("green"){ stroke([[w,h], [w,h-18*cos(vector_angle(example)/2)]], width=strokewidth, endcaps="arrow2");
+//                   translate([w-1.75,h-5.5])scale(.1)rotate(textangle)text("cut",size=14); }
+//   ll=lerp([w,h], [0,0],18/norm([w,h]-[0,0]) );
+//   color("blue"){ stroke(_shift_segment([[w,h], ll], -.7), width=strokewidth,endcaps="arrow2");
+//                  translate([w/2-1.3,h/2+.6]) rotate(textangle)text("joint",size=1.4);}
+//   color("red")stroke(
+//         select(round_corners(example, joint=18, method="chamfer",closed=false),1,-2),
 //         width=strokewidth);
 // Arguments:
 //   path = list of 2d or 3d points defining the path to be rounded.
@@ -232,7 +273,7 @@ include <structs.scad>
 //   polygon(round_corners(path,joint = halflen, method="circle",verbose=true));
 // Example(2D): Chamfering, specifying the chamfer length
 //   path = star(5, step=2, d=100);
-//   path2 = round_corners(path, method="chamfer", chamfer=5);
+//   path2 = round_corners(path, method="chamfer", length=5);
 //   polygon(path2);
 // Example(2D): Chamfering, specifying the cut
 //   path = star(5, step=2, d=100);
@@ -279,19 +320,19 @@ include <structs.scad>
 //   rpath1 = round_corners(path, cut=chamfcut, method="chamfer");
 //   rpath2 = round_corners(rpath1, cut=repeat_entries(roundcut,dups));
 //   polygon(rpath2);
-module round_corners(path, method="circle", radius, cut, joint, chamfer, k, closed=true, verbose=false) {no_module();}
-function round_corners(path, method="circle", radius, cut, joint, chamfer, k, closed=true, verbose=false) =
+module round_corners(path, method="circle", radius, cut, joint, length, k, closed=true, verbose=false) {no_module();}
+function round_corners(path, method="circle", radius, cut, joint, length, k, closed=true, verbose=false) =
     assert(in_list(method,["circle", "smooth", "chamfer"]), "method must be one of \"circle\", \"smooth\" or \"chamfer\"")
     let(
         default_k = 0.5,
-        size=one_defined([radius, cut, joint, chamfer], "radius,cut,joint,chamfer"),
+        size=one_defined([radius, cut, joint, length], "radius,cut,joint,length"),
         path = force_path(path), 
         size_ok = is_num(size) || len(size)==len(path) || (!closed && len(size)==len(path)-2),
         k_ok = is_undef(k) || (method=="smooth" && (is_num(k) || len(k)==len(path) || (!closed && len(k)==len(path)-2))),
         measure = is_def(radius) ? "radius"
                 : is_def(cut) ? "cut" 
                 : is_def(joint) ? "joint"
-                : "chamfer"
+                : "length"
     )
     assert(is_path(path,[2,3]), "input path must be a 2d or 3d path")
     assert(len(path)>2,str("Path has length ",len(path),".  Length must be 3 or more."))
@@ -299,7 +340,7 @@ function round_corners(path, method="circle", radius, cut, joint, chamfer, k, cl
     assert(k_ok,method=="smooth" ? str("Input k must be a number or list with length ",len(path), closed?"":str(" or ",len(path)-2)) :
                                    "Input k is only allowed with method=\"smooth\"")
     assert(method=="circle" || measure!="radius", "radius parameter allowed only with method=\"circle\"")
-    assert(method=="chamfer" || measure!="chamfer", "chamfer parameter  allowed only with method=\"chamfer\"")
+    assert(method=="chamfer" || measure!="length", "length parameter  allowed only with method=\"chamfer\"")
     let(
         parm = is_num(size) ? repeat(size, len(path)) :
                len(size)<len(path) ? [0, each size, 0] :
@@ -333,7 +374,7 @@ function round_corners(path, method="circle", radius, cut, joint, chamfer, k, cl
                                                             str("Path turns back on itself at index ",i," with nonzero rounding"))
                   (method=="chamfer" && measure=="joint")? [parm[i]] :
                   (method=="chamfer" && measure=="cut")  ? [parm[i]/cos(angle)] :
-                  (method=="chamfer" && measure=="chamfer") ? [parm[i]/sin(angle)/2] :
+                  (method=="chamfer" && measure=="length") ? [parm[i]/sin(angle)/2] :
                   (method=="smooth" && measure=="joint") ? [parm[i],k[i]] :
                   (method=="smooth" && measure=="cut")   ? [8*parm[i]/cos(angle)/(1+4*k[i]),k[i]] :
                   (method=="circle" && measure=="radius")? [parm[i]/tan(angle), parm[i]] :
