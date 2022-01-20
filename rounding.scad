@@ -11,8 +11,124 @@
 include <beziers.scad>
 include <structs.scad>
 
+// Section: Types of Roundovers
+//   The functions and modules in this file support two different types of roundovers and some different mechanisms for specifying
+//   the size of the roundover.  The usual circular roundover can produce a tactile "bump" where the curvature changes from flat to
+//   circular.  See https://hackernoon.com/apples-icons-have-that-shape-for-a-very-good-reason-720d4e7c8a14 for details.
+//   We compute continuous curvature rounding using 4th order Bezier curves.  This type of rounding, which we call "smooth" rounding,
+//   does not have a "radius" so we need different ways to specify the size of the roundover.  We introduce the `cut` and `joint`
+//   parameters for this purpose.  They can specify dimensions of circular roundovers, continuous curvature "smooth" roundovers, and even chamfers.  
+//   .
+//   The `cut` parameter specifies the distance from the unrounded corner to the rounded tip, so how
+//   much of the corner to "cut" off.  This can be easier to understand than setting a circular radius, which can be
+//   unexpectedly extreme when the corner is very sharp.  It also allows a systematic specification of
+//   corner treatments that are the same size for all corner treatments.
+//   .
+//   The `joint` parameter specifies the distance
+//   away from the corner along the path where the roundover or chamfer should start.  This parameter is good for ensuring that
+//   your roundover will fit on the polygon or polyhedron, since you can easily tell whether you have enough space, and whether
+//   adjacent corner treatments will interfere.
+//   .
+//   For circular rounding you can use the `radius` or `r` parameter to set the rounding radius.
+//   .
+//   For chamfers you can use `length` to set the length of the chamfer.  
+//   .
+//   The "smooth" rounding method also has a parameter that specifies how smooth the curvature match is.  This parameter, `k`,
+//   ranges from 0 to 1, with a default of 0.5.  Larger values gives a more 
+//   abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
+//   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
+//   not be continuous in practice.  If you set it very small then the transition is so gradual that
+//   the length of the roundover may be extremely long, and the actual rounded part of the curve may be very small.  
+// Figure(2D,Med,NoAxes):  Parameters of a "circle" roundover
+//   h = 18;
+//   w = 12.6;
+//   strokewidth = .3;
+//   example = [[0,0],[w,h],[2*w,0]];
+//   stroke(example, width=strokewidth*1.5);
+//   textangle = 90-vector_angle(example)/2;
+//   theta = vector_angle(example)/2;
+//   color("green"){ stroke([[w,h], [w,h-18*(1-sin(theta))/cos(theta)]], width=strokewidth, endcaps="arrow2");
+//                   translate([w-1.75,h-7])scale(.1)rotate(textangle)text("cut",size=14); }
+//   ll=lerp([w,h], [0,0],18/norm([w,h]-[0,0]) );
+//   color("blue"){ stroke(_shift_segment([[w,h], ll], -.7), width=strokewidth,endcaps="arrow2");
+//                  translate([w/2-1.3,h/2+.6])  scale(.1)rotate(textangle)text("joint",size=14);}
+//   color("red")stroke(
+//         select(round_corners(example, joint=18, method="circle",$fn=64,closed=false),1,-2),
+//         width=strokewidth);
+//   r=18*tan(theta);
+//   color("black"){
+//     stroke([ll, [w,h-r-18*(1-sin(theta))/cos(theta)]], width=strokewidth, endcaps="arrow2");
+//     translate([w/1.6,0])text("radius", size=1.4);
+//   }
+// Figure(2D,Med,NoAxes):  Parameters of a "smooth" roundover with the default of `k=0.5`.  Note the long, slow transition from flat to round.  
+//   h = 18;
+//   w = 12.6;
+//   strokewidth = .3;
+//   example = [[0,0],[w,h],[2*w,0]];
+//   stroke(example, width=strokewidth*1.5);
+//   textangle = 90-vector_angle(example)/2;
+//   color("green"){ stroke([[w,h], [w,h-cos(vector_angle(example)/2) *3/8*h]], width=strokewidth, endcaps="arrow2");
+//                   translate([w-1.75,h-5.5])scale(.1)rotate(textangle)text("cut",size=14); }
+//   ll=lerp([w,h], [0,0],18/norm([w,h]-[0,0]) );
+//   color("blue"){ stroke(_shift_segment([[w,h], ll], -.7), width=strokewidth,endcaps="arrow2");
+//                  translate([w/2-1.3,h/2+.6])  scale(.1)rotate(textangle)text("joint",size=14);}
+//   color("red")stroke(
+//         select(round_corners(example, joint=18, method="smooth",closed=false),1,-2),
+//         width=strokewidth);
+// Figure(2D,Med,NoAxes):  Parameters of a "smooth" roundover, with `k=0.75`.  The transition into the roundover is shorter, and faster.  The cut length is bigger for the same joint length.
+//   h = 18;
+//   w = 12.6;
+//   strokewidth = .3;
+//   example = [[0,0],[w,h],[2*w,0]];
+//   stroke(example, width=strokewidth*1.5);
+//   textangle = 90-vector_angle(example)/2;
+//   color("green"){ stroke([[w,h], [w,h-cos(vector_angle(example)/2) *4/8*h]], width=strokewidth, endcaps="arrow2");
+//                   translate([w-1.75,h-5.5])scale(.1)rotate(textangle)text("cut",size=14); }
+//   ll=lerp([w,h], [0,0],18/norm([w,h]-[0,0]) );
+//   color("blue"){ stroke(_shift_segment([[w,h], ll], -.7), width=strokewidth,endcaps="arrow2");
+//                  translate([w/2-1.3,h/2+.6])  scale(.1)rotate(textangle)text("joint",size=14);}
+//   color("red")stroke(
+//         select(round_corners(example, joint=18, method="smooth",closed=false,k=.75),1,-2),
+//         width=strokewidth);
+// Figure(2D,Med,NoAxes):  Parameters of a "smooth" roundover, with `k=0.15`.  The transition is so gradual that it appears that the roundover is much smaller than specified.  The cut length is much smaller for the same joint length.  
+//   h = 18;
+//   w = 12.6;
+//   strokewidth = .3;
+//   example = [[0,0],[w,h],[2*w,0]];
+//   stroke(example, width=strokewidth*1.5);
+//   textangle = 90-vector_angle(example)/2;
+//   color("green"){ stroke([[w,h], [w,h-cos(vector_angle(example)/2) *1.6/8*h]], width=strokewidth, endcaps="arrow2");
+//                   translate([w+.3,h])text("cut",size=1.4); }
+//   ll=lerp([w,h], [0,0],18/norm([w,h]-[0,0]) );
+//   color("blue"){ stroke(_shift_segment([[w,h], ll], -.7), width=strokewidth,endcaps="arrow2");
+//                  translate([w/2-1.3,h/2+.6])  scale(.1)rotate(textangle)text("joint",size=14);}
+//   color("red")stroke(
+//         select(round_corners(example, joint=18, method="smooth",closed=false,k=.15),1,-2),
+//         width=strokewidth);
+// Figure(2D,Med,NoAxes):  Parameters of a symmetric "chamfer".
+//   h = 18;
+//   w = 12.6;
+//   strokewidth = .3;
+//   example = [[0,0],[w,h],[2*w,0]];
+//   stroke(example, width=strokewidth*1.5);
+//   textangle = 90-vector_angle(example)/2;
+//   color("black"){
+//        stroke(fwd(1,
+//         select(round_corners(example, joint=18, method="chamfer",closed=false),1,-2)),
+//         width=strokewidth,endcaps="arrow2");
+//        translate([w,.3])text("length", size=1.4,halign="center");
+//   }     
+//   color("green"){ stroke([[w,h], [w,h-18*cos(vector_angle(example)/2)]], width=strokewidth, endcaps="arrow2");
+//                   translate([w-1.75,h-5.5])scale(.1)rotate(textangle)text("cut",size=14); }
+//   ll=lerp([w,h], [0,0],18/norm([w,h]-[0,0]) );
+//   color("blue"){ stroke(_shift_segment([[w,h], ll], -.7), width=strokewidth,endcaps="arrow2");
+//                  translate([w/2-1.3,h/2+.6]) rotate(textangle)text("joint",size=1.4);}
+//   color("red")stroke(
+//         select(round_corners(example, joint=18, method="chamfer",closed=false),1,-2),
+//         width=strokewidth);
 
-// Section: Functions
+
+// Section: Rounding Paths
 
 // Function: round_corners()
 //
@@ -23,35 +139,25 @@ include <structs.scad>
 //   Takes a 2D or 3D path as input and rounds each corner
 //   by a specified amount.  The rounding at each point can be different and some points can have zero
 //   rounding.  The `round_corners()` function supports three types of corner treatment: chamfers, circular rounding,
-//   and continuous curvature rounding using 4th order bezier curves.  Circular rounding can produce a
-//   tactile "bump" where the curvature changes from flat to circular.
-//   See https://hackernoon.com/apples-icons-have-that-shape-for-a-very-good-reason-720d4e7c8a14
+//   and continuous curvature rounding using 4th order bezier curves.  See
+//   [Types of Roundover](rounding.scad#subsection-types-of-roundover) for details on rounding types.  
 //   .
 //   You select the type of rounding using the `method` parameter, which should be `"smooth"` to
 //   get continuous curvature rounding, `"circle"` to get circular rounding, or `"chamfer"` to get chamfers.  The default is circle
-//   rounding.  Each method accepts multiple options to specify the amount of rounding.
+//   rounding.  Each method accepts multiple options to specify the amount of rounding.  See
+//   [Types of Roundover](rounding.scad#subsection-types-of-roundover) for example diagrams.
 //   .
-//   The `cut` parameter specifies the distance from the unrounded corner to the rounded tip, so how
-//   much of the corner to "cut" off.  This can be easier to understand than setting a circular radius, which can be
-//   unexpectedly extreme when the corner is very sharp.  It also allows a systematic specification of
-//   corner treatments that are the same size for all three methods.
+//   * The `cut` parameter specifies the distance from the unrounded corner to the rounded tip, so how
+//   much of the corner to "cut" off.  
+//   * The `joint` parameter specifies the distance
+//   away from the corner along the path where the roundover or chamfer should start.  This makes it easy to ensure your roundover will fit,
+//   so use it if you want the largest possible roundover.  
+//   * For circular rounding you can use the `radius` or `r` parameter to set the rounding radius.
+//   * For chamfers you can use the `length` parameter, which sets the length of the chamfer edge.  
 //   .
-//   The `joint` parameter specifies the distance
-//   away from the corner along the path where the roundover or chamfer should start.  The figure below shows
-//   the cut and joint distances for a given roundover.  This parameter is good for ensuring that your roundover will
-//   fit on the polygon, since you can easily tell whether adjacent corner treatments will interfere.  
-//   .
-//   For circular rounding you can also use the `radius` parameter, which sets a circular rounding
-//   radius.
-//   .
-//   For chamfers you can use the `length` parameter, which sets the length of the chamfer edge.  
-//   .
-//   The `"smooth"` method rounding also has a parameter that specifies how smooth the curvature match
-//   is.  This parameter, `k`, ranges from 0 to 1, with a default of 0.5.  Larger values give a more
-//   abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
-//   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
-//   not be continuous in practice.  If you set it very small then the transition is so gradual that
-//   the length of the roundover may be extremely long. 
+//   As explained in [Types of Roundover](rounding.scad#subsection-types-of-roundover), the continuous curvature "smooth"
+//   type of rounding also accepts the `k` parameter, between 0 and 1, which specifies how fast the curvature changes at
+//   the joint.  The default is `k=0.5`.  
 //   .
 //   If you select curves that are too large to fit the function will fail with an error.  You can set `verbose=true` to
 //   get a message showing a list of scale factors you can apply to your rounding parameters so that the
@@ -82,70 +188,14 @@ include <structs.scad>
 //   of a circular arc.  As usual, $fn overrides $fs.  When doing continuous curvature rounding be sure to use lots of segments or the effect
 //   will be hidden by the discretization.  Note that if you use $fn with "smooth" then $fn points are added at each corner.
 //   This guarantees a specific output length.  It also means that if
-//   you set `joint` nonzero on a flat "corner", with collinear points, you will get $fn points at that "corner." 
-//
-// Figure(2D,Med,NoAxes):  Parameters of a "circle" roundover
-//   h = 18;
-//   w = 12.6;
-//   strokewidth = .3;
-//   example = [[0,0],[w,h],[2*w,0]];
-//   stroke(example, width=strokewidth*1.5);
-//   textangle = 90-vector_angle(example)/2;
-//   theta = vector_angle(example)/2;
-//   color("green"){ stroke([[w,h], [w,h-18*(1-sin(theta))/cos(theta)]], width=strokewidth, endcaps="arrow2");
-//                   translate([w-1.75,h-7])scale(.1)rotate(textangle)text("cut",size=14); }
-//   ll=lerp([w,h], [0,0],18/norm([w,h]-[0,0]) );
-//   color("blue"){ stroke(_shift_segment([[w,h], ll], -.7), width=strokewidth,endcaps="arrow2");
-//                  translate([w/2-1.3,h/2+.6])  scale(.1)rotate(textangle)text("joint",size=14);}
-//   color("red")stroke(
-//         select(round_corners(example, joint=18, method="circle",$fn=64,closed=false),1,-2),
-//         width=strokewidth);
-//   r=18*tan(theta);
-//   color("black"){
-//     stroke([ll, [w,h-r-18*(1-sin(theta))/cos(theta)]], width=strokewidth, endcaps="arrow2");
-//     translate([w/1.6,0])text("radius", size=1.4);
-//   }
-// Figure(2D,Med,NoAxes):  Parameters of a "smooth" roundover
-//   h = 18;
-//   w = 12.6;
-//   strokewidth = .3;
-//   example = [[0,0],[w,h],[2*w,0]];
-//   stroke(example, width=strokewidth*1.5);
-//   textangle = 90-vector_angle(example)/2;
-//   color("green"){ stroke([[w,h], [w,h-cos(vector_angle(example)/2) *3/8*h]], width=strokewidth, endcaps="arrow2");
-//                   translate([w-1.75,h-5.5])scale(.1)rotate(textangle)text("cut",size=14); }
-//   ll=lerp([w,h], [0,0],18/norm([w,h]-[0,0]) );
-//   color("blue"){ stroke(_shift_segment([[w,h], ll], -.7), width=strokewidth,endcaps="arrow2");
-//                  translate([w/2-1.3,h/2+.6])  scale(.1)rotate(textangle)text("joint",size=14);}
-//   color("red")stroke(
-//         select(round_corners(example, joint=18, method="smooth",closed=false),1,-2),
-//         width=strokewidth);
-// Figure(2D,Med,NoAxes):  Parameters of "chamfer"
-//   h = 18;
-//   w = 12.6;
-//   strokewidth = .3;
-//   example = [[0,0],[w,h],[2*w,0]];
-//   stroke(example, width=strokewidth*1.5);
-//   textangle = 90-vector_angle(example)/2;
-//   color("black"){
-//        stroke(fwd(1,
-//         select(round_corners(example, joint=18, method="chamfer",closed=false),1,-2)),
-//         width=strokewidth,endcaps="arrow2");
-//        translate([w,.3])text("length", size=1.4,halign="center");
-//   }     
-//   color("green"){ stroke([[w,h], [w,h-18*cos(vector_angle(example)/2)]], width=strokewidth, endcaps="arrow2");
-//                   translate([w-1.75,h-5.5])scale(.1)rotate(textangle)text("cut",size=14); }
-//   ll=lerp([w,h], [0,0],18/norm([w,h]-[0,0]) );
-//   color("blue"){ stroke(_shift_segment([[w,h], ll], -.7), width=strokewidth,endcaps="arrow2");
-//                  translate([w/2-1.3,h/2+.6]) rotate(textangle)text("joint",size=1.4);}
-//   color("red")stroke(
-//         select(round_corners(example, joint=18, method="chamfer",closed=false),1,-2),
-//         width=strokewidth);
+//   you set `joint` nonzero on a flat "corner", with collinear points, you will get $fn points at that "corner."
+//   If you have two roundovers that fully consume a segment then they share a point where they meet in the segment, which means the output
+//   point count will be decreased by one.  
 // Arguments:
 //   path = list of 2d or 3d points defining the path to be rounded.
 //   method = rounding method to use.  Set to "chamfer" for chamfers, "circle" for circular rounding and "smooth" for continuous curvature 4th order bezier rounding.  Default: "circle"
 //   ---
-//   radius = rounding radius, only compatible with `method="circle"`. Can be a number or vector.
+//   radius|r = rounding radius, only compatible with `method="circle"`. Can be a number or vector.
 //   cut = rounding cut distance, compatible with all methods.  Can be a number or vector.
 //   joint = rounding joint distance, compatible with `method="chamfer"` and `method="smooth"`.  Can be a number or vector.
 //   flat = length of the flat edge created by chamfering, compatible with `method="chamfer"`.  Can be a number of vector. 
@@ -320,16 +370,17 @@ include <structs.scad>
 //   rpath1 = round_corners(path, cut=chamfcut, method="chamfer");
 //   rpath2 = round_corners(rpath1, cut=repeat_entries(roundcut,dups));
 //   polygon(rpath2);
-module round_corners(path, method="circle", radius, cut, joint, length, k, closed=true, verbose=false) {no_module();}
-function round_corners(path, method="circle", radius, cut, joint, length, k, closed=true, verbose=false) =
+module round_corners(path, method="circle", radius, r, cut, joint, length, k, closed=true, verbose=false) {no_module();}
+function round_corners(path, method="circle", radius, r, cut, joint, length, k, closed=true, verbose=false) =
     assert(in_list(method,["circle", "smooth", "chamfer"]), "method must be one of \"circle\", \"smooth\" or \"chamfer\"")
     let(
         default_k = 0.5,
-        size=one_defined([radius, cut, joint, length], "radius,cut,joint,length"),
+        size=one_defined([radius, r, cut, joint, length], "radius,r,cut,joint,length"),
         path = force_path(path), 
         size_ok = is_num(size) || len(size)==len(path) || (!closed && len(size)==len(path)-2),
         k_ok = is_undef(k) || (method=="smooth" && (is_num(k) || len(k)==len(path) || (!closed && len(k)==len(path)-2))),
         measure = is_def(radius) ? "radius"
+                : is_def(r) ? "radius"
                 : is_def(cut) ? "cut" 
                 : is_def(joint) ? "joint"
                 : "length"
@@ -623,7 +674,7 @@ function _scalar_to_vector(value,length,varname) =
 // Usage:
 //   joined_path = path_join(paths, [joint], [k=], [relocate=], [closed=]);
 // Description:
-//   Connect a sequence of paths together into a single path with optional rounding
+//   Connect a sequence of paths together into a single path with optional continuous curvature rounding
 //   applied at the joints.  By default the first path is taken as specified and subsequent paths are
 //   translated into position so that each path starts where the previous path ended.
 //   If you set relocate to false then this relocation is skipped.
@@ -634,7 +685,8 @@ function _scalar_to_vector(value,length,varname) =
 //   a default of 0.5.  Use a larger k value to get a curve that is bigger for the same joint value.  When
 //   k=1 the curve may be similar to a circle if your curves are symmetric.  As the path is built up, the joint
 //   parameter applies to the growing path, so if you pick a large joint parameter it may interact with the
-//   previous path sections.
+//   previous path sections.  See [Types of Roundover](rounding.scad#subsection-types-of-roundover) for more details
+//   on continuous curvature rounding. 
 //   .
 //   The rounding is created by extending the two clipped paths to define a corner point.  If the extensions of
 //   the paths do not intersect, the function issues an error.  When closed=true the final path should actually close
@@ -782,6 +834,364 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
      : _path_join(paths,joint,k,i+1,new_result, relocate,closed);
 
 
+
+// Function&Module: offset_stroke()
+// Usage: as module
+//   offset_stroke(path, [width], [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=], [closed=]);
+// Usage: as function
+//   path = offset_stroke(path, [width], closed=false, [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=]);
+//   region = offset_stroke(path, [width], closed=true, [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=]);
+// Description:
+//   Uses `offset()` to compute a stroke for the input path.  Unlike `stroke`, the result does not need to be
+//   centered on the input path.  The corners can be rounded, pointed, or chamfered, and you can make the ends
+//   rounded, flat or pointed with the `start` and `end` parameters.
+//   .
+//   The `check_valid` and `quality`  parameters are passed through to `offset()`
+//   .
+//   If `width` is a scalar then the output will be a centered stroke of the specified width.  If width
+//   is a list of two values then those two values will define the stroke side positions relative to the center line, where
+//   as with offset(), the shift is to the left for open paths and outward for closed paths.  For example,
+//   setting `width` to `[0,1]` will create a stroke of width 1 that extends entirely to the left of the input, and and [-4,-6]
+//   will create a stroke of width 2 offset 4 units to the right of the input path.
+//   .
+//   If closed==false then the function form will return a path.  If closed==true then it will return a region.  The `start` and
+//   `end` parameters are forbidden for closed paths.
+//   .
+//   Three simple end treatments are supported, "flat" (the default), "round" and "pointed".  The "flat" treatment
+//   cuts off the ends perpendicular to the path and the "round" treatment applies a semicircle to the end.  The
+//   "pointed" end treatment caps the stroke with a centered triangle that has 45 degree angles on each side.
+//   .
+//   More complex end treatments are available through parameter lists with helper functions to ease parameter passing.  The parameter list
+//   keywords are
+//      - "for" : must appear first in the list and have the value "offset_stroke"
+//      - "type": the type of end treatment, one of "shifted_point", "roundover", or "flat"
+//      - "angle": relative angle (relative to the path)
+//      - "abs_angle": absolute angle (angle relative to x-axis)
+//      - "cut": cut distance for roundovers, a single value to round both corners identically or a list of two values for the two corners.  Negative values round outward.
+//      - "k": curvature smoothness parameter for roundovers, default 0.75
+//   .
+//   Function helpers for defining ends, prefixed by "os" for offset_stroke, are:
+//      - os_flat(angle|absangle): specify a flat end either relative to the path or relative to the x-axis
+//      - os_pointed(dist, [loc]): specify a pointed tip where the point is distance `loc` from the centerline (positive is the left direction as for offset), and `dist` is the distance from the path end to the point tip.  The default value for `loc` is zero (the center).  You must specify `dist` when using this option.
+//      - os_round(cut, [angle|absangle], [k]).  Rounded ends with the specified cut distance, based on the specified angle or absolute angle.  The `k` parameter is the smoothness parameter for continuous curvature rounding.  See [Types of Roundover](rounding.scad#subsection-types-of-roundover) for more details on
+//        continuous curvature rounding.  
+//   .
+//   Note that `offset_stroke()` will attempt to apply roundovers and angles at the ends even when it means deleting segments of the stroke, unlike round_corners which only works on a segment adjacent to a corner.  If you specify an overly extreme angle it will fail to find an intersection with the stroke and display an error.  When you specify an angle the end segment is rotated around the center of the stroke and the last segment of the stroke one one side is extended to the corner.
+//   .
+//   The `$fn` and `$fs` variables are used in the usual way to determine the number of segments for roundings produced by the offset
+//   invocations and roundings produced by the semi-circular "round" end treatment.  The os_round() end treatment
+//   uses a bezier curve, and will produce segments of approximate length `$fs` or it will produce `$fn` segments.
+//   (This means that even a quarter circle will have `$fn` segments, unlike the usual case where it would have `$fn/4` segments.)
+// Arguments:
+//   path = 2d path that defines the stroke
+//   width = width of the stroke, a scalar or a vector of 2 values giving the offset from the path.  Default: 1
+//   ---
+//   rounded = set to true to use rounded offsets, false to use sharp (delta) offsets.  Default: true
+//   chamfer = set to true to use chamfers when `rounded=false`.  Default: false
+//   start = end treatment for the start of the stroke.  See above for details.  Default: "flat"
+//   end = end treatment for the end of the stroke.  See above for details.  Default: "flat"
+//   check_valid = passed to offset().  Default: true
+//   quality = passed to offset().  Default: 1
+//   closed = true if the curve is closed, false otherwise.  Default: false
+//
+// Example(2D):  Basic examples illustrating flat, round, and pointed ends, on a finely sampled arc and a path made from 3 segments.
+//   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
+//   path = [[0,0],[6,2],[9,7],[8,10]];
+//   xdistribute(spacing=10){
+//     offset_stroke(path, width = 2);
+//     offset_stroke(path, start="round", end="round", width = 2);
+//     offset_stroke(path, start="pointed", end="pointed", width = 2);
+//   }
+//   fwd(10) xdistribute(spacing=10){
+//     offset_stroke(arc, width = 2);
+//     offset_stroke(arc, start="round", end="round", width = 2);
+//     offset_stroke(arc, start="pointed", end="pointed", width = 2);
+//   }
+// Example(2D):  The effect of the `rounded` and `chamfer` options is most evident at sharp corners.  This only affects the middle of the path, not the ends.
+//   sharppath = [[0,0], [1.5,5], [3,0]];
+//   xdistribute(spacing=5){
+//     offset_stroke(sharppath, $fn=16);
+//     offset_stroke(sharppath, rounded=false);
+//     offset_stroke(sharppath, rounded=false, chamfer=true);
+//   }
+// Example(2D):  When closed is enabled all the corners are affected by those options.
+//   sharppath = [[0,0], [1.5,5], [3,0]];
+//   xdistribute(spacing=5){
+//     offset_stroke(sharppath,closed=true, $fn=16);
+//     offset_stroke(sharppath, rounded=false, closed=true);
+//     offset_stroke(sharppath, rounded=false, chamfer=true, closed=true);
+//   }
+// Example(2D):  The left stroke uses flat ends with a relative angle of zero.  The right hand one uses flat ends with an absolute angle of zero, so the ends are parallel to the x-axis.
+//   path = [[0,0],[6,2],[9,7],[8,10]];
+//   offset_stroke(path, start=os_flat(angle=0), end=os_flat(angle=0));
+//   right(5)
+//     offset_stroke(path, start=os_flat(abs_angle=0), end=os_flat(abs_angle=0));
+// Example(2D):  With continuous sampling the end treatment can remove segments or extend the last segment linearly, as shown here.  Again the left side uses relative angle flat ends and the right hand example uses absolute angle.
+//   arc = arc(points=[[4,0],[3,4],[6,3]],N=50);
+//   offset_stroke(arc, start=os_flat(angle=45), end=os_flat(angle=45));
+//   right(5)
+//     offset_stroke(arc, start=os_flat(abs_angle=45), end=os_flat(abs_angle=45));
+// Example(2D):  The os_pointed() end treatment allows adjustment of the point tip, as shown here.  The width is 2 so a location of 1 is at the edge.
+//   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
+//   offset_stroke(arc, width=2, start=os_pointed(loc=1,dist=3),end=os_pointed(loc=1,dist=3));
+//   right(10)
+//     offset_stroke(arc, width=2, start=os_pointed(dist=4),end=os_pointed(dist=-1));
+//   fwd(7)
+//     offset_stroke(arc, width=2, start=os_pointed(loc=2,dist=2),end=os_pointed(loc=.5,dist=-1));
+// Example(2D):  The os_round() end treatment adds roundovers to the end corners by specifying the `cut` parameter.  In the first example, the cut parameter is the same at each corner.  The bezier smoothness parameter `k` is given to allow a larger cut.  In the second example, each corner is given a different roundover, including zero for no rounding at all.  The red shows the same strokes without the roundover.
+//   $fn=36;
+//   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
+//   path = [[0,0],[6,2],[9,7],[8,10]];
+//   offset_stroke(path, width=2, rounded=false,start=os_round(angle=-20, cut=0.4,k=.9), end=os_round(angle=-35, cut=0.4,k=.9));
+//   color("red")down(.1)offset_stroke(path, width=2, rounded=false,start=os_flat(-20), end=os_flat(-35));
+//   right(9){
+//     offset_stroke(arc, width=2, rounded=false, start=os_round(cut=[.3,.6],angle=-45), end=os_round(angle=20,cut=[.6,0]));
+//     color("red")down(.1)offset_stroke(arc, width=2, rounded=false, start=os_flat(-45), end=os_flat(20));
+//   }
+// Example(2D):  Negative cut values produce a flaring end.  Note how the absolute angle aligns the ends of the first example withi the axes.  In the second example positive and negative cut values are combined.  Note also that very different cuts are needed at the start end to produce a similar looking flare.
+//   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
+//   path = [[0,0],[6,2],[9,7],[8,10]];
+//   offset_stroke(path, width=2, rounded=false,start=os_round(cut=-1, abs_angle=90), end=os_round(cut=-0.5, abs_angle=0),$fn=36);
+//   right(10)
+//      offset_stroke(arc, width=2, rounded=false, start=os_round(cut=[-.75,-.2], angle=-45), end=os_round(cut=[-.2,.2], angle=20),$fn=36);
+// Example(2D):  Setting the width to a vector allows you to offset the stroke.  Here with successive increasing offsets we create a set of parallel strokes
+//   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
+//   for(i=[0:.25:2])
+//     offset_stroke(path, rounded=false,width = [i,i+.08]);
+// Example(2D):  Setting rounded=true in the above example makes a very big difference in the result.  
+//   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
+//   for(i=[0:.25:2])
+//     offset_stroke(path, rounded=true,width = [i,i+.08], $fn=36);
+// Example(2D):  In this example a spurious triangle appears.  This results from overly enthusiastic validity checking.  Turning validity checking off fixes it in this case.
+//   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
+//   offset_stroke(path, check_valid=true,rounded=false,width = [1.4, 1.5]);
+//   right(2)
+//     offset_stroke(path, check_valid=false,rounded=false,width = [1.4, 1.5]);
+// Example(2D):  But in this case, disabling the validity check produces an invalid result.
+//   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
+//   offset_stroke(path, check_valid=true,rounded=false,width = [1.9, 2]);
+//   translate([1,-0.25])
+//     offset_stroke(path, check_valid=false,rounded=false,width = [1.9, 2]);
+// Example(2D): Self-intersecting paths are handled differently than with the `stroke()` module.
+//   $fn=16;
+//   path = turtle(["move",10,"left",144], repeat=4);
+//   stroke(path, closed=true);
+//   right(12)
+//     offset_stroke(path, width=1, closed=true);
+function offset_stroke(path, width=1, rounded=true, start="flat", end="flat", check_valid=true, quality=1, chamfer=false, closed=false) =
+        let(path = force_path(path))
+        assert(is_path(path,2),"path is not a 2d path")
+        let(closedok = !closed || (is_undef(start) && is_undef(end)))
+        assert(closedok, "Parameters `start` and `end` not allowed with closed path")
+        let(
+                start = closed? [] : _parse_stroke_end(default(start,"flat"),"start"),
+                end = closed? [] : _parse_stroke_end(default(end,"flat"),"end"),
+                width = is_list(width)? reverse(sort(width)) : [1,-1]*width/2,
+                left_r = !rounded? undef : width[0],
+                left_delta = rounded? undef : width[0],
+                right_r = !rounded? undef : width[1],
+                right_delta = rounded? undef : width[1],
+                left_path = offset(
+                        path, delta=left_delta, r=left_r, closed=closed,
+                        check_valid=check_valid, quality=quality,
+                        chamfer=chamfer 
+                ),
+                right_path = offset(
+                        path, delta=right_delta, r=right_r, closed=closed,
+                        check_valid=check_valid, quality=quality,
+                        chamfer=chamfer 
+                )
+        )
+        closed? [left_path, right_path] :
+        let(
+                startpath = _stroke_end(width,left_path, right_path, start),
+                endpath = _stroke_end(reverse(width),reverse(right_path), reverse(left_path),end),
+                clipping_ok = startpath[1]+endpath[2]<=len(left_path) && startpath[2]+endpath[1]<=len(right_path)
+        )
+        assert(clipping_ok, "End treatment removed the whole stroke")
+        concat(
+                slice(left_path,startpath[1],-1-endpath[2]),
+                endpath[0],
+                reverse(slice(right_path,startpath[2],-1-endpath[1])),
+                startpath[0]
+        );
+
+
+function os_pointed(dist,loc=0) =
+        assert(is_def(dist), "Must specify `dist`")
+        [
+                "for", "offset_stroke",
+                "type", "shifted_point",
+                "loc",loc,
+                "dist",dist
+        ];
+
+function os_round(cut, angle, abs_angle, k, r) =
+        assert(is_undef(r), "Radius not supported for os_round with offset_stroke.  (Did you mean os_circle for offset_sweep?)")
+        let(
+                acount = num_defined([angle,abs_angle]),
+                use_angle = first_defined([angle,abs_angle,0])
+        )
+        assert(acount<2, "You must define only one of `angle` and `abs_angle`")
+        assert(is_def(cut), "Parameter `cut` not defined.")
+        [
+                "for", "offset_stroke",
+                "type", "roundover",
+                "angle", use_angle,
+                "absolute", is_def(abs_angle),
+                "cut", is_vector(cut)? point2d(cut) : [cut,cut],
+                "k", first_defined([k, 0.75])
+        ];
+
+
+function os_flat(angle, abs_angle) =
+        let(
+                acount = num_defined([angle,abs_angle]),
+                use_angle = first_defined([angle,abs_angle,0])
+        )
+        assert(acount<2, "You must define only one of `angle` and `abs_angle`")
+        [
+                "for", "offset_stroke",
+                "type", "flat",
+                "angle", use_angle,
+                "absolute", is_def(abs_angle)
+        ];
+
+
+
+// Return angle in (-90,90] required to map line1 onto line2 (lines specified as lists of two points)
+function angle_between_lines(line1,line2) =
+        let(angle = atan2(det2([line1,line2]),line1*line2))
+        angle > 90 ? angle-180 :
+        angle <= -90 ? angle+180 :
+        angle;
+
+
+function _parse_stroke_end(spec,name) =
+        is_string(spec)?
+            assert(
+                    in_list(spec,["flat","round","pointed"]),
+                    str("Unknown \"",name,"\" string specification \"", spec,"\".  Must be \"flat\", \"round\", or \"pointed\"")
+            )
+            [["type", spec]]
+        : let(
+              dummy = _struct_valid(spec,"offset_stroke",name)
+          )
+          struct_set([], spec);
+
+
+function _stroke_end(width,left, right, spec) =
+        let(
+                type = struct_val(spec, "type"),
+                user_angle = default(struct_val(spec, "angle"), 0),
+                normal_seg = _normal_segment(right[0], left[0]),
+                normal_pt = normal_seg[1],
+                center = normal_seg[0],
+                parallel_dir = unit(left[0]-right[0]),
+                normal_dir = unit(normal_seg[1]-normal_seg[0]),
+                width_dir = sign(width[0]-width[1])
+        )
+        type == "round"? [arc(points=[right[0],normal_pt,left[0]],N=ceil(segs(width/2)/2)),1,1]  :
+        type == "pointed"? [[normal_pt],0,0] :
+        type == "shifted_point"? (
+                let(shiftedcenter = center + width_dir * parallel_dir * struct_val(spec, "loc"))
+                [[shiftedcenter+normal_dir*struct_val(spec, "dist")],0,0]
+        ) :
+        // Remaining types all support angled cutoff, so compute that
+        assert(abs(user_angle)<=90, "End angle must be in [-90,90]")
+        let(
+                angle = struct_val(spec,"absolute")?
+                        angle_between_lines(left[0]-right[0],[cos(user_angle),sin(user_angle)]) :
+                        user_angle,
+                endseg = [center, rot(p=[left[0]], angle, cp=center)[0]],
+                intright = angle>0,
+                pathclip = _path_line_intersection(intright? right : left, endseg),
+                pathextend = line_intersection(endseg, select(intright? left:right,0,1))
+        )
+        type == "flat"? (
+                intright?
+                        [[pathclip[0], pathextend], 1, pathclip[1]] :
+                        [[pathextend, pathclip[0]], pathclip[1],1]
+        ) :
+        type == "roundover"? (
+                let(
+                        bez_k = struct_val(spec,"k"),
+                        cut = struct_val(spec,"cut"),
+                        cutleft = cut[0],
+                        cutright = cut[1],
+                        // Create updated paths taking into account clipping for end rotation
+                        newright = intright?
+                                concat([pathclip[0]],list_tail(right,pathclip[1])) :
+                                concat([pathextend],list_tail(right)),
+                        newleft = !intright?
+                                concat([pathclip[0]],list_tail(left,pathclip[1])) :
+                                concat([pathextend],list_tail(left)),
+                        // calculate corner angles, which are different when the cut is negative (outside corner)
+                        leftangle = cutleft>=0?
+                                vector_angle([newleft[1],newleft[0],newright[0]])/2 :
+                                90-vector_angle([newleft[1],newleft[0],newright[0]])/2,
+                        rightangle = cutright>=0?
+                                vector_angle([newright[1],newright[0],newleft[0]])/2 :
+                                90-vector_angle([newright[1],newright[0],newleft[0]])/2,
+                        jointleft = 8*cutleft/cos(leftangle)/(1+4*bez_k),
+                        jointright = 8*cutright/cos(rightangle)/(1+4*bez_k),
+                        pathcutleft = _path_cut_points(newleft,abs(jointleft)),
+                        pathcutright = _path_cut_points(newright,abs(jointright)),
+                        leftdelete = intright? pathcutleft[1] : pathcutleft[1] + pathclip[1] -1,
+                        rightdelete = intright? pathcutright[1] + pathclip[1] -1 : pathcutright[1],
+                        leftcorner = line_intersection([pathcutleft[0], newleft[pathcutleft[1]]], [newright[0],newleft[0]]),
+                        rightcorner = line_intersection([pathcutright[0], newright[pathcutright[1]]], [newright[0],newleft[0]]),
+                        roundover_fits = jointleft+jointright < norm(rightcorner-leftcorner)
+                )
+                assert(roundover_fits,"Roundover too large to fit")
+                let(
+                        angled_dir = unit(newleft[0]-newright[0]),
+                        nPleft = [
+                                leftcorner - jointleft*angled_dir,
+                                leftcorner,
+                                pathcutleft[0]
+                        ],
+                        nPright = [
+                                pathcutright[0],
+                                rightcorner,
+                                rightcorner + jointright*angled_dir
+                        ],
+                        leftcurve = _bezcorner(nPleft, bez_k),
+                        rightcurve = _bezcorner(nPright, bez_k)
+                )
+                [concat(rightcurve, leftcurve), leftdelete, rightdelete]
+        ) : [[],0,0];  // This case shouldn't occur
+
+// returns [intersection_pt, index of first point in path after the intersection]
+function _path_line_intersection(path, line, ind=0) =
+        ind==len(path)-1 ? undef :
+        let(intersect=line_intersection(line, select(path,ind,ind+1),LINE,SEGMENT))
+        // If it intersects the segment excluding it's final point, then we're done
+        // The final point is treated as part of the next segment
+        is_def(intersect) && intersect != path[ind+1]?
+                [intersect, ind+1] :
+                _path_line_intersection(path, line, ind+1);
+
+module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, quality=1, chamfer=false, closed=false)
+{
+        no_children($children);
+        result = offset_stroke(
+                path, width=width, rounded=rounded,
+                start=start, end=end,
+                check_valid=check_valid, quality=quality,
+                chamfer=chamfer,
+                closed=closed
+        );
+        if (closed) {
+                region(result);
+        } else {
+                polygon(result);
+        }
+}
+
+
+// Section: Three-Dimensional Rounding
+
 // Function&Module: offset_sweep()
 // Usage: most common module arguments.  See Arguments list below for more.
 //    offset_sweep(path, <height|h|l>, [bottom], [top], [offset=], [convexity=],...) [attachments]
@@ -809,7 +1219,8 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   the profile is by using the profile helper functions.  These functions take profile parameters, as well as some
 //   general settings and translate them into a profile specification, with error checking on your input.  The description below
 //   describes the helper functions and the parameters specific to each function.  Below that is a description of the generic
-//   settings that you can optionally use with all of the helper functions.
+//   settings that you can optionally use with all of the helper functions.  For more details on the "cut" and "joint" rounding parameters, and
+//   on continuous curvature rounding, see [Types of Roundover](rounding.scad#subsection-types-of-roundover). 
 //   .
 //   - profile: os_profile(points)
 //     Define the offset profile with a list of points.  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  If the y value ever decreases then you might create a self-intersecting polyhedron, which is invalid.  Such invalid polyhedra will create cryptic assertion errors when you render your model and it is your responsibility to avoid creating them.  Note that the starting point of the profile is the center of the extrusion.  If you use a profile as the top it will rise upwards.  If you use it as the bottom it will be inverted, and will go downward.
@@ -1260,6 +1671,8 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 //   general settings and translate them into a profile specification, with error checking on your input.  The description below
 //   describes the helper functions and the parameters specific to each function.  Below that is a description of the generic
 //   settings that you can optionally use with all of the helper functions.
+//   For more details on the "cut" and "joint" rounding parameters, and
+//   on continuous curvature rounding, see [Types of Roundover](rounding.scad#subsection-types-of-roundover). 
 //   .
 //   The final shape is created by combining convex hulls of small extrusions.  The thickness of these small extrusions may result
 //   your model being slightly too long (if the curvature at the end is flaring outward), so if the exact length is very important
@@ -1421,358 +1834,6 @@ function _remove_undefined_vals(list) =
         list_remove(list, concat(ind, add_scalar(ind,-1)));
 
 
-// Function&Module: offset_stroke()
-// Usage: as module
-//   offset_stroke(path, [width], [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=], [closed=]);
-// Usage: as function
-//   path = offset_stroke(path, [width], closed=false, [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=]);
-//   region = offset_stroke(path, [width], closed=true, [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=]);
-// Description:
-//   Uses `offset()` to compute a stroke for the input path.  Unlike `stroke`, the result does not need to be
-//   centered on the input path.  The corners can be rounded, pointed, or chamfered, and you can make the ends
-//   rounded, flat or pointed with the `start` and `end` parameters.
-//   .
-//   The `check_valid` and `quality`  parameters are passed through to `offset()`
-//   .
-//   If `width` is a scalar then the output will be a centered stroke of the specified width.  If width
-//   is a list of two values then those two values will define the stroke side positions relative to the center line, where
-//   as with offset(), the shift is to the left for open paths and outward for closed paths.  For example,
-//   setting `width` to `[0,1]` will create a stroke of width 1 that extends entirely to the left of the input, and and [-4,-6]
-//   will create a stroke of width 2 offset 4 units to the right of the input path.
-//   .
-//   If closed==false then the function form will return a path.  If closed==true then it will return a region.  The `start` and
-//   `end` parameters are forbidden for closed paths.
-//   .
-//   Three simple end treatments are supported, "flat" (the default), "round" and "pointed".  The "flat" treatment
-//   cuts off the ends perpendicular to the path and the "round" treatment applies a semicircle to the end.  The
-//   "pointed" end treatment caps the stroke with a centered triangle that has 45 degree angles on each side.
-//   .
-//   More complex end treatments are available through parameter lists with helper functions to ease parameter passing.  The parameter list
-//   keywords are
-//      - "for" : must appear first in the list and have the value "offset_stroke"
-//      - "type": the type of end treatment, one of "shifted_point", "roundover", or "flat"
-//      - "angle": relative angle (relative to the path)
-//      - "abs_angle": absolute angle (angle relative to x-axis)
-//      - "cut": cut distance for roundovers, a single value to round both corners identically or a list of two values for the two corners.  Negative values round outward.
-//      - "k": curvature smoothness parameter for roundovers, default 0.75
-//   .
-//   Function helpers for defining ends, prefixed by "os" for offset_stroke, are:
-//      - os_flat(angle|absangle): specify a flat end either relative to the path or relative to the x-axis
-//      - os_pointed(dist, [loc]): specify a pointed tip where the point is distance `loc` from the centerline (positive is the left direction as for offset), and `dist` is the distance from the path end to the point tip.  The default value for `loc` is zero (the center).  You must specify `dist` when using this option.
-//      - os_round(cut, [angle|absangle], [k]).  Rounded ends with the specified cut distance, based on the specified angle or absolute angle.  The `k` parameter is the smoothness parameter for continuous curvature rounding.
-//   .
-//   Note that `offset_stroke()` will attempt to apply roundovers and angles at the ends even when it means deleting segments of the stroke, unlike round_corners which only works on a segment adjacent to a corner.  If you specify an overly extreme angle it will fail to find an intersection with the stroke and display an error.  When you specify an angle the end segment is rotated around the center of the stroke and the last segment of the stroke one one side is extended to the corner.
-//   .
-//   The `$fn` and `$fs` variables are used in the usual way to determine the number of segments for roundings produced by the offset
-//   invocations and roundings produced by the semi-circular "round" end treatment.  The os_round() end treatment
-//   uses a bezier curve, and will produce segments of approximate length `$fs` or it will produce `$fn` segments.
-//   (This means that even a quarter circle will have `$fn` segments, unlike the usual case where it would have `$fn/4` segments.)
-// Arguments:
-//   path = 2d path that defines the stroke
-//   width = width of the stroke, a scalar or a vector of 2 values giving the offset from the path.  Default: 1
-//   ---
-//   rounded = set to true to use rounded offsets, false to use sharp (delta) offsets.  Default: true
-//   chamfer = set to true to use chamfers when `rounded=false`.  Default: false
-//   start = end treatment for the start of the stroke.  See above for details.  Default: "flat"
-//   end = end treatment for the end of the stroke.  See above for details.  Default: "flat"
-//   check_valid = passed to offset().  Default: true
-//   quality = passed to offset().  Default: 1
-//   closed = true if the curve is closed, false otherwise.  Default: false
-//
-// Example(2D):  Basic examples illustrating flat, round, and pointed ends, on a finely sampled arc and a path made from 3 segments.
-//   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
-//   path = [[0,0],[6,2],[9,7],[8,10]];
-//   xdistribute(spacing=10){
-//     offset_stroke(path, width = 2);
-//     offset_stroke(path, start="round", end="round", width = 2);
-//     offset_stroke(path, start="pointed", end="pointed", width = 2);
-//   }
-//   fwd(10) xdistribute(spacing=10){
-//     offset_stroke(arc, width = 2);
-//     offset_stroke(arc, start="round", end="round", width = 2);
-//     offset_stroke(arc, start="pointed", end="pointed", width = 2);
-//   }
-// Example(2D):  The effect of the `rounded` and `chamfer` options is most evident at sharp corners.  This only affects the middle of the path, not the ends.
-//   sharppath = [[0,0], [1.5,5], [3,0]];
-//   xdistribute(spacing=5){
-//     offset_stroke(sharppath, $fn=16);
-//     offset_stroke(sharppath, rounded=false);
-//     offset_stroke(sharppath, rounded=false, chamfer=true);
-//   }
-// Example(2D):  When closed is enabled all the corners are affected by those options.
-//   sharppath = [[0,0], [1.5,5], [3,0]];
-//   xdistribute(spacing=5){
-//     offset_stroke(sharppath,closed=true, $fn=16);
-//     offset_stroke(sharppath, rounded=false, closed=true);
-//     offset_stroke(sharppath, rounded=false, chamfer=true, closed=true);
-//   }
-// Example(2D):  The left stroke uses flat ends with a relative angle of zero.  The right hand one uses flat ends with an absolute angle of zero, so the ends are parallel to the x-axis.
-//   path = [[0,0],[6,2],[9,7],[8,10]];
-//   offset_stroke(path, start=os_flat(angle=0), end=os_flat(angle=0));
-//   right(5)
-//     offset_stroke(path, start=os_flat(abs_angle=0), end=os_flat(abs_angle=0));
-// Example(2D):  With continuous sampling the end treatment can remove segments or extend the last segment linearly, as shown here.  Again the left side uses relative angle flat ends and the right hand example uses absolute angle.
-//   arc = arc(points=[[4,0],[3,4],[6,3]],N=50);
-//   offset_stroke(arc, start=os_flat(angle=45), end=os_flat(angle=45));
-//   right(5)
-//     offset_stroke(arc, start=os_flat(abs_angle=45), end=os_flat(abs_angle=45));
-// Example(2D):  The os_pointed() end treatment allows adjustment of the point tip, as shown here.  The width is 2 so a location of 1 is at the edge.
-//   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
-//   offset_stroke(arc, width=2, start=os_pointed(loc=1,dist=3),end=os_pointed(loc=1,dist=3));
-//   right(10)
-//     offset_stroke(arc, width=2, start=os_pointed(dist=4),end=os_pointed(dist=-1));
-//   fwd(7)
-//     offset_stroke(arc, width=2, start=os_pointed(loc=2,dist=2),end=os_pointed(loc=.5,dist=-1));
-// Example(2D):  The os_round() end treatment adds roundovers to the end corners by specifying the `cut` parameter.  In the first example, the cut parameter is the same at each corner.  The bezier smoothness parameter `k` is given to allow a larger cut.  In the second example, each corner is given a different roundover, including zero for no rounding at all.  The red shows the same strokes without the roundover.
-//   $fn=36;
-//   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
-//   path = [[0,0],[6,2],[9,7],[8,10]];
-//   offset_stroke(path, width=2, rounded=false,start=os_round(angle=-20, cut=0.4,k=.9), end=os_round(angle=-35, cut=0.4,k=.9));
-//   color("red")down(.1)offset_stroke(path, width=2, rounded=false,start=os_flat(-20), end=os_flat(-35));
-//   right(9){
-//     offset_stroke(arc, width=2, rounded=false, start=os_round(cut=[.3,.6],angle=-45), end=os_round(angle=20,cut=[.6,0]));
-//     color("red")down(.1)offset_stroke(arc, width=2, rounded=false, start=os_flat(-45), end=os_flat(20));
-//   }
-// Example(2D):  Negative cut values produce a flaring end.  Note how the absolute angle aligns the ends of the first example withi the axes.  In the second example positive and negative cut values are combined.  Note also that very different cuts are needed at the start end to produce a similar looking flare.
-//   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
-//   path = [[0,0],[6,2],[9,7],[8,10]];
-//   offset_stroke(path, width=2, rounded=false,start=os_round(cut=-1, abs_angle=90), end=os_round(cut=-0.5, abs_angle=0),$fn=36);
-//   right(10)
-//      offset_stroke(arc, width=2, rounded=false, start=os_round(cut=[-.75,-.2], angle=-45), end=os_round(cut=[-.2,.2], angle=20),$fn=36);
-// Example(2D):  Setting the width to a vector allows you to offset the stroke.  Here with successive increasing offsets we create a set of parallel strokes
-//   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
-//   for(i=[0:.25:2])
-//     offset_stroke(path, rounded=false,width = [i,i+.08]);
-// Example(2D):  Setting rounded=true in the above example makes a very big difference in the result.  
-//   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
-//   for(i=[0:.25:2])
-//     offset_stroke(path, rounded=true,width = [i,i+.08], $fn=36);
-// Example(2D):  In this example a spurious triangle appears.  This results from overly enthusiastic validity checking.  Turning validity checking off fixes it in this case.
-//   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
-//   offset_stroke(path, check_valid=true,rounded=false,width = [1.4, 1.5]);
-//   right(2)
-//     offset_stroke(path, check_valid=false,rounded=false,width = [1.4, 1.5]);
-// Example(2D):  But in this case, disabling the validity check produces an invalid result.
-//   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
-//   offset_stroke(path, check_valid=true,rounded=false,width = [1.9, 2]);
-//   translate([1,-0.25])
-//     offset_stroke(path, check_valid=false,rounded=false,width = [1.9, 2]);
-// Example(2D): Self-intersecting paths are handled differently than with the `stroke()` module.
-//   $fn=16;
-//   path = turtle(["move",10,"left",144], repeat=4);
-//   stroke(path, closed=true);
-//   right(12)
-//     offset_stroke(path, width=1, closed=true);
-function offset_stroke(path, width=1, rounded=true, start="flat", end="flat", check_valid=true, quality=1, chamfer=false, closed=false) =
-        let(path = force_path(path))
-        assert(is_path(path,2),"path is not a 2d path")
-        let(closedok = !closed || (is_undef(start) && is_undef(end)))
-        assert(closedok, "Parameters `start` and `end` not allowed with closed path")
-        let(
-                start = closed? [] : _parse_stroke_end(default(start,"flat"),"start"),
-                end = closed? [] : _parse_stroke_end(default(end,"flat"),"end"),
-                width = is_list(width)? reverse(sort(width)) : [1,-1]*width/2,
-                left_r = !rounded? undef : width[0],
-                left_delta = rounded? undef : width[0],
-                right_r = !rounded? undef : width[1],
-                right_delta = rounded? undef : width[1],
-                left_path = offset(
-                        path, delta=left_delta, r=left_r, closed=closed,
-                        check_valid=check_valid, quality=quality,
-                        chamfer=chamfer 
-                ),
-                right_path = offset(
-                        path, delta=right_delta, r=right_r, closed=closed,
-                        check_valid=check_valid, quality=quality,
-                        chamfer=chamfer 
-                )
-        )
-        closed? [left_path, right_path] :
-        let(
-                startpath = _stroke_end(width,left_path, right_path, start),
-                endpath = _stroke_end(reverse(width),reverse(right_path), reverse(left_path),end),
-                clipping_ok = startpath[1]+endpath[2]<=len(left_path) && startpath[2]+endpath[1]<=len(right_path)
-        )
-        assert(clipping_ok, "End treatment removed the whole stroke")
-        concat(
-                slice(left_path,startpath[1],-1-endpath[2]),
-                endpath[0],
-                reverse(slice(right_path,startpath[2],-1-endpath[1])),
-                startpath[0]
-        );
-
-
-function os_pointed(dist,loc=0) =
-        assert(is_def(dist), "Must specify `dist`")
-        [
-                "for", "offset_stroke",
-                "type", "shifted_point",
-                "loc",loc,
-                "dist",dist
-        ];
-
-function os_round(cut, angle, abs_angle, k, r) =
-        assert(is_undef(r), "Radius not supported for os_round with offset_stroke.  (Did you mean os_circle for offset_sweep?)")
-        let(
-                acount = num_defined([angle,abs_angle]),
-                use_angle = first_defined([angle,abs_angle,0])
-        )
-        assert(acount<2, "You must define only one of `angle` and `abs_angle`")
-        assert(is_def(cut), "Parameter `cut` not defined.")
-        [
-                "for", "offset_stroke",
-                "type", "roundover",
-                "angle", use_angle,
-                "absolute", is_def(abs_angle),
-                "cut", is_vector(cut)? point2d(cut) : [cut,cut],
-                "k", first_defined([k, 0.75])
-        ];
-
-
-function os_flat(angle, abs_angle) =
-        let(
-                acount = num_defined([angle,abs_angle]),
-                use_angle = first_defined([angle,abs_angle,0])
-        )
-        assert(acount<2, "You must define only one of `angle` and `abs_angle`")
-        [
-                "for", "offset_stroke",
-                "type", "flat",
-                "angle", use_angle,
-                "absolute", is_def(abs_angle)
-        ];
-
-
-
-// Return angle in (-90,90] required to map line1 onto line2 (lines specified as lists of two points)
-function angle_between_lines(line1,line2) =
-        let(angle = atan2(det2([line1,line2]),line1*line2))
-        angle > 90 ? angle-180 :
-        angle <= -90 ? angle+180 :
-        angle;
-
-
-function _parse_stroke_end(spec,name) =
-        is_string(spec)?
-            assert(
-                    in_list(spec,["flat","round","pointed"]),
-                    str("Unknown \"",name,"\" string specification \"", spec,"\".  Must be \"flat\", \"round\", or \"pointed\"")
-            )
-            [["type", spec]]
-        : let(
-              dummy = _struct_valid(spec,"offset_stroke",name)
-          )
-          struct_set([], spec);
-
-
-function _stroke_end(width,left, right, spec) =
-        let(
-                type = struct_val(spec, "type"),
-                user_angle = default(struct_val(spec, "angle"), 0),
-                normal_seg = _normal_segment(right[0], left[0]),
-                normal_pt = normal_seg[1],
-                center = normal_seg[0],
-                parallel_dir = unit(left[0]-right[0]),
-                normal_dir = unit(normal_seg[1]-normal_seg[0]),
-                width_dir = sign(width[0]-width[1])
-        )
-        type == "round"? [arc(points=[right[0],normal_pt,left[0]],N=ceil(segs(width/2)/2)),1,1]  :
-        type == "pointed"? [[normal_pt],0,0] :
-        type == "shifted_point"? (
-                let(shiftedcenter = center + width_dir * parallel_dir * struct_val(spec, "loc"))
-                [[shiftedcenter+normal_dir*struct_val(spec, "dist")],0,0]
-        ) :
-        // Remaining types all support angled cutoff, so compute that
-        assert(abs(user_angle)<=90, "End angle must be in [-90,90]")
-        let(
-                angle = struct_val(spec,"absolute")?
-                        angle_between_lines(left[0]-right[0],[cos(user_angle),sin(user_angle)]) :
-                        user_angle,
-                endseg = [center, rot(p=[left[0]], angle, cp=center)[0]],
-                intright = angle>0,
-                pathclip = _path_line_intersection(intright? right : left, endseg),
-                pathextend = line_intersection(endseg, select(intright? left:right,0,1))
-        )
-        type == "flat"? (
-                intright?
-                        [[pathclip[0], pathextend], 1, pathclip[1]] :
-                        [[pathextend, pathclip[0]], pathclip[1],1]
-        ) :
-        type == "roundover"? (
-                let(
-                        bez_k = struct_val(spec,"k"),
-                        cut = struct_val(spec,"cut"),
-                        cutleft = cut[0],
-                        cutright = cut[1],
-                        // Create updated paths taking into account clipping for end rotation
-                        newright = intright?
-                                concat([pathclip[0]],list_tail(right,pathclip[1])) :
-                                concat([pathextend],list_tail(right)),
-                        newleft = !intright?
-                                concat([pathclip[0]],list_tail(left,pathclip[1])) :
-                                concat([pathextend],list_tail(left)),
-                        // calculate corner angles, which are different when the cut is negative (outside corner)
-                        leftangle = cutleft>=0?
-                                vector_angle([newleft[1],newleft[0],newright[0]])/2 :
-                                90-vector_angle([newleft[1],newleft[0],newright[0]])/2,
-                        rightangle = cutright>=0?
-                                vector_angle([newright[1],newright[0],newleft[0]])/2 :
-                                90-vector_angle([newright[1],newright[0],newleft[0]])/2,
-                        jointleft = 8*cutleft/cos(leftangle)/(1+4*bez_k),
-                        jointright = 8*cutright/cos(rightangle)/(1+4*bez_k),
-                        pathcutleft = _path_cut_points(newleft,abs(jointleft)),
-                        pathcutright = _path_cut_points(newright,abs(jointright)),
-                        leftdelete = intright? pathcutleft[1] : pathcutleft[1] + pathclip[1] -1,
-                        rightdelete = intright? pathcutright[1] + pathclip[1] -1 : pathcutright[1],
-                        leftcorner = line_intersection([pathcutleft[0], newleft[pathcutleft[1]]], [newright[0],newleft[0]]),
-                        rightcorner = line_intersection([pathcutright[0], newright[pathcutright[1]]], [newright[0],newleft[0]]),
-                        roundover_fits = jointleft+jointright < norm(rightcorner-leftcorner)
-                )
-                assert(roundover_fits,"Roundover too large to fit")
-                let(
-                        angled_dir = unit(newleft[0]-newright[0]),
-                        nPleft = [
-                                leftcorner - jointleft*angled_dir,
-                                leftcorner,
-                                pathcutleft[0]
-                        ],
-                        nPright = [
-                                pathcutright[0],
-                                rightcorner,
-                                rightcorner + jointright*angled_dir
-                        ],
-                        leftcurve = _bezcorner(nPleft, bez_k),
-                        rightcurve = _bezcorner(nPright, bez_k)
-                )
-                [concat(rightcurve, leftcurve), leftdelete, rightdelete]
-        ) : [[],0,0];  // This case shouldn't occur
-
-// returns [intersection_pt, index of first point in path after the intersection]
-function _path_line_intersection(path, line, ind=0) =
-        ind==len(path)-1 ? undef :
-        let(intersect=line_intersection(line, select(path,ind,ind+1),LINE,SEGMENT))
-        // If it intersects the segment excluding it's final point, then we're done
-        // The final point is treated as part of the next segment
-        is_def(intersect) && intersect != path[ind+1]?
-                [intersect, ind+1] :
-                _path_line_intersection(path, line, ind+1);
-
-module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, quality=1, chamfer=false, closed=false)
-{
-        no_children($children);
-        result = offset_stroke(
-                path, width=width, rounded=rounded,
-                start=start, end=end,
-                check_valid=check_valid, quality=quality,
-                chamfer=chamfer,
-                closed=closed
-        );
-        if (closed) {
-                region(result);
-        } else {
-                polygon(result);
-        }
-}
 
 function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
    let(
@@ -1829,7 +1890,8 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
 //   not be continuous in practice.  A value of 0.92 is a good approximation to a circle.  If you set it very small then the transition
 //   is so gradual that the roundover may be very small.  If you want a very smooth roundover, set the joint parameter as large as possible and
-//   then adjust the k value down as low as gives a sufficiently large roundover.
+//   then adjust the k value down as low as gives a sufficiently large roundover.  See
+//   [Types of Roundover](rounding.scad#subsection-types-of-roundover) for more information on continuous curvature rounding.  
 //   .
 //   You can specify the bottom and top polygons by giving two compatible 3d paths.  You can also give 2d paths and a height/length and the
 //   two shapes will be offset in the z direction from each other.  The final option is to specify just the bottom along with a height/length;
