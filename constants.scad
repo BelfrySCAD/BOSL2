@@ -98,6 +98,10 @@ $slop = 0.0;
 // Constant: INCH
 // Description:
 //   The number of millimeters in an inch.
+// Example(2D):
+//   square(2*INCH, center=true);
+// Example(3D):
+//   cube([4,3,2.5]*INCH, center=true);
 INCH = 25.4;
 
 
@@ -162,7 +166,7 @@ TOP = [ 0,  0,  1];
 UP = TOP;
 
 // Constant: CENTER
-// Aliases: CTR
+// Aliases: CTR, CENTRE
 // Topics: Constants, Vectors
 // See Also: LEFT, RIGHT, FRONT, BACK, UP, DOWN
 // Description: Zero vector.  Centered.  [0,0,0]
@@ -170,6 +174,7 @@ UP = TOP;
 //   cuboid(20, anchor=CENTER);
 CENTER = [ 0,  0,  0];  // Centered zero vector.
 CTR = CENTER;
+CENTRE = CENTER;
 
 
 // Section: Line specifiers
