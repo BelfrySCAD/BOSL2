@@ -82,16 +82,16 @@ function bezier_points(curve, u) =
     )
     N==0 ? [for(uval=u)[1]*M] :
     N==1 ? [for(uval=u)[1, uval]*M] :
-    N==2 ? [for(uval=u)[1, uval, uval^2]*M] :
-    N==3 ? [for(uval=u)[1, uval, uval^2, uval^3]*M] :          
-    N==4 ? [for(uval=u)[1, uval, uval^2, uval^3, uval^4]*M] :
-    N==5 ? [for(uval=u)[1, uval, uval^2, uval^3, uval^4, uval^5]*M] :
-    N==6 ? [for(uval=u)[1, uval, uval^2, uval^3, uval^4, uval^5,uval^6]*M] :
-    N==7 ? [for(uval=u)[1, uval, uval^2, uval^3, uval^4, uval^5,uval^6, uval^7]*M] :
-    N==8 ? [for(uval=u)[1, uval, uval^2, uval^3, uval^4, uval^5,uval^6, uval^7, uval^8]*M] :
-    N==9 ? [for(uval=u)[1, uval, uval^2, uval^3, uval^4, uval^5,uval^6, uval^7, uval^8, uval^9]*M] :
-    N==10? [for(uval=u)[1, uval, uval^2, uval^3, uval^4, uval^5,uval^6, uval^7, uval^8, uval^9, uval^10]*M] :
-    /* N>=11 */  [for(uval=u)[for (i=[0:1:N]) uval^i]*M];
+    N==2 ? [for(uval=u)[1, uval, uval*uval]*M] :
+    N==3 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval]*M] :          
+    N==4 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, pow(uval,4)]*M] :
+    N==5 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, pow(uval,4), pow(uval,5)]*M] :
+    N==6 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, pow(uval,4), pow(uval,5), pow(uval,6)]*M] :
+    N==7 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, pow(uval,4), pow(uval,5), pow(uval,6), pow(uval,7)]*M] :
+    N==8 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, pow(uval,4), pow(uval,5), pow(uval,6), pow(uval,7), pow(uval,8)]*M] :
+    N==9 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, pow(uval,4), pow(uval,5), pow(uval,6), pow(uval,7), pow(uval,8), pow(uval,9)]*M] :
+    N==10? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, pow(uval,4), pow(uval,5), pow(uval,6), pow(uval,7), pow(uval,8), pow(uval,9), pow(uval,10)]*M] :
+    /* N>=11 */  [for(uval=u)[for (i=[0:1:N]) pow(uval,i)]*M];
 
 
 // Not public.

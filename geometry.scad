@@ -1133,8 +1133,8 @@ function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
         d = norm(c2-c1),
         a = (c2-c1)/d,
         b = [-a.y,a.x],
-        L = (r1^2-r2^2+d^2)/2/d,
-        hsqr = r1^2-L^2
+        L = (r1*r1-r2*r2+d*d)/2/d,
+        hsqr = r1*r1-L*L
     )
     approx(hsqr,0,eps) ? [L*a+c1]
   : hsqr<0 ? []
