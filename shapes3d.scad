@@ -2141,7 +2141,6 @@ module text3d(text, h=1, size=10, font="Helvetica", halign, valign, spacing=1.0,
         anch.z>0? TOP :
         CENTER;
     m = _attach_transform(base,spin,orient,geom);
-    echo(anchor=anchor, anch=anch, base=base);
     multmatrix(m) {
         $parent_anchor = anchor;
         $parent_spin   = spin;
