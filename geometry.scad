@@ -1048,15 +1048,20 @@ function _is_point_above_plane(plane, point) =
 // Arguments:
 //   c = center of circle
 //   r = radius of circle
-//   ---
-//   d = diameter of circle
 //   line = two points defining the line
 //   bounded = false for unbounded line, true for a segment, or a vector [false,true] or [true,false] to specify a ray with the first or second end unbounded.  Default: false
+//   ---
+//   d = diameter of circle
 //   eps = epsilon used for identifying the case with one solution.  Default: 1e-9
-function circle_line_intersection(c,r,d,line,bounded=false,eps=EPSILON) =
-  let(r=get_radius(r=r,d=d,dflt=undef))
+function circle_line_intersection(c,r,line,bounded=false,d,eps=EPSILON) =
   assert(_valid_line(line,2), "Invalid 2d line.")
   assert(is_vector(c,2), "Circle center must be a 2-vector")
+  _circle_or_sphere_line_intersection(c,r,line,bounded,d,eps);
+
+
+
+function _circle_or_sphere_line_intersection(c,r,line,bounded=false,d,eps=EPSILON) =
+  let(r=get_radius(r=r,d=d,dflt=undef))
   assert(is_num(r) && r>0, "Radius must be positive")
   assert(is_bool(bounded) || is_bool_list(bounded,2), "Invalid bound condition")
   let(
@@ -1488,6 +1493,34 @@ function _noncollinear_triple(points,error=true,eps=EPSILON) =
     max(distlist) < eps*nrm ?
         assert(!error, "Cannot find three noncollinear points in pointlist.") [] :
     [0, b, max_index(distlist)];
+
+
+
+// Section: Sphere Calculations
+
+
+
+
+// Function: sphere_line_intersection()
+// Usage:
+//   isect = sphere_line_intersection(c,<r|d>,[line],[bounded],[eps]);
+// Topics: Geometry, Spheres, Lines, Intersection
+// Description:
+//   Find intersection points between a sphere and a line, ray or segment specified by two points.
+//   By default the line is unbounded.
+// Arguments:
+//   c = center of sphere
+//   r = radius of sphere
+//   line = two points defining the line
+//   bounded = false for unbounded line, true for a segment, or a vector [false,true] or [true,false] to specify a ray with the first or second end unbounded.  Default: false
+//   ---
+//   d = diameter of sphere
+//   eps = epsilon used for identifying the case with one solution.  Default: 1e-9
+function sphere_line_intersection(c,r,line,bounded=false,d,eps=EPSILON) =
+  assert(_valid_line(line,3), "Invalid 3d line.")
+  assert(is_vector(c,3), "Sphere center must be a 3-vector")
+  _circle_or_sphere_line_intersection(c,r,line,bounded,d,eps);
+
 
 
 
