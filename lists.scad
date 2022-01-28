@@ -817,7 +817,7 @@ function list_remove_values(list,values=[],all=false) =
 
 
 
-// Section: Iteration Helpers
+// Section: Lists of Subsets
 
 // Function: idx()
 // Usage:
