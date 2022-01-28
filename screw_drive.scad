@@ -351,7 +351,7 @@ module robertson_mask(size, extra=1) {
     Fmin = [0.032, 0.057, 0.065, 0.085, 0.090][size];
     Fmax = [0.038, 0.065, 0.075, 0.095, 0.100][size];
     F = (Fmin + Fmax) / 2 * INCH;
-    ang = 2;
+    ang = 4;
     h = T + extra;
     down(T) {
         intersection(){
