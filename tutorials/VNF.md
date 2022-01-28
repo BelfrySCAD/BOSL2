@@ -43,6 +43,7 @@ vnf = [
 vnf_polyhedron(vnf);
 ```
 
+## Assembling a Polyhedron in Parts
 A VNF does not have to contain a complete polyhedron, and the vertices contained in it do not have to be unique.  This allows the true power of VNFs: You can use the `vnf_join()` function to take multiple partial-polyhedron VNFs and merge them into a more complete VNF.  This lets you construct a complex polyhedron in parts, without having to keep track of all the vertices you created in other parts of it.
 
 As an example, consider a roughly spherical polyhedron with vertices at the top and bottom poles.  You can break it down into three major parts:  The top cap, the bottom cap, and the side wall.  The top and bottom caps both have a ring of vertices linked to the top or bottom vertex in triangles, while the sides are multiple rings of vertices linked in squares.  Lets create the top cap first:
@@ -104,6 +105,8 @@ vnf_polyhedron(vnf);
 
 Which is now a complete manifold polyhedron.
 
+
+## Debugging a VNF
 One of the critical tasks in creating a polyhedron is making sure that all of your faces are facing the correct way.  This is also true for VNFs.  The best way to find reversed faces is simply to select the View→Thrown Together menu item in OpenSCAD while viewing your polyhedron or VNF.  Any purple faces are reversed, and you will need to fix them.  For example, one of the two top face triangles on this cube is reversed:
 
 ```openscad-3D,ThrownTogether
@@ -135,7 +138,7 @@ vnf = [
     ],
     [
         [0,1,2], [0,2,3],  //BOTTOM
-        [0,4,5], [0,5,1],  //FRONT
+        [0,4,5], //FRONT
         [1,5,6], [1,6,2],  //RIGHT
         [2,6,7], [2,7,3],  //BACK
         [3,7,4], [3,4,0],  //LEFT
@@ -145,12 +148,35 @@ vnf = [
 vnf_validate(vnf, size=0.1);
 ```
 
-This will also display to the console:
-
-```
+```text
 ECHO: "ERROR REVERSAL (violet): Faces Reverse Across Edge at [[-1, -1, 1], [1, -1, 1]]"
 ECHO: "ERROR REVERSAL (violet): Faces Reverse Across Edge at [[1, -1, 1], [1, 1, 1]]"
 ECHO: "ERROR REVERSAL (violet): Faces Reverse Across Edge at [[1, 1, 1], [-1, -1, 1]]"
 ```
 
+The `vnf_validate()` module will stop after displaying the first found problem type, so once you fix those issues, you will want to run it again to display any other remaining issues.  For example, the reversed face in the above example is hiding a non-manifold hole in the front face:
+
+```openscad-3D
+vnf = [
+    [
+        [-1,-1,-1], [1,-1,-1], [1,1,-1], [-1,1,-1],
+        [-1,-1, 1], [1,-1, 1], [1,1, 1], [-1,1, 1],
+    ],
+    [
+        [0,1,2], [0,2,3],  //BOTTOM
+        [0,4,5], //FRONT
+        [1,5,6], [1,6,2],  //RIGHT
+        [2,6,7], [2,7,3],  //BACK
+        [3,7,4], [3,4,0],  //LEFT
+        [6,4,7], [6,5,4]   //TOP
+    ]
+];
+vnf_validate(vnf, size=0.1);
+```
+
+```text
+ECHO: "ERROR HOLE_EDGE (red): Edge bounds Hole at [[-1, -1, -1], [1, -1, -1]]"
+ECHO: "ERROR HOLE_EDGE (red): Edge bounds Hole at [[-1, -1, -1], [1, -1, 1]]"
+ECHO: "ERROR HOLE_EDGE (red): Edge bounds Hole at [[1, -1, -1], [1, -1, 1]]"
+```
 
