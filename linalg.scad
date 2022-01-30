@@ -444,6 +444,28 @@ function linear_solve(A,b,pivot=true) =
     m<n ? Q*back_substitute(R,transpose(P)*b,transpose=true) // Too messy to avoid input checks here
         : P*_back_substitute(R, transpose(Q)*b);             // Calling internal version skips input checks
 
+
+// Function: linear_solve3()
+// Usage:
+//   x = linear_solve3(A,b)
+// Desription:
+//   Fast solution to a 3x3 linear system using Cramer's rule (which appears to be the fastest
+//   method in OpenSCAD).  The input `A` must be a 3x3 matrix.  Returns undef if `A` is singular.
+//   The input `b` must be a 3-vector.  Note that Cramer's rule is not a stable algorithm, so for
+//   the highest accuracy on ill-conditioned problems you may want to use the general solver, which is about ten times slower.  
+function linear_solve3(A,b) =
+  // Arg sanity checking adds 7% overhead
+  assert(b*0==[0,0,0], "Input b must be a 3-vector")
+  assert(A*0==[[0,0,0],[0,0,0],[0,0,0]],"Input A must be a 3x3 matrix")
+  let(
+      Az = [for(i=[0:2])[A[i][0], A[i][1], b[i]]],
+      Ay = [for(i=[0:2])[A[i][0], b[i], A[i][2]]],
+      Ax = [for(i=[0:2])[b[i], A[i][1], A[i][2]]],
+      detA = det3(A)
+  )
+  detA==0 ? undef : [det3(Ax), det3(Ay), det3(Az)] / detA;
+
+
 // Function: matrix_inverse()
 // Usage:
 //    mat = matrix_inverse(A)
