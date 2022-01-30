@@ -330,6 +330,7 @@ module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
 //   robertson_mask(size, [extra]);
 // Description:
 //   Creates a mask for creating a Robertson/Square drive recess given the drive size as an integer.
+//   The width of the recess will be oversized by `2 * $slop`.  
 // Arguments:
 //   size = The size of the square drive, as an integer from 0 to 4.
 //   extra = Extra length of drive mask to create.
