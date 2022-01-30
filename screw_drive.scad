@@ -353,12 +353,13 @@ module robertson_mask(size, extra=1) {
     F = (Fmin + Fmax) / 2 * INCH;
     ang = 4;
     h = T + extra;
+    Mslop=M+2*$slop;
     down(T) {
         intersection(){
-            Mtop = M + 2*adj_ang_to_opp(F+extra,ang);
-            Mbot = M - 2*adj_ang_to_opp(T-F,ang);
+            Mtop = Mslop + 2*adj_ang_to_opp(F+extra,ang);
+            Mbot = Mslop - 2*adj_ang_to_opp(T-F,ang);
             prismoid([Mbot,Mbot],[Mtop,Mtop],h=h,anchor=BOT);
-            cyl(d1=0, d2=M/(T-F)*sqrt(2)*h, h=h, anchor=BOT);
+            cyl(d1=0, d2=Mslop/(T-F)*sqrt(2)*h, h=h, anchor=BOT);
         }
     }
 }

@@ -416,14 +416,19 @@ function block_matrix(M) =
 
 // Function: linear_solve()
 // Usage:
-//   solv = linear_solve(A,b)
+//   solv = linear_solve(A,b,[pivot])
 // Description:
 //   Solves the linear system Ax=b.  If `A` is square and non-singular the unique solution is returned.  If `A` is overdetermined
 //   the least squares solution is returned. If `A` is underdetermined, the minimal norm solution is returned.
 //   If `A` is rank deficient or singular then linear_solve returns `[]`.  If `b` is a matrix that is compatible with `A`
 //   then the problem is solved for the matrix valued right hand side and a matrix is returned.  Note that if you 
 //   want to solve Ax=b1 and Ax=b2 that you need to form the matrix `transpose([b1,b2])` for the right hand side and then
-//   transpose the returned value.
+//   transpose the returned value.  The solution is computed using QR factorization.  If `pivot` is set to true (the default) then
+//   pivoting is used in the QR factorization, which is slower but expected to be more accurate.
+// Usage:
+//   A = Matrix describing the linear system, which need not be square
+//   b = right hand side for linear system, which can be a matrix to solve several cases simultaneously.  Must be consistent with A.
+//   pivot = if true use pivoting when computing the QR factorization.  Default: true
 function linear_solve(A,b,pivot=true) =
     assert(is_matrix(A), "Input should be a matrix.")
     let(
@@ -448,11 +453,14 @@ function linear_solve(A,b,pivot=true) =
 // Function: linear_solve3()
 // Usage:
 //   x = linear_solve3(A,b)
-// Desription:
+// Description:
 //   Fast solution to a 3x3 linear system using Cramer's rule (which appears to be the fastest
 //   method in OpenSCAD).  The input `A` must be a 3x3 matrix.  Returns undef if `A` is singular.
 //   The input `b` must be a 3-vector.  Note that Cramer's rule is not a stable algorithm, so for
-//   the highest accuracy on ill-conditioned problems you may want to use the general solver, which is about ten times slower.  
+//   the highest accuracy on ill-conditioned problems you may want to use the general solver, which is about ten times slower.
+// Arguments:
+//   A = 3x3 matrix for linear system
+//   b = length 3 vector, right hand side of linear system
 function linear_solve3(A,b) =
   // Arg sanity checking adds 7% overhead
   assert(b*0==[0,0,0], "Input b must be a 3-vector")
