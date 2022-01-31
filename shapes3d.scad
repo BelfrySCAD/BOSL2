@@ -918,8 +918,8 @@ function rect_tube(
 //   vnf = wedge(size, [center], ...);
 //
 // Description:
-//   When called as a modulem creates a 3D triangular wedge with the hypotenuse in the X+Z+ quadrant.
-//   When called as a function creates a VNF for a 3D triangular wedge with the hypotenuse in the X+Z+ quadrant.
+//   When called as a module, creates a 3D triangular wedge with the hypotenuse in the X+Z+ quadrant.
+//   When called as a function, creates a VNF for a 3D triangular wedge with the hypotenuse in the X+Z+ quadrant.
 //
 // Arguments:
 //   size = [width, thickness, height]
@@ -1474,15 +1474,19 @@ module tube(
 
 
 
-// Module: pie_slice()
+// Function&Module: pie_slice()
 //
 // Description:
 //   Creates a pie slice shape.
 //
-// Usage: Typical
+// Usage: As Module
 //   pie_slice(l|h, r, ang, [center]);
 //   pie_slice(l|h, d=, ang=, ...);
 //   pie_slice(l|h, r1=|d1=, r2=|d2=, ang=, ...);
+// Usage: As Function
+//   vnf = pie_slice(l|h, r, ang, [center]);
+//   vnf = pie_slice(l|h, d=, ang=, ...);
+//   vnf = pie_slice(l|h, r1=|d1=, r2=|d2=, ang=, ...);
 // Usage: Attaching Children
 //   pie_slice(l|h, r, ang, ...) [attachments];
 //
@@ -1505,6 +1509,11 @@ module tube(
 //   pie_slice(ang=45, l=20, r=30);
 // Example: Conical Pie Slice
 //   pie_slice(ang=60, l=20, d1=50, d2=70);
+// Example: Big Slice
+//   pie_slice(ang=300, l=20, d1=50, d2=70);
+// Example: Generating a VNF
+//   vnf = pie_slice(ang=150, l=20, r1=30, r2=50);
+//   vnf_polyhedron(vnf);
 module pie_slice(
     h, r, ang=30, center,
     r1, r2, d, d1, d2, l,
@@ -1527,6 +1536,34 @@ module pie_slice(
         children();
     }
 }
+
+
+function pie_slice(
+    h, r, ang=30, center,
+    r1, r2, d, d1, d2, l,
+    anchor, spin=0, orient=UP
+) = let(
+        anchor = get_anchor(anchor, center, BOT, BOT),
+        l = first_defined([l, h, 1]),
+        r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10),
+        r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10),
+        maxd = max(r1,r2)+0.1,
+        sides = ceil(segs(max(r1,r2))*ang/360),
+        step = ang/sides,
+        vnf = vnf_vertex_array(
+            points=[
+                for (u = [0,1]) let(
+                    h = lerp(-l/2,l/2,u),
+                    r = lerp(r1,r2,u)
+                ) [
+                    for (theta = [0:step:ang+EPSILON])
+                        cylindrical_to_xyz(r,theta,h),
+                    [0,0,h]
+                ]
+            ],
+            col_wrap=true, caps=true, reverse=true
+        )
+    ) reorient(anchor,spin,orient, r1=r1, r2=r2, l=l, p=vnf);
 
 
 
@@ -1809,9 +1846,9 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 
 
 
-// Module: torus()
+// Function&Module: torus()
 //
-// Usage: Typical
+// Usage: As Module
 //   torus(r_maj|d_maj, r_min|d_min, [center], ...);
 //   torus(or|od, ir|id, ...);
 //   torus(r_maj|d_maj, or|od, ...);
@@ -1820,6 +1857,13 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 //   torus(r_min|d_min, ir|id, ...);
 // Usage: Attaching Children
 //   torus(or|od, ir|id, ...) [attachments];
+// Usage: As Function
+//   vnf = torus(r_maj|d_maj, r_min|d_min, [center], ...);
+//   vnf = torus(or|od, ir|id, ...);
+//   vnf = torus(r_maj|d_maj, or|od, ...);
+//   vnf = torus(r_maj|d_maj, ir|id, ...);
+//   vnf = torus(r_min|d_min, or|od, ...);
+//   vnf = torus(r_min|d_min, ir|id, ...);
 //
 // Description:
 //   Creates a torus shape.
@@ -1875,6 +1919,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 //   torus(d_maj=45, od=60);
 //   torus(d_min=15, id=30);
 //   torus(d_min=15, od=60);
+//   vnf_polyhedron(torus(d_min=15, od=60), convexity=4);
 // Example: Standard Connectors
 //   torus(od=60, id=30) show_anchors();
 module torus(
@@ -1887,26 +1932,62 @@ module torus(
     _ir = get_radius(r=ir, d=id, dflt=undef);
     _r_maj = get_radius(r=r_maj, d=d_maj, dflt=undef);
     _r_min = get_radius(r=r_min, d=d_min, dflt=undef);
-    majrad = is_finite(_r_maj)? _r_maj :
+    maj_rad = is_finite(_r_maj)? _r_maj :
         is_finite(_ir) && is_finite(_or)? (_or + _ir)/2 :
         is_finite(_ir) && is_finite(_r_min)? (_ir + _r_min) :
         is_finite(_or) && is_finite(_r_min)? (_or - _r_min) :
         assert(false, "Bad Parameters");
-    minrad = is_finite(_r_min)? _r_min :
-        is_finite(_ir)? (majrad - _ir) :
-        is_finite(_or)? (_or - majrad) :
+    min_rad = is_finite(_r_min)? _r_min :
+        is_finite(_ir)? (maj_rad - _ir) :
+        is_finite(_or)? (_or - maj_rad) :
         assert(false, "Bad Parameters");
     anchor = get_anchor(anchor, center, BOT, CENTER);
-    attachable(anchor,spin,orient, r=(majrad+minrad), l=minrad*2) {
+    attachable(anchor,spin,orient, r=(maj_rad+min_rad), l=min_rad*2) {
         rotate_extrude(convexity=4) {
-            right(majrad) circle(r=minrad);
+            right_half(s=min_rad*2, planar=true)
+                right(maj_rad)
+                    circle(r=min_rad);
         }
         children();
     }
 }
 
 
-// Module: teardrop()
+function torus(
+    r_maj, r_min, center,
+    d_maj, d_min,
+    or, od, ir, id,
+    anchor, spin=0, orient=UP
+) = let(
+    _or = get_radius(r=or, d=od, dflt=undef),
+    _ir = get_radius(r=ir, d=id, dflt=undef),
+    _r_maj = get_radius(r=r_maj, d=d_maj, dflt=undef),
+    _r_min = get_radius(r=r_min, d=d_min, dflt=undef),
+    maj_rad = is_finite(_r_maj)? _r_maj :
+        is_finite(_ir) && is_finite(_or)? (_or + _ir)/2 :
+        is_finite(_ir) && is_finite(_r_min)? (_ir + _r_min) :
+        is_finite(_or) && is_finite(_r_min)? (_or - _r_min) :
+        assert(false, "Bad Parameters"),
+    min_rad = is_finite(_r_min)? _r_min :
+        is_finite(_ir)? (maj_rad - _ir) :
+        is_finite(_or)? (_or - maj_rad) :
+        assert(false, "Bad Parameters"),
+    anchor = get_anchor(anchor, center, BOT, CENTER),
+    maj_sides = segs(maj_rad+min_rad),
+    maj_step = 360 / maj_sides,
+    min_sides = segs(min_rad),
+    min_step = 360 / min_sides,
+    xyprofile = min_rad <= maj_rad? right(maj_rad, p=circle(r=min_rad)) :
+        right_half(p=right(maj_rad, p=circle(r=min_rad)))[0],
+    profile = xrot(90, p=path3d(xyprofile)),
+    vnf = vnf_vertex_array(
+        points=[for (a=[0:maj_step:360-EPSILON]) zrot(a, p=profile)],
+        caps=false, col_wrap=true, row_wrap=true, reverse=true
+    )
+) reorient(anchor,spin,orient, r=(maj_rad+min_rad), l=min_rad*2, p=vnf);
+
+
+// Function&Module: teardrop()
 //
 // Description:
 //   Makes a teardrop shape in the XZ plane. Useful for 3D printable holes.
@@ -1919,6 +2000,10 @@ module torus(
 //   teardrop(h|l, d1=, d2=, [ang=], [cap_h1=], [cap_h2=], ...);
 // Usage: Attaching Children
 //   teardrop(h|l, r, ...) [attachments];
+// Usage: As Function
+//   vnf = teardrop(h|l=, r|d=, [ang=], [cap_h=], ...);
+//   vnf = teardrop(h|l=, r1=|d1=, r2=|d2=, [ang=], [cap_h=], ...);
+//   vnf = teardrop(h|l=, r1=|d1=, r2=|d2=, [ang=], [cap_h1=], [cap_h2=], ...);
 //
 // Arguments:
 //   h / l = Thickness of teardrop. Default: 1
@@ -1950,6 +2035,9 @@ module torus(
 //   teardrop(r=30, h=10, ang=30, cap_h=20);
 // Example: Psuedo-Conical
 //   teardrop(r1=20, r2=30, h=40, cap_h1=25, cap_h2=35);
+// Example: Getting a VNF
+//   vnf = teardrop(r1=25, r2=30, l=20, cap_h1=25, cap_h2=35);
+//   vnf_polyhedron(vnf);
 // Example: Standard Conical Connectors
 //   teardrop(d1=20, d2=30, h=20, cap_h1=11, cap_h2=16)
 //       show_anchors(custom=false);
@@ -1961,33 +2049,38 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, ancho
     r1 = get_radius(r=r, r1=r1, d=d, d1=d1, dflt=1);
     r2 = get_radius(r=r, r1=r2, d=d, d1=d2, dflt=1);
     l = first_defined([l, h, 1]);
-    tip_y1 = adj_ang_to_hyp(r1, 90-ang);
-    tip_y2 = adj_ang_to_hyp(r2, 90-ang);
-    cap_h1 = min(first_defined([cap_h1, cap_h, tip_y1]), tip_y1);
-    cap_h2 = min(first_defined([cap_h2, cap_h, tip_y2]), tip_y2);
-    capvec = unit([0, cap_h1-cap_h2, l]);
+    cap_h1 = first_defined([cap_h1, cap_h]);
+    cap_h2 = first_defined([cap_h2, cap_h]);
+    sides = segs(max(r1,r2));
+    profile1 = teardrop2d(r=r1, ang=ang, cap_h=cap_h1, $fn=sides);
+    profile2 = teardrop2d(r=r2, ang=ang, cap_h=cap_h2, $fn=sides);
+    tip_y1 = max(column(profile1,1));
+    tip_y2 = max(column(profile2,1));
+    _cap_h1 = min(default(cap_h1, tip_y1), tip_y1);
+    _cap_h2 = min(default(cap_h2, tip_y2), tip_y2);
+    capvec = unit([0, _cap_h1-_cap_h2, l]);
     anchors = [
-        named_anchor("cap",      [0,0,(cap_h1+cap_h2)/2], capvec),
-        named_anchor("cap_fwd",  [0,-l/2,cap_h1],         unit((capvec+FWD)/2)),
-        named_anchor("cap_back", [0,+l/2,cap_h2],         unit((capvec+BACK)/2), 180),
+        named_anchor("cap",      [0,0,(_cap_h1+_cap_h2)/2], capvec),
+        named_anchor("cap_fwd",  [0,-l/2,_cap_h1],         unit((capvec+FWD)/2)),
+        named_anchor("cap_back", [0,+l/2,_cap_h2],         unit((capvec+BACK)/2), 180),
     ];
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=BACK, anchors=anchors) {
         rot(from=UP,to=FWD) {
             if (l > 0) {
                 if (r1 == r2) {
                     linear_extrude(height=l, center=true, slices=2) {
-                        teardrop2d(r=r1, ang=ang, cap_h=cap_h);
+                        polygon(profile1);
                     }
                 } else {
                     hull() {
                         up(l/2-0.001) {
                             linear_extrude(height=0.001, center=false) {
-                                teardrop2d(r=r1, ang=ang, cap_h=cap_h1);
+                                polygon(profile1);
                             }
                         }
                         down(l/2) {
                             linear_extrude(height=0.001, center=false) {
-                                teardrop2d(r=r2, ang=ang, cap_h=cap_h2);
+                                polygon(profile2);
                             }
                         }
                     }
@@ -1999,18 +2092,48 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, ancho
 }
 
 
-// Module: onion()
+function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, anchor=CENTER, spin=0, orient=UP) =
+    let(
+        r1 = get_radius(r=r, r1=r1, d=d, d1=d1, dflt=1),
+        r2 = get_radius(r=r, r1=r2, d=d, d1=d2, dflt=1),
+        l = first_defined([l, h, 1]),
+        cap_h1 = first_defined([cap_h1, cap_h]),
+        cap_h2 = first_defined([cap_h2, cap_h]),
+        sides = segs(max(r1,r2)),
+        profile1 = teardrop2d(r=r1, ang=ang, cap_h=cap_h1, $fn=sides),
+        profile2 = teardrop2d(r=r2, ang=ang, cap_h=cap_h2, $fn=sides),
+        tip_y1 = max(column(profile1,1)),
+        tip_y2 = max(column(profile2,1)),
+        feef=echo(tip_y1=tip_y1, tip_y2=tip_y2),
+        _cap_h1 = min(default(cap_h1, tip_y1), tip_y1),
+        _cap_h2 = min(default(cap_h2, tip_y2), tip_y2),
+        capvec = unit([0, _cap_h1-_cap_h2, l]),
+        anchors = [
+            named_anchor("cap",      [0,0,(_cap_h1+_cap_h2)/2], capvec),
+            named_anchor("cap_fwd",  [0,-l/2,_cap_h1],         unit((capvec+FWD)/2)),
+            named_anchor("cap_back", [0,+l/2,_cap_h2],         unit((capvec+BACK)/2), 180),
+        ],
+        vnf = vnf_vertex_array(
+            points = [
+                fwd(l/2, p=xrot(90, p=path3d(profile1))),
+                back(l/2, p=xrot(90, p=path3d(profile2))),
+            ],
+            caps=true, col_wrap=true, reverse=true
+        )
+    ) reorient(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=BACK, anchors=anchors, p=vnf);
+
+
+// Function&Module: onion()
 //
 // Description:
 //   Creates a sphere with a conical hat, to make a 3D teardrop.
 //
-// Usage:
-//   onion(r|d, [ang], [cap_h]);
-// Usage: Typical
-//   onion(r, [ang], [cap_h], ...);
-//   onion(d=, [ang=], [cap_h=], ...);
+// Usage: As Module
+//   onion(r|d=, [ang=], [cap_h=], ...);
 // Usage: Attaching Children
 //   onion(r, ...) [attachments];
+// Usage: As Function
+//   vnf = onion(r|d=, [ang=], [cap_h=], ...);
 //
 // Arguments:
 //   r = radius of spherical portion of the bottom. Default: 1
@@ -2028,7 +2151,7 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, ancho
 //   onion(r=30, ang=30, cap_h=40);
 // Example: Close Crop
 //   onion(r=30, ang=30, cap_h=20);
-// Example: Onions are useful for making the tops of large cylingdrical voids.
+// Example: Onions are useful for making the tops of large cylindrical voids.
 //   difference() {
 //       cuboid([100,50,100], anchor=FWD+BOT);
 //       down(0.1)
@@ -2041,21 +2164,43 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, ancho
 module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
-    tip_y = adj_ang_to_hyp(r, 90-ang);
-    cap_h = min(default(cap_h,tip_y), tip_y);
+    xyprofile = teardrop2d(r=r, ang=ang, cap_h=cap_h);
+    tip_h = max(column(xyprofile,1));
+    _cap_h = min(default(cap_h,tip_h), tip_h);
     anchors = [
-        ["cap", [0,0,cap_h], UP, 0]
+        ["cap", [0,0,_cap_h], UP, 0],
+        ["tip", [0,0,tip_h], UP, 0]
     ];
     attachable(anchor,spin,orient, r=r, anchors=anchors) {
         rotate_extrude(convexity=2) {
             difference() {
-                teardrop2d(r=r, ang=ang, cap_h=cap_h);
-                left(r) square(size=[2*r,2*max(cap_h,r)+1], center=true);
+                polygon(xyprofile);
+                square([2*r,2*max(_cap_h,r)+1], anchor=RIGHT);
             }
         }
         children();
     }
 }
+
+
+function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
+    let(
+        r = get_radius(r=r, d=d, dflt=1),
+        xyprofile = right_half(p=teardrop2d(r=r, ang=ang, cap_h=cap_h))[0],
+        profile = xrot(90, p=path3d(xyprofile)),
+        tip_h = max(column(xyprofile,1)),
+        _cap_h = min(default(cap_h,tip_h), tip_h),
+        anchors = [
+            ["cap", [0,0,_cap_h], UP, 0],
+            ["tip", [0,0,tip_h], UP, 0]
+        ],
+        sides = segs(r),
+        step = 360 / sides,
+        vnf = vnf_vertex_array(
+            points=[for (a = [0:step:360-EPSILON]) zrot(a, p=profile)],
+            caps=false, col_wrap=true, row_wrap=true, reverse=true
+        )
+    ) reorient(anchor,spin,orient, r=r, anchors=anchors, p=vnf);
 
 
 // Section: Text

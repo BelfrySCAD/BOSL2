@@ -161,10 +161,10 @@ function left_half(p,x=0) = half_of(p, LEFT, [x,0,0]);
 // Function&Module: right_half()
 //
 // Usage: as module
-//   right_half([s], [x]) ...
-//   right_half(planar=true, [s], [x]) ...
+//   right_half([s=], [x=]) ...
+//   right_half(planar=true, [s=], [x=]) ...
 // Usage: as function
-//   result = right_half(p, [x]);
+//   result = right_half(p=, [x=]);
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is left of it.
