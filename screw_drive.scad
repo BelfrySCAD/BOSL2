@@ -330,10 +330,14 @@ module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
 //   robertson_mask(size, [extra]);
 // Description:
 //   Creates a mask for creating a Robertson/Square drive recess given the drive size as an integer.
-//   The width of the recess will be oversized by `2 * $slop`.  
+//   The width of the recess will be oversized by `2 * $slop`.  Note that this model is based
+//   on an incomplete spec.   https://www.aspenfasteners.com/content/pdf/square_drive_specification.pdf
+//   We determined the angle by doing print tests on a Prusa MK3S with $slop set to 0.05.
 // Arguments:
 //   size = The size of the square drive, as an integer from 0 to 4.
 //   extra = Extra length of drive mask to create.
+//   ang = taper angle of each face.  Default: 2.5
+//   $slop = enlarge recess by this twice amount.  Default: 0
 // Example:
 //   robertson_mask(size=2);
 // Example:
@@ -341,7 +345,7 @@ module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
 //       cyl(d1=2, d2=8, h=4, anchor=TOP);
 //       robertson_mask(size=2);
 //   }
-module robertson_mask(size, extra=1) {
+module robertson_mask(size, extra=1, ang=2.5) {
     assert(is_int(size) && size>=0 && size<=4);
     Mmin = [0.0696, 0.0900, 0.1110, 0.1315, 0.1895][size];
     Mmax = [0.0710, 0.0910, 0.1126, 0.1330, 0.1910][size];
@@ -352,7 +356,6 @@ module robertson_mask(size, extra=1) {
     Fmin = [0.032, 0.057, 0.065, 0.085, 0.090][size];
     Fmax = [0.038, 0.065, 0.075, 0.095, 0.100][size];
     F = (Fmin + Fmax) / 2 * INCH;
-    ang = 4;
     h = T + extra;
     Mslop=M+2*$slop;
     down(T) {

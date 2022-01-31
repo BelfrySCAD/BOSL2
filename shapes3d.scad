@@ -1696,7 +1696,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
         rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r,
         stagger = style=="stagger"
      )
-     style=="icosa2" ?    // subdivide faces of an icosahedron and project them onto a sphere
+     style=="icosa" ?    // subdivide faces of an icosahedron and project them onto a sphere
          let(  
              N = icosa_steps-1,
              // construct an icosahedron
@@ -1744,32 +1744,6 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
         ) [
             for (i=idx(meridians), j=[0:1:meridians[i]-1])
             spherical_to_xyz(rr, j*360/meridians[i], i*180/(len(meridians)-1))
-        ] : style=="icosa"? [
-            for (tb=[0,1], j=[0,2], i = [0:1:4]) let(
-                theta0 = i*360/5,
-                theta1 = (i-0.5)*360/5,
-                theta2 = (i+0.5)*360/5,
-                phi0 = 180/3 * j,
-                phi1 = 180/3,
-                v0 = spherical_to_xyz(1,theta0,phi0),
-                v1 = spherical_to_xyz(1,theta1,phi1),
-                v2 = spherical_to_xyz(1,theta2,phi1),
-                ax0 = vector_axis(v0, v1),
-                ang0 = vector_angle(v0, v1),
-                ax1 = vector_axis(v0, v2),
-                ang1 = vector_angle(v0, v2)
-            )
-            for (k = [0:1:icosa_steps]) let(
-                u = k/icosa_steps,
-                vv0 = rot(ang0*u, ax0, p=v0),
-                vv1 = rot(ang1*u, ax1, p=v0),
-                ax2 = vector_axis(vv0, vv1),
-                ang2 = vector_angle(vv0, vv1)
-            )
-            for (l = [0:1:k]) let(
-                v = k? l/k : 0,
-                pt = rot(ang2*v, v=ax2, p=vv0) * rr * (tb? -1 : 1)
-            ) pt
         ] : assert(in_list(style,["orig","aligned","stagger","octa","icosa"])),
         lv = len(verts),
         faces = style=="orig"? [
@@ -1830,25 +1804,6 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                 [p5, p7, p8],
                 if (k<m-1) [p5, p8, p6],
             ],
-        ] : style=="icosa"? let(
-            pyr = [for (x=[0:1:icosa_steps+1]) x],
-            tri = sum(pyr),
-            soff = cumsum(pyr)
-        ) [
-            for (tb=[0,1], j=[0,1], i = [0:1:4]) let(
-                base = ((((tb*2) + j) * 5) + i) * tri
-            )
-            for (k = [0:1:icosa_steps-1])
-            for (l = [0:1:k]) let(
-                v1 = base + soff[k] + l,
-                v2 = base + soff[k+1] + l,
-                v3 = base + soff[k+1] + (l + 1),
-                faces = [
-                    if(l>0) [v1-1,v1,v2],
-                    [v1,v3,v2],
-                ],
-                faces2 = (tb+j)%2? [for (f=faces) reverse(f)] : faces
-            ) each faces2
         ] : []
     ) [reorient(anchor,spin,orient, r=r, p=verts), faces];
 
