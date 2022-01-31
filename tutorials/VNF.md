@@ -130,7 +130,7 @@ vnf_polyhedron(vnf);
 Another way to find problems with your VNF, is to use the `vnf_validate()` module, which will ECHO problems to the console, and will attempt to display where the issue is.  This can find a lot more types of non-manifold errors, but can be slow:
 
 
-```openscad-3D
+```openscad-3D,ThrownTogether
 vnf = [
     [
         [-1,-1,-1], [1,-1,-1], [1,1,-1], [-1,1,-1],
@@ -156,7 +156,7 @@ ECHO: "ERROR REVERSAL (violet): Faces Reverse Across Edge at [[1, 1, 1], [-1, -1
 
 The `vnf_validate()` module will stop after displaying the first found problem type, so once you fix those issues, you will want to run it again to display any other remaining issues.  For example, the reversed face in the above example is hiding a non-manifold hole in the front face:
 
-```openscad-3D
+```openscad-3D,ThrownTogether
 vnf = [
     [
         [-1,-1,-1], [1,-1,-1], [1,1,-1], [-1,1,-1],
