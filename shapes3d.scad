@@ -1654,8 +1654,8 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 //   - `style="orig"` constructs a sphere the same way that the OpenSCAD `sphere()` built-in does.
 //   - `style="aligned"` constructs a sphere where, if `$fn` is a multiple of 4, it has vertices at all axis maxima and minima.  ie: its bounding box is exactly the sphere diameter in length on all three axes.  This is the default.
 //   - `style="stagger"` forms a sphere where all faces are triangular, but the top and bottom poles have thinner triangles.
-//   - `style="octa"` forms a sphere by subdividing an octahedron (8-sided platonic solid).  This makes more uniform faces over the entirety of the sphere, and guarantees the bounding box is the sphere diameter in size on all axes.  The effective `$fn` value is quantized to a multiple of 4, though.  This is used in constructing rounded corners for various other shapes.
-//   - `style="icosa"` forms a sphere by subdividing an icosahedron (20-sided platonic solid).  This makes even more uniform faces over the entirety of the sphere.  The effective `$fn` value is quantized to a multiple of 5, though.
+//   - `style="octa"` forms a sphere by subdividing an octahedron (8-sided platonic solid).  This makes more uniform faces over the entirety of the sphere, and guarantees the bounding box is the sphere diameter in size on all axes.  The effective `$fn` value is quantized to a multiple of 4.  This is used in constructing rounded corners for various other shapes.
+//   - `style="icosa"` forms a sphere by subdividing an icosahedron (20-sided platonic solid).  This makes even more uniform faces over the entirety of the sphere.  The effective `$fn` value is quantized to a multiple of 5.
 // Arguments:
 //   r = Radius of the spheroid.
 //   style = The style of the spheroid's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "aligned"
@@ -1717,6 +1717,12 @@ module spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orie
 }
 
 
+// p is a list of 3 points defining a triangle in any dimension.  N is the number of extra points
+// to add, so output triangle has N+2 points on each side.  
+function _subsample_triangle(p,N) = 
+    [for(i=[0:N+1]) [for (j=[0:N+1-i]) unit(lerp(p[0],p[1],i/(N+1)) + (p[2]-p[0])*j/(N+1))]];
+
+
 function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orient=UP) =
     let(
         r = get_radius(r=r, d=d, dflt=1),
@@ -1725,7 +1731,36 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
         octa_steps = round(max(4,hsides)/4),
         icosa_steps = round(max(5,hsides)/5),
         rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r,
-        stagger = style=="stagger",
+        stagger = style=="stagger"
+     )
+     style=="icosa" ?    // subdivide faces of an icosahedron and project them onto a sphere
+         let(  
+             N = icosa_steps-1,
+             // construct an icosahedron
+             icovert=[ for(i=[-1,1], j=[-1,1]) each [[0,i,j*PHI], [i,j*PHI,0], [j*PHI,0,i]]],
+             icoface = hull(icovert),
+             // Subsample face 0 of the icosahedron
+             face0 = select(icovert,icoface[0]),
+             sampled = rr * _subsample_triangle(face0,N),
+             dir0 = mean(face0),
+             point0 = face0[0]-dir0,
+             // Make a rotated copy of the subsampled triangle on each icosahedral face
+             tri_list = [sampled,
+                         for(i=[1:1:len(icoface)-1])
+                 let(face = select(icovert,icoface[i]))
+                 apply(frame_map(z=mean(face),x=face[0]-mean(face))
+                        *frame_map(z=dir0,x=point0,reverse=true),
+                       sampled)],
+             // faces for the first triangle group
+             faces = vnf_tri_array(tri_list[0])[1],
+             size = repeat((N+2)*(N+3)/2,3),
+             // Expand to full face list
+             fullfaces = [for(i=idx(tri_list)) each [for(f=faces) f+i*size]],
+             fullvert = flatten(flatten(tri_list))    // eliminate triangle structure
+         ) 
+         [reorient(anchor,spin,orient, r=r, p=fullvert), fullfaces]
+        :
+     let(
         verts = style=="orig"? [
             for (i=[0:1:vsides-1]) let(phi = (i+0.5)*180/(vsides))
             for (j=[0:1:hsides-1]) let(theta = j*360/hsides)
@@ -1746,32 +1781,6 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
         ) [
             for (i=idx(meridians), j=[0:1:meridians[i]-1])
             spherical_to_xyz(rr, j*360/meridians[i], i*180/(len(meridians)-1))
-        ] : style=="icosa"? [
-            for (tb=[0,1], j=[0,2], i = [0:1:4]) let(
-                theta0 = i*360/5,
-                theta1 = (i-0.5)*360/5,
-                theta2 = (i+0.5)*360/5,
-                phi0 = 180/3 * j,
-                phi1 = 180/3,
-                v0 = spherical_to_xyz(1,theta0,phi0),
-                v1 = spherical_to_xyz(1,theta1,phi1),
-                v2 = spherical_to_xyz(1,theta2,phi1),
-                ax0 = vector_axis(v0, v1),
-                ang0 = vector_angle(v0, v1),
-                ax1 = vector_axis(v0, v2),
-                ang1 = vector_angle(v0, v2)
-            )
-            for (k = [0:1:icosa_steps]) let(
-                u = k/icosa_steps,
-                vv0 = rot(ang0*u, ax0, p=v0),
-                vv1 = rot(ang1*u, ax1, p=v0),
-                ax2 = vector_axis(vv0, vv1),
-                ang2 = vector_angle(vv0, vv1)
-            )
-            for (l = [0:1:k]) let(
-                v = k? l/k : 0,
-                pt = rot(ang2*v, v=ax2, p=vv0) * rr * (tb? -1 : 1)
-            ) pt
         ] : assert(in_list(style,["orig","aligned","stagger","octa","icosa"])),
         lv = len(verts),
         faces = style=="orig"? [
@@ -1832,25 +1841,6 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                 [p5, p7, p8],
                 if (k<m-1) [p5, p8, p6],
             ],
-        ] : style=="icosa"? let(
-            pyr = [for (x=[0:1:icosa_steps+1]) x],
-            tri = sum(pyr),
-            soff = cumsum(pyr)
-        ) [
-            for (tb=[0,1], j=[0,1], i = [0:1:4]) let(
-                base = ((((tb*2) + j) * 5) + i) * tri
-            )
-            for (k = [0:1:icosa_steps-1])
-            for (l = [0:1:k]) let(
-                v1 = base + soff[k] + l,
-                v2 = base + soff[k+1] + l,
-                v3 = base + soff[k+1] + (l + 1),
-                faces = [
-                    if(l>0) [v1-1,v1,v2],
-                    [v1,v3,v2],
-                ],
-                faces2 = (tb+j)%2? [for (f=faces) reverse(f)] : faces
-            ) each faces2
         ] : []
     ) [reorient(anchor,spin,orient, r=r, p=verts), faces];
 
