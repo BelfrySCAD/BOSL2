@@ -1665,7 +1665,9 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 //   a new polyhedron whose vertices are obtained from the faces of the parent polyhedron.  
 //   The "orig" and "align" forms are duals of each other.  If you request a circumscribing polyhedron in
 //   these styles then the polyhedron will look the same as the default inscribing form.  But for the other
-//   styles, the duals are completely different from their parents, and from each other.  
+//   styles, the duals are completely different from their parents, and from each other.  Generation of the circumscribed versions (duals)
+//   for "octa" and "icosa" is fast if you use the module form but can be very slow (several minutes) if you use the functional
+//   form and choose a large $fn value.  
 // Arguments:
 //   r = Radius of the spheroid.
 //   style = The style of the spheroid's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "aligned"
@@ -1741,7 +1743,7 @@ module spheroid(r, style="aligned", d, circum=false, dual=false, anchor=CENTER, 
         else if (circum && (style=="octa" || style=="icosa")) {
             orig_sphere = spheroid(r,style,circum=false);
             dualvert = _dual_vertices(orig_sphere);
-            hull_points(dualvert);
+            hull_points(dualvert,fast=true);
         } else {
             vnf = spheroid(r=r, circum=circum, style=style);
             vnf_polyhedron(vnf, convexity=2);
@@ -1769,6 +1771,7 @@ function _dual_vertices(vnf) =
 
 function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orient=UP) =
     let(
+        ff=echo("running sphereoid with ",circum=circum),
         r = get_radius(r=r, d=d, dflt=1),
         hsides = segs(r),
         vsides = max(2,ceil(hsides/2)),
