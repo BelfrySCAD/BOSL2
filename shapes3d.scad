@@ -1771,7 +1771,6 @@ function _dual_vertices(vnf) =
 
 function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orient=UP) =
     let(
-        ff=echo("running sphereoid with ",circum=circum),
         r = get_radius(r=r, d=d, dflt=1),
         hsides = segs(r),
         vsides = max(2,ceil(hsides/2)),
