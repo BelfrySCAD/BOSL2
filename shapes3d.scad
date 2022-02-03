@@ -2,7 +2,7 @@
 // LibFile: shapes3d.scad
 //   Some standard modules for making 3d shapes with attachment support, and function forms
 //   that produce a VNF.  Also included are shortcuts cylinders in each orientation and extended versions of
-//   the standard modules that provide roundovers and chamfers.  The sphereoid() module provides
+//   the standard modules that provide roundovers and chamfers.  The spheroid() module provides
 //   several different ways to make a sphere, and the text modules let you write text on a path
 //   so you can place it on a curved object.  
 // Includes:
@@ -1650,18 +1650,30 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 //   When called as a function, returns a [VNF](vnf.scad) for a spheroid.
 //   The exact triangulation of this spheroid can be controlled via the `style=`
 //   argument, where the value can be one of `"orig"`, `"aligned"`, `"stagger"`,
-//   `"octa"`, or `"icosa"`:
+//   `"octa"`, or `"icosa"`.  
 //   - `style="orig"` constructs a sphere the same way that the OpenSCAD `sphere()` built-in does.
 //   - `style="aligned"` constructs a sphere where, if `$fn` is a multiple of 4, it has vertices at all axis maxima and minima.  ie: its bounding box is exactly the sphere diameter in length on all three axes.  This is the default.
 //   - `style="stagger"` forms a sphere where all faces are triangular, but the top and bottom poles have thinner triangles.
-//   - `style="octa"` forms a sphere by subdividing an octahedron (8-sided platonic solid).  This makes more uniform faces over the entirety of the sphere, and guarantees the bounding box is the sphere diameter in size on all axes.  The effective `$fn` value is quantized to a multiple of 4.  This is used in constructing rounded corners for various other shapes.
-//   - `style="icosa"` forms a sphere by subdividing an icosahedron (20-sided platonic solid).  This makes even more uniform faces over the entirety of the sphere.  The effective `$fn` value is quantized to a multiple of 5.
+//   - `style="octa"` forms a sphere by subdividing an octahedron.  This makes more uniform faces over the entirety of the sphere, and guarantees the bounding box is the sphere diameter in size on all axes.  The effective `$fn` value is quantized to a multiple of 4.  This is used in constructing rounded corners for various other shapes.
+//   - `style="icosa"` forms a sphere by subdividing an icosahedron.  This makes even more uniform faces over the whole sphere.  The effective `$fn` value is quantized to a multiple of 5.
+//   .
+//   By default the object spheroid() produces is a polyhedron whose vertices all lie on the requested sphere.  This means
+//   it is an inscribed sphere, which sits inside the requested sphere.  
+//   The `circum` argument requests a circumscribing sphere, where the true sphere is
+//   inside and tangent to all the faces of the approximating polyhedron.  To produce
+//   a circumscribing polyhedron, we use the dual polyhedron of the basic form.  The dual of a polyhedron is
+//   a new polyhedron whose vertices are obtained from the faces of the parent polyhedron.  
+//   The "orig" and "align" forms are duals of each other.  If you request a circumscribing polyhedron in
+//   these styles then the polyhedron will look the same as the default inscribing form.  But for the other
+//   styles, the duals are completely different from their parents, and from each other.  Generation of the circumscribed versions (duals)
+//   for "octa" and "icosa" is fast if you use the module form but can be very slow (several minutes) if you use the functional
+//   form and choose a large $fn value.  
 // Arguments:
 //   r = Radius of the spheroid.
 //   style = The style of the spheroid's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "aligned"
 //   ---
 //   d = Diameter of the spheroid.
-//   circum = If true, the spheroid is made large enough to circumscribe the sphere of the ideal side.  Otherwise inscribes.  Default: false (inscribes)
+//   circum = If true, the spheroid is produced in a style where it circumscribes the sphere of the requested size.  Otherwise inscribes.  Note that for some styles, the circumscribed sphere looks different than the inscribed sphere.  Default: false (inscribes)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1675,14 +1687,16 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 //   spheroid(d=100, style="aligned", $fn=10);
 // Example: style="stagger"
 //   spheroid(d=100, style="stagger", $fn=10);
-// Example: style="octa", octahedral based tesselation.
+// Example: style="stagger" with circum=true
+//   spheroid(d=100, style="stagger", circum=true, $fn=10);
+// Example: style="octa", octahedral based tesselation.  In this style, $fn is quantized to a multiple of 4. 
 //   spheroid(d=100, style="octa", $fn=10);
-//   // In "octa" style, $fn is quantized
-//   //   to the nearest multiple of 4.
-// Example: style="icosa", icosahedral based tesselation.
-//   spheroid(d=100, style="icosa", $fn=10);
-//   // In "icosa" style, $fn is quantized
-//   //   to the nearest multiple of 5.
+// Example: style="octa", with circum=true, produces mostly very irregular hexagonal faces
+//   spheroid(d=100, style="octa", circum=true, $fn=16);
+// Example: style="icosa", icosahedral based tesselation.  In this style, $fn is quantized to a multiple of 5.
+//   spheroid(d=100, style="icosa", $fn=10);  
+// Example: style="icosa", circum=true.  This style has hexagons and 12 pentagons, similar to (but not the same as) a soccer ball.
+//   spheroid(d=100, style="icosa", circum=true, $fn=10);  
 // Example: Anchoring
 //   spheroid(d=100, anchor=FRONT);
 // Example: Spin
@@ -1694,13 +1708,28 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 // Example: Called as Function
 //   vnf = spheroid(d=100, style="icosa");
 //   vnf_polyhedron(vnf);
-module spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orient=UP)
+// Example: With "orig" the circumscribing sphere has the same form.  The green sphere is a tiny bit oversized so it pokes through the low points in the circumscribed sphere with low $fn.  This demonstrates that these spheres are in fact circumscribing.  
+//   color("green")spheroid(r=10.01, $fn=256);
+//   spheroid(r=10, style="orig", circum=true, $fn=16);
+// Example: With "aligned" the same is true: the circumscribing sphere is also aligned, if $fn is divisible by 4. 
+//   color("green")spheroid(r=10.01, $fn=256);
+//   spheroid(r=10, style="aligned", circum=true, $fn=16);
+// Example: For the other styles, the circumscribing sphere is different, as shown here with "stagger"
+//   color("green")spheroid(r=10.01, $fn=256);
+//   spheroid(r=10, style="stagger", circum=true, $fn=16);
+// Example: The dual of "octa" that provides the circumscribing sphere has weird asymmetric hexagonal faces:
+//   color("green")spheroid(r=10.01, $fn=256);
+//   spheroid(r=10, style="octa", circum=true, $fn=16);
+// Example: The dual of "icosa" features hexagons and always 12 pentagons:
+//   color("green")spheroid(r=10.01, $fn=256);
+//   spheroid(r=10, style="icosa", circum=true, $fn=16);
+module spheroid(r, style="aligned", d, circum=false, dual=false, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
     sides = segs(r);
     vsides = ceil(sides/2);
     attachable(anchor,spin,orient, r=r) {
-        if (style=="orig") {
+        if (style=="orig" && !circum) {
             merids = [ for (i=[0:1:vsides-1]) 90-(i+0.5)*180/vsides ];
             path = [
                 let(a = merids[0]) [0, sin(a)],
@@ -1708,6 +1737,13 @@ module spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orie
                 let(a = last(merids)) [0, sin(a)]
             ];
             scale(r) rotate(180) rotate_extrude(convexity=2,$fn=sides) polygon(path);
+        }
+        // Don't now how to construct faces for these efficiently, so use hull_points, which
+        // is very much faster than using hull() as happens in the spheroid() function
+        else if (circum && (style=="octa" || style=="icosa")) {
+            orig_sphere = spheroid(r,style,circum=false);
+            dualvert = _dual_vertices(orig_sphere);
+            hull_points(dualvert,fast=true);
         } else {
             vnf = spheroid(r=r, circum=circum, style=style);
             vnf_polyhedron(vnf, convexity=2);
@@ -1723,6 +1759,16 @@ function _subsample_triangle(p,N) =
     [for(i=[0:N+1]) [for (j=[0:N+1-i]) unit(lerp(p[0],p[1],i/(N+1)) + (p[2]-p[0])*j/(N+1))]];
 
 
+// Input should have only triangular faces
+function _dual_vertices(vnf) =
+  let(vert=vnf[0])
+  [for(face=vnf[1])
+      let(planes = select(vert,face))
+      //linear_solve3(planes, [for(p=planes) p*p])
+      linear_solve3(select(planes,0,2), [for(i=[0:2]) planes[i]*planes[i]]) // Handle larger faces, maybe?
+  ];
+
+
 function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orient=UP) =
     let(
         r = get_radius(r=r, d=d, dflt=1),
@@ -1730,9 +1776,30 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
         vsides = max(2,ceil(hsides/2)),
         octa_steps = round(max(4,hsides)/4),
         icosa_steps = round(max(5,hsides)/5),
-        rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r,
         stagger = style=="stagger"
      )
+     circum && style=="orig" ?
+         let(
+              orig_sphere = spheroid(r,"aligned",circum=false),
+              dualvert = zrot(360/hsides/2,_dual_vertices(orig_sphere)),
+              culledvert = [
+                              [for(i=[0:2:2*hsides-1]) dualvert[i]],
+                              for(j=[1:vsides-2])
+                                 [for(i=[0:2:2*hsides-1]) dualvert[j*2*hsides+i]],
+                              [for(i=[1:2:2*hsides-1]) dualvert[i]]
+                           ],
+              vnf = vnf_vertex_array(culledvert,col_wrap=true,caps=true)
+          )
+          [reorient(anchor,spin,orient, r=r, p=vnf[0]), vnf[1]]
+     :
+     circum && (style=="octa" || style=="icosa") ?
+         let(
+              orig_sphere = spheroid(r,style,circum=false),
+              dualvert = _dual_vertices(orig_sphere),
+              faces = hull(dualvert)
+         )
+         [reorient(anchor,spin,orient, r=r, p=dualvert), faces]
+     :
      style=="icosa" ?    // subdivide faces of an icosahedron and project them onto a sphere
          let(  
              N = icosa_steps-1,
@@ -1741,7 +1808,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
              icoface = hull(icovert),
              // Subsample face 0 of the icosahedron
              face0 = select(icovert,icoface[0]),
-             sampled = rr * _subsample_triangle(face0,N),
+             sampled = r * _subsample_triangle(face0,N),
              dir0 = mean(face0),
              point0 = face0[0]-dir0,
              // Make a rotated copy of the subsampled triangle on each icosahedral face
@@ -1759,89 +1826,135 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
              fullvert = flatten(flatten(tri_list))    // eliminate triangle structure
          ) 
          [reorient(anchor,spin,orient, r=r, p=fullvert), fullfaces]
-        :
+     :
      let(
-        verts = style=="orig"? [
-            for (i=[0:1:vsides-1]) let(phi = (i+0.5)*180/(vsides))
-            for (j=[0:1:hsides-1]) let(theta = j*360/hsides)
-            spherical_to_xyz(rr, theta, phi),
-        ] : style=="aligned" || style=="stagger"? [
-            spherical_to_xyz(rr, 0, 0),
-            for (i=[1:1:vsides-1]) let(phi = i*180/vsides)
-                for (j=[0:1:hsides-1]) let(theta = (j+((stagger && i%2!=0)?0.5:0))*360/hsides)
-                    spherical_to_xyz(rr, theta, phi),
-            spherical_to_xyz(rr, 0, 180)
-        ] : style=="octa"? let(
-            meridians = [
-                1,
-                for (i = [1:1:octa_steps]) i*4,
-                for (i = [octa_steps-1:-1:1]) i*4,
-                1,
-            ]
-        ) [
-            for (i=idx(meridians), j=[0:1:meridians[i]-1])
-            spherical_to_xyz(rr, j*360/meridians[i], i*180/(len(meridians)-1))
-        ] : assert(in_list(style,["orig","aligned","stagger","octa","icosa"])),
+        verts = circum && style=="stagger" ? _dual_vertices(spheroid(r,style,circum=false))
+              : circum && style=="aligned" ?
+                     let(
+                         orig_sphere = spheroid(r,"orig",circum=false),
+                         dualvert = _dual_vertices(orig_sphere),
+                         culledvert = zrot(360/hsides/2,
+                                           [dualvert[0],
+                                            for(i=[2:2:len(dualvert)-1]) dualvert[i],
+                                            dualvert[1]])
+                      )
+                      culledvert
+              : style=="orig"? [
+                                 for (i=[0:1:vsides-1])
+                                     let(phi = (i+0.5)*180/(vsides))
+                                     for (j=[0:1:hsides-1])
+                                         let(theta = j*360/hsides)
+                                         spherical_to_xyz(r, theta, phi),
+                               ]
+              : style=="aligned" || style=="stagger"?
+                         [ spherical_to_xyz(r, 0, 0),
+                           for (i=[1:1:vsides-1])
+                               let(phi = i*180/vsides)
+                               for (j=[0:1:hsides-1])
+                                   let(theta = (j+((stagger && i%2!=0)?0.5:0))*360/hsides)
+                                   spherical_to_xyz(r, theta, phi),
+                           spherical_to_xyz(r, 0, 180)
+                         ]
+              : style=="octa"?
+                      let(
+                           meridians = [
+                                        1,
+                                        for (i = [1:1:octa_steps]) i*4,
+                                        for (i = [octa_steps-1:-1:1]) i*4,
+                                        1,
+                                       ]
+                      )
+                      [
+                       for (i=idx(meridians), j=[0:1:meridians[i]-1])
+                           spherical_to_xyz(r, j*360/meridians[i], i*180/(len(meridians)-1))
+                      ]       
+              : assert(in_list(style,["orig","aligned","stagger","octa","icosa"])),
         lv = len(verts),
-        faces = style=="orig"? [
-            [for (i=[0:1:hsides-1]) hsides-i-1],
-            [for (i=[0:1:hsides-1]) lv-hsides+i],
-            for (i=[0:1:vsides-2], j=[0:1:hsides-1]) each [
-                [(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
-                [(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
-            ]
-        ] : style=="aligned" || style=="stagger"? [
-            for (i=[0:1:hsides-1]) let(
-                b2 = lv-2-hsides
-            ) each [
-                [i+1, 0, ((i+1)%hsides)+1],
-                [lv-1, b2+i+1, b2+((i+1)%hsides)+1],
-            ],
-            for (i=[0:1:vsides-3], j=[0:1:hsides-1]) let(
-                base = 1 + hsides*i
-            ) each (
-                (stagger && i%2!=0)? [
-                    [base+j, base+hsides+j%hsides, base+hsides+(j+hsides-1)%hsides],
-                    [base+j, base+(j+1)%hsides, base+hsides+j],
-                ] : [
-                    [base+j, base+(j+1)%hsides, base+hsides+(j+1)%hsides],
-                    [base+j, base+hsides+(j+1)%hsides, base+hsides+j],
-                ]
-            )
-        ] : style=="octa"? let(
-            meridians = [
-                0, 1,
-                for (i = [1:1:octa_steps]) i*4,
-                for (i = [octa_steps-1:-1:1]) i*4,
-                1,
-            ],
-            offs = cumsum(meridians),
-            pc = last(offs)-1,
-            os = octa_steps * 2
-        ) [
-            for (i=[0:1:3]) [0, 1+(i+1)%4, 1+i],
-            for (i=[0:1:3]) [pc-0, pc-(1+(i+1)%4), pc-(1+i)],
-            for (i=[1:1:octa_steps-1]) let(
-                m = meridians[i+2]/4
-            )
-            for (j=[0:1:3], k=[0:1:m-1]) let(
-                m1 = meridians[i+1],
-                m2 = meridians[i+2],
-                p1 = offs[i+0] + (j*m1/4 + k+0) % m1,
-                p2 = offs[i+0] + (j*m1/4 + k+1) % m1,
-                p3 = offs[i+1] + (j*m2/4 + k+0) % m2,
-                p4 = offs[i+1] + (j*m2/4 + k+1) % m2,
-                p5 = offs[os-i+0] + (j*m1/4 + k+0) % m1,
-                p6 = offs[os-i+0] + (j*m1/4 + k+1) % m1,
-                p7 = offs[os-i-1] + (j*m2/4 + k+0) % m2,
-                p8 = offs[os-i-1] + (j*m2/4 + k+1) % m2
-            ) each [
-                [p1, p4, p3],
-                if (k<m-1) [p1, p2, p4],
-                [p5, p7, p8],
-                if (k<m-1) [p5, p8, p6],
-            ],
-        ] : []
+        faces = circum && style=="stagger" ?  
+                     let(ptcount=2*hsides,ff=echo(verts))
+                     [
+                       [for(i=[ptcount-2:-2:0]) i],
+                       for(j=[0:hsides-1])
+                           [j*2, (j*2+2)%ptcount,ptcount+(j*2+2)%ptcount,ptcount+(j*2+3)%ptcount,ptcount+j*2],
+                       for(i=[1:vsides-3])
+                           let(base=ptcount*i)
+                           for(j=[0:hsides-1])
+                               i%2==0 ? [base+2*j, base+(2*j+1)%ptcount, base+(2*j+2)%ptcount,
+                                        base+ptcount+(2*j)%ptcount, base+ptcount+(2*j+1)%ptcount, base+ptcount+(2*j-2+ptcount)%ptcount]
+                                      : [base+(1+2*j)%ptcount, base+(2*j)%ptcount, base+(2*j+3)%ptcount,
+                                         base+ptcount+(3+2*j)%ptcount, base+ptcount+(2*j+2)%ptcount,base+ptcount+(2*j+1)%ptcount],
+                       for(j=[0:hsides-1])
+                          vsides%2==0
+                            ? [(j*2+3)%ptcount, j*2+1, lv-ptcount+(2+j*2)%ptcount, lv-ptcount+(3+j*2)%ptcount, lv-ptcount+(4+j*2)%ptcount]
+                            : [(j*2+3)%ptcount, j*2+1, lv-ptcount+(1+j*2)%ptcount, lv-ptcount+(j*2)%ptcount, lv-ptcount+(3+j*2)%ptcount],
+                       [for(i=[1:2:ptcount-1]) i],
+                     ]       
+              : style=="aligned" || style=="stagger" ?  // includes case of aligned with circum == true
+                     [
+                       for (i=[0:1:hsides-1])
+                           let(b2 = lv-2-hsides)
+                           each [
+                                 [i+1, 0, ((i+1)%hsides)+1],
+                                 [lv-1, b2+i+1, b2+((i+1)%hsides)+1],
+                                ],
+                       for (i=[0:1:vsides-3], j=[0:1:hsides-1])
+                           let(base = 1 + hsides*i)
+                           each (
+                                 (stagger && i%2!=0)? [
+                                     [base+j, base+hsides+j%hsides, base+hsides+(j+hsides-1)%hsides],
+                                     [base+j, base+(j+1)%hsides, base+hsides+j],
+                                 ] : [
+                                     [base+j, base+(j+1)%hsides, base+hsides+(j+1)%hsides],
+                                     [base+j, base+hsides+(j+1)%hsides, base+hsides+j],
+                                 ]  
+                           )
+                     ]
+              : style=="orig"? [
+                                [for (i=[0:1:hsides-1]) hsides-i-1],
+                                [for (i=[0:1:hsides-1]) lv-hsides+i],
+                                for (i=[0:1:vsides-2], j=[0:1:hsides-1])
+                                    each [
+                                          [(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
+                                          [(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
+                                    ]                   
+                               ]
+              : /*style=="octa"?*/
+                     let(
+                         meridians = [
+                                      0, 1,
+                                      for (i = [1:1:octa_steps]) i*4,
+                                      for (i = [octa_steps-1:-1:1]) i*4,
+                                      1,       
+                                     ],
+                         offs = cumsum(meridians),
+                         pc = last(offs)-1,
+                         os = octa_steps * 2
+                     )
+                     [
+                      for (i=[0:1:3]) [0, 1+(i+1)%4, 1+i],
+                      for (i=[0:1:3]) [pc-0, pc-(1+(i+1)%4), pc-(1+i)],
+                      for (i=[1:1:octa_steps-1])
+                          let(m = meridians[i+2]/4)
+                          for (j=[0:1:3], k=[0:1:m-1])
+                              let(
+                                  m1 = meridians[i+1],
+                                  m2 = meridians[i+2],
+                                  p1 = offs[i+0] + (j*m1/4 + k+0) % m1,
+                                  p2 = offs[i+0] + (j*m1/4 + k+1) % m1,
+                                  p3 = offs[i+1] + (j*m2/4 + k+0) % m2,
+                                  p4 = offs[i+1] + (j*m2/4 + k+1) % m2,
+                                  p5 = offs[os-i+0] + (j*m1/4 + k+0) % m1,
+                                  p6 = offs[os-i+0] + (j*m1/4 + k+1) % m1,
+                                  p7 = offs[os-i-1] + (j*m2/4 + k+0) % m2,
+                                  p8 = offs[os-i-1] + (j*m2/4 + k+1) % m2
+                              )
+                              each [
+                                    [p1, p4, p3],
+                                    if (k<m-1) [p1, p2, p4],
+                                    [p5, p7, p8],
+                                    if (k<m-1) [p5, p8, p6],
+                                   ],
+                     ] 
     ) [reorient(anchor,spin,orient, r=r, p=verts), faces];
 
 
