@@ -1658,7 +1658,7 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 //   - `style="icosa"` forms a sphere by subdividing an icosahedron.  This makes even more uniform faces over the whole sphere.  The effective `$fn` value is quantized to a multiple of 5.  This sphere has a guaranteed bounding box when `$fn` is a multiple of 10.  
 //   .
 //   By default the object spheroid() produces is a polyhedron whose vertices all lie on the requested sphere.  This means
-//   it is an inscribed sphere, which sits inside the requested sphere.  
+//   the approximating polyhedron is inscribed in the sphere.
 //   The `circum` argument requests a circumscribing sphere, where the true sphere is
 //   inside and tangent to all the faces of the approximating polyhedron.  To produce
 //   a circumscribing polyhedron, we use the dual polyhedron of the basic form.  The dual of a polyhedron is
@@ -1667,16 +1667,19 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 //   these styles then the polyhedron will look the same as the default inscribing form.  But for the other
 //   styles, the duals are completely different from their parents, and from each other.  Generation of the circumscribed versions (duals)
 //   for "octa" and "icosa" is fast if you use the module form but can be very slow (several minutes) if you use the functional
-//   form and choose a large $fn value.  With style="align", the circumscribed sphere has its maximum radius on the X and Y axes
-//   but is undersized on the Z axis.  With style="octa" the circumscribed sphere has faces at each axis, so the radius equals
-//   the specified radius, but other points on the object are farther from the origin.  The same situation applies to "icosa" when
-//   $fn is a multiple of 10.  
+//   form and choose a large $fn value.
+//   .
+//   With style="align", the circumscribed sphere has its maximum radius on the X and Y axes
+//   but is undersized on the Z axis.  With style="octa" the circumscribed sphere has faces at each axis, so
+//   the radius on the axes is equal to the specified radius, which is the *minimum* radius of the circumscribed sphere.
+//   The same thing is true for style="icosa" when $fn is a multiple of 10.  This would enable you to create spherical
+//   holes with guaranteed on-axis dimensions.  
 // Arguments:
 //   r = Radius of the spheroid.
 //   style = The style of the spheroid's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "aligned"
 //   ---
 //   d = Diameter of the spheroid.
-//   circum = If true, the spheroid is produced in a style where it circumscribes the sphere of the requested size.  Otherwise inscribes.  Note that for some styles, the circumscribed sphere looks different than the inscribed sphere.  Default: false (inscribes)
+//   circum = If true, the approximate sphere circumscribes the true sphere of the requested size.  Otherwise inscribes.  Note that for some styles, the circumscribed sphere looks different than the inscribed sphere.  Default: false (inscribes)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
