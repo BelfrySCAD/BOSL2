@@ -6,6 +6,7 @@
 The acronym VNF stands for Vertices 'N' Faces.  You have probably already come across the concept of vertices and faces when working with the OpenSCAD built-in module `polyhedron()`.  A `polyhedron()` in it's simplest form takes two arguments, the first being a list of vertices, and the second a list of faces, where each face is a lists of indices into the list of vertices.  For example, to make a cube, you can do:
 
 ```openscad-3D
+include <BOSL2/std.scad>
 verts = [
     [-1,-1,-1], [1,-1,-1], [1,1,-1], [-1,1,-1],
     [-1,-1, 1], [1,-1, 1], [1,1, 1], [-1,1, 1]
@@ -26,6 +27,7 @@ A VNF structure (usually just called a VNF) is just a two item list where the fi
 The equivalent to the `polyhedron()` module that takes a VNF instead is `vnf_polyhedron()`.  To make the same cube as a VNF, you can do it like:
 
 ```openscad-3D
+include <BOSL2/std.scad>
 vnf = [
     [
         [-1,-1,-1], [1,-1,-1], [1,1,-1], [-1,1,-1],
@@ -49,6 +51,7 @@ A VNF does not have to contain a complete polyhedron, and the vertices contained
 As an example, consider a roughly spherical polyhedron with vertices at the top and bottom poles.  You can break it down into three major parts:  The top cap, the bottom cap, and the side wall.  The top and bottom caps both have a ring of vertices linked to the top or bottom vertex in triangles, while the sides are multiple rings of vertices linked in squares.  Lets create the top cap first:
 
 ```openscad-3D,ThrownTogether
+include <BOSL2/std.scad>
 cap_vnf = [
     [[0,0,1], for (a=[0:30:359.9]) spherical_to_xyz(1,a,30)], // Vertices
     [for (i=[1:12]) [0, i%12+1, i]] // Faces
@@ -59,6 +62,7 @@ vnf_polyhedron(cap_vnf);
 The bottom cap is exactly the same, just mirrored:
 
 ```openscad-3D,ThrownTogether
+include <BOSL2/std.scad>
 cap_vnf = [
     [[0,0,1], for (a=[0:30:359.9]) spherical_to_xyz(1,a,30)], // Vertices
     [for (i=[1:12]) [0, i%12+1, i]] // Faces
@@ -70,6 +74,7 @@ vnf_polyhedron(cap_vnf2);
 To create the sides, we can make use of the `vnf_vertex_array()` function to turn a row-column grid of vertices into a VNF. The `col_wrap=true` argument tells it to connect the vertices of the last column to the vertices of the first column.  The `caps=false` argument tells it that we don't want it to create caps for the ends of the first and last rows:
 
 ```openscad-3D,ThrownTogether
+include <BOSL2/std.scad>
 wall_vnf = vnf_vertex_array(
     points=[
         for (phi = [30:30:179.9]) [
@@ -85,6 +90,7 @@ vnf_polyhedron(wall_vnf);
 Putting all the parts together with `vnf_join()`, we get:
 
 ```openscad-3D,ThrownTogether
+include <BOSL2/std.scad>
 cap_vnf = [
     [[0,0,1], for (a=[0:30:359.9]) spherical_to_xyz(1,a,30)], // Vertices
     [for (i=[1:12]) [0, i%12+1, i]] // Faces
@@ -110,6 +116,7 @@ Which is now a complete manifold polyhedron.
 One of the critical tasks in creating a polyhedron is making sure that all of your faces are facing the correct way.  This is also true for VNFs.  The best way to find reversed faces is simply to select the View→Thrown Together menu item in OpenSCAD while viewing your polyhedron or VNF.  Any purple faces are reversed, and you will need to fix them.  For example, one of the two top face triangles on this cube is reversed:
 
 ```openscad-3D,ThrownTogether
+include <BOSL2/std.scad>
 vnf = [
     [
         [-1,-1,-1], [1,-1,-1], [1,1,-1], [-1,1,-1],
@@ -131,6 +138,7 @@ Another way to find problems with your VNF, is to use the `vnf_validate()` modul
 
 
 ```openscad-3D,ThrownTogether
+include <BOSL2/std.scad>
 vnf = [
     [
         [-1,-1,-1], [1,-1,-1], [1,1,-1], [-1,1,-1],
@@ -157,6 +165,7 @@ ECHO: "ERROR REVERSAL (violet): Faces Reverse Across Edge at [[1, 1, 1], [-1, -1
 The `vnf_validate()` module will stop after displaying the first found problem type, so once you fix those issues, you will want to run it again to display any other remaining issues.  For example, the reversed face in the above example is hiding a non-manifold hole in the front face:
 
 ```openscad-3D,ThrownTogether
+include <BOSL2/std.scad>
 vnf = [
     [
         [-1,-1,-1], [1,-1,-1], [1,1,-1], [-1,1,-1],

@@ -269,7 +269,7 @@ Which outputs Markdown code that renders like:
 > The golden ration phi.
 
 
-The `Module` header is used to document a module.  It should have a Description sub-block. It is recommended to also have Usage, Arguments, and Example/Examples sub-blocks:
+The `Module` header is used to document a module.  It should have a Description sub-block. It is recommended to also have Usage, Arguments, and Example/Examples sub-blocks.  The Usage sub-block body lines are also used when constructing the Cheat Sheet index file:
 
     // Module: cross()
     // Usage:
@@ -306,7 +306,7 @@ Which outputs Markdown code that renders like:
 > GENERATED IMAGE GOES HERE
 
 
-The `Function` header is used to document a function.  It should have a Description sub-block. It is recommended to also have Usage, Arguments, and Example/Examples sub-blocks.  By default, Examples will not generate images for function blocks:
+The `Function` header is used to document a function.  It should have a Description sub-block. It is recommended to also have Usage, Arguments, and Example/Examples sub-blocks.  By default, Examples will not generate images for function blocks.  Usage sub-block body lines are also used when constructing the Cheat Sheet index file:
 
     // Function: vector_angle()
     // Usage:
@@ -347,8 +347,7 @@ Which outputs Markdown code that renders like:
 > // Returns: 45
 > ```
 
-The `Function&Module` header is used to document a function which has a related module of the same name.  It should have a Description sub-block.  It is recommended to also have Usage, Arguments, and Example/Examples sub-blocks. You should have Usage blocks for both calling as a function, and calling as a
-module:
+The `Function&Module` header is used to document a function which has a related module of the same name.  It should have a Description sub-block.  It is recommended to also have Usage, Arguments, and Example/Examples sub-blocks. You should have Usage blocks for both calling as a function, and calling as a module.  Usage sub-block body lines are also used in constructing the Cheat Sheet index file:
 
     // Function&Module: oval()
     // Topics: 2D Shapes, Geometry
@@ -464,7 +463,7 @@ Which outputs Markdown code that renders like:
 Usage Block
 -----------
 
-The Usage block describes the various ways that the current function or module can be called, with the names of the arguments.  By convention, the first few arguments that can be called positionally just have their name shown.  The remaining arguments that should be passed by name, will have the name followed by an `=` (equal sign).  Arguments that are optional in the given Usage context are shown in `<` and `>` angle brackets:
+The Usage block describes the various ways that the current function or module can be called, with the names of the arguments.  By convention, the first few arguments that can be called positionally just have their name shown.  The remaining arguments that should be passed by name, will have the name followed by an `=` (equal sign).  Arguments that are optional in the given Usage context are shown in `[` and `]` angle brackets.  Usage sub-block body lines are also used when constructing the Cheat Sheet index file:
 
     // Usage: As a Module
     //   oval(rx, ry, <spin=>);
@@ -608,7 +607,8 @@ metadata directives:
 - `Big`: Make the image big sized.
 - `Huge`: Make the image huge sized.
 - `Size=880x640`: Make the image 880 by 640 pixels in size.
-- `Render`: Force full rendering from OpenSCAD, instead of the normal preview.
+- `ThrownTogether`: Render in Thrown Together view mode instead of Preview mode.
+- `Render`: Force full rendering from OpenSCAD, instead of the normal Preview mode.
 - `Edges`: Highlight face edges.
 - `NoAxes`: Hides the axes and scales.
 - `NoScales`: Hides the scale numbers along the axes.
