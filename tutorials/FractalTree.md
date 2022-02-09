@@ -6,7 +6,7 @@
 
 Firstoff, include the BOSL2 library, then make a starting module that just has a tapered cylinder for the tree trunk.
 
-```openscad
+```openscad-3D
 include <BOSL2/std.scad>
 module tree(l=1500, sc=0.7)
     cylinder(l=l, d1=l/5, d2=l/5*sc);
@@ -17,7 +17,7 @@ tree();
 
 You can attach a branch to the top of the trunk by using `attach()` as a child of the trunk cylinder.
 
-```openscad
+```openscad-3D
 include <BOSL2/std.scad>
 module tree(l=1500, sc=0.7)
     cylinder(l=l, d1=l/5, d2=l/5*sc)
@@ -30,7 +30,7 @@ tree();
 
 Instead of attaching each branch individually, you can make multiple copies of one branch, that are rotated relative to each other.
 
-```openscad
+```openscad-3D
 include <BOSL2/std.scad>
 module tree(l=1500, sc=0.7)
     cylinder(l=l, d1=l/5, d2=l/5*sc)
@@ -117,4 +117,5 @@ module tree(l=1500, sc=0.7, depth=10)
             }
 tree();
 ```
+
 
