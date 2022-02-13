@@ -58,21 +58,36 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   An anchor can be referred to in one of two ways; as a directional vector, or as a named anchor string.
 //   .
 //   When given as a vector, it points, in a general way, towards the face, edge, or corner of the
-//   object that you want the anchor for, relative to the center of the object.  There are directional
-//   constants with names like `TOP`, `BOTTOM`, `LEFT`, `RIGHT` and `BACK` that you can add together
-//   to specify an anchor point.  See ?????? below for the full list of pre-defined directional constants. 
+//   object that you want the anchor for, relative to the center of the object.  You can simply
+//   specify a vector like `[0,0,1]` to anchor an object at the Z+ end, but you can also use 
+//   directional constants with names like `TOP`, `BOTTOM`, `LEFT`, `RIGHT` and `BACK` that you can add together
+//   to specify anchor points.  See [specifying directions](subsection-specifying-directions) 
+//   below for the full list of pre-defined directional constants. 
 //   .
 //   For example:
 //   - `[0,0,1]` is the same as `TOP` and refers to the center of the top face.
 //   - `[-1,0,1]` is the same as `TOP+LEFT`, and refers to the center of the top-left edge.
 //   - `[1,1,-1]` is the same as `BOTTOM+BACK+RIGHT`, and refers to the bottom-back-right corner.
 //   .
-//   When the object is cylindrical, conical, or spherical in nature, the anchors will be located
-//   around the surface of the cylinder, cone, or sphere, relative to the center.  The direction of a
-//   face anchor will be perpendicular to the face, pointing outward.  The direction of a edge anchor
+//   When the object is cubical or rectangular in shape the anchors must have zero or one values
+//   for their components and they refer to the face centers, edge centers, or corners of the object.
+//   The direction of a face anchor will be perpendicular to the face, pointing outward.  The direction of a edge anchor
 //   will be the average of the anchor directions of the two faces the edge is between.  The direction
 //   of a corner anchor will be the average of the anchor directions of the three faces the corner is
-//   on.  The spin of all standard anchors is 0.
+//   on. 
+//   .
+//   When the object is cylindrical, conical, or spherical in nature, the anchors will be located
+//   around the surface of the cylinder, cone, or sphere, relative to the center.
+//   You can generally use an arbitrary vector to get an anchor positioned anywhere on the curved
+//   surface of such an object, and the anchor direction will be the surface normal at the anchor location.
+//   However, for anchor component pointing toward the flat face should be either -1, 1, or 0, and
+//   anchors that point diagonally toward one of the flat faces will select a point on the edge.
+//   .
+//   For objects in two dimensions, the natural expectation is for TOP and BOTTOM to refer to the Y direction
+//   of the shape.  To support this, if you give an anchor in 2D that has anchor.y=0 then the Z component
+//   will be mapped to the Y direction.  This  means you can use TOP and BOTTOM for anchors of 2D objects.
+//   But remember that TOP and BOTTOM are three dimensional vectors and this is a special interpretation
+//   for 2d anchoring.  
 //   .
 //   Some more complex objects, like screws and stepper motors, have named anchors to refer to places
 //   on the object that are not at one of the standard faces, edges or corners.  For example, stepper
@@ -125,6 +140,26 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   up(.12)move(TOP) text3d("TOP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   move(TOP) text3d("UP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   }
+// Figure(2D,Big): Named constants for direction vectors in 2D.  For anchors the TOP and BOTTOM directions are collapsed into 2D as shown here, but do not try to use them as 2D directions in other situations.  
+//   $fn=12;
+//   stroke(path2d([[0,0,0],RIGHT]), endcap2="arrow2", width=.05);
+//   color("black")fwd(.22)left(.05)move(RIGHT) text("RIGHT",size=.1,anchor=RIGHT);
+//   stroke(path2d([[0,0,0],LEFT]), endcap2="arrow2", width=.05);
+//   color("black")right(.05)fwd(.22)move(LEFT) text("LEFT",size=.1,anchor=LEFT);
+//   stroke(path2d([[0,0,0],FRONT]), endcap2="arrow2", width=.05);
+//   color("black")
+//   fwd(.2)
+//   right(.15)
+//   color("black")move(BACK) { text("BACK",size=.1,anchor=LEFT); back(.14) text("(TOP)", size=.1, anchor=LEFT);}
+//   color("black")
+//   left(.15)back(.2+.14)move(FRONT){
+//   back(.14) text("FRONT",size=.1,anchor=RIGHT);
+//       text("FWD",size=.1,anchor=RIGHT);
+//   fwd(.14) text("FORWARD",size=.1,anchor=RIGHT);
+//   fwd(.28) text("(BOTTOM)",size=.1,anchor=RIGHT);
+//   fwd(.14*3) text("(BOT)",size=.1,anchor=RIGHT);   
+//   }
+//   stroke(path2d([[0,0,0],BACK]), endcap2="arrow2", width=.05);
 // Subsection: Specifying Faces
 //   Modules operating on faces accept a list of faces to describe the faces to operate on.  Each
 //   face is given by a vector that points to that face.  Attachments of cuboid objects onto their faces also
@@ -1797,6 +1832,11 @@ function _get_cp(geom) =
   : assert(false,"Invalid cp specification");
 
 
+function _force_anchor_2d(anchor) =
+  assert(anchor.y==0 || anchor.z==0, "Anchor for a 2D shape cannot be fully 3D.  It must have either Y or Z component equal to zero.")
+  anchor.y==0 ? [anchor.x,anchor.z] : point2d(anchor);
+
+
 /// Internal Function: _find_anchor()
 // Usage:
 //   anchorinfo = _find_anchor(anchor, geom);
@@ -1950,10 +1990,10 @@ function _find_anchor(anchor, geom) =
             pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
         ) [anchor, pos, anchor, oang]
     ) : type == "rect"? ( //size, size2, shift
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "All components of an anchor for a rectangle/trapezoid must be -1, 0, or 1")
         let(
+            anchor=_force_anchor_2d(anchor),
             size=geom[1], size2=geom[2], shift=geom[3],
             u = (anchor.y+1)/2,  // 0<=u<=1
             frpt = [size.x/2*anchor.x, -size.y/2],
@@ -1973,24 +2013,21 @@ function _find_anchor(anchor, geom) =
                 )
         ) [anchor, pos, vec, 0]
     ) : type == "circle"? ( //r
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
-        let( 
-            rr = geom[1],
-            r = is_num(rr)? [rr,rr] : point2d(rr),
+        let(
+            anchor = unit(_force_anchor_2d(anchor),[0,0]),
+            r = force_list(geom[1],2),
             pos = approx(anchor.x,0) ? [0,sign(anchor.y)*r.y]
                       : let(
                              m = anchor.y/anchor.x,
                              px = sign(anchor.x) * sqrt(1/(1/sqr(r.x) + m*m/sqr(r.y)))
                         )
                         [px,m*px],
-            anchor = unit(point2d(anchor),[0,0]),
             vec = unit([r.y/r.x*pos.x, r.x/r.y*pos.y])
         ) [anchor, point2d(cp+offset)+pos, vec, 0]
     ) : type == "rgn_isect"? ( //region
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(
+            anchor = _force_anchor_2d(anchor),
             rgn = force_region(move(-point2d(cp), p=geom[1])),
-            anchor = point2d(anchor),
             isects = [
                 for (path=rgn, t=triplet(path,true)) let(
                     seg1 = [t[0],t[1]],
@@ -2012,10 +2049,9 @@ function _find_anchor(anchor, geom) =
             vec = unit(isect[2],[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "rgn_extent"? ( //region
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(
+            anchor = _force_anchor_2d(anchor),
             rgn = force_region(geom[1]),
-            anchor = point2d(anchor),
             rpts = rot(from=anchor, to=RIGHT, p=flatten(rgn)),
             maxx = max(column(rpts,0)),
             ys = [for (pt=rpts) if (approx(pt.x, maxx)) pt.y],            

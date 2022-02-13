@@ -845,7 +845,7 @@ function offset(
         goodsegs = bselect(shiftsegs, good),
         goodpath = bselect(path,good)
     )
-    assert(len(goodsegs)>0,"Offset of path is degenerate")
+    assert(len(goodsegs)-(!closed && select(good,-1)?1:0)>0,"Offset of path is degenerate")
     let(
         // Extend the shifted segments to their intersection points
         sharpcorners = [for(i=[0:len(goodsegs)-1]) _segment_extension(select(goodsegs,i-1), select(goodsegs,i))],
