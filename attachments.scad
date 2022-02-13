@@ -80,6 +80,14 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   around the surface of the cylinder, cone, or sphere, relative to the center.
 //   You can generally use an arbitrary vector to get an anchor positioned anywhere on the curved
 //   surface of such an object, and the anchor direction will be the surface normal at the anchor location.
+//   However, for anchor component pointing toward the flat face should be either -1, 1, or 0, and
+//   anchors that point diagonally toward one of the flat faces will select a point on the edge.
+//   .
+//   For objects in two dimensions, the natural expectation is for TOP and BOTTOM to refer to the Y direction
+//   of the shape.  To support this, if you give an anchor in 2D that has anchor.y=0 then the Z component
+//   will be mapped to the Y direction.  This  means you can use TOP and BOTTOM for anchors of 2D objects.
+//   But remember that TOP and BOTTOM are three dimensional vectors and this is a special interpretation
+//   for 2d anchoring.  
 //   .
 //   Some more complex objects, like screws and stepper motors, have named anchors to refer to places
 //   on the object that are not at one of the standard faces, edges or corners.  For example, stepper
@@ -132,7 +140,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   up(.12)move(TOP) text3d("TOP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   move(TOP) text3d("UP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   }
-// Figure(2D,Big): Named constants for direction vectors in 2D.  Some directions have more than one name.
+// Figure(2D,Big): Named constants for direction vectors in 2D.  For anchors the TOP and BOTTOM directions are collapsed into 2D as shown here, but do not try to use them as 2D directions in other situations.  
 //   $fn=12;
 //   stroke(path2d([[0,0,0],RIGHT]), endcap2="arrow2", width=.05);
 //   color("black")fwd(.22)left(.05)move(RIGHT) text("RIGHT",size=.1,anchor=RIGHT);
@@ -142,12 +150,14 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   color("black")
 //   fwd(.2)
 //   right(.15)
-//   color("black")move(BACK) text("BACK",size=.1,anchor=LEFT);
+//   color("black")move(BACK) { text("BACK",size=.1,anchor=LEFT); back(.14) text("(TOP)", size=.1, anchor=LEFT);}
 //   color("black")
-//   left(.15)back(.2){
-//   back(.12)move(FRONT) text("FRONT",size=.1,anchor=RIGHT);
-//   move(FRONT) text("FWD",size=.1,anchor=RIGHT);
-//   fwd(.12)move(FRONT) text("FORWARD",size=.1,anchor=RIGHT);
+//   left(.15)back(.2+.14)move(FRONT){
+//   back(.14) text("FRONT",size=.1,anchor=RIGHT);
+//       text("FWD",size=.1,anchor=RIGHT);
+//   fwd(.14) text("FORWARD",size=.1,anchor=RIGHT);
+//   fwd(.28) text("(BOTTOM)",size=.1,anchor=RIGHT);
+//   fwd(.14*3) text("(BOT)",size=.1,anchor=RIGHT);   
 //   }
 //   stroke(path2d([[0,0,0],BACK]), endcap2="arrow2", width=.05);
 // Subsection: Specifying Faces
@@ -1822,6 +1832,11 @@ function _get_cp(geom) =
   : assert(false,"Invalid cp specification");
 
 
+function _force_anchor_2d(anchor) =
+  assert(anchor.y==0 || anchor.z==0, "Anchor for a 2D shape cannot be fully 3D.  It must have either Y or Z component equal to zero.")
+  anchor.y==0 ? [anchor.x,anchor.z] : point2d(anchor);
+
+
 /// Internal Function: _find_anchor()
 // Usage:
 //   anchorinfo = _find_anchor(anchor, geom);
@@ -1975,10 +1990,10 @@ function _find_anchor(anchor, geom) =
             pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
         ) [anchor, pos, anchor, oang]
     ) : type == "rect"? ( //size, size2, shift
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "All components of an anchor for a rectangle/trapezoid must be -1, 0, or 1")
         let(
+            anchor=_force_anchor_2d(anchor),
             size=geom[1], size2=geom[2], shift=geom[3],
             u = (anchor.y+1)/2,  // 0<=u<=1
             frpt = [size.x/2*anchor.x, -size.y/2],
@@ -1998,8 +2013,8 @@ function _find_anchor(anchor, geom) =
                 )
         ) [anchor, pos, vec, 0]
     ) : type == "circle"? ( //r
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
-        let( 
+        let(
+            anchor = _force_anchor_2d(anchor),
             rr = geom[1],
             r = is_num(rr)? [rr,rr] : point2d(rr),
             pos = approx(anchor.x,0) ? [0,sign(anchor.y)*r.y]
@@ -2012,8 +2027,8 @@ function _find_anchor(anchor, geom) =
             vec = unit([r.y/r.x*pos.x, r.x/r.y*pos.y])
         ) [anchor, point2d(cp+offset)+pos, vec, 0]
     ) : type == "rgn_isect"? ( //region
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(
+            anchor = _force_anchor_2d(anchor),
             rgn = force_region(move(-point2d(cp), p=geom[1])),
             anchor = point2d(anchor),
             isects = [
@@ -2037,8 +2052,8 @@ function _find_anchor(anchor, geom) =
             vec = unit(isect[2],[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "rgn_extent"? ( //region
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(
+            anchor = _force_anchor_2d(anchor),
             rgn = force_region(geom[1]),
             anchor = point2d(anchor),
             rpts = rot(from=anchor, to=RIGHT, p=flatten(rgn)),
