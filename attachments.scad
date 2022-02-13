@@ -58,21 +58,28 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   An anchor can be referred to in one of two ways; as a directional vector, or as a named anchor string.
 //   .
 //   When given as a vector, it points, in a general way, towards the face, edge, or corner of the
-//   object that you want the anchor for, relative to the center of the object.  There are directional
-//   constants with names like `TOP`, `BOTTOM`, `LEFT`, `RIGHT` and `BACK` that you can add together
-//   to specify an anchor point.  See ?????? below for the full list of pre-defined directional constants. 
+//   object that you want the anchor for, relative to the center of the object.  You can simply
+//   specify a vector like `[0,0,1]` to anchor an object at the Z+ end, but you can also use 
+//   directional constants with names like `TOP`, `BOTTOM`, `LEFT`, `RIGHT` and `BACK` that you can add together
+//   to specify anchor points.  See [specifying directions](subsection-specifying-directions) 
+//   below for the full list of pre-defined directional constants. 
 //   .
 //   For example:
 //   - `[0,0,1]` is the same as `TOP` and refers to the center of the top face.
 //   - `[-1,0,1]` is the same as `TOP+LEFT`, and refers to the center of the top-left edge.
 //   - `[1,1,-1]` is the same as `BOTTOM+BACK+RIGHT`, and refers to the bottom-back-right corner.
 //   .
-//   When the object is cylindrical, conical, or spherical in nature, the anchors will be located
-//   around the surface of the cylinder, cone, or sphere, relative to the center.  The direction of a
-//   face anchor will be perpendicular to the face, pointing outward.  The direction of a edge anchor
+//   When the object is cubical or rectangular in shape the anchors must have zero or one values
+//   for their components and they refer to the face centers, edge centers, or corners of the object.
+//   The direction of a face anchor will be perpendicular to the face, pointing outward.  The direction of a edge anchor
 //   will be the average of the anchor directions of the two faces the edge is between.  The direction
 //   of a corner anchor will be the average of the anchor directions of the three faces the corner is
-//   on.  The spin of all standard anchors is 0.
+//   on. 
+//   .
+//   When the object is cylindrical, conical, or spherical in nature, the anchors will be located
+//   around the surface of the cylinder, cone, or sphere, relative to the center.
+//   You can generally use an arbitrary vector to get an anchor positioned anywhere on the curved
+//   surface of such an object, and the anchor direction will be the surface normal at the anchor location.
 //   .
 //   Some more complex objects, like screws and stepper motors, have named anchors to refer to places
 //   on the object that are not at one of the standard faces, edges or corners.  For example, stepper
@@ -125,6 +132,24 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   up(.12)move(TOP) text3d("TOP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   move(TOP) text3d("UP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   }
+// Figure(2D,Big): Named constants for direction vectors in 2D.  Some directions have more than one name.
+//   $fn=12;
+//   stroke(path2d([[0,0,0],RIGHT]), endcap2="arrow2", width=.05);
+//   color("black")fwd(.22)left(.05)move(RIGHT) text("RIGHT",size=.1,anchor=RIGHT);
+//   stroke(path2d([[0,0,0],LEFT]), endcap2="arrow2", width=.05);
+//   color("black")right(.05)fwd(.22)move(LEFT) text("LEFT",size=.1,anchor=LEFT);
+//   stroke(path2d([[0,0,0],FRONT]), endcap2="arrow2", width=.05);
+//   color("black")
+//   fwd(.2)
+//   right(.15)
+//   color("black")move(BACK) text("BACK",size=.1,anchor=LEFT);
+//   color("black")
+//   left(.15)back(.2){
+//   back(.12)move(FRONT) text("FRONT",size=.1,anchor=RIGHT);
+//   move(FRONT) text("FWD",size=.1,anchor=RIGHT);
+//   fwd(.12)move(FRONT) text("FORWARD",size=.1,anchor=RIGHT);
+//   }
+//   stroke(path2d([[0,0,0],BACK]), endcap2="arrow2", width=.05);
 // Subsection: Specifying Faces
 //   Modules operating on faces accept a list of faces to describe the faces to operate on.  Each
 //   face is given by a vector that points to that face.  Attachments of cuboid objects onto their faces also
