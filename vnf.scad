@@ -1132,7 +1132,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
         span_chk = axis=="Z"?
             assert(bmin.y > 0 || bmax.y < 0, "Entire shape MUST be completely in front of or behind y=0.") :
             assert(bmin.z > 0 || bmax.z < 0, "Entire shape MUST be completely above or below z=0."),
-        steps = ceil(segs(r) * (extent[1]-extent[0])/(2*PI*r)),
+        steps = 1+ceil(segs(r) * (extent[1]-extent[0])/(2*PI*r)),
         step = (extent[1]-extent[0]) / steps,
         bend_at = [for(i = [1:1:steps-1]) i*step+extent[0]],
         slicedir = axis=="X"? "Y" : "X",   // slice in y dir for X axis case, and x dir otherwise
