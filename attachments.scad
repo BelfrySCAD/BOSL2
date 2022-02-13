@@ -2023,14 +2023,13 @@ function _find_anchor(anchor, geom) =
                              px = sign(anchor.x) * sqrt(1/(1/sqr(r.x) + m*m/sqr(r.y)))
                         )
                         [px,m*px],
-            anchor = unit(point2d(anchor),[0,0]),
+            anchor = unit(anchor,[0,0]),
             vec = unit([r.y/r.x*pos.x, r.x/r.y*pos.y])
         ) [anchor, point2d(cp+offset)+pos, vec, 0]
     ) : type == "rgn_isect"? ( //region
         let(
             anchor = _force_anchor_2d(anchor),
             rgn = force_region(move(-point2d(cp), p=geom[1])),
-            anchor = point2d(anchor),
             isects = [
                 for (path=rgn, t=triplet(path,true)) let(
                     seg1 = [t[0],t[1]],
@@ -2055,7 +2054,6 @@ function _find_anchor(anchor, geom) =
         let(
             anchor = _force_anchor_2d(anchor),
             rgn = force_region(geom[1]),
-            anchor = point2d(anchor),
             rpts = rot(from=anchor, to=RIGHT, p=flatten(rgn)),
             maxx = max(column(rpts,0)),
             ys = [for (pt=rpts) if (approx(pt.x, maxx)) pt.y],            
