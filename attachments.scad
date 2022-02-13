@@ -2014,16 +2014,14 @@ function _find_anchor(anchor, geom) =
         ) [anchor, pos, vec, 0]
     ) : type == "circle"? ( //r
         let(
-            anchor = _force_anchor_2d(anchor),
-            rr = geom[1],
-            r = is_num(rr)? [rr,rr] : point2d(rr),
+            anchor = unit(_force_anchor_2d(anchor),[0,0]),
+            r = force_list(geom[1],2),
             pos = approx(anchor.x,0) ? [0,sign(anchor.y)*r.y]
                       : let(
                              m = anchor.y/anchor.x,
                              px = sign(anchor.x) * sqrt(1/(1/sqr(r.x) + m*m/sqr(r.y)))
                         )
                         [px,m*px],
-            anchor = unit(anchor,[0,0]),
             vec = unit([r.y/r.x*pos.x, r.x/r.y*pos.y])
         ) [anchor, point2d(cp+offset)+pos, vec, 0]
     ) : type == "rgn_isect"? ( //region
