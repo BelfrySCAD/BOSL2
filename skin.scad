@@ -762,7 +762,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   T = path_sweep(tri,path,transforms=true);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
 //   color("blue")stroke(reverse(path3d(arc(r=5,N=101,angle=[-20-15,65]))),width=.1,endcap2="arrow2");
-// Text:
+// Continues:
 //   If your shape is too large for the curves in the path you can create a situation where the shapes cross each
 //   other.  This results in an invalid polyhedron, which may appear OK when previewed, but will give rise
 //   to cryptic CGAL errors when rendered with a second object in your model.  You may be able to use {{path_sweep2d()}}
@@ -776,7 +776,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   T = path_sweep(tri,path,transforms=true);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
 //   color("blue")stroke(path3d(xscale(1.5,arc(r=5,N=81,angle=[-70,80]))),width=.1,endcap2="arrow2");
-// Text:
+// Continues:
 //   When performing a path sweep, the normal vector of the shape aligns with the tangent vector of the
 //   path, but this leaves an ambiguity about how the shape is rotated.  For 2D paths it is easy to resolve
 //   this ambiguity by aligning the Y axis in the shape to the Z axis in the swept polyhedron.  We can force the
@@ -788,13 +788,14 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   T = path_sweep(tri,path,transforms=true,twist=-60);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
 //   color("blue")stroke(path3d(arc(r=5,N=101,angle=[-20,80])),width=.1,endcap2="arrow2");
-// Text:
-//   When the path is full three-dimensional, things can become more complex.   You may find that the shape rotates unexpectedly
-//   around its axis as it traverses the path.  Several options provide
-//   methods for controlling this rotation.  You can choose from three different methods for selecting the rotation of your shape.
-//   None of these methods will produce good, or even valid, results on all inputs, so it is important to select a suitable method. 
-//   You can also add (or remove) twist to the model.  This twist adjustment is done uniformly in arc length by default, or you
-//   can set `twist_by_length=false` to distribute the twist uniformly over the path point list.
+// Continues:
+//   When the path is full three-dimensional, things can become more complex.  You may find that the shape rotates
+//   unexpectedly around its axis as it traverses the path.  The `method` parameter allows you to specify how the shapes
+//   are aligned, resulting in different twist in the resulting polyhedron.  You can choose from three different methods
+//   for selecting the rotation of your shape.  None of these methods will produce good, or even valid, results on all
+//   inputs, so it is important to select a suitable method.  You can also explicitly add (or remove) twist to the
+//   model.  This twist adjustment is done uniformly in arc length by default, or you can set `twist_by_length=false` to
+//   distribute the twist uniformly over the path point list.
 //   .
 //   The method is set using the parameter with that name to one of the following:
 //   .
