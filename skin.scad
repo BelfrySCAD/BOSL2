@@ -855,6 +855,18 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   orient = Vector to rotate top towards after spin  
 //   atype  = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+// Example: A simple sweep of a square along a sine wave:
+//   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
+//   sq = square(6,center=true);
+//   path_sweep(sq,path);
+// Example: If the square is not centered, then we get a different result because the shape is in a different place relative to the origin:
+//   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta),0*theta/100]];
+//   sq = square(6);
+//   path_sweep(sq,path);
+// Example(VPR=[34,0,8]): It may not be obvious, but the polyhedron in the previous example is invalid.  It will eventually give CGAL errors when you combine it with other shapes.  To see this, set profiles to true and look at the left side.  The profiles cross each other and intersect.  Any time this happens, your polyhedron is invalid, even if it seems to be working at first.  Another observation from the profile display is that we have more profiles than needed over a lot of the shape, so if the model is slow, using fewer profiles in the flat portion of the curve might speed up the calculation.  
+//   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta),0*theta/100]];
+//   sq = square(6);
+//   path_sweep(sq,path,profiles=true,width=.1,$fn=8);
 // Example(2D): We'll use this shape in several examples
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   polygon(ushape);
