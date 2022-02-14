@@ -740,8 +740,8 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   .
 // Figure(3D,Big,VPR=[70,0,345],VPD=20,VPT=[5.5,10.8,-2.7],NoScales): This example shows how the shape, in this case the triangle defined by `[[0, 0], [0, 1], [1, 0]]`, appears as the cross section of the swept polyhedron.  The blue line shows the path.  The normal vector to the shape points upwards, in the Z direction.
 //   tri= [[0, 0], [0, 1], [1, 0]];
-//   % path_sweep(tri,path);
 //   path = arc(r=5,N=81,angle=[-20,65]);
+//   % path_sweep(tri,path);
 //   T = path_sweep(tri,path,transforms=true);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
 //   color("blue")stroke(path3d(arc(r=5,N=101,angle=[-20,80])),width=.1,endcap2="arrow2");
@@ -757,8 +757,8 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   reverse the order of points in the path we get a different result:
 // Figure(3D,Big,VPR=[70,0,20],VPD=20,VPT=[1.25,9.25,-2.65],NoScales): The same sweep operation with the path traveling in the opposite direction.
 //   tri= [[0, 0], [0, 1], [1, 0]];
-//   % path_sweep(tri,path);
 //   path = reverse(arc(r=5,N=81,angle=[-20,65]));
+//   % path_sweep(tri,path);
 //   T = path_sweep(tri,path,transforms=true);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
 //   color("blue")stroke(reverse(path3d(arc(r=5,N=101,angle=[-20-15,65]))),width=.1,endcap2="arrow2");
@@ -766,12 +766,13 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   If your shape is too large for the curves in the path you can create a situation where the shapes cross each
 //   other.  This results in an invalid polyhedron, which may appear OK when previewed, but will give rise
 //   to cryptic CGAL errors when rendered with a second object in your model.  You may be able to use {{path_sweep2d()}}
-//   to produce a valid model in cases like this.  
+//   to produce a valid model in cases like this.  You can debug models like this using the `profiles=true` option which will show all
+//   the cross sections in your polyhedron.  If any of them intersect, the polyhedron will be invalid.  
 // Figure(3D,Big,VPR=[47,0,325],VPD=23,VPT=[6.8,4,-3.8],NoScales): We have scaled the path to an ellipse and enlarged the triangle, and it is now sometimes bigger than the local radius of the path, leading to an invalid polyhedron.
 // .
 //   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
-//   % path_sweep(tri,path);
 //   path = xscale(1.5,arc(r=5,N=81,angle=[-70,70]));
+//   % path_sweep(tri,path);
 //   T = path_sweep(tri,path,transforms=true);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
 //   color("blue")stroke(path3d(xscale(1.5,arc(r=5,N=81,angle=[-70,80]))),width=.1,endcap2="arrow2");
@@ -782,8 +783,8 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   shape to twist with the `twist` parameter and get a result like this:
 // Figure(3D,Big,VPR=[66,0,14],VPD=20,VPT=[3.4,4.5,-0.8]): The shape twists as we sweep.  Note that it still aligns the origin in the shape with the path, and still aligns the normal vector with the path tangent vector.
 //   tri= [[0, 0], [0, 1], [1, 0]];
-//   % path_sweep(tri,path,twist=-60);
 //   path = arc(r=5,N=81,angle=[-20,65]);
+//   % path_sweep(tri,path,twist=-60);
 //   T = path_sweep(tri,path,transforms=true,twist=-60);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
 //   color("blue")stroke(path3d(arc(r=5,N=101,angle=[-20,80])),width=.1,endcap2="arrow2");
@@ -845,7 +846,9 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   relaxed = set to true with the "manual" method to relax the orthogonality requirement of cross sections to the path tangent.  Default: false
 //   caps = Can be a boolean or vector of two booleans.  Set to false to disable caps at the two ends.  Default: true
 //   style = vnf_vertex_array style.  Default: "min_edge"
-//   transforms = set to true to return transforms instead of a VNF.  These transforms can be manipulated and passed to sweep().  Default: false.
+//   profiles = if true then display all the cross section profiles instead of the solid shape.  Can help debug a sweep.  (module only) Default: false
+//   width = the width of lines used for profile display.  (module only) Default: 1
+//   transforms = set to true to return transforms instead of a VNF.  These transforms can be manipulated and passed to sweep().  (function only)  Default: false.
 //   convexity = convexity parameter for polyhedron().  (module only)  Default: 10
 //   anchor = Translate so anchor point is at the origin. Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor. Default: 0
@@ -1089,16 +1092,42 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //     path_sweep(left(.05,square([1.1,1])), curve, closed=true,
 //                method="manual", normal=UP);
 //   }
+// Example: Using the `profiles=true` option can help debug bad polyhedra such as this one.  Or it may help you identify cases where you have more profiles than needed to define the shape.  
+//   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
+//   path = left(4,xscale(1.5,arc(r=5,N=25,angle=[-70,70])));
+//   path_sweep(tri,path,profiles=true,width=.1);
+
 module path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
                     symmetry=1, last_normal, tangent, relaxed=false, caps, style="min_edge", convexity=10,
-                    anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull")
+                    anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull",profiles=false,width=1)
 {
     vnf = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
                     symmetry, last_normal, tangent, relaxed, caps, style);
-    vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
-        children();
+
+    if (profiles){
+        assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");      
+        tran = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
+                          symmetry, last_normal, tangent, relaxed,transforms=true);
+        attachable(anchor,spin,orient, vnf=vnf, extent=atype=="hull", cp=cp) {
+            for(T=tran) stroke([apply(T,path3d(shape))],width=width);        
+            children();
+        }
+    }
+    else 
+      vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
+          children();
 }        
 
+
+module path_sweep_profiles(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
+                    symmetry=1, last_normal, tangent, relaxed=false, width=1,caps,style,convexity,anchor,cp,spin,orient,atype)
+{
+    tran = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
+                    symmetry, last_normal, tangent, relaxed,transforms=true);
+    for(T=tran) stroke([apply(T,path3d(shape))],width=width);
+}    
+    
+    
 
 function path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
                     symmetry=1, last_normal, tangent, relaxed=false, caps, style="min_edge", transforms=false,
