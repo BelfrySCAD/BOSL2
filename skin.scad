@@ -1092,7 +1092,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //     path_sweep(left(.05,square([1.1,1])), curve, closed=true,
 //                method="manual", normal=UP);
 //   }
-// Example: Using the `profiles=true` option can help debug bad polyhedra such as this one.  Or it may help you identify cases where you have more profiles than needed to define the shape.  
+// Example: Using the `profiles=true` option can help debug bad polyhedra such as this one.  If any of the profiles intersect or cross each other, the polyhedron will be invalid.  The profiles may help you identify cases where you have more profiles than needed to adequately define the shape.  
 //   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
 //   path = left(4,xscale(1.5,arc(r=5,N=25,angle=[-70,70])));
 //   path_sweep(tri,path,profiles=true,width=.1);
