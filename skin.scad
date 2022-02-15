@@ -1122,7 +1122,6 @@ module path_sweep(shape, path, method="incremental", normal, closed=false, twist
         assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");      
         tran = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
                           symmetry, last_normal, tangent, uniform, relaxed,transforms=true);
-        echo_matrix(tran[0]);
         attachable(anchor,spin,orient, vnf=vnf, extent=atype=="hull", cp=cp) {
             for(T=tran) stroke([apply(T,path3d(shape))],width=width);        
             children();
@@ -1162,7 +1161,6 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
   assert(is_undef(tangent) || (is_path(tangent) && len(tangent)==len(path) && len(tangent[0])==3), "Invalid tangent specified")
   let(
     tangents = is_undef(tangent) ? path_tangents(path,uniform=uniform,closed=closed) : [for(t=tangent) unit(t)],
-fda=    echo(tangents=tangents)echo(path=path),
     normal = is_path(normal) ? [for(n=normal) unit(n)] :
              is_def(normal) ? unit(normal) :
              method =="incremental" && abs(tangents[0].z) > 1/sqrt(2) ? BACK : UP,
