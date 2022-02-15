@@ -843,6 +843,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   twist = amount of twist to add in degrees.  For closed sweeps must be a multiple of 360/symmetry.  Default: 0
 //   symmetry = symmetry of the shape when closed=true.  Allows the shape to join with a 360/symmetry rotation instead of a full 360 rotation.  Default: 1
 //   last_normal = normal to last point in the path for the "incremental" method.  Constrains the orientation of the last cross section if you supply it.
+//   uniform = if set to false then compute tangents using the uniform=false argument, which may give better results when your path is non-uniformly sampled.  This argument is passed to {{path_tangents()}}.  Default: true
 //   tangent = a list of tangent vectors in case you need more accuracy (particularly at the end points of your curve)
 //   relaxed = set to true with the "manual" method to relax the orthogonality requirement of cross sections to the path tangent.  Default: false
 //   caps = Can be a boolean or vector of two booleans.  Set to false to disable caps at the two ends.  Default: true
@@ -1111,16 +1112,17 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   path_sweep(tri,path,profiles=true,width=.1);
 
 module path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
-                    symmetry=1, last_normal, tangent, relaxed=false, caps, style="min_edge", convexity=10,
+                    symmetry=1, last_normal, tangent, uniform=true, relaxed=false, caps, style="min_edge", convexity=10,
                     anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull",profiles=false,width=1)
 {
     vnf = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
-                    symmetry, last_normal, tangent, relaxed, caps, style);
+                    symmetry, last_normal, tangent, uniform, relaxed, caps, style);
 
     if (profiles){
         assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");      
         tran = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
-                          symmetry, last_normal, tangent, relaxed,transforms=true);
+                          symmetry, last_normal, tangent, uniform, relaxed,transforms=true);
+        echo_matrix(tran[0]);
         attachable(anchor,spin,orient, vnf=vnf, extent=atype=="hull", cp=cp) {
             for(T=tran) stroke([apply(T,path3d(shape))],width=width);        
             children();
@@ -1132,18 +1134,8 @@ module path_sweep(shape, path, method="incremental", normal, closed=false, twist
 }        
 
 
-module path_sweep_profiles(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
-                    symmetry=1, last_normal, tangent, relaxed=false, width=1,caps,style,convexity,anchor,cp,spin,orient,atype)
-{
-    tran = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
-                    symmetry, last_normal, tangent, relaxed,transforms=true);
-    for(T=tran) stroke([apply(T,path3d(shape))],width=width);
-}    
-    
-    
-
 function path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
-                    symmetry=1, last_normal, tangent, relaxed=false, caps, style="min_edge", transforms=false,
+                    symmetry=1, last_normal, tangent, uniform=true, relaxed=false, caps, style="min_edge", transforms=false,
                     anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull") = 
   assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
   assert(!closed || twist % (360/symmetry)==0, str("For a closed sweep, twist must be a multiple of 360/symmetry = ",360/symmetry))
@@ -1169,7 +1161,8 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
   assert(is_undef(normal) || (is_vector(normal) && len(normal)==3) || (is_path(normal) && len(normal)==len(path) && len(normal[0])==3), "Invalid normal specified")
   assert(is_undef(tangent) || (is_path(tangent) && len(tangent)==len(path) && len(tangent[0])==3), "Invalid tangent specified")
   let(
-    tangents = is_undef(tangent) ? path_tangents(path,closed=closed) : [for(t=tangent) unit(t)],
+    tangents = is_undef(tangent) ? path_tangents(path,uniform=uniform,closed=closed) : [for(t=tangent) unit(t)],
+fda=    echo(tangents=tangents)echo(path=path),
     normal = is_path(normal) ? [for(n=normal) unit(n)] :
              is_def(normal) ? unit(normal) :
              method =="incremental" && abs(tangents[0].z) > 1/sqrt(2) ? BACK : UP,
