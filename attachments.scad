@@ -61,7 +61,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   object that you want the anchor for, relative to the center of the object.  You can simply
 //   specify a vector like `[0,0,1]` to anchor an object at the Z+ end, but you can also use 
 //   directional constants with names like `TOP`, `BOTTOM`, `LEFT`, `RIGHT` and `BACK` that you can add together
-//   to specify anchor points.  See [specifying directions](subsection-specifying-directions) 
+//   to specify anchor points.  See [specifying directions](attachments.scad#subsection-specifying-directions) 
 //   below for the full list of pre-defined directional constants. 
 //   .
 //   For example:
@@ -140,7 +140,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   up(.12)move(TOP) text3d("TOP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   move(TOP) text3d("UP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   }
-// Figure(2D,Big): Named constants for direction vectors in 2D.  For anchors the TOP and BOTTOM directions are collapsed into 2D as shown here, but do not try to use them as 2D directions in other situations.  
+// Figure(2D,Big): Named constants for direction vectors in 2D.  For anchors the TOP and BOTTOM directions are collapsed into 2D as shown here, but do not try to use TOP or BOTTOM as 2D directions in other situations.  
 //   $fn=12;
 //   stroke(path2d([[0,0,0],RIGHT]), endcap2="arrow2", width=.05);
 //   color("black")fwd(.22)left(.05)move(RIGHT) text("RIGHT",size=.1,anchor=RIGHT);
