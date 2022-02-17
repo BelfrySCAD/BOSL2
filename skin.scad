@@ -769,7 +769,6 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   to produce a valid model in cases like this.  You can debug models like this using the `profiles=true` option which will show all
 //   the cross sections in your polyhedron.  If any of them intersect, the polyhedron will be invalid.  
 // Figure(3D,Big,VPR=[47,0,325],VPD=23,VPT=[6.8,4,-3.8],NoScales): We have scaled the path to an ellipse and enlarged the triangle, and it is now sometimes bigger than the local radius of the path, leading to an invalid polyhedron.
-// .
 //   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
 //   path = xscale(1.5,arc(r=5,N=81,angle=[-70,70]));
 //   % path_sweep(tri,path);
@@ -793,11 +792,9 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   unexpectedly around its axis as it traverses the path.  The `method` parameter allows you to specify how the shapes
 //   are aligned, resulting in different twist in the resulting polyhedron.  You can choose from three different methods
 //   for selecting the rotation of your shape.  None of these methods will produce good, or even valid, results on all
-//   inputs, so it is important to select a suitable method.  You can also explicitly add (or remove) twist to the
-//   model.  This twist adjustment is done uniformly in arc length by default, or you can set `twist_by_length=false` to
-//   distribute the twist uniformly over the path point list.
+//   inputs, so it is important to select a suitable method.  
 //   .
-//   The method is set using the parameter with that name to one of the following:
+//   The three methods you can choose using the `method` parameter are:
 //   .
 //   The "incremental" method (the default) works by adjusting the shape at each step by the minimal rotation that makes the shape normal to the tangent
 //   at the next point.  This method is robust in that it always produces a valid result for well-behaved paths with sufficiently high
