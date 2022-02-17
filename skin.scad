@@ -1391,6 +1391,12 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   orient = Vector to rotate top towards after spin  (module only)
 //   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+// Example(VPR=[45,0.74]): A bent object that also changes shape along its length.
+//   radius = 75;
+//   angle = 40;
+//   shape = circle(r=5,$fn=32);
+//   T = [for(i=[0:25]) xrot(-angle*i/25,cp=[0,radius,0])*scale([1+i/25, 2-i/25,1])];
+//   sweep(shape,T);
 // Example: This is the "sweep-drop" example from list-comprehension-demos.
 //   function drop(t) = 100 * 0.5 * (1 - cos(180 * t)) * sin(180 * t) + 1;
 //   function path(t) = [0, 0, 80 + 80 * cos(180 * t)];
