@@ -2264,6 +2264,10 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, anc
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
+// Extra Anchors:
+//   cap = The center of the top of the cap, oriented with the cap face normal.
+//   tip = The position where an un-capped onion would come to a point, oriented in the direction the point is from the center.
+//
 // Example: Typical Shape
 //   onion(r=30, ang=30);
 // Example: Crop Cap
@@ -2279,7 +2283,7 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, anc
 //                   onion(d=50, cap_h=30);
 //   }
 // Example: Standard Connectors
-//   onion(r=30, ang=30, cap_h=40) show_anchors();
+//   onion(d=30, ang=30, cap_h=20) show_anchors();
 module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
