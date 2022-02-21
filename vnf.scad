@@ -296,6 +296,21 @@ function vnf_tri_array(points, row_wrap=false, reverse=false) =
 //   All the points in the input VNFs will appear in the output, even if they are
 //   duplicates of each other.  It is valid to repeat points in a VNF, but if you
 //   with to remove the duplicates that will occur along joined edges, use {{vnf_merge_points()}}.
+//   .
+//   Note that this is a tool for manipulating polyhedron data.  It is for
+//   building up a full polyhedron from partial polyhedra.
+//   It is *not* a union operator for VNFs.  The VNFs to be joined must not intersect each other, 
+//   except at edges, or the result will be an invalid polyhedron.  Similarly the
+//   result must not have any other illegal polyhedron characteristics, such as creating
+//   more than two faces sharing the same edge.  
+//   If you want a valid result it is your responsibility to ensure that the polyhedron
+//   has no holes, no intersecting faces or edges, and obeys all the requirements
+//   that CGAL expects. 
+//   .
+//   For example, if you combine two pyramids to try to make an octahedron, the result will
+//   be invalid because of the two internal faces created by the pyramid bases.  A valid
+//   use would be to build a cube missing one face and a pyramid missing its base and
+//   then join them into a cube with a point.  
 // Arguments:
 //   vnfs = a list of the VNFs to joint into one VNF.
 function vnf_join(vnfs) = 
