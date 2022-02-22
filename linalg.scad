@@ -64,25 +64,36 @@ function is_matrix_symmetric(A,eps=1e-12) =
 
 // Function&Module: echo_matrix()
 // Usage:
-//    echo_matrix(M, [description=], [sig=], [eps=]);
-//    dummy = echo_matrix(M, [description=], [sig=], [eps=]),
+//    echo_matrix(M, [description], [sig], [sep], [eps]);
+//    dummy = echo_matrix(M, [description], [sig], [sep], [eps]),
 // Description:
 //    Display a numerical matrix in a readable columnar format with `sig` significant
 //    digits.  Values smaller than eps display as zero.  If you give a description
-//    it is displayed at the top.  
-function echo_matrix(M,description,sig=4,eps=1e-9) =
+//    it is displayed at the top.  You can change the space between columns by
+//    setting `sep` to a number of spaces, which will use wide figure spaces the same
+//    width as digits, or you can set it to any string to separate the columns.
+//    Values that are NaN or INF will display as "nan" and "inf".  Values which are
+//    otherwise non-numerica display as two dashes.  Note that this includes lists, so
+//    a 3D array will display as a list of dashes.  
+// Arguments:
+//    M = matrix to display, which should be numerical
+//    description = optional text to print before the matrix
+//    sig = number of digits to display.  Default: 4
+//    sep = number of spaces between columns or a text string to separate columns.  Default: 1
+//    eps = numbers smaller than this display as zero.  Default: 1e-9
+function echo_matrix(M,description,sig=4,sep,eps=1e-9) =
   let(
       horiz_line = chr(8213),
-      matstr = _format_matrix(M,sig=sig,eps=eps),
+      matstr = _format_matrix(M,sig=sig,sep=sep,eps=eps),
       separator = str_join(repeat(horiz_line,10)),
       dummy=echo(str(separator,is_def(description) ? str("  ",description) : ""))
             [for(row=matstr) echo(row)]
   )
   echo(separator);
 
-module echo_matrix(M,description,sig=4,eps=1e-9)
+module echo_matrix(M,description,sig=4,sep,eps=1e-9)
 {
-  dummy = echo_matrix(M,description,sig,eps);
+  dummy = echo_matrix(M,description,sig,sep,eps);
 }
 
 

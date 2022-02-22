@@ -33,8 +33,8 @@
 //   The profiles can be specified either as a list of 3d curves or they can be specified as
 //   2d curves with heights given in the `z` parameter.  It is your responsibility to ensure
 //   that the resulting polyhedron is free from self-intersections, which would make it invalid
-//   and can result in cryptic CGAL errors upon rendering, even though the polyhedron appears
-//   OK during preview.
+//   and can result in cryptic CGAL errors upon rendering with a second object present, even though the polyhedron appears
+//   OK during preview or when rendered by itself.  
 //   .
 //   For this operation to be well-defined, the profiles must all have the same vertex count and
 //   we must assume that profiles are aligned so that vertex `i` links to vertex `i` on all polygons.
@@ -730,45 +730,53 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 
 // Function&Module: path_sweep()
 // Usage: As module
-//   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) {attachments};
+//   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) {attachments};
 // Usage: As function
-//   vnf = path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [relaxed=], [caps=], [style=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [atype=]) {attachments};
+//   vnf = path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [atype=]) {attachments};
 // Description:
 //   Takes as input `shape`, a 2D polygon path (list of points), and `path`, a 2d or 3d path (also a list of points)
 //   and constructs a polyhedron by sweeping the shape along the path. When run as a module returns the polyhedron geometry.
 //   When run as a function returns a VNF by default or if you set `transforms=true` then it returns a list of transformations suitable as input to `sweep`.
 //   .
-// Figure(3D,Big,VPR=[70,0,345],VPD=20,VPT=[5.5,10.8,-2.7],NoScales): This example shows how the shape, in this case the triangle defined by `[[0, 0], [0, 1], [1, 0]]`, appears as the cross section of the swept polyhedron.  The blue line shows the path.  The normal vector to the shape points upwards, in the Z direction.
-//   tri= [[0, 0], [0, 1], [1, 0]];
+//   The sweeping process places one copy of the shape for each point in the path.  The origin in `shape` is translated to
+//   the point in `path`.  The normal vector of the shape, which points in the Z direction, is aligned with the tangent
+//   vector for the path, so this process is constructing a shape whose normal cross sections are equal to your specified shape.
+//   If you do not supply a list of tangent vectors then an approximate tangent vector is computed
+//   based on the path points you supply using {{path_tangents()}}.  
+//   .
+// Figure(3D,Big,VPR=[70,0,345],VPD=20,VPT=[5.5,10.8,-2.7],NoScales): This example shows how the shape, in this case the quadrilateral defined by `[[0, 0], [0, 1], [0.25, 1], [1, 0]]`, appears as the cross section of the swept polyhedron.  The blue line shows the path.  The normal vector to the shape is shown in black; it is based at the origin and points upwards in the Z direction.  The sweep aligns this normal vector with the blue path tangent, which in this case, flips the shape around.  Note that for a 2D path like this one, the Y direction in the shape is mapped to the Z direction in the sweep.   
+//   tri= [[0, 0], [0, 1], [.25,1], [1, 0]];
 //   path = arc(r=5,N=81,angle=[-20,65]);
 //   % path_sweep(tri,path);
 //   T = path_sweep(tri,path,transforms=true);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
 //   color("blue")stroke(path3d(arc(r=5,N=101,angle=[-20,80])),width=.1,endcap2="arrow2");
 //   color("red")stroke([path3d(tri)],width=.1);
-//   stroke(move(centroid(tri),[CENTER,UP]), width=.07,endcap2="arrow2",color="black");
+//   stroke([CENTER,UP], width=.07,endcap2="arrow2",color="black");
 // .
-//   In the figure you can see that the swept polyhedron, shown in transparent gray, has the triangle as its cross
-//   section.  The triangle is positioned perpendicular to the path, which is shown in blue, so that the normal
-//   vector for the triangle is parallel to the tangent vector for the path.  The origin for the shape is the point
+//   In the figure you can see that the swept polyhedron, shown in transparent gray, has the quadrilateral as its cross
+//   section.  The quadrilateral is positioned perpendicular to the path, which is shown in blue, so that the normal
+//   vector for the quadrilateral is parallel to the tangent vector for the path.  The origin for the shape is the point
 //   which follows the path.  For a 2D path, the Y axis of the shape is mapped to the Z axis and in this case,
-//   pointing the triangle's normal vector (in black) along the tangent line of
-//   the path, which is going in the direction of the blue arrow, requires that the triangle be "turned around".  If we
+//   pointing the quadrilateral's normal vector (in black) along the tangent line of
+//   the path, which is going in the direction of the blue arrow, requires that the quadrilateral be "turned around".  If we
 //   reverse the order of points in the path we get a different result:
-// Figure(3D,Big,VPR=[70,0,20],VPD=20,VPT=[1.25,9.25,-2.65],NoScales): The same sweep operation with the path traveling in the opposite direction.
-//   tri= [[0, 0], [0, 1], [1, 0]];
+// Figure(3D,Big,VPR=[70,0,20],VPD=20,VPT=[1.25,9.25,-2.65],NoScales): The same sweep operation with the path traveling in the opposite direction.  Note that in order to line up the normal correctly, the shape is reversed, so the resulting sweep looks quite different.
+//   tri= [[0, 0], [0, 1], [.25,1], [1, 0]];
 //   path = reverse(arc(r=5,N=81,angle=[-20,65]));
 //   % path_sweep(tri,path);
 //   T = path_sweep(tri,path,transforms=true);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
 //   color("blue")stroke(reverse(path3d(arc(r=5,N=101,angle=[-20-15,65]))),width=.1,endcap2="arrow2");
+//   color("red")stroke([path3d(tri)],width=.1);
+//   stroke([CENTER,UP], width=.07,endcap2="arrow2",color="black");
 // Continues:
 //   If your shape is too large for the curves in the path you can create a situation where the shapes cross each
-//   other.  This results in an invalid polyhedron, which may appear OK when previewed, but will give rise
+//   other.  This results in an invalid polyhedron, which may appear OK when previewed or rendered alone, but will give rise
 //   to cryptic CGAL errors when rendered with a second object in your model.  You may be able to use {{path_sweep2d()}}
 //   to produce a valid model in cases like this.  You can debug models like this using the `profiles=true` option which will show all
 //   the cross sections in your polyhedron.  If any of them intersect, the polyhedron will be invalid.  
-// Figure(3D,Big,VPR=[47,0,325],VPD=23,VPT=[6.8,4,-3.8],NoScales): We have scaled the path to an ellipse and enlarged the triangle, and it is now sometimes bigger than the local radius of the path, leading to an invalid polyhedron.
+// Figure(3D,Big,VPR=[47,0,325],VPD=23,VPT=[6.8,4,-3.8],NoScales): We have scaled the path to an ellipse and show a large triangle as the shpae.  The triangle is sometimes bigger than the local radius of the path, leading to an invalid polyhedron, which you can identify because the red lines cross in the middle.
 //   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
 //   path = xscale(1.5,arc(r=5,N=81,angle=[-70,70]));
 //   % path_sweep(tri,path);
@@ -781,14 +789,15 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   this ambiguity by aligning the Y axis in the shape to the Z axis in the swept polyhedron.  We can force the
 //   shape to twist with the `twist` parameter and get a result like this:
 // Figure(3D,Big,VPR=[66,0,14],VPD=20,VPT=[3.4,4.5,-0.8]): The shape twists as we sweep.  Note that it still aligns the origin in the shape with the path, and still aligns the normal vector with the path tangent vector.
-//   tri= [[0, 0], [0, 1], [1, 0]];
+//   tri= [[0, 0], [0, 1], [.25,1],[1, 0]];
 //   path = arc(r=5,N=81,angle=[-20,65]);
 //   % path_sweep(tri,path,twist=-60);
 //   T = path_sweep(tri,path,transforms=true,twist=-60);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
 //   color("blue")stroke(path3d(arc(r=5,N=101,angle=[-20,80])),width=.1,endcap2="arrow2");
 // Continues:
-//   When the path is full three-dimensional, things can become more complex.  You may find that the shape rotates
+//   When the path is full three-dimensional, things can become more complex.  It is no longer possible to use a simple
+//   alignment rule like the one we use in 2D.  You may find that the shape rotates
 //   unexpectedly around its axis as it traverses the path.  The `method` parameter allows you to specify how the shapes
 //   are aligned, resulting in different twist in the resulting polyhedron.  You can choose from three different methods
 //   for selecting the rotation of your shape.  None of these methods will produce good, or even valid, results on all
@@ -812,7 +821,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   .
 //   The "natural" method works by computing the Frenet frame at each point on the path.  This is defined by the tangent to the curve and
 //   the normal which lies in the plane defined by the curve at each point.  This normal points in the direction of curvature of the curve.
-//   The result is a very well behaved set of sections without any unexpected twisting---as long as the curvature never falls to zero.  At a
+//   The result is a very well behaved set of shape positions without any unexpected twisting---as long as the curvature never falls to zero.  At a
 //   point of zero curvature (a flat point), the curve does not define a plane and the natural normal is not defined.  Furthermore, even if
 //   you skip over this troublesome point so the normal is defined, it can change direction abruptly when the curvature is zero, leading to
 //   a nasty twist and an invalid model.  A simple example is a circular arc joined to another arc that curves the other direction.  Note
@@ -830,6 +839,9 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   For any method you can use the `twist` argument to add the specified number of degrees of twist into the model.  
 //   If the model is closed then the twist must be a multiple of 360/symmetry.  The twist is normally spread uniformly along your shape
 //   based on the path length.  If you set `twist_by_length` to false then the twist will be uniform based on the point count of your path.
+//   Twisted shapes will produce twisted faces, so if you want them to look good you should use lots of points on your path and also
+//   lots of points on the shape.  If your shape is a simple polygon, use {{subdivide_path()}} or {{subdivide_long_segments()}} to
+//   increase the number of points.  
 // Arguments:
 //   shape = A 2D polygon path or region describing the shape to be swept.
 //   path = 2D or 3D path giving the path to sweep over
