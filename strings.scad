@@ -568,7 +568,7 @@ function format_float(f,sig=12) =
 
 /// Function: _format_matrix()
 /// Usage:
-///   _format_matrix(M, [sig], [eps])
+///   _format_matrix(M, [sig], [sep], [eps])
 /// Description:
 ///   Convert a numerical matrix into a matrix of strings where every column
 ///   is the same width so it will display in neat columns when printed.
@@ -577,18 +577,22 @@ function format_float(f,sig=12) =
 /// Arguments:
 ///   M = numerical matrix to convert
 ///   sig = significant digits to display.  Default: 4
+//    sep = number of spaces between columns or a text string to separate columns.  Default: 1
 ///   eps = values smaller than this are shown as zero.  Default: 1e-9
-function _format_matrix(M, sig=4, eps=1e-9) = 
+function _format_matrix(M, sig=4, sep=1, eps=1e-9) = 
    let(
-       columngap = 1,
        figure_dash = chr(8210),
        space_punc = chr(8200),
        space_figure = chr(8199),
+       sep = is_num(sep) && sep>=0 ? str_join(repeat(space_figure,sep))
+           : is_string(sep) ? sep
+           : assert(false,"Invalid separator: must be a string or positive integer giving number of spaces"),
        strarr=
          [for(row=M)
              [for(entry=row)
                  let(
                      text = is_undef(entry) ? "und"
+                          : !is_num(entry) ? str_join(repeat(figure_dash,2))
                           : abs(entry) < eps ? "0"             // Replace hyphens with figure dashes
                           : str_replace_char(format_float(entry, sig),"-",figure_dash),
                      have_dot = is_def(str_find(text, "."))
@@ -610,7 +614,7 @@ function _format_matrix(M, sig=4, eps=1e-9) =
                             let(
                                 extra = ends_with(row[i],"inf") ? 1 : 0
                             )
-                            str_pad(row[i],maxlen[i]+extra+(i==0?0:columngap),space_figure,left=true)])]
+                            str_pad(row[i],maxlen[i]+extra,space_figure,left=true)],sep=sep)]
     )
     padded;
 
