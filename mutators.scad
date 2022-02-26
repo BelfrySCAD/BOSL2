@@ -359,27 +359,24 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 //   path = [ [0, 0, 0], [33, 33, 33], [66, 33, 40], [100, 0, 0], [150,0,0] ];
 //   path_extrude(path) circle(r=10, $fn=6);
 module path_extrude(path, convexity=10, clipsize=100) {
-    function polyquats(path, q=q_ident(), v=[0,0,1], i=0) = let(
-            v2 = path[i+1] - path[i],
-            ang = vector_angle(v,v2),
-            axis = ang>0.001? unit(cross(v,v2)) : [0,0,1],
-            newq = q_mul(quat(axis, ang), q),
-            dist = norm(v2)
-        ) i < (len(path)-2)?
-            concat([[dist, newq, ang]], polyquats(path, newq, v2, i+1)) :
-            [[dist, newq, ang]];
-
+    rotmats = cumprod([
+       for (i = idx(path,e=-2)) let(
+           vec1 = i==0? UP : unit(path[i]-path[i-1], UP),
+           vec2 = unit(path[i+1]-path[i], UP)
+       ) rot(from=vec1,to=vec2)
+    ]);
+    // This adds a rotation midway between each item on the list
+    interp = rot_resample(rotmats,N=2,method="count");
     epsilon = 0.0001;  // Make segments ever so slightly too long so they overlap.
     ptcount = len(path);
-    pquats = polyquats(path);
     for (i = [0:1:ptcount-2]) {
         pt1 = path[i];
         pt2 = path[i+1];
-        dist = pquats[i][0];
-        q = pquats[i][1];
+        dist = norm(pt2-pt1);
+        T = rotmats[i];
         difference() {
             translate(pt1) {
-                q_rot(q) {
+                multmatrix(T) {
                     down(clipsize/2/2) {
                         if ((dist+clipsize/2) > 0) {
                             linear_extrude(height=dist+clipsize/2, convexity=convexity) {
@@ -390,17 +387,16 @@ module path_extrude(path, convexity=10, clipsize=100) {
                 }
             }
             translate(pt1) {
-                hq = (i > 0)? q_slerp(q, pquats[i-1][1], 0.5) : q;
-                q_rot(hq) down(clipsize/2+epsilon) cube(clipsize, center=true);
+                hq = (i > 0)? interp[2*i-1] : T;
+                multmatrix(hq) down(clipsize/2+epsilon) cube(clipsize, center=true);
             }
             translate(pt2) {
-                hq = (i < ptcount-2)? q_slerp(q, pquats[i+1][1], 0.5) : q;
-                q_rot(hq) up(clipsize/2+epsilon) cube(clipsize, center=true);
+                hq = (i < ptcount-2)? interp[2*i+1] : T;
+                multmatrix(hq) up(clipsize/2+epsilon) cube(clipsize, center=true);
             }
         }
     }
 }
-
 
 
 
