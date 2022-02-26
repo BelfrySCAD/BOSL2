@@ -779,7 +779,7 @@ function _product(v, i=0, _tot) =
 // Description:
 //   Returns a list where each item is the cumulative product of all items up to and including the corresponding entry in the input list.
 //   If passed an array of vectors, returns a list of elementwise vector products.  If passed a list of square matrices returns matrix
-//   products multiplying in the order items appear in the list.  
+//   products multiplying on the left, so a list `[A,B,C]` will produce the output `[A,BA,CBA]`.  
 // Arguments:
 //   list = The list to get the product of.
 // Example:
@@ -798,7 +798,7 @@ function _cumprod(v,_i=0,_acc=[]) =
         v, _i+1,
         concat(
             _acc,
-            [_i==0 ? v[_i] : _acc[len(_acc)-1]*v[_i]]
+            [_i==0 ? v[_i] : v[_i]*_acc[len(_acc)-1]]
         )
     );
 

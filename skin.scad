@@ -761,7 +761,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   pointing the quadrilateral's normal vector (in black) along the tangent line of
 //   the path, which is going in the direction of the blue arrow, requires that the quadrilateral be "turned around".  If we
 //   reverse the order of points in the path we get a different result:
-// Figure(3D,Big,VPR=[70,0,20],VPD=20,VPT=[1.25,9.25,-2.65],NoScales): The same sweep operation with the path traveling in the opposite direction.  Note that in order to line up the normal correctly, the shape is reversed, so the resulting sweep looks quite different.
+// Figure(3D,Big,VPR=[70,0,20],VPD=20,VPT=[1.25,9.25,-2.65],NoScales): The same sweep operation with the path traveling in the opposite direction.  Note that in order to line up the normal correctly, the shape is reversed compared to Figure 1, so the resulting sweep looks quite different.
 //   tri= [[0, 0], [0, 1], [.25,1], [1, 0]];
 //   path = reverse(arc(r=5,N=81,angle=[-20,65]));
 //   % path_sweep(tri,path);
@@ -776,7 +776,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   to cryptic CGAL errors when rendered with a second object in your model.  You may be able to use {{path_sweep2d()}}
 //   to produce a valid model in cases like this.  You can debug models like this using the `profiles=true` option which will show all
 //   the cross sections in your polyhedron.  If any of them intersect, the polyhedron will be invalid.  
-// Figure(3D,Big,VPR=[47,0,325],VPD=23,VPT=[6.8,4,-3.8],NoScales): We have scaled the path to an ellipse and show a large triangle as the shpae.  The triangle is sometimes bigger than the local radius of the path, leading to an invalid polyhedron, which you can identify because the red lines cross in the middle.
+// Figure(3D,Big,VPR=[47,0,325],VPD=23,VPT=[6.8,4,-3.8],NoScales): We have scaled the path to an ellipse and show a large triangle as the shape.  The triangle is sometimes bigger than the local radius of the path, leading to an invalid polyhedron, which you can identify because the red lines cross in the middle.
 //   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
 //   path = xscale(1.5,arc(r=5,N=81,angle=[-70,70]));
 //   % path_sweep(tri,path);
@@ -787,7 +787,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   When performing a path sweep, the normal vector of the shape aligns with the tangent vector of the
 //   path, but this leaves an ambiguity about how the shape is rotated.  For 2D paths it is easy to resolve
 //   this ambiguity by aligning the Y axis in the shape to the Z axis in the swept polyhedron.  We can force the
-//   shape to twist with the `twist` parameter and get a result like this:
+//   shape to twist with the `twist` parameter and get a result like the one shown below.
 // Figure(3D,Big,VPR=[66,0,14],VPD=20,VPT=[3.4,4.5,-0.8]): The shape twists as we sweep.  Note that it still aligns the origin in the shape with the path, and still aligns the normal vector with the path tangent vector.
 //   tri= [[0, 0], [0, 1], [.25,1],[1, 0]];
 //   path = arc(r=5,N=81,angle=[-20,65]);
@@ -871,11 +871,11 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   sq = square(6,center=true);
 //   path_sweep(sq,path);
 // Example: If the square is not centered, then we get a different result because the shape is in a different place relative to the origin:
-//   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta),0*theta/100]];
+//   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
 //   sq = square(6);
 //   path_sweep(sq,path);
 // Example(VPR=[34,0,8]): It may not be obvious, but the polyhedron in the previous example is invalid.  It will eventually give CGAL errors when you combine it with other shapes.  To see this, set profiles to true and look at the left side.  The profiles cross each other and intersect.  Any time this happens, your polyhedron is invalid, even if it seems to be working at first.  Another observation from the profile display is that we have more profiles than needed over a lot of the shape, so if the model is slow, using fewer profiles in the flat portion of the curve might speed up the calculation.  
-//   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta),0*theta/100]];
+//   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
 //   sq = square(6);
 //   path_sweep(sq,path,profiles=true,width=.1,$fn=8);
 // Example(2D): We'll use this shape in several examples
@@ -893,7 +893,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=30));  // Counter-clockwise 
 //   path_sweep(ushape, elliptic_arc, method="natural");
-// Example: Sweep along a clockwise elliptical arc, using "natural" method.  If the curve is clockwise than the shape flips upside-down to align the X axis.  
+// Example: Sweep along a clockwise elliptical arc, using "natural" method.  If the curve is clockwise then the shape flips upside-down to align the X axis.  
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
 //   path_sweep(ushape, path3d(elliptic_arc), method="natural");
@@ -901,19 +901,23 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
 //   path_sweep(ushape, path3d(elliptic_arc), method="manual", normal=UP+RIGHT);
-// Example: Sweep along a clockwise elliptical arc, using "manual" method.  You can orient the shape in a direction you choose (subject to the constraint that the profiles remain normal to the path):
+// Example: Here we changed the ellipse to be more pointy, and with the same results as above we get a shape with an irregularity in the middle where it maintains the specified direction around the point of the ellipse.  If the ellipse were more pointing, this would result in a bad polyhedron:
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = yscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
-//   path_sweep(ushape, path3d(elliptic_arc), method="manual", normal=UP+RIGHT, relaxed=false);
+//   path_sweep(ushape, path3d(elliptic_arc), method="manual", normal=UP+RIGHT);
 // Example: It is easy to produce an invalid shape when your path has a smaller radius of curvature than the width of your shape.  The exact threshold where the shape becomes invalid depends on the density of points on your path.  The error may not be immediately obvious, as the swept shape appears fine when alone in your model, but adding a cube to the model reveals the problem.  In this case the pentagon is turned so its longest direction points inward to create the singularity.  
 //   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
 //   echo(radius_of_curvature = 1/max(path_curvature(qpath)));   // Prints 0.9, but we use pentagon with radius of 1.0 > 0.9
-//   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual", relaxed=false);
+//   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual");
 //   cube(0.5);    // Adding a small cube forces a CGAL computation which reveals the error by displaying nothing or giving a cryptic message
 // Example: Using the `relax` option we allow the profiles to deviate from orthogonality to the path.  This eliminates the crease that broke the previous example because the sections are all parallel to each other.  
 //   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
 //   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual", relaxed=true);
 //   cube(0.5);    // Adding a small cube is not a problem with this valid model
+// Example(VPR=[16,0,100],VPT=[0.05,0.6,0.6],VPD=25): Using the `profiles=true` option can help debug bad polyhedra such as this one.  If any of the profiles intersect or cross each other, the polyhedron will be invalid.  In this case, you can see these intersections in the middle of the shape, which may give insight into how to fix your shape.   The profiles may also help you identify cases with a valid polyhedron where you have more profiles than needed to adequately define the shape.  
+//   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
+//   path = left(4,xscale(1.5,arc(r=5,N=25,angle=[-70,70])));
+//   path_sweep(tri,path,profiles=true,width=.1);
 // Example:  This 3d arc produces a result that twists to an undefined angle.  By default the incremental method sets the starting normal to UP, but the ending normal is unconstrained.  
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
@@ -1115,10 +1119,6 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //     path_sweep(left(.05,square([1.1,1])), curve, closed=true,
 //                method="manual", normal=UP);
 //   }
-// Example: Using the `profiles=true` option can help debug bad polyhedra such as this one.  If any of the profiles intersect or cross each other, the polyhedron will be invalid.  The profiles may help you identify cases where you have more profiles than needed to adequately define the shape.  
-//   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
-//   path = left(4,xscale(1.5,arc(r=5,N=25,angle=[-70,70])));
-//   path_sweep(tri,path,profiles=true,width=.1);
 
 module path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
                     symmetry=1, last_normal, tangent, uniform=true, relaxed=false, caps, style="min_edge", convexity=10,
@@ -1400,7 +1400,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   orient = Vector to rotate top towards after spin  (module only)
 //   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
-// Example(VPR=[45,0.74]): A bent object that also changes shape along its length.
+// Example(VPR=[45,0,74]): A bent object that also changes shape along its length.
 //   radius = 75;
 //   angle = 40;
 //   shape = circle(r=5,$fn=32);
