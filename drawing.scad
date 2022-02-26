@@ -268,8 +268,9 @@ module stroke(
     endcap_color2 = first_defined([endcap_color2, endcap_color, dots_color, color]);
     joint_color = first_defined([joint_color, dots_color, color]);
 
-    paths = is_region(path)? path : [path];
-    for (path = paths) {
+    paths = force_region(path);
+    assert(is_region(paths),"The path argument must be a list of 2D or 3D points, or a region.");
+        for (path = paths) {
         assert(is_list(path));
         if (len(path) > 1) {
             assert(is_path(path,[2,3]), "The path argument must be a list of 2D or 3D points, or a region.");
@@ -406,15 +407,13 @@ module stroke(
                     }
                 }
             } else {
-                quatsums = q_cumulative([
+                rotmats = cumprod([
                     for (i = idx(path2,e=-2)) let(
                         vec1 = i==0? UP : unit(path2[i]-path2[i-1], UP),
-                        vec2 = unit(path2[i+1]-path2[i], UP),
-                        axis = vector_axis(vec1,vec2),
-                        ang = vector_angle(vec1,vec2)
-                    ) quat(axis,ang)
+                        vec2 = unit(path2[i+1]-path2[i], UP)
+                    ) rot(from=vec1,to=vec2)
                 ]);
-                rotmats = [for (q=quatsums) q_matrix4(q)];
+
                 sides = [
                     for (i = idx(path2,e=-2))
                     quantup(segs(max(widths[i],widths[i+1])/2),4)

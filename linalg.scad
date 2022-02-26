@@ -81,7 +81,7 @@ function is_matrix_symmetric(A,eps=1e-12) =
 //    sig = number of digits to display.  Default: 4
 //    sep = number of spaces between columns or a text string to separate columns.  Default: 1
 //    eps = numbers smaller than this display as zero.  Default: 1e-9
-function echo_matrix(M,description,sig=4,sep,eps=1e-9) =
+function echo_matrix(M,description,sig=4,sep=1,eps=1e-9) =
   let(
       horiz_line = chr(8213),
       matstr = _format_matrix(M,sig=sig,sep=sep,eps=eps),
@@ -91,7 +91,7 @@ function echo_matrix(M,description,sig=4,sep,eps=1e-9) =
   )
   echo(separator);
 
-module echo_matrix(M,description,sig=4,sep,eps=1e-9)
+module echo_matrix(M,description,sig=4,sep=1,eps=1e-9)
 {
   dummy = echo_matrix(M,description,sig,sep,eps);
 }
