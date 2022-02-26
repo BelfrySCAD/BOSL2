@@ -444,7 +444,7 @@ function _bridge(pt, outer,eps) =
             [for( i = idx(edges) )
                 let( edge = edges[i] )
                 // consider just descending outer edges at right of pt crossing ordinate pt.y
-                if(    (edge[0].y >  pt.y+eps) 
+                if(    (edge[0].y >  pt.y) //+eps) 
                     && (edge[1].y <= pt.y) 
                     && _is_at_left(pt, [edge[1], edge[0]], eps) ) 
                     [ i,
