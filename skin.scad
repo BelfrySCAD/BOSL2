@@ -866,93 +866,98 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   orient = Vector to rotate top towards after spin  
 //   atype  = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
-// Example: A simple sweep of a square along a sine wave:
+// Example(NoScales): A simple sweep of a square along a sine wave:
 //   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
 //   sq = square(6,center=true);
 //   path_sweep(sq,path);
-// Example: If the square is not centered, then we get a different result because the shape is in a different place relative to the origin:
+// Example(NoScales): If the square is not centered, then we get a different result because the shape is in a different place relative to the origin:
 //   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
 //   sq = square(6);
 //   path_sweep(sq,path);
-// Example(VPR=[34,0,8]): It may not be obvious, but the polyhedron in the previous example is invalid.  It will eventually give CGAL errors when you combine it with other shapes.  To see this, set profiles to true and look at the left side.  The profiles cross each other and intersect.  Any time this happens, your polyhedron is invalid, even if it seems to be working at first.  Another observation from the profile display is that we have more profiles than needed over a lot of the shape, so if the model is slow, using fewer profiles in the flat portion of the curve might speed up the calculation.  
+// Example(Med,VPR=[34,0,8],NoScales): It may not be obvious, but the polyhedron in the previous example is invalid.  It will eventually give CGAL errors when you combine it with other shapes.  To see this, set profiles to true and look at the left side.  The profiles cross each other and intersect.  Any time this happens, your polyhedron is invalid, even if it seems to be working at first.  Another observation from the profile display is that we have more profiles than needed over a lot of the shape, so if the model is slow, using fewer profiles in the flat portion of the curve might speed up the calculation.  
 //   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
 //   sq = square(6);
 //   path_sweep(sq,path,profiles=true,width=.1,$fn=8);
 // Example(2D): We'll use this shape in several examples
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   polygon(ushape);
-// Example: Sweep along a clockwise elliptical arc, using default "incremental" method.
+// Example(NoScales): Sweep along a clockwise elliptical arc, using default "incremental" method.
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,00], r=30));  // Clockwise 
 //   path_sweep(ushape, path3d(elliptic_arc));
-// Example: Sweep along a counter-clockwise elliptical arc.  Note that the orientation of the shape flips.  
+// Example(NoScales): Sweep along a counter-clockwise elliptical arc.  Note that the orientation of the shape flips.  
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=30));   // Counter-clockwise 
 //   path_sweep(ushape, path3d(elliptic_arc));
-// Example: Sweep along a clockwise elliptical arc, using "natural" method, which lines up the X axis of the shape with the direction of curvature.  This means the X axis will point inward, so a counterclockwise arc gives:
+// Example(NoScales): Sweep along a clockwise elliptical arc, using "natural" method, which lines up the X axis of the shape with the direction of curvature.  This means the X axis will point inward, so a counterclockwise arc gives:
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=30));  // Counter-clockwise 
 //   path_sweep(ushape, elliptic_arc, method="natural");
-// Example: Sweep along a clockwise elliptical arc, using "natural" method.  If the curve is clockwise then the shape flips upside-down to align the X axis.  
+// Example(NoScales): Sweep along a clockwise elliptical arc, using "natural" method.  If the curve is clockwise then the shape flips upside-down to align the X axis.  
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
 //   path_sweep(ushape, path3d(elliptic_arc), method="natural");
-// Example: Sweep along a clockwise elliptical arc, using "manual" method.  You can orient the shape in a direction you choose (subject to the constraint that the profiles remain normal to the path):
+// Example(NoScales): Sweep along a clockwise elliptical arc, using "manual" method.  You can orient the shape in a direction you choose (subject to the constraint that the profiles remain normal to the path):
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
 //   path_sweep(ushape, path3d(elliptic_arc), method="manual", normal=UP+RIGHT);
-// Example: Here we changed the ellipse to be more pointy, and with the same results as above we get a shape with an irregularity in the middle where it maintains the specified direction around the point of the ellipse.  If the ellipse were more pointing, this would result in a bad polyhedron:
+// Example(NoScales): Here we changed the ellipse to be more pointy, and with the same results as above we get a shape with an irregularity in the middle where it maintains the specified direction around the point of the ellipse.  If the ellipse were more pointing, this would result in a bad polyhedron:
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = yscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
 //   path_sweep(ushape, path3d(elliptic_arc), method="manual", normal=UP+RIGHT);
-// Example: It is easy to produce an invalid shape when your path has a smaller radius of curvature than the width of your shape.  The exact threshold where the shape becomes invalid depends on the density of points on your path.  The error may not be immediately obvious, as the swept shape appears fine when alone in your model, but adding a cube to the model reveals the problem.  In this case the pentagon is turned so its longest direction points inward to create the singularity.  
+// Example(NoScales): It is easy to produce an invalid shape when your path has a smaller radius of curvature than the width of your shape.  The exact threshold where the shape becomes invalid depends on the density of points on your path.  The error may not be immediately obvious, as the swept shape appears fine when alone in your model, but adding a cube to the model reveals the problem.  In this case the pentagon is turned so its longest direction points inward to create the singularity.  
 //   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
 //   echo(radius_of_curvature = 1/max(path_curvature(qpath)));   // Prints 0.9, but we use pentagon with radius of 1.0 > 0.9
 //   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual");
 //   cube(0.5);    // Adding a small cube forces a CGAL computation which reveals the error by displaying nothing or giving a cryptic message
-// Example: Using the `relax` option we allow the profiles to deviate from orthogonality to the path.  This eliminates the crease that broke the previous example because the sections are all parallel to each other.  
+// Example(NoScales): Using the `relax` option we allow the profiles to deviate from orthogonality to the path.  This eliminates the crease that broke the previous example because the sections are all parallel to each other.  
 //   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
 //   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual", relaxed=true);
 //   cube(0.5);    // Adding a small cube is not a problem with this valid model
-// Example(VPR=[16,0,100],VPT=[0.05,0.6,0.6],VPD=25): Using the `profiles=true` option can help debug bad polyhedra such as this one.  If any of the profiles intersect or cross each other, the polyhedron will be invalid.  In this case, you can see these intersections in the middle of the shape, which may give insight into how to fix your shape.   The profiles may also help you identify cases with a valid polyhedron where you have more profiles than needed to adequately define the shape.  
+// Example(Med,VPR=[16,0,100],VPT=[0.05,0.6,0.6],VPD=25,NoScales): Using the `profiles=true` option can help debug bad polyhedra such as this one.  If any of the profiles intersect or cross each other, the polyhedron will be invalid.  In this case, you can see these intersections in the middle of the shape, which may give insight into how to fix your shape.   The profiles may also help you identify cases with a valid polyhedron where you have more profiles than needed to adequately define the shape.  
 //   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
 //   path = left(4,xscale(1.5,arc(r=5,N=25,angle=[-70,70])));
 //   path_sweep(tri,path,profiles=true,width=.1);
-// Example:  This 3d arc produces a result that twists to an undefined angle.  By default the incremental method sets the starting normal to UP, but the ending normal is unconstrained.  
+// Example(NoScales):  This 3d arc produces a result that twists to an undefined angle.  By default the incremental method sets the starting normal to UP, but the ending normal is unconstrained.  
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="incremental");
-// Example: You can constrain the last normal as well.  Here we point it right, which produces a nice result.  
+// Example(NoScales): You can constrain the last normal as well.  Here we point it right, which produces a nice result.  
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="incremental", last_normal=RIGHT);
-// Example: Here we constrain the last normal to UP.  Be aware that the behavior in the middle is unconstrained.  
+// Example(NoScales): Here we constrain the last normal to UP.  Be aware that the behavior in the middle is unconstrained.  
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="incremental", last_normal=UP);
-// Example: The "natural" method produces a very different result
+// Example(NoScales): The "natural" method produces a very different result
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="natural");
-// Example: When the path starts at an angle of more that 45 deg to the xy plane the initial normal for "incremental" is BACK.  This produces the effect of the shape rising up out of the xy plane.  (Using UP for a vertical path is invalid, hence the need for a split in the defaults.)  
+// Example(NoScales): When the path starts at an angle of more that 45 deg to the xy plane the initial normal for "incremental" is BACK.  This produces the effect of the shape rising up out of the xy plane.  (Using UP for a vertical path is invalid, hence the need for a split in the defaults.)  
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = xrot(75, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="incremental");
-// Example: Adding twist
-//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=3));   // Counter-clockwise 
+// Example(NoScales): Adding twist
+//   // Counter-clockwise 
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=3));   
 //   path_sweep(pentagon(r=1), path3d(elliptic_arc), twist=72);
-// Example: Closed shape
+// Example(NoScales): Closed shape
 //   ellipse = xscale(2, p=circle($fn=64, r=3));  
 //   path_sweep(pentagon(r=1), path3d(ellipse), closed=true);
-// Example: Closed shape with added twist
+// Example(NoScales): Closed shape with added twist
 //   ellipse = xscale(2, p=circle($fn=64, r=3));
-//   pentagon = subdivide_path(pentagon(r=1), 30);  // Looks better with finer sampling
-//   path_sweep(pentagon, path3d(ellipse), closed=true, twist=360);
-// Example: The last example was a lot of twist.  In order to use less twist you have to tell `path_sweep` that your shape has symmetry, in this case 5-fold.  Mobius strip with pentagon cross section:
+//   // Looks better with finer sampling
+//   pentagon = subdivide_path(pentagon(r=1), 30);  
+//   path_sweep(pentagon, path3d(ellipse),
+//              closed=true, twist=360);
+// Example(NoScales): The last example was a lot of twist.  In order to use less twist you have to tell `path_sweep` that your shape has symmetry, in this case 5-fold.  Mobius strip with pentagon cross section:
 //   ellipse = xscale(2, p=circle($fn=64, r=3));
-//   pentagon = subdivide_path(pentagon(r=1), 30);  // Looks better with finer sampling
-//   path_sweep(pentagon, path3d(ellipse), closed=true, symmetry = 5, twist=2*360/5);
-// Example: A helical path reveals the big problem with the "incremental" method: it can introduce unexpected and extreme twisting.  (Note helix example came from list-comprehension-demos)
+//   // Looks better with finer sampling
+//   pentagon = subdivide_path(pentagon(r=1), 30);  
+//   path_sweep(pentagon, path3d(ellipse), closed=true,
+//              symmetry = 5, twist=2*360/5);
+// Example(Med,NoScales): A helical path reveals the big problem with the "incremental" method: it can introduce unexpected and extreme twisting.  (Note helix example came from list-comprehension-demos)
 //   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
 //                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
 //                         200 * (1 - t)];
@@ -960,7 +965,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, helix);
-// Example: You can constrain both ends, but still the twist remains:
+// Example(Med,NoScales): You can constrain both ends, but still the twist remains:
 //   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
 //                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
 //                         200 * (1 - t)];
@@ -968,7 +973,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, helix, normal=UP, last_normal=UP);
-// Example: Even if you manually guess the amount of twist and remove it, the result twists one way and then the other:
+// Example(Med,NoScales): Even if you manually guess the amount of twist and remove it, the result twists one way and then the other:
 //   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
 //                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
 //                         200 * (1 - t)];
@@ -976,7 +981,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, helix, normal=UP, last_normal=UP, twist=360);
-// Example: To get a good result you must use a different method.  
+// Example(Med,NoScales): To get a good result you must use a different method.  
 //   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
 //                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
 //                         200 * (1 - t)];
@@ -984,7 +989,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, helix, method="natural");
-// Example: Note that it may look like the shape above is flat, but the profiles are very slightly tilted due to the nonzero torsion of the curve.  If you want as flat as possible, specify it so with the "manual" method:
+// Example(Med,NoScales): Note that it may look like the shape above is flat, but the profiles are very slightly tilted due to the nonzero torsion of the curve.  If you want as flat as possible, specify it so with the "manual" method:
 //   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
 //                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
 //                         200 * (1 - t)];
@@ -992,7 +997,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, helix, method="manual", normal=UP);
-// Example: What if you want to angle the shape inward?  This requires a different normal at every point in the path:
+// Example(Med,NoScales): What if you want to angle the shape inward?  This requires a different normal at every point in the path:
 //   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
 //                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
 //                         200 * (1 - t)];
@@ -1001,24 +1006,24 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   normals = [for(i=[0:helix_steps]) [-cos(6*360*i/helix_steps), -sin(6*360*i/helix_steps), 2.5]];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, helix, method="manual", normal=normals);
-// Example: When using "manual" it is important to choose a normal that works for the whole path, producing a consistent result.  Here we have specified an upward normal, and indeed the shape is pointed up everywhere, but two abrupt transitional twists render the model invalid.  
+// Example(NoScales): When using "manual" it is important to choose a normal that works for the whole path, producing a consistent result.  Here we have specified an upward normal, and indeed the shape is pointed up everywhere, but two abrupt transitional twists render the model invalid.  
 //   yzcircle = yrot(90,p=path3d(circle($fn=64, r=30)));
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, yzcircle, method="manual", normal=UP, closed=true);
-// Example: The "natural" method will introduce twists when the curvature changes direction.  A warning is displayed.  
+// Example(NoScales): The "natural" method will introduce twists when the curvature changes direction.  A warning is displayed.  
 //   arc1 = path3d(arc(angle=90, r=30));
 //   arc2 = xrot(-90, cp=[0,30],p=path3d(arc(angle=[90,180], r=30)));
 //   two_arcs = path_merge_collinear(concat(arc1,arc2));
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, two_arcs, method="natural");
-// Example: The only simple way to get a good result is the "incremental" method:
+// Example(NoScales): The only simple way to get a good result is the "incremental" method:
 //   arc1 = path3d(arc(angle=90, r=30));
 //   arc2 = xrot(-90, cp=[0,30],p=path3d(arc(angle=[90,180], r=30)));
 //   arc3 = apply( translate([-30,60,30])*yrot(90), path3d(arc(angle=[270,180], r=30)));
 //   three_arcs = path_merge_collinear(concat(arc1,arc2,arc3));
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, three_arcs, method="incremental");
-// Example: knot example from list-comprehension-demos, "incremental" method
+// Example(Med,NoScales): knot example from list-comprehension-demos, "incremental" method
 //   function knot(a,b,t) =   // rolling knot 
 //        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
 //          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
@@ -1028,7 +1033,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, knot_path, closed=true, method="incremental");
-// Example: knot example from list-comprehension-demos, "natural" method.  Which one do you like better? 
+// Example(Med,NoScales): knot example from list-comprehension-demos, "natural" method.  Which one do you like better? 
 //   function knot(a,b,t) =   // rolling knot 
 //        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
 //          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
@@ -1038,7 +1043,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, knot_path, closed=true, method="natural");
-// Example: knot with twist.  Note if you twist it the other direction the center section untwists because of the natural twist there.  Also compare to the "incremental" method which has less twist in the center.  
+// Example(Med,NoScales): knot with twist.  Note if you twist it the other direction the center section untwists because of the natural twist there.  Also compare to the "incremental" method which has less twist in the center.  
 //   function knot(a,b,t) =   // rolling knot 
 //        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
 //          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
@@ -1047,7 +1052,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   ksteps = 400;
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
 //   path_sweep(subdivide_path(pentagon(r=12),30), knot_path, closed=true, twist=-360*8, symmetry=5, method="natural");
-// Example: twisted knot with twist distributed by path sample points instead of by length using `twist_by_length=false`
+// Example(Med,NoScales): twisted knot with twist distributed by path sample points instead of by length using `twist_by_length=false`
 //   function knot(a,b,t) =   // rolling knot 
 //           [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
 //             a * sin( 3 * t) / (1 - b* sin (2 *t)), 
@@ -1056,7 +1061,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   ksteps = 400;
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
 //   path_sweep(subdivide_path(pentagon(r=12),30), knot_path, closed=true, twist=-360*8, symmetry=5, method="natural", twist_by_length=false);
-// Example: This torus knot example comes from list-comprehension-demos.  The knot lies on the surface of a torus.  When we use the "natural" method the swept figure is angled compared to the surface of the torus because the curve doesn't follow geodesics of the torus.  
+// Example(Big,NoScales): This torus knot example comes from list-comprehension-demos.  The knot lies on the surface of a torus.  When we use the "natural" method the swept figure is angled compared to the surface of the torus because the curve doesn't follow geodesics of the torus.  
 //   function knot(phi,R,r,p,q) = 
 //       [ (r * cos(q * phi) + R) * cos(p * phi),
 //         (r * cos(q * phi) + R) * sin(p * phi),
@@ -1069,7 +1074,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   k = max(p,q) / gcd(p,q) * points; 
 //   knot_path   = [ for (i=[0:k-1]) knot(360*i/k/gcd(p,q),R,r,p,q) ];
 //   path_sweep(rot(90,p=ushape),knot_path,  method="natural", closed=true);
-// Example: By computing the normal to the torus at the path we can orient the path to lie on the surface of the torus:
+// Example(Big,NoScales): By computing the normal to the torus at the path we can orient the path to lie on the surface of the torus:
 //   function knot(phi,R,r,p,q) = 
 //       [ (r * cos(q * phi) + R) * cos(p * phi),
 //         (r * cos(q * phi) + R) * sin(p * phi),
@@ -1087,21 +1092,21 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   knot_path   = [ for (i=[0:k-1]) knot(360*i/k/gcd(p,q),R,r,p,q) ];
 //   normals = [ for (i=[0:k-1]) knot_normal(360*i/k/gcd(p,q),R,r,p,q) ];
 //   path_sweep(ushape,knot_path,normal=normals, method="manual", closed=true);
-// Example: You can request the transformations and manipulate them before passing them on to sweep.  Here we construct a tube that changes scale by first generating the transforms and then applying the scale factor and connecting the inside and outside.  Note that the wall thickness varies because it is produced by scaling.  
+// Example(NoScales): You can request the transformations and manipulate them before passing them on to sweep.  Here we construct a tube that changes scale by first generating the transforms and then applying the scale factor and connecting the inside and outside.  Note that the wall thickness varies because it is produced by scaling.  
 //   shape = star(n=5, r=10, ir=5);
 //   rpath = arc(25, points=[[29,6,-4], [3,4,6], [1,1,7]]);
 //   trans = path_sweep(shape, rpath, transforms=true);
 //   outside = [for(i=[0:len(trans)-1]) trans[i]*scale(lerp(1,1.5,i/(len(trans)-1)))];
 //   inside = [for(i=[len(trans)-1:-1:0]) trans[i]*scale(lerp(1.1,1.4,i/(len(trans)-1)))];
 //   sweep(shape, concat(outside,inside),closed=true);
-// Example: Using path_sweep on a region
+// Example(Med,NoScales): Using path_sweep on a region
 //   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
 //   rgn2 = [square(30,center=false)];
 //   rgn3 = [for (size=[10:10:20]) move([15,15],p=square(size=size, center=true))];
 //   mrgn = union(rgn1,rgn2);
 //   orgn = difference(mrgn,rgn3);
 //   path_sweep(orgn,arc(r=40,angle=180));
-// Example: A region with a twist
+// Example(Med,NoScales): A region with a twist
 //   region = [for(i=pentagon(5)) move(i,p=circle(r=2,$fn=25))];
 //   path_sweep(region,
 //              circle(r=16,$fn=75),closed=true,
@@ -1400,7 +1405,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   orient = Vector to rotate top towards after spin  (module only)
 //   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
-// Example(VPR=[45,0,74]): A bent object that also changes shape along its length.
+// Example(VPR=[45,0,74],VPD=175,VPT=[-3.8,12.4,19]): A bent object that also changes shape along its length.
 //   radius = 75;
 //   angle = 40;
 //   shape = circle(r=5,$fn=32);
@@ -1637,7 +1642,7 @@ function _smooth(data,len,closed=false,angle=false) =
 //   tran = turtle3d(["arcsteps", 1, "arcup", 10, 90, "move", 10], transforms=true,state=[1,-.5,0]);
 //   rtran = rot_resample(tran,100,twist=[0,60],smoothlen=17);
 //   sweep(subdivide_path(rect([3,3]),40),rtran);
-// Example(3D): toothed belt based on list-comprehension-demos example.  This version has a smoothed twist transition.  Try changing smoothlen to 1 to see the more abrupt transition that occurs without smoothing.  
+// Example(3D): Toothed belt based on a list-comprehension-demos example.  This version has a smoothed twist transition.  Try changing smoothlen to 1 to see the more abrupt transition that occurs without smoothing.  
 //   include<BOSL2/turtle3d.scad>
 //   r_small = 19;       // radius of small curve
 //   r_large = 46;       // radius of large curve
