@@ -939,7 +939,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   arc = xrot(75, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="incremental");
 // Example(NoScales): Adding twist
-//                            // Counter-clockwise 
+//   // Counter-clockwise 
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=3));   
 //   path_sweep(pentagon(r=1), path3d(elliptic_arc), twist=72);
 // Example(NoScales): Closed shape
@@ -947,13 +947,13 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   path_sweep(pentagon(r=1), path3d(ellipse), closed=true);
 // Example(NoScales): Closed shape with added twist
 //   ellipse = xscale(2, p=circle($fn=64, r=3));
-//                    // Looks better with finer sampling
+//   // Looks better with finer sampling
 //   pentagon = subdivide_path(pentagon(r=1), 30);  
 //   path_sweep(pentagon, path3d(ellipse),
 //              closed=true, twist=360);
 // Example(NoScales): The last example was a lot of twist.  In order to use less twist you have to tell `path_sweep` that your shape has symmetry, in this case 5-fold.  Mobius strip with pentagon cross section:
 //   ellipse = xscale(2, p=circle($fn=64, r=3));
-//                 // Looks better with finer sampling
+//   // Looks better with finer sampling
 //   pentagon = subdivide_path(pentagon(r=1), 30);  
 //   path_sweep(pentagon, path3d(ellipse), closed=true,
 //              symmetry = 5, twist=2*360/5);
