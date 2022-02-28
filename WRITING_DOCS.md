@@ -417,8 +417,9 @@ These Type blocks can have a number of sub-blocks.  Most sub-blocks are optional
 - `// Topics: Comma, Delimited, Topic, List`
 - `// Usage:`
 - `// Description:`
-- `// Arguments:`
 - `// Figure:` or `// Figures`
+- `// Continues:`
+- `// Arguments:`
 - `// See Also: otherfunc(), othermod(), OTHERCONST`
 - `// Example:` or `// Examples:`
 
@@ -511,6 +512,36 @@ Which outputs Markdown code that renders like:
 > braces like [cyl()](shapes.scad#functionmodule-cyl) or [lerp()](math.scad#function-lerp) or [DOWN](constants.scad-down).  If you want to
 > link to another file, or section in another file you can use
 > a manual markdown link like [Section: Cuboids](shapes.scad#section-cuboids).
+
+
+Continues Block
+---------------
+The Continues block can be used to continue the body text of a previous block that has been interrupted by a Figure:
+
+    // Descripton: This is the description for this function or module.  It can be
+    //   many lines long.  If you need to show an image in the middle of this text,
+    //   you can use a Figure, like this:
+    // Figure(2D): A circle with a square cutout.
+    //   difference() {
+    //       circle(d=100);
+    //       square(100/sqrt(2), center=true);
+    //   }
+    // Continues: You can continue the description text here.  It can also be
+    //   multiple lines long.  This continuation will not print a header.
+
+Which outputs Markdown code that renders like:
+
+> **Descripton:**
+> This is the description for this function or module.  It can be
+> many lines long.  If you need to show an image in the middle of this text,
+> you can use a Figure, like this:
+>
+> **Figure 1:** A circle with a square cutout.
+> GENERATED IMAGE SHOWN HERE
+>
+> You can continue the description text here.  It can also be
+> multiple lines long.  This continuation will not print a header.
+>
 
 
 Arguments Block
@@ -727,6 +758,7 @@ Where NEWBLOCKNAME is the name of the new block header, OPTIONS is an optional l
 
 - `Generic`: Show both the TitleText and body.
 - `Text`: Show the TitleText as the first line of the body.
+- `Headerless`: Show the TitleText as the first line of the body, with no header line.
 - `Label`: Show only the TitleText and no body.
 - `NumList`: Shows TitleText, and the body lines in a numbered list.
 - `BulletList`: Shows TitleText, and the body lines in a bullet list.
@@ -768,7 +800,7 @@ Which outputs Markdown code that renders like:
 Text Block Type
 ---------------
 
-The Text block header type is similar to the Generic type, except it merges the title into the body.  This is useful for allowing single-line or multi- line blocks:
+The Text block header type is similar to the Generic type, except it merges the title into the body.  This is useful for allowing single-line or multi-line blocks:
 
     // DefineHeader(Text): Reason
     // Reason: This is a simple reason.
@@ -789,6 +821,29 @@ Which outputs Markdown code that renders like:
 > It is a multi-line explanation
 > about why this does what it does.
 > Refer to [nonsense()](foobar.scad#function-nonsense) for more info.
+>
+
+Headerless Block Type
+---------------------
+
+The Headerless block header type is similar to the Generic type, except it merges the title into the body, and generates no header line.
+
+    // DefineHeader(Headerless): Explanation
+    // Explanation: This is a simple explanation.
+    // Explanation: This is a complex explanation.
+    //   It is a multi-line explanation
+    //   about why this does what it does.
+    //   Refer to {{nonsense()}} for more info.
+
+Which outputs Markdown code that renders like:
+
+> This is a simple explanation.
+>
+> This is a complex explanation.
+> It is a multi-line explanation
+> about why this does what it does.
+> Refer to [nonsense()](foobar.scad#function-nonsense) for more info.
+>
 
 
 Label Block Type
