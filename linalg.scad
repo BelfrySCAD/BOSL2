@@ -62,6 +62,33 @@ function is_matrix_symmetric(A,eps=1e-12) =
     approx(A,transpose(A), eps);
 
 
+// Function: is_rotation()
+// Usage:
+//   b = is_rotation(A, [dim], [centered])
+// Description:
+//   Returns true if the input matrix is a square affine matrix that is a rotation around any point,
+//   or around the origin if `centered` is true. 
+//   The matrix must be 3x3 (representing a 2d transformation) or 4x4 (representing a 3d transformation).
+//   You can set `dim` to 2 to require a 2d transform (3x3 matrix) or to 3 to require a 3d transform (4x4 matrix).
+// Arguments:
+//   A = matrix to test
+//   dim = if set, specify dimension in which the transform operates (2 or 3)
+//   centered = if true then require rotation to be around the origin.  Default: false
+function is_rotation(A,dim,centered=false) =
+    let(n=len(A))
+    is_matrix(A,square=true)
+    && ( n==3 || n==4 && (is_undef(dim) || dim==n-1))
+    &&
+    (
+      let(
+          rotpart =  [for(i=[0:n-2]) [for(j=[0:n-2]) A[j][i]]]
+      )
+      approx(determinant(rotpart),1)
+    )
+    && 
+    (!centered || [for(row=[0:n-2]) if (!approx(A[row][n-1],0)) row]==[]);
+  
+
 // Function&Module: echo_matrix()
 // Usage:
 //    echo_matrix(M, [description], [sig], [sep], [eps]);

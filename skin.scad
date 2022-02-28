@@ -907,9 +907,11 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   path_sweep(ushape, path3d(elliptic_arc), method="manual", normal=UP+RIGHT);
 // Example(NoScales): It is easy to produce an invalid shape when your path has a smaller radius of curvature than the width of your shape.  The exact threshold where the shape becomes invalid depends on the density of points on your path.  The error may not be immediately obvious, as the swept shape appears fine when alone in your model, but adding a cube to the model reveals the problem.  In this case the pentagon is turned so its longest direction points inward to create the singularity.  
 //   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
-//   echo(radius_of_curvature = 1/max(path_curvature(qpath)));   // Prints 0.9, but we use pentagon with radius of 1.0 > 0.9
+//   // Prints 0.9, but we use pentagon with radius of 1.0 > 0.9
+//   echo(radius_of_curvature = 1/max(path_curvature(qpath)));
 //   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual");
-//   cube(0.5);    // Adding a small cube forces a CGAL computation which reveals the error by displaying nothing or giving a cryptic message
+//   cube(0.5);    // Adding a small cube forces a CGAL computation which reveals
+//                 // the error by displaying nothing or giving a cryptic message
 // Example(NoScales): Using the `relax` option we allow the profiles to deviate from orthogonality to the path.  This eliminates the crease that broke the previous example because the sections are all parallel to each other.  
 //   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
 //   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual", relaxed=true);
@@ -1111,7 +1113,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   path_sweep(region,
 //              circle(r=16,$fn=75),closed=true,
 //              twist=360/5*2,symmetry=5);
-// Example: Cutting a cylinder with a curved path.  Note that in this case, the incremental method produces just a slight twist but the natural method produces an extreme twist.  But manual specification produces no twist, as desired:
+// Example(Med,NoScales): Cutting a cylinder with a curved path.  Note that in this case, the incremental method produces just a slight twist but the natural method produces an extreme twist.  But manual specification produces no twist, as desired:
 //   $fn=90;
 //   r=8;
 //   thickness=1;
