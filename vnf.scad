@@ -313,16 +313,16 @@ function vnf_tri_array(points, row_wrap=false, reverse=false) =
 //   then join them into a cube with a point.  
 // Arguments:
 //   vnfs = a list of the VNFs to joint into one VNF.
-// Example(VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): Here is a VNF where the top face is missing.  It is not a valid polyhedron like this, but we can use it as a building block to make a polyhedron.  
+// Example(3D,VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): Here is a VNF where the top face is missing.  It is not a valid polyhedron like this, but we can use it as a building block to make a polyhedron.  
 //   bottom = vnf_vertex_array([path3d(rect(8)), path3d(rect(5),4)],col_wrap=true,cap1=true);
 //   vnf_polyhedron(bottom);
-// Example(VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): Here is a VNF that also has a missing face.  
+// Example(3D,VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): Here is a VNF that also has a missing face.  
 //   triangle = yrot(-90,path3d(regular_ngon(n=3,side=5,anchor=LEFT)));
 //   top = up(4,vnf_vertex_array([list_set(right(2.5,triangle),0,[0,0,7]),
 //                               right(6,triangle)
 //                               ], col_wrap=true, cap2=true));
 //   vnf_polyhedron(zrot(90,top));
-// Example(VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): Using vnf_join combines the two VNFs into a single VNF.  Note that they share an edge.  But the result still isn't closed, so it is not yet a valid polyhedron.  
+// Example(3D,VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): Using vnf_join combines the two VNFs into a single VNF.  Note that they share an edge.  But the result still isn't closed, so it is not yet a valid polyhedron.  
 //   bottom = vnf_vertex_array([path3d(rect(8)), path3d(rect(5),4)],col_wrap=true,cap1=true);
 //   triangle = yrot(-90,path3d(regular_ngon(n=3,side=5,anchor=LEFT)));
 //   top = up(4,vnf_vertex_array([list_set(right(2.5,triangle),0,[0,0,7]),
@@ -330,7 +330,7 @@ function vnf_tri_array(points, row_wrap=false, reverse=false) =
 //                               ], col_wrap=true, cap2=true));
 //   full = vnf_join([bottom,zrot(90,top)]);
 //   vnf_polyhedron(full);
-// Example(VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): If we add enough pieces, and the pieces are all consistent with each other, then we can arrive at a valid polyhedron like this one.  To be valid you need to meet all the CGAL requirements: every edge has exactly two faces, all faces are in clockwise order, no intersections of edges.
+// Example(3D,VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): If we add enough pieces, and the pieces are all consistent with each other, then we can arrive at a valid polyhedron like this one.  To be valid you need to meet all the CGAL requirements: every edge has exactly two faces, all faces are in clockwise order, no intersections of edges.
 //   bottom = vnf_vertex_array([path3d(rect(8)), path3d(rect(5),4)],col_wrap=true,cap1=true);
 //   triangle = yrot(-90,path3d(regular_ngon(n=3,side=5,anchor=LEFT)));
 //   top = up(4,vnf_vertex_array([list_set(right(2.5,triangle),0,[0,0,7]),
@@ -340,7 +340,7 @@ function vnf_tri_array(points, row_wrap=false, reverse=false) =
 //                     for(theta=[0:90:359]) zrot(theta,top)
 //                    ]);
 //   vnf_polyhedron(full);
-// Example: The vnf_join function is not a union operator for polyhedra.  If any faces intersect, like they do in this example where we combine the faces of two cubes, the result is invalid and will give rise to CGAL errors when you add more objects into the model.  
+// Example(3D): The vnf_join function is not a union operator for polyhedra.  If any faces intersect, like they do in this example where we combine the faces of two cubes, the result is invalid and will give rise to CGAL errors when you add more objects into the model.  
 //   cube1 = cube(5);
 //   cube2 = move([2,2,2],cube1);
 //   badvnf = vnf_join([cube1,cube2]);

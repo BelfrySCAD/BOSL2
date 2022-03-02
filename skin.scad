@@ -1053,7 +1053,8 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   a = 0.8; b = sqrt (1 - a * a); 
 //   ksteps = 400;
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
-//   path_sweep(subdivide_path(pentagon(r=12),30), knot_path, closed=true, twist=-360*8, symmetry=5, method="natural");
+//   path_sweep(subdivide_path(pentagon(r=12),30), knot_path, closed=true,
+//              twist=-360*8, symmetry=5, method="natural");
 // Example(Med,NoScales): twisted knot with twist distributed by path sample points instead of by length using `twist_by_length=false`
 //   function knot(a,b,t) =   // rolling knot 
 //           [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
@@ -1062,7 +1063,8 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   a = 0.8; b = sqrt (1 - a * a); 
 //   ksteps = 400;
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
-//   path_sweep(subdivide_path(pentagon(r=12),30), knot_path, closed=true, twist=-360*8, symmetry=5, method="natural", twist_by_length=false);
+//   path_sweep(subdivide_path(pentagon(r=12),30), knot_path, closed=true,
+//              twist=-360*8, symmetry=5, method="natural", twist_by_length=false);
 // Example(Big,NoScales): This torus knot example comes from list-comprehension-demos.  The knot lies on the surface of a torus.  When we use the "natural" method the swept figure is angled compared to the surface of the torus because the curve doesn't follow geodesics of the torus.  
 //   function knot(phi,R,r,p,q) = 
 //       [ (r * cos(q * phi) + R) * cos(p * phi),
