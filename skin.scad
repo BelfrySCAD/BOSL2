@@ -784,10 +784,11 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
 //   color("blue")stroke(path3d(xscale(1.5,arc(r=5,N=81,angle=[-70,80]))),width=.1,endcap2="arrow2");
 // Continues:
-//   When performing a path sweep, the normal vector of the shape aligns with the tangent vector of the
-//   path, but this leaves an ambiguity about how the shape is rotated.  For 2D paths it is easy to resolve
-//   this ambiguity by aligning the Y axis in the shape to the Z axis in the swept polyhedron.  We can force the
-//   shape to twist with the `twist` parameter and get a result like the one shown below.
+//   During the sweep operation the shape's normal vector aligns with the tangent vector of the path.  Note that
+//   this leaves an ambiguity about how the shape is rotated as it sweeps along the path.
+//   For 2D paths, this ambiguity is resolved by aligning the Y axis of the shape to the Z axis of the swept polyhedron.
+//   You can can force the  shape to twist as it sweeps along the path using the `twist` parameter, which specifies the total
+//   number of degrees to twist along the whole swept polyhedron.  This produces a result like the one shown below.
 // Figure(3D,Big,VPR=[66,0,14],VPD=20,VPT=[3.4,4.5,-0.8]): The shape twists as we sweep.  Note that it still aligns the origin in the shape with the path, and still aligns the normal vector with the path tangent vector.
 //   tri= [[0, 0], [0, 1], [.25,1],[1, 0]];
 //   path = arc(r=5,N=81,angle=[-20,65]);
@@ -796,12 +797,27 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
 //   color("blue")stroke(path3d(arc(r=5,N=101,angle=[-20,80])),width=.1,endcap2="arrow2");
 // Continues:
-//   When the path is full three-dimensional, things can become more complex.  It is no longer possible to use a simple
-//   alignment rule like the one we use in 2D.  You may find that the shape rotates
-//   unexpectedly around its axis as it traverses the path.  The `method` parameter allows you to specify how the shapes
-//   are aligned, resulting in different twist in the resulting polyhedron.  You can choose from three different methods
-//   for selecting the rotation of your shape.  None of these methods will produce good, or even valid, results on all
-//   inputs, so it is important to select a suitable method.  
+//   The `twist` argument adds the specified number of degrees of twist into the model, and it may be positive or
+//   negative.  When `closed=true` the starting shape and ending shape must match to avoid a sudden extreme twist at the
+//   joint.  By default `twist` is therefore required to be a multiple of 360.  However, if your shape has rotational
+//   symmetry, this requirement is overly strict.  You can specify the symmetry using the `symmetry` argument, and then
+//   you can choose smaller twists consistent with the specified symmetry.  The symmetry argument gives the number of
+//   rotations that map the shape exactly onto itself, so a pentagon has 5-fold symmetry.  This argument is only valid
+//   for closed sweeps.  When you specify symmetry, the twist must be a multiple of 360/symmetry.
+//   .
+//   The twist is normally spread uniformly along your shape based on the path length.  If you set `twist_by_length` to
+//   false then the twist will be uniform based on the point count of your path.  Twisted shapes will produce twisted
+//   faces, so if you want them to look good you should use lots of points on your path and also lots of points on the
+//   shape.  If your shape is a simple polygon, use {{subdivide_path()}} or {{subdivide_long_segments()}} to increase
+//   the number of points.
+//   .
+//   As noted above, the sweep process has an ambiguity regarding the twist.  For 2D paths it is easy to resolve this
+//   ambiguity by aligning the Y axis in the shape to the Z axis in the swept polyhedron.  When the path is
+//   three-dimensional, things become more complex.  It is no longer possible to use a simple alignment rule like the
+//   one we use in 2D.  You may find that the shape rotates unexpectedly around its axis as it traverses the path.  The
+//   `method` parameter allows you to specify how the shapes are aligned, resulting in different twist in the resulting
+//   polyhedron.  You can choose from three different methods for selecting the rotation of your shape.  None of these
+//   methods will produce good, or even valid, results on all inputs, so it is important to select a suitable method.
 //   .
 //   The three methods you can choose using the `method` parameter are:
 //   .
@@ -810,10 +826,8 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   sampling.  Unfortunately, it can produce a large amount of undesirable twist.  When constructing a closed shape this algorithm in
 //   its basic form provides no guarantee that the start and end shapes match up.  To prevent a sudden twist at the last segment,
 //   the method calculates the required twist for a good match and distributes it over the whole model (as if you had specified a
-//   twist amount).  By default the end shape is required to match the starting shape exactly, but if your shape as rotational
-//   symmetry you can specify this using the `symmetry` argument, and then a smaller amount of twist is needed to make this adjustment.
-//   The symmetry argument gives the number of rotations that map the shape exactly onto itself, so a pentagon has 5-fold symmetry.
-//   This argument is only valid for closed sweeps.  To start the algorithm, we need an initial condition.  This is supplied by
+//   twist amount).  If you specify `symmetry` this may allow the algorithm to choose a smaller twist for this alignment.
+//   To start the algorithm, we need an initial condition.  This is supplied by
 //   using the `normal` argument to give a direction to align the Y axis of your shape.  By default the normal points UP if the path
 //   makes an angle of 45 deg or less with the xy plane and it points BACK if the path makes a higher angle with the XY plane.  You
 //   can also supply `last_normal` which provides an ending orientation constraint.  Be aware that the curve may still exhibit
@@ -836,12 +850,6 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   the cross section orientation.  Specifying a list of normal vectors gives you complete control over the orientation of your
 //   cross sections and can be useful if you want to position your model to be on the surface of some solid.
 //   .
-//   For any method you can use the `twist` argument to add the specified number of degrees of twist into the model.  
-//   If the model is closed then the twist must be a multiple of 360/symmetry.  The twist is normally spread uniformly along your shape
-//   based on the path length.  If you set `twist_by_length` to false then the twist will be uniform based on the point count of your path.
-//   Twisted shapes will produce twisted faces, so if you want them to look good you should use lots of points on your path and also
-//   lots of points on the shape.  If your shape is a simple polygon, use {{subdivide_path()}} or {{subdivide_long_segments()}} to
-//   increase the number of points.  
 // Arguments:
 //   shape = A 2D polygon path or region describing the shape to be swept.
 //   path = 2D or 3D path giving the path to sweep over
