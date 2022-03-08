@@ -495,11 +495,12 @@ function cuboid(
 //   Creates a rectangular prismoid shape with optional roundovers and chamfering.
 //   You can only round or chamfer the vertical(ish) edges.  For those edges, you can
 //   specify rounding and/or chamferring per-edge, and for top and bottom separately.
+//   If you want to round the bottom or top edges see {{rounded_prism()}}.  
 //
 // Arguments:
 //   size1 = [width, length] of the bottom end of the prism.
 //   size2 = [width, length] of the top end of the prism.
-//   h|l = Height of the prism.
+//   h/l = Height of the prism.
 //   shift = [X,Y] amount to shift the center of the top end with respect to the center of the bottom end.
 //   ---
 //   rounding = The roundover radius for the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
@@ -745,7 +746,7 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   specify rounding and/or chamferring per-edge, and for top and bottom, inside and
 //   outside  separately.
 // Arguments:
-//   h|l = The height or length of the rectangular tube.  Default: 1
+//   h/l = The height or length of the rectangular tube.  Default: 1
 //   size = The outer [X,Y] size of the rectangular tube.
 //   isize = The inner [X,Y] size of the rectangular tube.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.

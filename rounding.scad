@@ -195,7 +195,7 @@ include <structs.scad>
 //   path = list of 2d or 3d points defining the path to be rounded.
 //   method = rounding method to use.  Set to "chamfer" for chamfers, "circle" for circular rounding and "smooth" for continuous curvature 4th order bezier rounding.  Default: "circle"
 //   ---
-//   radius|r = rounding radius, only compatible with `method="circle"`. Can be a number or vector.
+//   radius/r = rounding radius, only compatible with `method="circle"`. Can be a number or vector.
 //   cut = rounding cut distance, compatible with all methods.  Can be a number or vector.
 //   joint = rounding joint distance, compatible with `method="chamfer"` and `method="smooth"`.  Can be a number or vector.
 //   flat = length of the flat edge created by chamfering, compatible with `method="chamfer"`.  Can be a number of vector. 

@@ -750,7 +750,7 @@ module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, anc
 //   Helix will be right handed if turns is positive and left handed if it is negative.
 //   The angle is calculateld based on the radius at the base of the helix.
 // Arguments:
-//   h|l = Height/length of helix, zero for a flat spiral
+//   h/l = Height/length of helix, zero for a flat spiral
 //   ---
 //   turns = Number of turns in helix, positive for right handed
 //   angle = helix angle
