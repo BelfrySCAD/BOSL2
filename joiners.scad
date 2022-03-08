@@ -675,9 +675,9 @@ function _pin_size(size) =
 // Arguments:
 //    size = text string to select from a list of predefined sizes, one of "standard", "small", or "tiny".
 //    pointed = set to true to get a pointed pin, false to get one with a rounded end.  Default: true
-//    r|radius = radius of the pin
-//    d|diameter = diameter of the pin
-//    l|length = length of the pin
+//    r/radius = radius of the pin
+//    d/diameter = diameter of the pin
+//    l/length = length of the pin
 //    nub_depth = the distance of the nub from the base of the pin
 //    snap = how much snap the pin provides (the nub projection)
 //    thickness = thickness of the pin walls
@@ -740,9 +740,9 @@ module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, 
 // Arguments:
 //   size = text string to select from a list of predefined sizes, one of "standard", "small", or "tiny".
 //   pointed = set to true to get a pointed pin, false to get one with a rounded end.  Default: true
-//   r|radius = radius of the pin
-//   d|diameter = diameter of the pin
-//   l|length = length of the pin
+//   r/radius = radius of the pin
+//   d/diameter = diameter of the pin
+//   l/length = length of the pin
 //   nub_depth = the distance of the nub from the base of the pin
 //   snap = how much snap the pin provides (the nub projection)
 //   fixed = if true the pin cannot rotate, if false it can.  Default: true

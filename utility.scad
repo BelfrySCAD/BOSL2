@@ -447,8 +447,7 @@ function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
 //   specific, returns half its value, giving the radius.  If no radii or diameters are defined,
 //   returns the value of `dflt`.  Value specificity order is `r1`, `r2`, `d1`, `d2`, `r`, `d`,
 //   then `dflt`.  Only one of `r1`, `r2`, `d1`, or `d2` can be defined at once, or else it errors
-//   out, complaining about conflicting radius/diameter values.  Only one of `r` or `d` can be
-//   defined at once, or else it errors out, complaining about conflicting radius/diameter values.
+//   out, complaining about conflicting radius/diameter values.  
 // Arguments:
 //   ---
 //   r1 = Most specific radius.
