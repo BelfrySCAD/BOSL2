@@ -84,10 +84,15 @@ module square(size=1, center, anchor, spin) {
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
 // Arguments:
 //   size = The size of the rectangle to create.  If given as a scalar, both X and Y will be the same size.
+//   ---
 //   rounding = The rounding radius for the corners.  If negative, produces external roundover spikes on the X axis. If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
 //   chamfer = The chamfer size for the corners.  If negative, produces external chamfer spikes on the X axis. If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
+//   atype = The type of anchoring to use with `anchor=`.  Valid opptions are "box" and "perim".  This lets you choose between putting anchors on the rounded or chamfered perimeter, or on the square bounding box of the shape. Default: "box"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Anchor Types:
+//   box = Anchor is with respect to the rectangular bounding box of the shape.
+//   perim = Anchors are placed along the rounded or chamfered perimeter of the shape.
 // Example(2D):
 //   rect(40);
 // Example(2D): Anchored
@@ -102,13 +107,21 @@ module square(size=1, center, anchor, spin) {
 //   rect([40,30], chamfer=-5);
 // Example(2D): Negative-Rounded Rect
 //   rect([40,30], rounding=-5);
+// Example(2D): Default "box" Anchors
+//   color("red") rect([40,30]);
+//   rect([40,30], rounding=10)
+//       show_anchors();
+// Example(2D): "perim" Anchors
+//   rect([40,30], rounding=10, atype="perim")
+//       show_anchors();
 // Example(2D): Mixed Chamferring and Rounding
 //   rect([40,30],rounding=[5,0,10,0],chamfer=[0,8,0,15],$fa=1,$fs=1);
 // Example(2D): Called as Function
 //   path = rect([40,30], chamfer=5, anchor=FRONT, spin=30);
 //   stroke(path, closed=true);
 //   move_copies(path) color("blue") circle(d=2,$fn=8);
-module rect(size=1, rounding=0, chamfer=0, anchor=CENTER, spin=0) {
+module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0) {
+    errchk = assert(in_list(atype, ["box", "perim"]));
     size = is_num(size)? [size,size] : point2d(size);
     if (rounding==0 && chamfer==0) {
         attachable(anchor, spin, two_d=true, size=size) {
@@ -117,19 +130,27 @@ module rect(size=1, rounding=0, chamfer=0, anchor=CENTER, spin=0) {
         }
     } else {
         pts = rect(size=size, rounding=rounding, chamfer=chamfer);
-        attachable(anchor, spin, two_d=true, path=pts) {
-            polygon(pts);
-            children();
+        if (atype == "perim") {
+            attachable(anchor, spin, two_d=true, path=pts) {
+                polygon(pts);
+                children();
+            }
+        } else {
+            attachable(anchor, spin, two_d=true, size=size) {
+                polygon(pts);
+                children();
+            }
         }
     }
 }
 
 
 
-function rect(size=1, rounding=0, chamfer=0, anchor=CENTER, spin=0) =
+function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0) =
     assert(is_num(size)     || is_vector(size))
     assert(is_num(chamfer)  || len(chamfer)==4)
     assert(is_num(rounding) || len(rounding)==4)
+    assert(in_list(atype, ["box", "perim"]))
     let(
         anchor=point2d(anchor),
         size = is_num(size)? [size,size] : point2d(size),
@@ -176,7 +197,7 @@ function rect(size=1, rounding=0, chamfer=0, anchor=CENTER, spin=0) =
             )
             each move(cp, p=qrpts)
         ]
-    ) complex?
+    ) complex && atype=="perim"?
         reorient(anchor,spin, two_d=true, path=path, p=path) :
         reorient(anchor,spin, two_d=true, size=size, p=path);
 
