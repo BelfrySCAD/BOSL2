@@ -50,6 +50,7 @@ PrioritizeFiles:
   screw_drive.scad
 DefineHeader(BulletList): Side Effects
 DefineHeader(Table;Headers=Anchor Name|Position): Extra Anchors
+DefineHeader(Table;Headers=Anchor Type|What it is): Anchor Types
 DefineHeader(Table;Headers=Name|Definition): Terminology
 DefineHeader(BulletList): Requirements
 

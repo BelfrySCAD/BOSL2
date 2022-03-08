@@ -27,7 +27,6 @@ include <math.scad>
 include <linalg.scad>
 include <trigonometry.scad>
 include <vectors.scad>
-include <quaternions.scad>
 include <affine.scad>
 include <coords.scad>
 include <geometry.scad>
