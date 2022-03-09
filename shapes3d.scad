@@ -1276,7 +1276,21 @@ module cyl(
 //   d = Optional diameter of cylinder. (use instead of `r`)
 //   d1 = Optional diameter of left (X-) end of cylinder.
 //   d2 = Optional diameter of right (X+) end of cylinder.
+//   circum = If true, cylinder should circumscribe the circle of the given size.  Otherwise inscribes.  Default: `false`
+//   chamfer = The size of the chamfers on the ends of the cylinder.  Default: none.
+//   chamfer1 = The size of the chamfer on the left end of the cylinder.  Default: none.
+//   chamfer2 = The size of the chamfer on the right end of the cylinder.  Default: none.
+//   chamfang = The angle in degrees of the chamfers on the ends of the cylinder.
+//   chamfang1 = The angle in degrees of the chamfer on the left end of the cylinder.
+//   chamfang2 = The angle in degrees of the chamfer on the right end of the cylinder.
+//   from_end = If true, chamfer is measured from the end of the cylinder, instead of inset from the edge.  Default: `false`.
+//   rounding = The radius of the rounding on the ends of the cylinder.  Default: none.
+//   rounding1 = The radius of the rounding on the left end of the cylinder.
+//   rounding2 = The radius of the rounding on the right end of the cylinder.
+//   realign = If true, rotate the cylinder by half the angle of one face.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Example: By Radius
 //   ydistribute(50) {
@@ -1289,17 +1303,29 @@ module cyl(
 //       xcyl(l=35, d=20);
 //       xcyl(l=35, d1=30, d2=10);
 //   }
-module xcyl(h, r, d, r1, r2, d1, d2, l, anchor=CENTER)
-{
+module xcyl(
+    h, r, d, r1, r2, d1, d2, l,
+    chamfer, chamfer1, chamfer2,
+    chamfang, chamfang1, chamfang2,
+    rounding, rounding1, rounding2,
+    circum=false, realign=false, from_end=false,
+    anchor=CENTER, spin=0, orient=UP
+) {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     l = first_defined([l, h, 1]);
-    attachable(anchor,0,UP, r1=r1, r2=r2, l=l, axis=RIGHT) {
-        cyl(l=l, r1=r1, r2=r2, orient=RIGHT, anchor=CENTER);
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=RIGHT) {
+        cyl(
+            l=l, r1=r1, r2=r2,
+            chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+            chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+            rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+            circum=circum, realign=realign, from_end=from_end,
+            anchor=CENTER, orient=RIGHT
+        );
         children();
     }
 }
-
 
 
 // Module: ycyl()
@@ -1323,7 +1349,21 @@ module xcyl(h, r, d, r1, r2, d1, d2, l, anchor=CENTER)
 //   d = Diameter of cylinder.
 //   d1 = Diameter of front (Y-) end of one.
 //   d2 = Diameter of back (Y+) end of one.
+//   circum = If true, cylinder should circumscribe the circle of the given size.  Otherwise inscribes.  Default: `false`
+//   chamfer = The size of the chamfers on the ends of the cylinder.  Default: none.
+//   chamfer1 = The size of the chamfer on the front end of the cylinder.  Default: none.
+//   chamfer2 = The size of the chamfer on the back end of the cylinder.  Default: none.
+//   chamfang = The angle in degrees of the chamfers on the ends of the cylinder.
+//   chamfang1 = The angle in degrees of the chamfer on the front end of the cylinder.
+//   chamfang2 = The angle in degrees of the chamfer on the back end of the cylinder.
+//   from_end = If true, chamfer is measured from the end of the cylinder, instead of inset from the edge.  Default: `false`.
+//   rounding = The radius of the rounding on the ends of the cylinder.  Default: none.
+//   rounding1 = The radius of the rounding on the front end of the cylinder.
+//   rounding2 = The radius of the rounding on the back end of the cylinder.
+//   realign = If true, rotate the cylinder by half the angle of one face.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Example: By Radius
 //   xdistribute(50) {
@@ -1336,13 +1376,26 @@ module xcyl(h, r, d, r1, r2, d1, d2, l, anchor=CENTER)
 //       ycyl(l=35, d=20);
 //       ycyl(l=35, d1=30, d2=10);
 //   }
-module ycyl(h, r, d, r1, r2, d1, d2, l, anchor=CENTER)
-{
+module ycyl(
+    h, r, d, r1, r2, d1, d2, l,
+    chamfer, chamfer1, chamfer2,
+    chamfang, chamfang1, chamfang2,
+    rounding, rounding1, rounding2,
+    circum=false, realign=false, from_end=false,
+    anchor=CENTER, spin=0, orient=UP
+) {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     l = first_defined([l, h, 1]);
-    attachable(anchor,0,UP, r1=r1, r2=r2, l=l, axis=BACK) {
-        cyl(l=l, h=h, r1=r1, r2=r2, orient=BACK, anchor=CENTER);
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=BACK) {
+        cyl(
+            l=l, r1=r1, r2=r2,
+            chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+            chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+            rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+            circum=circum, realign=realign, from_end=from_end,
+            anchor=CENTER, orient=BACK
+        );
         children();
     }
 }
@@ -1370,7 +1423,21 @@ module ycyl(h, r, d, r1, r2, d1, d2, l, anchor=CENTER)
 //   d = Diameter of cylinder.
 //   d1 = Diameter of front (Y-) end of one.
 //   d2 = Diameter of back (Y+) end of one.
+//   circum = If true, cylinder should circumscribe the circle of the given size.  Otherwise inscribes.  Default: `false`
+//   chamfer = The size of the chamfers on the ends of the cylinder.  Default: none.
+//   chamfer1 = The size of the chamfer on the bottom end of the cylinder.  Default: none.
+//   chamfer2 = The size of the chamfer on the top end of the cylinder.  Default: none.
+//   chamfang = The angle in degrees of the chamfers on the ends of the cylinder.
+//   chamfang1 = The angle in degrees of the chamfer on the bottom end of the cylinder.
+//   chamfang2 = The angle in degrees of the chamfer on the top end of the cylinder.
+//   from_end = If true, chamfer is measured from the end of the cylinder, instead of inset from the edge.  Default: `false`.
+//   rounding = The radius of the rounding on the ends of the cylinder.  Default: none.
+//   rounding1 = The radius of the rounding on the bottom end of the cylinder.
+//   rounding2 = The radius of the rounding on the top end of the cylinder.
+//   realign = If true, rotate the cylinder by half the angle of one face.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Example: By Radius
 //   xdistribute(50) {
@@ -1383,9 +1450,28 @@ module ycyl(h, r, d, r1, r2, d1, d2, l, anchor=CENTER)
 //       zcyl(l=35, d=20);
 //       zcyl(l=35, d1=30, d2=10);
 //   }
-module zcyl(h, r, d, r1, r2, d1, d2, l, anchor=CENTER)
-{
-    cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=UP, anchor=anchor) children();
+module zcyl(
+    h, r, d, r1, r2, d1, d2, l,
+    chamfer, chamfer1, chamfer2,
+    chamfang, chamfang1, chamfang2,
+    rounding, rounding1, rounding2,
+    circum=false, realign=false, from_end=false,
+    anchor=CENTER, spin=0, orient=UP
+) {
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
+    l = first_defined([l, h, 1]);
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
+        cyl(
+            l=l, r1=r1, r2=r2,
+            chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+            chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+            rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+            circum=circum, realign=realign, from_end=from_end,
+            anchor=CENTER
+        );
+        children();
+    }
 }
 
 
