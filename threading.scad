@@ -823,8 +823,8 @@ module ball_screw_rod(
     depth = ball_diam * (1-cos(ball_arc/2))/2;
     cpy = ball_diam/2/pitch*cos(ball_arc/2);
     profile = [
-        each arc(N=n, d=ball_diam/pitch, cp=[-0.5,cpy], start=270, angle=ball_arc/2),
-        each arc(N=n, d=ball_diam/pitch, cp=[+0.5,cpy], start=270-ball_arc/2, angle=ball_arc/2)
+        each arc(n=n, d=ball_diam/pitch, cp=[-0.5,cpy], start=270, angle=ball_arc/2),
+        each arc(n=n, d=ball_diam/pitch, cp=[+0.5,cpy], start=270-ball_arc/2, angle=ball_arc/2)
     ];
     generic_threaded_rod(
         d=d, l=l, pitch=pitch,

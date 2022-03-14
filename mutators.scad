@@ -366,7 +366,7 @@ module path_extrude(path, convexity=10, clipsize=100) {
        ) rot(from=vec1,to=vec2)
     ]);
     // This adds a rotation midway between each item on the list
-    interp = rot_resample(rotmats,N=2,method="count");
+    interp = rot_resample(rotmats,n=2,method="count");
     epsilon = 0.0001;  // Make segments ever so slightly too long so they overlap.
     ptcount = len(path);
     for (i = [0:1:ptcount-2]) {

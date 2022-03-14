@@ -595,23 +595,23 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
 
 // Function&Module: arc()
 // Usage: 2D arc from 0º to `angle` degrees.
-//   arc(N, r|d=, angle);
+//   arc(n, r|d=, angle);
 // Usage: 2D arc from START to END degrees.
-//   arc(N, r|d=, angle=[START,END])
+//   arc(n, r|d=, angle=[START,END])
 // Usage: 2D arc from `start` to `start+angle` degrees.
-//   arc(N, r|d=, start=, angle=)
+//   arc(n, r|d=, start=, angle=)
 // Usage: 2D circle segment by `width` and `thickness`, starting and ending on the X axis.
-//   arc(N, width=, thickness=)
+//   arc(n, width=, thickness=)
 // Usage: Shortest 2D or 3D arc around centerpoint `cp`, starting at P0 and ending on the vector pointing from `cp` to `P1`.
-//   arc(N, cp=, points=[P0,P1], [long=], [cw=], [ccw=])
+//   arc(n, cp=, points=[P0,P1], [long=], [cw=], [ccw=])
 // Usage: 2D or 3D arc, starting at `P0`, passing through `P1` and ending at `P2`.
-//   arc(N, points=[P0,P1,P2])
+//   arc(n, points=[P0,P1,P2])
 // Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators
 // Description:
 //   If called as a function, returns a 2D or 3D path forming an arc.
 //   If called as a module, creates a 2D arc polygon or pie slice shape.
 // Arguments:
-//   N = Number of vertices to form the arc curve from.
+//   n = Number of vertices to form the arc curve from.
 //   r = Radius of the arc.
 //   angle = If a scalar, specifies the end angle in degrees (relative to start parameter).  If a vector of two scalars, specifies start and end angles.
 //   ---
@@ -629,7 +629,7 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  (Module only) Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  (Module only) Default: `0`
 // Examples(2D):
-//   arc(N=4, r=30, angle=30, wedge=true);
+//   arc(n=4, r=30, angle=30, wedge=true);
 //   arc(r=30, angle=30, wedge=true);
 //   arc(d=60, angle=30, wedge=true);
 //   arc(d=60, angle=120);
@@ -646,17 +646,17 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
 // Example(FlatSpin,VPD=175):
 //   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
 //   stroke(path, dots=true, dots_color="blue");
-function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true) =
+function arc(n, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true) =
     assert(is_bool(endpoint))
     !endpoint ? assert(!wedge, "endpoint cannot be false if wedge is true")
-               list_head(arc(u_add(N,1),r,angle,d,cp,points,width,thickness,start,wedge,long,cw,ccw,true)) :
-    assert(is_undef(N) || (is_integer(N) && N>=2), "Number of points must be an integer 2 or larger")
+               list_head(arc(u_add(n,1),r,angle,d,cp,points,width,thickness,start,wedge,long,cw,ccw,true)) :
+    assert(is_undef(n) || (is_integer(n) && n>=2), "Number of points must be an integer 2 or larger")
     // First try for 2D arc specified by width and thickness
     is_def(width) && is_def(thickness)? (
                 assert(!any_defined([r,cp,points]) && !any([cw,ccw,long]),"Conflicting or invalid parameters to arc")
                 assert(width>0, "Width must be postive")
                 assert(thickness>0, "Thickness must be positive")
-        arc(N,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge)
+        arc(n,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge)
     ) : is_def(angle)? (
         let(
             parmok = !any_defined([points,width,thickness]) &&
@@ -673,8 +673,8 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
         assert(angle!=0, "Arc has zero length")
         assert(is_def(r) && r>0, "Arc radius invalid")
         let(
-            N = is_def(N) ? N : max(3, ceil(segs(r)*abs(angle)/360)),
-            arcpoints = [for(i=[0:N-1]) let(theta = start + i*angle/(N-1)) r*[cos(theta),sin(theta)]+cp],
+            n = is_def(n) ? n : max(3, ceil(segs(r)*abs(angle)/360)),
+            arcpoints = [for(i=[0:n-1]) let(theta = start + i*angle/(n-1)) r*[cos(theta),sin(theta)]+cp],
             extra = wedge? [cp] : []
         )
         concat(extra,arcpoints)
@@ -689,7 +689,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
             center2d = is_def(cp) ? project_plane(plane,cp) : undef,
             points2d = project_plane(plane, points)
         )
-        lift_plane(plane,arc(N,cp=center2d,points=points2d,wedge=wedge,long=long))
+        lift_plane(plane,arc(n,cp=center2d,points=points2d,wedge=wedge,long=long))
     ) : is_def(cp)? (
         // Arc defined by center plus two points, will have radius defined by center and points[0]
         // and extent defined by direction of point[1] from the center
@@ -710,7 +710,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
             r=norm(v1),
                         final_angle = long || (ccw && dir<0) || (cw && dir>0) ? -dir*(360-angle) : dir*angle
         )
-        arc(N,cp=cp,r=r,start=atan2(v1.y,v1.x),angle=final_angle,wedge=wedge)
+        arc(n,cp=cp,r=r,start=atan2(v1.y,v1.x),angle=final_angle,wedge=wedge)
     ) : (
         // Final case is arc passing through three points, starting at point[0] and ending at point[3]
         let(col = is_collinear(points[0],points[1],points[2]))
@@ -724,15 +724,15 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
             theta_start = atan2(points[0].y-cp.y, points[0].x-cp.x),
             theta_end = atan2(points[1].y-cp.y, points[1].x-cp.x),
             angle = posmod(theta_end-theta_start, 360),
-            arcpts = arc(N,cp=cp,r=r,start=theta_start,angle=angle,wedge=wedge)
+            arcpts = arc(n,cp=cp,r=r,start=theta_start,angle=angle,wedge=wedge)
         )
         dir ? arcpts : reverse(arcpts)
     );
 
 
-module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, anchor=CENTER, spin=0)
+module arc(n, r, angle, d, cp, points, width, thickness, start, wedge=false, anchor=CENTER, spin=0)
 {
-    path = arc(N=N, r=r, angle=angle, d=d, cp=cp, points=points, width=width, thickness=thickness, start=start, wedge=wedge);
+    path = arc(n=n, r=r, angle=angle, d=d, cp=cp, points=points, width=width, thickness=thickness, start=start, wedge=wedge);
     attachable(anchor,spin, two_d=true, path=path, extent=false) {
         polygon(path);
         children();

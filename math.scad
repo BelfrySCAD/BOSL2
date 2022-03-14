@@ -492,7 +492,7 @@ function modang(x) =
 
 // Function: rand_int()
 // Usage:
-//   rand_int(minval, maxval, N, [seed]);
+//   rand_int(minval, maxval, n, [seed]);
 // Description:
 //   Return a list of random integers in the range of minval to maxval, inclusive.
 // Arguments:
@@ -503,51 +503,51 @@ function modang(x) =
 // Example:
 //   ints = rand_int(0,100,3);
 //   int = rand_int(-10,10,1)[0];
-function rand_int(minval, maxval, N, seed=undef) =
-    assert( is_finite(minval+maxval+N) && (is_undef(seed) || is_finite(seed) ), "Input must be finite numbers.")
+function rand_int(minval, maxval, n, seed=undef) =
+    assert( is_finite(minval+maxval+n) && (is_undef(seed) || is_finite(seed) ), "Input must be finite numbers.")
     assert(maxval >= minval, "Max value cannot be smaller than minval")
-    let (rvect = is_def(seed) ? rands(minval,maxval+1,N,seed) : rands(minval,maxval+1,N))
+    let (rvect = is_def(seed) ? rands(minval,maxval+1,n,seed) : rands(minval,maxval+1,n))
     [for(entry = rvect) floor(entry)];
 
 
 // Function: random_points()
 // Usage:
-//    points = random_points([N], [dim], [scale], [seed]);
+//    points = random_points([n], [dim], [scale], [seed]);
 // See Also: random_polygon(), spherical_random_points()
 // Topics: Random, Points
 // Description:
-//    Generate `N` uniform random points of dimension `dim` with data ranging from -scale to +scale.  
+//    Generate `n` uniform random points of dimension `dim` with data ranging from -scale to +scale.  
 //    The `scale` may be a number, in which case the random data lies in a cube,
 //    or a vector with dimension `dim`, in which case each dimension has its own scale.  
 // Arguments:
-//    N = number of points to generate. Default: 1
+//    n = number of points to generate. Default: 1
 //    dim = dimension of the points. Default: 2
 //    scale = the scale of the point coordinates. Default: 1
 //    seed = an optional seed for the random generation.
-function random_points(N, dim=2, scale=1, seed) =
-    assert( is_int(N) && N>=0, "The number of points should be a non-negative integer.")
+function random_points(n, dim=2, scale=1, seed) =
+    assert( is_int(n) && n>=0, "The number of points should be a non-negative integer.")
     assert( is_int(dim) && dim>=1, "The point dimensions should be an integer greater than 1.")
     assert( is_finite(scale) || is_vector(scale,dim), "The scale should be a number or a vector with length equal to d.")
     let( 
         rnds =   is_undef(seed) 
-                ? rands(-1,1,N*dim)
-                : rands(-1,1,N*dim, seed) )
+                ? rands(-1,1,n*dim)
+                : rands(-1,1,n*dim, seed) )
     is_num(scale) 
-    ? scale*[for(i=[0:1:N-1]) [for(j=[0:dim-1]) rnds[i*dim+j] ] ]
-    : [for(i=[0:1:N-1]) [for(j=[0:dim-1]) scale[j]*rnds[i*dim+j] ] ];
+    ? scale*[for(i=[0:1:n-1]) [for(j=[0:dim-1]) rnds[i*dim+j] ] ]
+    : [for(i=[0:1:n-1]) [for(j=[0:dim-1]) scale[j]*rnds[i*dim+j] ] ];
 
 
 // Function: gaussian_rands()
 // Usage:
-//   arr = gaussian_rands([N],[mean], [cov], [seed]);
+//   arr = gaussian_rands([n],[mean], [cov], [seed]);
 // Description:
 //   Returns a random number or vector with a Gaussian/normal distribution.
 // Arguments:
-//   N = the number of points to return.  Default: 1
+//   n = the number of points to return.  Default: 1
 //   mean = The average of the random value (a number or vector).  Default: 0
 //   cov = covariance matrix of the random numbers, or variance in the 1D case. Default: 1
 //   seed = If given, sets the random number seed.
-function gaussian_rands(N=1, mean=0, cov=1, seed=undef) =
+function gaussian_rands(n=1, mean=0, cov=1, seed=undef) =
     assert(is_num(mean) || is_vector(mean))
     let(
         dim = is_num(mean) ? 1 : len(mean)
@@ -555,8 +555,8 @@ function gaussian_rands(N=1, mean=0, cov=1, seed=undef) =
     assert((dim==1 && is_num(cov)) || is_matrix(cov,dim,dim),"mean and covariance matrix not compatible")
     assert(is_undef(seed) || is_finite(seed))
     let(
-         nums = is_undef(seed)? rands(0,1,dim*N*2) : rands(0,1,dim*N*2,seed),
-         rdata = [for (i = count(dim*N,0,2)) sqrt(-2*ln(nums[i]))*cos(360*nums[i+1])]
+         nums = is_undef(seed)? rands(0,1,dim*n*2) : rands(0,1,dim*n*2,seed),
+         rdata = [for (i = count(dim*n,0,2)) sqrt(-2*ln(nums[i]))*cos(360*nums[i+1])]
     )
     dim==1 ? add_scalar(sqrt(cov)*rdata,mean) :
     assert(is_matrix_symmetric(cov),"Supplied covariance matrix is not symmetric")
@@ -569,7 +569,7 @@ function gaussian_rands(N=1, mean=0, cov=1, seed=undef) =
 
 // Function: spherical_random_points()
 // Usage:
-//    points = spherical_random_points([N], [radius], [seed]);
+//    points = spherical_random_points([n], [radius], [seed]);
 // See Also: random_polygon(), random_points()
 // Topics: Random, Points
 // Description:
@@ -580,7 +580,7 @@ function gaussian_rands(N=1, mean=0, cov=1, seed=undef) =
 //    seed = an optional seed for the random generation.
 
 // See https://mathworld.wolfram.com/SpherePointPicking.html
-function spherical_random_points(N=1, radius=1, seed) =
+function spherical_random_points(n=1, radius=1, seed) =
     assert( is_int(n) && n>=1, "The number of points should be an integer greater than zero.")
     assert( is_num(radius) && radius>0, "The radius should be a non-negative number.")
     let( theta = is_undef(seed) 
@@ -616,9 +616,6 @@ function random_polygon(n=3,size=1, seed) =
         rads = rands(.01,size,n,seed+cumm[0])
       )
     [for(i=count(n)) rads[i]*[cos(angs[i]), sin(angs[i])] ];
-
-
-
 
 
 

@@ -746,11 +746,11 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   .
 // Figure(3D,Big,VPR=[70,0,345],VPD=20,VPT=[5.5,10.8,-2.7],NoScales): This example shows how the shape, in this case the quadrilateral defined by `[[0, 0], [0, 1], [0.25, 1], [1, 0]]`, appears as the cross section of the swept polyhedron.  The blue line shows the path.  The normal vector to the shape is shown in black; it is based at the origin and points upwards in the Z direction.  The sweep aligns this normal vector with the blue path tangent, which in this case, flips the shape around.  Note that for a 2D path like this one, the Y direction in the shape is mapped to the Z direction in the sweep.   
 //   tri= [[0, 0], [0, 1], [.25,1], [1, 0]];
-//   path = arc(r=5,N=81,angle=[-20,65]);
+//   path = arc(r=5,n=81,angle=[-20,65]);
 //   % path_sweep(tri,path);
 //   T = path_sweep(tri,path,transforms=true);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
-//   color("blue")stroke(path3d(arc(r=5,N=101,angle=[-20,80])),width=.1,endcap2="arrow2");
+//   color("blue")stroke(path3d(arc(r=5,n=101,angle=[-20,80])),width=.1,endcap2="arrow2");
 //   color("red")stroke([path3d(tri)],width=.1);
 //   stroke([CENTER,UP], width=.07,endcap2="arrow2",color="black");
 // .
@@ -763,11 +763,11 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   reverse the order of points in the path we get a different result:
 // Figure(3D,Big,VPR=[70,0,20],VPD=20,VPT=[1.25,9.25,-2.65],NoScales): The same sweep operation with the path traveling in the opposite direction.  Note that in order to line up the normal correctly, the shape is reversed compared to Figure 1, so the resulting sweep looks quite different.
 //   tri= [[0, 0], [0, 1], [.25,1], [1, 0]];
-//   path = reverse(arc(r=5,N=81,angle=[-20,65]));
+//   path = reverse(arc(r=5,n=81,angle=[-20,65]));
 //   % path_sweep(tri,path);
 //   T = path_sweep(tri,path,transforms=true);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
-//   color("blue")stroke(reverse(path3d(arc(r=5,N=101,angle=[-20-15,65]))),width=.1,endcap2="arrow2");
+//   color("blue")stroke(reverse(path3d(arc(r=5,n=101,angle=[-20-15,65]))),width=.1,endcap2="arrow2");
 //   color("red")stroke([path3d(tri)],width=.1);
 //   stroke([CENTER,UP], width=.07,endcap2="arrow2",color="black");
 // Continues:
@@ -778,11 +778,11 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   the cross sections in your polyhedron.  If any of them intersect, the polyhedron will be invalid.  
 // Figure(3D,Big,VPR=[47,0,325],VPD=23,VPT=[6.8,4,-3.8],NoScales): We have scaled the path to an ellipse and show a large triangle as the shape.  The triangle is sometimes bigger than the local radius of the path, leading to an invalid polyhedron, which you can identify because the red lines cross in the middle.
 //   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
-//   path = xscale(1.5,arc(r=5,N=81,angle=[-70,70]));
+//   path = xscale(1.5,arc(r=5,n=81,angle=[-70,70]));
 //   % path_sweep(tri,path);
 //   T = path_sweep(tri,path,transforms=true);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
-//   color("blue")stroke(path3d(xscale(1.5,arc(r=5,N=81,angle=[-70,80]))),width=.1,endcap2="arrow2");
+//   color("blue")stroke(path3d(xscale(1.5,arc(r=5,n=81,angle=[-70,80]))),width=.1,endcap2="arrow2");
 // Continues:
 //   During the sweep operation the shape's normal vector aligns with the tangent vector of the path.  Note that
 //   this leaves an ambiguity about how the shape is rotated as it sweeps along the path.
@@ -791,11 +791,11 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   number of degrees to twist along the whole swept polyhedron.  This produces a result like the one shown below.
 // Figure(3D,Big,VPR=[66,0,14],VPD=20,VPT=[3.4,4.5,-0.8]): The shape twists as we sweep.  Note that it still aligns the origin in the shape with the path, and still aligns the normal vector with the path tangent vector.
 //   tri= [[0, 0], [0, 1], [.25,1],[1, 0]];
-//   path = arc(r=5,N=81,angle=[-20,65]);
+//   path = arc(r=5,n=81,angle=[-20,65]);
 //   % path_sweep(tri,path,twist=-60);
 //   T = path_sweep(tri,path,transforms=true,twist=-60);
 //   color("red")for(i=[0:20:80]) stroke(apply(T[i],path3d(tri)),width=.1,closed=true);
-//   color("blue")stroke(path3d(arc(r=5,N=101,angle=[-20,80])),width=.1,endcap2="arrow2");
+//   color("blue")stroke(path3d(arc(r=5,n=101,angle=[-20,80])),width=.1,endcap2="arrow2");
 // Continues:
 //   The `twist` argument adds the specified number of degrees of twist into the model, and it may be positive or
 //   negative.  When `closed=true` the starting shape and ending shape must match to avoid a sudden extreme twist at the
@@ -926,7 +926,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   cube(0.5);    // Adding a small cube is not a problem with this valid model
 // Example(Med,VPR=[16,0,100],VPT=[0.05,0.6,0.6],VPD=25,NoScales): Using the `profiles=true` option can help debug bad polyhedra such as this one.  If any of the profiles intersect or cross each other, the polyhedron will be invalid.  In this case, you can see these intersections in the middle of the shape, which may give insight into how to fix your shape.   The profiles may also help you identify cases with a valid polyhedron where you have more profiles than needed to adequately define the shape.  
 //   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
-//   path = left(4,xscale(1.5,arc(r=5,N=25,angle=[-70,70])));
+//   path = left(4,xscale(1.5,arc(r=5,n=25,angle=[-70,70])));
 //   path_sweep(tri,path,profiles=true,width=.1);
 // Example(NoScales):  This 3d arc produces a result that twists to an undefined angle.  By default the incremental method sets the starting normal to UP, but the ending normal is unconstrained.  
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
@@ -1574,7 +1574,7 @@ function _smooth(data,len,closed=false,angle=false) =
 
 // Function: rot_resample()
 // Usage:
-//   rlist = rot_resample(rotlist, N, [method], [twist], [scale], [smoothlen], [long], [turns], [closed])
+//   rlist = rot_resample(rotlist, n, [method], [twist], [scale], [smoothlen], [long], [turns], [closed])
 // Description:
 //   Takes as input a list of rotation matrices in 3d.  Produces as output a resampled
 //   list of rotation operators (4x4 matrixes) suitable for use with sweep().  You can optionally apply twist to
@@ -1593,11 +1593,11 @@ function _smooth(data,len,closed=false,angle=false) =
 //   .
 //   The default is to resample based on the length of the arc defined by each rotation operator.  This produces
 //   uniform sampling over all of the transformations.  It requires that each rotation has nonzero length.
-//   In this case N specifies the total number of samples.  If you set method to "count" then N you get
-//   N samples for each transform.  You can set N to a vector to vary the samples at each step.  
+//   In this case n specifies the total number of samples.  If you set method to "count" then you get
+//   n samples for each transform.  You can set n to a vector to vary the samples at each step.  
 // Arguments:
 //   rotlist = list of rotation operators in 3d to resample
-//   N = Number of rotations to produce as output when method is "length" or number for each transformation if method is "count".  Can be a vector when method is "count"
+//   n = Number of rotations to produce as output when method is "length" or number for each transformation if method is "count".  Can be a vector when method is "count"
 //   --
 //   method = sampling method, either "length" or "count"
 //   twist = scalar or vector giving twist to add overall or at each rotation.  Default: none
@@ -1607,33 +1607,33 @@ function _smooth(data,len,closed=false,angle=false) =
 //   turns = add extra turns.  If a scalar adds the turns to every rotation, or give a vector.  Default: 0
 //   closed = if true then the rotation list is treated as closed.  Default: false
 // Example(3D): Resampling the arc from a compound rotation with translations thrown in.  
-//   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], N=25);
+//   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], n=25);
 //   sweep(circle(r=1,$fn=3), tran);
 // Example(3D): Applying a scale factor
-//   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], N=25, scale=2);
+//   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], n=25, scale=2);
 //   sweep(circle(r=1,$fn=3), tran);
 // Example(3D): Applying twist
-//   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], N=25, twist=60);
+//   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], n=25, twist=60);
 //   sweep(circle(r=1,$fn=3), tran);
 // Example(3D): Going the long way
-//   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], N=25, long=true);
+//   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], n=25, long=true);
 //   sweep(circle(r=1,$fn=3), tran);
 // Example(3D): Getting transformations from turtle3d
 //   include<BOSL2/turtle3d.scad>
 //   tran=turtle3d(["arcsteps",1,"up", 10, "arczrot", 10,170],transforms=true);
-//   sweep(circle(r=1,$fn=3),rot_resample(tran, N=40));
+//   sweep(circle(r=1,$fn=3),rot_resample(tran, n=40));
 // Example(3D): If you specify a larger angle in turtle you need to use the long argument
 //   include<BOSL2/turtle3d.scad>
 //   tran=turtle3d(["arcsteps",1,"up", 10, "arczrot", 10,270],transforms=true);
-//   sweep(circle(r=1,$fn=3),rot_resample(tran, N=40,long=true));
+//   sweep(circle(r=1,$fn=3),rot_resample(tran, n=40,long=true));
 // Example(3D): And if the angle is over 360 you need to add turns to get the right result.  Note long is false when the remaining angle after subtracting full turns is below 180:
 //   include<BOSL2/turtle3d.scad>
 //   tran=turtle3d(["arcsteps",1,"up", 10, "arczrot", 10,90+360],transforms=true);
-//   sweep(circle(r=1,$fn=3),rot_resample(tran, N=40,long=false,turns=1));
+//   sweep(circle(r=1,$fn=3),rot_resample(tran, n=40,long=false,turns=1));
 // Example(3D): Here the remaining angle is 270, so long must be set to true
 //   include<BOSL2/turtle3d.scad>
 //   tran=turtle3d(["arcsteps",1,"up", 10, "arczrot", 10,270+360],transforms=true);
-//   sweep(circle(r=1,$fn=3),rot_resample(tran, N=40,long=true,turns=1));
+//   sweep(circle(r=1,$fn=3),rot_resample(tran, n=40,long=true,turns=1));
 // Example(3D): Note the visible line at the scale transition
 //   include<BOSL2/turtle3d.scad>
 //   tran = turtle3d(["arcsteps",1,"arcup", 10, 90, "arcdown", 10, 90], transforms=true);
@@ -1688,15 +1688,15 @@ function _smooth(data,len,closed=false,angle=false) =
 //                   beltprofile)
 //          ];
 //   skin(belt,slices=0,closed=true);
-function rot_resample(rotlist,N,twist,scale,smoothlen=1,long=false,turns=0,closed=false,method="length") =
+function rot_resample(rotlist,n,twist,scale,smoothlen=1,long=false,turns=0,closed=false,method="length") =
     assert(is_int(smoothlen) && smoothlen>0 && smoothlen%2==1, "smoothlen must be a positive odd integer")
     assert(method=="length" || method=="count")
     let(tcount = len(rotlist) + (closed?0:-1))
-    assert(method=="count" || is_int(N), "N must be an integer when method is \"length\"")
-    assert(is_int(N) || is_vector(N,tcount), str("N must be scalar or vector with length ",tcount))
+    assert(method=="count" || is_int(n), "n must be an integer when method is \"length\"")
+    assert(is_int(n) || is_vector(n,tcount), str("n must be scalar or vector with length ",tcount))
     let(
-          count = method=="length" ? (closed ? N+1 : N)
-                                   : (is_vector(N) ? sum(N) : tcount*N)+1  //(closed?0:1)
+          count = method=="length" ? (closed ? n+1 : n)
+                                   : (is_vector(n) ? sum(n) : tcount*n)+1  //(closed?0:1)
     )
     assert(is_bool(long) || len(long)==tcount,str("Input long must be a scalar or have length ",tcount))
     let(      
@@ -1717,8 +1717,8 @@ function rot_resample(rotlist,N,twist,scale,smoothlen=1,long=false,turns=0,close
         totlen = last(cumlen),
         stepsize = totlen/(count-1),
         samples = method=="count"
-                  ? let( N = force_list(N,tcount))
-                    [for(n=N) lerpn(0,1,n,endpoint=false)]
+                  ? let( n = force_list(n,tcount))
+                    [for(N=n) lerpn(0,1,N,endpoint=false)]
                   :[for(i=idx(parms))
                     let(
                         remainder = cumlen[i] % stepsize,
