@@ -903,7 +903,7 @@ function offset(
                           select(goodsegs,i-1)[1],
                           goodsegs[i][0]
                       ],
-                      N=steps[i])
+                      n=steps[i])
               ],
         pointcount = (is_def(delta) && !chamfer)?
             repeat(1,len(sharpcorners)) :
