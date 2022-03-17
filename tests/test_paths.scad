@@ -165,13 +165,9 @@ module test_subdivide_path(){
                     0.404508497187]]);
     assert_approx(subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12),
           [[0, 0, 0], [2/3, 0, 1/3], [4/3, 0, 2/3], [2, 0, 1], [2, 0.75, 1.25], [2, 1.5, 1.5], [2, 2.25, 1.75], [2, 3, 2], [1.6, 2.4, 1.6], [1.2, 1.8, 1.2], [0.8, 1.2, 0.8], [0.4, 0.6, 0.4]]);
-}
-test_subdivide_path();
 
-
-module test_subdivide_long_segments(){
    path = pentagon(d=100);
-   spath = subdivide_long_segments(path, 10, closed=true);
+   spath = subdivide_path(path, maxlen=10, closed=true);
    assert_approx(spath,
          [[50, 0], [44.2418082865, -7.92547096913], [38.4836165729,
          -15.8509419383], [32.7254248594, -23.7764129074], [26.9672331458,
@@ -188,6 +184,11 @@ module test_subdivide_long_segments(){
          39.6273548456], [26.9672331458, 31.7018838765], [32.7254248594,
          23.7764129074], [38.4836165729, 15.8509419383], [44.2418082865,
          7.92547096913]]);
+}
+test_subdivide_path();
+
+
+module test_subdivide_long_segments(){
 }
 test_subdivide_long_segments();
 
