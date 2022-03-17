@@ -45,7 +45,7 @@
 //   Duplicating vertices allows two distinct points in one polygon to connect to a single point
 //   in the other one, creating
 //   triangular faces.  You can adjust non-matching polygons yourself
-//   either by resampling them using `subdivide_path` or by duplicating vertices using
+//   either by resampling them using {{subdivide_path()}} or by duplicating vertices using
 //   `repeat_entries`.  It is OK to pass a polygon that has the same vertex repeated, such as
 //   a square with 5 points (two of which are identical), so that it can match up to a pentagon.
 //   Such a combination would create a triangular face at the location of the duplicated vertex.
@@ -69,7 +69,7 @@
 //   on each edge, but if you refine a profile with the "length" method you will get new points
 //   distributed around the profile based on length, so small segments will get fewer new points than longer ones.  
 //   A uniform division may be impossible, in which case the code computes an approximation, which may result
-//   in arbitrary distribution of extra points.  See `subdivide_path` for more details.
+//   in arbitrary distribution of extra points.  See {{subdivide_path()}} for more details.
 //   Note that when dealing with continuous curves it is always better to adjust the
 //   sampling in your code to generate the desired sampling rather than using the `refine` argument.
 //   .
@@ -84,7 +84,7 @@
 //   right shapes but the point lists don't start from points that you want aligned in your skinned
 //   polyhedron.  You can correct this yourself using `reindex_polygon`, or you can use the "reindex"
 //   method which will look for the index choice that will minimize the length of all of the edges
-//   in the polyhedron---in will produce the least twisted possible result.  This algorithm has quadratic
+//   in the polyhedron&mdash;it will produce the least twisted possible result.  This algorithm has quadratic
 //   run time so it can be slow with very large profiles.
 //   .
 //   When the profiles are incommensurate, the "direct" and "reindex" resample them to match.  As noted above,
@@ -808,7 +808,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   The twist is normally spread uniformly along your shape based on the path length.  If you set `twist_by_length` to
 //   false then the twist will be uniform based on the point count of your path.  Twisted shapes will produce twisted
 //   faces, so if you want them to look good you should use lots of points on your path and also lots of points on the
-//   shape.  If your shape is a simple polygon, use {{subdivide_path()}} or {{subdivide_long_segments()}} to increase
+//   shape.  If your shape is a simple polygon, use {{subdivide_path()}} to increase
 //   the number of points.
 //   .
 //   As noted above, the sweep process has an ambiguity regarding the twist.  For 2D paths it is easy to resolve this
@@ -835,7 +835,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   .
 //   The "natural" method works by computing the Frenet frame at each point on the path.  This is defined by the tangent to the curve and
 //   the normal which lies in the plane defined by the curve at each point.  This normal points in the direction of curvature of the curve.
-//   The result is a very well behaved set of shape positions without any unexpected twisting---as long as the curvature never falls to zero.  At a
+//   The result is a very well behaved set of shape positions without any unexpected twisting&mdash;as long as the curvature never falls to zero.  At a
 //   point of zero curvature (a flat point), the curve does not define a plane and the natural normal is not defined.  Furthermore, even if
 //   you skip over this troublesome point so the normal is defined, it can change direction abruptly when the curvature is zero, leading to
 //   a nasty twist and an invalid model.  A simple example is a circular arc joined to another arc that curves the other direction.  Note
@@ -1501,7 +1501,7 @@ module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=
 //   profiles = profiles to operate on
 //   slices = number of slices to insert between each pair of profiles.  May be a vector
 //   numpoints = number of points after sampling.
-//   method = method used for calling `subdivide_path`, either `"length"` or `"segment"`.  Default: `"length"`
+//   method = method used for calling {{subdivide_path()}}, either `"length"` or `"segment"`.  Default: `"length"`
 //   closed = the first and last profile are connected.  Default: false
 function subdivide_and_slice(profiles, slices, numpoints, method="length", closed=false) =
   let(
@@ -1598,7 +1598,7 @@ function _smooth(data,len,closed=false,angle=false) =
 // Arguments:
 //   rotlist = list of rotation operators in 3d to resample
 //   n = Number of rotations to produce as output when method is "length" or number for each transformation if method is "count".  Can be a vector when method is "count"
-//   --
+//   ---
 //   method = sampling method, either "length" or "count"
 //   twist = scalar or vector giving twist to add overall or at each rotation.  Default: none
 //   scale = scalar or vector giving scale factor to add overall or at each rotation.  Default: none

@@ -3,7 +3,7 @@
 //   Cut objects with a plane, or partition them into interlocking pieces for easy printing of large objects. 
 // Includes:
 //   include <BOSL2/std.scad>
-// FileGroup: Advanced Modeling
+// FileGroup: Basic Modeling
 // FileSummary: Cut objects with a plane or partition them into interlocking pieces.
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////

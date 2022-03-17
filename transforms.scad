@@ -1326,13 +1326,13 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 // Topics: Affine, Matrices, Transforms
 // Description:
 //   Applies the specified transformation matrix `transform` to a point, point list, bezier patch or VNF.
-//   When `points` contains 2D or 3D points the transform matrix may be a 4x4 affine matrix or a 3x4 matrix---
-//   the 4x4 matrix with its final row removed.  When the data is 2D the matrix must not operate on the Z axis,
+//   When `points` contains 2D or 3D points the transform matrix may be a 4x4 affine matrix or a 3x4 
+//   matrix&mdash;the 4x4 matrix with its final row removed.  When the data is 2D the matrix must not operate on the Z axis,
 //   except possibly by scaling it.  When points contains 2D data you can also supply the transform as
 //   a 3x3 affine transformation matrix or the corresponding 2x3 matrix with the last row deleted.
 //   .
 //   Any other combination of matrices will produce an error, including acting with a 2D matrix (3x3) on 3D data.
-//   The output of apply is always the same dimension as the input---projections are not supported.
+//   The output of apply is always the same dimension as the input&mdash;projections are not supported.
 // Arguments:
 //   transform = The 2D (3x3 or 2x3) or 3D (4x4 or 3x4) transformation matrix to apply.
 //   points = The point, point list, bezier patch, or VNF to apply the transformation to.

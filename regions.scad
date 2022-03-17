@@ -213,7 +213,7 @@ function _polygon_crosses_region(region, poly, eps=EPSILON) =
 // Description:
 //   We extend the notion of the simple path to regions: a simple region is entirely
 //   non-self-intersecting, meaning that it is formed from a list of simple polygons that
-//   don't intersect each other at all---not even with corner contact points.
+//   don't intersect each other at all&mdash;not even with corner contact points.
 //   Regions with corner contact are valid but may fail CGAL.  Simple regions
 //   should not create problems with CGAL.  
 // Arguments:

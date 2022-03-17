@@ -299,7 +299,7 @@ function _path_self_intersections(path, closed=true, eps=EPSILON) =
                 [isect[0], i, isect[1], j, isect[2]]
     ];
 
-// Section: Resampling---changing the number of points in a path
+// Section: Resampling&mdash;changing the number of points in a path
 
 
 // Input `data` is a list that sums to an integer. 
@@ -320,31 +320,54 @@ function _sum_preserving_round(data, index=0) =
 
 
 // Function: subdivide_path()
+// See Also: subdivide_and_slice(), resample_path(), jittered_poly()
 // Usage:
-//   newpath = subdivide_path(path, [N|refine], method, [closed], [exact]);
+//   newpath = subdivide_path(path, [n|refine|maxlen], [method], [closed], [exact]);
 // Description:
 //   Takes a path as input (closed or open) and subdivides the path to produce a more
-//   finely sampled path.  The new points can be distributed proportional to length
-//   (`method="length"`) or they can be divided up evenly among all the path segments
-//   (`method="segment"`).  If the extra points don't fit evenly on the path then the
-//   algorithm attempts to distribute them uniformly.  The `exact` option requires that
-//   the final length is exactly as requested.  If you set it to `false` then the
-//   algorithm will favor uniformity and the output path may have a different number of
-//   points due to rounding error.
+//   finely sampled path.  You control the subdivision process by using the `maxlen` arg
+//   to specify a maximum segment length, or by specifying `n` or `refine`, which request
+//   a certain point count in the output.
 //   .
-//   With the `"segment"` method you can also specify a vector of lengths.  This vector, 
-//   `N` specfies the desired point count on each segment: with vector input, `subdivide_path`
-//   attempts to place `N[i]-1` points on segment `i`.  The reason for the -1 is to avoid
+//   You can specify the point count using the `n` option, where
+//   you give the number of points you want in the output, or you can use
+//   the `refine` option, where you specify a resampling factor.  If `refine=3` then
+//   the number of points would increase by a factor of three, so a four point square would
+//   have 12 points after subdivision.  With point-count subdivision, the new points can be distributed
+//   proportional to length (`method="length"`), which is the default, or they can be divided up evenly among all the path segments
+//   (`method="segment"`).  If the extra points don't fit evenly on the path then the
+//   algorithm attempts to distribute them as uniformly as possible, but the result may be uneven.
+//   The `exact` option, which is true by default, requires that the final point count is
+//   exactly as requested.  For example, if you subdivide a four point square and request `n=13` then one edge will have
+//   an extra point compared to the others.  
+//   If you set `exact=false` then the
+//   algorithm will favor uniformity and the output path may have a different number of
+//   points than you requested, but the sampling will be uniform.   In our example of the
+//   square with `n=13`, you will get only 12 points output, with the same number of points on each edge.
+//   .
+//   The points are always distributed uniformly on each segment.  The `method="length"` option does
+//   means that the number of points on a segment is based on its length, but the points are still
+//   distributed uniformly on each segment, independent of the other segments.  
+//   With the `"segment"` method you can also give `n` as a vector of counts.  This 
+//   specifies the desired point count on each segment: with vector valued `n` the `subdivide_path`
+//   function places `n[i]-1` points on segment `i`.  The reason for the -1 is to avoid
 //   double counting the endpoints, which are shared by pairs of segments, so that for
-//   a closed polygon the total number of points will be sum(N).  Note that with an open
-//   path there is an extra point at the end, so the number of points will be sum(N)+1. 
+//   a closed polygon the total number of points will be sum(n).  Note that with an open
+//   path there is an extra point at the end, so the number of points will be sum(n)+1.
+//   .
+//   If you use the `maxlen` option then you specify the maximum length segment allowed in the output.
+//   Each segment is subdivided into the largest number of segments meeting your requirement.  As above,
+//   the sampling is uniform on each segment, independent of the other segments.  With the `maxlen` option
+//   you cannot specify `method` or `exact`.    
 // Arguments:
 //   path = path in any dimension or a 1-region
-//   N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
-//   refine = number of points to add each segment.
+//   n = scalar total number of points desired or with `method="segment"` can be a vector requesting `n[i]-1` new points added to segment i.
+//   ---
+//   refine = increase total number of points by this factor (Specify only one of n, refine and maxlen)
+//   maxlen = maximum length segment in the output (Specify only one of n, refine and maxlen)
 //   closed = set to false if the path is open.  Default: True
-//   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
-//   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices evenly along the total path length.  If `"segment"`, adds points evenly among the segments.  Default: `"length"`
+//   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  (Not allowed with maxlen.) Default: true
+//   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices in proportion to segment length, so short segments get fewer points.  If `"segment"`, add points evenly among the segments, so all segments get the same number of points.  (Not allowed with maxlen.) Default: `"length"`
 // Example(2D):
 //   mypath = subdivide_path(square([2,2],center=true), 12);
 //   move_copies(mypath)circle(r=.1,$fn=32);
@@ -372,34 +395,58 @@ function _sum_preserving_round(data, index=0) =
 // Example(2D): With `exact=false` you can also get extra points, here 20 instead of requested 18
 //   mypath = subdivide_path(pentagon(side=2), 18, exact=false);
 //   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Using refine in this example multiplies the point count by 3 by adding 2 points to each edge
+//   mypath = subdivide_path(pentagon(side=2), refine=3);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): But note that refine doesn't distribute evenly by segment unless you change the method.  with the default method set to `"length"`, the points are distributed with more on the long segments in this example using refine.  
+//   mypath = subdivide_path(square([8,2],center=true), refine=3);
+//   move_copies(mypath)circle(r=.2,$fn=32);
+// Example(2D): In this example with maxlen, every side gets a different number of new points
+//   path = [[0,0],[0,4],[10,6],[10,0]];
+//   spath = subdivide_path(path, maxlen=2, closed=true);
+//   move_copies(spath) circle(r=.25,$fn=12);
 // Example(FlatSpin,VPD=15,VPT=[0,0,1.5]): Three-dimensional paths also work
 //   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
 //   move_copies(mypath)sphere(r=.1,$fn=32);
-function subdivide_path(path, N, refine, closed=true, exact=true, method="length") =
+function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
     let(path = force_path(path))
     assert(is_path(path))
-    assert(method=="length" || method=="segment")
-    assert(num_defined([N,refine]),"Must give exactly one of N and refine")
+    assert(num_defined([n,refine,maxlen]),"Must give exactly one of n, refine, and maxlen")
+    is_def(maxlen) ?
+        assert(is_undef(method), "Cannot give method with maxlen")
+        assert(is_undef(exact), "Cannot give exact with maxlen")
+        [
+         for (p=pair(path,closed))
+           let(steps = ceil(norm(p[1]-p[0])/maxlen))
+           each lerpn(p[0], p[1], steps, false),
+         if (!closed) last(path)
+        ]               
+    :
     let(
-        N = !is_undef(N)? N :
+        exact = default(exact, true),
+        method = default(method, "length")
+    )
+    assert(method=="length" || method=="segment")
+    let(
+        n = !is_undef(n)? n :
             !is_undef(refine)? len(path) * refine :
             undef
     )
-    assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
+    assert((is_num(n) && n>0) || is_vector(n),"Parameter n to subdivide_path must be postive number or vector")
     let(
         count = len(path) - (closed?0:1), 
         add_guess = method=="segment"?
                        (
-                          is_list(N)
-                          ? assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
-                            add_scalar(N,-1)
-                          : repeat((N-len(path)) / count, count)
+                          is_list(n)
+                          ? assert(len(n)==count,"Vector parameter n to subdivide_path has the wrong length")
+                            add_scalar(n,-1)
+                          : repeat((n-len(path)) / count, count)
                        )
                   : // method=="length"
-                    assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
+                    assert(is_num(n),"Parameter n to subdivide path must be a number when method=\"length\"")
                     let(
                         path_lens = path_segment_lengths(path,closed),
-                        add_density = (N - len(path)) / sum(path_lens)
+                        add_density = (n - len(path)) / sum(path_lens)
                     )
                     path_lens * add_density,
         add = exact? _sum_preserving_round(add_guess)
@@ -413,43 +460,12 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
 
 
 
-// Function: subdivide_long_segments()
-// Topics: Paths, Path Subdivision
-// See Also: subdivide_path(), subdivide_and_slice(), jittered_poly()
-// Usage:
-//   spath = subdivide_long_segments(path, maxlen, [closed=]);
-// Description:
-//   Evenly subdivides long `path` segments until they are all shorter than `maxlen`.
-// Arguments:
-//   path = path in any dimension or a 1-region
-//   maxlen = The maximum allowed path segment length.
-//   ---
-//   closed = If true, treat path like a closed polygon.  Default: true
-// Example(2D):
-//   path = pentagon(d=100);
-//   spath = subdivide_long_segments(path, 10, closed=true);
-//   stroke(path,width=2,closed=true);
-//   color("red") move_copies(path) circle(d=9,$fn=12);
-//   color("blue") move_copies(spath) circle(d=5,$fn=12);
-function subdivide_long_segments(path, maxlen, closed=true) =
-    let(path=force_path(path))
-    assert(is_path(path))
-    assert(is_finite(maxlen))
-    assert(is_bool(closed))
-    [
-        for (p=pair(path,closed)) let(
-            steps = ceil(norm(p[1]-p[0])/maxlen)
-        ) each lerpn(p[0], p[1], steps, false),
-        if (!closed) last(path)
-    ];
-
-
 
 // Function: resample_path()
 // Usage:
-//   newpath = resample_path(path, N|spacing, [closed]);
+//   newpath = resample_path(path, n|spacing, [closed]);
 // Description:
-//   Compute a uniform resampling of the input path.  If you specify `N` then the output path will have N
+//   Compute a uniform resampling of the input path.  If you specify `n` then the output path will have n
 //   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the
 //   input path that are guaranteed to appear in the output path are the starting and ending points.
 //   If you specify `spacing` then the length you give will be rounded to the nearest spacing that gives
@@ -458,7 +474,7 @@ function subdivide_long_segments(path, maxlen, closed=true) =
 //   the sampling of the input.  If you want very accurate output, use a lot of points for the input.
 // Arguments:
 //   path = path in any dimension or a 1-region
-//   N = Number of points in output
+//   n = Number of points in output
 //   ---
 //   spacing = Approximate spacing desired
 //   closed = set to true if path is closed.  Default: true
@@ -484,18 +500,18 @@ function subdivide_long_segments(path, maxlen, closed=true) =
 //   color("red")move_copies(sampled) circle($fn=16);
 
 
-function resample_path(path, N, spacing, closed=true) =
+function resample_path(path, n, spacing, closed=true) =
    let(path = force_path(path))
    assert(is_path(path))
-   assert(num_defined([N,spacing])==1,"Must define exactly one of N and spacing")
+   assert(num_defined([n,spacing])==1,"Must define exactly one of n and spacing")
    assert(is_bool(closed))
    let(
        length = path_length(path,closed),
-       // In the open path case decrease N by 1 so that we don't try to get
+       // In the open path case decrease n by 1 so that we don't try to get
        // path_cut to return the endpoint (which might fail due to rounding)
        // Add last point later
-       N = is_def(N) ? N-(closed?0:1) : round(length/spacing),
-       distlist = lerpn(0,length,N,false), 
+       n = is_def(n) ? n-(closed?0:1) : round(length/spacing),
+       distlist = lerpn(0,length,n,false), 
        cuts = _path_cut_points(path, distlist, closed=closed)
    )
    [ each column(cuts,0),
