@@ -895,7 +895,7 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   closed = true if the curve is closed, false otherwise.  Default: false
 //
 // Example(2D):  Basic examples illustrating flat, round, and pointed ends, on a finely sampled arc and a path made from 3 segments.
-//   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
+//   arc = arc(points=[[1,1],[3,4],[6,3]],n=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];
 //   xdistribute(spacing=10){
 //     offset_stroke(path, width = 2);
@@ -927,12 +927,12 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   right(5)
 //     offset_stroke(path, start=os_flat(abs_angle=0), end=os_flat(abs_angle=0));
 // Example(2D):  With continuous sampling the end treatment can remove segments or extend the last segment linearly, as shown here.  Again the left side uses relative angle flat ends and the right hand example uses absolute angle.
-//   arc = arc(points=[[4,0],[3,4],[6,3]],N=50);
+//   arc = arc(points=[[4,0],[3,4],[6,3]],n=50);
 //   offset_stroke(arc, start=os_flat(angle=45), end=os_flat(angle=45));
 //   right(5)
 //     offset_stroke(arc, start=os_flat(abs_angle=45), end=os_flat(abs_angle=45));
 // Example(2D):  The os_pointed() end treatment allows adjustment of the point tip, as shown here.  The width is 2 so a location of 1 is at the edge.
-//   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
+//   arc = arc(points=[[1,1],[3,4],[6,3]],n=50);
 //   offset_stroke(arc, width=2, start=os_pointed(loc=1,dist=3),end=os_pointed(loc=1,dist=3));
 //   right(10)
 //     offset_stroke(arc, width=2, start=os_pointed(dist=4),end=os_pointed(dist=-1));
@@ -940,7 +940,7 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //     offset_stroke(arc, width=2, start=os_pointed(loc=2,dist=2),end=os_pointed(loc=.5,dist=-1));
 // Example(2D):  The os_round() end treatment adds roundovers to the end corners by specifying the `cut` parameter.  In the first example, the cut parameter is the same at each corner.  The bezier smoothness parameter `k` is given to allow a larger cut.  In the second example, each corner is given a different roundover, including zero for no rounding at all.  The red shows the same strokes without the roundover.
 //   $fn=36;
-//   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
+//   arc = arc(points=[[1,1],[3,4],[6,3]],n=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];
 //   offset_stroke(path, width=2, rounded=false,start=os_round(angle=-20, cut=0.4,k=.9), end=os_round(angle=-35, cut=0.4,k=.9));
 //   color("red")down(.1)offset_stroke(path, width=2, rounded=false,start=os_flat(-20), end=os_flat(-35));
@@ -949,7 +949,7 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //     color("red")down(.1)offset_stroke(arc, width=2, rounded=false, start=os_flat(-45), end=os_flat(20));
 //   }
 // Example(2D):  Negative cut values produce a flaring end.  Note how the absolute angle aligns the ends of the first example withi the axes.  In the second example positive and negative cut values are combined.  Note also that very different cuts are needed at the start end to produce a similar looking flare.
-//   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
+//   arc = arc(points=[[1,1],[3,4],[6,3]],n=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];
 //   offset_stroke(path, width=2, rounded=false,start=os_round(cut=-1, abs_angle=90), end=os_round(cut=-0.5, abs_angle=0),$fn=36);
 //   right(10)
@@ -1091,7 +1091,7 @@ function _stroke_end(width,left, right, spec) =
                 normal_dir = unit(normal_seg[1]-normal_seg[0]),
                 width_dir = sign(width[0]-width[1])
         )
-        type == "round"? [arc(points=[right[0],normal_pt,left[0]],N=ceil(segs(width/2)/2)),1,1]  :
+        type == "round"? [arc(points=[right[0],normal_pt,left[0]],n=ceil(segs(width/2)/2)),1,1]  :
         type == "pointed"? [[normal_pt],0,0] :
         type == "shifted_point"? (
                 let(shiftedcenter = center + width_dir * parallel_dir * struct_val(spec, "loc"))
@@ -1910,6 +1910,11 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   If you set `debug` to true the module version will display the polyhedron even when it is invalid and it will show the bezier patches at the corners.
 //   This can help troubleshoot problems with your parameters.  With the function form setting debug to true causes it to return [patches,vnf] where
 //   patches is a list of the bezier control points for the corner patches.
+//   .
+//   Note that rounded_prism() is not well suited to rounding shapes that have already been rounded, or that have many points.
+//   It works best when the top and bottom are polygons with well-defined corners.  When the polygons have been rounded already,
+//   further rounding generates tiny bezier patches patches that can more easily
+//   interfere, giving rise to an invalid polyhedron.  It's also slow because you get bezier patches for every corner in the model.  
 //   .
 // Arguments:
 //   bottom = 2d or 3d path describing bottom polygon

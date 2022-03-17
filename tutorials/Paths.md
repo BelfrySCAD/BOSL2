@@ -203,11 +203,11 @@ path = arc(d=60, angle=120);
 stroke(path, endcap2="arrow2");
 ```
 
-If you give the `N=` argument, you can control exactly how many points the arc is divided into:
+If you give the `n=` argument, you can control exactly how many points the arc is divided into:
 
 ```openscad-2D
 include <BOSL2/std.scad>
-path = arc(N=5, r=30, angle=120);
+path = arc(n=5, r=30, angle=120);
 stroke(path, endcap2="arrow2");
 ```
 

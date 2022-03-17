@@ -503,7 +503,7 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
                         a = 360 - i*360/n,
                         p = polar_to_xy(r-inset, a)
                     )
-                    each arc(N=steps, cp=p, r=rounding, start=a+180/n, angle=-360/n)
+                    each arc(n=steps, cp=p, r=rounding, start=a+180/n, angle=-360/n)
                 ],
                 maxx_idx = max_index(column(path2,0)),
                 path3 = list_rotate(path2,maxx_idx)
@@ -889,30 +889,30 @@ function trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, flip=false,
             each (
                 let(i = 0)
                 rads[i] == 0? [base[i]] :
-                srads[i] > 0? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i], 90], r=rads[i]) :
-                flip? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i],-90], r=rads[i]) :
-                arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],90], r=rads[i])
+                srads[i] > 0? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i], 90], r=rads[i]) :
+                flip? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i],-90], r=rads[i]) :
+                arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],90], r=rads[i])
             ),
             each (
                 let(i = 1)
                 rads[i] == 0? [base[i]] :
-                srads[i] > 0? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[90,180+angs[i]], r=rads[i]) :
-                flip? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[270,180+angs[i]], r=rads[i]) :
-                arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[90,angs[i]], r=rads[i])
+                srads[i] > 0? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[90,180+angs[i]], r=rads[i]) :
+                flip? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[270,180+angs[i]], r=rads[i]) :
+                arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[90,angs[i]], r=rads[i])
             ),
             each (
                 let(i = 2)
                 rads[i] == 0? [base[i]] :
-                srads[i] > 0? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],270], r=rads[i]) :
-                flip? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],90], r=rads[i]) :
-                arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i],-90], r=rads[i])
+                srads[i] > 0? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],270], r=rads[i]) :
+                flip? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],90], r=rads[i]) :
+                arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i],-90], r=rads[i])
             ),
             each (
                 let(i = 3)
                 rads[i] == 0? [base[i]] :
-                srads[i] > 0? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[-90,angs[i]], r=rads[i]) :
-                flip? arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[90,angs[i]], r=rads[i]) :
-                arc(N=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[270,180+angs[i]], r=rads[i])
+                srads[i] > 0? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[-90,angs[i]], r=rads[i]) :
+                flip? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[90,angs[i]], r=rads[i]) :
+                arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[270,180+angs[i]], r=rads[i])
             ),
         ],
         path = reverse(cpath)
@@ -1330,12 +1330,12 @@ function glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) =
         // outer curves.  In the other case the inner curves are present and endpoint=false
         // prevents point duplication.  
         path = tangent==0 ?
-                    concat(arc(N=lobesegs+1, r=r, cp=-cp1, angle=[sa1,ea1]),
-                           arc(N=lobesegs+1, r=r, cp=cp1, angle=[sa1+180,ea1+180]))
+                    concat(arc(n=lobesegs+1, r=r, cp=-cp1, angle=[sa1,ea1]),
+                           arc(n=lobesegs+1, r=r, cp=cp1, angle=[sa1+180,ea1+180]))
                 :
-                    concat(arc(N=lobesegs, r=r, cp=-cp1, angle=[sa1,ea1], endpoint=false),
+                    concat(arc(n=lobesegs, r=r, cp=-cp1, angle=[sa1,ea1], endpoint=false),
                            [for(theta=lerpn(ea2+180,ea2-subarc+180,arcsegs,endpoint=false))  r2*[cos(theta),sin(theta)] - cp2],
-                           arc(N=lobesegs, r=r, cp=cp1, angle=[sa1+180,ea1+180], endpoint=false),
+                           arc(n=lobesegs, r=r, cp=cp1, angle=[sa1+180,ea1+180], endpoint=false),
                            [for(theta=lerpn(ea2,ea2-subarc,arcsegs,endpoint=false))  r2*[cos(theta),sin(theta)] + cp2]),
         maxx_idx = max_index(column(path,0)),
         path2 = reverse_polygon(list_rotate(path,maxx_idx))
@@ -1438,15 +1438,15 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 
 // Function&Module: reuleaux_polygon()
 // Usage: As Module
-//   reuleaux_polygon(N, r|d, ...);
+//   reuleaux_polygon(n, r|d, ...);
 // Usage: As Function
-//   path = reuleaux_polygon(N, r|d, ...);
+//   path = reuleaux_polygon(n, r|d, ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: regular_ngon(), pentagon(), hexagon(), octagon()
 // Description:
 //   Creates a 2D Reuleaux Polygon; a constant width shape that is not circular.  Uses "intersect" type anchoring.  
 // Arguments:
-//   N = Number of "sides" to the Reuleaux Polygon.  Must be an odd positive number.  Default: 3
+//   n = Number of "sides" to the Reuleaux Polygon.  Must be an odd positive number.  Default: 3
 //   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
 //   ---
 //   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
@@ -1455,19 +1455,19 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 // Extra Anchors:
 //   "tip0", "tip1", etc. = Each tip has an anchor, pointing outwards.
 // Examples(2D):
-//   reuleaux_polygon(N=3, r=50);
-//   reuleaux_polygon(N=5, d=100);
+//   reuleaux_polygon(n=3, r=50);
+//   reuleaux_polygon(n=5, d=100);
 // Examples(2D): Standard vector anchors are based on extents
-//   reuleaux_polygon(N=3, d=50) show_anchors(custom=false);
+//   reuleaux_polygon(n=3, d=50) show_anchors(custom=false);
 // Examples(2D): Named anchors exist for the tips
-//   reuleaux_polygon(N=3, d=50) show_anchors(std=false);
-module reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) {
-    assert(N>=3 && (N%2)==1);
+//   reuleaux_polygon(n=3, d=50) show_anchors(std=false);
+module reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) {
+    assert(n>=3 && (n%2)==1);
     r = get_radius(r=r, d=d, dflt=1);
-    path = reuleaux_polygon(N=N, r=r);
+    path = reuleaux_polygon(n=n, r=r);
     anchors = [
-        for (i = [0:1:N-1]) let(
-            ca = 360 - i * 360/N,
+        for (i = [0:1:n-1]) let(
+            ca = 360 - i * 360/n,
             cp = polar_to_xy(r, ca)
         ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
     ];
@@ -1478,23 +1478,23 @@ module reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) {
 }
 
 
-function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
-    assert(N>=3 && (N%2)==1)
+function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
+    assert(n>=3 && (n%2)==1)
     let(
         r = get_radius(r=r, d=d, dflt=1),
-        ssegs = max(3,ceil(segs(r)/N)),
-        slen = norm(polar_to_xy(r,0)-polar_to_xy(r,180-180/N)),
+        ssegs = max(3,ceil(segs(r)/n)),
+        slen = norm(polar_to_xy(r,0)-polar_to_xy(r,180-180/n)),
         path = [
-            for (i = [0:1:N-1]) let(
-                ca = 180 - (i+0.5) * 360/N,
-                sa = ca + 180 + (90/N),
-                ea = ca + 180 - (90/N),
+            for (i = [0:1:n-1]) let(
+                ca = 180 - (i+0.5) * 360/n,
+                sa = ca + 180 + (90/n),
+                ea = ca + 180 - (90/n),
                 cp = polar_to_xy(r, ca)
-            ) each arc(N=ssegs-1, r=slen, cp=cp, angle=[sa,ea], endpoint=false)
+            ) each arc(n=ssegs-1, r=slen, cp=cp, angle=[sa,ea], endpoint=false)
         ],
         anchors = [
-            for (i = [0:1:N-1]) let(
-                ca = 360 - i * 360/N,
+            for (i = [0:1:n-1]) let(
+                ca = 360 - i * 360/n,
                 cp = polar_to_xy(r, ca)
             ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
         ]
