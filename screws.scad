@@ -358,7 +358,7 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
                [3/8,  [0.656, 0.199, undef, 7/32, 45   , 0.122, 0.106]],
                [7/16, [0.750, 0.220, undef, 1/4,  undef, 0.193, undef]],  // hex depth interpolated
                [1/2,  [0.875, 0.265, undef, 5/16, 55   , 0.175, 0.158]],
-               [5/8,  [1.000, 0.331, undef, 3/8,  60,  , 0.210, 0.192]],
+               [5/8,  [1.000, 0.331, undef, 3/8,  60   , 0.210, 0.192]],
                [3/4,  [1.1,   0.375, undef, 7/16, undef, 0.241]],  // hex depth extrapolated
              ],
              UTS_round = [   // slotted, phillips
