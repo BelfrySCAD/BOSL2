@@ -356,7 +356,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                       ["move", seg1_len, "grow", seg2_bot_OD/seg1_bot_OD],  
 //                       "arcright", bend_r, bend_angle,
 //                       ["move", seg2_len, "grow", seg2_top_OD/seg2_bot_OD],
-//                       ["move", 0, , "reverse", "grow", seg2_top_ID/seg2_top_OD],
+//                       ["move", 0, "reverse", "grow", seg2_top_ID/seg2_top_OD],
 //                       ["move", seg2_len, "grow", seg2_bot_ID/seg2_top_ID],
 //                       "arcright", bend_r, bend_angle,
 //                       ["move", seg1_len, "grow", seg1_bot_ID/seg2_bot_ID]
