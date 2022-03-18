@@ -1079,7 +1079,7 @@ module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, 
 
 /// Internal Function: _path_add_jitter()
 /// Topics: Paths
-/// See Also: jittered_poly(), subdivide_long_segments()
+/// See Also: jittered_poly()
 /// Usage:
 ///   jpath = _path_add_jitter(path, [dist], [closed=]);
 /// Description:
@@ -1095,7 +1095,7 @@ module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, 
 /// Example(3D):
 ///   d = 100; h = 75; quadsize = 5;
 ///   path = pentagon(d=d);
-///   spath = subdivide_long_segments(path, quadsize, closed=true);
+///   spath = subdivide_path(path, maxlen=quadsize, closed=true);
 ///   jpath = _path_add_jitter(spath, closed=true);
 ///   linear_extrude(height=h, twist=72, slices=h/quadsize)
 ///      polygon(jpath);
@@ -1115,7 +1115,7 @@ function _path_add_jitter(path, dist=1/512, closed=true) =
 
 // Module: jittered_poly()
 // Topics: Extrusions
-// See Also: subdivide_long_segments()
+// See Also: subdivide_path()
 // Usage:
 //   jittered_poly(path, [dist]);
 // Description:
@@ -1128,7 +1128,7 @@ function _path_add_jitter(path, dist=1/512, closed=true) =
 // Example:
 //   d = 100; h = 75; quadsize = 5;
 //   path = pentagon(d=d);
-//   spath = subdivide_long_segments(path, quadsize, closed=true);
+//   spath = subdivide_path(path, maxlen=quadsize, closed=true);
 //   linear_extrude(height=h, twist=72, slices=h/quadsize)
 //      jittered_poly(spath);
 module jittered_poly(path, dist=1/512) {

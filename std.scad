@@ -20,10 +20,10 @@ include <shapes2d.scad>
 include <drawing.scad>
 include <masks3d.scad>
 include <masks2d.scad>
+include <math.scad>
 include <paths.scad>
 include <lists.scad>
 include <comparisons.scad>
-include <math.scad>
 include <linalg.scad>
 include <trigonometry.scad>
 include <vectors.scad>
