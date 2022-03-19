@@ -538,12 +538,44 @@ module attach(from, to, overlap, norot=false)
 // Usage:
 //   tags(tags) {...}
 // Topics: Attachments
-// See Also: recolor(), hide(), show(), diff(), intersect()
+// See Also: force_tags(), recolor(), hide(), show(), diff(), intersect()
 // Description:
-//   Marks all children with the given tags, so that they will `hide()`/`show()`/`diff()`  correctly.
-//   This is especially useful for working with children that are not attachment enhanced, such as:
+//   Sets the `$tags` variable as specified for all its children.  This makes it easy to set the tags
+//   on multiple items without having to repeat the tag setting for each one.  Note that if you want
+//   to apply tags to non-tag-aware objects you need to use {{force_tags()} instead. 
+//   .
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Arguments:
+//   tags = String containing space delimited set of tags to apply.
+// Example(3D):  Applies the tags to both cuboids instead of having to repeat `$tags="remove"` for each one. 
+//   diff("remove")
+//     cuboid(10){
+//       position(TOP) cuboid(3);
+//       tags("remove")
+//       {
+//         position(FRONT) cuboid(3);
+//         position(RIGHT)  cuboid(3);
+//       }
+//     }  
+module tags(tags)
+{ 
+    $tags = tags;
+    children();
+}
+
+
+// Module: force_tags()
+// Usage:
+//   force_tags([tags]) {...}
+// Topics: Attachments
+// See Also: tags(), recolor(), hide(), show(), diff(), intersect()
+// Description:
+//   You use this module when you want to make a non-attachable or non-BOSL2 module respect tags.
+//   It applies to its children the tags specified (or the tags currently in force if you don't specify any tags),
+//   making a final determination about whether to show or hide the children.  This means that tagging in children's children will be ignored.
+//   This module is specifically provided for operating on children that are not tag aware such as modules
+//   that don't use {{attachable()}} or built in modules such as 
 //   - `polygon()`
-//   - `text()`
 //   - `projection()`
 //   - `polyhedron()`  (or use [`vnf_polyhedron()`](vnf.scad#vnf_polyhedron))
 //   - `linear_extrude()`  (or use [`linear_sweep()`](regions.scad#linear_sweep))
@@ -551,42 +583,60 @@ module attach(from, to, overlap, norot=false)
 //   - `surface()`
 //   - `import()`
 //   .
+//   When you use tag-based modules like {{diff()}} with a non-attachable module, the result may be puzzling.
+//   Any time a test occurs for display of child() that test will succeed.  This means that when diff() checks
+//   to see if it should show a module it will show it, and when diff() checks to see if it should subtract the module
+//   it will subtract it.  The result will be a hole, possibly with zero-thickness edges or faces.  In order to
+//   get the correct behavior, every non-attachable module needs an invocation of force_tags, even ones that are not
+//   .
 //   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   tags = String containing space delimited set of tags to apply.
-module tags(tags)
+// Example(NoRender): This program produces no output because the objects are created and then differenced away.  The specified tag is ignored.
+//   diff("remove")
+//   {
+//     polygon(square(10));
+//     move(-[.01,.01])polygon(square(5),$tags="remove");
+//   }
+// Example(2D): Adding force_tags() fixed the model.  Note you need to add it to *every* non-attachable module, even the untagged ones.  
+//   diff("remove")
+//   {
+//     force_tags()
+//       polygon(square(10));
+//     force_tags("remove")
+//       move(-[.01,.01])polygon(square(5));
+//   }
+module force_tags(tags)
 {
-    $tags = tags;
-    if(_attachment_is_shown(tags)) {
+    $tags = is_def(tags) ? tags : $tags;
+    if(_attachment_is_shown($tags)) {
         children();
     }
 }
 
 
-
-
 // Module: diff()
 // Usage:
 //   diff(neg, [keep]) {...}
-//   diff(neg, pos, [keep]) {...}
 // Topics: Attachments
 // See Also: tags(), recolor(), show(), hide(), intersect()
 // Description:
-//   If `neg` is given, takes the union of all children with tags that are in `neg`, and differences
-//   them from the union of all children with tags in `pos`.  If `pos` is not given, then all items in
-//   `neg` are differenced from all items not in `neg`.  If `keep` is given, all children with tags in
-//   `keep` are then unioned with the result.  If `keep` is not given, all children without tags in
-//   `pos` or `neg` are then unioned with the result.
+//   Perform a differencing operation using tags to control what happens.  The children are grouped into
+//   three categories.  The `neg` argument is a space delimited list of tags specifying objects to
+//   subtract.  The `keep` argument, if given, is a similar list of tags giving objects to be kept.
+//   Objects not matching `neg` or `keep` form the third category of base objects.
+//   To produce its output, diff() forms the union of all the base objects, which don't match any tags.
+//   Next it subtracts all the objects with tags in `neg`.  Finally it adds in objects listed in `keep`.  
+//   . 
 //   Cannot be used in conjunction with `intersect()` or `hulling()` on the same parent object.
 //   .
 //   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   neg = String containing space delimited set of tag names of children to difference away.
-//   pos = String containing space delimited set of tag names of children to be differenced away from.
-//   keep = String containing space delimited set of tag names of children to keep whole.
+//   keep = String containing space delimited set of tag names of children to keep, that is, to union into the model after differencing is completed.  
 // Example:
-//   diff("neg", "pos", keep="axle")
-//   sphere(d=100, $tags="pos") {
+//   diff("neg", keep="axle")
+//   sphere(d=100) {
 //       attach(CENTER) xcyl(d=40, l=120, $tags="axle");
 //       attach(CENTER) cube([40,120,100], anchor=CENTER, $tags="neg");
 //   }
@@ -596,7 +646,40 @@ module tags(tags)
 //       edge_mask(FWD)
 //           rounding_edge_mask(l=max($parent_size)*1.01, r=25);
 //   }
-// Example: Working with Non-Attachables Like rotate_extrude()
+// Example(3D,VPR=[104,0,200], VPT=[-0.9,3.03, -0.74], VPD=19,NoAxes,NoScales): A pipe module that subtracts its interior when you call it using diff().  Normally if you union two pipes together, you'll get interfering walls at the intersection, but not here:
+//   $fn=16;
+//   // This module must be called by subtracting with "diff"
+//   module pipe(length, od, id) {
+//       // Strip the tag the user is using to subtract
+//       cylinder(h=length, d=od, center=true,$tags="");
+//       // Leave the tag along here, so this one is removed
+//       cylinder(h=length+.02, d=id, center=true);
+//   }
+//   // Draw some intersecting pipes
+//   diff("rem",keep="keep"){
+//     pipe(length=5, od=2, id=1.9, $tags="rem");
+//     zrot(10)xrot(75)
+//       pipe(length=5, od=2, id=1.9, $tags="rem");
+//     // The orange bar has its center removed
+//     color("orange") down(1) xcyl(h=8, d=1);
+//     // "keep" prevents interior of the blue bar intact
+//     recolor("blue") up(1) xcyl(h=8, d=1,$tags="keep");  
+//   }
+//   // Objects outside the diff don't have pipe interiors removed
+//   color("purple") down(2.2) ycyl(h=8, d=0.3,$tags="keep");
+// Example(3D,NoScales,NoAxes): Nested diff() calls work as expected, but be careful of reusing tag names, even hidden in submodules.
+//   $fn=16;
+//   diff("rem1")
+//   cyl(r=10,h=10){
+//     diff("rem2",$tags="rem1"){
+//       cyl(r=8,h=11);
+//       diff("rem3", $tags="rem2"){
+//           cyl(r=6,h=12);
+//           cyl(r=4,h=13,$tags="rem3");
+//           }
+//       }
+//   }
+// Example(3D,NoAxes,NoScales): Working with Non-Attachables like rotate_extrude() you must apply {{force_tags()}} to every non-attachable object.  
 //   back_half()
 //     diff("remove")
 //       cuboid(40) {
@@ -604,33 +687,27 @@ module tags(tags)
 //           recolor("lightgreen")
 //             cyl(l=10,d=30);
 //         position(TOP+RIGHT)
-//           tags("remove")
+//           force_tags("remove")
 //             xrot(90)
 //               rotate_extrude()
 //                 right(20)
 //                   circle(5);
 //       }
-module diff(neg, pos, keep)
+module diff(neg, keep)
 {
     // Don't perform the operation if the current tags are hidden
     if (_attachment_is_shown($tags)) {
         difference() {
-            if (pos != undef) {
-                show(pos) children();
+            if (keep == undef) {
+                hide(neg) children();
             } else {
-                if (keep == undef) {
-                    hide(neg) children();
-                } else {
-                    hide(str(neg," ",keep)) children();
-                }
+                hide(str(neg," ",keep)) children();
             }
             show(neg) children();
         }
     }
     if (keep!=undef) {
         show(keep) children();
-    } else if (pos!=undef) {
-        hide(str(pos," ",neg)) children();
     }
 }
 
