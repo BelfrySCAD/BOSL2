@@ -18,7 +18,7 @@ $tags = "";
 $overlap = 0;
 $color = undef;//"yellow";
 $save_color = undef;             // Saved color to revert back for children
-_DEFAULT_COLOR = "gold";
+_DEFAULT_COLOR = "#f9d72c";      // Maybe the same as "gold"
 
 $attach_to = undef;
 $attach_anchor = [CENTER, CENTER, UP, 0];
