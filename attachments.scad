@@ -17,6 +17,8 @@
 $tags = "";
 $overlap = 0;
 $color = undef;//"yellow";
+$save_color = undef;             // Saved color to revert back for children
+_DEFAULT_COLOR = "gold";
 
 $attach_to = undef;
 $attach_anchor = [CENTER, CENTER, UP, 0];
@@ -810,20 +812,56 @@ module hulling(a)
 
 // Module: recolor()
 // Usage:
-//   recolor(c) {...}
+//   recolor([c]) {...}
 // Topics: Attachments
-// See Also: tags(), hide(), show(), diff(), intersect()
+// See Also: color_this(), tags(), hide(), show(), diff(), intersect()
 // Description:
-//   Sets the color for children that can use the $color special variable.  For a more step-by-step
-//   explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   Sets the color for children that can use the $color special variable.  For this to work
+//   you cannot have any color() modules above it in any parents, only other recolor() or color_this() modules.
+//   Not ethat recolor() affects its children and all their descendants.  
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   c = Color name or RGBA vector.
+//   c = Color name or RGBA vector.  Default: The standard OpenSCAD yellow
 // Example:
-//   recolor("red") cyl(l=20, d=10);
-module recolor(c)
+//   cuboid([10,10,5])
+//     recolor("green")attach(TOP,BOT) cuboid([9,9,4.5])
+//       attach(TOP,BOT) cuboid([8,8,4])
+//         recolor("purple") attach(TOP,BOT) cuboid([7,7,3.5])
+//           attach(TOP,BOT) cuboid([6,6,3])
+//             recolor("cyan")attach(TOP,BOT) cuboid([5,5,2.5])
+//               attach(TOP,BOT) cuboid([4,4,2]);
+module recolor(c=_DEFAULT_COLOR)
 {
     $color = c;
     children();
+}
+
+
+// Module: color_this()
+// Usage:
+//   color_this([c]) {...}
+// Topics: Attachments
+// See Also: tags(), recolor()
+// Description:
+//   Sets the color for children at one level, reverting to the previous color for further descendants.
+//   This works only with attachables and you cannot have any color() modules above it in any parents,
+//   only recolor() or other color_this() modules.  
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Arguments:
+//   c = Color name or RGBA vector.  Default: the standard OpenSCAD yellow
+// Example:
+//   cuboid([10,10,5])
+//     color_this("green")attach(TOP,BOT) cuboid([9,9,4.5])
+//       attach(TOP,BOT) cuboid([8,8,4])
+//         color_this("purple") attach(TOP,BOT) cuboid([7,7,3.5])
+//           attach(TOP,BOT) cuboid([6,6,3])
+//             color_this("cyan")attach(TOP,BOT) cuboid([5,5,2.5])
+//               attach(TOP,BOT) cuboid([4,4,2]);
+module color_this(c=_DEFAULT_COLOR)
+{
+  $save_color=default($color, _DEFAULT_COLOR);
+  $color=c;
+  children();
 }
 
 
@@ -1383,10 +1421,14 @@ module attachable(
                 children(0);
             }
         }
+        if (is_def($save_color)) {
+            $color=$save_color;
+            $save_color=undef;
+            children(1);
+        } else
         children(1);
     }
 }
-
 
 // Function: reorient()
 //
