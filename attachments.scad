@@ -542,7 +542,7 @@ module attach(from, to, overlap, norot=false)
 // Description:
 //   Sets the `$tags` variable as specified for all its children.  This makes it easy to set the tags
 //   on multiple items without having to repeat the tag setting for each one.  Note that if you want
-//   to apply tags to non-tag-aware objects you need to use {{force_tags()} instead. 
+//   to apply tags to non-tag-aware objects you need to use {{force_tags()}} instead. 
 //   .
 //   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
