@@ -404,12 +404,9 @@ cylinder(h=100, d=100, center=true)
 BOSL2 introduces the concept of tags.  Tags are names that can be given to attachables, so that
 you can refer to them when performing `diff()`, `intersect()`, and `hulling()` operations.
 
-### `diff(neg, <pos>, <keep>)`
+### `diff(neg, <keep>)`
 The `diff()` operator is used to difference away all shapes marked with the tag(s) given to
-`neg=`, from shapes marked with the tag(s)  given to `pos=`.  Anything marked with a tag given
-to `keep=` will be unioned onto the result.  If no `pos=` argument is given, then everything
-marked with a tag given to `neg=` will be differenced from all shapes *not* marked with that
-tag.
+`neg=`, from the other shapes.  
 
 For example, to difference away a child cylinder from the middle of a parent cube, you can
 do this:
@@ -419,20 +416,6 @@ include <BOSL2/std.scad>
 diff("hole")
 cube(100, center=true)
     cylinder(h=101, d=50, center=true, $tags="hole");
-```
-
-If you give both the `neg=` and `pos=` arguments to `diff()`, then the shapes marked by tags
-given to `neg=` will be differenced away from the shapes marked with tags given to `pos=`.
-Everything else will be unioned to the result.
-
-```openscad-3D
-include <BOSL2/std.scad>
-diff("hole", "post")
-cube(100, center=true)
-    attach([RIGHT,TOP]) {
-        cylinder(d=95, h=5, $tags="post");
-        cylinder(d=50, h=11, anchor=CTR, $tags="hole");
-    }
 ```
 
 The `keep=` argument takes tags for shapes that you want to keep in the output.
@@ -446,6 +429,21 @@ cube(100, center=true)
         cylinder(h=33.1, d=10, $tags="antenna");
     }
 ```
+
+Remember that tags are inherited by children.  In this case, we need to explicitly
+untag the first cylinder (or change its tag to something else), or it
+will inherit the "keep" tag and get kept.  
+
+```openscad-3D
+include <BOSL2/std.scad>
+diff("hole", "keep")
+cube(100, center=true, $tags="keep")
+    attach([RIGHT,TOP]) {
+        cylinder(d=95, h=5, $tags="");
+        cylinder(d=50, h=11, anchor=CTR, $tags="hole");
+    }
+```
+
 
 If you need to mark multiple children with a tag, you can use the `tags()` module.
 
@@ -477,14 +475,14 @@ Some notable non-attachable modules are `text()`, `linear_extrude()`, `rotate_ex
 `intersection()`, `offset()`, `hull()`, and `minkowski()`.
 
 To allow you to use tags-based operations with non-attachable shapes, you can wrap them with the
-`tags()` module to specify their tags.  For example:
+`force_tags()` module to specify their tags.  For example:
 
 ```openscad-3D
 include <BOSL2/std.scad>
 diff("hole")
 cuboid(50)
   attach(TOP)
-    tags("hole")
+    force_tags("hole")
       rotate_extrude()
         right(15)
           square(10,center=true);
