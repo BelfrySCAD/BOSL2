@@ -1413,14 +1413,8 @@ module attachable(
         $parent_size   = _attach_geom_size(geom);
         $attach_to   = undef;
         do_show = _attachment_is_shown($tags);
-        if (do_show) {
-            if (is_undef($color) || $color=="default") {
-                children(0);
-            } else color($color) {
-                $color = undef;
-                children(0);
-            }
-        }
+        if (do_show)
+            _color($color) children(0);
         if (is_def($save_color)) {
             $color=$save_color;
             $save_color=undef;

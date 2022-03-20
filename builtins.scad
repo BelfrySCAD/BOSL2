@@ -19,7 +19,7 @@ module _text(text,size,font,halign,valign,spacing,direction,language,script)
         language=language, script=script
     );
 
-module _color(color) if (color==undef) children(); else color(color) children();
+module _color(color) if (color==undef || color=="default") children(); else color(color) children();
 
 module _cube(size,center) cube(size,center=center);
 
