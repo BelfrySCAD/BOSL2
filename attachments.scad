@@ -17,8 +17,27 @@
 $tags = "";
 $overlap = 0;
 $color = undef;//"yellow";
-$save_color = undef;             // Saved color to revert back for children
-_DEFAULT_COLOR = "#f9d72c";      // Maybe the same as "gold"
+$save_color = undef;         // Saved color to revert back for children
+$color_scheme = "cornfield"; // Default color scheme
+
+_default_colors = [
+   ["cornfield", "#f9d72c"],
+   ["metallic", "#ddddff"],
+   ["sunset", "#ffaaaa"],
+   ["starnight", "#ffffe0"],
+   ["beforedawn", "#cccccc"],
+   ["nature", "#16a085"],
+   ["deepocean", "#eeeeee"],
+   ["solarized", "#b58800"],
+   ["tomorrow", "#4271ae"],
+   ["tomorrow night", "#81a2be"],
+   ["monotone", "#f9d72c"]
+];
+
+function _default_color() =
+   let(ind = search([downcase($color_scheme)], _default_colors, 1, 0))
+   assert(ind[0]!=[], str("$color_scheme set to unknown value ",$color_scheme))
+   _default_colors[ind[0]][1];
 
 $attach_to = undef;
 $attach_anchor = [CENTER, CENTER, UP, 0];
@@ -830,9 +849,9 @@ module hulling(a)
 //           attach(TOP,BOT) cuboid([6,6,3])
 //             recolor("cyan")attach(TOP,BOT) cuboid([5,5,2.5])
 //               attach(TOP,BOT) cuboid([4,4,2]);
-module recolor(c=_DEFAULT_COLOR)
+module recolor(c)
 {
-    $color = c;
+    $color = default(c,_default_color());
     children();
 }
 
@@ -845,11 +864,19 @@ module recolor(c=_DEFAULT_COLOR)
 // Description:
 //   Sets the color for children at one level, reverting to the previous color for further descendants.
 //   This works only with attachables and you cannot have any color() modules above it in any parents,
-//   only recolor() or other color_this() modules.  
+//   only recolor() or other color_this() modules.
+//   .
+//   This module works by saving the current color, which means it needs to know the current color.  If you have
+//   not yet set the color with {{recolor()}} then the current color is the default color.  
+//   OpenSCAD provides no method for learning the value of the default color, so if you don't use the default
+//   "cornfield" color scheme you should set $color_scheme to the color scheme you are using.
+//   Alternatively, always use {{recolor()}} on a parent before using color_this().  
+//   . 
 //   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   c = Color name or RGBA vector.  Default: the standard OpenSCAD yellow
 // Example:
+//   $color_scheme = "cornfield";   // Change this if necessary
 //   cuboid([10,10,5])
 //     color_this("green")attach(TOP,BOT) cuboid([9,9,4.5])
 //       attach(TOP,BOT) cuboid([8,8,4])
@@ -857,10 +884,10 @@ module recolor(c=_DEFAULT_COLOR)
 //           attach(TOP,BOT) cuboid([6,6,3])
 //             color_this("cyan")attach(TOP,BOT) cuboid([5,5,2.5])
 //               attach(TOP,BOT) cuboid([4,4,2]);
-module color_this(c=_DEFAULT_COLOR)
+module color_this(c)
 {
-  $save_color=default($color, _DEFAULT_COLOR);
-  $color=c;
+  $save_color=default($color, _default_color());
+  $color=default(c, _default_color());
   children();
 }
 
