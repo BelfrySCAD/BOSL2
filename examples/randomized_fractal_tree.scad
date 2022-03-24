@@ -14,18 +14,18 @@ module leaf(s) {
 module branches(minsize, s1, s2){
     if(s2>minsize) {
         attach(TOP)
-        zrot(gaussian_rands(90,20)[0])
+        zrot(gaussian_rands(1,90,20)[0])
         zrot_copies(n=floor(log_rands(2,5,4)[0]))
         zrot(gaussian_rands(1,0,5))
         yrot(gaussian_rands(1,30,10)) {
-            sc = gaussian_rands(0.7,0.05)[0];
+            sc = gaussian_rands(1,0.7,0.05)[0];
             cylinder(d1=s2, d2=s2*sc, l=s1)
                 branches(minsize, s1*sc, s2*sc);
         }
     } else {
         recolor("springgreen")
         attach(TOP) zrot(90)
-        leaf(gaussian_rands(100,5)[0]);
+        leaf(gaussian_rands(1,100,5)[0]);
     }
 }
 
@@ -38,6 +38,7 @@ module tree(h, d, minsize) {
         }
     }
 }
+
 
 tree(d=300, h=1500, minsize=10);
 
