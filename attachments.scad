@@ -635,6 +635,16 @@ module force_tags(tags)
 // Arguments:
 //   neg = String containing space delimited set of tag names of children to difference away.
 //   keep = String containing space delimited set of tag names of children to keep, that is, to union into the model after differencing is completed.  
+// Example: The "hole" items are subtracted from everything else.  The other tags can be anything you find convenient.  
+//   diff("hole")
+//     sphere(d=100, $tags="body") {
+//       zcyl(d=55, h=100, $tags="pole");  // attach() not needed for center-to-center.
+//       tags("hole") {
+//          xcyl(d=55, h=101);
+//          ycyl(d=55, h=101);
+//       }
+//       zcyl(d=15, h=140, $tags="axle");
+//     }
 // Example:
 //   diff("neg", keep="axle")
 //   sphere(d=100) {

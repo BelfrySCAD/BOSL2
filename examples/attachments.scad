@@ -1,9 +1,9 @@
 include <BOSL2/std.scad>
-include <BOSL2/hull.scad>
+
 
 $fn=32;
 
-cuboid([60,40,40], rounding=5, edges=edges("Z"), anchor=BOTTOM) {
+cuboid([60,40,40], rounding=5, edges="Z", anchor=BOTTOM) {
     attach(TOP, BOTTOM) prismoid([60,40],[20,20], h=50, rounding1=5, rounding2=10) {
         attach(TOP) cylinder(d=20, h=30, center=false) {
             attach(TOP) cylinder(d1=50, d2=30, h=12, center=false);

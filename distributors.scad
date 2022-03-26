@@ -258,6 +258,20 @@ module ycopies(spacing, n, l, sp)
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
+// Example: Cubic sphere packing
+//   s = 20;
+//   s2 = s * sin(45);
+//   zcopies(s2,n=8) union()
+//       grid2d([s2,s2],n=8,stagger=($idx%2)? true : "alt")
+//          sphere(d=s);
+// Example: Hexagonal sphere packing
+//   s = 20;
+//   xyr = adj_ang_to_hyp(s/2,30);
+//   h = hyp_adj_to_opp(s,xyr);
+//   zcopies(h,n=8) union()
+//       back(($idx%2)*xyr*cos(60))
+//           grid2d(s,n=[12,7],stagger=($idx%2)? "alt" : true)
+//               sphere(d=s);
 module zcopies(spacing, n, l, sp)
 {
     sp = is_finite(sp)? [0,0,sp] : sp;

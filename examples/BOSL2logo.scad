@@ -34,7 +34,7 @@ xdistribute(50) {
 		[ x, y+s1], [ x, y]
 	];
 	recolor("#99f")
-	path_sweep(regular_ngon(n=3,d=10,spin=90), bezier_path(sbez));
+	path_sweep(regular_ngon(n=3,d=10,spin=90), bezpath_points(sbez));
 
 	recolor("#0bf")
 	translate([-15,-35,0])
