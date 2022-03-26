@@ -567,17 +567,22 @@ function gaussian_rands(n=1, mean=0, cov=1, seed=undef) =
     move(mean,list_to_matrix(rdata,dim)*transpose(L));
 
 
-// Function: spherical_random_points()
+// Function: exponential_rands()
 // Usage:
-//    points = spherical_random_points([n], [radius], [seed]);
-// See Also: random_polygon(), random_points()
-// Topics: Random, Points
+//   arr = exponential_rands([n], [lambda], [seed])
 // Description:
-//    Generate `n` 3D uniformly distributed random points lying on a sphere centered at the origin with radius equal to `radius`.
+//   Returns random numbers with an exponential distribution with parameter lambda, and hence mean 1/lambda.  
 // Arguments:
-//    n = number of points to generate. Default: 1
-//    radius = the sphere radius. Default: 1
-//    seed = an optional seed for the random generation.
+//   n = number of points to return.  Default: 1
+//   lambda = distribution parameter.  The mean will be 1/lambda.  Default: 1
+function exponential_rands(n=1, lambda=1, seed) =
+    assert( is_int(n) && n>=1, "The number of points should be an integer greater than zero.")
+    assert( is_num(lambda) && lambda>0, "The lambda parameter must be a positive number.")
+    let(
+         unif = is_def(seed) ? rands(0,1,n,seed=seed) : rands(0,1,n)
+    )
+    -(1/lambda) * [for(x=unif) ln(1-x)];
+
 
 // See https://mathworld.wolfram.com/SpherePointPicking.html
 function spherical_random_points(n=1, radius=1, seed) =

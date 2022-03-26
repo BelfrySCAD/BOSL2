@@ -215,4 +215,9 @@ RAY = [true, false];
 LINE = [false, false];
 
 
+// Constant: IDENT
+// Description: Identity transformation matrix for three-dimensional transforms.  Equal to `ident(4)`.  
+IDENT=ident(4);
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

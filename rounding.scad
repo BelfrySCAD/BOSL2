@@ -31,7 +31,7 @@ include <structs.scad>
 //   .
 //   For circular rounding you can use the `radius` or `r` parameter to set the rounding radius.
 //   .
-//   For chamfers you can use `length` to set the length of the chamfer.  
+//   For chamfers you can use `width` to set the width of the chamfer.  
 //   .
 //   The "smooth" rounding method also has a parameter that specifies how smooth the curvature match is.  This parameter, `k`,
 //   ranges from 0 to 1, with a default of 0.5.  Larger values gives a more 
@@ -153,7 +153,7 @@ include <structs.scad>
 //   away from the corner along the path where the roundover or chamfer should start.  This makes it easy to ensure your roundover will fit,
 //   so use it if you want the largest possible roundover.  
 //   * For circular rounding you can use the `radius` or `r` parameter to set the rounding radius.
-//   * For chamfers you can use the `length` parameter, which sets the length of the chamfer edge.  
+//   * For chamfers you can use the `width` parameter, which sets the width of the chamfer edge.  
 //   .
 //   As explained in [Types of Roundover](rounding.scad#subsection-types-of-roundover), the continuous curvature "smooth"
 //   type of rounding also accepts the `k` parameter, between 0 and 1, which specifies how fast the curvature changes at
@@ -198,7 +198,7 @@ include <structs.scad>
 //   radius/r = rounding radius, only compatible with `method="circle"`. Can be a number or vector.
 //   cut = rounding cut distance, compatible with all methods.  Can be a number or vector.
 //   joint = rounding joint distance, compatible with `method="chamfer"` and `method="smooth"`.  Can be a number or vector.
-//   flat = length of the flat edge created by chamfering, compatible with `method="chamfer"`.  Can be a number of vector. 
+//   width = width of the flat edge created by chamfering, compatible with `method="chamfer"`.  Can be a number or vector. 
 //   k = continuous curvature smoothness parameter for `method="smooth"`.  Can be a number or vector.  Default: 0.5
 //   closed = if true treat the path as a closed polygon, otherwise treat it as open.  Default: true.
 //   verbose = if true display rounding scale factors that show how close roundovers are to overlapping.  Default: false
@@ -321,7 +321,7 @@ include <structs.scad>
 //   path_len = path_segment_lengths(path,closed=true);
 //   halflen = [for(i=idx(path)) min(select(path_len,i-1,i))/2];
 //   polygon(round_corners(path,joint = halflen, method="circle",verbose=true));
-// Example(2D): Chamfering, specifying the chamfer length
+// Example(2D): Chamfering, specifying the chamfer width
 //   path = star(5, step=2, d=100);
 //   path2 = round_corners(path, method="chamfer", width=5);
 //   polygon(path2);
