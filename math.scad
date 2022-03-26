@@ -583,6 +583,17 @@ function exponential_rands(n=1, lambda=1, seed) =
     )
     -(1/lambda) * [for(x=unif) ln(1-x)];
 
+// Function: spherical_random_points()
+// Usage:
+//    points = spherical_random_points([n], [radius], [seed]);
+// See Also: random_polygon(), random_points()
+// Topics: Random, Points
+// Description:
+//    Generate `n` 3D uniformly distributed random points lying on a sphere centered at the origin with radius equal to `radius`.
+// Arguments:
+//    n = number of points to generate. Default: 1
+//    radius = the sphere radius. Default: 1
+//    seed = an optional seed for the random generation.
 
 // See https://mathworld.wolfram.com/SpherePointPicking.html
 function spherical_random_points(n=1, radius=1, seed) =
