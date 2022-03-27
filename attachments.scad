@@ -1206,6 +1206,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   `$parent_orient` is set to the parent object's `orient` value.
 //   `$parent_geom` is set to the parent object's `geom` value.
 //   `$parent_size` is set to the parent object's cubical `[X,Y,Z]` volume size.
+//   `$color` is used to set the color of the object
+//   `$save_color` is used to revert color to the parent's color
 //
 // Example(NORENDER): Cubical Shape
 //   attachable(anchor, spin, orient, size=size) {
