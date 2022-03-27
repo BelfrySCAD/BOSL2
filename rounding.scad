@@ -306,21 +306,25 @@ include <structs.scad>
 //   $fn=64;
 //   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
 //   debug_polygon(path);
-//   //polygon(round_corners(path,cut = [1,3,1,1], method="circle"));
+//   //polygon(round_corners(path,cut = [1,3,1,1],
+//   //        method="circle"));
 // Example(2D): The list of factors shows that the problem is in the first two rounding values, because the factors are smaller than one.  If we multiply the first two parameters by 0.85 then the roundings fit.  The verbose option gives us the same fit factors.  
 //   $fn=64;
 //   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
-//   polygon(round_corners(path,cut = [0.85,3*0.85,1,1], method="circle", verbose=true));
+//   polygon(round_corners(path,cut = [0.85,3*0.85,1,1],
+//                         method="circle", verbose=true));
 // Example(2D): From the fit factors we can see that rounding at vertices 2 and 3 could be increased a lot.  Applying those factors we get this more rounded shape.  The new fit factors show that we can still further increase the rounding parameters if we wish.  
 //   $fn=64;
 //   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
-//   polygon(round_corners(path,cut = [0.85,3*0.85,2.13, 10.15], method="circle",verbose=true));
+//   polygon(round_corners(path,cut = [0.85,3*0.85,2.13, 10.15],
+//                         method="circle",verbose=true));
 // Example(2D): Using the `joint` parameter it's easier to understand whether your roundvers will fit.  We can guarantee a fairly large roundover on any path by picking each one to use up half the segment distance along the shorter of its two segments:
 //   $fn=64;
 //   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
 //   path_len = path_segment_lengths(path,closed=true);
 //   halflen = [for(i=idx(path)) min(select(path_len,i-1,i))/2];
-//   polygon(round_corners(path,joint = halflen, method="circle",verbose=true));
+//   polygon(round_corners(path,joint = halflen,
+//                         method="circle",verbose=true));
 // Example(2D): Chamfering, specifying the chamfer width
 //   path = star(5, step=2, d=100);
 //   path2 = round_corners(path, method="chamfer", width=5);
@@ -619,16 +623,23 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   polygon(smooth_path(square(4),size=0.4,closed=true));
 // Example(2D): Turning on uniform tangent calculation also changes the end derivatives:
 //   color("green")stroke(square(4), width=0.1);
-//   stroke(smooth_path(square(4),size=0.4,uniform=true), width=0.1);
+//   stroke(smooth_path(square(4),size=0.4,uniform=true),
+//          width=0.1);
 // Example(2D): Here's a wide rectangle.  Using size means all edges bulge the same amount, regardless of their length. 
+//   color("green")
+//     stroke(square([10,4]), closed=true, width=0.1);
+//   stroke(smooth_path(square([10,4]),size=1,closed=true),
+//          width=0.1);
+// Example(2D): With relsize the bulge is proportional to the side length. 
 //   color("green")stroke(square([10,4]), closed=true, width=0.1);
-//   stroke(smooth_path(square([10,4]),size=1,closed=true),width=0.1);
-// Example(2D): Here's a wide rectangle.  With relsize the bulge is proportional to the side length. 
-//   color("green")stroke(square([10,4]), closed=true, width=0.1);
-//   stroke(smooth_path(square([10,4]),relsize=0.1,closed=true),width=0.1);
-// Example(2D): Here's a wide rectangle.  Settting uniform to true biases the tangents to aline more with the line sides
-//   color("green")stroke(square([10,4]), closed=true, width=0.1);
-//   stroke(smooth_path(square([10,4]),uniform=true,relsize=0.1,closed=true),width=0.1);
+//   stroke(smooth_path(square([10,4]),relsize=0.1,closed=true),
+//          width=0.1);
+// Example(2D): Settting uniform to true biases the tangents to aline more with the line sides
+//   color("green")
+//     stroke(square([10,4]), closed=true, width=0.1);
+//   stroke(smooth_path(square([10,4]),uniform=true,
+//                      relsize=0.1,closed=true),
+//          width=0.1);
 // Example(2D): A more interesting shape:
 //   path = [[0,0], [4,0], [7,14], [-3,12]];
 //   polygon(smooth_path(path,size=1,closed=true));
@@ -636,11 +647,13 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   polygon(smooth_path(square(4), size=.25,closed=true));
 // Example(2D): Here's the square with a size that's too big to achieve, so you get the maximum possible curve:
 //   color("green")stroke(square(4), width=0.1,closed=true);
-//   stroke(smooth_path(square(4), size=4, closed=true),closed=true,width=.1);
+//   stroke(smooth_path(square(4), size=4, closed=true),
+//          closed=true,width=.1);
 // Example(2D): You can alter the shape of the curve by specifying your own arbitrary tangent values
 //   polygon(smooth_path(square(4),tangents=1.25*[[-2,-1], [-4,1], [1,2], [6,-1]],size=0.4,closed=true));
 // Example(2D): Or you can give a different size for each segment
-//   polygon(smooth_path(square(4),size = [.4, .05, 1, .3],closed=true));
+//   polygon(smooth_path(square(4),size = [.4, .05, 1, .3],
+//                       closed=true));
 // Example(FlatSpin,VPD=35,VPT=[4.5,4.5,1]):  Works on 3d paths as well
 //   path = [[0,0,0],[3,3,2],[6,0,1],[9,9,0]];
 //   stroke(smooth_path(path,relsize=.1),width=.3);
@@ -716,23 +729,31 @@ function _scalar_to_vector(value,length,varname) =
 // Example(2D): Specifying pairs of joint values at a path joint creates an asymmetric curve
 //   horiz = [[0,0],[10,0]];
 //   vert = [[0,0],[0,10]];
-//   stroke(path_join([horiz, vert, -horiz],joint=[[4,1],[1,4]],$fn=16),width=.3);
+//   stroke(path_join([horiz, vert, -horiz],
+//                    joint=[[4,1],[1,4]],$fn=16),width=.3);
 // Example(2D): A closed square
 //   horiz = [[0,0],[10,0]];
 //   vert = [[0,0],[0,10]];
-//   stroke(path_join([horiz, vert, -horiz, -vert],joint=3,k=1,closed=true,$fn=16),closed=true);
+//   stroke(path_join([horiz, vert, -horiz, -vert],
+//                    joint=3,k=1,closed=true,$fn=16),closed=true);
 // Example(2D): Different curve at each corner by changing the joint size
 //   horiz = [[0,0],[10,0]];
 //   vert = [[0,0],[0,10]];
-//   stroke(path_join([horiz, vert, -horiz, -vert],joint=[3,0,1,2],k=1,closed=true,$fn=16),closed=true,width=0.4);
+//   stroke(path_join([horiz, vert, -horiz, -vert],
+//                    joint=[3,0,1,2],k=1,closed=true,$fn=16),
+//          closed=true,width=0.4);
 // Example(2D): Different curve at each corner by changing the curvature parameter.  Note that k=0 still gives a small curve, unlike joint=0 which gives a sharp corner.
 //   horiz = [[0,0],[10,0]];
 //   vert = [[0,0],[0,10]];
-//   stroke(path_join([horiz, vert, -horiz, -vert],joint=3,k=[1,.5,0,.7],closed=true,$fn=16),closed=true,width=0.4);
+//   stroke(path_join([horiz, vert, -horiz, -vert],joint=3,
+//                    k=[1,.5,0,.7],closed=true,$fn=16),
+//          closed=true,width=0.4);
 // Example(2D): Joint value of 7 is larger than half the square so curves interfere with each other, which breaks symmetry because they are computed sequentially
 //   horiz = [[0,0],[10,0]];
 //   vert = [[0,0],[0,10]];
-//   stroke(path_join([horiz, vert, -horiz, -vert],joint=7,k=.4,closed=true,$fn=16),closed=true);
+//   stroke(path_join([horiz, vert, -horiz, -vert],joint=7,
+//                     k=.4,closed=true,$fn=16),
+//          closed=true);
 // Example(2D): Unlike round_corners, we can add curves onto curves.
 //   $fn=64;
 //   myarc = arc(width=20, thickness=5 );
@@ -740,29 +761,41 @@ function _scalar_to_vector(value,length,varname) =
 // Example(2D): Here we make a closed shape from two arcs and round the sharp tips
 //   arc1 = arc(width=20, thickness=4,$fn=75);
 //   arc2 = reverse(arc(width=20, thickness=2,$fn=75));
-//   stroke(path_join([arc1,arc2]),width=.3);    // Join without rounding
-//   color("red")stroke(path_join([arc1,arc2], 3,k=1,closed=true), width=.3,closed=true,$fn=12);  // Join with rounding
+//   // Without rounding
+//   stroke(path_join([arc1,arc2]),width=.3);
+//   // With rounding
+//   color("red")stroke(path_join([arc1,arc2], 3,k=1,closed=true),
+//                      width=.3,closed=true,$fn=12); 
 // Example(2D): Combining arcs with segments
 //   arc1 = arc(width=20, thickness=4,$fn=75);
 //   arc2 = reverse(arc(width=20, thickness=2,$fn=75));
 //   vpath = [[0,0],[0,-5]];
 //   stroke(path_join([arc1,vpath,arc2,reverse(vpath)]),width=.2);
-//   color("red")stroke(path_join([arc1,vpath,arc2,reverse(vpath)], [1,2,2,1],k=1,closed=true), width=.2,closed=true,$fn=12);
+//   color("red")stroke(path_join([arc1,vpath,arc2,reverse(vpath)],
+//                                [1,2,2,1],k=1,closed=true),
+//                      width=.2,closed=true,$fn=12);
 // Example(2D): Here relocation is off.  We have three segments (in yellow) and add the curves to the segments.  Notice that joint zero still produces a curve because it refers to the endpoints of the supplied paths.  
 //   p1 = [[0,0],[2,0]];
 //   p2 = [[3,1],[1,3]];
 //   p3 = [[0,3],[-1,1]];
-//   color("red")stroke(path_join([p1,p2,p3], joint=0, relocate=false,closed=true),width=.3,$fn=12);
+//   color("red")stroke(
+//     path_join([p1,p2,p3], joint=0, relocate=false,
+//               closed=true),
+//     width=.3,$fn=12);
 //   for(x=[p1,p2,p3]) stroke(x,width=.3);
 // Example(2D): If you specify closed=true when the last path doesn't meet the first one then it is similar to using relocate=false: the function tries to close the path using a curve.  In the example below, this results in a long curve to the left, when given the unclosed three segments as input.  Note that if the segments are parallel the function fails with an error.  The extension of the curves must intersect in a corner for the rounding to be well-defined.  To get a normal rounding of the closed shape, you must include a fourth path, the last segment that closes the shape.
 //   horiz = [[0,0],[10,0]];
 //   vert = [[0,0],[0,10]];
 //   h2 = [[0,-3],[10,0]];
-//   color("red")stroke(path_join([horiz, vert, -h2],closed=true,joint=3,$fn=25),closed=true,width=.5);
+//   color("red")stroke(
+//     path_join([horiz, vert, -h2],closed=true,
+//               joint=3,$fn=25),
+//     closed=true,width=.5);
 //   stroke(path_join([horiz, vert, -h2]),width=.3);
 // Example(2D): With a single path with closed=true the start and end junction is rounded.
 //   tri = regular_ngon(n=3, r=7);
-//   stroke(path_join([tri], joint=3,closed=true,$fn=12),closed=true,width=.5);
+//   stroke(path_join([tri], joint=3,closed=true,$fn=12),
+//          closed=true,width=.5);
 module path_join(paths,joint=0,k=0.5,relocate=true,closed=false) { no_module();}
 function path_join(paths,joint=0,k=0.5,relocate=true,closed=false)=
   assert(is_list(paths),"Input paths must be a list of paths")
