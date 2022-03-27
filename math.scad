@@ -567,6 +567,22 @@ function gaussian_rands(n=1, mean=0, cov=1, seed=undef) =
     move(mean,list_to_matrix(rdata,dim)*transpose(L));
 
 
+// Function: exponential_rands()
+// Usage:
+//   arr = exponential_rands([n], [lambda], [seed])
+// Description:
+//   Returns random numbers with an exponential distribution with parameter lambda, and hence mean 1/lambda.  
+// Arguments:
+//   n = number of points to return.  Default: 1
+//   lambda = distribution parameter.  The mean will be 1/lambda.  Default: 1
+function exponential_rands(n=1, lambda=1, seed) =
+    assert( is_int(n) && n>=1, "The number of points should be an integer greater than zero.")
+    assert( is_num(lambda) && lambda>0, "The lambda parameter must be a positive number.")
+    let(
+         unif = is_def(seed) ? rands(0,1,n,seed=seed) : rands(0,1,n)
+    )
+    -(1/lambda) * [for(x=unif) x==1 ? 708.3964185322641 : ln(1-x)];  // Use ln(min_float) when x is 1
+
 // Function: spherical_random_points()
 // Usage:
 //    points = spherical_random_points([n], [radius], [seed]);
