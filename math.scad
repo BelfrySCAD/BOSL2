@@ -581,7 +581,7 @@ function exponential_rands(n=1, lambda=1, seed) =
     let(
          unif = is_def(seed) ? rands(0,1,n,seed=seed) : rands(0,1,n)
     )
-    -(1/lambda) * [for(x=unif) ln(1-x)];
+    -(1/lambda) * [for(x=unif) x==1 ? 708.3964185322641 : ln(1-x)];  // Use ln(min_float) when x is 1
 
 // Function: spherical_random_points()
 // Usage:
