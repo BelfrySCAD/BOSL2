@@ -377,29 +377,6 @@ function repeat(val, n, i=0) =
     [for (j=[1:1:n[i]]) repeat(val, n, i+1)];
 
 
-// Function: count()
-// Usage:
-//   list = count(n, [s], [step], [reverse]);
-// Description:
-//   Creates a list of `n` numbers, starting at `s`, incrementing by `step` each time.
-//   You can also pass a list for n and then the length of the input list is used.  
-// Arguments:
-//   n = The length of the list of numbers to create, or a list to match the length of
-//   s = The starting value of the list of numbers.
-//   step = The amount to increment successive numbers in the list.
-//   reverse = Reverse the list.  Default: false.
-// See Also: idx()
-// Example:
-//   nl1 = count(5);  // Returns: [0,1,2,3,4]
-//   nl2 = count(5,3);  // Returns: [3,4,5,6,7]
-//   nl3 = count(4,3,2);  // Returns: [3,5,7,9]
-//   nl4 = count(5,reverse=true);    // Returns: [4,3,2,1,0]
-//   nl5 = count(5,3,reverse=true);  // Returns: [7,6,5,4,3]
-function count(n,s=0,step=1,reverse=false) = let(n=is_list(n) ? len(n) : n)
-                                             reverse? [for (i=[n-1:-1:0]) s+i*step]
-                                                    : [for (i=[0:1:n-1]) s+i*step];
-
-
 
 // Function: list_bset()
 // Usage:
@@ -967,7 +944,7 @@ function permutations(l,n=2) =
 
 
 
-// Section: Changing list structure
+// Section: Changing List Structure
 
 
 // Function: list_to_matrix()

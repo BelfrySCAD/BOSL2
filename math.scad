@@ -1,10 +1,13 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: math.scad
-//   Math helper functions.
+//   Assorted math functions, including linear interpolation, list operations (sums, mean, products),
+//   convolution, quantization, log2, hyperbolic trig functions, random numbers, derivatives,
+//   polynomials, and root finding. 
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Math
-// FileSummary: General miscellaneous math function.
+// FileSummary: Math on lists, special functions, quantization, random numbers, calculus, root finding
+//  
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
@@ -28,7 +31,97 @@ NAN = acos(2);
 
 
 
-// Section: Simple math
+// Section: Interpolation and Counting
+
+
+// Function: count()
+// Usage:
+//   list = count(n, [s], [step], [reverse]);
+// Description:
+//   Creates a list of `n` numbers, starting at `s`, incrementing by `step` each time.
+//   You can also pass a list for n and then the length of the input list is used.  
+// Arguments:
+//   n = The length of the list of numbers to create, or a list to match the length of
+//   s = The starting value of the list of numbers.
+//   step = The amount to increment successive numbers in the list.
+//   reverse = Reverse the list.  Default: false.
+// See Also: idx()
+// Example:
+//   nl1 = count(5);  // Returns: [0,1,2,3,4]
+//   nl2 = count(5,3);  // Returns: [3,4,5,6,7]
+//   nl3 = count(4,3,2);  // Returns: [3,5,7,9]
+//   nl4 = count(5,reverse=true);    // Returns: [4,3,2,1,0]
+//   nl5 = count(5,3,reverse=true);  // Returns: [7,6,5,4,3]
+function count(n,s=0,step=1,reverse=false) = let(n=is_list(n) ? len(n) : n)
+                                             reverse? [for (i=[n-1:-1:0]) s+i*step]
+                                                    : [for (i=[0:1:n-1]) s+i*step];
+
+
+// Function: lerp()
+// Usage:
+//   x = lerp(a, b, u);
+//   l = lerp(a, b, LIST);
+// Description:
+//   Interpolate between two values or vectors.
+//   If `u` is given as a number, returns the single interpolated value.
+//   If `u` is 0.0, then the value of `a` is returned.
+//   If `u` is 1.0, then the value of `b` is returned.
+//   If `u` is a range, or list of numbers, returns a list of interpolated values.
+//   It is valid to use a `u` value outside the range 0 to 1.  The result will be an extrapolation
+//   along the slope formed by `a` and `b`.
+// Arguments:
+//   a = First value or vector.
+//   b = Second value or vector.
+//   u = The proportion from `a` to `b` to calculate.  Standard range is 0.0 to 1.0, inclusive.  If given as a list or range of values, returns a list of results.
+// Example:
+//   x = lerp(0,20,0.3);  // Returns: 6
+//   x = lerp(0,20,0.8);  // Returns: 16
+//   x = lerp(0,20,-0.1); // Returns: -2
+//   x = lerp(0,20,1.1);  // Returns: 22
+//   p = lerp([0,0],[20,10],0.25);  // Returns [5,2.5]
+//   l = lerp(0,20,[0.4,0.6]);  // Returns: [8,12]
+//   l = lerp(0,20,[0.25:0.25:0.75]);  // Returns: [5,10,15]
+// Example(2D):
+//   p1 = [-50,-20];  p2 = [50,30];
+//   stroke([p1,p2]);
+//   pts = lerp(p1, p2, [0:1/8:1]);
+//   // Points colored in ROYGBIV order.
+//   rainbow(pts) translate($item) circle(d=3,$fn=8);
+function lerp(a,b,u) =
+    assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
+    is_finite(u)? (1-u)*a + u*b :
+    assert(is_finite(u) || is_vector(u) || valid_range(u), "Input u to lerp must be a number, vector, or valid range.")
+    [for (v = u) (1-v)*a + v*b ];
+
+
+// Function: lerpn()
+// Usage:
+//   x = lerpn(a, b, n);
+//   x = lerpn(a, b, n, [endpoint]);
+// Description:
+//   Returns exactly `n` values, linearly interpolated between `a` and `b`.
+//   If `endpoint` is true, then the last value will exactly equal `b`.
+//   If `endpoint` is false, then the last value will about `a+(b-a)*(1-1/n)`.
+// Arguments:
+//   a = First value or vector.
+//   b = Second value or vector.
+//   n = The number of values to return.
+//   endpoint = If true, the last value will be exactly `b`.  If false, the last value will be one step less.
+// Example:
+//   l = lerpn(-4,4,9);        // Returns: [-4,-3,-2,-1,0,1,2,3,4]
+//   l = lerpn(-4,4,8,false);  // Returns: [-4,-3,-2,-1,0,1,2,3]
+//   l = lerpn(0,1,6);         // Returns: [0, 0.2, 0.4, 0.6, 0.8, 1]
+//   l = lerpn(0,1,5,false);   // Returns: [0, 0.2, 0.4, 0.6, 0.8]
+function lerpn(a,b,n,endpoint=true) =
+    assert(same_shape(a,b), "Bad or inconsistent inputs to lerpn")
+    assert(is_int(n))
+    assert(is_bool(endpoint))
+    let( d = n - (endpoint? 1 : 0) )
+    [for (i=[0:1:n-1]) let(u=i/d) (1-u)*a + u*b];
+
+
+
+// Section: Miscellaneous Functions 
 
 // Function: sqr()
 // Usage:
@@ -139,123 +232,44 @@ function binomial_coefficient(n,k) =
     b[len(b)-1];
 
 
-// Function: lerp()
+// Function: gcd()
 // Usage:
-//   x = lerp(a, b, u);
-//   l = lerp(a, b, LIST);
+//   x = gcd(a,b)
 // Description:
-//   Interpolate between two values or vectors.
-//   If `u` is given as a number, returns the single interpolated value.
-//   If `u` is 0.0, then the value of `a` is returned.
-//   If `u` is 1.0, then the value of `b` is returned.
-//   If `u` is a range, or list of numbers, returns a list of interpolated values.
-//   It is valid to use a `u` value outside the range 0 to 1.  The result will be an extrapolation
-//   along the slope formed by `a` and `b`.
-// Arguments:
-//   a = First value or vector.
-//   b = Second value or vector.
-//   u = The proportion from `a` to `b` to calculate.  Standard range is 0.0 to 1.0, inclusive.  If given as a list or range of values, returns a list of results.
-// Example:
-//   x = lerp(0,20,0.3);  // Returns: 6
-//   x = lerp(0,20,0.8);  // Returns: 16
-//   x = lerp(0,20,-0.1); // Returns: -2
-//   x = lerp(0,20,1.1);  // Returns: 22
-//   p = lerp([0,0],[20,10],0.25);  // Returns [5,2.5]
-//   l = lerp(0,20,[0.4,0.6]);  // Returns: [8,12]
-//   l = lerp(0,20,[0.25:0.25:0.75]);  // Returns: [5,10,15]
-// Example(2D):
-//   p1 = [-50,-20];  p2 = [50,30];
-//   stroke([p1,p2]);
-//   pts = lerp(p1, p2, [0:1/8:1]);
-//   // Points colored in ROYGBIV order.
-//   rainbow(pts) translate($item) circle(d=3,$fn=8);
-function lerp(a,b,u) =
-    assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
-    is_finite(u)? (1-u)*a + u*b :
-    assert(is_finite(u) || is_vector(u) || valid_range(u), "Input u to lerp must be a number, vector, or valid range.")
-    [for (v = u) (1-v)*a + v*b ];
+//   Computes the Greatest Common Divisor/Factor of `a` and `b`.  
+function gcd(a,b) =
+    assert(is_int(a) && is_int(b),"Arguments to gcd must be integers")
+    b==0 ? abs(a) : gcd(b,a % b);
 
 
-// Function: lerpn()
+// Computes lcm for two integers
+function _lcm(a,b) =
+    assert(is_int(a) && is_int(b), "Invalid non-integer parameters to lcm")
+    assert(a!=0 && b!=0, "Arguments to lcm should not be zero")
+    abs(a*b) / gcd(a,b);
+
+
+// Computes lcm for a list of values
+function _lcmlist(a) =
+    len(a)==1 ? a[0] :
+    _lcmlist(concat(lcm(a[0],a[1]),list_tail(a,2)));
+
+
+// Function: lcm()
 // Usage:
-//   x = lerpn(a, b, n);
-//   x = lerpn(a, b, n, [endpoint]);
+//   div = lcm(a, b);
+//   divs = lcm(list);
 // Description:
-//   Returns exactly `n` values, linearly interpolated between `a` and `b`.
-//   If `endpoint` is true, then the last value will exactly equal `b`.
-//   If `endpoint` is false, then the last value will about `a+(b-a)*(1-1/n)`.
-// Arguments:
-//   a = First value or vector.
-//   b = Second value or vector.
-//   n = The number of values to return.
-//   endpoint = If true, the last value will be exactly `b`.  If false, the last value will be one step less.
-// Example:
-//   l = lerpn(-4,4,9);        // Returns: [-4,-3,-2,-1,0,1,2,3,4]
-//   l = lerpn(-4,4,8,false);  // Returns: [-4,-3,-2,-1,0,1,2,3]
-//   l = lerpn(0,1,6);         // Returns: [0, 0.2, 0.4, 0.6, 0.8, 1]
-//   l = lerpn(0,1,5,false);   // Returns: [0, 0.2, 0.4, 0.6, 0.8]
-function lerpn(a,b,n,endpoint=true) =
-    assert(same_shape(a,b), "Bad or inconsistent inputs to lerpn")
-    assert(is_int(n))
-    assert(is_bool(endpoint))
-    let( d = n - (endpoint? 1 : 0) )
-    [for (i=[0:1:n-1]) let(u=i/d) (1-u)*a + u*b];
+//   Computes the Least Common Multiple of the two arguments or a list of arguments.  Inputs should
+//   be non-zero integers.  The output is always a positive integer.  It is an error to pass zero
+//   as an argument.  
+function lcm(a,b=[]) =
+    !is_list(a) && !is_list(b) 
+    ?   _lcm(a,b) 
+    :   let( arglist = concat(force_list(a),force_list(b)) )
+        assert(len(arglist)>0, "Invalid call to lcm with empty list(s)")
+        _lcmlist(arglist);
 
-
-// Section: Undef Safe Math
-
-// Function: u_add()
-// Usage:
-//   x = u_add(a, b);
-// Description:
-//   Adds `a` to `b`, returning the result, or undef if either value is `undef`.
-//   This emulates the way undefs used to be handled in versions of OpenSCAD before 2020.
-// Arguments:
-//   a = First value.
-//   b = Second value.
-function u_add(a,b) = is_undef(a) || is_undef(b)? undef : a + b;
-
-
-// Function: u_sub()
-// Usage:
-//   x = u_sub(a, b);
-// Description:
-//   Subtracts `b` from `a`, returning the result, or undef if either value is `undef`.
-//   This emulates the way undefs used to be handled in versions of OpenSCAD before 2020.
-// Arguments:
-//   a = First value.
-//   b = Second value.
-function u_sub(a,b) = is_undef(a) || is_undef(b)? undef : a - b;
-
-
-// Function: u_mul()
-// Usage:
-//   x = u_mul(a, b);
-// Description:
-//   Multiplies `a` by `b`, returning the result, or undef if either value is `undef`.
-//   This emulates the way undefs used to be handled in versions of OpenSCAD before 2020.
-// Arguments:
-//   a = First value.
-//   b = Second value.
-function u_mul(a,b) =
-    is_undef(a) || is_undef(b)? undef :
-    is_vector(a) && is_vector(b)? v_mul(a,b) :
-    a * b;
-
-
-// Function: u_div()
-// Usage:
-//   x = u_div(a, b);
-// Description:
-//   Divides `a` by `b`, returning the result, or undef if either value is `undef`.
-//   This emulates the way undefs used to be handled in versions of OpenSCAD before 2020.
-// Arguments:
-//   a = First value.
-//   b = Second value.
-function u_div(a,b) =
-    is_undef(a) || is_undef(b)? undef :
-    is_vector(a) && is_vector(b)? v_div(a,b) :
-    a / b;
 
 
 
@@ -488,6 +502,228 @@ function modang(x) =
     let(xx = posmod(x,360)) xx<180? xx : xx-360;
 
 
+
+// Section: Operations on Lists (Sums, Mean, Products)
+
+// Function: sum()
+// Usage:
+//   x = sum(v, [dflt]);
+// Description:
+//   Returns the sum of all entries in the given consistent list.
+//   If passed an array of vectors, returns the sum the vectors.
+//   If passed an array of matrices, returns the sum of the matrices.
+//   If passed an empty list, the value of `dflt` will be returned.
+// Arguments:
+//   v = The list to get the sum of.
+//   dflt = The default value to return if `v` is an empty list.  Default: 0
+// Example:
+//   sum([1,2,3]);  // returns 6.
+//   sum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [9, 12, 15]
+function sum(v, dflt=0) =
+    v==[]? dflt :
+    assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
+    is_finite(v[0]) || is_vector(v[0]) ? [for(i=v) 1]*v :
+    _sum(v,v[0]*0);
+
+function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
+
+
+
+
+// Function: mean()
+// Usage:
+//   x = mean(v);
+// Description:
+//   Returns the arithmetic mean/average of all entries in the given array.
+//   If passed a list of vectors, returns a vector of the mean of each part.
+// Arguments:
+//   v = The list of values to get the mean of.
+// Example:
+//   mean([2,3,4]);  // returns 3.
+//   mean([[1,2,3], [3,4,5], [5,6,7]]);  // returns [3, 4, 5]
+function mean(v) = 
+    assert(is_list(v) && len(v)>0, "Invalid list.")
+    sum(v)/len(v);
+
+
+
+// Function: median()
+// Usage:
+//   middle = median(v)
+// Description:
+//   Returns the median of the given vector.  
+function median(v) =
+    assert(is_vector(v), "Input to median must be a vector")
+    len(v)%2 ? max( list_smallest(v, ceil(len(v)/2)) ) :
+    let( lowest = list_smallest(v, len(v)/2 + 1),
+         max  = max(lowest),
+         imax = search(max,lowest,1),
+         max2 = max([for(i=idx(lowest)) if(i!=imax[0]) lowest[i] ])
+    )
+    (max+max2)/2;
+
+
+// Function: deltas()
+// Usage:
+//   delts = deltas(v);
+// Description:
+//   Returns a list with the deltas of adjacent entries in the given list, optionally wrapping back to the front.
+//   The list should be a consistent list of numeric components (numbers, vectors, matrix, etc).
+//   Given [a,b,c,d], returns [b-a,c-b,d-c].
+//   
+// Arguments:
+//   v = The list to get the deltas of.
+//   wrap = If true, wrap back to the start from the end.  ie: return the difference between the last and first items as the last delta.  Default: false
+// Example:
+//   deltas([2,5,9,17]);  // returns [3,4,8].
+//   deltas([[1,2,3], [3,6,8], [4,8,11]]);  // returns [[2,4,5], [1,2,3]]
+function deltas(v, wrap=false) = 
+    assert( is_consistent(v) && len(v)>1 , "Inconsistent list or with length<=1.")
+    [for (p=pair(v,wrap)) p[1]-p[0]] ;
+
+
+// Function: cumsum()
+// Usage:
+//   sums = cumsum(v);
+// Description:
+//   Returns a list where each item is the cumulative sum of all items up to and including the corresponding entry in the input list.
+//   If passed an array of vectors, returns a list of cumulative vectors sums.
+// Arguments:
+//   v = The list to get the sum of.
+// Example:
+//   cumsum([1,1,1]);  // returns [1,2,3]
+//   cumsum([2,2,2]);  // returns [2,4,6]
+//   cumsum([1,2,3]);  // returns [1,3,6]
+//   cumsum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [[1,2,3], [4,6,8], [9,12,15]]
+function cumsum(v) =
+    assert(is_consistent(v), "The input is not consistent." )
+    len(v)<=1 ? v :
+    _cumsum(v,_i=1,_acc=[v[0]]);
+
+function _cumsum(v,_i=0,_acc=[]) =
+   _i>=len(v) ? _acc :
+    _cumsum( v, _i+1, [ each _acc, _acc[len(_acc)-1] + v[_i] ] );
+
+
+
+// Function: product()
+// Usage:
+//   x = product(v);
+// Description:
+//   Returns the product of all entries in the given list.
+//   If passed a list of vectors of same dimension, returns a vector of products of each part.
+//   If passed a list of square matrices, returns the resulting product matrix.
+// Arguments:
+//   v = The list to get the product of.
+// Example:
+//   product([2,3,4]);  // returns 24.
+//   product([[1,2,3], [3,4,5], [5,6,7]]);  // returns [15, 48, 105]
+function product(v) = 
+    assert( is_vector(v) || is_matrix(v) || ( is_matrix(v[0],square=true) && is_consistent(v)), 
+    "Invalid input.")
+    _product(v, 1, v[0]);
+
+function _product(v, i=0, _tot) = 
+    i>=len(v) ? _tot :
+    _product( v, 
+              i+1, 
+              ( is_vector(v[i])? v_mul(_tot,v[i]) : _tot*v[i] ) );
+               
+
+
+// Function: cumprod()
+// Description:
+//   Returns a list where each item is the cumulative product of all items up to and including the corresponding entry in the input list.
+//   If passed an array of vectors, returns a list of elementwise vector products.  If passed a list of square matrices returns matrix
+//   products multiplying on the left, so a list `[A,B,C]` will produce the output `[A,BA,CBA]`.  
+// Arguments:
+//   list = The list to get the product of.
+// Example:
+//   cumprod([1,3,5]);  // returns [1,3,15]
+//   cumprod([2,2,2]);  // returns [2,4,8]
+//   cumprod([[1,2,3], [3,4,5], [5,6,7]]));  // returns [[1, 2, 3], [3, 8, 15], [15, 48, 105]]
+function cumprod(list) =
+   is_vector(list) ? _cumprod(list) :
+   assert(is_consistent(list), "Input must be a consistent list of scalars, vectors or square matrices")
+   is_matrix(list[0]) ? assert(len(list[0])==len(list[0][0]), "Matrices must be square") _cumprod(list) 
+                      : _cumprod_vec(list);
+
+function _cumprod(v,_i=0,_acc=[]) =
+    _i==len(v) ? _acc :
+    _cumprod(
+        v, _i+1,
+        concat(
+            _acc,
+            [_i==0 ? v[_i] : v[_i]*_acc[len(_acc)-1]]
+        )
+    );
+
+function _cumprod_vec(v,_i=0,_acc=[]) =
+    _i==len(v) ? _acc :
+    _cumprod_vec(
+        v, _i+1,
+        concat(
+            _acc,
+            [_i==0 ? v[_i] : v_mul(_acc[len(_acc)-1],v[_i])]
+        )
+    );
+
+
+
+// Function: convolve()
+// Usage:
+//   x = convolve(p,q);
+// Description:
+//   Given two vectors, or one vector and a path or
+//   two paths of the same dimension, finds the convolution of them.
+//   If both parameter are vectors, returns the vector convolution.
+//   If one parameter is a vector and the other a path,
+//   convolves using products by scalars and returns a path. 
+//   If both parameters are paths, convolve using scalar products
+//   and returns a vector.
+//   The returned vector or path has length len(p)+len(q)-1.
+// Arguments:
+//   p = The first vector or path.
+//   q = The second vector or path.
+// Example:
+//   a = convolve([1,1],[1,2,1]); // Returns: [1,3,3,1]
+//   b = convolve([1,2,3],[1,2,1])); // Returns: [1,4,8,8,3]
+//   c = convolve([[1,1],[2,2],[3,1]],[1,2,1])); // Returns: [[1,1],[4,4],[8,6],[8,4],[3,1]]
+//   d = convolve([[1,1],[2,2],[3,1]],[[1,2],[2,1]])); // Returns:  [3,9,11,7]
+function convolve(p,q) =
+    p==[] || q==[] ? [] :
+    assert( (is_vector(p) || is_matrix(p))
+            && ( is_vector(q) || (is_matrix(q) && ( !is_vector(p[0]) || (len(p[0])==len(q[0])) ) ) ) ,
+            "The inputs should be vectors or paths all of the same dimension.")
+    let( n = len(p),
+         m = len(q))
+    [for(i=[0:n+m-2], k1 = max(0,i-n+1), k2 = min(i,m-1) )
+       sum([for(j=[k1:k2]) p[i-j]*q[j] ]) 
+    ];
+
+
+
+// Function: sum_of_sines()
+// Usage:
+//   sum_of_sines(a,sines)
+// Description:
+//   Gives the sum of a series of sines, at a given angle.
+// Arguments:
+//   a = Angle to get the value for.
+//   sines = List of [amplitude, frequency, offset] items, where the frequency is the number of times the cycle repeats around the circle.
+// Example:
+//   v = sum_of_sines(30, [[10,3,0], [5,5.5,60]]);
+function sum_of_sines(a, sines) =
+    assert( is_finite(a) && is_matrix(sines,undef,3), "Invalid input.")
+    sum([ for (s = sines) 
+            let(
+              ss=point3d(s),
+              v=ss[0]*sin(a*ss[1]+ss[2])
+            ) v
+        ]);
+
+
+
 // Section: Random Number Generation
 
 // Function: rand_int()
@@ -633,407 +869,6 @@ function random_polygon(n=3,size=1, seed) =
       )
     [for(i=count(n)) rads[i]*[cos(angs[i]), sin(angs[i])] ];
 
-
-
-// Section: GCD/GCF, LCM
-
-// Function: gcd()
-// Usage:
-//   x = gcd(a,b)
-// Description:
-//   Computes the Greatest Common Divisor/Factor of `a` and `b`.  
-function gcd(a,b) =
-    assert(is_int(a) && is_int(b),"Arguments to gcd must be integers")
-    b==0 ? abs(a) : gcd(b,a % b);
-
-
-// Computes lcm for two integers
-function _lcm(a,b) =
-    assert(is_int(a) && is_int(b), "Invalid non-integer parameters to lcm")
-    assert(a!=0 && b!=0, "Arguments to lcm should not be zero")
-    abs(a*b) / gcd(a,b);
-
-
-// Computes lcm for a list of values
-function _lcmlist(a) =
-    len(a)==1 ? a[0] :
-    _lcmlist(concat(lcm(a[0],a[1]),list_tail(a,2)));
-
-
-// Function: lcm()
-// Usage:
-//   div = lcm(a, b);
-//   divs = lcm(list);
-// Description:
-//   Computes the Least Common Multiple of the two arguments or a list of arguments.  Inputs should
-//   be non-zero integers.  The output is always a positive integer.  It is an error to pass zero
-//   as an argument.  
-function lcm(a,b=[]) =
-    !is_list(a) && !is_list(b) 
-    ?   _lcm(a,b) 
-    :   let( arglist = concat(force_list(a),force_list(b)) )
-        assert(len(arglist)>0, "Invalid call to lcm with empty list(s)")
-        _lcmlist(arglist);
-
-
-
-// Section: Sums, Products, Aggregate Functions.
-
-// Function: sum()
-// Usage:
-//   x = sum(v, [dflt]);
-// Description:
-//   Returns the sum of all entries in the given consistent list.
-//   If passed an array of vectors, returns the sum the vectors.
-//   If passed an array of matrices, returns the sum of the matrices.
-//   If passed an empty list, the value of `dflt` will be returned.
-// Arguments:
-//   v = The list to get the sum of.
-//   dflt = The default value to return if `v` is an empty list.  Default: 0
-// Example:
-//   sum([1,2,3]);  // returns 6.
-//   sum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [9, 12, 15]
-function sum(v, dflt=0) =
-    v==[]? dflt :
-    assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
-    is_finite(v[0]) || is_vector(v[0]) ? [for(i=v) 1]*v :
-    _sum(v,v[0]*0);
-
-function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
-
-// Function: cumsum()
-// Usage:
-//   sums = cumsum(v);
-// Description:
-//   Returns a list where each item is the cumulative sum of all items up to and including the corresponding entry in the input list.
-//   If passed an array of vectors, returns a list of cumulative vectors sums.
-// Arguments:
-//   v = The list to get the sum of.
-// Example:
-//   cumsum([1,1,1]);  // returns [1,2,3]
-//   cumsum([2,2,2]);  // returns [2,4,6]
-//   cumsum([1,2,3]);  // returns [1,3,6]
-//   cumsum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [[1,2,3], [4,6,8], [9,12,15]]
-function cumsum(v) =
-    assert(is_consistent(v), "The input is not consistent." )
-    len(v)<=1 ? v :
-    _cumsum(v,_i=1,_acc=[v[0]]);
-
-function _cumsum(v,_i=0,_acc=[]) =
-   _i>=len(v) ? _acc :
-    _cumsum( v, _i+1, [ each _acc, _acc[len(_acc)-1] + v[_i] ] );
-
-
-// Function: sum_of_sines()
-// Usage:
-//   sum_of_sines(a,sines)
-// Description:
-//   Gives the sum of a series of sines, at a given angle.
-// Arguments:
-//   a = Angle to get the value for.
-//   sines = List of [amplitude, frequency, offset] items, where the frequency is the number of times the cycle repeats around the circle.
-// Example:
-//   v = sum_of_sines(30, [[10,3,0], [5,5.5,60]]);
-function sum_of_sines(a, sines) =
-    assert( is_finite(a) && is_matrix(sines,undef,3), "Invalid input.")
-    sum([ for (s = sines) 
-            let(
-              ss=point3d(s),
-              v=ss[0]*sin(a*ss[1]+ss[2])
-            ) v
-        ]);
-
-
-// Function: deltas()
-// Usage:
-//   delts = deltas(v);
-// Description:
-//   Returns a list with the deltas of adjacent entries in the given list, optionally wrapping back to the front.
-//   The list should be a consistent list of numeric components (numbers, vectors, matrix, etc).
-//   Given [a,b,c,d], returns [b-a,c-b,d-c].
-//   
-// Arguments:
-//   v = The list to get the deltas of.
-//   wrap = If true, wrap back to the start from the end.  ie: return the difference between the last and first items as the last delta.  Default: false
-// Example:
-//   deltas([2,5,9,17]);  // returns [3,4,8].
-//   deltas([[1,2,3], [3,6,8], [4,8,11]]);  // returns [[2,4,5], [1,2,3]]
-function deltas(v, wrap=false) = 
-    assert( is_consistent(v) && len(v)>1 , "Inconsistent list or with length<=1.")
-    [for (p=pair(v,wrap)) p[1]-p[0]] ;
-
-
-// Function: product()
-// Usage:
-//   x = product(v);
-// Description:
-//   Returns the product of all entries in the given list.
-//   If passed a list of vectors of same dimension, returns a vector of products of each part.
-//   If passed a list of square matrices, returns the resulting product matrix.
-// Arguments:
-//   v = The list to get the product of.
-// Example:
-//   product([2,3,4]);  // returns 24.
-//   product([[1,2,3], [3,4,5], [5,6,7]]);  // returns [15, 48, 105]
-function product(v) = 
-    assert( is_vector(v) || is_matrix(v) || ( is_matrix(v[0],square=true) && is_consistent(v)), 
-    "Invalid input.")
-    _product(v, 1, v[0]);
-
-function _product(v, i=0, _tot) = 
-    i>=len(v) ? _tot :
-    _product( v, 
-              i+1, 
-              ( is_vector(v[i])? v_mul(_tot,v[i]) : _tot*v[i] ) );
-               
-
-
-// Function: cumprod()
-// Description:
-//   Returns a list where each item is the cumulative product of all items up to and including the corresponding entry in the input list.
-//   If passed an array of vectors, returns a list of elementwise vector products.  If passed a list of square matrices returns matrix
-//   products multiplying on the left, so a list `[A,B,C]` will produce the output `[A,BA,CBA]`.  
-// Arguments:
-//   list = The list to get the product of.
-// Example:
-//   cumprod([1,3,5]);  // returns [1,3,15]
-//   cumprod([2,2,2]);  // returns [2,4,8]
-//   cumprod([[1,2,3], [3,4,5], [5,6,7]]));  // returns [[1, 2, 3], [3, 8, 15], [15, 48, 105]]
-function cumprod(list) =
-   is_vector(list) ? _cumprod(list) :
-   assert(is_consistent(list), "Input must be a consistent list of scalars, vectors or square matrices")
-   is_matrix(list[0]) ? assert(len(list[0])==len(list[0][0]), "Matrices must be square") _cumprod(list) 
-                      : _cumprod_vec(list);
-
-function _cumprod(v,_i=0,_acc=[]) =
-    _i==len(v) ? _acc :
-    _cumprod(
-        v, _i+1,
-        concat(
-            _acc,
-            [_i==0 ? v[_i] : v[_i]*_acc[len(_acc)-1]]
-        )
-    );
-
-function _cumprod_vec(v,_i=0,_acc=[]) =
-    _i==len(v) ? _acc :
-    _cumprod_vec(
-        v, _i+1,
-        concat(
-            _acc,
-            [_i==0 ? v[_i] : v_mul(_acc[len(_acc)-1],v[_i])]
-        )
-    );
-
-
-// Function: mean()
-// Usage:
-//   x = mean(v);
-// Description:
-//   Returns the arithmetic mean/average of all entries in the given array.
-//   If passed a list of vectors, returns a vector of the mean of each part.
-// Arguments:
-//   v = The list of values to get the mean of.
-// Example:
-//   mean([2,3,4]);  // returns 3.
-//   mean([[1,2,3], [3,4,5], [5,6,7]]);  // returns [3, 4, 5]
-function mean(v) = 
-    assert(is_list(v) && len(v)>0, "Invalid list.")
-    sum(v)/len(v);
-
-
-
-// Function: median()
-// Usage:
-//   middle = median(v)
-// Description:
-//   Returns the median of the given vector.  
-function median(v) =
-    assert(is_vector(v), "Input to median must be a vector")
-    len(v)%2 ? max( list_smallest(v, ceil(len(v)/2)) ) :
-    let( lowest = list_smallest(v, len(v)/2 + 1),
-         max  = max(lowest),
-         imax = search(max,lowest,1),
-         max2 = max([for(i=idx(lowest)) if(i!=imax[0]) lowest[i] ])
-    )
-    (max+max2)/2;
-
-
-// Function: convolve()
-// Usage:
-//   x = convolve(p,q);
-// Description:
-//   Given two vectors, or one vector and a path or
-//   two paths of the same dimension, finds the convolution of them.
-//   If both parameter are vectors, returns the vector convolution.
-//   If one parameter is a vector and the other a path,
-//   convolves using products by scalars and returns a path. 
-//   If both parameters are paths, convolve using scalar products
-//   and returns a vector.
-//   The returned vector or path has length len(p)+len(q)-1.
-// Arguments:
-//   p = The first vector or path.
-//   q = The second vector or path.
-// Example:
-//   a = convolve([1,1],[1,2,1]); // Returns: [1,3,3,1]
-//   b = convolve([1,2,3],[1,2,1])); // Returns: [1,4,8,8,3]
-//   c = convolve([[1,1],[2,2],[3,1]],[1,2,1])); // Returns: [[1,1],[4,4],[8,6],[8,4],[3,1]]
-//   d = convolve([[1,1],[2,2],[3,1]],[[1,2],[2,1]])); // Returns:  [3,9,11,7]
-function convolve(p,q) =
-    p==[] || q==[] ? [] :
-    assert( (is_vector(p) || is_matrix(p))
-            && ( is_vector(q) || (is_matrix(q) && ( !is_vector(p[0]) || (len(p[0])==len(q[0])) ) ) ) ,
-            "The inputs should be vectors or paths all of the same dimension.")
-    let( n = len(p),
-         m = len(q))
-    [for(i=[0:n+m-2], k1 = max(0,i-n+1), k2 = min(i,m-1) )
-       sum([for(j=[k1:k2]) p[i-j]*q[j] ]) 
-    ];
-
-
-
-
-
-
-
-// Function: all_integer()
-// Usage:
-//   bool = all_integer(x);
-// Description:
-//   If given a number, returns true if the number is a finite integer.
-//   If given an empty list, returns false.  If given a non-empty list, returns
-//   true if every item of the list is an integer.  Otherwise, returns false.
-// Arguments:
-//   x = The value to check.
-// Example:
-//   b = all_integer(true);  // Returns: false
-//   b = all_integer("foo"); // Returns: false
-//   b = all_integer(4);     // Returns: true
-//   b = all_integer(4.5);   // Returns: false
-//   b = all_integer([]);    // Returns: false
-//   b = all_integer([3,4,5]);   // Returns: true
-//   b = all_integer([3,4.2,5]); // Returns: false
-//   b = all_integer([3,[4,7],5]); // Returns: false
-function all_integer(x) =
-    is_num(x)? is_int(x) :
-    is_list(x)? (x != [] && [for (xx=x) if(!is_int(xx)) 1] == []) :
-    false;
-
-
-
-// Function: any()
-// Usage:
-//   bool = any(l);
-//   bool = any(l, func);   // Requires OpenSCAD 2021.01 or later.
-// Requirements:
-//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
-// Description:
-//   Returns true if any item in list `l` evaluates as true.
-// Arguments:
-//   l = The list to test for true items.
-//   func = An optional function literal of signature (x), returning bool, to test each list item with.
-// Example:
-//   any([0,false,undef]);  // Returns false.
-//   any([1,false,undef]);  // Returns true.
-//   any([1,5,true]);       // Returns true.
-//   any([[0,0], [0,0]]);   // Returns true.
-//   any([[0,0], [1,0]]);   // Returns true.
-function any(l, func) =
-    assert(is_list(l), "The input is not a list." )
-    assert(func==undef || is_func(func))
-    is_func(func)
-      ? _any_func(l, func)
-      : _any_bool(l);
-
-function _any_func(l, func, i=0, out=false) =
-    i >= len(l) || out? out :
-    _any_func(l, func, i=i+1, out=out || func(l[i]));
-
-function _any_bool(l, i=0, out=false) =
-    i >= len(l) || out? out :
-    _any_bool(l, i=i+1, out=out || l[i]);
-
-
-// Function: all()
-// Usage:
-//   bool = all(l);
-//   bool = all(l, func);   // Requires OpenSCAD 2021.01 or later.
-// Requirements:
-//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
-// Description:
-//   Returns true if all items in list `l` evaluate as true.  If `func` is given a function liteal
-//   of signature (x), returning bool, then that function literal is evaluated for each list item.
-// Arguments:
-//   l = The list to test for true items.
-//   func = An optional function literal of signature (x), returning bool, to test each list item with.
-// Example:
-//   test1 = all([0,false,undef]);  // Returns false.
-//   test2 = all([1,false,undef]);  // Returns false.
-//   test3 = all([1,5,true]);       // Returns true.
-//   test4 = all([[0,0], [0,0]]);   // Returns true.
-//   test5 = all([[0,0], [1,0]]);   // Returns true.
-//   test6 = all([[1,1], [1,1]]);   // Returns true.
-function all(l, func) =
-    assert(is_list(l), "The input is not a list.")
-    assert(func==undef || is_func(func))
-    is_func(func)
-      ? _all_func(l, func)
-      : _all_bool(l);
-
-function _all_func(l, func, i=0, out=true) =
-    i >= len(l) || !out? out :
-    _all_func(l, func, i=i+1, out=out && func(l[i]));
-
-function _all_bool(l, i=0, out=true) =
-    i >= len(l) || !out? out :
-    _all_bool(l, i=i+1, out=out && l[i]);
-
-
-// Function: count_true()
-// Usage:
-//   seq = count_true(l, [nmax=]);
-//   seq = count_true(l, func, [nmax=]);  // Requires OpenSCAD 2021.01 or later.
-// Requirements:
-//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
-// Description:
-//   Returns the number of items in `l` that evaluate as true.
-//   If `l` is a lists of lists, this is applied recursively to each
-//   sublist.  Returns the total count of items that evaluate as true
-//   in all recursive sublists.
-// Arguments:
-//   l = The list to test for true items.
-//   func = An optional function literal of signature (x), returning bool, to test each list item with.
-//   ---
-//   nmax = Max number of true items to count.  Default: `undef` (no limit)
-// Example:
-//   num1 = count_true([0,false,undef]);  // Returns 0.
-//   num2 = count_true([1,false,undef]);  // Returns 1.
-//   num3 = count_true([1,5,false]);      // Returns 2.
-//   num4 = count_true([1,5,true]);       // Returns 3.
-//   num5 = count_true([[0,0], [0,0]]);   // Returns 2.
-//   num6 = count_true([[0,0], [1,0]]);   // Returns 2.
-//   num7 = count_true([[1,1], [1,1]]);   // Returns 2.
-//   num8 = count_true([[1,1], [1,1]], nmax=1);  // Returns 1.
-function count_true(l, func, nmax) = 
-    assert(is_list(l))
-    assert(func==undef || is_func(func))
-    is_func(func)
-      ? _count_true_func(l, func, nmax)
-      : _count_true_bool(l, nmax);
-
-function _count_true_func(l, func, nmax, i=0, out=0) =
-    i >= len(l) || (nmax!=undef && out>=nmax) ? out :
-    _count_true_func(
-        l, func, nmax, i = i + 1,
-        out = out + (func(l[i])? 1:0)
-    );
-
-function _count_true_bool(l, nmax, i=0, out=0) =
-    i >= len(l) || (nmax!=undef && out>=nmax) ? out :
-    _count_true_bool(
-        l, nmax, i = i + 1,
-        out = out + (l[i]? 1:0)
-    );
 
 
 // Section: Calculus
@@ -1607,6 +1442,7 @@ function _rootfind(f, xpts, ypts, yrange, tol, i=0) =
      _rfcheck(newx, newy, new_yrange, tol)
         ? newx
         : _rootfind(f, xinterval, yinterval, new_yrange, tol, i+1);
+
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

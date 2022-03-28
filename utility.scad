@@ -116,6 +116,30 @@ function is_int(n) = is_finite(n) && n == round(n);
 function is_integer(n) = is_finite(n) && n == round(n);
 
 
+// Function: all_integer()
+// Usage:
+//   bool = all_integer(x);
+// Description:
+//   If given a number, returns true if the number is a finite integer.
+//   If given an empty list, returns false.  If given a non-empty list, returns
+//   true if every item of the list is an integer.  Otherwise, returns false.
+// Arguments:
+//   x = The value to check.
+// Example:
+//   b = all_integer(true);  // Returns: false
+//   b = all_integer("foo"); // Returns: false
+//   b = all_integer(4);     // Returns: true
+//   b = all_integer(4.5);   // Returns: false
+//   b = all_integer([]);    // Returns: false
+//   b = all_integer([3,4,5]);   // Returns: true
+//   b = all_integer([3,4.2,5]); // Returns: false
+//   b = all_integer([3,[4,7],5]); // Returns: false
+function all_integer(x) =
+    is_num(x)? is_int(x) :
+    is_list(x)? (x != [] && [for (xx=x) if(!is_int(xx)) 1] == []) :
+    false;
+
+
 // Function: is_nan()
 // Usage:
 //   bool = is_nan(x);
@@ -401,6 +425,181 @@ function any_defined(v,recursive=false) =
 //   bool = all_defined([23,34,[42]],recursive=true);     // Returns: true
 function all_defined(v,recursive=false) = 
     []==[for (x=v) if(is_undef(x)||(recursive && is_list(x) && !all_defined(x,recursive))) 0 ];
+
+
+
+// Section: Undef Safe Arithmetic
+
+// Function: u_add()
+// Usage:
+//   x = u_add(a, b);
+// Description:
+//   Adds `a` to `b`, returning the result, or undef if either value is `undef`.
+//   This emulates the way undefs used to be handled in versions of OpenSCAD before 2020.
+// Arguments:
+//   a = First value.
+//   b = Second value.
+function u_add(a,b) = is_undef(a) || is_undef(b)? undef : a + b;
+
+
+// Function: u_sub()
+// Usage:
+//   x = u_sub(a, b);
+// Description:
+//   Subtracts `b` from `a`, returning the result, or undef if either value is `undef`.
+//   This emulates the way undefs used to be handled in versions of OpenSCAD before 2020.
+// Arguments:
+//   a = First value.
+//   b = Second value.
+function u_sub(a,b) = is_undef(a) || is_undef(b)? undef : a - b;
+
+
+// Function: u_mul()
+// Usage:
+//   x = u_mul(a, b);
+// Description:
+//   Multiplies `a` by `b`, returning the result, or undef if either value is `undef`.
+//   This emulates the way undefs used to be handled in versions of OpenSCAD before 2020.
+// Arguments:
+//   a = First value.
+//   b = Second value.
+function u_mul(a,b) =
+    is_undef(a) || is_undef(b)? undef :
+    is_vector(a) && is_vector(b)? v_mul(a,b) :
+    a * b;
+
+
+// Function: u_div()
+// Usage:
+//   x = u_div(a, b);
+// Description:
+//   Divides `a` by `b`, returning the result, or undef if either value is `undef`.
+//   This emulates the way undefs used to be handled in versions of OpenSCAD before 2020.
+// Arguments:
+//   a = First value.
+//   b = Second value.
+function u_div(a,b) =
+    is_undef(a) || is_undef(b)? undef :
+    is_vector(a) && is_vector(b)? v_div(a,b) :
+    a / b;
+
+
+
+// Section: Boolean list testing
+
+// Function: any()
+// Usage:
+//   bool = any(l);
+//   bool = any(l, func);   // Requires OpenSCAD 2021.01 or later.
+// Requirements:
+//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
+// Description:
+//   Returns true if any item in list `l` evaluates as true.
+// Arguments:
+//   l = The list to test for true items.
+//   func = An optional function literal of signature (x), returning bool, to test each list item with.
+// Example:
+//   any([0,false,undef]);  // Returns false.
+//   any([1,false,undef]);  // Returns true.
+//   any([1,5,true]);       // Returns true.
+//   any([[0,0], [0,0]]);   // Returns true.
+//   any([[0,0], [1,0]]);   // Returns true.
+function any(l, func) =
+    assert(is_list(l), "The input is not a list." )
+    assert(func==undef || is_func(func))
+    is_func(func)
+      ? _any_func(l, func)
+      : _any_bool(l);
+
+function _any_func(l, func, i=0, out=false) =
+    i >= len(l) || out? out :
+    _any_func(l, func, i=i+1, out=out || func(l[i]));
+
+function _any_bool(l, i=0, out=false) =
+    i >= len(l) || out? out :
+    _any_bool(l, i=i+1, out=out || l[i]);
+
+
+// Function: all()
+// Usage:
+//   bool = all(l);
+//   bool = all(l, func);   // Requires OpenSCAD 2021.01 or later.
+// Requirements:
+//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
+// Description:
+//   Returns true if all items in list `l` evaluate as true.  If `func` is given a function liteal
+//   of signature (x), returning bool, then that function literal is evaluated for each list item.
+// Arguments:
+//   l = The list to test for true items.
+//   func = An optional function literal of signature (x), returning bool, to test each list item with.
+// Example:
+//   test1 = all([0,false,undef]);  // Returns false.
+//   test2 = all([1,false,undef]);  // Returns false.
+//   test3 = all([1,5,true]);       // Returns true.
+//   test4 = all([[0,0], [0,0]]);   // Returns true.
+//   test5 = all([[0,0], [1,0]]);   // Returns true.
+//   test6 = all([[1,1], [1,1]]);   // Returns true.
+function all(l, func) =
+    assert(is_list(l), "The input is not a list.")
+    assert(func==undef || is_func(func))
+    is_func(func)
+      ? _all_func(l, func)
+      : _all_bool(l);
+
+function _all_func(l, func, i=0, out=true) =
+    i >= len(l) || !out? out :
+    _all_func(l, func, i=i+1, out=out && func(l[i]));
+
+function _all_bool(l, i=0, out=true) =
+    i >= len(l) || !out? out :
+    _all_bool(l, i=i+1, out=out && l[i]);
+
+
+// Function: count_true()
+// Usage:
+//   seq = count_true(l, [nmax=]);
+//   seq = count_true(l, func, [nmax=]);  // Requires OpenSCAD 2021.01 or later.
+// Requirements:
+//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
+// Description:
+//   Returns the number of items in `l` that evaluate as true.
+//   If `l` is a lists of lists, this is applied recursively to each
+//   sublist.  Returns the total count of items that evaluate as true
+//   in all recursive sublists.
+// Arguments:
+//   l = The list to test for true items.
+//   func = An optional function literal of signature (x), returning bool, to test each list item with.
+//   ---
+//   nmax = Max number of true items to count.  Default: `undef` (no limit)
+// Example:
+//   num1 = count_true([0,false,undef]);  // Returns 0.
+//   num2 = count_true([1,false,undef]);  // Returns 1.
+//   num3 = count_true([1,5,false]);      // Returns 2.
+//   num4 = count_true([1,5,true]);       // Returns 3.
+//   num5 = count_true([[0,0], [0,0]]);   // Returns 2.
+//   num6 = count_true([[0,0], [1,0]]);   // Returns 2.
+//   num7 = count_true([[1,1], [1,1]]);   // Returns 2.
+//   num8 = count_true([[1,1], [1,1]], nmax=1);  // Returns 1.
+function count_true(l, func, nmax) = 
+    assert(is_list(l))
+    assert(func==undef || is_func(func))
+    is_func(func)
+      ? _count_true_func(l, func, nmax)
+      : _count_true_bool(l, nmax);
+
+function _count_true_func(l, func, nmax, i=0, out=0) =
+    i >= len(l) || (nmax!=undef && out>=nmax) ? out :
+    _count_true_func(
+        l, func, nmax, i = i + 1,
+        out = out + (func(l[i])? 1:0)
+    );
+
+function _count_true_bool(l, nmax, i=0, out=0) =
+    i >= len(l) || (nmax!=undef && out>=nmax) ? out :
+    _count_true_bool(
+        l, nmax, i = i + 1,
+        out = out + (l[i]? 1:0)
+    );
 
 
 

@@ -24,626 +24,7 @@
 //   type of gear its name.
 
 
-// Section: Functions
-//   These functions let the user find the derived dimensions of the gear.
-//   A gear fits within a circle of radius outer_radius, and two gears should have
-//   their centers separated by the sum of their pitch_radius.
-
-
-// Function: circular_pitch()
-// Usage:
-//   circp = circular_pitch(pitch|mod);
-// Topics: Gears
-// Description:
-//   Get tooth density expressed as "circular pitch".
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   mod = The metric module/modulus of the gear.
-// Example:
-//   circp = circular_pitch(pitch=5);
-//   circp = circular_pitch(mod=2);
-function circular_pitch(pitch=5, mod) =
-    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
-    pitch;
-
-
-// Function: diametral_pitch()
-// Usage:
-//   dp = diametral_pitch(pitch|mod);
-// Topics: Gears
-// Description:
-//   Get tooth density expressed as "diametral pitch".
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   mod = The metric module/modulus of the gear.
-// Example:
-//   dp = diametral_pitch(pitch=5);
-//   dp = diametral_pitch(mod=2);
-function diametral_pitch(pitch=5, mod) =
-    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
-    PI / pitch;
-
-
-// Function: pitch_value()
-// Usage:
-//   pitch = pitch_value(mod);
-// Topics: Gears
-// Description:
-//   Get circular pitch in mm from module/modulus.  The circular pitch of a gear is the number of
-//   millimeters per tooth around the pitch radius circle.
-// Arguments:
-//   mod = The module/modulus of the gear.
-function pitch_value(mod) = mod * PI;
-
-
-// Function: module_value()
-// Usage:
-//   mod = module_value(pitch);
-// Topics: Gears
-// Description:
-//   Get tooth density expressed as "module" or "modulus" in millimeters.  The module is the pitch
-//   diameter of the gear divided by the number of teeth on it.  For example, a gear with a pitch
-//   diameter of 40mm, with 20 teeth on it will have a modulus of 2.
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-function module_value(pitch=5) = pitch / PI;
-
-
-// Function: adendum()
-// Usage:
-//   ad = adendum(pitch|mod);
-// Topics: Gears
-// Description:
-//   The height of the top of a gear tooth above the pitch radius circle.
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   mod = The metric module/modulus of the gear.
-// Example:
-//   ad = adendum(pitch=5);
-//   ad = adendum(mod=2);
-// Example(2D):
-//   pitch = 5; teeth = 17;
-//   pr = pitch_radius(pitch=pitch, teeth=teeth);
-//   adn = adendum(pitch=5);
-//   #spur_gear2d(pitch=pitch, teeth=teeth);
-//   color("black") {
-//       stroke(circle(r=pr),width=0.1,closed=true);
-//       stroke(circle(r=pr+adn),width=0.1,closed=true);
-//   }
-function adendum(pitch=5, mod) =
-    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
-    module_value(pitch) * 1.0;
-
-
-// Function: dedendum()
-// Usage:
-//   ddn = dedendum(pitch|mod, [clearance]);
-// Topics: Gears
-// Description:
-//   The depth of the gear tooth valley, below the pitch radius.
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   clearance = If given, sets the clearance between meshing teeth.
-//   mod = The metric module/modulus of the gear.
-// Example:
-//   ddn = dedendum(pitch=5);
-//   ddn = dedendum(mod=2);
-// Example(2D):
-//   pitch = 5; teeth = 17;
-//   pr = pitch_radius(pitch=pitch, teeth=teeth);
-//   ddn = dedendum(pitch=5);
-//   #spur_gear2d(pitch=pitch, teeth=teeth);
-//   color("black") {
-//       stroke(circle(r=pr),width=0.1,closed=true);
-//       stroke(circle(r=pr-ddn),width=0.1,closed=true);
-//   }
-function dedendum(pitch=5, clearance, mod) =
-    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
-    is_undef(clearance)? (1.25 * module_value(pitch)) :
-    (module_value(pitch) + clearance);
-
-
-// Function: pitch_radius()
-// Usage:
-//   pr = pitch_radius(pitch|mod, teeth);
-// Topics: Gears
-// Description:
-//   Calculates the pitch radius for the gear.  Two mated gears will have their centers spaced apart
-//   by the sum of the two gear's pitch radii.
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   teeth = The number of teeth on the gear.
-//   mod = The metric module/modulus of the gear.
-// Example:
-//   pr = pitch_radius(pitch=5, teeth=11);
-//   pr = pitch_radius(mod=2, teeth=20);
-// Example(2D):
-//   pr = pitch_radius(pitch=5, teeth=11);
-//   #spur_gear2d(pitch=5, teeth=11);
-//   color("black")
-//       stroke(circle(r=pr),width=0.1,closed=true);
-function pitch_radius(pitch=5, teeth=11, mod) =
-    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
-    pitch * teeth / PI / 2;
-
-
-// Function: outer_radius()
-// Usage:
-//   or = outer_radius(pitch|mod, teeth, [clearance], [interior]);
-// Topics: Gears
-// Description:
-//   Calculates the outer radius for the gear. The gear fits entirely within a cylinder of this radius.
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   teeth = The number of teeth on the gear.
-//   clearance = If given, sets the clearance between meshing teeth.
-//   interior = If true, calculate for an interior gear.
-//   mod = The metric module/modulus of the gear.
-// Example:
-//   or = outer_radius(pitch=5, teeth=20);
-//   or = outer_radius(mod=2, teeth=16);
-// Example(2D):
-//   pr = outer_radius(pitch=5, teeth=11);
-//   #spur_gear2d(pitch=5, teeth=11);
-//   color("black")
-//       stroke(circle(r=pr),width=0.1,closed=true);
-function outer_radius(pitch=5, teeth=11, clearance, interior=false, mod) =
-    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
-    pitch_radius(pitch, teeth) +
-    (interior? dedendum(pitch, clearance) : adendum(pitch));
-
-
-// Function: root_radius()
-// Usage:
-//   rr = root_radius(pitch|mod, teeth, [clearance], [interior]);
-// Topics: Gears
-// Description:
-//   Calculates the root radius for the gear, at the base of the dedendum.
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   teeth = The number of teeth on the gear.
-//   clearance = If given, sets the clearance between meshing teeth.
-//   interior = If true, calculate for an interior gear.
-//   mod = The metric module/modulus of the gear.
-// Example:
-//   rr = root_radius(pitch=5, teeth=11);
-//   rr = root_radius(mod=2, teeth=16);
-// Example(2D):
-//   pr = root_radius(pitch=5, teeth=11);
-//   #spur_gear2d(pitch=5, teeth=11);
-//   color("black")
-//       stroke(circle(r=pr),width=0.1,closed=true);
-function root_radius(pitch=5, teeth=11, clearance, interior=false, mod) =
-    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
-    pitch_radius(pitch, teeth) -
-    (interior? adendum(pitch) : dedendum(pitch, clearance));
-
-
-// Function: base_radius()
-// Usage:
-//   br = base_radius(pitch|mod, teeth, [pressure_angle]);
-// Topics: Gears
-// Description:
-//   Get the base circle for involute teeth, at the base of the teeth.
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   teeth = The number of teeth on the gear.
-//   pressure_angle = Pressure angle in degrees.  Controls how straight or bulged the tooth sides are.
-//   mod = The metric module/modulus of the gear.
-// Example:
-//   br = base_radius(pitch=5, teeth=20, pressure_angle=20);
-//   br = base_radius(mod=2, teeth=18, pressure_angle=20);
-// Example(2D):
-//   pr = base_radius(pitch=5, teeth=11);
-//   #spur_gear2d(pitch=5, teeth=11);
-//   color("black")
-//       stroke(circle(r=pr),width=0.1,closed=true);
-function base_radius(pitch=5, teeth=11, pressure_angle=28, mod) =
-    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
-    pitch_radius(pitch, teeth) * cos(pressure_angle);
-
-
-// Function: bevel_pitch_angle()
-// Usage:
-//   ang = bevel_pitch_angle(teeth, mate_teeth, [drive_angle]);
-// Topics: Gears
-// See Also: bevel_gear()
-// Description:
-//   Returns the correct pitch angle for a bevel gear with a given number of tooth, that is
-//   matched to another bevel gear with a (possibly different) number of teeth.
-// Arguments:
-//   teeth = Number of teeth that this gear has.
-//   mate_teeth = Number of teeth that the matching gear has.
-//   drive_angle = Angle between the drive shafts of each gear.  Default: 90º.
-// Example:
-//   ang = bevel_pitch_angle(teeth=18, mate_teeth=30);
-// Example(2D):
-//   t1 = 13; t2 = 19; pitch=5;
-//   pang = bevel_pitch_angle(teeth=t1, mate_teeth=t2, drive_angle=90);
-//   color("black") {
-//       zrot_copies([0,pang])
-//           stroke([[0,0,0], [0,-20,0]],width=0.2);
-//       stroke(arc(r=3, angle=[270,270+pang]),width=0.2);
-//   }
-//   #bevel_gear(
-//       pitch=5, teeth=t1, mate_teeth=t2,
-//       spiral_angle=0, cutter_radius=1000,
-//       slices=12, anchor="apex", orient=BACK
-//   );
-function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
-    atan(sin(drive_angle)/((mate_teeth/teeth)+cos(drive_angle)));
-
-
-// Function: worm_gear_thickness()
-// Usage:
-//   thick = worm_gear_thickness(pitch|mod, teeth, worm_diam, [worm_arc], [crowning], [clearance]);
-// Topics: Gears
-// See Also: worm(), worm_gear()
-// Description:
-//   Calculate the thickness of the worm gear.
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.  Default: 5
-//   teeth = Total number of teeth along the rack.  Default: 30
-//   worm_diam = The pitch diameter of the worm gear to match to.  Default: 30
-//   worm_arc = The arc of the worm to mate with, in degrees. Default: 60 degrees
-//   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fir the work easier.  Default: 1
-//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
-//   mod = The metric module/modulus of the gear.
-// Example:
-//   thick = worm_gear_thickness(pitch=5, teeth=36, worm_diam=30);
-//   thick = worm_gear_thickness(mod=2, teeth=28, worm_diam=25);
-// Example(2D):
-//   pitch = 5;  teeth=17;
-//   worm_diam = 30; starts=2;
-//   y = worm_gear_thickness(pitch=pitch, teeth=teeth, worm_diam=worm_diam);
-//   #worm_gear(
-//       pitch=pitch, teeth=teeth,
-//       worm_diam=worm_diam,
-//       worm_starts=starts,
-//       orient=BACK
-//   );
-//   color("black") {
-//       ycopies(y) stroke([[-25,0],[25,0]], width=0.5);
-//       stroke([[-20,-y/2],[-20,y/2]],width=0.5,endcaps="arrow");
-//   }
-function worm_gear_thickness(pitch=5, teeth=30, worm_diam=30, worm_arc=60, crowning=1, clearance, mod) =
-    let(
-        pitch = is_undef(mod) ? pitch : pitch_value(mod),
-        r = worm_diam/2 + crowning,
-        pitch_thick = r * sin(worm_arc/2) * 2,
-        pr = pitch_radius(pitch, teeth),
-        rr = root_radius(pitch, teeth, clearance, false),
-        pitchoff = (pr-rr) * sin(worm_arc/2),
-        thickness = pitch_thick + 2*pitchoff
-    ) thickness;
-
-
-function _gear_polar(r,t) = r*[sin(t),cos(t)];
-function _gear_iang(r1,r2) = sqrt((r2/r1)*(r2/r1) - 1)/PI*180 - acos(r1/r2);  //unwind a string this many degrees to go from radius r1 to radius r2
-function _gear_q6(b,s,t,d) = _gear_polar(d,s*(_gear_iang(b,d)+t));            //point at radius d on the involute curve
-function _gear_q7(f,r,b,r2,t,s) = _gear_q6(b,s,t,(1-f)*max(b,r)+f*r2);        //radius a fraction f up the curved side of the tooth
-
-
-// Section: 2D Profiles
-
-
-// Function&Module: gear_tooth_profile()
-// Usage: As Module
-//   gear_tooth_profile(pitch|mod, teeth, [pressure_angle], [clearance], [backlash], [interior], [valleys]);
-// Usage: As Function
-//   path = gear_tooth_profile(pitch|mod, teeth, [pressure_angle], [clearance], [backlash], [interior], [valleys]);
-// Topics: Gears
-// See Also: spur_gear2d()
-// Description:
-//   When called as a function, returns the 2D profile path for an individual gear tooth.
-//   When called as a module, creates the 2D profile shape for an individual gear tooth.
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   teeth = Total number of teeth on the spur gear that this is a tooth for.
-//   pressure_angle = Pressure Angle.  Controls how straight or bulged the tooth sides are. In degrees.
-//   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
-//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
-//   interior = If true, create a mask for difference()ing from something else.
-//   valleys = If true, add the valley bottoms on either side of the tooth.  Default: true
-//   center = If true, centers the pitch circle of the tooth profile at the origin.  Default: false.
-//   mod = The metric module/modulus of the gear.
-// Example(2D):
-//   gear_tooth_profile(pitch=5, teeth=20, pressure_angle=20);
-// Example(2D): Metric Gear Tooth
-//   gear_tooth_profile(mod=2, teeth=20, pressure_angle=20);
-// Example(2D):
-//   gear_tooth_profile(
-//       pitch=5, teeth=20, pressure_angle=20, valleys=false
-//   );
-// Example(2D): As a function
-//   path = gear_tooth_profile(
-//       pitch=5, teeth=20, pressure_angle=20, valleys=false
-//   );
-//   stroke(path, width=0.1);
-function gear_tooth_profile(
-    pitch = 3,
-    teeth = 11,
-    pressure_angle = 28,
-    clearance = undef,
-    backlash = 0.0,
-    interior = false,
-    valleys = true,
-    center = false,
-    mod
-) = let(
-    pitch = is_undef(mod) ? pitch : pitch_value(mod),
-    p = pitch_radius(pitch, teeth),
-    c = outer_radius(pitch, teeth, clearance, interior),
-    r = root_radius(pitch, teeth, clearance, interior),
-    b = base_radius(pitch, teeth, pressure_angle),
-    t  = pitch/2-backlash/2,                //tooth thickness at pitch circle
-    k  = -_gear_iang(b, p) - t/2/p/PI*180,  //angle to where involute meets base circle on each side of tooth
-    kk = r<b? k : -180/teeth,
-    isteps = 5,
-    pts = [
-        if (valleys) each [
-            _gear_polar(r-1, 180.1/teeth),
-            _gear_polar(r, 180.1/teeth),
-        ],
-        _gear_polar(r, -kk),
-        for (i=[0: 1:isteps]) _gear_q7(i/isteps,r,b,c,k,-1),
-        for (i=[isteps:-1:0]) _gear_q7(i/isteps,r,b,c,k, 1),
-        _gear_polar(r, kk),
-        if (valleys) each [
-            _gear_polar(r, -180.1/teeth),
-            _gear_polar(r-1, -180.1/teeth),
-        ]
-    ],
-    pts2 = center? fwd(p, p=pts) : pts
-) pts2;
-
-
-module gear_tooth_profile(
-    pitch = 3,
-    teeth = 11,
-    pressure_angle = 28,
-    backlash  = 0.0,
-    clearance = undef,
-    interior = false,
-    valleys = true,
-    center = false,
-    mod
-) {
-    pitch = is_undef(mod) ? pitch : pitch_value(mod);
-    r = root_radius(pitch, teeth, clearance, interior);
-    fwd(r)
-    polygon(
-        points=gear_tooth_profile(
-            pitch = pitch,
-            teeth = teeth,
-            pressure_angle = pressure_angle,
-            backlash = backlash,
-            clearance = clearance,
-            interior = interior,
-            valleys = valleys,
-            center = center
-        )
-    );
-}
-
-
-// Function&Module: spur_gear2d()
-// Usage: As Module
-//   spur_gear2d(pitch|mod, teeth, [hide], [pressure_angle], [clearance], [backlash], [interior]);
-// Usage: As Function
-//   poly = spur_gear2d(pitch|mod, teeth, [hide], [pressure_angle], [clearance], [backlash], [interior]);
-// Topics: Gears
-// See Also: spur_gear()
-// Description:
-//   When called as a module, creates a 2D involute spur gear.  When called as a function, returns a
-//   2D path for the perimeter of a 2D involute spur gear.  Normally, you should just specify the
-//   first 2 parameters `pitch` and `teeth`, and let the rest be default values.
-//   Meshing gears must match in `pitch`, `pressure_angle`, and `helical`, and be separated by
-//   the sum of their pitch radii, which can be found with `pitch_radius()`.
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   teeth = Total number of teeth around the spur gear.
-//   hide = Number of teeth to delete to make this only a fraction of a circle
-//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
-//   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
-//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
-//   interior = If true, create a mask for difference()ing from something else.
-//   mod = The metric module/modulus of the gear.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Example(2D): Typical Gear Shape
-//   spur_gear2d(pitch=5, teeth=20);
-// Example(2D): Metric Gear
-//   spur_gear2d(mod=2, teeth=20);
-// Example(2D): Lower Pressure Angle
-//   spur_gear2d(pitch=5, teeth=20, pressure_angle=20);
-// Example(2D): Partial Gear
-//   spur_gear2d(pitch=5, teeth=20, hide=15, pressure_angle=20);
-// Example(2D): Called as a Function
-//   path = spur_gear2d(pitch=8, teeth=16);
-//   polygon(path);
-function spur_gear2d(
-    pitch = 3,
-    teeth = 11,
-    hide = 0,
-    pressure_angle = 28,
-    clearance = undef,
-    backlash = 0.0,
-    interior = false,
-    mod,
-    anchor = CENTER,
-    spin = 0
-) = let(
-    pitch = is_undef(mod) ? pitch : pitch_value(mod),
-    pr = pitch_radius(pitch=pitch, teeth=teeth),
-    tooth_profile = gear_tooth_profile(
-        pitch = pitch,
-        teeth = teeth,
-        pressure_angle = pressure_angle,
-        clearance = clearance,
-        backlash = backlash,
-        interior = interior,
-        valleys = false
-    ),
-    pts = concat(
-        [for (tooth = [0:1:teeth-hide-1])
-            each rot(tooth*360/teeth, p=tooth_profile)
-        ],
-        hide>0? [[0,0]] : []
-    )
-) reorient(anchor,spin, two_d=true, r=pr, p=pts);
-
-
-module spur_gear2d(
-    pitch = 3,
-    teeth = 11,
-    hide = 0,
-    pressure_angle = 28,
-    clearance = undef,
-    backlash = 0.0,
-    interior = false,
-    mod,
-    anchor = CENTER,
-    spin = 0
-) {
-    pitch = is_undef(mod) ? pitch : pitch_value(mod);
-    path = spur_gear2d(
-        pitch = pitch,
-        teeth = teeth,
-        hide = hide,
-        pressure_angle = pressure_angle,
-        clearance = clearance,
-        backlash = backlash,
-        interior = interior
-    );
-    pr = pitch_radius(pitch=pitch, teeth=teeth);
-    attachable(anchor,spin, two_d=true, r=pr) {
-        polygon(path);
-        children();
-    }
-}
-
-
-// Function&Module: rack2d()
-// Usage: As a Function
-//   path = rack2d(pitch|mod, teeth, height, [pressure_angle], [backlash]);
-// Usage: As a Module
-//   rack2d(pitch|mod, teeth, height, [pressure_angle], [backlash]);
-// Topics: Gears
-// See Also: spur_gear2d()
-// Description:
-//   This is used to create a 2D rack, which is a linear bar with teeth that a gear can roll along.
-//   A rack can mesh with any gear that has the same `pitch` and `pressure_angle`.
-//   When called as a function, returns a 2D path for the outline of the rack.
-//   When called as a module, creates a 2D rack shape.
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   teeth = Total number of teeth along the rack
-//   height = Height of rack in mm, from tooth top to back of rack.
-//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
-//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
-//   mod = The metric module/modulus of the gear.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Extra Anchors:
-//   "adendum" = At the tips of the teeth, at the center of rack.
-//   "adendum-left" = At the tips of the teeth, at the left end of the rack.
-//   "adendum-right" = At the tips of the teeth, at the right end of the rack.
-//   "dedendum" = At the height of the teeth, at the center of rack.
-//   "dedendum-left" = At the height of the teeth, at the left end of the rack.
-//   "dedendum-right" = At the height of the teeth, at the right end of the rack.
-// Example(2D):
-//   rack2d(pitch=5, teeth=10, height=10, pressure_angle=20);
-// Example(2D): Called as a Function
-//   path = rack2d(pitch=8, teeth=8, height=10, pressure_angle=28);
-//   polygon(path);
-function rack2d(
-    pitch = 5,
-    teeth = 20,
-    height = 10,
-    pressure_angle = 28,
-    backlash = 0.0,
-    clearance = undef,
-    mod,
-    anchor = CENTER,
-    spin = 0
-) =
-    let(
-        pitch = is_undef(mod) ? pitch : pitch_value(mod),
-        a = adendum(pitch),
-        d = dedendum(pitch, clearance)
-    )
-    assert(a+d < height)
-    let(
-        xa = a * sin(pressure_angle),
-        xd = d * sin(pressure_angle),
-        l = teeth * pitch,
-        anchors = [
-            named_anchor("adendum",         [   0, a,0],  BACK),
-            named_anchor("adendum-left",    [-l/2, a,0],  LEFT),
-            named_anchor("adendum-right",   [ l/2, a,0],  RIGHT),
-            named_anchor("dedendum",        [   0,-d,0],  BACK),
-            named_anchor("dedendum-left",   [-l/2,-d,0],  LEFT),
-            named_anchor("dedendum-right",  [ l/2,-d,0],  RIGHT),
-        ],
-        path = [
-            [-(teeth-1)/2 * pitch + -1/2 * pitch,  a-height],
-            [-(teeth-1)/2 * pitch + -1/2 * pitch,  -d],
-            for (i = [0:1:teeth-1]) let(
-                off = (i-(teeth-1)/2) * pitch
-            ) each [
-                [off + -1/4 * pitch + backlash - xd, -d],
-                [off + -1/4 * pitch + backlash + xa,  a],
-                [off +  1/4 * pitch - backlash - xa,  a],
-                [off +  1/4 * pitch - backlash + xd, -d],
-            ],
-            [ (teeth-1)/2 * pitch +  1/2 * pitch,  -d],
-            [ (teeth-1)/2 * pitch +  1/2 * pitch,  a-height],
-        ]
-    ) reorient(anchor,spin, two_d=true, size=[l,2*abs(a-height)], anchors=anchors, p=path);
-
-
-module rack2d(
-    pitch = 5,
-    teeth = 20,
-    height = 10,
-    pressure_angle = 28,
-    backlash = 0.0,
-    clearance = undef,
-    mod,
-    anchor = CENTER,
-    spin = 0
-) {
-    pitch = is_undef(mod) ? pitch : pitch_value(mod);
-    a = adendum(pitch);
-    d = dedendum(pitch, clearance);
-    l = teeth * pitch;
-    anchors = [
-        named_anchor("adendum",         [   0, a,0],  BACK),
-        named_anchor("adendum-left",    [-l/2, a,0],  LEFT),
-        named_anchor("adendum-right",   [ l/2, a,0],  RIGHT),
-        named_anchor("dedendum",        [   0,-d,0],  BACK),
-        named_anchor("dedendum-left",   [-l/2,-d,0],  LEFT),
-        named_anchor("dedendum-right",  [ l/2,-d,0],  RIGHT),
-    ];
-    path = rack2d(
-        pitch = pitch,
-        teeth = teeth,
-        height = height,
-        pressure_angle = pressure_angle,
-        backlash  = backlash,
-        clearance = clearance
-    );
-    attachable(anchor,spin, two_d=true, size=[l, 2*abs(a-height)], anchors=anchors) {
-        polygon(path);
-        children();
-    }
-}
-
-
-
-// Section: 3D Gears and Racks
-
+// Section: Gears
 
 // Function&Module: spur_gear()
 // Usage: As a Module
@@ -808,6 +189,370 @@ module spur_gear(
         children();
     }
 }
+
+
+// Function&Module: spur_gear2d()
+// Usage: As Module
+//   spur_gear2d(pitch|mod, teeth, [hide], [pressure_angle], [clearance], [backlash], [interior]);
+// Usage: As Function
+//   poly = spur_gear2d(pitch|mod, teeth, [hide], [pressure_angle], [clearance], [backlash], [interior]);
+// Topics: Gears
+// See Also: spur_gear()
+// Description:
+//   When called as a module, creates a 2D involute spur gear.  When called as a function, returns a
+//   2D path for the perimeter of a 2D involute spur gear.  Normally, you should just specify the
+//   first 2 parameters `pitch` and `teeth`, and let the rest be default values.
+//   Meshing gears must match in `pitch`, `pressure_angle`, and `helical`, and be separated by
+//   the sum of their pitch radii, which can be found with `pitch_radius()`.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
+//   teeth = Total number of teeth around the spur gear.
+//   hide = Number of teeth to delete to make this only a fraction of a circle
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
+//   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
+//   interior = If true, create a mask for difference()ing from something else.
+//   mod = The metric module/modulus of the gear.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Example(2D): Typical Gear Shape
+//   spur_gear2d(pitch=5, teeth=20);
+// Example(2D): Metric Gear
+//   spur_gear2d(mod=2, teeth=20);
+// Example(2D): Lower Pressure Angle
+//   spur_gear2d(pitch=5, teeth=20, pressure_angle=20);
+// Example(2D): Partial Gear
+//   spur_gear2d(pitch=5, teeth=20, hide=15, pressure_angle=20);
+// Example(2D): Called as a Function
+//   path = spur_gear2d(pitch=8, teeth=16);
+//   polygon(path);
+function spur_gear2d(
+    pitch = 3,
+    teeth = 11,
+    hide = 0,
+    pressure_angle = 28,
+    clearance = undef,
+    backlash = 0.0,
+    interior = false,
+    mod,
+    anchor = CENTER,
+    spin = 0
+) = let(
+    pitch = is_undef(mod) ? pitch : pitch_value(mod),
+    pr = pitch_radius(pitch=pitch, teeth=teeth),
+    tooth_profile = gear_tooth_profile(
+        pitch = pitch,
+        teeth = teeth,
+        pressure_angle = pressure_angle,
+        clearance = clearance,
+        backlash = backlash,
+        interior = interior,
+        valleys = false
+    ),
+    pts = concat(
+        [for (tooth = [0:1:teeth-hide-1])
+            each rot(tooth*360/teeth, p=tooth_profile)
+        ],
+        hide>0? [[0,0]] : []
+    )
+) reorient(anchor,spin, two_d=true, r=pr, p=pts);
+
+
+module spur_gear2d(
+    pitch = 3,
+    teeth = 11,
+    hide = 0,
+    pressure_angle = 28,
+    clearance = undef,
+    backlash = 0.0,
+    interior = false,
+    mod,
+    anchor = CENTER,
+    spin = 0
+) {
+    pitch = is_undef(mod) ? pitch : pitch_value(mod);
+    path = spur_gear2d(
+        pitch = pitch,
+        teeth = teeth,
+        hide = hide,
+        pressure_angle = pressure_angle,
+        clearance = clearance,
+        backlash = backlash,
+        interior = interior
+    );
+    pr = pitch_radius(pitch=pitch, teeth=teeth);
+    attachable(anchor,spin, two_d=true, r=pr) {
+        polygon(path);
+        children();
+    }
+}
+
+
+
+// Function&Module: rack()
+// Usage: As a Module
+//   rack(pitch, teeth, thickness, height, [pressure_angle=], [backlash=]);
+//   rack(mod=, teeth=, thickness=, height=, [pressure_angle=], [backlash]=);
+// Usage: As a Function
+//   vnf = rack(pitch, teeth, thickness, height, [pressure_angle=], [backlash=]);
+//   vnf = rack(mod=, teeth=, thickness=, height=, [pressure_angle=], [backlash=]);
+// Topics: Gears
+// See Also: spur_gear()
+// Description:
+//   This is used to create a 3D rack, which is a linear bar with teeth that a gear can roll along.
+//   A rack can mesh with any gear that has the same `pitch` and `pressure_angle`.
+//   When called as a function, returns a 3D [VNF](vnf.scad) for the rack.
+//   When called as a module, creates a 3D rack shape.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm. Default: 5
+//   teeth = Total number of teeth along the rack.  Default: 20
+//   thickness = Thickness of rack in mm (affects each tooth).  Default: 5
+//   height = Height of rack in mm, from tooth top to back of rack.  Default: 10
+//   ---
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.  Default: 28
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
+//   helical = The angle of the rack teeth away from perpendicular to the rack length.  Used to match helical spur gear pinions.  Default: 0
+//   mod = The metric module/modulus of the gear.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Extra Anchors:
+//   "adendum" = At the tips of the teeth, at the center of rack.
+//   "adendum-left" = At the tips of the teeth, at the left end of the rack.
+//   "adendum-right" = At the tips of the teeth, at the right end of the rack.
+//   "adendum-back" = At the tips of the teeth, at the back of the rack.
+//   "adendum-front" = At the tips of the teeth, at the front of the rack.
+//   "dedendum" = At the base of the teeth, at the center of rack.
+//   "dedendum-left" = At the base of the teeth, at the left end of the rack.
+//   "dedendum-right" = At the base of the teeth, at the right end of the rack.
+//   "dedendum-back" = At the base of the teeth, at the back of the rack.
+//   "dedendum-front" = At the base of the teeth, at the front of the rack.
+// Example(VPR=[60,0,325],VPD=130):
+//   rack(pitch=5, teeth=10, thickness=5, height=5, pressure_angle=20);
+// Example: Rack for Helical Gear
+//   rack(pitch=5, teeth=10, thickness=5, height=5, pressure_angle=20, helical=30);
+// Example: Alternate Helical Gear
+//   rack(pitch=5, teeth=10, thickness=5, height=5, pressure_angle=20, helical=-30);
+// Example: Metric Rack
+//   rack(mod=2, teeth=10, thickness=5, height=5, pressure_angle=20);
+// Example(Anim,VPT=[0,0,12],VPD=100,Frames=6): Rack and Pinion
+//   teeth1 = 16; teeth2 = 16;
+//   pitch = 5; thick = 5; helical = 30;
+//   pr = pitch_radius(pitch=pitch, teeth=teeth2);
+//   right(pr*2*PI/teeth2*$t) rack(pitch=pitch, teeth=teeth1, thickness=thick, height=5, helical=helical);
+//   up(pr) yrot(186.5-$t*360/teeth2)
+//       spur_gear(pitch=pitch, teeth=teeth2, thickness=thick, helical=helical, shaft_diam=5, orient=BACK);
+module rack(
+    pitch = 5,
+    teeth = 20,
+    thickness = 5,
+    height = 10,
+    pressure_angle = 28,
+    backlash = 0.0,
+    clearance,
+    helical=0,
+    mod,
+    anchor = CENTER,
+    spin = 0,
+    orient = UP
+) {
+    pitch = is_undef(mod) ? pitch : pitch_value(mod);
+    a = adendum(pitch);
+    d = dedendum(pitch, clearance);
+    l = teeth * pitch;
+    anchors = [
+        named_anchor("adendum",         [0,0,a],             BACK),
+        named_anchor("adendum-left",    [-l/2,0,a],          LEFT),
+        named_anchor("adendum-right",   [ l/2,0,a],          RIGHT),
+        named_anchor("adendum-front",   [0,-thickness/2,a],  DOWN),
+        named_anchor("adendum-back",    [0, thickness/2,a],  UP),
+        named_anchor("dedendum",        [0,0,-d],            BACK),
+        named_anchor("dedendum-left",   [-l/2,0,-d],         LEFT),
+        named_anchor("dedendum-right",  [ l/2,0,-d],         RIGHT),
+        named_anchor("dedendum-front",  [0,-thickness/2,-d], DOWN),
+        named_anchor("dedendum-back",   [0, thickness/2,-d], UP),
+    ];
+    attachable(anchor,spin,orient, size=[l, thickness, 2*abs(a-height)], anchors=anchors) {
+        skew(sxy=tan(helical)) xrot(90) {
+            linear_extrude(height=thickness, center=true, convexity=teeth*2) {
+                rack2d(
+                    pitch = pitch,
+                    teeth = teeth,
+                    height = height,
+                    pressure_angle = pressure_angle,
+                    backlash = backlash,
+                    clearance = clearance
+                );
+            }
+        }
+        children();
+    }
+}
+
+
+function rack(
+    pitch = 5,
+    teeth = 20,
+    thickness = 5,
+    height = 10,
+    pressure_angle = 28,
+    backlash = 0.0,
+    clearance,
+    helical=0,
+    mod,
+    anchor = CENTER,
+    spin = 0,
+    orient = UP
+) =
+    let(
+        pitch = is_undef(mod) ? pitch : pitch_value(mod),
+        a = adendum(pitch),
+        d = dedendum(pitch, clearance),
+        l = teeth * pitch,
+        anchors = [
+            named_anchor("adendum",         [0,0,a],             BACK),
+            named_anchor("adendum-left",    [-l/2,0,a],          LEFT),
+            named_anchor("adendum-right",   [ l/2,0,a],          RIGHT),
+            named_anchor("adendum-front",   [0,-thickness/2,a],  DOWN),
+            named_anchor("adendum-back",    [0, thickness/2,a],  UP),
+            named_anchor("dedendum",        [0,0,-d],            BACK),
+            named_anchor("dedendum-left",   [-l/2,0,-d],         LEFT),
+            named_anchor("dedendum-right",  [ l/2,0,-d],         RIGHT),
+            named_anchor("dedendum-front",  [0,-thickness/2,-d], DOWN),
+            named_anchor("dedendum-back",   [0, thickness/2,-d], UP),
+        ],
+        path = rack2d(
+            pitch = pitch,
+            teeth = teeth,
+            height = height,
+            pressure_angle = pressure_angle,
+            backlash = backlash,
+            clearance = clearance
+        ),
+        vnf = linear_sweep(path, height=thickness, anchor="origin", orient=FWD),
+        out = helical==0? vnf : skew(sxy=tan(helical), p=vnf)
+    ) reorient(anchor,spin,orient, size=[l, thickness, 2*abs(a-height)], anchors=anchors, p=out);
+
+
+
+
+// Function&Module: rack2d()
+// Usage: As a Function
+//   path = rack2d(pitch|mod, teeth, height, [pressure_angle], [backlash]);
+// Usage: As a Module
+//   rack2d(pitch|mod, teeth, height, [pressure_angle], [backlash]);
+// Topics: Gears
+// See Also: spur_gear2d()
+// Description:
+//   This is used to create a 2D rack, which is a linear bar with teeth that a gear can roll along.
+//   A rack can mesh with any gear that has the same `pitch` and `pressure_angle`.
+//   When called as a function, returns a 2D path for the outline of the rack.
+//   When called as a module, creates a 2D rack shape.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
+//   teeth = Total number of teeth along the rack
+//   height = Height of rack in mm, from tooth top to back of rack.
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
+//   mod = The metric module/modulus of the gear.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Extra Anchors:
+//   "adendum" = At the tips of the teeth, at the center of rack.
+//   "adendum-left" = At the tips of the teeth, at the left end of the rack.
+//   "adendum-right" = At the tips of the teeth, at the right end of the rack.
+//   "dedendum" = At the height of the teeth, at the center of rack.
+//   "dedendum-left" = At the height of the teeth, at the left end of the rack.
+//   "dedendum-right" = At the height of the teeth, at the right end of the rack.
+// Example(2D):
+//   rack2d(pitch=5, teeth=10, height=10, pressure_angle=20);
+// Example(2D): Called as a Function
+//   path = rack2d(pitch=8, teeth=8, height=10, pressure_angle=28);
+//   polygon(path);
+function rack2d(
+    pitch = 5,
+    teeth = 20,
+    height = 10,
+    pressure_angle = 28,
+    backlash = 0.0,
+    clearance = undef,
+    mod,
+    anchor = CENTER,
+    spin = 0
+) =
+    let(
+        pitch = is_undef(mod) ? pitch : pitch_value(mod),
+        a = adendum(pitch),
+        d = dedendum(pitch, clearance)
+    )
+    assert(a+d < height)
+    let(
+        xa = a * sin(pressure_angle),
+        xd = d * sin(pressure_angle),
+        l = teeth * pitch,
+        anchors = [
+            named_anchor("adendum",         [   0, a,0],  BACK),
+            named_anchor("adendum-left",    [-l/2, a,0],  LEFT),
+            named_anchor("adendum-right",   [ l/2, a,0],  RIGHT),
+            named_anchor("dedendum",        [   0,-d,0],  BACK),
+            named_anchor("dedendum-left",   [-l/2,-d,0],  LEFT),
+            named_anchor("dedendum-right",  [ l/2,-d,0],  RIGHT),
+        ],
+        path = [
+            [-(teeth-1)/2 * pitch + -1/2 * pitch,  a-height],
+            [-(teeth-1)/2 * pitch + -1/2 * pitch,  -d],
+            for (i = [0:1:teeth-1]) let(
+                off = (i-(teeth-1)/2) * pitch
+            ) each [
+                [off + -1/4 * pitch + backlash - xd, -d],
+                [off + -1/4 * pitch + backlash + xa,  a],
+                [off +  1/4 * pitch - backlash - xa,  a],
+                [off +  1/4 * pitch - backlash + xd, -d],
+            ],
+            [ (teeth-1)/2 * pitch +  1/2 * pitch,  -d],
+            [ (teeth-1)/2 * pitch +  1/2 * pitch,  a-height],
+        ]
+    ) reorient(anchor,spin, two_d=true, size=[l,2*abs(a-height)], anchors=anchors, p=path);
+
+
+module rack2d(
+    pitch = 5,
+    teeth = 20,
+    height = 10,
+    pressure_angle = 28,
+    backlash = 0.0,
+    clearance = undef,
+    mod,
+    anchor = CENTER,
+    spin = 0
+) {
+    pitch = is_undef(mod) ? pitch : pitch_value(mod);
+    a = adendum(pitch);
+    d = dedendum(pitch, clearance);
+    l = teeth * pitch;
+    anchors = [
+        named_anchor("adendum",         [   0, a,0],  BACK),
+        named_anchor("adendum-left",    [-l/2, a,0],  LEFT),
+        named_anchor("adendum-right",   [ l/2, a,0],  RIGHT),
+        named_anchor("dedendum",        [   0,-d,0],  BACK),
+        named_anchor("dedendum-left",   [-l/2,-d,0],  LEFT),
+        named_anchor("dedendum-right",  [ l/2,-d,0],  RIGHT),
+    ];
+    path = rack2d(
+        pitch = pitch,
+        teeth = teeth,
+        height = height,
+        pressure_angle = pressure_angle,
+        backlash  = backlash,
+        clearance = clearance
+    );
+    attachable(anchor,spin, two_d=true, size=[l, 2*abs(a-height)], anchors=anchors) {
+        polygon(path);
+        children();
+    }
+}
+
 
 
 
@@ -1064,150 +809,6 @@ module bevel_gear(
 }
 
 
-// Function&Module: rack()
-// Usage: As a Module
-//   rack(pitch, teeth, thickness, height, [pressure_angle=], [backlash=]);
-//   rack(mod=, teeth=, thickness=, height=, [pressure_angle=], [backlash]=);
-// Usage: As a Function
-//   vnf = rack(pitch, teeth, thickness, height, [pressure_angle=], [backlash=]);
-//   vnf = rack(mod=, teeth=, thickness=, height=, [pressure_angle=], [backlash=]);
-// Topics: Gears
-// See Also: spur_gear()
-// Description:
-//   This is used to create a 3D rack, which is a linear bar with teeth that a gear can roll along.
-//   A rack can mesh with any gear that has the same `pitch` and `pressure_angle`.
-//   When called as a function, returns a 3D [VNF](vnf.scad) for the rack.
-//   When called as a module, creates a 3D rack shape.
-// Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm. Default: 5
-//   teeth = Total number of teeth along the rack.  Default: 20
-//   thickness = Thickness of rack in mm (affects each tooth).  Default: 5
-//   height = Height of rack in mm, from tooth top to back of rack.  Default: 10
-//   ---
-//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.  Default: 28
-//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
-//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
-//   helical = The angle of the rack teeth away from perpendicular to the rack length.  Used to match helical spur gear pinions.  Default: 0
-//   mod = The metric module/modulus of the gear.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Extra Anchors:
-//   "adendum" = At the tips of the teeth, at the center of rack.
-//   "adendum-left" = At the tips of the teeth, at the left end of the rack.
-//   "adendum-right" = At the tips of the teeth, at the right end of the rack.
-//   "adendum-back" = At the tips of the teeth, at the back of the rack.
-//   "adendum-front" = At the tips of the teeth, at the front of the rack.
-//   "dedendum" = At the base of the teeth, at the center of rack.
-//   "dedendum-left" = At the base of the teeth, at the left end of the rack.
-//   "dedendum-right" = At the base of the teeth, at the right end of the rack.
-//   "dedendum-back" = At the base of the teeth, at the back of the rack.
-//   "dedendum-front" = At the base of the teeth, at the front of the rack.
-// Example(VPR=[60,0,325],VPD=130):
-//   rack(pitch=5, teeth=10, thickness=5, height=5, pressure_angle=20);
-// Example: Rack for Helical Gear
-//   rack(pitch=5, teeth=10, thickness=5, height=5, pressure_angle=20, helical=30);
-// Example: Alternate Helical Gear
-//   rack(pitch=5, teeth=10, thickness=5, height=5, pressure_angle=20, helical=-30);
-// Example: Metric Rack
-//   rack(mod=2, teeth=10, thickness=5, height=5, pressure_angle=20);
-// Example(Anim,VPT=[0,0,12],VPD=100,Frames=6): Rack and Pinion
-//   teeth1 = 16; teeth2 = 16;
-//   pitch = 5; thick = 5; helical = 30;
-//   pr = pitch_radius(pitch=pitch, teeth=teeth2);
-//   right(pr*2*PI/teeth2*$t) rack(pitch=pitch, teeth=teeth1, thickness=thick, height=5, helical=helical);
-//   up(pr) yrot(186.5-$t*360/teeth2)
-//       spur_gear(pitch=pitch, teeth=teeth2, thickness=thick, helical=helical, shaft_diam=5, orient=BACK);
-module rack(
-    pitch = 5,
-    teeth = 20,
-    thickness = 5,
-    height = 10,
-    pressure_angle = 28,
-    backlash = 0.0,
-    clearance,
-    helical=0,
-    mod,
-    anchor = CENTER,
-    spin = 0,
-    orient = UP
-) {
-    pitch = is_undef(mod) ? pitch : pitch_value(mod);
-    a = adendum(pitch);
-    d = dedendum(pitch, clearance);
-    l = teeth * pitch;
-    anchors = [
-        named_anchor("adendum",         [0,0,a],             BACK),
-        named_anchor("adendum-left",    [-l/2,0,a],          LEFT),
-        named_anchor("adendum-right",   [ l/2,0,a],          RIGHT),
-        named_anchor("adendum-front",   [0,-thickness/2,a],  DOWN),
-        named_anchor("adendum-back",    [0, thickness/2,a],  UP),
-        named_anchor("dedendum",        [0,0,-d],            BACK),
-        named_anchor("dedendum-left",   [-l/2,0,-d],         LEFT),
-        named_anchor("dedendum-right",  [ l/2,0,-d],         RIGHT),
-        named_anchor("dedendum-front",  [0,-thickness/2,-d], DOWN),
-        named_anchor("dedendum-back",   [0, thickness/2,-d], UP),
-    ];
-    attachable(anchor,spin,orient, size=[l, thickness, 2*abs(a-height)], anchors=anchors) {
-        skew(sxy=tan(helical)) xrot(90) {
-            linear_extrude(height=thickness, center=true, convexity=teeth*2) {
-                rack2d(
-                    pitch = pitch,
-                    teeth = teeth,
-                    height = height,
-                    pressure_angle = pressure_angle,
-                    backlash = backlash,
-                    clearance = clearance
-                );
-            }
-        }
-        children();
-    }
-}
-
-
-function rack(
-    pitch = 5,
-    teeth = 20,
-    thickness = 5,
-    height = 10,
-    pressure_angle = 28,
-    backlash = 0.0,
-    clearance,
-    helical=0,
-    mod,
-    anchor = CENTER,
-    spin = 0,
-    orient = UP
-) =
-    let(
-        pitch = is_undef(mod) ? pitch : pitch_value(mod),
-        a = adendum(pitch),
-        d = dedendum(pitch, clearance),
-        l = teeth * pitch,
-        anchors = [
-            named_anchor("adendum",         [0,0,a],             BACK),
-            named_anchor("adendum-left",    [-l/2,0,a],          LEFT),
-            named_anchor("adendum-right",   [ l/2,0,a],          RIGHT),
-            named_anchor("adendum-front",   [0,-thickness/2,a],  DOWN),
-            named_anchor("adendum-back",    [0, thickness/2,a],  UP),
-            named_anchor("dedendum",        [0,0,-d],            BACK),
-            named_anchor("dedendum-left",   [-l/2,0,-d],         LEFT),
-            named_anchor("dedendum-right",  [ l/2,0,-d],         RIGHT),
-            named_anchor("dedendum-front",  [0,-thickness/2,-d], DOWN),
-            named_anchor("dedendum-back",   [0, thickness/2,-d], UP),
-        ],
-        path = rack2d(
-            pitch = pitch,
-            teeth = teeth,
-            height = height,
-            pressure_angle = pressure_angle,
-            backlash = backlash,
-            clearance = clearance
-        ),
-        vnf = linear_sweep(path, height=thickness, anchor="origin", orient=FWD),
-        out = helical==0? vnf : skew(sxy=tan(helical), p=vnf)
-    ) reorient(anchor,spin,orient, size=[l, thickness, 2*abs(a-height)], anchors=anchors, p=out);
 
 
 
@@ -1510,6 +1111,411 @@ module worm_gear(
         children();
     }
 }
+
+
+// Section: 2D Profiles
+
+
+// Function&Module: gear_tooth_profile()
+// Usage: As Module
+//   gear_tooth_profile(pitch|mod, teeth, [pressure_angle], [clearance], [backlash], [interior], [valleys]);
+// Usage: As Function
+//   path = gear_tooth_profile(pitch|mod, teeth, [pressure_angle], [clearance], [backlash], [interior], [valleys]);
+// Topics: Gears
+// See Also: spur_gear2d()
+// Description:
+//   When called as a function, returns the 2D profile path for an individual gear tooth.
+//   When called as a module, creates the 2D profile shape for an individual gear tooth.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
+//   teeth = Total number of teeth on the spur gear that this is a tooth for.
+//   pressure_angle = Pressure Angle.  Controls how straight or bulged the tooth sides are. In degrees.
+//   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
+//   interior = If true, create a mask for difference()ing from something else.
+//   valleys = If true, add the valley bottoms on either side of the tooth.  Default: true
+//   center = If true, centers the pitch circle of the tooth profile at the origin.  Default: false.
+//   mod = The metric module/modulus of the gear.
+// Example(2D):
+//   gear_tooth_profile(pitch=5, teeth=20, pressure_angle=20);
+// Example(2D): Metric Gear Tooth
+//   gear_tooth_profile(mod=2, teeth=20, pressure_angle=20);
+// Example(2D):
+//   gear_tooth_profile(
+//       pitch=5, teeth=20, pressure_angle=20, valleys=false
+//   );
+// Example(2D): As a function
+//   path = gear_tooth_profile(
+//       pitch=5, teeth=20, pressure_angle=20, valleys=false
+//   );
+//   stroke(path, width=0.1);
+function gear_tooth_profile(
+    pitch = 3,
+    teeth = 11,
+    pressure_angle = 28,
+    clearance = undef,
+    backlash = 0.0,
+    interior = false,
+    valleys = true,
+    center = false,
+    mod
+) = let(
+    pitch = is_undef(mod) ? pitch : pitch_value(mod),
+    p = pitch_radius(pitch, teeth),
+    c = outer_radius(pitch, teeth, clearance, interior),
+    r = root_radius(pitch, teeth, clearance, interior),
+    b = base_radius(pitch, teeth, pressure_angle),
+    t  = pitch/2-backlash/2,                //tooth thickness at pitch circle
+    k  = -_gear_iang(b, p) - t/2/p/PI*180,  //angle to where involute meets base circle on each side of tooth
+    kk = r<b? k : -180/teeth,
+    isteps = 5,
+    pts = [
+        if (valleys) each [
+            _gear_polar(r-1, 180.1/teeth),
+            _gear_polar(r, 180.1/teeth),
+        ],
+        _gear_polar(r, -kk),
+        for (i=[0: 1:isteps]) _gear_q7(i/isteps,r,b,c,k,-1),
+        for (i=[isteps:-1:0]) _gear_q7(i/isteps,r,b,c,k, 1),
+        _gear_polar(r, kk),
+        if (valleys) each [
+            _gear_polar(r, -180.1/teeth),
+            _gear_polar(r-1, -180.1/teeth),
+        ]
+    ],
+    pts2 = center? fwd(p, p=pts) : pts
+) pts2;
+
+
+module gear_tooth_profile(
+    pitch = 3,
+    teeth = 11,
+    pressure_angle = 28,
+    backlash  = 0.0,
+    clearance = undef,
+    interior = false,
+    valleys = true,
+    center = false,
+    mod
+) {
+    pitch = is_undef(mod) ? pitch : pitch_value(mod);
+    r = root_radius(pitch, teeth, clearance, interior);
+    fwd(r)
+    polygon(
+        points=gear_tooth_profile(
+            pitch = pitch,
+            teeth = teeth,
+            pressure_angle = pressure_angle,
+            backlash = backlash,
+            clearance = clearance,
+            interior = interior,
+            valleys = valleys,
+            center = center
+        )
+    );
+}
+
+
+// Section: Computing Gear Dimensions
+//   These functions let the user find the derived dimensions of the gear.
+//   A gear fits within a circle of radius outer_radius, and two gears should have
+//   their centers separated by the sum of their pitch_radius.
+
+
+// Function: circular_pitch()
+// Usage:
+//   circp = circular_pitch(pitch|mod);
+// Topics: Gears
+// Description:
+//   Get tooth density expressed as "circular pitch".
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
+//   mod = The metric module/modulus of the gear.
+// Example:
+//   circp = circular_pitch(pitch=5);
+//   circp = circular_pitch(mod=2);
+function circular_pitch(pitch=5, mod) =
+    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
+    pitch;
+
+
+// Function: diametral_pitch()
+// Usage:
+//   dp = diametral_pitch(pitch|mod);
+// Topics: Gears
+// Description:
+//   Get tooth density expressed as "diametral pitch".
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
+//   mod = The metric module/modulus of the gear.
+// Example:
+//   dp = diametral_pitch(pitch=5);
+//   dp = diametral_pitch(mod=2);
+function diametral_pitch(pitch=5, mod) =
+    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
+    PI / pitch;
+
+
+// Function: pitch_value()
+// Usage:
+//   pitch = pitch_value(mod);
+// Topics: Gears
+// Description:
+//   Get circular pitch in mm from module/modulus.  The circular pitch of a gear is the number of
+//   millimeters per tooth around the pitch radius circle.
+// Arguments:
+//   mod = The module/modulus of the gear.
+function pitch_value(mod) = mod * PI;
+
+
+// Function: module_value()
+// Usage:
+//   mod = module_value(pitch);
+// Topics: Gears
+// Description:
+//   Get tooth density expressed as "module" or "modulus" in millimeters.  The module is the pitch
+//   diameter of the gear divided by the number of teeth on it.  For example, a gear with a pitch
+//   diameter of 40mm, with 20 teeth on it will have a modulus of 2.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
+function module_value(pitch=5) = pitch / PI;
+
+
+// Function: adendum()
+// Usage:
+//   ad = adendum(pitch|mod);
+// Topics: Gears
+// Description:
+//   The height of the top of a gear tooth above the pitch radius circle.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
+//   mod = The metric module/modulus of the gear.
+// Example:
+//   ad = adendum(pitch=5);
+//   ad = adendum(mod=2);
+// Example(2D):
+//   pitch = 5; teeth = 17;
+//   pr = pitch_radius(pitch=pitch, teeth=teeth);
+//   adn = adendum(pitch=5);
+//   #spur_gear2d(pitch=pitch, teeth=teeth);
+//   color("black") {
+//       stroke(circle(r=pr),width=0.1,closed=true);
+//       stroke(circle(r=pr+adn),width=0.1,closed=true);
+//   }
+function adendum(pitch=5, mod) =
+    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
+    module_value(pitch) * 1.0;
+
+
+// Function: dedendum()
+// Usage:
+//   ddn = dedendum(pitch|mod, [clearance]);
+// Topics: Gears
+// Description:
+//   The depth of the gear tooth valley, below the pitch radius.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
+//   clearance = If given, sets the clearance between meshing teeth.
+//   mod = The metric module/modulus of the gear.
+// Example:
+//   ddn = dedendum(pitch=5);
+//   ddn = dedendum(mod=2);
+// Example(2D):
+//   pitch = 5; teeth = 17;
+//   pr = pitch_radius(pitch=pitch, teeth=teeth);
+//   ddn = dedendum(pitch=5);
+//   #spur_gear2d(pitch=pitch, teeth=teeth);
+//   color("black") {
+//       stroke(circle(r=pr),width=0.1,closed=true);
+//       stroke(circle(r=pr-ddn),width=0.1,closed=true);
+//   }
+function dedendum(pitch=5, clearance, mod) =
+    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
+    is_undef(clearance)? (1.25 * module_value(pitch)) :
+    (module_value(pitch) + clearance);
+
+
+// Function: pitch_radius()
+// Usage:
+//   pr = pitch_radius(pitch|mod, teeth);
+// Topics: Gears
+// Description:
+//   Calculates the pitch radius for the gear.  Two mated gears will have their centers spaced apart
+//   by the sum of the two gear's pitch radii.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
+//   teeth = The number of teeth on the gear.
+//   mod = The metric module/modulus of the gear.
+// Example:
+//   pr = pitch_radius(pitch=5, teeth=11);
+//   pr = pitch_radius(mod=2, teeth=20);
+// Example(2D):
+//   pr = pitch_radius(pitch=5, teeth=11);
+//   #spur_gear2d(pitch=5, teeth=11);
+//   color("black")
+//       stroke(circle(r=pr),width=0.1,closed=true);
+function pitch_radius(pitch=5, teeth=11, mod) =
+    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
+    pitch * teeth / PI / 2;
+
+
+// Function: outer_radius()
+// Usage:
+//   or = outer_radius(pitch|mod, teeth, [clearance], [interior]);
+// Topics: Gears
+// Description:
+//   Calculates the outer radius for the gear. The gear fits entirely within a cylinder of this radius.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
+//   teeth = The number of teeth on the gear.
+//   clearance = If given, sets the clearance between meshing teeth.
+//   interior = If true, calculate for an interior gear.
+//   mod = The metric module/modulus of the gear.
+// Example:
+//   or = outer_radius(pitch=5, teeth=20);
+//   or = outer_radius(mod=2, teeth=16);
+// Example(2D):
+//   pr = outer_radius(pitch=5, teeth=11);
+//   #spur_gear2d(pitch=5, teeth=11);
+//   color("black")
+//       stroke(circle(r=pr),width=0.1,closed=true);
+function outer_radius(pitch=5, teeth=11, clearance, interior=false, mod) =
+    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
+    pitch_radius(pitch, teeth) +
+    (interior? dedendum(pitch, clearance) : adendum(pitch));
+
+
+// Function: root_radius()
+// Usage:
+//   rr = root_radius(pitch|mod, teeth, [clearance], [interior]);
+// Topics: Gears
+// Description:
+//   Calculates the root radius for the gear, at the base of the dedendum.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
+//   teeth = The number of teeth on the gear.
+//   clearance = If given, sets the clearance between meshing teeth.
+//   interior = If true, calculate for an interior gear.
+//   mod = The metric module/modulus of the gear.
+// Example:
+//   rr = root_radius(pitch=5, teeth=11);
+//   rr = root_radius(mod=2, teeth=16);
+// Example(2D):
+//   pr = root_radius(pitch=5, teeth=11);
+//   #spur_gear2d(pitch=5, teeth=11);
+//   color("black")
+//       stroke(circle(r=pr),width=0.1,closed=true);
+function root_radius(pitch=5, teeth=11, clearance, interior=false, mod) =
+    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
+    pitch_radius(pitch, teeth) -
+    (interior? adendum(pitch) : dedendum(pitch, clearance));
+
+
+// Function: base_radius()
+// Usage:
+//   br = base_radius(pitch|mod, teeth, [pressure_angle]);
+// Topics: Gears
+// Description:
+//   Get the base circle for involute teeth, at the base of the teeth.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
+//   teeth = The number of teeth on the gear.
+//   pressure_angle = Pressure angle in degrees.  Controls how straight or bulged the tooth sides are.
+//   mod = The metric module/modulus of the gear.
+// Example:
+//   br = base_radius(pitch=5, teeth=20, pressure_angle=20);
+//   br = base_radius(mod=2, teeth=18, pressure_angle=20);
+// Example(2D):
+//   pr = base_radius(pitch=5, teeth=11);
+//   #spur_gear2d(pitch=5, teeth=11);
+//   color("black")
+//       stroke(circle(r=pr),width=0.1,closed=true);
+function base_radius(pitch=5, teeth=11, pressure_angle=28, mod) =
+    let( pitch = is_undef(mod) ? pitch : pitch_value(mod) )
+    pitch_radius(pitch, teeth) * cos(pressure_angle);
+
+
+// Function: bevel_pitch_angle()
+// Usage:
+//   ang = bevel_pitch_angle(teeth, mate_teeth, [drive_angle]);
+// Topics: Gears
+// See Also: bevel_gear()
+// Description:
+//   Returns the correct pitch angle for a bevel gear with a given number of tooth, that is
+//   matched to another bevel gear with a (possibly different) number of teeth.
+// Arguments:
+//   teeth = Number of teeth that this gear has.
+//   mate_teeth = Number of teeth that the matching gear has.
+//   drive_angle = Angle between the drive shafts of each gear.  Default: 90º.
+// Example:
+//   ang = bevel_pitch_angle(teeth=18, mate_teeth=30);
+// Example(2D):
+//   t1 = 13; t2 = 19; pitch=5;
+//   pang = bevel_pitch_angle(teeth=t1, mate_teeth=t2, drive_angle=90);
+//   color("black") {
+//       zrot_copies([0,pang])
+//           stroke([[0,0,0], [0,-20,0]],width=0.2);
+//       stroke(arc(r=3, angle=[270,270+pang]),width=0.2);
+//   }
+//   #bevel_gear(
+//       pitch=5, teeth=t1, mate_teeth=t2,
+//       spiral_angle=0, cutter_radius=1000,
+//       slices=12, anchor="apex", orient=BACK
+//   );
+function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
+    atan(sin(drive_angle)/((mate_teeth/teeth)+cos(drive_angle)));
+
+
+// Function: worm_gear_thickness()
+// Usage:
+//   thick = worm_gear_thickness(pitch|mod, teeth, worm_diam, [worm_arc], [crowning], [clearance]);
+// Topics: Gears
+// See Also: worm(), worm_gear()
+// Description:
+//   Calculate the thickness of the worm gear.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.  Default: 5
+//   teeth = Total number of teeth along the rack.  Default: 30
+//   worm_diam = The pitch diameter of the worm gear to match to.  Default: 30
+//   worm_arc = The arc of the worm to mate with, in degrees. Default: 60 degrees
+//   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fir the work easier.  Default: 1
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
+//   mod = The metric module/modulus of the gear.
+// Example:
+//   thick = worm_gear_thickness(pitch=5, teeth=36, worm_diam=30);
+//   thick = worm_gear_thickness(mod=2, teeth=28, worm_diam=25);
+// Example(2D):
+//   pitch = 5;  teeth=17;
+//   worm_diam = 30; starts=2;
+//   y = worm_gear_thickness(pitch=pitch, teeth=teeth, worm_diam=worm_diam);
+//   #worm_gear(
+//       pitch=pitch, teeth=teeth,
+//       worm_diam=worm_diam,
+//       worm_starts=starts,
+//       orient=BACK
+//   );
+//   color("black") {
+//       ycopies(y) stroke([[-25,0],[25,0]], width=0.5);
+//       stroke([[-20,-y/2],[-20,y/2]],width=0.5,endcaps="arrow");
+//   }
+function worm_gear_thickness(pitch=5, teeth=30, worm_diam=30, worm_arc=60, crowning=1, clearance, mod) =
+    let(
+        pitch = is_undef(mod) ? pitch : pitch_value(mod),
+        r = worm_diam/2 + crowning,
+        pitch_thick = r * sin(worm_arc/2) * 2,
+        pr = pitch_radius(pitch, teeth),
+        rr = root_radius(pitch, teeth, clearance, false),
+        pitchoff = (pr-rr) * sin(worm_arc/2),
+        thickness = pitch_thick + 2*pitchoff
+    ) thickness;
+
+
+function _gear_polar(r,t) = r*[sin(t),cos(t)];
+function _gear_iang(r1,r2) = sqrt((r2/r1)*(r2/r1) - 1)/PI*180 - acos(r1/r2);  //unwind a string this many degrees to go from radius r1 to radius r2
+function _gear_q6(b,s,t,d) = _gear_polar(d,s*(_gear_iang(b,d)+t));            //point at radius d on the involute curve
+function _gear_q7(f,r,b,r2,t,s) = _gear_q6(b,s,t,(1-f)*max(b,r)+f*r2);        //radius a fraction f up the curved side of the tooth
+
+
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

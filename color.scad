@@ -98,17 +98,17 @@ module rainbow(list, stride=1, maxhues, shuffle=false, seed)
     hues = shuffle ? shuffle(huelist, seed=seed) : huelist;
     for($idx=idx(list)) {
         $item = list[$idx];
-        HSV(h=hues[$idx]) children();
+        hsv(h=hues[$idx]) children();
     }
 }
 
 
 // Section: Colorspace Conversion
 
-// Function&Module: HSL()
+// Function&Module: hsl()
 // Usage:
-//   HSL(h,[s],[l],[a]) ...
-//   rgb = HSL(h,[s],[l],[a]);
+//   hsl(h,[s],[l],[a]) ...
+//   rgb = hsl(h,[s],[l],[a]);
 // Description:
 //   When called as a function, returns the [R,G,B] color for the given hue `h`, saturation `s`, and lightness `l` from the HSL colorspace. If you supply
 //   the `a` value then you'll get a length 4 list [R,G,B,A].  
@@ -119,11 +119,11 @@ module rainbow(list, stride=1, maxhues, shuffle=false, seed)
 //   l = The lightness, between 0 and 1.  0 = black, 0.5 = bright colors, 1 = white.  Default: 0.5
 //   a = Specifies the alpha channel as a value between 0 and 1.  0 = fully transparent, 1=opaque.  Default: 1
 // Example:
-//   HSL(h=120,s=1,l=0.5) sphere(d=60);
+//   hsl(h=120,s=1,l=0.5) sphere(d=60);
 // Example:
-//   rgb = HSL(h=270,s=0.75,l=0.6);
+//   rgb = hsl(h=270,s=0.75,l=0.6);
 //   color(rgb) cube(60, center=true);
-function HSL(h,s=1,l=0.5,a) =
+function hsl(h,s=1,l=0.5,a) =
     let(
         h=posmod(h,360)
     ) [
@@ -133,13 +133,13 @@ function HSL(h,s=1,l=0.5,a) =
         if (is_def(a)) a
     ];
 
-module HSL(h,s=1,l=0.5,a=1) color(HSL(h,s,l),a) children();
+module hsl(h,s=1,l=0.5,a=1) color(hsl(h,s,l),a) children();
 
 
-// Function&Module: HSV()
+// Function&Module: hsv()
 // Usage:
-//   HSV(h,[s],[v],[a]) ...
-//   rgb = HSV(h,[s],[v],[a]);
+//   hsv(h,[s],[v],[a]) ...
+//   rgb = hsv(h,[s],[v],[a]);
 // Description:
 //   When called as a function, returns the [R,G,B] color for the given hue `h`, saturation `s`, and value `v` from the HSV colorspace.  If you supply
 //   the `a` value then you'll get a length 4 list [R,G,B,A].  
@@ -150,11 +150,11 @@ module HSL(h,s=1,l=0.5,a=1) color(HSL(h,s,l),a) children();
 //   v = The value, between 0 and 1.  0 = darkest black, 1 = bright.  Default: 1
 //   a = Specifies the alpha channel as a value between 0 and 1.  0 = fully transparent, 1=opaque.  Default: 1
 // Example:
-//   HSV(h=120,s=1,v=1) sphere(d=60);
+//   hsv(h=120,s=1,v=1) sphere(d=60);
 // Example:
-//   rgb = HSV(h=270,s=0.75,v=0.9);
+//   rgb = hsv(h=270,s=0.75,v=0.9);
 //   color(rgb) cube(60, center=true);
-function HSV(h,s=1,v=1,a) =
+function hsv(h,s=1,v=1,a) =
     assert(s>=0 && s<=1)
     assert(v>=0 && v<=1)
     assert(is_undef(a) || a>=0 && a<=1)
@@ -175,7 +175,7 @@ function HSV(h,s=1,v=1,a) =
     is_def(a) ? point4d(add_scalar(rgbprime,m),a)
               : add_scalar(rgbprime,m);
 
-module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
+module hsv(h,s=1,v=1,a=1) color(hsv(h,s,v),a) children();
 
 
 
