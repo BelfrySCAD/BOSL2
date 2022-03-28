@@ -287,7 +287,7 @@ shell2d(thickness=-5,or=[5,0],ir=[5,0]) star(5,step=2,d=100);
 ## Color Manipulators
 The built-in OpenSCAD `color()` module can let you set the RGB color of an object, but it's often
 easier to select colors using other color schemes.  You can use the HSL or Hue-Saturation-Lightness
-color scheme with the `HSL()` module:
+color scheme with the `hsl()` module:
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -295,12 +295,12 @@ n = 10; size = 100/n;
 for (a=count(n), b=count(n), c=count(n)) {
     let( h=360*a/n, s=1-b/(n-1), l=c/(n-1))
     translate(size*[a,b,c]) {
-        HSL(h,s,l) cube(size);
+        hsl(h,s,l) cube(size);
     }
 }
 ```
 
-You can use the HSV or Hue-Saturation-Value color scheme with the `HSV()` module:
+You can use the HSV or Hue-Saturation-Value color scheme with the `hsv()` module:
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -308,7 +308,7 @@ n = 10; size = 100/n;
 for (a=count(n), b=count(n), c=count(n)) {
     let( h=360*a/n, s=1-b/(n-1), v=c/(n-1))
     translate(size*[a,b,c]) {
-        HSV(h,s,v) cube(size);
+        hsv(h,s,v) cube(size);
     }
 }
 ```

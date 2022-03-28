@@ -1,7 +1,7 @@
 include <../std.scad>
 
 
-module test_HSL() {
+module test_hsl() {
     for (h = [0:30:360]) {
         for (s = [0:0.2:1]) {
             for (l = [0:0.2:1]) {
@@ -16,15 +16,15 @@ module test_HSL() {
                     h<=300? [x,0,c] :
                             [c,0,x]
                 );
-                assert_approx(HSL(h,s,l), rgb, format("h={}, s={}, l={}", [h,s,l]));
+                assert_approx(hsl(h,s,l), rgb, format("h={}, s={}, l={}", [h,s,l]));
             }
         }
     }
 }
-test_HSL();
+test_hsl();
 
 
-module test_HSV() {
+module test_hsv() {
     for (h = [0:30:360]) {
         for (s = [0:0.2:1]) {
             for (v = [0:0.2:1]) {
@@ -39,12 +39,12 @@ module test_HSV() {
                     h<=300? [x,0,c] :
                             [c,0,x]
                 );
-                assert_approx(HSV(h,s,v), rgb, format("h={}, s={}, v={}", [h,s,v]));
+                assert_approx(hsv(h,s,v), rgb, format("h={}, s={}, v={}", [h,s,v]));
             }
         }
     }
 }
-test_HSV();
+test_hsv();
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

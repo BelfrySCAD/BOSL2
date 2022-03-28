@@ -819,62 +819,6 @@ module hulling(a)
 }
 
 
-// Module: recolor()
-// Usage:
-//   recolor([c]) {...}
-// Topics: Attachments
-// See Also: color_this(), tags(), hide(), show(), diff(), intersect()
-// Description:
-//   Sets the color for children and all their descendants.  This only works with attachables and you cannot
-//   have any color() modules above it in any parents, only other recolor() or color_this() modules.
-//   This works by setting the special `$color` variable.  
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
-// Arguments:
-//   c = Color name or RGBA vector.  Default: The default color in your color scheme. 
-// Example:
-//   cuboid([10,10,5])
-//     recolor("green")attach(TOP,BOT) cuboid([9,9,4.5])
-//       attach(TOP,BOT) cuboid([8,8,4])
-//         recolor("purple") attach(TOP,BOT) cuboid([7,7,3.5])
-//           attach(TOP,BOT) cuboid([6,6,3])
-//             recolor("cyan")attach(TOP,BOT) cuboid([5,5,2.5])
-//               attach(TOP,BOT) cuboid([4,4,2]);
-module recolor(c="default")
-{
-    $color=c;
-    children();
-}
-
-
-// Module: color_this()
-// Usage:
-//   color_this([c]) {...}
-// Topics: Attachments
-// See Also: tags(), recolor()
-// Description:
-//   Sets the color for children at one level, reverting to the previous color for further descendants.
-//   This works only with attachables and you cannot have any color() modules above it in any parents,
-//   only recolor() or other color_this() modules.  This works using the `$color` and `$save_color` variables.  
-//   . 
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
-// Arguments:
-//   c = Color name or RGBA vector.  Default: the default color in your color scheme
-// Example:
-//   cuboid([10,10,5])
-//     color_this("green")attach(TOP,BOT) cuboid([9,9,4.5])
-//       attach(TOP,BOT) cuboid([8,8,4])
-//         color_this("purple") attach(TOP,BOT) cuboid([7,7,3.5])
-//           attach(TOP,BOT) cuboid([6,6,3])
-//             color_this("cyan")attach(TOP,BOT) cuboid([5,5,2.5])
-//               attach(TOP,BOT) cuboid([4,4,2]);
-module color_this(c="default")
-{
-  $save_color=default($color,"default");
-  $color=c;
-  children();
-}
-
-
 // Module: hide()
 // Usage:
 //   hide(tags) {...}
@@ -1262,6 +1206,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   `$parent_orient` is set to the parent object's `orient` value.
 //   `$parent_geom` is set to the parent object's `geom` value.
 //   `$parent_size` is set to the parent object's cubical `[X,Y,Z]` volume size.
+//   `$color` is used to set the color of the object
+//   `$save_color` is used to revert color to the parent's color
 //
 // Example(NORENDER): Cubical Shape
 //   attachable(anchor, spin, orient, size=size) {

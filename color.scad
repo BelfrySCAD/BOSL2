@@ -11,15 +11,69 @@
 
 use <builtins.scad>
 
-
 // Section: Coloring Objects
+
+// Module: recolor()
+// Usage:
+//   recolor([c]) {...}
+// Topics: Attachments
+// See Also: color_this()
+// Description:
+//   Sets the color for attachable children and all their descendants.  This only works with attachables and you cannot
+//   have any color() modules above it in any parents, only other recolor() or color_this() modules.
+//   This works by setting the special `$color` variable, which attachable objects make use of to set the color. 
+// Arguments:
+//   c = Color name or RGBA vector.  Default: The default color in your color scheme. 
+// Example:
+//   cuboid([10,10,5])
+//     recolor("green")attach(TOP,BOT) cuboid([9,9,4.5])
+//       attach(TOP,BOT) cuboid([8,8,4])
+//         recolor("purple") attach(TOP,BOT) cuboid([7,7,3.5])
+//           attach(TOP,BOT) cuboid([6,6,3])
+//             recolor("cyan")attach(TOP,BOT) cuboid([5,5,2.5])
+//               attach(TOP,BOT) cuboid([4,4,2]);
+module recolor(c="default")
+{
+    $color=c;
+    children();
+}
+
+
+// Module: color_this()
+// Usage:
+//   color_this([c]) {...}
+// Topics: Attachments
+// See Also: recolor()
+// Description:
+//   Sets the color for children at one level, reverting to the previous color for further descendants.
+//   This works only with attachables and you cannot have any color() modules above it in any parents,
+//   only recolor() or other color_this() modules.  This works using the `$color` and `$save_color` variables,
+//   which attachable objects make use of to set the color. 
+// Arguments:
+//   c = Color name or RGBA vector.  Default: the default color in your color scheme
+// Example:
+//   cuboid([10,10,5])
+//     color_this("green")attach(TOP,BOT) cuboid([9,9,4.5])
+//       attach(TOP,BOT) cuboid([8,8,4])
+//         color_this("purple") attach(TOP,BOT) cuboid([7,7,3.5])
+//           attach(TOP,BOT) cuboid([6,6,3])
+//             color_this("cyan")attach(TOP,BOT) cuboid([5,5,2.5])
+//               attach(TOP,BOT) cuboid([4,4,2]);
+module color_this(c="default")
+{
+  $save_color=default($color,"default");
+  $color=c;
+  children();
+}
+
 
 // Module: rainbow()
 // Usage:
 //   rainbow(list) ...
 // Description:
-//   Iterates the list, displaying children in different colors for each list item.
-//   This is useful for debugging lists of paths and such.
+//   Iterates the list, displaying children in different colors for each list item.  The color
+//   is set using the color() module, so this module is not compatible with {{recolor()}} or
+//   {{color_this()}}.  This is useful for debugging regions or lists of paths. 
 // Arguments:
 //   list = The list of items to iterate through.
 //   stride = Consecutive colors stride around the color wheel divided into this many parts.
@@ -44,62 +98,66 @@ module rainbow(list, stride=1, maxhues, shuffle=false, seed)
     hues = shuffle ? shuffle(huelist, seed=seed) : huelist;
     for($idx=idx(list)) {
         $item = list[$idx];
-        HSV(h=hues[$idx]) children();
+        hsv(h=hues[$idx]) children();
     }
 }
 
 
 // Section: Colorspace Conversion
 
-// Function&Module: HSL()
+// Function&Module: hsl()
 // Usage:
-//   HSL(h,[s],[l],[a]) ...
-//   rgb = HSL(h,[s],[l]);
+//   hsl(h,[s],[l],[a]) ...
+//   rgb = hsl(h,[s],[l],[a]);
 // Description:
-//   When called as a function, returns the [R,G,B] color for the given hue `h`, saturation `s`, and lightness `l` from the HSL colorspace.
-//   When called as a module, sets the color to the given hue `h`, saturation `s`, and lightness `l` from the HSL colorspace.
+//   When called as a function, returns the [R,G,B] color for the given hue `h`, saturation `s`, and lightness `l` from the HSL colorspace. If you supply
+//   the `a` value then you'll get a length 4 list [R,G,B,A].  
+//   When called as a module, sets the color using the color() module to the given hue `h`, saturation `s`, and lightness `l` from the HSL colorspace.
 // Arguments:
 //   h = The hue, given as a value between 0 and 360.  0=red, 60=yellow, 120=green, 180=cyan, 240=blue, 300=magenta.
 //   s = The saturation, given as a value between 0 and 1.  0 = grayscale, 1 = vivid colors.  Default: 1
 //   l = The lightness, between 0 and 1.  0 = black, 0.5 = bright colors, 1 = white.  Default: 0.5
-//   a = When called as a module, specifies the alpha channel as a value between 0 and 1.  0 = fully transparent, 1=opaque.  Default: 1
+//   a = Specifies the alpha channel as a value between 0 and 1.  0 = fully transparent, 1=opaque.  Default: 1
 // Example:
-//   HSL(h=120,s=1,l=0.5) sphere(d=60);
+//   hsl(h=120,s=1,l=0.5) sphere(d=60);
 // Example:
-//   rgb = HSL(h=270,s=0.75,l=0.6);
+//   rgb = hsl(h=270,s=0.75,l=0.6);
 //   color(rgb) cube(60, center=true);
-function HSL(h,s=1,l=0.5) =
+function hsl(h,s=1,l=0.5,a) =
     let(
         h=posmod(h,360)
     ) [
-        for (n=[0,8,4]) let(
-            k=(n+h/30)%12
-        ) l - s*min(l,1-l)*max(min(k-3,9-k,1),-1)
+        for (n=[0,8,4])
+          let(k=(n+h/30)%12)
+          l - s*min(l,1-l)*max(min(k-3,9-k,1),-1),
+        if (is_def(a)) a
     ];
 
-module HSL(h,s=1,l=0.5,a=1) color(HSL(h,s,l),a) children();
+module hsl(h,s=1,l=0.5,a=1) color(hsl(h,s,l),a) children();
 
 
-// Function&Module: HSV()
+// Function&Module: hsv()
 // Usage:
-//   HSV(h,[s],[v],[a]) ...
-//   rgb = HSV(h,[s],[v]);
+//   hsv(h,[s],[v],[a]) ...
+//   rgb = hsv(h,[s],[v],[a]);
 // Description:
-//   When called as a function, returns the [R,G,B] color for the given hue `h`, saturation `s`, and value `v` from the HSV colorspace.
-//   When called as a module, sets the color to the given hue `h`, saturation `s`, and value `v` from the HSV colorspace.
+//   When called as a function, returns the [R,G,B] color for the given hue `h`, saturation `s`, and value `v` from the HSV colorspace.  If you supply
+//   the `a` value then you'll get a length 4 list [R,G,B,A].  
+//   When called as a module, sets the color using the color() module to the given hue `h`, saturation `s`, and value `v` from the HSV colorspace.
 // Arguments:
 //   h = The hue, given as a value between 0 and 360.  0=red, 60=yellow, 120=green, 180=cyan, 240=blue, 300=magenta.
 //   s = The saturation, given as a value between 0 and 1.  0 = grayscale, 1 = vivid colors.  Default: 1
 //   v = The value, between 0 and 1.  0 = darkest black, 1 = bright.  Default: 1
-//   a = When called as a module, specifies the alpha channel as a value between 0 and 1.  0 = fully transparent, 1=opaque.  Default: 1
+//   a = Specifies the alpha channel as a value between 0 and 1.  0 = fully transparent, 1=opaque.  Default: 1
 // Example:
-//   HSV(h=120,s=1,v=1) sphere(d=60);
+//   hsv(h=120,s=1,v=1) sphere(d=60);
 // Example:
-//   rgb = HSV(h=270,s=0.75,v=0.9);
+//   rgb = hsv(h=270,s=0.75,v=0.9);
 //   color(rgb) cube(60, center=true);
-function HSV(h,s=1,v=1) =
+function hsv(h,s=1,v=1,a) =
     assert(s>=0 && s<=1)
     assert(v>=0 && v<=1)
+    assert(is_undef(a) || a>=0 && a<=1)
     let(
         h = posmod(h,360),
         c = v * s,
@@ -114,9 +172,10 @@ function HSV(h,s=1,v=1) =
                  : [0,0,0],
         m=v-c
     )
-    rgbprime+[m,m,m];
+    is_def(a) ? point4d(add_scalar(rgbprime,m),a)
+              : add_scalar(rgbprime,m);
 
-module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
+module hsv(h,s=1,v=1,a=1) color(hsv(h,s,v),a) children();
 
 
 

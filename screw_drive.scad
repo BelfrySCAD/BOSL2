@@ -126,13 +126,80 @@ function phillips_diam(size, depth) =
 // Section: Torx Drive
 
 
-// Function: torx_outer_diam()
+
+// Module: torx_mask()
 // Usage:
-//   diam = torx_outer_diam(size);
+//   torx_mask(size, l, [center]);
+// Description: Creates a torx bit tip.
+// Arguments:
+//   size = Torx size.
+//   l = Length of bit.
+//   center = If true, centers bit vertically.
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Examples:
+//   torx_mask(size=30, l=10, $fa=1, $fs=1);
+module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
+    anchor = get_anchor(anchor, center, BOT, BOT);
+    od = torx_diam(size);
+    attachable(anchor,spin,orient, d=od, l=l) {
+        linear_extrude(height=l, convexity=4, center=true) {
+            torx_mask2d(size);
+        }
+        children();
+    }
+}
+
+
+
+// Module: torx_mask2d()
+// Usage:
+//   torx_mask2d(size);
+// Description: Creates a torx bit 2D profile.
+// Arguments:
+//   size = Torx size.
+// Example(2D):
+//   torx_mask2d(size=30, $fa=1, $fs=1);
+module torx_mask2d(size) {
+    od = torx_diam(size);
+    id = _torx_inner_diam(size);
+    tip = _torx_tip_radius(size);
+    rounding = _torx_rounding_radius(size);
+    base = od - 2*tip;
+    $fn = quantup(segs(od/2),12);
+    difference() {
+        union() {
+            circle(d=base);
+            zrot_copies(n=2) {
+                hull() {
+                    zrot_copies(n=3) {
+                        translate([base/2,0,0]) {
+                            circle(r=tip, $fn=$fn/2);
+                        }
+                    }
+                }
+            }
+        }
+        zrot_copies(n=6) {
+            zrot(180/6) {
+                translate([id/2+rounding,0,0]) {
+                    circle(r=rounding);
+                }
+            }
+        }
+    }
+}
+
+
+// Function: torx_diam()
+// Usage:
+//   diam = torx_diam(size);
 // Description: Get the typical outer diameter of Torx profile.
 // Arguments:
 //   size = Torx size.
-function torx_outer_diam(size) = lookup(size, [
+function torx_diam(size) = lookup(size, [
     [  6,  1.75],
     [  8,  2.40],
     [ 10,  2.80],
@@ -152,13 +219,13 @@ function torx_outer_diam(size) = lookup(size, [
 ]);
  
 
-// Function: torx_inner_diam()
-// Usage:
-//   diam = torx_inner_diam(size);
-// Description: Get typical inner diameter of Torx profile.
-// Arguments:
-//   size = Torx size.
-function torx_inner_diam(size) = lookup(size, [
+/// Internal Function: torx_inner_diam()
+/// Usage:
+///   diam = torx_inner_diam(size);
+/// Description: Get typical inner diameter of Torx profile.
+/// Arguments:
+///   size = Torx size.
+function _torx_inner_diam(size) = lookup(size, [
     [  6,  1.27],
     [  8,  1.75],
     [ 10,  2.05],
@@ -204,13 +271,13 @@ function torx_depth(size) = lookup(size, [
 ]);
  
 
-// Function: torx_tip_radius()
-// Usage:
-//   rad = torx_tip_radius(size);
-// Description: Gets minor rounding radius of Torx profile.
-// Arguments:
-//   size = Torx size.
-function torx_tip_radius(size) = lookup(size, [
+/// Internal Function: torx_tip_radius()
+/// Usage:
+///   rad = torx_tip_radius(size);
+/// Description: Gets minor rounding radius of Torx profile.
+/// Arguments:
+///   size = Torx size.
+function _torx_tip_radius(size) = lookup(size, [
     [  6, 0.132],
     [  8, 0.190],
     [ 10, 0.229],
@@ -230,13 +297,13 @@ function torx_tip_radius(size) = lookup(size, [
 ]);
 
 
-// Function: torx_rounding_radius()
-// Usage:
-//   rad = torx_rounding_radius(size);
-// Description: Gets major rounding radius of Torx profile.
-// Arguments:
-//   size = Torx size.
-function torx_rounding_radius(size) = lookup(size, [
+/// Internal Function: torx_rounding_radius()
+/// Usage:
+///   rad = torx_rounding_radius(size);
+/// Description: Gets major rounding radius of Torx profile.
+/// Arguments:
+///   size = Torx size.
+function _torx_rounding_radius(size) = lookup(size, [
     [  6, 0.383],
     [  8, 0.510],
     [ 10, 0.598],
@@ -256,71 +323,6 @@ function torx_rounding_radius(size) = lookup(size, [
 ]);
 
 
-
-// Module: torx_mask2d()
-// Usage:
-//   torx_mask2d(size);
-// Description: Creates a torx bit 2D profile.
-// Arguments:
-//   size = Torx size.
-// Example(2D):
-//   torx_mask2d(size=30, $fa=1, $fs=1);
-module torx_mask2d(size) {
-    od = torx_outer_diam(size);
-    id = torx_inner_diam(size);
-    tip = torx_tip_radius(size);
-    rounding = torx_rounding_radius(size);
-    base = od - 2*tip;
-    $fn = quantup(segs(od/2),12);
-    difference() {
-        union() {
-            circle(d=base);
-            zrot_copies(n=2) {
-                hull() {
-                    zrot_copies(n=3) {
-                        translate([base/2,0,0]) {
-                            circle(r=tip, $fn=$fn/2);
-                        }
-                    }
-                }
-            }
-        }
-        zrot_copies(n=6) {
-            zrot(180/6) {
-                translate([id/2+rounding,0,0]) {
-                    circle(r=rounding);
-                }
-            }
-        }
-    }
-}
-
-
-
-// Module: torx_mask()
-// Usage:
-//   torx_mask(size, l, [center]);
-// Description: Creates a torx bit tip.
-// Arguments:
-//   size = Torx size.
-//   l = Length of bit.
-//   center = If true, centers bit vertically.
-//   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Examples:
-//   torx_mask(size=30, l=10, $fa=1, $fs=1);
-module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
-    anchor = get_anchor(anchor, center, BOT, BOT);
-    od = torx_outer_diam(size);
-    attachable(anchor,spin,orient, d=od, l=l) {
-        linear_extrude(height=l, convexity=4, center=true) {
-            torx_mask2d(size);
-        }
-        children();
-    }
-}
 
 
 // Section: Robertson/Square Drives
