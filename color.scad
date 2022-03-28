@@ -73,7 +73,7 @@ module color_this(c="default")
 // Description:
 //   Iterates the list, displaying children in different colors for each list item.  The color
 //   is set using the color() module, so this module is not compatible with {{recolor()}} or
-//   {{color_this}}.  This is useful for debugging regions or lists of paths. 
+//   {{color_this()}}.  This is useful for debugging regions or lists of paths. 
 // Arguments:
 //   list = The list of items to iterate through.
 //   stride = Consecutive colors stride around the color wheel divided into this many parts.
