@@ -1516,9 +1516,9 @@ function reorient(
 // Arguments:
 //   name = The string name of the anchor.  Lowercase.  Words separated by single dashes.  No spaces.
 //   pos = The [X,Y,Z] position of the anchor.
-//   orient = A vector pointing in the direction parts should project from the anchor position.
-//   spin = If needed, the angle to rotate the part around the direction vector.
-function named_anchor(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, spin];
+//   orient = A vector pointing in the direction parts should project from the anchor position.  Default: UP
+//   spin = If needed, the angle to rotate the part around the direction vector.  Default: 0
+function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 
 
 

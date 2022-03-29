@@ -256,7 +256,7 @@ function is_region_simple(region, eps=EPSILON) =
 //   pentagram = turtle(["move",100,"left",144], repeat=4);
 //   region = make_region(pentagram,nonzero=true);
 //   rainbow(region)stroke($item, width=1,closed=true);
-// Example(2D,NoAxes):  To crossing squares become two L-shaped components
+// Example(2D,NoAxes):  Two crossing squares become two L-shaped components
 //   region = make_region([square(10), move([5,5],square(8))]);
 //   rainbow(region)stroke($item, width=.3,closed=true);
 
