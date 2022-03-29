@@ -2993,7 +2993,7 @@ Access to the derivative smoothing parameter?
 //             (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]];
 //   aux_T=up(50);   
 //   join_prism(ellipse,base=flower,aux_T=aux_T,aux=flower,
-//              fillet=3, n=12, prism_end_T=fwd(1.7));
+//              fillet=3, n=12, prism_end_T=fwd(1.6));
 //   multmatrix(aux_T)
 //     linear_sweep(flower,height=60,center=true,orient=RIGHT);
 //   linear_sweep(flower,height=60,center=true,orient=RIGHT);
