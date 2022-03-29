@@ -1547,7 +1547,7 @@ module tube(
     assert(ir1 <= r1, "Inner radius is larger than outer radius.");
     assert(ir2 <= r2, "Inner radius is larger than outer radius.");
     sides = segs(max(r1,r2));
-    anchor = get_anchor(anchor, center, BOT, BOT);
+    anchor = get_anchor(anchor, center, BOT, CENTER);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
         zrot(realign? 180/sides : 0) {
             difference() {
