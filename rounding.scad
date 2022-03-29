@@ -2019,7 +2019,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 
 module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot, k_top, k_sides,
                      k=0.5, splinesteps=16, h, length, l, height, convexity=10, debug=false,
-                     anchor="origin",cp,spin=0, orient=UP, atype="hull")
+                     anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull")
 {
   assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
   result = rounded_prism(bottom=bottom, top=top, joint_bot=joint_bot, joint_top=joint_top, joint_sides=joint_sides,
