@@ -1500,7 +1500,7 @@ module zcyl(
 //   ---
 //   od = Outer diameter of tube.
 //   id = Inner diameter of tube.
-//   wall = horizontal thickness of tube wall. Default 0.5
+//   wall = horizontal thickness of tube wall. Default 1
 //   or1 = Outer radius of bottom of tube.  Default: value of r)
 //   or2 = Outer radius of top of tube.  Default: value of r)
 //   od1 = Outer diameter of bottom of tube.
@@ -1540,10 +1540,12 @@ module tube(
     orr2 = get_radius(r1=or2, r=or, d1=od2, d=od, dflt=undef);
     irr1 = get_radius(r1=ir1, r=ir, d1=id1, d=id, dflt=undef);
     irr2 = get_radius(r1=ir2, r=ir, d1=id2, d=id, dflt=undef);
+    wall = default(wall, 1);
     r1 = default(orr1, u_add(irr1,wall));
     r2 = default(orr2, u_add(irr2,wall));
     ir1 = default(irr1, u_sub(orr1,wall));
     ir2 = default(irr2, u_sub(orr2,wall));
+    assert(all_defined([r1, r2, ir1, ir2]), "Must specify two of inner radius/diam, outer radius/diam, and wall width.");
     assert(ir1 <= r1, "Inner radius is larger than outer radius.");
     assert(ir2 <= r2, "Inner radius is larger than outer radius.");
     sides = segs(max(r1,r2));
