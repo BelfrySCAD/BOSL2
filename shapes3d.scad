@@ -2447,14 +2447,6 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   text3d("Foobar", h=2, anchor=CENTER);
 //   text3d("Foobar", h=2, anchor=str("baseline",CENTER));
 //   text3d("Foobar", h=2, anchor=str("baseline",BOTTOM+RIGHT));
-// Example: Using line_of() distributor
-//   txt = "This is the string.";
-//   line_of(spacing=[10,-5],n=len(txt))
-//       text3d(txt[$idx], size=10, anchor=CENTER);
-// Example: Using arc_of() distributor
-//   txt = "This is the string";
-//   arc_of(r=50, n=len(txt), sa=0, ea=180)
-//       text3d(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
 module text3d(text, h=1, size=10, font="Helvetica", halign, valign, spacing=1.0, direction="ltr", language="em", script="latin", anchor="baseline[-1,0,-1]", spin=0, orient=UP) {
     no_children($children);
     dummy1 =

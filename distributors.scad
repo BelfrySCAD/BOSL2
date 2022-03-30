@@ -20,7 +20,7 @@
 //   Translates copies of all children to each given translation offset.
 //
 // Usage:
-//   move_copies(a) ...
+//   move_copies(a) children;
 //
 // Arguments:
 //   a = Array of XYZ offset vectors. Default `[[0,0,0]]`
@@ -46,15 +46,15 @@ module move_copies(a=[[0,0,0]])
 // Function&Module: line_of()
 //
 // Usage: Spread `n` copies by a given spacing
-//   line_of(spacing, [n], [p1=]) ...
+//   line_of(spacing, [n], [p1=]) children;
 // Usage: Spread copies every given spacing along the line
-//   line_of(spacing, [l=], [p1=]) ...
+//   line_of(spacing, [l=], [p1=]) children;
 // Usage: Spread `n` copies along the length of the line
-//   line_of([n=], [l=], [p1=]) ...
+//   line_of([n=], [l=], [p1=]) children;
 // Usage: Spread `n` copies along the line from `p1` to `p2`
-//   line_of([n=], [p1=], [p2=]) ...
+//   line_of([n=], [p1=], [p2=]) children;
 // Usage: Spread copies every given spacing, centered along the line from `p1` to `p2`
-//   line_of([spacing], [p1=], [p2=]) ...
+//   line_of([spacing], [p1=], [p2=]) children;
 // Usage: As a function
 //   pts = line_of([spacing], [n], [p1=]);
 //   pts = line_of([spacing], [l=], [p1=]);
@@ -155,8 +155,8 @@ function line_of(spacing, n, l, p1, p2) =
 //   Spreads out `n` copies of the children along a line on the X axis.
 //
 // Usage:
-//   xcopies(spacing, [n], [sp]) ...
-//   xcopies(l, [n], [sp]) ...
+//   xcopies(spacing, [n], [sp]) children;
+//   xcopies(l, [n], [sp]) children;
 //
 // Arguments:
 //   spacing = spacing between copies. (Default: 1.0)
@@ -195,8 +195,8 @@ module xcopies(spacing, n, l, sp)
 //   Spreads out `n` copies of the children along a line on the Y axis.
 //
 // Usage:
-//   ycopies(spacing, [n], [sp]) ...
-//   ycopies(l, [n], [sp]) ...
+//   ycopies(spacing, [n], [sp]) children;
+//   ycopies(l, [n], [sp]) children;
 //
 // Arguments:
 //   spacing = spacing between copies. (Default: 1.0)
@@ -235,8 +235,8 @@ module ycopies(spacing, n, l, sp)
 //   Spreads out `n` copies of the children along a line on the Z axis.
 //
 // Usage:
-//   zcopies(spacing, [n], [sp]) ...
-//   zcopies(l, [n], [sp]) ...
+//   zcopies(spacing, [n], [sp]) children;
+//   zcopies(l, [n], [sp]) children;
 //
 // Arguments:
 //   spacing = spacing between copies. (Default: 1.0)
@@ -292,11 +292,11 @@ module zcopies(spacing, n, l, sp)
 //   Makes a square or hexagonal grid of copies of children, with an optional masking polygon or region.  
 //
 // Usage:
-//   grid2d(spacing, size, [stagger], [scale], [inside]) ...
-//   grid2d(n, size, [stagger], [scale], [inside]) ...
-//   grid2d(spacing, n, [stagger], [scale], [inside]) ...
-//   grid2d(spacing, inside, [stagger], [scale]) ...
-//   grid2d(n, inside, [stagger], [scale]) ...
+//   grid2d(spacing, size, [stagger], [scale], [inside]) children;
+//   grid2d(n, size, [stagger], [scale], [inside]) children;
+//   grid2d(spacing, n, [stagger], [scale], [inside]) children;
+//   grid2d(spacing, inside, [stagger], [scale]) children;
+//   grid2d(n, inside, [stagger], [scale]) children;
 //
 // Arguments:
 //   size = The [X,Y] size to spread the copies over.
@@ -424,9 +424,9 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
 //   Makes a 3D grid of duplicate children.
 //
 // Usage:
-//   grid3d(n, spacing) ...
-//   grid3d(n=[Xn,Yn,Zn], spacing=[dX,dY,dZ]) ...
-//   grid3d([xa], [ya], [za]) ...
+//   grid3d(n, spacing) children;
+//   grid3d(n=[Xn,Yn,Zn], spacing=[dX,dY,dZ]) children;
+//   grid3d([xa], [ya], [za]) children;
 //
 // Arguments:
 //   xa = array or range of X-axis values to offset by. (Default: [0])
@@ -492,14 +492,15 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 //   The first (unrotated) copy will be placed at the relative starting angle `sa`.
 //
 // Usage:
-//   rot_copies(rots, [cp], [sa], [delta], [subrot]) ...
-//   rot_copies(rots, v, [cp], [sa], [delta], [subrot]) ...
-//   rot_copies(n, [v], [cp], [sa], [delta], [subrot]) ...
+//   rot_copies(rots, [cp=], [sa=], [delta=], [subrot=]) children;
+//   rot_copies(rots, v, [cp=], [sa=], [delta=], [subrot=]) children;
+//   rot_copies(n=, [v=], [cp=], [sa=], [delta=], [subrot=]) children;
 //
 // Arguments:
 //   rots = A list of [X,Y,Z] rotation angles in degrees.  If `v` is given, this will be a list of scalar angles in degrees to rotate around `v`.
 //   v = If given, this is the vector of the axis to rotate around.
 //   cp = Centerpoint to rotate around.  Default: `[0,0,0]`
+//   ---
 //   n = Optional number of evenly distributed copies, rotated around the axis.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise.  Default: 0
 //   delta = [X,Y,Z] amount to move away from cp before rotating.  Makes rings of copies.  Default: `[0,0,0]`
@@ -568,8 +569,8 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 // Module: xrot_copies()
 //
 // Usage:
-//   xrot_copies(rots, [r], [cp], [sa], [subrot]) ...
-//   xrot_copies(n, [r], [cp], [sa], [subrot]) ...
+//   xrot_copies(rots, [cp], [r=], [sa=], [subrot=]) children;
+//   xrot_copies(n=, [cp=], [r=], [sa=], [subrot=]) children;
 //
 // Description:
 //   Given an array of angles, rotates copies of the children to each of those angles around the X axis.
@@ -582,6 +583,7 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 // Arguments:
 //   rots = Optional array of rotation angles, in degrees, to make copies at.
 //   cp = Centerpoint to rotate around.
+//   --
 //   n = Optional number of evenly distributed copies to be rotated around the ring.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from Y+, when facing the origin from X+.  First unrotated copy is placed at that angle.
 //   r = Radius to move children back (Y+), away from cp, before rotating.  Makes rings of copies.
@@ -625,8 +627,8 @@ module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 // Module: yrot_copies()
 //
 // Usage:
-//   yrot_copies(rots, [r], [cp], [sa], [subrot]) ...
-//   yrot_copies(n, [r], [cp], [sa], [subrot]) ...
+//   yrot_copies(rots, [cp], [r=], [sa=], [subrot=]) children;
+//   yrot_copies(n=, [cp=], [r=], [sa=], [subrot=]) children;
 //
 // Description:
 //   Given an array of angles, rotates copies of the children to each of those angles around the Y axis.
@@ -639,6 +641,7 @@ module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 // Arguments:
 //   rots = Optional array of rotation angles, in degrees, to make copies at.
 //   cp = Centerpoint to rotate around.
+//   ---
 //   n = Optional number of evenly distributed copies to be rotated around the ring.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from X-, when facing the origin from Y+.
 //   r = Radius to move children left (X-), away from cp, before rotating.  Makes rings of copies.
@@ -682,8 +685,8 @@ module yrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 // Module: zrot_copies()
 //
 // Usage:
-//   zrot_copies(rots, [r], [cp], [sa], [subrot]) ...
-//   zrot_copies(n, [r], [cp], [sa], [subrot]) ...
+//   zrot_copies(rots, [cp], [r=], [sa=], [subrot=]) children;
+//   zrot_copies(n=, [cp=], [r=], [sa=], [subrot=]) children;
 //
 // Description:
 //   Given an array of angles, rotates copies of the children to each of those angles around the Z axis.
@@ -696,6 +699,7 @@ module yrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 // Arguments:
 //   rots = Optional array of rotation angles, in degrees, to make copies at.
 //   cp = Centerpoint to rotate around.  Default: [0,0,0]
+//   ---
 //   n = Optional number of evenly distributed copies to be rotated around the ring.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from X+, when facing the origin from Z+.  Default: 0
 //   r = Radius to move children right (X+), away from cp, before rotating.  Makes rings of copies.  Default: 0
@@ -742,12 +746,13 @@ module zrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //   Evenly distributes n duplicate children around an ovoid arc on the XY plane.
 //
 // Usage:
-//   arc_of(r|d, n, [sa], [ea], [rot]
-//   arc_of(rx|dx, ry|dy, n, [sa], [ea], [rot]
+//   arc_of(n, r|d=, [sa=], [ea=], [rot=]) children;
+//   arc_of(n, rx=|dx=, ry=|dy=, [sa=], [ea=], [rot=]) children;
 //
 // Arguments:
 //   n = number of copies to distribute around the circle. (Default: 6)
 //   r = radius of circle (Default: 1)
+//   ---
 //   rx = radius of ellipse on X axis. Used instead of r.
 //   ry = radius of ellipse on Y axis. Used instead of r.
 //   d = diameter of circle. (Default: 2)
@@ -777,9 +782,14 @@ module zrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 // Example:
 //   #cube(size=[10,3,3],center=true);
 //   arc_of(rx=20, ry=10, n=8) cube(size=[10,3,3],center=true);
+// Example(2D): Using `$idx` to alternate shapes
+//   arc_of(r=50, n=19, sa=0, ea=180)
+//       if ($idx % 2 == 0) rect(6);
+//       else circle(d=6);
 module arc_of(
     n=6,
-    r=undef, rx=undef, ry=undef,
+    r=undef,
+    rx=undef, ry=undef,
     d=undef, dx=undef, dy=undef,
     sa=0, ea=360,
     rot=true
@@ -809,12 +819,13 @@ module arc_of(
 //   Spreads children semi-evenly over the surface of a sphere.
 //
 // Usage:
-//   ovoid_spread(r|d, n, [cone_ang], [scale], [perp]) ...
+//   ovoid_spread(n, r|d=, [cone_ang=], [scale=], [perp=]) children;
 //
 // Arguments:
-//   r = Radius of the sphere to distribute over
-//   d = Diameter of the sphere to distribute over
 //   n = How many copies to evenly spread over the surface.
+//   r = Radius of the sphere to distribute over
+//   ---
+//   d = Diameter of the sphere to distribute over
 //   cone_ang = Angle of the cone, in degrees, to limit how much of the sphere gets covered.  For full sphere coverage, use 180.  Measured pre-scaling.  Default: 180
 //   scale = The [X,Y,Z] scaling factors to reshape the sphere being covered.
 //   perp = If true, rotate children to be perpendicular to the sphere surface.  Default: true
@@ -834,7 +845,7 @@ module arc_of(
 //   ovoid_spread(n=500, d=100, cone_ang=180)
 //       color(unit(point3d(v_abs($pos))))
 //           cylinder(d=8, h=10, center=false);
-module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=true)
+module ovoid_spread(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp=true)
 {
     r = get_radius(r=r, d=d, dflt=50);
     cnt = ceil(n / (cone_ang/180));
@@ -873,13 +884,15 @@ module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=tr
 //   If you specify `sp` then the copies will start at `sp`.
 //
 // Usage:
-//   path_spread(path), [n], [spacing], [sp], [rotate_children], [closed]) ...
+//   path_spread(path, [n], [spacing], [sp], [rotate_children], [closed]) children;
 //
 // Arguments:
-//   path = the path where children are placed
+//   path = path or 1-region where children are placed
 //   n = number of copies
 //   spacing = space between copies
 //   sp = if given, copies will start distance sp from the path start and spread beyond that point
+//   rotate_children = if true, rotate children to line up with curve normal.  Default: true
+//   closed = If true treat path as a closed curve.  Default: false
 //
 // Side Effects:
 //   `$pos` is set to the center of each copy
@@ -947,8 +960,11 @@ module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=tr
 //      color("blue") cyl(h=3,r=.2, anchor=BOTTOM);       // z-aligned cylinder
 //      color("red") xcyl(h=10,r=.2, anchor=FRONT+LEFT);  // x-aligned cylinder
 //   }
-module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=false)
+module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed)
 {
+    is_1reg = is_1region(path);
+    path = is_1reg ? path[0] : path;
+    closed = default(closed, is_1reg);
     length = path_length(path,closed);
     distances =
         is_def(sp)? (   // Start point given
@@ -1003,7 +1019,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 //   Makes a copy of the children, mirrored across the given plane.
 //
 // Usage:
-//   mirror_copy(v, [cp], [offset]) ...
+//   mirror_copy(v, [cp], [offset]) children;
 //
 // Arguments:
 //   v = The normal vector of the plane to mirror across.
@@ -1057,7 +1073,7 @@ module mirror_copy(v=[0,0,1], offset=0, cp)
 //   Makes a copy of the children, mirrored across the X axis.
 //
 // Usage:
-//   xflip_copy([x], [offset]) ...
+//   xflip_copy([offset], [x]) children;
 //
 // Arguments:
 //   offset = Distance to offset children right, before copying.
@@ -1090,7 +1106,7 @@ module xflip_copy(offset=0, x=0)
 //   Makes a copy of the children, mirrored across the Y axis.
 //
 // Usage:
-//   yflip_copy([y], [offset]) ...
+//   yflip_copy([offset], [y]) children;
 //
 // Arguments:
 //   offset = Distance to offset children back, before copying.
@@ -1123,7 +1139,7 @@ module yflip_copy(offset=0, y=0)
 //   Makes a copy of the children, mirrored across the Z axis.
 //
 // Usage:
-//   zflip_copy([z], [offset]) ...
+//   zflip_copy([offset], [z]) children;
 //
 // Arguments:
 //   offset = Distance to offset children up, before copying.
@@ -1162,13 +1178,13 @@ module zflip_copy(offset=0, z=0)
 //   where you only really care about the spacing between them.
 //
 // Usage:
-//   distribute(spacing, dir, [sizes]) ...
-//   distribute(l, dir, [sizes]) ...
+//   distribute(spacing, sizes, dir) children;
+//   distribute(l=, [sizes=], [dir=]) children;
 //
 // Arguments:
 //   spacing = Spacing to add between each child. (Default: 10.0)
 //   sizes = Array containing how much space each child will need.
-//   dir = Vector direction to distribute copies along.
+//   dir = Vector direction to distribute copies along.  Default: RIGHT
 //   l = Length to distribute copies along.
 //
 // Side Effects:
@@ -1207,8 +1223,8 @@ module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
 //   where you only really care about the spacing between them.
 //
 // Usage:
-//   xdistribute(spacing, [sizes]) ...
-//   xdistribute(l, [sizes]) ...
+//   xdistribute(spacing, [sizes]) children;
+//   xdistribute(l=, [sizes=]) children;
 //
 // Arguments:
 //   spacing = spacing between each child. (Default: 10.0)
@@ -1252,8 +1268,8 @@ module xdistribute(spacing=10, sizes=undef, l=undef)
 //   where you only really care about the spacing between them.
 //
 // Usage:
-//   ydistribute(spacing, [sizes])
-//   ydistribute(l, [sizes])
+//   ydistribute(spacing, [sizes]) children;
+//   ydistribute(l=, [sizes=]) children;
 //
 // Arguments:
 //   spacing = spacing between each child. (Default: 10.0)
@@ -1297,8 +1313,8 @@ module ydistribute(spacing=10, sizes=undef, l=undef)
 //   where you only really care about the spacing between them.
 //
 // Usage:
-//   zdistribute(spacing, [sizes])
-//   zdistribute(l, [sizes])
+//   zdistribute(spacing, [sizes]) children;
+//   zdistribute(l=, [sizes=]) children;
 //
 // Arguments:
 //   spacing = spacing between each child. (Default: 10.0)

@@ -340,12 +340,13 @@ include <structs.scad>
 // Example(2D): Two passes to apply chamfers first, and then round the unchamfered corners.  Chamfers always add one point, so it's not hard to keep track of the vertices
 //   $fn=32;
 //   shape = square(10);
-//   chamfered = round_corners(shape, method="chamfer", cut=[2,0,2,0]);
+//   chamfered = round_corners(shape, method="chamfer",
+//                             cut=[2,0,2,0]);
 //   rounded = round_corners(chamfered, 
-//              cut = [0, 0,    // first original veretex, chamfered
-//                     1.5,     // second original vertex
-//                     0, 0,    // third original vertex, chamfered
-//                     2.5]);   // last original vertex
+//              cut = [0, 0,  // 1st original vertex, chamfered
+//                     1.5,   // 2nd original vertex
+//                     0, 0,  // 3rd original vertex, chamfered
+//                     2.5]); // 4th original vertex
 //   polygon(rounded);
 // Example(2D): Another example of mixing chamfers and roundings with two passes
 //   path = star(5, step=2, d=100);
@@ -2347,7 +2348,7 @@ function _circle_mask(r) =
 //   rot(-90) {
 //     $fn=128;
 //     difference(){
-//       tube(or=r, wall=2, h=45);
+//       tube(or=r, wall=2, h=35, anchor=BOT);
 //       bent_cutout_mask(r-1, 2.1, back(5,p=square([18,18])));
 //     }
 //   }
@@ -2356,7 +2357,7 @@ function _circle_mask(r) =
 //   rot(-90) {
 //     $fn=128;
 //     difference(){
-//       tube(or=r, wall=2, h=45);
+//       tube(or=r, wall=2, h=35, anchor=BOT);
 //       bent_cutout_mask(r-1, 2.1,
 //         subdivide_path(back(5,p=square([18,18])),64,closed=true));
 //     }
@@ -2366,7 +2367,7 @@ function _circle_mask(r) =
 //   rot(-90) {
 //     $fn=128;
 //     difference(){
-//       tube(or=r, wall=2, h=45);
+//       tube(or=r, wall=2, h=35, anchor=BOT);
 //       bent_cutout_mask(r-1, 2.1,
 //         apply(back(15),
 //           subdivide_path(
