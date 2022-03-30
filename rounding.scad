@@ -1707,7 +1707,7 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 
 // Module: convex_offset_extrude()
 // Usage: Basic usage.  See below for full options
-//   convex_offset_extrude(height, [bottom], [top], ...) {2D children};
+//   convex_offset_extrude(height, [bottom], [top], ...) 2D-children;
 // Description:
 //   Extrudes 2d children with layers formed from the convex hull of the offset of each child according to a sequence of offset values.
 //   Like `offset_sweep` this module can use built-in offset profiles to provide treatments such as roundovers or chamfers but unlike `offset_sweep()` it
@@ -1812,6 +1812,7 @@ module convex_offset_extrude(
         joint=undef, k=0.75, angle=45,
         convexity=10, thickness = 1/1024
 ) {
+        req_children($children);  
         argspec = [
                 ["for", ""],
                 ["r",r],

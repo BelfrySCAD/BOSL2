@@ -731,7 +731,7 @@ function segs(r) =
 // Usage:
 //   no_children($children);
 // Topics: Error Checking
-// See Also: no_function(), no_module()
+// See Also: no_function(), no_module(), req_children()
 // Description:
 //   Assert that the calling module does not support children.  Prints an error message to this effect and fails if children are present,
 //   as indicated by its argument.
@@ -745,6 +745,28 @@ module no_children(count) {
   assert($children==0, "Module no_children() does not support child modules");
   if ($parent_modules>0) {
       assert(count==0, str("Module ",parent_module(1),"() does not support child modules"));
+  }
+}
+
+
+// Module: req_children()
+// Usage:
+//   req_children($children);
+// Topics: Error Checking
+// See Also: no_function(), no_module()
+// Description:
+//   Assert that the calling module requires children.  Prints an error message and fails if no
+//   children are present as indicated by its argument.
+// Arguments:
+//   $children = number of children the module has.  
+// Example:
+//   module foo() {
+//       req_children($children);
+//   }
+module req_children(count) {
+  assert($children==0, "Module no_children() does not support child modules");
+  if ($parent_modules>0) {
+      assert(count>0, str("Module ",parent_module(1),"() requires children"));
   }
 }
 

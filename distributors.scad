@@ -34,6 +34,7 @@
 //   move_copies([[-25,-25,0], [25,-25,0], [0,0,50], [0,25,0]]) sphere(r=10);
 module move_copies(a=[[0,0,0]])
 {
+    req_children($children);
     assert(is_list(a));
     for ($idx = idx(a)) {
         $pos = a[$idx];
@@ -117,6 +118,7 @@ module move_copies(a=[[0,0,0]])
 //   move_copies(pts) circle(d=2);
 module line_of(spacing, n, l, p1, p2)
 {
+    req_children($children);
     pts = line_of(spacing=spacing, n=n, l=l, p1=p1, p2=p2);
     for (i=idx(pts)) {
         $idx = i;
@@ -180,6 +182,7 @@ function line_of(spacing, n, l, p1, p2) =
 //   }
 module xcopies(spacing, n, l, sp)
 {
+    req_children($children);
     sp = is_finite(sp)? [sp,0,0] : sp;
     line_of(
         l=u_mul(l,RIGHT),
@@ -220,6 +223,7 @@ module xcopies(spacing, n, l, sp)
 //   }
 module ycopies(spacing, n, l, sp)
 {
+    req_children($children);  
     sp = is_finite(sp)? [0,sp,0] : sp;
     line_of(
         l=u_mul(l,BACK),
@@ -274,6 +278,7 @@ module ycopies(spacing, n, l, sp)
 //               sphere(d=s);
 module zcopies(spacing, n, l, sp)
 {
+    req_children($children);  
     sp = is_finite(sp)? [0,0,sp] : sp;
     line_of(
         l=u_mul(l,UP),
@@ -343,7 +348,7 @@ module zcopies(spacing, n, l, sp)
 //   }
 module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
 {
-    
+    req_children($children);    
     assert(in_list(stagger, [false, true, "alt"]));
     bounds = is_undef(inside)? undef :
         is_path(inside)? pointlist_bounds(inside) :
@@ -452,6 +457,7 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
 //   grid3d(n=[10, 10, 10], spacing=50) color($idx/9) cube(50, center=true);
 module grid3d(spacing, n, xa=[0], ya=[0], za=[0])
 {
+    req_children($children);
     n = scalar_vec3(n, 1);
     spacing = scalar_vec3(spacing, undef);
     if (!is_undef(n) && !is_undef(spacing)) {
@@ -541,6 +547,7 @@ module grid3d(spacing, n, xa=[0], ya=[0], za=[0])
 //   color("red",0.333) yrot(90) cylinder(h=20, r1=5, r2=0);
 module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[0,0,0], subrot=true)
 {
+    req_children($children);  
     sang = sa + offset;
     angs = !is_undef(n)?
         (n<=0? [] : [for (i=[0:1:n-1]) i/n*360+sang]) :
@@ -620,6 +627,7 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 //   color("red",0.333) xrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
 module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 {
+    req_children($children);  
     rot_copies(rots=rots, v=RIGHT, cp=cp, n=n, sa=sa, delta=[0, r, 0], subrot=subrot) children();
 }
 
@@ -678,6 +686,7 @@ module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //   color("red",0.333) yrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
 module yrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 {
+    req_children($children);  
     rot_copies(rots=rots, v=BACK, cp=cp, n=n, sa=sa, delta=[-r, 0, 0], subrot=subrot) children();
 }
 
@@ -794,6 +803,7 @@ module arc_of(
     sa=0, ea=360,
     rot=true
 ) {
+    req_children($children);  
     rx = get_radius(r1=rx, r=r, d1=dx, d=d, dflt=1);
     ry = get_radius(r1=ry, r=r, d1=dy, d=d, dflt=1);
     sa = posmod(sa, 360);
@@ -847,6 +857,7 @@ module arc_of(
 //           cylinder(d=8, h=10, center=false);
 module ovoid_spread(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp=true)
 {
+    req_children($children);  
     r = get_radius(r=r, d=d, dflt=50);
     cnt = ceil(n / (cone_ang/180));
 
@@ -962,6 +973,7 @@ module ovoid_spread(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp=tr
 //   }
 module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed)
 {
+    req_children($children);  
     is_1reg = is_1region(path);
     path = is_1reg ? path[0] : path;
     closed = default(closed, is_1reg);
@@ -1043,6 +1055,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed)
 //   color("blue",0.25) translate([0,-5,-5]) rot(from=UP, to=BACK+UP) cube([15,15,0.01], center=true);
 module mirror_copy(v=[0,0,1], offset=0, cp)
 {
+    req_children($children);  
     cp = is_vector(v,4)? plane_normal(v) * v[3] :
         is_vector(cp)? cp :
         is_num(cp)? cp*unit(v) :
@@ -1096,6 +1109,7 @@ module mirror_copy(v=[0,0,1], offset=0, cp)
 //   color("blue",0.25) left(5) cube([0.01,15,15], center=true);
 module xflip_copy(offset=0, x=0)
 {
+    req_children($children);  
     mirror_copy(v=[1,0,0], offset=offset, cp=[x,0,0]) children();
 }
 
@@ -1129,6 +1143,7 @@ module xflip_copy(offset=0, x=0)
 //   color("blue",0.25) fwd(5) cube([15,0.01,15], center=true);
 module yflip_copy(offset=0, y=0)
 {
+    req_children($children);
     mirror_copy(v=[0,1,0], offset=offset, cp=[0,y,0]) children();
 }
 
@@ -1162,6 +1177,7 @@ module yflip_copy(offset=0, y=0)
 //   color("blue",0.25) down(5) cube([15,15,0.01], center=true);
 module zflip_copy(offset=0, z=0)
 {
+    req_children($children);  
     mirror_copy(v=[0,0,1], offset=offset, cp=[0,0,z]) children();
 }
 
@@ -1199,6 +1215,7 @@ module zflip_copy(offset=0, z=0)
 //   }
 module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
 {
+    req_children($children);  
     gaps = ($children < 2)? [0] :
         !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
         [for (i=[0:1:$children-2]) 0];
@@ -1243,6 +1260,7 @@ module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
 //   }
 module xdistribute(spacing=10, sizes=undef, l=undef)
 {
+    req_children($children);  
     dir = RIGHT;
     gaps = ($children < 2)? [0] :
         !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
@@ -1288,6 +1306,7 @@ module xdistribute(spacing=10, sizes=undef, l=undef)
 //   }
 module ydistribute(spacing=10, sizes=undef, l=undef)
 {
+    req_children($children);  
     dir = BACK;
     gaps = ($children < 2)? [0] :
         !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
@@ -1333,6 +1352,7 @@ module ydistribute(spacing=10, sizes=undef, l=undef)
 //   }
 module zdistribute(spacing=10, sizes=undef, l=undef)
 {
+    req_children($children);  
     dir = UP;
     gaps = ($children < 2)? [0] :
         !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
