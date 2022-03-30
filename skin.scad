@@ -504,7 +504,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 
 // Function&Module: linear_sweep()
 // Usage:
-//   linear_sweep(region, height, [center], [slices], [twist], [scale], [style], [convexity]) {attachments};
+//   linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [convexity=]) {attachments};
 // Description:
 //   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or polygon.
 //   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
@@ -518,6 +518,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 // Arguments:
 //   region = The 2D [Region](regions.scad) or polygon that is to be extruded.
 //   height = The height to extrude the region.  Default: 1
+//   ---
 //   center = If true, the created polyhedron will be vertically centered.  If false, it will be extruded upwards from the XY plane.  Default: `false`
 //   slices = The number of slices to divide the shape into along the Z axis, to allow refinement of detail, especially when working with a twist.  Default: `twist/5`
 //   maxseg = If given, then any long segments of the region will be subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
@@ -622,7 +623,7 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
 
 // Function&Module: spiral_sweep()
 // Usage:
-//   spiral_sweep(poly, h, r, turns, [higbee], [center], [r1], [r2], [d], [d1], [d2], [higbee1], [higbee2], [internal], [anchor], [spin], [orient]);
+//   spiral_sweep(poly, h, r, turns, [higbee=], [center=], [r1=], [r2=], [d=], [d1=], [d2=], [higbee1=], [higbee2=], [internal=], [anchor=], [spin=], [orient=]){attachments};
 //   vnf = spiral_sweep(poly, h, r, turns, ...);
 // Description:
 //   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a 3D spiral path
@@ -1574,7 +1575,7 @@ function _smooth(data,len,closed=false,angle=false) =
 
 // Function: rot_resample()
 // Usage:
-//   rlist = rot_resample(rotlist, n, [method], [twist], [scale], [smoothlen], [long], [turns], [closed])
+//   rlist = rot_resample(rotlist, n, [method=], [twist=], [scale=], [smoothlen=], [long=], [turns=], [closed=])
 // Description:
 //   Takes as input a list of rotation matrices in 3d.  Produces as output a resampled
 //   list of rotation operators (4x4 matrixes) suitable for use with sweep().  You can optionally apply twist to
