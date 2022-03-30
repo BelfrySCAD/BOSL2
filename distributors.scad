@@ -292,16 +292,16 @@ module zcopies(spacing, n, l, sp)
 //   Makes a square or hexagonal grid of copies of children, with an optional masking polygon or region.  
 //
 // Usage:
-//   grid2d(spacing, size, [stagger], [scale], [inside]) children;
-//   grid2d(n, size, [stagger], [scale], [inside]) children;
-//   grid2d(spacing, n, [stagger], [scale], [inside]) children;
-//   grid2d(spacing, inside, [stagger], [scale]) children;
-//   grid2d(n, inside, [stagger], [scale]) children;
+//   grid2d(spacing, size=, [stagger=], [scale=], [inside=]) children;
+//   grid2d(n=, size=, [stagger=], [scale=], [inside=]) children;
+//   grid2d(spacing, [n], [stagger=], [scale=], [inside=]) children;
+//   grid2d(n=, inside=, [stagger], [scale]) children;
 //
 // Arguments:
-//   size = The [X,Y] size to spread the copies over.
 //   spacing = Distance between copies in [X,Y] or scalar distance.
 //   n = How many columns and rows of copies to make.  Can be given as `[COLS,ROWS]`, or just as a scalar that specifies both.  If staggered, count both staggered and unstaggered columns and rows.  Default: 2 (3 if staggered)
+//   size = The [X,Y] size to spread the copies over.
+//   ---
 //   stagger = If true, make a staggered (hexagonal) grid.  If false, make square grid.  If `"alt"`, makes alternate staggered pattern.  Default: false
 //   inside = If given a list of polygon points, or a region, only creates copies whose center would be inside the polygon or region.  Polygon can be concave and/or self crossing.
 //   nonzero = If inside is set to a polygon with self-crossings then use the nonzero method for deciding if points are in the polygon.  Default: false
@@ -424,16 +424,16 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
 //   Makes a 3D grid of duplicate children.
 //
 // Usage:
-//   grid3d(n, spacing) children;
-//   grid3d(n=[Xn,Yn,Zn], spacing=[dX,dY,dZ]) children;
-//   grid3d([xa], [ya], [za]) children;
+//   grid3d(spacing,n) children;
+//   grid3d(spacing=[dX,dY,dZ], n=[Xn,Yn,Zn]) children;
+//   grid3d([xa=], [ya=], [za=]) children;
 //
 // Arguments:
+//   spacing = spacing of copies per axis. Use with `n`.
+//   n = Optional number of copies to have per axis.
 //   xa = array or range of X-axis values to offset by. (Default: [0])
 //   ya = array or range of Y-axis values to offset by. (Default: [0])
 //   za = array or range of Z-axis values to offset by. (Default: [0])
-//   n = Optional number of copies to have per axis.
-//   spacing = spacing of copies per axis. Use with `n`.
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -450,7 +450,7 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
 //   grid3d(n=[3, 4], spacing=[80, 60]) sphere(r=10);
 // Examples:
 //   grid3d(n=[10, 10, 10], spacing=50) color($idx/9) cube(50, center=true);
-module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
+module grid3d(spacing, n, xa=[0], ya=[0], za=[0])
 {
     n = scalar_vec3(n, 1);
     spacing = scalar_vec3(spacing, undef);
