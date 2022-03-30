@@ -2568,19 +2568,20 @@ function _cut_interp(pathcut, path, data) =
 //   top = direction or list of directions pointing toward the top of the text
 //   reverse = reverse the letters if true.  Not allowed for 2D path.  Default: false
 //   textmetrics = if set to true and lettersize is not given then use the experimental textmetrics feature.  You must be running a dev snapshot that includes this feature and have the feature turned on in your preferences.  Default: false
-// Example:  The examples use Courier, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder. 
+//   kern = scalar or array giving size adjustments for each letter.  Default: 0
+// Example(3D,NoScales):  The examples use Courier, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder. 
 //   path = path3d(arc(100, r=25, angle=[245, 370]));
 //   color("red")stroke(path, width=.3);
 //   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2);
-// Example: By setting the normal to UP we can get text that lies flat, for writing around the edge of a disk:
+// Example(3D,NoScales): By setting the normal to UP we can get text that lies flat, for writing around the edge of a disk:
 //   path = path3d(arc(100, r=25, angle=[245, 370]));
 //   color("red")stroke(path, width=.3);
 //   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, normal=UP);
-// Example:  If we want text that reads from the other side we can use reverse.  Note we have to reverse the direction of the path and also set the reverse option.  
+// Example(3D,NoScales):  If we want text that reads from the other side we can use reverse.  Note we have to reverse the direction of the path and also set the reverse option.  
 //   path = reverse(path3d(arc(100, r=25, angle=[65, 190])));
 //   color("red")stroke(path, width=.3);
 //   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, reverse=true);
-// Example: text debossed onto a cylinder in a spiral.  The text is 1 unit deep because it is half in, half out. 
+// Example(3D,Med,NoScales): text debossed onto a cylinder in a spiral.  The text is 1 unit deep because it is half in, half out. 
 //   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
 //   L = 5*len(text);
 //   maxang = 360*L/(PI*50);
@@ -2589,22 +2590,22 @@ function _cut_interp(pathcut, path, data) =
 //     cyl(d=50, l=50, $fn=120);
 //     path_text(spiral, text, size=5, lettersize=5/1.2, font="Courier", thickness=2);
 //   }
-// Example: Same example but text embossed.  Make sure you have enough depth for the letters to fully overlap the object. 
+// Example(3D,Med,NoScales): Same example but text embossed.  Make sure you have enough depth for the letters to fully overlap the object. 
 //   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
 //   L = 5*len(text);
 //   maxang = 360*L/(PI*50);
 //   spiral = [for(a=[0:1:maxang]) [25*cos(a), 25*sin(a), 10-30/maxang*a]];
 //   cyl(d=50, l=50, $fn=120);
 //   path_text(spiral, text, size=5, lettersize=5/1.2, font="Courier", thickness=2);
-// Example: Here the text baseline sits on the path.  (Note the default orientation makes text readable from below, so we specify the normal.)
+// Example(3D,NoScales): Here the text baseline sits on the path.  (Note the default orientation makes text readable from below, so we specify the normal.)
 //   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
 //   color("red")stroke(path,width=.2);
 //   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Courier", normal=FRONT);
-// Example: If we use top to orient the text upward, the text baseline is no longer aligned with the path. 
+// Example(3D,NoScales): If we use top to orient the text upward, the text baseline is no longer aligned with the path. 
 //   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
 //   color("red")stroke(path,width=.2);
 //   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Courier", top=UP);
-// Example: This sine wave wrapped around the cylinder has a twisting normal that produces wild letter layout.  We fix it with a custom normal which is different at every path point. 
+// Example(3D,Med,NoScales): This sine wave wrapped around the cylinder has a twisting normal that produces wild letter layout.  We fix it with a custom normal which is different at every path point. 
 //   path = [for(theta = [0:360]) [25*cos(theta), 25*sin(theta), 4*cos(theta*4)]];
 //   normal = [for(theta = [0:360]) [cos(theta), sin(theta),0]];
 //   zrot(-120)
@@ -2612,19 +2613,25 @@ function _cut_interp(pathcut, path, data) =
 //     cyl(r=25, h=20, $fn=120);
 //     path_text(path, "A sine wave wiggles", font="Courier", lettersize=5/1.2, size=5, normal=normal);
 //   }
-// Example: The path center of curvature changes, and the text flips.  
+// Example(3D,Med,NoScales): The path center of curvature changes, and the text flips.  
 //   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
 //   color("red")stroke(path,width=.2);
 //   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier", thickness=2);
-// Example: We can fix it with top:
+// Example(3D,Med,NoScales): We can fix it with top:
 //   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
 //   color("red")stroke(path,width=.2);
 //   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier", thickness=2, top=UP);
-// Example(2D): With a 2D path instead of 3D there's no ambiguity about direction and it works by default:
+// Example(2D,NoScales): With a 2D path instead of 3D there's no ambiguity about direction and it works by default:
 //   path =  zrot(-120,p=concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180]))));
 //   color("red")stroke(path,width=.2);
 //   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier");
-module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false)
+// Example(3D,NoScales): The kern parameter lets you adjust the letter spacing either with a uniform value for each letter, or with an array to make adjustments throughout the text.  Here we show a case where adding some extra space gives a better look in a tight circle.  When textmetrics are off, `lettersize` can do this job, but with textmetrics, you'll need to use `kern` to make adjustments relative to the text metric sizes.
+//   path = path3d(arc(100, r=12, angle=[150, 450]));
+//   color("red")stroke(path, width=.3);
+//   kern = [1,1.2,1,1,.3,-.2,1,0,.8,1,1.1,1];
+//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, kern=kern, normal=UP);
+
+module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false, kern=0)
 {
   dummy2=assert(is_path(path,[2,3]),"Must supply a 2d or 3d path")
          assert(num_defined([normal,top])<=1, "Cannot define both \"normal\" and \"top\"");
@@ -2647,10 +2654,14 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
          : is_def(top) ? top
          : undef;
 
-  lsize = is_def(lettersize) ? force_list(lettersize, len(text))
+  kern = force_list(kern, len(text));
+  dummy3 = assert(is_list(kern) && len(kern)==len(text), "kern must be a scalar or list whose length is len(text)");
+  
+  lsize = kern + (
+          is_def(lettersize) ? force_list(lettersize, len(text))
         : textmetrics ? [for(letter=text) let(t=textmetrics(letter, font=font, size=size)) t.advance[0]]
-        : assert(false, "textmetrics disabled: Must specify letter size");
-
+        : assert(false, "textmetrics disabled: Must specify letter size")
+  );
   textlength = sum(lsize);
   dummy1 = assert(textlength<=path_length(path),"Path is too short for the text");
 

@@ -293,7 +293,7 @@ include <structs.scad>
 //   // Construct a square spiral path in 3D
 //   $fn=36;
 //   square = [[0,0],[1,0],[1,1],[0,1]];
-//   spiral = flatten(repeat(concat(square,reverse(square)),5));  // Squares repeat 10 times, forward and backward
+//   spiral = flatten(repeat(concat(square,reverse(square)),5));  // Squares repeat 10x, forward and backward
 //   squareind = [for(i=[0:9]) each [i,i,i,i]];                   // Index of the square for each point
 //   z = count(40)*.2+squareind;
 //   path3d = hstack(spiral,z);                                   // 3D spiral
@@ -650,7 +650,9 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   stroke(smooth_path(square(4), size=4, closed=true),
 //          closed=true,width=.1);
 // Example(2D): You can alter the shape of the curve by specifying your own arbitrary tangent values
-//   polygon(smooth_path(square(4),tangents=1.25*[[-2,-1], [-4,1], [1,2], [6,-1]],size=0.4,closed=true));
+//   polygon(smooth_path(square(4),
+//           tangents=1.25*[[-2,-1], [-4,1], [1,2], [6,-1]],
+//           size=0.4,closed=true));
 // Example(2D): Or you can give a different size for each segment
 //   polygon(smooth_path(square(4),size = [.4, .05, 1, .3],
 //                       closed=true));
@@ -952,7 +954,8 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   xdistribute(spacing=5){
 //     offset_stroke(sharppath,closed=true, $fn=16);
 //     offset_stroke(sharppath, rounded=false, closed=true);
-//     offset_stroke(sharppath, rounded=false, chamfer=true, closed=true);
+//     offset_stroke(sharppath, rounded=false, chamfer=true,
+//                   closed=true);
 //   }
 // Example(2D):  The left stroke uses flat ends with a relative angle of zero.  The right hand one uses flat ends with an absolute angle of zero, so the ends are parallel to the x-axis.
 //   path = [[0,0],[6,2],[9,7],[8,10]];
@@ -975,18 +978,24 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   $fn=36;
 //   arc = arc(points=[[1,1],[3,4],[6,3]],n=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];
-//   offset_stroke(path, width=2, rounded=false,start=os_round(angle=-20, cut=0.4,k=.9), end=os_round(angle=-35, cut=0.4,k=.9));
-//   color("red")down(.1)offset_stroke(path, width=2, rounded=false,start=os_flat(-20), end=os_flat(-35));
+//   offset_stroke(path, width=2, rounded=false,start=os_round(angle=-20, cut=0.4,k=.9),
+//                                              end=os_round(angle=-35, cut=0.4,k=.9));
+//   color("red")down(.1)offset_stroke(path, width=2, rounded=false,start=os_flat(-20),
+//                                                                  end=os_flat(-35));
 //   right(9){
-//     offset_stroke(arc, width=2, rounded=false, start=os_round(cut=[.3,.6],angle=-45), end=os_round(angle=20,cut=[.6,0]));
-//     color("red")down(.1)offset_stroke(arc, width=2, rounded=false, start=os_flat(-45), end=os_flat(20));
+//     offset_stroke(arc, width=2, rounded=false, start=os_round(cut=[.3,.6],angle=-45),
+//                                                end=os_round(angle=20,cut=[.6,0]));
+//     color("red")down(.1)offset_stroke(arc, width=2, rounded=false, start=os_flat(-45),
+//                                                                    end=os_flat(20));
 //   }
 // Example(2D):  Negative cut values produce a flaring end.  Note how the absolute angle aligns the ends of the first example withi the axes.  In the second example positive and negative cut values are combined.  Note also that very different cuts are needed at the start end to produce a similar looking flare.
 //   arc = arc(points=[[1,1],[3,4],[6,3]],n=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];
-//   offset_stroke(path, width=2, rounded=false,start=os_round(cut=-1, abs_angle=90), end=os_round(cut=-0.5, abs_angle=0),$fn=36);
+//   offset_stroke(path, width=2, rounded=false,start=os_round(cut=-1, abs_angle=90),
+//                                              end=os_round(cut=-0.5, abs_angle=0),$fn=36);
 //   right(10)
-//      offset_stroke(arc, width=2, rounded=false, start=os_round(cut=[-.75,-.2], angle=-45), end=os_round(cut=[-.2,.2], angle=20),$fn=36);
+//      offset_stroke(arc, width=2, rounded=false, start=os_round(cut=[-.75,-.2], angle=-45),
+//                                                 end=os_round(cut=[-.2,.2], angle=20),$fn=36);
 // Example(2D):  Setting the width to a vector allows you to offset the stroke.  Here with successive increasing offsets we create a set of parallel strokes
 //   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
 //   for(i=[0:.25:2])
@@ -997,14 +1006,18 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //     offset_stroke(path, rounded=true,width = [i,i+.08], $fn=36);
 // Example(2D):  In this example a spurious triangle appears.  This results from overly enthusiastic validity checking.  Turning validity checking off fixes it in this case.
 //   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
-//   offset_stroke(path, check_valid=true,rounded=false,width = [1.4, 1.5]);
+//   offset_stroke(path, check_valid=true,rounded=false,
+//                 width = [1.4, 1.5]);
 //   right(2)
-//     offset_stroke(path, check_valid=false,rounded=false,width = [1.4, 1.5]);
+//     offset_stroke(path, check_valid=false,rounded=false,
+//                   width = [1.4, 1.5]);
 // Example(2D):  But in this case, disabling the validity check produces an invalid result.
 //   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
-//   offset_stroke(path, check_valid=true,rounded=false,width = [1.9, 2]);
+//   offset_stroke(path, check_valid=true,rounded=false,
+//                 width = [1.9, 2]);
 //   translate([1,-0.25])
-//     offset_stroke(path, check_valid=false,rounded=false,width = [1.9, 2]);
+//     offset_stroke(path, check_valid=false,rounded=false,
+//                   width = [1.9, 2]);
 // Example(2D): Self-intersecting paths are handled differently than with the `stroke()` module.
 //   $fn=16;
 //   path = turtle(["move",10,"left",144], repeat=4);
@@ -1350,15 +1363,17 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   rsquare = round_corners(square, method="smooth", cut=0.1, k=0.7, $fn=36);
 //   end_spec = os_smooth(cut=0.1, k=0.7, steps=22);
 //   offset_sweep(rsquare, height=1, bottom=end_spec, top=end_spec);
-// Example: A nice rounded box, with a teardrop base and circular rounded interior and top
+// Example(3D,Med): A nice rounded box, with a teardrop base and circular rounded interior and top
 //   box = square([255,50]);
 //   rbox = round_corners(box, method="smooth", cut=4, $fn=12);
 //   thickness = 2;
 //   difference(){
-//     offset_sweep(rbox, height=50, check_valid=false, steps=22, bottom=os_teardrop(r=2), top=os_circle(r=1));
+//     offset_sweep(rbox, height=50, check_valid=false, steps=22,
+//                  bottom=os_teardrop(r=2), top=os_circle(r=1));
 //     up(thickness)
 //       offset_sweep(offset(rbox, r=-thickness, closed=true,check_valid=false),
-//                     height=48, steps=22, check_valid=false, bottom=os_circle(r=4), top=os_circle(r=-1,extra=1));
+//                    height=48, steps=22, check_valid=false,
+//                    bottom=os_circle(r=4), top=os_circle(r=-1,extra=1));
 //   }
 // Example: This box is much thicker, and cut in half to show the profiles.  Note also that we can turn `check_valid` off for the outside and for the top inside, but not for the bottom inside.  This example shows use of the direct keyword syntax without the helper functions.
 //   smallbox = square([75,50]);
@@ -1373,32 +1388,37 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //         offset_sweep(offset(roundbox, r=-thickness, closed=true),
 //                       height=height-thickness, steps=22,
 //                       bottom=["for","offset_sweep","r",6],
-//                       top=["for","offset_sweep","type","chamfer","angle",30,"chamfer_height",-3,"extra",1,"check_valid",false]);
+//                       top=["for","offset_sweep","type","chamfer","angle",30,
+//                            "chamfer_height",-3,"extra",1,"check_valid",false]);
 //   }
-// Example: A box with multiple sections and rounded dividers
+// Example(3D,Med): A box with multiple sections and rounded dividers
 //   thickness = 2;
 //   box = square([255,50]);
 //   cutpoints = [0, 125, 190, 255];
 //   rbox = round_corners(box, method="smooth", cut=4, $fn=12);
 //   back_half(y=25, s=700)
 //     difference(){
-//       offset_sweep(rbox, height=50, check_valid=false, steps=22, bottom=os_teardrop(r=2), top=os_circle(r=1));
+//       offset_sweep(rbox, height=50, check_valid=false, steps=22,
+//                    bottom=os_teardrop(r=2), top=os_circle(r=1));
 //       up(thickness)
 //         for(i=[0:2]){
 //           ofs = i==1 ? 2 : 0;
-//           hole = round_corners([[cutpoints[i]-ofs,0], [cutpoints[i]-ofs,50], [cutpoints[i+1]+ofs, 50], [cutpoints[i+1]+ofs,0]],
+//           hole = round_corners([[cutpoints[i]-ofs,0], [cutpoints[i]-ofs,50],
+//                                 [cutpoints[i+1]+ofs, 50], [cutpoints[i+1]+ofs,0]],
 //                                method="smooth", cut=4, $fn=36);
 //           offset_sweep(offset(hole, r=-thickness, closed=true,check_valid=false),
-//                         height=48, steps=22, check_valid=false, bottom=os_circle(r=4), top=os_circle(r=-1,extra=1));
+//                         height=48, steps=22, check_valid=false,
+//                         bottom=os_circle(r=4), top=os_circle(r=-1,extra=1));
 //         }
 //     }
-// Example: Star shaped box
+// Example(3D,Med): Star shaped box
 //   star = star(5, r=22, ir=13);
 //   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //   thickness = 2;
 //   ht=20;
 //   difference(){
-//     offset_sweep(rounded_star, height=ht, bottom=["for","offset_sweep","r",4], top=["for","offset_sweep","r",1], steps=15);
+//     offset_sweep(rounded_star, height=ht, bottom=["for","offset_sweep","r",4],
+//                                           top=["for","offset_sweep","r",1], steps=15);
 //     up(thickness)
 //         offset_sweep(offset(rounded_star,r=-thickness,closed=true),
 //                       height=ht-thickness, check_valid=false,
@@ -1756,14 +1776,17 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 //   k = default curvature parameter value for "smooth" roundover
 //   convexity = convexity setting for use with polyhedron.  Default: 10
 // Example: Chamfered elliptical prism.  If you stretch a chamfered cylinder the chamfer will be uneven.
-//   convex_offset_extrude(bottom = os_chamfer(height=-2), top=os_chamfer(height=1), height=7)
-//   xscale(4)circle(r=6,$fn=64);
+//   convex_offset_extrude(bottom = os_chamfer(height=-2),
+//                         top=os_chamfer(height=1), height=7)
+//     xscale(4)circle(r=6,$fn=64);
 // Example: Elliptical prism with circular roundovers.
-//   convex_offset_extrude(bottom=os_circle(r=-2), top=os_circle(r=1), height=7,steps=10)
-//   xscale(4)circle(r=6,$fn=64);
+//   convex_offset_extrude(bottom=os_circle(r=-2),
+//                         top=os_circle(r=1), height=7,steps=10)
+//     xscale(4)circle(r=6,$fn=64);
 // Example: If you give a non-convex input you get a convex hull output
 //   right(50) linear_extrude(height=7) star(5,r=22,ir=13);
-//   convex_offset_extrude(bottom = os_chamfer(height=-2), top=os_chamfer(height=1), height=7, $fn=32)
+//   convex_offset_extrude(bottom = os_chamfer(height=-2),
+//                         top=os_chamfer(height=1), height=7, $fn=32)
 //     star(5,r=22,ir=13);
 function convex_offset_extrude(
         height, h, l,
@@ -1967,53 +1990,78 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   atype = Select "hull" or "intersect" anchor types.  (module only) Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  (module only) Default: "centroid"
 // Example: Uniformly rounded pentagonal prism
-//   rounded_prism(pentagon(3), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+//   rounded_prism(pentagon(3), height=3,
+//                 joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
 // Example: Maximum possible rounding.
-//   rounded_prism(pentagon(3), height=3, joint_top=1.5, joint_bot=1.5, joint_sides=1.5);
+//   rounded_prism(pentagon(3), height=3,
+//                 joint_top=1.5, joint_bot=1.5, joint_sides=1.5);
 // Example: Decreasing k from the default of 0.5 to 0.3 gives a smoother round over which takes up more space, so it appears less rounded.
-//   rounded_prism(pentagon(3), height=3, joint_top=1.5, joint_bot=1.5, joint_sides=1.5, k=0.3, splinesteps=32);
+//   rounded_prism(pentagon(3), height=3, joint_top=1.5, joint_bot=1.5,
+//                 joint_sides=1.5, k=0.3, splinesteps=32);
 // Example: Increasing k from the default of 0.5 to 0.92 approximates a circular roundover, which does not have continuous curvature.  Notice the visible "edges" at the boundary of the corner and edge patches.  
-//   rounded_prism(pentagon(3), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5, k=0.92);
+//   rounded_prism(pentagon(3), height=3, joint_top=0.5,
+//                 joint_bot=0.5, joint_sides=0.5, k=0.92);
 // Example: rounding just one edge
-//   rounded_prism(pentagon(side=3), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=[0,0,0.5,0,0], splinesteps=16);
+//   rounded_prism(pentagon(side=3), height=3, joint_top=0.5, joint_bot=0.5,
+//                 joint_sides=[0,0,0.5,0,0], splinesteps=16);
 // Example: rounding all the edges differently
-//   rounded_prism(pentagon(side=3), height=3, joint_top=0.25, joint_bot=0.5, joint_sides=[1.7,.5,.7,1.2,.4], splinesteps=32);
+//   rounded_prism(pentagon(side=3), height=3, joint_top=0.25, joint_bot=0.5,
+//                 joint_sides=[1.7,.5,.7,1.2,.4], splinesteps=32);
 // Example: different k values for top, bottom and sides
-//   rounded_prism(pentagon(side=3.0), height=3.0, joint_top=1.4, joint_bot=1.4, joint_sides=0.7, k_top=0.7, k_bot=0.3, k_sides=0.5, splinesteps=48);
+//   rounded_prism(pentagon(side=3.0), height=3.0, joint_top=1.4, joint_bot=1.4,
+//                 joint_sides=0.7, k_top=0.7, k_bot=0.3, k_sides=0.5, splinesteps=48);
 // Example: flared bottom
-//   rounded_prism(pentagon(3), height=3, joint_top=1.0, joint_bot=-0.5, joint_sides=0.5);
+//   rounded_prism(pentagon(3), height=3, joint_top=1.0,
+//                 joint_bot=-0.5, joint_sides=0.5);
 // Example: truncated pyramid
-//   rounded_prism(pentagon(3), apply(scale(.7),pentagon(3)), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+//   rounded_prism(pentagon(3), apply(scale(.7),pentagon(3)),
+//                 height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
 // Example: top translated
-//   rounded_prism(pentagon(3), apply(right(2),pentagon(3)), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+//   rounded_prism(pentagon(3), apply(right(2),pentagon(3)),
+//                 height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
 // Example(NORENDER): top rotated: fails due to non-coplanar side faces
-//   rounded_prism(pentagon(3), apply(rot(45),pentagon(3)), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+//   rounded_prism(pentagon(3), apply(rot(45),pentagon(3)), height=3,
+//                 joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
 // Example: skew top
-//   rounded_prism(path3d(pentagon(3)), apply(affine3d_skew_yz(0,-20),path3d(pentagon(3),3)), joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+//   rounded_prism(path3d(pentagon(3)), apply(affine3d_skew_yz(0,-20),path3d(pentagon(3),3)),
+//                 joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
 // Example: this rotation gives coplanar sides
-//   rounded_prism(path3d(square(4)), apply(yrot(-100)*right(2),path3d(square(4),3)), joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+//   rounded_prism(path3d(square(4)), apply(yrot(-100)*right(2),path3d(square(4),3)),
+//                 joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
 // Example: a shape with concave corners
-//   M = path3d(turtle(["left", 180, "length",3,"move", "left", "move", 3, "right", "move", "right", "move", 4, "right", "move", 3, "right", "move", 2]));
-//   rounded_prism(M, apply(up(3),M), joint_top=0.75, joint_bot=0.2, joint_sides=[.2,2.5,2,0.5,1.5,.5,2.5], splinesteps=32);
+//   M = path3d(turtle(["left", 180, "length",3,"move", "left", "move", 3, "right",
+//                      "move", "right", "move", 4, "right", "move", 3, "right", "move", 2]));
+//   rounded_prism(M, apply(up(3),M), joint_top=0.75, joint_bot=0.2,
+//                 joint_sides=[.2,2.5,2,0.5,1.5,.5,2.5], splinesteps=32);
 // Example: using debug mode to see the corner patch sizes, which may help figure out problems with interfering corners or invalid polyhedra.  The corner patches must not intersect each other.
-//   M = path3d(turtle(["left", 180, "length",3,"move", "left", "move", 3, "right", "move", "right", "move", 4, "right", "move", 3, "right", "move", 2]));
-//   rounded_prism(M, apply(up(3),M), joint_top=0.75, joint_bot=0.2, joint_sides=[.2,2.5,2,0.5,1.5,.5,2.5], splinesteps=16,debug=true);
+//   M = path3d(turtle(["left", 180, "length",3,"move", "left", "move", 3, "right",
+//                      "move", "right", "move", 4, "right", "move", 3, "right", "move", 2]));
+//   rounded_prism(M, apply(up(3),M), joint_top=0.75, joint_bot=0.2,
+//                 joint_sides=[.2,2.5,2,0.5,1.5,.5,2.5], splinesteps=16,debug=true);
 // Example: applying transformation to the previous example
-//   M = path3d(turtle(["left", 180, "length",3,"move", "left", "move", 3, "right", "move", "right", "move", 4, "right", "move", 3, "right", "move", 2]));
-//   rounded_prism(M, apply(right(1)*scale(.75)*up(3),M), joint_top=0.5, joint_bot=0.2, joint_sides=[.2,1,1,0.5,1.5,.5,2], splinesteps=32);
+//   M = path3d(turtle(["left", 180, "length",3,"move", "left", "move", 3, "right",
+//                      "move", "right", "move", 4, "right", "move", 3, "right", "move", 2]));
+//   rounded_prism(M, apply(right(1)*scale(.75)*up(3),M), joint_top=0.5, joint_bot=0.2,
+//                 joint_sides=[.2,1,1,0.5,1.5,.5,2], splinesteps=32);
 // Example: this example shows most of the different types of patches that rounded_prism creates.  Note that some of the patches are close to interfering with each other across the top of the polyhedron, which would create an invalid result.
-//   N = apply(rot(180)*yscale(.8),turtle(["length",3,"left", "move", 2, "right", 135, "move", sqrt(2), "left", "move", sqrt(2), "right", 135, "move", 2]));
+//   N = apply(rot(180)*yscale(.8),turtle(["length",3,"left", "move", 2, "right", 135,"move", sqrt(2), 
+//                                         "left", "move", sqrt(2), "right", 135, "move", 2]));
 //   rounded_prism(N, height=3, joint_bot=0.5, joint_top=1.25, joint_sides=[[1,1.75],0,.5,.5,2], debug=true);
 // Example: This object has different scales on its different axies.  Here is the largest symmetric rounding that fits.  Note that the rounding is slightly smaller than the object dimensions because of roundoff error.
-//   rounded_prism(square([100.1,30.1]), height=8.1, joint_top=4, joint_bot=4, joint_sides=15, k_sides=0.3, splinesteps=32);
+//   rounded_prism(square([100.1,30.1]), height=8.1, joint_top=4, joint_bot=4,
+//                 joint_sides=15, k_sides=0.3, splinesteps=32);
 // Example: Using asymetric rounding enables a much more rounded form:
-//   rounded_prism(square([100.1,30.1]), height=8.1, joint_top=[15,4], joint_bot=[15,4], joint_sides=[[15,50],[50,15],[15,50],[50,15]], k_sides=0.3, splinesteps=32);
+//   rounded_prism(square([100.1,30.1]), height=8.1, joint_top=[15,4], joint_bot=[15,4],
+//                 joint_sides=[[15,50],[50,15],[15,50],[50,15]], k_sides=0.3, splinesteps=32);
 // Example: Flaring the top upward instead of outward.  The bottom has an asymmetric rounding with a small flare but a large rounding up the side.
-//   rounded_prism(pentagon(3), height=3, joint_top=[1,-1], joint_bot=[-0.5,2], joint_sides=0.5);
+//   rounded_prism(pentagon(3), height=3, joint_top=[1,-1],
+//                 joint_bot=[-0.5,2], joint_sides=0.5);
 // Example: Sideways polygons:
-//   rounded_prism(apply(yrot(95),path3d(hexagon(3))), apply(yrot(95), path3d(hexagon(3),3)), joint_top=2, joint_bot=1, joint_sides=1);
+//   rounded_prism(apply(yrot(95),path3d(hexagon(3))), apply(yrot(95), path3d(hexagon(3),3)),
+//                 joint_top=2, joint_bot=1, joint_sides=1);
 // Example: Chamfer a polyhedron by setting splinesteps to 1
-//   N = apply(rot(180)*yscale(.8),turtle(["length",3,"left", "move", 2, "right", 135, "move", sqrt(2), "left", "move", sqrt(2), "right", 135, "move", 2]));
+//   N = apply(rot(180)*yscale(.8),turtle(["length",3,"left", "move", 2, "right", 135,"move", sqrt(2), 
+//                                         "left", "move", sqrt(2), "right", 135, "move", 2]));
 //   rounded_prism(N, height=3, joint_bot=-0.3, joint_top=.4, joint_sides=[.75,0,.2,.2,.7], splinesteps=1);
 
 
@@ -2219,7 +2267,8 @@ function _circle_mask(r) =
 //     difference(){
 //       cyl(r=10.5, h=10);
 //       cyl(r=9.5, h=11);
-//       bent_cutout_mask(10, 1.05, apply(xscale(3),circle(r=3)),$fn=64);
+//       bent_cutout_mask(10, 1.05, apply(xscale(3),circle(r=3)),
+//                        $fn=64);
 //     }
 //   }
 // Example: An elliptical hole in a thick cylinder
@@ -2237,7 +2286,9 @@ function _circle_mask(r) =
 //     difference(){
 //       cyl(r=10.5, h=10, $fn=128);
 //       cyl(r=9.5, h=11, $fn=128);
-//       bent_cutout_mask(10, 1.05, apply(scale(3),supershape(step=2,m1=5, n1=0.3,n2=1.7)),$fn=32);
+//       bent_cutout_mask(10, 1.05,
+//         apply(scale(3),
+//           supershape(step=2,m1=5, n1=0.3,n2=1.7)),$fn=32);
 //     }
 //   }
 // Example: this shape is invalid due to self-intersections at the inner corners
@@ -2246,7 +2297,9 @@ function _circle_mask(r) =
 //     difference(){
 //       cylinder(r=10.5, h=10,center=true);
 //       cylinder(r=9.5, h=11,center=true);
-//       bent_cutout_mask(10, 1.05, apply(scale(3),supershape(step=2,m1=5, n1=0.1,n2=1.7)),$fn=32);
+//       bent_cutout_mask(10, 1.05,
+//         apply(scale(3),
+//           supershape(step=2,m1=5, n1=0.1,n2=1.7)),$fn=32);
 //     }
 //   }
 // Example: increasing the step gives a valid shape, but the shape looks terrible with so few points.
@@ -2255,7 +2308,9 @@ function _circle_mask(r) =
 //     difference(){
 //       cylinder(r=10.5, h=10,center=true);
 //       cylinder(r=9.5, h=11,center=true);
-//       bent_cutout_mask(10, 1.05, apply(scale(3),supershape(step=12,m1=5, n1=0.1,n2=1.7)),$fn=32);
+//       bent_cutout_mask(10, 1.05,
+//         apply(scale(3),
+//           supershape(step=12,m1=5, n1=0.1,n2=1.7)),$fn=32);
 //     }
 //   }
 // Example: uniform resampling produces a somewhat better result, but room remains for improvement.  The lesson is that concave corners in your cutout cause trouble.  To get a very good result we need to non-uniformly sample the supershape with more points at the star tips and few points at the inner corners.
@@ -2264,7 +2319,11 @@ function _circle_mask(r) =
 //     difference(){
 //       cylinder(r=10.5, h=10,center=true);
 //       cylinder(r=9.5, h=11,center=true);
-//       bent_cutout_mask(10, 1.05, apply(scale(3),resample_path(supershape(step=1,m1=5, n1=0.10,n2=1.7),60,closed=true)),$fn=32);
+//       bent_cutout_mask(10, 1.05,
+//         apply(scale(3), resample_path(
+//              supershape(step=1,m1=5, n1=0.10,n2=1.7),
+//              60,closed=true)),
+//         $fn=32);
 //     }
 //   }
 // Example: The cutout spans 177 degrees.  If you decrease the tube radius to 2.5 the cutout spans over 180 degrees and the model fails.
@@ -2273,7 +2332,9 @@ function _circle_mask(r) =
 //     $fn=128;
 //     difference(){
 //       tube(or=r, wall=1, h=10, anchor=CENTER);
-//       bent_cutout_mask(r-0.5, 1.05, apply(scale(3),supershape(step=1,m1=5, n1=0.15,n2=1.7)),$fn=32);
+//       bent_cutout_mask(r-0.5, 1.05,
+//         apply(scale(3),
+//           supershape(step=1,m1=5, n1=0.15,n2=1.7)),$fn=32);
 //     }
 //   }
 // Example: A square hole is not as simple as it seems.  The model valid, but wrong, because the square didn't have enough samples to follow the curvature of the cylinder.
@@ -2291,7 +2352,8 @@ function _circle_mask(r) =
 //     $fn=128;
 //     difference(){
 //       tube(or=r, wall=2, h=45);
-//       bent_cutout_mask(r-1, 2.1, subdivide_path(back(5,p=square([18,18])),64,closed=true));
+//       bent_cutout_mask(r-1, 2.1,
+//         subdivide_path(back(5,p=square([18,18])),64,closed=true));
 //     }
 //   }
 // Example: Rounding just the exterior corners of this star avoids the problems we had above with concave corners of the supershape, as long as we don't oversample the star.
@@ -2300,7 +2362,12 @@ function _circle_mask(r) =
 //     $fn=128;
 //     difference(){
 //       tube(or=r, wall=2, h=45);
-//       bent_cutout_mask(r-1, 2.1, apply(back(15),subdivide_path(round_corners(star(n=7,ir=5,or=10), cut=flatten(repeat([0.5,0],7)),$fn=32),14*15,closed=true)));
+//       bent_cutout_mask(r-1, 2.1,
+//         apply(back(15),
+//           subdivide_path(
+//             round_corners(star(n=7,ir=5,or=10),
+//                           cut=flatten(repeat([0.5,0],7)),$fn=32),
+//             14*15,closed=true)));
 //     }
 //   }
 // Example(2D): Cutting a slot in a cylinder is tricky if you want rounded corners at the top.  This slot profile has slightly angled top edges to blend into the top edge of the cylinder.
