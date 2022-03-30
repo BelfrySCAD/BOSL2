@@ -592,7 +592,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 
 // Function: smooth_path()
 // Usage:
-//   smoothed = smooth_path(path, [tangents], <size=|relsize=>, [splinesteps=], [closed=], [uniform=]);
+//   smoothed = smooth_path(path, [tangents], [size=|relsize=], [splinesteps=], [closed=], [uniform=]);
 // Description:
 //   Smooths the input path using a cubic spline.  Every segment of the path will be replaced by a cubic curve
 //   with `splinesteps` points.  The cubic interpolation will pass through every input point on the path
@@ -1240,9 +1240,9 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 
 // Function&Module: offset_sweep()
 // Usage: most common module arguments.  See Arguments list below for more.
-//    offset_sweep(path, <height|h|l>, [bottom], [top], [offset=], [convexity=],...) [attachments]
+//    offset_sweep(path, [height|length|h|l|], [bottom], [top], [offset=], [convexity=],...) {attachments};
 // Usage: most common function arguments.  See Arguments list below for more.
-//    vnf = offset_sweep(path, <height|h|l>, [bottom], [top], [offset=], ...)
+//    vnf = offset_sweep(path, [height|h|l|length], [bottom], [top], [offset=], ...);
 // Description:
 //   Takes a 2d path as input and extrudes it upwards and/or downward.  Each layer in the extrusion is produced using `offset()` to expand or shrink the previous layer.  When invoked as a function returns a VNF; when invoked as a module produces geometry.  
 //   Using the `top` and/or `bottom` arguments you can specify a sequence of offsets values, or you can use several built-in offset profiles that
@@ -1507,7 +1507,7 @@ function _struct_valid(spec, func, name) =
 function offset_sweep(
                        path, height, 
                        bottom=[], top=[], 
-                       h, l,
+                       h, l, length, 
                        offset="round", r=0, steps=16,
                        quality=1, check_valid=true,
                        extra=0,
@@ -1560,7 +1560,7 @@ function offset_sweep(
         bottom_height = len(offsets_bot)==0 ? 0 : abs(last(offsets_bot)[1]) - struct_val(bottom,"extra"),
         top_height = len(offsets_top)==0 ? 0 : abs(last(offsets_top)[1]) - struct_val(top,"extra"),
 
-        height = one_defined([l,h,height], "l,h,height", dflt=u_add(bottom_height,top_height)),
+        height = one_defined([l,h,height,length], "l,h,height,length", dflt=u_add(bottom_height,top_height)),
         middle = height-bottom_height-top_height
     )
     assert(height>0, "Height must be positive") 
@@ -1705,7 +1705,8 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 
 
 // Module: convex_offset_extrude()
-//
+// Usage: Basic usage.  See below for full options
+//   convex_offset_extrude(height, [bottom], [top], ...) {2D children};
 // Description:
 //   Extrudes 2d children with layers formed from the convex hull of the offset of each child according to a sequence of offset values.
 //   Like `offset_sweep` this module can use built-in offset profiles to provide treatments such as roundovers or chamfers but unlike `offset_sweep()` it
@@ -1762,9 +1763,10 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 //   number of vertices or lead to any special complications.
 //
 // Arguments:
-//   height / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.
-//   top = rounding spec for the top end.
+//   height / length / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.
 //   bottom = rounding spec for the bottom end
+//   top = rounding spec for the top end.
+//   ---
 //   offset = default offset, `"round"`, `"delta"`, or `"chamfer"`.  Default: `"round"`
 //   steps = default step count.  Default: 16
 //   extra = default extra height.  Default: 0
@@ -1789,8 +1791,9 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 //                         top=os_chamfer(height=1), height=7, $fn=32)
 //     star(5,r=22,ir=13);
 function convex_offset_extrude(
-        height, h, l,
-        top=[], bottom=[],
+        height, 
+        bottom=[], top=[], 
+        h, l, length,
         offset="round", r=0, steps=16,
         extra=0,
         cut=undef, chamfer_width=undef, chamfer_height=undef,
@@ -1798,8 +1801,10 @@ function convex_offset_extrude(
         convexity=10, thickness = 1/1024
 ) = no_function("convex_offset_extrude");
 module convex_offset_extrude(
-        height, h, l,
-        top=[], bottom=[],
+        height,
+        bottom=[],
+        top=[], 
+        h, l, length,
         offset="round", r=0, steps=16,
         extra=0,
         cut=undef, chamfer_width=undef, chamfer_height=undef,
@@ -1831,7 +1836,7 @@ module convex_offset_extrude(
         bottom_height = len(offsets_bot)==0 ? 0 : abs(last(offsets_bot)[1]) - struct_val(bottom,"extra");
         top_height = len(offsets_top)==0 ? 0 : abs(last(offsets_top)[1]) - struct_val(top,"extra");
 
-        height = one_defined([l,h,height], "l,h,height", dflt=u_add(bottom_height,top_height));
+        height = one_defined([l,h,height,length], "l,h,height,length", dflt=u_add(bottom_height,top_height));
         assert(height>=0, "Height must be nonnegative");
 
         middle = height-bottom_height-top_height;
@@ -1932,9 +1937,9 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 
 // Function&Module: rounded_prism()
 // Usage: as a module
-//   rounded_prism(bottom, [top], <height=|h=|length=|l=>, [joint_top=], [joint_bot=], [joint_sides=], [k=], [k_top=], [k_bot=], [k_sides=], [splinesteps=], [debug=], [convexity=],...) [attachments];
+//   rounded_prism(bottom, [top], [height=|h=|length=|l=], [joint_top=], [joint_bot=], [joint_sides=], [k=], [k_top=], [k_bot=], [k_sides=], [splinesteps=], [debug=], [convexity=],...) {attachments};
 // Usage: as a function
-//   vnf = rounded_prism(bottom, [top], <height=|h=|length=|l=>, [joint_top=], [joint_bot=], [joint_sides=], [k=], [k_top=], [k_bot=], [k_sides=], [splinesteps=], [debug=]);
+//   vnf = rounded_prism(bottom, [top], [height=|h=|length=|l=], [joint_top=], [joint_bot=], [joint_sides=], [k=], [k_top=], [k_bot=], [k_sides=], [splinesteps=], [debug=]);
 // Description:
 //   Construct a generalized prism with continuous curvature rounding.  You supply the polygons for the top and bottom of the prism.  The only
 //   limitation is that joining the edges must produce a valid polyhedron with coplanar side faces.  You specify the rounding by giving
@@ -2469,8 +2474,8 @@ Access to the derivative smoothing parameter?
 
 // Function&Module: join_prism()
 // Usage: The two main forms with most common options
-//   join_prism(polygon, base, length|height|l|h, fillet, [base_T], [scale], [prism_end_T], [short], ...) { ... }
-//   join_prism(polygon, base, aux, fillet, [base_T], [aux_T], [scale], [prism_end_T], [short], ...) { ... }
+//   join_prism(polygon, base, length=|height=|l=|h=, fillet=, [base_T=], [scale=], [prism_end_T=], [short=], ...) {attachments};
+//   join_prism(polygon, base, aux=, fillet=, [base_T=], [aux_T=], [scale=], [prism_end_T=], [short=], ...) {attachments};
 // Usage: As function
 //   vnf = join_prism( ... );
 // Description:
