@@ -831,8 +831,8 @@ function _slice_3dpolygons(polys, dir, cuts) =
 
 // Module: vnf_polyhedron()
 // Usage:
-//   vnf_polyhedron(vnf);
-//   vnf_polyhedron([VNF, VNF, VNF, ...]);
+//   vnf_polyhedron(vnf) [ATTACHMENTS];
+//   vnf_polyhedron([VNF, VNF, VNF, ...]) [ATTACHMENTS];
 // Description:
 //   Given a VNF structure, or a list of VNF structures, creates a polyhedron from them.
 // Arguments:

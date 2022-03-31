@@ -19,7 +19,7 @@
 
 // Function&Module: skin()
 // Usage: As module:
-//   skin(profiles, slices, [z=], [refine=], [method=], [sampling=], [caps=], [closed=], [style=], [convexity=], [anchor=],[cp=],[spin=],[orient=],[atype=]) {attachments};
+//   skin(profiles, slices, [z=], [refine=], [method=], [sampling=], [caps=], [closed=], [style=], [convexity=], [anchor=],[cp=],[spin=],[orient=],[atype=]) [ATTACHMENTS];
 // Usage: As function:
 //   vnf = skin(profiles, slices, [z=], [refine=], [method=], [sampling=], [caps=], [closed=], [style=], [anchor=],[cp=],[spin=],[orient=],[atype=]);
 // Description:
@@ -504,7 +504,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 
 // Function&Module: linear_sweep()
 // Usage:
-//   linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [convexity=]) {attachments};
+//   linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [convexity=]) [ATTACHMENTS];
 // Description:
 //   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or polygon.
 //   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
@@ -623,7 +623,7 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
 
 // Function&Module: spiral_sweep()
 // Usage:
-//   spiral_sweep(poly, h, r, turns, [higbee=], [center=], [r1=], [r2=], [d=], [d1=], [d2=], [higbee1=], [higbee2=], [internal=], [anchor=], [spin=], [orient=]){attachments};
+//   spiral_sweep(poly, h, r, turns, [higbee=], [center=], [r1=], [r2=], [d=], [d1=], [d2=], [higbee1=], [higbee2=], [internal=], [anchor=], [spin=], [orient=])[ATTACHMENTS];
 //   vnf = spiral_sweep(poly, h, r, turns, ...);
 // Description:
 //   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a 3D spiral path
@@ -731,9 +731,9 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 
 // Function&Module: path_sweep()
 // Usage: As module
-//   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) {attachments};
+//   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As function
-//   vnf = path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [atype=]) {attachments};
+//   vnf = path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [atype=]);
 // Description:
 //   Takes as input `shape`, a 2D polygon path (list of points), and `path`, a 2d or 3d path (also a list of points)
 //   and constructs a polyhedron by sweeping the shape along the path. When run as a module returns the polyhedron geometry.
@@ -1264,7 +1264,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
 
 // Function&Module: path_sweep2d()
 // Usage: as module
-//   path_sweep2d(shape, path, [closed], [caps], [quality], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=], [cp=]) {attachments};
+//   path_sweep2d(shape, path, [closed], [caps], [quality], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=], [cp=]) [ATTACHMENTS];
 // Usage: as function
 //   vnf = path_sweep2d(shape, path, [closed], [caps], [quality], [style], [anchor=], [spin=], [orient=], [atype=], [cp=]);
 // Description:
@@ -1388,7 +1388,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 
 // Function&Module: sweep()
 // Usage: As Module
-//   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=]) [attachments];
+//   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = sweep(shape, transforms, [closed], [caps], [style], [anchor=], [spin=], [orient=], [atype=]);
 // Description:

@@ -390,7 +390,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 
 // Module: position()
 // Usage:
-//   position(from) {...}
+//   position(from) CHILDREN;
 //
 // Topics: Attachments
 // See Also: attachable(), attach(), orient()
@@ -408,6 +408,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   }
 module position(from)
 {
+    req_children($children);
     assert($parent_geom != undef, "No object to attach to!");
     anchors = (is_vector(from)||is_string(from))? [from] : from;
     for (anchr = anchors) {
@@ -422,8 +423,8 @@ module position(from)
 
 // Module: orient()
 // Usage:
-//   orient(dir, <spin=>) ...
-//   orient(anchor=, <spin=>) ...
+//   orient(dir, [spin=]) CHILDREN;
+//   orient(anchor=, [spin=]) CHILDREN;
 // Topics: Attachments
 // Description:
 //   Orients children such that their top is tilted towards the given direction, or towards the
@@ -460,6 +461,7 @@ module position(from)
 //               prismoid([30,30],[0,5],h=20,anchor=BOT+BACK);
 //   }
 module orient(dir, anchor, spin) {
+    req_children($children);
     if (!is_undef(dir)) {
         assert(anchor==undef, "Only one of dir= or anchor= may be given to orient()");
         assert(is_vector(dir));
@@ -486,11 +488,10 @@ module orient(dir, anchor, spin) {
 
 
 
-
 // Module: attach()
 // Usage:
-//   attach(from, [overlap=], [norot=]) {...}
-//   attach(from, to, [overlap=], [norot=]) {...}
+//   attach(from, [overlap=], [norot=]) CHILDREN;
+//   attach(from, to, [overlap=], [norot=]) CHILDREN;
 // Topics: Attachments
 // See Also: attachable(), position(), face_profile(), edge_profile(), corner_profile()
 // Description:
@@ -514,6 +515,7 @@ module orient(dir, anchor, spin) {
 //   }
 module attach(from, to, overlap, norot=false)
 {
+    req_children($children);
     assert($parent_geom != undef, "No object to attach to!");
     overlap = (overlap!=undef)? overlap : $overlap;
     anchors = (is_vector(from)||is_string(from))? [from] : from;
@@ -537,7 +539,7 @@ module attach(from, to, overlap, norot=false)
 
 // Module: tags()
 // Usage:
-//   tags(tags) {...}
+//   tags(tags) CHILDREN;
 // Topics: Attachments
 // See Also: force_tags(), recolor(), hide(), show(), diff(), intersect()
 // Description:
@@ -559,7 +561,8 @@ module attach(from, to, overlap, norot=false)
 //       }
 //     }  
 module tags(tags)
-{ 
+{
+    req_children($children);
     $tags = tags;
     children();
 }
@@ -567,7 +570,7 @@ module tags(tags)
 
 // Module: force_tags()
 // Usage:
-//   force_tags([tags]) {...}
+//   force_tags([tags]) CHILDREN;
 // Topics: Attachments
 // See Also: tags(), recolor(), hide(), show(), diff(), intersect()
 // Description:
@@ -609,6 +612,7 @@ module tags(tags)
 //   }
 module force_tags(tags)
 {
+    req_children($children);
     $tags = is_def(tags) ? tags : $tags;
     if(_attachment_is_shown($tags)) {
         children();
@@ -618,7 +622,7 @@ module force_tags(tags)
 
 // Module: diff()
 // Usage:
-//   diff(neg, [keep]) {...}
+//   diff(neg, [keep]) CHILDREN;
 // Topics: Attachments
 // See Also: tags(), recolor(), show(), hide(), intersect()
 // Description:
@@ -706,6 +710,7 @@ module force_tags(tags)
 //       }
 module diff(neg, keep)
 {
+    req_children($children);
     // Don't perform the operation if the current tags are hidden
     if (_attachment_is_shown($tags)) {
         difference() {
@@ -725,14 +730,14 @@ module diff(neg, keep)
 
 // Module: intersect()
 // Usage:
-//   intersect(a, [keep=]) {...}
-//   intersect(a, b, [keep=]) {...}
+//   intersect(a, [keep=]) CHILDREN;
+//   intersect(a, b, [keep=]) CHILDREN;
 // Topics: Attachments
 // See Also: tags(), recolor(), show(), hide(), diff()
 // Description:
-//   If `a` is given, takes the union of all children with tags that are in `a`, and `intersection()`s
+//   If `a` is given, takes the union of all children with tags that are in `a`, and intersects
 //   them with the union of all children with tags in `b`.  If `b` is not given, then the union of all
-//   items with tags in `a` are intersection()ed with the union of all items without tags in `a`.  If
+//   items with tags in `a` are intersected with the union of all items without tags in `a`.  If
 //   `keep` is given, then the result is unioned with all the children with tags in `keep`.  If `keep`
 //   is not given, all children without tags in `a` or `b` are unioned with the result.
 //   Cannot be used in conjunction with `diff()` or `hulling()` on the same parent object.
@@ -764,6 +769,7 @@ module diff(neg, keep)
 //   }
 module intersect(a, b=undef, keep=undef)
 {
+    req_children($children);
     // Don't perform the operation if the current tags are hidden
     if (_attachment_is_shown($tags)) {
         intersection() {
@@ -790,7 +796,7 @@ module intersect(a, b=undef, keep=undef)
 
 // Module: hulling()
 // Usage:
-//   hulling(a) {...}
+//   hulling(a) CHILDREN;
 // Topics: Attachments
 // See Also: tags(), recolor(), show(), hide(), diff(), intersect()
 // Description:
@@ -810,6 +816,7 @@ module intersect(a, b=undef, keep=undef)
 //   }
 module hulling(a)
 {
+    req_children($children);
     if (is_undef(a)) {
         hull() children();
     } else {
@@ -821,7 +828,7 @@ module hulling(a)
 
 // Module: hide()
 // Usage:
-//   hide(tags) {...}
+//   hide(tags) CHILDREN;
 // Topics: Attachments
 // See Also: tags(), recolor(), show(), diff(), intersect()
 // Description:
@@ -834,6 +841,7 @@ module hulling(a)
 //   }
 module hide(tags="")
 {
+    req_children($children);
     $tags_hidden = tags==""? [] : str_split(tags, " ");
     $tags_shown = [];
     children();
@@ -842,7 +850,7 @@ module hide(tags="")
 
 // Module: show()
 // Usage:
-//   show(tags) {...}
+//   show(tags) CHILDREN;
 // Topics: Attachments
 // See Also: tags(), recolor(), hide(), diff(), intersect()
 // Description:
@@ -855,6 +863,7 @@ module hide(tags="")
 //   }
 module show(tags="")
 {
+    req_children($children);
     $tags_shown = tags==""? [] : str_split(tags, " ");
     $tags_hidden = [];
     children();
@@ -867,7 +876,7 @@ module show(tags="")
 
 // Module: edge_mask()
 // Usage:
-//   edge_mask([edges], [except]) {...}
+//   edge_mask([edges], [except]) CHILDREN;
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask()
 // Description:
@@ -895,6 +904,7 @@ module show(tags="")
 //       edge_mask([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           rounding_edge_mask(l=71,r=10);
 module edge_mask(edges=EDGES_ALL, except=[]) {
+    req_children($children);
     assert($parent_geom != undef, "No object to attach to!");
     edges = _edges(edges, except=except);
     vecs = [
@@ -922,7 +932,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 
 // Module: corner_mask()
 // Usage:
-//   corner_mask([corners], [except]) {...}
+//   corner_mask([corners], [except]) CHILDREN;
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), edge_mask()
 // Description:
@@ -944,6 +954,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 //               translate([20,20,20]) sphere(r=20);
 //           }
 module corner_mask(corners=CORNERS_ALL, except=[]) {
+    req_children($children);
     assert($parent_geom != undef, "No object to attach to!");
     corners = _corners(corners, except=except);
     vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
@@ -965,7 +976,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 
 // Module: face_profile()
 // Usage:
-//   face_profile(faces, r|d=, [convexity=]) {...}
+//   face_profile(faces, r|d=, [convexity=]) CHILDREN;
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), edge_profile(), corner_profile()
 // Description:
@@ -986,6 +997,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 //       face_profile(TOP,r=10)
 //           mask2d_roundover(r=10);
 module face_profile(faces=[], r, d, convexity=10) {
+    req_children($children);
     faces = is_vector(faces)? [faces] : faces;
     assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "Vector in faces doesn't point at a face.");
     r = get_radius(r=r, d=d, dflt=undef);
@@ -997,7 +1009,7 @@ module face_profile(faces=[], r, d, convexity=10) {
 
 // Module: edge_profile()
 // Usage:
-//   edge_profile([edges], [except], [convexity]) {...}
+//   edge_profile([edges], [except], [convexity]) CHILDREN;
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), corner_profile()
 // Description:
@@ -1018,6 +1030,7 @@ module face_profile(faces=[], r, d, convexity=10) {
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_roundover(r=10, inset=2);
 module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
+    req_children($children);
     assert($parent_geom != undef, "No object to attach to!");
     edges = _edges(edges, except=except);
     vecs = [
@@ -1052,7 +1065,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 
 // Module: corner_profile()
 // Usage:
-//   corner_profile([corners], [except], <r=|d=>, [convexity=]) {...}
+//   corner_profile([corners], [except], [r=|d=], [convexity=]) CHILDREN;
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile()
 // Description:
@@ -1121,33 +1134,33 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 // Module: attachable()
 //
 // Usage: Square/Trapezoid Geometry
-//   attachable(anchor, spin, two_d=true, size=, [size2=], [shift=], ...) {...}
+//   attachable(anchor, spin, two_d=true, size=, [size2=], [shift=], ...) {OBJECT; children();}
 // Usage: Circle/Oval Geometry
-//   attachable(anchor, spin, two_d=true, r=|d=, ...) {...}
+//   attachable(anchor, spin, two_d=true, r=|d=, ...) {OBJECT; children();}
 // Usage: 2D Path/Polygon Geometry
-//   attachable(anchor, spin, two_d=true, path=, [extent=], ...) {...}
+//   attachable(anchor, spin, two_d=true, path=, [extent=], ...) {OBJECT; children();}
 // Usage: 2D Region Geometry
-//   attachable(anchor, spin, two_d=true, region=, [extent=], ...) {...}
+//   attachable(anchor, spin, two_d=true, region=, [extent=], ...) {OBJECT; children();}
 // Usage: Cubical/Prismoidal Geometry
-//   attachable(anchor, spin, [orient], size=, [size2=], [shift=], ...) {...}
+//   attachable(anchor, spin, [orient], size=, [size2=], [shift=], ...) {OBJECT; children();}
 // Usage: Cylindrical Geometry
-//   attachable(anchor, spin, [orient], r=|d=, l=, [axis=], ...) {...}
+//   attachable(anchor, spin, [orient], r=|d=, l=, [axis=], ...) {OBJECT; children();}
 // Usage: Conical Geometry
-//   attachable(anchor, spin, [orient], r1=|d1=, r2=|d2=, l=, [axis=], ...) {...}
+//   attachable(anchor, spin, [orient], r1=|d1=, r2=|d2=, l=, [axis=], ...) {OBJECT; children();}
 // Usage: Spheroid/Ovoid Geometry
-//   attachable(anchor, spin, [orient], r=|d=, ...) {...}
+//   attachable(anchor, spin, [orient], r=|d=, ...) {OBJECT; children();}
 // Usage: Extruded Path/Polygon Geometry
-//   attachable(anchor, spin, path=, l=|h=, [extent=], ...) {...}
+//   attachable(anchor, spin, path=, l=|h=, [extent=], ...) {OBJECT; children();}
 // Usage: Extruded Region Geometry
-//   attachable(anchor, spin, region=, l=|h=, [extent=], ...) {...}
+//   attachable(anchor, spin, region=, l=|h=, [extent=], ...) {OBJECT; children();}
 // Usage: VNF Geometry
-//   attachable(anchor, spin, [orient], vnf=, [extent=], ...) {...}
+//   attachable(anchor, spin, [orient], vnf=, [extent=], ...) {OBJECT; children();}
 //
 // Topics: Attachments
 // See Also: reorient()
 //
 // Description:
-//   Manages the anchoring, spin, orientation, and attachments for a 3D volume or 2D area.
+//   Manages the anchoring, spin, orientation, and attachments for OBJECT, located in a 3D volume or 2D area.
 //   A managed 3D volume is assumed to be vertically (Z-axis) oriented, and centered.
 //   A managed 2D area is just assumed to be centered.  The shape to be managed is given
 //   as the first child to this module, and the second child should be given as `children()`.

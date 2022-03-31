@@ -1241,7 +1241,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 
 // Function&Module: offset_sweep()
 // Usage: most common module arguments.  See Arguments list below for more.
-//    offset_sweep(path, [height|length|h|l|], [bottom], [top], [offset=], [convexity=],...) {attachments};
+//    offset_sweep(path, [height|length|h|l|], [bottom], [top], [offset=], [convexity=],...) [ATTACHMENTS];
 // Usage: most common function arguments.  See Arguments list below for more.
 //    vnf = offset_sweep(path, [height|h|l|length], [bottom], [top], [offset=], ...);
 // Description:
@@ -1707,7 +1707,7 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 
 // Module: convex_offset_extrude()
 // Usage: Basic usage.  See below for full options
-//   convex_offset_extrude(height, [bottom], [top], ...) 2D-children;
+//   convex_offset_extrude(height, [bottom], [top], ...) 2D-CHILDREN;
 // Description:
 //   Extrudes 2d children with layers formed from the convex hull of the offset of each child according to a sequence of offset values.
 //   Like `offset_sweep` this module can use built-in offset profiles to provide treatments such as roundovers or chamfers but unlike `offset_sweep()` it
@@ -1939,7 +1939,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 
 // Function&Module: rounded_prism()
 // Usage: as a module
-//   rounded_prism(bottom, [top], [height=|h=|length=|l=], [joint_top=], [joint_bot=], [joint_sides=], [k=], [k_top=], [k_bot=], [k_sides=], [splinesteps=], [debug=], [convexity=],...) {attachments};
+//   rounded_prism(bottom, [top], [height=|h=|length=|l=], [joint_top=], [joint_bot=], [joint_sides=], [k=], [k_top=], [k_bot=], [k_sides=], [splinesteps=], [debug=], [convexity=],...) [ATTACHMENTS];
 // Usage: as a function
 //   vnf = rounded_prism(bottom, [top], [height=|h=|length=|l=], [joint_top=], [joint_bot=], [joint_sides=], [k=], [k_top=], [k_bot=], [k_sides=], [splinesteps=], [debug=]);
 // Description:
@@ -2476,8 +2476,8 @@ Access to the derivative smoothing parameter?
 
 // Function&Module: join_prism()
 // Usage: The two main forms with most common options
-//   join_prism(polygon, base, length=|height=|l=|h=, fillet=, [base_T=], [scale=], [prism_end_T=], [short=], ...) {attachments};
-//   join_prism(polygon, base, aux=, fillet=, [base_T=], [aux_T=], [scale=], [prism_end_T=], [short=], ...) {attachments};
+//   join_prism(polygon, base, length=|height=|l=|h=, fillet=, [base_T=], [scale=], [prism_end_T=], [short=], ...) [ATTACHMENTS];
+//   join_prism(polygon, base, aux=, fillet=, [base_T=], [aux_T=], [scale=], [prism_end_T=], [short=], ...) [ATTACHMENTS];
 // Usage: As function
 //   vnf = join_prism( ... );
 // Description:
