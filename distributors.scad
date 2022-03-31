@@ -263,7 +263,6 @@ module ycopies(spacing, n, l, sp)
 //   Spreads out `n` copies of the children along a line on the Z axis.
 //
 // Usage:
-
 //   zcopies(spacing, [n], [sp]) children;
 //   zcopies(l, [n], [sp]) children;
 //   zcopies(LIST) children;
