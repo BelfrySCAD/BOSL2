@@ -2437,7 +2437,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// See Also: attachable()
+// See Also: path_text()
 // Extra Anchors:
 //   "baseline" = Anchors at the baseline of the text, at the start of the string.
 //   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
