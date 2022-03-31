@@ -157,9 +157,10 @@ function line_of(spacing, n, l, p1, p2) =
 // Usage:
 //   xcopies(spacing, [n], [sp]) ...
 //   xcopies(l, [n], [sp]) ...
+//   xcopies(LIST) ...
 //
 // Arguments:
-//   spacing = spacing between copies. (Default: 1.0)
+//   spacing = Given a scalar, specifies a uniform spacing between copies. Given a list of scalars, each one gives a specific position along the line. (Default: 1.0)
 //   n = Number of copies to spread out. (Default: 2)
 //   l = Length to spread copies over.
 //   sp = If given as a point, copies will be spread on a line to the right of starting position `sp`.  If given as a scalar, copies will be spread on a line to the right of starting position `[sp,0,0]`.  If not given, copies will be spread along a line that is centered at [0,0,0].
@@ -178,14 +179,25 @@ function line_of(spacing, n, l, p1, p2) =
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
+// Example:
+//   xcopies([1,2,3,5,7]) sphere(d=1);
 module xcopies(spacing, n, l, sp)
 {
-    sp = is_finite(sp)? [sp,0,0] : sp;
-    line_of(
-        l=u_mul(l,RIGHT),
-        spacing=u_mul(spacing,RIGHT),
-        n=n, p1=sp
-    ) children();
+    dir = RIGHT;
+    sp = is_finite(sp)? (sp*dir) : sp;
+    if (is_vector(spacing)) {
+        translate(default(sp,[0,0,0])) {
+            for (x = spacing) {
+                translate(x*dir) children();
+            }
+        }
+    } else {
+        line_of(
+            l=u_mul(l,dir),
+            spacing=u_mul(spacing,dir),
+            n=n, p1=sp
+        ) children();
+    }
 }
 
 
@@ -197,9 +209,10 @@ module xcopies(spacing, n, l, sp)
 // Usage:
 //   ycopies(spacing, [n], [sp]) ...
 //   ycopies(l, [n], [sp]) ...
+//   ycopies(LIST) ...
 //
 // Arguments:
-//   spacing = spacing between copies. (Default: 1.0)
+//   spacing = Given a scalar, specifies a uniform spacing between copies. Given a list of scalars, each one gives a specific position along the line. (Default: 1.0)
 //   n = Number of copies to spread out. (Default: 2)
 //   l = Length to spread copies over.
 //   sp = If given as a point, copies will be spread on a line back from starting position `sp`.  If given as a scalar, copies will be spread on a line back from starting position `[0,sp,0]`.  If not given, copies will be spread along a line that is centered at [0,0,0].
@@ -218,14 +231,25 @@ module xcopies(spacing, n, l, sp)
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
+// Example:
+//   ycopies([1,2,3,5,7]) sphere(d=1);
 module ycopies(spacing, n, l, sp)
 {
-    sp = is_finite(sp)? [0,sp,0] : sp;
-    line_of(
-        l=u_mul(l,BACK),
-        spacing=u_mul(spacing,BACK),
-        n=n, p1=sp
-    ) children();
+    dir = BACK;
+    sp = is_finite(sp)? (sp*dir) : sp;
+    if (is_vector(spacing)) {
+        translate(default(sp,[0,0,0])) {
+            for (x = spacing) {
+                translate(x*dir) children();
+            }
+        }
+    } else {
+        line_of(
+            l=u_mul(l,dir),
+            spacing=u_mul(spacing,dir),
+            n=n, p1=sp
+        ) children();
+    }
 }
 
 
@@ -237,9 +261,10 @@ module ycopies(spacing, n, l, sp)
 // Usage:
 //   zcopies(spacing, [n], [sp]) ...
 //   zcopies(l, [n], [sp]) ...
+//   zcopies(LIST) ...
 //
 // Arguments:
-//   spacing = spacing between copies. (Default: 1.0)
+//   spacing = Given a scalar, specifies a uniform spacing between copies. Given a list of scalars, each one gives a specific position along the line. (Default: 1.0)
 //   n = Number of copies to spread out. (Default: 2)
 //   l = Length to spread copies over.
 //   sp = If given as a point, copies will be spread on a line up from starting position `sp`.  If given as a scalar, copies will be spread on a line up from starting position `[0,0,sp]`.  If not given, copies will be spread along a line that is centered at [0,0,0].
@@ -272,14 +297,25 @@ module ycopies(spacing, n, l, sp)
 //       back(($idx%2)*xyr*cos(60))
 //           grid2d(s,n=[12,7],stagger=($idx%2)? "alt" : true)
 //               sphere(d=s);
+// Example:
+//   zcopies([1,2,3,5,7]) sphere(d=1);
 module zcopies(spacing, n, l, sp)
 {
-    sp = is_finite(sp)? [0,0,sp] : sp;
-    line_of(
-        l=u_mul(l,UP),
-        spacing=u_mul(spacing,UP),
-        n=n, p1=sp
-    ) children();
+    dir = UP;
+    sp = is_finite(sp)? (sp*dir) : sp;
+    if (is_vector(spacing)) {
+        translate(default(sp,[0,0,0])) {
+            for (x = spacing) {
+                translate(x*dir) children();
+            }
+        }
+    } else {
+        line_of(
+            l=u_mul(l,dir),
+            spacing=u_mul(spacing,dir),
+            n=n, p1=sp
+        ) children();
+    }
 }
 
 
@@ -412,65 +448,6 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
                     }
                 }
             }
-        }
-    }
-}
-
-
-
-// Module: grid3d()
-//
-// Description:
-//   Makes a 3D grid of duplicate children.
-//
-// Usage:
-//   grid3d(n, spacing) ...
-//   grid3d(n=[Xn,Yn,Zn], spacing=[dX,dY,dZ]) ...
-//   grid3d([xa], [ya], [za]) ...
-//
-// Arguments:
-//   spacing = spacing of copies per axis. Use with `n`.
-//   n = Optional number of copies to have per axis.
-//   xa = array or range of X-axis values to offset by. (Default: [0])
-//   ya = array or range of Y-axis values to offset by. (Default: [0])
-//   za = array or range of Z-axis values to offset by. (Default: [0])
-//
-// Side Effects:
-//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
-//   `$idx` is set to the [Xidx,Yidx,Zidx] index values of each child copy, when using `count` and `n`.
-//
-// Examples(FlatSpin,VPD=240,VPT=[25,20,0]):
-//   grid3d(xa=[0:25:50],ya=[0,40],za=[-20:40:20])
-//       sphere(r=5);
-// Examples(FlatSpin,VPD=700):
-//   grid3d(n=[3, 4, 2], spacing=[60, 50, 40])
-//       sphere(r=10);
-// Examples:
-//   grid3d(ya=[-60:40:60],za=[0,70]) sphere(r=10);
-//   grid3d(n=3, spacing=30) sphere(r=10);
-//   grid3d(n=[3, 1, 2], spacing=30) sphere(r=10);
-//   grid3d(n=[3, 4], spacing=[80, 60]) sphere(r=10);
-// Examples:
-//   grid3d(n=[10, 10, 10], spacing=50)
-//       color($idx/9) cube(50, center=true);
-module grid3d(spacing, n, xa=[0], ya=[0], za=[0])
-{
-    n = scalar_vec3(n, 1);
-    spacing = scalar_vec3(spacing, undef);
-    if (!is_undef(n) && !is_undef(spacing)) {
-        for (xi = [0:1:n.x-1]) {
-            for (yi = [0:1:n.y-1]) {
-                for (zi = [0:1:n.z-1]) {
-                    $idx = [xi,yi,zi];
-                    $pos = v_mul(spacing, $idx - (n-[1,1,1])/2);
-                    translate($pos) children();
-                }
-            }
-        }
-    } else {
-        for (xoff = xa, yoff = ya, zoff = za) {
-            $pos = [xoff, yoff, zoff];
-            translate($pos) children();
         }
     }
 }
