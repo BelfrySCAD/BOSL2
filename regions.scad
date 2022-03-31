@@ -44,7 +44,7 @@
 
 // Function: is_region()
 // Usage:
-//   is_region(x);
+//   bool = is_region(x);
 // Description:
 //   Returns true if the given item looks like a region.  A region is a list of non-crossing simple polygons.  This test just checks
 //   that the argument is a list whose first entry is a path.  
@@ -281,7 +281,7 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 
 // Module: region()
 // Usage:
-//   region(r, [anchor], [spin], [cp]) { ... };
+//   region(r, [anchor], [spin=], [cp=], [atype=]) [attachments];
 // Description:
 //   Creates the 2D polygons described by the given region or list of polygons.  This module works on
 //   arbitrary lists of polygons that cross each other and hence do not define a valid region.  The
@@ -289,6 +289,7 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 // Arguments:
 //   r = region to create as geometry
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
+//   ---
 //   spin = Rotate this many degrees after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 2D point.  Default: "centroid"
 //   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
@@ -356,7 +357,7 @@ function _point_in_region(point, region, eps=EPSILON, i=0, cnt=0) =
 
 // Function: region_area()
 // Usage:
-//   area=region_area(region);
+//   area = region_area(region);
 // Description:
 //   Computes the area of the specified valid region. (If the region is invalid and has self intersections
 //   the result is meaningless.)
@@ -377,14 +378,13 @@ function _clockwise_region(r) = [for(p=r) clockwise_polygon(p)];
 
 // Function: are_regions_equal()
 // Usage:
-//    b = are_regions_equal(region1, region2, [eps])
+//    b = are_regions_equal(region1, region2, [either_winding])
 // Description:
-//    Returns true if the components of region1 and region2 are the same polygons (in any order)
-//    within given epsilon tolerance.
+//    Returns true if the components of region1 and region2 are the same polygons (in any order). 
 // Arguments:
 //    region1 = first region
 //    region2 = second region
-//    eps = tolerance for comparison
+//    either_winding = if true then two shapes test equal if they wind in opposite directions.  Default: false
 function are_regions_equal(region1, region2, either_winding=false) =
     let(
         region1=force_region(region1),
@@ -707,8 +707,8 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 
 // Function: offset()
 // Usage:
-//   offsetpath = offset(path, [r|delta], [chamfer], [closed], [check_valid], [quality])
-//   path_faces = offset(path, return_faces=true, [r|delta], [chamfer], [closed], [check_valid], [quality], [firstface_index], [flip_faces])
+//   offsetpath = offset(path, [r=|delta=], [chamfer=], [closed=], [check_valid=], [quality=])
+//   path_faces = offset(path, return_faces=true, [r=|delta=], [chamfer=], [closed=], [check_valid=], [quality=], [firstface_index=], [flip_faces=])
 // Description:
 //   Takes a 2D input path, polygon or region and returns a path offset by the specified amount.  As with the built-in
 //   offset() module, you can use `r` to specify rounded offset and `delta` to specify offset with
@@ -983,7 +983,7 @@ function _list_three(a,b,c) =
 
 // Function&Module: union()
 // Usage:
-//   union() {...}
+//   union() children;
 //   region = union(regions);
 //   region = union(REGION1,REGION2);
 //   region = union(REGION1,REGION2,REGION3);
@@ -1013,7 +1013,7 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 
 // Function&Module: difference()
 // Usage:
-//   difference() {...}
+//   difference() children;
 //   region = difference(regions);
 //   region = difference(REGION1,REGION2);
 //   region = difference(REGION1,REGION2,REGION3);
@@ -1045,7 +1045,7 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 
 // Function&Module: intersection()
 // Usage:
-//   intersection() {...}
+//   intersection() children;
 //   region = intersection(regions);
 //   region = intersection(REGION1,REGION2);
 //   region = intersection(REGION1,REGION2,REGION3);
@@ -1076,7 +1076,7 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 
 // Function&Module: exclusive_or()
 // Usage:
-//   exclusive_or() {...}
+//   exclusive_or() children;
 //   region = exclusive_or(regions);
 //   region = exclusive_or(REGION1,REGION2);
 //   region = exclusive_or(REGION1,REGION2,REGION3);

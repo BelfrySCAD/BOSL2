@@ -75,15 +75,12 @@ _NO_ARG = [true,[123232345],false];
 // Aliases: translate()
 //
 // Usage: As Module
-//   move([x=], [y=], [z=]) ...
-//   move(v) ...
+//   move(v) children;
 // Usage: As a function to translate points, VNF, or Bezier patch
 //   pts = move(v, p);
-//   pts = move([x=], [y=], [z=], p=);
 //   pts = move(STRING, p);
 // Usage: Get Translation Matrix
 //   mat = move(v);
-//   mat = move([x=], [y=], [z=]);
 //
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: left(), right(), fwd(), back(), down(), up(), spherical_to_xyz(), altaz_to_xyz(), cylindrical_to_xyz(), polar_to_xy()
@@ -97,28 +94,22 @@ _NO_ARG = [true,[123232345],false];
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the translated VNF.
 //   * Called as a function with the `p` argument, returns the translated point or list of points.
 //   * Called as a function with the `p` argument set to a VNF or a polygon and `v` set to "centroid", "mean" or "box", translates the argument to the centroid, mean, or bounding box center respectively.
-//   * Called as a function without a `p` argument, with a 2D offset vector `v`, returns an affine2d translation matrix.
-//   * Called as a function without a `p` argument, with a 3D offset vector `v`, returns an affine3d translation matrix.
+//   * Called as a function without a `p` argument, returns a 4x4 translation matrix for operating on 3D data.  
 //
 // Arguments:
-//   v = An [X,Y,Z] vector to translate by.  For function form with `p` is a point list or VNF, can be "centroid", "mean" or "box".  
+//   v = An [X,Y,Z] vector to translate by.  For function form with `p` a point list or VNF, can be "centroid", "mean" or "box".  
 //   p = Either a point, or a list of points to be translated when used as a function.
-//   ---
-//   x = X axis translation.
-//   y = Y axis translation.
-//   z = Z axis translation.
 //
 // Example:
 //   #sphere(d=10);
 //   move([0,20,30]) sphere(d=10);
 //
-// Example:
+// Example: You can move a 3D object with a 2D vector.  The Z component is treated at zero.  
 //   #sphere(d=10);
-//   move(y=20) sphere(d=10);
+//   move([-10,-5]) sphere(d=10);
 //
-// Example:
-//   #sphere(d=10);
-//   move(x=-10, y=-5) sphere(d=10);
+// Example(2D): Move to centroid
+//   polygon(move("centroid", right_triangle([10,4])));
 //
 // Example(FlatSpin): Using Altitude-Azimuth Coordinates
 //   #sphere(d=10);
@@ -135,19 +126,18 @@ _NO_ARG = [true,[123232345],false];
 //
 // Example(NORENDER):
 //   pt1 = move([0,20,30], p=[15,23,42]);       // Returns: [15, 43, 72]
-//   pt2 = move(y=10, p=[15,23,42]);            // Returns: [15, 33, 42]
-//   pt3 = move([0,3,1], p=[[1,2,3],[4,5,6]]);  // Returns: [[1,5,4], [4,8,7]]
-//   pt4 = move(y=11, p=[[1,2,3],[4,5,6]]);     // Returns: [[1,13,3], [4,16,6]]
+//   pt2 = move([0,3,1], p=[[1,2,3],[4,5,6]]);  // Returns: [[1,5,4], [4,8,7]]
 //   mat2d = move([2,3]);    // Returns: [[1,0,2],[0,1,3],[0,0,1]]
 //   mat3d = move([2,3,4]);  // Returns: [[1,0,0,2],[0,1,0,3],[0,0,1,4],[0,0,0,1]]
-module move(v=[0,0,0], p, x=0, y=0, z=0) {
+module move(v=[0,0,0], p) {
+    req_children($children);  
     assert(!is_string(v),"Module form of `move()` does not accept string `v` arguments");
     assert(is_undef(p), "Module form `move()` does not accept p= argument.");
     assert(is_vector(v) && (len(v)==3 || len(v)==2), "Invalid value for `v`")
-    translate(point3d(v)+[x,y,z]) children();
+    translate(point3d(v)) children();
 }
 
-function move(v=[0,0,0], p=_NO_ARG, x=0, y=0, z=0) =
+function move(v=[0,0,0], p=_NO_ARG) =
     is_string(v) ? (
         assert(is_vnf(p) || is_path(p),"String movements only work with point lists and VNFs")
         let(
@@ -156,12 +146,12 @@ function move(v=[0,0,0], p=_NO_ARG, x=0, y=0, z=0) =
                     : v=="box" ? mean(pointlist_bounds(p))
                     : assert(false,str("Unknown string movement ",v))
         )
-        move(-center,p=p, x=x,y=y,z=z)
+        move(-center,p=p)
       )
     :
     assert(is_vector(v) && (len(v)==3 || len(v)==2), "Invalid value for `v`")
     let(
-        m = affine3d_translate(point3d(v)+[x,y,z])
+        m = affine3d_translate(point3d(v))
     )
     p==_NO_ARG ? m : apply(m, p);
 
@@ -171,7 +161,7 @@ function translate(v=[0,0,0], p=_NO_ARG) = move(v=v, p=p);
 // Function&Module: left()
 //
 // Usage: As Module
-//   left(x) ...
+//   left(x) children;
 // Usage: Translate Points
 //   pts = left(x, p);
 // Usage: Get Translation Matrix
@@ -199,6 +189,7 @@ function translate(v=[0,0,0], p=_NO_ARG) = move(v=v, p=p);
 //   pt3 = left(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[-2,2,3], [1,5,6]]
 //   mat3d = left(4);  // Returns: [[1,0,0,-4],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
 module left(x=0, p) {
+    req_children($children);    
     assert(is_undef(p), "Module form `left()` does not accept p= argument.");
     assert(is_finite(x), "Invalid number")
     translate([-x,0,0]) children();
@@ -213,7 +204,7 @@ function left(x=0, p=_NO_ARG) =
 // Aliases: xmove()
 //
 // Usage: As Module
-//   right(x) ...
+//   right(x) children;
 // Usage: Translate Points
 //   pts = right(x, p);
 // Usage: Get Translation Matrix
@@ -241,6 +232,7 @@ function left(x=0, p=_NO_ARG) =
 //   pt3 = right(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[4,2,3], [7,5,6]]
 //   mat3d = right(4);  // Returns: [[1,0,0,4],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
 module right(x=0, p) {
+    req_children($children);    
     assert(is_undef(p), "Module form `right()` does not accept p= argument.");
     assert(is_finite(x), "Invalid number")
     translate([x,0,0]) children();
@@ -251,6 +243,7 @@ function right(x=0, p=_NO_ARG) =
     move([x,0,0],p=p);
 
 module xmove(x=0, p) {
+    req_children($children);    
     assert(is_undef(p), "Module form `xmove()` does not accept p= argument.");
     assert(is_finite(x), "Invalid number")
     translate([x,0,0]) children();
@@ -264,7 +257,7 @@ function xmove(x=0, p=_NO_ARG) =
 // Function&Module: fwd()
 //
 // Usage: As Module
-//   fwd(y) ...
+//   fwd(y) children;
 // Usage: Translate Points
 //   pts = fwd(y, p);
 // Usage: Get Translation Matrix
@@ -292,6 +285,7 @@ function xmove(x=0, p=_NO_ARG) =
 //   pt3 = fwd(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[1,-1,3], [4,2,6]]
 //   mat3d = fwd(4);  // Returns: [[1,0,0,0],[0,1,0,-4],[0,0,1,0],[0,0,0,1]]
 module fwd(y=0, p) {
+    req_children($children);    
     assert(is_undef(p), "Module form `fwd()` does not accept p= argument.");
     assert(is_finite(y), "Invalid number")
     translate([0,-y,0]) children();
@@ -306,7 +300,7 @@ function fwd(y=0, p=_NO_ARG) =
 // Aliases: ymove()
 //
 // Usage: As Module
-//   back(y) ...
+//   back(y) children;
 // Usage: Translate Points
 //   pts = back(y, p);
 // Usage: Get Translation Matrix
@@ -334,6 +328,7 @@ function fwd(y=0, p=_NO_ARG) =
 //   pt3 = back(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[1,5,3], [4,8,6]]
 //   mat3d = back(4);  // Returns: [[1,0,0,0],[0,1,0,4],[0,0,1,0],[0,0,0,1]]
 module back(y=0, p) {
+    req_children($children);    
     assert(is_undef(p), "Module form `back()` does not accept p= argument.");
     assert(is_finite(y), "Invalid number")
     translate([0,y,0]) children();
@@ -344,6 +339,7 @@ function back(y=0,p=_NO_ARG) =
     move([0,y,0],p=p);
 
 module ymove(y=0, p) {
+    req_children($children);    
     assert(is_undef(p), "Module form `ymove()` does not accept p= argument.");
     assert(is_finite(y), "Invalid number")
     translate([0,y,0]) children();
@@ -357,7 +353,7 @@ function ymove(y=0,p=_NO_ARG) =
 // Function&Module: down()
 //
 // Usage: As Module
-//   down(z) ...
+//   down(z) children;
 // Usage: Translate Points
 //   pts = down(z, p);
 // Usage: Get Translation Matrix
@@ -384,6 +380,7 @@ function ymove(y=0,p=_NO_ARG) =
 //   pt2 = down(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[1,2,0], [4,5,3]]
 //   mat3d = down(4);  // Returns: [[1,0,0,0],[0,1,0,0],[0,0,1,-4],[0,0,0,1]]
 module down(z=0, p) {
+    req_children($children);    
     assert(is_undef(p), "Module form `down()` does not accept p= argument.");
     translate([0,0,-z]) children();
 }
@@ -397,7 +394,7 @@ function down(z=0, p=_NO_ARG) =
 // Aliases: zmove()
 //
 // Usage: As Module
-//   up(z) ...
+//   up(z) children;
 // Usage: Translate Points
 //   pts = up(z, p);
 // Usage: Get Translation Matrix
@@ -424,6 +421,7 @@ function down(z=0, p=_NO_ARG) =
 //   pt2 = up(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[1,2,6], [4,5,9]]
 //   mat3d = up(4);  // Returns: [[1,0,0,0],[0,1,0,0],[0,0,1,4],[0,0,0,1]]
 module up(z=0, p) {
+    req_children($children);      
     assert(is_undef(p), "Module form `up()` does not accept p= argument.");
     assert(is_finite(z), "Invalid number");
     translate([0,0,z]) children();
@@ -434,6 +432,7 @@ function up(z=0, p=_NO_ARG) =
     move([0,0,z],p=p);
 
 module zmove(z=0, p) {
+    req_children($children);      
     assert(is_undef(p), "Module form `zmove()` does not accept p= argument.");
     assert(is_finite(z), "Invalid number");
     translate([0,0,z]) children();
@@ -453,10 +452,10 @@ function zmove(z=0, p=_NO_ARG) =
 // Function&Module: rot()
 //
 // Usage: As a Module
-//   rot(a, [cp], [reverse]) {...}
-//   rot([X,Y,Z], [cp], [reverse]) {...}
-//   rot(a, v, [cp], [reverse]) {...}
-//   rot(from, to, [a], [reverse]) {...}
+//   rot(a, [cp=], [reverse=]) children;
+//   rot([X,Y,Z], [cp=], [reverse=]) children;
+//   rot(a, v, [cp=], [reverse=]) children;
+//   rot(from=, to=, [a=], [reverse=]) children;
 // Usage: As a Function to transform data in `p`
 //   pts = rot(a, p=, [cp=], [reverse=]);
 //   pts = rot([X,Y,Z], p=, [cp=], [reverse=]);
@@ -519,6 +518,7 @@ function zmove(z=0, p=_NO_ARG) =
 //   stroke(rot(30,p=path), closed=true);
 module rot(a=0, v, cp, from, to, reverse=false)
 {
+    req_children($children);        
     m = rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse);
     multmatrix(m) children();
 }
@@ -556,7 +556,7 @@ function rot(a=0, v, cp, from, to, reverse=false, p=_NO_ARG, _m) =
 // Function&Module: xrot()
 //
 // Usage: As Module
-//   xrot(a, [cp=]) ...
+//   xrot(a, [cp=]) children;
 // Usage: As a function to rotate points
 //   rotated = xrot(a, p, [cp=]);
 // Usage: As a function to return rotation matrix
@@ -585,6 +585,7 @@ function rot(a=0, v, cp, from, to, reverse=false, p=_NO_ARG, _m) =
 //   xrot(90) cylinder(h=50, r=10, center=true);
 module xrot(a=0, p, cp)
 {
+    req_children($children);          
     assert(is_undef(p), "Module form `xrot()` does not accept p= argument.");
     if (a==0) {
         children();  // May be slightly faster?
@@ -601,7 +602,7 @@ function xrot(a=0, p=_NO_ARG, cp) = rot([a,0,0], cp=cp, p=p);
 // Function&Module: yrot()
 //
 // Usage: As Module
-//   yrot(a, [cp=]) ...
+//   yrot(a, [cp=]) children;
 // Usage: Rotate Points
 //   rotated = yrot(a, p, [cp=]);
 // Usage: Get Rotation Matrix
@@ -630,6 +631,7 @@ function xrot(a=0, p=_NO_ARG, cp) = rot([a,0,0], cp=cp, p=p);
 //   yrot(90) cylinder(h=50, r=10, center=true);
 module yrot(a=0, p, cp)
 {
+    req_children($children);  
     assert(is_undef(p), "Module form `yrot()` does not accept p= argument.");
     if (a==0) {
         children();  // May be slightly faster?
@@ -646,7 +648,7 @@ function yrot(a=0, p=_NO_ARG, cp) = rot([0,a,0], cp=cp, p=p);
 // Function&Module: zrot()
 //
 // Usage: As Module
-//   zrot(a, [cp=]) ...
+//   zrot(a, [cp=]) children;
 // Usage: As Function to rotate points
 //   rotated = zrot(a, p, [cp=]);
 // Usage: As Function to return rotation matrix
@@ -675,6 +677,7 @@ function yrot(a=0, p=_NO_ARG, cp) = rot([0,a,0], cp=cp, p=p);
 //   zrot(90) cube(size=[60,20,40], center=true);
 module zrot(a=0, p, cp)
 {
+    req_children($children);    
     assert(is_undef(p), "Module form `zrot()` does not accept p= argument.");
     if (a==0) {
         children();  // May be slightly faster?
@@ -696,8 +699,8 @@ function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
 
 // Function&Module: scale()
 // Usage: As Module
-//   scale(SCALAR) ...
-//   scale([X,Y,Z]) ...
+//   scale(SCALAR) children;
+//   scale([X,Y,Z]) children;
 // Usage: Scale Points
 //   pts = scale(v, p, [cp=]);
 // Usage: Get Scaling Matrix
@@ -747,7 +750,7 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
 //
 //
 // Usage: As Module
-//   xscale(x, [cp=]) ...
+//   xscale(x, [cp=]) children;
 // Usage: Scale Points
 //   scaled = xscale(x, p, [cp=]);
 // Usage: Get Affine Matrix
@@ -780,6 +783,7 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
 //   #stroke(path,closed=true);
 //   stroke(xscale(2,p=path),closed=true);
 module xscale(x=1, p, cp=0) {
+    req_children($children);      
     assert(is_undef(p), "Module form `xscale()` does not accept p= argument.");
     cp = is_num(cp)? [cp,0,0] : cp;
     if (cp == [0,0,0]) {
@@ -800,7 +804,7 @@ function xscale(x=1, p=_NO_ARG, cp=0) =
 // Function&Module: yscale()
 //
 // Usage: As Module
-//   yscale(y, [cp=]) ...
+//   yscale(y, [cp=]) children;
 // Usage: Scale Points
 //   scaled = yscale(y, p, [cp=]);
 // Usage: Get Affine Matrix
@@ -833,6 +837,7 @@ function xscale(x=1, p=_NO_ARG, cp=0) =
 //   #stroke(path,closed=true);
 //   stroke(yscale(2,p=path),closed=true);
 module yscale(y=1, p, cp=0) {
+    req_children($children);      
     assert(is_undef(p), "Module form `yscale()` does not accept p= argument.");
     cp = is_num(cp)? [0,cp,0] : cp;
     if (cp == [0,0,0]) {
@@ -853,7 +858,7 @@ function yscale(y=1, p=_NO_ARG, cp=0) =
 // Function&Module: zscale()
 //
 // Usage: As Module
-//   zscale(z, [cp=]) ...
+//   zscale(z, [cp=]) children;
 // Usage: Scale Points
 //   scaled = zscale(z, p, [cp=]);
 // Usage: Get Affine Matrix
@@ -886,6 +891,7 @@ function yscale(y=1, p=_NO_ARG, cp=0) =
 //   #stroke(path,closed=true);
 //   stroke(zscale(2,path),closed=true);
 module zscale(z=1, p, cp=0) {
+    req_children($children);      
     assert(is_undef(p), "Module form `zscale()` does not accept p= argument.");
     cp = is_num(cp)? [0,0,cp] : cp;
     if (cp == [0,0,0]) {
@@ -909,7 +915,7 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 
 // Function&Module: mirror()
 // Usage: As Module
-//   mirror(v) ...
+//   mirror(v) children;
 // Usage: As Function
 //   pt = mirror(v, p);
 // Usage: Get Reflection/Mirror Matrix
@@ -979,11 +985,11 @@ function mirror(v, p=_NO_ARG) =
 // Function&Module: xflip()
 //
 // Usage: As Module
-//   xflip([x]) ...
+//   xflip([x=]) children;
 // Usage: As Function
 //   pt = xflip(p, [x]);
 // Usage: Get Affine Matrix
-//   pt = xflip([x]);
+//   mat = xflip([x=]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), yflip(), zflip()
@@ -998,8 +1004,8 @@ function mirror(v, p=_NO_ARG) =
 //   * Called as a function without a `p` argument, returns the affine3d 4x4 mirror matrix.
 //
 // Arguments:
-//   x = The X coordinate of the plane of reflection.  Default: 0
 //   p = If given, the point, path, patch, or VNF to mirror.  Function use only.
+//   x = The X coordinate of the plane of reflection.  Default: 0
 //
 // Example:
 //   xflip() yrot(90) cylinder(d1=10, d2=0, h=20);
@@ -1011,6 +1017,7 @@ function mirror(v, p=_NO_ARG) =
 //   color("blue", 0.25) left(5) cube([0.01,15,15], center=true);
 //   color("red", 0.333) yrot(90) cylinder(d1=10, d2=0, h=20);
 module xflip(p, x=0) {
+    req_children($children);        
     assert(is_undef(p), "Module form `zflip()` does not accept p= argument.");
     translate([x,0,0])
         mirror([1,0,0])
@@ -1032,11 +1039,11 @@ function xflip(p=_NO_ARG, x=0) =
 // Function&Module: yflip()
 //
 // Usage: As Module
-//   yflip([y]) ...
+//   yflip([y=]) children;
 // Usage: As Function
 //   pt = yflip(p, [y]);
 // Usage: Get Affine Matrix
-//   pt = yflip([y]);
+//   mat = yflip([y=]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), xflip(), zflip()
@@ -1064,6 +1071,7 @@ function xflip(p=_NO_ARG, x=0) =
 //   color("blue", 0.25) back(5) cube([15,0.01,15], center=true);
 //   color("red", 0.333) xrot(90) cylinder(d1=10, d2=0, h=20);
 module yflip(p, y=0) {
+    req_children($children);          
     assert(is_undef(p), "Module form `yflip()` does not accept p= argument.");
     translate([0,y,0])
         mirror([0,1,0])
@@ -1085,11 +1093,11 @@ function yflip(p=_NO_ARG, y=0) =
 // Function&Module: zflip()
 //
 // Usage: As Module
-//   zflip([z]) ...
+//   zflip([z=]) children;
 // Usage: As Function
 //   pt = zflip(p, [z]);
 // Usage: Get Affine Matrix
-//   pt = zflip([z]);
+//   mat = zflip([z=]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), xflip(), yflip()
@@ -1117,6 +1125,7 @@ function yflip(p=_NO_ARG, y=0) =
 //   color("blue", 0.25) down(5) cube([15,15,0.01], center=true);
 //   color("red", 0.333) cylinder(d1=10, d2=0, h=20);
 module zflip(p, z=0) {
+    req_children($children);          
     assert(is_undef(p), "Module form `zflip()` does not accept p= argument.");
     translate([0,0,z])
         mirror([0,0,1])
@@ -1137,7 +1146,7 @@ function zflip(p=_NO_ARG, z=0) =
 
 // Function&Module: frame_map()
 // Usage: As module
-//   frame_map(v1, v2, v3, [reverse=]) { ... }
+//   frame_map(v1, v2, v3, [reverse=]) children;
 // Usage: As function to remap points
 //   transformed = frame_map(v1, v2, v3, p=points, [reverse=]);
 // Usage: As function to return a transformation matrix:
@@ -1216,6 +1225,7 @@ function frame_map(x,y,z, p=_NO_ARG, reverse=false) =
 
 module frame_map(x,y,z,p,reverse=false)
 {
+   req_children($children);        
    assert(is_undef(p), "Module form `frame_map()` does not accept p= argument.");
    multmatrix(frame_map(x,y,z,reverse=reverse))
        children();
@@ -1224,7 +1234,7 @@ module frame_map(x,y,z,p,reverse=false)
 
 // Function&Module: skew()
 // Usage: As Module
-//   skew([sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]) ...
+//   skew([sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]) children;
 // Usage: As Function
 //   pts = skew(p, [sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]);
 // Usage: Get Affine Matrix
@@ -1276,6 +1286,7 @@ module frame_map(x,y,z,p,reverse=false)
 //   stroke(pts,closed=true,dots=true,dots_color="blue");
 module skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0)
 {
+    req_children($children);          
     assert(is_undef(p), "Module form `skew()` does not accept p= argument.")
     multmatrix(
         affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
@@ -1299,7 +1310,7 @@ function skew(p=_NO_ARG, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0) =
 
 /// Internal Function: is_2d_transform()
 /// Usage:
-///   x = is_2d_transform(t);
+///   bool = is_2d_transform(t);
 /// Topics: Affine, Matrices, Transforms, Type Checking
 /// See Also: is_affine(), is_matrix()
 /// Description:
