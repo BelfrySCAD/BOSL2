@@ -27,7 +27,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 
 // Function: vnf_vertex_array()
 // Usage:
-//   vnf = vnf_vertex_array(points, [caps], [cap1], [cap2], [style], [reverse], [col_wrap], [row_wrap]);
+//   vnf = vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=]);
 // Description:
 //   Creates a VNF structure from a rectangular vertex list, by dividing the vertices into columns and rows,
 //   adding faces to tile the surface.  You can optionally have faces added to wrap the last column
@@ -662,7 +662,7 @@ function vnf_merge_points(vnf,eps=EPSILON) =
 
 // Function: vnf_drop_unused_points()
 // Usage:
-//   clean_vnf=vnf_drop_unused_points(vnf);
+//   clean_vnf = vnf_drop_unused_points(vnf);
 // Description:
 //   Remove all unreferenced vertices from a VNF.  Note that in most
 //   cases unreferenced vertices cause no harm, and this function may
@@ -1087,7 +1087,7 @@ function _triangulate_planar_convex_polygons(polys) =
 
 // Function: vnf_bend()
 // Usage:
-//   bentvnf = vnf_bend(vnf,r,d,[axis]);
+//   bentvnf = vnf_bend(vnf,r|d=,[axis=]);
 // Description:
 //   Bend a VNF around the X, Y or Z axis, splitting up faces as necessary.  Returns the bent
 //   VNF.  For bending around the Z axis the input VNF must not cross the Y=0 plane.  For bending
@@ -1292,7 +1292,7 @@ module _show_faces(vertices, faces, size=1) {
 
 // Module: debug_vnf()
 // Usage:
-//   debug_vnf(vnfs, [faces], [vertices], [opacity], [size], [convexity]);
+//   debug_vnf(vnfs, [faces=], [vertices=], [opacity=], [size=], [convexity=]);
 // Description:
 //   A drop-in module to replace `vnf_polyhedron()` to help debug vertices and faces.
 //   Draws all the vertices at their 3D position, numbered in blue by their
@@ -1332,7 +1332,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 // Usage: As Function
 //   fails = vnf_validate(vnf);
 // Usage: As Module
-//   vnf_validate(vnf, [size]);
+//   vnf_validate(vnf, [size], [check_isects]);
 // Description:
 //   When called as a function, returns a list of non-manifold errors with the given VNF.
 //   Each error has the format `[ERR_OR_WARN,CODE,MESG,POINTS,COLOR]`.
@@ -1358,6 +1358,8 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 // Arguments:
 //   vnf = The VNF to validate.
 //   size = The width of the lines and diameter of points used to highlight edges and vertices.  Module only.  Default: 1
+//   --
+//   show_warns = If true show warnings for non-triangular faces.  Default: true
 //   check_isects = If true, performs slow checks for intersecting faces.  Default: false
 // Example: BIG_FACE Warnings; Faces with More Than 3 Vertices.  CGAL often will fail to accept that a face is planar after a rotation, if it has more than 3 vertices.
 //   vnf = skin([
@@ -1628,6 +1630,7 @@ function _edge_not_reported(edge, varr, reports) =
 
 
 module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
+    no_children($children);
     faults = vnf_validate(
         vnf, show_warns=show_warns,
         check_isects=check_isects
