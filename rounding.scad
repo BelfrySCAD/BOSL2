@@ -340,12 +340,13 @@ include <structs.scad>
 // Example(2D): Two passes to apply chamfers first, and then round the unchamfered corners.  Chamfers always add one point, so it's not hard to keep track of the vertices
 //   $fn=32;
 //   shape = square(10);
-//   chamfered = round_corners(shape, method="chamfer", cut=[2,0,2,0]);
+//   chamfered = round_corners(shape, method="chamfer",
+//                             cut=[2,0,2,0]);
 //   rounded = round_corners(chamfered, 
-//              cut = [0, 0,    // first original veretex, chamfered
-//                     1.5,     // second original vertex
-//                     0, 0,    // third original vertex, chamfered
-//                     2.5]);   // last original vertex
+//              cut = [0, 0,  // 1st original vertex, chamfered
+//                     1.5,   // 2nd original vertex
+//                     0, 0,  // 3rd original vertex, chamfered
+//                     2.5]); // 4th original vertex
 //   polygon(rounded);
 // Example(2D): Another example of mixing chamfers and roundings with two passes
 //   path = star(5, step=2, d=100);
@@ -1706,7 +1707,7 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 
 // Module: convex_offset_extrude()
 // Usage: Basic usage.  See below for full options
-//   convex_offset_extrude(height, [bottom], [top], ...) {2D children};
+//   convex_offset_extrude(height, [bottom], [top], ...) 2D-children;
 // Description:
 //   Extrudes 2d children with layers formed from the convex hull of the offset of each child according to a sequence of offset values.
 //   Like `offset_sweep` this module can use built-in offset profiles to provide treatments such as roundovers or chamfers but unlike `offset_sweep()` it
@@ -1811,6 +1812,7 @@ module convex_offset_extrude(
         joint=undef, k=0.75, angle=45,
         convexity=10, thickness = 1/1024
 ) {
+        req_children($children);  
         argspec = [
                 ["for", ""],
                 ["r",r],
@@ -2347,7 +2349,7 @@ function _circle_mask(r) =
 //   rot(-90) {
 //     $fn=128;
 //     difference(){
-//       tube(or=r, wall=2, h=45);
+//       tube(or=r, wall=2, h=35, anchor=BOT);
 //       bent_cutout_mask(r-1, 2.1, back(5,p=square([18,18])));
 //     }
 //   }
@@ -2356,7 +2358,7 @@ function _circle_mask(r) =
 //   rot(-90) {
 //     $fn=128;
 //     difference(){
-//       tube(or=r, wall=2, h=45);
+//       tube(or=r, wall=2, h=35, anchor=BOT);
 //       bent_cutout_mask(r-1, 2.1,
 //         subdivide_path(back(5,p=square([18,18])),64,closed=true));
 //     }
@@ -2366,7 +2368,7 @@ function _circle_mask(r) =
 //   rot(-90) {
 //     $fn=128;
 //     difference(){
-//       tube(or=r, wall=2, h=45);
+//       tube(or=r, wall=2, h=35, anchor=BOT);
 //       bent_cutout_mask(r-1, 2.1,
 //         apply(back(15),
 //           subdivide_path(

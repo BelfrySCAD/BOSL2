@@ -50,20 +50,12 @@ include <BOSL2/std.scad>
 right(30) sphere(d=20);
 ```
 
-There is also a more generic `move()` command that can work just like `translate()`, or you can
-specify the motion on each axis more clearly:
+There is also a more generic `move()` command that can work just like `translate()`:
 ```openscad
 include <BOSL2/std.scad>
 #sphere(d=20);
 move([30,-10]) sphere(d=20);
 ```
-
-```openscad
-include <BOSL2/std.scad>
-#sphere(d=20);
-move(x=30,y=10) sphere(d=20);
-```
-
 
 ## Scaling
 The `scale()` command is also fairly simple:

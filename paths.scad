@@ -322,7 +322,7 @@ function _sum_preserving_round(data, index=0) =
 // Function: subdivide_path()
 // See Also: subdivide_and_slice(), resample_path(), jittered_poly()
 // Usage:
-//   newpath = subdivide_path(path, [n|refine|maxlen], [method], [closed], [exact]);
+//   newpath = subdivide_path(path, n|refine=|maxlen=, [method=], [closed=], [exact=]);
 // Description:
 //   Takes a path as input (closed or open) and subdivides the path to produce a more
 //   finely sampled path.  You control the subdivision process by using the `maxlen` arg
@@ -463,7 +463,7 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 
 // Function: resample_path()
 // Usage:
-//   newpath = resample_path(path, n|spacing, [closed]);
+//   newpath = resample_path(path, n|spacing=, [closed=]);
 // Description:
 //   Compute a uniform resampling of the input path.  If you specify `n` then the output path will have n
 //   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the
@@ -553,7 +553,7 @@ function is_path_simple(path, closed, eps=EPSILON) =
 
 // Function: path_closest_point()
 // Usage:
-//   path_closest_point(path, pt);
+//   index_pt = path_closest_point(path, pt);
 // Description:
 //   Finds the closest path segment, and point on that segment to the given point.
 //   Returns `[SEGNUM, POINT]`
@@ -828,7 +828,7 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 // Topics: Paths
 // See Also: split_path_at_self_crossings()
 // Usage:
-//   path_list = path_cut(path, cutdist, [closed=]);
+//   path_list = path_cut(path, cutdist, [closed]);
 // Description:
 //   Given a list of distances in `cutdist`, cut the path into
 //   subpaths at those lengths, returning a list of paths.
