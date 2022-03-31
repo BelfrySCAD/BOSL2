@@ -15,7 +15,7 @@ use <builtins.scad>
 
 // Module: recolor()
 // Usage:
-//   recolor([c]) {...}
+//   recolor([c]) children;
 // Topics: Attachments
 // See Also: color_this()
 // Description:
@@ -34,6 +34,7 @@ use <builtins.scad>
 //               attach(TOP,BOT) cuboid([4,4,2]);
 module recolor(c="default")
 {
+    req_children($children);  
     $color=c;
     children();
 }
@@ -41,7 +42,7 @@ module recolor(c="default")
 
 // Module: color_this()
 // Usage:
-//   color_this([c]) {...}
+//   color_this([c]) children;
 // Topics: Attachments
 // See Also: recolor()
 // Description:
@@ -61,6 +62,7 @@ module recolor(c="default")
 //               attach(TOP,BOT) cuboid([4,4,2]);
 module color_this(c="default")
 {
+  req_children($children);  
   $save_color=default($color,"default");
   $color=c;
   children();
@@ -69,7 +71,7 @@ module color_this(c="default")
 
 // Module: rainbow()
 // Usage:
-//   rainbow(list) ...
+//   rainbow(list,[stride],[maxhues],[shuffle],[seed]) children;
 // Description:
 //   Iterates the list, displaying children in different colors for each list item.  The color
 //   is set using the color() module, so this module is not compatible with {{recolor()}} or
@@ -91,6 +93,7 @@ module color_this(c="default")
 //   rainbow(rgn) stroke($item, closed=true);
 module rainbow(list, stride=1, maxhues, shuffle=false, seed)
 {
+    req_children($children);  
     ll = len(list);
     maxhues = first_defined([maxhues,ll]);
     huestep = 360 / maxhues;
@@ -107,7 +110,7 @@ module rainbow(list, stride=1, maxhues, shuffle=false, seed)
 
 // Function&Module: hsl()
 // Usage:
-//   hsl(h,[s],[l],[a]) ...
+//   hsl(h,[s],[l],[a]) children;
 //   rgb = hsl(h,[s],[l],[a]);
 // Description:
 //   When called as a function, returns the [R,G,B] color for the given hue `h`, saturation `s`, and lightness `l` from the HSL colorspace. If you supply
@@ -133,12 +136,16 @@ function hsl(h,s=1,l=0.5,a) =
         if (is_def(a)) a
     ];
 
-module hsl(h,s=1,l=0.5,a=1) color(hsl(h,s,l),a) children();
+module hsl(h,s=1,l=0.5,a=1)
+{
+  req_children($children);  
+  color(hsl(h,s,l),a) children();
+}
 
 
 // Function&Module: hsv()
 // Usage:
-//   hsv(h,[s],[v],[a]) ...
+//   hsv(h,[s],[v],[a]) children;
 //   rgb = hsv(h,[s],[v],[a]);
 // Description:
 //   When called as a function, returns the [R,G,B] color for the given hue `h`, saturation `s`, and value `v` from the HSV colorspace.  If you supply
@@ -175,7 +182,11 @@ function hsv(h,s=1,v=1,a) =
     is_def(a) ? point4d(add_scalar(rgbprime,m),a)
               : add_scalar(rgbprime,m);
 
-module hsv(h,s=1,v=1,a=1) color(hsv(h,s,v),a) children();
+module hsv(h,s=1,v=1,a=1)
+{
+    req_children($children);
+    color(hsv(h,s,v),a) children();
+}    
 
 
 
