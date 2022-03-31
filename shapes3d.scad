@@ -2261,7 +2261,7 @@ function torus(
 // Example: Standard Conical Connectors
 //   teardrop(d1=20, d2=30, h=20, cap_h1=11, cap_h2=16)
 //       show_anchors(custom=false);
-// Example(Spin,VPD=275): Named Conical Connectors
+// Example(Spin,VPD=150,Med): Named Conical Connectors
 //   teardrop(d1=20, d2=30, h=20, cap_h1=11, cap_h2=16)
 //       show_anchors(std=false);
 module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, anchor=CENTER, spin=0, orient=UP)
