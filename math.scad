@@ -142,7 +142,7 @@ function sqr(x) =
 
 // Function: log2()
 // Usage:
-//   foo = log2(x);
+//   val = log2(x);
 // Description:
 //   Returns the logarithm base 2 of the value given.
 // Example:
@@ -565,12 +565,11 @@ function median(v) =
 
 // Function: deltas()
 // Usage:
-//   delts = deltas(v);
+//   delts = deltas(v,[wrap]);
 // Description:
 //   Returns a list with the deltas of adjacent entries in the given list, optionally wrapping back to the front.
 //   The list should be a consistent list of numeric components (numbers, vectors, matrix, etc).
 //   Given [a,b,c,d], returns [b-a,c-b,d-c].
-//   
 // Arguments:
 //   v = The list to get the deltas of.
 //   wrap = If true, wrap back to the start from the end.  ie: return the difference between the last and first items as the last delta.  Default: false
@@ -748,7 +747,7 @@ function rand_int(minval, maxval, n, seed=undef) =
 
 // Function: random_points()
 // Usage:
-//    points = random_points([n], [dim], [scale], [seed]);
+//    points = random_points(n, dim, [scale], [seed]);
 // See Also: random_polygon(), spherical_random_points()
 // Topics: Random, Points
 // Description:
@@ -760,7 +759,7 @@ function rand_int(minval, maxval, n, seed=undef) =
 //    dim = dimension of the points. Default: 2
 //    scale = the scale of the point coordinates. Default: 1
 //    seed = an optional seed for the random generation.
-function random_points(n, dim=2, scale=1, seed) =
+function random_points(n, dim, scale=1, seed) =
     assert( is_int(n) && n>=0, "The number of points should be a non-negative integer.")
     assert( is_int(dim) && dim>=1, "The point dimensions should be an integer greater than 1.")
     assert( is_finite(scale) || is_vector(scale,dim), "The scale should be a number or a vector with length equal to d.")
@@ -848,7 +847,7 @@ function spherical_random_points(n=1, radius=1, seed) =
 
 // Function: random_polygon()
 // Usage:
-//    points = random_polygon(n, size, [seed]);
+//    points = random_polygon([n], [size], [seed]);
 // See Also: random_points(), spherical_random_points()
 // Topics: Random, Polygon
 // Description:

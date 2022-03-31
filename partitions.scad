@@ -14,7 +14,7 @@
 // Function&Module: half_of()
 //
 // Usage: as module
-//   half_of(v, [cp], [s], [planar]) ...
+//   half_of(v, [cp], [s], [planar]) CHILDREN;
 // Usage: as function
 //   result = half_of(p,v,[cp]);
 //
@@ -40,6 +40,7 @@
 //   half_of([1,1], planar=true) circle(d=50);
 module half_of(v=UP, cp, s=100, planar=false)
 {
+    req_children($children);
     cp = is_vector(v,4)? assert(cp==undef, "Don't use cp with plane definition.") plane_normal(v) * v[3] :
         is_vector(cp)? cp :
         is_num(cp)? cp*unit(v) :
@@ -119,8 +120,8 @@ function half_of(p, v=UP, cp) =
 // Function&Module: left_half()
 //
 // Usage: as module
-//   left_half([s], [x]) ...
-//   left_half(planar=true, [s], [x]) ...
+//   left_half([s], [x]) CHILDREN;
+//   left_half(planar=true, [s], [x]) CHILDREN;
 // Usage: as function
 //   result = left_half(p, [x]);
 //
@@ -142,6 +143,7 @@ function half_of(p, v=UP, cp) =
 //   left_half(planar=true) circle(r=20);
 module left_half(s=100, x=0, planar=false)
 {
+    req_children($children);
     dir = LEFT;
     difference() {
         children();
@@ -161,10 +163,10 @@ function left_half(p,x=0) = half_of(p, LEFT, [x,0,0]);
 // Function&Module: right_half()
 //
 // Usage: as module
-//   right_half([s=], [x=]) ...
-//   right_half(planar=true, [s=], [x=]) ...
+//   right_half([s=], [x=]) CHILDREN;
+//   right_half(planar=true, [s=], [x=]) CHILDREN;
 // Usage: as function
-//   result = right_half(p=, [x=]);
+//   result = right_half(p, [x=]);
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is left of it.
@@ -202,8 +204,8 @@ function right_half(p,x=0) = half_of(p, RIGHT, [x,0,0]);
 // Function&Module: front_half()
 //
 // Usage:
-//   front_half([s], [y]) ...
-//   front_half(planar=true, [s], [y]) ...
+//   front_half([s], [y]) CHILDREN;
+//   front_half(planar=true, [s], [y]) CHILDREN;
 // Usage: as function
 //   result = front_half(p, [y]);
 //
@@ -224,6 +226,7 @@ function right_half(p,x=0) = half_of(p, RIGHT, [x,0,0]);
 //   front_half(planar=true) circle(r=20);
 module front_half(s=100, y=0, planar=false)
 {
+    req_children($children);
     dir = FWD;
     difference() {
         children();
@@ -243,8 +246,8 @@ function front_half(p,y=0) = half_of(p, FRONT, [0,y,0]);
 // Function&Module: back_half()
 //
 // Usage:
-//   back_half([s], [y]) ...
-//   back_half(planar=true, [s], [y]) ...
+//   back_half([s], [y]) CHILDREN;
+//   back_half(planar=true, [s], [y]) CHILDREN;
 // Usage: as function
 //   result = back_half(p, [y]);
 //
@@ -265,6 +268,7 @@ function front_half(p,y=0) = half_of(p, FRONT, [0,y,0]);
 //   back_half(planar=true) circle(r=20);
 module back_half(s=100, y=0, planar=false)
 {
+    req_children($children);
     dir = BACK;
     difference() {
         children();
@@ -284,7 +288,7 @@ function back_half(p,y=0) = half_of(p, BACK, [0,y,0]);
 // Function&Module: bottom_half()
 //
 // Usage:
-//   bottom_half([s], [z]) ...
+//   bottom_half([s], [z]) CHILDREN;
 // Usage: as function
 //   result = bottom_half(p, [z]);
 //
@@ -302,6 +306,7 @@ function back_half(p,y=0) = half_of(p, BACK, [0,y,0]);
 //   bottom_half(z=-10) sphere(r=20);
 module bottom_half(s=100, z=0)
 {
+    req_children($children);
     dir = DOWN;
     difference() {
         children();
@@ -316,8 +321,9 @@ function bottom_half(p,z=0) = half_of(p,BOTTOM,[0,0,z]);
 
 // Function&Module: top_half()
 //
-// Usage:
-//   top_half([s], [z]) ...
+// Usage: as module
+//   top_half([s], [z]) CHILDREN;
+// Usage: as function
 //   result = top_half(p, [z]);
 //
 // Description:
@@ -334,6 +340,7 @@ function bottom_half(p,z=0) = half_of(p,BOTTOM,[0,0,z]);
 //   top_half(z=5) sphere(r=20);
 module top_half(s=100, z=0)
 {
+    req_children($children);
     dir = UP;
     difference() {
         children();
@@ -392,7 +399,7 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 
 // Module: partition_mask()
 // Usage:
-//   partition_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [spin], [orient],);
+//   partition_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [spin], [orient]) [ATTACHMENTS];
 // Description:
 //   Creates a mask that you can use to difference or intersect with an object to remove half of it, leaving behind a side designed to allow assembly of the sub-parts.
 // Arguments:
@@ -442,7 +449,7 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
 
 // Module: partition_cut_mask()
 // Usage:
-//   partition_cut_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [spin], [orient]);
+//   partition_cut_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [spin], [orient]) [ATTACHMENTS];
 // Description:
 //   Creates a mask that you can use to difference with an object to cut it into two sub-parts that can be assembled.
 //   The `$slop` value is important to get the proper fit and should probably be smaller than 0.2.  The examples below
@@ -485,7 +492,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
 
 // Module: partition()
 // Usage:
-//   partition(size, [spread], [cutsize], [cutpath], [gap], [spin]) ...
+//   partition(size, [spread], [cutsize], [cutpath], [gap], [spin]) CHILDREN;
 // Description:
 //   Partitions an object into two parts, spread apart a small distance, with matched joining edges.
 // Arguments:
@@ -510,6 +517,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
 //   partition(cutpath="jigsaw") cylinder(h=50, d=80, center=false);
 module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, spin=0)
 {
+    req_children($children);
     size = is_vector(size)? size : [size,size,size];
     cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
     rsize = v_abs(rot(spin,p=size));
