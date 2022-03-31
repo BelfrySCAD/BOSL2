@@ -215,43 +215,48 @@ module cuboid(
         cnt = sum(e);
         r = first_defined([chamfer, rounding]);
         dummy=assert(is_finite(r) && !approx(r,0));
-        c = [min(r,size.x/2), min(r,size.y/2), min(r,size.z/2)];
+        c = [r,r,r];
+        m = 0.01;
         c2 = v_mul(corner,c/2);
+        c3 = v_mul(corner,c-[1,1,1]*m/2);
         $fn = is_finite(chamfer)? 4 : quantup(segs(r),4);
         translate(v_mul(corner, size/2-c)) {
-            if (cnt == 0 || approx(r,0)) {
-                translate(c2) cube(c, center=true);
-            } else if (cnt == 1) {
-                if (e.x) right(c2.x) xtcyl(l=c.x, r=r);
-                if (e.y) back (c2.y) ytcyl(l=c.y, r=r);
-                if (e.z) up   (c2.z) zcyl(l=c.z, r=r);
-            } else if (cnt == 2) {
-                if (!e.x) {
-                    intersection() {
-                        ytcyl(l=c.y*2, r=r);
-                        zcyl(l=c.z*2, r=r);
-                    }
-                } else if (!e.y) {
-                    intersection() {
-                        xtcyl(l=c.x*2, r=r);
-                        zcyl(l=c.z*2, r=r);
+            intersection() {
+                if (cnt == 0 || approx(r,0)) {
+                    translate(c3) cube(m, center=true);
+                } else if (cnt == 1) {
+                    if (e.x) right(c3.x) xtcyl(l=m, r=r);
+                    if (e.y) back (c3.y) ytcyl(l=m, r=r);
+                    if (e.z) up   (c3.z) zcyl(l=m, r=r);
+                } else if (cnt == 2) {
+                    if (!e.x) {
+                        intersection() {
+                            ytcyl(l=c.y*2, r=r);
+                            zcyl(l=c.z*2, r=r);
+                        }
+                    } else if (!e.y) {
+                        intersection() {
+                            xtcyl(l=c.x*2, r=r);
+                            zcyl(l=c.z*2, r=r);
+                        }
+                    } else {
+                        intersection() {
+                            xtcyl(l=c.x*2, r=r);
+                            ytcyl(l=c.y*2, r=r);
+                        }
                     }
                 } else {
-                    intersection() {
-                        xtcyl(l=c.x*2, r=r);
-                        ytcyl(l=c.y*2, r=r);
+                    if (trimcorners) {
+                        tsphere(r=r);
+                    } else {
+                        intersection() {
+                            xtcyl(l=c.x*2, r=r);
+                            ytcyl(l=c.y*2, r=r);
+                            zcyl(l=c.z*2, r=r);
+                        }
                     }
                 }
-            } else {
-                if (trimcorners) {
-                    tsphere(r=r);
-                } else {
-                    intersection() {
-                        xtcyl(l=c.x*2, r=r);
-                        ytcyl(l=c.y*2, r=r);
-                        zcyl(l=c.z*2, r=r);
-                    }
-                }
+                translate(c2) cube(c, center=true); // Trim to just the octant.
             }
         }
     }
@@ -281,15 +286,22 @@ module cuboid(
             }
         }
     } else {
-        if (is_finite(chamfer)) {
-            if (any(edges[0])) assert(chamfer <= size.y/2 && chamfer <=size.z/2, "chamfer must be smaller than half the cube length or height.");
-            if (any(edges[1])) assert(chamfer <= size.x/2 && chamfer <=size.z/2, "chamfer must be smaller than half the cube width or height.");
-            if (any(edges[2])) assert(chamfer <= size.x/2 && chamfer <=size.y/2, "chamfer must be smaller than half the cube width or length.");
-        }
-        if (is_finite(rounding)) {
-            if (any(edges[0])) assert(rounding <= size.y/2 && rounding<=size.z/2, "rounding radius must be smaller than half the cube length or height.");
-            if (any(edges[1])) assert(rounding <= size.x/2 && rounding<=size.z/2, "rounding radius must be smaller than half the cube width or height.");
-            if (any(edges[2])) assert(rounding <= size.x/2 && rounding<=size.y/2, "rounding radius must be smaller than half the cube width or length.");
+        rr = max(default(chamfer,0), default(rounding,0));
+        if (rr>0) {
+            rv = [for (i=[0:2])
+                [for (j=[0:3])
+                    (edges[i][j]>0?rr:0) * v_abs(EDGE_OFFSETS[i][j])
+                ]
+            ];
+            grays = pair([0,1,3,2],wrap=true);  // gray code ordering.
+            minx = max([for (i=[1,2], j=grays) rv[i][j[0]].x + rv[i][j[1]].x]);
+            miny = max([for (i=[0,2], j=grays) rv[i][j[0]].y + rv[i][j[1]].y]);
+            minz = max([for (i=[0,1], j=grays) rv[i][j[0]].z + rv[i][j[1]].z]);
+            check =
+                assert(minx <= size.x, "Rounding or chamfering too large for cuboid size in the X axis.")
+                assert(miny <= size.y, "Rounding or chamfering too large for cuboid size in the Y axis.")
+                assert(minz <= size.z, "Rounding or chamfering too large for cuboid size in the Z axis.")
+            ;
         }
         majrots = [[0,90,0], [90,0,0], [0,0,0]];
         attachable(anchor,spin,orient, size=size) {
@@ -1500,7 +1512,7 @@ module zcyl(
 //   ---
 //   od = Outer diameter of tube.
 //   id = Inner diameter of tube.
-//   wall = horizontal thickness of tube wall. Default 0.5
+//   wall = horizontal thickness of tube wall. Default 1
 //   or1 = Outer radius of bottom of tube.  Default: value of r)
 //   or2 = Outer radius of top of tube.  Default: value of r)
 //   od1 = Outer diameter of bottom of tube.
@@ -1540,14 +1552,16 @@ module tube(
     orr2 = get_radius(r1=or2, r=or, d1=od2, d=od, dflt=undef);
     irr1 = get_radius(r1=ir1, r=ir, d1=id1, d=id, dflt=undef);
     irr2 = get_radius(r1=ir2, r=ir, d1=id2, d=id, dflt=undef);
+    wall = default(wall, 1);
     r1 = default(orr1, u_add(irr1,wall));
     r2 = default(orr2, u_add(irr2,wall));
     ir1 = default(irr1, u_sub(orr1,wall));
     ir2 = default(irr2, u_sub(orr2,wall));
+    assert(all_defined([r1, r2, ir1, ir2]), "Must specify two of inner radius/diam, outer radius/diam, and wall width.");
     assert(ir1 <= r1, "Inner radius is larger than outer radius.");
     assert(ir2 <= r2, "Inner radius is larger than outer radius.");
     sides = segs(max(r1,r2));
-    anchor = get_anchor(anchor, center, BOT, BOT);
+    anchor = get_anchor(anchor, center, BOT, CENTER);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
         zrot(realign? 180/sides : 0) {
             difference() {
@@ -2247,7 +2261,7 @@ function torus(
 // Example: Standard Conical Connectors
 //   teardrop(d1=20, d2=30, h=20, cap_h1=11, cap_h2=16)
 //       show_anchors(custom=false);
-// Example(Spin,VPD=275): Named Conical Connectors
+// Example(Spin,VPD=150,Med): Named Conical Connectors
 //   teardrop(d1=20, d2=30, h=20, cap_h1=11, cap_h2=16)
 //       show_anchors(std=false);
 module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, anchor=CENTER, spin=0, orient=UP)
@@ -2310,7 +2324,6 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, anc
         profile2 = teardrop2d(r=r2, ang=ang, cap_h=cap_h2, $fn=sides),
         tip_y1 = max(column(profile1,1)),
         tip_y2 = max(column(profile2,1)),
-        feef=echo(tip_y1=tip_y1, tip_y2=tip_y2),
         _cap_h1 = min(default(cap_h1, tip_y1), tip_y1),
         _cap_h2 = min(default(cap_h2, tip_y2), tip_y2),
         capvec = unit([0, _cap_h1-_cap_h2, l]),
