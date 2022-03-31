@@ -756,6 +756,7 @@ function right_triangle(size=[1,1], center, anchor, spin=0) =
         anchor = get_anchor(anchor, center, [-1,-1], [-1,-1])
     )
     assert(is_vector(size,2))
+    assert(min(size)>0, "Must give positive size")
     let(
         path = [ [size.x/2,-size.y/2], [-size.x/2,-size.y/2], [-size.x/2,size.y/2] ]
     ) reorient(anchor,spin, two_d=true, size=[size.x,size.y], size2=0, shift=-size.x/2, p=path);
