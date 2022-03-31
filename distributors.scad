@@ -429,28 +429,31 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
 //   grid3d([xa], [ya], [za]) ...
 //
 // Arguments:
+//   spacing = spacing of copies per axis. Use with `n`.
+//   n = Optional number of copies to have per axis.
 //   xa = array or range of X-axis values to offset by. (Default: [0])
 //   ya = array or range of Y-axis values to offset by. (Default: [0])
 //   za = array or range of Z-axis values to offset by. (Default: [0])
-//   n = Optional number of copies to have per axis.
-//   spacing = spacing of copies per axis. Use with `n`.
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the [Xidx,Yidx,Zidx] index values of each child copy, when using `count` and `n`.
 //
-// Examples(FlatSpin,VPD=222):
-//   grid3d(xa=[0:25:50],ya=[0,40],za=[-20:40:20]) sphere(r=5);
-// Examples(FlatSpin,VPD=800):
-//   grid3d(n=[3, 4, 2], spacing=[60, 50, 40]) sphere(r=10);
+// Examples(FlatSpin,VPD=240,VPT=[25,20,0]):
+//   grid3d(xa=[0:25:50],ya=[0,40],za=[-20:40:20])
+//       sphere(r=5);
+// Examples(FlatSpin,VPD=700):
+//   grid3d(n=[3, 4, 2], spacing=[60, 50, 40])
+//       sphere(r=10);
 // Examples:
 //   grid3d(ya=[-60:40:60],za=[0,70]) sphere(r=10);
 //   grid3d(n=3, spacing=30) sphere(r=10);
 //   grid3d(n=[3, 1, 2], spacing=30) sphere(r=10);
 //   grid3d(n=[3, 4], spacing=[80, 60]) sphere(r=10);
 // Examples:
-//   grid3d(n=[10, 10, 10], spacing=50) color($idx/9) cube(50, center=true);
-module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
+//   grid3d(n=[10, 10, 10], spacing=50)
+//       color($idx/9) cube(50, center=true);
+module grid3d(spacing, n, xa=[0], ya=[0], za=[0])
 {
     n = scalar_vec3(n, 1);
     spacing = scalar_vec3(spacing, undef);
