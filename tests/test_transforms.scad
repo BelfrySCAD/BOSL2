@@ -18,11 +18,10 @@ module test_move() {
     for (val=vals) {
         assert_equal(move(val), [[1,0,0,val.x],[0,1,0,val.y],[0,0,1,val.z],[0,0,0,1]]);
         assert_equal(move(val, p=[1,2,3]), [1,2,3]+val);
-        assert_equal(move(x=val.x, y=val.y, z=val.z, p=[1,2,3]), [1,2,3]+val);
     }
     // Verify that module at least doesn't crash.
-    move(x=-5) move(y=-5) move(z=-5) move([-5,-5,-5]) union(){};
-    move(x=5) move(y=5) move(z=5) move([5,5,5]) union(){};
+    move([-5,-5,-5]) union(){};
+    move([5,5,5]) union(){};
     sq = square(10);
     assert_equal(move("centroid", sq), move(-centroid(sq),sq));
     assert_equal(move("mean", vals), move(-mean(vals), vals));

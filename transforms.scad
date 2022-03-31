@@ -76,14 +76,11 @@ _NO_ARG = [true,[123232345],false];
 //
 // Usage: As Module
 //   move(v) children;
-//   move([x=], [y=], [z=]) children;
 // Usage: As a function to translate points, VNF, or Bezier patch
 //   pts = move(v, p);
-//   pts = move([x=], [y=], [z=], p=);
 //   pts = move(STRING, p);
 // Usage: Get Translation Matrix
 //   mat = move(v);
-//   mat = move([x=], [y=], [z=]);
 //
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: left(), right(), fwd(), back(), down(), up(), spherical_to_xyz(), altaz_to_xyz(), cylindrical_to_xyz(), polar_to_xy()
@@ -97,28 +94,22 @@ _NO_ARG = [true,[123232345],false];
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the translated VNF.
 //   * Called as a function with the `p` argument, returns the translated point or list of points.
 //   * Called as a function with the `p` argument set to a VNF or a polygon and `v` set to "centroid", "mean" or "box", translates the argument to the centroid, mean, or bounding box center respectively.
-//   * Called as a function without a `p` argument, with a 2D offset vector `v`, returns an affine2d translation matrix.
-//   * Called as a function without a `p` argument, with a 3D offset vector `v`, returns an affine3d translation matrix.
+//   * Called as a function without a `p` argument, returns a 4x4 translation matrix for operating on 3D data.  
 //
 // Arguments:
-//   v = An [X,Y,Z] vector to translate by.  For function form with `p` is a point list or VNF, can be "centroid", "mean" or "box".  
+//   v = An [X,Y,Z] vector to translate by.  For function form with `p` a point list or VNF, can be "centroid", "mean" or "box".  
 //   p = Either a point, or a list of points to be translated when used as a function.
-//   ---
-//   x = X axis translation.
-//   y = Y axis translation.
-//   z = Z axis translation.
 //
 // Example:
 //   #sphere(d=10);
 //   move([0,20,30]) sphere(d=10);
 //
-// Example:
+// Example: You can move a 3D object with a 2D vector.  The Z component is treated at zero.  
 //   #sphere(d=10);
-//   move(y=20) sphere(d=10);
+//   move([-10,-5]) sphere(d=10);
 //
-// Example:
-//   #sphere(d=10);
-//   move(x=-10, y=-5) sphere(d=10);
+// Example(2D): Move to centroid
+//   polygon(move("centroid", right_triangle([10,4])));
 //
 // Example(FlatSpin): Using Altitude-Azimuth Coordinates
 //   #sphere(d=10);
@@ -135,9 +126,7 @@ _NO_ARG = [true,[123232345],false];
 //
 // Example(NORENDER):
 //   pt1 = move([0,20,30], p=[15,23,42]);       // Returns: [15, 43, 72]
-//   pt2 = move(y=10, p=[15,23,42]);            // Returns: [15, 33, 42]
-//   pt3 = move([0,3,1], p=[[1,2,3],[4,5,6]]);  // Returns: [[1,5,4], [4,8,7]]
-//   pt4 = move(y=11, p=[[1,2,3],[4,5,6]]);     // Returns: [[1,13,3], [4,16,6]]
+//   pt2 = move([0,3,1], p=[[1,2,3],[4,5,6]]);  // Returns: [[1,5,4], [4,8,7]]
 //   mat2d = move([2,3]);    // Returns: [[1,0,2],[0,1,3],[0,0,1]]
 //   mat3d = move([2,3,4]);  // Returns: [[1,0,0,2],[0,1,0,3],[0,0,1,4],[0,0,0,1]]
 module move(v=[0,0,0], p) {
