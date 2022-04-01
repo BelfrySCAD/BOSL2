@@ -25,7 +25,7 @@ include <rounding.scad>
 ///   _hex_offset_ring(d=1, lev=3); // Returns a hex ring of 18 points.
 function _hex_offset_ring(d, lev=0) =
     (lev == 0)? [[0,0]] :
-    subdivide_path(reverse(hexagon(r=lev*d)), refine=lev);
+    reverse(subdivide_path(hexagon(r=lev*d), refine=lev));
 
 
 /// Function: _hex_offsets()
