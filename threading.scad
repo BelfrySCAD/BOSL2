@@ -22,6 +22,7 @@
 //   d = Outer diameter of threaded rod, or a triplet of [d_min, d_pitch, d_major]. 
 //   l = length of threaded rod.
 //   pitch = Length between threads.
+//   ---
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
