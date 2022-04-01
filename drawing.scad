@@ -534,9 +534,9 @@ module stroke(
 
 // Function&Module: dashed_stroke()
 // Usage: As a Module
-//   dashed_stroke(path, dashpat, [closed=]);
+//   dashed_stroke(path, dashpat, [width=], [closed=]);
 // Usage: As a Function
-//   dashes = dashed_stroke(path, dashpat, width=, [closed=]);
+//   dashes = dashed_stroke(path, dashpat, [closed=]);
 // Topics: Paths, Drawing Tools
 // See Also: stroke(), path_cut()
 // Description:
@@ -595,17 +595,19 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
 
 // Function&Module: arc()
 // Usage: 2D arc from 0º to `angle` degrees.
-//   arc(n, r|d=, angle);
+//   path=arc(n, r|d=, angle);
 // Usage: 2D arc from START to END degrees.
-//   arc(n, r|d=, angle=[START,END])
+//   path=arc(n, r|d=, angle=[START,END]);
 // Usage: 2D arc from `start` to `start+angle` degrees.
-//   arc(n, r|d=, start=, angle=)
+//   path=arc(n, r|d=, start=, angle=);
 // Usage: 2D circle segment by `width` and `thickness`, starting and ending on the X axis.
-//   arc(n, width=, thickness=)
+//   path=arc(n, width=, thickness=);
 // Usage: Shortest 2D or 3D arc around centerpoint `cp`, starting at P0 and ending on the vector pointing from `cp` to `P1`.
-//   arc(n, cp=, points=[P0,P1], [long=], [cw=], [ccw=])
+//   path=arc(n, cp=, points=[P0,P1], [long=], [cw=], [ccw=]);
 // Usage: 2D or 3D arc, starting at `P0`, passing through `P1` and ending at `P2`.
-//   arc(n, points=[P0,P1,P2])
+//   path=arc(n, points=[P0,P1,P2]);
+// Usage: as module
+//   arc(...) [ATTACHMENTS];
 // Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators
 // Description:
 //   If called as a function, returns a 2D or 3D path forming an arc.
@@ -742,7 +744,7 @@ module arc(n, r, angle, d, cp, points, width, thickness, start, wedge=false, anc
 
 // Function: helix()
 // Usage:
-//   helix([l|h], [turns], [angle], r|r1|r2, d|d1|d2)
+//   path = helix(l|h, [turns=], [angle=], r=|r1=|r2=, d=|d1=|d2=);
 // Description:
 //   Returns a 3D helical path on a cone, including the degerate case of flat spirals.
 //   You can specify start and end radii.  You can give the length, the helix angle, or the number of turns: two

@@ -371,7 +371,7 @@ function bezier_length(bezier, start_u=0, end_u=1, max_deflect=0.01) =
 
 // Function: bezier_line_intersection()
 // Usage: 
-//   u = bezier_line_intersection(curve, line);
+//   u = bezier_line_intersection(bezier, line);
 // Topics: Bezier Curves, Geometry, Intersection
 // See Also: bezier_points(), bezier_length(), bezier_closest_point()
 // Description:
@@ -708,6 +708,7 @@ function bezpath_offset(offset, bezier, N=3) =
 //   pt = The starting endpoint for the bezier path.
 //   a = If given a scalar, specifies the theta (XY plane) angle in degrees from X+.  If given a vector, specifies the direction and possibly distance of the first control point.
 //   r = Specifies the distance of the control point from the endpoint `pt`.
+//   ---
 //   p = If given, specifies the number of degrees away from the Z+ axis.
 // Example(2D): 2D Bezier Path by Angle
 //   bezpath = flatten([
@@ -781,6 +782,7 @@ function bez_begin(pt,a,r,p) =
 //   a = If given a scalar, specifies the theta (XY plane) angle in degrees from X+.  If given a vector, specifies the direction and possibly distance of the departing control point.
 //   r1 = Specifies the distance of the approching control point from the fixed point.  Overrides the distance component of the vector if `a` contains a vector.
 //   r2 = Specifies the distance of the departing control point from the fixed point.  Overrides the distance component of the vector if `a` contains a vector.  If `r1` is given and `r2` is not, uses the value of `r1` for `r2`.
+//   ---
 //   p = If given, specifies the number of degrees away from the Z+ axis.
 function bez_tang(pt,a,r1,r2,p) =
     assert(is_finite(r1) || is_vector(a))
@@ -816,6 +818,7 @@ function bez_tang(pt,a,r1,r2,p) =
 //   a2 = If given a scalar, specifies the theta (XY plane) angle in degrees from X+.  If given a vector, specifies the direction and possibly distance of the departing control point.
 //   r1 = Specifies the distance of the approching control point from the fixed point.  Overrides the distance component of the vector if `a1` contains a vector.
 //   r2 = Specifies the distance of the departing control point from the fixed point.  Overrides the distance component of the vector if `a2` contains a vector.
+//   ---
 //   p1 = If given, specifies the number of degrees away from the Z+ axis of the approaching control point.
 //   p2 = If given, specifies the number of degrees away from the Z+ axis of the departing control point.
 function bez_joint(pt,a1,a2,r1,r2,p1,p2) =

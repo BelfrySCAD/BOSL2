@@ -22,7 +22,7 @@ use <builtins.scad>
 // Usage: As Module
 //   cube(size, [center], ...);
 // Usage: With Attachments
-//   cube(size, [center], ...) { attachments }
+//   cube(size, [center], ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = cube(size, [center], ...);
 // See Also: cuboid(), prismoid()
@@ -96,7 +96,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 // Usage: Rounded Cubes
 //   cuboid(size, [rounding=], [teardrop=], [edges=], [except=], [trimcorners=], ...);
 // Usage: Attaching children
-//   cuboid(size, [anchor=], ...) [attachments];
+//   cuboid(...) ATTACHMENTS;
 //
 // Description:
 //   Creates a cube or cuboid object, with optional chamfering or rounding of edges and corners.
@@ -490,15 +490,13 @@ function cuboid(
 // Function&Module: prismoid()
 //
 // Usage: Typical Prismoids
-//   prismoid(size1, size2, h|l, [shift], ...);
-// Usage: Attaching Children
-//   prismoid(size1, size2, h|l, [shift], ...) [attachments];
+//   prismoid(size1, size2, h|l, [shift], ...) [ATTACHMENTS];
 // Usage: Chamfered Prismoids
-//   prismoid(size1, size2, h|l, [chamfer=], ...);
-//   prismoid(size1, size2, h|l, [chamfer1=], [chamfer2=], ...);
+//   prismoid(size1, size2, h|l, [chamfer=], ...) [ATTACHMENTS];
+//   prismoid(size1, size2, h|l, [chamfer1=], [chamfer2=], ...) [ATTACHMENTS];
 // Usage: Rounded Prismoids
-//   prismoid(size1, size2, h|l, [rounding=], ...);
-//   prismoid(size1, size2, h|l, [rounding1=], [rounding2=], ...);
+//   prismoid(size1, size2, h|l, [rounding=], ...) [ATTACHMENTS];
+//   prismoid(size1, size2, h|l, [rounding1=], [rounding2=], ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = prismoid(size1, size2, h|l, [shift], [rounding], [chamfer]);
 //   vnf = prismoid(size1, size2, h|l, [shift], [rounding1], [rounding2], [chamfer1], [chamfer2]);
@@ -692,9 +690,7 @@ function prismoid(
 
 // Function&Module: octahedron()
 // Usage: As Module
-//   octahedron(size, ...);
-// Usage: With Attachments
-//   octahedron(size, ...) { attachments }
+//   octahedron(size, ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = octahedron(size, ...);
 // Description:
@@ -750,7 +746,7 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   rect_tube(h, size, isize, irounding1=, irounding2= ...);
 //   rect_tube(h, size, isize, rounding=, irounding=, ...);
 // Usage: Attaching Children
-//   rect_tube(h, size, isize, ...) [attachments];
+//   rect_tube(...) ATTACHMENTS;
 //
 // Description:
 //   Creates a rectangular or prismoid tube with optional roundovers and/or chamfers.
@@ -924,9 +920,7 @@ function rect_tube(
 // Function&Module: wedge()
 //
 // Usage: As Module
-//   wedge(size, [center], ...);
-// Usage: With Attachments
-//   wedge(size, [center], ...) { attachments }
+//   wedge(size, [center], ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = wedge(size, [center], ...);
 //
@@ -985,10 +979,8 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 // Function&Module: cylinder()
 // Topics: Shapes (3D), Attachable, VNF Generators
 // Usage: As Module
-//   cylinder(h, r=/d=, [center=], ...);
-//   cylinder(h, r1/d1=, r2/d2=, [center=], ...);
-// Usage: With Attachments
-//   cylinder(h, r=/d=, [center=]) {attachments}
+//   cylinder(h, r=/d=, [center=], ...) [ATTACHMENTS];
+//   cylinder(h, r1/d1=, r2/d2=, [center=], ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = cylinder(h, r=/d=, [center=], ...);
 //   vnf = cylinder(h, r1/d1=, r2/d2=, [center=], ...);
@@ -1073,10 +1065,10 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   the cylinder's length.
 //
 // Usage: Normal Cylinders
-//   cyl(l|h, r, [center], [circum=], [realign=]);
-//   cyl(l|h, d=, ...);
-//   cyl(l|h, r1=, r2=, ...);
-//   cyl(l|h, d1=, d2=, ...);
+//   cyl(l|h, r, [center], [circum=], [realign=]) [ATTACHMENTS];
+//   cyl(l|h, d=, ...) [ATTACHMENTS];
+//   cyl(l|h, r1=, r2=, ...) [ATTACHMENTS];
+//   cyl(l|h, d1=, d2=, ...) [ATTACHMENTS];
 //
 // Usage: Chamferred Cylinders
 //   cyl(l|h, r|d, chamfer=, [chamfang=], [from_end=], ...);
@@ -1273,11 +1265,8 @@ module cyl(
 //   Creates a cylinder oriented along the X axis.
 //
 // Usage: Typical
-//   xcyl(l|h, r, [anchor=]);
-//   xcyl(l|h, d=, [anchor=]);
-//   xcyl(l|h, r1=|d1=, r2=|d2=, [anchor=]);
-// Usage: Attaching Children
-//   xcyl(l|h, r, [anchor=]) [attachments];
+//   xcyl(l|h, r|d=, [anchor=], ...) [ATTACHMENTS];
+//   xcyl(l|h, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
 //
 // Arguments:
 //   l / h = Length of cylinder along oriented axis. Default: 1
@@ -1346,11 +1335,8 @@ module xcyl(
 //   Creates a cylinder oriented along the Y axis.
 //
 // Usage: Typical
-//   ycyl(l|h, r, [anchor=]);
-//   ycyl(l|h, d=, [anchor=]);
-//   ycyl(l|h, r1=|d1=, r2=|d2=, [anchor=]);
-// Usage: Attaching Children
-//   ycyl(l|h, r, [anchor=]) [attachments];
+//   ycyl(l|h, r|d=, [anchor=], ...) [ATTACHMENTS];
+//   ycyl(l|h, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
 //
 // Arguments:
 //   l / h = Length of cylinder along oriented axis. (Default: `1.0`)
@@ -1420,11 +1406,8 @@ module ycyl(
 //   Creates a cylinder oriented along the Z axis.
 //
 // Usage: Typical
-//   zcyl(l|h, r, [anchor=]);
-//   zcyl(l|h, d=, [anchor=]);
-//   zcyl(l|h, r1=|d1=, r2=|d2=, [anchor=]);
-// Usage: Attaching Children
-//   zcyl(l|h, r, [anchor=]) [attachments];
+//   zcyl(l|h, r|d=, [anchor=],...) [ATTACHMENTS];
+//   zcyl(l|h, r1=|d1=, r2=|d2=, [anchor=],...);
 //
 // Arguments:
 //   l / h = Length of cylinder along oriented axis. (Default: 1.0)
@@ -1502,7 +1485,7 @@ module zcyl(
 //   tube(h|l, or1|od1, or2|od2, wall, ...);
 //   tube(h|l, ir1|id1, ir2|id2, or1|od1, or2|od2, [realign]);
 // Usage: Attaching Children
-//   tube(h|l, or, ir, [center]) [attachments];
+//   tube(...) ATTACHMENTS;
 //
 // Arguments:
 //   h / l = height of tube. Default: 1
@@ -1589,7 +1572,7 @@ module tube(
 //   vnf = pie_slice(l|h, d=, ang=, ...);
 //   vnf = pie_slice(l|h, r1=|d1=, r2=|d2=, ang=, ...);
 // Usage: Attaching Children
-//   pie_slice(l|h, r, ang, ...) [attachments];
+//   pie_slice(l|h, r, ang, ...) ATTACHMENTS;
 //
 // Arguments:
 //   h / l = height of pie slice.
@@ -1674,9 +1657,7 @@ function pie_slice(
 // Function&Module: sphere()
 // Topics: Shapes (3D), Attachable, VNF Generators
 // Usage: As Module
-//   sphere(r|d=, [circum=], [style=], ...);
-// Usage: With Attachments
-//   sphere(r|d=, ...) { attachments }
+//   sphere(r|d=, [circum=], [style=], ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = sphere(r|d=, [circum=], [style=], ...);
 // See Also: spheroid()
@@ -1740,9 +1721,7 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 
 // Function&Module: spheroid()
 // Usage: Typical
-//   spheroid(r|d, [circum], [style]);
-// Usage: Attaching Children
-//   spheroid(r|d, [circum], [style]) [attachments];
+//   spheroid(r|d, [circum], [style]) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = spheroid(r|d, [circum], [style]);
 // Description:
@@ -2069,14 +2048,12 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 // Function&Module: torus()
 //
 // Usage: As Module
-//   torus(r_maj|d_maj, r_min|d_min, [center], ...);
-//   torus(or|od, ir|id, ...);
-//   torus(r_maj|d_maj, or|od, ...);
-//   torus(r_maj|d_maj, ir|id, ...);
-//   torus(r_min|d_min, or|od, ...);
-//   torus(r_min|d_min, ir|id, ...);
-// Usage: Attaching Children
-//   torus(or|od, ir|id, ...) [attachments];
+//   torus(r_maj|d_maj, r_min|d_min, [center], ...) [ATTACHMENTS];
+//   torus(or|od, ir|id, ...) [ATTACHMENTS];
+//   torus(r_maj|d_maj, or|od, ...) [ATTACHMENTS];
+//   torus(r_maj|d_maj, ir|id, ...) [ATTACHMENTS];
+//   torus(r_min|d_min, or|od, ...) [ATTACHMENTS];
+//   torus(r_min|d_min, ir|id, ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = torus(r_maj|d_maj, r_min|d_min, [center], ...);
 //   vnf = torus(or|od, ir|id, ...);
@@ -2213,13 +2190,11 @@ function torus(
 //   Makes a teardrop shape in the XZ plane. Useful for 3D printable holes.
 //
 // Usage: Typical
-//   teardrop(h|l, r, [ang], [cap_h], ...);
-//   teardrop(h|l, d=, [ang=], [cap_h=], ...);
+//   teardrop(h|l, r, [ang], [cap_h], ...) [ATTACHMENTS];
+//   teardrop(h|l, d=, [ang=], [cap_h=], ...) [ATTACHMENTS];
 // Usage: Psuedo-Conical
-//   teardrop(h|l, r1=, r2=, [ang=], [cap_h1=], [cap_h2=], ...);
-//   teardrop(h|l, d1=, d2=, [ang=], [cap_h1=], [cap_h2=], ...);
-// Usage: Attaching Children
-//   teardrop(h|l, r, ...) [attachments];
+//   teardrop(h|l, r1=, r2=, [ang=], [cap_h1=], [cap_h2=], ...)  [ATTACHMENTS];
+//   teardrop(h|l, d1=, d2=, [ang=], [cap_h1=], [cap_h2=], ...)  [ATTACHMENTS];
 // Usage: As Function
 //   vnf = teardrop(h|l=, r|d=, [ang=], [cap_h=], ...);
 //   vnf = teardrop(h|l=, r1=|d1=, r2=|d2=, [ang=], [cap_h=], ...);
@@ -2348,9 +2323,7 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, anc
 //   Creates a sphere with a conical hat, to make a 3D teardrop.
 //
 // Usage: As Module
-//   onion(r|d=, [ang=], [cap_h=], ...);
-// Usage: Attaching Children
-//   onion(r, ...) [attachments];
+//   onion(r|d=, [ang=], [cap_h=], ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = onion(r|d=, [ang=], [cap_h=], ...);
 //
@@ -2530,7 +2503,7 @@ function _cut_interp(pathcut, path, data) =
 
 // Module: path_text()
 // Usage:
-//   path_text(path, text, [size], [thickness], [font], [lettersize], [offset], [reverse], [normal], [top], [textmetrics])
+//   path_text(path, text, [size], [thickness], [font], [lettersize], [offset], [reverse], [normal], [top], [textmetrics], [kern])
 // Description:
 //   Place the text letter by letter onto the specified path using textmetrics (if available and requested)
 //   or user specified letter spacing.  The path can be 2D or 3D.  In 2D the text appears along the path with letters upright
@@ -2638,6 +2611,7 @@ function _cut_interp(pathcut, path, data) =
 
 module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false, kern=0)
 {
+  no_children($children);
   dummy2=assert(is_path(path,[2,3]),"Must supply a 2d or 3d path")
          assert(num_defined([normal,top])<=1, "Cannot define both \"normal\" and \"top\"");
   dim = len(path[0]);
@@ -2716,10 +2690,8 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 //   Center this part along the concave edge to be chamfered and union it in.
 //
 // Usage: Typical
-//   interior_fillet(l, r, [ang], [overlap], ...);
-//   interior_fillet(l, d=, [ang=], [overlap=], ...);
-// Usage: Attaching Children
-//   interior_fillet(l, r, [ang], [overlap], ...) [attachments];
+//   interior_fillet(l, r, [ang], [overlap], ...) [ATTACHMENTS];
+//   interior_fillet(l, d=, [ang=], [overlap=], ...) [ATTACHMENTS];
 //
 // Arguments:
 //   l = Length of edge to fillet.
@@ -2777,9 +2749,7 @@ module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=FRONT+LEFT, spi
 
 // Function&Module: heightfield()
 // Usage: As Module
-//   heightfield(data, [size], [bottom], [maxz], [xrange], [yrange], [style], [convexity], ...);
-// Usage: Attaching Children
-//   heightfield(data, [size], ...) [attachments];
+//   heightfield(data, [size], [bottom], [maxz], [xrange], [yrange], [style], [convexity], ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = heightfield(data, [size], [bottom], [maxz], [xrange], [yrange], [style], ...);
 // Description:
@@ -2904,7 +2874,7 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 
 // Module: ruler()
 // Usage:
-//   ruler(length, width, [thickness=], [depth=], [labels=], [pipscale=], [maxscale=], [colors=], [alpha=], [unit=], [inch=]);
+//   ruler(length, width, [thickness=], [depth=], [labels=], [pipscale=], [maxscale=], [colors=], [alpha=], [unit=], [inch=]) [ATTACHMENTS];
 // Description:
 //   Creates a ruler for checking dimensions of the model
 // Arguments:

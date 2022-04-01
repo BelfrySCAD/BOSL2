@@ -15,7 +15,7 @@ use <builtins.scad>
 
 // Module: recolor()
 // Usage:
-//   recolor([c]) children;
+//   recolor([c]) CHILDREN;
 // Topics: Attachments
 // See Also: color_this()
 // Description:
@@ -42,7 +42,7 @@ module recolor(c="default")
 
 // Module: color_this()
 // Usage:
-//   color_this([c]) children;
+//   color_this([c]) CHILDREN;
 // Topics: Attachments
 // See Also: recolor()
 // Description:
@@ -71,7 +71,7 @@ module color_this(c="default")
 
 // Module: rainbow()
 // Usage:
-//   rainbow(list,[stride],[maxhues],[shuffle],[seed]) children;
+//   rainbow(list,[stride],[maxhues],[shuffle],[seed]) CHILDREN;
 // Description:
 //   Iterates the list, displaying children in different colors for each list item.  The color
 //   is set using the color() module, so this module is not compatible with {{recolor()}} or
@@ -110,7 +110,7 @@ module rainbow(list, stride=1, maxhues, shuffle=false, seed)
 
 // Function&Module: hsl()
 // Usage:
-//   hsl(h,[s],[l],[a]) children;
+//   hsl(h,[s],[l],[a]) CHILDREN;
 //   rgb = hsl(h,[s],[l],[a]);
 // Description:
 //   When called as a function, returns the [R,G,B] color for the given hue `h`, saturation `s`, and lightness `l` from the HSL colorspace. If you supply
@@ -145,7 +145,7 @@ module hsl(h,s=1,l=0.5,a=1)
 
 // Function&Module: hsv()
 // Usage:
-//   hsv(h,[s],[v],[a]) children;
+//   hsv(h,[s],[v],[a]) CHILDREN;
 //   rgb = hsv(h,[s],[v],[a]);
 // Description:
 //   When called as a function, returns the [R,G,B] color for the given hue `h`, saturation `s`, and value `v` from the HSV colorspace.  If you supply
