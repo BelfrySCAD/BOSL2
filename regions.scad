@@ -281,7 +281,7 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 
 // Module: region()
 // Usage:
-//   region(r, [anchor], [spin=], [cp=], [atype=]) [attachments];
+//   region(r, [anchor], [spin=], [cp=], [atype=]) [ATTACHMENTS];
 // Description:
 //   Creates the 2D polygons described by the given region or list of polygons.  This module works on
 //   arbitrary lists of polygons that cross each other and hence do not define a valid region.  The
@@ -983,7 +983,7 @@ function _list_three(a,b,c) =
 
 // Function&Module: union()
 // Usage:
-//   union() children;
+//   union() CHILDREN;
 //   region = union(regions);
 //   region = union(REGION1,REGION2);
 //   region = union(REGION1,REGION2,REGION3);
@@ -1013,7 +1013,7 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 
 // Function&Module: difference()
 // Usage:
-//   difference() children;
+//   difference() CHILDREN;
 //   region = difference(regions);
 //   region = difference(REGION1,REGION2);
 //   region = difference(REGION1,REGION2,REGION3);
@@ -1045,7 +1045,7 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 
 // Function&Module: intersection()
 // Usage:
-//   intersection() children;
+//   intersection() CHILDREN;
 //   region = intersection(regions);
 //   region = intersection(REGION1,REGION2);
 //   region = intersection(REGION1,REGION2,REGION3);
@@ -1076,7 +1076,7 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 
 // Function&Module: exclusive_or()
 // Usage:
-//   exclusive_or() children;
+//   exclusive_or() CHILDREN;
 //   region = exclusive_or(regions);
 //   region = exclusive_or(REGION1,REGION2);
 //   region = exclusive_or(REGION1,REGION2,REGION3);

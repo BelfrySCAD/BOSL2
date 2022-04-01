@@ -75,7 +75,7 @@ _NO_ARG = [true,[123232345],false];
 // Aliases: translate()
 //
 // Usage: As Module
-//   move(v) children;
+//   move(v) CHILDREN;
 // Usage: As a function to translate points, VNF, or Bezier patch
 //   pts = move(v, p);
 //   pts = move(STRING, p);
@@ -161,7 +161,7 @@ function translate(v=[0,0,0], p=_NO_ARG) = move(v=v, p=p);
 // Function&Module: left()
 //
 // Usage: As Module
-//   left(x) children;
+//   left(x) CHILDREN;
 // Usage: Translate Points
 //   pts = left(x, p);
 // Usage: Get Translation Matrix
@@ -204,7 +204,7 @@ function left(x=0, p=_NO_ARG) =
 // Aliases: xmove()
 //
 // Usage: As Module
-//   right(x) children;
+//   right(x) CHILDREN;
 // Usage: Translate Points
 //   pts = right(x, p);
 // Usage: Get Translation Matrix
@@ -257,7 +257,7 @@ function xmove(x=0, p=_NO_ARG) =
 // Function&Module: fwd()
 //
 // Usage: As Module
-//   fwd(y) children;
+//   fwd(y) CHILDREN;
 // Usage: Translate Points
 //   pts = fwd(y, p);
 // Usage: Get Translation Matrix
@@ -300,7 +300,7 @@ function fwd(y=0, p=_NO_ARG) =
 // Aliases: ymove()
 //
 // Usage: As Module
-//   back(y) children;
+//   back(y) CHILDREN;
 // Usage: Translate Points
 //   pts = back(y, p);
 // Usage: Get Translation Matrix
@@ -353,7 +353,7 @@ function ymove(y=0,p=_NO_ARG) =
 // Function&Module: down()
 //
 // Usage: As Module
-//   down(z) children;
+//   down(z) CHILDREN;
 // Usage: Translate Points
 //   pts = down(z, p);
 // Usage: Get Translation Matrix
@@ -394,7 +394,7 @@ function down(z=0, p=_NO_ARG) =
 // Aliases: zmove()
 //
 // Usage: As Module
-//   up(z) children;
+//   up(z) CHILDREN;
 // Usage: Translate Points
 //   pts = up(z, p);
 // Usage: Get Translation Matrix
@@ -452,10 +452,10 @@ function zmove(z=0, p=_NO_ARG) =
 // Function&Module: rot()
 //
 // Usage: As a Module
-//   rot(a, [cp=], [reverse=]) children;
-//   rot([X,Y,Z], [cp=], [reverse=]) children;
-//   rot(a, v, [cp=], [reverse=]) children;
-//   rot(from=, to=, [a=], [reverse=]) children;
+//   rot(a, [cp=], [reverse=]) CHILDREN;
+//   rot([X,Y,Z], [cp=], [reverse=]) CHILDREN;
+//   rot(a, v, [cp=], [reverse=]) CHILDREN;
+//   rot(from=, to=, [a=], [reverse=]) CHILDREN;
 // Usage: As a Function to transform data in `p`
 //   pts = rot(a, p=, [cp=], [reverse=]);
 //   pts = rot([X,Y,Z], p=, [cp=], [reverse=]);
@@ -556,7 +556,7 @@ function rot(a=0, v, cp, from, to, reverse=false, p=_NO_ARG, _m) =
 // Function&Module: xrot()
 //
 // Usage: As Module
-//   xrot(a, [cp=]) children;
+//   xrot(a, [cp=]) CHILDREN;
 // Usage: As a function to rotate points
 //   rotated = xrot(a, p, [cp=]);
 // Usage: As a function to return rotation matrix
@@ -602,7 +602,7 @@ function xrot(a=0, p=_NO_ARG, cp) = rot([a,0,0], cp=cp, p=p);
 // Function&Module: yrot()
 //
 // Usage: As Module
-//   yrot(a, [cp=]) children;
+//   yrot(a, [cp=]) CHILDREN;
 // Usage: Rotate Points
 //   rotated = yrot(a, p, [cp=]);
 // Usage: Get Rotation Matrix
@@ -648,7 +648,7 @@ function yrot(a=0, p=_NO_ARG, cp) = rot([0,a,0], cp=cp, p=p);
 // Function&Module: zrot()
 //
 // Usage: As Module
-//   zrot(a, [cp=]) children;
+//   zrot(a, [cp=]) CHILDREN;
 // Usage: As Function to rotate points
 //   rotated = zrot(a, p, [cp=]);
 // Usage: As Function to return rotation matrix
@@ -699,8 +699,8 @@ function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
 
 // Function&Module: scale()
 // Usage: As Module
-//   scale(SCALAR) children;
-//   scale([X,Y,Z]) children;
+//   scale(SCALAR) CHILDREN;
+//   scale([X,Y,Z]) CHILDREN;
 // Usage: Scale Points
 //   pts = scale(v, p, [cp=]);
 // Usage: Get Scaling Matrix
@@ -750,7 +750,7 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
 //
 //
 // Usage: As Module
-//   xscale(x, [cp=]) children;
+//   xscale(x, [cp=]) CHILDREN;
 // Usage: Scale Points
 //   scaled = xscale(x, p, [cp=]);
 // Usage: Get Affine Matrix
@@ -804,7 +804,7 @@ function xscale(x=1, p=_NO_ARG, cp=0) =
 // Function&Module: yscale()
 //
 // Usage: As Module
-//   yscale(y, [cp=]) children;
+//   yscale(y, [cp=]) CHILDREN;
 // Usage: Scale Points
 //   scaled = yscale(y, p, [cp=]);
 // Usage: Get Affine Matrix
@@ -858,7 +858,7 @@ function yscale(y=1, p=_NO_ARG, cp=0) =
 // Function&Module: zscale()
 //
 // Usage: As Module
-//   zscale(z, [cp=]) children;
+//   zscale(z, [cp=]) CHILDREN;
 // Usage: Scale Points
 //   scaled = zscale(z, p, [cp=]);
 // Usage: Get Affine Matrix
@@ -915,7 +915,7 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 
 // Function&Module: mirror()
 // Usage: As Module
-//   mirror(v) children;
+//   mirror(v) CHILDREN;
 // Usage: As Function
 //   pt = mirror(v, p);
 // Usage: Get Reflection/Mirror Matrix
@@ -985,7 +985,7 @@ function mirror(v, p=_NO_ARG) =
 // Function&Module: xflip()
 //
 // Usage: As Module
-//   xflip([x=]) children;
+//   xflip([x=]) CHILDREN;
 // Usage: As Function
 //   pt = xflip(p, [x]);
 // Usage: Get Affine Matrix
@@ -1039,7 +1039,7 @@ function xflip(p=_NO_ARG, x=0) =
 // Function&Module: yflip()
 //
 // Usage: As Module
-//   yflip([y=]) children;
+//   yflip([y=]) CHILDREN;
 // Usage: As Function
 //   pt = yflip(p, [y]);
 // Usage: Get Affine Matrix
@@ -1093,7 +1093,7 @@ function yflip(p=_NO_ARG, y=0) =
 // Function&Module: zflip()
 //
 // Usage: As Module
-//   zflip([z=]) children;
+//   zflip([z=]) CHILDREN;
 // Usage: As Function
 //   pt = zflip(p, [z]);
 // Usage: Get Affine Matrix
@@ -1146,7 +1146,7 @@ function zflip(p=_NO_ARG, z=0) =
 
 // Function&Module: frame_map()
 // Usage: As module
-//   frame_map(v1, v2, v3, [reverse=]) children;
+//   frame_map(v1, v2, v3, [reverse=]) CHILDREN;
 // Usage: As function to remap points
 //   transformed = frame_map(v1, v2, v3, p=points, [reverse=]);
 // Usage: As function to return a transformation matrix:
@@ -1234,7 +1234,7 @@ module frame_map(x,y,z,p,reverse=false)
 
 // Function&Module: skew()
 // Usage: As Module
-//   skew([sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]) children;
+//   skew([sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]) CHILDREN;
 // Usage: As Function
 //   pts = skew(p, [sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]);
 // Usage: Get Affine Matrix
