@@ -17,13 +17,14 @@
 
 // Function: is_vector()
 // Usage:
-//   is_vector(v, [length], ...);
+//   bool = is_vector(v, [length], [zero=], [all_nonzero=], [eps=]);
 // Description:
 //   Returns true if v is a list of finite numbers.
 // Arguments:
 //   v = The value to test to see if it is a vector.
 //   length = If given, make sure the vector is `length` items long.
-//   zero = If false, require that the length/`norm()` of the vector is not approximately zero.  If true, require the length/`norm()` of the vector to be approximately zero-length.  Default: `undef` (don't check vector length/`norm()`.)
+//   ---
+//   zero = If false, require that the `norm()` of the vector is not approximately zero.  If true, require the `norm()` of the vector to be approximately zero.  Default: `undef` (don't check vector `norm()`.)
 //   all_nonzero = If true, requires all elements of the vector to be more than `eps` different from zero.  Default: `false`
 //   eps = The minimum vector length that is considered non-zero.  Default: `EPSILON` (`1e-9`)
 // Example:
@@ -73,7 +74,8 @@ function add_scalar(v,s) =
 //   v3 = v_mul(v1, v2);
 // Description:
 //   Element-wise multiplication.  Multiplies each element of `v1` by the corresponding element of `v2`.
-//   Both `v1` and `v2` must be the same length.  Returns a vector of the products.
+//   Both `v1` and `v2` must be the same length.  Returns a vector of the products.  Note that
+//   the items in `v1` and `v2` can be anything that OpenSCAD will multiply.  
 // Arguments:
 //   v1 = The first vector.
 //   v2 = The second vector.
@@ -135,7 +137,7 @@ function v_ceil(v) =
 
 // Function: v_lookup()
 // Usage:
-//   v2 = v_ceil(x, v);
+//   v2 = v_lookup(x, v);
 // Description:
 //   Works just like the built-in function [`lookup()`](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Mathematical_Functions#lookup), except that it can also interpolate between vector result values of the same length.
 // Arguments:
