@@ -140,7 +140,7 @@ function _point_left_of_line2d(point, line, eps=EPSILON) =
 
 // Function: is_collinear()
 // Usage:
-//   test = is_collinear(a, [b, c], [eps]);
+//   bool = is_collinear(a, [b, c], [eps]);
 // Topics: Geometry, Points, Collinearity
 // Description:
 //   Returns true if the points `a`, `b` and `c` are co-linear or if the list of points `a` is collinear.
@@ -161,7 +161,7 @@ function is_collinear(a, b, c, eps=EPSILON) =
 
 // Function: point_line_distance()
 // Usage:
-//   pt = point_line_distance(line, pt, bounded);
+//   dist = point_line_distance(line, pt, [bounded]);
 // Topics: Geometry, Points, Lines, Distance
 // Description:
 //   Finds the shortest distance from the point `pt` to the specified line, segment or ray.
@@ -421,7 +421,7 @@ function line_from_points(points, fast=false, eps=EPSILON) =
 
 // Function: is_coplanar()
 // Usage:
-//   test = is_coplanar(points,[eps]);
+//   bool = is_coplanar(points,[eps]);
 // Topics: Geometry, Coplanarity
 // Description:
 //   Returns true if the given 3D points are non-collinear and are on a plane.
@@ -765,6 +765,7 @@ function plane_line_angle(plane, line) =
 //   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or
 //   3d points, return the closest 3D orthogonal projection of the points on the plane.
 //   In other words, for every point given, returns the closest point to it on the plane.
+//   If points is a single point then returns a single point result.  
 // Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 //   points = List of points to project
@@ -824,7 +825,7 @@ function _pointlist_greatest_distance(points,plane) =
 
 // Function: are_points_on_plane()
 // Usage:
-//   test = are_points_on_plane(points, plane, [eps]);
+//   bool = are_points_on_plane(points, plane, [eps]);
 // Topics: Geometry, Planes, Points
 // Description:
 //   Returns true if the given 3D points are on the given plane.
@@ -841,7 +842,7 @@ function are_points_on_plane(points, plane, eps=EPSILON) =
 
 /// Internal Function: is_point_above_plane()
 /// Usage:
-///   test = _is_point_above_plane(plane, point);
+///   bool = _is_point_above_plane(plane, point);
 /// Topics: Geometry, Planes
 // Description:
 ///   Given a plane as [A,B,C,D] where the cartesian equation for that plane
@@ -860,7 +861,7 @@ function _is_point_above_plane(plane, point) =
 
 // Function: circle_line_intersection()
 // Usage:
-//   isect = circle_line_intersection(c,<r|d>,[line],[bounded],[eps]);
+//   isect = circle_line_intersection(c, r|d=, line, [bounded], [eps=]);
 // Topics: Geometry, Circles, Lines, Intersection
 // Description:
 //   Find intersection points between a 2d circle and a line, ray or segment specified by two points.
@@ -903,7 +904,7 @@ function _circle_or_sphere_line_intersection(c,r,line,bounded=false,d,eps=EPSILO
 
 // Function: circle_circle_intersection()
 // Usage:
-//   pts = circle_circle_tangents(c1, r1|d1, c2, r2|d2, [eps]);
+//   pts = circle_circle_tangents(c1, r1|d1=, c2, r2|d2=, [eps]);
 // Topics: Geometry, Circles
 // Description:
 //   Compute the intersection points of two circles.  Returns a list of the intersection points, which
@@ -969,10 +970,10 @@ function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
 
 // Function&Module: circle_2tangents()
 // Usage: As Function
-//   circ = circle_2tangents(pt1, pt2, pt3, r|d, [tangents]);
+//   circ = circle_2tangents(pt1, pt2, pt3, r|d=, [tangents=]);
 // Topics: Geometry, Circles, Tangents
 // Usage: As Module
-//   circle_2tangents(pt1, pt2, pt3, r|d, [h], [center]);
+//   circle_2tangents(pt1, pt2, pt3, r|d=, [h=], [center=]);
 // Description:
 //   Given a pair of rays with a common origin, and a known circle radius/diameter, finds
 //   the centerpoint for the circle of that size that touches both rays tangentally.
@@ -998,6 +999,7 @@ function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
 //   pt2 = The starting point of both rays.
 //   pt3 = A point that the second ray passes though.
 //   r = The radius of the circle to find.
+//   ---
 //   d = The diameter of the circle to find.
 //   h = Height of the cylinder to create, when called as a module.
 //   center = When called as a module, center the cylinder if true,  Default: false
@@ -1063,6 +1065,7 @@ function circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
 
 
 module circle_2tangents(pt1, pt2, pt3, r, d, h, center=false) {
+    no_children($children);
     c = circle_2tangents(pt1=pt1, pt2=pt2, pt3=pt3, r=r, d=d);
     assert(!is_undef(c), "Cannot find circle when both rays are collinear.");
     cp = c[0]; n = c[1];
@@ -1147,6 +1150,7 @@ function circle_3points(pt1, pt2, pt3) =
 
 
 module circle_3points(pt1, pt2, pt3, h, center=false) {
+    no_children($children);
     c = circle_3points(pt1, pt2, pt3);
     assert(!is_undef(c[0]), "Points cannot be collinear.");
     cp = c[0];  r = c[1];  n = c[2];
@@ -1161,16 +1165,17 @@ module circle_3points(pt1, pt2, pt3, h, center=false) {
 
 // Function: circle_point_tangents()
 // Usage:
-//   tangents = circle_point_tangents(r|d, cp, pt);
+//   tangents = circle_point_tangents(r|d=, cp, pt);
 // Topics: Geometry, Circles, Tangents
 // Description:
 //   Given a 2d circle and a 2d point outside that circle, finds the 2d tangent point(s) on the circle for a
 //   line passing through the point.  Returns a list of zero or more 2D tangent points.
 // Arguments:
 //   r = Radius of the circle.
-//   d = Diameter of the circle.
 //   cp = The coordinates of the 2d circle centerpoint.
 //   pt = The coordinates of the 2d external point.
+//   ---
+//   d = Diameter of the circle.
 // Example(3D):
 //   cp = [-10,-10];  r = 30;  pt = [30,10];
 //   tanpts = circle_point_tangents(r=r, cp=cp, pt=pt);
@@ -1178,7 +1183,7 @@ module circle_3points(pt1, pt2, pt3, h, center=false) {
 //   color("cyan") for(tp=tanpts) {stroke([tp,pt]); stroke([tp,cp]);}
 //   color("red") move_copies(tanpts) circle(d=3,$fn=12);
 //   color("blue") move_copies([cp,pt]) circle(d=3,$fn=12);
-function circle_point_tangents(r, d, cp, pt) =
+function circle_point_tangents(r, cp, pt, d) =
     assert(is_finite(r) || is_finite(d), "Invalid radius or diameter." )
     assert(is_path([cp, pt],dim=2), "Invalid center point or external point.")
     let(
@@ -1196,7 +1201,7 @@ function circle_point_tangents(r, d, cp, pt) =
 
 // Function: circle_circle_tangents()
 // Usage:
-//   segs = circle_circle_tangents(c1, r1|d1, c2, r2|d2);
+//   segs = circle_circle_tangents(c1, r1|d1=, c2, r2|d2=);
 // Topics: Geometry, Circles, Tangents
 // Description:
 //   Computes 2d lines tangents to a pair of circles in 2d.  Returns a list of line endpoints [p1,p2] where
@@ -1281,7 +1286,7 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
 
 /// Internal Function: _noncollinear_triple()
 /// Usage:
-///   test = _noncollinear_triple(points);
+///   bool = _noncollinear_triple(points);
 /// Topics: Geometry, Noncollinearity
 /// Description:
 ///   Finds the indices of three non-collinear points from the pointlist `points`.
@@ -1319,11 +1324,9 @@ function _noncollinear_triple(points,error=true,eps=EPSILON) =
 // Section: Sphere Calculations
 
 
-
-
 // Function: sphere_line_intersection()
 // Usage:
-//   isect = sphere_line_intersection(c,<r|d>,[line],[bounded],[eps]);
+//   isect = sphere_line_intersection(c,r|d=,line,[bounded],[eps=]);
 // Topics: Geometry, Spheres, Lines, Intersection
 // Description:
 //   Find intersection points between a sphere and a line, ray or segment specified by two points.
@@ -1348,7 +1351,7 @@ function sphere_line_intersection(c,r,line,bounded=false,d,eps=EPSILON) =
 
 // Function: polygon_area()
 // Usage:
-//   area = polygon_area(poly);
+//   area = polygon_area(poly, [signed]);
 // Topics: Geometry, Polygons, Area
 // Description:
 //   Given a 2D or 3D simple planar polygon, returns the area of that polygon.
@@ -1474,7 +1477,7 @@ function polygon_normal(poly) =
 
 // Function: point_in_polygon()
 // Usage:
-//   test = point_in_polygon(point, poly, [nonzero], [eps])
+//   bool = point_in_polygon(point, poly, [nonzero], [eps])
 // Topics: Geometry, Polygons
 // Description:
 //   This function tests whether the given 2D point is inside, outside or on the boundary of
@@ -1832,7 +1835,7 @@ function _merge_segments(insegs,outsegs, eps, i=1) =
 //   report an error for this case. 
 // Arguments:
 //   poly = Array of the polygon vertices.
-//   ind = A list indexing the vertices of the polygon in `poly`.
+//   ind = If given, a list of indices indexing the vertices of the polygon in `poly`.  Default: use all the points of poly
 //   error = If false, returns `undef` when the polygon cannot be triangulated; otherwise, issues an assert error. Default: true.
 //   eps = A maximum tolerance in geometrical tests. Default: EPSILON
 // Example(2D,NoAxes): a simple polygon; see from above
@@ -1991,7 +1994,7 @@ function _none_inside(idxs,poly,p0,p1,p2,eps,i=0) =
 
 // Function: is_polygon_clockwise()
 // Usage:
-//   test = is_polygon_clockwise(poly);
+//   bool = is_polygon_clockwise(poly);
 // Topics: Geometry, Polygons, Clockwise
 // See Also: clockwise_polygon(), ccw_polygon(), reverse_polygon()
 // Description:
@@ -2181,7 +2184,7 @@ function align_polygon(reference, poly, angles, cp, trans, return_ind=false) =
 
 // Function: are_polygons_equal()
 // Usage:
-//    b = are_polygons_equal(poly1, poly2, [eps])
+//    bool = are_polygons_equal(poly1, poly2, [eps])
 // Description:
 //    Returns true if poly1 and poly2 are the same polongs
 //    within given epsilon tolerance.
@@ -2236,7 +2239,7 @@ function ___is_polygon_in_list(poly, polys, i) =
 
 // Function: hull()
 // Usage:
-//   hull(points);
+//   face_list_or_index_list = hull(points);
 // Description:
 //   Takes a list of 2D or 3D points (but not both in the same list) and returns either the list of
 //   indexes into `points` that forms the 2D convex hull perimeter path, or the list of faces that
@@ -2272,6 +2275,7 @@ function hull(points) =
 //   pts = [for (phi = [30:60:150], theta = [0:60:359]) spherical_to_xyz(10, theta, phi)];
 //   hull_points(pts);
 module hull_points(points, fast=false) {
+    no_children($children);
     assert(is_path(points))
     assert(len(points)>=3, "Point list must contain 3 points")
     if (len(points[0])==2)
@@ -2309,7 +2313,7 @@ function _is_cw(a,b,c,all) =
 
 // Function: hull2d_path()
 // Usage:
-//   hull2d_path(points,all)
+//   index_list = hull2d_path(points,all)
 // Description:
 //   Takes a list of arbitrary 2D points, and finds the convex hull polygon to enclose them.
 //   Returns a path as a list of indices into `points`. 
@@ -2371,7 +2375,7 @@ function _hull_collinear(points) =
 
 // Function: hull3d_faces()
 // Usage:
-//   hull3d_faces(points)
+//   faces = hull3d_faces(points)
 // Description:
 //   Takes a list of arbitrary 3D points, and finds the convex hull polyhedron to enclose
 //   them.  Returns a list of triangular faces, where each face is a list of indexes into the given `points`
@@ -2482,7 +2486,7 @@ function _find_first_noncoplanar(plane, points, i=0) =
 
 // Function: is_polygon_convex()
 // Usage:
-//   test = is_polygon_convex(poly);
+//   bool = is_polygon_convex(poly, [eps]);
 // Topics: Geometry, Convexity, Test
 // Description:
 //   Returns true if the given 2D or 3D polygon is convex.
@@ -2527,7 +2531,7 @@ function is_polygon_convex(poly,eps=EPSILON) =
 
 // Function: convex_distance()
 // Usage:
-//   dist = convex_distance(pts1, pts2,[eps=]);
+//   dist = convex_distance(points1, points2,eps);
 // Topics: Geometry, Convexity, Distance
 // See also: 
 //   convex_collision(), hull()
@@ -2586,7 +2590,7 @@ function _GJK_distance(points1, points2, eps=EPSILON, lbd, d, simplex=[]) =
 
 // Function: convex_collision()
 // Usage:
-//   test = convex_collision(pts1, pts2, [eps=]);
+//   bool = convex_collision(points1, points2, [eps]);
 // Topics: Geometry, Convexity, Collision, Intersection
 // See also: 
 //   convex_distance(), hull()
