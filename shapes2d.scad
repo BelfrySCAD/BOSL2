@@ -204,12 +204,18 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0)
 // Topics: Shapes (2D), Path Generators (2D)
 // Usage: As a Module
 //   circle(r|d=, ...) [ATTACHMENTS];
+//   circle(points=) [ATTACHMENTS];
+//   circle(r|d=, corner=) [ATTACHMENTS];
 // Usage: As a Function
 //   path = circle(r|d=, ...);
+//   path = circle(points=);
+//   path = circle(r|d=, corner=);
 // See Also: ellipse(), circle_2tangents(), circle_3points()
 // Description:
 //   When called as the builtin module, creates a 2D polygon that approximates a circle of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
+//   If `corner=` is given three 2D points, centers the circle so that it will be tangent to both segments of the path, on the inside corner.
+//   If `points=` is given three 2D points, centers and sizes the circle so that it passes through all three points.
 // Arguments:
 //   r = The radius of the circle to create.
 //   d = The diameter of the circle to create.
@@ -220,20 +226,78 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0)
 //   circle(r=25);
 // Example(2D): By Diameter
 //   circle(d=50);
-// Example(NORENDER): Called as Function
+// Example(2D): Fit to Three Points
+//   pts = [[50,25], [25,-25], [-10,0]];
+//   circle(points=pts);
+//   color("red") move_copies(pts) circle();
+// Example(2D): Fit Tangent to Inside Corner of Two Segments
+//   path = [[50,25], [-10,0], [25,-25]];
+//   circle(corner=path, r=15);
+//   color("red") stroke(path);
+// Example(2D): Called as Function
 //   path = circle(d=50, anchor=FRONT, spin=45);
-function circle(r, d, anchor=CENTER, spin=0) =
+//   stroke(path);
+function circle(r, d, points, corner, anchor=CENTER, spin=0) =
+    assert(is_undef(corner) || (is_path(corner,[2]) && len(corner) == 3))
+    assert(is_undef(points) || is_undef(corner), "Cannot specify both points and corner.")
     let(
-        r = get_radius(r=r, d=d, dflt=1),
+        data = is_def(points)?
+                assert(is_path(points,[2]) && len(points) == 3)
+                assert(is_undef(corner), "Cannot specify corner= when points= is given.")
+                assert(is_undef(r) && is_undef(d), "Cannot specify r= or d= when points= is given.")
+                let( c = circle_3points(points) )
+                assert(!is_undef(c[0]), "Points cannot be collinear.")
+                let( cp = c[0], r = c[1]  )
+                [cp, r] :
+            is_def(corner)?
+                assert(is_path(corner,[2]) && len(corner) == 3)
+                assert(is_undef(points), "Cannot specify points= when corner= is given.")
+                let(
+                    r = get_radius(r=r, d=d, dflt=1),
+                    c = circle_2tangents(pt1=corner[0], pt2=corner[1], pt3=corner[2], r=r)
+                )
+                assert(c!=undef, "Corner path cannot be collinear.")
+                let( cp = c[0] )
+                [cp, r] :
+            let(
+                cp = [0, 0],
+                r = get_radius(r=r, d=d, dflt=1)
+            ) [cp, r],
+        cp = data[0],
+        r = data[1],
         sides = segs(r),
-        path = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]]
+        path = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]+cp]
     ) reorient(anchor,spin, two_d=true, r=r, p=path);
 
-module circle(r, d, anchor=CENTER, spin=0) {
-    r = get_radius(r=r, d=d, dflt=1);
-    attachable(anchor,spin, two_d=true, r=r) {
-        _circle(r=r);
-        children();
+module circle(r, d, points, corner, anchor=CENTER, spin=0) {
+    if (is_path(points)) {
+        c = circle_3points(points);
+        check = assert(c!=undef && c[0] != undef, "Points must not be collinear.");
+        cp = c[0];
+        r = c[1];
+        translate(cp) {
+            attachable(anchor,spin, two_d=true, r=r) {
+                _circle(r=r);
+                children();
+            }
+        }
+    } else if (is_path(corner)) {
+        r = get_radius(r=r, d=d, dflt=1);
+        c = circle_2tangents(pt1=corner[0], pt2=corner[1], pt3=corner[2], r=r);
+        check = assert(c != undef && c[0] != undef, "Points must not be collinear.");
+        cp = c[0];
+        translate(cp) {
+            attachable(anchor,spin, two_d=true, r=r) {
+                _circle(r=r);
+                children();
+            }
+        }
+    } else {
+        r = get_radius(r=r, d=d, dflt=1);
+        attachable(anchor,spin, two_d=true, r=r) {
+            _circle(r=r);
+            children();
+        }
     }
 }
 

@@ -865,15 +865,45 @@ function _is_point_above_plane(plane, point) =
 // Topics: Geometry, Circles, Lines, Intersection
 // Description:
 //   Find intersection points between a 2d circle and a line, ray or segment specified by two points.
-//   By default the line is unbounded.
+//   By default the line is unbounded.  Returns the list of zero or more intersection points.
 // Arguments:
-//   c = center of circle
-//   r = radius of circle
-//   line = two points defining the line
-//   bounded = false for unbounded line, true for a segment, or a vector [false,true] or [true,false] to specify a ray with the first or second end unbounded.  Default: false
+//   c = Center of circle
+//   r = Radius of circle
+//   line = Two points defining the line
+//   bounded = False for unbounded line, true for a segment, or a vector [false,true] or [true,false] to specify a ray with the first or second end unbounded.  Default: false
 //   ---
-//   d = diameter of circle
-//   eps = epsilon used for identifying the case with one solution.  Default: 1e-9
+//   d = Diameter of circle
+//   eps = Epsilon used for identifying the case with one solution.  Default: `1e-9`
+// Example(2D): Standard intersection returns two points.
+//   line = [[-15,2], [15,7]];
+//   cp = [1,2]; r = 10;
+//   translate(cp) circle(r=r);
+//   color("black") stroke(line, endcaps="arrow2", width=0.5);
+//   isects = circle_line_intersection(c=cp, r=r, line=line);
+//   color("red") move_copies(isects) circle(d=1);
+// Example(2D): Tangent intersection returns one point.
+//   line = [[-10,12], [10,12]];
+//   cp = [1,2]; r = 10;
+//   translate(cp) circle(r=r);
+//   color("black") stroke(line, endcaps="arrow2", width=0.5);
+//   isects = circle_line_intersection(c=cp, r=r, line=line);
+//   color("#f44") move_copies(isects) circle(d=1);
+// Example(2D): A bounded ray might only intersect in one direction.
+//   line = [[-5,2], [5,7]];
+//   extended = [line[0], line[0]+22*unit(line[1]-line[0])];
+//   cp = [1,2]; r = 10;
+//   translate(cp) circle(r=r);
+//   color("gray") dashed_stroke(extended, width=0.2);
+//   color("black") stroke(line, endcap2="arrow2", width=0.5);
+//   isects = circle_line_intersection(c=cp, r=r, line=line, bounded=[true,false]);
+//   color("#f44") move_copies(isects) circle(d=1);
+// Example(2D): If they don't intersect at all, then an empty list is returned.
+//   line = [[-12,12], [12,8]];
+//   cp = [-5,-2]; r = 10;
+//   translate(cp) circle(r=r);
+//   color("black") stroke(line, endcaps="arrow2", width=0.5);
+//   isects = circle_line_intersection(c=cp, r=r, line=line);
+//   color("#f44") move_copies(isects) circle(d=1);
 function circle_line_intersection(c,r,line,bounded=false,d,eps=EPSILON) =
   assert(_valid_line(line,2), "Invalid 2d line.")
   assert(is_vector(c,2), "Circle center must be a 2-vector")
@@ -968,32 +998,46 @@ function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
     [L*a+h*b+c1, L*a-h*b+c1];
 
 
-// Function&Module: circle_2tangents()
-// Usage: As Function
+// Function: circle_2tangents()
+// Usage:
 //   circ = circle_2tangents(pt1, pt2, pt3, r|d=, [tangents=]);
 // Topics: Geometry, Circles, Tangents
-// Usage: As Module
-//   circle_2tangents(pt1, pt2, pt3, r|d=, [h=], [center=]);
 // Description:
 //   Given a pair of rays with a common origin, and a known circle radius/diameter, finds
 //   the centerpoint for the circle of that size that touches both rays tangentally.
 //   Both rays start at `pt2`, one passing through `pt1`, and the other through `pt3`.
 //   .
-//   When called as a module with an `h` height argument, creates a 3D cylinder of `h`
-//   length at the found centerpoint, aligned with the found normal.
-//   .
-//   When called as a module with 2D data and no `h` argument, creates a 2D circle of
-//   the given radius/diameter, tangentially touching both rays.
-//   .
-//   When called as a function with collinear rays, returns `undef`.
-//   Otherwise, when called as a function with `tangents=false`, returns `[CP,NORMAL]`.
-//   Otherwise, when called as a function with `tangents=true`, returns `[CP,NORMAL,TANPT1,TANPT2,ANG1,ANG2]`.
+//   When called with collinear rays, returns `undef`.
+//   Otherwise, when called with `tangents=false`, returns `[CP,NORMAL]`.
+//   Otherwise, when called with `tangents=true`, returns `[CP,NORMAL,TANPT1,TANPT2]`.
 //   - CP is the centerpoint of the circle.
 //   - NORMAL is the normal vector of the plane that the circle is on (UP or DOWN if the points are 2D).
 //   - TANPT1 is the point where the circle is tangent to the ray `[pt2,pt1]`.
 //   - TANPT2 is the point where the circle is tangent to the ray `[pt2,pt3]`.
-//   - ANG1 is the angle from the ray `[CP,pt2]` to the ray `[CP,TANPT1]`
-//   - ANG2 is the angle from the ray `[CP,pt2]` to the ray `[CP,TANPT2]`
+// Figure(Med,NoAxes):
+//   pts = [[45,10,-5], [10,5,10], [15,40,5]];
+//   rad = 15;
+//   circ = circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad, tangents=true);
+//   cp = circ[0]; n = circ[1]; tp1 = circ[2]; tp2 = circ[3];
+//   color("yellow") stroke(pts, endcaps="arrow2");
+//   color("purple") move_copies([cp,tp1,tp2]) sphere(d=2, $fn=12);
+//   color("lightgray") stroke([cp,tp2], width=0.5);
+//   stroke([cp,cp+n*20], endcap2="arrow2");
+//   labels = [
+//       ["pt1",    "blue",  2.5, [ 4, 0, 1], pts[0]],
+//       ["pt2",    "blue",  2.5, [-4, 0,-3], pts[1]],
+//       ["pt3",    "blue",  2.5, [ 4, 0, 1], pts[2]],
+//       ["r",      "blue",  2.5, [ 0,-2, 2], (cp+tp2)/2],
+//       ["CP",     "brown", 2.5, [ 6,-4, 3], cp],
+//       ["Normal", "brown", 2.0, [ 5, 2, 1], cp+20*n],
+//       ["TanPt1", "brown", 2.0, [-5,-4, 0], tp1],
+//       ["TanPt2", "brown", 2.0, [-5, 0, 2], tp2],
+//   ];
+//   for(l=labels)
+//       color(l[1]) move(l[4]+l[3]) rot($vpr)
+//           linear_extrude(height=0.1)
+//               text(text=l[0], size=l[2], halign="center", valign="center");
+//   color("green",0.5) move(cp) cyl(h=0.1, r=rad, orient=n, $fn=36);
 // Arguments:
 //   pt1 = A point that the first ray passes though.
 //   pt2 = The starting point of both rays.
@@ -1001,40 +1045,31 @@ function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
 //   r = The radius of the circle to find.
 //   ---
 //   d = The diameter of the circle to find.
-//   h = Height of the cylinder to create, when called as a module.
-//   center = When called as a module, center the cylinder if true,  Default: false
 //   tangents = If true, extended information about the tangent points is calculated and returned.  Default: false
 // Example(2D):
-//   pts = [[60,40], [10,10], [65,5]];
-//   rad = 10;
-//   stroke([pts[1],pts[0]], endcap2="arrow2");
-//   stroke([pts[1],pts[2]], endcap2="arrow2");
+//   pts = [[40,40], [10,10], [55,5]];  rad = 10;
 //   circ = circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad);
-//   translate(circ[0]) {
-//       color("green") {
-//           stroke(circle(r=rad),closed=true);
-//           stroke([[0,0],rad*[cos(315),sin(315)]]);
-//       }
-//   }
-//   move_copies(pts) color("blue") circle(d=2, $fn=12);
-//   translate(circ[0]) color("red") circle(d=2, $fn=12);
-//   labels = [[pts[0], "pt1"], [pts[1],"pt2"], [pts[2],"pt3"], [circ[0], "CP"], [circ[0]+[cos(315),sin(315)]*rad*0.7, "r"]];
-//   for(l=labels) translate(l[0]+[0,2]) color("black") text(text=l[1], size=2.5, halign="center");
+//   stroke(pts, endcaps="arrow2");
+//   color("red") move(circ[0]) circle(r=rad);
 // Example(2D):
-//   pts = [[-5,25], [5,-25], [45,15]];
-//   rad = 12;
-//   color("blue") stroke(pts, width=0.75, endcaps="arrow2");
-//   circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad);
-// Example: Non-centered Cylinder
-//   pts = [[45,15,10], [5,-25,5], [-5,25,20]];
-//   rad = 12;
-//   color("blue") stroke(pts, width=0.75, endcaps="arrow2");
-//   circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad, h=10, center=false);
-// Example: Non-centered Cylinder
-//   pts = [[45,15,10], [5,-25,5], [-5,25,20]];
-//   rad = 12;
-//   color("blue") stroke(pts, width=0.75, endcaps="arrow2");
-//   circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad, h=10, center=true);
+//   pts = [[20,40], [10,10], [55,20]];  rad = 10;
+//   circ = circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad, tangents=true);
+//   stroke(pts, endcaps="arrow2");
+//   color("red") move(circ[0]) circle(r=rad);
+//   color("blue") move_copies(select(circ,2,3)) circle(d=2);
+// Example: Fit into 3D path corner.
+//   pts = [[45,5,10], [10,10,15], [30,40,30]];  rad = 10;
+//   circ = circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad);
+//   stroke(pts, endcaps="arrow2");
+//   color("red") move(circ[0]) cyl(h=10, r=rad, orient=circ[1]);
+// Example:
+//   path = yrot(20, p=path3d(star(d=100, n=5, step=2)));
+//   stroke(path, closed=true);
+//   for (i = [0:1:5]) {
+//       crn = select(path, i*2-1, i*2+1);
+//       ci = circle_2tangents(crn[0], crn[1], crn[2], r=5);
+//       move(ci[0]) cyl(h=10,r=5,,orient=ci[1]);
+//   }
 function circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
     let(r = get_radius(r=r, d=d, dflt=undef))
     assert(r!=undef, "Must specify either r or d.")
@@ -1057,39 +1092,16 @@ function circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
         let(
             x = hyp * cos(a/2),
             tp1 = pt2 + x * v1,
-            tp2 = pt2 + x * v2,
-            dang1 = vector_angle(tp1-cp,pt2-cp),
-            dang2 = vector_angle(tp2-cp,pt2-cp)
+            tp2 = pt2 + x * v2
         )
-        [cp, n, tp1, tp2, dang1, dang2];
+        [cp, n, tp1, tp2];
 
 
-module circle_2tangents(pt1, pt2, pt3, r, d, h, center=false) {
-    no_children($children);
-    c = circle_2tangents(pt1=pt1, pt2=pt2, pt3=pt3, r=r, d=d);
-    assert(!is_undef(c), "Cannot find circle when both rays are collinear.");
-    cp = c[0]; n = c[1];
-    if (approx(point3d(cp).z,0) && approx(point2d(n),[0,0]) && is_undef(h)) {
-        translate(cp) circle(r=r, d=d);
-    } else {
-        assert(is_finite(h), "h argument required when result is not flat on the XY plane.");
-        translate(cp) {
-            rot(from=UP, to=n) {
-                cylinder(r=r, d=d, h=h, center=center);
-            }
-        }
-    }
-}
-
-
-// Function&Module: circle_3points()
-// Usage: As Function
+// Function: circle_3points()
+// Usage:
 //   circ = circle_3points(pt1, pt2, pt3);
 //   circ = circle_3points([pt1, pt2, pt3]);
 // Topics: Geometry, Circles
-// Usage: As Module
-//   circle_3points(pt1, pt2, pt3, [h], [center]);
-//   circle_3points([pt1, pt2, pt3], [h], [center]);
 // Description:
 //   Returns the [CENTERPOINT, RADIUS, NORMAL] of the circle that passes through three non-collinear
 //   points where NORMAL is the normal vector of the plane that the circle is on (UP or DOWN if the points are 2D).
@@ -1103,26 +1115,12 @@ module circle_2tangents(pt1, pt2, pt3, r, d, h, center=false) {
 //   pt1 = The first point.
 //   pt2 = The second point.
 //   pt3 = The third point.
-//   h = Height of the cylinder to create, when called as a module.
-//   center = When called as a module, center the cylinder if true,  Default: false
 // Example(2D):
 //   pts = [[60,40], [10,10], [65,5]];
 //   circ = circle_3points(pts[0], pts[1], pts[2]);
 //   translate(circ[0]) color("green") stroke(circle(r=circ[1]),closed=true,$fn=72);
 //   translate(circ[0]) color("red") circle(d=3, $fn=12);
 //   move_copies(pts) color("blue") circle(d=3, $fn=12);
-// Example(2D):
-//   pts = [[30,40], [10,20], [55,30]];
-//   circle_3points(pts[0], pts[1], pts[2]);
-//   move_copies(pts) color("blue") circle(d=3, $fn=12);
-// Example: Non-Centered Cylinder
-//   pts = [[30,15,30], [10,20,15], [55,25,25]];
-//   circle_3points(pts[0], pts[1], pts[2], h=10, center=false);
-//   move_copies(pts) color("cyan") sphere(d=3, $fn=12);
-// Example: Centered Cylinder
-//   pts = [[30,15,30], [10,20,15], [55,25,25]];
-//   circle_3points(pts[0], pts[1], pts[2], h=10, center=true);
-//   move_copies(pts) color("cyan") sphere(d=3, $fn=12);
 function circle_3points(pt1, pt2, pt3) =
     (is_undef(pt2) && is_undef(pt3) && is_list(pt1))
       ? circle_3points(pt1[0], pt1[1], pt1[2])
@@ -1148,19 +1146,6 @@ function circle_3points(pt1, pt2, pt3) =
             r  = norm(sc-v[0])
         ) [ cp, r, n ];
 
-
-module circle_3points(pt1, pt2, pt3, h, center=false) {
-    no_children($children);
-    c = circle_3points(pt1, pt2, pt3);
-    assert(!is_undef(c[0]), "Points cannot be collinear.");
-    cp = c[0];  r = c[1];  n = c[2];
-    if (approx(point3d(cp).z,0) && approx(point2d(n),[0,0]) && is_undef(h)) {
-        translate(cp) circle(r=r);
-    } else {
-        assert(is_finite(h));
-        translate(cp) rot(from=UP,to=n) cylinder(r=r, h=h, center=center);
-    }
-}
 
 
 // Function: circle_point_tangents()
@@ -1339,6 +1324,13 @@ function _noncollinear_triple(points,error=true,eps=EPSILON) =
 //   ---
 //   d = diameter of sphere
 //   eps = epsilon used for identifying the case with one solution.  Default: 1e-9
+// Example:
+//   cp = [10,20,5];  r = 40;
+//   line = [[-50,-10,25], [70,0,40]];
+//   isects = sphere_line_intersection(c=cp, r=r, line=line);
+//   color("cyan") stroke(line);
+//   move(cp) sphere(r=r, $fn=72);
+//   color("red") move_copies(isects) sphere(d=3, $fn=12);
 function sphere_line_intersection(c,r,line,bounded=false,d,eps=EPSILON) =
   assert(_valid_line(line,3), "Invalid 3d line.")
   assert(is_vector(c,3), "Sphere center must be a 3-vector")
@@ -1396,6 +1388,15 @@ function polygon_area(poly, signed=false) =
 // Arguments:
 //   object = object to compute the centroid of
 //   eps = epsilon value for identifying degenerate cases
+// Example(2D):
+//   path = [
+//       [-10,10], [-5,15], [15,15], [20,0],
+//       [15,-5], [25,-20], [25,-27], [15,-20],
+//       [0,-30], [-15,-25], [-5,-5]
+//   ];
+//   linear_extrude(height=0.01) polygon(path);
+//   cp = centroid(path);
+//   color("red") move(cp) sphere(d=2);
 function centroid(object,eps=EPSILON) =
     assert(is_finite(eps) && (eps>=0), "The tolerance should a non-negative value." )
     is_vnf(object) ? _vnf_centroid(object,eps)
@@ -1465,6 +1466,13 @@ function _polygon_centroid(poly, eps=EPSILON) =
 //   the the result is undefined.  It doesn't check for coplanarity.
 // Arguments:
 //   poly = The list of 3D path points for the perimeter of the polygon.
+// Example:
+//   path = rot([0,30,15], p=path3d(star(n=5, d=100, step=2)));
+//   stroke(path, closed=true);
+//   n = polygon_normal(path);
+//   rot(from=UP, to=n)
+//       color("red")
+//           stroke([[0,0,0], [0,0,20]], endcap2="arrow2");
 function polygon_normal(poly) =
     assert(is_path(poly,dim=3), "Invalid 3D polygon." )
     let(
