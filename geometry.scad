@@ -1014,7 +1014,7 @@ function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
 //   - NORMAL is the normal vector of the plane that the circle is on (UP or DOWN if the points are 2D).
 //   - TANPT1 is the point where the circle is tangent to the ray `[pt2,pt1]`.
 //   - TANPT2 is the point where the circle is tangent to the ray `[pt2,pt3]`.
-// Figure(Med,NoAxes):
+// Figure(3D,Med,NoAxes):
 //   pts = [[45,10,-5], [10,5,10], [15,40,5]];
 //   rad = 15;
 //   circ = circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad, tangents=true);
@@ -1057,12 +1057,12 @@ function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
 //   stroke(pts, endcaps="arrow2");
 //   color("red") move(circ[0]) circle(r=rad);
 //   color("blue") move_copies(select(circ,2,3)) circle(d=2);
-// Example: Fit into 3D path corner.
+// Example(3D): Fit into 3D path corner.
 //   pts = [[45,5,10], [10,10,15], [30,40,30]];  rad = 10;
 //   circ = circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad);
 //   stroke(pts, endcaps="arrow2");
 //   color("red") move(circ[0]) cyl(h=10, r=rad, orient=circ[1]);
-// Example:
+// Example(3D):
 //   path = yrot(20, p=path3d(star(d=100, n=5, step=2)));
 //   stroke(path, closed=true);
 //   for (i = [0:1:5]) {
@@ -1324,7 +1324,7 @@ function _noncollinear_triple(points,error=true,eps=EPSILON) =
 //   ---
 //   d = diameter of sphere
 //   eps = epsilon used for identifying the case with one solution.  Default: 1e-9
-// Example:
+// Example(3D):
 //   cp = [10,20,5];  r = 40;
 //   line = [[-50,-10,25], [70,0,40]];
 //   isects = sphere_line_intersection(c=cp, r=r, line=line);
@@ -1466,7 +1466,7 @@ function _polygon_centroid(poly, eps=EPSILON) =
 //   the the result is undefined.  It doesn't check for coplanarity.
 // Arguments:
 //   poly = The list of 3D path points for the perimeter of the polygon.
-// Example:
+// Example(3D):
 //   path = rot([0,30,15], p=path3d(star(n=5, d=100, step=2)));
 //   stroke(path, closed=true);
 //   n = polygon_normal(path);
@@ -2279,7 +2279,7 @@ function hull(points) =
 // Example(2D):
 //   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
 //   hull_points(pts);
-// Example:
+// Example(3D):
 //   pts = [for (phi = [30:60:150], theta = [0:60:359]) spherical_to_xyz(10, theta, phi)];
 //   hull_points(pts);
 module hull_points(points, fast=false) {
