@@ -1014,7 +1014,7 @@ function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
 //   - NORMAL is the normal vector of the plane that the circle is on (UP or DOWN if the points are 2D).
 //   - TANPT1 is the point where the circle is tangent to the ray `[pt2,pt1]`.
 //   - TANPT2 is the point where the circle is tangent to the ray `[pt2,pt3]`.
-// Figure(3D,Med,NoAxes,VPD=130,VPT=[27,22,8]):
+// Figure(3D,Med,NoAxes,VPD=130,VPT=[29,19,3],VPR=[55,0,25]):
 //   pts = [[45,10,-5], [10,5,10], [15,40,5]];
 //   rad = 15;
 //   circ = circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad, tangents=true);
