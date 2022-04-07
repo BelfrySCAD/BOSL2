@@ -861,14 +861,14 @@ function _is_point_above_plane(plane, point) =
 
 // Function: circle_line_intersection()
 // Usage:
-//   isect = circle_line_intersection(c, r|d=, line, [bounded], [eps=]);
+//   pts = circle_line_intersection(r|d=, cp, line, [bounded], [eps=]);
 // Topics: Geometry, Circles, Lines, Intersection
 // Description:
-//   Find intersection points between a 2d circle and a line, ray or segment specified by two points.
+//   Find intersection points between a 2D circle and a line, ray or segment specified by two points.
 //   By default the line is unbounded.  Returns the list of zero or more intersection points.
 // Arguments:
-//   c = Center of circle
 //   r = Radius of circle
+//   cp = Center of circle
 //   line = Two points defining the line
 //   bounded = False for unbounded line, true for a segment, or a vector [false,true] or [true,false] to specify a ray with the first or second end unbounded.  Default: false
 //   ---
@@ -879,14 +879,14 @@ function _is_point_above_plane(plane, point) =
 //   cp = [1,2]; r = 10;
 //   translate(cp) circle(r=r);
 //   color("black") stroke(line, endcaps="arrow2", width=0.5);
-//   isects = circle_line_intersection(c=cp, r=r, line=line);
+//   isects = circle_line_intersection(r=r, cp=cp, line=line);
 //   color("red") move_copies(isects) circle(d=1);
 // Example(2D): Tangent intersection returns one point.
 //   line = [[-10,12], [10,12]];
 //   cp = [1,2]; r = 10;
 //   translate(cp) circle(r=r);
 //   color("black") stroke(line, endcaps="arrow2", width=0.5);
-//   isects = circle_line_intersection(c=cp, r=r, line=line);
+//   isects = circle_line_intersection(r=r, cp=cp, line=line);
 //   color("#f44") move_copies(isects) circle(d=1);
 // Example(2D): A bounded ray might only intersect in one direction.
 //   line = [[-5,2], [5,7]];
@@ -895,30 +895,30 @@ function _is_point_above_plane(plane, point) =
 //   translate(cp) circle(r=r);
 //   color("gray") dashed_stroke(extended, width=0.2);
 //   color("black") stroke(line, endcap2="arrow2", width=0.5);
-//   isects = circle_line_intersection(c=cp, r=r, line=line, bounded=[true,false]);
+//   isects = circle_line_intersection(r=r, cp=cp, line=line, bounded=[true,false]);
 //   color("#f44") move_copies(isects) circle(d=1);
 // Example(2D): If they don't intersect at all, then an empty list is returned.
 //   line = [[-12,12], [12,8]];
 //   cp = [-5,-2]; r = 10;
 //   translate(cp) circle(r=r);
 //   color("black") stroke(line, endcaps="arrow2", width=0.5);
-//   isects = circle_line_intersection(c=cp, r=r, line=line);
+//   isects = circle_line_intersection(r=r, cp=cp, line=line);
 //   color("#f44") move_copies(isects) circle(d=1);
-function circle_line_intersection(c,r,line,bounded=false,d,eps=EPSILON) =
+function circle_line_intersection(r, cp, line, bounded=false, d, eps=EPSILON) =
   assert(_valid_line(line,2), "Invalid 2d line.")
-  assert(is_vector(c,2), "Circle center must be a 2-vector")
-  _circle_or_sphere_line_intersection(c,r,line,bounded,d,eps);
+  assert(is_vector(cp,2), "Circle center must be a 2-vector")
+  _circle_or_sphere_line_intersection(r, cp, line, bounded, d, eps);
 
 
 
-function _circle_or_sphere_line_intersection(c,r,line,bounded=false,d,eps=EPSILON) =
+function _circle_or_sphere_line_intersection(r, cp, line, bounded=false, d, eps=EPSILON) =
   let(r=get_radius(r=r,d=d,dflt=undef))
   assert(is_num(r) && r>0, "Radius must be positive")
   assert(is_bool(bounded) || is_bool_list(bounded,2), "Invalid bound condition")
   let(
       bounded = force_list(bounded,2),
-      closest = line_closest_point(line,c),
-      d = norm(closest-c)
+      closest = line_closest_point(line,cp),
+      d = norm(closest-cp)
   )
   d > r ? [] :
   let(
@@ -934,73 +934,74 @@ function _circle_or_sphere_line_intersection(c,r,line,bounded=false,d,eps=EPSILO
 
 // Function: circle_circle_intersection()
 // Usage:
-//   pts = circle_circle_tangents(c1, r1|d1=, c2, r2|d2=, [eps]);
+//   pts = circle_circle_intersection(r1|d1=, cp1, r2|d2=, cp2, [eps]);
 // Topics: Geometry, Circles
 // Description:
 //   Compute the intersection points of two circles.  Returns a list of the intersection points, which
 //   will contain two points in the general case, one point for tangent circles, or will be empty
 //   if the circles do not intersect.
 // Arguments:
-//   c1 = Center of the first circle.
 //   r1 = Radius of the first circle.
-//   c2 = Center of the second circle.
+//   cp1 = Centerpoint of the first circle.
 //   r2 = Radius of the second circle.
+//   cp2 = Centerpoint of the second circle.
 //   eps = Tolerance for detecting tangent circles.  Default: EPSILON
 //   ---
 //   d1 = Diameter of the first circle.
 //   d2 = Diameter of the second circle.
 // Example(2D,NoAxes): Circles intersect in two points. 
 //   $fn=32;
-//   c1 = [4,4];  r1 = 3;
-//   c2 = [7,7]; r2 = 2;
-//   pts = circle_circle_intersection(c1,r1,c2,r2);
-//   move(c1) stroke(circle(r=r1), width=0.2, closed=true);
-//   move(c2) stroke(circle(r=r2), width=0.2, closed=true);
-//   color("red")move_copies(pts) circle(r=.3);
+//   cp1 = [4,4];  r1 = 3;
+//   cp2 = [7,7];  r2 = 2;
+//   pts = circle_circle_intersection(r1, cp1, r2, cp2);
+//   move(cp1) stroke(circle(r=r1), width=0.2, closed=true);
+//   move(cp2) stroke(circle(r=r2), width=0.2, closed=true);
+//   color("red") move_copies(pts) circle(r=.3);
 // Example(2D,NoAxes): Circles are tangent, so one intersection point:
 //   $fn=32;
-//   c1 = [4,4];  r1 = 4;
-//   c2 = [4,10]; r2 = 2;
-//   pts = circle_circle_intersection(c1,r1,c2,r2);
-//   move(c1) stroke(circle(r=r1), width=0.2, closed=true);
-//   move(c2) stroke(circle(r=r2), width=0.2, closed=true);
-//   color("red")move_copies(pts) circle(r=.3);
+//   cp1 = [4,4];  r1 = 4;
+//   cp2 = [4,10]; r2 = 2;
+//   pts = circle_circle_intersection(r1, cp1, r2, cp2);
+//   move(cp1) stroke(circle(r=r1), width=0.2, closed=true);
+//   move(cp2) stroke(circle(r=r2), width=0.2, closed=true);
+//   color("red") move_copies(pts) circle(r=.3);
 // Example(2D,NoAxes): Another tangent example:
 //   $fn=32;
-//   c1 = [4,4];  r1 = 4;
-//   c2 = [5,5];  r2 = 4-sqrt(2);
-//   pts = circle_circle_intersection(c1,r1,c2,r2);
-//   move(c1) stroke(circle(r=r1), width=0.2, closed=true);
-//   move(c2) stroke(circle(r=r2), width=0.2, closed=true);
-//   color("red")move_copies(pts) circle(r=.3);
+//   cp1 = [4,4];  r1 = 4;
+//   cp2 = [5,5];  r2 = 4-sqrt(2);
+//   pts = circle_circle_intersection(r1, cp1, r2, cp2);
+//   move(cp1) stroke(circle(r=r1), width=0.2, closed=true);
+//   move(cp2) stroke(circle(r=r2), width=0.2, closed=true);
+//   color("red") move_copies(pts) circle(r=.3);
 // Example(2D,NoAxes): Circles do not intersect.  Returns empty list. 
 //   $fn=32;
-//   c1 = [3,4];  r1 = 2;
-//   c2 = [7,10]; r2 = 3;
-//   pts = circle_circle_intersection(c1,r1,c2,r2);
-//   move(c1) stroke(circle(r=r1), width=0.2, closed=true);
-//   move(c2) stroke(circle(r=r2), width=0.2, closed=true);
-//   color("red")move_copies(pts) circle(r=.2);     // pts is []
-function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
-    assert( is_path([c1,c2],dim=2), "Invalid center point(s)." )
+//   cp1 = [3,4];  r1 = 2;
+//   cp2 = [7,10]; r2 = 3;
+//   pts = circle_circle_intersection(r1, cp1, r2, cp2);
+//   move(cp1) stroke(circle(r=r1), width=0.2, closed=true);
+//   move(cp2) stroke(circle(r=r2), width=0.2, closed=true);
+//   color("red") move_copies(pts) circle(r=.3);
+function circle_circle_intersection(r1, cp1, r2, cp2, eps=EPSILON, d1, d2) =
+    assert( is_path([cp1,cp2],dim=2), "Invalid center point(s)." )
     let(
         r1 = get_radius(r1=r1,d1=d1),
         r2 = get_radius(r1=r2,d1=d2),
-        d = norm(c2-c1),
-        a = (c2-c1)/d,
+        d = norm(cp2-cp1),
+        a = (cp2-cp1)/d,
         b = [-a.y,a.x],
         L = (r1^2-r2^2+d^2)/2/d,
         hsqr = r1^2-L^2
     )
-    approx(hsqr,0,eps) ? [L*a+c1]
+    approx(hsqr,0,eps) ? [L*a+cp1]
   : hsqr<0 ? []
   : let(h=sqrt(hsqr))
-    [L*a+h*b+c1, L*a-h*b+c1];
+    [L*a+h*b+cp1, L*a-h*b+cp1];
 
 
 // Function: circle_2tangents()
 // Usage:
-//   circ = circle_2tangents(pt1, pt2, pt3, r|d=, [tangents=]);
+//   circ = circle_2tangents(r|d=, pt1, pt2, pt3, [tangents=]);
+//   circ = circle_2tangents(r|d=, [PT1, PT2, PT3], [tangents=]);
 // Topics: Geometry, Circles, Tangents
 // Description:
 //   Given a pair of rays with a common origin, and a known circle radius/diameter, finds
@@ -1017,7 +1018,7 @@ function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
 // Figure(3D,Med,NoAxes,VPD=130,VPT=[29,19,3],VPR=[55,0,25]):
 //   pts = [[45,10,-5], [10,5,10], [15,40,5]];
 //   rad = 15;
-//   circ = circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad, tangents=true);
+//   circ = circle_2tangents(r=rad, pt1=pts[0], pt2=pts[1], pt3=pts[2], tangents=true);
 //   cp = circ[0]; n = circ[1]; tp1 = circ[2]; tp2 = circ[3];
 //   color("yellow") stroke(pts, endcaps="arrow2");
 //   color("purple") move_copies([cp,tp1,tp2]) sphere(d=2, $fn=12);
@@ -1034,32 +1035,32 @@ function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
 //       ["TanPt2", "brown", 2.0, [-5, 0, 2], tp2],
 //   ];
 //   for(l=labels)
-//       color(l[1]) move(l[4]+l[3]) rot($vpr)
+//       color(l[1]) move(l[4]+l[3]) rot([55,0,25])
 //           linear_extrude(height=0.1)
 //               text(text=l[0], size=l[2], halign="center", valign="center");
 //   color("green",0.5) move(cp) cyl(h=0.1, r=rad, orient=n, $fn=36);
 // Arguments:
+//   r = The radius of the circle to find.
 //   pt1 = A point that the first ray passes though.
 //   pt2 = The starting point of both rays.
 //   pt3 = A point that the second ray passes though.
-//   r = The radius of the circle to find.
 //   ---
 //   d = The diameter of the circle to find.
 //   tangents = If true, extended information about the tangent points is calculated and returned.  Default: false
 // Example(2D):
 //   pts = [[40,40], [10,10], [55,5]];  rad = 10;
-//   circ = circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad);
+//   circ = circle_2tangents(r=rad, pt1=pts[0], pt2=pts[1], pt3=pts[2]);
 //   stroke(pts, endcaps="arrow2");
 //   color("red") move(circ[0]) circle(r=rad);
 // Example(2D):
 //   pts = [[20,40], [10,10], [55,20]];  rad = 10;
-//   circ = circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad, tangents=true);
+//   circ = circle_2tangents(r=rad, pt1=pts[0], pt2=pts[1], pt3=pts[2], tangents=true);
 //   stroke(pts, endcaps="arrow2");
 //   color("red") move(circ[0]) circle(r=rad);
 //   color("blue") move_copies(select(circ,2,3)) circle(d=2);
 // Example(3D): Fit into 3D path corner.
 //   pts = [[45,5,10], [10,10,15], [30,40,30]];  rad = 10;
-//   circ = circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad);
+//   circ = circle_2tangents(r=rad, pt1=pts[0], pt2=pts[1], pt3=pts[2]);
 //   stroke(pts, endcaps="arrow2");
 //   color("red") move(circ[0]) cyl(h=10, r=rad, orient=circ[1]);
 // Example(3D):
@@ -1067,17 +1068,17 @@ function circle_circle_intersection(c1,r1,c2,r2,eps=EPSILON,d1,d2) =
 //   stroke(path, closed=true);
 //   for (i = [0:1:5]) {
 //       crn = select(path, i*2-1, i*2+1);
-//       ci = circle_2tangents(crn[0], crn[1], crn[2], r=5);
+//       ci = circle_2tangents(r=5, crn[0], crn[1], crn[2]);
 //       move(ci[0]) cyl(h=10,r=5,,orient=ci[1]);
 //   }
-function circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
+function circle_2tangents(r, pt1, pt2, pt3, tangents=false, d) =
     let(r = get_radius(r=r, d=d, dflt=undef))
     assert(r!=undef, "Must specify either r or d.")
     assert( ( is_path(pt1) && len(pt1)==3 && is_undef(pt2) && is_undef(pt3))
             || (is_matrix([pt1,pt2,pt3]) && (len(pt1)==2 || len(pt1)==3) ),
             "Invalid input points." )
     is_undef(pt2)
-    ? circle_2tangents(pt1[0], pt1[1], pt1[2], r=r, tangents=tangents)
+    ? circle_2tangents(r, pt1[0], pt1[1], pt1[2], tangents=tangents)
     : is_collinear(pt1, pt2, pt3)? undef :
         let(
             v1 = unit(pt1 - pt2),
@@ -1100,7 +1101,7 @@ function circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
 // Function: circle_3points()
 // Usage:
 //   circ = circle_3points(pt1, pt2, pt3);
-//   circ = circle_3points([pt1, pt2, pt3]);
+//   circ = circle_3points([PT1, PT2, PT3]);
 // Topics: Geometry, Circles
 // Description:
 //   Returns the [CENTERPOINT, RADIUS, NORMAL] of the circle that passes through three non-collinear
@@ -1109,8 +1110,8 @@ function circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
 //   points are 2D, then the resulting centerpoint will be 2D, and the normal will be UP ([0,0,1]).
 //   If any of the points are 3D, then the resulting centerpoint will be 3D.  If the three points are
 //   collinear, then `[undef,undef,undef]` will be returned.  The normal will be a normalized 3D
-//   vector with a non-negative Z axis.
-//   Instead of 3 arguments, it is acceptable to input the 3 points in a list `pt1`, leaving `pt2`and `pt3` as undef.
+//   vector with a non-negative Z axis.  Instead of 3 arguments, it is acceptable to input the 3 points
+//   as a list given in `pt1`, leaving `pt2`and `pt3` as undef.
 // Arguments:
 //   pt1 = The first point.
 //   pt2 = The second point.
@@ -1186,7 +1187,7 @@ function circle_point_tangents(r, cp, pt, d) =
 
 // Function: circle_circle_tangents()
 // Usage:
-//   segs = circle_circle_tangents(c1, r1|d1=, c2, r2|d2=);
+//   segs = circle_circle_tangents(r1|d1=, cp1, r2|d2=, cp2);
 // Topics: Geometry, Circles, Tangents
 // Description:
 //   Computes 2d lines tangents to a pair of circles in 2d.  Returns a list of line endpoints [p1,p2] where
@@ -1200,54 +1201,54 @@ function circle_point_tangents(r, cp, pt, d) =
 //   so the function returns the empty set.  When the circles are tangent a degenerate tangent line
 //   passes through the point of tangency of the two circles:  this degenerate line is NOT returned.
 // Arguments:
-//   c1 = Center of the first circle.
 //   r1 = Radius of the first circle.
-//   c2 = Center of the second circle.
+//   cp1 = Centerpoint of the first circle.
 //   r2 = Radius of the second circle.
+//   cp2 = Centerpoint of the second circle.
 //   ---
 //   d1 = Diameter of the first circle.
 //   d2 = Diameter of the second circle.
 // Example(2D,NoAxes): Four tangents, first in green, second in black, third in blue, last in red.
 //   $fn=32;
-//   c1 = [3,4];  r1 = 2;
-//   c2 = [7,10]; r2 = 3;
-//   pts = circle_circle_tangents(c1,r1,c2,r2);
-//   move(c1) stroke(circle(r=r1), width=0.2, closed=true);
-//   move(c2) stroke(circle(r=r2), width=0.2, closed=true);
+//   cp1 = [3,4];  r1 = 2;
+//   cp2 = [7,10]; r2 = 3;
+//   pts = circle_circle_tangents(r1, cp1, r2, cp2);
+//   move(cp1) stroke(circle(r=r1), width=0.2, closed=true);
+//   move(cp2) stroke(circle(r=r2), width=0.2, closed=true);
 //   colors = ["green","black","blue","red"];
 //   for(i=[0:len(pts)-1]) color(colors[i]) stroke(pts[i],width=0.2);
 // Example(2D,NoAxes): Circles overlap so only exterior tangents exist.
 //   $fn=32;
-//   c1 = [4,4];  r1 = 3;
-//   c2 = [7,7]; r2 = 2;
-//   pts = circle_circle_tangents(c1,r1,c2,r2);
-//   move(c1) stroke(circle(r=r1), width=0.2, closed=true);
-//   move(c2) stroke(circle(r=r2), width=0.2, closed=true);
+//   cp1 = [4,4];  r1 = 3;
+//   cp2 = [7,7];  r2 = 2;
+//   pts = circle_circle_tangents(r1, cp1, r2, cp2);
+//   move(cp1) stroke(circle(r=r1), width=0.2, closed=true);
+//   move(cp2) stroke(circle(r=r2), width=0.2, closed=true);
 //   colors = ["green","black","blue","red"];
 //   for(i=[0:len(pts)-1]) color(colors[i]) stroke(pts[i],width=0.2);
 // Example(2D,NoAxes): Circles are tangent.  Only exterior tangents are returned.  The degenerate internal tangent is not returned.
 //   $fn=32;
-//   c1 = [4,4];  r1 = 4;
-//   c2 = [4,10]; r2 = 2;
-//   pts = circle_circle_tangents(c1,r1,c2,r2);
-//   move(c1) stroke(circle(r=r1), width=0.2, closed=true);
-//   move(c2) stroke(circle(r=r2), width=0.2, closed=true);
+//   cp1 = [4,4];  r1 = 4;
+//   cp2 = [4,10]; r2 = 2;
+//   pts = circle_circle_tangents(r1, cp1, r2, cp2);
+//   move(cp1) stroke(circle(r=r1), width=0.2, closed=true);
+//   move(cp2) stroke(circle(r=r2), width=0.2, closed=true);
 //   colors = ["green","black","blue","red"];
 //   for(i=[0:1:len(pts)-1]) color(colors[i]) stroke(pts[i],width=0.2);
 // Example(2D,NoAxes): One circle is inside the other: no tangents exist.  If the interior circle is tangent the single degenerate tangent will not be returned.
 //   $fn=32;
-//   c1 = [4,4];  r1 = 4;
-//   c2 = [5,5];  r2 = 2;
-//   pts = circle_circle_tangents(c1,r1,c2,r2);
-//   move(c1) stroke(circle(r=r1), width=0.2, closed=true);
-//   move(c2) stroke(circle(r=r2), width=0.2, closed=true);
+//   cp1 = [4,4];  r1 = 4;
+//   cp2 = [5,5];  r2 = 2;
+//   pts = circle_circle_tangents(r1, cp1, r2, cp2);
+//   move(cp1) stroke(circle(r=r1), width=0.2, closed=true);
+//   move(cp2) stroke(circle(r=r2), width=0.2, closed=true);
 //   echo(pts);   // Returns []
-function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
-    assert( is_path([c1,c2],dim=2), "Invalid center point(s)." )
+function circle_circle_tangents(r1, cp1, r2, cp2, d1, d2) =
+    assert( is_path([cp1,cp2],dim=2), "Invalid center point(s)." )
     let(
         r1 = get_radius(r1=r1,d1=d1),
         r2 = get_radius(r1=r2,d1=d2),
-        Rvals = [r2-r1, r2-r1, -r2-r1, -r2-r1]/norm(c1-c2),
+        Rvals = [r2-r1, r2-r1, -r2-r1, -r2-r1]/norm(cp1-cp2),
         kvals = [-1,1,-1,1],
         ext = [1,1,-1,-1],
         N = 1-sqr(Rvals[2])>=0 ? 4 :
@@ -1256,13 +1257,13 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
             for(i=[0:1:N-1]) [
                 [Rvals[i], -kvals[i]*sqrt(1-sqr(Rvals[i]))],
                 [kvals[i]*sqrt(1-sqr(Rvals[i])), Rvals[i]]
-            ] * unit(c2-c1)
+            ] * unit(cp2-cp1)
         ]
     ) [
         for(i=[0:1:N-1]) let(
             pt = [
-                c1-r1*coef[i],
-                c2-ext[i]*r2*coef[i]
+                cp1-r1*coef[i],
+                cp2-ext[i]*r2*coef[i]
             ]
         ) if (pt[0]!=pt[1]) pt
     ];
@@ -1311,15 +1312,15 @@ function _noncollinear_triple(points,error=true,eps=EPSILON) =
 
 // Function: sphere_line_intersection()
 // Usage:
-//   isect = sphere_line_intersection(c,r|d=,line,[bounded],[eps=]);
+//   isect = sphere_line_intersection(r|d=, cp, line, [bounded], [eps=]);
 // Topics: Geometry, Spheres, Lines, Intersection
 // Description:
 //   Find intersection points between a sphere and a line, ray or segment specified by two points.
 //   By default the line is unbounded.
 // Arguments:
-//   c = center of sphere
-//   r = radius of sphere
-//   line = two points defining the line
+//   r = Radius of sphere
+//   cp = Centerpoint of sphere
+//   line = Two points defining the line
 //   bounded = false for unbounded line, true for a segment, or a vector [false,true] or [true,false] to specify a ray with the first or second end unbounded.  Default: false
 //   ---
 //   d = diameter of sphere
@@ -1327,14 +1328,14 @@ function _noncollinear_triple(points,error=true,eps=EPSILON) =
 // Example(3D):
 //   cp = [10,20,5];  r = 40;
 //   line = [[-50,-10,25], [70,0,40]];
-//   isects = sphere_line_intersection(c=cp, r=r, line=line);
+//   isects = sphere_line_intersection(r=r, cp=cp, line=line);
 //   color("cyan") stroke(line);
 //   move(cp) sphere(r=r, $fn=72);
 //   color("red") move_copies(isects) sphere(d=3, $fn=12);
-function sphere_line_intersection(c,r,line,bounded=false,d,eps=EPSILON) =
+function sphere_line_intersection(r, cp, line, bounded=false, d, eps=EPSILON) =
   assert(_valid_line(line,3), "Invalid 3d line.")
-  assert(is_vector(c,3), "Sphere center must be a 3-vector")
-  _circle_or_sphere_line_intersection(c,r,line,bounded,d,eps);
+  assert(is_vector(cp,3), "Sphere center must be a 3-vector")
+  _circle_or_sphere_line_intersection(r, cp, line, bounded, d, eps);
 
 
 

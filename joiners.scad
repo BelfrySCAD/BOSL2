@@ -963,7 +963,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
     scaled_len = length - 0.5 * (earwidth * snap + point_length * length) / sqrt(sqr(snap)+sqr(length/2));
     bottom_pt = [0,max(scaled_len*0.15+thickness, 2*thickness)];
     ctr = [width/2,scaled_len] + line_normal([width/2-snap, scaled_len/2], [width/2, scaled_len]) * earwidth/2;
-    inside_pt = circle_circle_tangents(bottom_pt, 0, ctr, earwidth/2)[0][1];
+    inside_pt = circle_circle_tangents(0, bottom_pt, earwidth/2, ctr)[0][1];
     sidepath =[
                [width/2,0],
                [width/2-snap,scaled_len/2],
