@@ -246,7 +246,7 @@ function select(list, start, end) =
 function slice(list,start=0,end=-1) =
     assert(is_list(list))
     assert(is_int(start))
-    assert(is_int(eend))
+    assert(is_int(end))
     !list? [] :
     let(
         l = len(list),
