@@ -1,6 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: structs.scad
-//   Struct/Dictionary manipulation functions.
+//   This file provides manipulation of "structs".  A "struct" is a data structure that
+//   associates keywords with values and allows you to get and set values
+//   by keyword.  
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/structs.scad>
@@ -11,69 +13,74 @@
 
 // Section: struct operations
 //
-// A struct is a data structure that associates arbitrary keywords (of any type) with values (of any type).
-// Structures are implemented as lists of [keyword, value] pairs.
+// A struct is a data structure that associates arbitrary keys (of any type) with values (of any type).
+// Structures are implemented as lists of [key, value] pairs.
 //
 // An empty list `[]` is an empty structure and can be used wherever a structure input is required.
 
 // Function: struct_set()
 // Usage:
-//   struct_set(struct, keyword, value, [grow])
-//   struct_set(struct, [keyword1, value1, keyword2, value2, ...], [grow])
+//   struct_set(struct, key, value, [grow=])
+//   struct_set(struct, [key1, value1, key2, value2, ...], [grow=])
 // Description:
-//   Sets the keyword(s) in the structure to the specified value(s), returning a new updated structure.  If a keyword
-//   exists its value is changed, otherwise the keyword is added to the structure.  If grow is set to false then
-//   it is an error to set a keyword not already defined in the structure.  If you specify the same keyword twice
-//   that is also an error.  If speed matters, use the first form with scalars rather than the list form: this is
-//   about thirty times faster.
+//   Sets the key(s) in the structure to the specified value(s), returning a new updated structure.  If a key
+//   exists its value is changed, otherwise the key is added to the structure.  If grow is set to false then
+//   it is an error to set a key not already defined in the structure.  If you specify the same key twice
+//   that is also an error.  Note that key order will change when you change a key's value.   
 // Arguments:
-//   struct = Input structure.
-//   keyword = Keyword to set.
-//   value = Value to set the keyword to.
-//   grow = Set to true to allow structure to grow, or false for new keywords to generate an error.  Default: true
-function struct_set(struct, keyword, value=undef, grow=true) =
-    !is_list(keyword)? (
-        let( ind=search([keyword],struct,1,0)[0] )
-        ind==[]? (
-            assert(grow,str("Unknown keyword \"",keyword))
-            concat(struct, [[keyword,value]])
-        ) : list_set(struct, [ind], [[keyword,value]])
-    ) : _parse_pairs(struct,keyword,grow);
+//   struct = input structure.
+//   key = key to set or list of key,value pairs to set
+//   value = value to set the key to (when giving a single key and value)
+//   ---
+//   grow = Set to true to allow structure to grow, or false for new keys to generate an error.  Default: true
+function struct_set(struct, key, value, grow=true) =
+  is_def(value) ? struct_set(struct,[key,value],grow=grow)
+  :
+  assert(is_list(key) && len(key)%2==0, "[key,value] pair list is not a list or has an odd length") 
+  let(
+      new_entries = [for(i=[0:1:len(key)/2-1]) [key[2*i], key[2*i+1]]],
+      newkeys = column(new_entries,0),
+      indlist = search(newkeys, struct,0,0),
+      badkeys = grow ? (search([undef],new_entries,1,0)[0] != [] ? [undef] : [])
+                     : [for(i=idx(indlist)) if (is_undef(newkeys[i]) || len(indlist[i])==0) newkeys[i]],
+      ind = flatten(indlist),
+      dupfind = search(newkeys, new_entries,0,0),
+      dupkeys = [for(i=idx(dupfind)) if (len(dupfind[i])>1) newkeys[i]]
+  )
+  assert(badkeys==[], str("Unknown or bad key ",_format_key(badkeys[0])," in struct_set"))
+  assert(dupkeys==[], str("Duplicate key ",_format_key(dupkeys[0])," for struct"))
+  concat(list_remove(struct,ind), new_entries);
 
-
-function _parse_pairs(spec, input, grow=true, index=0, result=undef) =
-    assert(len(input)%2==0,"Odd number of entries in [keyword,value] pair list")
-    let( result = result==undef ? spec : result)
-    index == len(input) ? result :
-    _parse_pairs(spec,input,grow,index+2,struct_set(result, input[index], input[index+1],grow));
-
+function _format_key(key) = is_string(key) ? str("\"",key,"\""): key;
 
 // Function: struct_remove()
 // Usage:
-//   struct_remove(struct, keyword)
+//   struct_remove(struct, key)
 // Description:
-//   Remove keyword or keyword list from a structure
+//   Remove key or list of keys from a structure.  If you want to remove a single key which is a list
+//   you must pass it as a singleton list, or struct_remove will attempt to remove the listed items as keys.
+//   If you list the same item multiple times for removal it will be removed without error.  
 // Arguments:
 //   struct = input structure
-//   keyword = a single string (keyword) or list of strings (keywords) to remove
-function struct_remove(struct, keyword) =
-    is_string(keyword)? struct_remove(struct, [keyword]) :
-    let(ind = search(keyword, struct))
+//   key = a single key or list of keys to remove.  
+function struct_remove(struct, key) =
+    !is_list(key) ? struct_remove(struct, [key]) :
+    let(ind = search(key, struct))
     list_remove(struct, ind);
 
 
 // Function: struct_val()
 // Usage:
-//   struct_val(struct, keyword, default)
+//   struct_val(struct, key, default)
 // Description:
-//   Returns the value for the specified keyword in the structure, or default value if the keyword is not present
+//   Returns the value for the specified key in the structure, or default value if the key is not present
 // Arguments:
 //   struct = input structure
-//   keyword = keyword whose value to return
-//   default = default value to return if keyword is not present, defaults to undef
-function struct_val(struct, keyword, default=undef) =
-    assert(is_def(keyword),"keyword is missing")
-    let(ind = search([keyword],struct)[0])
+//   key = key whose value to return
+//   default = default value to return if key is not present.  Default: undef
+function struct_val(struct, key, default=undef) =
+    assert(is_def(key),"key is missing")
+    let(ind = search([key],struct)[0])
     ind == [] ? default : struct[ind][1];
 
 
@@ -84,15 +91,14 @@ function struct_val(struct, keyword, default=undef) =
 //   Returns a list of the keys in a structure
 // Arguments:
 //   struct = input structure
-function struct_keys(struct) =
-    [for(entry=struct) entry[0]];
+function struct_keys(struct) = column(struct,0);
 
 
 // Function&Module: struct_echo()
 // Usage:
 //   struct_echo(struct, [name])
 // Description:
-//   Displays a list of structure keywords and values, one pair per line, for easier reading.
+//   Displays a list of structure keys and values, one pair per line, for easier reading.
 // Arguments:
 //   struct = input structure
 //   name = optional structure name to list at the top of the output.  Default: ""
@@ -111,16 +117,9 @@ module struct_echo(struct,name="") {
 // Usage:
 //   is_struct(struct)
 // Description:
-//   Returns true if the input has the form of a structure, false otherwise.
+//   Returns true if the input is a list of pairs, false otherwise.
 function is_struct(x) =
-    is_list(x) && [
-        for (xx=x) if(
-            !is_list(xx) ||
-            len(xx) != 2 ||
-            !is_string(xx[0])
-        ) 1
-    ] == [];
-
+    is_list(x) && [for (xx=x) if(!(is_list(xx) && len(xx)==2)) 1] == [];
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
