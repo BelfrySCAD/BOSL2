@@ -20,7 +20,7 @@
 //   Returns a 2D vector/point from a 2D or 3D vector.  If given a 3D point, removes the Z coordinate.
 // Arguments:
 //   p = The coordinates to force into a 2D vector/point.
-//   fill = Value to fill missing values in vector with.
+//   fill = Value to fill missing values in vector with.  Default: 0
 function point2d(p, fill=0) = assert(is_list(p)) [for (i=[0:1]) (p[i]==undef)? fill : p[i]];
 
 
@@ -51,7 +51,7 @@ function path2d(points) =
 //   Returns a 3D vector/point from a 2D or 3D vector.
 // Arguments:
 //   p = The coordinates to force into a 3D vector/point.
-//   fill = Value to fill missing values in vector with.
+//   fill = Value to fill missing values in vector with.  Default: 0
 function point3d(p, fill=0) =
     assert(is_list(p)) 
     [for (i=[0:2]) (p[i]==undef)? fill : p[i]];
@@ -67,7 +67,7 @@ function point3d(p, fill=0) =
 //   by removing extra coordinates or adding the z coordinate.  
 // Arguments:
 //   points = A list of 2D, 3D or higher dimensional points/vectors.
-//   fill = Value to fill missing values in vectors with (in the 2D case)
+//   fill = Value to fill missing values in vectors with (in the 2D case).  Default: 0
 function path3d(points, fill=0) =
     assert(is_num(fill))
     assert(is_path(points, dim=undef, fast=true), "Input to path3d is not a path")
@@ -90,7 +90,7 @@ function path3d(points, fill=0) =
 //   Returns a 4D vector/point from a 2D or 3D vector.
 // Arguments:
 //   p = The coordinates to force into a 4D vector/point.
-//   fill = Value to fill missing values in vector with.
+//   fill = Value to fill missing values in vector with.  Default: 0
 function point4d(p, fill=0) = assert(is_list(p))
                               [for (i=[0:3]) (p[i]==undef)? fill : p[i]];
 
@@ -104,7 +104,7 @@ function point4d(p, fill=0) = assert(is_list(p))
 //   Returns a list of 4D vectors/points from a list of 2D or 3D vectors/points.
 // Arguments:
 //   points = A list of 2D or 3D points/vectors.
-//   fill = Value to fill missing values in vectors with.
+//   fill = Value to fill missing values in vectors with.  Default: 0 
 function path4d(points, fill=0) = 
    assert(is_num(fill) || is_vector(fill))
    assert(is_path(points, dim=undef, fast=true), "Input to path4d is not a path")

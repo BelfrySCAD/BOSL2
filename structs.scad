@@ -94,22 +94,22 @@ function struct_val(struct, key, default=undef) =
 function struct_keys(struct) = column(struct,0);
 
 
-// Function&Module: struct_echo()
+// Function&Module: echo_struct()
 // Usage:
-//   struct_echo(struct, [name])
+//   echo_struct(struct, [name])
 // Description:
 //   Displays a list of structure keys and values, one pair per line, for easier reading.
 // Arguments:
 //   struct = input structure
 //   name = optional structure name to list at the top of the output.  Default: ""
-function struct_echo(struct,name="") =
+function echo_struct(struct,name="") =
     let( keylist = [for(entry=struct) str("  ",entry[0],": ",entry[1],"\n")])
     echo(str("\nStructure ",name,"\n",str_join(keylist)))
     undef;
 
-module struct_echo(struct,name="") {
+module echo_struct(struct,name="") {
     no_children($children);
-    dummy = struct_echo(struct,name);
+    dummy = echo_struct(struct,name);
 }
 
 

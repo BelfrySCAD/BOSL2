@@ -52,18 +52,20 @@ function bosl_version_str() = version_to_str(BOSL_VERSION);
 
 // Module: bosl_required()
 // Usage:
-//   bosl_required(x);
+//   bosl_required(version);
 // Topics: Versioning
 // Description:
 //   Given a version as a list, number, or string, asserts that the currently installed BOSL library is at least the given version.
 // See Also: version_to_num(), version_to_str(), version_to_list(), version_cmp()
-module bosl_required(target) {
+// Arguments:
+//   version = version required
+module bosl_required(version) {
     no_children($children);
     assert(
-        version_cmp(bosl_version(), target) >= 0,
+        version_cmp(bosl_version(), version) >= 0,
         str(
             "BOSL ", bosl_version_str(), " is installed, but BOSL ",
-            version_to_str(target), " or better is required."  
+            version_to_str(version), " or better is required."  
         )
     );
 }
@@ -89,50 +91,56 @@ function _version_split_str(x, _i=0, _out=[], _num=0) =
 // Description:
 //   Given a version string, number, or list, returns the list of version integers [MAJOR,MINOR,REVISION].
 // See Also: version_to_num(), version_to_str(), version_cmp(), bosl_required()
+// Arguments:
+//   x = version to convert
 // Example:
 //   v1 = version_to_list("2.1.43");  // Returns: [2,1,43]
 //   v2 = version_to_list(2.120234);  // Returns: [2,12,234]
 //   v3 = version_to_list([2,3,4]);   // Returns: [2,3,4]
 //   v4 = version_to_list([2,3,4,5]); // Returns: [2,3,4]
-function version_to_list(x) =
-    is_list(x)? [default(x[0],0), default(x[1],0), default(x[2],0)] :
-    is_string(x)? _version_split_str(x) :
-    is_num(x)? [floor(x), floor(x*100%100), floor(x*1000000%10000+0.5)] :
-    assert(is_num(x) || is_vector(x) || is_string(x)) 0;
+function version_to_list(version) =
+    is_list(version)? [default(version[0],0), default(version[1],0), default(version[2],0)] :
+    is_string(version)? _version_split_str(version) :
+    is_num(version)? [floor(version), floor(version*100%100), floor(version*1000000%10000+0.5)] :
+    assert(is_num(version) || is_vector(version) || is_string(version)) 0;
 
 
 // Function: version_to_str()
 // Usage:
-//   str = version_to_str(x);
+//   str = version_to_str(version);
 // Topics: Versioning
 // Description:
 //   Takes a version string, number, or list, and returns the properly formatter version string for it.
 // See Also: version_to_num(), version_to_list(), version_cmp(), bosl_required()
+// Arguments:
+//   version = version to convert
 // Example:
 //   v1 = version_to_str([2,1,43]);  // Returns: "2.1.43"
 //   v2 = version_to_str(2.010043);  // Returns: "2.1.43"
 //   v3 = version_to_str(2.340789);  // Returns: "2.34.789"
 //   v4 = version_to_str("2.3.89");  // Returns: "2.3.89"
-function version_to_str(x) =
-    let(x = version_to_list(x))
-    str(x[0],".",x[1],".",x[2]);
+function version_to_str(version) =
+    let(version = version_to_list(version))
+    str(version[0],".",version[1],".",version[2]);
 
 
 // Function: version_to_num()
 // Usage:
-//   str = version_to_num(x);
+//   str = version_to_num(version);
 // Topics: Versioning
 // Description:
 //   Takes a version string, number, or list, and returns the properly formatter version number for it.
 // See Also: version_cmp(), version_to_str(), version_to_list(), bosl_required()
+// Arguments:
+//   version = version to convert
 // Example:
 //   v1 = version_to_num([2,1,43]);   // Returns: 2.010043
 //   v2 = version_to_num([2,34,567]); // Returns: 2.340567
 //   v3 = version_to_num(2.120567);   // Returns: 2.120567
 //   v4 = version_to_num("2.6.79");   // Returns: 2.060079
-function version_to_num(x) =
-    let(x = version_to_list(x))
-    (x[0]*1000000 + x[1]*10000 + x[2])/1000000;
+function version_to_num(version) =
+    let(version = version_to_list(version))
+    (version[0]*1000000 + version[1]*10000 + version[2])/1000000;
 
 
 // Function: version_cmp()

@@ -60,10 +60,10 @@ module test_struct_keys() {
 test_struct_keys();
 
 
-module test_struct_echo() {
+module test_echo_struct() {
     // Can't yet test echo output
 }
-test_struct_echo();
+test_echo_struct();
 
 
 module test_is_struct() {

@@ -19,7 +19,7 @@
 // Function: is_homogeneous()
 // Alias: is_homogenous()
 // Usage:
-//   bool = is_homogeneous(list, depth);
+//   bool = is_homogeneous(list, [depth]);
 // Topics: List Handling, Type Checking
 // See Also: is_vector(), is_matrix()
 // Description:
@@ -27,7 +27,7 @@
 //   Booleans and numbers are not distinguinshed as of distinct types. 
 // Arguments:
 //   l = the list to check
-//   depth = the lowest level the check is done
+//   depth = the lowest level the check is done.  Default: 10
 // Example:
 //   a = is_homogeneous([[1,["a"]], [2,["b"]]]);     // Returns true
 //   b = is_homogeneous([[1,["a"]], [2,[true]]]);    // Returns false
@@ -233,8 +233,8 @@ function select(list, start, end) =
 //   An index of -1 refers to the last list item.
 // Arguments:
 //   list = The list to get the slice of.
-//   s = The index of the first item to return.
-//   e = The index of the last item to return.
+//   start = The index of the first item to return.  Default: 0
+//   end = The index of the last item to return.  Default: -1 (last item)
 // See Also: select(), column(), last()
 // Example:
 //   a = slice([3,4,5,6,7,8,9], 3, 5);   // Returns [6,7,8]
@@ -243,17 +243,17 @@ function select(list, start, end) =
 //   d = slice([3,4,5,6,7,8,9], 5);      // Returns [8,9]
 //   e = slice([3,4,5,6,7,8,9], 2, -2);  // Returns [5,6,7,8]
 //   f = slice([3,4,5,6,7,8,9], 4, 3;    // Returns []
-function slice(list,s=0,e=-1) =
+function slice(list,start=0,end=-1) =
     assert(is_list(list))
-    assert(is_int(s))
-    assert(is_int(e))
+    assert(is_int(start))
+    assert(is_int(eend))
     !list? [] :
     let(
         l = len(list),
-        s = constrain(s + (s<0? l : 0), 0, l-1),
-        e = constrain(e + (e<0? l : 0), 0, l-1)
+        start = constrain(start + (start<0? l : 0), 0, l-1),
+        end = constrain(end + (end<0? l : 0), 0, l-1)
     )
-    [if (e>=s) for (i=[s:1:e]) list[i]];
+    [if (end>=start) for (i=[start:1:end]) list[i]];
 
 
 // Function: last()
@@ -279,12 +279,13 @@ function last(list) =
 // See Also: select(), slice(), list_tail(), last()
 // Description:
 //   Returns the head of the given list, from the first item up until the `to` index, inclusive.
+//   By default returns all but the last element of the list.  
 //   If the `to` index is negative, then the length of the list is added to it, such that
 //   `-1` is the last list item.  `-2` is the second from last.  `-3` is third from last, etc.
 //   If the list is shorter than the given index, then the full list is returned.
 // Arguments:
 //   list = The list to get the head of.
-//   to = The last index to include.  If negative, adds the list length to it.  ie: -1 is the last list item.
+//   to = The last index to include.  If negative, adds the list length to it.  ie: -1 is the last list item.  Default: -2
 // Example:
 //   hlist1 = list_head(["foo", "bar", "baz"]);  // Returns: ["foo", "bar"]
 //   hlist2 = list_head(["foo", "bar", "baz"], -3); // Returns: ["foo"]
@@ -306,12 +307,13 @@ function list_head(list, to=-2) =
 // See Also: select(), slice(), list_tail(), last()
 // Description:
 //   Returns the tail of the given list, from the `from` index up until the end of the list, inclusive.
+//   By default returns all but the first item.  
 //   If the `from` index is negative, then the length of the list is added to it, such that
 //   `-1` is the last list item.  `-2` is the second from last.  `-3` is third from last, etc.
 //   If you want it to return the last three items of the list, use `from=-3`.
 // Arguments:
 //   list = The list to get the tail of.
-//   from = The first index to include.  If negative, adds the list length to it.  ie: -1 is the last list item.
+//   from = The first index to include.  If negative, adds the list length to it.  ie: -1 is the last list item.  Default: 1.
 // Example:
 //   tlist1 = list_tail(["foo", "bar", "baz"]);  // Returns: ["bar", "baz"]
 //   tlist2 = list_tail(["foo", "bar", "baz"], -1); // Returns: ["baz"]
@@ -364,7 +366,7 @@ function bselect(list,index) =
 //   multi-dimensional array, filled with `val`.
 // Arguments:
 //   val = The value to repeat to make the list or array.
-//   n = The number of copies to make of `val`.
+//   n = The number of copies to make of `val`.  Can be a list to make an array of copies.
 // Example:
 //   a = repeat(1, 4);        // Returns [1,1,1,1]
 //   b = repeat(8, [2,3]);    // Returns [[8,8,8], [8,8,8]]
@@ -391,7 +393,7 @@ function repeat(val, n, i=0) =
 // Arguments:
 //   indexset = A list of boolean values.
 //   valuelist = The list of values to set into the returned list.
-//   dflt = Default value to store when the indexset item is false.
+//   dflt = Default value to store when the indexset item is false.  Default: 0
 // Example:
 //   a = list_bset([false,true,false,true,false], [3,4]);  // Returns: [0,3,0,4,0]
 //   b = list_bset([false,true,false,true,false], [3,4], dflt=1);  // Returns: [1,3,1,4,1]
@@ -461,13 +463,13 @@ function force_list(value, n=1, fill) =
 // Description:
 //   Reverses a list or string.
 // Arguments:
-//   x = The list or string to reverse.
+//   list = The list or string to reverse.
 // Example:
 //   reverse([3,4,5,6]);  // Returns [6,5,4,3]
-function reverse(x) =
-    assert(is_list(x)||is_string(x), str("Input to reverse must be a list or string. Got: ",x))
-    let (elems = [ for (i = [len(x)-1 : -1 : 0]) x[i] ])
-    is_string(x)? str_join(elems) : elems;
+function reverse(list) =
+    assert(is_list(list)||is_string(list), str("Input to reverse must be a list or string. Got: ",list))
+    let (elems = [ for (i = [len(list)-1 : -1 : 0]) list[i] ])
+    is_string(list)? str_join(elems) : elems;
 
 
 // Function: list_rotate()
@@ -652,7 +654,12 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 // Topics: List Handling
 // See Also: list_set(), list_remove(), list_remove_values()
 // Description:
-//   Insert `values` into `list` before position `indices`.
+//   Insert `values` into `list` before position `indices`.  The indices for insertion 
+//   are based on the original list, before any insertions have occurred.  
+// Arguments:
+//   list = list to insert items into
+//   indices = index or list of indices where values are inserted
+//   values = value or list of values to insert
 // Example:
 //   a = list_insert([3,6,9,12],1,5);  // Returns [3,5,6,9,12]
 //   b = list_insert([3,6,9,12],[1,3],[5,11]);  // Returns [3,5,6,9,11,12]
@@ -729,8 +736,7 @@ function list_remove(list, ind) =
 
 // Function: list_remove_values()
 // Usage:
-//   list = list_remove_values(list, values);
-//   list = list_remove_values(list, values, all=true);
+//   list = list_remove_values(list, values, [all]);
 // Topics: List Handling
 // See Also: list_set(), list_insert(), list_remove()
 // Description:
@@ -806,6 +812,7 @@ function list_remove_values(list,values=[],all=false) =
 //   Returns the range of indexes for the given list.
 // Arguments:
 //   list = The list to returns the index range of.
+//   ---
 //   s = The starting index.  Default: 0
 //   e = The delta from the end of the list.  Default: -1 (end of list)
 //   step = The step size to stride through the list.  Default: 1
@@ -906,7 +913,7 @@ function triplet(list, wrap=false) =
 //   For the list `[1,2,3,4]`, with `n=3`, this will return `[[1,2,3], [1,2,4], [1,3,4], [2,3,4]]`.
 // Arguments:
 //   l = The list to provide permutations for.
-//   n = The number of items in each permutation. Default: 2
+//   n = The number of items in each combination. Default: 2
 // Example:
 //   pairs = combinations([3,4,5,6]);  // Returns: [[3,4],[3,5],[3,6],[4,5],[4,6],[5,6]]
 //   triplets = combinations([3,4,5,6],n=3);  // Returns: [[3,4,5],[3,4,6],[3,5,6],[4,5,6]]
