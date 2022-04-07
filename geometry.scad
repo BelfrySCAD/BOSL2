@@ -1060,7 +1060,7 @@ function circle_circle_intersection(r1, cp1, r2, cp2, eps=EPSILON, d1, d2) =
 //   color("blue") move_copies(select(circ,2,3)) circle(d=2);
 // Example(3D): Fit into 3D path corner.
 //   pts = [[45,5,10], [10,10,15], [30,40,30]];  rad = 10;
-//   circ = circle_2tangents(r=rad, pt1=pts[0], pt2=pts[1], pt3=pts[2]);
+//   circ = circle_2tangents(rad, [pts[0], pts[1], pts[2]]);
 //   stroke(pts, endcaps="arrow2");
 //   color("red") move(circ[0]) cyl(h=10, r=rad, orient=circ[1]);
 // Example(3D):
@@ -1068,7 +1068,7 @@ function circle_circle_intersection(r1, cp1, r2, cp2, eps=EPSILON, d1, d2) =
 //   stroke(path, closed=true);
 //   for (i = [0:1:5]) {
 //       crn = select(path, i*2-1, i*2+1);
-//       ci = circle_2tangents(r=5, crn[0], crn[1], crn[2]);
+//       ci = circle_2tangents(5, crn[0], crn[1], crn[2]);
 //       move(ci[0]) cyl(h=10,r=5,,orient=ci[1]);
 //   }
 function circle_2tangents(r, pt1, pt2, pt3, tangents=false, d) =

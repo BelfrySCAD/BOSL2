@@ -183,10 +183,10 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut, wall, an
     wall = is_num(wall)? wall : thick/2;
 
     bevel_h = strut + (thick-wall)/2/tan(ang);
-    cp1 = circle_2tangents(r=strut, [0,0,+h/2], [l2/2,0,+h/2], [l1/2,0,-h/2])[0];
-    cp2 = circle_2tangents(r=bevel_h, [0,0,+h/2], [l2/2,0,+h/2], [l1/2,0,-h/2])[0];
-    cp3 = circle_2tangents(r=bevel_h, [0,0,-h/2], [l1/2,0,-h/2], [l2/2,0,+h/2])[0];
-    cp4 = circle_2tangents(r=strut, [0,0,-h/2], [l1/2,0,-h/2], [l2/2,0,+h/2])[0];
+    cp1 = circle_2tangents(strut, [0,0,+h/2], [l2/2,0,+h/2], [l1/2,0,-h/2])[0];
+    cp2 = circle_2tangents(bevel_h, [0,0,+h/2], [l2/2,0,+h/2], [l1/2,0,-h/2])[0];
+    cp3 = circle_2tangents(bevel_h, [0,0,-h/2], [l1/2,0,-h/2], [l2/2,0,+h/2])[0];
+    cp4 = circle_2tangents(strut, [0,0,-h/2], [l1/2,0,-h/2], [l2/2,0,+h/2])[0];
 
     z1 = h/2;
     z2 = cp1.z;
