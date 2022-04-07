@@ -1223,7 +1223,7 @@ module cyl(
                         ) [p1,p2]
                     ) : !is_undef(fil2)? (
                         let(
-                            cn = circle_2tangents([r2-fil2,l/2], [r2,l/2], [r1,-l/2], r=abs(fil2)),
+                            cn = circle_2tangents(abs(fil2), [r2-fil2,l/2], [r2,l/2], [r1,-l/2]),
                             ang = fil2<0? phi : phi-180,
                             steps = ceil(abs(ang)/360*segs(abs(fil2))),
                             step = ang/steps,
@@ -1238,7 +1238,7 @@ module cyl(
                         ) [p1,p2]
                     ) : !is_undef(fil1)? (
                         let(
-                            cn = circle_2tangents([r1-fil1,-l/2], [r1,-l/2], [r2,l/2], r=abs(fil1)),
+                            cn = circle_2tangents(abs(fil1), [r1-fil1,-l/2], [r1,-l/2], [r2,l/2]),
                             ang = fil1<0? 180-phi : -phi,
                             steps = ceil(abs(ang)/360*segs(abs(fil1))),
                             step = ang/steps,
@@ -2706,19 +2706,21 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 //
 // Example:
 //   union() {
-//       translate([0,2,-4])
-//           cube([20, 4, 24], anchor=BOTTOM);
-//       translate([0,-10,-4])
-//           cube([20, 20, 4], anchor=BOTTOM);
-//       color("green")
-//           interior_fillet(
-//               l=20, r=10,
-//               spin=180, orient=RIGHT
-//           );
+//     translate([0,2,-4])
+//       cube([20, 4, 24], anchor=BOTTOM);
+//     translate([0,-10,-4])
+//       cube([20, 20, 4], anchor=BOTTOM);
+//     color("green")
+//       interior_fillet(
+//         l=20, r=10,
+//         spin=180, orient=RIGHT
+//       );
 //   }
 //
-// Example:
-//   interior_fillet(l=40, r=10, spin=-90);
+// Examples:
+//   interior_fillet(l=10, r=20, ang=60);
+//   interior_fillet(l=10, r=20, ang=90);
+//   interior_fillet(l=10, r=20, ang=120);
 //
 // Example: Using with Attachments
 //   cube(50,center=true) {
@@ -2727,19 +2729,22 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 //     position(BOT+FRONT)
 //       interior_fillet(l=50, r=10, spin=180, orient=RIGHT);
 //   }
-module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=FRONT+LEFT, spin=0, orient=UP) {
+module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=CENTER, spin=0, orient=UP) {
     r = get_radius(r=r, d=d, dflt=1);
-    dy = r/tan(ang/2);
-    steps = ceil(segs(r)*ang/360);
-    step = ang/steps;
-    attachable(anchor,spin,orient, size=[r,r,l]) {
+    steps = ceil(segs(r)*(180-ang)/360);
+    arc = arc(n=steps+1, r=r, corner=[polar_to_xy(r,ang),[0,0],[r,0]]);
+    maxx = last(arc).x;
+    maxy = arc[0].y;
+    path = [
+        [maxx, -overlap],
+        polar_to_xy(overlap, 180+ang/2),
+        arc[0] + polar_to_xy(overlap, 90+ang),
+        each arc
+    ];
+    attachable(anchor,spin,orient, size=[2*maxx,2*maxy,l]) {
         if (l > 0) {
             linear_extrude(height=l, convexity=4, center=true) {
-                path = concat(
-                    [[0,0]],
-                    [for (i=[0:1:steps]) let(a=270-i*step) r*[cos(a),sin(a)]+[dy,r]]
-                );
-                translate(-[r,r]/2) polygon(path);
+                polygon(path);
             }
         }
         children();

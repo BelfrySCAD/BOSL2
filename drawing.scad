@@ -710,7 +710,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
         let( r = get_radius(r=r, d=d) )
         assert(is_finite(r) && r>0, "Must specify r= or d= when corner= is given.")
         let(
-            ci = circle_2tangents(corner[0], corner[1], corner[2], r=r, tangents=true),
+            ci = circle_2tangents(r, corner[0], corner[1], corner[2], tangents=true),
             cp = ci[0], nrm = ci[1], tp1 = ci[2], tp2 = ci[3],
             dir = det2([corner[1]-corner[0],corner[2]-corner[1]]) > 0,
             corner = dir? [tp1,tp2] : [tp2,tp1],

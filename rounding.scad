@@ -3281,7 +3281,7 @@ function _fix_angle_list(list,ind=0, result=[]) =
 function _cyl_line_intersection(R, line, ref) =
    let(
        line2d = path2d(line),
-       cisect = circle_line_intersection([0,0], r=R, line= line2d)
+       cisect = circle_line_intersection(r=R, cp=[0,0], line=line2d)
    )
    len(cisect)<2 ? [] :
    let(
@@ -3300,7 +3300,7 @@ function _cyl_line_intersection(R, line, ref) =
 
 function _sphere_line_isect_best(R, line, ref) =
    let(
-        pts = sphere_line_intersection([0,0,0],abs(R), line=line)
+        pts = sphere_line_intersection(abs(R), [0,0,0], line=line)
    )
    len(pts)<2 ? [] :
    let(  

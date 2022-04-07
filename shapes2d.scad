@@ -254,7 +254,7 @@ function circle(r, d, points, corner, anchor=CENTER, spin=0) =
                 assert(is_undef(points), "Cannot specify points= when corner= is given.")
                 let(
                     r = get_radius(r=r, d=d, dflt=1),
-                    c = circle_2tangents(pt1=corner[0], pt2=corner[1], pt3=corner[2], r=r)
+                    c = circle_2tangents(r=r, pt1=corner[0], pt2=corner[1], pt3=corner[2])
                 )
                 assert(c!=undef, "Corner path cannot be collinear.")
                 let( cp = c[0] )
@@ -283,7 +283,7 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
         }
     } else if (is_path(corner)) {
         r = get_radius(r=r, d=d, dflt=1);
-        c = circle_2tangents(pt1=corner[0], pt2=corner[1], pt3=corner[2], r=r);
+        c = circle_2tangents(r=r, pt1=corner[0], pt2=corner[1], pt3=corner[2]);
         check = assert(c != undef && c[0] != undef, "Points must not be collinear.");
         cp = c[0];
         translate(cp) {
@@ -1298,7 +1298,7 @@ function egg(length, r1, r2, R, d1, d2, D, anchor=CENTER, spin=0) =
         c1 = [-length/2+r1,0],
         c2 = [length/2-r2,0],
         Rmin = (r1+r2+norm(c1-c2))/2,
-        Mlist = circle_circle_intersection(c1,R-r1,c2,R-r2),
+        Mlist = circle_circle_intersection(R-r1, c1, R-r2, c2),
         arcparms = reverse([for(M=Mlist) [M, c1+r1*unit(c1-M), c2+r2*unit(c2-M)]]),
         path = concat(
                       arc(r=r2, cp=c2, points=[[length/2,0],arcparms[0][2]],endpoint=false),

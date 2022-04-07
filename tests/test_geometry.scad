@@ -424,15 +424,15 @@ module test_line_closest_point() {
 
 module test_circle_2tangents() {
 //** missing tests with arg tangent=true
-    assert(approx(circle_2tangents([10,10],[0,0],[10,-10],r=10/sqrt(2))[0],[10,0]));
-    assert(approx(circle_2tangents([-10,10],[0,0],[-10,-10],r=10/sqrt(2))[0],[-10,0]));
-    assert(approx(circle_2tangents([-10,10],[0,0],[10,10],r=10/sqrt(2))[0],[0,10]));
-    assert(approx(circle_2tangents([-10,-10],[0,0],[10,-10],r=10/sqrt(2))[0],[0,-10]));
-    assert(approx(circle_2tangents([0,10],[0,0],[10,0],r=10)[0],[10,10]));
-    assert(approx(circle_2tangents([10,0],[0,0],[0,-10],r=10)[0],[10,-10]));
-    assert(approx(circle_2tangents([0,-10],[0,0],[-10,0],r=10)[0],[-10,-10]));
-    assert(approx(circle_2tangents([-10,0],[0,0],[0,10],r=10)[0],[-10,10]));
-    assert_approx(circle_2tangents(polar_to_xy(10,60),[0,0],[10,0],r=10)[0],polar_to_xy(20,30));
+    assert(approx(circle_2tangents(10/sqrt(2),[10,10],[0,0],[10,-10])[0], [10,0]));
+    assert(approx(circle_2tangents(10/sqrt(2),[-10,10],[0,0],[-10,-10])[0], [-10,0]));
+    assert(approx(circle_2tangents(10/sqrt(2),[-10,10],[0,0],[10,10])[0], [0,10]));
+    assert(approx(circle_2tangents(10/sqrt(2),[-10,-10],[0,0],[10,-10])[0], [0,-10]));
+    assert(approx(circle_2tangents(10,[0,10],[0,0],[10,0])[0], [10,10]));
+    assert(approx(circle_2tangents(10,[10,0],[0,0],[0,-10])[0], [10,-10]));
+    assert(approx(circle_2tangents(10,[0,-10],[0,0],[-10,0])[0], [-10,-10]));
+    assert(approx(circle_2tangents(10,[-10,0],[0,0],[0,10])[0], [-10,10]));
+    assert_approx(circle_2tangents(10,polar_to_xy(10,60),[0,0],[10,0])[0], polar_to_xy(20,30));
 }
 *test_circle_2tangents();
 
