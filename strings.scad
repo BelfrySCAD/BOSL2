@@ -56,7 +56,7 @@ function suffix(str,len) =
 
 // Function: str_find()
 // Usage:
-//   str_find(str,pattern,[last],[all],[start])
+//   str_find(str,pattern,[last=],[all=],[start=])
 // Description:
 //   Searches input string `str` for the string `pattern` and returns the index or indices of the matches in `str`.
 //   By default `str_find()` returns the index of the first match in `str`.  If `last` is true then it returns the index of the last match.
@@ -67,6 +67,7 @@ function suffix(str,len) =
 // Arguments:
 //   str = String to search.
 //   pattern = string pattern to search for
+//   ---
 //   last = set to true to return the last match. Default: false
 //   all = set to true to return all matches as a list.  Overrides last.  Default: false  
 //   start = index where the search starts
@@ -402,7 +403,7 @@ function parse_float(str) =
 
 // Function: parse_frac()
 // Usage:
-//   parse_frac(str,[mixed],[improper],[signed])
+//   parse_frac(str,[mixed=],[improper=],[signed=])
 // Description:
 //   Converts a string fraction to a floating point number.  A string fraction has the form `[-][# ][#/#]` where each `#` is one or more of the
 //   digits 0-9, and there is an optional sign character at the beginning. 
@@ -414,6 +415,7 @@ function parse_float(str) =
 //   The empty string evaluates to zero.  Any invalid string evaluates to NaN.    
 // Arguments:
 //   str = String to convert.
+//   ---
 //   mixed = set to true to accept mixed fractions, false to reject them.  Default: true  
 //   improper = set to true to accept improper fractions, false to reject them.  Default: true
 //   signed = set to true to accept a leading sign character, false to reject.  Default: true  

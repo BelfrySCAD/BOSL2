@@ -968,7 +968,7 @@ module screw(name, head, thread="coarse", drive, drive_size, oversize=0, spec, l
 {
    spec = _validate_screw_spec(
                                is_def(spec) ? spec : screw_info(name, head, thread, drive, drive_size, oversize) );
-   struct_echo(spec,"spec");
+   echo_struct(spec,"spec");
    head = struct_val(spec,"head");
    pitch = struct_val(spec, "pitch");
    diameter = struct_val(spec, "diameter");
@@ -1324,7 +1324,7 @@ module nut(name, diameter, thickness, thread="coarse", oversize=0, spec, toleran
 function _is_positive(x) = is_num(x) && x>0;
 
 function _validate_screw_spec(spec) = let(
-    f=struct_echo(spec),
+    f=echo_struct(spec),
     systemOK = in_list(struct_val(spec,"system"), ["UTS","ISO"]),
     diamOK = _is_positive(struct_val(spec, "diameter")),
     pitch = struct_val(spec,"pitch"),
