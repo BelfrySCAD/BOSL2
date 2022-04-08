@@ -12,6 +12,7 @@
 // Section: Phillips Drive
 
 // Module: phillips_mask()
+// Usage: phillips_mask(size) [ATTACHMENTS];
 // Description:
 //   Creates a mask for creating a Phillips drive recess given the Phillips size.  Each mask can
 //   be lowered to different depths to create different sizes of recess.  
@@ -129,7 +130,7 @@ function phillips_diam(size, depth) =
 
 // Module: torx_mask()
 // Usage:
-//   torx_mask(size, l, [center]);
+//   torx_mask(size, l, [center]) [ATTACHMENTS];
 // Description: Creates a torx bit tip.
 // Arguments:
 //   size = Torx size.

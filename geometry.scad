@@ -1358,6 +1358,9 @@ function sphere_line_intersection(r, cp, line, bounded=false, d, eps=EPSILON) =
 function polygon_area(poly, signed=false) =
     assert(is_path(poly), "Invalid polygon." )
     len(poly)<3 ? 0 :
+    len(poly)==3 ?
+        let( total= len(poly[0])==2 ? 0.5*cross(poly[2]-poly[0],poly[2]-poly[1]) : 0.5*norm(cross(poly[2]-poly[0],poly[2]-poly[1])))
+        signed ? total : abs(total) :
     len(poly[0])==2
       ? let( total = sum([for(i=[1:1:len(poly)-2]) cross(poly[i]-poly[0],poly[i+1]-poly[0]) ])/2 )
         signed ? total : abs(total)

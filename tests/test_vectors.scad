@@ -29,6 +29,8 @@ module test_is_vector() {
     assert(is_vector([1,1,1],all_nonzero=true) == true);
     assert(is_vector([-1,1,1],all_nonzero=true) == true);
     assert(is_vector([-1,-1,-1],all_nonzero=true) == true);
+    assert(!is_vector([3,INF,4]));
+    assert(!is_vector([3,NAN,4]));
 }
 test_is_vector();
 

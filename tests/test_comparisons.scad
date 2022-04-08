@@ -120,6 +120,10 @@ test_is_decreasing();
 module test_find_approx() {
     assert(find_approx(1, [2,3,1.05,4,1,2,.99], eps=.1)==2);
     assert(find_approx(1, [2,3,1.05,4,1,2,.99], all=true, eps=.1)==[2,4,6]);
+    assert(find_approx(1, [2,3,4])==undef);
+    assert(find_approx(1, [2,3,4],all=true)==[]);
+    assert(find_approx(1, [])==undef);
+    assert(find_approx(1, [], all=true)==[]);
 }
 test_find_approx();
     

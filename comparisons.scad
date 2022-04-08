@@ -47,8 +47,8 @@ function approx(a,b,eps=EPSILON) =
 // Usage:
 //   x = all_zero(x, [eps]);
 // Description:
-//   Returns true if the finite number passed to it is approximately zero, to within `eps`.
-//   If passed a list returns true if all its entries are approximately zero. 
+//   Returns true if its argument is approximately zero, to within `eps`.
+//   If passed a list returns true if all its entries are approximately equal to zero. 
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
@@ -67,8 +67,8 @@ function all_zero(x, eps=EPSILON) =
 // Usage:
 //   test = all_nonzero(x, [eps]);
 // Description:
-//   Returns true if the finite number passed to it is different from zero by `eps`.
-//   If passed a list returns true if all the entries of the list are different from zero by `eps`.  
+//   Returns true if its argument is finite and different from zero by `eps`.
+//   If passed a list returns true if all the entries of the list are finite numbers that are different from zero by `eps`.  
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
@@ -88,8 +88,8 @@ function all_nonzero(x, eps=EPSILON) =
 // Usage:
 //   test = all_positive(x,[eps]);
 // Description:
-//   Returns true if the finite number passed to it is greater than zero.
-//   If passed a list returns true if all the entries are positive. 
+//   Returns true if the argument is finite and greater than zero, within epsilon tolerance if desired.
+//   If passed a list returns true if all the entries are finite positive numbers.
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
@@ -103,7 +103,7 @@ function all_nonzero(x, eps=EPSILON) =
 //   f = all_positive([3,1,2]);  // Returns: true.
 //   g = all_positive([3,-1,2]);  // Returns: false.
 function all_positive(x,eps=0) =
-    is_num(x)? x>eps :
+    is_finite(x)? x>eps :
     is_vector(x) && [for (xx=x) if(xx<=0) 1] == [];
 
 
@@ -111,8 +111,8 @@ function all_positive(x,eps=0) =
 // Usage:
 //   test = all_negative(x, [eps]);
 // Description:
-//   Returns true if the finite number passed to it is less than zero.
-//   If passed a list, recursively checks if all items in the list are negative.
+//   Returns true if the argument is finite and less than zero, within epsilon tolerance if desired.
+//   If passed a list, returns true if all the elements are finite negative numbers. 
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
@@ -127,7 +127,7 @@ function all_positive(x,eps=0) =
 //   g = all_negative([3,-1,2]);  // Returns: false.
 //   h = all_negative([-3,-1,-2]);  // Returns: true.
 function all_negative(x, eps=0) =
-    is_num(x)? x<-eps :
+    is_finite(x)? x<-eps :
     is_vector(x) && [for (xx=x) if(xx>=-eps) 1] == [];
 
 
@@ -135,8 +135,8 @@ function all_negative(x, eps=0) =
 // Usage:
 //   all_nonpositive(x, [eps]);
 // Description:
-//   Returns true if the finite number passed to it is less than or equal to zero.
-//   If passed a list, recursively checks if all items in the list are nonpositive.
+//   Returns true if its argument is finite and less than or equal to zero.
+//   If passed a list, returns true if all the elements are finite non-positive numbers.
 //   Otherwise, returns false. 
 // Arguments:
 //   x = The value to check.
@@ -160,7 +160,7 @@ function all_nonpositive(x,eps=0) =
 //   all_nonnegative(x, [eps]);
 // Description:
 //   Returns true if the finite number passed to it is greater than or equal to zero.
-//   If passed a list, recursively checks if all items in the list are nonnegative.
+//   If passed a list, returns true if all the elements are finite non-negative numbers. 
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
@@ -196,7 +196,7 @@ function all_equal(vec,eps=0) =
 
 // Function: is_increasing()
 // Usage:
-//    bool = is_increasing(list);
+//    bool = is_increasing(list, [strict]);
 // Topics: List Handling
 // See Also: max_index(), min_index(), is_decreasing()
 // Description:
@@ -205,7 +205,7 @@ function all_equal(vec,eps=0) =
 //   evaluated character by character.
 // Arguments:
 //   list = list (or string) to check
-//   strict = set to true to test that list is strictly increasing
+//   strict = set to true to test that list is strictly increasing.  Default: false
 // Example:
 //   a = is_increasing([1,2,3,4]);  // Returns: true
 //   b = is_increasing([1,3,2,4]);  // Returns: false
@@ -220,7 +220,7 @@ function is_increasing(list,strict=false) =
 
 // Function: is_decreasing()
 // Usage:
-//   bool = is_decreasing(list);
+//   bool = is_decreasing(list, [strict]);
 // Topics: List Handling
 // See Also: max_index(), min_index(), is_increasing()
 // Description:
@@ -229,7 +229,7 @@ function is_increasing(list,strict=false) =
 //   evaluated character by character.  
 // Arguments:
 //   list = list (or string) to check
-//   strict = set to true to test that list is strictly decreasing
+//   strict = set to true to test that list is strictly decreasing.  Default: false
 // Example:
 //   a = is_decreasing([1,2,3,4]);  // Returns: false
 //   b = is_decreasing([4,2,3,1]);  // Returns: false
@@ -256,7 +256,7 @@ function _type_num(x) =
 //   test = compare_vals(a, b);
 // Description:
 //   Compares two values.  Lists are compared recursively.
-//   Returns <0 if a<b.  Returns >0 if a>b.  Returns 0 if a==b.
+//   Returns a negative value if a<b.  Returns a positive value if a>b.  Returns 0 if a==b.
 //   If types are not the same, then undef < bool < nan < num < str < list < range.
 // Arguments:
 //   a = First value to compare.
@@ -274,9 +274,9 @@ function compare_vals(a, b) =
 //   test = compare_lists(a, b)
 // Description:
 //   Compare contents of two lists using `compare_vals()`.
-//   Returns <0 if `a`<`b`.
+//   Returns a negative number if `a`<`b`.
 //   Returns 0 if `a`==`b`.
-//   Returns >0 if `a`>`b`.
+//   Returns a positive number if `a`>`b`.
 // Arguments:
 //   a = First list to compare.
 //   b = Second list to compare.
@@ -312,7 +312,7 @@ function compare_lists(a, b) =
 //   a = min_index([5,3,9,6,2,7,8,2,1]); // Returns: 8
 //   b = min_index([5,3,9,6,2,7,8,2,7],all=true); // Returns: [4,7]
 function min_index(vals, all=false) =
-    assert( is_vector(vals) && len(vals)>0 , "Invalid or empty list of numbers.")
+    assert( is_vector(vals), "Invalid or list of numbers.")
     all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
 
 
@@ -336,11 +336,6 @@ function max_index(vals, all=false) =
     all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
 
 
-
-
-
-
-
 // Section: Dealing with duplicate list entries
 
 
@@ -351,14 +346,20 @@ function max_index(vals, all=false) =
 //   idx = find_approx(val, list, [start=], [eps=]);
 //   indices = find_approx(val, list, all=true, [start=], [eps=]);
 // Description:
-//   Finds the first item in `list` that matches `val`, returning the index.  Returns `undef` if there is no match.
+//   Finds the first item in `list` that matches `val` to within `eps` tolerance, returning the index.  Returns `undef` if there is no match.
+//   If `all=true` then returns all the items that agree within `eps` and returns the empty list if no such items exist.  
 // Arguments:
 //   val = The value to search for.  
-//   list = The list to search through.
+//   list = The list to search.
 //   ---
 //   start = The index to start searching from.  Default: 0
-//   all = If true, returns a list of all matching item indices.
-//   eps = The maximum allowed floating point rounding error for numeric comparisons.
+//   all = If true, returns a list of all matching item indices.  Default: false
+//   eps = The maximum allowed floating point rounding error for numeric comparisons.  Default: EPSILON (1e-9)
+// Example:
+//   find_approx(3,[4,5,3.01,2,2.99], eps=0.1);  // Returns 2
+//   find_approx(9,[4,5,3.01,2,2.99], eps=0.1);  // Returns undef
+//   find_approx(3,[4,5,3.01,2,2.99], all=true, eps=0.1);  // Returns [2,4]
+//   find_approx(9,[4,5,3.01,2,2.99], all=true, eps=0.1);  // Returns []
 function find_approx(val, list, start=0, all=false, eps=EPSILON) =
     all ? [for (i=[start:1:len(list)-1]) if (approx(val, list[i], eps=eps)) i]
         :  __find_approx(val, list, eps=eps, i=start);
@@ -373,7 +374,7 @@ function __find_approx(val, list, eps, i=0) =
 
 // Function: deduplicate()
 // Usage:
-//   list = deduplicate(list, [close], [eps]);
+//   list = deduplicate(list, [closed], [eps]);
 // Topics: List Handling
 // See Also: deduplicate_indexed()
 // Description:
@@ -459,7 +460,7 @@ function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
 //   Given a string or a list returns the sorted string or the sorted list with all repeated items removed.
 //   The sorting order of non homogeneous lists is the function `sort` order.
 // Arguments:
-//   list = The list to uniquify.
+//   list = The list to process.
 // Example:
 //   sorted = unique([5,2,8,3,1,3,8,7,5]);  // Returns: [1,2,3,5,7,8]
 //   sorted = unique("axdbxxc");  // Returns: "abcdx"
@@ -494,7 +495,7 @@ function _unique_sort(l) =
 
 // Function: unique_count()
 // Usage:
-//   counts = unique_count(list);
+//   sorted_counts = unique_count(list);
 // Topics: List Handling
 // See Also: shuffle(), sort(), sortidx(), unique()
 // Description:
@@ -724,7 +725,7 @@ function sort(list, idx=undef) =
 //   idxs2 = sortidx(lst, idx=0); // Returns: [1,2,0,3]
 //   idxs3 = sortidx(lst, idx=[1,3]); // Returns: [3,0,2,1]
 function sortidx(list, idx=undef) = 
-    assert(is_list(list)||is_string(list), "Invalid input." )
+    assert(is_list(list)||is_string(list), "Invalid list." )
     !is_list(list) || len(list)<=1 ? list :
     is_homogeneous(list,1)
     ?   let( 
@@ -751,26 +752,31 @@ function sortidx(list, idx=undef) =
 
 // Function: group_sort()
 // Usage:
-//   ulist = group_sort(list);
+//   ulist = group_sort(list,[idx]);
 // Topics: List Handling
 // See Also: shuffle(), sort(), sortidx(), unique(), unique_count()
 // Description:
-//   Given a list of values, returns the sorted list with all repeated items grouped in a list.
-//   When the list entries are themselves lists, the sorting may be done based on the `idx` entry
-//   of those entries, that should be numbers. 
-//   The result is always a list of lists. 
+//   Given a list of numbers, sorts the list into a sequence of lists, where each list contains any repeated values.
+//   If there are no repeated values the output will be a list of singleton lists.  
+//   If you apply {{flatten()}} to the output, the result will be a simple sorted list.  
+//   .
+//   When the input is a list of lists, the sorting is done based on index `idx` of the entries in `list`.
+//   In this case, `list[i][idx]` must be a number for every `i`, and the entries in `list` are grouped
+//   together in the output if they match at index `idx`.  This function can be used to group together
+//   items that are tagged with the same index.  
 // Arguments:
 //   list = The list to sort.
-//   idx = If given, do the comparison based just on the specified index. Default: zero.
+//   idx = If input is a list of lists, index to sort on.  Default: 0.  
 // Example:
 //   sorted = group_sort([5,2,8,3,1,3,8,7,5]);  // Returns: [[1],[2],[3,3],[5,5],[7],[8,8]]
-//   sorted2 = group_sort([[5,"a"],[2,"b"], [5,"c"], [3,"d"], [2,"e"] ], idx=0);  // Returns: [[[2,"b"],[2,"e"]], [[5,"a"],[5,"c"]], [[3,"d"]] ]
+//   // Next example returns: [ [[2,"b"],[2,"e"]], [[3,"d"]], [[5,"a"],[5,"c"]] ]
+//   sorted2 = group_sort([[5,"a"],[2,"b"], [5,"c"], [3,"d"], [2,"e"] ], idx=0);  
 function group_sort(list, idx) = 
     assert(is_list(list), "Input should be a list." )
-    assert(is_undef(idx) || (is_finite(idx) && idx>=0) , "Invalid index." )
+    assert(is_undef(idx) || (is_int(idx) && idx>=0) , "Invalid index." )
     len(list)<=1 ? [list] :
-    is_vector(list)? _group_sort(list) :
-    let( idx = is_undef(idx) ? 0 : idx )
+    is_vector(list)? assert(is_undef(idx),"Cannot give idx with a vector input") _group_sort(list) :
+    let( idx = default(idx,0) )
     assert( [for(entry=list) if(!is_list(entry) || len(entry)<idx || !is_num(entry[idx]) ) 1]==[],
         "Some entry of the list is a list shorter than `idx` or the indexed entry of it is not a number.")
     _group_sort_by_index(list,idx);
@@ -827,7 +833,7 @@ function group_data(groups, values) =
 //   k = number of items to return
 function list_smallest(list, k) =
     assert(is_list(list))
-    assert(is_finite(k) && k>=0, "k must be nonnegative")
+    assert(is_int(k) && k>=0, "k must be nonnegative")
     let( 
         v       = list[rand_int(0,len(list)-1,1)[0]],
         smaller = [for(li=list) if(li<v) li ],

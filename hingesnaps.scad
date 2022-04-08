@@ -10,112 +10,11 @@
 
 // Section: Hinges and Snaps
 
-// Module: folding_hinge_mask()
-// Usage:
-//   folding_hinge_mask(l, thick, [layerheight], [foldangle], [hingegap], [anchor], [spin], [orient]);
-// Description:
-//   Creates a mask to be differenced away from a plate to create a foldable hinge.
-//   Center the mask at the bottom of the plate you want to make a hinge in.
-//   The mask will leave  hinge material two `layerheight`s thick on the bottom of the hinge.
-// Arguments:
-//   l = Length of the hinge in mm.
-//   thick = Thickness in mm of the material to make the hinge in.
-//   layerheight = The expected printing layer height in mm.
-//   foldangle = The interior angle in degrees of the joint to be created with the hinge.  Default: 90
-//   hingegap = Size in mm of the gap at the bottom of the hinge, to make room for folding.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example:
-//   folding_hinge_mask(l=100, thick=3, foldangle=60);
-module folding_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
-{
-    hingegap = default(hingegap, layerheight)+2*$slop;
-    size = [l, hingegap, 2*thick];
-    size2 = [l, hingegap+2*thick*tan(foldangle/2)];
-    attachable(anchor,spin,orient, size=size, size2=size2) {
-        up(layerheight*2) prismoid([l,hingegap], [l, hingegap+2*thick/tan(foldangle/2)], h=thick, anchor=BOT);
-        children();
-    }
-}
-
-
-// Module: snap_lock()
-// Usage:
-//   snap_lock(thick, [snaplen], [snapdiam], [layerheight], [foldangle], [hingegap], [anchor], [spin], [orient]);
-// Description:
-//   Creates the central snaplock part.
-// Arguments:
-//   thick = Thickness in mm of the material to make the hinge in.
-//   snaplen = Length of locking snaps.
-//   snapdiam = Diameter/width of locking snaps.
-//   layerheight = The expected printing layer height in mm.
-//   foldangle = The interior angle in degrees of the joint to be created with the hinge.  Default: 90
-//   hingegap = Size in mm of the gap at the bottom of the hinge, to make room for folding.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example:
-//   snap_lock(thick=3, foldangle=60);
-module snap_lock(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
-{
-    hingegap = default(hingegap, layerheight)+2*$slop;
-    snap_x = (snapdiam/2) / tan(foldangle/2) + (thick-2*layerheight)/tan(foldangle/2) + hingegap/2;
-    size = [snaplen, snapdiam, 2*thick];
-    attachable(anchor,spin,orient, size=size) {
-        back(snap_x) {
-            cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
-                attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=16);
-                attach(TOP) xcopies(snaplen-snapdiam/4/3) xscale(0.333) sphere(d=snapdiam*0.8, $fn=12);
-            }
-        }
-        children();
-    }
-}
-
-
-// Module: snap_socket()
-// Usage:
-//   snap_socket(thick, [snaplen], [snapdiam], [layerheight], [foldangle], [hingegap], [anchor], [spin], [orient]);
-// Description:
-//   Creates the outside snaplock socketed part.
-// Arguments:
-//   thick = Thickness in mm of the material to make the hinge in.
-//   snaplen = Length of locking snaps.
-//   snapdiam = Diameter/width of locking snaps.
-//   layerheight = The expected printing layer height in mm.
-//   foldangle = The interior angle in degrees of the joint to be created with the hinge.  Default: 90
-//   hingegap = Size in mm of the gap at the bottom of the hinge, to make room for folding.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example:
-//   snap_socket(thick=3, foldangle=60);
-module snap_socket(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
-{
-    hingegap = default(hingegap, layerheight)+2*$slop;
-    snap_x = (snapdiam/2) / tan(foldangle/2) + (thick-2*layerheight)/tan(foldangle/2) + hingegap/2;
-    size = [snaplen, snapdiam, 2*thick];
-    attachable(anchor,spin,orient, size=size) {
-        fwd(snap_x) {
-            zrot_copies([0,180], r=snaplen+$slop) {
-                diff("divot")
-                cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
-                    attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=16);
-                    attach(TOP) left((snaplen+snapdiam/4/3)/2) xscale(0.333) sphere(d=snapdiam*0.8, $fn=12, $tags="divot");
-                }
-            }
-        }
-        children();
-    }
-}
-
-
 // Module: apply_folding_hinges_and_snaps()
 // Usage:
-//   apply_folding_hinges_and_snaps(thick, [foldangle], [hinges], [snaps], [sockets], [snaplen], [snapdiam], [hingegap], [layerheight]) ...
+//   apply_folding_hinges_and_snaps(thick, [foldangle=], [hinges=], [snaps=], [sockets=], [snaplen=], [snapdiam=], [hingegap=], [layerheight=]) CHILDREN;
 // Description:
-//   Adds snaplocks and removes hinges from children objects at the given positions.
+//   Adds snaplocks and create hinges in children at the given positions.
 // Arguments:
 //   thick = Thickness in mm of the material to make the hinge in.
 //   foldangle = The interior angle in degrees of the joint to be created with the hinge.  Default: 90
@@ -188,6 +87,113 @@ module apply_folding_hinges_and_snaps(thick, foldangle=90, hinges=[], snaps=[], 
         }
     }
 }
+
+
+
+// Module: folding_hinge_mask()
+// Usage:
+//   folding_hinge_mask(l, thick, [layerheight=], [foldangle=], [hingegap=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+// Description:
+//   Creates a mask to be differenced away from a plate to create a foldable hinge.
+//   Center the mask at the bottom of the plate you want to make a hinge in.
+//   The mask will leave  hinge material two `layerheight`s thick on the bottom of the hinge.
+// Arguments:
+//   l = Length of the hinge in mm.
+//   thick = Thickness in mm of the material to make the hinge in.
+//   ---
+//   layerheight = The expected printing layer height in mm.
+//   foldangle = The interior angle in degrees of the joint to be created with the hinge.  Default: 90
+//   hingegap = Size in mm of the gap at the bottom of the hinge, to make room for folding.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example:
+//   folding_hinge_mask(l=100, thick=3, foldangle=60);
+module folding_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
+{
+    hingegap = default(hingegap, layerheight)+2*$slop;
+    size = [l, hingegap, 2*thick];
+    size2 = [l, hingegap+2*thick*tan(foldangle/2)];
+    attachable(anchor,spin,orient, size=size, size2=size2) {
+        up(layerheight*2) prismoid([l,hingegap], [l, hingegap+2*thick/tan(foldangle/2)], h=thick, anchor=BOT);
+        children();
+    }
+}
+
+
+// Module: snap_lock()
+// Usage:
+//   snap_lock(thick, [snaplen=], [snapdiam=], [layerheight=], [foldangle=], [hingegap=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+// Description:
+//   Creates the central snaplock part.
+// Arguments:
+//   thick = Thickness in mm of the material to make the hinge in.
+//   ---
+//   snaplen = Length of locking snaps.
+//   snapdiam = Diameter/width of locking snaps.
+//   layerheight = The expected printing layer height in mm.
+//   foldangle = The interior angle in degrees of the joint to be created with the hinge.  Default: 90
+//   hingegap = Size in mm of the gap at the bottom of the hinge, to make room for folding.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example:
+//   snap_lock(thick=3, foldangle=60);
+module snap_lock(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
+{
+    hingegap = default(hingegap, layerheight)+2*$slop;
+    snap_x = (snapdiam/2) / tan(foldangle/2) + (thick-2*layerheight)/tan(foldangle/2) + hingegap/2;
+    size = [snaplen, snapdiam, 2*thick];
+    attachable(anchor,spin,orient, size=size) {
+        back(snap_x) {
+            cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
+                attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=16);
+                attach(TOP) xcopies(snaplen-snapdiam/4/3) xscale(0.333) sphere(d=snapdiam*0.8, $fn=12);
+            }
+        }
+        children();
+    }
+}
+
+
+// Module: snap_socket()
+// Usage:
+//   snap_socket(thick, [snaplen=], [snapdiam=], [layerheight=], [foldangle=], [hingegap=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+// Description:
+//   Creates the outside snaplock socketed part.
+// Arguments:
+//   thick = Thickness in mm of the material to make the hinge in.
+//   ---
+//   snaplen = Length of locking snaps.
+//   snapdiam = Diameter/width of locking snaps.
+//   layerheight = The expected printing layer height in mm.
+//   foldangle = The interior angle in degrees of the joint to be created with the hinge.  Default: 90
+//   hingegap = Size in mm of the gap at the bottom of the hinge, to make room for folding.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example:
+//   snap_socket(thick=3, foldangle=60);
+module snap_socket(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
+{
+    hingegap = default(hingegap, layerheight)+2*$slop;
+    snap_x = (snapdiam/2) / tan(foldangle/2) + (thick-2*layerheight)/tan(foldangle/2) + hingegap/2;
+    size = [snaplen, snapdiam, 2*thick];
+    attachable(anchor,spin,orient, size=size) {
+        fwd(snap_x) {
+            zrot_copies([0,180], r=snaplen+$slop) {
+                diff("divot")
+                cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
+                    attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=16);
+                    attach(TOP) left((snaplen+snapdiam/4/3)/2) xscale(0.333) sphere(d=snapdiam*0.8, $fn=12, $tags="divot");
+                }
+            }
+        }
+        children();
+    }
+}
+
+
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
