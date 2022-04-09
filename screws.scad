@@ -201,8 +201,10 @@ function screw(name, head, drive, thread="coarse", drive_size, oversize=0, spec,
 
 module screw(name, head, drive, thread="coarse", drive_size, oversize=0, spec, length, l, shank=0, tolerance=undef, details=true, anchor=undef,anchor_head=undef,spin=0, orient=UP)
 {
+   a=echo(ssthread=thread);
    spec = _validate_screw_spec(
-                               is_def(spec) ? spec : screw_info(name, head, thread, drive, drive_size, oversize) );
+                               is_def(spec) ? spec : screw_info(name, head, drive, thread=thread, drive_size=drive_size, oversize=oversize) );
+   echo(sthread=thread);
    echo_struct(spec,"spec");
    head = struct_val(spec,"head");
    pitch = struct_val(spec, "pitch");
