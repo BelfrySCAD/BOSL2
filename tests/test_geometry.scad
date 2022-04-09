@@ -771,7 +771,6 @@ module test_polygon_area() {
     assert(abs(polygon_area([[0,0], [0,10], [10,0]],signed=true) + 50) < EPSILON);
     assert(abs(polygon_area([[0,0], [0,10], [0,15]],signed=true)) < EPSILON);
     assert(abs(polygon_area([[0,0], [10,0], [0,10]],signed=true) - 50) < EPSILON);
-    
 }
 *test_polygon_area();
 
