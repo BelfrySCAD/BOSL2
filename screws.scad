@@ -584,7 +584,7 @@ function _parse_drive(drive=undef, drive_size=undef) =
 // Arguments:
 //    screw_info = structure produced by {{screw_info()}}
 //    details = true for more detailed model.  Default: false
-function screw_head(screw_info,details=false = no_function("screw_head");
+function screw_head(screw_info,details=false) = no_function("screw_head");
 module screw_head(screw_info,details=false) {
    no_children($children);
    head = struct_val(screw_info, "head");
