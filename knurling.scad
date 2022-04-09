@@ -50,6 +50,7 @@
 //   knurled_cylinder(l=30, r=20, count=20, profile=120, helix=30);
 //   knurled_cylinder(l=30, r=20, count=20, profile=120, helix=0.01);
 //   knurled_cylinder(l=30, r=20, count=20, profile=140, helix=60);
+//   knurled_cylinder(l=30, r1=20, r2=12, count=40, profile=90, helix=55);
 module knurled_cylinder(
     l,
     r=undef, r1=undef, r2=undef,
@@ -79,8 +80,11 @@ module knurled_cylinder(
     vertices = concat(
         [
             for (layer = [0:1:layers], pt=path)
-                (layer%2)? [pt.x, pt.y, layer*knob_h-layers*knob_h/2] :
-                rot(180/count, p=[pt.x, pt.y, layer*knob_h-layers*knob_h/2])
+                let(scale_factor =  lerp(1,r2/r1,layer/layers))
+                scale([scale_factor,scale_factor,1],
+                    (layer%2)? [pt.x, pt.y, layer*knob_h-layers*knob_h/2] :
+                               rot(180/count, p=[pt.x, pt.y, layer*knob_h-layers*knob_h/2])
+                )
         ], [
             [0,0,-layers*knob_h/2],
             [0,0, layers*knob_h/2]
