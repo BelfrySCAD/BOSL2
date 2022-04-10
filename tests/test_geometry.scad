@@ -768,10 +768,9 @@ module test_polygon_area() {
     assert(approx(polygon_area(rot([13,27,75],
                                p=path3d(circle(r=50,$fn=1000),fill=23)),
                                signed=true), PI*50*50, eps=0.1));
-    assert(abs(triangle_area([0,0], [0,10], [10,0]) + 50) < EPSILON);
-    assert(abs(triangle_area([0,0], [0,10], [0,15])) < EPSILON);
-    assert(abs(triangle_area([0,0], [10,0], [0,10]) - 50) < EPSILON);
-    
+    assert(abs(polygon_area([[0,0], [0,10], [10,0]],signed=true) + 50) < EPSILON);
+    assert(abs(polygon_area([[0,0], [0,10], [0,15]],signed=true)) < EPSILON);
+    assert(abs(polygon_area([[0,0], [10,0], [0,10]],signed=true) - 50) < EPSILON);
 }
 *test_polygon_area();
 

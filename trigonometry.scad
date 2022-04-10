@@ -88,27 +88,6 @@ function law_of_sines(a, A, b, B) =
     asin(constrain(b/r, -1, 1));
 
 
-// Function: triangle_area()
-// Usage:
-//   area = triangle_area(p1,p2,p3);
-// Topics: Geometry, Trigonometry, Triangles, Area
-// Description:
-//   Returns the area of a triangle formed between three 2D or 3D vertices.
-//   Result will be negative if the points are 2D and in clockwise order.
-// Arguments:
-//   p1 = The first vertex of the triangle.
-//   p2 = The second vertex of the triangle.
-//   p3 = The third vertex of the triangle.
-// Example:
-//   triangle_area([0,0], [5,10], [10,0]);  // Returns -50
-//   triangle_area([10,0], [5,10], [0,0]);  // Returns 50
-function triangle_area(p1,p2,p3) =
-    assert( is_path([p1,p2,p3]), "Invalid points or incompatible dimensions." )
-    len(p1)==3
-      ? 0.5*norm(cross(p3-p1,p3-p2))
-      : 0.5*cross(p3-p1,p3-p2);
-
-
 
 // Section: 2D Right Triangle Functions
 //   This is a set of functions to make it easier to perform trig calculations on right triangles.

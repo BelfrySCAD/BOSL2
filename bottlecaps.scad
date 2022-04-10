@@ -19,7 +19,7 @@ include <rounding.scad>
 
 // Module: pco1810_neck()
 // Usage:
-//   pco1810_neck([wall])
+//   pco1810_neck([wall]) [ATTACHMENTS];
 // Description:
 //   Creates an approximation of a standard PCO-1810 threaded beverage bottle neck.
 // Arguments:
@@ -140,7 +140,7 @@ function  pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 
 // Module: pco1810_cap()
 // Usage:
-//   pco1810_cap([wall], [texture]);
+//   pco1810_cap([wall], [texture]) [ATTACHMENTS];
 // Description:
 //   Creates a basic cap for a PCO1810 threaded beverage bottle.
 // Arguments:
@@ -211,7 +211,7 @@ function pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
 
 // Module: pco1881_neck()
 // Usage:
-//   pco1881_neck([wall])
+//   pco1881_neck([wall]) [ATTACHMENTS];
 // Description:
 //   Creates an approximation of a standard PCO-1881 threaded beverage bottle neck.
 // Arguments:
@@ -332,12 +332,13 @@ function pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 
 // Module: pco1881_cap()
 // Usage:
-//   pco1881_cap(wall, [texture]);
+//   pco1881_cap(wall, [texture]) [ATTACHMENTS];
 // Description:
 //   Creates a basic cap for a PCO1881 threaded beverage bottle.
 // Arguments:
 //   wall = Wall thickness in mm.
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -394,11 +395,12 @@ function pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
 
 // Module: generic_bottle_neck()
 // Usage:
-//   generic_bottle_neck([wall], ...)
+//   generic_bottle_neck([wall], ...) [ATTACHMENTS];
 // Description:
 //   Creates a bottle neck given specifications.
 // Arguments:
 //   wall = distance between ID and any wall that may be below the support
+//   ---
 //   neck_d = Outer diameter of neck without threads
 //   id = Inner diameter of neck
 //   thread_od = Outer diameter of thread
@@ -406,7 +408,6 @@ function pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
 //   support_d = Outer diameter of support ring.  Set to 0 for no support.
 //   pitch = Thread pitch
 //   round_supp = True to round the lower edge of the support ring
-//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -519,7 +520,7 @@ function generic_bottle_neck(
 
 // Module: generic_bottle_cap()
 // Usage:
-//   generic_bottle_cap(wall, [texture], ...);
+//   generic_bottle_cap(wall, [texture], ...) [ATTACHMENTS];
 // Description:
 //   Creates a basic threaded cap given specifications.
 // Arguments:
@@ -608,7 +609,7 @@ function generic_bottle_cap(
 
 // Module: bottle_adapter_neck_to_cap()
 // Usage:
-//   bottle_adapter_neck_to_cap(wall, [texture]);
+//   bottle_adapter_neck_to_cap(wall, [texture], ...) [ATTACHMENTS];
 // Description:
 //   Creates a threaded neck to cap adapter
 // Arguments:
@@ -834,10 +835,11 @@ function bottle_adapter_cap_to_cap(
 
 // Module: bottle_adapter_neck_to_neck()
 // Usage:
-//   bottle_adapter_neck_to_neck();
+//   bottle_adapter_neck_to_neck(...);
 // Description:
 //   Creates a threaded neck to neck adapter.
 // Arguments:
+//   ---
 //   d = Distance between bottoms of necks
 //   neck_od1 = Outer diameter of top neck w/o threads
 //   neck_id1 = Inner diameter of top neck
@@ -868,6 +870,7 @@ module bottle_adapter_neck_to_neck(
     support_od2, pitch2,
     taper_lead_in = 0, wall
 ) {
+    no_children($children);
     neck_od2 = (neck_od2 == undef) ? neck_od1 : neck_od2;
     neck_id2 = (neck_id2 == undef) ? neck_id1 : neck_id2;
     thread_od2 = (thread_od2 == undef) ? thread_od1 : thread_od2;
@@ -956,7 +959,7 @@ function bottle_adapter_neck_to_neck(
 
 // Module: sp_neck()
 // Usage:
-//   sp_neck(diam, type, wall|id, [style], [bead], [anchor], [spin], [orient])
+//   sp_neck(diam, type, wall|id=, [style=], [bead=]) [ATTACHMENTS];
 // Description:
 //   Make a SPI (Society of Plastics Industry) threaded bottle neck.  You must
 //   supply the nominal outer diameter of the threads and the thread type, one of
@@ -1150,6 +1153,9 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 //   true_diam = sp_diameter(diam,type)
 // Description:
 //   Returns the actual base diameter (root of the threads) for a SPI plastic bottle neck given the nominal diameter and type number (400, 410, 415). 
+// Arguments:
+//   diam = nominal diameter
+//   type = closure type number (400, 410 or 415)
 function sp_diameter(diam,type) =
   let(
       table = struct_val(_sp_specs,type)

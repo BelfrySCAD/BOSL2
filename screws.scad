@@ -28,6 +28,524 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 
 */
 
+
+
+// Module: screw()
+// Usage:
+//   screw([name], [head], [drive], [thread=], [drive_size=], [length=|l=], [shank=], [oversize=], [tolerance=], [$slop=], [spec=], [details=], [anchor=], [anchor_head=], [orient=], [spin=]) [ATTACHMENTS];
+// Description:
+//   Create a screw.
+//   .
+//   Most of these parameters are described in the entry for `screw_info()`.
+//   .
+//   The tolerance determines the actual thread sizing based on the
+//   nominal size.  For UTS threads it is either "1A", "2A" or "3A", in
+//   order of increasing tightness.  The default tolerance is "2A", which
+//   is the general standard for manufactured bolts.  For ISO the tolerance
+//   has the form of a number and letter.  The letter specifies the "fundamental deviation", also called the "tolerance position", the gap
+//   from the nominal size, and must be "e", "f", "g", or "h", where "e" is
+//   the loosest and "h" means no gap.  The number specifies the allowed
+//   range (variability) of the thread heights.  It must be a value from
+//   3-9 for crest diameter and one of 4, 6, or 8 for pitch diameter.  A
+//   tolerance "6g" specifies both pitch and crest diameter to be the same,
+//   but they can be different, with a tolerance like "5g6g" specifies a pitch diameter tolerance of "5g" and a crest diameter tolerance of "6g".
+//   Smaller numbers give a tighter tolerance.  The default ISO tolerance is "6g".
+//   .
+//   The $slop argument gives an extra gap to account for printing overextrusion. It defaults to 0.  
+// Arguments:
+//   name = screw specification, e.g. "M5x1" or "#8-32"
+//   head = head type (see list above).  Default: none
+//   drive = drive type.  Default: none
+//   ---
+//   thread = thread type or specification.  Default: "coarse"
+//   drive_size = size of drive recess to override computed value
+//   oversize = amount to increase screw diameter for clearance holes.  Default: 0
+//   spec = screw specification from `screw_info()`.  If you specify this you can omit all the preceeding parameters.
+//   length = length of screw (in mm)
+//   shank = length of unthreaded portion of screw (in mm).  Default: 0
+//   details = toggle some details in rendering.  Default: false
+//   tolerance = screw tolerance.  Determines actual screw thread geometry based on nominal sizing.  Default is "2A" for UTS and "6g" for ISO.
+//   $slop = add extra gap to account for printer overextrusion.  Default: 0
+//   anchor = Translate so anchor point on the shaft is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
+//   anchor_head = Translate so anchor point on the head is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor). 
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example(Med): Selected UTS (English) screws
+//   $fn=32;
+//   xdistribute(spacing=8){
+//     screw("#6", length=12);
+//     screw("#6-32", head="button", drive="torx",length=12);
+//     screw("#6-32,3/4", head="hex");
+//     screw("#6", thread="fine", head="fillister",length=12, drive="phillips");
+//     screw("#6", head="flat small",length=12,drive="slot");
+//     screw("#6-32", head="flat large", length=12, drive="torx");
+//     screw("#6-32", head="flat undercut",length=12);
+//     screw("#6-24", head="socket",length=12);          // Non-standard threading
+//     screw("#6-32", drive="hex", drive_size=1.5, length=12);
+//   }
+// Example(Med): A few examples of ISO (metric) screws
+//   $fn=32;
+//   xdistribute(spacing=8){
+//     screw("M3", head="flat small",length=12);
+//     screw("M3", head="button",drive="torx",length=12);
+//     screw("M3", head="pan", drive="phillips",length=12);
+//     screw("M3x1", head="pan", drive="slot",length=12);   // Non-standard threading!
+//     screw("M3", head="flat large",length=12);
+//     screw("M3", thread="none", head="flat", drive="hex",length=12);  // No threads
+//     screw("M3", head="socket",length=12);
+//     screw("M5", head="hex", length=12);
+//   }
+// Example(Med): Demonstration of all head types for UTS screws (using pitch zero for fast preview)
+//   xdistribute(spacing=15){
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="none", drive="hex");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="none", drive="torx");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="none");
+//     }
+//     screw("1/4", thread=0, length=8, anchor=TOP, head="hex");
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="socket", drive="hex");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="socket", drive="torx");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="socket");
+//     }
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="button", drive="hex");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="button", drive="torx");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="button");
+//     }
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="round", drive="slot");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="round", drive="phillips");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="round");
+//     }
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="fillister", drive="slot");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="fillister", drive="phillips");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="fillister");
+//     }
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="slot");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="phillips");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="hex");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="torx");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat large");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat small");
+//     }
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut", drive="slot");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut", drive="phillips");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut");
+//     }
+//   }
+// Example(Med): Demonstration of all head types for metric screws without threading.
+//   xdistribute(spacing=15){
+//     ydistribute(spacing=15){
+//       screw("M6x0", length=8, anchor=TOP,  head="none", drive="hex");
+//       screw("M6x0", length=8, anchor=TOP,  head="none", drive="torx");
+//       screw("M6x0", length=8, anchor=TOP);
+//     }
+//     screw("M6x0", length=8, anchor=TOP,  head="hex");
+//     ydistribute(spacing=15){
+//       screw("M6x0", length=8, anchor=TOP,  head="socket", drive="hex");
+//       screw("M6x0", length=8, anchor=TOP,  head="socket", drive="torx");
+//       screw("M6x0", length=8, anchor=TOP,  head="socket");
+//     }
+//     ydistribute(spacing=15){
+//       screw("M6x0", length=8, anchor=TOP,  head="pan", drive="slot");
+//       screw("M6x0", length=8, anchor=TOP,  head="pan", drive="phillips");
+//       screw("M6x0", length=8, anchor=TOP,  head="pan");
+//       screw("M6x0", length=8, anchor=TOP,  head="pan flat");
+//     }
+//     ydistribute(spacing=15){
+//       screw("M6x0", length=8, anchor=TOP,  head="button", drive="hex");
+//       screw("M6x0", length=8, anchor=TOP,  head="button", drive="torx");
+//       screw("M6x0", length=8, anchor=TOP,  head="button");
+//     }
+//     ydistribute(spacing=15){
+//       screw("M6x0", length=8, anchor=TOP,  head="cheese", drive="slot");
+//       screw("M6x0", length=8, anchor=TOP,  head="cheese", drive="phillips");
+//       screw("M6x0", length=8, anchor=TOP,  head="cheese");
+//     }
+//     ydistribute(spacing=15){
+//       screw("M6x0", length=8, anchor=TOP,  head="flat", drive="phillips");
+//       screw("M6x0", length=8, anchor=TOP,  head="flat", drive="slot");
+//       screw("M6x0", length=8, anchor=TOP,  head="flat", drive="hex");
+//       screw("M6x0", length=8, anchor=TOP,  head="flat", drive="torx");
+//       screw("M6x0", length=8, anchor=TOP,  head="flat small");
+//       screw("M6x0", length=8, anchor=TOP,  head="flat large");
+//     }
+//   }
+// Example: The three different English (UTS) screw tolerances
+//   module label(val)
+//   {
+//     difference(){
+//        children();
+//        yflip()linear_extrude(height=.35) text(val,valign="center",halign="center",size=8);
+//     }
+//   }
+//   $fn=64;
+//   xdistribute(spacing=15){
+//     label("1") screw("1/4-20,5/8", head="hex",orient=DOWN,anchor_head=TOP,tolerance="1A");  // Loose
+//     label("2") screw("1/4-20,5/8", head="hex",orient=DOWN,anchor_head=TOP,tolerance="2A");  // Standard
+//     label("3") screw("1/4-20,5/8", head="hex",orient=DOWN,anchor_head=TOP,tolerance="3A");  // Tight
+//   }
+// Example(2D): This example shows the gap between nut and bolt at the loosest tolerance for UTS.  This gap is what enables the parts to mesh without binding and is part of the definition for standard metal hardware.  Note that this gap is part of the standard definition for the metal hardware, not the 3D printing adjustment provided by the $slop parameter.  
+//   $slop=0;
+//   $fn=32;
+//   projection(cut=true)xrot(-90){
+//       screw("1/4-20,1/4", head="hex",orient=UP,anchor=BOTTOM,tolerance="1A");
+//       down(INCH*1/20*2.145) nut("1/4-20", thickness=8, diameter=0.5*INCH,tolerance="1B");
+//   }
+
+function screw(name, head, drive, thread="coarse", drive_size, oversize=0, spec, length, l, shank=0, tolerance=undef, details=true, anchor=undef,anchor_head=undef,spin=0, orient=UP) = no_function("screw");
+
+module screw(name, head, drive, thread="coarse", drive_size, oversize=0, spec, length, l, shank=0, tolerance=undef, details=true, anchor=undef,anchor_head=undef,spin=0, orient=UP)
+{
+   a=echo(ssthread=thread);
+   spec = _validate_screw_spec(
+                               is_def(spec) ? spec : screw_info(name, head, drive, thread=thread, drive_size=drive_size, oversize=oversize) );
+   echo(sthread=thread);
+   echo_struct(spec,"spec");
+   head = struct_val(spec,"head");
+   pitch = struct_val(spec, "pitch");
+   diameter = struct_val(spec, "diameter");
+   headless = head=="none" || head==undef;
+   eps = headless || starts_with(head,"flat") ? 0 : 0.01;
+   screwlen = one_defined([l,length],"l,length",dflt=undef);
+   length = first_defined([screwlen,struct_val(spec,"length")]) + eps;
+   assert(length>0, "Must specify positive length");
+   sides = max(12, segs(diameter/2));
+   unthreaded = is_undef(pitch) || pitch==0 ? length : shank;
+   threaded = length - unthreaded;
+   echo(t=threaded,length,unthreaded);
+   head_height = headless || starts_with(head, "flat") ? 0 : struct_val(spec, "head_height");
+   head_diam = struct_val(spec, "head_size");
+   head_size = headless ? [diameter, diameter, head_height] :
+               head == "hex" ? [head_diam, head_diam*2/sqrt(3), head_height] :
+                               [head_diam, head_diam, head_height];
+   assert(num_defined([anchor,anchor_head])<=1, "Cannot define both `anchor` and `anchor_head`");
+   head_anchor = is_def(anchor_head);
+   attachable(
+     d = head_anchor ? head_size[0] : diameter,  // This code should be tweaked to pass diameter and length more cleanly
+     l = head_anchor ? head_size[2] : length,
+     orient = orient,
+     anchor = first_defined([anchor, anchor_head, BOTTOM]),
+     //offset = head_anchor ? [0,0,head_height/2] : [0,0,-length/2],
+     spin = spin
+     )
+   {
+     up(head_anchor ? -head_height/2 : length/2)
+       difference(){
+         union(){
+           screw_head(spec,details);
+           up(eps){
+             if (unthreaded>0){
+                cyl(d=diameter, h=unthreaded+eps+(threaded>0?0.01:0), anchor=TOP, $fn=sides);
+               }
+             if (threaded>0)
+               intersection(){
+                 down(unthreaded)
+                   _rod(spec, length=threaded+eps, tolerance=tolerance, $fn=sides, anchor=TOP );
+                 if (details)
+                   up(.01)cyl(d=diameter, l=length+.02+eps, chamfer1 = pitch/2, chamfer2 = headless ? pitch/2 : -pitch/2, anchor=TOP, $fn=sides);
+              }
+           }
+         }
+         _driver(spec);
+       }
+     children();
+   }
+}
+
+
+module _driver(spec)
+{
+  drive = struct_val(spec,"drive");
+  echo(drive=drive);
+  if (is_def(drive) && drive!="none") {
+    echo(inside_drive=drive);
+    head = struct_val(spec,"head");
+    diameter = struct_val(spec,"diameter");
+    drive_size = struct_val(spec,"drive_size");
+    drive_width = struct_val(spec,"drive_width");
+    drive_diameter = struct_val(spec, "drive_diameter");
+    drive_depth = first_defined([struct_val(spec, "drive_depth"), .7*diameter]); // Note hack for unspecified depth
+    head_top = starts_with(head,"flat") || head=="none" ? 0 :
+               struct_val(spec,"head_height");
+               echo(drive_size=drive_size);
+    up(head_top-drive_depth){
+      // recess should be positioned with its bottom center at (0,0) and the correct recess depth given above
+      if (drive=="phillips") phillips_mask(drive_size,anchor=BOTTOM);
+      if (drive=="torx") torx_mask(size=drive_size, l=drive_depth+1, center=false);
+      if (drive=="hex") linear_extrude(height=drive_depth+1) hexagon(id=drive_size);
+      if (drive=="slot") cuboid([2*struct_val(spec,"head_size"), drive_width, drive_depth+1],anchor=BOTTOM);
+    }
+  }
+}
+
+
+function _ISO_thread_tolerance(diameter, pitch, internal=false, tolerance=undef) =
+  let(
+    P = pitch,
+    H = P*sqrt(3)/2,
+    tolerance = first_defined([tolerance, internal?"6H":"6g"]),
+
+    pdiam = diameter - 2*3/8*H,          // nominal pitch diameter
+    mindiam = diameter - 2*5/8*H,        // nominal minimum diameter
+
+    EI = [   // Fundamental deviations for nut thread
+          ["G", 15+11*P],
+          ["H", 0],            // Standard practice
+         ],
+
+    es = [    // Fundamental deviations for bolt thread
+          ["e", -(50+11*P)],   // Exceptions if P<=0.45mm
+          ["f", -(30+11*P)],
+          ["g", -(15+11*P)],   // Standard practice
+          ["h", 0]             // Standard practice for tight fit
+         ],
+
+    T_d6 = 180*pow(P,2/3)-3.15/sqrt(P),
+    T_d = [  // Crest diameter tolerance for major diameter of bolt thread
+           [4, 0.63*T_d6],
+           [6, T_d6],
+           [8, 1.6*T_d6]
+          ],
+
+    T_D1_6 = 0.2 <= P && P <= 0.8 ? 433*P - 190*pow(P,1.22) :
+             P > .8 ? 230 * pow(P,0.7) : undef,
+    T_D1 = [ // Crest diameter tolerance for minor diameter of nut thread
+             [4, 0.63*T_D1_6],
+             [5, 0.8*T_D1_6],
+             [6, T_D1_6],
+             [7, 1.25*T_D1_6],
+             [8, 1.6*T_D1_6]
+           ],
+
+    rangepts = [0.99, 1.4, 2.8, 5.6, 11.2, 22.4, 45, 90, 180, 300],
+    d_ind = floor(lookup(diameter,hstack(rangepts,count(len(rangepts))))),
+    avgd = sqrt(rangepts[d_ind]* rangepts[d_ind+1]),
+
+    T_d2_6 = 90*pow(P, 0.4)*pow(avgd,0.1),
+    T_d2 = [ // Pitch diameter tolerance for bolt thread
+             [3, 0.5*T_d2_6],
+             [4, 0.63*T_d2_6],
+             [5, 0.8*T_d2_6],
+             [6, T_d2_6],
+             [7, 1.25*T_d2_6],
+             [8, 1.6*T_d2_6],
+             [9, 2*T_d2_6],
+           ],
+
+    T_D2 = [  // Tolerance for pitch diameter of nut thread
+              [4, 0.85*T_d2_6],
+              [5, 1.06*T_d2_6],
+              [6, 1.32*T_d2_6],
+              [7, 1.7*T_d2_6],
+              [8, 2.12*T_d2_6]
+           ],
+
+    internal = is_def(internal) ? internal : tolerance[1] != downcase(tolerance[1]),
+    internalok = !internal || (
+                               len(tolerance)==2 && str_find("GH",tolerance[1])!=undef && str_find("45678",tolerance[0])!=undef),
+    tol_str = str(tolerance,tolerance),
+    externalok = internal || (
+                              (len(tolerance)==2 || len(tolerance)==4)
+                                                          && str_find("efgh", tol_str[1])!=undef
+                                                          && str_find("efgh", tol_str[3])!=undef
+                                                          && str_find("3456789", tol_str[0]) != undef
+                                                          && str_find("468", tol_str[2]) !=undef)
+  )
+  assert(internalok,str("Invalid internal thread tolerance, ",tolerance,".  Must have form <digit><letter>"))
+  assert(externalok,str("invalid external thread tolerance, ",tolerance,".  Must have form <digit><letter> or <digit><letter><digit><letter>"))
+  let(
+    tol_num_pitch = parse_num(tol_str[0]),
+    tol_num_crest = parse_num(tol_str[2]),
+    tol_letter = tol_str[1]
+  )
+  assert(tol_letter==tol_str[3],str("Invalid tolerance, ",tolerance,".  Cannot mix different letters"))
+  internal ?
+    let(  // Nut case
+      //a=echo("nut", tol_letter, tol_num_pitch, tol_num_crest),
+      fdev = struct_val(EI,tol_letter)/1000,
+      Tdval = struct_val(T_D1, tol_num_crest)/1000,
+      df=     echo(T_D1=T_D1),
+      Td2val = struct_val(T_D2, tol_num_pitch)/1000,
+      //fe=   echo("nut",P,fdev=fdev, Tdval=Tdval, Td2val=Td2val),
+      bot=[diameter+fdev, diameter+fdev+Td2val+H/6],
+      xdiam = [mindiam+fdev,mindiam+fdev+Tdval],
+      pitchdiam = [pdiam + fdev, pdiam+fdev+Td2val]
+    )
+    [["pitch",P],["d_minor",xdiam], ["d_pitch",pitchdiam], ["d_major",bot],["basic",[mindiam,pdiam,diameter]]]
+  :
+    let( // Bolt case
+      //a=echo("bolt"),
+      fdev = struct_val(es,tol_letter)/1000,
+      Tdval = struct_val(T_d, tol_num_crest)/1000,
+      Td2val = struct_val(T_d2, tol_num_pitch)/1000,
+      mintrunc = P/8,
+      d1 = diameter-5*H/4,
+      maxtrunc = H/4 - mintrunc * (1-cos(60-acos(1-Td2val/4/mintrunc)))+Td2val/2,
+      //cc=echo("bolt",P,fdev=fdev, Tdval=Tdval, Td2val=Td2val),
+      bot = [diameter-2*H+2*mintrunc+fdev, diameter-2*H+2*maxtrunc+fdev],
+      xdiam = [diameter+fdev,diameter+fdev-Tdval],
+      pitchdiam = [pdiam + fdev, pdiam+fdev-Td2val]
+    )
+    [["pitch",P],["d_major",xdiam], ["d_pitch",pitchdiam], ["d_minor",bot],["basic",[mindiam,pdiam,diameter]]];
+
+function _UTS_thread_tolerance(diam, pitch, internal=false, tolerance=undef) =
+  let(
+    d = diam/INCH,   // diameter in inches
+    P = pitch/INCH,  // pitch in inches
+    H = P*sqrt(3)/2,
+    tolerance = first_defined([tolerance, internal?"2B":"2A"]),
+    tolOK = in_list(tolerance, ["1A","1B","2A","2B","3A","3B"]),
+    internal = tolerance[1]=="B"
+  )
+  assert(tolOK,str("Tolerance was ",tolerance,". Must be one of 1A, 2A, 3A, 1B, 2B, 3B"))
+  let(
+    LE = 9*P,   // length of engagement.  Is this right?
+    pitchtol_2A = 0.0015*pow(d,1/3) + 0.0015*sqrt(LE) + 0.015*pow(P,2/3),
+    pitchtol_table = [
+                 ["1A", 1.500*pitchtol_2A],
+                 ["2A",       pitchtol_2A],
+                 ["3A", 0.750*pitchtol_2A],
+                 ["1B", 1.950*pitchtol_2A],
+                 ["2B", 1.300*pitchtol_2A],
+                 ["3B", 0.975*pitchtol_2A]
+               ],
+     pitchtol = struct_val(pitchtol_table, tolerance),
+     allowance = tolerance=="1A" || tolerance=="2A" ? 0.3 * pitchtol_2A : 0,
+     majortol = tolerance == "1A" ? 0.090*pow(P,2/3) :
+                tolerance == "2A" || tolerance == "3A" ? 0.060*pow(P,2/3) :
+                pitchtol+pitch/4/sqrt(3),    // Internal case
+     minortol = tolerance=="1B" || tolerance=="2B" ?
+                    (
+                      d < 0.25 ? constrain(0.05*pow(P,2/3)+0.03*P/d - 0.002, 0.25*P-0.4*P*P, 0.394*P)
+                               : (P > 0.25 ? 0.15*P : 0.25*P-0.4*P*P)
+                    ) :
+                tolerance=="3B" ? constrain(0.05*pow(P,2/3)+0.03*P/d - 0.002, P<1/13 ? 0.12*P : 0.23*P-1.5*P*P, 0.394*P)
+                     :0, // not used for external threads
+     //f=echo(allowance=allowance),
+     //g=echo(pta2 = pitchtol_2A),
+     // ff=echo(minortol=minortol, pitchtol=pitchtol, majortol=majortol),
+     basic_minordiam = d - 5/4*H,
+     basic_pitchdiam = d - 3/4*H,
+     majordiam = internal ? [d,d] :          // A little confused here, paragraph 8.3.2
+                          [d-allowance-majortol, d-allowance],
+     //ffda=echo(allowance=allowance, majortol=majortol, "*****************************"),
+     pitchdiam = internal ? [basic_pitchdiam, basic_pitchdiam + pitchtol]
+                          : [majordiam[1] - 3/4*H-pitchtol, majordiam[1]-3/4*H],
+     minordiam = internal ? [basic_minordiam, basic_minordiam + minortol]
+                          : [pitchdiam[0] - 3/4*H, basic_minordiam - allowance - H/8]   // the -H/8 is for the UNR case, 0 for UN case
+    )
+    [["pitch",P*INCH],["d_major",majordiam*INCH], ["d_pitch", pitchdiam*INCH], ["d_minor",minordiam*INCH],
+     ["basic", INCH*[basic_minordiam, basic_pitchdiam, d]]];
+
+function _exact_thread_tolerance(d,P) =
+   let(
+       H = P*sqrt(3)/2,
+       basic_minordiam = d - 5/4*H,
+       basic_pitchdiam = d - 3/4*H
+      )
+    [["pitch", P], ["d_major", d], ["d_pitch", basic_pitchdiam], ["d_minor", basic_minordiam],
+     ["basic", [basic_minordiam, basic_pitchdiam, d]]];
+
+
+
+module _rod(spec, length, tolerance, orient=UP, spin=0, anchor=CENTER)
+{
+      threadspec = thread_specification(spec, internal=false, tolerance=tolerance);
+      echo(d_major_mean = mean(struct_val(threadspec, "d_major")));
+
+      threaded_rod([mean(struct_val(threadspec, "d_minor")),
+                    mean(struct_val(threadspec, "d_pitch")),
+                    mean(struct_val(threadspec, "d_major"))],
+                    pitch = struct_val(threadspec, "pitch"),
+                    l=length, left_handed=false,
+                    bevel=false, orient=orient, anchor=anchor, spin=spin);
+}
+
+
+// Module: nut()
+// Usage:
+//   nut([name], diameter, thickness, [thread=], [oversize=], [spec=], [tolerance=], [$slop=]) [ATTACHMENTS];
+// Description:
+//   Generates a hexagonal nut.  
+//   The name, thread and oversize parameters are described under `screw_info()`.  As for screws,
+//   you can give the specification in `spec` and then omit the name.  The diameter is the flat-to-flat
+//   size of the nut produced.  
+//   .
+//   The tolerance determines the actual thread sizing based on the
+//   nominal size.  
+//   For UTS threads the tolerance is either "1B", "2B" or "3B", in
+//   order of increasing tightness.  The default tolerance is "2B", which
+//   is the general standard for manufactured nuts.  For ISO the tolerance
+//   has the form of a number and letter.  The letter specifies the "fundamental deviation", also called the "tolerance position", the gap
+//   from the nominal size, and must be "G", or "H", where "G" is looser
+//   he loosest and "H" means no gap.  The number specifies the allowed
+//   range (variability) of the thread heights.  Smaller  numbers give tigher tolerances.  It must be a value from
+//   4-8, so an allowed (loose) tolerance is "7G".  The default ISO tolerance is "6H".
+//   .
+//   The $slop parameter determines extra gaps left to account for printing overextrusion.  It defaults to 0.
+// Arguments:
+//   name = screw specification, e.g. "M5x1" or "#8-32"
+//   diameter = outside diameter of nut (flat to flat dimension)
+//   thickness = thickness of nut (in mm)
+//   ---
+//   thread = thread type or specification.  Default: "coarse"
+//   oversize = amount to increase screw diameter for clearance holes.  Default: 0
+//   spec = screw specification from `screw_info()`.  If you specify this you can omit all the preceeding parameters.
+//   bevel = bevel the nut.  Default: false
+//   tolerance = nut tolerance.  Determines actual nut thread geometry based on nominal sizing.  Default is "2B" for UTS and "6H" for ISO.
+//   $slop = extra space left to account for printing over-extrusion.  Default: 0
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example: A metric and UTS nut
+//   nut("3/8", 5/8*INCH, 1/4*INCH);
+//   right(25)
+//      nut("M8", 16, 6);
+// Example: The three different UTS nut tolerances
+//   module mark(number)
+//   {
+//     difference(){
+//        children();
+//        ycopies(n=number, spacing=1.5)right(.25*INCH-2)up(8-.35)cyl(d=1, h=1);
+//     }
+//   }
+//   $fn=64;
+//   xdistribute(spacing=17){
+//     mark(1) nut("1/4-20", thickness=8, diameter=0.5*INCH,tolerance="1B");
+//     mark(2) nut("1/4-20", thickness=8, diameter=0.5*INCH,tolerance="2B");
+//     mark(3) nut("1/4-20", thickness=8, diameter=0.5*INCH,tolerance="3B");
+//   }
+
+function nut(name, diameter, thickness, thread="coarse", oversize=0, spec, tolerance=undef,
+           bevel=false, anchor=BOTTOM,spin=0, orient=UP) = no_function("nut");
+
+module nut(name, diameter, thickness, thread="coarse", oversize=0, spec, tolerance=undef,
+           bevel=false, anchor=BOTTOM,spin=0, orient=UP)
+{
+   assert(is_num(diameter) && diameter>0);
+   assert(is_num(thickness) && thickness>0);
+   spec = is_def(spec) ? spec : screw_info(name, thread=thread, oversize=oversize);
+   threadspec = thread_specification(spec, internal=true, tolerance=tolerance);
+   echo(threadspec=threadspec,"for nut threads");
+   echo(nut_minor_diam = mean(struct_val(threadspec,"d_minor")));
+   threaded_nut(
+        od=diameter,
+        id=[mean(struct_val(threadspec, "d_minor")),
+            mean(struct_val(threadspec, "d_pitch")),
+            mean(struct_val(threadspec, "d_major"))],
+        pitch = struct_val(threadspec, "pitch"),
+        h=thickness,
+        bevel=bevel,
+        anchor=anchor,spin=spin,orient=orient) children();
+}
+
+
+
 function _parse_screw_name(name) =
     let( commasplit = str_split(name,","),
          length = parse_num(commasplit[1]),
@@ -56,9 +574,64 @@ function _parse_drive(drive=undef, drive_size=undef) =
     assert(str("Unknown screw drive type ",drive));
 
 
+// Module: screw_head()
+// Usage:
+//    screw_head(screw_info, [details])
+// Description:
+//    Draws the screw head described by the data structure `screw_info`, which
+//    should have the fields produced by {{screw_info()}}.  See that function for
+//    details on the fields.  Standard orientation is with the head centered at (0,0)
+//    and oriented in the +z direction.  Flat heads appear below the xy plane.
+//    Other heads appear sitting on the xy plane.
+// Arguments:
+//    screw_info = structure produced by {{screw_info()}}
+//    details = true for more detailed model.  Default: false
+function screw_head(screw_info,details=false) = no_function("screw_head");
+module screw_head(screw_info,details=false) {
+   no_children($children);
+   head = struct_val(screw_info, "head");
+   head_size = struct_val(screw_info, "head_size");
+   head_height = struct_val(screw_info, "head_height");
+   if (head=="flat") {
+     angle = struct_val(screw_info, "head_angle")/2;
+     full_height = head_size/2/tan(angle);
+     height = is_def(head_height) ? head_height : full_height;
+     d2 = head_size*(1-height/full_height);
+     //down(height)
+     zflip()
+       cyl(d1=head_size, d2=d2, l=height, anchor=BOTTOM);
+   }
+   if (in_list(head,["round","pan round","button","fillister","cheese"])) {
+     base = head=="fillister" ? 0.75*head_height :
+            head=="pan round" ? .6 * head_height :
+            head=="cheese" ? .7 * head_height :
+            0.1 * head_height;   // round and button
+     head_size2 = head=="cheese" ?  head_size-2*tan(5)*head_height : head_size; // 5 deg slope on cheese head
+     cyl(l=base, d1=head_size, d2=head_size2,anchor=BOTTOM, $fn=32)
+       attach(TOP)
+         rotate_extrude($fn=32)
+           intersection(){
+             arc(points=[[-head_size2/2,0], [0,-base+head_height * (head=="button"?4/3:1)], [head_size2/2,0]]);
+             square([head_size2, head_height-base]);
+           }
+   }
+   if (head=="pan flat")
+     cyl(l=head_height, d=head_size, rounding2=0.2*head_size, anchor=BOTTOM);
+   if (head=="socket")
+     cyl(l=head_height, d=head_size, anchor=BOTTOM);
+   if (head=="hex")
+     intersection(){
+       linear_extrude(height=head_height) hexagon(id=head_size);
+       if (details)
+         down(.01)cyl(l=head_height+.02,d=2*head_size/sqrt(3), chamfer=head_size*(1/sqrt(3)-1/2), anchor=BOTTOM);
+     }
+}
+
+
+
 // Function: screw_info()
 // Usage:
-//   info = screw_info(name, [head], [thread], [drive], [drive_size], [oversize])
+//   info = screw_info(name, [head], [drive], [thread=], [drive_size=], [oversize=])
 //
 // Description:
 //   Look up screw characteristics for the specified screw type.
@@ -154,11 +727,12 @@ function _parse_drive(drive=undef, drive_size=undef) =
 // Arguments:
 //   name = screw specification, e.g. "M5x1" or "#8-32"
 //   head = head type (see list above).  Default: none
-//   thread = thread type or specification.  Default: "coarse"
 //   drive = drive type.  Default: none
+//   ---
+//   thread = thread type or specification.  Default: "coarse"
 //   drive_size = size of drive recess to override computed value
 //   oversize = amount to increase screw diameter for clearance holes.  Default: 0
-function screw_info(name, head, thread="coarse", drive, drive_size=undef, oversize=0) =
+function screw_info(name, head, drive, thread="coarse", drive_size=undef, oversize=0) =
   let(type=_parse_screw_name(name),
       drive_info = _parse_drive(drive, drive_size),
       drive=drive_info[0],
@@ -751,574 +1325,6 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
           );
 
 
-// Module: screw_head()
-// Usage:
-//    screw_head(screw_info, [details])
-// Description:
-//    Draws the screw head described by the data structure `screw_info`, which
-//    should have the fields produced by `screw_info()`.  See that function for
-//    details on the fields.  Standard orientation is with the head centered at (0,0)
-//    and oriented in the +z direction.  Flat heads appear below the xy plane.
-//    Other heads appear sitting on the xy plane.
-module screw_head(screw_info,details=false) {
-   head = struct_val(screw_info, "head");
-   head_size = struct_val(screw_info, "head_size");
-   head_height = struct_val(screw_info, "head_height");
-   if (head=="flat") {
-     angle = struct_val(screw_info, "head_angle")/2;
-     full_height = head_size/2/tan(angle);
-     height = is_def(head_height) ? head_height : full_height;
-     d2 = head_size*(1-height/full_height);
-     //down(height)
-     zflip()
-       cyl(d1=head_size, d2=d2, l=height, anchor=BOTTOM);
-   }
-   if (in_list(head,["round","pan round","button","fillister","cheese"])) {
-     base = head=="fillister" ? 0.75*head_height :
-            head=="pan round" ? .6 * head_height :
-            head=="cheese" ? .7 * head_height :
-            0.1 * head_height;   // round and button
-     head_size2 = head=="cheese" ?  head_size-2*tan(5)*head_height : head_size; // 5 deg slope on cheese head
-     cyl(l=base, d1=head_size, d2=head_size2,anchor=BOTTOM, $fn=32)
-       attach(TOP)
-         rotate_extrude($fn=32)
-           intersection(){
-             arc(points=[[-head_size2/2,0], [0,-base+head_height * (head=="button"?4/3:1)], [head_size2/2,0]]);
-             square([head_size2, head_height-base]);
-           }
-   }
-   if (head=="pan flat")
-     cyl(l=head_height, d=head_size, rounding2=0.2*head_size, anchor=BOTTOM);
-   if (head=="socket")
-     cyl(l=head_height, d=head_size, anchor=BOTTOM);
-   if (head=="hex")
-     intersection(){
-       linear_extrude(height=head_height) hexagon(id=head_size);
-       if (details)
-         down(.01)cyl(l=head_height+.02,d=2*head_size/sqrt(3), chamfer=head_size*(1/sqrt(3)-1/2), anchor=BOTTOM);
-     }
-}
-
-
-// Module: screw()
-// Usage:
-//   screw([name],[head],[thread],[drive],[drive_size], [length], [shank], [oversize], [tolerance], [$slop], [spec], [details], [anchor], [anchor_head], [orient], [spin])
-// Description:
-//   Create a screw.
-//   .
-//   Most of these parameters are described in the entry for `screw_info()`.
-//   .
-//   The tolerance determines the actual thread sizing based on the
-//   nominal size.  For UTS threads it is either "1A", "2A" or "3A", in
-//   order of increasing tightness.  The default tolerance is "2A", which
-//   is the general standard for manufactured bolts.  For ISO the tolerance
-//   has the form of a number and letter.  The letter specifies the "fundamental deviation", also called the "tolerance position", the gap
-//   from the nominal size, and must be "e", "f", "g", or "h", where "e" is
-//   the loosest and "h" means no gap.  The number specifies the allowed
-//   range (variability) of the thread heights.  It must be a value from
-//   3-9 for crest diameter and one of 4, 6, or 8 for pitch diameter.  A
-//   tolerance "6g" specifies both pitch and crest diameter to be the same,
-//   but they can be different, with a tolerance like "5g6g" specifies a pitch diameter tolerance of "5g" and a crest diameter tolerance of "6g".
-//   Smaller numbers give a tighter tolerance.  The default ISO tolerance is "6g".
-//   .
-//   The $slop argument gives an extra gap to account for printing overextrusion. It defaults to 0.2.  
-// Arguments:
-//   name = screw specification, e.g. "M5x1" or "#8-32"
-//   head = head type (see list above).  Default: none
-//   thread = thread type or specification.  Default: "coarse"
-//   drive = drive type.  Default: none
-//   drive_size = size of drive recess to override computed value
-//   oversize = amount to increase screw diameter for clearance holes.  Default: 0
-//   spec = screw specification from `screw_info()`.  If you specify this you can omit all the preceeding parameters.
-//   length = length of screw (in mm)
-//   shank = length of unthreaded portion of screw (in mm).  Default: 0
-//   details = toggle some details in rendering.  Default: false
-//   tolerance = screw tolerance.  Determines actual screw thread geometry based on nominal sizing.  Default is "2A" for UTS and "6g" for ISO.
-//   $slop = add extra gap to account for printer overextrusion.  Default: 0.2
-//   anchor = anchor relative to the shaft of the screw
-//   anchor_head = anchor relative to the screw head
-// Example(Med): Selected UTS (English) screws
-//   $fn=32;
-//   xdistribute(spacing=8){
-//     screw("#6", length=12);
-//     screw("#6-32", head="button", drive="torx",length=12);
-//     screw("#6-32,3/4", head="hex");
-//     screw("#6", thread="fine", head="fillister",length=12, drive="phillips");
-//     screw("#6", head="flat small",length=12,drive="slot");
-//     screw("#6-32", head="flat large", length=12, drive="torx");
-//     screw("#6-32", head="flat undercut",length=12);
-//     screw("#6-24", head="socket",length=12);          // Non-standard threading
-//     screw("#6-32", drive="hex", drive_size=1.5, length=12);
-//   }
-// Example(Med): A few examples of ISO (metric) screws
-//   $fn=32;
-//   xdistribute(spacing=8){
-//     screw("M3", head="flat small",length=12);
-//     screw("M3", head="button",drive="torx",length=12);
-//     screw("M3", head="pan", drive="phillips",length=12);
-//     screw("M3x1", head="pan", drive="slot",length=12);   // Non-standard threading!
-//     screw("M3", head="flat large",length=12);
-//     screw("M3", thread="none", head="flat", drive="hex",length=12);  // No threads
-//     screw("M3", head="socket",length=12);
-//     screw("M5", head="hex", length=12);
-//   }
-// Example(Med): Demonstration of all head types for UTS screws (using pitch zero for fast preview)
-//   xdistribute(spacing=15){
-//     ydistribute(spacing=15){
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="none", drive="hex");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="none", drive="torx");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="none");
-//     }
-//     screw("1/4", thread=0, length=8, anchor=TOP, head="hex");
-//     ydistribute(spacing=15){
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="socket", drive="hex");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="socket", drive="torx");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="socket");
-//     }
-//     ydistribute(spacing=15){
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="button", drive="hex");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="button", drive="torx");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="button");
-//     }
-//     ydistribute(spacing=15){
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="round", drive="slot");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="round", drive="phillips");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="round");
-//     }
-//     ydistribute(spacing=15){
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="fillister", drive="slot");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="fillister", drive="phillips");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="fillister");
-//     }
-//     ydistribute(spacing=15){
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="slot");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="phillips");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="hex");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="torx");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat large");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat small");
-//     }
-//     ydistribute(spacing=15){
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut", drive="slot");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut", drive="phillips");
-//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut");
-//     }
-//   }
-// Example(Med): Demonstration of all head types for metric screws without threading.
-//   xdistribute(spacing=15){
-//     ydistribute(spacing=15){
-//       screw("M6x0", length=8, anchor=TOP,  head="none", drive="hex");
-//       screw("M6x0", length=8, anchor=TOP,  head="none", drive="torx");
-//       screw("M6x0", length=8, anchor=TOP);
-//     }
-//     screw("M6x0", length=8, anchor=TOP,  head="hex");
-//     ydistribute(spacing=15){
-//       screw("M6x0", length=8, anchor=TOP,  head="socket", drive="hex");
-//       screw("M6x0", length=8, anchor=TOP,  head="socket", drive="torx");
-//       screw("M6x0", length=8, anchor=TOP,  head="socket");
-//     }
-//     ydistribute(spacing=15){
-//       screw("M6x0", length=8, anchor=TOP,  head="pan", drive="slot");
-//       screw("M6x0", length=8, anchor=TOP,  head="pan", drive="phillips");
-//       screw("M6x0", length=8, anchor=TOP,  head="pan");
-//       screw("M6x0", length=8, anchor=TOP,  head="pan flat");
-//     }
-//     ydistribute(spacing=15){
-//       screw("M6x0", length=8, anchor=TOP,  head="button", drive="hex");
-//       screw("M6x0", length=8, anchor=TOP,  head="button", drive="torx");
-//       screw("M6x0", length=8, anchor=TOP,  head="button");
-//     }
-//     ydistribute(spacing=15){
-//       screw("M6x0", length=8, anchor=TOP,  head="cheese", drive="slot");
-//       screw("M6x0", length=8, anchor=TOP,  head="cheese", drive="phillips");
-//       screw("M6x0", length=8, anchor=TOP,  head="cheese");
-//     }
-//     ydistribute(spacing=15){
-//       screw("M6x0", length=8, anchor=TOP,  head="flat", drive="phillips");
-//       screw("M6x0", length=8, anchor=TOP,  head="flat", drive="slot");
-//       screw("M6x0", length=8, anchor=TOP,  head="flat", drive="hex");
-//       screw("M6x0", length=8, anchor=TOP,  head="flat", drive="torx");
-//       screw("M6x0", length=8, anchor=TOP,  head="flat small");
-//       screw("M6x0", length=8, anchor=TOP,  head="flat large");
-//     }
-//   }
-// Example: The three different English (UTS) screw tolerances
-//   module label(val)
-//   {
-//     difference(){
-//        children();
-//        yflip()linear_extrude(height=.35) text(val,valign="center",halign="center",size=8);
-//     }
-//   }
-//   $fn=64;
-//   xdistribute(spacing=15){
-//     label("1") screw("1/4-20,5/8", head="hex",orient=DOWN,anchor_head=TOP,tolerance="1A");  // Loose
-//     label("2") screw("1/4-20,5/8", head="hex",orient=DOWN,anchor_head=TOP,tolerance="2A");  // Standard
-//     label("3") screw("1/4-20,5/8", head="hex",orient=DOWN,anchor_head=TOP,tolerance="3A");  // Tight
-//   }
-// Example(2D): This example shows the gap between nut and bolt at the loosest tolerance for UTS.  This gap is what enables the parts to mesh without binding and is part of the definition for standard metal hardware.
-//   $slop=0;
-//   $fn=32;
-//   projection(cut=true)xrot(-90){
-//       screw("1/4-20,1/4", head="hex",orient=UP,anchor=BOTTOM,tolerance="1A");
-//       down(INCH*1/20*2.58) nut("1/4-20", thickness=8, diameter=0.5*INCH,tolerance="1B");
-//   }
-
-module screw(name, head, thread="coarse", drive, drive_size, oversize=0, spec, length, shank=0, tolerance=undef, details=true, anchor=undef,anchor_head=undef,spin=0, orient=UP)
-{
-   spec = _validate_screw_spec(
-                               is_def(spec) ? spec : screw_info(name, head, thread, drive, drive_size, oversize) );
-   echo_struct(spec,"spec");
-   head = struct_val(spec,"head");
-   pitch = struct_val(spec, "pitch");
-   diameter = struct_val(spec, "diameter");
-   headless = head=="none" || head==undef;
-   eps = headless || starts_with(head,"flat") ? 0 : 0.01;
-   length = first_defined([length,struct_val(spec,"length")]) + eps;
-   assert(length>0, "Must specify positive length");
-   sides = max(12, segs(diameter/2));
-   unthreaded = is_undef(pitch) || pitch==0 ? length : shank;
-   threaded = length - unthreaded;
-   echo(t=threaded,length,unthreaded);
-   head_height = headless || starts_with(head, "flat") ? 0 : struct_val(spec, "head_height");
-   head_diam = struct_val(spec, "head_size");
-   head_size = headless ? [diameter, diameter, head_height] :
-               head == "hex" ? [head_diam, head_diam*2/sqrt(3), head_height] :
-                               [head_diam, head_diam, head_height];
-   assert(num_defined([anchor,anchor_head])<=1, "Cannot define both `anchor` and `anchor_head`");
-   head_anchor = is_def(anchor_head);
-   attachable(
-     d = head_anchor ? head_size[0] : diameter,  // This code should be tweaked to pass diameter and length more cleanly
-     l = head_anchor ? head_size[2] : length,
-     orient = orient,
-     anchor = first_defined([anchor, anchor_head, BOTTOM]),
-     //offset = head_anchor ? [0,0,head_height/2] : [0,0,-length/2],
-     spin = spin
-     )
-   {
-     up(head_anchor ? -head_height/2 : length/2)
-       difference(){
-         union(){
-           screw_head(spec,details);
-           up(eps){
-             if (unthreaded>0){
-                cyl(d=diameter, h=unthreaded+eps+(threaded>0?0.01:0), anchor=TOP, $fn=sides);
-               }
-             if (threaded>0)
-               intersection(){
-                 down(unthreaded)
-                   _rod(spec, length=threaded+eps, tolerance=tolerance, $fn=sides, anchor=TOP );
-                 if (details)
-                   up(.01)cyl(d=diameter, l=length+.02+eps, chamfer1 = pitch/2, chamfer2 = headless ? pitch/2 : -pitch/2, anchor=TOP, $fn=sides);
-              }
-           }
-         }
-         _driver(spec);
-       }
-     children();
-   }
-}
-
-
-module _driver(spec)
-{
-  drive = struct_val(spec,"drive");
-  echo(drive=drive);
-  if (is_def(drive) && drive!="none") {
-    echo(inside_drive=drive);
-    head = struct_val(spec,"head");
-    diameter = struct_val(spec,"diameter");
-    drive_size = struct_val(spec,"drive_size");
-    drive_width = struct_val(spec,"drive_width");
-    drive_diameter = struct_val(spec, "drive_diameter");
-    drive_depth = first_defined([struct_val(spec, "drive_depth"), .7*diameter]); // Note hack for unspecified depth
-    head_top = starts_with(head,"flat") || head=="none" ? 0 :
-               struct_val(spec,"head_height");
-               echo(drive_size=drive_size);
-    up(head_top-drive_depth){
-      // recess should be positioned with its bottom center at (0,0) and the correct recess depth given above
-      if (drive=="phillips") phillips_mask(drive_size,anchor=BOTTOM);
-      if (drive=="torx") torx_mask(size=drive_size, l=drive_depth+1, center=false);
-      if (drive=="hex") linear_extrude(height=drive_depth+1) hexagon(id=drive_size);
-      if (drive=="slot") cuboid([2*struct_val(spec,"head_size"), drive_width, drive_depth+1],anchor=BOTTOM);
-    }
-  }
-}
-
-
-function _ISO_thread_tolerance(diameter, pitch, internal=false, tolerance=undef) =
-  let(
-    P = pitch,
-    H = P*sqrt(3)/2,
-    tolerance = first_defined([tolerance, internal?"6H":"6g"]),
-
-    pdiam = diameter - 2*3/8*H,          // nominal pitch diameter
-    mindiam = diameter - 2*5/8*H,        // nominal minimum diameter
-
-    EI = [   // Fundamental deviations for nut thread
-          ["G", 15+11*P],
-          ["H", 0],            // Standard practice
-         ],
-
-    es = [    // Fundamental deviations for bolt thread
-          ["e", -(50+11*P)],   // Exceptions if P<=0.45mm
-          ["f", -(30+11*P)],
-          ["g", -(15+11*P)],   // Standard practice
-          ["h", 0]             // Standard practice for tight fit
-         ],
-
-    T_d6 = 180*pow(P,2/3)-3.15/sqrt(P),
-    T_d = [  // Crest diameter tolerance for major diameter of bolt thread
-           [4, 0.63*T_d6],
-           [6, T_d6],
-           [8, 1.6*T_d6]
-          ],
-
-    T_D1_6 = 0.2 <= P && P <= 0.8 ? 433*P - 190*pow(P,1.22) :
-             P > .8 ? 230 * pow(P,0.7) : undef,
-    T_D1 = [ // Crest diameter tolerance for minor diameter of nut thread
-             [4, 0.63*T_D1_6],
-             [5, 0.8*T_D1_6],
-             [6, T_D1_6],
-             [7, 1.25*T_D1_6],
-             [8, 1.6*T_D1_6]
-           ],
-
-    rangepts = [0.99, 1.4, 2.8, 5.6, 11.2, 22.4, 45, 90, 180, 300],
-    d_ind = floor(lookup(diameter,hstack(rangepts,count(len(rangepts))))),
-    avgd = sqrt(rangepts[d_ind]* rangepts[d_ind+1]),
-
-    T_d2_6 = 90*pow(P, 0.4)*pow(avgd,0.1),
-    T_d2 = [ // Pitch diameter tolerance for bolt thread
-             [3, 0.5*T_d2_6],
-             [4, 0.63*T_d2_6],
-             [5, 0.8*T_d2_6],
-             [6, T_d2_6],
-             [7, 1.25*T_d2_6],
-             [8, 1.6*T_d2_6],
-             [9, 2*T_d2_6],
-           ],
-
-    T_D2 = [  // Tolerance for pitch diameter of nut thread
-              [4, 0.85*T_d2_6],
-              [5, 1.06*T_d2_6],
-              [6, 1.32*T_d2_6],
-              [7, 1.7*T_d2_6],
-              [8, 2.12*T_d2_6]
-           ],
-
-    internal = is_def(internal) ? internal : tolerance[1] != downcase(tolerance[1]),
-    internalok = !internal || (
-                               len(tolerance)==2 && str_find("GH",tolerance[1])!=undef && str_find("45678",tolerance[0])!=undef),
-    tol_str = str(tolerance,tolerance),
-    externalok = internal || (
-                              (len(tolerance)==2 || len(tolerance)==4)
-                                                          && str_find("efgh", tol_str[1])!=undef
-                                                          && str_find("efgh", tol_str[3])!=undef
-                                                          && str_find("3456789", tol_str[0]) != undef
-                                                          && str_find("468", tol_str[2]) !=undef)
-  )
-  assert(internalok,str("Invalid internal thread tolerance, ",tolerance,".  Must have form <digit><letter>"))
-  assert(externalok,str("invalid external thread tolerance, ",tolerance,".  Must have form <digit><letter> or <digit><letter><digit><letter>"))
-  let(
-    tol_num_pitch = parse_num(tol_str[0]),
-    tol_num_crest = parse_num(tol_str[2]),
-    tol_letter = tol_str[1]
-  )
-  assert(tol_letter==tol_str[3],str("Invalid tolerance, ",tolerance,".  Cannot mix different letters"))
-  internal ?
-    let(  // Nut case
-      //a=echo("nut", tol_letter, tol_num_pitch, tol_num_crest),
-      fdev = struct_val(EI,tol_letter)/1000,
-      Tdval = struct_val(T_D1, tol_num_crest)/1000,
-      df=     echo(T_D1=T_D1),
-      Td2val = struct_val(T_D2, tol_num_pitch)/1000,
-      //fe=   echo("nut",P,fdev=fdev, Tdval=Tdval, Td2val=Td2val),
-      bot=[diameter+fdev, diameter+fdev+Td2val+H/6],
-      xdiam = [mindiam+fdev,mindiam+fdev+Tdval],
-      pitchdiam = [pdiam + fdev, pdiam+fdev+Td2val]
-    )
-    [["pitch",P],["d_minor",xdiam], ["d_pitch",pitchdiam], ["d_major",bot],["basic",[mindiam,pdiam,diameter]]]
-  :
-    let( // Bolt case
-      //a=echo("bolt"),
-      fdev = struct_val(es,tol_letter)/1000,
-      Tdval = struct_val(T_d, tol_num_crest)/1000,
-      Td2val = struct_val(T_d2, tol_num_pitch)/1000,
-      mintrunc = P/8,
-      d1 = diameter-5*H/4,
-      maxtrunc = H/4 - mintrunc * (1-cos(60-acos(1-Td2val/4/mintrunc)))+Td2val/2,
-      //cc=echo("bolt",P,fdev=fdev, Tdval=Tdval, Td2val=Td2val),
-      bot = [diameter-2*H+2*mintrunc+fdev, diameter-2*H+2*maxtrunc+fdev],
-      xdiam = [diameter+fdev,diameter+fdev-Tdval],
-      pitchdiam = [pdiam + fdev, pdiam+fdev-Td2val]
-    )
-    [["pitch",P],["d_major",xdiam], ["d_pitch",pitchdiam], ["d_minor",bot],["basic",[mindiam,pdiam,diameter]]];
-
-function _UTS_thread_tolerance(diam, pitch, internal=false, tolerance=undef) =
-  let(
-    d = diam/INCH,   // diameter in inches
-    P = pitch/INCH,  // pitch in inches
-    H = P*sqrt(3)/2,
-    tolerance = first_defined([tolerance, internal?"2B":"2A"]),
-    tolOK = in_list(tolerance, ["1A","1B","2A","2B","3A","3B"]),
-    internal = tolerance[1]=="B"
-  )
-  assert(tolOK,str("Tolerance was ",tolerance,". Must be one of 1A, 2A, 3A, 1B, 2B, 3B"))
-  let(
-    LE = 9*P,   // length of engagement.  Is this right?
-    pitchtol_2A = 0.0015*pow(d,1/3) + 0.0015*sqrt(LE) + 0.015*pow(P,2/3),
-    pitchtol_table = [
-                 ["1A", 1.500*pitchtol_2A],
-                 ["2A",       pitchtol_2A],
-                 ["3A", 0.750*pitchtol_2A],
-                 ["1B", 1.950*pitchtol_2A],
-                 ["2B", 1.300*pitchtol_2A],
-                 ["3B", 0.975*pitchtol_2A]
-               ],
-     pitchtol = struct_val(pitchtol_table, tolerance),
-     allowance = tolerance=="1A" || tolerance=="2A" ? 0.3 * pitchtol_2A : 0,
-     majortol = tolerance == "1A" ? 0.090*pow(P,2/3) :
-                tolerance == "2A" || tolerance == "3A" ? 0.060*pow(P,2/3) :
-                pitchtol+pitch/4/sqrt(3),    // Internal case
-     minortol = tolerance=="1B" || tolerance=="2B" ?
-                    (
-                      d < 0.25 ? constrain(0.05*pow(P,2/3)+0.03*P/d - 0.002, 0.25*P-0.4*P*P, 0.394*P)
-                               : (P > 0.25 ? 0.15*P : 0.25*P-0.4*P*P)
-                    ) :
-                tolerance=="3B" ? constrain(0.05*pow(P,2/3)+0.03*P/d - 0.002, P<1/13 ? 0.12*P : 0.23*P-1.5*P*P, 0.394*P)
-                     :0, // not used for external threads
-     //f=echo(allowance=allowance),
-     //g=echo(pta2 = pitchtol_2A),
-     // ff=echo(minortol=minortol, pitchtol=pitchtol, majortol=majortol),
-     basic_minordiam = d - 5/4*H,
-     basic_pitchdiam = d - 3/4*H,
-     majordiam = internal ? [d,d] :          // A little confused here, paragraph 8.3.2
-                          [d-allowance-majortol, d-allowance],
-     //ffda=echo(allowance=allowance, majortol=majortol, "*****************************"),
-     pitchdiam = internal ? [basic_pitchdiam, basic_pitchdiam + pitchtol]
-                          : [majordiam[1] - 3/4*H-pitchtol, majordiam[1]-3/4*H],
-     minordiam = internal ? [basic_minordiam, basic_minordiam + minortol]
-                          : [pitchdiam[0] - 3/4*H, basic_minordiam - allowance - H/8]   // the -H/8 is for the UNR case, 0 for UN case
-    )
-    [["pitch",P*INCH],["d_major",majordiam*INCH], ["d_pitch", pitchdiam*INCH], ["d_minor",minordiam*INCH],
-     ["basic", INCH*[basic_minordiam, basic_pitchdiam, d]]];
-
-function _exact_thread_tolerance(d,P) =
-   let(
-       H = P*sqrt(3)/2,
-       basic_minordiam = d - 5/4*H,
-       basic_pitchdiam = d - 3/4*H
-      )
-    [["pitch", P], ["d_major", d], ["d_pitch", basic_pitchdiam], ["d_minor", basic_minordiam],
-     ["basic", [basic_minordiam, basic_pitchdiam, d]]];
-
-
-// Function: thread_specification()
-// Usage:
-//   thread_specification(screw_spec, [tolerance], [internal])
-// Description:
-//   Determines actual thread geometry for a given screw with specified tolerance.  If tolerance is omitted the default is used.  If tolerance
-//   is "none" or 0 then return the nominal thread geometry.
-//   .
-//   The return value is a structure with the following fields:
-//   - pitch: the thread pitch
-//   - d_major: major diameter range
-//   - d_pitch: pitch diameter range
-//   - d_minor: minor diameter range
-//   - basic: vector `[minor, pitch, major]` of the nominal or "basic" diameters for the threads
-function thread_specification(screw_spec, internal=false, tolerance=undef) =
-  let( diam = struct_val(screw_spec, "diameter"),
-       pitch = struct_val(screw_spec, "pitch"))
-  tolerance == 0 || tolerance=="none" ? _exact_thread_tolerance(diam, pitch)
-  :  struct_val(screw_spec,"system") == "ISO" ? _ISO_thread_tolerance(diam, pitch, internal, tolerance)
-  :  struct_val(screw_spec,"system") == "UTS" ? _UTS_thread_tolerance(diam, pitch, internal, tolerance)
-  :  assert(false,"Unknown screw system ",struct_val(screw_spec,"system"));
-
-
-module _rod(spec, length, tolerance, orient=UP, spin=0, anchor=CENTER)
-{
-      threadspec = thread_specification(spec, internal=false, tolerance=tolerance);
-      echo(d_major_mean = mean(struct_val(threadspec, "d_major")));
-
-      threaded_rod([mean(struct_val(threadspec, "d_minor")),
-                    mean(struct_val(threadspec, "d_pitch")),
-                    mean(struct_val(threadspec, "d_major"))],
-                    pitch = struct_val(threadspec, "pitch"),
-                    l=length, left_handed=false,
-                    bevel=false, orient=orient, anchor=anchor, spin=spin);
-}
-
-
-// Module: nut()
-// Usage:
-//   nut([name],diameter, thickness,[thread],[oversize],[spec],[tolerance],[details],[$slop])
-// Description:
-//   Generates a hexagonal nut.  
-//   The name, thread and oversize parameters are described under `screw_info()`.  As for screws,
-//   you can give the specification in `spec` and then omit the name.  The diameter is the flat-to-flat
-//   size of the nut produced.  
-//   .
-//   The tolerance determines the actual thread sizing based on the
-//   nominal size.  
-//   For UTS threads the tolerance is either "1B", "2B" or "3B", in
-//   order of increasing tightness.  The default tolerance is "2B", which
-//   is the general standard for manufactured nuts.  For ISO the tolerance
-//   has the form of a number and letter.  The letter specifies the "fundamental deviation", also called the "tolerance position", the gap
-//   from the nominal size, and must be "G", or "H", where "G" is looser
-//   he loosest and "H" means no gap.  The number specifies the allowed
-//   range (variability) of the thread heights.  Smaller  numbers give tigher tolerances.  It must be a value from
-//   4-8, so an allowed (loose) tolerance is "7G".  The default ISO tolerance is "6H".
-//   .
-//   The $slop parameter determines extra gaps left to account for printing overextrusion.  It defaults to 0.
-// Arguments:
-//   name = screw specification, e.g. "M5x1" or "#8-32"
-//   diameter = outside diameter of nut (flat to flat dimension)
-//   thickness = thickness of nut (in mm)
-//   ---
-//   thread = thread type or specification.  Default: "coarse"
-//   oversize = amount to increase screw diameter for clearance holes.  Default: 0
-//   spec = screw specification from `screw_info()`.  If you specify this you can omit all the preceeding parameters.
-//   bevel = bevel the nut.  Default: false
-//   tolerance = nut tolerance.  Determines actual nut thread geometry based on nominal sizing.  Default is "2B" for UTS and "6H" for ISO.
-//   $slop = extra space left to account for printing over-extrusion.  Default: 0
-// Example: A metric and UTS nut
-//   nut("3/8", 5/8*INCH, 1/4*INCH);
-//   right(25)
-//      nut("M8", 16, 6);
-// Example: The three different UTS nut tolerances
-//   module mark(number)
-//   {
-//     difference(){
-//        children();
-//        ycopies(n=number, spacing=1.5)right(.25*INCH-2)up(8-.35)cyl(d=1, h=1);
-//     }
-//   }
-//   $fn=64;
-//   xdistribute(spacing=17){
-//     mark(1) nut("1/4-20", thickness=8, diameter=0.5*INCH,tolerance="1B");
-//     mark(2) nut("1/4-20", thickness=8, diameter=0.5*INCH,tolerance="2B");
-//     mark(3) nut("1/4-20", thickness=8, diameter=0.5*INCH,tolerance="3B");
-//   }
-module nut(name, diameter, thickness, thread="coarse", oversize=0, spec, tolerance=undef,
-           bevel=false, anchor=BOTTOM,spin=0, orient=UP)
-{
-   assert(is_num(diameter) && diameter>0);
-   assert(is_num(thickness) && thickness>0);
-   spec = is_def(spec) ? spec : screw_info(name, thread=thread, oversize=oversize);
-   threadspec = thread_specification(spec, internal=true, tolerance=tolerance);
-   echo(threadspec=threadspec,"for nut threads");
-   echo(nut_minor_diam = mean(struct_val(threadspec,"d_minor")));
-   threaded_nut(
-        od=diameter,
-        id=[mean(struct_val(threadspec, "d_minor")),
-            mean(struct_val(threadspec, "d_pitch")),
-            mean(struct_val(threadspec, "d_major"))],
-        pitch = struct_val(threadspec, "pitch"),
-        h=thickness,
-        bevel=bevel,
-        anchor=anchor,spin=spin,orient=orient);
-}
 
 
 function _is_positive(x) = is_num(x) && x>0;
@@ -1352,6 +1358,37 @@ function _validate_screw_spec(spec) = let(
     assert(headOK, "Screw spec head type invalid or unknown for your screw size")
     assert(driveOK, "Screw drive type invalid or unknown for your screw size or head type")
     spec;
+
+
+
+
+// Function: thread_specification()
+// Usage:
+//   thread_specification(screw_spec, [tolerance], [internal])
+// Description:
+//   Determines actual thread geometry for a given screw with specified tolerance.  If tolerance is omitted the default is used.  If tolerance
+//   is "none" or 0 then return the nominal thread geometry.  See {{screw()}} or {{nut()}} for details on tolerance values for screws (internal=false) and
+//   nuts (internal=true).  
+//   .
+//   The return value is a structure with the following fields:
+//   - pitch: the thread pitch
+//   - d_major: major diameter range
+//   - d_pitch: pitch diameter range
+//   - d_minor: minor diameter range
+//   - basic: vector `[minor, pitch, major]` of the nominal or "basic" diameters for the threads
+// Arguments:
+//   screw_spec = screw specification structure
+//   ---
+//   tolerance = thread geometry tolerance
+//   internal = true for internal threads.  Default: false
+function thread_specification(screw_spec, tolerance=undef, internal=false) =
+  let( diam = struct_val(screw_spec, "diameter"),
+       pitch = struct_val(screw_spec, "pitch"))
+  tolerance == 0 || tolerance=="none" ? _exact_thread_tolerance(diam, pitch)
+  :  struct_val(screw_spec,"system") == "ISO" ? _ISO_thread_tolerance(diam, pitch, internal, tolerance)
+  :  struct_val(screw_spec,"system") == "UTS" ? _UTS_thread_tolerance(diam, pitch, internal, tolerance)
+  :  assert(false,"Unknown screw system ",struct_val(screw_spec,"system"));
+
 
 
 

@@ -15,12 +15,10 @@
 // Section: 2D Masking Shapes
 
 // Function&Module: mask2d_roundover()
-// Usage: As Module
-//   mask2d_roundover(r|d, [inset], [excess]);
-// Usage: With Attachments
-//   mask2d_roundover(r|d, [inset], [excess]) { attachments }
-// Usage: As Module
-//   path = mask2d_roundover(r|d, [inset], [excess]);
+// Usage: As module
+//   mask2d_roundover(r|d=, [inset], [excess]) [ATTACHMENTS];
+// Usage: As function
+//   path = mask2d_roundover(r|d=, [inset], [excess]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
@@ -72,12 +70,10 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 
 
 // Function&Module: mask2d_cove()
-// Usage: As Module
-//   mask2d_cove(r|d, [inset], [excess]);
-// Usage: With Attachments
-//   mask2d_cove(r|d, [inset], [excess]) { attachments }
-// Usage: As Function
-//   path = mask2d_cove(r|d, [inset], [excess]);
+// Usage: As module
+//   mask2d_cove(r|d=, [inset], [excess]) [ATTACHMENTS];
+// Usage: As function
+//   path = mask2d_cove(r|d=, [inset], [excess]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
@@ -130,21 +126,21 @@ function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 
 // Function&Module: mask2d_chamfer()
 // Usage: As Module
-//   mask2d_chamfer(edge, [angle], [inset], [excess]);
-//   mask2d_chamfer(y, [angle], [inset], [excess]);
-//   mask2d_chamfer(x, [angle], [inset], [excess]);
-// Usage: With Attachments
-//   mask2d_chamfer(edge, [angle], [inset], [excess]) { attachments }
+//   mask2d_chamfer(edge, [angle], [inset], [excess]) [ATTACHMENTS];
+//   mask2d_chamfer(y=, [angle=], [inset=], [excess=]) [ATTACHMENTS];
+//   mask2d_chamfer(x=, [angle=], [inset=], [excess=]) [ATTACHMENTS];
 // Usage: As Function
 //   path = mask2d_chamfer(edge, [angle], [inset], [excess]);
-//   path = mask2d_chamfer(y, [angle], [inset], [excess]);
-//   path = mask2d_chamfer(x, [angle], [inset], [excess]);
+//   path = mask2d_chamfer(y=, [angle=], [inset=], [excess=]);
+//   path = mask2d_chamfer(x=, [angle=], [inset=], [excess=]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D chamfer mask shape that is useful for extruding into a 3D mask for a 90° edge.
 //   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
+//   The edge parameter specifies the length of the chamfer's slanted edge.  Alternatively you can give x or y to
+//   specify the width or height.  Only one of x, y, or width is permitted.  
 // Arguments:
 //   edge = The length of the edge of the chamfer.
 //   angle = The angle of the chamfer edge, away from vertical.  Default: 45.
@@ -177,16 +173,15 @@ module mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTER,
 }
 
 function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTER,spin=0) =
-    assert(num_defined([x,y,edge])==1)
-    assert(is_num(first_defined([x,y,edge])))
+    let(dummy=one_defined([x,y,edge],["x","y","edge"]))
     assert(is_num(angle))
     assert(is_undef(excess)||is_num(excess))
     assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
     let(
         inset = is_list(inset)? inset : [inset,inset],
         excess = default(excess,$overlap),
-        x = !is_undef(x)? x :
-            !is_undef(y)? adj_ang_to_opp(adj=y,ang=angle) :
+        x = is_def(x)? x :
+            is_def(y)? adj_ang_to_opp(adj=y,ang=angle) :
             hyp_ang_to_opp(hyp=edge,ang=angle),
         y = opp_ang_to_adj(opp=x,ang=angle),
         path = [
@@ -201,9 +196,7 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 
 // Function&Module: mask2d_rabbet()
 // Usage: As Module
-//   mask2d_rabbet(size, [excess]);
-// Usage: With Attachments
-//   mask2d_rabbet(size, [excess]) { attachments }
+//   mask2d_rabbet(size, [excess]) [ATTACHMENTS];
 // Usage: As Function
 //   path = mask2d_rabbet(size, [excess]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
@@ -252,11 +245,9 @@ function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
 
 // Function&Module: mask2d_dovetail()
 // Usage: As Module
-//   mask2d_dovetail(edge, [angle], [inset], [shelf], [excess], ...);
-//   mask2d_dovetail(x=, [angle=], [inset=], [shelf=], [excess=], ...);
-//   mask2d_dovetail(y=, [angle=], [inset=], [shelf=], [excess=], ...);
-// Usage: With Attachments
-//   mask2d_dovetail(edge, [angle], [inset], [shelf], ...) { attachments }
+//   mask2d_dovetail(edge, [angle], [inset], [shelf], [excess], ...) [ATTACHMENTS];
+//   mask2d_dovetail(x=, [angle=], [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
+//   mask2d_dovetail(y=, [angle=], [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
 // Usage: As Function
 //   path = mask2d_dovetail(edge, [angle], [inset], [shelf], [excess]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
@@ -323,11 +314,9 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 
 // Function&Module: mask2d_teardrop()
 // Usage: As Module
-//   mask2d_teardrop(r|d, [angle], [excess]);
-// Usage: With Attachments
-//   mask2d_teardrop(r|d, [angle], [excess]) { attachments }
+//   mask2d_teardrop(r|d=, [angle], [excess]) [ATTACHMENTS];
 // Usage: As Function
-//   path = mask2d_teardrop(r|d, [angle], [excess]);
+//   path = mask2d_teardrop(r|d=, [angle], [excess]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
@@ -379,9 +368,7 @@ module mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) {
 
 // Function&Module: mask2d_ogee()
 // Usage: As Module
-//   mask2d_ogee(pattern, [excess], ...);
-// Usage: With Attachments
-//   mask2d_ogee(pattern, [excess], ...) { attachments }
+//   mask2d_ogee(pattern, [excess], ...) [ATTAHCMENTS];
 // Usage: As Function
 //   path = mask2d_ogee(pattern, [excess], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)

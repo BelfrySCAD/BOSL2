@@ -14,11 +14,11 @@
 
 // Module: bounding_box()
 // Usage:
-//   bounding_box() ...
+//   bounding_box([excess],[planar]) CHILDREN;
 // Description:
 //   Returns the smallest axis-aligned square (or cube) shape that contains all the 2D (or 3D)
-//   children given.  The module children() is supposed to be a 3d shape when planar=false and
-//   a 2d shape when planar=true otherwise the system will issue a warning of mixing dimension
+//   children given.  The module children() must 3d when planar=false and
+//   2d when planar=true, or you will get a warning of mixing dimension
 //   or scaling by 0.
 // Arguments:
 //   excess = The amount that the bounding box should be larger than needed to bound the children, in each axis.
@@ -103,7 +103,7 @@ module bounding_box(excess=0, planar=false) {
 // Module: chain_hull()
 //
 // Usage:
-//   chain_hull() ...
+//   chain_hull() CHILDREN;
 //
 // Description:
 //   Performs hull operations between consecutive pairs of children,
@@ -150,7 +150,7 @@ module chain_hull()
 
 // Module: path_extrude2d()
 // Usage:
-//   path_extrude2d(path, [caps], [closed]) {...}
+//   path_extrude2d(path, [caps=], [closed=], [s=], [convexity=]) 2D-CHILDREN;
 // Description:
 //   Extrudes 2D children along the given 2D path, with optional rounded endcaps.
 //   It works by constructing straight sections corresponding to each segment of the path and inserting rounded joints at each corner.
@@ -158,6 +158,7 @@ module chain_hull()
 //   If you set caps to true for asymmetric children then incorrect caps will be generated.
 // Arguments:
 //   path = The 2D path to extrude the geometry along.
+//   ---
 //   caps = If true, caps each end of the path with a rounded copy of the children.  Children must by symmetric across the Y axis, or results are wrong.  Default: false
 //   closed = If true, connect the starting point of the path to the ending point.  Default: false
 //   convexity = The max number of times a line could pass though a wall.  Default: 10
@@ -261,13 +262,15 @@ module path_extrude2d(path, caps=false, closed=false, s, convexity=10) {
 
 // Module: cylindrical_extrude()
 // Usage:
-//   cylindrical_extrude(size, ir|id, or|od, [convexity]) ...
+//   cylindrical_extrude(ir|id=, or|od=, [size=], [convexity=], [spin=], [orient=]) 2D-CHILDREN;
 // Description:
-//   Extrudes all 2D children outwards, curved around a cylindrical shape.
+//   Extrudes its 2D children outwards, curved around a cylindrical shape.  Uses $fn/$fa/$fs to
+//   control the faceting of the extrusion.  
 // Arguments:
-//   or = The outer radius to extrude to.
-//   od = The outer diameter to extrude to.
 //   ir = The inner radius to extrude from.
+//   or = The outer radius to extrude to.
+//   ---
+//   od = The outer diameter to extrude to.
 //   id = The inner diameter to extrude from.
 //   size = The [X,Y] size of the 2D children to extrude.  Default: [1000,1000]
 //   convexity = The max number of times a line could pass though a wall.  Default: 10
@@ -282,11 +285,12 @@ module path_extrude2d(path, caps=false, closed=false, s, convexity=10) {
 // Example: Orient to the Y Axis.
 //   cylindrical_extrude(or=40, ir=35, orient=BACK)
 //       text(text="Hello World!", size=10, halign="center", valign="center");
-module cylindrical_extrude(or, ir, od, id, size=1000, convexity=10, spin=0, orient=UP) {
+module cylindrical_extrude(ir, or, od, id, size=1000, convexity=10, spin=0, orient=UP) {
     assert(is_num(size) || is_vector(size,2));
     size = is_num(size)? [size,size] : size;
     ir = get_radius(r=ir,d=id);
     or = get_radius(r=or,d=od);
+    assert(all_positive([ir,or]), "Must supply positive inner and outer radius or diameter");
     index_r = or;
     circumf = 2 * PI * index_r;
     width = min(size.x, circumf);
@@ -316,11 +320,15 @@ module cylindrical_extrude(or, ir, od, id, size=1000, convexity=10, spin=0, orie
 
 
 // Module: extrude_from_to()
+// Usage:
+//   extrude_from_to(pt1, pt2, [convexity=], [twist=], [scale=], [slices=]) 2D-CHILDREN;
 // Description:
-//   Extrudes a 2D shape between the 3d points pt1 and pt2.  Takes as children a set of 2D shapes to extrude.
+//   Extrudes the 2D children linearly between the 3d points pt1 and pt2.  The origin of the 2D children are placed on
+//   pt1 and pt2, and oriented perpendicular to the line between the points.  
 // Arguments:
 //   pt1 = starting point of extrusion.
 //   pt2 = ending point of extrusion.
+//   ---
 //   convexity = max number of times a line could intersect a wall of the 2D shape being extruded.
 //   twist = number of degrees to twist the 2D shape over the entire extrusion length.
 //   scale = scale multiplier for end of extrusion compared the start.
@@ -349,8 +357,10 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 
 
 // Module: path_extrude()
+// Usage: path_extrude(path, [convexity], [clipsize]) 2D-CHILDREN;
 // Description:
-//   Extrudes 2D children along a 3D path.  This may be slow.
+//   Extrudes 2D children along a 3D path.  This may be slow and can have problems with twisting.  
+// See Also: path_sweep()
 // Arguments:
 //   path = Array of points for the bezier path to extrude along.
 //   convexity = Maximum number of walls a ray can pass through.
@@ -407,7 +417,7 @@ module path_extrude(path, convexity=10, clipsize=100) {
 
 // Module: minkowski_difference()
 // Usage:
-//   minkowski_difference() { base_shape(); diff_shape(); ... }
+//   minkowski_difference() { BASE; DIFF1; DIFF2; ... }
 // Description:
 //   Takes a 3D base shape and one or more 3D diff shapes, carves out the diff shapes from the
 //   surface of the base shape, in a way complementary to how `minkowski()` unions shapes to the
@@ -443,16 +453,16 @@ module minkowski_difference(planar=false) {
 
 // Module: offset3d()
 // Usage:
-//   offset3d(r, [size], [convexity]);
+//   offset3d(r, [size], [convexity]) CHILDREN;
 // Description:
 //   Expands or contracts the surface of a 3D object by a given amount.  This is very, very slow.
 //   No really, this is unbearably slow.  It uses `minkowski()`.  Use this as a last resort.
 //   This is so slow that no example images will be rendered.
 // Arguments:
-//   r = Radius to expand object by.  Negative numbers contract the object.
+//   r = Radius to expand object by.  Negative numbers contract the object. 
 //   size = Maximum size of object to be contracted, given as a scalar.  Default: 100
 //   convexity = Max number of times a line could intersect the walls of the object.  Default: 10
-module offset3d(r=1, size=100, convexity=10) {
+module offset3d(r, size=100, convexity=10) {
     n = quant(max(8,segs(abs(r))),4);
     if (r==0) {
         children();
@@ -482,10 +492,10 @@ module offset3d(r=1, size=100, convexity=10) {
 
 // Module: round3d()
 // Usage:
-//   round3d(r) ...
-//   round3d(or) ...
-//   round3d(ir) ...
-//   round3d(or, ir) ...
+//   round3d(r) CHILDREN;
+//   round3d(or) CHILDREN;
+//   round3d(ir) CHILDREN;
+//   round3d(or, ir) CHILDREN;
 // Description:
 //   Rounds arbitrary 3D objects.  Giving `r` rounds all concave and convex corners.  Giving just `ir`
 //   rounds just concave corners.  Giving just `or` rounds convex corners.  Giving both `ir` and `or`

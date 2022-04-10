@@ -28,8 +28,8 @@
 
 // Function&Module: spur_gear()
 // Usage: As a Module
-//   spur_gear(pitch, teeth, thickness, [shaft_diam=], [hide], [pressure_angle], [clearance], [backlash], [helical], [slices], [interior]);
-//   spur_gear(mod=, teeth=, thickness=, [shaft_diam=], ...);
+//   spur_gear(pitch, teeth, thickness, [shaft_diam], [hide=], [pressure_angle=], [clearance=], [backlash=], [helical=], [slices=], [interior=]) [ATTACHMENTS];
+//   spur_gear(mod=, teeth=, thickness=, [shaft_diam=], ...) [ATTACHMENTS];
 // Usage: As a Function
 //   vnf = spur_gear(pitch, teeth, thickness, [shaft_diam], ...);
 //   vnf = spur_gear(mod=, teeth=, thickness=, [shaft_diam], ...);
@@ -193,9 +193,11 @@ module spur_gear(
 
 // Function&Module: spur_gear2d()
 // Usage: As Module
-//   spur_gear2d(pitch|mod, teeth, [hide], [pressure_angle], [clearance], [backlash], [interior]);
+//   spur_gear2d(pitch, teeth, [hide=], [pressure_angle=], [clearance=], [backlash=], [interior=]) [ATTACHMENTS];
+//   spur_gear2d(mod=, teeth=, [hide=], [pressure_angle=], [clearance=], [backlash=], [interior=]) [ATTACHMENTS];
 // Usage: As Function
-//   poly = spur_gear2d(pitch|mod, teeth, [hide], [pressure_angle], [clearance], [backlash], [interior]);
+//   poly = spur_gear2d(pitch, teeth, [hide=], [pressure_angle=], [clearance=], [backlash=], [interior=]);
+//   poly = spur_gear2d(mod=, teeth=, [hide=], [pressure_angle=], [clearance=], [backlash=], [interior=]);
 // Topics: Gears
 // See Also: spur_gear()
 // Description:
@@ -291,8 +293,8 @@ module spur_gear2d(
 
 // Function&Module: rack()
 // Usage: As a Module
-//   rack(pitch, teeth, thickness, height, [pressure_angle=], [backlash=]);
-//   rack(mod=, teeth=, thickness=, height=, [pressure_angle=], [backlash]=);
+//   rack(pitch, teeth, thickness, height, [pressure_angle=], [backlash=]) [ATTACHMENTS];
+//   rack(mod=, teeth=, thickness=, height=, [pressure_angle=], [backlash]=) [ATTACHMENTS];
 // Usage: As a Function
 //   vnf = rack(pitch, teeth, thickness, height, [pressure_angle=], [backlash=]);
 //   vnf = rack(mod=, teeth=, thickness=, height=, [pressure_angle=], [backlash=]);
@@ -438,10 +440,12 @@ function rack(
 
 
 // Function&Module: rack2d()
-// Usage: As a Function
-//   path = rack2d(pitch|mod, teeth, height, [pressure_angle], [backlash]);
 // Usage: As a Module
-//   rack2d(pitch|mod, teeth, height, [pressure_angle], [backlash]);
+//   path = rack2d(pitch, teeth, height, [pressure_angle=], [backlash=]) [ATTACHMENTS];
+//   path = rack2d(mod=, teeth=, height=, [pressure_angle=], [backlash=]) [ATTACHMENTS];
+// Usage: As a Function
+//   path = rack2d(pitch, teeth, height, [pressure_angle=], [backlash=]);
+//   path = rack2d(mod=, teeth=, height=, [pressure_angle=], [backlash=]);
 // Topics: Gears
 // See Also: spur_gear2d()
 // Description:
@@ -453,6 +457,7 @@ function rack(
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = Total number of teeth along the rack
 //   height = Height of rack in mm, from tooth top to back of rack.
+//   ---
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   mod = The metric module/modulus of the gear.

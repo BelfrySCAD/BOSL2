@@ -14,22 +14,22 @@
 
 // Module: knurled_cylinder()
 // Usage:
-//   knurled_cylinder(l, r|d, [overage], [count], [profile], [helix]);
-//   knurled_cylinder(l, r1|d1, r2|d2, [overage], [count], [profile], [helix]);
+//   knurled_cylinder(l|h|height, r|d=, [count=], [profile=], [helix=]);
+//   knurled_cylinder(l|h|height, r1=|d1=, r2=|d2=, [count=], [profile=], [helix=]);
 // Description:
-//   Creates a mask to difference from a cylinder to give it a knurled surface.
+//   Creates a knurled cylinder.  The knurling is made from small bumps (pyramids) arranged on the surface.
+//   The 
 // Arguments:
-//   l = The length of the axis of the mask.  Default: 10
-//   overage = Extra backing to the mask.  Default: 5
-//   r = The radius of the cylinder to knurl.  Default: 10
+//   l / h / height = The length/height of the cylinder
+//   r = The radius of the cylinder to knurl.  
 //   r1 = The radius of the bottom of the conical cylinder to knurl.
 //   r2 = The radius of the top of the conical cylinder to knurl.
 //   d = The diameter of the cylinder to knurl.
 //   d1 = The diameter of the bottom of the conical cylinder to knurl.
 //   d2 = The diameter of the top of the conical cylinder to knurl.
-//   count = The number of grooves to have around the surface of the cylinder.  Default: 30
-//   profile = The angle of the bottom of the groove, in degrees.  Default 120
-//   helix = The helical angle of the grooves, in degrees.  Default: 30
+//   count = The number of bumps filling one revolution of the cylinder.  Default: 30
+//   profile = The lower angle between the pyramid-shaped bumps.  Smaller angles make the bumps sharper and can lead to bad models if count is small.  Default 120
+//   helix = The helical angle of the bumps, in degrees.  Close to zero produces vertical ribbing.  Close to 90 degrees produces very thin bumps and is not recommended.  Default: 30
 //   chamfer = The size of the chamfers on the ends of the cylinder.  Default: none.
 //   chamfer1 = The size of the chamfer on the bottom end of the cylinder.  Default: none.
 //   chamfer2 = The size of the chamfer on the top end of the cylinder.  Default: none.
@@ -48,8 +48,11 @@
 //   knurled_cylinder(l=30, r=20, count=30, profile=120, helix=30);
 //   knurled_cylinder(l=30, r=20, count=30, profile=90, helix=30);
 //   knurled_cylinder(l=30, r=20, count=20, profile=120, helix=30);
+//   knurled_cylinder(l=30, r=20, count=20, profile=120, helix=0.01);
+//   knurled_cylinder(l=30, r=20, count=20, profile=140, helix=60);
+//   knurled_cylinder(l=30, r1=20, r2=12, count=40, profile=90, helix=55);
 module knurled_cylinder(
-    l=20,
+    l,
     r=undef, r1=undef, r2=undef,
     d=undef, d1=undef, d2=undef,
     count=30, profile=120, helix=30,
@@ -57,8 +60,12 @@ module knurled_cylinder(
     chamfang=undef, chamfang1=undef, chamfang2=undef,
     from_end=false,
     rounding=undef, rounding1=undef, rounding2=undef,
-    anchor=CENTER, spin=0, orient=UP
+    anchor=CENTER, spin=0, orient=UP,
+    height, h
 ) {
+    assert(is_finite(helix) && helix>0 && helix<90, "Must give helix angle between 0 and 90");
+    assert(is_finite(profile) && profile>0 && profile<180, "Must give profile between 0 and 180");
+    l = one_defined([l,h,height],"l,h,height");
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
     inset = r1 * sin(180/count) / tan(profile/2);
@@ -73,8 +80,11 @@ module knurled_cylinder(
     vertices = concat(
         [
             for (layer = [0:1:layers], pt=path)
-                (layer%2)? [pt.x, pt.y, layer*knob_h-layers*knob_h/2] :
-                rot(180/count, p=[pt.x, pt.y, layer*knob_h-layers*knob_h/2])
+                let(scale_factor =  lerp(1,r2/r1,layer/layers))
+                scale([scale_factor,scale_factor,1],
+                    (layer%2)? [pt.x, pt.y, layer*knob_h-layers*knob_h/2] :
+                               rot(180/count, p=[pt.x, pt.y, layer*knob_h-layers*knob_h/2])
+                )
         ], [
             [0,0,-layers*knob_h/2],
             [0,0, layers*knob_h/2]
@@ -127,22 +137,23 @@ module knurled_cylinder(
 
 // Module: knurled_cylinder_mask()
 // Usage:
-//   knurled_cylinder_mask(l, r|d, [overage], [count], [profile], [helix]);
-//   knurled_cylinder_mask(l, r1|d1, r2|d2, [overage], [count], [profile], [helix]);
+//   knurled_cylinder_mask(l|h|height, r|d=, [overage], [count], [profile], [helix]) [ATTACHMENTS];
+//   knurled_cylinder_mask(l|h|height, r=1|d1=, r2=|d2=, [overage=], [count=], [profile=], [helix=],...) [ATTACHMENTS];
 // Description:
 //   Creates a mask to difference from a cylinder to give it a knurled surface.
 // Arguments:
-//   l = The length of the axis of the mask.  Default: 10
+//   l = The length of the axis of the mask.  
+//   r = The radius of the cylinder to knurl.  
 //   overage = Extra backing to the mask.  Default: 5
-//   r = The radius of the cylinder to knurl.  Default: 10
+//   ---
 //   r1 = The radius of the bottom of the conical cylinder to knurl.
 //   r2 = The radius of the top of the conical cylinder to knurl.
 //   d = The diameter of the cylinder to knurl.
 //   d1 = The diameter of the bottom of the conical cylinder to knurl.
 //   d2 = The diameter of the top of the conical cylinder to knurl.
-//   count = The number of grooves to have around the surface of the cylinder.  Default: 30
-//   profile = The angle of the bottom of the groove, in degrees.  Default 120
-//   helix = The helical angle of the grooves, in degrees.  Default: 30
+//   count = The number of bumps filling one revolution of the cylinder.  Default: 30
+//   profile = The lower angle between the pyramid-shaped bumps.  Smaller angles make the bumps sharper and can lead to bad models if count is small.  Default 120
+//   helix = The helical angle of the bumps, in degrees.  Close to zero produces vertical ribbing.  Close to 90 degrees produces very thin bumps and is not recommended.  Default: 30
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -150,18 +161,19 @@ module knurled_cylinder(
 //   knurled_cylinder_mask(l=30, r=20, overage=5, profile=120, helix=30);
 //   knurled_cylinder_mask(l=30, r=20, overage=10, profile=120, helix=30);
 module knurled_cylinder_mask(
-    l=10, overage=5,
-    r=undef, r1=undef, r2=undef,
+    l, r, overage=5,
+    r1=undef, r2=undef,
     d=undef, d1=undef, d2=undef,
     count=30, profile=120, helix=30,
-    anchor=CENTER, spin=0, orient=UP
+    anchor=CENTER, spin=0, orient=UP, height,h
 ) {
+    l = one_defined([l,h,height],"l,h,height");
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
         difference() {
             cylinder(r1=r1+overage, r2=r2+overage, h=l, center=true);
-            knurled_cylinder(r1=r1, r2=r2, l=l+0.01);
+            knurled_cylinder(r1=r1, r2=r2, l=l+0.01, profile=profile, helix=helix,count=count);
         }
         children();
     }
