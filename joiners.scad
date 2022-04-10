@@ -419,7 +419,7 @@ module joiner_quad_clear(xspacing=undef, yspacing=undef, n=2, h=40, w=10, a=30, 
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate=false);
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate=true);
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate="alt");
-module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=undef, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP) = no_function("joiner_quad");
+function joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=undef, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP) = no_function("joiner_quad");
 module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=undef, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
     spacing1 = first_defined([spacing1, xspacing, 100]);
