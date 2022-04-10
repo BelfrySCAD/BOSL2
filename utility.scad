@@ -22,6 +22,8 @@
 // Description:
 //   Returns a string representing the type of the value.  One of "undef", "boolean", "number", "nan", "string", "list", "range", "function" or "invalid".
 //   Some malformed "ranges", like '[0:NAN:INF]' and '[0:"a":INF]', may be classified as "undef" or "invalid".
+// Arguments:
+//   x = value whose type to check
 // Example:
 //   typ = typeof(undef);  // Returns: "undef"
 //   typ = typeof(true);  // Returns: "boolean"
@@ -75,6 +77,8 @@ function is_type(x,types) =
 // See Also: typeof(), is_type(), is_str()
 // Description:
 //   Returns true if `x` is not `undef`.  False if `x==undef`.
+// Arguments:
+//   x = value to check
 // Example:
 //   bool = is_def(undef);  // Returns: false
 //   bool = is_def(false);  // Returns: true
@@ -90,6 +94,8 @@ function is_def(x) = !is_undef(x);
 // See Also: typeof(), is_type(), is_int(), is_def()
 // Description:
 //   Returns true if `x` is a string.  A shortcut for `is_string()`.
+// Arguments:
+//   x = value to check
 // Example:
 //   bool = is_str(undef);  // Returns: false
 //   bool = is_str(false);  // Returns: false
@@ -107,6 +113,8 @@ function is_str(x) = is_string(x);
 // See Also: typeof(), is_type(), is_str(), is_def()
 // Description:
 //   Returns true if the given value is an integer (it is a number and it rounds to itself).  
+// Arguments:
+//   n = value to check
 // Example:
 //   bool = is_int(undef);  // Returns: false
 //   bool = is_int(false);  // Returns: false
@@ -147,6 +155,8 @@ function all_integer(x) =
 // See Also: typeof(), is_type(), is_str(), is_def(), is_int()
 // Description:
 //   Returns true if a given value `x` is nan, a floating point value representing "not a number".
+// Arguments:
+//   x = value to check
 // Example:
 //   bool = is_nan(undef);  // Returns: false
 //   bool = is_nan(false);  // Returns: false
@@ -163,6 +173,8 @@ function is_nan(x) = (x!=x);
 // See Also: typeof(), is_type(), is_str(), is_def(), is_int(), is_nan()
 // Description:
 //   Returns true if a given value `x` is a finite number.
+// Arguments:
+//   x = value to check
 // Example:
 //   bool = is_finite(undef);  // Returns: false
 //   bool = is_finite(false);  // Returns: false
@@ -181,6 +193,8 @@ function is_finite(x) = is_num(x) && !is_nan(0*x);
 // See Also: typeof(), is_type(), is_str(), is_def(), is_int()
 // Description:
 //   Returns true if its argument is a range
+// Arguments:
+//   x = value to check
 // Example:
 //   bool = is_range(undef);   // Returns: false
 //   bool = is_range(false);   // Returns: false
@@ -198,6 +212,8 @@ function is_range(x) = !is_list(x) && is_finite(x[0]) && is_finite(x[1]) && is_f
 // See Also: typeof(), is_type(), is_str(), is_def(), is_int(), is_range()
 // Description:
 //   Returns true if its argument is a valid range (deprecated ranges excluded).
+// Arguments:
+//   x = value to check
 // Example:
 //   bool = is_range(undef);   // Returns: false
 //   bool = is_range(false);   // Returns: false
@@ -219,7 +235,7 @@ function valid_range(x) =
 // Description:
 //   Returns true if OpenSCAD supports function literals, and the given item is one.
 // Arguments:
-//   x = The value to check against.
+//   x = The value to check
 // Example:
 //   f = function (a) a==2;
 //   bool = is_func(f);  // Returns: true
@@ -307,7 +323,7 @@ function is_bool_list(list, length) =
 //   Otherwise, returns the value of `dflt`.
 // Arguments:
 //   v = Value to pass through if not `undef`.
-//   dflt = Value to return if `v` *is* `undef`.
+//   dflt = Value to return if `v` *is* `undef`.  Default: undef
 function default(v,dflt=undef) = is_undef(v)? dflt : v;
 
 
@@ -321,7 +337,7 @@ function default(v,dflt=undef) = is_undef(v)? dflt : v;
 //   If all items are `undef`, or list is empty, returns `undef`.
 // Arguments:
 //   v = The list whose items are being checked.
-//   recursive = If true, sublists are checked recursively for defined values.  The first sublist that has a defined item is returned.
+//   recursive = If true, sublists are checked recursively for defined values.  The first sublist that has a defined item is returned.  Default: false
 // Example:
 //   val = first_defined([undef,7,undef,true]);  // Returns: 7
 function first_defined(v,recursive=false,_i=0) =
@@ -396,7 +412,7 @@ function num_defined(v) =
 //   Returns true if any item in the given array is not `undef`.
 // Arguments:
 //   v = The list whose items are being checked.
-//   recursive = If true, any sublists are evaluated recursively.
+//   recursive = If true, any sublists are evaluated recursively.  Default: false
 // Example:
 //   bool = any_defined([undef,undef,undef]);    // Returns: false
 //   bool = any_defined([undef,42,undef]);       // Returns: true
@@ -415,7 +431,7 @@ function any_defined(v,recursive=false) =
 //   Returns true if all items in the given array are not `undef`.
 // Arguments:
 //   v = The list whose items are being checked.
-//   recursive = If true, any sublists are evaluated recursively.
+//   recursive = If true, any sublists are evaluated recursively.  Default: false
 // Example:
 //   bool = all_defined([undef,undef,undef]);    // Returns: false
 //   bool = all_defined([undef,42,undef]);       // Returns: false
@@ -492,7 +508,7 @@ function u_div(a,b) =
 //   bool = any(l);
 //   bool = any(l, func);   // Requires OpenSCAD 2021.01 or later.
 // Requirements:
-//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
+//   Requires OpenSCAD 2021.01 or later to use the `func` argument.
 // Description:
 //   Returns true if any item in list `l` evaluates as true.
 // Arguments:
@@ -525,7 +541,7 @@ function _any_bool(l, i=0, out=false) =
 //   bool = all(l);
 //   bool = all(l, func);   // Requires OpenSCAD 2021.01 or later.
 // Requirements:
-//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
+//   Requires OpenSCAD 2021.01 or later to use the `func` argument.
 // Description:
 //   Returns true if all items in list `l` evaluate as true.  If `func` is given a function liteal
 //   of signature (x), returning bool, then that function literal is evaluated for each list item.
@@ -823,7 +839,7 @@ function _valstr(x) =
 //   expected = The value that was expected.
 //   info = Extra info to print out to make the error clearer.
 // Example:
-//   assert_approx(1/3, 0.333333333333333, str("number=",1,", demon=",3));
+//   assert_approx(1/3, 0.333333333333333, str("number=",1,", denom=",3));
 module assert_approx(got, expected, info) {
     no_children($children);
     if (!approx(got, expected)) {
@@ -874,7 +890,7 @@ module assert_equal(got, expected, info) {
 
 // Module: shape_compare()
 // Usage:
-//   shape_compare([eps]) {test_shape(); expected_shape();}
+//   shape_compare([eps]) {TEST_SHAPE; EXPECTED_SHAPE;}
 // Topics: Error Checking, Debugging, Testing
 // See Also: assert_approx(), assert_equal()
 // Description:
@@ -889,6 +905,7 @@ module assert_equal(got, expected, info) {
 //       rotate_extrude() right_half(planar=true) circle(d=100);
 //   }
 module shape_compare(eps=1/1024) {
+    assert($children==2,"Must give exactly two children");
     union() {
         difference() {
             children(0);
