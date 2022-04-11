@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: joiners.scad
-//   Snap-together joiners.
+//   Modules for joining separately printed parts including screw together, snap-together and dovetails. 
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/joiners.scad>
@@ -19,11 +19,12 @@ include <rounding.scad>
 // Description:
 //   Creates a mask to clear an area so that a half_joiner can be placed there.
 // Usage:
-//   half_joiner_clear(h, w, [a], [clearance], [overlap])
+//   half_joiner_clear(h, w, [a], [clearance=], [overlap=]) [ATTACHMENTS];
 // Arguments:
 //   h = Height of the joiner to clear space for.
 //   w = Width of the joiner to clear space for.
 //   a = Overhang angle of the joiner.
+//   ---
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -31,6 +32,7 @@ include <rounding.scad>
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   half_joiner_clear();
+function half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP) = no_function("half_joiner_clear");
 module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
 {
     dmnd_height = h*1.0;
@@ -62,7 +64,7 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CEN
 
 // Module: half_joiner()
 // Usage:
-//   half_joiner(h, w, l, [a], [screwsize], [guides], [$slop])
+//   half_joiner(h, w, l, [a], [screwsize=], [guides=], [$slop=]) [ATTACHMENTS];
 // Description:
 //   Creates a half_joiner object that can be attached to half_joiner2 object.
 // Arguments:
@@ -70,6 +72,7 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CEN
 //   w = Width of the half_joiner.
 //   l = Length of the backing to the half_joiner.
 //   a = Overhang angle of the half_joiner.
+//   ---
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -79,6 +82,7 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CEN
 // Examples(FlatSpin,VPD=75):
 //   half_joiner(screwsize=3);
 //   half_joiner(h=20,w=10,l=10);
+function half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP) = no_function("half_joiner");
 module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
     dmnd_height = h*1.0;
@@ -141,7 +145,7 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=
 
 // Module: half_joiner2()
 // Usage:
-//   half_joiner2(h, w, l, [a], [screwsize], [guides])
+//   half_joiner2(h, w, l, [a], [screwsize=], [guides=])
 // Description:
 //   Creates a half_joiner2 object that can be attached to half_joiner object.
 // Arguments:
@@ -149,6 +153,7 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=
 //   w = Width of the half_joiner.
 //   l = Length of the backing to the half_joiner.
 //   a = Overhang angle of the half_joiner.
+//   ---
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -157,6 +162,7 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=
 // Examples(FlatSpin,VPD=75):
 //   half_joiner2(screwsize=3);
 //   half_joiner2(h=20,w=10,l=10);
+function half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP) = no_function("half_joiner2");
 module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
     dmnd_height = h*1.0;
@@ -193,11 +199,12 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor
 // Description:
 //   Creates a mask to clear an area so that a joiner can be placed there.
 // Usage:
-//   joiner_clear(h, w, [a], [clearance], [overlap])
+//   joiner_clear(h, w, [a], [clearance=], [overlap=]) [ATTACHMENTS];
 // Arguments:
 //   h = Height of the joiner to clear space for.
 //   w = Width of the joiner to clear space for.
 //   a = Overhang angle of the joiner.
+//   ---
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -205,6 +212,7 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   joiner_clear();
+function joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP) = no_function("joiner_clear");
 module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
 {
     dmnd_height = h*0.5;
@@ -225,7 +233,7 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, 
 
 // Module: joiner()
 // Usage:
-//   joiner(h, w, l, [a], [screwsize], [guides], [$slop])
+//   joiner(h, w, l, [a], [screwsize=], [guides=], [$slop=]) [ATTACHMENTS];
 // Description:
 //   Creates a joiner object that can be attached to another joiner object.
 // Arguments:
@@ -233,6 +241,7 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, 
 //   w = Width of the joiner.
 //   l = Length of the backing to the joiner.
 //   a = Overhang angle of the joiner.
+//   ---
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -242,6 +251,7 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, 
 // Examples(FlatSpin,VPD=125):
 //   joiner(screwsize=3);
 //   joiner(w=10, l=10, h=40);
+function joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP) = no_function("joiner");
 module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
     attachable(anchor,spin,orient, size=[w, 2*l, h]) {
@@ -262,13 +272,14 @@ module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTE
 // Description:
 //   Creates a mask to clear an area so that a pair of joiners can be placed there.
 // Usage:
-//   joiner_pair_clear(spacing, [n], [h], [w], [a], [clearance], [overlap])
+//   joiner_pair_clear(spacing, [n], [h], [w], [a], [clearance=], [overlap=]) [ATTACHMENTS];
 // Arguments:
 //   spacing = Spacing between joiner centers.
+//   n = Number of joiners (2 by default) to clear for.
 //   h = Height of the joiner to clear space for.
 //   w = Width of the joiner to clear space for.
 //   a = Overhang angle of the joiner.
-//   n = Number of joiners (2 by default) to clear for.
+//   ---
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -277,7 +288,8 @@ module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTE
 // Examples:
 //   joiner_pair_clear(spacing=50, n=2);
 //   joiner_pair_clear(spacing=50, n=3);
-module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
+function joiner_pair_clear(spacing=100, n=2, h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP) = no_function("joiner_pair_clear");
+module joiner_pair_clear(spacing=100, n=2, h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
 {
     dmnd_height = h*0.5;
     dmnd_width = dmnd_height*tan(a);
@@ -296,16 +308,17 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overla
 
 // Module: joiner_pair()
 // Usage:
-//   joiner_pair(h, w, l, [a], [screwsize], [guides], [$slop])
+//   joiner_pair(spacing, [n], h, w, l, [a], [alternate=], [screwsize=], [guides=], [$slop=]) [ATTACHMENTS];
 // Description:
 //   Creates a joiner_pair object that can be attached to other joiner_pairs .
 // Arguments:
 //   spacing = Spacing between joiner centers.
+//   n = Number of joiners in a row.  Default: 2
 //   h = Height of the joiners.
 //   w = Width of the joiners.
 //   l = Length of the backing to the joiners.
 //   a = Overhang angle of the joiners.
-//   n = Number of joiners in a row.  Default: 2
+//   ---
 //   alternate = If true (default), each joiner alternates it's orientation.  If alternate is "alt", do opposite alternating orientations.
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
@@ -319,6 +332,7 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overla
 //   joiner_pair(spacing=50, l=10, n=3, alternate=false);
 //   joiner_pair(spacing=50, l=10, n=3, alternate=true);
 //   joiner_pair(spacing=50, l=10, n=3, alternate="alt");
+function joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP) = no_function("joiner_pair");
 module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
     attachable(anchor,spin,orient, size=[spacing+w, 2*l, h]) {
@@ -344,14 +358,15 @@ module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, scr
 // Description:
 //   Creates a mask to clear an area so that a pair of joiners can be placed there.
 // Usage:
-//   joiner_quad_clear(spacing, [n], [h], [w], [a], [clearance], [overlap])
+//   joiner_quad_clear([xspacing|spacing1=],[yspacing|spacing2=], [n], [h], [w], [a], [clearance], [overlap]) [ATTACHMENTS];
 // Arguments:
-//   spacing1 = Spacing between joiner centers.
-//   spacing2 = Spacing between back-to-back pairs/sets of joiners.
+//   spacing1 / xspacing = Spacing between joiner centers.
+//   spacing2 / yspacing = Spacing between back-to-back pairs/sets of joiners.
+//   n = Number of joiners in a row.  Default: 2
 //   h = Height of the joiner to clear space for.
 //   w = Width of the joiner to clear space for.
 //   a = Overhang angle of the joiner.
-//   n = Number of joiners in a row.  Default: 2
+//   ---
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -360,7 +375,8 @@ module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, scr
 // Examples:
 //   joiner_quad_clear(spacing1=50, spacing2=50, n=2);
 //   joiner_quad_clear(spacing1=50, spacing2=50, n=3);
-module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing2=undef, n=2, h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
+function joiner_quad_clear(xspacing=undef, yspacing=undef, n=2, h=40, w=10, a=30, spacing1=undef, spacing2=undef, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)=no_function("joiner_quad_clear");
+module joiner_quad_clear(xspacing=undef, yspacing=undef, n=2, h=40, w=10, a=30, spacing1=undef, spacing2=undef, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
 {
     spacing1 = first_defined([spacing1, xspacing, 100]);
     spacing2 = first_defined([spacing2, yspacing, 50]);
@@ -378,16 +394,18 @@ module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing
 
 // Module: joiner_quad()
 // Usage:
-//   joiner_quad(h, w, l, [a], [screwsize], [guides], [$slop])
+//   joiner_quad([xspacing|spacing1=], [yspacing|spacing2=], [n], h, w, l, [a], [alternate=], [screwsize=], [guides=], [$slop=]) [ATTACHMENTS];
 // Description:
 //   Creates a joiner_quad object that can be attached to other joiner_pairs .
 // Arguments:
-//   spacing = Spacing between joiner centers.
+//   spacing1 / xspacing = Spacing between joiner centers.
+//   spacing2 / yspacing = Spacing between back-to-back pairs/sets of joiners.
+//   n = Number of joiners in a row.  Default: 2
 //   h = Height of the joiners.
 //   w = Width of the joiners.
 //   l = Length of the backing to the joiners.
 //   a = Overhang angle of the joiners.
-//   n = Number of joiners in a row.  Default: 2
+//   ---
 //   alternate = If true (default), joiners on each side alternate orientations.  If alternate is "alt", do opposite alternating orientations.
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
@@ -401,6 +419,7 @@ module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate=false);
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate=true);
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate="alt");
+function joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=undef, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP) = no_function("joiner_quad");
 module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=undef, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
     spacing1 = first_defined([spacing1, xspacing, 100]);
@@ -421,7 +440,7 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 // Module: dovetail()
 //
 // Usage:
-//   dovetail(gender, w|width, h|height, slide, [slope|angle], [taper|back_width], [chamfer], [r|radius], [round], [extra], [$slop])
+//   dovetail(gender, w=|width, h=|height, slide, [slope=|angle=], [taper=|back_width=], [chamfer=], [r=|radius=], [round=], [extra=], [$slop=])
 //
 // Description:
 //   Produces a possibly tapered dovetail joint shape to attach to or subtract from two parts you wish to join together.
@@ -500,6 +519,7 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 //   diff("remove")
 //     cuboid([50,30,10])
 //       position(TOP+BACK) xcopies(10,5) dovetail("female", slide=10, width=7, taper=4, height=4, $tags="remove",anchor=BOTTOM+FRONT,spin=180);
+function dovetail(gender, width, height, slide, h, w, angle, slope, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient) = no_function("dovetail");
 module dovetail(gender, width, height, slide, h, w, angle, slope, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
 {
     radius = get_radius(r1=radius,r2=r);
@@ -656,8 +676,8 @@ function _pin_size(size) =
 
 // Module: snap_pin()
 // Usage:
-//    snap_pin(size, [pointed], [anchor], [spin], [orient])
-//    snap_pin(r|radius|d|diameter, l|length, nub_depth, snap, thickness, [clearance], [preload], [pointed], [anchor], [spin], [orient])
+//    snap_pin(size, [pointed=], [anchor=], [spin=], [orient]=) [ATTACHMENTS];
+//    snap_pin(r=|radius=|d=|diameter=, l=|length=, nub_depth=, snap=, thickness=, [clearance=], [preload=], [pointed=]) [ATTACHMENTS];
 // Description:
 //    Creates a snap pin that can be inserted into an appropriate socket to connect two objects together.  You can choose from some standard
 //    pin dimensions by giving a size, or you can specify all the pin geometry parameters yourself.  If you use a standard size you can
@@ -674,6 +694,7 @@ function _pin_size(size) =
 //    and distributed under the Creative Commons - Attribution - Share Alike License
 // Arguments:
 //    size = text string to select from a list of predefined sizes, one of "standard", "small", or "tiny".
+//    ---
 //    pointed = set to true to get a pointed pin, false to get one with a rounded end.  Default: true
 //    r/radius = radius of the pin
 //    d/diameter = diameter of the pin
@@ -688,6 +709,7 @@ function _pin_size(size) =
 //    snap_pin("standard", anchor=CENTER, orient=UP, thickness = 1, $fn=40);
 // Example: Pins oriented for printing
 //    xcopies(spacing=10, n=4) snap_pin("standard", $fn=40);
+function snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, clearance=0.2, preload, pointed=true, anchor=FRONT, spin=0, orient=FRONT, center) =no_function("snap_pin");
 module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, clearance=0.2, preload, pointed=true, anchor=FRONT, spin=0, orient=FRONT, center) {
   preload_default = 0.2;
   sizedat = _pin_size(size);
@@ -724,8 +746,8 @@ module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, 
 
 // Module: snap_pin_socket()
 // Usage:
-//   snap_pin_socket(size, [fixed], [fins], [pointed], [anchor], [spin], [orient]);
-//   snap_pin_socket(r|radius|d|diameter, l|length, nub_depth, snap, [fixed], [pointed], [fins], [anchor], [spin], [orient])
+//   snap_pin_socket(size, [fixed=], [fins=], [pointed=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   snap_pin_socket(r=|radius=|d=|diameter=, l=|length=, nub_depth=, snap=, [fixed=], [pointed=], [fins=]) [ATTACHMENTS];
 // Description:
 //   Constructs a socket suitable for a snap_pin with the same parameters.   If `fixed` is true then the socket has flat walls and the
 //   pin will not rotate in the socket.  If `fixed` is false then the socket is round and the pin will rotate, particularly well
@@ -739,6 +761,7 @@ module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, 
 //   has a length of 6 and diameter of 3.2.  The "tiny" pin has a length of 4 and a diameter of 2.5.  
 // Arguments:
 //   size = text string to select from a list of predefined sizes, one of "standard", "small", or "tiny".
+//   ---
 //   pointed = set to true to get a pointed pin, false to get one with a rounded end.  Default: true
 //   r/radius = radius of the pin
 //   d/diameter = diameter of the pin
@@ -757,7 +780,8 @@ module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, 
 //   diff("socket") cuboid([20,20,20]) {
 //     attach(TOP) snap_pin_socket("standard", $tags="socket");
 //     position(TOP+FRONT)snap_pin_socket("standard", $tags="socket");
-//   }  
+//   }
+function snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fixed=true, pointed=true, fins=false, anchor=BOTTOM, spin=0, orient=DOWN) = no_function("snap_pin_socket");
 module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fixed=true, pointed=true, fins=false, anchor=BOTTOM, spin=0, orient=DOWN) {
   sizedat = _pin_size(size);
   radius = get_radius(r1=r,r2=radius,d1=d,d2=diameter,dflt=struct_val(sizedat,"diameter")/2);
@@ -791,7 +815,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 
 // Module: rabbit_clip()
 // Usage:
-//   rabbit_clip(type, length, width, snap, thickness, depth, [compression], [clearance], [lock], [lock_clearance], [splineteps], [anchor], [orient], [spin])
+//   rabbit_clip(type, length, width, snap, thickness, depth, [compression=], [clearance=], [lock=], [lock_clearance=], [splineteps=], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
 //   Creates a clip with two flexible ears to lock into a mating socket, or create a mask to produce the appropriate
 //   mating socket.  The clip can be made to insert and release easily, or to hold much better, or it can be
@@ -871,6 +895,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //   snap = depth of hollow on the side of the clip
 //   thickness = thickness of the clip "line"
 //   depth = amount to extrude clip (give extra room for the socket, about 0.4mm)
+//   ---
 //   compression = excess width at the "ears" to lock more tightly.  Default: 0.1
 //   clearance = extra space in the socket for easier insertion.  Default: 0.1
 //   lock = set to true to make a locking clip that may be irreversible.  Default: false
@@ -920,6 +945,10 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //         xscale(0.8)
 //         zcyl(l=20,r=13.5, $tags="remove",$fn=64);
 //   }
+
+function rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1,  clearance=.1, lock=false, lock_clearance=0,
+                   splinesteps=8, anchor, orient, spin=0) = no_function("rabbit_clip");
+
 module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1,  clearance=.1, lock=false, lock_clearance=0,
                    splinesteps=8, anchor, orient, spin=0)
 {

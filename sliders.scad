@@ -16,11 +16,12 @@
 // Description:
 //   Creates a slider to match a V-groove rail.
 // Usage:
-//   slider(l, w, h, [base], [wall], [ang], [$slop])
+//   slider(l, w, h, [base=], [wall=], [ang=], [$slop=]) [ATTACHMENTS];
 // Arguments:
 //   l = Length (long axis) of slider.
 //   w = Width of slider.
 //   h = Height of slider.
+//   ---
 //   base = Height of slider base.
 //   wall = Width of wall behind each side of the slider.
 //   ang = Overhang angle for slider, to facilitate supportless printig.
@@ -30,6 +31,7 @@
 //   $slop = The printer-specific slop value to make parts fit just right.
 // Example:
 //   slider(l=30, base=10, wall=4, $slop=0.2, spin=90);
+function slider(l=30, w=10, h=10, base=10, wall=5, ang=30, anchor=BOTTOM, spin=0, orient=UP) = no_function("slider");
 module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, anchor=BOTTOM, spin=0, orient=UP)
 {
     full_width = w + 2*wall;
@@ -64,11 +66,12 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, anchor=BOTTOM, spin=0, 
 // Description:
 //   Creates a V-groove rail.
 // Usage:
-//   rail(l, w, h, [chamfer], [ang])
+//   rail(l, w, h, [chamfer=], [ang=]) [ATTACHMENTS];
 // Arguments:
 //   l = Length (long axis) of slider.
 //   w = Width of slider.
 //   h = Height of slider.
+//   ---
 //   chamfer = Size of chamfer at end of rail.
 //   ang = Overhang angle for slider, to facilitate supportless printig.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
@@ -76,6 +79,7 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, anchor=BOTTOM, spin=0, 
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   rail(l=100, w=10, h=10);
+function rail(l=30, w=10, h=10, chamfer=1.0, ang=30, anchor=BOTTOM, spin=0, orient=UP) = no_function("rail");
 module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, anchor=BOTTOM, spin=0, orient=UP)
 {
     attack_ang = 30;
