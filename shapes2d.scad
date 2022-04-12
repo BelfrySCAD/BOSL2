@@ -1584,7 +1584,7 @@ module text(text, size=10, font="Helvetica", halign, valign, spacing=1.0, direct
         assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin));
     anchor = default(anchor, CENTER);
     spin =   default(spin,   0);
-    geom = _attach_geom(size=[size,size],two_d=true);
+    geom = attach_geom(size=[size,size],two_d=true);
     anch = !any([for (c=anchor) c=="["])? anchor :
         let(
             parts = str_split(str_split(str_split(anchor,"]")[0],"[")[1],","),

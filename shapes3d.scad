@@ -2442,7 +2442,7 @@ module text3d(text, h=1, size=10, font="Helvetica", halign, valign, spacing=1.0,
     anchor = default(anchor, CENTER);
     spin =   default(spin,   0);
     orient = default(orient, UP);
-    geom = _attach_geom(size=[size,size,h]);
+    geom = attach_geom(size=[size,size,h]);
     anch = !any([for (c=anchor) c=="["])? anchor :
         let(
             parts = str_split(str_split(str_split(anchor,"]")[0],"[")[1],","),
