@@ -707,7 +707,7 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 
 // Function: offset()
 // Usage:
-//   offsetpath = offset(path, [r=|delta=], [chamfer=], [closed=], [check_valid=], [quality=])
+//   offsetpath = offset(path, [r=|delta=], [chamfer=], [closed=], [check_valid=], [quality=], [same_length=])
 //   path_faces = offset(path, return_faces=true, [r=|delta=], [chamfer=], [closed=], [check_valid=], [quality=], [firstface_index=], [flip_faces=])
 // Description:
 //   Takes a 2D input path, polygon or region and returns a path offset by the specified amount.  As with the built-in
@@ -727,7 +727,15 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   some situations you may be able to decrease run time by setting quality to 0, which causes only
 //   segment ends to be checked.
 //   .
-//   For construction of polyhedra `offset()` can also return face lists.  These list faces between
+//   When invalid segments are eliminated, the path length decreases.  If you use chamfering or rounding, then
+//   the chamfers and roundings can increase the length of the output path.  Hence points in the output may be 
+//   difficult to associate with the input.  If you want to maintain alignment between the points you
+//   can use the `same_length` option.  This option requires that you use `delta=` with `chamfer=false` to ensure
+//   that no points are added.  When points collapse to a single point in the offset, the output includes
+//   that point repeated to preserve the correct length.  
+//   .
+//   Another way to obtain alignment information is to use the return_faces option, which can
+//   provide alignment information for all offset parameters: it returns a face list which lists faces between
 //   the original path and the offset path where the vertices are ordered with the original path
 //   first, starting at `firstface_index` and the offset path vertices appearing afterwords.  The
 //   direction of the faces can be flipped using `flip_faces`.  When you request faces the return
@@ -741,9 +749,11 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   closed = if true path is treate as a polygon. Default: False.
 //   check_valid = perform segment validity check.  Default: True.
 //   quality = validity check quality parameter, a small integer.  Default: 1.
+//   same_length = return a path with the same length as the input.  Only compatible with `delta=`.  Default: false
 //   return_faces = return face list.  Default: False.
 //   firstface_index = starting index for face list.  Default: 0.
 //   flip_faces = flip face direction.  Default: false
+
 // Example(2D,NoAxes):
 //   star = star(5, r=100, ir=30);
 //   #stroke(closed=true, star, width=3);
@@ -812,12 +822,21 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //                          square([40,20], center=true)));
 //   #linear_extrude(height=1.1) stroke(rgn, width=1);
 //   region(offset(rgn, r=-5));
+// Example(2D,NoAxes): Using `same_length=true` to align the original curve to the offset.  Note that lots of points map to the corner at the top.
+//   closed=false;
+//   path = [for(angle=[0:5:180]) 10*[angle/100,2*sin(angle)]];
+//   opath = offset(path, delta=-3,same_length=true,closed=closed);
+//   stroke(path,closed=closed,width=.3);
+//   stroke(opath,closed=closed,width=.3);
+//   color("red") for(i=idx(path)) stroke([path[i],opath[i]],width=.3);
+
 function offset(
     path, r=undef, delta=undef, chamfer=false,
     closed=false, check_valid=true,
     quality=1, return_faces=false, firstface_index=0,
-    flip_faces=false
-) = 
+    flip_faces=false, same_length=false
+) =
+    assert(!(same_length && return_faces), "Cannot combine return_faces with same_length")
     is_region(path)?
         assert(!return_faces, "return_faces not supported for regions.")
         let(
@@ -829,6 +848,7 @@ function offset(
     :
     let(rcount = num_defined([r,delta]))
     assert(rcount==1,"Must define exactly one of 'delta' and 'r'")
+    assert(!same_length || (is_def(delta) && !chamfer), "Must specify delta, with chamfer=false, when same_length=true")
     assert(is_path(path), "Input must be a path or region")
     let(
         chamfer = is_def(r) ? false : chamfer,
@@ -917,8 +937,10 @@ function offset(
             _makefaces(
                 flip_faces, firstface_index, good,
                 pointcount, closed
-            )
-    ) return_faces? [edges,faces] : edges;
+            ),
+        final_edges = same_length ? select(edges, [0,each list_head (cumsum([for(g=good) g?1:0]))])
+                                  : edges
+    ) return_faces? [edges,faces] : final_edges;
 
 
 
