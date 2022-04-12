@@ -56,7 +56,7 @@
 //   }
 module apply_folding_hinges_and_snaps(thick, foldangle=90, hinges=[], snaps=[], sockets=[], snaplen=5, snapdiam=5, hingegap=undef, layerheight=0.2)
 {
-    hingegap = default(hingegap, layerheight)+2*$slop;
+    hingegap = default(hingegap, layerheight)+2*get_slop();
     difference() {
         children();
         for (hinge = hinges) {
@@ -111,7 +111,7 @@ module apply_folding_hinges_and_snaps(thick, foldangle=90, hinges=[], snaps=[], 
 //   folding_hinge_mask(l=100, thick=3, foldangle=60);
 module folding_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
 {
-    hingegap = default(hingegap, layerheight)+2*$slop;
+    hingegap = default(hingegap, layerheight)+2*get_slop();
     size = [l, hingegap, 2*thick];
     size2 = [l, hingegap+2*thick*tan(foldangle/2)];
     attachable(anchor,spin,orient, size=size, size2=size2) {
@@ -141,7 +141,7 @@ module folding_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=unde
 //   snap_lock(thick=3, foldangle=60);
 module snap_lock(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
 {
-    hingegap = default(hingegap, layerheight)+2*$slop;
+    hingegap = default(hingegap, layerheight)+2*get_slop();
     snap_x = (snapdiam/2) / tan(foldangle/2) + (thick-2*layerheight)/tan(foldangle/2) + hingegap/2;
     size = [snaplen, snapdiam, 2*thick];
     attachable(anchor,spin,orient, size=size) {
@@ -176,12 +176,12 @@ module snap_lock(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hi
 //   snap_socket(thick=3, foldangle=60);
 module snap_socket(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
 {
-    hingegap = default(hingegap, layerheight)+2*$slop;
+    hingegap = default(hingegap, layerheight)+2*get_slop();
     snap_x = (snapdiam/2) / tan(foldangle/2) + (thick-2*layerheight)/tan(foldangle/2) + hingegap/2;
     size = [snaplen, snapdiam, 2*thick];
     attachable(anchor,spin,orient, size=size) {
         fwd(snap_x) {
-            zrot_copies([0,180], r=snaplen+$slop) {
+            zrot_copies([0,180], r=snaplen+get_slop()) {
                 diff("divot")
                 cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
                     attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=16);

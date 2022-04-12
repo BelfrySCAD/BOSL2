@@ -164,6 +164,7 @@ module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
 // Example(2D):
 //   torx_mask2d(size=30, $fa=1, $fs=1);
 module torx_mask2d(size) {
+    no_children($children);
     od = torx_diam(size);
     id = _torx_inner_diam(size);
     tip = _torx_tip_radius(size);
@@ -360,7 +361,7 @@ module robertson_mask(size, extra=1, ang=2.5) {
     Fmax = [0.038, 0.065, 0.075, 0.095, 0.100][size];
     F = (Fmin + Fmax) / 2 * INCH;
     h = T + extra;
-    Mslop=M+2*$slop;
+    Mslop=M+2*get_slop();
     down(T) {
         intersection(){
             Mtop = Mslop + 2*adj_ang_to_opp(F+extra,ang);

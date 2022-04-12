@@ -469,9 +469,9 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, anchor=TOP, spin=0, orient
 module nema_mount_holes(size=17, depth=5, l=5, anchor=CENTER, spin=0, orient=UP)
 {
     motor_width = nema_motor_width(size);
-    plinth_diam = nema_motor_plinth_diam(size)+$slop;
+    plinth_diam = nema_motor_plinth_diam(size)+get_slop();
     screw_spacing = nema_motor_screw_spacing(size);
-    screw_size = nema_motor_screw_size(size)+$slop;
+    screw_size = nema_motor_screw_size(size)+get_slop();
 
     anchors = [
         named_anchor("screw1", [+screw_spacing/2, +screw_spacing/2, depth/2]),

@@ -41,16 +41,16 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, anchor=BOTTOM, spin=0, 
         zrot(90)
         down(base+h/2) {
             // Base
-            cuboid([full_width, l, base-$slop], chamfer=2, edges=[FRONT,BACK], except_edges=BOT, anchor=BOTTOM);
+            cuboid([full_width, l, base-get_slop()], chamfer=2, edges=[FRONT,BACK], except_edges=BOT, anchor=BOTTOM);
 
             // Wall
-            xflip_copy(offset=w/2+$slop) {
+            xflip_copy(offset=w/2+get_slop()) {
                 cuboid([wall, l, full_height], chamfer=2, edges=RIGHT, except_edges=BOT, anchor=BOTTOM+LEFT);
             }
 
             // Sliders
             up(base+h/2) {
-                xflip_copy(offset=w/2+$slop+0.02) {
+                xflip_copy(offset=w/2+get_slop()+0.02) {
                     bev_h = h/2*tan(ang);
                     prismoid([h, l], [0, l-w], h=bev_h+0.01, orient=LEFT, anchor=BOT);
                 }

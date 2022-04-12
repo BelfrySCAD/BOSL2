@@ -22,6 +22,11 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 //   `2*$slop` to each side.  This should be done for both X and Y axes.  The Z axis will require a
 //   slop that depends on your layer height and bridging settings, and hole sizes.  We leave that as
 //   a more complicated exercise for the user.
+//   .
+//   Note that the slop value is accessed using the {{get_slop()}} function.  This function provides
+//   the default value of 0 if you have not set `$slop`. This approach makes it possible for you to
+//   set `$slop` in your programs without experiencing peculiar OpenSCAD issues having to do with multiple
+//   definitions of the variable.  If you write code that uses `$slop` be sure to reference it using {{get_slop()}}. 
 // DefineHeader(NumList): Calibration
 // Calibration: To calibrate the `$slop` value for your printer, follow this procedure:
 //   Print the Slop Calibration part from the example below.
@@ -92,7 +97,14 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 //         text("gap", size=1.5, halign="center");
 //     }
 //   }
-$slop = 0.0;
+
+// Function: get_slop()
+// Usage:
+//    slop = get_slop();
+// Description:
+//    Returns the current $slop value, or the default value if the user did not set $slop.
+//    Always acess the `$slop` variable using this function.  
+function get_slop() = is_undef($slop) ? 0 : $slop;
 
 
 // Constant: INCH

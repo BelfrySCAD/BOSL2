@@ -204,11 +204,11 @@ module cubetruss_clip(extents=1, size, strut, clipthick, anchor=CENTER, spin=0, 
                             }
                         }
                         fwd(strut*3/2) {
-                            cube([$slop, strut*3, size], center=true);
+                            cube([get_slop(), strut*3, size], center=true);
                         }
                     }
-                    right($slop/2+0.01) {
-                        fwd(strut*1.25+$slop) {
+                    right(get_slop()/2+0.01) {
+                        fwd(strut*1.25+get_slop()) {
                             yrot(-90) prismoid([clipheight-cliplen*2, strut/2], [clipheight-cliplen*2-2*clipsize, strut/2], h=clipsize+0.01);
                         }
                     }
@@ -268,7 +268,7 @@ module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient
             }
 
             // Horiz Wall Clips
-            up(clipthick+strut+$slop*2) {
+            up(clipthick+strut+get_slop()*2) {
                 xcopies(w*(size-strut)+strut) {
                     prismoid([clipsize*2, size/3.5], [0.1, size/3.5], h=clipsize*3, anchor=BOT);
                 }
@@ -280,19 +280,19 @@ module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient
                     difference() {
                         // Start with octagon to fit sides.
                         up(clipthick-0.01) {
-                            zrot(180/8) cylinder(h=strut, d1=cyld-4*$slop, d2=cyld-4*$slop-1, center=false, $fn=8);
+                            zrot(180/8) cylinder(h=strut, d1=cyld-4*get_slop(), d2=cyld-4*get_slop()-1, center=false, $fn=8);
                         }
 
                         // Bevel to fit.
                         up(clipthick+strut) {
-                            ycopies(size-2*strut-4*$slop) {
+                            ycopies(size-2*strut-4*get_slop()) {
                                 chamfer_edge_mask(l=size-strut, chamfer=strut*2/3, orient=RIGHT);
                             }
                         }
 
                         // Cut out X for possible top mount.
                         zrot_copies([-45, 45]) {
-                            cube([size*3, strut/sqrt(2)+2*$slop, size*3], center=true);
+                            cube([size*3, strut/sqrt(2)+2*get_slop(), size*3], center=true);
                         }
                     }
                 }
@@ -354,7 +354,7 @@ module cubetruss_joiner(w=1, vert=true, size, strut, clipthick, anchor=CENTER, s
                 // Vert Wall Clips
                 up(size/2) {
                     xflip_copy(offset=(w*(size-strut)+strut+0.02)/2) {
-                        yflip_copy(offset=strut+$slop/2) {
+                        yflip_copy(offset=strut+get_slop()/2) {
                             yrot(-90) {
                                 back_half() {
                                     prismoid([size/3.5, clipthick*2], [size/3.5-4*2*clipsize, 0.1], h=2*clipsize, anchor=BOT);
@@ -393,15 +393,15 @@ module cubetruss_uclip(dual=true, size, strut, clipthick, anchor=CENTER, spin=0,
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
     clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
     clipsize = 0.5;
-    s = [(dual?2:1)*strut+2*clipthick+$slop, strut+2*clipthick, size/3.5];
+    s = [(dual?2:1)*strut+2*clipthick+get_slop(), strut+2*clipthick, size/3.5];
     attachable(anchor,spin,orient, size=s) {
         union() {
             difference() {
                 cube(s, center=true);
-                back(clipthick) cube([(dual?2:1)*strut+$slop, strut+2*clipthick, size+1], center=true);
+                back(clipthick) cube([(dual?2:1)*strut+get_slop(), strut+2*clipthick, size+1], center=true);
             }
-            back((strut+$slop)/2) {
-                xflip_copy(offset=(dual?1:0.5)*strut+$slop/2) {
+            back((strut+get_slop())/2) {
+                xflip_copy(offset=(dual?1:0.5)*strut+get_slop()/2) {
                     yrot(-90) {
                         back_half() {
                             prismoid([size/3.5, clipthick*1.87], [size/3.5, 0.1], h=clipsize, anchor=BOT);

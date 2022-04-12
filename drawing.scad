@@ -1127,6 +1127,7 @@ function _turtle_command(command, parm, parm2, state, index) =
 //   );
 module debug_polygon(points, paths, vertices=true, edges=true, convexity=2, size=1)
 {
+    no_children($children);
     paths = is_undef(paths)? [count(points)] :
         is_num(paths[0])? [paths] :
         paths;

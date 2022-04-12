@@ -539,7 +539,7 @@ module acme_threaded_nut(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.p
+//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D): The straight gray rectangle reveals the tapered threads.  
 //   projection(cut=true) npt_threaded_rod(size=1/4, orient=BACK);
 //   right(.533*INCH/2) color("gray") rect([2,0.5946*INCH],anchor=LEFT);
@@ -1075,7 +1075,7 @@ module generic_threaded_rod(
     r2 = get_radius(d1=d2, d=d);
     sides = quantup(segs(max(r1,r2)), starts);
     rsc = internal? (1/cos(180/sides)) : 1;
-    islop = internal? 2*$slop : 0;
+    islop = internal? 2*get_slop() : 0;
     _r1 = r1 * rsc + islop;
     _r2 = r2 * rsc + islop;
     threads = quantup(l/pitch+2,1); // Was quantup(1/pitch+2,2*starts);
