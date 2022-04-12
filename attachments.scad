@@ -1155,6 +1155,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   attachable(anchor, spin, region=, l=|h=, [extent=], ...) {OBJECT; children();}
 // Usage: VNF Geometry
 //   attachable(anchor, spin, [orient], vnf=, [extent=], ...) {OBJECT; children();}
+// Usage: Pre-Specified Geometry
+//   attachable(anchor, spin, [orient], geom=) {OBJECT; children();}
 //
 // Topics: Attachments
 // See Also: reorient()
@@ -1212,6 +1214,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a cylinder geometry.  Default: UP
+//   geom = If given, uses the pre-defined (via {{attach_geom()}} geometry.
 //
 // Side Effects:
 //   `$parent_anchor` is set to the parent object's `anchor` value.
@@ -1342,6 +1345,16 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //       polygon(path);
 //       children();
 //   }
+//
+// Example(NORENDER): Using Pre-defined Geometry
+//   geom = atype=="perim"? attach_geom(two_d=true, path=path, extent=false) :
+//       atype=="extents"? attach_geom(two_d=true, path=path, extent=true) :
+//       atype=="circle"? attach_geom(two_d=true, r=r) :
+//       assert(false, "Bad atype");
+//   attachable(anchor, spin, orient, geom=geom) {
+//       polygon(path);
+//       children();
+//   }
 module attachable(
     anchor, spin, orient,
     size, size2, shift,
@@ -1352,7 +1365,8 @@ module attachable(
     offset=[0,0,0],
     anchors=[],
     two_d=false,
-    axis=UP
+    axis=UP,
+    geom
 ) {
     dummy1 =
         assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
@@ -1365,7 +1379,7 @@ module attachable(
     region = !is_undef(region)? region :
         !is_undef(path)? [path] :
         undef;
-    geom = _attach_geom(
+    geom = is_def(geom)? geom : attach_geom(
         size=size, size2=size2, shift=shift,
         r=r, r1=r1, r2=r2, h=h,
         d=d, d1=d1, d2=d2, l=l,
@@ -1492,6 +1506,7 @@ function reorient(
     anchors=[],
     two_d=false,
     axis=UP,
+    geom,
     p=undef
 ) = 
     assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
@@ -1505,8 +1520,9 @@ function reorient(
             !is_undef(path)? [path] :
             undef
     )
-    (anchor==CENTER && spin==0 && orient==UP && p!=undef)? p : let(
-        geom = _attach_geom(
+    (anchor==CENTER && spin==0 && orient==UP && p!=undef)? p :
+    let(
+        geom = is_def(geom)? geom : attach_geom(
             size=size, size2=size2, shift=shift,
             r=r, r1=r1, r2=r2, h=h,
             d=d, d1=d1, d2=d2, l=l,
@@ -1534,37 +1550,29 @@ function reorient(
 function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 
 
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Attachment internal functions
-
-
-/// Internal Function: _attach_geom()
+// Function: attach_geom()
 //
 // Usage: Square/Trapezoid Geometry
-//   geom = _attach_geom(two_d=true, size=, [size2=], [shift=], ...);
+//   geom = attach_geom(two_d=true, size=, [size2=], [shift=], ...);
 // Usage: Circle/Oval Geometry
-//   geom = _attach_geom(two_d=true, r=|d=, ...);
+//   geom = attach_geom(two_d=true, r=|d=, ...);
 // Usage: 2D Path/Polygon/Region Geometry
-//   geom = _attach_geom(two_d=true, region=, [extent=], ...);
+//   geom = attach_geom(two_d=true, region=, [extent=], ...);
 // Usage: Cubical/Prismoidal Geometry
-//   geom = _attach_geom(size=, [size2=], [shift=], ...);
+//   geom = attach_geom(size=, [size2=], [shift=], ...);
 // Usage: Cylindrical Geometry
-//   geom = _attach_geom(r=|d=, l=|h=, [axis=], ...);
+//   geom = attach_geom(r=|d=, l=|h=, [axis=], ...);
 // Usage: Conical Geometry
-//   geom = _attach_geom(r1|d1=, r2=|d2=, l=, [axis=], ...);
+//   geom = attach_geom(r1|d1=, r2=|d2=, l=, [axis=], ...);
 // Usage: Spheroid/Ovoid Geometry
-//   geom = _attach_geom(r=|d=, ...);
+//   geom = attach_geom(r=|d=, ...);
 // Usage: Extruded 2D Path/Polygon/Region Geometry
-//   geom = _attach_geom(region=, l=|h=, [extent=], ...);
+//   geom = attach_geom(region=, l=|h=, [extent=], ...);
 // Usage: VNF Geometry
-//   geom = _attach_geom(vnf=, [extent=], ...);
+//   geom = attach_geom(vnf=, [extent=], ...);
 //
-/// Topics: Attachments
-/// See Also: reorient(), attachable()
+// Topics: Attachments
+// See Also: reorient(), attachable()
 //
 // Description:
 //   Given arguments that describe the geometry of an attachable object, returns the internal geometry description.
@@ -1592,69 +1600,69 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 //   axis = The vector pointing along the axis of a cylinder geometry.  Default: UP
 //
 // Example(NORENDER): Cubical Shape
-//   geom = _attach_geom(size=size);
+//   geom = attach_geom(size=size);
 //
 // Example(NORENDER): Prismoidal Shape
-//   geom = _attach_geom(
+//   geom = attach_geom(
 //       size=point3d(botsize,h),
 //       size2=topsize, shift=shift
 //   );
 //
 // Example(NORENDER): Cylindrical Shape, Z-Axis Aligned
-//   geom = _attach_geom(r=r, h=h);
+//   geom = attach_geom(r=r, h=h);
 //
 // Example(NORENDER): Cylindrical Shape, Y-Axis Aligned
-//   geom = _attach_geom(r=r, h=h, axis=BACK);
+//   geom = attach_geom(r=r, h=h, axis=BACK);
 //
 // Example(NORENDER): Cylindrical Shape, X-Axis Aligned
-//   geom = _attach_geom(r=r, h=h, axis=RIGHT);
+//   geom = attach_geom(r=r, h=h, axis=RIGHT);
 //
 // Example(NORENDER): Conical Shape, Z-Axis Aligned
-//   geom = _attach_geom(r1=r1, r2=r2, h=h);
+//   geom = attach_geom(r1=r1, r2=r2, h=h);
 //
 // Example(NORENDER): Conical Shape, Y-Axis Aligned
-//   geom = _attach_geom(r1=r1, r2=r2, h=h, axis=BACK);
+//   geom = attach_geom(r1=r1, r2=r2, h=h, axis=BACK);
 //
 // Example(NORENDER): Conical Shape, X-Axis Aligned
-//   geom = _attach_geom(r1=r1, r2=r2, h=h, axis=RIGHT);
+//   geom = attach_geom(r1=r1, r2=r2, h=h, axis=RIGHT);
 //
 // Example(NORENDER): Spherical Shape
-//   geom = _attach_geom(r=r);
+//   geom = attach_geom(r=r);
 //
 // Example(NORENDER): Ovoid Shape
-//   geom = _attach_geom(r=[r_x, r_y, r_z]);
+//   geom = attach_geom(r=[r_x, r_y, r_z]);
 //
 // Example(NORENDER): Arbitrary VNF Shape, Anchored by Extents
-//   geom = _attach_geom(vnf=vnf);
+//   geom = attach_geom(vnf=vnf);
 //
 // Example(NORENDER): Arbitrary VNF Shape, Anchored by Intersection
-//   geom = _attach_geom(vnf=vnf, extent=false);
+//   geom = attach_geom(vnf=vnf, extent=false);
 //
 // Example(NORENDER): 2D Rectangular Shape
-//   geom = _attach_geom(two_d=true, size=size);
+//   geom = attach_geom(two_d=true, size=size);
 //
 // Example(NORENDER): 2D Trapezoidal Shape
-//   geom = _attach_geom(two_d=true, size=[x1,y], size2=x2, shift=shift);
+//   geom = attach_geom(two_d=true, size=[x1,y], size2=x2, shift=shift);
 //
 // Example(NORENDER): 2D Circular Shape
-//   geom = _attach_geom(two_d=true, r=r);
+//   geom = attach_geom(two_d=true, r=r);
 //
 // Example(NORENDER): 2D Oval Shape
-//   geom = _attach_geom(two_d=true, r=[r_x, r_y]);
+//   geom = attach_geom(two_d=true, r=[r_x, r_y]);
 //
 // Example(NORENDER): Arbitrary 2D Region Shape, Anchored by Extents
-//   geom = _attach_geom(two_d=true, region=region);
+//   geom = attach_geom(two_d=true, region=region);
 //
 // Example(NORENDER): Arbitrary 2D Region Shape, Anchored by Intersection
-//   geom = _attach_geom(two_d=true, region=region, extent=false);
+//   geom = attach_geom(two_d=true, region=region, extent=false);
 //
 // Example(NORENDER): Extruded Region, Anchored by Extents
-//   geom = _attach_geom(region=region, l=height);
+//   geom = attach_geom(region=region, l=height);
 //
 // Example(NORENDER): Extruded Region, Anchored by Intersection
-//   geom = _attach_geom(region=region, l=length, extent=false);
+//   geom = attach_geom(region=region, l=length, extent=false);
 //
-function _attach_geom(
+function attach_geom(
     size, size2, shift,
     r,r1,r2, d,d1,d2, l,h,
     vnf, region,
@@ -1736,6 +1744,14 @@ function _attach_geom(
     ) :
     assert(false, "Unrecognizable geometry description.");
 
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Attachment internal functions
 
 
 /// Internal Function: _attach_geom_2d()
