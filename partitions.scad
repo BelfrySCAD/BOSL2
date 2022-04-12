@@ -432,13 +432,13 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
     cutsize = is_vector(cutsize)? point2d(cutsize) : [cutsize*2, cutsize];
     path = _partition_cutpath(l, h, cutsize, cutpath, gap);
     midpath = select(path,1,-2);
-    sizepath = concat([path[0]+[-$slop,0]], midpath, [last(path)+[$slop,0]], [[+(l/2+$slop), (w+$slop)*(inverse?-1:1)], [-(l/2+$slop), (w+$slop)*(inverse?-1:1)]]);
+    sizepath = concat([path[0]+[-get_slop(),0]], midpath, [last(path)+[get_slop(),0]], [[+(l/2+get_slop()), (w+get_slop())*(inverse?-1:1)], [-(l/2+get_slop()), (w+get_slop())*(inverse?-1:1)]]);
     bnds = pointlist_bounds(sizepath);
     fullpath = concat(path, [[last(path).x, w*(inverse?-1:1)], [path[0].x, w*(inverse?-1:1)]]);
     attachable(anchor,spin,orient, size=point3d(bnds[1]-bnds[0],h)) {
         linear_extrude(height=h, center=true, convexity=10) {
             intersection() {
-                offset(delta=-$slop) polygon(fullpath);
+                offset(delta=-get_slop()) polygon(fullpath);
                 square([l, w*2], center=true);
             }
         }
@@ -483,7 +483,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
     path = _partition_cutpath(l, h, cutsize, cutpath, gap);
     attachable(anchor,spin,orient, size=[l,cutsize.y,h]) {
         linear_extrude(height=h, center=true, convexity=10) {
-            stroke(path, width=max(0.1, $slop*2));
+            stroke(path, width=max(0.1, get_slop()*2));
         }
         children();
     }

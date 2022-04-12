@@ -1309,7 +1309,8 @@ function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, retur
 //       [  5,  10],  [  0,  10]
 //   ];
 //   debug_bezier(bez, N=3, width=0.5);
-module debug_bezier(bezpath, width=1, N=3) { 
+module debug_bezier(bezpath, width=1, N=3) {
+    no_children($children);
     assert(is_path(bezpath));
     assert(is_int(N));
     assert(len(bezpath)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
@@ -1372,6 +1373,7 @@ module debug_bezier(bezpath, width=1, N=3) {
 //   debug_bezier_patches(patches=[patch1, patch2], splinesteps=8, showcps=true);
 module debug_bezier_patches(patches=[], size, splinesteps=16, showcps=true, showdots=false, showpatch=true, convexity=10, style="default")
 {
+    no_children($children);
     assert(is_undef(size)||is_num(size));
     assert(is_int(splinesteps) && splinesteps>0);
     assert(is_list(patches) && all([for (patch=patches) is_bezier_patch(patch)]));

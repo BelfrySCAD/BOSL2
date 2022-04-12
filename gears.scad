@@ -1202,6 +1202,7 @@ module _gear_tooth_profile(
     center = false,
     mod
 ) {
+    no_children($children);
     pitch = is_undef(mod) ? pitch : pitch_value(mod);
     r = _root_radius(pitch, teeth, clearance, interior);
     fwd(r)

@@ -107,7 +107,7 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=
                                     cube([w+1, guide_width+1, h+1], anchor=FWD+BOT);
 
                     // Clear sides
-                    xcopies(2*w*2/3-$slop*2) {
+                    xcopies(2*w*2/3-get_slop()*2) {
                         cube([w, guide_width, h/3], center=true);
                         fwd(guide_width/2)
                             yrot_copies(n=2)
@@ -119,7 +119,7 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=
 
                 // Guide ridges.
                 if (guides == true) {
-                    xcopies(w/3-$slop*2) {
+                    xcopies(w/3-get_slop()*2) {
                         // Guide ridge.
                         fwd(0.05/2) {
                             scale([0.75, 1, 2]) yrot(45)
@@ -325,7 +325,7 @@ module joiner_pair_clear(spacing=100, n=2, h=40, w=10, a=30, clearance=0, overla
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = Printer specific slop value to make parts fit more closely.
+//   get_slop() = Printer specific slop value to make parts fit more closely.
 // Example(FlatSpin,VPD=200):
 //   joiner_pair(spacing=50, l=10);
 // Examples:
@@ -540,7 +540,7 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, taper, back_wi
     assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
     slope = is_def(slope) ? slope :
         is_def(angle) ? 1/tan(angle) :  6;
-    extra_slop = gender == "female" ? 2*$slop : 0;
+    extra_slop = gender == "female" ? 2*get_slop() : 0;
     width = w + extra_slop;
     height = h + extra_slop;
     back_width = u_add(back_width, extra_slop);
