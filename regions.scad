@@ -753,7 +753,6 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   return_faces = return face list.  Default: False.
 //   firstface_index = starting index for face list.  Default: 0.
 //   flip_faces = flip face direction.  Default: false
-
 // Example(2D,NoAxes):
 //   star = star(5, r=100, ir=30);
 //   #stroke(closed=true, star, width=3);
