@@ -412,6 +412,7 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
     let(path = force_path(path))
     assert(is_path(path))
     assert(num_defined([n,refine,maxlen]),"Must give exactly one of n, refine, and maxlen")
+    refine==1 || n==len(path) ? path :
     is_def(maxlen) ?
         assert(is_undef(method), "Cannot give method with maxlen")
         assert(is_undef(exact), "Cannot give exact with maxlen")

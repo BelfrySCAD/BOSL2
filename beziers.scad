@@ -927,16 +927,17 @@ function bezier_patch_reverse(patch) =
 //   ptgrid = bezier_patch_points(patch, LIST, LIST);
 //   ptgrid = bezier_patch_points(patch, RANGE, RANGE);
 // Topics: Bezier Patches
-// See Also: bezier_points(), bezier_curve(), bezpath_curve()
+// See Also: bezier_patch_normals(), bezier_points(), bezier_curve(), bezpath_curve()
 // Description:
-//   Given a square 2-dimensional array of (N+1) by (N+1) points size, that represents a Bezier Patch
-//   of degree N, returns a point on that surface, at positions `u`, and `v`.  A cubic bezier patch
-//   will be 4x4 points in size.  If given a non-square array, each direction will have its own
-//   degree.
+//   Sample a bezier patch on a listed point set.  The bezier patch must be a rectangular array of
+//   points, and it will be sampled at all the (u,v) pairs that you specify.  If you give u and v
+//   as single numbers you'll get a single point back.  If you give u and v as lists or ranges you'll
+//   get a 2d rectangular array of points.  If one but not both of u and v is a list or range then you'll
+//   get a list of points.  
 // Arguments:
 //   patch = The 2D array of control points for a Bezier patch.
-//   u = The proportion of the way along the horizontal inner list of the patch to find the point of.  0<=`u`<=1.  If given as a list or range of values, returns a list of point lists.
-//   v = The proportion of the way along the vertical outer list of the patch to find the point of.  0<=`v`<=1.  If given as a list or range of values, returns a list of point lists.
+//   u = The bezier u parameter (inner list of patch).  Generally between 0 and 1. Can be a list, range or value.
+//   v = The bezier v parameter (outer list of patch).  Generally between 0 and 1. Can be a list, range or value.
 // Example(3D):
 //   patch = [
 //       [[-50, 50,  0], [-16, 50,  20], [ 16, 50,  20], [50, 50,  0]],
@@ -958,14 +959,19 @@ function bezier_patch_reverse(patch) =
 //   pts = bezier_patch_points(patch, [0:0.2:1], [0:0.2:1]);
 //   for (row=pts) move_copies(row) color("magenta") sphere(d=3, $fn=12);
 function bezier_patch_points(patch, u, v) =
-    is_num(u) && is_num(v)? bezier_points([for (bez = patch) bezier_points(bez, u)], v) :
-    assert(is_num(u) || !is_undef(u[0]))
-    assert(is_num(v) || !is_undef(v[0]))
-    let(
-        vbezes = [for (i = idx(patch[0])) bezier_points(column(patch,i), is_num(u)? [u] : u)]
-    )
-    [for (i = idx(vbezes[0])) bezier_points(column(vbezes,i), is_num(v)? [v] : v)];
+    assert(is_range(u) || is_vector(u) || is_finite(u), "Input u is invalid")
+    assert(is_range(v) || is_vector(v) || is_finite(v), "Input v is invalid")
+      !is_num(u) && !is_num(v) ?
+            let(
+                vbezes = [for (i = idx(patch[0])) bezier_points(column(patch,i), u)]
+            )
+            [for (i = idx(vbezes[0])) bezier_points(column(vbezes,i), v)]
+    : is_num(u) && is_num(v)? bezier_points([for (bez = patch) bezier_points(bez, v)], u)
+    : is_num(u) ? bezier_patch_points(patch,force_list(u),v)[0]
+    :             column(bezier_patch_points(patch,u,force_list(v)),0);
 
+
+  
 
 function _bezier_rectangle(patch, splinesteps=16, style="default") =
     let(
@@ -1282,6 +1288,46 @@ function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, retur
        select(result[1],[2,3,0,1])
       ];
 
+
+// Function: bezier_patch_normals()
+// Usage:
+//   n = bezier_patch_normals(patch, u, v);
+//   ngrid = bezier_patch_normals(patch, LIST, LIST);
+//   ngrid = bezier_patch_normals(patch, RANGE, RANGE);
+// Topics: Bezier Patches
+// See Also: bezier_patch_points(), bezier_points(), bezier_curve(), bezpath_curve()
+// Description:
+//   Compute the normal vector to a bezier patch at the listed point set.  The bezier patch must be a rectangular array of
+//   points, and the normal will be computed at all the (u,v) pairs that you specify.  If you give u and v
+//   as single numbers you'll get a single point back.  If you give u and v as lists or ranges you'll
+//   get a 2d rectangular array of points.  If one but not both of u and v is a list or range then you'll
+//   get a list of points.
+//   .
+//   This function works by computing the cross product of the tangents.  If the tangents are parallel, or nearly parallel, the result
+//   will be invalid.  This can happen if you use a degenerate patch, or if you give two of the edges of your patch a smooth corner.  
+// Arguments:
+//   patch = The 2D array of control points for a Bezier patch.
+//   u = The bezier u parameter (inner list of patch).  Generally between 0 and 1. Can be a list, range or value.
+//   v = The bezier v parameter (outer list of patch).  Generally between 0 and 1. Can be a list, range or value.
+function bezier_patch_normals(patch, u, v) =
+    assert(is_range(u) || is_vector(u) || is_finite(u), "Input u is invalid")
+    assert(is_range(v) || is_vector(v) || is_finite(v), "Input v is invalid")
+      !is_num(u) && !is_num(v) ?
+          let(
+              vbezes = [for (i = idx(patch[0])) bezier_points(column(patch,i), u)],
+              dvbezes = [for (i = idx(patch[0])) bezier_derivative(column(patch,i), u)],
+              v_tangent = [for (i = idx(vbezes[0])) bezier_derivative(column(vbezes,i), v)],
+              u_tangent = [for (i = idx(vbezes[0])) bezier_points(column(dvbezes,i), v)]
+          )
+          [for(i=idx(u_tangent)) [for(j=idx(u_tangent[0])) unit(cross(u_tangent[i][j],v_tangent[i][j]))]]
+    : is_num(u) && is_num(v)?
+          let(
+                du = bezier_derivative([for (bez = patch) bezier_points(bez, v)], u),
+                dv = bezier_points([for (bez = patch) bezier_derivative(bez, v)], u)
+          )
+          unit(cross(du,dv))
+    : is_num(u) ? bezier_patch_normals(patch,force_list(u),v)[0]
+    :             column(bezier_patch_normals(patch,u,force_list(v)),0);
 
 
 
