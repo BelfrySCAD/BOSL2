@@ -2063,7 +2063,7 @@ function _get_texture(tex,n,m) =
 // Usage: As Module
 //   textured_linear_sweep(path, texture, tex_size, h, ...) [ATTACHMENTS];
 //   textured_linear_sweep(path, texture, counts=, h=, ...) [ATTACHMENTS];
-// Topics: Sweep, Extrusion, Textures
+// Topics: Sweep, Extrusion, Textures, Knurling
 // Description:
 //   Given a single polygon path, creates a linear extrusion of that polygon vertically, with a given texture tiled evenly over the side surfaces.
 // Arguments:
@@ -2225,7 +2225,7 @@ module textured_linear_sweep(
 // Usage: As Module
 //   textured_revolution(path, texture, tex_size, [tscale=], ...) [ATTACHMENTS];
 //   textured_revolution(path, texture, counts=, [tscale=], ...) [ATTACHMENTS];
-// Topics: Sweep, Extrusion, Textures
+// Topics: Sweep, Extrusion, Textures, Knurling
 // Description:
 //   Given a single 2D path, fully in the X+ half-plane, revolves that path around the Z axis (after rotating its Y+ to Z+).
 //   This creates a solid from that surface of revolution, capped top and bottom, with the sides covered in a given tiled texture.
@@ -2348,7 +2348,7 @@ module textured_revolution(
 // Usage: As Module
 //   textured_cylinder(h, r|d=, texture, tex_size|counts=, [tscale=], [inset=], [rot=], ...) [ATTACHMENTS];
 //   textured_cylinder(h, r1=|d1=, r2=|d2=, texture=, tex_size=|counts=, [tscale=], [inset=], [rot=], ...) [ATTACHMENTS];
-// Topics: Sweep, Extrusion, Textures
+// Topics: Sweep, Extrusion, Textures, Knurling
 // Description:
 //   Creates a cylinder or cone with optional chamfers or roundings, covered in a textured surface.
 // Arguments:
