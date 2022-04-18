@@ -511,10 +511,6 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   of the given 2D region or polygon.  The benefit of using this, over using `linear_extrude region(rgn)` is
 //   that it supports `anchor`, `spin`, `orient` and attachments.  You can also make more refined
 //   twisted extrusions by using `maxseg` to subsample flat faces.
-//   Note that the center option centers vertically using the named anchor "zcenter" whereas
-//   `anchor=CENTER` centers the entire shape relative to
-//   the shape's centroid, or other centerpoint you specify.  The centerpoint can be "centroid", "mean", "box" or
-//   a custom point location.  
 // Arguments:
 //   region = The 2D [Region](regions.scad) or polygon that is to be extruded.
 //   h | height = The height to extrude the region.  Default: 1
@@ -527,7 +523,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   maxseg = If given, then any long segments of the region will be subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
 //   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
 //   convexity = Max number of surfaces any single ray could pass through.  Module use only.
-//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: `[0,0,0]`
 //   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -578,19 +574,20 @@ module linear_sweep(
     region, height, center,
     twist=0, scale=1, shift=[0,0],
     slices, maxseg, style="default", convexity,
-    cp="centroid", atype="hull", h,
+    cp=[0,0,0], atype="hull", h,
     anchor, spin=0, orient=UP
 ) {
     h = first_defined([h, height, 1]);
     region = force_region(region);
-    dummy=assert(is_region(region),"Input is not a region");
+    check = assert(is_region(region),"Input is not a region");
     anchor = get_anchor(anchor, center, BOT, BOT);
     vnf = linear_sweep(
-        region, height=h,
+        region, height=h, style=style,
         twist=twist, scale=scale, shift=shift,
-        slices=slices, maxseg=maxseg, style=style
+        slices=slices, maxseg=maxseg,
+        anchor=CTR
     );
-    cent = centroid(path);
+    cent = centroid(region);
     anchors = [
         named_anchor("centroid_top", point3d(cent, h/2), UP),
         named_anchor("centroid",     point3d(cent),      UP),
@@ -610,26 +607,27 @@ function linear_sweep(
     region, height, center,
     twist=0, scale=1, shift=[0,0],
     slices, maxseg, style="default",
-    cp="centroid", atype="hull", h,
+    cp=[0,0,0], atype="hull", h,
     anchor, spin=0, orient=UP
-) = let(
-        region = force_region(region)
-    )
+) =
+    let( region = force_region(region) )
     assert(is_region(region), "Input is not a region or polygon.")
+    assert(is_num(scale) || is_vector(scale))
+    assert(is_vector(shift, 2), str(shift))
     let(
         h = first_defined([h, height, 1]),
         anchor = get_anchor(anchor, center, BOT, BOT),
         regions = region_parts(region),
-        slices = default(slices, ceil(abs(twist)/5)),
+        slices = default(slices, max(1,ceil(abs(twist)/5))),
         scale = is_num(scale)? [scale,scale] : point2d(scale),
         topmat = move(shift) * scale(scale) * rot(-twist),
         trgns = [
-            for (rgn=regions) [
-                for (path=rgn) let(
+            for (rgn = regions) [
+                for (path = rgn) let(
                     p = cleanup_path(path),
                     path = is_undef(maxseg)? p : [
-                        for (seg=pair(p,true)) each
-                        let(steps=ceil(norm(seg.y-seg.x)/maxseg))
+                        for (seg = pair(p,true)) each
+                        let( steps = ceil(norm(seg.y - seg.x) / maxseg) )
                         lerpn(seg.x, seg.y, steps, false)
                     ]
                 ) apply(topmat, path)
@@ -646,18 +644,18 @@ function linear_sweep(
                 ],
                 verts = [
                     for (i=[0:1:slices]) let(
-                        u = i/slices,
+                        u = i / slices,
                         scl = lerp([1,1], scale, u),
                         ang = lerp(0, -twist, u),
-                        off = lerp([0,0,0], point3d(shift,h), u),
+                        off = lerp([0,0,-h/2], point3d(shift,h/2), u),
                         m = move(off) * scale(scl) * rot(ang)
                     ) apply(m, path3d(path))
                 ]
             ) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
-            for (rgn = regions) vnf_from_region(rgn, ident(4), reverse=true),
-            for (rgn = trgns) vnf_from_region(rgn, up(h), reverse=false)
+            for (rgn = regions) vnf_from_region(rgn, down(h/2), reverse=true),
+            for (rgn = trgns) vnf_from_region(rgn, up(h/2), reverse=false)
         ]),
-        cent = centroid(path),
+        cent = centroid(region),
         anchors = [
             named_anchor("centroid_top", point3d(cent, h/2), UP),
             named_anchor("centroid",     point3d(cent),      UP),
