@@ -511,26 +511,26 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   of the given 2D region or polygon.  The benefit of using this, over using `linear_extrude region(rgn)` is
 //   that it supports `anchor`, `spin`, `orient` and attachments.  You can also make more refined
 //   twisted extrusions by using `maxseg` to subsample flat faces.
-//   Note that the center option centers vertically using the named anchor "zcenter" whereas
-//   `anchor=CENTER` centers the entire shape relative to
-//   the shape's centroid, or other centerpoint you specify.  The centerpoint can be "centroid", "mean", "box" or
-//   a custom point location.  
 // Arguments:
 //   region = The 2D [Region](regions.scad) or polygon that is to be extruded.
-//   height = The height to extrude the region.  Default: 1
-//   ---
+//   h | height = The height to extrude the region.  Default: 1
 //   center = If true, the created polyhedron will be vertically centered.  If false, it will be extruded upwards from the XY plane.  Default: `false`
+//   ---
+//   twist = The number of degrees to rotate the top of the shape, clockwise around the Z axis, relative to the bottom.  Default: 0
+//   scale = The amount to scale the top of the shape, in the X and Y directions, relative to the size of the bottom.  Default: 1
+//   shift = The amount to shift the top of the shape, in the X and Y directions, relative to the position of the bottom.  Default: [0,0]
 //   slices = The number of slices to divide the shape into along the Z axis, to allow refinement of detail, especially when working with a twist.  Default: `twist/5`
 //   maxseg = If given, then any long segments of the region will be subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
-//   twist = The number of degrees to rotate the shape clockwise around the Z axis, as it rises from bottom to top.  Default: 0
-//   scale = The amount to scale the shape, from bottom to top.  Default: 1
 //   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
 //   convexity = Max number of surfaces any single ray could pass through.  Module use only.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: `"centroid"`
 //   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
-//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Extra Anchors:
+//   "origin" = Centers the extruded shape vertically only, but keeps the original path positions in the X and Y.  Oriented UP.
+//   "original_base" = Keeps the original path positions in the X and Y, but at the bottom of the extrusion.  Oriented UP.
 // Example: Extruding a Compound Region.
 //   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
 //   rgn2 = [square(30,center=false)];
@@ -538,63 +538,100 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   mrgn = union(rgn1,rgn2);
 //   orgn = difference(mrgn,rgn3);
 //   linear_sweep(orgn,height=20,convexity=16);
-// Example: With Twist, Scale, Slices and Maxseg.
+// Example: With Twist, Scale, Shift, Slices and Maxseg.
 //   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
 //   rgn2 = [square(30,center=false)];
-//   rgn3 = [for (size=[10:10:20]) move([15,15],p=square(size=size, center=true))];
+//   rgn3 = [
+//       for (size=[10:10:20])
+//       apply(
+//          move([15,15]),
+//          square(size=size, center=true)
+//       )
+//   ];
 //   mrgn = union(rgn1,rgn2);
 //   orgn = difference(mrgn,rgn3);
-//   linear_sweep(orgn,height=50,maxseg=2,slices=40,twist=180,scale=0.5,convexity=16);
+//   linear_sweep(
+//       orgn, height=50, maxseg=2, slices=40,
+//       twist=90, scale=0.5, shift=[10,5],
+//       convexity=16
+//   );
 // Example: Anchors on an Extruded Region
 //   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
 //   rgn2 = [square(30,center=false)];
-//   rgn3 = [for (size=[10:10:20]) move([15,15],p=square(size=size, center=true))];
+//   rgn3 = [
+//       for (size=[10:10:20])
+//       apply(
+//           move([15,15]),
+//           rect(size=size)
+//       )
+//   ];
 //   mrgn = union(rgn1,rgn2);
 //   orgn = difference(mrgn,rgn3);
-//   linear_sweep(orgn,height=20,convexity=16) show_anchors();
-module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity,
-                    spin=0, orient=UP, cp="centroid", anchor="origin", atype="hull") {
+//   linear_sweep(orgn,height=20,convexity=16)
+//       show_anchors();
+module linear_sweep(
+    region, height, center,
+    twist=0, scale=1, shift=[0,0],
+    slices, maxseg, style="default", convexity,
+    cp, atype="hull", h,
+    anchor, spin=0, orient=UP
+) {
+    h = first_defined([h, height, 1]);
     region = force_region(region);
-    dummy=assert(is_region(region),"Input is not a region");
-    anchor = center ? "zcenter" : anchor;
-    anchors = [named_anchor("zcenter", [0,0,height/2], UP)];
+    check = assert(is_region(region),"Input is not a region");
+    anchor = center==true? "origin" :
+        center == false? "original_base" :
+        default(anchor, "original_base");
     vnf = linear_sweep(
-        region, height=height,
-        twist=twist, scale=scale,
+        region, height=h, style=style,
+        twist=twist, scale=scale, shift=shift,
         slices=slices, maxseg=maxseg,
-        style=style
+        anchor="origin"
     );
-    attachable(anchor,spin,orient, cp=cp, region=region, h=height, extent=atype=="hull", anchors=anchors) {
+    anchors = [
+        named_anchor("original_base", [0,0,-h/2], UP)
+    ];
+    cp = default(cp, "centroid");
+    geom = atype=="hull"? attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+        atype=="intersect"? attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+        assert(in_list(atype, ["hull", "intersect"]));
+    attachable(anchor,spin,orient, geom=geom) {
         vnf_polyhedron(vnf, convexity=convexity);
         children();
     }
 }
 
 
-function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
-                      maxseg, style="default", cp="centroid", atype="hull", anchor, spin=0, orient=UP) =
+function linear_sweep(
+    region, height, center,
+    twist=0, scale=1, shift=[0,0],
+    slices, maxseg, style="default",
+    cp, atype="hull", h,
+    anchor, spin=0, orient=UP
+) =
+    let( region = force_region(region) )
+    assert(is_region(region), "Input is not a region or polygon.")
+    assert(is_num(scale) || is_vector(scale))
+    assert(is_vector(shift, 2), str(shift))
     let(
-        region = force_region(region)
-    )
-    assert(is_region(region), "Input is not a region")
-    let(
-        anchor = center ? "zcenter" : anchor,
-        anchors = [named_anchor("zcenter", [0,0,height/2], UP)],
+        h = first_defined([h, height, 1]),
+        anchor = center==true? "origin" :
+            center == false? "original_base" :
+            default(anchor, "original_base"),
         regions = region_parts(region),
-        slices = default(slices, floor(twist/5+1)),
-        step = twist/slices,
-        hstep = height/slices,
+        slices = default(slices, max(1,ceil(abs(twist)/5))),
+        scale = is_num(scale)? [scale,scale] : point2d(scale),
+        topmat = move(shift) * scale(scale) * rot(-twist),
         trgns = [
-            for (rgn=regions) [
-                for (path=rgn) let(
+            for (rgn = regions) [
+                for (path = rgn) let(
                     p = cleanup_path(path),
                     path = is_undef(maxseg)? p : [
-                        for (seg=pair(p,true)) each
-                        let(steps=ceil(norm(seg.y-seg.x)/maxseg))
+                        for (seg = pair(p,true)) each
+                        let( steps = ceil(norm(seg.y - seg.x) / maxseg) )
                         lerpn(seg.x, seg.y, steps, false)
                     ]
-                )
-                rot(twist, p=scale([scale,scale],p=path))
+                ) apply(topmat, path)
             ]
         ],
         vnf = vnf_join([
@@ -608,16 +645,25 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
                 ],
                 verts = [
                     for (i=[0:1:slices]) let(
-                        sc = lerp(1, scale, i/slices),
-                        ang = i * step,
-                        h = i * hstep //- height/2
-                    ) scale([sc,sc,1], p=rot(ang, p=path3d(path,h)))
+                        u = i / slices,
+                        scl = lerp([1,1], scale, u),
+                        ang = lerp(0, -twist, u),
+                        off = lerp([0,0,-h/2], point3d(shift,h/2), u),
+                        m = move(off) * scale(scl) * rot(ang)
+                    ) apply(m, path3d(path))
                 ]
             ) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
-            for (rgn = regions) vnf_from_region(rgn, ident(4), reverse=true),
-            for (rgn = trgns) vnf_from_region(rgn, up(height), reverse=false)
-        ])
-    ) reorient(anchor,spin,orient, cp=cp, vnf=vnf, extent=atype=="hull", p=vnf, anchors=anchors);
+            for (rgn = regions) vnf_from_region(rgn, down(h/2), reverse=true),
+            for (rgn = trgns) vnf_from_region(rgn, up(h/2), reverse=false)
+        ]),
+        anchors = [
+            named_anchor("original_base", [0,0,-h/2], UP)
+        ],
+        cp = default(cp, "centroid"),
+        geom = atype=="hull"? attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+            atype=="intersect"? attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+            assert(in_list(atype, ["hull", "intersect"]))
+    ) reorient(anchor,spin,orient, geom=geom, p=vnf);
 
 
 
@@ -2037,6 +2083,477 @@ function associate_vertices(polygons, split, curpoly=0) =
     )
    associate_vertices(newpoly, split, curpoly+1);
 
+
+
+// Section: Texturing
+// DefineHeader(Table;Headers=Texture Name|Description): Texture Values
+
+function _get_texture(tex,n,m) =
+    tex=="ribs"? [[1,0]] :
+    tex=="trunc_ribs"? [[0, each repeat(1,default(n,1)), 1]] :
+    tex=="wave_ribs"? [[for(a=[0:360/default(n,8):359]) (cos(a)+1)/2]] :
+    tex=="diamonds"? [[1,0],[0,1]] :
+    tex=="pyramids"? [[0,0],[0,1]] :
+    tex=="trunc_pyramids"? let(n=default(n,2)) [repeat(0,n+1), each repeat([0, each repeat(1,n+1)], n+1)] :
+    tex=="dimpled_pyramids"? [[0,0,0,0],[0,1,1,1],[0,1,0,1],[0,1,1,1]] :
+    tex=="hills"? let(n=default(n,12)) [for (a=[0:360/n:359.999]) [for (b=[0:360/n:359.999]) (cos(a)*cos(b)+1)/2]] :
+    tex=="waves"? let(n=default(n,12)) [for (v=[0:360/n:359.999]) [for (h=[0:360/n:359.999]) max(0,cos(h+90*cos(v)))]] :
+    tex=="dots"? let(n=default(n,12), m=default(m,0)) [for (y=[0:1:n-1]) [for (x=[0:1:n-1]) max(0,cos(90*norm([n,n]/2-[x,y])*2/(n-m))) ]] :
+    tex=="cones"? let(n=default(n,12), m=default(m,0)) [for (y=[0:1:n-1]) [for (x=[0:1:n-1]) max(0,1-(norm([n,n]/2-[x,y])*2/(n-m))) ]] :
+    assert(false, str("Unrecognized texture name: ", tex));
+
+
+// Function&Module: textured_linear_sweep()
+// Usage: As Function
+//   vnf = textured_linear_sweep(path, texture, tex_size, h, ...);
+//   vnf = textured_linear_sweep(path, texture, counts=, h=, ...);
+// Usage: As Module
+//   textured_linear_sweep(path, texture, tex_size, h, ...) [ATTACHMENTS];
+//   textured_linear_sweep(path, texture, counts=, h=, ...) [ATTACHMENTS];
+// Topics: Sweep, Extrusion, Textures, Knurling
+// Description:
+//   Given a single polygon path, creates a linear extrusion of that polygon vertically, with a given texture tiled evenly over the side surfaces.
+// Arguments:
+//   path = The path to sweep/extrude.
+//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0) that define the texture to apply to vertical surfaces.
+//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   h / l = The height to extrude/sweep the path.
+//   ---
+//   counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
+//   inset = If numeric, lowers the texture into the surface by that amount, before the tscale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
+//   rot = If true, rotates the texture 90º.
+//   tscale = Scaling multiplier for the texture depth.
+//   twist = Degrees of twist for the top of the extrustion/sweep, compared to the bottom.  Default: 0
+//   scale = Scaling multiplier for the top of the extrustion/sweep, compared to the bottom.  Default: 1
+//   shift = [X,Y] amount to translate the top, relative to the bottom.  Default: [0,0]
+//   caps = (function only) If true, create endcaps for the extruded shape.
+//   col_wrap = (function only) If true, the path is considered a closed polygon.
+//   style = The triangulation style used.  See {{vnf_vertex_array()}} for valid styles.  Default: `"min_edge"`
+//   reverse = If the default faces are facing the wrong way, you can reverse them by setting this to `true`.  Default: `false`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Texture Values:
+//   "ribs" = Vertically aligned triangular ribs.
+//   "trunc_ribs" = Like "ribs" but with flat rib tips.
+//   "wave_ribs" = Vertically aligned wavy ribs.
+//   "diamonds" = Diamond shapes with tips aligned with the axes.  Useful for knurling.
+//   "pyramids" = Pyramids shapes with flat sides aligned with the axes.  Also useful for knurling.
+//   "trunc_pyramids" = Like "pyramids" but with flattened tips.
+//   "dimpled_pyramids" = Like "trunc_pyramids" but with dimples in the flat tips.
+//   "hills" = Wavy hills and valleys,
+//   "waves" = A raised sine-wave patten, oriented vertically.
+//   "dots" = Raised small round bumps.
+//   "cones" = Raised conical spikes.
+// Extra Anchors:
+//   centroid_top = The centroid of the top of the shape, oriented UP.
+//   centroid = The centroid of the center of the shape, oriented UP.
+//   centroid_bot = The centroid of the bottom of the shape, oriented DOWN.
+// See Also: textured_revolution(), textured_cylinder()
+// Example: "ribs" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, h=40, "ribs", tex_size=[3,5]);
+// Example: Rotated "ribs" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, h=40, "ribs", tex_size=[3,5], rot=true);
+// Example: Truncated "trunc_ribs" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, h=40, "trunc_ribs", tex_size=[3,5]);
+// Example: "wave_ribs" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, h=40, "wave_ribs", tex_size=[3,5]);
+// Example: "diamonds" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, "diamonds", tex_size=[5,10], h=40, style="concave");
+// Example: "pyramids" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, h=40, "pyramids", tex_size=[5,5], style="convex");
+// Example: Inverted "pyramids" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, h=40, "pyramids", tex_size=[5,5], tscale=-1, style="concave");
+// Example: "trunc_pyramids" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, h=40, "trunc_pyramids", tex_size=[5,5], style="convex");
+// Example: "trunc_pyramids" with style="concave".
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, h=40, "trunc_pyramids", tex_size=[5,5], style="concave");
+// Example: Inverted "trunc_pyramids" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, h=40, "trunc_pyramids", tex_size=[5,5], tscale=-1, style="concave");
+// Example: "dimpled_pyramids" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, h=40, "dimpled_pyramids", tex_size=[5,5], style="convex");
+// Example: "hills" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, "hills", tex_size=[5,5], h=40, style="quincunx");
+// Example: "waves" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, "waves", tex_size=[5,10], h=40, style="min_edge");
+// Example: "dots" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, "dots", tex_size=[5,5], h=40, style="concave");
+// Example: Inverted "dots" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, "dots", tex_size=[5,5], tscale=-1, h=40, style="concave");
+// Example: "cones" texture.
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   textured_linear_sweep(path, "cones", tex_size=[5,5], h=40, style="concave");
+// Example: User defined texture.
+//   path = ellipse(r=[20,10]);
+//   texture = [for (i=[0:9]) [ for (j=[0:9]) 1/max(0.5,norm([i,j]-[5,5])) ]];
+//   textured_linear_sweep(path, texture, tex_size=[5,5], h=40, style="min_edge", anchor=BOT);
+// Example: As Function
+//   path = glued_circles(r=15, spread=40, tangent=45);
+//   vnf = textured_linear_sweep(path, h=40, "trunc_pyramids", tex_size=[5,5], tscale=1, style="convex");
+//   vnf_polyhedron(vnf, convexity=10);
+function textured_linear_sweep(
+    path, texture,
+    tex_size=[5,5], h, counts,
+    inset=false, rot=false, tscale=1,
+    caps=true, col_wrap=true,
+    twist, scale, shift,
+    style="min_edge", reverse=false, l,
+    anchor=CENTER, spin=0, orient=UP
+) =
+    assert(is_path(path,[2]))
+    assert(is_bool(caps))
+    assert(is_bool(reverse))
+    assert(counts==undef || is_vector(counts,2))
+    assert(tex_size==undef || is_vector(tex_size,2))
+    let(
+        tex = is_string(texture)? _get_texture(texture) : texture,
+        texture = rot? transpose(tex) : tex,
+        twist = default(twist, 0),
+        shift = default(shift, [0,0]),
+        scale = scale==undef? [1,1,1] : is_num(scale)? [scale,scale,1] : scale,
+        h = first_defined([h, l, 1]),
+        plen = path_length(path, closed=col_wrap),
+        counts = is_vector(counts,2)? counts :
+            is_vector(tex_size,2)
+              ? [round(plen/tex_size.x), max(1,round(h/tex_size.y)), ]
+              : [30, 5],
+        texcnt = [len(texture[0]), len(texture)],
+        inset = is_num(inset)? inset : inset? 1 : 0,
+        xcnt = counts.x * texcnt.x,
+        ycnt = counts.y * texcnt.y,
+        bases = resample_path(path, n=xcnt+(col_wrap?0:1), closed=col_wrap),
+        norms = path_normals(bases, closed=col_wrap),
+        tiles = [
+            for (i = [0:1:ycnt])
+            let(
+                u = i / ycnt,
+                row = texture[i % texcnt.y],
+                levpts = [
+                    for (j = [0:1:xcnt-(col_wrap?1:0)])
+                    let(
+                        texh = (row[j % texcnt.x] - inset) * tscale,
+                        xy = bases[j] - norms[j] * texh,
+                        xyz = point3d(xy, (i/ycnt-0.5)*h)
+                    ) xyz
+                ]
+            ) apply(move(shift*u) * scale(lerp([1,1,1],scale,u)) * zrot(twist*u), levpts)
+        ],
+        vnf = vnf_vertex_array(
+            tiles, caps=caps, style=style, reverse=reverse,
+            col_wrap=col_wrap, row_wrap=false
+        ),
+        cent = centroid(path),
+        anchors = [
+            named_anchor("centroid_top", point3d(cent, h/2), UP),
+            named_anchor("centroid",     point3d(cent),      UP),
+            named_anchor("centroid_bot", point3d(cent,-h/2), DOWN)
+        ]
+    ) reorient(anchor,spin,orient, vnf=vnf, extent=true, anchors=anchors, p=vnf);
+
+
+module textured_linear_sweep(
+    path, texture, tex_size=[5,5], h,
+    inset=false, rot=false, tscale=1,
+    twist, scale, shift,
+    style="min_edge", reverse=false, l, counts,
+    anchor=CENTER, spin=0, orient=UP,
+    convexity=10
+) {
+    h = first_defined([h, l]);
+    vnf = textured_linear_sweep(
+        path, texture, h=h,
+        tex_size=tex_size, counts=counts,
+        inset=inset, rot=rot, tscale=tscale,
+        twist=twist, scale=scale, shift=shift,
+        caps=true, col_wrap=true,
+        style=style, reverse=reverse,
+        anchor=CENTER, spin=0, orient=UP
+    );
+    cent = centroid(path);
+    anchors = [
+        named_anchor("centroid_top", point3d(cent, h/2), UP),
+        named_anchor("centroid",     point3d(cent),      UP),
+        named_anchor("centroid_bot", point3d(cent,-h/2), DOWN)
+    ];
+    attachable(anchor,spin,orient, vnf=vnf, extent=true, anchors=anchors) {
+        vnf_polyhedron(vnf, convexity=convexity);
+        children();
+    }
+}
+
+
+// Function&Module: textured_revolution()
+// Usage: As Function
+//   vnf = textured_revolution(path, texture, tex_size, [tscale=], ...);
+//   vnf = textured_revolution(path, texture, counts=, [tscale=], ...);
+// Usage: As Module
+//   textured_revolution(path, texture, tex_size, [tscale=], ...) [ATTACHMENTS];
+//   textured_revolution(path, texture, counts=, [tscale=], ...) [ATTACHMENTS];
+// Topics: Sweep, Extrusion, Textures, Knurling
+// Description:
+//   Given a single 2D path, fully in the X+ half-plane, revolves that path around the Z axis (after rotating its Y+ to Z+).
+//   This creates a solid from that surface of revolution, capped top and bottom, with the sides covered in a given tiled texture.
+// Arguments:
+//   path = The path to sweep/extrude.
+//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0) that define the texture to apply to vertical surfaces.  See {{textured_linear_sweep()}} for what textures are supported.
+//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   ---
+//   shift = [X,Y] amount to translate the top, relative to the bottom.  Default: [0,0]
+//   tscale = Scaling multiplier for the texture depth.
+//   inset = If numeric, lowers the texture into the surface by that amount, before the tscale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
+//   rot = If true, rotates the texture 90º.
+//   caps = (function only) If true, create endcaps for the extruded shape.  Default: `true`
+//   col_wrap = (function only) If true, the path is considered a closed polygon.  Useful mainly for things like making a textured torus.  Default: `false`
+//   style = The triangulation style used.  See {{vnf_vertex_array()}} for valid styles.  Default: `"min_edge"`
+//   reverse = If the default faces are facing the wrong way, you can reverse them by setting this to `true`.  Default: `false`
+//   counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Texture Values:
+//   "ribs" = Vertically aligned triangular ribs.
+//   "trunc_ribs" = Like "ribs" but with flat rib tips.
+//   "wave_ribs" = Vertically aligned wavy ribs.
+//   "diamonds" = Diamond shapes with tips aligned with the axes.  Useful for knurling.
+//   "pyramids" = Pyramids shapes with flat sides aligned with the axes.  Also useful for knurling.
+//   "trunc_pyramids" = Like "pyramids" but with flattened tips.
+//   "dimpled_pyramids" = Like "trunc_pyramids" but with dimples in the flat tips.
+//   "hills" = Wavy hills and valleys,
+//   "waves" = A raised sine-wave patten, oriented vertically.
+//   "dots" = Raised small round bumps.
+//   "cones" = Raised conical spikes.
+// See Also: textured_linear_sweep(), textured_cylinder()
+// Example:
+//   include <BOSL2/beziers.scad>
+//   bezpath = [
+//       [15, 30], [10,15],
+//       [10,  0], [20, 10], [30,12],
+//       [30,-12], [20,-10], [10, 0],
+//       [10,-15], [15,-30]
+//   ];
+//   path = bezpath_curve(bezpath, splinesteps=32);
+//   textured_revolution(path, "diamonds", tex_size=[5,5], tscale=1, style="concave");
+// Example:
+//   path = [
+//       [20, 30], [20, 20],
+//       each arc(r=20, corner=[[20,20],[10,0],[20,-20]]),
+//       [20,-20], [20,-30],
+//   ];
+//   vnf = textured_revolution(path, "trunc_pyramids", tex_size=[5,5], tscale=1, style="convex");
+//   vnf_polyhedron(vnf, convexity=10);
+function textured_revolution(
+    path, texture, tex_size,
+    tscale=1, inset=false, rot=false,
+    caps=true, wrap=false, shift=[0,0],
+    style="min_edge", reverse=false,
+    counts
+) =
+    assert(is_path(path,[2]))
+    assert(is_bool(caps))
+    assert(is_bool(wrap))
+    assert(is_bool(reverse))
+    assert(counts==undef || is_vector(counts,2))
+    assert(tex_size==undef || is_vector(tex_size,2))
+    let(
+        tex = is_string(texture)? _get_texture(texture) : texture,
+        texture = rot? transpose(tex) :  tex,
+        plen = path_length(path),
+        maxx = max(column(path,0)),
+        circumf = 2 * PI * maxx,
+        counts = is_vector(counts,2)? counts :
+            is_vector(tex_size,2)
+              ? [round(circumf/tex_size.x), round(plen/tex_size.y)]
+              : [30, 5],
+        texcnt = [len(texture[0]), len(texture)],
+        inset = is_num(inset)? inset : inset? 1 : 0,
+        xcnt = counts.x * texcnt.x,
+        ycnt = counts.y * texcnt.y,
+        bases = resample_path(path, n=ycnt+1, closed=false),
+        norms = path_normals(bases),
+        tiles = [
+            for (i = [0:1:ycnt])
+            let(row = texture[i % texcnt.y]) [
+                for (j = [0:1:xcnt-1])
+                let(
+                    tscale = !wrap && (i==0 || i==ycnt)? 0 : tscale,
+                    texh = tscale * (row[j % texcnt.x] - inset) * (bases[i].x/maxx),
+                    xy = bases[i] - texh * norms[i],
+                    xyz = lerp([0,0,0],point3d(shift),i/ycnt) + rot([90, 0, 360*j/xcnt], p=point3d(xy))
+                )
+                xyz
+            ]
+        ],
+        vnf = vnf_vertex_array(
+            tiles, caps=caps, style=style, reverse=reverse,
+            col_wrap=true, row_wrap=wrap
+        )
+    ) vnf;
+
+
+module textured_revolution(
+    path, texture, tex_size,
+    tscale=1, inset=false, rot=false,
+    caps=true, wrap=false, shift=[0,0],
+    style="min_edge", reverse=false,
+    atype="surface",
+    convexity=10, counts,
+    anchor=CENTER, spin=0, orient=UP
+) {
+    assert(in_list(atype, ["surface","extent"]));
+    vnf = textured_revolution(
+        path, texture, tex_size=tex_size,
+        tscale=tscale, inset=inset, rot=rot,
+        caps=caps, wrap=wrap, style=style,
+        reverse=reverse, shift=shift,
+        counts=counts
+    );
+    geom = atype=="surface"
+          ? attach_geom(vnf=vnf, extent=false)
+          : attach_geom(vnf=vnf, extent=true);
+    attachable(anchor,spin,orient, geom=geom) {
+        vnf_polyhedron(vnf, convexity=convexity);
+        children();
+    }
+}
+
+
+// Function&Module: textured_cylinder()
+// Usage: As Function
+//   vnf = textured_cylinder(h|l=, r|d=, texture, tex_size|counts=, [tscale=], [inset=], [rot=], ...);
+//   vnf = textured_cylinder(h|l=, r1=|d1=, r2=|d2=, texture=, tex_size=|counts=, [tscale=], [inset=], [rot=], ...);
+// Usage: As Module
+//   textured_cylinder(h, r|d=, texture, tex_size|counts=, [tscale=], [inset=], [rot=], ...) [ATTACHMENTS];
+//   textured_cylinder(h, r1=|d1=, r2=|d2=, texture=, tex_size=|counts=, [tscale=], [inset=], [rot=], ...) [ATTACHMENTS];
+// Topics: Sweep, Extrusion, Textures, Knurling
+// Description:
+//   Creates a cylinder or cone with optional chamfers or roundings, covered in a textured surface.
+// Arguments:
+//   h | l = The height of the cylinder.
+//   r = The radius of the cylinder.
+//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0) that define the texture to apply to vertical surfaces.  See {{textured_linear_sweep()}} for supported textures.
+//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   ---
+//   r1 = The radius of the bottom of the cylinder.
+//   r2 = The radius of the top of the cylinder.
+//   d = The diameter of the cylinder.
+//   d1 = The diameter of the bottom of the cylinder.
+//   d2 = The diameter of the top of the cylinder.
+//   tscale = Scaling multiplier for the texture depth.
+//   inset = If numeric, lowers the texture into the surface by that amount, before the tscale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
+//   rot = If true, rotates the texture 90º.
+//   caps = (function only) If true, create endcaps for the extruded shape.  Default: `true`
+//   shift = [X,Y] amount to translate the top, relative to the bottom.  Default: [0,0]
+//   style = The triangulation style used.  See {{vnf_vertex_array()}} for valid styles.  Default: `"min_edge"`
+//   reverse = If the default faces are facing the wrong way, you can reverse them by setting this to `true`.  Default: `false`
+//   counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
+//   chamfer = If given, chamfers the top and bottom of the cylinder by the given size.
+//   chamfer1 = If given, chamfers the bottom of the cylinder by the given size.
+//   chamfer2 = If given, chamfers the top of the cylinder by the given size.
+//   rounding = If given, rounds the top and bottom of the cylinder to the given radius.
+//   rounding1 = If given, rounds the bottom of the cylinder to the given radius.
+//   rounding2 = If given, rounds the top of the cylinder to the given radius.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Texture Values:
+//   "ribs" = Vertically aligned triangular ribs.
+//   "trunc_ribs" = Like "ribs" but with flat rib tips.
+//   "wave_ribs" = Vertically aligned wavy ribs.
+//   "diamonds" = Diamond shapes with tips aligned with the axes.  Useful for knurling.
+//   "pyramids" = Pyramids shapes with flat sides aligned with the axes.  Also useful for knurling.
+//   "trunc_pyramids" = Like "pyramids" but with flattened tips.
+//   "dimpled_pyramids" = Like "trunc_pyramids" but with dimples in the flat tips.
+//   "hills" = Wavy hills and valleys,
+//   "waves" = A raised sine-wave patten, oriented vertically.
+//   "dots" = Raised small round bumps.
+//   "cones" = Raised conical spikes.
+// See Also: textured_linear_sweep(), textured_revolution()
+// Examples:
+//   textured_cylinder(h=40, r=20, texture="diamonds", tex_size=[5,5]);
+//   textured_cylinder(h=40, r1=20, r2=15, texture="pyramids", tex_size=[5,5], style="concave");
+//   textured_cylinder(h=40, r1=20, r2=15, texture="trunc_pyramids", tex_size=[5,5], chamfer=5, style="convex");
+//   textured_cylinder(h=40, r1=20, r2=15, texture="dots", tex_size=[5,5], rounding=8, style="convex");
+function textured_cylinder(
+    h, r, texture, tex_size=[1,1], counts,
+    tscale=1, inset=false, rot=false,
+    caps=true, style="min_edge",
+    reverse=false, shift=[0,0],
+    l, r1, r2, d, d1, d2,
+    chamfer, chamfer1, chamfer2,
+    rounding, rounding1, rounding2
+) =
+    let(
+        h = first_defined([h, l, 1]),
+        r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
+        r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
+        chamf1 = first_defined([chamfer1, chamfer]),
+        chamf2 = first_defined([chamfer2, chamfer]),
+        round1 = first_defined([rounding1, rounding]),
+        round2 = first_defined([rounding2, rounding]),
+        path = [
+            if (is_finite(chamf1)) each arc(n=2, r=chamf1, corner=[[0,-h/2],[r1,-h/2],[r2,h/2]])
+                else if (is_finite(round1)) each arc(r=round1, corner=[[0,-h/2],[r1,-h/2],[r2,h/2]])
+                else [r1,-h/2],
+            if (is_finite(chamf2)) each arc(n=2, r=chamf2, corner=[[r1,-h/2],[r2,h/2],[0,h/2]])
+                else if (is_finite(round2)) each arc(r=round2, corner=[[r1,-h/2],[r2,h/2],[0,h/2]])
+                else [r2,h/2],
+        ],
+        vnf = textured_revolution(
+            reverse(path), texture,
+            tex_size=tex_size, counts=counts,
+            tscale=tscale, inset=inset, rot=rot,
+            caps=caps, style=style, reverse=reverse,
+            shift=shift
+        )
+    ) vnf;
+
+
+module textured_cylinder(
+    h, r, texture, tex_size=[1,1],
+    counts, tscale=1, inset=false, rot=false,
+    style="min_edge", reverse=false, shift=[0,0],
+    l, r1, r2, d, d1, d2,
+    chamfer, chamfer1, chamfer2,
+    rounding, rounding1, rounding2,
+    convexity=10,
+    anchor=CENTER, spin=0, orient=UP
+) {
+    h = first_defined([h, l, 1]);
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
+    chamf1 = first_defined([chamfer1, chamfer]);
+    chamf2 = first_defined([chamfer2, chamfer]);
+    round1 = first_defined([rounding1, rounding]);
+    round2 = first_defined([rounding2, rounding]);
+    vnf = textured_cylinder(
+        texture=texture, h=h, r1=r1, r2=r2,
+        tscale=tscale, inset=inset, rot=rot,
+        counts=counts, tex_size=tex_size,
+        caps=true, style=style,
+        reverse=reverse, shift=shift,
+        chamfer1=chamf1, chamfer2=chamf2,
+        rounding1=round1, rounding2=round2
+    );
+    attachable(anchor,spin,orient, r1=r1, r2=r2, h=h, shift=shift) {
+        vnf_polyhedron(vnf, convexity=convexity);
+        children();
+    }
+}
 
 
 
