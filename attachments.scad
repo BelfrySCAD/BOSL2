@@ -1567,7 +1567,7 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 // Usage: Spheroid/Ovoid Geometry
 //   geom = attach_geom(r=|d=, ...);
 // Usage: Extruded 2D Path/Polygon/Region Geometry
-//   geom = attach_geom(region=, l=|h=, [extent=], ...);
+//   geom = attach_geom(region=, l=|h=, [extent=], [shift=], [scale=], [twist=], ...);
 // Usage: VNF Geometry
 //   geom = attach_geom(vnf=, [extent=], ...);
 //
@@ -1583,6 +1583,8 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 //   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
 //   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
 //   shift = If given as a 2D vector, shifts the top of the prismoidal or conical shape by the given amount.  If given as a number, shifts the back of the trapezoidal shape right by that amount.  Default: No shift.
+//   scale = If given as number or a 2D vector, scales the top of the shape, relative to the bottom.  Default: `[1,1]`
+//   twist = If given as number, rotates the top of the shape by the given number of degrees clockwise, relative to the bottom.  Default: `0`
 //   r = Radius of the cylindrical/conical volume.  Can be a scalar, or a list of sizes per axis.
 //   d = Diameter of the cylindrical/conical volume.  Can be a scalar, or a list of sizes per axis.
 //   r1 = Radius of the bottom of the conical volume.  Can be a scalar, or a list of sizes per axis.
@@ -1663,7 +1665,8 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 //   geom = attach_geom(region=region, l=length, extent=false);
 //
 function attach_geom(
-    size, size2, shift,
+    size, size2,
+    shift, scale, twist,
     r,r1,r2, d,d1,d2, l,h,
     vnf, region,
     extent=true,
@@ -1713,9 +1716,17 @@ function attach_geom(
               ? ["rgn_extent", region, cp, offset, anchors]
               : ["rgn_isect",  region, cp, offset, anchors]
           : assert(is_finite(l))
+            let(
+                shift = default(shift, [0,0]),
+                scale = is_num(scale)? [scale,scale] : default(scale, [1,1]),
+                twist = default(twist, 0)
+            )
+            assert(is_vector(shift,2))
+            assert(is_vector(scale,2))
+            assert(is_num(twist))
             extent==true
-              ? ["xrgn_extent", region, l, cp, offset, anchors]
-              : ["xrgn_isect",  region, l, cp, offset, anchors]
+              ? ["xrgn_extent", region, l, twist, scale, shift, cp, offset, anchors]
+              : ["xrgn_isect",  region, l, twist, scale, shift, cp, offset, anchors]
     ) :
     let(
         r1 = get_radius(r1=r1,d1=d1,r=r,d=d,dflt=undef)
@@ -1922,7 +1933,7 @@ function _get_cp(geom) =
     assert(type!="other", "Invalid cp value")
     cp=="centroid" ? (
        type=="vnf" && (len(geom[1][0])==0 || len(geom[1][1])==0) ? [0,0,0] :
-       [each centroid(geom[1]), if (type=="xpath") geom[2]/2]
+       [each centroid(geom[1]), if (type=="xpath") 0]
     )
   : let(points = type=="vnf"?geom[1][0]:flatten(force_region(geom[1])))
     cp=="mean" ? [each mean(points), if (type=="xpath") geom[2]/2]
@@ -2160,11 +2171,21 @@ function _find_anchor(anchor, geom) =
         assert(in_list(anchor.z,[-1,0,1]), "The Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
         let(
             anchor_xy = point2d(anchor),
-            L = geom[2]
+            rgn = geom[1],
+            L = geom[2],
+            twist = geom[3],
+            scale = geom[4],
+            shift = geom[5],
+            u = (anchor.z + 1) / 2,
+            shmat = move(lerp([0,0], shift, u)),
+            scmat = scale(lerp([1,1], scale, u)),
+            twmat = zrot(lerp(0, -twist, u)),
+            mat = shmat * scmat * twmat
         )
-        approx(anchor_xy,[0,0]) ? [anchor, up(anchor.z*L/2,cp), anchor, oang] :
+        approx(anchor_xy,[0,0]) ? [anchor, apply(mat, up(anchor.z*L/2,cp)), anchor, oang] :
         let(
-            newgeom = list_set(geom, [0,len(geom)-3], [substr(geom[0],1), point2d(cp)]),
+            newrgn = apply(mat, rgn),
+            newgeom = attach_geom(two_d=true, region=newrgn, extent=type=="xrgn_extent", cp=cp),
             result2d = _find_anchor(anchor_xy, newgeom),
             pos = point3d(result2d[1], cp.z+anchor.z*L/2),
             vec = unit(point3d(result2d[2], anchor.z),UP),

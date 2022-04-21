@@ -523,15 +523,14 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   maxseg = If given, then any long segments of the region will be subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
 //   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
 //   convexity = Max number of surfaces any single ray could pass through.  Module use only.
-//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: `[0,0,0]`
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: `"centroid"`
 //   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Extra Anchors:
-//   centroid_top = The centroid of the top of the shape, oriented UP.
-//   centroid = The centroid of the center of the shape, oriented UP.
-//   centroid_bot = The centroid of the bottom of the shape, oriented DOWN.
+//   "origin" = Centers the extruded shape vertically only, but keeps the original path positions in the X and Y.  Oriented UP.
+//   "original_base" = Keeps the original path positions in the X and Y, but at the bottom of the extrusion.  Oriented UP.
 // Example: Extruding a Compound Region.
 //   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
 //   rgn2 = [square(30,center=false)];
@@ -574,27 +573,27 @@ module linear_sweep(
     region, height, center,
     twist=0, scale=1, shift=[0,0],
     slices, maxseg, style="default", convexity,
-    cp=[0,0,0], atype="hull", h,
+    cp, atype="hull", h,
     anchor, spin=0, orient=UP
 ) {
     h = first_defined([h, height, 1]);
     region = force_region(region);
     check = assert(is_region(region),"Input is not a region");
-    anchor = get_anchor(anchor, center, BOT, BOT);
+    anchor = center==true? "origin" :
+        center == false? "original_base" :
+        default(anchor, "original_base");
     vnf = linear_sweep(
         region, height=h, style=style,
         twist=twist, scale=scale, shift=shift,
         slices=slices, maxseg=maxseg,
-        anchor=CTR
+        anchor="origin"
     );
-    cent = centroid(region);
     anchors = [
-        named_anchor("centroid_top", point3d(cent, h/2), UP),
-        named_anchor("centroid",     point3d(cent),      UP),
-        named_anchor("centroid_bot", point3d(cent,-h/2), DOWN)
+        named_anchor("original_base", [0,0,-h/2], UP)
     ];
-    geom = atype=="hull"? attach_geom(cp=cp, region=region, h=h, extent=true, anchors=anchors) :
-        atype=="intersect"? attach_geom(cp=cp, region=region, h=h, extent=false, anchors=anchors) :
+    cp = default(cp, "centroid");
+    geom = atype=="hull"? attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+        atype=="intersect"? attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
         assert(in_list(atype, ["hull", "intersect"]));
     attachable(anchor,spin,orient, geom=geom) {
         vnf_polyhedron(vnf, convexity=convexity);
@@ -607,7 +606,7 @@ function linear_sweep(
     region, height, center,
     twist=0, scale=1, shift=[0,0],
     slices, maxseg, style="default",
-    cp=[0,0,0], atype="hull", h,
+    cp, atype="hull", h,
     anchor, spin=0, orient=UP
 ) =
     let( region = force_region(region) )
@@ -616,7 +615,9 @@ function linear_sweep(
     assert(is_vector(shift, 2), str(shift))
     let(
         h = first_defined([h, height, 1]),
-        anchor = get_anchor(anchor, center, BOT, BOT),
+        anchor = center==true? "origin" :
+            center == false? "original_base" :
+            default(anchor, "original_base"),
         regions = region_parts(region),
         slices = default(slices, max(1,ceil(abs(twist)/5))),
         scale = is_num(scale)? [scale,scale] : point2d(scale),
@@ -655,14 +656,12 @@ function linear_sweep(
             for (rgn = regions) vnf_from_region(rgn, down(h/2), reverse=true),
             for (rgn = trgns) vnf_from_region(rgn, up(h/2), reverse=false)
         ]),
-        cent = centroid(region),
         anchors = [
-            named_anchor("centroid_top", point3d(cent, h/2), UP),
-            named_anchor("centroid",     point3d(cent),      UP),
-            named_anchor("centroid_bot", point3d(cent,-h/2), DOWN)
+            named_anchor("original_base", [0,0,-h/2], UP)
         ],
-        geom = atype=="hull"? attach_geom(cp=cp, region=region, h=h, extent=true, anchors=anchors) :
-            atype=="intersect"? attach_geom(cp=cp, region=region, h=h, extent=false, anchors=anchors) :
+        cp = default(cp, "centroid"),
+        geom = atype=="hull"? attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+            atype=="intersect"? attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
             assert(in_list(atype, ["hull", "intersect"]))
     ) reorient(anchor,spin,orient, geom=geom, p=vnf);
 
