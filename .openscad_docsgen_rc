@@ -11,6 +11,7 @@ IgnoreFiles:
   tmp_*.scad
 PrioritizeFiles:
   transforms.scad
+  constants.scad
   attachments.scad
   shapes2d.scad
   shapes3d.scad
@@ -23,10 +24,10 @@ PrioritizeFiles:
   mutators.scad
   paths.scad
   regions.scad
+  skin.scad
   vnf.scad
   beziers.scad
   rounding.scad
-  skin.scad
   turtle3d.scad
   math.scad
   linalg.scad
@@ -35,7 +36,6 @@ PrioritizeFiles:
   coords.scad
   geometry.scad
   trigonometry.scad
-  constants.scad
   version.scad
   comparisons.scad
   lists.scad
