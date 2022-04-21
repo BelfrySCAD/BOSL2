@@ -2485,7 +2485,7 @@ module textured_revolution(
 // See Also: textured_linear_sweep(), textured_revolution()
 // Examples:
 //   textured_cylinder(h=40, r=20, texture="diamonds", tex_size=[5,5]);
-//   textured_cylinder(h=40, r1=20, r2=15, texture="pyramids", tex_size=[5,5], style="concave");
+//   textured_cylinder(h=40, r1=20, r2=15, texture="pyramids", tex_size=[5,5], style="convex");
 //   textured_cylinder(h=40, r1=20, r2=15, texture="trunc_pyramids", tex_size=[5,5], chamfer=5, style="convex");
 //   textured_cylinder(h=40, r1=20, r2=15, texture="dots", tex_size=[5,5], rounding=8, style="convex");
 function textured_cylinder(
