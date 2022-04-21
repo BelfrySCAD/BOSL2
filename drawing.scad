@@ -5,7 +5,7 @@
 //   three-dimensional paths.  You can make a dashed line or add arrow
 //   heads.  The turtle() function provides a turtle graphics style
 //   approach for producing paths.  The arc() function produces arc paths,
-//   and helix() produces helix paths.
+//   and helix() produces helical paths.
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Basic Modeling

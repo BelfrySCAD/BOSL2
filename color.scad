@@ -1,10 +1,12 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: color.scad
-//   HSV and HSL conversion, and raindow module for coloring multiple objects.
+//   HSV and HSL conversion, raindow() module for coloring multiple objects. 
+//   The recolor() and color_this() modules allow you to change the color
+//   of previously colored attachable objects.  
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Basic Modeling
-// FileSummary: HSV and HSL conversion, color multiple objects
+// FileSummary: HSV and HSL conversion, color multiple objects, change color of objects
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 

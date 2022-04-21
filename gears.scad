@@ -1,8 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////
 // LibFile: gears.scad
 //   Spur Gears, Bevel Gears, Racks, Worms and Worm Gears.
-//   Originally based on code by Leemon Baird, 2011, Leemon@Leemon.com
-//   Almost completely rewritten for BOSL2 by Revar Desmera, 2017-2021, revarbat@gmail.com
+//   Inspired by code by Leemon Baird, 2011, Leemon@Leemon.com
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/gears.scad>

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: bottlecaps.scad
-//   Bottle caps and necks for PCO18XX standard plastic beverage bottles.
+//   Bottle caps and necks for PCO18XX standard plastic beverage bottles, and SPI standard bottle necks.  
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/bottlecaps.scad>

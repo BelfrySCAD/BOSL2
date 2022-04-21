@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: linear_bearings.scad
-//   Linear Bearing clips/holders.
+//   Mounts for LMxUU style linear bearings.
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/linear_bearings.scad>

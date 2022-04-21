@@ -2,7 +2,8 @@
 // LibFile: paths.scad
 //   A `path` is a list of points of the same dimensions, usually 2D or 3D, that can
 //   be connected together to form a sequence of line segments or a polygon.
-//   The functions in this file work on paths and also 1-regions, which are regions
+//   A `region` is a list of paths that represent polygons, and the functions
+//   in this file work on paths and also 1-regions, which are regions
 //   that include exactly one path.  When you pass a 1-region to a function, the default
 //   value for `closed` is always `true` because regions represent polygons.  
 //   Capabilities include computing length of paths, computing

@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: structs.scad
 //   This file provides manipulation of "structs".  A "struct" is a data structure that
-//   associates keywords with values and allows you to get and set values
-//   by keyword.  
+//   associates arbitrary keys with values and allows you to get and set values
+//   by key.  
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/structs.scad>

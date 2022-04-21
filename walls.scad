@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: walls.scad
-//   Various wall constructions.
+//   Walls and structural elements that 3D print without support.
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/walls.scad>

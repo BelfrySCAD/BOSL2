@@ -4,7 +4,7 @@
 //   that produce a VNF.  Also included are shortcuts cylinders in each orientation and extended versions of
 //   the standard modules that provide roundovers and chamfers.  The spheroid() module provides
 //   several different ways to make a sphere, and the text modules let you write text on a path
-//   so you can place it on a curved object.  
+//   so you can place it on a curved object.  A ruler lets you measure objects.  
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Basic Modeling

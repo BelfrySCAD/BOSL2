@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: hingesnaps.scad
-//   Useful hinge mask and snaps shapes.
+//   Modules for creating snap-locking foldable hined parts.  Includes the mask to create the hinge and
+//   modules to create the snap-locks. 
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/hingesnaps.scad>

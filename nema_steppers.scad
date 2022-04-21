@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: nema_steppers.scad
-//   Masks and models for NEMA stepper motors.
+//   Mounting holes for NEMA motors, and simple motor models.
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/nema_steppers.scad>
