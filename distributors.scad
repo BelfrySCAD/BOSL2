@@ -1,10 +1,12 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: distributors.scad
-//   Functions and modules to distribute children or copies of children.
+//   Functions and modules to distribute children or copies of children onto
+//   a line, a grid, or an arbitrary path.  The $idx mechanism means that
+//   the "copies" of children can vary.  Also includes shortcuts for mirroring.  
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Basic Modeling
-// FileSummary: Copy or distribute objects onto a line or grid.  Mirror shortcuts. 
+// FileSummary: Copy or distribute objects onto a line, grid, or path.  Mirror shortcuts. 
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 

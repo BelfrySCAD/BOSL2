@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: wiring.scad
-//   Rendering for wire bundles
+//   Rendering for routed wire bundles
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/wiring.scad>

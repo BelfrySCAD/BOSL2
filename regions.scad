@@ -3,7 +3,7 @@
 //   This file provides 2D boolean set operations on polygons, where you can
 //   compute, for example, the intersection or union of the shape defined by point lists, producing
 //   a new point list.  Of course, such operations may produce shapes with multiple
-//   components.  To handle that, we use "regions" which are defined by lists of polygons.
+//   components.  To handle that, we use "regions" which are lists of paths representing the polygons.
 //   In addition to set operations, you can calculate offsets, determine whether a point is in a
 //   region and you can decompose a region into parts.  
 // Includes:

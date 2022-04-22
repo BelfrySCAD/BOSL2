@@ -2,11 +2,14 @@
 // LibFile: rounding.scad
 //   Routines to create rounded corners, with either circular rounding,
 //   or continuous curvature rounding with no sudden curvature transitions.
+//   Provides rounding of corners or rounding that preserves corner points and curves the edges.
+//   Also provides some 3D rounding functions, and a powerful function for joining
+//   two prisms together with a rounded fillet at the joint.  
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/rounding.scad>
 // FileGroup: Advanced Modeling
-// FileSummary: Round path corners, rounded prisms, rounded cutouts in tubes.
+// FileSummary: Round path corners, rounded prisms, rounded cutouts in tubes, filleted prism joints
 //////////////////////////////////////////////////////////////////////
 include <beziers.scad>
 include <structs.scad>

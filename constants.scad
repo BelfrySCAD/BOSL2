@@ -1,8 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: constants.scad
-//   Useful Constants.
+//   Constants for directions (used with anchoring), and for specifying line termination for
+//   use with geometry.scad.  
 // Includes:
 //   include <BOSL2/std.scad>
+// FileSummary: Constants provided by the library
+
 //////////////////////////////////////////////////////////////////////
 
 // a value that the user should never enter randomly;

@@ -1,6 +1,10 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: screws.scad
-//   Functions and modules for creating metric and UTS standard screws and nuts.
+//   Functions and modules for creating metric (ISO) and English (UTS) standard screws and nuts.
+//   Included is a function for calculating the standard dimensions of screws including the
+//   tolerance values that are required to create clearance so that screws mate properly when they are formed
+//   precisely.  If you can fabricate objects accurately then your screws will mate
+//   with standard hardware. 
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/screws.scad>

@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: threading.scad
-//   Triangular and Trapezoidal-Threaded Screw Rods and Nuts.
+//   Provides generic threading support and specialized support for standard triangular (UTS/ISO) threading,
+//   trapezoidal threading (ACME), pipe threading, buttress threading, square threading and ball screws.  
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/threading.scad>
 // FileGroup: Threaded Parts
 // FileSummary: Various types of threaded rods and nuts.
 //////////////////////////////////////////////////////////////////////
-
 
 // Section: Standard (UTS/ISO) Threading
 

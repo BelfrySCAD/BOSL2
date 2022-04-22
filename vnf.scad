@@ -3,7 +3,9 @@
 //   The Vertices'N'Faces structure (VNF) holds the data used by polyhedron() to construct objects: a vertex
 //   list and a list of faces.  This library makes it easier to construct polyhedra by providing
 //   functions to construct, merge, and modify VNF data, while avoiding common pitfalls such as
-//   reversed faces.  
+//   reversed faces.  It can find faults in your polyhedrons.  Note that this file is for low level manipulation
+//   of lists of vertices and faces: it can perform some simple transformations on VNF structures
+//   but cannot perform boolean operations on the polyhedrons represented by VNFs.
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Advanced Modeling

@@ -1,11 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: screw_drive.scad
-//   Recess masks for screw heads
+//   Masks for Phillips, Torx and square (Robertson) driver holes.
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/screw_drive.scad>
 // FileGroup: Threaded Parts
-// FileSummary: Masks for Phillips/Torx/etc driver holes.
+// FileSummary: Masks for Phillips, Torx and square (Robertson) driver holes.
 //////////////////////////////////////////////////////////////////////
 
 
