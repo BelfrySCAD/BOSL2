@@ -51,12 +51,11 @@ module mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) {
 }
 
 function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
-    assert(is_num(r)||is_num(d))
-    assert(is_undef(excess)||is_num(excess))
-    assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
+    assert(is_finite(r)||is_finite(d))
+    assert(is_finite(excess))
+    assert(is_finite(inset)||(is_vector(inset)&&len(inset)==2))
     let(
         inset = is_list(inset)? inset : [inset,inset],
-        excess = default(excess,$overlap),
         r = get_radius(r=r,d=d,dflt=1),
         steps = quantup(segs(r),4)/4,
         step = 90/steps,
@@ -106,12 +105,11 @@ module mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) {
 }
 
 function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
-    assert(is_num(r)||is_num(d))
-    assert(is_undef(excess)||is_num(excess))
-    assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
+    assert(is_finite(r)||is_finite(d))
+    assert(is_finite(excess))
+    assert(is_finite(inset)||(is_vector(inset)&&len(inset)==2))
     let(
         inset = is_list(inset)? inset : [inset,inset],
-        excess = default(excess,$overlap),
         r = get_radius(r=r,d=d,dflt=1),
         steps = quantup(segs(r),4)/4,
         step = 90/steps,
@@ -174,12 +172,11 @@ module mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTER,
 
 function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTER,spin=0) =
     let(dummy=one_defined([x,y,edge],["x","y","edge"]))
-    assert(is_num(angle))
-    assert(is_undef(excess)||is_num(excess))
-    assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
+    assert(is_finite(angle))
+    assert(is_finite(excess))
+    assert(is_finite(inset)||(is_vector(inset)&&len(inset)==2))
     let(
         inset = is_list(inset)? inset : [inset,inset],
-        excess = default(excess,$overlap),
         x = is_def(x)? x :
             is_def(y)? adj_ang_to_opp(adj=y,ang=angle) :
             hyp_ang_to_opp(hyp=edge,ang=angle),
@@ -229,10 +226,9 @@ module mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) {
 }
 
 function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
-    assert(is_num(size)||(is_vector(size)&&len(size)==2))
-    assert(is_undef(excess)||is_num(excess))
+    assert(is_finite(size)||(is_vector(size)&&len(size)==2))
+    assert(is_finite(excess))
     let(
-        excess = default(excess,$overlap),
         size = is_list(size)? size : [size,size],
         path = [
             [size.x, -excess],
@@ -290,13 +286,12 @@ module mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, anch
 
 function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, anchor=CENTER, spin=0) =
     assert(num_defined([x,y,edge])==1)
-    assert(is_num(first_defined([x,y,edge])))
-    assert(is_num(angle))
-    assert(is_undef(excess)||is_num(excess))
-    assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
+    assert(is_finite(first_defined([x,y,edge])))
+    assert(is_finite(angle))
+    assert(is_finite(excess))
+    assert(is_finite(inset)||(is_vector(inset)&&len(inset)==2))
     let(
         inset = is_list(inset)? inset : [inset,inset],
-        excess = default(excess,$overlap),
         x = !is_undef(x)? x :
             !is_undef(y)? adj_ang_to_opp(adj=y,ang=angle) :
             hyp_ang_to_opp(hyp=edge,ang=angle),
@@ -342,9 +337,9 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 //       edge_profile(BOT)
 //           mask2d_teardrop(r=10, angle=40);
 function mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) =  
-    assert(is_num(angle))
+    assert(is_finite(angle))
     assert(angle>0 && angle<90)
-    assert(is_num(excess))
+    assert(is_finite(excess))
     let(
         r = get_radius(r=r, d=d, dflt=1),
         n = ceil(segs(r) * angle/360),
@@ -427,7 +422,6 @@ function mask2d_ogee(pattern, excess=0.01, anchor=CENTER, spin=0) =
     assert(len(pattern)%2==0,"pattern must be a list of TYPE, VAL pairs.")
     assert(all([for (i = idx(pattern,step=2)) in_list(pattern[i],["step","xstep","ystep","round","fillet"])]))
     let(
-        excess = default(excess,$overlap),
         x = concat([0], cumsum([
             for (i=idx(pattern,step=2)) let(
                 type = pattern[i],
