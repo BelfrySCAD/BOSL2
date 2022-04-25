@@ -622,23 +622,29 @@ module force_tags(tags)
 
 // Module: diff()
 // Usage:
-//   diff(neg, [keep]) CHILDREN;
+//   diff(remove, [keep]) CHILDREN;
 // Topics: Attachments
 // See Also: tags(), recolor(), show(), hide(), intersect()
 // Description:
 //   Perform a differencing operation using tags to control what happens.  The children are grouped into
-//   three categories.  The `neg` argument is a space delimited list of tags specifying objects to
+//   three categories.  The `remove` argument is a space delimited list of tags specifying objects to
 //   subtract.  The `keep` argument, if given, is a similar list of tags giving objects to be kept.
-//   Objects not matching `neg` or `keep` form the third category of base objects.
+//   Objects not matching `remove` or `keep` form the third category of base objects.
 //   To produce its output, diff() forms the union of all the base objects, which don't match any tags.
-//   Next it subtracts all the objects with tags in `neg`.  Finally it adds in objects listed in `keep`.  
+//   Next it subtracts all the objects with tags in `remove`.  Finally it adds in objects listed in `keep`.  
 //   . 
 //   Cannot be used in conjunction with `intersect()` or `hulling()` on the same parent object.
 //   .
 //   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   neg = String containing space delimited set of tag names of children to difference away.
-//   keep = String containing space delimited set of tag names of children to keep, that is, to union into the model after differencing is completed.  
+//   remove = String containing space delimited set of tag names of children to difference away.  Default: `"remove"`
+//   keep = String containing space delimited set of tag names of children to keep; that is, to union into the model after differencing is completed.  Default: `"keep"`
+// Example: Diffing using default tags
+//   diff()
+//   cuboid(50) {
+//       attach(TOP) sphere(d=40, $tags="remove");
+//       attach(CTR) cylinder(h=40, d=10, $tags="keep");
+//   }
 // Example: The "hole" items are subtracted from everything else.  The other tags can be anything you find convenient.  
 //   diff("hole")
 //     sphere(d=100, $tags="body") {
@@ -650,10 +656,10 @@ module force_tags(tags)
 //       zcyl(d=15, h=140, $tags="axle");
 //     }
 // Example:
-//   diff("neg", keep="axle")
+//   diff("remove", keep="axle")
 //   sphere(d=100) {
 //       attach(CENTER) xcyl(d=40, l=120, $tags="axle");
-//       attach(CENTER) cube([40,120,100], anchor=CENTER, $tags="neg");
+//       attach(CENTER) cube([40,120,100], anchor=CENTER, $tags="remove");
 //   }
 // Example: Masking
 //   diff("mask")
@@ -708,18 +714,18 @@ module force_tags(tags)
 //                 right(20)
 //                   circle(5);
 //       }
-module diff(neg, keep)
+module diff(remove="remove", keep="keep")
 {
     req_children($children);
     // Don't perform the operation if the current tags are hidden
     if (_attachment_is_shown($tags)) {
         difference() {
             if (keep == undef) {
-                hide(neg) children();
+                hide(remove) children();
             } else {
-                hide(str(neg," ",keep)) children();
+                hide(str(remove," ",keep)) children();
             }
-            show(neg) children();
+            show(remove) children();
         }
     }
     if (keep!=undef) {
