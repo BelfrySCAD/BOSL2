@@ -20,6 +20,7 @@ include <rounding.scad>
 //   half_joiner_clear(l, w, [ang=], [clearance=], [overlap=]) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = half_joiner_clear(l, w, [ang=], [clearance=], [overlap=]);
+// Topics: Joiners, Parts
 // Description:
 //   Creates a mask to clear an area so that a half_joiner can be placed there.
 // Arguments:
@@ -32,6 +33,7 @@ include <rounding.scad>
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// See Also: half_joiner_clear(), half_joiner(), half_joiner2(), joiner_clear(), joiner()
 // Example:
 //   half_joiner_clear();
 function half_joiner_clear(l=20, w=10, ang=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP) =
@@ -62,6 +64,7 @@ module half_joiner_clear(l=20, w=10, ang=30, clearance=0, overlap=0.01, anchor=C
 //   half_joiner(l, w, [base=], [ang=], [screwsize=], [$slop=]) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = half_joiner(l, w, [base=], [ang=], [screwsize=], [$slop=]);
+// Topics: Joiners, Parts
 // Description:
 //   Creates a half_joiner object that can be attached to a matching half_joiner2 object.
 // Arguments:
@@ -75,12 +78,13 @@ module half_joiner_clear(l=20, w=10, ang=30, clearance=0, overlap=0.01, anchor=C
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = Printer specific slop value to make parts fit more closely.
+// See Also: half_joiner_clear(), half_joiner(), half_joiner2(), joiner_clear(), joiner()
 // Examples(FlatSpin,VPD=75):
 //   half_joiner(screwsize=3);
 //   half_joiner(l=20,w=10,base=10);
 // Example(3D):
 //   diff()
-//   cuboid(50)
+//   cuboid(30)
 //       attach([FWD,TOP,RIGHT])
 //           xcopies(30) half_joiner();
 function half_joiner(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP) =
@@ -241,6 +245,7 @@ module half_joiner(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0
 //   half_joiner2(l, w, [base=], [ang=], [screwsize=])
 // Usage: As Function
 //   vnf = half_joiner2(l, w, [base=], [ang=], [screwsize=])
+// Topics: Joiners, Parts
 // Description:
 //   Creates a half_joiner2 object that can be attached to half_joiner object.
 // Arguments:
@@ -253,12 +258,13 @@ module half_joiner(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// See Also: half_joiner_clear(), half_joiner(), half_joiner2(), joiner_clear(), joiner()
 // Examples(FlatSpin,VPD=75):
 //   half_joiner2(screwsize=3);
 //   half_joiner2(w=10,base=10,l=20);
 // Example(3D):
 //   diff()
-//   cuboid(50)
+//   cuboid(30)
 //       attach([FWD,TOP,RIGHT])
 //           xcopies(30) half_joiner2();
 function half_joiner2(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP) =
@@ -442,6 +448,7 @@ module half_joiner2(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=
 //   Creates a mask to clear an area so that a joiner can be placed there.
 // Usage:
 //   joiner_clear(l, w, [ang=], [clearance=], [overlap=]) [ATTACHMENTS];
+// Topics: Joiners, Parts
 // Arguments:
 //   l = Length of the joiner to clear space for.
 //   w = Width of the joiner to clear space for.
@@ -452,6 +459,7 @@ module half_joiner2(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// See Also: half_joiner_clear(), half_joiner(), half_joiner2(), joiner_clear(), joiner()
 // Example:
 //   joiner_clear();
 function joiner_clear(l=40, w=10, ang=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP) = no_function("joiner_clear");
@@ -476,6 +484,7 @@ module joiner_clear(l=40, w=10, ang=30, clearance=0, overlap=0.01, anchor=CENTER
 // Module: joiner()
 // Usage:
 //   joiner(l, w, base, [ang=], [screwsize=], [$slop=]) [ATTACHMENTS];
+// Topics: Joiners, Parts
 // Description:
 //   Creates a joiner object that can be attached to another joiner object.
 // Arguments:
@@ -489,6 +498,7 @@ module joiner_clear(l=40, w=10, ang=30, clearance=0, overlap=0.01, anchor=CENTER
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = Printer specific slop value to make parts fit more closely.
+// See Also: half_joiner_clear(), half_joiner(), half_joiner2(), joiner_clear(), joiner()
 // Examples(FlatSpin,VPD=125):
 //   joiner(screwsize=3);
 //   joiner(l=40, w=10, base=10);
