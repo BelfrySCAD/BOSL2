@@ -15,15 +15,17 @@ include <rounding.scad>
 // Section: Half Joiners
 
 
-// Module: half_joiner_clear()
+// Function&Module: half_joiner_clear()
+// Usage: As Module
+//   half_joiner_clear(l, w, [ang=], [clearance=], [overlap=]) [ATTACHMENTS];
+// Usage: As Function
+//   vnf = half_joiner_clear(l, w, [ang=], [clearance=], [overlap=]);
 // Description:
 //   Creates a mask to clear an area so that a half_joiner can be placed there.
-// Usage:
-//   half_joiner_clear(h, w, [a], [clearance=], [overlap=]) [ATTACHMENTS];
 // Arguments:
-//   h = Height of the joiner to clear space for.
+//   l = Length of the joiner to clear space for.
 //   w = Width of the joiner to clear space for.
-//   a = Overhang angle of the joiner.
+//   ang = Overhang angle of the joiner.
 //   ---
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
@@ -32,161 +34,401 @@ include <rounding.scad>
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   half_joiner_clear();
-function half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP) = no_function("half_joiner_clear");
-module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
-{
-    dmnd_height = h*1.0;
-    dmnd_width = dmnd_height*tan(a);
-    guide_size = w/3;
-    guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
+function half_joiner_clear(l=20, w=10, ang=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP) =
+    let(
+        guide = [w/3-get_slop()*2, ang_adj_to_opp(ang, l/3)*2, l/3],
+        path = [
+            [ l/2,-overlap], [ guide.z/2, -guide.y/2-overlap],
+            [-guide.z/2, -guide.y/2-overlap], [-l/2,-overlap],
+            [-l/2, overlap], [-guide.z/2,  guide.y/2+overlap],
+            [ guide.z/2,  guide.y/2+overlap], [ l/2, overlap],
+        ],
+        dpath = deduplicate(path, closed=true),
+        vnf = linear_sweep(dpath, height=w+clearance*2, center=true, spin=90, orient=RIGHT)
+    ) reorient(anchor,spin,orient, vnf=vnf, p=vnf);
 
-    attachable(anchor,spin,orient, size=[w, guide_width, h]) {
-        union() {
-            ycopies(overlap, n=overlap>0? 2 : 1) {
-                difference() {
-                    // Diamonds.
-                    scale([w+clearance, dmnd_width/2, dmnd_height/2]) {
-                        xrot(45) cube(size=[1,sqrt(2),sqrt(2)], center=true);
-                    }
-                    // Blunt point of tab.
-                    ycopies(guide_width+4) {
-                        cube(size=[(w+clearance)*1.05, 4, h*0.99], center=true);
-                    }
-                }
-            }
-            if (overlap>0) cube([w+clearance, overlap+0.001, h], center=true);
-        }
+module half_joiner_clear(l=20, w=10, ang=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
+{
+    vnf = half_joiner_clear(l=l, w=w, ang=ang, clearance=clearance, overlap=overlap);
+    attachable(anchor,spin,orient, vnf=vnf) {
+        vnf_polyhedron(vnf, convexity=2);
         children();
     }
 }
 
 
-
-// Module: half_joiner()
-// Usage:
-//   half_joiner(h, w, l, [a], [screwsize=], [guides=], [$slop=]) [ATTACHMENTS];
+// Function&Module: half_joiner()
+// Usage: As Module
+//   half_joiner(l, w, [base=], [ang=], [screwsize=], [$slop=]) [ATTACHMENTS];
+// Usage: As Function
+//   vnf = half_joiner(l, w, [base=], [ang=], [screwsize=], [$slop=]);
 // Description:
-//   Creates a half_joiner object that can be attached to half_joiner2 object.
+//   Creates a half_joiner object that can be attached to a matching half_joiner2 object.
 // Arguments:
-//   h = Height of the half_joiner.
+//   l = Length of the half_joiner.
 //   w = Width of the half_joiner.
-//   l = Length of the backing to the half_joiner.
-//   a = Overhang angle of the half_joiner.
 //   ---
-//   screwsize = Diameter of screwhole.
-//   guides = If true, create sliding alignment guides.
+//   base = Length of the backing to the half_joiner.
+//   ang = Overhang angle of the half_joiner.
+//   screwsize = If given, diameter of screwhole.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = Printer specific slop value to make parts fit more closely.
 // Examples(FlatSpin,VPD=75):
 //   half_joiner(screwsize=3);
-//   half_joiner(h=20,w=10,l=10);
-function half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP) = no_function("half_joiner");
-module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
+//   half_joiner(l=20,w=10,base=10);
+// Example(3D):
+//   diff()
+//   cuboid(50)
+//       attach([FWD,TOP,RIGHT])
+//           xcopies(30) half_joiner();
+function half_joiner(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP) =
+    let(
+        guide = [w/3-get_slop()*2, ang_adj_to_opp(ang, l/3)*2, l/3],
+        snap_h = 1,
+        snap = [guide.x+snap_h, 2*snap_h, l*0.6],
+        slope = guide.z/2/(w/8),
+        snap_top = slope * (snap.x-guide.x)/2,
+
+        verts = [
+            [-w/2,-base,-l/2], [-w/2,-base,l/2], [w/2,-base,l/2], [w/2,-base,-l/2],
+
+            [-w/2, 0,-l/2],
+            [-w/2,-guide.y/2,-guide.z/2],
+            [-w/2,-guide.y/2, guide.z/2],
+            [-w/2, 0,l/2],
+            [ w/2, 0,l/2],
+            [ w/2,-guide.y/2, guide.z/2],
+            [ w/2,-guide.y/2,-guide.z/2],
+            [ w/2, 0,-l/2],
+
+            [-guide.x/2, 0,-l/2],
+            [-guide.x/2,-guide.y/2,-guide.z/2],
+            [-guide.x/2-w/8,-guide.y/2, 0],
+            [-guide.x/2,-guide.y/2, guide.z/2],
+            [-guide.x/2, 0,l/2],
+            [ guide.x/2, 0,l/2],
+            [ guide.x/2,-guide.y/2, guide.z/2],
+            [ guide.x/2+w/8,-guide.y/2, 0],
+            [ guide.x/2,-guide.y/2,-guide.z/2],
+            [ guide.x/2, 0,-l/2],
+
+            [-w/6, -snap.y/2, -snap.z/2],
+            [-w/6, -snap.y/2, -guide.z/2],
+            [-snap.x/2, 0, snap_top-guide.z/2],
+            [-w/6,  snap.y/2, -guide.z/2],
+            [-w/6,  snap.y/2, -snap.z/2],
+            [-snap.x/2, 0, snap_top-snap.z/2],
+
+            [-w/6, -snap.y/2, snap.z/2],
+            [-w/6, -snap.y/2, guide.z/2],
+            [-snap.x/2, 0, guide.z/2-snap_top],
+            [-w/6,  snap.y/2, guide.z/2],
+            [-w/6,  snap.y/2, snap.z/2],
+            [-snap.x/2, 0, snap.z/2-snap_top],
+
+            [ w/6, -snap.y/2, snap.z/2],
+            [ w/6, -snap.y/2, guide.z/2],
+            [ snap.x/2, 0, guide.z/2-snap_top],
+            [ w/6,  snap.y/2, guide.z/2],
+            [ w/6,  snap.y/2, snap.z/2],
+            [ snap.x/2, 0, snap.z/2-snap_top],
+
+            [ w/6, -snap.y/2, -snap.z/2],
+            [ w/6, -snap.y/2, -guide.z/2],
+            [ snap.x/2, 0, snap_top-guide.z/2],
+            [ w/6,  snap.y/2, -guide.z/2],
+            [ w/6,  snap.y/2, -snap.z/2],
+            [ snap.x/2, 0, snap_top-snap.z/2],
+
+            [-w/6, guide.y/2, -guide.z/2],
+            [-guide.x/2-w/8, guide.y/2, 0],
+            [-w/6, guide.y/2,  guide.z/2],
+            [ w/6, guide.y/2,  guide.z/2],
+            [ guide.x/2+w/8, guide.y/2, 0],
+            [ w/6, guide.y/2, -guide.z/2],
+
+            if (screwsize != undef) each [
+                for (a = [0:45:359]) [guide.x/2+w/8, 0, 0] + screwsize * 1.1 / 2 * [-abs(sin(a))/slope, cos(a), sin(a)],
+                for (a = [0:45:359]) [-(guide.x/2+w/8), 0, 0] + screwsize * 1.1 / 2 * [abs(sin(a))/slope, cos(a), sin(a)],
+            ]
+        ],
+        faces = [
+            [0,1,2], [2,3,0],
+
+            [0,4,5], [0,5,6], [0,6,1], [1,6,7],
+            [3,10,11], [3,9,10], [2,9,3], [2,8,9],
+
+            [1,7,16], [1,16,17], [1,17,8], [1,8,2],
+            [0,3,11], [0,11,21], [0,21,12], [0,12,4],
+
+            [10,20,11], [20,21,11],
+            [12,13,5], [12,5,4],
+            [9,8,18], [17,18,8],
+            [6,16,7], [6,15,16],
+
+            [19,10,9], [19,9,18], [19,20,10],
+            [6,14,15], [6,5,14], [5,13,14],
+
+            [24,26,25], [26,24,27],
+            [22,27,24], [22,24,23],
+            [22,26,27],
+
+            [30,32,33], [30,31,32],
+            [30,33,28], [30,28,29],
+            [32,28,33],
+
+            [40,41,42], [40,42,45],
+            [45,42,43], [43,44,45],
+            [40,45,44],
+
+            [36,38,37], [36,39,38],
+            [36,35,34], [36,34,39],
+            [39,34,38],
+
+            [12,26,22], [12,22,13], [22,23,13], [12,46,26], [46,25,26],
+            [16,28,32], [16,15,28], [15,29,28], [48,16,32], [32,31,48],
+            [17,38,34], [17,34,18], [18,34,35], [49,38,17], [37,38,49],
+            [21,40,44], [51,21,44], [43,51,44], [20,40,21], [20,41,40],
+
+            [17,16,49], [49,16,48],
+            [21,51,46], [46,12,21],
+
+            [51,50,49], [48,47,46], [46,51,49], [46,49,48],
+
+            if (screwsize == undef) each [
+                [19,36,50], [19,35,36], [19,18,35], [36,37,50], [49,50,37],
+                [19,50,42], [19,42,41], [41,20,19], [50,43,42], [50,51,43],
+                [14,24,47], [14,23,24], [14,13,23], [47,24,25], [46,47,25],
+                [47,30,14], [14,30,29], [14,29,15], [47,31,30], [47,48,31],
+            ] else each [
+                [20,19,56], [20,56,57], [20,57,58], [20,58,42], [20,42,41],
+                [50,51,52], [51,59,52], [51,58,59], [51,42,58], [51,43,42],
+                [49,50,52], [49,52,53], [49,53,54], [49,54,36], [49,36,37],
+                [56,19,18], [18,55,56], [18,54,55], [18,36,54], [18,35,36],
+                [14,64,15], [15,64,63], [15,63,62], [15,62,30], [15,30,29],
+                [48,31,30], [48,30,62], [48,62,61], [48,61,60], [60,47,48],
+                [13,23,24], [13,24,66], [13,66,65], [13,65,64], [64,14,13],
+                [46,47,60], [46,60,67], [46,67,66], [46,66,24], [46,24,25],
+                for (i=[0:7]) let(b=52) [b+i, b+8+i, b+8+(i+1)%8],
+                for (i=[0:7]) let(b=52) [b+i, b+8+(i+1)%8, b+(i+1)%8],
+            ],
+        ],
+        pvnf = [verts, faces],
+        vnf = xrot(90, p=pvnf)
+    ) reorient(anchor,spin,orient, size=[w,l,base*2], p=vnf);
+
+module half_joiner(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP)
 {
-    dmnd_height = h*1.0;
-    dmnd_width = dmnd_height*tan(a);
-    guide_size = w/3;
-    guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
-    a2 = atan2(guide_width/2,h/3);
-
-    render(convexity=12)
-    attachable(anchor,spin,orient, size=[w, 2*l, h]) {
-        difference() {
-            union() {
-                difference() {
-                    // Base cube
-                    fwd(l) cube([w, l+guide_width/2, h], anchor=FRONT);
-
-                    // Bevel top and bottom
-                    yrot_copies(n=2)
-                        down(h/2)
-                            xrot(-a2)
-                                down(0.1)
-                                    cube([w+1, guide_width+1, h+1], anchor=FWD+BOT);
-
-                    // Clear sides
-                    xcopies(2*w*2/3-get_slop()*2) {
-                        cube([w, guide_width, h/3], center=true);
-                        fwd(guide_width/2)
-                            yrot_copies(n=2)
-                                down(h/6)
-                                    xrot(a2)
-                                        cube([w, guide_width, h/2], anchor=FWD+TOP);
-                    }
-                }
-
-                // Guide ridges.
-                if (guides == true) {
-                    xcopies(w/3-get_slop()*2) {
-                        // Guide ridge.
-                        fwd(0.05/2) {
-                            scale([0.75, 1, 2]) yrot(45)
-                                cube(size=[guide_size/sqrt(2), guide_width+0.05, guide_size/sqrt(2)], center=true);
-                        }
-
-                        // Snap ridge.
-                        scale([0.25, 0.5, 1]) zrot(45)
-                            cube(size=[guide_size/sqrt(2), guide_size/sqrt(2), dmnd_width], center=true);
-                    }
-                }
-            }
-
-            // Make screwholes, if needed.
-            if (screwsize != undef) {
-                yrot(90) cylinder(r=screwsize*1.1/2, h=w+1, center=true, $fn=12);
-            }
+    vnf = half_joiner(l=l, w=w, base=base, ang=ang, screwsize=screwsize);
+    if (in_list("remove",$tags_shown)) {
+        attachable(anchor,spin,orient, size=[w,l,base*2], $tags="remove") {
+            half_joiner_clear(l=l, w=w, ang=ang, clearance=1);
+            union();
         }
-        children();
+    } else {
+        attachable(anchor,spin,orient, size=[w,base*2,l], $tags="keep") {
+            vnf_polyhedron(vnf, convexity=12);
+            children();
+        }
     }
 }
 
 
-// Module: half_joiner2()
-// Usage:
-//   half_joiner2(h, w, l, [a], [screwsize=], [guides=])
+// Function&Module: half_joiner2()
+// Usage: As Module
+//   half_joiner2(l, w, [base=], [ang=], [screwsize=])
+// Usage: As Function
+//   vnf = half_joiner2(l, w, [base=], [ang=], [screwsize=])
 // Description:
 //   Creates a half_joiner2 object that can be attached to half_joiner object.
 // Arguments:
-//   h = Height of the half_joiner.
+//   l = Length of the half_joiner.
 //   w = Width of the half_joiner.
-//   l = Length of the backing to the half_joiner.
-//   a = Overhang angle of the half_joiner.
 //   ---
+//   base = Length of the backing to the half_joiner.
+//   ang = Overhang angle of the half_joiner.
 //   screwsize = Diameter of screwhole.
-//   guides = If true, create sliding alignment guides.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples(FlatSpin,VPD=75):
 //   half_joiner2(screwsize=3);
-//   half_joiner2(h=20,w=10,l=10);
-function half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP) = no_function("half_joiner2");
-module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
+//   half_joiner2(w=10,base=10,l=20);
+// Example(3D):
+//   diff()
+//   cuboid(50)
+//       attach([FWD,TOP,RIGHT])
+//           xcopies(30) half_joiner2();
+function half_joiner2(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP) =
+    let(
+        guide = [w/3, ang_adj_to_opp(ang, l/3)*2, l/3],
+        snap_h = 1,
+        snap = [guide.x+snap_h, 2*snap_h, l*0.6],
+        slope = guide.z/2/(w/8),
+        snap_top = slope * (snap.x-guide.x)/2,
+
+        verts = [
+            [-w/2,-base,-l/2], [-w/2,-base,l/2], [w/2,-base,l/2], [w/2,-base,-l/2],
+
+            [-w/2, 0,-l/2],
+            [-w/2, guide.y/2,-guide.z/2],
+            [-w/2, guide.y/2, guide.z/2],
+            [-w/2, 0,l/2],
+            [ w/2, 0,l/2],
+            [ w/2, guide.y/2, guide.z/2],
+            [ w/2, guide.y/2,-guide.z/2],
+            [ w/2, 0,-l/2],
+
+            [-guide.x/2, 0,-l/2],
+            [-guide.x/2,-guide.y/2,-guide.z/2],
+            [-guide.x/2-w/8,-guide.y/2, 0],
+            [-guide.x/2,-guide.y/2, guide.z/2],
+            [-guide.x/2, 0,l/2],
+            [ guide.x/2, 0,l/2],
+            [ guide.x/2,-guide.y/2, guide.z/2],
+            [ guide.x/2+w/8,-guide.y/2, 0],
+            [ guide.x/2,-guide.y/2,-guide.z/2],
+            [ guide.x/2, 0,-l/2],
+
+            [-w/6, -snap.y/2, -snap.z/2],
+            [-w/6, -snap.y/2, -guide.z/2],
+            [-snap.x/2, 0, snap_top-guide.z/2],
+            [-w/6,  snap.y/2, -guide.z/2],
+            [-w/6,  snap.y/2, -snap.z/2],
+            [-snap.x/2, 0, snap_top-snap.z/2],
+
+            [-w/6, -snap.y/2, snap.z/2],
+            [-w/6, -snap.y/2, guide.z/2],
+            [-snap.x/2, 0, guide.z/2-snap_top],
+            [-w/6,  snap.y/2, guide.z/2],
+            [-w/6,  snap.y/2, snap.z/2],
+            [-snap.x/2, 0, snap.z/2-snap_top],
+
+            [ w/6, -snap.y/2, snap.z/2],
+            [ w/6, -snap.y/2, guide.z/2],
+            [ snap.x/2, 0, guide.z/2-snap_top],
+            [ w/6,  snap.y/2, guide.z/2],
+            [ w/6,  snap.y/2, snap.z/2],
+            [ snap.x/2, 0, snap.z/2-snap_top],
+
+            [ w/6, -snap.y/2, -snap.z/2],
+            [ w/6, -snap.y/2, -guide.z/2],
+            [ snap.x/2, 0, snap_top-guide.z/2],
+            [ w/6,  snap.y/2, -guide.z/2],
+            [ w/6,  snap.y/2, -snap.z/2],
+            [ snap.x/2, 0, snap_top-snap.z/2],
+
+            [-w/6, guide.y/2, -guide.z/2],
+            [-guide.x/2-w/8, guide.y/2, 0],
+            [-w/6, guide.y/2,  guide.z/2],
+            [ w/6, guide.y/2,  guide.z/2],
+            [ guide.x/2+w/8, guide.y/2, 0],
+            [ w/6, guide.y/2, -guide.z/2],
+
+            if (screwsize != undef) each [
+                for (a = [0:45:359]) [guide.x/2+w/8, 0, 0] + screwsize * 1.1 / 2 * [-abs(sin(a))/slope, cos(a), sin(a)],
+                for (a = [0:45:359]) [-(guide.x/2+w/8), 0, 0] + screwsize * 1.1 / 2 * [abs(sin(a))/slope, cos(a), sin(a)],
+                for (a = [0:45:359]) [w/2, 0, 0] + screwsize * 1.1 / 2 * [0, cos(a), sin(a)],
+                for (a = [0:45:359]) [-w/2, 0, 0] + screwsize * 1.1 / 2 * [0, cos(a), sin(a)],
+            ]
+        ],
+        faces = [
+            [0,1,2], [2,3,0],
+
+            [1,7,16], [1,16,17], [1,17,8], [1,8,2],
+            [0,3,11], [0,11,21], [0,21,12], [0,12,4],
+
+            [10,51,11], [51,21,11],
+            [12,46,5], [12,5,4],
+            [9,8,49], [17,49,8],
+            [6,16,7], [6,48,16],
+
+            [50,10,9], [50,9,49], [50,51,10],
+            [6,47,48], [6,5,47], [5,46,47],
+
+            [24,25,26], [26,27,24],
+            [22,24,27], [22,23,24],
+            [22,27,26],
+
+            [30,33,32], [30,32,31],
+            [30,28,33], [30,29,28],
+            [32,33,28],
+
+            [40,42,41], [40,45,42],
+            [45,43,42], [43,45,44],
+            [40,44,45],
+
+            [36,37,38], [36,38,39],
+            [36,34,35], [36,39,34],
+            [39,38,34],
+
+            [12,22,26], [12,13,22], [22,13,23], [12,26,46], [46,26,25],
+            [16,32,28], [16,28,15], [15,28,29], [48,32,16], [32,48,31],
+            [17,34,38], [17,18,34], [18,35,34], [49,17,38], [37,49,38],
+            [21,44,40], [51,44,21], [43,44,51], [20,21,40], [20,40,41],
+
+            [17,16,18], [18,16,15],
+            [21,20,13], [13,12,21],
+
+            [20,19,18], [15,14,13], [13,20,18], [13,18,15],
+
+            if (screwsize == undef) each [
+                [0,4,5], [0,5,6], [0,6,1], [1,6,7],
+                [3,10,11], [3,9,10], [2,9,3], [2,8,9],
+
+                [19,50,36], [19,36,35], [19,35,18], [36,50,37], [49,37,50],
+                [19,42,50], [19,41,42], [41,19,20], [50,42,43], [50,43,51],
+                [14,47,24], [14,24,23], [14,23,13], [47,25,24], [46,25,47],
+                [47,14,30], [14,29,30], [14,15,29], [47,30,31], [47,31,48],
+            ] else each [
+                [3,2,72], [2,71,72], [2,70,71], [2,8,70],
+                [8,9,70], [9,69,70], [9,68,69], [9,10,68],
+                [10,75,68], [10,74,75], [10,11,74],
+                [3,72,73], [3,73,74], [3,74,11],
+
+                [1,0,80], [0,81,80], [0,82,81], [0,4,82],
+                [4,5,82], [5,83,82], [5,76,83], [5,6,76],
+                [6,77,76], [6,78,77], [6,7,78],
+                [7,1,78], [1,79,78], [1,80,79],
+
+                [20,56,19], [20,57,56], [20,58,57], [20,42,58], [20,41,42],
+                [50,52,51], [51,52,59], [51,59,58], [51,58,42], [51,42,43],
+                [49,52,50], [49,53,52], [49,54,53], [49,36,54], [49,37,36],
+                [56,18,19], [18,56,55], [18,55,54], [18,54,36], [18,36,35],
+                [14,15,64], [15,63,64], [15,62,63], [15,30,62], [15,29,30],
+                [48,30,31], [48,62,30], [48,61,62], [48,60,61], [60,48,47],
+                [13,24,23], [13,66,24], [13,65,66], [13,64,65], [64,13,14],
+                [46,60,47], [46,67,60], [46,66,67], [46,24,66], [46,25,24],
+
+                for (i=[0:7]) let(b=52) each [
+                    [b+i, b+16+(i+1)%8, b+16+i],
+                    [b+i, b+(i+1)%8, b+16+(i+1)%8],
+                ],
+                for (i=[0:7]) let(b=60) each [
+                    [b+i, b+16+i, b+16+(i+1)%8],
+                    [b+i, b+16+(i+1)%8, b+(i+1)%8],
+                ],
+            ],
+        ],
+        pvnf = [verts, faces],
+        vnf = xrot(90, p=pvnf)
+    ) reorient(anchor,spin,orient, size=[w,l,base*2], p=vnf);
+
+module half_joiner2(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP)
 {
-    dmnd_height = h*1.0;
-    dmnd_width = dmnd_height*tan(a);
-    guide_size = w/3;
-    guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
-
-    render(convexity=12)
-    attachable(anchor,spin,orient, size=[w, 2*l, h]) {
-        difference() {
-            union () {
-                fwd(l/2) cube(size=[w, l, h], center=true);
-                cube([w, guide_width, h], center=true);
-            }
-
-            // Subtract mated half_joiner.
-            zrot(180) half_joiner(h=h+0.01, w=w+0.01, l=guide_width+0.01, a=a, screwsize=undef, guides=guides, $slop=0.0);
-
-            // Make screwholes, if needed.
-            if (screwsize != undef) {
-                xcyl(r=screwsize*1.1/2, l=w+1, $fn=12);
-            }
+    vnf = half_joiner2(l=l, w=w, base=base, ang=ang, screwsize=screwsize);
+    if (in_list("remove",$tags_shown)) {
+        attachable(anchor,spin,orient, size=[w,l,base*2], $tags="remove") {
+            half_joiner_clear(l=l, w=w, ang=ang, clearance=1);
+            union();
         }
-        children();
+    } else {
+        attachable(anchor,spin,orient, size=[w,base*2,l], $tags="keep") {
+            vnf_polyhedron(vnf, convexity=12);
+            children();
+        }
     }
 }
 
@@ -199,11 +441,11 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor
 // Description:
 //   Creates a mask to clear an area so that a joiner can be placed there.
 // Usage:
-//   joiner_clear(h, w, [a], [clearance=], [overlap=]) [ATTACHMENTS];
+//   joiner_clear(l, w, [ang=], [clearance=], [overlap=]) [ATTACHMENTS];
 // Arguments:
-//   h = Height of the joiner to clear space for.
+//   l = Length of the joiner to clear space for.
 //   w = Width of the joiner to clear space for.
-//   a = Overhang angle of the joiner.
+//   ang = Overhang angle of the joiner.
 //   ---
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
@@ -212,18 +454,18 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   joiner_clear();
-function joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP) = no_function("joiner_clear");
-module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
+function joiner_clear(l=40, w=10, ang=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP) = no_function("joiner_clear");
+module joiner_clear(l=40, w=10, ang=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
 {
-    dmnd_height = h*0.5;
-    dmnd_width = dmnd_height*tan(a);
+    dmnd_height = l*0.5;
+    dmnd_width = dmnd_height*tan(ang);
     guide_size = w/3;
-    guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
+    guide_width = 2*(dmnd_height/2-guide_size)*tan(ang);
 
-    attachable(anchor,spin,orient, size=[w, guide_width, h]) {
+    attachable(anchor,spin,orient, size=[w, guide_width, l]) {
         union() {
-            up(h/4) half_joiner_clear(h=h/2.0-0.01, w=w, a=a, overlap=overlap, clearance=clearance);
-            down(h/4) half_joiner_clear(h=h/2.0-0.01, w=w, a=a, overlap=overlap, clearance=-0.01);
+            back(l/4) half_joiner_clear(l=l/2+0.01, w=w, ang=ang, overlap=overlap, clearance=clearance);
+            fwd(l/4) half_joiner_clear(l=l/2+0.01, w=w, ang=ang, overlap=overlap, clearance=-0.01);
         }
         children();
     }
@@ -233,206 +475,48 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, 
 
 // Module: joiner()
 // Usage:
-//   joiner(h, w, l, [a], [screwsize=], [guides=], [$slop=]) [ATTACHMENTS];
+//   joiner(l, w, base, [ang=], [screwsize=], [$slop=]) [ATTACHMENTS];
 // Description:
 //   Creates a joiner object that can be attached to another joiner object.
 // Arguments:
-//   h = Height of the joiner.
+//   l = Length of the joiner.
 //   w = Width of the joiner.
-//   l = Length of the backing to the joiner.
-//   a = Overhang angle of the joiner.
+//   base = Length of the backing to the joiner.
+//   ang = Overhang angle of the joiner.
 //   ---
-//   screwsize = Diameter of screwhole.
-//   guides = If true, create sliding alignment guides.
+//   screwsize = If given, diameter of screwhole.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = Printer specific slop value to make parts fit more closely.
 // Examples(FlatSpin,VPD=125):
 //   joiner(screwsize=3);
-//   joiner(w=10, l=10, h=40);
-function joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP) = no_function("joiner");
-module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
+//   joiner(l=40, w=10, base=10);
+// Example(3D):
+//   diff()
+//   cuboid(50)
+//     attach([FWD,TOP,RIGHT])
+//       zrot_copies(n=2,r=15)
+//         joiner();
+function joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP) = no_function("joiner");
+module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP)
 {
-    attachable(anchor,spin,orient, size=[w, 2*l, h]) {
-        union() {
-            up(h/4) half_joiner(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
-            down(h/4) half_joiner2(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
+    if (in_list("remove",$tags_shown)) {
+        attachable(anchor,spin,orient, size=[w,l,base*2], $tags="remove") {
+            joiner_clear(w=w, l=l, ang=ang, clearance=1);
+            union();
         }
-        children();
-    }
-}
-
-
-
-// Section: Full Joiners Pairs/Sets
-
-
-// Module: joiner_pair_clear()
-// Description:
-//   Creates a mask to clear an area so that a pair of joiners can be placed there.
-// Usage:
-//   joiner_pair_clear(spacing, [n], [h], [w], [a], [clearance=], [overlap=]) [ATTACHMENTS];
-// Arguments:
-//   spacing = Spacing between joiner centers.
-//   n = Number of joiners (2 by default) to clear for.
-//   h = Height of the joiner to clear space for.
-//   w = Width of the joiner to clear space for.
-//   a = Overhang angle of the joiner.
-//   ---
-//   clearance = Extra width to clear.
-//   overlap = Extra depth to clear.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Examples:
-//   joiner_pair_clear(spacing=50, n=2);
-//   joiner_pair_clear(spacing=50, n=3);
-function joiner_pair_clear(spacing=100, n=2, h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP) = no_function("joiner_pair_clear");
-module joiner_pair_clear(spacing=100, n=2, h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
-{
-    dmnd_height = h*0.5;
-    dmnd_width = dmnd_height*tan(a);
-    guide_size = w/3;
-    guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
-
-    attachable(anchor,spin,orient, size=[spacing+w, guide_width, h]) {
-        xcopies(spacing, n=n) {
-            joiner_clear(h=h, w=w, a=a, clearance=clearance, overlap=overlap);
-        }
-        children();
-    }
-}
-
-
-
-// Module: joiner_pair()
-// Usage:
-//   joiner_pair(spacing, [n], h, w, l, [a], [alternate=], [screwsize=], [guides=], [$slop=]) [ATTACHMENTS];
-// Description:
-//   Creates a joiner_pair object that can be attached to other joiner_pairs .
-// Arguments:
-//   spacing = Spacing between joiner centers.
-//   n = Number of joiners in a row.  Default: 2
-//   h = Height of the joiners.
-//   w = Width of the joiners.
-//   l = Length of the backing to the joiners.
-//   a = Overhang angle of the joiners.
-//   ---
-//   alternate = If true (default), each joiner alternates it's orientation.  If alternate is "alt", do opposite alternating orientations.
-//   screwsize = Diameter of screwhole.
-//   guides = If true, create sliding alignment guides.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   get_slop() = Printer specific slop value to make parts fit more closely.
-// Example(FlatSpin,VPD=200):
-//   joiner_pair(spacing=50, l=10);
-// Examples:
-//   joiner_pair(spacing=50, l=10, n=3, alternate=false);
-//   joiner_pair(spacing=50, l=10, n=3, alternate=true);
-//   joiner_pair(spacing=50, l=10, n=3, alternate="alt");
-function joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP) = no_function("joiner_pair");
-module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
-{
-    attachable(anchor,spin,orient, size=[spacing+w, 2*l, h]) {
-        left((n-1)*spacing/2) {
-            for (i=[0:1:n-1]) {
-                right(i*spacing) {
-                    yrot(180 + (alternate? (i*180+(alternate=="alt"?180:0))%360 : 0)) {
-                        joiner(h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
-                    }
-                }
+    } else {
+        attachable(anchor,spin,orient, size=[w,l,base*2], $tags="keep") {
+            union() {
+                back(l/4) half_joiner(l=l/2, w=w, base=base, ang=ang, screwsize=screwsize);
+                fwd(l/4) half_joiner2(l=l/2, w=w, base=base, ang=ang, screwsize=screwsize);
             }
+            children();
         }
-        children();
     }
 }
 
-
-
-// Section: Full Joiners Quads/Sets
-
-
-// Module: joiner_quad_clear()
-// Description:
-//   Creates a mask to clear an area so that a pair of joiners can be placed there.
-// Usage:
-//   joiner_quad_clear([xspacing|spacing1=],[yspacing|spacing2=], [n], [h], [w], [a], [clearance], [overlap]) [ATTACHMENTS];
-// Arguments:
-//   spacing1 / xspacing = Spacing between joiner centers.
-//   spacing2 / yspacing = Spacing between back-to-back pairs/sets of joiners.
-//   n = Number of joiners in a row.  Default: 2
-//   h = Height of the joiner to clear space for.
-//   w = Width of the joiner to clear space for.
-//   a = Overhang angle of the joiner.
-//   ---
-//   clearance = Extra width to clear.
-//   overlap = Extra depth to clear.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Examples:
-//   joiner_quad_clear(spacing1=50, spacing2=50, n=2);
-//   joiner_quad_clear(spacing1=50, spacing2=50, n=3);
-function joiner_quad_clear(xspacing=undef, yspacing=undef, n=2, h=40, w=10, a=30, spacing1=undef, spacing2=undef, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)=no_function("joiner_quad_clear");
-module joiner_quad_clear(xspacing=undef, yspacing=undef, n=2, h=40, w=10, a=30, spacing1=undef, spacing2=undef, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
-{
-    spacing1 = first_defined([spacing1, xspacing, 100]);
-    spacing2 = first_defined([spacing2, yspacing, 50]);
-    attachable(anchor,spin,orient, size=[w+spacing1, spacing2, h]) {
-        zrot_copies(n=2) {
-            back(spacing2/2) {
-                joiner_pair_clear(spacing=spacing1, n=n, h=h, w=w, a=a, clearance=clearance, overlap=overlap);
-            }
-        }
-        children();
-    }
-}
-
-
-
-// Module: joiner_quad()
-// Usage:
-//   joiner_quad([xspacing|spacing1=], [yspacing|spacing2=], [n], h, w, l, [a], [alternate=], [screwsize=], [guides=], [$slop=]) [ATTACHMENTS];
-// Description:
-//   Creates a joiner_quad object that can be attached to other joiner_pairs .
-// Arguments:
-//   spacing1 / xspacing = Spacing between joiner centers.
-//   spacing2 / yspacing = Spacing between back-to-back pairs/sets of joiners.
-//   n = Number of joiners in a row.  Default: 2
-//   h = Height of the joiners.
-//   w = Width of the joiners.
-//   l = Length of the backing to the joiners.
-//   a = Overhang angle of the joiners.
-//   ---
-//   alternate = If true (default), joiners on each side alternate orientations.  If alternate is "alt", do opposite alternating orientations.
-//   screwsize = Diameter of screwhole.
-//   guides = If true, create sliding alignment guides.
-//   $slop = Printer specific slop value to make parts fit more closely.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example(FlatSpin,VPD=250):
-//   joiner_quad(spacing1=50, spacing2=50, l=10);
-// Examples:
-//   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate=false);
-//   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate=true);
-//   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate="alt");
-function joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=undef, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP) = no_function("joiner_quad");
-module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=undef, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
-{
-    spacing1 = first_defined([spacing1, xspacing, 100]);
-    spacing2 = first_defined([spacing2, yspacing, 50]);
-    attachable(anchor,spin,orient, size=[w+spacing1, spacing2, h]) {
-        zrot_copies(n=2) {
-            back(spacing2/2) {
-                joiner_pair(spacing=spacing1, n=n, h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides, alternate=alternate);
-            }
-        }
-        children();
-    }
-}
 
 
 // Section: Dovetails
@@ -1054,7 +1138,6 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
     }
   }
 }
-
 
 
 

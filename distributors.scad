@@ -474,7 +474,7 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
 //   If given a count `n`, makes that many copies, rotated evenly around the axis.
 //   If given an offset `delta`, translates each child by that amount before rotating them into place.  This makes rings.
 //   If given a centerpoint `cp`, centers the ring around that centerpoint.
-//   If `subrot` is true, each child will be rotated in place to keep the same size towards the center.
+//   If `subrot` is true, each child will be rotated in place to keep the same size towards the center when making rings.
 //   The first (unrotated) copy will be placed at the relative starting angle `sa`.
 //
 // Usage:
@@ -525,7 +525,7 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
 //   rot_copies(n=6, v=DOWN+BACK, delta=[20,0,0], subrot=false)
 //       yrot(90) cylinder(h=20, r1=5, r2=0);
 //   color("red",0.333) yrot(90) cylinder(h=20, r1=5, r2=0);
-module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[0,0,0], subrot=true)
+module rot_copies(rots=[], v=undef, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], subrot=true)
 {
     req_children($children);  
     sang = sa + offset;
@@ -556,15 +556,15 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 // Module: xrot_copies()
 //
 // Usage:
-//   xrot_copies(rots, [cp], [r=], [sa=], [subrot=]) CHILDREN;
-//   xrot_copies(n=, [cp=], [r=], [sa=], [subrot=]) CHILDREN;
+//   xrot_copies(rots, [cp], [r=|d=], [sa=], [subrot=]) CHILDREN;
+//   xrot_copies(n=, [cp=], [r=|d=], [sa=], [subrot=]) CHILDREN;
 //
 // Description:
 //   Given an array of angles, rotates copies of the children to each of those angles around the X axis.
 //   If given a count `n`, makes that many copies, rotated evenly around the X axis.
-//   If given an offset radius `r`, distributes children around a ring of that radius.
-//   If given a centerpoint `cp`, centers the ring around that centerpoint.
-//   If `subrot` is true, each child will be rotated in place to keep the same size towards the center.
+//   If given a radius `r` (or diameter `d`), distributes children around a ring of that size around the X axis.
+//   If given a centerpoint `cp`, centers the rotation around that centerpoint.
+//   If `subrot` is true, each child will be rotated in place to keep the same size towards the center when making rings.
 //   The first (unrotated) copy will be placed at the relative starting angle `sa`.
 //
 // Arguments:
@@ -573,7 +573,8 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 //   --
 //   n = Optional number of evenly distributed copies to be rotated around the ring.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from Y+, when facing the origin from X+.  First unrotated copy is placed at that angle.
-//   r = Radius to move children back (Y+), away from cp, before rotating.  Makes rings of copies.
+//   r = If given, makes a ring of child copies around the X axis, at the given radius.  Default: 0
+//   d = If given, makes a ring of child copies around the X axis, at the given diameter.
 //   subrot = If false, don't sub-rotate children as they are copied around the ring.
 //
 // Side Effects:
@@ -605,9 +606,10 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 //   xrot_copies(n=6, r=20, subrot=false)
 //       xrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
 //   color("red",0.333) xrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
-module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
+module xrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true)
 {
     req_children($children);  
+    r = get_radius(r=r, d=d, dflt=0);
     rot_copies(rots=rots, v=RIGHT, cp=cp, n=n, sa=sa, delta=[0, r, 0], subrot=subrot) children();
 }
 
@@ -615,15 +617,15 @@ module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 // Module: yrot_copies()
 //
 // Usage:
-//   yrot_copies(rots, [cp], [r=], [sa=], [subrot=]) CHILDREN;
-//   yrot_copies(n=, [cp=], [r=], [sa=], [subrot=]) CHILDREN;
+//   yrot_copies(rots, [cp], [r=|d=], [sa=], [subrot=]) CHILDREN;
+//   yrot_copies(n=, [cp=], [r=|d=], [sa=], [subrot=]) CHILDREN;
 //
 // Description:
 //   Given an array of angles, rotates copies of the children to each of those angles around the Y axis.
 //   If given a count `n`, makes that many copies, rotated evenly around the Y axis.
-//   If given an offset radius `r`, distributes children around a ring of that radius.
-//   If given a centerpoint `cp`, centers the ring around that centerpoint.
-//   If `subrot` is true, each child will be rotated in place to keep the same size towards the center.
+//   If given a radius `r` (or diameter `d`), distributes children around a ring of that size around the Y axis.
+//   If given a centerpoint `cp`, centers the rotation around that centerpoint.
+//   If `subrot` is true, each child will be rotated in place to keep the same size towards the center when making rings.
 //   The first (unrotated) copy will be placed at the relative starting angle `sa`.
 //
 // Arguments:
@@ -632,7 +634,8 @@ module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //   ---
 //   n = Optional number of evenly distributed copies to be rotated around the ring.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from X-, when facing the origin from Y+.
-//   r = Radius to move children left (X-), away from cp, before rotating.  Makes rings of copies.
+//   r = If given, makes a ring of child copies around the Y axis, at the given radius.  Default: 0
+//   d = If given, makes a ring of child copies around the Y axis, at the given diameter.
 //   subrot = If false, don't sub-rotate children as they are copied around the ring.
 //
 // Side Effects:
@@ -664,9 +667,10 @@ module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //   yrot_copies(n=6, r=20, subrot=false)
 //       yrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
 //   color("red",0.333) yrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
-module yrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
+module yrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true)
 {
-    req_children($children);  
+    req_children($children);
+    r = get_radius(r=r, d=d, dflt=0);
     rot_copies(rots=rots, v=BACK, cp=cp, n=n, sa=sa, delta=[-r, 0, 0], subrot=subrot) children();
 }
 
@@ -674,15 +678,15 @@ module yrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 // Module: zrot_copies()
 //
 // Usage:
-//   zrot_copies(rots, [cp], [r=], [sa=], [subrot=]) CHILDREN;
-//   zrot_copies(n=, [cp=], [r=], [sa=], [subrot=]) CHILDREN;
+//   zrot_copies(rots, [cp], [r=|d=], [sa=], [subrot=]) CHILDREN;
+//   zrot_copies(n=, [cp=], [r=|d=], [sa=], [subrot=]) CHILDREN;
 //
 // Description:
 //   Given an array of angles, rotates copies of the children to each of those angles around the Z axis.
 //   If given a count `n`, makes that many copies, rotated evenly around the Z axis.
-//   If given an offset radius `r`, distributes children around a ring of that radius.
-//   If given a centerpoint `cp`, centers the ring around that centerpoint.
-//   If `subrot` is true, each child will be rotated in place to keep the same size towards the center.
+//   If given a radius `r` (or diameter `d`), distributes children around a ring of that size around the Z axis.
+//   If given a centerpoint `cp`, centers the rotation around that centerpoint.
+//   If `subrot` is true, each child will be rotated in place to keep the same size towards the center when making rings.
 //   The first (unrotated) copy will be placed at the relative starting angle `sa`.
 //
 // Arguments:
@@ -691,7 +695,8 @@ module yrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //   ---
 //   n = Optional number of evenly distributed copies to be rotated around the ring.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from X+, when facing the origin from Z+.  Default: 0
-//   r = Radius to move children right (X+), away from cp, before rotating.  Makes rings of copies.  Default: 0
+//   r = If given, makes a ring of child copies around the Z axis, at the given radius.  Default: 0
+//   d = If given, makes a ring of child copies around the Z axis, at the given diameter.
 //   subrot = If false, don't sub-rotate children as they are copied around the ring.  Default: true
 //
 // Side Effects:
@@ -723,8 +728,9 @@ module yrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //   zrot_copies(n=6, r=20, subrot=false)
 //       yrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
 //   color("red",0.333) yrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
-module zrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
+module zrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true)
 {
+    r = get_radius(r=r, d=d, dflt=0);
     rot_copies(rots=rots, v=UP, cp=cp, n=n, sa=sa, delta=[r, 0, 0], subrot=subrot) children();
 }
 
