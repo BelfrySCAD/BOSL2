@@ -1297,18 +1297,85 @@ function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, retur
 // Topics: Bezier Patches
 // See Also: bezier_patch_points(), bezier_points(), bezier_curve(), bezpath_curve()
 // Description:
-//   Compute the normal vector to a bezier patch at the listed point set.  The bezier patch must be a rectangular array of
+//   Compute the unit normal vector to a bezier patch at the listed point set.  The bezier patch must be a rectangular array of
 //   points, and the normal will be computed at all the (u,v) pairs that you specify.  If you give u and v
 //   as single numbers you'll get a single point back.  If you give u and v as lists or ranges you'll
 //   get a 2d rectangular array of points.  If one but not both of u and v is a list or range then you'll
 //   get a list of points.
 //   .
-//   This function works by computing the cross product of the tangents.  If the tangents are parallel, or nearly parallel, the result
-//   will be invalid.  This can happen if you use a degenerate patch, or if you give two of the edges of your patch a smooth corner.  
+//   This function works by computing the cross product of the tangents.  In some degenerate cases the one of the tangents
+//   can be zero, so the normal vector does not exist.  In this case, undef is returned.  Another degenerate case
+//   occurs when the tangents are parallel, or nearly parallel.  In this case you will get a unit vector returned but it will not
+//   be the correct normal vector.   This can happen if you use a degenerate patch, or if you give two of the edges of your patch a smooth "corner"
+//   so that the u and v directions are parallel at the corner.  
 // Arguments:
 //   patch = The 2D array of control points for a Bezier patch.
 //   u = The bezier u parameter (inner list of patch).  Generally between 0 and 1. Can be a list, range or value.
 //   v = The bezier v parameter (outer list of patch).  Generally between 0 and 1. Can be a list, range or value.
+// Example(3D,Med,VPR=[71.1,0,155.9],VPD=292.705,VPT=[20.4724,38.7273,22.7683],NoAxes): Normal vectors on a patch
+//   patch = [
+//        // u=0,v=0                                         u=1,v=0
+//        [[-50,-50,  0], [-16,-50,  20], [ 16,-50, -20], [50,-50,  0]],
+//        [[-50,-16, 40], [-16,-16,  20], [ 16,-16, -20], [50,-16, 70]],
+//        [[-50, 16, 20], [-16, 16, -20], [ 16, 37,  20], [70, 16, 20]],
+//        [[-50, 50,  0], [73, 50, -40], [ 16, 50,  20], [50, 50,  0]],
+//        // u=0,v=1                                         u=1,v=1
+//   ];
+//   vnf_polyhedron(bezier_vnf(patch,splinesteps=30));
+//   uv = lerpn(0,1,12);
+//   pts = bezier_patch_points(patch, uv, uv);
+//   normals = bezier_patch_normals(patch, uv, uv);
+//     for(i=idx(uv),j=idx(uv)){
+//        stroke([pts[i][j],pts[i][j]-6*normals[i][j]], width=0.5,
+//               endcap1="dot",endcap2="arrow2",color="blue");
+//   }
+// Example(3D,NoAxes,Med,VPR=[72.5,0,288.9],VPD=192.044,VPT=[51.6089,48.118,5.89088]): This example gives invalid normal vectors at the four corners of the patch where the u and v directions are parallel.  You can see how the line of triangulation is approaching parallel at the edge, and the invalid vectors in red point in a completely incorrect direction.  
+//   patch = [
+//       [[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//       [[ 0,40,0], [ 0,  0,100], [100,  0, 20], [100, 40,0]],
+//       [[ 0,60,0], [ 0,100,100], [100,100, 20], [100, 60,0]],
+//       [[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//   ];
+//   vnf_polyhedron(bezier_vnf(patch,splinesteps=30));
+//   uv = lerpn(0,1,7);
+//   pts = bezier_patch_points(patch, uv, uv);
+//   normals = bezier_patch_normals(patch, uv, uv);
+//     for(i=idx(uv),j=idx(uv)){
+//        color=((uv[i]==0 || uv[i]==1) && (uv[j]==0 || uv[j]==1))
+//             ? "red" : "blue";
+//        stroke([pts[i][j],pts[i][j]-8*normals[i][j]], width=0.5,
+//               endcap1="dot",endcap2="arrow2",color=color);
+//   }
+// Example(3D,Med,NoAxes,VPR=[56.4,0,71.9],VPD=66.9616,VPT=[10.2954,1.33721,19.4484]): This degenerate patch has normals everywhere, but computational of the normal fails at the point of degeneracy, the top corner.  
+//    patch=[
+//             repeat([-12.5, 12.5, 15],5),
+//              [[-6.25, 11.25, 15], [-6.25, 8.75, 15], [-6.25, 6.25, 15], [-8.75, 6.25, 15], [-11.25, 6.25, 15]],
+//              [[0, 10, 15], [0, 5, 15], [0, 0, 15], [-5, 0, 15], [-10, 0, 15]],
+//              [[0, 10, 8.75], [0, 5, 8.75], [0, 0, 8.75], [-5, 0, 8.75], [-10, 0, 8.75]],
+//              [[0, 10, 2.5], [0, 5, 2.5], [0, 0, 2.5], [-5, 0, 2.5], [-10, 0, 2.5]]
+//             ];
+//    vnf_polyhedron(bezier_vnf(patch, 32));
+//    uv = lerpn(0,1,8);
+//    pts = bezier_patch_points(patch, uv, uv);
+//    normals = bezier_patch_normals(patch, uv, uv);
+//      for(i=idx(uv),j=idx(uv)){
+//        if (is_def(normals[i][j]))
+//          stroke([pts[i][j],pts[i][j]-2*normals[i][j]], width=0.1,
+//                 endcap1="dot",endcap2="arrow2",color="blue");
+//    }
+// Example(3D,Med,NoAxes,VPR=[48,0,23.6],VPD=32.0275,VPT=[-0.145727,-0.0532125,1.74224]): This example has a singularities where the tangent lines don't exist, so the normal will be undef at those points.  
+//    pts1 = [ [-5,0,0], [5,0,5], [-5,0,5], [5,0,0] ];
+//    pts2 = [ [0,-5,0], [0,5,5], [0,-5,5], [0,5,0] ];
+//    patch = [for(i=[0:3])
+//            [for(j=[0:3]) pts1[i]+pts2[j] ] ];
+//    vnf_polyhedron(bezier_vnf(patch, 163));
+//    uv = [0,.1,.2,.3,,.7,.8,.9,1];//lerpn(0,1,8);
+//    pts = bezier_patch_points(patch, uv, uv);
+//    normals = bezier_patch_normals(patch, uv, uv);
+//    for(i=idx(uv),j=idx(uv))
+//      stroke([pts[i][j],pts[i][j]+2*normals[i][j]], width=0.08,
+//               endcap1="dot",endcap2="arrow2",color="blue");
+  
 function bezier_patch_normals(patch, u, v) =
     assert(is_range(u) || is_vector(u) || is_finite(u), "Input u is invalid")
     assert(is_range(v) || is_vector(v) || is_finite(v), "Input v is invalid")
@@ -1319,13 +1386,13 @@ function bezier_patch_normals(patch, u, v) =
               v_tangent = [for (i = idx(vbezes[0])) bezier_derivative(column(vbezes,i), v)],
               u_tangent = [for (i = idx(vbezes[0])) bezier_points(column(dvbezes,i), v)]
           )
-          [for(i=idx(u_tangent)) [for(j=idx(u_tangent[0])) unit(cross(u_tangent[i][j],v_tangent[i][j]))]]
+          [for(i=idx(u_tangent)) [for(j=idx(u_tangent[0])) unit(cross(u_tangent[i][j],v_tangent[i][j]),undef)]]
     : is_num(u) && is_num(v)?
           let(
                 du = bezier_derivative([for (bez = patch) bezier_points(bez, v)], u),
                 dv = bezier_points([for (bez = patch) bezier_derivative(bez, v)], u)
           )
-          unit(cross(du,dv))
+          unit(cross(du,dv),undef)
     : is_num(u) ? bezier_patch_normals(patch,force_list(u),v)[0]
     :             column(bezier_patch_normals(patch,u,force_list(v)),0);
 
