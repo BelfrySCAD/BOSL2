@@ -418,7 +418,7 @@ module cuboid(
                             for (i = [0:3], axis=[0:1]) {
                                 if (edges[axis][i]>0) {
                                     vec = EDGE_OFFSETS[axis][i];
-                                    translate(v_mul(vec/2, size+[ard,ard,-ard])) {
+                                    translate(v_mul(vec/2, size+[ard,ard,-ard]-[0.01,0.01,0])) {
                                         rotate(majrots[axis]) {
                                             cube([ard, ard, size[axis]], center=true);
                                         }
