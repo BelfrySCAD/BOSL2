@@ -48,6 +48,7 @@ PrioritizeFiles:
   metric_screws.scad
   bottlecaps.scad
   screw_drive.scad
+  tripod_mounts.scad
 DefineHeader(BulletList): Side Effects
 DefineHeader(Table;Headers=Anchor Name|Position): Extra Anchors
 DefineHeader(Table;Headers=Anchor Type|What it is): Anchor Types
