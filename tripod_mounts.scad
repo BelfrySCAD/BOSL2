@@ -3,7 +3,7 @@
 //   Mount plates for tripods.  Currently only the Manfrotto RC2 plate. 
 // Includes:
 //   include <BOSL2/std.scad>
-//   include <BOSL2/tripd_mounts.scad>
+//   include <BOSL2/tripod_mounts.scad>
 // FileGroup: Parts
 // FileSummary: Tripod mount plates: RC2
 //////////////////////////////////////////////////////////////////////////////////////////////
