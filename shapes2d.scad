@@ -392,7 +392,7 @@ module ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER, 
     ry = r.y * sc;
     attachable(anchor,spin, two_d=true, r=[rx,ry]) {
         if (uniform) {
-            assert(!circum, "Circum option not allowed when \"uniform\" is true");
+            check = assert(!circum, "Circum option not allowed when \"uniform\" is true");
             polygon(ellipse(r,realign=realign, circum=circum, uniform=true));
         }
         else if (rx < ry) {
@@ -591,7 +591,7 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
     id = is_finite(id)? id*sc : undef;
     side = is_finite(side)? side/2/sin(180/n) : undef;
     r = get_radius(r1=ir, r2=or, r=r, d1=id, d2=od, d=d, dflt=side);
-    assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.");
+    check = assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.");
     mat = ( realign? zrot(-180/n) : ident(4) ) * (
             !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip)) :
             !is_undef(align_side)? rot(from=RIGHT, to=point2d(align_side)) * zrot(180/n) :
@@ -828,7 +828,7 @@ function right_triangle(size=[1,1], center, anchor, spin=0) =
 module right_triangle(size=[1,1], center, anchor, spin=0) {
     size = is_num(size)? [size,size] : size;
     anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]);
-    assert(is_vector(size,2));
+    check = assert(is_vector(size,2));
     path = right_triangle(size, center=true);
     attachable(anchor,spin, two_d=true, size=[size.x,size.y], size2=0, shift=-size.x/2) {
         polygon(path);
@@ -1083,10 +1083,11 @@ function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit
 
 
 module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0, atype="hull") {
-    assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
-    assert(is_undef(align_tip) || is_vector(align_tip));
-    assert(is_undef(align_pit) || is_vector(align_pit));
-    assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit");
+    checks =
+        assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
+        assert(is_undef(align_tip) || is_vector(align_tip))
+        assert(is_undef(align_pit) || is_vector(align_pit))
+        assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit");
     r = get_radius(r1=or, d1=od, r=r, d=d, dflt=undef);
     stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n);
     ir = get_radius(r=ir, d=id, dflt=stepr);
@@ -1463,7 +1464,7 @@ function supershape(step=0.5, m1=4, m2, n1=1, n2, n3, a=1, b, r, d,anchor=CENTER
     ) reorient(anchor,spin, two_d=true, path=path, p=path, extent=atype=="hull");
 
 module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0, atype="hull") {
-    assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
+    check = assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
     path = supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b,r=r,d=d);
     attachable(anchor,spin,extent=atype=="hull", two_d=true, path=path) {
         polygon(path);
@@ -1498,7 +1499,7 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 // Examples(2D): Named anchors exist for the tips
 //   reuleaux_polygon(n=3, d=50) show_anchors(std=false);
 module reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) {
-    assert(n>=3 && (n%2)==1);
+    check = assert(n>=3 && (n%2)==1);
     r = get_radius(r=r, d=d, dflt=1);
     path = reuleaux_polygon(n=n, r=r);
     anchors = [
