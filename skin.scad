@@ -1215,7 +1215,6 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
 function path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true,
                     symmetry=1, last_normal, tangent, uniform=true, relaxed=false, caps, style="min_edge", transforms=false,
                     anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull") =
-  let(a=echo(is_1region(path),closed))
   is_1region(path) ? path_sweep(shape=shape,path=path[0], method=method, normal=normal, closed=default(closed,true),
                                 twist=twist, twist_by_length=twist_by_length, symmetry=symmetry, last_normal=last_normal,
                                 tangent=tangent, uniform=uniform, relaxed=relaxed, caps=caps, style=style, transforms=transforms,
@@ -1389,7 +1388,7 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edg
         path = flip ? reverse(path) : path,
         proflist= transpose(
                      [for(pt = profile)
-                        let(  e=echo(delta=-flip*pt.x),
+                        let(  
                             ofs = offset(path, delta=-flip*pt.x, return_faces=true,closed=closed, quality=quality),
                             map = column(_ofs_vmap(ofs,closed=closed),1)
                         ) 
