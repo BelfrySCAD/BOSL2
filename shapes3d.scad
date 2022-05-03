@@ -214,7 +214,7 @@ module cuboid(
         e = _corner_edges(edges, corner);
         cnt = sum(e);
         r = first_defined([chamfer, rounding]);
-        dummy=assert(is_finite(r) && !approx(r,0));
+        dummy = assert(is_finite(r) && !approx(r,0));
         c = [r,r,r];
         m = 0.01;
         c2 = v_mul(corner,c/2);
@@ -266,15 +266,16 @@ module cuboid(
     teardrop = is_bool(teardrop)&&teardrop? 45 : teardrop;
     chamfer = approx(chamfer,0) ? undef : chamfer;
     rounding = approx(rounding,0) ? undef : rounding;
-    assert(is_vector(size,3));
-    assert(all_positive(size));
-    assert(is_undef(chamfer) || is_finite(chamfer),"chamfer must be a finite value");
-    assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value");
-    assert(is_undef(rounding) || is_undef(chamfer), "Cannot specify nonzero value for both chamfer and rounding");
-    assert(teardrop==false || (is_finite(teardrop) && teardrop>0 && teardrop<90), "teardrop must be either false or an angle number between 0 and 90")
-    assert(is_undef(p1) || is_vector(p1));
-    assert(is_undef(p2) || is_vector(p2));
-    assert(is_bool(trimcorners));
+    checks = 
+        assert(is_vector(size,3))
+        assert(all_positive(size))
+        assert(is_undef(chamfer) || is_finite(chamfer),"chamfer must be a finite value")
+        assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value")
+        assert(is_undef(rounding) || is_undef(chamfer), "Cannot specify nonzero value for both chamfer and rounding")
+        assert(teardrop==false || (is_finite(teardrop) && teardrop>0 && teardrop<90), "teardrop must be either false or an angle number between 0 and 90")
+        assert(is_undef(p1) || is_vector(p1))
+        assert(is_undef(p2) || is_vector(p2))
+        assert(is_bool(trimcorners));
     if (!is_undef(p1)) {
         if (!is_undef(p2)) {
             translate(pointlist_bounds([p1,p2])[0]) {
@@ -321,7 +322,7 @@ module cuboid(
                         }
                     }
                 } else if (chamfer<0) {
-                    assert(edges == EDGES_ALL || edges[2] == [0,0,0,0], "Cannot use negative chamfer with Z aligned edges.");
+                    checks = assert(edges == EDGES_ALL || edges[2] == [0,0,0,0], "Cannot use negative chamfer with Z aligned edges.");
                     ach = abs(chamfer);
                     cube(size, center=true);
 
@@ -408,7 +409,7 @@ module cuboid(
                         }
                     }
                 } else if (rounding<0) {
-                    assert(edges == EDGES_ALL || edges[2] == [0,0,0,0], "Cannot use negative rounding with Z aligned edges.");
+                    checks = assert(edges == EDGES_ALL || edges[2] == [0,0,0,0], "Cannot use negative rounding with Z aligned edges.");
                     ard = abs(rounding);
                     cube(size, center=true);
 
@@ -573,23 +574,25 @@ module prismoid(
     l, center,
     anchor, spin=0, orient=UP
 ) {
-    assert(is_num(size1) || is_vector(size1,2));
-    assert(is_num(size2) || is_vector(size2,2));
-    assert(is_num(h) || is_num(l));
-    assert(is_vector(shift,2));
-    assert(is_num(rounding) || is_vector(rounding,4), "Bad rounding argument.");
-    assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "Bad rounding1 argument.");
-    assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "Bad rounding2 argument.");
-    assert(is_num(chamfer) || is_vector(chamfer,4), "Bad chamfer argument.");
-    assert(is_undef(chamfer1) || is_num(chamfer1) || is_vector(chamfer1,4), "Bad chamfer1 argument.");
-    assert(is_undef(chamfer2) || is_num(chamfer2) || is_vector(chamfer2,4), "Bad chamfer2 argument.");
+    checks =
+        assert(is_num(size1) || is_vector(size1,2))
+        assert(is_num(size2) || is_vector(size2,2))
+        assert(is_num(h) || is_num(l))
+        assert(is_vector(shift,2))
+        assert(is_num(rounding) || is_vector(rounding,4), "Bad rounding argument.")
+        assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "Bad rounding1 argument.")
+        assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "Bad rounding2 argument.")
+        assert(is_num(chamfer) || is_vector(chamfer,4), "Bad chamfer argument.")
+        assert(is_undef(chamfer1) || is_num(chamfer1) || is_vector(chamfer1,4), "Bad chamfer1 argument.")
+        assert(is_undef(chamfer2) || is_num(chamfer2) || is_vector(chamfer2,4), "Bad chamfer2 argument.");
     eps = pow(2,-14);
     size1 = is_num(size1)? [size1,size1] : size1;
     size2 = is_num(size2)? [size2,size2] : size2;
-    assert(all_nonnegative(size1));
-    assert(all_nonnegative(size2));
-    assert(size1.x + size2.x > 0);
-    assert(size1.y + size2.y > 0);
+    checks2 = 
+        assert(all_nonnegative(size1))
+        assert(all_nonnegative(size2))
+        assert(size1.x + size2.x > 0)
+        assert(size1.y + size2.y > 0);
     s1 = [max(size1.x, eps), max(size1.y, eps)];
     s2 = [max(size2.x, eps), max(size2.y, eps)];
     rounding1 = default(rounding1, rounding);
@@ -841,8 +844,9 @@ module rect_tube(
     l
 ) {
     h = one_defined([h,l],"h,l");
-    assert(is_num(h), "l or h argument required.");
-    assert(is_vector(shift,2));
+    checks =
+        assert(is_num(h), "l or h argument required.")
+        assert(is_vector(shift,2));
     s1 = is_num(size1)? [size1, size1] :
         is_vector(size1,2)? size1 :
         is_num(size)? [size, size] :
@@ -875,15 +879,16 @@ module rect_tube(
     isize2 = is_def(is2)? is2 :
         (is_def(wall) && is_def(s2))? (s2-2*[wall,wall]) :
         undef;
-    assert(wall==undef || is_num(wall));
-    assert(size1!=undef, "Bad size/size1 argument.");
-    assert(size2!=undef, "Bad size/size2 argument.");
-    assert(isize1!=undef, "Bad isize/isize1 argument.");
-    assert(isize2!=undef, "Bad isize/isize2 argument.");
-    assert(isize1.x < size1.x, "Inner size is larger than outer size.");
-    assert(isize1.y < size1.y, "Inner size is larger than outer size.");
-    assert(isize2.x < size2.x, "Inner size is larger than outer size.");
-    assert(isize2.y < size2.y, "Inner size is larger than outer size.");
+    checks2 = 
+        assert(wall==undef || is_num(wall))
+        assert(size1!=undef, "Bad size/size1 argument.")
+        assert(size2!=undef, "Bad size/size2 argument.")
+        assert(isize1!=undef, "Bad isize/isize1 argument.")
+        assert(isize2!=undef, "Bad isize/isize2 argument.")
+        assert(isize1.x < size1.x, "Inner size is larger than outer size.")
+        assert(isize1.y < size1.y, "Inner size is larger than outer size.")
+        assert(isize2.x < size2.x, "Inner size is larger than outer size.")
+        assert(isize2.y < size2.y, "Inner size is larger than outer size.");
     anchor = get_anchor(anchor, center, BOT, BOT);
     attachable(anchor,spin,orient, size=[each size1, h], size2=size2, shift=shift) {
         diff("_H_o_L_e_")
@@ -1190,28 +1195,30 @@ module cyl(
                 fil1 = first_defined([rounding1, rounding]);
                 fil2 = first_defined([rounding2, rounding]);
                 if (chamfer != undef) {
-                    assert(chamfer <= r1,  "chamfer is larger than the r1 radius of the cylinder.");
-                    assert(chamfer <= r2,  "chamfer is larger than the r2 radius of the cylinder.");
+                    checks =
+                        assert(chamfer <= r1,  "chamfer is larger than the r1 radius of the cylinder.")
+                        assert(chamfer <= r2,  "chamfer is larger than the r2 radius of the cylinder.");
                 }
                 if (cham1 != undef) {
-                    assert(cham1 <= r1,  "chamfer1 is larger than the r1 radius of the cylinder.");
+                    check = assert(cham1 <= r1,  "chamfer1 is larger than the r1 radius of the cylinder.");
                 }
                 if (cham2 != undef) {
-                    assert(cham2 <= r2,  "chamfer2 is larger than the r2 radius of the cylinder.");
+                    check = assert(cham2 <= r2,  "chamfer2 is larger than the r2 radius of the cylinder.");
                 }
                 if (rounding != undef) {
-                    assert(rounding <= r1,  "rounding is larger than the r1 radius of the cylinder.");
-                    assert(rounding <= r2,  "rounding is larger than the r2 radius of the cylinder.");
+                    checks =
+                        assert(rounding <= r1,  "rounding is larger than the r1 radius of the cylinder.")
+                        assert(rounding <= r2,  "rounding is larger than the r2 radius of the cylinder.");
                 }
                 if (fil1 != undef) {
-                    assert(fil1 <= r1,  "rounding1 is larger than the r1 radius of the cylinder.");
+                    check = assert(fil1 <= r1,  "rounding1 is larger than the r1 radius of the cylinder.");
                 }
                 if (fil2 != undef) {
-                    assert(fil2 <= r2,  "rounding2 is larger than the r1 radius of the cylinder.");
+                    check = assert(fil2 <= r2,  "rounding2 is larger than the r1 radius of the cylinder.");
                 }
                 dy1 = abs(first_defined([cham1, fil1, 0]));
                 dy2 = abs(first_defined([cham2, fil2, 0]));
-                assert(dy1+dy2 <= l, "Sum of fillets and chamfer sizes must be less than the length of the cylinder.");
+                check = assert(dy1+dy2 <= l, "Sum of fillets and chamfer sizes must be less than the length of the cylinder.");
 
                 path = concat(
                     [[0,l/2]],
@@ -1540,9 +1547,10 @@ module tube(
     r2 = default(orr2, u_add(irr2,wall));
     ir1 = default(irr1, u_sub(orr1,wall));
     ir2 = default(irr2, u_sub(orr2,wall));
-    assert(all_defined([r1, r2, ir1, ir2]), "Must specify two of inner radius/diam, outer radius/diam, and wall width.");
-    assert(ir1 <= r1, "Inner radius is larger than outer radius.");
-    assert(ir2 <= r2, "Inner radius is larger than outer radius.");
+    checks =
+        assert(all_defined([r1, r2, ir1, ir2]), "Must specify two of inner radius/diam, outer radius/diam, and wall width.")
+        assert(ir1 <= r1, "Inner radius is larger than outer radius.")
+        assert(ir2 <= r2, "Inner radius is larger than outer radius.");
     sides = segs(max(r1,r2));
     anchor = get_anchor(anchor, center, BOT, CENTER);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
@@ -2608,7 +2616,6 @@ function _cut_interp(pathcut, path, data) =
 //   color("red")stroke(path, width=.3);
 //   kern = [1,1.2,1,1,.3,-.2,1,0,.8,1,1.1,1];
 //   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, kern=kern, normal=UP);
-
 module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false, kern=0)
 {
   no_children($children);
@@ -2653,29 +2660,37 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
   
   normpts = is_undef(normal) ? (reverse?1:-1)*column(pts,3) : _cut_interp(pts,path, normal);
   toppts = is_undef(top) ? undef : _cut_interp(pts,path,top);
-  for(i=idx(text))
-      let( tangent = pts[i][2] )
-      assert(!usetop || !approx(tangent*toppts[i],norm(top[i])*norm(tangent)),
-             str("Specified top direction parallel to path at character ",i))
-      assert(usetop || !approx(tangent*normpts[i],norm(normpts[i])*norm(tangent)),
-             str("Specified normal direction parallel to path at character ",i))
-      let(
-          adjustment = usetop ?  (tangent*toppts[i])*toppts[i]/(toppts[i]*toppts[i])
-                     : usernorm ?  (tangent*normpts[i])*normpts[i]/(normpts[i]*normpts[i])
-                     : [0,0,0]
-      )
-      move(pts[i][0])
-      if(dim==3){
-          frame_map(x=tangent-adjustment,
-                    z=usetop ? undef : normpts[i],
-                    y=usetop ? toppts[i] : undef)
-          up(offset-thickness/2)
+  for (i = idx(text)) {
+    tangent = pts[i][2];
+    checks =
+        assert(!usetop || !approx(tangent*toppts[i],norm(top[i])*norm(tangent)),
+               str("Specified top direction parallel to path at character ",i))
+        assert(usetop || !approx(tangent*normpts[i],norm(normpts[i])*norm(tangent)),
+               str("Specified normal direction parallel to path at character ",i));
+    adjustment = usetop ?  (tangent*toppts[i])*toppts[i]/(toppts[i]*toppts[i])
+               : usernorm ?  (tangent*normpts[i])*normpts[i]/(normpts[i]*normpts[i])
+               : [0,0,0];
+    move(pts[i][0]) {
+      if (dim==3) {
+        frame_map(
+          x=tangent-adjustment,
+          z=usetop ? undef : normpts[i],
+          y=usetop ? toppts[i] : undef
+        ) up(offset-thickness/2) {
           linear_extrude(height=thickness)
-          left(lsize[0]/2)text(text[i], font=font, size=size);
-     } else {
-          frame_map(x=point3d(tangent-adjustment), y=point3d(usetop ? toppts[i] : -normpts[i]))
-          left(lsize[0]/2)text(text[i], font=font, size=size);
-     }
+            left(lsize[0]/2)
+              text(text[i], font=font, size=size);
+        }
+      } else {
+          frame_map(
+            x=point3d(tangent-adjustment),
+            y=point3d(usetop ? toppts[i] : -normpts[i])
+          ) left(lsize[0]/2) {
+              text(text[i], font=font, size=size);
+          }
+      }
+    }
+  }
 }
 
 
@@ -2912,8 +2927,9 @@ module ruler(length=100, width, thickness=1, depth=3, labels=false, pipscale=1/3
              colors=["black","white"], alpha=1.0, unit=1, inch=false, anchor=LEFT+BACK+TOP, spin=0, orient=UP)
 {
     inchfactor = 25.4;
-    assert(depth<=5, "Cannot render scales smaller than depth=5");
-    assert(len(colors)==2, "colors must contain a list of exactly two colors.");
+    checks =
+        assert(depth<=5, "Cannot render scales smaller than depth=5")
+        assert(len(colors)==2, "colors must contain a list of exactly two colors.");
     length = inch ? inchfactor * length : length;
     unit = inch ? inchfactor*unit : unit;
     maxscale = is_def(maxscale)? maxscale : floor(log(length/unit-EPSILON));
