@@ -860,7 +860,7 @@ function _normal_segment(p1,p2) =
 //   "ymove"      | [dist]             | Move turtle scale*dist units in the y direction. Default dist=1.  Does not change turtle direction.
 //   "xymove"     | vector             | Move turtle by the specified vector.  Does not change turtle direction. 
 //   "untilx"     | xtarget            | Move turtle in turtle direction until x==xtarget.  Produces an error if xtarget is not reachable.
-//   "untily"     | ytarget            | Move turtle in turtle direction until y==ytarget.  Produces an error if xtarget is not reachable.
+//   "untily"     | ytarget            | Move turtle in turtle direction until y==ytarget.  Produces an error if ytarget is not reachable.
 //   "jump"       | point              | Move the turtle to the specified point
 //   "xjump"      | x                  | Move the turtle's x position to the specified value
 //   "yjump       | y                  | Move the turtle's y position to the specified value
