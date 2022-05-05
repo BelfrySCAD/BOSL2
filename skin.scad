@@ -897,6 +897,9 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   the cross section orientation.  Specifying a list of normal vectors gives you complete control over the orientation of your
 //   cross sections and can be useful if you want to position your model to be on the surface of some solid.
 //   .
+//   You can use set `transforms` to true to return a list of transformation matrices instead of the swept shape.  In this case, you can
+//   often omit shape entirely.  The exception is when `closed=true` and you are using the "incremental" method.  In this case, `path_sweep`
+//   uses the shape to correct for twist when the shape closes on itself, so you must include a valid shape.  
 // Arguments:
 //   shape = A 2D polygon path or region describing the shape to be swept.
 //   path = 2D or 3D path giving the path to sweep over
@@ -1184,10 +1187,11 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //                method="manual", normal=UP);
 //   }
 
-module path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
+module path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true,
                     symmetry=1, last_normal, tangent, uniform=true, relaxed=false, caps, style="min_edge", convexity=10,
                     anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull",profiles=false,width=1)
 {
+    dummy = assert(is_region(shape) || is_path(shape,2), "shape must be a 2D path or region");
     vnf = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
                     symmetry, last_normal, tangent, uniform, relaxed, caps, style);
 
@@ -1195,8 +1199,10 @@ module path_sweep(shape, path, method="incremental", normal, closed=false, twist
         assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");      
         tran = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
                           symmetry, last_normal, tangent, uniform, relaxed,transforms=true);
+        rshape = is_path(shape) ? [path3d(shape)]
+                                : [for(s=shape) path3d(s)];
         attachable(anchor,spin,orient, vnf=vnf, extent=atype=="hull", cp=cp) {
-            for(T=tran) stroke([apply(T,path3d(shape))],width=width);        
+            for(T=tran) stroke([for(part=rshape)apply(T,part)],width=width);        
             children();
         }
     }
@@ -1206,9 +1212,14 @@ module path_sweep(shape, path, method="incremental", normal, closed=false, twist
 }        
 
 
-function path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
+function path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true,
                     symmetry=1, last_normal, tangent, uniform=true, relaxed=false, caps, style="min_edge", transforms=false,
-                    anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull") = 
+                    anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull") =
+  is_1region(path) ? path_sweep(shape=shape,path=path[0], method=method, normal=normal, closed=default(closed,true),
+                                twist=twist, twist_by_length=twist_by_length, symmetry=symmetry, last_normal=last_normal,
+                                tangent=tangent, uniform=uniform, relaxed=relaxed, caps=caps, style=style, transforms=transforms,
+                                anchor=anchor, cp=cp, spin=spin, orient=orient, atype=atype) :
+  let(closed=default(closed,false))
   assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
   assert(!closed || twist % (360/symmetry)==0, str("For a closed sweep, twist must be a multiple of 360/symmetry = ",360/symmetry))
   assert(closed || symmetry==1, "symmetry must be 1 when closed is false")
@@ -1216,6 +1227,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
   let(path = force_path(path))
   assert(is_path(path,[2,3]), "input path is not a 2D or 3D path")
   assert(!closed || !approx(path[0],last(path)), "Closed path includes start point at the end")
+  assert((is_region(shape) || is_path(shape,2)) || (transforms && !(closed && method=="incremental")),"shape must be a 2d path or region")
   let(
     path = path3d(path),
     caps = is_def(caps) ? caps :
@@ -1376,7 +1388,7 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edg
         path = flip ? reverse(path) : path,
         proflist= transpose(
                      [for(pt = profile)
-                        let(  e=echo(delta=-flip*pt.x),
+                        let(  
                             ofs = offset(path, delta=-flip*pt.x, return_faces=true,closed=closed, quality=quality),
                             map = column(_ofs_vmap(ofs,closed=closed),1)
                         ) 
