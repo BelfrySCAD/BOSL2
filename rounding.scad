@@ -1615,7 +1615,7 @@ module offset_sweep(path, height,
 {
     assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
     vnf = offset_sweep(path=path, height=height, h=h, l=l, top=top, bottom=bottom, offset=offset, r=r, steps=steps,
-                       quality=quality, check_valid=true, extra=extra, cut=cut, chamfer_width=chamfer_width,
+                       quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
                        chamfer_height=chamfer_height, joint=joint, k=k, angle=angle);
     vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
         children();
