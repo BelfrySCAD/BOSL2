@@ -2,9 +2,9 @@
 // LibFile: screws.scad
 //   Functions and modules for creating metric (ISO) and English (UTS) standard screws and nuts.
 //   Included is a function for calculating the standard dimensions of screws including the
-//   tolerance values that are required to create clearance so that screws mate properly when they are formed
-//   precisely.  If you can fabricate objects accurately then your screws will mate
-//   with standard hardware. 
+//   tolerance values that are required to make screws mate properly when they are formed
+//   precisely, so if you can fabricate objects accurately then your screws will mate
+//   with standard hardware without the need to introduce extra gaps for clearance.  Those
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/screws.scad>
@@ -1411,6 +1411,8 @@ http://files.engineering.com/getfile.aspx?folder=76fb0d5e-1fff-4c49-87a5-0597947
 
 
 // To do list
+//
+// Is there no way to create a mask for making threaded holes?  This seems to be missing.
 //
 // Metric hex engagement:
 // https://www.bayoucitybolt.com/socket-head-cap-screws-metric.html
