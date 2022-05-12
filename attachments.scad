@@ -2045,9 +2045,9 @@ function _find_anchor(anchor, geom) =
             vec = unit(v_mul(r,anchor),UP)
         ) [anchor, pos, vec, oang]
     ) : type == "vnf_isect"? ( //vnf
-        let(
-            vnf=geom[1]
-        ) vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
+        let( vnf=geom[1] )
+        approx(anchor,CTR)? [anchor, [0,0,0], UP, 0] :
+        vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
         let(
             eps = 1/2048,
             points = vnf[0],
@@ -2095,9 +2095,9 @@ function _find_anchor(anchor, geom) =
         )
         [anchor, pos, n, oang]
     ) : type == "vnf_extent"? ( //vnf
-        let(
-            vnf=geom[1]
-        ) vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
+        let( vnf=geom[1] )
+        approx(anchor,CTR)? [anchor, [0,0,0], UP, 0] :
+        vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor,UP), 0] :
         let(
             rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
             maxx = max(column(rpts,0)),
@@ -2144,12 +2144,15 @@ function _find_anchor(anchor, geom) =
     ) : type == "rgn_isect"? ( //region
         let(
             anchor = _force_anchor_2d(anchor),
-            rgn = force_region(move(-point2d(cp), p=geom[1])),
+            rgn = force_region(move(-point2d(cp), p=geom[1]))
+        )
+        approx(anchor,[0,0])? [anchor, [0,0,0], BACK, 0] :
+        let(
             isects = [
                 for (path=rgn, t=triplet(path,true)) let(
                     seg1 = [t[0],t[1]],
                     seg2 = [t[1],t[2]],
-                    isect = line_intersection([[0,0],anchor], seg1,RAY,SEGMENT),
+                    isect = line_intersection([[0,0],anchor], seg1, RAY, SEGMENT),
                     n = is_undef(isect)? [0,1] :
                         !approx(isect, t[1])? line_normal(seg1) :
                         unit((line_normal(seg1)+line_normal(seg2))/2,[0,1]),
@@ -2166,15 +2169,16 @@ function _find_anchor(anchor, geom) =
             vec = unit(isect[2],[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "rgn_extent"? ( //region
+        let( anchor = _force_anchor_2d(anchor) )
+        approx(anchor,[0,0])? [anchor, [0,0,0], BACK, 0] :
         let(
-            anchor = _force_anchor_2d(anchor),
             rgn = force_region(geom[1]),
             rpts = rot(from=anchor, to=RIGHT, p=flatten(rgn)),
             maxx = max(column(rpts,0)),
             ys = [for (pt=rpts) if (approx(pt.x, maxx)) pt.y],            
             midy = (min(ys)+max(ys))/2,
             pos = rot(from=RIGHT, to=anchor, p=[maxx,midy])
-        ) [anchor, pos, unit(anchor), 0]
+        ) [anchor, pos, unit(anchor,BACK), 0]
     ) : type=="xrgn_extent" || type=="xrgn_isect" ? (  // extruded region
         assert(in_list(anchor.z,[-1,0,1]), "The Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
         let(
@@ -2190,7 +2194,7 @@ function _find_anchor(anchor, geom) =
             twmat = zrot(lerp(0, -twist, u)),
             mat = shmat * scmat * twmat
         )
-        approx(anchor_xy,[0,0]) ? [anchor, apply(mat, up(anchor.z*L/2,cp)), anchor, oang] :
+        approx(anchor_xy,[0,0]) ? [anchor, apply(mat, up(anchor.z*L/2,cp)), unit(anchor, UP), oang] :
         let(
             newrgn = apply(mat, rgn),
             newgeom = attach_geom(two_d=true, region=newrgn, extent=type=="xrgn_extent", cp=cp),
