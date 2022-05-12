@@ -1219,7 +1219,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   offset = If given, offsets the perimeter of the volume around the centerpoint.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
-//   axis = The vector pointing along the axis of a cylinder geometry.  Default: UP
+//   axis = The vector pointing along the axis of a geometry.  Default: UP
 //   geom = If given, uses the pre-defined (via {{attach_geom()}} geometry.
 //
 // Side Effects:
@@ -1385,14 +1385,15 @@ module attachable(
     region = !is_undef(region)? region :
         !is_undef(path)? [path] :
         undef;
-    geom = is_def(geom)? geom : attach_geom(
-        size=size, size2=size2, shift=shift,
-        r=r, r1=r1, r2=r2, h=h,
-        d=d, d1=d1, d2=d2, l=l,
-        vnf=vnf, region=region, extent=extent,
-        cp=cp, offset=offset, anchors=anchors,
-        two_d=two_d, axis=axis
-    );
+    geom = is_def(geom)? geom :
+        attach_geom(
+            size=size, size2=size2, shift=shift,
+            r=r, r1=r1, r2=r2, h=h,
+            d=d, d1=d1, d2=d2, l=l,
+            vnf=vnf, region=region, extent=extent,
+            cp=cp, offset=offset, anchors=anchors,
+            two_d=two_d, axis=axis
+        );
     m = _attach_transform(anchor,spin,orient,geom);
     multmatrix(m) {
         $parent_anchor = anchor;
@@ -1499,7 +1500,7 @@ module attachable(
 //   offset = If given, offsets the perimeter of the volume around the centerpoint.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
-//   axis = The vector pointing along the axis of a cylinder geometry.  Default: UP
+//   axis = The vector pointing along the axis of a geometry.  Default: UP
 //   p = The VNF, path, or point to transform.
 function reorient(
     anchor, spin, orient,
@@ -1528,14 +1529,15 @@ function reorient(
     )
     (anchor==CENTER && spin==0 && orient==UP && p!=undef)? p :
     let(
-        geom = is_def(geom)? geom : attach_geom(
-            size=size, size2=size2, shift=shift,
-            r=r, r1=r1, r2=r2, h=h,
-            d=d, d1=d1, d2=d2, l=l,
-            vnf=vnf, region=region, extent=extent,
-            cp=cp, offset=offset, anchors=anchors,
-            two_d=two_d, axis=axis
-        ),
+        geom = is_def(geom)? geom :
+            attach_geom(
+                size=size, size2=size2, shift=shift,
+                r=r, r1=r1, r2=r2, h=h,
+                d=d, d1=d1, d2=d2, l=l,
+                vnf=vnf, region=region, extent=extent,
+                cp=cp, offset=offset, anchors=anchors,
+                two_d=two_d, axis=axis
+            ),
         $attach_to = undef
     ) _attach_transform(anchor,spin,orient,geom,p);
 
@@ -1605,7 +1607,7 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 //   offset = If given, offsets the perimeter of the volume around the centerpoint.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
-//   axis = The vector pointing along the axis of a cylinder geometry.  Default: UP
+//   axis = The vector pointing along the axis of a geometry.  Default: UP
 //
 // Example(NORENDER): Cubical Shape
 //   geom = attach_geom(size=size);
@@ -1697,7 +1699,7 @@ function attach_geom(
             assert(is_vector(size,2))
             assert(is_num(size2))
             assert(is_num(shift))
-            ["rect", point2d(size), size2, shift, cp, offset, anchors]
+            ["trapezoid", point2d(size), size2, shift, cp, offset, anchors]
         ) : (
             let(
                 size2 = default(size2, point2d(size)),
@@ -1706,7 +1708,7 @@ function attach_geom(
             assert(is_vector(size,3))
             assert(is_vector(size2,2))
             assert(is_vector(shift,2))
-            ["cuboid", size, size2, shift, axis, cp, offset, anchors]
+            ["prismoid", size, size2, shift, axis, cp, offset, anchors]
         )
     ) : !is_undef(vnf)? (
         assert(is_vnf(vnf))
@@ -1748,11 +1750,11 @@ function attach_geom(
             assert(is_num(r2) || is_vector(r2,2))
             assert(is_num(l))
             assert(is_vector(shift,2))
-            ["cyl", r1, r2, l, shift, axis, cp, offset, anchors]
+            ["conoid", r1, r2, l, shift, axis, cp, offset, anchors]
         ) : (
             two_d? (
                 assert(is_num(r1) || is_vector(r1,2))
-                ["circle", r1, cp, offset, anchors]
+                ["ellipse", r1, cp, offset, anchors]
             ) : (
                 assert(is_num(r1) || is_vector(r1,3))
                 ["spheroid", r1, cp, offset, anchors]
@@ -1780,7 +1782,7 @@ function attach_geom(
 //   Returns true if the given attachment geometry description is for a 2D shape.
 function _attach_geom_2d(geom) =
     let( type = geom[0] )
-    type == "rect" || type == "circle" ||
+    type == "trapezoid" || type == "ellipse" ||
     type == "rgn_isect" || type == "rgn_extent";
 
 
@@ -1793,14 +1795,14 @@ function _attach_geom_2d(geom) =
 //   Returns the `[X,Y,Z]` bounding size for the given attachment geometry description.
 function _attach_geom_size(geom) =
     let( type = geom[0] )
-    type == "cuboid"? ( //size, size2, shift
+    type == "prismoid"? ( //size, size2, shift, axis
         let(
             size=geom[1], size2=geom[2], shift=point2d(geom[3]),
             maxx = max(size.x,size2.x),
             maxy = max(size.y,size2.y),
             z = size.z
         ) [maxx, maxy, z]
-    ) : type == "cyl"? ( //r1, r2, l, shift
+    ) : type == "conoid"? ( //r1, r2, l, shift
         let(
             r1=geom[1], r2=geom[2], l=geom[3],
             shift=point2d(geom[4]), axis=point3d(geom[5]),
@@ -1831,12 +1833,12 @@ function _attach_geom_size(geom) =
             mm = pointlist_bounds(flatten(geom[1])),
             delt = mm[1]-mm[0]
         ) [delt.x, delt.y, geom[2]]
-    ) : type == "rect"? ( //size, size2
+    ) : type == "trapezoid"? ( //size, size2
         let(
             size=geom[1], size2=geom[2], shift=geom[3],
             maxx = max(size.x,size2+abs(shift))
         ) [maxx, size.y]
-    ) : type == "circle"? ( //r
+    ) : type == "ellipse"? ( //r
         let( r=geom[1] )
         is_num(r)? [2,2]*r : v_mul([2,2],point2d(r))
     ) : type == "rgn_isect" || type == "rgn_extent"? ( //path
@@ -1982,37 +1984,36 @@ function _find_anchor(anchor, geom) =
         type = geom[0]
     )
     assert(is_vector(anchor),str("Invalid anchor: anchor=",anchor))
-    let(anchor = point3d(anchor))
-    anchor==CENTER? [anchor, cp, UP, 0] :
     let(
+        anchor = point3d(anchor),
         oang = (
             approx(point2d(anchor), [0,0])? 0 :
             atan2(anchor.y, anchor.x)+90
         )
     )
-    type == "cuboid"? ( //size, size2, shift
+    type == "prismoid"? ( //size, size2, shift, axis
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "All components of an anchor for a cuboid/prismoid must be -1, 0, or 1")
         let(
             size=geom[1], size2=geom[2],
             shift=point2d(geom[3]), axis=point3d(geom[4]),
             anch = rot(from=axis, to=UP, p=anchor),
+            offset = rot(from=axis, to=UP, p=offset),
             h = size.z,
-            u = (anch.z+1)/2,  // u is one of 0, 0.5, or 1
+            u = (anch.z + 1) / 2,  // u is one of 0, 0.5, or 1
             axy = point2d(anch),
-            bot = point3d(v_mul(point2d(size)/2,axy),-h/2),
-            top = point3d(v_mul(point2d(size2)/2,axy)+shift,h/2),
+            bot = point3d(v_mul(point2d(size )/2, axy), -h/2),
+            top = point3d(v_mul(point2d(size2)/2, axy) + shift, h/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
             vecs = [
-                if (anchor.x!=0) unit(rot(from=UP, to=unit([(top-bot).x,0,h]), p=[axy.x,0,0]), UP),
-                if (anchor.y!=0) unit(rot(from=UP, to=unit([0,(top-bot).y,h]), p=[0,axy.y,0]), UP),
-                if (anchor.z!=0) anch==CENTER? UP : unit([0,0,anch.z],UP)
+                if (anch.x!=0) unit(rot(from=UP, to=[(top-bot).x,0,h], p=[axy.x,0,0]), UP),
+                if (anch.y!=0) unit(rot(from=UP, to=[0,(top-bot).y,h], p=[0,axy.y,0]), UP),
+                if (anch.z!=0) anch==CENTER? UP : unit([0,0,anch.z],UP)
             ],
-            vec = unit(sum(vecs) / len(vecs)),
-            pos2 = rot(from=UP, to=axis, p=pos),
-            vec2 = rot(from=UP, to=axis, p=vec)
-        ) [anchor, pos2, vec2, oang]
-    ) : type == "cyl"? ( //r1, r2, l, shift
+            vec = anchor==CENTER? UP : rot(from=UP, to=axis, p=unit(sum(vecs) / len(vecs))),
+            pos2 = rot(from=UP, to=axis, p=pos)
+        ) [anchor, pos2, vec, oang]
+    ) : type == "conoid"? ( //r1, r2, l, shift
         assert(anchor.z == sign(anchor.z), "The Z component of an anchor for a cylinder/cone must be -1, 0, or 1")
         let(
             rr1=geom[1], rr2=geom[2], l=geom[3],
@@ -2020,6 +2021,7 @@ function _find_anchor(anchor, geom) =
             r1 = is_num(rr1)? [rr1,rr1] : point2d(rr1),
             r2 = is_num(rr2)? [rr2,rr2] : point2d(rr2),
             anch = rot(from=axis, to=UP, p=anchor),
+            offset = rot(from=axis, to=UP, p=offset),
             u = (anch.z+1)/2,
             axy = unit(point2d(anch),[0,0]),
             bot = point3d(v_mul(r1,axy), -l/2),
@@ -2027,12 +2029,12 @@ function _find_anchor(anchor, geom) =
             pos = point3d(cp) + lerp(bot,top,u) + offset,
             sidevec = rot(from=UP, to=top-bot, p=point3d(axy)),
             vvec = anch==CENTER? UP : unit([0,0,anch.z],UP),
-            vec = anch==CENTER? UP :
+            vec = anch==CENTER? CENTER :
                 approx(axy,[0,0])? unit(anch,UP) :
                 approx(anch.z,0)? sidevec :
                 unit((sidevec+vvec)/2,UP),
             pos2 = rot(from=UP, to=axis, p=pos),
-            vec2 = rot(from=UP, to=axis, p=vec)
+            vec2 = anch==CENTER? UP : rot(from=UP, to=axis, p=vec)
         ) [anchor, pos2, vec2, oang]
     ) : type == "spheroid"? ( //r
         let(
@@ -2043,9 +2045,9 @@ function _find_anchor(anchor, geom) =
             vec = unit(v_mul(r,anchor),UP)
         ) [anchor, pos, vec, oang]
     ) : type == "vnf_isect"? ( //vnf
-        let(
-            vnf=geom[1]
-        ) vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
+        let( vnf=geom[1] )
+        approx(anchor,CTR)? [anchor, [0,0,0], UP, 0] :
+        vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
         let(
             eps = 1/2048,
             points = vnf[0],
@@ -2093,9 +2095,9 @@ function _find_anchor(anchor, geom) =
         )
         [anchor, pos, n, oang]
     ) : type == "vnf_extent"? ( //vnf
-        let(
-            vnf=geom[1]
-        ) vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
+        let( vnf=geom[1] )
+        approx(anchor,CTR)? [anchor, [0,0,0], UP, 0] :
+        vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor,UP), 0] :
         let(
             rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
             maxx = max(column(rpts,0)),
@@ -2104,7 +2106,7 @@ function _find_anchor(anchor, geom) =
             mpt = approx(point2d(anchor),[0,0])? [maxx,0,0] : avep,
             pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
         ) [anchor, pos, anchor, oang]
-    ) : type == "rect"? ( //size, size2, shift
+    ) : type == "trapezoid"? ( //size, size2, shift
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "All components of an anchor for a rectangle/trapezoid must be -1, 0, or 1")
         let(
@@ -2127,7 +2129,7 @@ function _find_anchor(anchor, geom) =
                     unit((point3d(svec) + BACK) / 2, BACK)
                 )
         ) [anchor, pos, vec, 0]
-    ) : type == "circle"? ( //r
+    ) : type == "ellipse"? ( //r
         let(
             anchor = unit(_force_anchor_2d(anchor),[0,0]),
             r = force_list(geom[1],2),
@@ -2137,17 +2139,20 @@ function _find_anchor(anchor, geom) =
                              px = sign(anchor.x) * sqrt(1/(1/sqr(r.x) + m*m/sqr(r.y)))
                         )
                         [px,m*px],
-            vec = unit([r.y/r.x*pos.x, r.x/r.y*pos.y])
+            vec = unit([r.y/r.x*pos.x, r.x/r.y*pos.y],BACK)
         ) [anchor, point2d(cp+offset)+pos, vec, 0]
     ) : type == "rgn_isect"? ( //region
         let(
             anchor = _force_anchor_2d(anchor),
-            rgn = force_region(move(-point2d(cp), p=geom[1])),
+            rgn = force_region(move(-point2d(cp), p=geom[1]))
+        )
+        approx(anchor,[0,0])? [anchor, [0,0,0], BACK, 0] :
+        let(
             isects = [
                 for (path=rgn, t=triplet(path,true)) let(
                     seg1 = [t[0],t[1]],
                     seg2 = [t[1],t[2]],
-                    isect = line_intersection([[0,0],anchor], seg1,RAY,SEGMENT),
+                    isect = line_intersection([[0,0],anchor], seg1, RAY, SEGMENT),
                     n = is_undef(isect)? [0,1] :
                         !approx(isect, t[1])? line_normal(seg1) :
                         unit((line_normal(seg1)+line_normal(seg2))/2,[0,1]),
@@ -2164,15 +2169,16 @@ function _find_anchor(anchor, geom) =
             vec = unit(isect[2],[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "rgn_extent"? ( //region
+        let( anchor = _force_anchor_2d(anchor) )
+        approx(anchor,[0,0])? [anchor, [0,0,0], BACK, 0] :
         let(
-            anchor = _force_anchor_2d(anchor),
             rgn = force_region(geom[1]),
             rpts = rot(from=anchor, to=RIGHT, p=flatten(rgn)),
             maxx = max(column(rpts,0)),
             ys = [for (pt=rpts) if (approx(pt.x, maxx)) pt.y],            
             midy = (min(ys)+max(ys))/2,
             pos = rot(from=RIGHT, to=anchor, p=[maxx,midy])
-        ) [anchor, pos, unit(anchor), 0]
+        ) [anchor, pos, unit(anchor,BACK), 0]
     ) : type=="xrgn_extent" || type=="xrgn_isect" ? (  // extruded region
         assert(in_list(anchor.z,[-1,0,1]), "The Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
         let(
@@ -2188,7 +2194,7 @@ function _find_anchor(anchor, geom) =
             twmat = zrot(lerp(0, -twist, u)),
             mat = shmat * scmat * twmat
         )
-        approx(anchor_xy,[0,0]) ? [anchor, apply(mat, up(anchor.z*L/2,cp)), anchor, oang] :
+        approx(anchor_xy,[0,0]) ? [anchor, apply(mat, up(anchor.z*L/2,cp)), unit(anchor, UP), oang] :
         let(
             newrgn = apply(mat, rgn),
             newgeom = attach_geom(two_d=true, region=newrgn, extent=type=="xrgn_extent", cp=cp),
