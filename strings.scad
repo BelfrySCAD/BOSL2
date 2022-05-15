@@ -332,6 +332,20 @@ function upcase(str) =
     str_join([for(char=str) let(code=ord(char)) code>=97 && code<=122 ? chr(code-32) : char]);
 
 
+// Section: Random strings
+
+// Function: rand_str()
+// Usage:
+//    str = rand_str(n, [charset], [seed]);
+// Description:
+//    Produce a random string of length `n`.  If you give a string `charset` then the
+//    characters of the random string are drawn from that list, weighted by the number
+//    of times each character appears in the list.  If you do not give a character set
+//    then the string is generated with characters ranging from 0 to z (based on
+//    character code).  
+function rand_str(n, charset, seed) = 
+  is_undef(charset)? str_join([for(c=rand_int(48,122,n,seed)) chr(c)])
+                   : str_join([for(i=rand_int(0,len(charset)-1,n,seed)) charset[i]]);
 
 
 

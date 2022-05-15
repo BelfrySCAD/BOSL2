@@ -445,14 +445,14 @@ tag("keep")cube(100, center=true)
 ```
 
 
-If you need to mark multiple children with a tag, you can use the `tags()` module.
+If you need to mark multiple children with a tag, you can use the `tag()` module.
 
 ```openscad-3D
 include <BOSL2/std.scad>
 diff("hole")
 cube(100, center=true)
     attach([FRONT,TOP], overlap=20)
-        tags("hole") {
+        tag("hole") {
             cylinder(h=20.1, d1=0, d2=95);
             down(10) cylinder(h=30, d=30);
         }
@@ -475,14 +475,14 @@ Some notable non-attachable modules are `text()`, `linear_extrude()`, `rotate_ex
 `intersection()`, `offset()`, `hull()`, and `minkowski()`.
 
 To allow you to use tags-based operations with non-attachable shapes, you can wrap them with the
-`force_tags()` module to specify their tags.  For example:
+`force_tag()` module to specify their tags.  For example:
 
 ```openscad-3D
 include <BOSL2/std.scad>
 diff("hole")
 cuboid(50)
   attach(TOP)
-    force_tags("hole")
+    force_tag("hole")
       rotate_extrude()
         right(15)
           square(10,center=true);
