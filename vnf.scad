@@ -104,6 +104,23 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   vnf2 = vnf_vertex_array(points=cap1, col_wrap=true);
 //   vnf3 = vnf_vertex_array(points=cap2, col_wrap=true, reverse=true);
 //   vnf_polyhedron([vnf1, vnf2, vnf3]);
+// Example(3D): Building a Multi-Stage Cylindrical Ramp
+//   include <BOSL2/rounding.scad>
+//   major_r = 50;
+//   groove_profile = [
+//       [-10,0], each arc(points=[[-7,0],[0,-3],[7,0]]), [10,0]
+//   ];
+//   ramp_profile = [ [-10,25], [90,25], [180,5], [190,5] ];
+//   rgroove = apply(right(major_r) * xrot(90), path3d(groove_profile));
+//   rprofile = round_corners(ramp_profile, radius=20, closed=false, $fn=72);
+//   vnf = vnf_vertex_array([
+//       for (a = [ramp_profile[0].x : 1 : last(ramp_profile).x]) let(
+//           z = lookup(a,rprofile),
+//           m = zrot(a) * up(z)
+//       )
+//       apply(m, [ [rgroove[0].x,0,-z], each rgroove, [last(rgroove).x,0,-z] ])
+//   ], caps=true, col_wrap=true, reverse=true);
+//   vnf_polyhedron(vnf, convexity=8);
 function vnf_vertex_array(
     points,
     caps, cap1, cap2,
