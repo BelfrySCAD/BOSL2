@@ -899,7 +899,7 @@ module rect_tube(
             anchor=CTR
         ) {
             children();
-            tags("_H_o_L_e_") prismoid(
+            tag("_H_o_L_e_") prismoid(
                 isize1, isize2, h=h+0.05, shift=shift,
                 rounding=irounding, rounding1=irounding1, rounding2=irounding2,
                 chamfer=ichamfer, chamfer1=ichamfer1, chamfer2=ichamfer2,
