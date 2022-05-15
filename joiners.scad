@@ -226,7 +226,7 @@ function half_joiner(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin
 module half_joiner(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP)
 {
     vnf = half_joiner(l=l, w=w, base=base, ang=ang, screwsize=screwsize);
-    if (in_list("remove",$tags_shown)) {
+    if (is_list($tags_shown) && in_list("remove",$tags_shown)) {
         attachable(anchor,spin,orient, size=[w,l,base*2], $tag="remove") {
             half_joiner_clear(l=l, w=w, ang=ang, clearance=1);
             union();
@@ -425,7 +425,7 @@ function half_joiner2(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spi
 module half_joiner2(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP)
 {
     vnf = half_joiner2(l=l, w=w, base=base, ang=ang, screwsize=screwsize);
-    if (in_list("remove",$tags_shown)) {
+    if (is_list($tags_shown) && in_list("remove",$tags_shown)) {
         attachable(anchor,spin,orient, size=[w,l,base*2], $tag="remove") {
             half_joiner_clear(l=l, w=w, ang=ang, clearance=1);
             union();
@@ -511,7 +511,7 @@ module joiner_clear(l=40, w=10, ang=30, clearance=0, overlap=0.01, anchor=CENTER
 function joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP) = no_function("joiner");
 module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP)
 {
-    if (in_list("remove",$tags_shown)) {
+    if (is_list($tags_shown) && in_list("remove",$tags_shown)) {
         attachable(anchor,spin,orient, size=[w,l,base*2], $tag="remove") {
             joiner_clear(w=w, l=l, ang=ang, clearance=1);
             union();
