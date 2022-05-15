@@ -14,7 +14,9 @@
 
 
 // Default values for attachment code.
-$tags = "";
+$tags=undef;      // for backward compatibility
+$tag = "";
+$tag_prefix = "";
 $overlap = 0;
 $color = "default";          
 $save_color = undef;         // Saved color to revert back for children
@@ -30,7 +32,7 @@ $parent_orient = UP;
 $parent_size = undef;
 $parent_geom = undef;
 
-$tags_shown = [];
+$tags_shown = "ALL";
 $tags_hidden = [];
 
 _ANCHOR_TYPES = ["intersect","hull"];
@@ -396,7 +398,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 // See Also: attachable(), attach(), orient()
 //
 // Description:
-//   Attaches children to a parent object at an anchor point.  For a more step-by-step explanation
+//   Attaches children to a parent object at an anchor point.  For a step-by-step explanation
 //   of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   from = The vector, or name of the parent anchor point to attach to.
@@ -428,7 +430,7 @@ module position(from)
 // Topics: Attachments
 // Description:
 //   Orients children such that their top is tilted towards the given direction, or towards the
-//   direction of a given anchor point on the parent.  For a more step-by-step explanation of
+//   direction of a given anchor point on the parent.  For a step-by-step explanation of
 //   attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   dir = The direction to orient towards.
@@ -499,7 +501,7 @@ module orient(dir, anchor, spin) {
 //   be overlapped into the parent object by a little bit, as specified by the `$overlap`
 //   value (0 by default), or by the overriding `overlap=` argument.  This is to prevent OpenSCAD
 //   from making non-manifold objects.  You can define `$overlap=` as an argument in a parent
-//   module to set the default for all attachments to it.  For a more step-by-step explanation of
+//   module to set the default for all attachments to it.  For a step-by-step explanation of
 //   attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   from = The vector, or name of the parent anchor point to attach to.
@@ -537,45 +539,49 @@ module attach(from, to, overlap, norot=false)
 
 // Section: Attachment Modifiers
 
-// Module: tags()
+// Module: tag()
 // Usage:
-//   tags(tags) CHILDREN;
+//   tag(tags) CHILDREN;
 // Topics: Attachments
-// See Also: force_tags(), recolor(), hide(), show(), diff(), intersect()
+// See Also: force_tag(), recolor(), hide(), show_only(), diff(), intersect()
 // Description:
-//   Sets the `$tags` variable as specified for all its children.  This makes it easy to set the tags
+//   Sets the `$tag` variable as specified for all its children.  This makes it easy to set the tag
 //   on multiple items without having to repeat the tag setting for each one.  Note that if you want
-//   to apply tags to non-tag-aware objects you need to use {{force_tags()}} instead. 
+//   to apply a tag to non-tag-aware objects you need to use {{force_tag()}} instead. 
 //   .
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   tags = String containing space delimited set of tags to apply.
-// Example(3D):  Applies the tags to both cuboids instead of having to repeat `$tags="remove"` for each one. 
+//   tag = tag string, which must not contain any spaces.
+// Side Effects:
+//   Sets `$tag` to the tags you specify. 
+// Example(3D):  Applies the tag to both cuboids instead of having to repeat `$tag="remove"` for each one. 
 //   diff("remove")
 //     cuboid(10){
 //       position(TOP) cuboid(3);
-//       tags("remove")
+//       tag("remove")
 //       {
 //         position(FRONT) cuboid(3);
 //         position(RIGHT)  cuboid(3);
 //       }
 //     }  
-module tags(tags)
+module tag(tag)
 {
     req_children($children);
-    $tags = tags;
+    assert(is_string(tag),"tag must be a string");
+    assert(undef==str_find($tag," "),str("Tag string \"",$tag,"\" contains a space, which is not allowed"))    ;
+    $tag = str($tag_prefix,tag);
     children();
 }
 
 
-// Module: force_tags()
+// Module: force_tag()
 // Usage:
-//   force_tags([tags]) CHILDREN;
+//   force_tag([tag]) CHILDREN;
 // Topics: Attachments
-// See Also: tags(), recolor(), hide(), show(), diff(), intersect()
+// See Also: tag(), recolor(), hide(), show_only(), diff(), intersect()
 // Description:
 //   You use this module when you want to make a non-attachable or non-BOSL2 module respect tags.
-//   It applies to its children the tags specified (or the tags currently in force if you don't specify any tags),
+//   It applies to its children the tag specified (or the tag currently in force if you don't specify a tag),
 //   making a final determination about whether to show or hide the children.  This means that tagging in children's children will be ignored.
 //   This module is specifically provided for operating on children that are not tag aware such as modules
 //   that don't use {{attachable()}} or built in modules such as 
@@ -591,75 +597,120 @@ module tags(tags)
 //   Any time a test occurs for display of child() that test will succeed.  This means that when diff() checks
 //   to see if it should show a module it will show it, and when diff() checks to see if it should subtract the module
 //   it will subtract it.  The result will be a hole, possibly with zero-thickness edges or faces.  In order to
-//   get the correct behavior, every non-attachable module needs an invocation of force_tags, even ones that are not
+//   get the correct behavior, every non-attachable module needs an invocation of force_tag, even ones
+//   that are not tagged.
 //   .
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   tags = String containing space delimited set of tags to apply.
-// Example(NoRender): This program produces no output because the objects are created and then differenced away.  The specified tag is ignored.
-//   diff("remove")
+//   tag = tag string, which must not contain any spaces
+// Side Effects:
+//   Sets `$tag` to the tags you specify. 
+// Example(2D): This example produces the full square without subtracting the "remove" item.  When you use non-attachable modules with tags, results are unpredictable.
+//   diff()
 //   {
 //     polygon(square(10));
-//     move(-[.01,.01])polygon(square(5),$tags="remove");
+//     move(-[.01,.01])polygon(square(5),$tag="remove");
 //   }
-// Example(2D): Adding force_tags() fixed the model.  Note you need to add it to *every* non-attachable module, even the untagged ones.  
-//   diff("remove")
+// Example(2D): Adding force_tag() fixes the model.  Note you need to add it to *every* non-attachable module, even the untagged ones, as shown here.  
+//   diff()
 //   {
-//     force_tags()
+//     force_tag()
 //       polygon(square(10));
-//     force_tags("remove")
+//     force_tag("remove")
 //       move(-[.01,.01])polygon(square(5));
 //   }
-module force_tags(tags)
+module force_tag(tag)
 {
     req_children($children);
-    $tags = is_def(tags) ? tags : $tags;
-    if(_attachment_is_shown($tags)) {
+    assert(is_undef(tag) || is_string(tag),"tag must be a string");
+    assert(undef==str_find($tag," "),str("Tag string \"",$tag,"\" contains a space, which is not allowed"));
+    $tag = str($tag_prefix,is_def(tag) ? tag : $tag);
+    if(_is_shown())
+      show_all()
         children();
-    }
 }
+
+// Module: tag_scope()
+// Usage:
+//   tag_scope([scope]) CHILDREN;
+// Description:
+//   Creates a tag scope with locally altered tag names to avoid tag name conflict with other code.
+//   This is necessary when writing modules because the module's caller might happen to use the same tags.
+// Example: In this example the ring module uses "remove" tags which will conflict with use of the same tags by the parent.  
+//   module ring(r,h,w=1,anchor,spin,orient)
+//   {
+//     tag_scope("ringscope")
+//       attachable(anchor,spin,orient,r=r,h=h){
+//         diff()
+//           cyl(r=r,h=h)
+//             tag("remove") cyl(r=r-w,h=h+1);
+//         children();
+//       }
+//   }
+//   // Calling the module using "remove" tags
+//   // will conflict with internal tag use in
+//   // the ring module.
+//   $fn=32;
+//   diff(){
+//       ring(10,7,w=4);
+//       tag("remove")ring(8,8);
+//       tag("remove")diff("rem"){
+//          ring(9.5,8,w=1);
+//          tag("rem")ring(9.5,8,w=.3);
+//       }
+//     }
+module tag_scope(scope){
+  req_children($children);
+  scope = is_undef(scope) ? rand_str(20) : scope;
+  assert(is_string(scope), "scope must be a string");
+  $tag_prefix=scope;
+  children();
+}  
 
 
 // Module: diff()
 // Usage:
-//   diff(remove, [keep]) CHILDREN;
+//   diff([remove], [keep]) CHILDREN;
 // Topics: Attachments
-// See Also: tags(), recolor(), show(), hide(), intersect()
+// See Also: tag(), force_tag(), recolor(), show_only(), hide(), tag_diff(), intersect(), tag_intersect()
 // Description:
-//   Perform a differencing operation using tags to control what happens.  The children are grouped into
-//   three categories.  The `remove` argument is a space delimited list of tags specifying objects to
-//   subtract.  The `keep` argument, if given, is a similar list of tags giving objects to be kept.
-//   Objects not matching `remove` or `keep` form the third category of base objects.
-//   To produce its output, diff() forms the union of all the base objects, which don't match any tags.
-//   Next it subtracts all the objects with tags in `remove`.  Finally it adds in objects listed in `keep`.  
+//   Perform a differencing operation using tags to control what happens.  This is specifically intended to
+//   address the situation where you want differences between a parent and child object, something
+//   that is impossible with the native difference() module.  
+//   The children to diff are grouped into three categories, regardless of nesting level.
+//   The `remove` argument is a space delimited list of tags specifying objects to
+//   subtract.  The `keep` argument is a similar list of tags giving objects to be kept.
+//   Objects not matching either the `remove` or `keep` lists form the third category of base objects.
+//   To produce its output, diff() forms the union of all the base objects and then 
+//   subtracts all the objects with tags in `remove`.  Finally it adds in objects listed in `keep`.
+//   Attachable objects should be tagged using {{tag()}}
+//   and non-attachable objects with {{force_tag()}}.  
 //   . 
-//   Cannot be used in conjunction with `intersect()` or `hulling()` on the same parent object.
-//   .
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   remove = String containing space delimited set of tag names of children to difference away.  Default: `"remove"`
 //   keep = String containing space delimited set of tag names of children to keep; that is, to union into the model after differencing is completed.  Default: `"keep"`
 // Example: Diffing using default tags
 //   diff()
 //   cuboid(50) {
-//       attach(TOP) sphere(d=40, $tags="remove");
-//       attach(CTR) cylinder(h=40, d=10, $tags="keep");
+//       tag("remove") attach(TOP) sphere(d=40);
+//       tag("keep") attach(CTR) cylinder(h=40, d=10);
 //   }
 // Example: The "hole" items are subtracted from everything else.  The other tags can be anything you find convenient.  
 //   diff("hole")
-//     sphere(d=100, $tags="body") {
-//       zcyl(d=55, h=100, $tags="pole");  // attach() not needed for center-to-center.
-//       tags("hole") {
+//     tag("body")sphere(d=100) {
+//       tag("pole") zcyl(d=55, h=100);  // attach() not needed for center-to-center.
+//       tag("hole") {
 //          xcyl(d=55, h=101);
 //          ycyl(d=55, h=101);
 //       }
-//       zcyl(d=15, h=140, $tags="axle");
+//       tag("axle")zcyl(d=15, h=140);
 //     }
 // Example:
-//   diff("remove", keep="axle")
+//   diff(keep="axle")
 //   sphere(d=100) {
-//       attach(CENTER) xcyl(d=40, l=120, $tags="axle");
-//       attach(CENTER) cube([40,120,100], anchor=CENTER, $tags="remove");
+//       tag("axle")xcyl(d=40, l=120);
+//       tag("remove")cuboid([40,120,100]);
 //   }
 // Example: Masking
 //   diff("mask")
@@ -667,40 +718,61 @@ module force_tags(tags)
 //       edge_mask(FWD)
 //           rounding_edge_mask(l=max($parent_size)*1.01, r=25);
 //   }
+// Example: Here we subtract the parent object from the child.  Because tags propagate to children we need to clear the "remove" tag from the child. 
+//  diff()
+//     tag("remove")cuboid(10)
+//       tag("")position(RIGHT+BACK)cyl(r=8,h=9);
 // Example(3D,VPR=[104,0,200], VPT=[-0.9,3.03, -0.74], VPD=19,NoAxes,NoScales): A pipe module that subtracts its interior when you call it using diff().  Normally if you union two pipes together, you'll get interfering walls at the intersection, but not here:
 //   $fn=16;
 //   // This module must be called by subtracting with "diff"
 //   module pipe(length, od, id) {
 //       // Strip the tag the user is using to subtract
-//       cylinder(h=length, d=od, center=true,$tags="");
+//       tag("")cylinder(h=length, d=od, center=true);
 //       // Leave the tag along here, so this one is removed
 //       cylinder(h=length+.02, d=id, center=true);
 //   }
 //   // Draw some intersecting pipes
-//   diff("rem",keep="keep"){
-//     pipe(length=5, od=2, id=1.9, $tags="rem");
-//     zrot(10)xrot(75)
-//       pipe(length=5, od=2, id=1.9, $tags="rem");
+//   diff(){
+//     tag("remove"){
+//       pipe(length=5, od=2, id=1.9);
+//       zrot(10)xrot(75)
+//         pipe(length=5, od=2, id=1.9);
+//     }
 //     // The orange bar has its center removed
 //     color("orange") down(1) xcyl(h=8, d=1);
 //     // "keep" prevents interior of the blue bar intact
-//     recolor("blue") up(1) xcyl(h=8, d=1,$tags="keep");  
+//     tag("keep") recolor("blue") up(1) xcyl(h=8, d=1);  
 //   }
 //   // Objects outside the diff don't have pipe interiors removed
-//   color("purple") down(2.2) ycyl(h=8, d=0.3,$tags="keep");
+//   color("purple") down(2.2) ycyl(h=8, d=0.3);
 // Example(3D,NoScales,NoAxes): Nested diff() calls work as expected, but be careful of reusing tag names, even hidden in submodules.
-//   $fn=16;
+//   $fn=32;
 //   diff("rem1")
 //   cyl(r=10,h=10){
-//     diff("rem2",$tags="rem1"){
+//     diff("rem2",$tag="rem1"){
 //       cyl(r=8,h=11);
-//       diff("rem3", $tags="rem2"){
+//       tag("rem2")diff("rem3"){
 //           cyl(r=6,h=12);
-//           cyl(r=4,h=13,$tags="rem3");
+//           tag("rem3")cyl(r=4,h=13);
 //           }
 //       }
 //   }
-// Example(3D,NoAxes,NoScales): Working with Non-Attachables like rotate_extrude() you must apply {{force_tags()}} to every non-attachable object.  
+// Example: This example shows deep nesting, where all the differences cross levels.  Unlike the preceding example, each cylinder is positioned relative to its parent.  Note that it suffices to use two remove tags, alternating between them at each level.
+//   $fn=32;
+//   diff("remA")
+//     cyl(r=9, h=6)
+//       tag("remA")diff("remB")
+//         left(.2)position(RIGHT)cyl(r=8,h=7,anchor=RIGHT)
+//           tag("remB")diff("remA")
+//            left(.2)position(LEFT)cyl(r=7,h=7,anchor=LEFT)
+//              tag("remA")diff("remB")
+//                left(.2)position(LEFT)cyl(r=6,h=8,anchor=LEFT)
+//                  tag("remB")diff("remA")
+//                    right(.2)position(RIGHT)cyl(r=5,h=9,anchor=RIGHT)
+//                      tag("remA")diff("remB")
+//                        right(.2)position(RIGHT)cyl(r=4,h=10,anchor=RIGHT)
+//                          tag("remB")left(.2)position(LEFT)cyl(r=3,h=11,anchor=LEFT);
+// Example(3D,NoAxes,NoScales): When working with Non-Attachables like rotate_extrude() you must apply {{force_tag()}} to every non-attachable object.  
 //   back_half()
 //     diff("remove")
 //       cuboid(40) {
@@ -708,125 +780,283 @@ module force_tags(tags)
 //           recolor("lightgreen")
 //             cyl(l=10,d=30);
 //         position(TOP+RIGHT)
-//           force_tags("remove")
+//           force_tag("remove")
 //             xrot(90)
 //               rotate_extrude()
 //                 right(20)
 //                   circle(5);
 //       }
+// Example: Here is another example where two children are intersected using the native intersection operator, and then tagged with {{force_tag()}}
+//  diff()
+//    cuboid(10){
+//      force_tag("remove")intersection()
+//        {
+//          position(RIGHT) cyl(r=7,h=15);
+//          position(LEFT) cyl(r=7,h=15);
+//        }
+//      tag("keep")cyl(r=1,h=9);
+//    }
+// Example: In this example the children that are subtracted are each at different nesting levels, with a kept object in between.  
+//   diff()
+//     cuboid(10){
+//       tag("remove")cyl(r=4,h=11)
+//         tag("keep")cyl(r=3,h=17)
+//           tag("remove")position(RIGHT)cyl(r=2,h=18);
+//     }
+// Example: Combining tag operators can be tricky.  Here the `diff()` operation keeps two tags, "fullkeep" and "keep".  Then {{intersect()}} intersects the "keep" tagged item with everything else, but keeps the "fullkeep" object.  
+//   intersect("keep","fullkeep")
+//   diff(keep="fullkeep keep")
+//     cuboid(10){
+//       tag("remove")cyl(r=4,h=11);
+//       tag("keep") position(RIGHT)cyl(r=8,h=12);
+//       tag("fullkeep")cyl(r=1,h=12);
+//   }
+// Example: In this complex example we form an intersection, subtract an object, and keep some objects.  Note that for the small cylinders on either side, marking them as "keep" or removing their tag gives the same effect.  This is because without a tag they become part of the intersection and the result ends up the same.  For the two cylinders at the back, however, the result is different.  With "keep" the cylinder on the left appears whole, but without it, the cylinder at the back right is subject to intersection.
+//   $fn=64;
+//   diff()
+//     intersect(keep="remove keep")
+//       cuboid(10,$thing="cube"){
+//         tag("intersect"){
+//           position(RIGHT) cyl(r=5.5,h=15)
+//              tag("")cyl(r=2,h=10);
+//           position(LEFT) cyl(r=5.54,h=15)
+//              tag("keep")cyl(r=2,h=10);
+//         }
+//         // Untagged it is in the intersection
+//         tag("") position(BACK+RIGHT)
+//           cyl(r=2,h=10,anchor=CTR);
+//         // With keep the full cylinder appears
+//         tag("keep") position(BACK+LEFT)
+//           cyl(r=2,h=10,anchor=CTR);
+//         tag("remove") cyl(r=3,h=15);
+//       }
 module diff(remove="remove", keep="keep")
 {
     req_children($children);
-    // Don't perform the operation if the current tags are hidden
-    if (_attachment_is_shown($tags)) {
+    assert(is_string(remove),"remove must be a string of tags");
+    assert(is_string(keep),"keep must be a string of tags"); 
+    if (_is_shown())
+    {      
         difference() {
-            if (keep == undef) {
-                hide(remove) children();
-            } else {
-                hide(str(remove," ",keep)) children();
-            }
-            show(remove) children();
+            hide(str(remove," ",keep)) children();
+            show_only(remove) children();
         }
     }
-    if (keep!=undef) {
-        show(keep) children();
-    }
+    show_int(keep)children();        
+}
+
+
+// Module: tag_diff()
+// Usage:
+//   tag_diff(tag, [remove], [keep]) CHILDREN;
+// Topics: Attachments
+// See Also: tag(), force_tag(), recolor(), show_only(), hide(), diff(), intersect(), tag_intersect()
+// Description:
+//   Perform a differencing operation in the manner of {{diff()}} using tags to control what happens,
+//   and then tag the resulting difference object with the specified tag.  This forces the specified
+//   tag to be resolved at the level of the difference operation.  In most cases, this is not necessary,
+//   but if you have kept objects and want to operate on this difference object as a whole object using
+//   more tag operations, you will probably not get the results you want if you simply use {{tag()}}.  
+//   . 
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Arguments:
+//   tag = Tag string to apply to this difference object
+//   remove = String containing space delimited set of tag names of children to difference away.  Default: `"remove"`
+//   keep = String containing space delimited set of tag names of children to keep; that is, to union into the model after differencing is completed.  Default: `"keep"`
+// Side Effects:
+//   Sets `$tag` to the tags you specify. 
+// Example: In this example we have a difference with a kept object that is then subtracted from a cube, but we don't want the kept object to appear in the final output, so this result is wrong:
+//   diff("rem"){
+//     cuboid([20,10,30],anchor=FRONT);
+//     tag("rem")diff("remove","keep"){
+//       cuboid([10,10,20]);
+//       tag("remove")cuboid([11,11,5]);
+//       tag("keep")cuboid([2,2,20]);
+//     }
+//   }
+// Example: Using tag_diff corrects the problem:
+//   diff("rem"){
+//     cuboid([20,10,30],anchor=FRONT);
+//       tag_diff("rem","remove","keep"){
+//         cuboid([10,10,20]);
+//         tag("remove")cuboid([11,11,5]);
+//         tag("keep")cuboid([2,2,20]);
+//       }
+//   }
+// Example: This concentric cylinder example uses "keep" and produces the wrong result.  The kept cylinder gets kept in the final output instead of subtracted.  This happens even when we make sure to change the `keep` argument at the top level {{diff()}} call.  
+//   diff("rem","nothing")
+//     cyl(r=8,h=6)
+//       tag("rem")diff()
+//         cyl(r=7,h=7)
+//           tag("remove")cyl(r=6,h=8)
+//           tag("keep")cyl(r=5,h=9);
+// Example: Changing to tag_diff() causes the kept cylinder to be subtracted, producing the desired result:
+//   diff("rem")
+//     cyl(r=8,h=6)
+//       tag_diff("rem")
+//         cyl(r=7,h=7)
+//           tag("remove")cyl(r=6,h=8)
+//           tag("keep")cyl(r=5,h=9);
+// 
+module tag_diff(tag,remove="remove", keep="keep")
+{
+    req_children($children);
+    assert(is_string(remove),"remove must be a string of tags");
+    assert(is_string(keep),"keep must be a string of tags");
+    assert(is_string(tag),"tag must be a string");
+    assert(undef==str_find(tag," "),str("Tag string \"",tag,"\" contains a space, which is not allowed"));   
+    $tag=tag;
+    if (_is_shown())
+      show_all(){
+         difference() {
+            hide(str(remove," ",keep)) children();
+            show_only(remove) children();
+         }
+         show_only(keep)children();        
+      }
 }
 
 
 // Module: intersect()
 // Usage:
-//   intersect(a, [keep=]) CHILDREN;
-//   intersect(a, b, [keep=]) CHILDREN;
+//   intersect([intersect], [keep]) CHILDREN;
 // Topics: Attachments
-// See Also: tags(), recolor(), show(), hide(), diff()
+// See Also: tag(), force_tag(), recolor(), show_only(), hide(), diff(), tag_diff(), tag_intersect()
 // Description:
-//   If `a` is given, takes the union of all children with tags that are in `a`, and intersects
-//   them with the union of all children with tags in `b`.  If `b` is not given, then the union of all
-//   items with tags in `a` are intersected with the union of all items without tags in `a`.  If
-//   `keep` is given, then the result is unioned with all the children with tags in `keep`.  If `keep`
-//   is not given, all children without tags in `a` or `b` are unioned with the result.
-//   Cannot be used in conjunction with `diff()` or `hulling()` on the same parent object.
+//   Performs an intersection operation on its children, using tags to
+//   determine what happens.  This is specifically intended to address
+//   the situation where you want intersections involving a parent and
+//   child object, something that is impossible with the native
+//   intersection() module.  This module treats the children in three
+//   groups: objects matching the tags listed in `intersect`, objects
+//   matching tags listed in `keep`, and the remaining objects that
+//   don't match any of the listed tags.  The intersection is computed
+//   between the `intersect` tagged objects and the objects that don't
+//   match the listed tags.  Finally the objects listed in `keep` are
+//   unioned with the result.  Attachable objects should be tagged using {{tag()}}
+//   and non-attachable objects with {{force_tag()}}.  
 //   .
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   a = String containing space delimited set of tag names of children.
-//   b = String containing space delimited set of tag names of children.
-//   ---
-//   keep = String containing space delimited set of tag names of children to keep whole.
+//   intersect = String containing space delimited set of tag names of children to intersect.  Default: "intersect"
+//   keep = String containing space delimited set of tag names of children to keep whole.  Default: "keep"
 // Example:
-//   intersect("wheel", "mask", keep="axle")
-//   sphere(d=100, $tags="wheel") {
-//       attach(CENTER) cube([40,100,100], anchor=CENTER, $tags="mask");
-//       attach(CENTER) xcyl(d=40, l=100, $tags="axle");
+//   intersect("mask", keep="axle")
+//     sphere(d=100) {
+//         tag("mask")cuboid([40,100,100]);
+//         tag("axle")xcyl(d=40, l=100);
+//     } 
+// Example: Combining tag operators can be tricky.  Here the {{diff()}} operation keeps two tags, "fullkeep" and "keep".  Then `intersect()` intersects the "keep" tagged item with everything else, but keeps the "fullkeep" object.  
+//   intersect("keep","fullkeep")
+//   diff(keep="fullkeep keep")
+//     cuboid(10){
+//       tag("remove")cyl(r=4,h=11);
+//       tag("keep") position(RIGHT)cyl(r=8,h=12);
+//       tag("fullkeep")cyl(r=1,h=12);
 //   }
-// Example: Working with Non-Attachables
-//   intersect("A", "B")
-//   cuboid(50, $tags="A") {
-//       tags("B")
-//         hull() {
-//           down(25)
-//             linear_extrude(height=0.01)
-//               square(55,center=true);
-//           up(25)
-//             linear_extrude(height=0.01)
-//               circle(d=45);
+// Example: In this complex example we form an intersection, subtract an object, and keep some objects.  Note that for the small cylinders on either side, marking them as "keep" or removing their tag gives the same effect.  This is because without a tag they become part of the intersection and the result ends up the same.  For the two cylinders at the back, however, the result is different.  With "keep" the cylinder on the left appears whole, but without it, the cylinder at the back right is subject to intersection.
+//   $fn=64;
+//   diff()
+//     intersect(keep="remove keep")
+//       cuboid(10,$thing="cube"){
+//         tag("intersect"){
+//           position(RIGHT) cyl(r=5.5,h=15)
+//              tag("")cyl(r=2,h=10);
+//           position(LEFT) cyl(r=5.54,h=15)
+//              tag("keep")cyl(r=2,h=10);
 //         }
-//   }
-module intersect(a, b=undef, keep=undef)
+//         // Untagged it is in the intersection
+//         tag("") position(BACK+RIGHT)
+//           cyl(r=2,h=10,anchor=CTR);
+//         // With keep the full cylinder appears
+//         tag("keep") position(BACK+LEFT)
+//           cyl(r=2,h=10,anchor=CTR);
+//         tag("remove") cyl(r=3,h=15);
+//       }
+module intersect(intersect="intersect",keep="keep")
 {
-    req_children($children);
-    // Don't perform the operation if the current tags are hidden
-    if (_attachment_is_shown($tags)) {
-        intersection() {
-            if (b != undef) {
-                show(b) children();
-            } else {
-                if (keep == undef) {
-                    hide(a) children();
-                } else {
-                    hide(str(a," ",keep)) children();
-                }
-            }
-            show(a) children();
-        }
-    }
-    if (keep!=undef) {
-        show(keep) children();
-    } else if (b!=undef) {
-        hide(str(a," ",b)) children();
-    }
-}
+   assert(is_string(intersect),"intersect must be a string of tags");
+   assert(is_string(keep),"keep must be a string of tags");
+   intersection(){
+      show_only(intersect) children();
+      hide(str(intersect," ",keep)) children();
+   }
+   show_int(keep) children();
+}   
 
+
+// Module: tag_intersect()
+// Usage:
+//   tag_intersect(tag, [intersect], [keep]) CHILDREN;
+// Topics: Attachments
+// See Also: tag(), force_tag(), recolor(), show_only(), hide(), diff(), tag_diff(), intersect()
+// Description:
+//   Perform an intersection operation in the manner of {{intersect()}} using tags to control what happens,
+//   and then tag the resulting difference object with the specified tag.  This forces the specified
+//   tag to be resolved at the level of the intersect operation.  In most cases, this is not necessary,
+//   but if you have kept objects and want to operate on this difference object as a whole object using
+//   more tag operations, you will probably not get the results you want if you simply use {{tag()}}.  
+//   .
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Arguments:
+//   tag = Tag to set for the intersection
+//   intersect = String containing space delimited set of tag names of children to intersect.  Default: "intersect"
+//   keep = String containing space delimited set of tag names of children to keep whole.  Default: "keep"
+// Side Effects:
+//   Sets `$tag` to the tags you specify. 
+// Example:  Without `tag_intersect()` the kept object is not included in the difference.  
+//   diff()
+//     cuboid([20,15,9])
+//     tag_intersect("remove")
+//       cuboid(10){
+//         tag("intersect")position(RIGHT) cyl(r=7,h=10);
+//         tag("keep")position(LEFT)cyl(r=4,h=10);
+//       } 
+module tag_intersect(tag,intersect="intersect",keep="keep")
+{
+   assert(is_string(intersect),"intersect must be a string of tags");
+   assert(is_string(keep),"keep must be a string of tags");
+   assert(is_string(tag),"tag must be a string");
+   assert(undef==str_find(tag," "),str("Tag string \"",tag,"\" contains a space, which is not allowed"));   
+   $tag=tag;
+   if (_is_shown())
+     show_all(){
+       intersection(){
+          show_only(intersect) children();
+          hide(str(intersect," ",keep)) children();
+       }
+       show_only(keep) children();
+   }
+}   
 
 
 // Module: hulling()
 // Usage:
-//   hulling(a) CHILDREN;
+//   hulling(hull) CHILDREN;
 // Topics: Attachments
-// See Also: tags(), recolor(), show(), hide(), diff(), intersect()
+// See Also: tag(), recolor(), show_only(), hide(), diff(), intersect()
 // Description:
 //   If `a` is not given, then all children are `hull()`ed together.
-//   If `a` is given as a string, then all children with `$tags` that are in `a` are
+//   If `a` is given as a string, then all children with `$tag` that are in `a` are
 //   `hull()`ed together and the result is then unioned with all the remaining children.
 //   Cannot be used in conjunction with `diff()` or `intersect()` on the same parent object.
 //   .
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   a = String containing space delimited set of tag names of children to hull.
+//   hull = String containing space delimited set of tag names of children to hull.
 // Example:
 //   hulling("body")
-//   sphere(d=100, $tags="body") {
-//       attach(CENTER) cube([40,90,90], anchor=CENTER, $tags="body");
-//       attach(CENTER) xcyl(d=40, l=120, $tags="other");
+//   sphere(d=100, $tag="body") {
+//       attach(CENTER) cube([40,90,90], anchor=CENTER, $tag="body");
+//       attach(CENTER) xcyl(d=40, l=120, $tag="other");
 //   }
-module hulling(a)
+module hulling(hull)
 {
     req_children($children);
-    if (is_undef(a)) {
+    if (is_undef(hull)) {
         hull() children();
     } else {
-        hull() show(a) children();
+        hull() show_only(hull) children();
         children();
     }
 }
@@ -836,45 +1066,97 @@ module hulling(a)
 // Usage:
 //   hide(tags) CHILDREN;
 // Topics: Attachments
-// See Also: tags(), recolor(), show(), diff(), intersect()
+// See Also: tag(), recolor(), show_only(), diff(), intersect()
 // Description:
-//   Hides all children with the given tags.  Overrides any previous `hide()` or `show()` calls.
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
-// Example:
-//   hide("A") cube(50, anchor=CENTER, $tags="Main") {
-//       attach(LEFT, BOTTOM) cylinder(d=30, l=30, $tags="A");
-//       attach(RIGHT, BOTTOM) cylinder(d=30, l=30, $tags="B");
+//   Hides all attachable children with the given tags, which you supply as a space separated string. Previously hidden objects remain hidden, so hiding is cumulative, unlike `show_only()`.  
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Side Effects:
+//   Sets `$tags_hidden` to include the tags you specify. 
+// Example:  Hides part of the model.  
+//   hide("A")
+//     tag("main") cube(50, anchor=CENTER, $tag="Main") {
+//       tag("A")attach(LEFT, BOTTOM) cylinder(d=30, l=30);
+//     tag("B")attach(RIGHT, BOTTOM) cylinder(d=30, l=30);
 //   }
-module hide(tags="")
+// Example: Use an invisible parent to position children.  Note that children must be retagged because they inherit the parent tag.  
+//   hide("hidden")
+//     tag("hidden")cuboid(10)
+//       tag("visible") {
+//         position(RIGHT) cyl(r=1,h=12);
+//         position(LEFT) cyl(r=1,h=12);
+//       }  
+module hide(tags)
 {
     req_children($children);
-    $tags_hidden = tags==""? [] : str_split(tags, " ");
-    $tags_shown = [];
+    assert(is_string(tags), "tags must be a string");
+    taglist = [for(s=str_split(tags," ",keep_nulls=false)) str($tag_prefix,s)];
+    $tags_hidden = concat($tags_hidden,taglist);
     children();
 }
 
 
-// Module: show()
+// Module: show_only()
 // Usage:
-//   show(tags) CHILDREN;
+//   show_only(tags) CHILDREN;
 // Topics: Attachments
-// See Also: tags(), recolor(), hide(), diff(), intersect()
+// See Also: tag(), recolor(), hide(), diff(), intersect()
 // Description:
-//   Shows only children with the given tags.  Overrides any previous `hide()` or `show()` calls.
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   Show only the children with the listed tags, which you sply as a space separated string.  Only unhidden objects will be shown, so if an object is hidden either before or after the `show_only()` call then it will remain hidden.  This overrides any previous `show_only()` calls.  Unlike `hide()`, calls to `show_only()` are not cumulative.  
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Side Effects:
+//   Sets `$tags_shown` to the tags you specify. 
 // Example:  Display the attachments but not the parent
-//   show("A B") cube(50, anchor=CENTER, $tags="Main") {
-//       attach(LEFT, BOTTOM) cylinder(d=30, l=30, $tags="A");
-//       attach(RIGHT, BOTTOM) cylinder(d=30, l=30, $tags="B");
-//   }
-module show(tags="")
+//   show_only("visible")
+//     cube(50, anchor=CENTER) 
+//       tag("visible"){
+//         attach(LEFT, BOTTOM) cylinder(d=30, l=30);
+//         attach(RIGHT, BOTTOM) cylinder(d=30, l=30);
+//       }
+module show_only(tags)
 {
     req_children($children);
-    $tags_shown = tags==""? [] : str_split(tags, " ");
-    $tags_hidden = [];
+    assert(is_string(tags), str("tags must be a string",tags));
+    taglist = [for(s=str_split(tags," ",keep_nulls=false)) str($tag_prefix,s)];
+    $tags_shown = taglist;    
     children();
 }
 
+// Module: show_all()
+// Usage;
+//   show_all() CHILDREN;
+// Description:
+//   Shows all children.  Clears the list of hidden tags and shown tags so that all child objects will be
+//   fully displayed.
+// Side Effects:
+//   Sets `$tags_shown="ALL"`
+//   Sets `$tags_hidden=[]`
+module show_all()
+{
+   req_children($children);
+   $tags_shown="ALL";
+   $tags_hidden=[];
+   children();
+}   
+
+
+// Module: show_int()
+// Usage:
+//   show_int(tags) CHILDREN;
+// Description:
+//   Show only the children with the listed tags which were already shown in the parent context.
+//   This intersects the current show list with the list of tags you provide.
+// Arguments:
+//   tags = list of tags to show
+// Side Effects:
+//   Sets `$tags_shown`
+module show_int(tags)
+{
+    req_children($children);
+    assert(is_string(tags), str("tags must be a string",tags));
+    taglist = [for(s=str_split(tags," ",keep_nulls=false)) str($tag_prefix,s)];
+    $tags_shown = $tags_shown == "ALL" ? taglist : set_intersection($tags_shown,taglist);
+    children();
+}
 
 
 // Section: Attachable Masks
@@ -903,7 +1185,7 @@ module show(tags="")
 //   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
 // Side Effects:
-//   Sets `$tags = "mask"` for all children.
+//   Sets `$tag = "mask"` for all children.
 // Example:
 //   diff("mask")
 //   cube([50,60,70],center=true)
@@ -925,7 +1207,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
         $attach_to = undef;
         $attach_anchor = anch;
         $attach_norot = true;
-        $tags = "mask";
+        $tag = "mask";
         rotang =
             vec.z<0? [90,0,180+v_theta(vec)] :
             vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
@@ -950,7 +1232,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 //   corners = Corners to mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: All corners.
 //   except = Corners to explicitly NOT mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: No corners.
 // Side Effects:
-//   Sets `$tags = "mask"` for all children.
+//   Sets `$tag = "mask"` for all children.
 // Example:
 //   diff("mask")
 //   cube(100, center=true)
@@ -971,7 +1253,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
         $attach_to = undef;
         $attach_anchor = anch;
         $attach_norot = true;
-        $tags = "mask";
+        $tag = "mask";
         rotang = vec.z<0?
             [  0,0,180+v_theta(vec)-45] :
             [180,0,-90+v_theta(vec)-45];
@@ -996,7 +1278,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 //   d = Diameter of corner mask.
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
-//   Sets `$tags = "mask"` for all children.
+//   Sets `$tag = "mask"` for all children.
 // Example:
 //   diff("mask")
 //   cube([50,60,70],center=true)
@@ -1029,7 +1311,7 @@ module face_profile(faces=[], r, d, convexity=10) {
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
-//   Sets `$tags = "mask"` for all children.
+//   Sets `$tag = "mask"` for all children.
 // Example:
 //   diff("mask")
 //   cube([50,60,70],center=true)
@@ -1051,7 +1333,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
         $attach_to = undef;
         $attach_anchor = anch;
         $attach_norot = true;
-        $tags = "mask";
+        $tag = "mask";
         psize = point3d($parent_size);
         length = [for (i=[0:2]) if(!vec[i]) psize[i]][0]+0.1;
         rotang =
@@ -1088,7 +1370,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 //   d = Diameter of corner mask.
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
-//   Sets `$tags = "mask"` for all children.
+//   Sets `$tag = "mask"` for all children.
 // Example:
 //   diff("mask")
 //   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
@@ -1108,7 +1390,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
         $attach_to = undef;
         $attach_anchor = anch;
         $attach_norot = true;
-        $tags = "mask";
+        $tag = "mask";
         rotang = vec.z<0?
             [  0,0,180+v_theta(vec)-45] :
             [180,0,-90+v_theta(vec)-45];
@@ -1194,7 +1476,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   * Rotates this part so it's anchor direction vector exactly opposes the parent's anchor direction vector.
 //   * Rotates this part so it's anchor spin matches the parent's anchor spin.
 //   .
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 //
 // Arguments:
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1402,15 +1684,14 @@ module attachable(
         $parent_geom   = geom;
         $parent_size   = _attach_geom_size(geom);
         $attach_to   = undef;
-        do_show = _attachment_is_shown($tags);
-        if (do_show)
+        if (_is_shown())
             _color($color) children(0);
         if (is_def($save_color)) {
             $color=$save_color;
             $save_color=undef;
             children(1);
-        } else
-        children(1);
+        }
+        else children(1);
     }
 }
 
@@ -1475,7 +1756,7 @@ module attachable(
 //   * Rotates this part so it's anchor direction vector exactly opposes the parent's anchor direction vector.
 //   * Rotates this part so it's anchor spin matches the parent's anchor spin.
 //   .
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 //
 // Arguments:
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1548,7 +1829,7 @@ function reorient(
 // Topics: Attachments
 // See Also: reorient(), attachable()
 // Description:
-//   Creates an anchor data structure.  For a more step-by-step explanation of attachments,
+//   Creates an anchor data structure.  For a step-by-step explanation of attachments,
 //   see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   name = The string name of the anchor.  Lowercase.  Words separated by single dashes.  No spaces.
@@ -2208,21 +2489,28 @@ function _find_anchor(anchor, geom) =
     assert(false, "Unknown attachment geometry type.");
 
 
-/// Internal Function: _attachment_is_shown()
+/// Internal Function: _is_shown()
 // Usage:
-//   bool = _attachment_is_shown(tags);
+//   bool = _is_shown(tags);
 /// Topics: Attachments
 /// See Also: reorient(), attachable()
 // Description:
 //   Returns true if shapes tagged with any of the given space-delimited string of tag names should currently be shown.
-function _attachment_is_shown(tags) =
-    assert(!is_undef($tags_shown))
-    assert(!is_undef($tags_hidden))
+function _is_shown() =
+    assert(is_list($tags_shown) || $tags_shown=="ALL")
+    assert(is_list($tags_hidden))
     let(
-        tags = str_split(tags, " "),
-        shown  = !$tags_shown || any([for (tag=tags) in_list(tag, $tags_shown)]),
-        hidden = any([for (tag=tags) in_list(tag, $tags_hidden)])
-    ) shown && !hidden;
+        dummy=is_undef($tags) ? 0 : echo("Use tag() instead of $tags for specifying an object's tag."),
+        $tags = default($tag,$tags)
+    )
+    assert(is_string($tag), str("Tag value (",$tag,") is not a string"))
+    assert(undef==str_find($tag," "),str("Tag string \"",$tag,"\" contains a space, which is not allowed"))
+    let(
+        fulltag = $tag,
+        shown  = $tags_shown=="ALL" || in_list(fulltag,$tags_shown),
+        hidden = in_list(fulltag, $tags_hidden)
+    )
+    shown && !hidden;
 
 
 // Section: Visualizing Anchors
@@ -2281,7 +2569,7 @@ module show_anchors(s=10, std=true, custom=true) {
                     anchor_arrow(s, color="cyan");
                 }
                 color("black")
-                tags("anchor-arrow") {
+                tag("anchor-arrow") {
                     xrot(two_d? 0 : 90) {
                         back(s/3) {
                             yrot_copies(n=2)
@@ -2294,7 +2582,7 @@ module show_anchors(s=10, std=true, custom=true) {
                     }
                 }
                 color([1, 1, 1, 1])
-                tags("anchor-arrow") {
+                tag("anchor-arrow") {
                     xrot(two_d? 0 : 90) {
                         back(s/3) {
                              cube([s/4.5*len(anchor[0]), s/3, 0.01], center=true);
@@ -2320,7 +2608,7 @@ module show_anchors(s=10, std=true, custom=true) {
 //   flag = If true, draw the orientation flag on the arrowhead.  Default: true
 // Example:
 //   anchor_arrow(s=20);
-module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow") {
+module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow") {
     $fn=12;
     recolor("gray") spheroid(d=s/6) {
         attach(CENTER,BOT) recolor(color) cyl(h=s*2/3, d=s/15) {
@@ -2348,7 +2636,7 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow"
 //   color = Color of the arrow.
 // Example:
 //   anchor_arrow2d(s=20);
-module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
+module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tag="anchor-arrow") {
     color(color) stroke([[0,0],[0,s]], width=s/10, endcap1="butt", endcap2="arrow2");
 }
 
@@ -2365,7 +2653,7 @@ module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
 // Example(FlatSpin,VPD=333):
 //   expose_anchors() cube(50, center=true) show_anchors();
 module expose_anchors(opacity=0.2) {
-    show("anchor-arrow")
+    show_only("anchor-arrow")
         children();
     hide("anchor-arrow")
         color(is_undef($color) || $color=="default" ? [0,0,0] :

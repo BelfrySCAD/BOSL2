@@ -2479,8 +2479,7 @@ module text3d(text, h=1, size=10, font="Helvetica", halign, valign, spacing=1.0,
         $parent_geom   = geom;
         $parent_size   = _attach_geom_size(geom);
         $attach_to   = undef;
-        do_show = _attachment_is_shown($tags);
-        if (do_show) {
+        if (_is_shown()) {
             _color($color) {
                 linear_extrude(height=h, center=true)
                     _text(
