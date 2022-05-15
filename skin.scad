@@ -513,7 +513,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   twisted extrusions by using `maxseg` to subsample flat faces.
 // Arguments:
 //   region = The 2D [Region](regions.scad) or polygon that is to be extruded.
-//   h | height = The height to extrude the region.  Default: 1
+//   h / height = The height to extrude the region.  Default: 1
 //   center = If true, the created polyhedron will be vertically centered.  If false, it will be extruded upwards from the XY plane.  Default: `false`
 //   ---
 //   twist = The number of degrees to rotate the top of the shape, clockwise around the Z axis, relative to the bottom.  Default: 0
