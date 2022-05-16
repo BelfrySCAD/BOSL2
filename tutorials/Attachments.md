@@ -415,7 +415,7 @@ do this:
 include <BOSL2/std.scad>
 diff("hole")
 cube(100, center=true)
-    cylinder(h=101, d=50, center=true, $tags="hole");
+    tag("hole")cylinder(h=101, d=50, center=true);
 ```
 
 The `keep=` argument takes tags for shapes that you want to keep in the output.
@@ -425,8 +425,8 @@ include <BOSL2/std.scad>
 diff("dish", keep="antenna")
 cube(100, center=true)
     attach([FRONT,TOP], overlap=33) {
-        cylinder(h=33.1, d1=0, d2=95, $tags="dish");
-        cylinder(h=33.1, d=10, $tags="antenna");
+        tag("dish") cylinder(h=33.1, d1=0, d2=95);
+        tag("antenna") cylinder(h=33.1, d=10);
     }
 ```
 
@@ -437,22 +437,22 @@ will inherit the "keep" tag and get kept.
 ```openscad-3D
 include <BOSL2/std.scad>
 diff("hole", "keep")
-cube(100, center=true, $tags="keep")
+tag("keep")cube(100, center=true)
     attach([RIGHT,TOP]) {
-        cylinder(d=95, h=5, $tags="");
-        cylinder(d=50, h=11, anchor=CTR, $tags="hole");
+        tag("") cylinder(d=95, h=5);
+        tag("hole") cylinder(d=50, h=11, anchor=CTR);
     }
 ```
 
 
-If you need to mark multiple children with a tag, you can use the `tags()` module.
+If you need to mark multiple children with a tag, you can use the `tag()` module.
 
 ```openscad-3D
 include <BOSL2/std.scad>
 diff("hole")
 cube(100, center=true)
     attach([FRONT,TOP], overlap=20)
-        tags("hole") {
+        tag("hole") {
             cylinder(h=20.1, d1=0, d2=95);
             down(10) cylinder(h=30, d=30);
         }
@@ -464,8 +464,8 @@ though, so you will need to set the tags of the children as well as the parent.
 ```openscad-3D
 include <BOSL2/std.scad>
 diff("hole")
-cube([20,11,45], center=true, $tags="hole")
-    cube([40,10,90], center=true, $tags="body");
+cube([20,11,45], center=true, $tag="hole")
+    cube([40,10,90], center=true, $tag="body");
 ```
 
 Tags (and therefore tag-based operations like `diff()`) only work correctly with attachable
@@ -475,14 +475,14 @@ Some notable non-attachable modules are `text()`, `linear_extrude()`, `rotate_ex
 `intersection()`, `offset()`, `hull()`, and `minkowski()`.
 
 To allow you to use tags-based operations with non-attachable shapes, you can wrap them with the
-`force_tags()` module to specify their tags.  For example:
+`force_tag()` module to specify their tags.  For example:
 
 ```openscad-3D
 include <BOSL2/std.scad>
 diff("hole")
 cuboid(50)
   attach(TOP)
-    force_tags("hole")
+    force_tag("hole")
       rotate_extrude()
         right(15)
           square(10,center=true);
@@ -498,7 +498,7 @@ everything that *is* tagged with it.
 include <BOSL2/std.scad>
 intersect("bounds")
 cube(100, center=true)
-    cylinder(h=100, d1=120, d2=95, center=true, $fn=72, $tags="bounds");
+    cylinder(h=100, d1=120, d2=95, center=true, $fn=72, $tag="bounds");
 ```
 
 If given both the `a=` and `b=` arguments, then shapes marked with tags given to `a=` will be
@@ -509,8 +509,8 @@ include <BOSL2/std.scad>
 intersect("pole", "cap")
 cube(100, center=true)
     attach([TOP,RIGHT]) {
-        cube([40,40,80],center=true, $tags="pole");
-        sphere(d=40*sqrt(2), $tags="cap");
+        cube([40,40,80],center=true, $tag="pole");
+        sphere(d=40*sqrt(2), $tag="cap");
     }
 ```
 
@@ -521,8 +521,8 @@ the result of the union:
 include <BOSL2/std.scad>
 intersect("bounds", keep="pole")
 cube(100, center=true) {
-    cylinder(h=100, d1=120, d2=95, center=true, $fn=72, $tags="bounds");
-    zrot(45) xcyl(h=140, d=20, $fn=36, $tags="pole");
+    cylinder(h=100, d1=120, d2=95, center=true, $fn=72, $tag="bounds");
+    zrot(45) xcyl(h=140, d=20, $fn=36, $tag="pole");
 }
 ```
 
@@ -533,9 +533,9 @@ unioning the result with every other shape.
 ```openscad-3D
 include <BOSL2/std.scad>
 hulling("hull")
-cube(50, center=true, $tags="hull") {
+cube(50, center=true, $tag="hull") {
     cyl(h=100, d=20);
-    xcyl(h=100, d=20, $tags="pole");
+    xcyl(h=100, d=20, $tag="pole");
 }
 ```
 

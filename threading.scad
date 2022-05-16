@@ -551,7 +551,7 @@ module acme_threaded_nut(
 // Example:
 //   diff("remove"){
 //      cuboid([40,40,40])
-//      tags("remove"){
+//      tag("remove"){
 //        up(.01)position(TOP)
 //            npt_threaded_rod(size=3/4, $fn=96, internal=true, $slop=0.1, anchor=TOP);
 //        cyl(d=3/4*INCH, l=42, $fn=32);

@@ -56,7 +56,7 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 //     for (i=[0:holes-1]) {
 //       right((i-holes/2+0.5)*(holesize.x+gap)) {
 //         s = min_slop + slop_step * i;
-//         tags("holes") {
+//         tag("holes") {
 //           cuboid([holesize.x + 2*s, holesize.y + 2*s, h+0.2]);
 //           fwd(w/2-1) xrot(90) linear_extrude(1.1) {
 //             text(

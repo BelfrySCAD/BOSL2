@@ -899,7 +899,7 @@ module rect_tube(
             anchor=CTR
         ) {
             children();
-            tags("_H_o_L_e_") prismoid(
+            tag("_H_o_L_e_") prismoid(
                 isize1, isize2, h=h+0.05, shift=shift,
                 rounding=irounding, rounding1=irounding1, rounding2=irounding2,
                 chamfer=ichamfer, chamfer1=ichamfer1, chamfer2=ichamfer2,
@@ -2479,8 +2479,7 @@ module text3d(text, h=1, size=10, font="Helvetica", halign, valign, spacing=1.0,
         $parent_geom   = geom;
         $parent_size   = _attach_geom_size(geom);
         $attach_to   = undef;
-        do_show = _attachment_is_shown($tags);
-        if (do_show) {
+        if (_is_shown()) {
             _color($color) {
                 linear_extrude(height=h, center=true)
                     _text(

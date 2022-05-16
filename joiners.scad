@@ -226,13 +226,13 @@ function half_joiner(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin
 module half_joiner(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP)
 {
     vnf = half_joiner(l=l, w=w, base=base, ang=ang, screwsize=screwsize);
-    if (in_list("remove",$tags_shown)) {
-        attachable(anchor,spin,orient, size=[w,l,base*2], $tags="remove") {
+    if (is_list($tags_shown) && in_list("remove",$tags_shown)) {
+        attachable(anchor,spin,orient, size=[w,l,base*2], $tag="remove") {
             half_joiner_clear(l=l, w=w, ang=ang, clearance=1);
             union();
         }
     } else {
-        attachable(anchor,spin,orient, size=[w,base*2,l], $tags="keep") {
+        attachable(anchor,spin,orient, size=[w,base*2,l], $tag="keep") {
             vnf_polyhedron(vnf, convexity=12);
             children();
         }
@@ -425,13 +425,13 @@ function half_joiner2(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spi
 module half_joiner2(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP)
 {
     vnf = half_joiner2(l=l, w=w, base=base, ang=ang, screwsize=screwsize);
-    if (in_list("remove",$tags_shown)) {
-        attachable(anchor,spin,orient, size=[w,l,base*2], $tags="remove") {
+    if (is_list($tags_shown) && in_list("remove",$tags_shown)) {
+        attachable(anchor,spin,orient, size=[w,l,base*2], $tag="remove") {
             half_joiner_clear(l=l, w=w, ang=ang, clearance=1);
             union();
         }
     } else {
-        attachable(anchor,spin,orient, size=[w,base*2,l], $tags="keep") {
+        attachable(anchor,spin,orient, size=[w,base*2,l], $tag="keep") {
             vnf_polyhedron(vnf, convexity=12);
             children();
         }
@@ -511,13 +511,13 @@ module joiner_clear(l=40, w=10, ang=30, clearance=0, overlap=0.01, anchor=CENTER
 function joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP) = no_function("joiner");
 module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP)
 {
-    if (in_list("remove",$tags_shown)) {
-        attachable(anchor,spin,orient, size=[w,l,base*2], $tags="remove") {
+    if (is_list($tags_shown) && in_list("remove",$tags_shown)) {
+        attachable(anchor,spin,orient, size=[w,l,base*2], $tag="remove") {
             joiner_clear(w=w, l=l, ang=ang, clearance=1);
             union();
         }
     } else {
-        attachable(anchor,spin,orient, size=[w,l,base*2], $tags="keep") {
+        attachable(anchor,spin,orient, size=[w,l,base*2], $tag="keep") {
             union() {
                 back(l/4) half_joiner(l=l/2, w=w, base=base, ang=ang, screwsize=screwsize);
                 fwd(l/4) half_joiner2(l=l/2, w=w, base=base, ang=ang, screwsize=screwsize);
@@ -569,35 +569,35 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   dovetail("male", w=15, h=8, slide=30, taper=6);
 //   right(20) dovetail("female", 15, 8, 30, taper=6);  // Same as above
 // Example: A block that can link to itself
-//   diff("remove")
+//   diff()
 //     cuboid([50,30,10]){
 //       attach(BACK) dovetail("male", slide=10, width=15, height=8);
-//       attach(FRONT) dovetail("female", slide=10, width=15, height=8,$tags="remove");
+//       tag("remove")attach(FRONT) dovetail("female", slide=10, width=15, height=8);
 //     }
 // Example: Setting the dovetail angle.  This is too extreme to be useful.  
-//   diff("remove")
+//   diff()
 //     cuboid([50,30,10]){
 //       attach(BACK) dovetail("male", slide=10, width=15, height=8, angle=30);
-//       attach(FRONT) dovetail("female", slide=10, width=15, height=8, angle=30,$tags="remove");
+//       tag("remove")attach(FRONT) dovetail("female", slide=10, width=15, height=8, angle=30);
 //     }
 // Example: Adding a chamfer helps printed parts fit together without problems at the corners
 //   diff("remove")
 //     cuboid([50,30,10]){
 //       attach(BACK) dovetail("male", slide=10, width=15, height=8, chamfer=1);
-//       attach(FRONT) dovetail("female", slide=10, width=15, height=8,chamfer=1,$tags="remove");
+//       tag("remove")attach(FRONT) dovetail("female", slide=10, width=15, height=8,chamfer=1);
 //     }
 // Example: Rounding the outside corners is another option
 //   diff("remove")
 //   cuboid([50,30,10]) {
 //       attach(BACK)  dovetail("male", slide=10, width=15, height=8, radius=1, $fn=32);
-//       attach(FRONT) dovetail("female", slide=10, width=15, height=8, radius=1, $tags="remove", $fn=32);
+//       tag("remove") attach(FRONT) dovetail("female", slide=10, width=15, height=8, radius=1, $fn=32);
 //   }
 // Example: Or you can make a fully rounded joint
 //   $fn=32;
 //   diff("remove")
 //   cuboid([50,30,10]){
 //       attach(BACK) dovetail("male", slide=10, width=15, height=8, radius=1.5, round=true);
-//       attach(FRONT) dovetail("female", slide=10, width=15, height=8, radius=1.5, round=true, $tags="remove");
+//       tag("remove")attach(FRONT) dovetail("female", slide=10, width=15, height=8, radius=1.5, round=true);
 //   }
 // Example: With a long joint like this, a taper makes the joint easy to assemble.  It will go together easily and wedge tightly if you get the tolerances right.  Specifying the taper with `back_width` may be easier than using a taper angle.    
 //   cuboid([50,30,10])
@@ -605,14 +605,14 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   fwd(35)
 //     diff("remove")
 //       cuboid([50,30,10])
-//         attach(TOP) dovetail("female", slide=50, width=18, height=4, back_width=15, spin=90, $tags="remove");
+//         tag("remove") attach(TOP) dovetail("female", slide=50, width=18, height=4, back_width=15, spin=90);
 // Example: A series of dovetails forming a tail board, with the inside of the joint up.  A standard wood joint would have a zero taper. 
 //   cuboid([50,30,10])
 //     attach(BACK) xcopies(10,5) dovetail("male", slide=10, width=7, taper=4, height=4);
 // Example: Mating pin board for a half-blind right angle joint, where the joint only shows on the side but not the front.  Note that the anchor method and use of `spin` ensures that the joint works even with a taper.
 //   diff("remove")
 //     cuboid([50,30,10])
-//       position(TOP+BACK) xcopies(10,5) dovetail("female", slide=10, width=7, taper=4, height=4, $tags="remove",anchor=BOTTOM+FRONT,spin=180);
+//       tag("remove")position(TOP+BACK) xcopies(10,5) dovetail("female", slide=10, width=7, taper=4, height=4, anchor=BOTTOM+FRONT,spin=180);
 function dovetail(gender, width, height, slide, h, w, angle, slope, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient) = no_function("dovetail");
 module dovetail(gender, width, height, slide, h, w, angle, slope, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
 {
@@ -871,10 +871,11 @@ module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, 
 //   snap_pin_socket("standard", anchor=CENTER, orient=UP, fins=true, fixed=false, $fn=40);
 // Example:  A cube with a socket in the middle and one half-way off the front edge so you can see inside:
 //   $fn=40;
-//   diff("socket") cuboid([20,20,20]) {
-//     attach(TOP) snap_pin_socket("standard", $tags="socket");
-//     position(TOP+FRONT)snap_pin_socket("standard", $tags="socket");
-//   }
+//   diff("socket") cuboid([20,20,20])
+//     tag("socket"){
+//       attach(TOP) snap_pin_socket("standard");
+//       position(TOP+FRONT)snap_pin_socket("standard");
+//     }
 function snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fixed=true, pointed=true, fins=false, anchor=BOTTOM, spin=0, orient=DOWN) = no_function("snap_pin_socket");
 module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fixed=true, pointed=true, fins=false, anchor=BOTTOM, spin=0, orient=DOWN) {
   sizedat = _pin_size(size);
@@ -1011,9 +1012,10 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //     right(width+13)
 //     diff("remove")
 //         cuboid([width+8,max(12,length+2),depth+3], chamfer=.5, edges=[FRONT,"Y"], anchor=BOTTOM)
+//           tag("remove")
 //             attach(BACK)
-//               rabbit_clip(type="socket",length=length, width=width,snap=snap,thickness=thickness,depth=depth+extra_depth,
-//                           lock=lock,compression=0,$tags="remove");
+//               rabbit_clip(type="socket",length=length, width=width,snap=snap,thickness=thickness,
+//                           depth=depth+extra_depth, lock=lock,compression=0);
 //   }
 //   left(37)ydistribute(spacing=28){
 //     test_pair(length=6, width=7, snap=0.25, thickness=0.8, compression=0.1);
@@ -1033,11 +1035,11 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //   left(32)
 //   diff("remove")
 //   cuboid([30,30,11],orient=BACK,anchor=BACK){
-//       attach(BACK)rabbit_clip("socket", length=25, width=25, thickness=1.5, snap=2, compression=0, lock=true, depth=5.5, lock_clearance=3,$tags="remove");
+//       tag("remove")attach(BACK)rabbit_clip("socket", length=25, width=25, thickness=1.5, snap=2, compression=0, lock=true, depth=5.5, lock_clearance=3);
 //       xflip_copy()
 //         position(FRONT+LEFT)
 //         xscale(0.8)
-//         zcyl(l=20,r=13.5, $tags="remove",$fn=64);
+//         tag("remove")zcyl(l=20,r=13.5, $fn=64);
 //   }
 
 function rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1,  clearance=.1, lock=false, lock_clearance=0,

@@ -399,7 +399,7 @@ module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=U
 //   diff("mask")
 //   cyl(h=30, d=30) {
 //       attach(TOP)
-//           #rounding_cylinder_mask(d=30, rounding=5, $tags="mask");
+//           #tag("mask")rounding_cylinder_mask(d=30, rounding=5);
 //   }
 function rounding_cylinder_mask(r, rounding, d) = no_function("rounding_cylinder_mask");
 module rounding_cylinder_mask(r, rounding, d)
