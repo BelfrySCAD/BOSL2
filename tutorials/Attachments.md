@@ -402,11 +402,11 @@ cylinder(h=100, d=100, center=true)
 
 ## Tagged Operations
 BOSL2 introduces the concept of tags.  Tags are names that can be given to attachables, so that
-you can refer to them when performing `diff()`, `intersect()`, and `hulling()` operations.
+you can refer to them when performing `diff()`, `intersect()`, and `conv_hull()` operations.
 
-### `diff(neg, <keep>)`
+### `diff(remove, <keep>)`
 The `diff()` operator is used to difference away all shapes marked with the tag(s) given to
-`neg=`, from the other shapes.  
+`remove=`, from the other shapes.  
 
 For example, to difference away a child cylinder from the middle of a parent cube, you can
 do this:
@@ -526,13 +526,14 @@ cube(100, center=true) {
 }
 ```
 
-### `hulling(a)`
-You can use the `hulling()` module to hull shapes marked with a given tag together, before
-unioning the result with every other shape.
+### `conv_hull(keep)`
+You can use the `conv_hull()` module to hull shapes together the
+shapes not marked with the keep tags, before unioning the keep shapes
+into the final result. 
 
 ```openscad-3D
 include <BOSL2/std.scad>
-hulling("hull")
+conv_hull("pole")
 cube(50, center=true, $tag="hull") {
     cyl(h=100, d=20);
     xcyl(h=100, d=20, $tag="pole");
