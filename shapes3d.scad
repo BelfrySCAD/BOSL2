@@ -2890,6 +2890,128 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
     ) reorient(anchor,spin,orient, vnf=vnf, p=vnf);
 
 
+// Function&Module: cylindrical_heightfield()
+// Usage: As Function
+//   vnf = cylindrical_heightfield(data, l, r|d=, [base=], [transpose=], [aspect=]);
+// Usage: As Module
+//   cylindrical_heightfield(data, l, r|d=, [base=], [transpose=], [aspect=]) [ATTACHMENTS];
+// Description:
+//   Given a regular rectangular 2D grid of scalar values, or a function literal of signature (x,y), generates
+//   a cylindrical 3D surface where the height at any given point above the radius `r=`, is the scalar value
+//   for that position.
+// Arguments:
+//   data = This is either the 2D rectangular array of heights, or a function literal of signature `(x, y)`.
+//   l = The length of the cylinder to wrap around.
+//   r = The radius of the cylinder to wrap around.
+//   ---
+//   d = The diameter of the cylinder to wrap around.
+//   base = The radius for the bottom of the heightfield object to create.  Any heights smaller than this will be truncated to very slightly above this height.  Default: -20
+//   transpose = If true, swaps the radial and length axes of the data.  Default: false
+//   aspect = The aspect ratio of the generated heightfield at the surface of the cylinder.  Default: 1
+//   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
+//   yrange = A range of values to iterate Y over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
+//   maxh = The maximum height above the radius to model.  Truncates anything taller to this height.  Default: 99
+//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".  Default: "default"
+//   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example(VPR=[55,0,150];VPR=370):
+//   cylindrical_heightfield(l=100, r=30, base=5, data=[
+//       for (y=[-180:4:180]) [
+//           for(x=[-180:4:180])
+//           5*cos(5*norm([x,y]))+5
+//       ]
+//   ]);
+// Example: Heightfield by Function
+//   fn = function (x,y) 5*sin(x*360)*cos(y*360)+5;
+//   cylindrical_heightfield(l=100, r=30, data=fn);
+// Example: Heightfield by Function, with Specific Ranges
+//   fn = function (x,y) 2*cos(5*norm([x,y]));
+//   cylindrical_heightfield(
+//       l=100, r=30, base=5, data=fn,
+//       xrange=[-180:2:180], yrange=[-180:2:180]
+//   );
+function cylindrical_heightfield(
+    data, l, r, base=1,
+    transpose=false, aspect=1,
+    style="min_edge",
+    xrange=[-1:0.01:1],
+    yrange=[-1:0.01:1],
+    maxh=99, d, h, height,
+    anchor=CTR, spin=0, orient=UP
+) =
+    let(
+        l = first_defined([l, h, height]),
+        r = get_radius(r=r, d=d)
+    )
+    assert(is_finite(l) && l>0, "Must supply one of l=, h=, or height= as a finite positive number.")
+    assert(is_finite(r) && r>0, "Must supply one of r=, or d= as a finite positive number.")
+    assert(is_finite(base) && base>0, "Must supply base= as a finite positive number.")
+    assert(is_matrix(data)||is_function(data), "data= must be a function literal, or contain a 2D array of numbers.")
+    let(
+        xvals = is_list(data)? [for (x = idx(data[0])) x] :
+            is_range(xrange)? [for (x = xrange) x] :
+            assert(false, "xrange= must be given as a range if data= is a function literal."),
+        yvals = is_list(data)? [for (y = idx(data)) y] :
+            is_range(yrange)? [for (y = yrange) y] :
+            assert(false, "yrange= must be given as a range if data= is a function literal."),
+        xlen = len(xvals),
+        ylen = len(yvals),
+        stepy = l / (ylen-1),
+        stepx = stepy * aspect,
+        circ = 2 * PI * r,
+        astep = 360 / circ * stepx,
+        arc = astep * xlen,
+        bsteps = round(segs(r-base) * arc / 360),
+        bstep = arc / bsteps
+    )
+    assert(stepx*xlen <= circ, str("heightfield (",xlen," x ",ylen,") needs a radius of at least ",r*stepx*xlen/circ))
+    let(
+        verts = [
+            for (yi = idx(yvals)) let( z = yi * stepy - l/2 ) [
+                cylindrical_to_xyz(r-base, 0, z),
+                for (xi = idx(xvals)) let( a = xi*astep )
+                    let(
+                        rad = transpose? (
+                                is_list(data)? data[xi][yi] : data(yvals[yi],xvals[xi])
+                            ) : (
+                                is_list(data)? data[yi][xi] : data(xvals[xi],yvals[yi])
+                            ),
+                        rad2 = constrain(rad, 0.01-base, maxh)
+                    )
+                    cylindrical_to_xyz(r+rad2, a, z),
+                cylindrical_to_xyz(r-base, arc, z),
+                for (b = [1:1:bsteps-1]) let( a = arc-b*bstep )
+                    cylindrical_to_xyz(r-base, a, l/2*(z>0?1:-1)),
+            ]
+        ],
+        vnf = vnf_vertex_array(verts, caps=true, col_wrap=true, reverse=true, style=style)
+    ) reorient(anchor,spin,orient, r=r, l=l, p=vnf);
+
+
+module cylindrical_heightfield(
+    data, l, r, base=1,
+    transpose=false, aspect=1,
+    style="min_edge", convexity=10,
+    xrange=[-1:0.01:1], yrange=[-1:0.01:1],
+    maxh=99, d, h, height,
+    anchor=CTR, spin=0, orient=UP
+) {
+    l = first_defined([l, h, height]);
+    r = get_radius(r=r, d=d);
+    vnf = cylindrical_heightfield(
+        data, l=l, r=r, base=base,
+        xrange=xrange, yrange=yrange,
+        maxh=maxh, transpose=transpose,
+        aspect=aspect, style=style
+    );
+    attachable(anchor,spin,orient, r=r, l=l) {
+        vnf_polyhedron(vnf, convexity=convexity);
+        children();
+    }
+}
+
 
 // Module: ruler()
 // Usage:

@@ -84,9 +84,9 @@ module half_joiner_clear(l=20, w=10, ang=30, clearance=0, overlap=0.01, anchor=C
 //   half_joiner(l=20,w=10,base=10);
 // Example(3D):
 //   diff()
-//   cuboid(30)
+//   cuboid(40)
 //       attach([FWD,TOP,RIGHT])
-//           xcopies(30) half_joiner();
+//           xcopies(20) half_joiner();
 function half_joiner(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP) =
     let(
         guide = [w/3-get_slop()*2, ang_adj_to_opp(ang, l/3)*2, l/3],
@@ -264,9 +264,9 @@ module half_joiner(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0
 //   half_joiner2(w=10,base=10,l=20);
 // Example(3D):
 //   diff()
-//   cuboid(30)
+//   cuboid(40)
 //       attach([FWD,TOP,RIGHT])
-//           xcopies(30) half_joiner2();
+//           xcopies(20) half_joiner2();
 function half_joiner2(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, orient=UP) =
     let(
         guide = [w/3, ang_adj_to_opp(ang, l/3)*2, l/3],
