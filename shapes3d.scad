@@ -2916,17 +2916,17 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example(VPR=[55,0,150];VPR=370):
+// Example(VPD=400;VPR=[55,0,150]):
 //   cylindrical_heightfield(l=100, r=30, base=5, data=[
 //       for (y=[-180:4:180]) [
 //           for(x=[-180:4:180])
 //           5*cos(5*norm([x,y]))+5
 //       ]
 //   ]);
-// Example: Heightfield by Function
+// Example(VPD=400;VPR=[55,0,150]): Heightfield by Function
 //   fn = function (x,y) 5*sin(x*360)*cos(y*360)+5;
 //   cylindrical_heightfield(l=100, r=30, data=fn);
-// Example: Heightfield by Function, with Specific Ranges
+// Example(VPD=400;VPR=[55,0,150]): Heightfield by Function, with Specific Ranges
 //   fn = function (x,y) 2*cos(5*norm([x,y]));
 //   cylindrical_heightfield(
 //       l=100, r=30, base=5, data=fn,
