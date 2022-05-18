@@ -2125,6 +2125,8 @@ function _get_texture(tex,n,m) =
 // Topics: Sweep, Extrusion, Textures, Knurling
 // Description:
 //   Given a single polygon path, creates a linear extrusion of that polygon vertically, with a given texture tiled evenly over the side surfaces.
+//   One script to convert a grayscale image to a texture heightfield array in a .scad file can be found at:
+//   https://raw.githubusercontent.com/revarbat/BOSL2/master/scripts/img2scad.py
 // Arguments:
 //   path = The path to sweep/extrude.
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0) that define the texture to apply to vertical surfaces.
@@ -2320,6 +2322,8 @@ module textured_linear_sweep(
 // Description:
 //   Given a single 2D path, fully in the X+ half-plane, revolves that path around the Z axis (after rotating its Y+ to Z+).
 //   This creates a solid from that surface of revolution, capped top and bottom, with the sides covered in a given tiled texture.
+//   One script to convert a grayscale image to a texture heightfield array in a .scad file can be found at:
+//   https://raw.githubusercontent.com/revarbat/BOSL2/master/scripts/img2scad.py
 // Arguments:
 //   path = The path to sweep/extrude.
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0) that define the texture to apply to vertical surfaces.  See {{textured_linear_sweep()}} for what textures are supported.
@@ -2454,6 +2458,8 @@ module textured_revolution(
 // Topics: Sweep, Extrusion, Textures, Knurling
 // Description:
 //   Creates a cylinder or cone with optional chamfers or roundings, covered in a textured surface.
+//   One script to convert a grayscale image to a texture heightfield array in a .scad file can be found at:
+//   https://raw.githubusercontent.com/revarbat/BOSL2/master/scripts/img2scad.py
 // Arguments:
 //   h | l = The height of the cylinder.
 //   r = The radius of the cylinder.
