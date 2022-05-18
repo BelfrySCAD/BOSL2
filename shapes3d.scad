@@ -2771,6 +2771,7 @@ module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=CENTER, spin=0,
 //   heightfield(data, [size], [bottom], [maxz], [xrange], [yrange], [style], [convexity], ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = heightfield(data, [size], [bottom], [maxz], [xrange], [yrange], [style], ...);
+// Topics: Textures, Heightfield
 // Description:
 //   Given a regular rectangular 2D grid of scalar values, or a function literal, generates a 3D
 //   surface where the height at any given point is the scalar value for that position.
@@ -2787,6 +2788,7 @@ module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=CENTER, spin=0,
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// See Also: heightfield(), cylindrical_heightfield(), textured_revolution(), textured_cylinder(), textured_linear_sweep()
 // Example:
 //   heightfield(size=[100,100], bottom=-20, data=[
 //       for (y=[-180:4:180]) [
@@ -2895,6 +2897,7 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 //   vnf = cylindrical_heightfield(data, l, r|d=, [base=], [transpose=], [aspect=]);
 // Usage: As Module
 //   cylindrical_heightfield(data, l, r|d=, [base=], [transpose=], [aspect=]) [ATTACHMENTS];
+// Topics: Extrusion, Textures, Knurling, Heightfield
 // Description:
 //   Given a regular rectangular 2D grid of scalar values, or a function literal of signature (x,y), generates
 //   a cylindrical 3D surface where the height at any given point above the radius `r=`, is the scalar value
@@ -2904,7 +2907,11 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 //   l = The length of the cylinder to wrap around.
 //   r = The radius of the cylinder to wrap around.
 //   ---
+//   r1 = The radius of the bottom of the cylinder to wrap around.
+//   r2 = The radius of the top of the cylinder to wrap around.
 //   d = The diameter of the cylinder to wrap around.
+//   d1 = The diameter of the bottom of the cylinder to wrap around.
+//   d2 = The diameter of the top of the cylinder to wrap around.
 //   base = The radius for the bottom of the heightfield object to create.  Any heights smaller than this will be truncated to very slightly above this height.  Default: -20
 //   transpose = If true, swaps the radial and length axes of the data.  Default: false
 //   aspect = The aspect ratio of the generated heightfield at the surface of the cylinder.  Default: 1
@@ -2916,8 +2923,16 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// See Also: heightfield(), cylindrical_heightfield(), textured_revolution(), textured_cylinder(), textured_linear_sweep()
 // Example(VPD=400;VPR=[55,0,150]):
 //   cylindrical_heightfield(l=100, r=30, base=5, data=[
+//       for (y=[-180:4:180]) [
+//           for(x=[-180:4:180])
+//           5*cos(5*norm([x,y]))+5
+//       ]
+//   ]);
+// Example(VPD=400;VPR=[55,0,150]):
+//   cylindrical_heightfield(l=100, r1=60, r2=30, base=5, data=[
 //       for (y=[-180:4:180]) [
 //           for(x=[-180:4:180])
 //           5*cos(5*norm([x,y]))+5
@@ -2935,18 +2950,20 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 function cylindrical_heightfield(
     data, l, r, base=1,
     transpose=false, aspect=1,
-    style="min_edge",
+    style="min_edge", maxh=99,
     xrange=[-1:0.01:1],
     yrange=[-1:0.01:1],
-    maxh=99, d, h, height,
+    r1, r2, d, d1, d2, h, height,
     anchor=CTR, spin=0, orient=UP
 ) =
     let(
         l = first_defined([l, h, height]),
-        r = get_radius(r=r, d=d)
+        r1 = get_radius(r1=r1, r=r, d1=d1, d=d),
+        r2 = get_radius(r1=r2, r=r, d1=d2, d=d)
     )
     assert(is_finite(l) && l>0, "Must supply one of l=, h=, or height= as a finite positive number.")
-    assert(is_finite(r) && r>0, "Must supply one of r=, or d= as a finite positive number.")
+    assert(is_finite(r1) && r1>0, "Must supply one of r=, r1=, d=, or d1= as a finite positive number.")
+    assert(is_finite(r2) && r2>0, "Must supply one of r=, r2=, d=, or d2= as a finite positive number.")
     assert(is_finite(base) && base>0, "Must supply base= as a finite positive number.")
     assert(is_matrix(data)||is_function(data), "data= must be a function literal, or contain a 2D array of numbers.")
     let(
@@ -2960,17 +2977,21 @@ function cylindrical_heightfield(
         ylen = len(yvals),
         stepy = l / (ylen-1),
         stepx = stepy * aspect,
-        circ = 2 * PI * r,
+        maxr = max(r1,r2),
+        circ = 2 * PI * maxr,
         astep = 360 / circ * stepx,
         arc = astep * xlen,
-        bsteps = round(segs(r-base) * arc / 360),
+        bsteps = round(segs(maxr-base) * arc / 360),
         bstep = arc / bsteps
     )
-    assert(stepx*xlen <= circ, str("heightfield (",xlen," x ",ylen,") needs a radius of at least ",r*stepx*xlen/circ))
+    assert(stepx*xlen <= circ, str("heightfield (",xlen," x ",ylen,") needs a radius of at least ",maxr*stepx*xlen/circ))
     let(
         verts = [
-            for (yi = idx(yvals)) let( z = yi * stepy - l/2 ) [
-                cylindrical_to_xyz(r-base, 0, z),
+            for (yi = idx(yvals)) let(
+                z = yi * stepy - l/2,
+                rr = lerp(r1, r2, yi/(ylen-1))
+            ) [
+                cylindrical_to_xyz(rr-base, 0, z),
                 for (xi = idx(xvals)) let( a = xi*astep )
                     let(
                         rad = transpose? (
@@ -2980,14 +3001,14 @@ function cylindrical_heightfield(
                             ),
                         rad2 = constrain(rad, 0.01-base, maxh)
                     )
-                    cylindrical_to_xyz(r+rad2, a, z),
-                cylindrical_to_xyz(r-base, arc, z),
+                    cylindrical_to_xyz(rr+rad2, a, z),
+                cylindrical_to_xyz(rr-base, arc, z),
                 for (b = [1:1:bsteps-1]) let( a = arc-b*bstep )
-                    cylindrical_to_xyz(r-base, a, l/2*(z>0?1:-1)),
+                    cylindrical_to_xyz((z>0?r2:r1)-base, a, l/2*(z>0?1:-1)),
             ]
         ],
         vnf = vnf_vertex_array(verts, caps=true, col_wrap=true, reverse=true, style=style)
-    ) reorient(anchor,spin,orient, r=r, l=l, p=vnf);
+    ) reorient(anchor,spin,orient, r1=r1, r2=r2, l=l, p=vnf);
 
 
 module cylindrical_heightfield(
@@ -2995,18 +3016,19 @@ module cylindrical_heightfield(
     transpose=false, aspect=1,
     style="min_edge", convexity=10,
     xrange=[-1:0.01:1], yrange=[-1:0.01:1],
-    maxh=99, d, h, height,
+    maxh=99, r1, r2, d, d1, d2, h, height,
     anchor=CTR, spin=0, orient=UP
 ) {
     l = first_defined([l, h, height]);
-    r = get_radius(r=r, d=d);
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d);
     vnf = cylindrical_heightfield(
-        data, l=l, r=r, base=base,
+        data, l=l, r1=r1, r2=r2, base=base,
         xrange=xrange, yrange=yrange,
         maxh=maxh, transpose=transpose,
         aspect=aspect, style=style
     );
-    attachable(anchor,spin,orient, r=r, l=l) {
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
         vnf_polyhedron(vnf, convexity=convexity);
         children();
     }
