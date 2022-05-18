@@ -2775,6 +2775,8 @@ module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=CENTER, spin=0,
 // Description:
 //   Given a regular rectangular 2D grid of scalar values, or a function literal, generates a 3D
 //   surface where the height at any given point is the scalar value for that position.
+//   One script to convert a grayscale image to a heightfield array in a .scad file can be found at:
+//   https://raw.githubusercontent.com/revarbat/BOSL2/master/scripts/img2scad.py
 // Arguments:
 //   data = This is either the 2D rectangular array of heights, or a function literal that takes X and Y arguments.
 //   size = The [X,Y] size of the surface to create.  If given as a scalar, use it for both X and Y sizes. Default: `[100,100]`
@@ -2902,6 +2904,8 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 //   Given a regular rectangular 2D grid of scalar values, or a function literal of signature (x,y), generates
 //   a cylindrical 3D surface where the height at any given point above the radius `r=`, is the scalar value
 //   for that position.
+//   One script to convert a grayscale image to a heightfield array in a .scad file can be found at:
+//   https://raw.githubusercontent.com/revarbat/BOSL2/master/scripts/img2scad.py
 // Arguments:
 //   data = This is either the 2D rectangular array of heights, or a function literal of signature `(x, y)`.
 //   l = The length of the cylinder to wrap around.
