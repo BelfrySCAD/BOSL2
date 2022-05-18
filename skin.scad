@@ -2161,7 +2161,7 @@ function _get_texture(tex,n,m) =
 //   centroid_top = The centroid of the top of the shape, oriented UP.
 //   centroid = The centroid of the center of the shape, oriented UP.
 //   centroid_bot = The centroid of the bottom of the shape, oriented DOWN.
-// See Also: textured_revolution(), textured_cylinder()
+// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield()
 // Example: "ribs" texture.
 //   path = glued_circles(r=15, spread=40, tangent=45);
 //   textured_linear_sweep(path, h=40, "ribs", tex_size=[3,5]);
@@ -2349,7 +2349,7 @@ module textured_linear_sweep(
 //   "waves" = A raised sine-wave patten, oriented vertically.
 //   "dots" = Raised small round bumps.
 //   "cones" = Raised conical spikes.
-// See Also: textured_linear_sweep(), textured_cylinder()
+// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield()
 // Example:
 //   include <BOSL2/beziers.scad>
 //   bezpath = [
@@ -2494,7 +2494,7 @@ module textured_revolution(
 //   "waves" = A raised sine-wave patten, oriented vertically.
 //   "dots" = Raised small round bumps.
 //   "cones" = Raised conical spikes.
-// See Also: textured_linear_sweep(), textured_revolution()
+// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield()
 // Examples:
 //   textured_cylinder(h=40, r=20, texture="diamonds", tex_size=[5,5]);
 //   textured_cylinder(h=40, r1=20, r2=15, texture="pyramids", tex_size=[5,5], style="convex");
