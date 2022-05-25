@@ -173,6 +173,8 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //       edges=[TOP,BOT], except=RIGHT,
 //       trimcorners=false, $fn=24
 //   );
+// Example: Roundings and Chamfers can be as large as the full size of the cuboid, so long as the edges would not interfere.
+//   cuboid([4,2,1], rounding=2, edges=[FWD+RIGHT,BACK+LEFT]);
 // Example: Standard Connectors
 //   cuboid(40) show_anchors();
 module cuboid(
@@ -189,6 +191,18 @@ module cuboid(
     spin=0,
     orient=UP
 ) {
+    module trunc_cube(s,corner) {
+        multmatrix(
+            (corner.x<0? xflip() : ident(4)) *
+            (corner.y<0? yflip() : ident(4)) *
+            (corner.z<0? zflip() : ident(4)) *
+            scale(s+[1,1,1]*0.01) *
+            move(-[1,1,1]/2)
+        ) polyhedron(
+            [[1,1,1],[1,1,0],[1,0,0],[0,1,1],[0,1,0],[1,0,1],[0,0,1]],
+            [[0,1,2],[2,5,0],[0,5,6],[0,6,3],[0,3,4],[0,4,1],[1,4,2],[3,6,4],[5,2,6],[2,4,6]]
+        );
+    }
     module xtcyl(l,r) {
         if (teardrop) {
             teardrop(r=r, l=l, cap_h=r, ang=teardrop, spin=90, orient=DOWN);
@@ -221,14 +235,51 @@ module cuboid(
         c3 = v_mul(corner,c-[1,1,1]*m/2);
         $fn = is_finite(chamfer)? 4 : quantup(segs(r),4);
         translate(v_mul(corner, size/2-c)) {
-            intersection() {
-                if (cnt == 0 || approx(r,0)) {
-                    translate(c3) cube(m, center=true);
-                } else if (cnt == 1) {
-                    if (e.x) right(c3.x) xtcyl(l=m, r=r);
-                    if (e.y) back (c3.y) ytcyl(l=m, r=r);
-                    if (e.z) up   (c3.z) zcyl(l=m, r=r);
-                } else if (cnt == 2) {
+            if (cnt == 0 || approx(r,0)) {
+                translate(c3) cube(m, center=true);
+            } else if (cnt == 1) {
+                if (e.x) {
+                    mat = (corner.y<0? yflip() : ident(4)) *
+                        (corner.z<0? zflip() : ident(4)) *
+                        yrot(-90) * move(-[1,1]*0.01);
+                    right(c3.x) {
+                        intersection() {
+                            xtcyl(l=m, r=r);
+                            multmatrix(mat)
+                                linear_extrude(height=m+0.1, center=true)
+                                    scale(r+0.02)
+                                        polygon([[1,0],[0,1],[1,1]]);
+                        }
+                    }
+                } else if (e.y) {
+                    mat = (corner.x<0? xflip() : ident(4)) *
+                        (corner.z<0? zflip() : ident(4)) *
+                        xrot(90) * move(-[1,1]*0.01);
+                    back(c3.y) {
+                        intersection() {
+                            ytcyl(l=m, r=r);
+                            multmatrix(mat)
+                                linear_extrude(height=m+0.1, center=true)
+                                    scale(r+0.02)
+                                        polygon([[1,0],[0,1],[1,1]]);
+                        }
+                    }
+                } else if (e.z) {
+                    mat = (corner.x<0? xflip() : ident(4)) *
+                        (corner.y<0? yflip() : ident(4)) *
+                        move(-[1,1]*0.01);
+                    up(c3.z) {
+                        intersection() {
+                            zcyl(l=m, r=r);
+                            multmatrix(mat)
+                                linear_extrude(height=m+0.1, center=true)
+                                    scale(r+0.02)
+                                        polygon([[1,0],[0,1],[1,1]]);
+                        }
+                    }
+                }
+            } else if (cnt == 2) {
+                intersection() {
                     if (!e.x) {
                         intersection() {
                             ytcyl(l=c.y*2, r=r);
@@ -245,7 +296,10 @@ module cuboid(
                             ytcyl(l=c.y*2, r=r);
                         }
                     }
-                } else {
+                    translate(c2) trunc_cube(c,corner); // Trim to just the octant.
+                }
+            } else {
+                intersection() {
                     if (trimcorners) {
                         tsphere(r=r);
                     } else {
@@ -255,8 +309,8 @@ module cuboid(
                             zcyl(l=c.z*2, r=r);
                         }
                     }
+                    translate(c2) trunc_cube(c,corner); // Trim to just the octant.
                 }
-                translate(c2) cube(c, center=true); // Trim to just the octant.
             }
         }
     }
@@ -289,15 +343,30 @@ module cuboid(
     } else {
         rr = max(default(chamfer,0), default(rounding,0));
         if (rr>0) {
-            rv = [for (i=[0:2])
-                [for (j=[0:3])
-                    (edges[i][j]>0?rr:0) * v_abs(EDGE_OFFSETS[i][j])
-                ]
-            ];
-            grays = pair([0,1,3,2],wrap=true);  // gray code ordering.
-            minx = max([for (i=[1,2], j=grays) rv[i][j[0]].x + rv[i][j[1]].x]);
-            miny = max([for (i=[0,2], j=grays) rv[i][j[0]].y + rv[i][j[1]].y]);
-            minz = max([for (i=[0,1], j=grays) rv[i][j[0]].z + rv[i][j[1]].z]);
+            minx = max(
+                edges.y[0] + edges.y[1], edges.y[2] + edges.y[3],
+                edges.z[0] + edges.z[1], edges.z[2] + edges.z[3],
+                edges.y[0] + edges.z[1], edges.y[0] + edges.z[3],
+                edges.y[1] + edges.z[0], edges.y[1] + edges.z[2],
+                edges.y[2] + edges.z[1], edges.y[2] + edges.z[3],
+                edges.y[3] + edges.z[0], edges.y[3] + edges.z[2]
+            ) * rr;
+            miny = max(
+                edges.x[0] + edges.x[1], edges.x[2] + edges.x[3],
+                edges.z[0] + edges.z[2], edges.z[1] + edges.z[3],
+                edges.x[0] + edges.z[2], edges.x[0] + edges.z[3],
+                edges.x[1] + edges.z[0], edges.x[1] + edges.z[1],
+                edges.x[2] + edges.z[2], edges.x[2] + edges.z[3],
+                edges.x[3] + edges.z[0], edges.x[3] + edges.z[1]
+            ) * rr;
+            minz = max(
+                edges.x[0] + edges.x[2], edges.x[1] + edges.x[3],
+                edges.y[0] + edges.y[2], edges.y[1] + edges.y[3],
+                edges.x[0] + edges.y[2], edges.x[0] + edges.y[3],
+                edges.x[1] + edges.y[2], edges.x[1] + edges.y[3],
+                edges.x[2] + edges.y[0], edges.x[2] + edges.y[1],
+                edges.x[3] + edges.y[0], edges.x[3] + edges.y[1]
+            ) * rr;
             check =
                 assert(minx <= size.x, "Rounding or chamfering too large for cuboid size in the X axis.")
                 assert(miny <= size.y, "Rounding or chamfering too large for cuboid size in the Y axis.")
@@ -719,9 +788,10 @@ module octahedron(size=1, anchor=CENTER, spin=0, orient=UP) {
 
 function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
     let(
-        s = size / 2,
+        size = scalar_vec3(size),
+        s = size/2,
         vnf = [
-            [ [0,0,s], [s,0,0], [0,s,0], [-s,0,0], [0,-s,0], [0,0,-s] ],
+            [ [0,0,s.z], [s.x,0,0], [0,s.y,0], [-s.x,0,0], [0,-s.y,0], [0,0,-s.z] ],
             [ [0,2,1], [0,3,2], [0,4,3], [0,1,4], [5,1,2], [5,2,3], [5,3,4], [5,4,1] ]
         ]
     ) reorient(anchor,spin,orient, vnf=vnf, extent=true, p=vnf);
@@ -2984,7 +3054,7 @@ function cylindrical_heightfield(
         maxr = max(r1,r2),
         circ = 2 * PI * maxr,
         astep = 360 / circ * stepx,
-        arc = astep * xlen,
+        arc = astep * (xlen-1),
         bsteps = round(segs(maxr-base) * arc / 360),
         bstep = arc / bsteps
     )
@@ -2995,7 +3065,7 @@ function cylindrical_heightfield(
                 z = yi * stepy - l/2,
                 rr = lerp(r1, r2, yi/(ylen-1))
             ) [
-                cylindrical_to_xyz(rr-base, 0, z),
+                cylindrical_to_xyz(rr-base, -arc/2, z),
                 for (xi = idx(xvals)) let( a = xi*astep )
                     let(
                         rad = transpose? (
@@ -3005,9 +3075,9 @@ function cylindrical_heightfield(
                             ),
                         rad2 = constrain(rad, 0.01-base, maxh)
                     )
-                    cylindrical_to_xyz(rr+rad2, a, z),
-                cylindrical_to_xyz(rr-base, arc, z),
-                for (b = [1:1:bsteps-1]) let( a = arc-b*bstep )
+                    cylindrical_to_xyz(rr+rad2, a-arc/2, z),
+                cylindrical_to_xyz(rr-base, arc/2, z),
+                for (b = [1:1:bsteps-1]) let( a = arc/2-b*bstep )
                     cylindrical_to_xyz((z>0?r2:r1)-base, a, l/2*(z>0?1:-1)),
             ]
         ],

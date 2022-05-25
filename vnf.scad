@@ -178,7 +178,7 @@ function vnf_vertex_array(
                           let(
                                d42=norm(pts[i4]-pts[i2]),
                                d13=norm(pts[i1]-pts[i3]),
-                               shortedge = d42<=d13 ? [[i1,i4,i2],[i2,i4,i3]]
+                               shortedge = d42<d13+EPSILON ? [[i1,i4,i2],[i2,i4,i3]]
                                                     : [[i1,i3,i2],[i1,i4,i3]]
                           )
                           shortedge
