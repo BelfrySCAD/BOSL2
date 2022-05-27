@@ -54,7 +54,7 @@ include <screw_drive.scad>
 //    To set the pitch using these pitch strings you use the `thread=` argument to the modules.
 //    You cannot incorporate a named pitch into the thread name.  The finer pitch categories
 //    are defined only for larger screw diameters.  You can also use the `thread=` argument to
-//    directly specify a pitch, so `thread=2` would produce a thread pitch of 2mm.  Setting the
+//    directly specify a pitch, so `thread=2` produces a thread pitch of 2mm.  Setting the
 //    pitch to zero produces an unthreaded screws, the same as setting it to "none".  Specifying
 //    a numeric value this way overrides a value given in the name.
 // Subsection: Screw Heads
@@ -73,20 +73,20 @@ include <screw_drive.scad>
 //    shows which drive type is compatible with each head types.  Different head types work in ISO and UTS,
 //    as marked in the first column.  
 //    .
-//    ISO|UTS|Head            | Drive
-//    ---|---|--------------- | ----------------------------
-//    X|X|"none"          | hex, torx
-//    X|X|"hex"           | *none*
-//    X|X|"socket"        | hex, torx
-//    X|X|"button"        | hex, torx
-//    X|X|"flat"          | slot, phillips, hex, torx
-//     |X|"round"         | slot, phillips 
-//     |X|"fillister"     | slot, phillips 
-//     |X|"flat small"    | phillips, slot
-//     |X|"flat large"    | hex, torx 
-//     |X|"flat undercut" | slot, phillips 
-//    X| |"pan"           | slot, phillips 
-//    X| |"cheese"        | slot, phillips 
+//    |ISO|UTS|Head            | Drive  |
+//    |---|---|--------------- | ----------------------------|
+//    |X|X|"none"          | hex, torx|
+//    |X|X|"hex"           | *none*|
+//    |X|X|"socket"        | hex, torx|
+//    |X|X|"button"        | hex, torx|
+//    |X|X|"flat"          | slot, phillips, hex, torx|
+//    | |X|"round"         | slot, phillips |
+//    | |X|"fillister"     | slot, phillips |
+//    | |X|"flat small"    | slot, phillips|
+//    | |X|"flat large"    | hex, torx |
+//    | |X|"flat undercut" | slot, phillips |
+//    |X| |"pan"           | slot, phillips |
+//    |X| |"cheese"        | slot, phillips |
 //    .
 //    The drive size is specified appropriately to the drive type: drive number for phillips or torx,
 //    and allen width in mm or inches (as appropriate) for hex.  Drive size is determined automatically
@@ -98,15 +98,15 @@ include <screw_drive.scad>
 //    modeled by this method will have dimensions consistent with the standards they are based on, so that
 //    they would interface properly if fabricated by an accurate method.  Different tolerance designations
 //    are used for nuts and screws, and also for UTS and ISO.  
-// .  
+//    .
 //    For UTS screw threads the tolerance is one of "1A", "2A" or "3A", in
 //    order of increasing tightness.  The default tolerance is "2A", which
 //    is the general standard for manufactured bolts.
-// .
+//    .
 //    For UTS nut threads, the tolerance is one of "1B", "2B" or "3B", in
 //    order of increasing tightness.  The default tolerance is "2B", which
 //    is the general standard for manufactured nuts.
-// .
+//    .
 //    For ISO the tolerance
 //    has the form of a number and letter.  The letter specifies the "fundamental deviation",
 //    also called the "tolerance position", the gap
@@ -118,7 +118,7 @@ include <screw_drive.scad>
 //    but they can be different, with a tolerance like "5g6g" specifies a pitch diameter
 //    tolerance of "5g" and a crest diameter tolerance of "6g".
 //    Smaller numbers give a tighter tolerance.  The default ISO tolerance is "6g".
-// .
+//    .
 //    For ISO nuts the form is the same, but the number specifying the variability must range from 4-8,
 //    and the fundamental deviation letter must be "G" or "H" where "G" is loose and "H" means
 //    no gap.  An allowed (loose) nut tolerance is "7G".  The default ISO tolerance is "6H".  
@@ -298,9 +298,9 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //       down(INCH*1/20*2.145) nut("1/4-20", thickness=8, diameter=0.5*INCH,tolerance="1B");
 //   }
 
-function screw(name, head, drive, thread="coarse", drive_size, oversize=0, spec, length, l, shank=0, tolerance=undef, details=true, anchor=undef,anchor_head=undef,spin=0, orient=UP) = no_function("screw");
+function screw(name, head="none", drive, thread="coarse", drive_size, oversize=0, spec, length, l, shank=0, tolerance=undef, details=true, anchor=undef,anchor_head=undef,spin=0, orient=UP) = no_function("screw");
 
-module screw(name, head, drive, thread="coarse", drive_size, oversize=0, spec, length, l, shank=0, tolerance=undef, details=true, anchor=undef,anchor_head=undef,spin=0, orient=UP)
+module screw(name, head="none", drive, thread="coarse", drive_size, oversize=0, spec, length, l, shank=0, tolerance=undef, details=true, anchor=undef,anchor_head=undef,spin=0, orient=UP)
 {
    a=echo(ssthread=thread);
    spec = _validate_screw_spec(
@@ -310,8 +310,10 @@ module screw(name, head, drive, thread="coarse", drive_size, oversize=0, spec, l
    head = struct_val(spec,"head");
    pitch = struct_val(spec, "pitch");
    diameter = struct_val(spec, "diameter");
-   headless = head=="none" || head==undef;
-   eps = headless || starts_with(head,"flat") ? 0 : 0.01;
+   headless = head=="none";
+   eps = headless ? 0
+       : starts_with(head,"flat") ? -0.01
+       : 0.01;
    screwlen = one_defined([l,length],"l,length",dflt=undef);
    length = u_add(first_defined([screwlen,struct_val(spec,"length")]) , eps);
    assert(all_positive(length), "Must specify positive length");
@@ -688,7 +690,6 @@ module screw_head(screw_info,details=false) {
      full_height = head_size/2/tan(angle);
      height = is_def(head_height) ? head_height : full_height;
      d2 = head_size*(1-height/full_height);
-     //down(height)
      zflip()
        cyl(d1=head_size, d2=d2, l=height, anchor=BOTTOM);
    }
@@ -758,7 +759,7 @@ module screw_head(screw_info,details=false) {
 //   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
 //   drive_size = size of drive recess to override computed value
 //   oversize = amount to increase screw diameter for clearance holes.  Default: 0
-function screw_info(name, head, drive, thread="coarse", drive_size=undef, oversize=0) =
+function screw_info(name, head="none", drive, thread="coarse", drive_size=undef, oversize=0) =
   let(type=_parse_screw_name(name),
       drive_info = _parse_drive(drive, drive_size),
       drive=drive_info[0],
@@ -822,7 +823,7 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
        )
       INCH / struct_val(UTS_thread, diam)[tind],
       head_data =
-         head=="none" || is_undef(head) ? let (
+         head=="none" ? let (
           UTS_setscrew = [   // hex width, hex depth
             ["#0", [0.028, 0.050]],
             ["#1", [0.035, 0.060]],
@@ -1151,7 +1152,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
        )
       struct_val(ISO_thread, diam)[tind],
       head_data =
-         head=="none" || is_undef(head) ? let(
+         head=="none" ? let(
            metric_setscrew =
                [
                 [1.4, [0.7]],
@@ -1363,7 +1364,7 @@ function _validate_screw_spec(spec) = let(
     pitch = struct_val(spec,"pitch"),
     pitchOK = is_undef(pitch) || (is_num(pitch) && pitch>=0),
     head = struct_val(spec,"head"),
-    headOK = is_undef(head) || head=="none" || (
+    headOK = head=="none" || (
                  in_list(head, ["cheese","pan flat","pan round", "flat","flat large", "flat small", "flat undercut", "button","socket","fillister","round","hex"]) &&
                  _is_positive(struct_val(spec, "head_size"))),
     drive = struct_val(spec, "drive"),
@@ -1382,7 +1383,7 @@ function _validate_screw_spec(spec) = let(
     assert(systemOK, str("Screw spec has invalid \"system\", ", struct_val(spec,"system"), ".  Must be \"ISO\" or \"UTS\""))
     assert(diamOK, str("Screw spec has invalid \"diameter\", ", struct_val(spec,"diameter")))
     assert(pitchOK, str("Screw spec has invalid \"pitch\", ", pitch))
-    assert(headOK, "Screw spec head type invalid or unknown for your screw size")
+    assert(headOK, "Screw spec head type invalid or unknown for your screw type and size")
     assert(driveOK, "Screw drive type invalid or unknown for your screw size or head type")
     spec;
 
@@ -1393,9 +1394,9 @@ function _validate_screw_spec(spec) = let(
 // Usage:
 //   thread_specification(screw_spec, [tolerance], [internal])
 // Description:
-//   Determines actual thread geometry for a given screw with specified tolerance.  If tolerance is omitted the default is used.  If tolerance
-//   is "none" or 0 then return the nominal thread geometry.  See {{screw()}} or {{nut()}} for details on tolerance values for screws (internal=false) and
-//   nuts (internal=true).  
+//   Determines actual thread geometry for a given screw with specified tolerance and nominal size.  See [tolerance](#subsection-tolerance) for
+//   information on tolerances.  If tolerance is omitted the default is used.  If tolerance
+//   is "none" or 0 then return the nominal thread geometry.  When `internal=true` the nut tolerance is used.  
 //   .
 //   The return value is a structure with the following fields:
 //   - pitch: the thread pitch
