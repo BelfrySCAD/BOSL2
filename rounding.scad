@@ -675,10 +675,10 @@ module smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=false,
 function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=false, closed) =
   is_1region(path) ? smooth_path(path[0], tangents, size, relsize, splinesteps, uniform, default(closed,true)) :
   let (
-     bez = path_to_bezpath(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=default(closed,false))
+     bez = path_to_bezpath(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=default(closed,false)),
+     smoothed = bezpath_curve(bez,splinesteps=splinesteps)
   )
-  bezpath_curve(bez,splinesteps=splinesteps);
-
+  closed ? cleanup_path(smoothed) : smoothed;
 
 
 function _scalar_to_vector(value,length,varname) = 

@@ -310,6 +310,110 @@ function is_bool_list(list, length) =
      is_list(list) && (is_undef(length) || len(list)==length) && []==[for(entry=list) if (!is_bool(entry)) 1];
 
 
+// Section: Boolean list testing
+
+// Function: any()
+// Usage:
+//   bool = any(l);
+//   bool = any(l, func);   // Requires OpenSCAD 2021.01 or later.
+// Requirements:
+//   Requires OpenSCAD 2021.01 or later to use the `func` argument.
+// Description:
+//   Returns true if any item in list `l` evaluates as true.
+//   If `func` is given then returns true if the function evaluates as true on any list entry. 
+//   Items that evaluate as true include nonempty lists, nonempty strings, and nonzero numbers.
+// Arguments:
+//   l = The list to test for true items.
+//   func = An optional function literal of signature (x), returning bool, to test each list item with.
+// Example:
+//   any([0,false,undef]);  // Returns false.
+//   any([1,false,undef]);  // Returns true.
+//   any([1,5,true]);       // Returns true.
+//   any([[0,0], [0,0]]);   // Returns true.
+//   any([[0,0], [1,0]]);   // Returns true.
+function any(l, func) =
+    assert(is_list(l), "The input is not a list." )
+    assert(func==undef || is_func(func))
+    is_func(func)
+      ? _any_func(l, func)
+      : _any_bool(l);
+
+function _any_func(l, func, i=0, out=false) =
+    i >= len(l) || out? out :
+    _any_func(l, func, i=i+1, out=out || func(l[i]));
+
+function _any_bool(l, i=0, out=false) =
+    i >= len(l) || out? out :
+    _any_bool(l, i=i+1, out=out || l[i]);
+
+
+// Function: all()
+// Usage:
+//   bool = all(l);
+//   bool = all(l, func);   // Requires OpenSCAD 2021.01 or later.
+// Requirements:
+//   Requires OpenSCAD 2021.01 or later to use the `func` argument.
+// Description:
+//   Returns true if all items in list `l` evaluate as true.
+//   If `func` is given then returns true if the function evaluates as true on all list etnries. 
+//   Items that evaluate as true include nonempty lists, nonempty strings, and nonzero numbers.
+// Arguments:
+//   l = The list to test for true items.
+//   func = An optional function literal of signature (x), returning bool, to test each list item with.
+// Example:
+//   test1 = all([0,false,undef]);  // Returns false.
+//   test2 = all([1,false,undef]);  // Returns false.
+//   test3 = all([1,5,true]);       // Returns true.
+//   test4 = all([[0,0], [0,0]]);   // Returns true.
+//   test5 = all([[0,0], [1,0]]);   // Returns true.
+//   test6 = all([[1,1], [1,1]]);   // Returns true.
+function all(l, func) =
+    assert(is_list(l), "The input is not a list.")
+    assert(func==undef || is_func(func))
+    is_func(func)
+      ? _all_func(l, func)
+      : _all_bool(l);
+
+function _all_func(l, func, i=0, out=true) =
+    i >= len(l) || !out? out :
+    _all_func(l, func, i=i+1, out=out && func(l[i]));
+
+function _all_bool(l, i=0, out=true) =
+    i >= len(l) || !out? out :
+    _all_bool(l, i=i+1, out=out && l[i]);
+
+
+// Function: num_true()
+// Usage:
+//   seq = num_true(l);
+//   seq = num_true(l, func);  // Requires OpenSCAD 2021.01 or later.
+// Requirements:
+//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
+// Description:
+//   Returns the number of items in `l` that evaluate as true.  If `func` is given then counts
+//   list entries where the function evaluates as true.  
+//   Items that evaluate as true include nonempty lists, nonempty strings, and nonzero numbers.
+// Arguments:
+//   l = The list to test for true items.
+//   func = An optional function literal of signature (x), returning bool, to test each list item with.
+// Example:
+//   num1 = num_true([0,false,undef]);  // Returns 0.
+//   num2 = num_true([1,false,undef]);  // Returns 1.
+//   num3 = num_true([1,5,false]);      // Returns 2.
+//   num4 = num_true([1,5,true]);       // Returns 3.
+//   num5 = num_true([[0,0], [0,0]]);   // Returns 2.
+//   num6 = num_true([[], [1,0]]);      // Returns 1.
+function num_true(l, func) = 
+    assert(is_list(l))
+    assert(func==undef || is_func(func))
+    let(
+        true_list = is_def(func)? [for(entry=l) if (func(entry)) 1]
+                                : [for(entry=l) if (entry) 1]
+    )
+    len(true_list);
+
+
+
 // Section: Handling `undef`s.
 
 
@@ -499,123 +603,6 @@ function u_div(a,b) =
     is_vector(a) && is_vector(b)? v_div(a,b) :
     a / b;
 
-
-
-// Section: Boolean list testing
-
-// Function: any()
-// Usage:
-//   bool = any(l);
-//   bool = any(l, func);   // Requires OpenSCAD 2021.01 or later.
-// Requirements:
-//   Requires OpenSCAD 2021.01 or later to use the `func` argument.
-// Description:
-//   Returns true if any item in list `l` evaluates as true.
-// Arguments:
-//   l = The list to test for true items.
-//   func = An optional function literal of signature (x), returning bool, to test each list item with.
-// Example:
-//   any([0,false,undef]);  // Returns false.
-//   any([1,false,undef]);  // Returns true.
-//   any([1,5,true]);       // Returns true.
-//   any([[0,0], [0,0]]);   // Returns true.
-//   any([[0,0], [1,0]]);   // Returns true.
-function any(l, func) =
-    assert(is_list(l), "The input is not a list." )
-    assert(func==undef || is_func(func))
-    is_func(func)
-      ? _any_func(l, func)
-      : _any_bool(l);
-
-function _any_func(l, func, i=0, out=false) =
-    i >= len(l) || out? out :
-    _any_func(l, func, i=i+1, out=out || func(l[i]));
-
-function _any_bool(l, i=0, out=false) =
-    i >= len(l) || out? out :
-    _any_bool(l, i=i+1, out=out || l[i]);
-
-
-// Function: all()
-// Usage:
-//   bool = all(l);
-//   bool = all(l, func);   // Requires OpenSCAD 2021.01 or later.
-// Requirements:
-//   Requires OpenSCAD 2021.01 or later to use the `func` argument.
-// Description:
-//   Returns true if all items in list `l` evaluate as true.  If `func` is given a function liteal
-//   of signature (x), returning bool, then that function literal is evaluated for each list item.
-// Arguments:
-//   l = The list to test for true items.
-//   func = An optional function literal of signature (x), returning bool, to test each list item with.
-// Example:
-//   test1 = all([0,false,undef]);  // Returns false.
-//   test2 = all([1,false,undef]);  // Returns false.
-//   test3 = all([1,5,true]);       // Returns true.
-//   test4 = all([[0,0], [0,0]]);   // Returns true.
-//   test5 = all([[0,0], [1,0]]);   // Returns true.
-//   test6 = all([[1,1], [1,1]]);   // Returns true.
-function all(l, func) =
-    assert(is_list(l), "The input is not a list.")
-    assert(func==undef || is_func(func))
-    is_func(func)
-      ? _all_func(l, func)
-      : _all_bool(l);
-
-function _all_func(l, func, i=0, out=true) =
-    i >= len(l) || !out? out :
-    _all_func(l, func, i=i+1, out=out && func(l[i]));
-
-function _all_bool(l, i=0, out=true) =
-    i >= len(l) || !out? out :
-    _all_bool(l, i=i+1, out=out && l[i]);
-
-
-// Function: count_true()
-// Usage:
-//   seq = count_true(l, [nmax=]);
-//   seq = count_true(l, func, [nmax=]);  // Requires OpenSCAD 2021.01 or later.
-// Requirements:
-//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
-// Description:
-//   Returns the number of items in `l` that evaluate as true.
-//   If `l` is a lists of lists, this is applied recursively to each
-//   sublist.  Returns the total count of items that evaluate as true
-//   in all recursive sublists.
-// Arguments:
-//   l = The list to test for true items.
-//   func = An optional function literal of signature (x), returning bool, to test each list item with.
-//   ---
-//   nmax = Max number of true items to count.  Default: `undef` (no limit)
-// Example:
-//   num1 = count_true([0,false,undef]);  // Returns 0.
-//   num2 = count_true([1,false,undef]);  // Returns 1.
-//   num3 = count_true([1,5,false]);      // Returns 2.
-//   num4 = count_true([1,5,true]);       // Returns 3.
-//   num5 = count_true([[0,0], [0,0]]);   // Returns 2.
-//   num6 = count_true([[0,0], [1,0]]);   // Returns 2.
-//   num7 = count_true([[1,1], [1,1]]);   // Returns 2.
-//   num8 = count_true([[1,1], [1,1]], nmax=1);  // Returns 1.
-function count_true(l, func, nmax) = 
-    assert(is_list(l))
-    assert(func==undef || is_func(func))
-    is_func(func)
-      ? _count_true_func(l, func, nmax)
-      : _count_true_bool(l, nmax);
-
-function _count_true_func(l, func, nmax, i=0, out=0) =
-    i >= len(l) || (nmax!=undef && out>=nmax) ? out :
-    _count_true_func(
-        l, func, nmax, i = i + 1,
-        out = out + (func(l[i])? 1:0)
-    );
-
-function _count_true_bool(l, nmax, i=0, out=0) =
-    i >= len(l) || (nmax!=undef && out>=nmax) ? out :
-    _count_true_bool(
-        l, nmax, i = i + 1,
-        out = out + (l[i]? 1:0)
-    );
 
 
 

@@ -2903,7 +2903,7 @@ function _edge_set(v) =
             let(nonz = sum(v_abs(v)))
             nonz==2? (v==v2) :  // Edge: return matching edge.
             let(
-                matches = count_true([
+                matches = num_true([
                     for (i=[0:2]) v[i] && (v[i]==v2[i])
                 ])
             )

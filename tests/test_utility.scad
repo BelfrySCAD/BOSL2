@@ -1,6 +1,22 @@
 include <../std.scad>
 
 
+module test_num_true() {
+    assert_equal(num_true([0,false,undef]), 0);
+    assert_equal(num_true([1,false,undef]), 1);
+    assert_equal(num_true([1,5,false]), 2);
+    assert_equal(num_true([1,5,true]), 3);
+    assert_equal(num_true([[0,0], [0,0]]), 2);
+    assert_equal(num_true([[0,0], [1,0]]), 2);
+    assert_equal(num_true([[], [1,1]]), 1);
+    assert_equal(num_true([1,3,5,7,9], function (a) a%2==0),0);
+    assert_equal(num_true([1,3,6,8,9], function (a) a%2==0),2);
+    assert_equal(num_true([1,3,5,7,9], function (a) a%2!=0),5);
+}
+test_num_true();
+
+
+
 module test_typeof() {
     assert(typeof(undef) == "undef");
     assert(typeof(true) == "boolean");
