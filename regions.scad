@@ -890,8 +890,11 @@ function offset(
                  && (prevseg[1]-prevseg[0]) * (sharpcorners[i]-prevseg[1]) > 0
             ],
         steps = is_def(delta) ? [] : [
-            for(i=[0:len(goodsegs)-1])
+            for(i=[0:len(goodsegs)-1])  
                 r==0 ? 0
+                // if path is open but first and last entries match value is not used, but
+                // computation below gives error, so special case handle it
+              : i==len(goodsegs)-1 && !closed && approx(goodpath[i],goodsegs[i][0]) ? 0 
                 // floor is important here to ensure we don't generate extra segments when nearly straight paths expand outward
               : 1+floor(segs(r)*vector_angle(   
                                              select(goodsegs,i-1)[1]-goodpath[i],

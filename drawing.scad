@@ -740,7 +740,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
         assert(len(points)==2, "When pointlist has length 3 centerpoint is not allowed")
         assert(points[0]!=points[1], "Arc endpoints are equal")
         assert(cp!=points[0]&&cp!=points[1], "Centerpoint equals an arc endpoint")
-        assert(count_true([long,cw,ccw])<=1, str("Only one of `long`, `cw` and `ccw` can be true",cw,ccw,long))
+        assert(num_true([long,cw,ccw])<=1, str("Only one of `long`, `cw` and `ccw` can be true",cw,ccw,long))
         let(    
             angle = vector_angle(points[0], cp, points[1]),
             v1 = points[0]-cp,
