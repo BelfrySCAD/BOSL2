@@ -17,7 +17,115 @@ include <threading.scad>
 include <screw_drive.scad>
 
 
-// Section: Generic Screw Creation
+// Section: Screw Parameters
+//    This modules in this file create standard ISO (metric) and UTS (English) threaded screws.
+//    The {{screw()}} and {{nut()}} modules produce
+//    screws and nuts that comply with the relevant ISO and ASME standards,
+//    including tolerances for screw fit.  You can also create screws with
+//    various head types and drive types that should match standard hardware.
+// Subsection: Screw Naming
+//    You can specify screws using a string that names the screw.  
+//    For ISO (metric) screws the name has the form: `"M<size>x<pitch>,<length>"`,
+//    so `"M6x1,10"` specifies a 6mm diameter screw with a thread pitch of 1mm and length of 10mm.
+//    You can omit the pitch or length, e.g. `"M6x1"`, or `"M6,10"`, or just `"M6"`.
+//    .
+//    For UTS (English) screws the name has the form `"<size>-<threadcount>,<length>"`, e.g. 
+//    `"#8-32,1/2"`, or `"1/4-20,1"`.  The units are in inches, including the length.  Size can be a
+//    number from 0 to 12 with or without a leading `#` to specify a screw gauge size, or any other
+//    value to specify a diameter in inches, either as a float or a fraction, so `"0.5-13"` and
+//    `"1/2-13"` are equivalent.  To force interpretation of the value as inches add `''` (two
+//    single-quotes) to the end, e.g. `"1''-4"` is a one inch screw and `"1-80"` is a very small
+//    1-gauge screw.  The pitch is specified using a thread count, the number of threads per inch.
+//    As with the ISO screws, you can omit the pitch or length and specify `"#6-32"`, `"#6,3/4"`, or simply `#6`.
+// Subsection: Standard Screw Pitch
+//    If you omit the pitch when specifying a screw or nut then the library supplies a standard screw pitch based
+//    on the screw diameter.  For each screw diameter, multiple standard pitches are possible.
+//    The available thread pitch types are different for ISO and UTS:
+//    .
+//    | ISO      |    UTS   |
+//    | -------- | -------- |
+//    | "coarse" |  "coarse" or "UNC" |
+//    | "fine"   |   "fine" or "UNF"  |
+//    | "extrafine" or "extra fine" | "extrafine", "extra fine", or "UNEF"  |
+//    | "superfine" or "super fine" |   |
+//    | "none"   |  "none"  |
+//    .
+//    The default pitch selection is "coarse".  Note that this selection is case insensitive.
+//    To set the pitch using these pitch strings you use the `thread=` argument to the modules.
+//    You cannot incorporate a named pitch into the thread name.  The finer pitch categories
+//    are defined only for larger screw diameters.  You can also use the `thread=` argument to
+//    directly specify a pitch, so `thread=2` would produce a thread pitch of 2mm.  Setting the
+//    pitch to zero produces an unthreaded screws, the same as setting it to "none".  Specifying
+//    a numeric value this way overrides a value given in the name.
+// Subsection: Screw Heads
+//    By default screws do not have heads.  
+//    You can request a screw head using `head=` parameter to specify the desired head type.  If you want the
+//    head to have a recess for driving the screw you must also specify a drive type using `drive=`.  
+//    The table below lists the head options.  Only some combinations of head and drive
+//    type are supported.  Different sized flat heads exist for the same screw type.
+//    Sometimes this depends on the type of recess.  If you specify "flat" then the size will be chosen
+//    appropriately for the recess you specify.
+//    .
+//    The `drive=` argument can be set to "none", "hex", "slot", 
+//    "phillips", "ph0" to "ph4" (for phillips of the specified size), "torx" or
+//    "t<size>" (for Torx at a specified size, e.g. "t20").  If you have no head but still
+//    give a drive type you will get a set screw.  The table below lists all of the head types and
+//    shows which drive type is compatible with each head types.  Different head types work in ISO and UTS,
+//    as marked in the first column.  
+//    .
+//    ISO|UTS|Head            | Drive
+//    ---|---|--------------- | ----------------------------
+//    X|X|"none"          | hex, torx
+//    X|X|"hex"           | *none*
+//    X|X|"socket"        | hex, torx
+//    X|X|"button"        | hex, torx
+//    X|X|"flat"          | slot, phillips, hex, torx
+//     |X|"round"         | slot, phillips 
+//     |X|"fillister"     | slot, phillips 
+//     |X|"flat small"    | phillips, slot
+//     |X|"flat large"    | hex, torx 
+//     |X|"flat undercut" | slot, phillips 
+//    X| |"pan"           | slot, phillips 
+//    X| |"cheese"        | slot, phillips 
+//    .
+//    The drive size is specified appropriately to the drive type: drive number for phillips or torx,
+//    and allen width in mm or inches (as appropriate) for hex.  Drive size is determined automatically
+//    from the screw size, but by passing the `drive_size=` argument you can override the default, or
+//    in cases where no default exists you can specify it.
+// Subsection: Tolerance
+//    Without tolerance requirements, screws would not fit together.  The screw standards specify a
+//    nominal size, but the tolerance determines the actual size based on that nominal size.  Screws
+//    modeled by this method will have dimensions consistent with the standards they are based on, so that
+//    they would interface properly if fabricated by an accurate method.  Different tolerance designations
+//    are used for nuts and screws, and also for UTS and ISO.  
+// .  
+//    For UTS screw threads the tolerance is one of "1A", "2A" or "3A", in
+//    order of increasing tightness.  The default tolerance is "2A", which
+//    is the general standard for manufactured bolts.
+// .
+//    For UTS nut threads, the tolerance is one of "1B", "2B" or "3B", in
+//    order of increasing tightness.  The default tolerance is "2B", which
+//    is the general standard for manufactured nuts.
+// .
+//    For ISO the tolerance
+//    has the form of a number and letter.  The letter specifies the "fundamental deviation",
+//    also called the "tolerance position", the gap
+//    from the nominal size, and must be "e", "f", "g", or "h", where "e" is
+//    the loosest and "h" means no gap.  The number specifies the allowed
+//    range (variability) of the thread heights.  It must be a value from
+//    3-9 for crest diameter and one of 4, 6, or 8 for pitch diameter.  A
+//    tolerance "6g" specifies both pitch and crest diameter to be the same,
+//    but they can be different, with a tolerance like "5g6g" specifies a pitch diameter
+//    tolerance of "5g" and a crest diameter tolerance of "6g".
+//    Smaller numbers give a tighter tolerance.  The default ISO tolerance is "6g".
+// .
+//    For ISO nuts the form is the same, but the number specifying the variability must range from 4-8,
+//    and the fundamental deviation letter must be "G" or "H" where "G" is loose and "H" means
+//    no gap.  An allowed (loose) nut tolerance is "7G".  The default ISO tolerance is "6H".  
+
+
+
+// Section: Making Screws
 
 
 /*
@@ -38,37 +146,26 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 // Usage:
 //   screw([name], [head], [drive], [thread=], [drive_size=], [length=|l=], [shank=], [oversize=], [tolerance=], [$slop=], [spec=], [details=], [anchor=], [anchor_head=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
-//   Create a screw.
+//   Create a screw.  See [screw parameters](#section-screw-parameters) for details on the parameters that define a screw.
+//   The tolerance determines the dimensions of the screw
+//   based on ISO and ASME standards.  Screws fabricated at those dimensions will mate properly with standard hardware.
+//   The $slop argument creates
+//   an extra gap to account for printing overextrusion.  It defaults to 0.
 //   .
-//   Most of these parameters are described in the entry for `screw_info()`.
-//   .
-//   The tolerance determines the actual thread sizing based on the
-//   nominal size.  For UTS threads it is either "1A", "2A" or "3A", in
-//   order of increasing tightness.  The default tolerance is "2A", which
-//   is the general standard for manufactured bolts.  For ISO the tolerance
-//   has the form of a number and letter.  The letter specifies the "fundamental deviation", also called the "tolerance position", the gap
-//   from the nominal size, and must be "e", "f", "g", or "h", where "e" is
-//   the loosest and "h" means no gap.  The number specifies the allowed
-//   range (variability) of the thread heights.  It must be a value from
-//   3-9 for crest diameter and one of 4, 6, or 8 for pitch diameter.  A
-//   tolerance "6g" specifies both pitch and crest diameter to be the same,
-//   but they can be different, with a tolerance like "5g6g" specifies a pitch diameter tolerance of "5g" and a crest diameter tolerance of "6g".
-//   Smaller numbers give a tighter tolerance.  The default ISO tolerance is "6g".
-//   .
-//   The $slop argument gives an extra gap to account for printing overextrusion. It defaults to 0.  
+//   You can generate a screw specification from {{screw_info()}}, possibly modify it, and pass that in rather than giving the parameters.
 // Arguments:
-//   name = screw specification, e.g. "M5x1" or "#8-32"
-//   head = head type (see list above).  Default: none
-//   drive = drive type.  Default: none
+//   name = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
+//   head = head type.  See [screw heads](#subsection-screw-heads)  Default: none
+//   drive = drive type.  See [screw heads](#subsection-screw-heads) Default: none
 //   ---
-//   thread = thread type or specification.  Default: "coarse"
+//   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
 //   drive_size = size of drive recess to override computed value
 //   oversize = amount to increase screw diameter for clearance holes.  Default: 0
 //   spec = screw specification from `screw_info()`.  If you specify this you can omit all the preceeding parameters.
 //   length = length of screw (in mm)
 //   shank = length of unthreaded portion of screw (in mm).  Default: 0
 //   details = toggle some details in rendering.  Default: false
-//   tolerance = screw tolerance.  Determines actual screw thread geometry based on nominal sizing.  Default is "2A" for UTS and "6g" for ISO.
+//   tolerance = screw tolerance.  Determines actual screw thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2A" for UTS and "6g" for ISO.
 //   $slop = add extra gap to account for printer overextrusion.  Default: 0
 //   anchor = Translate so anchor point on the shaft is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   anchor_head = Translate so anchor point on the head is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor). 
@@ -216,11 +313,11 @@ module screw(name, head, drive, thread="coarse", drive_size, oversize=0, spec, l
    headless = head=="none" || head==undef;
    eps = headless || starts_with(head,"flat") ? 0 : 0.01;
    screwlen = one_defined([l,length],"l,length",dflt=undef);
-   length = first_defined([screwlen,struct_val(spec,"length")]) + eps;
-   assert(length>0, "Must specify positive length");
+   length = u_add(first_defined([screwlen,struct_val(spec,"length")]) , eps);
+   assert(all_positive(length), "Must specify positive length");
    sides = max(12, segs(diameter/2));
    unthreaded = is_undef(pitch) || pitch==0 ? length : shank;
-   threaded = length - unthreaded;
+   threaded = u_add(length,-unthreaded);
    echo(t=threaded,length,unthreaded);
    head_height = headless || starts_with(head, "flat") ? 0 : struct_val(spec, "head_height");
    head_diam = struct_val(spec, "head_size");
@@ -475,33 +572,22 @@ module _rod(spec, length, tolerance, orient=UP, spin=0, anchor=CENTER)
 // Usage:
 //   nut([name], diameter, thickness, [thread=], [oversize=], [spec=], [tolerance=], [$slop=]) [ATTACHMENTS];
 // Description:
-//   Generates a hexagonal nut.  
-//   The name, thread and oversize parameters are described under `screw_info()`.  As for screws,
-//   you can give the specification in `spec` and then omit the name.  The diameter is the flat-to-flat
+//   Generates a hexagonal nut.  See [screw parameters](#section-screw-parameters) for details on the parameters that define a nut.
+//   As for screws, you can give the specification in `spec` and then omit the name.  The diameter is the flat-to-flat
 //   size of the nut produced.  
 //   .
-//   The tolerance determines the actual thread sizing based on the
-//   nominal size.  
-//   For UTS threads the tolerance is either "1B", "2B" or "3B", in
-//   order of increasing tightness.  The default tolerance is "2B", which
-//   is the general standard for manufactured nuts.  For ISO the tolerance
-//   has the form of a number and letter.  The letter specifies the "fundamental deviation", also called the "tolerance position", the gap
-//   from the nominal size, and must be "G", or "H", where "G" is looser
-//   he loosest and "H" means no gap.  The number specifies the allowed
-//   range (variability) of the thread heights.  Smaller  numbers give tigher tolerances.  It must be a value from
-//   4-8, so an allowed (loose) tolerance is "7G".  The default ISO tolerance is "6H".
-//   .
+//   The tolerance determines the actual thread sizing based on the nominal size in accordance with standards.  
 //   The $slop parameter determines extra gaps left to account for printing overextrusion.  It defaults to 0.
 // Arguments:
-//   name = screw specification, e.g. "M5x1" or "#8-32"
+//   name = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
 //   diameter = outside diameter of nut (flat to flat dimension)
 //   thickness = thickness of nut (in mm)
 //   ---
-//   thread = thread type or specification.  Default: "coarse"
+//   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
 //   oversize = amount to increase screw diameter for clearance holes.  Default: 0
 //   spec = screw specification from `screw_info()`.  If you specify this you can omit all the preceeding parameters.
 //   bevel = bevel the nut.  Default: false
-//   tolerance = nut tolerance.  Determines actual nut thread geometry based on nominal sizing.  Default is "2B" for UTS and "6H" for ISO.
+//   tolerance = nut tolerance.  Determines actual nut thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2B" for UTS and "6H" for ISO.
 //   $slop = extra space left to account for printing over-extrusion.  Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -570,10 +656,11 @@ function _parse_screw_name(name) =
 // drive can be "hex", "phillips", "slot", "torx", or "none"
 // or you can specify "ph0" up to "ph4" for phillips and "t20" for torx 20
 function _parse_drive(drive=undef, drive_size=undef) =
+  let(f=echo(drive_size=drive_size))
     is_undef(drive) ? ["none",undef] :
     let(drive = downcase(drive))
     in_list(drive,["hex","phillips", "slot", "torx", "phillips", "none"]) ? [drive, drive_size] :
-    drive[0]=="t" ? ["torx", parse_int(substr(drive,1))] :
+    drive[0]=="t" ? let(size = parse_int(substr(drive,1))) ["torx",size,torx_depth(size) ] :
     substr(drive,0,2)=="ph" ? ["phillips", parse_int(substr(drive,2))] :
     assert(str("Unknown screw drive type ",drive));
 
@@ -639,72 +726,7 @@ module screw_head(screw_info,details=false) {
 //
 // Description:
 //   Look up screw characteristics for the specified screw type.
-//   .
-//   For metric (ISO) the `name=` argument is formatted in a string like: `"M<size>x<pitch>,<length>"`.
-//   e.g. `"M6x1,10"` specifies a 6mm diameter screw with a thread pitch of 1mm and length of 10mm.
-//   You can omit the pitch or length, e.g. `"M6x1"`, or `"M6,10"`, or just `"M6"`.
-//   .
-//   For English (UTS) `name=` is a string like `"<size>-<threadcount>,<length>"`.
-//   e.g. `"#8-32,1/2"`, or `"1/4-20,1"`.  Units are in inches, including the length.  Size can be a
-//   number from 0 to 12 with or without a leading `#` to specify a screw gauge size, or any other
-//   value to specify a diameter in inches, either as a float or a fraction, so `"0.5-13"` and
-//   `"1/2-13"` are equivalent.  To force interpretation of the value as inches add `''` (two
-//   single-quotes) to the end, e.g. `"1''-4"` is a one inch screw and `"1-80"` is a very small
-//   1-gauge screw.  The pitch is specified using a thread count, the number of threads per inch.
-//   The length is in inches.
-//   .
-//   If you omit the pitch then a standard screw pitch will be supplied from lookup tables for the
-//   screw diameter you have chosen.  For each screw diameter, multiple standard pitches are possible.
-//   The available thread pitch types are:
-//   - `"coarse"`
-//   - `"fine"`
-//   - `"extrafine"` or `"extra fine"`
-//   - `"superfine"` or `"super fine"` (Metric/ISO only.)
-//   - `"UNC"` (English/UTS only.  Same as `"coarse"`.)
-//   - `"UNF"` (English/UTS only.  Same as `"fine"`.)
-//   - `"UNEF"` (English/UTS only.  Same as `"extrafine"`.)
-//   .
-//   The default pitch selection is `"coarse"`.  Note that this selection is case insensitive.  Set the
-//   `thread=` argument to one of these values to choose a different pitch.  Note that not every pitch
-//   category is defined at every diameter.  You can also specify the thread pitch directly, for example
-//   you could set `thread=2` which would produce threads with a pitch of 2mm.  The final option is to
-//   specify `thread="none"` to produce an unthreaded screw either to simplify the model or to use for
-//   cutting out screw holes.  Setting the pitch to `0` (zero) also produces an unthreaded screw.
-//   If you specify a numeric thread value it will override any value given in the `name=` argument.
-//   .
-//   The `head=` parameter specifies the type of head the screw will have.  Options for the head are
-//   `"flat"`, `"flat small"`, `"flat large"`, `"flat undercut"`, `"round"`, `"pan"`, `"pan flat"`,
-//   `"pan round"`, `"socket"`, `"hex"`, `"button"`, `"cheese"`, `"fillister"`,  or `"none"`
-//   .
-//   Note that different sized flat heads exist for the same screw type.  Sometimes this depends on
-//   the type of recess.  If you specify `"flat"` then the size will be chosen appropriately for the
-//   recess you specify.  The default is `"none"`.
-//   .
-//   The `drive=` argument specifies the recess type.  Options for the drive are `"none"`, `"hex"`,
-//   `"slot"`, `"phillips"`, `"ph0"` to `"ph4"` (for phillips of the specified size), `"torx"` or
-//   `"t<size>"` (for Torx at a specified size, e.g. `"t20"`).  The default drive is `"none"`
-//   .
-//   Only some combinations of head and drive type are supported:
-//   .
-//   Head              | Drive
-//   ----------------- | ----------------------------
-//   `"none"`          | hex, torx
-//   `"hex"`           | *none*
-//   `"socket"`        | hex, torx
-//   `"button"`        | hex, torx
-//   `"flat"`          | slot, phillips, hex, torx
-//   `"round"`         | slot, phillips (UTS/English only.)
-//   `"fillister"`     | slot, phillips (UTS/English only.)
-//   `"flat small"`    | phillips, slot (UTS/English only.)
-//   `"flat large"`    | hex, torx (UTS/English only.)
-//   `"flat undercut"` | slot, phillips (UTS/English only.)
-//   `"pan"`           | slot, phillips (ISO/Metric only.)
-//   `"cheese"`        | slot, phillips (ISO/Metric only.)
-//   .
-//   The drive size is specified appropriately to the drive type: drive number for phillips or torx,
-//   and allen width in mm or inches (as appropriate) for hex.  Drive size is determined automatically
-//   from the screw size, but by passing the `drive_size=` argument you can override the default, or
-//   in cases where no default exists you can specify it.
+//   See [screw parameters](#section-screw-parameters) for details on the parameters that define a screw.
 //   .
 //   The `oversize=` parameter adds the specified amount to the screw and head diameter to make an
 //   oversized screw.  This is intended for generating clearance holes, not for dealing with printer
@@ -729,11 +751,11 @@ module screw_head(screw_info,details=false) {
 //   `"length"`         | Length of the screw in mm measured in the customary fashion.  For flat head screws the total length and for other screws, the length from the bottom of the head to the screw tip.
 //
 // Arguments:
-//   name = screw specification, e.g. "M5x1" or "#8-32"
-//   head = head type (see list above).  Default: none
-//   drive = drive type.  Default: none
+//   name = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
+//   head = head type.  See [screw heads](#subsection-screw-heads)  Default: none
+//   drive = drive type.  See [screw heads](#subsection-screw-heads) Default: none
 //   ---
-//   thread = thread type or specification.  Default: "coarse"
+//   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
 //   drive_size = size of drive recess to override computed value
 //   oversize = amount to increase screw diameter for clearance holes.  Default: 0
 function screw_info(name, head, drive, thread="coarse", drive_size=undef, oversize=0) =
@@ -745,6 +767,7 @@ function screw_info(name, head, drive, thread="coarse", drive_size=undef, oversi
       type[0] == "metric" ? _screw_info_metric(type[1], type[2], head, thread, drive) :
       [],
     over_ride = concat(
+                        len(drive_info)>=3 ? ["drive_depth", drive_info[2]] : [], 
                         is_def(type[3]) ? ["length",type[3]] : [],
                         is_def(drive_info[1]) ? ["drive_size", drive_info[1]] : [],
                         ["diameter", oversize+struct_val(screwdata,"diameter"),
@@ -960,11 +983,11 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
              drive_index = drive=="phillips" ? 2 :
                            drive=="hex" ? 3 :
                            drive=="torx" ? 4 : undef,
-             drive_size = drive=="phillips" && head=="round" ? [["drive_size", entry[2]], ["drive_diameter",INCH*entry[5]],
+             drive_size = drive=="phillips" && head=="round" ? [["drive_size", entry[2]], ["drive_diameter",u_mul(INCH,entry[5])],
                                               ["drive_width",INCH*entry[6]],["drive_depth",INCH*entry[7]]] :
-                          drive=="slot" && head=="round" ?  [["drive_width", INCH*entry[8]], ["drive_depth",INCH*entry[9]]] :
-                          drive=="hex" && head=="button" ? [["drive_size", INCH*entry[drive_index]], ["drive_depth", INCH*entry[5]]]:
-                          drive=="torx" && head=="button" ? [["drive_size", entry[drive_index]], ["drive_depth", INCH*entry[6]]]:
+                          drive=="slot" && head=="round" ?  [["drive_width", INCH*entry[8]], ["drive_depth",u_mul(INCH,entry[9])]] :
+                          drive=="hex" && head=="button" ? [["drive_size", INCH*entry[drive_index]], ["drive_depth", u_mul(INCH,entry[5])]]:
+                          drive=="torx" && head=="button" ? [["drive_size", entry[drive_index]], ["drive_depth", u_mul(INCH,entry[6])]]:
                           is_def(drive_index) && head=="button" ? [["drive_size", entry[drive_index]]] : []
              )
              concat([["head",head],["head_size",INCH*entry[0]], ["head_height", INCH*entry[1]]],drive_size) :
@@ -1079,7 +1102,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                          downcase(thread)),
                             // coarse  fine  xfine superfine
         ISO_thread = [
-                     [1  , [0.25,    0.2 ,   undef, undef,]],
+                      [1  , [0.25,    0.2 ,   undef, undef,]],
                       [1.2, [0.25,    0.2 ,   undef, undef,]],
                       [1.4, [0.3 ,    0.2 ,   undef, undef,]],
                       [1.6, [0.35,    0.2 ,   undef, undef,]],
