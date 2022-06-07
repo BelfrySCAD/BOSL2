@@ -4,7 +4,7 @@
 //   Included is a function for calculating the standard dimensions of screws including the
 //   tolerance values that are required to make screws mate properly when they are formed
 //   precisely, so if you can fabricate objects accurately then your screws will mate
-//   with standard hardware without the need to introduce extra gaps for clearance.  Those
+//   with standard hardware without the need to introduce extra gaps for clearance.
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/screws.scad>
@@ -94,10 +94,15 @@ include <screw_drive.scad>
 //    in cases where no default exists you can specify it.
 // Subsection: Tolerance
 //    Without tolerance requirements, screws would not fit together.  The screw standards specify a
-//    nominal size, but the tolerance determines the actual size based on that nominal size.  Screws
-//    modeled by this method will have dimensions consistent with the standards they are based on, so that
-//    they would interface properly if fabricated by an accurate method.  Different tolerance designations
-//    are used for nuts and screws, and also for UTS and ISO.  
+//    nominal size, but the tolerance determines a range of allowed sizes based on that nominal size.
+//    So for example, an M10 screw with the default tolerance has an outside (major) diameter between 9.74 mm and 9.97 mm.
+//    The librasry will use the center point in the allowed range and create a screw with a diameter of 9.86 mm.
+//    A M10 nut at the default tolerance has a major diameter (which is the inside diameter) between 10 mm and 10.4 mm.
+//    Shrinking the major diameter of a screw makes the screw loose.  Shrinking the major diameter of a nut, on the other hand,
+//    makes the hole smaller and hence makes the nut tighter.  For this reason, we need a difference tolerance
+//    for a screw than for a nut.  Screw tolerances Screws modeled by this method will have dimensions consistent with the
+//    standards they are based on, so that they would interface properly if fabricated by an accurate method.  The ISO and UTS
+//    systems use different tolerance designations.
 //    .
 //    For UTS screw threads the tolerance is one of "1A", "2A" or "3A", in
 //    order of increasing tightness.  The default tolerance is "2A", which
