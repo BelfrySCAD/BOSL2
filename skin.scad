@@ -2132,115 +2132,115 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   "vnf_pyramids" = VNF Tile = Like "pyramids", but slower and more consistent in triangulation.
 //   "vnf_trunc_pyramids" = VNF Tile = Like "trunc_pyramids", but slower and more consistent in triangulation.
 // See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), get_texture()
-// Example: "ribs" texture.
+// Example(3D): "ribs" texture.
 //   tex = get_texture("ribs");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[5,10], style="concave"
 //   );
-// Example: Truncated "trunc_ribs" texture.
+// Example(3D): Truncated "trunc_ribs" texture.
 //   tex = get_texture("trunc_ribs");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[5,10], style="concave"
 //   );
-// Example: "wave_ribs" texture.
+// Example(3D): "wave_ribs" texture.
 //   tex = get_texture("wave_ribs");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10], style="concave"
 //   );
-// Example: "diamonds" texture.
+// Example(3D): "diamonds" texture.
 //   tex = get_texture("diamonds");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10], style="concave"
 //   );
-// Example: "vnf_diamonds" texture.  Slower, but more consistent around complex curves.
+// Example(3D): "vnf_diamonds" texture.  Slower, but more consistent around complex curves.
 //   tex = get_texture("vnf_diamonds");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10],
 //   );
-// Example: "pyramids" texture.
+// Example(3D): "pyramids" texture.
 //   tex = get_texture("pyramids");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10], style="convex"
 //   );
-// Example: "vnf_pyramids" texture.  Slower, but more consistent around complex curves.
+// Example(3D): "vnf_pyramids" texture.  Slower, but more consistent around complex curves.
 //   tex = get_texture("vnf_pyramids");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10],
 //   );
-// Example: "trunc_pyramids" texture.
+// Example(3D): "trunc_pyramids" texture.
 //   tex = get_texture("trunc_pyramids");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10], style="convex"
 //   );
-// Example: "vnf_trunc_pyramids" texture.  Slower, but more consistent around complex curves.
+// Example(3D): "vnf_trunc_pyramids" texture.  Slower, but more consistent around complex curves.
 //   tex = get_texture("vnf_trunc_pyramids");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10],
 //   );
-// Example: "hills" texture.
+// Example(3D): "hills" texture.
 //   tex = get_texture("hills");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10], style="quincunx"
 //   );
-// Example: "vnf_dots" texture.
+// Example(3D): "vnf_dots" texture.
 //   tex = get_texture("vnf_dots");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10],
 //   );
-// Example: "vnf_dimples" texture.
+// Example(3D): "vnf_dimples" texture.
 //   tex = get_texture("vnf_dimples");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10],
 //   );
-// Example: "vnf_cones" texture.
+// Example(3D): "vnf_cones" texture.
 //   tex = get_texture("vnf_cones");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10],
 //   );
-// Example: "bricks" texture.
+// Example(3D): "bricks" texture.
 //   tex = get_texture("bricks");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10],
 //   );
-// Example: "vnf_bricks" texture.
+// Example(3D): "vnf_bricks" texture.
 //   tex = get_texture("vnf_bricks");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10],
 //   );
-// Example: "vnf_diagonal_grid" texture.
+// Example(3D): "vnf_diagonal_grid" texture.
 //   tex = get_texture("vnf_diagonal_grid");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10],
 //   );
-// Example: "vnf_hex_grid" texture.
+// Example(3D): "vnf_hex_grid" texture.
 //   tex = get_texture("vnf_hex_grid");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[12.5,20],
 //   );
-// Example: "vnf_checkers" texture.
+// Example(3D): "vnf_checkers" texture.
 //   tex = get_texture("vnf_checkers");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10],
 //   );
-// Example: "rough" texture.
+// Example(3D): "rough" texture.
 //   tex = get_texture("rough");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
