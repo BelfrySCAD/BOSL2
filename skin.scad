@@ -2131,7 +2131,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   "vnf_hex_grid" = VNF Tile = A hexagonal grid of thin lines.
 //   "vnf_pyramids" = VNF Tile = Like "pyramids", but slower and more consistent in triangulation.
 //   "vnf_trunc_pyramids" = VNF Tile = Like "trunc_pyramids", but slower and more consistent in triangulation.
-// See Also: invert_texture(), textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), get_texture()
+// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), get_texture()
 // Example: "ribs" texture.
 //   tex = get_texture("ribs");
 //   textured_linear_sweep(
@@ -2485,7 +2485,7 @@ function get_texture(tex,n,m,o) =
 //   centroid_top = The centroid of the top of the shape, oriented UP.
 //   centroid = The centroid of the center of the shape, oriented UP.
 //   centroid_bot = The centroid of the bottom of the shape, oriented DOWN.
-// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), get_texture(), invert_texture()
+// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), get_texture()
 // Example: "diamonds" texture.
 //   path = glued_circles(r=15, spread=40, tangent=45);
 //   textured_linear_sweep(
@@ -2997,8 +2997,8 @@ module textured_revolution(
 //   textured_cylinder(h=40, r=20, texture="diamonds", tex_size=[5,5]);
 //   textured_cylinder(h=40, r1=20, r2=15, texture="pyramids", tex_size=[5,5], style="convex");
 //   textured_cylinder(h=40, r1=20, r2=15, texture="trunc_pyramids", tex_size=[5,5], chamfer=5, style="convex");
-//   textured_cylinder(h=40, r1=20, r2=15, texture="dots", tex_size=[5,5], rounding=8, style="convex");
-//   textured_cylinder(h=50, r1=25, r2=20, shift=[0,10], texture="bricks", rounding1=-10, tex_size=tex_size, tscale=0.5, style="concave");
+//   textured_cylinder(h=40, r1=20, r2=15, texture="vnf_dots", tex_size=[5,5], rounding=8);
+//   textured_cylinder(h=50, r1=25, r2=20, shift=[0,10], texture="bricks", rounding1=-10, tex_size=[10,10], tscale=0.5, style="concave");
 function textured_cylinder(
     h, r, texture, tex_size=[1,1], counts,
     tscale=1, inset=false, rot=false,
