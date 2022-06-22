@@ -733,6 +733,20 @@ function vnf_triangulate(vnf) =
 
 
 
+function _vnf_sort_vertices(vnf, idx=[2,1,0]) =
+    let(
+        verts = vnf[0],
+        faces = vnf[1],
+        vidx = sortidx(verts, idx=idx),
+        rvidx = sortidx(vidx),
+        sorted_vnf = [
+            [ for (i = vidx) verts[i] ],
+            [ for (face = faces) [ for (i = face) rvidx[i] ] ],
+        ]
+    ) sorted_vnf;
+
+
+
 // Function: vnf_slice()
 // Usage:
 //   sliced = vnf_slice(vnf, dir, cuts);

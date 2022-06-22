@@ -29,11 +29,11 @@ module chamfcube(size=[1,1,1],chamfer=0.25,chamfaxes=[1,1,1],chamfcorners=false)
     cuboid(
         size=size, chamfer=chamfer,
         trimcorners=chamfcorners,
-        edges=concat(
-            chamfaxes[0]? ["X"] : [],
-            chamfaxes[1]? ["Y"] : [],
-            chamfaxes[2]? ["Z"] : []
-        )
+        edges=[
+            if (chamfaxes.x) "X",
+            if (chamfaxes.y) "Y",
+            if (chamfaxes.z) "Z",
+        ]
     );
 }
 
