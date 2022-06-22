@@ -2160,7 +2160,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   tex = get_texture("vnf_diamonds");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
-//       tex_size=[10,10],
+//       tex_size=[10,10]
 //   );
 // Example(3D): "pyramids" texture.
 //   tex = get_texture("pyramids");
@@ -2172,7 +2172,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   tex = get_texture("vnf_pyramids");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
-//       tex_size=[10,10],
+//       tex_size=[10,10]
 //   );
 // Example(3D): "trunc_pyramids" texture.
 //   tex = get_texture("trunc_pyramids");
@@ -2184,7 +2184,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   tex = get_texture("vnf_trunc_pyramids");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
-//       tex_size=[10,10],
+//       tex_size=[10,10]
 //   );
 // Example(3D): "hills" texture.
 //   tex = get_texture("hills");
@@ -2196,49 +2196,49 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   tex = get_texture("vnf_dots");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
-//       tex_size=[10,10],
+//       tex_size=[10,10]
 //   );
 // Example(3D): "vnf_dimples" texture.
 //   tex = get_texture("vnf_dimples");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
-//       tex_size=[10,10],
+//       tex_size=[10,10]
 //   );
 // Example(3D): "vnf_cones" texture.
 //   tex = get_texture("vnf_cones");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
-//       tex_size=[10,10],
+//       tex_size=[10,10]
 //   );
 // Example(3D): "bricks" texture.
 //   tex = get_texture("bricks");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
-//       tex_size=[10,10],
+//       tex_size=[10,10]
 //   );
 // Example(3D): "vnf_bricks" texture.
 //   tex = get_texture("vnf_bricks");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
-//       tex_size=[10,10],
+//       tex_size=[10,10]
 //   );
 // Example(3D): "vnf_diagonal_grid" texture.
 //   tex = get_texture("vnf_diagonal_grid");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
-//       tex_size=[10,10],
+//       tex_size=[10,10]
 //   );
 // Example(3D): "vnf_hex_grid" texture.
 //   tex = get_texture("vnf_hex_grid");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
-//       tex_size=[12.5,20],
+//       tex_size=[12.5,20]
 //   );
 // Example(3D): "vnf_checkers" texture.
 //   tex = get_texture("vnf_checkers");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
-//       tex_size=[10,10],
+//       tex_size=[10,10]
 //   );
 // Example(3D): "rough" texture.
 //   tex = get_texture("rough");
