@@ -2598,7 +2598,7 @@ function textured_linear_sweep(
                                     texh = (vert.z - inset) * tscale,
                                     base = lerp(bases[u], select(bases,u+1), uu),
                                     norm = unit(lerp(norms[u], select(norms,u+1), uu)),
-                                    xy = base - norm * texh
+                                    xy = base + norm * texh
                                 ) point3d(xy,vert.y)
                             ]
                         ],
@@ -2619,7 +2619,7 @@ function textured_linear_sweep(
                                     zscale(h/counts.y)
                             ) each apply(mat, group)
                         ],
-                        [for (face=sorted_row[1]) reverse(face)]
+                        sorted_row[1]
                     ]
                 ]),
                 tmat = move(shift) * scale(scale) * zrot(twist) * up(h/2),
@@ -2856,7 +2856,7 @@ function textured_revolution(
                         [
                             for (group = vertzs) each [
                                 for (vert = group) let(
-                                    part = (j + vert.y) * samples,
+                                    part = (j + (1-vert.y)) * samples,
                                     u = floor(part),
                                     uu = part - u,
                                     tscale =
