@@ -549,7 +549,8 @@ are a few specialized alternatives to the `attach()` and `position()` modules.
 If you have a 3D mask shape that you want to difference away from various edges, you can use
 the `edge_mask()` module.  This module will take a vertically oriented shape, and will rotate
 and move it such that the BACK, RIGHT (X+,Y+) side of the shape will be aligned with the given
-edges.  The shape will be tagged as a "mask" so that you can use `diff("mask")`.  For example,
+edges.  The shape will be tagged as a "remove" so that you can use
+`diff()` with its default "remove" tag.  For example,
 here's a shape for rounding an edge:
 
 ```openscad-3D
@@ -573,7 +574,7 @@ module round_edge(l,r) difference() {
     translate([r,r])
         cylinder(h=l+1,r=r,center=true, $fn=quantup(segs(r),4));
 }
-diff("mask")
+diff()
 cube([50,60,70],center=true)
     edge_mask([TOP,"Z"],except=[BACK,TOP+LEFT])
         round_edge(l=71,r=10);
@@ -583,7 +584,8 @@ cube([50,60,70],center=true)
 If you have a 3D mask shape that you want to difference away from various corners, you can use
 the `corner_mask()` module.  This module will take a shape and rotate and move it such that the
 BACK RIGHT TOP (X+,Y+,Z+) side of the shape will be aligned with the given corner.  The shape
-will be tagged as a "mask" so that you can use `diff("mask")`.  For example, here's a shape for
+will be tagged as a "remove" so that you can use `diff()` with its
+default "remove" tag.  For example, here's a shape for
 rounding a corner:
 
 ```openscad-3D
@@ -607,7 +609,7 @@ module round_corner(r) difference() {
     translate([r,r,r])
         sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
 }
-diff("mask")
+diff()
 cube([50,60,70],center=true)
     corner_mask([TOP,FRONT],LEFT+FRONT+TOP)
         round_corner(r=10);
@@ -630,7 +632,7 @@ module round_edge(l,r) difference() {
     translate([r,r])
         cylinder(h=l+1,r=r,center=true, $fn=quantup(segs(r),4));
 }
-diff("mask")
+diff()
 cube([50,60,70],center=true) {
     edge_mask("ALL") round_edge(l=71,r=10);
     corner_mask("ALL") round_corner(r=10);
@@ -647,7 +649,8 @@ mask shape (via `rotate_extrude()`).  This is where `edge_profile()`, `corner_pr
 ### `edge_profile()`
 Using the `edge_profile()` module, you can provide a 2D profile shape and it will be linearly
 extruded to a mask of the apropriate length for each given edge.  The resultant mask will be
-tagged with "mask" so that you can difference it away with `diff("mask")`.  The 2D profile is
+tagged with "remove" so that you can difference it away with `diff()`
+with the default "remove" tag.  The 2D profile is
 assumed to be oriented with the BACK, RIGHT (X+,Y+) quadrant as the "cutter edge" that gets
 re-oriented towards the edges of the parent shape.  A typical mask profile for chamfering an
 edge may look like:
@@ -661,7 +664,7 @@ Using that mask profile, you can mask the edges of a cube like:
 
 ```openscad-3D
 include <BOSL2/std.scad>
-diff("mask")
+diff()
 cube([50,60,70],center=true)
    edge_profile("ALL")
        mask2d_roundover(10);
@@ -672,7 +675,7 @@ You can use the same profile to make a rounded corner mask as well:
 
 ```openscad-3D
 include <BOSL2/std.scad>
-diff("mask")
+diff()
 cube([50,60,70],center=true)
    corner_profile("ALL", r=10)
        mask2d_roundover(10);
@@ -684,7 +687,7 @@ As a simple shortcut to apply a profile mask to all edges and corners of a face,
 
 ```openscad-3D
 include <BOSL2/std.scad>
-diff("mask")
+diff()
 cube([50,60,70],center=true)
    face_profile(TOP, r=10)
        mask2d_roundover(10);

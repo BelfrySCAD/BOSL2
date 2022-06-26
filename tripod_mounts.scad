@@ -72,33 +72,35 @@ module manfrotto_rc2_plate(chamfer="all",anchor,orient,spin)
             left(10,back(-flat_height,select(pts,-3)))
           ];
 
-  tag_scope()
   attachable(anchor,spin,orient,size=[botwid,length,thickness],size2=[topwid,length],shift=[.64115/2,0]){
+    tag_scope()
     down(thickness/2)
     diff()
       linear_sweep(pts,h=length,convexity=4,orient=FWD,anchor=FWD){
-          zflip_copy()
-            down(.01)fwd(.01)left(.01)position(LEFT+FRONT+BOT)
-              cuboid([corner_space,(length-innerlen)/2,thickness+.02], chamfer=-chsize, $tag="remove",
-                     orient=FWD,anchor=TOP+LEFT+FWD,edges=chamf_top?"ALL":TOP);
-          fwd(left_top)position(LEFT+BACK)linear_sweep(h=cutout_len,facet,convexity=4,$tag="remove",anchor=RIGHT+BACK);
+          tag("remove"){
+            zflip_copy()
+              down(.01)fwd(.01)left(.01)position(LEFT+FRONT+BOT)
+                cuboid([corner_space,(length-innerlen)/2,thickness+.02], chamfer=-chsize,
+                       orient=FWD,anchor=TOP+LEFT+FWD,edges=chamf_top?"ALL":TOP);
+            fwd(left_top)position(LEFT+BACK)linear_sweep(h=cutout_len,facet,convexity=4,anchor=RIGHT+BACK);
+          }
           if (chamf_bot){
-            edge_mask(FRONT+LEFT)chamfer_edge_mask(length,chsize,$tag="remove");
-            edge_mask(FRONT+RIGHT)chamfer_edge_mask(length,chsize,$tag="remove");
-            edge_mask(FRONT+TOP)chamfer_edge_mask(length,chsize,$tag="remove");        
-            edge_mask(FRONT+BOT)chamfer_edge_mask(length,chsize,$tag="remove");
-            edge_mask(TOP+RIGHT)chamfer_edge_mask(length,chsize,$tag="remove");
-            edge_mask(BOT+RIGHT)chamfer_edge_mask(length,chsize,$tag="remove");
+            edge_mask(FRONT+LEFT)chamfer_edge_mask(length,chsize);
+            edge_mask(FRONT+RIGHT)chamfer_edge_mask(length,chsize);
+            edge_mask(FRONT+TOP)chamfer_edge_mask(length,chsize);        
+            edge_mask(FRONT+BOT)chamfer_edge_mask(length,chsize);
+            edge_mask(TOP+RIGHT)chamfer_edge_mask(length,chsize);
+            edge_mask(BOT+RIGHT)chamfer_edge_mask(length,chsize);
             zflip_copy(){
-               right(corner_space)edge_mask(TOP+LEFT) chamfer_edge_mask(length,chsize,$tag="remove");
-               down((length-innerlen)/2)edge_mask(TOP+LEFT) chamfer_edge_mask(length,chsize,$tag="remove");
+               right(corner_space)edge_mask(TOP+LEFT) chamfer_edge_mask(length,chsize);
+               down((length-innerlen)/2)edge_mask(TOP+LEFT) chamfer_edge_mask(length,chsize);
             }
           }
           if (chamf_top){
-            edge_mask(BACK+LEFT)chamfer_edge_mask(length,chsize,$tag="remove");
-            edge_mask(BACK+RIGHT)chamfer_edge_mask(length,chsize,$tag="remove");
-            edge_mask(BACK+TOP)chamfer_edge_mask(length,chsize,$tag="remove");        
-            edge_mask(BACK+BOT)chamfer_edge_mask(length,chsize,$tag="remove");
+            edge_mask(BACK+LEFT) chamfer_edge_mask(length,chsize);
+            edge_mask(BACK+RIGHT) chamfer_edge_mask(length,chsize);
+            edge_mask(BACK+TOP) chamfer_edge_mask(length,chsize);        
+            edge_mask(BACK+BOT) chamfer_edge_mask(length,chsize);
           }
         }
     children();
