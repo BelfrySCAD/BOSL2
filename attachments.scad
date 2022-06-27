@@ -719,7 +719,7 @@ module tag_scope(scope){
 //       tag("remove")cuboid([40,120,100]);
 //   }
 // Example: Masking
-//   diff("mask")
+//   diff()
 //   cube([80,90,100], center=true) {
 //       edge_mask(FWD)
 //           rounding_edge_mask(l=max($parent_size)*1.01, r=25);
@@ -1455,7 +1455,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 // Example:
 //   diff()
 //   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
-//       corner_profile(BOT,r=10)
+//       corner_profile(TOP,r=10)
 //           mask2d_teardrop(r=10, angle=40);
 //   }
 module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
