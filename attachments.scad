@@ -554,7 +554,7 @@ module attach(from, to, overlap, norot=false)
 // Arguments:
 //   tag = tag string, which must not contain any spaces.
 // Side Effects:
-//   Sets `$tag` to the tag you specify. 
+//   Sets `$tag` to the tag you specify, possibly with a scope prefix. 
 // Example(3D):  Applies the tag to both cuboids instead of having to repeat `$tag="remove"` for each one. 
 //   diff("remove")
 //     cuboid(10){
@@ -609,7 +609,7 @@ module tag(tag)
 // Arguments:
 //   tag = tag string, which must not contain any spaces
 // Side Effects:
-//   Sets `$tag` to the tag you specify. 
+//   Sets `$tag` to the tag you specify, possibly with a scope prefix. 
 // Example(2D): This example produces the full square without subtracting the "remove" item.  When you use non-attachable modules with tags, results are unpredictable.
 //   diff()
 //   {
@@ -628,8 +628,8 @@ module force_tag(tag)
 {
     req_children($children);
     assert(is_undef(tag) || is_string(tag),"tag must be a string");
+    $tag = str($tag_prefix,default(tag,$tag));
     assert(undef==str_find($tag," "),str("Tag string \"",$tag,"\" contains a space, which is not allowed"));
-    $tag = str($tag_prefix,is_def(tag) ? tag : $tag);
     if(_is_shown())
       show_all()
         children();
@@ -873,7 +873,7 @@ module diff(remove="remove", keep="keep")
 //   remove = String containing space delimited set of tag names of children to difference away.  Default: `"remove"`
 //   keep = String containing space delimited set of tag names of children to keep; that is, to union into the model after differencing is completed.  Default: `"keep"`
 // Side Effects:
-//   Sets `$tag` to the tag you specify. 
+//   Sets `$tag` to the tag you specify, possibly with a scope prefix. 
 // Example: In this example we have a difference with a kept object that is then subtracted from a cube, but we don't want the kept object to appear in the final output, so this result is wrong:
 //   diff("rem"){
 //     cuboid([20,10,30],anchor=FRONT);
@@ -914,7 +914,7 @@ module tag_diff(tag,remove="remove", keep="keep")
     assert(is_string(keep),"keep must be a string of tags");
     assert(is_string(tag),"tag must be a string");
     assert(undef==str_find(tag," "),str("Tag string \"",tag,"\" contains a space, which is not allowed"));   
-    $tag=tag;
+    $tag=str($tag_prefix,tag);
     if (_is_shown())
       show_all(){
          difference() {
@@ -1013,7 +1013,7 @@ module intersect(intersect="intersect",keep="keep")
 //   intersect = String containing space delimited set of tag names of children to intersect.  Default: "intersect"
 //   keep = String containing space delimited set of tag names of children to keep whole.  Default: "keep"
 // Side Effects:
-//   Sets `$tag` to the tag you specify. 
+//   Sets `$tag` to the tag you specify, possibly with a scope prefix. 
 // Example:  Without `tag_intersect()` the kept object is not included in the difference.  
 //   $fn=32;
 //   diff()
@@ -1038,7 +1038,7 @@ module tag_intersect(tag,intersect="intersect",keep="keep")
    assert(is_string(keep),"keep must be a string of tags");
    assert(is_string(tag),"tag must be a string");
    assert(undef==str_find(tag," "),str("Tag string \"",tag,"\" contains a space, which is not allowed"));   
-   $tag=tag;
+   $tag=str($tag_prefix,tag);
    if (_is_shown())
      show_all(){
        intersection(){
@@ -1102,7 +1102,7 @@ module conv_hull(keep="keep")
 // Arguments:
 //   keep = String containing space delimited set of tag names of children to keep out of the hull.  Default: "keep"
 // Side Effects:
-//   Sets `$tag` to the tag you specify. 
+//   Sets `$tag` to the tag you specify, possibly with a scope prefix. 
 // Example: With a regular tag, the kept object is not handled as desired:
 //   diff(){
 //      cuboid([30,30,9])
@@ -1127,7 +1127,7 @@ module tag_conv_hull(tag,keep="keep")
     assert(is_string(keep),"keep must be a string of tags");
     assert(is_string(tag),"tag must be a string");
     assert(undef==str_find(tag," "),str("Tag string \"",tag,"\" contains a space, which is not allowed"));   
-    $tag=tag;
+    $tag=str($tag_prefix,tag);
     if (_is_shown())
       show_all(){
         hull() hide(keep) children();
@@ -1244,8 +1244,9 @@ module show_int(tags)
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask()
 // Description:
 //   Takes a 3D mask shape, and attaches it to the given edges, with the appropriate orientation to be
-//   `diff()`ed away.  The mask shape should be vertically oriented (Z-aligned) with the back-right
-//   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.
+//   differenced away.  The mask shape should be vertically oriented (Z-aligned) with the back-right
+//   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.  If no tag is set
+//   then `edge_mask` sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.  
 //   For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
 //   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Figure: A Typical Edge Rounding Mask
@@ -1260,9 +1261,9 @@ module show_int(tags)
 //   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
 // Side Effects:
-//   Sets `$tag = "mask"` for all children.
-// Example:
-//   diff("mask")
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set. 
+// Example:  
+//   diff()
 //   cube([50,60,70],center=true)
 //       edge_mask([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           rounding_edge_mask(l=71,r=10);
@@ -1282,13 +1283,14 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
         $attach_to = undef;
         $attach_anchor = anch;
         $attach_norot = true;
-        $tag = "mask";
         rotang =
             vec.z<0? [90,0,180+v_theta(vec)] :
             vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
             vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
             [-90,0,180+v_theta(vec)];
-        translate(anch[1]) rot(rotang) children();
+        translate(anch[1]) rot(rotang)
+           if ($tag=="") tag("remove") children();
+           else children();
     }
 }
 
@@ -1300,16 +1302,17 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), edge_mask()
 // Description:
 //   Takes a 3D mask shape, and attaches it to the specified corners, with the appropriate orientation to
-//   be `diff()`ed away.  The 3D corner mask shape should be designed to mask away the X+Y+Z+ octant.
+//   be differenced away.  The 3D corner mask shape should be designed to mask away the X+Y+Z+ octant.  If no tag is set
+//   then `corner_mask` sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.  
 //   See [Specifying Corners](attachments.scad#subsection-specifying-corners) for information on how to specify corner sets.  
 //   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   corners = Corners to mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: All corners.
 //   except = Corners to explicitly NOT mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: No corners.
 // Side Effects:
-//   Sets `$tag = "mask"` for all children.
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set. 
 // Example:
-//   diff("mask")
+//   diff()
 //   cube(100, center=true)
 //       corner_mask([TOP,FRONT],LEFT+FRONT+TOP)
 //           difference() {
@@ -1328,11 +1331,12 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
         $attach_to = undef;
         $attach_anchor = anch;
         $attach_norot = true;
-        $tag = "mask";
         rotang = vec.z<0?
             [  0,0,180+v_theta(vec)-45] :
             [180,0,-90+v_theta(vec)-45];
-        translate(anch[1]) rot(rotang) children();
+        translate(anch[1]) rot(rotang)
+           if ($tag=="") tag("remove") children();
+           else children();
     }
 }
 
@@ -1343,7 +1347,8 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), edge_profile(), corner_profile()
 // Description:
-//   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face.
+//   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face. If no tag is set
+//   then `face_profile` sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.  
 //   See  [Specifying Faces](attachments.scad#subsection-specifying-faces) for information on specifying faces.  
 //   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
@@ -1353,9 +1358,9 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 //   d = Diameter of corner mask.
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
-//   Sets `$tag = "mask"` for all children.
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set. 
 // Example:
-//   diff("mask")
+//   diff()
 //   cube([50,60,70],center=true)
 //       face_profile(TOP,r=10)
 //           mask2d_roundover(r=10);
@@ -1377,7 +1382,8 @@ module face_profile(faces=[], r, d, convexity=10) {
 // See Also: attachable(), position(), attach(), face_profile(), corner_profile()
 // Description:
 //   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation and
-//   extruded length to be `diff()`ed away, to give the edge a matching profile.
+//   extruded length to be `diff()`ed away, to give the edge a matching profile.  If no tag is set
+//   then `edge_profile` sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.  
 //   For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
 //   For a step-by-step
 //   explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
@@ -1386,9 +1392,9 @@ module face_profile(faces=[], r, d, convexity=10) {
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
-//   Sets `$tag = "mask"` for all children.
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set. 
 // Example:
-//   diff("mask")
+//   diff()
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_roundover(r=10, inset=2);
@@ -1408,7 +1414,6 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
         $attach_to = undef;
         $attach_anchor = anch;
         $attach_norot = true;
-        $tag = "mask";
         psize = point3d($parent_size);
         length = [for (i=[0:2]) if(!vec[i]) psize[i]][0]+0.1;
         rotang =
@@ -1419,7 +1424,8 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
         translate(anch[1]) {
             rot(rotang) {
                 linear_extrude(height=length, center=true, convexity=convexity) {
-                    children();
+                   if ($tag=="") tag("remove") children();
+                   else children();
                 }
             }
         }
@@ -1433,8 +1439,8 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile()
 // Description:
 //   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
-//   to the selected corners with the appropriate orientation.  Tags it as a "mask" to allow it to be
-//   `diff()`ed away, to give the corner a matching profile.
+//   to the selected corners with the appropriate orientation. If no tag is set
+//   then `corner_profile` sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.  
 //   See [Specifying Corners](attachments.scad#subsection-specifying-corners) for information on how to specify corner sets.  
 //   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
@@ -1445,9 +1451,9 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 //   d = Diameter of corner mask.
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
-//   Sets `$tag = "mask"` for all children.
+//   Tags the children with "remove" (and hence sets $tag) if no tag is already set. 
 // Example:
-//   diff("mask")
+//   diff()
 //   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
 //       corner_profile(BOT,r=10)
 //           mask2d_teardrop(r=10, angle=40);
@@ -1465,10 +1471,10 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
         $attach_to = undef;
         $attach_anchor = anch;
         $attach_norot = true;
-        $tag = "mask";
         rotang = vec.z<0?
             [  0,0,180+v_theta(vec)-45] :
             [180,0,-90+v_theta(vec)-45];
+        $tag = $tag=="" ? str($tag_prefix,"remove") : $tag;
         translate(anch[1]) {
             rot(rotang) {
                 render(convexity=convexity)
@@ -2576,14 +2582,13 @@ function _is_shown() =
     assert(is_list($tags_hidden))
     let(
         dummy=is_undef($tags) ? 0 : echo("Use tag() instead of $tags for specifying an object's tag."),
-        $tags = default($tag,$tags)
+        $tag = default($tag,$tags)
     )
     assert(is_string($tag), str("Tag value (",$tag,") is not a string"))
     assert(undef==str_find($tag," "),str("Tag string \"",$tag,"\" contains a space, which is not allowed"))
     let(
-        fulltag = $tag,
-        shown  = $tags_shown=="ALL" || in_list(fulltag,$tags_shown),
-        hidden = in_list(fulltag, $tags_hidden)
+        shown  = $tags_shown=="ALL" || in_list($tag,$tags_shown),
+        hidden = in_list($tag, $tags_hidden)
     )
     shown && !hidden;
 
