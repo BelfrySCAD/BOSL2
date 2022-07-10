@@ -1386,7 +1386,9 @@ function polygon_area(poly, signed=false) =
 //   If you provide a non-planar or collinear polygon you will get an error.  For self-intersecting
 //   polygons you may get an error or you may get meaningless results.
 //   .
-//   If object is a manifold VNF then returns the 3d centroid of the polyhedron.  The VNF must
+//   Given a [[region|regions.scad]], returns the 2D coordinates of the region's centroid.
+//   .
+//   Given a manifold [[VNF|vnf.scad]] then returns the 3D centroid of the polyhedron.  The VNF must
 //   describe a valid polyhedron with consistent face direction and no holes in the mesh; otherwise
 //   the results are undefined.
 // Arguments:
