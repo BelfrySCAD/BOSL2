@@ -1234,11 +1234,11 @@ module frame_map(x,y,z,p,reverse=false)
 
 // Function&Module: skew()
 // Usage: As Module
-//   skew([sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]) CHILDREN;
+//   skew([sxy=]|[axy=], [sxz=]|[axz=], [syx=]|[ayx=], [syz=]|[ayz=], [szx=]|[azx=], [szy=]|[azy=]) CHILDREN;
 // Usage: As Function
-//   pts = skew(p, [sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]);
+//   pts = skew(p, [sxy=]|[axy=], [sxz=]|[axz=], [syx=]|[ayx=], [syz=]|[ayz=], [szx=]|[azx=], [szy=]|[azy=]);
 // Usage: Get Affine Matrix
-//   mat = skew([sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]);
+//   mat = skew([sxy=]|[axy=], [sxz=]|[axz=], [syx=]|[ayx=], [syz=]|[ayz=], [szx=]|[azx=], [szy=]|[azy=]);
 // Topics: Affine, Matrices, Transforms, Skewing
 //
 // Description:
@@ -1259,8 +1259,16 @@ module frame_map(x,y,z,p,reverse=false)
 //   syz = Skew factor multiplier for skewing along the Y axis as you get farther from the Z axis.  Default: 0
 //   szx = Skew factor multiplier for skewing along the Z axis as you get farther from the X axis.  Default: 0
 //   szy = Skew factor multiplier for skewing along the Z axis as you get farther from the Y axis.  Default: 0
+//   axy = Angle to skew along the X axis as you get farther from the Y axis.
+//   axz = Angle to skew along the X axis as you get farther from the Z axis.
+//   ayx = Angle to skew along the Y axis as you get farther from the X axis.
+//   ayz = Angle to skew along the Y axis as you get farther from the Z axis.
+//   azx = Angle to skew along the Z axis as you get farther from the X axis.
+//   azy = Angle to skew along the Z axis as you get farther from the Y axis.
 // Example(2D): Skew along the X axis in 2D.
 //   skew(sxy=0.5) square(40, center=true);
+// Example(2D): Skew along the X axis by 30º in 2D.
+//   skew(axy=30) square(40, center=true);
 // Example(2D): Skew along the Y axis in 2D.
 //   skew(syx=0.5) square(40, center=true);
 // Example: Skew along the X axis in 3D as a factor of Y coordinate.
@@ -1284,23 +1292,43 @@ module frame_map(x,y,z,p,reverse=false)
 // Example(FlatSpin,VPD=175): Calling as a 3D Function
 //   pts = skew(p=path3d(square(40,center=true)), szx=0.5, szy=0.3);
 //   stroke(pts,closed=true,dots=true,dots_color="blue");
-module skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0)
+module skew(p, sxy, sxz, syx, syz, szx, szy, axy, axz, ayx, ayz, azx, azy)
 {
     req_children($children);          
-    assert(is_undef(p), "Module form `skew()` does not accept p= argument.")
-    multmatrix(
-        affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
-    ) children();
+    assert(is_undef(p), "Module form `skew()` does not accept p= argument.");
+    mat = skew(
+        sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy,
+        axy=axy, axz=axz, ayx=ayx, ayz=ayz, azx=azx, azy=azy
+    );
+    multmatrix(mat) children();
 }
 
-function skew(p=_NO_ARG, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0) =
-    assert(is_finite(sxy))
-    assert(is_finite(sxz))
-    assert(is_finite(syx))
-    assert(is_finite(syz))
-    assert(is_finite(szx))
-    assert(is_finite(szy))
+function skew(p=_NO_ARG, sxy, sxz, syx, syz, szx, szy, axy, axz, ayx, ayz, azx, azy) =
+    assert(num_defined([sxy,axy]) < 2)
+    assert(num_defined([sxz,axz]) < 2)
+    assert(num_defined([syx,ayx]) < 2)
+    assert(num_defined([syz,ayz]) < 2)
+    assert(num_defined([szx,azx]) < 2)
+    assert(num_defined([szy,azy]) < 2)
+    assert(sxy==undef || is_finite(sxy))
+    assert(sxz==undef || is_finite(sxz))
+    assert(syx==undef || is_finite(syx))
+    assert(syz==undef || is_finite(syz))
+    assert(szx==undef || is_finite(szx))
+    assert(szy==undef || is_finite(szy))
+    assert(axy==undef || is_finite(axy))
+    assert(axz==undef || is_finite(axz))
+    assert(ayx==undef || is_finite(ayx))
+    assert(ayz==undef || is_finite(ayz))
+    assert(azx==undef || is_finite(azx))
+    assert(azy==undef || is_finite(azy))
     let(
+        sxy = is_num(sxy)? sxy : is_num(axy)? tan(axy) : 0,
+        sxz = is_num(sxz)? sxz : is_num(axz)? tan(axz) : 0,
+        syx = is_num(syx)? syx : is_num(ayx)? tan(ayx) : 0,
+        syz = is_num(syz)? syz : is_num(ayz)? tan(ayz) : 0,
+        szx = is_num(szx)? szx : is_num(azx)? tan(azx) : 0,
+        szy = is_num(szy)? szy : is_num(azy)? tan(azy) : 0,
         m = affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
     )
     p==_NO_ARG? m : apply(m, p);
