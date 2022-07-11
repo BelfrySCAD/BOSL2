@@ -247,8 +247,7 @@ module cuboid(
                             xtcyl(l=m, r=r);
                             multmatrix(mat)
                                 linear_extrude(height=m+0.1, center=true)
-                                    scale(r+0.02)
-                                        polygon([[1,0],[0,1],[1,1]]);
+                                    polygon([[r,0],[0.99*r,0],[0,0.99*r],[0,r],[r,r]]);
                         }
                     }
                 } else if (e.y) {
@@ -260,8 +259,7 @@ module cuboid(
                             ytcyl(l=m, r=r);
                             multmatrix(mat)
                                 linear_extrude(height=m+0.1, center=true)
-                                    scale(r+0.02)
-                                        polygon([[1,0],[0,1],[1,1]]);
+                                    polygon([[r,0],[0.99*r,0],[0,0.99*r],[0,r],[r,r]]);
                         }
                     }
                 } else if (e.z) {
@@ -273,8 +271,7 @@ module cuboid(
                             zcyl(l=m, r=r);
                             multmatrix(mat)
                                 linear_extrude(height=m+0.1, center=true)
-                                    scale(r+0.02)
-                                        polygon([[1,0],[0,1],[1,1]]);
+                                    polygon([[r,0],[0.99*r,0],[0,0.99*r],[0,r],[r,r]]);
                         }
                     }
                 }
