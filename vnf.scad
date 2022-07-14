@@ -1403,13 +1403,13 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   label_faces = If true, shows labels at the center of each face that show the face number.  (Module only)  Default: false
 //   wireframe = If true, shows edges more clearly so you can see them in Thrown Together mode.  (Module only)  Default: false
 //   adjacent = If true, only display faces adjacent to a vertex listed in the errors.  (Module only)  Default: false
-// Example: BIG_FACE Warnings; Faces with More Than 3 Vertices.  CGAL often will fail to accept that a face is planar after a rotation, if it has more than 3 vertices.
+// Example(3D,Edges): BIG_FACE Warnings; Faces with More Than 3 Vertices.  CGAL often will fail to accept that a face is planar after a rotation, if it has more than 3 vertices.
 //   vnf = skin([
 //       path3d(regular_ngon(n=3, d=100),0),
 //       path3d(regular_ngon(n=5, d=100),100)
 //   ], slices=0, caps=true, method="tangent");
 //   vnf_validate(vnf);
-// Example: NONPLANAR Errors; Face Vertices are Not Coplanar
+// Example(3D,Edges): NONPLANAR Errors; Face Vertices are Not Coplanar
 //   a = [  0,  0,-50];
 //   b = [-50,-50, 50];
 //   c = [-50, 50, 50];
@@ -1419,10 +1419,10 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //       [a, b, e], [a, c, b], [a, d, c], [a, e, d], [b, c, d, e]
 //   ]);
 //   vnf_validate(vnf);
-// Example: MULTCONN Errors; More Than Two Faces Attached to the Same Edge.  This confuses CGAL, and can lead to failed renders.
+// Example(3D,Edges): MULTCONN Errors; More Than Two Faces Attached to the Same Edge.  This confuses CGAL, and can lead to failed renders.
 //   vnf = vnf_triangulate(linear_sweep(union(square(50), square(50,anchor=BACK+RIGHT)), height=50));
 //   vnf_validate(vnf);
-// Example: REVERSAL Errors; Faces Reversed Across Edge
+// Example(3D,Edges): REVERSAL Errors; Faces Reversed Across Edge
 //   vnf1 = skin([
 //       path3d(square(100,center=true),0),
 //       path3d(square(100,center=true),100),
@@ -1434,27 +1434,26 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //       [[-50,-50,100], [ 50,-50,100], [ 50, 50,100]],
 //   ])]);
 //   vnf_validate(vnf);
-// Example: T_JUNCTION Errors; Vertex is Mid-Edge on Another Face.
-//   vnf1 = skin([
-//       path3d(square(100,center=true),0),
-//       path3d(square(100,center=true),100),
-//   ], slices=0, caps=false);
-//   vnf = vnf_join([vnf1, vnf_from_polygons([
-//       [[-50,-50,0], [50,50,0], [-50,50,0]],
-//       [[-50,-50,0], [50,-50,0], [50,50,0]],
-//       [[-50,-50,100], [-50,50,100], [0,50,100]],
-//       [[-50,-50,100], [0,50,100], [0,-50,100]],
-//       [[0,-50,100], [0,50,100], [50,50,100]],
-//       [[0,-50,100], [50,50,100], [50,-50,100]],
-//   ])]);
+// Example(3D,Edges): T_JUNCTION Errors; Vertex is Mid-Edge on Another Face.
+//   vnf = [
+//       [
+//           each path3d(square(100,center=true),0),
+//           each path3d(square(100,center=true),100),
+//           [0,-50,100],
+//       ], [
+//          [0,2,1], [0,3,2], [0,8,4], [0,1,8], [1,5,8],
+//          [0,4,3], [4,7,3], [1,2,5], [2,6,5], [3,7,6],
+//          [3,6,2], [4,5,6], [4,6,7],
+//       ]
+//   ];
 //   vnf_validate(vnf);
-// Example: FACE_ISECT Errors; Faces Intersect
+// Example(3D,Edges): FACE_ISECT Errors; Faces Intersect
 //   vnf = vnf_join([
 //       vnf_triangulate(linear_sweep(square(100,center=true), height=100)),
 //       move([75,35,30],p=vnf_triangulate(linear_sweep(square(100,center=true), height=100)))
 //   ]);
 //   vnf_validate(vnf,size=2,check_isects=true);
-// Example: HOLE_EDGE Errors; Edges Adjacent to Holes.
+// Example(3D,Edges): HOLE_EDGE Errors; Edges Adjacent to Holes.
 //   vnf = skin([
 //       path3d(regular_ngon(n=4, d=100),0),
 //       path3d(regular_ngon(n=5, d=100),100)
@@ -1562,7 +1561,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
                 pt = line_closest_point([a,c],b,SEGMENT)
             )
             if (approx(pt,b))
-            _vnf_validate_err("T_JUNCTION", [b])
+            _vnf_validate_err("T_JUNCTION", [ib])
         ]),
         issues = concat(issues, t_juncts)
     ) t_juncts? issues :
@@ -1686,7 +1685,7 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, opacity=0.
         clr = fault[2];
         msg = fault[3];
         idxs = fault[4];
-        pts = [for (i=idxs) if(i>=0 && i<len(verts)) verts[i]];
+        pts = [for (i=idxs) if(is_finite(i) && i>=0 && i<len(verts)) verts[i]];
         echo(str(typ, " ", err, " (", clr ,"): ", msg, " at ", pts, " indices: ", idxs));
         color(clr) {
             if (is_vector(pts[0])) {
