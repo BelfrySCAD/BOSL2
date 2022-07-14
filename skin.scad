@@ -2100,9 +2100,9 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Section: Texturing
 // DefineHeader(Table;Headers=Texture Name|Type|Description): Texture Values
 
-// Function: get_texture()
+// Function: texture()
 // Usage:
-//   tx = get_texture(tex, [n], [m]);
+//   tx = texture(tex, [n], [m]);
 // Topics: Textures, Knurling
 // Description:
 //   Given a texture name, and two optional variables, returns a heightfield texture as a 2D array of scalars.
@@ -2131,122 +2131,122 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   "vnf_hex_grid" = VNF Tile = A hexagonal grid of thin lines.
 //   "vnf_pyramids" = VNF Tile = Like "pyramids", but slower and more consistent in triangulation.
 //   "vnf_trunc_pyramids" = VNF Tile = Like "trunc_pyramids", but slower and more consistent in triangulation.
-// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), get_texture()
+// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), texture()
 // Example(3D): "ribs" texture.
-//   tex = get_texture("ribs");
+//   tex = texture("ribs");
 //   textured_linear_sweep(
-//       rect(50), tex, h=40,
-//       tex_size=[5,10], style="concave"
+//       rect(50), tex, h=40, tscale=3,
+//       tex_size=[10,10], style="concave"
 //   );
 // Example(3D): Truncated "trunc_ribs" texture.
-//   tex = get_texture("trunc_ribs");
+//   tex = texture("trunc_ribs");
 //   textured_linear_sweep(
-//       rect(50), tex, h=40,
-//       tex_size=[5,10], style="concave"
+//       rect(50), tex, h=40, tscale=3,
+//       tex_size=[10,10], style="concave"
 //   );
 // Example(3D): "wave_ribs" texture.
-//   tex = get_texture("wave_ribs");
+//   tex = texture("wave_ribs");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10], style="concave"
 //   );
 // Example(3D): "diamonds" texture.
-//   tex = get_texture("diamonds");
+//   tex = texture("diamonds");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10], style="concave"
 //   );
 // Example(3D): "vnf_diamonds" texture.  Slower, but more consistent around complex curves.
-//   tex = get_texture("vnf_diamonds");
+//   tex = texture("vnf_diamonds");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "pyramids" texture.
-//   tex = get_texture("pyramids");
+//   tex = texture("pyramids");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10], style="convex"
 //   );
 // Example(3D): "vnf_pyramids" texture.  Slower, but more consistent around complex curves.
-//   tex = get_texture("vnf_pyramids");
+//   tex = texture("vnf_pyramids");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "trunc_pyramids" texture.
-//   tex = get_texture("trunc_pyramids");
+//   tex = texture("trunc_pyramids");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10], style="convex"
 //   );
 // Example(3D): "vnf_trunc_pyramids" texture.  Slower, but more consistent around complex curves.
-//   tex = get_texture("vnf_trunc_pyramids");
+//   tex = texture("vnf_trunc_pyramids");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "hills" texture.
-//   tex = get_texture("hills");
+//   tex = texture("hills");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10], style="quincunx"
 //   );
 // Example(3D): "vnf_dots" texture.
-//   tex = get_texture("vnf_dots");
+//   tex = texture("vnf_dots");
 //   textured_linear_sweep(
-//       rect(50), tex, h=40,
+//       rect(50), tex, h=40, tscale=3,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "vnf_dimples" texture.
-//   tex = get_texture("vnf_dimples");
+//   tex = texture("vnf_dimples");
 //   textured_linear_sweep(
-//       rect(50), tex, h=40,
+//       rect(50), tex, h=40, tscale=3,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "vnf_cones" texture.
-//   tex = get_texture("vnf_cones");
+//   tex = texture("vnf_cones");
 //   textured_linear_sweep(
-//       rect(50), tex, h=40,
+//       rect(50), tex, h=40, tscale=3,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "bricks" texture.
-//   tex = get_texture("bricks");
+//   tex = texture("bricks");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "vnf_bricks" texture.
-//   tex = get_texture("vnf_bricks");
+//   tex = texture("vnf_bricks");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "vnf_diagonal_grid" texture.
-//   tex = get_texture("vnf_diagonal_grid");
+//   tex = texture("vnf_diagonal_grid");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "vnf_hex_grid" texture.
-//   tex = get_texture("vnf_hex_grid");
+//   tex = texture("vnf_hex_grid");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[12.5,20]
 //   );
 // Example(3D): "vnf_checkers" texture.
-//   tex = get_texture("vnf_checkers");
+//   tex = texture("vnf_checkers");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "rough" texture.
-//   tex = get_texture("rough");
+//   tex = texture("rough");
 //   textured_linear_sweep(
 //       rect(50), tex, h=40,
 //       tex_size=[10,10], style="min_edge"
 //   );
-function get_texture(tex,n,m,o) =
+function texture(tex,n,m,o) =
     tex=="ribs"? [[1,0]] :
     tex=="trunc_ribs"? [[each repeat(0,default(n,1)+1), each repeat(1,default(n,1)+1)]] :
     tex=="wave_ribs"? [[for(a=[0:360/default(n,8):359]) (cos(a)+1)/2]] :
@@ -2440,21 +2440,16 @@ function get_texture(tex,n,m,o) =
 
 // Function&Module: textured_linear_sweep()
 // Usage: As Function
-//   vnf = textured_linear_sweep(path, texture, tex_size, h, ...);
-//   vnf = textured_linear_sweep(path, texture, counts=, h=, ...);
+//   vnf = textured_linear_sweep(region, texture, tex_size, h, ...);
+//   vnf = textured_linear_sweep(region, texture, counts=, h=, ...);
 // Usage: As Module
-//   textured_linear_sweep(path, texture, tex_size, h, ...) [ATTACHMENTS];
-//   textured_linear_sweep(path, texture, counts=, h=, ...) [ATTACHMENTS];
+//   textured_linear_sweep(region, texture, tex_size, h, ...) [ATTACHMENTS];
+//   textured_linear_sweep(region, texture, counts=, h=, ...) [ATTACHMENTS];
 // Topics: Sweep, Extrusion, Textures, Knurling
 // Description:
-//   Given a single polygon path, creates a linear extrusion of that polygon vertically, optionally twisted,
-//   scaled, and/or shifted, with a given texture tiled evenly over the side surfaces.
-//   If the path to be swept is clockwise on the XY plane, then the output shape should have its faces pointed outwards,
-//   though you can use `reverse=true` to reverse the face directions if needed.  It is recommended that you preview with
-//   OpenSCAD's "Thrown Together" view mode, to verify the orientation of the faces.  If you see purple, then your model is
-//   non-manifold, and not 3D print-able.
-//   The texture can be given in one of three ways:
-//   - As a texture name string. (See {{get_texture()}} for supported named textures.)
+//   Given a [[Region|regions.scad]], creates a linear extrusion of it vertically, optionally twisted, scaled, and/or shifted,
+//   with a given texture tiled evenly over the side surfaces.  The texture can be given in one of three ways:
+//   - As a texture name string. (See {{texture()}} for supported named textures.)
 //   - As a 2D array of evenly spread height values. (AKA a heightfield.)
 //   - As a VNF texture tile.  A VNF tile exactly defines a surface from `[0,0]` to `[1,1]`, with the Z coordinates
 //     being the height of the texture point from the surface.  VNF tiles MUST be able to tile in both X and Y
@@ -2462,8 +2457,8 @@ function get_texture(tex,n,m,o) =
 //   One script to convert a grayscale image to a texture heightfield array in a .scad file can be found at:
 //   https://raw.githubusercontent.com/revarbat/BOSL2/master/scripts/img2scad.py
 // Arguments:
-//   path = The path to sweep/extrude.
-//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{get_texture()}} for what named textures are supported.
+//   region = The [[Region|regions.scad]] to sweep/extrude.
+//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   h / l = The height to extrude/sweep the path.
 //   ---
@@ -2474,10 +2469,8 @@ function get_texture(tex,n,m,o) =
 //   twist = Degrees of twist for the top of the extrustion/sweep, compared to the bottom.  Default: 0
 //   scale = Scaling multiplier for the top of the extrustion/sweep, compared to the bottom.  Default: 1
 //   shift = [X,Y] amount to translate the top, relative to the bottom.  Default: [0,0]
-//   caps = (function only) If true, create endcaps for the extruded shape.
-//   col_wrap = (function only) If true, the path is considered a closed polygon.
 //   style = The triangulation style used.  See {{vnf_vertex_array()}} for valid styles.  Used only with heightfield type textures. Default: `"min_edge"`
-//   reverse = If the default faces are facing the wrong way, you can reverse them by setting this to `true`.  Default: `false`
+//   samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -2485,7 +2478,7 @@ function get_texture(tex,n,m,o) =
 //   centroid_top = The centroid of the top of the shape, oriented UP.
 //   centroid = The centroid of the center of the shape, oriented UP.
 //   centroid_bot = The centroid of the bottom of the shape, oriented DOWN.
-// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), get_texture()
+// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), texture()
 // Example: "diamonds" texture.
 //   path = glued_circles(r=15, spread=40, tangent=45);
 //   textured_linear_sweep(
@@ -2532,45 +2525,36 @@ function get_texture(tex,n,m,o) =
 //       tscale=1, style="convex");
 //   vnf_polyhedron(vnf, convexity=10);
 function textured_linear_sweep(
-    path, texture,
+    region, texture,
     tex_size=[5,5], h, counts,
     inset=false, rot=false, tscale=1,
-    caps=true, col_wrap=true,
     twist, scale, shift,
-    style="min_edge", reverse=false, l,
+    style="min_edge", l, samples,
     anchor=CENTER, spin=0, orient=UP
 ) =
-    assert(is_path(path,[2]))
-    assert(is_bool(caps))
-    assert(is_bool(reverse))
+    assert(is_path(region,[2])||is_region(region))
+    assert(is_undef(samples) || is_int(samples))
     assert(counts==undef || is_vector(counts,2))
     assert(tex_size==undef || is_vector(tex_size,2))
     assert(is_bool(rot) || in_list(rot,[0,90,180,270]))
     let(
-        tex = is_string(texture)? get_texture(texture) : texture,
-        path = col_wrap && is_polygon_clockwise(path)? reverse(path) : path,
+        regions = is_path(region,2)? [[region]] : region_parts(region),
+        tex = is_string(texture)? texture(texture) : texture,
         texture = !rot? tex :
             is_vnf(tex)? zrot(is_num(rot)?rot:90, cp=[1/2,1/2], p=tex) :
             rot==180? reverse([for (row=tex) reverse(row)]) :
             rot==270? [for (row=transpose(tex)) reverse(row)] :
             reverse(transpose(tex)),
+        h = first_defined([h, l, 1]),
+        inset = is_num(inset)? inset : inset? 1 : 0,
         twist = default(twist, 0),
         shift = default(shift, [0,0]),
-        scale = scale==undef? [1,1,1] : is_num(scale)? [scale,scale,1] : scale,
-        h = first_defined([h, l, 1]),
-        plen = path_length(path, closed=col_wrap),
-        counts = is_vector(counts,2)? counts :
-            is_vector(tex_size,2)
-              ? [round(plen/tex_size.x), max(1,round(h/tex_size.y)), ]
-              : [ceil(6*plen/h), 6],
-        inset = is_num(inset)? inset : inset? 1 : 0,
-        samples = is_vnf(texture)? 12 : len(texture[0]),
-        obases = resample_path(path, n=counts.x * samples, closed=col_wrap),
-        onorms = path_normals(obases, closed=col_wrap),
-        bases = col_wrap? close_path(obases) : obases,
-        norms = col_wrap? close_path(onorms) : onorms,
-        vnf = is_vnf(texture)
-          ? let( // VNF tile texture
+        scale = scale==undef? [1,1,1] :
+            is_num(scale)? [scale,scale,1] : scale,
+        samples = !is_vnf(texture)? len(texture[0]) :
+            is_num(samples)? samples : 8,
+        check_tex = is_vnf(texture)
+          ? let( // Validate VNF tile texture
                 bounds = pointlist_bounds(texture[0]),
                 min_xy = point2d(bounds[0]),
                 max_xy = point2d(bounds[1])
@@ -2583,97 +2567,122 @@ function textured_linear_sweep(
                 allgoody = all(vverts, function(v) any(vverts, function(w) w==[v.x, 1-v.y, v.z]))
             )
             assert(allgoodx && allgoody, "All VNF tile edge vertices must line up with a vertex on the opposite side of the tile.")
-            let(
-                tex2 = vnf_slice(texture, "X", list([1/8:1/8:7/8])),
-                sorted_tile = _vnf_sort_vertices(tex2, idx=[1,0]),
-                vertzs = group_sort(sorted_tile[0], idx=1),
-                row_vnf = vnf_join([
-                    for (j = [0:1:counts.x-1]) [
-                        [
-                            for (group = vertzs)
-                            each [
-                                for (vert = group) let(
-                                    u = floor((j + vert.x) * samples),
-                                    uu = ((j + vert.x) * samples) - u,
-                                    texh = (vert.z - inset) * tscale,
-                                    base = lerp(bases[u], select(bases,u+1), uu),
-                                    norm = unit(lerp(norms[u], select(norms,u+1), uu)),
-                                    xy = base + norm * texh
-                                ) point3d(xy,vert.y)
-                            ]
-                        ],
-                        sorted_tile[1]
-                    ]
+          : let( // Validate heightfield texture.
+                tex_dim = list_shape(texture)
+            )
+            assert(len(tex_dim) == 2, "Heightfield texture must be a 2D square array of scalar heights.")
+            assert(all_defined(tex_dim), "Heightfield texture must be a 2D square array of scalar heights."),
+        skmat = down(h/2) * skew(sxz=shift.x/h, syz=shift.y/h) * up(h/2),
+        tmat = scale(scale) * zrot(twist) * up(h/2),
+        final_vnf = vnf_join([
+            for (rgn = regions) let(
+                walls_vnf = vnf_join([
+                    for (path = rgn) let(
+                        path = reverse(path),
+                        plen = path_length(path, closed=true),
+                        counts = is_vector(counts,2)? counts :
+                            is_vector(tex_size,2)
+                              ? [round(plen/tex_size.x), max(1,round(h/tex_size.y)), ]
+                              : [ceil(6*plen/h), 6],
+                        bases = close_path(resample_path(path, n=counts.x * samples, closed=true)),
+                        norms = close_path(path_normals(bases, closed=true)),
+                        vnf = is_vnf(texture)
+                          ? let( // VNF tile texture
+                                tex2 = samples<=1? texture :
+                                    let( s = 1/samples )
+                                    vnf_slice(texture, "X", list([s:s:1-s/2])),
+                                sorted_tile = _vnf_sort_vertices(tex2, idx=[1,0]),
+                                vertzs = group_sort(sorted_tile[0], idx=1),
+                                row_vnf = vnf_join([
+                                    for (j = [0:1:counts.x-1]) [
+                                        [
+                                            for (group = vertzs)
+                                            each [
+                                                for (vert = group) let(
+                                                    u = floor((j + vert.x) * samples),
+                                                    uu = ((j + vert.x) * samples) - u,
+                                                    texh = (vert.z - inset) * tscale,
+                                                    base = lerp(bases[u], select(bases,u+1), uu),
+                                                    norm = unit(lerp(norms[u], select(norms,u+1), uu)),
+                                                    xy = base + norm * texh
+                                                ) point3d(xy,vert.y)
+                                            ]
+                                        ],
+                                        sorted_tile[1]
+                                    ]
+                                ]),
+                                sorted_row = _vnf_sort_vertices(row_vnf, idx=[1,0]),
+                                rvertzs = group_sort(sorted_row[0], idx=1),
+                                vnf1 = vnf_join([
+                                    for (i = [0:1:counts.y-1]) [
+                                        [
+                                            for (group = rvertzs) let(
+                                                v = (i + group[0].z) / counts.y,
+                                                mat = move(shift*v) *
+                                                    scale(lerp([1,1,1],scale,v)) *
+                                                    zrot(twist*v) *
+                                                    up(((i/counts.y)-0.5)*h) *
+                                                    zscale(h/counts.y)
+                                            ) each apply(mat, group)
+                                        ],
+                                        sorted_row[1]
+                                    ]
+                                ])
+                            ) vnf1
+                          : let( // Heightfield texture
+                                texcnt = [len(texture[0]), len(texture)],
+                                tile_rows = [
+                                    for (ti = [0:1:texcnt.y-1])
+                                    path3d([
+                                        for (j = [0:1:counts.x])
+                                        for (tj = [0:1:texcnt.x-1])
+                                        if (j != counts.x || tj == 0)
+                                        let(
+                                            part = (j + (tj/texcnt.x)) * samples,
+                                            u = floor(part),
+                                            uu = part - u,
+                                            texh = (texture[ti][tj] - inset) * tscale,
+                                            base = lerp(bases[u], select(bases,u+1), uu),
+                                            norm = unit(lerp(norms[u], select(norms,u+1), uu)),
+                                            xy = base + norm * texh
+                                        ) xy
+                                    ])
+                                ],
+                                tiles = [
+                                    for (i = [0:1:counts.y], ti = [0:1:texcnt.y-1])
+                                    if (i != counts.y || ti == 0)
+                                    let(
+                                        v = (i + (ti/texcnt.y)) / counts.y,
+                                        mat = down((v-0.5)*h) *
+                                              move(shift*v) *
+                                              scale(lerp([1,1,1],scale,v)) *
+                                              zrot(twist*v)
+                                    ) apply(mat, tile_rows[ti])
+                                ]
+                            ) vnf_vertex_array(
+                                tiles, caps=false, style=style,
+                                col_wrap=true, row_wrap=false
+                            )
+                    ) vnf
                 ]),
-                sorted_row = _vnf_sort_vertices(row_vnf, idx=[1,0]),
-                rvertzs = group_sort(sorted_row[0], idx=1),
-                vnf1 = vnf_join([
-                    for (i = [0:1:counts.y-1]) [
-                        [
-                            for (group = rvertzs) let(
-                                v = (i + group[0].z) / counts.y,
-                                mat = move(shift*v) *
-                                    scale(lerp([1,1,1],scale,v)) *
-                                    zrot(twist*v) *
-                                    up(((i/counts.y)-0.5)*h) *
-                                    zscale(h/counts.y)
-                            ) each apply(mat, group)
-                        ],
-                        sorted_row[1]
-                    ]
-                ]),
-                tmat = move(shift) * scale(scale) * zrot(twist) * up(h/2),
-                bpath = _find_vnf_z_edge_path(vnf1,-h/2),
-                vnf2 = vnf_from_region(bpath, down(h/2), reverse=true),
-                vnf3 = vnf_from_region(bpath, tmat, reverse=false)
-            ) vnf_join([vnf1, vnf2, vnf3])
-          : let( // Heightfield texture
-                texcnt = [len(texture[0]), len(texture)],
-                tile_rows = [
-                    for (ti = [0:1:texcnt.y-1])
-                    path3d([
-                        for (j = [0:1:counts.x])
-                        for (tj = [0:1:texcnt.x-1])
-                        if (j != counts.x || tj == 0)
-                        let(
-                            part = (j + (tj/texcnt.x)) * samples,
-                            u = floor(part),
-                            uu = part - u,
-                            texh = (texture[ti][tj] - inset) * tscale,
-                            base = lerp(bases[u], select(bases,u+1), uu),
-                            norm = unit(lerp(norms[u], select(norms,u+1), uu)),
-                            xy = base + norm * texh
-                        ) xy
-                    ])
-                ],
-                tiles = [
-                    for (i = [0:1:counts.y], ti = [0:1:texcnt.y-1])
-                    if (i != counts.y || ti == 0)
-                    let(
-                        v = (i + (ti/texcnt.y)) / counts.y,
-                        mat = down((v-0.5)*h) *
-                              move(shift*v) *
-                              scale(lerp([1,1,1],scale,v)) *
-                              zrot(twist*v)
-                    ) apply(mat, tile_rows[ti])
-                ]
-            ) vnf_vertex_array(
-                tiles, caps=caps, style=style, reverse=reverse,
-                col_wrap=col_wrap, row_wrap=false
-            ),
-        cent = centroid(path),
+                brgn = _find_vnf_edge_paths(walls_vnf,2,-h/2),
+                bot_vnf = vnf_from_region(brgn, down(h/2), reverse=true),
+                top_vnf = vnf_from_region(brgn, tmat, reverse=false)
+            ) vnf_join([walls_vnf, bot_vnf, top_vnf])
+        ]),
+        cent = centroid(region),
         anchors = [
             named_anchor("centroid_top", point3d(cent, h/2), UP),
             named_anchor("centroid",     point3d(cent),      UP),
             named_anchor("centroid_bot", point3d(cent,-h/2), DOWN)
         ]
-    ) reorient(anchor,spin,orient, vnf=vnf, extent=true, anchors=anchors, p=vnf);
+    ) reorient(anchor,spin,orient, vnf=final_vnf, extent=true, anchors=anchors, p=final_vnf);
 
 
 module textured_linear_sweep(
     path, texture, tex_size=[5,5], h,
     inset=false, rot=false, tscale=1,
-    twist, scale, shift,
+    twist, scale, shift, samples,
     style="min_edge", reverse=false, l, counts,
     anchor=CENTER, spin=0, orient=UP,
     convexity=10
@@ -2684,8 +2693,7 @@ module textured_linear_sweep(
         tex_size=tex_size, counts=counts,
         inset=inset, rot=rot, tscale=tscale,
         twist=twist, scale=scale, shift=shift,
-        caps=true, col_wrap=true,
-        style=style, reverse=reverse,
+        samples=samples, style=style, reverse=reverse,
         anchor=CENTER, spin=0, orient=UP
     );
     cent = centroid(path);
@@ -2700,37 +2708,33 @@ module textured_linear_sweep(
     }
 }
 
-function _find_vnf_z_edge_path(vnf, z) =
+function _find_vnf_edge_paths(vnf, idx, val) =
     let(
         verts = vnf[0],
         faces = vnf[1],
-        goods = [for (v = verts) approx(v.z, z)],
+        goods = [for (v = verts) approx(v[idx], val)],
         fragments = [
             for (face = faces)
             for (seg = pair(face, wrap=true))
             if (goods[seg[0]] && goods[seg[1]])
             path2d([verts[seg[0]], verts[seg[1]]])
         ]
-    ) _assemble_a_path_from_fragments(fragments, rightmost=true)[0];
+    ) _assemble_path_fragments(fragments);
 
 
 // Function&Module: textured_revolution()
 // Usage: As Function
-//   vnf = textured_revolution(path, texture, tex_size, [tscale=], ...);
-//   vnf = textured_revolution(path, texture, counts=, [tscale=], ...);
+//   vnf = textured_revolution(region, texture, tex_size, [tscale=], ...);
+//   vnf = textured_revolution(region, texture, counts=, [tscale=], ...);
 // Usage: As Module
-//   textured_revolution(path, texture, tex_size, [tscale=], ...) [ATTACHMENTS];
-//   textured_revolution(path, texture, counts=, [tscale=], ...) [ATTACHMENTS];
+//   textured_revolution(region, texture, tex_size, [tscale=], ...) [ATTACHMENTS];
+//   textured_revolution(region, texture, counts=, [tscale=], ...) [ATTACHMENTS];
 // Topics: Sweep, Extrusion, Textures, Knurling
 // Description:
-//   Given a single 2D path, fully in the X+ half-plane, revolves that path around the Z axis (after rotating its Y+ to Z+).
-//   This creates a solid from that surface of revolution, capped top and bottom, with the sides covered in a given tiled texture.
-//   If the path to be revolved is clockwise on the XY plane, then the output shape should have its faces pointed outwards,
-//   though you can use `reverse=true` to reverse the face directions if needed.  It is recommended that you preview with
-//   OpenSCAD's "Thrown Together" view mode, to verify the orientation of the faces.  If you see purple, then your model is
-//   non-manifold, and not 3D print-able.
+//   Given a 2D region or path, fully in the X+ half-plane, revolves that shape around the Z axis (after rotating its Y+ to Z+).
+//   This creates a solid from that surface of revolution, possibly capped top and bottom, with the sides covered in a given tiled texture.
 //   The texture can be given in one of three ways:
-//   - As a texture name string. (See {{get_texture()}} for supported named textures.)
+//   - As a texture name string. (See {{texture()}} for supported named textures.)
 //   - As a 2D array of evenly spread height values. (AKA a heightfield.)
 //   - As a VNF texture tile.  A VNF tile exactly defines a surface from `[0,0]` to `[1,1]`, with the Z coordinates
 //     being the height of the texture point from the surface.  VNF tiles MUST be able to tile in both X and Y
@@ -2738,23 +2742,22 @@ function _find_vnf_z_edge_path(vnf, z) =
 //   One script to convert a grayscale image to a texture heightfield array in a .scad file can be found at:
 //   https://raw.githubusercontent.com/revarbat/BOSL2/master/scripts/img2scad.py
 // Arguments:
-//   path = The path to sweep/extrude.
-//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to the revolution surface.  See {{get_texture()}} for what named textures are supported.
+//   shape = The path or region to sweep/extrude.
+//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to the revolution surface.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   ---
-//   shift = [X,Y] amount to translate the top, relative to the bottom.  Default: [0,0]
 //   tscale = Scaling multiplier for the texture depth.
+//   ---
 //   inset = If numeric, lowers the texture into the surface by that amount, before the tscale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
 //   rot = If true, rotates the texture 90º.
-//   caps = (function only) If true, create endcaps for the extruded shape.  Default: `true`
-//   wrap = (function only) If true, the path is considered a closed polygon.  Useful mainly for things like making a textured torus.  Default: `false`
+//   shift = [X,Y] amount to translate the top, relative to the bottom.  Default: [0,0]
+//   closed = If false, and shape is given as a path, then the revolved path will be sealed to the axis of rotation with untextured caps.  Default: `true`
+//   angle = The number of degrees counter-clockwise from X+ to revolve around the Z axis.  Default: `360`
 //   style = The triangulation style used.  See {{vnf_vertex_array()}} for valid styles.  Used only with heightfield type textures. Default: `"min_edge"`
-//   reverse = If the default faces are facing the wrong way, you can reverse them by setting this to `true`.  Default: `false`
 //   counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), get_texture()
+// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), texture()
 // Example:
 //   path = right(50, p=circle(d=40));
 //   textured_revolution(path, "vnf_bricks", tex_size=[10,10], tscale=0.5, wrap=true, caps=false, style="concave");
@@ -2794,50 +2797,34 @@ function _find_vnf_z_edge_path(vnf, z) =
 //   vnf = textured_revolution(path, "trunc_pyramids", tex_size=[5,5], tscale=1, style="convex");
 //   vnf_polyhedron(vnf, convexity=10);
 function textured_revolution(
-    path, texture, tex_size,
-    tscale=1, inset=false, rot=false,
-    caps=true, wrap=false, shift=[0,0],
-    style="min_edge", reverse=false,
-    counts
+    shape, texture, tex_size, tscale=1,
+    inset=false, rot=false,
+    shift=[0,0], closed=true, angle=360,
+    style="min_edge", counts, samples
 ) =
-    assert(is_path(path,[2]))
-    assert(is_bool(caps))
-    assert(is_bool(wrap))
-    assert(is_bool(reverse))
+    assert(angle>0 && angle<=360)
+    assert(is_path(shape,[2]) || is_region(shape))
+    assert(is_undef(samples) || is_int(samples))
+    assert(is_bool(closed))
     assert(counts==undef || is_vector(counts,2))
     assert(tex_size==undef || is_vector(tex_size,2))
     assert(is_bool(rot) || in_list(rot,[0,90,180,270]))
     let(
-        tex = is_string(texture)? get_texture(texture) : texture,
+        regions = is_path(shape,2)? [[shape]] : region_parts(shape)
+    )
+    assert(closed || is_path(shape,2))
+    let(
+        tex = is_string(texture)? texture(texture) : texture,
         texture = !rot? tex :
             is_vnf(tex)? zrot(is_num(rot)?rot:90, cp=[1/2,1/2], p=tex) :
             rot==180? reverse([for (row=tex) reverse(row)]) :
             rot==270? [for (row=transpose(tex)) reverse(row)] :
             reverse(transpose(tex)),
-        plen = path_length(path),
-        bounds = pointlist_bounds(path),
-        maxx = bounds[1].x,
-        miny = bounds[0].y,
-        maxy = bounds[1].y,
-        h = maxy - miny,
-        circumf = 2 * PI * maxx,
-        counts = is_vector(counts,2)? counts :
-            is_vector(tex_size,2)
-              ? [max(1,round(circumf/tex_size.x)), max(1,round(plen/tex_size.y))]
-              : [ceil(6*circumf/(maxy-miny)), 6],
-        inset = is_num(inset)? inset : inset? 1 : 0,
-        samples = is_vnf(texture)? 12 : len(texture),
-        obases = resample_path(path, n=counts.y * samples + (wrap?0:1), closed=wrap),
-        onorms = path_normals(obases, closed=wrap),
-        rbases = wrap? close_path(obases) : obases,
-        rnorms = wrap? close_path(onorms) : onorms,
-        bases = xrot(90, p=path3d(rbases)),
-        norms = xrot(90, p=path3d(rnorms)),
-        vnf = is_vnf(texture)
-          ? let( // VNF tile texture
-                tbounds = pointlist_bounds(texture[0]),
-                min_xy = point2d(tbounds[0]),
-                max_xy = point2d(tbounds[1])
+        check_tex = is_vnf(texture)
+          ? let( // Validate VNF tile texture
+                bounds = pointlist_bounds(texture[0]),
+                min_xy = point2d(bounds[0]),
+                max_xy = point2d(bounds[1])
             )
             assert(min_xy==[0,0] && max_xy==[1,1], "VNF tiles must span exactly from [0,0] to [1,1] in the X and Y components.")
             let(
@@ -2847,94 +2834,229 @@ function textured_revolution(
                 allgoody = all(vverts, function(v) any(vverts, function(w) w==[v.x, 1-v.y, v.z]))
             )
             assert(allgoodx && allgoody, "All VNF tile edge vertices must line up with a vertex on the opposite side of the tile.")
-            let(
-                tex2 = vnf_slice(vnf_slice(texture, "X", list([1/8:1/8:7/8])), "Y", list([1/8:1/8:7/8])),
-                sorted_tile = _vnf_sort_vertices(tex2, idx=[0,1]),
-                vertzs = group_sort(sorted_tile[0], idx=0),
-                col_vnf = vnf_join([
-                    for (j = [0:1:counts.y-1]) [
-                        [
-                            for (group = vertzs) each [
-                                for (vert = group) let(
-                                    part = (j + (1-vert.y)) * samples,
-                                    u = floor(part),
-                                    uu = part - u,
-                                    tscale =
-                                        wrap? tscale :
-                                        caps && j==0 && approx(vert.y,0)? 0 :
-                                        caps && j==counts.y-1 && approx(vert.y,1)? 0 :
-                                        tscale,
-                                    base = lerp(select(bases,u), select(bases,u+1), uu),
-                                    norm = unit(lerp(select(norms,u), select(norms,u+1), uu)),
-                                    texh = (vert.z - inset) * tscale * (base.x / maxx),
-                                    xyz = base - norm * texh
-                                ) zrot(vert.x*360/counts.x, p=xyz)
-                            ]
-                        ],
-                        sorted_tile[1]
-                    ]
-                ]),
-                vnf1 = vnf_join([
-                    for (i = [0:1:counts.x-1])
-                    zrot(i*360/counts.x, col_vnf)
-                ]),
-                skmat = down(-miny) * skew(sxz=shift.x/h, syz=shift.y/h) * up(-miny),
-                vnf_out = wrap? apply(skmat,vnf1) :
-                    let(
-                        bpath = _find_vnf_z_edge_path(vnf1,-h/2),
-                        vnf2 = vnf_from_region(bpath, down(h/2), reverse=true),
-                        vnf3 = vnf_from_region(bpath, up(h/2), reverse=false)
-                    ) apply(skmat, vnf_join([vnf1, vnf2, vnf3]))
-            ) vnf_out
-          : let( // Heightfield texture
-                texcnt = [len(texture[0]), len(texture)],
-                skmat = down(-miny) * skew(sxz=shift.x/h, syz=shift.y/h) * up(-miny),
-                tiles = transpose([
-                    for (j = [0:1:counts.x-1], tj = [0:1:texcnt.x-1]) let(
-                        v = (j + (tj/texcnt.x)) / counts.x,
-                        mat = skmat * zrot(v*360)
-                    ) apply(mat, [
-                        for (i = [0:1:counts.y-(wrap?1:0)], ti = [0:1:texcnt.y-1])
-                        if (i != counts.y || ti == 0)
-                        let(
-                            part = (i + (ti/texcnt.y)) * samples,
-                            u = floor(part),
-                            uu = part - u,
-                            tscale =
-                                wrap? tscale :
-                                caps && i==0 && ti==0? 0 :
-                                caps && i==counts.y && ti==0? 0 :
-                                tscale,
-                            base = lerp(bases[u], select(bases,u+1), uu),
-                            norm = unit(lerp(norms[u], select(norms,u+1), uu)),
-                            texh = (texture[ti][tj] - inset) * tscale * (base.x / maxx),
-                            xyz = base - norm * texh
-                        ) xyz
-                    ])
-                ])
-            ) vnf_vertex_array(
-                tiles, caps=caps, style=style, reverse=reverse,
-                col_wrap=true, row_wrap=wrap
+          : let( // Validate heightfield texture.
+                tex_dim = list_shape(texture)
             )
-    ) vnf;
+            assert(len(tex_dim) == 2, "Heightfield texture must be a 2D square array of scalar heights.")
+            assert(all_defined(tex_dim), "Heightfield texture must be a 2D square array of scalar heights."),
+        inset = is_num(inset)? inset : inset? 1 : 0,
+        samples = !is_vnf(texture)? len(texture) :
+            is_num(samples)? samples : 8,
+        bounds = pointlist_bounds(flatten(flatten(regions))),
+        maxx = bounds[1].x,
+        miny = bounds[0].y,
+        maxy = bounds[1].y,
+        h = maxy - miny,
+        circumf = 2 * PI * maxx,
+        tile = !is_vnf(texture)? texture :
+            let(
+                utex = samples<=1? texture :
+                    let(
+                        s = 1 / samples,
+                        slices = list([s : s : 1-s/2]),
+                        vnfx = vnf_slice(texture, "X", slices),
+                        vnfy = vnf_slice(vnfx, "Y", slices),
+                        vnft = vnf_triangulate(vnfy)
+                    ) vnft
+            ) _vnf_sort_vertices(utex, idx=[0,1]),
+        vertzs = is_vnf(texture)? group_sort(tile[0], idx=0) : undef,
+        counts_x = is_vector(counts,2)? counts.x :
+            is_vector(tex_size,2)
+              ? max(1,round(angle/360*circumf/tex_size.x))
+              : ceil(6*angle/360*circumf/h),
+        full_vnf = vnf_join([
+            for (rgn = regions) let(
+                rgn_wall_vnf = vnf_join([
+                    for (path = rgn) let(
+                        plen = path_length(path, closed=closed),
+                        counts_y = is_vector(counts,2)? counts.y :
+                            is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
+                        obases = resample_path(path, n=counts_y * samples + (closed?0:1), closed=closed),
+                        onorms = path_normals(obases, closed=closed),
+                        rbases = closed? close_path(obases) : obases,
+                        rnorms = closed? close_path(onorms) : onorms,
+                        bases = xrot(90, p=path3d(rbases)),
+                        norms = xrot(90, p=path3d(rnorms)),
+                        vnf = is_vnf(texture)
+                          ? vnf_join([ // VNF tile texture
+                                for (j = [0:1:counts_y-1]) [
+                                    [
+                                        for (group = vertzs) each [
+                                            for (vert = group) let(
+                                                part = (j + (1-vert.y)) * samples,
+                                                u = floor(part),
+                                                uu = part - u,
+                                                tscale =
+                                                    closed? tscale :
+                                                    !closed && j==0 && approx(vert.y,0)? 0 :
+                                                    !closed && j==counts_y-1 && approx(vert.y,1)? 0 :
+                                                    tscale,
+                                                base = lerp(select(bases,u), select(bases,u+1), uu),
+                                                norm = unit(lerp(select(norms,u), select(norms,u+1), uu)),
+                                                texh = (vert.z - inset) * tscale * (base.x / maxx),
+                                                xyz = base - norm * texh
+                                            ) zrot(vert.x*angle/counts_x, p=xyz)
+                                        ]
+                                    ],
+                                    tile[1]
+                                ]
+                            ])
+                          : let( // Heightfield texture
+                                texcnt = [len(texture[0]), len(texture)],
+                                tiles = transpose([
+                                    for (j = [0,1], tj = [0:1:texcnt.x-1])
+                                    if (j == 0 || tj == 0)
+                                    let(
+                                        v = (j + (tj/texcnt.x)) / counts_x,
+                                        mat = zrot(v*angle)
+                                    ) apply(mat, [
+                                        for (i = [0:1:counts_y-(closed?1:0)], ti = [0:1:texcnt.y-1])
+                                        if (i != counts_y || ti == 0)
+                                        let(
+                                            part = (i + (ti/texcnt.y)) * samples,
+                                            u = floor(part),
+                                            uu = part - u,
+                                            tscale =
+                                                closed? tscale :
+                                                !closed && i==0 && ti==0? 0 :
+                                                !closed && i==counts_y && ti==0? 0 :
+                                                tscale,
+                                            base = lerp(bases[u], select(bases,u+1), uu),
+                                            norm = unit(lerp(norms[u], select(norms,u+1), uu)),
+                                            texh = (texture[ti][tj] - inset) * tscale * (base.x / maxx),
+                                            xyz = base - norm * texh
+                                        ) xyz
+                                    ])
+                                ])
+                            ) vnf_vertex_array(
+                                tiles, caps=false, style=style,
+                                col_wrap=(angle==360), row_wrap=closed
+                            )
+                    ) vnf
+                ]),
+                walls_vnf = vnf_join([
+                    for (i = [0:1:counts_x-1])
+                    zrot(i*angle/counts_x, rgn_wall_vnf)
+                ]),
+                endcap_vnf = angle == 360? EMPTY_VNF :
+                    let(
+                        cap_rgn = [
+                            for (path = rgn) let(
+                                plen = path_length(path, closed=closed),
+                                counts_y = is_vector(counts,2)? counts.y :
+                                    is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
+                                obases = resample_path(path, n=counts_y * samples + (closed?0:1), closed=closed),
+                                bases = closed? close_path(obases) : obases,
+                                ppath = is_vnf(texture)
+                                  ? [ // VNF tile texture
+                                        for (j = [0:1:counts_y-1])
+                                        for (group = vertzs, vert = group)
+                                        if (vert.x == 0) let(
+                                            part = (j + vert.y) * samples,
+                                            u = floor(part),
+                                            uu = part - u
+                                        )
+                                        lerp(select(bases,u), select(bases,u+1), uu)
+                                    ]
+                                  : let( // Heightfield texture
+                                        texcnt = [len(texture[0]), len(texture)]
+                                    ) [
+                                        for (i = [0:1:counts_y-(closed?1:0)], ti = [0:1:texcnt.y-1])
+                                        if (i != counts_y || ti == 0)
+                                        let(
+                                            part = (i + (ti/texcnt.y)) * samples,
+                                            u = floor(part),
+                                            uu = part - u
+                                        )
+                                        lerp(select(bases,u), select(bases,u+1), uu)
+                                    ],
+                                path = closed? ppath : [
+                                    [0, ppath[0].y],
+                                    each ppath,
+                                    [0, last(ppath).y],
+                                ]
+                            ) deduplicate(path, closed=closed)
+                        ],
+                        vnf2 = vnf_from_region(cap_rgn, xrot(90), reverse=false),
+                        vnf3 = vnf_from_region(cap_rgn, rot([90,0,angle]), reverse=true)
+                    ) vnf_join([vnf2, vnf3]),
+                topcap_vnf = closed? EMPTY_VNF :
+                    let(
+                        rad = last(rgn[0]).x,
+                        top_rgn = [
+                            for (path = rgn) let(
+                                ppath = is_vnf(texture)
+                                  ? [ // VNF tile texture
+                                        for (j = [0:1:counts_x-1])
+                                        for (vert = tile[0])
+                                        if (vert.y == 1) let(
+                                            u = (j + vert.x) / counts_x
+                                        )
+                                        polar_to_xy(rad, angle*u)
+                                    ]
+                                  : let( // Heightfield texture
+                                        texcnt = [len(texture[0]), len(texture)]
+                                    ) [
+                                        for (i = [0:1:counts_x], ti = [0:1:texcnt.x-1])
+                                        if (i != counts_x || ti == 0)
+                                        let(
+                                            u = (i + (ti / texcnt.x)) / counts_x
+                                        )
+                                        polar_to_xy(rad, angle*u)
+                                    ],
+                                path = closed? ppath : concat(ppath, [[0,0]])
+                            ) deduplicate(path, closed=closed)
+                        ]
+                    ) vnf_from_region(top_rgn, up(last(rgn[0]).y), reverse=true),
+                botcap_vnf = closed? EMPTY_VNF :
+                    let(
+                        rad = rgn[0][0].x,
+                        bot_rgn = [
+                            for (path = rgn) let(
+                                ppath = is_vnf(texture)
+                                  ? [ // VNF tile texture
+                                        for (j = [0:1:counts_x-1])
+                                        for (vert = tile[0])
+                                        if (vert.y == 0) let(
+                                            u = (j + vert.x) / counts_x
+                                        )
+                                        polar_to_xy(rad, angle*u)
+                                    ]
+                                  : let( // Heightfield texture
+                                        texcnt = [len(texture[0]), len(texture)]
+                                    ) [
+                                        for (i = [0:1:counts_x], ti = [0:1:texcnt.x-1])
+                                        if (i != counts_x || ti == 0)
+                                        let(
+                                            u = (i + (ti / texcnt.x)) / counts_x
+                                        )
+                                        polar_to_xy(rad, angle*u)
+                                    ],
+                                path = closed? ppath : concat(ppath, [[0,0]])
+                            ) deduplicate(path, closed=closed)
+                        ]
+                    ) vnf_from_region(bot_rgn, up(rgn[0][0].y), reverse=false)
+            ) vnf_join([walls_vnf, endcap_vnf, botcap_vnf, topcap_vnf])
+        ]),
+        skmat = down(-miny) * skew(sxz=shift.x/h, syz=shift.y/h) * up(-miny)
+    ) apply(skmat, full_vnf);
 
 
 module textured_revolution(
-    path, texture, tex_size,
-    tscale=1, inset=false, rot=false,
-    caps=true, wrap=false, shift=[0,0],
-    style="min_edge", reverse=false,
-    atype="surface",
-    convexity=10, counts,
+    shape, texture, tex_size, tscale=1,
+    inset=false, rot=false, shift=[0,0],
+    closed=true, angle=360,
+    style="min_edge", atype="surface",
+    convexity=10, counts, samples,
     anchor=CENTER, spin=0, orient=UP
 ) {
     assert(in_list(atype, ["surface","extent"]));
     vnf = textured_revolution(
-        path, texture, tex_size=tex_size,
+        shape, texture, tex_size=tex_size,
         tscale=tscale, inset=inset, rot=rot,
-        caps=caps, wrap=wrap, style=style,
-        reverse=reverse, shift=shift,
-        counts=counts
+        closed=closed, style=style,
+        shift=shift, angle=angle,
+        samples=samples, counts=counts
     );
     geom = atype=="surface"
           ? attach_geom(vnf=vnf, extent=false)
@@ -2957,7 +3079,7 @@ module textured_revolution(
 // Description:
 //   Creates a cylinder or cone with optional chamfers or roundings, covered in a textured surface.
 //   The texture can be given in one of three ways:
-//   - As a texture name string. (See {{get_texture()}} for supported named textures.)
+//   - As a texture name string. (See {{texture()}} for supported named textures.)
 //   - As a 2D array of evenly spread height values. (AKA a heightfield.)
 //   - As a VNF texture tile.  A VNF tile exactly defines a surface from `[0,0]` to `[1,1]`, with the Z coordinates
 //     being the height of the texture point from the surface.  VNF tiles MUST be able to tile in both X and Y
@@ -2967,7 +3089,7 @@ module textured_revolution(
 // Arguments:
 //   h | l = The height of the cylinder.
 //   r = The radius of the cylinder.
-//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to the cylinder wall surfaces.  See {{get_texture()}} for what named textures are supported.
+//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to the cylinder wall surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   ---
 //   r1 = The radius of the bottom of the cylinder.
@@ -2981,7 +3103,6 @@ module textured_revolution(
 //   caps = (function only) If true, create endcaps for the extruded shape.  Default: `true`
 //   shift = [X,Y] amount to translate the top, relative to the bottom.  Default: [0,0]
 //   style = The triangulation style used.  See {{vnf_vertex_array()}} for valid styles.  Default: `"min_edge"`
-//   reverse = If the default faces are facing the wrong way, you can reverse them by setting this to `true`.  Default: `false`
 //   counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
 //   chamfer = If given, chamfers the top and bottom of the cylinder by the given size.  If given a negative size, creates a chamfer that juts *outward* from the cylinder.
 //   chamfer1 = If given, chamfers the bottom of the cylinder by the given size.  If given a negative size, creates a chamfer that juts *outward* from the cylinder.
@@ -2992,7 +3113,7 @@ module textured_revolution(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), get_texture()
+// See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), texture()
 // Examples:
 //   textured_cylinder(h=40, r=20, texture="diamonds", tex_size=[5,5]);
 //   textured_cylinder(h=40, r1=20, r2=15, texture="pyramids", tex_size=[5,5], style="convex");
@@ -3003,8 +3124,7 @@ function textured_cylinder(
     h, r, texture, tex_size=[1,1], counts,
     tscale=1, inset=false, rot=false,
     caps=true, style="min_edge",
-    reverse=false, shift=[0,0],
-    l, r1, r2, d, d1, d2,
+    shift=[0,0], l, r1, r2, d, d1, d2,
     chamfer, chamfer1, chamfer2,
     rounding, rounding1, rounding2
 ) =
@@ -3032,11 +3152,10 @@ function textured_cylinder(
             else [r2,h/2],
         ],
         vnf = textured_revolution(
-            reverse(path), texture,
+            reverse(path), texture, closed=false,
             tex_size=tex_size, counts=counts,
             tscale=tscale, inset=inset, rot=rot,
-            caps=caps, style=style, reverse=reverse,
-            shift=shift
+            style=style, shift=shift
         )
     ) vnf;
 
@@ -3044,7 +3163,7 @@ function textured_cylinder(
 module textured_cylinder(
     h, r, texture, tex_size=[1,1],
     counts, tscale=1, inset=false, rot=false,
-    style="min_edge", reverse=false, shift=[0,0],
+    style="min_edge", shift=[0,0],
     l, r1, r2, d, d1, d2,
     chamfer, chamfer1, chamfer2,
     rounding, rounding1, rounding2,
@@ -3063,7 +3182,7 @@ module textured_cylinder(
         tscale=tscale, inset=inset, rot=rot,
         counts=counts, tex_size=tex_size,
         caps=true, style=style,
-        reverse=reverse, shift=shift,
+        shift=shift,
         chamfer1=chamf1, chamfer2=chamf2,
         rounding1=round1, rounding2=round2
     );
