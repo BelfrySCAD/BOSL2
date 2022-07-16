@@ -1089,6 +1089,7 @@ function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
 ///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
 function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, eps=EPSILON) =
     len(fragments)==0? [[],[]] :
+    len(fragments)==1? [fragments[0],[]] :
     let(
         path = fragments[startfrag],
         newfrags = [for (i=idx(fragments)) if (i!=startfrag) fragments[i]]

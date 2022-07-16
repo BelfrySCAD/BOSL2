@@ -1234,7 +1234,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
 
 /// Internal Module: _show_vertices()
 /// Usage:
-///   _show_vertices(vertices, [size])
+///   _show_vertices(vertices, [size], [filter=])
 /// Description:
 ///   Draws all the vertices in an array, at their 3D position, numbered by their
 ///   position in the vertex array.  Also draws any children of this module with
@@ -1248,19 +1248,21 @@ function vnf_bend(vnf,r,d,axis="Z") =
 ///   _show_vertices(vertices=verts, size=2) {
 ///       polyhedron(points=verts, faces=faces);
 ///   }
-module _show_vertices(vertices, size=1) {
+module _show_vertices(vertices, size=1, filter) {
     color("blue") {
         dups = vector_search(vertices, EPSILON, vertices);
-        for (ind = dups){
-            numstr = str_join([for(i=ind) str(i)],",");
-            v = vertices[ind[0]];
-            translate(v) {
-                rot($vpr) back(size/8){
-                   linear_extrude(height=size/10, center=true, convexity=10) {
-                      text(text=numstr, size=size, halign="center");
-                   }
+        for (ind = dups) {
+            if (is_undef(filter) || any(ind, filter)) {
+                numstr = str_join([for(i=ind) str(i)],",");
+                v = vertices[ind[0]];
+                translate(v) {
+                    rot($vpr) back(size/8){
+                       linear_extrude(height=size/10, center=true, convexity=10) {
+                          text(text=numstr, size=size, halign="center");
+                       }
+                    }
+                    sphere(size/10);
                 }
-                sphere(size/10);
             }
         }
     }
@@ -1269,7 +1271,7 @@ module _show_vertices(vertices, size=1) {
 
 /// Internal Module: _show_faces()
 /// Usage:
-///   _show_faces(vertices, faces, [size=]);
+///   _show_faces(vertices, faces, [size=], [filter=]);
 /// Description:
 ///   Draws all the vertices at their 3D position, numbered in blue by their
 ///   position in the vertex array.  Each face will have their face number drawn
@@ -1285,14 +1287,14 @@ module _show_vertices(vertices, size=1) {
 ///   _show_faces(vertices=verts, faces=faces, size=2) {
 ///       polyhedron(points=verts, faces=faces);
 ///   }
-module _show_faces(vertices, faces, size=1) {
+module _show_faces(vertices, faces, size=1, filter) {
     vlen = len(vertices);
     color("red") {
         for (i = [0:1:len(faces)-1]) {
             face = faces[i];
             if (face[0] < 0 || face[1] < 0 || face[2] < 0 || face[0] >= vlen || face[1] >= vlen || face[2] >= vlen) {
                 echo("BAD FACE: ", vlen=vlen, face=face);
-            } else {
+            } else if (is_undef(filter) || any(face,filter)) {
                 verts = select(vertices,face);
                 c = mean(verts);
                 v0 = verts[0];
@@ -1325,7 +1327,7 @@ module _show_faces(vertices, faces, size=1) {
 
 // Module: debug_vnf()
 // Usage:
-//   debug_vnf(vnfs, [faces=], [vertices=], [opacity=], [size=], [convexity=]);
+//   debug_vnf(vnfs, [faces=], [vertices=], [opacity=], [size=], [convexity=], [filter=]);
 // Description:
 //   A drop-in module to replace `vnf_polyhedron()` to help debug vertices and faces.
 //   Draws all the vertices at their 3D position, numbered in blue by their
@@ -1346,18 +1348,20 @@ module _show_faces(vertices, faces, size=1) {
 //   opacity = Opacity of the polyhedron faces.  Default: 0.5
 //   convexity = The max number of walls a ray can pass through the given polygon paths.
 //   size = The size of the text used to label the faces and vertices.  Default: 1
+//   filter = If given a function literal of signature `function(i)`, will only show labels for vertices and faces that have a vertex index that gets a true result from that function.  Default: no filter.
 // Example(EdgesMed):
 //   verts = [for (z=[-10,10], a=[0:120:359.9]) [10*cos(a),10*sin(a),z]];
 //   faces = [[0,1,2], [5,4,3], [0,3,4], [0,4,1], [1,4,5], [1,5,2], [2,5,3], [2,3,0]];
 //   debug_vnf([verts,faces], size=2);
-module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=6 ) {
+module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=6, filter ) {
     no_children($children);
     if (faces)
-      _show_faces(vertices=vnf[0], faces=vnf[1], size=size);
+      _show_faces(vertices=vnf[0], faces=vnf[1], size=size, filter=filter);
     if (vertices)
-      _show_vertices(vertices=vnf[0], size=size);
-    color([0.2, 1.0, 0, opacity])
-       vnf_polyhedron(vnf,convexity=convexity);
+      _show_vertices(vertices=vnf[0], size=size, filter=filter);
+    if (opacity > 0)
+      color([0.2, 1.0, 0, opacity])
+        vnf_polyhedron(vnf,convexity=convexity);
 }
 
 
@@ -1365,7 +1369,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 // Usage: As Function
 //   fails = vnf_validate(vnf);
 // Usage: As Module
-//   vnf_validate(vnf, [size], [check_isects]);
+//   vnf_validate(vnf, [size], [show_warns=], [check_isects=], [opacity=], [adjacent=], [label_verts=], [label_faces=], [wireframe=]);
 // Description:
 //   When called as a function, returns a list of non-manifold errors with the given VNF.
 //   Each error has the format `[ERR_OR_WARN,CODE,MESG,POINTS,COLOR]`.
@@ -1394,13 +1398,18 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   --
 //   show_warns = If true show warnings for non-triangular faces.  Default: true
 //   check_isects = If true, performs slow checks for intersecting faces.  Default: false
-// Example: BIG_FACE Warnings; Faces with More Than 3 Vertices.  CGAL often will fail to accept that a face is planar after a rotation, if it has more than 3 vertices.
+//   opacity = The opacity level to show the polyhedron itself with.  (Module only)  Default: 0.67
+//   label_verts = If true, shows labels at each vertex that show the vertex number.  (Module only)  Default: false
+//   label_faces = If true, shows labels at the center of each face that show the face number.  (Module only)  Default: false
+//   wireframe = If true, shows edges more clearly so you can see them in Thrown Together mode.  (Module only)  Default: false
+//   adjacent = If true, only display faces adjacent to a vertex listed in the errors.  (Module only)  Default: false
+// Example(3D,Edges): BIG_FACE Warnings; Faces with More Than 3 Vertices.  CGAL often will fail to accept that a face is planar after a rotation, if it has more than 3 vertices.
 //   vnf = skin([
 //       path3d(regular_ngon(n=3, d=100),0),
 //       path3d(regular_ngon(n=5, d=100),100)
 //   ], slices=0, caps=true, method="tangent");
 //   vnf_validate(vnf);
-// Example: NONPLANAR Errors; Face Vertices are Not Coplanar
+// Example(3D,Edges): NONPLANAR Errors; Face Vertices are Not Coplanar
 //   a = [  0,  0,-50];
 //   b = [-50,-50, 50];
 //   c = [-50, 50, 50];
@@ -1410,10 +1419,10 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //       [a, b, e], [a, c, b], [a, d, c], [a, e, d], [b, c, d, e]
 //   ]);
 //   vnf_validate(vnf);
-// Example: MULTCONN Errors; More Than Two Faces Attached to the Same Edge.  This confuses CGAL, and can lead to failed renders.
+// Example(3D,Edges): MULTCONN Errors; More Than Two Faces Attached to the Same Edge.  This confuses CGAL, and can lead to failed renders.
 //   vnf = vnf_triangulate(linear_sweep(union(square(50), square(50,anchor=BACK+RIGHT)), height=50));
 //   vnf_validate(vnf);
-// Example: REVERSAL Errors; Faces Reversed Across Edge
+// Example(3D,Edges): REVERSAL Errors; Faces Reversed Across Edge
 //   vnf1 = skin([
 //       path3d(square(100,center=true),0),
 //       path3d(square(100,center=true),100),
@@ -1425,27 +1434,26 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //       [[-50,-50,100], [ 50,-50,100], [ 50, 50,100]],
 //   ])]);
 //   vnf_validate(vnf);
-// Example: T_JUNCTION Errors; Vertex is Mid-Edge on Another Face.
-//   vnf1 = skin([
-//       path3d(square(100,center=true),0),
-//       path3d(square(100,center=true),100),
-//   ], slices=0, caps=false);
-//   vnf = vnf_join([vnf1, vnf_from_polygons([
-//       [[-50,-50,0], [50,50,0], [-50,50,0]],
-//       [[-50,-50,0], [50,-50,0], [50,50,0]],
-//       [[-50,-50,100], [-50,50,100], [0,50,100]],
-//       [[-50,-50,100], [0,50,100], [0,-50,100]],
-//       [[0,-50,100], [0,50,100], [50,50,100]],
-//       [[0,-50,100], [50,50,100], [50,-50,100]],
-//   ])]);
+// Example(3D,Edges): T_JUNCTION Errors; Vertex is Mid-Edge on Another Face.
+//   vnf = [
+//       [
+//           each path3d(square(100,center=true),0),
+//           each path3d(square(100,center=true),100),
+//           [0,-50,100],
+//       ], [
+//          [0,2,1], [0,3,2], [0,8,4], [0,1,8], [1,5,8],
+//          [0,4,3], [4,7,3], [1,2,5], [2,6,5], [3,7,6],
+//          [3,6,2], [4,5,6], [4,6,7],
+//       ]
+//   ];
 //   vnf_validate(vnf);
-// Example: FACE_ISECT Errors; Faces Intersect
+// Example(3D,Edges): FACE_ISECT Errors; Faces Intersect
 //   vnf = vnf_join([
 //       vnf_triangulate(linear_sweep(square(100,center=true), height=100)),
 //       move([75,35,30],p=vnf_triangulate(linear_sweep(square(100,center=true), height=100)))
 //   ]);
 //   vnf_validate(vnf,size=2,check_isects=true);
-// Example: HOLE_EDGE Errors; Edges Adjacent to Holes.
+// Example(3D,Edges): HOLE_EDGE Errors; Edges Adjacent to Holes.
 //   vnf = skin([
 //       path3d(regular_ngon(n=4, d=100),0),
 //       path3d(regular_ngon(n=5, d=100),100)
@@ -1481,16 +1489,15 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
         big_faces = !show_warns? [] : [
             for (face = faces)
             if (len(face) > 3)
-            _vnf_validate_err("BIG_FACE", [for (i=face) varr[i]])
+            _vnf_validate_err("BIG_FACE", face)
         ],
         null_faces = !show_warns? [] : [
             for (i = idx(faces)) let(
                 face = faces[i],
-                area = face_areas[i],
-                faceverts = [for (k=face) varr[k]]
+                area = face_areas[i]
             )
             if (is_num(area) && abs(area) < EPSILON)
-            _vnf_validate_err("NULL_FACE", faceverts)
+            _vnf_validate_err("NULL_FACE", face)
         ],
         issues = concat(big_faces, null_faces)
     )
@@ -1515,7 +1522,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
                 sface1 = list_rotate(face1,min1),
                 sface2 = list_rotate(face2,min2)
             ) if (sface1 == sface2)
-            _vnf_validate_err("DUP_FACE", [for (i=sface1) varr[i]])
+            _vnf_validate_err("DUP_FACE", sface1)
         ],
         issues = concat(issues, repeated_faces)
     ) repeated_faces? issues :
@@ -1523,7 +1530,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
         multconn_edges = unique([
             for (i = idx(uniq_edges))
             if (edgecnts[1][i]>2)
-            _vnf_validate_err("MULTCONN", [for (i=uniq_edges[i]) varr[i]])
+            _vnf_validate_err("MULTCONN", uniq_edges[i])
         ]),
         issues = concat(issues, multconn_edges)
     ) multconn_edges? issues :
@@ -1534,7 +1541,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             for(edge2 = pair(faces[j],true))
             if(edge1 == edge2)  // Valid adjacent faces will never have the same vertex ordering.
             if(_edge_not_reported(edge1, varr, multconn_edges))
-            _vnf_validate_err("REVERSAL", [for (i=edge1) varr[i]])
+            _vnf_validate_err("REVERSAL", edge1)
         ]),
         issues = concat(issues, reversals)
     ) reversals? issues :
@@ -1554,7 +1561,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
                 pt = line_closest_point([a,c],b,SEGMENT)
             )
             if (approx(pt,b))
-            _vnf_validate_err("T_JUNCTION", [b])
+            _vnf_validate_err("T_JUNCTION", [ib])
         ]),
         issues = concat(issues, t_juncts)
     ) t_juncts? issues :
@@ -1606,7 +1613,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             if (edgecnts[1][i]<2)
             if (_pts_not_reported(uniq_edges[i], varr, t_juncts))
             if (_pts_not_reported(uniq_edges[i], varr, isect_faces))
-            _vnf_validate_err("HOLE_EDGE", [for (i=uniq_edges[i]) varr[i]])
+            _vnf_validate_err("HOLE_EDGE", uniq_edges[i])
         ]),
         issues = concat(issues, hole_edges)
     ) hole_edges? issues :
@@ -1619,7 +1626,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             )
             if (is_num(area) && abs(area) > EPSILON)
             if (!is_coplanar(faceverts))
-            _vnf_validate_err("NONPLANAR", faceverts)
+            _vnf_validate_err("NONPLANAR", face)
         ]),
         issues = concat(issues, nonplanars)
     ) issues;
@@ -1662,19 +1669,24 @@ function _edge_not_reported(edge, varr, reports) =
     ] == [];
 
 
-module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
+module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, opacity=0.67, adjacent=false, label_verts=false, label_faces=false, wireframe=false) {
     no_children($children);
+    verts = vnf[0];
     faults = vnf_validate(
         vnf, show_warns=show_warns,
         check_isects=check_isects
     );
+    if (!faults) {
+        echo("VNF appears valid.");
+    }
     for (fault = faults) {
         err = fault[0];
         typ = fault[1];
         clr = fault[2];
         msg = fault[3];
-        pts = fault[4];
-        echo(str(typ, " ", err, " (", clr ,"): ", msg, " at ", pts));
+        idxs = fault[4];
+        pts = [for (i=idxs) if(is_finite(i) && i>=0 && i<len(verts)) verts[i]];
+        echo(str(typ, " ", err, " (", clr ,"): ", msg, " at ", pts, " indices: ", idxs));
         color(clr) {
             if (is_vector(pts[0])) {
                 if (len(pts)==2) {
@@ -1688,7 +1700,26 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
             }
         }
     }
-    color([0.5,0.5,0.5,0.67]) vnf_polyhedron(vnf);
+    badverts = unique([for (fault=faults) each fault[4]]);
+    badverts2 = unique([for (j=idx(verts), i=badverts) if (i!=j && verts[i]==verts[j]) j]);
+    all_badverts = unique(concat(badverts, badverts2));
+    adjacent = !faults? false : adjacent;
+    filter_fn = !adjacent? undef : function(i) in_list(i,all_badverts);
+    adj_vnf = !adjacent? vnf : [
+        verts, [for (face=vnf[1]) if (any(face,filter_fn)) face]
+    ];
+    if (wireframe) {
+        vnf_wireframe(adj_vnf, width=size*0.25);
+    }
+    if (label_verts) {
+        debug_vnf(adj_vnf, size=size*3, opacity=0, faces=false, vertices=true, filter=filter_fn);
+    }
+    if (label_faces) {
+        debug_vnf(vnf, size=size*3, opacity=0, faces=true, vertices=false, filter=filter_fn);
+    }
+    if (opacity > 0) {
+        color([0.5,1,0.5,opacity]) vnf_polyhedron(adj_vnf);
+    }
 }
 
 
