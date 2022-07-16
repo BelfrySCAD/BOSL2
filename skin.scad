@@ -2836,7 +2836,7 @@ function _find_vnf_tile_bottom_edge_path(vnf, val) =
 //       each arc(r=20, corner=[[20,20],[10,0],[20,-20]]),
 //       [20,-20], [20,-30],
 //   ];
-//   vnf = textured_revolution(path, "trunc_pyramids", tex_size=[5,5], tscale=1, style="convex");
+//   vnf = textured_revolution(path, closed=false, texture="trunc_pyramids", tex_size=[5,5], tscale=1, style="convex");
 //   vnf_polyhedron(vnf, convexity=10);
 function textured_revolution(
     shape, texture, tex_size, tscale=1,
