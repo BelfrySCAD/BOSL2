@@ -2266,7 +2266,7 @@ function texture(tex,n,m,o) =
         [ [0,1,0], [1,1,0], [1/2,1/2,m], [0,0,0], [1,0,0] ],
         [ [2,0,1], [2,1,4], [2,4,3], [2,3,0] ]
     ] :
-    tex=="trunc_pyramids"? let(n=default(n,3), m=default(m,1)) [repeat(0,n+1), each repeat([0, each repeat(m,n+1)], n+1)] :
+    tex=="trunc_pyramids"? let(n=default(n,3), m=default(m,1)) [repeat(0,n+2), each repeat([0, each repeat(m,n+1)], n+1)] :
     tex=="vnf_trunc_pyramids"? let(n=default(n,0.25), m=default(m,1)) [
         [
             each path3d(square(1)),
@@ -2572,9 +2572,23 @@ function textured_linear_sweep(
             )
             assert(len(tex_dim) == 2, "Heightfield texture must be a 2D square array of scalar heights.")
             assert(all_defined(tex_dim), "Heightfield texture must be a 2D square array of scalar heights."),
-        skmat = down(h/2) * skew(sxz=shift.x/h, syz=shift.y/h) * up(h/2),
+        sorted_tile =
+            !is_vnf(texture)? texture :
+            samples<=1? texture :
+            let(
+                s = 1/samples,
+                vnf = vnf_slice(texture, "X", list([s:s:1-s/2]))
+            ) _vnf_sort_vertices(vnf, idx=[1,0]),
+        vertzs = !is_vnf(sorted_tile)? undef :
+            group_sort(sorted_tile[0], idx=1),
+        tpath = is_vnf(sorted_tile)
+            ? _find_vnf_tile_bottom_edge_path(sorted_tile,0)
+            : let(
+                  row = last(sorted_tile),
+                  rlen = len(row)
+              ) [for (i = [0:1:rlen]) [i/rlen, row[i%rlen]]],
         tmat = scale(scale) * zrot(twist) * up(h/2),
-        final_vnf = vnf_join([
+        pre_skew_vnf = vnf_join([
             for (rgn = regions) let(
                 walls_vnf = vnf_join([
                     for (path = rgn) let(
@@ -2584,15 +2598,12 @@ function textured_linear_sweep(
                             is_vector(tex_size,2)
                               ? [round(plen/tex_size.x), max(1,round(h/tex_size.y)), ]
                               : [ceil(6*plen/h), 6],
-                        bases = close_path(resample_path(path, n=counts.x * samples, closed=true)),
-                        norms = close_path(path_normals(bases, closed=true)),
+                        obases = resample_path(path, n=counts.x * samples, closed=true),
+                        onorms = path_normals(obases, closed=true),
+                        bases = close_path(obases),
+                        norms = close_path(onorms),
                         vnf = is_vnf(texture)
                           ? let( // VNF tile texture
-                                tex2 = samples<=1? texture :
-                                    let( s = 1/samples )
-                                    vnf_slice(texture, "X", list([s:s:1-s/2])),
-                                sorted_tile = _vnf_sort_vertices(tex2, idx=[1,0]),
-                                vertzs = group_sort(sorted_tile[0], idx=1),
                                 row_vnf = vnf_join([
                                     for (j = [0:1:counts.x-1]) [
                                         [
@@ -2618,8 +2629,8 @@ function textured_linear_sweep(
                                         [
                                             for (group = rvertzs) let(
                                                 v = (i + group[0].z) / counts.y,
-                                                mat = move(shift*v) *
-                                                    scale(lerp([1,1,1],scale,v)) *
+                                                sc = lerp([1,1,1], scale, v),
+                                                mat = scale(sc) *
                                                     zrot(twist*v) *
                                                     up(((i/counts.y)-0.5)*h) *
                                                     zscale(h/counts.y)
@@ -2653,9 +2664,9 @@ function textured_linear_sweep(
                                     if (i != counts.y || ti == 0)
                                     let(
                                         v = (i + (ti/texcnt.y)) / counts.y,
+                                        sc = lerp([1,1,1], scale, v),
                                         mat = down((v-0.5)*h) *
-                                              move(shift*v) *
-                                              scale(lerp([1,1,1],scale,v)) *
+                                              scale(sc) *
                                               zrot(twist*v)
                                     ) apply(mat, tile_rows[ti])
                                 ]
@@ -2665,11 +2676,36 @@ function textured_linear_sweep(
                             )
                     ) vnf
                 ]),
-                brgn = _find_vnf_edge_paths(walls_vnf,2,-h/2),
+                brgn = [
+                    for (path = rgn) let(
+                        path = reverse(path),
+                        plen = path_length(path, closed=true),
+                        counts = is_vector(counts,2)? counts :
+                            is_vector(tex_size,2)
+                              ? [round(plen/tex_size.x), max(1,round(h/tex_size.y)), ]
+                              : [ceil(6*plen/h), 6],
+                        obases = resample_path(path, n=counts.x * samples, closed=true),
+                        onorms = path_normals(obases, closed=true),
+                        bases = close_path(obases),
+                        norms = close_path(onorms)
+                    ) [
+                        for (j = [0:1:counts.x-1], vert = tpath) let(
+                            part = (j + vert.x) * samples,
+                            u = floor(part),
+                            uu = part - u,
+                            texh = (vert.y - inset) * tscale,
+                            base = lerp(bases[u], select(bases,u+1), uu),
+                            norm = unit(lerp(norms[u], select(norms,u+1), uu)),
+                            xy = base + norm * texh
+                        ) xy
+                    ]
+                ],
                 bot_vnf = vnf_from_region(brgn, down(h/2), reverse=true),
                 top_vnf = vnf_from_region(brgn, tmat, reverse=false)
             ) vnf_join([walls_vnf, bot_vnf, top_vnf])
         ]),
+        skmat = down(h/2) * skew(sxz=shift.x/h, syz=shift.y/h) * up(h/2),
+        final_vnf = apply(skmat, pre_skew_vnf),
         cent = centroid(region),
         anchors = [
             named_anchor("centroid_top", point3d(cent, h/2), UP),
@@ -2683,7 +2719,7 @@ module textured_linear_sweep(
     path, texture, tex_size=[5,5], h,
     inset=false, rot=false, tscale=1,
     twist, scale, shift, samples,
-    style="min_edge", reverse=false, l, counts,
+    style="min_edge", l, counts,
     anchor=CENTER, spin=0, orient=UP,
     convexity=10
 ) {
@@ -2693,7 +2729,7 @@ module textured_linear_sweep(
         tex_size=tex_size, counts=counts,
         inset=inset, rot=rot, tscale=tscale,
         twist=twist, scale=scale, shift=shift,
-        samples=samples, style=style, reverse=reverse,
+        samples=samples, style=style,
         anchor=CENTER, spin=0, orient=UP
     );
     cent = centroid(path);
@@ -2708,18 +2744,24 @@ module textured_linear_sweep(
     }
 }
 
-function _find_vnf_edge_paths(vnf, idx, val) =
+function _find_vnf_tile_bottom_edge_path(vnf, val) =
     let(
         verts = vnf[0],
         faces = vnf[1],
-        goods = [for (v = verts) approx(v[idx], val)],
+        goods = [for (v = verts) approx(v[1], val)],
         fragments = [
             for (face = faces)
             for (seg = pair(face, wrap=true))
-            if (goods[seg[0]] && goods[seg[1]])
-            path2d([verts[seg[0]], verts[seg[1]]])
-        ]
-    ) _assemble_path_fragments(fragments);
+            let(s0 = seg[0], s1 = seg[1])
+            if (goods[s0] && goods[s1])
+            let(v0 = verts[s0], v1 = verts[s1])
+            v0.x <= v1.x? [[v0.x,v0.z], [v1.x,v1.z]] :
+            [[v1.x,v1.z], [v0.x,v0.z]]
+        ],
+        sfrags = sort(fragments, idx=[0,1]),
+        rpath = _assemble_a_path_from_fragments(sfrags)[0],
+        opath = rpath[0].x > last(rpath).x? reverse(rpath) : rpath
+    ) opath;
 
 
 // Function&Module: textured_revolution()
