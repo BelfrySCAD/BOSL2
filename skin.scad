@@ -2802,7 +2802,7 @@ function _find_vnf_tile_bottom_edge_path(vnf, val) =
 // See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), texture()
 // Example:
 //   path = right(50, p=circle(d=40));
-//   textured_revolution(path, "vnf_bricks", tex_size=[10,10], tscale=0.5, wrap=true, caps=false, style="concave");
+//   textured_revolution(path, "vnf_bricks", tex_size=[10,10], tscale=0.5, style="concave");
 // Example:
 //   tex = [
 //       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
