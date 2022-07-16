@@ -2819,7 +2819,7 @@ function _find_vnf_tile_bottom_edge_path(vnf, val) =
 //       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 //   ];
 //   path = arc(cp=[0,0], r=40, start=60, angle=-120);
-//   textured_revolution(path, tex, tex_size=[20,20], tscale=1, style="concave");
+//   textured_revolution(path, closed=false, texture=tex, tex_size=[20,20], tscale=1, style="concave");
 // Example:
 //   include <BOSL2/beziers.scad>
 //   bezpath = [
@@ -2829,7 +2829,7 @@ function _find_vnf_tile_bottom_edge_path(vnf, val) =
 //       [10,-15], [15,-30]
 //   ];
 //   path = bezpath_curve(bezpath, splinesteps=32);
-//   textured_revolution(path, "diamonds", tex_size=[5,5], tscale=1, style="concave");
+//   textured_revolution(path, closed=false, texture="diamonds", tex_size=[10,10], tscale=1, style="concave");
 // Example:
 //   path = [
 //       [20, 30], [20, 20],
@@ -2838,6 +2838,12 @@ function _find_vnf_tile_bottom_edge_path(vnf, val) =
 //   ];
 //   vnf = textured_revolution(path, closed=false, texture="trunc_pyramids", tex_size=[5,5], tscale=1, style="convex");
 //   vnf_polyhedron(vnf, convexity=10);
+// Example:
+//   rgn = [
+//       right(40, p=circle(d=50)),
+//       right(40, p=circle(d=40,$fn=6)),
+//   ];
+//   textured_revolution(rgn, texture="diamonds", tex_size=[10,10], tscale=1, angle=240, style="concave");
 function textured_revolution(
     shape, texture, tex_size, tscale=1,
     inset=false, rot=false,
@@ -2972,7 +2978,7 @@ function textured_revolution(
                                 ])
                             ) vnf_vertex_array(
                                 tiles, caps=false, style=style,
-                                col_wrap=(angle==360), row_wrap=closed
+                                col_wrap=false, row_wrap=closed
                             )
                     ) vnf
                 ]),
@@ -2988,7 +2994,9 @@ function textured_revolution(
                                 counts_y = is_vector(counts,2)? counts.y :
                                     is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
                                 obases = resample_path(path, n=counts_y * samples + (closed?0:1), closed=closed),
+                                onorms = path_normals(obases, closed=closed),
                                 bases = closed? close_path(obases) : obases,
+                                norms = closed? close_path(onorms) : onorms,
                                 ppath = is_vnf(texture)
                                   ? [ // VNF tile texture
                                         for (j = [0:1:counts_y-1])
@@ -2996,9 +3004,17 @@ function textured_revolution(
                                         if (vert.x == 0) let(
                                             part = (j + vert.y) * samples,
                                             u = floor(part),
-                                            uu = part - u
-                                        )
-                                        lerp(select(bases,u), select(bases,u+1), uu)
+                                            uu = part - u,
+                                            tscale =
+                                                closed? tscale :
+                                                !closed && j==0 && approx(vert.y,0)? 0 :
+                                                !closed && j==counts_y-1 && approx(vert.y,1)? 0 :
+                                                tscale,
+                                            base = lerp(select(bases,u), select(bases,u+1), uu),
+                                            norm = unit(lerp(select(norms,u), select(norms,u+1), uu)),
+                                            texh = (vert.z - inset) * tscale * (base.x / maxx),
+                                            xyz = base - norm * texh
+                                        ) xyz
                                     ]
                                   : let( // Heightfield texture
                                         texcnt = [len(texture[0]), len(texture)]
@@ -3008,9 +3024,17 @@ function textured_revolution(
                                         let(
                                             part = (i + (ti/texcnt.y)) * samples,
                                             u = floor(part),
-                                            uu = part - u
-                                        )
-                                        lerp(select(bases,u), select(bases,u+1), uu)
+                                            uu = part - u,
+                                            tscale =
+                                                closed? tscale :
+                                                !closed && i==0 && ti==0? 0 :
+                                                !closed && i==counts_y && ti==0? 0 :
+                                                tscale,
+                                            base = lerp(bases[u], select(bases,u+1), uu),
+                                            norm = unit(lerp(norms[u], select(norms,u+1), uu)),
+                                            texh = (texture[ti][0] - inset) * tscale * (base.x / maxx),
+                                            xyz = base - norm * texh
+                                        ) xyz
                                     ],
                                 path = closed? ppath : [
                                     [0, ppath[0].y],
