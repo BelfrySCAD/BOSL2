@@ -2582,9 +2582,9 @@ function textured_linear_sweep(
         vertzs = !is_vnf(sorted_tile)? undef :
             group_sort(sorted_tile[0], idx=1),
         tpath = is_vnf(sorted_tile)
-            ? _find_vnf_tile_bottom_edge_path(sorted_tile,0)
+            ? _find_vnf_tile_edge_path(sorted_tile,0)
             : let(
-                  row = last(sorted_tile),
+                  row = sorted_tile[0],
                   rlen = len(row)
               ) [for (i = [0:1:rlen]) [i/rlen, row[i%rlen]]],
         tmat = scale(scale) * zrot(twist) * up(h/2),
@@ -2744,7 +2744,7 @@ module textured_linear_sweep(
     }
 }
 
-function _find_vnf_tile_bottom_edge_path(vnf, val) =
+function _find_vnf_tile_edge_path(vnf, val) =
     let(
         verts = vnf[0],
         faces = vnf[1],
@@ -2858,7 +2858,13 @@ function textured_revolution(
     assert(tex_size==undef || is_vector(tex_size,2))
     assert(is_bool(rot) || in_list(rot,[0,90,180,270]))
     let(
-        regions = is_path(shape,2)? [[shape]] : region_parts(shape)
+        regions = !is_path(shape,2)? region_parts(shape) :
+            shape[0].y <= last(shape).y? [[reverse(shape)]] :
+            [[shape]],
+        checks = [
+            for (rgn=regions, path=rgn)
+            assert(all(path, function(pt) pt.x>=0))
+        ]
     )
     assert(closed || is_path(shape,2))
     let(
@@ -2908,6 +2914,18 @@ function textured_revolution(
                     ) vnft
             ) _vnf_sort_vertices(utex, idx=[0,1]),
         vertzs = is_vnf(texture)? group_sort(tile[0], idx=0) : undef,
+        bpath = is_vnf(tile)
+            ? _find_vnf_tile_edge_path(tile,0)
+            : let(
+                  row = tile[0],
+                  rlen = len(row)
+              ) [for (i = [0:1:rlen]) [i/rlen, row[i%rlen]]],
+        tpath = is_vnf(tile)
+            ? _find_vnf_tile_edge_path(tile,1)
+            : let(
+                  row = last(tile),
+                  rlen = len(row)
+              ) [for (i = [0:1:rlen]) [i/rlen, row[i%rlen]]],
         counts_x = is_vector(counts,2)? counts.x :
             is_vector(tex_size,2)
               ? max(1,round(angle/360*circumf/tex_size.x))
@@ -2927,7 +2945,8 @@ function textured_revolution(
                         norms = xrot(90, p=path3d(rnorms)),
                         vnf = is_vnf(texture)
                           ? vnf_join([ // VNF tile texture
-                                for (j = [0:1:counts_y-1]) [
+                                for (j = [0:1:counts_y-1])
+                                [
                                     [
                                         for (group = vertzs) each [
                                             for (vert = group) let(
@@ -2936,8 +2955,8 @@ function textured_revolution(
                                                 uu = part - u,
                                                 tscale =
                                                     closed? tscale :
-                                                    !closed && j==0 && approx(vert.y,0)? 0 :
-                                                    !closed && j==counts_y-1 && approx(vert.y,1)? 0 :
+                                                    !closed && j==0 && approx(vert.y,1)? 0 :
+                                                    !closed && j==counts_y-1 && approx(vert.y,0)? 0 :
                                                     tscale,
                                                 base = lerp(select(bases,u), select(bases,u+1), uu),
                                                 norm = unit(lerp(select(norms,u), select(norms,u+1), uu)),
@@ -3048,60 +3067,34 @@ function textured_revolution(
                     ) vnf_join([vnf2, vnf3]),
                 topcap_vnf = closed? EMPTY_VNF :
                     let(
-                        rad = last(rgn[0]).x,
+                        pt = last(rgn[0]),
                         top_rgn = [
                             for (path = rgn) let(
-                                ppath = is_vnf(texture)
-                                  ? [ // VNF tile texture
-                                        for (j = [0:1:counts_x-1])
-                                        for (vert = tile[0])
-                                        if (vert.y == 1) let(
+                                ppath = [
+                                        for (j = [0:1:counts_x-1], vert = tpath) let(
                                             u = (j + vert.x) / counts_x
                                         )
-                                        polar_to_xy(rad, angle*u)
-                                    ]
-                                  : let( // Heightfield texture
-                                        texcnt = [len(texture[0]), len(texture)]
-                                    ) [
-                                        for (i = [0:1:counts_x], ti = [0:1:texcnt.x-1])
-                                        if (i != counts_x || ti == 0)
-                                        let(
-                                            u = (i + (ti / texcnt.x)) / counts_x
-                                        )
-                                        polar_to_xy(rad, angle*u)
+                                        polar_to_xy(pt.x, angle*u)
                                     ],
                                 path = closed? ppath : concat(ppath, [[0,0]])
                             ) deduplicate(path, closed=closed)
                         ]
-                    ) vnf_from_region(top_rgn, up(last(rgn[0]).y), reverse=true),
+                    ) vnf_from_region(top_rgn, up(pt.y), reverse=true),
                 botcap_vnf = closed? EMPTY_VNF :
                     let(
-                        rad = rgn[0][0].x,
+                        pt = rgn[0][0],
                         bot_rgn = [
                             for (path = rgn) let(
-                                ppath = is_vnf(texture)
-                                  ? [ // VNF tile texture
-                                        for (j = [0:1:counts_x-1])
-                                        for (vert = tile[0])
-                                        if (vert.y == 0) let(
+                                ppath = [
+                                        for (j = [0:1:counts_x-1], vert = bpath) let(
                                             u = (j + vert.x) / counts_x
                                         )
-                                        polar_to_xy(rad, angle*u)
-                                    ]
-                                  : let( // Heightfield texture
-                                        texcnt = [len(texture[0]), len(texture)]
-                                    ) [
-                                        for (i = [0:1:counts_x], ti = [0:1:texcnt.x-1])
-                                        if (i != counts_x || ti == 0)
-                                        let(
-                                            u = (i + (ti / texcnt.x)) / counts_x
-                                        )
-                                        polar_to_xy(rad, angle*u)
+                                        polar_to_xy(pt.x, angle*u)
                                     ],
                                 path = closed? ppath : concat(ppath, [[0,0]])
                             ) deduplicate(path, closed=closed)
                         ]
-                    ) vnf_from_region(bot_rgn, up(rgn[0][0].y), reverse=false)
+                    ) vnf_from_region(bot_rgn, up(pt.y), reverse=false)
             ) vnf_join([walls_vnf, endcap_vnf, botcap_vnf, topcap_vnf])
         ]),
         skmat = down(-miny) * skew(sxz=shift.x/h, syz=shift.y/h) * up(-miny)
