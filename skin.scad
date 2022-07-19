@@ -2098,39 +2098,48 @@ function associate_vertices(polygons, split, curpoly=0) =
 
 
 // Section: Texturing
-// DefineHeader(Table;Headers=Texture Name|Type|Description): Texture Values
+// DefineHeader(Table;Headers=Texture Name|Args|Description): Heightfield Textures
+// DefineHeader(Table;Headers=Texture Name|Args|Description): VNF Textures
 
 // Function: texture()
 // Usage:
-//   tx = texture(tex, [n], [m]);
+//   tx = texture(tex, [n=], [inset=], [gap=], [roughness=]);
 // Topics: Textures, Knurling
 // Description:
-//   Given a texture name, and two optional variables, returns a heightfield texture as a 2D array of scalars.
+//   Given a texture name, returns a texture.  Textures can come in two varieties:
+//   - Heightfield textures which are 2D arrays of scalars.  These are faster to render, but are less precise and prone to triangulation errors.
+//   - VNF Tile textures, which are VNFs that completely tile the rectangle `[0,0]` to `[1,1]`.  These tend to be slower to render, but are more precise.
+//   Sometimes the geometry of a shape to be textured will cause a heightfield texture to be badly triangulated.
+//   Switching to a similar VNF tile texture can solve this problem.  Usually just by adding the prefix "vnf_".
+// Heightfield Textures:
+//   "bricks"   = `n`, `roughness` = A brick-wall pattern.
+//   "diamonds" = `n` = Diamond shapes with tips aligned with the axes.  Useful for knurling.
+//   "hills"    = `n` = Wavy sine-wave hills and valleys,
+//   "pyramids" = `n` = Pyramids shapes with flat sides aligned with the axes.  Also useful for knurling.
+//   "ribs"     = `n` = Vertically aligned triangular ribs.
+//   "rough"    = `n`, `roughness` = A pseudo-randomized rough surace texture.
+//   "trunc_pyramids" = `n` = Like "pyramids" but with flattened tips.
+//   "trunc_ribs" = `n` = Like "ribs" but with flat rib tips.
+//   "wave_ribs"  = `n` = Vertically aligned wavy ribs.
+// VNF Textures:
+//   "vnf_bricks"   = `inset`, `gap` = Like "bricks", but slower and more consistent in triangulation.
+//   "vnf_checkers" = `inset` = A pattern of alternating checkerboard squares.
+//   "vnf_cones"    = `n`, `inset` = Raised conical spikes.
+//   "vnf_cubes"    = none = Cornercubes texture.
+//   "vnf_diagonal_grid" = `inset` = A grid of thin lines at 45º angles.
+//   "vnf_diamonds" = none = Like "diamonds", but slower and more consistent in triangulation.
+//   "vnf_dimples"  = `n`, `inset` = Small round divots.
+//   "vnf_dots"     = `n`, `inset` = Raised small round bumps.
+//   "vnf_hex_grid" = `inset` = A hexagonal grid of thin lines.
+//   "vnf_pyramids" = none = Like "pyramids", but slower and more consistent in triangulation.
+//   "vnf_trunc_pyramids" = `inset` = Like "trunc_pyramids", but slower and more consistent in triangulation.
 // Arguments:
 //   tex = The name of the texture to get.
-//   n = Generally the number of vertices in one axis to make the texture from.  Depends on the texture.
-//   m = Generally the texture height.  Depends on the texture.
-// Texture Values:
-//   "bricks" = Heightfield = A brick-wall pattern.
-//   "diamonds" = Heightfield = Diamond shapes with tips aligned with the axes.  Useful for knurling.
-//   "hills" = Heightfield = Wavy sine-wave hills and valleys,
-//   "pyramids" = Heightfield = Pyramids shapes with flat sides aligned with the axes.  Also useful for knurling.
-//   "ribs" = Heightfield = Vertically aligned triangular ribs.
-//   "rough" = Heightfield = A pseudo-randomized rough surace texture.
-//   "trunc_pyramids" = Heightfield = Like "pyramids" but with flattened tips.
-//   "trunc_ribs" = Heightfield = Like "ribs" but with flat rib tips.
-//   "wave_ribs" = Heightfield = Vertically aligned wavy ribs.
-//   "vnf_bricks" = VNF Tile = Like "bricks", but slower and more consistent in triangulation.
-//   "vnf_checkers" = VNF Tile = A pattern of alternating checkerboard squares.
-//   "vnf_cones" = VNF Tile = Raised conical spikes.
-//   "vnf_cubes" = VNF Tile = Cornercubes texture.
-//   "vnf_diagonal_grid" = VNF Tile = A grid of thin lines at 45º angles.
-//   "vnf_diamonds" = VNF Tile = Like "diamonds", but slower and more consistent in triangulation.
-//   "vnf_dimples" = VNF Tile = Small round divots.
-//   "vnf_dots" = VNF Tile = Raised small round bumps.
-//   "vnf_hex_grid" = VNF Tile = A hexagonal grid of thin lines.
-//   "vnf_pyramids" = VNF Tile = Like "pyramids", but slower and more consistent in triangulation.
-//   "vnf_trunc_pyramids" = VNF Tile = Like "trunc_pyramids", but slower and more consistent in triangulation.
+//   ---
+//   n = The general number of vertices to use to refine the resolution of the texture.
+//   inset = The amount to inset part of a VNF tile texture.  Generally between 0 and 0.5.
+//   gap = The gap between some parts of a VNF tile.  (ie: gap between bricks, etc.)
+//   roughness = The amount of roughness used on the surface of some heightfield textures.  Generally between 0 and 0.5.
 // See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), texture()
 // Example(3D): "ribs" texture.
 //   tex = texture("ribs");
@@ -2195,13 +2204,13 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Example(3D): "vnf_dots" texture.
 //   tex = texture("vnf_dots");
 //   textured_linear_sweep(
-//       rect(50), tex, h=40, tscale=3,
+//       rect(50), tex, h=40, tscale=1,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "vnf_dimples" texture.
 //   tex = texture("vnf_dimples");
 //   textured_linear_sweep(
-//       rect(50), tex, h=40, tscale=3,
+//       rect(50), tex, h=40, tscale=1,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "vnf_cones" texture.
@@ -2246,195 +2255,290 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(50), tex, h=40,
 //       tex_size=[10,10], style="min_edge"
 //   );
-function texture(tex,n,m,o) =
-    tex=="ribs"? [[1,0]] :
-    tex=="trunc_ribs"? [[each repeat(0,default(n,1)+1), each repeat(1,default(n,1)+1)]] :
-    tex=="wave_ribs"? [[for(a=[0:360/default(n,8):359]) (cos(a)+1)/2]] :
-    tex=="diamonds"? let(m=default(m,1)) [[m,0],[0,m]] :
-    tex=="vnf_diamonds"? let(m=default(m,1)) [
-        [
-            [0,  1,m], [1/2,  1,0], [1,  1,m],
-            [0,1/2,0], [1/2,1/2,m], [1,1/2,0],
-            [0,  0,m], [1/2,  0,0], [1,  0,m],
-        ], [
-            [0,1,3], [2,5,1], [8,7,5], [6,3,7],
-            [1,5,4], [5,7,4], [7,3,4], [4,3,1],
-        ]
-    ] :
-    tex=="pyramids"? let(m=default(m,1)) [[0,0],[0,m]] :
-    tex=="vnf_pyramids"? let(m=default(m,1)) [
-        [ [0,1,0], [1,1,0], [1/2,1/2,m], [0,0,0], [1,0,0] ],
-        [ [2,0,1], [2,1,4], [2,4,3], [2,3,0] ]
-    ] :
-    tex=="trunc_pyramids"? let(n=default(n,3), m=default(m,1)) [repeat(0,n+2), each repeat([0, each repeat(m,n+1)], n+1)] :
-    tex=="vnf_trunc_pyramids"? let(n=default(n,0.25), m=default(m,1)) [
-        [
-            each path3d(square(1)),
-            each move([1/2,1/2,m], p=path3d(rect(1-2*n))),
-        ], [
-            for (i=[0:3]) each [
-                [i, (i+1)%4, i+4],
-                [(i+1)%4, (i+1)%4+4, i+4],
+
+function texture(tex, n, inset, gap, roughness) =
+    tex=="ribs"?
+        let(
+            n = quantup(default(n,2),2)
+        ) [[
+            each lerpn(1,0,n/2,endpoint=false),
+            each lerpn(0,1,n/2,endpoint=false),
+        ]] :
+    tex=="trunc_ribs"?
+        let(
+            n = quantup(default(n,4),4)
+        ) [[
+            each repeat(0,n/4),
+            each lerpn(0,1,n/4,endpoint=false),
+            each repeat(1,n/4),
+            each lerpn(1,0,n/4,endpoint=false),
+        ]] :
+    tex=="wave_ribs"?
+        let(
+            n = max(6,default(n,8))
+        ) [[
+            for(a=[0:360/n:360-EPSILON])
+            (cos(a)+1)/2
+        ]] :
+    tex=="diamonds"?
+        let(
+            n = quantup(default(n,2),2)
+        ) [
+            let(
+                path = [
+                    each lerpn(0,1,n/2,endpoint=false),
+                    each lerpn(1,0,n/2,endpoint=false),
+                ]
+            )
+            for (i=[0:1:n-1]) [
+                for (j=[0:1:n-1]) min(
+                    select(path,i+j),
+                    select(path,i-j)
+                )
             ],
-            [4,5,6], [4,6,7],
-        ]
-    ] :
-    tex=="hills"? let(n=default(n,12)) [
-        for (a=[0:360/n:359.999]) [
-            for (b=[0:360/n:359.999])
-            (cos(a)*cos(b)+1)/2
-        ]
-    ] :
-    tex=="bricks"? let(n=default(n,16), m=default(m,0.05)) [
-        for (y = [0:1:n*2-1])
-        rands(-m/2, m/2, 2*n, seed=12345+y*678) + [
-            for (x = [0:1:2*n-1])
-            (y%n <= max(1,n/16))? 0 :
-            let( even = floor(y/n)%2? n : 0 )
-            (x+even) % (2*n) <= max(1,n/16)? 0 : 0.5
-        ]
-    ] :
-    tex=="vnf_bricks"? let(
-        h=default(n,1),
-        gap=default(m,0.05),
-        inset=default(o,0.1)
-    ) [
+        ] :
+    tex=="vnf_diamonds"?
         [
-            each path3d(square(1)),
-            each move([gap/2, gap/2, 0], p=path3d(square([1-gap, 0.5-gap]))),
-            each move([gap/2+inset/2, gap/2+inset/2, h], p=path3d(square([1-gap-inset, 0.5-gap-inset]))),
-            each move([0, 0.5+gap/2, 0], p=path3d(square([0.5-gap/2, 0.5-gap]))),
-            each move([0, 0.5+gap/2+inset/2, h], p=path3d(square([0.5-gap/2-inset/2, 0.5-gap-inset]))),
-            each move([0.5+gap/2, 0.5+gap/2, 0], p=path3d(square([0.5-gap/2, 0.5-gap]))),
-            each move([0.5+gap/2+inset/2, 0.5+gap/2+inset/2, h], p=path3d(square([0.5-gap/2-inset/2, 0.5-gap-inset]))),
-        ], [
-            [ 8, 9,10], [ 8,10,11], [16,17,18], [16,18,19], [24,25,26],
-            [24,26,27], [ 0, 1, 5], [ 0, 5, 4], [ 1,13, 6], [ 1, 6, 5],
-            [ 6,13,12], [ 6,12,21], [ 7,21,20], [ 6,21, 7], [ 0, 4, 7],
-            [ 0, 7,20], [21,12,15], [21,15,22], [ 3,23,22], [ 3,22,15],
-            [ 2,15,14], [ 2, 3,15], [23,27,26], [23,26,22], [21,22,26],
-            [21,26,25], [21,25,24], [21,24,20], [12,16,19], [12,19,15],
-            [14,15,19], [14,19,18], [13,17,16], [13,16,12], [ 6,10, 9],
-            [ 6, 9, 5], [ 5, 9, 8], [ 5, 8, 4], [ 4, 8,11], [ 4,11, 7],
-            [ 7,11,10], [ 7,10, 6],
-        ]
-    ] :
-    tex=="vnf_checkers"? let(n=default(n,0.05), m=default(m,1)) [
+            [
+                [0,   1, 1], [1/2,   1, 0], [1,   1, 1],
+                [0, 1/2, 0], [1/2, 1/2, 1], [1, 1/2, 0],
+                [0,   0, 1], [1/2,   0, 0], [1,   0, 1],
+            ], [
+                [0,1,3], [2,5,1], [8,7,5], [6,3,7],
+                [1,5,4], [5,7,4], [7,3,4], [4,3,1],
+            ]
+        ] :
+    tex=="pyramids"?
+        let(
+            n = quantup(default(n,2),2)
+        ) [
+            for (i = [0:1:n-1]) [
+                for (j = [0:1:n-1])
+                1 - (max(abs(i-n/2), abs(j-n/2)) / (n/2))
+            ]
+        ] :
+    tex=="vnf_pyramids"?
         [
-            each move([0,0], p=path3d(square(0.5-n),m)),
-            each move([0,0.5], p=path3d(square(0.5-n))),
-            each move([0.5,0], p=path3d(square(0.5-n))),
-            each move([0.5,0.5], p=path3d(square(0.5-n),m)),
-            [1/2-n/2,1/2-n/2,m/2], [0,1,m], [1/2-n,1,m],
-            [1/2,1,0], [1-n,1,0], [1,0,m], [1,1/2-n,m],
-            [1,1/2,0], [1,1-n,0], [1,1,m], [1/2-n/2,1-n/2,m/2],
-            [1-n/2,1-n/2,m/2], [1-n/2,1/2-n/2,m/2],
-        ], [
-            for (i=[0:4:12]) each [[i,i+1,i+2], [i, i+2, i+3]],
-            [10,13,11], [13,12,11], [2,5,4], [4,3,2],
-            [0,3,10], [10,9,0], [4,7,14], [4,14,13],
-            [4,13,16], [10,16,13], [10,3,16], [3,4,16],
-            [7,6,17], [7,17,18], [14,19,20], [14,20,15],
-            [8,11,22], [8,22,21], [12,15,24], [12,24,23],
-            [7,18,26], [7,26,14], [14,26,19], [18,19,26],
-            [15,20,27], [20,25,27], [24,27,25], [15,27,24],
-            [11,12,28], [12,23,28], [11,28,22], [23,22,28],
-        ]
-    ] :
-    tex=="vnf_cones"? let(n=quant(default(n,12),4), m=default(m,1)) [
+            [ [0,1,0], [1,1,0], [1/2,1/2,1], [0,0,0], [1,0,0] ],
+            [ [2,0,1], [2,1,4], [2,4,3], [2,3,0] ]
+        ] :
+    tex=="trunc_pyramids"?
+        let(
+            n = quantup(default(n,6),3)
+        ) [
+            for (i = [0:1:n-1]) [
+                for (j = [0:1:n-1])
+                (1 - (max(n/6, abs(i-n/2), abs(j-n/2)) / (n/2))) * 1.5
+            ]
+        ] :
+    tex=="vnf_trunc_pyramids"?
+        let(
+            inset = default(inset,0.25)
+        ) [
+            [
+                each path3d(square(1)),
+                each move([1/2,1/2,1], p=path3d(rect(1-2*inset))),
+            ], [
+                for (i=[0:3]) each [
+                    [i, (i+1)%4, i+4],
+                    [(i+1)%4, (i+1)%4+4, i+4],
+                ],
+                [4,5,6], [4,6,7],
+            ]
+        ] :
+    tex=="hills"?
+        let(
+            n = default(n,12)
+        ) [
+            for (a=[0:360/n:359.999]) [
+                for (b=[0:360/n:359.999])
+                (cos(a)*cos(b)+1)/2
+            ]
+        ] :
+    tex=="bricks"?
+        let(
+            n = quantup(default(n,24),2),
+            rough = default(roughness,0.05)
+        ) [
+            for (y = [0:1:n-1])
+            rands(-rough/2, rough/2, n, seed=12345+y*678) + [
+                for (x = [0:1:n-1])
+                (y%(n/2) <= max(1,n/16))? 0 :
+                let( even = floor(y/(n/2))%2? n/2 : 0 )
+                (x+even) % n <= max(1,n/16)? 0 : 0.5
+            ]
+        ] :
+    tex=="vnf_bricks"?
+        let(
+            inset = default(inset,0.05),
+            gap = default(gap,0.05)
+        ) [
+            [
+                each path3d(square(1)),
+                each move([gap/2, gap/2, 0], p=path3d(square([1-gap, 0.5-gap]))),
+                each move([gap/2+inset/2, gap/2+inset/2, 1], p=path3d(square([1-gap-inset, 0.5-gap-inset]))),
+                each move([0, 0.5+gap/2, 0], p=path3d(square([0.5-gap/2, 0.5-gap]))),
+                each move([0, 0.5+gap/2+inset/2, 1], p=path3d(square([0.5-gap/2-inset/2, 0.5-gap-inset]))),
+                each move([0.5+gap/2, 0.5+gap/2, 0], p=path3d(square([0.5-gap/2, 0.5-gap]))),
+                each move([0.5+gap/2+inset/2, 0.5+gap/2+inset/2, 1], p=path3d(square([0.5-gap/2-inset/2, 0.5-gap-inset]))),
+            ], [
+                [ 8, 9,10], [ 8,10,11], [16,17,18], [16,18,19], [24,25,26],
+                [24,26,27], [ 0, 1, 5], [ 0, 5, 4], [ 1,13, 6], [ 1, 6, 5],
+                [ 6,13,12], [ 6,12,21], [ 7,21,20], [ 6,21, 7], [ 0, 4, 7],
+                [ 0, 7,20], [21,12,15], [21,15,22], [ 3,23,22], [ 3,22,15],
+                [ 2,15,14], [ 2, 3,15], [23,27,26], [23,26,22], [21,22,26],
+                [21,26,25], [21,25,24], [21,24,20], [12,16,19], [12,19,15],
+                [14,15,19], [14,19,18], [13,17,16], [13,16,12], [ 6,10, 9],
+                [ 6, 9, 5], [ 5, 9, 8], [ 5, 8, 4], [ 4, 8,11], [ 4,11, 7],
+                [ 7,11,10], [ 7,10, 6],
+            ]
+        ] :
+    tex=="vnf_checkers"?
+        let(
+            inset = default(inset,0.05)
+        ) [
+            [
+                each move([0,0], p=path3d(square(0.5-inset),1)),
+                each move([0,0.5], p=path3d(square(0.5-inset))),
+                each move([0.5,0], p=path3d(square(0.5-inset))),
+                each move([0.5,0.5], p=path3d(square(0.5-inset),1)),
+                [1/2-inset/2,1/2-inset/2,1/2], [0,1,1], [1/2-inset,1,1],
+                [1/2,1,0], [1-inset,1,0], [1,0,1], [1,1/2-inset,1],
+                [1,1/2,0], [1,1-inset,0], [1,1,1], [1/2-inset/2,1-inset/2,1/2],
+                [1-inset/2,1-inset/2,1/2], [1-inset/2,1/2-inset/2,1/2],
+            ], [
+                for (i=[0:4:12]) each [[i,i+1,i+2], [i, i+2, i+3]],
+                [10,13,11], [13,12,11], [2,5,4], [4,3,2],
+                [0,3,10], [10,9,0], [4,7,14], [4,14,13],
+                [4,13,16], [10,16,13], [10,3,16], [3,4,16],
+                [7,6,17], [7,17,18], [14,19,20], [14,20,15],
+                [8,11,22], [8,22,21], [12,15,24], [12,24,23],
+                [7,18,26], [7,26,14], [14,26,19], [18,19,26],
+                [15,20,27], [20,25,27], [24,27,25], [15,27,24],
+                [11,12,28], [12,23,28], [11,28,22], [23,22,28],
+            ]
+        ] :
+    tex=="vnf_cones"?
+        let(
+            n = quant(default(n,12),4),
+            inset = default(inset,0)
+        )
+        assert(inset>=0 && inset<0.5)
         [
-            each move([1/2,1/2], p=path3d(circle(d=1,$fn=n))),
-            [1/2,1/2,m],
-            each path3d(square(1)),
-        ], [
-            for (i=[0:1:n-1]) [i, (i+1)%n, n],
-            for (i=[0:1:3], j=[0:1:n/4-1]) [n+1+i, (i*n/4+j+1)%n, i*n/4+j],
-        ]
-    ] :
-    tex=="vnf_cubes"? let(m=default(m,1)) [
+            [
+                each move([1/2,1/2], p=path3d(circle(d=1-inset,$fn=n))),
+                [1/2,1/2,1],
+                each path3d(square(1)),
+            ], [
+                for (i=[0:1:n-1]) [i, (i+1)%n, n],
+                for (i=[0:1:3], j=[0:1:n/4-1]) [n+1+i, (i*n/4+j+1)%n, i*n/4+j],
+                if (inset > 0) for (i = [0:1:3]) [i+n+1, (i+1)%4+n+1, ((i+1)*n/4)%n],
+            ]
+        ] :
+    tex=="vnf_cubes"?
         [
-            [0,1,m/2], [1,1,m/2], [1/2,5/6,m], [0,4/6,0], [1,4/6,0],
-            [1/2,3/6,m/2], [0,2/6,m], [1,2/6,m], [1/2,1/6,0], [0,0,m/2],
-            [1,0,m/2],
-        ], [
-            [0,1,2], [0,2,3], [1,4,2], [2,5,3], [2,4,5],
-            [6,3,5], [4,7,5], [7,8,5], [6,5,8], [10,8,7],
-            [9,6,8], [10,9,8],
-        ]
-    ] :
-    tex=="vnf_diagonal_grid"? let(m=default(m,1)) [
-       [
-           each move([1/2,1/2,0], p=path3d(circle(d=1,$fn=4))),
-           each move([1/2,1/2,m], p=path3d(circle(d=0.8,$fn=4))),
-           for (a=[0:90:359]) each move([1/2,1/2], p=zrot(-a, p=[[1/2,0.1,m], [0.1,1/2,m], [1/2,1/2,m]]))
-       ], [
-           for (i=[0:3]) each let(j=i*3+8) [
-               [i,(i+1)%4,(i+1)%4+4], [i,(i+1)%4+4,i+4],
-               [j,j+1,j+2], [i, (i+3)%4, j], [(i+3)%4, j+1, j],
-           ],
-           [4,5,6], [4,6,7],
-       ]
-    ] :
-    tex=="vnf_dimples" || tex=="vnf_dots" ? let(
-        n = quant(default(n,12),4),
-        m = default(m,0.05),
-        rows=ceil(n/4),
-        r=adj_ang_to_hyp(1/2-m,45),
-        dots = tex=="vnf_dots",
-        cp=[1/2, 1/2, r*sin(45)*(dots?-1:1)]
-    ) [
+            [
+                [0,1,1/2], [1,1,1/2], [1/2,5/6,1], [0,4/6,0], [1,4/6,0],
+                [1/2,3/6,1/2], [0,2/6,1], [1,2/6,1], [1/2,1/6,0], [0,0,1/2],
+                [1,0,1/2],
+            ], [
+                [0,1,2], [0,2,3], [1,4,2], [2,5,3], [2,4,5],
+                [6,3,5], [4,7,5], [7,8,5], [6,5,8], [10,8,7],
+                [9,6,8], [10,9,8],
+            ]
+        ] :
+    tex=="vnf_diagonal_grid"?
+        let(
+            inset = default(inset,0.1)
+        )
+        assert(inset>0 && inset<0.5)
         [
-            each path3d(square(1)),
-            for (p=[0:1:rows-1], t=[0:360/n:359.999])
-                cp + (
-                    dots? spherical_to_xyz(r, -t, 45-45*p/rows) :
-                    spherical_to_xyz(r, -t, 135+45*p/rows)
-                ),
-            cp + r * (dots?UP:DOWN),
-        ], [
-            for (i=[0:1:3], j=[0:1:n/4-1]) [i, 4+(i*n/4+j+1)%n, 4+i*n/4+j],
-            for (i=[0:1:rows-2], j=[0:1:n-1]) each [
-                [4+i*n+j, 4+(i+1)*n+(j+1)%n, 4+(i+1)*n+j],
-                [4+i*n+j, 4+i*n+(j+1)%n, 4+(i+1)*n+(j+1)%n],
+            [
+                each move([1/2,1/2,0], p=path3d(circle(d=1,$fn=4))),
+                each move([1/2,1/2,1], p=path3d(circle(d=1-inset*2,$fn=4))),
+                for (a=[0:90:359]) each move([1/2,1/2], p=zrot(-a, p=[[1/2,inset,1], [inset,1/2,1], [1/2,1/2,1]]))
+            ], [
+                for (i=[0:3]) each let(j=i*3+8) [
+                    [i,(i+1)%4,(i+1)%4+4], [i,(i+1)%4+4,i+4],
+                    [j,j+1,j+2], [i, (i+3)%4, j], [(i+3)%4, j+1, j],
+                ],
+                [4,5,6], [4,6,7],
+            ]
+        ] :
+    tex=="vnf_dimples" || tex=="vnf_dots" ?
+        let(
+            n = quant(default(n,16),4),
+            inset = default(inset,0.05)
+        )
+        assert(inset>=0 && inset < 0.5)
+        let(
+            rows=ceil(n/4),
+            r=adj_ang_to_hyp(1/2-inset,45),
+            dots = tex=="vnf_dots",
+            cp = [1/2, 1/2, r*sin(45)*(dots?-1:1)],
+            sc = 1 / (r - abs(cp.z)),
+            uverts = [
+                each path3d(square(1)),
+                for (p=[0:1:rows-1], t=[0:360/n:359.999])
+                    cp + (
+                        dots? spherical_to_xyz(r, -t, 45-45*p/rows) :
+                        spherical_to_xyz(r, -t, 135+45*p/rows)
+                    ),
+                cp + r * (dots?UP:DOWN),
             ],
-            for (i=[0:1:n-1]) [4+(rows-1)*n+i, 4+(rows-1)*n+(i+1)%n, 4+rows*n],
-            if (m>0) for (i=[0:3]) [i, (i+1)%4, 4+(i+1)%4*n/4]
-        ]
-    ] :
-    tex=="vnf_hex_grid"? let(
-        h=default(n,1), inset=default(m,0.1),
-        diag=opp_ang_to_hyp(inset,60),
-        side=adj_ang_to_opp(1,30),
-        hyp=adj_ang_to_hyp(0.5,30),
-        check=assert(inset<0.5),
-        sc = 1/3/hyp,
-        hex=[ [1,2/6,0], [1/2,1/6,0], [0,2/6,0], [0,4/6,0], [1/2,5/6,0], [1,4/6,0] ]
-    ) [
-        [
-            each hex,
-            each move([0.5,0.5], p=yscale(sc, p=path3d(ellipse(d=1-2*inset, circum=true, spin=-30,$fn=6),h))),
-            hex[0]-[0,diag*sc,-h],
-            for (ang=[270+60,270-60]) hex[1]+yscale(sc, p=cylindrical_to_xyz(diag,ang,h)),
-            hex[2]-[0,diag*sc,-h],
-            [0,0,h], [0.5-inset,0,h], [0.5,0,0], [0.5+inset,0,h], [1,0,h],
-            hex[3]+[0,diag*sc,h],
-            for (ang=[90+60,90-60]) hex[4]+yscale(sc, p=cylindrical_to_xyz(diag,ang,h)),
-            hex[5]+[0,diag*sc,h],
-            [0,1,h], [0.5-inset,1,h], [0.5,1,0], [0.5+inset,1,h], [1,1,h],
-        ], [
-            for (i=[0:2:5]) let(b=6) [b+i, b+(i+1)%6, b+(i+2)%6], [6,8,10],
-            for (i=[0:1:5]) each [ [i, (i+1)%6, (i+1)%6+6], [i, (i+1)%6+6, i+6] ],
-            [19,13,12], [19,12,20], [17,16,15], [17,15,14],
-            [21,25,26], [21,26,22], [23,28,29], [23,29,24],
-            [0,12,13], [0,13,1], [1,14,15], [1,15,2],
-            [3,21,22], [3,22,4], [4,23,24], [4,24,5],
-            [1,13,19], [1,19,18], [1,18,17], [1,17,14],
-            [4,22,26], [4,26,27], [4,27,28], [4,28,23],
-        ]
-    ] :
-    tex=="rough"? let(n=default(n,32), m=default(m,0.1)) [
-        for (y = [0:1:n-1]) rands(0, m, n, seed=123456+29*y)
-    ] :
+            verts = zscale(sc, p=uverts),
+            faces = [
+                for (i=[0:1:3], j=[0:1:n/4-1]) [i, 4+(i*n/4+j+1)%n, 4+i*n/4+j],
+                for (i=[0:1:rows-2], j=[0:1:n-1]) each [
+                    [4+i*n+j, 4+(i+1)*n+(j+1)%n, 4+(i+1)*n+j],
+                    [4+i*n+j, 4+i*n+(j+1)%n, 4+(i+1)*n+(j+1)%n],
+                ],
+                for (i=[0:1:n-1]) [4+(rows-1)*n+i, 4+(rows-1)*n+(i+1)%n, 4+rows*n],
+                if (inset>0) for (i=[0:3]) [i, (i+1)%4, 4+(i+1)%4*n/4]
+            ]
+        ) [verts, faces] :
+    tex=="vnf_hex_grid"?
+        let(
+            inset=default(inset,0.1)
+        )
+        assert(inset>=0 && inset<0.5)
+        let(
+            diag=opp_ang_to_hyp(inset,60),
+            side=adj_ang_to_opp(1,30),
+            hyp=adj_ang_to_hyp(0.5,30),
+            sc = 1/3/hyp,
+            hex=[ [1,2/6,0], [1/2,1/6,0], [0,2/6,0], [0,4/6,0], [1/2,5/6,0], [1,4/6,0] ]
+        ) [
+            [
+                each hex,
+                each move([0.5,0.5], p=yscale(sc, p=path3d(ellipse(d=1-2*inset, circum=true, spin=-30,$fn=6),1))),
+                hex[0]-[0,diag*sc,-1],
+                for (ang=[270+60,270-60]) hex[1]+yscale(sc, p=cylindrical_to_xyz(diag,ang,1)),
+                hex[2]-[0,diag*sc,-1],
+                [0,0,1], [0.5-inset,0,1], [0.5,0,0], [0.5+inset,0,1], [1,0,1],
+                hex[3]+[0,diag*sc,1],
+                for (ang=[90+60,90-60]) hex[4]+yscale(sc, p=cylindrical_to_xyz(diag,ang,1)),
+                hex[5]+[0,diag*sc,1],
+                [0,1,1], [0.5-inset,1,1], [0.5,1,0], [0.5+inset,1,1], [1,1,1],
+            ], [
+                for (i=[0:2:5]) let(b=6) [b+i, b+(i+1)%6, b+(i+2)%6], [6,8,10],
+                for (i=[0:1:5]) each [ [i, (i+1)%6, (i+1)%6+6], [i, (i+1)%6+6, i+6] ],
+                [19,13,12], [19,12,20], [17,16,15], [17,15,14],
+                [21,25,26], [21,26,22], [23,28,29], [23,29,24],
+                [0,12,13], [0,13,1], [1,14,15], [1,15,2],
+                [3,21,22], [3,22,4], [4,23,24], [4,24,5],
+                [1,13,19], [1,19,18], [1,18,17], [1,17,14],
+                [4,22,26], [4,26,27], [4,27,28], [4,28,23],
+            ]
+        ] :
+    tex=="rough"?
+        let(
+            n = default(n,32),
+            rough = default(roughness, 0.2)
+        ) [
+            for (y = [0:1:n-1])
+            rands(0, rough, n, seed=123456+29*y)
+        ] :
     assert(false, str("Unrecognized texture name: ", tex));
 
 
@@ -2487,7 +2591,7 @@ function texture(tex,n,m,o) =
 // Example: "pyramids" texture.
 //   textured_linear_sweep(
 //       rect(50), "pyramids", tex_size=[10,10],
-//       h=40, style="concave");
+//       h=40, style="convex");
 // Example: "vnf_bricks" texture.
 //   path = glued_circles(r=15, spread=40, tangent=45);
 //   textured_linear_sweep(
@@ -2524,6 +2628,7 @@ function texture(tex,n,m,o) =
 //       path, h=40, "trunc_pyramids", tex_size=[5,5],
 //       tscale=1, style="convex");
 //   vnf_polyhedron(vnf, convexity=10);
+
 function textured_linear_sweep(
     region, texture,
     tex_size=[5,5], h, counts,
@@ -2574,10 +2679,10 @@ function textured_linear_sweep(
             assert(all_defined(tex_dim), "Heightfield texture must be a 2D square array of scalar heights."),
         sorted_tile =
             !is_vnf(texture)? texture :
-            samples<=1? texture :
             let(
-                s = 1/samples,
-                vnf = vnf_slice(texture, "X", list([s:s:1-s/2]))
+                s = 1 / max(1, samples),
+                vnf = samples<=1? texture :
+                    vnf_slice(texture, "X", list([s:s:1-s/2]))
             ) _vnf_sort_vertices(vnf, idx=[1,0]),
         vertzs = !is_vnf(sorted_tile)? undef :
             group_sort(sorted_tile[0], idx=1),
@@ -2796,6 +2901,7 @@ function _find_vnf_tile_edge_path(vnf, val) =
 //   angle = The number of degrees counter-clockwise from X+ to revolve around the Z axis.  Default: `360`
 //   style = The triangulation style used.  See {{vnf_vertex_array()}} for valid styles.  Used only with heightfield type textures. Default: `"min_edge"`
 //   counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
+//   samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -2844,6 +2950,7 @@ function _find_vnf_tile_edge_path(vnf, val) =
 //       right(40, p=circle(d=40,$fn=6)),
 //   ];
 //   textured_revolution(rgn, texture="diamonds", tex_size=[10,10], tscale=1, angle=240, style="concave");
+
 function textured_revolution(
     shape, texture, tex_size, tscale=1,
     inset=false, rot=false,
@@ -3169,6 +3276,7 @@ module textured_revolution(
 //   rounding = If given, rounds the top and bottom of the cylinder to the given radius.  If given a negative size, creates a roundover that juts *outward* from the cylinder.
 //   rounding1 = If given, rounds the bottom of the cylinder to the given radius.  If given a negative size, creates a roundover that juts *outward* from the cylinder.
 //   rounding2 = If given, rounds the top of the cylinder to the given radius.  If given a negative size, creates a roundover that juts *outward* from the cylinder.
+//   samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -3177,15 +3285,17 @@ module textured_revolution(
 //   textured_cylinder(h=40, r=20, texture="diamonds", tex_size=[5,5]);
 //   textured_cylinder(h=40, r1=20, r2=15, texture="pyramids", tex_size=[5,5], style="convex");
 //   textured_cylinder(h=40, r1=20, r2=15, texture="trunc_pyramids", tex_size=[5,5], chamfer=5, style="convex");
-//   textured_cylinder(h=40, r1=20, r2=15, texture="vnf_dots", tex_size=[5,5], rounding=8);
+//   textured_cylinder(h=40, r1=20, r2=15, texture="vnf_dots", tex_size=[5,5], rounding=9, samples=6);
 //   textured_cylinder(h=50, r1=25, r2=20, shift=[0,10], texture="bricks", rounding1=-10, tex_size=[10,10], tscale=0.5, style="concave");
+
 function textured_cylinder(
     h, r, texture, tex_size=[1,1], counts,
     tscale=1, inset=false, rot=false,
     caps=true, style="min_edge",
     shift=[0,0], l, r1, r2, d, d1, d2,
     chamfer, chamfer1, chamfer2,
-    rounding, rounding1, rounding2
+    rounding, rounding1, rounding2,
+    samples
 ) =
     let(
         h = first_defined([h, l, 1]),
@@ -3214,7 +3324,8 @@ function textured_cylinder(
             reverse(path), texture, closed=false,
             tex_size=tex_size, counts=counts,
             tscale=tscale, inset=inset, rot=rot,
-            style=style, shift=shift
+            style=style, shift=shift,
+            samples=samples
         )
     ) vnf;
 
@@ -3226,7 +3337,7 @@ module textured_cylinder(
     l, r1, r2, d, d1, d2,
     chamfer, chamfer1, chamfer2,
     rounding, rounding1, rounding2,
-    convexity=10,
+    convexity=10, samples,
     anchor=CENTER, spin=0, orient=UP
 ) {
     h = first_defined([h, l, 1]);
@@ -3241,7 +3352,7 @@ module textured_cylinder(
         tscale=tscale, inset=inset, rot=rot,
         counts=counts, tex_size=tex_size,
         caps=true, style=style,
-        shift=shift,
+        shift=shift, samples=samples,
         chamfer1=chamf1, chamfer2=chamf2,
         rounding1=round1, rounding2=round2
     );
