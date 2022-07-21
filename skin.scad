@@ -2133,12 +2133,13 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   "vnf_hex_grid" = `inset` = A hexagonal grid of thin lines.
 //   "vnf_pyramids" = none = Like "pyramids", but slower and more consistent in triangulation.
 //   "vnf_trunc_pyramids" = `inset` = Like "trunc_pyramids", but slower and more consistent in triangulation.
+//   "vnf_trunc_ribs" = `inset`, `gap` = Like "trunc_ribs", but slower and more adjustable.
 // Arguments:
 //   tex = The name of the texture to get.
 //   ---
 //   n = The general number of vertices to use to refine the resolution of the texture.
 //   inset = The amount to inset part of a VNF tile texture.  Generally between 0 and 0.5.
-//   gap = The gap between some parts of a VNF tile.  (ie: gap between bricks, etc.)
+//   gap = The gap between logically distinct parts of a VNF tile.  (ie: gap between bricks, gap between truncated ribs, etc.)
 //   roughness = The amount of roughness used on the surface of some heightfield textures.  Generally between 0 and 0.5.
 // See Also: textured_revolution(), textured_cylinder(), textured_linear_sweep(), heightfield(), cylindrical_heightfield(), texture()
 // Example(3D): "ribs" texture.
@@ -2152,6 +2153,12 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   textured_linear_sweep(
 //       rect(50), tex, h=40, tscale=3,
 //       tex_size=[10,10], style="concave"
+//   );
+// Example(3D): "vnf_trunc_ribs" texture.  Slower, but more controllable.
+//   tex = texture("vnf_trunc_ribs", gap=0.25, inset=0.333);
+//   textured_linear_sweep(
+//       rect(50), tex, h=40, tscale=3,
+//       tex_size=[10,10]
 //   );
 // Example(3D): "wave_ribs" texture.
 //   tex = texture("wave_ribs");
@@ -2273,6 +2280,26 @@ function texture(tex, n, inset, gap, roughness) =
             each repeat(1,n/4),
             each lerpn(1,0,n/4,endpoint=false),
         ]] :
+    tex=="vnf_trunc_ribs"?
+        let(
+            inset = default(inset,1/2),
+            gap = default(gap,1/4)
+        )
+        assert(inset >= 0)
+        assert(gap >= 0)
+        assert(gap+inset > 0)
+        assert(gap+inset <= 1)
+        [
+            [
+               each move([0.5,0.5], p=path3d(rect([1-gap,1]),0)),
+               each move([0.5,0.5], p=path3d(rect([1-gap-inset,1]),1)),
+               each path3d(square(1)),
+            ], [
+                [1,2,6], [1,6,5], [0,4,3], [3,4,7],
+                if (gap+inset < 1-EPSILON) each [[4,5,6], [4,6,7]],
+                if (gap > EPSILON) each [[1,9,10], [1,10,2], [0,3,8], [3,11,8]],
+            ]
+        ] :
     tex=="wave_ribs"?
         let(
             n = max(6,default(n,8))
@@ -2871,11 +2898,11 @@ function _find_vnf_tile_edge_path(vnf, val) =
 
 // Function&Module: textured_revolution()
 // Usage: As Function
-//   vnf = textured_revolution(region, texture, tex_size, [tscale=], ...);
-//   vnf = textured_revolution(region, texture, counts=, [tscale=], ...);
+//   vnf = textured_revolution(shape, texture, tex_size, [tscale=], ...);
+//   vnf = textured_revolution(shape, texture, counts=, [tscale=], ...);
 // Usage: As Module
-//   textured_revolution(region, texture, tex_size, [tscale=], ...) [ATTACHMENTS];
-//   textured_revolution(region, texture, counts=, [tscale=], ...) [ATTACHMENTS];
+//   textured_revolution(shape, texture, tex_size, [tscale=], ...) [ATTACHMENTS];
+//   textured_revolution(shape, texture, counts=, [tscale=], ...) [ATTACHMENTS];
 // Topics: Sweep, Extrusion, Textures, Knurling
 // Description:
 //   Given a 2D region or path, fully in the X+ half-plane, revolves that shape around the Z axis (after rotating its Y+ to Z+).
@@ -2898,6 +2925,7 @@ function _find_vnf_tile_edge_path(vnf, val) =
 //   rot = If true, rotates the texture 90º.
 //   shift = [X,Y] amount to translate the top, relative to the bottom.  Default: [0,0]
 //   closed = If false, and shape is given as a path, then the revolved path will be sealed to the axis of rotation with untextured caps.  Default: `true`
+//   taper = If given, and `closed=false`, tapers the texture height to zero over the first and last given percentage of the path.  Default: `undef` (no taper)
 //   angle = The number of degrees counter-clockwise from X+ to revolve around the Z axis.  Default: `360`
 //   style = The triangulation style used.  See {{vnf_vertex_array()}} for valid styles.  Used only with heightfield type textures. Default: `"min_edge"`
 //   counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
@@ -2953,8 +2981,8 @@ function _find_vnf_tile_edge_path(vnf, val) =
 
 function textured_revolution(
     shape, texture, tex_size, tscale=1,
-    inset=false, rot=false,
-    shift=[0,0], closed=true, angle=360,
+    inset=false, rot=false, shift=[0,0],
+    taper, closed=true, angle=360,
     style="min_edge", counts, samples
 ) =
     assert(angle>0 && angle<=360)
@@ -2964,6 +2992,7 @@ function textured_revolution(
     assert(counts==undef || is_vector(counts,2))
     assert(tex_size==undef || is_vector(tex_size,2))
     assert(is_bool(rot) || in_list(rot,[0,90,180,270]))
+    assert(is_undef(taper) || (is_finite(taper) && taper>=0 && taper<50))
     let(
         regions = !is_path(shape,2)? region_parts(shape) :
             shape[0].y <= last(shape).y? [[reverse(shape)]] :
@@ -3037,6 +3066,8 @@ function textured_revolution(
             is_vector(tex_size,2)
               ? max(1,round(angle/360*circumf/tex_size.x))
               : ceil(6*angle/360*circumf/h),
+        taper_lup = closed || is_undef(taper)? [[-1,1],[2,1]] :
+            [[-1,0], [0,0], [taper/100+EPSILON,1], [1-taper/100-EPSILON,1], [1,0], [2,0]],
         full_vnf = vnf_join([
             for (rgn = regions) let(
                 rgn_wall_vnf = vnf_join([
@@ -3060,13 +3091,9 @@ function textured_revolution(
                                                 part = (j + (1-vert.y)) * samples,
                                                 u = floor(part),
                                                 uu = part - u,
-                                                tscale =
-                                                    closed? tscale :
-                                                    !closed && j==0 && approx(vert.y,1)? 0 :
-                                                    !closed && j==counts_y-1 && approx(vert.y,0)? 0 :
-                                                    tscale,
                                                 base = lerp(select(bases,u), select(bases,u+1), uu),
                                                 norm = unit(lerp(select(norms,u), select(norms,u+1), uu)),
+                                                tscale = tscale * lookup(part/samples/counts_y, taper_lup),
                                                 texh = (vert.z - inset) * tscale * (base.x / maxx),
                                                 xyz = base - norm * texh
                                             ) zrot(vert.x*angle/counts_x, p=xyz)
@@ -3090,13 +3117,9 @@ function textured_revolution(
                                             part = (i + (ti/texcnt.y)) * samples,
                                             u = floor(part),
                                             uu = part - u,
-                                            tscale =
-                                                closed? tscale :
-                                                !closed && i==0 && ti==0? 0 :
-                                                !closed && i==counts_y && ti==0? 0 :
-                                                tscale,
                                             base = lerp(bases[u], select(bases,u+1), uu),
                                             norm = unit(lerp(norms[u], select(norms,u+1), uu)),
+                                            tscale = tscale * lookup(part/samples/counts_y, taper_lup),
                                             texh = (texture[ti][tj] - inset) * tscale * (base.x / maxx),
                                             xyz = base - norm * texh
                                         ) xyz
@@ -3131,13 +3154,9 @@ function textured_revolution(
                                             part = (j + vert.y) * samples,
                                             u = floor(part),
                                             uu = part - u,
-                                            tscale =
-                                                closed? tscale :
-                                                !closed && j==0 && approx(vert.y,0)? 0 :
-                                                !closed && j==counts_y-1 && approx(vert.y,1)? 0 :
-                                                tscale,
                                             base = lerp(select(bases,u), select(bases,u+1), uu),
                                             norm = unit(lerp(select(norms,u), select(norms,u+1), uu)),
+                                            tscale = tscale * lookup(part/samples/counts_y, taper_lup),
                                             texh = (vert.z - inset) * tscale * (base.x / maxx),
                                             xyz = base - norm * texh
                                         ) xyz
@@ -3151,13 +3170,9 @@ function textured_revolution(
                                             part = (i + (ti/texcnt.y)) * samples,
                                             u = floor(part),
                                             uu = part - u,
-                                            tscale =
-                                                closed? tscale :
-                                                !closed && i==0 && ti==0? 0 :
-                                                !closed && i==counts_y && ti==0? 0 :
-                                                tscale,
                                             base = lerp(bases[u], select(bases,u+1), uu),
                                             norm = unit(lerp(norms[u], select(norms,u+1), uu)),
+                                            tscale = tscale * lookup(part/samples/counts_y, taper_lup),
                                             texh = (texture[ti][0] - inset) * tscale * (base.x / maxx),
                                             xyz = base - norm * texh
                                         ) xyz
@@ -3172,37 +3187,50 @@ function textured_revolution(
                         vnf2 = vnf_from_region(cap_rgn, xrot(90), reverse=false),
                         vnf3 = vnf_from_region(cap_rgn, rot([90,0,angle]), reverse=true)
                     ) vnf_join([vnf2, vnf3]),
-                topcap_vnf = closed? EMPTY_VNF :
+                allcaps_vnf = closed? EMPTY_VNF :
                     let(
-                        pt = last(rgn[0]),
-                        top_rgn = [
-                            for (path = rgn) let(
+                        plen = path_length(rgn[0], closed=closed),
+                        counts_y = is_vector(counts,2)? counts.y :
+                            is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
+                        obases = resample_path(rgn[0], n=counts_y * samples + (closed?0:1), closed=closed),
+                        onorms = path_normals(obases, closed=closed),
+                        rbases = closed? close_path(obases) : obases,
+                        rnorms = closed? close_path(onorms) : onorms,
+                        bases = xrot(90, p=path3d(rbases)),
+                        norms = xrot(90, p=path3d(rnorms)),
+                        caps_vnf = vnf_join([
+                            for (j = [-1,0]) let(
+                                base = select(bases,j),
+                                norm = unit(select(norms,j)),
                                 ppath = [
-                                        for (j = [0:1:counts_x-1], vert = tpath) let(
-                                            u = (j + vert.x) / counts_x
-                                        )
-                                        polar_to_xy(pt.x, angle*u)
-                                    ],
-                                path = closed? ppath : concat(ppath, [[0,0]])
-                            ) deduplicate(path, closed=closed)
-                        ]
-                    ) vnf_from_region(top_rgn, up(pt.y), reverse=true),
-                botcap_vnf = closed? EMPTY_VNF :
-                    let(
-                        pt = rgn[0][0],
-                        bot_rgn = [
-                            for (path = rgn) let(
-                                ppath = [
-                                        for (j = [0:1:counts_x-1], vert = bpath) let(
-                                            u = (j + vert.x) / counts_x
-                                        )
-                                        polar_to_xy(pt.x, angle*u)
-                                    ],
-                                path = closed? ppath : concat(ppath, [[0,0]])
-                            ) deduplicate(path, closed=closed)
-                        ]
-                    ) vnf_from_region(bot_rgn, up(pt.y), reverse=false)
-            ) vnf_join([walls_vnf, endcap_vnf, botcap_vnf, topcap_vnf])
+                                    for (vert = tpath) let(
+                                        uang = vert.x / counts_x,
+                                        tscale = tscale * lookup([0,1][j+1], taper_lup),
+                                        texh = (vert.y - inset) * tscale * (base.x / maxx),
+                                        xyz = base - norm * texh
+                                    ) zrot(angle*uang, p=xyz)
+                                ],
+                                pplen = len(ppath),
+                                zed = j<0? max(column(ppath,2)) :
+                                    min(column(ppath,2)),
+                                slice_vnf = [
+                                    [
+                                        each ppath,
+                                        [0, 0, zed],
+                                    ], [
+                                        for (i = [0:1:pplen-2])
+                                            j<0? [pplen, i, (i+1)%pplen] :
+                                            [pplen, (i+1)%pplen, i]
+                                    ]
+                                ],
+                                cap_vnf = vnf_join([
+                                    for (i = [0:1:counts_x-1])
+                                        zrot(i*angle/counts_x, p=slice_vnf)
+                                ])
+                            ) cap_vnf
+                        ])
+                    ) caps_vnf
+            ) vnf_join([walls_vnf, endcap_vnf, allcaps_vnf])
         ]),
         skmat = down(-miny) * skew(sxz=shift.x/h, syz=shift.y/h) * up(-miny)
     ) apply(skmat, full_vnf);
@@ -3211,7 +3239,7 @@ function textured_revolution(
 module textured_revolution(
     shape, texture, tex_size, tscale=1,
     inset=false, rot=false, shift=[0,0],
-    closed=true, angle=360,
+    taper, closed=true, angle=360,
     style="min_edge", atype="surface",
     convexity=10, counts, samples,
     anchor=CENTER, spin=0, orient=UP
@@ -3220,7 +3248,7 @@ module textured_revolution(
     vnf = textured_revolution(
         shape, texture, tex_size=tex_size,
         tscale=tscale, inset=inset, rot=rot,
-        closed=closed, style=style,
+        taper=taper, closed=closed, style=style,
         shift=shift, angle=angle,
         samples=samples, counts=counts
     );
@@ -3269,6 +3297,7 @@ module textured_revolution(
 //   caps = (function only) If true, create endcaps for the extruded shape.  Default: `true`
 //   shift = [X,Y] amount to translate the top, relative to the bottom.  Default: [0,0]
 //   style = The triangulation style used.  See {{vnf_vertex_array()}} for valid styles.  Default: `"min_edge"`
+//   taper = If given, tapers the texture height to zero over the given percentage of the top and bottom of the cylinder face.  Default: `undef` (no taper)
 //   counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
 //   chamfer = If given, chamfers the top and bottom of the cylinder by the given size.  If given a negative size, creates a chamfer that juts *outward* from the cylinder.
 //   chamfer1 = If given, chamfers the bottom of the cylinder by the given size.  If given a negative size, creates a chamfer that juts *outward* from the cylinder.
@@ -3287,11 +3316,17 @@ module textured_revolution(
 //   textured_cylinder(h=40, r1=20, r2=15, texture="trunc_pyramids", tex_size=[5,5], chamfer=5, style="convex");
 //   textured_cylinder(h=40, r1=20, r2=15, texture="vnf_dots", tex_size=[5,5], rounding=9, samples=6);
 //   textured_cylinder(h=50, r1=25, r2=20, shift=[0,10], texture="bricks", rounding1=-10, tex_size=[10,10], tscale=0.5, style="concave");
+// Example: No Texture Taper
+//   textured_cylinder(d1=25, d2=20, h=30, rounding=5, texture="trunc_ribs", tex_size=[5,1]);
+// Example: Taper Texure at Extreme Ends
+//   textured_cylinder(d1=25, d2=20, h=30, rounding=5, texture="trunc_ribs", taper=0, tex_size=[5,1]);
+// Example: Taper Texture over First and Last 10%
+//   textured_cylinder(d1=25, d2=20, h=30, rounding=5, texture="trunc_ribs", taper=10, tex_size=[5,1]);
 
 function textured_cylinder(
     h, r, texture, tex_size=[1,1], counts,
     tscale=1, inset=false, rot=false,
-    caps=true, style="min_edge",
+    caps=true, style="min_edge", taper,
     shift=[0,0], l, r1, r2, d, d1, d2,
     chamfer, chamfer1, chamfer2,
     rounding, rounding1, rounding2,
@@ -3324,7 +3359,7 @@ function textured_cylinder(
             reverse(path), texture, closed=false,
             tex_size=tex_size, counts=counts,
             tscale=tscale, inset=inset, rot=rot,
-            style=style, shift=shift,
+            style=style, shift=shift, taper=taper,
             samples=samples
         )
     ) vnf;
@@ -3333,7 +3368,7 @@ function textured_cylinder(
 module textured_cylinder(
     h, r, texture, tex_size=[1,1],
     counts, tscale=1, inset=false, rot=false,
-    style="min_edge", shift=[0,0],
+    style="min_edge", shift=[0,0], taper,
     l, r1, r2, d, d1, d2,
     chamfer, chamfer1, chamfer2,
     rounding, rounding1, rounding2,
@@ -3351,7 +3386,7 @@ module textured_cylinder(
         texture=texture, h=h, r1=r1, r2=r2,
         tscale=tscale, inset=inset, rot=rot,
         counts=counts, tex_size=tex_size,
-        caps=true, style=style,
+        caps=true, style=style, taper=taper,
         shift=shift, samples=samples,
         chamfer1=chamf1, chamfer2=chamf2,
         rounding1=round1, rounding2=round2
