@@ -3066,7 +3066,7 @@ function textured_revolution(
             is_vector(tex_size,2)
               ? max(1,round(angle/360*circumf/tex_size.x))
               : ceil(6*angle/360*circumf/h),
-        taper_lup = is_undef(taper)? [[-1,1],[2,1]] :
+        taper_lup = closed || is_undef(taper)? [[-1,1],[2,1]] :
             [[-1,0], [0,0], [taper/100+EPSILON,1], [1-taper/100-EPSILON,1], [1,0], [2,0]],
         full_vnf = vnf_join([
             for (rgn = regions) let(
