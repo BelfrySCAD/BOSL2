@@ -4,8 +4,6 @@ on: [workflow_dispatch]
 jobs:
   RegenerateDocs:
     runs-on: ubuntu-latest
-    env:
-      OPENSCADPATH: $(dirname $GITHUB_WORKSPACE)
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -31,6 +29,7 @@ jobs:
         wget https://files.openscad.org/OpenSCAD-2021.01-x86_64.AppImage
         sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
         sudo chmod +x /usr/local/bin/openscad
+        echo ::set-env name=OPENSCADPATH::$(dirname $GITHUB_WORKSPACE)
 
     - name: Generate Docs
       uses: GabrielBB/xvfb-action@v1
