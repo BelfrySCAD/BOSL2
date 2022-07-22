@@ -2481,13 +2481,32 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 // Usage:
 //   text3d(text, [h], [size], [font], ...);
 // Description:
-//   Creates a 3D text block that can be attached to other attachable objects.
-//   NOTE: This cannot have children attached to it.
+//   Creates a 3D text block that supports anchoring and attachment to attachable objects.  You cannot attach children to text. 
+//   .
+//   Historically fonts were specified by their "body size", the height of the metal body
+//   on which the glyphs were cast.  This means the size was an upper bound on the size
+//   of the font glyphs, not a direct measurement of their size.  In digital typesetting,
+//   the metal body is replaced by an invisible box, the em square, whose side length is
+//   defined to be the font's size.  The glyphs can be contained in that square, or they
+//   can extend beyond it, depending on the choices made by the font designer.  As a
+//   result, the meaning of font size varies between fonts: two fonts at the "same" size
+//   can differ significantly in the actual size of their characters.  Typographers
+//   customarily specify the size in the units of "points".  A point is 1/72 inch.  In
+//   OpenSCAD, you specify the size in OpenSCAD units (often treated as millimeters for 3d
+//   printing), so if you want points you will need to perform a suitable unit conversion.
+//   In addition, the OpenSCAD font system has a bug: if you specify size=s you will
+//   instead get a font whose size is s/0.72.  For many fonts this means the size of
+//   capital letters will be approximately equal to s, because it is common for fonts to
+//   use about 70% of their height for the ascenders in the font.  To get the customary
+//   font size, you should multiply your desired size by 0.72.
+//   .
+//   To find the fonts that you have available in your OpenSCAD installation,
+//   go to the Help menu and select "Font List".  
 // Arguments:
-//   text = The text string to instantiate as an object.
-//   h = The height to which the text should be extruded.  Default: 1
-//   size = The font size used to create the text block.  Default: 10
-//   font = The name of the font used to create the text block.  Default: "Helvetica"
+//   text = Text to create.
+//   h = Extrusion height for the text.  Default: 1
+//   size = The font will be created at this size divided by 0.72.   Default: 10
+//   font = Font to use.  Default: "Liberation Sans"
 //   ---
 //   halign = If given, specifies the horizontal alignment of the text.  `"left"`, `"center"`, or `"right"`.  Overrides `anchor=`.
 //   valign = If given, specifies the vertical alignment of the text.  `"top"`, `"center"`, `"baseline"` or `"bottom"`.  Overrides `anchor=`.
@@ -2605,13 +2624,33 @@ function _cut_interp(pathcut, path, data) =
 //   top, which directs the top of the letters in a desired direction.  If you specify your own directions and they
 //   are not perpendicular to the path then the direction you specify will take priority and the
 //   letters will not rest on the tangent line of the path.  Note that the normal or top directions that you
-//   specify must not be parallel to the path.  
+//   specify must not be parallel to the path.
+//   .
+//   Historically fonts were specified by their "body size", the height of the metal body
+//   on which the glyphs were cast.  This means the size was an upper bound on the size
+//   of the font glyphs, not a direct measurement of their size.  In digital typesetting,
+//   the metal body is replaced by an invisible box, the em square, whose side length is
+//   defined to be the font's size.  The glyphs can be contained in that square, or they
+//   can extend beyond it, depending on the choices made by the font designer.  As a
+//   result, the meaning of font size varies between fonts: two fonts at the "same" size
+//   can differ significantly in the actual size of their characters.  Typographers
+//   customarily specify the size in the units of "points".  A point is 1/72 inch.  In
+//   OpenSCAD, you specify the size in OpenSCAD units (often treated as millimeters for 3d
+//   printing), so if you want points you will need to perform a suitable unit conversion.
+//   In addition, the OpenSCAD font system has a bug: if you specify size=s you will
+//   instead get a font whose size is s/0.72.  For many fonts this means the size of
+//   capital letters will be approximately equal to s, because it is common for fonts to
+//   use about 70% of their height for the ascenders in the font.  To get the customary
+//   font size, you should multiply your desired size by 0.72.
+//   .
+//   To find the fonts that you have available in your OpenSCAD installation,
+//   go to the Help menu and select "Font List".  
 // Arguments:
 //   path = path to place the text on
 //   text = text to create
-//   size = font size
+//   size = The font will be created at this size divided by 0.72.   Default: 10
 //   thickness = thickness of letters (not allowed for 2D path)
-//   font = font to use
+//   font = font to use.  Default: "Liberation Sans"
 //   ---
 //   lettersize = scalar or array giving size of letters
 //   center = center text on the path instead of starting at the first point.  Default: false
