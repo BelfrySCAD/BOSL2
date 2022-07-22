@@ -37,17 +37,16 @@ jobs:
 
     - name: FooTest
       env:
-        OPENSCADPATH: ${{ github.workspace }}/../
+        OPENSCADPATH: $(dirname ${{ github.workspace }} )
       run: echo $OPENSCADPATH
 
     - name: Generate Tutorials
       uses: GabrielBB/xvfb-action@v1.6
       env:
-        OPENSCADPATH: ${{ github.workspace }}/../
+        OPENSCADPATH: $(dirname ${{ github.workspace }} )
       with:
-        run: openscad-mdimggen -f
+        run: $(which openscad-mdimggen) -f
         working-directory: $GITHUB_WORKSPACE
-        options: #optional
 
     - name: Upload Tutorials to Wiki
       uses: SwiftDocOrg/github-wiki-publish-action@v1
