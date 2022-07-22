@@ -33,11 +33,8 @@ jobs:
     - name: Generate Docs
       uses: GabrielBB/xvfb-action@v1
       with:
-        run: |
-          cd $GITHUB_WORKSPACE
-          export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
-          openscad-docsgen -f
-        working-directory: ./ #optional
+        run: export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE) openscad-docsgen -f
+        working-directory: $GITHUB_WORKSPACE
         options: #optional
 
     - name: Upload Docs to Wiki
