@@ -4,8 +4,6 @@ on: [workflow_dispatch]
 jobs:
   RegenerateDocs:
     runs-on: ubuntu-latest
-    env:
-      OPENSCADPATH: ${{ env.GITHUB_WORKSPACE }}/../
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -33,7 +31,9 @@ jobs:
         sudo chmod +x /usr/local/bin/openscad
 
     - name: Generate Docs
-      uses: GabrielBB/xvfb-action@v1
+      uses: GabrielBB/xvfb-action@v1.6
+      env:
+        OPENSCADPATH: ${{ env.GITHUB_WORKSPACE }}/../
       with:
         run: openscad-docsgen -f
         working-directory: $GITHUB_WORKSPACE

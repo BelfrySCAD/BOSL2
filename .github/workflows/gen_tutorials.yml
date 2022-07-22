@@ -4,8 +4,6 @@ on: [workflow_dispatch]
 jobs:
   RegenerateTutorials:
     runs-on: ubuntu-latest
-    env:
-      OPENSCADPATH: ${{ env.GITHUB_WORKSPACE }}/../
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -38,10 +36,14 @@ jobs:
         ./scripts/check_for_tabs.sh
 
     - name: FooTest
+      env:
+        OPENSCADPATH: ${{ env.GITHUB_WORKSPACE }}/../
       run: echo $OPENSCADPATH
 
     - name: Generate Tutorials
-      uses: GabrielBB/xvfb-action@v1
+      uses: GabrielBB/xvfb-action@v1.6
+      env:
+        OPENSCADPATH: ${{ env.GITHUB_WORKSPACE }}/../
       with:
         run: openscad-mdimggen -f
         working-directory: $GITHUB_WORKSPACE
