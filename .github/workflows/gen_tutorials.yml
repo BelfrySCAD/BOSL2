@@ -4,6 +4,8 @@ on: [workflow_dispatch]
 jobs:
   RegenerateTutorials:
     runs-on: ubuntu-latest
+    env:
+      OPENSCADPATH: ${{ env.GITHUB_WORKSPACE }}/../
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -29,7 +31,6 @@ jobs:
         wget https://files.openscad.org/OpenSCAD-2021.01-x86_64.AppImage
         sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
         sudo chmod +x /usr/local/bin/openscad
-        echo ::set-env name=OPENSCADPATH::$(dirname $GITHUB_WORKSPACE)
 
     - name: Tabs Check
       run: |
