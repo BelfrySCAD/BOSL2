@@ -37,13 +37,13 @@ jobs:
 
     - name: FooTest
       env:
-        OPENSCADPATH: ${{ env.GITHUB_WORKSPACE }}/../
+        OPENSCADPATH: ${{ github.workspace }}/../
       run: echo $OPENSCADPATH
 
     - name: Generate Tutorials
       uses: GabrielBB/xvfb-action@v1.6
       env:
-        OPENSCADPATH: ${{ env.GITHUB_WORKSPACE }}/../
+        OPENSCADPATH: ${{ github.workspace }}/../
       with:
         run: openscad-mdimggen -f
         working-directory: $GITHUB_WORKSPACE
