@@ -32,8 +32,10 @@ jobs:
 
     - name: Generate Docs
       uses: GabrielBB/xvfb-action@v1
+      env:
+        OPENSCADPATH: $(dirname $GITHUB_WORKSPACE)
       with:
-        run: export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE) openscad-docsgen -f
+        run: openscad-docsgen -f
         working-directory: $GITHUB_WORKSPACE
         options: #optional
 
