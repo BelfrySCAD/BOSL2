@@ -33,10 +33,9 @@ jobs:
     - name: Generate Docs
       uses: GabrielBB/xvfb-action@v1.6
       env:
-        OPENSCADPATH: $(dirname ${{ github.workspace }} )
+        OPENSCADPATH: ${{ github.workspace }}/..
       with:
         run: $(which openscad-docsgen) -f
-        working-directory: $GITHUB_WORKSPACE
 
     - name: Upload Docs to Wiki
       uses: SwiftDocOrg/github-wiki-publish-action@v1
