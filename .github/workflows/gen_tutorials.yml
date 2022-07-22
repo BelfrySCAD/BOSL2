@@ -45,7 +45,7 @@ jobs:
       env:
         OPENSCADPATH: ${{ github.workspace }}/..
       with:
-        run: $(which openscad-mdimggen) -f
+        run: openscad-mdimggen -f
 
     - name: Upload Tutorials to Wiki
       uses: SwiftDocOrg/github-wiki-publish-action@v1
