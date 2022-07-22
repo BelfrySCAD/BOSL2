@@ -1,0 +1,10 @@
+name: TestWorkflow
+on: [workflow_dispatch]
+
+jobs:
+  ListFonts:
+    runs-on: ubuntu-latest
+    steps:
+    - name: List Fonts
+      run: fc-list
+
