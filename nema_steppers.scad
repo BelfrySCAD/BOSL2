@@ -16,7 +16,8 @@
 // Usage:
 //   nema_stepper_motor(size, h, shaft_len, ...) [attachments];
 // Topics: Parts, Motors
-// Description: Creates a model of a NEMA 11 stepper motor.
+// Description:
+//   Creates a model of a NEMA standard stepper motor.
 // Arguments:
 //   size = The NEMA standard size of the stepper motor.
 //   h = Length of motor body.  Default: 24mm
