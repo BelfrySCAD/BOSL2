@@ -53,8 +53,8 @@ test_arc();
 
 
 module test_dashed_stroke() {
-    segs = dashed_stroke([[0,0],[10,0]], dashpat=[3,2], closed=false);
-    assert_equal(segs,[[[0,0],[3,0]], [[5,0],[8,0]]]);
+    segs = dashed_stroke([[0,0],[15,0]], dashpat=[3,2], closed=false);
+    assert_approx(segs,[[[0,0],[2.5,0]],[[4+1/6,0],[6+2/3,0]],[[8+1/3,0],[10+5/6,0]],[[12.5,0],[15,0]]]);
 }
 test_dashed_stroke();
 

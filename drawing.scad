@@ -552,41 +552,57 @@ module stroke(
 //   ---
 //   width = The width of the dashed line to draw.  Module only.  Default: 1
 //   closed = If true, treat path as a closed polygon.  Default: false
+//   fit = If true, shrink or stretch the dash pattern so that the path ends ofter a logical dash.  Default: true
+//   roundcaps = (Module only) If true, draws dashes with rounded caps.  This often looks better.  Default: true
+//   mindash = (Function only) Specifies the minimal dash length to return at the end of a path when fit is false.  Default: 0.5
 // Example(2D): Open Path
 //   path = [for (a=[-180:10:180]) [a/3,20*sin(a)]];
 //   dashed_stroke(path, [3,2], width=1);
 // Example(2D): Closed Polygon
 //   path = circle(d=100,$fn=72);
-//   dashpat = [10,2,3,2,3,2];
+//   dashpat = [10,2, 3,2, 3,2];
 //   dashed_stroke(path, dashpat, width=1, closed=true);
 // Example(FlatSpin,VPD=250): 3D Dashed Path
 //   path = [for (a=[-180:5:180]) [a/3, 20*cos(3*a), 20*sin(3*a)]];
 //   dashed_stroke(path, [3,2], width=1);
-function dashed_stroke(path, dashpat=[3,3], closed=false) =
-    is_region(path) ? [for(p=path) each dashed_stroke(p,dashpat,closed=true)] : 
+function dashed_stroke(path, dashpat=[3,3], closed=false, fit=true, mindash=0.5) =
+    is_region(path) ? [
+        for (p = path)
+        each dashed_stroke(p, dashpat, closed=true, fit=fit)
+    ] : 
     let(
         path = closed? close_path(path) : path,
         dashpat = len(dashpat)%2==0? dashpat : concat(dashpat,[0]),
         plen = path_length(path),
         dlen = sum(dashpat),
         doff = cumsum(dashpat),
-        reps = floor(plen / dlen),
-        step = plen / reps,
+        freps = plen / dlen,
+        reps = max(1, fit? round(freps) : floor(freps)),
+        tlen = !fit? plen :
+            reps * dlen + (closed? 0 : dashpat[0]),
+        sc = plen / tlen,
         cuts = [
-            for (i=[0:1:reps-1], off=doff)
-            let (st=i*step, x=st+off)
-            if (x>0 && x<plen) x
+            for (i = [0:1:reps], off = doff*sc)
+            let (x = i*dlen*sc + off)
+            if (x > 0 && x < plen) x
         ],
         dashes = path_cut(path, cuts, closed=false),
-        evens = [for (i=idx(dashes)) if (i%2==0) dashes[i]]
+        dcnt = len(dashes),
+        evens = [
+            for (i = idx(dashes))
+            if (i % 2 == 0)
+            let( dash = dashes[i] )
+            if (i < dcnt-1 || path_length(dash) > mindash)
+            dashes[i]
+        ]
     ) evens;
 
 
-module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
+module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, roundcaps=false) {
     no_children($children);
-    segs = dashed_stroke(path, dashpat=dashpat*width, closed=closed);
+    segs = dashed_stroke(path, dashpat=dashpat*width, closed=closed, fit=fit, mindash=0.5*width);
     for (seg = segs)
-        stroke(seg, width=width, endcaps=false);
+        stroke(seg, width=width, endcaps=roundcaps? "round" : false);
 }
 
 

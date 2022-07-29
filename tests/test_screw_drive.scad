@@ -13,48 +13,15 @@ module test_torx_diam() {
 test_torx_diam();
 
 
-module test_torx_inner_diam() {
-    assert_approx(_torx_inner_diam(10), 2.05);
-    assert_approx(_torx_inner_diam(15), 2.40);
-    assert_approx(_torx_inner_diam(20), 2.85);
-    assert_approx(_torx_inner_diam(25), 3.25);
-    assert_approx(_torx_inner_diam(30), 4.05);
-    assert_approx(_torx_inner_diam(40), 4.85);
-}
-test_torx_inner_diam();
-
-
 module test_torx_depth() {
-    assert_approx(torx_depth(10), 3.56);
-    assert_approx(torx_depth(15), 3.81);
-    assert_approx(torx_depth(20), 4.07);
-    assert_approx(torx_depth(25), 4.45);
-    assert_approx(torx_depth(30), 4.95);
-    assert_approx(torx_depth(40), 5.59);
+    assert_approx(torx_depth(10), 3.61);
+    assert_approx(torx_depth(15), 3.86);
+    assert_approx(torx_depth(20), 4.12);
+    assert_approx(torx_depth(25), 4.50);
+    assert_approx(torx_depth(30), 5,00);
+    assert_approx(torx_depth(40), 5.64);
 }
 test_torx_depth();
-
-
-module test_torx_tip_radius() {
-    assert_approx(_torx_tip_radius(10), 0.229);
-    assert_approx(_torx_tip_radius(15), 0.267);
-    assert_approx(_torx_tip_radius(20), 0.305);
-    assert_approx(_torx_tip_radius(25), 0.375);
-    assert_approx(_torx_tip_radius(30), 0.451);
-    assert_approx(_torx_tip_radius(40), 0.546);
-}
-test_torx_tip_radius();
-
-
-module test_torx_rounding_radius() {
-    assert_approx(_torx_rounding_radius(10), 0.598);
-    assert_approx(_torx_rounding_radius(15), 0.716);
-    assert_approx(_torx_rounding_radius(20), 0.859);
-    assert_approx(_torx_rounding_radius(25), 0.920);
-    assert_approx(_torx_rounding_radius(30), 1.194);
-    assert_approx(_torx_rounding_radius(40), 1.428);
-}
-test_torx_rounding_radius();
 
 
 
