@@ -305,9 +305,9 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
 
 // Function&Module: ellipse()
 // Usage: As a Module
-//   ellipse(r|d=, [realign=], [circum=], ...) [ATTACHMENTS];
+//   ellipse(r|d=, [realign=], [circum=], [uniform=], ...) [ATTACHMENTS];
 // Usage: As a Function
-//   path = ellipse(r|d=, [realign=], [circum=], ...);
+//   path = ellipse(r|d=, [realign=], [circum=], [uniform=], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), circle_2tangents(), circle_3points()
 // Description:
@@ -315,13 +315,16 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle or ellipse of the given size.
 //   By default the point list or shape is the same as the one you would get by scaling the output of {{circle()}}, but with this module your
 //   attachments to the ellipse will retain their dimensions, whereas scaling a circle with attachments will also scale the attachments.
-//   If you set unifom to true then you will get a polygon with congruent sides whose vertices lie on the ellipse.  
+//   If you set `uniform` to true then you will get a polygon with congruent sides whose vertices lie on the ellipse.  The `circum` option
+//   requests a polygon that circumscribes the requested ellipse (so the specified ellipse will fit into the resulting polygon).  Note that
+//   you cannot gives `circum=true` and `uniform=true`.  
 // Arguments:
 //   r = Radius of the circle or pair of semiaxes of ellipse 
 //   ---
 //   d = Diameter of the circle or a pair giving the full X and Y axis lengths.  
 //   realign = If false starts the approximate ellipse with a point on the X+ axis.  If true the midpoint of a side is on the X+ axis and the first point of the polygon is below the X+ axis.  This can result in a very different polygon when $fn is small.  Default: false
-//   circum = If true, the polygon that approximates the circle will be upsized slightly to circumscribe the theoretical circle.  If false, it inscribes the theoretical circle.  Default: false
+//   uniform = If true, the polygon that approximates the circle will have segments of equal length.  Only works if `circum=false`.  Default: false
+//   circum = If true, the polygon that approximates the circle will be upsized slightly to circumscribe the theoretical circle.  If false, it inscribes the theoretical circle.  If this is true then `uniform` must be false.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): By Radius
