@@ -666,11 +666,113 @@ function linear_sweep(
     ) reorient(anchor,spin,orient, geom=geom, p=vnf);
 
 
+// Function&Module: rotate_sweep()
+// Usage: As Function
+//   vnf = rotate_sweep(shape, angle, ...);
+// Usage: As Module
+//   rotate_sweep(shape, angle, ...) [ATTACHMENTS];
+// Topics: Extrusion, Sweep, Revolution
+// Description:
+//   Takes a polygon or [region](regions.scad) and sweeps it in a rotation around the Z axis.
+//   When called as a function, returns a [VNF](vnf.scad).
+//   When called as a module, creates the sweep as geometry.
+// Arguments:
+//   shape = The polygon or [region](regions.scad) to sweep around the Z axis.
+//   angle = If given, specifies the number of degrees to sweep the shape around the Z axis, counterclockwise from the X+ axis.  Default: 360 (full rotation)
+//   ---
+//   style = {{vnf_vertex_array()}} style.  Default: "min_edge"
+//   convexity = (Module only) Convexity setting for use with polyhedron.  Default: 10
+//   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+//   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
+//   anchor = Translate so anchor point is at the origin. Default: "origin"
+//   spin = Rotate this many degrees around Z axis after anchor. Default: 0
+//   orient = Vector to rotate top towards after spin  (module only)
+// See Also: linear_sweep(), sweep()
+// Example:
+//   rgn = [
+//       for (a = [0, 120, 240]) let(
+//           cp = polar_to_xy(15, a) + [30,0]
+//       ) each [
+//           move(cp, p=circle(r=10)),
+//           move(cp, p=hexagon(d=15)),
+//       ]
+//   ];
+//   rotate_sweep(rgn, angle=240);
+// Example:
+//   rgn = right(30, p=union([for (a = [0, 90]) rot(a, p=rect([15,5]))]));
+//   rotate_sweep(rgn);
+function rotate_sweep(
+    shape, angle=360,
+    style="min_edge", cp="centroid",
+    atype="hull", anchor="origin",
+    spin=0, orient=UP
+) =
+    let( region = force_region(shape) )
+    assert(is_region(region), "Input is not a region or polygon.")
+    let(
+        bounds = pointlist_bounds(flatten(region)),
+        min_x = bounds[0].x,
+        max_x = bounds[1].x
+    )
+    assert(min_x>=0, "Input region must exist entirely in the X+ half-plane.")
+    let(
+        steps = segs(max_x),
+        transforms = [
+            if (angle==360) for (i=[0:1:steps-1]) rot([90,0,360-i*360/steps]),
+            if (angle<360) for (i=[0:1:steps-1]) rot([90,0,angle-i*angle/(steps-1)]),
+        ],
+        vnf = sweep(
+            region, transforms,
+            closed=angle==360,
+            caps=angle!=360,
+            style=style, cp=cp,
+            atype=atype, anchor=anchor,
+            spin=spin, orient=orient
+        )
+    ) vnf;
+
+
+module rotate_sweep(
+    shape, angle=360,
+    style="min_edge",
+    cp="centroid",
+    convexity=10,
+    atype="hull",
+    anchor="origin",
+    spin=0,
+    orient=UP
+) {
+    region = force_region(shape);
+    check = assert(is_region(region), "Input is not a region or polygon.");
+    bounds = pointlist_bounds(flatten(region));
+    min_x = bounds[0].x;
+    max_x = bounds[1].x;
+    check2 = assert(min_x>=0, "Input region must exist entirely in the X+ half-plane.");
+    steps = segs(max_x);
+    transforms = [
+        if (angle==360) for (i=[0:1:steps-1]) rot([90,0,360-i*360/steps]),
+        if (angle<360) for (i=[0:1:steps-1]) rot([90,0,angle-i*angle/(steps-1)]),
+    ];
+    sweep(
+        region, transforms,
+        closed=angle==360,
+        caps=angle!=360,
+        style=style, cp=cp,
+        convexity=convexity,
+        atype=atype, anchor=anchor,
+        spin=spin, orient=orient
+    ) children();
+}
+
 
 // Function&Module: spiral_sweep()
-// Usage:
-//   spiral_sweep(poly, h, r, turns, [higbee=], [center=], [r1=], [r2=], [d=], [d1=], [d2=], [higbee1=], [higbee2=], [internal=], [anchor=], [spin=], [orient=])[ATTACHMENTS];
-//   vnf = spiral_sweep(poly, h, r, turns, ...);
+// Usage: As Module
+//   spiral_sweep(poly, h, r|d=, turns, [higbee=], [center=], [higbee1=], [higbee2=], [internal=], ...)[ATTACHMENTS];
+//   spiral_sweep(poly, h, r1=|d1=, r2=|d2=, turns, [higbee=], [center=], [higbee1=], [higbee2=], [internal=], ...)[ATTACHMENTS];
+// Usage: As Function
+//   vnf = spiral_sweep(poly, h, r|d=, turns, ...);
+//   vnf = spiral_sweep(poly, h, r1=|d1=, r1=|d2=, turns, ...);
+// Topics: Extrusion, Sweep
 // Description:
 //   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a 3D spiral path
 //   of a given radius, height and degrees of rotation.  The origin in the profile traces out the helix of the specified radius.
@@ -693,6 +795,7 @@ function linear_sweep(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
+// See Also: sweep(), linear_sweep(), rotate_sweep(), path_sweep()
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   spiral_sweep(poly, h=200, r=50, turns=3, $fn=36);
@@ -790,7 +893,6 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   vector for the path, so this process is constructing a shape whose normal cross sections are equal to your specified shape.
 //   If you do not supply a list of tangent vectors then an approximate tangent vector is computed
 //   based on the path points you supply using {{path_tangents()}}.  
-//   .
 // Figure(3D,Big,VPR=[70,0,345],VPD=20,VPT=[5.5,10.8,-2.7],NoScales): This example shows how the shape, in this case the quadrilateral defined by `[[0, 0], [0, 1], [0.25, 1], [1, 0]]`, appears as the cross section of the swept polyhedron.  The blue line shows the path.  The normal vector to the shape is shown in black; it is based at the origin and points upwards in the Z direction.  The sweep aligns this normal vector with the blue path tangent, which in this case, flips the shape around.  Note that for a 2D path like this one, the Y direction in the shape is mapped to the Z direction in the sweep.   
 //   tri= [[0, 0], [0, 1], [.25,1], [1, 0]];
 //   path = arc(r=5,n=81,angle=[-20,65]);
@@ -800,7 +902,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   color("blue")stroke(path3d(arc(r=5,n=101,angle=[-20,80])),width=.1,endcap2="arrow2");
 //   color("red")stroke([path3d(tri)],width=.1);
 //   stroke([CENTER,UP], width=.07,endcap2="arrow2",color="black");
-// .
+// Continues:
 //   In the figure you can see that the swept polyhedron, shown in transparent gray, has the quadrilateral as its cross
 //   section.  The quadrilateral is positioned perpendicular to the path, which is shown in blue, so that the normal
 //   vector for the quadrilateral is parallel to the tangent vector for the path.  The origin for the shape is the point
@@ -924,6 +1026,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   orient = Vector to rotate top towards after spin  
 //   atype  = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+// See Also: sweep(), linear_sweep(), rotate_sweep(), spiral_sweep()
 // Example(NoScales): A simple sweep of a square along a sine wave:
 //   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
 //   sq = square(6,center=true);
@@ -1471,11 +1574,11 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   style = vnf_vertex_array style.  Default: "min_edge"
 //   ---
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
+//   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+//   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   anchor = Translate so anchor point is at the origin. Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor. Default: 0
 //   orient = Vector to rotate top towards after spin  (module only)
-//   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
-//   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Example(VPR=[45,0,74],VPD=175,VPT=[-3.8,12.4,19]): A bent object that also changes shape along its length.
 //   radius = 75;
 //   angle = 40;
