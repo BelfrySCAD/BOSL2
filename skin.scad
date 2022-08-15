@@ -34,14 +34,14 @@
 //   2d curves with heights given in the `z` parameter.  It is your responsibility to ensure
 //   that the resulting polyhedron is free from self-intersections, which would make it invalid
 //   and can result in cryptic CGAL errors upon rendering with a second object present, even though the polyhedron appears
-//   OK during preview or when rendered by itself.  
+//   OK during preview or when rendered by itself.
 //   .
 //   For this operation to be well-defined, the profiles must all have the same vertex count and
 //   we must assume that profiles are aligned so that vertex `i` links to vertex `i` on all polygons.
 //   Many interesting cases do not comply with this restriction.  Two basic methods can handle
 //   these cases: either subdivide edges (insert additional points along edges)
 //   or duplicate vertcies (insert edges of length 0) so that both polygons have
-//   the same number of points. 
+//   the same number of points.
 //   Duplicating vertices allows two distinct points in one polygon to connect to a single point
 //   in the other one, creating
 //   triangular faces.  You can adjust non-matching polygons yourself
@@ -59,7 +59,7 @@
 //   between each pair of profiles, either a scalar to insert the same number everywhere, or a vector
 //   to insert a different number between each pair.
 //   .
-//   Resampling may occur, depending on the `method` parameter, to make profiles compatible.  
+//   Resampling may occur, depending on the `method` parameter, to make profiles compatible.
 //   To force (possibly additional) resampling of the profiles to increase the point density you can set `refine=N`, which
 //   will multiply the number of points on your profile by `N`.  You can choose between two resampling
 //   schemes using the `sampling` option, which you can set to `"length"` or `"segment"`.
@@ -67,7 +67,7 @@
 //   The segment method divides each segment of a profile into the same number of points.
 //   This means that if you refine a profile with the "segment" method you will get N points
 //   on each edge, but if you refine a profile with the "length" method you will get new points
-//   distributed around the profile based on length, so small segments will get fewer new points than longer ones.  
+//   distributed around the profile based on length, so small segments will get fewer new points than longer ones.
 //   A uniform division may be impossible, in which case the code computes an approximation, which may result
 //   in arbitrary distribution of extra points.  See {{subdivide_path()}} for more details.
 //   Note that when dealing with continuous curves it is always better to adjust the
@@ -90,10 +90,10 @@
 //   When the profiles are incommensurate, the "direct" and "reindex" resample them to match.  As noted above,
 //   for continuous input curves, it is better to generate your curves directly at the desired sample size,
 //   but for mapping between a discrete profile like a hexagon and a circle, the hexagon must be resampled
-//   to match the circle.  When you use "direct" or "reindex" the default `sampling` value is 
+//   to match the circle.  When you use "direct" or "reindex" the default `sampling` value is
 //   of `sampling="length"` to approximate a uniform length sampling of the profile.  This will generally
 //   produce the natural result for connecting two continuously sampled profiles or a continuous
-//   profile and a polygonal one.  However depending on your particular case, 
+//   profile and a polygonal one.  However depending on your particular case,
 //   `sampling="segment"` may produce a more pleasing result.  These two approaches differ only when
 //   the segments of your input profiles have unequal length.
 //   .
@@ -112,7 +112,7 @@
 //   Using sampling by length would ignore the repeated vertices and ruin the alignment.
 //   The "fast_distance" method restricts the optimization by assuming that an edge should connect
 //   vertex 0 of the two polygons.  This reduces the run time to O(N^2) and makes
-//   the method usable on profiles with more points if you take care to index the inputs to match.  
+//   the method usable on profiles with more points if you take care to index the inputs to match.
 //   .
 //   The `"tangent"` method generally produces good results when
 //   connecting a discrete polygon to a convex, finely sampled curve.  Given a polygon and a curve, consider one edge
@@ -131,7 +131,7 @@
 //   have no effect.  For best efficiency set `refine=1` and `slices=0`.  As with the "distance" method, refinement
 //   must be done using the "segment" sampling scheme to preserve alignment across duplicated points.
 //   Note that the "tangent" method produces similar results to the "distance" method on curved inputs.  If this
-//   method fails due to concavity, "fast_distance" may be a good option.  
+//   method fails due to concavity, "fast_distance" may be a good option.
 //   .
 //   It is possible to specify `method` and `refine` as arrays, but it is important to observe
 //   matching rules when you do this.  If a pair of profiles is connected using "tangent" or "distance"
@@ -155,7 +155,7 @@
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
 //   anchor = Translate so anchor point is at the origin.  Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
-//   orient = Vector to rotate top towards after spin 
+//   orient = Vector to rotate top towards after spin
 //   atype = Select "hull" or "intersect anchor types. Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   style = vnf_vertex_array style.  Default: "min_edge"
@@ -168,7 +168,7 @@
 // Example: Offsetting the starting edge connects to circles in an interesting way:
 //   circ = circle($fn=80, r=3);
 //   skin([circ, rot(110,p=circ)], z=[0,5], slices=20);
-// Example(FlatSpin,VPD=20): 
+// Example(FlatSpin,VPD=20):
 //   skin([ yrot(37,p=path3d(circle($fn=128, r=4))), path3d(square(3),3)], method="reindex",slices=10);
 // Example(FlatSpin,VPD=16): Ellipses connected with twist
 //   ellipse = xscale(2.5,p=circle($fn=80));
@@ -262,7 +262,7 @@
 //   ellipse = yscale(3,circle(r=10, $fn=32));
 //   tri = move([-50/3,-9],[[0,0], [50,0], [0,27]]);
 //   skin([ellipse, reverse(tri)], z=[0,20], slices=20, method="reindex");
-// Example(FlatSpin,VPD=185): You can get a nicer transition by rotating the polygons for better alignment.  You have to resample yourself before calling `align_polygon`. The orientation is fixed so we do not need to reverse.  
+// Example(FlatSpin,VPD=185): You can get a nicer transition by rotating the polygons for better alignment.  You have to resample yourself before calling `align_polygon`. The orientation is fixed so we do not need to reverse.
 //   ellipse = yscale(3,circle(r=10, $fn=32));
 //   tri = move([-50/3,-9],
 //              subdivide_path([[0,0], [50,0], [0,27]], 32));
@@ -279,12 +279,12 @@
 //   big = up(2,p=yrot(14,p=path3d(circle(r=3, $fn=7), 6)));
 //   skin([small,big],method="distance", slices=10, refine=10);
 // Example(FlatSpin,VPD=32,VPT=[1.2,4.3,2]): Another "distance" example:
-//   off = [0,2]; 
+//   off = [0,2];
 //   shape = turtle(["right",45,"move", "left",45,"move", "left",45, "move", "jump", [.5+sqrt(2)/2,8]]);
 //   rshape = rot(180,cp=centroid(shape)+off, p=shape);
 //   skin([shape,rshape],z=[0,4], method="distance",slices=10,refine=15);
 // Example(FlatSpin,VPD=32,VPT=[1.2,4.3,2]): Slightly shifting the profile changes the optimal linkage
-//   off = [0,1]; 
+//   off = [0,1];
 //   shape = turtle(["right",45,"move", "left",45,"move", "left",45, "move", "jump", [.5+sqrt(2)/2,8]]);
 //   rshape = rot(180,cp=centroid(shape)+off, p=shape);
 //   skin([shape,rshape],z=[0,4], method="distance",slices=10,refine=15);
@@ -347,7 +347,7 @@
 //   hex = path3d(hexagon(side=flare*sidelen, align_side=RIGHT, anchor="side0"),height);
 //   pentmate = path3d(pentagon(side=flare*sidelen,align_side=LEFT,anchor="side0"),height);
 //             // Native index would require mapping first and last vertices together, which is not allowed, so shift
-//   hexmate = list_rotate(  
+//   hexmate = list_rotate(
 //                           path3d(apply(move(pushvec)*rot(angle),hexagon(side=sidelen,align_side=LEFT,anchor="side0"))),
 //                           -1);
 //   join_vertex = lerp(
@@ -357,7 +357,7 @@
 //   augpent = repeat_entries(pent, [1,2,1,1,1]);         // Vertex 1 will split at the top forming a triangular face with the hexagon
 //   augpent_mate = repeat_entries(pentmate,[2,1,1,1,1]); // For mating pentagon it is vertex 0 that splits
 //              // Middle is the interpolation between top and bottom except for the join vertex, which is doubled because it splits
-//   middle = list_set(lerp(augpent,hex,midpoint),[1,2],[join_vertex,join_vertex]);  
+//   middle = list_set(lerp(augpent,hex,midpoint),[1,2],[join_vertex,join_vertex]);
 //   middle_mate = list_set(lerp(hexmate,augpent_mate,midpoint), [0,1], [join_vertex,join_vertex]);
 //   skin([augpent,middle,hex],  slices=10, refine=10, sampling="segment");
 //   color("green")skin([augpent_mate,middle_mate,hexmate],  slices=10,refine=10, sampling="segment");
@@ -387,11 +387,11 @@
 //      }
 module skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, style="min_edge", convexity=10,
             anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull")
-{   
+{
     vnf = skin(profiles, slices, refine, method, sampling, caps, closed, z, style=style);
     vnf_polyhedron(vnf,convexity=convexity,spin=spin,anchor=anchor,orient=orient,atype=atype,cp=cp)
         children();
-}        
+}
 
 
 function skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, style="min_edge",
@@ -424,7 +424,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
     DUPLICATOR = 1,
     method_type = [for(m = method) m=="direct" || m=="reindex" ? 0 : 1],
     sampling = is_def(sampling) ? sampling :
-               in_list(DUPLICATOR,method_type) ? "segment" : "length" 
+               in_list(DUPLICATOR,method_type) ? "segment" : "length"
   )
   assert(len(refine)==len(profiles), "refine list is the wrong length")
   assert(len(slices)==profcount, str("slices list must have length ",profcount))
@@ -439,7 +439,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
   assert(!closed || !caps, "Cannot make closed shape with caps")
   let(
     profile_dim=list_shape(profiles,2),
-    profiles_zcheck = (profile_dim != 2) || (profile_dim==2 && is_list(z) && len(z)==len(profiles)), 
+    profiles_zcheck = (profile_dim != 2) || (profile_dim==2 && is_list(z) && len(z)==len(profiles)),
     profiles_ok = (profile_dim==2 && is_list(z) && len(z)==len(profiles)) || profile_dim==3
   )
   assert(profiles_zcheck, "z parameter is invalid or has the wrong length.")
@@ -453,7 +453,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
     // True length (not counting repeated vertices) of profiles after refinement
     refined_len = [for(i=idx(profiles)) refine[i]*len(profiles[i])],
     // Define this to be 1 if a profile is used on either side by a resampling method, zero otherwise.
-    profile_resampled = [for(i=idx(profiles)) 
+    profile_resampled = [for(i=idx(profiles))
       1-(
            i==0 ?  method_type[0] * (closed? last(method_type) : 1) :
            i==len(profiles)-1 ? last(method_type) * (closed ? select(method_type,-2) : 1) :
@@ -470,20 +470,20 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
       !in_list(DUPLICATOR,method_type) ?
          let(
              resampled = [for(i=idx(profiles)) subdivide_path(profiles[i], max_list[i], method=sampling)],
-             fixedprof = [for(i=idx(profiles)) 
+             fixedprof = [for(i=idx(profiles))
                              i==0 || method[i-1]=="direct" ? resampled[i]
                                                          : reindex_polygon(resampled[i-1],resampled[i])],
-             sliced = slice_profiles(fixedprof, slices, closed)            
+             sliced = slice_profiles(fixedprof, slices, closed)
             )
             [!closed ? sliced : concat(sliced,[sliced[0]])]
       :  // There are duplicators, so use approach where each pair is treated separately
       [for(i=[0:profcount-1])
         let(
-          pair = 
+          pair =
             method[i]=="distance" ? _skin_distance_match(profiles[i],select(profiles,i+1)) :
             method[i]=="fast_distance" ? _skin_aligned_distance_match(profiles[i], select(profiles,i+1)) :
             method[i]=="tangent" ? _skin_tangent_match(profiles[i],select(profiles,i+1)) :
-            /*method[i]=="reindex" || method[i]=="direct" ?*/ 
+            /*method[i]=="reindex" || method[i]=="direct" ?*/
                let( p1 = subdivide_path(profiles[i],max_list[i], method=sampling),
                     p2 = subdivide_path(select(profiles,i+1),max_list[i], method=sampling)
                ) (method[i]=="direct" ? [p1,p2] : [p1, reindex_polygon(p1, p2)]),
@@ -521,6 +521,13 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   shift = The amount to shift the top of the shape, in the X and Y directions, relative to the position of the bottom.  Default: [0,0]
 //   slices = The number of slices to divide the shape into along the Z axis, to allow refinement of detail, especially when working with a twist.  Default: `twist/5`
 //   maxseg = If given, then any long segments of the region will be subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
+//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
+//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
+//   tex_inset = If numeric, lowers the texture into the surface by that amount, before the tscale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
+//   tex_rot = If true, rotates the texture 90º.
+//   tex_scale = Scaling multiplier for the texture depth.
+//   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
 //   convexity = Max number of surfaces any single ray could pass through.  Module use only.
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: `"centroid"`
@@ -569,10 +576,14 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   orgn = difference(mrgn,rgn3);
 //   linear_sweep(orgn,height=20,convexity=16)
 //       show_anchors();
+
 module linear_sweep(
     region, height, center,
     twist=0, scale=1, shift=[0,0],
     slices, maxseg, style="default", convexity,
+    texture, tex_size=[5,5], tex_counts,
+    tex_inset=false, tex_rot=false,
+    tex_scale=1, tex_samples,
     cp, atype="hull", h,
     anchor, spin=0, orient=UP
 ) {
@@ -585,7 +596,15 @@ module linear_sweep(
     vnf = linear_sweep(
         region, height=h, style=style,
         twist=twist, scale=scale, shift=shift,
-        slices=slices, maxseg=maxseg,
+        texture=texture,
+        tex_size=tex_size,
+        tex_counts=tex_counts,
+        tex_inset=tex_inset,
+        tex_rot=tex_rot,
+        tex_scale=tex_scale,
+        tex_samples=tex_samples,
+        slices=slices,
+        maxseg=maxseg,
         anchor="origin"
     );
     anchors = [
@@ -607,6 +626,9 @@ function linear_sweep(
     twist=0, scale=1, shift=[0,0],
     slices, maxseg, style="default",
     cp, atype="hull", h,
+    texture, tex_size=[5,5], tex_counts,
+    tex_inset=false, tex_rot=false,
+    tex_scale=1, tex_samples,
     anchor, spin=0, orient=UP
 ) =
     let( region = force_region(region) )
@@ -614,7 +636,18 @@ function linear_sweep(
     assert(is_num(scale) || is_vector(scale))
     assert(is_vector(shift, 2), str(shift))
     let(
-        h = first_defined([h, height, 1]),
+        h = first_defined([h, height, 1])
+    )
+    !is_undef(texture)? textured_linear_sweep(
+        region, h=h,
+        texture=texture, tex_size=tex_size,
+        counts=tex_counts, inset=tex_inset,
+        rot=tex_rot, tscale=tex_scale,
+        twist=twist, scale=scale, shift=shift,
+        style=style, samples=tex_samples,
+        anchor=anchor, spin=spin, orient=orient
+    ) :
+    let(
         anchor = center==true? "origin" :
             center == false? "original_base" :
             default(anchor, "original_base"),
@@ -779,7 +812,7 @@ module rotate_sweep(
 //   If turns is positive the path will be right-handed;  if turns is negative the path will be left-handed.
 //   .
 //   Higbee specifies tapering applied to the ends of the extrusion and is given as the linear distance
-//   over which to taper.  
+//   over which to taper.
 // Arguments:
 //   poly = Array of points of a polygon path, to be extruded.
 //   h = height of the spiral to extrude along.
@@ -808,7 +841,7 @@ function _ss_polygon_r(N,theta) =
 function spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, internal=false, anchor=CENTER, spin=0, orient=UP) =
     assert(is_num(turns) && turns != 0)
     let(
-        twist = 360*turns, 
+        twist = 360*turns,
         higsample = 10,         // Oversample factor for higbee tapering
         bounds = pointlist_bounds(poly),
         yctr = (bounds[0].y+bounds[1].y)/2,
@@ -858,7 +891,7 @@ function spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, hi
             ) pts
         ],
         vnf = vnf_vertex_array(
-            points, col_wrap=true, caps=true, reverse=dir>0?true:false, 
+            points, col_wrap=true, caps=true, reverse=dir>0?true:false,
             style=higbee1>0 || higbee2>0 ? "quincunx" : "alt"
         )
     )
@@ -892,8 +925,8 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   the point in `path`.  The normal vector of the shape, which points in the Z direction, is aligned with the tangent
 //   vector for the path, so this process is constructing a shape whose normal cross sections are equal to your specified shape.
 //   If you do not supply a list of tangent vectors then an approximate tangent vector is computed
-//   based on the path points you supply using {{path_tangents()}}.  
-// Figure(3D,Big,VPR=[70,0,345],VPD=20,VPT=[5.5,10.8,-2.7],NoScales): This example shows how the shape, in this case the quadrilateral defined by `[[0, 0], [0, 1], [0.25, 1], [1, 0]]`, appears as the cross section of the swept polyhedron.  The blue line shows the path.  The normal vector to the shape is shown in black; it is based at the origin and points upwards in the Z direction.  The sweep aligns this normal vector with the blue path tangent, which in this case, flips the shape around.  Note that for a 2D path like this one, the Y direction in the shape is mapped to the Z direction in the sweep.   
+//   based on the path points you supply using {{path_tangents()}}.
+// Figure(3D,Big,VPR=[70,0,345],VPD=20,VPT=[5.5,10.8,-2.7],NoScales): This example shows how the shape, in this case the quadrilateral defined by `[[0, 0], [0, 1], [0.25, 1], [1, 0]]`, appears as the cross section of the swept polyhedron.  The blue line shows the path.  The normal vector to the shape is shown in black; it is based at the origin and points upwards in the Z direction.  The sweep aligns this normal vector with the blue path tangent, which in this case, flips the shape around.  Note that for a 2D path like this one, the Y direction in the shape is mapped to the Z direction in the sweep.
 //   tri= [[0, 0], [0, 1], [.25,1], [1, 0]];
 //   path = arc(r=5,n=81,angle=[-20,65]);
 //   % path_sweep(tri,path);
@@ -924,7 +957,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   other.  This results in an invalid polyhedron, which may appear OK when previewed or rendered alone, but will give rise
 //   to cryptic CGAL errors when rendered with a second object in your model.  You may be able to use {{path_sweep2d()}}
 //   to produce a valid model in cases like this.  You can debug models like this using the `profiles=true` option which will show all
-//   the cross sections in your polyhedron.  If any of them intersect, the polyhedron will be invalid.  
+//   the cross sections in your polyhedron.  If any of them intersect, the polyhedron will be invalid.
 // Figure(3D,Big,VPR=[47,0,325],VPD=23,VPT=[6.8,4,-3.8],NoScales): We have scaled the path to an ellipse and show a large triangle as the shape.  The triangle is sometimes bigger than the local radius of the path, leading to an invalid polyhedron, which you can identify because the red lines cross in the middle.
 //   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
 //   path = xscale(1.5,arc(r=5,n=81,angle=[-70,70]));
@@ -980,7 +1013,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   using the `normal` argument to give a direction to align the Y axis of your shape.  By default the normal points UP if the path
 //   makes an angle of 45 deg or less with the xy plane and it points BACK if the path makes a higher angle with the XY plane.  You
 //   can also supply `last_normal` which provides an ending orientation constraint.  Be aware that the curve may still exhibit
-//   twisting in the middle.  This method is the default because it is the most robust, not because it generally produces the best result.  
+//   twisting in the middle.  This method is the default because it is the most robust, not because it generally produces the best result.
 //   .
 //   The "natural" method works by computing the Frenet frame at each point on the path.  This is defined by the tangent to the curve and
 //   the normal which lies in the plane defined by the curve at each point.  This normal points in the direction of curvature of the curve.
@@ -992,7 +1025,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   .
 //   The "manual" method allows you to specify your desired normal either globally with a single vector, or locally with
 //   a list of normal vectors for every path point.  The normal you supply is projected to be orthogonal to the tangent to the
-//   path and the Y direction of your shape will be aligned with the projected normal.  (Note this is different from the "natural" method.)  
+//   path and the Y direction of your shape will be aligned with the projected normal.  (Note this is different from the "natural" method.)
 //   Careless choice of a normal may result in a twist in the shape, or an error if your normal is parallel to the path tangent.
 //   If you set `relax=true` then the condition that the cross sections are orthogonal to the path is relaxed and the swept object
 //   uses the actual specified normal.  In this case, the tangent is projected to be orthogonal to your supplied normal to define
@@ -1001,7 +1034,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   .
 //   You can use set `transforms` to true to return a list of transformation matrices instead of the swept shape.  In this case, you can
 //   often omit shape entirely.  The exception is when `closed=true` and you are using the "incremental" method.  In this case, `path_sweep`
-//   uses the shape to correct for twist when the shape closes on itself, so you must include a valid shape.  
+//   uses the shape to correct for twist when the shape closes on itself, so you must include a valid shape.
 // Arguments:
 //   shape = A 2D polygon path or region describing the shape to be swept.
 //   path = 2D or 3D path giving the path to sweep over
@@ -1023,7 +1056,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   convexity = convexity parameter for polyhedron().  (module only)  Default: 10
 //   anchor = Translate so anchor point is at the origin. Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor. Default: 0
-//   orient = Vector to rotate top towards after spin  
+//   orient = Vector to rotate top towards after spin
 //   atype  = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // See Also: sweep(), linear_sweep(), rotate_sweep(), spiral_sweep()
@@ -1035,7 +1068,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
 //   sq = square(6);
 //   path_sweep(sq,path);
-// Example(Med,VPR=[34,0,8],NoScales): It may not be obvious, but the polyhedron in the previous example is invalid.  It will eventually give CGAL errors when you combine it with other shapes.  To see this, set profiles to true and look at the left side.  The profiles cross each other and intersect.  Any time this happens, your polyhedron is invalid, even if it seems to be working at first.  Another observation from the profile display is that we have more profiles than needed over a lot of the shape, so if the model is slow, using fewer profiles in the flat portion of the curve might speed up the calculation.  
+// Example(Med,VPR=[34,0,8],NoScales): It may not be obvious, but the polyhedron in the previous example is invalid.  It will eventually give CGAL errors when you combine it with other shapes.  To see this, set profiles to true and look at the left side.  The profiles cross each other and intersect.  Any time this happens, your polyhedron is invalid, even if it seems to be working at first.  Another observation from the profile display is that we have more profiles than needed over a lot of the shape, so if the model is slow, using fewer profiles in the flat portion of the curve might speed up the calculation.
 //   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
 //   sq = square(6);
 //   path_sweep(sq,path,profiles=true,width=.1,$fn=8);
@@ -1044,52 +1077,52 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   polygon(ushape);
 // Example(NoScales): Sweep along a clockwise elliptical arc, using default "incremental" method.
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
-//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,00], r=30));  // Clockwise 
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,00], r=30));  // Clockwise
 //   path_sweep(ushape, path3d(elliptic_arc));
-// Example(NoScales): Sweep along a counter-clockwise elliptical arc.  Note that the orientation of the shape flips.  
+// Example(NoScales): Sweep along a counter-clockwise elliptical arc.  Note that the orientation of the shape flips.
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
-//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=30));   // Counter-clockwise 
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=30));   // Counter-clockwise
 //   path_sweep(ushape, path3d(elliptic_arc));
 // Example(NoScales): Sweep along a clockwise elliptical arc, using "natural" method, which lines up the X axis of the shape with the direction of curvature.  This means the X axis will point inward, so a counterclockwise arc gives:
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
-//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=30));  // Counter-clockwise 
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=30));  // Counter-clockwise
 //   path_sweep(ushape, elliptic_arc, method="natural");
-// Example(NoScales): Sweep along a clockwise elliptical arc, using "natural" method.  If the curve is clockwise then the shape flips upside-down to align the X axis.  
+// Example(NoScales): Sweep along a clockwise elliptical arc, using "natural" method.  If the curve is clockwise then the shape flips upside-down to align the X axis.
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
-//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise
 //   path_sweep(ushape, path3d(elliptic_arc), method="natural");
 // Example(NoScales): Sweep along a clockwise elliptical arc, using "manual" method.  You can orient the shape in a direction you choose (subject to the constraint that the profiles remain normal to the path):
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
-//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise
 //   path_sweep(ushape, path3d(elliptic_arc), method="manual", normal=UP+RIGHT);
 // Example(NoScales): Here we changed the ellipse to be more pointy, and with the same results as above we get a shape with an irregularity in the middle where it maintains the specified direction around the point of the ellipse.  If the ellipse were more pointy, this would result in a bad polyhedron:
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
-//   elliptic_arc = yscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
+//   elliptic_arc = yscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise
 //   path_sweep(ushape, path3d(elliptic_arc), method="manual", normal=UP+RIGHT);
-// Example(NoScales): It is easy to produce an invalid shape when your path has a smaller radius of curvature than the width of your shape.  The exact threshold where the shape becomes invalid depends on the density of points on your path.  The error may not be immediately obvious, as the swept shape appears fine when alone in your model, but adding a cube to the model reveals the problem.  In this case the pentagon is turned so its longest direction points inward to create the singularity.  
+// Example(NoScales): It is easy to produce an invalid shape when your path has a smaller radius of curvature than the width of your shape.  The exact threshold where the shape becomes invalid depends on the density of points on your path.  The error may not be immediately obvious, as the swept shape appears fine when alone in your model, but adding a cube to the model reveals the problem.  In this case the pentagon is turned so its longest direction points inward to create the singularity.
 //   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
 //   // Prints 0.9, but we use pentagon with radius of 1.0 > 0.9
 //   echo(radius_of_curvature = 1/max(path_curvature(qpath)));
 //   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual");
 //   cube(0.5);    // Adding a small cube forces a CGAL computation which reveals
 //                 // the error by displaying nothing or giving a cryptic message
-// Example(NoScales): Using the `relax` option we allow the profiles to deviate from orthogonality to the path.  This eliminates the crease that broke the previous example because the sections are all parallel to each other.  
+// Example(NoScales): Using the `relax` option we allow the profiles to deviate from orthogonality to the path.  This eliminates the crease that broke the previous example because the sections are all parallel to each other.
 //   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
 //   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual", relaxed=true);
 //   cube(0.5);    // Adding a small cube is not a problem with this valid model
-// Example(Med,VPR=[16,0,100],VPT=[0.05,0.6,0.6],VPD=25,NoScales): Using the `profiles=true` option can help debug bad polyhedra such as this one.  If any of the profiles intersect or cross each other, the polyhedron will be invalid.  In this case, you can see these intersections in the middle of the shape, which may give insight into how to fix your shape.   The profiles may also help you identify cases with a valid polyhedron where you have more profiles than needed to adequately define the shape.  
+// Example(Med,VPR=[16,0,100],VPT=[0.05,0.6,0.6],VPD=25,NoScales): Using the `profiles=true` option can help debug bad polyhedra such as this one.  If any of the profiles intersect or cross each other, the polyhedron will be invalid.  In this case, you can see these intersections in the middle of the shape, which may give insight into how to fix your shape.   The profiles may also help you identify cases with a valid polyhedron where you have more profiles than needed to adequately define the shape.
 //   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
 //   path = left(4,xscale(1.5,arc(r=5,n=25,angle=[-70,70])));
 //   path_sweep(tri,path,profiles=true,width=.1);
-// Example(NoScales):  This 3d arc produces a result that twists to an undefined angle.  By default the incremental method sets the starting normal to UP, but the ending normal is unconstrained.  
+// Example(NoScales):  This 3d arc produces a result that twists to an undefined angle.  By default the incremental method sets the starting normal to UP, but the ending normal is unconstrained.
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="incremental");
-// Example(NoScales): You can constrain the last normal as well.  Here we point it right, which produces a nice result.  
+// Example(NoScales): You can constrain the last normal as well.  Here we point it right, which produces a nice result.
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="incremental", last_normal=RIGHT);
-// Example(NoScales): Here we constrain the last normal to UP.  Be aware that the behavior in the middle is unconstrained.  
+// Example(NoScales): Here we constrain the last normal to UP.  Be aware that the behavior in the middle is unconstrained.
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="incremental", last_normal=UP);
@@ -1097,27 +1130,27 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="natural");
-// Example(NoScales): When the path starts at an angle of more that 45 deg to the xy plane the initial normal for "incremental" is BACK.  This produces the effect of the shape rising up out of the xy plane.  (Using UP for a vertical path is invalid, hence the need for a split in the defaults.)  
+// Example(NoScales): When the path starts at an angle of more that 45 deg to the xy plane the initial normal for "incremental" is BACK.  This produces the effect of the shape rising up out of the xy plane.  (Using UP for a vertical path is invalid, hence the need for a split in the defaults.)
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = xrot(75, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="incremental");
 // Example(NoScales): Adding twist
-//   // Counter-clockwise 
-//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=3));   
+//   // Counter-clockwise
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=3));
 //   path_sweep(pentagon(r=1), path3d(elliptic_arc), twist=72);
 // Example(NoScales): Closed shape
-//   ellipse = xscale(2, p=circle($fn=64, r=3));  
+//   ellipse = xscale(2, p=circle($fn=64, r=3));
 //   path_sweep(pentagon(r=1), path3d(ellipse), closed=true);
 // Example(NoScales): Closed shape with added twist
 //   ellipse = xscale(2, p=circle($fn=64, r=3));
 //   // Looks better with finer sampling
-//   pentagon = subdivide_path(pentagon(r=1), 30);  
+//   pentagon = subdivide_path(pentagon(r=1), 30);
 //   path_sweep(pentagon, path3d(ellipse),
 //              closed=true, twist=360);
 // Example(NoScales): The last example was a lot of twist.  In order to use less twist you have to tell `path_sweep` that your shape has symmetry, in this case 5-fold.  Mobius strip with pentagon cross section:
 //   ellipse = xscale(2, p=circle($fn=64, r=3));
 //   // Looks better with finer sampling
-//   pentagon = subdivide_path(pentagon(r=1), 30);  
+//   pentagon = subdivide_path(pentagon(r=1), 30);
 //   path_sweep(pentagon, path3d(ellipse), closed=true,
 //              symmetry = 5, twist=2*360/5);
 // Example(Med,NoScales): A helical path reveals the big problem with the "incremental" method: it can introduce unexpected and extreme twisting.  (Note helix example came from list-comprehension-demos)
@@ -1144,7 +1177,7 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, helix, normal=UP, last_normal=UP, twist=360);
-// Example(Med,NoScales): To get a good result you must use a different method.  
+// Example(Med,NoScales): To get a good result you must use a different method.
 //   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
 //                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
 //                         200 * (1 - t)];
@@ -1169,11 +1202,11 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   normals = [for(i=[0:helix_steps]) [-cos(6*360*i/helix_steps), -sin(6*360*i/helix_steps), 2.5]];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, helix, method="manual", normal=normals);
-// Example(NoScales): When using "manual" it is important to choose a normal that works for the whole path, producing a consistent result.  Here we have specified an upward normal, and indeed the shape is pointed up everywhere, but two abrupt transitional twists render the model invalid.  
+// Example(NoScales): When using "manual" it is important to choose a normal that works for the whole path, producing a consistent result.  Here we have specified an upward normal, and indeed the shape is pointed up everywhere, but two abrupt transitional twists render the model invalid.
 //   yzcircle = yrot(90,p=path3d(circle($fn=64, r=30)));
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, yzcircle, method="manual", normal=UP, closed=true);
-// Example(NoScales): The "natural" method will introduce twists when the curvature changes direction.  A warning is displayed.  
+// Example(NoScales): The "natural" method will introduce twists when the curvature changes direction.  A warning is displayed.
 //   arc1 = path3d(arc(angle=90, r=30));
 //   arc2 = xrot(-90, cp=[0,30],p=path3d(arc(angle=[90,180], r=30)));
 //   two_arcs = path_merge_collinear(concat(arc1,arc2));
@@ -1187,47 +1220,47 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, three_arcs, method="incremental");
 // Example(Med,NoScales): knot example from list-comprehension-demos, "incremental" method
-//   function knot(a,b,t) =   // rolling knot 
-//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
-//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
-//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
-//   a = 0.8; b = sqrt (1 - a * a); 
+//   function knot(a,b,t) =   // rolling knot
+//        [ a * cos (3 * t) / (1 - b* sin (2 *t)),
+//          a * sin( 3 * t) / (1 - b* sin (2 *t)),
+//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))];
+//   a = 0.8; b = sqrt (1 - a * a);
 //   ksteps = 400;
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, knot_path, closed=true, method="incremental");
-// Example(Med,NoScales): knot example from list-comprehension-demos, "natural" method.  Which one do you like better? 
-//   function knot(a,b,t) =   // rolling knot 
-//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
-//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
-//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
-//   a = 0.8; b = sqrt (1 - a * a); 
+// Example(Med,NoScales): knot example from list-comprehension-demos, "natural" method.  Which one do you like better?
+//   function knot(a,b,t) =   // rolling knot
+//        [ a * cos (3 * t) / (1 - b* sin (2 *t)),
+//          a * sin( 3 * t) / (1 - b* sin (2 *t)),
+//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))];
+//   a = 0.8; b = sqrt (1 - a * a);
 //   ksteps = 400;
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, knot_path, closed=true, method="natural");
-// Example(Med,NoScales): knot with twist.  Note if you twist it the other direction the center section untwists because of the natural twist there.  Also compare to the "incremental" method which has less twist in the center.  
-//   function knot(a,b,t) =   // rolling knot 
-//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
-//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
-//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
-//   a = 0.8; b = sqrt (1 - a * a); 
+// Example(Med,NoScales): knot with twist.  Note if you twist it the other direction the center section untwists because of the natural twist there.  Also compare to the "incremental" method which has less twist in the center.
+//   function knot(a,b,t) =   // rolling knot
+//        [ a * cos (3 * t) / (1 - b* sin (2 *t)),
+//          a * sin( 3 * t) / (1 - b* sin (2 *t)),
+//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))];
+//   a = 0.8; b = sqrt (1 - a * a);
 //   ksteps = 400;
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
 //   path_sweep(subdivide_path(pentagon(r=12),30), knot_path, closed=true,
 //              twist=-360*8, symmetry=5, method="natural");
 // Example(Med,NoScales): twisted knot with twist distributed by path sample points instead of by length using `twist_by_length=false`
-//   function knot(a,b,t) =   // rolling knot 
-//           [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
-//             a * sin( 3 * t) / (1 - b* sin (2 *t)), 
-//           1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
-//   a = 0.8; b = sqrt (1 - a * a); 
+//   function knot(a,b,t) =   // rolling knot
+//           [ a * cos (3 * t) / (1 - b* sin (2 *t)),
+//             a * sin( 3 * t) / (1 - b* sin (2 *t)),
+//           1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))];
+//   a = 0.8; b = sqrt (1 - a * a);
 //   ksteps = 400;
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
 //   path_sweep(subdivide_path(pentagon(r=12),30), knot_path, closed=true,
 //              twist=-360*8, symmetry=5, method="natural", twist_by_length=false);
-// Example(Big,NoScales): This torus knot example comes from list-comprehension-demos.  The knot lies on the surface of a torus.  When we use the "natural" method the swept figure is angled compared to the surface of the torus because the curve doesn't follow geodesics of the torus.  
-//   function knot(phi,R,r,p,q) = 
+// Example(Big,NoScales): This torus knot example comes from list-comprehension-demos.  The knot lies on the surface of a torus.  When we use the "natural" method the swept figure is angled compared to the surface of the torus because the curve doesn't follow geodesics of the torus.
+//   function knot(phi,R,r,p,q) =
 //       [ (r * cos(q * phi) + R) * cos(p * phi),
 //         (r * cos(q * phi) + R) * sin(p * phi),
 //          r * sin(q * phi) ];
@@ -1236,16 +1269,16 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   R = 400; r = 150;  // Torus size
 //   p = 2;  q = 5;     // Knot parameters
 //   %torus(r_maj=R,r_min=r);
-//   k = max(p,q) / gcd(p,q) * points; 
+//   k = max(p,q) / gcd(p,q) * points;
 //   knot_path   = [ for (i=[0:k-1]) knot(360*i/k/gcd(p,q),R,r,p,q) ];
 //   path_sweep(rot(90,p=ushape),knot_path,  method="natural", closed=true);
 // Example(Big,NoScales): By computing the normal to the torus at the path we can orient the path to lie on the surface of the torus:
-//   function knot(phi,R,r,p,q) = 
+//   function knot(phi,R,r,p,q) =
 //       [ (r * cos(q * phi) + R) * cos(p * phi),
 //         (r * cos(q * phi) + R) * sin(p * phi),
 //          r * sin(q * phi) ];
-//   function knot_normal(phi,R,r,p,q) =  
-//       knot(phi,R,r,p,q) 
+//   function knot_normal(phi,R,r,p,q) =
+//       knot(phi,R,r,p,q)
 //           - R*unit(knot(phi,R,r,p,q)
 //               - [0,0, knot(phi,R,r,p,q)[2]]) ;
 //   ushape = 3*[[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
@@ -1253,11 +1286,11 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   R = 400; r = 150;  // Torus size
 //   p = 2;  q = 5;     // Knot parameters
 //   %torus(r_maj=R,r_min=r);
-//   k = max(p,q) / gcd(p,q) * points; 
+//   k = max(p,q) / gcd(p,q) * points;
 //   knot_path   = [ for (i=[0:k-1]) knot(360*i/k/gcd(p,q),R,r,p,q) ];
 //   normals = [ for (i=[0:k-1]) knot_normal(360*i/k/gcd(p,q),R,r,p,q) ];
 //   path_sweep(ushape,knot_path,normal=normals, method="manual", closed=true);
-// Example(NoScales): You can request the transformations and manipulate them before passing them on to sweep.  Here we construct a tube that changes scale by first generating the transforms and then applying the scale factor and connecting the inside and outside.  Note that the wall thickness varies because it is produced by scaling.  
+// Example(NoScales): You can request the transformations and manipulate them before passing them on to sweep.  Here we construct a tube that changes scale by first generating the transforms and then applying the scale factor and connecting the inside and outside.  Note that the wall thickness varies because it is produced by scaling.
 //   shape = star(n=5, r=10, ir=5);
 //   rpath = arc(25, points=[[29,6,-4], [3,4,6], [1,1,7]]);
 //   trans = path_sweep(shape, rpath, transforms=true);
@@ -1299,20 +1332,20 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
                     symmetry, last_normal, tangent, uniform, relaxed, caps, style);
 
     if (profiles){
-        assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");      
+        assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
         tran = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
                           symmetry, last_normal, tangent, uniform, relaxed,transforms=true);
         rshape = is_path(shape) ? [path3d(shape)]
                                 : [for(s=shape) path3d(s)];
         attachable(anchor,spin,orient, vnf=vnf, extent=atype=="hull", cp=cp) {
-            for(T=tran) stroke([for(part=rshape)apply(T,part)],width=width);        
+            for(T=tran) stroke([for(part=rshape)apply(T,part)],width=width);
             children();
         }
     }
-    else 
+    else
       vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
           children();
-}        
+}
 
 
 function path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true,
@@ -1355,12 +1388,12 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
     normals = is_path(normal) ? normal : repeat(normal,len(path)),
     pathfrac = twist_by_length ? path_length_fractions(path, closed) : [for(i=[0:1:len(path)]) i / (len(path)-(closed?0:1))],
     L = len(path),
-    transform_list = 
+    transform_list =
       method=="incremental" ?
         let(rotations =
                [for( i  = 0,
                      ynormal = normal - (normal * tangents[0])*tangents[0],
-                     rotation = frame_map(y=ynormal, z=tangents[0]) 
+                     rotation = frame_map(y=ynormal, z=tangents[0])
                        ;
                      i < len(tangents) + (closed?1:0) ;
                      rotation = i<len(tangents)-1+(closed?1:0)? rot(from=tangents[i],to=tangents[(i+1)%L])*rotation : undef,
@@ -1373,23 +1406,23 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
             // then it will be the identity, but we might have accumulated some twist which will show up as a rotation around the
             // X axis.  Similarly, in the closed==false case the desired and actual transformations can only differ in the twist,
             // so we can need to calculate the twist angle so we can apply a correction, which we distribute uniformly over the whole path.
-            reference_rot = closed ? rotations[0] :   
-                         is_undef(last_normal) ? last(rotations) : 
+            reference_rot = closed ? rotations[0] :
+                         is_undef(last_normal) ? last(rotations) :
                            let(
                                last_tangent = last(tangents),
                                lastynormal = last_normal - (last_normal * last_tangent) * last_tangent
                            )
                          frame_map(y=lastynormal, z=last_tangent),
-            mismatch = transpose(last(rotations)) * reference_rot, 
+            mismatch = transpose(last(rotations)) * reference_rot,
             correction_twist = atan2(mismatch[1][0], mismatch[0][0]),
             // Spread out this extra twist over the whole sweep so that it doesn't occur
-            // abruptly as an artifact at the last step.  
+            // abruptly as an artifact at the last step.
             twistfix = correction_twist%(360/symmetry),
             adjusted_final = !closed ? undef :
                           translate(path[0]) * rotations[0] * zrot(-correction_twist+correction_twist%(360/symmetry)-twist)
         )  [for(i=idx(path)) translate(path[i]) * rotations[i] * zrot((twistfix-twist)*pathfrac[i]), if(closed) adjusted_final] :
       method=="manual" ?
-            [for(i=[0:L-(closed?0:1)]) let(    
+            [for(i=[0:L-(closed?0:1)]) let(
                      ynormal = relaxed ? normals[i%L] : normals[i%L] - (normals[i%L] * tangents[i%L])*tangents[i%L],
                      znormal = relaxed ? tangents[i%L] - (normals[i%L] * tangents[i%L])*normals[i%L] : tangents[i%L],
                      rotation = frame_map(y=ynormal, z=znormal)
@@ -1432,14 +1465,14 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
 //   Takes an input 2D polygon (the shape) and a 2d path, and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF.
 //   .
-//   See {{path_sweep()}} for more details on how the sweep operation works and for introductory examples.  
+//   See {{path_sweep()}} for more details on how the sweep operation works and for introductory examples.
 //   This 2d version is different because local self-intersections (creases in the output) are allowed and do not produce CGAL errors.
 //   This is accomplished by using offset() calculations, which are more expensive than simply copying the shape along
 //   the path, so if you do not have local self-intersections, use {{path_sweep()}} instead.  If xmax is the largest x value (in absolute value)
 //   of the shape, then path_sweep2d() will work as long as the offset of `path` exists at `delta=xmax`.  If the offset vanishes, as in the
-//   case of a circle offset by more than its radius, then you will get an error about a degenerate offset.  
+//   case of a circle offset by more than its radius, then you will get an error about a degenerate offset.
 //   Note that global self-intersections will still give rise to CGAL errors.  You should be able to handle these by partitioning your model.  The y axis of the
-//   shape is mapped to the z axis in the swept polyhedron, and no twisting can occur.  
+//   shape is mapped to the z axis in the swept polyhedron, and no twisting can occur.
 //   The quality parameter is passed to offset to determine the offset quality.
 // Arguments:
 //   shape = a 2D polygon describing the shape to be swept
@@ -1452,13 +1485,13 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
 //   convexity = convexity parameter for polyhedron (module only)  Default: 10
 //   anchor = Translate so anchor point is at the origin.  Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
-//   orient = Vector to rotate top towards after spin 
+//   orient = Vector to rotate top towards after spin
 //   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
-// Example: Sine wave example with self-intersections at each peak.  This would fail with path_sweep(). 
+// Example: Sine wave example with self-intersections at each peak.  This would fail with path_sweep().
 //   sinewave = [for(i=[-30:10:360*2+30]) [i/40,3*sin(i)]];
 //   path_sweep2d(circle(r=3,$fn=15), sinewave);
-// Example: The ends can look weird if they are in a place where self intersection occurs.  This is a natural result of how offset behaves at ends of a path.  
+// Example: The ends can look weird if they are in a place where self intersection occurs.  This is a natural result of how offset behaves at ends of a path.
 //   coswave = [for(i=[0:10:360*1.5]) [i/40,3*cos(i)]];
 //   zrot(-20)
 //     path_sweep2d( circle(r=3,$fn=15), coswave);
@@ -1472,7 +1505,7 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
 //   path_sweep2d(circle(r=3.25, $fn=32), select(ellipse,floor(L*.7),ceil(L*.3)),closed=false);
 
 function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edge",
-                      anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull") = 
+                      anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull") =
    let(
         caps = is_def(caps) ? caps
              : closed ? false : true,
@@ -1491,10 +1524,10 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edg
         path = flip ? reverse(path) : path,
         proflist= transpose(
                      [for(pt = profile)
-                        let(  
+                        let(
                             ofs = offset(path, delta=-flip*pt.x, return_faces=true,closed=closed, quality=quality),
                             map = column(_ofs_vmap(ofs,closed=closed),1)
-                        ) 
+                        )
                         select(path3d(ofs[0],pt.y),map)
                       ]
                   ),
@@ -1534,7 +1567,7 @@ function _ofs_vmap(ofs,closed=false) =
 // face is a list of 3 or 4 vertices as indices into the two curves where the parent curve vertices are
 // numbered from 0 to firstlen-1 and the offset from firstlen and up.  The firstlen pararameter is used
 // to determine which curve the vertices belong to and to remove the offset so that the return gives
-// the index into each curve with a 0 base.  
+// the index into each curve with a 0 base.
 function _ofs_face_edge(face,firstlen,second=false) =
    let(
        itry = min_index(face),
@@ -1565,7 +1598,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   be invalid and will generate CGAL errors.  If you get such errors, most likely you have an
 //   overlooked self-intersection.  Note also that the errors will not occur when your shape is alone
 //   in your model, but will arise if you add a second object to the model.  This may mislead you into
-//   thinking the second object caused a problem.  Even adding a simple cube to the model will reveal the problem.  
+//   thinking the second object caused a problem.  Even adding a simple cube to the model will reveal the problem.
 // Arguments:
 //   shape = 2d path or region, describing the shape to be swept.
 //   transforms = list of 4x4 matrices to apply
@@ -1600,14 +1633,14 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   shape_points = subdivide_path(square(10),40,closed=true);
 //   path_transforms = [for (i=[0:pathstep:height]) let(t=i/height) up(i) * scale([f(t),f(t),i]) * zrot(r(t))];
 //   sweep(shape_points, path_transforms);
-// Example: Twisted container.  Note that this technique doesn't create a fixed container wall thickness.  
+// Example: Twisted container.  Note that this technique doesn't create a fixed container wall thickness.
 //   shape = subdivide_path(square(30,center=true), 40, closed=true);
 //   outside = [for(i=[0:24]) up(i)*rot(i)*scale(1.25*i/24+1)];
 //   inside = [for(i=[24:-1:2]) up(i)*rot(i)*scale(1.2*i/24+1)];
 //   sweep(shape, concat(outside,inside));
 
 function sweep(shape, transforms, closed=false, caps, style="min_edge",
-               anchor="origin", cp="centroid", spin=0, orient=UP, atype="hull") = 
+               anchor="origin", cp="centroid", spin=0, orient=UP, atype="hull") =
     assert(is_consistent(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
     assert(is_path(shape,2) || is_region(shape), "Input shape must be a 2d path or a region.")
     let(
@@ -1643,8 +1676,8 @@ module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=
     vnf = sweep(shape, transforms, closed, caps, style);
     vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
          children();
-}    
-         
+}
+
 
 
 // Section: Functions for resampling and slicing profile lists
@@ -1676,7 +1709,7 @@ function subdivide_and_slice(profiles, slices, numpoints, method="length", close
   assert(numpoints>=maxsize, "Number of points requested is smaller than largest profile")
   let(fixpoly = [for(poly=profiles) subdivide_path(poly, numpoints,method=method)])
   slice_profiles(fixpoly, slices, closed);
-  
+
 
 
 // Function: slice_profiles()
@@ -1707,7 +1740,7 @@ function slice_profiles(profiles,slices,closed=false) =
 
 function _closest_angle(alpha,beta) =
     is_vector(beta) ? [for(entry=beta) _closest_angle(alpha,entry)]
-  : beta-alpha > 180 ? beta - ceil((beta-alpha-180)/360) * 360 
+  : beta-alpha > 180 ? beta - ceil((beta-alpha-180)/360) * 360
   : beta-alpha < -180 ? beta + ceil((alpha-beta-180)/360) * 360
   : beta;
 
@@ -1756,7 +1789,7 @@ function _smooth(data,len,closed=false,angle=false) =
 //   The default is to resample based on the length of the arc defined by each rotation operator.  This produces
 //   uniform sampling over all of the transformations.  It requires that each rotation has nonzero length.
 //   In this case n specifies the total number of samples.  If you set method to "count" then you get
-//   n samples for each transform.  You can set n to a vector to vary the samples at each step.  
+//   n samples for each transform.  You can set n to a vector to vary the samples at each step.
 // Arguments:
 //   rotlist = list of rotation operators in 3d to resample
 //   n = Number of rotations to produce as output when method is "length" or number for each transformation if method is "count".  Can be a vector when method is "count"
@@ -1768,7 +1801,7 @@ function _smooth(data,len,closed=false,angle=false) =
 //   long = resample the "long way" around the rotation, a boolean or list of booleans.  Default: false
 //   turns = add extra turns.  If a scalar adds the turns to every rotation, or give a vector.  Default: 0
 //   closed = if true then the rotation list is treated as closed.  Default: false
-// Example(3D): Resampling the arc from a compound rotation with translations thrown in.  
+// Example(3D): Resampling the arc from a compound rotation with translations thrown in.
 //   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], n=25);
 //   sweep(circle(r=1,$fn=3), tran);
 // Example(3D): Applying a scale factor
@@ -1816,7 +1849,7 @@ function _smooth(data,len,closed=false,angle=false) =
 //   tran = turtle3d(["arcsteps", 1, "arcup", 10, 90, "move", 10], transforms=true,state=[1,-.5,0]);
 //   rtran = rot_resample(tran,100,twist=[0,60],smoothlen=17);
 //   sweep(subdivide_path(rect([3,3]),40),rtran);
-// Example(3D): Toothed belt based on a list-comprehension-demos example.  This version has a smoothed twist transition.  Try changing smoothlen to 1 to see the more abrupt transition that occurs without smoothing.  
+// Example(3D): Toothed belt based on a list-comprehension-demos example.  This version has a smoothed twist transition.  Try changing smoothlen to 1 to see the more abrupt transition that occurs without smoothing.
 //   include<BOSL2/turtle3d.scad>
 //   r_small = 19;       // radius of small curve
 //   r_large = 46;       // radius of large curve
@@ -1830,12 +1863,12 @@ function _smooth(data,len,closed=false,angle=false) =
 //                   square([belt_width, belt_thickness],anchor=FWD),
 //                   20));
 //   beltrots =
-//     turtle3d(["arcsteps",1,          
+//     turtle3d(["arcsteps",1,
 //               "move", flat_length,
 //               "arcleft", r_small, angle,
 //               "move", flat_length,
-//     // Closing path will be interpolated            
-//     //        "arcleft", r_large, 360-angle    
+//     // Closing path will be interpolated
+//     //        "arcleft", r_large, 360-angle
 //              ],transforms=true);
 //   beltpath = rot_resample(beltrots,teeth*4,
 //                           twist=[180,0,-180,0],
@@ -1861,7 +1894,7 @@ function rot_resample(rotlist,n,twist,scale,smoothlen=1,long=false,turns=0,close
                                    : (is_vector(n) ? sum(n) : tcount*n)+1  //(closed?0:1)
     )
     assert(is_bool(long) || len(long)==tcount,str("Input long must be a scalar or have length ",tcount))
-    let(      
+    let(
         long = force_list(long,tcount),
         turns = force_list(turns,tcount),
         T = [for(i=[0:1:tcount-1]) rot_inverse(rotlist[i])*select(rotlist,i+1)],
@@ -1874,7 +1907,7 @@ function rot_resample(rotlist,n,twist,scale,smoothlen=1,long=false,turns=0,close
     )
     assert(method=="count" || all_positive(length),
            "Rotation list includes a repeated entry or a rotation around the origin, not allowed when method=\"length\"")
-    let(   
+    let(
         cumlen = [0, each cumsum(length)],
         totlen = last(cumlen),
         stepsize = totlen/(count-1),
@@ -1933,7 +1966,7 @@ function rot_resample(rotlist,n,twist,scale,smoothlen=1,long=false,turns=0,close
 // polygon, computes the optimal value for each indexing, and chooses the overall best result.  It uses
 // _dp_extract_map() to thread back through the dynamic programming array to determine the actual mapping, and
 // then converts the result to an index repetition count list, which is passed to repeat_entries().
-// 
+//
 // The function _dp_distance_array builds up the rows of the dynamic programming matrix with reference
 // to the previous rows, where `tdist` holds the total distance for a given mapping, and `map`
 // holds the information about which path was optimal for each position.
@@ -2004,7 +2037,7 @@ function _dp_distance_row(small, big, small_ind, tdist) =
    ) if (big_ind==len(big)+1) each [newrow,newmap]];
 
 
-function _dp_extract_map(map) =  
+function _dp_extract_map(map) =
       [for(
            i=len(map)-1,
            j=len(map[0])-1,
@@ -2021,7 +2054,7 @@ function _dp_extract_map(map) =
            smallmap = concat( [i%(len(map)-1)]  , smallmap)
           )
         if (i==0 && j==0) each [smallmap,bigmap]];
-     
+
 
 /// Internal Function: _skin_distance_match(poly1,poly2)
 /// Usage:
@@ -2071,7 +2104,7 @@ function _skin_distance_match(poly1,poly2) =
 
 // This function associates vertices but with the assumption that index 0 is associated between the
 // two inputs.  This gives only quadratic run time.  As above, output is pair of polygons with
-// vertices duplicated as suited to use as input to skin(). 
+// vertices duplicated as suited to use as input to skin().
 
 function _skin_aligned_distance_match(poly1, poly2) =
     let(
@@ -2118,7 +2151,7 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
     let(
         angles = [
             for (i = [0:len(curve)-(closed?1:2)])
-            let( 
+            let(
                 plane = plane3pt( edge[0], edge[1], curve[i]),
                 tangent = [curve[i], select(curve,i+1)]
             ) plane_line_angle(plane,tangent)
@@ -2149,7 +2182,7 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
 //   You must ensure that each mapping produces the correct number of vertices to exactly map onto every vertex of the next polygon.
 //   Note that if you split (only) vertex i of a polygon that means it will map to vertices i and i+1 of the next polygon.  Vertex 0 will always
 //   map to vertex 0 and the last vertices will always map to each other, so if you want something different than that you'll need to reindex
-//   your polygons.  
+//   your polygons.
 // Arguments:
 //   polygons = list of polygons to split
 //   split = list of lists of split vertices
@@ -2161,7 +2194,7 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
 //   sq = regular_ngon(4,side=2);
 //   hex = apply(rot(15),hexagon(side=2));
 //   skin(associate_vertices([sq,hex],[[1,2]]), slices=10, refine=10, sampling="segment", z=[0,4]);
-// Example(FlatSpin,VPD=17,VPT=[0,0,2]): Here the two triangular faces connect to a single vertex on the square.  Note that we had to rotate the hexagon to line them up because the vertices match counting forward, so in this case vertex 0 of the square matches to vertices 0, 1, and 2 of the hexagon.  
+// Example(FlatSpin,VPD=17,VPT=[0,0,2]): Here the two triangular faces connect to a single vertex on the square.  Note that we had to rotate the hexagon to line them up because the vertices match counting forward, so in this case vertex 0 of the square matches to vertices 0, 1, and 2 of the hexagon.
 //   sq = regular_ngon(4,side=2);
 //   hex = apply(rot(60),hexagon(side=2));
 //   skin(associate_vertices([sq,hex],[[0,0]]), slices=10, refine=10, sampling="segment", z=[0,4]);
@@ -2760,14 +2793,14 @@ function texture(tex, n, inset, gap, roughness) =
 //   vnf_polyhedron(vnf, convexity=10);
 
 function textured_linear_sweep(
-    region, texture,
-    tex_size=[5,5], h, counts,
-    inset=false, rot=false, tscale=1,
-    twist, scale, shift,
-    style="min_edge", l, samples,
+    region, texture, tex_size=[5,5],
+    h, counts, inset=false, rot=false,
+    tscale=1, twist, scale, shift,
+    style="min_edge", l,
+    height, length, samples,
     anchor=CENTER, spin=0, orient=UP
 ) =
-    assert(is_path(region,[2])||is_region(region))
+    assert(is_path(region,[2]) || is_region(region))
     assert(is_undef(samples) || is_int(samples))
     assert(counts==undef || is_vector(counts,2))
     assert(tex_size==undef || is_vector(tex_size,2))
@@ -2780,7 +2813,7 @@ function textured_linear_sweep(
             rot==180? reverse([for (row=tex) reverse(row)]) :
             rot==270? [for (row=transpose(tex)) reverse(row)] :
             reverse(transpose(tex)),
-        h = first_defined([h, l, 1]),
+        h = first_defined([h, l, height, length, 1]),
         inset = is_num(inset)? inset : inset? 1 : 0,
         twist = default(twist, 0),
         shift = default(shift, [0,0]),
@@ -2824,7 +2857,8 @@ function textured_linear_sweep(
               ) [for (i = [0:1:rlen]) [i/rlen, row[i%rlen]]],
         tmat = scale(scale) * zrot(twist) * up(h/2),
         pre_skew_vnf = vnf_join([
-            for (rgn = regions) let(
+            /*for (rgn = regions)*/ let(
+                rgn = last(regions),
                 walls_vnf = vnf_join([
                     for (path = rgn) let(
                         path = reverse(path),
@@ -2922,18 +2956,19 @@ function textured_linear_sweep(
                         obases = resample_path(path, n=counts.x * samples, closed=true),
                         onorms = path_normals(obases, closed=true),
                         bases = close_path(obases),
-                        norms = close_path(onorms)
-                    ) [
-                        for (j = [0:1:counts.x-1], vert = tpath) let(
-                            part = (j + vert.x) * samples,
-                            u = floor(part),
-                            uu = part - u,
-                            texh = (vert.y - inset) * tscale,
-                            base = lerp(bases[u], select(bases,u+1), uu),
-                            norm = unit(lerp(norms[u], select(norms,u+1), uu)),
-                            xy = base + norm * texh
-                        ) xy
-                    ]
+                        norms = close_path(onorms),
+                        nupath = [
+                            for (j = [0:1:counts.x-1], vert = tpath) let(
+                                part = (j + vert.x) * samples,
+                                u = floor(part),
+                                uu = part - u,
+                                texh = (vert.y - inset) * tscale,
+                                base = lerp(bases[u], select(bases,u+1), uu),
+                                norm = unit(lerp(norms[u], select(norms,u+1), uu)),
+                                xy = base + norm * texh
+                            ) xy
+                        ]
+                    ) nupath
                 ],
                 bot_vnf = vnf_from_region(brgn, down(h/2), reverse=true),
                 top_vnf = vnf_from_region(brgn, tmat, reverse=false)
@@ -2954,11 +2989,12 @@ module textured_linear_sweep(
     path, texture, tex_size=[5,5], h,
     inset=false, rot=false, tscale=1,
     twist, scale, shift, samples,
-    style="min_edge", l, counts,
+    style="min_edge", l,
+    height, length, counts,
     anchor=CENTER, spin=0, orient=UP,
     convexity=10
 ) {
-    h = first_defined([h, l]);
+    h = first_defined([h, l, height, length, 1]);
     vnf = textured_linear_sweep(
         path, texture, h=h,
         tex_size=tex_size, counts=counts,
