@@ -21,6 +21,17 @@ module test_downcase() {
 }
 test_downcase();
 
+module test_substr_match(){
+     assert(substr_match("abcde",2,"cd")); 
+     assert(!substr_match("abcde",2,"cx"));
+     assert(!substr_match("abcde",2,"cdef"));
+     assert(!substr_match("abcde",-2,"cd"));
+     assert(!substr_match("abcde",19,"cd"));
+     assert(substr_match("abc",1,""));
+     assert(!substr_match("",0,"a"));
+     assert(substr_match("",0,""));
+}
+
 
 module test_starts_with() {
     assert(!starts_with("", "abc"));

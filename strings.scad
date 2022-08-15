@@ -13,7 +13,7 @@
 
 // Function: substr()
 // Usage:
-//   substr(str, [pos], [len])
+//   newstr = substr(str, [pos], [len]);
 // Description:
 //   Returns a substring from a string start at position `pos` with length `len`, or 
 //   if `len` isn't given, the rest of the string.  
@@ -39,7 +39,7 @@ function _substr(str,pos,len,substr="") =
 
 // Function: suffix()
 // Usage:
-//   suffix(str,len)
+//   newstr = suffix(str,len);
 // Description:
 //   Returns the last `len` characters from the input string `str`.
 //   If `len` is longer than the length of `str`, then the entirety of `str` is returned.
@@ -56,7 +56,7 @@ function suffix(str,len) =
 
 // Function: str_find()
 // Usage:
-//   str_find(str,pattern,[last=],[all=],[start=])
+//   ind = str_find(str,pattern,[last=],[all=],[start=]);
 // Description:
 //   Searches input string `str` for the string `pattern` and returns the index or indices of the matches in `str`.
 //   By default `str_find()` returns the index of the first match in `str`.  If `last` is true then it returns the index of the last match.
@@ -94,37 +94,56 @@ function str_find(str,pattern,start=undef,last=false,all=false) =
     _str_find_first(str,pattern,len(str)-len(pattern),start);
 
 function _str_find_first(str,pattern,max_sindex,sindex) = 
-    sindex<=max_sindex && !_str_cmp(str,sindex, pattern)?
+    sindex<=max_sindex && !substr_match(str,sindex, pattern)?
         _str_find_first(str,pattern,max_sindex,sindex+1) :
         (sindex <= max_sindex ? sindex : undef);
 
 function _str_find_last(str,pattern,sindex) = 
-    sindex>=0 && !_str_cmp(str,sindex, pattern)?
+    sindex>=0 && !substr_match(str,sindex, pattern)?
         _str_find_last(str,pattern,sindex-1) :
         (sindex >=0 ? sindex : undef);
 
 function _str_find_all(str,pattern) =
     pattern == "" ? count(len(str)) :
-    [for(i=[0:1:len(str)-len(pattern)]) if (_str_cmp(str,i,pattern)) i];
+    [for(i=[0:1:len(str)-len(pattern)]) if (substr_match(str,i,pattern)) i];
 
-// _str_cmp(str,sindex,pattern)
-//    returns true if the string pattern matches the string
-//    starting at index position sindex in the string.
+// Function: substr_match()
+// Usage
+//   bool = substr_match(str,start,pattern);
+// Description:
+//   Returns true if the string `pattern` matches the string `str` starting
+//   at `str[start]`.  If the string is too short for the pattern, or
+//   `start` is out of bounds---either negative or beyond the end of the
+//   string---then substr_match returns false. 
+// Arguments:
+//   str = String to search
+//   start = Starting index for search in str
+//   pattern = String pattern to search for
+// Examples:
+//   substr_match("abcde",2,"cd");   // Returns true
+//   substr_match("abcde",2,"cx");   // Returns false
+//   substr_match("abcde",2,"cdef"); // Returns false
+//   substr_match("abcde",-2,"cd");  // Returns false
+//   substr_match("abcde",19,"cd");  // Returns false
+//   substr_match("abc",1,"");       // Returns true
+
 //
 //    This is carefully optimized for speed.  Precomputing the length
 //    cuts run time in half when the string is long.  Two other string
 //    comparison methods were slower.  
-function _str_cmp(str,sindex,pattern) =
-    len(str)-sindex <len(pattern)? false :
-    _str_cmp_recurse(str,sindex,pattern,len(pattern));
+function substr_match(str,start,pattern) =
+     len(str)-start <len(pattern)? false
+   : _substr_match_recurse(str,start,pattern,len(pattern));
 
-function _str_cmp_recurse(str,sindex,pattern,plen,pindex=0,) = 
-    pindex < plen && pattern[pindex]==str[sindex] ? _str_cmp_recurse(str,sindex+1,pattern,plen,pindex+1): (pindex==plen);
+function _substr_match_recurse(str,sindex,pattern,plen,pindex=0,) =
+    pindex < plen && pattern[pindex]==str[sindex]
+       ? _substr_match_recurse(str,sindex+1,pattern,plen,pindex+1)
+       : (pindex==plen);
 
 
 // Function: starts_with()
 // Usage:
-//    starts_with(str,pattern)
+//    bool = starts_with(str,pattern);
 // Description:
 //    Returns true if the input string `str` starts with the specified string pattern, `pattern`.
 //    Otherwise returns false.   
@@ -135,12 +154,12 @@ function _str_cmp_recurse(str,sindex,pattern,plen,pindex=0,) =
 //   starts_with("abcdef","abc");  // Returns true
 //   starts_with("abcdef","def");  // Returns false
 //   starts_with("abcdef","");     // Returns true
-function starts_with(str,pattern) = _str_cmp(str,0,pattern);
+function starts_with(str,pattern) = substr_match(str,0,pattern);
 
 
 // Function: ends_with()
 // Usage:
-//    ends_with(str,pattern)
+//    bool = ends_with(str,pattern);
 // Description:
 //    Returns true if the input string `str` ends with the specified string pattern, `pattern`.
 //    Otherwise returns false. 
@@ -151,13 +170,13 @@ function starts_with(str,pattern) = _str_cmp(str,0,pattern);
 //   ends_with("abcdef","def");  // Returns true
 //   ends_with("abcdef","de");   // Returns false
 //   ends_with("abcdef","");     // Returns true
-function ends_with(str,pattern) = _str_cmp(str,len(str)-len(pattern),pattern);
+function ends_with(str,pattern) = substr_match(str,len(str)-len(pattern),pattern);
 
 
 
 // Function: str_split()
 // Usage:
-//   str_split(str, sep, [keep_nulls])
+//   string_list = str_split(str, sep, [keep_nulls]);
 // Description:
 //   Breaks an input string into substrings using a separator or list of separators.  If keep_nulls is true
 //   then two sequential separator characters produce an empty string in the output list.  If keep_nulls is false
@@ -207,7 +226,7 @@ function _remove_empty_strs(list) =
 
 // Function: str_join()
 // Usage:
-//   str_join(list, [sep])
+//   str = str_join(list, [sep]);
 // Description:
 //   Returns the concatenation of a list of strings, optionally with a
 //   separator string inserted between each string on the list.
@@ -226,7 +245,7 @@ function str_join(list,sep="",_i=0, _result="") =
 
 // Function: str_strip()
 // Usage:
-//   str_strip(s,c,[start],[end]);
+//   str = str_strip(s,c,[start],[end]);
 // Description:
 //   Takes a string `s` and strips off all leading and/or trailing characters that exist in string `c`.
 //   By default strips both leading and trailing characters.  If you set start or end to true then
@@ -293,7 +312,7 @@ function str_pad(str,length,char=" ",left=false) =
 
 // Function: str_replace_char()
 // Usage:
-//   newstr = str_replace_char(str, char, replace)
+//   newstr = str_replace_char(str, char, replace);
 // Description:
 //   Replace every occurence of `char` in the input string with the string `replace` which
 //   can be any string.  
@@ -306,7 +325,7 @@ function str_replace_char(str,char,replace) =
 
 // Function: downcase()
 // Usage:
-//   downcase(str)
+//   newstr = downcase(str);
 // Description:
 //   Returns the string with the standard ASCII upper case letters A-Z replaced
 //   by their lower case versions.
@@ -320,7 +339,7 @@ function downcase(str) =
 
 // Function: upcase()
 // Usage:
-//   upcase(str)
+//   newstr = upcase(str);
 // Description:
 //   Returns the string with the standard ASCII lower case letters a-z replaced
 //   by their upper case versions.
@@ -353,7 +372,7 @@ function rand_str(n, charset, seed) =
 
 // Function: parse_int()
 // Usage:
-//   parse_int(str, [base])
+//   num = parse_int(str, [base])
 // Description:
 //   Converts a string into an integer with any base up to 16.  Returns NaN if 
 //   conversion fails.  Digits above 9 are represented using letters A-F in either
@@ -389,7 +408,7 @@ function _parse_int_recurse(str,base,i) =
 
 // Function: parse_float()
 // Usage:
-//   parse_float(str)
+//   num = parse_float(str);
 // Description:
 //   Converts a string to a floating point number.  Returns NaN if the
 //   conversion fails.
@@ -417,7 +436,7 @@ function parse_float(str) =
 
 // Function: parse_frac()
 // Usage:
-//   parse_frac(str,[mixed=],[improper=],[signed=])
+//   num = parse_frac(str,[mixed=],[improper=],[signed=]);
 // Description:
 //   Converts a string fraction to a floating point number.  A string fraction has the form `[-][# ][#/#]` where each `#` is one or more of the
 //   digits 0-9, and there is an optional sign character at the beginning. 
@@ -471,7 +490,7 @@ function parse_frac(str,mixed=true,improper=true,signed=true) =
 
 // Function: parse_num()
 // Usage:
-//   parse_num(str)
+//   num = parse_num(str);
 // Description:
 //   Converts a string to a number.  The string can be either a fraction (two integers separated by a "/") or a floating point number.
 //   Returns NaN if the conversion fails.
@@ -491,7 +510,7 @@ function parse_num(str) =
 
 // Function: format_int()
 // Usage:
-//   format_int(i, [mindigits]);
+//   str = format_int(i, [mindigits]);
 // Description:
 //   Formats an integer number into a string.  This can handle larger numbers than `str()`.
 // Arguments:
@@ -539,7 +558,7 @@ function format_fixed(f,digits=6) =
 
 // Function: format_float()
 // Usage:
-//   format_float(f,[sig]);
+//   str = format_float(f,[sig]);
 // Description:
 //   Formats the given floating point number `f` into a string with `sig` significant digits.
 //   Strips trailing `0`s after the decimal point.  Strips trailing decimal point.

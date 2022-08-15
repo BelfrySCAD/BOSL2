@@ -305,9 +305,9 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
 
 // Function&Module: ellipse()
 // Usage: As a Module
-//   ellipse(r|d=, [realign=], [circum=], ...) [ATTACHMENTS];
+//   ellipse(r|d=, [realign=], [circum=], [uniform=], ...) [ATTACHMENTS];
 // Usage: As a Function
-//   path = ellipse(r|d=, [realign=], [circum=], ...);
+//   path = ellipse(r|d=, [realign=], [circum=], [uniform=], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), circle_2tangents(), circle_3points()
 // Description:
@@ -315,13 +315,16 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle or ellipse of the given size.
 //   By default the point list or shape is the same as the one you would get by scaling the output of {{circle()}}, but with this module your
 //   attachments to the ellipse will retain their dimensions, whereas scaling a circle with attachments will also scale the attachments.
-//   If you set unifom to true then you will get a polygon with congruent sides whose vertices lie on the ellipse.  
+//   If you set `uniform` to true then you will get a polygon with congruent sides whose vertices lie on the ellipse.  The `circum` option
+//   requests a polygon that circumscribes the requested ellipse (so the specified ellipse will fit into the resulting polygon).  Note that
+//   you cannot gives `circum=true` and `uniform=true`.  
 // Arguments:
 //   r = Radius of the circle or pair of semiaxes of ellipse 
 //   ---
 //   d = Diameter of the circle or a pair giving the full X and Y axis lengths.  
 //   realign = If false starts the approximate ellipse with a point on the X+ axis.  If true the midpoint of a side is on the X+ axis and the first point of the polygon is below the X+ axis.  This can result in a very different polygon when $fn is small.  Default: false
-//   circum = If true, the polygon that approximates the circle will be upsized slightly to circumscribe the theoretical circle.  If false, it inscribes the theoretical circle.  Default: false
+//   uniform = If true, the polygon that approximates the circle will have segments of equal length.  Only works if `circum=false`.  Default: false
+//   circum = If true, the polygon that approximates the circle will be upsized slightly to circumscribe the theoretical circle.  If false, it inscribes the theoretical circle.  If this is true then `uniform` must be false.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): By Radius
@@ -1396,18 +1399,22 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 
 // Function&Module: supershape()
 // Usage: As Module
-//   supershape(step, [m1=], [m2=], [n1=], [n2=], [n3=], [a=], [b=], [r=/d=]) [ATTACHMENTS];
+//   supershape([step],[n=], [m1=], [m2=], [n1=], [n2=], [n3=], [a=], [b=], [r=/d=]) [ATTACHMENTS];
 // Usage: As Function
-//   path = supershape(step, [m1=], [m2=], [n1=], [n2=], [n3=], [a=], [b=], [r=/d=]);
+//   path = supershape([step], [n=], [m1=], [m2=], [n1=], [n2=], [n3=], [a=], [b=], [r=/d=]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), ellipse()
 // Description:
 //   When called as a function, returns a 2D path for the outline of the [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
 //   When called as a module, creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
 //   Note that the "hull" type anchoring (the default) is more intuitive for concave star-like shapes, but the anchor points do not
-//   necesarily lie on the line of the anchor vector, which can be confusing, especially for simpler, ellipse-like shapes.  
+//   necesarily lie on the line of the anchor vector, which can be confusing, especially for simpler, ellipse-like shapes.
+//   Note that the default step angle of 0.5 is very fine and can be slow, but due to the complex curves of the supershape,
+//   many points are often required to give a good result.  
 // Arguments:
-//   step = The angle step size for sampling the superformula shape.  Smaller steps are slower but more accurate.
+//   step = The angle step size for sampling the superformula shape.  Smaller steps are slower but more accurate.  Default: 0.5
+//   ---
+//   n = Produce n points as output.  Alternative to step.  Not to be confused with shape parameters n1 and n2.  
 //   m1 = The m1 argument for the superformula. Default: 4.
 //   m2 = The m2 argument for the superformula. Default: m1.
 //   n1 = The n1 argument for the superformula. Default: 1.
@@ -1416,7 +1423,6 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   a = The a argument for the superformula.  Default: 1.
 //   b = The b argument for the superformula.  Default: a.
 //   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
-//   ---
 //   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -1446,26 +1452,25 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 // Examples:
 //   linear_extrude(height=0.3, scale=0) supershape(step=1, m1=6, n1=0.4, n2=0, n3=6);
 //   linear_extrude(height=5, scale=0) supershape(step=1, b=3, m1=6, n1=3.8, n2=16, n3=10);
-function supershape(step=0.5, m1=4, m2, n1=1, n2, n3, a=1, b, r, d,anchor=CENTER, spin=0, atype="hull") =
+function supershape(step=0.5, n, m1=4, m2, n1=1, n2, n3, a=1, b, r, d,anchor=CENTER, spin=0, atype="hull") =
     assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
     let(
-
+        n = first_defined([n, ceil(360/step)]),
+        angs = lerpn(360,0,n,endpoint=false),  
         r = get_radius(r=r, d=d, dflt=undef),
         m2 = is_def(m2) ? m2 : m1,
         n2 = is_def(n2) ? n2 : n1,
         n3 = is_def(n3) ? n3 : n2,
         b = is_def(b) ? b : a,
-        steps = ceil(360/step),
-        step = 360/steps,
-        angs = [for (i = [0:steps]) step*i],
-        rads = [for (theta = angs) _superformula(theta=theta,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b)],
-        scale = is_def(r) ? r/max(rads) : 1,
-        path = [for (i = [steps:-1:1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
+        // superformula returns r(theta), the point in polar coordinates
+        rvals = [for (theta = angs) _superformula(theta=theta,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b)],
+        scale = is_def(r) ? r/max(rvals) : 1,
+        path = [for (i=idx(angs)) scale*rvals[i]*[cos(angs[i]), sin(angs[i])]]
     ) reorient(anchor,spin, two_d=true, path=path, p=path, extent=atype=="hull");
 
-module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0, atype="hull") {
+module supershape(step=0.5,n,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0, atype="hull") {
     check = assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
-    path = supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b,r=r,d=d);
+    path = supershape(step=step,n=n,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b,r=r,d=d);
     attachable(anchor,spin,extent=atype=="hull", two_d=true, path=path) {
         polygon(path);
         children();
