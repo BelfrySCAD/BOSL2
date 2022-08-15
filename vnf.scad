@@ -23,7 +23,7 @@
 
 /// Constant: EMPTY_VNF
 /// Description:
-///   The empty VNF data structure.  Equal to `[[],[]]`.  
+///   The empty VNF data structure.  Equal to `[[],[]]`.
 EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 
 
@@ -40,7 +40,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   subdivide for each quadrilateral, so the division may not be uniform across the shape.  The "quincunx" style
 //   adds a vertex in the center of each quadrilateral and creates four triangles, and the "convex" and "concave" styles
 //   chooses the locally convex/concave subdivision.  Degenerate faces
-//   are not included in the output, but if this results in unused vertices they will still appear in the output.  
+//   are not included in the output, but if this results in unused vertices they will still appear in the output.
 // Arguments:
 //   points = A list of vertices to divide into columns and rows.
 //   ---
@@ -128,7 +128,7 @@ function vnf_vertex_array(
     row_wrap=false,
     reverse=false,
     style="default"
-) = 
+) =
     assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested")
     assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
     assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge"]))
@@ -148,8 +148,8 @@ function vnf_vertex_array(
         rowcnt = rows - (row_wrap?0:1),
         verts = [
             each pts,
-            if (style=="quincunx") 
-                for (r = [0:1:rowcnt-1], c = [0:1:colcnt-1]) 
+            if (style=="quincunx")
+                for (r = [0:1:rowcnt-1], c = [0:1:colcnt-1])
                    let(
                        i1 = ((r+0)%rows)*cols + ((c+0)%cols),
                        i2 = ((r+1)%rows)*cols + ((c+0)%cols),
@@ -169,41 +169,46 @@ function vnf_vertex_array(
                    i3 = ((r+1)%rows)*cols + ((c+1)%cols),
                    i4 = ((r+0)%rows)*cols + ((c+1)%cols),
                    faces =
-                        style=="quincunx"? 
+                        style=="quincunx"?
                           let(i5 = pcnt + r*colcnt + c)
                           [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
-                      : style=="alt"? 
+                      : style=="alt"?
                           [[i1,i4,i2],[i2,i4,i3]]
                       : style=="min_edge"?
                           let(
                                d42=norm(pts[i4]-pts[i2]),
                                d13=norm(pts[i1]-pts[i3]),
-                               shortedge = d42<d13+EPSILON ? [[i1,i4,i2],[i2,i4,i3]]
-                                                    : [[i1,i3,i2],[i1,i4,i3]]
+                               shortedge = d42<d13+EPSILON
+                                 ? [[i1,i4,i2],[i2,i4,i3]]
+                                 : [[i1,i3,i2],[i1,i4,i3]]
                           )
                           shortedge
-                      : style=="convex"?  
+                      : style=="convex"?
                           let(   // Find normal for 3 of the points.  Is the other point above or below?
                               n = (reverse?-1:1)*cross(pts[i2]-pts[i1],pts[i3]-pts[i1]),
-                              convexfaces = n==0 ? [[i1,i4,i3]]
-                                          : n*pts[i4] > n*pts[i1] ? [[i1,i4,i2],[i2,i4,i3]]
-                                                                  : [[i1,i3,i2],[i1,i4,i3]]
+                              convexfaces = n==0
+                                ? [[i1,i4,i3]]
+                                : n*pts[i4] > n*pts[i1]
+                                    ? [[i1,i4,i2],[i2,i4,i3]]
+                                    : [[i1,i3,i2],[i1,i4,i3]]
                           )
                           convexfaces
-                      : style=="concave"?  
+                      : style=="concave"?
                           let(   // Find normal for 3 of the points.  Is the other point above or below?
                               n = (reverse?-1:1)*cross(pts[i2]-pts[i1],pts[i3]-pts[i1]),
-                              concavefaces = n==0 ? [[i1,i4,i3]]
-                                          : n*pts[i4] <= n*pts[i1] ? [[i1,i4,i2],[i2,i4,i3]]
-                                                                  : [[i1,i3,i2],[i1,i4,i3]]
+                              concavefaces = n==0
+                                ? [[i1,i4,i3]]
+                                : n*pts[i4] <= n*pts[i1]
+                                    ? [[i1,i4,i2],[i2,i4,i3]]
+                                    : [[i1,i3,i2],[i1,i4,i3]]
                           )
                           concavefaces
                       : [[i1,i3,i2],[i1,i4,i3]],
-                   // remove degenerate faces 
+                   // remove degenerate faces
                    culled_faces= [for(face=faces)
                        if (norm(verts[face[0]]-verts[face[1]])>EPSILON &&
-                           norm(verts[face[1]]-verts[face[2]])>EPSILON && 
-                           norm(verts[face[2]]-verts[face[0]])>EPSILON) 
+                           norm(verts[face[1]]-verts[face[2]])>EPSILON &&
+                           norm(verts[face[2]]-verts[face[0]])>EPSILON)
                            face
                    ],
                    rfaces = reverse? [for (face=culled_faces) reverse(face)] : culled_faces
@@ -221,7 +226,7 @@ function vnf_vertex_array(
 //   Produces a vnf from an array of points where each row length can differ from the adjacent rows by up to 2 in length.  This enables
 //   the construction of triangular VNF patches.  The resulting VNF can be wrapped along the rows by setting `row_wrap` to true.
 //   You cannot wrap columns: if you need to do that you'll need to merge two VNF arrays that share edges.  Degenerate faces
-//   are not included in the output, but if this results in unused vertices they will still appear in the output.  
+//   are not included in the output, but if this results in unused vertices they will still appear in the output.
 // Arguments:
 //   points = List of point lists for each row
 //   row_wrap = If true then add faces connecting the first row and last row.  These rows must differ by at most 2 in length.
@@ -256,7 +261,7 @@ function vnf_vertex_array(
 //   vnf = vnf_tri_array(pts);
 //   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
-function vnf_tri_array(points, row_wrap=false, reverse=false) = 
+function vnf_tri_array(points, row_wrap=false, reverse=false) =
     let(
        lens = [for(row=points) len(row)],
        rowstarts = [0,each cumsum(lens)],
@@ -297,8 +302,8 @@ function vnf_tri_array(points, row_wrap=false, reverse=false) =
        culled_faces=
            [for(face=faces)
                if (norm(verts[face[0]]-verts[face[1]])>EPSILON &&
-                   norm(verts[face[1]]-verts[face[2]])>EPSILON && 
-                   norm(verts[face[2]]-verts[face[0]])>EPSILON) 
+                   norm(verts[face[1]]-verts[face[2]])>EPSILON &&
+                   norm(verts[face[2]]-verts[face[0]])>EPSILON)
                    face
            ]
     )
@@ -318,30 +323,30 @@ function vnf_tri_array(points, row_wrap=false, reverse=false) =
 //   .
 //   Note that this is a tool for manipulating polyhedron data.  It is for
 //   building up a full polyhedron from partial polyhedra.
-//   It is *not* a union operator for VNFs.  The VNFs to be joined must not intersect each other, 
+//   It is *not* a union operator for VNFs.  The VNFs to be joined must not intersect each other,
 //   except at edges, or the result will be an invalid polyhedron.  Similarly the
 //   result must not have any other illegal polyhedron characteristics, such as creating
-//   more than two faces sharing the same edge.  
+//   more than two faces sharing the same edge.
 //   If you want a valid result it is your responsibility to ensure that the polyhedron
 //   has no holes, no intersecting faces or edges, and obeys all the requirements
-//   that CGAL expects. 
+//   that CGAL expects.
 //   .
 //   For example, if you combine two pyramids to try to make an octahedron, the result will
 //   be invalid because of the two internal faces created by the pyramid bases.  A valid
 //   use would be to build a cube missing one face and a pyramid missing its base and
-//   then join them into a cube with a point.  
+//   then join them into a cube with a point.
 // Arguments:
 //   vnfs = a list of the VNFs to joint into one VNF.
-// Example(3D,VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): Here is a VNF where the top face is missing.  It is not a valid polyhedron like this, but we can use it as a building block to make a polyhedron.  
+// Example(3D,VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): Here is a VNF where the top face is missing.  It is not a valid polyhedron like this, but we can use it as a building block to make a polyhedron.
 //   bottom = vnf_vertex_array([path3d(rect(8)), path3d(rect(5),4)],col_wrap=true,cap1=true);
 //   vnf_polyhedron(bottom);
-// Example(3D,VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): Here is a VNF that also has a missing face.  
+// Example(3D,VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): Here is a VNF that also has a missing face.
 //   triangle = yrot(-90,path3d(regular_ngon(n=3,side=5,anchor=LEFT)));
 //   top = up(4,vnf_vertex_array([list_set(right(2.5,triangle),0,[0,0,7]),
 //                               right(6,triangle)
 //                               ], col_wrap=true, cap2=true));
 //   vnf_polyhedron(zrot(90,top));
-// Example(3D,VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): Using vnf_join combines the two VNFs into a single VNF.  Note that they share an edge.  But the result still isn't closed, so it is not yet a valid polyhedron.  
+// Example(3D,VPR=[60,0,26],VPD=55,VPT=[5.6,-5.3,9.8]): Using vnf_join combines the two VNFs into a single VNF.  Note that they share an edge.  But the result still isn't closed, so it is not yet a valid polyhedron.
 //   bottom = vnf_vertex_array([path3d(rect(8)), path3d(rect(5),4)],col_wrap=true,cap1=true);
 //   triangle = yrot(-90,path3d(regular_ngon(n=3,side=5,anchor=LEFT)));
 //   top = up(4,vnf_vertex_array([list_set(right(2.5,triangle),0,[0,0,7]),
@@ -359,7 +364,7 @@ function vnf_tri_array(points, row_wrap=false, reverse=false) =
 //                     for(theta=[0:90:359]) zrot(theta,top)
 //                    ]);
 //   vnf_polyhedron(full);
-// Example(3D): The vnf_join function is not a union operator for polyhedra.  If any faces intersect, like they do in this example where we combine the faces of two cubes, the result is invalid and will give rise to CGAL errors when you add more objects into the model.  
+// Example(3D): The vnf_join function is not a union operator for polyhedra.  If any faces intersect, like they do in this example where we combine the faces of two cubes, the result is invalid and will give rise to CGAL errors when you add more objects into the model.
 //   cube1 = cube(5);
 //   cube2 = move([2,2,2],cube1);
 //   badvnf = vnf_join([cube1,cube2]);
@@ -367,7 +372,7 @@ function vnf_tri_array(points, row_wrap=false, reverse=false) =
 //   right(2.5)up(3)color("red")
 //         text3d("Invalid",size=1,anchor=CENTER,
 //         orient=FRONT,h=.1);
-function vnf_join(vnfs) = 
+function vnf_join(vnfs) =
     assert(is_vnf_list(vnfs) , "Input must be a list of VNFs")
     len(vnfs)==1 ? vnfs[0]
     :
@@ -375,12 +380,12 @@ function vnf_join(vnfs) =
         offs  = cumsum([ 0, for (vnf = vnfs) len(vnf[0]) ]),
         verts = [for (vnf=vnfs) each vnf[0]],
         faces =
-            [ for (i = idx(vnfs)) 
+            [ for (i = idx(vnfs))
                 let( faces = vnfs[i][1] )
-                for (face = faces) 
+                for (face = faces)
                     if ( len(face) >= 3 )
-                        [ for (j = face) 
-                            assert( j>=0 && j<len(vnfs[i][0]), 
+                        [ for (j = face)
+                            assert( j>=0 && j<len(vnfs[i][0]),
                                     str("VNF number ", i, " has a face indexing an nonexistent vertex") )
                             offs[i] + j ]
             ]
@@ -393,7 +398,7 @@ function vnf_join(vnfs) =
 // Usage:
 //   vnf = vnf_from_polygons(polygons);
 // Description:
-//   Given a list of 3d polygons, produces a VNF containing those polygons.  
+//   Given a list of 3d polygons, produces a VNF containing those polygons.
 //   It is up to the caller to make sure that the points are in the correct order to make the face
 //   normals point outwards.  No checking for duplicate vertices is done.  If you want to
 //   remove duplicate vertices use {{vnf_merge_points()}}.
@@ -431,31 +436,31 @@ function _join_paths_at_vertices(path1,path2,v1,v2) =
         if (repeat_start) path1[0],
         each path2,
         if (repeat_start) path2[0],
-    ];                      
+    ];
 
-        
+
 /// Internal Function: _cleave_connected_region(region, eps)
 /// Description:
 ///   Given a region that is connected and has its outer border in region[0],
-///   produces a overlapping connected path to join internal holes to  
-///   the outer border without adding points. Output is a single non-simple polygon. 
+///   produces a overlapping connected path to join internal holes to
+///   the outer border without adding points. Output is a single non-simple polygon.
 /// Requirements:
-///   It expects that all region paths be simple closed paths, with region[0] CW and 
-///   the other paths CCW and encircled by region[0]. The input region paths are also 
-///   supposed to be disjoint except for common vertices and common edges but with 
+///   It expects that all region paths be simple closed paths, with region[0] CW and
+///   the other paths CCW and encircled by region[0]. The input region paths are also
+///   supposed to be disjoint except for common vertices and common edges but with
 ///   no crossings. It may return `undef` if these conditions are not met.
-///   This function implements an extension of the algorithm discussed in:  
+///   This function implements an extension of the algorithm discussed in:
 ///   https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
 function _cleave_connected_region(region, eps=EPSILON) =
     len(region)==1 ? region[0] :
-    let( 
-        outer   = deduplicate(region[0]),             // 
+    let(
+        outer   = deduplicate(region[0]),             //
         holes   = [for(i=[1:1:len(region)-1])         // deduplication possibly unneeded
                       deduplicate( region[i] ) ],     //
         extridx = [for(li=holes) max_index(column(li,0)) ],
         // the right extreme vertex for each hole sorted by decreasing x values
         extremes = sort( [for(i=idx(holes)) [ i, extridx[i], -holes[i][extridx[i]].x] ], idx=2 )
-    ) 
+    )
     _polyHoles(outer, holes, extremes, eps, 0);
 
 
@@ -463,8 +468,8 @@ function _cleave_connected_region(region, eps=EPSILON) =
 // 'extremes' is the list of the right extreme vertex of each hole sorted by decreasing abscissas
 // see: _cleave_connected_region(region, eps)
 function _polyHoles(outer, holes, extremes, eps=EPSILON, n=0) =
-    let( 
-        extr = extremes[n],    // 
+    let(
+        extr = extremes[n],    //
         hole = holes[extr[0]], // hole path to bridge to the outer path
         ipt  = extr[1],        // index of the hole point with maximum abscissa
         brdg = _bridge(hole[ipt], outer, eps)  // the index of a point in outer to bridge hole[ipt] to
@@ -475,32 +480,32 @@ function _polyHoles(outer, holes, extremes, eps=EPSILON, n=0) =
         lh = len(hole),
         // the new outer polygon bridging the hole to the old outer
         npoly =
-            approx(outer[brdg], hole[ipt], eps) 
+            approx(outer[brdg], hole[ipt], eps)
             ?   [ for(i=[brdg:  1: brdg+l])   outer[i%l] ,
                   for(i=[ipt+1: 1: ipt+lh-1]) hole[i%lh] ]
             :   [ for(i=[brdg:  1: brdg+l])   outer[i%l] ,
                   for(i=[ipt:   1: ipt+lh])   hole[i%lh] ]
     )
-    n==len(holes)-1 ?  npoly : 
-    _polyHoles(npoly, holes, extremes, eps, n+1);          
-          
-// find a point in outer to be connected to pt in the interior of outer 
+    n==len(holes)-1 ?  npoly :
+    _polyHoles(npoly, holes, extremes, eps, n+1);
+
+// find a point in outer to be connected to pt in the interior of outer
 // by a segment that not cross or touch any non adjacente edge of outer.
 // return the index of a vertex in the outer path where the bridge should end
 // see _polyHoles(outer, holes, extremes, eps)
 function _bridge(pt, outer,eps) =
-    // find the intersection of a ray from pt to the right 
+    // find the intersection of a ray from pt to the right
     // with the boundary of the outer cycle
-    let(  
+    let(
         l    = len(outer),
-        crxs = 
+        crxs =
             let( edges = pair(outer,wrap=true) )
             [for( i = idx(edges) )
                 let( edge = edges[i] )
                 // consider just descending outer edges at right of pt crossing ordinate pt.y
-                if(    (edge[0].y >  pt.y) //+eps) 
-                    && (edge[1].y <= pt.y) 
-                    && _is_at_left(pt, [edge[1], edge[0]], eps) ) 
+                if(    (edge[0].y >  pt.y) //+eps)
+                    && (edge[1].y <= pt.y)
+                    && _is_at_left(pt, [edge[1], edge[0]], eps) )
                     [ i,
                       // the point of edge with ordinate pt.y
                       abs(pt.y-edge[1].y)<eps ? edge[1] :
@@ -510,11 +515,11 @@ function _bridge(pt, outer,eps) =
              ]
     )
     crxs == [] ? undef :
-    let( 
+    let(
         // the intersection point of the nearest edge to pt with minimum slope
         minX    = min([for(p=crxs) p[1].x]),
         crxcand = [for(crx=crxs) if(crx[1].x < minX+eps) crx ], // nearest edges
-        nearest = min_index([for(crx=crxcand) 
+        nearest = min_index([for(crx=crxcand)
                                 (outer[crx[0]].x - pt.x) / (outer[crx[0]].y - pt.y) ]), // minimum slope
         proj    = crxcand[nearest],
         vert0   = outer[proj[0]],    // the two vertices of the nearest crossing edge
@@ -522,33 +527,33 @@ function _bridge(pt, outer,eps) =
         isect   = proj[1]            // the intersection point
     )
     norm(pt-vert1) < eps ? (proj[0]+1)%l : // if pt touches an outer vertex, return its index
-    // as vert0.y > pt.y then pt!=vert0 
+    // as vert0.y > pt.y then pt!=vert0
     norm(pt-isect) < eps ? undef :         // if pt touches the middle of an outer edge -> error
-    let( 
+    let(
         // the edge [vert0, vert1] necessarily satisfies vert0.y > vert1.y
         // indices of candidates to an outer bridge point
-        cand  = 
-            (vert0.x > pt.x) 
-            ?   [ proj[0], 
+        cand  =
+            (vert0.x > pt.x)
+            ?   [ proj[0],
                   // select reflex vertices inside of the triangle [pt, vert0, isect]
-                  for(i=idx(outer)) 
-                      if( _tri_class(select(outer,i-1,i+1),eps) <= 0 
+                  for(i=idx(outer))
+                      if( _tri_class(select(outer,i-1,i+1),eps) <= 0
                           && _pt_in_tri(outer[i], [pt, vert0, isect], eps)>=0 )
-                        i 
+                        i
                 ]
             :   [ (proj[0]+1)%l,
-                  // select reflex vertices inside of the triangle [pt, isect, vert1] 
-                  for(i=idx(outer)) 
-                      if( _tri_class(select(outer,i-1,i+1),eps) <= 0 
+                  // select reflex vertices inside of the triangle [pt, isect, vert1]
+                  for(i=idx(outer))
+                      if( _tri_class(select(outer,i-1,i+1),eps) <= 0
                           &&  _pt_in_tri(outer[i], [pt, isect, vert1], eps)>=0 )
-                        i 
+                        i
                 ],
         // choose the candidate outer[i] such that the line [pt, outer[i]] has minimum slope
         // among those with minimum slope choose the nearest to pt
         slopes  = [for(i=cand) 1-abs(outer[i].x-pt.x)/norm(outer[i]-pt) ],
         min_slp = min(slopes),
         cand2   = [for(i=idx(cand)) if(slopes[i]<=min_slp+eps) cand[i] ],
-        nearest = min_index([for(i=cand2) norm(pt-outer[i]) ]) 
+        nearest = min_index([for(i=cand2) norm(pt-outer[i]) ])
     )
     cand2[nearest];
 
@@ -558,7 +563,7 @@ function _bridge(pt, outer,eps) =
 //   vnf = vnf_from_region(region, [transform], [reverse]);
 // Description:
 //   Given a (two-dimensional) region, applies the given transformation matrix to it and makes a (three-dimensional) triangulated VNF of
-//   faces for that region, reversed if desired. 
+//   faces for that region, reversed if desired.
 // Arguments:
 //   region = The region to conver to a vnf.
 //   transform = If given, a transformation matrix to apply to the faces generated from the region.  Default: No transformation applied.
@@ -573,10 +578,14 @@ function _bridge(pt, outer,eps) =
 //   vnf_wireframe(vnf,width=.25);
 function vnf_from_region(region, transform, reverse=false) =
     let (
+        region = [for (path = region) deduplicate(path, closed=true)],
         regions = region_parts(force_region(region)),
         vnfs =
-            [ for (rgn = regions) 
-                let( cleaved = path3d(_cleave_connected_region(rgn)) ) 
+            [
+                for (rgn = regions)
+                let(
+                    cleaved = path3d(_cleave_connected_region(rgn))
+                )
                 assert( cleaved, "The region is invalid")
                 let(
                     face = is_undef(transform)? cleaved : apply(transform,cleaved),
@@ -653,29 +662,29 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
 // Description:
 //   Given a VNF, consolidates all duplicate vertices with a tolerance `eps`, relabeling the faces as necessary,
 //   and eliminating any face with fewer than 3 vertices.  Unreferenced vertices of the input VNF are not dropped.
-//   To remove such vertices uses {{vnf_drop_unused_points()}}.  
+//   To remove such vertices uses {{vnf_drop_unused_points()}}.
 // Arguments:
 //   vnf = a VNF to consolidate
 //   eps = the tolerance in finding duplicates. Default: EPSILON
-function vnf_merge_points(vnf,eps=EPSILON) = 
+function vnf_merge_points(vnf,eps=EPSILON) =
     let(
-        verts = vnf[0], 
+        verts = vnf[0],
         dedup  = vector_search(verts,eps,verts),                 // collect vertex duplicates
         map    = [for(i=idx(verts)) min(dedup[i]) ],             // remap duplic vertices
-        offset = cumsum([for(i=idx(verts)) map[i]==i ? 0 : 1 ]), // remaping face vertex offsets 
+        offset = cumsum([for(i=idx(verts)) map[i]==i ? 0 : 1 ]), // remaping face vertex offsets
         map2   = list(idx(verts))-offset,                        // map old vertex indices to new indices
         nverts = [for(i=idx(verts)) if(map[i]==i) verts[i] ],    // this doesn't eliminate unreferenced vertices
-        nfaces = 
-            [ for(face=vnf[1]) 
+        nfaces =
+            [ for(face=vnf[1])
                 let(
                     nface = [ for(vi=face) map2[map[vi]] ],
-                    dface = [for (i=idx(nface)) 
-                                if( nface[i]!=nface[(i+1)%len(nface)]) 
-                                    nface[i] ] 
+                    dface = [for (i=idx(nface))
+                                if( nface[i]!=nface[(i+1)%len(nface)])
+                                    nface[i] ]
                 )
-                if(len(dface) >= 3) dface 
+                if(len(dface) >= 3) dface
             ]
-    ) 
+    )
     [nverts, nfaces];
 
 
@@ -690,20 +699,20 @@ function vnf_drop_unused_points(vnf) =
     let(
         flat = flatten(vnf[1]),
         ind  = _link_indicator(flat,0,len(vnf[0])-1),
-        verts = [for(i=idx(vnf[0])) if(ind[i]==1) vnf[0][i] ], 
-        map   = cumsum(ind) 
+        verts = [for(i=idx(vnf[0])) if(ind[i]==1) vnf[0][i] ],
+        map   = cumsum(ind)
     )
     [ verts, [for(face=vnf[1]) [for(v=face) map[v]-1 ] ] ];
 
 function _link_indicator(l,imin,imax) =
     len(l) == 0  ? repeat(imax-imin+1,0) :
-    imax-imin<100 || len(l)<400 ? [for(si=search(list([imin:1:imax]),l,1)) si!=[] ? 1: 0 ] : 
-    let( 
+    imax-imin<100 || len(l)<400 ? [for(si=search(list([imin:1:imax]),l,1)) si!=[] ? 1: 0 ] :
+    let(
         pivot   = floor((imax+imin)/2),
         lesser  = [ for(li=l) if( li< pivot) li ],
-        greater = [ for(li=l) if( li> pivot) li ] 
+        greater = [ for(li=l) if( li> pivot) li ]
     )
-    concat( _link_indicator(lesser ,imin,pivot-1), 
+    concat( _link_indicator(lesser ,imin,pivot-1),
             search(pivot,l,1) ? 1 : 0 ,
             _link_indicator(greater,pivot+1,imax) ) ;
 
@@ -723,13 +732,13 @@ function _link_indicator(l,imin,imax) =
 function vnf_triangulate(vnf) =
     let(
         verts = vnf[0],
-        faces = [for (face=vnf[1]) 
-                    each (len(face)==3 ? [face] : 
+        faces = [for (face=vnf[1])
+                    each (len(face)==3 ? [face] :
                     let( tris = polygon_triangulate(verts, face) )
                     assert( tris!=undef, "Some `vnf` face cannot be triangulated.")
                     tris ) ]
-    ) 
-    [verts, faces]; 
+    )
+    [verts, faces];
 
 
 
@@ -817,7 +826,7 @@ function _split_2dpolygons_at_each_x(polys, xs, _i=0) =
 /// Topics: Geometry, Polygons, Intersections
 /// Description:
 ///   Given a list of 3D polygons, a choice of X, Y, or Z, and a cut list, `cuts`, splits all of the polygons where they cross
-///   X/Y/Z at any value given in cuts.  
+///   X/Y/Z at any value given in cuts.
 /// Arguments:
 ///   polys = A list of 3D polygons to split.
 ///   dir_ind = slice direction, 0=X, 1=Y, or 2=Z
@@ -893,7 +902,7 @@ module vnf_polyhedron(vnf, convexity=2, extent=true, cp="centroid", anchor="orig
 // Description:
 //   Given a VNF, creates a wire frame ball-and-stick model of the polyhedron with a cylinder for
 //   each edge and a sphere at each vertex.  The width parameter specifies the width of the sticks
-//   that form the wire frame and the diameter of the balls.  
+//   that form the wire frame and the diameter of the balls.
 // Arguments:
 //   vnf = A vnf structure
 //   width = width of the cylinders forming the wire frame.  Default: 1
@@ -922,7 +931,7 @@ module vnf_wireframe(vnf, width=1)
   for (e=edges) extrude_from_to(vertex[e[0]],vertex[e[1]]) circle(d=width);
   // Identify vertices actually used and draw them
   vertused = search(count(len(vertex)), flatten(edges), 1);
-  for(i=idx(vertex)) if(vertused[i]!=[]) move(vertex[i]) sphere(d=width); 
+  for(i=idx(vertex)) if(vertused[i]!=[]) move(vertex[i]) sphere(d=width);
 }
 
 
@@ -949,7 +958,7 @@ function vnf_volume(vnf) =
 // Usage:
 //   area = vnf_area(vnf);
 // Description:
-//   Returns the surface area in any VNF by adding up the area of all its faces.  The VNF need not be a manifold.  
+//   Returns the surface area in any VNF by adding up the area of all its faces.  The VNF need not be a manifold.
 function vnf_area(vnf) =
     let(verts=vnf[0])
     sum([for(face=vnf[1]) polygon_area(select(verts,face))]);
@@ -962,11 +971,11 @@ function vnf_area(vnf) =
 ///   Returns the centroid of the given manifold VNF.  The VNF must describe a valid polyhedron with consistent face direction and
 ///   no holes; otherwise the results are undefined.
 
-/// Divide the solid up into tetrahedra with the origin as one vertex.  
+/// Divide the solid up into tetrahedra with the origin as one vertex.
 /// The centroid of a tetrahedron is the average of its vertices.
 /// The centroid of the total is the volume weighted average.
 function _vnf_centroid(vnf,eps=EPSILON) =
-    assert(is_vnf(vnf) && len(vnf[0])!=0 && len(vnf[1])!=0,"Invalid or empty VNF given to centroid") 
+    assert(is_vnf(vnf) && len(vnf[0])!=0 && len(vnf[1])!=0,"Invalid or empty VNF given to centroid")
     let(
         verts = vnf[0],
         pos = sum([
@@ -990,7 +999,7 @@ function _vnf_centroid(vnf,eps=EPSILON) =
 //   Returns the intersection of the vnf with a half space.  The half space is defined by
 //   plane = [A,B,C,D], taking the side where the normal [A,B,C] points: Ax+By+Cz≥D.
 //   If closed is set to false then the cut face is not included in the vnf.  This could
-//   allow further extension of the vnf by merging with other vnfs.  
+//   allow further extension of the vnf by merging with other vnfs.
 // Arguments:
 //   plane = plane defining the boundary of the half space
 //   vnf = vnf to cut
@@ -1010,11 +1019,11 @@ function _vnf_centroid(vnf,eps=EPSILON) =
 //   cutvnf = vnf_halfspace([0,0.7,-4,0], vnf);
 //   vnf_polyhedron(cutvnf);
 // Example(3D): Cut object has multiple components
-//   function knot(a,b,t) =   // rolling knot 
-//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
-//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
-//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
-//   a = 0.8; b = sqrt (1 - a * a); 
+//   function knot(a,b,t) =   // rolling knot
+//        [ a * cos (3 * t) / (1 - b* sin (2 *t)),
+//          a * sin( 3 * t) / (1 - b* sin (2 *t)),
+//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))];
+//   a = 0.8; b = sqrt (1 - a * a);
 //   ksteps = 400;
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
@@ -1037,7 +1046,7 @@ function vnf_halfspace(plane, vnf, closed=true) =
                                     else assert(approx(p[0],p[1]),"Orphan edge found when assembling cut edges.")
            ]
     )
-    len(newpaths)<=1 ? [newvert, concat(faces_edges_vertices[0], newpaths)] 
+    len(newpaths)<=1 ? [newvert, concat(faces_edges_vertices[0], newpaths)]
     :
       let(
            M = project_plane(plane),
@@ -1055,9 +1064,9 @@ function _assemble_paths(vertices, edges, paths=[],i=0) =
          right = [for(j=idx(paths)) if (approx(vertices[edges[i][1]],vertices[paths[j][0]])) j]
      )
      assert(len(left)<=1 && len(right)<=1)
-     let(              
+     let(
           keep_path = list_remove(paths,concat(left,right)),
-          update_path = left==[] && right==[] ? edges[i] 
+          update_path = left==[] && right==[] ? edges[i]
                       : left==[] ? concat([edges[i][0]],paths[right[0]])
                       : right==[] ?  concat(paths[left[0]],[edges[i][1]])
                       : left != right ? concat(paths[left[0]], paths[right[0]])
@@ -1092,7 +1101,7 @@ function _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount, newfaces=
                  concat(newfaces, [list_head(newface)]), newedges,concat(newvertices,[newvert[0]]),i+1)
    :
    _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount,newfaces, newedges, newvert, i+1);
- 
+
 
 
 
@@ -1226,7 +1235,6 @@ function vnf_bend(vnf,r,d,axis="Z") =
                        axis=="X"? [p.x, p.z*sin(a), p.z*cos(a)] :
                        axis=="Y"? [p.z*sin(a), p.y, p.z*cos(a)] :
                        [p.y*sin(a), p.y*cos(a), p.z]]
-                         
    ) [new_vert,sliced[1]];
 
 
@@ -1335,7 +1343,7 @@ module _show_faces(vertices, faces, size=1, filter) {
 //   in red, aligned with the center of face.  All given faces are drawn with
 //   transparency. All children of this module are drawn with transparency.
 //   Works best with Thrown-Together preview mode, to see reversed faces.
-//   You can set opacity to 0 if you want to supress the display of the polyhedron faces.  
+//   You can set opacity to 0 if you want to supress the display of the polyhedron faces.
 //   .
 //   The vertex numbers are shown rotated to face you.  As you rotate your polyhedron you
 //   can rerun the preview to display them oriented for viewing from a different viewpoint.
