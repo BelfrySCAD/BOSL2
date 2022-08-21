@@ -36,7 +36,7 @@
 //       #chamfer_edge_mask(l=50, chamfer=10, orient=RIGHT);
 //   }
 // Example: Masking by Attachment
-//   diff("mask")
+//   diff()
 //   cube(50, center=true) {
 //       edge_mask(TOP+RIGHT)
 //           #chamfer_edge_mask(l=50, chamfer=10);
@@ -71,7 +71,7 @@ module chamfer_edge_mask(l=1, chamfer=1, excess=0.1, anchor=CENTER, spin=0, orie
 //       move(25*[1,-1,1]) #chamfer_corner_mask(chamfer=10);
 //   }
 // Example: Masking by Attachment
-//   diff("mask")
+//   diff()
 //   cuboid(100, chamfer=20, trimcorners=false) {
 //       corner_mask(TOP+FWD+RIGHT)
 //           chamfer_corner_mask(chamfer=20);
@@ -166,12 +166,12 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 //       #rounding_edge_mask(l=50, r1=25, r2=10, orient=UP, anchor=BOTTOM);
 //   }
 // Example: Masking by Attachment
-//   diff("mask")
+//   diff()
 //   cube(100, center=true)
 //       edge_mask(FRONT+RIGHT)
 //           #rounding_edge_mask(l=$parent_size.z+0.01, r=25);
 // Example: Multiple Masking by Attachment
-//   diff("mask")
+//   diff()
 //   cube([80,90,100], center=true) {
 //       let(p = $parent_size*1.01) {
 //           edge_mask(TOP)
@@ -237,7 +237,7 @@ module rounding_edge_mask(l, r, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, sp
 //           #rounding_corner_mask(r=20, spin=90);
 //   }
 // Example: Masking by Attachment
-//   diff("mask")
+//   diff()
 //   cube(size=[50, 60, 70]) {
 //       corner_mask(TOP)
 //           #rounding_corner_mask(r=20);
@@ -396,10 +396,11 @@ module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=U
 //     up(50) rounding_cylinder_mask(r=50, rounding=10);
 //   }
 // Example: Masking by Attachment
-//   diff("mask")
+//   diff()
 //   cyl(h=30, d=30) {
 //       attach(TOP)
-//           #tag("mask")rounding_cylinder_mask(d=30, rounding=5);
+//         #tag("remove")
+//           rounding_cylinder_mask(d=30, rounding=5);
 //   }
 function rounding_cylinder_mask(r, rounding, d) = no_function("rounding_cylinder_mask");
 module rounding_cylinder_mask(r, rounding, d)
@@ -475,7 +476,7 @@ module rounding_hole_mask(r, rounding, excess=0.1, d, anchor=CENTER, spin=0, ori
 // Example(VPD=50,VPR=[55,0,120]):
 //   teardrop_edge_mask(l=20, r=10, angle=40);
 // Example(VPD=300,VPR=[75,0,25]):
-//   diff("mask")
+//   diff()
 //   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
 //       edge_mask(BOT)
 //           teardrop_edge_mask(l=max($parent_size)+1, r=10, angle=40);
@@ -512,7 +513,7 @@ module teardrop_edge_mask(l, r, angle, excess=0.1, d)
 // Example:
 //   teardrop_corner_mask(r=20, angle=40);
 // Example:
-//   diff("mask")
+//   diff()
 //   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
 //       edge_profile(BOT)
 //           mask2d_teardrop(r=10, angle=40);
