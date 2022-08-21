@@ -876,7 +876,7 @@ function rotate_sweep(
     )
     assert(min_x>=0, "Input region must exist entirely in the X+ half-plane.")
     !is_undef(texture)? _textured_revolution(
-        region,
+        shape,
         texture=texture,
         tex_size=tex_size,
         counts=tex_counts,
@@ -935,7 +935,7 @@ module rotate_sweep(
     steps = segs(max_x);
     if (!is_undef(texture)) {
         _textured_revolution(
-            region,
+            shape,
             texture=texture,
             tex_size=tex_size,
             counts=tex_counts,

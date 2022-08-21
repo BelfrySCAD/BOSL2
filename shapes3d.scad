@@ -1266,7 +1266,7 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 // Example: Texturing with VNF tile "vnf_dots"
 //   cyl(h=40, r1=20, r2=15, rounding=9,
 //       texture="vnf_dots", tex_size=[5,5],
-//       samples=6);
+//       tex_samples=6);
 //
 // Example: Texturing with VNF tile "vnf_bricks"
 //   cyl(h=50, r1=25, r2=20, shift=[0,10], rounding1=-10,
@@ -1279,12 +1279,12 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //
 // Example: Taper Texure at Extreme Ends
 //   cyl(d1=25, d2=20, h=30, rounding=5,
-//       texture="trunc_ribs", taper=0,
+//       texture="trunc_ribs", tex_taper=0,
 //       tex_size=[5,1]);
 //
 // Example: Taper Texture over First and Last 10%
 //   cyl(d1=25, d2=20, h=30, rounding=5,
-//       texture="trunc_ribs", taper=10,
+//       texture="trunc_ribs", tex_taper=10,
 //       tex_size=[5,1]);
 
 function cyl(
@@ -3072,7 +3072,7 @@ module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=CENTER, spin=0,
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// See Also: heightfield(), cylindrical_heightfield(), textured_revolution(), textured_cylinder(), textured_linear_sweep()
+// See Also: heightfield(), cylindrical_heightfield()
 // Example:
 //   heightfield(size=[100,100], bottom=-20, data=[
 //       for (y=[-180:4:180]) [
@@ -3210,7 +3210,7 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// See Also: heightfield(), cylindrical_heightfield(), textured_revolution(), textured_cylinder(), textured_linear_sweep()
+// See Also: heightfield(), cylindrical_heightfield()
 // Example(VPD=400;VPR=[55,0,150]):
 //   cylindrical_heightfield(l=100, r=30, base=5, data=[
 //       for (y=[-180:4:180]) [

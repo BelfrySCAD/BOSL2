@@ -181,9 +181,9 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
             difference() {
                 union() {
                     if (texture == "knurled") {
-                        textured_cylinder(d=w, h=h, texture="diamonds", tex_size=[3,3], style="concave", anchor=BOT);
+                        cyl(d=w, h=h, texture="diamonds", tex_size=[3,3], tex_style="concave", anchor=BOT);
                     } else if (texture == "ribbed") {
-                        textured_cylinder(d=w, h=h, texture="ribs", tex_size=[3,3], style="min_edge", anchor=BOT);
+                        cyl(d=w, h=h, texture="ribs", tex_size=[3,3], tex_style="min_edge", anchor=BOT);
                     } else {
                         cyl(d=w, l=tamper_ring_h+wall, anchor=BOTTOM);
                     }
@@ -362,9 +362,9 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
             difference() {
                 union() {
                     if (texture == "knurled") {
-                        textured_cylinder(d=w, h=11.2+wall, texture="diamonds", tex_size=[3,3], style="concave", anchor=BOT);
+                        cyl(d=w, h=11.2+wall, texture="diamonds", tex_size=[3,3], tex_style="concave", anchor=BOT);
                     } else if (texture == "ribbed") {
-                        textured_cylinder(d=w, h=11.2+wall, texture="ribs", tex_size=[3,3], style="min_edge", anchor=BOT);
+                        cyl(d=w, h=11.2+wall, texture="ribs", tex_size=[3,3], tex_style="min_edge", anchor=BOT);
                     } else {
                         cyl(d=w, l=11.2+wall, anchor=BOTTOM);
                     }
@@ -567,9 +567,9 @@ module generic_bottle_cap(
                     // thickness so the wall+texture are the specified wall thickness.  That
                     // seems wrong so this does specified thickness+texture
                     if (texture == "knurled") {
-                        textured_cylinder(d=w + 1.5*diamMagMult, l=h, texture="diamonds", tex_size=[3,3], style="concave", anchor=BOT);
+                        cyl(d=w + 1.5*diamMagMult, l=h, texture="diamonds", tex_size=[3,3], tex_style="concave", anchor=BOT);
                     } else if (texture == "ribbed") {
-                        textured_cylinder(d=w + 1.5*diamMagMult, l=h, texture="ribs", tex_size=[3,3], style="min_edge", anchor=BOT);
+                        cyl(d=w + 1.5*diamMagMult, l=h, texture="ribs", tex_size=[3,3], tex_style="min_edge", anchor=BOT);
                     } else {
                         cyl(d = w, l = h, anchor = BOTTOM);
                     }
