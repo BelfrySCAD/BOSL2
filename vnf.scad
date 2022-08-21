@@ -1703,9 +1703,9 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, opacity=0.
         color(clr) {
             if (is_vector(pts[0])) {
                 if (len(pts)==2) {
-                    stroke(pts, width=size, closed=true, endcaps="butt", hull=false, $fn=8);
+                    stroke(pts, width=size, closed=true, endcaps="butt", $fn=8);
                 } else if (len(pts)>2) {
-                    stroke(pts, width=size, closed=true, hull=false, $fn=8);
+                    stroke(pts, width=size, closed=true, $fn=8);
                     polyhedron(pts,[[for (i=idx(pts)) i]]);
                 } else {
                     move_copies(pts) sphere(d=size*3, $fn=18);

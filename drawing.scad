@@ -85,7 +85,6 @@
 //   joint_color = If given, sets the color of the joints.  Overrides `color=` and `dots_color=`.
 //   dots_color = If given, sets the color of the endcaps and joints.  Overrides `color=`.
 //   convexity = Max number of times a line could intersect a wall of an endcap.
-//   hull = If true, use `hull()` to make higher quality joints between segments, at the cost of being much slower.  Default: true
 // Example(2D): Drawing a Path
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   stroke(path, width=20);
@@ -157,7 +156,7 @@ function stroke(
     endcap_angle,  endcap_angle1,  endcap_angle2,  joint_angle,  dots_angle,
     endcap_color,  endcap_color1,  endcap_color2,  joint_color,  dots_color, color,
     trim, trim1, trim2,
-    convexity=10, hull=true
+    convexity=10
 ) = no_function("stroke");
 
 
@@ -170,7 +169,7 @@ module stroke(
     endcap_angle,  endcap_angle1,  endcap_angle2,  joint_angle,  dots_angle,
     endcap_color,  endcap_color1,  endcap_color2,  joint_color,  dots_color, color,
     trim, trim1, trim2,
-    convexity=10, hull=true
+    convexity=10
 ) {
     no_children($children);
     module setcolor(clr) {
@@ -359,7 +358,7 @@ module stroke(
                     for (i = [1:1:len(path2)-2]) {
                         $fn = quantup(segs(widths[i]/2),4);
                         translate(path2[i]) {
-                            if (joints != undef) {
+                            if (joints != undef && joints != "round") {
                                 joint_shape = _shape_path(
                                     joints, width[i],
                                     joint_width,
@@ -372,18 +371,21 @@ module stroke(
                                   ? rot(from=BACK,to=v1)
                                   : zrot(joint_angle);
                                 multmatrix(mat) polygon(joint_shape);
-                            } else if (hull) {
-                                hull() {
-                                    rot(from=BACK, to=path2[i]-path2[i-1])
-                                        circle(d=widths[i]);
-                                    rot(from=BACK, to=path2[i+1]-path2[i])
-                                        circle(d=widths[i]);
-                                }
                             } else {
-                                rot(from=BACK, to=path2[i]-path2[i-1])
-                                    circle(d=widths[i]);
-                                rot(from=BACK, to=path2[i+1]-path2[i])
-                                    circle(d=widths[i]);
+                                v1 = path2[i] - path2[i-1];
+                                v2 = path2[i+1] - path2[i];
+                                ang = modang(v_theta(v2) - v_theta(v1));
+                                pv1 = rot(-90, p=unit(v1,BACK));
+                                pv2 = rot(-90, p=unit(v2,BACK));
+                                if (!approx(ang,0)) {
+                                    if (ang>=0) {
+                                        rot(from=RIGHT, to=pv1)
+                                            arc(d=widths[i], angle=ang, wedge=true);
+                                    } else {
+                                        rot(from=RIGHT, to=-pv2)
+                                            arc(d=widths[i], angle=-ang, wedge=true);
+                                    }
+                                }
                             }
                         }
                     }
@@ -439,7 +441,7 @@ module stroke(
                     for (i = [1:1:len(path2)-2]) {
                         $fn = sides[i];
                         translate(path2[i]) {
-                            if (joints != undef) {
+                            if (joints != undef && joints != "round") {
                                 joint_shape = _shape_path(
                                     joints, width[i],
                                     joint_width,
@@ -462,21 +464,18 @@ module stroke(
                                         }
                                     }
                                 }
-                            } else if (hull) {
-                                hull(){
-                                    multmatrix(rotmats[i]) {
-                                        sphere(d=widths[i],style="aligned");
-                                    }
-                                    multmatrix(rotmats[i-1]) {
-                                        sphere(d=widths[i],style="aligned");
-                                    }
-                                }
                             } else {
-                                multmatrix(rotmats[i]) {
-                                    sphere(d=widths[i],style="aligned");
-                                }
-                                multmatrix(rotmats[i-1]) {
-                                    sphere(d=widths[i],style="aligned");
+                                corner = select(path2,i-1,i+1);
+                                axis = vector_axis(corner);
+                                ang = vector_angle(corner);
+                                if (!approx(ang,0)) {
+                                    frame_map(x=path2[i-1]-path2[i], z=-axis) {
+                                        zrot(90-0.5) {
+                                            rotate_extrude(angle=180-ang+1) {
+                                                arc(d=widths[i], start=-90, angle=180);
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
