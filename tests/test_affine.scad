@@ -137,7 +137,7 @@ test_affine3d_skew();
 module test_affine3d_skew_xy() {
     for(ya = [-89:3:89]) {
         for(xa = [-89:3:89]) {
-            assert(affine3d_skew_xy(xa=xa, ya=ya) == [[1,0,tan(xa),0],[0,1,tan(ya),0],[0,0,1,0],[0,0,0,1]]);
+            assert(affine3d_skew_xy(xa=xa, ya=ya) == [[1,tan(xa),0,0],[tan(ya),1,0,0],[0,0,1,0],[0,0,0,1]]);
         }
     }
 }
@@ -147,7 +147,7 @@ test_affine3d_skew_xy();
 module test_affine3d_skew_xz() {
     for(za = [-89:3:89]) {
         for(xa = [-89:3:89]) {
-            assert(affine3d_skew_xz(xa=xa, za=za) == [[1,tan(xa),0,0],[0,1,0,0],[0,tan(za),1,0],[0,0,0,1]]);
+            assert(affine3d_skew_xz(xa=xa, za=za) == [[1,0,tan(xa),0],[0,1,0,0],[tan(za),0,1,0],[0,0,0,1]]);
         }
     }
 }
@@ -157,7 +157,7 @@ test_affine3d_skew_xz();
 module test_affine3d_skew_yz() {
     for(za = [-89:3:89]) {
         for(ya = [-89:3:89]) {
-            assert(affine3d_skew_yz(ya=ya, za=za) == [[1,0,0,0],[tan(ya),1,0,0],[tan(za),0,1,0],[0,0,0,1]]);
+            assert(affine3d_skew_yz(ya=ya, za=za) == [[1,0,0,0],[0,1,tan(ya),0],[0,tan(za),1,0],[0,0,0,1]]);
         }
     }
 }
