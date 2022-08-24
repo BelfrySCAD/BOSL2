@@ -1069,7 +1069,7 @@ function circle_circle_intersection(r1, cp1, r2, cp2, eps=EPSILON, d1, d2) =
 //   for (i = [0:1:5]) {
 //       crn = select(path, i*2-1, i*2+1);
 //       ci = circle_2tangents(5, crn[0], crn[1], crn[2]);
-//       move(ci[0]) cyl(h=10,r=5,,orient=ci[1]);
+//       move(ci[0]) cyl(h=10,r=5,orient=ci[1]);
 //   }
 function circle_2tangents(r, pt1, pt2, pt3, tangents=false, d) =
     let(r = get_radius(r=r, d=d, dflt=undef))
