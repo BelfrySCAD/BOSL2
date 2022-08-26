@@ -125,10 +125,26 @@ function phillips_diam(size, depth) =
     2 * tan(_ph_side_angle())*(depth-h1) + g;
 
 
+// Section: Hex drive
+
+// Module hex_drive_mask()
+// Usage:
+//   hex_drive_mask(size, length, [anchor], [spin], [orient], [$slop]) [ATTACHMENTS];
+// Description:
+//   Creates a mask for hex drive.  Note that the hex recess specs requires
+//   a slightly oversized recess.  You can use $slop to increase the size by 
+//   `2 * $slop` if necessary.  
+// 
+module hex_drive_mask(size,length,l,h,height,anchor,spin,orient)
+{
+   length = one_defined([length,height,l,h],"length,height,l,h");
+   realsize = 1.0072*size + 0.0341 + 2 * get_slop();  // Formula emperically determined from ISO standard
+   linear_sweep(height=length,hexagon(id=realsize),anchor=anchor,spin=spin,orient=orient) children();
+}
+function hex_drive_mask(size,length,l,h,height,anchor,spin,orient) = no_function("hex_drive_mask");
+
 
 // Section: Torx Drive
-
-
 
 // Module: torx_mask()
 // Usage:
@@ -137,7 +153,7 @@ function phillips_diam(size, depth) =
 // Arguments:
 //   size = Torx size.
 //   l = Length of bit.
-//   center = If true, centers bit vertically.
+//   center = If true, centers mask vertically.
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -212,7 +228,7 @@ module torx_mask2d(size) {
 // Arguments:
 //   size = Torx size.
 function torx_info(size) =
-    let( f=echo(size=size),
+    let( 
         info_arr = [      // Depth is from metric socket head screws, ISO 14583
             //T#     OD     ID     H        Re     Ri
             [  1, [  0.90,  0.65,  0.40,  0.059, 0.201]],  // depth interpolated

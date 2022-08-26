@@ -14,12 +14,12 @@ test_torx_diam();
 
 
 module test_torx_depth() {
-    assert_approx(torx_depth(10), 3.61);
-    assert_approx(torx_depth(15), 3.86);
-    assert_approx(torx_depth(20), 4.12);
-    assert_approx(torx_depth(25), 4.50);
-    assert_approx(torx_depth(30), 5,00);
-    assert_approx(torx_depth(40), 5.64);
+    assert_approx(torx_depth(10), 1.142);
+    assert_approx(torx_depth(15), 1.2);
+    assert_approx(torx_depth(20), 1.4);
+    assert_approx(torx_depth(25), 1.61);
+    assert_approx(torx_depth(30), 2.22);
+    assert_approx(torx_depth(40), 2.63);
 }
 test_torx_depth();
 

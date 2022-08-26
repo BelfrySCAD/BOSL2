@@ -215,6 +215,11 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //        screw("1/4", thread=0,length=8, anchor=TOP, head="socket");
 //     }
 //     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="socket ribbed", drive="hex",$fn=32);
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="socket ribbed", drive="torx",$fn=32);
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="socket ribbed",$fn=24);
+//     }
+//     ydistribute(spacing=15){
 //        screw("1/4", thread=0,length=8, anchor=TOP, head="button", drive="hex");
 //        screw("1/4", thread=0,length=8, anchor=TOP, head="button", drive="torx");
 //        screw("1/4", thread=0,length=8, anchor=TOP, head="button");
@@ -262,6 +267,11 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //       screw("M6x0", length=8, anchor=TOP,  head="socket");
 //     }
 //     ydistribute(spacing=15){
+//       screw("M6x0", length=8, anchor=TOP,  head="socket ribbed", drive="hex", $fn=32);
+//       screw("M6x0", length=8, anchor=TOP,  head="socket ribbed", drive="torx", $fn=32);
+//       screw("M6x0", length=8, anchor=TOP,  head="socket ribbed", $fn=32);
+//     }
+//     ydistribute(spacing=15){
 //       screw("M6x0", length=8, anchor=TOP,  head="pan", drive="slot");
 //       screw("M6x0", length=8, anchor=TOP,  head="pan", drive="phillips");
 //       screw("M6x0", length=8, anchor=TOP,  head="pan", drive="torx");
@@ -298,17 +308,17 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   }
 //   $fn=64;
 //   xdistribute(spacing=15){
-//     label("1") screw("1/4-20,5/8", head="hex",orient=DOWN,anchor_head=TOP,tolerance="1A");  // Loose
-//     label("2") screw("1/4-20,5/8", head="hex",orient=DOWN,anchor_head=TOP,tolerance="2A");  // Standard
-//     label("3") screw("1/4-20,5/8", head="hex",orient=DOWN,anchor_head=TOP,tolerance="3A");  // Tight
+//     label("1") screw("1/4-20,5/8", head="hex",orient=DOWN,atype="head", anchor=TOP,tolerance="1A");  // Loose
+//     label("2") screw("1/4-20,5/8", head="hex",orient=DOWN,atype="head", anchor=TOP,tolerance="2A");  // Standard
+//     label("3") screw("1/4-20,5/8", head="hex",orient=DOWN,atype="head", anchor=TOP,tolerance="3A");  // Tight
 //   }
 // Example(2D): This example shows the gap between nut and bolt at the loosest tolerance for UTS.  This gap is what enables the parts to mesh without binding and is part of the definition for standard metal hardware.  Note that this gap is part of the standard definition for the metal hardware, not the 3D printing adjustment provided by the $slop parameter.  
-//   $slop=0;
-//   $fn=32;
-//   projection(cut=true)xrot(-90){
-//       screw("1/4-20,1/4", head="hex",orient=UP,anchor=BOTTOM,tolerance="1A");
-//       down(INCH*1/20*2.145) nut("1/4-20", thickness=8, diameter=0.5*INCH,tolerance="1B");
-//   }
+   $slop=0;
+   $fn=32;
+   projection(cut=true)xrot(-90){
+       screw("1/4-20,1/4", head="hex",orient=UP,anchor=BOTTOM,tolerance="1A");
+       down(INCH*1/20*2.145) nut("1/4-20", thickness=8, diameter=0.5*INCH,tolerance="1B");
+   }
 
 function screw(name, head="none", drive, thread="coarse", drive_size, oversize=0, spec, length, l, shank=0, tolerance=undef, details=true, anchor=undef,anchor_head=undef,spin=0, orient=UP) = no_function("screw");
 
@@ -319,29 +329,35 @@ module screw(name, head="none", drive, thread="coarse", drive_size, oversize=0, 
    spec = _validate_screw_spec(
                                is_def(spec) ? spec
                              : screw_info(name, head, drive, thread=thread, drive_size=drive_size, oversize=oversize) );
-   echo_struct(spec,"spec");
    head = struct_val(spec,"head");
    pitch = struct_val(spec, "pitch");
    nominal_diam = struct_val(spec, "diameter");
-   threadspec = pitch==0 ? undef : thread_specification(spec, internal=internal, tolerance=tolerance);
+   threadspec = pitch==0 || is_undef(pitch) ? undef : thread_specification(spec, internal=internal, tolerance=tolerance);
    d_major = pitch==0 ? nominal_diam : mean(struct_val(threadspec, "d_major"));
    shank_diam = first_defined([u_add(shank_diam,oversize),d_major]);
    headless = head=="none";
    dummy1 = assert(in_list(atype,["shaft","head"]));
    dummy2 = assert(atype=="shaft" || !headless, "You cannot anchor headless screws with atype=\"head\"");
-   eps = headless ? 0
-       : starts_with(head,"flat") ? -0.01
-       : 0.01;
    screwlen = one_defined([l,length],"l,length",dflt=undef);
-   length = u_add(first_defined([screwlen,struct_val(spec,"length")]) , eps);
+   length = first_defined([screwlen,struct_val(spec,"length")]);
    dummy3 = assert(all_positive(length), "Must specify positive length");
    sides = max(12, segs(nominal_diam/2));
    unthreaded = is_undef(pitch) || pitch==0 ? length : shank;
    threaded = u_add(length,-unthreaded);
-   //dd=assert(threaded==0 || oversize==0, "Only unthreaded screws can be made with nonzero oversize");
-   echo(t=threaded,length,unthreaded);
    head_height = headless || starts_with(head, "flat") ? 0 : struct_val(spec, "head_height");
    head_diam = struct_val(spec, "head_size");
+   flat_height = !starts_with(head,"flat") ? undef 
+               : let( given_height = struct_val(spec, "head_height"))
+                 is_def(given_height) && given_height>0 ? given_height
+               : (head_diam-d_major)/2/tan(struct_val(spec,"head_angle")/2);
+   eps_top = headless ? 0 
+           : starts_with(head,"flat") ? -flat_height+0.01
+           : .01;
+   eps_bot = .01;
+   eps_unthreaded = unthreaded>0 ? eps_top : 0;
+   eps_threaded = unthreaded>0 ? eps_bot : eps_top;
+   echo(eps_thread=eps_threaded, lengthfinal = length+eps_threaded,unth=unthreaded,th=threaded);
+   dummy4 = assert(is_undef(flat_height) || flat_height < length, str("Length of screw (",length,") is shorter than the flat head height (",flat_height,")"));
    attach_size = atype=="head" && head=="hex" ? [head_diam, head_diam*2/sqrt(3), head_height] : undef;
    attach_d = atype=="shaft" ? d_major 
             : head=="hex" ? undef
@@ -360,20 +376,19 @@ module screw(name, head="none", drive, thread="coarse", drive_size, oversize=0, 
      up(atype=="head" ? -head_height/2 : length/2)
        difference(){
          union(){
-           screw_head(spec,details,counterbore=counterbore);
-           up(eps){
-             if (unthreaded>0)
-                cyl(d=shank_diam, h=unthreaded+eps+(threaded>0?0.01:0), anchor=TOP, $fn=sides);
-             if (threaded>0){
-                down(unthreaded)
+           screw_head(spec,details,counterbore=counterbore,flat_height=flat_height);
+           if (unthreaded>0)
+             up(eps_unthreaded) cyl(d=shank_diam, h=unthreaded+eps_unthreaded, anchor=TOP, $fn=sides);
+           if (threaded>0){
+             down(unthreaded-eps_threaded)
                    threaded_rod([mean(struct_val(threadspec, "d_minor")),
                                  mean(struct_val(threadspec, "d_pitch")),
                                  d_major], 
                       pitch = struct_val(threadspec, "pitch"),
-                      l=threaded+eps, left_handed=false, internal=internal, 
-                      bevel1=details, $fn=sides, anchor=TOP);
+                      l=threaded+eps_threaded, left_handed=false, internal=internal, 
+                      bevel1=details,bevel2=details && starts_with(head,"flat") && !headless && !internal,
+                      $fn=sides, anchor=TOP);
              }              
-           }
          }
          if (!internal) _driver(spec);
        }
@@ -399,7 +414,7 @@ module _driver(spec)
       // recess should be positioned with its bottom center at (0,0) and the correct recess depth given above
       if (drive=="phillips") phillips_mask(drive_size,anchor=BOTTOM);
       if (drive=="torx") torx_mask(size=drive_size, l=drive_depth+1, center=false);
-      if (drive=="hex") linear_extrude(height=drive_depth+1) hexagon(id=drive_size);
+      if (drive=="hex") hex_drive_mask(drive_size,drive_depth+1,anchor=BOT);
       if (drive=="slot") cuboid([2*struct_val(spec,"head_size"), drive_width, drive_depth+1],anchor=BOTTOM);
     }
   }
@@ -570,7 +585,7 @@ function _exact_thread_tolerance(d,P) =
        basic_minordiam = d - 5/4*H,
        basic_pitchdiam = d - 3/4*H
       )
-    [["pitch", P], ["d_major", d], ["d_pitch", basic_pitchdiam], ["d_minor", basic_minordiam],
+    [["pitch", P], ["d_major", [d,d]], ["d_pitch", [basic_pitchdiam,basic_pitchdiam]], ["d_minor", [basic_minordiam,basic_minordiam]],
      ["basic", [basic_minordiam, basic_pitchdiam, d]]];
 
 
@@ -624,7 +639,7 @@ function nut(name, diameter, thickness, thread="coarse", spec, tolerance=undef,
            bevel=false, anchor=BOTTOM,spin=0, orient=UP) = no_function("nut");
 
 module nut(name, diameter, thickness, thread="coarse", spec, tolerance=undef,
-           bevel=false, anchor=BOTTOM,spin=0, orient=UP)
+           bevel=false, anchor=BOTTOM,spin=0, orient=UP, oversize=0)
 {
    assert(is_num(diameter) && diameter>0);
    assert(is_num(thickness) && thickness>0);
@@ -644,7 +659,9 @@ module nut(name, diameter, thickness, thread="coarse", spec, tolerance=undef,
 }
 
 
-
+// Takes a screw name as input and returns a list of the form
+// [system, diameter, thread, length]
+// where system is either "english" or "metric".  
 
 function _parse_screw_name(name) =
     let( commasplit = str_split(name,","),
@@ -653,13 +670,23 @@ function _parse_screw_name(name) =
          type = xdash[0],
          thread = parse_float(xdash[1])
     )
-    type[0] == "M" || type[0] == "m" ? ["metric", parse_float(substr(type,1)), thread, length] :
+    assert(len(commasplit)<=2, str("More than one comma found in screw name, \"",name,"\""))
+    assert(len(xdash)<=2, str("Screw name has too many '-' or 'x' characters, \"",name,"\""))
+    assert(len(commasplit)==1 || is_num(length), str("Invalid length in screw name, \"",name,"\""))
+    assert(len(xdash)==1 || all_nonnegative(thread),str("Thread pitch not a valid number in screw name, \"",name,"\""))
+    type[0] == "M" || type[0] == "m" ? 
+        let(diam = parse_float(substr(type,1)))
+        assert(is_num(diam), str("Screw size must be a number in screw name, \"",name,"\""))
+        ["metric", parse_float(substr(type,1)), thread, length] 
+    :
     let(
         diam = type[0] == "#" ? type :
                suffix(type,2)=="''" ? parse_float(substr(type,0,len(type)-2)) :
                let(val=parse_num(type))
+               assert(all_positive(val), str("Screw size must be a number in screw name, \"",name,"\""))
                val == floor(val) && val>=0 && val<=12 ? str("#",type) : val
-        )
+    )
+    assert(is_str(diam) || is_num(diam), str("Invalid screw diameter in screw name, \"",name,"\""))
     ["english", diam, thread, u_mul(25.4,length)];
 
 
@@ -677,7 +704,7 @@ function _parse_drive(drive=undef, drive_size=undef) =
 
 // Module: screw_head()
 // Usage:
-//    screw_head(screw_info, [details])
+//    screw_head(screw_info, [details],[counterbore],[flat_height])
 // Description:
 //    Draws the screw head described by the data structure `screw_info`, which
 //    should have the fields produced by {{screw_info()}}.  See that function for
@@ -688,7 +715,7 @@ function _parse_drive(drive=undef, drive_size=undef) =
 //    screw_info = structure produced by {{screw_info()}}
 //    details = true for more detailed model.  Default: false
 function screw_head(screw_info,details=false) = no_function("screw_head");
-module screw_head(screw_info,details=false, counterbore=0) {
+module screw_head(screw_info,details=false, counterbore=0,flat_height) {
    no_children($children);
    head = struct_val(screw_info, "head");
    head_size = struct_val(screw_info, "head_size");
@@ -706,11 +733,12 @@ module screw_head(screw_info,details=false, counterbore=0) {
      cyl(d=head=="hex"? 2*head_size/sqrt(3) : head_size, l=counterbore, anchor=BOTTOM);
    if (head=="flat") {   // For flat head, counterbore is integrated
      angle = struct_val(screw_info, "head_angle")/2;
+     diam = struct_val(screw_info, "diameter");
      full_height = head_size/2/tan(angle);
      // if head_height is set we are making an undercut flat head
-     height = first_defined([head_height, full_height]);
+     height = first_defined([head_height, flat_height, full_height]);
      r1 = head_size/2;
-     r2 = r1*(1-height/full_height);  // r2 is zero unless the head is undercut
+     r2 = r1*(1-height/full_height); 
      rotate_extrude()
        polygon([[0,-height],[r2,-height],[r1,0],if (counterbore>0) [r1,counterbore], [0,counterbore]]);
    }
@@ -733,6 +761,21 @@ module screw_head(screw_info,details=false, counterbore=0) {
        cyl(l=head_height, d=head_size, rounding2=0.2*head_size, anchor=BOTTOM);
      if (head=="socket")
        cyl(l=head_height, d=head_size, anchor=BOTTOM, chamfer2=details?struct_val(screw_info,"diameter")/10:undef);
+     if (head=="socket ribbed"){
+       // These numbers are based on ISO specifications that dictate how much oversizsed a ribbed socket head can be
+       // We are making our ribbed heads the same size as unribbed (by cutting the ribbing away), but these numbers are presumably a good guide
+       rib_size = [[2, .09],
+                   [3, .09],
+                   [6, .11],
+                   [12, .135],
+                   [20, .165]];
+       diam = struct_val(screw_info,"diameter");
+       intersection() {
+         cyl(h=head_height/4, d=head_size, anchor=BOT)
+            attach(TOP) cyl(l=head_height*3/4, d=head_size, anchor=BOT, texture="trunc_ribs", tex_counts=[31,1], tex_scale=-lookup(diam,rib_size));
+         cyl(h=head_height,d=head_size, chamfer2=diam/10, anchor=BOT);
+       }
+     }
      if (head=="hex")
        intersection(){
          linear_extrude(height=head_height) hexagon(id=head_size);
@@ -796,24 +839,25 @@ function screw_info(name, head="none", drive, thread="coarse", drive_size=undef,
                         is_def(drive_info[1]) ? ["drive_size", drive_info[1]] : [],
                         ["diameter", oversize+struct_val(screwdata,"diameter"),
                          "head_size", u_add(oversize,struct_val(screwdata,"head_size"))]
-                      ),
-dfe=echo(over_ride=over_ride)
+                      )
   )
   struct_set(screwdata, over_ride);
 
 
 function _screw_info_english(diam, threadcount, head, thread, drive) =
  let(
-   diameter = is_string(diam) ? parse_int(substr(diam,1))*0.013 +0.06 :
-              diam,
+   diameter = is_string(diam) ? parse_int(substr(diam,1))*0.013 +0.06 
+                              : diam,
    pitch =
-     is_def(threadcount) ? INCH/threadcount :
      is_num(thread) ? thread :
+     thread=="none" ? 0 : 
+     is_def(threadcount) ? INCH/threadcount :
      let(
         tind=struct_val([["coarse",0],["unc",0],
                          ["fine",1],["unf",1],
                          ["extra fine",2],["extrafine",2],["unef",2]],
                          downcase(thread)),
+        dummy = assert(is_def(tind), str("Unknown thread type, \"",thread,"\"")),
                  // coarse  fine  xfine
                  // UNC     UNF   UNEF
         UTS_thread = [
@@ -843,11 +887,13 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
             [1.5,  [    6,    12,    18]],
             [1.75, [    5, undef, undef]],
             [2,    [  4.5, undef, undef]],
-         ]
-       )
-      INCH / struct_val(UTS_thread, diam)[tind],
-      head_data =
-         head=="none" ? let (
+         ],
+       tentry = struct_val(UTS_thread, diam)
+     )
+     assert(is_def(tentry), str("Unknown screw size, \"",diam,"\""))
+     INCH / tentry[tind],
+   head_data =
+       head=="none" ? let (
           UTS_setscrew = [   // hex width, hex depth
             ["#0", [0.028, 0.050]],
             ["#1", [0.035, 0.060]],
@@ -875,10 +921,11 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
             [2,    [1    , 1.000]],
             ],
           entry = struct_val(UTS_setscrew, diam),
+          dummy=assert(is_def(entry), str("Screw size ",diam," unsupported for headless screws")),
           drive_dims = drive == "hex" ? [["drive_size", INCH*entry[0]], ["drive_depth", INCH*entry[1]]] :
                        drive == "torx" ? [["drive_size", entry[2]], ["drive_depth", INCH*entry[3]]] : []
-         ) concat([["head","none"]], drive_dims) :
-         head=="hex" ? let(
+         ) concat([["head","none"]], drive_dims) 
+     : head=="hex" ? let( 
             UTS_hex = [
                // flat to flat width, height
                ["#2", [    1/8,   1/16]],
@@ -905,8 +952,9 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
             ],
             entry = struct_val(UTS_hex, diam)
            )
-           [["head", "hex"], ["head_size", INCH*entry[0]], ["head_height", INCH*entry[1]]] :
-         head=="socket" ? let(
+           assert(is_def(entry), str("Screw size ",diam," unsupported for head type \"",head,"\""))
+           [["head", "hex"], ["head_size", INCH*entry[0]], ["head_height", INCH*entry[1]]] 
+     : in_list(head,["socket","socket ribbed"]) ? let(
             UTS_socket = [    // height = screw diameter
                        //diam,   hex, torx size, hex depth, torx depth
                ["#0", [  0.096,  0.05, 6,         0.025,      0.027]],
@@ -937,14 +985,15 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
                [2,    [      3,   1.5, undef,     undef,      undef]],
             ],
             entry = struct_val(UTS_socket, diam),
+            dummy=assert(is_def(entry), str("Screw size ",diam," unsupported for head type \"",head,"\"")),
             hexdepth = is_def(entry[3]) ? entry[3]
                      : is_def(diam) ? diam/2
                      : undef,
             drive_size =  drive=="hex" ? [["drive_size",INCH*entry[1]], ["drive_depth",INCH*hexdepth]] :
                           drive=="torx" ? [["drive_size",entry[2]],["drive_depth",INCH*entry[4]]] : []
             )
-            concat([["head","socket"],["head_size",INCH*entry[0]], ["head_height", INCH*diameter]],drive_size) :
-         head=="pan" ? let (
+            concat([["head",head],["head_size",INCH*entry[0]], ["head_height", INCH*diameter]],drive_size) 
+     : head=="pan" ? let (
            UTS_pan = [  // pan head for phillips or slotted
                  //              head height 
                  //    diam,   slotted  phillips  phillips drive, phillips diam, phillips width, phillips depth, slot width, slot depth  torx size
@@ -964,10 +1013,11 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
             ],
             htind = drive=="slot" ? 1 : 2,
             entry = struct_val(UTS_pan, diam),
+            dummy=assert(is_def(entry), str("Screw size ",diam," unsupported for head type \"",head,"\"")),
             drive_size = drive=="phillips" ? [["drive_size", entry[3]], ["drive_diameter",INCH*entry[4]],["drive_width",INCH*entry[5]],["drive_depth",INCH*entry[6]]] :
                                             [["drive_width", INCH*entry[7]], ["drive_depth",INCH*entry[8]]])
-           concat([["head","pan round"], ["head_size", INCH*entry[0]], ["head_height", INCH*entry[htind]]], drive_size) :
-         head=="button" || head=="round" ? let(
+           concat([["head","pan round"], ["head_size", INCH*entry[0]], ["head_height", INCH*entry[htind]]], drive_size) 
+     : head=="button" || head=="round" ? let(
             UTS_button = [    // button, hex or torx drive
                  //   head diam, height, phillips, hex, torx, hex depth
                ["#0", [0.114, 0.032, undef, 0.035,5    , 0.020, 0.017]],
@@ -1006,6 +1056,7 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
                [1/2,  [0.813, 0.355, 4, undef, undef, 0.416, 0.068, 0.256, 0.106, 0.211]]
              ],
              entry = struct_val(head=="button" ? UTS_button : UTS_round, diam),
+             dummy=assert(is_def(entry), str("Screw size ",diam," unsupported for head type \"",head,"\"")),
              drive_index = drive=="phillips" ? 2 :
                            drive=="hex" ? 3 :
                            drive=="torx" ? 4 : undef,
@@ -1016,8 +1067,8 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
                           drive=="torx" && head=="button" ? [["drive_size", entry[drive_index]], ["drive_depth", u_mul(INCH,entry[6])]]:
                           is_def(drive_index) && head=="button" ? [["drive_size", entry[drive_index]]] : []
              )
-             concat([["head",head],["head_size",INCH*entry[0]], ["head_height", INCH*entry[1]]],drive_size) :
-         head=="fillister" ? let(
+             concat([["head",head],["head_size",INCH*entry[0]], ["head_height", INCH*entry[1]]],drive_size) 
+     : head=="fillister" ? let(
              UTS_fillister = [ // head diam, head height, slot width, slot depth, phillips diam, phillips depth, phillips width, phillips #
                    ["#0", [0.096, 0.055, 0.023, 0.025, 0.067, 0.039, 0.013, 0]],
                    ["#1", [0.118, 0.069, 0.027, 0.031, 0.085, 0.049, 0.015,  ]],
@@ -1034,12 +1085,13 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
                    [3/8,  [0.622, 0.355, 0.094, 0.164, 0.389, 0.233, 0.065, 4]],
              ],
              entry = struct_val(UTS_fillister, diam),
+             dummy=assert(is_def(entry), str("Screw size ",diam," unsupported for head type \"",head,"\"")),
              drive_size = drive=="phillips" ? [["drive_size", entry[7]], ["drive_diameter",INCH*entry[4]],
                                               ["drive_width",INCH*entry[6]],["drive_depth",INCH*entry[5]]] :
                           drive=="slot"?  [["drive_width", INCH*entry[2]], ["drive_depth",INCH*entry[3]]] : []
              )
-             concat([["head", "fillister"], ["head_size", INCH*entry[0]], ["head_height", INCH*entry[1]]], drive_size) :
-         starts_with(head,"flat") ? let(
+             concat([["head", "fillister"], ["head_size", INCH*entry[0]], ["head_height", INCH*entry[1]]], drive_size) 
+     : in_list(head, ["flat","flat large", "flat small", "flat undercut"]) ? let(
              small = head == "flat small" || head == "flat undercut" || (head=="flat" && (drive!="hex" && drive!="torx")),
              undercut = head=="flat undercut",
              UTS_flat_small = [  // for phillips drive, slotted, and torx
@@ -1086,6 +1138,7 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
                    [1.5,  [ 2.938,    1, undef, 0.435, undef]],
              ],
              entry = struct_val(small ? UTS_flat_small : UTS_flat_large, diam),
+             dummy=assert(is_def(entry), str("Screw size ",diam," unsupported for head type \"",head,"\"")),
              driveind = small && drive=="phillips" || !small && drive=="hex" ? 1 :
                         drive=="torx" ? 2 :
                         undef,
@@ -1107,17 +1160,18 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
              concat([["head","flat"],["head_angle",82],["head_size",INCH*entry[0]]],
                     is_def(driveind) ? [["drive_size", (drive=="hex"?INCH:1)*entry[driveind]]] : [],
                     undercut ? [["head_height", INCH*entry[3]]] : [], drive_dims
-                   ) : []
-    )
-    concat([["system","UTS"],["diameter",INCH*diameter],["pitch", pitch],["drive",drive]],
-            head_data
-          );
+                   ) 
+     : []
+ )
+ concat([["system","UTS"],["diameter",INCH*diameter],["pitch", pitch],["drive",drive]],
+          head_data
+ );
 
 
 function _screw_info_metric(diam, pitch, head, thread, drive) =
  let(
-   a=echo(metricsi=diam,pitch,head,thread,drive),
    pitch = is_num(thread) ? thread :
+     thread=="none" ? 0 : 
      is_def(pitch) ? pitch :
      let(
         tind=struct_val([["coarse",0],
@@ -1125,6 +1179,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                          ["extra fine",2],["extrafine",2],
              ["super fine",3],["superfine",3]],
                          downcase(thread)),
+        dummy = assert(is_def(tind), str("Unknown thread type, \"",thread,"\"")),
                             // coarse  fine  xfine superfine
         ISO_thread = [
                       [1  , [0.25,    0.2 ,   undef, undef,]],
@@ -1172,11 +1227,13 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                       [80 , [6   ,    4   ,    3   ,  2,]],
                       [90 , [6   ,    4   ,    3   ,  2,]],
                       [100, [6   ,    4   ,    3   ,  2,]],
-         ]
-       )
-      struct_val(ISO_thread, diam)[tind],
-      head_data =
-         head=="none" ? let(
+        ],
+        tentry = struct_val(ISO_thread, diam)
+     )
+     assert(is_def(tentry), str("Unknown screw size, M",diam,""))
+     tentry[tind],
+   head_data =
+       head=="none" ? let(
            metric_setscrew =
                [
                 [1.4, [0.7]],
@@ -1195,11 +1252,12 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                 [20,  [10, undef, undef]],
                ],
             entry = struct_val(metric_setscrew, diam),
+            dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
             drive_dim = drive=="hex" ? [["drive_size", entry[0]], ["drive_depth", diam/2]] :
                         drive=="torx" ? [["drive_size", entry[1]], ["drive_depth", entry[2]]] : []
            )
-           concat([["head","none"]], drive_dim) :
-         head=="hex" ? let(
+           concat([["head","none"]], drive_dim) 
+     : head=="hex" ? let(
             metric_hex = [
               // flat to flat width, height
               [5, [8, 3.5]],
@@ -1216,8 +1274,9 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
             ],
             entry = struct_val(metric_hex, diam)
            )
-           [["head", "hex"], ["head_size", entry[0]], ["head_height", entry[1]]] :
-         head=="socket" ? let(
+           assert(is_def(entry), str("Screw size M",diam," unsupported for head type \"",head,"\""))
+           [["head", "hex"], ["head_size", entry[0]], ["head_height", entry[1]]] 
+     : in_list(head,["socket","socket ribbed"]) ? let(
             // ISO 14579 gives dimensions for Torx (hexalobular) socket heads
             metric_socket = [    // height = screw diameter
                       //diam, hex, torx size, torx depth
@@ -1249,12 +1308,13 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                 [48,  [72,     36]],
             ],
             entry = struct_val(metric_socket, diam),
+            dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
             drive_size =  drive=="hex" ? [["drive_size",entry[1]],["drive_depth",diam/2]] :
                           drive=="torx" ? [["drive_size", entry[2]], ["drive_depth", entry[3]]] :
                           []
             )
-            concat([["head","socket"],["head_size",entry[0]], ["head_height", diam]],drive_size) :
-         starts_with(head,"pan") ? let (
+            concat([["head",head],["head_size",entry[0]], ["head_height", diam]],drive_size) 
+     : in_list(head,["pan","pan round","pan flat"]) ? let (
            metric_pan = [  // pan head for phillips or slotted, torx from ISO 14583
                       //          head height
                       // diam, slotted  phillips phillips size  phillips diam, phillips depth, ph width, slot width,slot depth, torx size, torx depth
@@ -1272,13 +1332,14 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
             type = head=="pan" ? (drive=="slot" ? "pan flat" : "pan round") : head,
             htind = drive=="slot" ? 1 : 2,
             entry = struct_val(metric_pan, diam),
+            dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
             drive_size = drive=="phillips" ? [["drive_size", entry[3]], ["drive_diameter", entry[4]], ["drive_depth",entry[5]], ["drive_width",entry[6]]] 
                        : drive=="torx" ? [["drive_size", entry[9]], ["drive_depth", entry[10]]]
                        : drive=="slot" ? [["drive_width", entry[7]], ["drive_depth", entry[8]]] 
                        : []
            )
-           concat([["head",type], ["head_size", entry[0]], ["head_height", entry[htind]]], drive_size) :
-         head=="button" || head=="cheese" ? let(
+           concat([["head",type], ["head_size", entry[0]], ["head_height", entry[htind]]], drive_size) 
+     : head=="button" || head=="cheese" ? let(
             // hex drive depth from ISO 7380-1
             metric_button = [    // button, hex drive
                  //   head diam, height, hex, phillips, hex drive depth, torx size, torx depth
@@ -1329,7 +1390,8 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
              entry = struct_val( head=="button" ? metric_button 
                                : drive=="torx"? metric_cheese_torx 
                                : metric_cheese, 
-                            diam),f=echo(entry=entry),
+                            diam),
+             dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
              drive_index = drive=="phillips" ? 3 
                          : drive=="hex" ? 2 
                          : undef,
@@ -1340,11 +1402,10 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                        : head=="cheese" && drive=="phillips" ? [["drive_diameter", entry[6]], ["drive_depth", entry[7]],
                                                                 ["drive_width", entry[6]/4]]  // Fabricated this width value to fill in missing field
                        :[],
-             drive_size = is_def(drive_index) ? [["drive_size", entry[drive_index]]] : [],
-fda=echo(ds=drive_size)
+             drive_size = is_def(drive_index) ? [["drive_size", entry[drive_index]]] : []
              )
-             concat([["head",head],["head_size",entry[0]], ["head_height", entry[1]]],drive_size, drive_dim) :
-         starts_with(head,"flat") ? let(
+             concat([["head",head],["head_size",entry[0]], ["head_height", entry[1]]],drive_size, drive_dim) 
+     : in_list(head, ["flat", "flat small", "flat large"]) ? let(
              small = head == "flat small" || (head=="flat" && (drive!="hex" && drive!="torx")),
              metric_flat_large = [ // for hex drive
                      // diam   hex size    hex depth  torx  torx depth
@@ -1366,9 +1427,6 @@ fda=echo(ds=drive_size)
                                    // Phillips from ASME B18.6.7M (ISO 7046 gives different values),
                                    // Slots from ISO 2009/DIN 963, which gives more values than ASME (and also inconsistent)
                         // diam, ph size, ph diam, ph depth, ph width, slot width, slot depth
-                 [1.6, [1.9, 0,undef,undef,undef, 0.25, .2]],
-                 [1.6, [2.3, 0,undef,undef,undef, 0.3, 0.25]],
-                 [1.6, [2.6, 0,undef,undef,undef, 0.3, 0.28]],
                  [1.6, [3,   0,undef,undef,undef, 0.4, 0.32]],
                  [2,   [3.8, 0, 2.14, 1.54, 0.53, 0.5, 0.4]],
                  [2.5, [4.7, 1, 2.80, 1.78, 0.74, 0.6, 0.5]],
@@ -1387,6 +1445,7 @@ fda=echo(ds=drive_size)
                  [20,  [36,undef,undef,undef,undef,5,4 ]],
              ],
              entry = struct_val(small ? metric_flat_small : metric_flat_large, diam),
+             dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
              driveind = small && drive=="phillips" || !small && drive=="hex" ? 1 : !small && drive=="torx" ? 3 : undef,
              drive_dim = small && drive=="phillips" ? [["drive_diameter", entry[2]], ["drive_depth",entry[3]], ["drive_width", entry[4]]] :
                          small && drive=="slot" ? [["drive_width", entry[5]], ["drive_depth", entry[6]]] :
@@ -1396,12 +1455,13 @@ fda=echo(ds=drive_size)
              concat([["head","flat"],["head_angle",90],["head_size",entry[0]]],
                     is_def(driveind) ? [["drive_size", entry[driveind]]] : [],
                     drive_dim
-                   ) : [] 
-    )
-    concat(
-            [["system","ISO"],["diameter",diam],["pitch", pitch],["drive",drive]],
-            head_data
-          );
+                   ) 
+     : [] 
+ )
+ concat(
+        [["system","ISO"],["diameter",diam],["pitch", pitch],["drive",drive]],
+        head_data
+ );
 
 
 
@@ -1409,14 +1469,14 @@ fda=echo(ds=drive_size)
 function _is_positive(x) = is_num(x) && x>0;
 
 function _validate_screw_spec(spec) = let(
-    f=echo_struct(spec),
+    dummy=echo_struct(spec,"Screw Specification"),
     systemOK = in_list(struct_val(spec,"system"), ["UTS","ISO"]),
     diamOK = _is_positive(struct_val(spec, "diameter")),
     pitch = struct_val(spec,"pitch"),
     pitchOK = is_undef(pitch) || (is_num(pitch) && pitch>=0),
     head = struct_val(spec,"head"),
     headOK = head=="none" || (
-                 in_list(head, ["cheese","pan flat","pan round", "flat","flat large", "flat small", "flat undercut", "button","socket","fillister","round","hex"]) &&
+                 in_list(head, ["cheese","pan flat","pan round", "flat","flat large", "flat small", "flat undercut", "button","socket","socket ribbed", "fillister","round","hex"]) &&
                  _is_positive(struct_val(spec, "head_size"))),
     drive = struct_val(spec, "drive"),
     driveOK = is_undef(drive) || drive=="none"
@@ -1434,7 +1494,7 @@ function _validate_screw_spec(spec) = let(
     assert(systemOK, str("Screw spec has invalid \"system\", ", struct_val(spec,"system"), ".  Must be \"ISO\" or \"UTS\""))
     assert(diamOK, str("Screw spec has invalid \"diameter\", ", struct_val(spec,"diameter")))
     assert(pitchOK, str("Screw spec has invalid \"pitch\", ", pitch))
-    assert(headOK, "Screw spec head type invalid or unknown for your screw type and size")
+    assert(headOK, str("Screw head type invalid or unknown for your screw type and size"))  // head is "undef" for invalid heads; we don't know what the user specified
     assert(driveOK, str("Screw drive type \"",drive,"\" invalid or unknown for your screw size or head type, \"",head,"\""))
     spec;
 
@@ -1461,12 +1521,17 @@ function _validate_screw_spec(spec) = let(
 //   tolerance = thread geometry tolerance
 //   internal = true for internal threads.  Default: false
 function thread_specification(screw_spec, tolerance=undef, internal=false) =
-  let( diam = struct_val(screw_spec, "diameter"),
-       pitch = struct_val(screw_spec, "pitch"))
-  tolerance == 0 || tolerance=="none" ? _exact_thread_tolerance(diam, pitch)
-  :  struct_val(screw_spec,"system") == "ISO" ? _ISO_thread_tolerance(diam, pitch, internal, tolerance)
-  :  struct_val(screw_spec,"system") == "UTS" ? _UTS_thread_tolerance(diam, pitch, internal, tolerance)
-  :  assert(false,"Unknown screw system ",struct_val(screw_spec,"system"));
+  let( 
+       diam = struct_val(screw_spec, "diameter"),
+       pitch = struct_val(screw_spec, "pitch"),
+       tspec = tolerance == 0 || tolerance=="none" ? _exact_thread_tolerance(diam, pitch)
+             :  struct_val(screw_spec,"system") == "ISO" ? _ISO_thread_tolerance(diam, pitch, internal, tolerance)
+             :  struct_val(screw_spec,"system") == "UTS" ? _UTS_thread_tolerance(diam, pitch, internal, tolerance)
+             :  assert(false,"Unknown screw system ",struct_val(screw_spec,"system"))
+  )
+  assert(min(struct_val(tspec,"d_minor"))>0, "Thread specification is too coarse for the diameter")
+  tspec;
+
 
 
 
@@ -1520,7 +1585,7 @@ http://files.engineering.com/getfile.aspx?folder=76fb0d5e-1fff-4c49-87a5-0597947
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
 
 
-/*
+/*  Table of common shoulder sizes
             ["#0", 0.0615  (.-002 to 0)
             ["#1", 3/32
             ["#2", 3/32
@@ -1601,24 +1666,23 @@ http://files.engineering.com/getfile.aspx?folder=76fb0d5e-1fff-4c49-87a5-0597947
 */                      
 
 
-
 /*
+      .1375 s + .325  to give length of chamfer on flatheads, s=diam
 
-knurling table for metric socket heads:
+       ISO 10642 / DIN 7991 for hex head
+       ISO 14581 for torx
 
-added diameter:
 
-m2-m3: +0.18
-m4-m6: +0.22
-m8-m12: +0.27
-m14-m20: +0.33
+TODO list:
 
-intersection() {
-    cyl(h=2, d=10, anchor=BOT)
-        attach(TOP) cyl(h=5, d=10, anchor=BOT, texture="trunc_ribs", tex_counts=[31,1], tex_scale=-0.2);
-    cyl(h=6,d=10, chamfer2=0.5, anchor=BOT);
-}
-
+square drive
+proper edge on flatheads
+need to make holes at actual size instead of nominal?
+anchoring:  "headtop" "headbot" "shaftbot"  "shafttop", top of counterbore same as top of head?  
+oversize different for head than shaft
+heads on shoulder screws
+torx depth for UTS pan head
+$fn control
 
 */
 
