@@ -1,0 +1,46 @@
+name: Regenerate Docs
+on: [workflow_dispatch]
+
+jobs:
+  RegenerateDocs:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Clone Wiki
+      uses: actions/checkout@v2
+      with:
+        repository: revarbat/BOSL2.wiki
+        path: BOSL2.wiki
+
+    - name: Apt Update
+      run: sudo apt update
+
+    - name: Install Python dev
+      run: sudo apt-get install python3-pip python3-dev python3-setuptools python3-pil gifsicle
+
+    - name: Install OpenSCAD-DocsGen package.
+      run: sudo pip3 install openscad-docsgen
+
+    - name: Install OpenSCAD
+      run: |
+        cd $GITHUB_WORKSPACE
+        wget https://files.openscad.org/OpenSCAD-2021.01-x86_64.AppImage
+        sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
+        sudo chmod +x /usr/local/bin/openscad
+
+    - name: Generate Docs
+      uses: GabrielBB/xvfb-action@v1.6
+      env:
+        OPENSCADPATH: ${{ github.workspace }}/..
+      with:
+        run: openscad-docsgen -f
+
+    - name: Upload Docs to Wiki
+      uses: SwiftDocOrg/github-wiki-publish-action@v1
+      with:
+        path: "BOSL2.wiki"
+      env:
+        GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_PAT }}
+

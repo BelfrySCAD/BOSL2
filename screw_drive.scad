@@ -143,8 +143,8 @@ function phillips_diam(size, depth) =
 // Examples:
 //   torx_mask(size=30, l=10, $fa=1, $fs=1);
 module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
-    anchor = get_anchor(anchor, center, BOT, BOT);
     od = torx_diam(size);
+    anchor = get_anchor(anchor, center, BOT, BOT);
     attachable(anchor,spin,orient, d=od, l=l) {
         linear_extrude(height=l, convexity=4, center=true) {
             torx_mask2d(size);
@@ -165,10 +165,11 @@ module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
 //   torx_mask2d(size=30, $fa=1, $fs=1);
 module torx_mask2d(size) {
     no_children($children);
-    od = torx_diam(size);
-    id = _torx_inner_diam(size);
-    tip = _torx_tip_radius(size);
-    rounding = _torx_rounding_radius(size);
+    info = torx_info(size);
+    od = info[0];
+    id = info[1];
+    tip = info[3];
+    rounding = info[4];
     base = od - 2*tip;
     $fn = quantup(segs(od/2),12);
     difference() {
@@ -195,119 +196,62 @@ module torx_mask2d(size) {
 }
 
 
+// Function: torx_info()
+// Usage:
+//   info = torx_info(size);
+// Description:
+//   Get the typical dimensional info for a given Torx size.
+//   Returns a list containing, in order:
+//   - Outer Diameter
+//   - Inner Diameter
+//   - Drive Hole Depth
+//   - External Tip Rounding Radius
+//   - Inner Rounding Radius
+// Arguments:
+//   size = Torx size.
+function torx_info(size) =
+    let(
+        info_arr = [
+            //T#     OD     ID     H     Re     Ri
+            [  1, [  0.90,  0.65,  1.19, 0.059, 0.201]],
+            [  2, [  1.00,  0.73,  1.70, 0.069, 0.224]],
+            [  3, [  1.20,  0.87,  1.70, 0.081, 0.266]],
+            [  4, [  1.35,  0.98,  1.70, 0.090, 0.308]],
+            [  5, [  1.48,  1.08,  1.70, 0.109, 0.330]],
+            [  6, [  1.75,  1.27,  1.87, 0.132, 0.383]],
+            [  7, [  2.08,  1.50,  3.10, 0.161, 0.446]],
+            [  8, [  2.40,  1.75,  3.10, 0.190, 0.510]],
+            [  9, [  2.58,  1.87,  3.35, 0.207, 0.554]],
+            [ 10, [  2.80,  2.05,  3.61, 0.229, 0.598]],
+            [ 15, [  3.35,  2.40,  3.86, 0.267, 0.716]],
+            [ 20, [  3.95,  2.85,  4.12, 0.305, 0.859]],
+            [ 25, [  4.50,  3.25,  4.50, 0.375, 0.920]],
+            [ 27, [  5.07,  3.65,  4.75, 0.390, 1.108]],
+            [ 30, [  5.60,  4.05,  5.00, 0.451, 1.194]],
+            [ 40, [  6.75,  4.85,  5.64, 0.546, 1.428]],
+            [ 45, [  7.93,  5.64,  6.27, 0.574, 1.796]],
+            [ 50, [  8.95,  6.45,  6.53, 0.775, 1.816]],
+            [ 55, [ 11.35,  8.05,  6.78, 0.867, 2.667]],
+            [ 60, [ 13.45,  9.60,  8.22, 1.067, 2.883]],
+            [ 70, [ 15.70, 11.20,  9.01, 1.194, 3.477]],
+            [ 80, [ 17.75, 12.80,  9.95, 1.526, 3.627]],
+            [ 90, [ 20.20, 14.40, 10.61, 1.530, 4.468]],
+            [100, [ 22.40, 16.00, 11.40, 1.720, 4.925]],
+        ],
+        found = [for(info=info_arr) if(info[0]==size) info[1]]
+    )
+    assert(found, "Unsupported Torx size.")
+    found[0];
+
+
 // Function: torx_diam()
 // Usage:
 //   diam = torx_diam(size);
 // Description: Get the typical outer diameter of Torx profile.
 // Arguments:
 //   size = Torx size.
-function torx_diam(size) = lookup(size, [
-    [  6,  1.75],
-    [  8,  2.40],
-    [ 10,  2.80],
-    [ 15,  3.35],
-    [ 20,  3.95],
-    [ 25,  4.50],
-    [ 30,  5.60],
-    [ 40,  6.75],
-    [ 45,  7.93],
-    [ 50,  8.95],
-    [ 55, 11.35],
-    [ 60, 13.45],
-    [ 70, 15.70],
-    [ 80, 17.75],
-    [ 90, 20.20],
-    [100, 22.40]
-]);
+function torx_diam(size) = torx_info(size)[0];
 
-
-/*
-[
-[  1, 0.90],
-[  2, 1.00],
-[  3, 1.20],
-[  4, 1.35],
-[  5, 1.50],
-[  6, 1.75],
-[  7, 2.10],
-[  8, 2.40],
-[  9, 2.60],
-[ 10, 2.80],
-[ 15, 3.35],
-[ 20, 3.95],
-[ 25, 4.50],
-[ 27, 5.10],
-[ 30, 5.60],
-[ 35, 5.90],
-[ 40, 6.75],
-[ 45, 7.93],
-[ 50, 8.95],
-[ 55, 11.35],
-[ 60, 13.45],
-[ 70, 15.70],
-[ 80, 17.75],
-[ 90, 20.20],
-[100, 22.40]
-];
-
-*/
-
-
-/// Internal Function: torx_inner_diam()
-/// Usage:
-///   diam = torx_inner_diam(size);
-/// Description: Get typical inner diameter of Torx profile.
-/// Arguments:
-///   size = Torx size.
-function _torx_inner_diam(size) = lookup(size, [
-    [  6,  1.27],
-    [  8,  1.75],
-    [ 10,  2.05],
-    [ 15,  2.40],
-    [ 20,  2.85],
-    [ 25,  3.25],
-    [ 30,  4.05],
-    [ 40,  4.85],
-    [ 45,  5.64],
-    [ 50,  6.45],
-    [ 55,  8.05],
-    [ 60,  9.60],
-    [ 70, 11.20],
-    [ 80, 12.80],
-    [ 90, 14.40],
-    [100, 16.00]
-]);
-
-
-/*
-[
-    [  1,  0.60],
-    [  2,  0.07],
-    [  3,  0.85],
-    [  4,  1.00],
-    [  5,  1.10],
-    [  6,  1.27],
-    [  7,  1.50],
-    [  8,  1.75],
-    [  9,  1.90],
-    [ 10,  2.05],
-    [ 15,  2.40],
-    [ 20,  2.85],
-    [ 25,  3.25],
-    [ 27,  3.68],
-    [ 30,  4.05],
-    [ 40,  4.85],
-    [ 45,  5.64],
-    [ 50,  6.45],
-    [ 55,  8.05],
-    [ 60,  9.60],
-    [ 70, 11.20],
-    [ 80, 12.80],
-    [ 90, 14.40],
-    [100, 16.00]
-]);
-
-*/
 
 // Function: torx_depth()
 // Usage:
@@ -315,77 +259,7 @@ function _torx_inner_diam(size) = lookup(size, [
 // Description: Gets typical drive hole depth.
 // Arguments:
 //   size = Torx size.
-function torx_depth(size) = lookup(size, [
-    [  6,  1.82],
-    [  8,  3.05],
-    [ 10,  3.56],
-    [ 15,  3.81],
-    [ 20,  4.07],
-    [ 25,  4.45],
-    [ 30,  4.95],
-    [ 40,  5.59],
-    [ 45,  6.22],
-    [ 50,  6.48],
-    [ 55,  6.73],
-    [ 60,  8.17],
-    [ 70,  8.96],
-    [ 80,  9.90],
-    [ 90, 10.56],
-    [100, 11.35]
-]);
- 
-
-/// Internal Function: torx_tip_radius()
-/// Usage:
-///   rad = torx_tip_radius(size);
-/// Description: Gets minor rounding radius of Torx profile.
-/// Arguments:
-///   size = Torx size.
-function _torx_tip_radius(size) = lookup(size, [
-    [  6, 0.132],
-    [  8, 0.190],
-    [ 10, 0.229],
-    [ 15, 0.267],
-    [ 20, 0.305],
-    [ 25, 0.375],
-    [ 30, 0.451],
-    [ 40, 0.546],
-    [ 45, 0.574],
-    [ 50, 0.775],
-    [ 55, 0.867],
-    [ 60, 1.067],
-    [ 70, 1.194],
-    [ 80, 1.526],
-    [ 90, 1.530],
-    [100, 1.720]
-]);
-
-
-/// Internal Function: torx_rounding_radius()
-/// Usage:
-///   rad = torx_rounding_radius(size);
-/// Description: Gets major rounding radius of Torx profile.
-/// Arguments:
-///   size = Torx size.
-function _torx_rounding_radius(size) = lookup(size, [
-    [  6, 0.383],
-    [  8, 0.510],
-    [ 10, 0.598],
-    [ 15, 0.716],
-    [ 20, 0.859],
-    [ 25, 0.920],
-    [ 30, 1.194],
-    [ 40, 1.428],
-    [ 45, 1.796],
-    [ 50, 1.816],
-    [ 55, 2.667],
-    [ 60, 2.883],
-    [ 70, 3.477],
-    [ 80, 3.627],
-    [ 90, 4.468],
-    [100, 4.925]
-]);
-
+function torx_depth(size) = torx_info(size)[2];
 
 
 

@@ -1369,7 +1369,7 @@ function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, retur
 //    patch = [for(i=[0:3])
 //            [for(j=[0:3]) pts1[i]+pts2[j] ] ];
 //    vnf_polyhedron(bezier_vnf(patch, 163));
-//    uv = [0,.1,.2,.3,,.7,.8,.9,1];//lerpn(0,1,8);
+//    uv = [0,.1,.2,.3,.7,.8,.9,1];//lerpn(0,1,8);
 //    pts = bezier_patch_points(patch, uv, uv);
 //    normals = bezier_patch_normals(patch, uv, uv);
 //    for(i=idx(uv),j=idx(uv))

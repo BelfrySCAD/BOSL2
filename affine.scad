@@ -519,10 +519,10 @@ function affine3d_skew_xy(xa=0, ya=0) =
     assert(is_finite(xa))
     assert(is_finite(ya))
     [
-        [1, 0, tan(xa), 0],
-        [0, 1, tan(ya), 0],
-        [0, 0,       1, 0],
-        [0, 0,       0, 1]
+        [      1, tan(xa), 0, 0],
+        [tan(ya),       1, 0, 0],
+        [      0,       0, 1, 0],
+        [      0,       0, 0, 1]
     ];
 
 
@@ -551,10 +551,10 @@ function affine3d_skew_xz(xa=0, za=0) =
     assert(is_finite(xa))
     assert(is_finite(za))
     [
-        [1, tan(xa), 0, 0],
-        [0,       1, 0, 0],
-        [0, tan(za), 1, 0],
-        [0,       0, 0, 1]
+        [      1, 0, tan(xa), 0],
+        [      0, 1,       0, 0],
+        [tan(za), 0,       1, 0],
+        [      0, 0,       0, 1]
     ];
 
 
@@ -583,10 +583,10 @@ function affine3d_skew_yz(ya=0, za=0) =
     assert(is_finite(ya))
     assert(is_finite(za))
     [
-        [      1, 0, 0, 0],
-        [tan(ya), 1, 0, 0],
-        [tan(za), 0, 1, 0],
-        [      0, 0, 0, 1]
+        [1,       0,       0, 0],
+        [0,       1, tan(ya), 0],
+        [0, tan(za),       1, 0],
+        [0,       0,       0, 1]
     ];
 
 
