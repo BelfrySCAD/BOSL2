@@ -12,9 +12,9 @@
 // FileSummary: ISO (metric) and UTS screws and nuts.
 //////////////////////////////////////////////////////////////////////
 
-include <BOSL2/structs.scad>
-include <BOSL2/threading.scad>
-include <BOSL2/screw_drive.scad>
+include <structs.scad>
+include <threading.scad>
+include <screw_drive.scad>
 
 // Section: Screw Parameters
 //    This modules in this file create standard ISO (metric) and UTS (English) threaded screws.
@@ -1612,6 +1612,13 @@ m2-m3: +0.18
 m4-m6: +0.22
 m8-m12: +0.27
 m14-m20: +0.33
+
+intersection() {
+    cyl(h=2, d=10, anchor=BOT)
+        attach(TOP) cyl(h=5, d=10, anchor=BOT, texture="trunc_ribs", tex_counts=[31,1], tex_scale=-0.2);
+    cyl(h=6,d=10, chamfer2=0.5, anchor=BOT);
+}
+
 
 */
 
