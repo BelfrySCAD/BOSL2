@@ -26,7 +26,7 @@ module manfrotto_rc2_plate(chamfer="all",anchor,orient,spin)
 {
   chsize=0.5;
 
-  assert(in_list(chamfer, ["bot","bottom","all","none"]), "chamfer must be \"all\", \"bottom\", \"bot\", or \"none\"");
+  dummy = assert(in_list(chamfer, ["bot","bottom","all","none"]), "chamfer must be \"all\", \"bottom\", \"bot\", or \"none\"");
   chamf_top = chamfer=="all";
   chamf_bot = in_list(chamfer, ["bot","bottom","all"]);
 

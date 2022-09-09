@@ -40,7 +40,7 @@ function _ph_bot_angle() = 28.0;
 function _ph_side_angle() = 26.5;
 
 module phillips_mask(size="#2", $fn=36, anchor=BOTTOM, spin=0, orient=UP) {
-    assert(in_list(size,["#0","#1","#2","#3","#4",0,1,2,3,4]));
+    dummy = assert(in_list(size,["#0","#1","#2","#3","#4",0,1,2,3,4]));
     num = is_num(size) ? size : ord(size[1]) - ord("0");
     shaft = _phillips_shaft(num);
     b =     [0.61, 0.97, 1.47, 2.41, 3.48][num];
@@ -304,7 +304,7 @@ function torx_depth(size) = torx_info(size)[2];
 //       robertson_mask(size=2);
 //   }
 module robertson_mask(size, extra=1, ang=2.5) {
-    assert(is_int(size) && size>=0 && size<=4);
+    dummy=assert(is_int(size) && size>=0 && size<=4);
     Mmin = [0.0696, 0.0900, 0.1110, 0.1315, 0.1895][size];
     Mmax = [0.0710, 0.0910, 0.1126, 0.1330, 0.1910][size];
     M = (Mmin + Mmax) / 2 * INCH;
