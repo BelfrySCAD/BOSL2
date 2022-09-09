@@ -421,12 +421,12 @@ module screw(spec, head="none", drive, thread="coarse", drive_size,
    dummyQ = assert(is_undef(flat_height) || flat_height < length, str("Length of screw (",length,") is shorter than the flat head height (",flat_height,")"));
    attach_size = atype=="head" && head=="hex" ? [head_diam, head_diam*2/sqrt(3), head_height] : undef;
    offset = atype=="head" ? (-head_height+flat_height)/2
-          : atype=="shaft" ? (length+flat_height)/2 
+          : atype=="shaft" ? length/2  //(length+flat_height)/2   Not sure what shaft is for flatheads
           : atype=="shank" ? shank/2
           : atype=="threads" ? shank+(length-shank)/2+flat_height
           : atype=="screw" ? length/2-head_height/2
           : assert(false,"Unknown atype");
-   echo(atype=atype, offset=offset, hh=head_height);
+   echo(atype=atype, offset=offset, hh=head_height,length=length);
    anchor_list = [
           named_anchor("top", [0,0,offset]),
           named_anchor("bot", [0,0,-length+offset]),
@@ -456,6 +456,7 @@ module screw(spec, head="none", drive, thread="coarse", drive_size,
             : atype=="screw" ? length+head_height
             : head=="hex" ? undef
             : head_height+flat_height;
+   echo(attach_l=attach_l);
    attachable(
               size = attach_size, 
               d = attach_d, 
@@ -673,7 +674,6 @@ module _driver(spec)
 {
   drive = struct_val(spec,"drive");
   if (is_def(drive) && drive!="none") {
-    echo(inside_drive=drive);
     head = struct_val(spec,"head");
     diameter = struct_val(spec,"diameter");
     drive_size = struct_val(spec,"drive_size");
@@ -1440,7 +1440,7 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
                    ["#3", [ 0.193,   1/16,            8    ,     0.044,    0.041]],
                    ["#4", [ 0.218,   1/16,            10   ,     0.055,    0.038]],
                    ["#5", [ 0.240,   5/64,            10   ,     0.061,    0.038]],
-                   ["#6", [ 0.363,   5/64,            15   ,     0.066,    0.045]],
+                   ["#6", [ 0.263,   5/64,            15   ,     0.066,    0.045]],
                    ["#8", [ 0.311,   3/32,            20   ,     0.076,    0.053]],
                    ["#10",[ 0.359,    1/8,            25   ,     0.087,    0.061]],
                    [1/4,  [ 0.480,   5/32,            30   ,     0.111,    0.075]],
@@ -1470,8 +1470,8 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
              dsmall=[.003, .063, .125], 
              dlarge = [-.031, .031, .062],
              sharpsize = small ? csmall[diamgroup]*diameter-dsmall[diamgroup] // max theoretical (sharp) head diam
-                                     : diameter < 0.2 ? [0.138,0.168,0.0822,0.0949][(diameter - 0.06)/.013] 
-                                     : 2*diameter-dlarge[diamgroup], 
+                                     : diameter < 0.1 ? [0.138,0.168,0.0822,0.0949][(diameter - 0.06)/.013] 
+                                     : 2*diameter-dlarge[diamgroup],
              largesize = lerp(entry[0],sharpsize,.20),   // Have min size and max theory size.  Use point 20% up from min size
              undercut_height = let(
                                    a=[.432+.386, .417+.37, .417+.37]/2,
