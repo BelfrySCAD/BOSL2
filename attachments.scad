@@ -635,6 +635,47 @@ module force_tag(tag)
         children();
 }
 
+
+
+// Module: default_tag()
+// Usage:
+//   default_tag(tag) CHILDREN;
+// Topics: Attachments
+// See Also: force_tag(), recolor(), hide(), show_only(), diff(), intersect()
+// Description:
+//   Sets a default tag for all of the children.  This is intended to be used to set a tag for a whole module
+//   that is then used outside the module, such as setting the tag to "remove" for easy operation with {{diff()}}.
+//   The default_tag() module sets the `$tag` variable only if it is not already
+//   set so you can have a module set a default tag of "remove" but that tag can be overridden by a {{tag()}}
+//   in force from a parent.  If you use {{tag()}} it will override any previously
+//   specified tag from a parent, which can be very confusing to a user trying to change the tag on a module.  
+//   .
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Arguments:
+//   tag = tag string, which must not contain any spaces.
+// Side Effects:
+//   Sets `$tag` to the tag you specify, possibly with a scope prefix. 
+// Example(3D):  The module thing() is defined with {{tag()}} and the user applied tag of "keep_it" is ignored, leaving the user puzzled.  
+//   module thing() { tag("remove") cuboid(10);}
+//   diff()
+//     cuboid(20){
+//       position(TOP) thing();
+//       position(RIGHT) tag("keep_it") thing();
+//   }
+// Example(3D):  Using default_tag() fixes this problem: the user applied tag does not get overridden by the tag hidden in the module definition.
+//   module thing() { default_tag("remove") cuboid(10);}
+//   diff()
+//     cuboid(20){
+//       position(TOP) thing();
+//       position(RIGHT) tag("keep_it") thing();
+//   }
+module default_tag(tag)
+{
+    if ($tag=="") tag(tag) children();
+    else children();
+}
+
+
 // Module: tag_scope()
 // Usage:
 //   tag_scope([scope]) CHILDREN;

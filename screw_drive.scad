@@ -91,7 +91,7 @@ module phillips_mask(size="#2", $fn=36, anchor=BOTTOM, spin=0, orient=UP) {
 //   size = size as a number or text string like "#2"
 //   d = desired diameter
 function phillips_depth(size, d) =
-    dummy=assert(in_list(size,["#0","#1","#2","#3","#4",0,1,2,3,4]))
+    assert(in_list(size,["#0","#1","#2","#3","#4",0,1,2,3,4]))
     let(
         num = is_num(size) ? size : ord(size[1]) - ord("0"),
         shaft = [3,4.5,6,8,10][num],
@@ -113,7 +113,7 @@ function phillips_depth(size, d) =
 //   size = size as number or text string like "#2"
 //   depth = depth of recess to find the diameter of
 function phillips_diam(size, depth) =
-    dummy=assert(in_list(size,["#0","#1","#2","#3","#4",0,1,2,3,4]))
+    assert(in_list(size,["#0","#1","#2","#3","#4",0,1,2,3,4]))
     let(
         num = is_num(size) ? size : ord(size[1]) - ord("0"),
         shaft = _phillips_shaft(num),
