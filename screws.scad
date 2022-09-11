@@ -76,7 +76,7 @@ include <screw_drive.scad>
 //    .
 //    |ISO|UTS|Head            | Drive  |
 //    |---|---|--------------- | ----------------------------|
-//    |X|X|"none"          | hex, torx|
+//    |X|X|"none"          | hex, torx, slot (UTS only)|
 //    |X|X|"hex"           | *none*|
 //    |X|X|"socket"        | hex, torx|
 //    |X|X|"button"        | hex, torx|
@@ -228,6 +228,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //     ydistribute(spacing=15){
 //        screw("1/4", thread=0,length=8, anchor=TOP, head="none", drive="hex");
 //        screw("1/4", thread=0,length=8, anchor=TOP, head="none", drive="torx");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="none", drive="slot");
 //        screw("1/4", thread=0,length=8, anchor=TOP, head="none");
 //     }
 //     screw("1/4", thread=0, length=8, anchor=TOP, head="hex");
@@ -687,7 +688,10 @@ module _driver(spec)
       if (drive=="phillips") phillips_mask(drive_size,anchor=BOTTOM);
       if (drive=="torx") torx_mask(size=drive_size, l=drive_depth+1, center=false);
       if (drive=="hex") hex_drive_mask(drive_size,drive_depth+1,anchor=BOT);
-      if (drive=="slot") cuboid([2*struct_val(spec,"head_size"), drive_width, drive_depth+1],anchor=BOTTOM);
+      if (drive=="slot") {
+          head_width = first_defined([struct_val(spec, "head_size"), diameter]);
+          cuboid([2*head_width, drive_width, drive_depth+1],anchor=BOTTOM);
+      }
     }
   }
 }
@@ -1187,36 +1191,41 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
      INCH / tentry[tind],
    head_data =
        head=="none" ? let (
-          UTS_setscrew = [   // hex width, hex depth
-            ["#0", [0.028, 0.050]],
-            ["#1", [0.035, 0.060]],
-            ["#2", [0.035, 0.060]],
-            ["#3", [0.05 , 0.070]],
-            ["#4", [0.05 , 0.045, 6, 0.027]],
-            ["#5", [1/16 , 0.080, 7, 0.036]],
-            ["#6", [1/16 , 0.080, 7, 0.036]],
-            ["#8", [5/64 , 0.090, 8, 0.041]],
-            ["#10",[3/32 , 0.100, 10, 0.049]],
-            [1/4,  [1/8  , 0.125, 15, 0.068]],
-            [5/16, [5/32 , 0.156, 25, 0.088]],
-            [3/8,  [3/16 , 0.188, 30, 0.097]],
-            [7/16, [7/32 , 0.219, 40, 0.117]],
-            [1/2,  [1/4  , 0.250, 45, 0.137]],
-            [5/8,  [5/16 , 0.312, 55, 0.202]],
-            [3/4,  [3/8  , 0.375, 60, 0.202]],
-            [7/8,  [1/2  , 0.500, 70, 0.291]],
-            [1,    [9/16 , 0.562, 70, 0.291]],
-            [1.125,[9/16 , 0.562]],
-            [1.25, [5/8  , 0.625]],
-            [1.375,[5/8  , 0.625]],
-            [1.5,  [3/4  , 0.750]],
-            [1.75, [1    , 1.000]],
-            [2,    [1    , 1.000]],
+          UTS_setscrew = [
+               // hex width, hex depth torx,  torx depth    slot width   slot depth 
+            ["#0", [0.028,   0.050,   undef,     undef,       0.012,       0.018]],
+            ["#1", [0.035,   0.060,   undef,     undef,       0.014,       0.018]],
+            ["#2", [0.035,   0.060,   undef,     undef,       0.016,       0.022]],
+            ["#3", [0.05 ,   0.070,   undef,     undef,       0.018,       0.025]],
+            ["#4", [0.05 ,   0.045,      6,      0.027,       0.021,       0.028]],
+            ["#5", [1/16 ,   0.080,      7,      0.036,       0.023,       0.031]],
+            ["#6", [1/16 ,   0.080,      7,      0.036,       0.025,       0.035]],
+            ["#8", [5/64 ,   0.090,      8,      0.041,       0.029,       0.041]],
+            ["#10",[3/32 ,   0.100,      10,     0.049,       0.032,       0.048]],
+            ["#12",[undef,   undef,   undef,    undef,        0.038,       0.056]],
+            [1/4,  [1/8  ,   0.125,      15,     0.068,       0.045,       0.063]],
+            [5/16, [5/32 ,   0.156,      25,     0.088,       0.051,       0.078]],
+            [3/8,  [3/16 ,   0.188,      30,     0.097,       0.064,       0.094]],
+            [7/16, [7/32 ,   0.219,      40,     0.117,       0.072,       0.109]],
+            [1/2,  [1/4  ,   0.250,      45,     0.137,       0.081,       0.125]],
+            [9/16, [undef,   undef,   undef,    undef,        0.091,       0.141]],
+            [5/8,  [5/16 ,   0.312,      55,     0.202,       0.102,       0.156]],
+            [3/4,  [3/8  ,   0.375,      60,     0.202,       0.129,       0.188]],
+            [7/8,  [1/2  ,   0.500,      70,     0.291]],     
+            [1,    [9/16 ,   0.562,      70,     0.291]],     
+            [1.125,[9/16 ,   0.562]],
+            [1.25, [5/8  ,   0.625]],
+            [1.375,[5/8  ,   0.625]],
+            [1.5,  [3/4  ,   0.750]],
+            [1.75, [1    ,   1.000]],
+            [2,    [1    ,   1.000]],
             ],
           entry = struct_val(UTS_setscrew, diam),
           dummy=assert(is_def(entry), str("Screw size ",diam," unsupported for headless screws")),
-          drive_dims = drive == "hex" ? [["drive_size", INCH*entry[0]], ["drive_depth", INCH*entry[1]]] :
-                       drive == "torx" ? [["drive_size", entry[2]], ["drive_depth", INCH*entry[3]]] : []
+          drive_dims = drive == "hex" ? [["drive_size", INCH*entry[0]], ["drive_depth", INCH*entry[1]]]
+                     : drive == "torx" ? [["drive_size", entry[2]], ["drive_depth", INCH*entry[3]]] 
+                     : drive == "slot" ? [["drive_width", INCH*entry[4]], ["drive_depth", INCH*entry[5]]]
+                     : []
          ) concat([["head","none"]], drive_dims) 
      : head=="hex" ? let( 
             UTS_hex = [
@@ -1259,13 +1268,13 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
                ["#6", [  0.226,  7/64, 15,        0.064,      0.058]],
                ["#8", [  0.270,  9/64, 25,        0.077,      0.078]],
                ["#10",[   5/16,  5/32, 27,        undef,      0.088]],
-               ["#12",[  0.324,  5/32, undef,     undef,      undef]],
+               ["#12",[  0.324,  5/32, 27,        undef,      0.088]],
                [1/4,  [    3/8,  3/16, 30,        undef,      0.097]],
                [5/16, [  15/32,   1/4, 45,        undef,      0.137]],
                [3/8,  [   9/16,  5/16, 50,        undef,      0.155]],
                [7/16, [  21/32,   3/8, 55,        undef,      0.202]],
                [1/2,  [    3/4,   3/8, 55,        undef,      0.202]],
-               [9/16, [  27/32,  7/16, undef,     undef,      undef]],
+               [9/16, [  27/32,  7/16, 60,        undef,      0.240]],
                [5/8,  [  15/16,   1/2, 70,        undef,      0.291]],
                [3/4,  [  1.125,   5/8, 80,        undef,      0.332]],
                [7/8,  [ 1+5/16,   3/4, 100,       undef,      0.425]],
@@ -1312,24 +1321,24 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
            concat([["head","pan round"], ["head_size", INCH*entry[0]], ["head_height", INCH*entry[htind]]], drive_size) 
      : head=="button" || head=="round" ? let(
             UTS_button = [    // button, hex or torx drive
-                 //   head diam, height, phillips, hex, torx, hex depth
-               ["#0", [0.114, 0.032, undef, 0.035,5    , 0.020, 0.017]],
-               ["#1", [0.139, 0.039, undef, 3/64, 5    , 0.028, 0.020]],
-               ["#2", [0.164, 0.046, undef, 3/64, 6    , 0.028, 0.023]],
-               ["#3", [0.188, 0.052, undef, 1/16, undef, 0.035, undef]],
-               ["#4", [0.213, 0.059, undef, 1/16, 8    , 0.035, 0.032]],
-               ["#5", [0.238, 0.066, undef, 5/64, undef, 0.044, undef]],
-               ["#6", [0.262, 0.073, undef, 5/64, 10   , 0.044, 0.038]],
-               ["#8", [0.312, 0.087, undef, 3/32, 15   , 0.052, 0.045]],
-               ["#10",[0.361, 0.101, undef, 1/8,  25   , 0.070, 0.052]],
-               ["#12",[0.413, 0.114, undef, 1/8,  undef, 0.070, undef]],   // also 0.410, .115, 9/64, hex depth guessed
-               [1/4,  [0.437, 0.132, undef, 5/32, 27   , 0.087, 0.068]],
-               [5/16, [0.547, 0.166, undef, 3/16, 40   , 0.105, 0.090]],
-               [3/8,  [0.656, 0.199, undef, 7/32, 45   , 0.122, 0.106]],
-               [7/16, [0.750, 0.220, undef, 1/4,  undef, 0.193, undef]],  // hex depth interpolated
-               [1/2,  [0.875, 0.265, undef, 5/16, 55   , 0.175, 0.158]],
-               [5/8,  [1.000, 0.331, undef, 3/8,  60   , 0.210, 0.192]],
-               [3/4,  [1.1,   0.375, undef, 7/16, undef, 0.241]],  // hex depth extrapolated
+                 //   head diam, height, phillips, hex,   torx, hex depth
+               ["#0", [0.114,    0.032,   undef,   0.035,  5    , 0.020, 0.015]],
+               ["#1", [0.139,    0.039,   undef,   3/64,   5    , 0.028, 0.022]],
+               ["#2", [0.164,    0.046,   undef,   3/64,   6    , 0.028, 0.023]],
+               ["#3", [0.188,    0.052,   undef,   1/16,   undef, 0.035, undef]],
+               ["#4", [0.213,    0.059,   undef,   1/16,   8    , 0.035, 0.032]],
+               ["#5", [0.238,    0.066,   undef,   5/64,   10   , 0.044, 0.038]],
+               ["#6", [0.262,    0.073,   undef,   5/64,   10   , 0.044, 0.038]],
+               ["#8", [0.312,    0.087,   undef,   3/32,   15   , 0.052, 0.045]],
+               ["#10",[0.361,    0.101,   undef,   1/8,    25   , 0.070, 0.052]],
+               ["#12",[0.413,    0.114,   undef,   1/8,    undef, 0.070, undef]],   // also 0.410, .115, 9/64, hex depth guessed
+               [1/4,  [0.437,    0.132,   undef,   5/32,   27   , 0.087, 0.068]],
+               [5/16, [0.547,    0.166,   undef,   3/16,   40   , 0.105, 0.090]],
+               [3/8,  [0.656,    0.199,   undef,   7/32,   45   , 0.122, 0.106]],
+               [7/16, [0.750,    0.220,   undef,   1/4,    undef, 0.193, undef]],  // hex depth interpolated
+               [1/2,  [0.875,    0.265,   undef,   5/16,   55   , 0.175, 0.158]],
+               [5/8,  [1.000,    0.331,   undef,   3/8,    60   , 0.210, 0.192]],
+               [3/4,  [1.1,      0.375,   undef,   7/16,   undef, 0.241]],  // hex depth extrapolated
              ],
              UTS_round = [   // slotted, phillips
                   // head diam, head height, phillips drive, hex, torx, ph diam, ph width, ph depth, slot width, slot depth
@@ -1593,25 +1602,30 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
        head=="none" ? let(
            metric_setscrew =
                [
-                [1.4, [0.7]],
-                [1.6, [0.7]],
-                [1.8, [0.7]],
-                [2,   [0.9]],
-                [2.5, [1.3]],
-                [3,   [1.5, 6, 0.77]],
-                [4,   [2, 8, 1.05]],
-                [5,   [2.5, 10, 1.24]],
-                [6,   [3, 15, 1.74]],
-                [8,   [4, 25, 2.24]],
-                [10,  [5, 40, 2.97]],
-                [12,  [6, 45, 3.48]],
-                [16,  [8, 55, 5.15]],
-                [20,  [10, undef, undef]],
+                  //   hex    torx, torx depth, slot width, slot depth 
+                [1.2, [undef, undef,   undef,    0.330,        0.460]],
+                [1.4, [0.7,   undef,   undef,    undef,        undef]],
+                [1.6, [0.7,   undef,   undef,    0.380,        0.650]],
+                [1.8, [0.7,   undef,   undef,    undef,        undef]],
+                [2,   [0.9,   undef,   undef,    0.380,        0.740]],
+                [2.5, [1.3,   undef,   undef,    0.530,        0.835]],
+                [3,   [1.5,     6,     0.77,     0.530,        0.925]],
+                [3.5, [undef, undef,   undef,    0.630,        1.085]],
+                [4,   [2,       8,     1.05,     0.730,        1.270]],
+                [5,   [2.5,    10,     1.24,     0.930,        1.455]],
+                [6,   [3,      15,     1.74,     1.130,        1.800]],
+                [8,   [4,      25,     2.24,     1.385,        2.250]],
+                [10,  [5,      40,     2.97,     1.785,        2.700]],
+                [12,  [6,      45,     3.48,     2.185,        3.200]],
+                [16,  [8,      55,     5.15]],
+                [20,  [10,   undef,    undef]],    
                ],
             entry = struct_val(metric_setscrew, diam),
             dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
-            drive_dim = drive=="hex" ? [["drive_size", entry[0]], ["drive_depth", diam/2]] :
-                        drive=="torx" ? [["drive_size", entry[1]], ["drive_depth", entry[2]]] : []
+            drive_dim = drive=="hex" ? [["drive_size", entry[0]], ["drive_depth", diam/2]]
+                      : drive=="torx" ? [["drive_size", entry[1]], ["drive_depth", entry[2]]]
+                      : drive=="slot" ? [["drive_width", entry[3]], ["drive_depth", entry[4]]]
+                      : []
            )
            concat([["head","none"]], drive_dim) 
      : head=="hex" ? let(
