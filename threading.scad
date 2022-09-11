@@ -26,10 +26,10 @@
 //   pitch = Length between threads.
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
+//   starts = The number of lead starts.  Default: 1
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end.
-//   starts = The number of lead starts.  Default: 1
 //   internal = If true, make this a mask for making internal threads.
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
@@ -137,8 +137,8 @@ module threaded_rod(
 //   h = height/thickness of nut.
 //   pitch = Length between threads.
 //   ---
-//   starts = The number of lead starts.  Default: 1
 //   left_handed = if true, create left-handed threads.  Default = false
+//   starts = The number of lead starts.  Default: 1
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
@@ -242,10 +242,10 @@ module threaded_nut(
 //   thread_depth = Depth of threads.  Default: pitch/2
 //   ---
 //   left_handed = If true, create left-handed threads.  Default: false
+//   starts = The number of lead starts.  Default: 1
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
-//   starts = The number of lead starts.  Default: 1
 //   internal = If true, make this a mask for making internal threads.  Default: false
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
@@ -474,6 +474,7 @@ module acme_threaded_rod(
 //   ---
 //   pitch = Thread spacing (alternative to tpi)
 //   left_handed = if true, create left-handed threads.  Default = false
+//   starts = Number of lead starts.  Default: 1
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
@@ -651,6 +652,7 @@ module npt_threaded_rod(
 //   pitch = Thread spacing.
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
+//   starts = Number of lead starts.  Default: 1
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
@@ -678,7 +680,7 @@ function buttress_threaded_rod(
     higbee=0,
     higbee1,
     higbee2,
-    d1,d2,
+    d1,d2,starts,
     anchor, spin, orient
 ) = no_function("buttress_threaded_rod");
 module buttress_threaded_rod(
@@ -689,7 +691,7 @@ module buttress_threaded_rod(
     higbee=0,
     higbee1,
     higbee2,
-    d1,d2,
+    d1,d2,starts=1,
     anchor, spin, orient
 ) {
     depth = pitch * 3/4;
@@ -711,7 +713,7 @@ module buttress_threaded_rod(
         higbee2=higbee2,
         d1=d1,d2=d2,
         anchor=anchor,
-        spin=spin,
+        spin=spin,starts=starts,
         orient=orient
     ) children();
 }
@@ -730,6 +732,7 @@ module buttress_threaded_rod(
 //   pitch = Thread spacing. 
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
+//   starts = The number of lead starts.  Default: 1
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
@@ -742,13 +745,13 @@ module buttress_threaded_rod(
 function buttress_threaded_nut(
     od=16, id=10, h=10,
     pitch=2, left_handed=false,
-    bevel,bevel1,bevel2,
+    bevel,bevel1,bevel2,starts,
     anchor, spin, orient
 ) = no_function("buttress_threaded_nut");
 module buttress_threaded_nut(
     od=16, id=10, h=10,
     pitch=2, left_handed=false,
-    bevel,bevel1,bevel2,
+    bevel,bevel1,bevel2,starts=1,
     anchor, spin, orient
 ) {
     depth = pitch * 3/4;
@@ -763,7 +766,7 @@ module buttress_threaded_nut(
         od=od, id=id, h=h,
         pitch=pitch,
         profile=profile,
-        left_handed=left_handed,
+        left_handed=left_handed,starts=starts,
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,
         anchor=anchor, spin=spin,
         orient=orient
@@ -786,10 +789,10 @@ module buttress_threaded_nut(
 //   pitch = Thread spacing.
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
+//   starts = The number of lead starts.  Default = 1
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
-//   starts = The number of lead starts.  Default = 1
 //   internal = If true, this is a mask for making internal threads.
 //   higbee = Length to taper thread ends over.  Default: 0
 //   higbee1 = Length to taper bottom thread end over.
@@ -857,10 +860,10 @@ module square_threaded_rod(
 //   pitch = Length between threads.
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
+//   starts = The number of lead starts.  Default = 1
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
-//   starts = The number of lead starts.  Default = 1
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1003,10 +1006,10 @@ module ball_screw_rod(
 //   profile = A 2D path giving the shape of a thread
 //   ---
 //   left_handed = If true, create left-handed threads.  Default: false
+//   starts = The number of lead starts.  Default: 1
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
-//   starts = The number of lead starts.  Default: 1
 //   internal = If true, make this a mask for making internal threads.  Default: false
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
