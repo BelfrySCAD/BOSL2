@@ -372,20 +372,16 @@ module stroke(
                                   : zrot(joint_angle);
                                 multmatrix(mat) polygon(joint_shape);
                             } else {
+                                // These are parallel to the path
                                 v1 = path2[i] - path2[i-1];
                                 v2 = path2[i+1] - path2[i];
                                 ang = modang(v_theta(v2) - v_theta(v1));
-                                pv1 = rot(-90, p=unit(v1,BACK));
-                                pv2 = rot(-90, p=unit(v2,BACK));
-                                if (!approx(ang,0)) {
-                                    if (ang>=0) {
-                                        rot(from=RIGHT, to=pv1)
-                                            arc(d=widths[i], angle=ang, wedge=true);
-                                    } else {
-                                        rot(from=RIGHT, to=-pv2)
-                                            arc(d=widths[i], angle=-ang, wedge=true);
-                                    }
-                                }
+                                // Need 90 deg offset to make wedge perpendicular to path, and the wedge
+                                // position depends on whether we turn left (ang<0) or right (ang>0)
+                                theta = v_theta(v1) - sign(ang)*90;
+                                ang_eps = 0.1;
+                                if (!approx(ang,0))
+                                  arc(d=widths[i], angle=[theta-ang_eps, theta+ang+ang_eps], wedge=true);
                             }
                         }
                     }
