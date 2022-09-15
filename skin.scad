@@ -3309,15 +3309,9 @@ function _textured_revolution(
             ) _vnf_sort_vertices(utex, idx=[0,1]),
         vertzs = is_vnf(texture)? group_sort(tile[0], idx=0) : undef,
         bpath = is_vnf(tile)
-            ? _find_vnf_tile_edge_path(tile,0)
-            : let(
-                  row = tile[0],
-                  rlen = len(row)
-              ) [for (i = [0:1:rlen]) [i/rlen, row[i%rlen]]],
-        tpath = is_vnf(tile)
             ? _find_vnf_tile_edge_path(tile,1)
             : let(
-                  row = last(tile),
+                  row = tile[0],
                   rlen = len(row)
               ) [for (i = [0:1:rlen]) [i/rlen, row[i%rlen]]],
         counts_x = is_vector(counts,2)? counts.x :
@@ -3470,7 +3464,7 @@ function _textured_revolution(
                                 base = select(bases,j),
                                 norm = unit(select(norms,j)),
                                 ppath = [
-                                    for (vert = tpath) let(
+                                    for (vert = bpath) let(
                                         uang = vert.x / counts_x,
                                         tex_scale = tex_scale * lookup([0,1][j+1], taper_lup),
                                         texh = (vert.y - inset) * tex_scale * (base.x / maxx),
