@@ -170,7 +170,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   .
 //   The anchors and anchor types refer to various parts of the screw, which are labeled below.  The "screw" anchor type (the default) is simply 
 //   the whole screw and the "head" anchor is the head.  These anchors will anchor to bounding cylinder for the specified screw part, so 
-// Figure(2D,VPD = 113.4, VPT = [16.9671, 14.9021, -3.59741], VPR = [0, 0, 0],NoAxes)
+// Figure(2D,VPD = 113.4, VPT = [16.9671, 14.9021, -3.59741], VPR = [0, 0, 0],NoAxes):
 //   rpos=33;
 //   fsize=2.5;
 //   projection(cut=true) xrot(-90)screw("M8", head="socket", length=25, thread_len=10);
