@@ -760,9 +760,9 @@ function _vnf_sort_vertices(vnf, idx=[2,1,0]) =
 // Usage:
 //   sliced = vnf_slice(vnf, dir, cuts);
 // Description:
-//   Slice the faces of a VNF along a specified axis direction at a given list
-//   of cut points.  The cut points can appear in any order.  You can use this to refine the faces of a VNF before applying
-//   a nonlinear transformation to its vertex set.
+//   Slice the faces of a VNF along a specified axis direction at a given list of cut points.
+//   The cut points can appear in any order.  You can use this to refine the faces of a VNF before
+//   applying a nonlinear transformation to its vertex set.
 // Arguments:
 //   vnf = vnf to slice
 //   dir = normal direction to the slices, either "X", "Y" or "Z"
@@ -774,12 +774,23 @@ function _vnf_sort_vertices(vnf, idx=[2,1,0]) =
 //   sliced = vnf_slice(vnf, "X", [-6,-1,10]);
 //   color("red")vnf_wireframe(sliced,width=.3);
 function vnf_slice(vnf,dir,cuts) =
-  let(
-       vert = vnf[0],
-       faces = [for(face=vnf[1]) select(vert,face)],
-       poly_list = _slice_3dpolygons(faces, dir, cuts)
-  )
-  vnf_merge_points(vnf_from_polygons(poly_list));
+    let(
+        cuts = [for (cut=cuts) _shift_cut_plane(vnf,dir,cut)],
+        vert = vnf[0],
+        faces = [for(face=vnf[1]) select(vert,face)],
+        poly_list = _slice_3dpolygons(faces, dir, cuts)
+    )
+    vnf_merge_points(vnf_from_polygons(poly_list));
+
+
+function _shift_cut_plane(vnf,dir,cut,off=0.001) =
+    let(
+        I = ident(3),
+        dir_ind = ord(dir)-ord("X"),
+        verts = vnf[0],
+        on_cut = [for (x = verts * I[dir_ind]) if(approx(x,cut,eps=1e-4)) 1] != []
+    ) !on_cut? cut :
+    _shift_cut_plane(vnf,dir,cut+off);
 
 
 function _split_polygon_at_x(poly, x) =
@@ -839,10 +850,9 @@ function _slice_3dpolygons(polys, dir, cuts) =
         I = ident(3),
         dir_ind = ord(dir)-ord("X")
     )
-    flatten([for (poly = polys)
-        let(
-            plane = plane_from_polygon(poly)
-        )
+    flatten([
+        for (poly = polys)
+        let( plane = plane_from_polygon(poly))
         assert(plane,"Found non-coplanar face.")
         let(
             normal = point3d(plane),
