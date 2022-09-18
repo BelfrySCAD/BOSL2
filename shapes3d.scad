@@ -1194,6 +1194,7 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   tex_scale = Scaling multiplier for the texture depth.
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   tex_style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
+//   tex_taper = If given as a number, tapers the texture height to zero over the first and last given percentage of the path.  If given as a lookup table with indices between 0 and 100, uses the percentage lookup table to ramp the texture heights.  Default: `undef` (no taper)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1286,6 +1287,38 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   cyl(d1=25, d2=20, h=30, rounding=5,
 //       texture="trunc_ribs", tex_taper=10,
 //       tex_size=[5,1]);
+//
+// Example: Making a Clay Pattern Roller
+//   tex = [
+//       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],
+//       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],
+//       [1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,],
+//       [1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,],
+//       [0,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,],
+//       [0,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,],
+//       [0,1,1,0,0,1,1,0,0,1,1,1,1,1,1,0,],
+//       [0,1,1,0,0,1,1,0,0,1,1,1,1,1,1,0,],
+//       [0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,],
+//       [0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,],
+//       [0,1,1,0,0,1,1,1,1,1,1,0,0,1,1,0,],
+//       [0,1,1,0,0,1,1,1,1,1,1,0,0,1,1,0,],
+//       [0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,],
+//       [0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,],
+//       [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],
+//       [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],
+//       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],
+//   ];
+//   diff()
+//   cyl(d=20*10/PI, h=10, chamfer=0,
+//       texture=tex, tex_counts=[20,1], tex_scale=-1,
+//       tex_taper=undef, tex_style="concave") {
+//           attach([TOP,BOT]) {
+//               cyl(d1=20*10/PI, d2=30, h=5, anchor=BOT)
+//                   attach(TOP) {
+//                       tag("remove") zscale(0.5) up(3) sphere(d=15);
+//                   }
+//           }
+//   }
 
 function cyl(
     h, r, center,

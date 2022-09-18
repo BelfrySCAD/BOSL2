@@ -3211,7 +3211,7 @@ function _find_vnf_tile_edge_path(vnf, val) =
 ///   rot = If true, rotates the texture 90º.
 ///   shift = [X,Y] amount to translate the top, relative to the bottom.  Default: [0,0]
 ///   closed = If false, and shape is given as a path, then the revolved path will be sealed to the axis of rotation with untextured caps.  Default: `true`
-///   taper = If given, and `closed=false`, tapers the texture height to zero over the first and last given percentage of the path.  Default: `undef` (no taper)
+///   taper = If given, and `closed=false`, tapers the texture height to zero over the first and last given percentage of the path.  If given as a lookup table with indices between 0 and 100, uses the percentage lookup table to ramp the texture heights.  Default: `undef` (no taper)
 ///   angle = The number of degrees counter-clockwise from X+ to revolve around the Z axis.  Default: `360`
 ///   style = The triangulation style used.  See {{vnf_vertex_array()}} for valid styles.  Used only with heightfield type textures. Default: `"min_edge"`
 ///   counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
@@ -3239,7 +3239,8 @@ function _textured_revolution(
     assert(counts==undef || is_vector(counts,2))
     assert(tex_size==undef || is_vector(tex_size,2))
     assert(is_bool(rot) || in_list(rot,[0,90,180,270]))
-    assert(is_undef(taper) || (is_finite(taper) && taper>=0 && taper<50))
+    let( taper_is_ok = is_undef(taper) || (is_finite(taper) && taper>=0 && taper<50) || is_path(taper,2) )
+    assert(taper_is_ok, "Bad taper= value.")
     assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
     let(
         regions = !is_path(shape,2)? region_parts(shape) :
@@ -3308,15 +3309,9 @@ function _textured_revolution(
             ) _vnf_sort_vertices(utex, idx=[0,1]),
         vertzs = is_vnf(texture)? group_sort(tile[0], idx=0) : undef,
         bpath = is_vnf(tile)
-            ? _find_vnf_tile_edge_path(tile,0)
-            : let(
-                  row = tile[0],
-                  rlen = len(row)
-              ) [for (i = [0:1:rlen]) [i/rlen, row[i%rlen]]],
-        tpath = is_vnf(tile)
             ? _find_vnf_tile_edge_path(tile,1)
             : let(
-                  row = last(tile),
+                  row = tile[0],
                   rlen = len(row)
               ) [for (i = [0:1:rlen]) [i/rlen, row[i%rlen]]],
         counts_x = is_vector(counts,2)? counts.x :
@@ -3324,7 +3319,16 @@ function _textured_revolution(
               ? max(1,round(angle/360*circumf/tex_size.x))
               : ceil(6*angle/360*circumf/h),
         taper_lup = closed || is_undef(taper)? [[-1,1],[2,1]] :
-            [[-1,0], [0,0], [taper/100+EPSILON,1], [1-taper/100-EPSILON,1], [1,0], [2,0]],
+            is_num(taper)? [[-1,0], [0,0], [taper/100+EPSILON,1], [1-taper/100-EPSILON,1], [1,0], [2,0]] :
+            is_path(taper,2)? let(
+                retaper = [
+                    for (t=taper)
+                    assert(t[0]>=0 && t[0]<=100, "taper lookup indices must be betweem 0 and 100 inclusive.")
+                    [t[0]/100, t[1]]
+                ],
+                taperout = [[-1,retaper[0][1]], each retaper, [2,last(retaper)[1]]]
+            ) taperout :
+            assert(false, "Bad taper= argument value."),
         full_vnf = vnf_join([
             for (rgn = regions) let(
                 rgn_wall_vnf = vnf_join([
@@ -3460,7 +3464,7 @@ function _textured_revolution(
                                 base = select(bases,j),
                                 norm = unit(select(norms,j)),
                                 ppath = [
-                                    for (vert = tpath) let(
+                                    for (vert = bpath) let(
                                         uang = vert.x / counts_x,
                                         tex_scale = tex_scale * lookup([0,1][j+1], taper_lup),
                                         texh = (vert.y - inset) * tex_scale * (base.x / maxx),
