@@ -169,8 +169,9 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   You can generate a screw specification from {{screw_info()}}, possibly create a modified version using {{struct_set()}}, and pass that in rather than giving the parameters.
 //   .
 //   The anchors and anchor types refer to various parts of the screw, which are labeled below.  The "screw" anchor type (the default) is simply 
-//   the whole screw and the "head" anchor is the head.  These anchors will anchor to bounding cylinder for the specified screw part, so 
-// Figure(2D,VPD = 113.4, VPT = [16.9671, 14.9021, -3.59741], VPR = [0, 0, 0],NoAxes)
+//   the whole screw and the "head" anchor is the head.  These anchors use the bounding cylinder for the specified screw part, except for hex
+//   heads, which anchor to a hexagonal prism.  
+// Figure(2D,VPD = 113.4, VPT = [16.9671, 14.9021, -3.59741], VPR = [0, 0, 0],NoAxes):
 //   rpos=33;
 //   fsize=2.5;
 //   projection(cut=true) xrot(-90)screw("M8", head="socket", length=25, thread_len=10);
@@ -321,6 +322,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //     ydistribute(spacing=15){
 //       screw("M6x0", length=8, anchor=TOP,  head="none", drive="hex");
 //       screw("M6x0", length=8, anchor=TOP,  head="none", drive="torx");
+//       screw("M6x0", length=8, anchor=TOP,  head="none", drive="slot");
 //       screw("M6x0", length=8, anchor=TOP);
 //     }
 //     screw("M6x0", length=8, anchor=TOP,  head="hex");
@@ -401,26 +403,31 @@ function screw(spec, head="none", drive, thread="coarse", drive_size,
              undersize=0, shaft_undersize, head_undersize,
              atype="shaft",anchor=BOTTOM, spin=0, orient=UP)  = no_function("screw");
 
-module screw(spec, head="none", drive, thread="coarse", drive_size, 
-             length, l, thread_len, tolerance=undef, details=true, 
+module screw(spec, head, drive, thread, drive_size, 
+             length, l, thread_len, tolerance, details=true, 
              undersize=0, shaft_undersize, head_undersize,
              atype="screw",anchor=BOTTOM, spin=0, orient=UP,
              _shoulder_diam=0, _shoulder_len=0, 
              _internal=false, _counterbore=0)
 {
-   dummyA=assert(is_def(undersize) || num_defined([shaft_undersize, head_undersize])==0, "Cannot combine \"undersize\" with other more specific undersize parameters");
-   dummyA1=assert(is_undef(undersize) || is_num(undersize) || is_vector(undersize,2), "Undersize must be a scalar or 2-vector");
+   dummyA=assert(is_def(undersize) || num_defined([shaft_undersize, head_undersize])==0,
+                 "Cannot combine \"undersize\" with other more specific undersize parameters")
+          assert(is_undef(undersize) || is_num(undersize) || is_vector(undersize,2), "Undersize must be a scalar or 2-vector")
+          assert(!is_struct(spec) || num_defined([head,drive,thread,drive_size])==0,
+                 "With screw struct, \"head\", \"drive\", \"drive_size\" and \"thread\" are not allowed");
    undersize = is_undef(undersize) ? undersize
              : is_num(undersize) ? [undersize,undersize]
              : undersize;
    shaft_undersize = first_defined([shaft_undersize, undersize[0], 0]);
    head_undersize = first_defined([head_undersize, undersize[1], 0]);
-   dummyA2=assert(is_num(shaft_undersize), "shaft_undersize must be a number");
-   dummyA3=assert(is_num(head_undersize), "head_undersize must be a number");   
-   dummyB=assert(is_string(spec) || is_struct(spec), "Screw spec must be a string or struct");
+   dummyB=assert(is_num(shaft_undersize), "shaft_undersize must be a number")
+          assert(is_num(head_undersize), "head_undersize must be a number")
+          assert(is_string(spec) || is_struct(spec), "Screw spec must be a string or struct");
+   thread = default(thread,"coarse");
    spec = _validate_screw_spec(
                                is_struct(spec) ? spec
-                             : screw_info(spec, head, drive, thread=thread, drive_size=drive_size, threads_oversize=-shaft_undersize, head_oversize=-head_undersize) );
+                             : screw_info(spec, default(head,"none"), drive, thread=thread, drive_size=drive_size,
+                                          threads_oversize=-shaft_undersize, head_oversize=-head_undersize) );
    head = struct_val(spec,"head");
    pitch = struct_val(spec, "pitch");
    nominal_diam = struct_val(spec, "diameter");
@@ -430,11 +437,11 @@ module screw(spec, head="none", drive, thread="coarse", drive_size,
    flathead = starts_with(head,"flat");
    screwlen = one_defined([l,length],"l,length",dflt=undef);
    length = first_defined([screwlen,struct_val(spec,"length")]);
-   dummyC = assert(in_list(atype,["shaft","head","shank","threads","screw","shoulder"]),str("Unknown anchor type: \"",atype,"\""));
-   dummyD = assert(is_finite(length) && length>0, "Must specify positive screw length");
-   dummyE = assert(is_finite(_shoulder_len) && _shoulder_len>=0, "Must specify a nonegative shoulder length");
-   dummyF = assert(is_finite(_shoulder_diam) && _shoulder_diam>=0, "Must specify nonnegative shoulder diameter");
-   dummyG = assert(is_undef(thread_len) || all_nonnegative(thread_len), "Must specify nonnegative thread length");
+   dummyC = assert(in_list(atype,["shaft","head","shank","threads","screw","shoulder"]),str("Unknown anchor type: \"",atype,"\""))
+            assert(is_finite(length) && length>0, "Must specify positive screw length")
+            assert(is_finite(_shoulder_len) && _shoulder_len>=0, "Must specify a nonegative shoulder length")
+            assert(is_finite(_shoulder_diam) && _shoulder_diam>=0, "Must specify nonnegative shoulder diameter")
+            assert(is_undef(thread_len) || all_nonnegative(thread_len), "Must specify nonnegative thread length");
    sides = max(12, segs(nominal_diam/2));
    head_height = headless || flathead ? 0 
                : _counterbore==true || is_undef(_counterbore) || _counterbore==0 ? struct_val(spec, "head_height")
@@ -451,17 +458,17 @@ module screw(spec, head="none", drive, thread="coarse", drive_size,
    shank_len = is_def(thread_len) ? length - thread_len - (_shoulder_len==0?flat_height:0) : 0;
    thread_len = is_def(thread_len) ? thread_len
               : length - (_shoulder_len==0?flat_height:0);
-   dummyH = assert(!(atype=="shank" && shank_len==0), "Specified atype of \"shank\" but screw has no shank (thread_len not given or it equals shaft length)");
-   dummyI = assert(!(atype=="shoulder" && _shoulder_len==0), "Specified atype of \"shoulder\" but screw has no shoulder");
-   dummyJ = assert(!(atype=="threads" && thread_len==0), "Specified atype of \"threads\" but screw has no threaded part (thread_len=0)");
-   dummyK = assert(!(atype=="head" && headless), "You cannot anchor headless screws with atype=\"head\"");
+   dummyD = assert(!(atype=="shank" && shank_len==0), "Specified atype of \"shank\" but screw has no shank (thread_len not given or it equals shaft length)")
+            assert(!(atype=="shoulder" && _shoulder_len==0), "Specified atype of \"shoulder\" but screw has no shoulder")
+            assert(!(atype=="threads" && thread_len==0), "Specified atype of \"threads\" but screw has no threaded part (thread_len=0)")
+            assert(!(atype=="head" && headless), "You cannot anchor headless screws with atype=\"head\"");
    eps_gen = 0.01;
    eps_shoulder = headless && !_internal ? 0 : eps_gen;
    eps_shank = headless && !_internal && _shoulder_len==0 ? 0 : eps_gen;
    eps_thread = headless && !_internal && shank_len==0 && _shoulder_len==0 ? 0 : eps_gen;
    echo(shank_len=shank_len, thread_len=thread_len);
    echo(eps_shoulder=eps_shoulder, eps_shank=eps_shank, eps_thread=eps_thread);
-   dummyL = assert(is_undef(flat_height) || flat_height < length, str("Length of screw (",length,") is shorter than the flat head height (",flat_height,")"));
+   dummyL = assert(_shoulder_len>0 || is_undef(flat_height) || flat_height < length, str("Length of screw (",length,") is shorter than the flat head height (",flat_height,")"));
    offset = atype=="head" ? (-head_height+flat_height-flat_cbore_height)/2
           : atype=="shoulder" ? _shoulder_len/2 + flat_height
           : atype=="shaft" ? _shoulder_len + (length+flat_height+shoulder_adj)/2
@@ -576,7 +583,7 @@ module screw(spec, head="none", drive, thread="coarse", drive_size,
 //   oversize = amount to increase diameter of all screw parts, a scalar or length 3 vector.  Default: 0
 //   oversize_hole = amount to increase diameter of the hole.
 //   oversize_head = amount to increase diameter of head.  
-//   length | l= length of screw (in mm)
+//   length / l= length of screw (in mm)
 //   counterbore = set to length of counterbore, or true to make a counterbore equal to head height.  Default: no counterbore
 //   tolerance = threading or clearance hole tolerance.  For internal threads, detrmines actual thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2B" for UTS and 6H for ISO.  For clearance holes, determines how much clearance to add.  Default is "normal".  
 //   $slop = add extra gap to account for printer overextrusion.  Default: 0
@@ -1178,7 +1185,7 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height) {
 //   `"length"`         | Length of the screw in mm measured in the customary fashion.  For flat head screws the total length and for other screws, the length from the bottom of the head to the screw tip.
 //
 // Arguments:
-//   name = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
+//   spec = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
 //   head = head type.  See [screw heads](#subsection-screw-heads)  Default: none
 //   drive = drive type.  See [screw heads](#subsection-screw-heads) Default: none
 //   ---
@@ -1186,8 +1193,10 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height) {
 //   drive_size = size of drive recess to override computed value
 //   oversize = amount to increase screw diameter for clearance holes.  Default: 0
 //   head_oversize = amount to increase head diameter for countersink holes.  Default: 0 
-function screw_info(name, head="none", drive, thread="coarse", drive_size=undef, threads_oversize=0, head_oversize=0) =
-  let(type=_parse_screw_name(name),
+function screw_info(spec, head="none", drive, thread="coarse", drive_size=undef, threads_oversize=0, head_oversize=0) =
+  assert(is_string(spec), "Screw specification must be a string")
+  let(
+      type=_parse_screw_name(spec),
       drive_info = _parse_drive(drive, drive_size),
       drive=drive_info[0],
       thread = thread==true ? "coarse"
@@ -1206,9 +1215,7 @@ function screw_info(name, head="none", drive, thread="coarse", drive_size=undef,
   _oversize_screw(struct_set(screwdata, over_ride), threads_oversize=threads_oversize, head_oversize=head_oversize);
 
 
-function _oversize_screw(spec, threads_oversize, head_oversize) = spec;
-
-function _xoversize_screw(spec, threads_oversize, head_oversize) = 
+function _oversize_screw(spec, threads_oversize, head_oversize) = 
   threads_oversize==0 && head_oversize==0 ? spec 
   : 
   let(
@@ -1221,6 +1228,7 @@ function _xoversize_screw(spec, threads_oversize, head_oversize) =
                             is_def(sharp_size) ? ["head_size_sharp", sharp_size+head_oversize] : [],
                             is_def(head_size) ? ["head_size", head_size+head_oversize] : []
                            ));
+
 
 function _screw_info_english(diam, threadcount, head, thread, drive) =
  let(
@@ -2079,27 +2087,119 @@ proper support for nuts, nut traps
 
 */
 
-/*
-module shoulder_screw(system,diam,length,head="socket", thread_len, spec, head_size, drive, atype, anchor=BOT, orient,spin)
-{
-  dummy1=assert(in_list(downcase(system),"iso","metric","uts","english"), "System must be ISO, UTS, English or metric");
+// Module: shoulder_screw()
+// Usage:
+// Description:
+//   Create a shoulder screw.  See [screw parameters](#section-screw-parameters) for details on the parameters that define a screw.
+//   The tolerance determines the dimensions of the screw
+//   based on ISO and ASME standards.  Screws fabricated at those dimensions will mate properly with standard hardware.
+//   Note that the $slop argument does not affect the size of screws: it only adjusts screw holes.  This will work fine
+//   if you are printing both parts, but if you need to mate printed screws to metal parts you may need to adjust the size
+//   of the screws, which you can do with the undersize arguments.
+//   .
+//   Unlike a regular screw, a shoulder screw is based on its shoulder dimensions: diameter and length.  The ISO and ASME standards
+//   specify for a given shoulder diameter the thread size and even the length of the threads.  Note that these standards specify only
+//   a small range of sizes.  You can specify a shoulder screw by giving the system, either "ISO" or "UTS" and the shoulder diameter
+//   and length, and shoulder_screw() will supply the other parameters.
+//   .
+//   Hardware sources like McMaster sell many screws that don't comply with the standards.  If you want to make such a screw then
+//   you can specify 
+//   with a 
+//   .
+//   You can generate a screw specification from {{screw_info()}}, possibly create a modified version using {{struct_set()}}, and pass that in rather than giving the parameters.
+//   .
+//   The anchors and anchor types refer to various parts of the screw, which are labeled below.  The "screw" anchor type (the default) is simply 
+//   the whole screw and the "head" anchor is the head.  These anchors use the bounding cylinder for the specified screw part, except for hex
+//   heads, which anchor to a hexagonal prism.  
 
-  iso = in_list(system, {"iso","metric"]);
+// Arguments:
+//   s = screw system to use, case insensitive, either "ISO", "UTS", "english" or "metric", or a screw specification 
+//   d = nominal shoulder diameter in mm for ISO or inches for UTS
+//   length = length of the shoulder (in mm)
+//   ---
+//   thread_len = length of threads
+//   tolerance = screw tolerance.  Determines actual screw thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2A" for UTS and "6g" for ISO.
+//   drive = drive type.  See [screw heads](#subsection-screw-heads) Default: "hex"
+//   drive_size = size of the drive recess
+//   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
+//   spec = screw specification to define the thread size 
+//   head_height = scalar or vector to give width,height, if no height computed according to formula for UTS sockets
+//             for flathead second value is the sharp size, and if not given it will be 12% more than given size
+// Anchor Types:
+//   screw = the entire screw (default)
+//   head = screw head (invalid for headless screws)
+//   shoulder = the shoulder
+//   shaft = screw shaft
+//   threads = threaded section of screw     
+// Extra Anchors:
+//   top = top of screw
+//   bot = bottom of screw
+//   center = center of screw
+//   head_top = top of head (invalid for headless screws)
+//   head_bot = bottom of head (invalid for headless screws)
+//   head_center = center of head (invalid for headless screws)
+//   shoulder_top = top of shoulder
+//   shoulder_bot = bottom of shoulder
+//   shoulder_center = center of shoulder
+//   shaft_top = top of shaft
+//   shaft_bot = bottom of shaft
+//   shaft_center = center of shaft
+//   threads_top = top of threaded portion of screw (invalid if thread_len=0)
+//   threads_bot = bottom of threaded portion of screw (invalid if thread_len=0)
+//   threads_center = center of threaded portion of screw (invalid if thread_len=0)
+// Examples: ISO shoulder screw
+//   shoulder_screw("iso",10,length=20);
+// Examples: English shoulder screw
+//   shoulder_screw("iso",10,length=20);
+// Examples: Custom example.  You must specify thread_len and head_size when creating custom configurations.  
+//   shoulder_screw("M6", 9.3, length=17, thread_len=8, head_size=14);
+// Example: Another custom example:
+//   shoulder_screw("M6", 9.3, length=17, thread_len=8, head_size=14, head="button", drive="torx");
+// Example: Threadless 
+//   shoulder_screw("iso,10,threads=0);
+// Example: Headless
+//   shoulder_screw("iso", 16, length=20, head="none");
+module shoulder_screw(s,d,length,head, thread_len, tolerance, head_size, drive, drive_size, thread,
+                      undersize, shaft_undersize, head_undersize, shoulder_undersize=0, 
+                      atype="screw", anchor=BOT, orient,spin)
+{
+  d1= assert(is_num(d) && d>0, "Must specify shoulder diameter")
+      assert (is_num(length) && length>0, "Must specify shoulder length");
+  systemOK=is_string(s) && in_list(downcase(s),["iso","metric","uts","english"]);
+  info_temp = systemOK ? undef
+            : is_struct(s) ? s
+            : screw_info(s);
+  infoOK = systemOK ? false
+         : struct_val(info_temp,"diameter") && struct_val(info_temp,"pitch") && struct_val(info_temp,"system");
+  d2=assert(systemOK || infoOK, "System must be \"ISO\", \"UTS\", \"English\" or \"metric\" or a valid screw specification string")
+     assert(!is_struct(s) || num_defined([drive, drive_size, thread, head])==0, "With screw struct, \"head\", \"drive\", \"drive_size\" and \"thread\" are not allowed");
+  drive = default(drive,"hex");
+  thread = default(thread,"coarse");
+  head = default(head, "socket");                                    
+  usersize = systemOK ? undef : s;
+  system = systemOK ? s : struct_val(info_temp,"system");
+  undersize = is_undef(undersize) ? undersize
+            : is_num(undersize) ? [undersize,undersize]
+            : undersize;
+  shaft_undersize = first_defined([shaft_undersize, undersize[0], 0]);
+  head_undersize = first_defined([head_undersize, undersize[1], 0]);
+  
+  iso = in_list(downcase(system), ["iso","metric"]);
 
   factor = iso ? 1 : INCH;
 
   table = iso ?   //  iso shoulder screws, hex drive socket head  ISO 7379
                   //  Mcmaster has variations like 12mm shoulder for m10, 6mm shoulder for M5
                   // shld   screw  thread  head  hex  hex     head  
-                  // diam   size   length  diam      depth     ht     tol
+                  // diam   size   length  diam      depth     ht 
                   [                                                 
-                     [6.5,  ["M5",   9.5,   10,   3,  2.4,     4.5,  0.03]],
-                     [8  ,  ["M6",   11 ,   13,   4,  3.3,     5.5,  0.03]],
-                     [10 ,  ["M8",   13 ,   16,   5,  4.2,     7  ,  0.03 ]],
-                     [13 ,  ["M10",  16 ,   18,   6,  4.9,     9  ,  0.037]],
-                     [16 ,  ["M12",  18 ,   24,   8,  6.6,    11  ,  0.037]],
-                     [20 ,  ["M16",  22 ,   30,  10,  8.8,    14  ,  0.046]],
-                     [25 ,  ["M20",  27 ,   36,  12,  10 ,    16  ,  0.046]]
+                     [6.5,  ["M5",   9.5,   10,   3,  2.4,     4.5]],
+                     [8  ,  ["M6",   11 ,   13,   4,  3.3,     5.5]],
+                     [10 ,  ["M8",   13 ,   16,   5,  4.2,     7  ]],
+                     [13 ,  ["M10",  16 ,   18,   6,  4.9,     9  ]],
+                     [16 ,  ["M12",  18 ,   24,   8,  6.6,    11  ]],
+                     [20 ,  ["M16",  22 ,   30,  10,  8.8,    14  ]],
+                     [25 ,  ["M20",  27 ,   36,  12,  10 ,    16  ]]
                    ]
         :
                    // UTS shoulder screws, b18.3 (table 13)
@@ -2109,27 +2209,54 @@ module shoulder_screw(system,diam,length,head="socket", thread_len, spec, head_s
                       [5/32 ,  ["#6",     3/16 ,    9/32     ,  3/32   ,  0.067]],
                       [3/16 ,  ["#8",     3/16 ,    5/16     ,  3/32   ,  0.079]],
                       [1/4  ,  ["#10",    3/8  ,    3/8      ,  1/8    ,  0.094]],
-                      [5/16 ,  [1/4,      7/16 ,    7/16     ,  5/32   ,  0.117]],
-                      [3/8  ,  [5/16,     1/2  ,    9/16     ,  3/16   ,  0.141]],
-                      [1/2  ,  [3/8,      5/8  ,    3/4      ,  1/4    ,  0.188]],
-                      [5/8  ,  [1/2,      3/4  ,    7/8      ,  5/16   ,  0.234]],
-                      [3/4  ,  [5/8,      7/8  ,    1        ,  3/8    ,  0.281]],
-                      [1    ,  [3/4,      1    ,    1+5/16   ,  1/2    ,  0.375]],
-                      [1+1/4,  [7/8,      1+1/8,    1+3/4    ,  5/8    ,  0.469]],
-                      [1+1/2,  [1+1/8,    1+1/2,    2+1/8    ,  7/8    ,  0.656]],
-                      [1+3/4,  [1+1/4,    1+3/4,    2+3/8    ,  1      ,  0.750]],
-                      [2    ,  [1+1/2,    2    ,    2+3/4    ,  1+1/4  ,  0.937]]
-                   ];
-  entry = struct_val(table, diam);
-  spec = first_defined(spec, entry[0]);
-  thread_len = first_defined(thread_len, u_mul(entry[1],factor));
-  head_size = first_defined(head_size, u_mul(entry[2],factor));
-  drive = fi  
+                      [5/16 ,  ["1/4",    7/16 ,    7/16     ,  5/32   ,  0.117]],
+                      [3/8  ,  ["5/16",   1/2  ,    9/16     ,  3/16   ,  0.141]],
+                      [1/2  ,  ["3/8",    5/8  ,    3/4      ,  1/4    ,  0.188]],
+                      [5/8  ,  ["1/2",    3/4  ,    7/8      ,  5/16   ,  0.234]],
+                      [3/4  ,  ["5/8",    7/8  ,    1        ,  3/8    ,  0.281]],
+                      [1    ,  ["3/4",    1    ,    1+5/16   ,  1/2    ,  0.375]],
+                      [1+1/4,  ["7/8",    1+1/8,    1+3/4    ,  5/8    ,  0.469]],
+                      [1+1/2,  ["1.125",  1+1/2,    2+1/8    ,  7/8    ,  0.656]],
+                      [1+3/4,  ["1.25",   1+3/4,    2+3/8    ,  1      ,  0.750]],
+                      [2    ,  ["1.5",    2    ,    2+3/4    ,  1+1/4  ,  0.937]]
+                   ];           
+  entry = struct_val(table, d);
+  shoulder_diam = d * factor - shoulder_undersize;
+  spec = first_defined([usersize, entry[0]]);
+  dummy2=assert(is_def(spec),"No shoulder screw found with specified diameter");
+  thread_len = first_defined([thread_len, u_mul(entry[1],factor)]);
+  head_size = first_defined([head_size, u_mul(entry[2],factor)]);
+  drive_size = first_defined([drive_size, u_mul(entry[3],factor)]);
+  drive_depth = u_mul(entry[4],factor);
+  head_height_table = iso? first_defined([entry[5],d/2+1.5])
+                    : d<3/4 ? (d/2 + 1/16)*INCH
+                    : (d/2 + 1/8)*INCH;
+  shoulder_tol = tolerance==0 || tolerance=="none" ? 0
+               : iso ? lookup(d, [[10,0.03],[13,0.037],[16,0.037],[20,0.046]])
+               : 1; //0.003 * INCH;
+  info = is_struct(s) ? s
+       : screw_info(spec, head, drive, drive_size=drive_size, thread=thread);
 
-//shoulder tol = .003
-//
-//height = .5 (shoulder nom diam) + .0625
-//         .5 (shoulder nom diam) + .125  >= 3/4
+  final_headsize = is_num(head_size) ? head_size
+                 : head_size[0];
+  d5=assert(is_num(final_headsize), "Head size invalid or missing");
+  final_sharpsize =  head!="flat" ? undef : is_vector(head_size)? head_size[1] : final_headsize*1.12;
+  head_height_flat = head!="flat" ? undef : (final_sharpsize-(shoulder_diam-shoulder_tol))/2/tan(struct_val(info,"head_angle")/2);
+  headfields = concat(
+                      ["head_size", final_headsize],
+                      head=="flat" ? ["head_size_sharp", final_sharpsize, "head_height", head_height_flat]
+                                   : ["head_height", is_num(head_height_table)? head_height_table
+                                                    :is_vector(head_size) ? head_size[1] : final_headsize/2 + 1.5],
+                      is_def(drive_depth) ? ["drive_depth", drive_depth] :[]
+                     );
+  dummy3=assert(is_num(length) && length>0, "Must give a positive shoulder length");
+  screw(struct_set(info, headfields),
+        _shoulder_len = length, _shoulder_diam = shoulder_diam-shoulder_tol,
+        length=thread_len, tolerance=tolerance, shaft_undersize=shaft_undersize, head_undersize=head_undersize,
+        atype=atype, anchor=anchor, orient=orient, spin=spin)
+    children();
+}        
+                     
 
-         
-*/
+                      
+                      
