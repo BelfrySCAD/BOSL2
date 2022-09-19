@@ -148,4 +148,27 @@ module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, ancho
 }
 
 
+// Module: lmXuu_bearing()
+// Description:
+//   Creates a model of an lmXuu linear ball bearing cartridge.
+// Arguments:
+//   size = Standard lmXuu inner size.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example:
+//   lmXuu_bearing(size=10);
+module lmXuu_bearing(size=8, anchor=CTR, spin=0, orient=UP) {
+    d = get_lmXuu_bearing_diam(size);
+    l = get_lmXuu_bearing_length(size);
+    color("silver") {
+        tube(id=size, od=d, l=l-1);
+        tube(id=d-1, od=d, l=l);
+        tube(id=size, od=size+1, l=l);
+        tube(id=size+2, od=d-2, l=l);
+    }
+}
+
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
