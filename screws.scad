@@ -621,10 +621,10 @@ module screw(spec, head, drive, thread, drive_size,
 //       attach(TOP)
 //          screw_hole("1/4-20,.5",head="flat",counterbore=0,anchor=TOP);
 // Example: Threaded hole
-   diff()
-     cuboid(20)
-       attach(TOP)
-          screw_hole("M16,15",anchor=TOP,thread=true);
+//   diff()
+//     cuboid(20)
+//       attach(TOP)
+//          screw_hole("M16,15",anchor=TOP,thread=true);
 
 module screw_hole(spec, head="none", thread=false, oversize, hole_oversize, head_oversize, 
              length, l, thread_len, tolerance=undef, counterbore=0, 
