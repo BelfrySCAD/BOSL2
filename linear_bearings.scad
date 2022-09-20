@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: linear_bearings.scad
-//   Mounts for LMxUU style linear bearings.
+//   Mounts and models for LMxUU style linear bearings.
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/linear_bearings.scad>
@@ -9,61 +9,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-include <metric_screws.scad>
-
-
-// Section: Functions
-
-
-// Function: get_lmXuu_bearing_diam()
-// Description: Get outside diameter, in mm, of a standard lmXuu bearing.
-// Arguments:
-//   size = Inner size of lmXuu bearing, in mm.
-function get_lmXuu_bearing_diam(size) = lookup(size, [
-        [  4.0,   8.0],
-        [  5.0,  10.0],
-        [  6.0,  12.0],
-        [  8.0,  15.0],
-        [ 10.0,  19.0],
-        [ 12.0,  21.0],
-        [ 13.0,  23.0],
-        [ 16.0,  28.0],
-        [ 20.0,  32.0],
-        [ 25.0,  40.0],
-        [ 30.0,  45.0],
-        [ 35.0,  52.0],
-        [ 40.0,  60.0],
-        [ 50.0,  80.0],
-        [ 60.0,  90.0],
-        [ 80.0, 120.0],
-        [100.0, 150.0]
-    ]);
-
-
-// Function: get_lmXuu_bearing_length()
-// Description: Get length, in mm, of a standard lmXuu bearing.
-// Arguments:
-//   size = Inner size of lmXuu bearing, in mm.
-function get_lmXuu_bearing_length(size) = lookup(size, [
-        [  4.0,  12.0],
-        [  5.0,  15.0],
-        [  6.0,  19.0],
-        [  8.0,  24.0],
-        [ 10.0,  29.0],
-        [ 12.0,  30.0],
-        [ 13.0,  32.0],
-        [ 16.0,  37.0],
-        [ 20.0,  42.0],
-        [ 25.0,  59.0],
-        [ 30.0,  64.0],
-        [ 35.0,  70.0],
-        [ 40.0,  80.0],
-        [ 50.0, 100.0],
-        [ 60.0, 110.0],
-        [ 80.0, 140.0],
-        [100.0, 175.0]
-    ]);
-
+// Section: Generic Linear Bearings
 
 // Module: linear_bearing_housing()
 // Description:
@@ -125,6 +71,34 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 }
 
 
+// Module: linear_bearing()
+// Description:
+//   Creates a rough model of a generic linear ball bearing cartridge.
+// Arguments:
+//   l/length = The length of the linear bearing cartridge.
+//   od = The outer diameter of the linear bearing cartridge.
+//   id = The inner diameter of the linear bearing cartridge.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example:
+//   linear_bearing(l=24, od=15, id=8);
+module linear_bearing(l, od=15, id=8, length, anchor=CTR, spin=0, orient=UP) {
+    l = first_defined([l, length, 24]);
+    attachable(anchor,spin,orient, d=od, l=l) {
+        color("silver") {
+            tube(id=id, od=od, l=l-1);
+            tube(id=od-1, od=od, l=l);
+            tube(id=id, od=id+1, l=l);
+            tube(id=id+2, od=od-2, l=l);
+        }
+        children();
+    }
+}
+
+
+// Section: lmXuu Linear Bearings
+
 // Module: lmXuu_housing()
 // Description:
 //   Creates a model of a clamp to hold a standard sized lmXuu linear bearing cartridge.
@@ -142,8 +116,9 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 //   lmXuu_housing(size=10, wall=2, tab=6, screwsize=2.5);
 module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, anchor=BOTTOM, spin=0, orient=UP)
 {
-    d = get_lmXuu_bearing_diam(size);
-    l = get_lmXuu_bearing_length(size);
+    info = lmXuu_info(size);
+    d = info[0];
+    l = info[1];
     linear_bearing_housing(d=d, l=l, tab=tab, gap=gap, wall=wall, tabwall=tabwall, screwsize=screwsize, orient=orient, spin=spin, anchor=anchor) children();
 }
 
@@ -159,15 +134,46 @@ module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, ancho
 // Example:
 //   lmXuu_bearing(size=10);
 module lmXuu_bearing(size=8, anchor=CTR, spin=0, orient=UP) {
-    d = get_lmXuu_bearing_diam(size);
-    l = get_lmXuu_bearing_length(size);
-    color("silver") {
-        tube(id=size, od=d, l=l-1);
-        tube(id=d-1, od=d, l=l);
-        tube(id=size, od=size+1, l=l);
-        tube(id=size+2, od=d-2, l=l);
-    }
+    info = lmXuu_info(size);
+    linear_bearing(l=info[1], id=size, od=info[0], anchor=anchor, spin=spin, orient=orient) children();
 }
+
+
+// Section: lmXuu Linear Bearing Info
+
+
+// Function: lmXuu_info()
+// Description:
+//   Get dimensional info for a standard metric lmXuu linear bearing cartridge.
+//   Returns `[DIAM, LENGTH]` for the cylindrical cartridge.
+// Arguments:
+//   size = Inner diameter of lmXuu bearing, in mm.
+function lmXuu_info(size) =
+    let(
+        data = [
+            // size, diam, length
+            [  4.0,   8.0,  12.0],
+            [  5.0,  10.0,  15.0],
+            [  6.0,  12.0,  19.0],
+            [  8.0,  15.0,  24.0],
+            [ 10.0,  19.0,  29.0],
+            [ 12.0,  21.0,  30.0],
+            [ 13.0,  23.0,  32.0],
+            [ 16.0,  28.0,  37.0],
+            [ 20.0,  32.0,  42.0],
+            [ 25.0,  40.0,  59.0],
+            [ 30.0,  45.0,  64.0],
+            [ 35.0,  52.0,  70.0],
+            [ 40.0,  60.0,  80.0],
+            [ 50.0,  80.0, 100.0],
+            [ 60.0,  90.0, 110.0],
+            [ 80.0, 120.0, 140.0],
+            [100.0, 150.0, 175.0],
+        ],
+        found = search([size], data, 1)[0]
+    )
+    assert(found, str("Unsupported lmXuu linear bearing size: ", size))
+    select(data[found], 1, -1);
 
 
 
