@@ -223,7 +223,7 @@ function ball_bearing_info(trade_size) =
         ],
         found = search([trade_size], data, 1)[0]
     )
-    assert(found, str("Unsupported ball bearing trade size: ", trade_size))
+    assert(found!=[], str("Unsupported ball bearing trade size: ", trade_size))
     select(data[found], 1, -1);
 
 
