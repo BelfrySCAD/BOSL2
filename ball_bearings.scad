@@ -24,9 +24,9 @@
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
-//   ball_bearing("603");
+//   ball_bearing("608");
 // Example:
-//   ball_bearing("603ZZ");
+//   ball_bearing("608ZZ");
 // Example:
 //   ball_bearing("R8");
 // Example:
