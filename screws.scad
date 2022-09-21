@@ -409,11 +409,12 @@ module screw(spec, head, drive, thread, drive_size,
              atype="screw",anchor=BOTTOM, spin=0, orient=UP,
              _shoulder_diam=0, _shoulder_len=0, 
              _internal=false, _counterbore=0)
-{  d=echo(undersize=undersize, shaft_undersize=shaft_undersize, head_undersize=head_undersize);
+{  d=echo(undersize=undersize, shaft_undersize=shaft_undersize, head_undersize=head_undersize)
+     echo(test=[head,drive,drive_size], thread=thread);
    dummyA=assert(is_def(undersize) || num_defined([shaft_undersize, head_undersize])==0,
                  "Cannot combine \"undersize\" with other more specific undersize parameters")
           assert(is_undef(undersize) || is_num(undersize) || is_vector(undersize,2), "Undersize must be a scalar or 2-vector")
-          assert(!is_struct(spec) || (num_defined([head,drive,drive_size])==0 && (thread=="none" || thread==0)),
+          assert(!is_struct(spec) || (num_defined([head,drive,drive_size])==0 && (is_undef(thread) || thread=="none" || thread==0)),
                  "With screw struct, \"head\", \"drive\", \"drive_size\" and \"thread\" are not allowed");
    undersize = is_undef(undersize) ? undersize
              : is_num(undersize) ? [undersize,undersize]
@@ -618,7 +619,7 @@ module screw(spec, head, drive, thread, drive_size,
 //   diff()
 //     cuboid(20)
 //       attach(TOP)
-//         down(4)screw_hole("1/4-20,.5",head="socket",counterbore=5,anchor=TOP);
+//         screw_hole("1/4-20,.5",head="socket",counterbore=5,anchor=TOP);
 // Example: Clearance hole for flathead 
 //   diff()
 //     cuboid(20)
@@ -800,7 +801,7 @@ module screw_hole(spec, head, thread=false, oversize, hole_oversize, head_oversi
 //   ---
 //   thread_len = length of threads
 //   tolerance = screw tolerance.  Determines actual screw thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2A" for UTS and "6g" for ISO.
-//   drive = drive type.  See [screw heads](#subsection-screw-heads) Default: "hex"
+//   drive = drive type.  See [screw heads](#subsection-screw-heads) set to "none" for no drive.  Default: "hex"
 //   drive_size = size of the drive recess
 //   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
 //   spec = screw specification to define the thread size 
@@ -837,7 +838,9 @@ module screw_hole(spec, head, thread=false, oversize, hole_oversize, head_oversi
 // Example: Another custom example:
 //   shoulder_screw("M6", 9.3, length=17, thread_len=8, head_size=14, head="button", drive="torx");
 // Example: Threadless 
-//   shoulder_screw("iso,10,threads=0);
+//   shoulder_screw("iso",10,length=15,thread=0);
+// Example: No drive recess
+//   shoulder_screw("iso",10,length=15,drive="none");
 // Example: Headless
 //   shoulder_screw("iso", 16, length=20, head="none");
 // Example: Changing head height
@@ -857,7 +860,7 @@ module shoulder_screw(s,d,length,head, thread_len, tolerance, head_size, drive, 
   d2=assert(systemOK || infoOK, "System must be \"ISO\", \"UTS\", \"English\" or \"metric\" or a valid screw specification string")
      assert(!is_struct(s) || num_defined([drive, drive_size, thread, head])==0,
             "With screw struct, \"head\", \"drive\", \"drive_size\" and \"thread\" are not allowed");
-  drive = default(drive,"hex");
+  drive = drive=="none" ? undef : default(drive,"hex");
   thread = default(thread,"coarse");
   head = default(head, "socket");                                    
   usersize = systemOK ? undef : s;
