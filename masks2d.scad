@@ -23,7 +23,8 @@
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D roundover/bead mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   Conversely, you can use that same extruded shape to make an interior fillet between two walls at a 90º angle.
+//   As a 2D mask, this is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
 //   r = Radius of the roundover.
@@ -42,6 +43,14 @@
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_roundover(r=10, inset=2);
+// Example: Making an interior fillet
+//   %render() difference() {
+//       move(-[5,0,5]) cube(30, anchor=BOT+LEFT);
+//       cube(310, anchor=BOT+LEFT);
+//   }
+//   xrot(90)
+//       linear_extrude(height=30, center=true)
+//           mask2d_roundover(r=10);
 module mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) {
     path = mask2d_roundover(r=r,d=d,excess=excess,inset=inset);
     attachable(anchor,spin, two_d=true, path=path) {
@@ -77,7 +86,8 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D cove mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   Conversely, you can use that same extruded shape to make an interior rounded shelf decoration between two walls at a 90º angle.
+//   As a 2D mask, this is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
 //   r = Radius of the cove.
@@ -96,6 +106,14 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_cove(r=10, inset=2);
+// Example: Making an interior rounded shelf
+//   %render() difference() {
+//       move(-[5,0,5]) cube(30, anchor=BOT+LEFT);
+//       cube(310, anchor=BOT+LEFT);
+//   }
+//   xrot(90)
+//       linear_extrude(height=30, center=true)
+//           mask2d_cove(r=5, inset=5);
 module mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) {
     path = mask2d_cove(r=r,d=d,excess=excess,inset=inset);
     attachable(anchor,spin, two_d=true, path=path) {
@@ -135,7 +153,8 @@ function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D chamfer mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   Conversely, you can use that same extruded shape to make an interior chamfer between two walls at a 90º angle.
+//   As a 2D mask, this is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 //   The edge parameter specifies the length of the chamfer's slanted edge.  Alternatively you can give x or y to
 //   specify the width or height.  Only one of x, y, or width is permitted.  
@@ -162,6 +181,14 @@ function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_chamfer(x=10, inset=2);
+// Example: Making an interior chamfer
+//   %render() difference() {
+//       move(-[5,0,5]) cube(30, anchor=BOT+LEFT);
+//       cube(310, anchor=BOT+LEFT);
+//   }
+//   xrot(90)
+//       linear_extrude(height=30, center=true)
+//           mask2d_chamfer(edge=10);
 module mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTER,spin=0) {
     path = mask2d_chamfer(x=x, y=y, edge=edge, angle=angle, excess=excess, inset=inset);
     attachable(anchor,spin, two_d=true, path=path, extent=true) {
@@ -200,7 +227,8 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D rabbet mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   Conversely, you can use that same extruded shape to make an interior shelf decoration between two walls at a 90º angle.
+//   As a 2D mask, this is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
 //   size = The size of the rabbet, either as a scalar or an [X,Y] list.
@@ -217,6 +245,14 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_rabbet(size=10);
+// Example: Making an interior shelf
+//   %render() difference() {
+//       move(-[5,0,5]) cube(30, anchor=BOT+LEFT);
+//       cube(310, anchor=BOT+LEFT);
+//   }
+//   xrot(90)
+//       linear_extrude(height=30, center=true)
+//           mask2d_rabbet(size=[5,10]);
 module mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) {
     path = mask2d_rabbet(size=size, excess=excess);
     attachable(anchor,spin, two_d=true, path=path, extent=false) {
@@ -250,7 +286,8 @@ function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D dovetail mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   Conversely, you can use that same extruded shape to make an interior dovetail between two walls at a 90º angle.
+//   As a 2D mask, this is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
 //   edge = The length of the edge of the dovetail.
@@ -276,6 +313,14 @@ function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_dovetail(x=10, inset=2);
+// Example: Making an interior dovetail
+//   %render() difference() {
+//       move(-[5,0,5]) cube(30, anchor=BOT+LEFT);
+//       cube(310, anchor=BOT+LEFT);
+//   }
+//   xrot(90)
+//       linear_extrude(height=30, center=true)
+//           mask2d_dovetail(x=10);
 module mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, anchor=CENTER, spin=0) {
     path = mask2d_dovetail(x=x, y=y, edge=edge, angle=angle, inset=inset, shelf=shelf, excess=excess);
     attachable(anchor,spin, two_d=true, path=path) {
@@ -316,7 +361,8 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D teardrop mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   Conversely, you can use that same extruded shape to make an interior teardrop fillet between two walls at a 90º angle.
+//   As a 2D mask, this is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 //   This is particularly useful to make partially rounded bottoms, that don't need support to print.
 // Arguments:
@@ -336,6 +382,14 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 //   cube([50,60,70],center=true)
 //       edge_profile(BOT)
 //           mask2d_teardrop(r=10, angle=40);
+// Example: Making an interior teardrop fillet
+//   %render() difference() {
+//       move(-[5,0,5]) cube(30, anchor=BOT+LEFT);
+//       cube(310, anchor=BOT+LEFT);
+//   }
+//   xrot(90)
+//       linear_extrude(height=30, center=true)
+//           mask2d_teardrop(r=10);
 function mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) =  
     assert(is_finite(angle))
     assert(angle>0 && angle<90)
@@ -371,7 +425,8 @@ module mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) {
 //
 // Description:
 //   Creates a 2D Ogee mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   This 2D mask is designed to be `difference()`d  away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   Conversely, you can use that same extruded shape to make an interior ogee decoration between two walls at a 90º angle.
+//   As a 2D mask, this is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   Since there are a number of shapes that fall under the name ogee, the shape of this mask is given as a pattern.
 //   Patterns are given as TYPE, VALUE pairs.  ie: `["fillet",10, "xstep",2, "step",[5,5], ...]`.  See Patterns below.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
@@ -407,6 +462,18 @@ module mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) {
 //               "xstep",1,  "ystep",1,  // Starting shoulder.
 //               "fillet",5, "round",5,  // S-curve.
 //               "ystep",1,  "xstep",1   // Ending shoulder.
+//           ]);
+// Example: Making an interior ogee
+//   %render() difference() {
+//       move(-[5,0,5]) cube(30, anchor=BOT+LEFT);
+//       cube(310, anchor=BOT+LEFT);
+//   }
+//   xrot(90)
+//       linear_extrude(height=30, center=true)
+//           mask2d_ogee([
+//               "xstep", 1, "round",5,
+//               "ystep",1, "fillet",5,
+//               "xstep", 1, "ystep", 1,
 //           ]);
 module mask2d_ogee(pattern, excess=0.01, anchor=CENTER,spin=0) {
     path = mask2d_ogee(pattern, excess=excess);
@@ -485,3 +552,4 @@ function mask2d_ogee(pattern, excess=0.01, anchor=CENTER, spin=0) =
 
 
 
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
