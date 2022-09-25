@@ -212,6 +212,8 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   anchor = Translate so anchor point on the shaft is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   `$screw_spec` is set to the spec specification structure. 
 // Anchor Types:
 //   screw = the entire screw (default)
 //   head = screw head (invalid for headless screws)
@@ -429,6 +431,7 @@ module screw(spec, head, drive, thread, drive_size,
                                is_struct(spec) ? spec
                              : screw_info(spec, default(head,"none"), drive, thread=thread, drive_size=drive_size,
                                           threads_oversize=-shaft_undersize, head_oversize=-head_undersize) );
+   $screw_spec = spec;
    head = struct_val(spec,"head");
    pitch = thread==0 || thread=="none" ? 0 : struct_val(spec, "pitch") ;
    nominal_diam = struct_val(spec, "diameter");
@@ -593,6 +596,8 @@ module screw(spec, head, drive, thread, drive_size,
 //   anchor = Translate so anchor point on the shaft is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   `$screw_spec` is set to the spec specification structure. 
 // Anchor Types:
 //   screw = the entire screw (default)
 //   head = screw head (invalid for headless screws)
@@ -636,7 +641,6 @@ module screw_hole(spec, head, thread=false, oversize, hole_oversize, head_oversi
              atype="screw",anchor=BOTTOM,spin=0, orient=UP)
 {
    // Force flatheads to sharp for proper countersink shape
-  
    head = is_def(head) && starts_with(head,"flat") ? str(head," sharp")
                                    : head;
    if ((thread && thread!="none") || is_def(oversize) || is_def(hole_oversize) || tolerance==0 || tolerance=="none") {
@@ -753,7 +757,7 @@ module screw_hole(spec, head, thread=false, oversize, hole_oversize, head_oversi
              : in_list(downcase(tolerance), ["normal", "medium"]) ? 1
              : in_list(downcase(tolerance), ["loose", "coarse"]) ? 2
              : in_list(tolerance, ["H12","H13","H14"]) ?
-                   assert(struct_val(spec,"systerm")=="ISO", str("Hole tolerance ", tolerance, " only allowed with ISO screws"))
+                   assert(struct_val(spec,"system")=="ISO", str("Hole tolerance ", tolerance, " only allowed with ISO screws"))
                    parse_int(substr(tolerance,1))
              : assert(false,str("Unknown tolerance ",tolerance, " for clearance hole"));
      tol_table = struct_val(spec,"system")=="UTS" ? UTS_clearance[tol_ind] : ISO_clearance[tol_ind];
@@ -805,8 +809,9 @@ module screw_hole(spec, head, thread=false, oversize, hole_oversize, head_oversi
 //   drive_size = size of the drive recess
 //   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
 //   spec = screw specification to define the thread size 
-//   head_height = scalar or vector to give width,height, if no height computed according to formula for UTS sockets
-//             for flathead second value is the sharp size, and if not given it will be 12% more than given size
+//   head_size = scalar or vector to give width or [width, height].  If you only give width, height is computed using a formula for socket heads.  For flat head screws the second value in the vector is the sharp size; if you don't give it then the sharp size will be 12% more than the given size
+// Side Effects:
+//   `$screw_spec` is set to the spec specification structure. 
 // Anchor Types:
 //   screw = the entire screw (default)
 //   head = screw head (invalid for headless screws)
@@ -1359,7 +1364,7 @@ echo(polygon=([[0,-flat_height],[r2,-flat_height],[r1,-flat_height+slopeheight],
 //   Note that flat head screws are defined by two different diameters, the theoretical maximum diameter, "head_size_sharp"
 //   and the actual diameter, "head_size".  The screw form is defined using the theoretical maximum, which gives
 //   sharp circular edge at the top of the screw.  Real screws have a flat chamfer around the edge.  
-// Figure(2D,Med):  Flat head screw geometry
+// Figure(2D,Med,NoAxes,VPD=39,VPT=[0,-4]):  Flat head screw geometry
 //   polysharp = [[0, -5.07407], [4.92593, -5.07407], [10, 0], [10, 0.01], [0, 0.01]];
 //   color("blue"){
 //       xflip_copy()polygon(polysharp);
@@ -1418,7 +1423,8 @@ function screw_info(spec, head="none", drive, thread="coarse", drive_size=undef,
       over_ride = concat(
                         len(drive_info)>=3 ? ["drive_depth", drive_info[2]] : [], 
                         is_def(type[3]) ? ["length",type[3]] : [],
-                        is_def(drive_info[1]) ? ["drive_size", drive_info[1]] : []
+                        is_def(drive_info[1]) ? ["drive_size", drive_info[1]] : [],
+                        "name",spec
                       )
   )
   _oversize_screw(struct_set(screwdata, over_ride), threads_oversize=threads_oversize, head_oversize=head_oversize);
@@ -1828,8 +1834,14 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
          ]
      : []
  )
- concat([["system","UTS"],["diameter",INCH*diameter],["pitch", pitch],["drive",drive]],
-          head_data
+ concat([
+           ["type","screw_info"],
+           ["system","UTS"],
+           ["diameter",INCH*diameter],
+           ["pitch", pitch],
+           ["drive",drive]
+         ],
+         head_data
  );
 
 
@@ -2144,12 +2156,15 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
      : [] 
  )
  concat(
-        [["system","ISO"],["diameter",diam],["pitch", pitch],["drive",drive]],
+        [
+          ["type","screw_info"],
+          ["system","ISO"],
+          ["diameter",diam],
+          ["pitch", pitch],
+          ["drive",drive]
+        ],
         head_data
  );
-
-
-
 
 function _is_positive(x) = is_num(x) && x>0;
 
