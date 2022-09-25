@@ -927,8 +927,8 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   ---
 //   rounded = set to true to use rounded offsets, false to use sharp (delta) offsets.  Default: true
 //   chamfer = set to true to use chamfers when `rounded=false`.  Default: false
-//   start = end treatment for the start of the stroke.  See above for details.  Default: "flat"
-//   end = end treatment for the end of the stroke.  See above for details.  Default: "flat"
+//   start = end treatment for the start of the stroke when closed=false.  See above for details.  Default: "flat"
+//   end = end treatment for the end of the stroke when closed=false.  See above for details.  Default: "flat"
 //   check_valid = passed to offset().  Default: true
 //   quality = passed to offset().  Default: 1
 //   closed = true if the curve is closed, false otherwise.  Default: false
@@ -1031,11 +1031,15 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   stroke(path, closed=true);
 //   right(12)
 //     offset_stroke(path, width=1, closed=true);
-function offset_stroke(path, width=1, rounded=true, start="flat", end="flat", check_valid=true, quality=1, chamfer=false, closed=false,
+function offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, quality=1, chamfer=false, closed=false,
                        astype="hull", anchor, spin, cp="centroid") =
         let(path = force_path(path))
         assert(is_path(path,2),"path is not a 2d path")
-        let(closedok = !closed || (is_undef(start) && is_undef(end)))
+        let(
+            closedok = !closed || (is_undef(start) && is_undef(end)),
+            start = default(start,"flat"),
+            end = default(end,"flat")
+        )
         assert(closedok, "Parameters `start` and `end` not allowed with closed path")
         let(
             start = closed? [] : _parse_stroke_end(default(start,"flat"),"start"),
