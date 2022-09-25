@@ -1032,7 +1032,7 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   right(12)
 //     offset_stroke(path, width=1, closed=true);
 function offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, quality=1, chamfer=false, closed=false,
-                       astype="hull", anchor, spin, cp="centroid") =
+                       atype="hull", anchor, spin, cp="centroid") =
         let(path = force_path(path))
         assert(is_path(path,2),"path is not a 2d path")
         let(
