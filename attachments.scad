@@ -537,7 +537,7 @@ module attach(from, to, overlap, norot=false)
     }
 }
 
-// Section: Attachment Modifiers
+// Section: Tagging
 
 // Module: tag()
 // Usage:
@@ -714,6 +714,8 @@ module tag_scope(scope){
   children();
 }  
 
+
+// Section: Attachment Modifiers 
 
 // Module: diff()
 // Usage:
@@ -1129,7 +1131,7 @@ module conv_hull(keep="keep")
 
 // Module: tag_conv_hull()
 // Usage:
-//   tag,conv_hull(tag, [keep]) CHILDREN;
+//   tag_conv_hull(tag, [keep]) CHILDREN;
 // Topics: Attachments
 // See Also: tag(), recolor(), show_only(), hide(), diff(), intersect()
 // Description:
@@ -2692,14 +2694,14 @@ function _standard_anchors(two_d=false) = [
 
 // Module: show_anchors()
 // Usage:
-//   ... show_anchors([s], [std=], [custom=]);
+//   PARENT() show_anchors([s], [std=], [custom=]);
 // Description:
 //   Show all standard anchors for the parent object.
 // Arguments:
 //   s = Length of anchor arrows.
 //   ---
-//   std = If true (default), show standard anchors.
-//   custom = If true (default), show custom anchors.
+//   std = If true show standard anchors.  Default: true
+//   custom = If true show named anchors.  Default: true 
 // Example(FlatSpin,VPD=333):
 //   cube(50, center=true) show_anchors();
 module show_anchors(s=10, std=true, custom=true) {
