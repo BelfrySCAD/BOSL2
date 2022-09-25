@@ -876,10 +876,10 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 
 // Function&Module: offset_stroke()
 // Usage: as module
-//   offset_stroke(path, [width], [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=], [closed=]);
+//   offset_stroke(path, [width], [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=], [closed=],...) [ATTACHMENTS];
 // Usage: as function
-//   path = offset_stroke(path, [width], closed=false, [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=]);
-//   region = offset_stroke(path, [width], closed=true, [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=]);
+//   path = offset_stroke(path, [width], closed=false, [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=],...);
+//   region = offset_stroke(path, [width], closed=true, [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=],...);
 // Description:
 //   Uses `offset()` to compute a stroke for the input path.  Unlike `stroke`, the result does not need to be
 //   centered on the input path.  The corners can be rounded, pointed, or chamfered, and you can make the ends
@@ -927,12 +927,15 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   ---
 //   rounded = set to true to use rounded offsets, false to use sharp (delta) offsets.  Default: true
 //   chamfer = set to true to use chamfers when `rounded=false`.  Default: false
-//   start = end treatment for the start of the stroke.  See above for details.  Default: "flat"
-//   end = end treatment for the end of the stroke.  See above for details.  Default: "flat"
+//   start = end treatment for the start of the stroke when closed=false.  See above for details.  Default: "flat"
+//   end = end treatment for the end of the stroke when closed=false.  See above for details.  Default: "flat"
 //   check_valid = passed to offset().  Default: true
 //   quality = passed to offset().  Default: 1
 //   closed = true if the curve is closed, false otherwise.  Default: false
-//
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
+//   spin = Rotate this many degrees after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 2D point.  Default: "centroid"
+//   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
 // Example(2D):  Basic examples illustrating flat, round, and pointed ends, on a finely sampled arc and a path made from 3 segments.
 //   arc = arc(points=[[1,1],[3,4],[6,3]],n=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];
@@ -1028,44 +1031,53 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   stroke(path, closed=true);
 //   right(12)
 //     offset_stroke(path, width=1, closed=true);
-function offset_stroke(path, width=1, rounded=true, start="flat", end="flat", check_valid=true, quality=1, chamfer=false, closed=false) =
+function offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, quality=1, chamfer=false, closed=false,
+                       atype="hull", anchor, spin, cp="centroid") =
         let(path = force_path(path))
         assert(is_path(path,2),"path is not a 2d path")
-        let(closedok = !closed || (is_undef(start) && is_undef(end)))
+        let(
+            closedok = !closed || (is_undef(start) && is_undef(end)),
+            start = default(start,"flat"),
+            end = default(end,"flat")
+        )
         assert(closedok, "Parameters `start` and `end` not allowed with closed path")
         let(
-                start = closed? [] : _parse_stroke_end(default(start,"flat"),"start"),
-                end = closed? [] : _parse_stroke_end(default(end,"flat"),"end"),
-                width = is_list(width)? reverse(sort(width)) : [1,-1]*width/2,
-                left_r = !rounded? undef : width[0],
-                left_delta = rounded? undef : width[0],
-                right_r = !rounded? undef : width[1],
-                right_delta = rounded? undef : width[1],
-                left_path = offset(
-                        path, delta=left_delta, r=left_r, closed=closed,
-                        check_valid=check_valid, quality=quality,
-                        chamfer=chamfer 
-                ),
-                right_path = offset(
-                        path, delta=right_delta, r=right_r, closed=closed,
-                        check_valid=check_valid, quality=quality,
-                        chamfer=chamfer 
-                )
-        )
-        closed? [left_path, right_path] :
-        let(
-                startpath = _stroke_end(width,left_path, right_path, start),
-                endpath = _stroke_end(reverse(width),reverse(right_path), reverse(left_path),end),
-                clipping_ok = startpath[1]+endpath[2]<=len(left_path) && startpath[2]+endpath[1]<=len(right_path)
-        )
-        assert(clipping_ok, "End treatment removed the whole stroke")
-        concat(
-                slice(left_path,startpath[1],-1-endpath[2]),
-                endpath[0],
-                reverse(slice(right_path,startpath[2],-1-endpath[1])),
-                startpath[0]
-        );
-
+            start = closed? [] : _parse_stroke_end(default(start,"flat"),"start"),
+            end = closed? [] : _parse_stroke_end(default(end,"flat"),"end"),
+            width = is_list(width)? reverse(sort(width)) : [1,-1]*width/2,
+            left_r = !rounded? undef : width[0],
+            left_delta = rounded? undef : width[0],
+            right_r = !rounded? undef : width[1],
+            right_delta = rounded? undef : width[1],
+            left_path = offset(
+                    path, delta=left_delta, r=left_r, closed=closed,
+                    check_valid=check_valid, quality=quality,
+                    chamfer=chamfer 
+            ),
+            right_path = offset(
+                    path, delta=right_delta, r=right_r, closed=closed,
+                    check_valid=check_valid, quality=quality,
+                    chamfer=chamfer 
+            )
+         )
+         closed? let(pts = [left_path, right_path])
+                 reorient(anchor=anchor, spin=spin, two_d=true, region=pts, extent=atype=="hull", cp=cp, p=pts)
+         :
+         let(
+             startpath = _stroke_end(width,left_path, right_path, start),
+             endpath = _stroke_end(reverse(width),reverse(right_path), reverse(left_path),end),
+             clipping_ok = startpath[1]+endpath[2]<=len(left_path) && startpath[2]+endpath[1]<=len(right_path)
+         )
+         assert(clipping_ok, "End treatment removed the whole stroke")
+         let(
+             pts = concat(
+                          slice(left_path,startpath[1],-1-endpath[2]),
+                          endpath[0],
+                          reverse(slice(right_path,startpath[2],-1-endpath[1])),
+                          startpath[0]
+                  )
+         )
+         reorient(anchor=anchor, spin=spin, two_d=true, path=pts, extent=atype=="hull", cp=cp, p=pts);
 
 function os_pointed(dist,loc=0) =
         assert(is_def(dist), "Must specify `dist`")
@@ -1222,9 +1234,9 @@ function _path_line_intersection(path, line, ind=0) =
                 [intersect, ind+1] :
                 _path_line_intersection(path, line, ind+1);
 
-module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, quality=1, chamfer=false, closed=false)
+module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, quality=1, chamfer=false, closed=false,
+                     atype="hull", anchor, spin, cp="centroid")
 {
-        no_children($children);
         result = offset_stroke(
                 path, width=width, rounded=rounded,
                 start=start, end=end,
@@ -1232,11 +1244,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
                 chamfer=chamfer,
                 closed=closed
         );
-        if (closed) {
-                region(result);
-        } else {
-                polygon(result);
-        }
+        region(result,atype=atype, anchor=anchor, spin=spin, cp=cp) children();
 }
 
 
@@ -2459,7 +2467,8 @@ module bent_cutout_mask(r, thickness, path, radius, convexity=10)
   zmean = mean(column(fixpath,1));
   innerzero = repeat([0,0,zmean], len(fixpath));
   outerpt = repeat( [1.5*mindist*cos((maxangle+minangle)/2),1.5*mindist*sin((maxangle+minangle)/2),zmean], len(fixpath));
-  vnf_polyhedron(vnf_vertex_array([innerzero, each profiles, outerpt],col_wrap=true),convexity=convexity);
+  default_tag("remove")
+    vnf_polyhedron(vnf_vertex_array([innerzero, each profiles, outerpt],col_wrap=true),convexity=convexity);
 }
 
 

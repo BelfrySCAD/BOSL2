@@ -537,7 +537,7 @@ module attach(from, to, overlap, norot=false)
     }
 }
 
-// Section: Attachment Modifiers
+// Section: Tagging
 
 // Module: tag()
 // Usage:
@@ -714,6 +714,8 @@ module tag_scope(scope){
   children();
 }  
 
+
+// Section: Attachment Modifiers 
 
 // Module: diff()
 // Usage:
@@ -1129,7 +1131,7 @@ module conv_hull(keep="keep")
 
 // Module: tag_conv_hull()
 // Usage:
-//   tag,conv_hull(tag, [keep]) CHILDREN;
+//   tag_conv_hull(tag, [keep]) CHILDREN;
 // Topics: Attachments
 // See Also: tag(), recolor(), show_only(), hide(), diff(), intersect()
 // Description:
@@ -1765,6 +1767,39 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //       polygon(path);
 //       children();
 //   }
+//
+// Example: An object can be designed to attach as negative space using {{diff()}}, but if you want an object to include both positive and negative space then you need to call attachable() twice, because tags inside the attachable() call don't work as expected.  This example shows how you can call attachable twice to create an object with positive and negative space.  Note, however, that children in the negative space are differenced away: the highlighted little cube does not survive into the final model. 
+//   module thing(anchor,spin,orient) {
+//      tag("remove") attachable(size=[15,15,15],anchor=anchor,spin=spin,orient=orient){
+//        cuboid([10,10,16]);
+//        union(){}   // dummy children
+//      }
+//      attachable(size=[15,15,15], anchor=anchor, spin=spin, orient=orient){
+//        cuboid([15,15,15]);
+//        children();
+//      }
+//   }   
+//   diff()
+//     cube([19,10,19])
+//       attach([FRONT],overlap=-4)
+//         thing(anchor=TOP)
+//           # attach(TOP) cuboid(2,anchor=TOP);
+// Example: Here is an example where the "keep" tag allows children to appear in the negative space.  That tag is also needed for this module to produce the desired output.  As above, the tag must be applied outside the attachable() call.  
+//   module thing(anchor = CENTER, spin = 0, orient = UP) {
+//      tag("remove") attachable(anchor, spin, orient, d1=0,d2=95,h=33) {
+//          cylinder(h = 33.1, d1 = 0, d2 = 95, anchor=CENTER);
+//          union(){}  // dummy children
+//      }
+//      tag("keep") attachable(anchor, spin, orient,d1=0,d2=95,h=33) {      
+//            cylinder(h = 33, d = 10,anchor=CENTER);
+//            children();
+//        }
+//    }
+//    diff()
+//      cube(100)
+//        attach([FRONT,TOP],overlap=-4)
+//          thing(anchor=TOP)
+//            tube(ir=12,h=10);
 module attachable(
     anchor, spin, orient,
     size, size2, shift,
@@ -2659,14 +2694,14 @@ function _standard_anchors(two_d=false) = [
 
 // Module: show_anchors()
 // Usage:
-//   ... show_anchors([s], [std=], [custom=]);
+//   PARENT() show_anchors([s], [std=], [custom=]);
 // Description:
 //   Show all standard anchors for the parent object.
 // Arguments:
 //   s = Length of anchor arrows.
 //   ---
-//   std = If true (default), show standard anchors.
-//   custom = If true (default), show custom anchors.
+//   std = If true show standard anchors.  Default: true
+//   custom = If true show named anchors.  Default: true 
 // Example(FlatSpin,VPD=333):
 //   cube(50, center=true) show_anchors();
 module show_anchors(s=10, std=true, custom=true) {
