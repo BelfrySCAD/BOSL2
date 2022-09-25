@@ -38,7 +38,7 @@
 // Example(2D): 2D Bead Mask
 //   mask2d_roundover(r=10,inset=2);
 // Example: Masking by Edge Attachment
-//   diff("mask")
+//   diff()
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_roundover(r=10, inset=2);
@@ -92,7 +92,7 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 // Example(2D): 2D Inset Cove Mask
 //   mask2d_cove(r=10,inset=3);
 // Example: Masking by Edge Attachment
-//   diff("mask")
+//   diff()
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_cove(r=10, inset=2);
@@ -158,7 +158,7 @@ function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 // Example(2D): 2D Inset Chamfer Mask
 //   mask2d_chamfer(x=10, inset=2);
 // Example: Masking by Edge Attachment
-//   diff("mask")
+//   diff()
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_chamfer(x=10, inset=2);
@@ -213,7 +213,7 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 // Example(2D): 2D Asymmetrical Rabbet Mask
 //   mask2d_rabbet(size=[5,10]);
 // Example: Masking by Edge Attachment
-//   diff("mask")
+//   diff()
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_rabbet(size=10);
@@ -272,7 +272,7 @@ function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
 // Example(2D): 2D Inset Dovetail Mask
 //   mask2d_dovetail(x=10, inset=2);
 // Example: Masking by Edge Attachment
-//   diff("mask")
+//   diff()
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_dovetail(x=10, inset=2);
@@ -332,7 +332,7 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 // Example(2D): Using a Custom Angle
 //   mask2d_teardrop(r=10,angle=30);
 // Example: Masking by Edge Attachment
-//   diff("mask")
+//   diff()
 //   cube([50,60,70],center=true)
 //       edge_profile(BOT)
 //           mask2d_teardrop(r=10, angle=40);
@@ -400,7 +400,7 @@ module mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) {
 //       "ystep",1,  "xstep",1   // Ending shoulder.
 //   ]);
 // Example: Masking by Edge Attachment
-//   diff("mask")
+//   diff()
 //   cube([50,60,70],center=true)
 //       edge_profile(TOP)
 //           mask2d_ogee([
