@@ -541,6 +541,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
+//   "bbox" = Anchors to the bounding box of the extruded shape.
 // Extra Anchors:
 //   "origin" = Centers the extruded shape vertically only, but keeps the original path positions in the X and Y.  Oriented UP.
 //   "original_base" = Keeps the original path positions in the X and Y, but at the bottom of the extrusion.  Oriented UP.
@@ -662,9 +663,16 @@ module linear_sweep(
         named_anchor("original_base", [0,0,-h/2], UP)
     ];
     cp = default(cp, "centroid");
-    geom = atype=="hull"? attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
-        atype=="intersect"? attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
-        assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
+    geom = atype=="hull"?  attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+        atype=="intersect"?  attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+        atype=="bbox"?
+            let(
+                bounds = pointlist_bounds(flatten(region)),
+                size = bounds[1] - bounds[0],
+                midpt = (bounds[0] + bounds[1])/2
+            )
+            attach_geom(cp=[0,0,0], size=point3d(size,h), offset=point3d(midpt), shift=shift, scale=scale, twist=twist, anchors=anchors) :
+        assert(in_list(atype, ["hull","intersect","bbox"]), "Anchor type must be \"hull\", \"intersect\", or \"bbox\".");
     attachable(anchor,spin,orient, geom=geom) {
         vnf_polyhedron(vnf, convexity=convexity);
         children();
@@ -744,9 +752,16 @@ function linear_sweep(
             named_anchor("original_base", [0,0,-h/2], UP)
         ],
         cp = default(cp, "centroid"),
-        geom = atype=="hull"? attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
-            atype=="intersect"? attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
-            assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
+        geom = atype=="hull"?  attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+            atype=="intersect"?  attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+            atype=="bbox"?
+                let(
+                    bounds = pointlist_bounds(flatten(region)),
+                    size = bounds[1] - bounds[0],
+                    midpt = (bounds[0] + bounds[1])/2
+                )
+                attach_geom(cp=[0,0,0], size=point3d(size,h), offset=point3d(midpt), shift=shift, scale=scale, twist=twist, anchors=anchors) :
+            assert(in_list(atype, ["hull","intersect","bbox"]), "Anchor type must be \"hull\", \"intersect\", or \"bbox\".")
     ) reorient(anchor,spin,orient, geom=geom, p=vnf);
 
 
