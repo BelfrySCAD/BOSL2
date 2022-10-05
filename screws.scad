@@ -1411,6 +1411,7 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
                                 ["threads_oversize", hole_oversize],
                                ]);
    $screw_spec = spec;
+   shape = struct_val(spec, "shape");
    pitch =  struct_val(spec, "pitch") ;
    threadspec = pitch==0 ? undef : thread_specification(spec, internal=true, tolerance=tolerance);
    nutwidth = struct_val(spec, "width");
