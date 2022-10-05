@@ -1422,6 +1422,7 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
             mean(struct_val(threadspec, "d_major"))],
         pitch = struct_val(threadspec, "pitch"),
         h=thickness,
+        shape=shape, 
         bevel=bevel,
         anchor=anchor,spin=spin,orient=orient) children();
 }
