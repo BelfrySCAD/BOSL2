@@ -130,13 +130,14 @@ module threaded_rod(
 // Usage:
 //   threaded_nut(od, id, h, pitch,...) [ATTACHMENTS];
 // Description:
-//   Constructs a hex nut for an ISO (metric) or UTS (English) threaded rod. 
+//   Constructs a hex nut or square nut for an ISO (metric) or UTS (English) threaded rod. 
 // Arguments:
 //   od = diameter of the nut.
 //   id = diameter of threaded rod to screw onto.
 //   h = height/thickness of nut.
 //   pitch = Length between threads.
 //   ---
+//   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default: 1
 //   bevel = if true, bevel the thread ends.  Default: false
@@ -151,18 +152,18 @@ module threaded_rod(
 //   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, bevel=true, $slop=0.1, $fa=1, $fs=1);
 function threaded_nut(
     od, id, h,
-    pitch, starts=1, left_handed=false, bevel, bevel1, bevel2, id1,id2,
+    pitch, starts=1, shape, left_handed=false, bevel, bevel1, bevel2, id1,id2,
     anchor, spin, orient
 )=no_function("threaded_nut");
 module threaded_nut(
     od, id, h,
-    pitch, starts=1, left_handed=false, bevel, bevel1, bevel2, id1,id2,
+    pitch, starts=1, shape="hex", left_handed=false, bevel, bevel1, bevel2, id1,id2,
     anchor, spin, orient
 ) {
     dummy1=
-    assert(all_positive(pitch))
-    assert(all_positive(id))
-    assert(all_positive(h));
+    assert(all_positive(pitch), "Nut pitch must be positive")
+    assert(all_positive(id), "Nut inner diameter must be positive")
+    assert(all_positive(h),"Nut thickness must be positive");
     basic = is_num(id) || is_undef(id) || is_def(id1) || is_def(id2);
     dummy2 = assert(basic || is_vector(id,3));
     depth = basic ? cos(30) * 5/8
@@ -187,7 +188,7 @@ module threaded_nut(
         id=basic ? id : id[2], id1=id1, id2=id2,
         h=h,
         pitch=pitch,
-        profile=profile,starts=starts,
+        profile=profile,starts=starts,shape=shape, 
         left_handed=left_handed,
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,
         anchor=anchor, spin=spin,
@@ -324,7 +325,7 @@ module trapezoidal_threaded_rod(
 // Usage:
 //   trapezoidal_threaded_nut(od, id, h, pitch, [thread_angle], [thread_depth], ...) [ATTACHMENTS];
 // Description:
-//   Constructs a hex nut for a symmetric trapzoidal threaded rod.
+//   Constructs a hex nut or square nut for a symmetric trapzoidal threaded rod.
 //   By default produces the nominal dimensions
 //   for metric trapezoidal threads: a thread angle of 30 degrees and a depth set to half the pitch.
 //   You can also specify your own trapezoid parameters.  For ACME threads see acme_threaded_nut(). 
@@ -336,6 +337,7 @@ module trapezoidal_threaded_rod(
 //   thread_angle = Angle between two thread faces.  Default: 30
 //   thread_depth = Depth of the threads.  Default: pitch/2
 //   ---
+//   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
 //   bevel = if true, bevel the thread ends.  Default: false
@@ -353,7 +355,7 @@ module trapezoidal_threaded_rod(
 function trapezoidal_threaded_rod(
     d, l, pitch,
     thread_angle=30,
-    thread_depth=undef,
+    thread_depth=undef, shape, 
     left_handed=false,
     bevel,bevel1,bevel2,
     starts=1,
@@ -367,7 +369,7 @@ module trapezoidal_threaded_nut(
     h,
     pitch,
     thread_angle=30,
-    thread_depth,
+    thread_depth, shape="hex",
     left_handed=false,
     starts=1,
     bevel,bevel1,bevel2,
@@ -388,7 +390,7 @@ module trapezoidal_threaded_nut(
                [ z2, rr1],
               ];
     generic_threaded_nut(od=od,id=id,h=h,pitch=pitch,profile=profile,id1=id1,id2=id2,
-                         left_handed=left_handed,bevel=bevel,bevel1=bevel1,bevel2=bevel2,starts=starts,
+                         shape=shape,left_handed=left_handed,bevel=bevel,bevel1=bevel1,bevel2=bevel2,starts=starts,
                          anchor=anchor,spin=spin,orient=orient)
       children();
 }
@@ -473,6 +475,7 @@ module acme_threaded_rod(
 //   tpi = threads per inch
 //   ---
 //   pitch = Thread spacing (alternative to tpi)
+//   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = Number of lead starts.  Default: 1
 //   bevel = if true, bevel the thread ends.  Default: false
@@ -488,14 +491,14 @@ module acme_threaded_rod(
 function acme_threaded_nut(
     od, id, h, tpi, pitch,
     starts=1,
-    left_handed=false,
+    left_handed=false,shape, 
     bevel,bevel1,bevel2,
     anchor, spin, orient
 ) = no_function("acme_threaded_nut");
 module acme_threaded_nut(
     od, id, h, tpi, pitch,
     starts=1,
-    left_handed=false,
+    left_handed=false,shape="hex",
     bevel,bevel1,bevel2,
     anchor, spin, orient
 ) {
@@ -505,7 +508,7 @@ module acme_threaded_nut(
     trapezoidal_threaded_nut(
         od=od, id=id, h=h, pitch=pitch,
         thread_depth = pitch/2, 
-        thread_angle=29,
+        thread_angle=29,shape=shape, 
         left_handed=left_handed,
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,
         starts=starts,
@@ -731,6 +734,7 @@ module buttress_threaded_rod(
 //   h = height/thickness of nut.
 //   pitch = Thread spacing. 
 //   ---
+//   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default: 1
 //   bevel = if true, bevel the thread ends.  Default: false
@@ -744,13 +748,13 @@ module buttress_threaded_rod(
 //   buttress_threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, $slop=0.05, $fa=1, $fs=1);
 function buttress_threaded_nut(
     od=16, id=10, h=10,
-    pitch=2, left_handed=false,
+    pitch=2, shape, left_handed=false,
     bevel,bevel1,bevel2,starts,
     anchor, spin, orient
 ) = no_function("buttress_threaded_nut");
 module buttress_threaded_nut(
     od=16, id=10, h=10,
-    pitch=2, left_handed=false,
+    pitch=2, shape="hex", left_handed=false,
     bevel,bevel1,bevel2,starts=1,
     anchor, spin, orient
 ) {
@@ -766,6 +770,7 @@ module buttress_threaded_nut(
         od=od, id=id, h=h,
         pitch=pitch,
         profile=profile,
+        shape=shape,
         left_handed=left_handed,starts=starts,
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,
         anchor=anchor, spin=spin,
@@ -1208,9 +1213,9 @@ module generic_threaded_rod(
 
 // Module: generic_threaded_nut()
 // Usage:
-//   generic_threaded_nut(od, id, h, pitch, profile, ...) [ATTACHMENTS];
+//   generic_threaded_nut(od, id, h, pitch, profile, [$slop], ...) [ATTACHMENTS];
 // Description:
-//   Constructs a hexagonal nut for an generic threaded rod using a user-supplied thread profile.
+//   Constructs a hexagonal or square nut for an generic threaded rod using a user-supplied thread profile.
 //   See generic_threaded_rod for details on the profile specification.  
 // Arguments:
 //   od = diameter of the nut.
@@ -1236,9 +1241,10 @@ function generic_threaded_nut(
     h,
     pitch,
     profile,
+    shape,
     left_handed=false,
     starts=1,
-    bevel,bevel1,bevel2,
+    bevel,bevel1,bevel2,bevang=30,
     id1,id2,
     anchor, spin, orient
 ) = no_function("generic_threaded_nut");
@@ -1248,12 +1254,14 @@ module generic_threaded_nut(
     h,
     pitch,
     profile,
+    shape="hex",
     left_handed=false,
     starts=1,
     bevel,bevel1,bevel2,
     id1,id2,
     anchor, spin, orient
 ) {
+    assert(in_list(shape,["square","hex"]), "shape must be \"hex\" or \"square\"");
     extra = 0.01;
     id1 = first_defined([id1,id]);
     id2 = first_defined([id2,id]);
@@ -1267,7 +1275,10 @@ module generic_threaded_nut(
     depth = -pitch*min(column(profile,1));
     attachable(anchor,spin,orient, size=[od/cos(30),od,h]) {
         difference() {
-            cyl(d=od/cos(30), h=h, center=true, $fn=6,chamfer1=bevel1?depth:undef,chamfer2=bevel2?depth:undef);
+            if (shape=="hex")
+              cyl(d=od/cos(30), h=h, center=true, $fn=6,chamfer1=bevel1?depth:undef,chamfer2=bevel2?depth:undef);
+            else
+              cuboid([od,od,h]);
             generic_threaded_rod(
                 d1=full_id1,d2=full_id2,
                 l=h+extra,
