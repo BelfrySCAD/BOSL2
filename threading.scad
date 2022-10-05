@@ -160,9 +160,9 @@ module threaded_nut(
     anchor, spin, orient
 ) {
     dummy1=
-    assert(all_positive(pitch))
-    assert(all_positive(id))
-    assert(all_positive(h));
+    assert(all_positive(pitch), "Nut pitch must be positive")
+    assert(all_positive(id), "Nut inner diameter must be positive")
+    assert(all_positive(h),"Nut thickness must be positive");
     basic = is_num(id) || is_undef(id) || is_def(id1) || is_def(id2);
     dummy2 = assert(basic || is_vector(id,3));
     depth = basic ? cos(30) * 5/8
@@ -1208,7 +1208,7 @@ module generic_threaded_rod(
 
 // Module: generic_threaded_nut()
 // Usage:
-//   generic_threaded_nut(od, id, h, pitch, profile, ...) [ATTACHMENTS];
+//   generic_threaded_nut(od, id, h, pitch, profile, [$slop], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a hexagonal nut for an generic threaded rod using a user-supplied thread profile.
 //   See generic_threaded_rod for details on the profile specification.  
@@ -1238,7 +1238,7 @@ function generic_threaded_nut(
     profile,
     left_handed=false,
     starts=1,
-    bevel,bevel1,bevel2,
+    bevel,bevel1,bevel2,bevang=30,
     id1,id2,
     anchor, spin, orient
 ) = no_function("generic_threaded_nut");

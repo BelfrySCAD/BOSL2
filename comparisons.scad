@@ -661,7 +661,8 @@ function _indexed_sort(arrind) =
 // Topics: List Handling
 // See Also: shuffle(), sortidx(), unique(), unique_count(), group_sort()
 // Description:
-//   Sorts the given list in lexicographic order. If the input is a homogeneous simple list or a homogeneous 
+//   Sorts the given list in lexicographic order. The sort is stable, meaning equivalent items will not change order. 
+//   If the input is a homogeneous simple list or a homogeneous 
 //   list of vectors (see function is_homogeneous), the sorting method uses the native comparison operator and is faster. 
 //   When sorting non homogeneous list the elements are compared with `compare_vals`, with types ordered according to
 //   `undef < boolean < number < string < list`.  Comparison of lists is recursive. 
@@ -704,6 +705,7 @@ function sort(list, idx=undef) =
 // Description:
 //   Given a list, sort it as function `sort()`, and returns
 //   a list of indexes into the original list in that sorted order.
+//   The sort is stable, so equivalent items will not change order.  
 //   If you iterate the returned list in order, and use the list items
 //   to index into the original list, you will be iterating the original
 //   values in sorted order.
