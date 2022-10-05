@@ -146,7 +146,7 @@ include <screw_drive.scad>
 //    generate the structure with your desired parameters to fill in values that would normally
 //    be produced automatically from the standard tables.  So if your hardware is missing from the
 //    tables, or is sized differently, you can still create the part.  For details on the
-//    screw_info and nut_info structures, see {{screw_info()}} and {{nut_info}}.  
+//    screw_info and nut_info structures, see {{screw_info()}} and {{nut_info()}}.  
 //    .
 //    All of the screw related modules set the variable `$screw_spec` to contain the specification
 //    for their screw.  This means that child modules can make use of this variable to create
@@ -640,7 +640,7 @@ module screw(spec, head, drive, thread, drive_size,
 
 // Module: screw_hole()
 // Usage:
-//   screw_hole([name], [head], [thread=], [length=|l=], [oversize=], [hole_oversize=], [head_oversize], [tolerance=], [$slop=], [anchor=], [atype=], [orient=], [spin=]) [ATTACHMENTS];
+//   screw_hole([spec], [head], [thread=], [length=|l=], [oversize=], [hole_oversize=], [head_oversize], [tolerance=], [$slop=], [anchor=], [atype=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
 //   Create a screw hole mask.  See [screw parameters](#section-screw-parameters) for details on the parameters that define a screw.
 //   The screw hole can be threaded to receive a screw or it can be an unthreaded clearance hole.  
@@ -852,10 +852,8 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
    }
 }  
 
-
-
 // Module: shoulder_screw()
-// Usage:
+// Usage: shoulder_screw(s, d, length, [head=], [thread_len=], [tolerance=], [head_size=], [drive=], [drive_size=], [thread=], [undersize=], [shaft_undersize=], [head_undersize=], [shoulder_undersize=],[atype=],[anchor=],[orient=],[spin=]) [ATTACHMENTS];
 // Description:
 //   Create a shoulder screw.  See [screw parameters](#section-screw-parameters) for details on the parameters that define a screw.
 //   The tolerance determines the dimensions of the screw
@@ -1268,11 +1266,13 @@ function _parse_drive(drive=undef, drive_size=undef) =
 //    should have the fields produced by {{screw_info()}}.  See that function for
 //    details on the fields.  Standard orientation is with the head centered at (0,0)
 //    and oriented in the +z direction.  Flat heads appear below the xy plane.
-//    Other heads appear sitting on the xy plane.
+//    Other heads appear sitting on the xy plane.  
 // Arguments:
 //    screw_info = structure produced by {{screw_info()}}
 //    details = true for more detailed model.  Default: false
-function screw_head(screw_info,details=false) = no_function("screw_head");
+//    counterbore = counterbore height.  Default: no counterbore
+//    flat_height = height of flat head 
+function screw_head(screw_info,details,counterbore,flat_height) = no_function("screw_head");
 module screw_head(screw_info,details=false, counterbore=0,flat_height) {
    no_children($children);
    head_oversize = struct_val(screw_info, "head_oversize",0);
@@ -1353,7 +1353,8 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height) {
 
 // Module: nut()
 // Usage:
-//   nut([name], diameter, thickness, [thread=], [oversize=], [spec=], [tolerance=], [$slop=]) [ATTACHMENTS];
+//   nut([spec], [shape], [thickness], [nutwidth], [thread=], [tolerance=], [hole_oversize=], [bevel=], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+
 // Description:
 //   Generates a hexagonal nut.  See [screw parameters](#section-screw-parameters) for details on the parameters that define a nut.
 //   As for screws, you can give the specification in `spec` and then omit the name.  The diameter is the flat-to-flat
@@ -1362,13 +1363,13 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height) {
 //   The tolerance determines the actual thread sizing based on the nominal size in accordance with standards.  
 //   The $slop parameter determines extra gaps left to account for printing overextrusion.  It defaults to 0.
 // Arguments:
-//   name = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
-//   diameter = outside diameter of nut (flat to flat dimension)
-//   thickness = thickness of nut (in mm)
+//   spec = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
+//   shape = "hex" or "square" to specify nut shape.  Default: "hex"
+//   thickness = "thin", "normal", "thick", or a thickness in mm.  Default: "normal"
 //   ---
+//   nutwidth = width of nut (overrides table values)
 //   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
-//   oversize = amount to increase screw diameter for clearance holes.  Default: 0
-//   spec = screw specification from `screw_info()`.  If you specify this you can omit all the preceeding parameters.
+//   hole_oversize = amount to increase hole diameter.  Default: 0
 //   bevel = bevel the nut.  Default: false
 //   tolerance = nut tolerance.  Determines actual nut thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2B" for UTS and "6H" for ISO.
 //   $slop = extra space left to account for printing over-extrusion.  Default: 0
@@ -1379,8 +1380,8 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height) {
 //   `$screw_spec` is set to the spec specification structure. 
 // Example: A metric and UTS nut at standard dimensions
 //   nut("3/8");
-//   right(25)
-//      nut("M8");
+//   //right(25)   //////////////////////////////////////////// FIXME
+//   //   nut("M8");
 // Example: The three different UTS nut tolerances (thickner than normal nuts)
 //   module mark(number)
 //   {
@@ -1396,10 +1397,9 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height) {
 //     mark(3) nut("1/4-20", thickness=8, nutwidth=0.5*INCH,tolerance="3B");
 //   }
 
-function nut(name, diameter, thickness, thread="coarse", spec, tolerance=undef,
-           bevel=false, anchor=BOTTOM,spin=0, orient=UP) = no_function("nut");
-
-module nut(spec, shape, nutwidth, thickness, thread, tolerance, hole_oversize, 
+function nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize, 
+           bevel=true, anchor=BOTTOM, spin=0, orient=UP, oversize=0) = no_function("nut");
+module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize, 
            bevel=true, anchor=BOTTOM, spin=0, orient=UP, oversize=0)
 {
    dummyA = assert(is_undef(nutwidth) || (is_num(nutwidth) && nutwidth>0));
@@ -1429,7 +1429,7 @@ module nut(spec, shape, nutwidth, thickness, thread, tolerance, hole_oversize,
 
 // Module: nut_trap_side()
 // Usage:
-//   nut_trap_side(trap_width, [spec], [poke_len], [poke_diam], [shape], [$slop], [anchor], [orient], [spin]) [ATTACHMENTS];
+//   nut_trap_side(trap_width, [spec], [shape], [poke_len=], [poke_diam=], [$slop=], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
 //   Create a nut trap that extends sideways, so the nut slides in perpendicular to the screw axis.
 //   The CENTER anchor is the center of the screw hole location in the trap.  The trap width is
@@ -1439,8 +1439,9 @@ module nut(spec, shape, nutwidth, thickness, thread, tolerance, hole_oversize,
 //   will be increased by `2*$slop` to allow adjusting the fit of the trap for your printer.  
 //   The trap will have a default tag of "remove" if no other tag is in force.  
 // Arguments:
-//   spec = screw specification
 //   trap_width = width of nut trap, measured from screw center, must be larger than half the nut width  (If spec is omitted this argument must be given by name.)
+//   spec = screw specification
+//   shape = "hex" or "square" to specify the shape of the nut.   Default: "hex"
 //   --- 
 //   poke_len = length of poke hole.  Default: no poke hole
 //   poke_diam = diameter of poke hole.  Default: nut thickness
@@ -1513,7 +1514,7 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 
 // Module: nut_trap_inline()
 // Usage:
-//   nut_trap_inline(length|l|heigth|h, [spec], [shape], [$slop], [anchor], [orient], [spin]) [ATTACHMENTS];
+//   nut_trap_inline(length|l|heigth|h, [spec], [shape], [$slop=], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
 //   Create a nut trap that extends along the axis of the screw.  The nut width
 //   will be increased by `2*$slop` to allow adjusting the fit of the trap for your printer.
@@ -1522,8 +1523,8 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 //   do this backwards, to declare a trap at a screw size and make a child screw hole, which will inherit
 //   the screw dimensions.  
 // Arguments:
-//   spec = screw specification
 //   length/l/height/h = length/height of nut trap (must be given by name if spec is omitted)
+//   spec = screw specification
 //   shape = "hex" or "square to determine type of nut.  Default: "hex"
 //   ---
 //   $slop = extra space left to account for printing over-extrusion.  Default: 0
@@ -1580,8 +1581,7 @@ module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orie
 
 // Function: screw_info()
 // Usage:
-//   info = screw_info(name, [head], [drive], [thread=], [drive_size=], [oversize=])
-//
+//   info = screw_info(spec, [head], [drive], [thread=], [drive_size=], [oversize=], [head_oversize=])
 // Description:
 //   Look up screw characteristics for the specified screw type.
 //   See [screw parameters](#section-screw-parameters) for details on the parameters that define a screw.
@@ -2614,8 +2614,7 @@ function _validate_screw_spec(spec) = let(
 //   - basic: vector `[minor, pitch, major]` of the nominal or "basic" diameters for the threads
 // Arguments:
 //   screw_spec = screw specification structure
-//   ---
-//   tolerance = thread geometry tolerance
+//   tolerance = thread geometry tolerance.  Default: For ISO, "6g" for screws, "6H" for internal threading (nuts).  For UTS, "2A" for screws, "2B" for internal threading (nuts).
 //   internal = true for internal threads.  Default: false
 function thread_specification(screw_spec, tolerance=undef, internal=false) =
   let( 
