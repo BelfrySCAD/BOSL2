@@ -180,9 +180,14 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   .
 //   You can generate a screw specification from {{screw_info()}}, possibly create a modified version using {{struct_set()}}, and pass that in rather than giving the parameters.
 //   .
-//   The anchors and anchor types refer to various parts of the screw, which are labeled below.  The "screw" anchor type (the default) is simply 
-//   the whole screw and the "head" anchor is the head.  These anchors use the bounding cylinder for the specified screw part, except for hex
-//   heads, which anchor to a hexagonal prism.  
+//   Various anchor types refer to different parts of the screw, some
+//   of which are labeled below.  The "screw" anchor type (the
+//   default) is simply the entire screw, so TOP and BOTTOM refer to
+//   the head end and tip respectively, and CENTER is the midpoint of
+//   the whole screw, including the head.  The "head" anchor refers to
+//   the head alone.  Both of these anchor types refer to the bounding
+//   cylinder for the specified screw part, except for hex heads,
+//   which anchor to a hexagonal prism.
 // Figure(2D,Med,VPD = 140, VPT = [18.4209, 14.9821, -3.59741], VPR = [0, 0, 0],NoAxes):
 //   rpos=33;
 //   fsize=2.5;
@@ -659,7 +664,10 @@ module screw(spec, head, drive, thread, drive_size,
 //   The counterbore parameter adds a cylindrical clearance hole above the screw shaft.  For flat heads it extends above the flathead and for other screw types it 
 //   replaces the head with a cylinder large enough for the head to fit.  For a flat head you must specify the length of the counterbore.  For other heads you can
 //   set counterbore to true and it will be sized to match the head height.  The counterbore will extend 0.01 above the TOP of the hole mask to ensure no
-//   problems with differences.  
+//   problems with differences.
+//   .
+//   Anchoring for screw_hole() is the same as anchoring for {{screw()}}, with all the same anchor types and named anchors.  If you specify a counterbore it is treated as
+//   the "head", or in the case of flat heads, it becomes part of the head.  
 // Arguments:
 //   spec = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).  This can also be a screw specification structure of the form produced by {{screw_info()}}.  
 //   head = head type.  See [screw heads](#subsection-screw-heads)  Default: none
@@ -713,9 +721,8 @@ module screw(spec, head, drive, thread, drive_size,
 // Example: Threaded hole
 //   diff()
 //     cuboid(20)
-//       attach(TOP)
+//       attach(FRONT)
 //          screw_hole("M16,15",anchor=TOP,thread=true);
-
 module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize, 
              length, l, thread_len, tolerance=undef, counterbore=0, 
              atype="screw",anchor=BOTTOM,spin=0, orient=UP)
@@ -853,7 +860,8 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
 }  
 
 // Module: shoulder_screw()
-// Usage: shoulder_screw(s, d, length, [head=], [thread_len=], [tolerance=], [head_size=], [drive=], [drive_size=], [thread=], [undersize=], [shaft_undersize=], [head_undersize=], [shoulder_undersize=],[atype=],[anchor=],[orient=],[spin=]) [ATTACHMENTS];
+// Usage:
+//   shoulder_screw(s, d, length, [head=], [thread_len=], [tolerance=], [head_size=], [drive=], [drive_size=], [thread=], [undersize=], [shaft_undersize=], [head_undersize=], [shoulder_undersize=],[atype=],[anchor=],[orient=],[spin=]) [ATTACHMENTS];
 // Description:
 //   Create a shoulder screw.  See [screw parameters](#section-screw-parameters) for details on the parameters that define a screw.
 //   The tolerance determines the dimensions of the screw
@@ -868,16 +876,14 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
 //   and length, and shoulder_screw() will supply the other parameters.
 //   .
 //   Hardware sources like McMaster sell many screws that don't comply with the standards.  If you want to make such a screw then
-//   you can specify 
-//   with a 
+//   you can specify parameters like thread_len, the length of the threaded portion below the shoulder, and you can choose a different head
+//   type.  You will need to specify the size of the head, since it cannot be looked up in tables.  You can also 
+//   generate a screw specification from {{screw_info()}}, possibly create a modified version using {{struct_set()}}, and pass that in rather than giving the parameters.
 //   .
-//   You can generate a screw specification from {{screw_info()}}, possibly create a modified version using {{struct_set()}}, and pass that in rather than giving the parameters.
-//   .
-//   The anchors and anchor types refer to various parts of the screw, which are labeled below.  The "screw" anchor type (the default) is simply 
-//   the whole screw and the "head" anchor is the head.  These anchors use the bounding cylinder for the specified screw part, except for hex
-//   heads, which anchor to a hexagonal prism.  
+//   The anchors and anchor types are the same as for {{screw()}} except that there is an anchor type for the shoulder and an additional set of named anchors
+//   refering to parts of the shoulder.  
 // Arguments:
-//   s = screw system to use, case insensitive, either "ISO", "UTS", "english" or "metric", or a screw specification 
+//   s = screw system to use, case insensitive, either "ISO", "UTS", "english" or "metric", or a screw name or specification.  See [screw naming](#subsection-screw-naming).
 //   d = nominal shoulder diameter in mm for ISO or inches for UTS
 //   length = length of the shoulder (in mm)
 //   ---
@@ -1363,7 +1369,7 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height) {
 //   The tolerance determines the actual thread sizing based on the nominal size in accordance with standards.  
 //   The $slop parameter determines extra gaps left to account for printing overextrusion.  It defaults to 0.
 // Arguments:
-//   spec = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
+//   spec = nut specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).  This can also be a nut or screw specification structure of the form produced by {{nut_info()}} or {{screw_info()}}.  
 //   shape = "hex" or "square" to specify nut shape.  Default: "hex"
 //   thickness = "thin", "normal", "thick", or a thickness in mm.  Default: "normal"
 //   ---
@@ -1378,10 +1384,13 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height) {
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
 //   `$screw_spec` is set to the spec specification structure. 
-// Example: A metric and UTS nut at standard dimensions
-//   nut("3/8");
-//   //right(25)   //////////////////////////////////////////// FIXME
-//   //   nut("M8");
+// Example: All the UTS nuts at one size.  Note that square nuts come in only one thickness.  
+//   xdistribute(spacing=0.75*INCH){
+//       nut("3/8",thickness="thin");
+//       nut("3/8",thickness="normal");
+//       nut("3/8",thickness="thick");
+//       nut("3/8",shape="square");
+//    }   
 // Example: The three different UTS nut tolerances (thickner than normal nuts)
 //   module mark(number)
 //   {
@@ -1442,7 +1451,7 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
 //   The trap will have a default tag of "remove" if no other tag is in force.  
 // Arguments:
 //   trap_width = width of nut trap, measured from screw center, must be larger than half the nut width  (If spec is omitted this argument must be given by name.)
-//   spec = screw specification
+//   spec = nut specification, e.g. "M5" or "#8".  See [screw naming](#subsection-screw-naming).  This can also be a screw or nut specification structure of the form produced by {{nut_info()}} or {{screw_info()}}.  
 //   shape = "hex" or "square" to specify the shape of the nut.   Default: "hex"
 //   --- 
 //   poke_len = length of poke hole.  Default: no poke hole
@@ -1479,11 +1488,11 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
 //      position(TOP)screw_hole("#8,1",anchor=TOP) 
 //        position(BOT) nut_trap_side(trap_width=16);
 // Example: Hole-trap assembly where we position the trap relative to a feature on the model and then position the screw hole through the trap as a child to the trap.  
-//   diff()
+//  diff()
 //   cuboid([30,30,20])
 //     position(RIGHT)cuboid([4,20,3],anchor=LEFT)
 //       right(1)position(TOP+LEFT)nut_trap_side(15, "#8",anchor=BOT+RIGHT)
-//         screw_hole(length=20);
+//         screw_hole(length=20,anchor=BOT);
 module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, orient, spin, poke_len=0, poke_diam) {
   dummy9=assert(is_num(trap_width), "trap_width is missing or the wrong type");
   tempspec = _get_spec(spec, "nut_info", "nut_trap", shape=shape, thickness=thickness);
@@ -1525,8 +1534,8 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 //   do this backwards, to declare a trap at a screw size and make a child screw hole, which will inherit
 //   the screw dimensions.  
 // Arguments:
-//   length/l/height/h = length/height of nut trap (must be given by name if spec is omitted)
-//   spec = screw specification
+//   length/l/height/h = length/height of nut trap
+//   spec = nut specification, e.g. "M5" or "#8".  See [screw naming](#subsection-screw-naming).  This can also be a screw or nut specification structure of the form produced by {{nut_info()}} or {{screw_info()}}.  
 //   shape = "hex" or "square to determine type of nut.  Default: "hex"
 //   ---
 //   $slop = extra space left to account for printing over-extrusion.  Default: 0
@@ -1547,7 +1556,7 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 // Example: Nut trap with child screw hole
 //   nut_trap_inline(10, "#8")
 //     position(TOP)screw_hole(length=10,anchor=BOT,head="flat");
-// Example: a pipe clamp
+// Example(Med): a pipe clamp
 //   bardiam = 32;
 //   bandwidth = 10;
 //   thickness = 3;
@@ -1594,7 +1603,7 @@ module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orie
 //   Note that flat head screws are defined by two different diameters, the theoretical maximum diameter, "head_size_sharp"
 //   and the actual diameter, "head_size".  The screw form is defined using the theoretical maximum, which gives
 //   sharp circular edge at the top of the screw.  Real screws have a flat chamfer around the edge.  
-// Figure(2D,Med,NoAxes,VPD=39,VPT=[0,-4]):  Flat head screw geometry
+// Figure(2D,Med,NoAxes,VPD=39,VPT=[0,-4,0],VPR=[0,0,0]):  Flat head screw geometry
 //   polysharp = [[0, -5.07407], [4.92593, -5.07407], [10, 0], [10, 0.01], [0, 0.01]];
 //   color("blue"){
 //       xflip_copy()polygon(polysharp);
