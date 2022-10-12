@@ -56,8 +56,8 @@
 //         threaded_rod(l=40, pitch=pitch, d=d,starts=starts,anchor=BOTTOM);
 //         threaded_rod(l=40, pitch=pitch, d=d, left_handed=true,starts=starts,anchor=BOTTOM);
 //       }
-//       threaded_nut(od=4.5/8*INCH,id=d,h=3/8*INCH,pitch=pitch,starts=starts,anchor=BOTTOM);
-//       threaded_nut(od=4.5/8*INCH,id=d,h=3/8*INCH,pitch=pitch,starts=starts,left_handed=true,anchor=BOTTOM);
+//       threaded_nut(nutwidth=4.5/8*INCH,id=d,h=3/8*INCH,pitch=pitch,starts=starts,anchor=BOTTOM);
+//       threaded_nut(nutwidth=4.5/8*INCH,id=d,h=3/8*INCH,pitch=pitch,starts=starts,left_handed=true,anchor=BOTTOM);
 //   }
 function threaded_rod(
     d, l, pitch,
@@ -148,8 +148,8 @@ module threaded_rod(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
-//   threaded_nut(od=16, id=8, h=8, pitch=1.25, $slop=0.05, $fa=1, $fs=1);
-//   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, bevel=true, $slop=0.1, $fa=1, $fs=1);
+//   threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, $slop=0.05, $fa=1, $fs=1);
+//   threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, left_handed=true, bevel=true, $slop=0.1, $fa=1, $fs=1);
 function threaded_nut(
     nutwidth, id, h,
     pitch, starts=1, shape, left_handed=false, bevel, bevel1, bevel2, id1,id2,
@@ -855,7 +855,7 @@ module square_threaded_rod(
 
 // Module: square_threaded_nut()
 // Usage:
-//   square_threaded_nut(od, id, h, pitch, ...) [ATTACHMENTS];
+//   square_threaded_nut(nutwidth, id, h, pitch, ...) [ATTACHMENTS];
 // Description:
 //   Constructs a hexagonal or square nut for a square profile threaded screw rod.  
 // Arguments:
@@ -877,7 +877,7 @@ module square_threaded_rod(
 // Examples(Med):
 //   square_threaded_nut(nutwidth=16, id=10, h=10, pitch=2, starts=2, $slop=0.1, $fn=32);
 function square_threaded_nut(
-    od, id, h,
+    nutwidth, id, h,
     pitch,
     shape=shape,
     left_handed=false,
@@ -886,7 +886,7 @@ function square_threaded_nut(
     anchor, spin, orient
 ) = no_function("square_threaded_nut");
 module square_threaded_nut(
-    od, id, h,
+    nutwidth, id, h,
     pitch,
     left_handed=false,
     bevel,bevel1,bevel2,
