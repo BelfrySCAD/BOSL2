@@ -508,6 +508,8 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 // Function&Module: linear_sweep()
 // Usage:
 //   linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [convexity=]) [ATTACHMENTS];
+// Usage: With Texturing
+//   linear_sweep(region, [height], [center=], texture=, [tex_size=]|[tex_counts=], [tex_scale=], [style=], [tex_samples=], ...) [ATTACHMENTS];
 // Description:
 //   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or polygon.
 //   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
@@ -767,12 +769,14 @@ function linear_sweep(
 
 // Function&Module: rotate_sweep()
 // Usage: As Function
-//   vnf = rotate_sweep(shape, angle, ...);
+//   vnf = rotate_sweep(shape, [angle], ...);
 // Usage: As Module
-//   rotate_sweep(shape, angle, ...) [ATTACHMENTS];
+//   rotate_sweep(shape, [angle], ...) [ATTACHMENTS];
+// Usage: With Texturing
+//   rotate_sweep(shape, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_samples=], [tex_rot=], [tex_inset=], ...) [ATTACHMENTS];
 // Topics: Extrusion, Sweep, Revolution
 // Description:
-//   Takes a polygon or [region](regions.scad) and sweeps it in a rotation around the Z axis.
+//   Takes a polygon or [region](regions.scad) and sweeps it in a rotation around the Z axis, with optional texturing.
 //   When called as a function, returns a [VNF](vnf.scad).
 //   When called as a module, creates the sweep as geometry.
 // Arguments:

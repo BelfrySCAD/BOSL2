@@ -1155,10 +1155,15 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   cyl(l|h, r|d, rounding2=, ...);
 //   cyl(l|h, r|d, rounding1=, rounding2=, ...);
 //
+// Usage: Textured Cylinders
+//   cyl(l|h, r|d, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h, r1=, r2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h, d1=, d2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//
 // Topics: Cylinders, Textures, Rounding, Chamfers
 //
 // Description:
-//   Creates cylinders in various anchorings and orientations, with optional rounding and chamfers.
+//   Creates cylinders in various anchorings and orientations, with optional rounding, chamfers, or textures.
 //   You can use `h` and `l` interchangably, and all variants allow specifying size by either `r`|`d`,
 //   or `r1`|`d1` and `r2`|`d2`.  Note: the chamfers and rounding cannot be cumulatively longer than
 //   the cylinder's length.
