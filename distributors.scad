@@ -982,7 +982,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed)
     );
     distOK = is_def(n) || (min(distances)>=0 && max(distances)<=length);
     assert(distOK,"Cannot fit all of the copies");
-    cutlist = _path_cut_points(path, distances, closed, direction=true);
+    cutlist = path_cut_points(path, distances, closed, direction=true);
     planar = len(path[0])==2;
     if (true) for(i=[0:1:len(cutlist)-1]) {
         $pos = cutlist[i][0];
