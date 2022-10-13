@@ -56,8 +56,8 @@
 //         threaded_rod(l=40, pitch=pitch, d=d,starts=starts,anchor=BOTTOM);
 //         threaded_rod(l=40, pitch=pitch, d=d, left_handed=true,starts=starts,anchor=BOTTOM);
 //       }
-//       threaded_nut(od=4.5/8*INCH,id=d,h=3/8*INCH,pitch=pitch,starts=starts,anchor=BOTTOM);
-//       threaded_nut(od=4.5/8*INCH,id=d,h=3/8*INCH,pitch=pitch,starts=starts,left_handed=true,anchor=BOTTOM);
+//       threaded_nut(nutwidth=4.5/8*INCH,id=d,h=3/8*INCH,pitch=pitch,starts=starts,anchor=BOTTOM);
+//       threaded_nut(nutwidth=4.5/8*INCH,id=d,h=3/8*INCH,pitch=pitch,starts=starts,left_handed=true,anchor=BOTTOM);
 //   }
 function threaded_rod(
     d, l, pitch,
@@ -128,11 +128,11 @@ module threaded_rod(
 
 // Module: threaded_nut()
 // Usage:
-//   threaded_nut(od, id, h, pitch,...) [ATTACHMENTS];
+//   threaded_nut(nutwidth, id, h, pitch,...) [ATTACHMENTS];
 // Description:
 //   Constructs a hex nut or square nut for an ISO (metric) or UTS (English) threaded rod. 
 // Arguments:
-//   od = diameter of the nut.
+//   nutwidth = flat to flat width of nut
 //   id = diameter of threaded rod to screw onto.
 //   h = height/thickness of nut.
 //   pitch = Length between threads.
@@ -148,15 +148,15 @@ module threaded_rod(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
-//   threaded_nut(od=16, id=8, h=8, pitch=1.25, $slop=0.05, $fa=1, $fs=1);
-//   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, bevel=true, $slop=0.1, $fa=1, $fs=1);
+//   threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, $slop=0.05, $fa=1, $fs=1);
+//   threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, left_handed=true, bevel=true, $slop=0.1, $fa=1, $fs=1);
 function threaded_nut(
-    od, id, h,
+    nutwidth, id, h,
     pitch, starts=1, shape, left_handed=false, bevel, bevel1, bevel2, id1,id2,
     anchor, spin, orient
 )=no_function("threaded_nut");
 module threaded_nut(
-    od, id, h,
+    nutwidth, id, h,
     pitch, starts=1, shape="hex", left_handed=false, bevel, bevel1, bevel2, id1,id2,
     anchor, spin, orient
 ) {
@@ -184,7 +184,7 @@ module threaded_nut(
         [ 6/16, -depth/pitch]
     ];
     generic_threaded_nut(
-        od=od,
+        nutwidth=nutwidth,
         id=basic ? id : id[2], id1=id1, id2=id2,
         h=h,
         pitch=pitch,
@@ -323,14 +323,14 @@ module trapezoidal_threaded_rod(
 
 // Module: trapezoidal_threaded_nut()
 // Usage:
-//   trapezoidal_threaded_nut(od, id, h, pitch, [thread_angle], [thread_depth], ...) [ATTACHMENTS];
+//   trapezoidal_threaded_nut(nutwidth, id, h, pitch, [thread_angle], [thread_depth], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a hex nut or square nut for a symmetric trapzoidal threaded rod.
 //   By default produces the nominal dimensions
 //   for metric trapezoidal threads: a thread angle of 30 degrees and a depth set to half the pitch.
 //   You can also specify your own trapezoid parameters.  For ACME threads see acme_threaded_nut(). 
 // Arguments:
-//   od = diameter of the nut.
+//   nutwidth = flat to flat width of nut
 //   id = diameter of threaded rod to screw onto.
 //   h = height/thickness of nut.
 //   pitch = Thread spacing.
@@ -348,11 +348,11 @@ module trapezoidal_threaded_rod(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
-//   trapezoidal_threaded_nut(od=16, id=8, h=8, pitch=2, $slop=0.1, anchor=UP);
-//   trapezoidal_threaded_nut(od=16, id=8, h=8, pitch=2, bevel=true, $slop=0.05, anchor=UP);
-//   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, $slop=0.1, left_handed=true);
-//   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, starts=3, $fa=1, $fs=1, $slop=0.15);
-function trapezoidal_threaded_rod(
+//   trapezoidal_threaded_nut(nutwidth=16, id=8, h=8, pitch=2, $slop=0.1, anchor=UP);
+//   trapezoidal_threaded_nut(nutwidth=16, id=8, h=8, pitch=2, bevel=true, $slop=0.05, anchor=UP);
+//   trapezoidal_threaded_nut(nutwidth=17.4, id=10, h=10, pitch=2, $slop=0.1, left_handed=true);
+//   trapezoidal_threaded_nut(nutwidth=17.4, id=10, h=10, pitch=2, starts=3, $fa=1, $fs=1, $slop=0.15);
+function trapezoidal_threaded_nut(
     d, l, pitch,
     thread_angle=30,
     thread_depth=undef, shape, 
@@ -364,7 +364,7 @@ function trapezoidal_threaded_rod(
     center, anchor, spin, orient
 ) = no_function("trapezoidal_threaded_nut");
 module trapezoidal_threaded_nut(
-    od,
+    nutwidth,
     id,
     h,
     pitch,
@@ -389,7 +389,7 @@ module trapezoidal_threaded_nut(
                [ z1,  0],
                [ z2, rr1],
               ];
-    generic_threaded_nut(od=od,id=id,h=h,pitch=pitch,profile=profile,id1=id1,id2=id2,
+    generic_threaded_nut(nutwidth=nutwidth,id=id,h=h,pitch=pitch,profile=profile,id1=id1,id2=id2,
                          shape=shape,left_handed=left_handed,bevel=bevel,bevel1=bevel1,bevel2=bevel2,starts=starts,
                          anchor=anchor,spin=spin,orient=orient)
       children();
@@ -465,11 +465,11 @@ module acme_threaded_rod(
 
 // Module: acme_threaded_nut()
 // Usage:
-//   acme_threaded_nut(od, id, h, tpi|pitch=, ...) [ATTACHMENTS];
+//   acme_threaded_nut(nutwidth, id, h, tpi|pitch=, [shape=], ...) [ATTACHMENTS];
 // Description:
-//   Constructs a hex nut for an ACME threaded screw rod. 
+//   Constructs a hexagonal or square nut for an ACME threaded screw rod. 
 // Arguments:
-//   od = diameter of the nut.
+//   nutwidth = flat to flat width of nut. 
 //   id = diameter of threaded rod to screw onto.
 //   h = height/thickness of nut.
 //   tpi = threads per inch
@@ -486,17 +486,17 @@ module acme_threaded_rod(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
-//   acme_threaded_nut(od=16, id=3/8*INCH, h=8, tpi=8, $slop=0.05);
-//   acme_threaded_nut(od=16, id=1/2*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1);
+//   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=8, tpi=8, $slop=0.05);
+//   acme_threaded_nut(nutwidth=16, id=1/2*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1);
 function acme_threaded_nut(
-    od, id, h, tpi, pitch,
+    nutwidth, id, h, tpi, pitch,
     starts=1,
     left_handed=false,shape, 
     bevel,bevel1,bevel2,
     anchor, spin, orient
 ) = no_function("acme_threaded_nut");
 module acme_threaded_nut(
-    od, id, h, tpi, pitch,
+    nutwidth, id, h, tpi, pitch,
     starts=1,
     left_handed=false,shape="hex",
     bevel,bevel1,bevel2,
@@ -506,7 +506,7 @@ module acme_threaded_nut(
     pitch = is_undef(pitch) ? INCH/tpi : pitch;
     dummy2=assert(is_num(pitch) && pitch>0);
     trapezoidal_threaded_nut(
-        od=od, id=id, h=h, pitch=pitch,
+        nutwidth=nutwidth, id=id, h=h, pitch=pitch,
         thread_depth = pitch/2, 
         thread_angle=29,shape=shape, 
         left_handed=left_handed,
@@ -725,11 +725,11 @@ module buttress_threaded_rod(
 
 // Module: buttress_threaded_nut()
 // Usage:
-//   buttress_threaded_nut(od, id, h, pitch, ...) [ATTACHMENTS];
+//   buttress_threaded_nut(nutwidth, id, h, pitch, ...) [ATTACHMENTS];
 // Description:
-//   Constructs a hex nut for a simple buttress threaded screw rod.  
+//   Constructs a hexagonal or square nut for a simple buttress threaded screw rod.  
 // Arguments:
-//   od = diameter of the nut.
+//   nutwidth = diameter of the nut.
 //   id = diameter of threaded rod to screw onto.
 //   h = height/thickness of nut.
 //   pitch = Thread spacing. 
@@ -745,15 +745,15 @@ module buttress_threaded_rod(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
-//   buttress_threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, $slop=0.05, $fa=1, $fs=1);
+//   buttress_threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, left_handed=true, $slop=0.05, $fa=1, $fs=1);
 function buttress_threaded_nut(
-    od=16, id=10, h=10,
+    nutwidth=16, id=10, h=10,
     pitch=2, shape, left_handed=false,
     bevel,bevel1,bevel2,starts,
     anchor, spin, orient
 ) = no_function("buttress_threaded_nut");
 module buttress_threaded_nut(
-    od=16, id=10, h=10,
+    nutwidth=16, id=10, h=10,
     pitch=2, shape="hex", left_handed=false,
     bevel,bevel1,bevel2,starts=1,
     anchor, spin, orient
@@ -767,7 +767,7 @@ module buttress_threaded_nut(
         [  1/ 2, -0.77],
     ];
     generic_threaded_nut(
-        od=od, id=id, h=h,
+        nutwidth=nutwidth, id=id, h=h,
         pitch=pitch,
         profile=profile,
         shape=shape,
@@ -855,15 +855,16 @@ module square_threaded_rod(
 
 // Module: square_threaded_nut()
 // Usage:
-//   square_threaded_nut(od, id, h, pitch, ...) [ATTACHMENTS];
+//   square_threaded_nut(nutwidth, id, h, pitch, ...) [ATTACHMENTS];
 // Description:
-//   Constructs a hex nut for a square profile threaded screw rod.  
+//   Constructs a hexagonal or square nut for a square profile threaded screw rod.  
 // Arguments:
-//   od = diameter of the nut.
+//   nutwidth = diameter of the nut.
 //   id = diameter of threaded rod to screw onto.
 //   h = height/thickness of nut.
 //   pitch = Length between threads.
 //   ---
+//   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
 //   bevel = if true, bevel the thread ends.  Default: false
@@ -874,17 +875,18 @@ module square_threaded_rod(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
-//   square_threaded_nut(od=16, id=10, h=10, pitch=2, starts=2, $slop=0.1, $fn=32);
+//   square_threaded_nut(nutwidth=16, id=10, h=10, pitch=2, starts=2, $slop=0.1, $fn=32);
 function square_threaded_nut(
-    od, id, h,
+    nutwidth, id, h,
     pitch,
+    shape=shape,
     left_handed=false,
     bevel,bevel1,bevel2,
     starts=1,
     anchor, spin, orient
 ) = no_function("square_threaded_nut");
 module square_threaded_nut(
-    od, id, h,
+    nutwidth, id, h,
     pitch,
     left_handed=false,
     bevel,bevel1,bevel2,
@@ -893,7 +895,7 @@ module square_threaded_nut(
 ) {
     assert(is_num(pitch) && pitch>0)
     trapezoidal_threaded_nut(
-        od=od, id=id, h=h, pitch=pitch,
+        nutwidth=nutwidth, id=id, h=h, pitch=pitch,
         thread_angle=0,
         left_handed=left_handed,
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,
@@ -1213,17 +1215,18 @@ module generic_threaded_rod(
 
 // Module: generic_threaded_nut()
 // Usage:
-//   generic_threaded_nut(od, id, h, pitch, profile, [$slop], ...) [ATTACHMENTS];
+//   generic_threaded_nut(nutwidth, id, h, pitch, profile, [$slop], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a hexagonal or square nut for an generic threaded rod using a user-supplied thread profile.
 //   See generic_threaded_rod for details on the profile specification.  
 // Arguments:
-//   od = diameter of the nut.
+//   nutwidth = outer dimension of nut from flat to flat. 
 //   id = diameter of threaded rod to screw onto.
 //   h = height/thickness of nut.
 //   pitch = Thread spacing.
 //   profile = Thread profile.
 //   ---
+//   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
 //   bevel = if true, bevel the thread ends.  Default: false
@@ -1236,7 +1239,7 @@ module generic_threaded_rod(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 function generic_threaded_nut(
-    od,
+    nutwidth,
     id,
     h,
     pitch,
@@ -1244,12 +1247,12 @@ function generic_threaded_nut(
     shape,
     left_handed=false,
     starts=1,
-    bevel,bevel1,bevel2,bevang=30,
+    bevel,bevel1,bevel2,bevang=15,
     id1,id2,
     anchor, spin, orient
 ) = no_function("generic_threaded_nut");
 module generic_threaded_nut(
-    od,
+    nutwidth,
     id,
     h,
     pitch,
@@ -1257,7 +1260,7 @@ module generic_threaded_nut(
     shape="hex",
     left_handed=false,
     starts=1,
-    bevel,bevel1,bevel2,
+    bevel,bevel1,bevel2,bevang=15,
     id1,id2,
     anchor, spin, orient
 ) {
@@ -1273,12 +1276,18 @@ module generic_threaded_nut(
     bevel2 = first_defined([bevel2,bevel,false]);
     dummy1 = assert(is_num(pitch) && pitch>0);
     depth = -pitch*min(column(profile,1));
-    attachable(anchor,spin,orient, size=[od/cos(30),od,h]) {
+    bevel_d=.975;
+    vnf = linear_sweep(hexagon(id=nutwidth), height=h, center=true);
+    attachable(anchor,spin,orient, size=shape=="square" ? [nutwidth,nutwidth,h] : undef, vnf=shape=="hex" ? vnf : undef) {
         difference() {
-            if (shape=="hex")
-              cyl(d=od/cos(30), h=h, center=true, $fn=6,chamfer1=bevel1?depth:undef,chamfer2=bevel2?depth:undef);
-            else
-              cuboid([od,od,h]);
+            intersection(){
+                if (shape=="hex")
+                  vnf_polyhedron(vnf);
+                else
+                  cuboid([nutwidth,nutwidth,h]);
+                if (bevel2) cyl(h=h+.01, d2=nutwidth*bevel_d,d1=nutwidth*bevel_d+h/tan(bevang), $fn=64);
+                if (bevel1) down(.01) cyl(h=h+.01, d1=nutwidth*bevel_d,d2=nutwidth*bevel_d+h/tan(bevang), $fn=64);
+            }
             generic_threaded_rod(
                 d1=full_id1,d2=full_id2,
                 l=h+extra,

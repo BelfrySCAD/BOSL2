@@ -16,7 +16,7 @@ include <structs.scad>
 include <threading.scad>
 include <screw_drive.scad>
 
-// Section: Screw Parameters
+// Section: Screw and Nut Parameters
 //    This modules in this file create standard ISO (metric) and UTS (English) threaded screws.
 //    The {{screw()}} and {{nut()}} modules produce
 //    screws and nuts that comply with the relevant ISO and ASME standards,
@@ -98,7 +98,22 @@ include <screw_drive.scad>
 //    in cases where no default exists you can specify it.  Flat head screws have variations such as 100 degree
 //    angle for UTS, or undercut heads.  You can also request a "sharp" screw which will set the screw diameter 
 //    the theoretical maximum and produce sharp corners instead of a flat edge on the head.  The flat head options
-//    can be mixed in any order, for example, "flat sharp undercut" or "flat undercut sharp".  
+//    can be mixed in any order, for example, "flat sharp undercut" or "flat undercut sharp".
+// Subsection: Nuts
+//    Nuts come in standard sizes and BOSL2 has tables to produce sizes for both Imperial and metric nuts.
+//    A nut for a given thread size is defined by its shape, width and thickness.  The shape is either "hex"
+//    for hexagonal nuts or "square" for square nuts.  For hexagonal Imperial nuts, you can choose from thickness values
+//    of "thin", "normal" or "thick", but the thin and thick nuts are defined only for thread sizes of 1/4 inch and above.
+//    .
+//    Metric nut standards are more complicated because ISO has a series of standards and DIN has a series of conflicting
+//    standards.  Nuts from McMaster-Carr in the USA comply with DIN rather than ISO.  Furthermore, ISO does not appear
+//    to specify dimensions for square nuts.  For metric nuts you can specify "thin", "normal" and "thick" and the
+//    nut will be constructed to ISO standards (ISO 4035, ISO 4032, and ISO 4033 respectively).  The DIN standard for thin
+//    nuts matches ISO, but the DIN normal thickness nuts are thinner than ISO nuts.  You can request DIN nuts
+//    by specifying a thickness of "DIN" or "undersized".  If you request a square nut it necessariliy derives from DIN
+//    instead of ISO.  For most nut sizes, the nut widths match between ISO and DIN, but they do differ for M10, M12, M14 and M22.
+//    .
+//    You can of course specify nuts by giving an explicit numerical width and thickness in millimeters. 
 // Subsection: Tolerance
 //    Without tolerance requirements, screws would not fit together.  The screw standards specify a
 //    nominal size, but the tolerance determines a range of allowed sizes based on that nominal size.
@@ -171,7 +186,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 // Usage:
 //   screw([spec], [head], [drive], [thread=], [drive_size=], [length=|l=], [thread_len=], [undersize=], [shaft_undersize=], [head_undersize=], [tolerance=], [details=], [anchor=], [atype=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
-//   Create a screw.  See [screw parameters](#section-screw-parameters) for details on the parameters that define a screw.
+//   Create a screw.  See [screw and nut parameters](#section-screw-and-nut-parameters) for details on the parameters that define a screw.
 //   The tolerance determines the dimensions of the screw
 //   based on ISO and ASME standards.  Screws fabricated at those dimensions will mate properly with standard hardware.
 //   Note that the $slop argument does not affect the size of screws: it only adjusts screw holes.  This will work fine
@@ -180,9 +195,14 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   .
 //   You can generate a screw specification from {{screw_info()}}, possibly create a modified version using {{struct_set()}}, and pass that in rather than giving the parameters.
 //   .
-//   The anchors and anchor types refer to various parts of the screw, which are labeled below.  The "screw" anchor type (the default) is simply 
-//   the whole screw and the "head" anchor is the head.  These anchors use the bounding cylinder for the specified screw part, except for hex
-//   heads, which anchor to a hexagonal prism.  
+//   Various anchor types refer to different parts of the screw, some
+//   of which are labeled below.  The "screw" anchor type (the
+//   default) is simply the entire screw, so TOP and BOTTOM refer to
+//   the head end and tip respectively, and CENTER is the midpoint of
+//   the whole screw, including the head.  The "head" anchor refers to
+//   the head alone.  Both of these anchor types refer to the bounding
+//   cylinder for the specified screw part, except for hex heads,
+//   which anchor to a hexagonal prism.
 // Figure(2D,Med,VPD = 140, VPT = [18.4209, 14.9821, -3.59741], VPR = [0, 0, 0],NoAxes):
 //   rpos=33;
 //   fsize=2.5;
@@ -418,8 +438,9 @@ function _get_spec(spec, needtype, origin, thread,   // common parameters
                    shape, thickness                  // nut parameters
                   ) =
     assert(needtype=="screw_info" || needtype=="nut_info")
-    assert(is_undef(thickness) || (is_num(thickness) && thickness>0) || in_list(thickness,["thin","normal","thick"]),
-          "thickness must be a positive number of one of \"thin\", \"thick\", or \"normal\"")
+    assert(is_undef(thickness) || (is_num(thickness) && thickness>0) ||
+           in_list(_downcase_if_str(thickness),["thin","normal","thick","undersized","din"]),
+          "thickness must be a positive number of one of \"thin\", \"thick\", \"normal\", \"undersized\", or \"DIN\"")
     assert(!(is_undef(spec) && is_undef($screw_spec)), "No screw spec given and no parent spec available to inherit")
     let(spec=is_undef(spec) ? $screw_spec : spec)
     assert(is_string(spec) || is_struct(spec), "Screw/nut specification must be a string or struct")
@@ -642,7 +663,7 @@ module screw(spec, head, drive, thread, drive_size,
 // Usage:
 //   screw_hole([spec], [head], [thread=], [length=|l=], [oversize=], [hole_oversize=], [head_oversize], [tolerance=], [$slop=], [anchor=], [atype=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
-//   Create a screw hole mask.  See [screw parameters](#section-screw-parameters) for details on the parameters that define a screw.
+//   Create a screw hole mask.  See [screw and nut parameters](#section-screw-and-nut-parameters) for details on the parameters that define a screw.
 //   The screw hole can be threaded to receive a screw or it can be an unthreaded clearance hole.  
 //   The tolerance determines the dimensions of the screw
 //   based on ISO and ASME standards.  Screws fabricated at those dimensions will mate properly with standard hardware.
@@ -659,7 +680,10 @@ module screw(spec, head, drive, thread, drive_size,
 //   The counterbore parameter adds a cylindrical clearance hole above the screw shaft.  For flat heads it extends above the flathead and for other screw types it 
 //   replaces the head with a cylinder large enough for the head to fit.  For a flat head you must specify the length of the counterbore.  For other heads you can
 //   set counterbore to true and it will be sized to match the head height.  The counterbore will extend 0.01 above the TOP of the hole mask to ensure no
-//   problems with differences.  
+//   problems with differences.
+//   .
+//   Anchoring for screw_hole() is the same as anchoring for {{screw()}}, with all the same anchor types and named anchors.  If you specify a counterbore it is treated as
+//   the "head", or in the case of flat heads, it becomes part of the head.  
 // Arguments:
 //   spec = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).  This can also be a screw specification structure of the form produced by {{screw_info()}}.  
 //   head = head type.  See [screw heads](#subsection-screw-heads)  Default: none
@@ -713,9 +737,8 @@ module screw(spec, head, drive, thread, drive_size,
 // Example: Threaded hole
 //   diff()
 //     cuboid(20)
-//       attach(TOP)
+//       attach(FRONT)
 //          screw_hole("M16,15",anchor=TOP,thread=true);
-
 module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize, 
              length, l, thread_len, tolerance=undef, counterbore=0, 
              atype="screw",anchor=BOTTOM,spin=0, orient=UP)
@@ -853,9 +876,10 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
 }  
 
 // Module: shoulder_screw()
-// Usage: shoulder_screw(s, d, length, [head=], [thread_len=], [tolerance=], [head_size=], [drive=], [drive_size=], [thread=], [undersize=], [shaft_undersize=], [head_undersize=], [shoulder_undersize=],[atype=],[anchor=],[orient=],[spin=]) [ATTACHMENTS];
+// Usage:
+//   shoulder_screw(s, d, length, [head=], [thread_len=], [tolerance=], [head_size=], [drive=], [drive_size=], [thread=], [undersize=], [shaft_undersize=], [head_undersize=], [shoulder_undersize=],[atype=],[anchor=],[orient=],[spin=]) [ATTACHMENTS];
 // Description:
-//   Create a shoulder screw.  See [screw parameters](#section-screw-parameters) for details on the parameters that define a screw.
+//   Create a shoulder screw.  See [screw and nut parameters](#section-screw-and-nut-parameters) for details on the parameters that define a screw.
 //   The tolerance determines the dimensions of the screw
 //   based on ISO and ASME standards.  Screws fabricated at those dimensions will mate properly with standard hardware.
 //   Note that the $slop argument does not affect the size of screws: it only adjusts screw holes.  This will work fine
@@ -868,16 +892,14 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
 //   and length, and shoulder_screw() will supply the other parameters.
 //   .
 //   Hardware sources like McMaster sell many screws that don't comply with the standards.  If you want to make such a screw then
-//   you can specify 
-//   with a 
+//   you can specify parameters like thread_len, the length of the threaded portion below the shoulder, and you can choose a different head
+//   type.  You will need to specify the size of the head, since it cannot be looked up in tables.  You can also 
+//   generate a screw specification from {{screw_info()}}, possibly create a modified version using {{struct_set()}}, and pass that in rather than giving the parameters.
 //   .
-//   You can generate a screw specification from {{screw_info()}}, possibly create a modified version using {{struct_set()}}, and pass that in rather than giving the parameters.
-//   .
-//   The anchors and anchor types refer to various parts of the screw, which are labeled below.  The "screw" anchor type (the default) is simply 
-//   the whole screw and the "head" anchor is the head.  These anchors use the bounding cylinder for the specified screw part, except for hex
-//   heads, which anchor to a hexagonal prism.  
+//   The anchors and anchor types are the same as for {{screw()}} except that there is an anchor type for the shoulder and an additional set of named anchors
+//   refering to parts of the shoulder.  
 // Arguments:
-//   s = screw system to use, case insensitive, either "ISO", "UTS", "english" or "metric", or a screw specification 
+//   s = screw system to use, case insensitive, either "ISO", "UTS", "english" or "metric", or a screw name or specification.  See [screw naming](#subsection-screw-naming).
 //   d = nominal shoulder diameter in mm for ISO or inches for UTS
 //   length = length of the shoulder (in mm)
 //   ---
@@ -1356,16 +1378,18 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height) {
 //   nut([spec], [shape], [thickness], [nutwidth], [thread=], [tolerance=], [hole_oversize=], [bevel=], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 
 // Description:
-//   Generates a hexagonal nut.  See [screw parameters](#section-screw-parameters) for details on the parameters that define a nut.
-//   As for screws, you can give the specification in `spec` and then omit the name.  The diameter is the flat-to-flat
-//   size of the nut produced.  
+//   Generates a hexagonal or square nut.  See [screw and nut parameters](#section-screw-and-nut-parameters) for details on the parameters that define a nut.
+//   As with screws, you can give the specification in `spec` and then omit the name.  The diameter is the flat-to-flat
+//   size of the nut produced.  The thickness can be "thin", "normal" or "thick" to choose standard nut dimensions.  For metric
+//   nuts you can also use thickness values of "DIN" or "undersized".  The nut's shape is hexagonal by default; set shape to "square" for
+//   a square nut.  
 //   .
 //   The tolerance determines the actual thread sizing based on the nominal size in accordance with standards.  
 //   The $slop parameter determines extra gaps left to account for printing overextrusion.  It defaults to 0.
 // Arguments:
-//   spec = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
+//   spec = nut specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).  This can also be a nut or screw specification structure of the form produced by {{nut_info()}} or {{screw_info()}}.  
 //   shape = "hex" or "square" to specify nut shape.  Default: "hex"
-//   thickness = "thin", "normal", "thick", or a thickness in mm.  Default: "normal"
+//   thickness = "thin", "normal", "thick", or a thickness in mm.  See [nuts](#subsection-nuts).  Default: "normal"
 //   ---
 //   nutwidth = width of nut (overrides table values)
 //   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
@@ -1378,10 +1402,26 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height) {
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
 //   `$screw_spec` is set to the spec specification structure. 
-// Example: A metric and UTS nut at standard dimensions
-//   nut("3/8");
-//   //right(25)   //////////////////////////////////////////// FIXME
-//   //   nut("M8");
+// Example: All the UTS nuts at one size.  Note that square nuts come in only one thickness.  
+//   xdistribute(spacing=0.75*INCH){
+//       nut("3/8",thickness="thin");
+//       nut("3/8",thickness="normal");
+//       nut("3/8",thickness="thick");
+//       nut("3/8",shape="square");
+//   }
+// Example: All the ISO (and DIN) nuts at one size.  Note that M10 is one of the four cases where the DIN nut width is larger.  
+//   ydistribute(spacing=30){
+//      xdistribute(spacing=22){
+//         nut("M10", thickness="thin");
+//         nut("M10",thickness="undersized");
+//         nut("M10",thickness="normal");
+//         nut("M10",thickness="thick");
+//      }
+//      xdistribute(spacing=25){
+//         nut("M10", shape="square", thickness="thin");
+//         nut("M10", shape="square", thickness="normal");      
+//      }
+//   }
 // Example: The three different UTS nut tolerances (thickner than normal nuts)
 //   module mark(number)
 //   {
@@ -1410,6 +1450,7 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
                                 ["width", nutwidth],
                                 ["threads_oversize", hole_oversize],
                                ]);
+   dummy=_validate_nut_spec(spec);
    $screw_spec = spec;
    shape = struct_val(spec, "shape");
    pitch =  struct_val(spec, "pitch") ;
@@ -1417,7 +1458,7 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
    nutwidth = struct_val(spec, "width");
    thickness = struct_val(spec, "thickness");
    threaded_nut(
-        od=nutwidth,
+        nutwidth=nutwidth,
         id=[mean(struct_val(threadspec, "d_minor")),
             mean(struct_val(threadspec, "d_pitch")),
             mean(struct_val(threadspec, "d_major"))],
@@ -1431,7 +1472,7 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
 
 // Module: nut_trap_side()
 // Usage:
-//   nut_trap_side(trap_width, [spec], [shape], [poke_len=], [poke_diam=], [$slop=], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
+//   nut_trap_side(trap_width, [spec], [shape], [thickness], [nutwidth=], [poke_len=], [poke_diam=], [$slop=], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
 //   Create a nut trap that extends sideways, so the nut slides in perpendicular to the screw axis.
 //   The CENTER anchor is the center of the screw hole location in the trap.  The trap width is
@@ -1442,9 +1483,11 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
 //   The trap will have a default tag of "remove" if no other tag is in force.  
 // Arguments:
 //   trap_width = width of nut trap, measured from screw center, must be larger than half the nut width  (If spec is omitted this argument must be given by name.)
-//   spec = screw specification
+//   spec = nut specification, e.g. "M5" or "#8".  See [screw naming](#subsection-screw-naming).  This can also be a screw or nut specification structure of the form produced by {{nut_info()}} or {{screw_info()}}.  
 //   shape = "hex" or "square" to specify the shape of the nut.   Default: "hex"
-//   --- 
+//   thickness = "thin", "normal", or "thick".  "DIN" or "undersized" for metric nuts.  See [nuts](#subsection-nuts). Default: "normal"
+//   ---
+//   nutwidth = width of the nut.  Default: determined from tables
 //   poke_len = length of poke hole.  Default: no poke hole
 //   poke_diam = diameter of poke hole.  Default: nut thickness
 //   $slop = extra space left to account for printing over-extrusion.  Default: 0
@@ -1479,17 +1522,17 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
 //      position(TOP)screw_hole("#8,1",anchor=TOP) 
 //        position(BOT) nut_trap_side(trap_width=16);
 // Example: Hole-trap assembly where we position the trap relative to a feature on the model and then position the screw hole through the trap as a child to the trap.  
-//   diff()
+//  diff()
 //   cuboid([30,30,20])
 //     position(RIGHT)cuboid([4,20,3],anchor=LEFT)
 //       right(1)position(TOP+LEFT)nut_trap_side(15, "#8",anchor=BOT+RIGHT)
-//         screw_hole(length=20);
+//         screw_hole(length=20,anchor=BOT);
 module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, orient, spin, poke_len=0, poke_diam) {
   dummy9=assert(is_num(trap_width), "trap_width is missing or the wrong type");
   tempspec = _get_spec(spec, "nut_info", "nut_trap", shape=shape, thickness=thickness);
   nutdata = _struct_reset(tempspec, [["width", nutwidth]]);
-  echo_struct(nutdata);
   $screw_spec = is_def(spec) ? nutdata : $screw_spec;
+  dummy8 = _validate_nut_spec(nutdata);
   nutwidth = struct_val(nutdata,"width")+2*get_slop();
   dummy = assert(is_num(poke_len) && poke_len>=0, "poke_len must be a nonnegative number")
           assert(is_undef(poke_diam) || (is_num(poke_diam) && poke_diam>0), "poke_diam must be a positive number")
@@ -1525,8 +1568,8 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 //   do this backwards, to declare a trap at a screw size and make a child screw hole, which will inherit
 //   the screw dimensions.  
 // Arguments:
-//   length/l/height/h = length/height of nut trap (must be given by name if spec is omitted)
-//   spec = screw specification
+//   length/l/height/h = length/height of nut trap
+//   spec = nut specification, e.g. "M5" or "#8".  See [screw naming](#subsection-screw-naming).  This can also be a screw or nut specification structure of the form produced by {{nut_info()}} or {{screw_info()}}.  
 //   shape = "hex" or "square to determine type of nut.  Default: "hex"
 //   ---
 //   $slop = extra space left to account for printing over-extrusion.  Default: 0
@@ -1547,7 +1590,7 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 // Example: Nut trap with child screw hole
 //   nut_trap_inline(10, "#8")
 //     position(TOP)screw_hole(length=10,anchor=BOT,head="flat");
-// Example: a pipe clamp
+// Example(Med): a pipe clamp
 //   bardiam = 32;
 //   bandwidth = 10;
 //   thickness = 3;
@@ -1563,8 +1606,8 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orient, spin) {
   tempspec = _get_spec(spec, "nut_info", "nut_trap", shape=shape, thickness=undef);
   nutdata = _struct_reset(tempspec, [["width", nutwidth]]);
-  echo_struct(nutdata);
   $screw_spec = is_def(spec) ? nutdata : $screw_spec;
+  dummy = _validate_nut_spec(nutdata);
   length = one_defined([l,length,h,height],"l,length,h,height");
   assert(is_num(length) && length>0, "length must be a positive number");
   nutwidth = struct_val(nutdata,"width")+2*get_slop();
@@ -1586,7 +1629,7 @@ module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orie
 //   info = screw_info(spec, [head], [drive], [thread=], [drive_size=], [oversize=], [head_oversize=])
 // Description:
 //   Look up screw characteristics for the specified screw type.
-//   See [screw parameters](#section-screw-parameters) for details on the parameters that define a screw.
+//   See [screw and nut parameters](#section-screw-and-nut-parameters) for details on the parameters that define a screw.
 //   .
 //   The `oversize=` parameter adds the specified amount to the screw and head diameter to make an
 //   oversized screw.  Does not affect length, thread pitch or head height.
@@ -1594,7 +1637,7 @@ module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orie
 //   Note that flat head screws are defined by two different diameters, the theoretical maximum diameter, "head_size_sharp"
 //   and the actual diameter, "head_size".  The screw form is defined using the theoretical maximum, which gives
 //   sharp circular edge at the top of the screw.  Real screws have a flat chamfer around the edge.  
-// Figure(2D,Med,NoAxes,VPD=39,VPT=[0,-4]):  Flat head screw geometry
+// Figure(2D,Med,NoAxes,VPD=39,VPT=[0,-4,0],VPR=[0,0,0]):  Flat head screw geometry
 //   polysharp = [[0, -5.07407], [4.92593, -5.07407], [10, 0], [10, 0.01], [0, 0.01]];
 //   color("blue"){
 //       xflip_copy()polygon(polysharp);
@@ -1704,9 +1747,12 @@ function screw_info(spec, head, drive, thread, drive_size, threads_oversize=0, h
 //   hole_oversize = amount ot increase diameter of hole in nut.  Default: 0
 
 function nut_info(spec, shape, thickness, thread, hole_oversize=0, width, _origin) =
+  assert(is_undef(thickness) || (is_num(thickness) && thickness>0) ||
+           in_list(_downcase_if_str(thickness),["thin","normal","thick","undersized","din"]),
+          "thickness must be a positive number of one of \"thin\", \"thick\", \"normal\", \"undersized\", or \"DIN\"")
   let(
-      shape = default(shape,"hex"),
-      thickness = default(thickness, "normal")
+      shape = downcase(default(shape,"hex")),
+      thickness = _downcase_if_str(default(thickness, "normal"))
   )
   assert(is_string(spec), str("Nut specification must be a string ",spec))
   assert(in_list(shape, ["hex","square"]), "Nut shape must be \"hex\" or \"square\"")
@@ -1716,8 +1762,8 @@ function nut_info(spec, shape, thickness, thread, hole_oversize=0, width, _origi
       thread = is_undef(thread) || thread==true ? "coarse"
              : thread==false || thread=="none" ? 0
              : thread,
-      nutdata = type[0]=="english" ? _nut_info_english(type[1],type[2], thread, shape, thickness)
-              : type[0]=="metric" ?  _nut_info_metric(type[1],type[2], thread, shape, thickness)
+      nutdata = type[0]=="english" ? _nut_info_english(type[1],type[2], thread, shape, thickness, width)
+              : type[0]=="metric" ?  _nut_info_metric(type[1],type[2], thread, shape, thickness, width)
               : []
   )
   _struct_reset(nutdata, [["name", spec],
@@ -1729,6 +1775,8 @@ function nut_info(spec, shape, thickness, thread, hole_oversize=0, width, _origi
 
 // Nut data is from ASME B18.2.2, mostly Table A-1
 function _nut_info_english(diam, threadcount, thread, shape, thickness, width) =
+  assert(!is_string(thickness) || in_list(thickness,["normal","thin","thick"]),
+         "You cannot use thickness \"DIN\" or \"undersized\" with English nuts")
   let(
        screwspec=_screw_info_english(diam, threadcount, head="none", thread=thread),
        diameter = struct_val(screwspec,"diameter")/INCH,
@@ -1792,7 +1840,8 @@ function _nut_info_english(diam, threadcount, thread, shape, thickness, width) =
                 : diameter < 11/16 ? quantdn(7/8*diameter,1/64)
                 : diameter < 1+3/16 ? 7/8*diameter - 1/64
                 : 7/8 * diameter - 1/32, 
-      width = is_def(entry[1]) ? entry[1]
+      width = is_num(width) ? width/INCH
+            : is_def(entry[1]) ? entry[1]
             : shape=="square" ? (diameter<5/8 ? quantup(1.5*diameter,1/16)+1/16 : 1.5*diameter)
             : quantup(1.5*diameter,1/16)
   )
@@ -1805,42 +1854,123 @@ function _nut_info_english(diam, threadcount, thread, shape, thickness, width) =
    ["shape", shape]];
 
 
+function _downcase_if_str(s) = is_string(s) ? downcase(s) : s;
 
- /*
+function _nut_info_metric(diam, pitch, thread, shape, thickness, width) =
+  let(
+       screwspec=_screw_info_metric(diam, pitch, head="none", thread=thread),
+       diameter = struct_val(screwspec,"diameter"),
 
-   normal
-   1.6, [3.2
-   2,   [4    1.6
-   2.5, [5    2
-   3,   [5.5  2.4
-   4,   [7    3.2
-   5,   [8    4
-   6,   [10   
-   8,   [13   6.5
-   10,  [16   8
-   12,  [18   10
-   16,  [24   13
-   20,  [30   16
-   24,  [36   19
-   30,  [46   24
-   36,  [55   29
-   42,  [65   34
-   48,  [75   38
-   56,  [85
-   64,  [95
-
-   3.5, [6
-   14,  [21
-   18,  [27
-   22,  [34
-   27,  [41
-   33,  [50
-   39,  [60
-   45,  [70
-   52,  [80
-   60,  [90
-*/
-   
+       ISO_table =      //     - ASME B18.4.1M -    DIN 439
+          //                   --- ISO 4032 ----   ISO 4035   ISO 4033 
+          //                   normal     normal     thin       thick
+          // diam    width     midpt      max        (max)      (max)
+          // Preferred threads
+          [
+             [1.6,   [3.2 ,     1.2,       1.3,       1.0   ]],
+             [2,     [4   ,     1.5,       1.6,       1.2   ]],
+             [2.5,   [5   ,     1.875,     2,         1.6   ]],
+             [3,     [5.5 ,     2.25,      2.4,       1.8   ]],
+             [4,     [7   ,     3,         3.2,       2.2   ]],
+             [5,     [8   ,     4.5 ,      4.7,       2.7,      5.1]],
+             [6,     [10  ,     5,         5.2,       3.2,      5.7]],
+             [8,     [13  ,     6.675,     6.8,      undef,      7.5]],
+             [10,    [16  ,     8.25,      8.4,      undef,      9.3]],
+             [12,    [18  ,     10.5,     10.8,      undef,     12  ]],
+             [16,    [24  ,     14.5,     14.8,      undef,     16.4]],
+             [20,    [30  ,     17.5,     18,        undef,     20.3]],
+             [24,    [36  ,     21,       21.5,      undef,     23.9]],
+             [30,    [46  ,     25,       25.6,      undef,     28.6]],
+             [36,    [55  ,     30,       31,        undef,     34.7]],
+             [42,    [65  ,     33,       34,        undef      ]],
+             [48,    [75  ,     37,       38,        undef      ]],
+             [56,    [85  ,     44,       45,        undef      ]],
+             [64,    [95  ,     50,       51,        undef      ]],
+          // Non-preferred threads
+             [3.5,   [ 6,       2.675,     2.8,      2          ]],
+             [14,    [21,      12.5,      12.8,      undef,     14.1]],
+             [18,    [27,      15.5,      15.8,      undef,     17.6]],
+             [22,    [34,      19,        19.4,      undef,     21.8]],
+             [27,    [41,      23,        23.8,      undef,     26.7]],
+             [33,    [50,      28,        28.7,      undef,     32.5]],
+             [39,    [60,      33,        33.4,      undef      ]],
+             [45,    [70,      35,        36,        undef      ]],
+             [52,    [80,      41,        42,        undef      ]],
+             [60,    [90,      47,        48,        undef      ]]
+          ],
+       DIN_table =
+          [
+             //                  DIN 934   DIN 936  DIN 562     DIN 557
+             //diam      width   normal    thin    thin square   square
+             [   1,    [   2.5,    0.8,   undef]],
+             [   1.2,  [   3,      1  ,   undef]],
+             [   1.4,  [   3,      1.2,   undef]],
+             [   1.6,  [   3.2,    1.3,   undef,      1.0]],
+             [   2,    [   4,      1.6,   undef,      1.2]],
+             [   2.5,  [   5,      2  ,   undef,      1.6]],
+             [   3,    [   5.5,    2.4,   undef,      1.8]],
+             [   3.5,  [   6,      2.8,   undef,      2.0]],
+             [   4,    [   7,      3.2,     2.8,      2.2]],
+             [   5,    [   8,      4,       3.5,      2.7]],
+             [   6,    [  10,      5,       4  ,      3.2]],
+             [   7,    [  11,      5.5,     4  ]],
+             [   8,    [  13,      6.5,     5        ]],
+             [  10,    [  17,      8,       6        ]],     //
+             [  12,    [  19,     10,       7  ]],  //
+             [  14,    [  22,     11,       8  ]],  //
+             [  16,    [  24,     13,       8  ]],
+             [  18,    [  27,     15,       9  ]],
+             [  20,    [  30,     16,       9  ]],
+             [  22,    [  32,     18,      10  ]],  //
+             [  24,    [  36,     19,      10  ]],
+             [  27,    [  41,     22,      12  ]],
+             [  30,    [  46,     24,      12  ]],
+             [  33,    [  50,     26,      14  ]],
+             [  36,    [  55,     29,      14  ]],
+             [  39,    [  60,     31,      16  ]],
+             [  42,    [  65,     34,      16  ]],
+             [  45,    [  70,     36,      18  ]],
+             [  48,    [  75,     38,      18  ]],
+             [  52,    [  80,     42,      20  ]],
+             [  56,    [  85,     45]],
+             [  60,    [  90,     48]],
+             [  64,    [  95,     51]],
+             [  68,    [ 100,     54]],
+             [  72,    [ 105,     58]],
+             [  76,    [ 110,     61]],
+             [  80,    [ 115,     64]],
+             [  85,    [ 120,     68]],
+             [  90,    [ 130,     72]],
+             [ 100,    [ 145,     80]],
+             [ 110,    [ 155,     88]],
+             [ 125,    [ 180,    100]],
+             [ 140,    [ 200,    112]],
+             [ 160,    [ 230,    128]]
+          ],
+          useDIN = thickness=="din" || thickness=="undersized" || shape=="square", 
+          entry = struct_val(useDIN ? DIN_table : ISO_table, diameter),
+          width = is_def(width) ? width
+                : entry[0],
+          thickind = useDIN && thickness=="thin" ? 3
+                   : useDIN ? 1 
+                   : thickness=="normal" ? 2
+                   : thickness=="thin" ? 3
+                   : thickness=="thick" ? 4
+                   : undef,
+          thickness = is_num(thickness) ? thickness
+                    : is_def(entry[thickind]) ? entry[thickind]
+                    : thickness=="thin" && diameter > 8 ? diam/2
+                    : undef
+  )
+  assert(is_def(thickness) && is_def(width), "Unknown thickness, size and shape combination for nut")
+  [["type","nut_info"],
+   ["system", "ISO"],
+   ["diameter", struct_val(screwspec, "diameter")],
+   ["pitch", struct_val(screwspec,"pitch")],
+   ["width", width],
+   ["thickness", thickness],
+   ["shape", shape]];
+          
 
 function _screw_info_english(diam, threadcount, head, thread, drive) =
  let(
@@ -2565,8 +2695,30 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
 
 function _is_positive(x) = is_num(x) && x>0;
 
+
+function _validate_nut_spec(spec) =
+   let(
+       //dummy=echo_struct(spec,"Screw Specification"),
+       systemOK = in_list(struct_val(spec,"system"), ["UTS","ISO"]),
+       diamOK = _is_positive(struct_val(spec, "diameter")),
+       pitch = struct_val(spec,"pitch"),
+       pitchOK = is_undef(pitch) || (is_num(pitch) && pitch>=0),
+       shape = struct_val(spec, "shape"),
+       shapeOK = shape=="hex" || shape=="square",
+       thicknessOK = _is_positive(struct_val(spec, "thickness")),
+       widthOK = _is_positive(struct_val(spec, "width"))
+    )
+    assert(systemOK, str("Nut spec has invalid \"system\", ", struct_val(spec,"system"), ".  Must be \"ISO\" or \"UTS\""))
+    assert(diamOK, str("Nut spec has invalid \"diameter\", ", struct_val(spec,"diameter")))
+    assert(pitchOK, str("Nut spec has invalid \"pitch\", ", pitch))
+    assert(shapeOK, str("Nut spec has invalid \"shape\", ", shape, ".  Must be \"square\" or \"hex\""))
+    assert(thicknessOK, str("Nut spec thickness is not a postive number: ",struct_val(spec,"thickness")))
+    assert(widthOK, str("Nut spec width is not a postive number: ",struct_val(spec,"width")))
+    spec;
+
+    
 function _validate_screw_spec(spec) = let(
-    dummy=echo_struct(spec,"Screw Specification"),
+    //dummy=echo_struct(spec,"Screw Specification"),
     systemOK = in_list(struct_val(spec,"system"), ["UTS","ISO"]),
     diamOK = _is_positive(struct_val(spec, "diameter")),
     pitch = struct_val(spec,"pitch"),
