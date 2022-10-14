@@ -692,9 +692,12 @@ module screw(spec, head, drive, thread, drive_size,
 //   set counterbore to true and it will be sized to match the head height.  The counterbore will extend 0.01 above the TOP of the hole mask to ensure no
 //   problems with differences.  Note that the counterbore defaults to true for non-flathead screws.  If you want the actual head shape to appear, set counterbore to zero.
 //   .
+//   For 3d printing circular holes can be problematic.  One solution is to use octagonal holes, setting $fn=8.  Another option is to use a teardrop hole, which
+//   can be accomplished by setting `teardrop=true`.  The point of the teardrop will point in the Y direction (BACK) so you will need to ensure that you orient it
+//   correctly in your final model.  
+//   .
 //   Anchoring for screw_hole() is the same as anchoring for {{screw()}}, with all the same anchor types and named anchors.  If you specify a counterbore it is treated as
 //   the "head", or in the case of flat heads, it becomes part of the head.  If you make a teardrop hole the point is ignored for purposes of anchoring.
-//   The point of the teardrop is in the Y direction.  
 // Arguments:
 //   spec = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).  This can also be a screw specification structure of the form produced by {{screw_info()}}.  
 //   head = head type.  See [screw heads](#subsection-screw-heads)  Default: none

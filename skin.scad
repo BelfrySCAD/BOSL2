@@ -1528,7 +1528,7 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
 
     if (profiles){
         assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
-        tran = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
+        tran = path_sweep(shape, path, method, normal, closed, twist, twist_by_length, scale, 
                           symmetry, last_normal, tangent, uniform, relaxed,transforms=true);
         rshape = is_path(shape) ? [path3d(shape)]
                                 : [for(s=shape) path3d(s)];
@@ -1546,8 +1546,8 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
 function path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true, scale=1,
                     symmetry=1, last_normal, tangent, uniform=true, relaxed=false, caps, style="min_edge", transforms=false,
                     anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull") =
-  is_1region(path) ? path_sweep(shape=shape,path=path[0], method=method, normal=normal, closed=default(closed,true), scale=scale,
-                                twist=twist, twist_by_length=twist_by_length, symmetry=symmetry, last_normal=last_normal,
+  is_1region(path) ? path_sweep(shape=shape,path=path[0], method=method, normal=normal, closed=default(closed,true), 
+                                twist=twist, scale=scale, twist_by_length=twist_by_length, symmetry=symmetry, last_normal=last_normal,
                                 tangent=tangent, uniform=uniform, relaxed=relaxed, caps=caps, style=style, transforms=transforms,
                                 anchor=anchor, cp=cp, spin=spin, orient=orient, atype=atype) :
   let(closed=default(closed,false))
