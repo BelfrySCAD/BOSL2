@@ -937,7 +937,7 @@ module spikeball(r, d, anchor=CENTER, spin=0, orient=UP) {
     r = get_radius(r=r,d=d,dflt=1);
     attachable(anchor,spin,orient, r=r*1.1) {
         union() {
-            ovoid_spread(r=r, n=512, cone_ang=180) cylinder(r1=r/10, r2=0, h=r/10);
+            sphere_copies(r=r, n=512, cone_ang=180) cylinder(r1=r/10, r2=0, h=r/10);
             sphere(r=r);
         }
         children();
@@ -946,7 +946,7 @@ module spikeball(r, d, anchor=CENTER, spin=0, orient=UP) {
 spikeball(r=50) show_anchors(20);
 ```
 
-If the shape is more of an ovoid, you can pass a 3-item vector of sizes to `r=` or `d=`.
+If the shape is an ellipsoid, you can pass a 3-item vector of sizes to `r=` or `d=`.
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -954,7 +954,7 @@ module spikeball(r, d, scale, anchor=CENTER, spin=0, orient=UP) {
     r = get_radius(r=r,d=d,dflt=1);
     attachable(anchor,spin,orient, r=r*1.1*scale) {
         union() {
-            ovoid_spread(r=r, n=512, scale=scale, cone_ang=180) cylinder(r1=r/10, r2=0, h=r/10);
+            sphere_copies(r=r, n=512, scale=scale, cone_ang=180) cylinder(r1=r/10, r2=0, h=r/10);
             scale(scale) sphere(r=r);
         }
         children();
