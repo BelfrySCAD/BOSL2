@@ -385,6 +385,9 @@ module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=U
 //   rounding = Radius of the edge rounding.
 //   ---
 //   d = Diameter of cylinder.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   difference() {
 //     cylinder(r=50, h=50, center=false);
@@ -402,14 +405,16 @@ module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=U
 //         #tag("remove")
 //           rounding_cylinder_mask(d=30, rounding=5);
 //   }
-function rounding_cylinder_mask(r, rounding, d) = no_function("rounding_cylinder_mask");
-module rounding_cylinder_mask(r, rounding, d)
+function rounding_cylinder_mask(r, rounding, d, anchor, spin, orient) = no_function("rounding_cylinder_mask");
+module rounding_cylinder_mask(r, rounding, d, anchor=CENTER, spin=0, orient=UP)
 {
-    no_children($children);
     r = get_radius(r=r, d=d, dflt=1);
-    difference() {
-        cyl(r=r+rounding, l=rounding*2, anchor=CENTER);
-        cyl(r=r, l=rounding*3, rounding=rounding, anchor=TOP);
+    attachable(anchor,spin,orient, r=r+rounding, l=rounding*2) {
+        difference() {
+            cyl(r=r+rounding, l=rounding*2, anchor=CENTER);
+            cyl(r=r, l=rounding*3, rounding=rounding, anchor=TOP);
+        }
+        children();
     }
 }
 
@@ -428,6 +433,7 @@ module rounding_cylinder_mask(r, rounding, d)
 //   d = Diameter of hole to rounding.
 //   rounding = Radius of the rounding.
 //   excess = The extra thickness of the mask.  Default: `0.1`.
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -473,6 +479,10 @@ module rounding_hole_mask(r, rounding, excess=0.1, d, anchor=CENTER, spin=0, ori
 //   d = Diameter of the mask rounding.
 //   angle = Maximum angle from vertical. Default: 45
 //   excess = Excess mask size.  Default: 0.1
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example(VPD=50,VPR=[55,0,120]):
 //   teardrop_edge_mask(l=20, r=10, angle=40);
 // Example(VPD=300,VPR=[75,0,25]):
@@ -483,19 +493,16 @@ module rounding_hole_mask(r, rounding, excess=0.1, d, anchor=CENTER, spin=0, ori
 //       corner_mask(BOT)
 //           teardrop_corner_mask(r=10, angle=40);
 //   }
-function teardrop_edge_mask(l, r, angle, excess=0.1, d) = no_function("teardrop_edge_mask");
-module teardrop_edge_mask(l, r, angle, excess=0.1, d)
+function teardrop_edge_mask(l, r, angle, excess=0.1, d, anchor, spin, orient) = no_function("teardrop_edge_mask");
+module teardrop_edge_mask(l, r, angle, excess=0.1, d, anchor=CTR, spin=0, orient=UP)
 {
-    no_children($children);
     assert(is_num(l));
     assert(is_num(angle));
     assert(is_num(excess));
     assert(angle>0 && angle<90);
     r = get_radius(r=r, d=d, dflt=1);
-    difference() {
-        translate(-[1,1,0]*excess) cube([r+excess,r+excess,l], anchor=FWD+LEFT);
-        translate([r,r,0]) teardrop(r=r, l=l+1, cap_h=r, ang=angle, orient=FWD);
-    }
+    path = mask2d_teardrop(r=r, angle=angle, excess=excess);
+    linear_sweep(path, height=l, center=true, atype="bbox", anchor=anchor, spin=spin, orient=orient) children();
 }
 
 
@@ -510,6 +517,9 @@ module teardrop_edge_mask(l, r, angle, excess=0.1, d)
 //   excess = Excess mask size.  Default: 0.1
 //   ---
 //   d = Diameter of the mask rounding.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   teardrop_corner_mask(r=20, angle=40);
 // Example:
@@ -520,17 +530,21 @@ module teardrop_edge_mask(l, r, angle, excess=0.1, d)
 //       corner_mask(BOT)
 //           teardrop_corner_mask(r=10, angle=40);
 //   }
-function teardrop_corner_mask(r, angle, excess=0.1, d) = no_function("teardrop_corner_mask");
-module teardrop_corner_mask(r, angle, excess=0.1, d)
+function teardrop_corner_mask(r, angle, excess=0.1, d, anchor, spin, orient) = no_function("teardrop_corner_mask");
+module teardrop_corner_mask(r, angle, excess=0.1, d, anchor=CTR, spin=0, orient=UP)
 {  
-    no_children($children);
     assert(is_num(angle));
     assert(is_num(excess));
     assert(angle>0 && angle<90);
     r = get_radius(r=r, d=d, dflt=1);
-    difference() {
-        translate(-[1,1,1]*excess) cube(r+excess, center=false);
-        translate([1,1,1]*r) onion(r=r, ang=angle, orient=DOWN);
+    size = (r+excess) * [1,1,1];
+    midpt = (r-excess)/2 * [1,1,1];
+    attachable(anchor,spin,orient, size=size, offset=midpt) {
+        difference() {
+            translate(-[1,1,1]*excess) cube(r+excess, center=false);
+            translate([1,1,1]*r) onion(r=r, ang=angle, orient=DOWN);
+        }
+        children();
     }
 }
 

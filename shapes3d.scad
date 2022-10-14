@@ -4,7 +4,7 @@
 //   that produce a VNF.  Also included are shortcuts cylinders in each orientation and extended versions of
 //   the standard modules that provide roundovers and chamfers.  The spheroid() module provides
 //   several different ways to make a sphere, and the text modules let you write text on a path
-//   so you can place it on a curved object.  A ruler lets you measure objects.  
+//   so you can place it on a curved object.  A ruler lets you measure objects.
 // Includes:
 //   include <BOSL2/std.scad>
 // FileGroup: Basic Modeling
@@ -319,7 +319,7 @@ module cuboid(
     teardrop = is_bool(teardrop)&&teardrop? 45 : teardrop;
     chamfer = approx(chamfer,0) ? undef : chamfer;
     rounding = approx(rounding,0) ? undef : rounding;
-    checks = 
+    checks =
         assert(is_vector(size,3))
         assert(all_positive(size))
         assert(is_undef(chamfer) || is_finite(chamfer),"chamfer must be a finite value")
@@ -574,7 +574,7 @@ function cuboid(
 //   Creates a rectangular prismoid shape with optional roundovers and chamfering.
 //   You can only round or chamfer the vertical(ish) edges.  For those edges, you can
 //   specify rounding and/or chamferring per-edge, and for top and bottom separately.
-//   If you want to round the bottom or top edges see {{rounded_prism()}}.  
+//   If you want to round the bottom or top edges see {{rounded_prism()}}.
 //
 // Arguments:
 //   size1 = [width, length] of the bottom end of the prism.
@@ -657,7 +657,7 @@ module prismoid(
     eps = pow(2,-14);
     size1 = is_num(size1)? [size1,size1] : size1;
     size2 = is_num(size2)? [size2,size2] : size2;
-    checks2 = 
+    checks2 =
         assert(all_nonnegative(size1))
         assert(all_nonnegative(size2))
         assert(size1.x + size2.x > 0)
@@ -951,7 +951,7 @@ module rect_tube(
     isize2 = is_def(is2)? is2 :
         (is_def(wall) && is_def(s2))? (s2-2*[wall,wall]) :
         undef;
-    checks2 = 
+    checks2 =
         assert(wall==undef || is_num(wall))
         assert(size1!=undef, "Bad size/size1 argument.")
         assert(size2!=undef, "Bad size/size2 argument.")
@@ -1155,10 +1155,15 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   cyl(l|h, r|d, rounding2=, ...);
 //   cyl(l|h, r|d, rounding1=, rounding2=, ...);
 //
+// Usage: Textured Cylinders
+//   cyl(l|h, r|d, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h, r1=, r2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h, d1=, d2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//
 // Topics: Cylinders, Textures, Rounding, Chamfers
 //
 // Description:
-//   Creates cylinders in various anchorings and orientations, with optional rounding and chamfers.
+//   Creates cylinders in various anchorings and orientations, with optional rounding, chamfers, or textures.
 //   You can use `h` and `l` interchangably, and all variants allow specifying size by either `r`|`d`,
 //   or `r1`|`d1` and `r2`|`d2`.  Note: the chamfers and rounding cannot be cumulatively longer than
 //   the cylinder's length.
@@ -1522,7 +1527,8 @@ module cyl(
                     [0,l/2]
                 ];
 
-                rotate_extrude(convexity=2) polygon(path);
+                vnf = rotate_sweep(path);
+                vnf_polyhedron(vnf, convexity=2);
             }
         }
         children();
@@ -2007,19 +2013,19 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 //   When called as a function, returns a [VNF](vnf.scad) for a spheroid.
 //   The exact triangulation of this spheroid can be controlled via the `style=`
 //   argument, where the value can be one of `"orig"`, `"aligned"`, `"stagger"`,
-//   `"octa"`, or `"icosa"`.  
+//   `"octa"`, or `"icosa"`.
 //   - `style="orig"` constructs a sphere the same way that the OpenSCAD `sphere()` built-in does.
 //   - `style="aligned"` constructs a sphere where, if `$fn` is a multiple of 4, it has vertices at all axis maxima and minima.  ie: its bounding box is exactly the sphere diameter in length on all three axes.  This is the default.
 //   - `style="stagger"` forms a sphere where all faces are triangular, but the top and bottom poles have thinner triangles.
 //   - `style="octa"` forms a sphere by subdividing an octahedron.  This makes more uniform faces over the entirety of the sphere, and guarantees the bounding box is the sphere diameter in size on all axes.  The effective `$fn` value is quantized to a multiple of 4.  This is used in constructing rounded corners for various other shapes.
-//   - `style="icosa"` forms a sphere by subdividing an icosahedron.  This makes even more uniform faces over the whole sphere.  The effective `$fn` value is quantized to a multiple of 5.  This sphere has a guaranteed bounding box when `$fn` is a multiple of 10.  
+//   - `style="icosa"` forms a sphere by subdividing an icosahedron.  This makes even more uniform faces over the whole sphere.  The effective `$fn` value is quantized to a multiple of 5.  This sphere has a guaranteed bounding box when `$fn` is a multiple of 10.
 //   .
 //   By default the object spheroid() produces is a polyhedron whose vertices all lie on the requested sphere.  This means
 //   the approximating polyhedron is inscribed in the sphere.
 //   The `circum` argument requests a circumscribing sphere, where the true sphere is
 //   inside and tangent to all the faces of the approximating polyhedron.  To produce
 //   a circumscribing polyhedron, we use the dual polyhedron of the basic form.  The dual of a polyhedron is
-//   a new polyhedron whose vertices are obtained from the faces of the parent polyhedron.  
+//   a new polyhedron whose vertices are obtained from the faces of the parent polyhedron.
 //   The "orig" and "align" forms are duals of each other.  If you request a circumscribing polyhedron in
 //   these styles then the polyhedron will look the same as the default inscribing form.  But for the other
 //   styles, the duals are completely different from their parents, and from each other.  Generation of the circumscribed versions (duals)
@@ -2030,7 +2036,7 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 //   but is undersized on the Z axis.  With style="octa" the circumscribed sphere has faces at each axis, so
 //   the radius on the axes is equal to the specified radius, which is the *minimum* radius of the circumscribed sphere.
 //   The same thing is true for style="icosa" when $fn is a multiple of 10.  This would enable you to create spherical
-//   holes with guaranteed on-axis dimensions.  
+//   holes with guaranteed on-axis dimensions.
 // Arguments:
 //   r = Radius of the spheroid.
 //   style = The style of the spheroid's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "aligned"
@@ -2052,14 +2058,14 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 //   spheroid(d=100, style="stagger", $fn=10);
 // Example: style="stagger" with circum=true
 //   spheroid(d=100, style="stagger", circum=true, $fn=10);
-// Example: style="octa", octahedral based tesselation.  In this style, $fn is quantized to a multiple of 4. 
+// Example: style="octa", octahedral based tesselation.  In this style, $fn is quantized to a multiple of 4.
 //   spheroid(d=100, style="octa", $fn=10);
 // Example: style="octa", with circum=true, produces mostly very irregular hexagonal faces
 //   spheroid(d=100, style="octa", circum=true, $fn=16);
 // Example: style="icosa", icosahedral based tesselation.  In this style, $fn is quantized to a multiple of 5.
-//   spheroid(d=100, style="icosa", $fn=10);  
+//   spheroid(d=100, style="icosa", $fn=10);
 // Example: style="icosa", circum=true.  This style has hexagons and 12 pentagons, similar to (but not the same as) a soccer ball.
-//   spheroid(d=100, style="icosa", circum=true, $fn=10);  
+//   spheroid(d=100, style="icosa", circum=true, $fn=10);
 // Example: Anchoring
 //   spheroid(d=100, anchor=FRONT);
 // Example: Spin
@@ -2071,10 +2077,10 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 // Example: Called as Function
 //   vnf = spheroid(d=100, style="icosa");
 //   vnf_polyhedron(vnf);
-// Example: With "orig" the circumscribing sphere has the same form.  The green sphere is a tiny bit oversized so it pokes through the low points in the circumscribed sphere with low $fn.  This demonstrates that these spheres are in fact circumscribing.  
+// Example: With "orig" the circumscribing sphere has the same form.  The green sphere is a tiny bit oversized so it pokes through the low points in the circumscribed sphere with low $fn.  This demonstrates that these spheres are in fact circumscribing.
 //   color("green")spheroid(r=10.01, $fn=256);
 //   spheroid(r=10, style="orig", circum=true, $fn=16);
-// Example: With "aligned" the same is true: the circumscribing sphere is also aligned, if $fn is divisible by 4. 
+// Example: With "aligned" the same is true: the circumscribing sphere is also aligned, if $fn is divisible by 4.
 //   color("green")spheroid(r=10.01, $fn=256);
 //   spheroid(r=10, style="aligned", circum=true, $fn=16);
 // Example: For the other styles, the circumscribing sphere is different, as shown here with "stagger"
@@ -2118,8 +2124,8 @@ module spheroid(r, style="aligned", d, circum=false, dual=false, anchor=CENTER, 
 
 
 // p is a list of 3 points defining a triangle in any dimension.  N is the number of extra points
-// to add, so output triangle has N+2 points on each side.  
-function _subsample_triangle(p,N) = 
+// to add, so output triangle has N+2 points on each side.
+function _subsample_triangle(p,N) =
     [for(i=[0:N+1]) [for (j=[0:N+1-i]) unit(lerp(p[0],p[1],i/(N+1)) + (p[2]-p[0])*j/(N+1))]];
 
 
@@ -2165,7 +2171,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
          [reorient(anchor,spin,orient, r=r, p=dualvert), faces]
      :
      style=="icosa" ?    // subdivide faces of an icosahedron and project them onto a sphere
-         let(  
+         let(
              N = icosa_steps-1,
              // construct an icosahedron
              icovert=[ for(i=[-1,1], j=[-1,1]) each [[0,i,j*PHI], [i,j*PHI,0], [j*PHI,0,i]]],
@@ -2188,7 +2194,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
              // Expand to full face list
              fullfaces = [for(i=idx(tri_list)) each [for(f=faces) f+i*size]],
              fullvert = flatten(flatten(tri_list))    // eliminate triangle structure
-         ) 
+         )
          [reorient(anchor,spin,orient, r=r, p=fullvert), fullfaces]
      :
      let(
@@ -2231,10 +2237,10 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                       [
                        for (i=idx(meridians), j=[0:1:meridians[i]-1])
                            spherical_to_xyz(r, j*360/meridians[i], i*180/(len(meridians)-1))
-                      ]       
+                      ]
               : assert(in_list(style,["orig","aligned","stagger","octa","icosa"])),
         lv = len(verts),
-        faces = circum && style=="stagger" ?  
+        faces = circum && style=="stagger" ?
                      let(ptcount=2*hsides)
                      [
                        [for(i=[ptcount-2:-2:0]) i],
@@ -2252,7 +2258,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                             ? [(j*2+3)%ptcount, j*2+1, lv-ptcount+(2+j*2)%ptcount, lv-ptcount+(3+j*2)%ptcount, lv-ptcount+(4+j*2)%ptcount]
                             : [(j*2+3)%ptcount, j*2+1, lv-ptcount+(1+j*2)%ptcount, lv-ptcount+(j*2)%ptcount, lv-ptcount+(3+j*2)%ptcount],
                        [for(i=[1:2:ptcount-1]) i],
-                     ]       
+                     ]
               : style=="aligned" || style=="stagger" ?  // includes case of aligned with circum == true
                      [
                        for (i=[0:1:hsides-1])
@@ -2270,7 +2276,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                                  ] : [
                                      [base+j, base+(j+1)%hsides, base+hsides+(j+1)%hsides],
                                      [base+j, base+hsides+(j+1)%hsides, base+hsides+j],
-                                 ]  
+                                 ]
                            )
                      ]
               : style=="orig"? [
@@ -2280,7 +2286,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                                     each [
                                           [(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
                                           [(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
-                                    ]                   
+                                    ]
                                ]
               : /*style=="octa"?*/
                      let(
@@ -2288,7 +2294,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                                       0, 1,
                                       for (i = [1:1:octa_steps]) i*4,
                                       for (i = [octa_steps-1:-1:1]) i*4,
-                                      1,       
+                                      1,
                                      ],
                          offs = cumsum(meridians),
                          pc = last(offs)-1,
@@ -2318,7 +2324,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                                     [p5, p7, p8],
                                     if (k<m-1) [p5, p8, p6],
                                    ],
-                     ] 
+                     ]
     ) [reorient(anchor,spin,orient, r=r, p=verts), faces];
 
 
@@ -2687,7 +2693,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 // Usage:
 //   text3d(text, [h], [size], [font], ...);
 // Description:
-//   Creates a 3D text block that supports anchoring and attachment to attachable objects.  You cannot attach children to text. 
+//   Creates a 3D text block that supports anchoring and attachment to attachable objects.  You cannot attach children to text.
 //   .
 //   Historically fonts were specified by their "body size", the height of the metal body
 //   on which the glyphs were cast.  This means the size was an upper bound on the size
@@ -2707,7 +2713,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   font size, you should multiply your desired size by 0.72.
 //   .
 //   To find the fonts that you have available in your OpenSCAD installation,
-//   go to the Help menu and select "Font List".  
+//   go to the Help menu and select "Font List".
 // Arguments:
 //   text = Text to create.
 //   h = Extrusion height for the text.  Default: 1
@@ -2810,21 +2816,21 @@ function _cut_interp(pathcut, path, data) =
 //   as determined by the path direction.  In 3D by default letters are positioned on the tangent line to the path with the path normal
 //   pointing toward the reader.  The path normal points away from the center of curvature (the opposite of the normal produced
 //   by path_normals()).  Note that this means that if the center of curvature switches sides the text will flip upside down.
-//   If you want text on such a path you must supply your own normal or top vector. 
-//   . 
+//   If you want text on such a path you must supply your own normal or top vector.
+//   .
 //   Text appears starting at the beginning of the path, so if the 3D path moves right to left
 //   then a left-to-right reading language will display in the wrong order. (For a 2D path text will appear upside down.)
 //   The text for a 3D path appears positioned to be read from "outside" of the curve (from a point on the other side of the
 //   curve from the center of curvature).  If you need the text to read properly from the inside, you can set reverse to
-//   true to flip the text, or supply your own normal.  
+//   true to flip the text, or supply your own normal.
 //   .
 //   If you do not have the experimental textmetrics feature enabled then you must specify the space for the letters
 //   using lettersize, which can be a scalar or array.  You will have the easiest time getting good results by using
 //   a monospace font such as Courier.  Note that even with text metrics, spacing may be different because path_text()
-//   doesn't do kerning to adjust positions of individual glyphs.  Also if your font has ligatures they won't be used.  
+//   doesn't do kerning to adjust positions of individual glyphs.  Also if your font has ligatures they won't be used.
 //   .
 //   By default letters appear centered on the path.  The offset can be specified to shift letters toward the reader (in
-//   the direction of the normal).  
+//   the direction of the normal).
 //   .
 //   You can specify your own normal by setting `normal` to a direction or a list of directions.  Your normal vector should
 //   point toward the reader.  You can also specify
@@ -2851,7 +2857,7 @@ function _cut_interp(pathcut, path, data) =
 //   font size, you should multiply your desired size by 0.72.
 //   .
 //   To find the fonts that you have available in your OpenSCAD installation,
-//   go to the Help menu and select "Font List".  
+//   go to the Help menu and select "Font List".
 // Arguments:
 //   path = path to place the text on
 //   text = text to create
@@ -2867,7 +2873,7 @@ function _cut_interp(pathcut, path, data) =
 //   reverse = reverse the letters if true.  Not allowed for 2D path.  Default: false
 //   textmetrics = if set to true and lettersize is not given then use the experimental textmetrics feature.  You must be running a dev snapshot that includes this feature and have the feature turned on in your preferences.  Default: false
 //   kern = scalar or array giving size adjustments for each letter.  Default: 0
-// Example(3D,NoScales):  The examples use Courier, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder. 
+// Example(3D,NoScales):  The examples use Courier, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder.
 //   path = path3d(arc(100, r=25, angle=[245, 370]));
 //   color("red")stroke(path, width=.3);
 //   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2);
@@ -2875,11 +2881,11 @@ function _cut_interp(pathcut, path, data) =
 //   path = path3d(arc(100, r=25, angle=[245, 370]));
 //   color("red")stroke(path, width=.3);
 //   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, normal=UP);
-// Example(3D,NoScales):  If we want text that reads from the other side we can use reverse.  Note we have to reverse the direction of the path and also set the reverse option.  
+// Example(3D,NoScales):  If we want text that reads from the other side we can use reverse.  Note we have to reverse the direction of the path and also set the reverse option.
 //   path = reverse(path3d(arc(100, r=25, angle=[65, 190])));
 //   color("red")stroke(path, width=.3);
 //   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, reverse=true);
-// Example(3D,Med,NoScales): text debossed onto a cylinder in a spiral.  The text is 1 unit deep because it is half in, half out. 
+// Example(3D,Med,NoScales): text debossed onto a cylinder in a spiral.  The text is 1 unit deep because it is half in, half out.
 //   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
 //   L = 5*len(text);
 //   maxang = 360*L/(PI*50);
@@ -2888,7 +2894,7 @@ function _cut_interp(pathcut, path, data) =
 //     cyl(d=50, l=50, $fn=120);
 //     path_text(spiral, text, size=5, lettersize=5/1.2, font="Courier", thickness=2);
 //   }
-// Example(3D,Med,NoScales): Same example but text embossed.  Make sure you have enough depth for the letters to fully overlap the object. 
+// Example(3D,Med,NoScales): Same example but text embossed.  Make sure you have enough depth for the letters to fully overlap the object.
 //   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
 //   L = 5*len(text);
 //   maxang = 360*L/(PI*50);
@@ -2899,11 +2905,11 @@ function _cut_interp(pathcut, path, data) =
 //   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
 //   color("red")stroke(path,width=.2);
 //   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Courier", normal=FRONT);
-// Example(3D,NoScales): If we use top to orient the text upward, the text baseline is no longer aligned with the path. 
+// Example(3D,NoScales): If we use top to orient the text upward, the text baseline is no longer aligned with the path.
 //   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
 //   color("red")stroke(path,width=.2);
 //   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Courier", top=UP);
-// Example(3D,Med,NoScales): This sine wave wrapped around the cylinder has a twisting normal that produces wild letter layout.  We fix it with a custom normal which is different at every path point. 
+// Example(3D,Med,NoScales): This sine wave wrapped around the cylinder has a twisting normal that produces wild letter layout.  We fix it with a custom normal which is different at every path point.
 //   path = [for(theta = [0:360]) [25*cos(theta), 25*sin(theta), 4*cos(theta*4)]];
 //   normal = [for(theta = [0:360]) [cos(theta), sin(theta),0]];
 //   zrot(-120)
@@ -2911,7 +2917,7 @@ function _cut_interp(pathcut, path, data) =
 //     cyl(r=25, h=20, $fn=120);
 //     path_text(path, "A sine wave wiggles", font="Courier", lettersize=5/1.2, size=5, normal=normal);
 //   }
-// Example(3D,Med,NoScales): The path center of curvature changes, and the text flips.  
+// Example(3D,Med,NoScales): The path center of curvature changes, and the text flips.
 //   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
 //   color("red")stroke(path,width=.2);
 //   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier", thickness=2);
@@ -2955,7 +2961,7 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 
   kern = force_list(kern, len(text));
   dummy3 = assert(is_list(kern) && len(kern)==len(text), "kern must be a scalar or list whose length is len(text)");
-  
+
   lsize = kern + (
           is_def(lettersize) ? force_list(lettersize, len(text))
         : textmetrics ? [for(letter=text) let(t=textmetrics(letter, font=font, size=size)) t.advance[0]]
@@ -2968,9 +2974,10 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
    
   pts = path_cut_points(path, add_scalar([0, each cumsum(lsize)],start+lsize[0]/2), direction=true);
 
+
   usernorm = is_def(normal);
   usetop = is_def(top);
-  
+
   normpts = is_undef(normal) ? (reverse?1:-1)*column(pts,3) : _cut_interp(pts,path, normal);
   toppts = is_undef(top) ? undef : _cut_interp(pts,path,top);
   for (i = idx(text)) {
@@ -3404,7 +3411,7 @@ module ruler(length=100, width, thickness=1, depth=3, labels=false, pipscale=1/3
     widths = width * widthfactor * [for(logsize = [0:-1:-depth+1]) pow(pipscale,-logsize)];
     offsets = concat([0],cumsum(widths));
     attachable(anchor,spin,orient, size=[length,width,thickness]) {
-        translate([-length/2, -width/2, 0]) 
+        translate([-length/2, -width/2, 0])
         for(i=[0:1:len(scales)-1]) {
             count = ceil(length/scales[i]);
             fontsize = 0.5*min(widths[i], scales[i]/ceil(log(count*scales[i]/unit)));
@@ -3412,7 +3419,7 @@ module ruler(length=100, width, thickness=1, depth=3, labels=false, pipscale=1/3
                 xcopies(scales[i], n=count, sp=[0,0,0]) union() {
                     actlen = ($idx<count-1) || approx(length%scales[i],0) ? scales[i] : length % scales[i];
                     color(colors[$idx%2], alpha=alpha) {
-                        w = i>0 ? quantup(widths[i],1/1024) : widths[i];    // What is the i>0 test supposed to do here? 
+                        w = i>0 ? quantup(widths[i],1/1024) : widths[i];    // What is the i>0 test supposed to do here?
                         cube([quantup(actlen,1/1024),quantup(w,1/1024),thickness], anchor=FRONT+LEFT);
                     }
                     mark =

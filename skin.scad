@@ -508,6 +508,8 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 // Function&Module: linear_sweep()
 // Usage:
 //   linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [convexity=]) [ATTACHMENTS];
+// Usage: With Texturing
+//   linear_sweep(region, [height], [center=], texture=, [tex_size=]|[tex_counts=], [tex_scale=], [style=], [tex_samples=], ...) [ATTACHMENTS];
 // Description:
 //   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or polygon.
 //   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
@@ -541,6 +543,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
+//   "bbox" = Anchors to the bounding box of the extruded shape.
 // Extra Anchors:
 //   "origin" = Centers the extruded shape vertically only, but keeps the original path positions in the X and Y.  Oriented UP.
 //   "original_base" = Keeps the original path positions in the X and Y, but at the bottom of the extrusion.  Oriented UP.
@@ -662,9 +665,16 @@ module linear_sweep(
         named_anchor("original_base", [0,0,-h/2], UP)
     ];
     cp = default(cp, "centroid");
-    geom = atype=="hull"? attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
-        atype=="intersect"? attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
-        assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
+    geom = atype=="hull"?  attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+        atype=="intersect"?  attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+        atype=="bbox"?
+            let(
+                bounds = pointlist_bounds(flatten(region)),
+                size = bounds[1] - bounds[0],
+                midpt = (bounds[0] + bounds[1])/2
+            )
+            attach_geom(cp=[0,0,0], size=point3d(size,h), offset=point3d(midpt), shift=shift, scale=scale, twist=twist, anchors=anchors) :
+        assert(in_list(atype, ["hull","intersect","bbox"]), "Anchor type must be \"hull\", \"intersect\", or \"bbox\".");
     attachable(anchor,spin,orient, geom=geom) {
         vnf_polyhedron(vnf, convexity=convexity);
         children();
@@ -744,20 +754,29 @@ function linear_sweep(
             named_anchor("original_base", [0,0,-h/2], UP)
         ],
         cp = default(cp, "centroid"),
-        geom = atype=="hull"? attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
-            atype=="intersect"? attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
-            assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
+        geom = atype=="hull"?  attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+            atype=="intersect"?  attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
+            atype=="bbox"?
+                let(
+                    bounds = pointlist_bounds(flatten(region)),
+                    size = bounds[1] - bounds[0],
+                    midpt = (bounds[0] + bounds[1])/2
+                )
+                attach_geom(cp=[0,0,0], size=point3d(size,h), offset=point3d(midpt), shift=shift, scale=scale, twist=twist, anchors=anchors) :
+            assert(in_list(atype, ["hull","intersect","bbox"]), "Anchor type must be \"hull\", \"intersect\", or \"bbox\".")
     ) reorient(anchor,spin,orient, geom=geom, p=vnf);
 
 
 // Function&Module: rotate_sweep()
 // Usage: As Function
-//   vnf = rotate_sweep(shape, angle, ...);
+//   vnf = rotate_sweep(shape, [angle], ...);
 // Usage: As Module
-//   rotate_sweep(shape, angle, ...) [ATTACHMENTS];
+//   rotate_sweep(shape, [angle], ...) [ATTACHMENTS];
+// Usage: With Texturing
+//   rotate_sweep(shape, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_samples=], [tex_rot=], [tex_inset=], ...) [ATTACHMENTS];
 // Topics: Extrusion, Sweep, Revolution
 // Description:
-//   Takes a polygon or [region](regions.scad) and sweeps it in a rotation around the Z axis.
+//   Takes a polygon or [region](regions.scad) and sweeps it in a rotation around the Z axis, with optional texturing.
 //   When called as a function, returns a [VNF](vnf.scad).
 //   When called as a module, creates the sweep as geometry.
 // Arguments:
