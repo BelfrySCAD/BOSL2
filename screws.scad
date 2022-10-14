@@ -606,7 +606,9 @@ module screw(spec, head, drive, thread, drive_size,
           named_anchor("threads_bot", [0,0,-length-shoulder_full+offset]),
           named_anchor("threads_center", [0,0,(-shank_len-length-_shoulder_len-shoulder_full-flat_height)/2+offset])
    ];
-   vnf = head=="hex" && atype=="head" && counterbore==0 ? linear_sweep(hexagon(id=head_diam),height=head_height,center=true) : undef;
+   rad_scale = _internal? (1/cos(180/sides)) : 1;
+   islop = _internal ? 4*get_slop() : 0;
+   vnf = head=="hex" && atype=="head" && counterbore==0 ? linear_sweep(hexagon(id=head_diam*rad_scale),height=head_height,center=true) : undef;
    head_diam_full = head=="hex" ? 2*head_diam/sqrt(3) : head_diam;
    attach_d = in_list(atype,["threads","shank","shaft"]) ? d_major 
             : atype=="screw" ? max(d_major,_shoulder_diam,default(head_diam_full,0))
@@ -622,7 +624,7 @@ module screw(spec, head, drive, thread, drive_size,
             : head_height+flat_height+flat_cbore_height;
    attachable(
               vnf = vnf, 
-              d = attach_d, 
+              d = u_add(u_mul(attach_d, rad_scale), islop),
               l = attach_l,
               orient = orient,
               anchor = anchor,
@@ -633,21 +635,21 @@ module screw(spec, head, drive, thread, drive_size,
        difference(){
          union(){
            screw_head(spec,details,counterbore=counterbore,flat_height=flat_height,
-                      oversize=_internal?4*get_slop():0,teardrop=_teardrop);
+                      oversize=islop,teardrop=_teardrop);
            if (_shoulder_len>0)
              up(eps_shoulder-flat_height){
                if (_teardrop)
-                 teardrop(d=_shoulder_diam+(_internal?4*get_slop():0), h=_shoulder_len+eps_shoulder, anchor=FRONT, orient=BACK, $fn=sides);
+                 teardrop(d=_shoulder_diam*rad_scale+islop, h=_shoulder_len+eps_shoulder, anchor=FRONT, orient=BACK, $fn=sides);
                else
-                 cyl(d=_shoulder_diam+(_internal?4*get_slop():0), h=_shoulder_len+eps_shoulder, anchor=TOP, $fn=sides, chamfer1=details ? _shoulder_diam/30:0);
+                 cyl(d=_shoulder_diam*rad_scale+islop, h=_shoulder_len+eps_shoulder, anchor=TOP, $fn=sides, chamfer1=details ? _shoulder_diam/30:0);
              }
            if (shank_len>0 || pitch==0){
              L = pitch==0 ? length - (_shoulder_len==0?flat_height:0) : shank_len;
              down(_shoulder_len+flat_height-eps_shank)
                if (_teardrop)
-                 teardrop(d=d_major+(_internal?4*get_slop():0), h=L+eps_shank, anchor=FRONT, orient=BACK, $fn=sides);
+                 teardrop(d=d_major*rad_scale+islop, h=L+eps_shank, anchor=FRONT, orient=BACK, $fn=sides);
                else
-                 cyl(d=d_major+(_internal?4*get_slop():0), h=L+eps_shank, anchor=TOP, $fn=sides);
+                 cyl(d=d_major*rad_scale+islop, h=L+eps_shank, anchor=TOP, $fn=sides);
            }
            if (thread_len>0 && pitch>0)
              down(_shoulder_len+flat_height+shank_len-eps_thread)
@@ -2781,7 +2783,7 @@ function _validate_nut_spec(spec) =
     
 function _validate_screw_spec(spec) =
     let(
-        dummy=echo_struct(spec,"Screw Specification"),
+        //dummy=echo_struct(spec,"Screw Specification"),
         systemOK = in_list(struct_val(spec,"system"), ["UTS","ISO"]),
         diamOK = _is_positive(struct_val(spec, "diameter")),
         pitch = struct_val(spec,"pitch"),
