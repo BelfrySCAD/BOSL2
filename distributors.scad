@@ -48,15 +48,15 @@ module move_copies(a=[[0,0,0]])
 
 // Function&Module: line_of()
 //
-// Usage: Spread `n` copies by a given spacing
+// Usage: Place `n` copies at a given spacing along the line
 //   line_of(spacing, [n], [p1=]) CHILDREN;
-// Usage: Spread copies every given spacing along the line
+// Usage: Place as many copies as will fit at a given spacing
 //   line_of(spacing, [l=], [p1=]) CHILDREN;
-// Usage: Spread `n` copies along the length of the line
+// Usage: Place `n` copies along the length of the line
 //   line_of([n=], [l=], [p1=]) CHILDREN;
-// Usage: Spread `n` copies along the line from `p1` to `p2`
+// Usage: Place `n` copies along the line from `p1` to `p2`
 //   line_of([n=], [p1=], [p2=]) CHILDREN;
-// Usage: Spread copies every given spacing, centered along the line from `p1` to `p2`
+// Usage: Place copies at the given spacing, centered along the line from `p1` to `p2`
 //   line_of([spacing], [p1=], [p2=]) CHILDREN;
 // Usage: As a function
 //   pts = line_of([spacing], [n], [p1=]);
@@ -65,11 +65,11 @@ module move_copies(a=[[0,0,0]])
 //   pts = line_of([n=], [p1=], [p2=]);
 //   pts = line_of([spacing], [p1=], [p2=]);
 // Description:
-//   When called as a function, returns a list of points at evenly spread positions along a line.
-//   When called as a module, copies `children()` at one or more evenly spread positions along a line.
+//   When called as a function, returns a list of points at evenly spaced positions along a line.
+//   When called as a module, copies `children()` at one or more evenly spaced positions along a line.
 //   By default, the line will be centered at the origin, unless the starting point `p1` is given.
 //   The line will be pointed towards `RIGHT` (X+) unless otherwise given as a vector in `l`,
-//   `spacing`, or `p1`/`p2`.  The spread is specified in one of several ways:
+//   `spacing`, or `p1`/`p2`.  The psotion of the copies is specified in one of several ways:
 //   .
 //   If You Know...                   | Then Use Something Like...
 //   -------------------------------- | --------------------------------
@@ -110,7 +110,7 @@ module move_copies(a=[[0,0,0]])
 //   line_of(p1=[0,0,0], p2=[5,5,20], n=6) cube(size=[3,2,1],center=true);
 // Example(FlatSpin,VPD=133):
 //   line_of(p1=[0,0,0], p2=[5,5,20], spacing=6) cube(size=[3,2,1],center=true);
-// Example: All Children are Copied at Each Spread Position
+// Example: All children are copied to each position
 //   line_of(l=20, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
@@ -156,7 +156,7 @@ function line_of(spacing, n, l, p1, p2) =
 // Module: xcopies()
 //
 // Description:
-//   Spreads out `n` copies of the children along a line on the X axis.
+//   Places out `n` copies of the children along a line on the X axis.
 //
 // Usage:
 //   xcopies(spacing, [n], [sp]) CHILDREN;
@@ -165,9 +165,9 @@ function line_of(spacing, n, l, p1, p2) =
 //
 // Arguments:
 //   spacing = Given a scalar, specifies a uniform spacing between copies. Given a list of scalars, each one gives a specific position along the line. (Default: 1.0)
-//   n = Number of copies to spread out. (Default: 2)
-//   l = Length to spread copies over.
-//   sp = If given as a point, copies will be spread on a line to the right of starting position `sp`.  If given as a scalar, copies will be spread on a line to the right of starting position `[sp,0,0]`.  If not given, copies will be spread along a line that is centered at [0,0,0].
+//   n = Number of copies to place. (Default: 2)
+//   l = Length to place copies over.
+//   sp = If given as a point, copies will be placed on a line to the right of starting position `sp`.  If given as a scalar, copies will be placed on a line to the right of starting position `[sp,0,0]`.  If not given, copies will be placed along a line that is centered at [0,0,0].
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -209,7 +209,7 @@ module xcopies(spacing, n, l, sp)
 // Module: ycopies()
 //
 // Description:
-//   Spreads out `n` copies of the children along a line on the Y axis.
+//   Places `n` copies of the children along a line on the Y axis.
 //
 // Usage:
 //   ycopies(spacing, [n], [sp]) CHILDREN;
@@ -218,9 +218,9 @@ module xcopies(spacing, n, l, sp)
 //
 // Arguments:
 //   spacing = Given a scalar, specifies a uniform spacing between copies. Given a list of scalars, each one gives a specific position along the line. (Default: 1.0)
-//   n = Number of copies to spread out. (Default: 2)
-//   l = Length to spread copies over.
-//   sp = If given as a point, copies will be spread on a line back from starting position `sp`.  If given as a scalar, copies will be spread on a line back from starting position `[0,sp,0]`.  If not given, copies will be spread along a line that is centered at [0,0,0].
+//   n = Number of copies to place on the line. (Default: 2)
+//   l = Length to place copies over.
+//   sp = If given as a point, copies will be place on a line back from starting position `sp`.  If given as a scalar, copies will be placed on a line back from starting position `[0,sp,0]`.  If not given, copies will be placed along a line that is centered at [0,0,0].
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -262,7 +262,7 @@ module ycopies(spacing, n, l, sp)
 // Module: zcopies()
 //
 // Description:
-//   Spreads out `n` copies of the children along a line on the Z axis.
+//   Places `n` copies of the children along a line on the Z axis.
 //
 // Usage:
 //   zcopies(spacing, [n], [sp]) CHILDREN;
@@ -271,9 +271,9 @@ module ycopies(spacing, n, l, sp)
 //
 // Arguments:
 //   spacing = Given a scalar, specifies a uniform spacing between copies. Given a list of scalars, each one gives a specific position along the line. (Default: 1.0)
-//   n = Number of copies to spread out. (Default: 2)
-//   l = Length to spread copies over.
-//   sp = If given as a point, copies will be spread on a line up from starting position `sp`.  If given as a scalar, copies will be spread on a line up from starting position `[0,0,sp]`.  If not given, copies will be spread along a line that is centered at [0,0,0].
+//   n = Number of copies to place. (Default: 2)
+//   l = Length to place copies over.
+//   sp = If given as a point, copies will be placed on a line up from starting position `sp`.  If given as a scalar, copies will be placed on a line up from starting position `[0,0,sp]`.  If not given, copies will be placed on a line that is centered at [0,0,0].
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -809,13 +809,13 @@ module arc_of(
 
 
 
-// Module: ovoid_spread()
+// Module: sphere_copies()
 //
 // Description:
-//   Spreads children semi-evenly over the surface of a sphere.
+//   Spreads children semi-evenly over the surface of a sphere or ellipsoid.
 //
 // Usage:
-//   ovoid_spread(n, r|d=, [cone_ang=], [scale=], [perp=]) CHILDREN;
+//   sphere_copies(n, r|d=, [cone_ang=], [scale=], [perp=]) CHILDREN;
 //
 // Arguments:
 //   n = How many copies to evenly spread over the surface.
@@ -834,14 +834,21 @@ module arc_of(
 //   `$idx` is set to the index number of each child being copied.
 //
 // Example:
-//   ovoid_spread(n=250, d=100, cone_ang=45, scale=[3,3,1])
+//   sphere_copies(n=250, d=100, cone_ang=45, scale=[3,3,1])
 //       cylinder(d=10, h=10, center=false);
 //
 // Example:
-//   ovoid_spread(n=500, d=100, cone_ang=180)
+//   sphere_copies(n=500, d=100, cone_ang=180)
 //       color(unit(point3d(v_abs($pos))))
 //           cylinder(d=8, h=10, center=false);
+function sphere_copies(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp=true) = no_function("sphere_copies");
 module ovoid_spread(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp=true)
+{
+  deprecate("sphere_copies");
+  sphere_copies(n,r,d,cone_ang,scale,perp);
+}  
+
+module sphere_copies(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp=true)
 {
     req_children($children);  
     r = get_radius(r=r, d=d, dflt=50);
@@ -872,16 +879,20 @@ module ovoid_spread(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp=tr
 // Section: Placing copies of all children on a path
 
 
-// Module: path_spread()
+// Module: path_copies()
 //
 // Description:
-//   Uniformly spreads out copies of children along a path.  Copies are located based on path length.  If you specify `n` but not spacing then `n` copies will be placed
-//   with one at path[0] of `closed` is true, or spanning the entire path from start to end if `closed` is false.
-//   If you specify `spacing` but not `n` then copies will spread out starting from one at path[0] for `closed=true` or at the path center for open paths.
-//   If you specify `sp` then the copies will start at `sp`.
+//   Place copies all of the children at points along the path based on path length.  You can specify `dist` as
+//   a scalar or distance list and the children will be placed at the specified distances from the start of the path.  Otherwise the children are
+//   placed at uniformly spaced points along the path.  If you specify `n` but not `spacing` then `n` copies will be placed
+//   with one at path[0] if `closed` is true, or spanning the entire path from start to end if `closed` is false.
+//   If you specify `spacing` but not `n` then copies will spread out starting from one set at path[0] for `closed=true` or at the path center for open paths.
+//   If you specify `sp` then the copies will start at distance `sp` from the start of the path.  
 //
-// Usage:
-//   path_spread(path, [n], [spacing], [sp], [rotate_children], [closed]) CHILDREN;
+// Usage: Uniformly distribute copies 
+//   path_copies(path, [n], [spacing], [sp], [rotate_children], [closed=]) CHILDREN;
+// Usage: Place copies at specified locations
+//   path_copies(path, dist=, [rotate_children=], [closed=]) CHILDREN;
 //
 // Arguments:
 //   path = path or 1-region where children are placed
@@ -889,6 +900,8 @@ module ovoid_spread(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp=tr
 //   spacing = space between copies
 //   sp = if given, copies will start distance sp from the path start and spread beyond that point
 //   rotate_children = if true, rotate children to line up with curve normal.  Default: true
+//   ---
+//   dist = Specify a list of distances to determine placement of children.  
 //   closed = If true treat path as a closed curve.  Default: false
 //
 // Side Effects:
@@ -900,72 +913,86 @@ module ovoid_spread(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp=tr
 // Example(2D):
 //   spiral = [for(theta=[0:360*8]) theta * [cos(theta), sin(theta)]]/100;
 //   stroke(spiral,width=.25);
-//   color("red") path_spread(spiral, n=100) circle(r=1);
+//   color("red") path_copies(spiral, n=100) circle(r=1);
 // Example(2D):
 //   circle = regular_ngon(n=64, or=10);
 //   stroke(circle,width=1,closed=true);
-//   color("green") path_spread(circle, n=7, closed=true) circle(r=1+$idx/3);
+//   color("green") path_copies(circle, n=7, closed=true) circle(r=1+$idx/3);
 // Example(2D):
 //   heptagon = regular_ngon(n=7, or=10);
 //   stroke(heptagon, width=1, closed=true);
-//   color("purple") path_spread(heptagon, n=9, closed=true) rect([0.5,3],anchor=FRONT);
+//   color("purple") path_copies(heptagon, n=9, closed=true) rect([0.5,3],anchor=FRONT);
 // Example(2D): Direction at the corners is the average of the two adjacent edges
 //   heptagon = regular_ngon(n=7, or=10);
 //   stroke(heptagon, width=1, closed=true);
-//   color("purple") path_spread(heptagon, n=7, closed=true) rect([0.5,3],anchor=FRONT);
+//   color("purple") path_copies(heptagon, n=7, closed=true) rect([0.5,3],anchor=FRONT);
 // Example(2D):  Don't rotate the children
 //   heptagon = regular_ngon(n=7, or=10);
 //   stroke(heptagon, width=1, closed=true);
-//   color("red") path_spread(heptagon, n=9, closed=true, rotate_children=false) rect([0.5,3],anchor=FRONT);
+//   color("red") path_copies(heptagon, n=9, closed=true, rotate_children=false) rect([0.5,3],anchor=FRONT);
 // Example(2D): Open path, specify `n`
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
 //   stroke(sinwav,width=.1);
-//   color("red") path_spread(sinwav, n=5) rect([.2,1.5],anchor=FRONT);
+//   color("red") path_copies(sinwav, n=5) rect([.2,1.5],anchor=FRONT);
 // Example(2D): Open path, specify `n` and `spacing`
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
 //   stroke(sinwav,width=.1);
-//   color("red") path_spread(sinwav, n=5, spacing=1) rect([.2,1.5],anchor=FRONT);
+//   color("red") path_copies(sinwav, n=5, spacing=1) rect([.2,1.5],anchor=FRONT);
 // Example(2D): Closed path, specify `n` and `spacing`, copies centered around circle[0]
 //   circle = regular_ngon(n=64,or=10);
 //   stroke(circle,width=.1,closed=true);
-//   color("red") path_spread(circle, n=10, spacing=1, closed=true) rect([.2,1.5],anchor=FRONT);
+//   color("red") path_copies(circle, n=10, spacing=1, closed=true) rect([.2,1.5],anchor=FRONT);
 // Example(2D): Open path, specify `spacing`
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
 //   stroke(sinwav,width=.1);
-//   color("red") path_spread(sinwav, spacing=5) rect([.2,1.5],anchor=FRONT);
+//   color("red") path_copies(sinwav, spacing=5) rect([.2,1.5],anchor=FRONT);
 // Example(2D): Open path, specify `sp`
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
 //   stroke(sinwav,width=.1);
-//   color("red") path_spread(sinwav, n=5, sp=18) rect([.2,1.5],anchor=FRONT);
+//   color("red") path_copies(sinwav, n=5, sp=18) rect([.2,1.5],anchor=FRONT);
+// Example(2D): Open path, specify `dist`
+//   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
+//   stroke(sinwav,width=.1);
+//   color("red") path_copies(sinwav, dist=[1,4,9,16]) rect([.2,1.5],anchor=FRONT);
 // Example(2D):
 //   wedge = arc(angle=[0,100], r=10, $fn=64);
 //   difference(){
 //     polygon(concat([[0,0]],wedge));
-//     path_spread(wedge,n=5,spacing=3) fwd(.1) rect([1,4],anchor=FRONT);
+//     path_copies(wedge,n=5,spacing=3) fwd(.1) rect([1,4],anchor=FRONT);
 //   }
 // Example(Spin,VPD=115): 3d example, with children rotated into the plane of the path
 //   tilted_circle = lift_plane([[0,0,0], [5,0,5], [0,2,3]],regular_ngon(n=64, or=12));
 //   path_sweep(regular_ngon(n=16,or=.1),tilted_circle);
-//   path_spread(tilted_circle, n=15,closed=true) {
+//   path_copies(tilted_circle, n=15,closed=true) {
 //      color("blue") cyl(h=3,r=.2, anchor=BOTTOM);      // z-aligned cylinder
 //      color("red") xcyl(h=10,r=.2, anchor=FRONT+LEFT); // x-aligned cylinder
 //   }
 // Example(Spin,VPD=115): 3d example, with rotate_children set to false
 //   tilted_circle = lift_plane([[0,0,0], [5,0,5], [0,2,3]], regular_ngon(n=64, or=12));
 //   path_sweep(regular_ngon(n=16,or=.1),tilted_circle);
-//   path_spread(tilted_circle, n=25,rotate_children=false,closed=true) {
+//   path_copies(tilted_circle, n=25,rotate_children=false,closed=true) {
 //      color("blue") cyl(h=3,r=.2, anchor=BOTTOM);       // z-aligned cylinder
 //      color("red") xcyl(h=10,r=.2, anchor=FRONT+LEFT);  // x-aligned cylinder
 //   }
-module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed)
+function path_copies(path, n, spacing, sp=undef, rotate_children=true, dist, closed) = no_function("path_copies");
+
+module path_spread(path, n, spacing, sp=undef, rotate_children=true, dist, closed){
+  deprecate("path_copes");
+  path_copies(path,n,spacing,sp,dist,rotate_children,dist, closed) children();
+}  
+
+module path_copies(path, n, spacing, sp=undef, dist, rotate_children=true, dist, closed)
 {
     req_children($children);  
     is_1reg = is_1region(path);
     path = is_1reg ? path[0] : path;
     closed = default(closed, is_1reg);
     length = path_length(path,closed);
+    distind = is_def(dist) ? sortidx(dist) : undef;
     distances =
-        is_def(sp)? (   // Start point given
+        is_def(dist) ? assert(is_undef(n) && is_undef(spacing) && is_undef(sp), "Can't use n, spacing or undef with dist")
+                       select(dist,distind)
+      : is_def(sp)? (   // Start point given
             is_def(n) && is_def(spacing)? count(n,sp,spacing) :
             is_def(n)? lerpn(sp, length, n) :
             list([sp:spacing:length])
@@ -984,9 +1011,9 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed)
     assert(distOK,"Cannot fit all of the copies");
     cutlist = path_cut_points(path, distances, closed, direction=true);
     planar = len(path[0])==2;
-    if (true) for(i=[0:1:len(cutlist)-1]) {
+    for(i=[0:1:len(cutlist)-1]) {
         $pos = cutlist[i][0];
-        $idx = i;
+        $idx = is_def(dist) ? distind[i] : i;
         $dir = rotate_children ? (planar?[1,0]:[1,0,0]) : cutlist[i][2];
         $normal = rotate_children? (planar?[0,1]:[0,0,1]) : cutlist[i][3];
         translate($pos) {
@@ -1174,7 +1201,7 @@ module zflip_copy(offset=0, z=0)
 // Module: distribute()
 //
 // Description:
-//   Spreads out each individual child along the direction `dir`.
+//   Spreads out the children individually along the direction `dir`.
 //   Every child is placed at a different position, in order.
 //   This is useful for laying out groups of disparate objects
 //   where you only really care about the spacing between them.
@@ -1220,7 +1247,7 @@ module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
 // Module: xdistribute()
 //
 // Description:
-//   Spreads out each individual child along the X axis.
+//   Spreads out the children individually along the X axis. 
 //   Every child is placed at a different position, in order.
 //   This is useful for laying out groups of disparate objects
 //   where you only really care about the spacing between them.
@@ -1266,7 +1293,7 @@ module xdistribute(spacing=10, sizes=undef, l=undef)
 // Module: ydistribute()
 //
 // Description:
-//   Spreads out each individual child along the Y axis.
+//   Spreads out the children individually along the Y axis. 
 //   Every child is placed at a different position, in order.
 //   This is useful for laying out groups of disparate objects
 //   where you only really care about the spacing between them.

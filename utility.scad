@@ -804,6 +804,18 @@ module no_module() {
 }    
   
 
+// Module: deprecate()
+// Usage:
+//   deprecate(new_name);
+// Description:
+//   Display info that the current module is deprecated and you should switch to a new name
+// Arguments:
+//   new_name = name of the new module that replaces the old one
+module deprecate(new_name)
+{
+   echo(str("***** Module ",parent_module(1),"() has been replaced by ",new_name,"() and will be removed in a future version *****"));
+}   
+
 
 // Section: Testing Helpers
 
