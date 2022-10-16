@@ -978,6 +978,11 @@ function bottle_adapter_neck_to_neck(
 
 // Thread specs from https://www.isbt.com/threadspecs-downloads.asp
 
+//  T = peak to peak diameter (outer diameter)
+//  I = Inner diameter
+//  S = space above top thread
+//  H = total height of neck
+
 _sp_specs = [
   [400, //diam     T      I      H     S    tpi
         [[ 18, [ 17.68,  8.26,  9.42, 0.94, 8]],
@@ -1042,7 +1047,7 @@ _sp_thread_width= [
                ];
 
 
-function _sp_thread_profile(tpi, a, S, style) = 
+function _sp_thread_profile(tpi, a, S, style, flip=false) = 
     let(
         pitch = 1/tpi*INCH,
         cL = a*(1-1/sqrt(3)),
@@ -1052,7 +1057,7 @@ function _sp_thread_profile(tpi, a, S, style) =
                   : style=="M" && tpi < 12 ? [0.25, 0.25, 0.75, 0.75]
                   : style=="L" ? [0.38, 0.13, 0.13, 0.38]
                   : /* style=="M" */  [0.25, 0.25, 0.2, 0.5],
-        path = style=="L"
+        path1 = style=="L"
                   ? round_corners([[-1/2*pitch,-a/2],
                                    [-a/2,-a/2],
                                    [-cL/2,0],
@@ -1065,10 +1070,11 @@ function _sp_thread_profile(tpi, a, S, style) =
                                    [-cM, 0],
                                    [0,0],
                                    [a/2,-a/2],
-                                   [1/2*pitch,-a/2]], radius=roundings, closed=false, $fn=24)
+                                   [1/2*pitch,-a/2]], radius=roundings, closed=false, $fn=24),
+        path2 = flip ? reverse(xflip(path1)) : path1
    )
    // Shift so that the profile is S mm from the right end to create proper length S top gap
-   select(right(-a/2+1/2-S,p=path),1,-2)/pitch;
+   select(right(-a/2+1/2-S,p=path2),1,-2)/pitch;
 
 
 function sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient) = no_function("sp_neck");
@@ -1132,7 +1138,89 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
         }
         children();
     }
-}  
+}
+
+
+
+// Module: sp_cap()
+// Usage:
+//   sp_neck(cap, type, wall, [style=], [top_adj=]) [ATTACHMENTS];
+// Description:
+//   Make a SPI (Society of Plastics Industry) threaded bottle neck.  You must
+//   supply the nominal outer diameter of the threads and the thread type, one of
+//   400, 410 and 415.  The 400 type neck has 360 degrees of thread, the 410
+//   neck has 540 degrees of thread, and the 415 neck has 720 degrees of thread.
+//   You can also choose between the L style thread, which is symmetric and
+//   the M style thread, which is an asymmetric buttress thread.  Note that it
+//   is OK to mix styles, so you can put an L-style cap onto an M-style neck.  
+//   .
+//   These caps often contain a cardboard or foam sealer disk, which can be as much as 1mm thick.
+//   If you don't include this, your cap may bottom out on the bead on the neck instead of sealing
+//   against the top.  If you set top_adj to 1 it will make the top space 1mm smaller so that the
+//   cap will not bottom out.  The 410 and 415 caps have very long unthreaded sections at the bottom.
+//   The bot_adj parameter specifies am amount to reduce that bottom extension.  Be careful that
+//   you don't shrink past the threads.  
+//   .
+//   Note: there is a published SPI standard for necks, but absolutely nothing for caps.  This
+//   cap module was designed based on the neck standard to mate reasonably well, but if you
+//   find ways that it does the wrong thing, file a report.  
+// Arguments:
+//   diam = nominal outer diameter of threads
+//   type = thread type, one of 400, 410 and 415
+//   wall = wall thickness
+//   ---
+//   style = Either "L" or "M" to specify the thread style.  Default: "L"
+//   top_adj = Amount to reduce top space in the cap, which means it doesn't screw down as far.  Default: 0
+//   bot_adj = Amount to reduce extension of cap at the bottom, which also means it doesn't screw down as far.  Default: 0
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Examples:
+//   sp_cap(48,400,2);
+//   sp_cap(22,410,2);
+//   sp_cap(28,415,1.5,style="M");
+module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, anchor, spin, orient)
+{
+    table = struct_val(_sp_specs,type);
+    dum1=assert(is_def(table),"Unknown SP closure type.  Type must be one of 400, 410, or 415");
+    entry = struct_val(table, diam);
+    dum2=assert(is_def(entry), str("Unknown closure nominal diameter.  Allowed diameters for SP",type,": ",struct_keys(table)))
+         assert(style=="L" || style=="M", "style must be \"L\" or \"M\"");
+
+    T = entry[0];
+    I = entry[1];
+    H = entry[2]-1;
+    S = entry[3];
+    tpi = entry[4];
+    a = (style=="M" && tpi==12) ? 1.3 : struct_val(_sp_thread_width,tpi);
+
+    twist = struct_val(_sp_twist, type);
+
+    dum3=assert(top_adj<S+0.75*a, str("The top_adj value is too large so the thread won't fit.  It must be smaller than ",S+0.75*a));
+    oprofile = _sp_thread_profile(tpi,a,S+0.75*a-top_adj,style,flip=true);
+    bounds=pointlist_bounds(oprofile);
+    profile = fwd(-bounds[0].y,yflip(oprofile));
+
+    depth = a/2;
+    higlen = 2*a;
+    higang = higlen / ((T-2*depth)*PI) * 360;
+
+    echo(a=a,depth=depth,halfdepth=depth/2, tpi*pointlist_bounds(profile));
+
+    space=2*depth/10+4*get_slop();
+    attachable(anchor,spin,orient,r= (T+space)/2+wall, l=H-bot_adj+wall){
+        xrot(180)
+        up((H-bot_adj)/2-wall/2){
+            difference(){
+                up(wall)cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8);
+                cyl(d=T+space, l=H-bot_adj+1, anchor=TOP);
+            }
+            thread_helix(d=T+space-.01, profile=profile, pitch = INCH/tpi, turns=(twist+2*higang)/360, higbee=higlen, anchor=TOP, internal=true);
+        }
+        children();
+    }
+}
+
 
 
 // Function: sp_diameter()

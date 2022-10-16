@@ -1663,7 +1663,7 @@ module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orie
 
 // Function: screw_info()
 // Usage:
-//   info = screw_info(spec, [head], [drive], [thread=], [drive_size=], [oversize=], [head_oversize=])
+//   info = screw_info(name, [head], [drive], [thread=], [drive_size=], [oversize=], [head_oversize=])
 // Description:
 //   Look up screw characteristics for the specified screw type.
 //   See [screw and nut parameters](#section-screw-and-nut-parameters) for details on the parameters that define a screw.
@@ -1715,7 +1715,7 @@ module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orie
 //   If you want to define a custom drive for a screw you will need to provide the drive size and drive depth.  
 //
 // Arguments:
-//   spec = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
+//   name = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
 //   head = head type.  See [screw heads](#subsection-screw-heads)  Default: none
 //   drive = drive type.  See [screw heads](#subsection-screw-heads) Default: none
 //   ---
@@ -1724,14 +1724,14 @@ module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orie
 //   oversize = amount to increase screw diameter for clearance holes.  Default: 0
 //   head_oversize = amount to increase head diameter for countersink holes.  Default: 0 
 
-function screw_info(spec, head, drive, thread, drive_size, threads_oversize=0, head_oversize=0, _origin) =
-  assert(is_string(spec), "Screw specification must be a string")
+function screw_info(name, head, drive, thread, drive_size, threads_oversize=0, head_oversize=0, _origin) =
+  assert(is_string(name), "Screw specification must be a string")
   let(
       thread = is_undef(thread) || thread==true ? "coarse"
              : thread==false || thread=="none" ? 0
              : thread,
       head = default(head,"none"),
-      type=_parse_screw_name(spec),
+      type=_parse_screw_name(name),
       drive_info = _parse_drive(drive, drive_size),
       drive=drive_info[0],
       screwdata =   type[0] == "english" ? _screw_info_english(type[1],type[2], head, thread, drive) 
@@ -1743,7 +1743,7 @@ function screw_info(spec, head, drive, thread, drive_size, threads_oversize=0, h
           ["drive_depth", drive_info[2]],
           ["length", type[3]],
           ["drive_size", drive_info[1]],
-          ["name", spec],
+          ["name", name],
           ["threads_oversize", threads_oversize],
           ["head_oversize", head_oversize],
           ["origin",_origin]
@@ -1752,7 +1752,7 @@ function screw_info(spec, head, drive, thread, drive_size, threads_oversize=0, h
 
 // Function: nut_info()
 // Usage:
-//   nut_spec = nut_info(spec, [shape], [thickness=], [thread=], [width=], [hole_oversize=]);
+//   nut_spec = nut_info(name, [shape], [thickness=], [thread=], [width=], [hole_oversize=]);
 // Description:
 //   Produces a nut specification structure that describes a nut.  You can specify the width
 //   and thickness numerically, or you can let the width be calculated automatically from
@@ -1775,7 +1775,7 @@ function screw_info(spec, head, drive, thread, drive_size, threads_oversize=0, h
 //   "thickness"      | Thickness of the nut
 //   "threads_oversize" | amount to oversize the threads (not including $slop)
 // Arguments:
-//   spec = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
+//   name = screw name, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
 //   shape = shape of the nut, either "hex" or "square".  Default: "hex"
 //   ---
 //   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
@@ -1783,7 +1783,7 @@ function screw_info(spec, head, drive, thread, drive_size, threads_oversize=0, h
 //   width = width of nut in mm.  Default: computed from thread specification
 //   hole_oversize = amount ot increase diameter of hole in nut.  Default: 0
 
-function nut_info(spec, shape, thickness, thread, hole_oversize=0, width, _origin) =
+function nut_info(name, shape, thickness, thread, hole_oversize=0, width, _origin) =
   assert(is_undef(thickness) || (is_num(thickness) && thickness>0) ||
            in_list(_downcase_if_str(thickness),["thin","normal","thick","undersized","din"]),
           "thickness must be a positive number of one of \"thin\", \"thick\", \"normal\", \"undersized\", or \"DIN\"")
@@ -1791,11 +1791,11 @@ function nut_info(spec, shape, thickness, thread, hole_oversize=0, width, _origi
       shape = _downcase_if_str(default(shape,"hex")),
       thickness = _downcase_if_str(default(thickness, "normal"))
   )
-  assert(is_string(spec), str("Nut specification must be a string ",spec))
+  assert(is_string(name), str("Nut nameification must be a string ",name))
   assert(in_list(shape, ["hex","square"]), "Nut shape must be \"hex\" or \"square\"")
   assert(is_undef(width) || (is_num(width) && width>0), "Specified width must be a positive number")
   let(
-      type = _parse_screw_name(spec),
+      type = _parse_screw_name(name),
       thread = is_undef(thread) || thread==true ? "coarse"
              : thread==false || thread=="none" ? 0
              : thread,
@@ -1803,7 +1803,7 @@ function nut_info(spec, shape, thickness, thread, hole_oversize=0, width, _origi
               : type[0]=="metric" ?  _nut_info_metric(type[1],type[2], thread, shape, thickness, width)
               : []
   )
-  _struct_reset(nutdata, [["name", spec],
+  _struct_reset(nutdata, [["name", name],
                           ["threads_oversize",hole_oversize],
                           ["width", width],
                           ["origin",_origin]
@@ -2856,20 +2856,13 @@ http://files.engineering.com/getfile.aspx?folder=76fb0d5e-1fff-4c49-87a5-0597947
 */
 
 
-// To do list
 //
-// Is there no way to create a mask for making threaded holes?  This seems to be missing.
-//
-// Metric hex engagement:
 // https://www.bayoucitybolt.com/socket-head-cap-screws-metric.html
 //
 // Torx drive depth for UTS and ISO (at least missing for "flat small", which means you can't select torx for this head type)
 // Handle generic phillips (e.g. ph2) or remove it?
 
 // https://www.fasteners.eu/tech-info/ISO/7721-2/
-//
-// How do you insert a threaded hole into a model?
-// Default nut thickness
 //
 //    JIS 
 //https://www.garagejournal.com/forum/media/jis-b-4633-vs-iso-8764-1-din-5260-ph.84492/
@@ -2882,37 +2875,27 @@ http://files.engineering.com/getfile.aspx?folder=76fb0d5e-1fff-4c49-87a5-0597947
 // thread standards:
 // https://www.gewinde-normen.de/en/index.html
 
-///////////////////////////////////////////////////////
-//
-// how to make screw mask: examples (e.g. for clearance hole w/ countersink)
-// how to make a screw hole (a mask function?)
-// 
+/////////////////////////////////////////////////////////////////////////////////////////*
+/////////////////////////////////////////////////////////////////////////////////////////*
+/////////////////////////////////////////////////////////////////////////////////////////*
+///  
+///  TODO list:
+///  
+///  need to make holes at actual size instead of nominal?
+///     or relative to actual size?
+///     That means I need to preserve thread= to specify this
+///  torx depth for UTS pan head
+///  $fn control
+///  phillips driver spec with ph# is confusing since it still looks up depth in tables
+///     and can give an error if it's not found
+///  torx depths missing for pan head
+///  support for square drive?  (It's in the ASME standard)
+///  
+/////////////////////////////////////////////////////////////////////////////////////////*
+/////////////////////////////////////////////////////////////////////////////////////////*
+/////////////////////////////////////////////////////////////////////////////////////////*
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
-
-/*
-TODO list:
-
-anchoring for counterbores OK?:  counterbore ignored for flatheads
-    counterbore is treated as the head for regular heads
-    for flathead counterbore is ignored.  Need an anchor that gives
-    access to counterbore for the flathead case but also the top of the head(?)
-anchoring for other heads:  using bounding cylinder
-    hex head anchoring OK?
-need to make holes at actual size instead of nominal?
-   or relative to actual size?
-   That means I need to preserve thread= to specify this
-shoulder screws: generally how to handle these?
-torx depth for UTS pan head
-$fn control
-phillips driver spec with ph# is confusing since it still looks up depth in tables
-   and can give an error if it's not found
-phillips code just uses depth, not width and slot width; maybe remove excess data?  
-torx depths missing for pan head
-support for square drive?  (It's in the ASME standard)
-proper support for nuts, nut traps
-
-*/
 
 
                       
