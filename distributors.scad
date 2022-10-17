@@ -293,7 +293,7 @@ module ycopies(spacing, n, l, sp)
 //   s = 20;
 //   s2 = s * sin(45);
 //   zcopies(s2,n=8) union()
-//       grid2d([s2,s2],n=8,stagger=($idx%2)? true : "alt")
+//       grid_copies([s2,s2],n=8,stagger=($idx%2)? true : "alt")
 //          sphere(d=s);
 // Example: Hexagonal sphere packing
 //   s = 20;
@@ -301,7 +301,7 @@ module ycopies(spacing, n, l, sp)
 //   h = hyp_adj_to_opp(s,xyr);
 //   zcopies(h,n=8) union()
 //       back(($idx%2)*xyr*cos(60))
-//           grid2d(s,n=[12,7],stagger=($idx%2)? "alt" : true)
+//           grid_copies(s,n=[12,7],stagger=($idx%2)? "alt" : true)
 //               sphere(d=s);
 // Example:
 //   zcopies([1,2,3,5,7]) sphere(d=1);
@@ -329,16 +329,16 @@ module zcopies(spacing, n, l, sp)
 
 
 
-// Module: grid2d()
+// Module: grid_copies()
 //
 // Description:
 //   Makes a square or hexagonal grid of copies of children, with an optional masking polygon or region.  
 //
 // Usage:
-//   grid2d(spacing, size=, [stagger=], [scale=], [inside=]) CHILDREN;
-//   grid2d(n=, size=, [stagger=], [scale=], [inside=]) CHILDREN;
-//   grid2d(spacing, [n], [stagger=], [scale=], [inside=]) CHILDREN;
-//   grid2d(n=, inside=, [stagger], [scale]) CHILDREN;
+//   grid_copies(spacing, size=, [stagger=], [scale=], [inside=]) CHILDREN;
+//   grid_copies(n=, size=, [stagger=], [scale=], [inside=]) CHILDREN;
+//   grid_copies(spacing, [n], [stagger=], [scale=], [inside=]) CHILDREN;
+//   grid_copies(n=, inside=, [stagger], [scale]) CHILDREN;
 //
 // Arguments:
 //   spacing = Distance between copies in [X,Y] or scalar distance.
@@ -355,20 +355,20 @@ module zcopies(spacing, n, l, sp)
 //   `$row` is set to the integer row number for each child.
 //
 // Examples:
-//   grid2d(size=50, spacing=10) cylinder(d=10, h=1);
-//   grid2d(size=50, spacing=[10,15]) cylinder(d=10, h=1);
-//   grid2d(spacing=10, n=[13,7], stagger=true) cylinder(d=6, h=5);
-//   grid2d(spacing=10, n=[13,7], stagger="alt") cylinder(d=6, h=5);
-//   grid2d(size=50, n=11, stagger=true) cylinder(d=5, h=1);
+//   grid_copies(size=50, spacing=10) cylinder(d=10, h=1);
+//   grid_copies(size=50, spacing=[10,15]) cylinder(d=10, h=1);
+//   grid_copies(spacing=10, n=[13,7], stagger=true) cylinder(d=6, h=5);
+//   grid_copies(spacing=10, n=[13,7], stagger="alt") cylinder(d=6, h=5);
+//   grid_copies(size=50, n=11, stagger=true) cylinder(d=5, h=1);
 //
 // Example:
 //   poly = [[-25,-25], [25,25], [-25,25], [25,-25]];
-//   grid2d(spacing=5, stagger=true, inside=poly)
+//   grid_copies(spacing=5, stagger=true, inside=poly)
 //      zrot(180/6) cylinder(d=5, h=1, $fn=6);
 //   %polygon(poly);
 //
 // Example: Using `$row` and `$col`
-//   grid2d(spacing=8, n=8)
+//   grid_copies(spacing=8, n=8)
 //       color(($row+$col)%2?"black":"red")
 //           cube([8,8,0.01], center=false);
 //
@@ -376,7 +376,7 @@ module zcopies(spacing, n, l, sp)
 //   // Makes a grid of hexagon pillars whose tops are all
 //   // angled to reflect light at [0,0,50], if they were shiny.
 //   hexregion = circle(r=50.01,$fn=6);
-//   grid2d(spacing=10, stagger=true, inside=hexregion) union() {
+//   grid_copies(spacing=10, stagger=true, inside=hexregion) union() {
 //       // Note: The union() is needed or else $pos will be
 //       //   inexplicably unreadable.
 //       ref_v = (unit([0,0,50]-point3d($pos)) + UP)/2;
@@ -384,7 +384,15 @@ module zcopies(spacing, n, l, sp)
 //           zrot(180/6)
 //               cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
 //   }
+
+function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero) = no_function("grid_copies");
 module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
+{
+   deprecate("grid_copies");
+   grid_copies(spacing, n, size, stagger, inside, nonzero) children();
+}   
+
+module grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero)
 {
     req_children($children);    
     assert(in_list(stagger, [false, true, "alt"]));
