@@ -1381,7 +1381,8 @@ module generic_threaded_nut(
 //   .
 //   Unlike generic_threaded_rod, when internal=true this module generates the threads, not a thread mask.
 //   The profile needs to be inverted to produce the proper thread form.  If you use the built-in trapezoidal
-//   thread you get the inverted thread, designed so that the inner diameter is d.  With adequate clearance
+//   thread you get the inverted thread, designed so that the inner diameter is d.  If you supply a custom profile
+//   you must invert it yourself to get internal threads.  With adequate clearance
 //   this thread will mate with the thread that uses the same parameters but has internal=false.  Note that
 //   unlike the threaded_rod modules, thread_helix does not adjust the diameter for faceting, nor does it
 //   subtract any $slop for clearance.  
@@ -1398,7 +1399,7 @@ module generic_threaded_nut(
 //   profile = If an asymmetrical thread profile is needed, it can be specified here.
 //   starts = The number of thread starts.  Default: 1
 //   left_handed = If true, thread has a left-handed winding.
-//   internal = If true, invert threads for internal threading.
+//   internal = If true, apply tapers for internal threading, and invert the default profile.  Default: false
 //   d1 = Bottom inside base diameter of threads.
 //   d2 = Top inside base diameter of threads.
 //   higbee = Length to taper thread ends over.  Default: 0

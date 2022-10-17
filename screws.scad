@@ -97,7 +97,8 @@ include <screw_drive.scad>
 //    from the screw size, but by passing the `drive_size=` argument you can override the default, or
 //    in cases where no default exists you can specify it.  Flat head screws have variations such as 100 degree
 //    angle for UTS, or undercut heads.  You can also request a "sharp" screw which will set the screw diameter 
-//    the theoretical maximum and produce sharp corners instead of a flat edge on the head.  The flat head options
+//    the theoretical maximum and produce sharp corners instead of a flat edge on the head.  For a flat head screw
+//    the drive specification must start with "flat", but the flat head options
 //    can be mixed in any order, for example, "flat sharp undercut" or "flat undercut sharp".
 // Subsection: Nuts
 //    Nuts come in standard sizes and BOSL2 has tables to produce sizes for both Imperial and metric nuts.
@@ -2512,7 +2513,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                 [20,  [10,   undef,    undef]],    
                ],
             entry = struct_val(metric_setscrew, diam),
-            dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
+            dummy=assert(drive=="none" || is_undef(drive) || is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
             drive_dim = drive=="hex" ? [["drive_size", entry[0]], ["drive_depth", diam/2]]
                       : drive=="torx" ? [["drive_size", entry[1]], ["drive_depth", entry[2]]]
                       : drive=="slot" ? [["drive_size", entry[3]], ["drive_depth", entry[4]]]
