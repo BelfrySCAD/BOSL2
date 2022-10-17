@@ -1580,7 +1580,6 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
   assert((is_region(shape) || is_path(shape,2)) || (transforms && !(closed && method=="incremental")),"shape must be a 2d path or region")
   let(
     path = path3d(path),
-    f=echo(caps=caps),
     caps = is_def(caps) ? caps :
            closed ? false : true,
     capsOK = is_bool(caps) || is_bool_list(caps,2),
