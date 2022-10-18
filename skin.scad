@@ -1104,9 +1104,9 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 
 // Function&Module: path_sweep()
 // Usage: As module
-//   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
+//   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As function
-//   vnf = path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [atype=]);
+//   vnf = path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [atype=]);
 // Description:
 //   Takes as input `shape`, a 2D polygon path (list of points), and `path`, a 2d or 3d path (also a list of points)
 //   and constructs a polyhedron by sweeping the shape along the path. When run as a module returns the polyhedron geometry.
@@ -1223,6 +1223,11 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   the cross section orientation.  Specifying a list of normal vectors gives you complete control over the orientation of your
 //   cross sections and can be useful if you want to position your model to be on the surface of some solid.
 //   .
+//   You can also apply scaling to the profile along the path.  You can give a list of scalar scale factors or a list of 2-vector scale. 
+//   In the latter scale the x and y scales of the profile are scaled separately before the profile is placed onto the path.  For non-closed
+//   paths you can also give a single scale value or a 2-vector which is treated as the final scale.  The intermediate sections
+//   are then scaled by linear interpolation either relative to length (if scale_by_length is true) or by point count otherwise.  
+//   .
 //   You can use set `transforms` to true to return a list of transformation matrices instead of the swept shape.  In this case, you can
 //   often omit shape entirely.  The exception is when `closed=true` and you are using the "incremental" method.  In this case, `path_sweep`
 //   uses the shape to correct for twist when the shape closes on itself, so you must include a valid shape.
@@ -1234,7 +1239,10 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   normal = normal vector for initializing the incremental method, or for setting normals with method="manual".  Default: UP if the path makes an angle lower than 45 degrees to the xy plane, BACK otherwise.
 //   closed = path is a closed loop.  Default: false
 //   twist = amount of twist to add in degrees.  For closed sweeps must be a multiple of 360/symmetry.  Default: 0
+//   twist_by_length = if true then interpolate twist based on the path length of the path. If false interoplate based on point count.  Default: true
 //   symmetry = symmetry of the shape when closed=true.  Allows the shape to join with a 360/symmetry rotation instead of a full 360 rotation.  Default: 1
+//   scale = Amount to scale the profiles.  If you give a scalar the scale starts at 1 and ends at your specified value. The same is true for a 2-vector, but x and y are scaled separately.   You can also give a vector of values, one for each path point, and you can give a list of 2-vectors that give the x and y scales of your profile for every point on the path (a Nx2 matrix for a path of length N.  Default: 1 (no scaling)
+//   scale_by_length = if true then interpolate scale based on the path length of the path. If false interoplate based on point count.  Default: true
 //   last_normal = normal to last point in the path for the "incremental" method.  Constrains the orientation of the last cross section if you supply it.
 //   uniform = if set to false then compute tangents using the uniform=false argument, which may give better results when your path is non-uniformly sampled.  This argument is passed to {{path_tangents()}}.  Default: true
 //   tangent = a list of tangent vectors in case you need more accuracy (particularly at the end points of your curve)
@@ -1491,6 +1499,18 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //   outside = [for(i=[0:len(trans)-1]) trans[i]*scale(lerp(1,1.5,i/(len(trans)-1)))];
 //   inside = [for(i=[len(trans)-1:-1:0]) trans[i]*scale(lerp(1.1,1.4,i/(len(trans)-1)))];
 //   sweep(shape, concat(outside,inside),closed=true);
+// Example(NoScales): An easier way to scale your model is to use the scale parameter.
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=3));
+//   path_sweep(pentagon(r=1), path3d(elliptic_arc), scale=2);
+// Example(NoScales): Scaling only in the y direction of the profile (z direction in the model in this case)
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=3));
+//   path_sweep(rect(2), path3d(elliptic_arc), scale=[1,2]);
+// Example(NoScales): Specifying scale at every point for a closed path
+//   N=64;
+//   path = circle(r=5, $fn=64);
+//   theta = lerpn(0,360,N,endpoint=false);
+//   scale = [for(t=theta) sin(6*t)/5+1];
+//   path_sweep(rect(2), path3d(path), closed=true, scale=scale);
 // Example(Med,NoScales): Using path_sweep on a region
 //   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
 //   rgn2 = [square(30,center=false)];
@@ -1517,17 +1537,17 @@ module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higb
 //                method="manual", normal=UP);
 //   }
 
-module path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true,
+module path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true,
                     symmetry=1, last_normal, tangent, uniform=true, relaxed=false, caps, style="min_edge", convexity=10,
                     anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull",profiles=false,width=1)
 {
     dummy = assert(is_region(shape) || is_path(shape,2), "shape must be a 2D path or region");
-    vnf = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
+    vnf = path_sweep(shape, path, method, normal, closed, twist, twist_by_length, scale, scale_by_length,
                     symmetry, last_normal, tangent, uniform, relaxed, caps, style);
 
     if (profiles){
         assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
-        tran = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
+        tran = path_sweep(shape, path, method, normal, closed, twist, twist_by_length, scale, scale_by_length, 
                           symmetry, last_normal, tangent, uniform, relaxed,transforms=true);
         rshape = is_path(shape) ? [path3d(shape)]
                                 : [for(s=shape) path3d(s)];
@@ -1542,11 +1562,11 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
 }
 
 
-function path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true,
+function path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true, 
                     symmetry=1, last_normal, tangent, uniform=true, relaxed=false, caps, style="min_edge", transforms=false,
                     anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull") =
-  is_1region(path) ? path_sweep(shape=shape,path=path[0], method=method, normal=normal, closed=default(closed,true),
-                                twist=twist, twist_by_length=twist_by_length, symmetry=symmetry, last_normal=last_normal,
+  is_1region(path) ? path_sweep(shape=shape,path=path[0], method=method, normal=normal, closed=default(closed,true), 
+                                twist=twist, scale=scale, scale_by_length=scale_by_length, twist_by_length=twist_by_length, symmetry=symmetry, last_normal=last_normal,
                                 tangent=tangent, uniform=uniform, relaxed=relaxed, caps=caps, style=style, transforms=transforms,
                                 anchor=anchor, cp=cp, spin=spin, orient=orient, atype=atype) :
   let(closed=default(closed,false))
@@ -1565,7 +1585,9 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
     capsOK = is_bool(caps) || is_bool_list(caps,2),
     fullcaps = is_bool(caps) ? [caps,caps] : caps,
     normalOK = is_undef(normal) || (method!="natural" && is_vector(normal,3))
-                                || (method=="manual" && same_shape(normal,path))
+                                || (method=="manual" && same_shape(normal,path)),
+    scaleOK = scale==1 || ((is_num(scale) || is_vector(scale,2)) && !closed) || is_vector(scale,len(path)) || is_matrix(scale,len(path),2)
+    
   )
   assert(normalOK,  method=="natural" ? "Cannot specify normal with the \"natural\" method"
                   : method=="incremental" ? "Normal with \"incremental\" method must be a 3-vector"
@@ -1574,79 +1596,88 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
   assert(!closed || !caps, "Cannot make closed shape with caps")
   assert(is_undef(normal) || (is_vector(normal) && len(normal)==3) || (is_path(normal) && len(normal)==len(path) && len(normal[0])==3), "Invalid normal specified")
   assert(is_undef(tangent) || (is_path(tangent) && len(tangent)==len(path) && len(tangent[0])==3), "Invalid tangent specified")
+  assert(scaleOK,str("Incompatible or invalid scale",closed?" for closed path":"",": must be ", closed?"":"a scalar, a 2-vector, ",
+                     "a vector of length ",len(path)," or a ",len(path),"x2 matrix of scales"))
   let(
+    scale = !(is_num(scale) || is_vector(scale,2)) ? scale
+          : let(s=is_num(scale) ? [scale,scale] : scale)
+            !scale_by_length ? lerpn([1,1],s,len(path))
+          : lerp([1,1],s, path_length_fractions(path,false)),
+    scale_list = [for(s=scale) scale(s),if (closed) scale(scale[0])],
     tangents = is_undef(tangent) ? path_tangents(path,uniform=uniform,closed=closed) : [for(t=tangent) unit(t)],
     normal = is_path(normal) ? [for(n=normal) unit(n)] :
              is_def(normal) ? unit(normal) :
              method =="incremental" && abs(tangents[0].z) > 1/sqrt(2) ? BACK : UP,
     normals = is_path(normal) ? normal : repeat(normal,len(path)),
-    pathfrac = twist_by_length ? path_length_fractions(path, closed) : [for(i=[0:1:len(path)]) i / (len(path)-(closed?0:1))],
+    tpathfrac = twist_by_length ? path_length_fractions(path, closed) : [for(i=[0:1:len(path)]) i / (len(path)-(closed?0:1))],
+    spathfrac = scale_by_length ? path_length_fractions(path, closed) : [for(i=[0:1:len(path)]) i / (len(path)-(closed?0:1))],    
     L = len(path),
-    transform_list =
-      method=="incremental" ?
-        let(rotations =
-               [for( i  = 0,
-                     ynormal = normal - (normal * tangents[0])*tangents[0],
-                     rotation = frame_map(y=ynormal, z=tangents[0])
-                       ;
-                     i < len(tangents) + (closed?1:0) ;
-                     rotation = i<len(tangents)-1+(closed?1:0)? rot(from=tangents[i],to=tangents[(i+1)%L])*rotation : undef,
-                     i=i+1
-                    )
-                 rotation],
-            // The mismatch is the inverse of the last transform times the first one for the closed case, or the inverse of the
-            // desired final transform times the realized final transform in the open case.  Note that when closed==true the last transform
-            // is a actually looped around and applies to the first point position, so if we got back exactly where we started
-            // then it will be the identity, but we might have accumulated some twist which will show up as a rotation around the
-            // X axis.  Similarly, in the closed==false case the desired and actual transformations can only differ in the twist,
-            // so we can need to calculate the twist angle so we can apply a correction, which we distribute uniformly over the whole path.
-            reference_rot = closed ? rotations[0] :
-                         is_undef(last_normal) ? last(rotations) :
-                           let(
-                               last_tangent = last(tangents),
-                               lastynormal = last_normal - (last_normal * last_tangent) * last_tangent
-                           )
-                         frame_map(y=lastynormal, z=last_tangent),
-            mismatch = transpose(last(rotations)) * reference_rot,
-            correction_twist = atan2(mismatch[1][0], mismatch[0][0]),
-            // Spread out this extra twist over the whole sweep so that it doesn't occur
-            // abruptly as an artifact at the last step.
-            twistfix = correction_twist%(360/symmetry),
-            adjusted_final = !closed ? undef :
-                          translate(path[0]) * rotations[0] * zrot(-correction_twist+correction_twist%(360/symmetry)-twist)
-        )  [for(i=idx(path)) translate(path[i]) * rotations[i] * zrot((twistfix-twist)*pathfrac[i]), if(closed) adjusted_final] :
-      method=="manual" ?
-            [for(i=[0:L-(closed?0:1)]) let(
-                     ynormal = relaxed ? normals[i%L] : normals[i%L] - (normals[i%L] * tangents[i%L])*tangents[i%L],
-                     znormal = relaxed ? tangents[i%L] - (normals[i%L] * tangents[i%L])*normals[i%L] : tangents[i%L],
-                     rotation = frame_map(y=ynormal, z=znormal)
+    unscaled_transform_list =
+        method=="incremental" ?
+          let(rotations =
+                 [for( i  = 0,
+                       ynormal = normal - (normal * tangents[0])*tangents[0],
+                       rotation = frame_map(y=ynormal, z=tangents[0])
+                         ;
+                       i < len(tangents) + (closed?1:0) ;
+                       rotation = i<len(tangents)-1+(closed?1:0)? rot(from=tangents[i],to=tangents[(i+1)%L])*rotation : undef,
+                       i=i+1
+                      )
+                   rotation],
+              // The mismatch is the inverse of the last transform times the first one for the closed case, or the inverse of the
+              // desired final transform times the realized final transform in the open case.  Note that when closed==true the last transform
+              // is a actually looped around and applies to the first point position, so if we got back exactly where we started
+              // then it will be the identity, but we might have accumulated some twist which will show up as a rotation around the
+              // X axis.  Similarly, in the closed==false case the desired and actual transformations can only differ in the twist,
+              // so we can need to calculate the twist angle so we can apply a correction, which we distribute uniformly over the whole path.
+              reference_rot = closed ? rotations[0] :
+                           is_undef(last_normal) ? last(rotations) :
+                             let(
+                                 last_tangent = last(tangents),
+                                 lastynormal = last_normal - (last_normal * last_tangent) * last_tangent
+                             )
+                           frame_map(y=lastynormal, z=last_tangent),
+              mismatch = transpose(last(rotations)) * reference_rot,
+              correction_twist = atan2(mismatch[1][0], mismatch[0][0]),
+              // Spread out this extra twist over the whole sweep so that it doesn't occur
+              // abruptly as an artifact at the last step.
+              twistfix = correction_twist%(360/symmetry),
+              adjusted_final = !closed ? undef :
+                            translate(path[0]) * rotations[0] * zrot(-correction_twist+correction_twist%(360/symmetry)-twist)
+          )  [for(i=idx(path)) translate(path[i]) * rotations[i] * zrot((twistfix-twist)*tpathfrac[i]), if(closed) adjusted_final] 
+      : method=="manual" ?
+              [for(i=[0:L-(closed?0:1)]) let(
+                       ynormal = relaxed ? normals[i%L] : normals[i%L] - (normals[i%L] * tangents[i%L])*tangents[i%L],
+                       znormal = relaxed ? tangents[i%L] - (normals[i%L] * tangents[i%L])*normals[i%L] : tangents[i%L],
+                       rotation = frame_map(y=ynormal, z=znormal)
+                   )
+                   assert(approx(ynormal*znormal,0),str("Supplied normal is parallel to the path tangent at point ",i))
+                   translate(path[i%L])*rotation*zrot(-twist*tpathfrac[i])
+              ] 
+      : method=="natural" ?   // map x axis of shape to the path normal, which points in direction of curvature
+              let (pathnormal = path_normals(path, tangents, closed))
+              assert(all_defined(pathnormal),"Natural normal vanishes on your curve, select a different method")
+              let( testnormals = [for(i=[0:len(pathnormal)-1-(closed?1:2)]) pathnormal[i]*select(pathnormal,i+2)],
+                   a=[for(i=idx(testnormals)) testnormals[i]<.5 ? echo(str("Big change at index ",i," pn=",pathnormal[i]," pn2= ",select(pathnormal,i+2))):0],
+                   dummy = min(testnormals) < .5 ? echo("WARNING: ***** Abrupt change in normal direction.  Consider a different method in path_sweep() *****") :0
                  )
-                 assert(approx(ynormal*znormal,0),str("Supplied normal is parallel to the path tangent at point ",i))
-                 translate(path[i%L])*rotation*zrot(-twist*pathfrac[i]),
-            ] :
-      method=="natural" ?   // map x axis of shape to the path normal, which points in direction of curvature
-            let (pathnormal = path_normals(path, tangents, closed))
-            assert(all_defined(pathnormal),"Natural normal vanishes on your curve, select a different method")
-            let( testnormals = [for(i=[0:len(pathnormal)-1-(closed?1:2)]) pathnormal[i]*select(pathnormal,i+2)],
-                 a=[for(i=idx(testnormals)) testnormals[i]<.5 ? echo(str("Big change at index ",i," pn=",pathnormal[i]," pn2= ",select(pathnormal,i+2))):0],
-                 dummy = min(testnormals) < .5 ? echo("WARNING: ***** Abrupt change in normal direction.  Consider a different method *****") :0
-               )
-            [for(i=[0:L-(closed?0:1)]) let(
-                     rotation = frame_map(x=pathnormal[i%L], z=tangents[i%L])
-                 )
-                 translate(path[i%L])*rotation*zrot(-twist*pathfrac[i])
-               ] :
-      assert(false,"Unknown method or no method given")[], // unknown method
-      ends_match = !closed ? true
+              [for(i=[0:L-(closed?0:1)]) let(
+                       rotation = frame_map(x=pathnormal[i%L], z=tangents[i%L])
+                   )
+                   translate(path[i%L])*rotation*zrot(-twist*tpathfrac[i])
+                 ] 
+      : assert(false,"Unknown method or no method given"), // unknown method
+    transform_list = v_mul(unscaled_transform_list, scale_list),
+    ends_match = !closed ? true
                  : let( rshape = is_path(shape) ? [path3d(shape)]
                                                 : [for(s=shape) path3d(s)]
                    )
                    are_regions_equal(apply(transform_list[0], rshape),
                                      apply(transform_list[L], rshape)),
-      dummy = ends_match ? 0 : echo("WARNING: ***** The points do not match when closing the model *****")
-    )
-    transforms ? transform_list
-               : sweep(is_path(shape)?clockwise_polygon(shape):shape, transform_list, closed=false, caps=fullcaps,style=style,
+    dummy = ends_match ? 0 : echo("WARNING: ***** The points do not match when closing the model in path_sweep() *****")
+  )
+  transforms ? transform_list
+             : sweep(is_path(shape)?clockwise_polygon(shape):shape, transform_list, closed=false, caps=fullcaps,style=style,
                        anchor=anchor,cp=cp,spin=spin,orient=orient,atype=atype);
 
 

@@ -845,8 +845,8 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
   assert(d_first<path_length(revresult),str("Path ",i," is too short for specified cut distance ",d_first))
   assert(d_next<path_length(nextpath), str("Path ",i+1," is too short for specified cut distance ",d_next))
   let(
-      firstcut = _path_cut_points(revresult, d_first, direction=true),
-      nextcut = _path_cut_points(nextpath, d_next, direction=true)
+      firstcut = path_cut_points(revresult, d_first, direction=true),
+      nextcut = path_cut_points(nextpath, d_next, direction=true)
   )
   assert(!loop || nextcut[1] < len(revresult)-1-firstcut[1], "Path is too short to close the loop")
   let(
@@ -1197,8 +1197,8 @@ function _stroke_end(width,left, right, spec) =
                                 90-vector_angle([newright[1],newright[0],newleft[0]])/2,
                         jointleft = 8*cutleft/cos(leftangle)/(1+4*bez_k),
                         jointright = 8*cutright/cos(rightangle)/(1+4*bez_k),
-                        pathcutleft = _path_cut_points(newleft,abs(jointleft)),
-                        pathcutright = _path_cut_points(newright,abs(jointright)),
+                        pathcutleft = path_cut_points(newleft,abs(jointleft)),
+                        pathcutright = path_cut_points(newright,abs(jointright)),
                         leftdelete = intright? pathcutleft[1] : pathcutleft[1] + pathclip[1] -1,
                         rightdelete = intright? pathcutright[1] + pathclip[1] -1 : pathcutright[1],
                         leftcorner = line_intersection([pathcutleft[0], newleft[pathcutleft[1]]], [newright[0],newleft[0]]),

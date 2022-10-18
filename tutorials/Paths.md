@@ -536,7 +536,7 @@ region(rgn);
 ```
 
 You can use regions for several useful things.  If you wanted a grid of holes in your object that
-form the shape given by a region, you can do that with `grid2d()`:
+form the shape given by a region, you can do that with `grid_copies()`:
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -546,7 +546,7 @@ rgn = [
 ];
 difference() {
     cyl(h=5, d=120);
-    grid2d(size=[120,120], spacing=[4,4], inside=rgn) cyl(h=10,d=2);
+    grid_copies(size=[120,120], spacing=[4,4], inside=rgn) cyl(h=10,d=2);
 }
 ```
 

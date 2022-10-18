@@ -332,7 +332,7 @@ module stroke(
             }
         } else {
             dummy=assert(trim1<path_length(path)-trim2, "Path is too short for endcap(s).  Try a smaller width, or set endcap_length to a smaller value.");
-            pathcut = _path_cut_points(path, [trim1, path_length(path)-trim2], closed=false);
+            pathcut = path_cut_points(path, [trim1, path_length(path)-trim2], closed=false);
             pathcut_su = _cut_to_seg_u_form(pathcut,path);
             path2 = _path_cut_getpaths(path, pathcut, closed=false)[1];
             widths = _path_select(width, pathcut_su[0][0], pathcut_su[0][1], pathcut_su[1][0], pathcut_su[1][1]);

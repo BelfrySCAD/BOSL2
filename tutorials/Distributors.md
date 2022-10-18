@@ -13,7 +13,7 @@ Transforms              | Related Distributors
 `left()`, `right()`     | `xcopies()`
 `fwd()`, `back()`       | `ycopies()`
 `down()`, `up()`        | `zcopies()`
-`move()`, `translate()` | `move_copies()`, `line_of()`, `grid2d()`
+`move()`, `translate()` | `move_copies()`, `line_of()`, `grid_copies()`
 `xrot()`                | `xrot_copies()`
 `yrot()`                | `yrot_copies()`
 `zrot()`                | `zrot_copies()`
@@ -127,30 +127,30 @@ line_of(p1=[0,100,0], p2=[100,0,0], n=4)
     sphere(d=10);
 ```
 
-The `grid2d()` command will let you spread copies across both the X and Y
+The `grid_copies()` command will let you spread copies across both the X and Y
 axes at the same time:
 ```openscad-2D
 include <BOSL2/std.scad>
-grid2d(20, n=6) sphere(d=10);
+grid_copies(20, n=6) sphere(d=10);
 ```
 
 The spacing can be separately specified for both the X and Y axes, as can
 the count of rows and columns:
 ```openscad-2D
 include <BOSL2/std.scad>
-grid2d([20,30], n=[6,4]) sphere(d=10);
+grid_copies([20,30], n=[6,4]) sphere(d=10);
 ```
 
-Another neat trick of `grid2d()`, is that you can stagger the output:
+Another neat trick of `grid_copies()`, is that you can stagger the output:
 ```openscad-2D
 include <BOSL2/std.scad>
-grid2d(20, n=[12,6], stagger=true) sphere(d=10);
+grid_copies(20, n=[12,6], stagger=true) sphere(d=10);
 ```
 
 You can get the alternate stagger pattern if you set `stagger="alt"`:
 ```openscad-2D
 include <BOSL2/std.scad>
-grid2d(20, n=[12,6], stagger="alt") sphere(d=10);
+grid_copies(20, n=[12,6], stagger="alt") sphere(d=10);
 ```
 
 By default, if you give a scalar for the spacing value, staggering will give
@@ -159,49 +159,49 @@ six of the surrounding items.  If you give the spacing as a 2-item vector,
 then that will force the X and Y spacings between columns and rows instead.
 ```openscad-2D
 include <BOSL2/std.scad>
-grid2d([20,20], n=6, stagger=true) sphere(d=10);
+grid_copies([20,20], n=6, stagger=true) sphere(d=10);
 ```
 
 You can alternately specify a grid using size and spacing:
 ```openscad-2D
 include <BOSL2/std.scad>
-grid2d(20, size=100) sphere(d=10);
+grid_copies(20, size=100) sphere(d=10);
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
-grid2d(20, size=[100,80]) sphere(d=10);
+grid_copies(20, size=[100,80]) sphere(d=10);
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
-grid2d(20, size=[100,80], stagger=true) sphere(d=10);
+grid_copies(20, size=[100,80], stagger=true) sphere(d=10);
 ```
 
 You can also make grids by specifying size and column/row count:
 ```openscad-2D
 include <BOSL2/std.scad>
-grid2d(n=5, size=100) sphere(d=10);
+grid_copies(n=5, size=100) sphere(d=10);
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
-grid2d(n=[4,5], size=100) sphere(d=10);
+grid_copies(n=[4,5], size=100) sphere(d=10);
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
-grid2d(n=[4,5], size=[100,80]) sphere(d=10);
+grid_copies(n=[4,5], size=[100,80]) sphere(d=10);
 ```
 
-Finally, the `grid2d()` command will let you give a polygon or region shape
+Finally, the `grid_copies()` command will let you give a polygon or region shape
 to fill with items.  Only the items in the grid whose center would be inside
 the polygon or region will be created.  To fill a star shape with items, you
 can do something like:
 ```openscad-3D
 include <BOSL2/std.scad>
 poly = [for (i=[0:11]) polar_to_xy(50*(i%2+1), i*360/12-90)];
-grid2d(5, stagger=true, inside=poly) {
+grid_copies(5, stagger=true, inside=poly) {
     cylinder(d=4,h=10,spin=90,$fn=6);
 }
 ```
