@@ -198,7 +198,7 @@ module cuboid(
             (corner.x<0? xflip() : ident(4)) *
             (corner.y<0? yflip() : ident(4)) *
             (corner.z<0? zflip() : ident(4)) *
-            scale(s+[1,1,1]*0.01) *
+            scale(s+[1,1,1]*0.001) *
             move(-[1,1,1]/2)
         ) polyhedron(
             [[1,1,1],[1,1,0],[1,0,0],[0,1,1],[0,1,0],[1,0,1],[0,0,1]],
@@ -241,39 +241,45 @@ module cuboid(
                 translate(c3) cube(m, center=true);
             } else if (cnt == 1) {
                 if (e.x) {
-                    mat = (corner.y<0? yflip() : ident(4)) *
-                        (corner.z<0? zflip() : ident(4)) *
-                        yrot(-90) * move(-[1,1]*0.01);
                     right(c3.x) {
                         intersection() {
                             xtcyl(l=m, r=r);
-                            multmatrix(mat)
-                                linear_extrude(height=m+0.1, center=true)
-                                    polygon([[r,0],[0.99*r,0],[0,0.99*r],[0,r],[r,r]]);
+                            multmatrix(
+                                (corner.y<0? yflip() : ident(4)) *
+                                (corner.z<0? zflip() : ident(4))
+                            ) {
+                                yrot(-90) linear_extrude(height=m+0.1, center=true) {
+                                    polygon([[r,0],[0.999*r,0],[0,0.999*r],[0,r],[r,r]]);
+                                }
+                            }
                         }
                     }
                 } else if (e.y) {
-                    mat = (corner.x<0? xflip() : ident(4)) *
-                        (corner.z<0? zflip() : ident(4)) *
-                        xrot(90) * move(-[1,1]*0.01);
                     back(c3.y) {
                         intersection() {
                             ytcyl(l=m, r=r);
-                            multmatrix(mat)
-                                linear_extrude(height=m+0.1, center=true)
-                                    polygon([[r,0],[0.99*r,0],[0,0.99*r],[0,r],[r,r]]);
+                            multmatrix(
+                                (corner.x<0? xflip() : ident(4)) *
+                                (corner.z<0? zflip() : ident(4))
+                            ) {
+                                xrot(90) linear_extrude(height=m+0.1, center=true) {
+                                    polygon([[r,0],[0.999*r,0],[0,0.999*r],[0,r],[r,r]]);
+                                }
+                            }
                         }
                     }
                 } else if (e.z) {
-                    mat = (corner.x<0? xflip() : ident(4)) *
-                        (corner.y<0? yflip() : ident(4)) *
-                        move(-[1,1]*0.01);
                     up(c3.z) {
                         intersection() {
                             zcyl(l=m, r=r);
-                            multmatrix(mat)
-                                linear_extrude(height=m+0.1, center=true)
-                                    polygon([[r,0],[0.99*r,0],[0,0.99*r],[0,r],[r,r]]);
+                            multmatrix(
+                                (corner.x<0? xflip() : ident(4)) *
+                                (corner.y<0? yflip() : ident(4))
+                            ) {
+                                linear_extrude(height=m+0.1, center=true) {
+                                    polygon([[r,0],[0.999*r,0],[0,0.999*r],[0,r],[r,r]]);
+                                }
+                            }
                         }
                     }
                 }
