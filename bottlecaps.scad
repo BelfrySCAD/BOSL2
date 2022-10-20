@@ -1144,7 +1144,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 
 // Module: sp_cap()
 // Usage:
-//   sp_neck(cap, type, wall, [style=], [top_adj=]) [ATTACHMENTS];
+//   sp_neck(cap, type, wall, [style=], [top_adj=], [bot_adj=], [$slop]) [ATTACHMENTS];
 // Description:
 //   Make a SPI (Society of Plastics Industry) threaded bottle neck.  You must
 //   supply the nominal outer diameter of the threads and the thread type, one of
@@ -1158,8 +1158,11 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 //   If you don't include this, your cap may bottom out on the bead on the neck instead of sealing
 //   against the top.  If you set top_adj to 1 it will make the top space 1mm smaller so that the
 //   cap will not bottom out.  The 410 and 415 caps have very long unthreaded sections at the bottom.
-//   The bot_adj parameter specifies am amount to reduce that bottom extension.  Be careful that
-//   you don't shrink past the threads.  
+//   The bot_adj parameter specifies an amount to reduce that bottom extension.  Be careful that
+//   you don't shrink past the threads.
+//   .
+//   The inner diameter of the cap is set to allow 10% of the thread depth in clearance.  The diameter
+//   is further increased by `2 * $slop` so you can increase clearance if necessary. 
 //   .
 //   Note: there is a published SPI standard for necks, but absolutely nothing for caps.  This
 //   cap module was designed based on the neck standard to mate reasonably well, but if you
@@ -1172,6 +1175,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 //   style = Either "L" or "M" to specify the thread style.  Default: "L"
 //   top_adj = Amount to reduce top space in the cap, which means it doesn't screw down as far.  Default: 0
 //   bot_adj = Amount to reduce extension of cap at the bottom, which also means it doesn't screw down as far.  Default: 0
+//   $slop = Increase inner diameter by `2 * $slop`.  
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1207,7 +1211,7 @@ module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, anchor, spin, orien
 
     echo(a=a,depth=depth,halfdepth=depth/2, tpi*pointlist_bounds(profile));
 
-    space=2*depth/10+4*get_slop();
+    space=2*depth/10+2*get_slop();
     attachable(anchor,spin,orient,r= (T+space)/2+wall, l=H-bot_adj+wall){
         xrot(180)
         up((H-bot_adj)/2-wall/2){
