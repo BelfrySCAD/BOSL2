@@ -1275,14 +1275,14 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //       texture="trunc_pyramids",
 //       tex_size=[5,5], tex_style="convex");
 //
-// Example: Texturing with VNF tile "vnf_dots"
+// Example: Texturing with VNF tile "dots"
 //   cyl(h=40, r1=20, r2=15, rounding=9,
-//       texture="vnf_dots", tex_size=[5,5],
+//       texture="dots", tex_size=[5,5],
 //       tex_samples=6);
 //
-// Example: Texturing with VNF tile "vnf_bricks"
+// Example: Texturing with VNF tile "bricks_vnf"
 //   cyl(h=50, r1=25, r2=20, shift=[0,10], rounding1=-10,
-//       texture="vnf_bricks", tex_size=[10,10],
+//       texture="bricks_vnf", tex_size=[10,10],
 //       tex_scale=0.5, tex_style="concave");
 //
 // Example: No Texture Taper
