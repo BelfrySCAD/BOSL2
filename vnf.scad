@@ -1418,7 +1418,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 // Arguments:
 //   vnf = The VNF to validate.
 //   size = The width of the lines and diameter of points used to highlight edges and vertices.  Module only.  Default: 1
-//   --
+//   ---
 //   show_warns = If true show warnings for non-triangular faces.  Default: true
 //   check_isects = If true, performs slow checks for intersecting faces.  Default: false
 //   opacity = The opacity level to show the polyhedron itself with.  (Module only)  Default: 0.67

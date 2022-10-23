@@ -592,7 +592,7 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0]
 // Arguments:
 //   rots = Optional array of rotation angles, in degrees, to make copies at.
 //   cp = Centerpoint to rotate around.
-//   --
+//   ---
 //   n = Optional number of evenly distributed copies to be rotated around the ring.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from Y+, when facing the origin from X+.  First unrotated copy is placed at that angle.
 //   r = If given, makes a ring of child copies around the X axis, at the given radius.  Default: 0
