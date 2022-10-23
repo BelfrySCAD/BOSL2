@@ -3022,6 +3022,49 @@ function texture(tex, n, inset, gap, roughness) =
 ///   centroid_bot = The centroid of the bottom of the shape, oriented DOWN.
 /// See Also: heightfield(), cylindrical_heightfield(), texture()
 
+function _get_vnf_tile_edges(texture) =
+    let(
+        verts = texture[0],
+        faces = texture[1],
+        everts = [for (v = verts) (v.x==0 || v.y==0 || v.x==1 || v.y==1)],
+        uc = unique_count([
+            for (face = faces, i = idx(face))
+            let(edge = select(face,i,i+1), i1 = min(edge), i2 = max(edge))
+            if (everts[i1] && everts[i2])
+            [i1, i2]
+        ]),
+        edges = uc[0], counts = uc[1],
+        uedges = [for (i = idx(edges)) if (counts[i] == 1) edges[i] ]
+    ) uedges;
+
+
+function _validate_texture(texture) =
+    is_vnf(texture)
+      ? let( // Validate VNF tile texture
+            bounds = pointlist_bounds(texture[0]),
+            min_xy = point2d(bounds[0]),
+            max_xy = point2d(bounds[1])
+        )
+        assert(min_xy==[0,0] && max_xy==[1,1], "VNF tiles must span exactly from [0,0] to [1,1] in the X and Y components.")
+        let(
+            verts = texture[0],
+            uedges = _get_vnf_tile_edges(texture),
+            edge_verts = [for (i = unique(flatten(uedges))) verts[i] ],
+            hverts = [for(v = edge_verts) if(v.x==0 || v.x==1) v],
+            vverts = [for(v = edge_verts) if(v.y==0 || v.y==1) v],
+            allgoodx = all(hverts, function(v) any(hverts, function(w) w==[1-v.x, v.y, v.z])),
+            allgoody = all(vverts, function(v) any(vverts, function(w) w==[v.x, 1-v.y, v.z]))
+        )
+        assert(allgoodx && allgoody, "All VNF tile edge vertices must line up with a vertex on the opposite side of the tile.")
+        true
+      : // Validate heightfield texture.
+        assert(is_matrix(texture), "Malformed texture.")
+        let( tex_dim = list_shape(texture) )
+        assert(len(tex_dim) == 2, "Heightfield texture must be a 2D square array of scalar heights.")
+        assert(all_defined(tex_dim), "Heightfield texture must be a 2D square array of scalar heights.")
+        true;
+
+
 function _textured_linear_sweep(
     region, texture, tex_size=[5,5],
     h, counts, inset=false, rot=false,
@@ -3051,25 +3094,7 @@ function _textured_linear_sweep(
             is_num(scale)? [scale,scale,1] : scale,
         samples = !is_vnf(texture)? len(texture[0]) :
             is_num(samples)? samples : 8,
-        check_tex = is_vnf(texture)
-          ? let( // Validate VNF tile texture
-                bounds = pointlist_bounds(texture[0]),
-                min_xy = point2d(bounds[0]),
-                max_xy = point2d(bounds[1])
-            )
-            assert(min_xy==[0,0] && max_xy==[1,1], "VNF tiles must span exactly from [0,0] to [1,1] in the X and Y components.")
-            let(
-                hverts = [for(v = texture[0]) if(v.x==0 || v.x==1) v],
-                vverts = [for(v = texture[0]) if(v.y==0 || v.y==1) v],
-                allgoodx = all(hverts, function(v) any(hverts, function(w) w==[1-v.x, v.y, v.z])),
-                allgoody = all(vverts, function(v) any(vverts, function(w) w==[v.x, 1-v.y, v.z]))
-            )
-            assert(allgoodx && allgoody, "All VNF tile edge vertices must line up with a vertex on the opposite side of the tile.")
-          : let( // Validate heightfield texture.
-                tex_dim = list_shape(texture)
-            )
-            assert(len(tex_dim) == 2, "Heightfield texture must be a 2D square array of scalar heights.")
-            assert(all_defined(tex_dim), "Heightfield texture must be a 2D square array of scalar heights."),
+        check_tex = _validate_texture(texture),
         sorted_tile =
             !is_vnf(texture)? texture :
             let(
@@ -3078,13 +3103,14 @@ function _textured_linear_sweep(
                     let(
                         vnft = vnf_slice(texture, "X", list([s:s:1-s/2])),
                         zvnf = [
-                            [for (p=vnft[0])
-                                [
+                            [
+                                for (p=vnft[0]) [
                                     approx(p.x,0)? 0 : approx(p.x,1)? 1 : p.x,
                                     approx(p.y,0)? 0 : approx(p.y,1)? 1 : p.y,
                                     p.z
                                 ]
-                            ], vnft[1]
+                            ],
+                            vnft[1]
                         ]
                     ) zvnf
             ) _vnf_sort_vertices(vnf, idx=[1,0]),
@@ -3258,14 +3284,10 @@ module _textured_linear_sweep(
 function _find_vnf_tile_edge_path(vnf, val) =
     let(
         verts = vnf[0],
-        faces = vnf[1],
-        goods = [for (v = verts) approx(v[1], val)],
         fragments = [
-            for (face = faces)
-            for (seg = pair(face, wrap=true))
-            let(s0 = seg[0], s1 = seg[1])
-            if (goods[s0] && goods[s1])
-            let(v0 = verts[s0], v1 = verts[s1])
+            for(edge = _get_vnf_tile_edges(vnf))
+            let(v0 = verts[edge[0]], v1 = verts[edge[1]])
+            if (approx(v0.y, val) && approx(v1.y, val))
             v0.x <= v1.x? [[v0.x,v0.z], [v1.x,v1.z]] :
             [[v1.x,v1.z], [v0.x,v0.z]]
         ],
@@ -3352,25 +3374,7 @@ function _textured_revolution(
             rot==180? reverse([for (row=tex) reverse(row)]) :
             rot==270? [for (row=transpose(tex)) reverse(row)] :
             reverse(transpose(tex)),
-        check_tex = is_vnf(texture)
-          ? let( // Validate VNF tile texture
-                bounds = pointlist_bounds(texture[0]),
-                min_xy = point2d(bounds[0]),
-                max_xy = point2d(bounds[1])
-            )
-            assert(min_xy==[0,0] && max_xy==[1,1], "VNF tiles must span exactly from [0,0] to [1,1] in the X and Y components.")
-            let(
-                hverts = [for(v = texture[0]) if(v.x==0 || v.x==1) v],
-                vverts = [for(v = texture[0]) if(v.y==0 || v.y==1) v],
-                allgoodx = all(hverts, function(v) any(hverts, function(w) w==[1-v.x, v.y, v.z])),
-                allgoody = all(vverts, function(v) any(vverts, function(w) w==[v.x, 1-v.y, v.z]))
-            )
-            assert(allgoodx && allgoody, "All VNF tile edge vertices must line up with a vertex on the opposite side of the tile.")
-          : let( // Validate heightfield texture.
-                tex_dim = list_shape(texture)
-            )
-            assert(len(tex_dim) == 2, "Heightfield texture must be a 2D square array of scalar heights.")
-            assert(all_defined(tex_dim), "Heightfield texture must be a 2D square array of scalar heights."),
+        check_tex = _validate_texture(texture),
         inset = is_num(inset)? inset : inset? 1 : 0,
         samples = !is_vnf(texture)? len(texture) :
             is_num(samples)? samples : 8,
@@ -3390,13 +3394,14 @@ function _textured_revolution(
                         vnfy = vnf_slice(vnfx, "Y", slices),
                         vnft = vnf_triangulate(vnfy),
                         zvnf = [
-                            [for (p=vnft[0])
-                                [
+                            [
+                                for (p=vnft[0]) [
                                     approx(p.x,0)? 0 : approx(p.x,1)? 1 : p.x,
                                     approx(p.y,0)? 0 : approx(p.y,1)? 1 : p.y,
                                     p.z
                                 ]
-                            ], vnft[1]
+                            ],
+                            vnft[1]
                         ]
                     ) zvnf
             ) _vnf_sort_vertices(utex, idx=[0,1]),
