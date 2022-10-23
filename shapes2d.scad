@@ -1595,9 +1595,9 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 //   text("Foobar", size=12, font="Helvetica");
 //   text("Foobar", anchor=CENTER);
 //   text("Foobar", anchor=str("baseline",CENTER));
-// Example: Using line_of() distributor
+// Example: Using line_copies() distributor
 //   txt = "This is the string.";
-//   line_of(spacing=[10,-5],n=len(txt))
+//   line_copies(spacing=[10,-5],n=len(txt))
 //       text(txt[$idx], size=10, anchor=CENTER);
 // Example: Using arc_of() distributor
 //   txt = "This is the string";

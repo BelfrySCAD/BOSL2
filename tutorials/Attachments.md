@@ -403,10 +403,11 @@ cylinder(h=100, d=100, center=true)
 ## Tagged Operations
 BOSL2 introduces the concept of tags.  Tags are names that can be given to attachables, so that
 you can refer to them when performing `diff()`, `intersect()`, and `conv_hull()` operations.
+Each object can have no more than one tag at a time.  
 
-### `diff(remove, <keep>)`
+### `diff([remove], [keep])`
 The `diff()` operator is used to difference away all shapes marked with the tag(s) given to
-`remove=`, from the other shapes.  
+`remove`, from the other shapes.  
 
 For example, to difference away a child cylinder from the middle of a parent cube, you can
 do this:
@@ -445,7 +446,7 @@ tag("keep")cube(100, center=true)
 ```
 
 
-If you need to mark multiple children with a tag, you can use the `tag()` module.
+You can of course apply `tag()` to several children.
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -458,14 +459,28 @@ cube(100, center=true)
         }
 ```
 
+Many of the modules that use tags have default values for their tags.  For diff the default
+remove tag is "remove" and the default keep tag is "keep".  In this example we rely on the
+default values:
+
+```openscad-3D
+include <BOSL2/std.scad>
+diff()
+sphere(d=100) {
+    tag("keep")xcyl(d=40, l=120);
+    tag("remove")cuboid([40,120,100]);
+}
+```
+
+
 The parent object can be differenced away from other shapes.  Tags are inherited by children,
 though, so you will need to set the tags of the children as well as the parent.
 
 ```openscad-3D
 include <BOSL2/std.scad>
 diff("hole")
-cube([20,11,45], center=true, $tag="hole")
-    cube([40,10,90], center=true, $tag="body");
+tag("hole")cube([20,11,45], center=true)
+    tag("body")cube([40,10,90], center=true);
 ```
 
 Tags (and therefore tag-based operations like `diff()`) only work correctly with attachable
@@ -488,55 +503,62 @@ cuboid(50)
           square(10,center=true);
 ```
 
-### `intersect(a, <b>, <keep>)`
+### `intersect([intersect], [keep])`
 
-To perform an intersection of attachables, you can use the `intersect()` module.  If given one
-argument to `a=`, the parent and all children *not* tagged with that will be intersected by
-everything that *is* tagged with it.
+To perform an intersection of attachables, you can use the `intersect()` module.  This is
+specifically intended to address the situation where you want intersections involving a parent
+and a child, something that is impossible with the native `intersection()` module.  This module
+treats the children in three groups: objects matching the `intersect` tags, objects matching
+the tags listed in `keep` and the remaining objects that don't match any listed tags.  The
+intersection is computed between the union of the `intersect` tagged objects and the union of
+the objects that don't match any listed tags.  Finally the objects lsited in `keep` are union
+ed with the result.  
+
+In this example the parent is intersected with a conical bounding shape.  
 
 ```openscad-3D
 include <BOSL2/std.scad>
 intersect("bounds")
 cube(100, center=true)
-    cylinder(h=100, d1=120, d2=95, center=true, $fn=72, $tag="bounds");
+    tag("bounds") cylinder(h=100, d1=120, d2=95, center=true, $fn=72);
 ```
 
-If given both the `a=` and `b=` arguments, then shapes marked with tags given to `a=` will be
-intersected with shapes marked with tags given to `b=`, then unioned with all other shapes.
+In this example the child objects are intersected with the bounding box parent.  
 
 ```openscad-3D
 include <BOSL2/std.scad>
-intersect("pole", "cap")
+intersect("pole cap")
 cube(100, center=true)
     attach([TOP,RIGHT]) {
-        cube([40,40,80],center=true, $tag="pole");
-        sphere(d=40*sqrt(2), $tag="cap");
+        tag("pole")cube([40,40,80],center=true);
+        tag("cap")sphere(d=40*sqrt(2));
     }
 ```
 
-If the `keep=` argument is given, anything marked with tags passed to it will be unioned with
-the result of the union:
+The default `intersect` tag is "intersect" and the default `keep` tag is "keep".  Here is an
+example where "keep" is used to keep the pole from being removed by the intersection. 
 
 ```openscad-3D
 include <BOSL2/std.scad>
-intersect("bounds", keep="pole")
+intersect()
 cube(100, center=true) {
-    cylinder(h=100, d1=120, d2=95, center=true, $fn=72, $tag="bounds");
-    zrot(45) xcyl(h=140, d=20, $fn=36, $tag="pole");
+    tag("intersect")cylinder(h=100, d1=120, d2=95, center=true, $fn=72);
+    tag("keep")zrot(45) xcyl(h=140, d=20, $fn=36);
 }
 ```
 
-### `conv_hull(keep)`
-You can use the `conv_hull()` module to hull shapes together the
-shapes not marked with the keep tags, before unioning the keep shapes
-into the final result. 
+### `conv_hull([keep])`
+You can use the `conv_hull()` module to hull shapes together.  Objects
+marked with the keep tags are excluded from the hull and unioned into the final result.
+The default keep tag is "keep".  
+
 
 ```openscad-3D
 include <BOSL2/std.scad>
-conv_hull("pole")
-cube(50, center=true, $tag="hull") {
+conv_hull()
+cube(50, center=true) {
     cyl(h=100, d=20);
-    xcyl(h=100, d=20, $tag="pole");
+    tag("keep")xcyl(h=100, d=20);
 }
 ```
 

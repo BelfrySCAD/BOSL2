@@ -13,11 +13,11 @@ Transforms              | Related Distributors
 `left()`, `right()`     | `xcopies()`
 `fwd()`, `back()`       | `ycopies()`
 `down()`, `up()`        | `zcopies()`
-`move()`, `translate()` | `move_copies()`, `line_of()`, `grid_copies()`
+`move()`, `translate()` | `move_copies()`, `line_copies()`, `grid_copies()`
 `xrot()`                | `xrot_copies()`
 `yrot()`                | `yrot_copies()`
 `zrot()`                | `zrot_copies()`
-`rot()`, `rotate()`     | `rot_copies()`, `arc_of()`
+`rot()`, `rotate()`     | `rot_copies()`, `arc_copies()`
 `xflip()`               | `xflip_copy()`
 `yflip()`               | `yflip_copy()`
 `zflip()`               | `zflip_copy()`
@@ -106,24 +106,24 @@ zcopies(20, n=5, sp=[0,0,0]) sphere(d=10);
 ```
 
 If you need to distribute copies along an arbitrary line, you can use the
-`line_of()` command.  You can give both the direction vector and the spacing
+`line_copies()` command.  You can give both the direction vector and the spacing
 of the line of copies with the `spacing=` argument:
 ```openscad-3D
 include <BOSL2/std.scad>
-line_of(spacing=(BACK+RIGHT)*20, n=5) sphere(d=10);
+line_copies(spacing=(BACK+RIGHT)*20, n=5) sphere(d=10);
 ```
 
 With the `p1=` argument, you can specify the starting point of the line:
 ```openscad-3D
 include <BOSL2/std.scad>
-line_of(spacing=(BACK+RIGHT)*20, n=5, p1=[0,0,0]) sphere(d=10);
+line_copies(spacing=(BACK+RIGHT)*20, n=5, p1=[0,0,0]) sphere(d=10);
 ```
 
 If you give both `p1=` and `p2=`, you can nail down both the start and
 endpoints of the line of copies:
 ```openscad-2D
 include <BOSL2/std.scad>
-line_of(p1=[0,100,0], p2=[100,0,0], n=4)
+line_copies(p1=[0,100,0], p2=[100,0,0], n=4)
     sphere(d=10);
 ```
 

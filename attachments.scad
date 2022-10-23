@@ -835,7 +835,7 @@ module tag_scope(scope){
 //                 right(20)
 //                   circle(5);
 //       }
-// Example: Here is another example where two children are intersected using the native intersection operator, and then tagged with {{force_tag()}}.  Note that because the children are at the save level, you don't need to use a tagged operator for their intersection.  
+// Example: Here is another example where two children are intersected using the native intersection operator, and then tagged with {{force_tag()}}.  Note that because the children are at the same level, you don't need to use a tagged operator for their intersection.  
 //  $fn=32;
 //  diff()
 //    cuboid(10){
