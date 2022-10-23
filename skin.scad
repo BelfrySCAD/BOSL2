@@ -3034,7 +3034,7 @@ function _get_vnf_tile_edges(texture) =
             [i1, i2]
         ]),
         edges = uc[0], counts = uc[1],
-        uedges = [for (i = idx(edges)) if (counts[i] == 1) edges[i] ],
+        uedges = [for (i = idx(edges)) if (counts[i] == 1) edges[i] ]
     ) uedges;
 
 
