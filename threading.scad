@@ -140,7 +140,7 @@ module threaded_rod(
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default: 1
-//   bevel = if true, bevel the outside of the nut.
+//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
 //   bevel1 = if true, bevel the outside of the nut bottom.
 //   bevel2 = if true, bevel the outside of the nut top. 
 //   bevang = set the angle for the outside nut bevel.  Default: 15
@@ -347,7 +347,7 @@ module trapezoidal_threaded_rod(
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
-//   bevel = if true, bevel the outside of the nut.
+//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
 //   bevel1 = if true, bevel the outside of the nut bottom.
 //   bevel2 = if true, bevel the outside of the nut top. 
 //   bevang = set the angle for the outside nut bevel.  Default: 15
@@ -497,7 +497,7 @@ module acme_threaded_rod(
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = Number of lead starts.  Default: 1
-//   bevel = if true, bevel the outside of the nut.
+//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
 //   bevel1 = if true, bevel the outside of the nut bottom.
 //   bevel2 = if true, bevel the outside of the nut top. 
 //   bevang = set the angle for the outside nut bevel.  Default: 15
@@ -766,7 +766,7 @@ module buttress_threaded_rod(
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default: 1
-//   bevel = if true, bevel the outside of the nut.
+//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
 //   bevel1 = if true, bevel the outside of the nut bottom.
 //   bevel2 = if true, bevel the outside of the nut top. 
 //   bevang = set the angle for the outside nut bevel.  Default: 15
@@ -904,7 +904,7 @@ module square_threaded_rod(
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
-//   bevel = if true, bevel the outside of the nut.
+//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
 //   bevel1 = if true, bevel the outside of the nut bottom.
 //   bevel2 = if true, bevel the outside of the nut top. 
 //   bevang = set the angle for the outside nut bevel.  Default: 15
@@ -1274,7 +1274,7 @@ module generic_threaded_rod(
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
-//   bevel = if true, bevel the outside of the nut.
+//   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
 //   bevel1 = if true, bevel the outside of the nut bottom.
 //   bevel2 = if true, bevel the outside of the nut top. 
 //   bevang = set the angle for the outside nut bevel.  Default: 15
@@ -1315,6 +1315,7 @@ module generic_threaded_nut(
     id1,id2, height, thickness, 
     anchor, spin, orient
 ) {
+    
     extra = 0.01;
     id1 = first_defined([id1,id]);
     id2 = first_defined([id2,id]);
@@ -1328,8 +1329,8 @@ module generic_threaded_nut(
     full_id2 = id2+slope*extra/2;
     ibevel1 = first_defined([ibevel1,ibevel,true]);
     ibevel2 = first_defined([ibevel2,ibevel,true]);
-    bevel1 = first_defined([bevel1,bevel,false]);
-    bevel2 = first_defined([bevel2,bevel,false]);
+    bevel1 = first_defined([bevel1,bevel,shape=="hex"?true:false]);
+    bevel2 = first_defined([bevel2,bevel,shape=="hex"?true:false]);
     depth = -pitch*min(column(profile,1));
     bevel_d=0.975;
     IBEV=0.05;
@@ -1497,30 +1498,6 @@ module thread_helix(
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
 
-// Changes
-//   internal: can set bevel to true and get non-garbage result
-//   bevel is always set by thread depth
-//   acme takes tpi
-//   square threads are at angle 0
-//   added generic_threaded_{rod,nut}
-//   eliminated metric_trapezoidal_*
-//   cleaned up matrices some in generic_threaded_rod
-//   threaded_rod can produce spec-true ISO/UTS profile with a triplet input for the diameter.
-//   Added bevel1 and bevel2 to all modules.  Made default uniformly false for every case instead of
-//       sometimes true, sometimes false
-//   Profiles that go over zero are not clipped, and bevels are based on actual profile top, not nominal
-//   When bevel is given to nuts it bevels the outside of the nut by thread depth
-//   higbee looks best with quincunx, but it's more expensive.  Select quincunx when higbee is used, min_edge otherwise
-//   Current code uses difference to remove excess length in the rod.  This gives faster renders at the cost
-//      of more complex code and green top/bottom surfaces.
-//   Changed slop to 4 * $slop.  I got good results printing with $slop=0.05 with this setting.
-//   Don't generate excess threads when starts>1, and don't force threads to be even
-//
-//   Fixed higbee in spiral_sweep for properly centered scaling and for staying on the internal/external base of threads
-//   Fixed bug in spiral_sweep where two segments were missing if higbee is zero
-//   Fixed faceting bugs in spiral_sweep where segments weren't aligned with requested number of segments, and higbee
-//      would pull away from the cylinder by using a higher count and following a true circle
-//
 // Questions
 //   Should nut modules take d1/d2 for tapered nuts?
 //
