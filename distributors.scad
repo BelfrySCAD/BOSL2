@@ -46,113 +46,6 @@ module move_copies(a=[[0,0,0]])
 }
 
 
-// Function&Module: line_of()
-//
-// Usage: Place `n` copies at a given spacing along the line
-//   line_of(spacing, [n], [p1=]) CHILDREN;
-// Usage: Place as many copies as will fit at a given spacing
-//   line_of(spacing, [l=], [p1=]) CHILDREN;
-// Usage: Place `n` copies along the length of the line
-//   line_of([n=], [l=], [p1=]) CHILDREN;
-// Usage: Place `n` copies along the line from `p1` to `p2`
-//   line_of([n=], [p1=], [p2=]) CHILDREN;
-// Usage: Place copies at the given spacing, centered along the line from `p1` to `p2`
-//   line_of([spacing], [p1=], [p2=]) CHILDREN;
-// Usage: As a function
-//   pts = line_of([spacing], [n], [p1=]);
-//   pts = line_of([spacing], [l=], [p1=]);
-//   pts = line_of([n=], [l=], [p1=]);
-//   pts = line_of([n=], [p1=], [p2=]);
-//   pts = line_of([spacing], [p1=], [p2=]);
-// Description:
-//   When called as a function, returns a list of points at evenly spaced positions along a line.
-//   When called as a module, copies `children()` at one or more evenly spaced positions along a line.
-//   By default, the line will be centered at the origin, unless the starting point `p1` is given.
-//   The line will be pointed towards `RIGHT` (X+) unless otherwise given as a vector in `l`,
-//   `spacing`, or `p1`/`p2`.  The psotion of the copies is specified in one of several ways:
-//   .
-//   If You Know...                   | Then Use Something Like...
-//   -------------------------------- | --------------------------------
-//   Spacing distance, Count          | `line_of(spacing=10, n=5) ...` or `line_of(10, n=5) ...`
-//   Spacing vector, Count            | `line_of(spacing=[10,5], n=5) ...` or `line_of([10,5], n=5) ...`
-//   Spacing distance, Line length    | `line_of(spacing=10, l=50) ...` or `line_of(10, l=50) ...`
-//   Spacing distance, Line vector    | `line_of(spacing=10, l=[50,30]) ...` or `line_of(10, l=[50,30]) ...`
-//   Spacing vector, Line length      | `line_of(spacing=[10,5], l=50) ...` or `line_of([10,5], l=50) ...`
-//   Line length, Count               | `line_of(l=50, n=5) ...`
-//   Line vector, Count               | `line_of(l=[50,40], n=5) ...`
-//   Line endpoints, Count            | `line_of(p1=[10,10], p2=[60,-10], n=5) ...`
-//   Line endpoints, Spacing distance | `line_of(p1=[10,10], p2=[60,-10], spacing=10) ...`
-//
-// Arguments:
-//   spacing = Either the scalar spacing distance along the X+ direction, or the vector giving both the direction and spacing distance between each set of copies.
-//   n = Number of copies to distribute along the line. (Default: 2)
-//   ---
-//   l = Either the scalar length of the line, or a vector giving both the direction and length of the line.
-//   p1 = If given, specifies the starting point of the line.
-//   p2 = If given with `p1`, specifies the ending point of line, and indirectly calculates the line length.
-//
-// Side Effects:
-//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
-//   `$idx` is set to the index number of each child being copied.
-//
-// Examples:
-//   line_of(10) sphere(d=1);
-//   line_of(10, n=5) sphere(d=1);
-//   line_of([10,5], n=5) sphere(d=1);
-//   line_of(spacing=10, n=6) sphere(d=1);
-//   line_of(spacing=[10,5], n=6) sphere(d=1);
-//   line_of(spacing=10, l=50) sphere(d=1);
-//   line_of(spacing=10, l=[50,30]) sphere(d=1);
-//   line_of(spacing=[10,5], l=50) sphere(d=1);
-//   line_of(l=50, n=4) sphere(d=1);
-//   line_of(l=[50,-30], n=4) sphere(d=1);
-// Example(FlatSpin,VPD=133):
-//   line_of(p1=[0,0,0], p2=[5,5,20], n=6) cube(size=[3,2,1],center=true);
-// Example(FlatSpin,VPD=133):
-//   line_of(p1=[0,0,0], p2=[5,5,20], spacing=6) cube(size=[3,2,1],center=true);
-// Example: All children are copied to each position
-//   line_of(l=20, n=3) {
-//       cube(size=[1,3,1],center=true);
-//       cube(size=[3,1,1],center=true);
-//   }
-// Example(2D): The functional form of line_of() returns a list of points.
-//   pts = line_of([10,5],n=5);
-//   move_copies(pts) circle(d=2);
-module line_of(spacing, n, l, p1, p2)
-{
-    req_children($children);
-    pts = line_of(spacing=spacing, n=n, l=l, p1=p1, p2=p2);
-    for (i=idx(pts)) {
-        $idx = i;
-        $pos = pts[i];
-        translate($pos) children();
-    }
-}
-
-function line_of(spacing, n, l, p1, p2) =
-    assert(is_undef(spacing) || is_finite(spacing) || is_vector(spacing))
-    assert(is_undef(n) || is_finite(n))
-    assert(is_undef(l) || is_finite(l) || is_vector(l))
-    assert(is_undef(p1) || is_vector(p1))
-    assert(is_undef(p2) || is_vector(p2))
-    let(
-        ll = !is_undef(l)? scalar_vec3(l, 0) :
-            (!is_undef(spacing) && !is_undef(n))? ((n-1) * scalar_vec3(spacing, 0)) :
-            (!is_undef(p1) && !is_undef(p2))? point3d(p2-p1) :
-            undef,
-        cnt = !is_undef(n)? n :
-            (!is_undef(spacing) && !is_undef(ll))? floor(norm(ll) / norm(scalar_vec3(spacing, 0)) + 1.000001) :
-            2,
-        spc = cnt<=1? [0,0,0] :
-            is_undef(spacing)? (ll/(cnt-1)) :
-            is_num(spacing) && !is_undef(ll)? (ll/(cnt-1)) :
-            scalar_vec3(spacing, 0)
-    )
-    assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `line_of()`.")
-    let( spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc )
-    [for (i=[0:1:cnt-1]) i * spc + spos];
-
-
 // Module: xcopies()
 //
 // Description:
@@ -192,12 +85,14 @@ module xcopies(spacing, n, l, sp)
     sp = is_finite(sp)? (sp*dir) : sp;
     if (is_vector(spacing)) {
         translate(default(sp,[0,0,0])) {
-            for (x = spacing) {
-                translate(x*dir) children();
+            for (i = idx(spacing)) {
+                $idx = i;
+                $pos = spacing[i]*dir;
+                translate($pos) children();
             }
         }
     } else {
-        line_of(
+        line_copies(
             l=u_mul(l,dir),
             spacing=u_mul(spacing,dir),
             n=n, p1=sp
@@ -245,12 +140,14 @@ module ycopies(spacing, n, l, sp)
     sp = is_finite(sp)? (sp*dir) : sp;
     if (is_vector(spacing)) {
         translate(default(sp,[0,0,0])) {
-            for (x = spacing) {
-                translate(x*dir) children();
+            for (i = idx(spacing)) {
+                $idx = i;
+                $pos = spacing[i]*dir;
+                translate($pos) children();
             }
         }
     } else {
-        line_of(
+        line_copies(
             l=u_mul(l,dir),
             spacing=u_mul(spacing,dir),
             n=n, p1=sp
@@ -312,18 +209,135 @@ module zcopies(spacing, n, l, sp)
     sp = is_finite(sp)? (sp*dir) : sp;
     if (is_vector(spacing)) {
         translate(default(sp,[0,0,0])) {
-            for (x = spacing) {
-                translate(x*dir) children();
+            for (i = idx(spacing)) {
+                $idx = i;
+                $pos = spacing[i]*dir;
+                translate($pos) children();
             }
         }
     } else {
-        line_of(
+        line_copies(
             l=u_mul(l,dir),
             spacing=u_mul(spacing,dir),
             n=n, p1=sp
         ) children();
     }
 }
+
+
+
+// Function&Module: line_copies()
+//
+// Usage: Place `n` copies at a given spacing along the line
+//   line_copies(spacing, [n], [p1=]) CHILDREN;
+// Usage: Place as many copies as will fit at a given spacing
+//   line_copies(spacing, [l=], [p1=]) CHILDREN;
+// Usage: Place `n` copies along the length of the line
+//   line_copies([n=], [l=], [p1=]) CHILDREN;
+// Usage: Place `n` copies along the line from `p1` to `p2`
+//   line_copies([n=], [p1=], [p2=]) CHILDREN;
+// Usage: Place copies at the given spacing, centered along the line from `p1` to `p2`
+//   line_copies([spacing], [p1=], [p2=]) CHILDREN;
+// Usage: As a function
+//   pts = line_copies([spacing], [n], [p1=]);
+//   pts = line_copies([spacing], [l=], [p1=]);
+//   pts = line_copies([n=], [l=], [p1=]);
+//   pts = line_copies([n=], [p1=], [p2=]);
+//   pts = line_copies([spacing], [p1=], [p2=]);
+// Description:
+//   When called as a function, returns a list of points at evenly spaced positions along a line.
+//   When called as a module, copies `children()` at one or more evenly spaced positions along a line.
+//   By default, the line will be centered at the origin, unless the starting point `p1` is given.
+//   The line will be pointed towards `RIGHT` (X+) unless otherwise given as a vector in `l`,
+//   `spacing`, or `p1`/`p2`.  The psotion of the copies is specified in one of several ways:
+//   .
+//   If You Know...                   | Then Use Something Like...
+//   -------------------------------- | --------------------------------
+//   Spacing distance, Count          | `line_copies(spacing=10, n=5) ...` or `line_copies(10, n=5) ...`
+//   Spacing vector, Count            | `line_copies(spacing=[10,5], n=5) ...` or `line_copies([10,5], n=5) ...`
+//   Spacing distance, Line length    | `line_copies(spacing=10, l=50) ...` or `line_copies(10, l=50) ...`
+//   Spacing distance, Line vector    | `line_copies(spacing=10, l=[50,30]) ...` or `line_copies(10, l=[50,30]) ...`
+//   Spacing vector, Line length      | `line_copies(spacing=[10,5], l=50) ...` or `line_copies([10,5], l=50) ...`
+//   Line length, Count               | `line_copies(l=50, n=5) ...`
+//   Line vector, Count               | `line_copies(l=[50,40], n=5) ...`
+//   Line endpoints, Count            | `line_copies(p1=[10,10], p2=[60,-10], n=5) ...`
+//   Line endpoints, Spacing distance | `line_copies(p1=[10,10], p2=[60,-10], spacing=10) ...`
+//
+// Arguments:
+//   spacing = Either the scalar spacing distance along the X+ direction, or the vector giving both the direction and spacing distance between each set of copies.
+//   n = Number of copies to distribute along the line. (Default: 2)
+//   ---
+//   l = Either the scalar length of the line, or a vector giving both the direction and length of the line.
+//   p1 = If given, specifies the starting point of the line.
+//   p2 = If given with `p1`, specifies the ending point of line, and indirectly calculates the line length.
+//
+// Side Effects:
+//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
+//   `$idx` is set to the index number of each child being copied.
+//
+// Examples:
+//   line_copies(10) sphere(d=1);
+//   line_copies(10, n=5) sphere(d=1);
+//   line_copies([10,5], n=5) sphere(d=1);
+//   line_copies(spacing=10, n=6) sphere(d=1);
+//   line_copies(spacing=[10,5], n=6) sphere(d=1);
+//   line_copies(spacing=10, l=50) sphere(d=1);
+//   line_copies(spacing=10, l=[50,30]) sphere(d=1);
+//   line_copies(spacing=[10,5], l=50) sphere(d=1);
+//   line_copies(l=50, n=4) sphere(d=1);
+//   line_copies(l=[50,-30], n=4) sphere(d=1);
+// Example(FlatSpin,VPD=133):
+//   line_copies(p1=[0,0,0], p2=[5,5,20], n=6) cube(size=[3,2,1],center=true);
+// Example(FlatSpin,VPD=133):
+//   line_copies(p1=[0,0,0], p2=[5,5,20], spacing=6) cube(size=[3,2,1],center=true);
+// Example: All children are copied to each position
+//   line_copies(l=20, n=3) {
+//       cube(size=[1,3,1],center=true);
+//       cube(size=[3,1,1],center=true);
+//   }
+// Example(2D): The functional form of line_copies() returns a list of points.
+//   pts = line_copies([10,5],n=5);
+//   move_copies(pts) circle(d=2);
+
+module line_of(spacing, n, l, p1, p2) {
+    deprecate("line_copies");
+    line_copies(spacing, n, l, p1, p2);
+}
+
+module line_copies(spacing, n, l, p1, p2)
+{
+    req_children($children);
+    pts = line_copies(spacing=spacing, n=n, l=l, p1=p1, p2=p2);
+    for (i=idx(pts)) {
+        $idx = i;
+        $pos = pts[i];
+        translate($pos) children();
+    }
+}
+
+function line_copies(spacing, n, l, p1, p2) =
+    assert(is_undef(spacing) || is_finite(spacing) || is_vector(spacing))
+    assert(is_undef(n) || is_finite(n))
+    assert(is_undef(l) || is_finite(l) || is_vector(l))
+    assert(is_undef(p1) || is_vector(p1))
+    assert(is_undef(p2) || is_vector(p2))
+    let(
+        ll = !is_undef(l)? scalar_vec3(l, 0) :
+            (!is_undef(spacing) && !is_undef(n))? ((n-1) * scalar_vec3(spacing, 0)) :
+            (!is_undef(p1) && !is_undef(p2))? point3d(p2-p1) :
+            undef,
+        cnt = !is_undef(n)? n :
+            (!is_undef(spacing) && !is_undef(ll))? floor(norm(ll) / norm(scalar_vec3(spacing, 0)) + 1.000001) :
+            2,
+        spc = cnt<=1? [0,0,0] :
+            is_undef(spacing)? (ll/(cnt-1)) :
+            is_num(spacing) && !is_undef(ll)? (ll/(cnt-1)) :
+            scalar_vec3(spacing, 0)
+    )
+    assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `line_copies()`.")
+    let( spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc )
+    [for (i=[0:1:cnt-1]) i * spc + spos];
+
 
 
 
@@ -578,7 +592,7 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0]
 // Arguments:
 //   rots = Optional array of rotation angles, in degrees, to make copies at.
 //   cp = Centerpoint to rotate around.
-//   --
+//   ---
 //   n = Optional number of evenly distributed copies to be rotated around the ring.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from Y+, when facing the origin from X+.  First unrotated copy is placed at that angle.
 //   r = If given, makes a ring of child copies around the X axis, at the given radius.  Default: 0
@@ -743,14 +757,14 @@ module zrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true)
 }
 
 
-// Module: arc_of()
+// Module: arc_copies()
 //
 // Description:
 //   Evenly distributes n duplicate children around an ovoid arc on the XY plane.
 //
 // Usage:
-//   arc_of(n, r|d=, [sa=], [ea=], [rot=]) CHILDREN;
-//   arc_of(n, rx=|dx=, ry=|dy=, [sa=], [ea=], [rot=]) CHILDREN;
+//   arc_copies(n, r|d=, [sa=], [ea=], [rot=]) CHILDREN;
+//   arc_copies(n, rx=|dx=, ry=|dy=, [sa=], [ea=], [rot=]) CHILDREN;
 //
 // Arguments:
 //   n = number of copies to distribute around the circle. (Default: 6)
@@ -772,24 +786,30 @@ module zrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true)
 //
 // Example:
 //   #cube(size=[10,3,3],center=true);
-//   arc_of(d=40, n=5) cube(size=[10,3,3],center=true);
+//   arc_copies(d=40, n=5) cube(size=[10,3,3],center=true);
 //
 // Example:
 //   #cube(size=[10,3,3],center=true);
-//   arc_of(d=40, n=5, sa=45, ea=225) cube(size=[10,3,3],center=true);
+//   arc_copies(d=40, n=5, sa=45, ea=225) cube(size=[10,3,3],center=true);
 //
 // Example:
 //   #cube(size=[10,3,3],center=true);
-//   arc_of(r=15, n=8, rot=false) cube(size=[10,3,3],center=true);
+//   arc_copies(r=15, n=8, rot=false) cube(size=[10,3,3],center=true);
 //
 // Example:
 //   #cube(size=[10,3,3],center=true);
-//   arc_of(rx=20, ry=10, n=8) cube(size=[10,3,3],center=true);
+//   arc_copies(rx=20, ry=10, n=8) cube(size=[10,3,3],center=true);
 // Example(2D): Using `$idx` to alternate shapes
-//   arc_of(r=50, n=19, sa=0, ea=180)
+//   arc_copies(r=50, n=19, sa=0, ea=180)
 //       if ($idx % 2 == 0) rect(6);
 //       else circle(d=6);
-module arc_of(
+
+function arc_copies(n=6,r,rx,ry,d,dx,dy,sa=0,ea=360,rot=true) = no_function("arc_copies");
+module arc_of(n=6,r,rx,ry,d,dx,dy,sa=0,ea=360,rot=true){
+    deprecate("arc_copies");
+    arc_copies(n,r,rx,ry,d,dx,dy,sa,ea,rot);
+}    
+module arc_copies(
     n=6,
     r=undef,
     rx=undef, ry=undef,
@@ -1046,61 +1066,6 @@ module path_copies(path, n, spacing, sp=undef, dist, rotate_children=true, dist,
 //////////////////////////////////////////////////////////////////////
 
 
-// Module: mirror_copy()
-//
-// Description:
-//   Makes a copy of the children, mirrored across the given plane.
-//
-// Usage:
-//   mirror_copy(v, [cp], [offset]) CHILDREN;
-//
-// Arguments:
-//   v = The normal vector of the plane to mirror across.
-//   offset = distance to offset away from the plane.
-//   cp = A point that lies on the mirroring plane.
-//
-// Side Effects:
-//   `$orig` is true for the original instance of children.  False for the copy.
-//   `$idx` is set to the index value of each copy.
-//
-// Example:
-//   mirror_copy([1,-1,0]) zrot(-45) yrot(90) cylinder(d1=10, d2=0, h=20);
-//   color("blue",0.25) zrot(-45) cube([0.01,15,15], center=true);
-//
-// Example:
-//   mirror_copy([1,1,0], offset=5) rot(a=90,v=[-1,1,0]) cylinder(d1=10, d2=0, h=20);
-//   color("blue",0.25) zrot(45) cube([0.01,15,15], center=true);
-//
-// Example:
-//   mirror_copy(UP+BACK, cp=[0,-5,-5]) rot(from=UP, to=BACK+UP) cylinder(d1=10, d2=0, h=20);
-//   color("blue",0.25) translate([0,-5,-5]) rot(from=UP, to=BACK+UP) cube([15,15,0.01], center=true);
-module mirror_copy(v=[0,0,1], offset=0, cp)
-{
-    req_children($children);  
-    cp = is_vector(v,4)? plane_normal(v) * v[3] :
-        is_vector(cp)? cp :
-        is_num(cp)? cp*unit(v) :
-        [0,0,0];
-    nv = is_vector(v,4)? plane_normal(v) : unit(v);
-    off = nv*offset;
-    if (cp == [0,0,0]) {
-        translate(off) {
-            $orig = true;
-            $idx = 0;
-            children();
-        }
-        mirror(nv) translate(off) {
-            $orig = false;
-            $idx = 1;
-            children();
-        }
-    } else {
-        translate(off) children();
-        translate(cp) mirror(nv) translate(-cp) translate(off) children();
-    }
-}
-
-
 // Module: xflip_copy()
 //
 // Description:
@@ -1202,55 +1167,66 @@ module zflip_copy(offset=0, z=0)
     mirror_copy(v=[0,0,1], offset=offset, cp=[0,0,z]) children();
 }
 
-////////////////////
-// Section: Distributing children individually along a line
-///////////////////
 
-// Module: distribute()
+// Module: mirror_copy()
 //
 // Description:
-//   Spreads out the children individually along the direction `dir`.
-//   Every child is placed at a different position, in order.
-//   This is useful for laying out groups of disparate objects
-//   where you only really care about the spacing between them.
+//   Makes a copy of the children, mirrored across the given plane.
 //
 // Usage:
-//   distribute(spacing, sizes, dir) CHILDREN;
-//   distribute(l=, [sizes=], [dir=]) CHILDREN;
+//   mirror_copy(v, [cp], [offset]) CHILDREN;
 //
 // Arguments:
-//   spacing = Spacing to add between each child. (Default: 10.0)
-//   sizes = Array containing how much space each child will need.
-//   dir = Vector direction to distribute copies along.  Default: RIGHT
-//   l = Length to distribute copies along.
+//   v = The normal vector of the plane to mirror across.
+//   offset = distance to offset away from the plane.
+//   cp = A point that lies on the mirroring plane.
 //
 // Side Effects:
-//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
-//   `$idx` is set to the index number of each child being copied.
+//   `$orig` is true for the original instance of children.  False for the copy.
+//   `$idx` is set to the index value of each copy.
 //
 // Example:
-//   distribute(sizes=[100, 30, 50], dir=UP) {
-//       sphere(r=50);
-//       cube([10,20,30], center=true);
-//       cylinder(d=30, h=50, center=true);
-//   }
-module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
+//   mirror_copy([1,-1,0]) zrot(-45) yrot(90) cylinder(d1=10, d2=0, h=20);
+//   color("blue",0.25) zrot(-45) cube([0.01,15,15], center=true);
+//
+// Example:
+//   mirror_copy([1,1,0], offset=5) rot(a=90,v=[-1,1,0]) cylinder(d1=10, d2=0, h=20);
+//   color("blue",0.25) zrot(45) cube([0.01,15,15], center=true);
+//
+// Example:
+//   mirror_copy(UP+BACK, cp=[0,-5,-5]) rot(from=UP, to=BACK+UP) cylinder(d1=10, d2=0, h=20);
+//   color("blue",0.25) translate([0,-5,-5]) rot(from=UP, to=BACK+UP) cube([15,15,0.01], center=true);
+module mirror_copy(v=[0,0,1], offset=0, cp)
 {
     req_children($children);  
-    gaps = ($children < 2)? [0] :
-        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-        [for (i=[0:1:$children-2]) 0];
-    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
-    gaps2 = [for (gap = gaps) gap+spc];
-    spos = dir * -sum(gaps2)/2;
-    spacings = cumsum([0, each gaps2]);
-    for (i=[0:1:$children-1]) {
-        $pos = spos + spacings[i] * dir;
-        $idx = i;
-        translate($pos) children(i);
+    cp = is_vector(v,4)? plane_normal(v) * v[3] :
+        is_vector(cp)? cp :
+        is_num(cp)? cp*unit(v) :
+        [0,0,0];
+    nv = is_vector(v,4)? plane_normal(v) : unit(v);
+    off = nv*offset;
+    if (cp == [0,0,0]) {
+        translate(off) {
+            $orig = true;
+            $idx = 0;
+            children();
+        }
+        mirror(nv) translate(off) {
+            $orig = false;
+            $idx = 1;
+            children();
+        }
+    } else {
+        translate(off) children();
+        translate(cp) mirror(nv) translate(-cp) translate(off) children();
     }
 }
 
+
+
+////////////////////
+// Section: Distributing children individually along a line
+///////////////////
 
 // Module: xdistribute()
 //
@@ -1388,6 +1364,54 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
         translate($pos) children(i);
     }
 }
+
+
+
+// Module: distribute()
+//
+// Description:
+//   Spreads out the children individually along the direction `dir`.
+//   Every child is placed at a different position, in order.
+//   This is useful for laying out groups of disparate objects
+//   where you only really care about the spacing between them.
+//
+// Usage:
+//   distribute(spacing, sizes, dir) CHILDREN;
+//   distribute(l=, [sizes=], [dir=]) CHILDREN;
+//
+// Arguments:
+//   spacing = Spacing to add between each child. (Default: 10.0)
+//   sizes = Array containing how much space each child will need.
+//   dir = Vector direction to distribute copies along.  Default: RIGHT
+//   l = Length to distribute copies along.
+//
+// Side Effects:
+//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
+//   `$idx` is set to the index number of each child being copied.
+//
+// Example:
+//   distribute(sizes=[100, 30, 50], dir=UP) {
+//       sphere(r=50);
+//       cube([10,20,30], center=true);
+//       cylinder(d=30, h=50, center=true);
+//   }
+module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
+{
+    req_children($children);  
+    gaps = ($children < 2)? [0] :
+        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+        [for (i=[0:1:$children-2]) 0];
+    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+    gaps2 = [for (gap = gaps) gap+spc];
+    spos = dir * -sum(gaps2)/2;
+    spacings = cumsum([0, each gaps2]);
+    for (i=[0:1:$children-1]) {
+        $pos = spos + spacings[i] * dir;
+        $idx = i;
+        translate($pos) children(i);
+    }
+}
+
 
 
 

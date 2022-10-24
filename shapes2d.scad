@@ -1595,13 +1595,13 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 //   text("Foobar", size=12, font="Helvetica");
 //   text("Foobar", anchor=CENTER);
 //   text("Foobar", anchor=str("baseline",CENTER));
-// Example: Using line_of() distributor
+// Example: Using line_copies() distributor
 //   txt = "This is the string.";
-//   line_of(spacing=[10,-5],n=len(txt))
+//   line_copies(spacing=[10,-5],n=len(txt))
 //       text(txt[$idx], size=10, anchor=CENTER);
-// Example: Using arc_of() distributor
+// Example: Using arc_copies() distributor
 //   txt = "This is the string";
-//   arc_of(r=50, n=len(txt), sa=0, ea=180)
+//   arc_copies(r=50, n=len(txt), sa=0, ea=180)
 //       text(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
 module text(text, size=10, font="Helvetica", halign, valign, spacing=1.0, direction="ltr", language="en", script="latin", anchor="baseline", spin=0) {
     no_children($children);
