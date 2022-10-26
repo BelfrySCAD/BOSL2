@@ -1190,6 +1190,8 @@ module jittered_poly(path, dist=1/512) {
 //
 // Description:
 //   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.  Uses "intersect" style anchoring.  
+//   The cap_h parameter truncates the top of the teardrop.  If cap_h is taller than the untruncated form then
+//   the result will be the full, untruncated shape.
 //
 // Usage: As Module
 //   teardrop2d(r/d=, [ang], [cap_h]) [ATTACHMENTS];
@@ -1205,7 +1207,7 @@ module jittered_poly(path, dist=1/512) {
 //   ang = angle of hat walls from the Y axis.  (Default: 45 degrees)
 //   cap_h = if given, height above center where the shape will be truncated.
 //   ---
-//   d = diameter of spherical portion of bottom. (Use instead of r)
+//   d = diameter of circular portion of bottom. (Use instead of r)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //
@@ -1224,22 +1226,23 @@ module teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0)
     }
 }
 
+// _extrapt = true causes the point to be duplicated so a teardrop with no cap
+// has the same point count as one with a cap.  
 
-function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
+function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0, _extrapt=false) =
     let(
         r = get_radius(r=r, d=d, dflt=1),
-        ang2 = 90-ang,
-        prepath = zrot(90, p=circle(r=r)),
-        eps=1e-9,
-        prepath2 = [for (p=prepath) let(a=atan2(p.y,p.x)) if(a<=90-ang2+eps || a>=90+ang2-eps) p],
-        hyp = is_undef(cap_h)
-          ? opp_ang_to_hyp(abs(prepath2[0].x), ang)
-          : adj_ang_to_hyp(cap_h-prepath2[0].y, ang),
-        p1 = prepath2[0] + polar_to_xy(hyp, 90+ang),
-        p2 = last(prepath2) + polar_to_xy(hyp, 90-ang),
-        path = deduplicate([p1, each prepath2, p2], closed=true)
+        ang2=90-ang,
+        minheight = r*sin(ang),
+        maxheight = r/cos(ang2)
+    )
+    assert(is_undef(cap_h) || cap_h>=minheight, str("cap_h cannot be less than ",minheight," but it is ",cap_h))
+    let(
+        firstpt = is_undef(cap_h) || cap_h>=maxheight ? [[0,maxheight]]
+                : [[(maxheight-cap_h)*tan(ang), cap_h]],
+        lastpt =  !_extrapt && (is_undef(cap_h) || cap_h>=maxheight) ? [] : [[-firstpt[0].x,firstpt[0].y]],
+        path = concat(firstpt, arc(angle=[ang, -180-ang], r=r), lastpt)
     ) reorient(anchor,spin, two_d=true, path=path, p=path, extent=false);
-
 
 
 // Function&Module: egg()

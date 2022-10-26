@@ -143,7 +143,7 @@ module threaded_rod(
 //   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
 //   bevel1 = if true, bevel the outside of the nut bottom.
 //   bevel2 = if true, bevel the outside of the nut top. 
-//   bevang = set the angle for the outside nut bevel.  Default: 15
+//   bevang = set the angle for the outside nut bevel.  Default: 30
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
@@ -157,13 +157,13 @@ module threaded_rod(
 function threaded_nut(
     nutwidth, id, h,
     pitch, starts=1, shape="hex", left_handed=false, bevel, bevel1, bevel2, id1,id2,
-    ibevel1, ibevel2, ibevel, bevang=15, thickness, height,     
+    ibevel1, ibevel2, ibevel, bevang=30, thickness, height,     
     anchor, spin, orient
 )=no_function("threaded_nut");
 module threaded_nut(
     nutwidth, id, h,
     pitch, starts=1, shape="hex", left_handed=false, bevel, bevel1, bevel2, id1,id2,
-    ibevel1, ibevel2, ibevel, bevang=15, thickness, height,     
+    ibevel1, ibevel2, ibevel, bevang=30, thickness, height,     
     anchor, spin, orient
 ) {
     dummy1=
@@ -350,7 +350,7 @@ module trapezoidal_threaded_rod(
 //   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
 //   bevel1 = if true, bevel the outside of the nut bottom.
 //   bevel2 = if true, bevel the outside of the nut top. 
-//   bevang = set the angle for the outside nut bevel.  Default: 15
+//   bevang = set the angle for the outside nut bevel.  Default: 30
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
@@ -373,7 +373,7 @@ function trapezoidal_threaded_nut(
     thread_depth, shape="hex",
     left_handed=false,
     starts=1,
-    bevel,bevel1,bevel2,bevang=15,
+    bevel,bevel1,bevel2,bevang=30,
     ibevel1,ibevel2,ibevel,
     thickness,height,
     id1,id2,
@@ -388,7 +388,7 @@ module trapezoidal_threaded_nut(
     thread_depth, shape="hex",
     left_handed=false,
     starts=1,
-    bevel,bevel1,bevel2,bevang=15,
+    bevel,bevel1,bevel2,bevang=30,
     ibevel1,ibevel2,ibevel,
     thickness,height,
     id1,id2,
@@ -500,7 +500,7 @@ module acme_threaded_rod(
 //   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
 //   bevel1 = if true, bevel the outside of the nut bottom.
 //   bevel2 = if true, bevel the outside of the nut top. 
-//   bevang = set the angle for the outside nut bevel.  Default: 15
+//   bevang = set the angle for the outside nut bevel.  Default: 30
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
@@ -515,7 +515,7 @@ function acme_threaded_nut(
     nutwidth, id, h, tpi, pitch,
     starts=1,
     left_handed=false,shape="hex",
-    bevel,bevel1,bevel2,bevang=15,
+    bevel,bevel1,bevel2,bevang=30,
     ibevel,ibevel1,ibevel2,
     height,thickness,
     anchor, spin, orient
@@ -524,7 +524,7 @@ module acme_threaded_nut(
     nutwidth, id, h, tpi, pitch,
     starts=1,
     left_handed=false,shape="hex",
-    bevel,bevel1,bevel2,bevang=15,
+    bevel,bevel1,bevel2,bevang=30,
     ibevel,ibevel1,ibevel2,
     height,thickness,
     anchor, spin, orient
@@ -769,7 +769,7 @@ module buttress_threaded_rod(
 //   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
 //   bevel1 = if true, bevel the outside of the nut bottom.
 //   bevel2 = if true, bevel the outside of the nut top. 
-//   bevang = set the angle for the outside nut bevel.  Default: 15
+//   bevang = set the angle for the outside nut bevel.  Default: 30
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
@@ -782,14 +782,14 @@ module buttress_threaded_rod(
 function buttress_threaded_nut(
     nutwidth, id, h,
     pitch, shape="hex", left_handed=false,
-    bevel,bevel1,bevel2,bevang=15,starts=1,
+    bevel,bevel1,bevel2,bevang=30,starts=1,
     ibevel,ibevel1,ibevel2,height,thickness,
     anchor, spin, orient
 ) = no_function("buttress_threaded_nut");
 module buttress_threaded_nut(
     nutwidth, id, h,
     pitch, shape="hex", left_handed=false,
-    bevel,bevel1,bevel2,bevang=15,starts=1,
+    bevel,bevel1,bevel2,bevang=30,starts=1,
     ibevel,ibevel1,ibevel2,height,thickness,
     anchor, spin, orient
 ) {
@@ -907,7 +907,7 @@ module square_threaded_rod(
 //   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
 //   bevel1 = if true, bevel the outside of the nut bottom.
 //   bevel2 = if true, bevel the outside of the nut top. 
-//   bevang = set the angle for the outside nut bevel.  Default: 15
+//   bevang = set the angle for the outside nut bevel.  Default: 30
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
@@ -921,7 +921,7 @@ function square_threaded_nut(
     nutwidth, id, h,
     pitch,
     left_handed=false,
-    bevel,bevel1,bevel2,bevang=15,
+    bevel,bevel1,bevel2,bevang=30,
     ibevel,ibevel1,ibevel2,
     height,thickness,    
     starts=1,
@@ -931,7 +931,7 @@ module square_threaded_nut(
     nutwidth, id, h,
     pitch,
     left_handed=false,
-    bevel,bevel1,bevel2,bevang=15,
+    bevel,bevel1,bevel2,bevang=30,
     ibevel,ibevel1,ibevel2,
     height,thickness,    
     starts=1,
@@ -1277,7 +1277,7 @@ module generic_threaded_rod(
 //   bevel = if true, bevel the outside of the nut.  Default: true for hex nuts, false for square nuts
 //   bevel1 = if true, bevel the outside of the nut bottom.
 //   bevel2 = if true, bevel the outside of the nut top. 
-//   bevang = set the angle for the outside nut bevel.  Default: 15
+//   bevang = set the angle for the outside nut bevel.  Default: 30
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
@@ -1296,7 +1296,7 @@ function generic_threaded_nut(
     shape="hex",
     left_handed=false,
     starts=1,
-    bevel,bevel1,bevel2,bevang=15,
+    bevel,bevel1,bevel2,bevang=30,
     ibevel, ibevel1, ibevel2,
     id1,id2, height, thickness, 
     anchor, spin, orient
@@ -1310,7 +1310,7 @@ module generic_threaded_nut(
     shape="hex",
     left_handed=false,
     starts=1,
-    bevel,bevel1,bevel2,bevang=15,
+    bevel,bevel1,bevel2,bevang=30,
     ibevel, ibevel1, ibevel2,
     id1,id2, height, thickness, 
     anchor, spin, orient
@@ -1332,19 +1332,11 @@ module generic_threaded_nut(
     bevel1 = first_defined([bevel1,bevel,shape=="hex"?true:false]);
     bevel2 = first_defined([bevel2,bevel,shape=="hex"?true:false]);
     depth = -pitch*min(column(profile,1));
-    bevel_d=0.975;
     IBEV=0.05;
     vnf = linear_sweep(hexagon(id=nutwidth), height=h, center=true);
     attachable(anchor,spin,orient, size=shape=="square" ? [nutwidth,nutwidth,h] : undef, vnf=shape=="hex" ? vnf : undef) {
         difference() {
-            intersection(){
-                if (shape=="hex")
-                  vnf_polyhedron(vnf);
-                else
-                  cuboid([nutwidth,nutwidth,h]);
-                if (bevel2) cyl(h=h+.01, d2=nutwidth*bevel_d,d1=nutwidth*bevel_d+h/tan(bevang), $fn=64);
-                if (bevel1) down(.01) cyl(h=h+.01, d1=nutwidth*bevel_d,d2=nutwidth*bevel_d+h/tan(bevang), $fn=64);
-            }
+            _nutshape(nutwidth,h, shape,bevel1,bevel2);
             if (pitch==0) 
                cyl(l=h+extra, d1=full_id1+4*get_slop(), d2=full_id2+4*get_slop(), chamfer1=ibevel1?-IBEV*full_id1:undef, chamfer2=ibevel2?-IBEV*full_id2:undef);
             else
@@ -1361,6 +1353,23 @@ module generic_threaded_nut(
         }
         children();
     }
+}
+
+
+module _nutshape(nutwidth, h, shape, bevel1, bevel2)
+{
+   bevel_d=0.9;
+   intersection(){
+       if (shape=="hex")
+         cyl(d=nutwidth, circum=true, $fn=6, l=h, chamfer1=bevel1?0:nutwidth*.01, chamfer2=bevel2?0:nutwidth*.01);
+        //vnf_polyhedron(vnf);
+       else
+         cuboid([nutwidth,nutwidth,h],chamfer=nutwidth*.01, except=[if (bevel1) BOT, if(bevel2) TOP]);
+       fn = quantup(segs(r=nutwidth/2),shape=="hex"?6:4);
+       d = shape=="hex" ? 2*nutwidth/sqrt(3) : sqrt(2)*nutwidth;
+       chamfsize = (d-nutwidth)/2/bevel_d;
+       cyl(d=d*.99,h=h+.01,realign=true,circum=true,$fn=fn,chamfer1=bevel1?chamfsize:0,chamfer2=bevel2?chamfsize:0,chamfang=90-30);
+   }
 }
 
 
