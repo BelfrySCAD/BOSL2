@@ -2479,10 +2479,15 @@ function torus(
 //
 // Description:
 //   Makes a teardrop shape in the XZ plane. Useful for 3D printable holes.
+//   Optional chamfers can be added with positive or negative distances.  A positive distance
+//   specifies the amount to inset the chamfer along the front/back faces of the shape.
+//   The chamfer will extend the same y distance into the shape.  If the radii are the same
+//   then the chamfer will be a 45 degree chamfer, but in other cases it will not.
+//   Note that with caps, the chamfer must not be so big that it makes the cap height illegal.  
 //
 // Usage: Typical
-//   teardrop(h|l, r, [ang], [cap_h], ...) [ATTACHMENTS];
-//   teardrop(h|l, d=, [ang=], [cap_h=], ...) [ATTACHMENTS];
+//   teardrop(h|l|length|height, r, [ang], [cap_h], [chamfer=], ...) [ATTACHMENTS];
+//   teardrop(h|l|length|height, d=, [ang=], [cap_h=], [chamfer=], ...) [ATTACHMENTS];
 // Usage: Psuedo-Conical
 //   teardrop(h|l, r1=, r2=, [ang=], [cap_h1=], [cap_h2=], ...)  [ATTACHMENTS];
 //   teardrop(h|l, d1=, d2=, [ang=], [cap_h1=], [cap_h2=], ...)  [ATTACHMENTS];
@@ -2504,6 +2509,9 @@ function torus(
 //   d2 = Diameter of circular portion of the back end of the teardrop shape.
 //   cap_h1 = If given, height above center where the shape will be truncated, on the front side. Default: `undef` (no truncation)
 //   cap_h2 = If given, height above center where the shape will be truncated, on the back side. Default: `undef` (no truncation)
+//   chamfer = Specifies size of chamfer as distance along the bottom and top faces.  Default: 0
+//   chamfer1 = Specifies size of chamfer on bottom as distance along bottom face.  Default: 0
+//   chamfer2 = Specifies size of chamfer on top as distance along top face.  Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -2521,6 +2529,8 @@ function torus(
 //   teardrop(r=30, h=10, ang=30, cap_h=20);
 // Example: Psuedo-Conical
 //   teardrop(r1=20, r2=30, h=40, cap_h1=25, cap_h2=35);
+// Example: Adding chamfers can be useful for a teardrop hole mask
+//   teardrop(r=10, l=50, chamfer1=2, chamfer2=-1.5);
 // Example: Getting a VNF
 //   vnf = teardrop(r1=25, r2=30, l=20, cap_h1=25, cap_h2=35);
 //   vnf_polyhedron(vnf);
@@ -2531,78 +2541,70 @@ function torus(
 //   teardrop(d1=20, d2=30, h=20, cap_h1=11, cap_h2=16)
 //       show_anchors(std=false);
 
-module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, anchor=CENTER, spin=0, orient=UP)
+module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, length, height, chamfer, chamfer1, chamfer2,anchor=CENTER, spin=0, orient=UP)
 {
-    r1 = get_radius(r=r, r1=r1, d=d, d1=d1, dflt=1);
-    r2 = get_radius(r=r, r1=r2, d=d, d1=d2, dflt=1);
-    l = first_defined([l, h, 1]);
-    cap_h1 = first_defined([cap_h1, cap_h]);
-    cap_h2 = first_defined([cap_h2, cap_h]);
-    sides = segs(max(r1,r2));
-    profile1 = teardrop2d(r=r1, ang=ang, cap_h=cap_h1, $fn=sides);
-    profile2 = teardrop2d(r=r2, ang=ang, cap_h=cap_h2, $fn=sides);
-    tip_y1 = max(column(profile1,1));
-    tip_y2 = max(column(profile2,1));
+    length = one_defined([l, h, length, height],"l,h,length,height");
+    r1 = get_radius(r=r, r1=r1, d=d, d1=d1);
+    r2 = get_radius(r=r, r1=r2, d=d, d1=d2);
+    tip_y1 = r1/cos(90-ang);
+    tip_y2 = r2/cos(90-ang);
     _cap_h1 = min(default(cap_h1, tip_y1), tip_y1);
     _cap_h2 = min(default(cap_h2, tip_y2), tip_y2);
-    capvec = unit([0, _cap_h1-_cap_h2, l]);
+  f= echo(fff=_cap_h1,_cap_h2);
+    capvec = unit([0, _cap_h1-_cap_h2, length]);
     anchors = [
         named_anchor("cap",      [0,0,(_cap_h1+_cap_h2)/2], capvec),
-        named_anchor("cap_fwd",  [0,-l/2,_cap_h1],         unit((capvec+FWD)/2)),
-        named_anchor("cap_back", [0,+l/2,_cap_h2],         unit((capvec+BACK)/2), 180),
+        named_anchor("cap_fwd",  [0,-length/2,_cap_h1],         unit((capvec+FWD)/2)),
+        named_anchor("cap_back", [0,+length/2,_cap_h2],         unit((capvec+BACK)/2), 180),
     ];
-    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=BACK, anchors=anchors) {
-        rot(from=UP,to=FWD) {
-            if (l > 0) {
-                if (r1 == r2) {
-                    linear_extrude(height=l, center=true, slices=2) {
-                        polygon(profile1);
-                    }
-                } else {
-                    hull() {
-                        up(l/2-0.001) {
-                            linear_extrude(height=0.001, center=false) {
-                                polygon(profile1);
-                            }
-                        }
-                        down(l/2) {
-                            linear_extrude(height=0.001, center=false) {
-                                polygon(profile2);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=length, axis=BACK, anchors=anchors)
+    {
+        vnf_polyhedron(teardrop(ang=ang,cap_h=cap_h,r1=r1,r2=r2,,cap_h1=cap_h1,cap_h2=cap_h2,
+                                length=length, chamfer1=chamfer1,chamfer2=chamfer2,chamfer=chamfer));
         children();
     }
 }
 
 
-function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, anchor=CENTER, spin=0, orient=UP) =
+function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamfer, chamfer1, chamfer2,
+                  l, length, height, anchor=CENTER, spin=0, orient=UP) =
     let(
         r1 = get_radius(r=r, r1=r1, d=d, d1=d1, dflt=1),
         r2 = get_radius(r=r, r1=r2, d=d, d1=d2, dflt=1),
-        l = first_defined([l, h, 1]),
+        length = one_defined([l, h, length, height],"l,h,length,height"),
         cap_h1 = first_defined([cap_h1, cap_h]),
         cap_h2 = first_defined([cap_h2, cap_h]),
+        chamfer1 = first_defined([chamfer1,chamfer,0]),
+        chamfer2 = first_defined([chamfer2,chamfer,0]),    
         sides = segs(max(r1,r2)),
-        profile1 = teardrop2d(r=r1, ang=ang, cap_h=cap_h1, $fn=sides),
-        profile2 = teardrop2d(r=r2, ang=ang, cap_h=cap_h2, $fn=sides),
-        tip_y1 = max(column(profile1,1)),
-        tip_y2 = max(column(profile2,1)),
+        profile1 = teardrop2d(r=r1, ang=ang, cap_h=cap_h1, $fn=sides, _extrapt=true),
+        profile2 = teardrop2d(r=r2, ang=ang, cap_h=cap_h2, $fn=sides, _extrapt=true),
+        tip_y1 = r1/cos(90-ang),
+        tip_y2 = r2/cos(90-ang),
         _cap_h1 = min(default(cap_h1, tip_y1), tip_y1),
         _cap_h2 = min(default(cap_h2, tip_y2), tip_y2),
-        capvec = unit([0, _cap_h1-_cap_h2, l]),
+        capvec = unit([0, _cap_h1-_cap_h2, length]),
+        dummy=
+          assert(abs(chamfer1)+abs(chamfer2) <= length,"chamfers are too big to fit in the length")
+          assert(chamfer1<=r1 && chamfer2<=r2, "Chamfers cannot be larger than raduis")
+          assert(is_undef(cap_h1) || cap_h1-chamfer1 > r1*sin(ang), "chamfer1 is too big to work with the specified cap_h1")
+          assert(is_undef(cap_h2) || cap_h2-chamfer2 > r2*sin(ang), "chamfer2 is too big to work with the specified cap_h2"),
+        cprof1 = r1==chamfer1 ? repeat([0,0],len(profile1))
+                              : teardrop2d(r=r1-chamfer1, ang=ang, cap_h=u_add(cap_h1,-chamfer1), $fn=sides, _extrapt=true),
+        cprof2 = r2==chamfer2 ? repeat([0,0],len(profile2))
+                              : teardrop2d(r=r2-chamfer2, ang=ang, cap_h=u_add(cap_h2,-chamfer2), $fn=sides, _extrapt=true),
+    fefda=   echo(lens=len(cprof1),len(cprof2)),        
         anchors = [
             named_anchor("cap",      [0,0,(_cap_h1+_cap_h2)/2], capvec),
-            named_anchor("cap_fwd",  [0,-l/2,_cap_h1],         unit((capvec+FWD)/2)),
-            named_anchor("cap_back", [0,+l/2,_cap_h2],         unit((capvec+BACK)/2), 180),
+            named_anchor("cap_fwd",  [0,-length/2,_cap_h1],         unit((capvec+FWD)/2)),
+            named_anchor("cap_back", [0,+length/2,_cap_h2],         unit((capvec+BACK)/2), 180),
         ],
         vnf = vnf_vertex_array(
             points = [
-                fwd(l/2, p=xrot(90, p=path3d(profile1))),
-                back(l/2, p=xrot(90, p=path3d(profile2))),
+                if (chamfer1!=0) fwd(length/2, xrot(90, path3d(cprof1))),
+                fwd(length/2-abs(chamfer1), xrot(90, path3d(profile1))),
+                back(length/2-abs(chamfer2), xrot(90, path3d(profile2))),
+                if (chamfer2!=0) back(length/2, xrot(90, path3d(cprof2))),
             ],
             caps=true, col_wrap=true, reverse=true
         )
