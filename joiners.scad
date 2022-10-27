@@ -534,7 +534,7 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 // Module: dovetail()
 //
 // Usage:
-//   dovetail(gender, w=|width, h=|height, slide, [slope=|angle=], [taper=|back_width=], [chamfer=], [r=|radius=], [round=], [extra=], [$slop=])
+//   dovetail(gender, w=|width, h=|height, slide|thickness=, [slope=|angle=], [taper=|back_width=], [chamfer=], [r=|radius=], [round=], [extra=], [$slop=])
 //
 // Description:
 //   Produces a possibly tapered dovetail joint shape to attach to or subtract from two parts you wish to join together.
@@ -546,13 +546,14 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   differenced, and it also changes the anchor and orientation.  The default anchor for dovetails is BOTTOM;
 //   the default orientation depends on the gender, with male dovetails oriented UP and female ones DOWN.  The dovetails by default
 //   have extra extension of 0.01 for unions and differences.  You should ensure that attachment is done with overlap=0 to ensure that
-//   the sizing and positioning is correct.
+//   the sizing and positioning is correct.  To adjust the fit, use the $slop variable, which increases the depth and width of
+//   the female part of the joint.  
 //
 // Arguments:
 //   gender = A string, "male" or "female", to specify the gender of the dovetail.
 //   w / width = Width (at the wider, top end) of the dovetail before tapering
 //   h / height = Height of the dovetail (the amount it projects from its base)
-//   slide = Distance the dovetail slides when you assemble it (length of sliding dovetails, thickness of regular dovetails)
+//   slide / thickness = Distance the dovetail slides when you assemble it (length of sliding dovetails, thickness of regular dovetails)
 //   ---
 //   slope = slope of the dovetail.  Standard woodworking slopes are 4, 6, or 8.  Default: 6.  
 //   angle = angle (in degrees) of the dovetail.  Specify only one of slope and angle.
@@ -560,7 +561,8 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   back_width = width of right hand end of the dovetail.  This alternate method of specifying the taper may be easier to manage.  Specify only one of `taper` and `back_width`.  Note that `back_width` should be smaller than `width` to taper in the customary direction, with the smaller end at the back.  
 //   chamfer = amount to chamfer the corners of the joint (Default: no chamfer)
 //   r / radius = amount to round over the corners of the joint (Default: no rounding)
-//   round = true to round both corners of the dovetail and give it a puzzle piece look.  Default: false.  
+//   round = true to round both corners of the dovetail and give it a puzzle piece look.  Default: false.
+//   $slop = Increase the width and depth of the female joint by this amount to allow adjustment of the fit. 
 //   extra = amount of extra length and base extension added to dovetails for unions and differences.  Default: 0.01
 // Example: Ordinary straight dovetail, male version (sticking up) and female version (below the xy plane)
 //   dovetail("male", width=15, height=8, slide=30);
@@ -613,19 +615,16 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   diff("remove")
 //     cuboid([50,30,10])
 //       tag("remove")position(TOP+BACK) xcopies(10,5) dovetail("female", slide=10, width=7, taper=4, height=4, anchor=BOTTOM+FRONT,spin=180);
-function dovetail(gender, width, height, slide, h, w, angle, slope, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient) = no_function("dovetail");
-module dovetail(gender, width, height, slide, h, w, angle, slope, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
+function dovetail(gender, width, height, slide, h, w, angle, slope, thickness, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient) = no_function("dovetail");
+module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
 {
     radius = get_radius(r1=radius,r2=r);
-    hcount = num_defined([h,height]);
-    wcount = num_defined([w,width]);
-    assert(is_def(slide), "Must define slide");
-    assert(hcount==1, "Must define exactly one of h and height");
-    assert(wcount==1, "Must define exactly one of w and width");
-    h = first_defined([h,height]);
-    w = first_defined([w,width]);
-    orient = is_def(orient) ? orient :
-        gender == "female" ? DOWN : UP;
+    slide = one_defined([slide,thickness],"slide,thickness");
+    h = one_defined([h,height],"h,height");
+    w = one_defined([w,width],"w,width");
+    orient = is_def(orient) ? orient
+           : gender == "female" ? DOWN
+           : UP;
     count = num_defined([angle,slope]);
     assert(count<=1, "Do not specify both angle and slope");
     count2 = num_defined([taper,back_width]);
