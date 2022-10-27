@@ -2559,7 +2559,7 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, lengt
     ];
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=length, axis=BACK, anchors=anchors)
     {
-        vnf_polyhedron(teardrop(ang=ang,cap_h=cap_h,r1=r1,r2=r2,,cap_h1=cap_h1,cap_h2=cap_h2,
+        vnf_polyhedron(teardrop(ang=ang,cap_h=cap_h,r1=r1,r2=r2,cap_h1=cap_h1,cap_h2=cap_h2,
                                 length=length, chamfer1=chamfer1,chamfer2=chamfer2,chamfer=chamfer));
         children();
     }
