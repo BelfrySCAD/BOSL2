@@ -1049,7 +1049,7 @@ function vnf_halfspace(plane, vnf, closed=true) =
     assert(_valid_plane(plane), "Invalid plane")
     assert(is_vnf(vnf), "Invalid vnf")
     let(
-         inside = [for(x=vnf[0]) plane*[each x,-1] >= 0 ? 1 : 0],
+         inside = [for(x=vnf[0]) plane*[each x,-1] >= -EPSILON ? 1 : 0],
          vertexmap = [0,each cumsum(inside)],
          faces_edges_vertices = _vnfcut(plane, vnf[0],vertexmap,inside, vnf[1], last(vertexmap)),
          newvert = concat(bselect(vnf[0],inside), faces_edges_vertices[2])

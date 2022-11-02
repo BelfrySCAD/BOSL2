@@ -336,20 +336,17 @@ function list_tail(list, from=1) =
 // Topics: List Handling
 // See Also: list_bset()
 // Description:
-//   Returns the items in `list` whose matching element in `index` is true.
+//   Returns the items in `list` whose matching element in `index` evaluates as true.  
 // Arguments:
-//   list = Initial list to extract items from.
-//   index = List of booleans.
+//   list = Initial list (or string) to extract items from.
+//   index = List of values that will be evaluated as boolean, same length as `list`.  
 // Example:
 //   a = bselect([3,4,5,6,7], [false,true,true,false,true]);  // Returns: [4,5,7]
 function bselect(list,index) =
-    assert(is_list(list)||is_string(list), "Improper list." )
-    assert(is_list(index) && len(index)>=len(list) , "Improper index list." )
+    assert(is_list(list)||is_string(list), "First argument must be a list or string." )
+    assert(is_list(index) && len(index)==len(list) , "Second argument must have same length as the first." )
     is_string(list)? str_join(bselect( [for (x=list) x], index)) :
-    [for(i=[0:len(list)-1]) if (index[i]) list[i]];
-
-
-
+    [for(i=idx(list)) if (index[i]) list[i]];
 
 
 // Section: List Construction
