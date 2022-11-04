@@ -1372,6 +1372,11 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 //   .
 //   Any other combination of matrices will produce an error, including acting with a 2D matrix (3x3) on 3D data.
 //   The output of apply is always the same dimension as the input&mdash;projections are not supported.
+//   .
+//   Note that a matrix with a negative determinant such as any mirror reflection flips the orientation of faces.
+//   If the transform matrix is square then apply() checks the determinant and if it is negative, apply() reverses the face order so that
+//   the transformed VNF has faces with the same winding direction as the original VNF.  This adjustment applies
+//   only to VNFs, not to beziers or point lists.  
 // Arguments:
 //   transform = The 2D (3x3 or 2x3) or 3D (4x4 or 3x4) transformation matrix to apply.
 //   points = The point, point list, bezier patch, or VNF to apply the transformation to.
@@ -1395,7 +1400,7 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 //   stroke(path2,closed=true);
 function apply(transform,points) =
     points==[] ? []
-  : is_vector(points) ? _apply(transform, [points])[0]     // point
+  : is_vector(points) ? _apply(transform, [points])[0]    // point
   : is_vnf(points) ?                                      // vnf
         let(
             newvnf = [_apply(transform, points[0]), points[1]],
