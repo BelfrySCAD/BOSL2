@@ -1191,12 +1191,16 @@ module jittered_poly(path, dist=1/512) {
 // Description:
 //   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.  Uses "intersect" style anchoring.  
 //   The cap_h parameter truncates the top of the teardrop.  If cap_h is taller than the untruncated form then
-//   the result will be the full, untruncated shape.
+//   the result will be the full, untruncated shape.  The segments of the bottom section of the teardrop are
+//   calculated to be the same as a circle or cylinder when rotated 90 degrees.  (Note that this agreement is poor when `$fn=6` or `$fn=7`.  
+//   If `$fn` is a multiple of four then the teardrop will reach its extremes on all four axes.  The circum option
+//   produces a teardrop that circumscribes the circle; in this case set `realign=true` to get a teardrop that meets its internal extremes
+//   on the axes.  
 //
 // Usage: As Module
 //   teardrop2d(r/d=, [ang], [cap_h]) [ATTACHMENTS];
 // Usage: As Function
-//   path = teardrop2d(r/d=, [ang], [cap_h]);
+//   path = teardrop2d(r|d=, [ang], [cap_h]);
 //
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 //
@@ -1208,6 +1212,8 @@ module jittered_poly(path, dist=1/512) {
 //   cap_h = if given, height above center where the shape will be truncated.
 //   ---
 //   d = diameter of circular portion of bottom. (Use instead of r)
+//   circum = if true, create a circumscribing teardrop.  Default: false
+//   realign = if true, change whether bottom of teardrop is a point or a flat.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //
@@ -1217,9 +1223,9 @@ module jittered_poly(path, dist=1/512) {
 //   teardrop2d(r=30, ang=30, cap_h=40);
 // Example(2D): Close Crop
 //   teardrop2d(r=30, ang=30, cap_h=20);
-module teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0)
+module teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CENTER, spin=0)
 {
-    path = teardrop2d(r=r, d=d, ang=ang, cap_h=cap_h);
+    path = teardrop2d(r=r, d=d, ang=ang, circum=circum, realign=realign, cap_h=cap_h);
     attachable(anchor,spin, two_d=true, path=path, extent=false) {
         polygon(path);
         children();
@@ -1229,20 +1235,54 @@ module teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0)
 // _extrapt = true causes the point to be duplicated so a teardrop with no cap
 // has the same point count as one with a cap.  
 
-function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0, _extrapt=false) =
+function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CENTER, spin=0, _extrapt=false) =
     let(
         r = get_radius(r=r, d=d, dflt=1),
-        ang2=90-ang,
         minheight = r*sin(ang),
-        maxheight = r/cos(ang2)
+        maxheight = r/sin(ang), //cos(90-ang),
+        pointycap = is_undef(cap_h) || cap_h>=maxheight
     )
     assert(is_undef(cap_h) || cap_h>=minheight, str("cap_h cannot be less than ",minheight," but it is ",cap_h))
     let(
-        firstpt = is_undef(cap_h) || cap_h>=maxheight ? [[0,maxheight]]
-                : [[(maxheight-cap_h)*tan(ang), cap_h]],
-        lastpt =  !_extrapt && (is_undef(cap_h) || cap_h>=maxheight) ? [] : [[-firstpt[0].x,firstpt[0].y]],
-        path = concat(firstpt, arc(angle=[ang, -180-ang], r=r), lastpt)
-    ) reorient(anchor,spin, two_d=true, path=path, p=path, extent=false);
+        cap = [
+                pointycap? [0,maxheight] : [(maxheight-cap_h)*tan(ang), cap_h],
+                r*[cos(ang),sin(ang)]
+              ],
+        fullcircle = ellipse(r=r, realign=realign, circum=circum,spin=90),        
+        
+        // Chose the point on the circle that is lower than the cap but also creates a segment bigger than
+        // seglen/3 so we don't have a teeny tiny segment at the end of the cap
+        path = !circum ?
+                  let(seglen = norm(fullcircle[0]-fullcircle[1]))
+                  [
+                   each cap,
+                   for (p=fullcircle)
+                          if (
+                               p.y<last(cap).y-EPSILON
+                                 && norm([abs(p.x)-last(cap).x,p.y-last(cap.y)])>seglen/3
+                             ) p,
+                   xflip(cap[1]),
+                   if (_extrapt || !pointycap) xflip(cap[0])
+                  ]
+             : let(
+                   isect = [for(i=[0:1:len(fullcircle)/4])
+                               let(p = line_intersection(cap, select(fullcircle,[i,i+1]), bounded1=RAY, bounded2=SEGMENT))
+                               if (p) [i,p]
+                           ],
+                   i = last(isect)[0],
+                   p = last(isect)[1],
+                   ff=echo(isect)
+               )
+               [
+                 cap[0],
+                 p,
+                 each select(fullcircle,i+1,-i-1-(realign?1:0)),
+                 xflip(p),
+                 if(_extrapt || !pointycap) xflip(cap[0])
+               ]
+    )
+    reorient(anchor,spin, two_d=true, path=path, p=path, extent=false);
+
 
 
 // Function&Module: egg()
