@@ -376,7 +376,7 @@ function furthest_point(pt, points) =
 //       color("blue")stroke(move(queries[i],circle(r=1)), closed=true, width=.08);
 //       color("red") move_copies(select(points, search_ind[i])) circle(r=.08);
 //   }
-// Example: when a series of search with different radius are needed, its is faster to pre-compute the tree
+// Example: when a series of searches with different radius are needed, its is faster to pre-compute the tree
 //   $fn=32;
 //   k = 2000;
 //   points = list_to_matrix(rands(0,10,k*2),2,seed=13333);
@@ -419,8 +419,8 @@ function vector_search(query, r, target) =
             "The query points should be a list of points compatible with the target point list.")
     tgpts 
     ?   len(target)<=400
-        ?   simple ? [for(i=idx(target)) if(norm(target[i]-query)<r) i ] :
-            [for(q=query) [for(i=idx(target)) if(norm(target[i]-q)<r) i ] ]
+        ?   simple ? [for(i=idx(target)) if(norm(target[i]-query)<=r) i ] :
+            [for(q=query) [for(i=idx(target)) if(norm(target[i]-q)<=r) i ] ]
         :   let( tree = _bt_tree(target, count(len(target)), leafsize=25) )
             simple ? _bt_search(query, r, target, tree) :
             [for(q=query) _bt_search(q, r, target, tree)]

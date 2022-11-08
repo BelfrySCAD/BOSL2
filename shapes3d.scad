@@ -2618,15 +2618,17 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 //   Creates a sphere with a conical hat, to make a 3D teardrop.
 //
 // Usage: As Module
-//   onion(r|d=, [ang=], [cap_h=], ...) [ATTACHMENTS];
+//   onion(r|d=, [ang=], [cap_h=], [circum=], [realign=], ...) [ATTACHMENTS];
 // Usage: As Function
-//   vnf = onion(r|d=, [ang=], [cap_h=], ...);
+//   vnf = onion(r|d=, [ang=], [cap_h=], [circum=], [realign=], ...);
 //
 // Arguments:
 //   r = radius of spherical portion of the bottom. Default: 1
 //   ang = Angle of cone on top from vertical. Default: 45 degrees
 //   cap_h = If given, height above sphere center to truncate teardrop shape.  Default: `undef` (no truncation)
 //   ---
+//   circum = set to true to circumscribe the specified radius/diameter.  Default: False
+//   realign = adjust point alignment to determine if bottom is flat or pointy.  Default: False
 //   d = diameter of spherical portion of bottom.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -2653,10 +2655,10 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 // Example: Standard Connectors
 //   onion(d=30, ang=30, cap_h=20) show_anchors();
 
-module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
+module onion(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
-    xyprofile = teardrop2d(r=r, ang=ang, cap_h=cap_h);
+    xyprofile = teardrop2d(r=r, ang=ang, cap_h=cap_h, circum=circum, realign=realign);
     tip_h = max(column(xyprofile,1));
     _cap_h = min(default(cap_h,tip_h), tip_h);
     anchors = [
