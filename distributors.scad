@@ -409,7 +409,7 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
 module grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero)
 {
     req_children($children);    
-    assert(in_list(stagger, [false, true, "alt"]));
+    dummy = assert(in_list(stagger, [false, true, "alt"]));
     bounds = is_undef(inside)? undef :
         is_path(inside)? pointlist_bounds(inside) :
         assert(is_region(inside))
@@ -1035,8 +1035,8 @@ module path_copies(path, n, spacing, sp=undef, dist, rotate_children=true, dist,
             sort([for(entry=ptlist) posmod(entry-listcenter,length)]) :
             [for(entry=ptlist) entry + length/2-listcenter ]
     );
-    distOK = is_def(n) || (min(distances)>=0 && max(distances)<=length);
-    assert(distOK,"Cannot fit all of the copies");
+    distOK = min(distances)>=0 && max(distances)<=length;
+    dummy = assert(distOK,"Cannot fit all of the copies");
     cutlist = path_cut_points(path, distances, closed, direction=true);
     planar = len(path[0])==2;
     for(i=[0:1:len(cutlist)-1]) {

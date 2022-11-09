@@ -625,12 +625,13 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
     orient = is_def(orient) ? orient
            : gender == "female" ? DOWN
            : UP;
+    dummy = 
+      assert(count<=1, "Do not specify both angle and slope")
+      assert(count2<=1, "Do not specify both taper and back_width")
+      assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
     count = num_defined([angle,slope]);
-    assert(count<=1, "Do not specify both angle and slope");
     count2 = num_defined([taper,back_width]);
-    assert(count2<=1, "Do not specify both taper and back_width");
     count3 = num_defined([chamfer, radius]);
-    assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
     slope = is_def(slope) ? slope :
         is_def(angle) ? 1/tan(angle) :  6;
     extra_slop = gender == "female" ? 2*get_slop() : 0;
@@ -1047,17 +1048,17 @@ function rabbit_clip(type, length, width,  snap, thickness, depth, compression=0
 module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1,  clearance=.1, lock=false, lock_clearance=0,
                    splinesteps=8, anchor, orient, spin=0)
 {
-  assert(is_num(width) && width>0,"Width must be a positive value");
-  assert(is_num(length) && length>0, "Length must be a positive value");
-  assert(is_num(thickness) && thickness>0, "Thickness must be a positive value");  
-  assert(is_num(snap) && snap>=0, "Snap must be a non-negative value");
-  assert(is_num(depth) && depth>0, "Depth must be a positive value");
-  assert(is_num(compression) && compression >= 0, "Compression must be a nonnegative value");
-  assert(is_bool(lock));
-  assert(is_num(lock_clearance));
   legal_types = ["pin","socket","male","female","double"];
-  assert(in_list(type,legal_types),str("type must be one of ",legal_types));
-  
+  check = 
+    assert(is_num(width) && width>0,"Width must be a positive value")
+    assert(is_num(length) && length>0, "Length must be a positive value")
+    assert(is_num(thickness) && thickness>0, "Thickness must be a positive value")  
+    assert(is_num(snap) && snap>=0, "Snap must be a non-negative value")
+    assert(is_num(depth) && depth>0, "Depth must be a positive value")
+    assert(is_num(compression) && compression >= 0, "Compression must be a nonnegative value")
+    assert(is_bool(lock))
+    assert(is_num(lock_clearance))
+    assert(in_list(type,legal_types),str("type must be one of ",legal_types));
   if (type=="double") {
     attachable(size=[width+2*compression, depth, 2*length], anchor=default(anchor,BACK), spin=spin, orient=default(orient,BACK)){
       union(){
@@ -1100,7 +1101,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
                       [bottom_pt], 
                       reverse(apply(xflip(),sidepath))
                       );
-    assert(fullpath[4].y < fullpath[3].y, "Pin is too wide for its length");
+    dummy2 = assert(fullpath[4].y < fullpath[3].y, "Pin is too wide for its length");
     
     snapmargin = -snap + last(sidepath).x;// - compression;
     if (is_pin){

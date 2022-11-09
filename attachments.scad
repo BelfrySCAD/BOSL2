@@ -465,17 +465,19 @@ module position(from)
 module orient(dir, anchor, spin) {
     req_children($children);
     if (!is_undef(dir)) {
-        assert(anchor==undef, "Only one of dir= or anchor= may be given to orient()");
-        assert(is_vector(dir));
         spin = default(spin, 0);
-        assert(is_finite(spin));
+        check = 
+          assert(anchor==undef, "Only one of dir= or anchor= may be given to orient()")
+          assert(is_vector(dir))
+          assert(is_finite(spin));
         two_d = _attach_geom_2d($parent_geom);
         fromvec = two_d? BACK : UP;
         rot(spin, from=fromvec, to=dir) children();
     } else {
-        assert(dir==undef, "Only one of dir= or anchor= may be given to orient()");
-        assert($parent_geom != undef, "No parent to orient from!");
-        assert(is_string(anchor) || is_vector(anchor));
+        check=
+          assert(dir==undef, "Only one of dir= or anchor= may be given to orient()")
+          assert($parent_geom != undef, "No parent to orient from!")
+          assert(is_string(anchor) || is_vector(anchor));
         anch = _find_anchor(anchor, $parent_geom);
         two_d = _attach_geom_2d($parent_geom);
         fromvec = two_d? BACK : UP;
@@ -568,8 +570,9 @@ module attach(from, to, overlap, norot=false)
 module tag(tag)
 {
     req_children($children);
-    assert(is_string(tag),"tag must be a string");
-    assert(undef==str_find($tag," "),str("Tag string \"",$tag,"\" contains a space, which is not allowed"))    ;
+    check=
+      assert(is_string(tag),"tag must be a string")
+      assert(undef==str_find(tag," "),str("Tag string \"",tag,"\" contains a space, which is not allowed"));
     $tag = str($tag_prefix,tag);
     children();
 }
@@ -627,7 +630,7 @@ module tag(tag)
 module force_tag(tag)
 {
     req_children($children);
-    assert(is_undef(tag) || is_string(tag),"tag must be a string");
+    check1=assert(is_undef(tag) || is_string(tag),"tag must be a string");
     $tag = str($tag_prefix,default(tag,$tag));
     assert(undef==str_find($tag," "),str("Tag string \"",$tag,"\" contains a space, which is not allowed"));
     if(_is_shown())
@@ -710,6 +713,7 @@ module tag_scope(scope){
   req_children($children);
   scope = is_undef(scope) ? rand_str(20) : scope;
   assert(is_string(scope), "scope must be a string");
+  assert(undef==str_find(scope," "),str("Scope string \"",scope,"\" contains a space, which is not allowed"));
   $tag_prefix=scope;
   children();
 }  
@@ -1206,7 +1210,7 @@ module tag_conv_hull(tag,keep="keep")
 module hide(tags)
 {
     req_children($children);
-    assert(is_string(tags), "tags must be a string");
+    dummy=assert(is_string(tags), "tags must be a string");
     taglist = [for(s=str_split(tags," ",keep_nulls=false)) str($tag_prefix,s)];
     $tags_hidden = concat($tags_hidden,taglist);
     children();
@@ -1233,7 +1237,7 @@ module hide(tags)
 module show_only(tags)
 {
     req_children($children);
-    assert(is_string(tags), str("tags must be a string",tags));
+    dummy=assert(is_string(tags), str("tags must be a string",tags));
     taglist = [for(s=str_split(tags," ",keep_nulls=false)) str($tag_prefix,s)];
     $tags_shown = taglist;    
     children();
@@ -1270,7 +1274,7 @@ module show_all()
 module show_int(tags)
 {
     req_children($children);
-    assert(is_string(tags), str("tags must be a string",tags));
+    dummy=assert(is_string(tags), str("tags must be a string",tags));
     taglist = [for(s=str_split(tags," ",keep_nulls=false)) str($tag_prefix,s)];
     $tags_shown = $tags_shown == "ALL" ? taglist : set_intersection($tags_shown,taglist);
     children();
@@ -1321,7 +1325,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
     ];
     for (vec = vecs) {
         vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        assert(vcount == 2, "Not an edge vector!");
+        dummy=assert(vcount == 2, "Not an edge vector!");
         anch = _find_anchor(vec, $parent_geom);
         $attach_to = undef;
         $attach_anchor = anch;
@@ -1369,7 +1373,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
     vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
     for (vec = vecs) {
         vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        assert(vcount == 3, "Not an edge vector!");
+        dummy=assert(vcount == 3, "Not an edge vector!");
         anch = _find_anchor(vec, $parent_geom);
         $attach_to = undef;
         $attach_anchor = anch;
@@ -1452,7 +1456,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
     ];
     for (vec = vecs) {
         vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        assert(vcount == 2, "Not an edge vector!");
+        dummy=assert(vcount == 2, "Not an edge vector!");
         anch = _find_anchor(vec, $parent_geom);
         $attach_to = undef;
         $attach_anchor = anch;
@@ -1509,7 +1513,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
     vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
     for (vec = vecs) {
         vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        assert(vcount == 3, "Not an edge vector!");
+        dummy=assert(vcount == 3, "Not an edge vector!");
         anch = _find_anchor(vec, $parent_geom);
         $attach_to = undef;
         $attach_anchor = anch;
@@ -2705,7 +2709,7 @@ function _standard_anchors(two_d=false) = [
 // Example(FlatSpin,VPD=333):
 //   cube(50, center=true) show_anchors();
 module show_anchors(s=10, std=true, custom=true) {
-    check = assert($parent_geom != undef) 1;
+    check = assert($parent_geom != undef);
     two_d = _attach_geom_2d($parent_geom);
     if (std) {
         for (anchor=_standard_anchors(two_d=two_d)) {

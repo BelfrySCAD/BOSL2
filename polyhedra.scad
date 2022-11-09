@@ -308,7 +308,7 @@ module regular_polyhedron(
     longside=undef, // special parameter for trapezohedron
     h=undef         // special parameter for trapezohedron
 ) {
-    assert(rounding>=0, "'rounding' must be nonnegative");
+    dummy=assert(is_num(rounding) && rounding>=0, "'rounding' must be nonnegative");
     entry = regular_polyhedron_info(
         "fullentry", name=name, index=index,
         type=type, faces=faces, facetype=facetype,

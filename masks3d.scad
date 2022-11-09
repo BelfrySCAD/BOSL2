@@ -471,15 +471,16 @@ module rounding_hole_mask(r, rounding, excess=0.1, d, anchor=CENTER, spin=0, ori
 
 // Module: teardrop_edge_mask()
 // Usage:
-//   teardrop_edge_mask(r|d=, [angle], [excess]);
+//   teardrop_edge_mask(l, r|d=, [angle], [excess], [anchor], [spin], [orient]) [ATTACHMENTS];
 // Description:
 //   Makes an apropriate 3D corner rounding mask that keeps within `angle` degrees of vertical.
 // Arguments:
+//   l = length of mask
 //   r = Radius of the mask rounding.
-//   d = Diameter of the mask rounding.
 //   angle = Maximum angle from vertical. Default: 45
 //   excess = Excess mask size.  Default: 0.1
 //   ---
+//   d = Diameter of the mask rounding.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -496,10 +497,10 @@ module rounding_hole_mask(r, rounding, excess=0.1, d, anchor=CENTER, spin=0, ori
 function teardrop_edge_mask(l, r, angle, excess=0.1, d, anchor, spin, orient) = no_function("teardrop_edge_mask");
 module teardrop_edge_mask(l, r, angle, excess=0.1, d, anchor=CTR, spin=0, orient=UP)
 {
-    assert(is_num(l));
-    assert(is_num(angle));
-    assert(is_num(excess));
-    assert(angle>0 && angle<90);
+    check = 
+      assert(is_num(l) && l>0, "Length of mask must be positive")
+      assert(is_num(angle) && angle>0 && angle<90, "Angle must be a number between 0 and 90")
+      assert(is_num(excess));
     r = get_radius(r=r, d=d, dflt=1);
     path = mask2d_teardrop(r=r, angle=angle, excess=excess);
     linear_sweep(path, height=l, center=true, atype="bbox", anchor=anchor, spin=spin, orient=orient) children();
@@ -508,7 +509,7 @@ module teardrop_edge_mask(l, r, angle, excess=0.1, d, anchor=CTR, spin=0, orient
 
 // Module: teardrop_corner_mask()
 // Usage:
-//   teardrop_corner_mask(r|d=, [angle], [excess]);
+//   teardrop_corner_mask(r|d=, [angle], [excess], [anchor], [spin], [orient]) [ATTACHMENTS];
 // Description:
 //   Makes an apropriate 3D corner rounding mask that keeps within `angle` degrees of vertical.
 // Arguments:

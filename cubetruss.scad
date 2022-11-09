@@ -133,9 +133,10 @@ module cubetruss_support(size, strut, extents=1, anchor=CENTER, spin=0, orient=U
     extents = is_num(extents)? [1,1,extents] : extents;
     size = is_undef(size)? $cubetruss_size : size;
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
-    assert(is_int(extents.x) && extents.x > 0);
-    assert(is_int(extents.y) && extents.y > 0);
-    assert(is_int(extents.z) && extents.z > 0);
+    check =
+      assert(is_int(extents.x) && extents.x > 0)
+      assert(is_int(extents.y) && extents.y > 0)
+      assert(is_int(extents.z) && extents.z > 0);
     w = (size-strut) * extents.x + strut;
     l = (size-strut) * extents.y + strut;
     h = (size-strut) * extents.z + strut;

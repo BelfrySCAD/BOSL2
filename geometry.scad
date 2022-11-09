@@ -452,7 +452,8 @@ function is_coplanar(points, eps=EPSILON) =
 //   p2 = The second point on the plane.
 //   p3 = The third point on the plane.
 function plane3pt(p1, p2, p3) =
-    assert( is_path([p1,p2,p3],dim=3) && len(p1)==3,
+    is_undef(p2) && is_undef(p3) && is_path(p1,dim=3) ? plane3pt(p1[0],p1[1],p1[2])
+  : assert( is_path([p1,p2,p3],dim=3) && len(p1)==3,
             "Invalid points or incompatible dimensions." )
     let(
         crx = cross(p3-p1, p2-p1),
@@ -476,6 +477,8 @@ function plane3pt(p1, p2, p3) =
 //   i2 = The index into `points` of the second point on the plane.
 //   i3 = The index into `points` of the third point on the plane.
 function plane3pt_indexed(points, i1, i2, i3) =
+    is_undef(i3) && is_undef(i2) && is_vector(i1) ? plane3pt_indexed(points, i1[0], i1[1], i1[2])
+  :
     assert( is_vector([i1,i2,i3]) && min(i1,i2,i3)>=0 && is_list(points) && max(i1,i2,i3)<len(points),
             "Invalid or out of range indices." )
     assert( is_path([points[i1], points[i2], points[i3]],dim=3),
@@ -2290,8 +2293,8 @@ function hull(points) =
 //   hull_points(pts);
 module hull_points(points, fast=false) {
     no_children($children);
-    assert(is_path(points))
-    assert(len(points)>=3, "Point list must contain 3 points")
+    check = assert(is_path(points))
+            assert(len(points)>=3, "Point list must contain 3 points");
     if (len(points[0])==2)
        hull() polygon(points=points);
     else {

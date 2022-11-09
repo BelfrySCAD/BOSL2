@@ -1850,15 +1850,14 @@ module convex_offset_extrude(
         top_height = len(offsets_top)==0 ? 0 : abs(last(offsets_top)[1]) - struct_val(top,"extra");
 
         height = one_defined([l,h,height,length], "l,h,height,length", dflt=u_add(bottom_height,top_height));
-        assert(height>=0, "Height must be nonnegative");
-
         middle = height-bottom_height-top_height;
-        assert(
-                middle>=0, str(
-                        "Specified end treatments (bottom height = ",bottom_height,
-                        " top_height = ",top_height,") are too large for extrusion height (",height,")"
-                )
-        );
+        check =
+          assert(height>=0, "Height must be nonnegative")
+          assert(middle>=0, str(
+                                "Specified end treatments (bottom height = ",bottom_height,
+                                " top_height = ",top_height,") are too large for extrusion height (",height,")"
+                            )
+          );
         // The entry r[i] is [radius,z] for a given layer
         r = move([0,bottom_height],p=concat(
                           reverse(offsets_bot), [[0,0], [0,middle]], move([0,middle], p=offsets_top)));
@@ -2453,9 +2452,9 @@ module bent_cutout_mask(r, thickness, path, radius, convexity=10)
   r = get_radius(r1=r, r2=radius);
   dummy1=assert(is_def(r) && r>0,"Radius of the cylinder to bend around must be positive");
   path2 = force_path(path);
-  dummy2=assert(is_path(path2,2),"Input path must be a 2D path");
-  assert(r-thickness>0, "Thickness too large for radius");
-  assert(thickness>0, "Thickness must be positive");
+  dummy2=assert(is_path(path2,2),"Input path must be a 2D path")
+         assert(r-thickness>0, "Thickness too large for radius")
+         assert(thickness>0, "Thickness must be positive");
   fixpath = clockwise_polygon(path2);
   curvepoints = arc(d=thickness, angle = [-180,0]);
   profiles = [for(pt=curvepoints) _cyl_hole(r+pt.x,apply(xscale((r+pt.x)/r), offset(fixpath,delta=thickness/2+pt.y,check_valid=false,closed=true)))];
@@ -2463,7 +2462,7 @@ module bent_cutout_mask(r, thickness, path, radius, convexity=10)
   minangle = (min(pathx)-thickness/2)*360/(2*PI*r);
   maxangle = (max(pathx)+thickness/2)*360/(2*PI*r);
   mindist = (r+thickness/2)/cos((maxangle-minangle)/2);
-  assert(maxangle-minangle<180,"Cutout angle span is too large.  Must be smaller than 180.");
+  dummy3 = assert(maxangle-minangle<180,"Cutout angle span is too large.  Must be smaller than 180.");
   zmean = mean(column(fixpath,1));
   innerzero = repeat([0,0,zmean], len(fixpath));
   outerpt = repeat( [1.5*mindist*cos((maxangle+minangle)/2),1.5*mindist*sin((maxangle+minangle)/2),zmean], len(fixpath));

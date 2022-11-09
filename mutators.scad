@@ -196,13 +196,14 @@ module chain_hull()
 //           circle(r=1.5);
 module path_extrude2d(path, caps=false, closed=false, s, convexity=10) {
     extra_ang = 0.1; // Extra angle for overlap of joints
-    assert(caps==false || closed==false, "Cannot have caps on a closed extrusion");
-    assert(is_path(path,2));
+    check =
+       assert(caps==false || closed==false, "Cannot have caps on a closed extrusion")
+       assert(is_path(path,2));
     path = deduplicate(path);
     s = s!=undef? s :
         let(b = pointlist_bounds(path))
         norm(b[1]-b[0]);
-    assert(is_finite(s));
+    check2 = assert(is_finite(s));
     L = len(path);
     for (i = [0:1:L-(closed?1:2)]) {
         seg = select(path, i, i+1);
@@ -286,15 +287,15 @@ module path_extrude2d(path, caps=false, closed=false, s, convexity=10) {
 //   cylindrical_extrude(or=40, ir=35, orient=BACK)
 //       text(text="Hello World!", size=10, halign="center", valign="center");
 module cylindrical_extrude(ir, or, od, id, size=1000, convexity=10, spin=0, orient=UP) {
-    assert(is_num(size) || is_vector(size,2));
+    check1 = assert(is_num(size) || is_vector(size,2));
     size = is_num(size)? [size,size] : size;
     ir = get_radius(r=ir,d=id);
     or = get_radius(r=or,d=od);
-    assert(all_positive([ir,or]), "Must supply positive inner and outer radius or diameter");
+    check2 = assert(all_positive([ir,or]), "Must supply positive inner and outer radius or diameter");
     index_r = or;
     circumf = 2 * PI * index_r;
     width = min(size.x, circumf);
-    assert(width <= circumf, "Shape would more than completely wrap around.");
+    check3 = assert(width <= circumf, "Shape would more than completely wrap around.");
     sides = segs(or);
     step = circumf / sides;
     steps = ceil(width / step);
@@ -338,8 +339,9 @@ module cylindrical_extrude(ir, or, od, id, size=1000, convexity=10, spin=0, orie
 //       xcopies(3) circle(3, $fn=32);
 //   }
 module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
-    assert(is_vector(pt1));
-    assert(is_vector(pt2));
+    check =
+      assert(is_vector(pt1),"First point must be a vector")
+      assert(is_vector(pt2),"Second point must be a vector");
     pt1 = point3d(pt1);
     pt2 = point3d(pt2);
     rtp = xyz_to_spherical(pt2-pt1);
