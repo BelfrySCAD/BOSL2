@@ -186,7 +186,7 @@ module snap_socket(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, 
                 diff("divot")
                 cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
                     attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=16);
-                    attach(TOP) left((snaplen+snapdiam/4/3)/2) xscale(0.333) sphere(d=snapdiam*0.8, $fn=12, $tags="divot");
+                    tag("divot") attach(TOP) left((snaplen+snapdiam/4/3)/2) xscale(0.333) sphere(d=snapdiam*0.8, $fn=12);
                 }
             }
         }
