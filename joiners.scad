@@ -625,13 +625,13 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
     orient = is_def(orient) ? orient
            : gender == "female" ? DOWN
            : UP;
+    count = num_defined([angle,slope]);
+    count2 = num_defined([taper,back_width]);
+    count3 = num_defined([chamfer, radius]);
     dummy = 
       assert(count<=1, "Do not specify both angle and slope")
       assert(count2<=1, "Do not specify both taper and back_width")
       assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
-    count = num_defined([angle,slope]);
-    count2 = num_defined([taper,back_width]);
-    count3 = num_defined([chamfer, radius]);
     slope = is_def(slope) ? slope :
         is_def(angle) ? 1/tan(angle) :  6;
     extra_slop = gender == "female" ? 2*get_slop() : 0;
