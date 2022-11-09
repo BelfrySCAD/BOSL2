@@ -1251,7 +1251,9 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
         fullcircle = ellipse(r=r, realign=realign, circum=circum,spin=90),        
         
         // Chose the point on the circle that is lower than the cap but also creates a segment bigger than
-        // seglen/3 so we don't have a teeny tiny segment at the end of the cap
+        // seglen/skipfactor so we don't have a teeny tiny segment at the end of the cap, except for the hexagoin
+        // case which is treated specially
+        skipfactor = len(fullcircle)==6 ? 15 : 3,
         path = !circum ?
                   let(seglen = norm(fullcircle[0]-fullcircle[1]))
                   [
@@ -1259,7 +1261,7 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
                    for (p=fullcircle)
                           if (
                                p.y<last(cap).y-EPSILON
-                                 && norm([abs(p.x)-last(cap).x,p.y-last(cap.y)])>seglen/3
+                                 && norm([abs(p.x)-last(cap).x,p.y-last(cap.y)])>seglen/skipfactor
                              ) p,
                    xflip(cap[1]),
                    if (_extrapt || !pointycap) xflip(cap[0])
