@@ -606,12 +606,13 @@ module npt_threaded_rod(
     internal=false,
     anchor, spin, orient
 ) {
-    assert(is_finite(size));
-    assert(is_bool(left_handed));
-    assert(is_undef(bevel) || is_bool(bevel));
-    assert(is_bool(hollow));
-    assert(is_bool(internal));
-    assert(!(internal&&hollow), "Cannot created a hollow internal threads mask.");
+    checks = 
+      assert(is_finite(size))
+      assert(is_bool(left_handed))
+      assert(is_undef(bevel) || is_bool(bevel))
+      assert(is_bool(hollow))
+      assert(is_bool(internal))
+      assert(!(internal&&hollow), "Cannot created a hollow internal threads mask.");
     info_table = [
         // Size    len      OD    TPI
         [ 1/16,  [ 0.3896, 0.308, 27  ]],

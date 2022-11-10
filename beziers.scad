@@ -1424,9 +1424,10 @@ function bezier_patch_normals(patch, u, v) =
 //   debug_bezier(bez, N=3, width=0.5);
 module debug_bezier(bezpath, width=1, N=3) {
     no_children($children);
-    assert(is_path(bezpath));
-    assert(is_int(N));
-    assert(len(bezpath)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
+    check = 
+      assert(is_path(bezpath),"bezpath must be a path")
+      assert(is_int(N) && N>0, "N must be a positive integer")
+      assert(len(bezpath)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
     $fn=8;
     stroke(bezpath_curve(bezpath, N=N), width=width, color="cyan");
     color("green")

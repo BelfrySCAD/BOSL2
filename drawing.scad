@@ -220,16 +220,17 @@ module stroke(
     ) * linewidth;
 
     closed = default(closed, is_region(path));
-    assert(is_bool(closed));
+    check1 = assert(is_bool(closed));
 
     dots = dots==true? "dot" : dots;
 
     endcap1 = first_defined([endcap1, endcaps, dots, "round"]);
     endcap2 = first_defined([endcap2, endcaps, if (!closed) dots, "round"]);
     joints  = first_defined([joints, dots, "round"]);
-    assert(is_bool(endcap1) || is_string(endcap1) || is_path(endcap1));
-    assert(is_bool(endcap2) || is_string(endcap2) || is_path(endcap2));
-    assert(is_bool(joints)  || is_string(joints)  || is_path(joints));
+    check2 = 
+      assert(is_bool(endcap1) || is_string(endcap1) || is_path(endcap1))
+      assert(is_bool(endcap2) || is_string(endcap2) || is_path(endcap2))
+      assert(is_bool(joints)  || is_string(joints)  || is_path(joints));
 
     endcap1_dflts = _shape_defaults(endcap1);
     endcap2_dflts = _shape_defaults(endcap2);
@@ -238,47 +239,47 @@ module stroke(
     endcap_width1 = first_defined([endcap_width1, endcap_width, dots_width, endcap1_dflts[0]]);
     endcap_width2 = first_defined([endcap_width2, endcap_width, dots_width, endcap2_dflts[0]]);
     joint_width   = first_defined([joint_width, dots_width, joint_dflts[0]]);
-    assert(is_num(endcap_width1));
-    assert(is_num(endcap_width2));
-    assert(is_num(joint_width));
+    check3 = 
+      assert(is_num(endcap_width1))
+      assert(is_num(endcap_width2))
+      assert(is_num(joint_width));
 
     endcap_length1 = first_defined([endcap_length1, endcap_length, dots_length, endcap1_dflts[1]*endcap_width1]);
     endcap_length2 = first_defined([endcap_length2, endcap_length, dots_length, endcap2_dflts[1]*endcap_width2]);
     joint_length   = first_defined([joint_length, dots_length, joint_dflts[1]*joint_width]);
-    assert(is_num(endcap_length1));
-    assert(is_num(endcap_length2));
-    assert(is_num(joint_length));
+    check4 = 
+      assert(is_num(endcap_length1))
+      assert(is_num(endcap_length2))
+      assert(is_num(joint_length));
 
     endcap_extent1 = first_defined([endcap_extent1, endcap_extent, dots_extent, endcap1_dflts[2]*endcap_width1]);
     endcap_extent2 = first_defined([endcap_extent2, endcap_extent, dots_extent, endcap2_dflts[2]*endcap_width2]);
     joint_extent   = first_defined([joint_extent, dots_extent, joint_dflts[2]*joint_width]);
-    assert(is_num(endcap_extent1));
-    assert(is_num(endcap_extent2));
-    assert(is_num(joint_extent));
+    check5 = 
+      assert(is_num(endcap_extent1))
+      assert(is_num(endcap_extent2))
+      assert(is_num(joint_extent));
 
     endcap_angle1 = first_defined([endcap_angle1, endcap_angle, dots_angle]);
     endcap_angle2 = first_defined([endcap_angle2, endcap_angle, dots_angle]);
     joint_angle = first_defined([joint_angle, dots_angle]);
-    assert(is_undef(endcap_angle1)||is_num(endcap_angle1));
-    assert(is_undef(endcap_angle2)||is_num(endcap_angle2));
-    assert(is_undef(joint_angle)||is_num(joint_angle));
+    check6 = 
+      assert(is_undef(endcap_angle1)||is_num(endcap_angle1))
+      assert(is_undef(endcap_angle2)||is_num(endcap_angle2))
+      assert(is_undef(joint_angle)||is_num(joint_angle));
 
     endcap_color1 = first_defined([endcap_color1, endcap_color, dots_color, color]);
     endcap_color2 = first_defined([endcap_color2, endcap_color, dots_color, color]);
     joint_color = first_defined([joint_color, dots_color, color]);
-
     paths = force_region(path);
-    assert(is_region(paths),"The path argument must be a list of 2D or 3D points, or a region.");
-        for (path = paths) {
-        assert(is_list(path));
-        if (len(path) > 1) {
-            assert(is_path(path,[2,3]), "The path argument must be a list of 2D or 3D points, or a region.");
-        }
+    check7 = assert(is_region(paths),"The path argument must be a list of 2D or 3D points, or a region.");
+    for (path = paths) {
+        assert(len(path)==1 || is_path(path,[2,3]), "The path argument must be a list of 2D or 3D points, or a region.");
         path = deduplicate( closed? close_path(path) : path );
 
-        assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
+        check8 = assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
         width = is_num(width)? [for (x=path) width] : width;
-        assert(all([for (w=width) w>0]));
+        check9 = assert(all([for (w=width) w>0]));
 
         endcap_shape1 = _shape_path(endcap1, width[0], endcap_width1, endcap_length1, endcap_extent1);
         endcap_shape2 = _shape_path(endcap2, last(width), endcap_width2, endcap_length2, endcap_extent2);
@@ -289,7 +290,7 @@ module stroke(
             (endcap1=="arrow2")? endcap_length1*3/4 :
             0
         ]);
-        assert(is_num(trim1));
+        check10 = assert(is_num(trim1));
 
         trim2 = last(width) * first_defined([
             trim2, trim,
@@ -297,7 +298,7 @@ module stroke(
             (endcap2=="arrow2")? endcap_length2*3/4 :
             0
         ]);
-        assert(is_num(trim2));
+        check11 = assert(is_num(trim2));
 
 
         if (len(path) == 1) {

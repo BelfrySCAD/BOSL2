@@ -3607,7 +3607,7 @@ module _textured_revolution(
     convexity=10, counts, samples,
     anchor=CENTER, spin=0, orient=UP
 ) {
-    assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
+    dummy = assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
     vnf = _textured_revolution(
         shape, texture, tex_size=tex_size,
         tex_scale=tex_scale, inset=inset, rot=rot,

@@ -2502,6 +2502,7 @@ function torus(
 //   ang = Angle of hat walls from the Z axis.  Default: 45 degrees
 //   cap_h = If given, height above center where the shape will be truncated. Default: `undef` (no truncation)
 //   ---
+//   circum = produce a circumscribing teardrop shape.  Default: false
 //   r1 = Radius of circular portion of the front end of the teardrop shape.
 //   r2 = Radius of circular portion of the back end of the teardrop shape.
 //   d = Diameter of circular portion of the teardrop shape.
@@ -2512,6 +2513,7 @@ function torus(
 //   chamfer = Specifies size of chamfer as distance along the bottom and top faces.  Default: 0
 //   chamfer1 = Specifies size of chamfer on bottom as distance along bottom face.  Default: 0
 //   chamfer2 = Specifies size of chamfer on top as distance along top face.  Default: 0
+//   realign = Passes realign option to teardrop2d, which shifts face alignment.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -2541,7 +2543,8 @@ function torus(
 //   teardrop(d1=20, d2=30, h=20, cap_h1=11, cap_h2=16)
 //       show_anchors(std=false);
 
-module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, length, height, chamfer, chamfer1, chamfer2,anchor=CENTER, spin=0, orient=UP)
+module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, length, height, circum=false, realign=false,
+                chamfer, chamfer1, chamfer2,anchor=CENTER, spin=0, orient=UP)
 {
     length = one_defined([l, h, length, height],"l,h,length,height");
     r1 = get_radius(r=r, r1=r1, d=d, d1=d1);
@@ -2550,7 +2553,6 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, lengt
     tip_y2 = r2/cos(90-ang);
     _cap_h1 = min(default(cap_h1, tip_y1), tip_y1);
     _cap_h2 = min(default(cap_h2, tip_y2), tip_y2);
-  f= echo(fff=_cap_h1,_cap_h2);
     capvec = unit([0, _cap_h1-_cap_h2, length]);
     anchors = [
         named_anchor("cap",      [0,0,(_cap_h1+_cap_h2)/2], capvec),
@@ -2559,14 +2561,14 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, lengt
     ];
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=length, axis=BACK, anchors=anchors)
     {
-        vnf_polyhedron(teardrop(ang=ang,cap_h=cap_h,r1=r1,r2=r2,cap_h1=cap_h1,cap_h2=cap_h2,
+        vnf_polyhedron(teardrop(ang=ang,cap_h=cap_h,r1=r1,r2=r2,cap_h1=cap_h1,cap_h2=cap_h2,circum=circum,realign=realign,
                                 length=length, chamfer1=chamfer1,chamfer2=chamfer2,chamfer=chamfer));
         children();
     }
 }
 
 
-function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamfer, chamfer1, chamfer2,
+function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamfer, chamfer1, chamfer2, circum=false, realign=false,
                   l, length, height, anchor=CENTER, spin=0, orient=UP) =
     let(
         r1 = get_radius(r=r, r1=r1, d=d, d1=d1, dflt=1),
@@ -2577,8 +2579,8 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
         chamfer1 = first_defined([chamfer1,chamfer,0]),
         chamfer2 = first_defined([chamfer2,chamfer,0]),    
         sides = segs(max(r1,r2)),
-        profile1 = teardrop2d(r=r1, ang=ang, cap_h=cap_h1, $fn=sides, _extrapt=true),
-        profile2 = teardrop2d(r=r2, ang=ang, cap_h=cap_h2, $fn=sides, _extrapt=true),
+        profile1 = teardrop2d(r=r1, ang=ang, cap_h=cap_h1, $fn=sides, circum=circum, realign=realign,_extrapt=true),
+        profile2 = teardrop2d(r=r2, ang=ang, cap_h=cap_h2, $fn=sides, circum=circum, realign=realign,_extrapt=true),
         tip_y1 = r1/cos(90-ang),
         tip_y2 = r2/cos(90-ang),
         _cap_h1 = min(default(cap_h1, tip_y1), tip_y1),
@@ -2590,10 +2592,9 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
           assert(is_undef(cap_h1) || cap_h1-chamfer1 > r1*sin(ang), "chamfer1 is too big to work with the specified cap_h1")
           assert(is_undef(cap_h2) || cap_h2-chamfer2 > r2*sin(ang), "chamfer2 is too big to work with the specified cap_h2"),
         cprof1 = r1==chamfer1 ? repeat([0,0],len(profile1))
-                              : teardrop2d(r=r1-chamfer1, ang=ang, cap_h=u_add(cap_h1,-chamfer1), $fn=sides, _extrapt=true),
+                              : teardrop2d(r=r1-chamfer1, ang=ang, cap_h=u_add(cap_h1,-chamfer1), $fn=sides, circum=circum, realign=realign,_extrapt=true),
         cprof2 = r2==chamfer2 ? repeat([0,0],len(profile2))
-                              : teardrop2d(r=r2-chamfer2, ang=ang, cap_h=u_add(cap_h2,-chamfer2), $fn=sides, _extrapt=true),
-    fefda=   echo(lens=len(cprof1),len(cprof2)),        
+                              : teardrop2d(r=r2-chamfer2, ang=ang, cap_h=u_add(cap_h2,-chamfer2), $fn=sides, circum=circum, realign=realign,_extrapt=true),
         anchors = [
             named_anchor("cap",      [0,0,(_cap_h1+_cap_h2)/2], capvec),
             named_anchor("cap_fwd",  [0,-length/2,_cap_h1],         unit((capvec+FWD)/2)),
@@ -2617,15 +2618,17 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 //   Creates a sphere with a conical hat, to make a 3D teardrop.
 //
 // Usage: As Module
-//   onion(r|d=, [ang=], [cap_h=], ...) [ATTACHMENTS];
+//   onion(r|d=, [ang=], [cap_h=], [circum=], [realign=], ...) [ATTACHMENTS];
 // Usage: As Function
-//   vnf = onion(r|d=, [ang=], [cap_h=], ...);
+//   vnf = onion(r|d=, [ang=], [cap_h=], [circum=], [realign=], ...);
 //
 // Arguments:
 //   r = radius of spherical portion of the bottom. Default: 1
 //   ang = Angle of cone on top from vertical. Default: 45 degrees
 //   cap_h = If given, height above sphere center to truncate teardrop shape.  Default: `undef` (no truncation)
 //   ---
+//   circum = set to true to circumscribe the specified radius/diameter.  Default: False
+//   realign = adjust point alignment to determine if bottom is flat or pointy.  Default: False
 //   d = diameter of spherical portion of bottom.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -2652,10 +2655,10 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 // Example: Standard Connectors
 //   onion(d=30, ang=30, cap_h=20) show_anchors();
 
-module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
+module onion(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
-    xyprofile = teardrop2d(r=r, ang=ang, cap_h=cap_h);
+    xyprofile = teardrop2d(r=r, ang=ang, cap_h=cap_h, circum=circum, realign=realign);
     tip_h = max(column(xyprofile,1));
     _cap_h = min(default(cap_h,tip_h), tip_h);
     anchors = [

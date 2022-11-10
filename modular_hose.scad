@@ -163,7 +163,7 @@ module modular_hose(size, type, clearance=0, waist_len, anchor=BOTTOM, spin=0,or
   bigend = move([clearance[1], -bbound[0].y], p=_big_end[ind]);
 
   midlength = first_defined([waist_len, _hose_waist[ind]]);
-  assert(midlength>=0,"midlength must be nonnegative");
+  dummy = assert(midlength>=0,"midlength must be nonnegative");
 
   goodtypes = ["small","big","segment","socket","ball"];
   shape =
