@@ -2469,7 +2469,7 @@ function _find_anchor(anchor, geom) =
             bot = point3d(v_mul(r1,axy), -l/2),
             top = point3d(v_mul(r2,axy)+shift, l/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
-            sidevec = rot(from=UP, to=top-bot, p=point3d(axy)),
+            sidevec = rot(from=UP, to=top==bot?UP:top-bot, p=point3d(axy)),
             vvec = anch==CENTER? UP : unit([0,0,anch.z],UP),
             vec = anch==CENTER? CENTER :
                 approx(axy,[0,0])? unit(anch,UP) :

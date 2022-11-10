@@ -2547,6 +2547,7 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, lengt
                 chamfer, chamfer1, chamfer2,anchor=CENTER, spin=0, orient=UP)
 {
     length = one_defined([l, h, length, height],"l,h,length,height");
+    dummy=assert(is_finite(length) && length>0, "length must be positive");
     r1 = get_radius(r=r, r1=r1, d=d, d1=d1);
     r2 = get_radius(r=r, r1=r2, d=d, d1=d2);
     tip_y1 = r1/cos(90-ang);
@@ -2574,6 +2575,7 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
         r1 = get_radius(r=r, r1=r1, d=d, d1=d1, dflt=1),
         r2 = get_radius(r=r, r1=r2, d=d, d1=d2, dflt=1),
         length = one_defined([l, h, length, height],"l,h,length,height"),
+        dummy0=assert(is_finite(length) && length>0, "length must be positive"),
         cap_h1 = first_defined([cap_h1, cap_h]),
         cap_h2 = first_defined([cap_h2, cap_h]),
         chamfer1 = first_defined([chamfer1,chamfer,0]),

@@ -14,7 +14,7 @@
 
 // Module: nema_stepper_motor()
 // Usage:
-//   nema_stepper_motor(size, h, shaft_len, ...) [attachments];
+//   nema_stepper_motor(size, h, shaft_len, [$slop=], ...) [ATTACHMENTS];
 // Topics: Parts, Motors
 // Description:
 //   Creates a model of a NEMA standard stepper motor.
@@ -25,6 +25,7 @@
 //   ---
 //   details = If false, creates a very rough motor shape, suitable for using as a mask.  Default: true
 //   atype = The attachment set type to use when anchoring.  Default: `"body"`
+//   $slop = If details is false then increase size of the model by double this amount (for use as a mask)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `TOP`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -117,7 +118,7 @@ module nema_stepper_motor(size=17, h=24, shaft_len=20, details=true, atype="body
 
 // Module: nema_mount_mask()
 // Usage:
-//   nema_mount_mask(size, depth, l, ...);
+//   nema_mount_mask(size, depth, l, [$slop], ...);
 // Topics: Parts, Motors
 // Description: Creates a mask to use when making standard NEMA stepper motor mounts.
 // Arguments:
