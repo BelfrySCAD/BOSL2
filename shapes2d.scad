@@ -536,6 +536,7 @@ function ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER
 // Example(2D): Called as Function
 //   stroke(closed=true, regular_ngon(n=6, or=30));
 function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip, align_side, anchor=CENTER, spin=0, _mat, _anchs) =
+    assert(is_int(n) && n>=3)
     assert(is_undef(align_tip) || is_vector(align_tip))
     assert(is_undef(align_side) || is_vector(align_side))
     assert(is_undef(align_tip) || is_undef(align_side), "Can only specify one of align_tip and align-side")
@@ -547,6 +548,7 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
         r = get_radius(r1=ir, r2=or, r=r, d1=id, d2=od, d=d, dflt=side)
     )
     assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.")
+    assert(all_positive([r]), "polygon size must be a positive value")
     let(
         inset = opp_ang_to_hyp(rounding, (180-360/n)/2),
         mat = !is_undef(_mat) ? _mat :
@@ -594,7 +596,8 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
     id = is_finite(id)? id*sc : undef;
     side = is_finite(side)? side/2/sin(180/n) : undef;
     r = get_radius(r1=ir, r2=or, r=r, d1=id, d2=od, d=d, dflt=side);
-    check = assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.");
+    check = assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.")
+            assert(all_positive([r]), "polygon size must be a positive value");
     mat = ( realign? zrot(-180/n) : ident(4) ) * (
             !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip)) :
             !is_undef(align_side)? rot(from=RIGHT, to=point2d(align_side)) * zrot(180/n) :
