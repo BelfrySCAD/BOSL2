@@ -105,7 +105,7 @@ module cubetruss_segment(size, strut, bracing, anchor=CENTER, spin=0, orient=UP)
 
 // Module: cubetruss_support()
 // Usage:
-//   cubetruss_support([size], [strut]);
+//   cubetruss_support([size], [strut], [extents], [anchor], [spin], [orient]) [ATTACHMENTS];
 // Description:
 //   Creates a single cubetruss support.
 // Arguments:
@@ -166,7 +166,7 @@ module cubetruss_support(size, strut, extents=1, anchor=CENTER, spin=0, orient=U
 
 // Module: cubetruss_clip()
 // Usage:
-//   cubetruss_clip(extents, [size], [strut], [clipthick]);
+//   cubetruss_clip(extents, [size], [strut], [clipthick], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates a pair of clips to add onto the end of a truss.
 // Arguments:
@@ -175,6 +175,7 @@ module cubetruss_support(size, strut, extents=1, anchor=CENTER, spin=0, orient=U
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   clipthick = The thickness of the clip.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
+//   $slop = allowance for printer overextrusion
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -230,7 +231,7 @@ module cubetruss_clip(extents=1, size, strut, clipthick, anchor=CENTER, spin=0, 
 
 // Module: cubetruss_foot()
 // Usage:
-//   cubetruss_foot(w, [size], [strut], [clipthick]);
+//   cubetruss_foot(w, [size], [strut], [clipthick], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates a foot that can be clipped onto the bottom of a truss for support.
 // Arguments:
@@ -239,6 +240,7 @@ module cubetruss_clip(extents=1, size, strut, clipthick, anchor=CENTER, spin=0, 
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
+//   $slop = make fit looser to allow for printer overextrusion
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -306,7 +308,7 @@ module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient
 
 // Module: cubetruss_joiner()
 // Usage:
-//   cubetruss_joiner([w], [vert], [size], [strut], [clipthick]);
+//   cubetruss_joiner([w], [vert], [size], [strut], [clipthick], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates a part to join two cubetruss trusses end-to-end.
 // Arguments:
@@ -316,6 +318,7 @@ module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
+//   $slop = Make fit looser by this amount to allow for printer overextrusion
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -373,7 +376,7 @@ module cubetruss_joiner(w=1, vert=true, size, strut, clipthick, anchor=CENTER, s
 
 // Module: cubetruss_uclip()
 // Usage:
-//   cubetruss_uclip(dual, [size], [strut], [clipthick]);
+//   cubetruss_uclip(dual, [size], [strut], [clipthick], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates a small clip that can snap around one or two adjacent struts.
 // Arguments:
@@ -382,6 +385,7 @@ module cubetruss_joiner(w=1, vert=true, size, strut, clipthick, anchor=CENTER, s
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
+//   $slop = Make fit looser by this amount
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`

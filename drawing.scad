@@ -25,7 +25,10 @@
 //   Draws a 2D or 3D path with a given line width.  Joints and each endcap can be replaced with
 //   various marker shapes, and can be assigned different colors.  If passed a region instead of
 //   a path, draws each path in the region as a closed polygon by default. If `closed=false` is
-//   given with a region, each subpath is drawn as an un-closed line path.
+//   given with a region or list of paths, then each path is drawn without the closing line segment.
+//   To facilitate debugging, stroke() accepts "paths" that have a single point.  These are drawn with
+//   the style of endcap1, but have their own scale parameter, `singleton_scale`, which defaults to 2
+//   so that singleton dots with endcap "round" are clearly visible.  
 // Figure(Med,NoAxes,2D,VPR=[0,0,0],VPD=250): Endcap Types
 //   cap_pairs = [
 //       ["butt",  "chisel" ],
@@ -84,6 +87,7 @@
 //   endcap_color2 = If given, sets the color of the ending endcap.  Overrides `color=`, `dots_color=`,  and `endcap_color=`.
 //   joint_color = If given, sets the color of the joints.  Overrides `color=` and `dots_color=`.
 //   dots_color = If given, sets the color of the endcaps and joints.  Overrides `color=`.
+//   singleton_scale = Change the scale of the endcap shape drawn for singleton paths.  Default: 2.  
 //   convexity = Max number of times a line could intersect a wall of an endcap.
 // Example(2D): Drawing a Path
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
@@ -100,7 +104,7 @@
 // Example(2D): Mixed Endcaps
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   stroke(path, width=10, endcap1="tail2", endcap2="arrow2");
-// Example(2D): Plotting Points
+// Example(2D): Plotting Points.  Setting endcap_angle to zero results in the weird arrow orientation. 
 //   path = [for (a=[0:30:360]) [a-180, 60*sin(a)]];
 //   stroke(path, width=3, joints="diamond", endcaps="arrow2", endcap_angle=0, endcap_width=5, joint_angle=0, joint_width=5);
 // Example(2D): Joints and Endcaps
@@ -147,6 +151,12 @@
 //       ]
 //   ];
 //   stroke(paths, closed=false, width=5);
+// Example(2D): Paths with a singleton.  Note that the singleton is not a single point, but a list containing a single point.  
+//   stroke([
+//           [[0,0],[1,1]],
+//           [[1.5,1.5]],
+//           [[2,2],[3,3]]
+//          ],width=0.2,closed=false,$fn=16);
 function stroke(
     path, width=1, closed,
     endcaps,       endcap1,        endcap2,        joints,       dots,
@@ -155,7 +165,7 @@ function stroke(
     endcap_extent, endcap_extent1, endcap_extent2, joint_extent, dots_extent,
     endcap_angle,  endcap_angle1,  endcap_angle2,  joint_angle,  dots_angle,
     endcap_color,  endcap_color1,  endcap_color2,  joint_color,  dots_color, color,
-    trim, trim1, trim2,
+    trim, trim1, trim2, singleton_scale=2,
     convexity=10
 ) = no_function("stroke");
 
@@ -168,7 +178,7 @@ module stroke(
     endcap_extent, endcap_extent1, endcap_extent2, joint_extent, dots_extent,
     endcap_angle,  endcap_angle1,  endcap_angle2,  joint_angle,  dots_angle,
     endcap_color,  endcap_color1,  endcap_color2,  joint_color,  dots_color, color,
-    trim, trim1, trim2,
+    trim, trim1, trim2, singleton_scale=2,
     convexity=10
 ) {
     no_children($children);
@@ -201,8 +211,8 @@ module stroke(
         assert(false, str("Invalid cap or joint: ",cap));
 
     function _shape_path(cap,linewidth,w,l,l2) = (
-        (cap=="butt" || cap==false || cap==undef)? [] : 
-        (cap=="round" || cap==true)? scale([w,l], p=circle(d=1, $fn=max(8, segs(w/2)))) :
+        cap=="butt" || cap==false || cap==undef ? [] : 
+        cap=="round" || cap==true ? scale([w,l], p=circle(d=1, $fn=max(8, segs(w/2)))) :
         cap=="chisel"?  scale([w,l], p=circle(d=1,$fn=4)) :
         cap=="diamond"? circle(d=w,$fn=4) :
         cap=="square"?  scale([w,l], p=square(1,center=true)) :
@@ -239,47 +249,47 @@ module stroke(
     endcap_width1 = first_defined([endcap_width1, endcap_width, dots_width, endcap1_dflts[0]]);
     endcap_width2 = first_defined([endcap_width2, endcap_width, dots_width, endcap2_dflts[0]]);
     joint_width   = first_defined([joint_width, dots_width, joint_dflts[0]]);
-    check3 = 
-      assert(is_num(endcap_width1))
-      assert(is_num(endcap_width2))
-      assert(is_num(joint_width));
 
     endcap_length1 = first_defined([endcap_length1, endcap_length, dots_length, endcap1_dflts[1]*endcap_width1]);
     endcap_length2 = first_defined([endcap_length2, endcap_length, dots_length, endcap2_dflts[1]*endcap_width2]);
     joint_length   = first_defined([joint_length, dots_length, joint_dflts[1]*joint_width]);
-    check4 = 
-      assert(is_num(endcap_length1))
-      assert(is_num(endcap_length2))
-      assert(is_num(joint_length));
 
     endcap_extent1 = first_defined([endcap_extent1, endcap_extent, dots_extent, endcap1_dflts[2]*endcap_width1]);
     endcap_extent2 = first_defined([endcap_extent2, endcap_extent, dots_extent, endcap2_dflts[2]*endcap_width2]);
     joint_extent   = first_defined([joint_extent, dots_extent, joint_dflts[2]*joint_width]);
-    check5 = 
-      assert(is_num(endcap_extent1))
-      assert(is_num(endcap_extent2))
-      assert(is_num(joint_extent));
 
     endcap_angle1 = first_defined([endcap_angle1, endcap_angle, dots_angle]);
     endcap_angle2 = first_defined([endcap_angle2, endcap_angle, dots_angle]);
     joint_angle = first_defined([joint_angle, dots_angle]);
-    check6 = 
-      assert(is_undef(endcap_angle1)||is_num(endcap_angle1))
-      assert(is_undef(endcap_angle2)||is_num(endcap_angle2))
-      assert(is_undef(joint_angle)||is_num(joint_angle));
-
+    
+    check3 =
+      assert(all_nonnegative([endcap_length1]))
+      assert(all_nonnegative([endcap_length2]))
+      assert(all_nonnegative([joint_length]));
+      assert(all_nonnegative([endcap_extent1]))
+      assert(all_nonnegative([endcap_extent2]))
+      assert(all_nonnegative([joint_extent]));
+      assert(is_undef(endcap_angle1)||is_finite(endcap_angle1))
+      assert(is_undef(endcap_angle2)||is_finite(endcap_angle2))
+      assert(is_undef(joint_angle)||is_finite(joint_angle))
+      assert(all_positive([singleton_scale]))
+      assert(all_positive(width));
+      
     endcap_color1 = first_defined([endcap_color1, endcap_color, dots_color, color]);
     endcap_color2 = first_defined([endcap_color2, endcap_color, dots_color, color]);
     joint_color = first_defined([joint_color, dots_color, color]);
-    paths = force_region(path);
-    check7 = assert(is_region(paths),"The path argument must be a list of 2D or 3D points, or a region.");
+
+    // We want to allow "paths" with length 1, so we can't use the normal path/region checks
+    paths = is_matrix(path) ? [path] : path;
+    assert(is_list(paths),"The path argument must be a list of 2D or 3D points, or a region.");
     for (path = paths) {
-        assert(len(path)==1 || is_path(path,[2,3]), "The path argument must be a list of 2D or 3D points, or a region.");
+        pathvalid = is_path(path,[2,3]) || same_shape(path,[[0,0]]) || same_shape(path,[[0,0,0]]);
+        assert(pathvalid,"The path argument must be a list of 2D or 3D points, or a region.");
         path = deduplicate( closed? close_path(path) : path );
 
-        check8 = assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
+        check4 = assert(is_num(width) || len(width)==len(path),
+                        "width must be a number or a vector the same length as the path (or all components of a region)");
         width = is_num(width)? [for (x=path) width] : width;
-        check9 = assert(all([for (w=width) w>0]));
 
         endcap_shape1 = _shape_path(endcap1, width[0], endcap_width1, endcap_length1, endcap_extent1);
         endcap_shape2 = _shape_path(endcap2, last(width), endcap_width2, endcap_length2, endcap_extent2);
@@ -290,7 +300,6 @@ module stroke(
             (endcap1=="arrow2")? endcap_length1*3/4 :
             0
         ]);
-        check10 = assert(is_num(trim1));
 
         trim2 = last(width) * first_defined([
             trim2, trim,
@@ -298,8 +307,8 @@ module stroke(
             (endcap2=="arrow2")? endcap_length2*3/4 :
             0
         ]);
-        check11 = assert(is_num(trim2));
-
+        check10 = assert(is_finite(trim1))
+                  assert(is_finite(trim2));
 
         if (len(path) == 1) {
             if (len(path[0]) == 2) {
@@ -307,7 +316,7 @@ module stroke(
                 setcolor(endcap_color1) {
                     translate(path[0]) {
                         mat = is_undef(endcap_angle1)? ident(3) : zrot(endcap_angle1);
-                        multmatrix(mat) polygon(endcap_shape1);
+                        multmatrix(mat) polygon(scale(singleton_scale,endcap_shape1));
                     }
                 }
             } else {
@@ -685,7 +694,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
     is_def(angle)? (
         let(
             parmok = !any_defined([points,width,thickness]) &&
-                ((is_vector(angle,2) && is_undef(start)) || is_num(angle))
+                ((is_vector(angle,2) && is_undef(start)) || is_finite(angle))
         )
         assert(parmok,"Invalid parameters in arc")
         let(

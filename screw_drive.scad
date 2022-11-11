@@ -285,7 +285,7 @@ function torx_depth(size) = torx_info(size)[2];
 
 // Module: robertson_mask()
 // Usage:
-//   robertson_mask(size, [extra]);
+//   robertson_mask(size, [extra], [ang], [$slop=]);
 // Description:
 //   Creates a mask for creating a Robertson/Square drive recess given the drive size as an integer.
 //   The width of the recess will be oversized by `2 * $slop`.  Note that this model is based
@@ -295,6 +295,7 @@ function torx_depth(size) = torx_info(size)[2];
 //   size = The size of the square drive, as an integer from 0 to 4.
 //   extra = Extra length of drive mask to create.
 //   ang = taper angle of each face.  Default: 2.5
+//   ---
 //   $slop = enlarge recess by this twice amount.  Default: 0
 // Example:
 //   robertson_mask(size=2);

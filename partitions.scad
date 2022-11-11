@@ -399,7 +399,7 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 
 // Module: partition_mask()
 // Usage:
-//   partition_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [spin], [orient]) [ATTACHMENTS];
+//   partition_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates a mask that you can use to difference or intersect with an object to remove half of it, leaving behind a side designed to allow assembly of the sub-parts.
 // Arguments:
@@ -449,7 +449,7 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
 
 // Module: partition_cut_mask()
 // Usage:
-//   partition_cut_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [spin], [orient]) [ATTACHMENTS];
+//   partition_cut_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates a mask that you can use to difference with an object to cut it into two sub-parts that can be assembled.
 //   The `$slop` value is important to get the proper fit and should probably be smaller than 0.2.  The examples below
@@ -463,7 +463,7 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
 //   gap = Empty gaps between cutpath iterations.  Default: 0
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The width of the cut mask, to correct for printer-specific fitting.  Min: 0.05.
+//   $slop = The width of the cut mask, to correct for printer-specific fitting. 
 // Examples:
 //   partition_cut_mask(gap=0, cutpath="dovetail");
 //   partition_cut_mask(gap=30, cutpath="dovetail");
@@ -492,7 +492,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
 
 // Module: partition()
 // Usage:
-//   partition(size, [spread], [cutsize], [cutpath], [gap], [spin]) CHILDREN;
+//   partition(size, [spread], [cutsize], [cutpath], [gap], [spin], [$slop=]) CHILDREN;
 // Description:
 //   Partitions an object into two parts, spread apart a small distance, with matched joining edges.
 // Arguments:
@@ -502,6 +502,8 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
 //   cutpath = The cutpath to use.  Standard named paths are "flat", "sawtooth", "sinewave", "comb", "finger", "dovetail", "hammerhead", and "jigsaw".  Alternatively, you can give a cutpath as a 2D path, where X is between 0 and 1, and Y is between -0.5 and 0.5.
 //   gap = Empty gaps between cutpath iterations.  Default: 0
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   ---
+//   $slop = Extra gap to leave to correct for printer-specific fitting. 
 // Examples(Med):
 //   partition(spread=12, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=12, gap=30, cutpath="dovetail") cylinder(h=50, d=80, center=false);
