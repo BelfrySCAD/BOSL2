@@ -341,6 +341,7 @@ additional translations or other transformations if you wish.  For
 example, you can position an object 5 units from the right edge:
 
 ```openscad-3D
+include<BOSL2/std.scad>
 cube([50,50,20],center=true)
     position(TOP+RIGHT) translate([-5,0,0]) cube([4,50,10], anchor=RIGHT+BOT);
 ```
