@@ -547,7 +547,7 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   the default orientation depends on the gender, with male dovetails oriented UP and female ones DOWN.  The dovetails by default
 //   have extra extension of 0.01 for unions and differences.  You should ensure that attachment is done with overlap=0 to ensure that
 //   the sizing and positioning is correct.  To adjust the fit, use the $slop variable, which increases the depth and width of
-//   the female part of the joint.  
+//   the female part of the joint to allow a clearance gap of $slop on each of the three sides.  
 //
 // Arguments:
 //   gender = A string, "male" or "female", to specify the gender of the dovetail.
@@ -562,7 +562,7 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   chamfer = amount to chamfer the corners of the joint (Default: no chamfer)
 //   r / radius = amount to round over the corners of the joint (Default: no rounding)
 //   round = true to round both corners of the dovetail and give it a puzzle piece look.  Default: false.
-//   $slop = Increase the width and depth of the female joint by this amount to allow adjustment of the fit. 
+//   $slop = Increase the width of socket by double this amount and depth by this amount to allow adjustment of the fit. 
 //   extra = amount of extra length and base extension added to dovetails for unions and differences.  Default: 0.01
 // Example: Ordinary straight dovetail, male version (sticking up) and female version (below the xy plane)
 //   dovetail("male", width=15, height=8, slide=30);
@@ -638,7 +638,10 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
 
     // This adjustment factor doesn't seem to be exactly right, but don't know how to get it right
 
-    wfactor=rot(atan(tan(angle)*cos(taper)),p=zrot(taper, RIGHT), v=[-sin(taper),cos(taper),0]).x;
+    taper_ang = is_def(taper) ? taper
+              : is_def(back_width) ? atan((back_width-width)/slide)
+              : 0;
+    wfactor=rot(atan(cos(taper_ang)/slope),p=zrot(taper_ang, RIGHT), v=[-sin(taper_ang),cos(taper_ang),0]).x;
              // adjust width for increased height    adjust for normal to dovetail surface
     width_slop = 2*height_slop/slope                + 2* height_slop / wfactor;
     
@@ -679,9 +682,14 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
     adjustment = 0;    // Default overlap is assumed to be zero
 
     // This code computes the true normal from which the exact width factor can be obtained
-    // as the x component.  Comparing to wfactor above shows small discrepancy
+    // as the x component.  Comparing to wfactor above shows small discrepancy.
+    // Note, male joint case is totally wrong, but that doesn't matter because we only need
+    // slop for female
     //   pts = [smallend_points[0], smallend_points[1], bigend_points[1],bigend_points[0]];
     //   n = -polygon_normal(pts);
+    //   echo(n=n);
+    //   echo(wfactor=wfactor);
+    //   echo(err = n.x-wfactor);
     
     attachable(anchor,spin,orient, size=[width+2*offset, slide, height]) {
         down(height/2+adjustment) {
