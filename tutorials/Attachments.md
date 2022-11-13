@@ -3,15 +3,30 @@
 <!-- TOC -->
 
 ## Attachables
-BOSL2 introduces the concept of attachables.  Attachables are shapes that can be anchored,
-spun, oriented, and attached to other attachables.  The most basic attachable shapes are the
-`cube()`, `cylinder()`, `sphere()`, `square()`, and `circle()`.  BOSL2 overrides the built-in
-definitions for these shapes, and makes them attachable.
+BOSL2 introduces the concept of attachables.  You can do the following
+things with attachable shapes:
+
+* Control where the shape appears and how it is oriented by anchoring and specifying orientatoin and spin
+* Position or attach shapes relative to parent objects
+* Tag objects and then color them or control boolean operations based on their tags.
+
+The various attachment features may seem complex at first, but 
+attachability is one of the most important features of the BOSL2
+library.  It enables you to position objects relative to other objects
+in your model instead of having to keep track of absolute positions.
+It makes models simpler, more intuitive, and easier to maintain.
+
+Almost all objects defined by BOSL2 are attachable.  In addition,
+BOSL2 overrides the built-in definitions for `cube()`, `cylinder()`,
+`sphere()`, `square()`, and `circle()` and makes them attachable as
+well.
 
 
 ## Anchoring
-Anchoring allows you to align a side, edge, or corner of an object with the origin as it is
-created.  This is done by passing a vector into the `anchor=` argument.  For roughly cubical
+Anchoring allows you to align a specified part of an object or point
+on an object with the origin.  The alignment point can be the center
+of a side, the center of an edge, a corner, or some other
+distinguished point on the object.  This is done by passing a vector into the `anchor=` argument.  For roughly cubical
 or prismoidal shapes, that vector points in the general direction of the side, edge, or
 corner that will be aligned to.  For example, a vector of [1,0,-1] refers to the lower-right
 edge of the shape.  Each vector component should be -1, 0, or 1:
@@ -43,7 +58,7 @@ Constant | Direction | Value
 `RIGHT`  | X+        | `[ 1, 0, 0]`
 `FRONT`/`FORWARD`/`FWD` | Y- | `[ 0,-1, 0]`
 `BACK`   | Y+        | `[ 0, 1, 0]`
-`BOTTOM`/`BOT`/`BTM`/`DOWN` | Z- | `[ 0, 0,-1]` (3D only.)
+`BOTTOM`/`BOT`/`DOWN` | Z- | `[ 0, 0,-1]` (3D only.)
 `TOP`/`UP` | Z+      | `[ 0, 0, 1]` (3D only.)
 `CENTER`/`CTR` | Centered | `[ 0, 0, 0]`
 
@@ -88,7 +103,7 @@ cylinder(r1=25, r2=15, h=60, anchor=UP+spherical_to_xyz(1,30,90));
 
 For Spherical type attachables, you can pass a vector that points at any arbitrary place on
 the surface of the sphere:
-
+p
 ```openscad-3D
 include <BOSL2/std.scad>
 sphere(r=50, anchor=TOP);
@@ -134,9 +149,14 @@ cube([50,40,30],center=false);
 
 ---
 
-Many 2D shapes provided by BOSL2 are also anchorable.  Even the built-in `square()` and `circle()`
+Most 2D shapes provided by BOSL2 are also anchorable.  The built-in `square()` and `circle()`
 modules have been overridden to enable attachability and anchoring.  The `anchor=` options for 2D
-shapes can accept 3D vectors, but only the X and Y components will be used:
+shapes treat 2D vectors as expected.  Special handling occurs with 3D
+vectors:  if the Y coordinate is zero and the Z coordinate is nonzero,
+then the Z coordinate is used to replace the Y coordinate.  This is
+done so that you can use the TOP and BOTTOM names as anchor for 2D
+shapes.  
+
 
 ```openscad-2D
 include <BOSL2/std.scad>
@@ -156,13 +176,25 @@ hexagon(d=50, anchor=LEFT);
 ```openscad-2D
 include <BOSL2/std.scad>
 ellipse(d=[50,30], anchor=FRONT);
+
+This final 2D example shows using the 3D anchor, TOP, with a 2D
+object.  Also notice how the pentagon anchors to its maost extreme point on
+the Y+ axis.  
+
+```openscad-2D
+include <BOSL2/std.scad>
+pentagon(d=50, anchor=TOP);
 ```
 
 
 ## Spin
-Attachable shapes also can be spun in place as you create them.  You can do this by passing the
-spin angle (in degrees) into the `spin=` argument.  A positive number will result in a counter-
-clockwise spin around the Z axis (as seen from above), and a negative number will make a clockwise
+You can spin attachable objects around the origin using the `spin=`
+argument.  The spin applies **after** anchoring, so depending on how
+you anchor an object, its spin may not be about its center.  This
+means that spin can have an effect even on rotationally symmetric
+objects like spheres and cylinders.  You specify the spin in degrees.
+A positive number will result in a counter-clockwise spin around the Z
+axis (as seen from above), and a negative number will make a clockwise
 spin:
 
 ```openscad-3D
@@ -178,6 +210,18 @@ the order given, X-axis spin, then Y-axis, then Z-axis:
 include <BOSL2/std.scad>
 cube([20,20,40], center=true, spin=[10,20,30]);
 ```
+
+This example shows a cylinder with a rotatied copy in gray.  Because the
+rotation is around the origin, it does have an effect on the
+cylinder, even though the cylinder has rotational symmetry.  
+
+```openscad-3D
+include <BOSL2/std.scad>
+cylinder(h=40,d=20,anchor=FRONT+BOT);
+%cylinder(h=40,d=20,anchor=FRONT+BOT,spin=40);
+```
+
+
 
 You can also apply spin to 2D shapes from BOSL2, though only by scalar angle:
 
@@ -235,14 +279,6 @@ include <BOSL2/std.scad>
 cube([20,20,50], anchor=CENTER, spin=45, orient=UP+FWD);
 ```
 
-Something that may confuse new users is that adding spin to a cylinder may seem nonsensical.
-However, since spin is applied *after* anchoring, it can actually have a significant effect:
-
-```openscad-3D
-include <BOSL2/std.scad>
-cylinder(d=50, l=40, anchor=FWD, spin=-30);
-```
-
 For 2D shapes, you can mix `anchor=` with `spin=`, but not with `orient=`.
 
 ```openscad-2D
@@ -250,108 +286,146 @@ include <BOSL2/std.scad>
 square([40,30], anchor=BACK+LEFT, spin=30);
 ```
 
+## Positioning Children
 
-## Attaching 3D Children
-The reason attachables are called that, is because they can be attached to each other.
-You can do that by making one attachable shape be a child of another attachable shape.
-By default, the child of an attachable is attached to the center of the parent shape.
-
-```openscad-3D
-include <BOSL2/std.scad>
-cube(50,center=true)
-    cylinder(d1=50,d2=20,l=50);
-```
-
-To attach to a different place on the parent, you can use the `attach()` module.  By default,
-this will attach the bottom of the child to the given position on the parent.  The orientation
-of the child will be overridden to point outwards from the center of the parent, more or less:
+Positioning is a powerful method for placing an object relative to
+another object.  You do this by making the second object a child of
+the first object.  By default the center of the child object will be aligned
+with the center of the parent.  Note that the cylinder is this example
+is centered on the cube, not on the Z axis.  
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cube(50,center=true)
-    attach(TOP) cylinder(d1=50,d2=20,l=20);
+cube(50,anchor=FRONT)     
+    cylinder(d=25,l=75);
 ```
 
-If you give `attach()` a second anchor argument, it attaches that anchor on the child to the
-first anchor on the parent:
+If you anchor the child object then its anchor point will be aligned
+with the center point of the parent object.  In this example the right
+side of the cylinder is aligned with the center of the cube.  
+
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cube(50,center=true)
-    attach(TOP,TOP) cylinder(d1=50,d2=20,l=20);
+cube(50,anchor=FRONT)     
+    cylinder(d=25,l=75,anchor=RIGHT);
 ```
 
-By default, `attach()` places the child exactly flush with the surface of the parent.  Sometimes
-it's useful to have the child overlap the parent by insetting a bit.  You can do this with the
-`overlap=` argument to `attach()`.  A positive value will inset the child into the parent, and
-a negative value will outset out from the parent:
+The `position()` module enables you to specify where on the parent to
+position the child object.  You give `position()` an anchor point on
+the parent, and the child's anchor point is aligned with that point.
+In this example the LEFT anchor of the cylinder is positioned on the
+RIGHT anchor of the cube.  
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cube(50,center=true)
-    attach(TOP,overlap=10)
-        cylinder(d=20,l=20);
+cube(50,anchor=FRONT)     
+    position(RIGHT) cylinder(d=25,l=75,anchor=LEFT);
 ```
+
+Using this mechanism you can position objects relative to other
+objects which are in turn positioned relative to other objects without
+having to keep track of the transformation math.
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cube(50,center=true)
-    attach(TOP,overlap=-20)
-        cylinder(d=20,l=20);
+cube([50,50,30],center=true)
+    position(TOP+RIGHT) cube([25,40,10], anchor=RIGHT+BOT)
+       position(LEFT+FRONT+TOP) cube([12,12,8], anchor=LEFT+FRONT+BOT)
+         cylinder(l=10,r=3);
 ```
 
-If you want to position the child at the parent's anchorpoint, without re-orienting, you can
-use the `position()` module:
+The positioning mechanism is not magical: it simply applies a
+`translate()` operation to the child.  You can still apply your own
+additional translations or other transformations if you wish.  For
+example, you can position an object 5 units from the right edge:
 
 ```openscad-3D
-include <BOSL2/std.scad>
-cube(50,center=true)
-    position(RIGHT) cylinder(d1=50,d2=20,l=20);
+include<BOSL2/std.scad>
+cube([50,50,20],center=true)
+    position(TOP+RIGHT) translate([-5,0,0]) cube([4,50,10], anchor=RIGHT+BOT);
 ```
 
-You can attach or position more than one child at a time by enclosing them all in braces:
 
-```openscad-3D
-include <BOSL2/std.scad>
-cube(50, center=true) {
-    attach(TOP) cylinder(d1=50,d2=20,l=20);
-    position(RIGHT) cylinder(d1=50,d2=20,l=20);
-}
-```
-
-If you want to attach the same shape to multiple places on the same parent, you can pass the
-desired anchors as a list to the `attach()` or `position()` modules:
-
-```openscad-3D
-include <BOSL2/std.scad>
-cube(50, center=true)
-    attach([RIGHT,FRONT],TOP) cylinder(d1=50,d2=20,l=20);
-```
-
-```openscad-3D
-include <BOSL2/std.scad>
-cube(50, center=true)
-    position([TOP,RIGHT,FRONT]) cylinder(d1=50,d2=20,l=20);
-```
-
-## Attaching 2D Children
-You can use attachments in 2D as well, but only in the XY plane:
+Positioning objects works the same way in 2D.
 
 ```openscad-2D
-include <BOSL2/std.scad>
-square(50,center=true)
-    attach(RIGHT,FRONT)
-        trapezoid(w1=30,w2=0,h=30);
+include<BOSL2/std.scad>
+square(10)
+    position(RIGHT) square(3,anchor=LEFT);
 ```
 
-```openscad-2D
-include <BOSL2/std.scad>
-circle(d=50)
-    attach(BACK,FRONT,overlap=5)
-        trapezoid(w1=30,w2=0,h=30);
+## Using position() with orient()
+
+When positioning an object near an edge or corner you may wish to
+orient the object relative to some face other than the TOP face that
+meets at that edge or corner.  The `orient()` modules provides a
+mechanism to do this.  Using its `anchor=` argument you can orient the
+child relative to the parent anchor directions.  This is different
+than giving an `orient=` argument to the child, because that orients
+relative to the **child** anchor directions.  A series of three
+examples shows the different results.  In the first example, we use
+only `position()`.  The child cube is erected pointing upwards, in the
+Z direction.  In the second example we use `orient=RIGHT` in the child
+and the result is that the child object points in the X+ direction,
+without regard for the shape of the parent object.  In the final
+example we apply `orient(anchor=RIGHT)` and the child is oriented
+relative to the slanted right face of the parent.  
+
+```openscad-3D
+include<BOSL2/std.scad>
+prismoid([50,50],[30,30],h=40)
+  position(RIGHT+TOP)
+     cube([15,15,25],anchor=RIGHT+BOT);
 ```
 
-## Anchor Arrows
+
+```openscad-3D
+include<BOSL2/std.scad>
+prismoid([50,50],[30,30],h=40)
+  position(RIGHT+TOP)
+     cube([15,15,25],orient=RIGHT,anchor=LEFT+BOT);
+```
+
+
+```openscad-3D
+include<BOSL2/std.scad>
+prismoid([50,50],[30,30],h=40)
+  position(RIGHT+TOP)
+     orient(anchor=RIGHT)
+        cube([15,15,25],anchor=BACK+BOT);
+```
+
+
+## Attachment overview
+
+Attachables get their name from their ability to be attached to each
+other.  Unlike with positioning, attaching changes the orientation of
+the child object.  When you attach an object, it appears on the parent
+relative to the local coordinate system of the parent.  To understand
+what this means, imagine the perspective of an ant walking on a
+sphere.  If you attach a cylinder to the sphere then the cylinder will
+be "up" from the ant's perspective.
+
+```
+include<BOSL2/std.scad>
+sphere(40)
+    attach(RIGHT+TOP) cylinder(r=8,l=20);
+```
+
+In the example above, the cylinder's center point is attached to the
+sphere, pointing "up" from the perspectiev of the sphere's surface.
+For a sphere, a surface normal is defined everywhere that specifies
+what "up" means.  But for other objects, it may not be so obvious.
+Usually at edges and corners the direction is the average of the
+direction of the faces that meet there.
+
+When you specify an anchor you are actually specifying both an anchor
+point but also an anchor direction.  If you want to visualize this
+direction you can use anchor arrows.  
+
+
+## Anchor Directions and Anchor Arrows
 One way that is useful to show the position and orientation of an anchorpoint is by attaching
 an anchor arrow to that anchor.
 
@@ -397,7 +471,209 @@ For large objects, you can again change the size of the arrows with the `s=` arg
 include <BOSL2/std.scad>
 cylinder(h=100, d=100, center=true)
     show_anchors(s=30);
+
+
+## Basic Attachment
+
+The simplest form of attachment is to attach using the `attach()`
+module with a single argument, which gives the anchor on the parent
+where the child will attach.  This will attach the bottom of the child
+to the given anchor point on the parent.  The child appears on the parent with its
+Z direction aligned parallel to the parent's anchor direction.
+The anchor direction of the child does not affect the result in this
+case.
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true)
+    attach(RIGHT)cylinder(d1=30,d2=15,l=25);
 ```
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true)
+    attach(RIGHT+TOP)cylinder(d1=30,d2=15,l=25);
+```
+
+In the second example, the child object point diagonally away
+from the cube.  If you want the child at at edge of the parent it's
+likely that this result will not be what you want.  To get a differet
+result, use `position()`, maybe combined with `orient(anchor=)`. 
+
+If you give an anchor point to the child object it moves the child
+around (in the attached coordinate system).  Or alternatively you can
+think that it moves the object first, and then it gets attached.
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true)
+    attach(RIGHT)cylinder(d1=30,d2=15,l=25,anchor=FRONT);
+```
+
+In the above example we anchor the child to its FRONT and then attach
+it to the RIGHT.  An ambiguity exists regarding the spin of the
+parent's coordinate system.  How is this resolved?   The small flags
+on the anchor arrows show the position of zero spin by pointing
+towards the local Y direction.  For the above
+cube, the arrow looks like this:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true)
+    attach(RIGHT)anchor_arrow(30);
+```
+
+The red flag points up, which explains why the attached cylinder
+appeared above the anchor point.  The CENTER anchor generally has a
+direction that points upward, so an attached object will keep its
+orientation if attached to the CENTER of a parent.
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true)
+    attach(RIGHT)anchor_arrow(30);
+
+
+By default, `attach()` places the child exactly flush with the surface of the parent.  Sometimes
+it's useful to have the child overlap the parent by insetting a bit.  You can do this with the
+`overlap=` argument to `attach()`.  A positive value will inset the child into the parent, and
+a negative value will outset out from the parent:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true)
+    attach(TOP,overlap=10)
+        cylinder(d=20,l=20);
+```
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true)
+    attach(TOP,overlap=-20)
+        cylinder(d=20,l=20);
+```
+
+As with `position()`, you can still apply your own translations and
+other transformations even after anchoring an object.  However, the
+order of operations now matters.  If you apply a translation outside
+of the anchor then it acts in the global coordinate system, so the
+child moves up in this example:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true)
+    translate([0,0,10])
+        attach(RIGHT)cylinder(d1=30,d2=15,l=25);
+```
+
+On the other hand, if you put the translation between the attach and
+the object in your code, then it will act in the coordinate system of
+the parent, so in the example below it moves to the right.  
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true)
+    attach(RIGHT) translate([0,0,10]) cylinder(d1=30,d2=15,l=25);
+```
+
+
+## Attachment With Parent and Child Anchors
+
+The `attach()` module can also take a second argument, the child anchor.
+In this case, the attachment behavior
+is quite different.  The objects are still attached with their anchor
+points aligned, but the child is reoriented so that its anchor
+direction is the opposite of the parent anchor direction.  It's like
+you assemble the parts by pushing them together in the direction of
+their anchor arrows.  Two examples appear below, where first we show
+two objects with their anchors and then we show the result of
+attaching with those anchors. 
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true) attach(TOP) anchor_arrow(30);
+right(60)cylinder(d1=30,d2=15,l=25) attach(TOP) anchor_arrow(30);
+```
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true)
+  attach(TOP,TOP) cylinder(d1=30,d2=15,l=25);
+```
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true) attach(RIGHT) anchor_arrow(30);
+right(80)cylinder(d1=30,d2=15,l=25) attach(LEFT) anchor_arrow(30);
+```
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true)
+  attach(RIGHT,LEFT) cylinder(d1=30,d2=15,l=25);
+```  
+
+Note that when you attach with two anchors like this, the attachment
+operation overrides any anchor or orientation specified in the child.
+Attachment with CENTER anchors can be surprising because the anchors
+point upwards, so in the example below, the child's CENTER anchor
+points up, so it is inverted when it is attached to the parent cone.  
+
+```openscad-3D
+include <BOSL2/std.scad>
+cylinder(d1=30,d2=15,l=25)
+    attach(CENTER,CENTER)
+        cylinder(d1=30,d2=15,l=25);
+```
+
+
+## Positioning and Attaching Multiple Children
+
+You can attach or position more than one child at a time by enclosing them all in braces:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50, center=true) {
+    attach(TOP) cylinder(d1=50,d2=20,l=20);
+    position(RIGHT) cylinder(d1=50,d2=20,l=20);
+}
+```
+
+If you want to attach the same shape to multiple places on the same parent, you can pass the
+desired anchors as a list to the `attach()` or `position()` modules:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50, center=true)
+    attach([RIGHT,FRONT],TOP) cylinder(d1=50,d2=20,l=20);
+```
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50, center=true)
+    position([TOP,RIGHT,FRONT]) cylinder(d1=50,d2=20,l=20);
+```
+
+
+## Attaching 2D Children
+You can use attachments in 2D as well.  As usual for the 2D case you
+can use TOP and BOTTOM as alternative to BACK and FORWARD.  
+
+```openscad-2D
+include <BOSL2/std.scad>
+square(50,center=true)
+    attach(RIGHT,FRONT)
+        trapezoid(w1=30,w2=0,h=30);
+```
+
+```openscad-2D
+include <BOSL2/std.scad>
+circle(d=50)
+    attach(TOP,BOT,overlap=5)
+        trapezoid(w1=30,w2=0,h=30);
+```
+
+
 
 
 ## Tagged Operations
