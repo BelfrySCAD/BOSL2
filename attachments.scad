@@ -2756,31 +2756,37 @@ module show_anchors(s=10, std=true, custom=true) {
 }
 
 
-
 // Module: anchor_arrow()
 // Usage:
-//   anchor_arrow([s], [color], [flag]);
+//   anchor_arrow([s], [color], [flag], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
 //   Show an anchor orientation arrow.  By default, tagged with the name "anchor-arrow".
 // Arguments:
 //   s = Length of the arrows.  Default: `10`
 //   color = Color of the arrow.  Default: `[0.333, 0.333, 1]`
 //   flag = If true, draw the orientation flag on the arrowhead.  Default: true
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   anchor_arrow(s=20);
-module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow") {
+module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow", anchor=BOT, spin=0, orient=UP) {
     $fn=12;
-    recolor("gray") spheroid(d=s/6) {
-        attach(CENTER,BOT) recolor(color) cyl(h=s*2/3, d=s/15) {
-            attach(TOP,BOT) cyl(h=s/3, d1=s/5, d2=0) {
-                if(flag) {
-                    position(BOT)
-                        recolor([1,0.5,0.5])
-                            cuboid([s/100, s/6, s/4], anchor=FRONT+BOT);
+    attachable(anchor,spin,orient, r=s/6, l=s) {
+        down(s/2)
+        recolor("gray") spheroid(d=s/6) {
+            attach(CENTER,BOT) recolor(color) cyl(h=s*2/3, d=s/15) {
+                attach(TOP,BOT) cyl(h=s/3, d1=s/5, d2=0) {
+                    if(flag) {
+                        position(BOT)
+                            recolor([1,0.5,0.5])
+                                cuboid([s/100, s/6, s/4], anchor=FRONT+BOT);
+                    }
                 }
-                children();
             }
         }
+        children();
     }
 }
 

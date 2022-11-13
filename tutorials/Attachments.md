@@ -6,7 +6,7 @@
 BOSL2 introduces the concept of attachables.  You can do the following
 things with attachable shapes:
 
-* Control where the shape appears and how it is oriented by anchoring and specifying orientatoin and spin
+* Control where the shape appears and how it is oriented by anchoring and specifying orientation and spin
 * Position or attach shapes relative to parent objects
 * Tag objects and then color them or control boolean operations based on their tags.
 
@@ -58,13 +58,13 @@ Constant | Direction | Value
 `RIGHT`  | X+        | `[ 1, 0, 0]`
 `FRONT`/`FORWARD`/`FWD` | Y- | `[ 0,-1, 0]`
 `BACK`   | Y+        | `[ 0, 1, 0]`
-`BOTTOM`/`BOT`/`DOWN` | Z- | `[ 0, 0,-1]` (3D only.)
-`TOP`/`UP` | Z+      | `[ 0, 0, 1]` (3D only.)
+`BOTTOM`/`BOT`/`DOWN` | Z- (Y- in 2D) | `[ 0, 0,-1]` (`[0,-1]` in 2D.)
+`TOP`/`UP` | Z+ (Y+ in 2D)      | `[ 0, 0, 1]` (`[0,-1]` in 2D.)
 `CENTER`/`CTR` | Centered | `[ 0, 0, 0]`
 
 If you want a vector pointing towards the bottom-left edge, just add the `BOTTOM` and `LEFT` vector
-constants together like `BOTTOM + LEFT`.  Ths will result in a vector of `[-1,0,-1]`.  You can pass
-that to the `anchor=` argument for a clearly understandable anchoring:
+constants together like `BOTTOM + LEFT`.  This will result in a vector of `[-1,0,-1]`.  You can pass
+that to the `anchor=` argument for a clearly understandable anchoring:  
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -132,7 +132,7 @@ teardrop(d=100, l=20, anchor="cap");
 
 ---
 
-Some shapes, for backwards compatability reasons, can take a `center=` argument.  This just
+Some shapes, for backwards compatibility reasons, can take a `center=` argument.  This just
 overrides the `anchor=` argument.  A `center=true` argument is the same as `anchor=CENTER`.
 A `center=false` argument can mean `anchor=[-1,-1,-1]` for a cube, or `anchor=BOTTOM` for a
 cylinder, to make them behave just like the builtin versions:
@@ -178,7 +178,7 @@ include <BOSL2/std.scad>
 ellipse(d=[50,30], anchor=FRONT);
 
 This final 2D example shows using the 3D anchor, TOP, with a 2D
-object.  Also notice how the pentagon anchors to its maost extreme point on
+object.  Also notice how the pentagon anchors to its most extreme point on
 the Y+ axis.  
 
 ```openscad-2D
@@ -211,14 +211,16 @@ include <BOSL2/std.scad>
 cube([20,20,40], center=true, spin=[10,20,30]);
 ```
 
-This example shows a cylinder with a rotatied copy in gray.  Because the
-rotation is around the origin, it does have an effect on the
-cylinder, even though the cylinder has rotational symmetry.  
+This example shows a cylinder which has been anchored at its FRONT,
+with a rotated copy in gray.  The rotation is performed around the
+origin, but the cylinder is off the origin, so the rotation *does*
+have an effect on the cylinder, even though the cylinder has
+rotational symmetry.
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cylinder(h=40,d=20,anchor=FRONT+BOT);
-%cylinder(h=40,d=20,anchor=FRONT+BOT,spin=40);
+%cylinder(h=40.1,d=20,anchor=FRONT+BOT,spin=40);
 ```
 
 
@@ -246,7 +248,9 @@ include <BOSL2/std.scad>
 cylinder(h=100, r1=50, r2=20, orient=UP+RIGHT);
 ```
 
-You can *not* use `orient=` with 2D shapes.
+More precisely, the Z direction of the shape is rotated to align with
+the vector you specify.  Two dimensional attachables, which have no Z vector,
+do not accept the `orient=` argument.  
 
 
 ## Mixing Anchoring, Spin, and Orientation
@@ -290,17 +294,26 @@ square([40,30], anchor=BACK+LEFT, spin=30);
 
 Positioning is a powerful method for placing an object relative to
 another object.  You do this by making the second object a child of
-the first object.  By default the center of the child object will be aligned
-with the center of the parent.  Note that the cylinder is this example
+the first object.  By default, the child's anchor point will be
+aligned with the center of the parent.  Note that the cylinder is this example
 is centered on the cube, not on the Z axis.  
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cube(50,anchor=FRONT)     
+cube(50)
+    cyl(d=25,l=75);
+```
+
+With `cylinder()` the default anchor is BOTTOM.  It's hard to tell,
+but the cylinder's bottom is placed at the center of the cube.  
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50)
     cylinder(d=25,l=75);
 ```
 
-If you anchor the child object then its anchor point will be aligned
+If you explicitly anchor the child object then the anchor you choose will be aligned
 with the center point of the parent object.  In this example the right
 side of the cylinder is aligned with the center of the cube.  
 
@@ -313,8 +326,8 @@ cube(50,anchor=FRONT)
 
 The `position()` module enables you to specify where on the parent to
 position the child object.  You give `position()` an anchor point on
-the parent, and the child's anchor point is aligned with that point.
-In this example the LEFT anchor of the cylinder is positioned on the
+the parent, and the child's anchor point is aligned with the specified
+parent anchor point.  In this example the LEFT anchor of the cylinder is positioned on the
 RIGHT anchor of the cube.  
 
 ```openscad-3D
@@ -343,7 +356,7 @@ example, you can position an object 5 units from the right edge:
 ```openscad-3D
 include<BOSL2/std.scad>
 cube([50,50,20],center=true)
-    position(TOP+RIGHT) translate([-5,0,0]) cube([4,50,10], anchor=RIGHT+BOT);
+    position(TOP+RIGHT) left(5) cube([4,50,10], anchor=RIGHT+BOT);
 ```
 
 
@@ -359,8 +372,11 @@ square(10)
 
 When positioning an object near an edge or corner you may wish to
 orient the object relative to some face other than the TOP face that
-meets at that edge or corner.  The `orient()` modules provides a
-mechanism to do this.  Using its `anchor=` argument you can orient the
+meets at that edge or corner.  You can always apply a `rotation()` to 
+change the orientation of the child object, but in order to do this,
+you need to figure out the correct rotation.  The `orient()` module provides a
+mechanism for re-orienting the child() that eases this burden.
+Using its `anchor=` argument you can orient the
 child relative to the parent anchor directions.  This is different
 than giving an `orient=` argument to the child, because that orients
 relative to the **child** anchor directions.  A series of three
@@ -396,6 +412,45 @@ prismoid([50,50],[30,30],h=40)
         cube([15,15,25],anchor=BACK+BOT);
 ```
 
+You may have noticed that the anchors were different in each of the
+three examples above.  Why is that?  The first and second examples
+differ because anchoring up and anchoring to the right require
+anchoring on opposite sides of the child.  But the third case differs
+because the spin has changed.  The examples below show the same models
+but with arrows replacing the child cube.  The red flags on the arrows
+mark the zero spin direction.  Examine the red flags to see how the spin
+changes.  The Y+ direction of the child will point towards that red
+flag.  
+
+```openscad-3D
+include<BOSL2/std.scad>
+prismoid([50,50],[30,30],h=40)
+  position(RIGHT+TOP)
+     anchor_arrow(20);
+```
+
+
+```openscad-3D
+include<BOSL2/std.scad>
+prismoid([50,50],[30,30],h=40)
+  position(RIGHT+TOP)
+     anchor_arrow(20, orient=RIGHT);
+```
+
+```openscad-3D
+include<BOSL2/std.scad>
+prismoid([50,50],[30,30],h=40)
+  position(RIGHT+TOP)
+     orient(anchor=RIGHT)
+        anchor_arrow(20);
+```
+
+
+Note also that `orient()` can be used to orient the child relative to
+the absolute coordinate system using its first argument, `dir=`.  This
+use of `orient()` is the same as using the `orient=` argument for the
+child object.    
+
 
 ## Attachment overview
 
@@ -407,14 +462,14 @@ what this means, imagine the perspective of an ant walking on a
 sphere.  If you attach a cylinder to the sphere then the cylinder will
 be "up" from the ant's perspective.
 
-```
+```openscad-3D
 include<BOSL2/std.scad>
 sphere(40)
     attach(RIGHT+TOP) cylinder(r=8,l=20);
 ```
 
 In the example above, the cylinder's center point is attached to the
-sphere, pointing "up" from the perspectiev of the sphere's surface.
+sphere, pointing "up" from the perspective of the sphere's surface.
 For a sphere, a surface normal is defined everywhere that specifies
 what "up" means.  But for other objects, it may not be so obvious.
 Usually at edges and corners the direction is the average of the
@@ -426,12 +481,13 @@ direction you can use anchor arrows.
 
 
 ## Anchor Directions and Anchor Arrows
-One way that is useful to show the position and orientation of an anchorpoint is by attaching
-an anchor arrow to that anchor.
+One way that is useful to show the position and orientation of an anchor point is by attaching
+an anchor arrow to that anchor.  As noted before, the small red flag
+points in the direction that is zero spin for the anchor.  
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cube(40, center=true)
+cube(18, center=true)
     attach(LEFT+TOP)
         anchor_arrow();
 ```
@@ -442,10 +498,10 @@ For large objects, you can change the size of the arrow with the `s=` argument.
 include <BOSL2/std.scad>
 sphere(d=100)
     attach(LEFT+TOP)
-        anchor_arrow(s=30);
+        anchor_arrow(s=50);
 ```
 
-To show all the standard cardinal anchorpoints, you can use the `show_anchors()` module.
+To show all the standard cardinal anchor points, you can use the `show_anchors()` module.
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -471,16 +527,17 @@ For large objects, you can again change the size of the arrows with the `s=` arg
 include <BOSL2/std.scad>
 cylinder(h=100, d=100, center=true)
     show_anchors(s=30);
-
+```
 
 ## Basic Attachment
 
 The simplest form of attachment is to attach using the `attach()`
-module with a single argument, which gives the anchor on the parent
+module with a single argument, which specifies the anchor on the parent
 where the child will attach.  This will attach the bottom of the child
 to the given anchor point on the parent.  The child appears on the parent with its
-Z direction aligned parallel to the parent's anchor direction.
-The anchor direction of the child does not affect the result in this
+Z direction aligned parallel to the parent's anchor direction, and
+it's Y direction spin to point in the zero spin direction for the
+parent anchor.  The anchor direction of the child does not affect the result in this
 case.
 
 ```openscad-3D
@@ -497,7 +554,7 @@ cube(50,center=true)
 
 In the second example, the child object point diagonally away
 from the cube.  If you want the child at at edge of the parent it's
-likely that this result will not be what you want.  To get a differet
+likely that this result will not be what you want.  To get a different
 result, use `position()`, maybe combined with `orient(anchor=)`. 
 
 If you give an anchor point to the child object it moves the child
@@ -562,7 +619,7 @@ child moves up in this example:
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,center=true)
-    translate([0,0,10])
+    up(10)
         attach(RIGHT)cylinder(d1=30,d2=15,l=25);
 ```
 
@@ -573,7 +630,7 @@ the parent, so in the example below it moves to the right.
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,center=true)
-    attach(RIGHT) translate([0,0,10]) cylinder(d1=30,d2=15,l=25);
+    attach(RIGHT) up(10) cylinder(d1=30,d2=15,l=25);
 ```
 
 
@@ -611,10 +668,13 @@ right(80)cylinder(d1=30,d2=15,l=25) attach(LEFT) anchor_arrow(30);
 include <BOSL2/std.scad>
 cube(50,center=true)
   attach(RIGHT,LEFT) cylinder(d1=30,d2=15,l=25);
-```  
+```
 
 Note that when you attach with two anchors like this, the attachment
-operation overrides any anchor or orientation specified in the child.
+operation **overrides any anchor or orientation specified in the
+child**.  That means the child `anchor=` and `orient=` options are
+ignored.
+
 Attachment with CENTER anchors can be surprising because the anchors
 point upwards, so in the example below, the child's CENTER anchor
 points up, so it is inverted when it is attached to the parent cone.  
@@ -787,7 +847,7 @@ and a child, something that is impossible with the native `intersection()` modul
 treats the children in three groups: objects matching the `intersect` tags, objects matching
 the tags listed in `keep` and the remaining objects that don't match any listed tags.  The
 intersection is computed between the union of the `intersect` tagged objects and the union of
-the objects that don't match any listed tags.  Finally the objects lsited in `keep` are union
+the objects that don't match any listed tags.  Finally the objects listed in `keep` are union
 ed with the result.  
 
 In this example the parent is intersected with a conical bounding shape.  
@@ -946,7 +1006,7 @@ mask shape (via `rotate_extrude()`).  This is where `edge_profile()`, `corner_pr
 
 ### `edge_profile()`
 Using the `edge_profile()` module, you can provide a 2D profile shape and it will be linearly
-extruded to a mask of the apropriate length for each given edge.  The resultant mask will be
+extruded to a mask of the appropriate length for each given edge.  The resultant mask will be
 tagged with "remove" so that you can difference it away with `diff()`
 with the default "remove" tag.  The 2D profile is
 assumed to be oriented with the BACK, RIGHT (X+,Y+) quadrant as the "cutter edge" that gets
@@ -1137,7 +1197,7 @@ module twistar(l,r,d, anchor=CENTER, spin=0, orient=UP) {
 twistar(l=100, r=40) show_anchors(20);
 ```
 
-If the cylinder is elipsoidal in shape, you can pass the inequal X/Y sizes as a 2-item vector
+If the cylinder is elipsoidal in shape, you can pass the unequal X/Y sizes as a 2-item vector
 to the `r=` or `d=` argument.
 
 ```openscad-3D
@@ -1153,7 +1213,7 @@ module ovalstar(l,rx,ry, anchor=CENTER, spin=0, orient=UP) {
 ovalstar(l=100, rx=50, ry=30) show_anchors(20);
 ```
 
-For cylindrical shapes that arent oriented vertically, use the `axis=` argument.
+For cylindrical shapes that aren't oriented vertically, use the `axis=` argument.
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -1187,7 +1247,7 @@ module twistar(l, r,r1,r2, d,d1,d2, anchor=CENTER, spin=0, orient=UP) {
 twistar(l=100, r1=40, r2=20) show_anchors(20);
 ```
 
-If the cone is ellipsoidal in shape, you can pass the inequal X/Y sizes as a 2-item vectors
+If the cone is ellipsoidal in shape, you can pass the unequal X/Y sizes as a 2-item vectors
 to the `r1=`/`r2=` or `d1=`/`d2=` arguments.
 
 ```openscad-3D
@@ -1267,7 +1327,7 @@ If the shape just doesn't fit into any of the above categories, and you construc
 
 There are two variations to how anchoring can work for VNFs. When `extent=true`, (the default)
 then a plane is projected out from the origin, perpendicularly in the direction of the anchor,
-to the furthest distance that intersects with the VNF shape.  The anchorpoint is then the
+to the furthest distance that intersects with the VNF shape.  The anchor point is then the
 center of the points that still intersect that plane.
 
 ```openscad-FlatSpin,VPD=500
@@ -1303,8 +1363,8 @@ stellate_cube(25) {
 }
 ```
 
-When `extent=false`, then the anchorpoint will be the furthest intersection of the VNF with
-the anchor ray from the origin. The orientation of the anchorpoint will be the normal of the
+When `extent=false`, then the anchor point will be the furthest intersection of the VNF with
+the anchor ray from the origin. The orientation of the anchor point will be the normal of the
 face at the intersection.  If the intersection is at an edge or corner, then the orientation
 will bisect the angles between the faces.
 
@@ -1353,8 +1413,8 @@ a named anchor "cap" that is at the tip of the hat of the teardrop shape.
 
 Named anchors are passed as an array of `named_anchor()`s to the `anchors=` argument of `attachable()`.
 The `named_anchor()` call takes a name string, a positional point, an orientation vector, and a spin.
-The name is the name of the anchor.  The positional point is where the anchorpoint is at.  The
-orientation vector is the direction that a child attached at that anchorpoint should be oriented.
+The name is the name of the anchor.  The positional point is where the anchor point is at.  The
+orientation vector is the direction that a child attached at that anchor point should be oriented.
 The spin is the number of degrees that an attached child should be rotated counter-clockwise around
 the orientation vector.  Spin is optional, and defaults to 0.
 
@@ -1409,7 +1469,7 @@ chain them together with matrix multiplication.  For example, if you have:
 scale([1.1, 1.2, 1.3]) xrot(15) zrot(25) right(20) sphere(d=1);
 ```
 
-and you want to calculate the centerpoint of the sphere, you can do it like:
+and you want to calculate the center point of the sphere, you can do it like:
 
 ```
 sphere_pt = apply(
