@@ -634,16 +634,25 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
       assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
     slope = is_def(slope) ? slope :
         is_def(angle) ? 1/tan(angle) :  6;
-    extra_slop = gender == "female" ? 2*get_slop() : 0;
-    width = w + extra_slop;
-    height = h + extra_slop;
-    back_width = u_add(back_width, extra_slop);
+    height_slop = gender == "female" ? get_slop() : 0;
 
-    front_offset = is_def(taper) ? -extra * tan(taper) :
-        is_def(back_width) ? extra * (back_width-width)/slide/2 : 0;
+    // This adjustment factor doesn't seem to be exactly right, but don't know how to get it right
 
-    size = is_def(chamfer) && chamfer>0 ? chamfer :
-        is_def(radius) && radius>0 ? radius : 0;
+    wfactor=rot(atan(tan(angle)*cos(taper)),p=zrot(taper, RIGHT), v=[-sin(taper),cos(taper),0]).x;
+             // adjust width for increased height    adjust for normal to dovetail surface
+    width_slop = 2*height_slop/slope                + 2* height_slop / wfactor;
+    
+    width = w + width_slop;
+    height = h + height_slop;
+    back_width = u_add(back_width, width_slop);
+
+    front_offset = is_def(taper) ? -extra * tan(taper)
+                 : is_def(back_width) ? extra * (back_width-width)/slide/2
+                 : 0;
+
+    size = is_def(chamfer) && chamfer>0 ? chamfer
+         : is_def(radius) && radius>0 ? radius
+         : 0;
     type = is_def(chamfer) && chamfer>0 ? "chamfer" : "circle";
 
     fullsize = round ? [size,size] :
@@ -653,21 +662,26 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
         move(
             [0,-slide/2-extra,0],
             p=[
-                [0                     , 0, height],
-                [width/2-front_offset  , 0, height],
-                [width/2 - height/slope - front_offset, 0, 0 ],
-                [width/2 - front_offset + height, 0, 0]
+                [0,                                     0, height],
+                [width/2 - front_offset,                0, height],
+                [width/2 - height/slope - front_offset, 0, 0     ],
+                [width/2 - front_offset + height,       0, 0     ]
             ]
         ),
         method=type, cut = fullsize, closed=false
     );
     smallend_points = concat(select(smallend_half, 1, -2), [down(extra,p=select(smallend_half, -2))]);
-    offset = is_def(taper) ? -(slide+extra) * tan(taper) :
-        is_def(back_width) ? (back_width-width) / 2 : 0;
+    offset = is_def(taper) ? -(slide+extra) * tan(taper)
+           : is_def(back_width) ? (back_width-width) / 2
+           : 0;
     bigend_points = move([offset,slide+2*extra,0], p=smallend_points);
-
     //adjustment = $overlap * (gender == "male" ? -1 : 1);  // Adjustment for default overlap in attach()
     adjustment = 0;    // Default overlap is assumed to be zero
+
+    // This code computes the true normal from which the exact width factor can be obtained
+    // as the x component.  Comparing to wfactor above shows small discrepancy
+    //   pts = [smallend_points[0], smallend_points[1], bigend_points[1],bigend_points[0]];
+    //   n = -polygon_normal(pts);
     
     attachable(anchor,spin,orient, size=[width+2*offset, slide, height]) {
         down(height/2+adjustment) {

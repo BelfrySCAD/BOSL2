@@ -26,7 +26,8 @@ well.
 Anchoring allows you to align a specified part of an object or point
 on an object with the origin.  The alignment point can be the center
 of a side, the center of an edge, a corner, or some other
-distinguished point on the object.  This is done by passing a vector into the `anchor=` argument.  For roughly cubical
+distinguished point on the object.  This is done by passing a vector
+or text string into the `anchor=` argument.  For roughly cubical
 or prismoidal shapes, that vector points in the general direction of the side, edge, or
 corner that will be aligned to.  For example, a vector of [1,0,-1] refers to the lower-right
 edge of the shape.  Each vector component should be -1, 0, or 1:
@@ -56,14 +57,14 @@ Constant | Direction | Value
 -------- | --------- | -----------
 `LEFT`   | X-        | `[-1, 0, 0]`
 `RIGHT`  | X+        | `[ 1, 0, 0]`
-`FRONT`/`FORWARD`/`FWD` | Y- | `[ 0,-1, 0]`
+`FRONT`/`FORWARD`/`FWD` | Y− | `[ 0, −1, 0]`
 `BACK`   | Y+        | `[ 0, 1, 0]`
-`BOTTOM`/`BOT`/`DOWN` | Z- (Y- in 2D) | `[ 0, 0,-1]` (`[0,-1]` in 2D.)
-`TOP`/`UP` | Z+ (Y+ in 2D)      | `[ 0, 0, 1]` (`[0,-1]` in 2D.)
+`BOTTOM`/`BOT`/`DOWN` | Z− (Y− in 2D) | `[ 0, 0, −1]` (`[0, −1]` in 2D.)
+`TOP`/`UP` | Z+ (Y+ in 2D)      | `[ 0, 0, 1]` (`[0, 1]` in 2D.)
 `CENTER`/`CTR` | Centered | `[ 0, 0, 0]`
 
-If you want a vector pointing towards the bottom-left edge, just add the `BOTTOM` and `LEFT` vector
-constants together like `BOTTOM + LEFT`.  This will result in a vector of `[-1,0,-1]`.  You can pass
+If you want a vector pointing towards the bottom−left edge, just add the `BOTTOM` and `LEFT` vector
+constants together like `BOTTOM + LEFT`.  This will result in a vector of `[−1,0,−1]`.  You can pass
 that to the `anchor=` argument for a clearly understandable anchoring:  
 
 ```openscad-3D
@@ -78,9 +79,9 @@ cube([40,30,50], anchor=FRONT);
 
 ---
 
-For cylindrical type attachables, the Z component of the vector will be -1, 0, or 1, referring
+For cylindrical type attachables, the Z component of the vector will be −1, 0, or 1, referring
 to the bottom rim, the middle side, or the top rim of the cylindrical or conical shape.
-The X and Y components can be any value, pointing towards the circular perimeter of the cone.  
+The X and Y components can be any value, pointing towards the circular perimeter of the cone.
 These combined let you point at any place on the bottom or top rims, or at an arbitrary
 side wall:
 
@@ -122,20 +123,29 @@ sphere(r=50, anchor=spherical_to_xyz(1,-30,60));
 ---
 
 Some attachable shapes may provide specific named anchors for shape-specific anchoring.  These
-will be given as strings and will be specific to that type of attachable.  For example, the
-`teardrop()` attachable has a named anchor called "cap":
+will be given as strings and will be specific to that type of
+attachable.  When named anchors are supported, they are listed in a
+"Named Anchors" section of the documentation for the module.  The
+`teardrop()` attachable, for example, has a named anchor called "cap" and in 2D the
+`star()` attachable has anchors labeled by tip number: 
 
 ```openscad-3D
 include <BOSL2/std.scad>
 teardrop(d=100, l=20, anchor="cap");
 ```
 
+```openscad-2D
+include <BOSL2/std.scad>
+star(n=7, od=30, id=20, anchor="tip2");
+```
+
 ---
 
 Some shapes, for backwards compatibility reasons, can take a `center=` argument.  This just
 overrides the `anchor=` argument.  A `center=true` argument is the same as `anchor=CENTER`.
-A `center=false` argument can mean `anchor=[-1,-1,-1]` for a cube, or `anchor=BOTTOM` for a
-cylinder, to make them behave just like the builtin versions:
+A `center=false` argument chooses the anchor to match the behavior of
+the builtin version:  for a cube it is the same as `anchor=[-1,-1,-1]` but for a
+cylinder, it is the same as `anchor=BOTTOM`.
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -150,7 +160,7 @@ cube([50,40,30],center=false);
 ---
 
 Most 2D shapes provided by BOSL2 are also anchorable.  The built-in `square()` and `circle()`
-modules have been overridden to enable attachability and anchoring.  The `anchor=` options for 2D
+modules have been overridden to make them attachable..  The `anchor=` options for 2D
 shapes treat 2D vectors as expected.  Special handling occurs with 3D
 vectors:  if the Y coordinate is zero and the Z coordinate is nonzero,
 then the Z coordinate is used to replace the Y coordinate.  This is
@@ -202,9 +212,9 @@ include <BOSL2/std.scad>
 cube([20,20,40], center=true, spin=45);
 ```
 
-You can even spin around each of the three axes in one pass, by giving 3 angles (in degrees) to
-`spin=` as a vector, like [Xang,Yang,Zang].  Similarly to `rotate()`, the axes will be spun in
-the order given, X-axis spin, then Y-axis, then Z-axis:
+You can also spin around other axes, or multiple axes at once, by giving 3 angles (in degrees) to
+`spin=` as a vector, like [Xang,Yang,Zang].  Similarly to `rotate()`,
+the rotations apply in the order given, X-axis spin, then Y-axis, then Z-axis:
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -213,14 +223,14 @@ cube([20,20,40], center=true, spin=[10,20,30]);
 
 This example shows a cylinder which has been anchored at its FRONT,
 with a rotated copy in gray.  The rotation is performed around the
-origin, but the cylinder is off the origin, so the rotation *does*
+origin, but the cylinder is off the origin, so the rotation **does**
 have an effect on the cylinder, even though the cylinder has
 rotational symmetry.
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cylinder(h=40,d=20,anchor=FRONT+BOT);
-%cylinder(h=40.1,d=20,anchor=FRONT+BOT,spin=40);
+%cylinder(h=40.2,d=20,anchor=FRONT+BOT,spin=40);
 ```
 
 
@@ -295,12 +305,12 @@ square([40,30], anchor=BACK+LEFT, spin=30);
 Positioning is a powerful method for placing an object relative to
 another object.  You do this by making the second object a child of
 the first object.  By default, the child's anchor point will be
-aligned with the center of the parent.  Note that the cylinder is this example
-is centered on the cube, not on the Z axis.  
+aligned with the center of the parent.  The default anchor for `cyl()`
+is CENTER, and in this case, the cylinder is centered on the cube's center
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cube(50)
+up(13) cube(50)
     cyl(d=25,l=75);
 ```
 
