@@ -2771,8 +2771,7 @@ module show_anchors(s=10, std=true, custom=true) {
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   anchor_arrow(s=20);
-module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow", anchor=BOT, spin=0, orient=UP) {
-    $fn=12;
+module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow", $fn=12, anchor=BOT, spin=0, orient=UP) {
     attachable(anchor,spin,orient, r=s/6, l=s) {
         down(s/2)
         recolor("gray") spheroid(d=s/6) {
