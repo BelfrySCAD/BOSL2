@@ -1247,8 +1247,8 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //
 // Example: Putting it all together
 //   cyl(
-//       l=40, d1=25, d2=15,
-//       chamfer1=10, chamfang1=30,
+//       l=20, d1=25, d2=15,
+//       chamfer1=5, chamfang1=60,
 //       from_end=true, rounding2=5
 //   );
 //
@@ -1398,6 +1398,7 @@ function cyl(
                 cp2 = [r2,+l/2],
                 dy1 = abs(first_defined([chamf1l, round1, 0])),
                 dy2 = abs(first_defined([chamf2l, round2, 0])),
+                ffffff=echo(chamf1r=chamf1r, chamf1l=chamf1l, r1=r1),
                 checks2 =
                     assert(is_finite(round1), "rounding1 must be a finite number if given.")
                     assert(is_finite(round2), "rounding2 must be a finite number if given.")
