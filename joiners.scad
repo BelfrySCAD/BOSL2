@@ -547,7 +547,7 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   the default orientation depends on the gender, with male dovetails oriented UP and female ones DOWN.  The dovetails by default
 //   have extra extension of 0.01 for unions and differences.  You should ensure that attachment is done with overlap=0 to ensure that
 //   the sizing and positioning is correct.  To adjust the fit, use the $slop variable, which increases the depth and width of
-//   the female part of the joint.  
+//   the female part of the joint to allow a clearance gap of $slop on each of the three sides.  
 //
 // Arguments:
 //   gender = A string, "male" or "female", to specify the gender of the dovetail.
@@ -562,7 +562,7 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   chamfer = amount to chamfer the corners of the joint (Default: no chamfer)
 //   r / radius = amount to round over the corners of the joint (Default: no rounding)
 //   round = true to round both corners of the dovetail and give it a puzzle piece look.  Default: false.
-//   $slop = Increase the width and depth of the female joint by this amount to allow adjustment of the fit. 
+//   $slop = Increase the width of socket by double this amount and depth by this amount to allow adjustment of the fit. 
 //   extra = amount of extra length and base extension added to dovetails for unions and differences.  Default: 0.01
 // Example: Ordinary straight dovetail, male version (sticking up) and female version (below the xy plane)
 //   dovetail("male", width=15, height=8, slide=30);
@@ -629,48 +629,76 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
     count2 = num_defined([taper,back_width]);
     count3 = num_defined([chamfer, radius]);
     dummy = 
-      assert(count<=1, "Do not specify both angle and slope")
-      assert(count2<=1, "Do not specify both taper and back_width")
-      assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
-    slope = is_def(slope) ? slope :
-        is_def(angle) ? 1/tan(angle) :  6;
-    extra_slop = gender == "female" ? 2*get_slop() : 0;
-    width = w + extra_slop;
-    height = h + extra_slop;
-    back_width = u_add(back_width, extra_slop);
+        assert(count<=1, "Do not specify both angle and slope")
+        assert(count2<=1, "Do not specify both taper and back_width")
+        assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
+    slope = is_def(slope) ? slope
+          : is_def(angle) ? 1/tan(angle)
+          :  6;
+    height_slop = gender == "female" ? get_slop() : 0;
 
-    front_offset = is_def(taper) ? -extra * tan(taper) :
-        is_def(back_width) ? extra * (back_width-width)/slide/2 : 0;
+    // Need taper angle for computing width adjustment, but not used elsewhere
+    taper_ang = is_def(taper) ? taper
+              : is_def(back_width) ? atan((back_width-width)/2/slide)
+              : 0;
+    // This is the adjustment factor for width to grow in the direction normal to the dovetail face
+    wfactor = sqrt( 1/slope^2 + 1/cos(taper_ang)^2 );
+             // adjust width for increased height    adjust for normal to dovetail surface
+    width_slop = 2*height_slop/slope                + 2* height_slop * wfactor;
+    width = w + width_slop;
+    height = h + height_slop;
+    back_width = u_add(back_width, width_slop);
 
-    size = is_def(chamfer) && chamfer>0 ? chamfer :
-        is_def(radius) && radius>0 ? radius : 0;
+    extra_offset = is_def(taper) ? -extra * tan(taper)
+                 : is_def(back_width) ? extra * (back_width-width)/slide/2
+                 : 0;
+
+    size = is_def(chamfer) && chamfer>0 ? chamfer
+         : is_def(radius) && radius>0 ? radius
+         : 0;
+    fullsize = round ? [size,size]
+             : gender == "male" ? [size,0]
+             : [0,size];
+    
     type = is_def(chamfer) && chamfer>0 ? "chamfer" : "circle";
-
-    fullsize = round ? [size,size] :
-        gender == "male" ? [size,0] : [0,size];
 
     smallend_half = round_corners(
         move(
             [0,-slide/2-extra,0],
             p=[
-                [0                     , 0, height],
-                [width/2-front_offset  , 0, height],
-                [width/2 - height/slope - front_offset, 0, 0 ],
-                [width/2 - front_offset + height, 0, 0]
+                [0,                                     0, height],
+                [width/2 - extra_offset,                0, height],
+                [width/2 - extra_offset - height/slope, 0, 0     ],
+                [width/2 - extra_offset + height,       0, 0     ]
             ]
         ),
         method=type, cut = fullsize, closed=false
     );
-    smallend_points = concat(select(smallend_half, 1, -2), [down(extra,p=select(smallend_half, -2))]);
-    offset = is_def(taper) ? -(slide+extra) * tan(taper) :
-        is_def(back_width) ? (back_width-width) / 2 : 0;
-    bigend_points = move([offset,slide+2*extra,0], p=smallend_points);
 
+    smallend_points = concat(select(smallend_half, 1, -2), [down(extra,p=select(smallend_half, -2))]);
+    offset = is_def(taper) ? -slide * tan(taper)
+           : is_def(back_width) ? (back_width-width) / 2
+           : 0;
+    bigend_points = move([offset+2*extra_offset,slide+2*extra,0], p=smallend_points);
+
+    bigenough = all_nonnegative(column(smallend_half,0)) && all_nonnegative(column(bigend_points,0));
+    
+    assert(bigenough, "Width of dovetail is not large enough for its geometry (angle and taper");
+    
     //adjustment = $overlap * (gender == "male" ? -1 : 1);  // Adjustment for default overlap in attach()
     adjustment = 0;    // Default overlap is assumed to be zero
-    
+
+    // This code computes the true normal from which the exact width factor can be obtained
+    // as the x component.  Comparing to wfactor above shows that they agree.  
+    //   pts = [smallend_points[0], smallend_points[1], bigend_points[1],bigend_points[0]];
+    //   n = -polygon_normal(pts);
+    //   echo(n=n);
+    //   echo(invwfactor = 1/wfactor, error = n.x-1/wfactor);
+
     attachable(anchor,spin,orient, size=[width+2*offset, slide, height]) {
         down(height/2+adjustment) {
+            //color("red")stroke([pts],width=.1);
+
             skin(
                 [
                     reverse(concat(smallend_points, xflip(p=reverse(smallend_points)))),
