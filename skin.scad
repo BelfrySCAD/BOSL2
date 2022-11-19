@@ -1083,7 +1083,8 @@ function spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, hi
         ],
         vnf = vnf_vertex_array(
             points, col_wrap=true, caps=true, reverse=dir>0?true:false,
-            style=higbee1>0 || higbee2>0 ? "quincunx" : "alt"
+//            style=higbee1>0 || higbee2>0 ? "quincunx" : "alt"
+            style="convex"
         )
     )
     reorient(anchor,spin,orient, vnf=vnf, r1=r1, r2=r2, l=h, p=vnf);
