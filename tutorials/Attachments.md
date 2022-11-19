@@ -508,11 +508,11 @@ direction you can use anchor arrows.
 ## Anchor Directions and Anchor Arrows
 For the ant on the sphere it is obvious which direction is UP; that
 direction corresponds to the Z+ axis.  The location of the X and Y
-axes is less clear and in fact it may be arbitrary.  
-One way that is useful to show the position and orientation of an anchor point is by attaching
-an anchor arrow to that anchor.  As noted before, the small red flag
-points in the direction of the anchor's Y+ axis when the spin is
-zero.  
+axes is less clear and in fact it may be arbitrary.  One way that is
+useful to show the position and orientation of an anchor point is by
+attaching an anchor arrow to that anchor.  As noted before, the small
+red flag points in the direction of the anchor's Y+ axis when the spin
+is zero.
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -565,7 +565,7 @@ module with a single argument, which specifies the anchor on the parent
 where the child will attach.  This will attach the bottom of the child
 to the given anchor point on the parent.  The child appears on the parent with its
 Z direction aligned parallel to the parent's anchor direction, and
-it's Y direction spin to point in the zero spin direction for the
+its Y direction pointing in the zero spin direction for the
 parent anchor.  The anchor direction of the child does not affect the result in this
 case.
 
@@ -581,7 +581,7 @@ cube(50,center=true)
     attach(RIGHT+TOP)cylinder(d1=30,d2=15,l=25);
 ```
 
-In the second example, the child object point diagonally away
+In the second example, the child object points diagonally away
 from the cube.  If you want the child at at edge of the parent it's
 likely that this result will not be what you want.  To get a different
 result, use `position()` with `orient(anchor=)`, if needed. 
@@ -600,7 +600,7 @@ In the above example we anchor the child to its FRONT and then attach
 it to the RIGHT.  An ambiguity exists regarding the spin of the
 parent's coordinate system.  How is this resolved?   The small flags
 on the anchor arrows show the position of zero spin by pointing
-towards the local Y direction.  For the above
+towards the local Y+ direction, which is also the BACK direction of the child.  For the above
 cube, the arrow looks like this:
 
 ```openscad-3D
@@ -649,8 +649,8 @@ cube(50,center=true)
 ```
 
 On the other hand, if you put the translation between the attach and
-the object in your code, then it will act in the coordinate system of
-the parent, so in the example below it moves to the right.  
+the object in your code, then it will act in the local coordinate system of
+the parent at the parent's anchor, so in the example below it moves to the right.  
 
 ```openscad-3D
 include <BOSL2/std.scad>

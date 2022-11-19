@@ -33,9 +33,9 @@
 //   internal = If true, make this a mask for making internal threads.
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
-//   higbee = Length to taper thread ends over.  Default: 0
-//   higbee1 = Length to taper bottom thread end over.
-//   higbee2 = Length to taper top thread end over.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -46,6 +46,8 @@
 // Examples(Med):
 //   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
+//   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1, bevel=true);
+//   rot(90)threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1, higbee=true);
 // Example: Diamond threading where both left-handed and right-handed nuts travel (in the same direction) on the threaded rod:
 //   $slop = 0.075;
 //   d = 3/8*INCH;
@@ -147,13 +149,19 @@ module threaded_rod(
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
 //   threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, $slop=0.05, $fa=1, $fs=1);
-//   threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, left_handed=true, bevel=true, $slop=0.1, $fa=1, $fs=1);
+//   threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, left_handed=true, bevel=false, $slop=0.1, $fa=1, $fs=1);
+//   threaded_nut(shape="square", nutwidth=16, id=8, h=8, pitch=1.25, $slop=0.1, $fa=1, $fs=1);
+//   threaded_nut(shape="square", nutwidth=16, id=8, h=8, pitch=1.25, bevel2=true, $slop=0.1, $fa=1, $fs=1);
+//   rot(90)threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25,higbee=true, $slop=0.1, $fa=1, $fs=1);
 function threaded_nut(
     nutwidth, id, h,
     pitch, starts=1, shape="hex", left_handed=false, bevel, bevel1, bevel2, id1,id2,
@@ -163,7 +171,8 @@ function threaded_nut(
 module threaded_nut(
     nutwidth, id, h,
     pitch, starts=1, shape="hex", left_handed=false, bevel, bevel1, bevel2, id1,id2,
-    ibevel1, ibevel2, ibevel, bevang=30, thickness, height,     
+    ibevel1, ibevel2, ibevel, bevang=30, thickness, height,
+    higbee, higbee1, higbee2,
     anchor, spin, orient
 ) {
     dummy1=
@@ -198,7 +207,8 @@ module threaded_nut(
         left_handed=left_handed,
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,
         ibevel1=ibevel1, ibevel2=ibevel2, ibevel=ibevel,
-        height=height, thickness=thickness, bevang=bevang, 
+        height=height, thickness=thickness, bevang=bevang,
+        higbee=higbee, higbee1=higbee1, higbee2=higbee2,
         anchor=anchor, spin=spin,
         orient=orient
     ) children();
@@ -258,9 +268,9 @@ module threaded_nut(
 //   internal = If true, make this a mask for making internal threads.  Default: false
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
-//   higbee = Length to taper thread ends over.  Default: 0 (No higbee thread tapering)
-//   higbee1 = Length to taper bottom thread end over.
-//   higbee2 = Length to taper top thread end over.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -270,20 +280,20 @@ module threaded_nut(
 //       trapezoidal_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
 // Examples(Med): 
 //   trapezoidal_threaded_rod(d=10, l=40, pitch=2, $fn=32);  // Standard metric threading
-//   trapezoidal_threaded_rod(d=10, l=17, pitch=2, higbee=25, $fn=32);  // Standard metric threading
+//   rot(-65)trapezoidal_threaded_rod(d=10, l=17, pitch=2, higbee=25, $fn=32);  // Standard metric threading
 //   trapezoidal_threaded_rod(d=10, l=17, pitch=2, bevel=true, $fn=32);  // Standard metric threading
 //   trapezoidal_threaded_rod(d=10, l=30, pitch=2, left_handed=true, $fa=1, $fs=1);  // Standard metric threading
 //   trapezoidal_threaded_rod(d=10, l=40, pitch=3, left_handed=true, starts=3, $fn=36);
-//   trapezoidal_threaded_rod(l=25, d=10, pitch=2, starts=3, $fa=1, $fs=1, orient=RIGHT, anchor=BOTTOM);
+//   trapezoidal_threaded_rod(l=25, d=10, pitch=2, starts=3, $fa=1, $fs=1, bevel=true, orient=RIGHT, anchor=BOTTOM);
 //   trapezoidal_threaded_rod(d=60, l=16, pitch=8, thread_depth=3, thread_angle=90, left_handed=true, $fa=2, $fs=2);
 //   trapezoidal_threaded_rod(d=60, l=16, pitch=8, thread_depth=3, thread_angle=90, left_handed=true, starts=4, $fa=2, $fs=2);
 //   trapezoidal_threaded_rod(d=16, l=40, pitch=2, thread_angle=60);
 //   trapezoidal_threaded_rod(d=25, l=40, pitch=10, thread_depth=8/3, thread_angle=100, starts=4, anchor=BOT, $fa=2, $fs=2);
-//   trapezoidal_threaded_rod(d=50, l=35, pitch=8, thread_angle=60, starts=11, higbee=10,$fn=120);
+//   trapezoidal_threaded_rod(d=50, l=35, pitch=8, thread_angle=60, starts=11, higbee=true,$fn=120);
 // Example(Med): Using as a Mask to Make Internal Threads
 //   bottom_half() difference() {
 //       cube(50, center=true);
-//       trapezoidal_threaded_rod(d=40, l=51, pitch=5, thread_angle=30, internal=true, orient=RIGHT, $fn=36);
+//       trapezoidal_threaded_rod(d=40, l=51, pitch=5, thread_angle=30, internal=true, bevel=true, orient=RIGHT, $fn=36);
 //   }
 function trapezoidal_threaded_rod(
     d, l, pitch,
@@ -354,6 +364,9 @@ module trapezoidal_threaded_rod(
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -363,6 +376,7 @@ module trapezoidal_threaded_rod(
 //   trapezoidal_threaded_nut(nutwidth=16, id=8, h=8, pitch=2, bevel=true, $slop=0.05, anchor=UP);
 //   trapezoidal_threaded_nut(nutwidth=17.4, id=10, h=10, pitch=2, $slop=0.1, left_handed=true);
 //   trapezoidal_threaded_nut(nutwidth=17.4, id=10, h=10, pitch=2, starts=3, $fa=1, $fs=1, $slop=0.15);
+//   trapezoidal_threaded_nut(nutwidth=17.4, id=10, h=10, pitch=2, starts=3, $fa=1, $fs=1, $slop=0.15, higbee=true);
 //   trapezoidal_threaded_nut(nutwidth=17.4, id=10, h=10, pitch=0, $slop=0.2);   // No threads
 function trapezoidal_threaded_nut(
     nutwidth,
@@ -377,6 +391,7 @@ function trapezoidal_threaded_nut(
     ibevel1,ibevel2,ibevel,
     thickness,height,
     id1,id2,
+    higbee,higbee1,higbee2,
     anchor, spin, orient
 ) = no_function("trapezoidal_threaded_nut");
 module trapezoidal_threaded_nut(
@@ -392,6 +407,7 @@ module trapezoidal_threaded_nut(
     ibevel1,ibevel2,ibevel,
     thickness,height,
     id1,id2,
+    higbee,higbee1,higbee2,
     anchor, spin, orient
 ) {
     dummy1 = assert(is_num(pitch) && pitch>=0 && thread_angle>=0 && thread_angle<180);
@@ -410,6 +426,7 @@ module trapezoidal_threaded_nut(
     generic_threaded_nut(nutwidth=nutwidth,id=id,h=h,pitch=pitch,profile=profile,id1=id1,id2=id2,
                          shape=shape,left_handed=left_handed,bevel=bevel,bevel1=bevel1,bevel2=bevel2,starts=starts,
                          ibevel=ibevel,ibevel1=ibevel1,ibevel2=ibevel2,bevang=bevang,height=height,thickness=thickness,
+                         higbee=higbee, higbee1=higbee1, higbee2=higbee2,
                          anchor=anchor,spin=spin,orient=orient)
       children();
 }
@@ -433,9 +450,9 @@ module trapezoidal_threaded_nut(
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
 //   internal = If true, this is a mask for making internal threads.
-//   higbee = Length to taper thread ends over.  Default: 0 (No higbee thread tapering)
-//   higbee1 = Length to taper bottom thread end over.
-//   higbee2 = Length to taper top thread end over.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -474,6 +491,7 @@ module acme_threaded_rod(
         left_handed=left_handed,
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,
         internal=internal, length=length,
+        higbee=higbee,
         anchor=anchor,
         spin=spin,
         orient=orient
@@ -504,6 +522,9 @@ module acme_threaded_rod(
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -511,6 +532,7 @@ module acme_threaded_rod(
 // Examples(Med):
 //   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=8, tpi=8, $slop=0.05);
 //   acme_threaded_nut(nutwidth=16, id=1/2*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1);
+//   acme_threaded_nut(nutwidth=16, id=1/2*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1,ibevel=false,higbee=true);
 function acme_threaded_nut(
     nutwidth, id, h, tpi, pitch,
     starts=1,
@@ -518,6 +540,7 @@ function acme_threaded_nut(
     bevel,bevel1,bevel2,bevang=30,
     ibevel,ibevel1,ibevel2,
     height,thickness,
+    higbee,higbee1,higbee2,
     anchor, spin, orient
 ) = no_function("acme_threaded_nut");
 module acme_threaded_nut(
@@ -527,6 +550,7 @@ module acme_threaded_nut(
     bevel,bevel1,bevel2,bevang=30,
     ibevel,ibevel1,ibevel2,
     height,thickness,
+    higbee,higbee1,higbee2,
     anchor, spin, orient
 ) {
     dummy = assert(num_defined([pitch,tpi])==1,"Must give exactly one of pitch and tpi");
@@ -541,6 +565,7 @@ module acme_threaded_nut(
         ibevel=ibevel,ibevel1=ibevel1,ibevel2=ibevel2,
         height=height,thickness=thickness,
         starts=starts,
+        higbee=higbee, higbee1=higbee1, higbee2=higbee2,
         anchor=anchor,
         spin=spin,
         orient=orient
@@ -606,13 +631,12 @@ module npt_threaded_rod(
     internal=false,
     anchor, spin, orient
 ) {
-    checks = 
-      assert(is_finite(size))
-      assert(is_bool(left_handed))
-      assert(is_undef(bevel) || is_bool(bevel))
-      assert(is_bool(hollow))
-      assert(is_bool(internal))
-      assert(!(internal&&hollow), "Cannot created a hollow internal threads mask.");
+    assert(is_finite(size));
+    assert(is_bool(left_handed));
+    assert(is_undef(bevel) || is_bool(bevel));
+    assert(is_bool(hollow));
+    assert(is_bool(internal));
+    assert(!(internal&&hollow), "Cannot created a hollow internal threads mask.");
     info_table = [
         // Size    len      OD    TPI
         [ 1/16,  [ 0.3896, 0.308, 27  ]],
@@ -660,7 +684,7 @@ module npt_threaded_rod(
                 left_handed=left_handed,
                 bevel=bevel,bevel1=bevel1,bevel2=bevel2,
                 internal=internal,
-                higbee=r1*PI/2
+                higbee=true
             );
             if (hollow) cylinder(l=l+1, d=size*INCH, center=true);
         }
@@ -690,9 +714,9 @@ module npt_threaded_rod(
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
 //   internal = If true, this is a mask for making internal threads.
-//   higbee = Length to taper thread ends over.  Default: 0
-//   higbee1 = Length to taper bottom thread end over.
-//   higbee2 = Length to taper top thread end over.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -710,9 +734,7 @@ function buttress_threaded_rod(
     left_handed=false,
     bevel,bevel1,bevel2,
     internal=false,
-    higbee=0,
-    higbee1,
-    higbee2,
+    higbee, higbee1, higbee2,
     d1,d2,starts=1,length, 
     anchor, spin, orient
 ) = no_function("buttress_threaded_rod");
@@ -721,9 +743,7 @@ module buttress_threaded_rod(
     left_handed=false,
     bevel,bevel1,bevel2,
     internal=false,
-    higbee=0,
-    higbee1,
-    higbee2,
+    higbee,higbee1,higbee2,
     d1,d2,starts=1,length, 
     anchor, spin, orient
 ) {
@@ -735,6 +755,10 @@ module buttress_threaded_rod(
         [  7/16, -0.75],
         [  1/ 2, -0.77],
     ];
+    higbee2 = !internal || (!higbee && !higbee2) ? higbee2
+            : let (higval = first_defined([higbee2,higbee]))
+              is_num(higval) ? higval + 270
+            : 270;
     generic_threaded_rod(
         d=d, l=l, pitch=pitch,
         profile=profile, 
@@ -774,6 +798,9 @@ module buttress_threaded_rod(
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -785,6 +812,7 @@ function buttress_threaded_nut(
     pitch, shape="hex", left_handed=false,
     bevel,bevel1,bevel2,bevang=30,starts=1,
     ibevel,ibevel1,ibevel2,height,thickness,
+    higbee,higbee1,higbee2,
     anchor, spin, orient
 ) = no_function("buttress_threaded_nut");
 module buttress_threaded_nut(
@@ -792,6 +820,7 @@ module buttress_threaded_nut(
     pitch, shape="hex", left_handed=false,
     bevel,bevel1,bevel2,bevang=30,starts=1,
     ibevel,ibevel1,ibevel2,height,thickness,
+    higbee,higbee1,higbee2,
     anchor, spin, orient
 ) {
     depth = pitch * 3/4;
@@ -802,6 +831,10 @@ module buttress_threaded_nut(
         [  7/16, -0.75],
         [  1/ 2, -0.77],
     ];
+    higbee2 = !higbee && !higbee2 ? higbee2
+            : let (higval = first_defined([higbee2,higbee]))
+              is_num(higval) ? higval + 270
+            : 270;
     generic_threaded_nut(
         nutwidth=nutwidth, id=id, h=h,
         pitch=pitch,
@@ -810,6 +843,7 @@ module buttress_threaded_nut(
         left_handed=left_handed,starts=starts,
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,bevang=bevang,
         ibevel=ibevel,ibevel1=ibevel1,ibevel2=ibevel2,
+        higbee=higbee, higbee1=higbee1, higbee2=higbee2,
         anchor=anchor, spin=spin, height=height, thickness=thickness, 
         orient=orient
     ) children();
@@ -836,9 +870,9 @@ module buttress_threaded_nut(
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
 //   internal = If true, this is a mask for making internal threads.
-//   higbee = Length to taper thread ends over.  Default: 0
-//   higbee1 = Length to taper bottom thread end over.
-//   higbee2 = Length to taper top thread end over.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -856,7 +890,7 @@ function square_threaded_rod(
     bevel,bevel1,bevel2,
     starts=1,
     internal=false,
-    higbee=0, higbee1, higbee2,
+    higbee, higbee1, higbee2,
     d1,d2,
     anchor, spin, orient
 ) = no_function("square_threaded_rod");
@@ -912,6 +946,9 @@ module square_threaded_rod(
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -926,6 +963,7 @@ function square_threaded_nut(
     ibevel,ibevel1,ibevel2,
     height,thickness,    
     starts=1,
+    higbee,higbee1,higbee2,
     anchor, spin, orient
 ) = no_function("square_threaded_nut");
 module square_threaded_nut(
@@ -935,6 +973,7 @@ module square_threaded_nut(
     bevel,bevel1,bevel2,bevang=30,
     ibevel,ibevel1,ibevel2,
     height,thickness,    
+    higbee,higbee1,higbee2,
     starts=1,
     anchor, spin, orient
 ) {
@@ -947,6 +986,7 @@ module square_threaded_nut(
         ibevel=ibevel, ibevel1=ibevel1, ibevel2=ibevel2,
         height=height,thickness=thickness,
         starts=starts,
+        higbee=higbee, higbee1=higbee1, higbee2=higbee2,
         anchor=anchor,
         spin=spin,
         orient=orient
@@ -1051,8 +1091,13 @@ module ball_screw_rod(
 //   If bevel is set to true and internal is false then the ends of the rod will be beveled.  When bevel is true and internal is true the ends of the rod will
 //   be filled in so that the rod mask will create a bevel when subtracted from an object.  The bevel is at 45 deg and is the depth of the threads.
 //   .
-//   Higbee specifies tapering of the thread ends to make screws easier to start.  Specify the number of degrees for the taper.  Higbee
-//   only works for external threads.  It is ignored if internal is true.
+//   Higbee or blunt start threading specifies that the thread ends abruptly at its full width instead of running off the end of the shaft and leaving a sharp edged partial
+//   thread at the end of the screw.  This makes screws easier to start and
+//   prevents cross threading.  If you set `higbee=true` then the blunt start applies to both ends.  The blunt start cuts the thread end in a single facet, 
+//   so if you use lots of facets it will be close to perpendicular to the screw surface, but if you use fewer facets, it will be a more sloped cut.  
+//   The place to cut the threads is calculated to try to leave a 1/4 thread gap from the end of the screw, but depending on your profile, you may
+//   wish to adjust this.  If you set higbee to a numerical value it will be added to the computed higbee angle, so a positive value will cut the thread back farther
+//   giving more space at the end.  Higbee works on both internal and external threads.  
 // Arguments:
 //   d = Outer diameter of threaded rod.
 //   l / length = Length of threaded rod.
@@ -1067,9 +1112,9 @@ module ball_screw_rod(
 //   internal = If true, make this a mask for making internal threads.  Default: false
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
-//   higbee = Angle to taper thread ends over.  Default: 0 (No higbee thread tapering)
-//   higbee1 = Angle to taper bottom thread end over.
-//   higbee2 = Angle to taper top thread end over.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1121,13 +1166,20 @@ module generic_threaded_rod(
     anchor, spin, orient
 ) {
     l = one_defined([l,length],"l,length");
-    dummy0 = 
-      assert(all_positive(pitch))
-      assert(all_positive(l))
-      assert(is_path(profile))
-      assert(is_bool(left_handed));
     bevel1 = first_defined([bevel1,bevel,false]);
     bevel2 = first_defined([bevel2,bevel,false]);
+    thigbee1 = first_defined([higbee1,higbee,false]);
+    thigbee2 = first_defined([higbee2,higbee,false]);
+    // Zero higbee should be treated as "true", default angle, but it tests as false so adjust
+    higbee1 = thigbee1==0 ? true : thigbee1;
+    higbee2 = thigbee2==0 ? true : thigbee1;
+    dummy0 = 
+      assert(all_positive([pitch]),"Thread pitch must be a positive value")
+      assert(all_positive([l]),"Length must be a postive value")
+      assert(is_path(profile),"Profile must be a path")
+      assert(is_finite(higbee1) || is_bool(higbee1), str("higbee",is_undef(higbee)?"1":""," must be boolean or a number"))
+      assert(is_finite(higbee2) || is_bool(higbee2), str("higbee",is_undef(higbee)?"1":""," must be boolean or a number"))
+      assert(is_bool(left_handed));
     r1 = get_radius(d1=d1, d=d);
     r2 = get_radius(d1=d2, d=d);
     sides = quantup(segs(max(r1,r2)), starts);
@@ -1138,10 +1190,19 @@ module generic_threaded_rod(
     threads = quantup(l/pitch+2,1); // Was quantup(1/pitch+2,2*starts);
     dir = left_handed? -1 : 1;
     twist = 360 * l / pitch / starts;
-    higang1 = first_defined([higbee1, higbee, 0]);
-    higang2 = first_defined([higbee2, higbee, 0]);
-    assert(higang1 < twist/2);
-    assert(higang2 < twist/2);
+    profile = !internal ? profile
+            : [
+                 for(entry=profile) if (entry.x>=0) [entry.x-1/2,entry.y], 
+                 for(entry=profile) if (entry.x<0) [entry.x+1/2,entry.y]
+              ];
+    gap = 0.25;
+    thread_minx = min(column(profile,0));
+    thread_maxx = max(column(profile,0));
+    // Compute higbee cut angles, or set to large negative value if higbee is not enabled
+    higang1 = !higbee1 ? -1000
+                       : (180+(gap-(thread_minx+.5))*360)/starts + (is_num(higbee1) ? higbee1 : 0);
+    higang2 = !higbee2 ? -1000
+                       : (180+(gap-(.5-thread_maxx))*360)/starts + (is_num(higbee2) ? higbee2 : 0);
     prof3d = path3d(profile);
     pdepth = -min(column(profile,1));
     pmax = pitch * max(column(profile,1));
@@ -1152,12 +1213,6 @@ module generic_threaded_rod(
                 * affine3d_skew(sxz=(_r2-_r1)/l)           // Skew correction for tapered threads
                 * frame_map(x=[0,0,1], y=[1,0,0])          // Map profile to 3d, parallel to z axis
                 * scale(pitch);                            // scale profile by pitch
-    hig_table = [
-        [-twist/2-0.0001, 0],
-        [-twist/2+higang1, 1],
-        [ twist/2-higang2, 1],
-        [ twist/2+0.0001, 0],
-    ];
     start_steps = sides / starts;
     thread_verts = [
          // Outer loop constructs a vertical column of the screw at each angle
@@ -1169,15 +1224,13 @@ module generic_threaded_rod(
              full_profile =  [   // profile for the entire rod
                  for (thread = [-threads/2:1:threads/2-1]) let(
                      tang = (thread/starts) * 360 + ang,
-                     hsc = internal? 1
-                         : (higang1==0 && tang<=0)? 1
-                         : (higang2==0 && tang>=0)? 1
-                         : lookup(tang, hig_table),
-                     higscale = yscale(hsc,cp = -pdepth)  // Scale for higbee
+                     adjusted_prof3d = tang < -twist/2+higang1 || tang > twist/2-higang2 
+                                           ? [for(v=prof3d) [v.x,internal?pmax/pitch:-pdepth,v.z]] 
+                                     : prof3d
                  )
                  // The right movement finds the position of the thread along
                  // what will be the z axis after the profile is mapped to 3d                                           
-                 each apply(right(dz + thread) * higscale, prof3d)
+                 each apply(right(dz + thread) , adjusted_prof3d)
              ]
          ) [
              [0, 0, -l/2-pitch],
@@ -1185,8 +1238,7 @@ module generic_threaded_rod(
              [0, 0, +l/2+pitch]
          ]
     ];
-
-    style = higang1>0 || higang2>0 ? "quincunx" : "min_edge";
+    style=internal?"concave":"convex";
     
     thread_vnfs = vnf_join([
         // Main thread faces
@@ -1239,11 +1291,13 @@ module generic_threaded_rod(
                   up(l/2) cuboid([2*rmax+1,2*rmax+1, maxlen], anchor=BOTTOM);
           }
 
-/*          intersection(){
+          /*  // slower, simpler approach for beveling
+          intersection(){
               //vnf_validate(vnf_quantize(thread_vnfs), size=0.1);
               vnf_polyhedron(vnf_quantize(thread_vnfs), convexity=10);
               cyl(l=l, r1=_r1+pmax, r2=_r2+pmax, chamfer1=bevel1?depth:undef, chamfer2=bevel2?depth:undef);                  
-          }*/
+          }
+          */
 
           // Add bevel for internal thread mask
           if (internal) {
@@ -1282,6 +1336,9 @@ module generic_threaded_rod(
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   id1 = inner diameter at the bottom
 //   id2 = inner diameter at the top
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1300,6 +1357,7 @@ function generic_threaded_nut(
     bevel,bevel1,bevel2,bevang=30,
     ibevel, ibevel1, ibevel2,
     id1,id2, height, thickness, 
+    higbee,higbee1,higbee2,
     anchor, spin, orient
 ) = no_function("generic_threaded_nut");
 module generic_threaded_nut(
@@ -1314,6 +1372,7 @@ module generic_threaded_nut(
     bevel,bevel1,bevel2,bevang=30,
     ibevel, ibevel1, ibevel2,
     id1,id2, height, thickness, 
+    higbee,higbee1,higbee2,
     anchor, spin, orient
 ) {
     
@@ -1349,7 +1408,8 @@ module generic_threaded_nut(
                      left_handed=left_handed,
                      starts=starts,
                      internal=true,
-                     bevel1=ibevel1,bevel2=ibevel2
+                     bevel1=ibevel1,bevel2=ibevel2,
+                     higbee=higbee, higbee1=higbee1, higbee2=higbee2
                 );
         }
         children();
@@ -1378,19 +1438,23 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 // Usage:
 //   thread_helix(d, pitch, [thread_depth], [flank_angle], [twist], [profile=], [left_handed=], [higbee=], [internal=]);
 // Description:
-//   Creates a right-handed helical thread with optional end tapering.  Unlike generic_threaded_rod, this module just generates the thread, and
-//   you specify the angle of thread you want, which makes it easy to put complete threads onto a longer shaft.  It also makes a more finely
-//   divided taper at the thread ends.  However, it takes about twice as long to render compared to generic_threaded_rod.
+
+//   Creates a right-handed helical thread with optional end tapering.  Unlike
+//   {{generic_threaded_rod()}, this module just generates the thread, and you specify the total
+//   angle of threading that you want, which makes it easy to put complete threads onto a longer
+//   shaft.  It also optionally makes a finely divided taper at the thread ends.  However, it takes
+//   2-3 times as long to render compared to {{generic_threaded_rod()}}.  This module was designed
+//   to handle threads found in plastic and glass bottles.
 //   .
-//   You can specify a thread_depth and flank_angle, in which
-//   case you get a symmetric trapezoidal thread, whose inner diameter (the base of the threads for external threading)
-//   is d (so the total diameter will be d + thread_depth).  This differs from the threaded_rod modules, where the specified
-//   diameter is the outer diameter.  
-//   Alternatively you can give a profile, following the same rules as for general_threaded_rod.
-//   The Y=0 point will align with the specified diameter, and the profile should 
-//   range in X from -1/2 to 1/2.  You cannot specify both the profile and the thread_depth or flank_angle.  
+//   You can specify a thread_depth and flank_angle, in which case you get a symmetric trapezoidal
+//   thread, whose inner diameter (the base of the threads for external threading) is d (so the
+//   total diameter will be d + thread_depth).  This differs from the threaded_rod modules, where
+//   the specified diameter is the outer diameter.  Alternatively you can give a profile, following
+//   the same rules as for general_threaded_rod.  The Y=0 point will align with the specified
+//   diameter, and the profile should range in X from -1/2 to 1/2.  You cannot specify both the
+//   profile and the thread_depth or flank_angle.
 //   .
-//   Unlike generic_threaded_rod, when internal=true this module generates the threads, not a thread mask.
+//   Unlike {{generic_threaded_rod()}, when internal=true this module generates the threads, not a thread mask.
 //   The profile needs to be inverted to produce the proper thread form.  If you use the built-in trapezoidal
 //   thread you get the inverted thread, designed so that the inner diameter is d.  If you supply a custom profile
 //   you must invert it yourself to get internal threads.  With adequate clearance
@@ -1398,7 +1462,7 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 //   unlike the threaded_rod modules, thread_helix does not adjust the diameter for faceting, nor does it
 //   subtract any $slop for clearance.  
 //   .
-//   Higbee specifies tapering applied to the ends of the threads and is given as the linear distance
+//   The taper options specify Higbee specifies tapering applied to the ends of the threads and is given as the linear distance
 //   over which to taper.  Tapering works on both internal and external threads.  
 // Arguments:
 //   d = Inside base diameter of threads.  Default: 10
