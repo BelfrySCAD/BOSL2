@@ -1026,6 +1026,8 @@ module rotate_sweep(
 function _taperfunc(x) =
      let(higofs = pow(0.05,2))   // Smallest hig scale is the square root of this value
      sqrt((1-higofs)*x+higofs);
+function _taperfunc(x) =
+     sqrt(1-(1-x)^2);
 function _ss_polygon_r(N,theta) =
         let( alpha = 360/N )
         cos(alpha/2)/(cos(posmod(theta,alpha)-alpha/2));
@@ -1045,8 +1047,8 @@ function spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, hi
         sides = segs(max(r1,r2)),
         dir = sign(twist),
         ang_step = 360/sides*dir,
-        anglist = [for(ang = [0:ang_step:twist-EPSILON]) ang,
-                   twist],
+        orig_anglist = [for(ang = [0:ang_step:twist-EPSILON]) ang,
+                        twist],
         higbee1 = first_defined([higbee1, higbee, 0]),
         higbee2 = first_defined([higbee2, higbee, 0]),
         higang1 = 360 * higbee1 / (2 * r1 * PI),
@@ -1056,12 +1058,21 @@ function spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, hi
     assert(higang1 < dir*twist/2,"Higbee1 is more than half the threads")
     assert(higang2 < dir*twist/2,"Higbee2 is more than half the threads")
     let(
+        // This complicated sampling scheme is designed to ensure that there is always a facet boundary
+        // at the $fn specified location, regardless of what kind of subsampling occurs for tapers."
+        anglist = [
+           for(a=orig_anglist) if (a*dir<higang1-EPSILON) a,
+           dir*higang1,
+           for(a=orig_anglist) if (a*dir>higang1+EPSILON && (twist-a)*dir>higang2+EPSILON) a,
+           twist-dir*higang2,
+           for(a=orig_anglist) if ((twist-a)*dir<higang2-EPSILON) a
+        ],
         interp_ang = [
                       for(i=idx(anglist,e=-2))
                           each lerpn(anglist[i],anglist[i+1],
-                                     (higang1>0 && higang1>dir*anglist[i+1]
-                                      || (higang2>0 && higang2>dir*(twist-anglist[i]))) ? ceil((anglist[i+1]-anglist[i])/ang_step*higsample)
-                                                                                        : 1,
+                                         (higang1>0 && dir*anglist[i+1]<=higang1) || (higang2>0 && dir*(twist-anglist[i])<=higang2)
+                                            ? ceil((anglist[i+1]-anglist[i])/ang_step*higsample)
+                                            : 1,
                                      endpoint=false),
                       last(anglist)
                      ],
@@ -1082,8 +1093,8 @@ function spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, hi
             ) pts
         ],
         vnf = vnf_vertex_array(
-            points, col_wrap=true, caps=true, reverse=dir>0?true:false,
-//            style=higbee1>0 || higbee2>0 ? "quincunx" : "alt"
+            points, col_wrap=true, caps=true, reverse=dir>0,
+        //    style=higbee1>0 || higbee2>0 ? "quincunx" : "alt"
             style="convex"
         )
     )

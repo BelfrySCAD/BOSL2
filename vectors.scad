@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: vectors.scad
 //   This file provides some mathematical operations that apply to each
-//   entry in a vector.  It provides normalizatoin and angle computation, and
+//   entry in a vector.  It provides normalization and angle computation, and
 //   it provides functions for searching lists of vectors for matches to
 //   a given vector.  
 // Includes:
