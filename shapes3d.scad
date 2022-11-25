@@ -1371,15 +1371,14 @@ function cyl(
           ? cylinder(h=l, r1=r1, r2=r2, center=true, $fn=sides)
           : let(
                 vang = atan2(r1-r2,l),
-                _chamf1 = first_defined([chamfer1, chamfer, 0]),
-                _chamf2 = first_defined([chamfer2, chamfer, 0]),
+                _chamf1 = first_defined([chamfer1, if (is_undef(rounding1)) chamfer, 0]),
+                _chamf2 = first_defined([chamfer2, if (is_undef(rounding2)) chamfer, 0]),
                 _fromend1 = first_defined([from_end1, from_end, false]),
                 _fromend2 = first_defined([from_end2, from_end, false]),
                 chang1 = first_defined([chamfang1, chamfang, 45+sign(_chamf1)*vang/2]),
                 chang2 = first_defined([chamfang2, chamfang, 45-sign(_chamf2)*vang/2]),
-dgfat=                echo(vang=vang,chang1=chang1,45-vang/2,chang2=chang2,vang/2),
-                round1 = first_defined([rounding1, rounding, 0]),
-                round2 = first_defined([rounding2, rounding, 0]),
+                round1 = first_defined([rounding1, if (is_undef(chamfer1)) rounding, 0]),
+                round2 = first_defined([rounding2, if (is_undef(chamfer2)) rounding, 0]),
                 checks1 =
                     assert(is_finite(_chamf1), "chamfer1 must be a finite number if given.")
                     assert(is_finite(_chamf2), "chamfer2 must be a finite number if given.")
@@ -1403,8 +1402,6 @@ dgfat=                echo(vang=vang,chang1=chang1,45-vang/2,chang2=chang2,vang/
                 chamf2l = !_chamf2? 0
                         : _fromend2? abs(_chamf2)
                         : abs(law_of_sines(a=_chamf2, A=180-chang2-(90+sign(_chamf2)*vang), B=chang2)),
-                f=echo(chamf1r=chamf1r, chamf1L = chamf1l)
-                  echo(chamf2r=chamf2r, chamf2L = chamf2l),
                 facelen = adj_ang_to_hyp(l, abs(vang)),
                 cp1 = [r1,-l/2],
                 cp2 = [r2,+l/2],
@@ -1412,7 +1409,6 @@ dgfat=                echo(vang=vang,chang1=chang1,45-vang/2,chang2=chang2,vang/
                                         : round1/tan(45+vang/2),
                 roundlen2 = round2 >=0 ? round2/tan(45+vang/2)
                                        : round2/tan(45-vang/2),
-fdee=                echo(roundlen1=roundlen1, roundlen2=roundlen2),
                 dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1 : 0), 
                 dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0),
                 checks2 =
@@ -1444,7 +1440,6 @@ fdee=                echo(roundlen1=roundlen1, roundlen2=roundlen2),
                     else [r2,l/2],
                     if (texture==undef) [0,l/2],
                 ]
-,                ffeeg=echo(path=path)echo(corner=[[r1-2*roundlen1,-l/2],[r1,-l/2],[r2,l/2]], -2*roundlen1)
             ) rotate_sweep(path,
                 texture=texture, tex_counts=tex_counts, tex_size=tex_size,
                 tex_inset=tex_inset, tex_rot=tex_rot,
