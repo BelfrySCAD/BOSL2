@@ -1375,8 +1375,9 @@ function cyl(
                 _chamf2 = first_defined([chamfer2, chamfer, 0]),
                 _fromend1 = first_defined([from_end1, from_end, false]),
                 _fromend2 = first_defined([from_end2, from_end, false]),
-                chang1 = first_defined([chamfang1, chamfang, 45+vang/2]),
-                chang2 = first_defined([chamfang2, chamfang, 45-vang/2]),
+                chang1 = first_defined([chamfang1, chamfang, 45+sign(_chamf1)*vang/2]),
+                chang2 = first_defined([chamfang2, chamfang, 45-sign(_chamf2)*vang/2]),
+dgfat=                echo(vang=vang,chang1=chang1,45-vang/2,chang2=chang2,vang/2),
                 round1 = first_defined([rounding1, rounding, 0]),
                 round2 = first_defined([rounding2, rounding, 0]),
                 checks1 =
@@ -1384,20 +1385,26 @@ function cyl(
                     assert(is_finite(_chamf2), "chamfer2 must be a finite number if given.")
                     assert(is_finite(chang1) && chang1>0, "chamfang1 must be a positive number if given.")
                     assert(is_finite(chang2) && chang2>0, "chamfang2 must be a positive number if given.")
-                    assert(chang1<90+vang, "chamfang1 must be smaller than the cone face angle")
-                    assert(180-chang2>90+vang, "chamfang2 must be smaller than the cone face angle")
+                    assert(chang1<90+sign(_chamf1)*vang, "chamfang1 must be smaller than the cone face angle")
+                    assert(chang2<90-sign(_chamf2)*vang, "chamfang2 must be smaller than the cone face angle")
                     assert(num_defined([chamfer1,rounding1])<2, "cannot define both chamfer1 and rounding1")
                     assert(num_defined([chamfer2,rounding2])<2, "cannot define both chamfer2 and rounding2")
                     assert(num_defined([chamfer,rounding])<2, "cannot define both chamfer and rounding")                                
                     undef,
-                chamf1r = !_chamf1? 0 : !_fromend1? _chamf1 :
-                    law_of_sines(a=_chamf1, A=chang1, B=180-chang1-(90-vang)),
-                chamf2r = !_chamf2? 0 : !_fromend2? _chamf2 :
-                    law_of_sines(a=_chamf2, A=chang2, B=180-chang2-(90+vang)),
-                chamf1l = !_chamf1? 0 : _fromend1? _chamf1 :
-                    law_of_sines(a=_chamf1, A=180-chang1-(90-vang), B=chang1),
-                chamf2l = !_chamf2? 0 : _fromend2? _chamf2 :
-                    law_of_sines(a=_chamf2, A=180-chang2-(90+vang), B=chang2),
+                chamf1r = !_chamf1? 0
+                        : !_fromend1? _chamf1
+                        : law_of_sines(a=_chamf1, A=chang1, B=180-chang1-(90-sign(_chamf2)*vang)),
+                chamf2r = !_chamf2? 0
+                        : !_fromend2? _chamf2
+                        : law_of_sines(a=_chamf2, A=chang2, B=180-chang2-(90+sign(_chamf2)*vang)),
+                chamf1l = !_chamf1? 0
+                        : _fromend1? abs(_chamf1)
+                        : abs(law_of_sines(a=_chamf1, A=180-chang1-(90-sign(_chamf1)*vang), B=chang1)),
+                chamf2l = !_chamf2? 0
+                        : _fromend2? abs(_chamf2)
+                        : abs(law_of_sines(a=_chamf2, A=180-chang2-(90+sign(_chamf2)*vang), B=chang2)),
+                f=echo(chamf1r=chamf1r, chamf1L = chamf1l)
+                  echo(chamf2r=chamf2r, chamf2L = chamf2l),
                 facelen = adj_ang_to_hyp(l, abs(vang)),
                 cp1 = [r1,-l/2],
                 cp2 = [r2,+l/2],
@@ -1408,8 +1415,8 @@ function cyl(
                 dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1 : 0), 
                 dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0),
                 checks2 =
-                    assert(is_finite(round1), "rounding1 must be a finite number if given.")
-                    assert(is_finite(round2), "rounding2 must be a finite number if given.")
+                    assert(is_finite(round1), "rounding1 must be a number if given.")
+                    assert(is_finite(round2), "rounding2 must be a number if given.")
                     assert(chamf1r <= r1, "chamfer1 is larger than the r1 radius of the cylinder.")
                     assert(chamf2r <= r2, "chamfer2 is larger than the r2 radius of the cylinder.")
                     assert(roundlen1 <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
