@@ -1412,6 +1412,7 @@ dgfat=                echo(vang=vang,chang1=chang1,45-vang/2,chang2=chang2,vang/
                                         : round1/tan(45+vang/2),
                 roundlen2 = round2 >=0 ? round2/tan(45+vang/2)
                                        : round2/tan(45-vang/2),
+fdee=                echo(roundlen1=roundlen1, roundlen2=roundlen2),
                 dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1 : 0), 
                 dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0),
                 checks2 =
@@ -1430,8 +1431,8 @@ dgfat=                echo(vang=vang,chang1=chang1,45-vang/2,chang2=chang2,vang/
                             [r1, -l/2] + polar_to_xy(chamf1r,180),
                             [r1, -l/2] + polar_to_xy(chamf1l,90+vang),
                         ]
-                    else if (is_finite(round1) && !approx(round1,0))
-                        each arc(r=abs(round1), corner=[[max(0,-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]])
+                    else if (!approx(round1,0))
+                        each arc(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]])
                     else [r1,-l/2],
                     if (is_finite(chamf2r) && !approx(chamf2r,0))
                         each [
@@ -1439,10 +1440,11 @@ dgfat=                echo(vang=vang,chang1=chang1,45-vang/2,chang2=chang2,vang/
                             [r2, l/2] + polar_to_xy(chamf2r,180),
                         ]
                     else if (is_finite(round2) && !approx(round2,0))
-                        each arc(r=abs(round2), corner=[[r1,-l/2],[r2,l/2],[max(0,-2*roundlen2),l/2]])
+                        each arc(r=abs(round2), corner=[[r1,-l/2],[r2,l/2],[max(0,r2-2*roundlen2),l/2]])
                     else [r2,l/2],
                     if (texture==undef) [0,l/2],
                 ]
+,                ffeeg=echo(path=path)echo(corner=[[r1-2*roundlen1,-l/2],[r1,-l/2],[r2,l/2]], -2*roundlen1)
             ) rotate_sweep(path,
                 texture=texture, tex_counts=tex_counts, tex_size=tex_size,
                 tex_inset=tex_inset, tex_rot=tex_rot,
