@@ -132,6 +132,7 @@ function chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CEN
 module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
+    dummy = assert(all_nonnegative([chamfer]), "Chamfer must be a nonnegative number");
     ch = from_end? chamfer : opp_ang_to_adj(chamfer,90-ang);
     attachable(anchor,spin,orient, r=r, l=ch*2) {
         difference() {
