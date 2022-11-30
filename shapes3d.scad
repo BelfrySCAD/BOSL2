@@ -1237,7 +1237,7 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   }
 //
 // Example: Rounding
-//   cyl(l=40, d=40, rounding=9);
+//   cyl(l=40, d=40, rounding=10);
 //
 // Example: Heterogenous Chamfers and Rounding
 //   ydistribute(80) {
