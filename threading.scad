@@ -1429,7 +1429,7 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
        fn = quantup(segs(r=nutwidth/2),shape=="hex"?6:4);
        d = shape=="hex" ? 2*nutwidth/sqrt(3) : sqrt(2)*nutwidth;
        chamfsize = (d-nutwidth)/2/bevel_d;
-       cyl(d=d*.99,h=h+.01,realign=true,circum=true,$fn=fn,chamfer1=bevel1?chamfsize:0,chamfer2=bevel2?chamfsize:0,chamfang=90-30);
+       cyl(d=d*.99,h=h+.01,realign=true,circum=true,$fn=fn,chamfer1=bevel1?chamfsize:0,chamfer2=bevel2?chamfsize:0,chamfang=30);
    }
 }
 

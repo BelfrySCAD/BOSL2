@@ -98,7 +98,7 @@ module chamfer_corner_mask(chamfer=1, anchor=CENTER, spin=0, orient=UP) {
 //   chamfer = Size of the edge chamfered, inset from edge.
 //   ---
 //   d = Diameter of cylinder to chamfer. Use instead of r.
-//   ang = Angle of chamfer in degrees from vertical.  (Default: 45)
+//   ang = Angle of chamfer in degrees from the horizontal.  (Default: 45)
 //   from_end = If true, chamfer size is measured from end of cylinder.  If false, chamfer is measured outset from the radius of the cylinder.  (Default: false)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -113,12 +113,26 @@ module chamfer_corner_mask(chamfer=1, anchor=CENTER, spin=0, orient=UP) {
 //       cylinder(r=50, h=100, center=true);
 //       up(50) chamfer_cylinder_mask(r=50, chamfer=10);
 //   }
+// Example: Changing the chamfer angle
+//   difference() {
+//       cylinder(r=50, h=100, center=true);
+//       up(50) #chamfer_cylinder_mask(r=50, chamfer=10, ang=70);
+//   }
+// Example:
+//   difference() {
+//       cylinder(r=50, h=100, center=true);
+//       up(50) chamfer_cylinder_mask(r=50, chamfer=10, ang=70);
+//   }
 // Example: Masking by Attachment
+//   diff()
+//   cyl(d=100,h=40)
+//      attach([TOP,BOT])
+//         tag("remove")chamfer_cylinder_mask(d=100, chamfer=10);
 function chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTER, spin=0, orient=UP) = no_function("chamfer_cylinder_mask");
 module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
-    ch = from_end? chamfer : opp_ang_to_adj(chamfer,ang);
+    ch = from_end? chamfer : opp_ang_to_adj(chamfer,90-ang);
     attachable(anchor,spin,orient, r=r, l=ch*2) {
         difference() {
             cyl(r=r+chamfer, l=ch*2, anchor=CENTER);
