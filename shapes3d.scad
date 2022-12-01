@@ -1172,9 +1172,35 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   Creates cylinders in various anchorings and orientations, with optional rounding, chamfers, or textures.
 //   You can use `h` and `l` interchangably, and all variants allow specifying size by either `r`|`d`,
 //   or `r1`|`d1` and `r2`|`d2`.  Note: the chamfers and rounding cannot be cumulatively longer than
-//   the cylinder or cones sloped side.  The more specific parameters like chamfer1 or rounding2 override the more
+//   the cylinder or cone's sloped side.  The more specific parameters like chamfer1 or rounding2 override the more
 //   general ones like chamfer or rounding, so if you specify `rounding=3, chamfer2=3` you will get a chamfer at the top and
-//   rounding at the bottom.  
+//   rounding at the bottom.
+//
+
+// Figure(2D,Med): Chamfers on cones can be tricky.  This figure shows chamfers of the same size and same angle, A=30 degrees.  Note that the angle is measured on the inside, and produces a quit different looking chamfer at the top and bottom of the cone.  Black arrows mark the size of the chamfers, which may not even appear the same size visually.  When you do not give an angle, the triangle that is cut off will be isoceles, like the triangle at the top, with two equal angles.
+//  color("lightgray")
+//  projection()
+//      cyl(r2=10, r1=20, l=20,chamfang=30, chamfer=0,orient=BACK);
+//  projection()
+//      cyl(r2=10, r1=20, l=20,chamfang=30, chamfer=8,orient=BACK);
+//  color("black"){
+//      fwd(9.8)right(20-5.5)text("A",size=1.1);
+//      fwd(-8.7)right(10-5.5)text("A",size=1.1);
+//      right(20-8)fwd(10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
+//      right(10-8)fwd(-10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
+//  }    
+// Figure(2D,Med): With negative chamfers, the angle A=30 degrees is on the outside.  The chamfers are again quit different looking.  As before, the default will feature two congruent angles, and in this case it happens at the bottom of the cone but not the top.  The arrows again show the size of the chamfer.
+//  color("lightgray")
+//  projection()
+//      cyl(r2=10, r1=20, l=20,chamfang=30, chamfer=-8,orient=BACK);
+//  projection()
+//      cyl(r2=10, r1=20, l=20,chamfang=30, chamfer=0,orient=BACK);
+//  color("black"){
+//      fwd(9.8)right(20+4.5)text("A",size=1.1);
+//      fwd(-8.7)right(10+4.3)text("A",size=1.1);
+//      right(20)fwd(10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
+//      right(10)fwd(-10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
+//  }
 //
 // Arguments:
 //   l / h = Length of cylinder along oriented axis.  Default: 1
