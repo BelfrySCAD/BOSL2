@@ -8,6 +8,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Install Required Libraries
+      run: sudo apt-get install libfuse2
+
     - name: Install OpenSCAD
       run: |
         cd $GITHUB_WORKSPACE
