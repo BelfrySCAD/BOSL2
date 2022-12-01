@@ -17,8 +17,8 @@ jobs:
     - name: Apt Update
       run: sudo apt update
 
-    - name: Install Python dev
-      run: sudo apt-get install python3-pip python3-dev python3-setuptools python3-pil gifsicle
+    - name: Install Required Libraries
+      run: sudo apt-get install python3-pip python3-dev python3-setuptools python3-pil gifsicle libfuse2
 
     - name: Install OpenSCAD-DocsGen package.
       run: sudo pip3 install openscad-docsgen
