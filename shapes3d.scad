@@ -1429,6 +1429,7 @@ function cyl(
                         : _fromend2? abs(_chamf2)
                         : abs(law_of_sines(a=_chamf2, A=180-chang2-(90+sign(_chamf2)*vang), B=chang2)),
                 facelen = adj_ang_to_hyp(l, abs(vang)),
+
                 cp1 = [r1,-l/2],
                 cp2 = [r2,+l/2],
                 roundlen1 = round1 >= 0 ? round1/tan(45-vang/2)
@@ -1437,6 +1438,7 @@ function cyl(
                                        : round2/tan(45-vang/2),
                 dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1 : 0), 
                 dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0),
+
                 checks2 =
                     assert(is_finite(round1), "rounding1 must be a number if given.")
                     assert(is_finite(round2), "rounding2 must be a number if given.")
