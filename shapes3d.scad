@@ -1394,8 +1394,6 @@ function cyl(
                 chamf2l = !_chamf2? 0 : _fromend2? _chamf2 :
                     law_of_sines(a=_chamf2, A=180-chang2-(90+vang), B=chang2),
                 facelen = adj_ang_to_hyp(l, abs(vang)),
-                cp1 = [r1,-l/2],
-                cp2 = [r2,+l/2],
                 dy1 = abs(first_defined([chamf1l, round1, 0])),
                 dy2 = abs(first_defined([chamf2l, round2, 0])),
                 checks2 =
