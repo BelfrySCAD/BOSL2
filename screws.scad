@@ -207,8 +207,8 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 // Figure(2D,Med,VPD = 140, VPT = [18.4209, 14.9821, -3.59741], VPR = [0, 0, 0],NoAxes):
 //   rpos=33;
 //   fsize=2.5;
-//   projection(cut=true) xrot(-90)screw("M8", head="socket", length=25, thread_len=10);
-//   right(rpos)projection(cut=true) xrot(-90)screw("M8", head="flat", length=25, thread_len=10);
+//   projection(cut=true) xrot(-90)screw("M8", head="socket", length=25, thread_len=10,anchor=BOT);
+//   right(rpos)projection(cut=true) xrot(-90)screw("M8", head="flat", length=25, thread_len=10,anchor=BOT);
 //   color("black"){
 //      stroke([[5,0],[5,10]],endcaps="arrow2",width=.3);
 //      back(5)right(6)text("threads",size=fsize,anchor=LEFT);
@@ -241,6 +241,10 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   undersize = amount to decrease screw diameter, a scalar to apply to all parts, or a 2-vector to control shaft and head.  Default: 0
 //   undersize_shaft = amount to decrease diameter of the shaft of screw
 //   undersize_head = amount to decrease the head diameter of the screw
+//   bevel1 = bevel bottom end of screw.  Default: true
+//   bevel2 = bevel top end of threaded section.  Default: true for headless, false otherwise
+//   bevel = bevel both ends of the threaded section.
+//   higbee = if true create blunt start threads at both ends for headless screws, and bottom only for other screws.  Default: false
 //   atype = anchor type, one of "screw", "head", "shaft", "threads", "shank"
 //   anchor = Translate so anchor point on the shaft is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -503,7 +507,9 @@ function screw(spec, head, drive, thread, drive_size,
              length, l, thread_len, tolerance, details=true, 
              undersize, shaft_undersize, head_undersize,
              atype="screw",anchor=BOTTOM, spin=0, orient=UP,
-             _shoulder_diam=0, _shoulder_len=0, 
+             _shoulder_diam=0, _shoulder_len=0,
+             bevel,bevel1,bevel2,bevelsize,
+             higbee=false,
              _internal=false, _counterbore, _teardrop) = no_function("screw");
 
 module screw(spec, head, drive, thread, drive_size, 
@@ -512,6 +518,7 @@ module screw(spec, head, drive, thread, drive_size,
              atype="screw",anchor, spin=0, orient=UP,
              _shoulder_diam=0, _shoulder_len=0,
              bevel,bevel1,bevel2,bevelsize,
+             higbee,
              _internal=false, _counterbore, _teardrop=false)
 {
    tempspec = _get_spec(spec, "screw_info", _internal ? "screw_hole" : "screw",
@@ -674,6 +681,8 @@ module screw(spec, head, drive, thread, drive_size,
                       l=thread_len+eps_thread, left_handed=false, internal=_internal, 
                       bevel1=bev1,
                       bevel2=bev2,
+                      higbee1=higbee,
+                      higbee2=!headless || is_undef(higbee) ? false : higbee,
                       $fn=sides, anchor=TOP);
             }
              

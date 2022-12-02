@@ -1172,7 +1172,7 @@ module generic_threaded_rod(
     thigbee2 = first_defined([higbee2,higbee,false]);
     // Zero higbee should be treated as "true", default angle, but it tests as false so adjust
     higbee1 = thigbee1==0 ? true : thigbee1;
-    higbee2 = thigbee2==0 ? true : thigbee1;
+    higbee2 = thigbee2==0 ? true : thigbee2;
     dummy0 = 
       assert(all_positive([pitch]),"Thread pitch must be a positive value")
       assert(all_positive([l]),"Length must be a postive value")
