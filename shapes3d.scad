@@ -1189,7 +1189,7 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //      stroke(arc(cp=[2,10], angle=[0,-30], n=20, r=5), width=.18, endcaps="arrow2");
 //      stroke(arc(cp=[12,-10], angle=[0,30], n=20, r=5), width=.18, endcaps="arrow2");
 //  }
-// Figure(2D,Big,NoAxes,VPR = [0, 0, 0], VPT = [0,0,0], VPD = 110)): The cone in this example is narrow but has the same slope.  With negative chamfers, the angle A=30 degrees is on the outside.  The chamfers are again quite different looking.  As before, the default will feature two congruent angles, and in this case it happens at the bottom of the cone but not the top.  The straight arrows again show the size of the chamfer.
+// Figure(2D,Big,NoAxes,VPR = [0, 0, 0], VPT = [0,0,0], VPD = 82)): The cone in this example is narrow but has the same slope.  With negative chamfers, the angle A=30 degrees is on the outside.  The chamfers are again quite different looking.  As before, the default will feature two congruent angles, and in this case it happens at the bottom of the cone but not the top.  The straight arrows again show the size of the chamfer.
 //  r1=10-7.5;r2=20-7.5;
 //  color("lightgray")
 //  projection()
