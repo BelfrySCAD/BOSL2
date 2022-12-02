@@ -101,7 +101,7 @@ function lerp(a,b,u) =
 // Description:
 //   Returns exactly `n` values, linearly interpolated between `a` and `b`.
 //   If `endpoint` is true, then the last value will exactly equal `b`.
-//   If `endpoint` is false, then the last value will about `a+(b-a)*(1-1/n)`.
+//   If `endpoint` is false, then the last value will be `a+(b-a)*(1-1/n)`.
 // Arguments:
 //   a = First value or vector.
 //   b = Second value or vector.

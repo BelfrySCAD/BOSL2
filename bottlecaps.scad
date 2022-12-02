@@ -1144,7 +1144,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 
 // Module: sp_cap()
 // Usage:
-//   sp_neck(cap, type, wall, [style=], [top_adj=], [bot_adj=], [$slop]) [ATTACHMENTS];
+//   sp_cap(diam, type, wall, [style=], [top_adj=], [bot_adj=], [$slop]) [ATTACHMENTS];
 // Description:
 //   Make a SPI (Society of Plastics Industry) threaded bottle neck.  You must
 //   supply the nominal outer diameter of the threads and the thread type, one of

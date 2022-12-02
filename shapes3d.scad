@@ -1172,7 +1172,35 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   Creates cylinders in various anchorings and orientations, with optional rounding, chamfers, or textures.
 //   You can use `h` and `l` interchangably, and all variants allow specifying size by either `r`|`d`,
 //   or `r1`|`d1` and `r2`|`d2`.  Note: the chamfers and rounding cannot be cumulatively longer than
-//   the cylinder's length.
+//   the cylinder or cone's sloped side.  The more specific parameters like chamfer1 or rounding2 override the more
+//   general ones like chamfer or rounding, so if you specify `rounding=3, chamfer2=3` you will get a chamfer at the top and
+//   rounding at the bottom.
+//
+
+// Figure(2D,Med): Chamfers on cones can be tricky.  This figure shows chamfers of the same size and same angle, A=30 degrees.  Note that the angle is measured on the inside, and produces a quit different looking chamfer at the top and bottom of the cone.  Black arrows mark the size of the chamfers, which may not even appear the same size visually.  When you do not give an angle, the triangle that is cut off will be isoceles, like the triangle at the top, with two equal angles.
+//  color("lightgray")
+//  projection()
+//      cyl(r2=10, r1=20, l=20,chamfang=30, chamfer=0,orient=BACK);
+//  projection()
+//      cyl(r2=10, r1=20, l=20,chamfang=30, chamfer=8,orient=BACK);
+//  color("black"){
+//      fwd(9.8)right(20-5.5)text("A",size=1.1);
+//      fwd(-8.7)right(10-5.5)text("A",size=1.1);
+//      right(20-8)fwd(10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
+//      right(10-8)fwd(-10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
+//  }    
+// Figure(2D,Med): With negative chamfers, the angle A=30 degrees is on the outside.  The chamfers are again quit different looking.  As before, the default will feature two congruent angles, and in this case it happens at the bottom of the cone but not the top.  The arrows again show the size of the chamfer.
+//  color("lightgray")
+//  projection()
+//      cyl(r2=10, r1=20, l=20,chamfang=30, chamfer=-8,orient=BACK);
+//  projection()
+//      cyl(r2=10, r1=20, l=20,chamfang=30, chamfer=0,orient=BACK);
+//  color("black"){
+//      fwd(9.8)right(20+4.5)text("A",size=1.1);
+//      fwd(-8.7)right(10+4.3)text("A",size=1.1);
+//      right(20)fwd(10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
+//      right(10)fwd(-10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
+//  }
 //
 // Arguments:
 //   l / h = Length of cylinder along oriented axis.  Default: 1
@@ -1369,51 +1397,66 @@ function cyl(
           ? cylinder(h=l, r1=r1, r2=r2, center=true, $fn=sides)
           : let(
                 vang = atan2(r1-r2,l),
-                _chamf1 = first_defined([chamfer1, chamfer, 0]),
-                _chamf2 = first_defined([chamfer2, chamfer, 0]),
+                _chamf1 = first_defined([chamfer1, if (is_undef(rounding1)) chamfer, 0]),
+                _chamf2 = first_defined([chamfer2, if (is_undef(rounding2)) chamfer, 0]),
                 _fromend1 = first_defined([from_end1, from_end, false]),
                 _fromend2 = first_defined([from_end2, from_end, false]),
-                chang1 = first_defined([chamfang1, chamfang, 45+vang/2]),
-                chang2 = first_defined([chamfang2, chamfang, 45-vang/2]),
-                round1 = first_defined([rounding1, rounding, 0]),
-                round2 = first_defined([rounding2, rounding, 0]),
+                chang1 = first_defined([chamfang1, chamfang, 45+sign(_chamf1)*vang/2]),
+                chang2 = first_defined([chamfang2, chamfang, 45-sign(_chamf2)*vang/2]),
+                round1 = first_defined([rounding1, if (is_undef(chamfer1)) rounding, 0]),
+                round2 = first_defined([rounding2, if (is_undef(chamfer2)) rounding, 0]),
                 checks1 =
                     assert(is_finite(_chamf1), "chamfer1 must be a finite number if given.")
                     assert(is_finite(_chamf2), "chamfer2 must be a finite number if given.")
-                    assert(is_finite(chang1) && chang1>0 && chang1<90, "chamfang1 must be a number between 0 and 90 (exclusive) if given.")
-                    assert(is_finite(chang2) && chang2>0 && chang2<90, "chamfang2 must be a number between 0 and 90 (exclusive) if given.")
-                    assert(chang1<=90+vang, "chamfang1 is larger than the cone face angle")
-                    assert(180-chang2>=90+vang, "chamfang2 is larger than the cone face angle")
+                    assert(is_finite(chang1) && chang1>0, "chamfang1 must be a positive number if given.")
+                    assert(is_finite(chang2) && chang2>0, "chamfang2 must be a positive number if given.")
+                    assert(chang1<90+sign(_chamf1)*vang, "chamfang1 must be smaller than the cone face angle")
+                    assert(chang2<90-sign(_chamf2)*vang, "chamfang2 must be smaller than the cone face angle")
+                    assert(num_defined([chamfer1,rounding1])<2, "cannot define both chamfer1 and rounding1")
+                    assert(num_defined([chamfer2,rounding2])<2, "cannot define both chamfer2 and rounding2")
+                    assert(num_defined([chamfer,rounding])<2, "cannot define both chamfer and rounding")                                
                     undef,
-                chamf1r = !_chamf1? 0 : !_fromend1? _chamf1 :
-                    law_of_sines(a=_chamf1, A=chang1, B=180-chang1-(90-vang)),
-                chamf2r = !_chamf2? 0 : !_fromend2? _chamf2 :
-                    law_of_sines(a=_chamf2, A=chang2, B=180-chang2-(90+vang)),
-                chamf1l = !_chamf1? 0 : _fromend1? _chamf1 :
-                    law_of_sines(a=_chamf1, A=180-chang1-(90-vang), B=chang1),
-                chamf2l = !_chamf2? 0 : _fromend2? _chamf2 :
-                    law_of_sines(a=_chamf2, A=180-chang2-(90+vang), B=chang2),
+                chamf1r = !_chamf1? 0
+                        : !_fromend1? _chamf1
+                        : law_of_sines(a=_chamf1, A=chang1, B=180-chang1-(90-sign(_chamf2)*vang)),
+                chamf2r = !_chamf2? 0
+                        : !_fromend2? _chamf2
+                        : law_of_sines(a=_chamf2, A=chang2, B=180-chang2-(90+sign(_chamf2)*vang)),
+                chamf1l = !_chamf1? 0
+                        : _fromend1? abs(_chamf1)
+                        : abs(law_of_sines(a=_chamf1, A=180-chang1-(90-sign(_chamf1)*vang), B=chang1)),
+                chamf2l = !_chamf2? 0
+                        : _fromend2? abs(_chamf2)
+                        : abs(law_of_sines(a=_chamf2, A=180-chang2-(90+sign(_chamf2)*vang), B=chang2)),
                 facelen = adj_ang_to_hyp(l, abs(vang)),
-                dy1 = abs(first_defined([chamf1l, round1, 0])),
-                dy2 = abs(first_defined([chamf2l, round2, 0])),
+
+                cp1 = [r1,-l/2],
+                cp2 = [r2,+l/2],
+                roundlen1 = round1 >= 0 ? round1/tan(45-vang/2)
+                                        : round1/tan(45+vang/2),
+                roundlen2 = round2 >=0 ? round2/tan(45+vang/2)
+                                       : round2/tan(45-vang/2),
+                dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1 : 0), 
+                dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0),
+
                 checks2 =
-                    assert(is_finite(round1), "rounding1 must be a finite number if given.")
-                    assert(is_finite(round2), "rounding2 must be a finite number if given.")
+                    assert(is_finite(round1), "rounding1 must be a number if given.")
+                    assert(is_finite(round2), "rounding2 must be a number if given.")
                     assert(chamf1r <= r1, "chamfer1 is larger than the r1 radius of the cylinder.")
                     assert(chamf2r <= r2, "chamfer2 is larger than the r2 radius of the cylinder.")
-                    assert(round1 <= r1, "rounding1 is larger than the r1 radius of the cylinder.")
-                    assert(round2 <= r2, "rounding2 is larger than the r1 radius of the cylinder.")
-                    assert(dy1+dy2 <= facelen, "Sum of fillets and chamfer sizes must be less than the length of the cylinder/cone face.")
+                    assert(roundlen1 <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
+                    assert(roundlen2 <= r2, "size of rounding2 is larger than the r2 radius of the cylinder.")
+                    assert(dy1+dy2 <= facelen, "Chamfers/roundings don't fit on the cylinder/cone.  They exceed the length of the cylinder/cone face.")
                     undef,
                 path = [
                     if (texture==undef) [0,-l/2],
-                    if (is_finite(chamf1r) && !approx(chamf1r,0))
+                    if (!approx(chamf1r,0))
                         each [
                             [r1, -l/2] + polar_to_xy(chamf1r,180),
                             [r1, -l/2] + polar_to_xy(chamf1l,90+vang),
                         ]
-                    else if (is_finite(round1) && !approx(round1,0))
-                        each arc(r=abs(round1), corner=[[(round1>0?0:1e6),-l/2],[r1,-l/2],[r2,l/2]])
+                    else if (!approx(round1,0))
+                        each arc(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]])
                     else [r1,-l/2],
                     if (is_finite(chamf2r) && !approx(chamf2r,0))
                         each [
@@ -1421,7 +1464,7 @@ function cyl(
                             [r2, l/2] + polar_to_xy(chamf2r,180),
                         ]
                     else if (is_finite(round2) && !approx(round2,0))
-                        each arc(r=abs(round2), corner=[[r1,-l/2],[r2,l/2],[(round2>0?0:1e6),l/2]])
+                        each arc(r=abs(round2), corner=[[r1,-l/2],[r2,l/2],[max(0,r2-2*roundlen2),l/2]])
                     else [r2,l/2],
                     if (texture==undef) [0,l/2],
                 ]
