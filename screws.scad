@@ -681,8 +681,8 @@ module screw(spec, head, drive, thread, drive_size,
                       l=thread_len+eps_thread, left_handed=false, internal=_internal, 
                       bevel1=bev1,
                       bevel2=bev2,
-                      higbee1=higbee,
-                      higbee2=!headless || is_undef(higbee) ? false : higbee,
+                      higbee1=higbee && !_internal,
+                      higbee2=(!headless && !_internal) || is_undef(higbee) ? false : higbee,
                       $fn=sides, anchor=TOP);
             }
              
@@ -746,6 +746,7 @@ module screw(spec, head, drive, thread, drive_size,
 //   bevel = if true create bevel at both ends of hole.  Default: see below
 //   bevel1 = if true create bevel at bottom end of hole.  Default: false
 //   bevel2 = if true create bevel at top end of hole.     Default: true when tolerance="self tap", false otherwise
+//   higbee = if true and hole is threaded, create blunt start threads at the top of the hole.  Default: false
 //   $slop = add extra gap to account for printer overextrusion.  Default: 0
 //   atype = anchor type, one of "screw", "head", "shaft", "threads", "shank"
 //   anchor = Translate so anchor point on the shaft is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1472,6 +1473,9 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,oversize=0
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
+//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
+//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
+//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
 //   tolerance = nut tolerance.  Determines actual nut thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2B" for UTS and "6H" for ISO.
 //   $slop = extra space left to account for printing over-extrusion.  Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1517,10 +1521,10 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,oversize=0
 //   nut("#8", thread="none");
 
 function nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize, 
-           bevel,bevel1,bevel2,bevang=15,ibevel,ibevel1,ibevel2, anchor=BOTTOM, spin=0, orient=UP, oversize=0) 
+           bevel,bevel1,bevel2,bevang=15,ibevel,ibevel1,ibevel2, higbee, higbee1, higbee2, anchor=BOTTOM, spin=0, orient=UP, oversize=0) 
            = no_function("nut");
 module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize, 
-           bevel,bevel1,bevel2,bevang=15,ibevel,ibevel1,ibevel2, anchor=BOTTOM, spin=0, orient=UP, oversize=0)
+           bevel,bevel1,bevel2,bevang=15,ibevel,ibevel1,ibevel2, higbee, higbee1, higbee2, anchor=BOTTOM, spin=0, orient=UP, oversize=0)
 {
    dummyA = assert(is_undef(nutwidth) || (is_num(nutwidth) && nutwidth>0));
 
@@ -1548,6 +1552,7 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
         shape=shape, 
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,bevang=bevang,
         ibevel=ibevel,ibevel1=ibevel1,ibevel2=ibevel2,
+        higbee=higbee, higbee1=higbee1, higbee2=higbee2, 
         anchor=anchor,spin=spin,orient=orient) children();
 }
 
