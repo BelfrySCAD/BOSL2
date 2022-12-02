@@ -1175,33 +1175,35 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   the cylinder or cone's sloped side.  The more specific parameters like chamfer1 or rounding2 override the more
 //   general ones like chamfer or rounding, so if you specify `rounding=3, chamfer2=3` you will get a chamfer at the top and
 //   rounding at the bottom.
-//
-
-// Figure(2D,Med): Chamfers on cones can be tricky.  This figure shows chamfers of the same size and same angle, A=30 degrees.  Note that the angle is measured on the inside, and produces a quit different looking chamfer at the top and bottom of the cone.  Black arrows mark the size of the chamfers, which may not even appear the same size visually.  When you do not give an angle, the triangle that is cut off will be isoceles, like the triangle at the top, with two equal angles.
+// Figure(2D,Big,NoAxes,VPR = [0, 0, 0], VPT = [0,0,0], VPD = 82): Chamfers on cones can be tricky.  This figure shows chamfers of the same size and same angle, A=30 degrees.  Note that the angle is measured on the inside, and produces a quite different looking chamfer at the top and bottom of the cone.  Straight black arrows mark the size of the chamfers, which may not even appear the same size visually.  When you do not give an angle, the triangle that is cut off will be isoceles, like the triangle at the top, with two equal angles.
 //  color("lightgray")
 //  projection()
 //      cyl(r2=10, r1=20, l=20,chamfang=30, chamfer=0,orient=BACK);
 //  projection()
 //      cyl(r2=10, r1=20, l=20,chamfang=30, chamfer=8,orient=BACK);
 //  color("black"){
-//      fwd(9.8)right(20-5.5)text("A",size=1.1);
-//      fwd(-8.7)right(10-5.5)text("A",size=1.1);
+//      fwd(9.6)right(20-4.8)text("A",size=1.3);
+//      fwd(-8.4)right(10-4.9)text("A",size=1.3);
 //      right(20-8)fwd(10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
 //      right(10-8)fwd(-10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
-//  }    
-// Figure(2D,Med): With negative chamfers, the angle A=30 degrees is on the outside.  The chamfers are again quit different looking.  As before, the default will feature two congruent angles, and in this case it happens at the bottom of the cone but not the top.  The arrows again show the size of the chamfer.
+//      stroke(arc(cp=[2,10], angle=[0,-30], n=20, r=5), width=.18, endcaps="arrow2");
+//      stroke(arc(cp=[12,-10], angle=[0,30], n=20, r=5), width=.18, endcaps="arrow2");
+//  }
+// Figure(2D,Big,NoAxes,VPR = [0, 0, 0], VPT = [0,0,0], VPD = 82)): The cone in this example is narrow but has the same slope.  With negative chamfers, the angle A=30 degrees is on the outside.  The chamfers are again quite different looking.  As before, the default will feature two congruent angles, and in this case it happens at the bottom of the cone but not the top.  The straight arrows again show the size of the chamfer.
+//  r1=10-7.5;r2=20-7.5;
 //  color("lightgray")
 //  projection()
-//      cyl(r2=10, r1=20, l=20,chamfang=30, chamfer=-8,orient=BACK);
+//      cyl(r2=r1, r1=r2, l=20,chamfang=30, chamfer=-8,orient=BACK);
 //  projection()
-//      cyl(r2=10, r1=20, l=20,chamfang=30, chamfer=0,orient=BACK);
+//      cyl(r2=r1, r1=r2, l=20,chamfang=30, chamfer=0,orient=BACK);
 //  color("black"){
-//      fwd(9.8)right(20+4.5)text("A",size=1.1);
-//      fwd(-8.7)right(10+4.3)text("A",size=1.1);
-//      right(20)fwd(10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
-//      right(10)fwd(-10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
+//      fwd(9.7)right(r2+3.8)text("A",size=1.3);
+//      fwd(-8.5)right(r1+3.7)text("A",size=1.3);
+//      right(r2)fwd(10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
+//      right(r1)fwd(-10.5)stroke([[0,0],[8,0]], endcaps="arrow2",width=.15);
+//      stroke(arc(cp=[r1+8,10], angle=[180,180+30], n=20, r=5), width=.18, endcaps="arrow2");
+//      stroke(arc(cp=[r2+8,-10], angle=[180-30,180], n=20, r=5), width=.18, endcaps="arrow2");
 //  }
-//
 // Arguments:
 //   l / h = Length of cylinder along oriented axis.  Default: 1
 //   r = Radius of cylinder.  Default: 1
