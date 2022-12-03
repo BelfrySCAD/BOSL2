@@ -419,8 +419,8 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 // Example(2D): This example shows the gap between nut and bolt at the loosest tolerance for UTS.  This gap is what enables the parts to mesh without binding and is part of the definition for standard metal hardware.  Note that this gap is part of the standard definition for the metal hardware, not the 3D printing adjustment provided by the $slop parameter.  
 //   $fn=32;
 //   projection(cut=true)xrot(-90){
-//       screw("1/4-20,1/4", head="hex",orient=UP,anchor=BOTTOM,tolerance="1A");
-//       down(INCH*1/20*2.145) nut("1/4-20", thickness=8, nutwidth=0.5*INCH, tolerance="1B");
+//       screw("1/4-20,3/8", head="hex",orient=UP,anchor=BOTTOM,tolerance="1A");
+//       down(INCH*1/20*1.395) nut("1/4-20", thickness=8, nutwidth=0.5*INCH, tolerance="1B");
 //   }
 // Example: Here is a screw with nonstadard threading and a weird head size, which we create by modifying the screw structure:
 //   spec = screw_info("M6x2,12",head="socket");
@@ -793,7 +793,7 @@ module screw(spec, head, drive, thread, drive_size,
 //          screw_hole("M16,15",anchor=TOP,thread=true);
 module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize, 
              length, l, thread_len, tolerance=undef, counterbore, teardrop=false,
-             bevel, bevel1, bevel2,
+             bevel, bevel1, bevel2, higbee=false,
              atype="screw",anchor=CENTER,spin=0, orient=UP)
 {
    screwspec = _get_spec(spec, "screw_info", "screw_hole", 
@@ -811,7 +811,7 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
      undersize = is_def(oversize) ? -oversize
                : -[default(hole_oversize,0), default(head_oversize,0)];
      default_tag("remove")
-       screw(spec,head=head,thread=thread,undersize=undersize,
+       screw(spec,head=head,thread=thread,undersize=undersize, higbee=higbee,
              length=length,l=l,thread_len=thread_len, tolerance=tolerance, _counterbore=counterbore,
              bevel=bevel, bevel1=bevel1, bevel2=bevel2, 
              atype=atype, anchor=anchor, spin=spin, orient=orient, _internal=true, _teardrop=teardrop)
@@ -933,7 +933,7 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
      default_tag("remove")     
        screw(spec,head=head,thread=0,shaft_undersize=-hole_oversize, head_undersize=-head_oversize, 
              length=length,l=l,thread_len=thread_len, _counterbore=counterbore,
-             bevel=bevel, bevel1=bevel1, bevel2=bevel2, bevelsize=pitch>0?pitch:undef, 
+             bevel=bevel, bevel1=bevel1, bevel2=bevel2, bevelsize=pitch>0?pitch:undef, higbee=higbee, 
              atype=atype, anchor=anchor, spin=spin, orient=orient, _internal=true, _teardrop=teardrop)
          children();
    }
@@ -1672,12 +1672,13 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 // Example: Square trap (just a cube, but hopefully just the right size)
 //   nut_trap_inline(10, "#8", shape="square");
 // Example: Attached to a screw hole
-//   screw_hole("#8,1",head="socket",counterbore=true) 
+//   screw_hole("#8,1",head="socket",counterbore=true, $fn=32) 
 //     position(BOT) nut_trap_inline(10);
 // Example: Nut trap with child screw hole
 //   nut_trap_inline(10, "#8")
-//     position(TOP)screw_hole(length=10,anchor=BOT,head="flat");
+//     position(TOP)screw_hole(length=10,anchor=BOT,head="flat",$fn=32);
 // Example(Med): a pipe clamp
+//   $fa=5;$fs=0.5;
 //   bardiam = 32;
 //   bandwidth = 10;
 //   thickness = 3;
@@ -1686,7 +1687,7 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 //     tube(id=bardiam, wall = thickness, h=bandwidth, orient=BACK)
 //       left(thickness/2) position(RIGHT) cube([bandwidth, bandwidth, 14], anchor = LEFT, orient=FWD)
 //       {
-//          screw_hole("#6",length=12, head="socket",counterbore=6,anchor=CENTER)
+//          screw_hole("#4",length=12, head="socket",counterbore=6,anchor=CENTER)
 //             position(BOT) nut_trap_inline(l=6,anchor=BOT);
 //          tag("remove")right(1)position(RIGHT)cube([11+thickness, 11, 2], anchor = RIGHT);
 //       }
