@@ -416,7 +416,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //     label("2") screw("1/4-20,5/8", head="hex",orient=DOWN,atype="head", anchor=TOP,tolerance="2A");  // Standard
 //     label("3") screw("1/4-20,5/8", head="hex",orient=DOWN,atype="head", anchor=TOP,tolerance="3A");  // Tight
 //   }
-// Example(2D): This example shows the gap between nut and bolt at the loosest tolerance for UTS.  This gap is what enables the parts to mesh without binding and is part of the definition for standard metal hardware.  Note that this gap is part of the standard definition for the metal hardware, not the 3D printing adjustment provided by the $slop parameter.  
+// Example(2D,NoAxes): This example shows the gap between nut and bolt at the loosest tolerance for UTS.  This gap is what enables the parts to mesh without binding and is part of the definition for standard metal hardware.  Note that this gap is part of the standard definition for the metal hardware, not the 3D printing adjustment provided by the $slop parameter.  
 //   $fn=32;
 //   projection(cut=true)xrot(-90){
 //       screw("1/4-20,3/8", head="hex",orient=UP,anchor=BOTTOM,tolerance="1A");
@@ -1677,7 +1677,7 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 // Example: Nut trap with child screw hole
 //   nut_trap_inline(10, "#8")
 //     position(TOP)screw_hole(length=10,anchor=BOT,head="flat",$fn=32);
-// Example(Med): a pipe clamp
+// Example(Med,NoAxes): a pipe clamp
 //   $fa=5;$fs=0.5;
 //   bardiam = 32;
 //   bandwidth = 10;
