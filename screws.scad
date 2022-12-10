@@ -925,11 +925,12 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
                    parse_int(substr(tolerance,1))
              : assert(false,str("Unknown tolerance ",tolerance, " for clearance hole"));
      tol_table = struct_val(screwspec,"system")=="UTS" ? UTS_clearance[tol_ind] : ISO_clearance[tol_ind];
+     tol_gap = lookup(_nominal_diam(screwspec), tol_table);
      // If we got here, hole_oversize is undefined and oversize is undefined
      hole_oversize = downcase(tolerance)=="tap" ? -pitch
                    : downcase(tolerance)=="self tap" ? -pitch*lookup(pitch,[[1,0.72],[1.5,.6]])
-                   : lookup(_nominal_diam(screwspec), tol_table);
-     head_oversize = first_defined([head_oversize,hole_oversize]);
+                   : tol_gap;
+     head_oversize = default(head_oversize, tol_gap);
      default_tag("remove")     
        screw(spec,head=head,thread=0,shaft_undersize=-hole_oversize, head_undersize=-head_oversize, 
              length=length,l=l,thread_len=thread_len, _counterbore=counterbore,

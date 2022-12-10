@@ -16,6 +16,10 @@ test_sort();
 
 
 module test_sortidx() {
+    assert(sortidx([3]) == [0]);
+    assert(sortidx([]) == []);
+    assert(sortidx([[5,6,7]])==[0]);
+    assert(sortidx(["abc"]) == [0]);
     lst1 = ["da","bax","eaw","cav"];
     assert(sortidx(lst1) == [1,3,0,2]);
     lst5 = [3,5,1,7];
