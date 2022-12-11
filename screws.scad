@@ -416,7 +416,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //     label("2") screw("1/4-20,5/8", head="hex",orient=DOWN,atype="head", anchor=TOP,tolerance="2A");  // Standard
 //     label("3") screw("1/4-20,5/8", head="hex",orient=DOWN,atype="head", anchor=TOP,tolerance="3A");  // Tight
 //   }
-// Example(2D): This example shows the gap between nut and bolt at the loosest tolerance for UTS.  This gap is what enables the parts to mesh without binding and is part of the definition for standard metal hardware.  Note that this gap is part of the standard definition for the metal hardware, not the 3D printing adjustment provided by the $slop parameter.  
+// Example(2D,NoAxes): This example shows the gap between nut and bolt at the loosest tolerance for UTS.  This gap is what enables the parts to mesh without binding and is part of the definition for standard metal hardware.  Note that this gap is part of the standard definition for the metal hardware, not the 3D printing adjustment provided by the $slop parameter.  
 //   $fn=32;
 //   projection(cut=true)xrot(-90){
 //       screw("1/4-20,3/8", head="hex",orient=UP,anchor=BOTTOM,tolerance="1A");
@@ -925,11 +925,12 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
                    parse_int(substr(tolerance,1))
              : assert(false,str("Unknown tolerance ",tolerance, " for clearance hole"));
      tol_table = struct_val(screwspec,"system")=="UTS" ? UTS_clearance[tol_ind] : ISO_clearance[tol_ind];
+     tol_gap = lookup(_nominal_diam(screwspec), tol_table);
      // If we got here, hole_oversize is undefined and oversize is undefined
      hole_oversize = downcase(tolerance)=="tap" ? -pitch
                    : downcase(tolerance)=="self tap" ? -pitch*lookup(pitch,[[1,0.72],[1.5,.6]])
-                   : lookup(_nominal_diam(screwspec), tol_table);
-     head_oversize = first_defined([head_oversize,hole_oversize]);
+                   : tol_gap;
+     head_oversize = default(head_oversize, tol_gap);
      default_tag("remove")     
        screw(spec,head=head,thread=0,shaft_undersize=-hole_oversize, head_undersize=-head_oversize, 
              length=length,l=l,thread_len=thread_len, _counterbore=counterbore,
@@ -1677,7 +1678,7 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 // Example: Nut trap with child screw hole
 //   nut_trap_inline(10, "#8")
 //     position(TOP)screw_hole(length=10,anchor=BOT,head="flat",$fn=32);
-// Example(Med): a pipe clamp
+// Example(Med,NoAxes): a pipe clamp
 //   $fa=5;$fs=0.5;
 //   bardiam = 32;
 //   bandwidth = 10;

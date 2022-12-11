@@ -1288,7 +1288,7 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 // Example: External Roundings
 //   cyl(l=50, r=30, rounding1=-5, rounding2=5, $fa=1, $fs=1);
 //
-// Example: Standard Connectors
+// Example(Med): Standard Connectors
 //   xdistribute(40) {
 //       cyl(l=30, d=25) show_anchors();
 //       cyl(l=30, d1=25, d2=10) show_anchors();
@@ -1755,19 +1755,16 @@ module zcyl(
 // Module: tube()
 //
 // Description:
-//   Makes a hollow tube with the given outer size and wall thickness.
-//
-// Usage: Typical
-//   tube(h|l, or, ir, [center], [realign=]);
-//   tube(h|l, or=|od=, ir=|id=, ...);
-//   tube(h|l, ir|id, wall, ...);
-//   tube(h|l, or|od, wall, ...);
-//   tube(h|l, ir1|id1, ir2|id2, wall, ...);
-//   tube(h|l, or1|od1, or2|od2, wall, ...);
-//   tube(h|l, ir1|id1, ir2|id2, or1|od1, or2|od2, [realign]);
-// Usage: Attaching Children
-//   tube(...) ATTACHMENTS;
-//
+//   Makes a hollow tube that can be cylindrical or conical by specifying inner and outer dimensions or by giving one dimension and
+//   wall thickness. 
+// Usage: Basic cylindrical tube, specifying inner and outer radius or diameter
+//   tube(h|l, or, ir, [center], [realign=], [anchor=], [spin=],[orient=]) [ATTACHMENTS];
+//   tube(h|l, od=, id=, ...)  [ATTACHMENTS];
+// Usage: Specify wall thickness
+//   tube(h|l, or|od=|ir=|id=, wall=, ...) [ATTACHMENTS];
+// Usage: Conical tubes
+//   tube(h|l, ir1=|id1=, ir2=|id2=, or1=|od1=, or2=|od2=, ...) [ATTACHMENTS];
+//   tube(h|l, or1=|od1=, or2=|od2=, wall=, ...) [ATTACHMENTS];
 // Arguments:
 //   h / l = height of tube. Default: 1
 //   or = Outer radius of tube. Default: 1

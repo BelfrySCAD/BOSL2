@@ -728,7 +728,6 @@ function sort(list, idx=undef) =
 //   idxs3 = sortidx(lst, idx=[1,3]); // Returns: [3,0,2,1]
 function sortidx(list, idx=undef) = 
     assert(is_list(list)||is_string(list), "Invalid list." )
-    !is_list(list) || len(list)<=1 ? list :
     is_homogeneous(list,1)
     ?   let( 
             size = list_shape(list[0]),

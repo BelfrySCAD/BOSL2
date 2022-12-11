@@ -775,7 +775,7 @@ module zrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true)
 //   d = diameter of circle. (Default: 2)
 //   dx = diameter of ellipse on X axis. Used instead of d.
 //   dy = diameter of ellipse on Y axis. Used instead of d.
-//   rot = whether to rotate the copied children.  (Default: false)
+//   rot = whether to rotate the copied children.  (Default: true)
 //   sa = starting angle. (Default: 0.0)
 //   ea = ending angle. Will distribute copies CCW from sa to ea. (Default: 360.0)
 //
