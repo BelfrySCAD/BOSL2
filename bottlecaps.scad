@@ -117,7 +117,7 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
                             thread_depth=thread_h+0.1,
                             flank_angle=flank_angle,
                             turns=810/360,
-                            higbee=thread_h*2,
+                            taper=-thread_h*2,
                             anchor=TOP
                         );
                         zrot_copies(rots=[90,270]) {
@@ -190,7 +190,7 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=cap_id, h=tamper_ring_h+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, turns=810/360, higbee=thread_depth, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, turns=810/360, taper=-thread_depth, internal=true, anchor=BOTTOM);
         }
         children();
     }
@@ -306,7 +306,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
                         thread_depth=thread_h+0.1,
                         flank_angle=flank_angle,
                         turns=650/360,
-                        higbee=thread_h*2,
+                        taper=-thread_h*2,
                         anchor=TOP
                     );
                     zrot_copies(rots=[90,270]) {
@@ -371,7 +371,7 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=28.58, h=11.2+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, flank_angle=15, turns=650/360, higbee=1.6, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, flank_angle=15, turns=650/360, taper=-1.6, internal=true, anchor=BOTTOM);
         }
         children();
     }
@@ -475,7 +475,7 @@ module generic_bottle_neck(
                         thread_depth = thread_h + 0.1 * diamMagMult,
                         flank_angle = flank_angle,
                         turns = (height - pitch - lip_roundover_r) * .6167 / pitch,
-                        higbee = thread_h * 2,
+                        taper = -thread_h * 2,
                         anchor = TOP
                     );
                     zrot_copies(rots = [90, 270]) {
@@ -578,7 +578,8 @@ module generic_bottle_cap(
             }
             difference(){
                 up(wall + pitch / 2) {
-                    thread_helix(d = neckOuterDTol, pitch = pitch, thread_depth = threadDepth, flank_angle = flank_angle, turns = ((height - pitch) / pitch), higbee = threadDepth, internal = true, anchor = BOTTOM);
+                    thread_helix(d = neckOuterDTol, pitch = pitch, thread_depth = threadDepth, flank_angle = flank_angle,
+                                 turns = ((height - pitch) / pitch), taper = -threadDepth, internal = true, anchor = BOTTOM);
                 }
             }
         }
@@ -1100,8 +1101,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
     profile = _sp_thread_profile(tpi,a,S,style);
 
     depth = a/2;
-    higlen = 2*a;
-    higang = higlen / ((T-2*depth)*PI) * 360;
+    taperlen = 2*a;
 
     beadmax = type==400 ? (T/2-depth)+depth*1.25
             : diam <=15 ? (T-.15)/2 : (T-.05)/2;
@@ -1126,7 +1126,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
         up((H+extra_bot)/2){
             difference(){
                 union(){
-                    thread_helix(d=T-.01, profile=profile, pitch = INCH/tpi, turns=(twist+2*higang)/360, higbee=higlen, anchor=TOP);
+                    thread_helix(d=T-.01, profile=profile, pitch = INCH/tpi, turns=twist/360, taper=taperlen, anchor=TOP);
                     cylinder(d=T-depth*2,l=H,anchor=TOP);
                     if (bead)
                       down(bead_shift)
@@ -1144,7 +1144,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 
 // Module: sp_cap()
 // Usage:
-//   sp_cap(diam, type, wall, [style=], [top_adj=], [bot_adj=], [$slop]) [ATTACHMENTS];
+//   sp_cap(diam, type, wall, [style=], [top_adj=], [bot_adj=], [texture=], [$slop]) [ATTACHMENTS];
 // Description:
 //   Make a SPI (Society of Plastics Industry) threaded bottle neck.  You must
 //   supply the nominal outer diameter of the threads and the thread type, one of
@@ -1175,6 +1175,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 //   style = Either "L" or "M" to specify the thread style.  Default: "L"
 //   top_adj = Amount to reduce top space in the cap, which means it doesn't screw down as far.  Default: 0
 //   bot_adj = Amount to reduce extension of cap at the bottom, which also means it doesn't screw down as far.  Default: 0
+//   texture = texture for outside of cap, one of "knurled", "ribbed" or "none.  Default: "none"
 //   $slop = Increase inner diameter by `2 * $slop`.  
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -1183,7 +1184,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 //   sp_cap(48,400,2);
 //   sp_cap(22,410,2);
 //   sp_cap(28,415,1.5,style="M");
-module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, anchor, spin, orient)
+module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, texture="none", anchor, spin, orient)
 {
     table = struct_val(_sp_specs,type);
     dum1=assert(is_def(table),"Unknown SP closure type.  Type must be one of 400, 410, or 415");
@@ -1206,20 +1207,24 @@ module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, anchor, spin, orien
     profile = fwd(-bounds[0].y,yflip(oprofile));
 
     depth = a/2;
-    higlen = 2*a;
-    higang = higlen / ((T-2*depth)*PI) * 360;
-
-    echo(a=a,depth=depth,halfdepth=depth/2, tpi*pointlist_bounds(profile));
-
+    taperlen = 2*a;
+    assert(in_list(texture, ["none","knurled","ribbed"]));
     space=2*depth/10+2*get_slop();
     attachable(anchor,spin,orient,r= (T+space)/2+wall, l=H-bot_adj+wall){
         xrot(180)
         up((H-bot_adj)/2-wall/2){
             difference(){
-                up(wall)cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8);
+                up(wall){
+                   if (texture=="knurled")
+                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8*0,texture="diamonds", tex_size=[3,3], tex_style="concave");
+                   else if (texture == "ribbed") 
+                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8*0,texture="trunc_ribs", tex_size=[3,3], tex_style="min_edge");
+                   else
+                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8);
+                }
                 cyl(d=T+space, l=H-bot_adj+1, anchor=TOP);
             }
-            thread_helix(d=T+space-.01, profile=profile, pitch = INCH/tpi, turns=(twist+2*higang)/360, higbee=higlen, anchor=TOP, internal=true);
+            thread_helix(d=T+space-.01, profile=profile, pitch = INCH/tpi, turns=twist/360, taper=taperlen, anchor=TOP, internal=true);
         }
         children();
     }
