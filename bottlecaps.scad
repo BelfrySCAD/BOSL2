@@ -1216,9 +1216,9 @@ module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, texture="none", anc
             difference(){
                 up(wall){
                    if (texture=="knurled")
-                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8*0,texture="diamonds", tex_size=[3,3], tex_style="concave");
+                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,texture="trunc_pyramids", tex_size=[3,3], tex_style="convex");
                    else if (texture == "ribbed") 
-                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8*0,texture="trunc_ribs", tex_size=[3,3], tex_style="min_edge");
+                        cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8,tex_taper=0,texture="trunc_ribs", tex_size=[3,3], tex_style="min_edge");
                    else
                         cyl(d=T+space+2*wall,l=H+wall-bot_adj,anchor=TOP,chamfer2=.8);
                 }
