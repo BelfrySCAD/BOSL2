@@ -1436,9 +1436,8 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 
 // Module: thread_helix()
 // Usage:
-//   thread_helix(d, pitch, [thread_depth], [flank_angle], [twist], [profile=], [left_handed=], [higbee=], [internal=]);
+//   thread_helix(d, pitch, [thread_depth], [flank_angle], [turns], [profile=], [left_handed=], [higbee=], [internal=]);
 // Description:
-
 //   Creates a right-handed helical thread with optional end tapering.  Unlike
 //   {{generic_threaded_rod()}, this module just generates the thread, and you specify the total
 //   angle of threading that you want, which makes it easy to put complete threads onto a longer
@@ -1462,24 +1461,25 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 //   unlike the threaded_rod modules, thread_helix does not adjust the diameter for faceting, nor does it
 //   subtract any $slop for clearance.  
 //   .
-//   The taper options specify Higbee specifies tapering applied to the ends of the threads and is given as the linear distance
-//   over which to taper.  Tapering works on both internal and external threads.  
+//   The taper options specify tapering at of the threads at each end, and is given as the linear distance
+//   over which to taper.  If taper is positive the threads are lengthened by the specified distance; if taper
+//   is negative, the taper is included in the thread length specified by `turns`.  Tapering works on both internal and external threads.  
 // Arguments:
 //   d = Inside base diameter of threads.  Default: 10
-//   pitch = Distance between threads.  Default: 2mm/thread
+//   pitch = Distance between threads.  Default: 2
 //   thread_depth = Depth of threads from top to bottom.
 //   flank_angle = Angle of thread faces to plane perpendicular to screw.  Default: 15 degrees.
-//   turns = Number of revolutions to rotate thread around.  Default: 2.
+//   turns = Number of revolutions to rotate thread around. 
 //   ---
 //   profile = If an asymmetrical thread profile is needed, it can be specified here.
 //   starts = The number of thread starts.  Default: 1
 //   left_handed = If true, thread has a left-handed winding.
-//   internal = If true, apply tapers for internal threading, and invert the default profile.  Default: false
+//   internal = if true make internal threads.  The only effect this has is to change how the threads taper if tapering is selected. When true, threads taper towards the outside; when false, they taper towards the inside.  Default: false
 //   d1 = Bottom inside base diameter of threads.
 //   d2 = Top inside base diameter of threads.
-//   higbee = Length to taper thread ends over.  Default: 0
-//   higbee1 = Length to taper bottom thread end over.
-//   higbee2 = Length to taper top thread end over.
+//   taper = Length of tapers for thread ends.  Positive to add taper to threads, negative to taper within specified length.  Default: 0
+//   taper1 = Length of taper for bottom thread end
+//   taper2 = Length of taper for top thread end
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1519,19 +1519,19 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 //      }
 // Examples:
 //   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=2.5, $fn=72);
-//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=2.5, higbee=1, $fn=72);
-//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=2, higbee=2, internal=true, $fn=72);
-//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=1, left_handed=true, higbee=1, $fn=36);
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=2.5, taper=1, $fn=72);
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=2, taper=2, internal=true, $fn=72);
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=1, left_handed=true, taper=1, $fn=36);
 function thread_helix(
-    d, pitch, thread_depth, flank_angle, turns=2,
+    d, pitch, thread_depth, flank_angle, turns,
     profile, starts=1, left_handed=false, internal=false,
-    d1, d2, higbee, higbee1, higbee2,
+    d1, d2, taper, taper1, taper2,
     anchor, spin, orient
 ) = no_function("thread_helix");
 module thread_helix(
     d, pitch, thread_depth, flank_angle, turns=2,
     profile, starts=1, left_handed=false, internal=false,
-    d1, d2, higbee, higbee1, higbee2,
+    d1, d2, taper, taper1, taper2,
     anchor, spin, orient
 ) {
     dummy1=assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),"Cannot give thread_depth or flank_angle with a profile");
@@ -1562,7 +1562,7 @@ module thread_helix(
     dir = left_handed? -1 : 1;
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
         zrot_copies(n=starts) {
-            spiral_sweep(pline, h=h, r1=r1, r2=r2, turns=turns*dir, higbee=higbee, higbee1=higbee1, higbee2=higbee2, internal=internal, anchor=CENTER);
+            spiral_sweep(pline, h=h, r1=r1, r2=r2, turns=turns*dir, taper=taper, taper1=taper1, taper2=taper2, internal=internal, anchor=CENTER);
         }
         children();
     }

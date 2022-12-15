@@ -991,8 +991,8 @@ module rotate_sweep(
 
 // Function&Module: spiral_sweep()
 // Usage: As Module
-//   spiral_sweep(poly, h, r|d=, turns, [higbee=], [center=], [higbee1=], [higbee2=], [internal=], ...)[ATTACHMENTS];
-//   spiral_sweep(poly, h, r1=|d1=, r2=|d2=, turns, [higbee=], [center=], [higbee1=], [higbee2=], [internal=], ...)[ATTACHMENTS];
+//   spiral_sweep(poly, h, r|d=, turns, [taper=], [center=], [taper1=], [taper2=], [internal=], ...)[ATTACHMENTS];
+//   spiral_sweep(poly, h, r1=|d1=, r2=|d2=, turns, [taper=], [center=], [taper1=], [taper2=], [internal=], ...)[ATTACHMENTS];
 // Usage: As Function
 //   vnf = spiral_sweep(poly, h, r|d=, turns, ...);
 //   vnf = spiral_sweep(poly, h, r1=|d1=, r1=|d2=, turns, ...);
@@ -1002,19 +1002,22 @@ module rotate_sweep(
 //   of a given radius, height and degrees of rotation.  The origin in the profile traces out the helix of the specified radius.
 //   If turns is positive the path will be right-handed;  if turns is negative the path will be left-handed.
 //   .
-//   Higbee specifies tapering applied to the ends of the extrusion and is given as the linear distance
-//   over which to taper.
+//   The taper options specify tapering at of the ends of the extrusion, and are given as the linear distance
+//   over which to taper.  If taper is positive the extrusion lengthened by the specified distance; if taper
+//   is negative, the taper is included in the extrusion length specified by `turns`. 
 // Arguments:
 //   poly = Array of points of a polygon path, to be extruded.
 //   h = height of the spiral to extrude along.
-//   r = Radius of the spiral to extrude along. Default: 50
+//   r = Radius of the spiral to extrude along.
 //   turns = number of revolutions to spiral up along the height.
 //   ---
 //   d = Diameter of the spiral to extrude along.
-//   higbee = Length to taper thread ends over.
-//   higbee1 = Taper length at start
-//   higbee2 = Taper length at end
-//   internal = direction to taper the threads with higbee.  If true threads taper outward; if false they taper inward.   Default: false
+//   d1|r1 = Bottom inside diameter or radius of spiral to extrude along.
+//   d2|r2 = Top inside diameter or radius of spiral to extrude along.
+//   taper = Length of tapers for thread ends.  Positive to add taper to threads, negative to taper within specified length.  Default: 0
+//   taper1 = Length of taper for bottom thread end
+//   taper2 = Length of taper for top thread end
+//   internal = if true make internal threads.  The only effect this has is to change how the extrusion tapers if tapering is selected. When true, the extrusion tapers towards the outside; when false, it tapers towards the inside.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1026,66 +1029,75 @@ module rotate_sweep(
 function _taperfunc(x) =
      let(higofs = pow(0.05,2))   // Smallest hig scale is the square root of this value
      sqrt((1-higofs)*x+higofs);
-function _taperfunc(x) =
+function _taperfunc_ellipse(x) =
      sqrt(1-(1-x)^2);
 function _ss_polygon_r(N,theta) =
         let( alpha = 360/N )
         cos(alpha/2)/(cos(posmod(theta,alpha)-alpha/2));
-function spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, internal=false, anchor=CENTER, spin=0, orient=UP) =
+function spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, taper1, taper2, internal=false, anchor=CENTER, spin=0, orient=UP) =
     assert(is_num(turns) && turns != 0)
     let(
-        twist = 360*turns,
-        higsample = 10,         // Oversample factor for higbee tapering
+        tapersample = 10,         // Oversample factor for higbee tapering
+        dir = sign(turns),
+        r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=50),
+        r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=50),
         bounds = pointlist_bounds(poly),
         yctr = (bounds[0].y+bounds[1].y)/2,
         xmin = bounds[0].x,
         xmax = bounds[1].x,
         poly = path3d(clockwise_polygon(poly)),
         anchor = get_anchor(anchor,center,BOT,BOT),
-        r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=50),
-        r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=50),
         sides = segs(max(r1,r2)),
-        dir = sign(twist),
-        ang_step = 360/sides*dir,
-        orig_anglist = [for(ang = [0:ang_step:twist-EPSILON]) ang,
-                        twist],
-        higbee1 = first_defined([higbee1, higbee, 0]),
-        higbee2 = first_defined([higbee2, higbee, 0]),
-        higang1 = 360 * higbee1 / (2 * r1 * PI),
-        higang2 = 360 * higbee2 / (2 * r2 * PI)
+        ang_step = 360/sides,
+        turns = abs(turns),
+        taper1 = first_defined([taper1, taper, 0]),
+        taper2 = first_defined([taper2, taper, 0]),
+        taperang1 = 360 * abs(taper1) / (2 * r1 * PI),
+        taperang2 = 360 * abs(taper2) / (2 * r2 * PI),
+        minang = taper1<=0 ? 0 : -taperang1,
+        tapercut1 = taper1<=0 ? taperang1 : 0,
+        maxang = taper2<=0 ? 360*turns : 360*turns+taperang2,
+        tapercut2 = taper2<=0 ? 360*turns-taperang2 : 360*turns
     )
-    assert(higbee1>=0 && higbee2>=0)
-    assert(higang1 < dir*twist/2,"Higbee1 is more than half the threads")
-    assert(higang2 < dir*twist/2,"Higbee2 is more than half the threads")
+    assert( tapercut1<tapercut2 && tapercut1<maxang, "Tapers are too long to fit")
+    assert( all_positive([r1,r2]), "Diameter/radius must be positive")
     let(
-        // This complicated sampling scheme is designed to ensure that there is always a facet boundary
-        // at the $fn specified location, regardless of what kind of subsampling occurs for tapers."
+        // This complicated sampling scheme is designed to ensure that faceting always starts at angle zero
+        // for alignment with cylinders, and there is always a facet boundary at the $fn specified locations, 
+        // regardless of what kind of subsampling occurs for tapers.
+        orig_anglist = [
+            if (minang<0) minang,
+            each reverse([for(ang = [-ang_step:-ang_step:minang+EPSILON]) ang]),
+            for(ang = [0:ang_step:maxang-EPSILON]) ang,
+            maxang
+        ],
         anglist = [
-           for(a=orig_anglist) if (a*dir<higang1-EPSILON) a,
-           dir*higang1,
-           for(a=orig_anglist) if (a*dir>higang1+EPSILON && (twist-a)*dir>higang2+EPSILON) a,
-           twist-dir*higang2,
-           for(a=orig_anglist) if ((twist-a)*dir<higang2-EPSILON) a
+           for(a=orig_anglist) if (a<tapercut1-EPSILON) a,
+           tapercut1,
+           for(a=orig_anglist) if (a>tapercut1+EPSILON && a<tapercut2-EPSILON) a,
+           tapercut2,
+           for(a=orig_anglist) if (a>tapercut2+EPSILON) a
         ],
         interp_ang = [
                       for(i=idx(anglist,e=-2))
                           each lerpn(anglist[i],anglist[i+1],
-                                         (higang1>0 && dir*anglist[i+1]<=higang1) || (higang2>0 && dir*(twist-anglist[i])<=higang2)
-                                            ? ceil((anglist[i+1]-anglist[i])/ang_step*higsample)
+                                         (taper1!=0 && anglist[i+1]<=tapercut1) || (taper2!=0 && anglist[i]>=tapercut2)
+                                            ? ceil((anglist[i+1]-anglist[i])/ang_step*tapersample)
                                             : 1,
                                      endpoint=false),
                       last(anglist)
                      ],
+        e=echo(lenlist=len(interp_ang)),                     
         skewmat = affine3d_skew_xz(xa=atan2(r2-r1,h)),
         points = [
             for (a = interp_ang) let (
-                hsc = dir*a<higang1 ? _taperfunc(dir*a/higang1)
-                    : dir*(twist-a)<higang2 ? _taperfunc(dir*(twist-a)/higang2)
+                hsc = a<tapercut1 ? _taperfunc((a-minang)/taperang1)
+                    : a>tapercut2 ? _taperfunc((maxang-a)/taperang2)
                     : 1,
-                u = a/twist,
+                u = a/(360*turns), 
                 r = lerp(r1,r2,u),
-                mat = affine3d_zrot(a)
-                    * affine3d_translate([_ss_polygon_r(sides,a)*r, 0, h * (u-0.5)])
+                mat = affine3d_zrot(dir*a)
+                    * affine3d_translate([_ss_polygon_r(sides,dir*a)*r, 0, dir*h * (u-0.5)])
                     * affine3d_xrot(90)
                     * skewmat
                     * scale([hsc,lerp(hsc,1,0.25),1], cp=[internal ? xmax : xmin, yctr, 0]),
@@ -1102,12 +1114,15 @@ function spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, hi
 
 
 
-module spiral_sweep(poly, h, r, turns=1, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, internal=false, anchor=CENTER, spin=0, orient=UP) {
-    vnf = spiral_sweep(poly, h, r, turns, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, internal);
+module spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, taper1, taper2, internal=false, anchor=CENTER, spin=0, orient=UP) {
+    vnf = spiral_sweep(poly, h, r, turns, taper, center, r1, r2, d, d1, d2, taper1, taper2, internal);
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=50);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=50);
+    taper1 = first_defined([taper1,taper,0]);
+    taper2 = first_defined([taper2,taper,0]);
+    extra = PI/2*(max(0,taper1/r1)+max(0,taper2/r2));
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
-        vnf_polyhedron(vnf, convexity=ceil(abs(2*turns)));
+        vnf_polyhedron(vnf, convexity=ceil(2*(abs(turns)+extra)));
         children();
     }
 }
