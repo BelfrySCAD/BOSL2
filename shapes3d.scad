@@ -969,20 +969,21 @@ module rect_tube(
         assert(isize2.y < size2.y, "Inner size is larger than outer size.");
     anchor = get_anchor(anchor, center, BOT, BOT);
     attachable(anchor,spin,orient, size=[each size1, h], size2=size2, shift=shift) {
-        diff("_H_o_L_e_")
-        prismoid(
-            size1, size2, h=h, shift=shift,
-            rounding=rounding, rounding1=rounding1, rounding2=rounding2,
-            chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
-            anchor=CTR
-        ) {
-            children();
-            tag("_H_o_L_e_") prismoid(
-                isize1, isize2, h=h+0.05, shift=shift,
-                rounding=irounding, rounding1=irounding1, rounding2=irounding2,
-                chamfer=ichamfer, chamfer1=ichamfer1, chamfer2=ichamfer2,
-                anchor=CTR
-            );
+        down(h/2) {
+            difference() {
+                prismoid(
+                    size1, size2, h=h, shift=shift,
+                    rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+                    chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+                    anchor=BOT
+                );
+                down(0.01) prismoid(
+                    isize1, isize2, h=h+0.02, shift=shift,
+                    rounding=irounding, rounding1=irounding1, rounding2=irounding2,
+                    chamfer=ichamfer, chamfer1=ichamfer1, chamfer2=ichamfer2,
+                    anchor=BOT
+                );
+            }
         }
         children();
     }
