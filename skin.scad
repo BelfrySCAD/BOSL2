@@ -507,7 +507,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 
 // Function&Module: linear_sweep()
 // Usage:
-//   linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [convexity=]) [ATTACHMENTS];
+//   linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [caps=], [convexity=]) [ATTACHMENTS];
 // Usage: With Texturing
 //   linear_sweep(region, [height], [center=], texture=, [tex_size=]|[tex_counts=], [tex_scale=], [style=], [tex_samples=], ...) [ATTACHMENTS];
 // Description:
@@ -534,6 +534,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   tex_scale = Scaling multiplier for the texture depth.
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
+//   caps = If false do not create end caps.  Can be a boolean vector.  Default: true
 //   convexity = Max number of surfaces any single ray could pass through.  Module use only.
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: `"centroid"`
 //   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
@@ -624,6 +625,22 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //        ]
 //   ];
 //   linear_sweep(path, texture=tex, tex_size=[5,5], h=40);
+// Example: VNF tile that has no top/bottom edges and produces a disconnected result
+//   shape = skin([
+//                 rect(2/5),
+//                 rect(2/3),
+//                 rect(2/5)
+//                ],
+//                z=[0,1/2,1],
+//                slices=0,
+//                caps=false);
+//   tile = move([0,1/2,2/3],yrot(90,shape));
+//   linear_sweep(
+//       circle(20), texture=tile,
+//       tex_size=[10,10],tex_scale=5,
+//       h=40,convexity=4);
+
+
 // Example: As Function
 //   path = glued_circles(r=15, spread=40, tangent=45);
 //   vnf = linear_sweep(
@@ -634,7 +651,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 module linear_sweep(
     region, height, center,
     twist=0, scale=1, shift=[0,0],
-    slices, maxseg, style="default", convexity,
+    slices, maxseg, style="default", convexity, caps=true, 
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
     tex_scale=1, tex_samples,
@@ -648,7 +665,7 @@ module linear_sweep(
         center == false? "original_base" :
         default(anchor, "original_base");
     vnf = linear_sweep(
-        region, height=h, style=style,
+        region, height=h, style=style, caps=caps, 
         twist=twist, scale=scale, shift=shift,
         texture=texture,
         tex_size=tex_size,
@@ -685,7 +702,7 @@ module linear_sweep(
 function linear_sweep(
     region, height, center,
     twist=0, scale=1, shift=[0,0],
-    slices, maxseg, style="default",
+    slices, maxseg, style="default", caps=true, 
     cp, atype="hull", h,
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
@@ -696,11 +713,12 @@ function linear_sweep(
     assert(is_region(region), "Input is not a region or polygon.")
     assert(is_num(scale) || is_vector(scale))
     assert(is_vector(shift, 2), str(shift))
+    assert(is_bool(caps) || is_bool_list(caps,2), "caps must be boolean or a list of two booleans")
     let(
         h = first_defined([h, height, 1])
     )
     !is_undef(texture)? _textured_linear_sweep(
-        region, h=h,
+        region, h=h, caps=caps, 
         texture=texture, tex_size=tex_size,
         counts=tex_counts, inset=tex_inset,
         rot=tex_rot, tex_scale=tex_scale,
@@ -709,6 +727,7 @@ function linear_sweep(
         anchor=anchor, spin=spin, orient=orient
     ) :
     let(
+        caps = is_bool(caps) ? [caps,caps] : caps, 
         anchor = center==true? "origin" :
             center == false? "original_base" :
             default(anchor, "original_base"),
@@ -747,8 +766,8 @@ function linear_sweep(
                     ) apply(m, path3d(path))
                 ]
             ) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
-            for (rgn = regions) vnf_from_region(rgn, down(h/2), reverse=true),
-            for (rgn = trgns) vnf_from_region(rgn, up(h/2), reverse=false)
+            if (caps[0]) for (rgn = regions) vnf_from_region(rgn, down(h/2), reverse=true),
+            if (caps[1]) for (rgn = trgns) vnf_from_region(rgn, up(h/2), reverse=false)
         ]),
         anchors = [
             named_anchor("original_base", [0,0,-h/2], UP)
@@ -1087,7 +1106,6 @@ function spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, tap
                                      endpoint=false),
                       last(anglist)
                      ],
-        e=echo(lenlist=len(interp_ang)),                     
         skewmat = affine3d_skew_xz(xa=atan2(r2-r1,h)),
         points = [
             for (a = interp_ang) let (
@@ -2494,6 +2512,110 @@ function associate_vertices(polygons, split, curpoly=0) =
 // DefineHeader(Table;Headers=Texture Name|Type|Description): Texture Values
 
 // Section: Texturing
+// Some operations are able to add texture to the objects they create.  A texture can be any regularly repeated variation in the height of the surface.
+// To define a texture you need to specify how the height should vary over a rectangular block that will be repeated to tile the object.  Because textures
+// are based on rectangular tiling, this means adding textures to curved shapes may result in distortion of the basic texture unit.  For example, if you
+// texture a cone, the scale of the texture will be larger at the wide end of the cone and smaller at the narrower end of the cone.
+// .
+// You can specify a texture using to method: a height field or a VNF.  For each method you also must specify the scale of the texture, which
+// gives the size of the rectangular unit in your object that will correspond to one texture tile.  Note that this scale does not preserve
+// aspect ratio: you can stretch the texture as desired.  
+
+// Subsection: Height Field Texture Maps
+
+//   The simplest way to specify a texture map is to give a 2d array of
+//   height values which specify the height of the texture on a grid.
+//   Values in the height field should range from 0 to 1.  A zero height
+//   in the height field corresponds to the height of the surface and 1
+//   the heighest point in the texture.
+// .
+//   Below is an example of a 2d texture described by a "grid" that just contains a single row.  Such a texture can be used to create ribbing.
+//   The texture is [[0, 1, 1, 0]], and the fixture shows three repetitions of the basic texture unit.
+// Figure(2D,Big,NoScales):
+//   ftex1 = [0,1,1,0,0];
+//   stroke( transpose([count(5),ftex1]), dots=true, dots_width=3,width=.05);
+//   right(4)stroke( transpose([count(5),ftex1]), dots=true, width=.05,dots_color="red",color="blue",dots_width=3);
+//   right(8)stroke( transpose([count(5),ftex1]), dots=true, dots_width=3,width=.05);
+//   stroke([[4,-.3],[8,-.3]],width=.05,endcaps="arrow2",color="black");
+//   move([6,-.4])color("black")text("Texture Size", size=0.3,anchor=BACK);
+// Continues:
+//   Line segments connect the dots within the texture and also the dots between adjacent texture tiles.
+//   The size of the texture (specified with `tex_size`) includes the segment that connects the tile to the next one.
+//   Note that the grid is always uniformly spaced.  If you want to keep the texture the same size but make the slope
+//   steeper you need to add more points.  
+// Figure(2D,Big,NoScales):
+//   ftex2 = xscale(4/11,transpose([count(12),[0,1,1,1,1,1,1,1,1,1,0,0]]));
+//   stroke( ftex2, dots=true, dots_width=3,width=.05);
+//   right(4)stroke( ftex2, dots=true, width=.05,dots_color="red",color="blue",dots_width=3);
+//   right(8)stroke( ftex2, dots=true, dots_width=3,width=.05);
+//   stroke([[4,-.3],[8,-.3]],width=.05,endcaps="arrow2",color="black");
+//   move([6,-.4])color("black")text("Texture Size", size=0.3,anchor=BACK);
+// Continues:
+//   A more serious limitation of height field textures is that some shapes, such as hexagons or circles, cannot be accurately represented because
+//   their points don't fall on a grid.  Trying to create such shapes is difficult and will require many points to approximate the
+//   true point positions for the desired shape.  This will make the texture slow to compute.  
+//   Another serious limitation is more subtle.  In the 2D examples above, it is obvious how to connect the
+//   dots together.  But in 3D example we need to triangulate the points on a grid, and this triangulation is not unique.
+//   The `style` argument lets you specify how the points are triangulated using the styles supported by {{vnf_vertex_array()}}.
+//   In the example below we have expanded the 2D example into 3D: [[0,0,0,0],[0,1,1,0],[0,1,1,0],[0,0,0,0]], and we show the
+//   3D triangulations produced by the different styles:
+// Figure(Big, NoAxes, VPR = [39.2, 0, 13.3], VPT = [3.76242, -5.50969, 4.51854], VPD = 32.0275):
+//   tex = [
+//          [0,0,0,0,0],
+//          [0,1,1,0,0],
+//          [0,1,1,0,0],
+//          [0,0,0,0,0],
+//          [0,0,0,0,0]       
+//         ];
+//   hm = [for(i=[0:4]) [for(j=[0:4]) [i,-j,tex[i][j]]]];      
+//   types = ["quincunx", "convex", "concave","default","alt","min_edge"]; 
+//   grid2d(spacing=5, n=[3,2]){
+//     let(s = types[$row*3+$col]){
+//       vnf_polyhedron(vnf_vertex_array(hm,style=s));
+//       if ($row==1)
+//         back(.8)right(2)rotate($vpr)color("black")text(s,size=.5,anchor=CENTER);
+//       else
+//         fwd(4.7)right(2)rotate($vpr)color("black")text(s,size=.5,anchor=CENTER);    
+//     }
+//   }  
+// Continues:
+//   Note that of the six available styles, five produce a different result.  You might think that simply identifying the
+//   correct style will enable you to get the result you want.  This is true if you apply the texture to a convex object, but for concave
+//   objects, the triangulation rules for the styles may result in different triangulations in different parts of the surface.
+//   For some cases, none of the six styles produces the correct result in every case.
+//   [Can this actually happen?  We need an example of this!]
+// Subsection: VNF Textures
+//   VNF textures overcome all of the limitations of height field textures, but with two costs.  They can be more difficult to construct than
+//   a simple array of height values, and they are significantly slower to compute for a tile with the same number of points.  Note, however, for
+//   textures that don't neatly lie on a grid, a VNF tile will be more efficient than a finely sampled height field.  With VNF textures you can create
+//   textures that have disconnected components, or concavities that cannot be expressed with a single valued height map.  However, you can also
+//   create invalid textures that fail to close at the ends, so care is required to ensure that your resulting shape is valid.  
+//   .
+//   A VNF texture is defined by defining the texture tile with a VNF whose projection onto the XY plane is contained in the unit square [0,1] x [0,1] so
+//   that the VNF can be tiled.   The VNF is tiled without a gap, matching the edges, so the vertices along corresponding edges must match to make a
+//   consistent triangulation possible.  The VNF cannot have any X or Y values outside the interval [0,1].  If you want a valid polyhedron
+//   that OpenSCAD will render then you need to take care with edges of the tiles that correspond to endcap faces in the textured object.
+//   So for example, in a linear sweep, the top and bottom edges of tiles end abruptly to form the end cap of the object.  You can make a valid object
+//   in two ways.  One way is to create a tile with a single, complete edge along Y=0, and of course a corresponding edges along Y=1.  The second way
+//   to make a valid object is to have no points at all on the Y=0 line, and of course none on Y=1.  In this case, the resulting texture produces
+//   a collection of disconnected objects.  Note that the Z coordinates of your tile can be anything, but for the dimensional settings on textures
+//   to work intuitively, you should construct your tile so that Z ranges from 0 to 1.
+// Figure: This is the "hexgrid" VNF tile, which creates a hexagonal grid texture, something which doesn't work well with a height field because the edges of the hexagon don't align with the grid.  Note how the tile ranges between 0 and 1 in both X, Y and Z.
+//   tex = texture("hex_grid");
+//   vnf_polyhedron(tex);
+// Figure: This is an example of a tile that has no edges at the top or bottom, so it creates disconnected rings.  See below for examples showing this tile in use.
+//   shape = skin([
+//                 rect(2/5),
+//                 rect(2/3),
+//                 rect(2/5)
+//                ],
+//                z=[0,1/2,1],
+//                slices=0,
+//                caps=false);
+//   tile = move([0,1/2,2/3],yrot(90,shape));
+//   vnf_polyhedron(tile);
+
+
 
 // Function: texture()
 // Usage:
@@ -2503,31 +2625,32 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   Given a texture name, returns a texture.  Textures can come in two varieties:
 //   - Heightfield textures which are 2D arrays of scalars.  These are faster to render, but are less precise and prone to triangulation errors.
 //   - VNF Tile textures, which are VNFs that completely tile the rectangle `[0,0]` to `[1,1]`.  These tend to be slower to render, but are more precise.
-//   Sometimes the geometry of a shape to be textured will cause a heightfield texture to be badly triangulated.
-//   Switching to a similar VNF tile texture can solve this problem.  Usually just by adding the prefix "vnf_".
+//   Sometimes the geometry of a shape to be textured will cause a heightfield texture to be badly triangulated.  The table below gives the recommended
+//   style for the best triangulation of height field textures, but if results are still incorrect, switch to the similar VNF tile by adding the "_vnf" suffix
+//   to the texture name. 
 // Texture Values:
-//   "bricks"       = Heightfield = A brick-wall pattern.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Giving `roughness=` adds a level of height randomization to add roughness to the texture.
+//   "bricks"       = Heightfield = A brick-wall pattern.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Giving `roughness=` adds a level of height randomization to add roughness to the texture.  Use `style="convex"`. 
 //   "bricks_vnf"   = VNF Tile = Like "bricks", but slower and more consistent in triangulation.  Giving `gap=` sets the mortar gap between bricks.  Giving `inset=` specifies the inset of the brick tops, relative to their bottoms.
 //   "checkers"     = VNF Tile = A pattern of alternating checkerboard squares.  Giving `inset=` specifies the inset of the raised checker tile tops, relative to the lowered tiles.
 //   "cones"        = VNF Tile = Raised conical spikes.  Giving `n=` sets the number of sides to the cone.  Giving `inset=` specifies the inset of the base of the cone, relative to the tile edges.
 //   "cubes"        = VNF Tile = Cornercubes texture.
-//   "diamonds"     = Heightfield = Diamond shapes with tips aligned with the axes.  Useful for knurling.  Giving `n=` sets the number of heightfield samples to `n` by `n`.
+//   "diamonds"     = Heightfield = Diamond shapes with tips aligned with the axes.  Useful for knurling.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Use `style="concave"` for pointed bumps, or `style="default"` or `style="alt"` for diagonal ribs.  
 //   "diamonds_vnf" = VNF Tile = Like "diamonds", but slower and more consistent in triangulation.
 //   "dimples"      = VNF Tile = Small round divots.  Giving `n=` sets the resolution of the divot curve.  Giving `inset=` specifies the inset of the dimples, relative to the edge of the tile.
 //   "dots"         = VNF Tile = Raised small round bumps.  Giving `n=` sets the resolution of the bump curve.  Giving `inset=` specifies the inset of the dots, relative to the edge of the tile.
 //   "hex_grid"     = VNF Tile = A hexagonal grid of thin lines.  Giving `inset=` specifies the inset of the hex tops, relative to their bottoms.
-//   "hills"        = Heightfield = Wavy sine-wave hills and valleys,  Giving `n=` sets the number of heightfield samples to `n` by `n`.
+//   "hills"        = Heightfield = Wavy sine-wave hills and valleys,  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Set `style="quincunx"`.  
 //   "pyramids"     = Heightfield = Pyramids shapes with flat sides aligned with the axes.  Also useful for knurling.  Giving `n=` sets the number of heightfield samples to `n` by `n`.
 //   "pyramids_vnf" = VNF Tile = Like "pyramids", but slower and more consistent in triangulation.
-//   "ribs"         = Heightfield = Vertically aligned triangular ribs.  Giving `n=` sets the number of heightfield samples to `n` by `1`.
+//   "ribs"         = Heightfield = Vertically aligned triangular ribs.  Giving `n=` sets the number of heightfield samples to `n` by `1`.  The choice of style does not matter. 
 //   "rough"        = Heightfield = A pseudo-randomized rough surace texture.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Giving `roughness=` adds a level of height randomization to add roughness to the texture.
 //   "tri_grid"     = VNF Tile = A triangular grid of thin lines.  Giving `inset=` specifies the inset of the triangle tops, relative to their bottoms.
 //   "trunc_diamonds"     = VNF Tile = Truncated diamonds.  A grid of thin lines at 45º angles.  Giving `inset=` specifies the inset of the truncated diamond tops, relative to their bottoms.
-//   "trunc_pyramids"     = Heightfield = Truncated pyramids.  Like "pyramids" but with flattened tips.  Giving `n=` sets the number of heightfield samples to `n` by `n`.
+//   "trunc_pyramids"     = Heightfield = Truncated pyramids.  Like "pyramids" but with flattened tips.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Set `style="convex"`.  
 //   "trunc_pyramids_vnf" = VNF Tile = Like "trunc_pyramids", but slower and more consistent in triangulation.  Giving `inset=` specifies the inset of the truncated pyramid tops, relative to their bottoms.
-//   "trunc_ribs"         = Heightfield = Truncated ribs.  Like "ribs" but with flat rib tips.  Giving `n=` sets the number of heightfield samples to `n` by `1`.
+//   "trunc_ribs"         = Heightfield = Truncated ribs.  Like "ribs" but with flat rib tips.  Giving `n=` sets the number of heightfield samples to `n` by `1`.  The style does not matter. 
 //   "trunc_ribs_vnf"     = VNF Tile = Like "trunc_ribs", but slower and more adjustable.  Giving `gap=` sets the bottom gap between ribs.  Giving `inset=` specifies the inset of the rib tops, relative to their bottoms.
-//   "wave_ribs"          = Heightfield = Vertically aligned wavy ribs.  Giving `n=` sets the number of heightfield samples to `n` by `1`.
+//   "wave_ribs"          = Heightfield = Vertically aligned wavy ribs.  Giving `n=` sets the number of heightfield samples to `n` by `1`.  The style does not matter.  
 // Arguments:
 //   tex = The name of the texture to get.
 //   ---
@@ -3072,15 +3195,16 @@ function _validate_texture(texture) =
             min_xy = point2d(bounds[0]),
             max_xy = point2d(bounds[1])
         )
-        assert(min_xy==[0,0] && max_xy==[1,1], "VNF tiles must span exactly from [0,0] to [1,1] in the X and Y components.")
+        //assert(min_xy==[0,0] && max_xy==[1,1],"VNF tiles must span exactly from [0,0] to [1,1] in the X and Y components."))
+        assert(all_nonnegative(concat(min_xy,[1,1]-max_xy)), "VNF tile X and Y components must be between 0 and 1.")
         let(
             verts = texture[0],
             uedges = _get_vnf_tile_edges(texture),
             edge_verts = [for (i = unique(flatten(uedges))) verts[i] ],
             hverts = [for(v = edge_verts) if(v.x==0 || v.x==1) v],
             vverts = [for(v = edge_verts) if(v.y==0 || v.y==1) v],
-            allgoodx = all(hverts, function(v) any(hverts, function(w) w==[1-v.x, v.y, v.z])),
-            allgoody = all(vverts, function(v) any(vverts, function(w) w==[v.x, 1-v.y, v.z]))
+            allgoodx = all(hverts, function(v) any(hverts, function(w) approx(w,[1-v.x, v.y, v.z]))),
+            allgoody = all(vverts, function(v) any(vverts, function(w) approx(w,[v.x, 1-v.y, v.z])))
         )
         assert(allgoodx && allgoody, "All VNF tile edge vertices must line up with a vertex on the opposite side of the tile.")
         true
@@ -3096,7 +3220,7 @@ function _textured_linear_sweep(
     region, texture, tex_size=[5,5],
     h, counts, inset=false, rot=false,
     tex_scale=1, twist, scale, shift,
-    style="min_edge", l,
+    style="min_edge", l, caps=true, 
     height, length, samples,
     anchor=CENTER, spin=0, orient=UP
 ) =
@@ -3105,7 +3229,9 @@ function _textured_linear_sweep(
     assert(counts==undef || is_vector(counts,2))
     assert(tex_size==undef || is_vector(tex_size,2))
     assert(is_bool(rot) || in_list(rot,[0,90,180,270]))
+    assert(is_bool(caps) || is_bool_list(caps,2))
     let(
+        caps = is_bool(caps) ? [caps,caps] : caps,
         regions = is_path(region,2)? [[region]] : region_parts(region),
         tex = is_string(texture)? texture(texture) : texture,
         texture = !rot? tex :
@@ -3263,8 +3389,8 @@ function _textured_linear_sweep(
                         ]
                     ) nupath
                 ],
-                bot_vnf = vnf_from_region(brgn, down(h/2), reverse=true),
-                top_vnf = vnf_from_region(brgn, tmat, reverse=false)
+                bot_vnf = !caps[0] || brgn==[[]] ? EMPTY_VNF:vnf_from_region(brgn, down(h/2), reverse=true),
+                top_vnf = !caps[1] || brgn==[[]] ? EMPTY_VNF:vnf_from_region(brgn, tmat, reverse=false)
             ) vnf_join([walls_vnf, bot_vnf, top_vnf])
         ]),
         skmat = down(h/2) * skew(sxz=shift.x/h, syz=shift.y/h) * up(h/2),
@@ -3281,7 +3407,7 @@ function _textured_linear_sweep(
 module _textured_linear_sweep(
     path, texture, tex_size=[5,5], h,
     inset=false, rot=false, tex_scale=1,
-    twist, scale, shift, samples,
+    twist, scale, shift, samples, caps=true, 
     style="min_edge", l,
     height, length, counts,
     anchor=CENTER, spin=0, orient=UP,
@@ -3289,7 +3415,7 @@ module _textured_linear_sweep(
 ) {
     h = first_defined([h, l, height, length, 1]);
     vnf = _textured_linear_sweep(
-        path, texture, h=h,
+        path, texture, h=h, caps=caps, 
         tex_size=tex_size, counts=counts,
         inset=inset, rot=rot, tex_scale=tex_scale,
         twist=twist, scale=scale, shift=shift,
@@ -3320,7 +3446,9 @@ function _find_vnf_tile_edge_path(vnf, val) =
         ],
         sfrags = sort(fragments, idx=[0,1]),
         rpath = _assemble_a_path_from_fragments(sfrags)[0],
-        opath = rpath[0].x > last(rpath).x? reverse(rpath) : rpath
+        opath = rpath==[]? []
+              : rpath[0].x > last(rpath).x ? reverse(rpath)
+              : rpath
     ) opath;
 
 
