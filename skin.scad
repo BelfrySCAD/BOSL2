@@ -2520,18 +2520,13 @@ function associate_vertices(polygons, split, curpoly=0) =
 // You can specify a texture using to method: a height field or a VNF.  For each method you also must specify the scale of the texture, which
 // gives the size of the rectangular unit in your object that will correspond to one texture tile.  Note that this scale does not preserve
 // aspect ratio: you can stretch the texture as desired.  
-
 // Subsection: Height Field Texture Maps
-
 //   The simplest way to specify a texture map is to give a 2d array of
 //   height values which specify the height of the texture on a grid.
 //   Values in the height field should range from 0 to 1.  A zero height
 //   in the height field corresponds to the height of the surface and 1
 //   the heighest point in the texture.
-// .
-//   Below is an example of a 2d texture described by a "grid" that just contains a single row.  Such a texture can be used to create ribbing.
-//   The texture is [[0, 1, 1, 0]], and the fixture shows three repetitions of the basic texture unit.
-// Figure(2D,Big,NoScales):
+// Figure(2D,Big,NoScales): Here is a 2d texture described by a "grid" that just contains a single row.  Such a texture can be used to create ribbing. The texture is [[0, 1, 1, 0]], and the fixture shows three repetitions of the basic texture unit.
 //   ftex1 = [0,1,1,0,0];
 //   stroke( transpose([count(5),ftex1]), dots=true, dots_width=3,width=.05);
 //   right(4)stroke( transpose([count(5),ftex1]), dots=true, width=.05,dots_color="red",color="blue",dots_width=3);
@@ -2543,7 +2538,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   The size of the texture (specified with `tex_size`) includes the segment that connects the tile to the next one.
 //   Note that the grid is always uniformly spaced.  If you want to keep the texture the same size but make the slope
 //   steeper you need to add more points.  
-// Figure(2D,Big,NoScales):
+// Figure(2D,Big,NoScales):  
 //   ftex2 = xscale(4/11,transpose([count(12),[0,1,1,1,1,1,1,1,1,1,0,0]]));
 //   stroke( ftex2, dots=true, dots_width=3,width=.05);
 //   right(4)stroke( ftex2, dots=true, width=.05,dots_color="red",color="blue",dots_width=3);
