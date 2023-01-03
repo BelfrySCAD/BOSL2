@@ -754,8 +754,10 @@ module _pin_shaft(r, lStraight, nub, nubscale, stretch, d, pointed)
    down(extra) cylinder(r = r, h = lStraight + extra);
    up(lStraight) {
       zscale(stretch) {
-         sphere(r = r);
-         if (pointed) up(rPoint) cylinder(r1 = rPoint, r2 = 0, h = rPoint);
+         hull() {
+            sphere(r = r);
+            if (pointed) up(rPoint) cylinder(r1 = rPoint, r2 = 0, h = rPoint/stretch);
+         }
       }
    }
    up(d) yscale(nubscale) _pin_nub(r = r, nub = nub, h = lStraight - d);
