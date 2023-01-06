@@ -331,7 +331,7 @@ module cuboid(
         assert(is_undef(chamfer) || is_finite(chamfer),"chamfer must be a finite value")
         assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value")
         assert(is_undef(rounding) || is_undef(chamfer), "Cannot specify nonzero value for both chamfer and rounding")
-        assert(teardrop==false || (is_finite(teardrop) && teardrop>0 && teardrop<90), "teardrop must be either false or an angle number between 0 and 90")
+        assert(teardrop==false || (is_finite(teardrop) && teardrop>0 && teardrop<=90), "teardrop must be either false or an angle number between 0 and 90")
         assert(is_undef(p1) || is_vector(p1))
         assert(is_undef(p2) || is_vector(p2))
         assert(is_bool(trimcorners));
