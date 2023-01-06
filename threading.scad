@@ -900,7 +900,7 @@ module square_threaded_rod(
     bevel,bevel1,bevel2,
     starts=1,
     internal=false,
-    higbee=0, higbee1, higbee2,
+    higbee, higbee1, higbee2,
     d1,d2,length,
     anchor, spin, orient
 ) {
@@ -1060,7 +1060,7 @@ module ball_screw_rod(
         starts=starts,
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,
         internal=internal,
-        higbee=0, length=length, 
+        higbee=false, length=length, 
         anchor=anchor,
         spin=spin,
         orient=orient
@@ -1173,6 +1173,8 @@ module generic_threaded_rod(
     // Zero higbee should be treated as "true", default angle, but it tests as false so adjust
     higbee1 = thigbee1==0 ? true : thigbee1;
     higbee2 = thigbee2==0 ? true : thigbee2;
+    extra_thread1 = higbee1==false && internal ? 1 : 0;
+    extra_thread2 = higbee2==false && internal ? 1 : 0;    
     dummy0 = 
       assert(all_positive([pitch]),"Thread pitch must be a positive value")
       assert(all_positive([l]),"Length must be a postive value")
@@ -1187,10 +1189,10 @@ module generic_threaded_rod(
     islop = internal? 2*get_slop() : 0;
     _r1 = r1 * rsc + islop;
     _r2 = r2 * rsc + islop;
-    threads = quantup(l/pitch+2,1); // Was quantup(1/pitch+2,2*starts);
+    threads = extra_thread1+extra_thread2+quantup(l/pitch+2,1); // Was quantup(1/pitch+2,2*starts);
     dir = left_handed? -1 : 1;
     twist = 360 * l / pitch / starts;
-    profile = !internal ? profile
+    profile =  !internal ? profile
             : [
                  for(entry=profile) if (entry.x>=0) [entry.x-1/2,entry.y], 
                  for(entry=profile) if (entry.x<0) [entry.x+1/2,entry.y]
@@ -1199,10 +1201,10 @@ module generic_threaded_rod(
     thread_minx = min(column(profile,0));
     thread_maxx = max(column(profile,0));
     // Compute higbee cut angles, or set to large negative value if higbee is not enabled
-    higang1 = !higbee1 ? -1000
-                       : (180+(gap-(thread_minx+.5))*360)/starts + (is_num(higbee1) ? higbee1 : 0);
-    higang2 = !higbee2 ? -1000
-                       : (180+(gap-(.5-thread_maxx))*360)/starts + (is_num(higbee2) ? higbee2 : 0);
+    higang1 = !higbee1 && !internal ? -1000
+                       : (180+(gap-(thread_minx+.5))*360)/starts + (is_num(higbee1) ? higbee1 : 0) - 360*(higbee1==false?1:0);
+    higang2 = !higbee2 && !internal? -1000
+                       : (180+(gap-(.5-thread_maxx))*360)/starts + (is_num(higbee2) ? higbee2 : 0) - 360*(higbee2==false?1:0);
     prof3d = path3d(profile);
     pdepth = -min(column(profile,1));
     pmax = pitch * max(column(profile,1));
@@ -1215,55 +1217,63 @@ module generic_threaded_rod(
                 * scale(pitch);                            // scale profile by pitch
     start_steps = sides / starts;
     thread_verts = [
-         // Outer loop constructs a vertical column of the screw at each angle
-         // covering 1/starts * 360 degrees of the cylinder.  
-         for (step = [0:1:start_steps]) let(
-             ang = 360 * step/sides,
-             dz = step / start_steps,    // z offset for threads at this angle
-             rot_prof = zrot(ang*dir)*map_threads,   // Rotate profile to correct angular location
-             full_profile =  [   // profile for the entire rod
-                 for (thread = [-threads/2:1:threads/2-1]) let(
-                     tang = (thread/starts) * 360 + ang,
-                     adjusted_prof3d = tang < -twist/2+higang1 || tang > twist/2-higang2 
-                                           ? [for(v=prof3d) [v.x,internal?pmax/pitch:-pdepth,v.z]] 
-                                     : prof3d
-                 )
-                 // The right movement finds the position of the thread along
-                 // what will be the z axis after the profile is mapped to 3d                                           
-                 each apply(right(dz + thread) , adjusted_prof3d)
-             ]
-         ) [
-             [0, 0, -l/2-pitch],
-             each apply(rot_prof , full_profile),
-             [0, 0, +l/2+pitch]
-         ]
+        // Outer loop constructs a vertical column of the screw at each angle
+        // covering 1/starts * 360 degrees of the cylinder.  
+        for (step = [0:1:start_steps])
+            let(
+                ang = 360 * step/sides,
+                dz = step / start_steps,    // z offset for threads at this angle
+                rot_prof = zrot(ang*dir)*map_threads,   // Rotate profile to correct angular location
+                full_profile =  [   // profile for the entire rod
+                    for (thread = [-threads/2:1:threads/2-1])
+                        let(
+                            tang = (thread/starts) * 360 + ang,
+                            adjusted_prof3d = tang < -twist/2+higang1 || tang > twist/2-higang2 
+                                            ? [for(v=prof3d) [v.x,internal?pmax/pitch:-pdepth,v.z]] 
+                                            : prof3d
+                        )
+                        // The right movement finds the position of the thread along
+                        // what will be the z axis after the profile is mapped to 3d
+                        each apply(right(dz + thread) , adjusted_prof3d)
+                ]  
+            )
+            [
+              [0, 0, -l/2-pitch-1-extra_thread1*pitch],
+              each apply(rot_prof , full_profile),
+              [0, 0, +l/2+pitch+1+extra_thread2*pitch]
+            ]
     ];
     style=internal?"concave":"convex";
     
-    thread_vnfs = vnf_join([
+    thread_vnfs = vnf_join(
+      [
         // Main thread faces
         for (i=[0:1:starts-1])
             zrot(i*360/starts, p=vnf_vertex_array(thread_verts, reverse=left_handed, style=style)),
         // Top closing face(s) of thread                                 
-        for (i=[0:1:starts-1]) let(
-            rmat = zrot(i*360/starts),
-            pts = deduplicate(list_head(thread_verts[0], len(prof3d)+1)),
-            faces = [for (i=idx(pts,e=-2)) left_handed ? [0, i, i+1] : [0, i+1, i]]
-        ) [apply(rmat,pts), faces],
+        for (i=[0:1:starts-1])
+            let(
+                rmat = zrot(i*360/starts),
+                pts = deduplicate(list_head(thread_verts[0], len(prof3d)+1)),
+                faces = [for (i=idx(pts,e=-2)) left_handed ? [0, i, i+1] : [0, i+1, i]]
+            )
+            [apply(rmat,pts), faces],
         // Bottom closing face(s) of thread                                 
-        for (i=[0:1:starts-1]) let(
-            rmat = zrot(i*360/starts),
-            pts = deduplicate(list_tail(last(thread_verts), -len(prof3d)-2)),
-            faces = [for (i=idx(pts,e=-2)) left_handed ? [len(pts)-1, i+1, i] : [len(pts)-1, i, i+1]]
-        ) [apply(rmat,pts), faces]
-    ]);
+        for (i=[0:1:starts-1])
+            let(
+                rmat = zrot(i*360/starts),
+                pts = deduplicate(list_tail(last(thread_verts), -len(prof3d)-2)),
+                faces = [for (i=idx(pts,e=-2)) left_handed ? [len(pts)-1, i+1, i] : [len(pts)-1, i, i+1]]
+            )
+            [apply(rmat,pts), faces]
+      ]
+    );
 
     slope = (_r1-_r2)/l;
     maxlen = 2*pitch;
 
     attachable(anchor,spin,orient, r1=_r1, r2=_r2, l=l) {
         union(){
-
           // This method is faster but more complex code and it produces green tops
           difference() {
               vnf_polyhedron(vnf_quantize(thread_vnfs),convexity=10);
