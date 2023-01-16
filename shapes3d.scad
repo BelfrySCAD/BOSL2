@@ -19,12 +19,12 @@ use <builtins.scad>
 
 // Function&Module: cube()
 // Topics: Shapes (3D), Attachable, VNF Generators
-// Usage: As Module
-//   cube(size, [center], ...);
-// Usage: With Attachments
-//   cube(size, [center], ...) [ATTACHMENTS];
-// Usage: As Function
-//   vnf = cube(size, [center], ...);
+// Usage: As Module (as in native OpenSCAD)
+//   cube(size, [center]);
+// Usage: With BOSL2 Attachment extensions
+//   cube(size, [center], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+// Usage: As Function (BOSL2 extension)
+//   vnf = cube(size, ...);
 // See Also: cuboid(), prismoid()
 // Description:
 //   Creates a 3D cubic object with support for anchoring and attachments.
@@ -834,7 +834,7 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   specify rounding and/or chamferring per-edge, and for top and bottom, inside and
 //   outside  separately.
 // Arguments:
-//   h/l = The height or length of the rectangular tube.  Default: 1
+//   h/l/height/length = The height or length of the rectangular tube.  Default: 1
 //   size = The outer [X,Y] size of the rectangular tube.
 //   isize = The inner [X,Y] size of the rectangular tube.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
@@ -919,9 +919,9 @@ module rect_tube(
     chamfer=0, chamfer1, chamfer2,
     ichamfer=0, ichamfer1, ichamfer2,
     anchor, spin=0, orient=UP,
-    l
+    l, length, height
 ) {
-    h = one_defined([h,l],"h,l");
+    h = one_defined([h,l,length,height],"h,l,length,height");
     checks =
         assert(is_num(h), "l or h argument required.")
         assert(is_vector(shift,2));
@@ -997,7 +997,7 @@ function rect_tube(
     chamfer=0, chamfer1, chamfer2,
     ichamfer=0, ichamfer1, ichamfer2,
     anchor, spin=0, orient=UP,
-    l
+    l, length, height
 ) = no_function("rect_tube");
 
 
@@ -1063,16 +1063,19 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 
 // Function&Module: cylinder()
 // Topics: Shapes (3D), Attachable, VNF Generators
-// Usage: As Module
-//   cylinder(h, r=/d=, [center=], ...) [ATTACHMENTS];
-//   cylinder(h, r1/d1=, r2/d2=, [center=], ...) [ATTACHMENTS];
-// Usage: As Function
-//   vnf = cylinder(h, r=/d=, [center=], ...);
-//   vnf = cylinder(h, r1/d1=, r2/d2=, [center=], ...);
+// Usage: As Module (as in Native OpenSCAD)
+//   cylinder(h, r=/d=, [center=]);
+//   cylinder(h, r1/d1=, r2/d2=, [center=]);
+// Usage: With BOSL2 anchoring and attachment extensions
+//   cylinder(h, r=/d=, [center=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   cylinder(h, r1/d1=, r2/d2=, [center=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+// Usage: As Function (BOSL2 extension)
+//   vnf = cylinder(h, r=/d=, ...);
+//   vnf = cylinder(h, r1/d1=, r2/d2=, ...);
 // See Also: cyl()
 // Description:
 //   Creates a 3D cylinder or conic object with support for anchoring and attachments.
-//   This can be used as a drop-in replacement for the built-in `cylinder()` module.
+//   This modules extends the built-in `cylinder()` module by adding support for attachment.  
 //   When called as a function, returns a [VNF](vnf.scad) for a cylinder.
 // Arguments:
 //   l / h = The height of the cylinder.
@@ -1145,27 +1148,27 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 // Function&Module: cyl()
 //
 // Usage: Normal Cylinders
-//   cyl(l|h, r, [center], [circum=], [realign=]) [ATTACHMENTS];
-//   cyl(l|h, d=, ...) [ATTACHMENTS];
-//   cyl(l|h, r1=, r2=, ...) [ATTACHMENTS];
-//   cyl(l|h, d1=, d2=, ...) [ATTACHMENTS];
+//   cyl(l|h|length|height, r, [center], [circum=], [realign=]) [ATTACHMENTS];
+//   cyl(l|h|length|height, d=, ...) [ATTACHMENTS];
+//   cyl(l|h|length|height, r1=, r2=, ...) [ATTACHMENTS];
+//   cyl(l|h|length|height, d1=, d2=, ...) [ATTACHMENTS];
 //
 // Usage: Chamferred Cylinders
-//   cyl(l|h, r|d, chamfer=, [chamfang=], [from_end=], ...);
-//   cyl(l|h, r|d, chamfer1=, [chamfang1=], [from_end=], ...);
-//   cyl(l|h, r|d, chamfer2=, [chamfang2=], [from_end=], ...);
-//   cyl(l|h, r|d, chamfer1=, chamfer2=, [chamfang1=], [chamfang2=], [from_end=], ...);
+//   cyl(l|h|length|height, r|d, chamfer=, [chamfang=], [from_end=], ...);
+//   cyl(l|h|length|height, r|d, chamfer1=, [chamfang1=], [from_end=], ...);
+//   cyl(l|h|length|height, r|d, chamfer2=, [chamfang2=], [from_end=], ...);
+//   cyl(l|h|length|height, r|d, chamfer1=, chamfer2=, [chamfang1=], [chamfang2=], [from_end=], ...);
 //
 // Usage: Rounded End Cylinders
-//   cyl(l|h, r|d, rounding=, ...);
-//   cyl(l|h, r|d, rounding1=, ...);
-//   cyl(l|h, r|d, rounding2=, ...);
-//   cyl(l|h, r|d, rounding1=, rounding2=, ...);
+//   cyl(l|h|length|height, r|d, rounding=, ...);
+//   cyl(l|h|length|height, r|d, rounding1=, ...);
+//   cyl(l|h|length|height, r|d, rounding2=, ...);
+//   cyl(l|h|length|height, r|d, rounding1=, rounding2=, ...);
 //
 // Usage: Textured Cylinders
-//   cyl(l|h, r|d, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
-//   cyl(l|h, r1=, r2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
-//   cyl(l|h, d1=, d2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, r|d, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, r1=, r2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, d1=, d2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
 //
 // Topics: Cylinders, Textures, Rounding, Chamfers
 //
@@ -1376,8 +1379,8 @@ function cyl(
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
-    tex_scale=1, tex_samples, h, height, 
-    tex_taper, tex_style="min_edge",
+    tex_scale=1, tex_samples, length, height, 
+    tex_taper, tex_style="min_edge", 
     anchor, spin=0, orient=UP
 ) =
     let(
@@ -1544,11 +1547,11 @@ module cyl(
 //   Creates a cylinder oriented along the X axis.
 //
 // Usage: Typical
-//   xcyl(l|h, r|d=, [anchor=], ...) [ATTACHMENTS];
-//   xcyl(l|h, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
+//   xcyl(l|h|length|height, r|d=, [anchor=], ...) [ATTACHMENTS];
+//   xcyl(l|h|length|height, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
 //
 // Arguments:
-//   l / h = Length of cylinder along oriented axis. Default: 1
+//   l / h / length / height = Length of cylinder along oriented axis. Default: 1
 //   r = Radius of cylinder.  Default: 1
 //   ---
 //   r1 = Optional radius of left (X-) end of cylinder.
@@ -1584,17 +1587,26 @@ module cyl(
 //       xcyl(l=35, d1=30, d2=10);
 //   }
 
+function xcyl(
+    h, r, d, r1, r2, d1, d2, l, 
+    chamfer, chamfer1, chamfer2,
+    chamfang, chamfang1, chamfang2,
+    rounding, rounding1, rounding2,
+    circum=false, realign=false, from_end=false, length, height,
+    anchor=CENTER, spin=0, orient=UP
+) = no_function("xcyl");
+
 module xcyl(
     h, r, d, r1, r2, d1, d2, l, 
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, from_end=false,
+    circum=false, realign=false, from_end=false, length, height,
     anchor=CENTER, spin=0, orient=UP
 ) {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
-    l = first_defined([l, h, 1]);
+    l = one_defined([l,h,length,height],"l,h,length,height",1);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=RIGHT) {
         cyl(
             l=l, r1=r1, r2=r2,
@@ -1615,11 +1627,11 @@ module xcyl(
 //   Creates a cylinder oriented along the Y axis.
 //
 // Usage: Typical
-//   ycyl(l|h, r|d=, [anchor=], ...) [ATTACHMENTS];
-//   ycyl(l|h, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
+//   ycyl(l|h|length|height, r|d=, [anchor=], ...) [ATTACHMENTS];
+//   ycyl(l|h|length|height, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
 //
 // Arguments:
-//   l / h = Length of cylinder along oriented axis. (Default: `1.0`)
+//   l / h / length / height = Length of cylinder along oriented axis. (Default: `1.0`)
 //   r = Radius of cylinder.
 //   ---
 //   r1 = Radius of front (Y-) end of cone.
@@ -1655,17 +1667,27 @@ module xcyl(
 //       ycyl(l=35, d1=30, d2=10);
 //   }
 
+function ycyl(
+    h, r, d, r1, r2, d1, d2, l,
+    chamfer, chamfer1, chamfer2,
+    chamfang, chamfang1, chamfang2,
+    rounding, rounding1, rounding2,
+    circum=false, realign=false, from_end=false,height,length,
+    anchor=CENTER, spin=0, orient=UP
+) = no_function("ycyl");
+
+
 module ycyl(
     h, r, d, r1, r2, d1, d2, l,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, from_end=false,
+    circum=false, realign=false, from_end=false,height,length,
     anchor=CENTER, spin=0, orient=UP
 ) {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
-    l = first_defined([l, h, 1]);
+    l = one_defined([l,h,length,height],"l,h,length,height",1);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=BACK) {
         cyl(
             l=l, r1=r1, r2=r2,
@@ -1687,11 +1709,11 @@ module ycyl(
 //   Creates a cylinder oriented along the Z axis.
 //
 // Usage: Typical
-//   zcyl(l|h, r|d=, [anchor=],...) [ATTACHMENTS];
-//   zcyl(l|h, r1=|d1=, r2=|d2=, [anchor=],...);
+//   zcyl(l|h|length|height, r|d=, [anchor=],...) [ATTACHMENTS];
+//   zcyl(l|h|length|height, r1=|d1=, r2=|d2=, [anchor=],...);
 //
 // Arguments:
-//   l / h = Length of cylinder along oriented axis. (Default: 1.0)
+//   l / h / length / height = Length of cylinder along oriented axis. (Default: 1.0)
 //   r = Radius of cylinder.
 //   ---
 //   r1 = Radius of front (Y-) end of cone.
@@ -1727,17 +1749,26 @@ module ycyl(
 //       zcyl(l=35, d1=30, d2=10);
 //   }
 
+function zcyl(
+    h, r, d, r1, r2, d1, d2, l,
+    chamfer, chamfer1, chamfer2,
+    chamfang, chamfang1, chamfang2,
+    rounding, rounding1, rounding2,
+    circum=false, realign=false, from_end=false, length, height,
+    anchor=CENTER, spin=0, orient=UP
+) = no_function("zcyl");
+
 module zcyl(
     h, r, d, r1, r2, d1, d2, l,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, from_end=false,
+    circum=false, realign=false, from_end=false, length, height,
     anchor=CENTER, spin=0, orient=UP
 ) {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
-    l = first_defined([l, h, 1]);
+    l = one_defined([l,h,length,height],"l,h,length,height",1);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
         cyl(
             l=l, r1=r1, r2=r2,
@@ -1802,15 +1833,24 @@ module zcyl(
 // Example: Standard Connectors
 //   tube(h=30, or=40, wall=5) show_anchors();
 
+function tube(
+     h, or, ir, center,
+    od, id, wall,
+    or1, or2, od1, od2,
+    ir1, ir2, id1, id2,
+    realign=false, l, length, height,
+    anchor, spin=0, orient=UP
+) = no_function("tube");
+
 module tube(
     h, or, ir, center,
     od, id, wall,
     or1, or2, od1, od2,
     ir1, ir2, id1, id2,
-    realign=false, l,
+    realign=false, l, length, height,
     anchor, spin=0, orient=UP
 ) {
-    h = first_defined([h,l,1]);
+    h = one_defined([h,l,height,length],"h,l,height,length",dflt=1);
     orr1 = get_radius(r1=or1, r=or, d1=od1, d=od, dflt=undef);
     orr2 = get_radius(r1=or2, r=or, d1=od2, d=od, dflt=undef);
     irr1 = get_radius(r1=ir1, r=ir, d1=id1, d=id, dflt=undef);
