@@ -518,7 +518,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   twisted extrusions by using `maxseg` to subsample flat faces.
 // Arguments:
 //   region = The 2D [Region](regions.scad) or polygon that is to be extruded.
-//   h / height = The height to extrude the region.  Default: 1
+//   h / height / l / length = The height to extrude the region.  Default: 1
 //   center = If true, the created polyhedron will be vertically centered.  If false, it will be extruded upwards from the XY plane.  Default: `false`
 //   ---
 //   twist = The number of degrees to rotate the top of the shape, clockwise around the Z axis, relative to the bottom.  Default: 0
@@ -688,10 +688,10 @@ module linear_sweep(
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
     tex_scale=1, tex_samples,
-    cp, atype="hull", h,
+    cp, atype="hull", h,l,length,
     anchor, spin=0, orient=UP
 ) {
-    h = first_defined([h, height, 1]);
+    h = one_defined([h, height,l,length],"h,height,l,length",dflt=1);
     region = force_region(region);
     check = assert(is_region(region),"Input is not a region");
     anchor = center==true? "origin" :
@@ -739,7 +739,7 @@ function linear_sweep(
     cp, atype="hull", h,
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
-    tex_scale=1, tex_samples,
+    tex_scale=1, tex_samples, h, l, length, 
     anchor, spin=0, orient=UP
 ) =
     let( region = force_region(region) )
@@ -748,7 +748,7 @@ function linear_sweep(
     assert(is_vector(shift, 2), str(shift))
     assert(is_bool(caps) || is_bool_list(caps,2), "caps must be boolean or a list of two booleans")
     let(
-        h = first_defined([h, height, 1])
+        h = one_defined([h, height,l,length],"h,height,l,length",dflt=1)
     )
     !is_undef(texture)? _textured_linear_sweep(
         region, h=h, caps=caps, 
