@@ -1023,7 +1023,11 @@ function _vnf_centroid(vnf,eps=EPSILON) =
 //   vnf as usual (with closed=false) and boundary is a list giving each connected component of the cut
 //   boundary surface.  Each entry in boundary is a list of index values that index into the vnf vertex list (vnf[0]).
 //   This makes it possible to construct mating shapes, e.g. with {{skin()}} or {{vnf_vertex_array()}} that
-//   can be combined using {{vnf_join()}} to make a valid polyhedron.  
+//   can be combined using {{vnf_join()}} to make a valid polyhedron.
+//   .
+//   Note that the input to vnf_halfspace() does not need to be a closed, manifold polyhedron.
+//   Because it adds the faces on the cut surface, you can use vnf_halfspace() to cap off an open shape if you
+//   slice through a region that excludes all of the gaps in the input VNF.  
 // Arguments:
 //   plane = plane defining the boundary of the half space
 //   vnf = vnf to cut
@@ -1088,6 +1092,17 @@ function _vnf_centroid(vnf,eps=EPSILON) =
 //   vnf=bezier_vnf(patch);
 //   vnfcut = vnf_halfspace([-.8,0,-1,-14],vnf,closed=false);
 //   vnf_polyhedron(vnfcut);
+// Example: Here is a VNF that has holes, so it is not a valid manifold. 
+//   outside = linear_sweep(circle(r=30), h=100, caps=false);
+//   inside = yrot(7,linear_sweep(circle(r=10), h=120, caps=false));
+//   open_vnf=vnf_join([outside, vnf_reverse_faces(inside)]);
+//   vnf_polyhedron(open_vnf);
+// Example: By cutting it at each end we can create closing faces, resulting in a valid manifold without holes.
+//   outside = linear_sweep(circle(r=30), h=100, caps=false);
+//   inside = yrot(11,linear_sweep(circle(r=10), h=120, caps=false));
+//   open_vnf=vnf_join([outside, vnf_reverse_faces(inside)]);
+//   vnf = vnf_halfspace([0,0,1,5], vnf_halfspace([0,.7,-1,-75], open_vnf));
+//   vnf_polyhedron(vnf);
 // Example: If boundary=true then the return is a list with the VNF and boundary data.  
 //   vnf = path_sweep(circle(r=4, $fn=16),
 //                    circle(r=20, $fn=64),closed=true);

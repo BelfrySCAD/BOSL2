@@ -19,12 +19,12 @@ use <builtins.scad>
 
 // Function&Module: cube()
 // Topics: Shapes (3D), Attachable, VNF Generators
-// Usage: As Module
-//   cube(size, [center], ...);
-// Usage: With Attachments
-//   cube(size, [center], ...) [ATTACHMENTS];
-// Usage: As Function
-//   vnf = cube(size, [center], ...);
+// Usage: As Module (as in native OpenSCAD)
+//   cube(size, [center]);
+// Usage: With BOSL2 Attachment extensions
+//   cube(size, [center], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+// Usage: As Function (BOSL2 extension)
+//   vnf = cube(size, ...);
 // See Also: cuboid(), prismoid()
 // Description:
 //   Creates a 3D cubic object with support for anchoring and attachments.
@@ -646,7 +646,7 @@ module prismoid(
     size1, size2, h, shift=[0,0],
     rounding=0, rounding1, rounding2,
     chamfer=0, chamfer1, chamfer2,
-    l, center,
+    l, height, length, center,
     anchor, spin=0, orient=UP
 ) {
     checks =
@@ -691,7 +691,7 @@ function prismoid(
     size1, size2, h, shift=[0,0],
     rounding=0, rounding1, rounding2,
     chamfer=0, chamfer1, chamfer2,
-    l, center,
+    l, height, length, center,
     anchor=DOWN, spin=0, orient=UP
 ) =
     assert(is_vector(size1,2))
@@ -730,7 +730,7 @@ function prismoid(
     )
     let(
         eps = pow(2,-14),
-        h = first_defined([h,l,1]),
+        h = one_defined([h,l,length,height],"h,l,length,height",dflt=1),
         shiftby = point3d(point2d(shift)),
         s1 = [max(size1.x, eps), max(size1.y, eps)],
         s2 = [max(size2.x, eps), max(size2.y, eps)],
@@ -834,7 +834,7 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   specify rounding and/or chamferring per-edge, and for top and bottom, inside and
 //   outside  separately.
 // Arguments:
-//   h/l = The height or length of the rectangular tube.  Default: 1
+//   h/l/height/length = The height or length of the rectangular tube.  Default: 1
 //   size = The outer [X,Y] size of the rectangular tube.
 //   isize = The inner [X,Y] size of the rectangular tube.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
@@ -919,9 +919,9 @@ module rect_tube(
     chamfer=0, chamfer1, chamfer2,
     ichamfer=0, ichamfer1, ichamfer2,
     anchor, spin=0, orient=UP,
-    l
+    l, length, height
 ) {
-    h = one_defined([h,l],"h,l");
+    h = one_defined([h,l,length,height],"h,l,length,height");
     checks =
         assert(is_num(h), "l or h argument required.")
         assert(is_vector(shift,2));
@@ -997,7 +997,7 @@ function rect_tube(
     chamfer=0, chamfer1, chamfer2,
     ichamfer=0, ichamfer1, ichamfer2,
     anchor, spin=0, orient=UP,
-    l
+    l, length, height
 ) = no_function("rect_tube");
 
 
@@ -1063,16 +1063,19 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 
 // Function&Module: cylinder()
 // Topics: Shapes (3D), Attachable, VNF Generators
-// Usage: As Module
-//   cylinder(h, r=/d=, [center=], ...) [ATTACHMENTS];
-//   cylinder(h, r1/d1=, r2/d2=, [center=], ...) [ATTACHMENTS];
-// Usage: As Function
-//   vnf = cylinder(h, r=/d=, [center=], ...);
-//   vnf = cylinder(h, r1/d1=, r2/d2=, [center=], ...);
+// Usage: As Module (as in Native OpenSCAD)
+//   cylinder(h, r=/d=, [center=]);
+//   cylinder(h, r1/d1=, r2/d2=, [center=]);
+// Usage: With BOSL2 anchoring and attachment extensions
+//   cylinder(h, r=/d=, [center=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   cylinder(h, r1/d1=, r2/d2=, [center=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+// Usage: As Function (BOSL2 extension)
+//   vnf = cylinder(h, r=/d=, ...);
+//   vnf = cylinder(h, r1/d1=, r2/d2=, ...);
 // See Also: cyl()
 // Description:
 //   Creates a 3D cylinder or conic object with support for anchoring and attachments.
-//   This can be used as a drop-in replacement for the built-in `cylinder()` module.
+//   This modules extends the built-in `cylinder()` module by adding support for attachment.  
 //   When called as a function, returns a [VNF](vnf.scad) for a cylinder.
 // Arguments:
 //   l / h = The height of the cylinder.
@@ -1145,27 +1148,27 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 // Function&Module: cyl()
 //
 // Usage: Normal Cylinders
-//   cyl(l|h, r, [center], [circum=], [realign=]) [ATTACHMENTS];
-//   cyl(l|h, d=, ...) [ATTACHMENTS];
-//   cyl(l|h, r1=, r2=, ...) [ATTACHMENTS];
-//   cyl(l|h, d1=, d2=, ...) [ATTACHMENTS];
+//   cyl(l|h|length|height, r, [center], [circum=], [realign=]) [ATTACHMENTS];
+//   cyl(l|h|length|height, d=, ...) [ATTACHMENTS];
+//   cyl(l|h|length|height, r1=, r2=, ...) [ATTACHMENTS];
+//   cyl(l|h|length|height, d1=, d2=, ...) [ATTACHMENTS];
 //
 // Usage: Chamferred Cylinders
-//   cyl(l|h, r|d, chamfer=, [chamfang=], [from_end=], ...);
-//   cyl(l|h, r|d, chamfer1=, [chamfang1=], [from_end=], ...);
-//   cyl(l|h, r|d, chamfer2=, [chamfang2=], [from_end=], ...);
-//   cyl(l|h, r|d, chamfer1=, chamfer2=, [chamfang1=], [chamfang2=], [from_end=], ...);
+//   cyl(l|h|length|height, r|d, chamfer=, [chamfang=], [from_end=], ...);
+//   cyl(l|h|length|height, r|d, chamfer1=, [chamfang1=], [from_end=], ...);
+//   cyl(l|h|length|height, r|d, chamfer2=, [chamfang2=], [from_end=], ...);
+//   cyl(l|h|length|height, r|d, chamfer1=, chamfer2=, [chamfang1=], [chamfang2=], [from_end=], ...);
 //
 // Usage: Rounded End Cylinders
-//   cyl(l|h, r|d, rounding=, ...);
-//   cyl(l|h, r|d, rounding1=, ...);
-//   cyl(l|h, r|d, rounding2=, ...);
-//   cyl(l|h, r|d, rounding1=, rounding2=, ...);
+//   cyl(l|h|length|height, r|d, rounding=, ...);
+//   cyl(l|h|length|height, r|d, rounding1=, ...);
+//   cyl(l|h|length|height, r|d, rounding2=, ...);
+//   cyl(l|h|length|height, r|d, rounding1=, rounding2=, ...);
 //
 // Usage: Textured Cylinders
-//   cyl(l|h, r|d, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
-//   cyl(l|h, r1=, r2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
-//   cyl(l|h, d1=, d2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, r|d, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, r1=, r2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, d1=, d2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
 //
 // Topics: Cylinders, Textures, Rounding, Chamfers
 //
@@ -1206,7 +1209,7 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //      stroke(arc(cp=[r2+8,-10], angle=[180-30,180], n=20, r=5), width=.18, endcaps="arrow2");
 //  }
 // Arguments:
-//   l / h = Length of cylinder along oriented axis.  Default: 1
+//   l / h / length / height = Length of cylinder along oriented axis.  Default: 1
 //   r = Radius of cylinder.  Default: 1
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
 //   ---
@@ -1376,12 +1379,12 @@ function cyl(
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
-    tex_scale=1, tex_samples,
-    tex_taper, tex_style="min_edge",
+    tex_scale=1, tex_samples, length, height, 
+    tex_taper, tex_style="min_edge", 
     anchor, spin=0, orient=UP
 ) =
     let(
-        l = first_defined([l, h, length, height, 1]),
+        l = one_defined([l, h, length, height],"l,h,length,height",dflt=1),
         _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
         _r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
         sides = segs(max(_r1,_r2)),
@@ -1497,11 +1500,11 @@ module cyl(
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
-    tex_scale=1, tex_samples,
+    tex_scale=1, tex_samples, length, height, 
     tex_taper, tex_style="min_edge",
     anchor, spin=0, orient=UP
 ) {
-    l = first_defined([l, h, 1]);
+    l = one_defined([l, h, length, height],"l,h,length,height",dflt=1);
     _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     _r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     sides = segs(max(_r1,_r2));
@@ -1544,11 +1547,11 @@ module cyl(
 //   Creates a cylinder oriented along the X axis.
 //
 // Usage: Typical
-//   xcyl(l|h, r|d=, [anchor=], ...) [ATTACHMENTS];
-//   xcyl(l|h, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
+//   xcyl(l|h|length|height, r|d=, [anchor=], ...) [ATTACHMENTS];
+//   xcyl(l|h|length|height, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
 //
 // Arguments:
-//   l / h = Length of cylinder along oriented axis. Default: 1
+//   l / h / length / height = Length of cylinder along oriented axis. Default: 1
 //   r = Radius of cylinder.  Default: 1
 //   ---
 //   r1 = Optional radius of left (X-) end of cylinder.
@@ -1584,17 +1587,26 @@ module cyl(
 //       xcyl(l=35, d1=30, d2=10);
 //   }
 
-module xcyl(
-    h, r, d, r1, r2, d1, d2, l,
+function xcyl(
+    h, r, d, r1, r2, d1, d2, l, 
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, from_end=false,
+    circum=false, realign=false, from_end=false, length, height,
+    anchor=CENTER, spin=0, orient=UP
+) = no_function("xcyl");
+
+module xcyl(
+    h, r, d, r1, r2, d1, d2, l, 
+    chamfer, chamfer1, chamfer2,
+    chamfang, chamfang1, chamfang2,
+    rounding, rounding1, rounding2,
+    circum=false, realign=false, from_end=false, length, height,
     anchor=CENTER, spin=0, orient=UP
 ) {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
-    l = first_defined([l, h, 1]);
+    l = one_defined([l,h,length,height],"l,h,length,height",1);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=RIGHT) {
         cyl(
             l=l, r1=r1, r2=r2,
@@ -1615,11 +1627,11 @@ module xcyl(
 //   Creates a cylinder oriented along the Y axis.
 //
 // Usage: Typical
-//   ycyl(l|h, r|d=, [anchor=], ...) [ATTACHMENTS];
-//   ycyl(l|h, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
+//   ycyl(l|h|length|height, r|d=, [anchor=], ...) [ATTACHMENTS];
+//   ycyl(l|h|length|height, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
 //
 // Arguments:
-//   l / h = Length of cylinder along oriented axis. (Default: `1.0`)
+//   l / h / length / height = Length of cylinder along oriented axis. (Default: `1.0`)
 //   r = Radius of cylinder.
 //   ---
 //   r1 = Radius of front (Y-) end of cone.
@@ -1655,17 +1667,27 @@ module xcyl(
 //       ycyl(l=35, d1=30, d2=10);
 //   }
 
+function ycyl(
+    h, r, d, r1, r2, d1, d2, l,
+    chamfer, chamfer1, chamfer2,
+    chamfang, chamfang1, chamfang2,
+    rounding, rounding1, rounding2,
+    circum=false, realign=false, from_end=false,height,length,
+    anchor=CENTER, spin=0, orient=UP
+) = no_function("ycyl");
+
+
 module ycyl(
     h, r, d, r1, r2, d1, d2, l,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, from_end=false,
+    circum=false, realign=false, from_end=false,height,length,
     anchor=CENTER, spin=0, orient=UP
 ) {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
-    l = first_defined([l, h, 1]);
+    l = one_defined([l,h,length,height],"l,h,length,height",1);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=BACK) {
         cyl(
             l=l, r1=r1, r2=r2,
@@ -1687,11 +1709,11 @@ module ycyl(
 //   Creates a cylinder oriented along the Z axis.
 //
 // Usage: Typical
-//   zcyl(l|h, r|d=, [anchor=],...) [ATTACHMENTS];
-//   zcyl(l|h, r1=|d1=, r2=|d2=, [anchor=],...);
+//   zcyl(l|h|length|height, r|d=, [anchor=],...) [ATTACHMENTS];
+//   zcyl(l|h|length|height, r1=|d1=, r2=|d2=, [anchor=],...);
 //
 // Arguments:
-//   l / h = Length of cylinder along oriented axis. (Default: 1.0)
+//   l / h / length / height = Length of cylinder along oriented axis. (Default: 1.0)
 //   r = Radius of cylinder.
 //   ---
 //   r1 = Radius of front (Y-) end of cone.
@@ -1727,17 +1749,26 @@ module ycyl(
 //       zcyl(l=35, d1=30, d2=10);
 //   }
 
+function zcyl(
+    h, r, d, r1, r2, d1, d2, l,
+    chamfer, chamfer1, chamfer2,
+    chamfang, chamfang1, chamfang2,
+    rounding, rounding1, rounding2,
+    circum=false, realign=false, from_end=false, length, height,
+    anchor=CENTER, spin=0, orient=UP
+) = no_function("zcyl");
+
 module zcyl(
     h, r, d, r1, r2, d1, d2, l,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, from_end=false,
+    circum=false, realign=false, from_end=false, length, height,
     anchor=CENTER, spin=0, orient=UP
 ) {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
-    l = first_defined([l, h, 1]);
+    l = one_defined([l,h,length,height],"l,h,length,height",1);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
         cyl(
             l=l, r1=r1, r2=r2,
@@ -1802,15 +1833,24 @@ module zcyl(
 // Example: Standard Connectors
 //   tube(h=30, or=40, wall=5) show_anchors();
 
+function tube(
+     h, or, ir, center,
+    od, id, wall,
+    or1, or2, od1, od2,
+    ir1, ir2, id1, id2,
+    realign=false, l, length, height,
+    anchor, spin=0, orient=UP
+) = no_function("tube");
+
 module tube(
     h, or, ir, center,
     od, id, wall,
     or1, or2, od1, od2,
     ir1, ir2, id1, id2,
-    realign=false, l,
+    realign=false, l, length, height,
     anchor, spin=0, orient=UP
 ) {
-    h = first_defined([h,l,1]);
+    h = one_defined([h,l,height,length],"h,l,height,length",dflt=1);
     orr1 = get_radius(r1=or1, r=or, d1=od1, d=od, dflt=undef);
     orr2 = get_radius(r1=or2, r=or, d1=od2, d=od, dflt=undef);
     irr1 = get_radius(r1=ir1, r=ir, d1=id1, d=id, dflt=undef);
@@ -1845,18 +1885,18 @@ module tube(
 //   Creates a pie slice shape.
 //
 // Usage: As Module
-//   pie_slice(l|h, r, ang, [center]);
-//   pie_slice(l|h, d=, ang=, ...);
-//   pie_slice(l|h, r1=|d1=, r2=|d2=, ang=, ...);
+//   pie_slice(l|h=|height=|length=, r, ang, [center]);
+//   pie_slice(l|h=|height=|length=, d=, ang=, ...);
+//   pie_slice(l|h=|height=|length=, r1=|d1=, r2=|d2=, ang=, ...);
 // Usage: As Function
-//   vnf = pie_slice(l|h, r, ang, [center]);
-//   vnf = pie_slice(l|h, d=, ang=, ...);
-//   vnf = pie_slice(l|h, r1=|d1=, r2=|d2=, ang=, ...);
+//   vnf = pie_slice(l|h=|height=|length=, r, ang, [center]);
+//   vnf = pie_slice(l|h=|height=|length=, d=, ang=, ...);
+//   vnf = pie_slice(l|h=|height=|length=, r1=|d1=, r2=|d2=, ang=, ...);
 // Usage: Attaching Children
 //   pie_slice(l|h, r, ang, ...) ATTACHMENTS;
 //
 // Arguments:
-//   h / l = height of pie slice.
+//   h / l / height / length = height of pie slice.
 //   r = radius of pie slice.
 //   ang = pie slice angle in degrees.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
@@ -1882,10 +1922,10 @@ module tube(
 
 module pie_slice(
     h, r, ang=30, center,
-    r1, r2, d, d1, d2, l,
+    r1, r2, d, d1, d2, l, length, height,
     anchor, spin=0, orient=UP
 ) {
-    l = first_defined([l, h, 1]);
+    l = one_defined([l, h,height,length],"l,h,height,length",dflt=1);
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
     maxd = max(r1,r2)+0.1;
@@ -1905,11 +1945,11 @@ module pie_slice(
 
 function pie_slice(
     h, r, ang=30, center,
-    r1, r2, d, d1, d2, l,
+    r1, r2, d, d1, d2, l, length, height,
     anchor, spin=0, orient=UP
 ) = let(
         anchor = get_anchor(anchor, center, BOT, BOT),
-        l = first_defined([l, h, 1]),
+        l = one_defined([l, h,height,length],"l,h,height,length",dflt=1),
         r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10),
         r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10),
         maxd = max(r1,r2)+0.1,
@@ -2478,18 +2518,18 @@ function torus(
 //   Note that with caps, the chamfer must not be so big that it makes the cap height illegal.  
 //
 // Usage: Typical
-//   teardrop(h|l|length|height, r, [ang], [cap_h], [chamfer=], ...) [ATTACHMENTS];
-//   teardrop(h|l|length|height, d=, [ang=], [cap_h=], [chamfer=], ...) [ATTACHMENTS];
+//   teardrop(h|l=|length=|height=, r, [ang], [cap_h], [chamfer=], ...) [ATTACHMENTS];
+//   teardrop(h|l=|length=|height=, d=, [ang=], [cap_h=], [chamfer=], ...) [ATTACHMENTS];
 // Usage: Psuedo-Conical
-//   teardrop(h|l, r1=, r2=, [ang=], [cap_h1=], [cap_h2=], ...)  [ATTACHMENTS];
-//   teardrop(h|l, d1=, d2=, [ang=], [cap_h1=], [cap_h2=], ...)  [ATTACHMENTS];
+//   teardrop(h|l=|height=|length=, r1=, r2=, [ang=], [cap_h1=], [cap_h2=], ...)  [ATTACHMENTS];
+//   teardrop(h|l=|height=|length=, d1=, d2=, [ang=], [cap_h1=], [cap_h2=], ...)  [ATTACHMENTS];
 // Usage: As Function
-//   vnf = teardrop(h|l=, r|d=, [ang=], [cap_h=], ...);
-//   vnf = teardrop(h|l=, r1=|d1=, r2=|d2=, [ang=], [cap_h=], ...);
-//   vnf = teardrop(h|l=, r1=|d1=, r2=|d2=, [ang=], [cap_h1=], [cap_h2=], ...);
+//   vnf = teardrop(h|l=|height=|length=, r|d=, [ang=], [cap_h=], ...);
+//   vnf = teardrop(h|l=|height=|length=, r1=|d1=, r2=|d2=, [ang=], [cap_h=], ...);
+//   vnf = teardrop(h|l=|height=|length=, r1=|d1=, r2=|d2=, [ang=], [cap_h1=], [cap_h2=], ...);
 //
 // Arguments:
-//   h / l = Thickness of teardrop. Default: 1
+//   h / l / height / length = Thickness of teardrop. Default: 1
 //   r = Radius of circular part of teardrop.  Default: 1
 //   ang = Angle of hat walls from the Z axis.  Default: 45 degrees
 //   cap_h = If given, height above center where the shape will be truncated. Default: `undef` (no truncation)
@@ -2721,7 +2761,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   go to the Help menu and select "Font List".
 // Arguments:
 //   text = Text to create.
-//   h = Extrusion height for the text.  Default: 1
+//   h / height / thickness = Extrusion height for the text.  Default: 1
 //   size = The font will be created at this size divided by 0.72.   Default: 10
 //   font = Font to use.  Default: "Liberation Sans"
 //   ---
@@ -2745,8 +2785,11 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   text3d("Foobar", h=2, anchor=str("baseline",CENTER));
 //   text3d("Foobar", h=2, anchor=str("baseline",BOTTOM+RIGHT));
 
-module text3d(text, h=1, size=10, font="Helvetica", halign, valign, spacing=1.0, direction="ltr", language="em", script="latin", anchor="baseline[-1,0,-1]", spin=0, orient=UP) {
+module text3d(text, h, size=10, font="Helvetica", halign, valign, spacing=1.0, direction="ltr", language="em", script="latin",
+              height, thickness, 
+              anchor="baseline[-1,0,-1]", spin=0, orient=UP) {
     no_children($children);
+    h = one_defined([h,height,thickness],"h,height,thickness",dflt=1);
     dummy1 =
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
         assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
@@ -2814,7 +2857,7 @@ function _cut_interp(pathcut, path, data) =
 
 // Module: path_text()
 // Usage:
-//   path_text(path, text, [size], [thickness], [font], [lettersize], [offset], [reverse], [normal], [top], [textmetrics], [kern])
+//   path_text(path, text, [size], [thickness], [font], [lettersize=], [offset=], [reverse=], [normal=], [top=], [textmetrics=], [kern=])
 // Description:
 //   Place the text letter by letter onto the specified path using textmetrics (if available and requested)
 //   or user specified letter spacing.  The path can be 2D or 3D.  In 2D the text appears along the path with letters upright
@@ -2866,8 +2909,8 @@ function _cut_interp(pathcut, path, data) =
 // Arguments:
 //   path = path to place the text on
 //   text = text to create
-//   size = The font will be created at this size divided by 0.72.   Default: 10
-//   thickness = thickness of letters (not allowed for 2D path)
+//   size = The font will be created at this size divided by 0.72.   
+//   thickness / h / height = thickness of letters (not allowed for 2D path)
 //   font = font to use.  Default: "Liberation Sans"
 //   ---
 //   lettersize = scalar or array giving size of letters
@@ -2940,22 +2983,23 @@ function _cut_interp(pathcut, path, data) =
 //   kern = [1,1.2,1,1,.3,-.2,1,0,.8,1,1.1,1];
 //   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, kern=kern, normal=UP);
 
-module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false, kern=0)
+module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false, kern=0, height,h)
 {
   no_children($children);
   dummy2=assert(is_path(path,[2,3]),"Must supply a 2d or 3d path")
-         assert(num_defined([normal,top])<=1, "Cannot define both \"normal\" and \"top\"");
+         assert(num_defined([normal,top])<=1, "Cannot define both \"normal\" and \"top\"")
+         assert(all_positive([size]), "Must give positive text size");
   dim = len(path[0]);
   normalok = is_undef(normal) || is_vector(normal,3) || (is_path(normal,3) && len(normal)==len(path));
   topok = is_undef(top) || is_vector(top,dim) || (dim==2 && is_vector(top,3) && top[2]==0)
                         || (is_path(top,dim) && len(top)==len(path));
-  dummy4 = assert(dim==3 || is_undef(thickness), "Cannot give a thickness with 2d path")
+  dummy4 = assert(dim==3 || !any_defined([thickness,h,height]), "Cannot give a thickness or height with 2d path")
            assert(dim==3 || !reverse, "Reverse not allowed with 2d path")
            assert(dim==3 || offset==0, "Cannot give offset with 2d path")
            assert(dim==3 || is_undef(normal), "Cannot define \"normal\" for a 2d path, only \"top\"")
            assert(normalok,"\"normal\" must be a vector or path compatible with the given path")
            assert(topok,"\"top\" must be a vector or path compatible with the given path");
-  thickness = first_defined([thickness,1]);
+  thickness = one_defined([thickness,h,height],"thickness,h,height",dflt=1);
   normal = is_vector(normal) ? repeat(normal, len(path))
          : is_def(normal) ? normal
          : undef;
@@ -3031,10 +3075,10 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 //
 // Usage: Typical
 //   interior_fillet(l, r, [ang], [overlap], ...) [ATTACHMENTS];
-//   interior_fillet(l, d=, [ang=], [overlap=], ...) [ATTACHMENTS];
+//   interior_fillet(l|length=|h=|height=, d=, [ang=], [overlap=], ...) [ATTACHMENTS];
 //
 // Arguments:
-//   l = Length of edge to fillet.
+//   l / length / h / height = Length of edge to fillet.
 //   r = Radius of fillet.
 //   ang = Angle between faces to fillet.
 //   overlap = Overlap size for unioning with faces.
@@ -3070,7 +3114,8 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 //       interior_fillet(l=50, r=10, spin=180, orient=RIGHT);
 //   }
 
-module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=CENTER, spin=0, orient=UP) {
+module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTER, spin=0, orient=UP) {
+    l = one_defined([l,length,h,height],"l,length,h,height");
     r = get_radius(r=r, d=d, dflt=1);
     steps = ceil(segs(r)*(180-ang)/360);
     arc = arc(n=steps+1, r=r, corner=[polar_to_xy(r,ang),[0,0],[r,0]]);
@@ -3224,9 +3269,9 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 
 // Function&Module: cylindrical_heightfield()
 // Usage: As Function
-//   vnf = cylindrical_heightfield(data, l, r|d=, [base=], [transpose=], [aspect=]);
+//   vnf = cylindrical_heightfield(data, l|length=|h=|height=, r|d=, [base=], [transpose=], [aspect=]);
 // Usage: As Module
-//   cylindrical_heightfield(data, l, r|d=, [base=], [transpose=], [aspect=]) [ATTACHMENTS];
+//   cylindrical_heightfield(data, l|length=|h=|height=, r|d=, [base=], [transpose=], [aspect=]) [ATTACHMENTS];
 // Topics: Extrusion, Textures, Knurling, Heightfield
 // Description:
 //   Given a regular rectangular 2D grid of scalar values, or a function literal of signature (x,y), generates
@@ -3236,7 +3281,7 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 //   https://raw.githubusercontent.com/revarbat/BOSL2/master/scripts/img2scad.py
 // Arguments:
 //   data = This is either the 2D rectangular array of heights, or a function literal of signature `(x, y)`.
-//   l = The length of the cylinder to wrap around.
+//   l / length / h / height = The length of the cylinder to wrap around.
 //   r = The radius of the cylinder to wrap around.
 //   ---
 //   r1 = The radius of the bottom of the cylinder to wrap around.
@@ -3286,11 +3331,11 @@ function cylindrical_heightfield(
     style="min_edge", maxh=99,
     xrange=[-1:0.01:1],
     yrange=[-1:0.01:1],
-    r1, r2, d, d1, d2, h, height,
+    r1, r2, d, d1, d2, h, height, length, 
     anchor=CTR, spin=0, orient=UP
 ) =
     let(
-        l = first_defined([l, h, height]),
+        l = one_defined([l, h, height, length], "l,h,height,l"),
         r1 = get_radius(r1=r1, r=r, d1=d1, d=d),
         r2 = get_radius(r1=r2, r=r, d1=d2, d=d)
     )
@@ -3349,10 +3394,10 @@ module cylindrical_heightfield(
     transpose=false, aspect=1,
     style="min_edge", convexity=10,
     xrange=[-1:0.01:1], yrange=[-1:0.01:1],
-    maxh=99, r1, r2, d, d1, d2, h, height,
+    maxh=99, r1, r2, d, d1, d2, h, height, length,
     anchor=CTR, spin=0, orient=UP
 ) {
-    l = first_defined([l, h, height]);
+    l = one_defined([l, h, height, length], "l,h,height,length");
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d);
     vnf = cylindrical_heightfield(
