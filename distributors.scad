@@ -412,8 +412,11 @@ function zcopies(spacing, n, l, sp, p=_NO_ARG) =
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
-// Example(2D): The functional form of line_copies() returns a list of points.
-//   pts = line_copies([10,5],n=5);
+// Example(2D): The functional form of line_copies() returns a list of transform matrices.
+//   mats = line_copies([10,5],n=5);
+//   for (m = mats) multmatrix(m)  circle(d=2);
+// Example(2D): The functional form of line_copies() returns a list of points if given a point.
+//   pts = line_copies([10,5],n=5,p=[0,0,0]);
 //   move_copies(pts) circle(d=2);
 
 module line_of(spacing, n, l, p1, p2) {
