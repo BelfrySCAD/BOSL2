@@ -418,13 +418,13 @@ function zcopies(spacing, n, l, sp, p=_NO_ARG) =
 
 module line_of(spacing, n, l, p1, p2) {
     deprecate("line_copies");
-    line_copies(spacing, n, l, p1, p2);
+    line_copies(spacing, n, l, p1, p2) children();
 }
 
 module line_copies(spacing, n, l, p1, p2)
 {
     req_children($children);
-    pts = line_copies(spacing=spacing, n=n, l=l, p1=p1, p2=p2);
+    pts = line_copies(spacing=spacing, n=n, l=l, p1=p1, p2=p2, p=[0,0,0]);
     for (i=idx(pts)) {
         $idx = i;
         $pos = pts[i];
@@ -801,10 +801,10 @@ function rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], su
         mats = [
             for (ang = angs)
             translate(cp) *
-            rot(a=ang, v=v) *
-            translate(delta) *
-            rot(a=(subrot? sang : ang), v=v, reverse=true) *
-            translate(-cp)
+                rot(a=ang, v=v) *
+                translate(delta) *
+                rot(a=(subrot? sang : ang), v=v, reverse=true) *
+                translate(-cp)
         ]
     )
     p==_NO_ARG? mats : [for (m = mats) apply(m, p)];
@@ -1112,7 +1112,7 @@ function zrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 
 module arc_of(n=6,r,rx,ry,d,dx,dy,sa=0,ea=360,rot=true){
     deprecate("arc_copies");
-    arc_copies(n,r,rx,ry,d,dx,dy,sa,ea,rot);
+    arc_copies(n,r,rx,ry,d,dx,dy,sa,ea,rot) children();
 }    
 
 
@@ -1220,7 +1220,7 @@ function arc_copies(
 module ovoid_spread(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp=true)
 {
   deprecate("sphere_copies");
-  sphere_copies(n,r,d,cone_ang,scale,perp);
+  sphere_copies(n,r,d,cone_ang,scale,perp) children();
 }  
 
 
