@@ -76,7 +76,7 @@ _NO_ARG = [true,[123232345],false];
 //
 // Usage: As Module
 //   move(v) CHILDREN;
-// Usage: As a function to translate points, VNF, or Bezier patch
+// Usage: As a function to translate points, VNF, or Bezier patches
 //   pts = move(v, p);
 //   pts = move(STRING, p);
 // Usage: Get Translation Matrix
