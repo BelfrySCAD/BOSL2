@@ -27,8 +27,8 @@ use <builtins.scad>
 //   vnf = cube(size, ...);
 // See Also: cuboid(), prismoid()
 // Description:
-//   Creates a 3D cubic object with support for anchoring and attachments.
-//   This can be used as a drop-in replacement for the built-in `cube()` module.
+//   Creates a 3D cubic object.
+//   This module extends the built-in cube()` module by providing support for attachments and a function form.  
 //   When called as a function, returns a [VNF](vnf.scad) for a cube.
 // Arguments:
 //   size = The size of the cube.
@@ -1063,7 +1063,7 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 
 // Function&Module: cylinder()
 // Topics: Shapes (3D), Attachable, VNF Generators
-// Usage: As Module (as in Native OpenSCAD)
+// Usage: As Module (as in native OpenSCAD)
 //   cylinder(h, r=/d=, [center=]);
 //   cylinder(h, r1/d1=, r2/d2=, [center=]);
 // Usage: With BOSL2 anchoring and attachment extensions
@@ -1074,14 +1074,14 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 //   vnf = cylinder(h, r1/d1=, r2/d2=, ...);
 // See Also: cyl()
 // Description:
-//   Creates a 3D cylinder or conic object with support for anchoring and attachments.
-//   This modules extends the built-in `cylinder()` module by adding support for attachment.  
-//   When called as a function, returns a [VNF](vnf.scad) for a cylinder.
+//   Creates a 3D cylinder or conic object.
+//   This modules extends the built-in `cylinder()` module by adding support for attachment and by adding a function version.   
+//   When called as a function, returns a [VNF](vnf.scad) for a cylinder.  
 // Arguments:
-//   l / h = The height of the cylinder.
+//   h = The height of the cylinder.
 //   r1 = The bottom radius of the cylinder.  (Before orientation.)
 //   r2 = The top radius of the cylinder.  (Before orientation.)
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.  Default: false
 //   ---
 //   d1 = The bottom diameter of the cylinder.  (Before orientation.)
 //   d2 = The top diameter of the cylinder.  (Before orientation.)
@@ -1112,24 +1112,24 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 //       cylinder(h=30, d1=25, d2=10) show_anchors();
 //   }
 
-module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
+module cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP)
 {
     anchor = get_anchor(anchor, center, BOTTOM, BOTTOM);
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
-    l = first_defined([h, l, 1]);
-    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
-        _cylinder(h=l, r1=r1, r2=r2, center=true);
+    h = default(h,1);
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
+        _cylinder(h=h, r1=r1, r2=r2, center=true);
         children();
     }
 }
 
-function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP) =
+function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
     let(
         anchor = get_anchor(anchor, center, BOTTOM, BOTTOM),
         r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
         r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
-        l = first_defined([h, l, 1]),
+        l = default(h,1),
         sides = segs(max(r1,r2)),
         verts = [
             for (i=[0:1:sides-1]) let(a=360*(1-i/sides)) [r1*cos(a),r1*sin(a),-l/2],
@@ -1977,21 +1977,21 @@ function pie_slice(
 
 // Function&Module: sphere()
 // Topics: Shapes (3D), Attachable, VNF Generators
-// Usage: As Module
-//   sphere(r|d=, [circum=], [style=], ...) [ATTACHMENTS];
-// Usage: As Function
-//   vnf = sphere(r|d=, [circum=], [style=], ...);
+// Usage: As Module (native OpenSCAD)
+//   sphere(r|d=);
+// Usage: Using BOSL2 attachments extensions
+//   sphere(r|d=, [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+// Usage: As Function (BOSL2 extension)
+//   vnf = sphere(r|d=, [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // See Also: spheroid()
 // Description:
-//   Creates a sphere object, with support for anchoring and attachments.
-//   This is a drop-in replacement for the built-in `sphere()` module.
+//   Creates a sphere object.
+//   This module extends the built-in `sphere()` module by providing support for BOSL2 anchoring and attachments, and a function form. 
 //   When called as a function, returns a [VNF](vnf.scad) for a sphere.
 // Arguments:
 //   r = Radius of the sphere.
 //   ---
 //   d = Diameter of the sphere.
-//   circum = If true, the sphere is made large enough to circumscribe the sphere of the ideal side.  Otherwise inscribes.  Default: false (inscribes)
-//   style = The style of the sphere's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "orig"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1999,16 +1999,6 @@ function pie_slice(
 //   sphere(r=50);
 // Example: By Diameter
 //   sphere(d=100);
-// Example: style="orig"
-//   sphere(d=100, style="orig", $fn=10);
-// Example: style="aligned"
-//   sphere(d=100, style="aligned", $fn=10);
-// Example: style="stagger"
-//   sphere(d=100, style="stagger", $fn=10);
-// Example: style="icosa"
-//   sphere(d=100, style="icosa", $fn=10);
-//   // In "icosa" style, $fn is quantized
-//   //   to the nearest multiple of 5.
 // Example: Anchoring
 //   sphere(d=100, anchor=FRONT);
 // Example: Spin
@@ -2021,23 +2011,16 @@ function pie_slice(
 //   vnf = sphere(d=100, style="icosa");
 //   vnf_polyhedron(vnf);
 
-module sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP) {
+module sphere(r, d, anchor=CENTER, spin=0, orient=UP) {
     r = get_radius(r=r, d=d, dflt=1);
-    if (!circum && style=="orig" && is_num(r)) {
-        attachable(anchor,spin,orient, r=r) {
+    attachable(anchor,spin,orient, r=r) {
             _sphere(r=r);
             children();
-        }
-    } else {
-        spheroid(
-            r=r, circum=circum, style=style,
-            anchor=anchor, spin=spin, orient=orient
-        ) children();
     }
 }
 
-function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP) =
-    spheroid(r=r, d=d, circum=circum, style=style, anchor=anchor, spin=spin, orient=orient);
+function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
+    spheroid(r=r, d=d, anchor=anchor, spin=spin, orient=orient);
 
 
 // Function&Module: spheroid()
@@ -2920,7 +2903,8 @@ function _cut_interp(pathcut, path, data) =
 //   top = direction or list of directions pointing toward the top of the text
 //   reverse = reverse the letters if true.  Not allowed for 2D path.  Default: false
 //   textmetrics = if set to true and lettersize is not given then use the experimental textmetrics feature.  You must be running a dev snapshot that includes this feature and have the feature turned on in your preferences.  Default: false
-//   kern = scalar or array giving size adjustments for each letter.  Default: 0
+//   valign = align text to the path using "top", "bottom", "center" or "baseline".  This only works with textmetrics enabled.  Default: "baseline"
+//   kern = scalar or array giving spacing adjusments between each letter.  If it's an array it should have one less entry than the text string.  Default: 0
 // Example(3D,NoScales):  The examples use Courier, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder.
 //   path = path3d(arc(100, r=25, angle=[245, 370]));
 //   color("red")stroke(path, width=.3);
@@ -2983,7 +2967,7 @@ function _cut_interp(pathcut, path, data) =
 //   kern = [1,1.2,1,1,.3,-.2,1,0,.8,1,1.1,1];
 //   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, kern=kern, normal=UP);
 
-module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false, kern=0, height,h)
+module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false, kern=0, height,h,spacing=1, valign="baseline")
 {
   no_children($children);
   dummy2=assert(is_path(path,[2,3]),"Must supply a 2d or 3d path")
@@ -3008,27 +2992,38 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
          : is_def(top) ? top
          : undef;
 
-  kern = force_list(kern, len(text));
-  dummy3 = assert(is_list(kern) && len(kern)==len(text), "kern must be a scalar or list whose length is len(text)");
+  kern = force_list(kern, len(text)-1);
+  dummy3 = assert(is_list(kern) && len(kern)==len(text)-1, "kern must be a scalar or list whose length is len(text)-1");
 
-  lsize = kern + (
-          is_def(lettersize) ? force_list(lettersize, len(text))
+  lsize = is_def(lettersize) ? force_list(lettersize, len(text))
         : textmetrics ? [for(letter=text) let(t=textmetrics(letter, font=font, size=size)) t.advance[0]]
-        : assert(false, "textmetrics disabled: Must specify letter size")
-  );
-  textlength = sum(lsize);
+        : assert(false, "textmetrics disabled: Must specify letter size");
+  lcenter = spacing * convolve(lsize,[1,1]/2)+[0,each kern,0] ;
+  textlength = spacing*sum(lsize)+sum(kern);
+
+  ascent = !textmetrics ? undef
+         : textmetrics(text, font=font, size=size).ascent;
+  descent = !textmetrics ? undef
+          : textmetrics(text, font=font, size=size).descent;
+
+  vadjustment = !textmetrics ? assert(valign=="baseline","valign requires textmetrics support") 0
+              : valign=="baseline" ? 0 
+              : valign=="top" ? -ascent
+              : valign=="bottom" ? descent
+              : valign=="center" ? (descent-ascent)/2
+              : assert(false,"Invalid valign value");
+
   dummy1 = assert(textlength<=path_length(path),"Path is too short for the text");
 
   start = center ? (path_length(path) - textlength)/2 : 0;
    
-  pts = path_cut_points(path, add_scalar([0, each cumsum(lsize)],start+lsize[0]/2), direction=true);
-
+  pts = path_cut_points(path, add_scalar([ each cumsum(lcenter)],start+0*lsize[0]/2), direction=true);
 
   usernorm = is_def(normal);
   usetop = is_def(top);
-
   normpts = is_undef(normal) ? (reverse?1:-1)*column(pts,3) : _cut_interp(pts,path, normal);
   toppts = is_undef(top) ? undef : _cut_interp(pts,path,top);
+
   for (i = idx(text)) {
     tangent = pts[i][2];
     checks =
@@ -3047,8 +3042,13 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
           y=usetop ? toppts[i] : undef
         ) up(offset-thickness/2) {
           linear_extrude(height=thickness)
-            left(lsize[0]/2)
+            back(vadjustment)
+            {
+              //stroke([[0,0],[0,14]], width=.3, endcap2="arrow");
+              
+            left(lsize[i]/2)
               text(text[i], font=font, size=size);
+            }
         }
       } else {
           frame_map(
