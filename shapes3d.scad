@@ -2903,7 +2903,7 @@ function _cut_interp(pathcut, path, data) =
 //   top = direction or list of directions pointing toward the top of the text
 //   reverse = reverse the letters if true.  Not allowed for 2D path.  Default: false
 //   textmetrics = if set to true and lettersize is not given then use the experimental textmetrics feature.  You must be running a dev snapshot that includes this feature and have the feature turned on in your preferences.  Default: false
-//   valign = align text to the path using "top", "bottom", "center" or "baseline".  This only works with textmetrics enabled.  Default: "baseline"
+//   valign = align text to the path using "top", "bottom", "center" or "baseline".  You can also adjust position with a numerical offset as in "top-5" or "bottom+2".  This only works with textmetrics enabled.  You can give a simple numerical offset, which will be relative to the baseline and works even without textmetrics.  Default: "baseline"
 //   kern = scalar or array giving spacing adjusments between each letter.  If it's an array it should have one less entry than the text string.  Default: 0
 // Example(3D,NoScales):  The examples use Courier, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder.
 //   path = path3d(arc(100, r=25, angle=[245, 370]));
@@ -2967,7 +2967,7 @@ function _cut_interp(pathcut, path, data) =
 //   kern = [1,1.2,1,1,.3,-.2,1,0,.8,1,1.1,1];
 //   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, kern=kern, normal=UP);
 
-module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false, kern=0, height,h,spacing=1, valign="baseline")
+module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false, kern=0, height,h, valign="baseline")
 {
   no_children($children);
   dummy2=assert(is_path(path,[2,3]),"Must supply a 2d or 3d path")
@@ -2998,20 +2998,27 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
   lsize = is_def(lettersize) ? force_list(lettersize, len(text))
         : textmetrics ? [for(letter=text) let(t=textmetrics(letter, font=font, size=size)) t.advance[0]]
         : assert(false, "textmetrics disabled: Must specify letter size");
-  lcenter = spacing * convolve(lsize,[1,1]/2)+[0,each kern,0] ;
-  textlength = spacing*sum(lsize)+sum(kern);
+  lcenter = convolve(lsize,[1,1]/2)+[0,each kern,0] ;
+  textlength = sum(lsize)+sum(kern);
 
   ascent = !textmetrics ? undef
          : textmetrics(text, font=font, size=size).ascent;
   descent = !textmetrics ? undef
           : textmetrics(text, font=font, size=size).descent;
 
-  vadjustment = !textmetrics ? assert(valign=="baseline","valign requires textmetrics support") 0
-              : valign=="baseline" ? 0 
-              : valign=="top" ? -ascent
-              : valign=="bottom" ? descent
-              : valign=="center" ? (descent-ascent)/2
-              : assert(false,"Invalid valign value");
+  vadjustment = is_num(valign) ? -valign
+              : !textmetrics ? assert(valign=="baseline","valign requires textmetrics support") 0
+              : let(
+                     table = [
+                              ["baseline", 0],
+                              ["top", -ascent],
+                              ["bottom", descent],
+                              ["center", (descent-ascent)/2]
+                             ],
+                     match = [for(i=idx(table)) if (starts_with(valign,table[i][0])) i]
+                )
+                assert(len(match)==1, "Invalid valign value")
+                table[match[0]][1] - parse_num(substr(valign,len(table[match[0]][0])));
 
   dummy1 = assert(textlength<=path_length(path),"Path is too short for the text");
 
@@ -3044,7 +3051,7 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
           linear_extrude(height=thickness)
             back(vadjustment)
             {
-              //stroke([[0,0],[0,14]], width=.3, endcap2="arrow");
+              stroke([[0,0],[0,14]], width=.3, endcap2="arrow");
               
             left(lsize[i]/2)
               text(text[i], font=font, size=size);
