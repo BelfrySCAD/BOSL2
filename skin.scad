@@ -1609,8 +1609,8 @@ module spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, taper
 //   curve = [for(theta=[0:4:359])
 //              [r*cos(theta), r*sin(theta), 10+sin(6*theta)]];
 //   difference(){
-//     cylinder(r=r, l=len);
-//     down(.5)cylinder(r=r-thickness, l=len+1);
+//     cylinder(r=r, h=len);
+//     down(.5)cylinder(r=r-thickness, h=len+1);
 //     path_sweep(left(.05,square([1.1,1])), curve, closed=true,
 //                method="manual", normal=UP);
 //   }

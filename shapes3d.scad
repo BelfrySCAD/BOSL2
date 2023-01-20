@@ -2007,9 +2007,6 @@ function pie_slice(
 //   sphere(d=100, anchor=FRONT, spin=45, orient=FWD);
 // Example: Standard Connectors
 //   sphere(d=50) show_anchors();
-// Example: Called as Function
-//   vnf = sphere(d=100, style="icosa");
-//   vnf_polyhedron(vnf);
 
 module sphere(r, d, anchor=CENTER, spin=0, orient=UP) {
     r = get_radius(r=r, d=d, dflt=1);
@@ -2964,7 +2961,7 @@ function _cut_interp(pathcut, path, data) =
 // Example(3D,NoScales): The kern parameter lets you adjust the letter spacing either with a uniform value for each letter, or with an array to make adjustments throughout the text.  Here we show a case where adding some extra space gives a better look in a tight circle.  When textmetrics are off, `lettersize` can do this job, but with textmetrics, you'll need to use `kern` to make adjustments relative to the text metric sizes.
 //   path = path3d(arc(100, r=12, angle=[150, 450]));
 //   color("red")stroke(path, width=.3);
-//   kern = [1,1.2,1,1,.3,-.2,1,0,.8,1,1.1,1];
+//   kern = [1,1.2,1,1,.3,-.2,1,0,.8,1,1.1];
 //   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, kern=kern, normal=UP);
 
 module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false, kern=0, height,h, valign="baseline")

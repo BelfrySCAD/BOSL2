@@ -2924,7 +2924,7 @@ Access to the derivative smoothing parameter?
 //   ellipse = ellipse([17,10],$fn=164);  
 //   join_prism(ellipse,base="sphere",base_r=30, length=18,
 //              fillet=18, n=25, overlap=1);
-//   sphere(r=30,circum=true, $fn=96);
+//   spheroid(r=30,circum=true, $fn=96);
 // Example(3D,NoScales): This example shows a failed rounding attempt where the result is self-intersecting.  Using the `debug=true` option makes it possible to view the result to understand what went wrong.  Note that the concave corners have a crease where the fillet crosses itself.  The error message will advise you to decrease the size of the fillet.  You can also fix the problem by making your concave curves shallower.  
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))
 //             (15+2.5*sin(6*theta))*[cos(theta),sin(theta)]];
@@ -2934,19 +2934,19 @@ Access to the derivative smoothing parameter?
 //   sq = rect(15);
 //   join_prism(sq, base="sphere", base_r=25,
 //              length=18, fillet=4, n=12);
-//   sphere(r=25, circum=true, $fn=96);
+//   spheroid(r=25, circum=true, $fn=96);
 // Example(3D,NoScales): To fix the problem, you must subdivide the polygon that defines the prism.  But note that the join_prism method works poorly at sharp corners.
 //   sq = subdivide_path(rect(15),n=64);
 //   join_prism(sq, base="sphere", base_r=25,
 //              length=18, fillet=4, n=12);
-//   sphere(r=25, circum=true,$fn=96);
+//   spheroid(r=25, circum=true,$fn=96);
 // Example(3D,NoScales): In the previous example, a small rounding of the prism corners produces a nicer result.
 //   sq = subdivide_path(
 //          round_corners(rect(15),cut=.5,$fn=32),
 //          n=128);
 //   join_prism(sq, base="sphere", base_r=25,
 //              length=18, fillet=4, n=12);
-//   sphere(r=25, circum=true,$fn=96);
+//   spheroid(r=25, circum=true,$fn=96);
 // Example(3D,NoScales): The final option for specifying the base is to use an arbitrary prism, specified by a polygon.  Note that the base prism is oriented to the RIGHT, so the attached prism remains Z oriented.  
 //   ellipse = ellipse([17,10],$fn=164);  
 //   join_prism(zrot(90,ellipse), base=2*ellipse, length=19,
@@ -3032,7 +3032,7 @@ Access to the derivative smoothing parameter?
 //   base_T = xrot(5)*yrot(-12);
 //   join_prism(flower,base="cylinder",base_r=25, fillet=4, n=12,
 //              aux="sphere",aux_r=35,base_T=base_T, aux_T=aux_T);
-//   multmatrix(aux_T)sphere(35,circum=true);
+//   multmatrix(aux_T)spheroid(35,circum=true);
 //   multmatrix(base_T)xcyl(l=75,r=25,circum=true);
 // Example(3D,NoScales,VPR=[84,0,21],VPT=[13.6,-1,46.8],VPD=446): Here we translate the sphere to the right and the prism goes with it
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))
@@ -3040,7 +3040,7 @@ Access to the derivative smoothing parameter?
 //   aux_T = right(40)*up(85);
 //   join_prism(flower,base="cylinder",base_r=25, n=12,
 //              aux="sphere",aux_r=35, aux_T=aux_T, fillet=4);
-//   multmatrix(aux_T)sphere(35,circum=true);
+//   multmatrix(aux_T)spheroid(35,circum=true);
 //   xcyl(l=75,r=25,circum=true);
 // Example(3D,NoScales,VPR=[84,0,21],VPT=[13.6,-1,46.8],VPD=446): This is the previous example with the prism_end_T transformation used to shift the far end of the prism away from the sphere center.  Note that prism_end_T can be any transformation, but it just acts on the location of the prism endpoint to shift the direction the prism points.  
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))
@@ -3049,7 +3049,7 @@ Access to the derivative smoothing parameter?
 //   join_prism(flower,base="cylinder",base_r=25,
 //              prism_end_T=left(4), fillet=3, n=12, 
 //              aux="sphere",aux_r=35, aux_T=aux_T); 
-//   multmatrix(aux_T)sphere(35,circum=true);
+//   multmatrix(aux_T)spheroid(35,circum=true);
 //   xcyl(l=75,r=25,circum=true);
 // Example(3D,NoScales,VPR=[96.9,0,157.5],VPT=[-7.77616,-2.272,37.9424],VPD=366.527): Here the base is a cylinder but the auxilary object is a generic prism, and the joiner prism has a scale factor.  
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))

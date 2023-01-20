@@ -143,7 +143,7 @@ _hose_waist = [1.7698, 1.8251, 3.95998];
 //    right(25)modular_hose(1/2,"segment");
 //    right(60)modular_hose(3/4,"segment");
 // Example: A mount point for modular hose
-//    cylinder(l=10, r=20)
+//    cylinder(h=10, r=20)
 //       attach(TOP) modular_hose(1/2, "ball", waist_len=15);
 // Example: Mounting plate for something at the end of the hose
 //    cuboid([50,50,5])

@@ -686,7 +686,7 @@ module npt_threaded_rod(
                 internal=internal,
                 higbee=true
             );
-            if (hollow) cylinder(l=l+1, d=size*INCH, center=true);
+            if (hollow) cylinder(h=l+1, d=size*INCH, center=true);
         }
         children();
     }

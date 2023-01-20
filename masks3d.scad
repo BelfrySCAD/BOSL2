@@ -266,7 +266,7 @@ module rounding_corner_mask(r, d, style="octa", excess=0.1, anchor=CENTER, spin=
             translate(-excess*[1,1,1])
                 cube(size=r+excess, center=false);
             translate([r,r,r])
-                sphere(r=r, style=style);
+                spheroid(r=r, style=style);
         }
         children();
     }
