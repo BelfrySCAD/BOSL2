@@ -2020,7 +2020,7 @@ module sphere(r, d, anchor=CENTER, spin=0, orient=UP) {
 }
 
 function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
-    spheroid(r=r, d=d, anchor=anchor, spin=spin, orient=orient);
+    spheroid(r=r, d=d, style="orig", anchor=anchor, spin=spin, orient=orient);
 
 
 // Function&Module: spheroid()

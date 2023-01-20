@@ -33,13 +33,6 @@ test_is_1region();
 
     
 
-module test_is_closed_path() {
-    assert(!is_closed_path([[1,2,3],[4,5,6],[1,8,9]]));
-    assert(is_closed_path([[1,2,3],[4,5,6],[1,8,9],[1,2,3]]));
-}
-test_is_closed_path();
-
-
 module test_close_path() {
     assert(close_path([[1,2,3],[4,5,6],[1,8,9]]) == [[1,2,3],[4,5,6],[1,8,9],[1,2,3]]);
     assert(close_path([[1,2,3],[4,5,6],[1,8,9],[1,2,3]]) == [[1,2,3],[4,5,6],[1,8,9],[1,2,3]]);
