@@ -572,13 +572,13 @@ case.
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,center=true)
-    attach(RIGHT)cylinder(d1=30,d2=15,l=25);
+    attach(RIGHT)cylinder(d1=30,d2=15,h=25);
 ```
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,center=true)
-    attach(RIGHT+TOP)cylinder(d1=30,d2=15,l=25);
+    attach(RIGHT+TOP)cylinder(d1=30,d2=15,h=25);
 ```
 
 In the second example, the child object points diagonally away

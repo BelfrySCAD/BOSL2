@@ -1211,7 +1211,7 @@ module jittered_poly(path, dist=1/512) {
 //
 // Arguments:
 //   r = radius of circular part of teardrop.  (Default: 1)
-//   ang = angle of hat walls from the Y axis.  (Default: 45 degrees)
+//   ang = angle of hat walls from the Y axis (half the angle of the peak).  (Default: 45 degrees)
 //   cap_h = if given, height above center where the shape will be truncated.
 //   ---
 //   d = diameter of circular portion of bottom. (Use instead of r)
