@@ -251,7 +251,7 @@ function ang_adj_to_opp(ang,adj) = adj_ang_to_opp(adj,ang);
 //   hyp = opp_adj_to_hyp(opp,adj);
 // Topics: Geometry, Trigonometry, Triangles
 // Description:
-//   Given the length of the adjacent and opposite sides of a right triangle, returns the length of thee hypotenuse.
+//   Given the length of the adjacent and opposite sides of a right triangle, returns the length of the hypotenuse.
 // Arguments:
 //   adj = The length of the side of the right triangle that is adjacent to the primary angle.
 //   opp = The length of the side of the right triangle that is opposite from the primary angle.
