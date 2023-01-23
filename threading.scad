@@ -686,7 +686,7 @@ module npt_threaded_rod(
                 internal=internal,
                 higbee=true
             );
-            if (hollow) cylinder(l=l+1, d=size*INCH, center=true);
+            if (hollow) cylinder(h=l+1, d=size*INCH, center=true);
         }
         children();
     }
@@ -1270,7 +1270,7 @@ module generic_threaded_rod(
     );
 
     slope = (_r1-_r2)/l;
-    maxlen = 2*pitch;
+    maxlen = 5*pitch;
 
     attachable(anchor,spin,orient, r1=_r1, r2=_r2, l=l) {
         union(){

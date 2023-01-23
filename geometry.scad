@@ -442,6 +442,7 @@ function is_coplanar(points, eps=EPSILON) =
 // Function: plane3pt()
 // Usage:
 //   plane = plane3pt(p1, p2, p3);
+//   plane = plane3pt([p1, p2, p3]);
 // Topics: Geometry, Planes
 // Description:
 //   Generates the normalized cartesian equation of a plane from three 3d points.

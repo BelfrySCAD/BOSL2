@@ -87,21 +87,13 @@ function force_path(path, name="path") =
    : path;
 
 
-// Function: is_closed_path()
-// Usage:
-//   is_closed_path(path, [eps]);
-// Description:
-//   Returns true if the first and last points in the given path are coincident.
-function is_closed_path(path, eps=EPSILON) = approx(path[0], path[len(path)-1], eps=eps);
-
-
 // Function: close_path()
 // Usage:
 //   close_path(path);
 // Description:
 //   If a path's last point does not coincide with its first point, closes the path so it does.
 function close_path(path, eps=EPSILON) =
-    is_closed_path(path,eps=eps)? path : concat(path,[path[0]]);
+    are_ends_equal(path,eps=eps)? path : concat(path,[path[0]]);
 
 
 // Function: cleanup_path()
@@ -110,7 +102,7 @@ function close_path(path, eps=EPSILON) =
 // Description:
 //   If a path's last point coincides with its first point, deletes the last point in the path.
 function cleanup_path(path, eps=EPSILON) =
-    is_closed_path(path,eps=eps)? [for (i=[0:1:len(path)-2]) path[i]] : path;
+    are_ends_equal(path,eps=eps)? [for (i=[0:1:len(path)-2]) path[i]] : path;
 
 
 /// Internal Function: _path_select()
@@ -1096,7 +1088,7 @@ function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0,
     let(
         path = fragments[startfrag],
         newfrags = [for (i=idx(fragments)) if (i!=startfrag) fragments[i]]
-    ) is_closed_path(path, eps=eps)? (
+    ) are_ends_equal(path, eps=eps)? (
         // starting fragment is already closed
         [path, newfrags]
     ) : let(
@@ -1109,7 +1101,7 @@ function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0,
         // No remaining fragments connect!  INCOMPLETE PATH!
         // Treat it as complete.
         [path, remainder]
-    ) : is_closed_path(foundfrag, eps=eps)? (
+    ) : are_ends_equal(foundfrag, eps=eps)? (
         // Found fragment is already closed
         [foundfrag, concat([path], remainder)]
     ) : let(

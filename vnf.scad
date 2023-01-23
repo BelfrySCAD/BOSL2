@@ -206,9 +206,8 @@ function vnf_vertex_array(
                       : [[i1,i3,i2],[i1,i4,i3]],
                    // remove degenerate faces
                    culled_faces= [for(face=faces)
-                       if (norm(verts[face[0]]-verts[face[1]])>EPSILON &&
-                           norm(verts[face[1]]-verts[face[2]])>EPSILON &&
-                           norm(verts[face[2]]-verts[face[0]])>EPSILON)
+                       if (norm(cross(verts[face[1]]-verts[face[0]],
+                                      verts[face[2]]-verts[face[0]]))>EPSILON)
                            face
                    ],
                    rfaces = reverse? [for (face=culled_faces) reverse(face)] : culled_faces

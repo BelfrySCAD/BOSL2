@@ -121,6 +121,18 @@ module test_is_decreasing() {
 test_is_decreasing();
 
 
+
+module test_are_ends_equal() {
+    assert(!are_ends_equal([[1,2,3],[4,5,6],[1,8,9]]));
+    assert(are_ends_equal([[1,2,3],[4,5,6],[1,8,9],[1,2,3]]));
+    assert(are_ends_equal([1,2,3,1.00004],eps=1e-2));
+    assert(are_ends_equal([3]));
+}
+test_are_ends_equal();
+
+
+
+
 module test_find_approx() {
     assert(find_approx(1, [2,3,1.05,4,1,2,.99], eps=.1)==2);
     assert(find_approx(1, [2,3,1.05,4,1,2,.99], all=true, eps=.1)==[2,4,6]);

@@ -320,7 +320,7 @@ but the cylinder's bottom is placed at the center of the cube.
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50)
-    cylinder(d=25,l=75);
+    cylinder(d=25,h=75);
 ```
 
 If you explicitly anchor the child object then the anchor you choose will be aligned
@@ -331,7 +331,7 @@ side of the cylinder is aligned with the center of the cube.
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,anchor=FRONT)     
-    cylinder(d=25,l=95,anchor=RIGHT);
+    cylinder(d=25,h=95,anchor=RIGHT);
 ```
 
 The `position()` module enables you to specify where on the parent to
@@ -343,7 +343,7 @@ RIGHT anchor of the cube.
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,anchor=FRONT)     
-    position(RIGHT) cylinder(d=25,l=75,anchor=LEFT);
+    position(RIGHT) cylinder(d=25,h=75,anchor=LEFT);
 ```
 
 Using this mechanism you can position objects relative to other
@@ -355,7 +355,7 @@ include <BOSL2/std.scad>
 cube([50,50,30],center=true)
     position(TOP+RIGHT) cube([25,40,10], anchor=RIGHT+BOT)
        position(LEFT+FRONT+TOP) cube([12,12,8], anchor=LEFT+FRONT+BOT)
-         cylinder(l=10,r=3);
+         cylinder(h=10,r=3);
 ```
 
 The positioning mechanism is not magical: it simply applies a
@@ -483,14 +483,14 @@ point on the sphere.
 ```openscad-3D
 include<BOSL2/std.scad>
 sphere(40)
-    position(RIGHT+TOP) cylinder(r=8,l=20);
+    position(RIGHT+TOP) cylinder(r=8,h=20);
 ```
 
 
 ```openscad-3D
 include<BOSL2/std.scad>
 sphere(40)
-    attach(RIGHT+TOP) cylinder(r=8,l=20);
+    attach(RIGHT+TOP) cylinder(r=8,h=20);
 ```
 
 In the example above, the cylinder's center point is attached to the
@@ -572,13 +572,13 @@ case.
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,center=true)
-    attach(RIGHT)cylinder(d1=30,d2=15,l=25);
+    attach(RIGHT)cylinder(d1=30,d2=15,h=25);
 ```
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,center=true)
-    attach(RIGHT+TOP)cylinder(d1=30,d2=15,l=25);
+    attach(RIGHT+TOP)cylinder(d1=30,d2=15,h=25);
 ```
 
 In the second example, the child object points diagonally away
@@ -593,7 +593,7 @@ think that it moves the object first, and then it gets attached.
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,center=true)
-    attach(RIGHT)cylinder(d1=30,d2=15,l=25,anchor=FRONT);
+    attach(RIGHT)cylinder(d1=30,d2=15,h=25,anchor=FRONT);
 ```
 
 In the above example we anchor the child to its FRONT and then attach
@@ -624,14 +624,14 @@ when doing differences.
 include <BOSL2/std.scad>
 cube(50,center=true)
     attach(TOP,overlap=10)
-        cylinder(d=20,l=20);
+        cylinder(d=20,h=20);
 ```
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,center=true)
     attach(TOP,overlap=-20)
-        cylinder(d=20,l=20);
+        cylinder(d=20,h=20);
 ```
 
 As with `position()`, you can still apply your own translations and
@@ -645,7 +645,7 @@ include <BOSL2/std.scad>
 cube(50,center=true)
     up(13)
         attach(RIGHT)
-            cylinder(d1=30,d2=15,l=25);
+            cylinder(d1=30,d2=15,h=25);
 ```
 
 On the other hand, if you put the translation between the attach and
@@ -657,7 +657,7 @@ include <BOSL2/std.scad>
 cube(50,center=true)
     attach(RIGHT)
         up(13)
-            cylinder(d1=30,d2=15,l=25);
+            cylinder(d1=30,d2=15,h=25);
 ```
 
 
@@ -676,25 +676,25 @@ attaching with those anchors.
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,anchor=BOT) attach(TOP) anchor_arrow(30);
-right(60)cylinder(d1=30,d2=15,l=25) attach(TOP) anchor_arrow(30);
+right(60)cylinder(d1=30,d2=15,h=25) attach(TOP) anchor_arrow(30);
 ```
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,anchor=BOT)
-  attach(TOP,TOP) cylinder(d1=30,d2=15,l=25);
+  attach(TOP,TOP) cylinder(d1=30,d2=15,h=25);
 ```
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,center=true) attach(RIGHT) anchor_arrow(30);
-right(80)cylinder(d1=30,d2=15,l=25) attach(LEFT) anchor_arrow(30);
+right(80)cylinder(d1=30,d2=15,h=25) attach(LEFT) anchor_arrow(30);
 ```
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50,center=true)
-  attach(RIGHT,LEFT) cylinder(d1=30,d2=15,l=25);
+  attach(RIGHT,LEFT) cylinder(d1=30,d2=15,h=25);
 ```
 
 Note that when you attach with two anchors like this, the attachment
@@ -710,15 +710,15 @@ hidden in the middle of the objects.
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cylinder(d1=30,d2=15,l=25) attach(CENTER) anchor_arrow(40);
-right(40)cylinder(d1=30,d2=15,l=25) attach(CENTER) anchor_arrow(40);
+cylinder(d1=30,d2=15,h=25) attach(CENTER) anchor_arrow(40);
+right(40)cylinder(d1=30,d2=15,h=25) attach(CENTER) anchor_arrow(40);
 ```
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cylinder(d1=30,d2=15,l=25)
+cylinder(d1=30,d2=15,h=25)
     attach(CENTER,CENTER)
-        cylinder(d1=30,d2=15,l=25);
+        cylinder(d1=30,d2=15,h=25);
 ```
 
 
@@ -729,8 +729,8 @@ You can attach or position more than one child at a time by enclosing them all i
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50, center=true) {
-    attach(TOP) cylinder(d1=50,d2=20,l=20);
-    position(RIGHT) cylinder(d1=50,d2=20,l=20);
+    attach(TOP) cylinder(d1=50,d2=20,h=20);
+    position(RIGHT) cylinder(d1=50,d2=20,h=20);
 }
 ```
 
@@ -740,13 +740,13 @@ desired anchors as a list to the `attach()` or `position()` modules:
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50, center=true)
-    attach([RIGHT,FRONT],TOP) cylinder(d1=35,d2=20,l=25);
+    attach([RIGHT,FRONT],TOP) cylinder(d1=35,d2=20,h=25);
 ```
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cube(50, center=true)
-    position([TOP,RIGHT,FRONT]) cylinder(d1=35,d2=20,l=25);
+    position([TOP,RIGHT,FRONT]) cylinder(d1=35,d2=20,h=25);
 ```
 
 
@@ -987,7 +987,7 @@ module round_corner(r) difference() {
     translate(-[1,1,1])
         cube(r+1);
     translate([r,r,r])
-        sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
+        spheroid(r=r, style="aligned", $fn=quantup(segs(r),4));
 }
 round_corner(r=10);
 ```
@@ -1000,7 +1000,7 @@ module round_corner(r) difference() {
     translate(-[1,1,1])
         cube(r+1);
     translate([r,r,r])
-        sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
+        spheroid(r=r, style="aligned", $fn=quantup(segs(r),4));
 }
 diff()
 cube([50,60,70],center=true)
@@ -1017,7 +1017,7 @@ module round_corner(r) difference() {
     translate(-[1,1,1])
         cube(r+1);
     translate([r,r,r])
-        sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
+        spheroid(r=r, style="aligned", $fn=quantup(segs(r),4));
 }
 module round_edge(l,r) difference() {
     translate([-1,-1,-l/2])

@@ -1609,8 +1609,8 @@ module spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, taper
 //   curve = [for(theta=[0:4:359])
 //              [r*cos(theta), r*sin(theta), 10+sin(6*theta)]];
 //   difference(){
-//     cylinder(r=r, l=len);
-//     down(.5)cylinder(r=r-thickness, l=len+1);
+//     cylinder(r=r, h=len);
+//     down(.5)cylinder(r=r-thickness, h=len+1);
 //     path_sweep(left(.05,square([1.1,1])), curve, closed=true,
 //                method="manual", normal=UP);
 //   }
@@ -2585,9 +2585,9 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   Another serious limitation is more subtle.  In the 2D examples above, it is obvious how to connect the
 //   dots together.  But in 3D example we need to triangulate the points on a grid, and this triangulation is not unique.
 //   The `style` argument lets you specify how the points are triangulated using the styles supported by {{vnf_vertex_array()}}.
-//   In the example below we have expanded the 2D example into 3D: [[0,0,0,0],[0,1,1,0],[0,1,1,0],[0,0,0,0]], and we show the
+//   In the example below we have expanded the 2D example into 3D: `[[0,0,0,0],[0,1,1,0],[0,1,1,0],[0,0,0,0]]`, and we show the
 //   3D triangulations produced by the different styles:
-// Figure(Big, NoAxes, VPR = [39.2, 0, 13.3], VPT = [3.76242, -5.50969, 4.51854], VPD = 32.0275):
+// Figure(Big,NoAxes,VPR=[39.2,0,13.3],VPT=[3.76242,-5.50969,4.51854],VPD=32.0275):
 //   tex = [
 //          [0,0,0,0,0],
 //          [0,1,1,0,0],
@@ -3432,35 +3432,6 @@ function _textured_linear_sweep(
     ) reorient(anchor,spin,orient, vnf=final_vnf, extent=true, anchors=anchors, p=final_vnf);
 
 
-module _textured_linear_sweep(
-    path, texture, tex_size=[5,5], h,
-    inset=false, rot=false, tex_scale=1,
-    twist, scale, shift, samples, caps=true, 
-    style="min_edge", l,
-    height, length, counts,
-    anchor=CENTER, spin=0, orient=UP,
-    convexity=10
-) {
-    h = first_defined([h, l, height, length, 1]);
-    vnf = _textured_linear_sweep(
-        path, texture, h=h, caps=caps, 
-        tex_size=tex_size, counts=counts,
-        inset=inset, rot=rot, tex_scale=tex_scale,
-        twist=twist, scale=scale, shift=shift,
-        samples=samples, style=style,
-        anchor=CENTER, spin=0, orient=UP
-    );
-    cent = centroid(path);
-    anchors = [
-        named_anchor("centroid_top", point3d(cent, h/2), UP),
-        named_anchor("centroid",     point3d(cent),      UP),
-        named_anchor("centroid_bot", point3d(cent,-h/2), DOWN)
-    ];
-    attachable(anchor,spin,orient, vnf=vnf, extent=true, anchors=anchors) {
-        vnf_polyhedron(vnf, convexity=convexity);
-        children();
-    }
-}
 
 function _find_vnf_tile_edge_path(vnf, val) =
     let(
