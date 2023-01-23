@@ -1270,7 +1270,7 @@ module generic_threaded_rod(
     );
 
     slope = (_r1-_r2)/l;
-    maxlen = 2*pitch;
+    maxlen = 5*pitch;
 
     attachable(anchor,spin,orient, r1=_r1, r2=_r2, l=l) {
         union(){
