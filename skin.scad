@@ -2585,9 +2585,15 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   Another serious limitation is more subtle.  In the 2D examples above, it is obvious how to connect the
 //   dots together.  But in 3D example we need to triangulate the points on a grid, and this triangulation is not unique.
 //   The `style` argument lets you specify how the points are triangulated using the styles supported by {{vnf_vertex_array()}}.
-//   In the example below we have expanded the 2D example into 3D: [[0,0,0,0],[0,1,1,0],[0,1,1,0],[0,0,0,0]], and we show the
-//   3D triangulations produced by the different styles:
-// Figure(Big, NoAxes, VPR = [39.2, 0, 13.3], VPT = [3.76242, -5.50969, 4.51854], VPD = 32.0275):
+//   In the example below we have expanded the 2D example into 3D:
+//   ```openscad
+//       [[0,0,0,0],
+//        [0,1,1,0],
+//        [0,1,1,0],
+//        [0,0,0,0]]
+//   ```
+//   and we show the 3D triangulations produced by the different styles:
+// Figure(3D,Big,NoAxes,VPR=[39.2,0,13.3],VPT=[3.76242,-5.50969,4.51854],VPD=32.0275):
 //   tex = [
 //          [0,0,0,0,0],
 //          [0,1,1,0,0],
@@ -2628,10 +2634,10 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   to make a valid object is to have no points at all on the Y=0 line, and of course none on Y=1.  In this case, the resulting texture produces
 //   a collection of disconnected objects.  Note that the Z coordinates of your tile can be anything, but for the dimensional settings on textures
 //   to work intuitively, you should construct your tile so that Z ranges from 0 to 1.
-// Figure: This is the "hexgrid" VNF tile, which creates a hexagonal grid texture, something which doesn't work well with a height field because the edges of the hexagon don't align with the grid.  Note how the tile ranges between 0 and 1 in both X, Y and Z.
+// Figure(3D): This is the "hexgrid" VNF tile, which creates a hexagonal grid texture, something which doesn't work well with a height field because the edges of the hexagon don't align with the grid.  Note how the tile ranges between 0 and 1 in both X, Y and Z.
 //   tex = texture("hex_grid");
 //   vnf_polyhedron(tex);
-// Figure: This is an example of a tile that has no edges at the top or bottom, so it creates disconnected rings.  See below for examples showing this tile in use.
+// Figure(3D): This is an example of a tile that has no edges at the top or bottom, so it creates disconnected rings.  See below for examples showing this tile in use.
 //   shape = skin([
 //                 rect(2/5),
 //                 rect(2/3),
