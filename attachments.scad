@@ -1211,8 +1211,8 @@ module tag_conv_hull(tag,keep="keep")
 // Example:  Hides part of the model.
 //   hide("A")
 //     tag("main") cube(50, anchor=CENTER, $tag="Main") {
-//       tag("A")attach(LEFT, BOTTOM) cylinder(d=30, l=30);
-//       tag("B")attach(RIGHT, BOTTOM) cylinder(d=30, l=30);
+//       tag("A")attach(LEFT, BOTTOM) cylinder(d=30, h=30);
+//       tag("B")attach(RIGHT, BOTTOM) cylinder(d=30, h=30);
 //     }
 // Example: Use an invisible parent to position children.  Note that children must be retagged because they inherit the parent tag.
 //   $fn=16;
@@ -1246,8 +1246,8 @@ module hide(tags)
 //   show_only("visible")
 //     cube(50, anchor=CENTER)
 //       tag("visible"){
-//         attach(LEFT, BOTTOM) cylinder(d=30, l=30);
-//         attach(RIGHT, BOTTOM) cylinder(d=30, l=30);
+//         attach(LEFT, BOTTOM) cylinder(d=30, h=30);
+//         attach(RIGHT, BOTTOM) cylinder(d=30, h=30);
 //       }
 module show_only(tags)
 {

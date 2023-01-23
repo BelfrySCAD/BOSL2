@@ -1127,7 +1127,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
             difference(){
                 union(){
                     thread_helix(d=T-.01, profile=profile, pitch = INCH/tpi, turns=twist/360, taper=taperlen, anchor=TOP);
-                    cylinder(d=T-depth*2,l=H,anchor=TOP);
+                    cylinder(d=T-depth*2,h=H,anchor=TOP);
                     if (bead)
                       down(bead_shift)
                          rotate_extrude()

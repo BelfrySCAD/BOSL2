@@ -194,6 +194,19 @@ function all_equal(vec,eps=0) =
 
 
 
+// Function: are_ends_equal()
+// Usage:
+//   are_ends_equal(list, [eps]);
+// Description:
+//   Returns true if the first and last points in the given list are equal to within epsilon.
+// Arguments:
+//   list = list to check
+//   eps = Tolerance for approximate equality.  Default: `EPSILON` (1e-9)
+function are_ends_equal(list, eps=EPSILON) =
+  assert(is_list(list) && len(list)>0, "Must give a nonempty list")
+  approx(list[0], list[len(list)-1], eps=eps);
+
+
 // Function: is_increasing()
 // Usage:
 //    bool = is_increasing(list, [strict]);
