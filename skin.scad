@@ -139,7 +139,7 @@
 //   a vertex duplicating method on one side and a resampling method on the other side, then
 //   `refine` must be set so that the resulting number of vertices matches the number that is
 //   used for the resampled profiles.  The best way to avoid confusion is to ensure that the
-//   profiles connected by "direct" or "realign" all have the same number of points and at the
+//   profiles connected by "direct" or "reindex" all have the same number of points and at the
 //   transition, the refined number of points matches.
 //   .
 // Arguments:
