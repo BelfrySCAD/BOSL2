@@ -540,7 +540,7 @@ module screw(spec, head, drive, thread, drive_size,
                 : _counterbore;
    head = struct_val(tempspec,"head");
    headless = head=="none";
-   flathead = starts_with(head,"flat");
+   flathead = is_def(head) && starts_with(head,"flat");
    reset_headsize = _internal && flathead ? struct_val(tempspec,"head_size_sharp") : undef;
    spec=_struct_reset(tempspec,[
                                 ["length", l],
@@ -2624,7 +2624,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                 [48,  [72,     36]],
             ],
             entry = struct_val(metric_socket, diam),
-            dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
+            dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for head type \"",head,"\"")),
             drive_size =  drive=="hex" ? [["drive_size",entry[1]],["drive_depth",diam/2]] :
                           drive=="torx" ? [["drive_size", entry[2]], ["drive_depth", entry[3]]] :
                           []
@@ -2648,7 +2648,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
             type = head=="pan" ? (drive=="slot" ? "pan flat" : "pan round") : head,
             htind = drive=="slot" ? 1 : 2,
             entry = struct_val(metric_pan, diam),
-            dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
+            dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for head type \"",head,"\"")),
             drive_size = drive=="phillips" ? [["drive_size", entry[3]],
                                               //["drive_diameter", entry[4]],
                                               ["drive_depth",entry[5]],
@@ -2711,7 +2711,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                                : drive=="torx"? metric_cheese_torx 
                                : metric_cheese, 
                             diam),
-             dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
+             dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for head type \"",head,"\"")),
              drive_index = drive=="phillips" ? 3 
                          : drive=="hex" ? 2 
                          : undef,
@@ -2772,7 +2772,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                  [20,  [40  ,   35.7  ]]
              ],
              entry = struct_val(small ? metric_flat_small : metric_flat_large, diam),
-             dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
+             dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for head type \"",head,"\"")),
              driveind = small && drive=="phillips" ? 2
                       : !small && drive=="hex" ? 2
                       : !small && drive=="torx" ? 4
