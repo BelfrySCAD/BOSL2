@@ -11,6 +11,52 @@
 //////////////////////////////////////////////////////////////////////
 
 
+// Section: Adaptive Children Using `$` Variables
+//   The distributor methods create multiple copies of their children and place them in various ways.  While there are many occasions where
+//   a model demands multiple identical copies of an object, this framework is more powerful than
+//   might be immediately obvious because of `$` variables.  The distributors set `$` variables that the children can use to change their
+//   behavior from one child to the next within a single distributor invocation.  This means the copies need not be identical.  
+//   The {{xcopies()}} module sets `$idx` to the index number
+//   of the copy.  The first example shows how we can use that to produce **different** geometry at each index:
+// Example(2D):
+//   xcopies(n=10, spacing=10)
+//     text(str($idx));
+// Example(2D): Here the children are sometimes squares and sometimes circles as determined by the conditional statement.  
+//   xcopies(n=4, spacing=10)
+//     if($idx%2==0) circle(r=3,$fn=16);
+//     else rect(6);
+// Continues:
+//   Suppose we would like to color odd and even index copies differently.  This example shows two important gotchas.  First of all, the `if` statement
+//   in the previous example works for creating geometry, but don't be tempted to use an `if` statement to set variables like `if (condition) { c="red";}`
+//   because the variable is set only in the scope of the if statement and isn't available later on.  Instead you must use the ternary operator as shown in the example.  
+// Example(2D):
+//   xcopies(n=6, spacing=10){
+//       let(c = $idx % 2 == 0 ? "red" : "green")
+//           color(c) rect(6);
+//   }
+// Continues:
+//   The second complication is that in OpenSCAD version 2021.01 and earlier, assignments in children were executed before their
+//   parent.  This means that `$idx` isn't available in assignments, so you will get a warning about an unknown variable.
+//   Two workarounds exist, neither of which are needed in newer versions of OpenSCAD.  The workarounds solve the problem because
+//   **modules** execute after their parent, so the `$` variables **are** available in modules.  In the example above, `let()` is a module
+//   that sets variables available to its children.  Note that multiple assignments in `let()` are separated by commas, not semicolons.  
+//   The other workaround is to wrap your child in a `union()`.  The next example shows how you can change the position of children
+//   adaptively.  If you want to avoid repeating your code for each case, this requires storing a transformation matrix in a variable
+//   and then applying it using `multmatrix()`.
+// Example(2D):
+//   xcopies(n=5,spacing=10)
+//     union()
+//     {
+//       shiftback = $idx%2==0 ? back(5) : IDENT;
+//       spin = zrot(180*$idx/4);
+//       multmatrix(shiftback*spin) stroke([[-4,0],[4,0]],endcap2="arrow2",width=1/2);
+//     }
+// Continues:
+//   In these examples we used `$idx`, but the various distributors offer a variety of `$` variables that you can use in your
+//   children.  Check the "Side Effects" section for each module to learn what variables that module provides.  
+
+
+
 //////////////////////////////////////////////////////////////////////
 // Section: Translating copies of all the children
 //////////////////////////////////////////////////////////////////////
@@ -96,7 +142,7 @@ function move_copies(a=[[0,0,0]],p=_NO_ARG) =
 //   spacing = Given a scalar, specifies a uniform spacing between copies. Given a list of scalars, each one gives a specific position along the line. (Default: 1.0)
 //   n = Number of copies to place. (Default: 2)
 //   l = Length to place copies over.
-//   sp = If given as a point, copies will be placed on a line to the right of starting position `sp`.  If given as a scalar, copies will be placed on a line to the right of starting position `[sp,0,0]`.  If not given, copies will be placed along a line that is centered at [0,0,0].
+//   sp = If given as a point, copies will be placed on a line to the right of starting position `sp`.  If given as a scalar, copies will be placed on a line segment to the right of starting position `[sp,0,0]`.  If not given, copies will be placed along a line segment that is centered at [0,0,0].
 //   p = Either a point, pointlist, VNF or Bezier patch to be translated when used as a function.
 //
 // Side Effects:
@@ -119,6 +165,8 @@ function move_copies(a=[[0,0,0]],p=_NO_ARG) =
 //   xcopies([1,2,3,5,7]) sphere(d=1);
 module xcopies(spacing, n, l, sp)
 {
+    assert(is_undef(n) || num_defined([l,spacing])==1, "When n is given must give exactly one of spacing or l")
+    assert(is_def(n) || num_defined([l,spacing])>=1, "When n is not given must give at least one of spacing or l")  
     req_children($children);
     dir = RIGHT;
     sp = is_finite(sp)? (sp*dir) : sp;
@@ -141,6 +189,8 @@ module xcopies(spacing, n, l, sp)
 
 
 function xcopies(spacing, n, l, sp, p=_NO_ARG) =
+    assert(is_undef(n) || num_defined([l,spacing])==1, "When n is given must give exactly one of spacing or l")
+    assert(is_def(n) || num_defined([l,spacing])>=1, "When n is not given must give at least one of spacing or l")  
     let(
         dir = RIGHT,
         sp = is_finite(sp)? (sp*dir) : sp,
@@ -201,6 +251,8 @@ function xcopies(spacing, n, l, sp, p=_NO_ARG) =
 //   ycopies([1,2,3,5,7]) sphere(d=1);
 module ycopies(spacing, n, l, sp)
 {
+    assert(is_undef(n) || num_defined([l,spacing])==1, "When n is given must give exactly one of spacing or l")
+    assert(is_def(n) || num_defined([l,spacing])>=1, "When n is not given must give at least one of spacing or l")  
     req_children($children);  
     dir = BACK;
     sp = is_finite(sp)? (sp*dir) : sp;
@@ -223,6 +275,8 @@ module ycopies(spacing, n, l, sp)
 
 
 function ycopies(spacing, n, l, sp, p=_NO_ARG) =
+    assert(is_undef(n) || num_defined([l,spacing])==1, "When n is given must give exactly one of spacing or l")
+    assert(is_def(n) || num_defined([l,spacing])>=1, "When n is not given must give at least one of spacing or l")  
     let(
         dir = BACK,
         sp = is_finite(sp)? (sp*dir) : sp,
@@ -297,6 +351,8 @@ function ycopies(spacing, n, l, sp, p=_NO_ARG) =
 //   zcopies([1,2,3,5,7]) sphere(d=1);
 module zcopies(spacing, n, l, sp)
 {
+    assert(is_undef(n) || num_defined([l,spacing])==1, "When n is given must give exactly one of spacing or l")
+    assert(is_def(n) || num_defined([l,spacing])>=1, "When n is not given must give at least one of spacing or l")  
     req_children($children);  
     dir = UP;
     sp = is_finite(sp)? (sp*dir) : sp;
@@ -319,6 +375,8 @@ module zcopies(spacing, n, l, sp)
 
 
 function zcopies(spacing, n, l, sp, p=_NO_ARG) =
+    assert(is_undef(n) || num_defined([l,spacing])==1, "When n is given must give exactly one of spacing or l")
+    assert(is_def(n) || num_defined([l,spacing])>=1, "When n is not given must give at least one of spacing or l")  
     let(
         dir = UP,
         sp = is_finite(sp)? (sp*dir) : sp,
@@ -441,18 +499,23 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
     assert(is_undef(l) || is_finite(l) || is_vector(l))
     assert(is_undef(p1) || is_vector(p1))
     assert(is_undef(p2) || is_vector(p2))
+    assert(is_undef(p2) || is_def(p1), "If p2 is given must also give p1")
+    assert(is_undef(p2) || is_undef(l), "Cannot give both p2 and l")
+    assert(is_undef(n) || num_defined([l,spacing,p2])==1,"If n is given then must give exactly one of 'l', 'spacing', or the 'p1'/'p2' pair")
+    assert(is_def(n) || num_defined([l,spacing,p2])>=1,"If n is given then must give at least one of 'l', 'spacing', or the 'p1'/'p2' pair")    
     let(
-        ll = !is_undef(l)? scalar_vec3(l, 0) :
-            (!is_undef(spacing) && !is_undef(n))? ((n-1) * scalar_vec3(spacing, 0)) :
-            (!is_undef(p1) && !is_undef(p2))? point3d(p2-p1) :
-            undef,
-        cnt = !is_undef(n)? n :
-            (!is_undef(spacing) && !is_undef(ll))? floor(norm(ll) / norm(scalar_vec3(spacing, 0)) + 1.000001) :
-            2,
-        spc = cnt<=1? [0,0,0] :
-            is_undef(spacing)? (ll/(cnt-1)) :
-            is_num(spacing) && !is_undef(ll)? (ll/(cnt-1)) :
-            scalar_vec3(spacing, 0)
+        ll = is_def(l)? scalar_vec3(l, 0)
+           : is_def(spacing) && is_def(n)? (n-1) * scalar_vec3(spacing, 0)
+           : is_def(p1) && is_def(p2)? point3d(p2-p1)
+           : undef,
+        cnt = is_def(n)? n
+            : is_def(spacing) && is_def(ll) ? floor(norm(ll) / norm(scalar_vec3(spacing, 0)) + 1.000001)
+            : 2,
+        spc = cnt<=1? [0,0,0]
+            : is_undef(spacing) && is_def(ll)? ll/(cnt-1) 
+            : is_num(spacing) && is_def(ll)? (ll/(cnt-1)) 
+            : scalar_vec3(spacing, 0),
+                                          afd=echo(spc=spc)
     )
     assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `line_copies()`.")
     let( spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc )
