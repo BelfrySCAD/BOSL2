@@ -514,8 +514,7 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
         spc = cnt<=1? [0,0,0]
             : is_undef(spacing) && is_def(ll)? ll/(cnt-1) 
             : is_num(spacing) && is_def(ll)? (ll/(cnt-1)) 
-            : scalar_vec3(spacing, 0),
-                                          afd=echo(spc=spc)
+            : scalar_vec3(spacing, 0)
     )
     assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `line_copies()`.")
     let( spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc )
