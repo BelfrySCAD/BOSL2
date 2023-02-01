@@ -1203,7 +1203,8 @@ function _stroke_end(width,left, right, spec) =
                         rightdelete = intright? pathcutright[1] + pathclip[1] -1 : pathcutright[1],
                         leftcorner = line_intersection([pathcutleft[0], newleft[pathcutleft[1]]], [newright[0],newleft[0]]),
                         rightcorner = line_intersection([pathcutright[0], newright[pathcutright[1]]], [newright[0],newleft[0]]),
-                        roundover_fits = jointleft+jointright < norm(rightcorner-leftcorner)
+                        roundover_fits = is_def(rightcorner) && is_def(leftcorner) &&
+                                         jointleft+jointright < norm(rightcorner-leftcorner)
                 )
                 assert(roundover_fits,"Roundover too large to fit")
                 let(
