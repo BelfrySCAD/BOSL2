@@ -16,34 +16,32 @@
 //   a model demands multiple identical copies of an object, this framework is more powerful than
 //   might be immediately obvious because of `$` variables.  The distributors set `$` variables that the children can use to change their
 //   behavior from one child to the next within a single distributor invocation.  This means the copies need not be identical.  
-//   The {{xcopies()}} module sets `$idx` to the index number
-//   of the copy.  The first example shows how we can use that to produce **different** geometry at each index:
-// Example(2D):
+//   The {{xcopies()}} module sets `$idx` to the index number of the copy, and in the examples below we use `$idx`, but the various
+//   distributors offer a variety of `$` variables that you can use in your children.  Check the "Side Effects" section for each module
+//   to learn what variables that module provides.
+//   .
+//   Two gotchas may lead to models that don't behave as expected.  While `if` statements work to control modules, you cannot
+//   use them to make variable assignments in your child object.  If you write a statement like 
+//   `if (condition) { c="red";}` then the `c` variable is set only in the scope of the `if` statement and is not available later on.  
+//   Instead you must use the ternary operator.  The second complication is
+//   that in OpenSCAD version 2021.01 and earlier, assignments in children were executed before their
+//   parent.  This means that `$` variables like `$idx` are not available in assignments, so if you use them you will get a warning about an unknown variable.
+//   Two workarounds exist, neither of which are needed in newer versions of OpenSCAD.  The workarounds solve the problem because
+//   **modules** execute after their parent, so the `$` variables **are** available in modules.  You can put your assignments
+//   in a `let()` module, or you can wrap your child in a `union()`.  Both methods appear below in the examples. 
+// Example(2D): This example shows how we can use `$idx` to produce **different** geometry at each index.
 //   xcopies(n=10, spacing=10)
 //     text(str($idx));
-// Example(2D): Here the children are sometimes squares and sometimes circles as determined by the conditional statement.  
+// Example(2D): Here the children are sometimes squares and sometimes circles as determined by the conditional `if` module. This use of `if` is OK because no variables are assigned.  
 //   xcopies(n=4, spacing=10)
 //     if($idx%2==0) circle(r=3,$fn=16);
 //     else rect(6);
-// Continues:
-//   Suppose we would like to color odd and even index copies differently.  This example shows two important gotchas.  First of all, the `if` statement
-//   in the previous example works for creating geometry, but don't be tempted to use an `if` statement to set variables like `if (condition) { c="red";}`
-//   because the variable is set only in the scope of the if statement and isn't available later on.  Instead you must use the ternary operator as shown in the example.  
-// Example(2D):
+// Example(2D): Suppose we would like to color odd and even index copies differently.  In this example we compute the color for a given child from `$idx` using the ternary operator.  The `let()` module is a module that sets variables and makes them available to its children.  Note that multiple assignments in `let()` are separated by commas, not semicolons.  
 //   xcopies(n=6, spacing=10){
 //       let(c = $idx % 2 == 0 ? "red" : "green")
 //           color(c) rect(6);
 //   }
-// Continues:
-//   The second complication is that in OpenSCAD version 2021.01 and earlier, assignments in children were executed before their
-//   parent.  This means that `$idx` isn't available in assignments, so you will get a warning about an unknown variable.
-//   Two workarounds exist, neither of which are needed in newer versions of OpenSCAD.  The workarounds solve the problem because
-//   **modules** execute after their parent, so the `$` variables **are** available in modules.  In the example above, `let()` is a module
-//   that sets variables available to its children.  Note that multiple assignments in `let()` are separated by commas, not semicolons.  
-//   The other workaround is to wrap your child in a `union()`.  The next example shows how you can change the position of children
-//   adaptively.  If you want to avoid repeating your code for each case, this requires storing a transformation matrix in a variable
-//   and then applying it using `multmatrix()`.
-// Example(2D):
+// Example(2D):  This example shows how you can change the position of children adaptively.  If you want to avoid repeating your code for each case, this requires storing a transformation matrix in a variable and then applying it using `multmatrix()`.  We wrap our code in `union()` to ensure that it works in OpenSCAD 2021.01.  
 //   xcopies(n=5,spacing=10)
 //     union()
 //     {
@@ -51,10 +49,6 @@
 //       spin = zrot(180*$idx/4);
 //       multmatrix(shiftback*spin) stroke([[-4,0],[4,0]],endcap2="arrow2",width=1/2);
 //     }
-// Continues:
-//   In these examples we used `$idx`, but the various distributors offer a variety of `$` variables that you can use in your
-//   children.  Check the "Side Effects" section for each module to learn what variables that module provides.  
-
 
 
 //////////////////////////////////////////////////////////////////////
