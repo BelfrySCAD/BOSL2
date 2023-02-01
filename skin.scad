@@ -1079,6 +1079,7 @@ module rotate_sweep(
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   spiral_sweep(poly, h=200, r=50, turns=3, $fn=36);
 function _taperfunc(x) =
+      x>1 ? 1 : x<0 ? 0:
      let(higofs = pow(0.05,2))   // Smallest hig scale is the square root of this value
      sqrt((1-higofs)*x+higofs);
 function _taperfunc_ellipse(x) =
@@ -1087,7 +1088,8 @@ function _ss_polygon_r(N,theta) =
         let( alpha = 360/N )
         cos(alpha/2)/(cos(posmod(theta,alpha)-alpha/2));
 function spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, taper1, taper2, internal=false, anchor=CENTER, spin=0, orient=UP) =
-    assert(is_num(turns) && turns != 0)
+    assert(is_num(turns) && turns != 0, "turns must be a nonzero number")
+    assert(all_positive([h]), "Spiral height must be a positive number")
     let(
         tapersample = 10,         // Oversample factor for higbee tapering
         dir = sign(turns),
@@ -1148,7 +1150,7 @@ function spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, tap
                 u = a/(360*turns), 
                 r = lerp(r1,r2,u),
                 mat = affine3d_zrot(dir*a)
-                    * affine3d_translate([_ss_polygon_r(sides,dir*a)*r, 0, dir*h * (u-0.5)])
+                    * affine3d_translate([_ss_polygon_r(sides,dir*a)*r, 0, h * (u-0.5)])
                     * affine3d_xrot(90)
                     * skewmat
                     * scale([hsc,lerp(hsc,1,0.25),1], cp=[internal ? xmax : xmin, yctr, 0]),
@@ -2637,7 +2639,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Figure(3D): This is the "hexgrid" VNF tile, which creates a hexagonal grid texture, something which doesn't work well with a height field because the edges of the hexagon don't align with the grid.  Note how the tile ranges between 0 and 1 in both X, Y and Z.
 //   tex = texture("hex_grid");
 //   vnf_polyhedron(tex);
-// Figure(3D): This is an example of a tile that has no edges at the top or bottom, so it creates disconnected rings.  See below for examples showing this tile in use.
+// Figure(3D): This is an example of a tile that has no edges at the top or bottom, so it creates disconnected rings.  See {{linear_sweep()}} for examples showing this tile in use.
 //   shape = skin([
 //                 rect(2/5),
 //                 rect(2/3),

@@ -1175,15 +1175,16 @@ module generic_threaded_rod(
     higbee2 = thigbee2==0 ? true : thigbee2;
     extra_thread1 = higbee1==false && internal ? 1 : 0;
     extra_thread2 = higbee2==false && internal ? 1 : 0;    
+    r1 = get_radius(d1=d1, d=d);
+    r2 = get_radius(d1=d2, d=d);
     dummy0 = 
       assert(all_positive([pitch]),"Thread pitch must be a positive value")
       assert(all_positive([l]),"Length must be a postive value")
       assert(is_path(profile),"Profile must be a path")
       assert(is_finite(higbee1) || is_bool(higbee1), str("higbee",is_undef(higbee)?"1":""," must be boolean or a number"))
       assert(is_finite(higbee2) || is_bool(higbee2), str("higbee",is_undef(higbee)?"1":""," must be boolean or a number"))
-      assert(is_bool(left_handed));
-    r1 = get_radius(d1=d1, d=d);
-    r2 = get_radius(d1=d2, d=d);
+      assert(is_bool(left_handed))
+      assert(all_positive([r1,r2]), "Must give d or both d1 and d2 as positive values");
     sides = quantup(segs(max(r1,r2)), starts);
     rsc = internal? (1/cos(180/sides)) : 1;
     islop = internal? 2*get_slop() : 0;
@@ -1216,6 +1217,8 @@ module generic_threaded_rod(
                 * frame_map(x=[0,0,1], y=[1,0,0])          // Map profile to 3d, parallel to z axis
                 * scale(pitch);                            // scale profile by pitch
     start_steps = sides / starts;
+    higlen = 4/32*360;//360*max(pitch/2, pmax-depth)/(2*PI*_r2);
+    echo(higlen=higlen);
     thread_verts = [
         // Outer loop constructs a vertical column of the screw at each angle
         // covering 1/starts * 360 degrees of the cylinder.  
@@ -1227,14 +1230,15 @@ module generic_threaded_rod(
                 full_profile =  [   // profile for the entire rod
                     for (thread = [-threads/2:1:threads/2-1])
                         let(
-                            tang = (thread/starts) * 360 + ang,
-                            adjusted_prof3d = tang < -twist/2+higang1 || tang > twist/2-higang2 
-                                            ? [for(v=prof3d) [v.x,internal?pmax/pitch:-pdepth,v.z]] 
-                                            : prof3d
+                            tang = thread/starts * 360 + ang,
+                            hsc = tang < -twist/2+higang1 ? _taperfunc(1-(-twist/2+higang1-tang)/higlen )
+                                : tang > twist/2-higang2 ? _taperfunc(1-(tang-twist/2+higang2)/higlen  )
+                                : 1,
+                            higscale=scale([lerp(hsc,1,0.25),hsc,1], cp=[0,internal ? pmax/pitch:-pdepth, 0])
                         )
                         // The right movement finds the position of the thread along
                         // what will be the z axis after the profile is mapped to 3d
-                        each apply(right(dz + thread) , adjusted_prof3d)
+                        each apply(right(dz + thread) * higscale, prof3d)
                 ]  
             )
             [
@@ -1271,13 +1275,12 @@ module generic_threaded_rod(
 
     slope = (_r1-_r2)/l;
     maxlen = 5*pitch;
-
     attachable(anchor,spin,orient, r1=_r1, r2=_r2, l=l) {
         union(){
           // This method is faster but more complex code and it produces green tops
           difference() {
               vnf_polyhedron(vnf_quantize(thread_vnfs),convexity=10);
-
+             
               if (!internal){
                   if (bevel1 || bevel2)
                       rotate_extrude(){
@@ -1544,8 +1547,9 @@ module thread_helix(
     d1, d2, taper, taper1, taper2,
     anchor, spin, orient
 ) {
-    dummy1=assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),"Cannot give thread_depth or flank_angle with a profile");
-    h = pitch*starts*turns;
+    dummy1=assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),"Cannot give thread_depth or flank_angle with a profile")
+           assert(all_positive([turns]), "The turns parameter must be a positive number");
+    h = pitch*starts*abs(turns);
     r1 = get_radius(d1=d1, d=d, dflt=10);
     r2 = get_radius(d1=d2, d=d, dflt=10);
     profile = is_def(profile) ? profile :
