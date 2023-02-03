@@ -845,24 +845,26 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 
 // Function&Module: trapezoid()
 // Usage: As Module
-//   trapezoid(h, w1, w2, [shift=], [rounding=], [chamfer=], ...) [ATTACHMENTS];
-//   trapezoid(h, w1, angle=, ...) [ATTACHMENTS];
-//   trapezoid(h, w2, angle=, ...) [ATTACHMENTS];
-//   trapezoid(w1, w2, angle=, ...) [ATTACHMENTS];
+//   trapezoid(h, w1, w2, [shift=], [rounding=], [chamfer=], [flip=], ...) [ATTACHMENTS];
+//   trapezoid(h, w1, ang=, [rounding=], [chamfer=], [flip=], ...) [ATTACHMENTS];
+//   trapezoid(h, w2=, ang=, [rounding=], [chamfer=], [flip=], ...) [ATTACHMENTS];
+//   trapezoid(w1=, w2=, ang=, [rounding=], [chamfer=], [flip=], ...) [ATTACHMENTS];
 // Usage: As Function
 //   path = trapezoid(...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: rect(), square()
 // Description:
-//   When called as a function, returns a 2D path for a trapezoid with parallel front and back sides.
-//   When called as a module, creates a 2D trapezoid with parallel front and back sides.
+//   When called as a function, returns a 2D path for a trapezoid with parallel front and back (top and bottom) sides. 
+//   When called as a module, creates a 2D trapezoid.  You can specify the trapezoid by giving its height and the lengths
+//   of its two bases.  Alternatively, you can omit one of those parameters and specify the lower angle(s).
+//   The shift parameter, which cannot be combined with ang, shifts the back (top) of the trapezoid to the right.  
 // Arguments:
 //   h = The Y axis height of the trapezoid.
 //   w1 = The X axis width of the front end of the trapezoid.
 //   w2 = The X axis width of the back end of the trapezoid.
 //   ---
-//   angle = If given in place of `h`, `w1`, or `w2`, then the missing value is calculated such that the right side has that angle away from the Y axis.
-//   shift = Scalar value to shift the back of the trapezoid along the X axis by.  Default: 0
+//   ang = Specify the bottom angle(s) of the trapezoid.  Can give a scalar for an isosceles trapezoid or a list of two angles, the left angle and right angle.  You must omit one of `h`, `w1`, or `w2` to allow the freedom to control the angles. 
+//   shift = Scalar value to shift the back of the trapezoid along the X axis by.  Cannot be combined with ang.  Default: 0
 //   rounding = The rounding radius for the corners.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
 //   chamfer = The Length of the chamfer faces at the corners.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
 //   flip = If true, negative roundings and chamfers will point forward and back instead of left and right.  Default: `false`.
@@ -872,11 +874,11 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 //   trapezoid(h=30, w1=40, w2=20);
 //   trapezoid(h=25, w1=20, w2=35);
 //   trapezoid(h=20, w1=40, w2=0);
-//   trapezoid(h=20, w1=30, angle=30);
-//   trapezoid(h=20, w1=20, angle=-30);
-//   trapezoid(h=20, w2=10, angle=30);
-//   trapezoid(h=20, w2=30, angle=-30);
-//   trapezoid(w1=30, w2=10, angle=30);
+//   trapezoid(h=20, w1=30, ang=60);
+//   trapezoid(h=20, w1=20, ang=120);
+//   trapezoid(h=20, w2=10, ang=60);
+//   trapezoid(h=20, w1=50, ang=[40,60]);
+//   trapezoid(w1=30, w2=10, ang=[30,90]);
 // Example(2D): Chamfered Trapezoid
 //   trapezoid(h=30, w1=60, w2=40, chamfer=5);
 // Example(2D): Negative Chamfered Trapezoid
@@ -893,20 +895,30 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 //   trapezoid(h=30, w1=60, w2=40, rounding=[5,0,-10,0],chamfer=[0,8,0,-15],$fa=1,$fs=1);
 // Example(2D): Called as Function
 //   stroke(closed=true, trapezoid(h=30, w1=40, w2=20));
-function trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0) =
+function trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0, angle) =
+    assert(is_undef(angle), "The angle parameter has been replaced by ang, which specifies trapezoid interior angle")
     assert(is_undef(h) || is_finite(h))
     assert(is_undef(w1) || is_finite(w1))
     assert(is_undef(w2) || is_finite(w2))
-    assert(is_undef(angle) || is_finite(angle))
-    assert(num_defined([h, w1, w2, angle]) == 3, "Must give exactly 3 of the arguments h, w1, w2, and angle.")
-    assert(is_finite(shift))
+    assert(is_undef(ang) || is_finite(ang) || is_vector(ang,2))
+    assert(num_defined([h, w1, w2, ang]) == 3, "Must give exactly 3 of the arguments h, w1, w2, and angle.")
+    assert(is_undef(shift) || is_finite(shift))
+    assert(num_defined([shift,ang])<2, "Cannot specify shift and ang together")
     assert(is_finite(chamfer)  || is_vector(chamfer,4))
     assert(is_finite(rounding) || is_vector(rounding,4))
     let(
+        ang = force_list(ang,2),
+        angOK = ang==[undef,undef] || (all_positive(ang) && ang[0]<180 && ang[1]<180)
+    )
+    assert(angOK, "trapezoid angles must be strictly between 0 and 180")
+    let(
         simple = chamfer==0 && rounding==0,
-        h  = !is_undef(h)?  h  : opp_ang_to_adj(abs(w2-w1)/2, abs(angle)),
-        w1 = !is_undef(w1)? w1 : w2 + 2*(adj_ang_to_opp(h, angle) + shift),
-        w2 = !is_undef(w2)? w2 : w1 - 2*(adj_ang_to_opp(h, angle) + shift),
+        h = is_def(h)? h : (w1-w2) * sin(ang[0]) * sin(ang[1]) / sin(ang[0]+ang[1]),
+        x1 = is_undef(ang[0]) || ang[0]==90 ? 0 : h/tan(ang[0]),
+        x2 = is_undef(ang[1]) || ang[1]==90 ? 0 : h/tan(ang[1]),
+        w1 = is_def(w1)? w1 : w2 + x1 + x2,
+        w2 = is_def(w2)? w2 : w1 - x1 - x2,
+        shift = first_defined([shift,(x1-x2)/2]),
         chamfs = is_num(chamfer)? [for (i=[0:3]) chamfer] :
             assert(len(chamfer)==4) chamfer,
         rounds = is_num(rounding)? [for (i=[0:3]) rounding] :
@@ -966,19 +978,23 @@ function trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, flip=false,
             ),
         ],
         path = reverse(cpath)
-    ) simple
+    ) true  //simple  // force regular anchoring
       ? reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, shift=shift, p=path)
       : reorient(anchor,spin, two_d=true, path=path, p=path);
 
 
 
-module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0) {
-    path = trapezoid(h=h, w1=w1, w2=w2, angle=angle, shift=shift, chamfer=chamfer, rounding=rounding, flip=flip);
+module trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0, angle) {
+    path = trapezoid(h=h, w1=w1, w2=w2, ang=ang, shift=shift, chamfer=chamfer, rounding=rounding, flip=flip, angle=angle);
     union() {
-        simple = chamfer==0 && rounding==0;
-        h  = !is_undef(h)?  h  : opp_ang_to_adj(abs(w2-w1)/2, abs(angle));
-        w1 = !is_undef(w1)? w1 : w2 + 2*(adj_ang_to_opp(h, angle) + shift);
-        w2 = !is_undef(w2)? w2 : w1 - 2*(adj_ang_to_opp(h, angle) + shift);
+        simple = true; //chamfer==0 && rounding==0;   // force "normal" anchoring for now
+        ang = force_list(ang,2);
+        h = is_def(h)? h : (w1-w2) * sin(ang[0]) * sin(ang[1]) / sin(ang[0]+ang[1]);
+        x1 = is_undef(ang[0]) || ang[0]==90 ? 0 : h/tan(ang[0]);
+        x2 = is_undef(ang[1]) || ang[1]==90 ? 0 : h/tan(ang[1]);
+        w1 = is_def(w1)? w1 : w2 + x1 + x2;
+        w2 = is_def(w2)? w2 : w1 - x1 - x2;
+        shift = first_defined([shift,(x1-x2)/2]);
         if (simple) {
             attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2, shift=shift) {
                 polygon(path);
@@ -1275,8 +1291,7 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
                                if (p) [i,p]
                            ],
                    i = last(isect)[0],
-                   p = last(isect)[1],
-                   ff=echo(isect)
+                   p = last(isect)[1]
                )
                [
                  cap[0],
