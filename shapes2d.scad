@@ -877,7 +877,7 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 //   trapezoid(h=20, w1=30, ang=60);
 //   trapezoid(h=20, w1=20, ang=120);
 //   trapezoid(h=20, w2=10, ang=60);
-//   trapezoid(h=20, w1=40, ang=[40,50]);
+//   trapezoid(h=20, w1=50, ang=[40,60]);
 //   trapezoid(w1=30, w2=10, ang=[30,90]);
 // Example(2D): Chamfered Trapezoid
 //   trapezoid(h=30, w1=60, w2=40, chamfer=5);
