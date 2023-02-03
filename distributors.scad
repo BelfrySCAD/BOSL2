@@ -28,20 +28,38 @@
 //   parent.  This means that `$` variables like `$idx` are not available in assignments, so if you use them you will get a warning about an unknown variable.
 //   Two workarounds exist, neither of which are needed in newer versions of OpenSCAD.  The workarounds solve the problem because
 //   **modules** execute after their parent, so the `$` variables **are** available in modules.  You can put your assignments
-//   in a `let()` module, or you can wrap your child in a `union()`.  Both methods appear below in the examples. 
-// Example(2D): This example shows how we can use `$idx` to produce **different** geometry at each index.
+//   in a `let()` module, or you can wrap your child in a `union()`.  Both methods appear below.
+//   ```
 //   xcopies(n=10, spacing=10)
 //     text(str($idx));
-// Example(2D): Here the children are sometimes squares and sometimes circles as determined by the conditional `if` module. This use of `if` is OK because no variables are assigned.  
+//   ```
+// Figure(2D): This example shows how we can use `$idx` to produce **different** geometry at each index.
+//   xcopies(n=10, spacing=10)
+//     text(str($idx));
+// Continues:
+// Figure(2D): Here the children are sometimes squares and sometimes circles as determined by the conditional `if` module. This use of `if` is OK because no variables are assigned.  
 //   xcopies(n=4, spacing=10)
 //     if($idx%2==0) circle(r=3,$fn=16);
 //     else rect(6);
-// Example(2D): Suppose we would like to color odd and even index copies differently.  In this example we compute the color for a given child from `$idx` using the ternary operator.  The `let()` module is a module that sets variables and makes them available to its children.  Note that multiple assignments in `let()` are separated by commas, not semicolons.  
+// Continues:
+//   ```
+//   xcopies(n=4, spacing=10)
+//     if($idx%2==0) circle(r=3,$fn=16);
+//     else rect(6);
+//   ```
+// Figure(2D): Suppose we would like to color odd and even index copies differently.  In this example we compute the color for a given child from `$idx` using the ternary operator.  The `let()` module is a module that sets variables and makes them available to its children.  Note that multiple assignments in `let()` are separated by commas, not semicolons.  
 //   xcopies(n=6, spacing=10){
 //       let(c = $idx % 2 == 0 ? "red" : "green")
 //           color(c) rect(6);
 //   }
-// Example(2D):  This example shows how you can change the position of children adaptively.  If you want to avoid repeating your code for each case, this requires storing a transformation matrix in a variable and then applying it using `multmatrix()`.  We wrap our code in `union()` to ensure that it works in OpenSCAD 2021.01.  
+// Continues:
+//   ```
+//   xcopies(n=6, spacing=10){
+//       let(c = $idx % 2 == 0 ? "red" : "green")
+//           color(c) rect(6);
+//   }
+//   ```
+// Figure(2D):  This example shows how you can change the position of children adaptively.  If you want to avoid repeating your code for each case, this requires storing a transformation matrix in a variable and then applying it using `multmatrix()`.  We wrap our code in `union()` to ensure that it works in OpenSCAD 2021.01.  
 //   xcopies(n=5,spacing=10)
 //     union()
 //     {
@@ -49,6 +67,16 @@
 //       spin = zrot(180*$idx/4);
 //       multmatrix(shiftback*spin) stroke([[-4,0],[4,0]],endcap2="arrow2",width=1/2);
 //     }
+// Continues:
+//   ```
+//   xcopies(n=5,spacing=10)
+//     union()
+//     {
+//       shiftback = $idx%2==0 ? back(5) : IDENT;
+//       spin = zrot(180*$idx/4);
+//       multmatrix(shiftback*spin) stroke([[-4,0],[4,0]],endcap2="arrow2",width=1/2);
+//     }
+//   ```
 
 
 //////////////////////////////////////////////////////////////////////

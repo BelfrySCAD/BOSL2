@@ -1064,8 +1064,8 @@ module rotate_sweep(
 //   turns = number of revolutions to spiral up along the height.
 //   ---
 //   d = Diameter of the spiral to extrude along.
-//   d1|r1 = Bottom inside diameter or radius of spiral to extrude along.
-//   d2|r2 = Top inside diameter or radius of spiral to extrude along.
+//   d1/r1 = Bottom inside diameter or radius of spiral to extrude along.
+//   d2/r2 = Top inside diameter or radius of spiral to extrude along.
 //   taper = Length of tapers for thread ends.  Positive to add taper to threads, negative to taper within specified length.  Default: 0
 //   taper1 = Length of taper for bottom thread end
 //   taper2 = Length of taper for top thread end
