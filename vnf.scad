@@ -1546,11 +1546,11 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   ]);
 //   vnf_validate(vnf,size=2,check_isects=true);
 // Example(3D,Edges): HOLE_EDGE Errors; Edges Adjacent to Holes.
-   vnf = skin([
-       path3d(regular_ngon(n=4, d=100),0),
-       path3d(regular_ngon(n=5, d=100),100)
-   ], slices=0, caps=false);
-   vnf_validate(vnf,size=2);
+//   vnf = skin([
+//       path3d(regular_ngon(n=4, d=100),0),
+//       path3d(regular_ngon(n=5, d=100),100)
+//   ], slices=0, caps=false);
+//   vnf_validate(vnf,size=2);
 
 
 //   Returns a list of non-manifold errors with the given VNF.
