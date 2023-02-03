@@ -1461,14 +1461,10 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 }
 
 
-// Function&Module: vnf_validate()
-// Usage: As Function
-//   fails = vnf_validate(vnf);
-// Usage: As Module
+// Module: vnf_validate()
+// Usage: 
 //   vnf_validate(vnf, [size], [show_warns=], [check_isects=], [opacity=], [adjacent=], [label_verts=], [label_faces=], [wireframe=]);
 // Description:
-//   When called as a function, returns a list of non-manifold errors with the given VNF.
-//   Each error has the format `[ERR_OR_WARN,CODE,MESG,POINTS,COLOR]`.
 //   When called as a module, echoes the non-manifold errors to the console, and color hilites the
 //   bad edges and vertices, overlaid on a transparent gray polyhedron of the VNF.
 //   .
@@ -1477,13 +1473,13 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   Type    | Color    | Code         | Message
 //   ------- | -------- | ------------ | ---------------------------------
 //   WARNING | Yellow   | BIG_FACE     | Face has more than 3 vertices, and may confuse CGAL.
-//   WARNING | Brown    | NULL_FACE    | Face has zero area.
+//   WARNING | Blue     | NULL_FACE    | Face has zero area.
 //   ERROR   | Cyan     | NONPLANAR    | Face vertices are not coplanar.
 //   ERROR   | Brown    | DUP_FACE     | Multiple instances of the same face.
 //   ERROR   | Orange   | MULTCONN     | Multiply Connected Geometry. Too many faces attached at Edge.
 //   ERROR   | Violet   | REVERSAL     | Faces reverse across edge.
 //   ERROR   | Red      | T_JUNCTION   | Vertex is mid-edge on another Face.
-//   ERROR   | Blue     | FACE_ISECT   | Faces intersect.
+//   ERROR   | Brown    | FACE_ISECT   | Faces intersect.
 //   ERROR   | Magenta  | HOLE_EDGE    | Edge bounds Hole.
 //   .
 //   Still to implement:
@@ -1494,11 +1490,11 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   ---
 //   show_warns = If true show warnings for non-triangular faces.  Default: true
 //   check_isects = If true, performs slow checks for intersecting faces.  Default: false
-//   opacity = The opacity level to show the polyhedron itself with.  (Module only)  Default: 0.67
-//   label_verts = If true, shows labels at each vertex that show the vertex number.  (Module only)  Default: false
-//   label_faces = If true, shows labels at the center of each face that show the face number.  (Module only)  Default: false
-//   wireframe = If true, shows edges more clearly so you can see them in Thrown Together mode.  (Module only)  Default: false
-//   adjacent = If true, only display faces adjacent to a vertex listed in the errors.  (Module only)  Default: false
+//   opacity = The opacity level to show the polyhedron itself with.    Default: 0.67
+//   label_verts = If true, shows labels at each vertex that show the vertex number.    Default: false
+//   label_faces = If true, shows labels at the center of each face that show the face number.    Default: false
+//   wireframe = If true, shows edges more clearly so you can see them in Thrown Together mode.    Default: false
+//   adjacent = If true, only display faces adjacent to a vertex listed in the errors.    Default: false
 // Example(3D,Edges): BIG_FACE Warnings; Faces with More Than 3 Vertices.  CGAL often will fail to accept that a face is planar after a rotation, if it has more than 3 vertices.
 //   vnf = skin([
 //       path3d(regular_ngon(n=3, d=100),0),
@@ -1550,15 +1546,18 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   ]);
 //   vnf_validate(vnf,size=2,check_isects=true);
 // Example(3D,Edges): HOLE_EDGE Errors; Edges Adjacent to Holes.
-//   vnf = skin([
-//       path3d(regular_ngon(n=4, d=100),0),
-//       path3d(regular_ngon(n=5, d=100),100)
-//   ], slices=0, caps=false);
-//   vnf_validate(vnf,size=2);
-function vnf_validate(vnf, show_warns=true, check_isects=false) =
+   vnf = skin([
+       path3d(regular_ngon(n=4, d=100),0),
+       path3d(regular_ngon(n=5, d=100),100)
+   ], slices=0, caps=false);
+   vnf_validate(vnf,size=2);
+
+
+//   Returns a list of non-manifold errors with the given VNF.
+//   Each error has the format `[ERR_OR_WARN,CODE,MESG,POINTS,COLOR]`.
+function _vnf_validate(vnf, show_warns=true, check_isects=false) =
     assert(is_vnf(vnf), "Invalid VNF")
     let(
-        vnf = vnf_merge_points(vnf),
         varr = vnf[0],
         faces = vnf[1],
         lvarr = len(varr),
@@ -1767,22 +1766,30 @@ function _edge_not_reported(edge, varr, reports) =
 
 module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, opacity=0.67, adjacent=false, label_verts=false, label_faces=false, wireframe=false) {
     no_children($children);
-    verts = vnf[0];
-    faults = vnf_validate(
+    vcount = len(vnf[0]);
+    fcount = len(vnf[1]);
+    vnf = vnf_merge_points(vnf);
+    faults = _vnf_validate(
         vnf, show_warns=show_warns,
         check_isects=check_isects
     );
+    verts = vnf[0];
+    vnf_changed = len(verts)!=vcount || len(vnf[1])!=fcount;
     if (!faults) {
         echo("VNF appears valid.");
     }
+    if (vnf_changed) echo("VNF changed when merging points; unable to display indices");
     for (fault = faults) {
         err = fault[0];
         typ = fault[1];
         clr = fault[2];
         msg = fault[3];
         idxs = fault[4];
-        pts = [for (i=idxs) if(is_finite(i) && i>=0 && i<len(verts)) verts[i]];
-        echo(str(typ, " ", err, " (", clr ,"): ", msg, " at ", pts, " indices: ", idxs));
+        pts = err=="FACE_ISECT" ? idxs : [for (i=idxs) if(is_finite(i) && i>=0 && i<len(verts)) verts[i]];
+        if (vnf_changed || err=="FACE_ISECT")
+          echo(str(typ, " ", err, " (", clr ,"): ", msg, " at ", pts));
+        else
+          echo(str(typ, " ", err, " (", clr ,"): ", msg, " at ", pts, " indices: ", idxs));
         color(clr) {
             if (is_vector(pts[0])) {
                 if (len(pts)==2) {
