@@ -131,7 +131,7 @@ function vnf_vertex_array(
 ) =
     assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested")
     assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
-    assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge"]))
+    assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area"]))
     assert(is_matrix(points[0], n=3),"Point array has the wrong shape or points are not 3d")
     assert(is_consistent(points), "Non-rectangular or invalid point array")
     let(
@@ -174,6 +174,15 @@ function vnf_vertex_array(
                           [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
                       : style=="alt"?
                           [[i1,i4,i2],[i2,i4,i3]]
+                      : style=="min_area"?
+                          let(
+                               area42 = norm(cross(pts[i2]-pts[i1], pts[14]-pts[i1]))+norm(cross(pts[i4]-pts[i3], pts[i2]-pts[i3])),
+                               area13 = norm(cross(pts[i1]-pts[i4], pts[i3]-pts[i4]))+norm(cross(pts[i3]-pts[i2], pts[i1]-pts[i2])),
+                               minarea_edge = area42 < area13 + EPSILON
+                                 ? [[i1,i4,i2],[i2,i4,i3]]
+                                 : [[i1,i3,i2],[i1,i4,i3]]
+                          )
+                          minarea_edge
                       : style=="min_edge"?
                           let(
                                d42=norm(pts[i4]-pts[i2]),
