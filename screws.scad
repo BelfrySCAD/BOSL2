@@ -235,7 +235,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   length / l = length of screw (in mm)
 //   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
 //   drive_size = size of drive recess to override computed value
-//   thread_len = length of threaded portoin of screw (in mm), for making partly threaded screws.  Default: fully threaded
+//   thread_len = length of threaded portion of screw (in mm), for making partly threaded screws.  Default: fully threaded
 //   details = toggle some details in rendering.  Default: true
 //   tolerance = screw tolerance.  Determines actual screw thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2A" for UTS and "6g" for ISO.  
 //   undersize = amount to decrease screw diameter, a scalar to apply to all parts, or a 2-vector to control shaft and head.  Default: 0
@@ -718,7 +718,7 @@ module screw(spec, head, drive, thread, drive_size,
 //   need to adjust $slop for best results.  Some people screw machine screws directly into plastic without tapping.  This works better with a somewhat larger hole, so
 //   a tolerance of "self tap" produces such a hole.  Note that this tolerance also makes the default bevel2=true to bevel the top, which makes it much easier
 //   to start the screw.  The "self tap" tolerance subtracts `0.72 * pitch` when pitch is below 1mm, `0.6 * pitch` when the pitch is over 1.5mm, and it interpolates between.
-//   It was tested in PLA with a Prusa MK3S and $slop=0.5 and worked on UTS screws from #2 up to 1/2 inch.  
+//   It was tested in PLA with a Prusa MK3S and $slop=0.05 and worked on UTS screws from #2 up to 1/2 inch.  
 //   .
 //   The counterbore parameter adds a cylindrical clearance hole above the screw shaft.  For flat heads it extends above the flathead and for other screw types it 
 //   replaces the head with a cylinder large enough in diameter for the head to fit.  For a flat head you must specify the length of the counterbore.  For other heads you can
@@ -1792,6 +1792,7 @@ function screw_info(name, head, drive, thread, drive_size, threads_oversize=0, h
                   : type[0] == "metric" ? _screw_info_metric(type[1], type[2], head, thread, drive) 
                   : []
     )
+    assert(is_def(struct_val(screwdata,"head")),str("Screw head \"",head,"\" unknown or unsupported for specified screw"))
     _struct_reset(screwdata,
          [
           ["drive_depth", drive_info[2]],
