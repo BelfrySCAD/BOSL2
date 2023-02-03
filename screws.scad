@@ -235,7 +235,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   length / l = length of screw (in mm)
 //   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
 //   drive_size = size of drive recess to override computed value
-//   thread_len = length of threaded portoin of screw (in mm), for making partly threaded screws.  Default: fully threaded
+//   thread_len = length of threaded portion of screw (in mm), for making partly threaded screws.  Default: fully threaded
 //   details = toggle some details in rendering.  Default: true
 //   tolerance = screw tolerance.  Determines actual screw thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2A" for UTS and "6g" for ISO.  
 //   undersize = amount to decrease screw diameter, a scalar to apply to all parts, or a 2-vector to control shaft and head.  Default: 0
@@ -540,7 +540,7 @@ module screw(spec, head, drive, thread, drive_size,
                 : _counterbore;
    head = struct_val(tempspec,"head");
    headless = head=="none";
-   flathead = starts_with(head,"flat");
+   flathead = is_def(head) && starts_with(head,"flat");
    reset_headsize = _internal && flathead ? struct_val(tempspec,"head_size_sharp") : undef;
    spec=_struct_reset(tempspec,[
                                 ["length", l],
@@ -718,7 +718,7 @@ module screw(spec, head, drive, thread, drive_size,
 //   need to adjust $slop for best results.  Some people screw machine screws directly into plastic without tapping.  This works better with a somewhat larger hole, so
 //   a tolerance of "self tap" produces such a hole.  Note that this tolerance also makes the default bevel2=true to bevel the top, which makes it much easier
 //   to start the screw.  The "self tap" tolerance subtracts `0.72 * pitch` when pitch is below 1mm, `0.6 * pitch` when the pitch is over 1.5mm, and it interpolates between.
-//   It was tested in PLA with a Prusa MK3S and $slop=0.5 and worked on UTS screws from #2 up to 1/2 inch.  
+//   It was tested in PLA with a Prusa MK3S and $slop=0.05 and worked on UTS screws from #2 up to 1/2 inch.  
 //   .
 //   The counterbore parameter adds a cylindrical clearance hole above the screw shaft.  For flat heads it extends above the flathead and for other screw types it 
 //   replaces the head with a cylinder large enough in diameter for the head to fit.  For a flat head you must specify the length of the counterbore.  For other heads you can
@@ -1406,9 +1406,11 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,oversize=0
               head=="cheese" ? .7 * head_height :
               0.1 * head_height;   // round and button
        head_size2 = head=="cheese" ?  head_size-2*tan(5)*head_height : head_size; // 5 deg slope on cheese head
-       cyl(l=base, d1=head_size, d2=head_size2,anchor=BOTTOM)
+       segs = segs(head_size);
+       cyl(l=base, d1=head_size, d2=head_size2,anchor=BOTTOM, $fn=segs)
          attach(TOP)
-           rotate_extrude()
+           zrot(180) // Needed to align facets when $fn is odd
+           rotate_extrude($fn=segs)  // ensure same number of segments for cap as for head body
              intersection(){
                arc(points=[[-head_size2/2,0], [0,-base+head_height * (head=="button"?4/3:1)], [head_size2/2,0]]);
                square([head_size2, head_height-base]);
@@ -1790,6 +1792,7 @@ function screw_info(name, head, drive, thread, drive_size, threads_oversize=0, h
                   : type[0] == "metric" ? _screw_info_metric(type[1], type[2], head, thread, drive) 
                   : []
     )
+    assert(is_def(struct_val(screwdata,"head")),str("Screw head \"",head,"\" unknown or unsupported for specified screw"))
     _struct_reset(screwdata,
          [
           ["drive_depth", drive_info[2]],
@@ -2622,7 +2625,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                 [48,  [72,     36]],
             ],
             entry = struct_val(metric_socket, diam),
-            dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
+            dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for head type \"",head,"\"")),
             drive_size =  drive=="hex" ? [["drive_size",entry[1]],["drive_depth",diam/2]] :
                           drive=="torx" ? [["drive_size", entry[2]], ["drive_depth", entry[3]]] :
                           []
@@ -2646,7 +2649,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
             type = head=="pan" ? (drive=="slot" ? "pan flat" : "pan round") : head,
             htind = drive=="slot" ? 1 : 2,
             entry = struct_val(metric_pan, diam),
-            dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
+            dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for head type \"",head,"\"")),
             drive_size = drive=="phillips" ? [["drive_size", entry[3]],
                                               //["drive_diameter", entry[4]],
                                               ["drive_depth",entry[5]],
@@ -2709,7 +2712,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                                : drive=="torx"? metric_cheese_torx 
                                : metric_cheese, 
                             diam),
-             dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
+             dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for head type \"",head,"\"")),
              drive_index = drive=="phillips" ? 3 
                          : drive=="hex" ? 2 
                          : undef,
@@ -2770,7 +2773,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
                  [20,  [40  ,   35.7  ]]
              ],
              entry = struct_val(small ? metric_flat_small : metric_flat_large, diam),
-             dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for headless screws")),
+             dummy=assert(is_def(entry), str("Screw size M",diam," unsupported for head type \"",head,"\"")),
              driveind = small && drive=="phillips" ? 2
                       : !small && drive=="hex" ? 2
                       : !small && drive=="torx" ? 4

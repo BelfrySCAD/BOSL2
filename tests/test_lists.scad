@@ -37,6 +37,14 @@ module test_slice() {
     assert(slice(l, 3, 3) == [6]);
     assert(slice(l, 4) == [7,8,9]);
     assert(slice(l, -2) == [8,9]);
+    assert(slice(l,-10,-8) == []);
+    assert(slice(l,10,12) == []);
+    assert(slice(l,12,10) == []);
+    assert(slice(l,4,12) == [7,8,9]);
+    assert(slice(l,-10,2) == [3,4,5]);
+    assert(slice(l,-10,-4) == [3,4,5,6]);
+    assert(slice(l,-1,1) == []);
+    assert(slice(l,5,4) == []);
 }
 test_slice();
 

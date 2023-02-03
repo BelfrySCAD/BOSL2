@@ -229,8 +229,9 @@ function select(list, start, end) =
 //   list = slice(list, s, e);
 // Description:
 //   Returns a slice of a list, from the first position `s` up to and including the last position `e`.
-//   The first item in the list is at index 0.  Negative indexes are counted back from the end.
-//   An index of -1 refers to the last list item.
+//   The first item in the list is at index 0.  Negative indexes are counted back from the end, with
+//   -1 referring to the last list item.  If `s` is after `e` then the empty list is returned.
+//   If an index is off the start/end of the list it will refer to the list start/end.  
 // Arguments:
 //   list = The list to get the slice of.
 //   start = The index of the first item to return.  Default: 0
@@ -243,6 +244,8 @@ function select(list, start, end) =
 //   d = slice([3,4,5,6,7,8,9], 5);      // Returns [8,9]
 //   e = slice([3,4,5,6,7,8,9], 2, -2);  // Returns [5,6,7,8]
 //   f = slice([3,4,5,6,7,8,9], 4, 3;    // Returns []
+//   g = slice([3,4,5], 1, 5;            // Returns [4,5]
+//   h = slice([3,4,5], 5, 7);           // Returns []
 function slice(list,start=0,end=-1) =
     assert(is_list(list))
     assert(is_int(start))
@@ -250,11 +253,10 @@ function slice(list,start=0,end=-1) =
     !list? [] :
     let(
         l = len(list),
-        start = constrain(start + (start<0? l : 0), 0, l-1),
-        end = constrain(end + (end<0? l : 0), 0, l-1)
+        start = start+(start<0 ? l : 0),
+        end = end + (end<0? l : 0)
     )
-    [if (end>=start) for (i=[start:1:end]) list[i]];
-
+    [if (start<=end && end>=0 && start<=l) for (i=[max(start,0):1:min(end,l-1)]) list[i]];
 
 // Function: last()
 // Usage:
