@@ -2841,6 +2841,18 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(50), texture=tex, h=40,
 //       tex_size=[12.5,20]
 //   );
+// Example(3D): "tri_grid" texture with large inset.  (Max inset for tri_grid is 1/6.)  
+//   tex = texture("tri_grid",inset=.12);
+//   linear_sweep(
+//       rect(50), texture=tex, h=40,
+//       tex_size=[12.5,20]
+//   );
+// Example(3D): "tri_grid" texture scaled by sqrt(3) so triangles are equilateral and grooves are all the same width.  Note we have to ensure the height evenly fits the scaled texture tiles.
+//   tex = texture("tri_grid",inset=.04);
+//   linear_sweep(
+//       rect(50), texture=tex, h=quantup(40,10*sqrt(3)),
+//       tex_size=[10,10*sqrt(3)], tex_scale=3
+//   );
 // Example(3D): "hex_grid" texture.
 //   tex = texture("hex_grid");
 //   linear_sweep(
@@ -2852,6 +2864,12 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   linear_sweep(
 //       rect(50), texture=tex, h=40,
 //       tex_size=[12.5,20]
+//   );
+// Example(3D): "hex_grid" scaled vertically by sqrt(3) so hexagons are regular and grooves are all the same width.  Note height of cylinder is also scaled so tile fits without being automatically adjusted to fit, ruining our choice of scale.
+//   tex = texture("hex_grid",inset=.04);
+//   linear_sweep(
+//       rect(50), texture=tex, h=quantup(40,10*sqrt(3)),
+//       tex_size=[10,10*sqrt(3)], tex_scale=3
 //   );
 // Example(3D): "checkers" texture.
 //   tex = texture("checkers");
