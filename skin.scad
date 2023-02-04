@@ -2811,14 +2811,14 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(50), texture=tex, h=40,
 //       tex_size=[10,10]
 //   );
-// Example(3D): "bricks" texture.
-//   tex = texture("bricks", inset=.25);
+// Example(3D): "bricks_vnf" texture.
+//   tex = texture("bricks_vnf");
 //   linear_sweep(
 //       rect(50), texture=tex, h=40,
 //       tex_size=[10,10]
 //   );
-// Example(3D): "bricks_vnf" texture.
-//   tex = texture("bricks_vnf");
+// Example(3D): "bricks_vnf" texture with large inset. 
+//   tex = texture("bricks_vnf",inset=0.25);
 //   linear_sweep(
 //       rect(50), texture=tex, h=40,
 //       tex_size=[10,10]
