@@ -23,7 +23,7 @@ include <screws.scad>
 //   The offset is the distance from a vertical mounting point to the center of the hinge pin.  The hinge barrel is held by an angled support and
 //   vertical support.  The length of the angled support is determined by its angle and the offset.  You specify the length of the vertical support with the
 //   arm_height parameter.
-// Figure(2D,NoScales):  The basic hinge form appears on the left.  If fill is set to true the gap between the mount surface and hinge arm is filled as shown on the right. 
+// Figure(2D,Med,NoScales):  The basic hinge form appears on the left.  If fill is set to true the gap between the mount surface and hinge arm is filled as shown on the right. 
 //   _hinge_profile(4, 5, $fn=32, fill=false);
 //   right(13)_hinge_profile(4, 5, $fn=32, fill=true);
 //   fwd(9)stroke([[0,0],[4,4],[4,9]], width=.3,color="black");
@@ -36,13 +36,13 @@ include <screws.scad>
 // Continues:
 //   As shown in the above figure, the fill option fills the gap between the hinge arm and the mount surface to make a stronger connection.  When the
 //   arm height is set to zero, only a single segment connects the hinge barrel to the mount surface.  
-// Figure(2D,NoScales): Zero arm height with 45 deg arm
+// Figure(2D,Med,NoScales): Zero arm height with 45 deg arm
 //   right(10)   _hinge_profile(4, 0, $fn=32);
 //   _hinge_profile(4, 0, $fn=32,fill=false);
 //   right(11)fwd(-3)color("blue")text("fill=true",size=1);
 //   right(.5)fwd(-3)color("blue")text("fill=false",size=1);
 // Continues:
-// Figure(2D,NoScales): Zero arm height with 90 deg arm.  The clear_top parameter removes the hinge support material that is above the x axis
+// Figure(2D,Med,NoScales): Zero arm height with 90 deg arm.  The clear_top parameter removes the hinge support material that is above the x axis
 //   _hinge_profile(4, 0, 90, $fn=32);
 //   right(10)  _hinge_profile(4, 0, 90, $fn=32,clear_top=true);
 //   right(9.5)fwd(-3)color("blue")text("clear_top=true",size=.76);
