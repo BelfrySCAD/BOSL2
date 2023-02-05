@@ -22,10 +22,19 @@
 //   .
 //   Two gotchas may lead to models that don't behave as expected.  While `if` statements work to control modules, you cannot
 //   use them to make variable assignments in your child object.  If you write a statement like 
-//   `if (condition) { c="red";}` then the `c` variable is set only in the scope of the `if` statement and is not available later on.  
-//   Instead you must use the ternary operator.  The second complication is
-//   that in OpenSCAD version 2021.01 and earlier, assignments in children were executed before their
-//   parent.  This means that `$` variables like `$idx` are not available in assignments, so if you use them you will get a warning about an unknown variable.
+//   ```
+//   if (condition) { c="red";}
+//   else {c="green";}
+//   ```
+//   then the `c` variable is set only in the scope of the `if` and `else` clauses and is not available later on when you actually
+//   try to use it.  Instead you must use the ternary operator and write:
+//   ```
+///  c = condition ? "red" : "green";
+//   ```
+//   The second complication is
+//   that in OpenSCAD version 2021.01 and earlier, assignments in children were executed before their parent.  This means 
+//   that `$` variables like `$idx` are not available in assignments because the parent hasn't run to set them, so if you use them
+//   you will get a warning about an unknown variable.
 //   Two workarounds exist, neither of which are needed in newer versions of OpenSCAD.  The workarounds solve the problem because
 //   **modules** execute after their parent, so the `$` variables **are** available in modules.  You can put your assignments
 //   in a `let()` module, or you can wrap your child in a `union()`.  Both methods appear below.
@@ -63,9 +72,9 @@
 //   xcopies(n=5,spacing=10)
 //     union()
 //     {
-//       shiftback = $idx%2==0 ? back(5) : IDENT;
+//       shiftback = $idx%2==0 ? back(10) : IDENT;
 //       spin = zrot(180*$idx/4);
-//       multmatrix(shiftback*spin) stroke([[-4,0],[4,0]],endcap2="arrow2",width=1/2);
+//       multmatrix(shiftback*spin) stroke([[-4,0],[4,0]],endcap2="arrow2",width=3/4, color="red");
 //     }
 // Continues:
 //   ```
