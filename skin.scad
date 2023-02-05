@@ -2659,34 +2659,35 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Topics: Textures, Knurling
 // Description:
 //   Given a texture name, returns a texture.  Textures can come in two varieties:
-//   - Heightfield textures which are 2D arrays of scalars.  These are faster to render, but are less precise and prone to triangulation errors.
-//   - VNF Tile textures, which are VNFs that completely tile the rectangle `[0,0]` to `[1,1]`.  These tend to be slower to render, but are more precise.
-//   Sometimes the geometry of a shape to be textured will cause a heightfield texture to be badly triangulated.  The table below gives the recommended
-//   style for the best triangulation of height field textures, but if results are still incorrect, switch to the similar VNF tile by adding the "_vnf" suffix
-//   to the texture name. 
+//   - Heightfield textures which are 2D arrays of scalars.  These are usually faster to render, but can be less precise and prone to triangulation errors.  The table below gives the recommended style for the best triangulation.  If results are still incorrect, switch to the similar VNF tile by adding the "_vnf" suffix.
+//   - VNF Tile textures, which are VNFs that cover the unit square [0,0] x [1,1].  These tend to be slower to render, but allow greater flexibility and precision for shapes that don't align with a grid.
+//   In the descriptions below, imagine the textures positioned on the XY plane, so "horizontal" refers to the "sideways" dimensions of the texture and
+//   "up" and "down" refer to the depth dimension.  If a texture is placed on a cylinder the "depth" will become the radial direction and the "horizontal"
+//   direction will be the vertical and tangential directions on the cylindrical surface.  All horizontal dimensions for VNF textures are relative to the unit square
+//   on which the textures are defined, so a value of 0.25 for a gap or inset will refer to 1/4 of the texture's full length and width.  
 // Texture Values:
-//   "bricks"       = Heightfield = A brick-wall pattern.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Giving `roughness=` adds a level of height randomization to add roughness to the texture.  Use `style="convex"`. 
-//   "bricks_vnf"   = VNF Tile = Like "bricks", but slower and more consistent in triangulation.  Giving `gap=` sets the mortar gap between bricks.  Giving `inset=` specifies the inset of the brick tops, relative to their bottoms.
-//   "checkers"     = VNF Tile = A pattern of alternating checkerboard squares.  Giving `inset=` specifies the inset of the raised checker tile tops, relative to the lowered tiles.
-//   "cones"        = VNF Tile = Raised conical spikes.  Giving `n=` sets the number of sides to the cone.  Giving `inset=` specifies the inset of the base of the cone, relative to the tile edges.
+//   "bricks"       = Heightfield = A brick-wall pattern.  Giving `n=` sets the number of heightfield samples to `n x n`.  Default: 24.  Giving `roughness=` adds a level of height randomization to add roughness to the texture.  Use `style="convex"`. 
+//   "bricks_vnf"   = VNF Tile = VNF version of "bricks".  Giving `gap=` sets the mortar gap between bricks at the bottom, default 0.05.  Giving `inset=` specifies that the top face of the brick is smaller than the bottom of the brick by `inset` on each of the four sides.  If `gap` is zero then `inset` close to 0.5 will cause bricks to come to a sharp pointed edge, with just a tiny flat top surface.  Note that `gap+inset` must be strictly smaller than 0.5.   Default is `inset=0.05`.  
+//   "checkers"     = VNF Tile = A pattern of alternating checkerboard squares.  Giving `inset=` specifies that the top face of the checker surface is smaller than the bottom by `inset` on each of the four sides.  As `inset` approaches 0.5 the tops come to sharp corners.  You must set `inset` strictly between 0 and 0.5.  Default: 0.05.  
+//   "cones"        = VNF Tile = Raised conical spikes.  Giving `n=` sets `$fn` for the cone (will be rounded to a multiple of 4).  Default: 16.  Giving `inset=` specifies the horizontal inset of the base of the cone, relative to the tile edges.  The `inset` value must be nonnegative and smaller than 0.5.  Default: 0.  
 //   "cubes"        = VNF Tile = Cornercubes texture.
-//   "diamonds"     = Heightfield = Diamond shapes with tips aligned with the axes.  Useful for knurling.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Use `style="concave"` for pointed bumps, or `style="default"` or `style="alt"` for diagonal ribs.  
-//   "diamonds_vnf" = VNF Tile = Like "diamonds", but slower and more consistent in triangulation.
-//   "dimples"      = VNF Tile = Small round divots.  Giving `n=` sets the resolution of the divot curve.  Giving `inset=` specifies the inset of the dimples, relative to the edge of the tile.
-//   "dots"         = VNF Tile = Raised small round bumps.  Giving `n=` sets the resolution of the bump curve.  Giving `inset=` specifies the inset of the dots, relative to the edge of the tile.
-//   "hex_grid"     = VNF Tile = A hexagonal grid of thin lines.  Giving `inset=` specifies the inset of the hex tops, relative to their bottoms.
-//   "hills"        = Heightfield = Wavy sine-wave hills and valleys,  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Set `style="quincunx"`.  
-//   "pyramids"     = Heightfield = Pyramids shapes with flat sides aligned with the axes.  Also useful for knurling.  Giving `n=` sets the number of heightfield samples to `n` by `n`.
-//   "pyramids_vnf" = VNF Tile = Like "pyramids", but slower and more consistent in triangulation.
-//   "ribs"         = Heightfield = Vertically aligned triangular ribs.  Giving `n=` sets the number of heightfield samples to `n` by `1`.  The choice of style does not matter. 
-//   "rough"        = Heightfield = A pseudo-randomized rough surace texture.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Giving `roughness=` adds a level of height randomization to add roughness to the texture.
-//   "tri_grid"     = VNF Tile = A triangular grid of thin lines.  Giving `inset=` specifies the inset of the triangle tops, relative to their bottoms.
-//   "trunc_diamonds"     = VNF Tile = Truncated diamonds.  A grid of thin lines at 45º angles.  Giving `inset=` specifies the inset of the truncated diamond tops, relative to their bottoms.
-//   "trunc_pyramids"     = Heightfield = Truncated pyramids.  Like "pyramids" but with flattened tips.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Set `style="convex"`.  
-//   "trunc_pyramids_vnf" = VNF Tile = Like "trunc_pyramids", but slower and more consistent in triangulation.  Giving `inset=` specifies the inset of the truncated pyramid tops, relative to their bottoms.
-//   "trunc_ribs"         = Heightfield = Truncated ribs.  Like "ribs" but with flat rib tips.  Giving `n=` sets the number of heightfield samples to `n` by `1`.  The style does not matter. 
-//   "trunc_ribs_vnf"     = VNF Tile = Like "trunc_ribs", but slower and more adjustable.  Giving `gap=` sets the bottom gap between ribs.  Giving `inset=` specifies the inset of the rib tops, relative to their bottoms.
-//   "wave_ribs"          = Heightfield = Vertically aligned wavy ribs.  Giving `n=` sets the number of heightfield samples to `n` by `1`.  The style does not matter.  
+//   "diamonds"     = Heightfield = Four-sided pyramid with the corners of the base aligned aligned with the axes.  Compare to "pyramids".  Useful for knurling.  Giving `n=` sets the number of heightfield samples to `n x n`. Default: 2.  Use `style="concave"` for pointed bumps, or `style="default"` or `style="alt"` for a diagonal ribs.  
+//   "diamonds_vnf" = VNF Tile = VNF version of "diamonds".  
+//   "dimples"      = VNF Tile = Round divots.  Giving `n=` sets `$fn` for the curve (will be rounded to a multiple of 4).  Default: 16.  Giving `inset=` specifies the horizontal distance of the flat region around the dimple relative to the edge of the tile.  Default: 0.05.  
+//   "dots"         = VNF Tile = Raised round bumps.  Giving `n=` sets `$fn` for the curve (will be rounded to a multiple of 4).  Default: 16.   Giving `inset=` specifies the horizontal inset of the dots, relative to the edge of the tile.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.  
+//   "hex_grid"     = VNF Tile = A hexagonal grid defined by V-grove borders.  Giving `inset=` specifies the X-direction horizontal inset of the hexagonal tops, relative to their bottoms.  This means the V-groove top width for grooves running parallel to the Y axis will be double the inset value.  If the texture is scaled in the Y direction by sqrt(3) then the groove will be uniform on all six sides of the hexagon.  Inset must be strictly between 0 and 0.5, default: 0.1.  
+//   "hills"        = Heightfield = Wavy sine-wave hills and valleys,  Giving `n=` sets the number of heightfield samples to `n` x `n`.  Default: 12.  Set `style="quincunx"`.  
+//   "pyramids"     = Heightfield = Four-sided pyramid with the edges of the base aligned with the axess.  Compare to "diamonds". Useful for knurling.  Giving `n=` sets the number of heightfield samples to `n` by `n`. Default: 2. Set style to "convex".  Note that style="concave" or style="min_edge" produce mini-diamonds with flat squares in between.  
+//   "pyramids_vnf" = VNF Tile = VNF version of "pyramids". 
+//   "ribs"         = Heightfield = Vertically aligned triangular ribs.  Giving `n=` sets the number of heightfield samples to `n` by 1.  Default: 2.  The choice of style does not matter. 
+//   "rough"        = Heightfield = A pseudo-randomized rough texture.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Default: 32.  The `roughness=` parameter specifies the height of the random texture.  Default: 0.2.  
+//   "tri_grid"     = VNF Tile = A triangular grid defined by V-groove borders  Giving `inset=` specifies the horizontal inset of the triangular tops, relative to their bottoms, along the horizontal edges of the triangles.  This means the V-groove top width of the horizontal grooves will be double the inset value.  If the tile is scaled in the Y direction by sqrt(3) then the groove will be uniform on the three sides of the triangle.  The inset must be strictly between 0 and 1/6, default: 0.05.  
+//   "trunc_diamonds"     = VNF Tile = Truncated diamonds, four-sided pyramids with the base corners aligned with the axes and the top cut off.  Or you can interpret it as V-groove lines at 45º angles.  Giving `inset=` specifies the horizontal inset of the square top face compared to the bottom face along all four edges.  This means the V-groove top width will be double the inset value.  The inset must be strictly between 0 and sqrt(2)/4, which is about 0.35.  Default: 0.1. 
+//   "trunc_pyramids"     = Heightfield = Truncated pyramids, four sided pyramids with the base edges aligned to the axes and the top cut off.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Default: 6.  Set `style="convex"`.  
+//   "trunc_pyramids_vnf" = VNF Tile = Truncated pyramids, four sided pyramids with the base edges aligned to the axes and the top cut off.  You can also regard this as a grid of V-grooves.  Giving `inset=` specifies the horizontal inset of the flat square tops on all four sides relative to their bottoms.  This means the V-groove top width will be double the inset value.  The inset must be strictly between 0 and 0.5.  Default: 0.1.  
+//   "trunc_ribs"         = Heightfield = Truncated ribs.  Vertically aligned triangular ribs with the tops cut off, and with rib separation equal to the width of the flat tops.  Giving `n=` sets the number of heightfield samples to `n` by `1`.  Default: 4.  The style does not matter. 
+//   "trunc_ribs_vnf"     = VNF Tile = Vertically aligned triangular ribs with the tops cut off.  Giving `gap=` sets the bottom gap between ribs.  Giving `inset=` specifies the horizontal inset of the rib top face, relative to the bottom on both sides.  In order to fit, gap+2*inset must be less than 1.  (This is because the gap is counted once but the inset counts on both sides.)  Defaults: gap=1/4, inset=1/4.  
+//   "wave_ribs"          = Heightfield = Vertically aligned wavy ribs.  Giving `n=` sets the number of heightfield samples to `n` by `1`.  Default: 8.  The style does not matter.  
 // Arguments:
 //   tex = The name of the texture to get.
 //   ---
@@ -2708,8 +2709,8 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       tex_scale=3, tex_size=[10,10],
 //       style="concave"
 //   );
-// Example(3D): "trunc_ribs_vnf" texture.  Slower, but more controllable.
-//   tex = texture("trunc_ribs_vnf", gap=0.25, inset=0.333);
+// Example(3D): "trunc_ribs_vnf" texture.  
+//   tex = texture("trunc_ribs_vnf", gap=0.25, inset=1/6);
 //   linear_sweep(
 //       rect(50), h=40, texture=tex,
 //       tex_scale=3, tex_size=[10,10]
@@ -2726,19 +2727,37 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(50), texture=tex, h=40,
 //       tex_size=[10,10], style="concave"
 //   );
-// Example(3D): "diamonds_vnf" texture.  Slower, but more consistent around complex curves.
+// Example(3D): "diamonds" texture can give diagonal ribbing.
+//   tex = texture("diamonds");
+//   linear_sweep(
+//       rect(50), texture=tex, h=40,
+//       tex_size=[10,10], style="default"
+//   );
+// Example(3D): "diamonds" texture gives diagonal ribbing the other direction. 
+//   tex = texture("diamonds");
+//   linear_sweep(
+//       rect(50), texture=tex, h=40,
+//       tex_size=[10,10], style="alt"
+//   );
+// Example(3D): "diamonds_vnf" texture. 
 //   tex = texture("diamonds_vnf");
 //   linear_sweep(
 //       rect(50), texture=tex, h=40,
 //       tex_size=[10,10]
 //   );
-// Example(3D): "pyramids" texture.
+// Example(3D): "pyramids" texture, with the style that produces the advertised pyramid shape. 
 //   tex = texture("pyramids");
 //   linear_sweep(
 //       rect(50), texture=tex, h=40,
 //       tex_size=[10,10], style="convex"
 //   );
-// Example(3D): "pyramids_vnf" texture.  Slower, but more consistent around complex curves.
+// Example(3D): "pyramids" texture, with "concave" produces a mini-diamon texture.  Note that "min_edge" also gives this result.
+//   tex = texture("pyramids");
+//   linear_sweep(
+//       rect(50), texture=tex, h=40,
+//       tex_size=[10,10], style="concave"
+//   );
+// Example(3D): "pyramids_vnf" texture. 
 //   tex = texture("pyramids_vnf");
 //   linear_sweep(
 //       rect(50), texture=tex, h=40,
@@ -2750,8 +2769,14 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(50), texture=tex, h=40,
 //       tex_size=[10,10], style="convex"
 //   );
-// Example(3D): "trunc_pyramids_vnf" texture.  Slower, but more consistent around complex curves.
+// Example(3D): "trunc_pyramids_vnf" texture. 
 //   tex = texture("trunc_pyramids_vnf");
+//   linear_sweep(
+//       rect(50), texture=tex, h=40,
+//       tex_size=[10,10]
+//   );
+// Example(3D): "trunc_pyramids_vnf" texture with large inset
+//   tex = texture("trunc_pyramids_vnf", inset=.4);
 //   linear_sweep(
 //       rect(50), texture=tex, h=40,
 //       tex_size=[10,10]
@@ -2792,8 +2817,20 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(50), texture=tex, h=40,
 //       tex_size=[10,10]
 //   );
+// Example(3D): "bricks_vnf" texture with large inset. 
+//   tex = texture("bricks_vnf",inset=0.25);
+//   linear_sweep(
+//       rect(50), texture=tex, h=40,
+//       tex_size=[10,10]
+//   );
 // Example(3D): "trunc_diamonds" texture.
 //   tex = texture("trunc_diamonds");
+//   linear_sweep(
+//       rect(50), texture=tex, h=40,
+//       tex_size=[10,10]
+//   );
+// Example(3D): "trunc_diamonds" texture with large inset. 
+//   tex = texture("trunc_diamonds",inset=.25);
 //   linear_sweep(
 //       rect(50), texture=tex, h=40,
 //       tex_size=[10,10]
@@ -2804,14 +2841,44 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(50), texture=tex, h=40,
 //       tex_size=[12.5,20]
 //   );
+// Example(3D): "tri_grid" texture with large inset.  (Max inset for tri_grid is 1/6.)  
+//   tex = texture("tri_grid",inset=.12);
+//   linear_sweep(
+//       rect(50), texture=tex, h=40,
+//       tex_size=[12.5,20]
+//   );
+// Example(3D): "tri_grid" texture scaled by sqrt(3) so triangles are equilateral and grooves are all the same width.  Note we have to ensure the height evenly fits the scaled texture tiles.
+//   tex = texture("tri_grid",inset=.04);
+//   linear_sweep(
+//       rect(50), texture=tex, h=quantup(40,10*sqrt(3)),
+//       tex_size=[10,10*sqrt(3)], tex_scale=3
+//   );
 // Example(3D): "hex_grid" texture.
 //   tex = texture("hex_grid");
 //   linear_sweep(
 //       rect(50), texture=tex, h=40,
 //       tex_size=[12.5,20]
 //   );
+// Example(3D): "hex_grid" texture with large inset
+//   tex = texture("hex_grid", inset=0.4);
+//   linear_sweep(
+//       rect(50), texture=tex, h=40,
+//       tex_size=[12.5,20]
+//   );
+// Example(3D): "hex_grid" scaled vertically by sqrt(3) so hexagons are regular and grooves are all the same width.  Note height of cylinder is also scaled so tile fits without being automatically adjusted to fit, ruining our choice of scale.
+//   tex = texture("hex_grid",inset=.04);
+//   linear_sweep(
+//       rect(50), texture=tex, h=quantup(40,10*sqrt(3)),
+//       tex_size=[10,10*sqrt(3)], tex_scale=3
+//   );
 // Example(3D): "checkers" texture.
 //   tex = texture("checkers");
+//   linear_sweep(
+//       rect(50), texture=tex, h=40,
+//       tex_size=[10,10]
+//   );
+// Example(3D): "checkers" texture.
+//   tex = texture("checkers",inset=0.25);
 //   linear_sweep(
 //       rect(50), texture=tex, h=40,
 //       tex_size=[10,10]
@@ -2824,7 +2891,13 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   );
 
 function texture(tex, n, inset, gap, roughness) =
+    assert(is_undef(n) || all_positive([n]), "n must be a positive value if given")
+    assert(is_undef(inset) || is_finite(inset), "inset must be a number if given")
+    assert(is_undef(gap) || is_finite(gap), "gap must be a number if given")
+    assert(is_undef(roughness) || all_nonnegative([roughness]), "roughness must be a nonnegative value if given")  
     tex=="ribs"?
+        assert(num_defined([gap, inset, roughness])==0, "ribs texture does not accept gap, inset or roughness")
+
         let(
             n = quantup(default(n,2),2)
         ) [[
@@ -2832,6 +2905,7 @@ function texture(tex, n, inset, gap, roughness) =
             each lerpn(0,1,n/2,endpoint=false),
         ]] :
     tex=="trunc_ribs"?
+        assert(num_defined([gap, inset, roughness])==0, "trunc_ribs texture does not accept gap, inset or roughness")
         let(
             n = quantup(default(n,4),4)
         ) [[
@@ -2841,14 +2915,14 @@ function texture(tex, n, inset, gap, roughness) =
             each lerpn(1,0,n/4,endpoint=false),
         ]] :
     tex=="trunc_ribs_vnf"?
+        assert(is_undef(n), "trunc_ribs_vnf texture does not accept n")
         let(
-            inset = default(inset,1/2),
+            inset = default(inset,1/4)*2,
             gap = default(gap,1/4)
         )
-        assert(inset >= 0)
-        assert(gap >= 0)
-        assert(gap+inset > 0)
-        assert(gap+inset <= 1)
+        assert(all_nonnegative([inset,gap]), "trunc_ribs_vnf texture requires gap>=0 and inset>=0")
+        assert(gap+inset > 0, "trunc_ribs_vnf texture requires that gap+inset>0")
+        assert(gap+inset <= 1, "trunc_ribs_vnf texture requires that gap+2*inset<=1")
         [
             [
                each move([0.5,0.5], p=path3d(rect([1-gap,1]),0)),
@@ -2861,6 +2935,7 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="wave_ribs"?
+        assert(num_defined([gap, inset, roughness])==0, "wave_ribs texture does not accept gap, inset or roughness")  
         let(
             n = max(6,default(n,8))
         ) [[
@@ -2868,6 +2943,7 @@ function texture(tex, n, inset, gap, roughness) =
             (cos(a)+1)/2
         ]] :
     tex=="diamonds"?
+        assert(num_defined([gap, inset, roughness])==0, "diamonds texture does not accept gap, inset or roughness")  
         let(
             n = quantup(default(n,2),2)
         ) [
@@ -2885,6 +2961,7 @@ function texture(tex, n, inset, gap, roughness) =
             ],
         ] :
     tex=="diamonds_vnf"?
+        assert(num_defined([n,gap, inset, roughness])==0, "diamonds_vnf texture does not accept n, gap, inset or roughness")
         [
             [
                 [0,   1, 1], [1/2,   1, 0], [1,   1, 1],
@@ -2896,6 +2973,7 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="pyramids"?
+        assert(num_defined([gap, inset, roughness])==0, "pyramids texture does not accept gap, inset or roughness")
         let(
             n = quantup(default(n,2),2)
         ) [
@@ -2905,11 +2983,13 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="pyramids_vnf"?
+        assert(num_defined([n,gap, inset, roughness])==0, "pyramids_Vnf texture does not accept n, gap, inset or roughness")  
         [
             [ [0,1,0], [1,1,0], [1/2,1/2,1], [0,0,0], [1,0,0] ],
             [ [2,0,1], [2,1,4], [2,4,3], [2,3,0] ]
         ] :
     tex=="trunc_pyramids"?
+        assert(num_defined([gap, inset, roughness])==0, "trunc_pyramids texture does not accept gap, inset or roughness")  
         let(
             n = quantup(default(n,6),3)
         ) [
@@ -2919,9 +2999,12 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="trunc_pyramids_vnf"?
+        assert(num_defined([gap, n, roughness])==0, "trunc_pyramids_vnf texture does not accept gap, n or roughness")
         let(
-            inset = default(inset,0.25)
-        ) [
+            inset = default(inset,0.1)
+        )
+        assert(inset>0 && inset<.5, "trunc_pyramids_vnf texture requires inset in (0,0.5)")
+        [
             [
                 each path3d(square(1)),
                 each move([1/2,1/2,1], p=path3d(rect(1-2*inset))),
@@ -2934,6 +3017,7 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="hills"?
+        assert(num_defined([gap, inset, roughness])==0, "hills texture does not accept gap, inset or roughness")  
         let(
             n = default(n,12)
         ) [
@@ -2943,6 +3027,7 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="bricks"?
+        assert(num_defined([gap,inset])==0, "bricks texture does not accept gap or inset")  
         let(
             n = quantup(default(n,24),2),
             rough = default(roughness,0.05)
@@ -2956,10 +3041,15 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="bricks_vnf"?
+        assert(num_defined([n,roughness])==0, "bricks_vnf texture does not accept n or roughness")
         let(
             inset = default(inset,0.05),
             gap = default(gap,0.05)
-        ) [
+        )
+        assert(inset>=0,"bricks_vnf texture requires nonnegative inset")
+        assert(gap>0, "bricks_vnf requires gap greater than 0")
+        assert(gap+inset<0.5, "bricks_vnf requires gap+inset<0.5")
+          [
             [
                 each path3d(square(1)),
                 each move([gap/2, gap/2, 0], p=path3d(square([1-gap, 0.5-gap]))),
@@ -2981,9 +3071,12 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="checkers"?
+        assert(num_defined([gap, n, roughness])==0, "checkers texture does not accept gap, n or roughness")
         let(
             inset = default(inset,0.05)
-        ) [
+        )
+        assert(inset>0 && inset<.5, "checkers texture requires inset in (0,0.5)")
+          [
             [
                 each move([0,0], p=path3d(square(0.5-inset),1)),
                 each move([0,0.5], p=path3d(square(0.5-inset))),
@@ -3006,14 +3099,15 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="cones"?
+        assert(num_defined([gap,roughness])==0, "cones texture does not accept gap or roughness")  
         let(
-            n = quant(default(n,12),4),
+            n = quant(default(n,16),4),
             inset = default(inset,0)
         )
         assert(inset>=0 && inset<0.5)
         [
             [
-                each move([1/2,1/2], p=path3d(circle(d=1-inset,$fn=n))),
+                each move([1/2,1/2], p=path3d(circle(d=1-2*inset,$fn=n))),
                 [1/2,1/2,1],
                 each path3d(square(1)),
             ], [
@@ -3023,6 +3117,7 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="cubes"?
+        assert(num_defined([n, gap, inset, roughness])==0, "cubes texture does not accept n, gap, inset or roughness")  
         [
             [
                 [0,1,1/2], [1,1,1/2], [1/2,5/6,1], [0,4/6,0], [1,4/6,0],
@@ -3035,8 +3130,9 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="trunc_diamonds"?
+        assert(num_defined([gap, n, roughness])==0, "trunc_diamonds texture does not accept gap, n or roughness")
         let(
-            inset = default(inset,0.1)
+            inset = default(inset,0.1)/sqrt(2)*2
         )
         assert(inset>0 && inset<0.5)
         [
@@ -3053,6 +3149,7 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="dimples" || tex=="dots" ?
+        assert(num_defined([gap,roughness])==0, str(tex," texture does not accept gap or roughness"))
         let(
             n = quant(default(n,16),4),
             inset = default(inset,0.05)
@@ -3085,29 +3182,30 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ) [verts, faces] :
     tex=="tri_grid"?
+        assert(num_defined([gap, n, roughness])==0, str(tex," texture does not accept gap, n or roughness"))  
         let(
-            inset = default(inset,0.1),
-            aspect = 1 / adj_ang_to_opp(1,60),
-            adj = opp_ang_to_adj(inset, 30),
-            hyp = opp_ang_to_hyp(inset, 30),
-            y1 = inset * aspect,
-            y2 = adj * aspect,
-            y3 = 0.5 - inset * aspect,
-            y4 = 0.5 + inset * aspect,
-            y5 = 1 - adj * aspect,
-            y6 = 1 - inset * aspect
+            inset = default(inset,0.1)*sqrt(3)
         )
-        assert(inset>0 && inset<0.5)
+        assert(inset>0 && inset<sqrt(3)/6, "tri_grid texture requires inset in (0,1/6)")
+        let(
+            adj = opp_ang_to_adj(inset, 30),
+            y1 = inset / adj_ang_to_opp(1,60),     // i/sqrt(3)
+            y2 = 2*y1,            // 2*i/sqrt(3)
+            y3 = 0.5 - y1,
+            y4 = 0.5 + y1,
+            y5 = 1 - y2,
+            y6 = 1 - y1
+        )
         [
             [
                 [0,0,0], [1,0,0],
                 [adj,y1,1], [1-adj,y1,1],
                 [0,y2,1], [1,y2,1],
-                [0.5,0.5-adj*aspect,1],
+                [0.5,0.5-y2,1],
                 [0,y3,1], [0.5-adj,y3,1], [0.5+adj,y3,1], [1,y3,1],
                 [0,0.5,0], [0.5,0.5,0], [1,0.5,0],
                 [0,y4,1], [0.5-adj,y4,1], [0.5+adj,y4,1], [1,y4,1],
-                [0.5,0.5+adj*aspect,1],
+                [0.5,0.5+y2,1],
                 [0,y5,1], [1,y5,1],
                 [adj,y6,1], [1-adj,y6,1],
                 [0,1,0], [1,1,0],
@@ -3122,10 +3220,11 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="hex_grid"?
+        assert(num_defined([gap, n, roughness])==0, str(tex," texture does not accept gap, n or roughness"))
         let(
             inset=default(inset,0.1)
         )
-        assert(inset>=0 && inset<0.5)
+        assert(inset>0 && inset<0.5)
         let(
             diag=opp_ang_to_hyp(inset,60),
             side=adj_ang_to_opp(1,30),
@@ -3156,6 +3255,7 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="rough"?
+        assert(num_defined([gap,inset])==0, str(tex," texture does not accept gap or inset"))
         let(
             n = default(n,32),
             rough = default(roughness, 0.2)
