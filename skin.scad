@@ -2712,7 +2712,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Example(3D): **"cubes"** (VNF) = Corner-cubes texture.  Note that this texture needs to be scaled vertically by sqrt(3) to have its correct aspect
 //   tex = texture("cubes");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40
+//       rect(50), texture=tex, h=40,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "cubes" texture at approximately the correct scale.  
@@ -2754,7 +2754,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Example(3D): **"dots"** (VNF) = Raised round bumps.  Giving `n=` sets `$fn` for the curve (will be rounded to a multiple of 4).  Default: 16.   Giving `inset=` specifies the horizontal inset of the dots, relative to the edge of the tile.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.
 //   tex = texture("dots");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40
+//       rect(50), texture=tex, h=40,
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"hex_grid"** (VNF) = A hexagonal grid defined by V-grove borders.  Giving `inset=` specifies the horizontal inset of the left and right edges of the hexagonal tops, relative to their bottoms.  This means the V-groove top width for grooves running parallel to the Y axis will be double the inset value.  If the texture is scaled in the Y direction by sqrt(3) then the groove will be uniform on all six sides of the hexagon.  Inset must be strictly between 0 and 0.5, default: 0.1.
