@@ -2636,7 +2636,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   to make a valid object is to have no points at all on the Y=0 line, and of course none on Y=1.  In this case, the resulting texture produces
 //   a collection of disconnected objects.  Note that the Z coordinates of your tile can be anything, but for the dimensional settings on textures
 //   to work intuitively, you should construct your tile so that Z ranges from 0 to 1.
-// Figure(3D): This is the "hexgrid" VNF tile, which creates a hexagonal grid texture, something which doesn't work well with a height field because the edges of the hexagon don't align with the grid.  Note how the tile ranges between 0 and 1 in both X, Y and Z.
+// Figure(3D): This is the "hexgrid" VNF tile, which creates a hexagonal grid texture, something which doesn't work well with a height field because the edges of the hexagon don't align with the grid.  Note how the tile ranges between 0 and 1 in both X, Y and Z.  In fact, to get a proper aspect ratio in your final texture you need to use the `tex_size` parameter to introduct a sqrt(3) scale factor.  
 //   tex = texture("hex_grid");
 //   vnf_polyhedron(tex);
 // Figure(3D): This is an example of a tile that has no edges at the top or bottom, so it creates disconnected rings.  See {{linear_sweep()}} for examples showing this tile in use.
@@ -2676,218 +2676,218 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Example(3D): **"bricks"** (Heightfield) = A brick-wall pattern.  Giving `n=` sets the number of heightfield samples to `n x n`.  Default: 24.  Giving `roughness=` adds a level of height randomization to add roughness to the texture.  Default: 0.05.  Use `style="convex"`.
 //   tex = texture("bricks");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"bricks_vnf"** (VNF) = VNF version of "bricks".  Giving `gap=` sets the "mortar" gap between adjacent bricks, default 0.05.  Giving `inset=` specifies that the top face of the brick is smaller than the bottom of the brick by `inset` on each of the four sides.  If `gap` is zero then an `inset` value close to 0.5 will cause bricks to come to a sharp pointed edge, with just a tiny flat top surface.  Note that `gap+inset` must be strictly smaller than 0.5.   Default is `inset=0.05`.  
 //   tex = texture("bricks_vnf");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "bricks_vnf" texture with large inset. 
 //   tex = texture("bricks_vnf",inset=0.25);
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"checker"** (VNF) = A pattern of alternating checkerboard squares.  Giving `inset=` specifies that the top face of the checker surface is smaller than the bottom by `inset` on each of the four sides.  As `inset` approaches 0.5 the tops come to sharp corners.  You must set `inset` strictly between 0 and 0.5.  Default: 0.05.
+// Example(3D,VPR=[84.4,0,4.7]): **"checkers"** (VNF) = A pattern of alternating checkerboard squares.  Giving `inset=` specifies that the top face of the checker surface is smaller than the bottom by `inset` on each of the four sides.  As `inset` approaches 0.5 the tops come to sharp corners.  You must set `inset` strictly between 0 and 0.5.  Default: 0.05.
 //   tex = texture("checkers");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): "checkers" texture with large inset.  
+// Example(3D,VPR=[76,0,24]): "checkers" texture with large inset.  
 //   tex = texture("checkers",inset=0.25);
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"cones"** (VNF) = Raised conical spikes.  Giving `n=` sets `$fn` for the cone (will be rounded to a multiple of 4).  Default: 16.  Giving `inset=` specifies the horizontal inset of the base of the cone, relative to the tile edges.  The `inset` value must be nonnegative and smaller than 0.5.  Default: 0.
 //   tex = texture("cones");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40, tex_scale=3,
+//       rect(30), texture=tex, h=30, tex_scale=3,
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"cubes"** (VNF) = Corner-cubes texture.  Note that this texture needs to be scaled vertically by sqrt(3) to have its correct aspect
+// Example(3D): **"cubes"** (VNF) = Corner-cubes texture.  Note that this texture needs to be scaled in vertically by sqrt(3) to have its correct aspect
 //   tex = texture("cubes");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "cubes" texture at approximately the correct scale.  
 //   tex = texture("cubes");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40, tex_scale=3,
-//       tex_size=[12,20]
+//       rect(30), texture=tex, h=20*sqrt(3), tex_scale=3,
+//       tex_size=[10,10*sqrt(3)]
 //   );
 // Example(3D): **"diamonds"** (Heightfield) = Four-sided pyramid with the corners of the base aligned aligned with the axes.  Compare to "pyramids".  Useful for knurling.  Giving `n=` sets the number of heightfield samples to `n x n`. Default: 2.  Use `style="concave"` for pointed bumps, or `style="default"` or `style="alt"` for a diagonal ribs.  
 //   tex = texture("diamonds");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10], style="concave"
 //   );
 // Example(3D): "diamonds" texture can give diagonal ribbing with "default" style. 
 //   tex = texture("diamonds");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10], style="default"
 //   );
 // Example(3D): "diamonds" texture gives diagonal ribbing the other direction with "alt" style.  
 //   tex = texture("diamonds");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10], style="alt"
 //   );
-// Example(3D): **"diamonds_vnf"* (VNF) = VNF version of "diamonds".
+// Example(3D): **"diamonds_vnf"** (VNF) = VNF version of "diamonds".
 //   tex = texture("diamonds_vnf");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"dimples"** (VNF) = Round divots.  Giving `n=` sets `$fn` for the curve (will be rounded to a multiple of 4).  Default: 16.  Giving `inset=` specifies the horizontal distance of the flat region around the dimple relative to the edge of the tile.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.  
 //   tex = texture("dimples");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40, 
+//       rect(30), texture=tex, h=30, 
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"dots"** (VNF) = Raised round bumps.  Giving `n=` sets `$fn` for the curve (will be rounded to a multiple of 4).  Default: 16.   Giving `inset=` specifies the horizontal inset of the dots, relative to the edge of the tile.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.
 //   tex = texture("dots");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"hex_grid"** (VNF) = A hexagonal grid defined by V-grove borders.  Giving `inset=` specifies the horizontal inset of the left and right edges of the hexagonal tops, relative to their bottoms.  This means the V-groove top width for grooves running parallel to the Y axis will be double the inset value.  If the texture is scaled in the Y direction by sqrt(3) then the groove will be uniform on all six sides of the hexagon.  Inset must be strictly between 0 and 0.5, default: 0.1.
 //   tex = texture("hex_grid");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "hex_grid" texture with large inset
 //   tex = texture("hex_grid", inset=0.4);
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): "hex_grid" scaled vertically by sqrt(3) so hexagons are regular and grooves are all the same width.  Note height of cylinder is also scaled so tile fits without being automatically adjusted to fit, ruining our choice of scale.
+// Example(3D): "hex_grid" scaled in Y by sqrt(3) so hexagons are regular and grooves are all the same width.  Note height of cube is also scaled so tile fits without being automatically adjusted to fit, ruining our choice of scale.
 //   tex = texture("hex_grid",inset=.07);
 //   linear_sweep(
-//       rect(50), texture=tex, h=quantup(40,10*sqrt(3)),
+//       rect(30), texture=tex, h=quantup(30,10*sqrt(3)),
 //       tex_size=[10,10*sqrt(3)], tex_scale=3
 //   );
-// Example(3D): "hex_grid" texture, with approximate scaling because 20 is close to sqrt(3) times 12.5.  
+// Example(3D): "hex_grid" texture, with approximate scaling because 17 is close to sqrt(3) times 10.
 //   tex = texture("hex_grid");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
-//       tex_size=[12.5,20]
+//       rect(30), texture=tex, h=34,
+//       tex_size=[10,17]
 //   );
 // Example(3D): **"hills"** (Heightfield) = Wavy sine-wave hills and valleys,  Giving `n=` sets the number of heightfield samples to `n` x `n`.  Default: 12.  Set `style="quincunx"`.
 //   tex = texture("hills");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10], style="quincunx"
 //   );
 // Example(3D): **"pyramids"** (Heightfield) = Four-sided pyramid with the edges of the base aligned with the axess.  Compare to "diamonds". Useful for knurling.  Giving `n=` sets the number of heightfield samples to `n` by `n`. Default: 2. Set style to "convex".  Note that style="concave" or style="min_edge" produce mini-diamonds with flat squares in between.
 //   tex = texture("pyramids");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10], style="convex"
 //   );
 // Example(3D): "pyramids" texture, with "concave" produces a mini-diamond texture.  Note that "min_edge" also gives this result.
 //   tex = texture("pyramids");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10], style="concave"
 //   );
 // Example(3D): **"pyramids_vnf"** (VNF) = VNF version of "pyramids".
 //   tex = texture("pyramids_vnf");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"ribs"** (Heightfield) = Vertically aligned triangular ribs.  Giving `n=` sets the number of heightfield samples to `n` by 1.  Default: 2.  The choice of style does not matter.
 //   tex = texture("ribs");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40, tex_scale=3,
+//       rect(30), texture=tex, h=30, tex_scale=3,
 //       tex_size=[10,10], style="concave"
 //   );
 // Example(3D): **"rough"** (Heightfield) = A pseudo-randomized rough texture.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Default: 32.  The `roughness=` parameter specifies the height of the random texture.  Default: 0.2.
 //   tex = texture("rough");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10], style="min_edge"
 //   );
 // Example(3D): **"tri_grid"** (VNF) = A triangular grid defined by V-groove borders  Giving `inset=` specifies the horizontal inset of the triangular tops, relative to their bottoms, along the horizontal edges (parallel to the X axis) of the triangles.  This means the V-groove top width of the grooves parallel to the X axis will be double the inset value.  (The other grooves are wider.) If the tile is scaled in the Y direction by sqrt(3) then the groove will be uniform on the three sides of the triangle.  The inset must be strictly between 0 and 1/6, default: 0.05.
 //   tex = texture("tri_grid");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "tri_grid" texture with large inset.  (Max inset for tri_grid is 1/6.)  
 //   tex = texture("tri_grid",inset=.12);
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): "tri_grid" texture scaled by sqrt(3) so triangles are equilateral and grooves are all the same width.  Note we have to ensure the height evenly fits the scaled texture tiles.
+// Example(3D): "tri_grid" texture scaled in Y by sqrt(3) so triangles are equilateral and grooves are all the same width.  Note we have to ensure the height evenly fits the scaled texture tiles.
 //   tex = texture("tri_grid",inset=.04);
 //   linear_sweep(
-//       rect(50), texture=tex, h=quantup(40,10*sqrt(3)),
+//       rect(30), texture=tex, h=quantup(30,10*sqrt(3)),
 //       tex_size=[10,10*sqrt(3)], tex_scale=3
 //   );
-// Example(3D): "tri_grid" texture.  Here scale is approximately sqrt(3) taller so triangles are close to equilateral.
+// Example(3D): "tri_grid" texture.  Here scale makes Y approximately sqrt(3) larger than X so triangles are close to equilateral.
 //   tex = texture("tri_grid");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
-//       tex_size=[12.5,20]
+//       rect(30), texture=tex, h=34,
+//       tex_size=[10,17]
 //   );
 // Example(3D): **"trunc_diamonds"** (VNF) = Truncated diamonds, four-sided pyramids with the base corners aligned with the axes and the top cut off.  Or you can interpret it as V-groove lines at 45º angles.  Giving `inset=` specifies the horizontal inset of the square top face compared to the bottom face along all four edges.  This means the V-groove top width will be double the inset value.  The inset must be strictly between 0 and sqrt(2)/4, which is about 0.35.  Default: 0.1.
 //   tex = texture("trunc_diamonds");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "trunc_diamonds" texture with large inset. 
 //   tex = texture("trunc_diamonds",inset=.25);
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"trunc_pyramids"** (Heightfield) = Truncated pyramids, four sided pyramids with the base edges aligned to the axes and the top cut off.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Default: 6.  Set `style="convex"`.
 //   tex = texture("trunc_pyramids");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10], style="convex"
 //   );
 // Example(3D): **"trunc_pyramids_vnf"** (VNF) = Truncated pyramids, four sided pyramids with the base edges aligned to the axes and the top cut off.  You can also regard this as a grid of V-grooves.  Giving `inset=` specifies the horizontal inset of the flat square tops on all four sides relative to their bottoms.  This means the V-groove top width will be double the inset value.  The inset must be strictly between 0 and 0.5.  Default: 0.1.
 //   tex = texture("trunc_pyramids_vnf");
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "trunc_pyramids_vnf" texture with large inset
 //   tex = texture("trunc_pyramids_vnf", inset=.4);
 //   linear_sweep(
-//       rect(50), texture=tex, h=40,
+//       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"trunc_ribs"** (Heightfield) = Truncated ribs.  Vertically aligned triangular ribs with the tops cut off, and with rib separation equal to the width of the flat tops.  Giving `n=` sets the number of heightfield samples to `n` by `1`.  Default: 4.  The style does not matter.
 //   tex = texture("trunc_ribs");
 //   linear_sweep(
-//       rect(50), h=40, texture=tex,
+//       rect(30), h=30, texture=tex,
 //       tex_scale=3, tex_size=[10,10],
 //       style="concave"
 //   );
 // Example(3D): **"trunc_ribs_vnf"** (VNF) = Vertically aligned triangular ribs with the tops cut off.  Giving `gap=` sets the bottom gap between ribs.  Giving `inset=` specifies the horizontal inset of the rib top face, relative to the bottom on both sides.  In order to fit, gap+2*inset must be less than 1.  (This is because the gap is counted once but the inset counts on both sides.)  Defaults: gap=1/4, inset=1/4.
 //   tex = texture("trunc_ribs_vnf", gap=0.25, inset=1/6);
 //   linear_sweep(
-//       rect(50), h=40, texture=tex,
+//       rect(30), h=30, texture=tex,
 //       tex_scale=3, tex_size=[10,10]
 //   );
 // Example(3D): **"wave_ribs"** (Heightfield) = Vertically aligned wavy ribs.  Giving `n=` sets the number of heightfield samples to `n` by `1`.  Default: 8.  The style does not matter.  
 //   tex = texture("wave_ribs");
 //   linear_sweep(
-//       rect(50), h=40, texture=tex, 
+//       rect(30), h=30, texture=tex, 
 //       tex_size=[10,10], tex_scale=3, style="concave"
 //   );
 
