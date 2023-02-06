@@ -29,7 +29,7 @@
 //   then the `c` variable is set only in the scope of the `if` and `else` clauses and is not available later on when you actually
 //   try to use it.  Instead you must use the ternary operator and write:
 //   ```
-///  c = condition ? "red" : "green";
+//   c = condition ? "red" : "green";
 //   ```
 //   The second complication is
 //   that in OpenSCAD version 2021.01 and earlier, assignments in children were executed before their parent.  This means 
