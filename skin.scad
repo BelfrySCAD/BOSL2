@@ -2691,13 +2691,13 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D,VPR=[84.4,0,4.7]): **"checkers"** (VNF) = A pattern of alternating checkerboard squares.  Giving `inset=` specifies that the top face of the checker surface is smaller than the bottom by `inset` on each of the four sides.  As `inset` approaches 0.5 the tops come to sharp corners.  You must set `inset` strictly between 0 and 0.5.  Default: 0.05.
+// Example(3D,VPR=[84.4,0,4.7],VPT=[2.44496,6.53317,14.6135],VPD = 126): **"checkers"** (VNF) = A pattern of alternating checkerboard squares.  Giving `inset=` specifies that the top face of the checker surface is smaller than the bottom by `inset` on each of the four sides.  As `inset` approaches 0.5 the tops come to sharp corners.  You must set `inset` strictly between 0 and 0.5.  Default: 0.05.
 //   tex = texture("checkers");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D,VPR=[76,0,24]): "checkers" texture with large inset.  
+// Example(3D,VPR=[84.4,0,4.7],VPT=[2.44496,6.53317,14.6135],VPD = 126): "checkers" texture with large inset.  
 //   tex = texture("checkers",inset=0.25);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
@@ -2709,13 +2709,13 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30, tex_scale=3,
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"cubes"** (VNF) = Corner-cubes texture.  Note that this texture needs to be scaled in vertically by sqrt(3) to have its correct aspect
+// Example(3D): **"cubes"** (VNF) = Corner-cubes texture.  This texture needs to be scaled in vertically by sqrt(3) to have its correct aspect
 //   tex = texture("cubes");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): "cubes" texture at approximately the correct scale.  
+// Example(3D): "cubes" texture at the correct scale.  
 //   tex = texture("cubes");
 //   linear_sweep(
 //       rect(30), texture=tex, h=20*sqrt(3), tex_scale=3,

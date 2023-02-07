@@ -470,7 +470,7 @@ function _get_spec(spec, needtype, origin, thread,   // common parameters
                                            : nut_info(name,_origin=origin, thread=thread, shape=shape, thickness=thickness))
   : 
     assert(in_list(struct_val(spec,"type"), ["nut_info","screw_info"]), "Screw/nut spec is invalid struct type")
-    assert(is_undef(thread) || thread=="none" || thread==false || is_num(thread),
+    assert(is_undef(thread) || thread=="none" || thread==false || thread==true || is_num(thread),
            str("Thread type applied to struct specification must be numeric, \"none\" or false but got ",thread))
     assert(is_undef(thickness) || is_num(thickness), str("thickness applied to struct specification must be numeric but is ",thickness))
     assert(is_undef(head) || head=="none", str("The only head type allowed with struct specifications is \"none\" but got ",head))
@@ -483,7 +483,7 @@ function _get_spec(spec, needtype, origin, thread,   // common parameters
                                      if (head=="none") ["head","none"],
                                      if (head=="none") ["drive","none"],
                                      if (thread==false || thread=="none") ["pitch",0]
-                                     else ["pitch",thread],
+                                     else if (thread!=true) ["pitch",thread],
                                      ["thickness", thickness],
                                    ], grow=false)
     )
@@ -738,8 +738,8 @@ module screw(spec, head, drive, thread, drive_size,
 //   thread = thread type or specification for threaded masks, or false to make an unthreaded mask.  See [screw pitch](#subsection-standard-screw-pitch). Default: false
 //   teardrop = if true produce teardrop hole.  Only compatible with clearance holes, not threaded.  Default: false
 //   oversize = amount to increase diameter of all screw parts, a scalar or length 3 vector.  Default: 0
-//   oversize_hole = amount to increase diameter of the hole.
-//   oversize_head = amount to increase diameter of head.  
+//   hole_oversize = amount to increase diameter of the hole.
+//   head_oversize = amount to increase diameter of head.  
 //   length / l= length of screw (in mm)
 //   counterbore = set to length of counterbore, or true to make a counterbore equal to head height.  Default: false for flat heads and headless, true otherwise
 //   tolerance = threading or clearance hole tolerance.  For internal threads, detrmines actual thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2B" for UTS and 6H for ISO.  For clearance holes, determines how much clearance to add.  Default is "normal".  
@@ -1775,7 +1775,7 @@ module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orie
 //   ---
 //   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
 //   drive_size = size of drive recess to override computed value
-//   oversize = amount to increase screw diameter for clearance holes.  Default: 0
+//   threads_oversize = amount to increase screw diameter for clearance holes.  Default: 0
 //   head_oversize = amount to increase head diameter for countersink holes.  Default: 0 
 
 function screw_info(name, head, drive, thread, drive_size, threads_oversize=0, head_oversize=0, _origin) =
