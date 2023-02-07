@@ -810,8 +810,6 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
    if (threaded || is_def(oversize) || is_def(hole_oversize) || tolerance==0 || tolerance=="none") {
      undersize = is_def(oversize) ? -oversize
                : -[default(hole_oversize,0), default(head_oversize,0)];
-     echo_struct(spec);
-fdsa=     echo(undersize=undersize);
      default_tag("remove")
        screw(spec,head=head,thread=thread,undersize=undersize, higbee=higbee,
              length=length,l=l,thread_len=thread_len, tolerance=tolerance, _counterbore=counterbore,
