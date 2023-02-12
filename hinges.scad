@@ -23,9 +23,17 @@ include <screws.scad>
 //   The offset is the distance from a vertical mounting point to the center of the hinge pin.  The hinge barrel is held by an angled support and
 //   vertical support.  The length of the angled support is determined by its angle and the offset.  You specify the length of the vertical support with the
 //   arm_height parameter.
+//   
+//   .
+//   A hinge requires clearance so its parts don't interfere.  If the hinge pin is exactly centered on the top of your part, then the hinge may not close all the way
+//   due to interference at the edge.  A small clearance, specified with `clearance=`, raises the hinge up and can ease this interference.  It should probably be equal to a layer thickness or two.
+//   If the hinge knuckle is close to the hinged part then the mating part may interfere.  You can create clearance to address this problem by increasing the offset
+//   to move the hinge knuckles farther away.  Another method is to cut out a curved recess on the parts to allow space for the other hinges.  This is possible
+//   using the `knuckle_clearance=` parameter, which specifies the extra space to cut away to leave room for the hinge knuckles.  It must be positive for any space
+//   to be cut, and to use this option you must make the hinge a child of some object and specify {{diff()}} for the parent object of the hinge. 
 // Figure(2D,Med,NoScales):  The basic hinge form appears on the left.  If fill is set to true the gap between the mount surface and hinge arm is filled as shown on the right. 
-//   _hinge_profile(4, 5, $fn=32, fill=false);
-//   right(13)_hinge_profile(4, 5, $fn=32, fill=true);
+//   _knuckle_hinge_profile(4, 5, $fn=32, fill=false);
+//   right(13)_knuckle_hinge_profile(4, 5, $fn=32, fill=true);
 //   fwd(9)stroke([[0,0],[4,4],[4,9]], width=.3,color="black");
 //   stroke([[5,-5],[5,0]], endcaps="arrow2", color="blue",width=.15);
 //   color("blue"){move([6.2,-2.5])text("arm_height",size=.75,valign="center");
@@ -37,27 +45,47 @@ include <screws.scad>
 //   As shown in the above figure, the fill option fills the gap between the hinge arm and the mount surface to make a stronger connection.  When the
 //   arm height is set to zero, only a single segment connects the hinge barrel to the mount surface.  
 // Figure(2D,Med,NoScales): Zero arm height with 45 deg arm
-//   right(10)   _hinge_profile(4, 0, $fn=32);
-//   _hinge_profile(4, 0, $fn=32,fill=false);
+//   right(10)   _knuckle_hinge_profile(4, 0, $fn=32);
+//   _knuckle_hinge_profile(4, 0, $fn=32,fill=false);
 //   right(11)fwd(-3)color("blue")text("fill=true",size=1);
 //   right(.5)fwd(-3)color("blue")text("fill=false",size=1);
 // Continues:
 // Figure(2D,Med,NoScales): Zero arm height with 90 deg arm.  The clear_top parameter removes the hinge support material that is above the x axis
-//   _hinge_profile(4, 0, 90, $fn=32);
-//   right(10)  _hinge_profile(4, 0, 90, $fn=32,clear_top=true);
+//   _knuckle_hinge_profile(4, 0, 90, $fn=32);
+//   right(10)  _knuckle_hinge_profile(4, 0, 90, $fn=32,clear_top=true);
 //   right(9.5)fwd(-3)color("blue")text("clear_top=true",size=.76);
 //   right(.5)fwd(-3)color("blue")text("clear_top=false",size=.76);
+// Figure(2D,Med,NoScales):  An excessively large clearance value raises up the hinge center.  Note that the hinge mounting remains bounded by the X axis, so when `fill=true` or `clear_top=true` this is different than simply raising up the entire hinge.  
+//   right(10)  _knuckle_hinge_profile(4, 0, 90, $fn=32,clear_top=true,clearance=.5);
+//   _knuckle_hinge_profile(4, 0, $fn=32,fill=true,clearance=.5);
 // Continues:
-//   For 3D printability, you may want to make the hinge pin hole octagonal.  To do this without
-//   changing the other parts of the design, set `pin_fn=8`.  You can round off the joint to the
-//   mount surface with `round_top` and `round_bot`.  You specify the amount of thickness to add.
-//   If you make this parameter too large you will get an error that the rounding doesn't fit.
+//   For 3D printability, you may prefer a teardrop shaped hole, which you can get with `teardrop=true`; 
+//   if necessary you can specify the teardrop direction to be UP, DOWN, FORWARD, or BACK.
+//   (These directions assume that the base of the hinge is mounted on the back of something.)
+//   Another option for printability is to use an octagonal hole, though it does seem more
+//   difficult to size these for robust printability.  To get an octagonal hole set `pin_fn=8`.
+// Figure(2D,Med,NoScales): Alternate hole shapes for improved 3D printabililty
+//   right(10)   _knuckle_hinge_profile(4, 0, $fn=32,pin_fn=8);
+//   _knuckle_hinge_profile(4, 0, $fn=32,tearspin=0);
+//   right(11)fwd(-3)color("blue")text("octagonal",size=1);
+//   right(1.5)fwd(-3)color("blue")text("teardrop",size=1);
+// Continues:
 //   The default pin hole size admits a piece of 1.75 mm filament.  If you prefer to use a machine
 //   screw you can set the pin_diam to a screw specification like `"M3"` or "#6".  In this case,
 //   a clearance hole is created through most of the hinge with a self-tap hole for the last segment.
 //   If the last segment is very long you may shrink the self-tap portion using the tap_depth parameter.
 //   The pin hole diameter is enlarged by the `2*$slop` for numerically specified holes.
-//   Screw holes are made using {{screw_hole()} which enlarges the hole by `4*$slop`.  
+//   Screw holes are made using {{screw_hole()}} which enlarges the hole by `4*$slop`.  
+//   .
+//   To blend hinges better with a model you can round off the joint with the mounting surface using
+//   the `round_top` and `round_bot` parameters, which specify the cut distance, the amount of material to add.
+//   They make a continuous curvature "smooth" roundover with `k=0.8`.  See [smooth roundovers](rounding.scad#section-types-of-roundovers) for more
+//   information.  If you specify too large of a roundover you will get an error that the rounding doesn't fit.  
+// Figure(2D,Med,NoScales): Top and bottom roundovers for smooth hinge attachment
+//   right(12)_knuckle_hinge_profile(6, 0, $fn=32,fill=false,round_top=1.5);
+//   _knuckle_hinge_profile(4, 0, $fn=32,fill=false,round_bot=1.5);
+//   right(12)fwd(11)color("blue")text("round_top=1.8",size=1);
+//   right(.5)fwd(-3)color("blue")text("round_bot=1.5",size=1);
 // Arguments:
 //   length = total length of the entire hinge
 //   offset = horizontal offset of the hinge pin center from the mount point
@@ -73,18 +101,22 @@ include <screws.scad>
 //   round_bot = rounding amount to add where bottom of hinge arm joins the mount surface.  Default: 0
 //   knuckle_diam = diameter of hinge barrel.  Default: 4
 //   pin_diam = diameter of hinge pin hole as a number of screw specification.  Default: 1.75
+//   pin_fn = $fn value to use for the pin.
+//   teardrop = Set to true or UP/DOWN/FWD/BACK to specify teardrop shape for the pin hole.  Default: false
 //   screw_head = screw head to use for countersink
 //   screw_tolerance = screw hole tolerance.  Default: "close"
 //   tap_depth = Don't make the tapped part of the screw hole larger than this. 
 //   $slop = increases pin hole diameter
+//   clearance = raises pin hole to create clearance at the edge of the mounted surface.  Default: 0.15
+//   clear_knuckle = clear space for hinge knuckle of mating part.  Must use with {{diff()}}.  Default: 0 
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example: Basic hinge, inner=false in front and inner=true in the back
 //   $fn=32;
 //   ydistribute(30){
-//     knuckle_hinge(length=35, segs=4, offset=3, arm_height=1);
-//     knuckle_hinge(length=35, segs=4, offset=3, arm_height=1,inner=true);
+//     knuckle_hinge(length=35, segs=5, offset=3, arm_height=1);
+//     knuckle_hinge(length=35, segs=5, offset=3, arm_height=1,inner=true);
 //   }
 // Example(NoScales):  Basic hinge, mounted.  Odd segment count means the "outside" hinge is on the outside at both ends.  
 //   $fn=32;
@@ -163,23 +195,35 @@ include <screws.scad>
 //        position(TOP+RIGHT) orient(anchor=RIGHT)
 //           knuckle_hinge(length=35, segs=3, offset=5, knuckle_diam=9, pin_diam="#6",
 //                 fill=false, inner=false, tap_depth=6, screw_head="socket");
-function knuckle_hinge(length, offset, segs, inner=false, arm_height=0, arm_angle=45, gap=0.2,
+// Example(NoScales): This hinge has a small offset, so the hinged parts may interfere.  To prevent this, use `knuckle_clearance`.  This example shows an excessive clearance value to make the effect obvious.  Note that you **must** use {{diff()}} when you set `knuckle_clearance`, and the hinge must be a child of the object it mounts to.  Otherwise the cylinders that are supposed to be subtracted will appear as extra objects.  This is an inner hinge, so it has clearance zones for the larger outer hinge that will mate with it.  
+//   $fn=32;
+//   diff()
+//     cuboid([4,40,15])
+//       position(TOP+RIGHT) orient(anchor=RIGHT)
+//         knuckle_hinge(length=35, segs=5, offset=2, inner=true, knuckle_clearance=1);
+// Example(NoScales): Oh no! Forgot to use {{diff()}} with knuckle_clearance!
+//   $fn=32;
+//     cuboid([4,40,15])
+//       position(TOP+RIGHT) orient(anchor=RIGHT)
+//         knuckle_hinge(length=35, segs=5, offset=2, inner=true, knuckle_clearance=1);
+
+function knuckle_hinge(length, segs, offset, inner=false, arm_height=0, arm_angle=45, gap=0.2,
              seg_ratio=1, knuckle_diam=4, pin_diam=1.75, fill=true, clear_top=false,
-             round_bot=0, round_top=0, pin_fn,
+             round_bot=0, round_top=0, pin_fn, clearance,
              tap_depth, screw_head, screw_tolerance="close", 
              anchor=BOT,orient,spin) = no_function("hinge");
 
-module knuckle_hinge(length, offset, segs, inner=false, arm_height=0, arm_angle=45, gap=0.2,
+module knuckle_hinge(length, segs, offset, inner=false, arm_height=0, arm_angle=45, gap=0.2,
              seg_ratio=1, knuckle_diam=4, pin_diam=1.75, fill=true, clear_top=false,
-             round_bot=0, round_top=0, pin_fn,
-             tap_depth, screw_head, screw_tolerance="close", 
+             round_bot=0, round_top=0, pin_fn, clearance=0, teardrop,
+             tap_depth, screw_head, screw_tolerance="close", knuckle_clearance, 
              anchor=BOT,orient,spin)
 {
   dummy =
     assert(is_str(pin_diam) || all_positive([pin_diam]), "pin_diam must be a screw spec string or a positive number")
     assert(all_positive(length), "length must be a postive number")
-    assert(is_int(segs) && segs>=1, "segs must be an integer 1 or greater")
-    assert(is_finite(offset) && offset>=knuckle_diam/2, "offset must be a valid number that is not smaller than radius of the hinge barrel")
+    assert(is_int(segs) && segs>=2, "segs must be an integer 2 or greater")
+    assert(is_finite(offset) && offset>=knuckle_diam/2, "offset must be a valid number that is not smaller than radius of the hinge knuckle")
     assert(is_finite(arm_angle) && arm_angle>0 && arm_angle<=90, "arm_angle must be greater than zero and less than or equal to 90");
   segs1 = ceil(segs/2);
   segs2 = floor(segs/2);
@@ -188,6 +232,42 @@ module knuckle_hinge(length, offset, segs, inner=false, arm_height=0, arm_angle=
   z_adjust = segs%2==1 ? 0
            : inner? seglen1/2
            : seglen2/2;
+  tearspin = is_undef(teardrop) || teardrop==false ? undef
+           : teardrop==UP || teardrop==true ? 0
+           : teardrop==DOWN ? 180
+           : teardrop==BACK ? 270
+           : teardrop==FWD ? 90
+           : assert(false, "Illegal value for teardrop");
+  knuckle_segs = segs(knuckle_diam);
+  transform = down(offset)*yrot(-90)*zmove(z_adjust);
+
+  if(knuckle_clearance){
+    knuckle_clearance_diam = knuckle_diam / cos(180/knuckle_segs) + 2*knuckle_clearance;
+    tag("remove")
+      attachable(anchor,spin,orient,
+                 size=[length,
+                       arm_height+offset/tan(arm_angle)+knuckle_diam/2+knuckle_diam/2/sin(arm_angle),
+                       offset+knuckle_diam/2],
+                 offset=[0,
+                         -arm_height/2-offset/tan(arm_angle)/2-knuckle_diam/sin(arm_angle)/4+knuckle_diam/4,
+                         -offset/2+knuckle_diam/4]
+      )
+      {
+        multmatrix(transform) down(segs%2==1? 0 : (seglen1+seglen2)/2){
+          move([offset,clearance])
+            intersection(){
+              n = inner && segs%2==1 ? segs1
+                
+                : inner ? segs1
+                : segs2;
+              zcopies(n=n, spacing=seglen1+seglen2)
+                 cyl(h=(inner?seglen1:seglen2)+gap-.01, d=knuckle_clearance_diam, circum=true, $fn=knuckle_segs, realign=true);
+              //cyl(h=length+2*gap, d=knuckle_clearance_diam, circum=true, $fn=knuckle_segs, realign=true);
+            }
+        }
+        union(){}
+    }
+  }
   attachable(anchor,spin,orient,
              size=[length,
                    arm_height+offset/tan(arm_angle)+knuckle_diam/2+knuckle_diam/2/sin(arm_angle),
@@ -197,33 +277,31 @@ module knuckle_hinge(length, offset, segs, inner=false, arm_height=0, arm_angle=
                      -offset/2+knuckle_diam/4]
   )
   {
-    down(offset)
-      yrot(-90)
-        zmove(z_adjust)
-          difference()
-          {
-            zcopies(n=inner?segs2:segs1, spacing=seglen1+seglen2)
-              linear_extrude((inner?seglen2:seglen1)-gap,center=true)
-                _hinge_profile(offset=offset, arm_height=arm_height, arm_angle=arm_angle, knuckle_diam=knuckle_diam, pin_diam=pin_diam,
-                               fill=fill, clear_top=clear_top, round_bot=round_bot, round_top=round_top, pin_fn=pin_fn);
-            if (is_str(pin_diam)) right(offset) up(length/2-(inner?1:1)*z_adjust){
-               tap_depth = min(segs%2==1?seglen1-gap/2:seglen2-gap/2, default(tap_depth, length));
-               screw_hole(pin_diam, length=length+.01, tolerance="self tap", bevel=false, anchor=TOP);
-               multmatrix(inner ? zflip(z=-length/2) : IDENT)
-                 if (is_undef(screw_head) || screw_head=="none" || starts_with(screw_head,"flat"))
-                   screw_hole(pin_diam, length=length-tap_depth, tolerance=screw_tolerance, bevel=false, anchor=TOP, head=screw_head);
-                 else {
-                   screw_hole(pin_diam, length=length-tap_depth, tolerance=screw_tolerance, bevel=false, anchor=TOP);
-                   screw_hole(pin_diam, length=.01, tolerance=screw_tolerance, bevel=false, anchor=TOP, head=screw_head);
-                 }
+    multmatrix(transform)
+      force_tag() difference() {
+        zcopies(n=inner?segs2:segs1, spacing=seglen1+seglen2)
+          linear_extrude((inner?seglen2:seglen1)-gap,center=true)
+            _knuckle_hinge_profile(offset=offset, arm_height=arm_height, arm_angle=arm_angle, knuckle_diam=knuckle_diam, pin_diam=pin_diam,
+                                   fill=fill, clear_top=clear_top, round_bot=round_bot, round_top=round_top, pin_fn=pin_fn,clearance=clearance,tearspin=tearspin);
+        if (is_str(pin_diam)) back(clearance)right(offset) up(length/2-(inner?1:1)*z_adjust) zrot(default(tearspin,0)){
+          $fn = default(pin_fn,$fn);
+          tap_depth = min(segs%2==1?seglen1-gap/2:seglen2-gap/2, default(tap_depth, length));
+          screw_hole(pin_diam, length=length+.01, tolerance="self tap", bevel=false, anchor=TOP, teardrop=is_def(tearspin));
+          multmatrix(inner ? zflip(z=-length/2) : IDENT)
+            if (is_undef(screw_head) || screw_head=="none" || starts_with(screw_head,"flat"))
+              screw_hole(pin_diam, length=length-tap_depth, tolerance=screw_tolerance, bevel=false, anchor=TOP, head=screw_head, teardrop=is_def(tearspin));
+            else {
+              screw_hole(pin_diam, length=length-tap_depth, tolerance=screw_tolerance, bevel=false, anchor=TOP, teardrop=is_def(tearspin));
+              screw_hole(pin_diam, length=.01, tolerance=screw_tolerance, bevel=false, anchor=TOP, head=screw_head, teardrop=is_def(tearspin));
             }
-          }           
+        }
+      }
     children();
   }    
 }  
 
 
-module _hinge_profile(offset, arm_height, arm_angle=45, knuckle_diam=4, pin_diam=1.75, fill=true, clear_top=false, round_bot=0, round_top=0, pin_fn)
+module _knuckle_hinge_profile(offset, arm_height, arm_angle=45, knuckle_diam=4, pin_diam=1.75, fill=true, clear_top=false, round_bot=0, round_top=0, pin_fn, clearance=0, tearspin)
 {
   extra = .01;
   skel = turtle(["left", 90-arm_angle, "untilx", offset+extra, "left", arm_angle,
@@ -231,22 +309,30 @@ module _hinge_profile(offset, arm_height, arm_angle=45, knuckle_diam=4, pin_diam
   ofs = arm_height+offset/tan(arm_angle);
   start=round_bot==0 && round_top==0 ? os_flat(abs_angle=90)
                                      : os_round(abs_angle=90, cut=[-round_top,-round_bot],k=.8);
+  f=echo(clearance=clearance);
+  back(clearance)
   difference(){
     union(){
       difference(){
         fwd(ofs){
           left(extra)offset_stroke(skel, width=knuckle_diam, start=start);
-          if (fill) polygon([each skel,[-extra,ofs]]);
+          if (fill) polygon([each list_head(skel,-2), fwd(clearance,last(skel)), [-extra,ofs-clearance]]);
         }
-        if (clear_top) left(.1) rect([offset+knuckle_diam,knuckle_diam+1],anchor=BOT+LEFT);
+        if (clear_top==true || clear_top=="all") left(.1)fwd(clearance) rect([offset+knuckle_diam,knuckle_diam+1+clearance],anchor=BOT+LEFT);
+        if (is_num(clear_top)) left(.1)fwd(clearance) rect([.1+clear_top, knuckle_diam+1+clearance], anchor=BOT+LEFT);
       }
       right(offset)ellipse(d=knuckle_diam,realign=true,circum=true);
     }
-    if (is_num(pin_diam) && pin_diam>0)
-      right(offset)ellipse(d=pin_diam+2*get_slop(), realign=true, circum=true, $fn=default(pin_fn,$fn));
-  }  
-}  
-
+    if (is_num(pin_diam) && pin_diam>0){
+      $fn = default(pin_fn,$fn);
+      right(offset)
+        if (is_def(tearspin)){
+          teardrop2d(d=pin_diam+2*get_slop(), realign=true, circum=true, spin=tearspin);
+        }
+        else ellipse(d=pin_diam+2*get_slop(), realign=true, circum=true);
+    }
+  }
+} 
 
 
 // Module: living_hinge_mask()
