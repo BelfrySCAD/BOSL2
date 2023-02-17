@@ -471,11 +471,11 @@ function _get_spec(spec, needtype, origin, thread,   // common parameters
                : spec_origin=="screw_hole" && origin!="screw_hole" && p==0 && is_string(specname) ?
                     let(temp_info = screw_info(specname,thread))
                     struct_val(temp_info,"pitch")
-               : spec_origin=="screw_hole" && origin=="screw_hole" && all_positive([p]) ? p
-               : origin=="screw_hole" && is_undef(thread) ? 0
+//               : spec_origin=="screw_hole" && origin=="screw_hole" && all_positive([p]) ? p
+//               : origin=="screw_hole" && is_undef(thread) ? 0
                : thread
     )
-    is_def(name) ? (needtype=="screw_info" ? screw_info(name,_origin=origin, thread= origin=="screw_hole" ? default(thread,false) : thread,
+    is_def(name) ? (needtype=="screw_info" ? screw_info(name,_origin=origin, thread= origin=="screw_hole" ? default(thread,true) : thread,
                                                         head=head, drive=drive, drive_size=drive_size)
                                            : nut_info(name,_origin=origin, thread=thread, shape=shape, thickness=thickness))
   : 
@@ -809,7 +809,7 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
                         thread=thread, head=head);
    bevel1 = first_defined([bevel1,bevel,false]);
    bevel2 = first_defined([bevel2,bevel,tolerance=="self tap"]);
-   //   thread = default(thread,false);
+   thread = default(thread,false);
    checkhead = struct_val(screwspec,"head");
    default_counterbore = checkhead=="none" || starts_with(checkhead,"flat") ? 0 : true;
    counterbore = default(counterbore, default_counterbore);
