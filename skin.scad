@@ -3489,7 +3489,7 @@ function _textured_linear_sweep(
                                     if (i != counts.y || ti == 0)
                                     let(
                                         v = (i + (ti/texcnt.y)) / counts.y,
-                                        sc = lerp([1,1,1], scale, v),
+                                        sc = lerp(scale, [1,1,1], v),
                                         mat = down((v-0.5)*h) *
                                               scale(sc) *
                                               zrot(twist*v)
