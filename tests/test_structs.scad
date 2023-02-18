@@ -31,6 +31,7 @@ module test_struct_remove() {
     assert(struct_remove(st, ["Baz","Baz"]) == [["Foo",91],["Bar",28]]);
     assert(struct_remove(st, ["Baz","Foo"]) == [["Bar",28]]);
     assert(struct_remove(st, []) == st);
+    assert(struct_remove(st, ["Bar","niggle"]) == [["Foo",91],["Baz",9]]);
     assert(struct_remove(st, struct_keys(st)) == []);
 }
 test_struct_remove();

@@ -64,9 +64,9 @@ function _format_key(key) = is_string(key) ? str("\"",key,"\""): key;
 //   struct = input structure
 //   key = a single key or list of keys to remove.  
 function struct_remove(struct, key) =
-    !is_list(key) ? struct_remove(struct, [key]) :
+   !is_list(key) ? struct_remove(struct, [key]) :
     let(ind = search(key, struct))
-    list_remove(struct, ind);
+    list_remove(struct, [for(i=ind) if (i!=[]) i]);
 
 
 // Function: struct_val()

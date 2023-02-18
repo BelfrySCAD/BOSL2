@@ -367,14 +367,14 @@ function ycopies(spacing, n, l, sp, p=_NO_ARG) =
 // Example: Cubic sphere packing
 //   s = 20;
 //   s2 = s * sin(45);
-//   zcopies(s2,n=8) union()
+//   zcopies(s2,n=8)
 //       grid_copies([s2,s2],n=8,stagger=($idx%2)? true : "alt")
 //          sphere(d=s);
 // Example: Hexagonal sphere packing
 //   s = 20;
 //   xyr = adj_ang_to_hyp(s/2,30);
 //   h = hyp_adj_to_opp(s,xyr);
-//   zcopies(h,n=8) union()
+//   zcopies(h,n=8)
 //       back(($idx%2)*xyr*cos(60))
 //           grid_copies(s,n=[12,7],stagger=($idx%2)? "alt" : true)
 //               sphere(d=s);
@@ -613,18 +613,15 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 //       color(($row+$col)%2?"black":"red")
 //           cube([8,8,0.01], center=false);
 //
-// Example:
-//   // Makes a grid of hexagon pillars whose tops are all
-//   // angled to reflect light at [0,0,50], if they were shiny.
+// Example: Makes a grid of hexagon pillars whose tops are all angled to reflect light at [0,0,50], if they were shiny.
 //   hexregion = circle(r=50.01,$fn=6);
-//   grid_copies(spacing=10, stagger=true, inside=hexregion) union() {
-//       // Note: The union() is needed or else $pos will be
-//       //   inexplicably unreadable.
+//   grid_copies(spacing=10, stagger=true, inside=hexregion)
+//     union() {   // Needed for OpenSCAD 2021.01 as noted above
 //       ref_v = (unit([0,0,50]-point3d($pos)) + UP)/2;
 //       half_of(v=-ref_v, cp=[0,0,5])
 //           zrot(180/6)
 //               cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
-//   }
+//     }
 
 module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
 {

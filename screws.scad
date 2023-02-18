@@ -166,7 +166,11 @@ include <screw_drive.scad>
 //    .
 //    All of the screw related modules set the variable `$screw_spec` to contain the specification
 //    for their screw.  This means that child modules can make use of this variable to create
-//    mating (or identical) parts.  
+//    mating (or identical) parts.  Note that the `shaft_oversize` and `head_oversize` screw
+//    info fields are only inherited into modules that are the same as the parent module.
+//    This means that if you create an oversized screw hole and then make a screw as s child, the
+//    child screw will **not** inherit the oversize parameters.  But a screw_hole will inherit 
+//    oversize parameters from a parent screw_hole.  
 
 /*
 http://mdmetric.com/thddata.htm#idx
@@ -238,9 +242,9 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   thread_len = length of threaded portion of screw (in mm), for making partly threaded screws.  Default: fully threaded
 //   details = toggle some details in rendering.  Default: true
 //   tolerance = screw tolerance.  Determines actual screw thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2A" for UTS and "6g" for ISO.  
-//   undersize = amount to decrease screw diameter, a scalar to apply to all parts, or a 2-vector to control shaft and head.  Default: 0
-//   undersize_shaft = amount to decrease diameter of the shaft of screw
-//   undersize_head = amount to decrease the head diameter of the screw
+//   undersize = amount to decrease screw diameter, a scalar to apply to all parts, or a 2-vector to control shaft and head.  Replaces rather than adding to the head_oversize value in a screw specification.  
+//   shaft_undersize = amount to decrease diameter of the shaft of screw; replaces rather than adding to the shaft_oversize value in a screw specification. 
+//   head_undersize = amount to decrease the head diameter of the screw; replaces rather than adding to the head_oversize value in a screw specification. 
 //   bevel1 = bevel bottom end of screw.  Default: true
 //   bevel2 = bevel top end of threaded section.  Default: true for headless, false otherwise
 //   bevel = bevel both ends of the threaded section.
@@ -447,7 +451,10 @@ function _get_spec(spec, needtype, origin, thread,   // common parameters
            in_list(_downcase_if_str(thickness),["thin","normal","thick","undersized","din"]),
           "thickness must be a positive number of one of \"thin\", \"thick\", \"normal\", \"undersized\", or \"DIN\"")
     assert(!(is_undef(spec) && is_undef($screw_spec)), "No screw spec given and no parent spec available to inherit")
-    let(spec=is_undef(spec) ? $screw_spec : spec)
+    let(
+        spec=is_undef(spec) ? $screw_spec : spec,
+        spec_origin = is_struct(spec) ? struct_val(spec,"origin") : undef
+    )
     assert(is_string(spec) || is_struct(spec), "Screw/nut specification must be a string or struct")
     let(
         specname = is_struct(spec) ? struct_val(spec,"name") : undef,
@@ -459,11 +466,14 @@ function _get_spec(spec, needtype, origin, thread,   // common parameters
                specname
              : undef,
         p = is_struct(spec) ? struct_val(spec,"pitch") : undef,
-        thread =   // If the origin of the struct is a hole with pitch zero and we are making a screw, try to find a nonzero pitch
-                 is_undef(name) && struct_val(spec,"origin")=="screw_hole" && origin!="screw_hole" && p==0 && is_string(specname)
-                 ? let(temp_info = screw_info(specname,thread))
-                   struct_val(temp_info,"pitch")
-                 : thread
+        thread = is_def(name) ? thread
+                 // If the origin of the struct is a hole with pitch zero and we are making a screw, try to find a nonzero pitch
+               : spec_origin=="screw_hole" && origin!="screw_hole" && p==0 && is_string(specname) ?
+                    let(temp_info = screw_info(specname,thread))
+                    struct_val(temp_info,"pitch")
+//               : spec_origin=="screw_hole" && origin=="screw_hole" && all_positive([p]) ? p
+//               : origin=="screw_hole" && is_undef(thread) ? 0
+               : thread
     )
     is_def(name) ? (needtype=="screw_info" ? screw_info(name,_origin=origin, thread= origin=="screw_hole" ? default(thread,true) : thread,
                                                         head=head, drive=drive, drive_size=drive_size)
@@ -479,19 +489,18 @@ function _get_spec(spec, needtype, origin, thread,   // common parameters
     let(
         spec = _struct_reset(spec,
                                    [ 
+                                     ["origin", origin],
                                      if (origin=="screw") ["counterbore",0],
                                      if (head=="none") ["head","none"],
                                      if (head=="none") ["drive","none"],
                                      if (thread==false || thread=="none") ["pitch",0]
                                      else if (thread!=true) ["pitch",thread],
                                      ["thickness", thickness],
-                                   ], grow=false)
+                                   ], grow=true),
+        inherit = is_undef(spec_origin) || spec_origin==origin 
     )
-    origin==struct_val(spec, "origin") ? spec
-  : _struct_reset(spec, [
-                         ["thread_oversize",0],
-                         ["head_oversize",0]
-                        ], grow=false);
+    inherit ? spec
+  : struct_remove(spec, ["shaft_oversize","head_oversize"]);
 
 
 function _struct_reset(s, keyval, grow=true) =
@@ -501,7 +510,7 @@ function _struct_reset(s, keyval, grow=true) =
   struct_set(s,flatten(bselect(keyval,good)));
 
 
-function _nominal_diam(spec) = struct_val(spec,"diameter")+default(struct_val(spec,"threads_oversize"),0);
+function _nominal_diam(spec) = struct_val(spec,"diameter")+default(struct_val(spec,"shaft_oversize"),0);
                                                     
 function screw(spec, head, drive, thread, drive_size, 
              length, l, thread_len, tolerance, details=true, 
@@ -544,7 +553,7 @@ module screw(spec, head, drive, thread, drive_size,
    reset_headsize = _internal && flathead ? struct_val(tempspec,"head_size_sharp") : undef;
    spec=_struct_reset(tempspec,[
                                 ["length", l],
-                                ["threads_oversize", u_mul(-1,shaft_undersize)],
+                                ["shaft_oversize", u_mul(-1,shaft_undersize)],
                                 ["head_oversize", u_mul(-1,head_undersize)],
                                 ["counterbore", _counterbore],
                                 ["thread_len", thread_len],
@@ -651,7 +660,7 @@ module screw(spec, head, drive, thread, drive_size,
        difference(){
          union(){
            screw_head(spec,details,counterbore=counterbore,flat_height=flat_height,
-                      oversize=islop,teardrop=_teardrop);
+                      slop=islop,teardrop=_teardrop);
            if (_shoulder_len>0)
              up(eps_shoulder-flat_height){
                if (_teardrop)
@@ -737,9 +746,9 @@ module screw(spec, head, drive, thread, drive_size,
 //   ---
 //   thread = thread type or specification for threaded masks, or false to make an unthreaded mask.  See [screw pitch](#subsection-standard-screw-pitch). Default: false
 //   teardrop = if true produce teardrop hole.  Only compatible with clearance holes, not threaded.  Default: false
-//   oversize = amount to increase diameter of all screw parts, a scalar or length 3 vector.  Default: 0
-//   hole_oversize = amount to increase diameter of the hole.
-//   head_oversize = amount to increase diameter of head.  
+//   oversize = amount to increase diameter of the screw hole (hole and countersink).  A scalar or length 2 vector.  Default: use computed tolerance
+//   hole_oversize = amount to increase diameter of the hole.  Overrides the use of tolerance and replaces any settings given in the screw specification. 
+//   head_oversize = amount to increase diameter of head.  Overrides the user of tolerance and replaces any settings given in the screw specification.  
 //   length / l= length of screw (in mm)
 //   counterbore = set to length of counterbore, or true to make a counterbore equal to head height.  Default: false for flat heads and headless, true otherwise
 //   tolerance = threading or clearance hole tolerance.  For internal threads, detrmines actual thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2B" for UTS and 6H for ISO.  For clearance holes, determines how much clearance to add.  Default is "normal".  
@@ -807,11 +816,12 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
    dummy = _validate_screw_spec(screwspec);
    threaded = thread==true || (is_finite(thread) && thread>0) || (is_undef(thread) && struct_val(screwspec,"pitch")>0);
    dummy2 = assert(!threaded || !teardrop, "Cannot make threaded teardrop holes");
-   if (threaded || is_def(oversize) || is_def(hole_oversize) || tolerance==0 || tolerance=="none") {
-     undersize = is_def(oversize) ? -oversize
-               : -[default(hole_oversize,0), default(head_oversize,0)];
+   oversize = force_list(oversize,2);
+   hole_oversize = first_defined([hole_oversize, oversize[0],struct_val(screwspec,"shaft_oversize")]);
+   head_oversize = first_defined([head_oversize, oversize[1],struct_val(screwspec,"head_oversize")]);
+   if (threaded || is_def(hole_oversize) || tolerance==0 || tolerance=="none") {
      default_tag("remove")
-       screw(spec,head=head,thread=thread,undersize=undersize, higbee=higbee,
+       screw(spec,head=head,thread=thread,shaft_undersize=u_mul(-1,hole_oversize), head_undersize=u_mul(-1,head_oversize), higbee=higbee,
              length=length,l=l,thread_len=thread_len, tolerance=tolerance, _counterbore=counterbore,
              bevel=bevel, bevel1=bevel1, bevel2=bevel2, 
              atype=atype, anchor=anchor, spin=spin, orient=orient, _internal=true, _teardrop=teardrop)
@@ -1346,7 +1356,7 @@ function _parse_drive(drive=undef, drive_size=undef) =
 
 // Module: screw_head()
 // Usage:
-//    screw_head(screw_info, [details],[counterbore],[flat_height],[oversize],[teardrop])
+//    screw_head(screw_info, [details],[counterbore],[flat_height],[teardrop],[internal])
 // Description:
 //    Draws the screw head described by the data structure `screw_info`, which
 //    should have the fields produced by {{screw_info()}}.  See that function for
@@ -1355,15 +1365,16 @@ function _parse_drive(drive=undef, drive_size=undef) =
 //    Other heads appear sitting on the xy plane.  
 // Arguments:
 //    screw_info = structure produced by {{screw_info()}}
+//    ---
 //    details = true for more detailed model.  Default: false
 //    counterbore = counterbore height.  Default: no counterbore
 //    flat_height = height of flat head
-//    oversize = amount to oversize the head
 //    teardrop = if true make flathead and counterbores teardrop shaped
-function screw_head(screw_info,details,counterbore,flat_height) = no_function("screw_head");
-module screw_head(screw_info,details=false, counterbore=0,flat_height,oversize=0,teardrop=false) {
+//    slop = enlarge diameter by this extra amount (beyond that specified in the screw specification).  Default: 0
+function screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=false,slop=0) = no_function("screw_head");
+module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=false,slop=0) {
    no_children($children);
-   head_oversize = struct_val(screw_info, "head_oversize",0) + oversize;
+   head_oversize = struct_val(screw_info, "head_oversize",0) + slop;
    head = struct_val(screw_info, "head");
    head_size = struct_val(screw_info, "head_size",0) + head_oversize;
    head_height = struct_val(screw_info, "head_height");
@@ -1378,6 +1389,7 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,oversize=0
                                                              : "Counterbore must be a nonnegative number"));
 
    counterbore = counterbore_temp==0 && head!="flat" ? counterbore_temp : counterbore_temp + 0.01;
+   adj_diam = struct_val(screw_info, "diameter") + head_oversize;   // Used for determining chamfers and ribbing
    if (head!="flat" && counterbore>0){
      d = head=="hex"? 2*head_size/sqrt(3) : head_size;
      if (teardrop)
@@ -1387,7 +1399,6 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,oversize=0
    }  
    if (head=="flat") {   // For flat head, counterbore is integrated
      angle = struct_val(screw_info, "head_angle")/2;
-     diam = _nominal_diam(screw_info);
      sharpsize = struct_val(screw_info, "head_size_sharp")+head_oversize;
      sidewall_height = (sharpsize - head_size)/2 / tan(angle);
      cylheight = counterbore + sidewall_height;
@@ -1419,7 +1430,7 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,oversize=0
      if (head=="pan flat")
        cyl(l=head_height, d=head_size, rounding2=0.2*head_size, anchor=BOTTOM);
      if (head=="socket")
-       cyl(l=head_height, d=head_size, anchor=BOTTOM, chamfer2=details? _nominal_diam(screw_info)/10:undef);
+       cyl(l=head_height, d=head_size, anchor=BOTTOM, chamfer2=details? adj_diam/10:undef);
      if (head=="socket ribbed"){
        // These numbers are based on ISO specifications that dictate how much oversizsed a ribbed socket head can be
        // We are making our ribbed heads the same size as unribbed (by cutting the ribbing away), but these numbers are presumably a good guide
@@ -1428,11 +1439,10 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,oversize=0
                    [6, .11],
                    [12, .135],
                    [20, .165]];
-       diam = _nominal_diam(screw_info);
        intersection() {
          cyl(h=head_height/4, d=head_size, anchor=BOT)
-            attach(TOP) cyl(l=head_height*3/4, d=head_size, anchor=BOT, texture="trunc_ribs", tex_counts=[31,1], tex_scale=-lookup(diam,rib_size));
-         cyl(h=head_height,d=head_size, chamfer2=diam/10, anchor=BOT);
+            attach(TOP) cyl(l=head_height*3/4, d=head_size, anchor=BOT, texture="trunc_ribs", tex_counts=[31,1], tex_scale=-lookup(adj_diam,rib_size));
+         cyl(h=head_height,d=head_size, chamfer2=adj_diam/10, anchor=BOT);
        }
      }
      if (head=="hex")
@@ -1530,12 +1540,12 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
            bevel,bevel1,bevel2,bevang=15,ibevel,ibevel1,ibevel2, higbee, higbee1, higbee2, anchor=BOTTOM, spin=0, orient=UP, oversize=0)
 {
    dummyA = assert(is_undef(nutwidth) || (is_num(nutwidth) && nutwidth>0));
-
+   
    tempspec = _get_spec(spec, "nut_info", "nut", 
                         thread=thread, shape=shape, thickness=thickness);
    spec=_struct_reset(tempspec,[
                                 ["width", nutwidth],
-                                ["threads_oversize", hole_oversize],
+                                ["shaft_oversize", hole_oversize],
                                ]);
    dummy=_validate_nut_spec(spec);
    $screw_spec = spec;
@@ -1763,7 +1773,7 @@ module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orie
 //   "drive_depth"    | Depth of the drive recess.
 //   "length"         | Length of the screw in mm measured in the customary fashion.  For flat head screws the total length and for other screws, the length from the bottom of the head to the screw tip.
 //   "thread_len"     | Length of threaded portion of screw in mm
-//   "threads_oversize"| Amount to oversize the threads
+//   "shaft_oversize"| Amount to oversize the threads
 //   "head_oversize"   | Amount to oversize the head
 //   .
 //   If you want to define a custom drive for a screw you will need to provide the drive size and drive depth.  
@@ -1775,10 +1785,10 @@ module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orie
 //   ---
 //   thread = thread type or specification. See [screw pitch](#subsection-standard-screw-pitch). Default: "coarse"
 //   drive_size = size of drive recess to override computed value
-//   threads_oversize = amount to increase screw diameter for clearance holes.  Default: 0
+//   shaft_oversize = amount to increase screw diameter for clearance holes.  Default: 0
 //   head_oversize = amount to increase head diameter for countersink holes.  Default: 0 
 
-function screw_info(name, head, drive, thread, drive_size, threads_oversize=0, head_oversize=0, _origin) =
+function screw_info(name, head, drive, thread, drive_size, shaft_oversize, head_oversize, _origin) =
   assert(is_string(name), "Screw specification must be a string")
   let(
       thread = is_undef(thread) || thread==true ? "coarse"
@@ -1799,7 +1809,7 @@ function screw_info(name, head, drive, thread, drive_size, threads_oversize=0, h
           ["length", type[3]],
           ["drive_size", drive_info[1]],
           ["name", name],
-          ["threads_oversize", threads_oversize],
+          ["shaft_oversize", shaft_oversize],
           ["head_oversize", head_oversize],
           ["origin",_origin]
          ]);
@@ -1828,7 +1838,7 @@ function screw_info(name, head, drive, thread, drive_size, threads_oversize=0, h
 //   "shape"          | Shape of the nut, either "hex" or "square"
 //   "width"          | Flat to flat width of the nut
 //   "thickness"      | Thickness of the nut
-//   "threads_oversize" | amount to oversize the threads (not including $slop)
+//   "shaft_oversize" | amount to oversize the threads (not including $slop)
 // Arguments:
 //   name = screw name, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).
 //   shape = shape of the nut, either "hex" or "square".  Default: "hex"
@@ -1859,7 +1869,7 @@ function nut_info(name, shape, thickness, thread, hole_oversize=0, width, _origi
               : []
   )
   _struct_reset(nutdata, [["name", name],
-                          ["threads_oversize",hole_oversize],
+                          ["shaft_oversize",hole_oversize],
                           ["width", width],
                           ["origin",_origin]
                          ]);

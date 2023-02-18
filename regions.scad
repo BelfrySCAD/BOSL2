@@ -853,7 +853,10 @@ function offset(
         chamfer = is_def(r) ? false : chamfer,
         quality = max(0,round(quality)),
         flip_dir = closed && !is_polygon_clockwise(path)? -1 : 1,
-        d = flip_dir * (is_def(r) ? r : delta),
+        d = flip_dir * (is_def(r) ? r : delta)
+    )
+    d==0 && !return_faces ? path :
+    let(
 //        shiftsegs = [for(i=[0:len(path)-1]) _shift_segment(select(path,i,i+1), d)],
         shiftsegs = [for(i=[0:len(path)-2]) _shift_segment([path[i],path[i+1]], d),
                      if (closed) _shift_segment([last(path),path[0]],d)
