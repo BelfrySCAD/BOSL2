@@ -833,6 +833,11 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   You can only round or chamfer the vertical(ish) edges.  For those edges, you can
 //   specify rounding and/or chamferring per-edge, and for top and bottom, inside and
 //   outside  separately.
+//   .
+//   By default if you specify a chamfer or rounding then it applies as specified to the
+//   outside, and an inside rounding is calculated that will maintain constant width
+//   if your wall thickness is uniform.  If the wall thickness is not uniform, the default
+//   inside rounding is calculated based on the smaller of the two wall thicknesses.
 // Arguments:
 //   h/l/height/length = The height or length of the rectangular tube.  Default: 1
 //   size = The outer [X,Y] size of the rectangular tube.
@@ -851,10 +856,10 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   chamfer = The chamfer size for the outside edges of the rectangular tube.
 //   chamfer1 = The chamfer size for the outside bottom corner of the rectangular tube.
 //   chamfer2 = The chamfer size for the outside top corner of the rectangular tube.
-//   irounding = The roundover radius for the inside edges of the rectangular tube. Default: See above
+//   irounding = The roundover radius for the inside edges of the rectangular tube. Default: Computed for uniform wall thickness (see above)
 //   irounding1 = The roundover radius for the inside bottom corner of the rectangular tube.
 //   irounding2 = The roundover radius for the inside top corner of the rectangular tube.
-//   ichamfer = The chamfer size for the inside edges of the rectangular tube.  Default: Same as `chamfer`
+//   ichamfer = The chamfer size for the inside edges of the rectangular tube.  Default: Computed for uniform wall thickness (see above)
 //   ichamfer1 = The chamfer size for the inside bottom corner of the rectangular tube.
 //   ichamfer2 = The chamfer size for the inside top corner of the rectangular tube.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
