@@ -851,7 +851,7 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   chamfer = The chamfer size for the outside edges of the rectangular tube.
 //   chamfer1 = The chamfer size for the outside bottom corner of the rectangular tube.
 //   chamfer2 = The chamfer size for the outside top corner of the rectangular tube.
-//   irounding = The roundover radius for the inside edges of the rectangular tube. Default: Same as `rounding`
+//   irounding = The roundover radius for the inside edges of the rectangular tube. Default: See above
 //   irounding1 = The roundover radius for the inside bottom corner of the rectangular tube.
 //   irounding2 = The roundover radius for the inside top corner of the rectangular tube.
 //   ichamfer = The chamfer size for the inside edges of the rectangular tube.  Default: Same as `chamfer`
@@ -871,6 +871,10 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //       size1=[100,60], size2=[70,40],
 //       isize1=[40,20], isize2=[65,35], h=15
 //   );
+// Example: With rounding
+//   rect_tube(size=100, wall=5, rounding=10, h=30);
+// Example: With rounding
+//   rect_tube(size=100, wall=5, chamfer=10, h=30);
 // Example: Outer Rounding Only
 //   rect_tube(size=100, wall=5, rounding=10, irounding=0, h=30);
 // Example: Outer Chamfer Only
@@ -911,13 +915,22 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //       rounding2=[0,5,0,10], irounding2=[0,3,0,8]
 //   );
 
+
+function _rect_tube_rounding(factor,ir,r,size,isize) =
+    let(wall = min(size-isize)/2*factor
+      )
+    is_def(ir) ? ir
+  : is_undef(r) ? undef
+  : is_num(r) ?  max(0,r-wall)
+  : [for(val=r) max(0,val-wall)];
+
 module rect_tube(
     h, size, isize, center, shift=[0,0],
     wall, size1, size2, isize1, isize2,
     rounding=0, rounding1, rounding2,
-    irounding=0, irounding1, irounding2,
+    irounding, irounding1, irounding2,
     chamfer=0, chamfer1, chamfer2,
-    ichamfer=0, ichamfer1, ichamfer2,
+    ichamfer, ichamfer1, ichamfer2,
     anchor, spin=0, orient=UP,
     l, length, height
 ) {
@@ -958,6 +971,12 @@ module rect_tube(
         (is_def(wall) && is_def(s2))? (s2-2*[wall,wall]) :
         undef;
     checks2 =
+        assert(is_num(rounding) || is_vector(rounding,4), "rounding must be a number or 4-vector")
+        assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "rounding1 must be a number or 4-vector")
+        assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "rounding2 must be a number or 4-vector")
+        assert(is_undef(irounding) || is_num(irounding) || is_vector(irounding,4), "irounding must be a number or 4-vector")
+        assert(is_undef(irounding1) || is_num(irounding1) || is_vector(irounding1,4), "irounding1 must be a number or 4-vector")
+        assert(is_undef(irounding2) || is_num(irounding2) || is_vector(irounding2,4), "irounding2 must be a number or 4-vector")      
         assert(wall==undef || is_num(wall))
         assert(size1!=undef, "Bad size/size1 argument.")
         assert(size2!=undef, "Bad size/size2 argument.")
@@ -967,6 +986,10 @@ module rect_tube(
         assert(isize1.y < size1.y, "Inner size is larger than outer size.")
         assert(isize2.x < size2.x, "Inner size is larger than outer size.")
         assert(isize2.y < size2.y, "Inner size is larger than outer size.");
+    irounding1 = _rect_tube_rounding(1,default(irounding1, irounding), default(rounding1, rounding) , size1, isize1);
+    irounding2 = _rect_tube_rounding(1,default(irounding2, irounding), default(rounding2, rounding) , size2, isize2);
+    ichamfer1 = _rect_tube_rounding(1/sqrt(2),default(ichamfer1, ichamfer), default(chamfer1, chamfer) , size1, isize1);
+    ichamfer2 = _rect_tube_rounding(1/sqrt(2),default(ichamfer2, ichamfer), default(chamfer2, chamfer) , size2, isize2);
     anchor = get_anchor(anchor, center, BOT, BOT);
     attachable(anchor,spin,orient, size=[each size1, h], size2=size2, shift=shift) {
         down(h/2) {
@@ -979,8 +1002,8 @@ module rect_tube(
                 );
                 down(0.01) prismoid(
                     isize1, isize2, h=h+0.02, shift=shift,
-                    rounding=irounding, rounding1=irounding1, rounding2=irounding2,
-                    chamfer=ichamfer, chamfer1=ichamfer1, chamfer2=ichamfer2,
+                    rounding1=irounding1, rounding2=irounding2,
+                    chamfer1=ichamfer1, chamfer2=ichamfer2,
                     anchor=BOT
                 );
             }
@@ -993,9 +1016,9 @@ function rect_tube(
     h, size, isize, center, shift=[0,0],
     wall, size1, size2, isize1, isize2,
     rounding=0, rounding1, rounding2,
-    irounding=0, irounding1, irounding2,
+    irounding, irounding1, irounding2,
     chamfer=0, chamfer1, chamfer2,
-    ichamfer=0, ichamfer1, ichamfer2,
+    ichamfer, ichamfer1, ichamfer2,
     anchor, spin=0, orient=UP,
     l, length, height
 ) = no_function("rect_tube");
