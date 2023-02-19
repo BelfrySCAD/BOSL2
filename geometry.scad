@@ -1195,8 +1195,8 @@ function circle_point_tangents(r, cp, pt, d) =
 // Topics: Geometry, Circles, Tangents
 // Description:
 //   Computes 2d lines tangents to a pair of circles in 2d.  Returns a list of line endpoints [p1,p2] where
-//   p2 is the tangent point on circle 1 and p2 is the tangent point on circle 2.
-//   If four tangents exist then the first one the left hand exterior tangent as regarded looking from
+//   p1 is the tangent point on circle 1 and p2 is the tangent point on circle 2.
+//   If four tangents exist then the first one is the left hand exterior tangent as regarded looking from
 //   circle 1 toward circle 2.  The second value is the right hand exterior tangent.  The third entry
 //   gives the interior tangent that starts on the left of circle 1 and crosses to the right side of
 //   circle 2.  And the fourth entry is the last interior tangent that starts on the right side of
