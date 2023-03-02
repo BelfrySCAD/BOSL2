@@ -175,7 +175,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //       trimcorners=false, $fn=24
 //   );
 // Example: Roundings and Chamfers can be as large as the full size of the cuboid, so long as the edges would not interfere.
-//   cuboid([4,2,1], rounding=2, edges=[FWD+RIGHT,BACK+LEFT]);
+//   cuboid([40,20,10], rounding=20, edges=[FWD+RIGHT,BACK+LEFT]);
 // Example: Standard Connectors
 //   cuboid(40) show_anchors();
 
@@ -3099,15 +3099,17 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 // Section: Miscellaneous
 
 
-// Module: interior_fillet()
+
+
+// Module: fillet()
 //
 // Description:
 //   Creates a shape that can be unioned into a concave joint between two faces, to fillet them.
 //   Center this part along the concave edge to be chamfered and union it in.
 //
 // Usage: Typical
-//   interior_fillet(l, r, [ang], [overlap], ...) [ATTACHMENTS];
-//   interior_fillet(l|length=|h=|height=, d=, [ang=], [overlap=], ...) [ATTACHMENTS];
+//   fillet(l, r, [ang], [overlap], ...) [ATTACHMENTS];
+//   fillet(l|length=|h=|height=, d=, [ang=], [overlap=], ...) [ATTACHMENTS];
 //
 // Arguments:
 //   l / length / h / height = Length of edge to fillet.
@@ -3127,26 +3129,33 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 //     translate([0,-10,-4])
 //       cube([20, 20, 4], anchor=BOTTOM);
 //     color("green")
-//       interior_fillet(
+//       fillet(
 //         l=20, r=10,
 //         spin=180, orient=RIGHT
 //       );
 //   }
 //
 // Examples:
-//   interior_fillet(l=10, r=20, ang=60);
-//   interior_fillet(l=10, r=20, ang=90);
-//   interior_fillet(l=10, r=20, ang=120);
+//   fillet(l=10, r=20, ang=60);
+//   fillet(l=10, r=20, ang=90);
+//   fillet(l=10, r=20, ang=120);
 //
 // Example: Using with Attachments
 //   cube(50,center=true) {
 //     position(FRONT+LEFT)
-//       interior_fillet(l=50, r=10, spin=-90);
+//       fillet(l=50, r=10, spin=-90);
 //     position(BOT+FRONT)
-//       interior_fillet(l=50, r=10, spin=180, orient=RIGHT);
+//       fillet(l=50, r=10, spin=180, orient=RIGHT);
 //   }
 
-module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTER, spin=0, orient=UP) {
+module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTER, spin=0, orient=UP)
+{
+    deprecate("fillet");
+    fillet(l,r,ang,overlap,d,length,h,height,anchor,spin,orient);
+}
+
+
+module fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTER, spin=0, orient=UP) {
     l = one_defined([l,length,h,height],"l,length,h,height");
     r = get_radius(r=r, d=d, dflt=1);
     steps = ceil(segs(r)*(180-ang)/360);

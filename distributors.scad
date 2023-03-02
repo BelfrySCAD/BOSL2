@@ -12,8 +12,8 @@
 
 
 // Section: Adaptive Children Using `$` Variables
-//   The distributor methods create multiple copies of their children and place them in various ways.  While there are many occasions where
-//   a model demands multiple identical copies of an object, this framework is more powerful than
+//   The distributor methods create multiple copies of their children and place them in various ways.  While many models 
+//   require multiple identical copies of an object, this framework is more powerful than
 //   might be immediately obvious because of `$` variables.  The distributors set `$` variables that the children can use to change their
 //   behavior from one child to the next within a single distributor invocation.  This means the copies need not be identical.  
 //   The {{xcopies()}} module sets `$idx` to the index number of the copy, and in the examples below we use `$idx`, but the various
@@ -1097,8 +1097,7 @@ function yrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 //   r = If given, makes a ring of child copies around the Z axis, at the given radius.  Default: 0
 //   d = If given, makes a ring of child copies around the Z axis, at the given diameter.
 //   subrot = If false, don't sub-rotate children as they are copied around the ring.  Default: true
-//   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
-//   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
+//   p = Either a point, pointlist, VNF or Bezier patch to be translated when used as a function.
 //
 // Side Effects:
 //   `$idx` is set to the index value of each child copy.
