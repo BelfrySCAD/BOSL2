@@ -464,6 +464,47 @@ function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
 
 
 
+// Function: list_wrap()
+// Usage:
+//   list_wrap(path, [eps]);
+// Description:
+//   Force a list to wrap around so that its last point is equal to its first point:  if the first and last entries are equal, simply returns the list unchanged.
+//   Otherwise returns the list with the first point duplicated at the end of the list.  Comparisons are done to the tolerance `eps`.  Lists of length 0 or
+//   1 are returned unchanged.  
+// Arguments:
+//   list = list to unwrap
+//   eps = epsilon for comparison.  Default: EPSILON (1e-9)
+// See Also: list_unwrap(), deduplicate()
+
+function list_wrap(list, eps=EPSILON) =
+    assert(is_list(list))
+    len(list)<2 || are_ends_equal(list,eps=eps)? list : [each list, list[0]];
+
+
+function cleanup_path(list,eps=EPSILON) =
+  echo("***** Function cleanup_path() has been replaced by list_unwrap() and will be removed in a future version *****")
+  list_unwrap(list,eps);
+
+function close_path(list,eps=EPSILON) =
+  echo("***** Function close_path() has been replaced by list_wrap() and will be removed in a future version *****")
+  list_wrap(list,eps);
+
+// Function: list_unwrap()
+// Usage:
+//   list_unwrap(list, [eps]);
+// Description:
+//   If a list's last point matches its first point then delete the last point.  Inverse operation to {{list_wrap()}}.  Note that if the first/last points
+//   are repeated then the output may still have the first point equal to the last point.  Comparisons are done to the tolerance `eps`.  If the list has
+//   length 0 or 1 it is returned unchanged.  
+// Arguments:
+//   list = list to unwrap
+//   eps = epsilon for comparison.  Default: EPSILON (1e-9)
+function list_unwrap(list, eps=EPSILON) =
+    assert(is_list(list))
+    len(list)>=2 && are_ends_equal(list,eps=eps)? [for (i=[0:1:len(list)-2]) list[i]] : list;
+
+
+
 // Function: unique()
 // Usage:
 //   ulist = unique(list);

@@ -81,6 +81,26 @@ test_unique_count();
 
 
 
+
+module test_list_wrap() {
+    assert(list_wrap([[1,2,3],[4,5,6],[1,8,9]]) == [[1,2,3],[4,5,6],[1,8,9],[1,2,3]]);
+    assert(list_wrap([[1,2,3],[4,5,6],[1,8,9],[1,2,3]]) == [[1,2,3],[4,5,6],[1,8,9],[1,2,3]]);
+    assert(list_wrap([])==[]);
+    assert(list_wrap([3])==[3]);
+}
+test_list_wrap();
+
+
+module test_list_unwrap() {
+    assert(list_unwrap([[1,2,3],[4,5,6],[1,8,9]]) == [[1,2,3],[4,5,6],[1,8,9]]);
+    assert(list_unwrap([[1,2,3],[4,5,6],[1,8,9],[1,2,3]]) == [[1,2,3],[4,5,6],[1,8,9]]);
+    assert(list_unwrap([])==[]);
+    assert(list_unwrap([3])==[3]);
+}
+test_list_unwrap();
+
+
+
 module test_is_increasing() {
     assert(is_increasing([1,2,3,4]) == true);
     assert(is_increasing([1,2,2,2]) == true);

@@ -1217,7 +1217,7 @@ module generic_threaded_rod(
                 * frame_map(x=[0,0,1], y=[1,0,0])          // Map profile to 3d, parallel to z axis
                 * scale(pitch);                            // scale profile by pitch
     start_steps = sides / starts;
-    higlen = 4/32*360;//360*max(pitch/2, pmax-depth)/(2*PI*_r2);
+    higlen = 2/32*360;//360*max(pitch/2, pmax-depth)/(2*PI*_r2);
     echo(higlen=higlen);
     thread_verts = [
         // Outer loop constructs a vertical column of the screw at each angle
@@ -1231,10 +1231,13 @@ module generic_threaded_rod(
                     for (thread = [-threads/2:1:threads/2-1])
                         let(
                             tang = thread/starts * 360 + ang,
-                            hsc = tang < -twist/2+higang1 ? _taperfunc(1-(-twist/2+higang1-tang)/higlen )
-                                : tang > twist/2-higang2 ? _taperfunc(1-(tang-twist/2+higang2)/higlen  )
-                                : 1,
-                            higscale=scale([lerp(hsc,1,0.25),hsc,1], cp=[0,internal ? pmax/pitch:-pdepth, 0])
+                            hsc = tang < -twist/2+higang1 ? _taperfunc(1-(-twist/2+higang1-tang)/higlen,PI*2*_r1*higlen/360 )
+                                : tang > twist/2-higang2 ? _taperfunc(1-(tang-twist/2+higang2)/higlen,PI*2*_r2*higlen/360  )
+                                : [1,1],
+                           higscale=scale([hsc.x, hsc.y,1],  cp=[0,internal ? pmax/pitch:-pdepth, 0])
+//                           higscale=scale([lerp(hsc,1,0.25),hsc,1], cp=[0,internal ? pmax/pitch:-pdepth, 0])
+//                              higscale=scale([lerp(hsc,1,0.25),1,1], cp=[0,internal ? pmax/pitch:-pdepth, 0])
+//                              higscale=scale([1,hsc,1], cp=[0,internal ? pmax/pitch:-pdepth, 0])
                         )
                         // The right movement finds the position of the thread along
                         // what will be the z axis after the profile is mapped to 3d

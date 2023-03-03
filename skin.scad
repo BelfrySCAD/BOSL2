@@ -771,7 +771,7 @@ function linear_sweep(
         trgns = [
             for (rgn = regions) [
                 for (path = rgn) let(
-                    p = cleanup_path(path),
+                    p = list_unwrap(path),
                     path = is_undef(maxseg)? p : [
                         for (seg = pair(p,true)) each
                         let( steps = ceil(norm(seg.y - seg.x) / maxseg) )
@@ -783,7 +783,7 @@ function linear_sweep(
         vnf = vnf_join([
             for (rgn = regions)
             for (pathnum = idx(rgn)) let(
-                p = cleanup_path(rgn[pathnum]),
+                p = list_unwrap(rgn[pathnum]),
                 path = is_undef(maxseg)? p : [
                     for (seg=pair(p,true)) each
                     let(steps=ceil(norm(seg.y-seg.x)/maxseg))
@@ -1078,12 +1078,75 @@ module rotate_sweep(
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   spiral_sweep(poly, h=200, r=50, turns=3, $fn=36);
-function _taperfunc(x) =
+function _taperfunc_orig_1d(x,L) =
       x>1 ? 1 : x<0 ? 0:
-     let(higofs = pow(0.05,2))   // Smallest hig scale is the square root of this value
+     let(
+         higofs = pow(0.05,2)            // Smallest hig scale is the square root of this value
+     )
      sqrt((1-higofs)*x+higofs);
+
+function _taperfunc_orig(x,L) = 
+     let(s=_taperfunc_orig_1d(x))
+     x>1 ? [1,1]
+   : x<0 ? [0,0]
+  
+  :    [lerp(s,1,.25),s];
 function _taperfunc_ellipse(x) =
      sqrt(1-(1-x)^2);
+function _taperfunc_linear(x) =
+     x>1 ? 1 : x<0 ? 0 : x;
+function _taperfunc_ogive_width(x,L) =
+     let( minscale = .2,
+          r=(L^2+(1-minscale^2))/2/(1-minscale),
+          scale = sqrt(r^2-(L*(1-x))^2) -(r-1)
+     )
+     x>1 ? [1,1]
+   : x<0 ? [0,0]
+   : [scale,1];     
+function _taperfunc_ogive_width_circle(x,L,h) =
+     let( minscale = .2,
+          r=(L^2+(1-minscale^2))/2/(1-minscale),
+          scale = sqrt(r^2-(L*(1-x))^2) -(r-1),
+          vscale = x*L>h ? h : sqrt(h^2-(x*L-h)^2)
+     )
+     x>1 ? [1,1]
+   : x<0.02 ? [0,0]
+   : [scale,vscale/h];     
+function _taperfunc_ogive_height(x,L) =
+     let( minscale = .1,L=3*L, 
+          r=(L^2+(1-minscale^2))/2/(1-minscale),
+          scale = sqrt(r^2-(L*(1-x))^2) -(r-1)
+     )
+     x>1 ? [1,1]
+   : x<0 ? [0,0] //minscale,0]
+   : [1,scale];     
+function _taperfunc_ogive(x,L) =
+     let( minscale = .3,
+          r=(L^2+(1-minscale^2))/2/(1-minscale),
+          scale = sqrt(r^2-(L*(1-x))^2) -(r-1)
+     )
+     x>1 ? [1,1]
+   : x<0 ? [0,0]
+   : [scale,scale];     
+function _taperfunc_ogive_orig(x,L) =
+     let( minscale = .3,
+          r=(L^2+(1-minscale^2))/2/(1-minscale),
+          scale = sqrt(r^2-(L*(1-x))^2) -(r-1)
+     )
+     x>1 ? [1,1]
+   : x<0 ? [0,0]
+   : [lerp(_taperfunc_orig_1d(x),1,.25),scale];
+
+function _taperfunc_cut(x,L) = x>1 ? [1,1] : [0,0];
+
+
+function _taperfunc(x,L,h) = _taperfunc_ogive_width_circle(x,L,h);
+//function _taperfunc(x,L,h) = _taperfunc_orig(x,L);
+//function _taperfunc(x,L,h) = _taperfunc_ogive_width(x,L);
+function _taperfunc(x,L,h) = _taperfunc_orig(x,L);
+
+
+
 function _ss_polygon_r(N,theta) =
         let( alpha = 360/N )
         cos(alpha/2)/(cos(posmod(theta,alpha)-alpha/2));
@@ -1144,16 +1207,16 @@ function spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, tap
         skewmat = affine3d_skew_xz(xa=atan2(r2-r1,h)),
         points = [
             for (a = interp_ang) let (
-                hsc = a<tapercut1 ? _taperfunc((a-minang)/taperang1)
-                    : a>tapercut2 ? _taperfunc((maxang-a)/taperang2)
-                    : 1,
+                hsc = a<tapercut1 ? _taperfunc((a-minang)/taperang1,abs(taper1),xmax-xmin)
+                    : a>tapercut2 ? _taperfunc((maxang-a)/taperang2,abs(taper2),xmax-xmin)
+                    : [1,1],
                 u = a/(360*turns), 
                 r = lerp(r1,r2,u),
                 mat = affine3d_zrot(dir*a)
                     * affine3d_translate([_ss_polygon_r(sides,dir*a)*r, 0, h * (u-0.5)])
                     * affine3d_xrot(90)
                     * skewmat
-                    * scale([hsc,lerp(hsc,1,0.25),1], cp=[internal ? xmax : xmin, yctr, 0]),
+                    * scale([hsc.y,hsc.x,1], cp=[internal ? xmax : xmin, yctr, 0]),
                 pts = apply(mat, poly)
             ) pts
         ],
@@ -3425,8 +3488,8 @@ function _textured_linear_sweep(
                               : [ceil(6*plen/h), 6],
                         obases = resample_path(path, n=counts.x * samples, closed=true),
                         onorms = path_normals(obases, closed=true),
-                        bases = close_path(obases),
-                        norms = close_path(onorms),
+                        bases = list_wrap(obases),
+                        norms = list_wrap(onorms),
                         vnf = is_vnf(texture)
                           ? let( // VNF tile texture
                                 row_vnf = vnf_join([
@@ -3511,8 +3574,8 @@ function _textured_linear_sweep(
                               : [ceil(6*plen/h), 6],
                         obases = resample_path(path, n=counts.x * samples, closed=true),
                         onorms = path_normals(obases, closed=true),
-                        bases = close_path(obases),
-                        norms = close_path(onorms),
+                        bases = list_wrap(obases),
+                        norms = list_wrap(onorms),
                         nupath = [
                             for (j = [0:1:counts.x-1], vert = tpath) let(
                                 part = (j + vert.x) * samples,
@@ -3699,8 +3762,8 @@ function _textured_revolution(
                             is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
                         obases = resample_path(path, n=counts_y * samples + (closed?0:1), closed=closed),
                         onorms = path_normals(obases, closed=closed),
-                        rbases = closed? close_path(obases) : obases,
-                        rnorms = closed? close_path(onorms) : onorms,
+                        rbases = closed? list_wrap(obases) : obases,
+                        rnorms = closed? list_wrap(onorms) : onorms,
                         bases = xrot(90, p=path3d(rbases)),
                         norms = xrot(90, p=path3d(rnorms)),
                         vnf = is_vnf(texture)
@@ -3766,8 +3829,8 @@ function _textured_revolution(
                                     is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
                                 obases = resample_path(path, n=counts_y * samples + (closed?0:1), closed=closed),
                                 onorms = path_normals(obases, closed=closed),
-                                bases = closed? close_path(obases) : obases,
-                                norms = closed? close_path(onorms) : onorms,
+                                bases = closed? list_wrap(obases) : obases,
+                                norms = closed? list_wrap(onorms) : onorms,
                                 ppath = is_vnf(texture)
                                   ? [ // VNF tile texture
                                         for (j = [0:1:counts_y-1])
@@ -3816,8 +3879,8 @@ function _textured_revolution(
                             is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
                         obases = resample_path(rgn[0], n=counts_y * samples + (closed?0:1), closed=closed),
                         onorms = path_normals(obases, closed=closed),
-                        rbases = closed? close_path(obases) : obases,
-                        rnorms = closed? close_path(onorms) : onorms,
+                        rbases = closed? list_wrap(obases) : obases,
+                        rnorms = closed? list_wrap(onorms) : onorms,
                         bases = xrot(90, p=path3d(rbases)),
                         norms = xrot(90, p=path3d(rnorms)),
                         caps_vnf = vnf_join([

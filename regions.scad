@@ -421,7 +421,7 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
        intersections =   [
            for(p1=idx(region1))
               let(
-                  path = closed1?close_path(region1[p1]):region1[p1]
+                  path = closed1?list_wrap(region1[p1]):region1[p1]
               )
               for(i = [0:1:len(path)-2])
                   let(
@@ -442,7 +442,7 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
                            // further tests can be discarded.
                        for(p2=idx(region2))
                            let(
-                               poly  = closed2?close_path(region2[p2]):region2[p2],
+                               poly  = closed2?list_wrap(region2[p2]):region2[p2],
                                signs = [for(v=poly*seg_normal) abs(v-ref) < eps ? 0 : sign(v-ref) ]
                            ) 
                            if(max(signs)>=0 && min(signs)<=0) // some edge intersects line [a1,a2]
