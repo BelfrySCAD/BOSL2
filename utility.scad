@@ -935,7 +935,7 @@ module shape_compare(eps=1/1024) {
 }
 
 
-// Section: Looping Helpers
+// Section: C-Style For Loop Helpers
 //   You can use a list comprehension with a C-style for loop to iteratively make a calculation.
 //   .
 //   The syntax is: `[for (INIT; CONDITION; NEXT) RETVAL]` where:

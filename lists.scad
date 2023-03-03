@@ -798,8 +798,7 @@ function list_remove_values(list,values=[],all=false) =
 
 
 
-
-// Section: Lists of Subsets
+// Section: List Iteration Index Helper
 
 // Function: idx()
 // Usage:
@@ -827,6 +826,8 @@ function idx(list, s=0, e=-1, step=1) =
         _e = posmod(e,ll)
     ) [_s : step : _e];
 
+
+// Section: Lists of Subsets
 
 
 // Function: pair()
