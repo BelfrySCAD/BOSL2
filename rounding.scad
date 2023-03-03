@@ -678,7 +678,7 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
      bez = path_to_bezpath(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=default(closed,false)),
      smoothed = bezpath_curve(bez,splinesteps=splinesteps)
   )
-  closed ? cleanup_path(smoothed) : smoothed;
+  closed ? list_unwrap(smoothed) : smoothed;
 
 
 function _scalar_to_vector(value,length,varname) = 
@@ -815,7 +815,7 @@ function path_join(paths,joint=0,k=0.5,relocate=true,closed=false)=
   let(
       paths = !closed || len(paths)>1
             ? paths
-            : [close_path(paths[0])],
+            : [list_wrap(paths[0])],
       N = len(paths) + (closed?0:-1),
       k = _scalar_to_vector(k,N),
       repjoint = is_num(joint) || (is_vector(joint,2) && len(paths)!=3),
@@ -828,7 +828,7 @@ function path_join(paths,joint=0,k=0.5,relocate=true,closed=false)=
   )
   assert(bad_j==[], str("Invalid joint values at indices ",bad_j))
   let(result=_path_join(paths,joint,k, relocate=relocate, closed=closed))
-  closed ? cleanup_path(result) : result;
+  closed ? list_unwrap(result) : result;
 
 function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) =
   let( 

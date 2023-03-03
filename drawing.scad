@@ -285,7 +285,7 @@ module stroke(
     for (path = paths) {
         pathvalid = is_path(path,[2,3]) || same_shape(path,[[0,0]]) || same_shape(path,[[0,0,0]]);
         assert(pathvalid,"The path argument must be a list of 2D or 3D points, or a region.");
-        path = deduplicate( closed? close_path(path) : path );
+        path = deduplicate( closed? list_wrap(path) : path );
 
         check4 = assert(is_num(width) || len(width)==len(path),
                         "width must be a number or a vector the same length as the path (or all components of a region)");
@@ -576,7 +576,7 @@ function dashed_stroke(path, dashpat=[3,3], closed=false, fit=true, mindash=0.5)
         each dashed_stroke(p, dashpat, closed=true, fit=fit)
     ] : 
     let(
-        path = closed? close_path(path) : path,
+        path = closed? list_wrap(path) : path,
         dashpat = len(dashpat)%2==0? dashpat : concat(dashpat,[0]),
         plen = path_length(path),
         dlen = sum(dashpat),

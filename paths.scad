@@ -87,24 +87,6 @@ function force_path(path, name="path") =
    : path;
 
 
-// Function: close_path()
-// Usage:
-//   close_path(path);
-// Description:
-//   If a path's last point does not coincide with its first point, closes the path so it does.
-function close_path(path, eps=EPSILON) =
-    are_ends_equal(path,eps=eps)? path : concat(path,[path[0]]);
-
-
-// Function: cleanup_path()
-// Usage:
-//   cleanup_path(path);
-// Description:
-//   If a path's last point coincides with its first point, deletes the last point in the path.
-function cleanup_path(path, eps=EPSILON) =
-    are_ends_equal(path,eps=eps)? [for (i=[0:1:len(path)-2]) path[i]] : path;
-
-
 /// Internal Function: _path_select()
 /// Usage:
 ///   _path_select(path,s1,u1,s2,u2,[closed]):
@@ -260,7 +242,7 @@ function path_length_fractions(path, closed) =
 ///   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
 function _path_self_intersections(path, closed=true, eps=EPSILON) =
     let(
-        path = closed ? close_path(path,eps=eps) : path,
+        path = closed ? list_wrap(path,eps=eps) : path,
         plen = len(path)
     )
     [ for (i = [0:1:plen-3]) let(
@@ -919,7 +901,7 @@ function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
     assert(is_path(path,2), "Must give a 2D path")
     assert(is_bool(closed))
     let(
-        path = cleanup_path(path, eps=eps),
+        path = list_unwrap(path, eps=eps),
         isects = deduplicate(
             eps=eps,
             concat(
@@ -1030,7 +1012,7 @@ function polygon_parts(poly, nonzero=false, eps=EPSILON) =
     assert(is_path(poly,2), "Must give 2D polygon")
     assert(is_bool(nonzero))    
     let(
-        poly = cleanup_path(poly, eps=eps),
+        poly = list_unwrap(poly, eps=eps),
         tagged = _tag_self_crossing_subpaths(poly, nonzero=nonzero, closed=true, eps=eps),
         kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
         outregion = _assemble_path_fragments(kept, eps=eps)
@@ -1158,7 +1140,7 @@ function _assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
         l_area = abs(polygon_area(result_l[0])),
         r_area = abs(polygon_area(result_r[0])),
         result = l_area < r_area? result_l : result_r,
-        newpath = cleanup_path(result[0]),
+        newpath = list_unwrap(result[0]),
         remainder = result[1],
         finished = min(l_area,r_area)<eps ? _finished : concat(_finished, [newpath])
     ) _assemble_path_fragments(

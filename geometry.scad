@@ -2217,8 +2217,8 @@ function align_polygon(reference, poly, angles, cp, trans, return_ind=false) =
 //                   rot(90, p=pentagon(r=4)));    // returns false
 function are_polygons_equal(poly1, poly2, eps=EPSILON) =
     let(
-        poly1 = cleanup_path(poly1),
-        poly2 = cleanup_path(poly2),
+        poly1 = list_unwrap(poly1),
+        poly2 = list_unwrap(poly2),
         l1 = len(poly1),
         l2 = len(poly2)
     ) l1 != l2 ? false :

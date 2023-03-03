@@ -826,7 +826,7 @@ function _split_polygon_at_x(poly, x) =
             if (len(out1)>=3) each split_path_at_self_crossings(out1),
             if (len(out2)>=3) each split_path_at_self_crossings(out2),
         ],
-        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
+        out = [for (p=out3) if (len(p) > 2) list_unwrap(p)]
     ) out;
 
 
