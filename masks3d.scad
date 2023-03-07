@@ -548,8 +548,8 @@ module teardrop_edge_mask(l, r, angle=45, excess=0.1, d, anchor=CTR, spin=0, ori
 //       corner_mask(BOT)
 //           teardrop_corner_mask(r=10, angle=40);
 //   }
-function teardrop_corner_mask(r, angle, excess=0.1, d, anchor, spin, orient) = no_function("teardrop_corner_mask");
-module teardrop_corner_mask(r, angle, excess=0.1, d, anchor=CTR, spin=0, orient=UP)
+function teardrop_corner_mask(r, angle=45, excess=0.1, d, anchor, spin, orient) = no_function("teardrop_corner_mask");
+module teardrop_corner_mask(r, angle=45, excess=0.1, d, anchor=CTR, spin=0, orient=UP)
 {  
     assert(is_num(angle));
     assert(is_num(excess));
