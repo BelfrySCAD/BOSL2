@@ -2080,6 +2080,8 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 
 // Function: attach_geom()
 //
+// Usage: Null/Point Geometry
+//   geom = attach_geom(...);
 // Usage: Square/Trapezoid Geometry
 //   geom = attach_geom(two_d=true, size=, [size2=], [shift=], ...);
 // Usage: Circle/Oval Geometry
@@ -2128,6 +2130,9 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
+//
+// Example(NORENDER): Null/Point Shape
+//   geom = attach_geom();
 //
 // Example(NORENDER): Cubical Shape
 //   geom = attach_geom(size=size);
@@ -2281,7 +2286,7 @@ function attach_geom(
             )
         )
     ) :
-    assert(false, "Unrecognizable geometry description.");
+    ["point", cp, offset, anchors];
 
 
 
@@ -2315,6 +2320,7 @@ function _attach_geom_2d(geom) =
 //   Returns the `[X,Y,Z]` bounding size for the given attachment geometry description.
 function _attach_geom_size(geom) =
     let( type = geom[0] )
+    type == "point"? [0,0,0] :
     type == "prismoid"? ( //size, size2, shift, axis
         let(
             size=geom[1], size2=geom[2], shift=point2d(geom[3]),
@@ -2555,6 +2561,12 @@ function _find_anchor(anchor, geom) =
             pos2 = rot(from=UP, to=axis, p=pos),
             vec2 = anch==CENTER? UP : rot(from=UP, to=axis, p=vec)
         ) [anchor, pos2, vec2, oang]
+    ) : type == "point"? (
+        let(
+            anchor = unit(point3d(anchor),CENTER),
+            pos = point3d(cp) + point3d(offset),
+            vec = unit(anchor,UP)
+        ) [anchor, pos, vec, oang]
     ) : type == "spheroid"? ( //r
         let(
             rr = geom[1],
