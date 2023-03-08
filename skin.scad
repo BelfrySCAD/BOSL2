@@ -3686,11 +3686,12 @@ function _textured_revolution(
     let(
         regions = !is_path(shape,2)? region_parts(shape) :
             closed? region_parts([shape]) :
-            region_parts([
-                [0,shape[0].y],
-                each shape,
-                [0,last(shape).y],
-            ]),
+            let(
+                clpoly = [[0,shape[0].y], each shape, [0,last(shape).y]],
+                dpoly = deduplicate(clpoly),
+                cwpoly = is_polygon_clockwise(dpoly) ? dpoly : reverse(dpoly)
+            )
+            [[ select(cwpoly,1,-2) ]],
         checks = [
             for (rgn=regions, path=rgn)
             assert(all(path, function(pt) pt.x>=0))
