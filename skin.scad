@@ -3685,8 +3685,12 @@ function _textured_revolution(
     assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
     let(
         regions = !is_path(shape,2)? region_parts(shape) :
-            shape[0].y <= last(shape).y? [[reverse(shape)]] :
-            [[shape]],
+            closed? region_parts([shape]) :
+            region_parts([
+                [0,shape[0].y],
+                each shape,
+                [0,last(shape).y],
+            ]),
         checks = [
             for (rgn=regions, path=rgn)
             assert(all(path, function(pt) pt.x>=0))
@@ -3747,7 +3751,7 @@ function _textured_revolution(
             is_path(taper,2)? let(
                 retaper = [
                     for (t=taper)
-                    assert(t[0]>=0 && t[0]<=100, "taper lookup indices must be betweem 0 and 100 inclusive.")
+                    assert(t[0]>=0 && t[0]<=100, "taper lookup indices must be between 0 and 100 inclusive.")
                     [t[0]/100, t[1]]
                 ],
                 taperout = [[-1,retaper[0][1]], each retaper, [2,last(retaper)[1]]]
