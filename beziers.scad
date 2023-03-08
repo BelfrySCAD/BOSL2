@@ -887,15 +887,19 @@ function is_bezier_patch(x) =
 // Description:
 //   Returns a flat rectangular bezier patch of degree `N`, centered on the XY plane.
 // Arguments:
-//   size = 2D XY size of the patch.
+//   size = scalar or 2-vector giving the X and Y dimensions of the patch. 
 //   ---
-//   N = Degree of the patch to generate.  Since this is flat, a degree of 1 should usually be sufficient.
-//   orient = The orientation to rotate the edge patch into.  Given as an [X,Y,Z] rotation angle list.
-//   trans = Amount to translate patch, after rotating to `orient`.
+//   N = Degree of the patch to generate.  Since this is flat, a degree of 1 should usually be sufficient.  Default: 1
+//   orient = A direction vector.  Point the patch normal in this direction.  
+//   spin = Spin angle to apply to the patch
+//   trans = Amount to translate patch, after orient and spin. 
 // Example(3D):
-//   patch = bezier_patch_flat(size=[100,100], N=3);
+//   patch = bezier_patch_flat(size=[100,100]);
 //   debug_bezier_patches([patch], size=1, showcps=true);
-function bezier_patch_flat(size=[100,100], N=4, spin=0, orient=UP, trans=[0,0,0]) =
+function bezier_patch_flat(size, N=1, spin=0, orient=UP, trans=[0,0,0]) =
+    assert(N>0)
+    let(size = force_list(size,2))
+    assert(is_vector(size,2))
     let(
         patch = [
             for (x=[0:1:N]) [
@@ -994,6 +998,7 @@ function _bezier_rectangle(patch, splinesteps=16, style="default") =
 //   It can be a scalar, which gives a uniform grid, or
 //   it can be [USTEPS, VSTEPS], which gives difference spacing in the U and V parameters. 
 //   Note that the surface you produce may be disconnected and is not necessarily a valid manifold in OpenSCAD.
+//   You must also ensure that the patches mate exactly along their edges, or the VNF will be invalid.  
 // Arguments:
 //   patches = The bezier patch or list of bezier patches to convert into a vnf.
 //   splinesteps = Number of segments on the border of the bezier surface.  You can specify [USTEPS,VSTEPS].  Default: 16
@@ -1010,21 +1015,23 @@ function _bezier_rectangle(patch, splinesteps=16, style="default") =
 //   vnf = bezier_vnf(patch, splinesteps=16);
 //   vnf_polyhedron(vnf);
 // Example(3D,FlatSpin,VPD=444): Combining multiple patches
-//   patch = [
+//   patch = 100*[
 //       // u=0,v=0                                u=1,v=0
-//       [[0,  0,0], [33,  0,  0], [67,  0,  0], [100,  0,0]],
-//       [[0, 33,0], [33, 33, 33], [67, 33, 33], [100, 33,0]],
-//       [[0, 67,0], [33, 67, 33], [67, 67, 33], [100, 67,0]],
-//       [[0,100,0], [33,100,  0], [67,100,  0], [100,100,0]],
+//       [[0,  0,0], [1/3,  0,  0], [2/3,  0,  0], [1,  0,0]],
+//       [[0,1/3,0], [1/3,1/3,1/3], [2/3,1/3,1/3], [1,1/3,0]],
+//       [[0,2/3,0], [1/3,2/3,1/3], [2/3,2/3,1/3], [1,2/3,0]],
+//       [[0,  1,0], [1/3,  1,  0], [2/3,  1,  0], [1,  1,0]],
 //       // u=0,v=1                                u=1,v=1
 //   ];
+//   fpatch = bezier_patch_flat([100,100]);
 //   tpatch = translate([-50,-50,50], patch);
+//   flatpatch = translate([0,0,50], fpatch);
 //   vnf = bezier_vnf([
 //                     tpatch,
 //                     xrot(90, tpatch),
 //                     xrot(-90, tpatch),
 //                     xrot(180, tpatch),
-//                     yrot(90, tpatch),
+//                     yrot(90, flatpatch),
 //                     yrot(-90, tpatch)]);
 //   vnf_polyhedron(vnf);
 // Example(3D):

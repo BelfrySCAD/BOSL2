@@ -426,7 +426,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //       screw("1/4-20,3/8", head="hex",orient=UP,anchor=BOTTOM,tolerance="1A");
 //       down(INCH*1/20*1.395) nut("1/4-20", thickness=8, nutwidth=0.5*INCH, tolerance="1B");
 //   }
-// Example: Here is a screw with nonstadard threading and a weird head size, which we create by modifying the screw structure:
+// Example: Here is a screw with nonstandard threading and a weird head size, which we create by modifying the screw structure:
 //   spec = screw_info("M6x2,12",head="socket");
 //   newspec = struct_set(spec,["head_size",20,"head_height",3]);
 //   screw(newspec);

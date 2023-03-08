@@ -21,6 +21,7 @@
 //   stroke(path, [width], [closed], [endcaps], [endcap_width], [endcap_length], [endcap_extent], [trim]);
 //   stroke(path, [width], [closed], [endcap1], [endcap2], [endcap_width1], [endcap_width2], [endcap_length1], [endcap_length2], [endcap_extent1], [endcap_extent2], [trim1], [trim2]);
 // Topics: Paths (2D), Paths (3D), Drawing Tools
+// See Also: offset_stroke(), path_sweep()
 // Description:
 //   Draws a 2D or 3D path with a given line width.  Joints and each endcap can be replaced with
 //   various marker shapes, and can be assigned different colors.  If passed a region instead of
@@ -28,7 +29,13 @@
 //   given with a region or list of paths, then each path is drawn without the closing line segment.
 //   To facilitate debugging, stroke() accepts "paths" that have a single point.  These are drawn with
 //   the style of endcap1, but have their own scale parameter, `singleton_scale`, which defaults to 2
-//   so that singleton dots with endcap "round" are clearly visible.  
+//   so that singleton dots with endcap "round" are clearly visible.
+//   .
+//   In 2d the stroke module works by creating a sequence of rectangles (or trapezoids if line width varies) and
+//   filling in the gaps with rounded wedges.  This is fast and produces a good result.  In 3d the modules
+//   creates a cylinders (or cones) and fills the gaps with rounded wedges made using rotate_extrude.  This process will be slow for
+//   long paths due to the 3d unions, and the faces on sequential cylinders may not line up.  In many cases, {{path_sweep()}} will be
+//   a better choice, both running faster and producing superior output, when working in three dimensions. 
 // Figure(Med,NoAxes,2D,VPR=[0,0,0],VPD=250): Endcap Types
 //   cap_pairs = [
 //       ["butt",  "chisel" ],

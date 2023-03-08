@@ -798,17 +798,18 @@ function list_remove_values(list,values=[],all=false) =
 
 
 
-
-// Section: Lists of Subsets
+// Section: List Iteration Index Helper
 
 // Function: idx()
 // Usage:
-//   rng = idx(list, [s=], [e=], [step=]);
+//   range = idx(list, [s=], [e=], [step=]);
 //   for(i=idx(list, [s=], [e=], [step=])) ...
 // Topics: List Handling, Iteration
-// See Also: pair(), triplet(), combinations(), permutations()
+// See Also: count()
 // Description:
-//   Returns the range of indexes for the given list.
+//   Returns the range that gives the indices for a given list.  This makes is a little bit
+//   easier to loop over a list by index, when you need the index numbers and looping of list values isn't enough.
+//   Note that the return is a **range** not a list.  
 // Arguments:
 //   list = The list to returns the index range of.
 //   ---
@@ -827,6 +828,8 @@ function idx(list, s=0, e=-1, step=1) =
         _e = posmod(e,ll)
     ) [_s : step : _e];
 
+
+// Section: Lists of Subsets
 
 
 // Function: pair()
