@@ -548,7 +548,7 @@ function f_3arg(target_func) =
 //   a = The argument that will be passed through.
 //   b = The argumen that will be discarded.
 // Example:
-//   x = while(0, ival(f_lt(5)), xval(fngen_add(1)));
+//   x = while(0, ival(f_lt(5)), xval(f_add(1)));
 function ival(target_func) = function(a,b) target_func(a);
 
 
@@ -564,7 +564,7 @@ function ival(target_func) = function(a,b) target_func(a);
 //   a = The argument that will be passed through.
 //   b = The argumen that will be discarded.
 // Example:
-//   x = while(0, ival(f_lt(5)), xval(fngen_add(1)));
+//   x = while(0, ival(f_lt(5)), xval(f_add(1)));
 function xval(target_func) = function(a,b) target_func(b);
 
 

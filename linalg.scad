@@ -331,7 +331,7 @@ function outer_product(u,v) =
 // Description:
 //   Sets a submatrix of M equal to the matrix A.  By default the top left corner of M is set to A, but
 //   you can specify offset coordinates m and n.  If A (as adjusted by m and n) extends beyond the bounds
-//   of M then the extra entries are ignored.  You can pass in A=[[]], a null matrix, and M will be
+//   of M then the extra entries are ignored.  You can pass in `A=[[]]`, a null matrix, and M will be
 //   returned unchanged.  This function works on arbitrary lists of lists and the input M need not be rectangular in shape.  
 // Arguments:
 //   M = Original matrix.

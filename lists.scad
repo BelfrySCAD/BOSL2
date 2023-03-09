@@ -970,9 +970,9 @@ function permutations(l,n=2) =
 //   dflt = The default value to fill in with if the list is not a multiple of `cnt` items long.  Default: undef
 // Example:
 //   v = [1,2,3,4,5,6];
-//   a = list_to_matrix(v,2) returns [[1,2], [3,4], [5,6]]
-//   b = list_to_matrix(v,3) returns [[1,2,3], [4,5,6]]
-//   c = list_to_matrix(v,4,0) returns [[1,2,3,4], [5,6,0,0]]
+//   a = list_to_matrix(v,2)  // returns [[1,2], [3,4], [5,6]]
+//   b = list_to_matrix(v,3)  // returns [[1,2,3], [4,5,6]]
+//   c = list_to_matrix(v,4,0)  // returns [[1,2,3,4], [5,6,0,0]]
 function list_to_matrix(v, cnt, dflt=undef) =
     [for (i = [0:cnt:len(v)-1]) [for (j = [0:1:cnt-1]) default(v[i+j], dflt)]];
 
