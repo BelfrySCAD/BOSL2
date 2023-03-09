@@ -345,7 +345,7 @@
 //   push = -5;     // Push (translates the base away from the top)
 //   flare = 1;     // Flare (the two pieces will be different unless this is 1)
 //   midpoint = .5; // Height of the extra vertex (as a fraction of total height); the two pieces will be different unless this is .5)
-//   pushvec = rot(angle/2,p=push*RIGHT);  // Push direction is the the average of the top and bottom mating edges
+//   pushvec = rot(angle/2,p=push*RIGHT);  // Push direction is the average of the top and bottom mating edges
 //   pent = path3d(apply(move(pushvec)*rot(angle),pentagon(side=sidelen,align_side=RIGHT,anchor="side0")));
 //   hex = path3d(hexagon(side=flare*sidelen, align_side=RIGHT, anchor="side0"),height);
 //   pentmate = path3d(pentagon(side=flare*sidelen,align_side=LEFT,anchor="side0"),height);
@@ -1303,7 +1303,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, taper
 //   During the sweep operation the shape's normal vector aligns with the tangent vector of the path.  Note that
 //   this leaves an ambiguity about how the shape is rotated as it sweeps along the path.
 //   For 2D paths, this ambiguity is resolved by aligning the Y axis of the shape to the Z axis of the swept polyhedron.
-//   You can can force the  shape to twist as it sweeps along the path using the `twist` parameter, which specifies the total
+//   You can force the  shape to twist as it sweeps along the path using the `twist` parameter, which specifies the total
 //   number of degrees to twist along the whole swept polyhedron.  This produces a result like the one shown below.
 // Figure(3D,Big,VPR=[66,0,14],VPD=20,VPT=[3.4,4.5,-0.8]): The shape twists as we sweep.  Note that it still aligns the origin in the shape with the path, and still aligns the normal vector with the path tangent vector.
 //   tri= [[0, 0], [0, 1], [.25,1],[1, 0]];
@@ -2624,7 +2624,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   Values in the height field should range from 0 to 1.  A zero height
 //   in the height field corresponds to the height of the surface and 1
 //   the heighest point in the texture.
-// Figure(2D,Big,NoScales): Here is a 2d texture described by a "grid" that just contains a single row.  Such a texture can be used to create ribbing. The texture is [[0, 1, 1, 0]], and the fixture shows three repetitions of the basic texture unit.
+// Figure(2D,Big,NoScales): Here is a 2d texture described by a "grid" that just contains a single row.  Such a texture can be used to create ribbing. The texture is `[[0, 1, 1, 0]]`, and the fixture shows three repetitions of the basic texture unit.
 //   ftex1 = [0,1,1,0,0];
 //   stroke( transpose([count(5),ftex1]), dots=true, dots_width=3,width=.05);
 //   right(4)stroke( transpose([count(5),ftex1]), dots=true, width=.05,dots_color="red",color="blue",dots_width=3);
@@ -2784,7 +2784,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=20*sqrt(3), tex_scale=3,
 //       tex_size=[10,10*sqrt(3)]
 //   );
-// Example(3D): **"diamonds"** (Heightfield) = Four-sided pyramid with the corners of the base aligned aligned with the axes.  Compare to "pyramids".  Useful for knurling.  Giving `n=` sets the number of heightfield samples to `n x n`. Default: 2.  Use `style="concave"` for pointed bumps, or `style="default"` or `style="alt"` for a diagonal ribs.  
+// Example(3D): **"diamonds"** (Heightfield) = Four-sided pyramid with the corners of the base aligned with the axes.  Compare to "pyramids".  Useful for knurling.  Giving `n=` sets the number of heightfield samples to `n x n`. Default: 2.  Use `style="concave"` for pointed bumps, or `style="default"` or `style="alt"` for a diagonal ribs.  
 //   tex = texture("diamonds");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
