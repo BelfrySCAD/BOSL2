@@ -914,7 +914,7 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 //   trapezoid(h=30, w1=100, ang=[66,44],rounding=-5, atype="perim",flip=true) show_anchors();
 // Example(2D): Called as Function
 //   stroke(closed=true, trapezoid(h=30, w1=40, w2=20));
-function trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0, ,atype="box", _return_override, angle) =
+function trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0,atype="box", _return_override, angle) =
     assert(is_undef(angle), "The angle parameter has been replaced by ang, which specifies trapezoid interior angle")
     assert(is_undef(h) || is_finite(h))
     assert(is_undef(w1) || is_finite(w1))
