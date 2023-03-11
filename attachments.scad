@@ -1628,7 +1628,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 // Module: attachable()
 //
 // Usage: Square/Trapezoid Geometry
-//   attachable(anchor, spin, two_d=true, size=, [size2=], [shift=], ...) {OBJECT; children();}
+//   attachable(anchor, spin, two_d=true, size=, [size2=], [shift=], [override=], ...) {OBJECT; children();}
 // Usage: Circle/Oval Geometry
 //   attachable(anchor, spin, two_d=true, r=|d=, ...) {OBJECT; children();}
 // Usage: 2D Path/Polygon Geometry
@@ -1708,6 +1708,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
+//   override = Function that takes an anchor and returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction]]` entries.  If the direction/position that is returned is undef then the default will be used.
 //   geom = If given, uses the pre-defined (via {{attach_geom()}} geometry.
 //
 // Side Effects:
@@ -1892,7 +1893,7 @@ module attachable(
     offset=[0,0,0],
     anchors=[],
     two_d=false,
-    axis=UP,
+    axis=UP,override,
     geom
 ) {
     dummy1 =
@@ -1913,7 +1914,7 @@ module attachable(
             d=d, d1=d1, d2=d2, l=l,
             vnf=vnf, region=region, extent=extent,
             cp=cp, offset=offset, anchors=anchors,
-            two_d=two_d, axis=axis
+            two_d=two_d, axis=axis, override=override
         );
     m = _attach_transform(anchor,spin,orient,geom);
     multmatrix(m) {
@@ -2032,7 +2033,7 @@ function reorient(
     cp=[0,0,0],
     anchors=[],
     two_d=false,
-    axis=UP,
+    axis=UP, override, 
     geom,
     p=undef
 ) =
@@ -2056,7 +2057,7 @@ function reorient(
                 d=d, d1=d1, d2=d2, l=l,
                 vnf=vnf, region=region, extent=extent,
                 cp=cp, offset=offset, anchors=anchors,
-                two_d=two_d, axis=axis
+                two_d=two_d, axis=axis, override=override
             ),
         $attach_to = undef
     ) _attach_transform(anchor,spin,orient,geom,p);
@@ -2130,6 +2131,7 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
+//   override = Function that takes an anchor and returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction]]` entries.  If the direction/position that is returned is undef then the default will be used.
 //
 // Example(NORENDER): Null/Point Shape
 //   geom = attach_geom();
@@ -2177,7 +2179,7 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 //   geom = attach_geom(two_d=true, size=size);
 //
 // Example(NORENDER): 2D Trapezoidal Shape
-//   geom = attach_geom(two_d=true, size=[x1,y], size2=x2, shift=shift);
+//   geom = attach_geom(two_d=true, size=[x1,y], size2=x2, shift=shift, override=override);
 //
 // Example(NORENDER): 2D Circular Shape
 //   geom = attach_geom(two_d=true, r=r);
@@ -2197,6 +2199,13 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 // Example(NORENDER): Extruded Region, Anchored by Intersection
 //   geom = attach_geom(region=region, l=length, extent=false);
 //
+
+function _local_struct_val(struct, key)=
+    assert(is_def(key),"key is missing")
+    let(ind = search([key],struct)[0])
+    ind == [] ? undef : struct[ind][1];
+
+
 function attach_geom(
     size, size2,
     shift, scale, twist,
@@ -2207,7 +2216,7 @@ function attach_geom(
     offset=[0,0,0],
     anchors=[],
     two_d=false,
-    axis=UP
+    axis=UP, override
 ) =
     assert(is_bool(extent))
     assert(is_vector(cp) || is_string(cp))
@@ -2219,12 +2228,15 @@ function attach_geom(
         two_d? (
             let(
                 size2 = default(size2, size.x),
-                shift = default(shift, 0)
+                shift = default(shift, 0),
+                over_f = is_undef(override) ? function(anchor) [undef,undef]
+                       : is_func(override) ? override
+                       : function(anchor) _local_struct_val(override,anchor)
             )
             assert(is_vector(size,2))
             assert(is_num(size2))
             assert(is_num(shift))
-            ["trapezoid", point2d(size), size2, shift, cp, offset, anchors]
+            ["trapezoid", point2d(size), size2, shift, over_f, cp, offset, anchors]
         ) : (
             let(
                 size2 = default(size2, point2d(size)),
@@ -2637,7 +2649,7 @@ function _find_anchor(anchor, geom) =
             mpt = approx(point2d(anchor),[0,0])? [maxx,0,0] : avep,
             pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
         ) [anchor, pos, anchor, oang]
-    ) : type == "trapezoid"? ( //size, size2, shift
+    ) : type == "trapezoid"? ( //size, size2, shift, override
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "All components of an anchor for a rectangle/trapezoid must be -1, 0, or 1")
         let(
@@ -2646,9 +2658,12 @@ function _find_anchor(anchor, geom) =
             u = (anchor.y+1)/2,  // 0<=u<=1
             frpt = [size.x/2*anchor.x, -size.y/2],
             bkpt = [size2/2*anchor.x+shift,  size.y/2],
-            pos = point2d(cp) + lerp(frpt, bkpt, u) + point2d(offset),
+            override = geom[4](anchor),
+            pos = default(override[0],point2d(cp) + lerp(frpt, bkpt, u) + point2d(offset)),
             svec = point3d(line_normal(bkpt,frpt)*anchor.x),
-            vec = anchor.y < 0? (
+            vec = is_def(override[1]) ? override[1]
+                :
+                anchor.y < 0? (
                     anchor.x == 0? FWD :
                     size.x == 0? unit(-[shift,size.y], FWD) :
                     unit((point3d(svec) + FWD) / 2, FWD)
@@ -2658,6 +2673,7 @@ function _find_anchor(anchor, geom) =
                     anchor.x == 0? BACK :
                     size2 == 0? unit([shift,size.y], BACK) :
                     unit((point3d(svec) + BACK) / 2, BACK)
+
                 )
         ) [anchor, pos, vec, 0]
     ) : type == "ellipse"? ( //r

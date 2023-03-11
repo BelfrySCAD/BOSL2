@@ -112,6 +112,9 @@ module square(size=1, center, anchor, spin) {
 // Example(2D): "perim" Anchors
 //   rect([40,30], rounding=10, atype="perim")
 //       show_anchors();
+// Example(2D): "perim" Anchors
+//   rect([40,30], rounding=[-10,-8,-3,-7], atype="perim")
+//       show_anchors();
 // Example(2D): Mixed Chamferring and Rounding
 //   rect([40,30],rounding=[5,0,10,0],chamfer=[0,8,0,15],$fa=1,$fs=1);
 // Example(2D): Called as Function
@@ -120,52 +123,49 @@ module square(size=1, center, anchor, spin) {
 //   move_copies(path) color("blue") circle(d=2,$fn=8);
 module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0) {
     errchk = assert(in_list(atype, ["box", "perim"]));
-    size = is_num(size)? [size,size] : point2d(size);
+    size = force_list(size,2);
     if (rounding==0 && chamfer==0) {
         attachable(anchor, spin, two_d=true, size=size) {
             square(size, center=true);
             children();
         }
     } else {
-        pts = rect(size=size, rounding=rounding, chamfer=chamfer);
-        if (atype == "perim") {
-            attachable(anchor, spin, two_d=true, path=pts) {
+        pts_over = rect(size=size, rounding=rounding, chamfer=chamfer, atype=atype, _return_override=true);
+        pts = pts_over[0];
+        override = pts_over[1];
+        attachable(anchor, spin, two_d=true, size=size,override=override) {
                 polygon(pts);
                 children();
-            }
-        } else {
-            attachable(anchor, spin, two_d=true, size=size) {
-                polygon(pts);
-                children();
-            }
         }
     }
 }
 
 
 
-function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0) =
-    assert(is_num(size)     || is_vector(size))
-    assert(is_num(chamfer)  || len(chamfer)==4)
-    assert(is_num(rounding) || len(rounding)==4)
+function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0, _return_override) =
+    assert(is_num(size)     || is_vector(size,2))
+    assert(is_num(chamfer)  || is_vector(chamfer,4))
+    assert(is_num(rounding) || is_vector(rounding,4))
     assert(in_list(atype, ["box", "perim"]))
     let(
         anchor=point2d(anchor),
-        size = is_num(size)? [size,size] : point2d(size),
-        complex = rounding!=0 || chamfer!=0
+        size = force_list(size,2),
+        chamfer = force_list(chamfer,4), 
+        rounding = force_list(rounding,4)
     )
-    (rounding==0 && chamfer==0)? let(
-        path = [
-            [ size.x/2, -size.y/2],
-            [-size.x/2, -size.y/2],
-            [-size.x/2,  size.y/2],
-            [ size.x/2,  size.y/2] 
-        ]
-    )
-    rot(spin, p=move(-v_mul(anchor,size/2), p=path)) :
+    all_zero(concat(chamfer,rounding),0) ?
+        let(
+             path = [
+                     [ size.x/2, -size.y/2],
+                     [-size.x/2, -size.y/2],
+                     [-size.x/2,  size.y/2],
+                     [ size.x/2,  size.y/2] 
+                    ]
+        )
+        rot(spin, p=move(-v_mul(anchor,size/2), p=path))
+    :
+    assert(all_zero(v_mul(chamfer,rounding),0), "Cannot specify chamfer and rounding at the same corner")
     let(
-        chamfer = is_list(chamfer)? chamfer : [for (i=[0:3]) chamfer],
-        rounding = is_list(rounding)? rounding : [for (i=[0:3]) rounding],
         quadorder = [3,2,1,0],
         quadpos = [[1,1],[-1,1],[-1,-1],[1,-1]],
         eps = 1e-9,
@@ -176,7 +176,7 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0)
     assert(insets_x <= size.x, "Requested roundings and/or chamfers exceed the rect width.")
     assert(insets_y <= size.y, "Requested roundings and/or chamfers exceed the rect height.")
     let(
-        path = [
+        corners = [
             for(i = [0:3])
             let(
                 quad = quadorder[i],
@@ -191,13 +191,20 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0)
                     abs(qround) >= eps? [for (j=[0:1:cverts]) let(a=90-j*step) v_mul(polar_to_xy(abs(qinset),a),[sign(qinset),1])] :
                     [[0,0]],
                 qfpts = [for (p=qpts) v_mul(p,qpos)],
-                qrpts = qpos.x*qpos.y < 0? reverse(qfpts) : qfpts
-            )
-            each move(cp, p=qrpts)
-        ]
-    ) complex && atype=="perim"?
-        reorient(anchor,spin, two_d=true, path=path, p=path) :
-        reorient(anchor,spin, two_d=true, size=size, p=path);
+                qrpts = qpos.x*qpos.y < 0? reverse(qfpts) : qfpts,
+                cornerpt = atype=="box" || (qround==0 && qchamf==0) ? undef
+                         : qround<0 || qchamf<0 ? [[0,-qpos.y*min(qround,qchamf)]]
+                         : [for(seg=pair(qrpts)) let(isect=line_intersection(seg, [[0,0],qpos],SEGMENT,LINE)) if (is_def(isect) && isect!=seg[0]) isect]
+              )
+            assert(is_undef(cornerpt) || len(cornerpt)==1,"Cannot find corner point to anchor")
+            [move(cp, p=qrpts), is_undef(cornerpt)? undef : move(cp,p=cornerpt[0])]
+        ],
+        path = flatten(column(corners,0)),
+        override = [for(i=[0:3])
+                      let(quad=quadorder[i])
+                      if (is_def(corners[i][1])) [quadpos[quad], [corners[i][1], min(chamfer[quad],rounding[quad])<0 ? [quadpos[quad].x,0] : undef]]]
+      ) _return_override ? [reorient(anchor,spin, two_d=true, size=size, p=path, override=override), override]
+                       : reorient(anchor,spin, two_d=true, size=size, p=path, override=override);
 
 
 // Function&Module: circle()
@@ -868,8 +875,12 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 //   rounding = The rounding radius for the corners.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
 //   chamfer = The Length of the chamfer faces at the corners.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
 //   flip = If true, negative roundings and chamfers will point forward and back instead of left and right.  Default: `false`.
+//   atype = The type of anchoring to use with `anchor=`.  Valid opptions are "box" and "perim".  This lets you choose between putting anchors on the rounded or chamfered perimeter, or on the square bounding box of the shape. Default: "box"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Anchor Types:
+//   box = Anchor is with respect to the rectangular bounding box of the shape.
+//   perim = Anchors are placed along the rounded or chamfered perimeter of the shape.
 // Examples(2D):
 //   trapezoid(h=30, w1=40, w2=20);
 //   trapezoid(h=25, w1=20, w2=35);
@@ -893,9 +904,17 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 //   trapezoid(h=30, w1=60, w2=40, rounding=-5, flip=true);
 // Example(2D): Mixed Chamfering and Rounding
 //   trapezoid(h=30, w1=60, w2=40, rounding=[5,0,-10,0],chamfer=[0,8,0,-15],$fa=1,$fs=1);
+// Example(2D): default anchors for roundings
+//   trapezoid(h=30, w1=100, ang=[66,44],rounding=5) show_anchors();
+// Example(2D): default anchors for negative roundings are still at the trapezoid corners
+//   trapezoid(h=30, w1=100, ang=[66,44],rounding=-5) show_anchors();
+// Example(2D): "perim" anchors are at the tips of negative roundings
+//   trapezoid(h=30, w1=100, ang=[66,44],rounding=-5, atype="perim") show_anchors();
+// Example(2D): They point the other direction if you flip them
+//   trapezoid(h=30, w1=100, ang=[66,44],rounding=-5, atype="perim",flip=true) show_anchors();
 // Example(2D): Called as Function
 //   stroke(closed=true, trapezoid(h=30, w1=40, w2=20));
-function trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0, angle) =
+function trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0, ,atype="box", _return_override, angle) =
     assert(is_undef(angle), "The angle parameter has been replaced by ang, which specifies trapezoid interior angle")
     assert(is_undef(h) || is_finite(h))
     assert(is_undef(w1) || is_finite(w1))
@@ -919,11 +938,12 @@ function trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anc
         w1 = is_def(w1)? w1 : w2 + x1 + x2,
         w2 = is_def(w2)? w2 : w1 - x1 - x2,
         shift = first_defined([shift,(x1-x2)/2]),
-        chamfs = is_num(chamfer)? [for (i=[0:3]) chamfer] :
-            assert(len(chamfer)==4) chamfer,
-        rounds = is_num(rounding)? [for (i=[0:3]) rounding] :
-            assert(len(rounding)==4) rounding,
-        srads = [for (i=[0:3]) rounds[i]? rounds[i] : chamfs[i]],
+        chamfer = force_list(chamfer,4),
+        rounding = force_list(rounding,4)
+    )
+    assert(all_zero(v_mul(chamfer,rounding),0), "Cannot specify chamfer and rounding at the same corner")
+    let(
+        srads = chamfer+rounding, 
         rads = v_abs(srads)
     )
     assert(w1>=0 && w2>=0 && h>0, "Degenerate trapezoid geometry.")
@@ -947,65 +967,70 @@ function trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anc
                 b = a + [hyps[i] * qdirs[i].x * (srads[i]<0 && !flip? 1 : -1), 0]
             ) b
         ],
-        cpath = [
-            each (
+        corners = [
+             (
                 let(i = 0)
-                rads[i] == 0? [base[i]] :
-                srads[i] > 0? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i], 90], r=rads[i]) :
-                flip? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i],-90], r=rads[i]) :
-                arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],90], r=rads[i])
+                rads[i] == 0? [base[i]]
+              : srads[i] > 0? arc(n=rounding[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i], 90], r=rads[i])
+              : flip? arc(n=rounding[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i],-90], r=rads[i])
+              : arc(n=rounding[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],90], r=rads[i])
             ),
-            each (
+             (
                 let(i = 1)
-                rads[i] == 0? [base[i]] :
-                srads[i] > 0? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[90,180+angs[i]], r=rads[i]) :
-                flip? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[270,180+angs[i]], r=rads[i]) :
-                arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[90,angs[i]], r=rads[i])
+                rads[i] == 0? [base[i]] 
+              : srads[i] > 0? arc(n=rounding[i]?undef:2, cp=base[i]+offs[i], angle=[90,180+angs[i]], r=rads[i]) 
+              : flip? arc(n=rounding[i]?undef:2, cp=base[i]+offs[i], angle=[270,180+angs[i]], r=rads[i]) 
+              : arc(n=rounding[i]?undef:2, cp=base[i]+offs[i], angle=[90,angs[i]], r=rads[i])
             ),
-            each (
+             (
                 let(i = 2)
-                rads[i] == 0? [base[i]] :
-                srads[i] > 0? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],270], r=rads[i]) :
-                flip? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],90], r=rads[i]) :
-                arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i],-90], r=rads[i])
+                rads[i] == 0? [base[i]] 
+              : srads[i] > 0? arc(n=rounding[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],270], r=rads[i]) 
+              : flip? arc(n=rounding[i]?undef:2, cp=base[i]+offs[i], angle=[180+angs[i],90], r=rads[i]) 
+              : arc(n=rounding[i]?undef:2, cp=base[i]+offs[i], angle=[angs[i],-90], r=rads[i])
             ),
-            each (
+             (
                 let(i = 3)
-                rads[i] == 0? [base[i]] :
-                srads[i] > 0? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[-90,angs[i]], r=rads[i]) :
-                flip? arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[90,angs[i]], r=rads[i]) :
-                arc(n=rounds[i]?undef:2, cp=base[i]+offs[i], angle=[270,180+angs[i]], r=rads[i])
+                rads[i] == 0? [base[i]] 
+              : srads[i] > 0? arc(n=rounding[i]?undef:2, cp=base[i]+offs[i], angle=[-90,angs[i]], r=rads[i]) 
+              : flip? arc(n=rounding[i]?undef:2, cp=base[i]+offs[i], angle=[90,angs[i]], r=rads[i]) 
+              : arc(n=rounding[i]?undef:2, cp=base[i]+offs[i], angle=[270,180+angs[i]], r=rads[i])
             ),
         ],
-        path = reverse(cpath)
-    ) true  //simple  // force regular anchoring
-      ? reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, shift=shift, p=path)
-      : reorient(anchor,spin, two_d=true, path=path, p=path);
+        path = reverse(flatten(corners)),
+        override = [for(i=[0:3])
+                      if (atype!="box" && srads[i]!=0)
+                         srads[i]>0?
+                             let(dir = unit(base[i]-select(base,i-1)) + unit(base[i]-select(base,i+1)),
+                                pt=[for(seg=pair(corners[i])) let(isect=line_intersection(seg, [base[i],base[i]+dir],SEGMENT,LINE))
+                                                             if (is_def(isect) && isect!=seg[0]) isect]
+                             )
+                             [qdirs[i], [pt[0], undef]]
+                        : flip?
+                            let(  dir=unit(base[i] - select(base,i+(i%2==0?-1:1))))
+                            [qdirs[i], [select(corners[i],i%2==0?0:-1), dir]]
+                        : let( dir = [qdirs[i].x,0])
+                            [qdirs[i], [select(corners[i],i%2==0?-1:0), dir]]]
+    ) _return_override ? [reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, shift=shift, p=path, override=override),override]
+                       : reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, shift=shift, p=path, override=override);
 
 
 
-module trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0, angle) {
-    path = trapezoid(h=h, w1=w1, w2=w2, ang=ang, shift=shift, chamfer=chamfer, rounding=rounding, flip=flip, angle=angle);
-    union() {
-        simple = true; //chamfer==0 && rounding==0;   // force "normal" anchoring for now
-        ang = force_list(ang,2);
-        h = is_def(h)? h : (w1-w2) * sin(ang[0]) * sin(ang[1]) / sin(ang[0]+ang[1]);
-        x1 = is_undef(ang[0]) || ang[0]==90 ? 0 : h/tan(ang[0]);
-        x2 = is_undef(ang[1]) || ang[1]==90 ? 0 : h/tan(ang[1]);
-        w1 = is_def(w1)? w1 : w2 + x1 + x2;
-        w2 = is_def(w2)? w2 : w1 - x1 - x2;
-        shift = first_defined([shift,(x1-x2)/2]);
-        if (simple) {
-            attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2, shift=shift) {
-                polygon(path);
-                children();
-            }
-        } else {
-            attachable(anchor,spin, two_d=true, path=path) {
-                polygon(path);
-                children();
-            }
-        }
+
+module trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0, atype="box", angle) {
+    path_over = trapezoid(h=h, w1=w1, w2=w2, ang=ang, shift=shift, chamfer=chamfer, rounding=rounding, flip=flip, angle=angle,atype=atype,_return_override=true);
+    path=path_over[0];
+    override = path_over[1];
+    ang = force_list(ang,2);
+    h = is_def(h)? h : (w1-w2) * sin(ang[0]) * sin(ang[1]) / sin(ang[0]+ang[1]);
+    x1 = is_undef(ang[0]) || ang[0]==90 ? 0 : h/tan(ang[0]);
+    x2 = is_undef(ang[1]) || ang[1]==90 ? 0 : h/tan(ang[1]);
+    w1 = is_def(w1)? w1 : w2 + x1 + x2;
+    w2 = is_def(w2)? w2 : w1 - x1 - x2;
+    shift = first_defined([shift,(x1-x2)/2]);
+    attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2, shift=shift, override=override) {
+        polygon(path);
+        children();
     }
 }
 

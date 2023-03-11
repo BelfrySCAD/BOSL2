@@ -8,7 +8,8 @@ things with attachable shapes:
 
 * Control where the shape appears and how it is oriented by anchoring and specifying orientation and spin
 * Position or attach shapes relative to parent objects
-* Tag objects and then color them or control boolean operations based on their tags.
+* Tag objects and then control boolean operations based on their tags.
+* Change the color of objects so that child objects are different colors than their parents
 
 The various attachment features may seem complex at first, but 
 attachability is one of the most important features of the BOSL2
@@ -18,8 +19,13 @@ It makes models simpler, more intuitive, and easier to maintain.
 
 Almost all objects defined by BOSL2 are attachable.  In addition,
 BOSL2 overrides the built-in definitions for `cube()`, `cylinder()`,
-`sphere()`, `square()`, and `circle()` and makes them attachable as
-well.
+`sphere()`, `square()`, `circle()` and `text()` and makes them attachable as
+well.  However, some basic OpenSCAD built-in definitions are not
+attachable and will not work with the features described in this
+tutorial.  The non-attachables are `polyhedron()`, `linear_extrude()`,
+`rotate_extrude()`, `surface()`, `projection()` and `polygon()`.
+Some of these have attachable alternatives: `vnf_polyhedron()`,
+`linear_sweep()`, `rotate_sweep()`, and `region()`.  
 
 
 ## Anchoring
@@ -1101,8 +1107,8 @@ color("red") spheroid(d=3) {
 }
 ```
 
-If you use the `recolor()` module, however, the child's color overrides the color of the parent.
-This is probably easier to understand by example:
+If you use the `recolor()` module, however, the child's color
+overrides the color of the parent.  This is probably easier to understand by example:
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -1113,6 +1119,31 @@ recolor("red") spheroid(d=3) {
     }
 }
 ```
+
+Be aware that `recolor()` will only work if you avoid using the native
+`color()` module.  Also note that `recolor()` still affects all its
+children.  If you want to color an object without affecting the
+children you can use `color_this()`.  See the difference below:
+
+```openscad-3D
+include <BOSL2/std.scad>
+$fn = 24;
+recolor("red") spheroid(d=3) {
+    attach(CENTER,BOT) recolor("white") cyl(h=10, d=1) {
+        attach(TOP,BOT)  cyl(h=5, d1=3, d2=0);
+    }
+}
+right(5)
+recolor("red") spheroid(d=3) {
+    attach(CENTER,BOT) color_this("white") cyl(h=10, d=1) {
+        attach(TOP,BOT)  cyl(h=5, d1=3, d2=0);
+    }
+}
+```
+
+As with all of the attachable features, these color modules only work
+on attachable objects, so they will have no effect on objects you
+create using `linear_extrude()` or `rotate_extrude()`.  
 
 
 ## Making Attachables

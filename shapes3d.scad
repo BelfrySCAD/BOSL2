@@ -838,6 +838,11 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   outside, and an inside rounding is calculated that will maintain constant width
 //   if your wall thickness is uniform.  If the wall thickness is not uniform, the default
 //   inside rounding is calculated based on the smaller of the two wall thicknesses.
+//   Note that the values of the more specific chamfers and roundings inherit from the
+//   more general ones, so `rounding2` is determined from `rounding`.  The constant
+//   width default will apply when the inner rounding and chamfer are both undef.
+//   You can give an inner chamfer or rounding as a list with undef entries if you want to specify
+//   some corner roundings and allow others to be computed.  
 // Arguments:
 //   h/l/height/length = The height or length of the rectangular tube.  Default: 1
 //   size = The outer [X,Y] size of the rectangular tube.
@@ -907,8 +912,8 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 // Example: Mixing Chamfer and Rounding
 //   rect_tube(
 //       size=100, wall=10, h=30,
-//       chamfer=[0,5,0,10], ichamfer=0,
-//       rounding=[5,0,10,0], irounding=0
+//       chamfer=[0,10,0,20], 
+//       rounding=[10,0,20,0]
 //   );
 // Example: Really Mixing It Up
 //   rect_tube(
@@ -919,23 +924,29 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //       rounding1=[5,0,10,0], irounding1=[3,0,8,0],
 //       rounding2=[0,5,0,10], irounding2=[0,3,0,8]
 //   );
+// Example: Some interiors chamfered, others with default rounding
+//   rect_tube(
+//       size=100, wall=10, h=30,
+//       rounding=[0,10,20,30], ichamfer=[8,8,undef,undef]
+//   );
 
 
-function _rect_tube_rounding(factor,ir,r,size,isize) =
-    let(wall = min(size-isize)/2*factor
-      )
-    is_def(ir) ? ir
-  : is_undef(r) ? undef
-  : is_num(r) ?  max(0,r-wall)
-  : [for(val=r) max(0,val-wall)];
 
+function _rect_tube_rounding(factor,ir,r,alternative,size,isize) =
+    let(wall = min(size-isize)/2*factor)
+    [for(i=[0:3])
+      is_def(ir[i]) ? ir[i]
+    : is_undef(alternative[i]) ? max(0,r[i]-wall)
+    : 0
+    ];
+    
 module rect_tube(
     h, size, isize, center, shift=[0,0],
     wall, size1, size2, isize1, isize2,
     rounding=0, rounding1, rounding2,
-    irounding, irounding1, irounding2,
+    irounding=undef, irounding1=undef, irounding2=undef,
     chamfer=0, chamfer1, chamfer2,
-    ichamfer, ichamfer1, ichamfer2,
+    ichamfer=undef, ichamfer1=undef, ichamfer2=undef,
     anchor, spin=0, orient=UP,
     l, length, height
 ) {
@@ -976,12 +987,6 @@ module rect_tube(
         (is_def(wall) && is_def(s2))? (s2-2*[wall,wall]) :
         undef;
     checks2 =
-        assert(is_num(rounding) || is_vector(rounding,4), "rounding must be a number or 4-vector")
-        assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "rounding1 must be a number or 4-vector")
-        assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "rounding2 must be a number or 4-vector")
-        assert(is_undef(irounding) || is_num(irounding) || is_vector(irounding,4), "irounding must be a number or 4-vector")
-        assert(is_undef(irounding1) || is_num(irounding1) || is_vector(irounding1,4), "irounding1 must be a number or 4-vector")
-        assert(is_undef(irounding2) || is_num(irounding2) || is_vector(irounding2,4), "irounding2 must be a number or 4-vector")      
         assert(wall==undef || is_num(wall))
         assert(size1!=undef, "Bad size/size1 argument.")
         assert(size2!=undef, "Bad size/size2 argument.")
@@ -990,19 +995,59 @@ module rect_tube(
         assert(isize1.x < size1.x, "Inner size is larger than outer size.")
         assert(isize1.y < size1.y, "Inner size is larger than outer size.")
         assert(isize2.x < size2.x, "Inner size is larger than outer size.")
-        assert(isize2.y < size2.y, "Inner size is larger than outer size.");
-    irounding1 = _rect_tube_rounding(1,default(irounding1, irounding), default(rounding1, rounding) , size1, isize1);
-    irounding2 = _rect_tube_rounding(1,default(irounding2, irounding), default(rounding2, rounding) , size2, isize2);
-    ichamfer1 = _rect_tube_rounding(1/sqrt(2),default(ichamfer1, ichamfer), default(chamfer1, chamfer) , size1, isize1);
-    ichamfer2 = _rect_tube_rounding(1/sqrt(2),default(ichamfer2, ichamfer), default(chamfer2, chamfer) , size2, isize2);
+        assert(isize2.y < size2.y, "Inner size is larger than outer size.")
+        assert(is_num(rounding) || is_vector(rounding,4), "rounding must be a number or 4-vector")
+        assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "rounding1 must be a number or 4-vector")
+        assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "rounding2 must be a number or 4-vector")
+        assert(is_num(chamfer) || is_vector(chamfer,4), "chamfer must be a number or 4-vector")
+        assert(is_undef(chamfer1) || is_num(chamfer1) || is_vector(chamfer1,4), "chamfer1 must be a number or 4-vector")
+        assert(is_undef(chamfer2) || is_num(chamfer2) || is_vector(chamfer2,4), "chamfer2 must be a number or 4-vector")
+        assert(is_undef(irounding) || is_num(irounding) || (is_list(irounding) && len(irounding)==4), "irounding must be a number or 4-vector")
+        assert(is_undef(irounding1) || is_num(irounding1) || (is_list(irounding1) && len(irounding1)==4), "irounding1 must be a number or 4-vector")
+        assert(is_undef(irounding2) || is_num(irounding2) || (is_list(irounding2) && len(irounding2)==4), "irounding2 must be a number or 4-vector")      
+        assert(is_undef(ichamfer) || is_num(ichamfer) || (is_list(ichamfer) && len(ichamfer)==4), "ichamfer must be a number or 4-vector")
+        assert(is_undef(ichamfer1) || is_num(ichamfer1) || (is_list(ichamfer1) && len(ichamfer1)==4), "ichamfer1 must be a number or 4-vector")
+        assert(is_undef(ichamfer2) || is_num(ichamfer2) || (is_list(ichamfer2) && len(ichamfer2)==4), "ichamfer2 must be a number or 4-vector");
+    chamfer1=force_list( is_def(chamfer1)?chamfer1 :    default(chamfer1,chamfer),4);
+    chamfer2=force_list(default(chamfer2,chamfer),4);
+    rounding1=force_list(default(rounding1,rounding),4);
+    rounding2=force_list(default(rounding2,rounding),4);
+    checks3 =
+        assert(all_nonnegative(chamfer1), "chamfer/chamfer1 must be non-negative")
+        assert(all_nonnegative(chamfer2), "chamfer/chamfer2 must be non-negative")
+        assert(all_nonnegative(rounding1), "rounding/rounding1 must be non-negative")
+        assert(all_nonnegative(rounding2), "rounding/rounding2 must be non-negative")        
+        assert(all_zero(v_mul(rounding1,chamfer1),0), "rounding1 and chamfer1 (possibly inherited from rounding and chamfer) cannot both be nonzero at the same corner")
+        assert(all_zero(v_mul(rounding2,chamfer2),0), "rounding2 and chamfer2 (possibly inherited from rounding and chamfer) cannot both be nonzero at the same corner");
+    irounding1_temp = force_list(default(irounding1,irounding),4);
+    irounding2_temp = force_list(default(irounding2,irounding),4);    
+    ichamfer1_temp = force_list(default(ichamfer1,ichamfer),4);
+    ichamfer2_temp = force_list(default(ichamfer2,ichamfer),4);
+    checksignr1 = [for(entry=irounding1_temp) if (is_def(entry) && entry<0) 1]==[];
+    checksignr2 = [for(entry=irounding2_temp) if (is_def(entry) && entry<0) 1]==[];    
+    checksignc1 = [for(entry=ichamfer1_temp) if (is_def(entry) && entry<0) 1]==[];
+    checksignc2 = [for(entry=ichamfer2_temp) if (is_def(entry) && entry<0) 1]==[];
+    checkconflict1 = [for(i=[0:3]) if (is_def(irounding1_temp[i]) && is_def(ichamfer1_temp[i]) && irounding1_temp[i]!=0 && ichamfer1_temp[i]!=0) 1]==[];
+    checkconflict2 = [for(i=[0:3]) if (is_def(irounding2_temp[i]) && is_def(ichamfer2_temp[i]) && irounding2_temp[i]!=0 && ichamfer2_temp[i]!=0) 1]==[];
+    checks4 =
+        assert(checksignr1, "irounding/irounding1 must be non-negative")
+        assert(checksignr2, "irounding/irounding2 must be non-negative")
+        assert(checksignc1, "ichamfer/ichamfer1 must be non-negative")
+        assert(checksignc2, "ichamfer/ichamfer2 must be non-negative")
+        assert(checkconflict1, "irounding1 and ichamfer1 (possibly inherited from irounding and ichamfer) cannot both be nonzero at the swame corner")
+        assert(checkconflict2, "irounding2 and ichamfer2 (possibly inherited from irounding and ichamfer) cannot both be nonzero at the swame corner");
+    irounding1 = _rect_tube_rounding(1,irounding1_temp, rounding1, ichamfer1_temp, size1, isize1);
+    irounding2 = _rect_tube_rounding(1,irounding2_temp, rounding2, ichamfer2_temp, size2, isize2);
+    ichamfer1 = _rect_tube_rounding(1/sqrt(2),ichamfer1_temp, chamfer1, irounding1_temp, size1, isize1);
+    ichamfer2 = _rect_tube_rounding(1/sqrt(2),ichamfer2_temp, chamfer2, irounding2_temp, size2, isize2);
     anchor = get_anchor(anchor, center, BOT, BOT);
     attachable(anchor,spin,orient, size=[each size1, h], size2=size2, shift=shift) {
         down(h/2) {
             difference() {
                 prismoid(
                     size1, size2, h=h, shift=shift,
-                    rounding=rounding, rounding1=rounding1, rounding2=rounding2,
-                    chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+                    rounding1=rounding1, rounding2=rounding2,
+                    chamfer1=chamfer1, chamfer2=chamfer2,
                     anchor=BOT
                 );
                 down(0.01) prismoid(

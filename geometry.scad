@@ -2296,24 +2296,27 @@ module hull_points(points, fast=false) {
     no_children($children);
     check = assert(is_path(points))
             assert(len(points)>=3, "Point list must contain 3 points");
-    if (len(points[0])==2)
-       hull() polygon(points=points);
-    else {
-      if (fast) {
-         extra = len(points)%3;
-         faces = [
-                   [for(i=[0:1:extra+2])i], // If vertex count not divisible by 3, combine extras with first 3
-                   for(i=[extra+3:3:len(points)-3])[i,i+1,i+2]
-                 ];
-         hull() polyhedron(points=points, faces=faces);
-      } else {
-        faces = hull(points);
-        if (is_num(faces[0])){
-          if (len(faces)<=2) echo("Hull contains only two points");
-          else polyhedron(points=points, faces=[faces]);
+    attachable(){
+      if (len(points[0])==2)
+         hull() polygon(points=points);
+      else {
+        if (fast) {
+           extra = len(points)%3;
+           faces = [
+                     [for(i=[0:1:extra+2])i], // If vertex count not divisible by 3, combine extras with first 3
+                     for(i=[extra+3:3:len(points)-3])[i,i+1,i+2]
+                   ];
+           hull() polyhedron(points=points, faces=faces);
+        } else {
+          faces = hull(points);
+          if (is_num(faces[0])){
+            if (len(faces)<=2) echo("Hull contains only two points");
+            else polyhedron(points=points, faces=[faces]);
+          }
+          else polyhedron(points=points, faces=faces);
         }
-        else polyhedron(points=points, faces=faces);
       }
+      union();
     }
 }
 
