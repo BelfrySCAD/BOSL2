@@ -148,7 +148,7 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
     assert(is_num(rounding) || is_vector(rounding,4))
     assert(in_list(atype, ["box", "perim"]))
     let(
-        anchor=point2d(anchor),
+        anchor=_force_anchor_2d(anchor),
         size = force_list(size,2),
         chamfer = force_list(chamfer,4), 
         rounding = force_list(rounding,4)
