@@ -2789,7 +2789,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 // Module: text3d()
 // Topics: Attachments, Text
 // Usage:
-//   text3d(text, [h], [size], [font], ...);
+//   text3d(text, [h], [size], [font], [language=], [script=], [direction=], [atype=], [anchor=], [spin=], [orient=]);
 // Description:
 //   Creates a 3D text block that supports anchoring and attachment to attachable objects.  You cannot attach children to text.
 //   .
@@ -2816,62 +2816,46 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   text = Text to create.
 //   h / height / thickness = Extrusion height for the text.  Default: 1
 //   size = The font will be created at this size divided by 0.72.   Default: 10
-//   font = Font to use.  Default: "Liberation Sans"
+//   font = Font to use.  Default: "Liberation Sans" (standard OpenSCAD default)
 //   ---
-//   halign = If given, specifies the horizontal alignment of the text.  `"left"`, `"center"`, or `"right"`.  Overrides `anchor=`.
-//   valign = If given, specifies the vertical alignment of the text.  `"top"`, `"center"`, `"baseline"` or `"bottom"`.  Overrides `anchor=`.
 //   spacing = The relative spacing multiplier between characters.  Default: `1.0`
 //   direction = The text direction.  `"ltr"` for left to right.  `"rtl"` for right to left. `"ttb"` for top to bottom. `"btt"` for bottom to top.  Default: `"ltr"`
 //   language = The language the text is in.  Default: `"en"`
 //   script = The script the text is in.  Default: `"latin"`
+//   atype = Change vertical center between "baseline" and "center".  Default: "baseline"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
+//   center = Center the text.  Equivalent to `atype="center", anchor=CENTER`.  Default: false
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // See Also: path_text()
-// Extra Anchors:
-//   "baseline" = Anchors at the baseline of the text, at the start of the string.
-//   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
+// Anchor Types:
+//   baseline = Anchor center is relative to text baseline
+//   ycenter = Anchor center is relative to the actualy y direction center of the text
 // Examples:
-//   text3d("Foobar", h=3, size=10);
-//   text3d("Foobar", h=2, size=12, font="Helvetica");
-//   text3d("Foobar", h=2, anchor=CENTER);
-//   text3d("Foobar", h=2, anchor=str("baseline",CENTER));
-//   text3d("Foobar", h=2, anchor=str("baseline",BOTTOM+RIGHT));
-
-module text3d(text, h, size=10, font="Helvetica", halign, valign, spacing=1.0, direction="ltr", language="em", script="latin",
-              height, thickness, 
-              anchor="baseline[-1,0,-1]", spin=0, orient=UP) {
+//   text3d("Fogmobar", h=3, size=10);
+//   text3d("Fogmobar", h=2, size=12, font="Helvetica");
+//   text3d("Fogmobar", h=2, anchor=CENTER);
+//   text3d("Fogmobar", h=2, anchor=CENTER, atype="ycenter");
+//   text3d("Fogmobar", h=2, anchor=RIGHT);
+//   text3d("Fogmobar", h=2, anchor=RIGHT+BOT, atype="ycenter");
+module text3d(text, h, size=10, font="Helvetica", spacing=1.0, direction="ltr", language="em", script="latin",
+              height, thickness, atype, center=false,
+              anchor, spin=0, orient=UP) {
     no_children($children);
     h = one_defined([h,height,thickness],"h,height,thickness",dflt=1);
-    dummy1 =
-        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
-        assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
-        assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient));
-    anchor = default(anchor, CENTER);
-    spin =   default(spin,   0);
-    orient = default(orient, UP);
+    assert(is_undef(atype) || in_list(atype,["ycenter","baseline"]), "atype must be \"center\" or \"baseline\"");
+    assert(is_bool(center));
+    atype = default(atype, center?"ycenter":"baseline");
+    anchor = default(anchor, center?CENTER:LEFT);
     geom = attach_geom(size=[size,size,h]);
-    anch = !any([for (c=anchor) c=="["])? anchor :
-        let(
-            parts = str_split(str_split(str_split(anchor,"]")[0],"[")[1],","),
-            vec = [for (p=parts) parse_float(str_strip(p," ",start=true))]
-        ) vec;
-    ha = anchor=="baseline"? "left" :
-        anchor==anch && is_string(anchor)? "center" :
-        anch.x<0? "left" :
-        anch.x>0? "right" :
-        "center";
-    va = starts_with(anchor,"baseline")? "baseline" :
-        anchor==anch && is_string(anchor)? "center" :
-        anch.y<0? "bottom" :
-        anch.y>0? "top" :
-        "center";
-    base = anchor=="baseline"? CENTER :
-        anchor==anch && is_string(anchor)? CENTER :
-        anch.z<0? BOTTOM :
-        anch.z>0? TOP :
-        CENTER;
-    m = _attach_transform(base,spin,orient,geom);
+    ha = anchor.x<0? "left" 
+       : anchor.x>0? "right" 
+       : "center";
+    va = anchor.y<0? "bottom" 
+       : anchor.y>0? "top" 
+       : atype=="baseline"? "baseline"
+       : "center";
+    m = _attach_transform([0,0,anchor.z],spin,orient,geom);
     multmatrix(m) {
         $parent_anchor = anchor;
         $parent_spin   = spin;
@@ -2975,6 +2959,8 @@ function _cut_interp(pathcut, path, data) =
 //   textmetrics = if set to true and lettersize is not given then use the experimental textmetrics feature.  You must be running a dev snapshot that includes this feature and have the feature turned on in your preferences.  Default: false
 //   valign = align text to the path using "top", "bottom", "center" or "baseline".  You can also adjust position with a numerical offset as in "top-5" or "bottom+2".  This only works with textmetrics enabled.  You can give a simple numerical offset, which will be relative to the baseline and works even without textmetrics.  Default: "baseline"
 //   kern = scalar or array giving spacing adjusments between each letter.  If it's an array it should have one less entry than the text string.  Default: 0
+//   language = text language, passed to OpenSCAD `text()`.  Default: "en"
+//   script = text script, passed to OpenSCAD `text()`.  Default: "latin" 
 // Example(3D,NoScales):  The examples use Courier, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder.
 //   path = path3d(arc(100, r=25, angle=[245, 370]));
 //   color("red")stroke(path, width=.3);
@@ -3037,7 +3023,8 @@ function _cut_interp(pathcut, path, data) =
 //   kern = [1,1.2,1,1,.3,-.2,1,0,.8,1,1.1];
 //   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, kern=kern, normal=UP);
 
-module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false, kern=0, height,h, valign="baseline")
+module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false,
+                 textmetrics=false, kern=0, height,h, valign="baseline", language, script)
 {
   no_children($children);
   dummy2=assert(is_path(path,[2,3]),"Must supply a 2d or 3d path")
@@ -3100,42 +3087,42 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
   usetop = is_def(top);
   normpts = is_undef(normal) ? (reverse?1:-1)*column(pts,3) : _cut_interp(pts,path, normal);
   toppts = is_undef(top) ? undef : _cut_interp(pts,path,top);
-
-  for (i = idx(text)) {
-    tangent = pts[i][2];
-    checks =
-        assert(!usetop || !approx(tangent*toppts[i],norm(top[i])*norm(tangent)),
-               str("Specified top direction parallel to path at character ",i))
-        assert(usetop || !approx(tangent*normpts[i],norm(normpts[i])*norm(tangent)),
-               str("Specified normal direction parallel to path at character ",i));
-    adjustment = usetop ?  (tangent*toppts[i])*toppts[i]/(toppts[i]*toppts[i])
-               : usernorm ?  (tangent*normpts[i])*normpts[i]/(normpts[i]*normpts[i])
-               : [0,0,0];
-    move(pts[i][0]) {
-      if (dim==3) {
-        frame_map(
-          x=tangent-adjustment,
-          z=usetop ? undef : normpts[i],
-          y=usetop ? toppts[i] : undef
-        ) up(offset-thickness/2) {
-          linear_extrude(height=thickness)
-            back(vadjustment)
-            {
-              stroke([[0,0],[0,14]], width=.3, endcap2="arrow");
-              
-            left(lsize[i]/2)
-              text(text[i], font=font, size=size);
+  attachable(){
+    for (i = idx(text)) {
+      tangent = pts[i][2];
+      checks =
+          assert(!usetop || !approx(tangent*toppts[i],norm(top[i])*norm(tangent)),
+                 str("Specified top direction parallel to path at character ",i))
+          assert(usetop || !approx(tangent*normpts[i],norm(normpts[i])*norm(tangent)),
+                 str("Specified normal direction parallel to path at character ",i));
+      adjustment = usetop ?  (tangent*toppts[i])*toppts[i]/(toppts[i]*toppts[i])
+                 : usernorm ?  (tangent*normpts[i])*normpts[i]/(normpts[i]*normpts[i])
+                 : [0,0,0];
+      move(pts[i][0]) {
+        if (dim==3) {
+          frame_map(
+            x=tangent-adjustment,
+            z=usetop ? undef : normpts[i],
+            y=usetop ? toppts[i] : undef
+          ) up(offset-thickness/2) {
+            linear_extrude(height=thickness)
+              back(vadjustment)
+              {
+              left(lsize[i]/2)
+                text(text[i], font=font, size=size, language=language, script=script);
+              }
+          }
+        } else {
+            frame_map(
+              x=point3d(tangent-adjustment),
+              y=point3d(usetop ? toppts[i] : -normpts[i])
+            ) left(lsize[0]/2) {
+                text(text[i], font=font, size=size, language=language, script=script);
             }
         }
-      } else {
-          frame_map(
-            x=point3d(tangent-adjustment),
-            y=point3d(usetop ? toppts[i] : -normpts[i])
-          ) left(lsize[0]/2) {
-              text(text[i], font=font, size=size);
-          }
       }
     }
+    union();
   }
 }
 

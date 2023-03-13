@@ -787,7 +787,7 @@ function _scalar_to_vector(value,length,varname) =
 //   color("red")stroke(
 //     path_join([p1,p2,p3], joint=0, relocate=false,
 //               closed=true),
-//     width=.3,$fn=12);
+//     width=.3,$fn=48);
 //   for(x=[p1,p2,p3]) stroke(x,width=.3);
 // Example(2D): If you specify closed=true when the last path doesn't meet the first one then it is similar to using relocate=false: the function tries to close the path using a curve.  In the example below, this results in a long curve to the left, when given the unclosed three segments as input.  Note that if the segments are parallel the function fails with an error.  The extension of the curves must intersect in a corner for the rounding to be well-defined.  To get a normal rounding of the closed shape, you must include a fourth path, the last segment that closes the shape.
 //   horiz = [[0,0],[10,0]];
