@@ -442,7 +442,7 @@ function quantup(x,y) =
               : _ceilall(x/y)*y;
 
 function _ceilall(data) =
-    [for(x=data) is_list(x) ? ceilall(x) : ceil(x)];
+    [for(x=data) is_list(x) ? _ceilall(x) : ceil(x)];
 
 
 // Section: Constraints and Modulos
