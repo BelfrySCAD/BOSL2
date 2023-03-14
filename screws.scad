@@ -744,7 +744,7 @@ module screw(spec, head, drive, thread, drive_size,
 //   spec = screw specification, e.g. "M5x1" or "#8-32".  See [screw naming](#subsection-screw-naming).  This can also be a screw specification structure of the form produced by {{screw_info()}}.  
 //   head = head type.  See [screw heads](#subsection-screw-heads)  Default: none
 //   ---
-//   thread = thread type or specification for threaded masks, or false to make an unthreaded mask.  See [screw pitch](#subsection-standard-screw-pitch). Default: false
+//   thread = thread type or specification for threaded masks, true to make a threaded mask with the standard threads, or false to make an unthreaded mask.  See [screw pitch](#subsection-standard-screw-pitch). Default: false
 //   teardrop = if true produce teardrop hole.  Only compatible with clearance holes, not threaded.  Default: false
 //   oversize = amount to increase diameter of the screw hole (hole and countersink).  A scalar or length 2 vector.  Default: use computed tolerance
 //   hole_oversize = amount to increase diameter of the hole.  Overrides the use of tolerance and replaces any settings given in the screw specification. 

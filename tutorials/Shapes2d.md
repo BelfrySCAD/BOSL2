@@ -89,7 +89,9 @@ include <BOSL2/std.scad>
 circle(d=50, anchor=polar_to_xy(1,150));
 ```
 
-You can see the typical anchor points by making `show_anchors()` the child of the shape:
+Note that the radius does not matter for the anchor because only the
+anchor's direction affects the result.  You can see the typical anchor
+points by giving `show_anchors()` as a child of the shape:
 
 ```openscad-2D
 include <BOSL2/std.scad>

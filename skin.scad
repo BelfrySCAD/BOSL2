@@ -2678,11 +2678,9 @@ function associate_vertices(polygons, split, curpoly=0) =
 //     }
 //   }  
 // Continues:
-//   Note that of the six available styles, five produce a different result.  You might think that simply identifying the
-//   correct style will enable you to get the result you want.  This is true if you apply the texture to a convex object, but for concave
-//   objects, the triangulation rules for the styles may result in different triangulations in different parts of the surface.
-//   For some cases, none of the six styles produces the correct result in every case.
-//   [Can this actually happen?  We need an example of this!]
+//   Note that of the six available styles, five produce a different result.  There may exist some concave shape where none of the styles
+//   produce the right result everywhere on the shape.  If this happens it would be another limitation of height field textures.  (If you have an
+//   example of such a texture and shape please let us know!)
 // Subsection: VNF Textures
 //   VNF textures overcome all of the limitations of height field textures, but with two costs.  They can be more difficult to construct than
 //   a simple array of height values, and they are significantly slower to compute for a tile with the same number of points.  Note, however, for

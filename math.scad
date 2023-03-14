@@ -339,8 +339,8 @@ function atanh(x) =
 //   The value of `y` does NOT have to be an integer.  If `x` is a list, then every item
 //   in that list will be recursively quantized.
 // Arguments:
-//   x = The value to quantize.
-//   y = The non-zero integer quantum of the quantization.
+//   x = The value or list to quantize.
+//   y = Positive quantum to quantize to
 // Example:
 //   a = quant(12,4);    // Returns: 12
 //   b = quant(13,4);    // Returns: 12
@@ -361,11 +361,12 @@ function atanh(x) =
 //   q = quant([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,12,12,12]
 //   r = quant([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[12,12,12]]
 function quant(x,y) =
-    assert( is_finite(y) && y>0, "The quantum `y` must be a non zero integer.")
-    is_list(x)
-    ?   [for (v=x) quant(v,y)]
-    :   assert( is_finite(x), "The input to quantize is not a number nor a list of numbers.")
-        floor(x/y+0.5)*y;
+    assert( is_finite(y) && y>0, "The quantum `y` must be a positive value.")
+    is_num(x) ? round(x/y)*y 
+              : _roundall(x/y)*y;
+
+function _roundall(data) =
+    [for(x=data) is_list(x) ? _roundall(x) : round(x)];
 
 
 // Function: quantdn()
@@ -376,8 +377,8 @@ function quant(x,y) =
 //   The value of `y` does NOT have to be an integer.  If `x` is a list, then every item in that
 //   list will be recursively quantized down.
 // Arguments:
-//   x = The value to quantize.
-//   y = The non-zero integer quantum of the quantization.
+//   x = The value or list to quantize.
+//   y = Postive quantum to quantize to. 
 // Example:
 //   a = quantdn(12,4);    // Returns: 12
 //   b = quantdn(13,4);    // Returns: 12
@@ -398,11 +399,12 @@ function quant(x,y) =
 //   q = quantdn([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,9,9,12]
 //   r = quantdn([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[9,9,12]]
 function quantdn(x,y) =
-    assert( is_finite(y) && y>0, "The quantum `y` must be a non zero integer.")
-    is_list(x)
-    ?   [for (v=x) quantdn(v,y)]
-    :   assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
-        floor(x/y)*y;
+    assert( is_finite(y) && y>0, "The quantum `y` must be a positive value.")
+    is_num(x) ? floor(x/y)*y 
+              : _floorall(x/y)*y;
+
+function _floorall(data) =
+    [for(x=data) is_list(x) ? _floorall(x) : floor(x)];
 
 
 // Function: quantup()
@@ -413,8 +415,8 @@ function quantdn(x,y) =
 //   The value of `y` does NOT have to be an integer.  If `x` is a list, then every item in
 //   that list will be recursively quantized up.
 // Arguments:
-//   x = The value to quantize.
-//   y = The non-zero integer quantum of the quantization.
+//   x = The value or list to quantize.
+//   y = Positive quantum to quantize to.
 // Example:
 //   a = quantup(12,4);    // Returns: 12
 //   b = quantup(13,4);    // Returns: 16
@@ -435,11 +437,12 @@ function quantdn(x,y) =
 //   q = quantup([9,10,10.4,10.5,11,12],3);      // Returns: [9,12,12,12,12,12]
 //   r = quantup([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,12,12],[12,12,12]]
 function quantup(x,y) =
-    assert( is_finite(y) && y>0, "The quantum `y` must be a non zero integer.")
-    is_list(x)
-    ?   [for (v=x) quantup(v,y)]
-    :   assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
-        ceil(x/y)*y;
+    assert( is_finite(y) && y>0, "The quantum `y` must be a positive value.")
+    is_num(x) ? ceil(x/y)*y 
+              : _ceilall(x/y)*y;
+
+function _ceilall(data) =
+    [for(x=data) is_list(x) ? _ceilall(x) : ceil(x)];
 
 
 // Section: Constraints and Modulos
