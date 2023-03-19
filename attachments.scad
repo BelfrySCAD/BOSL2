@@ -2671,7 +2671,7 @@ function _find_anchor(anchor, geom) =
             vec = is_def(override[1]) ? override[1]
                 : anchor.y == 0? ( anchor.x == 0? BACK : svec )
                 : anchor.x == 0? [0,anchor.y,0]
-                : unit((svec + [0,anchor.y,0]) / 2, [0,anchor.y,0]),
+                : unit((svec + [0,anchor.y,0]) / 2, [0,anchor.y,0])
         ) [anchor, pos, vec, 0]
     ) : type == "ellipse"? ( //r
         let(
