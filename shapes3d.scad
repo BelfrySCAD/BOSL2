@@ -120,6 +120,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// See Also: prismoid(), rounded_prism()
 // Example: Simple regular cube.
 //   cuboid(40);
 // Example: Cube with minimum cornerpoint given.
@@ -598,7 +599,7 @@ function cuboid(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
-// See Also: rounded_prism()
+// See Also: cuboid(), rounded_prism()
 //
 // Example: Rectangular Pyramid
 //   prismoid([40,40], [0,0], h=20);
