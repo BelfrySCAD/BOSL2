@@ -755,6 +755,13 @@ module tag_scope(scope){
 //   Attachable objects should be tagged using {{tag()}}
 //   and non-attachable objects with {{force_tag()}}.
 //   .
+//   Remember when using tagged operations with that the operations don't happen in hierarchical order, since
+//   the point of tags is to break the hierarchy.  If you tag an object with a keep tag, nothing will be
+//   subtracted from it, no matter where it appears because kept objects are unioned in at the end.
+//   If you want a child of an object tagged with a remove tag to stay in the model it may be
+//   better to give it a tag that is not a remove tag or a keep tag.  Such an object *will* be subject to
+//   subtractions from other remove-tagged objects.  
+//   .
 //   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   remove = String containing space delimited set of tag names of children to difference away.  Default: `"remove"`
@@ -2662,19 +2669,9 @@ function _find_anchor(anchor, geom) =
             pos = default(override[0],point2d(cp) + lerp(frpt, bkpt, u) + point2d(offset)),
             svec = point3d(line_normal(bkpt,frpt)*anchor.x),
             vec = is_def(override[1]) ? override[1]
-                :
-                anchor.y < 0? (
-                    anchor.x == 0? FWD :
-                    size.x == 0? unit(-[shift,size.y], FWD) :
-                    unit((point3d(svec) + FWD) / 2, FWD)
-                ) :
-                anchor.y == 0? ( anchor.x == 0? BACK : svec ) :
-                (  // anchor.y > 0
-                    anchor.x == 0? BACK :
-                    size2 == 0? unit([shift,size.y], BACK) :
-                    unit((point3d(svec) + BACK) / 2, BACK)
-
-                )
+                : anchor.y == 0? ( anchor.x == 0? BACK : svec )
+                : anchor.x == 0? [0,anchor.y,0]
+                : unit((svec + [0,anchor.y,0]) / 2, [0,anchor.y,0])
         ) [anchor, pos, vec, 0]
     ) : type == "ellipse"? ( //r
         let(
