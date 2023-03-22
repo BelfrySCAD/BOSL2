@@ -1324,7 +1324,7 @@ function _parse_screw_name(name) =
     )
     assert(len(commasplit)<=2, str("More than one comma found in screw name, \"",name,"\""))
     assert(len(xdash)<=2, str("Screw name has too many '-' or 'x' characters, \"",name,"\""))
-    assert(len(commasplit)==1 || is_num(length), str("Invalid length in screw name, \"",name,"\""))
+    assert(len(commasplit)==1 || is_num(length), str("Invalid length \"", commasplit[1],"\" in screw name, \"",name,"\""))
     assert(len(xdash)==1 || all_nonnegative(thread),str("Thread pitch not a valid number in screw name, \"",name,"\""))
     type[0] == "M" || type[0] == "m" ? 
         let(diam = parse_float(substr(type,1)))
