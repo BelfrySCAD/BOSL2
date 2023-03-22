@@ -2255,8 +2255,8 @@ function attach_geom(
             assert(is_vector(scale,2))
             assert(is_num(twist))
             extent==true
-              ? ["xrgn_extent", region, l, twist, scale, shift, cp, offset, anchors]
-              : ["xrgn_isect",  region, l, twist, scale, shift, cp, offset, anchors]
+              ? ["extrusion_extent", region, l, twist, scale, shift, cp, offset, anchors]
+              : ["extrusion_isect",  region, l, twist, scale, shift, cp, offset, anchors]
     ) :
     let(
         r1 = get_radius(r1=r1,d1=d1,r=r,d=d,dflt=undef)
@@ -2351,7 +2351,7 @@ function _attach_geom_size(geom) =
             mm = pointlist_bounds(geom[1][0]),
             delt = mm[1]-mm[0]
         ) delt
-    ) : type == "xrgn_isect" || type == "xrgn_extent"? ( //path, l
+    ) : type == "extrusion_isect" || type == "extrusion_extent"? ( //path, l
         let(
             mm = pointlist_bounds(flatten(geom[1])),
             delt = mm[1]-mm[0]
@@ -2457,7 +2457,7 @@ function _get_cp(geom) =
   : let(
         type = in_list(geom[0],["vnf_extent","vnf_isect"]) ? "vnf"
              : in_list(geom[0],["rgn_extent","rgn_isect"]) ? "path"
-             : in_list(geom[0],["xrgn_extent","xrgn_isect"]) ? "xpath"
+             : in_list(geom[0],["extrusion_extent","extrusion_isect"]) ? "xpath"
              : "other"
     )
     assert(type!="other", "Invalid cp value")
@@ -2466,9 +2466,27 @@ function _get_cp(geom) =
        [each centroid(geom[1]), if (type=="xpath") 0]
     )
   : let(points = type=="vnf"?geom[1][0]:flatten(force_region(geom[1])))
-    cp=="mean" ? [each mean(points), if (type=="xpath") geom[2]/2]
-  : cp=="box" ?[each  mean(pointlist_bounds(points)), if (type=="xpath") geom[2]/2]
+    cp=="mean" ? [each mean(points), if (type=="xpath") 0]
+  : cp=="box" ?[each  mean(pointlist_bounds(points)), if (type=="xpath") 0]
   : assert(false,"Invalid cp specification");
+
+
+function _get_cp(geom) =
+    let(cp=select(geom,-3))
+    is_vector(cp) ? cp
+  : let(
+        is_vnf = in_list(geom[0],["vnf_extent","vnf_isect"])
+    )
+    cp == "centroid" ? (
+       is_vnf && len(geom[1][1])==0
+          ? [0,0,0]
+          : centroid(geom[1])
+    )
+  : let(points = is_vnf?geom[1][0]:flatten(force_region(geom[1])))
+    cp=="mean" ? mean(points)
+  : cp=="box" ? mean(pointlist_bounds(points))
+  : assert(false,"Invalid cp specification");
+
 
 
 function _force_anchor_2d(anchor) =
@@ -2701,7 +2719,7 @@ function _find_anchor(anchor, geom) =
             midy = (min(ys)+max(ys))/2,
             pos = rot(from=RIGHT, to=anchor, p=[maxx,midy])
         ) [anchor, pos, unit(anchor,BACK), 0]
-    ) : type=="xrgn_extent" || type=="xrgn_isect" ? (  // extruded region
+    ) : type=="extrusion_extent" || type=="extrusion_isect" ? (  // extruded region
         assert(in_list(anchor.z,[-1,0,1]), "The Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
         let(
             anchor_xy = point2d(anchor),
@@ -2716,12 +2734,12 @@ function _find_anchor(anchor, geom) =
             twmat = zrot(lerp(0, -twist, u)),
             mat = shmat * scmat * twmat
         )
-        approx(anchor_xy,[0,0]) ? [anchor, apply(mat, up(anchor.z*L/2,cp)), unit(anchor, UP), oang] :
+        approx(anchor_xy,[0,0]) ? [anchor, apply(mat, point3d(cp,anchor.z*L/2)), unit(anchor, UP), oang] :
         let(
             newrgn = apply(mat, rgn),
-            newgeom = attach_geom(two_d=true, region=newrgn, extent=type=="xrgn_extent", cp=cp),
+            newgeom = attach_geom(two_d=true, region=newrgn, extent=type=="extrusion_extent", cp=cp),
             result2d = _find_anchor(anchor_xy, newgeom),
-            pos = point3d(result2d[1], cp.z+anchor.z*L/2),
+            pos = point3d(result2d[1], anchor.z*L/2),
             vec = unit(point3d(result2d[2], anchor.z),UP),
             oang = atan2(vec.y,vec.x) + 90
         )
