@@ -429,73 +429,51 @@ module position(from)
 
 // Module: orient()
 // Usage:
-//   orient(dir, [spin=]) CHILDREN;
-//   PARENT() orient(anchor=, [spin=]) CHILDREN;
+//   PARENT() orient(anchor, [spin]) CHILDREN;
 // Topics: Attachments
 // Description:
-//   Orients children such that their top is tilted towards the given direction, or towards the
-//   direction of a given anchor point on the parent.  For a step-by-step explanation of
-//   attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   Orients children such that their top is tilted in the direction of the specified parent anchor point. 
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   dir = The direction to orient towards.
-//   ---
-//   anchor = The anchor on the parent which you want to match the orientation of.  Use instead of `dir`.
+//   anchor = The anchor on the parent which you want to match the orientation of.
 //   spin = The spin to add to the children.  (Overrides anchor spin.)
 // Side Effects:
 //   `$attach_anchor` is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for the `anchor=`, if given.
 //   `$attach_to` is set to `undef`.
 //   `$attach_norot` is set to `true`.
 // See Also: attachable(), attach(), orient()
-// Example: Orienting by Vector
+// Example: When orienting to an anchor, the spin of the anchor may cause confusion:
 //   prismoid([50,50],[30,30],h=40) {
 //       position(TOP+RIGHT)
 //           orient(RIGHT)
 //               prismoid([30,30],[0,5],h=20,anchor=BOT+LEFT);
 //   }
-// Example: When orienting to an anchor, the spin of the anchor may cause confusion:
-//   prismoid([50,50],[30,30],h=40) {
-//       position(TOP+RIGHT)
-//           orient(anchor=RIGHT)
-//               prismoid([30,30],[0,5],h=20,anchor=BOT+LEFT);
-//   }
 // Example: You can override anchor spin with `spin=`.
 //   prismoid([50,50],[30,30],h=40) {
 //       position(TOP+RIGHT)
-//           orient(anchor=RIGHT,spin=0)
+//           orient(RIGHT,spin=0)
 //               prismoid([30,30],[0,5],h=20,anchor=BOT+LEFT);
 //   }
 // Example: Or you can anchor the child from the back
 //   prismoid([50,50],[30,30],h=40) {
 //       position(TOP+RIGHT)
-//           orient(anchor=RIGHT)
+//           orient(RIGHT)
 //               prismoid([30,30],[0,5],h=20,anchor=BOT+BACK);
 //   }
-module orient(dir, anchor, spin) {
+module orient(anchor, spin) {
     req_children($children);
-    if (!is_undef(dir)) {
-        spin = default(spin, 0);
-        check =
-          assert(anchor==undef, "Only one of dir= or anchor= may be given to orient()")
-          assert(is_vector(dir))
-          assert(is_finite(spin));
-        two_d = _attach_geom_2d($parent_geom);
-        fromvec = two_d? BACK : UP;
-        rot(spin, from=fromvec, to=dir) children();
-    } else {
-        check=
-          assert(dir==undef, "Only one of dir= or anchor= may be given to orient()")
-          assert($parent_geom != undef, "No parent to orient from!")
-          assert(is_string(anchor) || is_vector(anchor));
-        anch = _find_anchor(anchor, $parent_geom);
-        two_d = _attach_geom_2d($parent_geom);
-        fromvec = two_d? BACK : UP;
-        $attach_to = undef;
-        $attach_anchor = anch;
-        $attach_norot = true;
-        spin = default(spin, anch[3]);
-        assert(is_finite(spin));
-        rot(spin, from=fromvec, to=anch[2]) children();
-    }
+    check=
+      assert($parent_geom != undef, "No parent to orient from!")
+      assert(is_string(anchor) || is_vector(anchor));
+    anch = _find_anchor(anchor, $parent_geom);
+    two_d = _attach_geom_2d($parent_geom);
+    fromvec = two_d? BACK : UP;
+    $attach_to = undef;
+    $attach_anchor = anch;
+    $attach_norot = true;
+    spin = default(spin, anch[3]);
+    assert(is_finite(spin));
+    rot(spin, from=fromvec, to=anch[2]) children();
 }
 
 
