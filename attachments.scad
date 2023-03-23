@@ -429,73 +429,51 @@ module position(from)
 
 // Module: orient()
 // Usage:
-//   orient(dir, [spin=]) CHILDREN;
-//   PARENT() orient(anchor=, [spin=]) CHILDREN;
+//   PARENT() orient(anchor, [spin]) CHILDREN;
 // Topics: Attachments
 // Description:
-//   Orients children such that their top is tilted towards the given direction, or towards the
-//   direction of a given anchor point on the parent.  For a step-by-step explanation of
-//   attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   Orients children such that their top is tilted in the direction of the specified parent anchor point. 
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   dir = The direction to orient towards.
-//   ---
-//   anchor = The anchor on the parent which you want to match the orientation of.  Use instead of `dir`.
+//   anchor = The anchor on the parent which you want to match the orientation of.
 //   spin = The spin to add to the children.  (Overrides anchor spin.)
 // Side Effects:
 //   `$attach_anchor` is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for the `anchor=`, if given.
 //   `$attach_to` is set to `undef`.
 //   `$attach_norot` is set to `true`.
 // See Also: attachable(), attach(), orient()
-// Example: Orienting by Vector
+// Example: When orienting to an anchor, the spin of the anchor may cause confusion:
 //   prismoid([50,50],[30,30],h=40) {
 //       position(TOP+RIGHT)
 //           orient(RIGHT)
 //               prismoid([30,30],[0,5],h=20,anchor=BOT+LEFT);
 //   }
-// Example: When orienting to an anchor, the spin of the anchor may cause confusion:
-//   prismoid([50,50],[30,30],h=40) {
-//       position(TOP+RIGHT)
-//           orient(anchor=RIGHT)
-//               prismoid([30,30],[0,5],h=20,anchor=BOT+LEFT);
-//   }
 // Example: You can override anchor spin with `spin=`.
 //   prismoid([50,50],[30,30],h=40) {
 //       position(TOP+RIGHT)
-//           orient(anchor=RIGHT,spin=0)
+//           orient(RIGHT,spin=0)
 //               prismoid([30,30],[0,5],h=20,anchor=BOT+LEFT);
 //   }
 // Example: Or you can anchor the child from the back
 //   prismoid([50,50],[30,30],h=40) {
 //       position(TOP+RIGHT)
-//           orient(anchor=RIGHT)
+//           orient(RIGHT)
 //               prismoid([30,30],[0,5],h=20,anchor=BOT+BACK);
 //   }
-module orient(dir, anchor, spin) {
+module orient(anchor, spin) {
     req_children($children);
-    if (!is_undef(dir)) {
-        spin = default(spin, 0);
-        check =
-          assert(anchor==undef, "Only one of dir= or anchor= may be given to orient()")
-          assert(is_vector(dir))
-          assert(is_finite(spin));
-        two_d = _attach_geom_2d($parent_geom);
-        fromvec = two_d? BACK : UP;
-        rot(spin, from=fromvec, to=dir) children();
-    } else {
-        check=
-          assert(dir==undef, "Only one of dir= or anchor= may be given to orient()")
-          assert($parent_geom != undef, "No parent to orient from!")
-          assert(is_string(anchor) || is_vector(anchor));
-        anch = _find_anchor(anchor, $parent_geom);
-        two_d = _attach_geom_2d($parent_geom);
-        fromvec = two_d? BACK : UP;
-        $attach_to = undef;
-        $attach_anchor = anch;
-        $attach_norot = true;
-        spin = default(spin, anch[3]);
-        assert(is_finite(spin));
-        rot(spin, from=fromvec, to=anch[2]) children();
-    }
+    check=
+      assert($parent_geom != undef, "No parent to orient from!")
+      assert(is_string(anchor) || is_vector(anchor));
+    anch = _find_anchor(anchor, $parent_geom);
+    two_d = _attach_geom_2d($parent_geom);
+    fromvec = two_d? BACK : UP;
+    $attach_to = undef;
+    $attach_anchor = anch;
+    $attach_norot = true;
+    spin = default(spin, anch[3]);
+    assert(is_finite(spin));
+    rot(spin, from=fromvec, to=anch[2]) children();
 }
 
 
@@ -2277,8 +2255,8 @@ function attach_geom(
             assert(is_vector(scale,2))
             assert(is_num(twist))
             extent==true
-              ? ["xrgn_extent", region, l, twist, scale, shift, cp, offset, anchors]
-              : ["xrgn_isect",  region, l, twist, scale, shift, cp, offset, anchors]
+              ? ["extrusion_extent", region, l, twist, scale, shift, cp, offset, anchors]
+              : ["extrusion_isect",  region, l, twist, scale, shift, cp, offset, anchors]
     ) :
     let(
         r1 = get_radius(r1=r1,d1=d1,r=r,d=d,dflt=undef)
@@ -2373,7 +2351,7 @@ function _attach_geom_size(geom) =
             mm = pointlist_bounds(geom[1][0]),
             delt = mm[1]-mm[0]
         ) delt
-    ) : type == "xrgn_isect" || type == "xrgn_extent"? ( //path, l
+    ) : type == "extrusion_isect" || type == "extrusion_extent"? ( //path, l
         let(
             mm = pointlist_bounds(flatten(geom[1])),
             delt = mm[1]-mm[0]
@@ -2479,7 +2457,7 @@ function _get_cp(geom) =
   : let(
         type = in_list(geom[0],["vnf_extent","vnf_isect"]) ? "vnf"
              : in_list(geom[0],["rgn_extent","rgn_isect"]) ? "path"
-             : in_list(geom[0],["xrgn_extent","xrgn_isect"]) ? "xpath"
+             : in_list(geom[0],["extrusion_extent","extrusion_isect"]) ? "xpath"
              : "other"
     )
     assert(type!="other", "Invalid cp value")
@@ -2488,9 +2466,27 @@ function _get_cp(geom) =
        [each centroid(geom[1]), if (type=="xpath") 0]
     )
   : let(points = type=="vnf"?geom[1][0]:flatten(force_region(geom[1])))
-    cp=="mean" ? [each mean(points), if (type=="xpath") geom[2]/2]
-  : cp=="box" ?[each  mean(pointlist_bounds(points)), if (type=="xpath") geom[2]/2]
+    cp=="mean" ? [each mean(points), if (type=="xpath") 0]
+  : cp=="box" ?[each  mean(pointlist_bounds(points)), if (type=="xpath") 0]
   : assert(false,"Invalid cp specification");
+
+
+function _get_cp(geom) =
+    let(cp=select(geom,-3))
+    is_vector(cp) ? cp
+  : let(
+        is_vnf = in_list(geom[0],["vnf_extent","vnf_isect"])
+    )
+    cp == "centroid" ? (
+       is_vnf && len(geom[1][1])==0
+          ? [0,0,0]
+          : centroid(geom[1])
+    )
+  : let(points = is_vnf?geom[1][0]:flatten(force_region(geom[1])))
+    cp=="mean" ? mean(points)
+  : cp=="box" ? mean(pointlist_bounds(points))
+  : assert(false,"Invalid cp specification");
+
 
 
 function _force_anchor_2d(anchor) =
@@ -2723,7 +2719,7 @@ function _find_anchor(anchor, geom) =
             midy = (min(ys)+max(ys))/2,
             pos = rot(from=RIGHT, to=anchor, p=[maxx,midy])
         ) [anchor, pos, unit(anchor,BACK), 0]
-    ) : type=="xrgn_extent" || type=="xrgn_isect" ? (  // extruded region
+    ) : type=="extrusion_extent" || type=="extrusion_isect" ? (  // extruded region
         assert(in_list(anchor.z,[-1,0,1]), "The Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
         let(
             anchor_xy = point2d(anchor),
@@ -2738,12 +2734,12 @@ function _find_anchor(anchor, geom) =
             twmat = zrot(lerp(0, -twist, u)),
             mat = shmat * scmat * twmat
         )
-        approx(anchor_xy,[0,0]) ? [anchor, apply(mat, up(anchor.z*L/2,cp)), unit(anchor, UP), oang] :
+        approx(anchor_xy,[0,0]) ? [anchor, apply(mat, point3d(cp,anchor.z*L/2)), unit(anchor, UP), oang] :
         let(
             newrgn = apply(mat, rgn),
-            newgeom = attach_geom(two_d=true, region=newrgn, extent=type=="xrgn_extent", cp=cp),
+            newgeom = attach_geom(two_d=true, region=newrgn, extent=type=="extrusion_extent", cp=cp),
             result2d = _find_anchor(anchor_xy, newgeom),
-            pos = point3d(result2d[1], cp.z+anchor.z*L/2),
+            pos = point3d(result2d[1], anchor.z*L/2),
             vec = unit(point3d(result2d[2], anchor.z),UP),
             oang = atan2(vec.y,vec.x) + 90
         )

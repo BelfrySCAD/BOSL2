@@ -468,24 +468,23 @@ function parse_float(str) =
 //   parse_frac("-2 12/4",mixed=false);    // Returns nan
 //   parse_frac("2 1/4",mixed=false);      // Returns nan
 function parse_frac(str,mixed=true,improper=true,signed=true) =
-    str == undef ? undef :
-    len(str)==0 ? 0 :
-    signed && str[0]=="-" ? -parse_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
-    signed && str[0]=="+" ?  parse_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
-    mixed ? (                      
-        !in_list(str_find(str," "), [undef,0]) || is_undef(str_find(str,"/"))? (
-            let(whole = str_split(str,[" "]))
-            _parse_int_recurse(whole[0],10,len(whole[0])-1) + parse_frac(whole[1], mixed=false, improper=improper, signed=false)
-        ) : parse_frac(str,mixed=false, improper=improper)
-    ) : (
-        let(split = str_split(str,"/"))
-        len(split)!=2 ? (0/0) :
-        let(
-            numerator =  _parse_int_recurse(split[0],10,len(split[0])-1),
-            denominator = _parse_int_recurse(split[1],10,len(split[1])-1)
-        ) !improper && numerator>=denominator? (0/0) :
-        denominator<0 ? (0/0) : numerator/denominator
-    );
+    str == undef ? undef
+  : len(str)==0 ? 0
+  : str[0]==" " ? NAN
+  : signed && str[0]=="-" ? -parse_frac(substr(str,1),mixed=mixed,improper=improper,signed=false)
+  : signed && str[0]=="+" ?  parse_frac(substr(str,1),mixed=mixed,improper=improper,signed=false)
+  : mixed && (str_find(str," ")!=undef || str_find(str,"/")==undef)?   // Mixed allowed and there is a space or no slash 
+        let(whole = str_split(str,[" "]))
+        _parse_int_recurse(whole[0],10,len(whole[0])-1) + parse_frac(whole[1], mixed=false, improper=improper, signed=false)
+  : let(split = str_split(str,"/"))
+    len(split)!=2 ? NAN
+  : let(
+        numerator =  _parse_int_recurse(split[0],10,len(split[0])-1),
+        denominator = _parse_int_recurse(split[1],10,len(split[1])-1)
+    )
+    !improper && numerator>=denominator? NAN
+  : denominator<0 ? NAN
+  : numerator/denominator;
 
 
 // Function: parse_num()

@@ -391,19 +391,18 @@ orient the object relative to some face other than the TOP face that
 meets at that edge or corner.  You can always apply a `rotation()` to 
 change the orientation of the child object, but in order to do this,
 you need to figure out the correct rotation.  The `orient()` module provides a
-mechanism for re-orienting the child() that eases this burden.
-Using its `anchor=` argument you can orient the
-child relative to the parent anchor directions.  This is different
+mechanism for re-orienting the child() that eases this burden: 
+it can orient the child relative to the parent anchor directions.  This is different
 than giving an `orient=` argument to the child, because that orients
 relative to the parent's global coordinate system by just using the vector
-directly instead of orienting to the parent's anchor, which takes
+directly, instead of orienting to the parent's anchor, which takes
 account of face orientation.  A series of three
 examples shows the different results.  In the first example, we use
 only `position()`.  The child cube is erected pointing upwards, in the
 Z direction.  In the second example we use `orient=RIGHT` in the child
 and the result is that the child object points in the X+ direction,
 without regard for the shape of the parent object.  In the final
-example we apply `orient(anchor=RIGHT)` and the child is oriented
+example we apply `orient(RIGHT)` and the child is oriented
 relative to the slanted right face of the parent using the parent
 RIGHT anchor.   
 
@@ -427,7 +426,7 @@ prismoid([50,50],[30,30],h=40)
 include<BOSL2/std.scad>
 prismoid([50,50],[30,30],h=40)
   position(RIGHT+TOP)
-     orient(anchor=RIGHT)
+     orient(RIGHT)
         cube([15,15,25],anchor=BACK+BOT);
 ```
 
@@ -460,15 +459,9 @@ prismoid([50,50],[30,30],h=40)
 include<BOSL2/std.scad>
 prismoid([50,50],[30,30],h=40)
   position(RIGHT+TOP)
-     orient(anchor=RIGHT)
+     orient(RIGHT)
         anchor_arrow(40);
 ```
-
-
-Note also that `orient()` can be used to orient the child relative to
-the parent global coordinate system using its first argument, `dir=`.  This
-use of `orient()` is the same as using the `orient=` argument for the
-child object.    
 
 
 ## Attachment overview
@@ -590,7 +583,7 @@ cube(50,center=true)
 In the second example, the child object points diagonally away
 from the cube.  If you want the child at at edge of the parent it's
 likely that this result will not be what you want.  To get a different
-result, use `position()` with `orient(anchor=)`, if needed. 
+result, use `position()` with `orient()`, if needed. 
 
 If you give an anchor point to the child object it moves the child
 around (in the attached coordinate system).  Or alternatively you can

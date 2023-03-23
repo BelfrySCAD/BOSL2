@@ -215,6 +215,12 @@ module test_parse_frac() {
     assert(parse_frac("3/0") == INF);
     assert(parse_frac("-3/0") == -INF);
     assert(is_nan(parse_frac("0/0")));
+    assert(is_nan(parse_frac("-77/9", improper=false)));
+    assert(is_nan(parse_frac("-2 12/4",improper=false))); 
+    assert(is_nan(parse_frac("-2 12/4",signed=false)));   
+    assert(is_nan(parse_frac("-2 12/4",mixed=false)));    
+    assert(is_nan(parse_frac("2 1/4",mixed=false)));
+    assert(is_nan(parse_frac("2", mixed=false)));
 }
 test_parse_frac();
 
