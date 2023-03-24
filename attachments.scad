@@ -1317,7 +1317,7 @@ module show_int(tags)
 }
 
 
-// Section: Attachable Masks
+// Section: Mask Attachment
 
 
 // Module: face_mask()
@@ -1482,7 +1482,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 
 
 // Module: face_profile()
-// Synopses: Extrudes a 2D edge profile into a mask for all edges and corners of the given faces on the parent.
+// Synopsis: Extrudes a 2D edge profile into a mask for all edges and corners of the given faces on the parent.
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), edge_profile(), corner_profile(), face_mask(), edge_mask(), corner_mask()
 //
@@ -1523,7 +1523,7 @@ module face_profile(faces=[], r, d, convexity=10) {
 // Module: edge_profile()
 // Synopsis: Extrudes a 2d edge profile into a mask on the given edges of the parent.
 // Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), face_profile(), corner_profile(), edge_mask(), face_mask(), corner_mask
+// See Also: attachable(), position(), attach(), face_profile(), corner_profile(), edge_mask(), face_mask(), corner_mask()
 //
 // Usage:
 //   PARENT() edge_profile([edges], [except], [convexity]) CHILDREN;
