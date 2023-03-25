@@ -699,9 +699,7 @@ function prismoid(
         size1=force_list(size1,2),
         size2=force_list(size2,2),
         h=first_defined([l,h,length,height]),
-        shift = force_list(shift,2),
-        
-        fff=echo(size1=size1,size2=size2)
+        shift = force_list(shift,2)
     )
     assert(xangOK, "prismoid angles must be scalar or 2-vector, strictly between 0 and 180")
     assert(yangOK, "prismoid angles must be scalar or 2-vector, strictly between 0 and 180")
@@ -711,7 +709,6 @@ function prismoid(
     let(
         hx = _trapezoid_dims(h,size1.x,size2.x,shift.x,xang)[0],
         hy = _trapezoid_dims(h,size1.y,size2.y,shift.y,yang)[0]
-        ,eerr=echo(hx=hx,hy=hy,xang=xang,yang=yang)
     )
     assert(num_defined([hx,hy])>0, "Height not given and specification does not determine prismoid height")
     assert(hx==undef || hy==undef || approx(hx,hy),
@@ -751,7 +748,6 @@ function prismoid(
     assert(all_zero(v_mul(rounding2,chamfer2),0),
            "rounding2 and chamfer2 (possibly inherited from rounding and chamfer) cannot both be nonzero at the same corner")
     let(
-      ffda=echo(s1=s1,s2=s2,h=h,shift=shift),
         rounding1 = default(rounding1, rounding),
         rounding2 = default(rounding2, rounding),
         chamfer1 = default(chamfer1, chamfer),
