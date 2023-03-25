@@ -429,7 +429,7 @@ module position(from)
 
 
 // Module: orient()
-// Synopsis: Orients children's tops in the directon of the speccified anchor.
+// Synopsis: Orients children's tops in the directon of the specified anchor.
 // Topics: Attachments
 // See Also: attachable(), attach(), orient()
 
@@ -1660,6 +1660,9 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 
 
 // Module: attachable()
+// Synopsis: Manages the anchoring, spin, orientation, and attachments for an object.
+// Topics: Attachments
+// See Also: reorient()
 //
 // Usage: Square/Trapezoid Geometry
 //   attachable(anchor, spin, two_d=true, size=, [size2=], [shift=], [override=], ...) {OBJECT; children();}
@@ -1685,9 +1688,6 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   attachable(anchor, spin, [orient], vnf=, [extent=], ...) {OBJECT; children();}
 // Usage: Pre-Specified Geometry
 //   attachable(anchor, spin, [orient], geom=) {OBJECT; children();}
-//
-// Topics: Attachments
-// See Also: reorient()
 //
 // Description:
 //   Manages the anchoring, spin, orientation, and attachments for OBJECT, located in a 3D volume or 2D area.
@@ -1970,6 +1970,9 @@ module attachable(
 }
 
 // Function: reorient()
+// Synopsis: Calculates the transformation matrix needed to reorient an object.
+// Topics: Attachments
+// See Also: reorient(), attachable()
 //
 // Usage: Square/Trapezoid Geometry
 //   mat = reorient(anchor, spin, [orient], two_d=true, size=, [size2=], [shift=], ...);
@@ -2004,9 +2007,6 @@ module attachable(
 // Usage: VNF Geometry
 //   mat = reorient(anchor, spin, [orient], vnf, [extent], ...);
 //   pts = reorient(anchor, spin, [orient], vnf, [extent], p=, ...);
-//
-// Topics: Attachments
-// See Also: reorient(), attachable()
 //
 // Description:
 //   Given anchor, spin, orient, and general geometry info for a managed volume, this calculates
@@ -2098,10 +2098,12 @@ function reorient(
 
 
 // Function: named_anchor()
-// Usage:
-//   a = named_anchor(name, pos, [orient], [spin]);
+// Synopsis: Creates an anchro data structure.
 // Topics: Attachments
 // See Also: reorient(), attachable()
+//
+// Usage:
+//   a = named_anchor(name, pos, [orient], [spin]);
 // Description:
 //   Creates an anchor data structure.  For a step-by-step explanation of attachments,
 //   see the [[Attachments Tutorial|Tutorial-Attachments]].
@@ -2114,6 +2116,9 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 
 
 // Function: attach_geom()
+// Synopsis: Returns the internal geometry description of an attachable object.
+// Topics: Attachments
+// See Also: reorient(), attachable()
 //
 // Usage: Null/Point Geometry
 //   geom = attach_geom(...);
@@ -2135,9 +2140,6 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 //   geom = attach_geom(region=, l=|h=, [extent=], [shift=], [scale=], [twist=], ...);
 // Usage: VNF Geometry
 //   geom = attach_geom(vnf=, [extent=], ...);
-//
-// Topics: Attachments
-// See Also: reorient(), attachable()
 //
 // Description:
 //   Given arguments that describe the geometry of an attachable object, returns the internal geometry description.
@@ -2345,10 +2347,11 @@ function attach_geom(
 
 
 /// Internal Function: _attach_geom_2d()
-// Usage:
-//   bool = _attach_geom_2d(geom);
 /// Topics: Attachments
 /// See Also: reorient(), attachable()
+//
+f// Usage:
+//   bool = _attach_geom_2d(geom);
 // Description:
 //   Returns true if the given attachment geometry description is for a 2D shape.
 function _attach_geom_2d(geom) =
@@ -2844,6 +2847,10 @@ function _standard_anchors(two_d=false) = [
 
 
 // Module: show_anchors()
+// Synopsis: Shows anchors for the parent object.
+// Topics: Attachments
+// See Also: expose_anchors(), anchor_arrow(), anchor_arrow2d(), frame_ref()
+//
 // Usage:
 //   PARENT() show_anchors([s], [std=], [custom=]);
 // Description:
@@ -2904,6 +2911,10 @@ module show_anchors(s=10, std=true, custom=true) {
 
 
 // Module: anchor_arrow()
+// Synopsis: Shows a 3d anchor orientation arrow.
+// Topics: Attachments
+// See Also: anchor_arrow2d(), show_anchors(), expose_anchors(), frame_ref()
+//
 // Usage:
 //   anchor_arrow([s], [color], [flag], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
@@ -2939,6 +2950,10 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow",
 
 
 // Module: anchor_arrow2d()
+// Synopsis: Shows a 2d anchor orientation arrow.
+// Topics: Attachments
+// See Also: anchor_arrow3d(), show_anchors(), expose_anchors(), frame_ref()
+//
 // Usage:
 //   anchor_arrow2d([s], [color], [flag]);
 // Description:
@@ -2955,6 +2970,9 @@ module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tag="anchor-arrow") {
 
 
 // Module: expose_anchors()
+// Synopsis: Used to show a transparent object with solid color anchor arrows.
+// Topics: Attachments
+// See Also: anchor_arrow2d(), show_anchors(), show_anchors(), frame_ref()
 // Usage:
 //   expose_anchors(opacity) {child1() show_anchors(); child2() show_anchors(); ...}
 // Description:
@@ -2978,6 +2996,9 @@ module expose_anchors(opacity=0.2) {
 
 
 // Module: frame_ref()
+// Synopsis: Shows axis orientation arrows.
+// Topics: Attachments
+// See Also: anchor_arrow(), anchor_arrow2d(), show_anchors(), expose_anchors()
 // Usage:
 //   frame_ref(s, opacity);
 // Description:
