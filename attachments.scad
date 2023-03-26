@@ -2350,7 +2350,7 @@ function attach_geom(
 /// Topics: Attachments
 /// See Also: reorient(), attachable()
 //
-f// Usage:
+// Usage:
 //   bool = _attach_geom_2d(geom);
 // Description:
 //   Returns true if the given attachment geometry description is for a 2D shape.
@@ -2952,7 +2952,7 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow",
 // Module: anchor_arrow2d()
 // Synopsis: Shows a 2d anchor orientation arrow.
 // Topics: Attachments
-// See Also: anchor_arrow3d(), show_anchors(), expose_anchors(), frame_ref()
+// See Also: anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
 //
 // Usage:
 //   anchor_arrow2d([s], [color], [flag]);
