@@ -914,6 +914,30 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 //   trapezoid(h=30, w1=100, ang=[66,44],rounding=-5, atype="perim",flip=true) show_anchors();
 // Example(2D): Called as Function
 //   stroke(closed=true, trapezoid(h=30, w1=40, w2=20));
+
+function _trapezoid_dims(h,w1,w2,shift,ang) = 
+    let(  
+        h = is_def(h)? h
+          : num_defined([w1,w2,each ang])==4 ? (w1-w2) * sin(ang[0]) * sin(ang[1]) / sin(ang[0]+ang[1])
+          : undef
+    )
+    is_undef(h) ? [h]
+  :
+    let(
+        x1 = is_undef(ang[0]) || ang[0]==90 ? 0 : h/tan(ang[0]),
+        x2 = is_undef(ang[1]) || ang[1]==90 ? 0 : h/tan(ang[1]),
+        w1 = is_def(w1)? w1
+           : is_def(w2) && is_def(ang[0]) ? w2 + x1 + x2
+           : undef,
+        w2 = is_def(w2)? w2
+           : is_def(w1) && is_def(ang[0]) ? w1 - x1 - x2
+           : undef,
+        shift = first_defined([shift,(x1-x2)/2])
+    )
+    [h,w1,w2,shift];
+
+
+
 function trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0,atype="box", _return_override, angle) =
     assert(is_undef(angle), "The angle parameter has been replaced by ang, which specifies trapezoid interior angle")
     assert(is_undef(h) || is_finite(h))
@@ -927,17 +951,15 @@ function trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anc
     assert(is_finite(rounding) || is_vector(rounding,4))
     let(
         ang = force_list(ang,2),
-        angOK = ang==[undef,undef] || (all_positive(ang) && ang[0]<180 && ang[1]<180)
+        angOK = len(ang)==2 && (ang==[undef,undef] || (all_positive(ang) && ang[0]<180 && ang[1]<180))
     )
-    assert(angOK, "trapezoid angles must be strictly between 0 and 180")
+    assert(angOK, "trapezoid angles must be scalar or 2-vector, strictly between 0 and 180")
     let(
-        simple = chamfer==0 && rounding==0,
-        h = is_def(h)? h : (w1-w2) * sin(ang[0]) * sin(ang[1]) / sin(ang[0]+ang[1]),
-        x1 = is_undef(ang[0]) || ang[0]==90 ? 0 : h/tan(ang[0]),
-        x2 = is_undef(ang[1]) || ang[1]==90 ? 0 : h/tan(ang[1]),
-        w1 = is_def(w1)? w1 : w2 + x1 + x2,
-        w2 = is_def(w2)? w2 : w1 - x1 - x2,
-        shift = first_defined([shift,(x1-x2)/2]),
+        h_w1_w2_shift = _trapezoid_dims(h,w1,w2,shift,ang),
+        h = h_w1_w2_shift[0],
+        w1 = h_w1_w2_shift[1],
+        w2 = h_w1_w2_shift[2],
+        shift = h_w1_w2_shift[3],
         chamfer = force_list(chamfer,4),
         rounding = force_list(rounding,4)
     )
@@ -1018,16 +1040,16 @@ function trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anc
 
 
 module trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0, atype="box", angle) {
-    path_over = trapezoid(h=h, w1=w1, w2=w2, ang=ang, shift=shift, chamfer=chamfer, rounding=rounding, flip=flip, angle=angle,atype=atype,_return_override=true);
+    path_over = trapezoid(h=h, w1=w1, w2=w2, ang=ang, shift=shift, chamfer=chamfer, rounding=rounding,
+                          flip=flip, angle=angle,atype=atype,_return_override=true);
     path=path_over[0];
     override = path_over[1];
     ang = force_list(ang,2);
-    h = is_def(h)? h : (w1-w2) * sin(ang[0]) * sin(ang[1]) / sin(ang[0]+ang[1]);
-    x1 = is_undef(ang[0]) || ang[0]==90 ? 0 : h/tan(ang[0]);
-    x2 = is_undef(ang[1]) || ang[1]==90 ? 0 : h/tan(ang[1]);
-    w1 = is_def(w1)? w1 : w2 + x1 + x2;
-    w2 = is_def(w2)? w2 : w1 - x1 - x2;
-    shift = first_defined([shift,(x1-x2)/2]);
+    h_w1_w2_shift = _trapezoid_dims(h,w1,w2,shift,ang);
+    h = h_w1_w2_shift[0];
+    w1 = h_w1_w2_shift[1];
+    w2 = h_w1_w2_shift[2];
+    shift = h_w1_w2_shift[3];
     attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2, shift=shift, override=override) {
         polygon(path);
         children();
