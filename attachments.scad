@@ -2031,10 +2031,7 @@ function reorient(
         orient = default(orient, UP),
         region = !is_undef(region)? region :
             !is_undef(path)? [path] :
-            undef
-    )
-    (anchor==CENTER && spin==0 && orient==UP && p!=undef)? p :
-    let(
+            undef,
         geom = is_def(geom)? geom :
             attach_geom(
                 size=size, size2=size2, shift=shift,
