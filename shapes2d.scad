@@ -1261,7 +1261,7 @@ module jittered_poly(path, dist=1/512) {
 // See Also: teardrop(), onion()
 //
 // Description:
-//   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.  Uses "intersect" style anchoring.  
+//   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes as it limits overhang to 45 degrees.  Uses "intersect" style anchoring.  
 //   The cap_h parameter truncates the top of the teardrop.  If cap_h is taller than the untruncated form then
 //   the result will be the full, untruncated shape.  The segments of the bottom section of the teardrop are
 //   calculated to be the same as a circle or cylinder when rotated 90 degrees.  (Note that this agreement is poor when `$fn=6` or `$fn=7`.  
