@@ -581,21 +581,26 @@ function cuboid(
 //   prismoid(size1, size2, h|l, [rounding=], ...) [ATTACHMENTS];
 //   prismoid(size1, size2, h|l, [rounding1=], [rounding2=], ...) [ATTACHMENTS];
 // Usage: As Function
-//   vnf = prismoid(size1, size2, h|l, [shift], [rounding], [chamfer]);
-//   vnf = prismoid(size1, size2, h|l, [shift], [rounding1], [rounding2], [chamfer1], [chamfer2]);
-//
+//   vnf = prismoid(...);
 // Description:
 //   Creates a rectangular prismoid shape with optional roundovers and chamfering.
 //   You can only round or chamfer the vertical(ish) edges.  For those edges, you can
 //   specify rounding and/or chamferring per-edge, and for top and bottom separately.
 //   If you want to round the bottom or top edges see {{rounded_prism()}}.
-//
+//   .
+//   Specification of the prismoid is similar to specification for {{trapezoid()}}.  You can specify the dimensions of the
+//   bottom and top and its height to get a symmetric prismoid.  You can use the shift argument to shift the top face around.
+//   You can also specify base angles either in the X direction, Y direction or both.  In order to avoid overspecification,
+//   you may need to specify a parameter such as size2 as a list of two values, one of which is undef.  For example,
+//   specifying `size2=[100,undef]` sets the size in the X direction but allows the size in the Y direction to be computed based on yang.
 // Arguments:
 //   size1 = [width, length] of the bottom end of the prism.
 //   size2 = [width, length] of the top end of the prism.
-//   h/l = Height of the prism.
+//   h/l/height/length = Height of the prism.
 //   shift = [X,Y] amount to shift the center of the top end with respect to the center of the bottom end.
 //   ---
+//   xang = base angle in the X direction.  Can be a scalar or list of two values, one of which may be undef
+//   yang = base angle in the Y direction.  Can be a scalar or list of two values, one of which may be undef
 //   rounding = The roundover radius for the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
 //   rounding1 = The roundover radius for the bottom of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
 //   rounding2 = The roundover radius for the top of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
@@ -607,12 +612,12 @@ function cuboid(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 //
+// Example: Truncated Pyramid
+//   prismoid(size1=[35,50], size2=[20,30], h=20);
 // Example: Rectangular Pyramid
 //   prismoid([40,40], [0,0], h=20);
 // Example: Prism
 //   prismoid(size1=[40,40], size2=[0,40], h=20);
-// Example: Truncated Pyramid
-//   prismoid(size1=[35,50], size2=[20,30], h=20);
 // Example: Wedge
 //   prismoid(size1=[60,35], size2=[30,0], h=30);
 // Example: Truncated Tetrahedron
@@ -623,9 +628,19 @@ function cuboid(
 //   prismoid(size1=[30,60], size2=[0,60], shift=[-15,0], h=30);
 // Example(FlatSpin,VPD=160,VPT=[0,0,10]): Shifting/Skewing
 //   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]);
+// Example: Specifying bottom, height and angle
+//   prismoid(size1=[100,75], h=30, xang=50, yang=70);
+// Example: Specifying top, height and angle, with asymmetric angles
+//   prismoid(size2=[100,75], h=30, xang=[50,60], yang=[70,40]);
+// Example: Specifying top, bottom and angle for X and using that to define height.  Note that giving yang here would likely give a conflicting height calculation, which is not allowed.  
+//   prismoid(size1=[100,75], size2=[75,35], xang=50);
+// Example: The same as the previous example but we give a shift in Y.  Note that shift.x must be undef because you cannot give combine an angle with a shift, so a shift.x value would conflict with xang being defined.  
+//   prismoid(size1=[100,75], size2=[75,35], xang=50, shift=[undef,20]);
+// Example:  The X dimensions defined by the base length, angle and height; the Y dimensions defined by the top length, angle, and height. 
+//   prismoid(size1=[100,undef], size2=[undef,75], h=30, xang=[20,90], yang=30);
 // Example: Rounding
 //   prismoid(100, 80, rounding=10, h=30);
-// Example: Outer Chamfer Only
+// Example: Chamfers
 //   prismoid(100, 80, chamfer=5, h=30);
 // Example: Gradiant Rounding
 //   prismoid(100, 80, rounding1=10, rounding2=0, h=30);
@@ -650,46 +665,26 @@ function cuboid(
 //       show_anchors();
 
 module prismoid(
-    size1, size2, h, shift=[0,0],
+    size1=undef, size2=undef, h, shift=[undef,undef],
+    xang, yang,
     rounding=0, rounding1, rounding2,
     chamfer=0, chamfer1, chamfer2,
     l, height, length, center,
     anchor, spin=0, orient=UP
-) {
-    checks =
-        assert(is_num(size1) || is_vector(size1,2))
-        assert(is_num(size2) || is_vector(size2,2))
-        assert(is_num(h) || is_num(l))
-        assert(is_vector(shift,2))
-        assert(is_num(rounding) || is_vector(rounding,4), "Bad rounding argument.")
-        assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "Bad rounding1 argument.")
-        assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "Bad rounding2 argument.")
-        assert(is_num(chamfer) || is_vector(chamfer,4), "Bad chamfer argument.")
-        assert(is_undef(chamfer1) || is_num(chamfer1) || is_vector(chamfer1,4), "Bad chamfer1 argument.")
-        assert(is_undef(chamfer2) || is_num(chamfer2) || is_vector(chamfer2,4), "Bad chamfer2 argument.");
-    eps = pow(2,-14);
-    size1 = is_num(size1)? [size1,size1] : size1;
-    size2 = is_num(size2)? [size2,size2] : size2;
-    checks2 =
-        assert(all_nonnegative(size1))
-        assert(all_nonnegative(size2))
-        assert(size1.x + size2.x > 0)
-        assert(size1.y + size2.y > 0);
-    s1 = [max(size1.x, eps), max(size1.y, eps)];
-    s2 = [max(size2.x, eps), max(size2.y, eps)];
-    rounding1 = default(rounding1, rounding);
-    rounding2 = default(rounding2, rounding);
-    chamfer1 = default(chamfer1, chamfer);
-    chamfer2 = default(chamfer2, chamfer);
-    anchor = get_anchor(anchor, center, BOT, BOT);
-    vnf = prismoid(
+)
+{
+    vnf_s1_s2_shift = prismoid(
         size1=size1, size2=size2, h=h, shift=shift,
+        xang=xang, yang=yang, 
+        rounding=rounding, chamfer=chamfer, 
         rounding1=rounding1, rounding2=rounding2,
         chamfer1=chamfer1, chamfer2=chamfer2,
-        l=l, center=CENTER
+        l=l, height=height, length=length, anchor=BOT, _return_dim=true
     );
-    attachable(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift) {
-        vnf_polyhedron(vnf, convexity=4);
+    anchor = get_anchor(anchor, center, BOT, BOT);
+    attachable(anchor,spin,orient, size=vnf_s1_s2_shift[1], size2=vnf_s1_s2_shift[2], shift=vnf_s1_s2_shift[3]) {
+        down(vnf_s1_s2_shift[1].z/2)
+            vnf_polyhedron(vnf_s1_s2_shift[0], convexity=4);
         children();
     }
 }
@@ -699,78 +694,86 @@ function prismoid(
     rounding=0, rounding1, rounding2,
     chamfer=0, chamfer1, chamfer2,
     l, height, length, center,
-    anchor=DOWN, spin=0, orient=UP
+    anchor=DOWN, spin=0, orient=UP, xang, yang,
+    _return_dim=false
+    
 ) =
-    assert(is_vector(size1,2))
-    assert(is_vector(size2,2))
-    assert(is_num(h) || is_num(l))
-    assert(is_vector(shift,2))
-    assert(
-        (is_num(rounding) && rounding>=0) ||
-        (is_vector(rounding,4) && all_nonnegative(rounding)),
-        "Bad rounding argument."
+    assert(is_undef(shift) || is_num(shift) || len(shift)==2, "shift must be a number or list of length 2")
+    assert(is_undef(size1) || is_num(size1) || len(size1)==2, "size1 must be a number or list of length 2")
+    assert(is_undef(size2) || is_num(size2) || len(size2)==2, "size2 must be a number or list of length 2")  
+    let(
+        xang = force_list(xang,2),
+        yang = force_list(yang,2),
+        yangOK = len(yang)==2 && (yang==[undef,undef] || (all_positive(yang) && yang[0]<180 && yang[1]<180)),
+        xangOK = len(xang)==2 && (xang==[undef,undef] || (all_positive(xang) && xang[0]<180 && xang[1]<180)),
+        size1=force_list(size1,2),
+        size2=force_list(size2,2),
+        h=first_defined([l,h,length,height]),
+        shift = force_list(shift,2)
     )
-    assert(
-        is_undef(rounding1) || (is_num(rounding1) && rounding1>=0) ||
-        (is_vector(rounding1,4) && all_nonnegative(rounding1)),
-        "Bad rounding1 argument."
+    assert(xangOK, "prismoid angles must be scalar or 2-vector, strictly between 0 and 180")
+    assert(yangOK, "prismoid angles must be scalar or 2-vector, strictly between 0 and 180")
+    assert(xang==[undef,undef] || shift.x==undef, "Cannot specify xang and a shift.x value together")
+    assert(yang==[undef,undef] || shift.y==undef, "Cannot specify yang and a shift.y value together")
+    assert(all_positive([h]) || is_undef(h), "h must be a positive value")
+    let(
+        hx = _trapezoid_dims(h,size1.x,size2.x,shift.x,xang)[0],
+        hy = _trapezoid_dims(h,size1.y,size2.y,shift.y,yang)[0]
     )
-    assert(
-        is_undef(rounding2) || (is_num(rounding2) && rounding2>=0) ||
-        (is_vector(rounding2,4) && all_nonnegative(rounding2)),
-        "Bad rounding2 argument."
-    )
-    assert(
-        (is_num(chamfer) && chamfer>=0) ||
-        (is_vector(chamfer,4) && all_nonnegative(chamfer)),
-        "Bad chamfer argument."
-    )
-    assert(
-        is_undef(chamfer1) || (is_num(chamfer1) && chamfer1>=0) ||
-        (is_vector(chamfer1,4) && all_nonnegative(chamfer1)),
-        "Bad chamfer1 argument."
-    )
-    assert(
-        is_undef(chamfer2) || (is_num(chamfer2) && chamfer2>=0) ||
-        (is_vector(chamfer2,4) && all_nonnegative(chamfer2)),
-        "Bad chamfer2 argument."
+    assert(num_defined([hx,hy])>0, "Height not given and specification does not determine prismoid height")
+    assert(hx==undef || hy==undef || approx(hx,hy),
+           str("X and Y angle specifications give rise to conflicting height values ",hx," and ",hy))
+    let(
+        h = first_defined([hx,hy]),
+        x_h_w1_w2_shift = _trapezoid_dims(h,size1.x,size2.x,shift.x,xang),
+        y_h_w1_w2_shift = _trapezoid_dims(h,size1.y,size2.y,shift.y,yang)
     )
     let(
-        eps = pow(2,-14),
-        h = one_defined([h,l,length,height],"h,l,length,height",dflt=1),
-        shiftby = point3d(point2d(shift)),
-        s1 = [max(size1.x, eps), max(size1.y, eps)],
-        s2 = [max(size2.x, eps), max(size2.y, eps)],
+        s1 = [x_h_w1_w2_shift[1], y_h_w1_w2_shift[1]],
+        s2 = [x_h_w1_w2_shift[2], y_h_w1_w2_shift[2]],
+        shift = [x_h_w1_w2_shift[3], y_h_w1_w2_shift[3]]
+    )
+    assert(is_vector(s1,2), "Insufficient information to define prismoid")
+    assert(is_vector(s2,2), "Insufficient information to define prismoid")
+    assert(all_nonnegative(concat(s1,s2)),"Degenerate prismoid geometry")
+    assert(s1.x+s2.x>0 && s1.y+s2.y>0, "Degenerate prismoid geometry")
+    assert(is_num(rounding) || is_vector(rounding,4), "rounding must be a number or 4-vector")
+    assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "rounding1 must be a number or 4-vector")
+    assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "rounding2 must be a number or 4-vector")
+    assert(is_num(chamfer) || is_vector(chamfer,4), "chamfer must be a number or 4-vector")
+    assert(is_undef(chamfer1) || is_num(chamfer1) || is_vector(chamfer1,4), "chamfer1 must be a number or 4-vector")
+    assert(is_undef(chamfer2) || is_num(chamfer2) || is_vector(chamfer2,4), "chamfer2 must be a number or 4-vector")
+    let(
+        chamfer1=force_list(default(chamfer1,chamfer),4),
+        chamfer2=force_list(default(chamfer2,chamfer),4),
+        rounding1=force_list(default(rounding1,rounding),4),
+        rounding2=force_list(default(rounding2,rounding),4)
+    )
+    assert(all_nonnegative(chamfer1), "chamfer/chamfer1 must be non-negative")
+    assert(all_nonnegative(chamfer2), "chamfer/chamfer2 must be non-negative")
+    assert(all_nonnegative(rounding1), "rounding/rounding1 must be non-negative")
+    assert(all_nonnegative(rounding2), "rounding/rounding2 must be non-negative")        
+    assert(all_zero(v_mul(rounding1,chamfer1),0),
+           "rounding1 and chamfer1 (possibly inherited from rounding and chamfer) cannot both be nonzero at the same corner")
+    assert(all_zero(v_mul(rounding2,chamfer2),0),
+           "rounding2 and chamfer2 (possibly inherited from rounding and chamfer) cannot both be nonzero at the same corner")
+    let(
         rounding1 = default(rounding1, rounding),
         rounding2 = default(rounding2, rounding),
         chamfer1 = default(chamfer1, chamfer),
         chamfer2 = default(chamfer2, chamfer),
         anchor = get_anchor(anchor, center, BOT, BOT),
-        vnf = (rounding1==0 && rounding2==0 && chamfer1==0 && chamfer2==0)? (
-            let(
-                corners = [[1,1],[1,-1],[-1,-1],[-1,1]] * 0.5,
-                points = [
-                    for (p=corners) point3d(v_mul(s2,p), +h/2) + shiftby,
-                    for (p=corners) point3d(v_mul(s1,p), -h/2)
-                ],
-                faces=[
-                    [0,1,2], [0,2,3], [0,4,5], [0,5,1],
-                    [1,5,6], [1,6,2], [2,6,7], [2,7,3],
-                    [3,7,4], [3,4,0], [4,7,6], [4,6,5],
-                ]
-            ) [points, faces]
-        ) : (
-            let(
-                path1 = rect(size1, rounding=rounding1, chamfer=chamfer1, anchor=CTR),
-                path2 = rect(size2, rounding=rounding2, chamfer=chamfer2, anchor=CTR),
-                points = [
+        path1 = rect(s1, rounding=rounding1, chamfer=chamfer1, anchor=CTR),
+        path2 = rect(s2, rounding=rounding2, chamfer=chamfer2, anchor=CTR),
+        points = [
                     each path3d(path1, -h/2),
-                    each path3d(move(shiftby, p=path2), +h/2),
-                ],
-                faces = hull(points)
-            ) [points, faces]
-        )
-    ) reorient(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift, p=vnf);
+                    each path3d(move(shift, path2), +h/2),
+                 ],
+        faces = hull(points),
+        vnf = [points, faces]
+    )
+    _return_dim ? [reorient(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift, p=vnf),point3d(s1,h),s2,shift]
+                : reorient(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift, p=vnf);
 
 
 // Function&Module: octahedron()
@@ -1024,7 +1027,7 @@ module rect_tube(
         assert(is_undef(ichamfer) || is_num(ichamfer) || (is_list(ichamfer) && len(ichamfer)==4), "ichamfer must be a number or 4-vector")
         assert(is_undef(ichamfer1) || is_num(ichamfer1) || (is_list(ichamfer1) && len(ichamfer1)==4), "ichamfer1 must be a number or 4-vector")
         assert(is_undef(ichamfer2) || is_num(ichamfer2) || (is_list(ichamfer2) && len(ichamfer2)==4), "ichamfer2 must be a number or 4-vector");
-    chamfer1=force_list( is_def(chamfer1)?chamfer1 :    default(chamfer1,chamfer),4);
+    chamfer1=force_list(default(chamfer1,chamfer),4);
     chamfer2=force_list(default(chamfer2,chamfer),4);
     rounding1=force_list(default(rounding1,rounding),4);
     rounding2=force_list(default(rounding2,rounding),4);
