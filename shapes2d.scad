@@ -21,14 +21,16 @@ use <builtins.scad>
 // Section: 2D Primitives
 
 // Function&Module: square()
+// Synopsis: Creates a 2D square or rectangle.
 // Topics: Shapes (2D), Path Generators (2D)
+// See Also: rect()
+//
 // Usage: As a Module
 //   square(size, [center], ...);
 // Usage: With Attachments
 //   square(size, [center], ...) [ATTACHMENTS];
 // Usage: As a Function
 //   path = square(size, [center], ...);
-// See Also: rect()
 // Description:
 //   When called as the builtin module, creates a 2D square or rectangle of the given size.
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
@@ -71,12 +73,13 @@ module square(size=1, center, anchor, spin) {
 
 
 // Function&Module: rect()
+// Synopsis: Creates a 2d rectangle with optional corner rounding.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: square()
 // Usage: As Module
 //   rect(size, [rounding], [chamfer], ...) [ATTACHMENTS];
 // Usage: As Function
 //   path = rect(size, [rounding], [chamfer], ...);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: square()
 // Description:
 //   When called as a module, creates a 2D rectangle of the given size, with optional rounding or chamfering.
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
@@ -208,7 +211,10 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
 
 
 // Function&Module: circle()
+// Synopsis: Creates the approximation of a circle.
 // Topics: Shapes (2D), Path Generators (2D)
+// See Also: ellipse(), circle_2tangents(), circle_3points()
+//
 // Usage: As a Module
 //   circle(r|d=, ...) [ATTACHMENTS];
 //   circle(points=) [ATTACHMENTS];
@@ -217,7 +223,6 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
 //   path = circle(r|d=, ...);
 //   path = circle(points=);
 //   path = circle(r|d=, corner=);
-// See Also: ellipse(), circle_2tangents(), circle_3points()
 // Description:
 //   When called as the builtin module, creates a 2D polygon that approximates a circle of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
@@ -311,12 +316,14 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
 
 
 // Function&Module: ellipse()
+// Synopsis: Creates the approximation of an ellipse or a circle.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), circle_2tangents(), circle_3points()
+
 // Usage: As a Module
 //   ellipse(r|d=, [realign=], [circum=], [uniform=], ...) [ATTACHMENTS];
 // Usage: As a Function
 //   path = ellipse(r|d=, [realign=], [circum=], [uniform=], ...);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), circle_2tangents(), circle_3points()
 // Description:
 //   When called as a module, creates a 2D polygon that approximates a circle or ellipse of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle or ellipse of the given size.
@@ -494,12 +501,14 @@ function ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER
 // Section: Polygons
 
 // Function&Module: regular_ngon()
+// Synopsis: Creates a regular N-sided polygon.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), pentagon(), hexagon(), octagon(), ellipse(), star()
+
 // Usage:
 //   regular_ngon(n, r|d=|or=|od=, [realign=]) [ATTACHMENTS];
 //   regular_ngon(n, ir=|id=, [realign=]) [ATTACHMENTS];
 //   regular_ngon(n, side=, [realign=]) [ATTACHMENTS];
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), pentagon(), hexagon(), octagon(), ellipse(), star()
 // Description:
 //   When called as a function, returns a 2D path for a regular N-sided polygon.
 //   When called as a module, creates a 2D regular N-sided polygon.
@@ -633,14 +642,16 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 
 
 // Function&Module: pentagon()
+// Synopsis: Creates a regular pentagon.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), regular_ngon(), hexagon(), octagon(), ellipse(), star()
+
 // Usage:
 //   pentagon(or|od=, [realign=], [align_tip=|align_side=]) [ATTACHMENTS];
 //   pentagon(ir=|id=, [realign=], [align_tip=|align_side=]) [ATTACHMENTS];
 //   pentagon(side=, [realign=], [align_tip=|align_side=]) [ATTACHMENTS];
 // Usage: as function
 //   path = pentagon(...);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), regular_ngon(), hexagon(), octagon(), ellipse(), star()
 // Description:
 //   When called as a function, returns a 2D path for a regular pentagon.
 //   When called as a module, creates a 2D regular pentagon.
@@ -691,6 +702,10 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip
 
 
 // Function&Module: hexagon()
+// Synopsis: Creates a regular hexagon.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), regular_ngon(), pentagon(), octagon(), ellipse(), star()
+
 // Usage: As Module
 //   hexagon(r/or, [realign=], <align_tip=|align_side=>, [rounding=], ...) [ATTACHMENTS];
 //   hexagon(d=/od=, ...) [ATTACHMENTS];
@@ -698,8 +713,6 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip
 //   hexagon(side=, ...) [ATTACHMENTS];
 // Usage: As Function
 //   path = hexagon(...);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), regular_ngon(), pentagon(), octagon(), ellipse(), star()
 // Description:
 //   When called as a function, returns a 2D path for a regular hexagon.
 //   When called as a module, creates a 2D regular hexagon.
@@ -750,6 +763,10 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 
 
 // Function&Module: octagon()
+// Synopsis: Creates a regular octagon.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), regular_ngon(), pentagon(), hexagon(), ellipse(), star()
+
 // Usage: As Module
 //   octagon(r/or, [realign=], [align_tip=|align_side=], [rounding=], ...) [ATTACHMENTS];
 //   octagon(d=/od=, ...) [ATTACHMENTS];
@@ -757,8 +774,6 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   octagon(side=, ...) [ATTACHMENTS];
 // Usage: As Function
 //   path = octagon(...);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), regular_ngon(), pentagon(), hexagon(), ellipse(), star()
 // Description:
 //   When called as a function, returns a 2D path for a regular octagon.
 //   When called as a module, creates a 2D regular octagon.
@@ -808,6 +823,10 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 
 
 // Function&Module: right_triangle()
+// Synopsis: Creates a right triangle.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: square(), rect(), regular_ngon(), pentagon(), hexagon(), octagon(), star()
+
 // Usage: As Module
 //   right_triangle(size, [center], ...) [ATTACHMENTS];
 // Usage: As Function
@@ -851,6 +870,10 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 
 
 // Function&Module: trapezoid()
+// Synopsis: Creates a trapezoid with parallel top and bottom sides.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: rect(), square()
+
 // Usage: As Module
 //   trapezoid(h, w1, w2, [shift=], [rounding=], [chamfer=], [flip=], ...) [ATTACHMENTS];
 //   trapezoid(h, w1, ang=, [rounding=], [chamfer=], [flip=], ...) [ATTACHMENTS];
@@ -858,8 +881,6 @@ module right_triangle(size=[1,1], center, anchor, spin=0) {
 //   trapezoid(w1=, w2=, ang=, [rounding=], [chamfer=], [flip=], ...) [ATTACHMENTS];
 // Usage: As Function
 //   path = trapezoid(...);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: rect(), square()
 // Description:
 //   When called as a function, returns a 2D path for a trapezoid with parallel front and back (top and bottom) sides. 
 //   When called as a module, creates a 2D trapezoid.  You can specify the trapezoid by giving its height and the lengths
@@ -1037,14 +1058,16 @@ module trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, ancho
 
 
 // Function&Module: star()
+// Synopsis: Creates a star-shaped polygon with N points.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), ellipse(), regular_ngon()
+// 
 // Usage: As Module
 //   star(n, r/or, ir, [realign=], [align_tip=], [align_pit=], ...) [ATTACHMENTS];
 //   star(n, r/or, step=, ...) [ATTACHMENTS];
 // Usage: As Function
 //   path = star(n, r/or, ir, [realign=], [align_tip=], [align_pit=], ...);
 //   path = star(n, r/or, step=, ...);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), ellipse()
 // Description:
 //   When called as a function, returns the path needed to create a star polygon with N points.
 //   When called as a module, creates a star polygon with N points.
@@ -1204,8 +1227,10 @@ function _path_add_jitter(path, dist=1/512, closed=true) =
 
 
 // Module: jittered_poly()
+// Synopsis: Creates a polygon with extra points for smoother twisted extrusions.
 // Topics: Extrusions
 // See Also: subdivide_path()
+//
 // Usage:
 //   jittered_poly(path, [dist]);
 // Description:
@@ -1231,9 +1256,12 @@ module jittered_poly(path, dist=1/512) {
 
 
 // Function&Module: teardrop2d()
+// Synopsis: Creates a 2D teardrop shape.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: teardrop(), onion()
 //
 // Description:
-//   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.  Uses "intersect" style anchoring.  
+//   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes as it limits overhang to 45 degrees.  Uses "intersect" style anchoring.  
 //   The cap_h parameter truncates the top of the teardrop.  If cap_h is taller than the untruncated form then
 //   the result will be the full, untruncated shape.  The segments of the bottom section of the teardrop are
 //   calculated to be the same as a circle or cylinder when rotated 90 degrees.  (Note that this agreement is poor when `$fn=6` or `$fn=7`.  
@@ -1245,10 +1273,6 @@ module jittered_poly(path, dist=1/512) {
 //   teardrop2d(r/d=, [ang], [cap_h]) [ATTACHMENTS];
 // Usage: As Function
 //   path = teardrop2d(r|d=, [ang], [cap_h]);
-//
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-//
-// See Also: teardrop(), onion()
 //
 // Arguments:
 //   r = radius of circular part of teardrop.  (Default: 1)
@@ -1331,12 +1355,14 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
 
 
 // Function&Module: egg()
+// Synopsis: Creates an egg-shaped 2d object.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), ellipse(), glued_circles()
+//
 // Usage: As Module
 //   egg(length, r1|d1=, r2|d2=, R|D=) [ATTACHMENTS];
 // Usage: As Function
 //   path = egg(length, r1|d1=, r2|d2=, R|D=);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), ellipse(), glued_circles()
 // Description:
 //   Constructs an egg-shaped object by connecting two circles with convex arcs that are tangent to the circles.
 //   You specify the length of the egg, the radii of the two circles, and the desired arc radius.
@@ -1418,12 +1444,14 @@ module egg(length,r1,r2,R,d1,d2,D,anchor=CENTER, spin=0)
 
 
 // Function&Module: glued_circles()
+// Synopsis: Creates a shape of two circles joined by a curved waist.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), ellipse(), egg()
+//
 // Usage: As Module
 //   glued_circles(r/d=, [spread], [tangent], ...) [ATTACHMENTS];
 // Usage: As Function
 //   path = glued_circles(r/d=, [spread], [tangent], ...);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), ellipse(), egg()
 // Description:
 //   When called as a function, returns a 2D path forming a shape of two circles joined by curved waist.
 //   When called as a module, creates a 2D shape of two circles joined by curved waist.  Uses "hull" style anchoring.  
@@ -1486,12 +1514,14 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
     pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
 
 // Function&Module: supershape()
+// Synopsis: Creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), ellipse()
+//
 // Usage: As Module
 //   supershape([step],[n=], [m1=], [m2=], [n1=], [n2=], [n3=], [a=], [b=], [r=/d=]) [ATTACHMENTS];
 // Usage: As Function
 //   path = supershape([step], [n=], [m1=], [m2=], [n1=], [n2=], [n3=], [a=], [b=], [r=/d=]);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), ellipse()
 // Description:
 //   When called as a function, returns a 2D path for the outline of the [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
 //   When called as a module, creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
@@ -1567,12 +1597,14 @@ module supershape(step=0.5,n,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=u
 
 
 // Function&Module: reuleaux_polygon()
+// Synopsis: Creates a constant-width shape that is not circular.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: regular_ngon(), pentagon(), hexagon(), octagon()
+//
 // Usage: As Module
 //   reuleaux_polygon(n, r|d=, ...) [ATTACHMENTS];
 // Usage: As Function
 //   path = reuleaux_polygon(n, r|d=, ...);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: regular_ngon(), pentagon(), hexagon(), octagon()
 // Description:
 //   Creates a 2D Reuleaux Polygon; a constant width shape that is not circular.  Uses "intersect" type anchoring.  
 // Arguments:
@@ -1635,7 +1667,9 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 // Section: Text
 
 // Module: text()
+// Synopsis: Creates an attachable block of text.
 // Topics: Attachments, Text
+// See Also: text3d()
 // Usage:
 //   text(text, [size], [font], ...);
 // Description:
@@ -1746,6 +1780,8 @@ module text(text, size=10, font="Helvetica", halign, valign, spacing=1.0, direct
 // Section: Rounding 2D shapes
 
 // Module: round2d()
+// Synopsis: Rounds the corners of 2d objects.
+
 // Usage:
 //   round2d(r) [ATTACHMENTS];
 //   round2d(or=) [ATTACHMENTS];
@@ -1775,6 +1811,8 @@ module round2d(r, or, ir)
 
 
 // Module: shell2d()
+// Synopsis: Creates a shell from 2D children.
+//
 // Usage:
 //   shell2d(thickness, [or], [ir])
 // Description:

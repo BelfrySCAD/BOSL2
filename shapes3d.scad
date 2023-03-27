@@ -18,14 +18,16 @@ use <builtins.scad>
 // Section: Cuboids, Prismoids and Pyramids
 
 // Function&Module: cube()
+// Synopsis: Creates a cube with anchors for attaching children.
 // Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: cuboid(), prismoid()
+//
 // Usage: As Module (as in native OpenSCAD)
 //   cube(size, [center]);
 // Usage: With BOSL2 Attachment extensions
 //   cube(size, [center], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Usage: As Function (BOSL2 extension)
 //   vnf = cube(size, ...);
-// See Also: cuboid(), prismoid()
 // Description:
 //   Creates a 3D cubic object.
 //   This module extends the built-in cube()` module by providing support for attachments and a function form.  
@@ -87,6 +89,9 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 
 
 // Module: cuboid()
+// Synopsis: Creates a cube with chamfering and roundovers. 
+// Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: prismoid(), rounded_prism()
 //
 // Usage: Standard Cubes
 //   cuboid(size, [anchor=], [spin=], [orient=]);
@@ -120,7 +125,6 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// See Also: prismoid(), rounded_prism()
 // Example: Simple regular cube.
 //   cuboid(40);
 // Example: Cube with minimum cornerpoint given.
@@ -564,7 +568,10 @@ function cuboid(
 
 
 // Function&Module: prismoid()
-//
+// Synopsis: Creates a rectangular prismoid shape with optional roundovers and chamfering.
+// Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: cuboid(), rounded_prism() wedge() octahedron()
+
 // Usage: Typical Prismoids
 //   prismoid(size1, size2, h|l, [shift], ...) [ATTACHMENTS];
 // Usage: Chamfered Prismoids
@@ -599,7 +606,6 @@ function cuboid(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
-// See Also: cuboid(), rounded_prism()
 //
 // Example: Rectangular Pyramid
 //   prismoid([40,40], [0,0], h=20);
@@ -768,6 +774,11 @@ function prismoid(
 
 
 // Function&Module: octahedron()
+// Synopsis: Creates an octahedron with axis-aligned points.
+// Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: prismoid()
+
+
 // Usage: As Module
 //   octahedron(size, ...) [ATTACHMENTS];
 // Usage: As Function
@@ -806,6 +817,10 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 
 
 // Module: rect_tube()
+// Synopsis: Creates a rectangular tube.
+// Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: tube()
+//
 // Usage: Typical Rectangular Tubes
 //   rect_tube(h, size, isize, [center], [shift]);
 //   rect_tube(h, size, wall=, [center=]);
@@ -1076,6 +1091,9 @@ function rect_tube(
 
 
 // Function&Module: wedge()
+// Synopsis: Creates a 3d triangular wedge.
+// Topics: Shapes (3D), Attachable, VNF Generators
+// See also: prismoid(), rounded_prism(), pie_slice()
 //
 // Usage: As Module
 //   wedge(size, [center], ...) [ATTACHMENTS];
@@ -1136,7 +1154,10 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 
 
 // Function&Module: cylinder()
+// Synopsis: Creates an attachable cylinder.
 // Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: cyl()
+//
 // Usage: As Module (as in native OpenSCAD)
 //   cylinder(h, r=/d=, [center=]);
 //   cylinder(h, r1/d1=, r2/d2=, [center=]);
@@ -1146,7 +1167,6 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 // Usage: As Function (BOSL2 extension)
 //   vnf = cylinder(h, r=/d=, ...);
 //   vnf = cylinder(h, r1/d1=, r2/d2=, ...);
-// See Also: cyl()
 // Description:
 //   Creates a 3D cylinder or conic object.
 //   This modules extends the built-in `cylinder()` module by adding support for attachment and by adding a function version.   
@@ -1220,7 +1240,10 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 
 
 // Function&Module: cyl()
-//
+// Synopsis: Creates an attachable cylinder with roundovers and chamfering.
+// Topics: Cylinders, Textures, Rounding, Chamfers
+// See Also: texture(), rotate_sweep(), cylinder()
+// 
 // Usage: Normal Cylinders
 //   cyl(l|h|length|height, r, [center], [circum=], [realign=]) [ATTACHMENTS];
 //   cyl(l|h|length|height, d=, ...) [ATTACHMENTS];
@@ -1244,7 +1267,6 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   cyl(l|h|length|height, r1=, r2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
 //   cyl(l|h|length|height, d1=, d2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
 //
-// Topics: Cylinders, Textures, Rounding, Chamfers
 //
 // Description:
 //   Creates cylinders in various anchorings and orientations, with optional rounding, chamfers, or textures.
@@ -1320,7 +1342,6 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
-// See Also: texture(), rotate_sweep()
 //
 // Example: By Radius
 //   xdistribute(30) {
@@ -1616,9 +1637,12 @@ module cyl(
 
 
 // Module: xcyl()
+// Synopsis: creates a cylinder oriented along the X axis.
+// Topics: Cylinders, Textures, Rounding, Chamfers
+// See Also: texture(), rotate_sweep(), cyl()
 //
 // Description:
-//   Creates a cylinder oriented along the X axis.
+//   Creates an attachable cylinder with roundovers and chamfering oriented along the X axis.
 //
 // Usage: Typical
 //   xcyl(l|h|length|height, r|d=, [anchor=], ...) [ATTACHMENTS];
@@ -1696,9 +1720,13 @@ module xcyl(
 
 
 // Module: ycyl()
+// Synopsis: creates a cylinder oriented along the y axis.
+// Topics: Cylinders, Textures, Rounding, Chamfers
+// See Also: texture(), rotate_sweep(), cyl()
 //
 // Description:
-//   Creates a cylinder oriented along the Y axis.
+//   Creates an attachable cylinder with roundovers and chamfering oriented along the y axis.
+
 //
 // Usage: Typical
 //   ycyl(l|h|length|height, r|d=, [anchor=], ...) [ATTACHMENTS];
@@ -1778,9 +1806,13 @@ module ycyl(
 
 
 // Module: zcyl()
+// Synopsis: creates a cylinder oriented along the Z axis.
+// Topics: Cylinders, Textures, Rounding, Chamfers
+// See Also: texture(), rotate_sweep(), cyl()
 //
 // Description:
-//   Creates a cylinder oriented along the Z axis.
+//   Creates an attachable cylinder with roundovers and chamfering oriented along the Z axis.
+
 //
 // Usage: Typical
 //   zcyl(l|h|length|height, r|d=, [anchor=],...) [ATTACHMENTS];
@@ -1859,6 +1891,10 @@ module zcyl(
 
 
 // Module: tube()
+// Synopsis: Creates a cylindrical or conical tube.
+// Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: rect_tube()
+
 //
 // Description:
 //   Makes a hollow tube that can be cylindrical or conical by specifying inner and outer dimensions or by giving one dimension and
@@ -1954,6 +1990,9 @@ module tube(
 
 
 // Function&Module: pie_slice()
+// Synopsis: Creates a pie slice shape
+// Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: wedge()
 //
 // Description:
 //   Creates a pie slice shape.
@@ -2050,14 +2089,16 @@ function pie_slice(
 
 
 // Function&Module: sphere()
+// Synopsis: Creates an attachable spherical object.
 // Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: spheroid()
+
 // Usage: As Module (native OpenSCAD)
 //   sphere(r|d=);
 // Usage: Using BOSL2 attachments extensions
 //   sphere(r|d=, [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Usage: As Function (BOSL2 extension)
 //   vnf = sphere(r|d=, [anchor=], [spin=], [orient=]) [ATTACHMENTS];
-// See Also: spheroid()
 // Description:
 //   Creates a sphere object.
 //   This module extends the built-in `sphere()` module by providing support for BOSL2 anchoring and attachments, and a function form. 
@@ -2095,6 +2136,10 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 
 
 // Function&Module: spheroid()
+// Synopsis: Creates an attachable spherical object with controllable triangulation.
+// Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: sphere();
+//
 // Usage: Typical
 //   spheroid(r|d, [circum], [style]) [ATTACHMENTS];
 // Usage: As Function
@@ -2422,6 +2467,8 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 
 
 // Function&Module: torus()
+// Synopsis: Creates an attachable torus.
+// Topics: Shapes (3D), Attachable, VNF Generators
 //
 // Usage: As Module
 //   torus(r_maj|d_maj, r_min|d_min, [center], ...) [ATTACHMENTS];
@@ -2439,7 +2486,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 //   vnf = torus(r_min|d_min, ir|id, ...);
 //
 // Description:
-//   Creates a torus shape.
+//   Creates an attachable toroidal shape.
 //
 // Figure(2D,Med):
 //   module dashcirc(r,start=0,angle=359.9,dashlen=5) let(step=360*dashlen/(2*r*PI)) for(a=[start:step:start+angle]) stroke(arc(r=r,start=a,angle=step/2));
@@ -2562,6 +2609,9 @@ function torus(
 
 
 // Function&Module: teardrop()
+// Synopsis: Creates a teardrop shape.
+// Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: onion(), teardrop2d()
 //
 // Description:
 //   Makes a teardrop shape in the XZ plane. Useful for 3D printable holes.
@@ -2701,6 +2751,9 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 
 
 // Function&Module: onion()
+// Synopsis: Creates an attachable onion-like shape.
+// Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: teardrop(), teardrop2d()
 //
 // Description:
 //   Creates a sphere with a conical hat, to make a 3D teardrop.
@@ -2788,7 +2841,10 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 // Section: Text
 
 // Module: text3d()
+// Synopsis: Creates an attachable 3d text block.
 // Topics: Attachments, Text
+// See Also: path_text(), text() 
+// 
 // Usage:
 //   text3d(text, [h], [size], [font], [language=], [script=], [direction=], [atype=], [anchor=], [spin=], [orient=]);
 // Description:
@@ -2828,7 +2884,6 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   center = Center the text.  Equivalent to `atype="center", anchor=CENTER`.  Default: false
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// See Also: path_text()
 // Anchor Types:
 //   baseline = Anchor center is relative to text baseline
 //   ycenter = Anchor center is relative to the actualy y direction center of the text
@@ -2894,6 +2949,10 @@ function _cut_interp(pathcut, path, data) =
 
 
 // Module: path_text()
+// Synopsis: Creates 2d or 3d text placed along a path.
+// Topics: Text, Paths, Paths (2D), Paths (3D), Path Generators, Path Generators (2D)
+// See Also, text(), text2d()
+
 // Usage:
 //   path_text(path, text, [size], [thickness], [font], [lettersize=], [offset=], [reverse=], [normal=], [top=], [textmetrics=], [kern=])
 // Description:
@@ -3134,7 +3193,10 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 
 
 
+// Topics: Shapes (3D), Attachable
 // Module: fillet()
+// Synopsis: Creates a smooth fillet between two faces.
+// 
 //
 // Description:
 //   Creates a shape that can be unioned into a concave joint between two faces, to fillet them.
@@ -3213,11 +3275,14 @@ module fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTE
 
 
 // Function&Module: heightfield()
+// Synopsis: Generates a 3D surface from a 2D grid of values. 
+// Topics: Textures, Heightfield
+// See Also: cylindrical_heightfield()
+//
 // Usage: As Module
 //   heightfield(data, [size], [bottom], [maxz], [xrange], [yrange], [style], [convexity], ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = heightfield(data, [size], [bottom], [maxz], [xrange], [yrange], [style], ...);
-// Topics: Textures, Heightfield
 // Description:
 //   Given a regular rectangular 2D grid of scalar values, or a function literal, generates a 3D
 //   surface where the height at any given point is the scalar value for that position.
@@ -3236,7 +3301,6 @@ module fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTE
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// See Also: heightfield(), cylindrical_heightfield()
 // Example:
 //   heightfield(size=[100,100], bottom=-20, data=[
 //       for (y=[-180:4:180]) [
@@ -3342,11 +3406,14 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 
 
 // Function&Module: cylindrical_heightfield()
+// Synopsis: Generates a cylindrical 3d surface from a 2D grid of values.
+// Topics: Extrusion, Textures, Knurling, Heightfield
+// See Also: heightfield()
+//
 // Usage: As Function
 //   vnf = cylindrical_heightfield(data, l|length=|h=|height=, r|d=, [base=], [transpose=], [aspect=]);
 // Usage: As Module
 //   cylindrical_heightfield(data, l|length=|h=|height=, r|d=, [base=], [transpose=], [aspect=]) [ATTACHMENTS];
-// Topics: Extrusion, Textures, Knurling, Heightfield
 // Description:
 //   Given a regular rectangular 2D grid of scalar values, or a function literal of signature (x,y), generates
 //   a cylindrical 3D surface where the height at any given point above the radius `r=`, is the scalar value
@@ -3374,7 +3441,6 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// See Also: heightfield(), cylindrical_heightfield()
 // Example(VPD=400;VPR=[55,0,150]):
 //   cylindrical_heightfield(l=100, r=30, base=5, data=[
 //       for (y=[-180:4:180]) [
@@ -3488,10 +3554,12 @@ module cylindrical_heightfield(
 
 
 // Module: ruler()
+// Synopsis: Creates a ruler.
+// 
 // Usage:
 //   ruler(length, width, [thickness=], [depth=], [labels=], [pipscale=], [maxscale=], [colors=], [alpha=], [unit=], [inch=]) [ATTACHMENTS];
 // Description:
-//   Creates a ruler for checking dimensions of the model
+//   Creates an attachable ruler for checking dimensions of the model.
 // Arguments:
 //   length = length of the ruler.  Default 100
 //   width = width of the ruler.  Default: size of the largest unit division
