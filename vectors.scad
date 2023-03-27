@@ -284,6 +284,26 @@ function vector_axis(v1,v2=undef,v3=undef) =
             ) unit(cross(w1,w3));
 
 
+// Function: vector_bisect()
+// Usage:
+//   newv = vector_bisect(v1,v2);
+// Description:
+//   Returns a unit vector that exactly bisects the minor angle between two given vectors.
+//   If given two vectors that are directly opposed, returns `undef`.
+function vector_bisect(v1,v2) =
+    assert(is_vector(v1))
+    assert(is_vector(v2))
+    assert(!approx(norm(v1),0), "Zero length vector.")
+    assert(!approx(norm(v2),0), "Zero length vector.")
+    assert(len(v1)==len(v2), "Vectors are of different sizes.")
+    let( v1 = unit(v1), v2 = unit(v2) )
+    approx(v1,-v2)? undef :
+    let(
+        axis = vector_axis(v1,v2),
+        ang = vector_angle(v1,v2),
+        v3 = rot(ang/2, v=axis, p=v1)
+    ) v3;
+
 
 
 // Section: Vector Searching
