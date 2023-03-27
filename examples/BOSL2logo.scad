@@ -11,11 +11,11 @@ xdistribute(50) {
 	recolor("#f77")
 	diff("hole")
 	cuboid([45,45,10], chamfer=10, edges=[RIGHT+BACK,RIGHT+FRONT], anchor=FRONT) {
-		cuboid([30,30,11], chamfer=5, edges=[RIGHT+BACK,RIGHT+FRONT], $tags="hole");
+		tag("hole")cuboid([30,30,11], chamfer=5, edges=[RIGHT+BACK,RIGHT+FRONT]);
 		attach(FRONT,BACK, overlap=5) {
-			diff("hole")
+			diff("hole2")
 			cuboid([45,45,10], rounding=15, edges=[RIGHT+BACK,RIGHT+FRONT]) {
-				cuboid([30,30,11], rounding=10, edges=[RIGHT+BACK,RIGHT+FRONT], $tags="hole");
+				tag("hole2")cuboid([30,30,11], rounding=10, edges=[RIGHT+BACK,RIGHT+FRONT]);
 			}
 		}
 	}
@@ -50,4 +50,3 @@ xdistribute(50) {
 				nut("M12", thickness=10, diameter=20);
 	}
 }
-
