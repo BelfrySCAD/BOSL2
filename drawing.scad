@@ -17,11 +17,13 @@
 // Section: Line Drawing
 
 // Module: stroke()
+// Synopsis: Draws a line along 2D or 3D path.
+// Topics: Paths (2D), Paths (3D), Drawing Tools
+// See Also: offset_stroke(), path_sweep()
+//
 // Usage:
 //   stroke(path, [width], [closed], [endcaps], [endcap_width], [endcap_length], [endcap_extent], [trim]);
 //   stroke(path, [width], [closed], [endcap1], [endcap2], [endcap_width1], [endcap_width2], [endcap_length1], [endcap_length2], [endcap_extent1], [endcap_extent2], [trim1], [trim2]);
-// Topics: Paths (2D), Paths (3D), Drawing Tools
-// See Also: offset_stroke(), path_sweep()
 // Description:
 //   Draws a 2D or 3D path with a given line width.  Joints and each endcap can be replaced with
 //   various marker shapes, and can be assigned different colors.  If passed a region instead of
@@ -545,12 +547,14 @@ module stroke(
 
 
 // Function&Module: dashed_stroke()
+// Synopsis: Draws a dashed line along a path or region boundry.
+// Topics: Paths, Drawing Tools
+// See Also: stroke(), path_cut()
+//
 // Usage: As a Module
 //   dashed_stroke(path, dashpat, [width=], [closed=]);
 // Usage: As a Function
 //   dashes = dashed_stroke(path, dashpat, [closed=]);
-// Topics: Paths, Drawing Tools
-// See Also: stroke(), path_cut()
 // Description:
 //   Given a path (or region) and a dash pattern, creates a dashed line that follows that
 //   path or region boundary with the given dash pattern.
@@ -622,6 +626,9 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 // Section: Computing paths
 
 // Function&Module: arc()
+// Synopsis: Draws a 2d pie-slice or returns 2D or 3D path forming an arc.
+// Topics: Shapes (2D), Path Generators (2D)
+//
 // Usage: 2D arc from 0º to `angle` degrees.
 //   path=arc(n, r|d=, angle);
 // Usage: 2D arc from START to END degrees.
@@ -657,7 +664,7 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   width = If given with `thickness`, arc starts and ends on X axis, to make a circle segment.
 //   thickness = If given with `width`, arc starts and ends on X axis, to make a circle segment.
 //   start = Start angle of arc.
-//   wedge = If true, include centerpoint `cp` in output to form pie slice shape.
+//   wedge = If true, include centerpoint `cp` in output to form pie slice shape.  Default: false
 //   endpoint = If false exclude the last point (function only).  Default: true
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  (Module only) Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  (Module only) Default: `0`
@@ -814,6 +821,9 @@ module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=fa
 
 
 // Function: helix()
+// Synopsis: Creates a 2d spiral or 3d helical path.
+// Topics: Path Generators, Paths, Drawing Tools
+//
 // Usage:
 //   path = helix(l|h, [turns=], [angle=], r=|r1=|r2=, d=|d1=|d2=);
 // Description:
@@ -866,12 +876,14 @@ function _normal_segment(p1,p2) =
 
 
 // Function: turtle()
-// Usage:
-//   turtle(commands, [state], [full_state=], [repeat=])
+// Synopsis: Uses [turtle graphics](https://en.wikipedia.org/wiki/Turtle_graphics) to generate a 2D path.
 // Topics: Shapes (2D), Path Generators (2D), Mini-Language
 // See Also: turtle3d()
+//
+// Usage:
+//   turtle(commands, [state], [full_state=], [repeat=])
 // Description:
-//   Use a sequence of turtle graphics commands to generate a path.  The parameter `commands` is a list of
+//   Use a sequence of [turtle graphics]{https://en.wikipedia.org/wiki/Turtle_graphics} commands to generate a path.  The parameter `commands` is a list of
 //   turtle commands and optional parameters for each command.  The turtle state has a position, movement direction,
 //   movement distance, and default turn angle.  If you do not give `state` as input then the turtle starts at the
 //   origin, pointed along the positive x axis with a movement distance of 1.  By default, `turtle` returns just
@@ -1128,6 +1140,10 @@ function _turtle_command(command, parm, parm2, state, index) =
 // Section: Debugging polygons
 
 // Module: debug_polygon()
+// Synopsis: Draws an annotated polygon.
+// Topics: Shapes (2D)
+// See Also: polygon()
+//
 // Usage:
 //   debug_polygon(points, paths, [vertices=], [edges=], [convexity=], [size=]);
 // Description:

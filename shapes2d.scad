@@ -503,7 +503,7 @@ function ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER
 // Function&Module: regular_ngon()
 // Synopsis: Creates a regular N-sided polygon.
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), pentagon(), hexagon(), octagon(), ellipse(), star()
+// See Also: debug_polygon(), circle(), pentagon(), hexagon(), octagon(), ellipse(), star()
 
 // Usage:
 //   regular_ngon(n, r|d=|or=|od=, [realign=]) [ATTACHMENTS];
