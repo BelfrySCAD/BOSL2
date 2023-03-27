@@ -570,7 +570,7 @@ function cuboid(
 // Function&Module: prismoid()
 // Synopsis: Creates a rectangular prismoid shape with optional roundovers and chamfering.
 // Topics: Shapes (3D), Attachable, VNF Generators
-// See Also: cuboid() rounded_prism() wedge() octahedron()
+// See Also: cuboid(), rounded_prism(), wedge(), octahedron()
 
 // Usage: Typical Prismoids
 //   prismoid(size1, size2, h|l, [shift], ...) [ATTACHMENTS];
