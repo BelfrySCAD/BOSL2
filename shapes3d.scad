@@ -570,7 +570,7 @@ function cuboid(
 // Function&Module: prismoid()
 // Synopsis: Creates a rectangular prismoid shape with optional roundovers and chamfering.
 // Topics: Shapes (3D), Attachable, VNF Generators
-// See Also: cuboid(), rounded_prism() wedge() octahedron()
+// See Also: cuboid() rounded_prism() wedge() octahedron()
 
 // Usage: Typical Prismoids
 //   prismoid(size1, size2, h|l, [shift], ...) [ATTACHMENTS];
@@ -2141,7 +2141,7 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 // Function&Module: spheroid()
 // Synopsis: Creates an attachable spherical object with controllable triangulation.
 // Topics: Shapes (3D), Attachable, VNF Generators
-// See Also: sphere();
+// See Also: sphere()
 //
 // Usage: Typical
 //   spheroid(r|d, [circum], [style]) [ATTACHMENTS];
