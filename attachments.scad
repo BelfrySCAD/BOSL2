@@ -385,6 +385,78 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //       _show_corners(_corners("ALL",[FRONT+RIGHT+TOP,FRONT+LEFT+BOT]),
 //                    toplabel=["except=[FRONT+RIGHT+TOP,","       FRONT+LEFT+BOT]"]);
 //    }
+// Subsection: Anchoring of Non-Rectangular Objects and Anchor Type (atype)
+//   We focused above on rectangular objects that have well-defined faces and edges aligned with the coordinate axes.
+//   Things get difficult when the objects are curved, or even when their edges are not neatly aligned with the coordinae axes.
+//   In these cases, the library may provide multiple different anchoring schemes, called the anchor types.  When a module supports
+//   multiple anchor types, use the `atype=` parameter to select the anchor type you need.
+// .
+//   First consider the case of a simple rectangle whose corners have been rounded.  Where should the anchors lie?
+//   The default anchor type puts them in the same location as the anchors of an unrounded rectangle, which means that for
+//   positive rounding radii, they are not even located on the perimeter of the object.
+// Figure(2D,Med): Default "box" atype anchors for a rounded {{rect()}}
+//   rect([100,50], rounding=[10,0,0,-20],chamfer=[0,10,-20,0]) show_anchors();
+// Continues:
+//   This choice enables you to position the box, or attach things to it, without regard to its rounding or chamfers.  If you need to
+//   anchor onto the roundovers or chamfers then you can use the "perim" anchor type:
+// Figure(2D,Med): The "perim" atype for a rounded and chamfered {{rect()}}
+//   rect([100,50], rounding=[10,0,0,-20],chamfer=[0,10,-20,0],atype="perim") show_anchors();
+// Continues:
+//   With this anchor type, the anchors are located on the perimeter.  For positive roundings they point in the standard anchor direction;
+//   for negative roundings they are parellel to the base.  As noted above, for circles, cylinders, and spheres, the anchor point is
+//   determined by choosing the point where the anchor vector intersects the shape.  On a circle, this results in an anchor whose direction
+//   matches the user provided anchor vector.  But on an ellipse, something else happens:
+// Figure: Anchors on an ellipse.  The red arrow shows a TOP+RIGHT anchor direction. 
+//   ellipse([70,30]) show_anchors();
+//   stroke([[0,0],[45,45]], color="red",endcap2="arrow2");
+// Continues:
+//   For a TOP+RIGHT anchor direction, the surface normal at the intersection point does not match the anchor direction,
+//   so the direction of the anchor shown in blue does not match the direction specified, in red.
+//   Anchors computed this way have anchor type "intersect".  When a shape is concave, intersection anchors can produce
+//   a result buried inside the shape's concavity.  Consider the RIGHT anchor of this supershape example:
+// Figure: A supershape with "intersect" anchor type:
+//   supershape(n=150,r=75, m1=4, n1=4.0,n2=16, n3=1.5, a=0.9, b=9,atype="intersect") show_anchors();
+// Continues:
+//   A different anchor type called "hull" finds anchors that are on the convex hull of the shape.  
+// Figure: A supershape with "hull" anchor type:
+//   supershape(n=150,r=55, m1=4, n1=4.0,n2=16, n3=1.5, a=0.9, b=9,atype="hull") show_anchors();
+// Continues:
+//   Hull anchoring works by creating the line (or plane in 3D) that is normal to the specified anchor direction, and
+//   finding the point farthest from the center that intersects that line (or plane).
+// Figure: Finding the RIGHT and BACK+LEFT "hull" anchors
+//   supershape(n=128,r=55, m1=4, n1=4.0,n2=16, n3=1.5, a=0.9, b=9,atype="hull") {
+//     position(RIGHT) color_this("red")rect([1,90],anchor=LEFT);
+//     attach(RIGHT)anchor_arrow2d(13);
+//     attach(BACK+LEFT) {
+//        anchor_arrow2d(13);
+//        color_this("red")rect([30,1]);
+//        }
+//     }
+// Continues:
+//   In the example the RIGHT anchor is found when the normal line (shown in red) is tangent to the shape at two points.
+//   The anchor is then taken to be the midpoint.  The BACK+LEFT anchor occurs with a single tangent point, and the
+//   anchor point is located at the tangent point.  For circles intersection is done to the exact circle, but for other
+//   shapes these calculations are done on the point lists that defines the shape, so if you change the number of points
+//   in the list, the precise location of the anchors can change.  You can also get surprising results if your point list is badly chosen.
+// Figure: Circle anchor in blue.  The red anchor is computed to a point list of a circle with 17 segments.  
+//   circle(r=31,$fn=128) attach(TOP)anchor_arrow2d(15);
+//   region(circle(r=33,$fn=17)) {color("red")attach(TOP)anchor_arrow2d(13);}
+// Continues:
+//   The figure shows a large horizontal offset due to a poor choice of sampling for the circular shape when using the "hull" anchor type.
+//   The determination of "hull" or "intersect" anchors may depend on the location of the centerpoint used in the computation.
+//   Some of the modules allow you to change the centerpoint using a `cp=` argument.  If you need to change the centerpoint for
+//   a module that does not provide this option, you can use the generic {{region()}} module, which will let you specify a centerpoint.
+//   The default center point is the centroid, specified by "centroid".  You can also choose "mean", which gives the mean of all
+//   the data points, or "bbox", which gives the centerpoint of the bounding box for the data.  Your last option for centerpoint is to
+//   choose an arbitrary point that meets your needs.
+// Figure: The centerpoint for "intersect" anchors is located at the red dot
+//   region(supershape(n=128,r=55, m1=4, n1=4.0,n2=16, n3=1.5, a=0.9, b=9),atype="intersect",cp=[0,30]) show_anchors();
+//   color("red")back(30)circle(r=2,$fn=16);
+// Continues:
+//   Note that all the anchors for an object have to be determined based on one anchor type and relative to the same centerpoint.
+//   The supported anchor types for each module appear in the "Anchor Types" section of its entry.  
+
+
 
 
 
@@ -2033,7 +2105,7 @@ function reorient(
             !is_undef(path)? [path] :
             undef
     )
-    (anchor==CENTER && spin==0 && orient==UP && p!=undef)? p :
+//    (anchor==CENTER && spin==0 && orient==UP && p!=undef)? p :
     let(
         geom = is_def(geom)? geom :
             attach_geom(
