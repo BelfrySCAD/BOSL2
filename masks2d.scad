@@ -15,12 +15,14 @@
 // Section: 2D Masking Shapes
 
 // Function&Module: mask2d_roundover()
+// Synopsis: Creates a 2D beading mask shape useful for rounding 90° edges.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile(), fillet()
+//
 // Usage: As module
 //   mask2d_roundover(r|d=, [inset], [excess]) [ATTACHMENTS];
 // Usage: As function
 //   path = mask2d_roundover(r|d=, [inset], [excess]);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
-// See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D roundover/bead mask shape that is useful for extruding into a 3D mask for a 90° edge.
 //   Conversely, you can use that same extruded shape to make an interior fillet between two walls at a 90º angle.
@@ -78,12 +80,14 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 
 
 // Function&Module: mask2d_cove()
+// Synopsis: Creates a 2d cove (quarter-round) mask shape.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
+//
 // Usage: As module
 //   mask2d_cove(r|d=, [inset], [excess]) [ATTACHMENTS];
 // Usage: As function
 //   path = mask2d_cove(r|d=, [inset], [excess]);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
-// See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D cove mask shape that is useful for extruding into a 3D mask for a 90° edge.
 //   Conversely, you can use that same extruded shape to make an interior rounded shelf decoration between two walls at a 90º angle.
@@ -141,6 +145,10 @@ function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 
 
 // Function&Module: mask2d_chamfer()
+// Synopsis: Produces a 2D chamfer mask shape.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
+//
 // Usage: As Module
 //   mask2d_chamfer(edge, [angle], [inset], [excess]) [ATTACHMENTS];
 //   mask2d_chamfer(y=, [angle=], [inset=], [excess=]) [ATTACHMENTS];
@@ -149,8 +157,6 @@ function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 //   path = mask2d_chamfer(edge, [angle], [inset], [excess]);
 //   path = mask2d_chamfer(y=, [angle=], [inset=], [excess=]);
 //   path = mask2d_chamfer(x=, [angle=], [inset=], [excess=]);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
-// See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D chamfer mask shape that is useful for extruding into a 3D mask for a 90° edge.
 //   Conversely, you can use that same extruded shape to make an interior chamfer between two walls at a 90º angle.
@@ -219,12 +225,14 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 
 
 // Function&Module: mask2d_rabbet()
+// Synopsis: Creates a rabbet mask shape.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
+//
 // Usage: As Module
 //   mask2d_rabbet(size, [excess]) [ATTACHMENTS];
 // Usage: As Function
 //   path = mask2d_rabbet(size, [excess]);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
-// See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D rabbet mask shape that is useful for extruding into a 3D mask for a 90° edge.
 //   Conversely, you can use that same extruded shape to make an interior shelf decoration between two walls at a 90º angle.
@@ -276,14 +284,16 @@ function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
 
 
 // Function&Module: mask2d_dovetail()
+// Creates a 2d dovetail mask shape.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
+//
 // Usage: As Module
 //   mask2d_dovetail(edge, [angle], [inset], [shelf], [excess], ...) [ATTACHMENTS];
 //   mask2d_dovetail(x=, [angle=], [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
 //   mask2d_dovetail(y=, [angle=], [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
 // Usage: As Function
 //   path = mask2d_dovetail(edge, [angle], [inset], [shelf], [excess]);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
-// See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D dovetail mask shape that is useful for extruding into a 3D mask for a 90° edge.
 //   Conversely, you can use that same extruded shape to make an interior dovetail between two walls at a 90º angle.
@@ -353,12 +363,14 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 
 
 // Function&Module: mask2d_teardrop()
+// Synopsis: Creates a 2d teardrop mask shape with a controllable maximum angle from vertical.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
+//
 // Usage: As Module
 //   mask2d_teardrop(r|d=, [angle], [excess]) [ATTACHMENTS];
 // Usage: As Function
 //   path = mask2d_teardrop(r|d=, [angle], [excess]);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
-// See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D teardrop mask shape that is useful for extruding into a 3D mask for a 90° edge.
 //   Conversely, you can use that same extruded shape to make an interior teardrop fillet between two walls at a 90º angle.
@@ -416,12 +428,14 @@ module mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) {
 }
 
 // Function&Module: mask2d_ogee()
+// Synopsis: Creates a 2d ogee mask shape.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
+//
 // Usage: As Module
 //   mask2d_ogee(pattern, [excess], ...) [ATTAHCMENTS];
 // Usage: As Function
 //   path = mask2d_ogee(pattern, [excess], ...);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
-// See Also: corner_profile(), edge_profile(), face_profile()
 //
 // Description:
 //   Creates a 2D Ogee mask shape that is useful for extruding into a 3D mask for a 90° edge.

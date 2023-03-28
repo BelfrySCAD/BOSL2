@@ -3199,6 +3199,7 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 // Topics: Shapes (3D), Attachable
 // Module: fillet()
 // Synopsis: Creates a smooth fillet between two faces.
+// See Also: mask2d_roundover()
 // 
 //
 // Description:
