@@ -1080,7 +1080,7 @@ module trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, ancho
 
 
 // Function&Module: star()
-// Synopsis: Creates a star-shaped polygon with N points.
+// Synopsis: Creates a star-shaped polygon or returns a star-shaped region.
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), ellipse(), regular_ngon()
 // 

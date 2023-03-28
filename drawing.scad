@@ -17,7 +17,7 @@
 // Section: Line Drawing
 
 // Module: stroke()
-// Synopsis: Draws a line along 2D or 3D path.
+// Synopsis: Draws a line along a path or region boundry.
 // Topics: Paths (2D), Paths (3D), Drawing Tools
 // See Also: offset_stroke(), path_sweep()
 //

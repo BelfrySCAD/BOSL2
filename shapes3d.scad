@@ -18,7 +18,7 @@ use <builtins.scad>
 // Section: Cuboids, Prismoids and Pyramids
 
 // Function&Module: cube()
-// Synopsis: Creates a cube with anchors for attaching children.
+// Synopsis: Creates a cube with anchors for attaching children, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: cuboid(), prismoid()
 //
@@ -89,7 +89,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 
 
 // Module: cuboid()
-// Synopsis: Creates a cube with chamfering and roundovers. 
+// Synopsis: Creates a cube with chamfering and roundovers, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: prismoid(), rounded_prism()
 //
@@ -568,18 +568,15 @@ function cuboid(
 
 
 // Function&Module: prismoid()
-// Synopsis: Creates a rectangular prismoid shape with optional roundovers and chamfering.
+// Synopsis: Creates a rectangular prismoid shape with optional roundovers and chamfering, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
-// See Also: cuboid(), rounded_prism(), wedge(), octahedron()
-
-// Usage: Typical Prismoids
-//   prismoid(size1, size2, h|l, [shift], ...) [ATTACHMENTS];
-// Usage: Chamfered Prismoids
-//   prismoid(size1, size2, h|l, [chamfer=], ...) [ATTACHMENTS];
-//   prismoid(size1, size2, h|l, [chamfer1=], [chamfer2=], ...) [ATTACHMENTS];
-// Usage: Rounded Prismoids
-//   prismoid(size1, size2, h|l, [rounding=], ...) [ATTACHMENTS];
-//   prismoid(size1, size2, h|l, [rounding1=], [rounding2=], ...) [ATTACHMENTS];
+// See Also: cuboid(), rounded_prism(), trapezoid()
+//
+// Usage: 
+//   prismoid(size1, size2, [h|l|height|length], [shift], [xang=], [yang=], ...) [ATTACHMENTS];
+// Usage: Chamfered and/or Rounded Prismoids
+//   prismoid(size1, size2, h|l|height|length, [chamfer=], [rounding=]...) [ATTACHMENTS];
+//   prismoid(size1, size2, h|l|height|length, [chamfer1=], [chamfer2=], [rounding1=], [rounding2=], ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = prismoid(...);
 // Description:
@@ -610,7 +607,6 @@ function cuboid(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//
 //
 // Example: Truncated Pyramid
 //   prismoid(size1=[35,50], size2=[20,30], h=20);
@@ -777,7 +773,7 @@ function prismoid(
 
 
 // Function&Module: octahedron()
-// Synopsis: Creates an octahedron with axis-aligned points.
+// Synopsis: Creates an octahedron with axis-aligned points, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: prismoid()
 
@@ -820,7 +816,7 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 
 
 // Module: rect_tube()
-// Synopsis: Creates a rectangular tube.
+// Synopsis: Creates a rectangular tube, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: tube()
 //
@@ -1094,7 +1090,7 @@ function rect_tube(
 
 
 // Function&Module: wedge()
-// Synopsis: Creates a 3d triangular wedge.
+// Synopsis: Creates a 3d triangular wedge, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See also: prismoid(), rounded_prism(), pie_slice()
 //
@@ -1157,7 +1153,7 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 
 
 // Function&Module: cylinder()
-// Synopsis: Creates an attachable cylinder.
+// Synopsis: Creates an attachable cylinder, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: cyl()
 //
@@ -1243,7 +1239,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 
 
 // Function&Module: cyl()
-// Synopsis: Creates an attachable cylinder with roundovers and chamfering.
+// Synopsis: Creates an attachable cylinder with roundovers and chamfering, or returns a vnf.
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cylinder()
 // 
@@ -1640,7 +1636,7 @@ module cyl(
 
 
 // Module: xcyl()
-// Synopsis: creates a cylinder oriented along the X axis.
+// Synopsis: creates a cylinder oriented along the X axis, or returns a vnf.
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
 //
@@ -1723,7 +1719,7 @@ module xcyl(
 
 
 // Module: ycyl()
-// Synopsis: creates a cylinder oriented along the y axis.
+// Synopsis: creates a cylinder oriented along the y axis, or returns a vnf.
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
 //
@@ -1809,7 +1805,7 @@ module ycyl(
 
 
 // Module: zcyl()
-// Synopsis: creates a cylinder oriented along the Z axis.
+// Synopsis: creates a cylinder oriented along the Z axis, or returns a vnf.
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
 //
@@ -1894,7 +1890,7 @@ module zcyl(
 
 
 // Module: tube()
-// Synopsis: Creates a cylindrical or conical tube.
+// Synopsis: Creates a cylindrical or conical tube, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: rect_tube()
 
@@ -1993,7 +1989,7 @@ module tube(
 
 
 // Function&Module: pie_slice()
-// Synopsis: Creates a pie slice shape
+// Synopsis: Creates a pie slice shape, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: wedge()
 //
@@ -2092,7 +2088,7 @@ function pie_slice(
 
 
 // Function&Module: sphere()
-// Synopsis: Creates an attachable spherical object.
+// Synopsis: Creates an attachable spherical object, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: spheroid()
 
@@ -2139,7 +2135,7 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 
 
 // Function&Module: spheroid()
-// Synopsis: Creates an attachable spherical object with controllable triangulation.
+// Synopsis: Creates an attachable spherical object with controllable triangulation, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: sphere()
 //
@@ -2470,7 +2466,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 
 
 // Function&Module: torus()
-// Synopsis: Creates an attachable torus.
+// Synopsis: Creates an attachable torus, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 //
 // Usage: As Module
@@ -2612,7 +2608,7 @@ function torus(
 
 
 // Function&Module: teardrop()
-// Synopsis: Creates a teardrop shape.
+// Synopsis: Creates a teardrop shape, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: onion(), teardrop2d()
 //
@@ -2754,7 +2750,7 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 
 
 // Function&Module: onion()
-// Synopsis: Creates an attachable onion-like shape.
+// Synopsis: Creates an attachable onion-like shape, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: teardrop(), teardrop2d()
 //
@@ -2844,7 +2840,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 // Section: Text
 
 // Module: text3d()
-// Synopsis: Creates an attachable 3d text block.
+// Synopsis: Creates an attachable 3d text block, or returns a vnf.
 // Topics: Attachments, Text
 // See Also: path_text(), text() 
 // 
@@ -2952,7 +2948,7 @@ function _cut_interp(pathcut, path, data) =
 
 
 // Module: path_text()
-// Synopsis: Creates 2d or 3d text placed along a path.
+// Synopsis: Creates 2d or 3d text placed along a path, or returns a vnf.
 // Topics: Text, Paths, Paths (2D), Paths (3D), Path Generators, Path Generators (2D)
 // See Also, text(), text2d()
 
@@ -3198,7 +3194,7 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 
 // Topics: Shapes (3D), Attachable
 // Module: fillet()
-// Synopsis: Creates a smooth fillet between two faces.
+// Synopsis: Creates a smooth fillet between two faces, or returns a vnf.
 // See Also: mask2d_roundover()
 // 
 //
@@ -3279,7 +3275,7 @@ module fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTE
 
 
 // Function&Module: heightfield()
-// Synopsis: Generates a 3D surface from a 2D grid of values. 
+// Synopsis: Generates a 3D surface from a 2D grid of values, or returns a vnf.
 // Topics: Textures, Heightfield
 // See Also: cylindrical_heightfield()
 //
@@ -3410,7 +3406,7 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 
 
 // Function&Module: cylindrical_heightfield()
-// Synopsis: Generates a cylindrical 3d surface from a 2D grid of values.
+// Synopsis: Generates a cylindrical 3d surface from a 2D grid of values, or returns a vnf.
 // Topics: Extrusion, Textures, Knurling, Heightfield
 // See Also: heightfield()
 //
