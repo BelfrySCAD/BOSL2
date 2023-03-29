@@ -23,7 +23,6 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 // Synopsis: Extends [turtle graphics](https://en.wikipedia.org/wiki/Turtle_graphics) to 3d. Generates a 3D path or returns a list of transforms.
 // Topics: Shapes (3D), Path Generators (3D), Mini-Language
 // See Also: turtle()
-//
 // Usage:
 //   turtle3d(commands, [state], [transforms], [full_state], [repeat])
 // Description:
