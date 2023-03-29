@@ -1111,19 +1111,35 @@ function rect_tube(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
+// Extra Anchors:
+//   hypot = Center of angled wedge face, perpendicular to that face.
+//   hypot_left = Left side of angled wedge face, bisecting the angle between the left side and angled faces.
+//   hypot_right = Right side of angled wedge face, bisecting the angle between the right side and angled faces.
+//
 // Example: Centered
 //   wedge([20, 40, 15], center=true);
 // Example: *Non*-Centered
 //   wedge([20, 40, 15]);
-// Example: Standard Connectors
-//   wedge([20, 40, 15]) show_anchors();
+// Example: Standard Anchors
+//   wedge([40, 80, 30], center=true)
+//       show_anchors(custom=false);
+//   color([0.5,0.5,0.5,0.1])
+//       cube([40, 80, 30], center=true);
+// Example: Named Anchors
+//   wedge([40, 80, 30], center=true)
+//       show_anchors(std=false);
 
 module wedge(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
 {
     size = scalar_vec3(size);
     anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
-    vnf = wedge(size, center=true);
-    attachable(anchor,spin,orient, size=size, size2=[size.x,0], shift=[0,-size.y/2]) {
+    vnf = wedge(size, anchor="origin");
+    anchors = [
+        named_anchor("hypot", CTR, unit([0,size.z,size.y],UP)),
+        named_anchor("hypot_left", [-size.x/2,0,0], unit(unit([0,size.z,size.y],UP)+LEFT)),
+        named_anchor("hypot_right", [size.x/2,0,0], unit(unit([0,size.z,size.y],UP)+RIGHT)),
+    ];
+    attachable(anchor,spin,orient, size=size, anchors=anchors) {
         if (size.z > 0) {
             vnf_polyhedron(vnf);
         }
@@ -1144,9 +1160,14 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
             [0,1,2], [3,5,4], [0,3,1], [1,3,4],
             [1,4,2], [2,4,5], [2,5,3], [0,2,3],
         ],
-        vnf = [scale(size/2,p=pts), faces]
+        vnf = [scale(size/2,p=pts), faces],
+        anchors = [
+            named_anchor("hypot", CTR, unit([0,size.z,size.y],UP)),
+            named_anchor("hypot_left", [-size.x/2,0,0], unit(unit([0,size.z,size.y],UP)+LEFT)),
+            named_anchor("hypot_right", [size.x/2,0,0], unit(unit([0,size.z,size.y],UP)+RIGHT)),
+        ]
     )
-    reorient(anchor,spin,orient, size=size, size2=[size.x,0], shift=[0,-size.y/2], p=vnf);
+    reorient(anchor,spin,orient, size=size, anchors=anchors, p=vnf);
 
 
 // Section: Cylinders
