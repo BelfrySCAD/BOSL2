@@ -670,11 +670,12 @@ module prismoid(
         rounding=rounding, chamfer=chamfer, 
         rounding1=rounding1, rounding2=rounding2,
         chamfer1=chamfer1, chamfer2=chamfer2,
-        l=l, height=height, length=length, center=CENTER, _return_dim=true
+        l=l, height=height, length=length, anchor=BOT, _return_dim=true
     );
     anchor = get_anchor(anchor, center, BOT, BOT);
     attachable(anchor,spin,orient, size=vnf_s1_s2_shift[1], size2=vnf_s1_s2_shift[2], shift=vnf_s1_s2_shift[3]) {
-        vnf_polyhedron(vnf_s1_s2_shift[0], convexity=4);
+        down(vnf_s1_s2_shift[1].z/2)
+            vnf_polyhedron(vnf_s1_s2_shift[0], convexity=4);
         children();
     }
 }

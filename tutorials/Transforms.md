@@ -158,10 +158,8 @@ Constant                       | Value        | Direction
 `RIGHT`                        | `[ 1, 0, 0]` | Towards X+
 `FWD`, `FORWARD`, `FRONT`      | `[ 0,-1, 0]` | Towards Y-
 `BACK`                         | `[ 0, 1, 0]` | Towards Y+
-`DOWN`, `BOTTOM`, `BOT`, `BTM` | `[ 0, 0,-1]` | Towards Z-
+`DOWN`, `BOTTOM`, `BOT`        | `[ 0, 0,-1]` | Towards Z-
 `UP`, `TOP`                    | `[ 0, 0, 1]` | Towards Z+
-`ALLNEG`                       | `[-1,-1,-1]` | Towards X-Y-Z-
-`ALLPOS`                       | `[ 1, 1, 1]` | Towards X+Y+Z+
 
 This lets you rewrite the above vector rotation more clearly as:
 ```openscad

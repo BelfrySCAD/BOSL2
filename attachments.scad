@@ -2103,10 +2103,7 @@ function reorient(
         orient = default(orient, UP),
         region = !is_undef(region)? region :
             !is_undef(path)? [path] :
-            undef
-    )
-//    (anchor==CENTER && spin==0 && orient==UP && p!=undef)? p :
-    let(
+            undef,
         geom = is_def(geom)? geom :
             attach_geom(
                 size=size, size2=size2, shift=shift,
@@ -2617,12 +2614,25 @@ function _find_anchor(anchor, geom) =
             bot = point3d(v_mul(point2d(size )/2, axy), -h/2),
             top = point3d(v_mul(point2d(size2)/2, axy) + shift, h/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
-            vecs = [
-                if (anch.x!=0) unit(rot(from=UP, to=[(top-bot).x,0,h], p=[axy.x,0,0]), UP),
-                if (anch.y!=0) unit(rot(from=UP, to=[0,(top-bot).y,h], p=[0,axy.y,0]), UP),
-                if (anch.z!=0) anch==CENTER? UP : unit([0,0,anch.z],UP)
-            ],
-            vec = anchor==CENTER? UP : rot(from=UP, to=axis, p=unit(sum(vecs) / len(vecs))),
+            vecs = anchor==CENTER? [UP]
+              : [
+                    if (anch.x!=0) unit(rot(from=UP, to=[(top-bot).x,0,h], p=[axy.x,0,0]), UP),
+                    if (anch.y!=0) unit(rot(from=UP, to=[0,(top-bot).y,h], p=[0,axy.y,0]), UP),
+                    if (anch.z!=0) unit([0,0,anch.z],UP)
+                ],
+            vec2 = anchor==CENTER? UP
+              : len(vecs)==1? unit(vecs[0],UP)
+              : len(vecs)==2? vector_bisect(vecs[0],vecs[1])
+              : let(
+                    v1 = vector_bisect(vecs[0],vecs[2]),
+                    v2 = vector_bisect(vecs[1],vecs[2]),
+                    p1 = plane_from_normal(yrot(90,p=v1)),
+                    p2 = plane_from_normal(xrot(-90,p=v2)),
+                    line = plane_intersection(p1,p2),
+                    v3 = unit(line[1]-line[0],UP) * anch.z
+                )
+                unit(v3,UP),
+            vec = rot(from=UP, to=axis, p=vec2),
             pos2 = rot(from=UP, to=axis, p=pos)
         ) [anchor, pos2, vec, oang]
     ) : type == "conoid"? ( //r1, r2, l, shift
