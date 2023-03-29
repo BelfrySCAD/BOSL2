@@ -2,7 +2,7 @@
 // LibFile: attachments.scad
 //   The modules in this file allows you to attach one object to another by making one object the child of another object.
 //   You can place the child object in relation to its parent object and control the position and orientation
-//   relative to the parent.  The modifiers allow you to treat children in different ways that simple union, such
+//   relative to the parent.  The modifiers allow you to treat children in ways different from simple union, such
 //   as differencing them from the parent, or changing their color.  Attachment only works when the parent and child
 //   are both written to support attachment.  Also included in this file  are the tools to make your own "attachable" objects.
 // Includes:
@@ -42,7 +42,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   This library adds the concept of anchoring, spin and orientation to the `cube()`, `cylinder()`
 //   and `sphere()` builtins, as well as to most of the shapes provided by this library itself.
 //   - An anchor is a place on an object which you can align the object to, or attach other objects
-//     to using `attach()` or `position()`.  An anchor has a position, a direction, and a spin.
+//     to using `attach()` or `position()`. An anchor has a position, a direction, and a spin.
 //     The direction and spin are used to orient other objects to match when using `attach()`.
 //   - Spin is a simple rotation around the Z axis.
 //   - Orientation is rotating an object so that its top is pointed towards a given vector.
@@ -270,7 +270,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //           _show_edges(edges="NONE");
 //       }
 //   }
-// Figure(3D,Big,VPD=310,NoScales):  Next are some examples showing how you can combine edge descriptors to obtain different edge sets.    You can specify the top front edge with a numerical vector or by combining the named direction vectors.  If you combine them as a list you get all the edges around the front or top faces.  Adding `except` removes an edge.
+// Figure(3D,Big,VPD=310,NoScales):  Next are some examples showing how you can combine edge descriptors to obtain different edge sets.    You can specify the top front edge with a numerical vector or by combining the named direction vectors.  If you combine them as a list you get all the edges around the front and top faces.  Adding `except` removes an edge.
 //   xdistribute(43){
 //     _show_edges(_edges([0,-1,1]),toplabel=["edges=[0,-1,1]"]);
 //     _show_edges(_edges(TOP+FRONT),toplabel=["edges=TOP+FRONT"]);
@@ -463,11 +463,12 @@ _ANCHOR_TYPES = ["intersect","hull"];
 // Section: Attachment Positioning
 
 // Module: position()
-// Usage:
-//   PARENT() position(from) CHILDREN;
-//
+// Synopsis: Attaches children to a parent object at an anchor point.
 // Topics: Attachments
 // See Also: attachable(), attach(), orient()
+//
+// Usage:
+//   PARENT() position(from) CHILDREN;
 //
 // Description:
 //   Attaches children to a parent object at an anchor point.  For a step-by-step explanation
@@ -500,9 +501,12 @@ module position(from)
 
 
 // Module: orient()
+// Synopsis: Orients children's tops in the directon of the specified anchor.
+// Topics: Attachments
+// See Also: attachable(), attach(), orient()
+
 // Usage:
 //   PARENT() orient(anchor, [spin]) CHILDREN;
-// Topics: Attachments
 // Description:
 //   Orients children such that their top is tilted in the direction of the specified parent anchor point. 
 //   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
@@ -513,7 +517,7 @@ module position(from)
 //   `$attach_anchor` is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for the `anchor=`, if given.
 //   `$attach_to` is set to `undef`.
 //   `$attach_norot` is set to `true`.
-// See Also: attachable(), attach(), orient()
+//
 // Example: When orienting to an anchor, the spin of the anchor may cause confusion:
 //   prismoid([50,50],[30,30],h=40) {
 //       position(TOP+RIGHT)
@@ -551,11 +555,13 @@ module orient(anchor, spin) {
 
 
 // Module: attach()
+// Synopsis: Attaches children to a parent object at an anchor point and orientation.
+// Topics: Attachments
+// See Also: attachable(), position(), face_profile(), edge_profile(), corner_profile()
+//
 // Usage:
 //   PARENT() attach(from, [overlap=], [norot=]) CHILDREN;
 //   PARENT() attach(from, to, [overlap=], [norot=]) CHILDREN;
-// Topics: Attachments
-// See Also: attachable(), position(), face_profile(), edge_profile(), corner_profile()
 // Description:
 //   Attaches children to a parent object at an anchor point and orientation.  Attached objects will
 //   be overlapped into the parent object by a little bit, as specified by the `$overlap`
@@ -606,10 +612,12 @@ module attach(from, to, overlap, norot=false)
 // Section: Tagging
 
 // Module: tag()
-// Usage:
-//   PARENT() tag(tag) CHILDREN;
+// Synopsis: Assigns a tag to an object
 // Topics: Attachments
 // See Also: force_tag(), recolor(), hide(), show_only(), diff(), intersect()
+//
+// Usage:
+//   PARENT() tag(tag) CHILDREN;
 // Description:
 //   Assigns the specified tag to all of the children. Note that if you want
 //   to apply a tag to non-tag-aware objects you need to use {{force_tag()}} instead.
@@ -643,10 +651,12 @@ module tag(tag)
 
 
 // Module: force_tag()
-// Usage:
-//   PARENT() force_tag([tag]) CHILDREN;
+// Assigns a tag to a non-attachable object.
 // Topics: Attachments
 // See Also: tag(), recolor(), hide(), show_only(), diff(), intersect()
+//
+// Usage:
+//   PARENT() force_tag([tag]) CHILDREN;
 // Description:
 //   You use this module when you want to make a non-attachable or non-BOSL2 module respect tags.
 //   It applies to its children the tag specified (or the tag currently in force if you don't specify a tag),
@@ -705,10 +715,12 @@ module force_tag(tag)
 
 
 // Module: default_tag()
-// Usage:
-//   PARENT() default_tag(tag) CHILDREN;
+// Synopsis: Sets a default tag for all children.
 // Topics: Attachments
 // See Also: force_tag(), recolor(), hide(), show_only(), diff(), intersect()
+//
+// Usage:
+//   PARENT() default_tag(tag) CHILDREN;
 // Description:
 //   Sets a default tag for all of the children.  This is intended to be used to set a tag for a whole module
 //   that is then used outside the module, such as setting the tag to "remove" for easy operation with {{diff()}}.
@@ -788,12 +800,14 @@ module tag_scope(scope){
 // Section: Attachment Modifiers
 
 // Module: diff()
-// Usage:
-//   diff([remove], [keep]) PARENT() CHILDREN;
+// Synopsis: Performs a differencing operation using tags rather than hierarchy to control what happens.
 // Topics: Attachments
 // See Also: tag(), force_tag(), recolor(), show_only(), hide(), tag_diff(), intersect(), tag_intersect()
+//
+// Usage:
+//   diff([remove], [keep]) PARENT() CHILDREN;
 // Description:
-//   Perform a differencing operation using tags to control what happens.  This is specifically intended to
+//   Performs a differencing operation using tags to control what happens.  This is specifically intended to
 //   address the situation where you want differences between a parent and child object, something
 //   that is impossible with the native difference() module.
 //   The children to diff are grouped into three categories, regardless of nesting level.
@@ -976,10 +990,12 @@ module diff(remove="remove", keep="keep")
 
 
 // Module: tag_diff()
-// Usage:
-//   tag_diff(tag, [remove], [keep]) PARENT() CHILDREN;
+// Synopsis: Performs a {{diff()}} and then sets a tag on the result.
 // Topics: Attachments
 // See Also: tag(), force_tag(), recolor(), show_only(), hide(), diff(), intersect(), tag_intersect()
+//
+// Usage:
+//   tag_diff(tag, [remove], [keep]) PARENT() CHILDREN;
 // Description:
 //   Perform a differencing operation in the manner of {{diff()}} using tags to control what happens,
 //   and then tag the resulting difference object with the specified tag.  This forces the specified
@@ -1046,10 +1062,12 @@ module tag_diff(tag,remove="remove", keep="keep")
 
 
 // Module: intersect()
-// Usage:
-//   intersect([intersect], [keep]) PARENT() CHILDREN;
+// Synopsis: Perform an intersection operation on children using tags rather than hierarchy to control what happens.
 // Topics: Attachments
 // See Also: tag(), force_tag(), recolor(), show_only(), hide(), diff(), tag_diff(), tag_intersect()
+//
+// Usage:
+//   intersect([intersect], [keep]) PARENT() CHILDREN;
 // Description:
 //   Performs an intersection operation on its children, using tags to
 //   determine what happens.  This is specifically intended to address
@@ -1115,10 +1133,12 @@ module intersect(intersect="intersect",keep="keep")
 
 
 // Module: tag_intersect()
-// Usage:
-//   tag_intersect(tag, [intersect], [keep]) PARENT() CHILDREN;
+// Synopsis: Performs an {{intersect()}} and then tags the result.
 // Topics: Attachments
 // See Also: tag(), force_tag(), recolor(), show_only(), hide(), diff(), tag_diff(), intersect()
+//
+// Usage:
+//   tag_intersect(tag, [intersect], [keep]) PARENT() CHILDREN;
 // Description:
 //   Perform an intersection operation in the manner of {{intersect()}} using tags to control what happens,
 //   and then tag the resulting difference object with the specified tag.  This forces the specified
@@ -1170,10 +1190,12 @@ module tag_intersect(tag,intersect="intersect",keep="keep")
 
 
 // Module: conv_hull()
-// Usage:
-//   conv_hull([keep]) CHILDREN;
+// Synopsis:  Performs a hull operation on the children using tags to determine what happens.
 // Topics: Attachments
 // See Also: tag(), recolor(), show_only(), hide(), diff(), intersect()
+//
+// Usage:
+//   conv_hull([keep]) CHILDREN;
 // Description:
 //   Performs a hull operation on the children using tags to determine what happens.  The items
 //   not tagged with the `keep` tags are combined into a convex hull, and the children tagged with the keep tags
@@ -1206,10 +1228,12 @@ module conv_hull(keep="keep")
 
 
 // Module: tag_conv_hull()
-// Usage:
-//   tag_conv_hull(tag, [keep]) CHILDREN;
+// Synopsis: Performs a {{conv_hull()}} and then sets a tag on the result.
 // Topics: Attachments
 // See Also: tag(), recolor(), show_only(), hide(), diff(), intersect()
+//
+// Usage:
+//   tag_conv_hull(tag, [keep]) CHILDREN;
 // Description:
 //   Perform a convex hull operation in the manner of {{conv_hull()}} using tags to control what happens,
 //   and then tag the resulting hull object with the specified tag.  This forces the specified
@@ -1256,10 +1280,12 @@ module tag_conv_hull(tag,keep="keep")
 
 
 // Module: hide()
+// Synopsis: Hides attachable children with the given tags.
+// Topics: Attachments
+// See Also: tag(), recolor(), show_only(), show_all(), show_int(), diff(), intersect()
+//
 // Usage:
 //   hide(tags) CHILDREN;
-// Topics: Attachments
-// See Also: tag(), recolor(), show_only(), diff(), intersect()
 // Description:
 //   Hides all attachable children with the given tags, which you supply as a space separated string. Previously hidden objects remain hidden, so hiding is cumulative, unlike `show_only()`.
 //   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
@@ -1290,10 +1316,12 @@ module hide(tags)
 
 
 // Module: show_only()
+// Synopsis: Show only the children with the listed tags.
+// See Also: tag(), recolor(), show_all(), show_int(), diff(), intersect()
+// Topics: Attachments
+//
 // Usage:
 //   show_only(tags) CHILDREN;
-// Topics: Attachments
-// See Also: tag(), recolor(), hide(), diff(), intersect()
 // Description:
 //   Show only the children with the listed tags, which you sply as a space separated string.  Only unhidden objects will be shown, so if an object is hidden either before or after the `show_only()` call then it will remain hidden.  This overrides any previous `show_only()` calls.  Unlike `hide()`, calls to `show_only()` are not cumulative.
 //   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
@@ -1316,6 +1344,10 @@ module show_only(tags)
 }
 
 // Module: show_all()
+// Synopsis: Shows all children and clears tags.
+// See Also: tag(), recolor(), show_only(), show_int(), diff(), intersect()
+// Topics: Attachments
+//
 // Usage;
 //   show_all() CHILDREN;
 // Description:
@@ -1334,6 +1366,10 @@ module show_all()
 
 
 // Module: show_int()
+// Synopsis: Shows children with the listed tags which were already shown in the parent context.
+// See Also: tag(), recolor(), show_only(), show_all(), show_int(), diff(), intersect()
+// Topics: Attachments
+//
 // Usage:
 //   show_int(tags) CHILDREN;
 // Description:
@@ -1353,13 +1389,16 @@ module show_int(tags)
 }
 
 
-// Section: Attachable Masks
+// Section: Mask Attachment
 
 
 // Module: face_mask()
+// Synopsis: Ataches a 3d mask shape to the given faces of the parent.
+// Topics: Attachments, Masking
+// See Also: attachable(), position(), edge_mask(), corner_mask(), face_profile(), edge_profile(), corner_profile()
+//
 // Usage:
 //   PARENT() face_mask(faces) CHILDREN;
-// Topics: Attachments, Masking
 // Description:
 //   Takes a 3D mask shape, and attaches it to the given faces, with the appropriate orientation to be
 //   differenced away.  The mask shape should be vertically oriented (Z-aligned) with the bottom half
@@ -1399,10 +1438,12 @@ module face_mask(faces=[LEFT,RIGHT,FRONT,BACK,BOT,TOP]) {
 
 
 // Module: edge_mask()
+// Synopsis: Attaches a 3D mask shape to the given edges of the parent.
+// Topics: Attachments, Masking
+// See Also: attachable(), position(), attach(), face_mask(), corner_mask(), face_profile(), edge_profile(), corner_profile()
+//
 // Usage:
 //   PARENT() edge_mask([edges], [except]) CHILDREN;
-// Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask(), face_mask()
 // Description:
 //   Takes a 3D mask shape, and attaches it to the given edges, with the appropriate orientation to be
 //   differenced away.  The mask shape should be vertically oriented (Z-aligned) with the back-right
@@ -1462,10 +1503,12 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 
 
 // Module: corner_mask()
+// Synopsis: Attaches a 3d mask shape to the given corners of the parent.
+// Topics: Attachments, Masking
+// See Also: attachable(), position(), attach(), face_mask(), edge_mask(), face_profile(), edge_profile(), corner_profile()
+//
 // Usage:
 //   PARENT() corner_mask([corners], [except]) CHILDREN;
-// Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), face_profile(), edge_profile(), edge_mask()
 // Description:
 //   Takes a 3D mask shape, and attaches it to the specified corners, with the appropriate orientation to
 //   be differenced away.  The 3D corner mask shape should be designed to mask away the X+Y+Z+ octant.  If no tag is set
@@ -1511,10 +1554,12 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 
 
 // Module: face_profile()
+// Synopsis: Extrudes a 2D edge profile into a mask for all edges and corners of the given faces on the parent.
+// Topics: Attachments, Masking
+// See Also: attachable(), position(), attach(), edge_profile(), corner_profile(), face_mask(), edge_mask(), corner_mask()
+//
 // Usage:
 //   PARENT() face_profile(faces, r|d=, [convexity=]) CHILDREN;
-// Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), edge_profile(), corner_profile()
 // Description:
 //   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face. If no tag is set
 //   then `face_profile` sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.
@@ -1548,10 +1593,12 @@ module face_profile(faces=[], r, d, convexity=10) {
 
 
 // Module: edge_profile()
+// Synopsis: Extrudes a 2d edge profile into a mask on the given edges of the parent.
+// Topics: Attachments, Masking
+// See Also: attachable(), position(), attach(), face_profile(), corner_profile(), edge_mask(), face_mask(), corner_mask()
+//
 // Usage:
 //   PARENT() edge_profile([edges], [except], [convexity]) CHILDREN;
-// Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), face_profile(), corner_profile()
 // Description:
 //   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation and
 //   extruded length to be `diff()`ed away, to give the edge a matching profile.  If no tag is set
@@ -1610,10 +1657,12 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 }
 
 // Module: corner_profile()
+// Synopsis: Rotationally extrudes a 2d edge profile into corner mask on the given corners of the parent.
+// Topics: Attachments, Masking
+// See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask(), face_mask(), edge_mask()
+//
 // Usage:
 //   PARENT() corner_profile([corners], [except], [r=|d=], [convexity=]) CHILDREN;
-// Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), face_profile(), edge_profile()
 // Description:
 //   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
 //   to the selected corners with the appropriate orientation. If no tag is set
@@ -1683,6 +1732,9 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 
 
 // Module: attachable()
+// Synopsis: Manages the anchoring, spin, orientation, and attachments for an object.
+// Topics: Attachments
+// See Also: reorient()
 //
 // Usage: Square/Trapezoid Geometry
 //   attachable(anchor, spin, two_d=true, size=, [size2=], [shift=], [override=], ...) {OBJECT; children();}
@@ -1708,9 +1760,6 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   attachable(anchor, spin, [orient], vnf=, [extent=], ...) {OBJECT; children();}
 // Usage: Pre-Specified Geometry
 //   attachable(anchor, spin, [orient], geom=) {OBJECT; children();}
-//
-// Topics: Attachments
-// See Also: reorient()
 //
 // Description:
 //   Manages the anchoring, spin, orientation, and attachments for OBJECT, located in a 3D volume or 2D area.
@@ -1993,6 +2042,9 @@ module attachable(
 }
 
 // Function: reorient()
+// Synopsis: Calculates the transformation matrix needed to reorient an object.
+// Topics: Attachments
+// See Also: reorient(), attachable()
 //
 // Usage: Square/Trapezoid Geometry
 //   mat = reorient(anchor, spin, [orient], two_d=true, size=, [size2=], [shift=], ...);
@@ -2027,9 +2079,6 @@ module attachable(
 // Usage: VNF Geometry
 //   mat = reorient(anchor, spin, [orient], vnf, [extent], ...);
 //   pts = reorient(anchor, spin, [orient], vnf, [extent], p=, ...);
-//
-// Topics: Attachments
-// See Also: reorient(), attachable()
 //
 // Description:
 //   Given anchor, spin, orient, and general geometry info for a managed volume, this calculates
@@ -2118,10 +2167,12 @@ function reorient(
 
 
 // Function: named_anchor()
-// Usage:
-//   a = named_anchor(name, pos, [orient], [spin]);
+// Synopsis: Creates an anchro data structure.
 // Topics: Attachments
 // See Also: reorient(), attachable()
+//
+// Usage:
+//   a = named_anchor(name, pos, [orient], [spin]);
 // Description:
 //   Creates an anchor data structure.  For a step-by-step explanation of attachments,
 //   see the [[Attachments Tutorial|Tutorial-Attachments]].
@@ -2134,6 +2185,9 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 
 
 // Function: attach_geom()
+// Synopsis: Returns the internal geometry description of an attachable object.
+// Topics: Attachments
+// See Also: reorient(), attachable()
 //
 // Usage: Null/Point Geometry
 //   geom = attach_geom(...);
@@ -2155,9 +2209,6 @@ function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 //   geom = attach_geom(region=, l=|h=, [extent=], [shift=], [scale=], [twist=], ...);
 // Usage: VNF Geometry
 //   geom = attach_geom(vnf=, [extent=], ...);
-//
-// Topics: Attachments
-// See Also: reorient(), attachable()
 //
 // Description:
 //   Given arguments that describe the geometry of an attachable object, returns the internal geometry description.
@@ -2365,10 +2416,11 @@ function attach_geom(
 
 
 /// Internal Function: _attach_geom_2d()
-// Usage:
-//   bool = _attach_geom_2d(geom);
 /// Topics: Attachments
 /// See Also: reorient(), attachable()
+//
+// Usage:
+//   bool = _attach_geom_2d(geom);
 // Description:
 //   Returns true if the given attachment geometry description is for a 2D shape.
 function _attach_geom_2d(geom) =
@@ -2877,6 +2929,10 @@ function _standard_anchors(two_d=false) = [
 
 
 // Module: show_anchors()
+// Synopsis: Shows anchors for the parent object.
+// Topics: Attachments
+// See Also: expose_anchors(), anchor_arrow(), anchor_arrow2d(), frame_ref()
+//
 // Usage:
 //   PARENT() show_anchors([s], [std=], [custom=]);
 // Description:
@@ -2937,6 +2993,10 @@ module show_anchors(s=10, std=true, custom=true) {
 
 
 // Module: anchor_arrow()
+// Synopsis: Shows a 3d anchor orientation arrow.
+// Topics: Attachments
+// See Also: anchor_arrow2d(), show_anchors(), expose_anchors(), frame_ref()
+//
 // Usage:
 //   anchor_arrow([s], [color], [flag], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
@@ -2972,6 +3032,10 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow",
 
 
 // Module: anchor_arrow2d()
+// Synopsis: Shows a 2d anchor orientation arrow.
+// Topics: Attachments
+// See Also: anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
+//
 // Usage:
 //   anchor_arrow2d([s], [color], [flag]);
 // Description:
@@ -2988,6 +3052,9 @@ module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tag="anchor-arrow") {
 
 
 // Module: expose_anchors()
+// Synopsis: Used to show a transparent object with solid color anchor arrows.
+// Topics: Attachments
+// See Also: anchor_arrow2d(), show_anchors(), show_anchors(), frame_ref()
 // Usage:
 //   expose_anchors(opacity) {child1() show_anchors(); child2() show_anchors(); ...}
 // Description:
@@ -3011,6 +3078,9 @@ module expose_anchors(opacity=0.2) {
 
 
 // Module: frame_ref()
+// Synopsis: Shows axis orientation arrows.
+// Topics: Attachments
+// See Also: anchor_arrow(), anchor_arrow2d(), show_anchors(), expose_anchors()
 // Usage:
 //   frame_ref(s, opacity);
 // Description:
