@@ -18,7 +18,6 @@
 // Synopsis: Creates a 2D beading mask shape useful for rounding 90° edges.
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile(), fillet()
-//
 // Usage: As module
 //   mask2d_roundover(r|d=, [inset], [excess]) [ATTACHMENTS];
 // Usage: As function
@@ -83,7 +82,6 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 // Synopsis: Creates a 2d cove (quarter-round) mask shape.
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
-//
 // Usage: As module
 //   mask2d_cove(r|d=, [inset], [excess]) [ATTACHMENTS];
 // Usage: As function
@@ -148,7 +146,6 @@ function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 // Synopsis: Produces a 2D chamfer mask shape.
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
-//
 // Usage: As Module
 //   mask2d_chamfer(edge, [angle], [inset], [excess]) [ATTACHMENTS];
 //   mask2d_chamfer(y=, [angle=], [inset=], [excess=]) [ATTACHMENTS];
@@ -228,7 +225,6 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 // Synopsis: Creates a rabbet mask shape.
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
-//
 // Usage: As Module
 //   mask2d_rabbet(size, [excess]) [ATTACHMENTS];
 // Usage: As Function
@@ -287,7 +283,6 @@ function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
 // Creates a 2d dovetail mask shape.
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
-//
 // Usage: As Module
 //   mask2d_dovetail(edge, [angle], [inset], [shelf], [excess], ...) [ATTACHMENTS];
 //   mask2d_dovetail(x=, [angle=], [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
@@ -366,7 +361,6 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 // Synopsis: Creates a 2d teardrop mask shape with a controllable maximum angle from vertical.
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
-//
 // Usage: As Module
 //   mask2d_teardrop(r|d=, [angle], [excess]) [ATTACHMENTS];
 // Usage: As Function
@@ -431,7 +425,6 @@ module mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) {
 // Synopsis: Creates a 2d ogee mask shape.
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
-//
 // Usage: As Module
 //   mask2d_ogee(pattern, [excess], ...) [ATTAHCMENTS];
 // Usage: As Function

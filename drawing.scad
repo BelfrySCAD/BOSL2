@@ -20,7 +20,6 @@
 // Synopsis: Draws a line along a path or region boundry.
 // Topics: Paths (2D), Paths (3D), Drawing Tools
 // See Also: offset_stroke(), path_sweep()
-//
 // Usage:
 //   stroke(path, [width], [closed], [endcaps], [endcap_width], [endcap_length], [endcap_extent], [trim]);
 //   stroke(path, [width], [closed], [endcap1], [endcap2], [endcap_width1], [endcap_width2], [endcap_length1], [endcap_length2], [endcap_extent1], [endcap_extent2], [trim1], [trim2]);
@@ -550,7 +549,6 @@ module stroke(
 // Synopsis: Draws a dashed line along a path or region boundry.
 // Topics: Paths, Drawing Tools
 // See Also: stroke(), path_cut()
-//
 // Usage: As a Module
 //   dashed_stroke(path, dashpat, [width=], [closed=]);
 // Usage: As a Function
@@ -879,7 +877,6 @@ function _normal_segment(p1,p2) =
 // Synopsis: Uses [turtle graphics](https://en.wikipedia.org/wiki/Turtle_graphics) to generate a 2D path.
 // Topics: Shapes (2D), Path Generators (2D), Mini-Language
 // See Also: turtle3d()
-//
 // Usage:
 //   turtle(commands, [state], [full_state=], [repeat=])
 // Description:
