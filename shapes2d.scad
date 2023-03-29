@@ -839,13 +839,20 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Extra Anchors:
+//   hypot = Center of angled side, perpendicular to that side.
 // Example(2D):
 //   right_triangle([40,30]);
 // Example(2D): With `center=true`
 //   right_triangle([40,30], center=true);
-// Example(2D): Anchors
-//   right_triangle([40,30])
-//       show_anchors();
+// Example(2D): Standard Anchors
+//   right_triangle([80,30], center=true)
+//       show_anchors(custom=false);
+//   color([0.5,0.5,0.5,0.1])
+//       square([80,30], center=true);
+// Example(2D): Named Anchors
+//   right_triangle([80,30], center=true)
+//       show_anchors(std=false);
 function right_triangle(size=[1,1], center, anchor, spin=0) =
     let(
         size = is_num(size)? [size,size] : size,
@@ -854,15 +861,21 @@ function right_triangle(size=[1,1], center, anchor, spin=0) =
     assert(is_vector(size,2))
     assert(min(size)>0, "Must give positive size")
     let(
-        path = [ [size.x/2,-size.y/2], [-size.x/2,-size.y/2], [-size.x/2,size.y/2] ]
-    ) reorient(anchor,spin, two_d=true, size=[size.x,size.y], size2=0, shift=-size.x/2, p=path);
+        path = [ [size.x/2,-size.y/2], [-size.x/2,-size.y/2], [-size.x/2,size.y/2] ],
+        anchors = [
+            named_anchor("hypot", CTR, unit([size.y,size.x])),
+        ]
+    ) reorient(anchor,spin, two_d=true, size=[size.x,size.y], anchors=anchors, p=path);
 
 module right_triangle(size=[1,1], center, anchor, spin=0) {
     size = is_num(size)? [size,size] : size;
     anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]);
     check = assert(is_vector(size,2));
-    path = right_triangle(size, center=true);
-    attachable(anchor,spin, two_d=true, size=[size.x,size.y], size2=0, shift=-size.x/2) {
+    path = right_triangle(size, anchor="origin");
+    anchors = [
+        named_anchor("hypot", CTR, unit([size.y,size.x])),
+    ];
+    attachable(anchor,spin, two_d=true, size=[size.x,size.y], anchors=anchors) {
         polygon(path);
         children();
     }
@@ -1062,7 +1075,7 @@ function trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anc
 
 module trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, anchor=CENTER, spin=0, atype="box", angle) {
     path_over = trapezoid(h=h, w1=w1, w2=w2, ang=ang, shift=shift, chamfer=chamfer, rounding=rounding,
-                          flip=flip, angle=angle,atype=atype,_return_override=true);
+                          flip=flip, angle=angle,atype=atype,anchor="origin",_return_override=true);
     path=path_over[0];
     override = path_over[1];
     ang = force_list(ang,2);
