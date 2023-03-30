@@ -646,7 +646,7 @@ module tag(tag)
 
 
 // Module: force_tag()
-// Assigns a tag to a non-attachable object.
+// Synopsis: Assigns a tag to a non-attachable object.
 // Topics: Attachments
 // See Also: tag(), recolor(), hide(), show_only(), diff(), intersect()
 // Usage:
@@ -749,6 +749,9 @@ module default_tag(tag)
 
 
 // Module: tag_scope()
+// Synopsis: Creates a new tag scope.
+// See Also: tag(), force_tag(), default_tag()
+// Topics: Attachments
 // Usage:
 //   tag_scope([scope]) CHILDREN;
 // Description:
