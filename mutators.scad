@@ -432,7 +432,7 @@ module path_extrude(path, convexity=10, clipsize=100) {
 // Module: minkowski_difference()
 // Synopsis: Removes diff shapes from base shape surface.
 // Topics: Mutators
-// See Also: Offset3d()
+// See Also: offset3d()
 // Usage:
 //   minkowski_difference() { BASE; DIFF1; DIFF2; ... }
 // Description:

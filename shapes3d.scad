@@ -1087,7 +1087,6 @@ function rect_tube(
 // Synopsis: Creates a 3d triangular wedge, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See also: prismoid(), rounded_prism(), pie_slice()
-//
 // Usage: As Module
 //   wedge(size, [center], ...) [ATTACHMENTS];
 // Usage: As Function
