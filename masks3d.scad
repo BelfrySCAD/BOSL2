@@ -239,7 +239,7 @@ module rounding_edge_mask(l, r, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, sp
 // Module: rounding_corner_mask()
 // Synopsis: Creates a shape to round 90° corners.
 // Topics: Masking, Rounding, Shapes (3D)
-// See Also: angled_rounding_corner_mask(), rounding_edge_mask(), rounding_angled_edge_mask()
+// See Also: rounding_angled_corner_mask(), rounding_edge_mask(), rounding_angled_edge_mask()
 // Usage:
 //   rounding_corner_mask(r|d, [excess=], [style=]) [ATTACHMENTS];
 // Description:
@@ -515,7 +515,7 @@ module rounding_hole_mask(r, rounding, excess=0.1, d, anchor=CENTER, spin=0, ori
 // Module: teardrop_edge_mask()
 // Synopsis: Creates a shape to round a 90° edge but limit the angle of overhang.
 // Topics: Masking, Rounding, Shapes (3D), FDM Optimized
-// See Also: teardrop_corner_mask
+// See Also: teardrop_corner_mask()
 // Usage:
 //   teardrop_edge_mask(l|h=|length=|height=, r|d=, [angle], [excess], [anchor], [spin], [orient]) [ATTACHMENTS];
 // Description:
@@ -557,7 +557,7 @@ module teardrop_edge_mask(l, r, angle=45, excess=0.1, d, anchor=CTR, spin=0, ori
 // Module: teardrop_corner_mask()
 // Synopsis: Creates a shape to round a 90° corner but limit the angle of overhang.
 // Topics: Masking, Rounding, Shapes (3D), FDM Optimized
-// See Also: teardrop_edge_mask
+// See Also: teardrop_edge_mask()
 // Usage:
 //   teardrop_corner_mask(r|d=, [angle], [excess], [anchor], [spin], [orient]) [ATTACHMENTS];
 // Description:
