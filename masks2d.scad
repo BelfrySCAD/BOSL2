@@ -79,7 +79,7 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 
 
 // Function&Module: mask2d_cove()
-// Synopsis: Creates a 2d cove (quarter-round) mask shape.
+// Synopsis: Creates a 2D cove (quarter-round) mask shape.
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As module
@@ -280,8 +280,8 @@ function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
 
 
 // Function&Module: mask2d_dovetail()
-// Creates a 2d dovetail mask shape.
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// Synopsis: Creates a 2D dovetail mask shape.
+// Topics: Masks (2D), Shapes (2D), Paths (2D), Path Generators, Attachable 
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
 //   mask2d_dovetail(edge, [angle], [inset], [shelf], [excess], ...) [ATTACHMENTS];
@@ -358,8 +358,8 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 
 
 // Function&Module: mask2d_teardrop()
-// Synopsis: Creates a 2d teardrop mask shape with a controllable maximum angle from vertical.
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// Synopsis: Creates a 2D teardrop mask shape with a controllable maximum angle from vertical.
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D), FDM Optimized
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
 //   mask2d_teardrop(r|d=, [angle], [excess]) [ATTACHMENTS];
@@ -422,7 +422,7 @@ module mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) {
 }
 
 // Function&Module: mask2d_ogee()
-// Synopsis: Creates a 2d ogee mask shape.
+// Synopsis: Creates a 2D ogee mask shape.
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
