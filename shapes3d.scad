@@ -2470,6 +2470,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 // Function&Module: torus()
 // Synopsis: Creates an attachable torus, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: spheroid(), cyl()
 //
 // Usage: As Module
 //   torus(r_maj|d_maj, r_min|d_min, [center], ...) [ATTACHMENTS];

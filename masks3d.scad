@@ -95,7 +95,6 @@ module chamfer_corner_mask(chamfer=1, anchor=CENTER, spin=0, orient=UP) {
 // Module: chamfer_cylinder_mask()
 // Synopsis: Creates a shape to chamfer the end of a cylinder.
 // Topics: Masking, Chamfers, Cylinders
-
 // Usage:
 //   chamfer_cylinder_mask(r|d=, chamfer, [ang], [from_end]) [ATTACHMENTS];
 // Description:
@@ -290,7 +289,7 @@ module rounding_corner_mask(r, d, style="octa", excess=0.1, anchor=CENTER, spin=
 
 
 // Module: rounding_angled_edge_mask()
-// Creates a shape to round edges of any angle.
+// Synopsis: Creates a shape to round edges of any angle.
 // Topics: Masks, Rounding
 // See Also: rounding_angled_corner_mask(), rounding_edge_mask(), rounding_corner_mask()
 // Usage:
