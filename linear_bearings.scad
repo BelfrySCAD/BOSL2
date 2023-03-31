@@ -15,6 +15,9 @@ include <metric_screws.scad>
 // Section: Generic Linear Bearings
 
 // Module: linear_bearing_housing()
+// Synopsis: Creates a generic linear bearing mount clamp.
+// Topics: Parts, Bearings
+// See Also: linear_bearing(), lmXuu_info(), ball_bearing()
 // Description:
 //   Creates a model of a clamp to hold a generic linear bearing cartridge.
 // Arguments:
@@ -75,6 +78,9 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 
 
 // Module: linear_bearing()
+// Synopsis: Creates a generic linear bearing cartridge.
+// Topics: Parts, Bearings
+// See Also: linear_bearing_housing(), lmXuu_info(), ball_bearing()
 // Description:
 //   Creates a rough model of a generic linear ball bearing cartridge.
 // Arguments:
@@ -103,6 +109,9 @@ module linear_bearing(l, od=15, id=8, length, anchor=CTR, spin=0, orient=UP) {
 // Section: lmXuu Linear Bearings
 
 // Module: lmXuu_housing()
+// Synopsis: Creates a standardized LM*UU linear bearing mount clamp.
+// Topics: Parts, Bearings
+// See Also: linear_bearing(), linear_bearing_housing(), lmXuu_info(), lmXuu_bearing(), lmXuu_housing(), ball_bearing()
 // Description:
 //   Creates a model of a clamp to hold a standard sized lmXuu linear bearing cartridge.
 // Arguments:
@@ -127,6 +136,9 @@ module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, ancho
 
 
 // Module: lmXuu_bearing()
+// Synopsis: Creates a standardized LM*UU linear bearing cartridge.
+// Topics: Parts, Bearings
+// See Also: linear_bearing(), linear_bearing_housing(), lmXuu_info(), lmXuu_bearing(), lmXuu_housing(), ball_bearing()
 // Description:
 //   Creates a model of an lmXuu linear ball bearing cartridge.
 // Arguments:
@@ -146,6 +158,9 @@ module lmXuu_bearing(size=8, anchor=CTR, spin=0, orient=UP) {
 
 
 // Function: lmXuu_info()
+// Synopsis: Returns the sizes of a standard LM*UU linear bearing cartridge.
+// Topics: Parts, Bearings
+// See Also: linear_bearing(), linear_bearing_housing(), lmXuu_info(), lmXuu_bearing(), lmXuu_housing(), ball_bearing()
 // Description:
 //   Get dimensional info for a standard metric lmXuu linear bearing cartridge.
 //   Returns `[DIAM, LENGTH]` for the cylindrical cartridge.
