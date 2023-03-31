@@ -616,7 +616,7 @@ function generic_bottle_cap(
 // Module: bottle_adapter_neck_to_cap()
 // Synopsis: Creates a generic adaptor between a neck and a cap.
 // Topics: Bottles, Threading
-// See Also: bottle_adaptor_neck_to_neck()
+// See Also: bottle_adapter_neck_to_neck()
 // Usage:
 //   bottle_adapter_neck_to_cap(wall, [texture], ...) [ATTACHMENTS];
 // Description:
@@ -732,7 +732,7 @@ function bottle_adapter_neck_to_cap(
 // Module: bottle_adapter_cap_to_cap()
 // Synopsis: Creates a generic adaptor between a cap and a cap.
 // Topics: Bottles, Threading
-// See Also: bottle_adaptor_neck_to_cap(), bottle_adaptor_neck_to_neck()
+// See Also: bottle_adapter_neck_to_cap(), bottle_adapter_neck_to_neck()
 // Usage:
 //   bottle_adapter_cap_to_cap(wall, [texture]);
 // Description:
@@ -848,7 +848,7 @@ function bottle_adapter_cap_to_cap(
 // Module: bottle_adapter_neck_to_neck()
 // Synopsis: Creates a generic adaptor between a neck and a neck.
 // Topics: Bottles, Threading
-// See Also: bottle_adaptor_neck_to_cap(), bottle_adaptor_cap_to_cap()
+// See Also: bottle_adapter_neck_to_cap(), bottle_adapter_cap_to_cap()
 // Usage:
 //   bottle_adapter_neck_to_neck(...);
 // Description:
