@@ -54,6 +54,9 @@ function _hex_offsets(n, d, lev=0, arr=[]) =
 
 
 // Module: wire_bundle()
+// Synopsis: Creates a wire bundle for a given number of wires.
+// Topics: Wiring
+// See Also: path_sweep(), path_sweep2d()
 // Usage:
 //   wire_bundle(path, wires, [wirediam], [rounding], [wirenum=], [corner_steps=]);
 // Description:
