@@ -15,6 +15,8 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 // Section: General Constants
 
 // Constant: $slop
+// Synopsis: The slop amount to make printed items fit closely.
+// Topics: Constants
 // Description:
 //   A number of printers, particularly FDM/FFF printers, tend to be a bit sloppy in their printing.
 //   This has made it so that some parts won't fit together without adding a bit of extra slop space.
@@ -102,6 +104,9 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 //   }
 
 // Function: get_slop()
+// Synopsis: Returns the $slop value.
+// Topics: Slop
+// See Also: $slop
 // Usage:
 //    slop = get_slop();
 // Description:
@@ -111,6 +116,8 @@ function get_slop() = is_undef($slop) ? 0 : $slop;
 
 
 // Constant: INCH
+// Synopsis: A constant containing the  number of millimeters in an inch.
+// Topics: Constants
 // Description:
 //   The number of millimeters in an inch.
 // Example(2D):
@@ -125,6 +132,7 @@ INCH = 25.4;
 //   Vectors useful for `rotate()`, `mirror()`, and `anchor` arguments for `cuboid()`, `cyl()`, etc.
 
 // Constant: LEFT
+// Synopsis: The left-wards (X-) direction vector constant `[-1,0,0]`.
 // Topics: Constants, Vectors
 // See Also: RIGHT, FRONT, BACK, UP, DOWN, CENTER
 // Description: Vector pointing left.  [-1,0,0]
@@ -133,6 +141,7 @@ INCH = 25.4;
 LEFT  = [-1,  0,  0];
 
 // Constant: RIGHT
+// Synopsis: The right-wards (X+) direction vector constant `[1,0,0]`.
 // Topics: Constants, Vectors
 // See Also: LEFT, FRONT, BACK, UP, DOWN, CENTER
 // Description: Vector pointing right.  [1,0,0]
@@ -142,6 +151,7 @@ RIGHT = [ 1,  0,  0];
 
 // Constant: FRONT
 // Aliases: FWD, FORWARD
+// Synopsis: The front-wards (Y-) direction vector constant `[0,-1,0]`.
 // Topics: Constants, Vectors
 // See Also: LEFT, RIGHT, BACK, UP, DOWN, CENTER
 // Description: Vector pointing forward.  [0,-1,0]
@@ -152,6 +162,7 @@ FWD = FRONT;
 FORWARD = FRONT;
 
 // Constant: BACK
+// Synopsis: The back-wards (Y+) direction vector constant `[0,1,0]`.
 // Topics: Constants, Vectors
 // See Also: LEFT, RIGHT, FRONT, UP, DOWN, CENTER
 // Description: Vector pointing back.  [0,1,0]
@@ -161,6 +172,7 @@ BACK  = [ 0,  1,  0];
 
 // Constant: BOTTOM
 // Aliases: BOT, DOWN
+// Synopsis: The down-wards (Z-) direction vector constant `[0,0,-1]`.
 // Topics: Constants, Vectors
 // See Also: LEFT, RIGHT, FRONT, BACK, UP, CENTER
 // Description: Vector pointing down.  [0,0,-1]
@@ -172,6 +184,7 @@ DOWN = BOTTOM;
 
 // Constant: TOP
 // Aliases: UP
+// Synopsis: The top-wards (Z+) direction vector constant `[0,0,1]`.
 // Topics: Constants, Vectors
 // See Also: LEFT, RIGHT, FRONT, BACK, DOWN, CENTER
 // Description: Vector pointing up.  [0,0,1]
@@ -182,6 +195,7 @@ UP = TOP;
 
 // Constant: CENTER
 // Aliases: CTR, CENTRE
+// Synopsis: The center vector constant `[0,0,0]`.
 // Topics: Constants, Vectors
 // See Also: LEFT, RIGHT, FRONT, BACK, UP, DOWN
 // Description: Zero vector.  Centered.  [0,0,0]
@@ -198,6 +212,7 @@ CENTRE = CENTER;
 //   with two endpoints.  
 
 // Constant: SEGMENT
+// Synopsis: A constant for specifying a line segment.
 // Topics: Constants, Lines
 // See Also: RAY, LINE
 // Description: Treat a line as a segment.  [true, true]
@@ -209,6 +224,7 @@ SEGMENT = [true,true];
 
 
 // Constant: RAY
+// Synopsis: A constant for specifying a ray line.
 // Topics: Constants, Lines
 // See Also: SEGMENT, LINE
 // Description: Treat a line as a ray, based at the first point.  [true, false]
@@ -220,6 +236,7 @@ RAY = [true, false];
 
 
 // Constant: LINE
+// Synopsis: A constant for specifying an unbounded line.
 // Topics: Constants, Lines
 // See Also: RAY, SEGMENT
 // Description: Treat a line as an unbounded line.  [false, false]
@@ -231,6 +248,9 @@ LINE = [false, false];
 
 
 // Constant: IDENT
+// Synopsis: A constant containing the 3D identity transformation matrix.
+// Topics: Affine, Matrices, Transforms
+// See Also: ident()
 // Description: Identity transformation matrix for three-dimensional transforms.  Equal to `ident(4)`.  
 IDENT=ident(4);
 
