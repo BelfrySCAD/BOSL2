@@ -1087,7 +1087,6 @@ function rect_tube(
 // Synopsis: Creates a 3d triangular wedge, or returns a vnf.
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See also: prismoid(), rounded_prism(), pie_slice()
-//
 // Usage: As Module
 //   wedge(size, [center], ...) [ATTACHMENTS];
 // Usage: As Function
@@ -2612,7 +2611,7 @@ function torus(
 
 // Function&Module: teardrop()
 // Synopsis: Creates a teardrop shape, or returns a vnf.
-// Topics: Shapes (3D), Attachable, VNF Generators
+// Topics: Shapes (3D), Attachable, VNF Generators, FDM Optimized
 // See Also: onion(), teardrop2d()
 // Description:
 //   Makes a teardrop shape in the XZ plane. Useful for 3D printable holes.
@@ -2753,7 +2752,7 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 
 // Function&Module: onion()
 // Synopsis: Creates an attachable onion-like shape, or returns a vnf.
-// Topics: Shapes (3D), Attachable, VNF Generators
+// Topics: Shapes (3D), Attachable, VNF Generators, FDM Optimized
 // See Also: teardrop(), teardrop2d()
 // Description:
 //   Creates a sphere with a conical hat, to make a 3D teardrop.
@@ -3550,7 +3549,7 @@ module cylindrical_heightfield(
 
 // Module: ruler()
 // Synopsis: Creates a ruler.
-// 
+// Topics: Distance
 // Usage:
 //   ruler(length, width, [thickness=], [depth=], [labels=], [pipscale=], [maxscale=], [colors=], [alpha=], [unit=], [inch=]) [ATTACHMENTS];
 // Description:

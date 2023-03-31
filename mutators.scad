@@ -13,6 +13,8 @@
 //////////////////////////////////////////////////////////////////////
 
 // Module: bounding_box()
+// Synopsis: Creates the smallest bounding box that contains all the children.
+// Topics: Mutators, Bounds, Bounding Boxes
 // Usage:
 //   bounding_box([excess],[planar]) CHILDREN;
 // Description:
@@ -101,7 +103,8 @@ module bounding_box(excess=0, planar=false) {
 
 
 // Module: chain_hull()
-//
+// Synopsis: Performs the union of hull operations between consecutive pairs of children.
+// Topics: Mutators
 // Usage:
 //   chain_hull() CHILDREN;
 //
@@ -149,6 +152,9 @@ module chain_hull()
 
 
 // Module: path_extrude2d()
+// Synopsis: Extrudes 2D children along a 2D path.
+// Topics: Mutators, Extrusion 
+// See Also: path_sweep(), path_extrude()
 // Usage:
 //   path_extrude2d(path, [caps=], [closed=], [s=], [convexity=]) 2D-CHILDREN;
 // Description:
@@ -262,6 +268,8 @@ module path_extrude2d(path, caps=false, closed=false, s, convexity=10) {
 
 
 // Module: cylindrical_extrude()
+// Synopsis: Extrudes 2D children outwards around a cylinder.
+// Topics: Mutators, Extrusion, Rotation
 // Usage:
 //   cylindrical_extrude(ir|id=, or|od=, [size=], [convexity=], [spin=], [orient=]) 2D-CHILDREN;
 // Description:
@@ -321,6 +329,8 @@ module cylindrical_extrude(ir, or, od, id, size=1000, convexity=10, spin=0, orie
 
 
 // Module: extrude_from_to()
+// Extrudes 2D children between two points in 3D space.
+// Topics: Extrusion, Mutators
 // Usage:
 //   extrude_from_to(pt1, pt2, [convexity=], [twist=], [scale=], [slices=]) 2D-CHILDREN;
 // Description:
@@ -359,10 +369,12 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 
 
 // Module: path_extrude()
+// Synopsis: Extrudes 2D children along a 3D path.
+// Topics: Paths, Extrusion, Mutators
+// See Also: path_sweep(), path_extrude2d()
 // Usage: path_extrude(path, [convexity], [clipsize]) 2D-CHILDREN;
 // Description:
 //   Extrudes 2D children along a 3D path.  This may be slow and can have problems with twisting.  
-// See Also: path_sweep()
 // Arguments:
 //   path = Array of points for the bezier path to extrude along.
 //   convexity = Maximum number of walls a ray can pass through.
@@ -418,6 +430,9 @@ module path_extrude(path, convexity=10, clipsize=100) {
 //////////////////////////////////////////////////////////////////////
 
 // Module: minkowski_difference()
+// Synopsis: Removes diff shapes from base shape surface.
+// Topics: Mutators
+// See Also: offset3d()
 // Usage:
 //   minkowski_difference() { BASE; DIFF1; DIFF2; ... }
 // Description:
@@ -454,6 +469,9 @@ module minkowski_difference(planar=false) {
 
 
 // Module: offset3d()
+// Synopsis: Expands or contracts the surface of a 3D object.
+// Topics: Mutators
+// See Also: minkowski_difference()
 // Usage:
 //   offset3d(r, [size], [convexity]) CHILDREN;
 // Description:
@@ -493,6 +511,8 @@ module offset3d(r, size=100, convexity=10) {
 
 
 // Module: round3d()
+// Synopsis: Rounds arbitrary 3d objects.
+// Topics: Rounding, Mutators
 // Usage:
 //   round3d(r) CHILDREN;
 //   round3d(or) CHILDREN;
