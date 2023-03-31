@@ -15,7 +15,7 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 // Section: General Constants
 
 // Constant: $slop
-// Synopsis: The slop amount to make printed items fit closely.
+// Synopsis: The slop amount to make printed items fit closely. `0.0` by default.
 // Topics: Constants
 // Description:
 //   A number of printers, particularly FDM/FFF printers, tend to be a bit sloppy in their printing.
@@ -116,7 +116,7 @@ function get_slop() = is_undef($slop) ? 0 : $slop;
 
 
 // Constant: INCH
-// Synopsis: A constant containing the  number of millimeters in an inch.
+// Synopsis: A constant containing the  number of millimeters in an inch. `25.4`
 // Topics: Constants
 // Description:
 //   The number of millimeters in an inch.
@@ -212,7 +212,7 @@ CENTRE = CENTER;
 //   with two endpoints.  
 
 // Constant: SEGMENT
-// Synopsis: A constant for specifying a line segment.
+// Synopsis: A constant for specifying a line segment in various geometry.scad functions.  `[true,true]`
 // Topics: Constants, Lines
 // See Also: RAY, LINE
 // Description: Treat a line as a segment.  [true, true]
@@ -224,7 +224,7 @@ SEGMENT = [true,true];
 
 
 // Constant: RAY
-// Synopsis: A constant for specifying a ray line.
+// Synopsis: A constant for specifying a ray line in various geometry.scad functions.  `[true,false]`
 // Topics: Constants, Lines
 // See Also: SEGMENT, LINE
 // Description: Treat a line as a ray, based at the first point.  [true, false]
@@ -236,7 +236,7 @@ RAY = [true, false];
 
 
 // Constant: LINE
-// Synopsis: A constant for specifying an unbounded line.
+// Synopsis: A constant for specifying an unbounded line in various geometry.scad functions.  `[false,false]`
 // Topics: Constants, Lines
 // See Also: RAY, SEGMENT
 // Description: Treat a line as an unbounded line.  [false, false]
