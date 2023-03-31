@@ -20,6 +20,7 @@
 // Function: is_path()
 // Synopsis: Returns True if 'list' is a path.
 // Topics: Paths
+// See Also: is_region(), is_vnf()
 // Usage:
 //   is_path(list, [dim], [fast])
 // Description:
@@ -204,6 +205,9 @@ function path_segment_lengths(path, closed) =
 
 
 // Function: path_length_fractions()
+// Synopsis: Returns the fractional distance of each point along the length of a path.
+// Topics: Paths
+// See Also: path_length(), path_segment_lengths()
 // Usage:
 //   fracs = path_length_fractions(path, [closed]);
 // Description:
@@ -456,6 +460,9 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 
 
 // Function: resample_path()
+// Synopsis: Returns an equidistant set of points along a path.
+// Topics: Paths
+// See Also: subdivide_path()
 // Usage:
 //   newpath = resample_path(path, n|spacing=, [closed=]);
 // Description:
@@ -516,6 +523,9 @@ function resample_path(path, n, spacing, closed=true) =
 // Section: Path Geometry
 
 // Function: is_path_simple()
+// Synopsis: Returns true if a path has no self intersections.
+// Topics: Paths
+// See Also: is_path()
 // Usage:
 //   bool = is_path_simple(path, [closed], [eps]);
 // Description:
@@ -546,15 +556,18 @@ function is_path_simple(path, closed, eps=EPSILON) =
 
 
 // Function: path_closest_point()
+// Synopsis: Returns the closest place on a path to a given point.
+// Topics: Paths
+// See Also: point_line_distance(), line_closest_point()
 // Usage:
 //   index_pt = path_closest_point(path, pt);
 // Description:
 //   Finds the closest path segment, and point on that segment to the given point.
 //   Returns `[SEGNUM, POINT]`
 // Arguments:
-//   path = path of any dimension or a 1-region
-//   pt = the point to find the closest point to
-//   closed = 
+//   path = Path of any dimension or a 1-region.
+//   pt = The point to find the closest point to.
+//   closed = If true, the path is considered closed.
 // Example(2D):
 //   path = circle(d=100,$fn=6);
 //   pt = [20,10];
@@ -575,6 +588,9 @@ function path_closest_point(path, pt, closed=true) =
 
 
 // Function: path_tangents()
+// Synopsis: Returns tangent vectors for each point along a path.
+// Topics: Paths
+// See Also: path_normals()
 // Usage:
 //   tangs = path_tangents(path, [closed], [uniform]);
 // Description:
@@ -611,6 +627,9 @@ function path_tangents(path, closed, uniform=true) =
 
 
 // Function: path_normals()
+// Synopsis: Returns normal vectors for each point along a path.
+// Topics: Paths
+// See Also: path_tangents()
 // Usage:
 //   norms = path_normals(path, [tangents], [closed]);
 // Description:
@@ -653,6 +672,9 @@ function path_normals(path, tangents, closed) =
 
 
 // Function: path_curvature()
+// Synopsis: Returns the estimated numerical curvature of the path.
+// Topics: Paths
+// See Also: path_tangents(), path_normals(), path_torsion()
 // Usage:
 //   curvs = path_curvature(path, [closed]);
 // Description:
@@ -678,6 +700,9 @@ function path_curvature(path, closed) =
 
 
 // Function: path_torsion()
+// Synopsis: Returns the estimated numerical torsion of the path.
+// Topics: Paths
+// See Also: path_tangents(), path_normals(), path_curvature()
 // Usage:
 //   torsions = path_torsion(path, [closed]);
 // Description:
@@ -704,8 +729,9 @@ function path_torsion(path, closed=false) =
 
 
 // Function: path_cut()
+// Synopsis: Cuts a path into subpaths at various points.
 // Topics: Paths, Path Subdivision
-// See Also: split_path_at_self_crossings()
+// See Also: split_path_at_self_crossings(), path_cut_points()
 // Usage:
 //   path_list = path_cut(path, cutdist, [closed]);
 // Description:
@@ -766,6 +792,7 @@ function _path_cut_getpaths(path, cutlist, closed) =
 // Function: path_cut_points()
 // Synopsis: Returns a list of cut points at a list of distances from the first point in a path.
 // Topics: Paths, Path Subdivision
+// See Also: path_cut(), split_path_at_self_crossings()
 // Usage:
 //   cuts = path_cut_points(path, cutdist, [closed=], [direction=]);
 //
@@ -903,6 +930,7 @@ function _cut_to_seg_u_form(pathcut, path, closed) =
 // Function: split_path_at_self_crossings()
 // Synopsis: Split a 2D path wherever it crosses itself.
 // Topics: Paths, Path Subdivision
+// See Also: path_cut(), path_cut_points()
 // Usage:
 //   paths = split_path_at_self_crossings(path, [closed], [eps]);
 // Description:
@@ -972,6 +1000,7 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 // Function: polygon_parts()
 // Synopsis: Parses a self-intersecting polygon into a list of non-intersecting polygons.
 // Topics: Paths, Polygons
+// See Also: split_path_at_self_crossings(), path_cut(), path_cut_points()
 // Usage:
 //   splitpolys = polygon_parts(poly, [nonzero], [eps]);
 // Description:
