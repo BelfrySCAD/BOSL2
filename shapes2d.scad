@@ -1799,7 +1799,8 @@ module text(text, size=10, font="Helvetica", halign, valign, spacing=1.0, direct
 
 // Module: round2d()
 // Synopsis: Rounds the corners of 2d objects.
-
+// Topics: Rounding
+// See Also: shell2d(), round3d(), minkowski_difference()
 // Usage:
 //   round2d(r) [ATTACHMENTS];
 //   round2d(or=) [ATTACHMENTS];
@@ -1830,7 +1831,8 @@ module round2d(r, or, ir)
 
 // Module: shell2d()
 // Synopsis: Creates a shell from 2D children.
-//
+// Topics: Shell
+// See Also: round2d(), round3d(), minkowski_difference()
 // Usage:
 //   shell2d(thickness, [or], [ir])
 // Description:
