@@ -13,6 +13,9 @@
 
 
 // Module: slider()
+// Synopsis: Creates a V-groove slider.
+// Topics: Parts, Sliders
+// See Also: rail()
 // Description:
 //   Creates a slider to match a V-groove rail.
 // Usage:
@@ -63,6 +66,9 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, anchor=BOTTOM, spin=0, 
 
 
 // Module: rail()
+// Synopsis: Creates a V-groove rail.
+// Topics: Parts, Sliders
+// See Also: slider()
 // Description:
 //   Creates a V-groove rail.
 // Usage:

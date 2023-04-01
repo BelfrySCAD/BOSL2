@@ -14,7 +14,11 @@ include <structs.scad>
 // Section: Phillips Drive
 
 // Module: phillips_mask()
-// Usage: phillips_mask(size) [ATTACHMENTS];
+// Synopsis: Creates a mask for a Philips screw drive.
+// Topics: Screws, Masks
+// See Also: hex_drive_mask(), philips_depth(), phillips_diam(), torx_mask(), robertson_mask()
+// Usage:
+//   phillips_mask(size) [ATTACHMENTS];
 // Description:
 //   Creates a mask for creating a Phillips drive recess given the Phillips size.  Each mask can
 //   be lowered to different depths to create different sizes of recess.  
@@ -82,6 +86,9 @@ module phillips_mask(size="#2", $fn=36, anchor=BOTTOM, spin=0, orient=UP) {
 
 
 // Function: phillips_depth()
+// Synopsis: Returns the depth a phillips recess needs to be for a given diameter.
+// Topics: Screws, Masks
+// See Also: phillips_mask(), hex_drive_mask(), philips_depth(), phillips_diam(), torx_mask()
 // Usage:
 //   depth = phillips_depth(size, d);
 // Description:
@@ -104,6 +111,9 @@ function phillips_depth(size, d) =
 
 
 // Function: phillips_diam()
+// Synopsis: Returns the diameter of a phillips recess of a given depth.
+// Topics: Screws, Masks
+// See Also: phillips_mask(), hex_drive_mask(), philips_depth(), phillips_diam(), torx_mask()
 // Usage:
 //   diam = phillips_diam(size, depth);
 // Description:
@@ -128,6 +138,9 @@ function phillips_diam(size, depth) =
 // Section: Hex drive
 
 // Module hex_drive_mask()
+// Synopsis: Creates a mask for a hex drive recess.
+// Topics: Screws, Masks
+// See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  philips_depth(), phillips_diam(), robertson_mask()
 // Usage:
 //   hex_drive_mask(size, length, [anchor], [spin], [orient], [$slop]) [ATTACHMENTS];
 // Description:
@@ -147,6 +160,9 @@ function hex_drive_mask(size,length,l,h,height,anchor,spin,orient) = no_function
 // Section: Torx Drive
 
 // Module: torx_mask()
+// Synopsis: Creates a mask for a torx drive recess.
+// Topics: Screws, Masks
+// See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  philips_depth(), phillips_diam(), robertson_mask()
 // Usage:
 //   torx_mask(size, l, [center]) [ATTACHMENTS];
 // Description: Creates a torx bit tip.
@@ -174,6 +190,9 @@ module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
 
 
 // Module: torx_mask2d()
+// Synopsis: Creates the 2D cross section for a torx drive recess.
+// Topics: Screws, Masks
+// See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  philips_depth(), phillips_diam(), torx_info(), robertson_mask()
 // Usage:
 //   torx_mask2d(size);
 // Description: Creates a torx bit 2D profile.
@@ -215,6 +234,9 @@ module torx_mask2d(size) {
 
 
 // Function: torx_info()
+// Synopsis: Returns the dimensions of a torx drive.
+// Topics: Screws, Masks
+// See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  philips_depth(), phillips_diam(), torx_info()
 // Usage:
 //   info = torx_info(size);
 // Description:
@@ -263,6 +285,9 @@ function torx_info(size) =
 
 
 // Function: torx_diam()
+// Synopsis: Returns the diameter of a torx drive.
+// Topics: Screws, Masks
+// See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  philips_depth(), phillips_diam(), torx_info()
 // Usage:
 //   diam = torx_diam(size);
 // Description: Get the typical outer diameter of Torx profile.
@@ -272,6 +297,9 @@ function torx_diam(size) = torx_info(size)[0];
 
 
 // Function: torx_depth()
+// Synopsis: Returns the typical depth of a torx drive recess.
+// Topics: Screws, Masks
+// See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  philips_depth(), phillips_diam(), torx_info()
 // Usage:
 //   depth = torx_depth(size);
 // Description: Gets typical drive hole depth.
@@ -284,6 +312,9 @@ function torx_depth(size) = torx_info(size)[2];
 // Section: Robertson/Square Drives
 
 // Module: robertson_mask()
+// Synopsis: Creates a mask for a Robertson/Square drive recess.
+// Topics: Screws, Masks
+// See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  philips_depth(), phillips_diam(), torx_info(), robertson_mask()
 // Usage:
 //   robertson_mask(size, [extra], [ang], [$slop=]);
 // Description:
