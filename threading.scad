@@ -12,6 +12,9 @@
 // Section: Standard (UTS/ISO) Threading
 
 // Module: threaded_rod()
+// Synopsis: Creates an ISO threaded rod.
+// Topics: Threading, Screws
+// See Also: threaded_nut()
 // Usage:
 //   threaded_rod(d, l|length, pitch, [internal=], ...) [ATTACHMENTS];
 // Description:
@@ -129,6 +132,9 @@ module threaded_rod(
 
 
 // Module: threaded_nut()
+// Synopsis: Creates an ISO threaded nut.
+// Topics: Threading, Screws
+// See Also: threaded_rod()
 // Usage:
 //   threaded_nut(nutwidth, id, h|height|thickness, pitch,...) [ATTACHMENTS];
 // Description:
@@ -218,6 +224,9 @@ module threaded_nut(
 
 
 // Module: trapezoidal_threaded_rod()
+// Synopsis: Creates a trapezoidal threaded rod.
+// Topics: Threading, Screws
+// See Also: trapezoidal_threaded_nut()
 // Usage:
 //   trapezoidal_threaded_rod(d, l|length, pitch, [thread_angle], [thread_depth], [internal=], ...) [ATTACHMENTS];
 // Description:
@@ -339,13 +348,16 @@ module trapezoidal_threaded_rod(
 
 
 // Module: trapezoidal_threaded_nut()
+// Synopsis: Creates a trapezoidal threaded nut.
+// Topics: Threading, Screws
+// See Also: trapezoidal_threaded_rod()
 // Usage:
 //   trapezoidal_threaded_nut(nutwidth, id, h|height|thickness, pitch, [thread_angle], [thread_depth], ...) [ATTACHMENTS];
 // Description:
-//   Constructs a hex nut or square nut for a symmetric trapzoidal threaded rod.
-//   By default produces the nominal dimensions
-//   for metric trapezoidal threads: a thread angle of 30 degrees and a depth set to half the pitch.
-//   You can also specify your own trapezoid parameters.  For ACME threads see acme_threaded_nut(). 
+//   Constructs a hex nut or square nut for a symmetric trapzoidal threaded rod.  By default produces
+//   the nominal dimensions for metric trapezoidal threads: a thread angle of 30 degrees and a depth
+//   set to half the pitch.  You can also specify your own trapezoid parameters.  For ACME threads see
+//   acme_threaded_nut().
 // Arguments:
 //   nutwidth = flat to flat width of nut
 //   id = diameter of threaded rod to screw onto.
@@ -433,6 +445,9 @@ module trapezoidal_threaded_nut(
 
 
 // Module: acme_threaded_rod()
+// Synopsis: Creates an ACME threaded rod.
+// Topics: Threading, Screws
+// See Also: acme_threaded_nut()
 // Usage:
 //   acme_threaded_rod(d, l|length, tpi|pitch=, [internal=], ...) [ATTACHMENTS];
 // Description:
@@ -501,6 +516,9 @@ module acme_threaded_rod(
 
 
 // Module: acme_threaded_nut()
+// Synopsis: Creates an ACME threaded nut.
+// Topics: Threading, Screws
+// See Also: acme_threaded_rod()
 // Usage:
 //   acme_threaded_nut(nutwidth, id, h|height|thickness, tpi|pitch=, [shape=], ...) [ATTACHMENTS];
 // Description:
@@ -578,6 +596,9 @@ module acme_threaded_nut(
 // Section: Pipe Threading
 
 // Module: npt_threaded_rod()
+// Synopsis: Creates NPT pipe threading.
+// Topics: Threading, Screws
+// See Also: acme_threaded_rod()
 // Usage:
 //   npt_threaded_rod(size, [internal=], ...) [ATTACHMENTS];
 // Description:
@@ -697,6 +718,9 @@ module npt_threaded_rod(
 // Section: Buttress Threading
 
 // Module: buttress_threaded_rod()
+// Synopsis: Creates a buttress-threaded rod.
+// Topics: Threading, Screws
+// See Also: buttress_threaded_nut()
 // Usage:
 //   buttress_threaded_rod(d, l|length, pitch, [internal=], ...) [ATTACHMENTS];
 // Description:
@@ -778,6 +802,9 @@ module buttress_threaded_rod(
 
 
 // Module: buttress_threaded_nut()
+// Synopsis: Creates a buttress-threaded nut.
+// Topics: Threading, Screws
+// See Also: buttress_threaded_rod()
 // Usage:
 //   buttress_threaded_nut(nutwidth, id, h|height|thickness, pitch, ...) [ATTACHMENTS];
 // Description:
@@ -854,10 +881,14 @@ module buttress_threaded_nut(
 // Section: Square Threading
 
 // Module: square_threaded_rod()
+// Synopsis: Creates a square-threaded rod.
+// Topics: Threading, Screws
+// See Also: square_threaded_nut()
 // Usage:
 //   square_threaded_rod(d, l|length, pitch, [internal=], ...) [ATTACHMENTS];
 // Description:
-//   Constructs a square profile threaded screw rod.  The greatest advantage of square threads is that they have the least friction and a much higher intrinsic efficiency than trapezoidal threads.
+//   Constructs a square profile threaded screw rod.  The greatest advantage of square threads is
+//   that they have the least friction and a much higher intrinsic efficiency than trapezoidal threads.
 //   They produce no radial load on the nut.  However, square threads cannot carry as much load as trapezoidal threads. 
 // Arguments:
 //   d = Outer diameter of threaded rod.
@@ -926,6 +957,9 @@ module square_threaded_rod(
 
 
 // Module: square_threaded_nut()
+// Synopsis: Creates a square-threaded nut.
+// Topics: Threading, Screws
+// See Also: square_threaded_rod()
 // Usage:
 //   square_threaded_nut(nutwidth, id, h|height|thickness, pitch, ...) [ATTACHMENTS];
 // Description:
@@ -997,6 +1031,8 @@ module square_threaded_nut(
 // Section: Ball Screws
 
 // Module: ball_screw_rod()
+// Synopsis: Creates a ball screw rod.
+// Topics: Threading, Screws
 // Usage:
 //   ball_screw_rod(d, l|length, pitch, [ball_diam], [ball_arc], [internal=], ...) [ATTACHMENTS];
 // Description:
@@ -1072,6 +1108,9 @@ module ball_screw_rod(
 // Section: Generic Threading
 
 // Module: generic_threaded_rod()
+// Synopsis: Creates a generic threaded rod.
+// Topics: Threading, Screws
+// See Also: generic_threaded_nut()
 // Usage:
 //   generic_threaded_rod(d, l|length, pitch, profile, [internal=], ...) [ATTACHMENTS];
 // Description:
@@ -1330,6 +1369,9 @@ module generic_threaded_rod(
 
 
 // Module: generic_threaded_nut()
+// Synopsis: Creates a generic threaded nut.
+// Topics: Threading, Screws
+// See Also: generic_threaded_rod()
 // Usage:
 //   generic_threaded_nut(nutwidth, id, h|height|thickness, pitch, profile, [$slop], ...) [ATTACHMENTS];
 // Description:
@@ -1451,6 +1493,9 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 
 
 // Module: thread_helix()
+// Synopsis: Creates a thread helix to add to a cylinder.
+// Topics: Threading, Screws
+// See Also: generic_threaded_rod()
 // Usage:
 //   thread_helix(d, pitch, [thread_depth], [flank_angle], [turns], [profile=], [left_handed=], [higbee=], [internal=]);
 // Description:
@@ -1587,10 +1632,10 @@ module thread_helix(
 
 
 
-// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
-
 // Questions
 //   Should nut modules take d1/d2 for tapered nuts?
 //
 // Need explanation of what exactly the diff is between threaded_rod and helix_threads.
 // Higbee is different, angle in one and length in another.  Need to reconcile
+
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
