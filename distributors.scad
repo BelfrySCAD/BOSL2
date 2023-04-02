@@ -1,4 +1,4 @@
-`//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 // LibFile: distributors.scad
 //   Functions and modules to distribute children or copies of children onto
 //   a line, a grid, or an arbitrary path.  The $idx mechanism means that
@@ -1364,7 +1364,7 @@ function sphere_copies(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp
 // Function&Module: path_copies()
 // Synopsis: Uniformly distributes copies of children along a path.
 // Topics: Transformations, Distributors, Copiers
-// See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
+// See Also: line_copies(), move_copies(), xcopies(), ycopies(), zcopies(), grid_copies(), xflip_copy(), yflip_copy(), zflip_copy(), mirror_copy()
 //
 // Usage: Uniformly distribute copies 
 //   path_copies(path, [n], [spacing], [sp], [rotate_children], [closed=]) CHILDREN;
@@ -1577,7 +1577,7 @@ function path_copies(path, n, spacing, sp=undef, dist, rotate_children=true, dis
 // Function&Module: xflip_copy()
 // Synopsis: Makes a copy of children mirrored across the X axis.
 // Topics: Transformations, Distributors, Translation, Copiers
-// See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
+// See Also: yflip_copy(), zflip_copy(), mirror_copy(), path_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
 // Usage:
 //   xflip_copy([offset], [x]) CHILDREN;
@@ -1627,7 +1627,7 @@ function xflip_copy(offset=0, x=0, p=_NO_ARG) =
 // Function&Module: yflip_copy()
 // Synopsis: Makes a copy of children mirrored across the Y axis.
 // Topics: Transformations, Distributors, Translation, Copiers
-// See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
+// See Also: xflip_copy(), zflip_copy(), mirror_copy(), path_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
 // Usage:
 //   yflip_copy([offset], [y]) CHILDREN;
