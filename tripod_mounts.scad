@@ -10,6 +10,8 @@
 
 
 // Module: manfrotto_rc2_plate()
+// Synopsis: Creates a Manfrotto RC2 tripod quick release mount plate.
+// Topics: Parts
 // Usage:
 //   manfrotto_rc2_plate([chamfer],[anchor],[orient],[spin]) [ATTACHMENTS];
 // Description:

@@ -16,47 +16,51 @@ BOSL_VERSION = [2,0,652];
 
 
 // Function: bosl_version()
+// Synopsis: Returns the BOSL2 version as a list.
+// Topics: Versioning
+// See Also: bosl_version_num(), bosl_version_str(), bosl_required()
 // Usage:
 //   ver = bosl_version();
-// Topics: Versioning
 // Description:
 //   Returns a list with three integer elements, [MAJOR,MINOR,REV],
 //   representing the Major, Minor, and Build Revision numbers.
 //   For example, version 2.1.43 will be returned as `[2,1,43]`.
-// See Also: bosl_version_num(), bosl_version_str()
 function bosl_version() = BOSL_VERSION;
 
 
 // Function: bosl_version_num()
+// Synopsis: Returns the BOSL2 version as a float.
+// Topics: Versioning
+// See Also: bosl_version(), bosl_version_str(), bosl_required()
 // Usage:
 //   ver = bosl_version_num();
-// Topics: Versioning
 // Description:
 //   Returns a floating point number of the version, formatted like M.mmrrrr where M is the major version number,
 //   each m is a zero-padded digit of the minor version number, and each r is a zero-padded digit of the build
 //   revision number.  For example, version 2.1.43 will be returned as `2.010043`.
-// See Also: bosl_version(), bosl_version_str()
 function bosl_version_num() = version_to_num(BOSL_VERSION);
 
 
 // Function: bosl_version_str()
+// Synopsis: Returns the BOSL2 version as a string.
+// Topics: Versioning
+// See Also: bosl_version(), bosl_version_num(), bosl_required()
 // Usage:
 //   ver = bosl_version_str();
-// Topics: Versioning
 // Description:
 //   Returns a string of the version, formatted like "MAJOR.MINOR.REV".
 //   For example, version 2.1.43 will be returned as `"2.1.43"`.
-// See Also: bosl_version(), bosl_version_num()
 function bosl_version_str() = version_to_str(BOSL_VERSION);
 
 
 // Module: bosl_required()
+// Synopsis: Asserts that the current version of the library is at least the given version.
+// Topics: Versioning
+// See Also: version_to_num(), version_to_str(), version_to_list(), version_cmp()
 // Usage:
 //   bosl_required(version);
-// Topics: Versioning
 // Description:
 //   Given a version as a list, number, or string, asserts that the currently installed BOSL library is at least the given version.
-// See Also: version_to_num(), version_to_str(), version_to_list(), version_cmp()
 // Arguments:
 //   version = version required
 module bosl_required(version) {
@@ -85,12 +89,13 @@ function _version_split_str(x, _i=0, _out=[], _num=0) =
 
 
 // Function: version_to_list()
+// Synopsis: Splits a version into a list of integer version parts.
+// Topics: Versioning
+// See Also: version_to_num(), version_to_str(), version_cmp(), bosl_required()
 // Usage:
 //   ver = version_to_list(x);
-// Topics: Versioning
 // Description:
 //   Given a version string, number, or list, returns the list of version integers [MAJOR,MINOR,REVISION].
-// See Also: version_to_num(), version_to_str(), version_cmp(), bosl_required()
 // Arguments:
 //   x = version to convert
 // Example:
@@ -106,12 +111,13 @@ function version_to_list(version) =
 
 
 // Function: version_to_str()
+// Synopsis: Coerces a version into a standard version string.
+// Topics: Versioning
+// See Also: version_to_num(), version_to_list(), version_cmp(), bosl_required()
 // Usage:
 //   str = version_to_str(version);
-// Topics: Versioning
 // Description:
 //   Takes a version string, number, or list, and returns the properly formatter version string for it.
-// See Also: version_to_num(), version_to_list(), version_cmp(), bosl_required()
 // Arguments:
 //   version = version to convert
 // Example:
@@ -125,12 +131,13 @@ function version_to_str(version) =
 
 
 // Function: version_to_num()
+// Synopsis: Coerces a version into a standard version float.
+// Topics: Versioning
+// See Also: version_cmp(), version_to_str(), version_to_list(), bosl_required()
 // Usage:
 //   str = version_to_num(version);
-// Topics: Versioning
 // Description:
 //   Takes a version string, number, or list, and returns the properly formatter version number for it.
-// See Also: version_cmp(), version_to_str(), version_to_list(), bosl_required()
 // Arguments:
 //   version = version to convert
 // Example:
@@ -144,13 +151,14 @@ function version_to_num(version) =
 
 
 // Function: version_cmp()
+// Synopsis: Compares two versions.
+// Topics: Versioning
+// See Also: version_to_num(), version_to_str(), version_to_list(), bosl_required()
 // Usage:
 //   cmp = version_cmp(a,b);
-// Topics: Versioning
 // Description:
 //   Given a pair of versions, in any combination of string, integer, or list, compares them, and returns the relative value of them.
 //   Returns an integer <0 if a<b.  Returns 0 if a==b.  Returns an integer >0 if a>b.
-// See Also: version_to_num(), version_to_str(), version_to_list(), bosl_required()
 // Example:
 //   cmp1 = version_cmp(2.010034, "2.1.33");  // Returns: >0
 //   cmp2 = version_cmp(2.010034, "2.1.34");  // Returns: 0
