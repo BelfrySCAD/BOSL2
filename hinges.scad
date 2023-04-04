@@ -14,23 +14,32 @@ include <screws.scad>
 // Section: Hinges
 
 // Module: knuckle_hinge()
+// Synopsis: Creates a knuckle-hinge shape.
+// Topics: Hinges, Parts
+// See Also: living_hinge_mask(), snap_lock(), snap_socket()
 // Usage:
 //   knuckle_hinge(length, offset, segs, [inner], [arm_height=], [arm_angle=], [fill=], [clear_top=], [gap=], [round_top=], [round_bot=], [knuckle_diam=], [pin_diam=], [pin_fn=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
-//   Construct standard knuckle hinge in two parts using a hinge pin that must be separately supplied.  The default is configured to use a piece of 1.75 mm filament as the hinge pin,
-//   but you can select any dimensions you like to use a screw or other available pin material.  The BOTTOM of the hinge is its mount point, which is aligned with
-//   the hinge pin centersurface, and the hinge pin hole is the CENTER of the hinge.  
-//   The offset is the distance from a vertical mounting point to the center of the hinge pin.  The hinge barrel is held by an angled support and
-//   vertical support.  The length of the angled support is determined by its angle and the offset.  You specify the length of the vertical support with the
-//   arm_height parameter.
-//   
+//   Construct standard knuckle hinge in two parts using a hinge pin that must be separately supplied.
+//   The default is configured to use a piece of 1.75 mm filament as the hinge pin, but you can select
+//   any dimensions you like to use a screw or other available pin material.  The BOTTOM of the hinge
+//   is its mount point, which is aligned with the hinge pin centersurface, and the hinge pin hole is
+//   the CENTER of the hinge.  The offset is the distance from a vertical mounting point to the center
+//   of the hinge pin.  The hinge barrel is held by an angled support and vertical support.  The
+//   length of the angled support is determined by its angle and the offset.  You specify the length
+//   of the vertical support with the arm_height parameter.
 //   .
-//   A hinge requires clearance so its parts don't interfere.  If the hinge pin is exactly centered on the top of your part, then the hinge may not close all the way
-//   due to interference at the edge.  A small clearance, specified with `clearance=`, raises the hinge up and can ease this interference.  It should probably be equal to a layer thickness or two.
-//   If the hinge knuckle is close to the hinged part then the mating part may interfere.  You can create clearance to address this problem by increasing the offset
-//   to move the hinge knuckles farther away.  Another method is to cut out a curved recess on the parts to allow space for the other hinges.  This is possible
-//   using the `knuckle_clearance=` parameter, which specifies the extra space to cut away to leave room for the hinge knuckles.  It must be positive for any space
-//   to be cut, and to use this option you must make the hinge a child of some object and specify {{diff()}} for the parent object of the hinge. 
+//   A hinge requires clearance so its parts don't interfere.  If the hinge pin is exactly centered on
+//   the top of your part, then the hinge may not close all the way due to interference at the edge.
+//   A small clearance, specified with `clearance=`, raises the hinge up and can ease this
+//   interference.  It should probably be equal to a layer thickness or two.  If the hinge knuckle is
+//   close to the hinged part then the mating part may interfere.  You can create clearance to address
+//   this problem by increasing the offset to move the hinge knuckles farther away.  Another method is
+//   to cut out a curved recess on the parts to allow space for the other hinges.  This is possible
+//   using the `knuckle_clearance=` parameter, which specifies the extra space to cut away to leave
+//   room for the hinge knuckles.  It must be positive for any space to be cut, and to use this option
+//   you must make the hinge a child of some object and specify {{diff()}} for the parent object of
+//   the hinge.
 // Figure(2D,Med,NoScales):  The basic hinge form appears on the left.  If fill is set to true the gap between the mount surface and hinge arm is filled as shown on the right. 
 //   _knuckle_hinge_profile(4, 5, $fn=32, fill=false);
 //   right(13)_knuckle_hinge_profile(4, 5, $fn=32, fill=true);
@@ -336,6 +345,9 @@ module _knuckle_hinge_profile(offset, arm_height, arm_angle=45, knuckle_diam=4, 
 
 
 // Module: living_hinge_mask()
+// Synopsis: Creates a mask to make a folding "living" hinge.
+// Topics: Hinges, Parts
+// See Also: knuckle_hinge(), living_hinge_mask(), snap_lock(), snap_socket(), apply_folding_hinges_and_snaps()
 // Usage:
 //   living_hinge_mask(l, thick, [layerheight=], [foldangle=], [hingegap=], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
@@ -378,6 +390,9 @@ module folding_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=unde
 
 
 // Module: apply_folding_hinges_and_snaps()
+// Synopsis: Adds snap shapes and removes living hinges from a child shape.
+// Topics: Hinges, Parts
+// See Also: knuckle_hinge(), living_hinge_mask(), snap_lock(), snap_socket()
 // Usage:
 //   apply_folding_hinges_and_snaps(thick, [foldangle=], [hinges=], [snaps=], [sockets=], [snaplen=], [snapdiam=], [hingegap=], [layerheight=], [$slop=]) CHILDREN;
 // Description:
@@ -460,6 +475,9 @@ module apply_folding_hinges_and_snaps(thick, foldangle=90, hinges=[], snaps=[], 
 
 
 // Module: snap_lock()
+// Synopsis: Creates a snap-lock shape.
+// Topics: Hinges, Parts
+// See Also: knuckle_hinge(), living_hinge_mask(), snap_lock(), snap_socket()
 // Usage:
 //   snap_lock(thick, [snaplen=], [snapdiam=], [layerheight=], [foldangle=], [hingegap=], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
@@ -496,6 +514,9 @@ module snap_lock(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hi
 
 
 // Module: snap_socket()
+// Synopsis: Creates a snap-lock socket shape.
+// Topics: Hinges, Parts
+// See Also: knuckle_hinge(), living_hinge_mask(), snap_lock(), snap_socket()
 // Usage:
 //   snap_socket(thick, [snaplen=], [snapdiam=], [layerheight=], [foldangle=], [hingegap=], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
@@ -533,3 +554,6 @@ module snap_socket(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, 
     }
 }
 
+
+
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
