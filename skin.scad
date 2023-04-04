@@ -1053,132 +1053,140 @@ module rotate_sweep(
 //   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a 3D spiral path
 //   of a given radius, height and degrees of rotation.  The origin in the profile traces out the helix of the specified radius.
 //   If turns is positive the path will be right-handed;  if turns is negative the path will be left-handed.
+//   Such an extrusion can be used to make screw threads.  
 //   .
-//   The taper options specify tapering at of the ends of the extrusion, and are given as the linear distance
-//   over which to taper.  If taper is positive the extrusion lengthened by the specified distance; if taper
-//   is negative, the taper is included in the extrusion length specified by `turns`. 
+//   The lead_in options specify a lead-in setiton where the ends of the spiral scale down to avoid a sharp cut face at the ends.
+//   You can specify the length of this scaling directly with the lead_in parameters or as an angle using the lead_in_ang parameters.
+//   If you give a positive value, the extrusion is lengthenend by the specified distance or angle; if you give a negative
+//   value then the scaled end is included in the extrusion length specified by `turns`.  If the value is zero then no scaled ends
+//   are produced.  The shape of the scaled ends can be controlled with the lead_in_shape parameter.  Supported options are "sqrt", "linear"
+//   "smooth" and "cut".  
+//   .
+//   The inside argument changes how the extrusion lead-in sections are formed.  If it is true then they scale
+//   towards the outside, like would be needed for internal threading.  If internal is fale then the lead-in sections scale
+//   towards the inside, like would be appropriate for external threads.  
 // Arguments:
 //   poly = Array of points of a polygon path, to be extruded.
-//   h = height of the spiral to extrude along.
-//   r = Radius of the spiral to extrude along.
-//   turns = number of revolutions to spiral up along the height.
+//   h = height of the spiral extrusion path
+//   r = Radius of the spiral extrusion path
+//   turns = number of revolutions to include in the spiral
 //   ---
-//   d = Diameter of the spiral to extrude along.
+//   d = Diameter of the spiral extrusion path.
 //   d1/r1 = Bottom inside diameter or radius of spiral to extrude along.
 //   d2/r2 = Top inside diameter or radius of spiral to extrude along.
-//   taper = Length of tapers for thread ends.  Positive to add taper to threads, negative to taper within specified length.  Default: 0
-//   taper1 = Length of taper for bottom thread end
-//   taper2 = Length of taper for top thread end
-//   internal = if true make internal threads.  The only effect this has is to change how the extrusion tapers if tapering is selected. When true, the extrusion tapers towards the outside; when false, it tapers towards the inside.  Default: false
+//   lead_in = Specify linear length of the lead-in scaled section of the spiral.  Default: 0
+//   lead_in1 = Specify linear length of the lead-in scaled section of the spiral at the bottom
+//   lead_in2 = Specify linear length of the lead-in scaled section of the spiral at the top
+//   lead_in_ang = Specify angular  length of the lead-in scaled section of the spiral
+//   lead_in_ang1 = Specify angular length of the lead-in scaled section of the spiral at the bottom
+//   lead_in_ang2 = Specify angular length of the lead-in scaled section of the spiral at the top
+//   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "sqrt"
+//   lead_in_shape1 = Specify the shape of the thread lead-in at the bottom by giving a text string or function.  
+//   lead_in_shape2 = Specify the shape of the thread lead-in at the top by giving a text string or function.
+//   lead_in_sample = Factor to increase sample rate in the lead-in section.  Default: 10
+//   internal = if true make internal threads.  The only effect this has is to change how the extrusion lead-in section are formed. When true, the extrusion scales towards the outside; when false, it scales towards the inside.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
-// See Also: sweep(), linear_sweep(), rotate_sweep(), path_sweep()
+// See Also: sweep(), linear_sweep(), rotate_sweep(), path_sweep(), thread_helix()
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   spiral_sweep(poly, h=200, r=50, turns=3, $fn=36);
-function _taperfunc_orig_1d(x,L) =
-      x>1 ? 1 : x<0 ? 0:
-     let(
-         higofs = pow(0.05,2)            // Smallest hig scale is the square root of this value
-     )
-     sqrt((1-higofs)*x+higofs);
-
-function _taperfunc_orig(x,L) = 
-     let(s=_taperfunc_orig_1d(x))
-     x>1 ? [1,1]
-   : x<0 ? [0,0]
-  
-  :    [lerp(s,1,.25),s];
-function _taperfunc_ellipse(x) =
-     sqrt(1-(1-x)^2);
-function _taperfunc_linear(x) =
-     x>1 ? 1 : x<0 ? 0 : x;
-function _taperfunc_ogive_width(x,L) =
-     let( minscale = .2,
+_leadin_ogive=function (x,L) 
+     let( minscale = .05,
           r=(L^2+(1-minscale^2))/2/(1-minscale),
           scale = sqrt(r^2-(L*(1-x))^2) -(r-1)
      )
      x>1 ? [1,1]
-   : x<0 ? [0,0]
-   : [scale,1];     
-function _taperfunc_ogive_width_circle(x,L,h) =
-     let( minscale = .2,
-          r=(L^2+(1-minscale^2))/2/(1-minscale),
-          scale = sqrt(r^2-(L*(1-x))^2) -(r-1),
-          vscale = x*L>h ? h : sqrt(h^2-(x*L-h)^2)
-     )
+   : x<0 ? [lerp(minscale,1,.25),0] 
+   : [lerp(scale,1,.25),scale];     
+
+_leadin_cut = function(x,L) x>0 ? [1,1] : [1,0];
+
+_leadin_sqrt = function(x,L)
+     let(end=0.05)   // Smallest scale at the end
      x>1 ? [1,1]
-   : x<0.02 ? [0,0]
-   : [scale,vscale/h];     
-function _taperfunc_ogive_height(x,L) =
-     let( minscale = .1,L=3*L, 
-          r=(L^2+(1-minscale^2))/2/(1-minscale),
-          scale = sqrt(r^2-(L*(1-x))^2) -(r-1)
+   : x<0 ? [lerp(end,1,.25),0]   
+   : let(  
+          s = sqrt(x + end^2 * (1-x))
      )
+     [lerp(s,1,.25),s];    // thread width scale, thread height scale
+
+_leadin_linear = function(x,L)
+     let(minscale=.1)
      x>1 ? [1,1]
-   : x<0 ? [0,0] //minscale,0]
-   : [1,scale];     
-function _taperfunc_ogive(x,L) =
-     let( minscale = .3,
-          r=(L^2+(1-minscale^2))/2/(1-minscale),
-          scale = sqrt(r^2-(L*(1-x))^2) -(r-1)
-     )
-     x>1 ? [1,1]
-   : x<0 ? [0,0]
-   : [scale,scale];     
-function _taperfunc_ogive_orig(x,L) =
-     let( minscale = .3,
-          r=(L^2+(1-minscale^2))/2/(1-minscale),
-          scale = sqrt(r^2-(L*(1-x))^2) -(r-1)
-     )
-     x>1 ? [1,1]
-   : x<0 ? [0,0]
-   : [lerp(_taperfunc_orig_1d(x),1,.25),scale];
+   : x<0 ? [lerp(minscale,1,.25),0]
+   : let(scale = lerp(minscale,1,x))
+     [lerp(scale,1,.25),scale];
 
-function _taperfunc_cut(x,L) = x>1 ? [1,1] : [0,0];
+_lead_in_table = [
+     ["default", _leadin_sqrt],
+     ["sqrt", _leadin_sqrt],
+     ["cut", _leadin_cut],
+     ["smooth", _leadin_ogive],
+     ["linear", _leadin_linear]
+];
 
-
-function _taperfunc(x,L,h) = _taperfunc_ogive_width_circle(x,L,h);
-//function _taperfunc(x,L,h) = _taperfunc_orig(x,L);
-//function _taperfunc(x,L,h) = _taperfunc_ogive_width(x,L);
-function _taperfunc(x,L,h) = _taperfunc_orig(x,L);
-
-
-
+      
 function _ss_polygon_r(N,theta) =
         let( alpha = 360/N )
         cos(alpha/2)/(cos(posmod(theta,alpha)-alpha/2));
-function spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, taper1, taper2, internal=false, anchor=CENTER, spin=0, orient=UP) =
+function spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=false,
+                      lead_in_shape,lead_in_shape1, lead_in_shape2,
+                      lead_in, lead_in1, lead_in2,
+                      lead_in_ang, lead_in_ang1, lead_in_ang2,
+                      height,l,length,
+                      lead_in_sample = 10,
+                      anchor=CENTER, spin=0, orient=UP) =
     assert(is_num(turns) && turns != 0, "turns must be a nonzero number")
     assert(all_positive([h]), "Spiral height must be a positive number")
     let(
-        tapersample = 10,         // Oversample factor for higbee tapering
         dir = sign(turns),
-        r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=50),
-        r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=50),
+        r1 = get_radius(r1=r1, r=r, d1=d1, d=d),
+        r2 = get_radius(r1=r2, r=r, d1=d2, d=d),
         bounds = pointlist_bounds(poly),
         yctr = (bounds[0].y+bounds[1].y)/2,
         xmin = bounds[0].x,
         xmax = bounds[1].x,
         poly = path3d(clockwise_polygon(poly)),
-        anchor = get_anchor(anchor,center,BOT,BOT),
         sides = segs(max(r1,r2)),
         ang_step = 360/sides,
         turns = abs(turns),
-        taper1 = first_defined([taper1, taper, 0]),
-        taper2 = first_defined([taper2, taper, 0]),
-        taperang1 = 360 * abs(taper1) / (2 * r1 * PI),
-        taperang2 = 360 * abs(taper2) / (2 * r2 * PI),
-        minang = taper1<=0 ? 0 : -taperang1,
-        tapercut1 = taper1<=0 ? taperang1 : 0,
-        maxang = taper2<=0 ? 360*turns : 360*turns+taperang2,
-        tapercut2 = taper2<=0 ? 360*turns-taperang2 : 360*turns
+        lead_in1 = first_defined([lead_in1, lead_in]),
+        lead_in2 = first_defined([lead_in1, lead_in]),        
+        lead_in_ang1 =
+                      let(
+                           user_ang = first_defined([lead_in_ang1,lead_in_ang])
+                      )
+                      assert(is_undef(user_ang) || is_undef(lead_in1), "Cannot define lead_in/lead_in1 by both length and angle")
+                      is_def(user_ang) ? user_ang : default(lead_in1,0)*360/(2*PI*r1),
+        lead_in_ang2 =
+                      let(
+                           user_ang = first_defined([lead_in_ang2,lead_in_ang])
+                      )
+                      assert(is_undef(user_ang) || is_undef(lead_in2), "Cannot define lead_in/lead_in2 by both length and angle")
+                      is_def(user_ang) ? user_ang : default(lead_in2,0)*360/(2*PI*r2),
+        minang = -max(0,lead_in_ang1),
+        maxang = 360*turns + max(0,lead_in_ang2),
+        cut_ang1 = minang+abs(lead_in_ang1),
+        cut_ang2 = maxang-abs(lead_in_ang1),        
+        lead_in_shape1 = first_defined([lead_in_shape1, lead_in_shape, "default"]),
+        lead_in_shape2 = first_defined([lead_in_shape2, lead_in_shape, "default"]),             
+        lead_in_func1 = is_func(lead_in_shape1) ? lead_in_shape1
+                      : assert(is_string(lead_in_shape1),"lead_in_shape/lead_in_shape1 must be a function or string")
+                        let(ind = search([lead_in_shape1], _lead_in_table,0)[0])
+                        assert(ind!=[],str("Unknown lead_in_shape, \"",lead_in_shape1,"\""))
+                        _lead_in_table[ind[0]][1],
+        lead_in_func2 = is_func(lead_in_shape2) ? lead_in_shape2
+                      : assert(is_string(lead_in_shape2),"lead_in_shape/lead_in_shape2 must be a function or string")
+                        let(ind = search([lead_in_shape2], _lead_in_table,0)[0])
+                        assert(ind!=[],str("Unknown lead_in_shape, \"",lead_in_shape2,"\""))
+                        _lead_in_table[ind[0]][1]
     )
-    assert( tapercut1<tapercut2 && tapercut1<maxang, "Tapers are too long to fit")
+    assert( cut_ang1<cut_ang2, "Tapers are too long to fit")
     assert( all_positive([r1,r2]), "Diameter/radius must be positive")
     let(
+  
         // This complicated sampling scheme is designed to ensure that faceting always starts at angle zero
         // for alignment with cylinders, and there is always a facet boundary at the $fn specified locations, 
         // regardless of what kind of subsampling occurs for tapers.
@@ -1189,17 +1197,17 @@ function spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, tap
             maxang
         ],
         anglist = [
-           for(a=orig_anglist) if (a<tapercut1-EPSILON) a,
-           tapercut1,
-           for(a=orig_anglist) if (a>tapercut1+EPSILON && a<tapercut2-EPSILON) a,
-           tapercut2,
-           for(a=orig_anglist) if (a>tapercut2+EPSILON) a
+           for(a=orig_anglist) if (a<cut_ang1-EPSILON) a,
+           cut_ang1,
+           for(a=orig_anglist) if (a>cut_ang1+EPSILON && a<cut_ang2-EPSILON) a,
+           cut_ang2,
+           for(a=orig_anglist) if (a>cut_ang2+EPSILON) a
         ],
         interp_ang = [
-                      for(i=idx(anglist,e=-2))
+                      for(i=idx(anglist,e=-2)) 
                           each lerpn(anglist[i],anglist[i+1],
-                                         (taper1!=0 && anglist[i+1]<=tapercut1) || (taper2!=0 && anglist[i]>=tapercut2)
-                                            ? ceil((anglist[i+1]-anglist[i])/ang_step*tapersample)
+                                         (lead_in_ang1!=0 && anglist[i+1]<=cut_ang1) || (lead_in_ang2!=0 && anglist[i]>=cut_ang2)
+                                            ? ceil((anglist[i+1]-anglist[i])/ang_step*lead_in_sample)
                                             : 1,
                                      endpoint=false),
                       last(anglist)
@@ -1207,8 +1215,8 @@ function spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, tap
         skewmat = affine3d_skew_xz(xa=atan2(r2-r1,h)),
         points = [
             for (a = interp_ang) let (
-                hsc = a<tapercut1 ? _taperfunc((a-minang)/taperang1,abs(taper1),xmax-xmin)
-                    : a>tapercut2 ? _taperfunc((maxang-a)/taperang2,abs(taper2),xmax-xmin)
+                hsc = a<cut_ang1 ? lead_in_func1((a-minang)/abs(lead_in_ang1),abs(lead_in_ang1)*2*PI*r1/360)
+                    : a>cut_ang2 ? lead_in_func2((maxang-a)/abs(lead_in_ang2),abs(lead_in_ang2)*2*PI*r2/360)
                     : [1,1],
                 u = a/(360*turns), 
                 r = lerp(r1,r2,u),
@@ -1230,15 +1238,30 @@ function spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, tap
 
 
 
-module spiral_sweep(poly, h, r, turns=1, taper, center, r1, r2, d, d1, d2, taper1, taper2, internal=false, anchor=CENTER, spin=0, orient=UP) {
-    vnf = spiral_sweep(poly, h, r, turns, taper, center, r1, r2, d, d1, d2, taper1, taper2, internal);
-    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=50);
-    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=50);
-    taper1 = first_defined([taper1,taper,0]);
-    taper2 = first_defined([taper2,taper,0]);
-    extra = PI/2*(max(0,taper1/r1)+max(0,taper2/r2));
+module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=false,
+                    lead_in_shape,lead_in_shape1, lead_in_shape2,
+                    lead_in, lead_in1, lead_in2,
+                    lead_in_ang, lead_in_ang1, lead_in_ang2,
+                    height,l,length,
+                    lead_in_sample=10,
+                    anchor=CENTER, spin=0, orient=UP)
+{
+    vnf = spiral_sweep(poly=poly, h=h, r=r, turns=turns, r1=r1, r2=r2, d=d, d1=d1, d2=d2, internal=internal,
+                       lead_in_shape=lead_in_shape,lead_in_shape1=lead_in_shape1, lead_in_shape2=lead_in_shape2,
+                       lead_in=lead_in, lead_in1=lead_in1, lead_in2=lead_in2,
+                       lead_in_ang=lead_in_ang, lead_in_ang1=lead_in_ang1, lead_in_ang2=lead_in_ang2,
+                       height=height,l=length,length=length,
+                       lead_in_sample=lead_in_sample);
+    h = one_defined([h,height,length,l],"h,height,length,l");
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d);
+    lead_in1 = u_mul(first_defined([lead_in1,lead_in]),1/(2*PI*r1));
+    lead_in2 = u_mul(first_defined([lead_in2,lead_in]),1/(2*PI*r2));
+    lead_in_ang1 = first_defined([lead_in_ang1,lead_in_ang]);
+    lead_in_ang2 = first_defined([lead_in_ang2,lead_in_ang]);
+    extra_turns = max(0,first_defined([lead_in1,lead_in_ang1,0]))+max(0,first_defined([lead_in2,lead_in_ang2,0]));
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
-        vnf_polyhedron(vnf, convexity=ceil(2*(abs(turns)+extra)));
+        vnf_polyhedron(vnf, convexity=ceil(2*(abs(turns)+extra_turns)));
         children();
     }
 }
@@ -1796,7 +1819,22 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
                    )
                    assert(approx(ynormal*znormal,0),str("Supplied normal is parallel to the path tangent at point ",i))
                    translate(path[i%L])*rotation*zrot(-twist*tpathfrac[i])
-              ] 
+              ]
+      : method=="cross"?
+              let(
+                  crossnormal_mid = [for(i=[(closed?0:1):L-(closed?1:2)])
+                                       let(v=    cross(  select(path,i+1)-path[i], path[i]-select(path,i-1)),
+                                           f=assert(norm(v)>EPSILON)
+                                       )
+                                       v
+                                    ],
+                  crossnormal = closed ? crossnormal_mid : [crossnormal_mid[0], each crossnormal_mid, last(crossnormal_mid)]
+              )
+              [for(i=[0:L-(closed?0:1)]) let(
+                       rotation = frame_map(x=crossnormal[i%L], z=tangents[i%L])
+                   )
+                   translate(path[i%L])*rotation*zrot(-twist*tpathfrac[i])
+                 ] 
       : method=="natural" ?   // map x axis of shape to the path normal, which points in direction of curvature
               let (pathnormal = path_normals(path, tangents, closed))
               assert(all_defined(pathnormal),"Natural normal vanishes on your curve, select a different method")

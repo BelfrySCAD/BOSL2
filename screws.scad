@@ -189,7 +189,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 
 // Module: screw()
 // Usage:
-//   screw([spec], [head], [drive], [thread=], [drive_size=], [length=|l=], [thread_len=], [undersize=], [shaft_undersize=], [head_undersize=], [tolerance=], [details=], [anchor=], [atype=], [orient=], [spin=]) [ATTACHMENTS];
+//   screw([spec], [head], [drive], [thread=], [drive_size=], [length=|l=], [thread_len=], [undersize=], [shaft_undersize=], [head_undersize=], [tolerance=], [blunt_start=], [details=], [anchor=], [atype=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
 //   Create a screw.  See [screw and nut parameters](#section-screw-and-nut-parameters) for details on the parameters that define a screw.
 //   The tolerance determines the dimensions of the screw
@@ -246,9 +246,11 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   shaft_undersize = amount to decrease diameter of the shaft of screw; replaces rather than adding to the shaft_oversize value in a screw specification. 
 //   head_undersize = amount to decrease the head diameter of the screw; replaces rather than adding to the head_oversize value in a screw specification. 
 //   bevel1 = bevel bottom end of screw.  Default: true
-//   bevel2 = bevel top end of threaded section.  Default: true for headless, false otherwise
+//   bevel2 = bevel top end of threaded section.  Default: true for fully threaded or unthreaded headless, false otherwise
 //   bevel = bevel both ends of the threaded section.
-//   higbee = if true create blunt start threads at both ends for headless screws, and bottom only for other screws.  Default: false
+//   blunt_start = if true and hole is threaded, create blunt start threads.  Default: true
+//   blunt_start1 = if true and hole is threaded, create blunt start threads at bottom end.
+//   blunt_start2 = if true and hole is threaded, create blunt start threads top end.
 //   atype = anchor type, one of "screw", "head", "shaft", "threads", "shank"
 //   anchor = Translate so anchor point on the shaft is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -424,7 +426,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   $fn=32;
 //   projection(cut=true)xrot(-90){
 //       screw("1/4-20,3/8", head="hex",orient=UP,anchor=BOTTOM,tolerance="1A");
-//       down(INCH*1/20*1.395) nut("1/4-20", thickness=8, nutwidth=0.5*INCH, tolerance="1B");
+//       down(INCH*1/20*1.5) nut("1/4-20", thickness=8, nutwidth=0.5*INCH, tolerance="1B");
 //   }
 // Example: Here is a screw with nonstandard threading and a weird head size, which we create by modifying the screw structure:
 //   spec = screw_info("M6x2,12",head="socket");
@@ -515,19 +517,19 @@ function _nominal_diam(spec) = struct_val(spec,"diameter")+default(struct_val(sp
 function screw(spec, head, drive, thread, drive_size, 
              length, l, thread_len, tolerance, details=true, 
              undersize, shaft_undersize, head_undersize,
-             atype="screw",anchor=BOTTOM, spin=0, orient=UP,
+             atype="screw",anchor, spin=0, orient=UP,
              _shoulder_diam=0, _shoulder_len=0,
              bevel,bevel1,bevel2,bevelsize,
-             higbee=false,
-             _internal=false, _counterbore, _teardrop) = no_function("screw");
-
+             blunt_start,blunt_start1, blunt_start2,
+             _internal=false, _counterbore, _teardrop=false)
+   = no_function("screw");
 module screw(spec, head, drive, thread, drive_size, 
              length, l, thread_len, tolerance, details=true, 
              undersize, shaft_undersize, head_undersize,
              atype="screw",anchor, spin=0, orient=UP,
              _shoulder_diam=0, _shoulder_len=0,
              bevel,bevel1,bevel2,bevelsize,
-             higbee,
+             blunt_start,blunt_start1, blunt_start2,
              _internal=false, _counterbore, _teardrop=false)
 {
    tempspec = _get_spec(spec, "screw_info", _internal ? "screw_hole" : "screw",
@@ -584,6 +586,9 @@ module screw(spec, head, drive, thread, drive_size,
                  all_positive(given_height) ? given_height
                : (struct_val(spec,"head_size_sharp")+struct_val(spec,"head_oversize",0)-d_major)/2/tan(struct_val(spec,"head_angle")/2);
    flat_cbore_height = flathead && is_num(counterbore) ? counterbore : 0;
+
+   blunt_start1 = first_defined([blunt_start1,blunt_start,true]);
+   blunt_start2 = first_defined([blunt_start2,blunt_start,true]);
 
    shoulder_adj = _shoulder_len>0 ? flat_height:0;  // Adjustment because flathead height doesn't count toward shoulder length
    shoulder_full = _shoulder_len==0 ? 0 : _shoulder_len + flat_height;
@@ -647,6 +652,8 @@ module screw(spec, head, drive, thread, drive_size,
             : is_def(vnf) ? undef
             : head_height+flat_height+flat_cbore_height;
    bevelsize = default(bevelsize, d_major/12);
+   bevel1 = first_defined([bevel1,bevel,true]);
+   bevel2 = first_defined([bevel2,bevel,headless && _shoulder_len==0 && shank_len==0]);
    attachable(
               vnf = vnf, 
               d = u_add(u_mul(attach_d, rad_scale), islop),
@@ -671,8 +678,16 @@ module screw(spec, head, drive, thread, drive_size,
            if (shank_len>0 || pitch==0){
              L = pitch==0 ? length - (_shoulder_len==0?flat_height:0) : shank_len;
              bevsize = (_internal ? -1 : 1)*bevelsize;
-             bev1 = details && pitch==0 && first_defined([bevel1,bevel,!_internal]) ? bevsize : 0;
-             bev2 = details && pitch==0 && first_defined([bevel2,bevel,headless && !_internal]) ? bevsize : 0;
+             bev1 = pitch!=0 ? 0
+                  : bevel1==true ? bevsize
+                  : bevel1==false ? 0
+                  : bevel1=="reverse" ? -bevsize
+                  : bevel1;
+             bev2 = pitch!=0 ? 0
+                  : bevel2==true ? bevsize
+                  : bevel2==false ? 0
+                  : bevel2=="reverse" ? -bevsize
+                  : bevel2;
              down(_shoulder_len+flat_height-eps_shank)
                if (_teardrop)
                  teardrop(d=d_major*rad_scale+islop, h=L+eps_shank, anchor=FRONT, orient=BACK, $fn=sides, chamfer1=bev1, chamfer2=bev2);
@@ -680,18 +695,15 @@ module screw(spec, head, drive, thread, drive_size,
                  cyl(d=d_major*rad_scale+islop, h=L+eps_shank, anchor=TOP, $fn=sides, chamfer1=bev1, chamfer2=bev2);
            }
            if (thread_len>0 && pitch>0){
-             bev1 = details && first_defined([bevel1,bevel,!_internal]);
-             bev2 = details && first_defined([bevel2,bevel,!_internal && (flathead || _shoulder_len>0 || headless)]);
              down(_shoulder_len+flat_height+shank_len-eps_thread)
                    threaded_rod([mean(struct_val(threadspec, "d_minor")),
                                  mean(struct_val(threadspec, "d_pitch")),
                                  d_major], 
                       pitch = struct_val(threadspec, "pitch"),
                       l=thread_len+eps_thread, left_handed=false, internal=_internal, 
-                      bevel1=bev1,
-                      bevel2=bev2,
-                      higbee1=higbee && !_internal,
-                      higbee2=(!headless && !_internal) || is_undef(higbee) ? false : higbee,
+                      bevel1=bevel1,
+                      bevel2=bevel2,
+                      blunt_start=blunt_start, blunt_start1=blunt_start1, blunt_start2=blunt_start2, 
                       $fn=sides, anchor=TOP);
             }
              
@@ -704,10 +716,9 @@ module screw(spec, head, drive, thread, drive_size,
 
 
 
-
 // Module: screw_hole()
 // Usage:
-//   screw_hole([spec], [head], [thread=], [length=|l=], [oversize=], [hole_oversize=], [teardrop=], [head_oversize], [tolerance=], [$slop=], [anchor=], [atype=], [orient=], [spin=]) [ATTACHMENTS];
+//   screw_hole([spec], [head], [thread=], [length=|l=], [oversize=], [hole_oversize=], [teardrop=], [head_oversize], [tolerance=], [$slop=], [blunt_start=], [anchor=], [atype=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
 //   Create a screw hole mask.  See [screw and nut parameters](#section-screw-and-nut-parameters) for details on the parameters that define a screw.
 //   The screw hole can be threaded to receive a screw or it can be an unthreaded clearance hole.  
@@ -755,7 +766,9 @@ module screw(spec, head, drive, thread, drive_size,
 //   bevel = if true create bevel at both ends of hole.  Default: see below
 //   bevel1 = if true create bevel at bottom end of hole.  Default: false
 //   bevel2 = if true create bevel at top end of hole.     Default: true when tolerance="self tap", false otherwise
-//   higbee = if true and hole is threaded, create blunt start threads at the top of the hole.  Default: false
+//   blunt_start = if true and hole is threaded, create blunt start threads.  Default: true
+//   blunt_start1 = if true and hole is threaded, create blunt start threads at bottom end.
+//   blunt_start2 = if true and hole is threaded, create blunt start threads top end.
 //   $slop = add extra gap to account for printer overextrusion.  Default: 0
 //   atype = anchor type, one of "screw", "head", "shaft", "threads", "shank"
 //   anchor = Translate so anchor point on the shaft is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -795,14 +808,20 @@ module screw(spec, head, drive, thread, drive_size,
 //     cuboid(20)
 //       attach(TOP)
 //          screw_hole("1/4-20,.5",head="flat",counterbore=0,anchor=TOP);
-// Example: Threaded hole
-//   diff()
-//     cuboid(20)
-//       attach(FRONT)
-//          screw_hole("M16,15",anchor=TOP,thread=true);
+// Example: Threaded hole, with inward bevel at the base
+//   bottom_half()
+//     diff()
+//       cuboid(20)
+//         attach(FRONT)
+//           screw_hole("M16,15",anchor=TOP,thread=true,bevel1="reverse");
+function screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize, 
+             length, l, thread_len, tolerance=undef, counterbore, teardrop=false,
+             bevel, bevel1, bevel2, blunt_start, blunt_start1, blunt_start2, 
+             atype="screw",anchor=CENTER,spin=0, orient=UP)
+    = no_function("screw_hole");
 module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize, 
              length, l, thread_len, tolerance=undef, counterbore, teardrop=false,
-             bevel, bevel1, bevel2, higbee=false,
+             bevel, bevel1, bevel2, blunt_start, blunt_start1, blunt_start2, 
              atype="screw",anchor=CENTER,spin=0, orient=UP)
 {
    screwspec = _get_spec(spec, "screw_info", "screw_hole", 
@@ -821,9 +840,10 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
    head_oversize = first_defined([head_oversize, oversize[1],struct_val(screwspec,"head_oversize")]);
    if (threaded || is_def(hole_oversize) || tolerance==0 || tolerance=="none") {
      default_tag("remove")
-       screw(spec,head=head,thread=thread,shaft_undersize=u_mul(-1,hole_oversize), head_undersize=u_mul(-1,head_oversize), higbee=higbee,
+       screw(spec,head=head,thread=thread,shaft_undersize=u_mul(-1,hole_oversize), head_undersize=u_mul(-1,head_oversize),
+             blunt_start=blunt_start, blunt_start1=blunt_start1, blunt_start2=blunt_start2, 
              length=length,l=l,thread_len=thread_len, tolerance=tolerance, _counterbore=counterbore,
-             bevel=bevel, bevel1=bevel1, bevel2=bevel2, 
+             bevel1=bevel1, bevel2=bevel2, 
              atype=atype, anchor=anchor, spin=spin, orient=orient, _internal=true, _teardrop=teardrop)
          children();
    }
@@ -944,7 +964,7 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
      default_tag("remove")     
        screw(spec,head=head,thread=0,shaft_undersize=-hole_oversize, head_undersize=-head_oversize, 
              length=length,l=l,thread_len=thread_len, _counterbore=counterbore,
-             bevel=bevel, bevel1=bevel1, bevel2=bevel2, bevelsize=pitch>0?pitch:undef, higbee=higbee, 
+             bevel1=bevel1, bevel2=bevel2, bevelsize=pitch>0?pitch:undef,
              atype=atype, anchor=anchor, spin=spin, orient=orient, _internal=true, _teardrop=teardrop)
          children();
    }
@@ -1025,8 +1045,13 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
 //   shoulder_screw("iso", 16, length=20, head="none");
 // Example: Changing head height
 //   shoulder_screw("iso", 16, length=20, head_size=[24,5]);
+function shoulder_screw(s,d,length,head, thread_len, tolerance, head_size, drive, drive_size, thread,
+                      undersize, shaft_undersize, head_undersize, shoulder_undersize=0,
+                      blunt_start, blunt_start1, blunt_start2, 
+                      atype="screw", anchor=BOT, orient,spin) = no_function("shoulder_screw");
 module shoulder_screw(s,d,length,head, thread_len, tolerance, head_size, drive, drive_size, thread,
-                      undersize, shaft_undersize, head_undersize, shoulder_undersize=0, 
+                      undersize, shaft_undersize, head_undersize, shoulder_undersize=0,
+                      blunt_start, blunt_start1, blunt_start2, 
                       atype="screw", anchor=BOT, orient,spin)
 {
   d1= assert(is_num(d) && d>0, "Must specify shoulder diameter")
@@ -1121,6 +1146,7 @@ module shoulder_screw(s,d,length,head, thread_len, tolerance, head_size, drive, 
   screw(struct_set(info, headfields),
         _shoulder_len = length, _shoulder_diam = shoulder_diam-shoulder_tol,
         length=thread_len, tolerance=tolerance, shaft_undersize=shaft_undersize, head_undersize=head_undersize,
+        blunt_start=blunt_start, blunt_start1=blunt_start1, blunt_start2=blunt_start2,                 
         atype=atype, anchor=anchor, orient=orient, spin=spin)
     children();
 }        
@@ -1486,9 +1512,9 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
 //   ibevel = if true, bevel the inside (the hole).   Default: true
 //   ibevel1 = if true bevel the inside, bottom end.
 //   ibevel2 = if true bevel the inside, top end.
-//   higbee = If true apply higbee thread truncation at both ends, or set to an angle to adjust higbee cut point.  Default: false
-//   higbee1 = If true apply higbee thread truncation at bottom end, or set to an angle to adjust higbee cut point.
-//   higbee2 = If true apply higbee thread truncation at top end, or set to an angle to adjust higbee cut point.
+//   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
+//   blunt_start1 = If true apply truncated blunt start threads bottom end.
+//   blunt_start2 = If true apply truncated blunt start threads top end.
 //   tolerance = nut tolerance.  Determines actual nut thread geometry based on nominal sizing.  See [tolerance](#subsection-tolerance). Default is "2B" for UTS and "6H" for ISO.
 //   $slop = extra space left to account for printing over-extrusion.  Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1537,7 +1563,7 @@ function nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
            bevel,bevel1,bevel2,bevang=15,ibevel,ibevel1,ibevel2, higbee, higbee1, higbee2, anchor=BOTTOM, spin=0, orient=UP, oversize=0) 
            = no_function("nut");
 module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize, 
-           bevel,bevel1,bevel2,bevang=15,ibevel,ibevel1,ibevel2, higbee, higbee1, higbee2, anchor=BOTTOM, spin=0, orient=UP, oversize=0)
+           bevel,bevel1,bevel2,bevang=15,ibevel,ibevel1,ibevel2,blunt_start, blunt_start1, blunt_start2, anchor=BOTTOM, spin=0, orient=UP, oversize=0)
 {
    dummyA = assert(is_undef(nutwidth) || (is_num(nutwidth) && nutwidth>0));
    
@@ -1565,9 +1591,13 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
         shape=shape, 
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,bevang=bevang,
         ibevel=ibevel,ibevel1=ibevel1,ibevel2=ibevel2,
-        higbee=higbee, higbee1=higbee1, higbee2=higbee2, 
+        blunt_start=blunt_start, blunt_start1=blunt_start1, blunt_start2=blunt_start2,         
         anchor=anchor,spin=spin,orient=orient) children();
 }
+
+
+
+
 
 
 // Module: nut_trap_side()
