@@ -10,7 +10,6 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
-
 // Section: Adaptive Children Using `$` Variables
 //   The distributor methods create multiple copies of their children and place them in various ways.  While many models 
 //   require multiple identical copies of an object, this framework is more powerful than
@@ -92,8 +91,10 @@
 // Section: Translating copies of all the children
 //////////////////////////////////////////////////////////////////////
 
-
 // Function&Module: move_copies()
+// Synopsis: Translates copies of all children.
+// Topics: Transformations, Distributors, Translation, Copiers
+// See Also: xcopies(), ycopies(), zcopies(), line_copies(), grid_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Usage:
 //   move_copies(a) CHILDREN;
@@ -101,9 +102,6 @@
 //   copies = move_copies(a, p=);
 // Usage: Get Translation Matrices
 //   mats = move_copies(a);
-//
-// Topics: Transformations, Distributors, Copiers
-//
 // Description:
 //   When called as a module, translates copies of all children to each given translation offset.
 //   When called as a function, with no `p=` argument, returns a list of transformation matrices, one for each copy.
@@ -118,7 +116,6 @@
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Example:
 //   #sphere(r=10);
@@ -147,6 +144,9 @@ function move_copies(a=[[0,0,0]],p=_NO_ARG) =
 
 
 // Function&Module: xcopies()
+// Synopsis: Places copies of children along the X axis. 
+// Topics: Transformations, Distributors, Translation, Copiers
+// See Also: move_copies(), ycopies(), zcopies(), line_copies(), grid_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Usage:
 //   xcopies(spacing, [n], [sp]) CHILDREN;
@@ -160,9 +160,6 @@ function move_copies(a=[[0,0,0]],p=_NO_ARG) =
 //   mats = xcopies(spacing, [n], [sp]);
 //   mats = xcopies(l, [n], [sp]);
 //   mats = xcopies(LIST);
-//
-// Topics: Transformations, Distributors, Copiers
-//
 // Description:
 //   When called as a module, places `n` copies of the children along a line on the X axis.
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
@@ -180,7 +177,6 @@ function move_copies(a=[[0,0,0]],p=_NO_ARG) =
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Examples:
 //   xcopies(20) sphere(3);
@@ -233,6 +229,9 @@ function xcopies(spacing, n, l, sp, p=_NO_ARG) =
 
 
 // Function&Module: ycopies()
+// Synopsis: Places copies of children along the Y axis. 
+// Topics: Transformations, Distributors, Translation, Copiers
+// See Also: move_copies(), xcopies(), zcopies(), line_copies(), grid_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Usage:
 //   ycopies(spacing, [n], [sp]) CHILDREN;
@@ -246,9 +245,6 @@ function xcopies(spacing, n, l, sp, p=_NO_ARG) =
 //   mats = ycopies(spacing, [n], [sp]);
 //   mats = ycopies(l, [n], [sp]);
 //   mats = ycopies(LIST);
-//
-// Topics: Transformations, Distributors, Copiers
-//
 // Description:
 //   When called as a module, places `n` copies of the children along a line on the Y axis.
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
@@ -266,7 +262,6 @@ function xcopies(spacing, n, l, sp, p=_NO_ARG) =
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Examples:
 //   ycopies(20) sphere(3);
@@ -319,6 +314,9 @@ function ycopies(spacing, n, l, sp, p=_NO_ARG) =
 
 
 // Function&Module: zcopies()
+// Synopsis: Places copies of children along the Z axis. 
+// Topics: Transformations, Distributors, Translation, Copiers
+// See Also: move_copies(), xcopies(), ycopies(), line_copies(), grid_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Usage:
 //   zcopies(spacing, [n], [sp]) CHILDREN;
@@ -332,9 +330,6 @@ function ycopies(spacing, n, l, sp, p=_NO_ARG) =
 //   mats = zcopies(spacing, [n], [sp]);
 //   mats = zcopies(l, [n], [sp]);
 //   mats = zcopies(LIST);
-//
-// Topics: Transformations, Distributors, Copiers
-//
 // Description:
 //   When called as a module, places `n` copies of the children along a line on the Z axis.
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
@@ -352,7 +347,6 @@ function ycopies(spacing, n, l, sp, p=_NO_ARG) =
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Examples:
 //   zcopies(20) sphere(3);
@@ -420,6 +414,9 @@ function zcopies(spacing, n, l, sp, p=_NO_ARG) =
 
 
 // Function&Module: line_copies()
+// Synopsis: Places copies of children along an arbitrary line. 
+// Topics: Transformations, Distributors, Translation, Copiers
+// See Also: move_copies(), xcopies(), ycopies(), zcopies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Usage: Place `n` copies at a given spacing along the line
 //   line_copies(spacing, [n], [p1=]) CHILDREN;
@@ -443,9 +440,6 @@ function zcopies(spacing, n, l, sp, p=_NO_ARG) =
 //   mats = line_copies([n=], [l=], [p1=]);
 //   mats = line_copies([n=], [p1=], [p2=]);
 //   mats = line_copies([spacing], [p1=], [p2=]);
-//
-// Topics: Transformations, Distributors, Copiers
-//
 // Description:
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
 //   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
@@ -479,7 +473,6 @@ function zcopies(spacing, n, l, sp, p=_NO_ARG) =
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Examples:
 //   line_copies(10) sphere(d=1.5);
@@ -554,6 +547,9 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 
 
 // Function&Module: grid_copies()
+// Synopsis: Places copies of children in an [X,Y] grid. 
+// Topics: Transformations, Distributors, Translation, Copiers
+// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Usage:
 //   grid_copies(spacing, size=, [stagger=], [scale=], [inside=]) CHILDREN;
@@ -570,9 +566,6 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 //   mats = grid_copies(n=, size=, [stagger=], [scale=], [inside=]);
 //   mats = grid_copies(spacing, [n], [stagger=], [scale=], [inside=]);
 //   mats = grid_copies(n=, inside=, [stagger], [scale]);
-//
-// Topics: Transformations, Distributors, Copiers
-//
 // Description:
 //   When called as a module, makes a square or hexagonal grid of copies of children, with an optional masking polygon or region.
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
@@ -593,7 +586,6 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 //   `$col` is set to the integer column number for each child.
 //   `$row` is set to the integer row number for each child.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Examples:
 //   grid_copies(size=50, spacing=10) cylinder(d=10, h=1);
@@ -777,8 +769,10 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, p=_
 // Section: Rotating copies of all children
 //////////////////////////////////////////////////////////////////////
 
-
 // Function&Module: rot_copies()
+// Synopsis: Rotates copies of children.
+// Topics: Transformations, Distributors, Rotation, Copiers
+// See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
 // Usage:
 //   rot_copies(rots, [cp=], [sa=], [delta=], [subrot=]) CHILDREN;
@@ -792,9 +786,6 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, p=_
 //   mats = rot_copies(rots, [cp=], [sa=], [delta=], [subrot=]);
 //   mats = rot_copies(rots, v, [cp=], [sa=], [delta=], [subrot=]);
 //   mats = rot_copies(n=, [v=], [cp=], [sa=], [delta=], [subrot=]);
-//
-// Topics: Transformations, Distributors, Copiers
-//
 // Description:
 //   When called as a module:
 //   - Given a list of [X,Y,Z] rotation angles in `rots`, rotates copies of the children to each of those angles, regardless of axis of rotation.
@@ -824,7 +815,6 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, p=_
 //   `$idx` is set to the index value of each child copy.
 //   `$axis` is set to the axis to rotate around, if `rots` was given as a list of angles instead of a list of [X,Y,Z] rotation angles.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Example:
 //   #cylinder(h=20, r1=5, r2=0);
@@ -904,6 +894,9 @@ function rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], su
 
 
 // Function&Module: xrot_copies()
+// Synopsis: Rotates copies of children around the X axis.
+// Topics: Transformations, Distributors, Rotation, Copiers
+// See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
 // Usage:
 //   xrot_copies(rots, [cp], [r=|d=], [sa=], [subrot=]) CHILDREN;
@@ -914,9 +907,6 @@ function rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], su
 // Usage: Get Translation Matrices
 //   mats = xrot_copies(rots, [cp], [r=|d=], [sa=], [subrot=]);
 //   mats = xrot_copies(n=, [cp=], [r=|d=], [sa=], [subrot=]);
-//
-// Topics: Transformations, Distributors, Copiers
-//
 // Description:
 //   When called as a module:
 //   - Given an array of angles, rotates copies of the children to each of those angles around the X axis.
@@ -944,7 +934,6 @@ function rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], su
 //   `$ang` is set to the rotation angle of each child copy, and can be used to modify each child individually.
 //   `$axis` is set to the axis vector rotated around.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Example:
 //   xrot_copies([180, 270, 315])
@@ -984,6 +973,9 @@ function xrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 
 
 // Function&Module: yrot_copies()
+// Synopsis: Rotates copies of children around the Y axis.
+// Topics: Transformations, Distributors, Rotation, Copiers
+// See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
 // Usage:
 //   yrot_copies(rots, [cp], [r=|d=], [sa=], [subrot=]) CHILDREN;
@@ -994,9 +986,6 @@ function xrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 // Usage: Get Translation Matrices
 //   mats = yrot_copies(rots, [cp], [r=|d=], [sa=], [subrot=]);
 //   mats = yrot_copies(n=, [cp=], [r=|d=], [sa=], [subrot=]);
-//
-// Topics: Transformations, Distributors, Copiers
-//
 // Description:
 //   When called as a module:
 //   - Given an array of angles, rotates copies of the children to each of those angles around the Y axis.
@@ -1024,7 +1013,6 @@ function xrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 //   `$ang` is set to the rotation angle of each child copy, and can be used to modify each child individually.
 //   `$axis` is set to the axis vector rotated around.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Example:
 //   yrot_copies([180, 270, 315])
@@ -1064,6 +1052,9 @@ function yrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 
 
 // Function&Module: zrot_copies()
+// Synopsis: Rotates copies of children around the Z axis.
+// Topics: Transformations, Distributors, Rotation, Copiers
+// See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
 // Usage:
 //   zrot_copies(rots, [cp], [r=|d=], [sa=], [subrot=]) CHILDREN;
@@ -1074,8 +1065,6 @@ function yrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 // Usage: Get Translation Matrices
 //   mats = zrot_copies(rots, [cp], [r=|d=], [sa=], [subrot=]);
 //   mats = zrot_copies(n=, [cp=], [r=|d=], [sa=], [subrot=]);
-//
-// Topics: Transformations, Distributors, Copiers
 //
 // Description:
 //   When called as a module:
@@ -1104,7 +1093,6 @@ function yrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 //   `$ang` is set to the rotation angle of each child copy, and can be used to modify each child individually.
 //   `$axis` is set to the axis vector rotated around.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Example:
 //   zrot_copies([180, 270, 315])
@@ -1143,6 +1131,9 @@ function zrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 
 
 // Function&Module: arc_copies()
+// Synopsis: Distributes duplicates of children along an arc.
+// Topics: Transformations, Distributors, Rotation, Copiers
+// See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
 // Usage:
 //   arc_copies(n, r|d=, [sa=], [ea=], [rot=]) CHILDREN;
@@ -1154,7 +1145,6 @@ function zrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 //   mats = arc_copies(n, r|d=, [sa=], [ea=], [rot=]);
 //   mats = arc_copies(n, rx=|dx=, ry=|dy=, [sa=], [ea=], [rot=]);
 //
-// Topics: Transformations, Distributors, Copiers
 //
 // Description:
 //   When called as a module, evenly distributes n duplicate children around an ovoid arc on the XY plane.
@@ -1180,7 +1170,6 @@ function zrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index value of each child copy.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Example:
 //   #cube(size=[10,3,3],center=true);
@@ -1266,6 +1255,9 @@ function arc_copies(
 
 
 // Function&Module: sphere_copies()
+// Synopsis: Distributes copies of children over the surface of a sphere. 
+// Topics: Transformations, Distributors, Rotation, Copiers
+// See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
 // Usage:
 //   sphere_copies(n, r|d=, [cone_ang=], [scale=], [perp=]) CHILDREN;
@@ -1273,8 +1265,6 @@ function arc_copies(
 //   copies = sphere_copies(n, r|d=, [cone_ang=], [scale=], [perp=], p=);
 // Usage: Get Translation Matrices
 //   mats = sphere_copies(n, r|d=, [cone_ang=], [scale=], [perp=]);
-//
-// Topics: Transformations, Distributors, Copiers
 //
 // Description:
 //   When called as a module, spreads children semi-evenly over the surface of a sphere or ellipsoid.
@@ -1298,7 +1288,6 @@ function arc_copies(
 //   `$rad` is set to the pre-scaled radial distance of the child from the center of the sphere.
 //   `$idx` is set to the index number of each child being copied.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Example:
 //   sphere_copies(n=250, d=100, cone_ang=45, scale=[3,3,1])
@@ -1373,6 +1362,9 @@ function sphere_copies(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp
 
 
 // Function&Module: path_copies()
+// Synopsis: Uniformly distributes copies of children along a path.
+// Topics: Transformations, Distributors, Copiers
+// See Also: line_copies(), move_copies(), xcopies(), ycopies(), zcopies(), grid_copies(), xflip_copy(), yflip_copy(), zflip_copy(), mirror_copy()
 //
 // Usage: Uniformly distribute copies 
 //   path_copies(path, [n], [spacing], [sp], [rotate_children], [closed=]) CHILDREN;
@@ -1384,8 +1376,6 @@ function sphere_copies(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp
 // Usage: Get Translation Matrices
 //   mats = path_copies(path, [n], [spacing], [sp], [rotate_children], [closed=]);
 //   mats = path_copies(path, dist=, [rotate_children=], [closed=]);
-//
-// Topics: Transformations, Distributors, Copiers
 //
 // Description:
 //   When called as a module:
@@ -1415,7 +1405,6 @@ function sphere_copies(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp
 //   `$dir` is set to the direction vector of the path at the point where the copy is placed.
 //   `$normal` is set to the direction of the normal vector to the path direction that is coplanar with the path at this point
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Example(2D):
 //   spiral = [for(theta=[0:360*8]) theta * [cos(theta), sin(theta)]]/100;
@@ -1585,8 +1574,10 @@ function path_copies(path, n, spacing, sp=undef, dist, rotate_children=true, dis
 // Section: Making a copy of all children with reflection
 //////////////////////////////////////////////////////////////////////
 
-
 // Function&Module: xflip_copy()
+// Synopsis: Makes a copy of children mirrored across the X axis.
+// Topics: Transformations, Distributors, Translation, Copiers
+// See Also: yflip_copy(), zflip_copy(), mirror_copy(), path_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
 // Usage:
 //   xflip_copy([offset], [x]) CHILDREN;
@@ -1594,8 +1585,6 @@ function path_copies(path, n, spacing, sp=undef, dist, rotate_children=true, dis
 //   copies = xflip_copy([offset], [x], p=);
 // Usage: Get Translation Matrices
 //   mats = xflip_copy([offset], [x]);
-//
-// Topics: Transformations, Distributors, Copiers
 //
 // Description:
 //   When called as a module, makes a copy of the children, mirrored across the X axis.
@@ -1612,7 +1601,6 @@ function path_copies(path, n, spacing, sp=undef, dist, rotate_children=true, dis
 //   `$orig` is true for the original instance of children.  False for the copy.
 //   `$idx` is set to the index value of each copy.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Example:
 //   xflip_copy() yrot(90) cylinder(h=20, r1=4, r2=0);
@@ -1637,6 +1625,9 @@ function xflip_copy(offset=0, x=0, p=_NO_ARG) =
 
 
 // Function&Module: yflip_copy()
+// Synopsis: Makes a copy of children mirrored across the Y axis.
+// Topics: Transformations, Distributors, Translation, Copiers
+// See Also: xflip_copy(), zflip_copy(), mirror_copy(), path_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
 // Usage:
 //   yflip_copy([offset], [y]) CHILDREN;
@@ -1644,8 +1635,6 @@ function xflip_copy(offset=0, x=0, p=_NO_ARG) =
 //   copies = yflip_copy([offset], [y], p=);
 // Usage: Get Translation Matrices
 //   mats = yflip_copy([offset], [y]);
-//
-// Topics: Transformations, Distributors, Copiers
 //
 // Description:
 //   When called as a module, makes a copy of the children, mirrored across the Y axis.
@@ -1662,7 +1651,6 @@ function xflip_copy(offset=0, x=0, p=_NO_ARG) =
 //   `$orig` is true for the original instance of children.  False for the copy.
 //   `$idx` is set to the index value of each copy.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Example:
 //   yflip_copy() xrot(-90) cylinder(h=20, r1=4, r2=0);
@@ -1687,6 +1675,9 @@ function yflip_copy(offset=0, y=0, p=_NO_ARG) =
 
 
 // Function&Module: zflip_copy()
+// Synopsis: Makes a copy of children mirrored across the Z axis.
+// Topics: Transformations, Distributors, Translation, Copiers
+// See Also: xflip_copy(), yflip_copy(), mirror_copy(), path_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
 // Usage:
 //   zflip_copy([offset], [z]) CHILDREN;
@@ -1694,8 +1685,6 @@ function yflip_copy(offset=0, y=0, p=_NO_ARG) =
 //   copies = zflip_copy([offset], [z], p=);
 // Usage: Get Translation Matrices
 //   mats = zflip_copy([offset], [z]);
-//
-// Topics: Transformations, Distributors, Copiers
 //
 // Description:
 //   When called as a module, makes a copy of the children, mirrored across the Z axis.
@@ -1712,7 +1701,6 @@ function yflip_copy(offset=0, y=0, p=_NO_ARG) =
 //   `$orig` is true for the original instance of children.  False for the copy.
 //   `$idx` is set to the index value of each copy.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Example:
 //   zflip_copy() cylinder(h=20, r1=4, r2=0);
@@ -1737,6 +1725,9 @@ function zflip_copy(offset=0, z=0, p=_NO_ARG) =
 
 
 // Function&Module: mirror_copy()
+// Synopsis: Makes a copy of children mirrored across a given plane.
+// Topics: Transformations, Distributors, Translation, Copiers
+// See Also: xflip_copy(), yflip_copy(), zflip_copy(), path_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
 // Usage:
 //   mirror_copy(v, [cp], [offset]) CHILDREN;
@@ -1744,8 +1735,6 @@ function zflip_copy(offset=0, z=0, p=_NO_ARG) =
 //   copies = mirror_copy(v, [cp], [offset], p=);
 // Usage: Get Translation Matrices
 //   mats = mirror_copy(v, [cp], [offset]);
-//
-// Topics: Transformations, Distributors, Copiers
 //
 // Description:
 //   When called as a module, makes a copy of the children, mirrored across the given plane.
@@ -1763,7 +1752,6 @@ function zflip_copy(offset=0, z=0, p=_NO_ARG) =
 //   `$orig` is true for the original instance of children.  False for the copy.
 //   `$idx` is set to the index value of each copy.
 //
-// See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Example:
 //   mirror_copy([1,-1,0]) zrot(-45) yrot(90) cylinder(d1=10, d2=0, h=20);
@@ -1826,7 +1814,6 @@ function mirror_copy(v=[0,0,1], offset=0, cp, p=_NO_ARG) =
 ////////////////////
 // Section: Distributing children individually along a line
 ///////////////////
-
 // Module: xdistribute()
 //
 // Description:

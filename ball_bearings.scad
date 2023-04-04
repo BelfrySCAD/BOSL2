@@ -13,6 +13,9 @@
 // Section: Ball Bearing Models
 
 // Module: ball_bearing()
+// Synopsis: Creates a standardized ball bearing assembly.
+// Topics: Parts, Bearings
+// See Also: linear_bearing(), lmXuu_bearing(), lmXuu_housing()
 // Description:
 //   Creates a model of a ball bearing assembly.
 // Arguments:
@@ -70,6 +73,9 @@ module ball_bearing(trade_size, id, od, width, shield=true, anchor=CTR, spin=0, 
 
 
 // Function: ball_bearing_info()
+// Synopsis: Creates a standardized ball bearing assembly.
+// Topics: Parts, Bearings
+// See Also: ball_bearing(), linear_bearing(), lmXuu_info()
 // Description:
 //   Get dimensional info for a standard metric ball bearing cartridge.
 //   Returns `[SHAFT_DIAM, OUTER_DIAM, WIDTH, SHIELDED]` for the cylindrical cartridge.

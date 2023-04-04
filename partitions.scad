@@ -12,6 +12,9 @@
 // Section: Planar Cutting
 
 // Function&Module: half_of()
+// Synopsis: Masks half of an object at a cut plane.
+// Topics: Partitions, Masking
+// See Also: back_half(), front_half(), left_half(), right_half(), top_half(), bottom_half()
 //
 // Usage: as module
 //   half_of(v, [cp], [s], [planar]) CHILDREN;
@@ -118,6 +121,9 @@ function half_of(p, v=UP, cp) =
 
 
 // Function&Module: left_half()
+// Synopsis: Masks the right half of an object along the Y-Z plane, leaving the left half.
+// Topics: Partitions, Masking
+// See Also: back_half(), front_half(), right_half(), top_half(), bottom_half(), half_of()
 //
 // Usage: as module
 //   left_half([s], [x]) CHILDREN;
@@ -161,6 +167,9 @@ function left_half(p,x=0) = half_of(p, LEFT, [x,0,0]);
 
 
 // Function&Module: right_half()
+// Synopsis: Masks the left half of an object along the Y-Z plane, leaving the right half.
+// Topics: Partitions, Masking
+// See Also: back_half(), front_half(), left_half(), top_half(), bottom_half(), half_of()
 //
 // Usage: as module
 //   right_half([s=], [x=]) CHILDREN;
@@ -202,6 +211,9 @@ function right_half(p,x=0) = half_of(p, RIGHT, [x,0,0]);
 
 
 // Function&Module: front_half()
+// Synopsis: Masks the back half of an object along the X-Z plane, leaving the front half.
+// Topics: Partitions, Masking
+// See Also: back_half(), left_half(), right_half(), top_half(), bottom_half(), half_of()
 //
 // Usage:
 //   front_half([s], [y]) CHILDREN;
@@ -244,6 +256,9 @@ function front_half(p,y=0) = half_of(p, FRONT, [0,y,0]);
 
 
 // Function&Module: back_half()
+// Synopsis: Masks the front half of an object along the X-Z plane, leaving the back half.
+// Topics: Partitions, Masking
+// See Also: front_half(), left_half(), right_half(), top_half(), bottom_half(), half_of()
 //
 // Usage:
 //   back_half([s], [y]) CHILDREN;
@@ -286,6 +301,9 @@ function back_half(p,y=0) = half_of(p, BACK, [0,y,0]);
 
 
 // Function&Module: bottom_half()
+// Synopsis: Masks the top half of an object along the X-Y plane, leaving the bottom half.
+// Topics: Partitions, Masking
+// See Also: back_half(), front_half(), left_half(), right_half(), top_half(), half_of()
 //
 // Usage:
 //   bottom_half([s], [z]) CHILDREN;
@@ -320,6 +338,9 @@ function bottom_half(p,z=0) = half_of(p,BOTTOM,[0,0,z]);
 
 
 // Function&Module: top_half()
+// Synopsis: Masks the bottom half of an object along the X-Y plane, leaving the top half.
+// Topics: Partitions, Masking
+// See Also: back_half(), front_half(), left_half(), right_half(), bottom_half(), half_of()
 //
 // Usage: as module
 //   top_half([s], [z]) CHILDREN;
@@ -398,6 +419,9 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 
 
 // Module: partition_mask()
+// Synopsis: Creates a mask to remove half an object with the remaining half suitable for reassembly.
+// Topics: Partitions, Masking, Paths
+// See Also: partition_cut_mask(), partition()
 // Usage:
 //   partition_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
@@ -448,6 +472,9 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
 
 
 // Module: partition_cut_mask()
+// Synopsis: Creates a mask to cut an object into two subparts that can be reassembled.
+// Topics: Partitions, Masking, Paths
+// See Also: partition_mask(), partition()
 // Usage:
 //   partition_cut_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
@@ -491,6 +518,9 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
 
 
 // Module: partition()
+// Synopsis: Cuts an object in two with matched joining edges, then separates the parts .
+// Topics: Partitions, Masking, Paths
+// See Also: partition_cut_mask(), partition_mask()
 // Usage:
 //   partition(size, [spread], [cutsize], [cutpath], [gap], [spin], [$slop=]) CHILDREN;
 // Description:

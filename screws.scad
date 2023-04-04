@@ -188,26 +188,28 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 // Section: Making Screws
 
 // Module: screw()
+// Synopsis: Creates a standard screw with optional tolerances.
+// Topics: Threading, Screws
+// See Also: screw_hole(), shoulder_screw()
 // Usage:
 //   screw([spec], [head], [drive], [thread=], [drive_size=], [length=|l=], [thread_len=], [undersize=], [shaft_undersize=], [head_undersize=], [tolerance=], [blunt_start=], [details=], [anchor=], [atype=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
-//   Create a screw.  See [screw and nut parameters](#section-screw-and-nut-parameters) for details on the parameters that define a screw.
-//   The tolerance determines the dimensions of the screw
-//   based on ISO and ASME standards.  Screws fabricated at those dimensions will mate properly with standard hardware.
-//   Note that the $slop argument does not affect the size of screws: it only adjusts screw holes.  This will work fine
-//   if you are printing both parts, but if you need to mate printed screws to metal parts you may need to adjust the size
-//   of the screws, which you can do with the undersize arguments.  
+//   Create a screw.  See [screw and nut parameters](#section-screw-and-nut-parameters) for details on
+//   the parameters that define a screw.  The tolerance determines the dimensions of the screw based
+//   on ISO and ASME standards.  Screws fabricated at those dimensions will mate properly with
+//   standard hardware.  Note that the $slop argument does not affect the size of screws: it only
+//   adjusts screw holes.  This will work fine if you are printing both parts, but if you need to mate
+//   printed screws to metal parts you may need to adjust the size of the screws, which you can do
+//   with the undersize arguments.
 //   .
-//   You can generate a screw specification from {{screw_info()}}, possibly create a modified version using {{struct_set()}}, and pass that in rather than giving the parameters.
+//   You can generate a screw specification from {{screw_info()}}, possibly create a modified version
+//   using {{struct_set()}}, and pass that in rather than giving the parameters.
 //   .
-//   Various anchor types refer to different parts of the screw, some
-//   of which are labeled below.  The "screw" anchor type (the
-//   default) is simply the entire screw, so TOP and BOTTOM refer to
-//   the head end and tip respectively, and CENTER is the midpoint of
-//   the whole screw, including the head.  The "head" anchor refers to
-//   the head alone.  Both of these anchor types refer to the bounding
-//   cylinder for the specified screw part, except for hex heads,
-//   which anchor to a hexagonal prism.
+//   Various anchor types refer to different parts of the screw, some of which are labeled below.  The
+//   "screw" anchor type (the default) is simply the entire screw, so TOP and BOTTOM refer to the head
+//   end and tip respectively, and CENTER is the midpoint of the whole screw, including the head.  The
+//   "head" anchor refers to the head alone.  Both of these anchor types refer to the bounding
+//   cylinder for the specified screw part, except for hex heads, which anchor to a hexagonal prism.
 // Figure(2D,Med,VPD = 140, VPT = [18.4209, 14.9821, -3.59741], VPR = [0, 0, 0],NoAxes):
 //   rpos=33;
 //   fsize=2.5;
@@ -717,6 +719,9 @@ module screw(spec, head, drive, thread, drive_size,
 
 
 // Module: screw_hole()
+// Synopsis: Creates a screw hole.
+// Topics: Threading, Screws
+// See Also: screw()
 // Usage:
 //   screw_hole([spec], [head], [thread=], [length=|l=], [oversize=], [hole_oversize=], [teardrop=], [head_oversize], [tolerance=], [$slop=], [blunt_start=], [anchor=], [atype=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
@@ -971,6 +976,9 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
 } 
 
 // Module: shoulder_screw()
+// Synopsis: Creates a shoulder screw.
+// Topics: Threading, Screws
+// See Also: screw(), screw_hole()
 // Usage:
 //   shoulder_screw(s, d, length, [head=], [thread_len=], [tolerance=], [head_size=], [drive=], [drive_size=], [thread=], [undersize=], [shaft_undersize=], [head_undersize=], [shoulder_undersize=],[atype=],[anchor=],[orient=],[spin=]) [ATTACHMENTS];
 // Description:
@@ -1381,6 +1389,9 @@ function _parse_drive(drive=undef, drive_size=undef) =
 
 
 // Module: screw_head()
+// Synopsis: Creates a screw head.
+// Topics: Threading, Screws
+// See Also: screw(), screw_hole()
 // Usage:
 //    screw_head(screw_info, [details],[counterbore],[flat_height],[teardrop],[internal])
 // Description:
@@ -1481,9 +1492,11 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
 
 
 // Module: nut()
+// Synopsis: Creates a standard nut.
+// Topics: Threading, Screws
+// See Also: screw(), screw_hole()
 // Usage:
 //   nut([spec], [shape], [thickness], [nutwidth], [thread=], [tolerance=], [hole_oversize=], [bevel=], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
-
 // Description:
 //   Generates a hexagonal or square nut.  See [screw and nut parameters](#section-screw-and-nut-parameters) for details on the parameters that define a nut.
 //   As with screws, you can give the specification in `spec` and then omit the name.  The diameter is the flat-to-flat
@@ -1601,6 +1614,9 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
 
 
 // Module: nut_trap_side()
+// Synopsis: Creates a side nut trap mask.
+// Topics: Threading, Screws
+// See Also: screw(), screw_hole()
 // Usage:
 //   nut_trap_side(trap_width, [spec], [shape], [thickness], [nutwidth=], [poke_len=], [poke_diam=], [$slop=], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
@@ -1688,6 +1704,9 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 }
 
 // Module: nut_trap_inline()
+// Synopsis: Creates an inline nut trap mask.
+// Topics: Threading, Screws
+// See Also: screw(), screw_hole()
 // Usage:
 //   nut_trap_inline(length|l|heigth|h, [spec], [shape], [$slop=], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
@@ -1756,6 +1775,9 @@ module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orie
 
 
 // Function: screw_info()
+// Synopsis: Returns the dimensions and other info for the given screw.
+// Topics: Threading, Screws
+// See Also: screw(), screw_hole()
 // Usage:
 //   info = screw_info(name, [head], [drive], [thread=], [drive_size=], [oversize=], [head_oversize=])
 // Description:
@@ -1846,6 +1868,9 @@ function screw_info(name, head, drive, thread, drive_size, shaft_oversize, head_
       
 
 // Function: nut_info()
+// Synopsis: Returns the dimensions and other info for the given nut.
+// Topics: Threading, Screws
+// See Also: screw(), screw_hole()
 // Usage:
 //   nut_spec = nut_info(name, [shape], [thickness=], [thread=], [width=], [hole_oversize=]);
 // Description:
@@ -2903,6 +2928,9 @@ function _validate_screw_spec(spec) =
 
 
 // Function: thread_specification()
+// Synopsis: Returns the thread geometry for a given screw.
+// Topics: Threading, Screws
+// See Also: screw(), screw_hole()
 // Usage:
 //   thread_specification(screw_spec, [tolerance], [internal])
 // Description:
@@ -2991,6 +3019,3 @@ http://files.engineering.com/getfile.aspx?folder=76fb0d5e-1fff-4c49-87a5-0597947
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
 
-
-                      
-                      
