@@ -18,6 +18,8 @@ include <metric_screws.scad>
 // Synopsis: Creates a generic linear bearing mount clamp.
 // Topics: Parts, Bearings
 // See Also: linear_bearing(), lmXuu_info(), ball_bearing()
+// Usage:
+//   linear_bearing_housing(d, l, tab, gap, wall, tabwall, screwsize) [ATTACHMENTS];
 // Description:
 //   Creates a model of a clamp to hold a generic linear bearing cartridge.
 // Arguments:
@@ -28,6 +30,7 @@ include <metric_screws.scad>
 //   wall = Wall thickness of clamp housing. (Default: 3)
 //   gap = Gap in clamp. (Default: 5)
 //   screwsize = Size of screw to use to tighten clamp. (Default: 3)
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -81,12 +84,15 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 // Synopsis: Creates a generic linear bearing cartridge.
 // Topics: Parts, Bearings
 // See Also: linear_bearing_housing(), lmXuu_info(), ball_bearing()
+// Usage:
+//   linear_bearing(l, od, id, length) [ATTACHMENTS];
 // Description:
 //   Creates a rough model of a generic linear ball bearing cartridge.
 // Arguments:
 //   l/length = The length of the linear bearing cartridge.
 //   od = The outer diameter of the linear bearing cartridge.
 //   id = The inner diameter of the linear bearing cartridge.
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -112,6 +118,8 @@ module linear_bearing(l, od=15, id=8, length, anchor=CTR, spin=0, orient=UP) {
 // Synopsis: Creates a standardized LM*UU linear bearing mount clamp.
 // Topics: Parts, Bearings
 // See Also: linear_bearing(), linear_bearing_housing(), lmXuu_info(), lmXuu_bearing(), lmXuu_housing(), ball_bearing()
+// Usage:
+//   lmXuu_housing(size, tab, gap, wall, tabwall, screwsize) [ATTACHMENTS];
 // Description:
 //   Creates a model of a clamp to hold a standard sized lmXuu linear bearing cartridge.
 // Arguments:
@@ -121,6 +129,7 @@ module linear_bearing(l, od=15, id=8, length, anchor=CTR, spin=0, orient=UP) {
 //   wall = Wall thickness of clamp housing.  Default: 3
 //   gap = Gap in clamp.  Default: 5
 //   screwsize = Size of screw to use to tighten clamp.  Default: 3
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -139,10 +148,13 @@ module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, ancho
 // Synopsis: Creates a standardized LM*UU linear bearing cartridge.
 // Topics: Parts, Bearings
 // See Also: linear_bearing(), linear_bearing_housing(), lmXuu_info(), lmXuu_bearing(), lmXuu_housing(), ball_bearing()
+// Usage:
+//   lmXuu_bearing(size) [ATTACHMENTS];
 // Description:
 //   Creates a model of an lmXuu linear ball bearing cartridge.
 // Arguments:
 //   size = Standard lmXuu inner size.
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -161,6 +173,8 @@ module lmXuu_bearing(size=8, anchor=CTR, spin=0, orient=UP) {
 // Synopsis: Returns the sizes of a standard LM*UU linear bearing cartridge.
 // Topics: Parts, Bearings
 // See Also: linear_bearing(), linear_bearing_housing(), lmXuu_info(), lmXuu_bearing(), lmXuu_housing(), ball_bearing()
+// Usage:
+//   diam_len = lmXuu_info(size);
 // Description:
 //   Get dimensional info for a standard metric lmXuu linear bearing cartridge.
 //   Returns `[DIAM, LENGTH]` for the cylindrical cartridge.

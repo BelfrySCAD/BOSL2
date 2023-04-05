@@ -16,81 +16,67 @@ $cubetruss_clip_thickness = 1.6;
 
 // Section: Cube Trusses
 
-// Function: cubetruss_dist()
+// Module: cubetruss()
+// Synopsis: Creates a multi-cube straight cubetruss shape.
+// Topics: Trusses, CubeTruss, FDM Optimized, Parts
+// See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_dist(cubes, gaps, [size], [strut]);
+//   cubetruss(extents, [clips=], [bracing=], [size=], [strut=], [clipthick=], ...) [ATTACHMENTS];
 // Description:
-//   Function to calculate the length of a cubetruss truss.
+//   Creates a cubetruss truss, assembled out of one or more cubical segments.
 // Arguments:
-//   cubes = The number of cubes along the truss's length.
-//   gaps = The number of extra strut widths to add in, corresponding to each time a truss butts up against another.
-//   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
-// Topics: Trusses
-function cubetruss_dist(cubes=0, gaps=0, size, strut) =
-    let(
-        size = is_undef(size)? $cubetruss_size : size,
-        strut = is_undef(strut)? $cubetruss_strut_size : strut
-    ) cubes*(size-strut)+gaps*strut;
-
-
-// Module: cubetruss_segment()
-// Usage:
-//   cubetruss_segment([size], [strut], [bracing]);
-// Description:
-//   Creates a single cubetruss cube segment.
-// Arguments:
-//   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   extents = The number of cubes in length to make the truss.  If given as a [X,Y,Z] vector, specifies the number of cubes in each dimension.
+//   clips = List of vectors pointing towards the sides to add clips to.
 //   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
+//   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Topics: Attachable, Trusses
 // Examples:
-//   cubetruss_segment(bracing=false);
-//   cubetruss_segment(bracing=true);
-//   cubetruss_segment(strut=4);
-//   cubetruss_segment(size=40);
-module cubetruss_segment(size, strut, bracing, anchor=CENTER, spin=0, orient=UP) {
+//   cubetruss(extents=3);
+//   cubetruss(extents=3, clips=FRONT);
+//   cubetruss(extents=3, clips=[FRONT,BACK]);
+//   cubetruss(extents=[2,3]);
+//   cubetruss(extents=[1,4,2]);
+//   cubetruss(extents=[1,4,2], bracing=false);
+module cubetruss(extents=6, clips=[], bracing, size, strut, clipthick, anchor=CENTER, spin=0, orient=UP) {
+    clips = is_vector(clips)? [clips] : clips;
     size = is_undef(size)? $cubetruss_size : size;
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
     bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
-    h = size;
-    crossthick = strut/sqrt(2);
-    voffset = 0.333;
-    attachable(anchor,spin,orient, size=[size,size,size]) {
-        render(convexity=10)
+    clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
+    extents = is_vector(extents)? point3d(extents,fill=1) : [1,extents,1];
+    w = extents[0];
+    l = extents[1];
+    h = extents[2];
+    s = [cubetruss_dist(w,1), cubetruss_dist(l,1), cubetruss_dist(h,1)];
+    attachable(anchor,spin,orient, size=s) {
         union() {
-            difference() {
-                // Start with a cube.
-                cube([size, size, h], center=true);
-
-                cube([size-strut*2, size-strut*2, h-strut*2], center=true);
-
-                // Hollow out octogons in X and Y axes.
-                zrot_copies([0,90]) {
-                    xrot(90) zrot(180/8) cylinder(h=max(h,size)+1, d=(min(h,size)-2*strut)/cos(180/8), center=true, $fn=8);
+            for (zrow = [0:h-1]) {
+                up((zrow-(h-1)/2)*(size-strut)) {
+                    for (xcol = [0:w-1]) {
+                        right((xcol-(w-1)/2)*(size-strut)) {
+                            for (ycol = [0:l-1]) {
+                                back((ycol-(l-1)/2)*(size-strut)) {
+                                    cubetruss_segment(size=size, strut=strut, bracing=bracing);
+                                }
+                            }
+                        }
+                    }
                 }
-
-                // Hollow out octogon vertically.
-                zrot(180/8) cylinder(h=max(h,size)+1, d=(min(h,size)-2*strut)/cos(180/8), center=true, $fn=8);
             }
-
-            // Interior cross-supports
-            if (bracing) {
-                for (i = [-1,1]) {
-                    zrot(i*45) {
-                        difference() {
-                            cube([crossthick, (size-strut)*sqrt(2), h], center=true);
-                            up(i*voffset) {
-                                yscale(1.3) {
-                                    yrot(90) {
-                                        zrot(180/6) {
-                                            cylinder(h=crossthick+1, d=(min(h,size)-2*strut)/cos(180/6)-2*voffset, center=true, $fn=6);
-                                        }
-                                    }
+            if (clipthick > 0) {
+                for (vec = clips) {
+                    exts = v_abs(rot(from=FWD, to=vec, p=extents));
+                    rot(from=FWD,to=vec) {
+                        for (zrow = [0:1:exts.z-1]) {
+                            up((zrow-(exts.z-1)/2)*(size-strut)) {
+                                fwd((exts.y*(size-strut)+strut)/2) {
+                                    cubetruss_clip(size=size, strut=strut, extents=exts.x, clipthick=clipthick);
                                 }
                             }
                         }
@@ -103,9 +89,88 @@ module cubetruss_segment(size, strut, bracing, anchor=CENTER, spin=0, orient=UP)
 }
 
 
-// Module: cubetruss_support()
+// Module: cubetruss_corner()
+// Synopsis: Creates a multi-cube corner cubetruss shape.
+// Topics: Trusses, CubeTruss, FDM Optimized, Parts
+// See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_support([size], [strut], [extents], [anchor], [spin], [orient]) [ATTACHMENTS];
+//   cubetruss_corner(h, extents, [bracing=], [size=], [strut=], [clipthick=]);
+// Description:
+//   Creates a corner cubetruss with extents jutting out in one or more directions.
+// Arguments:
+//   h = The number of cubes high to make the base and horizontal extents.
+//   extents = The number of cubes to extend beyond the corner.  If given as a vector of cube counts, gives the number of cubes to extend right, back, left, front, and up in order.  If the vector is shorter than length 5 the extra cube counts are taken to be zero.  
+//   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
+//   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Topics: Attachable, Trusses
+// Examples:
+//   cubetruss_corner(extents=2);
+//   cubetruss_corner(extents=2, h=2);
+//   cubetruss_corner(extents=[3,3,0,0,2]);
+//   cubetruss_corner(extents=[3,0,3,0,2]);
+//   cubetruss_corner(extents=[3,3,3,3,2]);
+module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing, size, strut, clipthick, anchor=CENTER, spin=0, orient=UP) {
+    size = is_undef(size)? $cubetruss_size : size;
+    strut = is_undef(strut)? $cubetruss_strut_size : strut;
+    bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
+    clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
+    exts = is_vector(extents)? list_pad(extents,5,fill=0) : [extents, extents, 0, 0, extents];
+    dummy = assert(len(exts)==5, "Input extents must be a scalar or vector with length 5 or less.");
+    s = [cubetruss_dist(exts[0]+1+exts[2],1), cubetruss_dist(exts[1]+1+exts[3],1), cubetruss_dist(h+exts[4],1)];
+    offset = [cubetruss_dist(exts[0]-exts[2],0), cubetruss_dist(exts[1]-exts[3],0), cubetruss_dist(h+exts[4]-1,0)]/2;
+    attachable(anchor,spin,orient, size=s, offset=offset) {
+        union() {
+            for (zcol = [0:h-1]) {
+                up((size-strut)*zcol) {
+                    cubetruss_segment(size=size, strut=strut, bracing=bracing);
+                }
+            }
+            for (dir = [0:3]) {
+                if (exts[dir] != undef && exts[dir] > 0) {
+                    zrot(dir*90) {
+                        for (zcol = [0:h-1]) {
+                            up((size-strut+0.01)*zcol) {
+                                for (i = [1:exts[dir]]) {
+                                    right((size-strut+0.01)*i) cubetruss_segment(size=size, strut=strut, bracing=bracing);
+                                }
+                                if (clipthick > 0) {
+                                    right(exts[dir]*(size-strut)+size/2) {
+                                        zrot(90) cubetruss_clip(size=size, strut=strut, clipthick=clipthick);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (exts[4] != undef && exts[4] > 0) {
+                for (i = [1:exts[4]]) {
+                    up((size-strut+0.01)*(i+h-1)) cubetruss_segment(size=size, strut=strut, bracing=bracing);
+                }
+                if (clipthick > 0) {
+                    up((exts[4]+h-1)*(size-strut)+size/2) {
+                        xrot(-90) cubetruss_clip(size=size, strut=strut, clipthick=clipthick);
+                    }
+                }
+            }
+        }
+        children();
+    }
+}
+
+
+// Module: cubetruss_support()
+// Synopsis: Creates a cubetruss support structure shape.
+// Topics: Trusses, CubeTruss, FDM Optimized, Parts
+// See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
+// Usage:
+//   cubetruss_support([size=], [strut=], [extents=]) [ATTACHMENTS];
 // Description:
 //   Creates a single cubetruss support.
 // Arguments:
@@ -164,74 +229,15 @@ module cubetruss_support(size, strut, extents=1, anchor=CENTER, spin=0, orient=U
 }
 
 
-// Module: cubetruss_clip()
-// Usage:
-//   cubetruss_clip(extents, [size], [strut], [clipthick], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
-// Description:
-//   Creates a pair of clips to add onto the end of a truss.
-// Arguments:
-//   extents = How many cubes to separate the clips by.
-//   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
-//   clipthick = The thickness of the clip.  Default: `$cubetruss_clip_thickness` (usually 1.6)
-//   ---
-//   $slop = allowance for printer overextrusion
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Topics: Attachable, Trusses
-// Examples:
-//   cubetruss_clip(extents=2);
-//   cubetruss_clip(extents=1);
-//   cubetruss_clip(clipthick=2.5);
-module cubetruss_clip(extents=1, size, strut, clipthick, anchor=CENTER, spin=0, orient=UP) {
-    size = is_undef(size)? $cubetruss_size : size;
-    strut = is_undef(strut)? $cubetruss_strut_size : strut;
-    clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
-    cliplen = strut * 2.6;
-    clipheight = min(size+strut, size/3+2*strut*2.6);
-    clipsize = 0.5;
-    s = [extents*(size-strut)+strut+2*clipthick, strut*2, clipheight-2*strut];
-    attachable(anchor,spin,orient, size=s) {
-        xflip_copy(offset=(extents*(size-strut)+strut)/2) {
-            difference() {
-                union() {
-                    difference() {
-                        right(clipthick/2-0.01) {
-                            back(strut) {
-                                difference() {
-                                    xrot(90) prismoid([clipthick, clipheight], [clipthick, clipheight-cliplen*2], h=cliplen);
-                                    right(clipthick/2) chamfer_edge_mask(l=clipheight+0.1, chamfer=clipthick);
-                                }
-                            }
-                        }
-                        fwd(strut*3/2) {
-                            cube([get_slop(), strut*3, size], center=true);
-                        }
-                    }
-                    right(get_slop()/2+0.01) {
-                        fwd(strut*1.25+get_slop()) {
-                            yrot(-90) prismoid([clipheight-cliplen*2, strut/2], [clipheight-cliplen*2-2*clipsize, strut/2], h=clipsize+0.01);
-                        }
-                    }
-                }
-                fwd(strut*1.6) {
-                    left(clipsize) {
-                        yscale(1.5) chamfer_edge_mask(l=size+1, chamfer=clipsize+clipthick/3);
-                    }
-                }
-                zcopies(clipheight-strut) cube([clipthick*3, cliplen*2, strut], center=true);
-                zcopies(clipheight-2*strut) right(clipthick) chamfer_edge_mask(l=cliplen*2, chamfer=clipthick, orient=BACK);
-            }
-        }
-        children();
-    }
-}
 
+// Section: Cubetruss Support
 
 // Module: cubetruss_foot()
+// Synopsis: Creates a foot that can connect two cubetrusses.
+// Topics: Trusses, CubeTruss, FDM Optimized, Parts
+// See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_foot(w, [size], [strut], [clipthick], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   cubetruss_foot(w, [size=], [strut=], [clipthick=]) [ATTACHMENTS];
 // Description:
 //   Creates a foot that can be clipped onto the bottom of a truss for support.
 // Arguments:
@@ -307,8 +313,11 @@ module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient
 
 
 // Module: cubetruss_joiner()
+// Synopsis: Creates a joiner that can connect two cubetrusses end-to-end.
+// Topics: Trusses, CubeTruss, FDM Optimized, Parts
+// See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_joiner([w], [vert], [size], [strut], [clipthick], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   cubetruss_joiner([w=], [vert=], [size=], [strut=], [clipthick=]) [ATTACHMENTS];
 // Description:
 //   Creates a part to join two cubetruss trusses end-to-end.
 // Arguments:
@@ -375,8 +384,11 @@ module cubetruss_joiner(w=1, vert=true, size, strut, clipthick, anchor=CENTER, s
 
 
 // Module: cubetruss_uclip()
+// Synopsis: Creates a joiner that can connect two cubetrusses end-to-end.
+// Topics: Trusses, CubeTruss, FDM Optimized, Parts
+// See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_uclip(dual, [size], [strut], [clipthick], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   cubetruss_uclip(dual, [size=], [strut=], [clipthick=]) [ATTACHMENTS];
 // Description:
 //   Creates a small clip that can snap around one or two adjacent struts.
 // Arguments:
@@ -420,126 +432,68 @@ module cubetruss_uclip(dual=true, size, strut, clipthick, anchor=CENTER, spin=0,
 }
 
 
-// Module: cubetruss()
+
+// Section: Cubetruss Primitives
+
+// Module: cubetruss_segment()
+// Synopsis: Creates a single cubetruss cube.
+// Topics: Trusses, CubeTruss, FDM Optimized, Parts
+// See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss(extents, [clips], [bracing], [size], [strut], [clipthick]);
+//   cubetruss_segment([size=], [strut=], [bracing=]);
 // Description:
-//   Creates a cubetruss truss, assembled out of one or more cubical segments.
+//   Creates a single cubetruss cube segment.
 // Arguments:
-//   extents = The number of cubes in length to make the truss.  If given as a [X,Y,Z] vector, specifies the number of cubes in each dimension.
-//   clips = List of vectors pointing towards the sides to add clips to.
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
-//   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Topics: Attachable, Trusses
 // Examples:
-//   cubetruss(extents=3);
-//   cubetruss(extents=3, clips=FRONT);
-//   cubetruss(extents=3, clips=[FRONT,BACK]);
-//   cubetruss(extents=[2,3]);
-//   cubetruss(extents=[1,4,2]);
-//   cubetruss(extents=[1,4,2], bracing=false);
-module cubetruss(extents=6, clips=[], bracing, size, strut, clipthick, anchor=CENTER, spin=0, orient=UP) {
-    clips = is_vector(clips)? [clips] : clips;
+//   cubetruss_segment(bracing=false);
+//   cubetruss_segment(bracing=true);
+//   cubetruss_segment(strut=4);
+//   cubetruss_segment(size=40);
+module cubetruss_segment(size, strut, bracing, anchor=CENTER, spin=0, orient=UP) {
     size = is_undef(size)? $cubetruss_size : size;
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
     bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
-    clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
-    extents = is_vector(extents)? point3d(extents,fill=1) : [1,extents,1];
-    w = extents[0];
-    l = extents[1];
-    h = extents[2];
-    s = [cubetruss_dist(w,1), cubetruss_dist(l,1), cubetruss_dist(h,1)];
-    attachable(anchor,spin,orient, size=s) {
+    h = size;
+    crossthick = strut/sqrt(2);
+    voffset = 0.333;
+    attachable(anchor,spin,orient, size=[size,size,size]) {
+        render(convexity=10)
         union() {
-            for (zrow = [0:h-1]) {
-                up((zrow-(h-1)/2)*(size-strut)) {
-                    for (xcol = [0:w-1]) {
-                        right((xcol-(w-1)/2)*(size-strut)) {
-                            for (ycol = [0:l-1]) {
-                                back((ycol-(l-1)/2)*(size-strut)) {
-                                    cubetruss_segment(size=size, strut=strut, bracing=bracing);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (clipthick > 0) {
-                for (vec = clips) {
-                    exts = v_abs(rot(from=FWD, to=vec, p=extents));
-                    rot(from=FWD,to=vec) {
-                        for (zrow = [0:1:exts.z-1]) {
-                            up((zrow-(exts.z-1)/2)*(size-strut)) {
-                                fwd((exts.y*(size-strut)+strut)/2) {
-                                    cubetruss_clip(size=size, strut=strut, extents=exts.x, clipthick=clipthick);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        children();
-    }
-}
+            difference() {
+                // Start with a cube.
+                cube([size, size, h], center=true);
 
+                cube([size-strut*2, size-strut*2, h-strut*2], center=true);
 
-// Module: cubetruss_corner()
-// Usage:
-//   cubetruss_corner(h, extents, [bracing], [size], [strut], [clipthick]);
-// Description:
-//   Creates a corner cubetruss with extents jutting out in one or more directions.
-// Arguments:
-//   h = The number of cubes high to make the base and horizontal extents.
-//   extents = The number of cubes to extend beyond the corner.  If given as a vector of cube counts, gives the number of cubes to extend right, back, left, front, and up in order.  If the vector is shorter than length 5 the extra cube counts are taken to be zero.  
-//   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
-//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
-//   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
-//   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
-//   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Topics: Attachable, Trusses
-// Examples:
-//   cubetruss_corner(extents=2);
-//   cubetruss_corner(extents=2, h=2);
-//   cubetruss_corner(extents=[3,3,0,0,2]);
-//   cubetruss_corner(extents=[3,0,3,0,2]);
-//   cubetruss_corner(extents=[3,3,3,3,2]);
-module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing, size, strut, clipthick, anchor=CENTER, spin=0, orient=UP) {
-    size = is_undef(size)? $cubetruss_size : size;
-    strut = is_undef(strut)? $cubetruss_strut_size : strut;
-    bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
-    clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
-    exts = is_vector(extents)? list_pad(extents,5,fill=0) : [extents, extents, 0, 0, extents];
-    dummy = assert(len(exts)==5, "Input extents must be a scalar or vector with length 5 or less.");
-    s = [cubetruss_dist(exts[0]+1+exts[2],1), cubetruss_dist(exts[1]+1+exts[3],1), cubetruss_dist(h+exts[4],1)];
-    offset = [cubetruss_dist(exts[0]-exts[2],0), cubetruss_dist(exts[1]-exts[3],0), cubetruss_dist(h+exts[4]-1,0)]/2;
-    attachable(anchor,spin,orient, size=s, offset=offset) {
-        union() {
-            for (zcol = [0:h-1]) {
-                up((size-strut)*zcol) {
-                    cubetruss_segment(size=size, strut=strut, bracing=bracing);
+                // Hollow out octogons in X and Y axes.
+                zrot_copies([0,90]) {
+                    xrot(90) zrot(180/8) cylinder(h=max(h,size)+1, d=(min(h,size)-2*strut)/cos(180/8), center=true, $fn=8);
                 }
+
+                // Hollow out octogon vertically.
+                zrot(180/8) cylinder(h=max(h,size)+1, d=(min(h,size)-2*strut)/cos(180/8), center=true, $fn=8);
             }
-            for (dir = [0:3]) {
-                if (exts[dir] != undef && exts[dir] > 0) {
-                    zrot(dir*90) {
-                        for (zcol = [0:h-1]) {
-                            up((size-strut+0.01)*zcol) {
-                                for (i = [1:exts[dir]]) {
-                                    right((size-strut+0.01)*i) cubetruss_segment(size=size, strut=strut, bracing=bracing);
-                                }
-                                if (clipthick > 0) {
-                                    right(exts[dir]*(size-strut)+size/2) {
-                                        zrot(90) cubetruss_clip(size=size, strut=strut, clipthick=clipthick);
+
+            // Interior cross-supports
+            if (bracing) {
+                for (i = [-1,1]) {
+                    zrot(i*45) {
+                        difference() {
+                            cube([crossthick, (size-strut)*sqrt(2), h], center=true);
+                            up(i*voffset) {
+                                yscale(1.3) {
+                                    yrot(90) {
+                                        zrot(180/6) {
+                                            cylinder(h=crossthick+1, d=(min(h,size)-2*strut)/cos(180/6)-2*voffset, center=true, $fn=6);
+                                        }
                                     }
                                 }
                             }
@@ -547,20 +501,99 @@ module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing, size, strut, clipthic
                     }
                 }
             }
-            if (exts[4] != undef && exts[4] > 0) {
-                for (i = [1:exts[4]]) {
-                    up((size-strut+0.01)*(i+h-1)) cubetruss_segment(size=size, strut=strut, bracing=bracing);
-                }
-                if (clipthick > 0) {
-                    up((exts[4]+h-1)*(size-strut)+size/2) {
-                        xrot(-90) cubetruss_clip(size=size, strut=strut, clipthick=clipthick);
+        }
+        children();
+    }
+}
+
+
+// Module: cubetruss_clip()
+// Synopsis: Creates a clip for the end of a cubetruss to snap-lock it to another cubetruss.
+// Topics: Trusses, CubeTruss, FDM Optimized, Parts
+// See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
+// Usage:
+//   cubetruss_clip(extents, [size=], [strut=], [clipthick=]) [ATTACHMENTS];
+// Description:
+//   Creates a pair of clips to add onto the end of a truss.
+// Arguments:
+//   extents = How many cubes to separate the clips by.
+//   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   clipthick = The thickness of the clip.  Default: `$cubetruss_clip_thickness` (usually 1.6)
+//   ---
+//   $slop = allowance for printer overextrusion
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Topics: Attachable, Trusses
+// Examples:
+//   cubetruss_clip(extents=2);
+//   cubetruss_clip(extents=1);
+//   cubetruss_clip(clipthick=2.5);
+module cubetruss_clip(extents=1, size, strut, clipthick, anchor=CENTER, spin=0, orient=UP) {
+    size = is_undef(size)? $cubetruss_size : size;
+    strut = is_undef(strut)? $cubetruss_strut_size : strut;
+    clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
+    cliplen = strut * 2.6;
+    clipheight = min(size+strut, size/3+2*strut*2.6);
+    clipsize = 0.5;
+    s = [extents*(size-strut)+strut+2*clipthick, strut*2, clipheight-2*strut];
+    attachable(anchor,spin,orient, size=s) {
+        xflip_copy(offset=(extents*(size-strut)+strut)/2) {
+            difference() {
+                union() {
+                    difference() {
+                        right(clipthick/2-0.01) {
+                            back(strut) {
+                                difference() {
+                                    xrot(90) prismoid([clipthick, clipheight], [clipthick, clipheight-cliplen*2], h=cliplen);
+                                    right(clipthick/2) chamfer_edge_mask(l=clipheight+0.1, chamfer=clipthick);
+                                }
+                            }
+                        }
+                        fwd(strut*3/2) {
+                            cube([get_slop(), strut*3, size], center=true);
+                        }
+                    }
+                    right(get_slop()/2+0.01) {
+                        fwd(strut*1.25+get_slop()) {
+                            yrot(-90) prismoid([clipheight-cliplen*2, strut/2], [clipheight-cliplen*2-2*clipsize, strut/2], h=clipsize+0.01);
+                        }
                     }
                 }
+                fwd(strut*1.6) {
+                    left(clipsize) {
+                        yscale(1.5) chamfer_edge_mask(l=size+1, chamfer=clipsize+clipthick/3);
+                    }
+                }
+                zcopies(clipheight-strut) cube([clipthick*3, cliplen*2, strut], center=true);
+                zcopies(clipheight-2*strut) right(clipthick) chamfer_edge_mask(l=cliplen*2, chamfer=clipthick, orient=BACK);
             }
         }
         children();
     }
 }
+
+
+// Function: cubetruss_dist()
+// Synopsis: Returns the length of a cubetruss truss.
+// Topics: Trusses, CubeTruss, FDM Optimized, Parts
+// See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
+// Usage:
+//   length = cubetruss_dist(cubes, [gaps], [size=], [strut=]);
+// Description:
+//   Function to calculate the length of a cubetruss truss.
+// Arguments:
+//   cubes = The number of cubes along the truss's length.
+//   gaps = The number of extra strut widths to add in, corresponding to each time a truss butts up against another.
+//   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+// Topics: Trusses
+function cubetruss_dist(cubes=0, gaps=0, size, strut) =
+    let(
+        size = is_undef(size)? $cubetruss_size : size,
+        strut = is_undef(strut)? $cubetruss_strut_size : strut
+    ) cubes*(size-strut)+gaps*strut;
 
 
 
