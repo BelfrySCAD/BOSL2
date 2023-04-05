@@ -43,6 +43,9 @@
 
 
 // Function: is_region()
+// Synopsis: Returns true if the input appears to be a region.
+// Topics: Regions, Paths, Polygons, Lists
+// See Also: is_valid_region(), is_1region(), is_region_simple()
 // Usage:
 //   bool = is_region(x);
 // Description:
@@ -52,6 +55,9 @@ function is_region(x) = is_list(x) && is_path(x.x);
 
 
 // Function: is_valid_region()
+// Synopsis: Returns true if the input is a valid region.
+// Topics: Regions, Paths, Polygons, Lists
+// See Also: is_region(), is_1region(), is_region_simple()
 // Usage:
 //   bool = is_valid_region(region, [eps]);
 // Description:
@@ -208,6 +214,9 @@ function _polygon_crosses_region(region, poly, eps=EPSILON) =
 
 
 // Function: is_region_simple()
+// Synopsis: Returns true if the input is a region with no corner contact.
+// Topics: Regions, Paths, Polygons, Lists
+// See Also: is_region(), is_valid_region(), is_1region()
 // Usage:
 //   bool = is_region_simple(region, [eps]);
 // Description:
@@ -238,12 +247,15 @@ function is_region_simple(region, eps=EPSILON) =
   
   
 // Function: make_region()
+// Synopsis: Converts lists of intersecting polygons into valid regions.
+// Topics: Regions, Paths, Polygons, Lists
+// See Also: force_region(), region()
+// 
 // Usage:
 //   region = make_region(polys, [nonzero], [eps]);
 // Description:
 //   Takes a list of polygons that may intersect themselves or cross each other 
-//   and converts it into a properly defined region without
-//   these defects.
+//   and converts it into a properly defined region without these defects.
 // Arguments:
 //   polys = list of polygons to use
 //   nonzero = set to true to use nonzero rule for polygon membership.  Default: false
@@ -268,6 +280,9 @@ function make_region(polys,nonzero=false,eps=EPSILON) =
                   eps=eps);
 
 // Function: force_region()
+// Synopsis: Given a polygon returns a region.
+// Topics: Regions, Paths, Polygons, Lists
+// See Also: make_region(), region()
 // Usage:
 //   region = force_region(poly)
 // Description:
@@ -280,6 +295,9 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 // Section: Turning a region into geometry
 
 // Module: region()
+// Synopsis: Creates the 2D polygons described by the given region or list of polygons.
+// Topics: Regions, Paths, Polygons, Lists
+// See Also: make_region(), region()
 // Usage:
 //   region(r, [anchor], [spin=], [cp=], [atype=]) [ATTACHMENTS];
 // Description:
