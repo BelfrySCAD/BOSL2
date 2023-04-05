@@ -54,7 +54,7 @@ function _same_type(a,b, depth) =
   
 
 // Function: min_length()
-// Synopsis: Returns the length of the shortest list.
+// Synopsis: Given a list of sublists, returns the length of the shortest sublist.
 // Topics: List Handling
 // See Also: max_length()
 // Usage:
@@ -71,7 +71,7 @@ function min_length(list) =
 
 
 // Function: max_length()
-// Synopsis: Returns the length of the longest list.
+// Synopsis: Given a list of sublists, returns the length of the longest sublist.
 // Topics: List Handling
 // See Also: min_length()
 // Usage:
@@ -233,7 +233,7 @@ function select(list, start, end) =
 
 
 // Function: slice()
-// Synopsis: Returns part of a list, not including the last index.
+// Synopsis: Returns part of a list without wrapping.
 // Topics: List Handling
 // See Also: select(), column(), last()
 // Usage:
@@ -286,7 +286,7 @@ function last(list) =
 
 
 // Function: list_head()
-// Synopsis: Returns the head of the given list.
+// Synopsis: Returns the elements at the beginning of a list.
 // Topics: List Handling
 // See Also: select(), slice(), list_tail(), last()
 // Usage:
@@ -315,7 +315,7 @@ function list_head(list, to=-2) =
 
 
 // Function: list_tail()
-// Synopsis: Returns the tail of the given list.
+// Synopsis: Returns the elements at the end of a list.
 // Topics: List Handling
 // See Also: select(), slice(), list_tail(), last()
 // Usage:
@@ -346,7 +346,7 @@ function list_tail(list, from=1) =
 
 
 // Function: bselect()
-// Synopsis: Cherry-picks specific items from a list.
+// Synopsis: Select list items using boolean index list.
 // Topics: List Handling
 // See Also: list_bset()
 // Usage:
@@ -369,7 +369,7 @@ function bselect(list,index) =
 
 
 // Function: repeat()
-// Synopsis: Returns a list of N copies of a value.
+// Synopsis: Returns a list of repeated copies of a value.
 // Topics: List Handling
 // See Also: count(), lerpn()
 // Usage:
@@ -395,7 +395,7 @@ function repeat(val, n, i=0) =
 
 
 // Function: list_bset()
-// Synopsis: Returns a list where specific values are set from a list of values.
+// Synopsis: Returns a list where values are spread to locations indicated by a boolean index list.
 // Topics: List Handling
 // See Also: bselect()
 // Usage:
@@ -473,7 +473,7 @@ function force_list(value, n=1, fill) =
 // Section: List Modification
 
 // Function: reverse()
-// Synopsis: Reverses the ordering of a list.
+// Synopsis: Reverses the elements of a list.
 // Topics: List Handling
 // See Also: select(), list_rotate()
 // Usage:
@@ -529,7 +529,7 @@ function list_rotate(list,n=1) =
     
 
 // Function: shuffle()
-// Synopsis: Randomizes the ordering of a list.
+// Synopsis: Randomizes the order of a list.
 // Topics: List Handling
 // See Also: sort(), sortidx(), unique(), unique_count()
 // Usage:
@@ -563,7 +563,7 @@ function shuffle(list,seed) =
 
 
 // Function: repeat_entries()
-// Synopsis: Repeats items in a list to expand it to a given length.
+// Synopsis: Repeats list entries (as uniformly as possible) to make list of specified length.
 // Topics: List Handling
 // See Also: repeat()
 // Usage:
@@ -605,7 +605,7 @@ function repeat_entries(list, N, exact=true) =
 
 
 // Function: list_pad()
-// Synopsis: Adds items to the end of a list until it is a given length.
+// Synopsis: Extend list to specified length.
 // Topics: List Handling
 // See Also: force_list(), scalar_vec3()
 // Usage:
@@ -717,7 +717,7 @@ function list_insert(list, indices, values) =
 
 
 // Function: list_remove()
-// Synopsis: Removes items from the middle of a list.
+// Synopsis: Removes items by index from a list.
 // Topics: List Handling
 // See Also: list_set(), list_insert(), list_remove_values()
 // Usage:
@@ -760,7 +760,7 @@ function list_remove(list, ind) =
 
 
 // Function: list_remove_values()
-// Synopsis: Removes specific values from a list.
+// Synopsis: Removes items by value from a list.
 // Topics: List Handling
 // See Also: list_set(), list_insert(), list_remove()
 // Usage:
@@ -861,7 +861,7 @@ function idx(list, s=0, e=-1, step=1) =
 
 
 // Function: pair()
-// Synopsis: Returns a list of consecutive pairs in a list.
+// Synopsis: Returns a list of overlapping consecutive pairs in a list.
 // Topics: List Handling, Iteration
 // See Also: idx(), triplet(), combinations(), permutations()
 // Usage:
@@ -895,7 +895,7 @@ function pair(list, wrap=false) =
 
 
 // Function: triplet()
-// Synopsis: Returns a list of consecutive triplets in a list.
+// Synopsis: Returns a list of overlapping consecutive triplets in a list.
 // Topics: List Handling, Iteration
 // See Also: idx(), pair(), combinations(), permutations()
 // Usage:
@@ -935,7 +935,7 @@ function triplet(list, wrap=false) =
 
 
 // Function: combinations()
-// Synopsis: Returns a list of all item combinations in a list.
+// Synopsis: Returns a list of all combinations of the list entries.
 // Topics: List Handling, Iteration
 // See Also: idx(), pair(), triplet(), permutations()
 // Usage:
@@ -962,7 +962,7 @@ function combinations(l,n=2,_s=0) =
 
 
 // Function: permutations()
-// Synopsis: Returns a list of all item permutations in a list.
+// Synopsis: Returns a list of all permutations of the list entries.
 // Topics: List Handling, Iteration
 // See Also: idx(), pair(), triplet(), combinations()
 // Usage:
