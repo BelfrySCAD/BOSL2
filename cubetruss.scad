@@ -21,15 +21,15 @@ $cubetruss_clip_thickness = 1.6;
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss(extents, [clips], [bracing], [size], [strut], [clipthick]);
+//   cubetruss(extents, [clips=], [bracing=], [size=], [strut=], [clipthick=], ...) [ATTACHMENTS];
 // Description:
 //   Creates a cubetruss truss, assembled out of one or more cubical segments.
 // Arguments:
 //   extents = The number of cubes in length to make the truss.  If given as a [X,Y,Z] vector, specifies the number of cubes in each dimension.
 //   clips = List of vectors pointing towards the sides to add clips to.
+//   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
-//   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -94,15 +94,15 @@ module cubetruss(extents=6, clips=[], bracing, size, strut, clipthick, anchor=CE
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_corner(h, extents, [bracing], [size], [strut], [clipthick]);
+//   cubetruss_corner(h, extents, [bracing=], [size=], [strut=], [clipthick=]);
 // Description:
 //   Creates a corner cubetruss with extents jutting out in one or more directions.
 // Arguments:
 //   h = The number of cubes high to make the base and horizontal extents.
 //   extents = The number of cubes to extend beyond the corner.  If given as a vector of cube counts, gives the number of cubes to extend right, back, left, front, and up in order.  If the vector is shorter than length 5 the extra cube counts are taken to be zero.  
+//   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
-//   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -170,7 +170,7 @@ module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing, size, strut, clipthic
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_support([size], [strut], [extents], [anchor], [spin], [orient]) [ATTACHMENTS];
+//   cubetruss_support([size=], [strut=], [extents=]) [ATTACHMENTS];
 // Description:
 //   Creates a single cubetruss support.
 // Arguments:
@@ -237,7 +237,7 @@ module cubetruss_support(size, strut, extents=1, anchor=CENTER, spin=0, orient=U
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_foot(w, [size], [strut], [clipthick], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   cubetruss_foot(w, [size=], [strut=], [clipthick=]) [ATTACHMENTS];
 // Description:
 //   Creates a foot that can be clipped onto the bottom of a truss for support.
 // Arguments:
@@ -317,7 +317,7 @@ module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_joiner([w], [vert], [size], [strut], [clipthick], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   cubetruss_joiner([w=], [vert=], [size=], [strut=], [clipthick=]) [ATTACHMENTS];
 // Description:
 //   Creates a part to join two cubetruss trusses end-to-end.
 // Arguments:
@@ -388,7 +388,7 @@ module cubetruss_joiner(w=1, vert=true, size, strut, clipthick, anchor=CENTER, s
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_uclip(dual, [size], [strut], [clipthick], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   cubetruss_uclip(dual, [size=], [strut=], [clipthick=]) [ATTACHMENTS];
 // Description:
 //   Creates a small clip that can snap around one or two adjacent struts.
 // Arguments:
@@ -440,7 +440,7 @@ module cubetruss_uclip(dual=true, size, strut, clipthick, anchor=CENTER, spin=0,
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_segment([size], [strut], [bracing]);
+//   cubetruss_segment([size=], [strut=], [bracing=]);
 // Description:
 //   Creates a single cubetruss cube segment.
 // Arguments:
@@ -512,7 +512,7 @@ module cubetruss_segment(size, strut, bracing, anchor=CENTER, spin=0, orient=UP)
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_clip(extents, [size], [strut], [clipthick], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   cubetruss_clip(extents, [size=], [strut=], [clipthick=]) [ATTACHMENTS];
 // Description:
 //   Creates a pair of clips to add onto the end of a truss.
 // Arguments:
@@ -580,7 +580,7 @@ module cubetruss_clip(extents=1, size, strut, clipthick, anchor=CENTER, spin=0, 
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
-//   cubetruss_dist(cubes, gaps, [size], [strut]);
+//   length = cubetruss_dist(cubes, [gaps], [size=], [strut=]);
 // Description:
 //   Function to calculate the length of a cubetruss truss.
 // Arguments:
