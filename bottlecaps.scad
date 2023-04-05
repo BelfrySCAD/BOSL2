@@ -120,7 +120,7 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
                             thread_depth=thread_h+0.1,
                             flank_angle=flank_angle,
                             turns=810/360,
-                            taper=-thread_h*2,
+                            lead_in=-thread_h*2,
                             anchor=TOP
                         );
                         zrot_copies(rots=[90,270]) {
@@ -196,7 +196,7 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=cap_id, h=tamper_ring_h+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, turns=810/360, taper=-thread_depth, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, turns=810/360, lead_in=-thread_depth, internal=true, anchor=BOTTOM);
         }
         children();
     }
@@ -315,7 +315,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
                         thread_depth=thread_h+0.1,
                         flank_angle=flank_angle,
                         turns=650/360,
-                        taper=-thread_h*2,
+                        lead_in=-thread_h*2,
                         anchor=TOP
                     );
                     zrot_copies(rots=[90,270]) {
@@ -383,7 +383,7 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=28.58, h=11.2+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, flank_angle=15, turns=650/360, taper=-1.6, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, flank_angle=15, turns=650/360, lead_in=-1.6, internal=true, anchor=BOTTOM);
         }
         children();
     }
@@ -490,7 +490,7 @@ module generic_bottle_neck(
                         thread_depth = thread_h + 0.1 * diamMagMult,
                         flank_angle = flank_angle,
                         turns = (height - pitch - lip_roundover_r) * .6167 / pitch,
-                        taper = -thread_h * 2,
+                        lead_in = -thread_h * 2,
                         anchor = TOP
                     );
                     zrot_copies(rots = [90, 270]) {
@@ -597,7 +597,7 @@ module generic_bottle_cap(
             difference(){
                 up(wall + pitch / 2) {
                     thread_helix(d = neckOuterDTol, pitch = pitch, thread_depth = threadDepth, flank_angle = flank_angle,
-                                 turns = ((height - pitch) / pitch), taper = -threadDepth, internal = true, anchor = BOTTOM);
+                                 turns = ((height - pitch) / pitch), lead_in = -threadDepth, internal = true, anchor = BOTTOM);
                 }
             }
         }
@@ -984,8 +984,9 @@ function bottle_adapter_neck_to_neck(
 //   400, 410 and 415.  The 400 type neck has 360 degrees of thread, the 410
 //   neck has 540 degrees of thread, and the 415 neck has 720 degrees of thread.
 //   You can also choose between the L style thread, which is symmetric and
-//   the M style thread, which is an asymmetric buttress thread.  You can
-//   specify the wall thickness (measured from the base of the threads) or
+//   the M style thread, which is an asymmetric buttress thread.  The M style
+//   may be good for 3d printing if printed with the flat face up.  
+//   You can specify the wall thickness (measured from the base of the threads) or
 //   the inner diameter, and you can specify an optional bead at the base of the threads.
 // Arguments:
 //   diam = nominal outer diameter of threads
@@ -1124,6 +1125,8 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
     H = entry[2];
     S = entry[3];
     tpi = entry[4];
+
+    // a is the width of the thread 
     a = (style=="M" && tpi==12) ? 1.3 : struct_val(_sp_thread_width,tpi);
 
     twist = struct_val(_sp_twist, type);
@@ -1156,7 +1159,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
         up((H+extra_bot)/2){
             difference(){
                 union(){
-                    thread_helix(d=T-.01, profile=profile, pitch = INCH/tpi, turns=twist/360, taper=taperlen, anchor=TOP);
+                    thread_helix(d=T-.01, profile=profile, pitch = INCH/tpi, turns=twist/360, lead_in=taperlen, anchor=TOP);
                     cylinder(d=T-depth*2,h=H,anchor=TOP);
                     if (bead)
                       down(bead_shift)
@@ -1187,12 +1190,15 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 //   the M style thread, which is an asymmetric buttress thread.  Note that it
 //   is OK to mix styles, so you can put an L-style cap onto an M-style neck.  
 //   .
-//   These caps often contain a cardboard or foam sealer disk, which can be as much as 1mm thick.
-//   If you don't include this, your cap may bottom out on the bead on the neck instead of sealing
-//   against the top.  If you set top_adj to 1 it will make the top space 1mm smaller so that the
-//   cap will not bottom out.  The 410 and 415 caps have very long unthreaded sections at the bottom.
-//   The bot_adj parameter specifies an amount to reduce that bottom extension.  Be careful that
-//   you don't shrink past the threads.
+//   The 410 and 415 caps have very long unthreaded sections at the bottom.
+//   The bot_adj parameter specifies an amount to reduce that bottom extension, which might be
+//   necessary if the cap bottoms out on the bead.  Be careful that you don't shrink past the threads,
+//   especially if making adjustments to 400 caps which have a very small bottom extension.  
+//   These caps often contain a cardboard or foam sealer disk, which can be as much as 1mm thick, and
+//   would cause the cap to stop in a higher position.
+//   .
+//   You can also adjust the space between the top of the cap and the threads using top_adj.  This
+//   will change how the threads engage when the cap is fully seated.
 //   .
 //   The inner diameter of the cap is set to allow 10% of the thread depth in clearance.  The diameter
 //   is further increased by `2 * $slop` so you can increase clearance if necessary. 
@@ -1215,6 +1221,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   sp_cap(48,400,2);
+//   sp_cap(22,400,2);
 //   sp_cap(22,410,2);
 //   sp_cap(28,415,1.5,style="M");
 module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, texture="none", anchor, spin, orient)
@@ -1227,13 +1234,14 @@ module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, texture="none", anc
 
     T = entry[0];
     I = entry[1];
-    H = entry[2]-1;
+    H = entry[2]-0.5;
     S = entry[3];
     tpi = entry[4];
     a = (style=="M" && tpi==12) ? 1.3 : struct_val(_sp_thread_width,tpi);
 
     twist = struct_val(_sp_twist, type);
 
+    echo(top_adj=top_adj,bot_adj=bot_adj);
     dum3=assert(top_adj<S+0.75*a, str("The top_adj value is too large so the thread won't fit.  It must be smaller than ",S+0.75*a));
     oprofile = _sp_thread_profile(tpi,a,S+0.75*a-top_adj,style,flip=true);
     bounds=pointlist_bounds(oprofile);
@@ -1257,7 +1265,7 @@ module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, texture="none", anc
                 }
                 cyl(d=T+space, l=H-bot_adj+1, anchor=TOP);
             }
-            thread_helix(d=T+space-.01, profile=profile, pitch = INCH/tpi, turns=twist/360, taper=taperlen, anchor=TOP, internal=true);
+            thread_helix(d=T+space-.01, profile=profile, pitch = INCH/tpi, turns=twist/360, lead_in=taperlen, anchor=TOP, internal=true);
         }
         children();
     }
