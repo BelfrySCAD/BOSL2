@@ -118,7 +118,11 @@ _big_end = [
 
 _hose_waist = [1.7698, 1.8251, 3.95998];
 
+
 // Module: modular_hose()
+// Synopsis: Creates modular hose parts.
+// Topics: Modular Hose, Parts
+// See Also: modular_hose_radius(), tube()
 // Usage:
 //    modular_hose(size, type, [clearance], [waist_len], [anchor], [spin], [orient]) [ATTACHMENTS];
 // Description:
@@ -186,6 +190,9 @@ module modular_hose(size, type, clearance=0, waist_len, anchor=BOTTOM, spin=0,or
 
 
 // Function: modular_hose_radius()
+// Synopsis: Returns the waist radius of the given modular hose size.
+// Topics: Modular Hose, Parts
+// See Also: modular_hose(), tube()
 // Usage:
 //   r = modular_hose_radius(size, [outer]);
 // Description:
@@ -218,5 +225,7 @@ function modular_hose_radius(size, outer=false) =
      s = select(_small_end[ind], [0,-1])
   )
   outer ? b[1][0] : b[0][0];
+
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

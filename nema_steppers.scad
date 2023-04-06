@@ -13,9 +13,11 @@
 
 
 // Module: nema_stepper_motor()
+// Synopsis: Creates a NEMA standard stepper motor model.
+// Topics: Parts, Motors
+// See Also: nema_stepper_motor(), nema_mount_mask()
 // Usage:
 //   nema_stepper_motor(size, h, shaft_len, [$slop=], ...) [ATTACHMENTS];
-// Topics: Parts, Motors
 // Description:
 //   Creates a model of a NEMA standard stepper motor.
 // Arguments:
@@ -34,7 +36,6 @@
 //   "plinth" = Anchor relative to the plinth.
 //   "body" = Anchor relative to the motor body.
 //   "screws" = Anchor relative to the screw hole centers.  ie: TOP+RIGHT+FRONT is the center-top of the front-right screwhole.
-// See Also: nema_stepper_motor(), nema_mount_mask()
 // Examples:
 //   nema_stepper_motor(size=8, h=24, shaft_len=15);
 //   nema_stepper_motor(size=11, h=24, shaft_len=20);
@@ -117,9 +118,11 @@ module nema_stepper_motor(size=17, h=24, shaft_len=20, details=true, atype="body
 
 
 // Module: nema_mount_mask()
+// Synopsis: Creates a standard NEMA mount holes mask.
+// Topics: Parts, Motors
+// See Also: nema_stepper_motor(), nema_mount_mask()
 // Usage:
 //   nema_mount_mask(size, depth, l, [$slop], ...);
-// Topics: Parts, Motors
 // Description: Creates a mask to use when making standard NEMA stepper motor mounts.
 // Arguments:
 //   size = The standard NEMA motor size to make a mount for.
@@ -133,7 +136,6 @@ module nema_stepper_motor(size=17, h=24, shaft_len=20, details=true, atype="body
 // Anchor Types:
 //   "full" = Anchor relative the full mask.
 //   "screws" = Anchor relative to the screw hole centers.  ie: TOP+RIGHT+FRONT is the center-top of the front-right screwhole.
-// See Also: nema_stepper_motor(), nema_mount_mask()
 // Examples:
 //   nema_mount_mask(size=14, depth=5, l=5);
 //   nema_mount_mask(size=17, depth=5, l=5);
@@ -183,6 +185,9 @@ module nema_mount_mask(size, depth=5, l=5, atype="full", anchor=CENTER, spin=0, 
 
 
 // Function: nema_motor_info()
+// Synopsis: Returns dimension info for a given NEMA motor size.
+// Topics: Parts, Motors
+// See Also: nema_stepper_motor(), nema_mount_mask()
 // Usage:
 //   info = nema_motor_info(size);
 // Description:

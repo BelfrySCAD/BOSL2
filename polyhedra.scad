@@ -37,6 +37,9 @@ function _unique_groups(m) = [
 
 
 // Module: regular_polyhedron()
+// Synopsis: Creates a regular polyhedron with optional rounding.
+// Topics: Polyhedra, Shapes, Parts
+// See Also: regular_polyhedron_info()
 // Usage: Selecting a polyhedron
 //   regular_polyhedron([name],[index=],[type=],[faces=],[facetype=],[hasfaces=],...) [CHILDREN];
 // Usage: Controlling the size and position of the polyhedron
@@ -550,6 +553,9 @@ _stellated_polyhedra_ = [
 
 
 // Function: regular_polyhedron_info()
+// Synopsis: Returns info used to create a regular polyhedron.
+// Topics: Polyhedra, Shapes, Parts
+// See Also: regular_polyhedron()
 //
 // Usage:
 //   info = regular_polyhedron_info(info, ...);
