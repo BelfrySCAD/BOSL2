@@ -28,6 +28,9 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 
 
 // Function: vnf_vertex_array()
+// Synopsis: Returns a VNF structure from a rectangular vertex list.
+// Topics: VNF Generators, Lists
+// See Also: vnf_tri_array(), vnf_join(), vnf_from_polygons(), vnf_from_region()
 // Usage:
 //   vnf = vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=]);
 // Description:
@@ -228,10 +231,13 @@ function vnf_vertex_array(
 
 
 // Function: vnf_tri_array()
+// Synopsis: Returns a VNF from an array of points.
+// Topics: VNF Generators, Lists
+// See Also: vnf_vertex_array(), vnf_join(), vnf_from_polygons(), vnf_from_region()
 // Usage:
 //   vnf = vnf_tri_array(points, [row_wrap], [reverse])
 // Description:
-//   Produces a vnf from an array of points where each row length can differ from the adjacent rows by up to 2 in length.  This enables
+//   Produces a VNF from an array of points where each row length can differ from the adjacent rows by up to 2 in length.  This enables
 //   the construction of triangular VNF patches.  The resulting VNF can be wrapped along the rows by setting `row_wrap` to true.
 //   You cannot wrap columns: if you need to do that you'll need to merge two VNF arrays that share edges.  Degenerate faces
 //   are not included in the output, but if this results in unused vertices they will still appear in the output.
@@ -320,6 +326,9 @@ function vnf_tri_array(points, row_wrap=false, reverse=false) =
 
 
 // Function: vnf_join()
+// Synopsis: Returns a single VNF structure from a list of VNF structures.
+// Topics: VNF Generators, Lists
+// See Also: vnf_tri_array(), vnf_vertex_array(), vnf_from_polygons(), vnf_from_region()
 // Usage:
 //   vnf = vnf_join([VNF, VNF, VNF, ...]);
 // Description:
@@ -403,15 +412,18 @@ function vnf_join(vnfs) =
 
 
 // Function: vnf_from_polygons()
+// Synopsis: Returns a VNF from a list of 3D polygons.
+// Topics: VNF Generators, Lists
+// See Also: vnf_tri_array(), vnf_join(), vnf_vertex_array(), vnf_from_region()
 // Usage:
 //   vnf = vnf_from_polygons(polygons);
 // Description:
-//   Given a list of 3d polygons, produces a VNF containing those polygons.
+//   Given a list of 3D polygons, produces a VNF containing those polygons.
 //   It is up to the caller to make sure that the points are in the correct order to make the face
 //   normals point outwards.  No checking for duplicate vertices is done.  If you want to
 //   remove duplicate vertices use {{vnf_merge_points()}}.
 // Arguments:
-//   polygons = The list of 3d polygons to turn into a VNF
+//   polygons = The list of 3D polygons to turn into a VNF
 function vnf_from_polygons(polygons) =
    assert(is_list(polygons) && is_path(polygons[0]),"Input should be a list of polygons")
    let(
@@ -567,13 +579,16 @@ function _bridge(pt, outer,eps) =
 
 
 // Function: vnf_from_region()
+// Topics: VNF Generators, Lists
+// Synopsis: Returns a 3D VNF given a 2D region.
+// See Also: vnf_vertex_array(), vnf_tri_array(), vnf_join(), vnf_from_polygons()
 // Usage:
 //   vnf = vnf_from_region(region, [transform], [reverse]);
 // Description:
 //   Given a (two-dimensional) region, applies the given transformation matrix to it and makes a (three-dimensional) triangulated VNF of
 //   faces for that region, reversed if desired.
 // Arguments:
-//   region = The region to conver to a vnf.
+//   region = The region to convert to a vnf.
 //   transform = If given, a transformation matrix to apply to the faces generated from the region.  Default: No transformation applied.
 //   reverse = If true, reverse the normals of the faces generated from the region.  An untransformed region will have face normals pointing `UP`.  Default: false
 // Example(3D):
@@ -610,6 +625,9 @@ function vnf_from_region(region, transform, reverse=false) =
 
 
 // Function: is_vnf()
+// Synopsis: Returns true given a VNF-like structure.
+// Topics: VNF Manipulation
+// See Also: is_vnf_list(), vnf_vertices(), vnf_faces()
 // Usage:
 //   bool = is_vnf(x);
 // Description:
@@ -624,16 +642,26 @@ function is_vnf(x) =
 
 
 // Function: is_vnf_list()
+// Synopsis: Returns true given a list of VNF-like structures.
+// Topics: VNF Manipulation
+// See Also: is_vnf(), vnf_vertices(), vnf_faces()
+//
 // Description: Returns true if the given value looks passingly like a list of VNF structures.
 function is_vnf_list(x) = is_list(x) && all([for (v=x) is_vnf(v)]);
 
 
 // Function: vnf_vertices()
+// Synopsis: Returns the list of vertex points from a VNF.
+// Topics: VNF Manipulation
+// See Also: is_vnf(), is_vnf_list(), vnf_faces()
 // Description: Given a VNF structure, returns the list of vertex points.
 function vnf_vertices(vnf) = vnf[0];
 
 
 // Function: vnf_faces()
+// Synopsis: Returns the list of faces from a VNF.
+// Topics: VNF Manipulation
+// See Also: is_vnf(), is_vnf_list(), vnf_vertices()
 // Description: Given a VNF structure, returns the list of faces, where each face is a list of indices into the VNF vertex list.
 function vnf_faces(vnf) = vnf[1];
 
@@ -643,6 +671,9 @@ function vnf_faces(vnf) = vnf[1];
 
 
 // Function: vnf_reverse_faces()
+// Synopsis: Reverses the faces of a VNF.
+// Topics: VNF Manipulation
+// See Also: vnf_quantize(), vnf_merge_points(), vnf_drop_unused_points(), vnf_triangulate(), vnf_slice() 
 // Usage:
 //   rvnf = vnf_reverse_faces(vnf);
 // Description:
@@ -652,6 +683,9 @@ function vnf_reverse_faces(vnf) =
 
 
 // Function: vnf_quantize()
+// Synopsis: Quantizes the vertex coordinates of a VNF.
+// Topics: VNF Manipulation
+// See Also: vnf_reverse_faces(), vnf_merge_points(), vnf_drop_unused_points(), vnf_triangulate(), vnf_slice() 
 // Usage:
 //   vnf2 = vnf_quantize(vnf,[q]);
 // Description:
@@ -665,6 +699,9 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
 
 
 // Function: vnf_merge_points()
+// Synopsis: COnsolidates duplicate vertices of a VNF.
+// Topics: VNF Manipulation
+// See Also: vnf_reverse_faces(), vnf_quantize(), vnf_drop_unused_points(), vnf_triangulate(), vnf_slice() 
 // Usage:
 //   new_vnf = vnf_merge_points(vnf, [eps]);
 // Description:
@@ -697,6 +734,9 @@ function vnf_merge_points(vnf,eps=EPSILON) =
 
 
 // Function: vnf_drop_unused_points()
+// Synopsis: Removes unreferenced vertices from a VNF.
+// Topics: VNF Manipulation
+// See Also: vnf_reverse_faces(), vnf_quantize(), vnf_merge_points(), vnf_triangulate(), vnf_slice() 
 // Usage:
 //   clean_vnf = vnf_drop_unused_points(vnf);
 // Description:
@@ -725,12 +765,15 @@ function _link_indicator(l,imin,imax) =
             _link_indicator(greater,pivot+1,imax) ) ;
 
 // Function: vnf_triangulate()
+// Synopsis: Triangulates the faces of a VNF.
+// Topics: VNF Manipulation
+// See Also: vnf_reverse_faces(), vnf_quantize(), vnf_merge_points(), vnf_drop_unused_points(), vnf_slice() 
 // Usage:
 //   vnf2 = vnf_triangulate(vnf);
 // Description:
 //   Triangulates faces in the VNF that have more than 3 vertices.
 // Arguments:
-//   vnf = vnf to triangulate
+//   vnf = VNF to triangulate
 // Example(3D):
 //   include <BOSL2/polyhedra.scad>
 //   vnf = zrot(33,regular_polyhedron_info("vnf", "dodecahedron", side=12));
@@ -765,6 +808,9 @@ function _vnf_sort_vertices(vnf, idx=[2,1,0]) =
 
 
 // Function: vnf_slice()
+// Synopsis: Slice the faces of a VNF along an axis.
+// Topics: VNF Manipulation
+// See Also: vnf_reverse_faces(), vnf_quantize(), vnf_merge_points(), vnf_drop_unused_points(), vnf_triangulate()
 // Usage:
 //   sliced = vnf_slice(vnf, dir, cuts);
 // Description:
@@ -772,7 +818,7 @@ function _vnf_sort_vertices(vnf, idx=[2,1,0]) =
 //   The cut points can appear in any order.  You can use this to refine the faces of a VNF before
 //   applying a nonlinear transformation to its vertex set.
 // Arguments:
-//   vnf = vnf to slice
+//   vnf = VNF to slice
 //   dir = normal direction to the slices, either "X", "Y" or "Z"
 //   cuts = X, Y or Z values where cuts occur
 // Example(3D):
@@ -890,6 +936,9 @@ function _slice_3dpolygons(polys, dir, cuts) =
 
 
 // Module: vnf_polyhedron()
+// Synopsis: Returns a polyhedron from a VNF or list of VNFs.
+// Topics: VNF Manipulation
+// See Also: vnf_wireframe()
 // Usage:
 //   vnf_polyhedron(vnf) [ATTACHMENTS];
 //   vnf_polyhedron([VNF, VNF, VNF, ...]) [ATTACHMENTS];
@@ -920,6 +969,9 @@ module vnf_polyhedron(vnf, convexity=2, extent=true, cp="centroid", anchor="orig
 
 
 // Module: vnf_wireframe()
+// Synopsis: Creates a wireframe model from a VNF.
+// Topics: VNF Manipulation
+// See Also: vnf_polyhedron()
 // Usage:
 //   vnf_wireframe(vnf, [width]);
 // Description:
@@ -961,6 +1013,9 @@ module vnf_wireframe(vnf, width=1)
 // Section: Operations on VNFs
 
 // Function: vnf_volume()
+// Synopsis: Returns the volume of a VNF.
+// Topics: VNF Manipulation
+// See Also: vnf_area(), vnf_halfspace(), vnf_bend() 
 // Usage:
 //   vol = vnf_volume(vnf);
 // Description:
@@ -978,6 +1033,9 @@ function vnf_volume(vnf) =
 
 
 // Function: vnf_area()
+// Synopsis: Returns the surface area of a VNF.
+// Topics: VNF Manipulation
+// See Also: vnf_volume(), vnf_halfspace(), vnf_bend() 
 // Usage:
 //   area = vnf_area(vnf);
 // Description:
@@ -1016,6 +1074,10 @@ function _vnf_centroid(vnf,eps=EPSILON) =
 
 
 // Function: vnf_halfspace()
+// Synopsis: Returns the intersection of the vnf with a half space.
+// Topics: VNF Manipulation
+// See Also: vnf_volume(), vnf_area(), vnf_bend() 
+
 // Usage:
 //   newvnf = vnf_halfspace(plane, vnf, [closed], [boundary]);
 // Description:
@@ -1038,7 +1100,7 @@ function _vnf_centroid(vnf,eps=EPSILON) =
 //   slice through a region that excludes all of the gaps in the input VNF.  
 // Arguments:
 //   plane = plane defining the boundary of the half space
-//   vnf = vnf to cut
+//   vnf = VNF to cut
 //   closed = if false do not return the cut face(s) in the returned VNF.  Default: true
 //   boundary = if true return a pair [vnf,boundary] where boundary is a list of paths on the cut boundary indexed into the VNF vertex list.  If boundary is true, then closed is set to false.  Default: false
 // Example(3D):
@@ -1216,6 +1278,9 @@ function _triangulate_planar_convex_polygons(polys) =
 //
 
 // Function: vnf_bend()
+// Synopsis: Bends a VNF around an axis.
+// Topics: VNF Manipulation
+// See Also: vnf_volume(), vnf_area(), vnf_halfspace() 
 // Usage:
 //   bentvnf = vnf_bend(vnf,r|d=,[axis=]);
 // Description:
@@ -1422,6 +1487,9 @@ module _show_faces(vertices, faces, size=1, filter) {
 
 
 // Module: debug_vnf()
+// Synopsis: A replacement for `vnf_polyhedron()` to help with debugging.
+// Topics: VNF Manipulation, Debugging
+// See Also: vnf_validate()
 // Usage:
 //   debug_vnf(vnfs, [faces=], [vertices=], [opacity=], [size=], [convexity=], [filter=]);
 // Description:
@@ -1437,7 +1505,7 @@ module _show_faces(vertices, faces, size=1, filter) {
 //   can rerun the preview to display them oriented for viewing from a different viewpoint.
 // Topics: Polyhedra, Debugging
 // Arguments:
-//   vnf = vnf to display
+//   vnf = VNF to display
 //   ---
 //   faces = if true display face numbers.  Default: true
 //   vertices = if true display vertex numbers.  Default: true
@@ -1462,6 +1530,10 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 
 
 // Module: vnf_validate()
+// Synopsis: Echos non-manifold VNF errors to the console.
+// Topics: VNF Manipulation, Debugging
+// See Also: debug_vnf()
+// 
 // Usage: 
 //   vnf_validate(vnf, [size], [show_warns=], [check_isects=], [opacity=], [adjacent=], [label_verts=], [label_faces=], [wireframe=]);
 // Description:
