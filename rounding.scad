@@ -134,10 +134,11 @@ include <structs.scad>
 // Section: Rounding Paths
 
 // Function: round_corners()
-//
+// Synopsis: Round or chamfer the corners of a path (clipping them off).
+// Topics: Rounding, Paths
+// See Also: round_corners(), smooth_path(), path_join(), offset_stroke()
 // Usage:
 //   rounded_path = round_corners(path, [method], [radius=], [cut=], [joint=], [closed=], [verbose=]);
-// Synopsis: Round or chamfer the corners of a path (clipping them off).  
 // Description:
 //   Takes a 2D or 3D path as input and rounds each corner
 //   by a specified amount.  The rounding at each point can be different and some points can have zero
@@ -595,9 +596,11 @@ function _rounding_offsets(edgespec,z_dir=1) =
 
 
 // Function: smooth_path()
+// Synopsis: Create smoothed path that passes through all the points of a given path.
+// Topics: Rounding, Paths
+// See Also: round_corners(), smooth_path(), path_join(), offset_stroke()
 // Usage:
 //   smoothed = smooth_path(path, [tangents], [size=|relsize=], [splinesteps=], [closed=], [uniform=]);
-// Synopsis: Create smoothed path that passes through all the points of a given path.
 // Description:
 //   Smooths the input path using a cubic spline.  Every segment of the path will be replaced by a cubic curve
 //   with `splinesteps` points.  The cubic interpolation will pass through every input point on the path
@@ -691,9 +694,11 @@ function _scalar_to_vector(value,length,varname) =
 
 
 // Function: path_join()
+// Synopsis: Join paths end to end with optional rounding.
+// Topics: Rounding, Paths
+// See Also: round_corners(), smooth_path(), path_join(), offset_stroke()
 // Usage:
 //   joined_path = path_join(paths, [joint], [k=], [relocate=], [closed=]);
-// Synopsis: Join paths end to end with optional rounding.  
 // Description:
 //   Connect a sequence of paths together into a single path with optional continuous curvature rounding
 //   applied at the joints.  By default the first path is taken as specified and subsequent paths are
@@ -877,12 +882,14 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 
 
 // Function&Module: offset_stroke()
+// Synopsis: Draws a line along a path with options to specify angles and roundings at the ends.
+// Topics: Rounding, Paths
+// See Also: round_corners(), smooth_path(), path_join(), offset_stroke()
 // Usage: as module
 //   offset_stroke(path, [width], [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=], [closed=],...) [ATTACHMENTS];
 // Usage: as function
 //   path = offset_stroke(path, [width], closed=false, [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=],...);
 //   region = offset_stroke(path, [width], closed=true, [rounded=], [chamfer=], [start=], [end=], [check_valid=], [quality=],...);
-// Synopsis: Draws a line along a path with options to specify angles and roundings at the ends.  
 // Description:
 //   Uses `offset()` to compute a stroke for the input path.  Unlike `stroke`, the result does not need to be
 //   centered on the input path.  The corners can be rounded, pointed, or chamfered, and you can make the ends
@@ -1255,11 +1262,13 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 // Section: Three-Dimensional Rounding
 
 // Function&Module: offset_sweep()
+// Synopsis: Make a solid from a polygon with offset that changes along its length.
+// Topics: Rounding, Offsets
+// See Also: offset_sweep(), convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), join_prism()
 // Usage: most common module arguments.  See Arguments list below for more.
 //    offset_sweep(path, [height|length|h|l|], [bottom], [top], [offset=], [convexity=],...) [ATTACHMENTS];
 // Usage: most common function arguments.  See Arguments list below for more.
-//    vnf = offset_sweep(path, [height|h|l|length], [bottom], [top], [offset=], ...);
-// Synopsis: Make a solid from a polygon with offset that changes along its length. 
+//   vnf = offset_sweep(path, [height|h|l|length], [bottom], [top], [offset=], ...);
 // Description:
 //   Takes a 2d path as input and extrudes it upwards and/or downward.  Each layer in the extrusion is produced using `offset()` to expand or shrink the previous layer.  When invoked as a function returns a VNF; when invoked as a module produces geometry.  
 //   Using the `top` and/or `bottom` arguments you can specify a sequence of offsets values, or you can use several built-in offset profiles that
@@ -1722,9 +1731,11 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 
 
 // Module: convex_offset_extrude()
+// Synopsis: Make a solid from geometry where offset changes along the object's length.
+// Topics: Rounding, Offsets
+// See Also: offset_sweep(), convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), join_prism()
 // Usage: Basic usage.  See below for full options
 //   convex_offset_extrude(height, [bottom], [top], ...) 2D-CHILDREN;
-// Synopsis: Make a solid from geometry where offset changes along the object's length. 
 // Description:
 //   Extrudes 2d children with layers formed from the convex hull of the offset of each child according to a sequence of offset values.
 //   Like `offset_sweep` this module can use built-in offset profiles to provide treatments such as roundovers or chamfers but unlike `offset_sweep()` it
@@ -1954,9 +1965,11 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 
 
 // Function&Module: rounded_prism()
+// Synopsis: Make a rounded 3d object by connecting two polygons with the same vertex count.
+// Topics: Rounding, Offsets
+// See Also: offset_sweep(), convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), join_prism()
 // Usage: as a module
 //   rounded_prism(bottom, [top], [height=|h=|length=|l=], [joint_top=], [joint_bot=], [joint_sides=], [k=], [k_top=], [k_bot=], [k_sides=], [splinesteps=], [debug=], [convexity=],...) [ATTACHMENTS];
-// Synopsis: Make a rounded 3d object by connecting two polygons with the same vertex count. 
 // Usage: as a function
 //   vnf = rounded_prism(bottom, [top], [height=|h=|length=|l=], [joint_top=], [joint_bot=], [joint_sides=], [k=], [k_top=], [k_bot=], [k_sides=], [splinesteps=], [debug=]);
 // Description:
@@ -2268,9 +2281,11 @@ function _circle_mask(r) =
 
 
 // Module: bent_cutout_mask()
+// Synopsis: Create a mask for making a round-edged cutout in a cylindrical shell.
+// Topics: Rounding, Offsets
+// See Also: offset_sweep(), convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), join_prism()
 // Usage:
 //   bent_cutout_mask(r|radius, thickness, path);
-// Synopsis: Create a mask for making a round-edged cutout in a cylindrical shell.  
 // Description:
 //   Creates a mask for cutting a round-edged hole out of a vertical cylindrical shell.  The specified radius
 //   is the center radius of the cylindrical shell.  The path needs to be sampled finely enough
@@ -2494,12 +2509,14 @@ Access to the derivative smoothing parameter?
 
 
 // Function&Module: join_prism()
+// Synopsis: Join an arbitrary prism to a plane, sphere, cylinder or another arbitrary prism with a fillet.
+// Topics: Rounding, Offsets
+// See Also: offset_sweep(), convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), join_prism()
 // Usage: The two main forms with most common options
 //   join_prism(polygon, base, length=|height=|l=|h=, fillet=, [base_T=], [scale=], [prism_end_T=], [short=], ...) [ATTACHMENTS];
 //   join_prism(polygon, base, aux=, fillet=, [base_T=], [aux_T=], [scale=], [prism_end_T=], [short=], ...) [ATTACHMENTS];
 // Usage: As function
 //   vnf = join_prism( ... );
-// Synopsis: Join an arbitrary prism to a plane, sphere, cylinder or another arbitrary prism with a fillet. 
 // Description:
 //   This function creates a smooth fillet between one or both ends of an arbitrary prism and various other shapes: a plane, a sphere, a cylinder,
 //   or another arbitrary prism.  The fillet is a continuous curvature rounding with a specified width/height.  This module is very general
