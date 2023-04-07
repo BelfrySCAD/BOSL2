@@ -2841,7 +2841,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 // Section: Text
 
 // Module: text3d()
-// Synopsis: Creates an attachable 3d text block, or returns a vnf.
+// Synopsis: Creates an attachable 3d text block.
 // Topics: Attachments, Text
 // See Also: path_text(), text() 
 // Usage:
@@ -2948,7 +2948,7 @@ function _cut_interp(pathcut, path, data) =
 
 
 // Module: path_text()
-// Synopsis: Creates 2d or 3d text placed along a path, or returns a vnf.
+// Synopsis: Creates 2d or 3d text placed along a path.
 // Topics: Text, Paths, Paths (2D), Paths (3D), Path Generators, Path Generators (2D)
 // See Also, text(), text2d()
 // Usage:
