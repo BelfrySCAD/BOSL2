@@ -9,10 +9,117 @@
 // FileSummary: Various types of threaded rods and nuts.
 //////////////////////////////////////////////////////////////////////
 
+
+// Section: Thread Ends and Options
+//   A standard process for making machine screws is to begin with wire stock that has
+//   pbeveled ends.  This stock is then rolled between flat, grooved plates to form the threads.
+//   The result is a bolt that looks like this at the end:
+// Figure(3D,Med,VPR=[83.7,0,115.5],VPT=[1.37344,1.26411,-0.299415],VPD=35.5861): 
+//   threaded_rod(d=13,pitch=2,l=10,blunt_start=false);
+// Continues:
+//   A properly mated screw and bolt with beveled ends look like this:
+// Figure(2D,Med):
+//   $fn=32;
+//   projection(cut=true)
+//   xrot(-90){
+//   down(2.5)difference(){
+//     cuboid([20,20,5]);
+//     zrot(20)
+//     threaded_rod(d=13.2, pitch=2,l=5.1,blunt_start=false,internal=true);
+//   }
+//   up(2.85-2)threaded_rod(d=13, pitch=2, l=10, blunt_start=false);
+//   
+//   }
+// Continues:
+//   Cross threading occurs when the bolt is misaligned with the threads in the nut.
+//   It can destroy the threads, or cause the nut to jam.  The standard beveled end process
+//   makes cross threading a possibility because the beveled partial threads can pass
+//   each other when the screw enters the nut.
+// Figure(2D,Med):
+//   $fn=32;
+//   projection(cut=true)
+//   xrot(-90){
+//   down(2.5)difference(){
+//     cuboid([20,20,5]);
+//     zrot(20)
+//     threaded_rod(d=13.2, pitch=2,l=5.1,blunt_start=false,internal=true);
+//   }
+//   left(.6)up(2.99)yrot(-atan(2/13)-1)rot(180+30)threaded_rod(d=13, pitch=2, l=10, blunt_start=false);
+//   }
+// Continues:
+//   In addition, those partial screw threads may be weak, and easily broken.  They do
+//   not contribute to the strength of the assembly.  
+//   In 1891 Clinton A. Higbee received a patent for a modification to screw threads
+//   https://patents.google.com/patent/US447775A meant to address these limitations.
+//   Instead of beveling the end of the screw, Higbee said to remove the partial thread.
+//   The resulting screw might look like this:
+// Figure(3D,Med,VPR=[71.4,0,292.8],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335):
+//   $fn=32;
+//   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,lead_in_shape="cut",end_len=.2);
+// Continues:
+//   Because the threads are complete everywhere, cross threading is unlikely to occur.
+//   This type of threading has been called "Higbee threads", but in recent machinist
+//   handbooks it is called "blunt start" threading.  
+//   This style of thread is not commonly used in metal fasteners because it requires
+//   machining the threads, which is much more costly than the rolling procedure described
+//   above.  However, plastic threads usually have some sort of gradual thread end.
+//   For models that will be 3D printed, there is no reason to choose the standard
+//   bevel end bolt, so in this library the blunt start threads are the default.
+//   If you need standard bevel-end threads, you can choose them with the `blunt_start` options.
+//   Note that blunt start threads are more efficient.
+//   .
+//   Various options for controlling the ends of threads You can specify bevels on thread.
+//   With blunt start the bevel appears on the unthreaded part of the rod:
+// Figure(3D,Med,VPR=[73.2,0,53.7],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335):
+//   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,bevel=true,$fn=32);
+// Continues:
+//   You can also extend the unthreaded section using the `end_len` parameters.  A long unthreaded section will make
+//   it very easy to correctly align the threads.
+// Figure(3D,Med,VPR=[73.2,0,53.7],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335)
+//   threaded_rod(d=13,pitch=2,l=15,end_len2=5,blunt_start=true,bevel=true,$fn=32);
+// Continues:
+//   It is also possible to adjust the length of the lead-in section of threads, or the
+//   shape of that lead-in section.  The lead-in length can be set using the `lead_in` arguments
+//   to specify a length or the `lead_in_ang` arguments to specify an angle.  For general
+//   threading applications, making the lead in long creates a smaller thread that could
+//   be more fragile and more prone to cross threading.  
+// Figure(3D,Med,VPR=[51.5,0,303.4],VPT=[4.98906,1.63966,-0.141486],VPD=35.5861):
+//   threaded_rod(d=13,pitch=2,l=10,lead_in=6,blunt_start=true,bevel=false,$fn=64);
+// Continues:
+//   To change the form of the thread end you use the `lead_in_shape` argument.
+//   You can specify "sqrt", "cut" or "smooth" shapes.  The "sqrt" shape is the historical
+//   shape used in the library.  The "cut" shape is available to model Higbee pattern threads, but
+//   is not as good as the others in practice, because the flat faces on the threads can hit each other.
+//   The lead in shape is produced by applying a scale factor to the threads across the lead-in length. 
+//   You can also specify a custom shape
+//   by giving a function literal, `f(x,L)` where `L` will be the total linear
+//   length of the lead-in section and `x` will be a value between 0 and 1 giving
+//   the position in the lead in, with 0 being the tip and 1 being the full height thread.
+//   The return value must be a 2-vector giving the thread width scale and thread height
+//   scale at that location.  If `x<0` the function must return a thread height scale
+//   of zero, but it is usually best if the thread width scale does not go to zero,
+//   because that will give a sharply pointed thread end.  If `x>1` the function must
+//   return `[1,1]`.  
+// Figure(3D,Med,VPR=[74.6,0,338.4],VPT=[-0.829811,-2.56647,2.54868],VPD=28.8248): The standard lead in shapes
+//   left_half()zrot(0){
+//   up(2)   threaded_rod(d=13,pitch=2,l=2,blunt_start=true,bevel=false,$fn=128,anchor=BOT);
+//   up(4)   threaded_rod(d=13,pitch=2,l=2.5,blunt_start=true,bevel=false,$fn=128,lead_in_shape="cut",end_len2=.5,anchor=BOT);
+//      threaded_rod(d=13,pitch=2,l=2,blunt_start=true,bevel=false,$fn=128,lead_in_shape="smooth",anchor=BOT);
+//   }
+//   $fn=64;
+//   s=.85;
+//   color("black")
+//   up(3.5)left(4.5)fwd(6)rot($vpr){
+//      back(1.9)text3d("cut",size=s);
+//      text3d("sqrt",size=s);
+//      fwd(1.9)text3d("smooth",size=s);
+//   }   
+
+
 // Section: Standard (UTS/ISO) Threading
 
 // Module: threaded_rod()
-// Synopsis: Creates an ISO threaded rod.
+// Synopsis: Creates an UTS/ISO triangular threaded rod.
 // Topics: Threading, Screws
 // See Also: threaded_nut()
 // Usage:
@@ -151,7 +258,7 @@ module threaded_rod(
 
 
 // Module: threaded_nut()
-// Synopsis: Creates an ISO threaded nut.
+// Synopsis: Creates an UTS/ISO triangular threaded nut.
 // Topics: Threading, Screws
 // See Also: threaded_rod()
 // Usage:
@@ -1362,29 +1469,28 @@ module ball_screw_rod(
 // Usage:
 //   generic_threaded_rod(d, l|length, pitch, profile, [internal=], ...) [ATTACHMENTS];
 // Description:
-//   Constructs a generic threaded rod using an arbitrary thread profile that you supply.  The rod can be tapered (e.g. for pipe threads).
-//   For specific thread types use other modules that supply the appropriate profile.
+//   Constructs a generic threaded rod using an arbitrary thread profile that you supply.  The rod can be tapered
+//   (e.g. for pipe threads).  For specific thread types use other modules that supply the appropriate profile.
 //   .
-//   You give the profile as a 2D path that will be scaled by the pitch to produce the final thread shape.  The profile X values
-//   must be between -1/2 and 1/2.  The Y=0 point will align with the specified rod diameter, so generally you want a Y value of zero at the peak (which
-//   makes your specified diameter the outer diameter of the threads).  
-//   The value in the valleys of the thread should then be `-depth/pitch` due to the scaling by the thread pitch.  The segment between the end
-//   of one thread and the start of the next is added automatically, so you should not have the path start and end at equivalent points (X = +-1/2 with the same Y value).
-//   Generally you should center the profile horizontally in the interval [-1/2, 1/2].
+//   You give the profile as a 2D path that will be scaled by the pitch to produce the final thread shape.  The profile
+//   X values must be between -1/2 and 1/2.  The Y=0 point will align with the specified rod diameter, so generally you
+//   want a Y value of zero at the peak (which makes your specified diameter the outer diameter of the threads).  The
+//   value in the valleys of the thread should then be `-depth/pitch` due to the scaling by the thread pitch.  The first
+//   and last points should generally have the same Y value, but it is not necessary to give values at X=1/2 or X=-1/2
+//   if unless the Y values differ from the interior points in the profile.  Generally you should center the profile
+//   horizontally in the interval [-1/2, 1/2].
 //   .
-//   If internal is true then produce a thread mask to difference from an object.
-//   When internal is true the rod diameter is enlarged to correct for the polygonal nature of circles to ensure that the internal diameter is the specified size.
-//   The diameter is also increased by `4 * $slop` to create clearance for threading by allowing a `2 * $slop` gap on each side. 
-//   If bevel is set to true and internal is false then the ends of the rod will be beveled.  When bevel is true and internal is true the ends of the rod will
-//   be filled in so that the rod mask will create a bevel when subtracted from an object.  The bevel is at 45 deg and is the depth of the threads.
+//   If internal is true then produce a thread mask to difference from an object.  When internal is true the rod
+//   diameter is enlarged to correct for the polygonal nature of circles to ensure that the internal diameter is the
+//   specified size.  The diameter is also increased by `4 * $slop` to create clearance for threading by allowing a `2 *
+//   $slop` gap on each side.  If bevel is set to true and internal is false then the ends of the rod will be beveled.
+//   When bevel is true and internal is true the ends of the rod will be filled in so that the rod mask will create a
+//   bevel when subtracted from an object.  The bevel is at 45 deg and is the depth of the threads.
 //   .
-//   Higbee or blunt start threading specifies that the thread ends abruptly at its full width instead of running off the end of the shaft and leaving a sharp edged partial
-//   thread at the end of the screw.  This makes screws easier to start and
-//   prevents cross threading.  If you set `higbee=true` then the blunt start applies to both ends.  The blunt start cuts the thread end in a single facet, 
-//   so if you use lots of facets it will be close to perpendicular to the screw surface, but if you use fewer facets, it will be a more sloped cut.  
-//   The place to cut the threads is calculated to try to leave a 1/4 thread gap from the end of the screw, but depending on your profile, you may
-//   wish to adjust this.  If you set higbee to a numerical value it will be added to the computed higbee angle, so a positive value will cut the thread back farther
-//   giving more space at the end.  Higbee works on both internal and external threads.  
+//   Blunt start threading, which is the default, specifies that the thread ends abruptly at its full width instead of
+//   running off the end of the shaft and leaving a sharp edged partial thread at the end of the screw.  This makes
+//   screws easier to start and prevents cross threading.  Blunt start threads should always be superior, and they are
+//   faster to model, but if you really need standard threads that run off the end you can set `blunt_start=false`.
 // Arguments:
 //   d = Outer diameter of threaded rod.
 //   l / length / h / height = Length of threaded rod.
@@ -1942,6 +2048,7 @@ module thread_helix(
 ) {
     dummy1=assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),"Cannot give thread_depth or flank_angle with a profile")
            assert(all_positive([turns]), "The turns parameter must be a positive number")
+           assert(all_positive(pitch), "pitch must be a positive number")
            assert(is_def(profile) || is_def(thread_depth), "If profile is not given, must give thread depth");
     flank_angle = default(flank_angle,15);
     h = pitch*starts*abs(turns);
