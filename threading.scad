@@ -11,14 +11,12 @@
 
 
 // Section: Thread Ends and Options
-//   A standard process for making machine screws is to begin with wire stock that has
-//   pbeveled ends.  This stock is then rolled between flat, grooved plates to form the threads.
+//   A standard process for making machine screws is to begin with round stock that has
+//   beveled ends.  This stock is then rolled between flat, grooved plates to form the threads.
 //   The result is a bolt that looks like this at the end:
-// Figure(3D,Med,VPR=[83.7,0,115.5],VPT=[1.37344,1.26411,-0.299415],VPD=35.5861): 
-//   threaded_rod(d=13,pitch=2,l=10,blunt_start=false);
-// Continues:
-//   A properly mated screw and bolt with beveled ends look like this:
-// Figure(2D,Med):
+// Figure(3D,Med,NoAxes,VPR=[83.7,0,115.5],VPT=[1.37344,1.26411,-0.299415],VPD=35.5861): 
+//   threaded_rod(d=13,pitch=2,l=10,blunt_start=false,$fn=80);
+// Figure(2D,Med,NoAxes): A properly mated screw and bolt with beveled ends
 //   $fn=32;
 //   projection(cut=true)
 //   xrot(-90){
@@ -35,7 +33,7 @@
 //   It can destroy the threads, or cause the nut to jam.  The standard beveled end process
 //   makes cross threading a possibility because the beveled partial threads can pass
 //   each other when the screw enters the nut.
-// Figure(2D,Med):
+// Figure(2D,Med,NoAxes):
 //   $fn=32;
 //   projection(cut=true)
 //   xrot(-90){
@@ -53,8 +51,8 @@
 //   https://patents.google.com/patent/US447775A meant to address these limitations.
 //   Instead of beveling the end of the screw, Higbee said to remove the partial thread.
 //   The resulting screw might look like this:
-// Figure(3D,Med,VPR=[71.4,0,292.8],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335):
-//   $fn=32;
+// Figure(3D,Med,NoAxes,VPR=[71.4,0,292.8],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335):
+//   $fn=48;
 //   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,lead_in_shape="cut",end_len=.2);
 // Continues:
 //   Because the threads are complete everywhere, cross threading is unlikely to occur.
@@ -68,29 +66,43 @@
 //   If you need standard bevel-end threads, you can choose them with the `blunt_start` options.
 //   Note that blunt start threads are more efficient.
 //   .
-//   Various options for controlling the ends of threads You can specify bevels on thread.
-//   With blunt start the bevel appears on the unthreaded part of the rod:
-// Figure(3D,Med,VPR=[73.2,0,53.7],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335):
-//   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,bevel=true,$fn=32);
+//   Various options exist for controlling the ends of threads. You can specify bevels on threaded rods.
+//   In conventional threading, bevels are needed on the ends to remove sharp, thin edges, and
+//   the bevel is sized to the full outer diameter of the threaded rod.  
+//   With blunt start threading, the bevel appears on the unthreaded part of the rod.
+//   On a threaded rod, a bevel value of `true` or a positive bevel value cut off the corner.
+// Figure(3D,Med,NoAxes,VPR=[73.2,0,53.7],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335): 
+//   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,bevel=true,$fn=80);
+// Continues:
+//   A negative bevel value produces a flaring bevel, that might be useful if the rod needs to mate with another part.
+//   You can also set `bevel="reverse"` to get a flaring bevel of the default size.
+// Figure(3D,Med,NoAxes,VPR=[73.2,0,53.7],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335): Negative bevel on a regular threaded rod.
+//   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,bevel=-2,$fn=80);
+// Continues:
+//   If you set `internal=true` then bevels are reversed: positive bevels flare outward so that when you subtract
+//   the threaded rod it gives a beveled edge to the hole.  In this case, negative bevels go inward, which might be useful to
+//   create a bevel at the bottom of a threaded hole.
+// Figure(3D,Med,NoAxes,VPR=[73.2,0,53.7],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335): Threaded rod mask produced using `internal=true` with regular bevel at the top and reversed bevel at the bottom.  
+//   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,bevel2=true,bevel1="reverse",internal=true,$fn=80);
 // Continues:
 //   You can also extend the unthreaded section using the `end_len` parameters.  A long unthreaded section will make
-//   it very easy to correctly align the threads.
-// Figure(3D,Med,VPR=[73.2,0,53.7],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335)
-//   threaded_rod(d=13,pitch=2,l=15,end_len2=5,blunt_start=true,bevel=true,$fn=32);
+//   it impossible to tilt the bolt and produce misaligned threads, so it could make assembly easier.  
+// Figure(3D,Med,NoAxes,VPR=[73.2,0,53.7],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335):
+//   threaded_rod(d=13,pitch=2,l=15,end_len2=5,blunt_start=true,bevel=true,$fn=80);
 // Continues:
 //   It is also possible to adjust the length of the lead-in section of threads, or the
 //   shape of that lead-in section.  The lead-in length can be set using the `lead_in` arguments
 //   to specify a length or the `lead_in_ang` arguments to specify an angle.  For general
 //   threading applications, making the lead in long creates a smaller thread that could
 //   be more fragile and more prone to cross threading.  
-// Figure(3D,Med,VPR=[51.5,0,303.4],VPT=[4.98906,1.63966,-0.141486],VPD=35.5861):
-//   threaded_rod(d=13,pitch=2,l=10,lead_in=6,blunt_start=true,bevel=false,$fn=64);
+// Figure(3D,Med,NoAxes,VPR=[51.5,0,303.4],VPT=[4.98906,1.63966,-0.141486],VPD=35.5861):
+//   threaded_rod(d=13,pitch=2,l=10,lead_in=6,blunt_start=true,bevel=false,$fn=80);
 // Continues:
 //   To change the form of the thread end you use the `lead_in_shape` argument.
 //   You can specify "sqrt", "cut" or "smooth" shapes.  The "sqrt" shape is the historical
 //   shape used in the library.  The "cut" shape is available to model Higbee pattern threads, but
 //   is not as good as the others in practice, because the flat faces on the threads can hit each other.
-//   The lead in shape is produced by applying a scale factor to the threads across the lead-in length. 
+//   The lead-in shape is produced by applying a scale factor to the thread cross section that varies along the lead-in length. 
 //   You can also specify a custom shape
 //   by giving a function literal, `f(x,L)` where `L` will be the total linear
 //   length of the lead-in section and `x` will be a value between 0 and 1 giving
@@ -100,7 +112,7 @@
 //   of zero, but it is usually best if the thread width scale does not go to zero,
 //   because that will give a sharply pointed thread end.  If `x>1` the function must
 //   return `[1,1]`.  
-// Figure(3D,Med,VPR=[74.6,0,338.4],VPT=[-0.829811,-2.56647,2.54868],VPD=28.8248): The standard lead in shapes
+// Figure(3D,Med,NoAxes,VPR=[74.6,0,338.4],VPT=[-0.829811,-2.56647,2.54868],VPD=28.8248): The standard lead in shapes
 //   left_half()zrot(0){
 //   up(2)   threaded_rod(d=13,pitch=2,l=2,blunt_start=true,bevel=false,$fn=128,anchor=BOT);
 //   up(4)   threaded_rod(d=13,pitch=2,l=2.5,blunt_start=true,bevel=false,$fn=128,lead_in_shape="cut",end_len2=.5,anchor=BOT);
