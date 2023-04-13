@@ -55,4 +55,9 @@ DefineHeader(Table;Headers=Anchor Name|Position): Extra Anchors
 DefineHeader(Table;Headers=Anchor Type|What it is): Anchor Types
 DefineHeader(Table;Headers=Name|Definition): Terminology
 DefineHeader(BulletList): Requirements
+DefineSynTags:
+  VNF = Returns a VNF when called as a function.
+  Path = Returns a Path when called as a function.
+  Region = Returns a Region when called as a function.
+  Geom = Returns Geometry when called as a module.
 

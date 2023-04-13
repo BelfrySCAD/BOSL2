@@ -18,7 +18,8 @@ use <builtins.scad>
 // Section: Cuboids, Prismoids and Pyramids
 
 // Function&Module: cube()
-// Synopsis: Creates a cube with anchors for attaching children, or returns a vnf.
+// Synopsis: Creates a cube with anchors for attaching children.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: cuboid(), prismoid()
 // Usage: As Module (as in native OpenSCAD)
@@ -88,7 +89,8 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 
 
 // Module: cuboid()
-// Synopsis: Creates a cube with chamfering and roundovers, or returns a vnf.
+// Synopsis: Creates a cube with chamfering and roundovers.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: prismoid(), rounded_prism()
 // Usage: Standard Cubes
@@ -566,7 +568,8 @@ function cuboid(
 
 
 // Function&Module: prismoid()
-// Synopsis: Creates a rectangular prismoid shape with optional roundovers and chamfering, or returns a vnf.
+// Synopsis: Creates a rectangular prismoid shape with optional roundovers and chamfering.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: cuboid(), rounded_prism(), trapezoid()
 // Usage: 
@@ -770,7 +773,8 @@ function prismoid(
 
 
 // Function&Module: octahedron()
-// Synopsis: Creates an octahedron with axis-aligned points, or returns a vnf.
+// Synopsis: Creates an octahedron with axis-aligned points.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: prismoid()
 // Usage: As Module
@@ -811,7 +815,8 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 
 
 // Module: rect_tube()
-// Synopsis: Creates a rectangular tube, or returns a vnf.
+// Synopsis: Creates a rectangular tube.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: tube()
 // Usage: Typical Rectangular Tubes
@@ -1084,7 +1089,8 @@ function rect_tube(
 
 
 // Function&Module: wedge()
-// Synopsis: Creates a 3d triangular wedge, or returns a vnf.
+// Synopsis: Creates a 3d triangular wedge.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See also: prismoid(), rounded_prism(), pie_slice()
 // Usage: As Module
@@ -1167,7 +1173,8 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 
 
 // Function&Module: cylinder()
-// Synopsis: Creates an attachable cylinder, or returns a vnf.
+// Synopsis: Creates an attachable cylinder.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: cyl()
 // Usage: As Module (as in native OpenSCAD)
@@ -1252,7 +1259,8 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 
 
 // Function&Module: cyl()
-// Synopsis: Creates an attachable cylinder with roundovers and chamfering, or returns a vnf.
+// Synopsis: Creates an attachable cylinder with roundovers and chamfering.
+// SynTags: Geom, VNF
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cylinder()
 // Usage: Normal Cylinders
@@ -1648,7 +1656,8 @@ module cyl(
 
 
 // Module: xcyl()
-// Synopsis: creates a cylinder oriented along the X axis, or returns a vnf.
+// Synopsis: creates a cylinder oriented along the X axis.
+// SynTags: Geom, VNF
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
 // Description:
@@ -1730,7 +1739,8 @@ module xcyl(
 
 
 // Module: ycyl()
-// Synopsis: creates a cylinder oriented along the y axis, or returns a vnf.
+// Synopsis: Creates a cylinder oriented along the y axis.
+// SynTags: Geom, VNF
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
 // Description:
@@ -1814,7 +1824,8 @@ module ycyl(
 
 
 // Module: zcyl()
-// Synopsis: creates a cylinder oriented along the Z axis, or returns a vnf.
+// Synopsis: Creates a cylinder oriented along the Z axis.
+// SynTags: Geom, VNF
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
 // Description:
@@ -1897,7 +1908,8 @@ module zcyl(
 
 
 // Module: tube()
-// Synopsis: Creates a cylindrical or conical tube, or returns a vnf.
+// Synopsis: Creates a cylindrical or conical tube.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: rect_tube()
 // Description:
@@ -1994,7 +2006,8 @@ module tube(
 
 
 // Function&Module: pie_slice()
-// Synopsis: Creates a pie slice shape, or returns a vnf.
+// Synopsis: Creates a pie slice shape.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: wedge()
 // Description:
@@ -2092,7 +2105,8 @@ function pie_slice(
 
 
 // Function&Module: sphere()
-// Synopsis: Creates an attachable spherical object, or returns a vnf.
+// Synopsis: Creates an attachable spherical object.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: spheroid()
 // Usage: As Module (native OpenSCAD)
@@ -2138,7 +2152,8 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 
 
 // Function&Module: spheroid()
-// Synopsis: Creates an attachable spherical object with controllable triangulation, or returns a vnf.
+// Synopsis: Creates an attachable spherical object with controllable triangulation.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: sphere()
 // Usage: Typical
@@ -2468,7 +2483,8 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 
 
 // Function&Module: torus()
-// Synopsis: Creates an attachable torus, or returns a vnf.
+// Synopsis: Creates an attachable torus.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: spheroid(), cyl()
 //
@@ -2611,7 +2627,8 @@ function torus(
 
 
 // Function&Module: teardrop()
-// Synopsis: Creates a teardrop shape, or returns a vnf.
+// Synopsis: Creates a teardrop shape.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators, FDM Optimized
 // See Also: onion(), teardrop2d()
 // Description:
@@ -2752,7 +2769,8 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 
 
 // Function&Module: onion()
-// Synopsis: Creates an attachable onion-like shape, or returns a vnf.
+// Synopsis: Creates an attachable onion-like shape.
+// SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators, FDM Optimized
 // See Also: teardrop(), teardrop2d()
 // Description:
@@ -2842,6 +2860,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 
 // Module: text3d()
 // Synopsis: Creates an attachable 3d text block.
+// SynTags: Geom
 // Topics: Attachments, Text
 // See Also: path_text(), text() 
 // Usage:
@@ -2949,6 +2968,7 @@ function _cut_interp(pathcut, path, data) =
 
 // Module: path_text()
 // Synopsis: Creates 2d or 3d text placed along a path.
+// SynTags: Geom
 // Topics: Text, Paths, Paths (2D), Paths (3D), Path Generators, Path Generators (2D)
 // See Also, text(), text2d()
 // Usage:
@@ -3193,7 +3213,8 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 
 // Topics: Shapes (3D), Attachable
 // Module: fillet()
-// Synopsis: Creates a smooth fillet between two faces, or returns a vnf.
+// Synopsis: Creates a smooth fillet between two faces.
+// SynTags: Geom, VNF
 // See Also: mask2d_roundover()
 // Description:
 //   Creates a shape that can be unioned into a concave joint between two faces, to fillet them.
@@ -3272,7 +3293,8 @@ module fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTE
 
 
 // Function&Module: heightfield()
-// Synopsis: Generates a 3D surface from a 2D grid of values, or returns a vnf.
+// Synopsis: Generates a 3D surface from a 2D grid of values.
+// SynTags: Geom, VNF
 // Topics: Textures, Heightfield
 // See Also: cylindrical_heightfield()
 // Usage: As Module
@@ -3402,7 +3424,8 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 
 
 // Function&Module: cylindrical_heightfield()
-// Synopsis: Generates a cylindrical 3d surface from a 2D grid of values, or returns a vnf.
+// Synopsis: Generates a cylindrical 3d surface from a 2D grid of values.
+// SynTags: Geom, VNF
 // Topics: Extrusion, Textures, Knurling, Heightfield
 // See Also: heightfield()
 // Usage: As Function
@@ -3550,6 +3573,7 @@ module cylindrical_heightfield(
 
 // Module: ruler()
 // Synopsis: Creates a ruler.
+// SynTags: Geom
 // Topics: Distance
 // Usage:
 //   ruler(length, width, [thickness=], [depth=], [labels=], [pipscale=], [maxscale=], [colors=], [alpha=], [unit=], [inch=]) [ATTACHMENTS];
