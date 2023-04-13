@@ -22,6 +22,7 @@
 //   skin(profiles, slices, [z=], [refine=], [method=], [sampling=], [caps=], [closed=], [style=], [convexity=], [anchor=],[cp=],[spin=],[orient=],[atype=]) [ATTACHMENTS];
 // Usage: As function:
 //   vnf = skin(profiles, slices, [z=], [refine=], [method=], [sampling=], [caps=], [closed=], [style=], [anchor=],[cp=],[spin=],[orient=],[atype=]);
+// Synopsis: Connect a sequence of arbitrary polygons into a 3D object. 
 // Description:
 //   Given a list of two or more path `profiles` in 3d space, produces faces to skin a surface between
 //   the profiles.  Optionally the first and last profiles can have endcaps, or the first and last profiles
@@ -510,6 +511,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [caps=], [convexity=]) [ATTACHMENTS];
 // Usage: With Texturing
 //   linear_sweep(region, [height], [center=], texture=, [tex_size=]|[tex_counts=], [tex_scale=], [style=], [tex_samples=], ...) [ATTACHMENTS];
+// Synopsis: Create a linear extrusion from a path with optional texturing. 
 // Description:
 //   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or polygon.
 //   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
@@ -826,6 +828,7 @@ function linear_sweep(
 //   rotate_sweep(shape, [angle], ...) [ATTACHMENTS];
 // Usage: With Texturing
 //   rotate_sweep(shape, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_samples=], [tex_rot=], [tex_inset=], ...) [ATTACHMENTS];
+// Synopsis: Create a surface of revolution from a path with optional texturing. 
 // Topics: Extrusion, Sweep, Revolution
 // Description:
 //   Takes a polygon or [region](regions.scad) and sweeps it in a rotation around the Z axis, with optional texturing.
@@ -1048,6 +1051,7 @@ module rotate_sweep(
 // Usage: As Function
 //   vnf = spiral_sweep(poly, h, r|d=, turns, ...);
 //   vnf = spiral_sweep(poly, h, r1=|d1=, r1=|d2=, turns, ...);
+// Synopsis: Sweep a path along a helix.
 // Topics: Extrusion, Sweep
 // Description:
 //   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a 3D spiral path
@@ -1273,6 +1277,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As function
 //   vnf = path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [atype=]);
+// Synopsis: Sweep a 2d polygon path along a 2d or 3d path. 
 // Description:
 //   Takes as input `shape`, a 2D polygon path (list of points), and `path`, a 2d or 3d path (also a list of points)
 //   and constructs a polyhedron by sweeping the shape along the path. When run as a module returns the polyhedron geometry.
@@ -1867,6 +1872,7 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
 //   path_sweep2d(shape, path, [closed], [caps], [quality], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=], [cp=]) [ATTACHMENTS];
 // Usage: as function
 //   vnf = path_sweep2d(shape, path, [closed], [caps], [quality], [style], [anchor=], [spin=], [orient=], [atype=], [cp=]);
+// Synopsis: Sweep a 2d polygon path along a 2d path allowing self-intersection. 
 // Description:
 //   Takes an input 2D polygon (the shape) and a 2d path, and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF.
@@ -1994,6 +2000,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = sweep(shape, transforms, [closed], [caps], [style], [anchor=], [spin=], [orient=], [atype=]);
+// Synopsis: Construct a 3d object from arbitrary transformations of a 2d polygon path.
 // Description:
 //   The input `shape` must be a non-self-intersecting 2D polygon or region, and `transforms`
 //   is a list of 4x4 transformation matrices.  The sweep algorithm applies each transformation in sequence
@@ -2098,6 +2105,7 @@ module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=
 // Topics: Paths, Path Subdivision
 // Usage:
 //   newprof = subdivide_and_slice(profiles, slices, [numpoints], [method], [closed]);
+// Synopsis: Resample list of paths to have the same point count and interpolate additional paths. 
 // Description:
 //   Subdivides the input profiles to have length `numpoints` where `numpoints` must be at least as
 //   big as the largest input profile.  By default `numpoints` is set equal to the length of the
@@ -2182,6 +2190,7 @@ function _smooth(data,len,closed=false,angle=false) =
 // Function: rot_resample()
 // Usage:
 //   rlist = rot_resample(rotlist, n, [method=], [twist=], [scale=], [smoothlen=], [long=], [turns=], [closed=])
+// Synopsis: Resample a list of rotation operators. 
 // Description:
 //   Takes as input a list of rotation matrices in 3d.  Produces as output a resampled
 //   list of rotation operators (4x4 matrixes) suitable for use with sweep().  You can optionally apply twist to
@@ -2583,6 +2592,7 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
 // Function: associate_vertices()
 // Usage:
 //   newpoly = associate_vertices(polygons, split);
+// Synopsis: Create vertex association to control how skin() links vertices. 
 // Description:
 //   Takes as input a list of polygons and duplicates specified vertices in each polygon in the list through the series so
 //   that the input can be passed to `skin()`.  This allows you to decide how the vertices are linked up rather than accepting
@@ -2756,6 +2766,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Usage:
 //   tx = texture(tex, [n=], [inset=], [gap=], [roughness=]);
 // Topics: Textures, Knurling
+// Synopsis: Produce a standard texture. 
 // Description:
 //   Given a texture name, returns a texture.  Textures can come in two varieties:
 //   - Heightfield textures which are 2D arrays of scalars.  These are usually faster to render, but can be less precise and prone to triangulation errors.  The table below gives the recommended style for the best triangulation.  If results are still incorrect, switch to the similar VNF tile by adding the "_vnf" suffix.
