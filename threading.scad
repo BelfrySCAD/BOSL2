@@ -181,7 +181,7 @@
 //   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1, end_len=1.5, bevel=true);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1, blunt_start=false);
-// Example: Diamond threading where both left-handed and right-handed nuts travel (in the same direction) on the threaded rod:
+// Example(BIG,NoAxes): Diamond threading where both left-handed and right-handed nuts travel (in the same direction) on the threaded rod:
 //   $fn=32;
 //   $slop = 0.075;
 //   d = 3/8*INCH;
@@ -800,9 +800,9 @@ module acme_threaded_rod(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
-//   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=8, tpi=8, $slop=0.05,end_len=0,ibevel=1);
-//   acme_threaded_nut(nutwidth=16, id=1/2*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1);
-//   acme_threaded_nut(nutwidth=16, id=1/2*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1, blunt_start=false);
+//   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=8, tpi=8, $slop=0.05);
+//   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1, ibevel=false);
+//   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1, blunt_start=false);
 function acme_threaded_nut(
     nutwidth, id, h, tpi, pitch,
     starts=1,
