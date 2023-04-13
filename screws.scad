@@ -1573,7 +1573,7 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
 //   nut("#8", thread="none");
 
 function nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize, 
-           bevel,bevel1,bevel2,bevang=15,ibevel,ibevel1,ibevel2, higbee, higbee1, higbee2, anchor=BOTTOM, spin=0, orient=UP, oversize=0) 
+           bevel,bevel1,bevel2,bevang=15,ibevel,ibevel1,ibevel2,blunt_start, blunt_start1, blunt_start2, anchor=BOTTOM, spin=0, orient=UP, oversize=0)
            = no_function("nut");
 module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize, 
            bevel,bevel1,bevel2,bevang=15,ibevel,ibevel1,ibevel2,blunt_start, blunt_start1, blunt_start2, anchor=BOTTOM, spin=0, orient=UP, oversize=0)
