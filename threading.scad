@@ -51,7 +51,7 @@
 //   https://patents.google.com/patent/US447775A meant to address these limitations.
 //   Instead of beveling the end of the screw, Higbee said to remove the partial thread.
 //   The resulting screw might look like this:
-// Figure(3D,Med,NoAxes,VPR=[71.4,0,292.8],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335):
+// Figure(3D,Med,NoAxes,VPR=[72,0,294],VPT=[0,0,0],VPD=44):
 //   $fn=48;
 //   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,lead_in_shape="cut",end_len=.2);
 // Continues:
@@ -71,23 +71,23 @@
 //   the bevel is sized to the full outer diameter of the threaded rod.  
 //   With blunt start threading, the bevel appears on the unthreaded part of the rod.
 //   On a threaded rod, a bevel value of `true` or a positive bevel value cut off the corner.
-// Figure(3D,Med,NoAxes,VPR=[73.2,0,53.7],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335): 
+// Figure(3D,Med,NoAxes,VPR=[72,0,54],VPT=[0,0,0],VPD=44):
 //   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,bevel=true,$fn=80);
 // Continues:
 //   A negative bevel value produces a flaring bevel, that might be useful if the rod needs to mate with another part.
 //   You can also set `bevel="reverse"` to get a flaring bevel of the default size.
-// Figure(3D,Med,NoAxes,VPR=[73.2,0,53.7],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335): Negative bevel on a regular threaded rod.
+// Figure(3D,Med,NoAxes,VPR=[72,0,54],VPT=[0,0,0],VPD=44): Negative bevel on a regular threaded rod.
 //   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,bevel=-2,$fn=80);
 // Continues:
-//   If you set `internal=true` then bevels are reversed: positive bevels flare outward so that when you subtract
+//   If you set `internal=true` to create a mask for a threaded hole, then bevels are reversed: positive bevels flare outward so that when you subtract
 //   the threaded rod it gives a beveled edge to the hole.  In this case, negative bevels go inward, which might be useful to
 //   create a bevel at the bottom of a threaded hole.
-// Figure(3D,Med,NoAxes,VPR=[73.2,0,53.7],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335): Threaded rod mask produced using `internal=true` with regular bevel at the top and reversed bevel at the bottom.  
+// Figure(3D,Med,NoAxes,VPR=[72,0,54],VPT=[0,0,0],VPD=44): Threaded rod mask produced using `internal=true` with regular bevel at the top and reversed bevel at the bottom.  
 //   threaded_rod(d=13,pitch=2,l=10,blunt_start=true,bevel2=true,bevel1="reverse",internal=true,$fn=80);
 // Continues:
 //   You can also extend the unthreaded section using the `end_len` parameters.  A long unthreaded section will make
 //   it impossible to tilt the bolt and produce misaligned threads, so it could make assembly easier.  
-// Figure(3D,Med,NoAxes,VPR=[73.2,0,53.7],VPT=[2.47443,0.356302,-1.41819],VPD=43.9335):
+// Figure(3D,Med,NoAxes,VPR=[72,0,54],VPT=[0,0,0],VPD=48): Negative bevel on a regular threaded rod.
 //   threaded_rod(d=13,pitch=2,l=15,end_len2=5,blunt_start=true,bevel=true,$fn=80);
 // Continues:
 //   It is also possible to adjust the length of the lead-in section of threads, or the
@@ -95,7 +95,7 @@
 //   to specify a length or the `lead_in_ang` arguments to specify an angle.  For general
 //   threading applications, making the lead in long creates a smaller thread that could
 //   be more fragile and more prone to cross threading.  
-// Figure(3D,Med,NoAxes,VPR=[51.5,0,303.4],VPT=[4.98906,1.63966,-0.141486],VPD=35.5861):
+// Figure(3D,Med,NoAxes,VPR=[52,0,300],VPT=[0,0,4],VPD=35.5861):
 //   threaded_rod(d=13,pitch=2,l=10,lead_in=6,blunt_start=true,bevel=false,$fn=80);
 // Continues:
 //   To change the form of the thread end you use the `lead_in_shape` argument.
@@ -112,7 +112,7 @@
 //   of zero, but it is usually best if the thread width scale does not go to zero,
 //   because that will give a sharply pointed thread end.  If `x>1` the function must
 //   return `[1,1]`.  
-// Figure(3D,Med,NoAxes,VPR=[74.6,0,338.4],VPT=[-0.829811,-2.56647,2.54868],VPD=28.8248): The standard lead in shapes
+// Figure(3D,Med,NoAxes,VPR=[75,0,338],VPT=[-2,0,3.3],VPD=25): The standard lead in shapes
 //   left_half()zrot(0){
 //   up(2)   threaded_rod(d=13,pitch=2,l=2,blunt_start=true,bevel=false,$fn=128,anchor=BOT);
 //   up(4)   threaded_rod(d=13,pitch=2,l=2.5,blunt_start=true,bevel=false,$fn=128,lead_in_shape="cut",end_len2=.5,anchor=BOT);
@@ -132,6 +132,7 @@
 
 // Module: threaded_rod()
 // Synopsis: Creates an UTS/ISO triangular threaded rod.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: threaded_nut()
 // Usage:
@@ -180,7 +181,7 @@
 //   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1, end_len=1.5, bevel=true);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1, blunt_start=false);
-// Example: Diamond threading where both left-handed and right-handed nuts travel (in the same direction) on the threaded rod:
+// Example(BIG,NoAxes): Diamond threading where both left-handed and right-handed nuts travel (in the same direction) on the threaded rod:
 //   $fn=32;
 //   $slop = 0.075;
 //   d = 3/8*INCH;
@@ -271,6 +272,7 @@ module threaded_rod(
 
 // Module: threaded_nut()
 // Synopsis: Creates an UTS/ISO triangular threaded nut.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: threaded_rod()
 // Usage:
@@ -387,6 +389,7 @@ module threaded_nut(
 
 // Module: trapezoidal_threaded_rod()
 // Synopsis: Creates a trapezoidal threaded rod.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: trapezoidal_threaded_nut()
 // Usage:
@@ -538,6 +541,7 @@ module trapezoidal_threaded_rod(
 
 // Module: trapezoidal_threaded_nut()
 // Synopsis: Creates a trapezoidal threaded nut.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: trapezoidal_threaded_rod()
 // Usage:
@@ -659,6 +663,7 @@ module trapezoidal_threaded_nut(
 
 // Module: acme_threaded_rod()
 // Synopsis: Creates an ACME threaded rod.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: acme_threaded_nut()
 // Usage:
@@ -753,6 +758,7 @@ module acme_threaded_rod(
 
 // Module: acme_threaded_nut()
 // Synopsis: Creates an ACME threaded nut.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: acme_threaded_rod()
 // Usage:
@@ -794,9 +800,9 @@ module acme_threaded_rod(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
-//   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=8, tpi=8, $slop=0.05,end_len=0,ibevel=1);
-//   acme_threaded_nut(nutwidth=16, id=1/2*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1);
-//   acme_threaded_nut(nutwidth=16, id=1/2*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1, blunt_start=false);
+//   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=8, tpi=8, $slop=0.05);
+//   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1, ibevel=false);
+//   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1, blunt_start=false);
 function acme_threaded_nut(
     nutwidth, id, h, tpi, pitch,
     starts=1,
@@ -857,6 +863,7 @@ module acme_threaded_nut(
 
 // Module: npt_threaded_rod()
 // Synopsis: Creates NPT pipe threading.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: acme_threaded_rod()
 // Usage:
@@ -979,6 +986,7 @@ module npt_threaded_rod(
 
 // Module: buttress_threaded_rod()
 // Synopsis: Creates a buttress-threaded rod.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: buttress_threaded_nut()
 // Usage:
@@ -1079,6 +1087,7 @@ module buttress_threaded_rod(
 
 // Module: buttress_threaded_nut()
 // Synopsis: Creates a buttress-threaded nut.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: buttress_threaded_rod()
 // Usage:
@@ -1179,6 +1188,7 @@ module buttress_threaded_nut(
 
 // Module: square_threaded_rod()
 // Synopsis: Creates a square-threaded rod.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: square_threaded_nut()
 // Usage:
@@ -1274,6 +1284,7 @@ module square_threaded_rod(
 
 // Module: square_threaded_nut()
 // Synopsis: Creates a square-threaded nut.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: square_threaded_rod()
 // Usage:
@@ -1372,6 +1383,7 @@ module square_threaded_nut(
 
 // Module: ball_screw_rod()
 // Synopsis: Creates a ball screw rod.
+// SynTags: Geom
 // Topics: Threading, Screws
 // Usage:
 //   ball_screw_rod(d, l|length, pitch, [ball_diam], [ball_arc], [internal=], ...) [ATTACHMENTS];
@@ -1476,6 +1488,7 @@ module ball_screw_rod(
 
 // Module: generic_threaded_rod()
 // Synopsis: Creates a generic threaded rod.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: generic_threaded_nut()
 // Usage:
@@ -1804,6 +1817,7 @@ module generic_threaded_rod(
 
 // Module: generic_threaded_nut()
 // Synopsis: Creates a generic threaded nut.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: generic_threaded_rod()
 // Usage:
@@ -1953,6 +1967,7 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 
 // Module: thread_helix()
 // Synopsis: Creates a thread helix to add to a cylinder.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: generic_threaded_rod()
 // Usage:
