@@ -56,8 +56,10 @@ DefineHeader(Table;Headers=Anchor Type|What it is): Anchor Types
 DefineHeader(Table;Headers=Name|Definition): Terminology
 DefineHeader(BulletList): Requirements
 DefineSynTags:
-  VNF = Returns a VNF when called as a function.
-  Path = Returns a Path when called as a function.
-  Region = Returns a Region when called as a function.
+  VNF = Can return a VNF when called as a function.
+  Path = Can return a Path when called as a function.
+  Region = Can return a Region when called as a function.
+  Mat = Can return a transformation matrix when called as a function.
   Geom = Returns Geometry when called as a module.
+  Trans = When called as a module, performs a transformation on the children.
 
