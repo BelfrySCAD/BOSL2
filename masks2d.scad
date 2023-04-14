@@ -16,6 +16,7 @@
 
 // Function&Module: mask2d_roundover()
 // Synopsis: Creates a 2D beading mask shape useful for rounding 90° edges.
+// SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile(), fillet()
 // Usage: As module
@@ -80,6 +81,7 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 
 // Function&Module: mask2d_cove()
 // Synopsis: Creates a 2D cove (quarter-round) mask shape.
+// SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As module
@@ -144,6 +146,7 @@ function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 
 // Function&Module: mask2d_chamfer()
 // Synopsis: Produces a 2D chamfer mask shape.
+// SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
@@ -223,6 +226,7 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 
 // Function&Module: mask2d_rabbet()
 // Synopsis: Creates a rabbet mask shape.
+// SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
@@ -281,6 +285,7 @@ function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
 
 // Function&Module: mask2d_dovetail()
 // Synopsis: Creates a 2D dovetail mask shape.
+// SynTags: Geom, Path
 // Topics: Masks (2D), Shapes (2D), Paths (2D), Path Generators, Attachable 
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
@@ -359,6 +364,7 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 
 // Function&Module: mask2d_teardrop()
 // Synopsis: Creates a 2D teardrop mask shape with a controllable maximum angle from vertical.
+// SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D), FDM Optimized
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
@@ -423,6 +429,7 @@ module mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) {
 
 // Function&Module: mask2d_ogee()
 // Synopsis: Creates a 2D ogee mask shape.
+// SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
