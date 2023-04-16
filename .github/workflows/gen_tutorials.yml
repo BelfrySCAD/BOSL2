@@ -1,5 +1,5 @@
-name: Regenerate Tutorials
 on: [workflow_dispatch]
+name: Regenerate Tutorials
 
 jobs:
   RegenerateTutorials:
@@ -11,7 +11,7 @@ jobs:
     - name: Clone Wiki
       uses: actions/checkout@v3
       with:
-        repository: RAMilewski/BOSL2.wiki
+        repository: revarbat/BOSL2.wiki
         path: BOSL2.wiki
 
     - name: Apt Update
