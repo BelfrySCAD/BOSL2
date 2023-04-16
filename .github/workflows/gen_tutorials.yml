@@ -1,5 +1,5 @@
-on: [workflow_dispatch]
 name: Regenerate Tutorials
+on: [workflow_dispatch]
 
 jobs:
   RegenerateTutorials:
