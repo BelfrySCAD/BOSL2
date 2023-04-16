@@ -397,7 +397,8 @@ module stroke(
                                 // Need 90 deg offset to make wedge perpendicular to path, and the wedge
                                 // position depends on whether we turn left (ang<0) or right (ang>0)
                                 theta = v_theta(v1) - sign(ang)*90;
-                                ang_eps = 0.1;
+                                ang_eps = sign(ang)/10;
+                                
                                 if (!approx(ang,0))
                                   arc(d=widths[i], angle=[theta-ang_eps, theta+ang+ang_eps], wedge=true);
                             }
