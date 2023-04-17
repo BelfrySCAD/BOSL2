@@ -11,8 +11,8 @@ IgnoreFiles:
   builtins.scad
   tmp_*.scad
 PrioritizeFiles:
-  transforms.scad
   constants.scad
+  transforms.scad
   attachments.scad
   shapes2d.scad
   shapes3d.scad
@@ -33,7 +33,6 @@ PrioritizeFiles:
   math.scad
   linalg.scad
   vectors.scad
-  quaternions.scad
   coords.scad
   geometry.scad
   trigonometry.scad
@@ -47,19 +46,32 @@ PrioritizeFiles:
   threading.scad
   screws.scad
   metric_screws.scad
-  bottlecaps.scad
   screw_drive.scad
+  bottlecaps.scad
+  ball_bearings.scad
+  cubetruss.scad
+  gears.scad
+  hinges.scad
+  joiners.scad
+  linear_bearings.scad
+  modular_hose.scad
+  nema_steppers.scad
+  polyhedra.scad
+  sliders.scad
   tripod_mounts.scad
+  walls.scad
+  wiring.scad
 DefineHeader(BulletList): Side Effects
 DefineHeader(Table;Headers=Anchor Name|Position): Extra Anchors
 DefineHeader(Table;Headers=Anchor Type|What it is): Anchor Types
 DefineHeader(Table;Headers=Name|Definition): Terminology
 DefineHeader(BulletList): Requirements
 DefineSynTags:
-  VNF = Can return a VNF when called as a function.
-  Path = Can return a Path when called as a function.
-  Region = Can return a Region when called as a function.
-  Mat = Can return a transformation matrix when called as a function.
-  Geom = Returns Geometry when called as a module.
-  Trans = When called as a module, performs a transformation on the children.
+  Geom = Can return geometry.
+  Mat = Can return a transformation matrix.
+  MatList = Can return a list of transformation matrices.
+  Path = Can return a Path.
+  Region = Can return a Region.
+  Trans = Can transform children.
+  VNF = Can return a VNF.
 
