@@ -181,7 +181,7 @@
 //   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1, end_len=1.5, bevel=true);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1, blunt_start=false);
-// Example(BIG,NoAxes): Diamond threading where both left-handed and right-handed nuts travel (in the same direction) on the threaded rod:
+// Example(Big,NoAxes): Diamond threading where both left-handed and right-handed nuts travel (in the same direction) on the threaded rod:
 //   $fn=32;
 //   $slop = 0.075;
 //   d = 3/8*INCH;
