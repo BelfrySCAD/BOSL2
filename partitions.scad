@@ -13,6 +13,7 @@
 
 // Function&Module: half_of()
 // Synopsis: Masks half of an object at a cut plane.
+// SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
 // See Also: back_half(), front_half(), left_half(), right_half(), top_half(), bottom_half()
 //
@@ -122,6 +123,7 @@ function half_of(p, v=UP, cp) =
 
 // Function&Module: left_half()
 // Synopsis: Masks the right half of an object along the Y-Z plane, leaving the left half.
+// SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
 // See Also: back_half(), front_half(), right_half(), top_half(), bottom_half(), half_of()
 //
@@ -167,6 +169,7 @@ function left_half(p,x=0) = half_of(p, LEFT, [x,0,0]);
 
 
 // Function&Module: right_half()
+// SynTags: Geom, VNF, Path, Region
 // Synopsis: Masks the left half of an object along the Y-Z plane, leaving the right half.
 // Topics: Partitions, Masking
 // See Also: back_half(), front_half(), left_half(), top_half(), bottom_half(), half_of()
@@ -212,6 +215,7 @@ function right_half(p,x=0) = half_of(p, RIGHT, [x,0,0]);
 
 // Function&Module: front_half()
 // Synopsis: Masks the back half of an object along the X-Z plane, leaving the front half.
+// SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
 // See Also: back_half(), left_half(), right_half(), top_half(), bottom_half(), half_of()
 //
@@ -257,6 +261,7 @@ function front_half(p,y=0) = half_of(p, FRONT, [0,y,0]);
 
 // Function&Module: back_half()
 // Synopsis: Masks the front half of an object along the X-Z plane, leaving the back half.
+// SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
 // See Also: front_half(), left_half(), right_half(), top_half(), bottom_half(), half_of()
 //
@@ -302,6 +307,7 @@ function back_half(p,y=0) = half_of(p, BACK, [0,y,0]);
 
 // Function&Module: bottom_half()
 // Synopsis: Masks the top half of an object along the X-Y plane, leaving the bottom half.
+// SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
 // See Also: back_half(), front_half(), left_half(), right_half(), top_half(), half_of()
 //
@@ -339,6 +345,7 @@ function bottom_half(p,z=0) = half_of(p,BOTTOM,[0,0,z]);
 
 // Function&Module: top_half()
 // Synopsis: Masks the bottom half of an object along the X-Y plane, leaving the top half.
+// SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
 // See Also: back_half(), front_half(), left_half(), right_half(), bottom_half(), half_of()
 //
@@ -420,6 +427,7 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 
 // Module: partition_mask()
 // Synopsis: Creates a mask to remove half an object with the remaining half suitable for reassembly.
+// SynTags: Geom
 // Topics: Partitions, Masking, Paths
 // See Also: partition_cut_mask(), partition()
 // Usage:
@@ -473,6 +481,7 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
 
 // Module: partition_cut_mask()
 // Synopsis: Creates a mask to cut an object into two subparts that can be reassembled.
+// SynTags: Geom
 // Topics: Partitions, Masking, Paths
 // See Also: partition_mask(), partition()
 // Usage:
@@ -518,7 +527,8 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
 
 
 // Module: partition()
-// Synopsis: Cuts an object in two with matched joining edges, then separates the parts .
+// Synopsis: Cuts an object in two with matched joining edges, then separates the parts.
+// SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking, Paths
 // See Also: partition_cut_mask(), partition_mask()
 // Usage:
