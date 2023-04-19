@@ -4,8 +4,9 @@
 //   use with geometry.scad.  
 // Includes:
 //   include <BOSL2/std.scad>
+// FileGroup: Basic Modeling
 // FileSummary: Constants provided by the library
-
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 // a value that the user should never enter randomly;
@@ -127,6 +128,14 @@ function get_slop() = is_undef($slop) ? 0 : $slop;
 INCH = 25.4;
 
 
+// Constant: IDENT
+// Synopsis: A constant containing the 3D identity transformation matrix.
+// Topics: Constants, Affine, Matrices, Transforms
+// See Also: ident()
+// Description: Identity transformation matrix for three-dimensional transforms.  Equal to `ident(4)`.  
+IDENT=ident(4);
+
+
 
 // Section: Directional Vectors
 //   Vectors useful for `rotate()`, `mirror()`, and `anchor` arguments for `cuboid()`, `cyl()`, etc.
@@ -245,14 +254,6 @@ RAY = [true, false];
 //    line2 = 10*[[2, 3], [6, 5]];
 //    isect = line_intersection(line1, line2, LINE, SEGMENT);
 LINE = [false, false];
-
-
-// Constant: IDENT
-// Synopsis: A constant containing the 3D identity transformation matrix.
-// Topics: Affine, Matrices, Transforms
-// See Also: ident()
-// Description: Identity transformation matrix for three-dimensional transforms.  Equal to `ident(4)`.  
-IDENT=ident(4);
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
