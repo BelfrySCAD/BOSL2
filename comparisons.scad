@@ -23,7 +23,7 @@
 // Arguments:
 //   a = First value.
 //   b = Second value.
-//   eps = The maximum allowed difference between `a` and `b` that will return true.
+//   eps = The maximum allowed difference between `a` and `b` that will return true. Defaults to 1e-9.
 // Example:
 //   test1 = approx(-0.3333333333,-1/3);  // Returns: true
 //   test2 = approx(0.3333333333,1/3);    // Returns: true

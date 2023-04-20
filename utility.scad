@@ -883,15 +883,17 @@ function _valstr(x) =
 
 
 // Module: assert_approx()
-// Synopsis: Assert that a value is expected.
+// Synopsis: Assert that a value is approximately what was expected.
 // Topics: Error Checking, Debugging
 // See Also: no_children(), no_function(), no_module(), assert_equal()
 // Usage:
 //   assert_approx(got, expected, [info]);
 // Description:
-//   Tests if the value gotten is what was expected.  If not, then
+//   Tests if the value gotten is what was expected, plus or minus 1e-9.  If not, then
 //   the expected and received values are printed to the console and
 //   an assertion is thrown to stop execution.
+//   
+//   Returns false if both 'got' and 'expected' are 'nan'.
 // Arguments:
 //   got = The value actually received.
 //   expected = The value that was expected.
@@ -924,6 +926,8 @@ module assert_approx(got, expected, info) {
 // Description:
 //   Tests if the value gotten is what was expected.  If not, then the expected and received values
 //   are printed to the console and an assertion is thrown to stop execution.
+//   
+//   Returns true if both 'got' and 'expected' are 'nan'.
 // Arguments:
 //   got = The value actually received.
 //   expected = The value that was expected.
