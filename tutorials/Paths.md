@@ -149,43 +149,43 @@ BOSL2 will let you get the perimeter polygon for almost all of the standard 2D s
 ```openscad-2D
 include <BOSL2/std.scad>
 path = square(40, center=true);
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = rect([40,30], rounding=5);
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = trapezoid(w1=40, w2=20, h=30);
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = circle(d=50);
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = ellipse(d=[50,30]);
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = pentagon(d=50);
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = star(n=5, step=2, d=50);
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ### Arcs
@@ -336,19 +336,19 @@ To translate a path, you can just pass it to the `move()` (or up/down/left/right
 ```openscad-2D
 include <BOSL2/std.scad>
 path = move([-15,-30], p=square(50,center=true));
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = fwd(30, p=square(50,center=true));
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = left(30, p=square(50,center=true));
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 To scale a path, you can just pass it to the `scale()` (or [xyz]scale) function in the `p=` argument:
@@ -356,19 +356,19 @@ To scale a path, you can just pass it to the `scale()` (or [xyz]scale) function 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = scale([1.5,0.75], p=square(50,center=true));
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = xscale(1.5, p=square(50,center=true));
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = yscale(1.5, p=square(50,center=true));
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 To rotate a path, just can pass it to the `rot()` (or [xyz]rot) function in the `p=` argument:
@@ -376,13 +376,13 @@ To rotate a path, just can pass it to the `rot()` (or [xyz]rot) function in the 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = rot(30, p=square(50,center=true));
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = zrot(30, p=square(50,center=true));
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 To mirror a path, just can pass it to the `mirror()` (or [xyz]flip) function in the `p=` argument:
@@ -390,19 +390,19 @@ To mirror a path, just can pass it to the `mirror()` (or [xyz]flip) function in 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = mirror([1,1], p=trapezoid(w1=40, w2=10, h=25));
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = xflip(p=trapezoid(w1=40, w2=10, h=25));
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
 path = yflip(p=trapezoid(w1=40, w2=10, h=25));
-stroke(path, closed=true, endcap2="arrow2");
+stroke(list_wrap(path), endcap2="arrow2");
 ```
 
 You can get raw transformation matrices for various transformations by calling them like a function without a `p=` argument:

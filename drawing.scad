@@ -103,7 +103,7 @@
 //   stroke(path, width=20);
 // Example(2D): Closing a Path
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=20, endcaps=true, closed=true);
+//   stroke(path, width=20, closed=true);
 // Example(2D): Fancy Arrow Endcaps
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   stroke(path, width=10, endcaps="arrow2");
