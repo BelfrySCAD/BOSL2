@@ -999,14 +999,21 @@ module vnf_polyhedron(vnf, convexity=2, extent=true, cp="centroid", anchor="orig
 //   vnf_wireframe(octahedron,width=5);
 module vnf_wireframe(vnf, width=1)
 {
+  no_children($children);
   vertex = vnf[0];
   edges = unique([for (face=vnf[1], i=idx(face))
                     sort([face[i], select(face,i+1)])
                  ]);
-  for (e=edges) extrude_from_to(vertex[e[0]],vertex[e[1]]) circle(d=width);
-  // Identify vertices actually used and draw them
-  vertused = search(count(len(vertex)), flatten(edges), 1);
-  for(i=idx(vertex)) if(vertused[i]!=[]) move(vertex[i]) sphere(d=width);
+  attachable()
+  {
+    union(){
+      for (e=edges) extrude_from_to(vertex[e[0]],vertex[e[1]]) circle(d=width);
+      // Identify vertices actually used and draw them
+      vertused = search(count(len(vertex)), flatten(edges), 1);
+      for(i=idx(vertex)) if(vertused[i]!=[]) move(vertex[i]) sphere(d=width);
+    }
+    union();
+  }
 }
 
 
@@ -1865,7 +1872,7 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, opacity=0.
         color(clr) {
             if (is_vector(pts[0])) {
                 if (len(pts)==2) {
-                    stroke(pts, width=size, closed=true, endcaps="butt", $fn=8);
+                    stroke(pts, width=size, endcaps="butt", $fn=8);
                 } else if (len(pts)>2) {
                     stroke(pts, width=size, closed=true, $fn=8);
                     polyhedron(pts,[[for (i=idx(pts)) i]]);
