@@ -15,10 +15,11 @@
 
 
 // Function: typeof()
-// Usage:
-//   typ = typeof(x);
+// Synopsis: Returns a string representing the type of the value.
 // Topics: Type Checking
 // See Also: is_type()
+// Usage:
+//   typ = typeof(x);
 // Description:
 //   Returns a string representing the type of the value.  One of "undef", "boolean", "number", "nan", "string", "list", "range", "function" or "invalid".
 //   Some malformed "ranges", like '[0:NAN:INF]' and '[0:"a":INF]', may be classified as "undef" or "invalid".
@@ -46,10 +47,11 @@ function typeof(x) =
 
 
 // Function: is_type()
-// Usage:
-//   bool = is_type(x, types);
+// Synopsis: Returns true if the type of 'x' is one of those in the list `types`.
 // Topics: Type Checking
 // See Also: typeof()
+// Usage:
+//   bool = is_type(x, types);
 // Description:
 //   Returns true if the type of the value `x` is one of those given as strings in the list `types`. 
 //   Valid types are "undef", "boolean", "number", "nan", "string", "list", "range", or "function".
@@ -88,10 +90,11 @@ function is_def(x) = !is_undef(x);
 
 
 // Function: is_str()
+// Synopsis: Returns true if the argument is a string.
+// Topics: Type Checking
+// See Also: typeof(), is_type(), is_int(), is_def(), is_int()
 // Usage:
 //   bool = is_str(x);
-// Topics: Type Checking
-// See Also: typeof(), is_type(), is_int(), is_def()
 // Description:
 //   Returns true if `x` is a string.  A shortcut for `is_string()`.
 // Arguments:
@@ -105,12 +108,13 @@ function is_str(x) = is_string(x);
 
 
 // Function: is_int()
+// Synopsis: Returns true if the argument is an integer.
 // Alias: is_integer()
+// Topics: Type Checking
+// See Also: typeof(), is_type(), is_str(), is_def()
 // Usage:
 //   bool = is_int(n);
 //   bool = is_integer(n);
-// Topics: Type Checking
-// See Also: typeof(), is_type(), is_str(), is_def()
 // Description:
 //   Returns true if the given value is an integer (it is a number and it rounds to itself).  
 // Arguments:
@@ -125,6 +129,9 @@ function is_integer(n) = is_finite(n) && n == round(n);
 
 
 // Function: all_integer()
+// Synopsis: Returns true if all of the numbers in the argument are integers.
+// Topics: Type Checking
+// See also: is_int(), typeof(), is_type()
 // Usage:
 //   bool = all_integer(x);
 // Description:
@@ -149,10 +156,11 @@ function all_integer(x) =
 
 
 // Function: is_nan()
+// Synopsis: Return true if the argument is "not a number".
+// Topics: Type Checking
+// See Also: typeof(), is_type(), is_str(), is_def(), is_int(), is_finite()
 // Usage:
 //   bool = is_nan(x);
-// Topics: Type Checking
-// See Also: typeof(), is_type(), is_str(), is_def(), is_int()
 // Description:
 //   Returns true if a given value `x` is nan, a floating point value representing "not a number".
 // Arguments:
@@ -167,10 +175,11 @@ function is_nan(x) = (x!=x);
 
 
 // Function: is_finite()
-// Usage:
-//   bool = is_finite(x);
+// Synopsis: Returns true if the argument is a finite number.
 // Topics: Type Checking
 // See Also: typeof(), is_type(), is_str(), is_def(), is_int(), is_nan()
+// Usage:
+//   bool = is_finite(x);
 // Description:
 //   Returns true if a given value `x` is a finite number.
 // Arguments:
@@ -187,6 +196,7 @@ function is_finite(x) = is_num(x) && !is_nan(0*x);
 
 
 // Function: is_range()
+// Synopsis: Returns true if the argument is a range.
 // Usage:
 //   bool = is_range(x);
 // Topics: Type Checking
@@ -206,10 +216,11 @@ function is_range(x) = !is_list(x) && is_finite(x[0]) && is_finite(x[1]) && is_f
 
 
 // Function: valid_range()
-// Usage:
-//   bool = valid_range(x);
+// Synopsis: Returns true if the argument is a valid range.
 // Topics: Type Checking
 // See Also: typeof(), is_type(), is_str(), is_def(), is_int(), is_range()
+// Usage:
+//   bool = valid_range(x);
 // Description:
 //   Returns true if its argument is a valid range (deprecated ranges excluded).
 // Arguments:
@@ -230,6 +241,9 @@ function valid_range(x) =
 
 
 // Function: is_func()
+// Synopsis: Returns true if the argument is a function literal.
+// Topics: Type Checking, Function Literals
+// See also: is_type(), typeof()
 // Usage:
 //   bool = is_func(x);
 // Description:
@@ -243,10 +257,11 @@ function is_func(x) = version_num()>20210000 && is_function(x);
 
 
 // Function: is_consistent()
+// Synopsis: Returns true if the argument is a list with consistent structure and finite numerical data.
+// Topics: Type Checking, Testing
+// See Also: typeof(), is_type(), is_str(), is_def(), is_int(), is_range(), is_homogeneous()
 // Usage:
 //   bool = is_consistent(list, [pattern]);
-// Topics: Type Checking
-// See Also: typeof(), is_type(), is_str(), is_def(), is_int(), is_range(), is_homogeneous()
 // Description:
 //   Tests whether input is a list of entries which all have the same list structure
 //   and are filled with finite numerical data.  You can optionally specify a required 
@@ -284,10 +299,11 @@ function _list_pattern(list) =
 
 
 // Function: same_shape()
+// Synopsis: Returns true if the argument lists are numeric and of the same shape.
+// Topics: Type Checking, Testing
+// See Also: is_homogeneous(), is_consistent()
 // Usage:
 //   bool = same_shape(a,b);
-// Topics: Type Checking
-// See Also: is_homogeneous(), is_consistent()
 // Description:
 //   Tests whether the inputs `a` and `b` are both numeric and are the same shaped list.
 // Example:
@@ -297,10 +313,11 @@ function same_shape(a,b) = is_def(b) && _list_pattern(a) == b*0;
 
 
 // Function: is_bool_list()
+// Synopsis: Returns true if the argument list contains only booleans.
+// Topics: Boolean Testing
+// See Also: is_homogeneous(), is_consistent()
 // Usage:
 //   check = is_bool_list(list,[length])
-// Topics: Type Checking
-// See Also: is_homogeneous(), is_consistent()
 // Description:
 //   Tests whether input is a list containing only booleans, and optionally checks its length.
 // Arguments:
@@ -313,6 +330,9 @@ function is_bool_list(list, length) =
 // Section: Boolean list testing
 
 // Function: any()
+// Synopsis: Returns true if any item in the argument list is true.
+// Topics: Type Checking
+// See Also: all(), num_true()
 // Usage:
 //   bool = any(l);
 //   bool = any(l, func);   // Requires OpenSCAD 2021.01 or later.
@@ -348,6 +368,9 @@ function _any_bool(l, i=0, out=false) =
 
 
 // Function: all()
+// Synopsis: Returns true if all items in the argument list are true.
+// Topics: Type Checking
+// See Also: any(), num_true()
 // Usage:
 //   bool = all(l);
 //   bool = all(l, func);   // Requires OpenSCAD 2021.01 or later.
@@ -384,6 +407,9 @@ function _all_bool(l, i=0, out=true) =
 
 
 // Function: num_true()
+// Synopsis: Returns the number of true entries in the arguemnt list.
+// Topics: Boolean Testing
+// See Also: any(), all()
 // Usage:
 //   seq = num_true(l);
 //   seq = num_true(l, func);  // Requires OpenSCAD 2021.01 or later.
@@ -418,10 +444,11 @@ function num_true(l, func) =
 
 
 // Function: default()
-// Usage:
-//   val = default(val, dflt);
+// Synopsis Returns a default value if the argument is 'undef', else returns the argument.
 // Topics: Undef Handling
 // See Also: first_defined(), one_defined(), num_defined()
+// Usage:
+//   val = default(val, dflt);
 // Description:
 //   Returns the value given as `v` if it is not `undef`.
 //   Otherwise, returns the value of `dflt`.
@@ -432,10 +459,11 @@ function default(v,dflt=undef) = is_undef(v)? dflt : v;
 
 
 // Function: first_defined()
-// Usage:
-//   val = first_defined(v, [recursive]);
+// Synopsis: Returns the first value in the argument list that is not 'undef'.
 // Topics: Undef Handling
 // See Also: default(), one_defined(), num_defined(), any_defined(), all_defined()
+// Usage:
+//   val = first_defined(v, [recursive]);
 // Description:
 //   Returns the first item in the list that is not `undef`.
 //   If all items are `undef`, or list is empty, returns `undef`.
@@ -455,10 +483,11 @@ function first_defined(v,recursive=false,_i=0) =
     
 
 // Function: one_defined()
-// Usage:
-//   val = one_defined(vals, names, [dflt])
+// Synopsis: Returns the defined value in the argument list if only a single value is defined.
 // Topics: Undef Handling
 // See Also: default(), first_defined(), num_defined(), any_defined(), all_defined()
+// Usage:
+//   val = one_defined(vals, names, [dflt])
 // Description:
 //   Examines the input list `vals` and returns the entry which is not `undef`.
 //   If more than one entry is not `undef` then an error is asserted, specifying
@@ -495,10 +524,11 @@ function one_defined(vals, names, dflt=_UNDEF) =
 
 
 // Function: num_defined()
-// Usage:
-//   cnt = num_defined(v);
+// Synopsis: Returns the number of defined values in the the argument list.
 // Topics: Undef Handling
 // See Also: default(), first_defined(), one_defined(), any_defined(), all_defined()
+// Usage:
+//   cnt = num_defined(v);
 // Description:
 //   Counts how many items in list `v` are not `undef`.
 // Example:
@@ -508,10 +538,11 @@ function num_defined(v) =
 
 
 // Function: any_defined()
-// Usage:
-//   bool = any_defined(v, [recursive]);
+// Synopsis: Returns true if any item in the argument list is not `undef`.
 // Topics: Undef Handling
 // See Also: default(), first_defined(), one_defined(), num_defined(), all_defined()
+// Usage:
+//   bool = any_defined(v, [recursive]);
 // Description:
 //   Returns true if any item in the given array is not `undef`.
 // Arguments:
@@ -529,6 +560,9 @@ function any_defined(v,recursive=false) =
 
 
 // Function: all_defined()
+// Synopsis: Returns true if all items in the given array are defined.
+// Topics: Undef Handling
+// See Also: default(), first_defined(), one_defined(), num_defined(), all_defined()
 // Usage:
 //   bool = all_defined(v, [recursive]);
 // Description:
@@ -551,6 +585,9 @@ function all_defined(v,recursive=false) =
 // Section: Undef Safe Arithmetic
 
 // Function: u_add()
+// Synopsis: Returns the sum of 2 numbers if both are defined, otherwise returns undef.
+// Topics: Undef Handling
+// See Also: u_sub(), u_mul(), u_div()
 // Usage:
 //   x = u_add(a, b);
 // Description:
@@ -563,6 +600,9 @@ function u_add(a,b) = is_undef(a) || is_undef(b)? undef : a + b;
 
 
 // Function: u_sub()
+// Synopsis: Returns the difference of 2 numbers if both are defined, otherwise returns undef.
+// Topics: Undef Handling
+// See Also: u_add(), u_mul(), u_div()
 // Usage:
 //   x = u_sub(a, b);
 // Description:
@@ -575,6 +615,9 @@ function u_sub(a,b) = is_undef(a) || is_undef(b)? undef : a - b;
 
 
 // Function: u_mul()
+// Synopsis: Returns the product of 2 numbers if both are defined, otherwise returns undef.
+// Topics: Undef Handling
+// See Also: u_add(), u_sub(), u_div()
 // Usage:
 //   x = u_mul(a, b);
 // Description:
@@ -590,6 +633,9 @@ function u_mul(a,b) =
 
 
 // Function: u_div()
+// Synopsis: Returns the quotient of 2 numbers if both are defined, otherwise returns undef.
+// Topics: Undef Handling
+// See Also: u_add(), u_sub(), u_mul()
 // Usage:
 //   x = u_div(a, b);
 // Description:
@@ -610,10 +656,11 @@ function u_div(a,b) =
 
 
 // Function: get_anchor()
-// Usage:
-//   anchr = get_anchor(anchor,center,[uncentered],[dflt]);
+// Synopsis: Returns the correct anchor from `anchor` and `center`.
 // Topics: Argument Handling
 // See Also: get_radius()
+// Usage:
+//   anchr = get_anchor(anchor,center,[uncentered],[dflt]);
 // Description:
 //   Calculated the correct anchor from `anchor` and `center`.  In order:
 //   - If `center` is not `undef` and `center` evaluates as true, then `CENTER` (`[0,0,0]`) is returned.
@@ -640,10 +687,11 @@ function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
 
 
 // Function: get_radius()
-// Usage:
-//   r = get_radius([r1=], [r2=], [r=], [d1=], [d2=], [d=], [dflt=]);
+// Synopsis: Given various radii and diameters, returns the most specific radius.
 // Topics: Argument Handling
 // See Also: get_anchor()
+// Usage:
+//   r = get_radius([r1=], [r2=], [r=], [d1=], [d2=], [d=], [dflt=]);
 // Description:
 //   Given various radii and diameters, returns the most specific radius.  If a diameter is most
 //   specific, returns half its value, giving the radius.  If no radii or diameters are defined,
@@ -688,10 +736,11 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 
 
 // Function: scalar_vec3()
-// Usage:
-//   vec = scalar_vec3(v, [dflt]);
+// Synopsis: Expands a scalar or a list with length less than 3 to a length 3 vector. 
 // Topics: Argument Handling
 // See Also: get_anchor(), get_radius(), force_list()
+// Usage:
+//   vec = scalar_vec3(v, [dflt]);
 // Description:
 //   This is expands a scalar or a list with length less than 3 to a length 3 vector in the
 //   same way that OpenSCAD expands short vectors in some contexts, e.g. cube(10) or rotate([45,90]).  
@@ -717,9 +766,10 @@ function scalar_vec3(v, dflt) =
 
 
 // Function: segs()
+// Synopsis: Returns the number of sides for a circle given `$fn`, `$fa`, and `$fs`.
+// Topics: Geometry
 // Usage:
 //   sides = segs(r);
-// Topics: Geometry
 // Description:
 //   Calculate the standard number of sides OpenSCAD would give a circle based on `$fn`, `$fa`, and `$fs`.
 // Arguments:
@@ -734,10 +784,11 @@ function segs(r) =
 
 
 // Module: no_children()
-// Usage:
-//   no_children($children);
+// Synopsis: Assert that the calling module does not support children.
 // Topics: Error Checking
 // See Also: no_function(), no_module(), req_children()
+// Usage:
+//   no_children($children);
 // Description:
 //   Assert that the calling module does not support children.  Prints an error message to this effect and fails if children are present,
 //   as indicated by its argument.
@@ -756,10 +807,11 @@ module no_children(count) {
 
 
 // Module: req_children()
-// Usage:
-//   req_children($children);
+// Assert that the calling module requires children.
 // Topics: Error Checking
 // See Also: no_function(), no_module()
+// Usage:
+//   req_children($children);
 // Description:
 //   Assert that the calling module requires children.  Prints an error message and fails if no
 //   children are present as indicated by its argument.
@@ -778,6 +830,7 @@ module req_children(count) {
 
 
 // Function: no_function()
+// Synopsis: Assert that the argument exists only as a module and not as a function.
 // Usage:
 //   dummy = no_function(name)
 // Topics: Error Checking
@@ -791,10 +844,11 @@ function no_function(name) =
 
 
 // Module: no_module()
-// Usage:
-//   no_module();
+// Synopsis: Assert that the argument exists only as a function and not as a module.
 // Topics: Error Checking
 // See Also: no_children(), no_function()
+// Usage:
+//   no_module();
 // Description:
 //   Asserts that the called module exists only as a function.
 // Example:
@@ -805,6 +859,7 @@ module no_module() {
   
 
 // Module: deprecate()
+// Synopsis: Display a console note that a module is deprecated and suggest a replacement.
 // Usage:
 //   deprecate(new_name);
 // Description:
@@ -828,14 +883,17 @@ function _valstr(x) =
 
 
 // Module: assert_approx()
-// Usage:
-//   assert_approx(got, expected, [info]);
+// Synopsis: Assert that a value is approximately what was expected.
 // Topics: Error Checking, Debugging
 // See Also: no_children(), no_function(), no_module(), assert_equal()
+// Usage:
+//   assert_approx(got, expected, [info]);
 // Description:
-//   Tests if the value gotten is what was expected.  If not, then
+//   Tests if the value gotten is what was expected, plus or minus 1e-9.  If not, then
 //   the expected and received values are printed to the console and
 //   an assertion is thrown to stop execution.
+//   
+//   Returns false if both 'got' and 'expected' are 'nan'.
 // Arguments:
 //   got = The value actually received.
 //   expected = The value that was expected.
@@ -860,13 +918,16 @@ module assert_approx(got, expected, info) {
 
 
 // Module: assert_equal()
+// Synopsis: Assert that a value is expected.
+// See Also: no_children(), no_function(), no_module(), assert_approx()
+// Topics: Error Checking, Debugging
 // Usage:
 //   assert_equal(got, expected, [info]);
-// Topics: Error Checking, Debugging
-// See Also: no_children(), no_function(), no_module(), assert_approx()
 // Description:
 //   Tests if the value gotten is what was expected.  If not, then the expected and received values
 //   are printed to the console and an assertion is thrown to stop execution.
+//   
+//   Returns true if both 'got' and 'expected' are 'nan'.
 // Arguments:
 //   got = The value actually received.
 //   expected = The value that was expected.
@@ -891,10 +952,12 @@ module assert_equal(got, expected, info) {
 
 
 // Module: shape_compare()
-// Usage:
-//   shape_compare([eps]) {TEST_SHAPE; EXPECTED_SHAPE;}
+// Synopsis: Compares two child shapes.
+// SynTags: Geom
 // Topics: Error Checking, Debugging, Testing
 // See Also: assert_approx(), assert_equal()
+// Usage:
+//   shape_compare([eps]) {TEST_SHAPE; EXPECTED_SHAPE;}
 // Description:
 //   Compares two child shapes, returning empty geometry if they are very nearly the same shape and size.
 //   Returns the differential geometry if they are not quite the same shape and size.
@@ -972,10 +1035,11 @@ module shape_compare(eps=1/1024) {
 
 
 // Function: looping()
-// Usage:
-//   bool = looping(state);
+// Synopsis: Returns true if the argument indicates the current C-style loop should continue.
 // Topics: Iteration
 // See Also: loop_while(), loop_done()
+// Usage:
+//   bool = looping(state);
 // Description:
 //   Returns true if the `state` value indicates the current loop should continue.  This is useful
 //   when using C-style for loops to iteratively calculate a value.  Used with `loop_while()` and
@@ -986,10 +1050,11 @@ function looping(state) = state < 2;
 
 
 // Function: loop_while()
-// Usage:
-//   state = loop_while(state, continue);
+// Synopsis: Returns true if both arguments indicate the current C-style loop should continue.
 // Topics: Iteration
 // See Also: looping(), loop_done()
+// Usage:
+//   state = loop_while(state, continue);
 // Description:
 //   Given the current `state`, and a boolean `continue` that indicates if the loop should still be
 //   continuing, returns the updated state value for the the next loop.  This is useful when using
@@ -1004,10 +1069,11 @@ function loop_while(state, continue) =
 
 
 // Function: loop_done()
-// Usage:
-//   bool = loop_done(state);
+// Synopsis: Returns true if the argument indicates the current C-style loop is finishing.
 // Topics: Iteration
 // See Also: looping(), loop_while()
+// Usage:
+//   bool = loop_done(state);
 // Description:
 //   Returns true if the `state` value indicates the loop is finishing.  This is useful when using
 //   C-style for loops to iteratively calculate a value.  Used with `looping()` and `loop_while()`.
