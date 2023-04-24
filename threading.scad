@@ -2012,9 +2012,14 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 //   internal = if true make internal threads.  The only effect this has is to change how the threads taper if tapering is selected. When true, threads taper towards the outside; when false, they taper towards the inside.  Default: false
 //   d1 = Bottom inside base diameter of threads.
 //   d2 = Top inside base diameter of threads.
-//   taper = Length of tapers for thread ends.  Positive to add taper to threads, negative to taper within specified length.  Default: 0
-//   taper1 = Length of taper for bottom thread end
-//   taper2 = Length of taper for top thread end
+//   lead_in = Specify linear length of the lead in section of the threading with blunt start threads
+//   lead_in1 = Specify linear length of the lead in section of the threading at the bottom with blunt start threads
+//   lead_in2 = Specify linear length of the lead in section of the threading at the top with blunt start threads
+//   lead_in_ang = Specify angular length in degrees of the lead in section of the threading with blunt start threads
+//   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
+//   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
+//   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
+//   lead_in_sample = Factor to increase sample rate in the lead-in section.  Default: 10
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -2060,7 +2065,11 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 function thread_helix(
     d, pitch, thread_depth, flank_angle, turns,
     profile, starts=1, left_handed=false, internal=false,
-    d1, d2, taper, taper1, taper2,
+    d1, d2,
+    lead_in_shape,
+    lead_in, lead_in1, lead_in2,
+    lead_in_ang, lead_in_ang1, lead_in_ang2,
+    lead_in_sample=10,
     anchor, spin, orient
 ) = no_function("thread_helix");
 module thread_helix(

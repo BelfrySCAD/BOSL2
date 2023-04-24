@@ -359,14 +359,18 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
     pt1 = point3d(pt1);
     pt2 = point3d(pt2);
     rtp = xyz_to_spherical(pt2-pt1);
-    translate(pt1) {
-        rotate([0, rtp[2], rtp[1]]) {
-            if (rtp[0] > 0) {
-                linear_extrude(height=rtp[0], convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
-                    children();
-                }
-            }
-        }
+    attachable()
+    {
+      translate(pt1) {
+          rotate([0, rtp[2], rtp[1]]) {
+              if (rtp[0] > 0) {
+                  linear_extrude(height=rtp[0], convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
+                      children();
+                  }
+              }
+          }
+      }
+      union();
     }
 }
 

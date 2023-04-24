@@ -999,14 +999,21 @@ module vnf_polyhedron(vnf, convexity=2, extent=true, cp="centroid", anchor="orig
 //   vnf_wireframe(octahedron,width=5);
 module vnf_wireframe(vnf, width=1)
 {
+  no_children($children);
   vertex = vnf[0];
   edges = unique([for (face=vnf[1], i=idx(face))
                     sort([face[i], select(face,i+1)])
                  ]);
-  for (e=edges) extrude_from_to(vertex[e[0]],vertex[e[1]]) circle(d=width);
-  // Identify vertices actually used and draw them
-  vertused = search(count(len(vertex)), flatten(edges), 1);
-  for(i=idx(vertex)) if(vertused[i]!=[]) move(vertex[i]) sphere(d=width);
+  attachable()
+  {
+    union(){
+      for (e=edges) extrude_from_to(vertex[e[0]],vertex[e[1]]) circle(d=width);
+      // Identify vertices actually used and draw them
+      vertused = search(count(len(vertex)), flatten(edges), 1);
+      for(i=idx(vertex)) if(vertused[i]!=[]) move(vertex[i]) sphere(d=width);
+    }
+    union();
+  }
 }
 
 

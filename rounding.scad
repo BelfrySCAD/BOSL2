@@ -1892,26 +1892,29 @@ module convex_offset_extrude(
           delta[i] == 1 ? above :
           /* delta[i] == -1 ? */ below];
         dochamfer = offset=="chamfer";
-        for(i=[0:len(r)-2])
-          for(j=[0:$children-1])
-           hull(){
-             up(r[i][1]+layers[i][0])
-               linear_extrude(convexity=convexity,height=layers[i][1]-layers[i][0])
-                 if (offset=="round")
-                   offset(r=r[i][0])
-                     children(j);
-                 else
-                   offset(delta=r[i][0],chamfer = dochamfer)
-                     children(j);
-             up(r[i+1][1]+layers[i+1][0])
-               linear_extrude(convexity=convexity,height=layers[i+1][1]-layers[i+1][0])
-                 if (offset=="round")
-                   offset(r=r[i+1][0])
-                     children(j);
-                 else
-                   offset(delta=r[i+1][0],chamfer=dochamfer)
-                     children(j);
-           }
+        attachable(){
+          for(i=[0:len(r)-2])
+            for(j=[0:$children-1])
+             hull(){
+               up(r[i][1]+layers[i][0])
+                 linear_extrude(convexity=convexity,height=layers[i][1]-layers[i][0])
+                   if (offset=="round")
+                     offset(r=r[i][0])
+                       children(j);
+                   else
+                     offset(delta=r[i][0],chamfer = dochamfer)
+                       children(j);
+               up(r[i+1][1]+layers[i+1][0])
+                 linear_extrude(convexity=convexity,height=layers[i+1][1]-layers[i+1][0])
+                   if (offset=="round")
+                     offset(r=r[i+1][0])
+                       children(j);
+                   else
+                     offset(delta=r[i+1][0],chamfer=dochamfer)
+                       children(j);
+             }
+          union();
+        }
 }
 
 

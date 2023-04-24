@@ -85,11 +85,14 @@ module wire_bundle(path, wires, wirediam=2, rounding=10, wirenum=0, corner_steps
     sides = max(segs(wirediam/2), 8);
     offsets = _hex_offsets(wires, wirediam);
     rounded_path = round_corners(path, radius=rounding, $fn=(corner_steps+1)*4, closed=false);
-    for (i = [0:1:wires-1]) {
-        extpath = move(offsets[i], p=circle(d=wirediam, $fn=sides));
-        color(colors[(i+wirenum)%len(colors)]) {
-            path_sweep(extpath, rounded_path);
-        }
+    attachable(){
+      for (i = [0:1:wires-1]) {
+          extpath = move(offsets[i], p=circle(d=wirediam, $fn=sides));
+          color(colors[(i+wirenum)%len(colors)]) {
+              path_sweep(extpath, rounded_path);
+          }
+      }
+      union();
     }
 }
 
