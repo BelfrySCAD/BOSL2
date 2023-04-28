@@ -443,15 +443,17 @@ module generic_bottle_neck(
     diamMagMult = neck_d / 26.19;
     heightMagMult = height / 17.00;
 
+    assert(all_nonnegative([support_d]),"support_d must be a nonnegative number");
     sup_r = 0.30 * (heightMagMult > 1 ? heightMagMult : 1);
     support_r = floor(((supp_d == neck_d) ? sup_r : min(sup_r, (supp_d - neck_d) / 2)) * 5000) / 10000;
     support_rad = (wall == undef || !round_supp) ? support_r :
         min(support_r, floor((supp_d - (inner_d + 2 * wall)) * 5000) / 10000);
         //Too small of a radius will cause errors with the arc, this limits granularity to .0001mm
-    support_width = 1 * (heightMagMult > 1 ? heightMagMult : 1) * sign(support_d);
+    support_width = max(heightMagMult,1) * sign(support_d);
     roundover = 0.58 * diamMagMult;
     lip_roundover_r = (roundover > (neck_d - inner_d) / 2) ? 0 : roundover;
     h = height + support_width;
+    echo(h=h);
     threadbase_d = neck_d - 0.8 * diamMagMult;
 
     $fn = segs(33 / 2);
@@ -459,7 +461,7 @@ module generic_bottle_neck(
     anchors = [
         named_anchor("support-ring", [0, 0, 0 - h / 2])
     ];
-    attachable(anchor, spin, orient, d1 = neck_d, d2 = 0, l = h, anchors = anchors) {
+    attachable(anchor, spin, orient, d = neck_d, l = h, anchors = anchors) {
         down(h / 2) {
             rotate_extrude(convexity = 10) {
                 polygon(turtle(
@@ -555,7 +557,7 @@ module generic_bottle_cap(
     wall = 2,
     texture = "none",
     height = 11.2,
-    thread_od = 28.58,
+    thread_depth = 2.34,
     tolerance = .2,
     neck_od = 25.5,
     flank_angle = 15,
@@ -565,11 +567,10 @@ module generic_bottle_cap(
     orient = UP
 ) {
     $fn = segs(33 / 2);
-    threadOuterDTol = thread_od + 2 * tolerance;
-    w = threadOuterDTol + 2 * wall;
+    threadOuterDTol = neck_od + 2*(thread_depth - 0.8) + 2 * tolerance;   // WTF; Engineered for consistency with old code, but 
+    w = threadOuterDTol + 2 * wall;                                       // no clue why this was chosen
     h = height + wall;
     neckOuterDTol = neck_od + 2 * tolerance;
-    threadDepth = (thread_od - neck_od) / 2 + .8;
 
     diamMagMult = (w > 32.58) ? w / 32.58 : 1;
     heightMagMult = (height > 11.2) ? height / 11.2 : 1;
@@ -596,8 +597,8 @@ module generic_bottle_cap(
             }
             difference(){
                 up(wall + pitch / 2) {
-                    thread_helix(d = neckOuterDTol, pitch = pitch, thread_depth = threadDepth, flank_angle = flank_angle,
-                                 turns = ((height - pitch) / pitch), lead_in = -threadDepth, internal = true, anchor = BOTTOM);
+                    thread_helix(d = neckOuterDTol, pitch = pitch, thread_depth = thread_depth, flank_angle = flank_angle,
+                                 turns = ((height - pitch) / pitch), lead_in = -thread_depth, internal = true, anchor = BOTTOM);
                 }
             }
         }
@@ -626,7 +627,7 @@ function generic_bottle_cap(
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
 //   cap_wall = Wall thickness of the cap in mm.
 //   cap_h = Interior height of the cap in mm.
-//   cap_thread_od = Outer diameter of cap threads in mm.
+//   cap_thread_depth = Cap thread depth.  Default: 2.34
 //   tolerance = Extra space to add to the outer diameter of threads and neck in mm.  Applied to radius.
 //   cap_neck_od = Inner diameter of the cap threads.
 //   cap_neck_id = Inner diameter of the hole through the cap.
@@ -640,6 +641,9 @@ function generic_bottle_cap(
 //   neck_support_od = Outer diameter of neck support ring.  Leave undefined to set equal to OD of cap.  Set to 0 for no ring.  Default: undef
 //   d = Distance between bottom of neck and top of cap
 //   taper_lead_in = Length to leave straight before tapering on tube between neck and cap if exists.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   bottle_adapter_neck_to_cap();
 module bottle_adapter_neck_to_cap(
@@ -647,7 +651,7 @@ module bottle_adapter_neck_to_cap(
     texture = "none",
     cap_wall = 2,
     cap_h = 11.2,
-    cap_thread_od = 28.58,
+    cap_thread_depth = 2.34,
     tolerance = .2,
     cap_neck_od = 25.5,
     cap_neck_id,
@@ -660,69 +664,79 @@ module bottle_adapter_neck_to_cap(
     neck_thread_pitch = 3.2,
     neck_support_od,
     d = 0,
-    taper_lead_in = 0
+    taper_lead_in = 0, anchor, spin,orient
 ) {
-    neck_support_od = (neck_support_od == undef || (d == 0 && neck_support_od < cap_thread_od + 2 * tolerance)) ? cap_thread_od + 2 * (cap_wall + tolerance) : neck_support_od;
-    cap_neck_id = (cap_neck_id == undef) ? neck_id : cap_neck_id;
-    wall = (wall == undef) ? neck_support_od + neck_d + cap_thread_od + neck_id : wall;
+    cap_od = cap_neck_od + 2*(cap_thread_depth - 0.8) + 2 * tolerance;
+    neck_support_od = (neck_support_od == undef || (d == 0 && neck_support_od < cap_od)) ? cap_od+2*cap_wall
+                    : neck_support_od;
+    cap_neck_id = default(cap_neck_id,neck_id);
+    wall = default(wall, neck_support_od + neck_d + cap_od + neck_id - 2*tolerance);
+    echo(wall=wall);
 
     $fn = segs(33 / 2);
     wallt1 = min(wall, (max(neck_support_od, neck_d) - neck_id) / 2);
-    wallt2 = min(wall, (cap_thread_od + 2 * (cap_wall + tolerance) - cap_neck_id) / 2);
+    wallt2 = min(wall, (cap_od + 2 * cap_wall - cap_neck_id) / 2);
 
-    difference(){
-        union(){
-            up(d / 2) {
-                generic_bottle_neck(neck_d = neck_d,
-                    id = neck_id,
-                    thread_od = neck_thread_od,
-                    height = neck_h,
-                    support_d = neck_support_od,
-                    pitch = neck_thread_pitch,
-                    round_supp = ((wallt1 < (neck_support_od - neck_id) / 2) && (d > 0 || neck_support_od > (cap_thread_od + 2 * (cap_wall + tolerance)))),
-                    wall = (d > 0) ? wallt1 : min(wallt1, ((cap_thread_od + 2 * (cap_wall + tolerance) - neck_id) / 2))
-                );
-            }
-            if (d != 0) {
-                rotate_extrude(){
-                    polygon(points = [
-                        [0, d / 2],
-                        [neck_id / 2 + wallt1, d / 2],
-                        [neck_id / 2 + wallt1, d / 2 - taper_lead_in],
-                        [cap_neck_id / 2 + wallt2, taper_lead_in - d / 2],
-                        [cap_neck_id / 2 + wallt2, -d / 2],
-                        [0, -d / 2]
-                    ]);
+    top_h = neck_h + max(1,neck_h/17)*sign(neck_support_od);
+    echo(top_h=top_h);
+    bot_h = cap_h + cap_wall;
+    attachable(anchor=anchor,orient=orient,spin=spin, r=max([neck_id/2+wallt1, cap_neck_id/2+wallt2, neck_support_od/2]), h=top_h+bot_h+d) {      
+      zmove((bot_h-top_h)/2)
+        difference(){
+            union(){
+                up(d / 2) {
+                    generic_bottle_neck(neck_d = neck_d,
+                        id = neck_id,
+                        thread_od = neck_thread_od,
+                        height = neck_h,
+                        support_d = neck_support_od,
+                        pitch = neck_thread_pitch,
+                        round_supp = ((wallt1 < (neck_support_od - neck_id) / 2) && (d > 0 || neck_support_od > (cap_thread_od + 2 * (cap_wall + tolerance)))),
+                        wall = (d > 0) ? wallt1 : min(wallt1, ((cap_od + 2 * (cap_wall) - neck_id) / 2))
+                    );
+                }
+                if (d != 0) {
+                    rotate_extrude(){
+                        polygon(points = [
+                            [0, d / 2],
+                            [neck_id / 2 + wallt1, d / 2],
+                            [neck_id / 2 + wallt1, d / 2 - taper_lead_in],
+                            [cap_neck_id / 2 + wallt2, taper_lead_in - d / 2],
+                            [cap_neck_id / 2 + wallt2, -d / 2],
+                            [0, -d / 2]
+                        ]);
+                    }
+                }
+                down(d / 2){
+                    generic_bottle_cap(wall = cap_wall,
+                        texture = texture,
+                        height = cap_h,
+                        thread_depth = cap_thread_depth,
+                        tolerance = tolerance,
+                        neck_od = cap_neck_od,
+                        flank_angle = cap_thread_taper,
+                        orient = DOWN,
+                        pitch = cap_thread_pitch
+                    );
                 }
             }
-            down(d / 2){
-                generic_bottle_cap(wall = cap_wall,
-                    texture = texture,
-                    height = cap_h,
-                    thread_od = cap_thread_od,
-                    tolerance = tolerance,
-                    neck_od = cap_neck_od,
-                    flank_angle = cap_thread_taper,
-                    orient = DOWN,
-                    pitch = cap_thread_pitch
-                );
+            rotate_extrude() {
+                polygon(points = [
+                    [0, d / 2 + 0.1],
+                    [neck_id / 2, d / 2],
+                    [neck_id / 2, d / 2 - taper_lead_in],
+                    [cap_neck_id / 2, taper_lead_in - d / 2],
+                    [cap_neck_id / 2, -d / 2 - cap_wall],
+                    [0, -d / 2 - cap_wall - 0.1]
+                ]);
             }
         }
-        rotate_extrude() {
-            polygon(points = [
-                [0, d / 2 + 0.1],
-                [neck_id / 2, d / 2],
-                [neck_id / 2, d / 2 - taper_lead_in],
-                [cap_neck_id / 2, taper_lead_in - d / 2],
-                [cap_neck_id / 2, -d / 2 - cap_wall],
-                [0, -d / 2 - cap_wall - 0.1]
-            ]);
-        }
+      children();
     }
 }
 
 function bottle_adapter_neck_to_cap(
-    wall, texture, cap_wall, cap_h, cap_thread_od,
+    wall, texture, cap_wall, cap_h, cap_thread_depth1,
     tolerance, cap_neck_od, cap_neck_id, cap_thread_taper,
     cap_thread_pitch, neck_d, neck_id, neck_thread_od,
     neck_h, neck_thread_pitch, neck_support_od, d, taper_lead_in
@@ -734,107 +748,115 @@ function bottle_adapter_neck_to_cap(
 // Topics: Bottles, Threading
 // See Also: bottle_adapter_neck_to_cap(), bottle_adapter_neck_to_neck()
 // Usage:
-//   bottle_adapter_cap_to_cap(wall, [texture]);
+//   bottle_adapter_cap_to_cap(wall, [texture]) [ATTACHMENTS];
 // Description:
 //   Creates a threaded cap to cap adapter.
 // Arguments:
 //   wall = Wall thickness in mm.
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
 //   cap_h1 = Interior height of top cap.
-//   cap_thread_od1 = Outer diameter of threads on top cap.
+//   cap_thread_depth1 = Thread depth on top cap.  Default: 2.34
 //   tolerance = Extra space to add to the outer diameter of threads and neck in mm.  Applied to radius.
 //   cap_neck_od1 = Inner diameter of threads on top cap.
 //   cap_thread_pitch1 = Thread pitch of top cap in mm.
 //   cap_h2 = Interior height of bottom cap.  Leave undefined to duplicate cap_h1.
-//   cap_thread_od2 = Outer diameter of threads on bottom cap.  Leave undefined to duplicate capThread1.
+//   cap_thread_depth2 = Thread depth on bottom cap.  Default: same as cap_thread_depth1
 //   cap_neck_od2 = Inner diameter of threads on top cap.  Leave undefined to duplicate cap_neck_od1.
 //   cap_thread_pitch2 = Thread pitch of bottom cap in mm.  Leave undefinced to duplicate cap_thread_pitch1.
 //   d = Distance between caps.
 //   neck_id1 = Inner diameter of cutout in top cap.
 //   neck_id2 = Inner diameter of cutout in bottom cap.
 //   taper_lead_in = Length to leave straight before tapering on tube between caps if exists.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   bottle_adapter_cap_to_cap();
 module bottle_adapter_cap_to_cap(
     wall = 2,
     texture = "none",
     cap_h1 = 11.2,
-    cap_thread_od1 = 28.58,
+    cap_thread_depth1 = 2.34,
     tolerance = .2,
     cap_neck_od1 = 25.5,
     cap_thread_pitch1 = 4,
     cap_h2,
-    cap_thread_od2,
+    cap_thread_depth2,
     cap_neck_od2,
     cap_thread_pitch2,
     d = 0,
-    neck_id1, neck_id2,
-    taper_lead_in = 0
+    neck_id,
+    taper_lead_in = 0, anchor, spin,orient
 ) {
-    cap_h2 = (cap_h2 == undef) ? cap_h1 : cap_h2;
-    cap_thread_od2 = (cap_thread_od2 == undef) ? cap_thread_od1 : cap_thread_od2;
-    cap_neck_od2 = (cap_neck_od2 == undef) ? cap_neck_od1 : cap_neck_od2;
-    cap_thread_pitch2 = (cap_thread_pitch2 == undef) ? cap_thread_pitch1 : cap_thread_pitch2;
-    neck_id2 = (neck_id2 == undef && neck_id1 != undef) ? neck_id1 : neck_id2;
+    cap_h2 = default(cap_h2,cap_h1);
+    cap_thread_depth2 = default(cap_thread_depth2,cap_thread_depth1);
+    cap_neck_od2 = default(cap_neck_od2,cap_neck_od1);
+    cap_thread_pitch2 = default(cap_thread_pitch2,cap_thread_pitch1);
     taper_lead_in = (d >= taper_lead_in * 2) ? taper_lead_in : d / 2;
 
+    neck_id = min(cap_neck_od1 - cap_thread_depth1, cap_neck_od2-cap_thread_depth2);
+    
+    top_h = cap_h1+wall;
+    bot_h = cap_h2+wall;
+    
 
+    cap_od1 = cap_neck_od1 + 2*(cap_thread_depth1 - 0.8) + 2 * tolerance;   // WTF; Engineered for consistency with old code, but
+    cap_od2 = cap_neck_od2 + 2*(cap_thread_depth2 - 0.8) + 2 * tolerance;   // WTF; Engineered for consistency with old code, but 
+    
     $fn = segs(33 / 2);
-
-    difference(){
-        union(){
-            up(d / 2){
-                generic_bottle_cap(
-                    orient = UP,
-                    wall = wall,
-                    texture = texture,
-                    height = cap_h1,
-                    thread_od = cap_thread_od1,
-                    tolerance = tolerance,
-                    neck_od = cap_neck_od1,
-                    pitch = cap_thread_pitch1
-                );
-            }
-            if (d != 0) {
-                rotate_extrude() {
-                    polygon(points = [
-                        [0, d / 2],
-                        [cap_thread_od1 / 2 + (wall + tolerance), d / 2],
-                        [cap_thread_od1 / 2 + (wall + tolerance), d / 2 - taper_lead_in],
-                        [cap_thread_od2 / 2 + (wall + tolerance), taper_lead_in - d / 2],
-                        [cap_thread_od2 / 2 + (wall + tolerance), -d / 2],
-                        [0, -d / 2]
-                    ]);
-                }
-            }
-            down(d / 2){
-                generic_bottle_cap(
-                    orient = DOWN,
-                    wall = wall,
-                    texture = texture,
-                    height = cap_h2,
-                    thread_od = cap_thread_od2,
-                    tolerance = tolerance,
-                    neck_od = cap_neck_od2,
-                    pitch = cap_thread_pitch2
-                );
-            }
-        }
-        if (neck_id1 != undef || neck_id2 != undef) {
-            neck_id1 = (neck_id1 == undef) ? neck_id2 : neck_id1;
-            neck_id2 = (neck_id2 == undef) ? neck_id1 : neck_id2;
-
-            rotate_extrude() {
-                polygon(points = [
-                    [0, wall + d / 2 + 0.1],
-                    [neck_id1 / 2, wall + d / 2],
-                    [neck_id1 / 2, wall + d / 2 - taper_lead_in],
-                    [neck_id2 / 2, taper_lead_in - d / 2 - wall],
-                    [neck_id2 / 2, -d / 2 - wall],
-                    [0, -d / 2 - wall - 0.1]
-                ]);
-            }
-        }
+    attachable(anchor=anchor,spin=spin,orient=orient, h=top_h+bot_h+d, d=max(cap_od1,cap_od2)+2*wall){
+      zmove((bot_h-top_h)/2)
+        difference(){
+          union(){
+              up(d / 2){
+                  generic_bottle_cap(
+                      orient = UP,
+                      wall = wall,
+                      texture = texture,
+                      height = cap_h1,
+                      thread_depth = cap_thread_depth1,
+                      tolerance = tolerance,
+                      neck_od = cap_neck_od1,
+                      pitch = cap_thread_pitch1
+                  );
+              }
+              if (d != 0) {
+                  rotate_extrude() {
+                      polygon(points = [
+                          [0, d / 2],
+                          [cap_od1 / 2 + wall, d / 2],
+                          [cap_od1 / 2 + wall, d / 2 - taper_lead_in],
+                          [cap_od2 / 2 + wall, taper_lead_in - d / 2],
+                          [cap_od2 / 2 + wall, -d / 2],
+                          [0, -d / 2]
+                      ]);
+                  }
+              }
+              down(d / 2){
+                  generic_bottle_cap(
+                      orient = DOWN,
+                      wall = wall,
+                      texture = texture,
+                      height = cap_h2,
+                      thread_depth = cap_thread_depth2,
+                      tolerance = tolerance,
+                      neck_od = cap_neck_od2,
+                      pitch = cap_thread_pitch2
+                  );
+              }
+          }
+          rotate_extrude() {
+                  polygon(points = [
+                      [0, wall + d / 2 + 0.1],
+                      [neck_id / 2, wall + d / 2],
+                      [neck_id / 2, wall + d / 2 - taper_lead_in],
+                      [neck_id / 2, taper_lead_in - d / 2 - wall],
+                      [neck_id / 2, -d / 2 - wall],
+                      [0, -d / 2 - wall - 0.1]
+                  ]);
+              }
+      }
+      children();
     }
 }
 
@@ -850,7 +872,7 @@ function bottle_adapter_cap_to_cap(
 // Topics: Bottles, Threading
 // See Also: bottle_adapter_neck_to_cap(), bottle_adapter_cap_to_cap()
 // Usage:
-//   bottle_adapter_neck_to_neck(...);
+//   bottle_adapter_neck_to_neck(...) [ATTACHMENTS];
 // Description:
 //   Creates a threaded neck to neck adapter.
 // Arguments:
@@ -869,7 +891,10 @@ function bottle_adapter_cap_to_cap(
 //   support_od2 = Outer diameter of the support ring on bottom neck.  Set to 0 for no ring.  Leave undefined to duplicate support_od1 
 //   pitch2 = Thread pitch of bottom neck.  Leave undefined to duplicate thread_pitch1
 //   taper_lead_in = Length to leave straight before tapering on tube between necks if exists.
-//   wall = Thickness of tube wall between necks.  Leave undefined to match outer diameters with the neckODs/supportODs.  
+//   wall = Thickness of tube wall between necks.  Leave undefined to match outer diameters with the neckODs/supportODs.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   bottle_adapter_neck_to_neck();
 module bottle_adapter_neck_to_neck(
@@ -882,10 +907,9 @@ module bottle_adapter_neck_to_neck(
     thread_pitch1 = 3.2,
     neck_od2, neck_id2,
     thread_od2, height2,
-    support_od2, pitch2,
-    taper_lead_in = 0, wall
+    support_od2,  pitch2,
+    taper_lead_in = 0, wall, anchor, spin, orient
 ) {
-    no_children($children);
     neck_od2 = (neck_od2 == undef) ? neck_od1 : neck_od2;
     neck_id2 = (neck_id2 == undef) ? neck_id1 : neck_id2;
     thread_od2 = (thread_od2 == undef) ? thread_od1 : thread_od2;
@@ -903,60 +927,67 @@ module bottle_adapter_neck_to_neck(
 
     taper_lead_in = (d >= taper_lead_in * 2) ? taper_lead_in : d / 2;
 
-    difference(){
-        union(){
-            up(d / 2){
-                generic_bottle_neck(orient = UP,
-                    neck_d = neck_od1,
-                    id = neck_id1,
-                    thread_od = thread_od1,
-                    height = height1,
-                    support_d = supprtOD1,
-                    pitch = thread_pitch1,
-                    round_supp = ((wallt1 < (supprtOD1 - neck_id1) / 2) || (support_od1 > max(neck_od2, support_od2) && d == 0)),
-                    wall = (d > 0) ? wallt1 : min(wallt1, ((max(neck_od2, support_od2)) - neck_id1) / 2)
-                );
-            }
-            if (d != 0) {
-                rotate_extrude() {
-                    polygon(points = [
-                        [0, d / 2],
-                        [neck_id1 / 2 + wallt1, d / 2],
-                        [neck_id1 / 2 + wallt1, d / 2 - taper_lead_in],
-                        [neck_id2 / 2 + wallt2, taper_lead_in - d / 2],
-                        [neck_id2 / 2 + wallt2, -d / 2],
-                        [0, -d / 2]
-                    ]);
-                }
-            }
-            down(d / 2){
-                generic_bottle_neck(orient = DOWN,
-                    neck_d = neck_od2,
-                    id = neck_id2,
-                    thread_od = thread_od2,
-                    height = height2,
-                    support_d = supprtOD2,
-                    pitch = pitch2,
-                    round_supp = ((wallt2 < (supprtOD2 - neck_id2) / 2) || (support_od2 > max(neck_od1, support_od1) && d == 0)),
-                    wall = (d > 0) ? wallt2 : min(wallt2, ((max(neck_od1, support_od1)) - neck_id2) / 2)
-                );
-            }
-        }
-        if (neck_id1 != undef || neck_id2 != undef) {
-            neck_id1 = (neck_id1 == undef) ? neck_id2 : neck_id1;
-            neck_id2 = (neck_id2 == undef) ? neck_id1 : neck_id2;
+    top_h = height1 + max(1,height1/17)*sign(support_od1);
+    bot_h = height2 + max(1,height2/17)*sign(support_od2);
+    
+    attachable(anchor=anchor,orient=orient,spin=spin, h=top_h+bot_h+d, d=max(neck_od1,neck_od2)){
+      zmove((bot_h-top_h)/2)
+      difference(){
+          union(){
+              up(d / 2){
+                  generic_bottle_neck(orient = UP,
+                      neck_d = neck_od1,
+                      id = neck_id1,
+                      thread_od = thread_od1,
+                      height = height1,
+                      support_d = supprtOD1,
+                      pitch = thread_pitch1,
+                      round_supp = ((wallt1 < (supprtOD1 - neck_id1) / 2) || (support_od1 > max(neck_od2, support_od2) && d == 0)),
+                      wall = (d > 0) ? wallt1 : min(wallt1, ((max(neck_od2, support_od2)) - neck_id1) / 2)
+                  );
+              }
+              if (d != 0) {
+                  rotate_extrude() {
+                      polygon(points = [
+                          [0, d / 2],
+                          [neck_id1 / 2 + wallt1, d / 2],
+                          [neck_id1 / 2 + wallt1, d / 2 - taper_lead_in],
+                          [neck_id2 / 2 + wallt2, taper_lead_in - d / 2],
+                          [neck_id2 / 2 + wallt2, -d / 2],
+                          [0, -d / 2]
+                      ]);
+                  }
+              }
+              down(d / 2){
+                  generic_bottle_neck(orient = DOWN,
+                      neck_d = neck_od2,
+                      id = neck_id2,
+                      thread_od = thread_od2,
+                      height = height2,
+                      support_d = supprtOD2,
+                      pitch = pitch2,
+                      round_supp = ((wallt2 < (supprtOD2 - neck_id2) / 2) || (support_od2 > max(neck_od1, support_od1) && d == 0)),
+                      wall = (d > 0) ? wallt2 : min(wallt2, ((max(neck_od1, support_od1)) - neck_id2) / 2)
+                  );
+              }
+          }
+          if (neck_id1 != undef || neck_id2 != undef) {
+              neck_id1 = (neck_id1 == undef) ? neck_id2 : neck_id1;
+              neck_id2 = (neck_id2 == undef) ? neck_id1 : neck_id2;
 
-            rotate_extrude() {
-                polygon(points = [
-                    [0, d / 2],
-                    [neck_id1 / 2, d / 2],
-                    [neck_id1 / 2, d / 2 - taper_lead_in],
-                    [neck_id2 / 2, taper_lead_in - d / 2],
-                    [neck_id2 / 2, -d / 2],
-                    [0, -d / 2]
-                ]);
-            }
-        }
+              rotate_extrude() {
+                  polygon(points = [
+                      [0, d / 2],
+                      [neck_id1 / 2, d / 2],
+                      [neck_id1 / 2, d / 2 - taper_lead_in],
+                      [neck_id2 / 2, taper_lead_in - d / 2],
+                      [neck_id2 / 2, -d / 2],
+                      [0, -d / 2]
+                  ]);
+              }
+          }
+      }
+      children();
     }
 }
 
