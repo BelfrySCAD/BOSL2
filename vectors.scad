@@ -16,6 +16,9 @@
 
 
 // Function: is_vector()
+// Synopsis: Returns true if the given value is a vector.
+// Topics: Vectors, Math
+// See Also: is_matrix(), is_path(), is_region()
 // Usage:
 //   bool = is_vector(v, [length], [zero=], [all_nonzero=], [eps=]);
 // Description:
@@ -53,9 +56,11 @@ function is_vector(v, length, zero, all_nonzero=false, eps=EPSILON) =
 // Section: Scalar operations on vectors
 
 // Function: add_scalar()
+// Synopsis: Adds a scalar value to every item in a vector.
+// Topics: Vectors, Math
+// See Also: add_scalar(), v_mul(), v_div()
 // Usage:  
 //   v_new = add_scalar(v, s);
-// Topics: List Handling
 // Description:
 //   Given a vector and a scalar, returns the vector with the scalar added to each item in it.
 // Arguments:
@@ -70,6 +75,9 @@ function add_scalar(v,s) =
 
 
 // Function: v_mul()
+// Synopsis: Returns the element-wise multiplication of two equal-length vectors.
+// Topics: Vectors, Math
+// See Also: add_scalar(), v_mul(), v_div()
 // Usage:
 //   v3 = v_mul(v1, v2);
 // Description:
@@ -87,6 +95,9 @@ function v_mul(v1, v2) =
     
 
 // Function: v_div()
+// Synopsis: Returns the element-wise division of two equal-length vectors.
+// Topics: Vectors, Math
+// See Also: add_scalar(), v_mul(), v_div()
 // Usage:
 //   v3 = v_div(v1, v2);
 // Description:
@@ -103,6 +114,9 @@ function v_div(v1, v2) =
 
 
 // Function: v_abs()
+// Synopsis: Returns the absolute values of the given vector.
+// Topics: Vectors, Math
+// See Also: v_abs(), v_floor(), v_ceil()
 // Usage:
 //   v2 = v_abs(v);
 // Description: Returns a vector of the absolute value of each element of vector `v`.
@@ -116,6 +130,9 @@ function v_abs(v) =
 
 
 // Function: v_floor()
+// Synopsis: Returns the values of the given vector, rounded down.
+// Topics: Vectors, Math
+// See Also: v_abs(), v_floor(), v_ceil()
 // Usage:
 //   v2 = v_floor(v);
 // Description:
@@ -126,6 +143,9 @@ function v_floor(v) =
 
 
 // Function: v_ceil()
+// Synopsis: Returns the values of the given vector, rounded up.
+// Topics: Vectors, Math
+// See Also: v_abs(), v_floor(), v_ceil()
 // Usage:
 //   v2 = v_ceil(v);
 // Description:
@@ -136,6 +156,9 @@ function v_ceil(v) =
 
 
 // Function: v_lookup()
+// Synopsis: Like `lookup()`, but it can interpolate between vector results.
+// Topics: Vectors, Math
+// See Also: v_abs(), v_floor(), v_ceil()
 // Usage:
 //   v2 = v_lookup(x, v);
 // Description:
@@ -166,6 +189,9 @@ function v_lookup(x, v) =
 
 
 // Function: unit()
+// Synopsis: Returns the unit length of a given vector.
+// Topics: Vectors, Math
+// See Also: v_abs(), v_floor(), v_ceil()
 // Usage:
 //   v = unit(v, [error]);
 // Description:
@@ -188,6 +214,9 @@ function unit(v, error=[[["ASSERT"]]]) =
 
 
 // Function: v_theta()
+// Synopsis: Returns the angle counter-clockwise from X+ on the XY plane.
+// Topics: Vectors, Math
+// See Also: unit()
 // Usage:
 //   theta = v_theta([X,Y]);
 // Description:
@@ -199,6 +228,9 @@ function v_theta(v) =
 
 
 // Function: vector_angle()
+// Synopsis: Returns the minor angle between two vectors.
+// Topics: Vectors, Math
+// See Also: unit(), v_theta()
 // Usage:
 //   ang = vector_angle(v1,v2);
 //   ang = vector_angle([v1,v2]);
@@ -241,6 +273,9 @@ function vector_angle(v1,v2,v3) =
     
 
 // Function: vector_axis()
+// Synopsis: Returns the perpendicular axis between two vectors.
+// Topics: Vectors, Math
+// See Also: unit(), v_theta(), vector_angle()
 // Usage:
 //   axis = vector_axis(v1,v2);
 //   axis = vector_axis([v1,v2]);
@@ -285,6 +320,9 @@ function vector_axis(v1,v2=undef,v3=undef) =
 
 
 // Function: vector_bisect()
+// Synopsis: Returns the vector that bisects two vectors.
+// Topics: Vectors, Math
+// See Also: unit(), v_theta(), vector_angle(), vector_axis()
 // Usage:
 //   newv = vector_bisect(v1,v2);
 // Description:
@@ -310,9 +348,11 @@ function vector_bisect(v1,v2) =
 
 
 // Function: pointlist_bounds()
+// Synopsis: Returns the min and max bounding coordinates for the given list of points.
+// Topics: Geometry, Bounding Boxes, Bounds
+// See Also: closest_point()
 // Usage:
 //   pt_pair = pointlist_bounds(pts);
-// Topics: Geometry, Bounding Boxes, Bounds
 // Description:
 //   Finds the bounds containing all the points in `pts` which can be a list of points in any dimension.
 //   Returns a list of two items: a list of the minimums and a list of the maximums.  For example, with
@@ -333,9 +373,11 @@ function pointlist_bounds(pts) =
 
 
 // Function: closest_point()
+// Synopsis: Finds the closest point in a list of points.
+// Topics: Geometry, Points, Distance
+// See Also: pointlist_bounds(), furthest_point(), closest_point()
 // Usage:
 //   index = closest_point(pt, points);
-// Topics: Geometry, Points, Distance
 // Description:
 //   Given a list of `points`, finds the index of the closest point to `pt`.
 // Arguments:
@@ -348,9 +390,11 @@ function closest_point(pt, points) =
 
 
 // Function: furthest_point()
+// Synopsis: Finds the furthest point in a list of points.
+// Topics: Geometry, Points, Distance
+// See Also: pointlist_bounds(), furthest_point(), closest_point()
 // Usage:
 //   index = furthest_point(pt, points);
-// Topics: Geometry, Points, Distance
 // Description:
 //   Given a list of `points`, finds the index of the furthest point from `pt`.
 // Arguments:
@@ -363,10 +407,11 @@ function furthest_point(pt, points) =
 
 
 // Function: vector_search()
+// Synopsis: Finds points in a list that are close to a given point.
+// Topics: Search, Points, Closest
+// See Also: vector_search_tree(), vector_nearest()
 // Usage:
 //   indices = vector_search(query, r, target);
-// See Also: vector_search_tree(), vector_nearest()
-// Topics: Search, Points, Closest
 // Description:
 //   Given a list of query points `query` and a `target` to search, 
 //   finds the points in `target` that match each query point. A match holds when the 
@@ -465,10 +510,11 @@ function _bt_search(query, r, points, tree) =
      
 
 // Function: vector_search_tree()
+// Synopsis: Makes a distance search tree for a list of points.
+// Topics: Search, Points, Closest
+// See Also: vector_nearest(), vector_search()
 // Usage:
 //    tree = vector_search_tree(points,leafsize);
-// See Also: vector_nearest(), vector_search()
-// Topics: Search, Points, Closest
 // Description:
 //    Construct a search tree for the given list of points to be used as input
 //    to the function `vector_search()`. The use of a tree speeds up the
@@ -526,9 +572,11 @@ function _bt_tree(points, ind, leafsize=25) =
 
 
 // Function: vector_nearest()
+// Synopsis: Finds the `k` nearest points in a list to a given point.
+// Topics: Search, Points, Closest
+// See Also: vector_search(), vector_search_tree()
 // Usage:
 //    indices = vector_nearest(query, k, target);
-// See Also: vector_search(), vector_search_tree()
 // Description:
 //    Search `target` for the `k` points closest to point `query`.
 //    The input `target` is either a list of points to search or a search tree
