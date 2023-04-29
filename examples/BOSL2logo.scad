@@ -44,9 +44,9 @@ xdistribute(50) {
 	xdistribute(24) {
 		screw("M12,70", head="hex", anchor="origin", orient=BACK)
 			attach(BOT,CENTER)
-				nut("M12", thickness=10, diameter=20);
+				nut("M12", thickness=10);
 		screw("M12,70", head="hex", anchor="origin", orient=BACK)
 			attach(BOT,CENTER)
-				nut("M12", thickness=10, diameter=20);
+				nut("M12", thickness=10);
 	}
 }
