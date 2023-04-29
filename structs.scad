@@ -19,7 +19,9 @@
 // An empty list `[]` is an empty structure and can be used wherever a structure input is required.
 
 // Function: struct_set()
+// Synopsis: Sets one or more key-value pairs in a struct.
 // Topics: Data Structures, Dictionaries
+// See Also: struct_set(), struct_remove(), struct_val(), struct_keys(), echo_struct(), is_struct()
 // Usage:
 //   struct2 = struct_set(struct, key, value, [grow=]);
 //   struct2 = struct_set(struct, [key1, value1, key2, value2, ...], [grow=]);
@@ -55,7 +57,9 @@ function struct_set(struct, key, value, grow=true) =
 function _format_key(key) = is_string(key) ? str("\"",key,"\""): key;
 
 // Function: struct_remove()
+// Synopsis: Removes one or more keys from a struct.
 // Topics: Data Structures, Dictionaries
+// See Also: struct_set(), struct_remove(), struct_val(), struct_keys(), echo_struct(), is_struct()
 // Usage:
 //   struct2 = struct_remove(struct, key);
 // Description:
@@ -72,7 +76,9 @@ function struct_remove(struct, key) =
 
 
 // Function: struct_val()
+// Synopsis: Returns the value for an key in a struct.
 // Topics: Data Structures, Dictionaries
+// See Also: struct_set(), struct_remove(), struct_val(), struct_keys(), echo_struct(), is_struct()
 // Usage:
 //   val = struct_val(struct, key, default);
 // Description:
@@ -88,7 +94,9 @@ function struct_val(struct, key, default=undef) =
 
 
 // Function: struct_keys()
+// Synopsis: Returns a list of keys for a struct.
 // Topics: Data Structures, Dictionaries
+// See Also: struct_set(), struct_remove(), struct_val(), struct_keys(), echo_struct(), is_struct()
 // Usage:
 //   keys = struct_keys(struct);
 // Description:
@@ -99,7 +107,9 @@ function struct_keys(struct) = column(struct,0);
 
 
 // Function&Module: echo_struct()
+// Synopsis: Echoes the struct to the console in a formatted manner.
 // Topics: Data Structures, Dictionaries
+// See Also: struct_set(), struct_remove(), struct_val(), struct_keys(), echo_struct(), is_struct()
 // Usage:
 //   echo_struct(struct, [name]);
 //   foo = echo_struct(struct, [name]);
@@ -120,7 +130,9 @@ module echo_struct(struct,name="") {
 
 
 // Function: is_struct()
+// Synopsis: Returns true if the value is a struct.
 // Topics: Data Structures, Dictionaries
+// See Also: struct_set(), struct_remove(), struct_val(), struct_keys(), echo_struct(), is_struct()
 // Usage:
 //   bool = is_struct(struct);
 // Description:
