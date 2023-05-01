@@ -3159,7 +3159,7 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 
   start = center ? (path_length(path) - textlength)/2 : 0;
    
-  pts = path_cut_points(path, add_scalar([ each cumsum(lcenter)],start+0*lsize[0]/2), direction=true);
+  pts = path_cut_points(path, add_scalar(cumsum(lcenter),start), direction=true);
 
   usernorm = is_def(normal);
   usetop = is_def(top);

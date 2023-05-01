@@ -16,6 +16,7 @@
 //   pt = point2d(p, [fill]);
 // Topics: Coordinates, Points
 // See Also: path2d(), point3d(), path3d()
+// Synopsis: Convert a vector to 2d. 
 // Description:
 //   Returns a 2D vector/point from a 2D or 3D vector.  If given a 3D point, removes the Z coordinate.
 // Arguments:
@@ -29,6 +30,7 @@ function point2d(p, fill=0) = assert(is_list(p)) [for (i=[0:1]) (p[i]==undef)? f
 //   pts = path2d(points);
 // Topics: Coordinates, Points, Paths
 // See Also: point2d(), point3d(), path3d()
+// Synopsis: Convert a path to 2d. 
 // Description:
 //   Returns a list of 2D vectors/points from a list of 2D, 3D or higher dimensional vectors/points.
 //   Removes the extra coordinates from higher dimensional points.  The input must be a path, where
@@ -47,6 +49,7 @@ function path2d(points) =
 //   pt = point3d(p, [fill]);
 // Topics: Coordinates, Points
 // See Also: path2d(), point2d(), path3d()
+// Synopsis: Convert a vector to 3d. 
 // Description:
 //   Returns a 3D vector/point from a 2D or 3D vector.
 // Arguments:
@@ -61,6 +64,7 @@ function point3d(p, fill=0) =
 // Usage:
 //   pts = path3d(points, [fill]);
 // Topics: Coordinates, Points, Paths
+// Synopsis: Convert a path to 3d. 
 // See Also: point2d(), path2d(), point3d()
 // Description:
 //   Returns a list of 3D vectors/points from a list of 2D or higher dimensional vectors/points
@@ -85,6 +89,7 @@ function path3d(points, fill=0) =
 // Usage:
 //   pt = point4d(p, [fill]);
 // Topics: Coordinates, Points
+// Synopsis: Convert a vector to 4d. 
 // See Also: point2d(), path2d(), point3d(), path3d(), path4d()
 // Description:
 //   Returns a 4D vector/point from a 2D or 3D vector.
@@ -100,6 +105,7 @@ function point4d(p, fill=0) = assert(is_list(p))
 //   pt = path4d(points, [fill]);
 // Topics: Coordinates, Points, Paths
 // See Also: point2d(), path2d(), point3d(), path3d(), point4d()
+// Synopsis: Convert a path to 4d.  
 // Description:
 //   Returns a list of 4D vectors/points from a list of 2D or 3D vectors/points.
 // Arguments:
@@ -132,6 +138,7 @@ function path4d(points, fill=0) =
 //   pt = polar_to_xy(r, theta);
 //   pt = polar_to_xy([r, theta]);
 // Topics: Coordinates, Points, Paths
+// Synopsis: Convert 2d polar coordinates to cartesian coordinates. 
 // See Also: xy_to_polar(), xyz_to_cylindrical(), cylindrical_to_xyz(), xyz_to_spherical(), spherical_to_xyz()
 // Description:
 //   Convert polar coordinates to 2D cartesian coordinates.
@@ -161,6 +168,7 @@ function polar_to_xy(r,theta=undef) = let(
 //   r_theta = xy_to_polar(x,y);
 //   r_theta = xy_to_polar([X,Y]);
 // Topics: Coordinates, Points, Paths
+// Synopsis: Convert 2d cartesian coordinates to polar coordinates (radius and angle)
 // See Also: polar_to_xy(), xyz_to_cylindrical(), cylindrical_to_xyz(), xyz_to_spherical(), spherical_to_xyz()
 // Description:
 //   Convert 2D cartesian coordinates to polar coordinates.
@@ -189,6 +197,7 @@ function xy_to_polar(x,y=undef) = let(
 //   xy = project_plane(plane, p);
 // Usage: To get a transform matrix
 //   M = project_plane(plane)
+// Synopsis: Project a set of points onto a specified plane, returning 2d points.  
 // Description:
 //   Maps the provided 3d point(s) from 3D coordinates to a 2d coordinate system defined by `plane`.  Points that are not
 //   on the specified plane will be projected orthogonally onto the plane.  This coordinate system is useful if you need
@@ -264,6 +273,7 @@ function project_plane(plane,p) =
 //   xyz = lift_plane(plane, p);
 // Usage: to get transform matrix
 //   M =  lift_plane(plane);
+// Synopsis: Map a list of 2d points onto a plane in 3d. 
 // Topics: Coordinates, Points, Paths
 // See Also: project_plane()
 // Description:
@@ -316,7 +326,8 @@ function lift_plane(plane, p) =
 //   pt = cylindrical_to_xyz(r, theta, z);
 //   pt = cylindrical_to_xyz([r, theta, z]);
 // Topics: Coordinates, Points, Paths
-// See Also: xyz_to_cylindrical(), xyz_to_spherical(), spherical_to_xyz()
+// See Also: xyz_to_cylindrical(), xy_to_polar(), polar_to_xy(), xyz_to_spherical(), spherical_to_xyz()
+// Synopsis: Convert cylindrical coordinates to cartesian coordinates. 
 // Description:
 //   Convert cylindrical coordinates to 3D cartesian coordinates.  Returns [X,Y,Z] cartesian coordinates.
 // Arguments:
@@ -338,7 +349,8 @@ function cylindrical_to_xyz(r,theta=undef,z=undef) = let(
 //   rtz = xyz_to_cylindrical(x,y,z);
 //   rtz = xyz_to_cylindrical([X,Y,Z]);
 // Topics: Coordinates, Points, Paths
-// See Also: cylindrical_to_xyz(), xyz_to_spherical(), spherical_to_xyz()
+// Synopsis: Convert 3d cartesian coordinates to cylindrical coordinates. 
+// See Also: cylindrical_to_xyz(), xy_to_polar(), polar_to_xy(), xyz_to_spherical(), spherical_to_xyz()
 // Description:
 //   Convert 3D cartesian coordinates to cylindrical coordinates.  Returns [radius,theta,Z].
 //   Theta is the angle counter-clockwise of X+ on the XY plane.  Z is height above the XY plane.
@@ -360,8 +372,9 @@ function xyz_to_cylindrical(x,y=undef,z=undef) = let(
 //   pt = spherical_to_xyz([r, theta, phi]);
 // Description:
 //   Convert spherical coordinates to 3D cartesian coordinates.  Returns [X,Y,Z] cartesian coordinates.
+// Synopsis: Convert spherical coordinates to 3d cartesian coordinates. 
 // Topics: Coordinates, Points, Paths
-// See Also: cylindrical_to_xyz(), xyz_to_spherical(), xyz_to_cylindrical()
+// See Also: cylindrical_to_xyz(), xyz_to_spherical(), xyz_to_cylindrical(), altaz_to_xyz(), xyz_to_altaz()
 // Arguments:
 //   r = distance from origin.
 //   theta = angle in degrees, counter-clockwise of X+ on the XY plane.
@@ -381,7 +394,8 @@ function spherical_to_xyz(r,theta=undef,phi=undef) = let(
 //   r_theta_phi = xyz_to_spherical(x,y,z)
 //   r_theta_phi = xyz_to_spherical([X,Y,Z])
 // Topics: Coordinates, Points, Paths
-// See Also: cylindrical_to_xyz(), spherical_to_xyz(), xyz_to_cylindrical()
+// Synopsis: Convert 3d cartesian coordinates to spherical coordinates. 
+// See Also: cylindrical_to_xyz(), spherical_to_xyz(), xyz_to_cylindrical(), altaz_to_xyz(), xyz_to_altaz()
 // Description:
 //   Convert 3D cartesian coordinates to spherical coordinates.  Returns [r,theta,phi], where phi is
 //   the angle from the Z+ pole, and theta is degrees counter-clockwise of X+ on the XY plane.
@@ -403,6 +417,7 @@ function xyz_to_spherical(x,y=undef,z=undef) = let(
 //   pt = altaz_to_xyz([alt, az, r]);
 // Topics: Coordinates, Points, Paths
 // See Also: cylindrical_to_xyz(), xyz_to_spherical(), spherical_to_xyz(), xyz_to_cylindrical(), xyz_to_altaz()
+// Synopsis: Convert altitude/azimuth/range to 3d cartesian coordinates. 
 // Description:
 //   Convert altitude/azimuth/range coordinates to 3D cartesian coordinates.
 //   Returns [X,Y,Z] cartesian coordinates.
@@ -426,6 +441,7 @@ function altaz_to_xyz(alt,az=undef,r=undef) = let(
 //   alt_az_r = xyz_to_altaz([X,Y,Z]);
 // Topics: Coordinates, Points, Paths
 // See Also: cylindrical_to_xyz(), xyz_to_spherical(), spherical_to_xyz(), xyz_to_cylindrical(), altaz_to_xyz()
+// Synopsis: Convert 3d cartesian coordinates to [altitude,azimuth,range]. 
 // Description:
 //   Convert 3D cartesian coordinates to altitude/azimuth/range coordinates.
 //   Returns [altitude,azimuth,range], where altitude is angle above the
