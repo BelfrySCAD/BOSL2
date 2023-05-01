@@ -71,6 +71,7 @@ DefineSynTags:
   Mat = Can return a transformation matrix.
   MatList = Can return a list of transformation matrices.
   Path = Can return a Path.
+  PathList = Can return a list of Paths.
   Region = Can return a Region.
   Trans = Can transform children.
   VNF = Can return a VNF.
