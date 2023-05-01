@@ -105,7 +105,7 @@ function point4d(p, fill=0) = assert(is_list(p))
 //   pt = path4d(points, [fill]);
 // Topics: Coordinates, Points, Paths
 // See Also: point2d(), path2d(), point3d(), path3d(), point4d()
-// Convert a path to 4d.  
+// Synopsis: Convert a path to 4d.  
 // Description:
 //   Returns a list of 4D vectors/points from a list of 2D or 3D vectors/points.
 // Arguments:

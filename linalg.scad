@@ -427,7 +427,7 @@ function hstack(M1, M2, M3) =
 //    bmat = block_matrix([[M11, M12,...],[M21, M22,...], ... ]);
 // Topics: Matrices, Arrays
 // See Also: column(), submatrix()
-// Make a new matrix from a block of matrices. 
+// Synopsis: Make a new matrix from a block of matrices. 
 // Description:
 //    Create a block matrix by supplying a matrix of matrices, which will
 //    be combined into one unified matrix.  Every matrix in one row
