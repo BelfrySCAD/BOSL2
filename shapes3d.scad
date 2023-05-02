@@ -2912,7 +2912,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   text3d("Fogmobar", h=2, anchor=CENTER, atype="ycenter");
 //   text3d("Fogmobar", h=2, anchor=RIGHT);
 //   text3d("Fogmobar", h=2, anchor=RIGHT+BOT, atype="ycenter");
-module text3d(text, h, size=10, font="Helvetica", spacing=1.0, direction="ltr", language="em", script="latin",
+module text3d(text, h, size=10, font="Helvetica", spacing=1.0, direction="ltr", language="en", script="latin",
               height, thickness, atype, center=false,
               anchor, spin=0, orient=UP) {
     no_children($children);
