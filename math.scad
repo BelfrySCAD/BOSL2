@@ -74,7 +74,7 @@ function count(n,s=0,step=1,reverse=false) = let(n=is_list(n) ? len(n) : n)
 // Function: lerp()
 // Synopsis: Linearly interpolates between two values.
 // Topics: Interpolation, Math
-// See Also: lookup_vector(), lerpn()
+// See Also: v_lookup(), lerpn()
 // Usage:
 //   x = lerp(a, b, u);
 //   l = lerp(a, b, LIST);
@@ -114,7 +114,7 @@ function lerp(a,b,u) =
 // Function: lerpn()
 // Synopsis: Returns exactly `n` values, linearly interpolated between `a` and `b`.
 // Topics: Interpolation, Math
-// See Also: lookup_vector(), lerp()
+// See Also: v_lookup(), lerp()
 // Usage:
 //   x = lerpn(a, b, n);
 //   x = lerpn(a, b, n, [endpoint]);
