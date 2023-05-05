@@ -1805,7 +1805,7 @@ module nut_trap_inline(length, spec, shape, l, height, h, nutwidth, anchor, orie
 //     fwd(1)text("\"head_size\"", size=.75,anchor=BACK);
 //   }  
 // Continues:
-//   The output is a [[struct|structs.scad]] with the following fields:
+//   The output is a [struct](structs.scad) with the following fields:
 //   . 
 //   Field              | What it is
 //   ------------------ | ---------------
@@ -1880,7 +1880,7 @@ function screw_info(name, head, drive, thread, drive_size, shaft_oversize, head_
 //   Note that square nuts are only available in "normal" thickness, and "thin" and "thick" nuts
 //   are only available for 1/4 inch and above.  
 //   .
-//   The output is a [[struct|structs.scad]] with the following fields:
+//   The output is a [struct](structs.scad) with the following fields:
 //   . 
 //   Field              | What it is
 //   ------------------ | ---------------
