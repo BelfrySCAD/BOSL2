@@ -783,7 +783,7 @@ function prismoid(
 //   vnf = octahedron(size, ...);
 // Description:
 //   When called as a module, creates an octahedron with axis-aligned points.
-//   When called as a function, creates a [[VNF|vnf.scad]] of an octahedron with axis-aligned points.
+//   When called as a function, creates a [VNF](vnf.scad) of an octahedron with axis-aligned points.
 // Arguments:
 //   size = Width of the octahedron, tip to tip.
 //   ---
