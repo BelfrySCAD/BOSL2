@@ -29,6 +29,7 @@
 
 // Function: bezier_points()
 // Synopsis: Computes one or more specified points along a bezier curve.
+// SynTags: Path
 // Topics: Bezier Curves
 // See Also: bezier_curve(), bezier_curvature(), bezier_tangent(), bezier_derivative(), bezier_points()
 // Usage:
@@ -179,6 +180,7 @@ function _bezier_matrix(N) =
 
 // Function: bezier_curve()
 // Synopsis: Computes a number of uniformly distributed points along a bezier curve.
+// SynTags: Path
 // Topics: Bezier Curves
 // See Also: bezier_curve(), bezier_curvature(), bezier_tangent(), bezier_derivative(), bezier_points()
 // Usage:
@@ -414,6 +416,7 @@ function bezier_line_intersection(bezier, line) =
 
 // Function: bezpath_points()
 // Synopsis: Computes one or more specified points along a bezier path.
+// SynTags: Path
 // Topics: Bezier Paths
 // See Also: bezier_points(), bezier_curve()
 // Usage:
@@ -435,6 +438,7 @@ function bezpath_points(bezpath, curveind, u, N=3) =
 
 // Function: bezpath_curve()
 // Synopsis: Takes a bezier path and converts it into a path of points.
+// SynTags: Path
 // Topics: Bezier Paths
 // See Also: bezier_points(), bezier_curve(), bezpath_points()
 // Usage:
@@ -544,6 +548,7 @@ function bezpath_length(bezpath, N=3, max_deflect=0.001) =
 
 // Function: path_to_bezpath()
 // Synopsis: Generates a bezier path that passes through all points in a given linear path.
+// SynTags: Path
 // Topics: Bezier Paths, Rounding
 // See Also: path_tangents()
 // Usage:
@@ -631,6 +636,7 @@ function path_to_bezpath(path, closed, tangents, uniform=false, size, relsize) =
 
 // Function: bezpath_close_to_axis()
 // Synopsis: Closes a 2D bezier path to the specified axis.
+// SynTags: Path
 // Topics: Bezier Paths
 // See Also: bezpath_offset()
 // Usage:
@@ -675,6 +681,7 @@ function bezpath_close_to_axis(bezpath, axis="X", N=3) =
 
 // Function: bezpath_offset()
 // Synopsis: Forms a closed bezier path loop with a translated and reversed copy of itself.
+// SynTags: Path
 // Topics: Bezier Paths
 // See Also: bezpath_close_to_axis()
 // Usage:
@@ -1012,6 +1019,7 @@ function _bezier_rectangle(patch, splinesteps=16, style="default") =
 
 // Function: bezier_vnf()
 // Synopsis: Generates a (probably non-manifold) VNF for one or more bezier surface patches.
+// SynTags: VNF
 // Topics: Bezier Patches
 // See Also: bezier_patch_points(), bezier_patch_flat()
 // Usage:
@@ -1139,6 +1147,7 @@ function bezier_vnf(patches=[], splinesteps=16, style="default") =
 
 // Function: bezier_vnf_degenerate_patch()
 // Synopsis: Generates a VNF for a degenerate bezier surface patch.
+// SynTags: VNF
 // Topics: Bezier Patches
 // See Also: bezier_patch_points(), bezier_patch_flat(), bezier_vnf()
 // Usage:
@@ -1439,6 +1448,7 @@ function bezier_patch_normals(patch, u, v) =
 
 // Module: debug_bezier()
 // Synopsis: Shows a bezier path and it's associated control points.
+// SynTags: Geom
 // Topics: Bezier Paths, Debugging
 // See Also: bezpath_curve()
 // Usage:
@@ -1493,6 +1503,7 @@ module debug_bezier(bezpath, width=1, N=3) {
 
 // Module: debug_bezier_patches()
 // Synopsis: Shows a bezier surface patch and its associated control points.
+// SynTags: Geom
 // Topics: Bezier Patches, Debugging
 // See Also: bezier_patch_points(), bezier_patch_flat(), bezier_vnf()
 // Usage:

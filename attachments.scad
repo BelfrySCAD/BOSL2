@@ -2904,6 +2904,7 @@ function _standard_anchors(two_d=false) = [
 
 // Module: show_anchors()
 // Synopsis: Shows anchors for the parent object.
+// SynTags: Geom
 // Topics: Attachments
 // See Also: expose_anchors(), anchor_arrow(), anchor_arrow2d(), frame_ref()
 // Usage:
@@ -2967,6 +2968,7 @@ module show_anchors(s=10, std=true, custom=true) {
 
 // Module: anchor_arrow()
 // Synopsis: Shows a 3d anchor orientation arrow.
+// SynTags: Geom
 // Topics: Attachments
 // See Also: anchor_arrow2d(), show_anchors(), expose_anchors(), frame_ref()
 // Usage:
@@ -3005,6 +3007,7 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow",
 
 // Module: anchor_arrow2d()
 // Synopsis: Shows a 2d anchor orientation arrow.
+// SynTags: Geom
 // Topics: Attachments
 // See Also: anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
 // Usage:
@@ -3050,6 +3053,7 @@ module expose_anchors(opacity=0.2) {
 
 // Module: frame_ref()
 // Synopsis: Shows axis orientation arrows.
+// SynTags: Geom
 // Topics: Attachments
 // See Also: anchor_arrow(), anchor_arrow2d(), show_anchors(), expose_anchors()
 // Usage:

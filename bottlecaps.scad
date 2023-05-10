@@ -18,6 +18,7 @@ include <rounding.scad>
 
 // Module: pco1810_neck()
 // Synopsis: Creates a neck for a PCO1810 standard bottle.
+// SynTags: Geom
 // Topics: Bottles, Threading
 // See Also: pco1810_cap()
 // Usage:
@@ -142,6 +143,7 @@ function  pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 
 // Module: pco1810_cap()
 // Synopsis: Creates a cap for a PCO1810 standard bottle.
+// SynTags: Geom
 // Topics: Bottles, Threading
 // See Also: pco1810_neck()
 // Usage:
@@ -212,6 +214,7 @@ function pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
 
 // Module: pco1881_neck()
 // Synopsis: Creates a neck for a PCO1881 standard bottle.
+// SynTags: Geom
 // Topics: Bottles, Threading
 // See Also: pco1881_cap()
 // Usage:
@@ -336,6 +339,7 @@ function pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 
 // Module: pco1881_cap()
 // Synopsis: Creates a cap for a PCO1881 standard bottle.
+// SynTags: Geom
 // Topics: Bottles, Threading
 // See Also: pco1881_neck()
 // Usage:
@@ -398,6 +402,7 @@ function pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
 
 // Module: generic_bottle_neck()
 // Synopsis: Creates a generic neck for a bottle.
+// SynTags: Geom
 // Topics: Bottles, Threading
 // See Also: generic_bottle_cap()
 // Usage:
@@ -528,6 +533,7 @@ function generic_bottle_neck(
 
 // Module: generic_bottle_cap()
 // Synopsis: Creates a generic cap for a bottle.
+// SynTags: Geom
 // Topics: Bottles, Threading
 // See Also: generic_bottle_neck()
 // Usage:
@@ -616,6 +622,7 @@ function generic_bottle_cap(
 
 // Module: bottle_adapter_neck_to_cap()
 // Synopsis: Creates a generic adaptor between a neck and a cap.
+// SynTags: Geom
 // Topics: Bottles, Threading
 // See Also: bottle_adapter_neck_to_neck()
 // Usage:
@@ -745,6 +752,7 @@ function bottle_adapter_neck_to_cap(
 
 // Module: bottle_adapter_cap_to_cap()
 // Synopsis: Creates a generic adaptor between a cap and a cap.
+// SynTags: Geom
 // Topics: Bottles, Threading
 // See Also: bottle_adapter_neck_to_cap(), bottle_adapter_neck_to_neck()
 // Usage:
@@ -869,6 +877,7 @@ function bottle_adapter_cap_to_cap(
 
 // Module: bottle_adapter_neck_to_neck()
 // Synopsis: Creates a generic adaptor between a neck and a neck.
+// SynTags: Geom
 // Topics: Bottles, Threading
 // See Also: bottle_adapter_neck_to_cap(), bottle_adapter_cap_to_cap()
 // Usage:
@@ -1005,6 +1014,7 @@ function bottle_adapter_neck_to_neck(
 
 // Module: sp_neck()
 // Synopsis: Creates an SPI threaded bottle neck.
+// SynTags: Geom
 // Topics: Bottles, Threading
 // See Also: sp_cap()
 // Usage:
@@ -1208,6 +1218,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 
 // Module: sp_cap()
 // Synopsis: Creates an SPI threaded bottle cap.
+// SynTags: Geom
 // Topics: Bottles, Threading
 // See Also: sp_neck()
 // Usage:
