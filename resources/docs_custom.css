@@ -5,7 +5,7 @@ background-color: #fdfdfd;
 }
 body {
 margin: 0 auto;
-max-width: 36em;
+max-width: 50em;
 padding-left: 50px;
 padding-right: 50px;
 padding-top: 50px;
@@ -14,10 +14,11 @@ hyphens: auto;
 overflow-wrap: break-word;
 text-rendering: optimizeLegibility;
 font-kerning: normal;
+font-size: 0.75em;
 }
 @media (max-width: 600px) {
 body {
-font-size: 0.9em;
+font-size: 90%;
 padding: 12px;
 }
 h1 {
