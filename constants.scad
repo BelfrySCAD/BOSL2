@@ -171,7 +171,7 @@ FWD = FRONT;
 FORWARD = FRONT;
 
 // Constant: BACK
-// Synopsis: The back-wards (Y+) direction vector constant `[0,1,0]`.
+// Synopsis: The backwards (Y+) direction vector constant `[0,1,0]`.
 // Topics: Constants, Vectors
 // See Also: LEFT, RIGHT, FRONT, UP, DOWN, CENTER
 // Description: Vector pointing back.  [0,1,0]
