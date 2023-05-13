@@ -83,7 +83,7 @@ _NO_ARG = [true,[123232345],false];
 //   mat = move(v);
 //
 // Synopsis: Translates children in an arbitrary direction.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: left(), right(), fwd(), back(), down(), up(), spherical_to_xyz(), altaz_to_xyz(), cylindrical_to_xyz(), polar_to_xy()
 //
@@ -168,7 +168,7 @@ function translate(v=[0,0,0], p=_NO_ARG) = move(v=v, p=p);
 //   mat = left(x);
 //
 // Synopsis: Translates children leftwards (X-).
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: move(), right(), fwd(), back(), down(), up()
 //
@@ -213,7 +213,7 @@ function left(x=0, p=_NO_ARG) =
 //   mat = right(x);
 //
 // Synopsis: Translates children rightwards (X+).
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: move(), left(), fwd(), back(), down(), up()
 //
@@ -268,7 +268,7 @@ function xmove(x=0, p=_NO_ARG) =
 //   mat = fwd(y);
 //
 // Synopsis: Translates children forwards (Y-).
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: move(), left(), right(), back(), down(), up()
 //
@@ -313,7 +313,7 @@ function fwd(y=0, p=_NO_ARG) =
 //   mat = back(y);
 //
 // Synopsis: Translates children backwards (Y+).
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: move(), left(), right(), fwd(), down(), up()
 //
@@ -368,7 +368,7 @@ function ymove(y=0,p=_NO_ARG) =
 //   mat = down(z);
 //
 // Synopsis: Translates children downwards (Z-).
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: move(), left(), right(), fwd(), back(), up()
 //
@@ -411,7 +411,7 @@ function down(z=0, p=_NO_ARG) =
 //   mat = up(z);
 //
 // Synopsis: Translates children upwards (Z+).
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: move(), left(), right(), fwd(), back(), down()
 //
@@ -480,7 +480,7 @@ function zmove(z=0, p=_NO_ARG) =
 //   M = rot(from=, to=, [a=], [reverse=]);
 //
 // Synopsis: Rotates children in various ways.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: xrot(), yrot(), zrot()
 //
@@ -577,7 +577,7 @@ function rot(a=0, v, cp, from, to, reverse=false, p=_NO_ARG, _m) =
 //   mat = xrot(a, [cp=]);
 //
 // Synopsis: Rotates children around the X axis using the right-hand rule.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: rot(), yrot(), zrot()
 //
@@ -625,7 +625,7 @@ function xrot(a=0, p=_NO_ARG, cp) = rot([a,0,0], cp=cp, p=p);
 //   mat = yrot(a, [cp=]);
 //
 // Synopsis: Rotates children around the Y axis using the right-hand rule.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: rot(), xrot(), zrot()
 //
@@ -674,7 +674,7 @@ function yrot(a=0, p=_NO_ARG, cp) = rot([0,a,0], cp=cp, p=p);
 //
 // Synopsis: Rotates children around the Z axis using the right-hand rule.
 // Topics: Affine, Matrices, Transforms, Rotation
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // See Also: rot(), xrot(), yrot()
 //
 // Description:
@@ -727,7 +727,7 @@ function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
 //   mat = scale(v, [cp=]);
 // Synopsis: Scales children arbitrarily.
 // Topics: Affine, Matrices, Transforms, Scaling
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // See Also: xscale(), yscale(), zscale()
 // Description:
 //   Scales by the [X,Y,Z] scaling factors given in `v`.  If `v` is given as a scalar number, all axes are scaled uniformly by that amount.
@@ -778,7 +778,7 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
 //   mat = xscale(x, [cp=]);
 //
 // Synopsis: Scales children along the X axis.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Scaling
 // See Also: scale(), yscale(), zscale()
 //
@@ -834,7 +834,7 @@ function xscale(x=1, p=_NO_ARG, cp=0) =
 //   mat = yscale(y, [cp=]);
 //
 // Synopsis: Scales children along the Y axis.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Scaling
 // See Also: scale(), xscale(), zscale()
 //
@@ -890,7 +890,7 @@ function yscale(y=1, p=_NO_ARG, cp=0) =
 //   mat = zscale(z, [cp=]);
 //
 // Synopsis: Scales children along the Z axis.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Scaling
 // See Also: scale(), xscale(), yscale()
 //
@@ -948,7 +948,7 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 // Usage: Get Reflection/Mirror Matrix
 //   mat = mirror(v);
 // Synopsis: Reflects children across an arbitrary plane.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: xflip(), yflip(), zflip()
 // Description:
@@ -1021,7 +1021,7 @@ function mirror(v, p=_NO_ARG) =
 //   mat = xflip([x=]);
 //
 // Synopsis: Reflects children across the YZ plane.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), yflip(), zflip()
 //
@@ -1077,7 +1077,7 @@ function xflip(p=_NO_ARG, x=0) =
 //   mat = yflip([y=]);
 //
 // Synopsis: Reflects children across the XZ plane.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), xflip(), zflip()
 //
@@ -1133,7 +1133,7 @@ function yflip(p=_NO_ARG, y=0) =
 //   mat = zflip([z=]);
 //
 // Synopsis: Reflects children across the XY plane.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), xflip(), yflip()
 //
@@ -1190,7 +1190,7 @@ function zflip(p=_NO_ARG, z=0) =
 //   map = frame_map(x=VECTOR1, z=VECTOR2, [reverse=]);
 //   map = frame_map(y=VECTOR1, z=VECTOR2, [reverse=]);
 // Synopsis: Rotates and possibly skews children from one frame of reference to another.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: rot(), xrot(), yrot(), zrot()
 // Description:
@@ -1278,7 +1278,7 @@ module frame_map(x,y,z,p,reverse=false)
 //   mat = skew([sxy=]|[axy=], [sxz=]|[axz=], [syx=]|[ayx=], [syz=]|[ayz=], [szx=]|[azx=], [szy=]|[azy=]);
 // Topics: Affine, Matrices, Transforms, Skewing
 // Synopsis: Skews children along various axes.
-// SynTags: Geom, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat
 //
 // Description:
 //   Skews geometry by the given skew factors.
