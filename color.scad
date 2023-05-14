@@ -17,6 +17,7 @@ use <builtins.scad>
 
 // Module: recolor()
 // Synopsis:  Sets the color for attachable children and their descendants.
+// SynTags: Trans
 // Topics: Attachments
 // See Also: color_this(), hsl(), hsv()
 // Usage:
@@ -49,6 +50,7 @@ module recolor(c="default")
 
 // Module: color_this()
 // Synopsis: Sets the color for children at the current level only.
+// SynTags: Trans
 // Topics: Attachments
 // See Also: recolor(), hsl(), hsv()
 // Usage:
@@ -82,6 +84,7 @@ module color_this(c="default")
 
 // Module: rainbow()
 // Synopsis: Iterates through a list, displaying children in different colors.
+// SynTags: Trans
 // Topics: List Handling
 // See Also: hsl(), hsv()
 // Usage:
@@ -124,6 +127,7 @@ module rainbow(list, stride=1, maxhues, shuffle=false, seed)
 
 // Function&Module: hsl()
 // Synopsis: Sets the color of children to a specified hue, saturation, lightness and optional alpha channel value.
+// SynTags: Trans
 // See Also: hsv(), recolor(), color_this()
 // Topics: Colors, Colorspace
 // Usage:
@@ -165,6 +169,7 @@ module hsl(h,s=1,l=0.5,a=1)
 
 // Function&Module: hsv()
 // Synopsis: Sets the color of children to a hue, saturation, value and optional alpha channel value.
+// SynTags: Trans
 // See Also: hsl(), recolor(), color_this()
 // Topics: Colors, Colorspace
 // Usage:
