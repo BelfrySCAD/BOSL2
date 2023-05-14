@@ -1551,6 +1551,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 //   r = Radius of corner mask.
 //   ---
 //   d = Diameter of corner mask.
+//   excess = Excess length to extrude the profile to make edge masks.  Default: 0.01
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
@@ -1562,13 +1563,13 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 //   cube([50,60,70],center=true)
 //       face_profile(TOP,r=10)
 //           mask2d_roundover(r=10);
-module face_profile(faces=[], r, d, convexity=10) {
+module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
     req_children($children);
     faces = is_vector(faces)? [faces] : faces;
     assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "Vector in faces doesn't point at a face.");
     r = get_radius(r=r, d=d, dflt=undef);
-    assert(is_num(r) && r>0);
-    edge_profile(faces) children();
+    assert(is_num(r) && r>=0);
+    edge_profile(faces, excess=excess) children();
     corner_profile(faces, convexity=convexity, r=r) children();
 }
 
@@ -1589,6 +1590,7 @@ module face_profile(faces=[], r, d, convexity=10) {
 // Arguments:
 //   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
+//   excess = Excess length to extrude the profile to make edge masks.  Default: 0.01
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
@@ -1600,7 +1602,7 @@ module face_profile(faces=[], r, d, convexity=10) {
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_roundover(r=10, inset=2);
-module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
+module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
     req_children($children);
     assert($parent_geom != undef, "No object to attach to!");
     edges = _edges(edges, except=except);
@@ -1619,7 +1621,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
         $attach_norot = true;
         $profile_type = "edge";
         psize = point3d($parent_size);
-        length = [for (i=[0:2]) if(!vec[i]) psize[i]][0]+0.1;
+        length = [for (i=[0:2]) if(!vec[i]) psize[i]][0] + excess;
         rotang =
             vec.z<0? [90,0,180+v_theta(vec)] :
             vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
@@ -1644,8 +1646,8 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 //   PARENT() corner_profile([corners], [except], [r=|d=], [convexity=]) CHILDREN;
 // Description:
 //   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
-//   to the selected corners with the appropriate orientation. If no tag is set
-//   then `corner_profile` sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.
+//   to the selected corners with the appropriate orientation. If no tag is set then `corner_profile()`
+//   sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.
 //   See [Specifying Corners](attachments.scad#subsection-specifying-corners) for information on how to specify corner sets.
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
@@ -1668,7 +1670,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 //   }
 module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
     assert($parent_geom != undef, "No object to attach to!");
-    r = get_radius(r=r, d=d, dflt=undef);
+    r = max(0.01, get_radius(r=r, d=d, dflt=undef));
     assert(is_num(r));
     corners = _corners(corners, except=except);
     vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
@@ -1687,17 +1689,18 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
         $tag = $tag=="" ? str($tag_prefix,"remove") : $tag;
         translate(anch[1]) {
             rot(rotang) {
-                render(convexity=convexity)
-                difference() {
-                    translate(-0.1*[1,1,1]) cube(r+0.1, center=false);
-                    right(r) back(r) zrot(180) {
-                        rotate_extrude(angle=90, convexity=convexity) {
-                            xflip() left(r) {
-                                difference() {
-                                    square(r,center=false);
-                                    children();
-                                }
-                            }
+                down(0.01) {
+                    linear_extrude(height=r+0.01, center=false) {
+                        difference() {
+                            translate(-[0.01,0.01]) square(r);
+                            translate([r,r]) circle(r=r*0.999);
+                        }
+                    }
+                }
+                translate([r,r]) zrot(180) {
+                    rotate_extrude(angle=90, convexity=convexity) {
+                        right(r) xflip() {
+                            children();
                         }
                     }
                 }
