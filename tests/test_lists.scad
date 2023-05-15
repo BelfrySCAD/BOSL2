@@ -160,7 +160,15 @@ module test_list_set() {
     assert_equal(list_set([1,2,3], 1, 4, dflt=12, minlen=5), [1,4,3,12,12]);
     assert_equal(list_set([1,2,3], [],[],dflt=12, minlen=5), [1,2,3,12,12]);
     assert_equal(list_set([1,2,3], 5,9), [1,2,3,0,0,9]);
-    assert_equal(list_set([1,2,3], 5,9,dflt=12), [1,2,3,12,12,9]);    
+    assert_equal(list_set([1,2,3], 5,9,minlen=4), [1,2,3,0,0,9]);
+    assert_equal(list_set([1,2,3], 5,9,minlen=7), [1,2,3,0,0,9,0]);
+    assert_equal(list_set([1,2,3], 5,9,dflt=12), [1,2,3,12,12,9]);
+    assert_equal(list_set([1,2,3], -1,12), [1,2,12]);
+    assert_equal(list_set([1,2,3], -1,12,minlen=5), [1,2,12,0,0]);
+    assert_equal(list_set([1,2,3], [-2,5], [8,9]), [1,8,3,0,0,9]);
+    assert_equal(list_set([1,2,3], [-2,5], [8,9],minlen=8,dflt=-1), [1,8,3,-1,-1,9,-1,-1]);
+    assert_equal(list_set([1,2,3], [-2,5], [8,9],minlen=3,dflt=-1), [1,8,3,-1,-1,9]);
+    assert_equal(list_set([1,2,3], [0],[4], minlen=5), [4,2,3,0,0]);
 }
 test_list_set();
 
@@ -213,6 +221,8 @@ module test_list_insert() {
     assert_equal(list_insert([3],[0,1], [1,2]), [1,3,2]);
     assert_equal(list_insert([1,2,3],[],[]),[1,2,3]);
     assert_equal(list_insert([], 0, 4),[4]);
+    assert_equal(list_insert([1,2,3],-2,4), [1,4,2,3]);
+    assert_equal(list_insert([1,2,3,4,5], [-1,-3],[12,9]), [1,2,9,3,4,12,5]);
 }
 test_list_insert();
 

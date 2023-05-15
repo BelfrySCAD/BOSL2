@@ -377,7 +377,7 @@ function bselect(list,index) =
 // Description:
 //   Generates a list of `n` copies of the given value `val`.
 //   If the count `n` is given as a list of counts, then this creates a
-//   multi-dimensional array, filled with `val`.
+//   multi-dimensional array, filled with `val`.  If `n` is negative, returns the empty list. 
 // Arguments:
 //   val = The value to repeat to make the list or array.
 //   n = The number of copies to make of `val`.  Can be a list to make an array of copies.
@@ -386,6 +386,7 @@ function bselect(list,index) =
 //   b = repeat(8, [2,3]);    // Returns [[8,8,8], [8,8,8]]
 //   c = repeat(0, [2,2,3]);  // Returns [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]
 //   d = repeat([1,2,3],3);   // Returns [[1,2,3], [1,2,3], [1,2,3]]
+//   e = repeat(4, -1);       // Returns []
 function repeat(val, n, i=0) =
     is_num(n)? [for(j=[1:1:n]) val] :
     assert( is_list(n), "Invalid count number.")
@@ -633,7 +634,9 @@ function list_pad(list, minlen, fill) =
 // Description:
 //   Takes the input list and returns a new list such that `list[indices[i]] = values[i]` for all of
 //   the (index,value) pairs supplied and unchanged for other indices.  If you supply `indices` that are 
-//   beyond the length of the list then the list is extended and filled in with the `dflt` value.  
+//   larger that the length of the list then the list is extended and filled in with the `dflt` value.
+//   If you specify indices smaller than zero then they index from the end, with -1 being the last element.
+//   Negative indexing does not wrap around: an error occurs if you give a value smaller than `-len(list)`.
 //   If you set `minlen` then the list is lengthed, if necessary, by padding with `dflt` to that length.  
 //   Repetitions in `indices` are not allowed. The lists `indices` and `values` must have the same length.  
 //   If `indices` is given as a scalar, then that index of the given `list` will be set to the scalar value of `values`.
@@ -646,29 +649,45 @@ function list_pad(list, minlen, fill) =
 // Example:
 //   a = list_set([2,3,4,5], 2, 21);  // Returns: [2,3,21,5]
 //   b = list_set([2,3,4,5], [1,3], [81,47]);  // Returns: [2,81,4,47]
-function list_set(list=[],indices,values,dflt=0,minlen=0) = 
+function list_set(list=[],indices,values,dflt=0,minlen=0) =
     assert(is_list(list))
-    !is_list(indices)? (
-        (is_finite(indices) && indices<len(list))
-          ? concat([for (i=idx(list)) i==indices? values : list[i]], repeat(dflt, minlen-len(list)))
-          : list_set(list,[indices],[values],dflt)
-    ) :
-    indices==[] && values==[]
+    !is_list(indices)?
+        assert(is_finite(indices))
+        let(
+            index = indices<0 ? indices+len(list) : indices
+        )
+        assert(index>=0, str("Index ",indices," is smaller than negative list length"))
+        (
+            index<len(list) ?
+                [
+                  for(i=[0:1:index-1]) list[i],
+                  values,
+                  for(i=[index+1:1:len(list)-1]) list[i],
+                  for(i=[len(list):1:minlen-1]) dflt
+                ]
+            : concat(list, repeat(dflt, index-len(list)), [values], repeat(dflt, minlen-index-1))
+        )
+  : indices==[] && values==[]
       ? concat(list, repeat(dflt, minlen-len(list)))
-      : assert(is_vector(indices) && is_list(values) && len(values)==len(indices),
-               "Index list and value list must have the same length")
-        let( midx = max(len(list)-1, max(indices)) )
-        [
-            for (i=[0:1:midx]) let(
-                j = search(i,indices,0),
-                k = j[0]
-            )
-            assert( len(j)<2, "Repeated indices are not allowed." )
-            k!=undef
-              ? values[k]
-              : i<len(list) ? list[i] : dflt,
-            each repeat(dflt, minlen-max(len(list),max(indices)))
-        ];
+  : assert(is_vector(indices) && is_list(values) && len(values)==len(indices),
+           "Index list and value list must have the same length")
+    let(  indices = [for(ind=indices) ind<0 ? ind+len(list) : ind],
+          midx = max(len(list)-1, max(indices))
+    )
+    assert(min(indices)>=0, "Index list contains value smaller than negative list length")
+    [
+       for (i=[0:1:midx])
+           let(
+               j = search(i,indices,0),
+               k = j[0]
+           )
+           assert( len(j)<2, "Repeated indices are not allowed." )
+           k!=undef ? values[k]
+         : i<len(list) ? list[i]
+         : dflt,
+       each repeat(dflt, minlen-max(len(list),max(indices)+1))
+    ];
+
 
 
 // Function: list_insert()
@@ -679,7 +698,9 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 //   list = list_insert(list, indices, values);
 // Description:
 //   Insert `values` into `list` before position `indices`.  The indices for insertion 
-//   are based on the original list, before any insertions have occurred.  
+//   are based on the original list, before any insertions have occurred.
+//   You can use negative indices to count from the end of the list.  Note that -1 refers
+//   to the last element, so the insertion will be *before* the last element.  
 // Arguments:
 //   list = list to insert items into
 //   indices = index or list of indices where values are inserted
@@ -690,7 +711,9 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 function list_insert(list, indices, values) = 
     assert(is_list(list))
     !is_list(indices) ?
-        assert( is_finite(indices) && is_finite(values), "Invalid indices/values." ) 
+        assert(is_finite(indices), "Invalid indices." )
+        let(indices = indices<0 ? indices+len(list) : indices)
+        assert(indices>=0, "Index is too small, must be >= len(list)")
         assert( indices<=len(list), "Indices must be <= len(list) ." )
         [
           for (i=idx(list)) each ( i==indices?  [ values, list[i] ] : [ list[i] ] ),
@@ -701,9 +724,13 @@ function list_insert(list, indices, values) =
            "Index list and value list must have the same length")
     assert( max(indices)<=len(list), "Indices must be <= len(list)." )
     let(
+        indices = [for(ind=indices) ind<0 ? ind+len(list) : ind],
         maxidx = max(indices),
         minidx = min(indices)
-    ) [
+    )
+    assert(minidx>=0, "Index list contains values that are too small")
+    assert(maxidx<=len(list), "Index list contains values that are too large")
+    [
         for (i=[0:1:minidx-1] ) list[i],
         for (i=[minidx : min(maxidx, len(list)-1)] )
             let(
