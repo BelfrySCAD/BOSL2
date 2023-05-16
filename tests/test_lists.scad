@@ -169,6 +169,8 @@ module test_list_set() {
     assert_equal(list_set([1,2,3], [-2,5], [8,9],minlen=8,dflt=-1), [1,8,3,-1,-1,9,-1,-1]);
     assert_equal(list_set([1,2,3], [-2,5], [8,9],minlen=3,dflt=-1), [1,8,3,-1,-1,9]);
     assert_equal(list_set([1,2,3], [0],[4], minlen=5), [4,2,3,0,0]);
+    assert_equal(list_set([], 2,3), [0,0,3]);
+    assert_equal(list_set([], 2,3,minlen=5,dflt=1), [1,1,3,1,1]);
 }
 test_list_set();
 
@@ -209,7 +211,6 @@ module test_list_remove_values() {
     assert_equal(list_remove_values(test,99,all=true), test);
     assert_equal(list_remove_values(test,[99,100],all=true), test);
     assert_equal(list_remove_values(test,[99,100]), test);            
-  
 }
 test_list_remove_values();
 

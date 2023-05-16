@@ -365,7 +365,7 @@ include <structs.scad>
 // Example(2D,Med,NoAxes): Specifying by corner index.  Use {{list_set()}} to construct the full chamfer cut list. 
 //   path = star(47, ir=25, or=50);  // long path, lots of corners
 //   chamfind = [8, 28, 60];         // But only want 3 chamfers
-//   chamfcut = list_set([],chamfind,[10,13,15],minlen=len(path)-1);
+//   chamfcut = list_set([],chamfind,[10,13,15],minlen=len(path));
 //   rpath = round_corners(path, cut=chamfcut, method="chamfer");   
 //   polygon(rpath);
 // Example(2D,Med,NoAxes): Two-pass to chamfer and round by index.  Use {{repeat_entries()}} to correct for first pass chamfers.
@@ -373,9 +373,9 @@ include <structs.scad>
 //   path = star(47, ir=32, or=65);  // long path, lots of corners
 //   chamfind = [8, 28, 60];         // But only want 3 chamfers
 //   roundind = [7,9,27,29,59,61];   // And 6 roundovers
-//   chamfcut = list_set([],chamfind,[10,13,15],minlen=len(path)-1);
-//   roundcut = list_set([],roundind,repeat(8,6),minlen=len(path)-1);
-//   dups = list_set([], chamfind, repeat(2,len(chamfind)), dflt=1, minlen=len(path)-1);
+//   chamfcut = list_set([],chamfind,[10,13,15],minlen=len(path));
+//   roundcut = list_set([],roundind,repeat(8,6),minlen=len(path));
+//   dups = list_set([], chamfind, repeat(2,len(chamfind)), dflt=1, minlen=len(path));
 //   rpath1 = round_corners(path, cut=chamfcut, method="chamfer");
 //   rpath2 = round_corners(rpath1, cut=repeat_entries(roundcut,dups));
 //   polygon(rpath2);
