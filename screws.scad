@@ -1483,7 +1483,7 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
        }
      }
      if (head=="hex")
-       _nutshape(head_size,head_height,"hex",false,true);
+       up(head_height/2)_nutshape(head_size,head_height,"hex",false,true);
    }
 }
 
