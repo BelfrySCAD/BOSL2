@@ -3429,7 +3429,7 @@ function texture(tex, n, inset, gap, roughness) =
 ///     being the height of the texture point from the surface.  VNF tiles MUST be able to tile in both X and Y
 ///     directions with no gaps, with the front and back edges aligned exactly, and the left and right edges as well.
 ///   One script to convert a grayscale image to a texture heightfield array in a .scad file can be found at:
-///   https://raw.githubusercontent.com/revarbat/BOSL2/master/scripts/img2scad.py
+///   https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py
 /// Arguments:
 ///   region = The [[Region|regions.scad]] to sweep/extrude.
 ///   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
@@ -3723,7 +3723,7 @@ function _find_vnf_tile_edge_path(vnf, val) =
 ///     being the height of the texture point from the surface.  VNF tiles MUST be able to tile in both X and Y
 ///     directions with no gaps, with the front and back edges aligned exactly, and the left and right edges as well.
 ///   One script to convert a grayscale image to a texture heightfield array in a .scad file can be found at:
-///   https://raw.githubusercontent.com/revarbat/BOSL2/master/scripts/img2scad.py
+///   https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py
 /// Arguments:
 ///   shape = The path or region to sweep/extrude.
 ///   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to the revolution surface.  See {{texture()}} for what named textures are supported.
