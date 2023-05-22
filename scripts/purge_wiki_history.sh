@@ -12,5 +12,5 @@ git init
 git add .
 git commit -m "Purged wiki history."
 git config pull.rebase false
-git remote add origin git@github.com:revarbat/BOSL2.wiki.git
+git remote add origin git@github.com:BelfrySCAD/BOSL2.wiki.git
 git push -u --force origin master

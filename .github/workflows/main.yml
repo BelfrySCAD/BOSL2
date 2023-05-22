@@ -33,7 +33,7 @@ jobs:
     - name: Clone Wiki
       uses: actions/checkout@v3
       with:
-        repository: revarbat/BOSL2.wiki
+        repository: BelfrySCAD/BOSL2.wiki
         path: BOSL2.wiki
 
     - name: Apt Update
@@ -74,7 +74,7 @@ jobs:
     - name: Clone Wiki
       uses: actions/checkout@v3
       with:
-        repository: revarbat/BOSL2.wiki
+        repository: BelfrySCAD/BOSL2.wiki
         path: BOSL2.wiki
 
     - name: Apt Update
