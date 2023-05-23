@@ -2089,6 +2089,7 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 //       right(14)back(19)text("flank",size=4,halign="center");
 //       right(14)back(14)text("angle",size=4,halign="center");
 //      }
+// Figure(2D,Med,NoAxes):
 //   pa_delta = tan(15)/4;
 //   rr1 = -1/2;
 //   z1 = 1/4-pa_delta;
