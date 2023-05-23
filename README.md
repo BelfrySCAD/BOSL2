@@ -10,17 +10,17 @@ Requires OpenSCAD 2021.01 or later.
 - **NOTE:** BOSL2 IS BETA CODE.  THE CODE IS STILL BEING REORGANIZED.
 - **NOTE2:** CODE WRITTEN FOR BOSLv1 PROBABLY WON'T WORK WITH BOSL2!
 
-[![Join the chat at https://gitter.im/revarbat/BOSL2](https://badges.gitter.im/revarbat/BOSL2.svg)](https://gitter.im/revarbat/BOSL2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/BelfrySCAD/BOSL2](https://badges.gitter.im/BelfrySCAD/BOSL2.svg)](https://gitter.im/BelfrySCAD/BOSL2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
 ## Documentation
 
-You can find the full BOSL2 library documentation at: https://github.com/revarbat/BOSL2/wiki
+You can find the full BOSL2 library documentation at: https://github.com/BelfrySCAD/BOSL2/wiki
 
 
 ## Installation
 
-1. Download the .zip or .tar.gz release file for this library.  Currently you should be able to find this at https://github.com/revarbat/BOSL2/archive/refs/heads/master.zip
+1. Download the .zip or .tar.gz release file for this library.  Currently you should be able to find this at https://github.com/BelfrySCAD/BOSL2/archive/refs/heads/master.zip
 2. Unpack it. Make sure that you unpack the whole file structure. Some zipfile unpackers call this option "Use folder names". It should create either a `BOSL-v2.0` or `BOSL2-master` directory with the library files within it.  You should see "examples", "scripts", "tests", and other subdirectories.
 3. Rename the unpacked main directory to `BOSL2`.
 4. Move the `BOSL2` directory into the apropriate OpenSCAD library directory for your platform:
@@ -33,7 +33,7 @@ You can find the full BOSL2 library documentation at: https://github.com/revarba
 ## Examples
 A lot of the features of this library are to allow shorter, easier-to-read, intent-based coding.  For example:
 
-[`BOSL2/transforms.scad`](https://github.com/revarbat/BOSL2/wiki/transforms.scad) Examples | Raw OpenSCAD Equivalent
+[`BOSL2/transforms.scad`](https://github.com/BelfrySCAD/BOSL2/wiki/transforms.scad) Examples | Raw OpenSCAD Equivalent
 ------------------------------- | -------------------------------
 `up(5)`                         | `translate([0,0,5])`
 `xrot(30,cp=[0,10,20])`         | `translate([0,10,20]) rotate([30,0,0]) translate([0,-10,-20])`
@@ -41,7 +41,7 @@ A lot of the features of this library are to allow shorter, easier-to-read, inte
 `zrot_copies(n=6,r=20)`         | `for (zr=[0:5]) rotate([0,0,zr*60]) translate([20,0,0])`
 `skew(sxz=0.5,syz=0.333)`       | `multmatrix([[1,0,0.5,0],[0,1,0.333,0],[0,0,1,0],[0,0,0,1]])`
 
-[`BOSL2/shapes.scad`](https://github.com/revarbat/BOSL2/wiki/shapes.scad) Examples | Raw OpenSCAD Equivalent
+[`BOSL2/shapes.scad`](https://github.com/BelfrySCAD/BOSL2/wiki/shapes.scad) Examples | Raw OpenSCAD Equivalent
 ---------------------------------- | -------------------------------
 `cube([10,20,30], anchor=BOTTOM);` | `translate([0,0,15]) cube([10,20,30], center=true);`
 `cuboid([20,20,30], rounding=5);`  | `minkowski() {cube([10,10,20], center=true); sphere(r=5, $fn=32);}`

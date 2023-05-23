@@ -5,7 +5,7 @@ If you wish to contribute bugfixes or code to the BOSL2 project, the standard wa
 1. Alternatively, you can install GitHub Desktop.
     - https://desktop.github.com
     - https://docs.github.com/en/desktop
-1. Go to the main BOSL2 GitHub repo page: https://github.com/revarbat/BOSL2/
+1. Go to the main BOSL2 GitHub repo page: https://github.com/BelfrySCAD/BOSL2/
 1. Fork the BOSL2 repository by clicking on the Fork button.
    
     - https://docs.github.com/en/github/getting-started-with-github/fork-a-repo
@@ -14,7 +14,7 @@ If you wish to contribute bugfixes or code to the BOSL2 project, the standard wa
         ```
         git clone git@github.com:YOURLOGIN/BOSL2.git
         cd BOSL2
-        git remote add upstream https://github.com/revarbat/BOSL2.git
+        git remote add upstream https://github.com/BelfrySCAD/BOSL2.git
         ```
     
     - If using GitHub Desktop:
