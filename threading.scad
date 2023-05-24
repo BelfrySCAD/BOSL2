@@ -2148,7 +2148,6 @@ module thread_helix(
     lead_in_sample=10,
     anchor, spin, orient
 ) {
-  a=echo(profile)echo(flank_angle)echo(thread_angle);
     dummy1=assert(num_defined([thread_angle,flank_angle])<=1, "Cannot define both flank angle and thread angle")
            assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),
                   "Cannot give thread_depth or flank_angle with a profile")
@@ -2182,7 +2181,6 @@ module thread_helix(
             [-cap/2-dz, 0  ],
           ];
 
-    echo_matrix(profile);
     pline = mirror([-1,1],  p = profile * pitch);
     dir = left_handed? -1 : 1;
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
