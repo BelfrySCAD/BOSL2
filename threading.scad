@@ -393,7 +393,7 @@ module threaded_nut(
 // Topics: Threading, Screws
 // See Also: trapezoidal_threaded_nut()
 // Usage:
-//   trapezoidal_threaded_rod(d, l|length, pitch, [thread_angle], [thread_depth], [internal=], ...) [ATTACHMENTS];
+//   trapezoidal_threaded_rod(d, l|length, pitch, [thread_angle=|flank_angle=], [thread_depth=], [internal=], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a threaded rod with a symmetric trapezoidal thread.  Trapezoidal threads are used for lead screws because
 //   they are one of the strongest symmetric profiles.  This tooth shape is stronger than a similarly
@@ -427,13 +427,39 @@ module threaded_nut(
 //    back(10)text("thread",size=4,halign="center");
 //    back(3)text("angle",size=4,halign="center");
 //   }
+// Figure(2D,Med,NoAxes):
+//   pa_delta = tan(15)/4;
+//      rr1 = -1/2;
+//      z1 = 1/4-pa_delta;
+//      z2 = 1/4+pa_delta;
+//      profile = [
+//                  [-z2, rr1],
+//                  [-z1,  0],
+//                  [ z1,  0],
+//                  [ z2, rr1],
+//                ];
+//      fullprofile = 50*left(1/2,p=concat(profile, right(1, p=profile)));
+//      stroke(fullprofile,width=1);
+//      dir = fullprofile[2]-fullprofile[3];
+//      dir2 = fullprofile[5]-fullprofile[4];
+//      curve = arc(15,angle=[75,87],r=40 /*67.5*/);
+//      avgpt = mean([fullprofile[5]+.1*dir2, fullprofile[5]+.4*dir2]);
+//      color("red"){
+//       stroke([fullprofile[4]+[0,1], fullprofile[4]+[0,37]], width=1);
+//       stroke([fullprofile[5]+.1*dir2, fullprofile[5]+.4*dir2], width=1);
+//       stroke(move(-curve[0]+avgpt,p=curve), width=0.71,endcaps="arrow2");
+//       right(14)back(19)text("flank",size=4,halign="center");
+//       right(14)back(14)text("angle",size=4,halign="center");
+//      }
+
 // Arguments:
 //   d = Outer diameter of threaded rod.
 //   l / length / h / height = Length of threaded rod.
 //   pitch = Thread spacing. 
+//   ---
 //   thread_angle = Angle between two thread faces.  Default: 30
 //   thread_depth = Depth of threads.  Default: pitch/2
-//   ---
+//   flank_angle = Angle of thread faces to plane perpendicular to screw. 
 //   left_handed = If true, create left-handed threads.  Default: false
 //   starts = The number of lead starts.  Default: 1
 //   bevel = if true, bevel the thread ends.  Default: false
@@ -483,8 +509,9 @@ module threaded_nut(
 //   }
 function trapezoidal_threaded_rod(
     d, l, pitch,
-    thread_angle=30,
-    thread_depth=undef,
+    thread_angle,
+    thread_depth,
+    flank_angle,
     left_handed=false,
     bevel,bevel1,bevel2,
     starts=1, 
@@ -499,8 +526,9 @@ function trapezoidal_threaded_rod(
 ) = no_function("trapezoidal_threaded_rod");
 module trapezoidal_threaded_rod(
     d, l, pitch,
-    thread_angle=30,
-    thread_depth=undef,
+    thread_angle,
+    thread_depth,
+    flank_angle,
     left_handed=false,
     bevel,bevel1,bevel2,
     starts=1, 
@@ -513,11 +541,15 @@ module trapezoidal_threaded_rod(
     lead_in_shape="default",
     anchor, spin, orient
 ) {
-    dummy0 = assert(all_positive(pitch));
-    dummy1 = assert(thread_angle>=0 && thread_angle<180);
-    depth = first_defined([thread_depth, pitch/2]);
+    dummy0 = assert(num_defined([thread_angle,flank_angle])<=1, "Cannot define both flank angle and thread angle");
+    thread_angle = first_defined([thread_angle, u_mul(2,flank_angle), 30]);
+    dummy1 = assert(all_nonnegative(pitch),"Must give a positive pitch value")
+             assert(thread_angle>=0 && thread_angle<180, "Invalid thread angle or flank angle")
+             assert(thread_angle<=90 || all_positive([thread_depth]),
+                   "Thread angle (2*flank_angle) must be smaller than 90 degrees with default thread depth of pitch/2");
+    depth = first_defined([thread_depth,pitch/2]);
     pa_delta = 0.5*depth*tan(thread_angle/2) / pitch;
-    dummy2 = assert(pa_delta<1/4, "Specified thread geometry is impossible");
+    dummy2 = assert(pa_delta<=1/4, "Specified thread geometry is impossible");
     rr1 = -depth/pitch;
     z1 = 1/4-pa_delta;
     z2 = 1/4+pa_delta;
@@ -545,7 +577,7 @@ module trapezoidal_threaded_rod(
 // Topics: Threading, Screws
 // See Also: trapezoidal_threaded_rod()
 // Usage:
-//   trapezoidal_threaded_nut(nutwidth, id, h|height|thickness, pitch, [thread_angle], [thread_depth], ...) [ATTACHMENTS];
+//   trapezoidal_threaded_nut(nutwidth, id, h|height|thickness, pitch, [thread_angle=|flank_angle=], [thread_depth], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a hex nut or square nut for a symmetric trapzoidal threaded rod.  By default produces
 //   the nominal dimensions for metric trapezoidal threads: a thread angle of 30 degrees and a depth
@@ -556,9 +588,10 @@ module trapezoidal_threaded_rod(
 //   id = diameter of threaded rod to screw onto.
 //   h / height / l / length / thickness = height/thickness of nut.
 //   pitch = Thread spacing.
+//   ---
 //   thread_angle = Angle between two thread faces.  Default: 30
 //   thread_depth = Depth of the threads.  Default: pitch/2
-//   ---
+//   flank_angle = Angle of thread faces to plane perpendicular to screw. 
 //   shape = specifies shape of nut, either "hex" or "square".  Default: "hex"
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
@@ -598,8 +631,9 @@ function trapezoidal_threaded_nut(
     id,
     h,
     pitch,
-    thread_angle=30,
+    thread_angle,
     thread_depth, shape="hex",
+    flank_angle,
     left_handed=false,
     starts=1,
     bevel,bevel1,bevel2,bevang=30,
@@ -619,8 +653,9 @@ module trapezoidal_threaded_nut(
     id,
     h,
     pitch,
-    thread_angle=30,
+    thread_angle,
     thread_depth, shape="hex",
+    flank_angle,
     left_handed=false,
     starts=1,
     bevel,bevel1,bevel2,bevang=30,
@@ -635,8 +670,13 @@ module trapezoidal_threaded_nut(
     lead_in_shape="default",
     anchor, spin, orient
 ) {
-    dummy1 = assert(is_num(pitch) && pitch>=0 && thread_angle>=0 && thread_angle<180);
-    depth = first_defined([thread_depth, pitch/2]);
+    dummy0 = assert(num_defined([thread_angle,flank_angle])<=1, "Cannot define both flank angle and thread angle");
+    thread_angle = first_defined([thread_angle, u_mul(2,flank_angle), 30]);
+    dummy1 = assert(all_nonnegative(pitch),"Must give a positive pitch value")
+             assert(thread_angle>=0 && thread_angle<180, "Invalid thread angle or flank angle")
+             assert(thread_angle<=90 || all_positive([thread_depth]),
+                   "Thread angle (2*flank_angle) must be smaller than 90 degrees with default thread depth of pitch/2");
+    depth = first_defined([thread_depth,pitch/2]);
     pa_delta = 0.5*depth*tan(thread_angle/2) / pitch;
     dummy2 = assert(pitch==0 || pa_delta<1/4, "Specified thread geometry is impossible");
     rr1 = -depth/pitch;
@@ -2002,16 +2042,18 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 // Arguments:
 //   d = Inside base diameter of threads.  Default: 10
 //   pitch = Distance between threads.  Default: 2
+//   ---
 //   thread_depth = Depth of threads from top to bottom.
 //   flank_angle = Angle of thread faces to plane perpendicular to screw.  Default: 15 degrees.
-//   turns = Number of revolutions to rotate thread around. 
-//   ---
+//   turns = Number of revolutions to rotate thread around.
+//   thread_angle = Angle between two thread faces.  
 //   profile = If an asymmetrical thread profile is needed, it can be specified here.
 //   starts = The number of thread starts.  Default: 1
 //   left_handed = If true, thread has a left-handed winding.
 //   internal = if true make internal threads.  The only effect this has is to change how the threads taper if tapering is selected. When true, threads taper towards the outside; when false, they taper towards the inside.  Default: false
 //   d1 = Bottom inside base diameter of threads.
 //   d2 = Top inside base diameter of threads.
+//   thread_angle = Angle between 
 //   lead_in = Specify linear length of the lead in section of the threading with blunt start threads
 //   lead_in1 = Specify linear length of the lead in section of the threading at the bottom with blunt start threads
 //   lead_in2 = Specify linear length of the lead in section of the threading at the top with blunt start threads
@@ -2023,17 +2065,7 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example(2DMed): Typical Tooth Profile
-//   pitch = 2;
-//   depth = pitch * cos(30) * 5/8;
-//   profile = [
-//       [-6/16, 0           ],
-//       [-1/16, depth/pitch ],
-//       [ 1/16, depth/pitch ],
-//       [ 6/16, 0           ],
-//   ];
-//   stroke(profile, width=0.02);
-// Figure(2D,Med):
+// Figure(2D,Med,NoAxes):
 //   pa_delta = tan(15)/4;
 //      rr1 = -1/2;
 //      z1 = 1/4-pa_delta;
@@ -2057,6 +2089,40 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 //       right(14)back(19)text("flank",size=4,halign="center");
 //       right(14)back(14)text("angle",size=4,halign="center");
 //      }
+// Figure(2D,Med,NoAxes):
+//   pa_delta = tan(15)/4;
+//   rr1 = -1/2;
+//   z1 = 1/4-pa_delta;
+//   z2 = 1/4+pa_delta;
+//   profile = [
+//               [-z2, rr1],
+//               [-z1,  0],
+//               [ z1,  0],
+//               [ z2, rr1],
+//             ];
+//   fullprofile = 50*left(1/2,p=concat(profile, right(1, p=profile)));
+//   stroke(fullprofile,width=1);
+//   dir = fullprofile[2]-fullprofile[3];
+//   dir2 = fullprofile[5]-fullprofile[4];
+//   curve = arc(32,angle=[75,105],r=67.5);
+//   avgpt = mean([fullprofile[5]+.1*dir2, fullprofile[5]+.4*dir2]);
+//   color("red"){
+//    stroke([fullprofile[2]+.1*dir, fullprofile[2]+.4*dir], width=1);
+//    stroke([fullprofile[5]+.1*dir2, fullprofile[5]+.4*dir2], width=1);
+//    stroke(move(-curve[0]+avgpt,p=curve), width=1,endcaps="arrow2");
+//    back(10)text("thread",size=4,halign="center");
+//    back(3)text("angle",size=4,halign="center");
+//   }
+// Example(2DMed): Typical Tooth Profile
+//   pitch = 2;
+//   depth = pitch * cos(30) * 5/8;
+//   profile = [
+//       [-6/16, 0           ],
+//       [-1/16, depth/pitch ],
+//       [ 1/16, depth/pitch ],
+//       [ 6/16, 0           ],
+//   ];
+//   stroke(profile, width=0.02);
 // Examples:
 //   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=2.5, $fn=72);
 //   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, turns=2.5, lead_in=1, $fn=72);
@@ -2065,7 +2131,7 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 function thread_helix(
     d, pitch, thread_depth, flank_angle, turns,
     profile, starts=1, left_handed=false, internal=false,
-    d1, d2,
+    d1, d2, thread_angle, 
     lead_in_shape,
     lead_in, lead_in1, lead_in2,
     lead_in_ang, lead_in_ang1, lead_in_ang2,
@@ -2075,18 +2141,21 @@ function thread_helix(
 module thread_helix(
     d, pitch, thread_depth, flank_angle, turns,
     profile, starts=1, left_handed=false, internal=false,
-    d1, d2,
+    d1, d2, thread_angle, 
     lead_in_shape,
     lead_in, lead_in1, lead_in2,
     lead_in_ang, lead_in_ang1, lead_in_ang2,
     lead_in_sample=10,
     anchor, spin, orient
 ) {
-    dummy1=assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),"Cannot give thread_depth or flank_angle with a profile")
+    dummy1=assert(num_defined([thread_angle,flank_angle])<=1, "Cannot define both flank angle and thread angle")
+           assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),
+                  "Cannot give thread_depth or flank_angle with a profile")
            assert(all_positive([turns]), "The turns parameter must be a positive number")
            assert(all_positive(pitch), "pitch must be a positive number")
+           assert(num_defined([flank_angle,thread_angle])<=1, "Cannot give both thread_angle and flank_angle")
            assert(is_def(profile) || is_def(thread_depth), "If profile is not given, must give thread depth");
-    flank_angle = default(flank_angle,15);
+    flank_angle = first_defined([flank_angle,u_mul(0.5,thread_angle),15]);
     h = pitch*starts*abs(turns);
     r1 = get_radius(d1=d1, d=d, dflt=10);
     r2 = get_radius(d1=d2, d=d, dflt=10);
@@ -2096,6 +2165,7 @@ module thread_helix(
             dz = tdp * tan(flank_angle),
             cap = (1 - 2*dz)/2
         )
+        assert(cap/2+dz<=0.5, "Invalid geometry: incompatible thread depth and thread_angle/flank_angle")
         internal?
           [
             [-cap/2-dz, tdp],
@@ -2110,6 +2180,7 @@ module thread_helix(
             [-cap/2,    tdp],
             [-cap/2-dz, 0  ],
           ];
+
     pline = mirror([-1,1],  p = profile * pitch);
     dir = left_handed? -1 : 1;
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
