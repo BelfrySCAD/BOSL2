@@ -604,7 +604,7 @@ function cuboid(
 //   chamfer = The chamfer size for the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
 //   chamfer1 = The chamfer size for the bottom of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
 //   chamfer2 = The chamfer size for the top of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
@@ -1286,6 +1286,8 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   cyl(l|h|length|height, r1=, r2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
 //   cyl(l|h|length|height, d1=, d2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
 //
+// Usage: Caled as a function to get a VNF
+//   vnf = cyl(...);
 //
 // Description:
 //   Creates cylinders in various anchorings and orientations, with optional rounding, chamfers, or textures.
@@ -1348,6 +1350,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   rounding1 = The radius of the rounding on the bottom end of the cylinder.
 //   rounding2 = The radius of the rounding on the top end of the cylinder.
 //   realign = If true, rotate the cylinder by half the angle of one face.
+//   teardrop = If given as a number, rounding around the bottom edge of the cylinder won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
@@ -1384,6 +1387,9 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //
 // Example: Rounding
 //   cyl(l=40, d=40, rounding=10);
+//
+// Example(VPD=175;VPR=[90,0,0]): Teardrop Bottom Rounding
+//   cyl(l=40, d=40, rounding=10, teardrop=true);
 //
 // Example: Heterogenous Chamfers and Rounding
 //   ydistribute(80) {
@@ -1490,6 +1496,7 @@ function cyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign=false, shift=[0,0],
+    teardrop=false,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
@@ -1559,6 +1566,12 @@ function cyl(
                 dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1 : 0), 
                 dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0),
 
+                td_ang = teardrop == true? 45 :
+                    teardrop == false? 90 :
+                    assert(is_finite(teardrop))
+                    assert(teardrop>=0 && teardrop<=90)
+                    teardrop,
+
                 checks2 =
                     assert(is_finite(round1), "rounding1 must be a number if given.")
                     assert(is_finite(round2), "rounding2 must be a number if given.")
@@ -1570,14 +1583,18 @@ function cyl(
                     undef,
                 path = [
                     if (texture==undef) [0,-l/2],
+
                     if (!approx(chamf1r,0))
                         each [
                             [r1, -l/2] + polar_to_xy(chamf1r,180),
                             [r1, -l/2] + polar_to_xy(chamf1l,90+vang),
                         ]
-                    else if (!approx(round1,0))
+                    else if (!approx(round1,0) && td_ang < 90)
+                        each _teardrop_corner(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]], ang=td_ang)
+                    else if (!approx(round1,0) && td_ang >= 90)
                         each arc(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]])
                     else [r1,-l/2],
+
                     if (is_finite(chamf2r) && !approx(chamf2r,0))
                         each [
                             [r2, l/2] + polar_to_xy(chamf2l,270+vang),
@@ -1586,6 +1603,7 @@ function cyl(
                     else if (is_finite(round2) && !approx(round2,0))
                         each arc(r=abs(round2), corner=[[r1,-l/2],[r2,l/2],[max(0,r2-2*roundlen2),l/2]])
                     else [r2,l/2],
+
                     if (texture==undef) [0,l/2],
                 ]
             ) rotate_sweep(path,
@@ -1603,6 +1621,23 @@ function cyl(
     reorient(anchor,spin,orient, r1=r1, r2=r2, l=l, shift=shift, p=ovnf);
 
 
+function _teardrop_corner(r, corner, ang=45) =
+    let(
+        check = assert(len(corner)==3) assert(is_finite(r)) assert(is_finite(ang)),
+        cp = circle_2tangents(r, corner)[0],
+        path1 = arc(r=r, corner=corner),
+        path2 = [
+            for (p = select(path1,0,-2))
+                if (v_theta(p-cp) >= -ang) p,
+            last(path1)
+        ],
+        path = [
+            line_intersection([corner[0],corner[1]],[path2[0],path2[0]+polar_to_xy(1,-90-ang)]),
+            each path2
+        ]
+    ) path;
+
+
 module cyl(
     h, r, center,
     l, r1, r2,
@@ -1611,6 +1646,7 @@ module cyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign=false, shift=[0,0],
+    teardrop=false,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
@@ -1640,6 +1676,7 @@ module cyl(
                     chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
                     rounding=rounding, rounding1=rounding1, rounding2=rounding2,
                     from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+                    teardrop=teardrop,
                     texture=texture, tex_size=tex_size,
                     tex_counts=tex_counts, tex_scale=tex_scale,
                     tex_inset=tex_inset, tex_rot=tex_rot,

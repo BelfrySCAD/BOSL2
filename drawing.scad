@@ -665,8 +665,8 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 // Section: Computing paths
 
 // Function&Module: arc()
-// Synopsis: Draws a 2d pie-slice or returns 2D or 3D path forming an arc.
-// Topics: Shapes (2D), Path Generators (2D)
+// Synopsis: Draws a 2D pie-slice or returns 2D or 3D path forming an arc.
+// Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators
 //
 // Usage: 2D arc from 0º to `angle` degrees.
 //   path=arc(n, r|d=, angle);
@@ -684,7 +684,6 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   path=arc(n, corner=[P0,P1,P2], r=);
 // Usage: as module
 //   arc(...) [ATTACHMENTS];
-// Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators
 // Description:
 //   If called as a function, returns a 2D or 3D path forming an arc.
 //   If called as a module, creates a 2D arc polygon or pie slice shape.
