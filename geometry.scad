@@ -1108,7 +1108,7 @@ function circle_2tangents(r, pt1, pt2, pt3, tangents=false, d) =
     assert(r!=undef, "Must specify either r or d.")
     assert( ( is_path(pt1) && len(pt1)==3 && is_undef(pt2) && is_undef(pt3))
             || (is_matrix([pt1,pt2,pt3]) && (len(pt1)==2 || len(pt1)==3) ),
-            "Invalid input points." )
+            str("Invalid input points. pt1=",pt1,", pt2=",pt2,", pt3=",pt3))
     is_undef(pt2)
     ? circle_2tangents(r, pt1[0], pt1[1], pt1[2], tangents=tangents)
     : is_collinear(pt1, pt2, pt3)? undef :

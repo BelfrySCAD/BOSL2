@@ -1388,7 +1388,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 // Example: Rounding
 //   cyl(l=40, d=40, rounding=10);
 //
-// Example: Teardrop Bottom Rounding
+// Example(VPD=175;VPR=[90,0,0]): Teardrop Bottom Rounding
 //   cyl(l=40, d=40, rounding=10, teardrop=true);
 //
 // Example: Heterogenous Chamfers and Rounding
