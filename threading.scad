@@ -543,7 +543,7 @@ module trapezoidal_threaded_rod(
 ) {
     dummy0 = assert(num_defined([thread_angle,flank_angle])<=1, "Cannot define both flank angle and thread angle");
     thread_angle = first_defined([thread_angle, u_mul(2,flank_angle), 30]);
-    dummy1 = assert(all_positive(pitch),"Must give a positive pitch value")
+    dummy1 = assert(all_nonnegative(pitch),"Must give a positive pitch value")
              assert(thread_angle>=0 && thread_angle<180, "Invalid thread angle or flank angle")
              assert(thread_angle<=90 || all_positive([thread_depth]),
                    "Thread angle (2*flank_angle) must be smaller than 90 degrees with default thread depth of pitch/2");
@@ -672,7 +672,7 @@ module trapezoidal_threaded_nut(
 ) {
     dummy0 = assert(num_defined([thread_angle,flank_angle])<=1, "Cannot define both flank angle and thread angle");
     thread_angle = first_defined([thread_angle, u_mul(2,flank_angle), 30]);
-    dummy1 = assert(all_positive(pitch),"Must give a positive pitch value")
+    dummy1 = assert(all_nonnegative(pitch),"Must give a positive pitch value")
              assert(thread_angle>=0 && thread_angle<180, "Invalid thread angle or flank angle")
              assert(thread_angle<=90 || all_positive([thread_depth]),
                    "Thread angle (2*flank_angle) must be smaller than 90 degrees with default thread depth of pitch/2");
