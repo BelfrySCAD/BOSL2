@@ -1566,7 +1566,7 @@ function cyl(
                 dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1 : 0), 
                 dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0),
 
-                teardrop = teardrop == true? 45 :
+                td_ang = teardrop == true? 45 :
                     teardrop == false? 90 :
                     assert(is_finite(teardrop))
                     assert(teardrop>=0 && teardrop<=90)
@@ -1589,9 +1589,9 @@ function cyl(
                             [r1, -l/2] + polar_to_xy(chamf1r,180),
                             [r1, -l/2] + polar_to_xy(chamf1l,90+vang),
                         ]
-                    else if (!approx(round1,0) && teardrop < 90)
-                        each _teardrop_corner(corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]], r=abs(round1), teardrop)
-                    else if (!approx(round1,0) && teardrop >= 90)
+                    else if (!approx(round1,0) && td_ang < 90)
+                        each _teardrop_corner(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]], ang=td_ang)
+                    else if (!approx(round1,0) && td_ang >= 90)
                         each arc(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]])
                     else [r1,-l/2],
 
@@ -1621,8 +1621,9 @@ function cyl(
     reorient(anchor,spin,orient, r1=r1, r2=r2, l=l, shift=shift, p=ovnf);
 
 
-function _teardrop_corner(corner, r, ang=45) =
+function _teardrop_corner(r, corner, ang=45) =
     let(
+        check = assert(len(corner)==3) assert(is_finite(r)) assert(is_finite(ang)),
         cp = circle_2tangents(r, corner)[0],
         path1 = arc(r=r, corner=corner),
         path2 = [
