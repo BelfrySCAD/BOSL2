@@ -464,6 +464,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 
 // Module: position()
 // Synopsis: Attaches children to a parent object at an anchor point.
+// SynTags: Trans
 // Topics: Attachments
 // See Also: attachable(), attach(), orient()
 // Usage:
@@ -500,6 +501,7 @@ module position(from)
 
 // Module: orient()
 // Synopsis: Orients children's tops in the directon of the specified anchor.
+// SynTags: Trans
 // Topics: Attachments
 // See Also: attachable(), attach(), orient()
 // Usage:
@@ -553,6 +555,7 @@ module orient(anchor, spin) {
 
 // Module: attach()
 // Synopsis: Attaches children to a parent object at an anchor point and orientation.
+// SynTags: Trans
 // Topics: Attachments
 // See Also: attachable(), position(), face_profile(), edge_profile(), corner_profile()
 // Usage:
@@ -1380,6 +1383,7 @@ module show_int(tags)
 
 // Module: face_mask()
 // Synopsis: Ataches a 3d mask shape to the given faces of the parent.
+// SynTags: Trans
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), edge_mask(), corner_mask(), face_profile(), edge_profile(), corner_profile()
 // Usage:
@@ -1423,6 +1427,7 @@ module face_mask(faces=[LEFT,RIGHT,FRONT,BACK,BOT,TOP]) {
 
 // Module: edge_mask()
 // Synopsis: Attaches a 3D mask shape to the given edges of the parent.
+// SynTags: Trans
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), face_mask(), corner_mask(), face_profile(), edge_profile(), corner_profile()
 // Usage:
@@ -1487,6 +1492,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 
 // Module: corner_mask()
 // Synopsis: Attaches a 3d mask shape to the given corners of the parent.
+// SynTags: Trans
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), face_mask(), edge_mask(), face_profile(), edge_profile(), corner_profile()
 // Usage:
@@ -1537,6 +1543,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 
 // Module: face_profile()
 // Synopsis: Extrudes a 2D edge profile into a mask for all edges and corners of the given faces on the parent.
+// SynTags: Geom
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), edge_profile(), corner_profile(), face_mask(), edge_mask(), corner_mask()
 // Usage:
@@ -1576,6 +1583,7 @@ module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
 
 // Module: edge_profile()
 // Synopsis: Extrudes a 2d edge profile into a mask on the given edges of the parent.
+// SynTags: Geom
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), face_profile(), corner_profile(), edge_mask(), face_mask(), corner_mask()
 // Usage:
@@ -1640,6 +1648,7 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 
 // Module: corner_profile()
 // Synopsis: Rotationally extrudes a 2d edge profile into corner mask on the given corners of the parent.
+// SynTags: Geom
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask(), face_mask(), edge_mask()
 // Usage:
@@ -2024,6 +2033,7 @@ module attachable(
 
 // Function: reorient()
 // Synopsis: Calculates the transformation matrix needed to reorient an object.
+// SynTags: Trans, Path, VNF
 // Topics: Attachments
 // See Also: reorient(), attachable()
 // Usage: Square/Trapezoid Geometry
@@ -2040,25 +2050,25 @@ module attachable(
 //   pts = reorient(anchor, spin, [orient], two_d=true, region=, [extent=], p=, ...);
 // Usage: Cubical/Prismoidal Geometry
 //   mat = reorient(anchor, spin, [orient], size=, [size2=], [shift=], ...);
-//   pts = reorient(anchor, spin, [orient], size=, [size2=], [shift=], p=, ...);
+//   vnf = reorient(anchor, spin, [orient], size=, [size2=], [shift=], p=, ...);
 // Usage: Cylindrical Geometry
 //   mat = reorient(anchor, spin, [orient], r=|d=, l=, [axis=], ...);
-//   pts = reorient(anchor, spin, [orient], r=|d=, l=, [axis=], p=, ...);
+//   vnf = reorient(anchor, spin, [orient], r=|d=, l=, [axis=], p=, ...);
 // Usage: Conical Geometry
 //   mat = reorient(anchor, spin, [orient], r1=|d1=, r2=|d2=, l=, [axis=], ...);
-//   pts = reorient(anchor, spin, [orient], r1=|d1=, r2=|d2=, l=, [axis=], p=, ...);
+//   vnf = reorient(anchor, spin, [orient], r1=|d1=, r2=|d2=, l=, [axis=], p=, ...);
 // Usage: Spheroid/Ovoid Geometry
 //   mat = reorient(anchor, spin, [orient], r|d=, ...);
-//   pts = reorient(anchor, spin, [orient], r|d=, p=, ...);
+//   vnf = reorient(anchor, spin, [orient], r|d=, p=, ...);
 // Usage: Extruded Path/Polygon Geometry
 //   mat = reorient(anchor, spin, [orient], path=, l=|h=, [extent=], ...);
-//   pts = reorient(anchor, spin, [orient], path=, l=|h=, [extent=], p=, ...);
+//   vnf = reorient(anchor, spin, [orient], path=, l=|h=, [extent=], p=, ...);
 // Usage: Extruded Region Geometry
 //   mat = reorient(anchor, spin, [orient], region=, l=|h=, [extent=], ...);
-//   pts = reorient(anchor, spin, [orient], region=, l=|h=, [extent=], p=, ...);
+//   vnf = reorient(anchor, spin, [orient], region=, l=|h=, [extent=], p=, ...);
 // Usage: VNF Geometry
 //   mat = reorient(anchor, spin, [orient], vnf, [extent], ...);
-//   pts = reorient(anchor, spin, [orient], vnf, [extent], p=, ...);
+//   vnf = reorient(anchor, spin, [orient], vnf, [extent], p=, ...);
 //
 // Description:
 //   Given anchor, spin, orient, and general geometry info for a managed volume, this calculates

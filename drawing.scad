@@ -18,6 +18,7 @@
 
 // Module: stroke()
 // Synopsis: Draws a line along a path or region boundry.
+// SynTags: Geom
 // Topics: Paths (2D), Paths (3D), Drawing Tools
 // See Also: offset_stroke(), path_sweep()
 // Usage:
@@ -588,6 +589,7 @@ module stroke(
 
 // Function&Module: dashed_stroke()
 // Synopsis: Draws a dashed line along a path or region boundry.
+// SynTags: Geom, PathList
 // Topics: Paths, Drawing Tools
 // See Also: stroke(), path_cut()
 // Usage: As a Module
@@ -666,7 +668,9 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 
 // Function&Module: arc()
 // Synopsis: Draws a 2D pie-slice or returns 2D or 3D path forming an arc.
+// SynTags: Geom, Path
 // Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators
+// See Also: pie_slice(), stroke()
 //
 // Usage: 2D arc from 0º to `angle` degrees.
 //   path=arc(n, r|d=, angle);
@@ -860,7 +864,9 @@ module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=fa
 
 // Function: helix()
 // Synopsis: Creates a 2d spiral or 3d helical path.
+// SynTags: Path
 // Topics: Path Generators, Paths, Drawing Tools
+// See Also: pie_slice(), stroke(), thread_helix(), path_sweep()
 //
 // Usage:
 //   path = helix(l|h, [turns=], [angle=], r=|r1=|r2=, d=|d1=|d2=);
@@ -915,10 +921,11 @@ function _normal_segment(p1,p2) =
 
 // Function: turtle()
 // Synopsis: Uses [turtle graphics](https://en.wikipedia.org/wiki/Turtle_graphics) to generate a 2D path.
+// SynTags: Path
 // Topics: Shapes (2D), Path Generators (2D), Mini-Language
-// See Also: turtle3d()
+// See Also: turtle3d(), stroke(), path_sweep()
 // Usage:
-//   turtle(commands, [state], [full_state=], [repeat=])
+//   path = turtle(commands, [state], [full_state=], [repeat=])
 // Description:
 //   Use a sequence of [turtle graphics]{https://en.wikipedia.org/wiki/Turtle_graphics} commands to generate a path.  The parameter `commands` is a list of
 //   turtle commands and optional parameters for each command.  The turtle state has a position, movement direction,
@@ -1178,7 +1185,9 @@ function _turtle_command(command, parm, parm2, state, index) =
 
 // Module: debug_polygon()
 // Synopsis: Draws an annotated polygon.
+// SynTags: Geom
 // Topics: Shapes (2D)
+// See Also: debug_vnf(), debug_bezier()
 //
 // Usage:
 //   debug_polygon(points, paths, [vertices=], [edges=], [convexity=], [size=]);

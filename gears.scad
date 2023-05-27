@@ -27,6 +27,7 @@
 
 // Function&Module: spur_gear()
 // Synopsis: Creates a spur gear shape.
+// SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: rack(), spur_gear(), spur_gear2d(), bevel_gear()
 // Usage: As a Module
@@ -193,6 +194,7 @@ module spur_gear(
 
 // Function&Module: spur_gear2d()
 // Synopsis: Creates a 2D spur gear shape.
+// SynTags: Geom, Path
 // Topics: Gears, Parts
 // See Also: rack(), spur_gear(), spur_gear2d(), bevel_gear()
 // Usage: As Module
@@ -294,6 +296,7 @@ module spur_gear2d(
 
 // Function&Module: rack()
 // Synopsis: Creates a gear rack shape.
+// SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: rack2d(), spur_gear(), spur_gear2d(), bevel_gear()
 // Usage: As a Module
@@ -443,6 +446,7 @@ function rack(
 
 // Function&Module: rack2d()
 // Synopsis: Creates a 2D gear rack shape.
+// SynTags: Geom, Path
 // Topics: Gears, Parts
 // See Also: rack(), spur_gear(), spur_gear2d(), bevel_gear()
 // Usage: As a Module
@@ -566,6 +570,7 @@ module rack2d(
 
 // Function&Module: bevel_gear()
 // Synopsis: Creates a possibly spiral beveled gear shape.
+// SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
 // Usage: As a Module
@@ -826,6 +831,7 @@ module bevel_gear(
 
 // Function&Module: worm()
 // Synopsis: Creates a worm shape that will mate with a worm gear.
+// SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
 // Usage: As a Module
@@ -946,6 +952,7 @@ module worm(
 
 // Function&Module: worm_gear()
 // Synopsis: Creates a worm gear shape that will mate with a worm.
+// SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
 // Usage: As a Module
