@@ -18,6 +18,7 @@ $cubetruss_clip_thickness = 1.6;
 
 // Module: cubetruss()
 // Synopsis: Creates a multi-cube straight cubetruss shape.
+// SynTags: Geom
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
@@ -35,7 +36,6 @@ $cubetruss_clip_thickness = 1.6;
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Topics: Attachable, Trusses
 // Examples:
 //   cubetruss(extents=3);
 //   cubetruss(extents=3, clips=FRONT);
@@ -91,6 +91,7 @@ module cubetruss(extents=6, clips=[], bracing, size, strut, clipthick, anchor=CE
 
 // Module: cubetruss_corner()
 // Synopsis: Creates a multi-cube corner cubetruss shape.
+// SynTags: Geom
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
@@ -108,7 +109,6 @@ module cubetruss(extents=6, clips=[], bracing, size, strut, clipthick, anchor=CE
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Topics: Attachable, Trusses
 // Examples:
 //   cubetruss_corner(extents=2);
 //   cubetruss_corner(extents=2, h=2);
@@ -167,6 +167,7 @@ module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing, size, strut, clipthic
 
 // Module: cubetruss_support()
 // Synopsis: Creates a cubetruss support structure shape.
+// SynTags: Geom
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
@@ -181,7 +182,6 @@ module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing, size, strut, clipthic
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Topics: Attachable, Trusses
 // Example(VPT=[0,0,0],VPD=150):
 //   cubetruss_support();
 // Example(VPT=[0,0,0],VPD=200):
@@ -234,6 +234,7 @@ module cubetruss_support(size, strut, extents=1, anchor=CENTER, spin=0, orient=U
 
 // Module: cubetruss_foot()
 // Synopsis: Creates a foot that can connect two cubetrusses.
+// SynTags: Geom
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
@@ -250,7 +251,6 @@ module cubetruss_support(size, strut, extents=1, anchor=CENTER, spin=0, orient=U
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Topics: Attachable, Trusses
 // Examples:
 //   cubetruss_foot(w=1);
 //   cubetruss_foot(w=3);
@@ -314,6 +314,7 @@ module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient
 
 // Module: cubetruss_joiner()
 // Synopsis: Creates a joiner that can connect two cubetrusses end-to-end.
+// SynTags: Geom
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
@@ -331,7 +332,6 @@ module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Topics: Attachable, Trusses
 // Examples:
 //   cubetruss_joiner(w=1, vert=false);
 //   cubetruss_joiner(w=1, vert=true);
@@ -385,6 +385,7 @@ module cubetruss_joiner(w=1, vert=true, size, strut, clipthick, anchor=CENTER, s
 
 // Module: cubetruss_uclip()
 // Synopsis: Creates a joiner that can connect two cubetrusses end-to-end.
+// SynTags: Geom
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
@@ -401,7 +402,6 @@ module cubetruss_joiner(w=1, vert=true, size, strut, clipthick, anchor=CENTER, s
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Topics: Attachable, Trusses
 // Examples:
 //   cubetruss_uclip(dual=false);
 //   cubetruss_uclip(dual=true);
@@ -437,6 +437,7 @@ module cubetruss_uclip(dual=true, size, strut, clipthick, anchor=CENTER, spin=0,
 
 // Module: cubetruss_segment()
 // Synopsis: Creates a single cubetruss cube.
+// SynTags: Geom
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
@@ -451,7 +452,6 @@ module cubetruss_uclip(dual=true, size, strut, clipthick, anchor=CENTER, spin=0,
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Topics: Attachable, Trusses
 // Examples:
 //   cubetruss_segment(bracing=false);
 //   cubetruss_segment(bracing=true);
@@ -509,6 +509,7 @@ module cubetruss_segment(size, strut, bracing, anchor=CENTER, spin=0, orient=UP)
 
 // Module: cubetruss_clip()
 // Synopsis: Creates a clip for the end of a cubetruss to snap-lock it to another cubetruss.
+// SynTags: Geom
 // Topics: Trusses, CubeTruss, FDM Optimized, Parts
 // See Also: cubetruss_segment(), cubetruss_support(), cubetruss(), cubetruss_corner()
 // Usage:
@@ -525,7 +526,6 @@ module cubetruss_segment(size, strut, bracing, anchor=CENTER, spin=0, orient=UP)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Topics: Attachable, Trusses
 // Examples:
 //   cubetruss_clip(extents=2);
 //   cubetruss_clip(extents=1);
@@ -588,7 +588,6 @@ module cubetruss_clip(extents=1, size, strut, clipthick, anchor=CENTER, spin=0, 
 //   gaps = The number of extra strut widths to add in, corresponding to each time a truss butts up against another.
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
-// Topics: Trusses
 function cubetruss_dist(cubes=0, gaps=0, size, strut) =
     let(
         size = is_undef(size)? $cubetruss_size : size,

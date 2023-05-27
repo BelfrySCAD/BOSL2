@@ -93,6 +93,7 @@
 
 // Function&Module: move_copies()
 // Synopsis: Translates copies of all children.
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Translation, Copiers
 // See Also: xcopies(), ycopies(), zcopies(), line_copies(), grid_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
@@ -145,6 +146,7 @@ function move_copies(a=[[0,0,0]],p=_NO_ARG) =
 
 // Function&Module: xcopies()
 // Synopsis: Places copies of children along the X axis. 
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Translation, Copiers
 // See Also: move_copies(), ycopies(), zcopies(), line_copies(), grid_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
@@ -230,6 +232,7 @@ function xcopies(spacing, n, l, sp, p=_NO_ARG) =
 
 // Function&Module: ycopies()
 // Synopsis: Places copies of children along the Y axis. 
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Translation, Copiers
 // See Also: move_copies(), xcopies(), zcopies(), line_copies(), grid_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
@@ -315,6 +318,7 @@ function ycopies(spacing, n, l, sp, p=_NO_ARG) =
 
 // Function&Module: zcopies()
 // Synopsis: Places copies of children along the Z axis. 
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Translation, Copiers
 // See Also: move_copies(), xcopies(), ycopies(), line_copies(), grid_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
@@ -415,6 +419,7 @@ function zcopies(spacing, n, l, sp, p=_NO_ARG) =
 
 // Function&Module: line_copies()
 // Synopsis: Places copies of children along an arbitrary line. 
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Translation, Copiers
 // See Also: move_copies(), xcopies(), ycopies(), zcopies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
@@ -548,6 +553,7 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 
 // Function&Module: grid_copies()
 // Synopsis: Places copies of children in an [X,Y] grid. 
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Translation, Copiers
 // See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
@@ -771,6 +777,7 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, p=_
 
 // Function&Module: rot_copies()
 // Synopsis: Rotates copies of children.
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Rotation, Copiers
 // See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
@@ -895,6 +902,7 @@ function rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], su
 
 // Function&Module: xrot_copies()
 // Synopsis: Rotates copies of children around the X axis.
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Rotation, Copiers
 // See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
@@ -974,6 +982,7 @@ function xrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 
 // Function&Module: yrot_copies()
 // Synopsis: Rotates copies of children around the Y axis.
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Rotation, Copiers
 // See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
@@ -1053,6 +1062,7 @@ function yrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 
 // Function&Module: zrot_copies()
 // Synopsis: Rotates copies of children around the Z axis.
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Rotation, Copiers
 // See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
@@ -1132,6 +1142,7 @@ function zrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 
 // Function&Module: arc_copies()
 // Synopsis: Distributes duplicates of children along an arc.
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Rotation, Copiers
 // See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), sphere_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
@@ -1256,6 +1267,7 @@ function arc_copies(
 
 // Function&Module: sphere_copies()
 // Synopsis: Distributes copies of children over the surface of a sphere. 
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Rotation, Copiers
 // See Also: rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
@@ -1363,6 +1375,7 @@ function sphere_copies(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp
 
 // Function&Module: path_copies()
 // Synopsis: Uniformly distributes copies of children along a path.
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Copiers
 // See Also: line_copies(), move_copies(), xcopies(), ycopies(), zcopies(), grid_copies(), xflip_copy(), yflip_copy(), zflip_copy(), mirror_copy()
 //
@@ -1576,6 +1589,7 @@ function path_copies(path, n, spacing, sp=undef, dist, rotate_children=true, dis
 
 // Function&Module: xflip_copy()
 // Synopsis: Makes a copy of children mirrored across the X axis.
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Translation, Copiers
 // See Also: yflip_copy(), zflip_copy(), mirror_copy(), path_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
@@ -1626,6 +1640,7 @@ function xflip_copy(offset=0, x=0, p=_NO_ARG) =
 
 // Function&Module: yflip_copy()
 // Synopsis: Makes a copy of children mirrored across the Y axis.
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Translation, Copiers
 // See Also: xflip_copy(), zflip_copy(), mirror_copy(), path_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
@@ -1676,6 +1691,7 @@ function yflip_copy(offset=0, y=0, p=_NO_ARG) =
 
 // Function&Module: zflip_copy()
 // Synopsis: Makes a copy of children mirrored across the Z axis.
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Translation, Copiers
 // See Also: xflip_copy(), yflip_copy(), mirror_copy(), path_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
@@ -1726,6 +1742,7 @@ function zflip_copy(offset=0, z=0, p=_NO_ARG) =
 
 // Function&Module: mirror_copy()
 // Synopsis: Makes a copy of children mirrored across a given plane.
+// SynTags: MatList, Trans
 // Topics: Transformations, Distributors, Translation, Copiers
 // See Also: xflip_copy(), yflip_copy(), zflip_copy(), path_copies(), move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), grid_copies() 
 //
@@ -1815,16 +1832,20 @@ function mirror_copy(v=[0,0,1], offset=0, cp, p=_NO_ARG) =
 // Section: Distributing children individually along a line
 ///////////////////
 // Module: xdistribute()
+// Synopsis: Distributes each child, individually, out along the X axis.
+// SynTags: Trans
+// See Also: xdistribute(), ydistribute(), zdistribute(), distribute()
+//
+// Usage:
+//   xdistribute(spacing, [sizes]) CHILDREN;
+//   xdistribute(l=, [sizes=]) CHILDREN;
+//
 //
 // Description:
 //   Spreads out the children individually along the X axis. 
 //   Every child is placed at a different position, in order.
 //   This is useful for laying out groups of disparate objects
 //   where you only really care about the spacing between them.
-//
-// Usage:
-//   xdistribute(spacing, [sizes]) CHILDREN;
-//   xdistribute(l=, [sizes=]) CHILDREN;
 //
 // Arguments:
 //   spacing = spacing between each child. (Default: 10.0)
@@ -1861,16 +1882,19 @@ module xdistribute(spacing=10, sizes=undef, l=undef)
 
 
 // Module: ydistribute()
+// Synopsis: Distributes each child, individually, out along the Y axis.
+// SynTags: Trans
+// See Also: xdistribute(), ydistribute(), zdistribute(), distribute()
+//
+// Usage:
+//   ydistribute(spacing, [sizes]) CHILDREN;
+//   ydistribute(l=, [sizes=]) CHILDREN;
 //
 // Description:
 //   Spreads out the children individually along the Y axis. 
 //   Every child is placed at a different position, in order.
 //   This is useful for laying out groups of disparate objects
 //   where you only really care about the spacing between them.
-//
-// Usage:
-//   ydistribute(spacing, [sizes]) CHILDREN;
-//   ydistribute(l=, [sizes=]) CHILDREN;
 //
 // Arguments:
 //   spacing = spacing between each child. (Default: 10.0)
@@ -1907,16 +1931,19 @@ module ydistribute(spacing=10, sizes=undef, l=undef)
 
 
 // Module: zdistribute()
+// Synopsis: Distributes each child, individually, out along the Z axis.
+// SynTags: Trans
+// See Also: xdistribute(), ydistribute(), zdistribute(), distribute()
+//
+// Usage:
+//   zdistribute(spacing, [sizes]) CHILDREN;
+//   zdistribute(l=, [sizes=]) CHILDREN;
 //
 // Description:
 //   Spreads out each individual child along the Z axis.
 //   Every child is placed at a different position, in order.
 //   This is useful for laying out groups of disparate objects
 //   where you only really care about the spacing between them.
-//
-// Usage:
-//   zdistribute(spacing, [sizes]) CHILDREN;
-//   zdistribute(l=, [sizes=]) CHILDREN;
 //
 // Arguments:
 //   spacing = spacing between each child. (Default: 10.0)
@@ -1954,16 +1981,19 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 
 
 // Module: distribute()
+// Synopsis: Distributes each child, individually, out along an arbitrary line.
+// SynTags: Trans
+// See Also: xdistribute(), ydistribute(), zdistribute(), distribute()
+//
+// Usage:
+//   distribute(spacing, sizes, dir) CHILDREN;
+//   distribute(l=, [sizes=], [dir=]) CHILDREN;
 //
 // Description:
 //   Spreads out the children individually along the direction `dir`.
 //   Every child is placed at a different position, in order.
 //   This is useful for laying out groups of disparate objects
 //   where you only really care about the spacing between them.
-//
-// Usage:
-//   distribute(spacing, sizes, dir) CHILDREN;
-//   distribute(l=, [sizes=], [dir=]) CHILDREN;
 //
 // Arguments:
 //   spacing = Spacing to add between each child. (Default: 10.0)
