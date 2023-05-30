@@ -73,10 +73,11 @@ function is_type(x,types) =
 
 
 // Function: is_def()
-// Usage:
-//   bool = is_def(x);
+// Synopsis: Returns true if `x` is not `undef`.
 // Topics: Type Checking
 // See Also: typeof(), is_type(), is_str()
+// Usage:
+//   bool = is_def(x);
 // Description:
 //   Returns true if `x` is not `undef`.  False if `x==undef`.
 // Arguments:
@@ -108,8 +109,8 @@ function is_str(x) = is_string(x);
 
 
 // Function: is_int()
-// Synopsis: Returns true if the argument is an integer.
 // Alias: is_integer()
+// Synopsis: Returns true if the argument is an integer.
 // Topics: Type Checking
 // See Also: typeof(), is_type(), is_str(), is_def()
 // Usage:
@@ -197,10 +198,10 @@ function is_finite(x) = is_num(x) && !is_nan(0*x);
 
 // Function: is_range()
 // Synopsis: Returns true if the argument is a range.
-// Usage:
-//   bool = is_range(x);
 // Topics: Type Checking
 // See Also: typeof(), is_type(), is_str(), is_def(), is_int()
+// Usage:
+//   bool = is_range(x);
 // Description:
 //   Returns true if its argument is a range
 // Arguments:
@@ -768,6 +769,7 @@ function scalar_vec3(v, dflt) =
 // Function: segs()
 // Synopsis: Returns the number of sides for a circle given `$fn`, `$fa`, and `$fs`.
 // Topics: Geometry
+// See Also: circle(), cyl()
 // Usage:
 //   sides = segs(r);
 // Description:
@@ -831,10 +833,10 @@ module req_children(count) {
 
 // Function: no_function()
 // Synopsis: Assert that the argument exists only as a module and not as a function.
-// Usage:
-//   dummy = no_function(name)
 // Topics: Error Checking
 // See Also: no_children(), no_module()
+// Usage:
+//   dummy = no_function(name)
 // Description:
 //   Asserts that the function, "name", only exists as a module.
 // Example:
@@ -860,6 +862,8 @@ module no_module() {
 
 // Module: deprecate()
 // Synopsis: Display a console note that a module is deprecated and suggest a replacement.
+// Topics: Error Checking
+// See Also: no_function(), no_module()
 // Usage:
 //   deprecate(new_name);
 // Description:

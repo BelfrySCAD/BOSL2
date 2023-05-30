@@ -90,7 +90,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 
 // Module: cuboid()
 // Synopsis: Creates a cube with chamfering and roundovers.
-// SynTags: Geom, VNF
+// SynTags: Geom
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: prismoid(), rounded_prism()
 // Usage: Standard Cubes
@@ -816,7 +816,7 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 
 // Module: rect_tube()
 // Synopsis: Creates a rectangular tube.
-// SynTags: Geom, VNF
+// SynTags: Geom
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: tube()
 // Usage: Typical Rectangular Tubes
@@ -1694,7 +1694,7 @@ module cyl(
 
 // Module: xcyl()
 // Synopsis: creates a cylinder oriented along the X axis.
-// SynTags: Geom, VNF
+// SynTags: Geom
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
 // Description:
@@ -1777,7 +1777,7 @@ module xcyl(
 
 // Module: ycyl()
 // Synopsis: Creates a cylinder oriented along the y axis.
-// SynTags: Geom, VNF
+// SynTags: Geom
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
 // Description:
@@ -1862,7 +1862,7 @@ module ycyl(
 
 // Module: zcyl()
 // Synopsis: Creates a cylinder oriented along the Z axis.
-// SynTags: Geom, VNF
+// SynTags: Geom
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
 // Description:
@@ -1946,7 +1946,7 @@ module zcyl(
 
 // Module: tube()
 // Synopsis: Creates a cylindrical or conical tube.
-// SynTags: Geom, VNF
+// SynTags: Geom
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: rect_tube()
 // Description:
@@ -3248,10 +3248,10 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 
 
 
-// Topics: Shapes (3D), Attachable
 // Module: fillet()
 // Synopsis: Creates a smooth fillet between two faces.
 // SynTags: Geom, VNF
+// Topics: Shapes (3D), Attachable
 // See Also: mask2d_roundover()
 // Description:
 //   Creates a shape that can be unioned into a concave joint between two faces, to fillet them.

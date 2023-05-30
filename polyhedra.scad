@@ -38,6 +38,7 @@ function _unique_groups(m) = [
 
 // Module: regular_polyhedron()
 // Synopsis: Creates a regular polyhedron with optional rounding.
+// SynTags: Geom
 // Topics: Polyhedra, Shapes, Parts
 // See Also: regular_polyhedron_info()
 // Usage: Selecting a polyhedron

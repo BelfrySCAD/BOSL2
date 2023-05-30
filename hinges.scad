@@ -15,6 +15,7 @@ include <screws.scad>
 
 // Module: knuckle_hinge()
 // Synopsis: Creates a knuckle-hinge shape.
+// SynTags: Geom
 // Topics: Hinges, Parts
 // See Also: living_hinge_mask(), snap_lock(), snap_socket()
 // Usage:
@@ -346,6 +347,7 @@ module _knuckle_hinge_profile(offset, arm_height, arm_angle=45, knuckle_diam=4, 
 
 // Module: living_hinge_mask()
 // Synopsis: Creates a mask to make a folding "living" hinge.
+// SynTags: Geom
 // Topics: Hinges, Parts
 // See Also: knuckle_hinge(), living_hinge_mask(), snap_lock(), snap_socket(), apply_folding_hinges_and_snaps()
 // Usage:
@@ -391,6 +393,7 @@ module folding_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=unde
 
 // Module: apply_folding_hinges_and_snaps()
 // Synopsis: Adds snap shapes and removes living hinges from a child shape.
+// SynTags: Geom
 // Topics: Hinges, Parts
 // See Also: knuckle_hinge(), living_hinge_mask(), snap_lock(), snap_socket()
 // Usage:
@@ -476,6 +479,7 @@ module apply_folding_hinges_and_snaps(thick, foldangle=90, hinges=[], snaps=[], 
 
 // Module: snap_lock()
 // Synopsis: Creates a snap-lock shape.
+// SynTags: Geom
 // Topics: Hinges, Parts
 // See Also: knuckle_hinge(), living_hinge_mask(), snap_lock(), snap_socket()
 // Usage:
@@ -515,6 +519,7 @@ module snap_lock(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hi
 
 // Module: snap_socket()
 // Synopsis: Creates a snap-lock socket shape.
+// SynTags: Geom
 // Topics: Hinges, Parts
 // See Also: knuckle_hinge(), living_hinge_mask(), snap_lock(), snap_socket()
 // Usage:

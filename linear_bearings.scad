@@ -16,6 +16,7 @@ include <metric_screws.scad>
 
 // Module: linear_bearing_housing()
 // Synopsis: Creates a generic linear bearing mount clamp.
+// SynTags: Geom
 // Topics: Parts, Bearings
 // See Also: linear_bearing(), lmXuu_info(), ball_bearing()
 // Usage:
@@ -82,6 +83,7 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 
 // Module: linear_bearing()
 // Synopsis: Creates a generic linear bearing cartridge.
+// SynTags: Geom
 // Topics: Parts, Bearings
 // See Also: linear_bearing_housing(), lmXuu_info(), ball_bearing()
 // Usage:
@@ -116,6 +118,7 @@ module linear_bearing(l, od=15, id=8, length, anchor=CTR, spin=0, orient=UP) {
 
 // Module: lmXuu_housing()
 // Synopsis: Creates a standardized LM*UU linear bearing mount clamp.
+// SynTags: Geom
 // Topics: Parts, Bearings
 // See Also: linear_bearing(), linear_bearing_housing(), lmXuu_info(), lmXuu_bearing(), lmXuu_housing(), ball_bearing()
 // Usage:
@@ -146,6 +149,7 @@ module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, ancho
 
 // Module: lmXuu_bearing()
 // Synopsis: Creates a standardized LM*UU linear bearing cartridge.
+// SynTags: Geom
 // Topics: Parts, Bearings
 // See Also: linear_bearing(), linear_bearing_housing(), lmXuu_info(), lmXuu_bearing(), lmXuu_housing(), ball_bearing()
 // Usage:

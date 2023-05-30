@@ -268,6 +268,7 @@ function slice(list,start=0,end=-1) =
     )
     [if (start<=end && end>=0 && start<=l) for (i=[max(start,0):1:min(end,l-1)]) list[i]];
 
+
 // Function: last()
 // Synopsis: Returns the last item of a list.
 // Topics: List Handling

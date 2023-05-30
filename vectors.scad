@@ -339,7 +339,7 @@ function vector_bisect(v1,v2) =
     let(
         axis = vector_axis(v1,v2),
         ang = vector_angle(v1,v2),
-        v3 = rot(ang/2, v=axis, p=v1)
+        v3 = unit(rot(ang/2, v=axis, p=v1))
     ) v3;
 
 

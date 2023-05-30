@@ -10,7 +10,7 @@ Requires OpenSCAD 2021.01 or later.
 - **NOTE:** BOSL2 IS BETA CODE.  THE CODE IS STILL BEING REORGANIZED.
 - **NOTE2:** CODE WRITTEN FOR BOSLv1 PROBABLY WON'T WORK WITH BOSL2!
 
-[![Join the chat at https://gitter.im/BelfrySCAD/BOSL2](https://badges.gitter.im/BelfrySCAD/BOSL2.svg)](https://gitter.im/BelfrySCAD/BOSL2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/revarbat/BOSL2](https://badges.gitter.im/revarbat/BOSL2.svg)](https://gitter.im/revarbat/BOSL2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
 ## Documentation

@@ -10,7 +10,7 @@
 
 // Section: Modular Hose Parts
 
-_small_end = [
+_modhose_small_end = [
              turtle([
                      "left", 90-38.5,            //   1/4" hose
                      "arcsteps", 12, 
@@ -57,7 +57,7 @@ _small_end = [
             ];
   
 
-_big_end = [
+_modhose_big_end = [
            turtle([                            //   1/4" hose
                    "left", 90-22,
                    "move", 6.5,
@@ -116,7 +116,7 @@ _big_end = [
         ];
 
 
-_hose_waist = [1.7698, 1.8251, 3.95998];
+_modhose_waist = [1.7698, 1.8251, 3.95998];
 
 
 // Module: modular_hose()
@@ -159,14 +159,14 @@ module modular_hose(size, type, clearance=0, waist_len, anchor=BOTTOM, spin=0,or
   ind = search([size],[1/4, 1/2, 3/4])[0];
   sbound =
     assert(ind!=[], "Must specify size as 1/4, 1/2 or 3/4")
-    pointlist_bounds(_small_end[ind]);
-  bbound = pointlist_bounds(_big_end[ind]);
+    pointlist_bounds(_modhose_small_end[ind]);
+  bbound = pointlist_bounds(_modhose_big_end[ind]);
   smallend =
     assert(is_vector(clearance,2), "Clearance must be a scalar or length 2 vector")
-    move([-clearance[0],-sbound[0].y],p=_small_end[ind]);
-  bigend = move([clearance[1], -bbound[0].y], p=_big_end[ind]);
+    move([-clearance[0],-sbound[0].y],p=_modhose_small_end[ind]);
+  bigend = move([clearance[1], -bbound[0].y], p=_modhose_big_end[ind]);
 
-  midlength = first_defined([waist_len, _hose_waist[ind]]);
+  midlength = first_defined([waist_len, _modhose_waist[ind]]);
   dummy = assert(midlength>=0,"midlength must be nonnegative");
 
   goodtypes = ["small","big","segment","socket","ball"];
@@ -221,8 +221,8 @@ function modular_hose_radius(size, outer=false) =
   )
   assert(ind!=[], "Must specify size as 1/4, 1/2 or 3/4")
   let(
-     b = select(_big_end[ind], [0,-1]),
-     s = select(_small_end[ind], [0,-1])
+     b = select(_modhose_big_end[ind], [0,-1]),
+     s = select(_modhose_small_end[ind], [0,-1])
   )
   outer ? b[1][0] : b[0][0];
 
