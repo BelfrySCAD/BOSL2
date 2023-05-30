@@ -11,7 +11,9 @@
 
 // Module: manfrotto_rc2_plate()
 // Synopsis: Creates a Manfrotto RC2 tripod quick release mount plate.
+// SynTags: Geom
 // Topics: Parts
+// See Also: threaded_rod()
 // Usage:
 //   manfrotto_rc2_plate([chamfer],[anchor],[orient],[spin]) [ATTACHMENTS];
 // Description:

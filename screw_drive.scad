@@ -15,6 +15,7 @@ include <structs.scad>
 
 // Module: phillips_mask()
 // Synopsis: Creates a mask for a Philips screw drive.
+// SynTags: Geom
 // Topics: Screws, Masks
 // See Also: hex_drive_mask(), phillips_depth(), phillips_diam(), torx_mask(), robertson_mask()
 // Usage:
@@ -139,6 +140,7 @@ function phillips_diam(size, depth) =
 
 // Module: hex_drive_mask()
 // Synopsis: Creates a mask for a hex drive recess.
+// SynTags: Geom
 // Topics: Screws, Masks
 // See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  phillips_depth(), phillips_diam(), robertson_mask()
 // Usage:
@@ -161,6 +163,7 @@ function hex_drive_mask(size,length,l,h,height,anchor,spin,orient) = no_function
 
 // Module: torx_mask()
 // Synopsis: Creates a mask for a torx drive recess.
+// SynTags: Geom
 // Topics: Screws, Masks
 // See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  phillips_depth(), phillips_diam(), robertson_mask()
 // Usage:
@@ -191,6 +194,7 @@ module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
 
 // Module: torx_mask2d()
 // Synopsis: Creates the 2D cross section for a torx drive recess.
+// SynTags: Geom
 // Topics: Screws, Masks
 // See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  phillips_depth(), phillips_diam(), torx_info(), robertson_mask()
 // Usage:
@@ -313,6 +317,7 @@ function torx_depth(size) = torx_info(size)[2];
 
 // Module: robertson_mask()
 // Synopsis: Creates a mask for a Robertson/Square drive recess.
+// SynTags: Geom
 // Topics: Screws, Masks
 // See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  phillips_depth(), phillips_diam(), torx_info(), robertson_mask()
 // Usage:

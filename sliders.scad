@@ -14,6 +14,7 @@
 
 // Module: slider()
 // Synopsis: Creates a V-groove slider.
+// SynTags: Geom
 // Topics: Parts, Sliders
 // See Also: rail()
 // Usage:
@@ -67,6 +68,7 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, anchor=BOTTOM, spin=0, 
 
 // Module: rail()
 // Synopsis: Creates a V-groove rail.
+// SynTags: Geom
 // Topics: Parts, Sliders
 // See Also: slider()
 // Usage:

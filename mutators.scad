@@ -14,6 +14,7 @@
 
 // Module: bounding_box()
 // Synopsis: Creates the smallest bounding box that contains all the children.
+// SynTags: Geom
 // Topics: Mutators, Bounds, Bounding Boxes
 // See Also: pointlist_bounds()
 // Usage:
@@ -109,6 +110,7 @@ module bounding_box(excess=0, planar=false) {
 
 // Module: chain_hull()
 // Synopsis: Performs the union of hull operations between consecutive pairs of children.
+// SynTags: Geom
 // Topics: Mutators
 // See Also: hull()
 // Usage:
@@ -162,6 +164,7 @@ module chain_hull()
 
 // Module: path_extrude2d()
 // Synopsis: Extrudes 2D children along a 2D path.
+// SynTags: Geom
 // Topics: Mutators, Extrusion 
 // See Also: path_sweep(), path_extrude()
 // Usage:
@@ -284,6 +287,7 @@ module path_extrude2d(path, caps=false, closed=false, s, convexity=10) {
 
 // Module: cylindrical_extrude()
 // Synopsis: Extrudes 2D children outwards around a cylinder.
+// SynTags: Geom
 // Topics: Mutators, Extrusion, Rotation
 // See Also: heightfield(), cylindrical_heightfield(), cyl()
 // Usage:
@@ -349,7 +353,8 @@ module cylindrical_extrude(ir, or, od, id, size=1000, convexity=10, spin=0, orie
 
 
 // Module: extrude_from_to()
-// Extrudes 2D children between two points in 3D space.
+// Synopsis: Extrudes 2D children between two points in 3D space.
+// SynTags: Geom
 // Topics: Extrusion, Mutators
 // See Also: path_sweep(), path_extrude2d()
 // Usage:
@@ -396,9 +401,11 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 
 // Module: path_extrude()
 // Synopsis: Extrudes 2D children along a 3D path.
+// SynTags: Geom
 // Topics: Paths, Extrusion, Mutators
 // See Also: path_sweep(), path_extrude2d()
-// Usage: path_extrude(path, [convexity], [clipsize]) 2D-CHILDREN;
+// Usage:
+//   path_extrude(path, [convexity], [clipsize]) 2D-CHILDREN;
 // Description:
 //   Extrudes 2D children along a 3D path.  This may be slow and can have problems with twisting.  
 // Arguments:
@@ -461,6 +468,7 @@ module path_extrude(path, convexity=10, clipsize=100) {
 
 // Module: minkowski_difference()
 // Synopsis: Removes diff shapes from base shape surface.
+// SynTags: Geom
 // Topics: Mutators
 // See Also: offset3d()
 // Usage:
@@ -504,6 +512,7 @@ module minkowski_difference(planar=false) {
 
 // Module: offset3d()
 // Synopsis: Expands or contracts the surface of a 3D object.
+// SynTags: Geom
 // Topics: Mutators
 // See Also: minkowski_difference(), round3d()
 // Usage:
@@ -550,6 +559,7 @@ module offset3d(r, size=100, convexity=10) {
 
 // Module: round3d()
 // Synopsis: Rounds arbitrary 3d objects.
+// SynTags: Geom
 // Topics: Rounding, Mutators
 // See Also: offset3d(), minkowski_difference()
 // Usage:

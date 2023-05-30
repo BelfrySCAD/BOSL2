@@ -74,6 +74,11 @@ _NO_ARG = [true,[123232345],false];
 // Function&Module: move()
 // Aliases: translate()
 //
+// Synopsis: Translates children in an arbitrary direction.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Translation
+// See Also: left(), right(), fwd(), back(), down(), up(), spherical_to_xyz(), altaz_to_xyz(), cylindrical_to_xyz(), polar_to_xy()
+//
 // Usage: As Module
 //   move(v) CHILDREN;
 // Usage: As a function to translate points, VNF, or Bezier patches
@@ -81,11 +86,6 @@ _NO_ARG = [true,[123232345],false];
 //   pts = move(STRING, p);
 // Usage: Get Translation Matrix
 //   mat = move(v);
-//
-// Synopsis: Translates children in an arbitrary direction.
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Translation
-// See Also: left(), right(), fwd(), back(), down(), up(), spherical_to_xyz(), altaz_to_xyz(), cylindrical_to_xyz(), polar_to_xy()
 //
 // Description:
 //   Translates position by the given amount.
@@ -160,17 +160,17 @@ function translate(v=[0,0,0], p=_NO_ARG) = move(v=v, p=p);
 
 // Function&Module: left()
 //
+// Synopsis: Translates children leftwards (X-).
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Translation
+// See Also: move(), right(), fwd(), back(), down(), up()
+//
 // Usage: As Module
 //   left(x) CHILDREN;
 // Usage: Translate Points
 //   pts = left(x, p);
 // Usage: Get Translation Matrix
 //   mat = left(x);
-//
-// Synopsis: Translates children leftwards (X-).
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Translation
-// See Also: move(), right(), fwd(), back(), down(), up()
 //
 // Description:
 //   If called as a module, moves/translates all children left (in the X- direction) by the given amount.
@@ -205,17 +205,17 @@ function left(x=0, p=_NO_ARG) =
 // Function&Module: right()
 // Aliases: xmove()
 //
+// Synopsis: Translates children rightwards (X+).
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Translation
+// See Also: move(), left(), fwd(), back(), down(), up()
+//
 // Usage: As Module
 //   right(x) CHILDREN;
 // Usage: Translate Points
 //   pts = right(x, p);
 // Usage: Get Translation Matrix
 //   mat = right(x);
-//
-// Synopsis: Translates children rightwards (X+).
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Translation
-// See Also: move(), left(), fwd(), back(), down(), up()
 //
 // Description:
 //   If called as a module, moves/translates all children right (in the X+ direction) by the given amount.
@@ -260,17 +260,17 @@ function xmove(x=0, p=_NO_ARG) =
 
 // Function&Module: fwd()
 //
+// Synopsis: Translates children forwards (Y-).
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Translation
+// See Also: move(), left(), right(), back(), down(), up()
+//
 // Usage: As Module
 //   fwd(y) CHILDREN;
 // Usage: Translate Points
 //   pts = fwd(y, p);
 // Usage: Get Translation Matrix
 //   mat = fwd(y);
-//
-// Synopsis: Translates children forwards (Y-).
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Translation
-// See Also: move(), left(), right(), back(), down(), up()
 //
 // Description:
 //   If called as a module, moves/translates all children forward (in the Y- direction) by the given amount.
@@ -305,17 +305,17 @@ function fwd(y=0, p=_NO_ARG) =
 // Function&Module: back()
 // Aliases: ymove()
 //
+// Synopsis: Translates children backwards (Y+).
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Translation
+// See Also: move(), left(), right(), fwd(), down(), up()
+//
 // Usage: As Module
 //   back(y) CHILDREN;
 // Usage: Translate Points
 //   pts = back(y, p);
 // Usage: Get Translation Matrix
 //   mat = back(y);
-//
-// Synopsis: Translates children backwards (Y+).
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Translation
-// See Also: move(), left(), right(), fwd(), down(), up()
 //
 // Description:
 //   If called as a module, moves/translates all children back (in the Y+ direction) by the given amount.
@@ -360,17 +360,17 @@ function ymove(y=0,p=_NO_ARG) =
 
 // Function&Module: down()
 //
+// Synopsis: Translates children downwards (Z-).
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Translation
+// See Also: move(), left(), right(), fwd(), back(), up()
+//
 // Usage: As Module
 //   down(z) CHILDREN;
 // Usage: Translate Points
 //   pts = down(z, p);
 // Usage: Get Translation Matrix
 //   mat = down(z);
-//
-// Synopsis: Translates children downwards (Z-).
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Translation
-// See Also: move(), left(), right(), fwd(), back(), up()
 //
 // Description:
 //   If called as a module, moves/translates all children down (in the Z- direction) by the given amount.
@@ -403,17 +403,17 @@ function down(z=0, p=_NO_ARG) =
 // Function&Module: up()
 // Aliases: zmove()
 //
+// Synopsis: Translates children upwards (Z+).
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Translation
+// See Also: move(), left(), right(), fwd(), back(), down()
+//
 // Usage: As Module
 //   up(z) CHILDREN;
 // Usage: Translate Points
 //   pts = up(z, p);
 // Usage: Get Translation Matrix
 //   mat = up(z);
-//
-// Synopsis: Translates children upwards (Z+).
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Translation
-// See Also: move(), left(), right(), fwd(), back(), down()
 //
 // Description:
 //   If called as a module, moves/translates all children up (in the Z+ direction) by the given amount.
@@ -463,6 +463,11 @@ function zmove(z=0, p=_NO_ARG) =
 
 // Function&Module: rot()
 //
+// Synopsis: Rotates children in various ways.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: xrot(), yrot(), zrot()
+//
 // Usage: As a Module
 //   rot(a, [cp=], [reverse=]) CHILDREN;
 //   rot([X,Y,Z], [cp=], [reverse=]) CHILDREN;
@@ -478,11 +483,6 @@ function zmove(z=0, p=_NO_ARG) =
 //   M = rot([X,Y,Z], [cp=], [reverse=]);
 //   M = rot(a, v, [cp=], [reverse=]);
 //   M = rot(from=, to=, [a=], [reverse=]);
-//
-// Synopsis: Rotates children in various ways.
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Rotation
-// See Also: xrot(), yrot(), zrot()
 //
 // Description:
 //   This is a shorthand version of the built-in `rotate()`, and operates similarly, with a few additional capabilities.
@@ -569,17 +569,17 @@ function rot(a=0, v, cp, from, to, reverse=false, p=_NO_ARG, _m) =
 
 // Function&Module: xrot()
 //
+// Synopsis: Rotates children around the X axis using the right-hand rule.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), yrot(), zrot()
+//
 // Usage: As Module
 //   xrot(a, [cp=]) CHILDREN;
 // Usage: As a function to rotate points
 //   rotated = xrot(a, p, [cp=]);
 // Usage: As a function to return rotation matrix
 //   mat = xrot(a, [cp=]);
-//
-// Synopsis: Rotates children around the X axis using the right-hand rule.
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), yrot(), zrot()
 //
 // Description:
 //   Rotates around the X axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
@@ -617,17 +617,17 @@ function xrot(a=0, p=_NO_ARG, cp) = rot([a,0,0], cp=cp, p=p);
 
 // Function&Module: yrot()
 //
+// Synopsis: Rotates children around the Y axis using the right-hand rule.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), xrot(), zrot()
+//
 // Usage: As Module
 //   yrot(a, [cp=]) CHILDREN;
 // Usage: Rotate Points
 //   rotated = yrot(a, p, [cp=]);
 // Usage: Get Rotation Matrix
 //   mat = yrot(a, [cp=]);
-//
-// Synopsis: Rotates children around the Y axis using the right-hand rule.
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), xrot(), zrot()
 //
 // Description:
 //   Rotates around the Y axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
@@ -665,17 +665,17 @@ function yrot(a=0, p=_NO_ARG, cp) = rot([0,a,0], cp=cp, p=p);
 
 // Function&Module: zrot()
 //
+// Synopsis: Rotates children around the Z axis using the right-hand rule.
+// Topics: Affine, Matrices, Transforms, Rotation
+// SynTags: Trans, Path, VNF, Mat
+// See Also: rot(), xrot(), yrot()
+//
 // Usage: As Module
 //   zrot(a, [cp=]) CHILDREN;
 // Usage: As Function to rotate points
 //   rotated = zrot(a, p, [cp=]);
 // Usage: As Function to return rotation matrix
 //   mat = zrot(a, [cp=]);
-//
-// Synopsis: Rotates children around the Z axis using the right-hand rule.
-// Topics: Affine, Matrices, Transforms, Rotation
-// SynTags: Trans, Path, VNF, Mat
-// See Also: rot(), xrot(), yrot()
 //
 // Description:
 //   Rotates around the Z axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
@@ -718,6 +718,12 @@ function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
 
 
 // Function&Module: scale()
+//
+// Synopsis: Scales children arbitrarily.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Scaling
+// See Also: xscale(), yscale(), zscale()
+//
 // Usage: As Module
 //   scale(SCALAR) CHILDREN;
 //   scale([X,Y,Z]) CHILDREN;
@@ -725,10 +731,7 @@ function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
 //   pts = scale(v, p, [cp=]);
 // Usage: Get Scaling Matrix
 //   mat = scale(v, [cp=]);
-// Synopsis: Scales children arbitrarily.
-// Topics: Affine, Matrices, Transforms, Scaling
-// SynTags: Trans, Path, VNF, Mat
-// See Also: xscale(), yscale(), zscale()
+//
 // Description:
 //   Scales by the [X,Y,Z] scaling factors given in `v`.  If `v` is given as a scalar number, all axes are scaled uniformly by that amount.
 //   * Called as the built-in module, scales all children.
@@ -738,17 +741,20 @@ function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the scaled VNF.
 //   * Called as a function without a `p` argument, and a 2D list of scaling factors in `v`, returns an affine2d scaling matrix.
 //   * Called as a function without a `p` argument, and a 3D list of scaling factors in `v`, returns an affine3d scaling matrix.
+//
 // Arguments:
 //   v = Either a numeric uniform scaling factor, or a list of [X,Y,Z] scaling factors.  Default: 1
 //   p = If called as a function, the point or list of points to scale.
 //   ---
 //   cp = If given, centers the scaling on the point `cp`.
+//
 // Example(NORENDER):
 //   pt1 = scale(3, p=[3,1,4]);        // Returns: [9,3,12]
 //   pt2 = scale([2,3,4], p=[3,1,4]);  // Returns: [6,3,16]
 //   pt3 = scale([2,3,4], p=[[1,2,3],[4,5,6]]);  // Returns: [[2,6,12], [8,15,24]]
 //   mat2d = scale([2,3]);    // Returns: [[2,0,0],[0,3,0],[0,0,1]]
 //   mat3d = scale([2,3,4]);  // Returns: [[2,0,0,0],[0,3,0,0],[0,0,4,0],[0,0,0,1]]
+//
 // Example(2D):
 //   path = circle(d=50,$fn=12);
 //   #stroke(path,closed=true);
@@ -770,17 +776,17 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
 
 // Function&Module: xscale()
 //
+// Synopsis: Scales children along the X axis.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Scaling
+// See Also: scale(), yscale(), zscale()
+//
 // Usage: As Module
 //   xscale(x, [cp=]) CHILDREN;
 // Usage: Scale Points
 //   scaled = xscale(x, p, [cp=]);
 // Usage: Get Affine Matrix
 //   mat = xscale(x, [cp=]);
-//
-// Synopsis: Scales children along the X axis.
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Scaling
-// See Also: scale(), yscale(), zscale()
 //
 // Description:
 //   Scales along the X axis by the scaling factor `x`.
@@ -826,17 +832,17 @@ function xscale(x=1, p=_NO_ARG, cp=0) =
 
 // Function&Module: yscale()
 //
+// Synopsis: Scales children along the Y axis.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Scaling
+// See Also: scale(), xscale(), zscale()
+//
 // Usage: As Module
 //   yscale(y, [cp=]) CHILDREN;
 // Usage: Scale Points
 //   scaled = yscale(y, p, [cp=]);
 // Usage: Get Affine Matrix
 //   mat = yscale(y, [cp=]);
-//
-// Synopsis: Scales children along the Y axis.
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Scaling
-// See Also: scale(), xscale(), zscale()
 //
 // Description:
 //   Scales along the Y axis by the scaling factor `y`.
@@ -882,17 +888,17 @@ function yscale(y=1, p=_NO_ARG, cp=0) =
 
 // Function&Module: zscale()
 //
+// Synopsis: Scales children along the Z axis.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Scaling
+// See Also: scale(), xscale(), yscale()
+//
 // Usage: As Module
 //   zscale(z, [cp=]) CHILDREN;
 // Usage: Scale Points
 //   scaled = zscale(z, p, [cp=]);
 // Usage: Get Affine Matrix
 //   mat = zscale(z, [cp=]);
-//
-// Synopsis: Scales children along the Z axis.
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Scaling
-// See Also: scale(), xscale(), yscale()
 //
 // Description:
 //   Scales along the Z axis by the scaling factor `z`.
@@ -941,16 +947,19 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 //////////////////////////////////////////////////////////////////////
 
 // Function&Module: mirror()
+//
+// Synopsis: Reflects children across an arbitrary plane.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
+// See Also: xflip(), yflip(), zflip()
+//
 // Usage: As Module
 //   mirror(v) CHILDREN;
 // Usage: As Function
 //   pt = mirror(v, p);
 // Usage: Get Reflection/Mirror Matrix
 //   mat = mirror(v);
-// Synopsis: Reflects children across an arbitrary plane.
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
-// See Also: xflip(), yflip(), zflip()
+//
 // Description:
 //   Mirrors/reflects across the plane or line whose normal vector is given in `v`.
 //   * Called as the built-in module, mirrors all children across the line/plane.
@@ -960,9 +969,11 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the mirrored VNF.
 //   * Called as a function without a `p` argument, and with a 2D normal vector `v`, returns the affine2d 3x3 mirror matrix.
 //   * Called as a function without a `p` argument, and with a 3D normal vector `v`, returns the affine3d 4x4 mirror matrix.
+//
 // Arguments:
 //   v = The normal vector of the line or plane to mirror across.
 //   p = If called as a function, the point or list of points to scale.
+//
 // Example:
 //   n = [1,0,0];
 //   module obj() right(20) rotate([0,15,-15]) cube([40,30,20]);
@@ -972,6 +983,7 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 //       color("red") anchor_arrow(s=20, flag=false);
 //       color("#7777") cube([75,75,0.1], center=true);
 //   }
+//
 // Example:
 //   n = [1,1,0];
 //   module obj() right(20) rotate([0,15,-15]) cube([40,30,20]);
@@ -981,6 +993,7 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 //       color("red") anchor_arrow(s=20, flag=false);
 //       color("#7777") cube([75,75,0.1], center=true);
 //   }
+//
 // Example:
 //   n = [1,1,1];
 //   module obj() right(20) rotate([0,15,-15]) cube([40,30,20]);
@@ -990,6 +1003,7 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 //       color("red") anchor_arrow(s=20, flag=false);
 //       color("#7777") cube([75,75,0.1], center=true);
 //   }
+//
 // Example(2D):
 //   n = [0,1];
 //   path = rot(30, p=square([50,30]));
@@ -997,6 +1011,7 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 //   color("red") stroke([[0,0],10*n],endcap2="arrow2");
 //   #stroke(path,closed=true);
 //   stroke(mirror(n, p=path),closed=true);
+//
 // Example(2D):
 //   n = [1,1];
 //   path = rot(30, p=square([50,30]));
@@ -1004,6 +1019,7 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 //   color("red") stroke([[0,0],10*n],endcap2="arrow2");
 //   #stroke(path,closed=true);
 //   stroke(mirror(n, p=path),closed=true);
+//
 function mirror(v, p=_NO_ARG) =
     assert(is_vector(v))
     assert(p==_NO_ARG || is_list(p),"Invalid pointlist")
@@ -1013,17 +1029,17 @@ function mirror(v, p=_NO_ARG) =
 
 // Function&Module: xflip()
 //
+// Synopsis: Reflects children across the YZ plane.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
+// See Also: mirror(), yflip(), zflip()
+//
 // Usage: As Module
 //   xflip([x=]) CHILDREN;
 // Usage: As Function
 //   pt = xflip(p, [x]);
 // Usage: Get Affine Matrix
 //   mat = xflip([x=]);
-//
-// Synopsis: Reflects children across the YZ plane.
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
-// See Also: mirror(), yflip(), zflip()
 //
 // Description:
 //   Mirrors/reflects across the origin [0,0,0], along the X axis.  If `x` is given, reflects across [x,0,0] instead.
@@ -1069,17 +1085,17 @@ function xflip(p=_NO_ARG, x=0) =
 
 // Function&Module: yflip()
 //
+// Synopsis: Reflects children across the XZ plane.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
+// See Also: mirror(), xflip(), zflip()
+//
 // Usage: As Module
 //   yflip([y=]) CHILDREN;
 // Usage: As Function
 //   pt = yflip(p, [y]);
 // Usage: Get Affine Matrix
 //   mat = yflip([y=]);
-//
-// Synopsis: Reflects children across the XZ plane.
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
-// See Also: mirror(), xflip(), zflip()
 //
 // Description:
 //   Mirrors/reflects across the origin [0,0,0], along the Y axis.  If `y` is given, reflects across [0,y,0] instead.
@@ -1125,17 +1141,17 @@ function yflip(p=_NO_ARG, y=0) =
 
 // Function&Module: zflip()
 //
+// Synopsis: Reflects children across the XY plane.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
+// See Also: mirror(), xflip(), yflip()
+//
 // Usage: As Module
 //   zflip([z=]) CHILDREN;
 // Usage: As Function
 //   pt = zflip(p, [z]);
 // Usage: Get Affine Matrix
 //   mat = zflip([z=]);
-//
-// Synopsis: Reflects children across the XY plane.
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
-// See Also: mirror(), xflip(), yflip()
 //
 // Description:
 //   Mirrors/reflects across the origin [0,0,0], along the Z axis.  If `z` is given, reflects across [0,0,z] instead.
@@ -1180,6 +1196,12 @@ function zflip(p=_NO_ARG, z=0) =
 //////////////////////////////////////////////////////////////////////
 
 // Function&Module: frame_map()
+//
+// Synopsis: Rotates and possibly skews children from one frame of reference to another.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), xrot(), yrot(), zrot()
+//
 // Usage: As module
 //   frame_map(v1, v2, v3, [reverse=]) CHILDREN;
 // Usage: As function to remap points
@@ -1189,10 +1211,7 @@ function zflip(p=_NO_ARG, z=0) =
 //   map = frame_map(x=VECTOR1, y=VECTOR2, [reverse=]);
 //   map = frame_map(x=VECTOR1, z=VECTOR2, [reverse=]);
 //   map = frame_map(y=VECTOR1, z=VECTOR2, [reverse=]);
-// Synopsis: Rotates and possibly skews children from one frame of reference to another.
-// SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), xrot(), yrot(), zrot()
+//
 // Description:
 //   Maps one coordinate frame to another.  You must specify two or
 //   three of `x`, `y`, and `z`.  The specified axes are mapped to the vectors you supplied, so if you
@@ -1204,19 +1223,24 @@ function zflip(p=_NO_ARG, z=0) =
 //   You cannot use the `reverse` option with non-orthogonal inputs.  Note that only the direction
 //   of the specified vectors matters: the transformation will not apply scaling, though it can
 //   skew if your provide non-orthogonal axes.
+//
 // Arguments:
 //   x = Destination 3D vector for x axis.
 //   y = Destination 3D vector for y axis.
 //   z = Destination 3D vector for z axis.
 //   p = If given, the point, path, patch, or VNF to operate on.  Function use only.
 //   reverse = reverse direction of the map for orthogonal inputs.  Default: false
+//
 // Example:  Remap axes after linear extrusion
 //   frame_map(x=[0,1,0], y=[0,0,1]) linear_extrude(height=10) square(3);
+//
 // Example: This map is just a rotation around the z axis
 //   mat = frame_map(x=[1,1,0], y=[-1,1,0]);
 //   multmatrix(mat) frame_ref();
+//
 // Example:  This map is not a rotation because x and y aren't orthogonal
 //   frame_map(x=[1,0,0], y=[1,1,0]) cube(10);
+//
 // Example:  This sends [1,1,0] to [0,1,1] and [-1,1,0] to [0,-1,1].  (Original directions shown in light shade, final directions shown dark.)
 //   mat = frame_map(x=[0,1,1], y=[0,-1,1]) * frame_map(x=[1,1,0], y=[-1,1,0],reverse=true);
 //   color("purple",alpha=.2) stroke([[0,0,0],10*[1,1,0]]);
@@ -1225,6 +1249,7 @@ function zflip(p=_NO_ARG, z=0) =
 //      color("purple") stroke([[0,0,0],10*[1,1,0]]);
 //      color("green") stroke([[0,0,0],10*[-1,1,0]]);
 //   }
+//
 function frame_map(x,y,z, p=_NO_ARG, reverse=false) =
     p != _NO_ARG
     ? apply(frame_map(x,y,z,reverse=reverse), p)
@@ -1270,15 +1295,18 @@ module frame_map(x,y,z,p,reverse=false)
 
 
 // Function&Module: skew()
+//
+// Synopsis: Skews children along various axes.
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Skewing
+// See Also: move(), rot(), scale()
+//
 // Usage: As Module
 //   skew([sxy=]|[axy=], [sxz=]|[axz=], [syx=]|[ayx=], [syz=]|[ayz=], [szx=]|[azx=], [szy=]|[azy=]) CHILDREN;
 // Usage: As Function
 //   pts = skew(p, [sxy=]|[axy=], [sxz=]|[axz=], [syx=]|[ayx=], [syz=]|[ayz=], [szx=]|[azx=], [szy=]|[azy=]);
 // Usage: Get Affine Matrix
 //   mat = skew([sxy=]|[axy=], [sxz=]|[axz=], [syx=]|[ayx=], [syz=]|[ayz=], [szx=]|[azx=], [szy=]|[azy=]);
-// Topics: Affine, Matrices, Transforms, Skewing
-// Synopsis: Skews children along various axes.
-// SynTags: Trans, Path, VNF, Mat
 //
 // Description:
 //   Skews geometry by the given skew factors.
@@ -1399,11 +1427,15 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 
 
 // Function: apply()
+//
+// Synopsis: Applies a transformation matrix to a point, list of points, array of points, or a VNF.
+// SynTags: Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms
+// See Also: move(), rot(), scale(), skew()
+//
 // Usage:
 //   pts = apply(transform, points);
-// Topics: Affine, Matrices, Transforms
-// Synopsis: Applies a transformation matrix to a point, list of points, array of points, or VNF.
-// SynTags: Path, VNF, Mat
+//
 // Description:
 //   Applies the specified transformation matrix `transform` to a point, point list, bezier patch or VNF.
 //   When `points` contains 2D or 3D points the transform matrix may be a 4x4 affine matrix or a 3x4 
@@ -1418,27 +1450,32 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 //   If the transform matrix is square then apply() checks the determinant and if it is negative, apply() reverses the face order so that
 //   the transformed VNF has faces with the same winding direction as the original VNF.  This adjustment applies
 //   only to VNFs, not to beziers or point lists.  
+//
 // Arguments:
 //   transform = The 2D (3x3 or 2x3) or 3D (4x4 or 3x4) transformation matrix to apply.
 //   points = The point, point list, bezier patch, or VNF to apply the transformation to.
+//
 // Example(3D):
 //   path1 = path3d(circle(r=40));
 //   tmat = xrot(45);
 //   path2 = apply(tmat, path1);
 //   #stroke(path1,closed=true);
 //   stroke(path2,closed=true);
+//
 // Example(2D):
 //   path1 = circle(r=40);
 //   tmat = translate([10,5]);
 //   path2 = apply(tmat, path1);
 //   #stroke(path1,closed=true);
 //   stroke(path2,closed=true);
+//
 // Example(2D):
 //   path1 = circle(r=40);
 //   tmat = rot(30) * back(15) * scale([1.5,0.5,1]);
 //   path2 = apply(tmat, path1);
 //   #stroke(path1,closed=true);
 //   stroke(path2,closed=true);
+//
 function apply(transform,points) =
     points==[] ? []
   : is_vector(points) ? _apply(transform, [points])[0]    // point

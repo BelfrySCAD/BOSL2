@@ -78,14 +78,16 @@ function is_1region(path, name="path") =
 
 // Function: force_path()
 // Synopsis: Checks that path is a region with one component.
+// SynTags: Path
 // Topics: Paths, Regions
 // See Also: is_1region()
 // Usage:
 //   outpath = force_path(path, [name])
 // Description:
-//   If `path` is a region with one component (a 1-region) then return that component as a path.  If path is a region with more components
-//   then display an error message about the parameter `name` requiring a path or a single component region.  If the input
-//   is not a region then return the input without any checks.  This function helps path functions accept 1-regions.
+//   If `path` is a region with one component (a 1-region) then returns that component as a path.
+//   If path is a region with more components then displays an error message about the parameter
+//   `name` requiring a path or a single component region.  If the input is not a region then
+//   returns the input without any checks.  This function helps path functions accept 1-regions.
 // Arguments:
 //   path = input to process
 //   name = name of parameter to use in error message.  Default: "path"
@@ -129,6 +131,7 @@ function _path_select(path, s1, u1, s2, u2, closed=false) =
 
 // Function: path_merge_collinear()
 // Synopsis: Removes unnecessary points from a path.
+// SynTags: Path
 // Topics: Paths, Regions
 // Description:
 //   Takes a path and removes unnecessary sequential collinear points.
@@ -316,6 +319,7 @@ function _sum_preserving_round(data, index=0) =
 
 // Function: subdivide_path()
 // Synopsis: Subdivides a path to produce a more finely sampled path.
+// SynTags: Path
 // Topics: Paths, Path Subdivision
 // See Also: subdivide_and_slice(), resample_path(), jittered_poly()
 // Usage:
@@ -461,6 +465,7 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 
 // Function: resample_path()
 // Synopsis: Returns an equidistant set of points along a path.
+// SynTags: Path
 // Topics: Paths
 // See Also: subdivide_path()
 // Usage:
@@ -730,6 +735,7 @@ function path_torsion(path, closed=false) =
 
 // Function: path_cut()
 // Synopsis: Cuts a path into subpaths at various points.
+// SynTags: PathList
 // Topics: Paths, Path Subdivision
 // See Also: split_path_at_self_crossings(), path_cut_points()
 // Usage:
@@ -929,6 +935,7 @@ function _cut_to_seg_u_form(pathcut, path, closed) =
 
 // Function: split_path_at_self_crossings()
 // Synopsis: Split a 2D path wherever it crosses itself.
+// SynTags: PathList
 // Topics: Paths, Path Subdivision
 // See Also: path_cut(), path_cut_points()
 // Usage:
@@ -999,6 +1006,7 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 
 // Function: polygon_parts()
 // Synopsis: Parses a self-intersecting polygon into a list of non-intersecting polygons.
+// SynTags: PathList
 // Topics: Paths, Polygons
 // See Also: split_path_at_self_crossings(), path_cut(), path_cut_points()
 // Usage:

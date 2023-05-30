@@ -17,6 +17,7 @@ include <rounding.scad>
 
 // Function&Module: half_joiner_clear()
 // Synopsis: Creates a mask to clear space for a {{half_joiner()}}.
+// SynTags: Geom, VNF
 // Topics: Joiners, Parts
 // See Also: half_joiner_clear(), half_joiner(), half_joiner2(), joiner_clear(), joiner(), snap_pin(), rabbit_clip(), dovetail()
 // Usage: As Module
@@ -62,6 +63,7 @@ module half_joiner_clear(l=20, w=10, ang=30, clearance=0, overlap=0.01, anchor=C
 
 // Function&Module: half_joiner()
 // Synopsis: Creates a half-joiner shape to mate with a {{half_joiner2()}} shape..
+// SynTags: Geom, VNF
 // Topics: Joiners, Parts
 // See Also: half_joiner_clear(), half_joiner(), half_joiner2(), joiner_clear(), joiner(), snap_pin(), rabbit_clip(), dovetail()
 // Usage: As Module
@@ -244,6 +246,7 @@ module half_joiner(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0
 
 // Function&Module: half_joiner2()
 // Synopsis: Creates a half_joiner2 shape to mate with a {{half_joiner()}} shape..
+// SynTags: Geom, VNF
 // Topics: Joiners, Parts
 // See Also: half_joiner_clear(), half_joiner(), half_joiner2(), joiner_clear(), joiner(), snap_pin(), rabbit_clip(), dovetail()
 // Usage: As Module
@@ -459,6 +462,7 @@ module half_joiner2(l=20, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=
 
 // Module: joiner_clear()
 // Synopsis: Creates a mask to clear space for a {{joiner()}} shape.
+// SynTags: Geom
 // Topics: Joiners, Parts
 // See Also: half_joiner_clear(), half_joiner(), half_joiner2(), joiner_clear(), joiner(), snap_pin(), rabbit_clip(), dovetail()
 // Description:
@@ -498,6 +502,7 @@ module joiner_clear(l=40, w=10, ang=30, clearance=0, overlap=0.01, anchor=CENTER
 
 // Module: joiner()
 // Synopsis: Creates a joiner shape that can mate with another rotated joiner shape.
+// SynTags: Geom
 // Topics: Joiners, Parts
 // See Also: half_joiner_clear(), half_joiner(), half_joiner2(), joiner_clear(), joiner(), snap_pin(), rabbit_clip(), dovetail()
 // Usage:
@@ -549,6 +554,7 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 
 // Module: dovetail()
 // Synopsis: Creates a possibly tapered dovetail shape.
+// SynTags: Geom
 // Topics: Joiners, Parts
 // See Also: joiner(), snap_pin(), rabbit_clip()
 //
@@ -819,6 +825,7 @@ function _pin_size(size) =
 
 // Module: snap_pin()
 // Synopsis: Creates a snap-pin that can slot into a {{snap_pin_socket()}} to join two parts.
+// SynTags: Geom
 // Topics: Joiners, Parts
 // See Also: snap_pin_socket(), joiner(), dovetail(), snap_pin(), rabbit_clip()
 // Usage:
@@ -892,6 +899,7 @@ module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, 
 
 // Module: snap_pin_socket()
 // Synopsis: Creates a snap-pin socket for a {{snap_pin()}} to slot into.
+// SynTags: Geom
 // Topics: Joiners, Parts
 // See Also: snap_pin(), joiner(), dovetail(), snap_pin(), rabbit_clip()
 // Usage:
@@ -965,6 +973,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 
 // Module: rabbit_clip()
 // Synopsis: Creates a rabbit-eared clip that can snap into a slot.
+// SynTags: Geom
 // Topics: Joiners, Parts
 // See Also: snap_pin(), joiner(), dovetail(), snap_pin(), rabbit_clip()
 // Usage:
