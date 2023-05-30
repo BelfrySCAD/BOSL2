@@ -1884,7 +1884,7 @@ function screw_info(name, head, drive, thread, drive_size, shaft_oversize, head_
 //   . 
 //   Field              | What it is
 //   ------------------ | ---------------
-//   "type"           | Always set to "screw_info"
+//   "type"           | Always set to "nut_info"
 //   "system"         | Either `"UTS"` or `"ISO"` (used for correct tolerance computation).
 //   "origin"         | Module that created the structure
 //   "name"           | Name used to specify threading, such as "M6" or "#8"
