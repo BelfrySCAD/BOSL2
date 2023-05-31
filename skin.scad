@@ -2691,14 +2691,14 @@ function associate_vertices(polygons, split, curpoly=0) =
 // DefineHeader(Table;Headers=Texture Name|Type|Description): Texture Values
 
 // Section: Texturing
-// Some operations are able to add texture to the objects they create.  A texture can be any regularly repeated variation in the height of the surface.
-// To define a texture you need to specify how the height should vary over a rectangular block that will be repeated to tile the object.  Because textures
-// are based on rectangular tiling, this means adding textures to curved shapes may result in distortion of the basic texture unit.  For example, if you
-// texture a cone, the scale of the texture will be larger at the wide end of the cone and smaller at the narrower end of the cone.
-// .
-// You can specify a texture using to method: a height field or a VNF.  For each method you also must specify the scale of the texture, which
-// gives the size of the rectangular unit in your object that will correspond to one texture tile.  Note that this scale does not preserve
-// aspect ratio: you can stretch the texture as desired.  
+//   Some operations are able to add texture to the objects they create.  A texture can be any regularly repeated variation in the height of the surface.
+//   To define a texture you need to specify how the height should vary over a rectangular block that will be repeated to tile the object.  Because textures
+//   are based on rectangular tiling, this means adding textures to curved shapes may result in distortion of the basic texture unit.  For example, if you
+//   texture a cone, the scale of the texture will be larger at the wide end of the cone and smaller at the narrower end of the cone.
+//   .
+//   You can specify a texture using to method: a height field or a VNF.  For each method you also must specify the scale of the texture, which
+//   gives the size of the rectangular unit in your object that will correspond to one texture tile.  Note that this scale does not preserve
+//   aspect ratio: you can stretch the texture as desired.  
 // Subsection: Height Field Texture Maps
 //   The simplest way to specify a texture map is to give a 2d array of
 //   height values which specify the height of the texture on a grid.
@@ -2799,7 +2799,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Topics: Textures, Knurling
 // Synopsis: Produce a standard texture. 
 // Topics: Extrusion, Textures
-// See Also: linear_sweep(), rotate_sweep()
+// See Also: linear_sweep(), rotate_sweep(), heightfield(), cylindrical_heightfield()
 // Usage:
 //   tx = texture(tex, [n=], [inset=], [gap=], [roughness=]);
 // Description:
@@ -2817,7 +2817,6 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   inset = The amount to inset part of a VNF tile texture.  Generally between 0 and 0.5.
 //   gap = The gap between logically distinct parts of a VNF tile.  (ie: gap between bricks, gap between truncated ribs, etc.)
 //   roughness = The amount of roughness used on the surface of some heightfield textures.  Generally between 0 and 0.5.
-// See Also: heightfield(), cylindrical_heightfield(), texture()
 // Example(3D): **"bricks"** (Heightfield) = A brick-wall pattern.  Giving `n=` sets the number of heightfield samples to `n x n`.  Default: 24.  Giving `roughness=` adds a level of height randomization to add roughness to the texture.  Default: 0.05.  Use `style="convex"`.
 //   tex = texture("bricks");
 //   linear_sweep(
