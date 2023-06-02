@@ -5,10 +5,11 @@ GenerateDocs: Files, TOC, Index, Topics, CheatSheet, Sidebar
 UsePNGAnimations: Yes
 IgnoreFiles:
   affine.scad
-  foo.scad
+  metric_screws.scad
   std.scad
   bosl1compat.scad
   builtins.scad
+  foo.scad
   tmp_*.scad
 PrioritizeFiles:
   constants.scad

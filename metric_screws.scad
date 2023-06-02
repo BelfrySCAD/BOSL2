@@ -12,6 +12,8 @@
 include <threading.scad>
 include <screw_drive.scad>
 
+warn = echo("*** WARNING: metric_screws.scad is deprecated and may be removed in the future.  Use screws.scad instead. ***");
+
 
 // Section: Functions
 
