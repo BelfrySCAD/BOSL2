@@ -1733,7 +1733,7 @@ module edge_profile_asym(edges=EDGES_ALL, except=[], excess=0.01, convexity=10, 
                 (pos.x>0? xflip() : ident(4)) *
                 (pos.y>0? yflip() : ident(4)) *
                 (pos.z>0? zflip() : ident(4)) *
-                rot(-120*(2-j), v=[1,1,1]),
+                rot(-120*(2-j), v=[1,1,1])
         ) T;
 
     function _default_edge_orientation(edge) =
