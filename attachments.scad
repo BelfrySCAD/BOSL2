@@ -1585,7 +1585,7 @@ module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
 // Synopsis: Extrudes a 2d edge profile into a mask on the given edges of the parent.
 // SynTags: Geom
 // Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), face_profile(), corner_profile(), edge_mask(), face_mask(), corner_mask()
+// See Also: attachable(), position(), attach(), face_profile(), edge_profile_asym(), corner_profile(), edge_mask(), face_mask(), corner_mask()
 // Usage:
 //   PARENT() edge_profile([edges], [except], [convexity]) CHILDREN;
 // Description:
@@ -1610,19 +1610,20 @@ module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_roundover(r=10, inset=2);
+
 module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
     req_children($children);
-    assert($parent_geom != undef, "No object to attach to!");
+    check1 = assert($parent_geom != undef, "No object to attach to!");
     edges = _edges(edges, except=except);
     vecs = [
         for (i = [0:3], axis=[0:2])
         if (edges[axis][i]>0)
         EDGE_OFFSETS[axis][i]
     ];
+    all_vecs_are_edges = all([for (vec = vecs) sum(v_abs(vec))==2]);
+    check2 = assert(all_vecs_are_edges, "All vectors must be edges.");
     for ($idx = idx(vecs)) {
         vec = vecs[$idx];
-        vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        dummy=assert(vcount == 2, "Not an edge vector!");
         anch = _find_anchor(vec, $parent_geom);
         $attach_to = undef;
         $attach_anchor = anch;
@@ -1645,6 +1646,292 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
         }
     }
 }
+
+
+// Module: edge_profile_asym()
+// Synopsis: Extrudes an asymmetric 2D profile into a mask on the given edges and corners of the parent.
+// SynTags: Geom
+// Topics: Attachments, Masking
+// See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_profile(), edge_mask(), face_mask(), corner_mask()
+// Usage:
+//   PARENT() edge_profile([edges], [except=], [convexity=], [flip=], [corner_type=]) CHILDREN;
+// Description:
+//   Takes an asymmetric 2D mask shape and attaches it to the selected edges and corners, with the appropriate
+//   orientation and extruded length to be `diff()`ed away, to give the edges and corners a matching profile.
+//   If no tag is set then `edge_profile_asym()` sets the tag for children to "remove" so that it will work
+//   with the default {{diff()}} tag.  For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   Profile orientation will be made consistent for all connected edges and corners.  This prohibits having three
+//   edges meeting at any one corner.  You can intert the orientations of all edges with `flip=true`.
+// Arguments:
+//   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
+//   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
+//   excess = Excess length to extrude the profile to make edge masks.  Default: 0.01
+//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
+//   flip = If true, reverses the orientation of any external profile parts at each edge.  Default false
+//   corner_type = Specifies how exterior corners should be formed.  Must be one of `"none"`, `"chamfer"`, `"round"`, or `"sharp"`.  Default: `"none"`
+// Side Effects:
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
+//   `$idx` is set to the index number of each edge.
+//   `$attach_anchor` is set for each edge given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
+//   `$profile_type` is set to `"edge"`.
+// Example:
+//   ogee = [
+//       "xstep",1,  "ystep",1,  // Starting shoulder.
+//       "fillet",5, "round",5,  // S-curve.
+//       "ystep",1,  "xstep",1   // Ending shoulder.
+//   ];
+//   diff()
+//   cuboid(50) {
+//       edge_profile_asym(FRONT)
+//          mask2d_ogee(ogee);
+//   }
+// Example: Flipped
+//   ogee = [
+//       "xstep",1,  "ystep",1,  // Starting shoulder.
+//       "fillet",5, "round",5,  // S-curve.
+//       "ystep",1,  "xstep",1   // Ending shoulder.
+//   ];
+//   diff()
+//   cuboid(50) {
+//       edge_profile_asym(FRONT, flip=true)
+//          mask2d_ogee(ogee);
+//   }
+// Example: Negative Chamfering
+//   cuboid(50) {
+//       edge_profile_asym(FWD, flip=false)
+//           xflip() mask2d_chamfer(10);
+//       edge_profile_asym(BACK, flip=true, corner_type="sharp")
+//           xflip() mask2d_chamfer(10);
+//   }
+// Example: Negative Roundings
+//   cuboid(50) {
+//       edge_profile_asym(FWD, flip=false)
+//           xflip() mask2d_roundover(10);
+//       edge_profile_asym(BACK, flip=true, corner_type="round")
+//           xflip() mask2d_roundover(10);
+//   }
+// Example: Cornerless
+//   cuboid(50) {
+//       edge_profile_asym(
+//           "ALL", except=[TOP+FWD+RIGHT, BOT+BACK+LEFT]
+//        ) xflip() mask2d_roundover(10);
+//   }
+// Example: More complicated edge sets
+//   cuboid(50) {
+//       edge_profile_asym(
+//           "ALL", except=[TOP+FWD+RIGHT, BOT+BACK+LEFT],
+//           corner_type="chamfer"
+//        ) xflip() mask2d_roundover(10);
+//   }
+
+module edge_profile_asym(edges=EDGES_ALL, except=[], excess=0.01, convexity=10, flip=false, corner_type="none") {
+    function _corner_orientation(pos,pvec) =
+        let(
+            j = [for (i=[0:2]) if (pvec[i]) i][0],
+            T =
+                (pos.x>0? xflip() : ident(4)) *
+                (pos.y>0? yflip() : ident(4)) *
+                (pos.z>0? zflip() : ident(4)) *
+                rot(-120*(2-j), v=[1,1,1]),
+        ) T;
+
+    function _default_edge_orientation(edge) =
+        edge.z < 0? [[-edge.x,-edge.y,0], UP] :
+        edge.z > 0? [[-edge.x,-edge.y,0], DOWN] :
+        edge.y < 0? [[-edge.x,0,0], BACK] :
+        [[-edge.x,0,0], FWD] ;
+
+    function _edge_transition_needs_flip(from,to) =
+        let(
+            flip_edges = [
+                [BOT+FWD, [FWD+LEFT, FWD+RIGHT]],
+                [BOT+BACK, [BACK+LEFT, BACK+RIGHT]],
+                [BOT+LEFT, []],
+                [BOT+RIGHT, []],
+                [TOP+FWD, [FWD+LEFT, FWD+RIGHT]],
+                [TOP+BACK, [BACK+LEFT, BACK+RIGHT]],
+                [TOP+LEFT, []],
+                [TOP+RIGHT, []],
+                [FWD+LEFT, [TOP+FWD, BOT+FWD]],
+                [FWD+RIGHT, [TOP+FWD, BOT+FWD]],
+                [BACK+LEFT, [TOP+BACK, BOT+BACK]],
+                [BACK+RIGHT, [TOP+BACK, BOT+BACK]],
+            ],
+            i = search([from], flip_edges, num_returns_per_match=1)[0],
+            check = assert(i!=[], "Bad edge vector.")
+        ) in_list(to,flip_edges[i][1]);
+
+    function _edge_corner_numbers(vec) =
+        let(
+            v2 = [for (i=idx(vec)) vec[i]? (vec[i]+1)/2*pow(2,i) : 0],
+            off = v2.x + v2.y + v2.z,
+            xs = [0, if (!vec.x) 1],
+            ys = [0, if (!vec.y) 2],
+            zs = [0, if (!vec.z) 4]
+        ) [for (x=xs, y=ys, z=zs) x+y+z + off];
+
+    function _gather_contiguous_edges(edge_corners) =
+        let(
+            no_tri_corners = all([for(cn = [0:7]) len([for (ec=edge_corners) if(in_list(cn,ec[1])) 1])<3]),
+            check = assert(no_tri_corners, "Cannot have three edges that meet at the same corner.")
+        )
+        _gather_contiguous_edges_r(
+            [for (i=idx(edge_corners)) if(i) edge_corners[i]],
+            edge_corners[0][1],
+            [edge_corners[0][0]], []);
+
+    function _gather_contiguous_edges_r(edge_corners, ecns, curr, out) =
+        len(edge_corners)==0? [each out, curr] :
+        let(
+            i1 = [
+                for (i = idx(edge_corners))
+                if (in_list(ecns[0], edge_corners[i][1]))
+                i
+            ],
+            i2 = [
+                for (i = idx(edge_corners))
+                if (in_list(ecns[1], edge_corners[i][1]))
+                i
+            ]
+        ) !i1 && !i2? _gather_contiguous_edges_r(
+            [for (i=idx(edge_corners)) if(i) edge_corners[i]],
+            edge_corners[0][1],
+            [edge_corners[0][0]],
+            [each out, curr]
+        ) : let(
+            nu_curr = [
+                if (i1) edge_corners[i1[0]][0],
+                each curr,
+                if (i2) edge_corners[i2[0]][0],
+            ],
+            nu_ecns = [
+                if (!i1) ecns[0] else [
+                    for (ecn = edge_corners[i1[0]][1])
+                    if (ecn != ecns[0]) ecn
+                ][0],
+                if (!i2) ecns[1] else [
+                    for (ecn = edge_corners[i2[0]][1])
+                    if (ecn != ecns[1]) ecn
+                ][0],
+            ],
+            rem = [
+                for (i = idx(edge_corners))
+                if (i != i1[0] && i != i2[0])
+                edge_corners[i]
+            ]
+        )
+        _gather_contiguous_edges_r(rem, nu_ecns, nu_curr, out);
+
+    function _edge_transition_inversions(edge_string) =
+        let(
+            // boolean cumulative sum
+            bcs = function(list, i=0, inv=false, out=[])
+                    i>=len(list)? out :
+                    let( nu_inv = list[i]? !inv : inv )
+                    bcs(list, i+1, nu_inv, [each out, nu_inv]),
+            inverts = bcs([
+                false,
+                for(i = idx(edge_string)) if (i)
+                    _edge_transition_needs_flip(
+                        edge_string[i-1],
+                        edge_string[i]
+                    )
+            ]),
+            boti = [for(i = idx(edge_string)) if (edge_string[i].z<0) i],
+            topi = [for(i = idx(edge_string)) if (edge_string[i].z>0) i],
+            lfti = [for(i = idx(edge_string)) if (edge_string[i].x<0) i],
+            rgti = [for(i = idx(edge_string)) if (edge_string[i].x>0) i],
+            idx = [for (m = [boti, topi, lfti, rgti]) if(m) m[0]][0],
+            rinverts = inverts[idx] == false? inverts : [for (x = inverts) !x]
+        ) rinverts;
+
+    function _is_closed_edge_loop(edge_string) =
+        let(
+            e1 = edge_string[0],
+            e2 = last(edge_string)
+        )
+        len([for (i=[0:2]) if (abs(e1[i])==1 && e1[i]==e2[i]) 1]) == 1 &&
+        len([for (i=[0:2]) if (e1[i]==0 && abs(e2[i])==1) 1]) == 1 &&
+        len([for (i=[0:2]) if (e2[i]==0 && abs(e1[i])==1) 1]) == 1;
+
+    function _edge_pair_perp_vec(e1,e2) =
+        [for (i=[0:2]) if (abs(e1[i])==1 && e1[i]==e2[i]) -e1[i] else 0];
+
+    req_children($children);
+    check1 = assert($parent_geom != undef, "No object to attach to!")
+        assert(in_list(corner_type, ["none", "round", "chamfer", "sharp"]))
+        assert(is_bool(flip));
+    edges = _edges(edges, except=except);
+    vecs = [
+        for (i = [0:3], axis=[0:2])
+        if (edges[axis][i]>0)
+        EDGE_OFFSETS[axis][i]
+    ];
+    all_vecs_are_edges = all([for (vec = vecs) sum(v_abs(vec))==2]);
+    check2 = assert(all_vecs_are_edges, "All vectors must be edges.");
+    edge_corners = [for (vec = vecs) [vec, _edge_corner_numbers(vec)]];
+    edge_strings = _gather_contiguous_edges(edge_corners);
+    for (edge_string = edge_strings) {
+        inverts = _edge_transition_inversions(edge_string);
+        flipverts = [for (x = inverts) flip? !x : x];
+        vecpairs = [
+            for (i = idx(edge_string))
+            let (p = _default_edge_orientation(edge_string[i]))
+            flipverts[i]? [p.y,p.x] : p
+        ];
+        is_loop = _is_closed_edge_loop(edge_string);
+        for (i = idx(edge_string)) {
+            if (corner_type!="none" && (i || is_loop)) {
+                e1 = select(edge_string,i-1);
+                e2 = select(edge_string,i);
+                vp1 = select(vecpairs,i-1);
+                vp2 = select(vecpairs,i);
+                pvec = _edge_pair_perp_vec(e1,e2);
+                pos = [for (i=[0:2]) e1[i]? e1[i] : e2[i]];
+                if (vp1.y == vp2.y) {
+                    default_tag("remove")
+                    position(pos) {
+                        mirT = _corner_orientation(pos, pvec);
+                        multmatrix(mirT) {
+                            if (corner_type=="chamfer") {
+                                fn = $fn;
+                                rotate_extrude(angle=90, $fn=4)
+                                    right_half(planar=true, $fn=fn)
+                                        children();
+                                rotate_extrude(angle=90, $fn=4)
+                                    left_half(planar=true, $fn=fn)
+                                        children();
+                            } else if (corner_type=="round") {
+                                rotate_extrude(angle=90)
+                                    right_half(planar=true)
+                                        children();
+                                rotate_extrude(angle=90)
+                                    left_half(planar=true)
+                                        children();
+                            } else { //corner_type == "sharp"
+                                intersection() {
+                                    rot([90,0, 0]) linear_extrude(height=100,center=true,convexity=convexity) children();
+                                    rot([90,0,90]) linear_extrude(height=100,center=true,convexity=convexity) children();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (i = idx(edge_string)) {
+            edge_profile(edge_string[i], excess=excess, convexity=convexity) {
+                if (flipverts[i]) {
+                    mirror([-1,1]) children();
+                } else {
+                    children();
+                }
+            }
+        }
+    }
+}
+
 
 // Module: corner_profile()
 // Synopsis: Rotationally extrudes a 2d edge profile into corner mask on the given corners of the parent.
@@ -1678,15 +1965,15 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 //           mask2d_teardrop(r=10, angle=40);
 //   }
 module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
-    assert($parent_geom != undef, "No object to attach to!");
+    check1 = assert($parent_geom != undef, "No object to attach to!");
     r = max(0.01, get_radius(r=r, d=d, dflt=undef));
-    assert(is_num(r));
+    check2 = assert(is_num(r), "Bad r/d argument.");
     corners = _corners(corners, except=except);
     vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
+    all_vecs_are_corners = all([for (vec = vecs) sum(v_abs(vec))==3]);
+    check3 = assert(all_vecs_are_corners, "All vectors must be corners.");
     for ($idx = idx(vecs)) {
         vec = vecs[$idx];
-        vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        dummy=assert(vcount == 3, "Not an edge vector!");
         anch = _find_anchor(vec, $parent_geom);
         $attach_to = undef;
         $attach_anchor = anch;
