@@ -394,6 +394,7 @@ children to the parent in different locations, each child needs a different anch
 be achieved using the `$align` variable:
 
 ```openscad-3D
+include<BOSL2/std.scad>
 cuboid([50,40,15])
     position([RIGHT+TOP,LEFT+TOP])
         color("lightblue")prismoid([10,5],[7,4],height=4, anchor=$align);
@@ -493,6 +494,7 @@ can be eliminated using the `$align` variable which takes into account the spin
 that the `orient()` module applies.
 
 ```openscad-3D
+include<BOSL2/std.scad>
 cuboid([50,40,15])
     position(RIGHT+TOP)
         orient(RIGHT)
@@ -504,6 +506,7 @@ with the appropriate anchor taking the spin into account.  You can use this meth
 for children placed on the top by using orient with a TOP direction, but nonzero spin.
 
 ```openscad-3D
+include<BOSL2/std.scad>
 cuboid([50,40,15])
     position(RIGHT+TOP)
         orient(TOP, spin=90)
