@@ -375,6 +375,31 @@ cube([50,50,20],center=true)
     position(TOP+RIGHT) left(5) cube([4,50,10], anchor=RIGHT+BOT);
 ```
 
+When you position a child at an edge or corner of a parent object, you very likely
+need to change the anchor for the child in a matching way to align the child with the surface and edge
+of the parent.  You can automate this process by making use of the `$align` special variable, which
+is set by `position()`.  To align a child with a corner you can do:
+
+```openscad-3D
+include<BOSL2/std.scad>
+cuboid([50,40,15])
+    position(RIGHT+FRONT+TOP)
+        color("lightblue")prismoid([10,5],[7,4],height=4, anchor=$align);
+```
+
+In this example, the `$align` variable replaces the explicit anchor of `RIGHT+FRONT+BOT` that
+would be required for this case. The `position()` module can also accept a list of positions,
+and it will place a copy of the child at each location.  However, if you want to align multiple
+children to the parent in different locations, each child needs a different anchor.  This can
+be achieved using the `$align` variable:
+
+```openscad-3D
+cuboid([50,40,15])
+    position([RIGHT+TOP,LEFT+TOP])
+        color("lightblue")prismoid([10,5],[7,4],height=4, anchor=$align);
+```
+
+
 
 Positioning objects works the same way in 2D.
 
@@ -461,6 +486,28 @@ prismoid([50,50],[30,30],h=40)
   position(RIGHT+TOP)
      orient(RIGHT)
         anchor_arrow(40);
+```
+
+The potential confusion that spin creates for the proper anchoring of children 
+can be eliminated using the `$align` variable which takes into account the spin
+that the `orient()` module applies.
+
+```openscad-3D
+cuboid([50,40,15])
+    position(RIGHT+TOP)
+        orient(RIGHT)
+            color("lightblue")prismoid([10,5],[7,4],height=4, anchor=$align);
+```
+
+In this case, the correct anchor is chosen to place the child on the right side
+with the appropriate anchor taking the spin into account.  You can use this method
+for children placed on the top by using orient with a TOP direction, but nonzero spin.
+
+```openscad-3D
+cuboid([50,40,15])
+    position(RIGHT+TOP)
+        orient(TOP, spin=90)
+            color("lightblue")prismoid([10,5],[7,4],height=4, anchor=$align);
 ```
 
 
