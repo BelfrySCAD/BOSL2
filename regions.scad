@@ -248,6 +248,7 @@ function is_region_simple(region, eps=EPSILON) =
   
 // Function: make_region()
 // Synopsis: Converts lists of intersecting polygons into valid regions.
+// SynTags: Region
 // Topics: Regions, Paths, Polygons, List Handling
 // See Also: force_region(), region()
 // 
@@ -281,6 +282,7 @@ function make_region(polys,nonzero=false,eps=EPSILON) =
 
 // Function: force_region()
 // Synopsis: Given a polygon returns a region.
+// SynTags: Region
 // Topics: Regions, Paths, Polygons, List Handling
 // See Also: make_region(), region()
 // Usage:
@@ -296,6 +298,7 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 
 // Module: region()
 // Synopsis: Creates the 2D polygons described by the given region or list of polygons.
+// SynTags: Geom
 // Topics: Regions, Paths, Polygons, List Handling
 // See Also: make_region(), region()
 // Usage:
@@ -576,6 +579,7 @@ function split_region_at_region_crossings(region1, region2, closed1=true, closed
 
 // Function: region_parts()
 // Synopsis: Splits a region into a list of regions.
+// SynTags: RegList
 // Topics: Regions, List Handling
 // See Also: split_region_at_region_crossings()
 // Usage:
@@ -739,6 +743,7 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 
 // Function: offset()
 // Synopsis: Takes a 2D path, polygon or region and returns a path offset by an amount.
+// SynTags: Path, Region
 // Topics: Paths, Polygons, Regions
 // Usage:
 //   offsetpath = offset(path, [r=|delta=], [chamfer=], [closed=], [check_valid=], [quality=], [same_length=])
@@ -1044,6 +1049,7 @@ function _list_three(a,b,c) =
 
 // Function&Module: union()
 // Synopsis: Performs a Boolean union operation.
+// SynTags: Geom, Region
 // Topics: Boolean Operations, Regions, Polygons, Shapes2D, Shapes3D
 // See Also: difference(), intersection(), diff(), intersect(), exclusive_or()
 // Usage:
@@ -1077,6 +1083,7 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 
 // Function&Module: difference()
 // Synopsis: Performs a Boolean difference operation.
+// SynTags: Geom, Region
 // Topics: Boolean Operations, Regions, Polygons, Shapes2D, Shapes3D
 // See Also: union(), intersection(), diff(), intersect(), exclusive_or()
 // Usage:
@@ -1112,6 +1119,7 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 
 // Function&Module: intersection()
 // Synopsis: Performs a Boolean intersection operation.
+// SynTags: Geom, Region
 // Topics: Boolean Operations, Regions, Polygons, Shapes2D, Shapes3D
 // See Also: difference(), union(), diff(), intersect(), exclusive_or()
 // Usage:
@@ -1146,6 +1154,7 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 
 // Function&Module: exclusive_or()
 // Synopsis: Performs a Boolean exclusive-or operation.
+// SynTags: Geom, Region
 // Topics: Boolean Operations, Regions, Polygons, Shapes2D, Shapes3D
 // See Also: union(), difference(), intersection(), diff(), intersect()
 // Usage:

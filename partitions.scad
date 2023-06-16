@@ -15,7 +15,7 @@
 // Synopsis: Masks half of an object at a cut plane.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: back_half(), front_half(), left_half(), right_half(), top_half(), bottom_half()
+// See Also: back_half(), front_half(), left_half(), right_half(), top_half(), bottom_half(), intersection()
 //
 // Usage: as module
 //   half_of(v, [cp], [s], [planar]) CHILDREN;
@@ -23,12 +23,13 @@
 //   result = half_of(p,v,[cp]);
 //
 // Description:
-//   Slices an object at a cut plane, and masks away everything that is on one side.  The v parameter is either a plane specification or
-//   a normal vector.  The s parameter is needed for the module
-//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
-//   wrong half, but if it is too small it won't fully mask your model.  
-//   When called as a function, you must supply a vnf, path or region in p.  If planar is set to true for the module version the operation
-//   is performed in 2D and UP and DOWN are treated as equivalent to BACK and FWD respectively.
+//   Slices an object at a cut plane, and masks away everything that is on one side.  The v parameter
+//   is either a plane specification or a normal vector.  The `s` parameter is needed for the module
+//   version to control the size of the masking cube.  If `s` is too large then the preview display
+//   will flip around and display the wrong half, but if it is too small it won't fully mask your
+//   model.  When called as a function, you must supply a vnf, path or region in p.  If planar is set
+//   to true for the module version the operation is performed in 2D and UP and DOWN are treated as
+//   equivalent to BACK and FWD respectively.
 //
 // Arguments:
 //   p = path, region or VNF to slice.  (Function version)
@@ -125,7 +126,7 @@ function half_of(p, v=UP, cp) =
 // Synopsis: Masks the right half of an object along the Y-Z plane, leaving the left half.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: back_half(), front_half(), right_half(), top_half(), bottom_half(), half_of()
+// See Also: back_half(), front_half(), right_half(), top_half(), bottom_half(), half_of(), intersection()
 //
 // Usage: as module
 //   left_half([s], [x]) CHILDREN;
@@ -135,9 +136,9 @@ function half_of(p, v=UP, cp) =
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is right of it.
-//   The s parameter is needed for the module
-//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
-//   wrong half, but if it is too small it won't fully mask your model.  
+//   The `s` parameter is needed for the module version to control the size of the masking cube.
+//   If `s` is too large then the preview display will flip around and display the wrong half,
+//   but if it is too small it won't fully mask your model.  
 //
 // Arguments:
 //   p = VNF, region or path to slice (function version)
@@ -172,7 +173,7 @@ function left_half(p,x=0) = half_of(p, LEFT, [x,0,0]);
 // SynTags: Geom, VNF, Path, Region
 // Synopsis: Masks the left half of an object along the Y-Z plane, leaving the right half.
 // Topics: Partitions, Masking
-// See Also: back_half(), front_half(), left_half(), top_half(), bottom_half(), half_of()
+// See Also: back_half(), front_half(), left_half(), top_half(), bottom_half(), half_of(), intersection()
 //
 // Usage: as module
 //   right_half([s=], [x=]) CHILDREN;
@@ -182,9 +183,9 @@ function left_half(p,x=0) = half_of(p, LEFT, [x,0,0]);
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is left of it.
-//   The s parameter is needed for the module
-//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
-//   wrong half, but if it is too small it won't fully mask your model.  
+//   The `s` parameter is needed for the module version to control the size of the masking cube.
+//   If `s` is too large then the preview display will flip around and display the wrong half,
+//   but if it is too small it won't fully mask your model.  
 // Arguments:
 //   p = VNF, region or path to slice (function version)
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may display the wrong half.  (Module version)  Default: 100
@@ -217,7 +218,7 @@ function right_half(p,x=0) = half_of(p, RIGHT, [x,0,0]);
 // Synopsis: Masks the back half of an object along the X-Z plane, leaving the front half.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: back_half(), left_half(), right_half(), top_half(), bottom_half(), half_of()
+// See Also: back_half(), left_half(), right_half(), top_half(), bottom_half(), half_of(), intersection()
 //
 // Usage:
 //   front_half([s], [y]) CHILDREN;
@@ -227,9 +228,9 @@ function right_half(p,x=0) = half_of(p, RIGHT, [x,0,0]);
 //
 // Description:
 //   Slices an object at a vertical X-Z cut plane, and masks away everything that is behind it.
-//   The s parameter is needed for the module
-//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
-//   wrong half, but if it is too small it won't fully mask your model.  
+//   The `s` parameter is needed for the module version to control the size of the masking cube.
+//   If `s` is too large then the preview display will flip around and display the wrong half,
+//   but if it is too small it won't fully mask your model.  
 // Arguments:
 //   p = VNF, region or path to slice (function version)
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may display the wrong half.  (Module version)  Default: 100
@@ -263,7 +264,7 @@ function front_half(p,y=0) = half_of(p, FRONT, [0,y,0]);
 // Synopsis: Masks the front half of an object along the X-Z plane, leaving the back half.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: front_half(), left_half(), right_half(), top_half(), bottom_half(), half_of()
+// See Also: front_half(), left_half(), right_half(), top_half(), bottom_half(), half_of(), intersection()
 //
 // Usage:
 //   back_half([s], [y]) CHILDREN;
@@ -273,9 +274,9 @@ function front_half(p,y=0) = half_of(p, FRONT, [0,y,0]);
 //
 // Description:
 //   Slices an object at a vertical X-Z cut plane, and masks away everything that is in front of it.
-//   The s parameter is needed for the module
-//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
-//   wrong half, but if it is too small it won't fully mask your model.  
+//   The `s` parameter is needed for the module version to control the size of the masking cube.
+//   If `s` is too large then the preview display will flip around and display the wrong half,
+//   but if it is too small it won't fully mask your model.  
 // Arguments:
 //   p = VNF, region or path to slice (function version)
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may display the wrong half.  (Module version)  Default: 100
@@ -309,7 +310,7 @@ function back_half(p,y=0) = half_of(p, BACK, [0,y,0]);
 // Synopsis: Masks the top half of an object along the X-Y plane, leaving the bottom half.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: back_half(), front_half(), left_half(), right_half(), top_half(), half_of()
+// See Also: back_half(), front_half(), left_half(), right_half(), top_half(), half_of(), intersection()
 //
 // Usage:
 //   bottom_half([s], [z]) CHILDREN;
@@ -318,9 +319,9 @@ function back_half(p,y=0) = half_of(p, BACK, [0,y,0]);
 //
 // Description:
 //   Slices an object at a horizontal X-Y cut plane, and masks away everything that is above it.
-//   The s parameter is needed for the module
-//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
-//   wrong half, but if it is too small it won't fully mask your model. 
+//   The `s` parameter is needed for the module version to control the size of the masking cube.
+//   If `s` is too large then the preview display will flip around and display the wrong half,
+//   but if it is too small it won't fully mask your model. 
 // Arguments:
 //   p = VNF, region or path to slice (function version)
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may display the wrong half.  (Module version)  Default: 100
@@ -347,7 +348,7 @@ function bottom_half(p,z=0) = half_of(p,BOTTOM,[0,0,z]);
 // Synopsis: Masks the bottom half of an object along the X-Y plane, leaving the top half.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking
-// See Also: back_half(), front_half(), left_half(), right_half(), bottom_half(), half_of()
+// See Also: back_half(), front_half(), left_half(), right_half(), bottom_half(), half_of(), intersection()
 //
 // Usage: as module
 //   top_half([s], [z]) CHILDREN;
@@ -356,9 +357,9 @@ function bottom_half(p,z=0) = half_of(p,BOTTOM,[0,0,z]);
 //
 // Description:
 //   Slices an object at a horizontal X-Y cut plane, and masks away everything that is below it.
-//   The s parameter is needed for the module
-//   version to control the size of the masking cube.  If s is too large then the preview display will flip around and display the
-//   wrong half, but if it is too small it won't fully mask your model.  
+//   The `s` parameter is needed for the module version to control the size of the masking cube.
+//   If `s` is too large then the preview display will flip around and display the wrong half,
+//   but if it is too small it won't fully mask your model.  
 // Arguments:
 //   p = VNF, region or path to slice (function version)
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may display the wrong half.  (Module version)  Default: 100
@@ -433,7 +434,8 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 // Usage:
 //   partition_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
-//   Creates a mask that you can use to difference or intersect with an object to remove half of it, leaving behind a side designed to allow assembly of the sub-parts.
+//   Creates a mask that you can use to difference or intersect with an object to remove half of it,
+//   leaving behind a side designed to allow assembly of the sub-parts.
 // Arguments:
 //   l = The length of the cut axis.
 //   w = The width of the part to be masked, back from the cut plane.

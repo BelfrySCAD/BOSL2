@@ -130,6 +130,7 @@ INCH = 25.4;
 
 // Constant: IDENT
 // Synopsis: A constant containing the 3D identity transformation matrix.
+// SynTags: Mat
 // Topics: Constants, Affine, Matrices, Transforms
 // See Also: ident()
 // Description: Identity transformation matrix for three-dimensional transforms.  Equal to `ident(4)`.  

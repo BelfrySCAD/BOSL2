@@ -200,6 +200,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 
 // Module: screw()
 // Synopsis: Creates a standard screw with optional tolerances.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: screw_hole(), shoulder_screw()
 // Usage:
@@ -733,6 +734,7 @@ fdsa=   echo(pitch=pitch);
 
 // Module: screw_hole()
 // Synopsis: Creates a screw hole.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: screw()
 // Usage:
@@ -990,6 +992,7 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
 
 // Module: shoulder_screw()
 // Synopsis: Creates a shoulder screw.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: screw(), screw_hole()
 // Usage:
@@ -1403,6 +1406,7 @@ function _parse_drive(drive=undef, drive_size=undef) =
 
 // Module: screw_head()
 // Synopsis: Creates a screw head.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: screw(), screw_hole()
 // Usage:
@@ -1506,6 +1510,7 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
 
 // Module: nut()
 // Synopsis: Creates a standard nut.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: screw(), screw_hole()
 // Usage:
@@ -1628,6 +1633,7 @@ module nut(spec, shape, thickness, nutwidth, thread, tolerance, hole_oversize,
 
 // Module: nut_trap_side()
 // Synopsis: Creates a side nut trap mask.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: screw(), screw_hole()
 // Usage:
@@ -1718,6 +1724,7 @@ module nut_trap_side(trap_width, spec, shape, thickness, nutwidth, anchor=BOT, o
 
 // Module: nut_trap_inline()
 // Synopsis: Creates an inline nut trap mask.
+// SynTags: Geom
 // Topics: Threading, Screws
 // See Also: screw(), screw_hole()
 // Usage:
@@ -1897,7 +1904,7 @@ function screw_info(name, head, drive, thread, drive_size, shaft_oversize, head_
 //   . 
 //   Field              | What it is
 //   ------------------ | ---------------
-//   "type"           | Always set to "screw_info"
+//   "type"           | Always set to "nut_info"
 //   "system"         | Either `"UTS"` or `"ISO"` (used for correct tolerance computation).
 //   "origin"         | Module that created the structure
 //   "name"           | Name used to specify threading, such as "M6" or "#8"

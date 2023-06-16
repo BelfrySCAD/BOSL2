@@ -14,6 +14,7 @@
 
 // Module: sparse_wall()
 // Synopsis: Makes an open cross-braced rectangular wall.
+// SynTags: Geom
 // Topics: FDM Optimized, Walls
 // See Also: sparse_wall(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
 //
@@ -88,6 +89,7 @@ module sparse_wall(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anch
 
 // Module: corrugated_wall()
 // Synopsis: Makes a corrugated rectangular wall.
+// SynTags: Geom
 // Topics: FDM Optimized, Walls
 // See Also: sparse_wall(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
 //
@@ -147,6 +149,7 @@ module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, anchor=CENTER, spi
 
 // Module: thinning_wall()
 // Synopsis: Makes a rectangular wall with a thin middle.
+// SynTags: Geom
 // Topics: FDM Optimized, Walls
 // See Also: sparse_wall(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
 //
@@ -331,6 +334,7 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut, wall, an
 
 // Module: thinning_triangle()
 // Synopsis: Makes a triangular wall with a thin middle.
+// SynTags: Geom
 // Topics: FDM Optimized, Walls
 // See Also: sparse_wall(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
 //
@@ -399,6 +403,7 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 
 // Module: narrowing_strut()
 // Synopsis: Makes a strut like an extruded baseball home plate.
+// SynTags: Geom
 // Topics: FDM Optimized
 // See Also: sparse_wall(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
 //

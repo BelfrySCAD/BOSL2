@@ -451,7 +451,6 @@ module threaded_nut(
 //       right(14)back(19)text("flank",size=4,halign="center");
 //       right(14)back(14)text("angle",size=4,halign="center");
 //      }
-
 // Arguments:
 //   d = Outer diameter of threaded rod.
 //   l / length / h / height = Length of threaded rod.
@@ -1248,7 +1247,6 @@ module buttress_threaded_nut(
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
 //   internal = If true, this is a mask for making internal threads.
-
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
 //   blunt_start1 = If true apply truncated blunt start threads bottom end.
 //   blunt_start2 = If true apply truncated blunt start threads top end.
@@ -2039,32 +2037,6 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 //   The taper options specify tapering at of the threads at each end, and is given as the linear distance
 //   over which to taper.  If taper is positive the threads are lengthened by the specified distance; if taper
 //   is negative, the taper is included in the thread length specified by `turns`.  Tapering works on both internal and external threads.  
-// Arguments:
-//   d = Inside base diameter of threads.  Default: 10
-//   pitch = Distance between threads.  Default: 2
-//   ---
-//   thread_depth = Depth of threads from top to bottom.
-//   flank_angle = Angle of thread faces to plane perpendicular to screw.  Default: 15 degrees.
-//   turns = Number of revolutions to rotate thread around.
-//   thread_angle = Angle between two thread faces.  
-//   profile = If an asymmetrical thread profile is needed, it can be specified here.
-//   starts = The number of thread starts.  Default: 1
-//   left_handed = If true, thread has a left-handed winding.
-//   internal = if true make internal threads.  The only effect this has is to change how the threads taper if tapering is selected. When true, threads taper towards the outside; when false, they taper towards the inside.  Default: false
-//   d1 = Bottom inside base diameter of threads.
-//   d2 = Top inside base diameter of threads.
-//   thread_angle = Angle between 
-//   lead_in = Specify linear length of the lead in section of the threading with blunt start threads
-//   lead_in1 = Specify linear length of the lead in section of the threading at the bottom with blunt start threads
-//   lead_in2 = Specify linear length of the lead in section of the threading at the top with blunt start threads
-//   lead_in_ang = Specify angular length in degrees of the lead in section of the threading with blunt start threads
-//   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
-//   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
-//   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
-//   lead_in_sample = Factor to increase sample rate in the lead-in section.  Default: 10
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Figure(2D,Med,NoAxes):
 //   pa_delta = tan(15)/4;
 //      rr1 = -1/2;
@@ -2113,6 +2085,32 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 //    back(10)text("thread",size=4,halign="center");
 //    back(3)text("angle",size=4,halign="center");
 //   }
+// Arguments:
+//   d = Inside base diameter of threads.  Default: 10
+//   pitch = Distance between threads.  Default: 2
+//   ---
+//   thread_depth = Depth of threads from top to bottom.
+//   flank_angle = Angle of thread faces to plane perpendicular to screw.  Default: 15 degrees.
+//   turns = Number of revolutions to rotate thread around.
+//   thread_angle = Angle between two thread faces.  
+//   profile = If an asymmetrical thread profile is needed, it can be specified here.
+//   starts = The number of thread starts.  Default: 1
+//   left_handed = If true, thread has a left-handed winding.
+//   internal = if true make internal threads.  The only effect this has is to change how the threads taper if tapering is selected. When true, threads taper towards the outside; when false, they taper towards the inside.  Default: false
+//   d1 = Bottom inside base diameter of threads.
+//   d2 = Top inside base diameter of threads.
+//   thread_angle = Angle between 
+//   lead_in = Specify linear length of the lead in section of the threading with blunt start threads
+//   lead_in1 = Specify linear length of the lead in section of the threading at the bottom with blunt start threads
+//   lead_in2 = Specify linear length of the lead in section of the threading at the top with blunt start threads
+//   lead_in_ang = Specify angular length in degrees of the lead in section of the threading with blunt start threads
+//   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
+//   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
+//   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
+//   lead_in_sample = Factor to increase sample rate in the lead-in section.  Default: 10
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example(2DMed): Typical Tooth Profile
 //   pitch = 2;
 //   depth = pitch * cos(30) * 5/8;

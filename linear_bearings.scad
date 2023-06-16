@@ -8,14 +8,14 @@
 // FileSummary: Mounts for LMxUU style linear bearings.
 //////////////////////////////////////////////////////////////////////
 
-
-include <metric_screws.scad>
+include <screws.scad>
 
 
 // Section: Generic Linear Bearings
 
 // Module: linear_bearing_housing()
 // Synopsis: Creates a generic linear bearing mount clamp.
+// SynTags: Geom
 // Topics: Parts, Bearings
 // See Also: linear_bearing(), lmXuu_info(), ball_bearing()
 // Usage:
@@ -25,7 +25,7 @@ include <metric_screws.scad>
 // Arguments:
 //   d = Diameter of linear bearing. (Default: 15)
 //   l = Length of linear bearing. (Default: 24)
-//   tab = Clamp tab height. (Default: 7)
+//   tab = Clamp tab height. (Default: 8)
 //   tabwall = Clamp Tab thickness. (Default: 5)
 //   wall = Wall thickness of clamp housing. (Default: 3)
 //   gap = Gap in clamp. (Default: 5)
@@ -35,12 +35,12 @@ include <metric_screws.scad>
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
-//   linear_bearing_housing(d=19, l=29, wall=2, tab=6, screwsize=2.5);
-module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, anchor=BOTTOM, spin=0, orient=UP)
+//   linear_bearing_housing(d=19, l=29, wall=2, tab=8, screwsize=2.5);
+module linear_bearing_housing(d=15, l=24, tab=8, gap=5, wall=3, tabwall=5, screwsize=3, anchor=BOTTOM, spin=0, orient=UP)
 {
     od = d+2*wall;
     ogap = gap+2*tabwall;
-    tabh = tab/2+od/2*sqrt(2)-ogap/2;
+    tabh = tab/2+od/2*sqrt(2)-ogap/2-1;
     h = od+tab/2;
     anchors = [
         named_anchor("axis", [0,0,-tab/2/2]),
@@ -68,11 +68,15 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
             cube([l+0.05,gap,od], anchor=BOTTOM);
 
             up(tabh) {
+                screwsize = is_string(screwsize)? screwsize : str("M",screwsize);
+
                 // Screwhole
-                fwd(ogap/2-2+0.01) generic_screw(screwsize=screwsize*1.06, screwlen=ogap, headsize=screwsize*2, headlen=10, orient=FWD);
+                fwd(ogap/2-2+0.01)
+                    screw_hole(str(screwsize,",",ogap), head="socket", counterbore=3, anchor="head_bot", orient=FWD, $fn=12);
 
                 // Nut holder
-                back(ogap/2-2+0.01) metric_nut(size=screwsize, hole=false, anchor=BOTTOM, orient=BACK);
+                back(ogap/2-2+0.01)
+                    nut_trap_inline(tabwall, screwsize, orient=BACK);
             }
         }
         children();
@@ -82,6 +86,7 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 
 // Module: linear_bearing()
 // Synopsis: Creates a generic linear bearing cartridge.
+// SynTags: Geom
 // Topics: Parts, Bearings
 // See Also: linear_bearing_housing(), lmXuu_info(), ball_bearing()
 // Usage:
@@ -116,6 +121,7 @@ module linear_bearing(l, od=15, id=8, length, anchor=CTR, spin=0, orient=UP) {
 
 // Module: lmXuu_housing()
 // Synopsis: Creates a standardized LM*UU linear bearing mount clamp.
+// SynTags: Geom
 // Topics: Parts, Bearings
 // See Also: linear_bearing(), linear_bearing_housing(), lmXuu_info(), lmXuu_bearing(), lmXuu_housing(), ball_bearing()
 // Usage:
@@ -146,6 +152,7 @@ module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, ancho
 
 // Module: lmXuu_bearing()
 // Synopsis: Creates a standardized LM*UU linear bearing cartridge.
+// SynTags: Geom
 // Topics: Parts, Bearings
 // See Also: linear_bearing(), linear_bearing_housing(), lmXuu_info(), lmXuu_bearing(), lmXuu_housing(), ball_bearing()
 // Usage:

@@ -14,6 +14,7 @@
 
 // Module: nema_stepper_motor()
 // Synopsis: Creates a NEMA standard stepper motor model.
+// SynTags: Geom
 // Topics: Parts, Motors
 // See Also: nema_stepper_motor(), nema_mount_mask()
 // Usage:
@@ -119,6 +120,7 @@ module nema_stepper_motor(size=17, h=24, shaft_len=20, details=true, atype="body
 
 // Module: nema_mount_mask()
 // Synopsis: Creates a standard NEMA mount holes mask.
+// SynTags: Geom
 // Topics: Parts, Motors
 // See Also: nema_stepper_motor(), nema_mount_mask()
 // Usage:
