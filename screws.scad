@@ -578,9 +578,7 @@ module screw(spec, head, drive, thread, drive_size,
    dummy = _validate_screw_spec(spec);
    $screw_spec = spec;
    pitch =  struct_val(spec, "pitch") ;
-fdsa=   echo(pitch=pitch);
    threadspec = pitch==0 ? undef : thread_specification(spec, internal=_internal, tolerance=tolerance);
-   f=echo(threadspec);
    nominal_diam = _nominal_diam(spec);
    d_major = pitch==0 ? nominal_diam : mean(struct_val(threadspec, "d_major"));
    length = struct_val(spec,"length");
