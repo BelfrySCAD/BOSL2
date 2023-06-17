@@ -375,31 +375,6 @@ cube([50,50,20],center=true)
     position(TOP+RIGHT) left(5) cube([4,50,10], anchor=RIGHT+BOT);
 ```
 
-When you position a child at an edge or corner of a parent object, you very likely
-need to change the anchor for the child in a matching way to align the child with the surface and edge
-of the parent.  You can automate this process by making use of the `$align` special variable, which
-is set by `position()`.  To align a child with a corner you can do:
-
-```openscad-3D
-include<BOSL2/std.scad>
-cuboid([50,40,15])
-    position(RIGHT+FRONT+TOP)
-        color("lightblue")prismoid([10,5],[7,4],height=4, anchor=$align);
-```
-
-In this example, the `$align` variable replaces the explicit anchor of `RIGHT+FRONT+BOT` that
-would be required for this case. The `position()` module can also accept a list of positions,
-and it will place a copy of the child at each location.  However, if you want to align multiple
-children to the parent in different locations, each child needs a different anchor.  This can
-be achieved using the `$align` variable:
-
-```openscad-3D
-include<BOSL2/std.scad>
-cuboid([50,40,15])
-    position([RIGHT+TOP,LEFT+TOP])
-        color("lightblue")prismoid([10,5],[7,4],height=4, anchor=$align);
-```
-
 
 
 Positioning objects works the same way in 2D.
@@ -489,28 +464,102 @@ prismoid([50,50],[30,30],h=40)
         anchor_arrow(40);
 ```
 
-The potential confusion that spin creates for the proper anchoring of children 
-can be eliminated using the `$align` variable which takes into account the spin
-that the `orient()` module applies.
+
+## Aligning children with align()
+
+You may have noticed that with position() and orient(), specifying the
+child anchors to position objects flush with their parent can be
+annoying, or sometimes even tricky.  You can simplify this task by
+using the align() module.  This module positions children at specified
+anchor points on the parent while picking the correct anchor points on
+the children so that they line up with faces on the parent object.
+
+In the simplest case, if you want to place a child on the RIGHT side
+of its parent, you need to anchor the child to its LEFT anchor:
 
 ```openscad-3D
 include<BOSL2/std.scad>
 cuboid([50,40,15])
-    position(RIGHT+TOP)
-        orient(RIGHT)
-            color("lightblue")prismoid([10,5],[7,4],height=4, anchor=$align);
+    position(RIGHT)
+        color("lightblue")cuboid(5,anchor=LEFT);
 ```
 
-In this case, the correct anchor is chosen to place the child on the right side
-with the appropriate anchor taking the spin into account.  You can use this method
-for children placed on the top by using orient with a TOP direction, but nonzero spin.
+Using align(), the determination of the anchor is automatic.  Any
+anchor you do specify is ignored.
 
 ```openscad-3D
 include<BOSL2/std.scad>
 cuboid([50,40,15])
-    position(RIGHT+TOP)
-        orient(TOP, spin=90)
-            color("lightblue")prismoid([10,5],[7,4],height=4, anchor=$align);
+    align(RIGHT)
+        color("lightblue")cuboid(5);
+```
+
+To place the child on top of the parent in the corner you can do use
+align as shown below instead of specifying the RIGHT+FRONT+BOT anchor
+with position(): 
+
+```openscad-3D
+include<BOSL2/std.scad>
+cuboid([50,40,15])
+    align(RIGHT+FRONT+TOP)
+        color("lightblue")prismoid([10,5],[7,4],height=4);
+```
+
+Both position() and align() can accept a list of anchor locations and
+makes several copies of the children, but
+if you want the children positioned flush, each copy 
+requires a different anchor, so it is impossible to do this with a
+singlke call to position(), but easily done using align():
+
+```openscad-3D
+include<BOSL2/std.scad>
+cuboid([50,40,15])
+    align([RIGHT+TOP,LEFT+TOP])
+        color("lightblue")prismoid([10,5],[7,4],height=4);
+```
+
+Align also accepts a spin argument, which lets you spin the child
+while still aligning it:
+
+```openscad-3D
+include<BOSL2/std.scad>
+cuboid([50,40,15])
+    align(RIGHT+TOP,spin=90)
+        color("lightblue")prismoid([10,5],[7,4],height=4);
+```
+
+Note that this is different than using the spin argument to the child
+object, which will apply after alignment has been done.
+
+
+```openscad-3D
+include<BOSL2/std.scad>
+cuboid([50,40,15])
+    align(RIGHT+TOP)
+        color("lightblue")prismoid([10,5],[7,4],height=4,spin=90);
+```
+
+If you orient the object DOWN it will be attached from its top anchor:
+
+```openscad-3D
+include<BOSL2/std.scad>
+cuboid([50,40,15])
+    align(RIGHT+TOP,DOWN)
+        color("lightblue")prismoid([10,5],[7,4],height=4);
+```
+
+When placing children on the RIGHT and LEFT, there is a spin applied.
+This means that setting spin=0 changes the orientation.  Here we have
+one object with the default and one object with zero spin:
+
+```openscad-3D
+include<BOSL2/std.scad>
+prismoid(50,30,25){
+  align(RIGHT+TOP,RIGHT,spin=0)
+    color("lightblue")prismoid([10,5],[7,4],height=4);
+  align(RIGHT+BOT,RIGHT)
+    color("green")prismoid([10,5],[7,4],height=4);
+}
 ```
 
 
