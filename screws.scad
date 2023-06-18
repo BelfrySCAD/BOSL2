@@ -23,22 +23,33 @@ include <screw_drive.scad>
 //    including tolerances for screw fit.  You can also create screws with
 //    various head types and drive types that should match standard hardware.
 // Subsection: Screw Naming
-//    You can specify screws using a string that specifies the screw.  
-//    For ISO (metric) screws the specification has the form: "M`<size>`x`<pitch>`,`<length>`,
+//    You can specify screws using a string that specifies the screw.
+//    Metric or ISO screws are specified by a diameter in millimeters and a thread pitch in millimeters.  For example,
+//    an M8x2 screw has a nominal diameter of 8 mm and a thread pitch of 2 mm.  
+//    The screw specification for these screws has the form: "M`<size>`x`<pitch>`,`<length>`,
 //    so "M6x1,10" specifies a 6mm diameter screw with a thread pitch of 1mm and length of 10mm.
-//    You can omit the pitch or length, e.g. "M6x1", or "M6,10", or just "M6".
+//    You can omit the pitch or length, e.g. "M6x1", or "M6,10", or just "M6".  If you omit the
+//    length then you must provide the `length` parameter.  If you omit the pitch, the library
+//    provides a standard pitch for the specified diameter.
 //    .
-//    For UTS (English) screws the specification has the form `<size>`-`<threadcount>`,`<length>`, e.g. 
+//    Imperial or UTS screws are specified by a diameter and the number of threads per inch.
+//    For large screws, the diameter is simply the nominal diameter in inches, so a 5/16-18 screw
+//    has a nominal diameter of 5/16 inches and 18 threads per inch.  For diameters smaller than
+//    1/4 inch, the screw diameter is given using a screw gauge, which can be from 0 up to 12.
+//    A common smaller size is #8-32, an 8 gauge screw with 32 threads per inch.  
+//    For UTS screws the specification has the form `<size>`-`<threadcount>`,`<length>`, e.g. 
 //    "#8-32,1/2", or "1/4-20,1".  The units are in inches, including the length.  Size can be a
-//    number from 0 to 12 with or without a leading # to specify a screw gauge size, or any other
+//    gauge number from 0 to 12 with or without a leading # to specify a screw gauge size, or any other
 //    value to specify a diameter in inches, either as a float or a fraction, so "0.5-13" and
 //    "1/2-13" are equivalent.  To force interpretation of the value as inches add '' (two
 //    single-quotes) to the end, e.g. "1''-4" is a one inch screw and "1-80" is a very small
 //    1-gauge screw.  The pitch is specified using a thread count, the number of threads per inch.
 //    As with the ISO screws, you can omit the pitch or length and specify "#6-32", "#6,3/4", or simply #6.
+//    As in the metric case, if you omit the length then you must provide the `length` parameter.  If you omit the pitch, the
+//    library provides a standard pitch for the specified diameter.
 // Subsection: Standard Screw Pitch
 //    If you omit the pitch when specifying a screw or nut then the library supplies a standard screw pitch based
-//    on the screw diameter.  For each screw diameter, multiple standard pitches are possible.
+//    on the screw diameter as listed in ISO 724 or ASME B1.1.  For many diameters, multiple standard pitches exist.
 //    The available thread pitch types are different for ISO and UTS:
 //    .
 //    | ISO      |    UTS   |
@@ -2185,6 +2196,7 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
        tentry = struct_val(UTS_thread, diam)
      )
      assert(is_def(tentry), str("Unknown screw size, \"",diam,"\""))
+     assert(is_def(tentry[tind]), str("No ",thread," pitch known for screw size, \"",diam,"\""))
      INCH / tentry[tind],
    head_data =
        head=="none" ? let (
@@ -2614,8 +2626,10 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
         ],
         tentry = struct_val(ISO_thread, diam)
      )
-     assert(is_def(tentry), str("Unknown screw size, M",diam,""))
+     assert(is_def(tentry), str("Unknown screw size, M",diam))
+     assert(is_def(tentry[tind]), str("No ",thread," pitch known for M",diam))
      tentry[tind],
+   
    head_data =
        head=="none" ? let(
            metric_setscrew =
