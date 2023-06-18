@@ -21,6 +21,7 @@ $overlap = 0;
 $color = "default";
 $save_color = undef;         // Saved color to revert back for children
 
+$anchor_override = undef;
 $attach_to = undef;
 $attach_anchor = [CENTER, CENTER, UP, 0];
 $attach_norot = false;
@@ -487,8 +488,9 @@ _ANCHOR_TYPES = ["intersect","hull"];
 module position(from)
 {
     req_children($children);
-    assert($parent_geom != undef, "No object to attach to!");
+    dummy1=assert($parent_geom != undef, "No object to position relative to.");
     anchors = (is_vector(from)||is_string(from))? [from] : from;
+    two_d = _attach_geom_2d($parent_geom);
     for (anchr = anchors) {
         anch = _find_anchor(anchr, $parent_geom);
         $attach_to = undef;
@@ -499,11 +501,12 @@ module position(from)
 }
 
 
+
 // Module: orient()
 // Synopsis: Orients children's tops in the directon of the specified anchor.
 // SynTags: Trans
 // Topics: Attachments
-// See Also: attachable(), attach(), orient()
+// See Also: attachable(), attach(), position()
 // Usage:
 //   PARENT() orient(anchor, [spin]) CHILDREN;
 // Description:
@@ -513,10 +516,8 @@ module position(from)
 //   anchor = The anchor on the parent which you want to match the orientation of.
 //   spin = The spin to add to the children.  (Overrides anchor spin.)
 // Side Effects:
-//   `$attach_anchor` is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for the `anchor=`, if given.
 //   `$attach_to` is set to `undef`.
 //   `$attach_norot` is set to `true`.
-//
 // Example: When orienting to an anchor, the spin of the anchor may cause confusion:
 //   prismoid([50,50],[30,30],h=40) {
 //       position(TOP+RIGHT)
@@ -543,13 +544,129 @@ module orient(anchor, spin) {
     anch = _find_anchor(anchor, $parent_geom);
     two_d = _attach_geom_2d($parent_geom);
     fromvec = two_d? BACK : UP;
-    $attach_to = undef;
-    $attach_anchor = anch;
-    $attach_norot = true;
     spin = default(spin, anch[3]);
-    assert(is_finite(spin));
-    rot(spin, from=fromvec, to=anch[2]) children();
+    dummy=assert(is_finite(spin));
+
+    $attach_to = undef;
+    $attach_norot = true;
+    if (two_d)
+        rot(spin)rot(from=fromvec, to=anch[2]) children();
+    else
+        rot(spin, from=fromvec, to=anch[2]) children();
 }
+
+
+
+// Module: align()
+// Synopsis: Position and orient children with alignment to parent edges.
+// SynTags: Trans
+// Topics: Attachments
+// See Also: attachable(), attach(), position(), orient()
+// Usage:
+//   PARENT() align(anchor, [orient], [spin], [inside=]) CHILDREN;
+// Description:
+//   Positions children to the specified anchor(s) on the parent and anchors the
+//   children so that they are aligned with the edge(s) of the parent at those parent anchors.
+//   You can specify a parent anchor point in `orient` and in this case, the top of the child
+//   is tilted in the direction of that anchor.
+//   This means you can easily place children so they are aligned flush with edges of the parent.
+//   In contrast, with {{position()}} you will have to work out the correct anchor for the children
+//   which is not always obvious.  It also enables you to place several children that have different
+//   anchors, which would otherwise require several {{position()}} calls.  The inside argument
+//   causes the object to appear inside the parent for use with {{diff()}}.  
+//   .
+//   When you use `align()`, the `orient=` and `anchor=` arguments to the child objects are overriden,
+//   so they do not have any effect.  The `spin=` argument to the child still applies. 
+// Arguments:
+//   anchor = parent anchor or list of parent anchors for positioning children
+//   orient = parent anchor to give direction for orienting the children.  Default: UP
+//   spin = spin in degrees for rotating the children.  Default: Derived from orient anchor
+//   ---
+//   inside = if true, place object inside the parent instead of outside.  Default: false
+// Side Effects:
+//   `$attach_anchor` for each anchor given, this is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
+//   `$attach_to` is set to `undef`.
+//   `$attach_norot` is set to `true`.
+//   if inside is true then set default tag to "remove"
+// Example: Child would require anchor of RIGHT+FRONT+BOT if placed with {{position()}}. 
+//   cuboid([50,40,15])
+//     align(RIGHT+FRONT+TOP)
+//       color("lightblue")prismoid([10,5],[7,4],height=4);
+// Example: Child requires a different anchor for each position, so explicit specification of the anchor for children is impossible in this case, without using two separate commands.
+//   cuboid([50,40,15])
+//     align([RIGHT+TOP,LEFT+TOP])
+//       color("lightblue")prismoid([10,5],[7,4],height=4);
+// Example: If you try to spin your child, the spin happens after the alignment anchor, so the child will not be flush:
+//   cuboid([50,40,15])
+//     align([RIGHT+TOP])
+//       color("lightblue")
+//          prismoid([10,5],[7,4],height=4,spin=90);
+// Example: You can instead spin the attached children using the spin parameter to `align()`.  In this example, the required anchor is BOT+FWD, which is less obvious.
+//   cuboid([50,40,15])
+//     align(RIGHT+TOP,spin=90)
+//       color("lightblue")prismoid([10,5],[7,4],height=4);
+// Example: Here the child is oriented to the RIGHT, so it appears flush with the top.  In this case you don't have to figure out that the required child anchor is BOT+BACK.  
+//   cuboid([50,40,15])
+//     align(RIGHT+TOP,RIGHT)
+//       color("lightblue")prismoid([10,5],[7,4],height=4);
+// Example: If you change the orientation the child still appears aligned flush in its changed orientation:
+//   cuboid([50,40,15])
+//     align(RIGHT+TOP,DOWN)
+//       color("lightblue")prismoid([10,5],[7,4],height=4);
+// Example: Objects on the right already have nonzero spin by default, so setting spin=0 changes the spin:
+//   prismoid(50,30,25){
+//     align(RIGHT+TOP,RIGHT,spin=0)
+//       color("lightblue")prismoid([10,5],[7,4],height=4);
+//     align(RIGHT+BOT,RIGHT)
+//       color("green")prismoid([10,5],[7,4],height=4);
+//   }
+// Example: Setting inside=true enables us to subtract the child from the parent with {{diff()}.  The "remove" tag is automatically applied when you set `inside=true`.  
+//   diff()
+//     cuboid([40,30,10])
+//       move(.1*[0,-1,1])
+//         align(FRONT+TOP,inside=true)
+//           prismoid([10,5],[7,5],height=4);
+module align(anchor,orient=UP,spin,inside=false)
+{
+    req_children($children);
+    dummy1=assert($parent_geom != undef, "No object to align to.")
+           assert(is_string(orient) || is_vector(orient),"Bad orient value");
+    position_anchors = (is_vector(anchor)||is_string(anchor))? [anchor] : anchor;
+    two_d = _attach_geom_2d($parent_geom);
+    fromvec = two_d? BACK : UP;
+
+    orient_anch = _find_anchor(orient, $parent_geom);
+    spin = default(spin, orient_anch[3]);
+    dummy2=assert(is_finite(spin));
+    
+    $attach_to = undef;
+    $attach_norot = true;
+
+    factor = inside?1:-1;
+    
+    for (thisanch = position_anchors) {
+        pos_anch = _find_anchor(thisanch, $parent_geom);
+        init_anch = two_d ? rot(from=orient_anch[2], to=fromvec, p=zrot(-spin,pos_anch[0]))
+                          : rot(spin, from=fromvec, to=orient_anch[2], reverse=true, p=pos_anch[0]);
+        quant_anch = [for(v=init_anch) sign(round(v))];
+        $anchor_override = two_d && quant_anch.y!=0 ? [quant_anch.x,factor*quant_anch.y]
+                         : !two_d && quant_anch.z!=0 ? [quant_anch.x,quant_anch.y, factor*quant_anch.z]
+                         : factor*quant_anch;
+        $attach_anchor = pos_anch;
+        translate(pos_anch[1]) {
+            if (two_d)
+                rot(spin)rot(from=fromvec, to=orient_anch[2])
+                  if (inside) default_tag("remove") children();
+                  else children();
+            else
+                rot(spin, from=fromvec, to=orient_anch[2])
+                  if (inside) default_tag("remove") children();
+                  else children();
+        }
+    }
+}
+
+
 
 
 
@@ -2358,9 +2475,9 @@ module attachable(
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
         assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
         assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient));
-    anchor = default(anchor, CENTER);
+    anchor = first_defined([$anchor_override, anchor, CENTER]);
     spin =   default(spin,   0);
-    orient = default(orient, UP);
+    orient = is_def($anchor_override)? UP : default(orient, UP);
     region = !is_undef(region)? region :
         !is_undef(path)? [path] :
         undef;
@@ -2381,6 +2498,7 @@ module attachable(
         $parent_geom   = geom;
         $parent_size   = _attach_geom_size(geom);
         $attach_to   = undef;
+        $anchor_override=undef;
         if (_is_shown())
             _color($color) children(0);
         if (is_def($save_color)) {
@@ -2959,6 +3077,7 @@ function _attach_transform(anchor, spin, orient, geom, p) =
     assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient))
     let(
         anchor = default(anchor, CENTER),
+        
         spin   = default(spin,   0),
         orient = default(orient, UP),
         two_d = _attach_geom_2d(geom),
