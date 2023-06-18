@@ -109,6 +109,36 @@
 //   color("#fc7") left(r1+r4)  zrot(a4) spur_gear(pitch,n4,thickness,hole,hide=n4-3);
 //   color("#ccc") fwd(r1) right(pitch*$t)
 //       rack(pitch=pitch,teeth=n5,thickness=thickness,height=rack_base,anchor=CENTER,orient=BACK);
+// Example(Anim,Frames=36,VPT=[0,0,0],VPR=[55,0,25],VPD=375): Planetary Gear Assembly
+//   rteeth=56; pteeth=16; cteeth=24;
+//   pitch=5; thick=10; pa=20;
+//   prad = (pitch_radius(pitch,rteeth) +
+//           pitch_radius(pitch,cteeth)) / 2;
+//   rrad = outer_radius(pitch,rteeth,interior=true) + 5;
+//   diff()
+//   cyl(r=rrad,l=thick)
+//       tag("remove")
+//           spur_gear(
+//               pitch=pitch, teeth=rteeth, thickness=thick+1,
+//               pressure_angle=pa, interior=true);
+//   for (a=[0:3]) {
+//       zrot($t*90+a*90) back(prad) {
+//           color("green")
+//           spur_gear(
+//               pitch=pitch, teeth=pteeth,
+//               thickness=thick,
+//               shaft_diam=5,
+//               pressure_angle=pa,
+//               spin=-$t*90*rteeth/pteeth);
+//       }
+//   }
+//   color("orange")
+//   zrot($t*90*rteeth/cteeth+$t*90+180/cteeth)
+//   spur_gear(
+//       pitch=pitch, teeth=cteeth,
+//       thickness=thick,
+//       shaft_diam=5,
+//       pressure_angle=pa);
 function spur_gear(
     pitch = 3,
     teeth = 11,
@@ -228,6 +258,29 @@ module spur_gear(
 //   spur_gear2d(pitch=5, teeth=20, pressure_angle=20);
 // Example(2D): Partial Gear
 //   spur_gear2d(pitch=5, teeth=20, hide=15, pressure_angle=20);
+// Example(2D): Planetary Gear Assembly
+//   rteeth=56; pteeth=16; cteeth=24;
+//   pitch=5; pa=20;
+//   prad = (pitch_radius(pitch,rteeth) +
+//           pitch_radius(pitch,cteeth)) / 2;
+//   rrad = outer_radius(pitch,rteeth,interior=true) + 5;
+//   difference() {
+//       circle(r=rrad);
+//       spur_gear2d(
+//           pitch=pitch, teeth=rteeth,
+//           pressure_angle=pa, interior=true);
+//   }
+//   for (a=[0:3]) {
+//       zrot(a*90) back(prad) {
+//           color("green")
+//           spur_gear2d(
+//               pitch=pitch, teeth=pteeth,
+//               pressure_angle=pa);
+//       }
+//   }
+//   color("orange")
+//     zrot(180/cteeth)
+//       spur_gear2d(pitch=pitch, teeth=cteeth, pressure_angle=pa);
 // Example(2D): Called as a Function
 //   path = spur_gear2d(pitch=8, teeth=16);
 //   polygon(path);
