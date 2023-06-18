@@ -516,10 +516,8 @@ module position(from)
 //   anchor = The anchor on the parent which you want to match the orientation of.
 //   spin = The spin to add to the children.  (Overrides anchor spin.)
 // Side Effects:
-//   `$attach_anchor` is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for the `anchor=`, if given.
 //   `$attach_to` is set to `undef`.
 //   `$attach_norot` is set to `true`.
-//
 // Example: When orienting to an anchor, the spin of the anchor may cause confusion:
 //   prismoid([50,50],[30,30],h=40) {
 //       position(TOP+RIGHT)
@@ -550,7 +548,6 @@ module orient(anchor, spin) {
     dummy=assert(is_finite(spin));
 
     $attach_to = undef;
-    $attach_anchor = anch;
     $attach_norot = true;
     if (two_d)
         rot(spin)rot(from=fromvec, to=anch[2]) children();
@@ -566,7 +563,7 @@ module orient(anchor, spin) {
 // Topics: Attachments
 // See Also: attachable(), attach(), position(), orient()
 // Usage:
-//   PARENT() align(anchor, [orient], [spin]) CHILDREN;
+//   PARENT() align(anchor, [orient], [spin], [inside=]) CHILDREN;
 // Description:
 //   Positions children to the specified anchor(s) on the parent and anchors the
 //   children so that they are aligned with the edge(s) of the parent at those parent anchors.
@@ -584,7 +581,13 @@ module orient(anchor, spin) {
 //   anchor = parent anchor or list of parent anchors for positioning children
 //   orient = parent anchor to give direction for orienting the children.  Default: UP
 //   spin = spin in degrees for rotating the children.  Default: Derived from orient anchor
+//   ---
 //   inside = if true, place object inside the parent instead of outside.  Default: false
+// Side Effects:
+//   `$attach_anchor` for each anchor given, this is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
+//   `$attach_to` is set to `undef`.
+//   `$attach_norot` is set to `true`.
+//   if inside is true then set default tag to "remove"
 // Example: Child would require anchor of RIGHT+FRONT+BOT if placed with {{position()}}. 
 //   cuboid([50,40,15])
 //     align(RIGHT+FRONT+TOP)
@@ -617,15 +620,12 @@ module orient(anchor, spin) {
 //     align(RIGHT+BOT,RIGHT)
 //       color("green")prismoid([10,5],[7,4],height=4);
 //   }
-// Example: Setting inside=true enables us to subtract the child from the parent with {{diff()}.
+// Example: Setting inside=true enables us to subtract the child from the parent with {{diff()}.  The "remove" tag is automatically applied when you set `inside=true`.  
 //   diff()
 //     cuboid([40,30,10])
 //       move(.1*[0,-1,1])
 //         align(FRONT+TOP,inside=true)
-//           tag("remove")
-//             prismoid([10,5],[7,5],height=4);
-
-
+//           prismoid([10,5],[7,5],height=4);
 module align(anchor,orient=UP,spin,inside=false)
 {
     req_children($children);
@@ -655,9 +655,13 @@ module align(anchor,orient=UP,spin,inside=false)
         $attach_anchor = pos_anch;
         translate(pos_anch[1]) {
             if (two_d)
-                rot(spin)rot(from=fromvec, to=orient_anch[2]) children();
+                rot(spin)rot(from=fromvec, to=orient_anch[2])
+                  if (inside) default_tag("remove") children();
+                  else children();
             else
-                rot(spin, from=fromvec, to=orient_anch[2]) children();
+                rot(spin, from=fromvec, to=orient_anch[2])
+                  if (inside) default_tag("remove") children();
+                  else children();
         }
     }
 }
