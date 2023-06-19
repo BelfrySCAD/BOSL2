@@ -26,7 +26,7 @@
 // Section: Gears
 
 // Function&Module: spur_gear()
-// Synopsis: Creates a spur gear shape.
+// Synopsis: Creates a spur gear, helical gear, or internal ring gear.
 // SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: rack(), spur_gear(), spur_gear2d(), bevel_gear()
@@ -37,9 +37,17 @@
 //   vnf = spur_gear(pitch, teeth, thickness, [shaft_diam=], ...);
 //   vnf = spur_gear(mod=, teeth=, thickness=, [shaft_diam=], ...);
 // Description:
-//   Creates a (potentially helical) involute spur gear.  The module `spur_gear()` gives an involute
+//   Creates a involute spur gear, helical gear, or internal ring gear.  The module `spur_gear()` gives an involute
 //   spur gear, with reasonable defaults for all the parameters.  Normally, you should just choose the
-//   first 4 parameters, and let the rest be default values.  The module `spur_gear()` gives a gear in
+//   first 4 parameters, and let the rest be default values.  Spur gears have straight teeth and
+//   mesh together on parallel shafts without creating any axial thrust.  The teeth engage suddenly across their
+//   entire width, creating stress and noise.  Helical gears have angled teeth and engage more gradually, so they
+//   run more smoothly and quietly, however they do produce thrust along the gear axis.  This can be
+//   circumvented using herringbone or double helical gears, which have no axial thrust and also self-align.
+//   Helical gears can mesh along shafts that are not parallel, where the angle between the shafts is
+//   the sum of the helical angles of the two gears.  
+//   .  
+//   The module `spur_gear()` gives a gear in
 //   the XY plane, centered on the origin, with one tooth centered on the positive Y axis.  The most
 //   important is `pitch_radius()`, which tells how far apart to space gears that are meshing, and
 //   `outer_radius()`, which gives the size of the region filled by the gear.  A gear has a "pitch
@@ -120,6 +128,24 @@
 //   color("#fc7") left(r1+r4)  zrot(a4) spur_gear(pitch,n4,thickness,hole,hide=n4-3);
 //   color("#ccc") fwd(r1) right(pitch*$t)
 //       rack(pitch=pitch,teeth=n5,thickness=thickness,height=rack_base,anchor=CENTER,orient=BACK);
+// Example: Helical gears meshing with non-parallel shafts
+//   ang1 = 30;
+//   ang2 = 10;
+//   pitch = 5;
+//   n = 20;
+//   r = pitch_radius(pitch,n);
+//   left(r) spur_gear(
+//          pitch=pitch, teeth=n, thickness=10,
+//          shaft_diam=5, helical=ang1, slices=12,
+//          $fa=1, $fs=1
+//      );
+//   right(r)
+//   xrot(ang1+ang2)
+//   zrot(360/n/2-5) spur_gear(
+//          pitch=pitch, teeth=n, thickness=10,
+//          shaft_diam=5, helical=ang2, slices=12,
+//          $fa=1, $fs=1
+//      );
 // Example(Anim,Frames=36,VPT=[0,0,0],VPR=[55,0,25],VPD=375): Planetary Gear Assembly
 //   rteeth=56; pteeth=16; cteeth=24;
 //   pitch=5; thick=10; pa=20;
@@ -240,7 +266,7 @@ module spur_gear(
 
 
 // Function&Module: spur_gear2d()
-// Synopsis: Creates a 2D spur gear shape.
+// Synopsis: Creates a 2D spur gear or internal ring gear.
 // SynTags: Geom, Path
 // Topics: Gears, Parts
 // See Also: rack(), spur_gear(), spur_gear2d(), bevel_gear()
@@ -365,7 +391,7 @@ module spur_gear2d(
 
 
 // Function&Module: rack()
-// Synopsis: Creates a gear rack shape.
+// Synopsis: Creates a straight or helical gear rack.
 // SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: rack2d(), spur_gear(), spur_gear2d(), bevel_gear()
@@ -515,7 +541,7 @@ function rack(
 
 
 // Function&Module: rack2d()
-// Synopsis: Creates a 2D gear rack shape.
+// Synopsis: Creates a 2D gear rack.
 // SynTags: Geom, Path
 // Topics: Gears, Parts
 // See Also: rack(), spur_gear(), spur_gear2d(), bevel_gear()
@@ -639,7 +665,7 @@ module rack2d(
 
 
 // Function&Module: bevel_gear()
-// Synopsis: Creates a possibly spiral beveled gear shape.
+// Synopsis: Creates a straight or spiral bevel gear.
 // SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
@@ -652,7 +678,13 @@ module rack2d(
 // Description:
 //   Creates a (potentially spiral) bevel gear.  The module `bevel_gear()` gives a bevel gear, with
 //   reasonable defaults for all the parameters.  Normally, you should just choose the first 4
-//   parameters, and let the rest be default values.  The module `bevel_gear()` gives a gear in the XY
+//   parameters, and let the rest be default values.  In straight bevel gear sets, when each tooth
+//   engages it inpacts the corresponding tooth.  The abrupt tooth engagement causes impact stress
+//   which makes them more prone to breakage.  Spiral bevel gears have teeth formed along spirals so
+//   they engage more gradually, resulting in a less abrupt transfer of force, so they are quieter
+//   in operation and less likely to break.
+//   .
+//   The module `bevel_gear()` gives a gear in the XY
 //   plane, centered on the origin, with one tooth centered on the positive Y axis.  The various
 //   functions below it take the same parameters, and return various measurements for the gear.  The
 //   most important is `pitch_radius()`, which tells how far apart to space gears that are meshing,
@@ -900,7 +932,7 @@ module bevel_gear(
 
 
 // Function&Module: worm()
-// Synopsis: Creates a worm shape that will mate with a worm gear.
+// Synopsis: Creates a worm that will mate with a worm gear.
 // SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
@@ -1021,7 +1053,7 @@ module worm(
 
 
 // Function&Module: worm_gear()
-// Synopsis: Creates a worm gear shape that will mate with a worm.
+// Synopsis: Creates a worm gear that will mate with a worm.
 // SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
@@ -1039,7 +1071,7 @@ module worm(
 //   worm_diam = The pitch diameter of the worm gear to match to.  Default: 30
 //   worm_starts = The number of lead starts on the worm gear to match to.  Default: 1
 //   worm_arc = The arc of the worm to mate with, in degrees. Default: 60 degrees
-//   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fir the work easier.  Default: 1
+//   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fit the work easier.  Default: 1
 //   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0

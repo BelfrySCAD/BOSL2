@@ -179,7 +179,7 @@ function _bezier_matrix(N) =
 
 
 // Function: bezier_curve()
-// Synopsis: Computes a number of uniformly distributed points along a bezier curve.
+// Synopsis: Computes a specified number of points on a bezier curve.
 // SynTags: Path
 // Topics: Bezier Curves
 // See Also: bezier_curve(), bezier_curvature(), bezier_tangent(), bezier_derivative(), bezier_points()
@@ -261,7 +261,7 @@ function bezier_tangent(bezier, u) =
 
 
 // Function: bezier_curvature()
-// Synopsis: Returns the curvature values at one or more given positions along a bezier curve.
+// Synopsis: Returns the curvature at one or more given positions along a bezier curve.
 // Topics: Bezier Curves
 // See Also: bezier_tangent(), bezier_derivative(), bezier_points()
 // Usage:
@@ -437,7 +437,7 @@ function bezpath_points(bezpath, curveind, u, N=3) =
 
 
 // Function: bezpath_curve()
-// Synopsis: Takes a bezier path and converts it into a path of points.
+// Synopsis: Converts bezier path into a path of points. 
 // SynTags: Path
 // Topics: Bezier Paths
 // See Also: bezier_points(), bezier_curve(), bezpath_points()
@@ -474,7 +474,7 @@ function bezpath_curve(bezpath, splinesteps=16, N=3, endpoint=true) =
 
 
 // Function: bezpath_closest_point()
-// Synopsis: Finds the closest part of a bezier path to a give point.
+// Synopsis: Finds the closest point on a bezier path to a given point.
 // Topics: Bezier Paths
 // See Also: bezpath_points(), bezpath_curve(), bezier_points(), bezier_curve(), bezier_closest_point()
 // Usage:
