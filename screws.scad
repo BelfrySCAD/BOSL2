@@ -1442,63 +1442,68 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
 
    counterbore = counterbore_temp==0 && head!="flat" ? counterbore_temp : counterbore_temp + 0.01;
    adj_diam = struct_val(screw_info, "diameter") + head_oversize;   // Used for determining chamfers and ribbing
-   if (head!="flat" && counterbore>0){
-     d = head=="hex"? 2*head_size/sqrt(3) : head_size;
-     if (teardrop)
-       teardrop(d=d, l=counterbore, orient=BACK, anchor=BACK);
-     else                    
-       cyl(d=d, l=counterbore, anchor=BOTTOM);
-   }  
-   if (head=="flat") {   // For flat head, counterbore is integrated
-     angle = struct_val(screw_info, "head_angle")/2;
-     sharpsize = struct_val(screw_info, "head_size_sharp")+head_oversize;
-     sidewall_height = (sharpsize - head_size)/2 / tan(angle);
-     cylheight = counterbore + sidewall_height;
-     slopeheight = flat_height - sidewall_height;
-     r1 = head_size/2;
-     r2 = r1 - tan(angle)*slopeheight;
-     n = segs(r1);
-     prof1 = teardrop ? teardrop2d(r=r1,$fn=n) : circle(r=r1, $fn=n);
-     prof2 = teardrop ? teardrop2d(r=r2,$fn=n) : circle(r=r2, $fn=n);
-     skin([prof2,prof1,prof1], z=[-flat_height, -flat_height+slopeheight, counterbore],slices=0);
-   }
-   if (head!="flat" && counterbore==0) {
-     if (in_list(head,["round","pan round","button","fillister","cheese"])) {
-       base = head=="fillister" ? 0.75*head_height :
-              head=="pan round" ? .6 * head_height :
-              head=="cheese" ? .7 * head_height :
-              0.1 * head_height;   // round and button
-       head_size2 = head=="cheese" ?  head_size-2*tan(5)*head_height : head_size; // 5 deg slope on cheese head
-       segs = segs(head_size);
-       cyl(l=base, d1=head_size, d2=head_size2,anchor=BOTTOM, $fn=segs)
-         attach(TOP)
-           zrot(180) // Needed to align facets when $fn is odd
-           rotate_extrude($fn=segs)  // ensure same number of segments for cap as for head body
-             intersection(){
-               arc(points=[[-head_size2/2,0], [0,-base+head_height * (head=="button"?4/3:1)], [head_size2/2,0]]);
-               square([head_size2, head_height-base]);
+   attachable(){
+     union(){
+         if (head!="flat" && counterbore>0){
+           d = head=="hex"? 2*head_size/sqrt(3) : head_size;
+           if (teardrop)
+             teardrop(d=d, l=counterbore, orient=BACK, anchor=BACK);
+           else                    
+             cyl(d=d, l=counterbore, anchor=BOTTOM);
+         }  
+         if (head=="flat") {   // For flat head, counterbore is integrated
+           angle = struct_val(screw_info, "head_angle")/2;
+           sharpsize = struct_val(screw_info, "head_size_sharp")+head_oversize;
+           sidewall_height = (sharpsize - head_size)/2 / tan(angle);
+           cylheight = counterbore + sidewall_height;
+           slopeheight = flat_height - sidewall_height;
+           r1 = head_size/2;
+           r2 = r1 - tan(angle)*slopeheight;
+           n = segs(r1);
+           prof1 = teardrop ? teardrop2d(r=r1,$fn=n) : circle(r=r1, $fn=n);
+           prof2 = teardrop ? teardrop2d(r=r2,$fn=n) : circle(r=r2, $fn=n);
+           skin([prof2,prof1,prof1], z=[-flat_height, -flat_height+slopeheight, counterbore],slices=0);
+         }
+         if (head!="flat" && counterbore==0) {
+           if (in_list(head,["round","pan round","button","fillister","cheese"])) {
+             base = head=="fillister" ? 0.75*head_height :
+                    head=="pan round" ? .6 * head_height :
+                    head=="cheese" ? .7 * head_height :
+                    0.1 * head_height;   // round and button
+             head_size2 = head=="cheese" ?  head_size-2*tan(5)*head_height : head_size; // 5 deg slope on cheese head
+             segs = segs(head_size);
+             cyl(l=base, d1=head_size, d2=head_size2,anchor=BOTTOM, $fn=segs)
+               attach(TOP)
+                 zrot(180) // Needed to align facets when $fn is odd
+                 rotate_extrude($fn=segs)  // ensure same number of segments for cap as for head body
+                   intersection(){
+                     arc(points=[[-head_size2/2,0], [0,-base+head_height * (head=="button"?4/3:1)], [head_size2/2,0]]);
+                     square([head_size2, head_height-base]);
+                   }
+           }
+           if (head=="pan flat")
+             cyl(l=head_height, d=head_size, rounding2=0.2*head_size, anchor=BOTTOM);
+           if (head=="socket")
+             cyl(l=head_height, d=head_size, anchor=BOTTOM, chamfer2=details? adj_diam/10:undef);
+           if (head=="socket ribbed"){
+             // These numbers are based on ISO specifications that dictate how much oversizsed a ribbed socket head can be
+             // We are making our ribbed heads the same size as unribbed (by cutting the ribbing away), but these numbers are presumably a good guide
+             rib_size = [[2, .09],
+                         [3, .09],
+                         [6, .11],
+                         [12, .135],
+                         [20, .165]];
+             intersection() {
+               cyl(h=head_height/4, d=head_size, anchor=BOT)
+                  attach(TOP) cyl(l=head_height*3/4, d=head_size, anchor=BOT, texture="trunc_ribs", tex_counts=[31,1], tex_scale=-lookup(adj_diam,rib_size));
+               cyl(h=head_height,d=head_size, chamfer2=adj_diam/10, anchor=BOT);
              }
-     }
-     if (head=="pan flat")
-       cyl(l=head_height, d=head_size, rounding2=0.2*head_size, anchor=BOTTOM);
-     if (head=="socket")
-       cyl(l=head_height, d=head_size, anchor=BOTTOM, chamfer2=details? adj_diam/10:undef);
-     if (head=="socket ribbed"){
-       // These numbers are based on ISO specifications that dictate how much oversizsed a ribbed socket head can be
-       // We are making our ribbed heads the same size as unribbed (by cutting the ribbing away), but these numbers are presumably a good guide
-       rib_size = [[2, .09],
-                   [3, .09],
-                   [6, .11],
-                   [12, .135],
-                   [20, .165]];
-       intersection() {
-         cyl(h=head_height/4, d=head_size, anchor=BOT)
-            attach(TOP) cyl(l=head_height*3/4, d=head_size, anchor=BOT, texture="trunc_ribs", tex_counts=[31,1], tex_scale=-lookup(adj_diam,rib_size));
-         cyl(h=head_height,d=head_size, chamfer2=adj_diam/10, anchor=BOT);
-       }
-     }
-     if (head=="hex")
-       up(head_height/2)_nutshape(head_size,head_height,"hex",false,true);
+           }
+           if (head=="hex")
+             up(head_height/2)_nutshape(head_size,head_height,"hex",false,true);
+         }
+     }    
+     union(){};
    }
 }
 

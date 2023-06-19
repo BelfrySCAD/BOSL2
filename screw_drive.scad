@@ -168,7 +168,7 @@ function hex_drive_mask(size,length,l,h,height,anchor,spin,orient) = no_function
 // See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  phillips_depth(), phillips_diam(), robertson_mask()
 // Usage:
 //   torx_mask(size, l, [center]) [ATTACHMENTS];
-// Description: Creates a torx bit tip.
+// Description: Creates a torx bit tip.  The anchors are located on the circumscribing cylinder.  See {{torx_info()}} for allowed sizes.
 // Arguments:
 //   size = Torx size.
 //   l = Length of bit.
@@ -191,7 +191,6 @@ module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
 }
 
 
-
 // Module: torx_mask2d()
 // Synopsis: Creates the 2D cross section for a torx drive recess.
 // SynTags: Geom
@@ -199,13 +198,12 @@ module torx_mask(size, l=5, center, anchor, spin=0, orient=UP) {
 // See Also: phillips_mask(), hex_drive_mask(), torx_mask(),  phillips_depth(), phillips_diam(), torx_info(), robertson_mask()
 // Usage:
 //   torx_mask2d(size);
-// Description: Creates a torx bit 2D profile.
+// Description: Creates a torx bit 2D profile.  The anchors are located on the circumscribing circle.   See {{torx_info()}} for allowed sizes.
 // Arguments:
 //   size = Torx size.
 // Example(2D):
 //   torx_mask2d(size=30, $fa=1, $fs=1);
-module torx_mask2d(size) {
-    no_children($children);
+module torx_mask2d(size,anchor=CENTER,spin) {
     info = torx_info(size);
     od = info[0];
     id = info[1];
@@ -213,26 +211,29 @@ module torx_mask2d(size) {
     rounding = info[4];
     base = od - 2*tip;
     $fn = quantup(segs(od/2),12);
-    difference() {
-        union() {
-            circle(d=base);
-            zrot_copies(n=2) {
-                hull() {
-                    zrot_copies(n=3) {
-                        translate([base/2,0,0]) {
-                            circle(r=tip, $fn=$fn/2);
+    attachable(anchor,spin,two_d=true,d=od){
+        difference() {
+            union() {
+                circle(d=base);
+                zrot_copies(n=2) {
+                    hull() {
+                        zrot_copies(n=3) {
+                            translate([base/2,0,0]) {
+                                circle(r=tip, $fn=$fn/2);
+                            }
                         }
                     }
                 }
             }
-        }
-        zrot_copies(n=6) {
-            zrot(180/6) {
-                translate([id/2+rounding,0,0]) {
-                    circle(r=rounding);
+            zrot_copies(n=6) {
+                zrot(180/6) {
+                    translate([id/2+rounding,0,0]) {
+                        circle(r=rounding);
+                    }
                 }
             }
         }
+        children();
     }
 }
 
@@ -251,6 +252,10 @@ module torx_mask2d(size) {
 //   - Drive Hole Depth
 //   - External Tip Rounding Radius
 //   - Inner Rounding Radius
+// .
+//   The allowed torx sizes are:
+//   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 27, 30, 40, 45, 50, 55,
+//   60, 70, 80, 90, 100.
 // Arguments:
 //   size = Torx size.
 function torx_info(size) =
@@ -333,6 +338,11 @@ function torx_depth(size) = torx_info(size)[2];
 //   ang = taper angle of each face.  Default: 2.5
 //   ---
 //   $slop = enlarge recess by this twice amount.  Default: 0
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: TOP
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   Sets tag to "remove" if no tag is set.  
 // Example:
 //   robertson_mask(size=2);
 // Example:
@@ -340,7 +350,7 @@ function torx_depth(size) = torx_info(size)[2];
 //       cyl(d1=2, d2=8, h=4, anchor=TOP);
 //       robertson_mask(size=2);
 //   }
-module robertson_mask(size, extra=1, ang=2.5) {
+module robertson_mask(size, extra=1, ang=2.5,anchor=TOP,spin,orient) {
     dummy=assert(is_int(size) && size>=0 && size<=4);
     Mmin = [0.0696, 0.0900, 0.1110, 0.1315, 0.1895][size];
     Mmax = [0.0710, 0.0910, 0.1126, 0.1330, 0.1910][size];
@@ -353,14 +363,18 @@ module robertson_mask(size, extra=1, ang=2.5) {
     F = (Fmin + Fmax) / 2 * INCH;
     h = T + extra;
     Mslop=M+2*get_slop();
-    down(T) {
-        intersection(){
-            Mtop = Mslop + 2*adj_ang_to_opp(F+extra,ang);
-            Mbot = Mslop - 2*adj_ang_to_opp(T-F,ang);
-            prismoid([Mbot,Mbot],[Mtop,Mtop],h=h,anchor=BOT);
-            cyl(d1=0, d2=Mslop/(T-F)*sqrt(2)*h, h=h, anchor=BOT);
-        }
-    }
+    Mtop = Mslop + 2*adj_ang_to_opp(F+extra,ang);
+    Mbot = Mslop - 2*adj_ang_to_opp(T-F,ang);
+    anchors = [named_anchor("standard",[0,0,T-h/2], UP, 0)];
+    default_tag("remove")
+      attachable(anchor,spin,orient,size=[Mbot,Mbot,T],size2=[Mtop,Mtop],anchors=anchors){
+        down(T/2)
+            intersection(){
+                prismoid([Mbot,Mbot],[Mtop,Mtop],h=h,anchor=BOT);
+                cyl(d1=0, d2=Mslop/(T-F)*sqrt(2)*h, h=h, anchor=BOT);
+            }
+        children();
+      }
 }
 
 
