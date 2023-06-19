@@ -84,6 +84,17 @@
 //       shaft_diam=5, helical=-30, slices=12,
 //       $fa=1, $fs=1
 //   );
+// Example: Herringbone Gear
+//   spur_gear(
+//       pitch=5, teeth=20, thickness=5,
+//       shaft_diam=5, helical=-30, slices=5,
+//       anchor=BOT
+//   ) attach(BOT,TOP,overlap=0.01)
+//       spur_gear(
+//           pitch=5, teeth=20, thickness=5,
+//           shaft_diam=5, helical=30, slices=5,
+//           anchor=TOP
+//       );
 // Example(Anim,Frames=8,VPT=[0,30,0],VPR=[0,0,0],VPD=300): Assembly of Gears
 //   n1 = 11; //red gear number of teeth
 //   n2 = 20; //green gear
@@ -174,7 +185,8 @@ function spur_gear(
             ),
             if (shaft_diam > 0) circle(d=shaft_diam, $fn=max(12,segs(shaft_diam/2)))
         ],
-        vnf = linear_sweep(rgn, height=thickness, center=true)
+        rvnf = linear_sweep(rgn, height=thickness, twist=twist, slices=slices, center=true),
+        vnf = zrot(twist/2, p=rvnf)
     ) reorient(anchor,spin,orient, h=thickness, r=p, p=vnf);
 
 
@@ -201,8 +213,13 @@ module spur_gear(
     r = _root_radius(pitch, teeth, clearance, interior);
     twist = atan2(thickness*tan(helical),p);
     attachable(anchor,spin,orient, r=p, l=thickness) {
-        difference() {
-            linear_extrude(height=thickness, center=true, convexity=teeth/2, twist=twist) {
+        zrot(twist/2)
+        linear_extrude(
+            height=thickness, center=true,
+            twist=twist, slices=slices,
+            convexity=teeth/2
+        ) {
+            difference() {
                 spur_gear2d(
                     pitch = pitch,
                     teeth = teeth,
@@ -212,9 +229,9 @@ module spur_gear(
                     backlash = backlash,
                     interior = interior
                 );
-            }
-            if (shaft_diam > 0) {
-                cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
+                if (shaft_diam > 0) {
+                    circle(r=shaft_diam/2, $fn=max(12,segs(shaft_diam/2)));
+                }
             }
         }
         children();
