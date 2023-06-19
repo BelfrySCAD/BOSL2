@@ -135,6 +135,36 @@
 //          shaft_diam=5, helical=ang2, slices=12,
 //          $fa=1, $fs=1
 //      );
+// Example(Anim,Frames=36,VPT=[0,0,0],VPR=[55,0,25],VPD=375): Planetary Gear Assembly
+//   rteeth=56; pteeth=16; cteeth=24;
+//   pitch=5; thick=10; pa=20;
+//   prad = (pitch_radius(pitch,rteeth) +
+//           pitch_radius(pitch,cteeth)) / 2;
+//   rrad = outer_radius(pitch,rteeth,interior=true) + 5;
+//   diff()
+//   cyl(r=rrad,l=thick)
+//       tag("remove")
+//           spur_gear(
+//               pitch=pitch, teeth=rteeth, thickness=thick+1,
+//               pressure_angle=pa, interior=true);
+//   for (a=[0:3]) {
+//       zrot($t*90+a*90) back(prad) {
+//           color("green")
+//           spur_gear(
+//               pitch=pitch, teeth=pteeth,
+//               thickness=thick,
+//               shaft_diam=5,
+//               pressure_angle=pa,
+//               spin=-$t*90*rteeth/pteeth);
+//       }
+//   }
+//   color("orange")
+//   zrot($t*90*rteeth/cteeth+$t*90+180/cteeth)
+//   spur_gear(
+//       pitch=pitch, teeth=cteeth,
+//       thickness=thick,
+//       shaft_diam=5,
+//       pressure_angle=pa);
 function spur_gear(
     pitch = 3,
     teeth = 11,
