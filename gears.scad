@@ -284,6 +284,29 @@ module spur_gear(
 //   spur_gear2d(pitch=5, teeth=20, pressure_angle=20);
 // Example(2D): Partial Gear
 //   spur_gear2d(pitch=5, teeth=20, hide=15, pressure_angle=20);
+// Example(2D): Planetary Gear Assembly
+//   rteeth=56; pteeth=16; cteeth=24;
+//   pitch=5; pa=20;
+//   prad = (pitch_radius(pitch,rteeth) +
+//           pitch_radius(pitch,cteeth)) / 2;
+//   rrad = outer_radius(pitch,rteeth,interior=true) + 5;
+//   difference() {
+//       circle(r=rrad);
+//       spur_gear2d(
+//           pitch=pitch, teeth=rteeth,
+//           pressure_angle=pa, interior=true);
+//   }
+//   for (a=[0:3]) {
+//       zrot(a*90) back(prad) {
+//           color("green")
+//           spur_gear2d(
+//               pitch=pitch, teeth=pteeth,
+//               pressure_angle=pa);
+//       }
+//   }
+//   color("orange")
+//     zrot(180/cteeth)
+//       spur_gear2d(pitch=pitch, teeth=cteeth, pressure_angle=pa);
 // Example(2D): Called as a Function
 //   path = spur_gear2d(pitch=8, teeth=16);
 //   polygon(path);

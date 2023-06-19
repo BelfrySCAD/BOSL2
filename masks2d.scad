@@ -15,22 +15,23 @@
 // Section: 2D Masking Shapes
 
 // Function&Module: mask2d_roundover()
-// Synopsis: Creates a 2D beading mask shape useful for rounding 90° edges.
+// Synopsis: Creates a 2D beading mask shape useful for rounding edges.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile(), fillet()
 // Usage: As module
-//   mask2d_roundover(r|d=, [inset], [excess]) [ATTACHMENTS];
+//   mask2d_roundover(r|d=, [inset], [mask_angle], [excess]) [ATTACHMENTS];
 // Usage: As function
-//   path = mask2d_roundover(r|d=, [inset], [excess]);
+//   path = mask2d_roundover(r|d=, [inset], [mask_angle], [excess]);
 // Description:
-//   Creates a 2D roundover/bead mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   Conversely, you can use that same extruded shape to make an interior fillet between two walls at a 90º angle.
+//   Creates a 2D roundover/bead mask shape that is useful for extruding into a 3D mask for an edge.
+//   Conversely, you can use that same extruded shape to make an interior fillet between two walls.
 //   As a 2D mask, this is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
 //   r = Radius of the roundover.
 //   inset = Optional bead inset size.  Default: 0
+//   mask_angle = Number of degrees in the corner angle to mask.  Default: 90
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.  Default: 0.01
 //   ---
 //   d = Diameter of the roundover.
@@ -40,6 +41,10 @@
 //   mask2d_roundover(r=10);
 // Example(2D): 2D Bead Mask
 //   mask2d_roundover(r=10,inset=2);
+// Example(2D): 2D Bead Mask for a Non-Right Edge.
+//   mask2d_roundover(r=10, inset=2, mask_angle=75);
+// Example(2D): Increasing the Excess
+//   mask2d_roundover(r=10, inset=2, mask_angle=75, excess=2);
 // Example: Masking by Edge Attachment
 //   diff()
 //   cube([50,60,70],center=true)
@@ -53,29 +58,36 @@
 //   xrot(90)
 //       linear_extrude(height=30, center=true)
 //           mask2d_roundover(r=10);
-module mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) {
-    path = mask2d_roundover(r=r,d=d,excess=excess,inset=inset);
+module mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, d, anchor=CENTER,spin=0) {
+    path = mask2d_roundover(r=r, d=d, inset=inset, mask_angle=mask_angle, excess=excess);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
         children();
     }
 }
 
-function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
+function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, d, anchor=CENTER, spin=0) =
     assert(is_finite(r)||is_finite(d))
     assert(is_finite(excess))
+    assert(is_finite(mask_angle) && mask_angle>0 && mask_angle<180)
     assert(is_finite(inset)||(is_vector(inset)&&len(inset)==2))
     let(
         inset = is_list(inset)? inset : [inset,inset],
         r = get_radius(r=r,d=d,dflt=1),
-        steps = quantup(segs(r),4)/4,
-        step = 90/steps,
-        path = [
-            [r+inset.x,-excess],
+        avec = polar_to_xy(inset.x,mask_angle-90),
+        line1 = [[0,inset.y], [100,inset.y]],
+        line2 = [avec, polar_to_xy(100,mask_angle)+avec],
+        corner = line_intersection(line1,line2),
+        arcpts = arc(r=r, corner=[line2.y, corner, line1.y]),
+        ipath = [
+            arcpts[0] + polar_to_xy(inset.x+excess, mask_angle+90),
+            each arcpts,
+            last(arcpts) + polar_to_xy(inset.y+excess, -90),
+            [0,-excess],
             [-excess,-excess],
-            [-excess, r+inset.y],
-            for (i=[0:1:steps]) [r,r] + inset + polar_to_xy(r,180+i*step)
-        ]
+            [-excess,0]
+        ],
+        path = deduplicate(ipath)
     ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
 
 
@@ -85,17 +97,18 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As module
-//   mask2d_cove(r|d=, [inset], [excess]) [ATTACHMENTS];
+//   mask2d_cove(r|d=, [inset], [mask_angle], [excess]) [ATTACHMENTS];
 // Usage: As function
-//   path = mask2d_cove(r|d=, [inset], [excess]);
+//   path = mask2d_cove(r|d=, [inset], [mask_angle], [excess]);
 // Description:
-//   Creates a 2D cove mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   Conversely, you can use that same extruded shape to make an interior rounded shelf decoration between two walls at a 90º angle.
+//   Creates a 2D cove mask shape that is useful for extruding into a 3D mask for an edge.
+//   Conversely, you can use that same extruded shape to make an interior rounded shelf decoration between two walls.
 //   As a 2D mask, this is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
 //   r = Radius of the cove.
 //   inset = Optional amount to inset code from corner.  Default: 0
+//   mask_angle = Number of degrees in the corner angle to mask.  Default: 90
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.  Default: 0.01
 //   ---
 //   d = Diameter of the cove.
@@ -105,6 +118,10 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 //   mask2d_cove(r=10);
 // Example(2D): 2D Inset Cove Mask
 //   mask2d_cove(r=10,inset=3);
+// Example(2D): 2D Inset Cove Mask for a Non-Right Edge
+//   mask2d_cove(r=10,inset=3,mask_angle=75);
+// Example(2D): Increasing the Excess
+//   mask2d_cove(r=10,inset=3,mask_angle=75, excess=2);
 // Example: Masking by Edge Attachment
 //   diff()
 //   cube([50,60,70],center=true)
@@ -118,29 +135,36 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 //   xrot(90)
 //       linear_extrude(height=30, center=true)
 //           mask2d_cove(r=5, inset=5);
-module mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) {
-    path = mask2d_cove(r=r,d=d,excess=excess,inset=inset);
+module mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, d, anchor=CENTER, spin=0) {
+    path = mask2d_cove(r=r, d=d, inset=inset, mask_angle=mask_angle, excess=excess);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
         children();
     }
 }
 
-function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
+function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, d, anchor=CENTER, spin=0) =
     assert(is_finite(r)||is_finite(d))
+    assert(is_finite(mask_angle) && mask_angle>0 && mask_angle<180)
     assert(is_finite(excess))
     assert(is_finite(inset)||(is_vector(inset)&&len(inset)==2))
     let(
         inset = is_list(inset)? inset : [inset,inset],
         r = get_radius(r=r,d=d,dflt=1),
-        steps = quantup(segs(r),4)/4,
-        step = 90/steps,
-        path = [
-            [r+inset.x,-excess],
+        avec = polar_to_xy(inset.x,mask_angle-90),
+        line1 = [[0,inset.y], [100,inset.y]],
+        line2 = [avec, polar_to_xy(100,mask_angle)+avec],
+        corner = line_intersection(line1,line2),
+        arcpts = arc(r=r, cp=corner, start=mask_angle, angle=-mask_angle),
+        ipath = [
+            arcpts[0] + polar_to_xy(inset.x+excess, mask_angle+90),
+            each arcpts,
+            last(arcpts) + polar_to_xy(inset.y+excess, -90),
+            [0,-excess],
             [-excess,-excess],
-            [-excess, r+inset.y],
-            for (i=[0:1:steps]) inset + polar_to_xy(r,90-i*step)
-        ]
+            [-excess,0]
+        ],
+        path = deduplicate(ipath)
     ) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 
@@ -230,16 +254,17 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
-//   mask2d_rabbet(size, [excess]) [ATTACHMENTS];
+//   mask2d_rabbet(size, [mask_angle], [excess]) [ATTACHMENTS];
 // Usage: As Function
-//   path = mask2d_rabbet(size, [excess]);
+//   path = mask2d_rabbet(size, [mask_angle], [excess]);
 // Description:
-//   Creates a 2D rabbet mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   Conversely, you can use that same extruded shape to make an interior shelf decoration between two walls at a 90º angle.
+//   Creates a 2D rabbet mask shape that is useful for extruding into a 3D mask for an edge.
+//   Conversely, you can use that same extruded shape to make an interior shelf decoration between two walls.
 //   As a 2D mask, this is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
 //   size = The size of the rabbet, either as a scalar or an [X,Y] list.
+//   mask_angle = Number of degrees in the corner angle to mask.  Default: 90
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape. Default: 0.01
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -248,6 +273,8 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 //   mask2d_rabbet(size=10);
 // Example(2D): 2D Asymmetrical Rabbet Mask
 //   mask2d_rabbet(size=[5,10]);
+// Example(2D): 2D Mask for a Non-Right Edge
+//   mask2d_rabbet(size=10,mask_angle=75);
 // Example: Masking by Edge Attachment
 //   diff()
 //   cube([50,60,70],center=true)
@@ -261,24 +288,31 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 //   xrot(90)
 //       linear_extrude(height=30, center=true)
 //           mask2d_rabbet(size=[5,10]);
-module mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) {
-    path = mask2d_rabbet(size=size, excess=excess);
+module mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) {
+    path = mask2d_rabbet(size=size, mask_angle=mask_angle, excess=excess);
     attachable(anchor,spin, two_d=true, path=path, extent=false) {
         polygon(path);
         children();
     }
 }
 
-function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
+function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
     assert(is_finite(size)||(is_vector(size)&&len(size)==2))
+    assert(is_finite(mask_angle) && mask_angle>0 && mask_angle<180)
     assert(is_finite(excess))
     let(
         size = is_list(size)? size : [size,size],
+        avec = polar_to_xy(size.x,mask_angle-90),
+        line1 = [[0,size.y], [100,size.y]],
+        line2 = [avec, polar_to_xy(100,mask_angle)+avec],
+        cp = line_intersection(line1,line2),
         path = [
-            [size.x, -excess],
-            [-excess, -excess],
-            [-excess, size.y],
-            size
+            cp + polar_to_xy(size.x+excess, mask_angle+90),
+            cp,
+            cp + polar_to_xy(size.y+excess, -90),
+            [0,-excess],
+            [-excess,-excess],
+            [-excess,0]
         ]
     ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
 
@@ -368,18 +402,19 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D), FDM Optimized
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
-//   mask2d_teardrop(r|d=, [angle], [excess]) [ATTACHMENTS];
+//   mask2d_teardrop(r|d=, [angle], [mask_angle], [excess]) [ATTACHMENTS];
 // Usage: As Function
-//   path = mask2d_teardrop(r|d=, [angle], [excess]);
+//   path = mask2d_teardrop(r|d=, [angle], [mask_angle], [excess]);
 // Description:
-//   Creates a 2D teardrop mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   Conversely, you can use that same extruded shape to make an interior teardrop fillet between two walls at a 90º angle.
+//   Creates a 2D teardrop mask shape that is useful for extruding into a 3D mask for an edge.
+//   Conversely, you can use that same extruded shape to make an interior teardrop fillet between two walls.
 //   As a 2D mask, this is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 //   This is particularly useful to make partially rounded bottoms, that don't need support to print.
 // Arguments:
 //   r = Radius of the rounding.
 //   angle = The maximum angle from vertical.
+//   mask_angle = Number of degrees in the corner angle to mask.  Default: 90
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape. Default: 0.01
 //   ---
 //   d = Diameter of the rounding.
@@ -387,6 +422,10 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): 2D Teardrop Mask
 //   mask2d_teardrop(r=10);
+// Example(2D): 2D Teardrop Mask for a Non-Right Edge
+//   mask2d_teardrop(r=10, mask_angle=75);
+// Example(2D): Increasing Excess
+//   mask2d_teardrop(r=10, mask_angle=75, excess=2);
 // Example(2D): Using a Custom Angle
 //   mask2d_teardrop(r=10,angle=30);
 // Example: Masking by Edge Attachment
@@ -402,25 +441,34 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 //   xrot(90)
 //       linear_extrude(height=30, center=true)
 //           mask2d_teardrop(r=10);
-function mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) =  
+function mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, d, anchor=CENTER, spin=0) =  
     assert(is_finite(angle))
     assert(angle>0 && angle<90)
+    assert(is_finite(mask_angle) && mask_angle>0 && mask_angle<180)
     assert(is_finite(excess))
     let(
         r = get_radius(r=r, d=d, dflt=1),
-        n = ceil(segs(r) * angle/360),
-        cp = [r,r],
+        avec = polar_to_xy(r,mask_angle-90),
+        line1 = [[0,r], [100,r]],
+        line2 = [avec, polar_to_xy(100,mask_angle)+avec],
+        cp = line_intersection(line1,line2),
         tp = cp + polar_to_xy(r,180+angle),
         bp = [tp.x+adj_ang_to_opp(tp.y,angle), 0],
-        step = angle/n,
-        path = [
-            bp, bp-[0,excess], [-excess,-excess], [-excess,r],
-            for (i=[0:1:n]) cp+polar_to_xy(r,180+i*step)
-        ]
+        arcpts = arc(r=r, cp=cp, angle=[mask_angle+90,180+angle]),
+        ipath = [
+            arcpts[0] + polar_to_xy(excess, mask_angle+90),
+            each arcpts,
+            bp,
+            bp + [0,-excess],
+            [0,-excess],
+            [-excess,-excess],
+            [-excess,0]
+        ],
+        path = deduplicate(ipath)
     ) reorient(anchor,spin, two_d=true, path=path, p=path);
 
-module mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) {
-    path = mask2d_teardrop(r=r, d=d, angle=angle, excess=excess);
+module mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, d, anchor=CENTER, spin=0) {
+    path = mask2d_teardrop(r=r, d=d, angle=angle, mask_angle=mask_angle, excess=excess);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
         children();
