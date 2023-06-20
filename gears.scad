@@ -198,7 +198,7 @@ function spur_gear(
         p = pitch_radius(pitch, teeth),
         c = outer_radius(pitch, teeth, clearance, interior),
         r = _root_radius(pitch, teeth, clearance, interior),
-        twist = atan2(thickness*tan(helical),p),
+        twist = 360*thickness*tan(helical)/(2*PI*p),
         rgn = [
             spur_gear2d(
                 pitch = pitch,
@@ -237,7 +237,7 @@ module spur_gear(
     p = pitch_radius(pitch, teeth);
     c = outer_radius(pitch, teeth, clearance, interior);
     r = _root_radius(pitch, teeth, clearance, interior);
-    twist = atan2(thickness*tan(helical),p);
+    twist = 360*thickness*tan(helical)/(2*PI*p);
     attachable(anchor,spin,orient, r=p, l=thickness) {
         zrot(twist/2)
         linear_extrude(
