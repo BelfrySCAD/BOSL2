@@ -1722,11 +1722,26 @@ module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
 //   `$idx` is set to the index number of each edge.
 //   `$attach_anchor` is set for each edge given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
 //   `$profile_type` is set to `"edge"`.
+//   `$edge_angle` is set to the inner angle of the current edge.
 // Example:
 //   diff()
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_roundover(r=10, inset=2);
+// Example: Using $edge_angle on a Conoid
+//   diff()
+//   cyl(d1=50, d2=30, l=40, anchor=BOT) {
+//       edge_profile([TOP,BOT], excess=10, convexity=6) {
+//           mask2d_roundover(r=8, inset=1, excess=1, mask_angle=$edge_angle);
+//       }
+//   }
+// Example: Using $edge_angle on a Prismoid
+//   diff()
+//   prismoid([60,50],[30,20],h=40,shift=[-25,15]) {
+//       edge_profile(excess=10, convexity=20) {
+//           mask2d_roundover(r=5,inset=1,mask_angle=$edge_angle);
+//       }
+//   }
 
 module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
     req_children($children);
@@ -1768,9 +1783,9 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
                 if (!approx(pt1,pt2)) {
                     seglen = norm(pt2-pt1) + 2 * excess;
                     move(cp) {
-                        frame_map(y=-v1, z=unit(pt2-pt1)) {
+                        frame_map(x=-v2, z=unit(pt2-pt1)) {
                             linear_extrude(height=seglen, center=true, convexity=convexity)
-                                children();
+                                mirror([-1,1]) children();
                         }
                     }
                 }
