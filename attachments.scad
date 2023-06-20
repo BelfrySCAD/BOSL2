@@ -587,6 +587,7 @@ module orient(anchor, spin) {
 //   `$attach_anchor` for each anchor given, this is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
 //   `$attach_to` is set to `undef`.
 //   `$attach_norot` is set to `true`.
+//   `$anchor_override` is set to the anchor required for proper positioning of the child.  
 //   if inside is true then set default tag to "remove"
 // Example: Child would require anchor of RIGHT+FRONT+BOT if placed with {{position()}}. 
 //   cuboid([50,40,15])
@@ -656,12 +657,10 @@ module align(anchor,orient=UP,spin,inside=false)
         translate(pos_anch[1]) {
             if (two_d)
                 rot(spin)rot(from=fromvec, to=orient_anch[2])
-                  if (inside) default_tag("remove") children();
-                  else children();
+                  default_tag("remove",inside) children();
             else
                 rot(spin, from=fromvec, to=orient_anch[2])
-                  if (inside) default_tag("remove") children();
-                  else children();
+                  default_tag("remove",inside) children();                  
         }
     }
 }
@@ -841,10 +840,12 @@ module force_tag(tag)
 //   set so you can have a module set a default tag of "remove" but that tag can be overridden by a {{tag()}}
 //   in force from a parent.  If you use {{tag()}} it will override any previously
 //   specified tag from a parent, which can be very confusing to a user trying to change the tag on a module.
+//   The `do_tag` parameter allows you to apply a default tag conditionally without having to repeat the children.  
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
 //   tag = tag string, which must not contain any spaces.
+//   do_tag = if false do not set the tag.  
 // Side Effects:
 //   Sets `$tag` to the tag you specify, possibly with a scope prefix.
 // Example(3D):  The module thing() is defined with {{tag()}} and the user applied tag of "keep_it" is ignored, leaving the user puzzled.
@@ -861,7 +862,7 @@ module force_tag(tag)
 //       position(TOP) thing();
 //       position(RIGHT) tag("keep_it") thing();
 //   }
-module default_tag(tag)
+module default_tag(tag,do_tag=false)
 {
     if ($tag=="") tag(tag) children();
     else children();
