@@ -196,8 +196,8 @@ function spur_gear(
     spin = 0,
     orient = UP
 ) =
-    assert(is_undef(interior), "The interior paramter to spur_gear has been replaced by internal and will be removed.") 
     let(
+        dummy = !is_undef(interior) ? echo("The interior paramter to spur_gear has been replaced by internal and will be removed."):0,
         internal = first_defined([internal,interior,false]),
         pitch = is_undef(mod) ? pitch : pitch_value(mod),
         p = pitch_radius(pitch, teeth),
@@ -239,7 +239,7 @@ module spur_gear(
     spin = 0,
     orient = UP
 ) {
-    assert(is_undef(interior), "The interior paramter to spur_gear has been replaced by internal and will be removed.");
+    if (!is_undef(interior)) echo("The interior paramter to spur_gear has been replaced by internal and will be removed.");
     internal = first_defined([internal,interior,false]);
     pitch = is_undef(mod) ? pitch : pitch_value(mod);
     p = pitch_radius(pitch, teeth);
@@ -315,7 +315,7 @@ module spur_gear(
 //   pitch=5; pa=20;
 //   prad = (pitch_radius(pitch,rteeth) +
 //           pitch_radius(pitch,cteeth)) / 2;
-//   rrad = outer_radius(pitch,rteeth,interior=true) + 5;
+//   rrad = outer_radius(pitch,rteeth,internal=true) + 5;
 //   difference() {
 //       circle(r=rrad);
 //       spur_gear2d(
@@ -349,8 +349,8 @@ function spur_gear2d(
     anchor = CENTER,
     spin = 0
 ) = 
-    assert(is_undef(interior), "The interior paramter to spur_gear2d has been replaced by internal and will be removed.") 
     let(
+    dummy = !is_undef(interior) ? echo("The interior paramter to spur_gear2d has been replaced by internal and will be removed."):0,      
     internal = first_defined([internal,internal,false]),
     pitch = is_undef(mod) ? pitch : pitch_value(mod),
     pr = pitch_radius(pitch=pitch, teeth=teeth),
@@ -385,7 +385,7 @@ module spur_gear2d(
     anchor = CENTER,
     spin = 0
 ) {
-    assert(is_undef(interior), "The interior paramter to spur_gear2d has been replaced by internal and will be removed.");
+    if (!is_undef(interior)) echo("The interior paramter to spur_gear2d has been replaced by internal and will be removed.");
     internal = first_defined([internal,interior,false]);
     pitch = is_undef(mod) ? pitch : pitch_value(mod);
     path = spur_gear2d(
@@ -797,8 +797,8 @@ function bevel_gear(
     spin = 0,
     orient = UP
 ) =
-    assert(is_undef(interior), "The interior paramter to bevel_gear has been replaced by internal and will be removed.")
     let(
+        dummy = !is_undef(interior) ? echo("The interior paramter to bevel_gear has been replaced by internal and will be removed."):0,      
         internal = first_defined([internal,interior,false]),
         pitch = is_undef(mod) ? pitch : pitch_value(mod),
         slices = cutter_radius==0? 1 : slices,
@@ -908,7 +908,7 @@ module bevel_gear(
     spin = 0,
     orient = UP
 ) {
-    assert(is_undef(interior), "The interior paramter to bevel_gear has been replaced by internal and will be removed.");
+    if (!is_undef(interior)) echo("The interior paramter to bevel_gear has been replaced by internal and will be removed.");
     internal = first_defined([internal,interior,false]);
     pitch = is_undef(mod) ? pitch : pitch_value(mod);
     slices = cutter_radius==0? 1 : slices;
