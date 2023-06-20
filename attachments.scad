@@ -1732,33 +1732,48 @@ module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
 module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
     req_children($children);
     check1 = assert($parent_geom != undef, "No object to attach to!");
-    edges = _edges(edges, except=except);
-    vecs = [
-        for (i = [0:3], axis=[0:2])
-        if (edges[axis][i]>0)
-        EDGE_OFFSETS[axis][i]
-    ];
+    conoid = $parent_geom[0] == "conoid";
+    edges = !conoid? _edges(edges, except=except) :
+        edges==EDGES_ALL? [TOP,BOT] :
+        assert(all([for (e=edges) in_list(e,[TOP,BOT])]), "Invalid conoid edge spec.")
+        edges;
+    vecs = conoid
+      ? [for (e=edges) e+FWD]
+      : [
+            for (i = [0:3], axis=[0:2])
+            if (edges[axis][i]>0)
+            EDGE_OFFSETS[axis][i]
+        ];
     all_vecs_are_edges = all([for (vec = vecs) sum(v_abs(vec))==2]);
     check2 = assert(all_vecs_are_edges, "All vectors must be edges.");
+    default_tag("remove")
     for ($idx = idx(vecs)) {
         vec = vecs[$idx];
         anch = _find_anchor(vec, $parent_geom);
+        path_angs_T = _attach_geom_edge_path($parent_geom, vec);
+        path = path_angs_T[0];
+        vecs = path_angs_T[1];
+        post_T = path_angs_T[2];
         $attach_to = undef;
         $attach_anchor = anch;
         $attach_norot = true;
         $profile_type = "edge";
-        psize = point3d($parent_size);
-        length = [for (i=[0:2]) if(!vec[i]) psize[i]][0] + excess;
-        rotang =
-            vec.z<0? [90,0,180+v_theta(vec)] :
-            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
-            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
-            [-90,0,180+v_theta(vec)];
-        translate(anch[1]) {
-            rot(rotang) {
-                linear_extrude(height=length, center=true, convexity=convexity) {
-                   if ($tag=="") tag("remove") children();
-                   else children();
+        multmatrix(post_T) {
+            for (i = idx(path,e=-2)) {
+                pt1 = select(path,i);
+                pt2 = select(path,i+1);
+                cp = (pt1 + pt2) / 2;
+                v1 = vecs[i][0];
+                v2 = vecs[i][1];
+                $edge_angle = 180 - vector_angle(v1,v2);
+                if (!approx(pt1,pt2)) {
+                    seglen = norm(pt2-pt1) + 2 * excess;
+                    move(cp) {
+                        frame_map(y=-v1, z=unit(pt2-pt1)) {
+                            linear_extrude(height=seglen, center=true, convexity=convexity)
+                                children();
+                        }
+                    }
                 }
             }
         }
@@ -1788,6 +1803,7 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 //   flip = If true, reverses the orientation of any external profile parts at each edge.  Default false
 //   corner_type = Specifies how exterior corners should be formed.  Must be one of `"none"`, `"chamfer"`, `"round"`, or `"sharp"`.  Default: `"none"`
+//   size = If given the width and height of the 2D profile, will enable rounding and chamfering of internal corners when given a negative profile.
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 //   `$idx` is set to the index number of each edge.
@@ -1838,17 +1854,43 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 // Example: More complicated edge sets
 //   cuboid(50) {
 //       edge_profile_asym(
-//           "ALL", except=[TOP+FWD+RIGHT, BOT+BACK+LEFT],
-//           corner_type="chamfer"
+//           [FWD,BACK,BOT+RIGHT], except=[FWD+RIGHT,BOT+BACK],
+//           corner_type="round"
+//        ) xflip() mask2d_roundover(10);
+//   }
+// Example: Mixing it up a bit.
+//   diff()
+//   cuboid(60) {
+//       tag("keep") edge_profile_asym(LEFT, flip=true, corner_type="chamfer")
+//           xflip() mask2d_chamfer(10);
+//       edge_profile_asym(RIGHT)
+//           mask2d_roundover(10);
+//   }
+// Example: Chamfering internal corners.
+//   cuboid(40) {
+//       edge_profile_asym(
+//           [FWD+DOWN,FWD+LEFT],
+//           corner_type="chamfer", size=[7,10]
+//        ) xflip() mask2d_chamfer(10);
+//   }
+// Example: Rounding internal corners.
+//   cuboid(40) {
+//       edge_profile_asym(
+//           [FWD+DOWN,FWD+LEFT],
+//           corner_type="round", size=[10,10]
 //        ) xflip() mask2d_roundover(10);
 //   }
 
-module edge_profile_asym(edges=EDGES_ALL, except=[], excess=0.01, convexity=10, flip=false, corner_type="none") {
+module edge_profile_asym(
+    edges=EDGES_ALL, except=[],
+    excess=0.01, convexity=10,
+    flip=false, corner_type="none",
+    size=[0,0]
+) {
     function _corner_orientation(pos,pvec) =
         let(
             j = [for (i=[0:2]) if (pvec[i]) i][0],
-            T =
-                (pos.x>0? xflip() : ident(4)) *
+            T = (pos.x>0? xflip() : ident(4)) *
                 (pos.y>0? yflip() : ident(4)) *
                 (pos.z>0? zflip() : ident(4)) *
                 rot(-120*(2-j), v=[1,1,1])
@@ -1990,6 +2032,7 @@ module edge_profile_asym(edges=EDGES_ALL, except=[], excess=0.01, convexity=10, 
     check2 = assert(all_vecs_are_edges, "All vectors must be edges.");
     edge_corners = [for (vec = vecs) [vec, _edge_corner_numbers(vec)]];
     edge_strings = _gather_contiguous_edges(edge_corners);
+    default_tag("remove")
     for (edge_string = edge_strings) {
         inverts = _edge_transition_inversions(edge_string);
         flipverts = [for (x = inverts) flip? !x : x];
@@ -2007,11 +2050,37 @@ module edge_profile_asym(edges=EDGES_ALL, except=[], excess=0.01, convexity=10, 
                 vp2 = select(vecpairs,i);
                 pvec = _edge_pair_perp_vec(e1,e2);
                 pos = [for (i=[0:2]) e1[i]? e1[i] : e2[i]];
-                if (vp1.y == vp2.y) {
-                    default_tag("remove")
-                    position(pos) {
-                        mirT = _corner_orientation(pos, pvec);
-                        multmatrix(mirT) {
+                mirT = _corner_orientation(pos, pvec);
+                $attach_to = undef;
+                $attach_anchor = _find_anchor(pos, $parent_geom);
+                $attach_norot = true;
+                $profile_type = "corner";
+                position(pos) {
+                    multmatrix(mirT) {
+                        if (vp1.x == vp2.x && size.y > 0) {
+                            zflip() {
+                                if (corner_type=="chamfer") {
+                                    fn = $fn;
+                                    move([size.y,size.y]) {
+                                        rotate_extrude(angle=90, $fn=4)
+                                            left_half(planar=true, $fn=fn)
+                                                zrot(-90) fwd(size.y) children();
+                                    }
+                                    linear_extrude(height=size.x) {
+                                        mask2d_roundover(size.y, inset=0.01, $fn=4);
+                                    }
+                                } else if (corner_type=="round") {
+                                    move([size.y,size.y]) {
+                                        rotate_extrude(angle=90)
+                                            left_half(planar=true)
+                                                zrot(-90) fwd(size.y) children();
+                                    }
+                                    linear_extrude(height=size.x) {
+                                        mask2d_roundover(size.y, inset=0.01);
+                                    }
+                                }
+                            }
+                        } else if (vp1.y == vp2.y) {
                             if (corner_type=="chamfer") {
                                 fn = $fn;
                                 rotate_extrude(angle=90, $fn=4)
@@ -2039,6 +2108,10 @@ module edge_profile_asym(edges=EDGES_ALL, except=[], excess=0.01, convexity=10, 
             }
         }
         for (i = idx(edge_string)) {
+            $attach_to = undef;
+            $attach_anchor = _find_anchor(edge_string[i], $parent_geom);
+            $attach_norot = true;
+            $profile_type = "edge";
             edge_profile(edge_string[i], excess=excess, convexity=convexity) {
                 if (flipverts[i]) {
                     mirror([-1,1]) children();
@@ -2049,6 +2122,7 @@ module edge_profile_asym(edges=EDGES_ALL, except=[], excess=0.01, convexity=10, 
         }
     }
 }
+
 
 
 // Module: corner_profile()
@@ -2885,6 +2959,101 @@ function _attach_geom_size(geom) =
         ) [delt.x, delt.y]
     ) :
     assert(false, "Unknown attachment geometry type.");
+
+
+
+/// Internal Function: _attach_geom_edge_path()
+/// Usage:
+///   angle = _attach_geom_edge_path(geom, edge);
+/// Topics: Attachments
+/// See Also: reorient(), attachable()
+/// Description:
+///   Returns the path and post-transform matrix of the indicated edge.
+///   If the edge is invalid for the geometry, returns `undef`.
+function _attach_geom_edge_path(geom, edge) =
+    assert(is_vector(edge),str("Invalid edge: edge=",edge))
+    let(
+        type = geom[0],
+        cp = _get_cp(geom),
+        offset_raw = select(geom,-2),
+        offset = [for (i=[0:2]) edge[i]==0? 0 : offset_raw[i]],  // prevents bad centering.
+        edge = point3d(edge)
+    )
+    type == "prismoid"? ( //size, size2, shift, axis
+        let(all_comps_good = [for (c=edge) if (c!=sign(c)) 1]==[])
+        assert(all_comps_good, "All components of an edge for a cuboid/prismoid must be -1, 0, or 1")
+        let(edge_good = len([for (c=edge) if(c) 1])==2)
+        assert(edge_good, "Invalid edge.")
+        let(
+            size = geom[1],
+            size2 = geom[2],
+            shift = point2d(geom[3]),
+            axis = point3d(geom[4]),
+            edge = rot(from=axis, to=UP, p=edge),
+            offset = rot(from=axis, to=UP, p=offset),
+            h = size.z,
+            cpos = function(vec) let(
+                        u = (vec.z + 1) / 2,
+                        siz = lerp(point2d(size), size2, u) / 2,
+                        z = vec.z * h / 2,
+                        pos = point3d(v_mul(siz, point2d(vec)) + shift * u, z)
+                    ) pos,
+            ep1 = cpos([for (c=edge) c? c : -1]),
+            ep2 = cpos([for (c=edge) c? c :  1]),
+            cp = (ep1 + ep2) / 2,
+            axy = point2d(edge),
+            bot = point3d(v_mul(point2d(size )/2, axy), -h/2),
+            top = point3d(v_mul(point2d(size2)/2, axy) + shift, h/2),
+            xang = atan2(h,(top-bot).x),
+            yang = atan2(h,(top-bot).y),
+            vecs = [
+                if (edge.x) yrot(90-xang, p=sign(axy.x)*RIGHT),
+                if (edge.y) xrot(yang-90, p=sign(axy.y)*BACK),
+                if (edge.z) [0,0,sign(edge.z)]
+            ], 
+            segvec = cross(unit(vecs[1]), unit(vecs[0])),
+            seglen = norm(ep2 - ep1),
+            path = [
+                cp - segvec * seglen/2,
+                cp + segvec * seglen/2
+            ],
+            m = rot(from=UP,to=axis) * move(offset)
+        ) [path, [vecs], m]
+    ) : type == "conoid"? ( //r1, r2, l, shift, axis
+        assert(edge.z && edge.z == sign(edge.z), "The Z component of an edge for a cylinder/cone must be -1 or 1")
+        let(
+            rr1 = geom[1],
+            rr2 = geom[2],
+            l = geom[3],
+            shift = point2d(geom[4]),
+            axis = point3d(geom[5]),
+            r1 = is_num(rr1)? [rr1,rr1] : point2d(rr1),
+            r2 = is_num(rr2)? [rr2,rr2] : point2d(rr2),
+            edge = rot(from=axis, to=UP, p=edge),
+            offset = rot(from=axis, to=UP, p=offset),
+            maxr = max([each r1, each r2]),
+            sides = segs(maxr),
+            top = path3d(move(shift, p=ellipse(r=r2, $fn=sides)), l/2),
+            bot = path3d(ellipse(r=r1, $fn=sides), -l/2),
+            path = edge.z < 0 ? bot : top,
+            path2 = edge.z < 0 ? top : bot,
+            zed = edge.z<0? [0,0,-l/2] : point3d(shift,l/2),
+            vecs = [
+                for (i = idx(top)) let(
+                    pt1 = (path[i] + select(path,i+1)) /2,
+                    pt2 = (path2[i] + select(path2,i+1)) /2,
+                    v1 = unit(zed - pt1),
+                    v2 = unit(pt2 - pt1),
+                    v3 = unit(cross(v1,v2)),
+                    v4 = cross(v3,v2),
+                    v5 = cross(v1,v3)
+                ) [v4, v5]
+            ],
+            m = rot(from=UP,to=axis) * move(offset)
+        ) edge.z>0
+          ? [reverse(list_wrap(path)), reverse(vecs), m]
+          : [list_wrap(path), vecs, m]
+    ) : undef;
 
 
 /// Internal Function: _attach_transform()

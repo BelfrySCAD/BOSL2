@@ -94,6 +94,17 @@
 //       shaft_diam=5, helical=-30, slices=12,
 //       $fa=1, $fs=1
 //   );
+// Example: Herringbone Gear
+//   spur_gear(
+//       pitch=5, teeth=20, thickness=5,
+//       shaft_diam=5, helical=-30, slices=5,
+//       anchor=BOT
+//   ) attach(BOT,TOP,overlap=0.01)
+//       spur_gear(
+//           pitch=5, teeth=20, thickness=5,
+//           shaft_diam=5, helical=30, slices=5,
+//           anchor=TOP
+//       );
 // Example(Anim,Frames=8,VPT=[0,30,0],VPR=[0,0,0],VPD=300): Assembly of Gears
 //   n1 = 11; //red gear number of teeth
 //   n2 = 20; //green gear
@@ -205,7 +216,8 @@ function spur_gear(
             ),
             if (shaft_diam > 0) circle(d=shaft_diam, $fn=max(12,segs(shaft_diam/2)))
         ],
-        vnf = linear_sweep(rgn, height=thickness, center=true)
+        rvnf = linear_sweep(rgn, height=thickness, twist=twist, slices=slices, center=true),
+        vnf = zrot(twist/2, p=rvnf)
     ) reorient(anchor,spin,orient, h=thickness, r=p, p=vnf);
 
 
@@ -234,6 +246,7 @@ module spur_gear(
     c = outer_radius(pitch, teeth, clearance, internal);
     r = _root_radius(pitch, teeth, clearance, internal);
     twist = atan2(thickness*tan(helical),p);
+<<<<<<< HEAD
     default_tag("remove", internal)
         attachable(anchor,spin,orient, r=p, l=thickness) {
             difference() {
@@ -250,6 +263,27 @@ module spur_gear(
                 }
                 if (shaft_diam > 0) {
                     cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
+=======
+    attachable(anchor,spin,orient, r=p, l=thickness) {
+        zrot(twist/2)
+        linear_extrude(
+            height=thickness, center=true,
+            twist=twist, slices=slices,
+            convexity=teeth/2
+        ) {
+            difference() {
+                spur_gear2d(
+                    pitch = pitch,
+                    teeth = teeth,
+                    pressure_angle = pressure_angle,
+                    hide = hide,
+                    clearance = clearance,
+                    backlash = backlash,
+                    interior = interior
+                );
+                if (shaft_diam > 0) {
+                    circle(r=shaft_diam/2, $fn=max(12,segs(shaft_diam/2)));
+>>>>>>> upstream/master
                 }
             }
             children();
@@ -293,6 +327,29 @@ module spur_gear(
 //   spur_gear2d(pitch=5, teeth=20, pressure_angle=20);
 // Example(2D): Partial Gear
 //   spur_gear2d(pitch=5, teeth=20, hide=15, pressure_angle=20);
+// Example(2D): Planetary Gear Assembly
+//   rteeth=56; pteeth=16; cteeth=24;
+//   pitch=5; pa=20;
+//   prad = (pitch_radius(pitch,rteeth) +
+//           pitch_radius(pitch,cteeth)) / 2;
+//   rrad = outer_radius(pitch,rteeth,interior=true) + 5;
+//   difference() {
+//       circle(r=rrad);
+//       spur_gear2d(
+//           pitch=pitch, teeth=rteeth,
+//           pressure_angle=pa, interior=true);
+//   }
+//   for (a=[0:3]) {
+//       zrot(a*90) back(prad) {
+//           color("green")
+//           spur_gear2d(
+//               pitch=pitch, teeth=pteeth,
+//               pressure_angle=pa);
+//       }
+//   }
+//   color("orange")
+//     zrot(180/cteeth)
+//       spur_gear2d(pitch=pitch, teeth=cteeth, pressure_angle=pa);
 // Example(2D): Called as a Function
 //   path = spur_gear2d(pitch=8, teeth=16);
 //   polygon(path);
