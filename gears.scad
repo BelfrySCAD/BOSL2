@@ -203,7 +203,7 @@ function spur_gear(
         p = pitch_radius(pitch, teeth),
         c = outer_radius(pitch, teeth, clearance, internal),
         r = _root_radius(pitch, teeth, clearance, internal),
-        twist = atan2(thickness*tan(helical),p),
+        twist = 360*thickness*tan(helical)/(2*PI*p),
         rgn = [
             spur_gear2d(
                 pitch = pitch,
@@ -245,7 +245,7 @@ module spur_gear(
     p = pitch_radius(pitch, teeth);
     c = outer_radius(pitch, teeth, clearance, internal);
     r = _root_radius(pitch, teeth, clearance, internal);
-    twist = atan2(thickness*tan(helical),p);
+    twist = 360*thickness*tan(helical)/(2*PI*p);
     default_tag("remove", internal)
         attachable(anchor,spin,orient, r=p, l=thickness) {
             zrot(twist/2)
@@ -268,7 +268,7 @@ module spur_gear(
                         circle(r=shaft_diam/2, $fn=max(12,segs(shaft_diam/2)));
                     }
                 }
-              }
+            }
             children();
         }
 }
