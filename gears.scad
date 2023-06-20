@@ -246,11 +246,15 @@ module spur_gear(
     c = outer_radius(pitch, teeth, clearance, internal);
     r = _root_radius(pitch, teeth, clearance, internal);
     twist = atan2(thickness*tan(helical),p);
-<<<<<<< HEAD
     default_tag("remove", internal)
         attachable(anchor,spin,orient, r=p, l=thickness) {
-            difference() {
-                linear_extrude(height=thickness, center=true, convexity=teeth/2, twist=twist) {
+            zrot(twist/2)
+            linear_extrude(
+                height=thickness, center=true,
+                twist=twist, slices=slices,
+                convexity=teeth/2
+            ) {
+                difference() {
                     spur_gear2d(
                         pitch = pitch,
                         teeth = teeth,
@@ -258,34 +262,13 @@ module spur_gear(
                         hide = hide,
                         clearance = clearance,
                         backlash = backlash,
-                        internal = internal
+                        interior = interior
                     );
+                    if (shaft_diam > 0) {
+                        circle(r=shaft_diam/2, $fn=max(12,segs(shaft_diam/2)));
+                    }
                 }
-                if (shaft_diam > 0) {
-                    cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
-=======
-    attachable(anchor,spin,orient, r=p, l=thickness) {
-        zrot(twist/2)
-        linear_extrude(
-            height=thickness, center=true,
-            twist=twist, slices=slices,
-            convexity=teeth/2
-        ) {
-            difference() {
-                spur_gear2d(
-                    pitch = pitch,
-                    teeth = teeth,
-                    pressure_angle = pressure_angle,
-                    hide = hide,
-                    clearance = clearance,
-                    backlash = backlash,
-                    interior = interior
-                );
-                if (shaft_diam > 0) {
-                    circle(r=shaft_diam/2, $fn=max(12,segs(shaft_diam/2)));
->>>>>>> upstream/master
-                }
-            }
+              }
             children();
         }
 }
