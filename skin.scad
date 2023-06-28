@@ -3634,7 +3634,7 @@ function _textured_linear_sweep(
                                     let(
                                         v = (i + (ti/texcnt.y)) / counts.y,
                                         sc = lerp([1, 1, 1], scale, v),
-                                        mat = up((v-0.5)*h) *
+                                        mat = down((v-0.5)*h) *
                                               scale(sc) *
                                               zrot(twist*v)
                                     ) apply(mat, tile_rows[ti])
