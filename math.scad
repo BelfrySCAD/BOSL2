@@ -314,7 +314,35 @@ function lcm(a,b=[]) =
         assert(len(arglist)>0, "Invalid call to lcm with empty list(s)")
         _lcmlist(arglist);
 
+// Function rational_approx()
+// Usage:
+//   pq = rational_approx(x, maxq);
+// Description:
+//   Finds the best rational approximation p/q to the number x so that q<=maxq.  Returns
+//   the result as `[p,q]`.  If the input is zero, then returns `[0,1]`.  
+// Example:
+//   pq1 = rational_approx(PI,10);        // Returns: [22,7]
+//   pq2 = rational_approx(PI,10000);     // Returns: [355, 113]
+//   pq3 = rational_approx(221/323,500);  // Returns: [13,19]
+//   pq4 = rational_approx(0,50);         // Returns: [0,1]
+function rational_approx(x, maxq, cfrac=[], p, q) =
+  let(
+       next = floor(x),
+       fracpart = x-next,
+       cfrac = [each cfrac, next],
+       pq = _cfrac_to_pq(cfrac)
+  )
+    approx(fracpart,0) ? pq 
+  : pq[1]>maxq ? [p,q]
+  : rational_approx(1/fracpart,maxq,cfrac, pq[0], pq[1]);
 
+
+// Converts a continued fraction given as a list with leading integer term
+// into a fraction in the form p / q, returning [p,q]. 
+function _cfrac_to_pq(cfrac,p=0,q=1,ind) =
+    is_undef(ind) ? _cfrac_to_pq(cfrac,p,q,len(cfrac)-1)
+  : ind==0 ? [p+q*cfrac[0], q]
+  : _cfrac_to_pq(cfrac, q, cfrac[ind]*q+p, ind-1);
 
 
 // Section: Hyperbolic Trigonometry
