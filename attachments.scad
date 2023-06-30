@@ -984,7 +984,7 @@ module tag_scope(scope){
 //   module pipe(length, od, id) {
 //       // Strip the tag the user is using to subtract
 //       tag("")cylinder(h=length, d=od, center=true);
-//       // Leave the tag along here, so this one is removed
+//       // Leave the tag alone here, so this one is removed
 //       cylinder(h=length+.02, d=id, center=true);
 //   }
 //   // Draw some intersecting pipes
@@ -996,7 +996,7 @@ module tag_scope(scope){
 //     }
 //     // The orange bar has its center removed
 //     color("orange") down(1) xcyl(h=8, d=1);
-//     // "keep" prevents interior of the blue bar intact
+//     // "keep" preserves the interior of the blue bar intact
 //     tag("keep") recolor("blue") up(1) xcyl(h=8, d=1);
 //   }
 //   // Objects outside the diff don't have pipe interiors removed
