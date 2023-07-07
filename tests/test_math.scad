@@ -505,6 +505,23 @@ module test_lcm() {
 }
 test_lcm();
 
+module test_rational_approx()
+{
+   pq1 = rational_approx(PI,10);       // Returns: [22,7]
+   pq2 = rational_approx(PI,10000);    // Returns: [355, 113]
+   pq3 = rational_approx(221/323,500); // Returns: [13,19]
+   pq4 = rational_approx(0,50);        // Returns: [0,1]
+   assert_equal(pq1,[22,7]);
+   assert_equal(pq2,[355,113]);
+   assert_equal(pq3,[13,19]);
+   assert_equal(pq4,[0,1]);
+   assert_equal(rational_approx(-PI,10),[-22,7]);
+   assert_equal(rational_approx(7,10), [7,1]);
+}
+test_rational_approx();
+
+
+
 
 
 module test_complex(){

@@ -940,7 +940,9 @@ module tag_scope(scope){
 //   subtracted from it, no matter where it appears because kept objects are unioned in at the end.
 //   If you want a child of an object tagged with a remove tag to stay in the model it may be
 //   better to give it a tag that is not a remove tag or a keep tag.  Such an object *will* be subject to
-//   subtractions from other remove-tagged objects.  
+//   subtractions from other remove-tagged objects.
+//   .
+//   Note that `diff()` invokes its children three times.
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
@@ -1196,6 +1198,8 @@ module tag_diff(tag,remove="remove", keep="keep")
 //   unioned with the result.  Attachable objects should be tagged using {{tag()}}
 //   and non-attachable objects with {{force_tag()}}.
 //   .
+//   Note that `intersect()` invokes its children three times.
+//   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
 //   intersect = String containing space delimited set of tag names of children to intersect.  Default: "intersect"
@@ -1312,6 +1316,8 @@ module tag_intersect(tag,intersect="intersect",keep="keep")
 //   Performs a hull operation on the children using tags to determine what happens.  The items
 //   not tagged with the `keep` tags are combined into a convex hull, and the children tagged with the keep tags
 //   are unioned with the result.
+//   .
+//   Note that `conv_hull()` invokes its children twice.  
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:

@@ -2387,6 +2387,8 @@ module hull_points(points, fast=false) {
     attachable(){
       if (len(points[0])==2)
          hull() polygon(points=points);
+      else if (len(points)==3)
+         polyhedron(points=points, faces=[[0,1,2]]);
       else {
         if (fast) {
            extra = len(points)%3;
