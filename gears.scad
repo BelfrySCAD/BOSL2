@@ -971,7 +971,7 @@ function rack2d(
         PA = _inherit_gear_param("pressure_angle", pressure_angle, $parent_gear_pa, _GEAR_PA),
         helical = _inherit_gear_param("helical", helical, $parent_gear_helical, _GEAR_HELICAL),
         adendum = _adendum(pitch, profile_shift),
-        dedendum = _dedendum(pitch, clearance, profile_shift),
+        dedendum = _dedendum(pitch, clearance, profile_shift)
     )
     assert(dedendum < height)
     let(
