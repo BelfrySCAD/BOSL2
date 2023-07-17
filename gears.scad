@@ -605,8 +605,9 @@ module spur_gear2d(
 // Topics: Gears, Parts
 // See Also: rack(), ring_gear2d(), spur_gear(), spur_gear2d(), bevel_gear()
 // Usage:
-//   ring_gear(circ_pitch, teeth, thickness=, [pressure_angle=], [clearance=], [backlash=], [profile_shift=]) [ATTACHMENTS];
-//   ring_gear(mod=, teeth=, thickness=, [pressure_angle=], [clearance=], [backlash=], [profile_shift=]) [ATTACHMENTS];
+//   ring_gear(circ_pitch, teeth, thickness, [backing], [pressure_angle=], [helical=], [herringbone=], [profile_shift=], [clearance=], [backlash=]) [ATTACHMENTS];
+//   ring_gear(mod=, teeth=, thickness=, backing=, [pressure_angle=], [helical=], [herringbone=], [profile_shift=], [clearance=], [backlash=]) [ATTACHMENTS];
+//   ring_gear(diam_pitch=, teeth=, thickness=, backing=, [pressure_angle=], [helical=], [herringbone=], [profile_shift=], [clearance=], [backlash=]) [ATTACHMENTS];
 // Description:
 //   Creates a 3D involute ring gear.  Normally, you should just specify the
 //   first 3 parameters `circ_pitch`, `teeth`, and `thickness`, and let the rest be default values.
@@ -615,18 +616,20 @@ module spur_gear2d(
 // Arguments:
 //   circ_pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = Total number of teeth around the spur gear.
-//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
 //   thickness = Thickness of ring gear in mm
+//   backing = The width of the ring gear backing, in mm.
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
 //   ---
+//   helical = The angle of the rack teeth away from perpendicular to the gear axis of rotation.  Stretches out the tooth shapes.  Used to match helical spur gear pinions.  Default: 0
+//   herringbone = If true, and helical is set, creates a herringbone gear.
+//   profile_shift = Profile shift factor x for tooth profile.
 //   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
-//   helical = The angle of the rack teeth away from perpendicular to the gear axis of rotation.  Stretches out the tooth shapes.  Used to match helical spur gear pinions.  Default: 0
-//   profile_shift = Profile shift factor x.
-//   herringbone = If true, and helical is set, creates a herringbone gear.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   ring_gear(circ_pitch=5, teeth=48, thickness=10);
 // Example: Adjusting Backing
@@ -642,21 +645,22 @@ module spur_gear2d(
 module ring_gear(
     circ_pitch,
     teeth = 50,
+    thickness = 10,
+    backing = 10,
     pressure_angle,
+    helical,
+    herringbone = false,
+    profile_shift,
     clearance,
     backlash = 0.0,
-    profile_shift,
-    helical,
-    backing = 10,
-    thickness = 10,
-    herringbone = false,
     pitch,
     diam_pitch,
     mod,
     slices,
     gear_spin = 0,
     anchor = CENTER,
-    spin = 0
+    spin = 0,
+    orient = UP
 ) {
     circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
@@ -668,7 +672,7 @@ module ring_gear(
     circum = 2 * PI * pr;
     twist = 360*thickness*tan(helical)/circum;
     slices = default(slices, ceil(twist/360*segs(pr)+1));
-    attachable(anchor,spin, h=thickness, r=pr) {
+    attachable(anchor,spin,orient, h=thickness, r=pr) {
         zrot(gear_spin)
         if (herringbone) {
             zflip_copy() down(0.01)
@@ -716,8 +720,9 @@ module ring_gear(
 // Topics: Gears, Parts
 // See Also: rack(), spur_gear(), spur_gear2d(), bevel_gear()
 // Usage:
-//   ring_gear2d(circ_pitch, teeth, [pressure_angle=], [clearance=], [backlash=], [profile_shift=]) [ATTACHMENTS];
-//   ring_gear2d(mod=, teeth=, [pressure_angle=], [clearance=], [backlash=], [profile_shift=]) [ATTACHMENTS];
+//   ring_gear2d(circ_pitch, teeth, [backing], [pressure_angle=], [helical=], [profile_shift=], [clearance=], [backlash=]) [ATTACHMENTS];
+//   ring_gear2d(mod=, teeth=, [backing=], [pressure_angle=], [helical=], [profile_shift=], [clearance=], [backlash=]) [ATTACHMENTS];
+//   ring_gear2d(diam_pitch=, teeth=, [backing=], [pressure_angle=], [helical=], [profile_shift=], [clearance=], [backlash=]) [ATTACHMENTS];
 // Description:
 //   Creates a 2D involute ring gear.  Normally, you should just specify the
 //   first 2 parameters `circ_pitch` and `teeth`, and let the rest be default values.
@@ -726,12 +731,13 @@ module ring_gear(
 // Arguments:
 //   circ_pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = Total number of teeth around the spur gear.
-//   ---
+//   backing = The width of the ring gear backing, in mm.
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
+//   ---
+//   helical = The angle of the rack teeth away from perpendicular to the gear axis of rotation.  Stretches out the tooth shapes.  Used to match helical spur gear pinions.  Default: 0
+//   profile_shift = Profile shift factor x for tooth profile.
 //   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
-//   profile_shift = Profile shift factor x.
-//   helical = The angle of the rack teeth away from perpendicular to the gear axis of rotation.  Stretches out the tooth shapes.  Used to match helical spur gear pinions.  Default: 0
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -745,12 +751,12 @@ module ring_gear(
 module ring_gear2d(
     circ_pitch,
     teeth = 50,
+    backing = 10,
     pressure_angle,
+    helical,
+    profile_shift,
     clearance,
     backlash = 0.0,
-    profile_shift,
-    helical,
-    backing = 10,
     pitch,
     diam_pitch,
     mod,
