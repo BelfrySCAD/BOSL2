@@ -123,6 +123,45 @@ module rainbow(list, stride=1, maxhues, shuffle=false, seed)
 }
 
 
+// Module: color_overlaps()
+// Synopsis: Shows ghostly children, with overlaps highlighted in color.
+// SynTags: Trans
+// Topics: Debugging
+// See Also: rainbow(), debug_vnf()
+// Usage:
+//   color_overlaps([color]) CHILDREN;
+// Description:
+//   Displays the given children in ghostly transparent gray, while the places where the
+//   they overlap are highlighted with the given color.
+// Arguments:
+//   color = The color to highlight overlaps with.  Default: "red"
+// Example(2D): 2D Overlaps
+//   color_overlaps() {
+//       circle(d=50);
+//       left(20) circle(d=50);
+//       right(20) circle(d=50);
+//   }
+// Example(): 3D Overlaps
+//   color_overlaps() {
+//       cuboid(50);
+//       left(30) sphere(d=50);
+//       right(30) sphere(d=50);
+//       xcyl(d=10,l=120);
+//   }
+module color_overlaps(color="red") {
+    pairs = [for (i=[0:1:$children-1], j=[i+1:1:$children-1]) [i,j]];
+    for (p = pairs) {
+        color(color) {
+            intersection() {
+                children(p.x);
+                children(p.y);
+            }
+        }
+    }
+    %children();
+}
+
+
 // Section: Colorspace Conversion
 
 // Function&Module: hsl()
