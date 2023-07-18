@@ -1774,7 +1774,7 @@ module worm_gear(
         difference() {
             vnf_polyhedron(vnf, convexity=teeth/2);
             if (shaft_diam > 0) {
-                cylinder(d=shaft_diam, l=worm_diam, center=true);
+                cylinder(d=shaft_diam, h=worm_diam, center=true);
             }
         }
         children();
