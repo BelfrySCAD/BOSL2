@@ -1009,7 +1009,9 @@ function rack(
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.
 //   helical = The angle of the rack teeth away from perpendicular to the rack length.  Stretches out the tooth shapes.  Used to match helical spur gear pinions.  Default: 0
-//   profile_shift = Profile shift factor x.
+//   profile_shift = Profile shift factor x for tooth shape.
+//   gear_travel = The distance the rack should be moved by linearly.  Default: 0
+//   rounding = If true, rack tips and valleys are slightly rounded.  Default: true
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1040,6 +1042,7 @@ function rack2d(
     diam_pitch,
     mod,
     gear_travel = 0,
+    rounding = true,
     anchor = CENTER,
     spin = 0
 ) = let(
@@ -1057,29 +1060,30 @@ function rack2d(
         l = teeth * trans_pitch,
         ax = ang_adj_to_opp(trans_pa, adendum),
         dx = ang_adj_to_opp(trans_pa, dedendum),
+        clear = dedendum - adendum,
         poff = tthick/2 - backlash,
         tooth = [
             [-trans_pitch/2, -dedendum],
-            each arc(n=4, r=dedendum-adendum, corner=[
+            if (rounding) each arc(n=4, r=clear, corner=[
                 [-trans_pitch/2, -dedendum],
-                [-poff-dx,   -dedendum],
-                [-poff+ax,   +adendum],
-            ]),
-            each arc(n=4, r=trans_pitch/16, corner=[
-                [-poff-dx,   -dedendum],
-                [-poff+ax,   +adendum],
-                [+poff-ax,   +adendum],
-            ]),
-            each arc(n=4, r=trans_pitch/16, corner=[
-                [-poff+ax,   +adendum],
-                [+poff-ax,   +adendum],
-                [+poff+dx,   -dedendum],
-            ]),
-            each arc(n=4, r=dedendum-adendum, corner=[
-                [+poff-ax,   +adendum],
-                [+poff+dx,   -dedendum],
+                [-poff-dx, -dedendum],
+                [-poff+ax, +adendum],
+            ]) else [-poff-dx, -dedendum],
+            if (rounding) each arc(n=4, r=trans_pitch/16, corner=[
+                [-poff-dx, -dedendum],
+                [-poff+ax, +adendum],
+                [+poff-ax, +adendum],
+            ]) else [-poff+ax, +adendum],
+            if (rounding) each arc(n=4, r=trans_pitch/16, corner=[
+                [-poff+ax, +adendum],
+                [+poff-ax, +adendum],
+                [+poff+dx, -dedendum],
+            ]) else [+poff-ax, +adendum],
+            if (rounding) each arc(n=4, r=clear, corner=[
+                [+poff-ax, +adendum],
+                [+poff+dx, -dedendum],
                 [+trans_pitch/2, -dedendum],
-            ]),
+            ]) else [+poff+dx, -dedendum],
             [+trans_pitch/2, -dedendum],
         ],
         path2 = [
