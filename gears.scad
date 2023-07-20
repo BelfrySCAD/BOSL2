@@ -1610,7 +1610,7 @@ function worm(
     let(
         circ_pitch = _inherit_gear_pitch("worm()", pitch, circ_pitch, diam_pitch, mod),
         PA = _inherit_gear_pa(pressure_angle),
-        profile_shift = default(profile_shift, 0),
+        profile_shift = default(profile_shift, 0)
     )
     assert(is_integer(starts) && starts>0)
     assert(is_finite(l) && l>0)
@@ -1805,7 +1805,7 @@ function worm_gear(
     let(
         circ_pitch = _inherit_gear_pitch("worm_gear()", pitch, circ_pitch, diam_pitch, mod),
         PA = _inherit_gear_pa(pressure_angle),
-        profile_shift = default(profile_shift, auto_profile_shift(teeth,PA)),
+        profile_shift = default(profile_shift, auto_profile_shift(teeth,PA))
     )
     assert(is_integer(teeth) && teeth>10)
     assert(is_finite(worm_diam) && worm_diam>0)
