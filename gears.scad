@@ -37,11 +37,13 @@ function _inherit_gear_param(name, val, pval, dflt, invert=false) =
         : (invert?-1:1)*val;
 
 
-function _inherit_gear_pitch(pitch,circ_pitch,diam_pitch,mod) =
+function _inherit_gear_pitch(fname,pitch,circ_pitch,diam_pitch,mod,warn=true) =
     pitch != undef?
-        echo("WARNING: The use of the argument pitch= in gear code is deprecated.  Please use circ_pitch= instead.")
         assert(is_finite(pitch) && pitch>0)
-        pitch :
+        warn? echo(str(
+            "WARNING: The use of the argument pitch= in ", fname,
+            " is deprecated.  Please use circ_pitch= instead."
+        )) pitch : pitch :
     circ_pitch != undef?
         assert(is_finite(circ_pitch) && circ_pitch>0)
         circ_pitch :
@@ -260,7 +262,7 @@ function _inherit_gear_thickness(thickness) =
 
 function spur_gear(
     circ_pitch,
-    teeth=11,
+    teeth,
     thickness,
     shaft_diam = 0,
     hide = 0,
@@ -284,11 +286,25 @@ function spur_gear(
     let(
         dummy = !is_undef(interior) ? echo("In spur_gear(), the argument 'interior=' has been deprecated, and may be removed in the future.  Please use 'internal=' instead."):0,
         internal = first_defined([internal,interior,false]),
-        circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod),
+        circ_pitch = _inherit_gear_pitch("spur_gear()", pitch, circ_pitch, diam_pitch, mod),
         PA = _inherit_gear_pa(pressure_angle),
         helical = _inherit_gear_helical(helical, invert=!internal),
         thickness = _inherit_gear_thickness(thickness),
-        profile_shift = default(profile_shift, auto_profile_shift(teeth,PA)),
+        profile_shift = default(profile_shift, auto_profile_shift(teeth,PA))
+    )
+    assert(is_integer(teeth) && teeth>3)
+    assert(is_finite(thickness) && thickness>0)
+    assert(is_finite(shaft_diam) && shaft_diam>=0)
+    assert(is_integer(hide) && hide>=0 && hide<teeth)
+    assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+    assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+    assert(is_finite(backlash) && backlash>=0)
+    assert(is_finite(helical) && abs(helical)<90)
+    assert(is_bool(herringbone))
+    assert(slices==undef || (is_integer(slices) && slices>0))
+    assert(is_finite(profile_shift) && abs(profile_shift)<1)
+    assert(is_finite(gear_spin))
+    let(
         pr = pitch_radius(circ_pitch, teeth, helical),
         circum = 2 * PI * pr,
         twist = 360*thickness*tan(helical)/circum,
@@ -303,7 +319,7 @@ function spur_gear(
                 backlash = backlash,
                 internal = internal,
                 profile_shift = profile_shift,
-                hub_diam = shaft_diam
+                shaft_diam = shaft_diam
             ),
         rvnf = herringbone
           ? zrot(twist/2, p=linear_sweep(rgn, height=thickness, twist=twist, slices=slices, center=true))
@@ -321,7 +337,7 @@ function spur_gear(
 
 module spur_gear(
     circ_pitch,
-    teeth=11,
+    teeth,
     thickness,
     shaft_diam = 0,
     hide = 0,
@@ -344,11 +360,24 @@ module spur_gear(
 ) {
     dummy = !is_undef(interior) ? echo("In spur_gear(), the argument 'interior=' has been deprecated, and may be removed in the future.  Please use 'internal=' instead."):0;
     internal = first_defined([internal,interior,false]);
-    circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod);
+    circ_pitch = _inherit_gear_pitch("spur_gear()", pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
     helical = _inherit_gear_helical(helical, invert=!internal);
     thickness = _inherit_gear_thickness(thickness);
     profile_shift = default(profile_shift, auto_profile_shift(teeth,PA));
+    checks =
+        assert(is_integer(teeth) && teeth>3)
+        assert(is_finite(thickness) && thickness>0)
+        assert(is_finite(shaft_diam) && shaft_diam>=0)
+        assert(is_integer(hide) && hide>=0 && hide<teeth)
+        assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+        assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+        assert(is_finite(backlash) && backlash>=0)
+        assert(is_finite(helical) && abs(helical)<90)
+        assert(is_bool(herringbone))
+        assert(is_finite(profile_shift) && abs(profile_shift)<1)
+        assert(slices==undef || (is_integer(slices) && slices>0))
+        assert(is_finite(gear_spin));
     pr = pitch_radius(circ_pitch, teeth, helical);
     circum = 2 * PI * pr;
     twist = 360*thickness*tan(helical)/circum;
@@ -373,7 +402,7 @@ module spur_gear(
                         backlash = backlash,
                         internal = internal,
                         profile_shift = profile_shift,
-                        hub_diam = shaft_diam
+                        shaft_diam = shaft_diam
                     );
                 }
             } else {
@@ -393,7 +422,7 @@ module spur_gear(
                         backlash = backlash,
                         internal = internal,
                         profile_shift = profile_shift,
-                        hub_diam = shaft_diam
+                        shaft_diam = shaft_diam
                     );
                 }
             }
@@ -440,17 +469,17 @@ module spur_gear(
 //   helical = The angle of the rack teeth away from perpendicular to the gear axis of rotation.  Stretches out the tooth shapes.  Used to match helical spur gear pinions.  Default: 0
 //   internal = If true, create a mask for difference()ing from something else.
 //   profile_shift = Profile shift factor x.
-//   hub_diam = If given, the diameter of the central hub hole.
+//   shaft_diam = If given, the diameter of the central shaft hole.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): Typical Gear Shape
-//   spur_gear2d(circ_pitch=5, teeth=20, hub_diam=5);
+//   spur_gear2d(circ_pitch=5, teeth=20, shaft_diam=5);
 // Example(2D): By Metric Module
-//   spur_gear2d(mod=2, teeth=20, hub_diam=5);
+//   spur_gear2d(mod=2, teeth=20, shaft_diam=5);
 // Example(2D): By Imperial Gear Pitch
-//   spur_gear2d(diam_pitch=10, teeth=20, hub_diam=5);
+//   spur_gear2d(diam_pitch=10, teeth=20, shaft_diam=5);
 // Example(2D): Lower Pressure Angle
 //   spur_gear2d(circ_pitch=5, teeth=20, pressure_angle=14);
 // Example(2D): Partial Gear
@@ -462,7 +491,7 @@ module spur_gear(
 //       pr = pitch_radius(circ_pitch,teeth);
 //       mr = mesh_radius(circ_pitch,teeth,profile_shift=profile_shift);
 //       back(mr) {
-//           spur_gear2d(circ_pitch, teeth, hub_diam=shaft, profile_shift=profile_shift);
+//           spur_gear2d(circ_pitch, teeth, shaft_diam=shaft, profile_shift=profile_shift);
 //           up(0.1) color("black")
 //               dashed_stroke(circle(r=pr), width=strokewidth, closed=true);
 //       }
@@ -500,12 +529,12 @@ module spur_gear(
 //           teeth=cteeth,
 //           pressure_angle=pa);
 // Example(2D): Called as a Function
-//   rgn = spur_gear2d(circ_pitch=8, teeth=16, hub_diam=5);
+//   rgn = spur_gear2d(circ_pitch=8, teeth=16, shaft_diam=5);
 //   region(rgn);
 
 function spur_gear2d(
     circ_pitch,
-    teeth = 11,
+    teeth,
     hide = 0,
     pressure_angle,
     clearance,
@@ -514,7 +543,7 @@ function spur_gear2d(
     interior,
     profile_shift,
     helical,
-    hub_diam,
+    shaft_diam = 0,
     pitch,
     diam_pitch,
     mod,
@@ -522,39 +551,50 @@ function spur_gear2d(
     anchor = CENTER,
     spin = 0
 ) = let(
-    dummy = !is_undef(interior) ? echo("In spur_gear2d(), the argument 'interior=' has been deprecated, and may be removed in the future.  Please use 'internal=' instead."):0,
-    internal = first_defined([internal,interior,false]),
-    circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod),
-    PA = _inherit_gear_pa(pressure_angle),
-    helical = _inherit_gear_helical(helical, invert=!internal),
-    profile_shift = default(profile_shift, auto_profile_shift(teeth,PA)),
-    pr = pitch_radius(circ_pitch, teeth, helical=helical),
-    tooth = _gear_tooth_profile(
-            circ_pitch=circ_pitch,
-            teeth=teeth,
-            pressure_angle=PA,
-            clearance=clearance,
-            backlash=backlash,
-            profile_shift=profile_shift,
-            helical=helical,
-            internal=internal
-        ),
-    perim = [
-        for (i = [0:1:teeth-1-hide])
-            each zrot(-i*360/teeth+gear_spin, p=tooth),
-        if (hide>0) [0,0],
-    ],
-    rgn = [
-        list_unwrap(deduplicate(perim)),
-        if (is_finite(hub_diam) && hub_diam>0 && !hide)
-            reverse(circle(d=hub_diam)),
-    ]
-) reorient(anchor,spin, two_d=true, r=pr, p=rgn);
+        dummy = !is_undef(interior) ? echo("In spur_gear2d(), the argument 'interior=' has been deprecated, and may be removed in the future.  Please use 'internal=' instead."):0,
+        internal = first_defined([internal,interior,false]),
+        circ_pitch = _inherit_gear_pitch("spur_gear2d()", pitch, circ_pitch, diam_pitch, mod),
+        PA = _inherit_gear_pa(pressure_angle),
+        helical = _inherit_gear_helical(helical, invert=!internal),
+        profile_shift = default(profile_shift, auto_profile_shift(teeth,PA))
+    )
+    assert(is_integer(teeth) && teeth>3)
+    assert(is_finite(shaft_diam) && shaft_diam>=0)
+    assert(is_integer(hide) && hide>=0 && hide<teeth)
+    assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+    assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+    assert(is_finite(backlash) && backlash>=0)
+    assert(is_finite(profile_shift) && abs(profile_shift)<1)
+    assert(is_finite(helical) && abs(helical)<90)
+    assert(is_finite(gear_spin))
+    let(
+        pr = pitch_radius(circ_pitch, teeth, helical=helical),
+        tooth = _gear_tooth_profile(
+                circ_pitch=circ_pitch,
+                teeth=teeth,
+                pressure_angle=PA,
+                clearance=clearance,
+                backlash=backlash,
+                profile_shift=profile_shift,
+                helical=helical,
+                internal=internal
+            ),
+        perim = [
+            for (i = [0:1:teeth-1-hide])
+                each zrot(-i*360/teeth+gear_spin, p=tooth),
+            if (hide>0) [0,0],
+        ],
+        rgn = [
+            list_unwrap(deduplicate(perim)),
+            if (shaft_diam>0 && !hide)
+                reverse(circle(d=shaft_diam)),
+        ]
+    ) reorient(anchor,spin, two_d=true, r=pr, p=rgn);
 
 
 module spur_gear2d(
     circ_pitch,
-    teeth = 11,
+    teeth,
     hide = 0,
     pressure_angle,
     clearance,
@@ -563,7 +603,7 @@ module spur_gear2d(
     interior,
     profile_shift,
     helical,
-    hub_diam=0,
+    shaft_diam = 0,
     pitch,
     diam_pitch,
     mod,
@@ -573,10 +613,20 @@ module spur_gear2d(
 ) {
     dummy = !is_undef(interior) ? echo("In spur_gear2d(), the argument 'interior=' has been deprecated, and may be removed in the future.  Please use 'internal=' instead."):0;
     internal = first_defined([internal,interior,false]);
-    circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod);
+    circ_pitch = _inherit_gear_pitch("spur_gear2d()", pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
     helical = _inherit_gear_helical(helical, invert=!internal);
     profile_shift = default(profile_shift, auto_profile_shift(teeth,PA));
+    checks =
+        assert(is_integer(teeth) && teeth>3)
+        assert(is_finite(shaft_diam) && shaft_diam>=0)
+        assert(is_integer(hide) && hide>=0 && hide<teeth)
+        assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+        assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+        assert(is_finite(backlash) && backlash>=0)
+        assert(is_finite(profile_shift) && abs(profile_shift)<1)
+        assert(is_finite(helical) && abs(helical)<90)
+        assert(is_finite(gear_spin));
     rgn = spur_gear2d(
         circ_pitch = circ_pitch,
         teeth = teeth,
@@ -587,7 +637,7 @@ module spur_gear2d(
         backlash = backlash,
         profile_shift = profile_shift,
         internal = internal,
-        hub_diam = hub_diam
+        shaft_diam = shaft_diam
     );
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
     attachable(anchor,spin, two_d=true, r=pr) {
@@ -651,7 +701,7 @@ module spur_gear2d(
 
 module ring_gear(
     circ_pitch,
-    teeth = 50,
+    teeth,
     thickness = 10,
     backing = 10,
     pressure_angle,
@@ -669,11 +719,23 @@ module ring_gear(
     spin = 0,
     orient = UP
 ) {
-    circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod);
+    circ_pitch = _inherit_gear_pitch("ring_gear()",pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
     helical = _inherit_gear_helical(helical);
     thickness = _inherit_gear_thickness(thickness);
     profile_shift = default(profile_shift, auto_profile_shift(teeth,PA));
+    checks =
+        assert(is_integer(teeth) && teeth>3)
+        assert(is_finite(thickness) && thickness>0)
+        assert(is_finite(backing) && backing>0)
+        assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+        assert(is_finite(helical) && abs(helical)<90)
+        assert(is_bool(herringbone))
+        assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+        assert(is_finite(backlash) && backlash>=0)
+        assert(is_finite(profile_shift) && abs(profile_shift)<1)
+        assert(slices==undef || (is_integer(slices) && slices>0))
+        assert(is_finite(gear_spin));
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
     ar = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=true);
     circum = 2 * PI * pr;
@@ -757,7 +819,7 @@ module ring_gear(
 //   back(pr1-pr2) spur_gear2d(circ_pitch=circ_pitch, teeth=teeth2);
 module ring_gear2d(
     circ_pitch,
-    teeth = 50,
+    teeth,
     backing = 10,
     pressure_angle,
     helical,
@@ -771,10 +833,19 @@ module ring_gear2d(
     anchor = CENTER,
     spin = 0
 ) {
-    circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod);
+    circ_pitch = _inherit_gear_pitch("ring_gear2d()",pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
     helical = _inherit_gear_helical(helical);
     profile_shift = default(profile_shift, auto_profile_shift(teeth,PA));
+    checks =
+        assert(is_integer(teeth) && teeth>3)
+        assert(is_finite(backing) && backing>0)
+        assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+        assert(is_finite(helical) && abs(helical)<90)
+        assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+        assert(is_finite(backlash) && backlash>=0)
+        assert(is_finite(profile_shift) && abs(profile_shift)<1)
+        assert(is_finite(gear_spin));
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
     ar = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=true);
     attachable(anchor,spin, two_d=true, r=pr) {
@@ -865,7 +936,7 @@ module ring_gear2d(
 
 module rack(
     pitch,
-    teeth = 20,
+    teeth,
     thickness,
     height = 10,
     pressure_angle,
@@ -881,10 +952,21 @@ module rack(
     spin = 0,
     orient = UP
 ) {
-    pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod);
+    pitch = _inherit_gear_pitch("rack()",pitch, circ_pitch, diam_pitch, mod, warn=false);
     PA = _inherit_gear_pa(pressure_angle);
     helical = _inherit_gear_helical(helical);
     thickness = _inherit_gear_thickness(thickness);
+    checks=
+        assert(is_integer(teeth) && teeth>0)
+        assert(is_finite(thickness) && thickness>0)
+        assert(is_finite(height) && height>0)
+        assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+        assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+        assert(is_finite(backlash) && backlash>=0)
+        assert(is_finite(helical) && abs(helical)<90)
+        //assert(is_bool(herringbone))
+        assert(is_finite(profile_shift) && abs(profile_shift)<1)
+        assert(is_finite(gear_travel));
     trans_pitch = pitch / cos(helical);
     a = _adendum(pitch, profile_shift);
     d = _dedendum(pitch, clearance, profile_shift);
@@ -925,7 +1007,7 @@ module rack(
 
 function rack(
     pitch,
-    teeth = 20,
+    teeth,
     thickness,
     height = 10,
     pressure_angle,
@@ -942,10 +1024,22 @@ function rack(
     orient = UP
 ) =
     let(
-        pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod),
+        pitch = _inherit_gear_pitch("rack()",pitch, circ_pitch, diam_pitch, mod, warn=false),
         PA = _inherit_gear_pa(pressure_angle),
         helical = _inherit_gear_helical(helical),
-        thickness = _inherit_gear_thickness(thickness),
+        thickness = _inherit_gear_thickness(thickness)
+    )
+    assert(is_integer(teeth) && teeth>0)
+    assert(is_finite(thickness) && thickness>0)
+    assert(is_finite(height) && height>0)
+    assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+    assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+    assert(is_finite(backlash) && backlash>=0)
+    assert(is_finite(helical) && abs(helical)<90)
+    //assert(is_bool(herringbone))
+    assert(is_finite(profile_shift) && abs(profile_shift)<1)
+    assert(is_finite(gear_travel))
+    let(
         trans_pitch = pitch / cos(helical),
         a = _adendum(pitch, profile_shift),
         d = _dedendum(pitch, clearance, profile_shift),
@@ -1009,7 +1103,9 @@ function rack(
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.
 //   helical = The angle of the rack teeth away from perpendicular to the rack length.  Stretches out the tooth shapes.  Used to match helical spur gear pinions.  Default: 0
-//   profile_shift = Profile shift factor x.
+//   profile_shift = Profile shift factor x for tooth shape.
+//   gear_travel = The distance the rack should be moved by linearly.  Default: 0
+//   rounding = If true, rack tips and valleys are slightly rounded.  Default: true
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1029,7 +1125,7 @@ function rack(
 
 function rack2d(
     pitch,
-    teeth = 20,
+    teeth,
     height = 10,
     pressure_angle,
     backlash = 0,
@@ -1040,16 +1136,27 @@ function rack2d(
     diam_pitch,
     mod,
     gear_travel = 0,
+    rounding = true,
     anchor = CENTER,
     spin = 0
 ) = let(
-        pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod),
+        pitch = _inherit_gear_pitch("rack2d()",pitch, circ_pitch, diam_pitch, mod, warn=false),
         PA = _inherit_gear_pa(pressure_angle),
-        helical = _inherit_gear_helical(helical),
+        helical = _inherit_gear_helical(helical)
+    )
+    assert(is_integer(teeth) && teeth>0)
+    assert(is_finite(height) && height>0)
+    assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+    assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+    assert(is_finite(backlash) && backlash>=0)
+    assert(is_finite(helical) && abs(helical)<90)
+    assert(is_finite(profile_shift) && abs(profile_shift)<1)
+    assert(is_finite(gear_travel))
+    let(
         adendum = _adendum(pitch, profile_shift),
         dedendum = _dedendum(pitch, clearance, profile_shift)
     )
-    assert(dedendum < height)
+    assert(dedendum < height, "height= is not large enough.")
     let(
         trans_pitch = pitch / cos(helical),
         trans_pa = atan(tan(PA)/cos(helical)),
@@ -1057,29 +1164,30 @@ function rack2d(
         l = teeth * trans_pitch,
         ax = ang_adj_to_opp(trans_pa, adendum),
         dx = ang_adj_to_opp(trans_pa, dedendum),
+        clear = dedendum - adendum,
         poff = tthick/2 - backlash,
         tooth = [
             [-trans_pitch/2, -dedendum],
-            each arc(n=4, r=dedendum-adendum, corner=[
+            if (rounding) each arc(n=4, r=clear, corner=[
                 [-trans_pitch/2, -dedendum],
-                [-poff-dx,   -dedendum],
-                [-poff+ax,   +adendum],
-            ]),
-            each arc(n=4, r=trans_pitch/16, corner=[
-                [-poff-dx,   -dedendum],
-                [-poff+ax,   +adendum],
-                [+poff-ax,   +adendum],
-            ]),
-            each arc(n=4, r=trans_pitch/16, corner=[
-                [-poff+ax,   +adendum],
-                [+poff-ax,   +adendum],
-                [+poff+dx,   -dedendum],
-            ]),
-            each arc(n=4, r=dedendum-adendum, corner=[
-                [+poff-ax,   +adendum],
-                [+poff+dx,   -dedendum],
+                [-poff-dx, -dedendum],
+                [-poff+ax, +adendum],
+            ]) else [-poff-dx, -dedendum],
+            if (rounding) each arc(n=4, r=trans_pitch/16, corner=[
+                [-poff-dx, -dedendum],
+                [-poff+ax, +adendum],
+                [+poff-ax, +adendum],
+            ]) else [-poff+ax, +adendum],
+            if (rounding) each arc(n=4, r=trans_pitch/16, corner=[
+                [-poff+ax, +adendum],
+                [+poff-ax, +adendum],
+                [+poff+dx, -dedendum],
+            ]) else [+poff-ax, +adendum],
+            if (rounding) each arc(n=4, r=clear, corner=[
+                [+poff-ax, +adendum],
+                [+poff+dx, -dedendum],
                 [+trans_pitch/2, -dedendum],
-            ]),
+            ]) else [+poff+dx, -dedendum],
             [+trans_pitch/2, -dedendum],
         ],
         path2 = [
@@ -1106,7 +1214,7 @@ function rack2d(
 
 module rack2d(
     pitch,
-    teeth = 20,
+    teeth,
     height = 10,
     pressure_angle,
     backlash = 0.0,
@@ -1120,9 +1228,18 @@ module rack2d(
     anchor = CENTER,
     spin = 0
 ) {
-    pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod);
+    pitch = _inherit_gear_pitch("rack2d()",pitch, circ_pitch, diam_pitch, mod, warn=false);
     PA = _inherit_gear_pa(pressure_angle);
     helical = _inherit_gear_helical(helical);
+    checks =
+        assert(is_integer(teeth) && teeth>0)
+        assert(is_finite(height) && height>0)
+        assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+        assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+        assert(is_finite(backlash) && backlash>=0)
+        assert(is_finite(helical) && abs(helical)<90)
+        assert(is_finite(profile_shift) && abs(profile_shift)<1)
+        assert(is_finite(gear_travel));
     trans_pitch = pitch / cos(helical);
     a = _adendum(pitch, profile_shift);
     d = _dedendum(pitch, clearance, profile_shift);
@@ -1253,8 +1370,8 @@ module rack2d(
 //   }
 
 function bevel_gear(
-    circ_pitch = 5,
-    teeth = 20,
+    circ_pitch,
+    teeth,
     face_width = 10,
     pitch_angle = 45,
     mate_teeth,
@@ -1277,7 +1394,7 @@ function bevel_gear(
 ) = let(
         dummy = !is_undef(interior) ? echo("In bevel_gear(), the argument 'interior=' has been deprecated, and may be removed in the future.  Please use 'internal=' instead."):0,
         internal = first_defined([internal,interior,false]),
-        circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod),
+        circ_pitch = _inherit_gear_pitch("bevel_gear()",pitch, circ_pitch, diam_pitch, mod),
         PA = _inherit_gear_pa(pressure_angle),
         spiral_angle = _inherit_gear_helical(spiral_angle, invert=!internal),
         face_width = _inherit_gear_thickness(face_width),
@@ -1366,8 +1483,8 @@ function bevel_gear(
 
 
 module bevel_gear(
-    circ_pitch = 5,
-    teeth = 20,
+    circ_pitch,
+    teeth,
     face_width = 10,
     pitch_angle = 45,
     mate_teeth,
@@ -1390,7 +1507,7 @@ module bevel_gear(
 ) {
     dummy = !is_undef(interior) ? echo("In bevel_gear(), the argument 'interior=' has been deprecated, and may be removed in the future.  Please use 'internal=' instead."):0;
     internal = first_defined([internal,interior,false]);
-    circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod);
+    circ_pitch = _inherit_gear_pitch("bevel_gear()",pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
     spiral_angle = _inherit_gear_helical(spiral_angle, invert=!internal);
     face_width = _inherit_gear_thickness(face_width);
@@ -1491,9 +1608,20 @@ function worm(
     orient=UP
 ) =
     let(
-        circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod),
+        circ_pitch = _inherit_gear_pitch("worm()", pitch, circ_pitch, diam_pitch, mod),
         PA = _inherit_gear_pa(pressure_angle),
-        profile_shift = default(profile_shift, 0),
+        profile_shift = default(profile_shift, 0)
+    )
+    assert(is_integer(starts) && starts>0)
+    assert(is_finite(l) && l>0)
+    //assert(is_finite(shaft_diam) && shaft_diam>=0)
+    assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+    assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+    assert(is_finite(backlash) && backlash>=0)
+    assert(is_bool(left_handed))
+    assert(is_finite(profile_shift) && abs(profile_shift)<1)
+    //assert(is_finite(gear_spin))
+    let(
         helical = asin(starts * circ_pitch / PI / d),
         trans_pitch = circ_pitch / cos(helical),
         tooth = xflip(
@@ -1549,9 +1677,19 @@ module worm(
     spin=0,
     orient=UP
 ) {
-    circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod);
+    circ_pitch = _inherit_gear_pitch("worm()", pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
     profile_shift = default(profile_shift, auto_profile_shift(starts,PA));
+    checks =
+        assert(is_integer(starts) && starts>0)
+        assert(is_finite(l) && l>0)
+        //assert(is_finite(shaft_diam) && shaft_diam>=0)
+        assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+        assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+        assert(is_finite(backlash) && backlash>=0)
+        assert(is_bool(left_handed))
+        assert(is_finite(gear_spin))
+        assert(is_finite(profile_shift) && abs(profile_shift)<1);
     vnf = worm(
         circ_pitch=circ_pitch,
         starts=starts,
@@ -1644,8 +1782,8 @@ module worm(
 
 function worm_gear(
     circ_pitch,
-    teeth = 36,
-    worm_diam = 30,
+    teeth,
+    worm_diam,
     worm_starts = 1,
     worm_arc = 60,
     crowning = 0.1,
@@ -1665,9 +1803,24 @@ function worm_gear(
 ) =
     assert(worm_arc >= 10 && worm_arc <= 60)
     let(
-        circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod),
+        circ_pitch = _inherit_gear_pitch("worm_gear()", pitch, circ_pitch, diam_pitch, mod),
         PA = _inherit_gear_pa(pressure_angle),
-        profile_shift = default(profile_shift, auto_profile_shift(teeth,PA)),
+        profile_shift = default(profile_shift, auto_profile_shift(teeth,PA))
+    )
+    assert(is_integer(teeth) && teeth>10)
+    assert(is_finite(worm_diam) && worm_diam>0)
+    assert(is_integer(worm_starts) && worm_starts>0)
+    assert(is_finite(worm_arc) && worm_arc>0 && worm_arc<90)
+    assert(is_finite(crowning) && crowning>=0)
+    assert(is_bool(left_handed))
+    assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+    assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+    assert(is_finite(backlash) && backlash>=0)
+    //assert(is_finite(shaft_diam) && shaft_diam>=0)
+    assert(slices==undef || (is_integer(slices) && slices>0))
+    assert(is_finite(profile_shift) && abs(profile_shift)<1)
+    assert(is_finite(gear_spin))
+    let(
         helical = asin(worm_starts * circ_pitch / PI / worm_diam),
         pr = pitch_radius(circ_pitch, teeth, helical),
         hob_rad = worm_diam / 2 + crowning,
@@ -1739,29 +1892,43 @@ function worm_gear(
 
 module worm_gear(
     circ_pitch,
-    teeth = 36,
-    worm_diam = 30,
+    teeth,
+    worm_diam,
     worm_starts = 1,
     worm_arc = 60,
     crowning = 0.1,
     left_handed = false,
     pressure_angle,
-    backlash = 0,
-    slices = 10,
     clearance,
+    backlash = 0,
+    shaft_diam = 0,
+    slices = 10,
     profile_shift,
     gear_spin=0,
     pitch,
     diam_pitch,
     mod,
-    shaft_diam = 0,
     anchor = CENTER,
     spin = 0,
     orient = UP
 ) {
-    circ_pitch = _inherit_gear_pitch(pitch, circ_pitch, diam_pitch, mod);
+    circ_pitch = _inherit_gear_pitch("worm_gear()", pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
     profile_shift = default(profile_shift, auto_profile_shift(teeth,PA));
+    checks =
+        assert(is_integer(teeth) && teeth>10)
+        assert(is_finite(worm_diam) && worm_diam>0)
+        assert(is_integer(worm_starts) && worm_starts>0)
+        assert(is_finite(worm_arc) && worm_arc>0 && worm_arc<90)
+        assert(is_finite(crowning) && crowning>=0)
+        assert(is_bool(left_handed))
+        assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+        assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+        assert(is_finite(backlash) && backlash>=0)
+        assert(is_finite(shaft_diam) && shaft_diam>=0)
+        assert(slices==undef || (is_integer(slices) && slices>0))
+        assert(is_finite(profile_shift) && abs(profile_shift)<1)
+        assert(is_finite(gear_spin));
     helical = asin(worm_starts * circ_pitch / PI / worm_diam);
     pr = pitch_radius(circ_pitch, teeth, helical);
     vnf = worm_gear(
@@ -2253,7 +2420,7 @@ function pitch_radius(
 //               halign="center", valign="top");
 //   }
 
-function outer_radius(circ_pitch=5, teeth=11, clearance, internal=false, helical=0, profile_shift=0, mod, pitch, diam_pitch) =
+function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, profile_shift=0, mod, pitch, diam_pitch) =
     let( circ_pitch = circular_pitch(pitch, mod, circ_pitch, diam_pitch) )
     pitch_radius(circ_pitch, teeth, helical) + (
         internal
