@@ -1027,7 +1027,7 @@ function rack(
         pitch = _inherit_gear_pitch("rack()",pitch, circ_pitch, diam_pitch, mod, warn=false),
         PA = _inherit_gear_pa(pressure_angle),
         helical = _inherit_gear_helical(helical),
-        thickness = _inherit_gear_thickness(thickness),
+        thickness = _inherit_gear_thickness(thickness)
     )
     assert(is_integer(teeth) && teeth>0)
     assert(is_finite(thickness) && thickness>0)
@@ -1142,7 +1142,7 @@ function rack2d(
 ) = let(
         pitch = _inherit_gear_pitch("rack2d()",pitch, circ_pitch, diam_pitch, mod, warn=false),
         PA = _inherit_gear_pa(pressure_angle),
-        helical = _inherit_gear_helical(helical),
+        helical = _inherit_gear_helical(helical)
     )
     assert(is_integer(teeth) && teeth>0)
     assert(is_finite(height) && height>0)
