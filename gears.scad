@@ -2002,6 +2002,9 @@ function _gear_tooth_profile(
     helical = 0,
     internal = false,
     profile_shift = 0.0,
+    mod,
+    diam_pitch,
+    pitch,
     center = false
 ) = let(
     // Calculate a point on the involute curve, by angle.
@@ -2009,6 +2012,7 @@ function _gear_tooth_profile(
         let(b=a*PI/180) base_r * [cos(a)+b*sin(a), sin(a)-b*cos(a)],
 
     steps = 16,
+    circ_pitch = circular_pitch(pitch=pitch, circ_pitch=circ_pitch, diam_pitch=diam_pitch, mod=mod),
 
     // Calculate the important circle radii
     arad = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal),
@@ -2072,8 +2076,8 @@ function _gear_tooth_profile(
 
     // The u values to use when generating the tooth.
     us = [
-        for (i=[0:1:20-1]) 0.2*sin(i/20*90),
-        for (i=[2:1:steps-1]) i/(steps-1),
+        for (i=[0.0:0.02:0.2-EPSILON]) i,
+        for (i=[0:1:steps-1]) 0.2 + i/(steps-1)*0.8,
     ],
 
     // Generate the left half of the tooth.
@@ -2089,26 +2093,23 @@ function _gear_tooth_profile(
         ) polar_to_xy(ma_rad, a),
     ]),
 
-    // Find undercut bottom "jaggie" if it exists.
-    minima = [
-        for (i = idx(tooth_half_raw))
-            let(p = tooth_half_raw[i])
-            if (i > 0 && i < len(tooth_half_raw)-1 && norm(p) <= prad)
-            let(
-                pp = tooth_half_raw[i-1],
-                np = tooth_half_raw[i+1]
-            )
-            if (p.x > pp.x && p.x > np.x)
-            i
-    ],
-
     // Strip "jaggies" if found.
-    tooth_half = len(minima)<2? tooth_half_raw : [
-        for (i = idx(tooth_half_raw))
-            let(p = tooth_half_raw[i])
-            if (i <= minima[0] || i >= last(minima))
-            p
-    ],
+    strip_left = function(path,i)
+        i > len(path)? [] :
+        norm(path[i]) >= prad? [for (j=idx(path)) if(j>=i) path[j]] :
+        let(
+            angs = [
+                for (j=[i+1:1:len(path)-1]) let(
+                    p = path[i],
+                    np = path[j],
+                    r = norm(np),
+                    a = v_theta(np-p)
+                ) if(r<prad) a
+            ],
+            mti = !angs? 0 : min_index(angs),
+            out = concat([path[i]], strip_left(path, i + mti + 1))
+        ) out,
+    tooth_half = strip_left(tooth_half_raw, 0),
 
     // Mirror the tooth to complete it.
     tooth = deduplicate([
