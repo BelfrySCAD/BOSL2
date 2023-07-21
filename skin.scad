@@ -2677,7 +2677,7 @@ function associate_vertices(polygons, split, curpoly=0) =
     assert(len(cursplit)+polylen == len(polygons[curpoly+1]),
            str("Polygon ", curpoly, " has ", polylen, " vertices.  Next polygon has ", len(polygons[curpoly+1]),
                   " vertices.  Split list has length ", len(cursplit), " but must have length ", len(polygons[curpoly+1])-polylen))
-    assert(max(cursplit)<polylen && min(curpoly)>=0,
+    assert(len(cursplit) == 0 || max(cursplit)<polylen && min(curpoly)>=0,
            str("Split ",cursplit," at polygon ",curpoly," has invalid vertices.  Must be in [0:",polylen-1,"]"))
     len(cursplit)==0 ? associate_vertices(polygons,split,curpoly+1) :
     let(
