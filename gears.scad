@@ -1603,6 +1603,7 @@ function worm(
     diam_pitch,
     mod,
     pitch,
+    gear_spin=0,
     anchor=CENTER,
     spin=0,
     orient=UP
@@ -1620,7 +1621,7 @@ function worm(
     assert(is_finite(backlash) && backlash>=0)
     assert(is_bool(left_handed))
     assert(is_finite(profile_shift) && abs(profile_shift)<1)
-    //assert(is_finite(gear_spin))
+    assert(is_finite(gear_spin))
     let(
         helical = asin(starts * circ_pitch / PI / d),
         trans_pitch = circ_pitch / cos(helical),
@@ -1641,7 +1642,7 @@ function worm(
         ],
         steps = max(36, segs(d/2)),
         step = 360 / steps,
-        zsteps = ceil(l / circ_pitch * cos(helical) / starts * steps),
+        zsteps = ceil(l / trans_pitch / starts * steps),
         zstep = l / zsteps,
         profiles = [
             for (j = [0:1:zsteps]) [
@@ -1649,14 +1650,18 @@ function worm(
                     u = i / steps - 0.5,
                     ang = 360 * (1 - u) + 90,
                     z = j*zstep - l/2,
-                    zoff = circ_pitch * starts * u / cos(helical),
+                    zoff = trans_pitch * starts * u,
                     h = lookup(z+zoff, rack_profile)
                 )
                 cylindrical_to_xyz(d/2+h, ang, z)
             ]
         ],
         vnf1 = vnf_vertex_array(profiles, caps=true, col_wrap=true, style="alt"),
-        vnf = left_handed? xflip(p=vnf1) : vnf1
+        m = product([
+            zrot(gear_spin),
+            if (left_handed) xflip(),
+        ]),
+        vnf = apply(m, vnf1)
     ) reorient(anchor,spin,orient, d=d, l=l, p=vnf);
 
 
@@ -1690,6 +1695,8 @@ module worm(
         assert(is_bool(left_handed))
         assert(is_finite(gear_spin))
         assert(is_finite(profile_shift) && abs(profile_shift)<1);
+    helical = asin(starts * circ_pitch / PI / d);
+    trans_pitch = circ_pitch / cos(helical);
     vnf = worm(
         circ_pitch=circ_pitch,
         starts=starts,
@@ -1702,7 +1709,7 @@ module worm(
         mod=mod
     );
     attachable(anchor,spin,orient, d=d, l=l) {
-        zrot(gear_spin) vnf_polyhedron(vnf, convexity=ceil(l/circ_pitch)*2);
+        zrot(gear_spin) vnf_polyhedron(vnf, convexity=ceil(l/trans_pitch)*2);
         children();
     }
 }
@@ -1850,7 +1857,7 @@ function worm_gear(
                         left(hob_rad) *
                         zrot(-90) *
                         back(tbot) *
-                        scale(cos(u*worm_arc)) *
+                        scale(pow(cos(u*worm_arc),2)) *
                         fwd(tbot),
                     path3d(tooth_profile)
                 )
