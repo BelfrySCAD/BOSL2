@@ -166,7 +166,7 @@ function _inherit_gear_thickness(thickness) =
 //   rack2d(mod=5, teeth=3, height=15,clearance=.00001,pressure_angle=14.5);
 //   left(2*PI*pitch_radius(mod=5, teeth=5)*ang/360)
 //   color("lightgreen")back(mesh_radius(mod=5, teeth=5,profile_shift=0))zrot(ang)spur_gear2d(mod=5, teeth=5,clearance=.00001,profile_shift=0,pressure_angle=14.5);
-// Subection: Corrected Gears and Profile Shifting
+// Subsection: Corrected Gears and Profile Shifting
 //   A solution to the problem of undercutting is to use profile shifting.  Profile shifting uses a different portion of the
 //   involute curve to form the gear teeth, and this adjustment to the tooth form can eliminate undercutting, while
 //   still allowing the gear to mesh with unmodified gears.  Profile shifting
