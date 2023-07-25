@@ -109,7 +109,7 @@ function _inherit_gear_thickness(thickness) =
 //    zrot(87-360/30)stroke([[pitchpt,0],[pitchpt+11,0]], width=0.25);
 //    right(8.3)back(74)zrot(87-360/30)zrot(10,cp=[pitchpt,0]) stroke( arc(angle=[0,20],r=10.5),endcaps="arrow2",width=.25);
 //    back(84)right(13)text("pressure angle",size=2.5);
-//   }
+//  }
 // Continues:
 //   The size of the teeth can be specified as the circular pitch, the distance along the pitch circle
 //   from the start of one tooth to the start of the text tooth.  The circular pitch can be computed as
