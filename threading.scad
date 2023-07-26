@@ -139,7 +139,8 @@
 //   threaded_rod(d, l|length, pitch, [internal=], ...) [ATTACHMENTS];
 // Description:
 //   Constructs a standard ISO (metric) or UTS (English) threaded rod.  These threads are close to triangular,
-//   with a 60 degree thread angle.  You can give the outer diameter and get the "basic form" or you can
+//   with a 60 degree thread angle.  You can give diameter value which specifies the outer diameter and will produce
+//   the "basic form" or you can
 //   set d to a triplet [d_min, d_pitch, d_major] where are parameters determined by the ISO and UTS specifications
 //   that define clearance sizing for the threading.  See screws.scad for how to make screws
 //   using the specification parameters.  
@@ -278,10 +279,11 @@ module threaded_rod(
 // Usage:
 //   threaded_nut(nutwidth, id, h|height|thickness, pitch,...) [ATTACHMENTS];
 // Description:
-//   Constructs a hex nut or square nut for an ISO (metric) or UTS (English) threaded rod. 
+//   Constructs a hex nut or square nut for an ISO (metric) or UTS (English) threaded rod.
+//   The inner diameter is measured from the bottom of the threads.  
 // Arguments:
 //   nutwidth = flat to flat width of nut
-//   id = diameter of threaded rod to screw onto.
+//   id = inner diameter of threaded hole, measured from bottom of threads
 //   h / height / l / length / thickness = height/thickness of nut.
 //   pitch = Distance between threads, or zero for no threads. 
 //   ---
@@ -584,7 +586,7 @@ module trapezoidal_threaded_rod(
 //   acme_threaded_nut().
 // Arguments:
 //   nutwidth = flat to flat width of nut
-//   id = diameter of threaded rod to screw onto.
+//   id = inner diameter of threaded hole, measured from bottom of threads
 //   h / height / l / length / thickness = height/thickness of nut.
 //   pitch = Thread spacing.
 //   ---
@@ -805,8 +807,8 @@ module acme_threaded_rod(
 // Description:
 //   Constructs a hexagonal or square nut for an ACME threaded screw rod. 
 // Arguments:
-//   nutwidth = flat to flat width of nut. 
-//   id = diameter of threaded rod to screw onto.
+//   nutwidth = flat to flat width of nut.
+//   id = inner diameter of threaded hole, measured from bottom of threads
 //   h / height / l / length / thickness = height/thickness of nut.
 //   tpi = threads per inch
 //   ---
@@ -1135,7 +1137,7 @@ module buttress_threaded_rod(
 //   Constructs a hexagonal or square nut for a simple buttress threaded screw rod.  
 // Arguments:
 //   nutwidth = diameter of the nut.
-//   id = diameter of threaded rod to screw onto.
+//   id = inner diameter of threaded hole, measured from bottom of threads
 //   h / height / l / length / thickness = height/thickness of nut.
 //   pitch = Thread spacing. 
 //   ---
@@ -1331,7 +1333,7 @@ module square_threaded_rod(
 //   Constructs a hexagonal or square nut for a square profile threaded screw rod.  
 // Arguments:
 //   nutwidth = diameter of the nut.
-//   id = diameter of threaded rod to screw onto.
+//   id = inner diameter of threaded hole, measured from bottom of threads
 //   h / height / l / length / thickness = height/thickness of nut.
 //   pitch = Length between threads.
 //   ---
@@ -1864,8 +1866,8 @@ module generic_threaded_rod(
 //   Constructs a hexagonal or square nut for an generic threaded rod using a user-supplied thread profile.
 //   See {{generic_threaded_rod()}} for details on the profile specification.  
 // Arguments:
-//   nutwidth = outer dimension of nut from flat to flat. 
-//   id = diameter of threaded rod to screw onto.
+//   nutwidth = outer dimension of nut from flat to flat.
+//   id = inner diameter of threaded hole, measured from bottom of threads
 //   h / height / thickness = height/thickness of nut.
 //   pitch = Thread spacing.
 //   profile = Thread profile.
@@ -2086,7 +2088,7 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 //    back(3)text("angle",size=4,halign="center");
 //   }
 // Arguments:
-//   d = Inside base diameter of threads.  Default: 10
+//   d = Base diameter of threads.  Default: 10
 //   pitch = Distance between threads.  Default: 2
 //   ---
 //   thread_depth = Depth of threads from top to bottom.

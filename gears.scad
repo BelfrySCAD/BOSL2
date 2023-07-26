@@ -2747,7 +2747,8 @@ function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning
 //   dist = gear_dist(pitch, teeth1, teeth2, [helical=], [profile_shift=], [pressure_angle=]);
 //   dist = gear_dist(mod=, teeth=, [helical=], [profile_shift=], [pressure_angle=]);
 // Description:
-//   Calculate the distance between the centers of two gears.
+//   Calculate the distance between the centers of two gears with parallel axes, taking into account
+//   profile shifting and helical angles.  
 // Arguments:
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.  Default: 5
 //   teeth1 = Total number of teeth in the first gear.  If given 0, we assume this is a rack or worm.
@@ -2812,6 +2813,74 @@ function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, 
   )
   pa_eff;
 
+
+// Function: gear_dist_skew()
+// Usage:
+//   d = gear_dist_skew(circ_pitch, teeth1, profile_shift1, h
+// Description:
+//   Calculate the distance between two helical gears that mesh with non-parallel axes, taking into account
+//   profile shift and the helical angles.  
+function gear_dist_skew(mod,teeth1,profile_shift1=0, helical1, teeth2, profile_shift2=0, helical2, pressure_angle=20) =
+  let(
+      pa_normal_eff = _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1,teeth2,profile_shift2,helical2,pressure_angle),
+      dist_adj = 0.5*(teeth1/cos(helical1)^3+teeth2/cos(helical2)^3)*(cos(pressure_angle)/cos(pa_normal_eff)-1),
+      ff=echo(y=dist_adj,pa_normal_eff)
+  )
+  mod*(teeth1/2/cos(helical1)+teeth2/2/cos(helical2)+dist_adj);
+
+
+function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, teeth2, profile_shift2, helical2, pressure_angle) = 
+  let(
+      rhs = 2*(profile_shift1+profile_shift2)/(teeth1/cos(helical1)^3+teeth2/cos(helical2)^3)*tan(pressure_angle) + inv(pressure_angle),
+fdaseee=      echo(rhs=rhs),
+      pa_eff_normal = root_find(function (x) inv(x)-rhs, 5, 75)
+  )
+  pa_eff_normal;
+
+
+// Function: gear_skew_angle()
+// Usage:
+//   ang = gear_skew_angle(....
+// Description:
+//   Compute the correct skew angle between the axes of two helical gears.  
+function gear_skew_angle(mod,teeth1,profile_shift1,helical1,teeth2, profile_shift2,helical2,pressure_angle=20)=
+ //  profile_shift1==0 && profile_shift2==0 ? helical1+helical2
+  // :
+   let(
+        //mod = circular_pitch(pitch, mod, circ_pitch, diam_pitch)/PI,     
+        a = gear_dist_skew(mod,teeth1,profile_shift1,helical1,teeth2, profile_shift2,helical2,pressure_angle),
+        d1 = 2*pitch_radius(mod=mod,teeth=teeth1,helical=helical1),
+        d2 = 2*pitch_radius(mod=mod,teeth=teeth2,helical=helical2),
+        dw1 = 2*a*d1/(d1+d2),
+        dw2 = 2*a*d2/(d1+d2),
+        beta1 = atan(dw1/d1*tan(helical1)),
+        beta2 = atan(dw2/d2*tan(helical2))
+   )
+   beta1+beta2;
+
+
+
+
+// Function: get_profile_shift()
+// Usage:
+//   total_shift = get_profile_shift(desired,....)
+// Description:
+//   Compute the total profile shift, split between two gears, needed to place those gears with a specified separation.
+//   If the requested separation is impossible, returns nan.  Note that the profile shift returned may also be impractically
+//   large.
+// Arguments:
+//   circ_pitch = circular pitch of gear teeth
+//   teeth1 = number of teeth on first gear
+//   teeth2 = number of teeth on second gear
+//   pressure_angle = normal pressure angle of gear teeth.  Default: 20
+//   mod = gear module, an alternative to circ_pitch for giving gear size
+//   diam_pitch = specify dimetral pitch
+function get_profile_shift(desired,circ_pitch,teeth1,teeth2,pressure_angle=20,mod,diam_pitch,pitch) =
+  let(
+       mod = circular_pitch(pitch, mod, circ_pitch, diam_pitch)/PI,
+       pa_eff = acos(mod*(teeth1+teeth2)*cos(pressure_angle)/2/desired)
+  )
+  (_invol(pa_eff)-_invol(pressure_angle))/2/tan(pressure_angle) * (teeth1+teeth2);
 
 
 // Function: auto_profile_shift()
