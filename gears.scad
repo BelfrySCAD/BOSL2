@@ -109,7 +109,7 @@ function _inherit_gear_thickness(thickness) =
 //    zrot(87-360/30)stroke([[pitchpt,0],[pitchpt+11,0]], width=0.25);
 //    right(8.3)back(74)zrot(87-360/30)zrot(10,cp=[pitchpt,0]) stroke( arc(angle=[0,20],r=10.5),endcaps="arrow2",width=.25);
 //    back(84)right(13)text("pressure angle",size=2.5);
-//  }
+//   }
 // Continues:
 //   The size of the teeth can be specified as the circular pitch, the distance along the pitch circle
 //   from the start of one tooth to the start of the text tooth.  The circular pitch can be computed as
@@ -132,14 +132,14 @@ function _inherit_gear_thickness(thickness) =
 //   increase the force that tries to push the gears apart, and hence the load on the gear axles.  The current standard pressure
 //   angle is 20 degrees.  It replaces an old 14.5 degree standard.  
 // Figure(2D,Med,NoAxes): Teeth of the same size with different pressure angles.  Note that 20 deg is the industry standard. 
-//   pang = [30,20,14.5];
-//   ycopies(n=3,spacing=25){
+//    pang = [30,20,14.5];
+//    ycopies(n=3,spacing=25){
 //     intersection(){
 //     spur_gear2d(mod=5,teeth=30,pressure_angle=pang[$idx]);
 //     back(82)rect([45, 20],anchor=BACK);
 //     }
 //     back(68)right(26)text(str(pang[$idx]), size=6.5);
-//   }
+//    }
 // Continues:
 //   In order for the gear teeth to fit together, and to allow space for lubricant, the valleys of the teeth
 //   are made deeper by the `clearance` distance.
@@ -2844,8 +2844,8 @@ fdaseee=      echo(rhs=rhs),
 // Description:
 //   Compute the correct skew angle between the axes of two helical gears.  
 function gear_skew_angle(mod,teeth1,profile_shift1,helical1,teeth2, profile_shift2,helical2,pressure_angle=20)=
- //  profile_shift1==0 && profile_shift2==0 ? helical1+helical2
-  // :
+   profile_shift1==0 && profile_shift2==0 ? helical1+helical2
+   :
    let(
         //mod = circular_pitch(pitch, mod, circ_pitch, diam_pitch)/PI,     
         a = gear_dist_skew(mod,teeth1,profile_shift1,helical1,teeth2, profile_shift2,helical2,pressure_angle),
