@@ -2258,6 +2258,17 @@ function _gear_tooth_profile(
         for (i=[0:1:steps-1]) 0.2 + i/(steps-1)*0.8,
     ],
 
+    // Is there an undercut?
+    has_undercut = [
+        for (u = us) let(
+            r = lerp(rrad, ma_rad, u),
+            a1 = lookup(r, involute_lup) + soff,
+            a2 = lookup(r, undercut_lup),
+            a = internal || r < undercut_lup[0].x? a1 : min(a1,a2),
+            b = internal || r < undercut_lup[0].x? false : a1>a2
+        ) if(a<90+180/teeth && b) 1
+    ] != [],
+
     // Generate the left half of the tooth.
     tooth_half_raw = deduplicate([
         for (u = us) let(
@@ -2287,7 +2298,8 @@ function _gear_tooth_profile(
             mti = !angs? 0 : min_index(angs),
             out = concat([path[i]], strip_left(path, i + mti + 1))
         ) out,
-    tooth_half = strip_left(tooth_half_raw, 0),
+    tooth_half = !has_undercut? tooth_half_raw :
+        strip_left(tooth_half_raw, 0),
 
     // Mirror the tooth to complete it.
     tooth = deduplicate([
