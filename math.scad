@@ -1560,13 +1560,6 @@ function _poly_roots(p, pderiv, s, z, tol, i=0) =
 //   eps = used to determine whether imaginary parts of roots are zero
 //   tol = tolerance for the complex polynomial root finder
 
-//   The algorithm is based on Brent's method and is a combination of
-//   bisection and inverse quadratic approximation, where bisection occurs
-//   at every step, with refinement using inverse quadratic approximation
-//   only when that approximation gives a good result.  The detail
-//   of how to decide when to use the quadratic came from an article
-//   by Crenshaw on "The World's Best Root Finder".
-//   https://www.embedded.com/worlds-best-root-finder/
 function real_roots(p,eps=undef,tol=1e-14) =
     assert( is_vector(p), "Invalid polynomial." )
     let( p = _poly_trim(p,eps=0) )
@@ -1602,6 +1595,14 @@ function real_roots(p,eps=undef,tol=1e-14) =
 //    x0 = endpoint of interval to search for root
 //    x1 = second endpoint of interval to search for root
 //    tol = tolerance for solution.  Default: 1e-15
+
+//   The algorithm is based on Brent's method and is a combination of
+//   bisection and inverse quadratic approximation, where bisection occurs
+//   at every step, with refinement using inverse quadratic approximation
+//   only when that approximation gives a good result.  The detail
+//   of how to decide when to use the quadratic came from an article
+//   by Crenshaw on "The World's Best Root Finder".
+//   https://www.embedded.com/worlds-best-root-finder/
 function root_find(f,x0,x1,tol=1e-15) =
    let(
         y0 = f(x0),
