@@ -87,7 +87,7 @@ function _inherit_gear_thickness(thickness) =
 // Continues:
 //   The term "involute" refers to the shape of the teeth:  the curves of the teeth involutes of circles, 
 //   which are curves that optimize gear performance.
-// Figure(2D,Med,NoAxes,VPD=[8.20073,73.8041,0],VPR=[0,0,0],VPD=150.196): The three marked circles are key references on gear teeth.  The pitch circle, which is roughly in the middle of the teeth, is the reference used to define the pitch of teeth on the gear.  The pressure angle is the angle the tooth makes with the pitch circle.  In this example, the pressure angle is 20 degrees as shown by the red lines.  
+// Figure(2D,Med,NoAxes,VPT=[8,74,0],VPR=[0,0,0],VPD=150): The three marked circles are key references on gear teeth.  The pitch circle, which is roughly in the middle of the teeth, is the reference used to define the pitch of teeth on the gear.  The pressure angle is the angle the tooth makes with the pitch circle.  In this example, the pressure angle is 20 degrees as shown by the red lines.  
 //   $fn=128;
 //   intersection(){
 //     spur_gear2d(mod=5,teeth=30,pressure_angle=20);
