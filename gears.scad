@@ -79,11 +79,10 @@ function _inherit_gear_thickness(thickness) =
 //   type of gear its name.
 
 
-
 // Section: Involute Spur Gears
 // The simplest gear form is the involute spur gear, which is an extrusion of a two dimensional form.
 // Figure(3D,Med,NoAxes): Involute Spur Gear
-//   spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25);
+//   spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,shaft_diam=15);
 // Continues:
 //   The term "involute" refers to the shape of the teeth:  the curves of the teeth involutes of circles, 
 //   which are curves that optimize gear performance.
@@ -103,12 +102,12 @@ function _inherit_gear_thickness(thickness) =
 //   }  
 //   base = _base_radius(mod=5, teeth=30);
 //   pitchpt = pitch_radius(mod=5, teeth=30);
-//   color("blue")rot(98.1)stroke([[base,0], [base+12,0]],width=0.25);
+//   color("blue") rot(98.1) stroke([[base,0], [base+12,0]],width=0.25);
 //   color("red"){
-//    zrot(87-360/30)zrot(20,cp=[pitchpt,0])stroke([[base-5,0],[base+15,0]], width=0.25);
-//    zrot(87-360/30)stroke([[pitchpt,0],[pitchpt+11,0]], width=0.25);
-//    right(8.3)back(74)zrot(87-360/30)zrot(10,cp=[pitchpt,0]) stroke( arc(angle=[0,20],r=10.5),endcaps="arrow2",width=.25);
-//    back(84)right(13)text("pressure angle",size=2.5);
+//     zrot(87-360/30) zrot(20,cp=[pitchpt,0]) stroke([[base-5,0],[base+15,0]], width=0.25);
+//     zrot(87-360/30) stroke([[pitchpt,0],[pitchpt+11,0]], width=0.25);
+//     right(8.3) back(74) zrot(87-360/30) zrot(10,cp=[pitchpt,0]) stroke(arc(angle=[0,20],r=10.5),endcaps="arrow2",width=.25);
+//     back(84) right(13) text("pressure angle",size=2.5);
 //   }
 // Continues:
 //   The size of the teeth can be specified as the circular pitch, the distance along the pitch circle
@@ -132,40 +131,45 @@ function _inherit_gear_thickness(thickness) =
 //   increase the force that tries to push the gears apart, and hence the load on the gear axles.  The current standard pressure
 //   angle is 20 degrees.  It replaces an old 14.5 degree standard.  
 // Figure(2D,Med,NoAxes): Teeth of the same size with different pressure angles.  Note that 20 deg is the industry standard. 
-//    pang = [30,20,14.5];
-//    ycopies(n=3,spacing=25){
+//   pang = [30,20,14.5];
+//   ycopies(n=3, spacing=25){
 //     intersection(){
-//     spur_gear2d(mod=5,teeth=30,pressure_angle=pang[$idx]);
-//     back(82)rect([45, 20],anchor=BACK);
+//       spur_gear2d(mod=5, teeth=30, pressure_angle=pang[$idx]);
+//       back(82) rect([45,20], anchor=BACK);
 //     }
-//     back(68)right(26)text(str(pang[$idx]), size=6.5);
-//    }
+//     back(68) right(26) text(str(pang[$idx]), size=6.5);
+//   }
 // Continues:
 //   In order for the gear teeth to fit together, and to allow space for lubricant, the valleys of the teeth
 //   are made deeper by the `clearance` distance.
 // Figure(2D,Med,NoAxes,VPT=[5.62512,-1.33268,-0.0144912],VPR=[0,0,0],VPD=126): The clearance is extra space at the tooth valley that separates the tooth tip (in green) from the tooth valley below it.  the gap between the top of the tooth (in green) and the bot
 //   intersection(){
-//     rack2d(mod=5, teeth=10, height=15,clearance=undef,pressure_angle=14.5);
+//     rack2d(mod=5, teeth=10, height=15, pressure_angle=14.5);
 //     rect([35,20]);
 //   }  
 //   color("lightgreen")render()
 //   intersection(){
-//      back(gear_dist(mod=5, teeth1=146,teeth2=0,profile_shift1=0))
-//          spur_gear2d(mod=5, teeth=146,clearance=undef,profile_shift=0,pressure_angle=14.5);
+//      back(gear_dist(mod=5, teeth1=146, teeth2=0 ,profile_shift1=0))
+//          spur_gear2d(mod=5, teeth=146, profile_shift=0, pressure_angle=14.5);
 //      rect([45,20]);
 //   }   
-//   color("black"){ stroke([[-10,-5],[20,-5]], width=.25);
+//   color("black") {
+//       stroke([[-10,-5],[20,-5]], width=.25);
 //       stroke([[-10,-6.2],[20,-6.2]], width=.25);
-//       fwd(6.4)right(22)text("clearance",size=2.5);
+//       fwd(6.4) right(22) text("clearance", size=2.5);
 //   }    
 // Continues:
 //   Another clearance requirement can present a serious problem when the number of teeth is low.  As the gear rotates, the
 //   teeth may interfere with each other.  This may require undercutting the gear teeth to create space, which weakens the teeth. 
 // Figure(2D,Med,NoAxes,VPT=[0.042845,6.5338,-0.0144912],VPR=[0,0,0],VPD=126):  The green gear with only five teeth has a severe undercut, which weakens its teeth.  This undercut is necessary to avoid interference with the teeth from the other gear during rotation.  Note that the yellow rack tooth is deep into the undercut space.
 //   ang=16;
-//   rack2d(mod=5, teeth=3, height=15,clearance=.00001,pressure_angle=14.5);
+//   rack2d(mod=5, teeth=3, height=15, clearance=.00001, pressure_angle=14.5);
 //   left(2*PI*pitch_radius(mod=5, teeth=5)*ang/360)
-//   color("lightgreen")back(gear_dist(mod=5, teeth1=5,profile_shift1=0,teeth2=0))zrot(ang)spur_gear2d(mod=5, teeth=5,clearance=.00001,profile_shift=0,pressure_angle=14.5);
+//   color("lightgreen")
+//     back(gear_dist(mod=5, teeth1=5, profile_shift1=0, teeth2=0))
+//       zrot(ang)
+//         spur_gear2d(mod=5, teeth=5, clearance=.00001, profile_shift=0, pressure_angle=14.5, shaft_diam=5);
+
 // Subsection: Corrected Gears and Profile Shifting
 //   A solution to the problem of undercutting is to use profile shifting.  Profile shifting uses a different portion of the
 //   involute curve to form the gear teeth, and this adjustment to the tooth form can eliminate undercutting, while
@@ -186,10 +190,14 @@ function _inherit_gear_thickness(thickness) =
 //   ang2=20;
 //   left(2*PI*pitch_radius(mod=5, teeth=5)*ang1/360)
 //   left(3*5*PI/2)
-//     back(gear_dist(mod=5,teeth1=5,profile_shift1=0,teeth2=0))zrot(ang1){spur_gear2d(mod=5, teeth=5, profile_shift=0, pressure_angle=14.5);color("black")circle(r=1);}
+//     back(gear_dist(mod=5,teeth1=5,profile_shift1=0,teeth2=0))
+//       zrot(ang1)
+//          spur_gear2d(mod=5, teeth=5, profile_shift=0, pressure_angle=14.5, shaft_diam=5);
 //   left(2*PI*pitch_radius(mod=5, teeth=5)*ang2/360)
 //   right(3*5*PI/2)
-//     back(gear_dist(mod=5,teeth1=5,teeth2=0))zrot(ang2){spur_gear2d(mod=5, teeth=5, pressure_angle=14.5);color("black")circle(r=1);}
+//     back(gear_dist(mod=5, teeth1=5, teeth2=0))
+//       zrot(ang2)
+//         spur_gear2d(mod=5, teeth=5, pressure_angle=14.5, shaft_diam=5);
 //   rack2d(teeth=4, height=15, mod=5);
 
 
@@ -199,7 +207,7 @@ function _inherit_gear_thickness(thickness) =
 //   and quietly.  A disadvantage of helical gears is that they have thrust along the axis of the gear that must be 
 //   accomodated.  Helical gears also have more sliding friction between the meshing teeth compared to spur gears. 
 // Figure(3D,Med,NoAxes): A Helical Gear
-//   spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=-29);
+//   spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=-29,shaft_diam=15);
 // Continues:
 //   Helical gears have the same compatibility requirements as spur gears, with the additional requirement that
 //   the helical angles must be opposite each other, so a gear with a helical angle of 25 must mesh with one
@@ -210,9 +218,12 @@ function _inherit_gear_thickness(thickness) =
 //   to avoid undercutting without having to use profile shifting, so smaller tooth count gears can be more effective
 //   using the helical form. 
 // Figure(Anim,Frames=10,VPT=[43.8006,15.9214,3.52727],VPR=[62.3,0,20.3],VPD=446.129): Meshing compatible helical gears
-//   zrot($t*360/18)spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=-29);
-//     right(gear_dist(mod=5,teeth1=18,teeth2=18,helical=29))
-//       zrot(360/18/2)zrot(-$t*360/18)spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=29);
+//   zrot($t*360/18)
+//     spur_gear(mod=5, teeth=18, pressure_angle=20, thickness=25, helical=-29, shaft_diam=15);
+//   right(gear_dist(mod=5, teeth1=18, teeth2=18, helical=29))
+//     zrot(360/18/2)
+//       zrot(-$t*360/18)
+//         spur_gear(mod=5, teeth=18, pressure_angle=20, thickness=25, helical=29, shaft_diam=15);
 // Continues:
 //   Helical gears can mesh in a second manner that is different from spur gears at skew, or crossed axis.  These are also
 //   sometimes called "screw gears".  In fact, the general requirement for two helical gears to mesh is that the angle 
@@ -222,19 +233,19 @@ function _inherit_gear_thickness(thickness) =
 //   dist = gear_dist(mod=5, teeth1=18, teeth2=18, helical=22.5);
 //   color("lightblue")
 //       zrot($t*360/18)
-//           spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=22.5);
+//           spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=22.5,shaft_diam=15);
 //   right(dist)
 //       xrot(45)
 //           zrot(360/18/2)
 //               zrot(-$t*360/18)
-//                   spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=22.5);
+//                   spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=22.5,shaft_diam=15);
 
 
 // Section: Herringbone Gears
 //   The herringbone gear addresses the problem of axial forces that afflict helical gears by having one section that slopes to the
 //   right and another that slopes to the left.  Herringbone gears also have the advantage of being self-aligning.
-// Figure(Med,NoAxes): A herringbone gear
-//   spur_gear(mod=5,teeth=16,pressure_angle=20,thickness=35,helical=-20,herringbone=true);
+// Figure(3D,Med,NoAxes): A herringbone gear
+//   spur_gear(mod=5, teeth=16, pressure_angle=20, thickness=35, helical=-20, herringbone=true, shaft_diam=15);
 
 
 
@@ -745,7 +756,7 @@ function spur_gear2d(
         rgn = [
             list_unwrap(deduplicate(perim)),
             if (shaft_diam>0 && !hide)
-                reverse(circle(d=shaft_diam)),
+                reverse(circle(d=shaft_diam, $fn=max(16,segs(shaft_diam/2)))),
         ]
     ) reorient(anchor,spin, two_d=true, r=pr, p=rgn);
 
