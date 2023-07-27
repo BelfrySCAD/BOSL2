@@ -382,24 +382,26 @@ function _inherit_gear_thickness(thickness) =
 //   color("#ccc") fwd(d1r) right(circ_pitch*$t)
 //       rack(pitch=circ_pitch,teeth=n5,thickness=thickness,height=rack_base,anchor=CENTER,orient=BACK);
 // Example: Helical gears meshing with non-parallel shafts  BROKEN 
-//     //   ang1 = 30;
-//     //   ang2 = 10;
-//     //   circ_pitch = 5;
-//     //   n = 20;
-//     //   r1 = mesh_radius(circ_pitch,n,helical=ang1);
-//     //   r2 = mesh_radius(circ_pitch,n,helical=ang2);
-//     //   left(r1) spur_gear(
-//     //          circ_pitch, teeth=n, thickness=10,
-//     //          shaft_diam=5, helical=ang1, slices=12,
-//     //          gear_spin=-90
-//     //      );
-//     //   right(r2)
-//     //   xrot(ang1+ang2)
-//     //   spur_gear(
-//     //          circ_pitch=circ_pitch, teeth=n, thickness=10,
-//     //          shaft_diam=5, helical=ang2, slices=12,
-//     //          gear_spin=90-180/n
-//     //      );
+//   ang1 = 30;
+//   ang2 = 10;
+//   circ_pitch = 5;
+//   n = 20;
+//   dist = gear_dist_skew(
+//      circ_pitch=circ_pitch,
+//      teeth1=n, teeth2=n,
+//      helical1=ang1, helical2=ang2);
+//   left(dist/2) spur_gear(
+//          circ_pitch, teeth=n, thickness=10,
+//          shaft_diam=5, helical=ang1, slices=12,
+//          gear_spin=-90
+//      );
+//   right(dist/2)
+//   xrot(ang1+ang2)
+//   spur_gear(
+//          circ_pitch=circ_pitch, teeth=n, thickness=10,
+//          shaft_diam=5, helical=ang2, slices=12,
+//          gear_spin=90-180/n
+//      );
 // Example(Anim,Frames=36,VPT=[0,0,0],VPR=[55,0,25],VPD=375): Planetary Gear Assembly
 //   rteeth=56; pteeth=16; cteeth=24;
 //   circ_pitch=5; thick=10; pa=20;
@@ -2837,13 +2839,19 @@ function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, 
 
 
 // Function: gear_dist_skew()
+// Synopsis: Returns the distance between two helical gear centers.
+// Topics: Gears, Parts
+// See Also: gear_dist(), worm(), worm_gear(), pitch_radius(), outer_radius()
 // Usage:
-//   d = gear_dist_skew(circ_pitch, teeth1, profile_shift1, h
+//   dist = gear_dist_skew(mod, teeth1, profile_shift1, helical1, teeth2, profile_shift2, helical2, [pressure_angle=]);
+//   dist = gear_dist_skew(diam_pitch=, teeth1=, [profile_shift1=], [helical1=], teeth2=, [profile_shift2=], [helical2=], [pressure_angle=]);
+//   dist = gear_dist_skew(circ_pitch=, teeth1=, [profile_shift1=], [helical1=], teeth2=, [profile_shift2=], [helical2=], [pressure_angle=]);
 // Description:
 //   Calculate the distance between two helical gears that mesh with non-parallel axes, taking into account
 //   profile shift and the helical angles.  
-function gear_dist_skew(mod,teeth1,profile_shift1=0, helical1, teeth2, profile_shift2=0, helical2, pressure_angle=20) =
+function gear_dist_skew(mod,teeth1,profile_shift1=0, helical1, teeth2, profile_shift2=0, helical2, pressure_angle=20, circ_pitch, diam_pitch) =
   let(
+      mod = module_value(circ_pitch=circ_pitch, diam_pitch=diam_pitch, mod=mod),
       pa_normal_eff = _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1,teeth2,profile_shift2,helical2,pressure_angle),
       dist_adj = 0.5*(teeth1/cos(helical1)^3+teeth2/cos(helical2)^3)*(cos(pressure_angle)/cos(pa_normal_eff)-1),
       ff=echo(y=dist_adj,pa_normal_eff)
@@ -2853,8 +2861,8 @@ function gear_dist_skew(mod,teeth1,profile_shift1=0, helical1, teeth2, profile_s
 
 function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, teeth2, profile_shift2, helical2, pressure_angle) = 
   let(
+      inv = function(a) tan(a) + a*PI/180,
       rhs = 2*(profile_shift1+profile_shift2)/(teeth1/cos(helical1)^3+teeth2/cos(helical2)^3)*tan(pressure_angle) + inv(pressure_angle),
-fdaseee=      echo(rhs=rhs),
       pa_eff_normal = root_find(function (x) inv(x)-rhs, 5, 75)
   )
   pa_eff_normal;
