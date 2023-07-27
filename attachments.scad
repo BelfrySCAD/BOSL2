@@ -862,9 +862,9 @@ module force_tag(tag)
 //       position(TOP) thing();
 //       position(RIGHT) tag("keep_it") thing();
 //   }
-module default_tag(tag,do_tag=false)
+module default_tag(tag,do_tag=true)
 {
-    if ($tag=="") tag(tag) children();
+    if ($tag=="" && do_tag) tag(tag) children();
     else children();
 }
 
