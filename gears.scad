@@ -82,7 +82,7 @@ function _inherit_gear_thickness(thickness) =
 
 // Section: Involute Spur Gears
 // The simplest gear form is the involute spur gear, which is an extrusion of a two dimensional form.
-// Figure(Med,NoAxes): Involute Spur Gear
+// Figure(3D,Med,NoAxes): Involute Spur Gear
 //   spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25);
 // Continues:
 //   The term "involute" refers to the shape of the teeth:  the curves of the teeth involutes of circles, 
