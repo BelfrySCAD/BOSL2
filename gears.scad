@@ -143,7 +143,7 @@ function _inherit_gear_thickness(thickness) =
 // Continues:
 //   In order for the gear teeth to fit together, and to allow space for lubricant, the valleys of the teeth
 //   are made deeper by the `clearance` distance.
-// Figure(2D,Med,NoAxes,VPD=[5.62512,-1.33268,-0.0144912],VPR=[0,0,0],VPD=126): The clearance is extra space at the tooth valley that separates the tooth tip (in green) from the tooth valley below it.  the gap between the top of the tooth (in green) and the bot
+// Figure(2D,Med,NoAxes,VPT=[5.62512,-1.33268,-0.0144912],VPR=[0,0,0],VPD=126): The clearance is extra space at the tooth valley that separates the tooth tip (in green) from the tooth valley below it.  the gap between the top of the tooth (in green) and the bot
 //   intersection(){
 //     rack2d(mod=5, teeth=10, height=15,clearance=undef,pressure_angle=14.5);
 //     rect([35,20]);
@@ -161,7 +161,7 @@ function _inherit_gear_thickness(thickness) =
 // Continues:
 //   Another clearance requirement can present a serious problem when the number of teeth is low.  As the gear rotates, the
 //   teeth may interfere with each other.  This may require undercutting the gear teeth to create space, which weakens the teeth. 
-// Figure(2D,Med,NoAxes,VPD=[0.042845,6.5338,-0.0144912],VPR=[0,0,0],VPD=126):  The green gear with only five teeth has a severe undercut, which weakens its teeth.  This undercut is necessary to avoid interference with the teeth from the other gear during rotation.  Note that the yellow rack tooth is deep into the undercut space.
+// Figure(2D,Med,NoAxes,VPT=[0.042845,6.5338,-0.0144912],VPR=[0,0,0],VPD=126):  The green gear with only five teeth has a severe undercut, which weakens its teeth.  This undercut is necessary to avoid interference with the teeth from the other gear during rotation.  Note that the yellow rack tooth is deep into the undercut space.
 //   ang=16;
 //   rack2d(mod=5, teeth=3, height=15,clearance=.00001,pressure_angle=14.5);
 //   left(2*PI*pitch_radius(mod=5, teeth=5)*ang/360)
@@ -180,7 +180,7 @@ function _inherit_gear_thickness(thickness) =
 //   By default, the gear modules produce corrected gears.  You can override this by specifying the profile shift
 //   yourself.  A small undercut maybe acceptable, for example: a rule of thumb indicates that gears as small as 14
 //   teeth are OK with a 20 degree pressure angle, because the undercut is too small to weaken the teeth significantly.  
-// Figure(2D,Med,NoAxes,VPD=[1.33179,10.6532,-0.0144912],VPR=[0,0,0],VPD=155.556): Basic five tooth gear form on the left.  Corrected gear with profile shifting on the right.  The profile shifted teeth lack the weak undercut section.  The axis of the corrected gear is shifted away from the mating rack.
+// Figure(2D,Med,NoAxes,VPT=[1.33179,10.6532,-0.0144912],VPR=[0,0,0],VPD=155.556): Basic five tooth gear form on the left.  Corrected gear with profile shifting on the right.  The profile shifted teeth lack the weak undercut section.  The axis of the corrected gear is shifted away from the mating rack.
 //   $fn=32;
 //   ang1=-20;
 //   ang2=20;
@@ -191,12 +191,14 @@ function _inherit_gear_thickness(thickness) =
 //   right(3*5*PI/2)
 //     back(gear_dist(mod=5,teeth1=5,teeth2=0))zrot(ang2){spur_gear2d(mod=5, teeth=5, pressure_angle=14.5);color("black")circle(r=1);}
 //   rack2d(teeth=4, height=15, mod=5);
+
+
 // Section: Helical Gears
 //   Helicals gears are a modification of spur gears.  They can replace spur gears in any application.  The teeth are cut
 //   following a slanted, helical path.  The angled teeth engage more gradually than spur gear teeth, so they run more smoothly
 //   and quietly.  A disadvantage of helical gears is that they have thrust along the axis of the gear that must be 
 //   accomodated.  Helical gears also have more sliding friction between the meshing teeth compared to spur gears. 
-// Figure(Med,NoAxes): A Helical Gear
+// Figure(3D,Med,NoAxes): A Helical Gear
 //   spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=-29);
 // Continues:
 //   Helical gears have the same compatibility requirements as spur gears, with the additional requirement that
@@ -207,7 +209,7 @@ function _inherit_gear_thickness(thickness) =
 //   The effective pressure angle of helical gears is larger than the nominal pressure angle.  This can make it possible
 //   to avoid undercutting without having to use profile shifting, so smaller tooth count gears can be more effective
 //   using the helical form. 
-// Figure(Anim,Frames=10,VPD=[43.8006,15.9214,3.52727],VPR=[62.3,0,20.3],VPD=446.129): Meshing compatible helical gears
+// Figure(Anim,Frames=10,VPT=[43.8006,15.9214,3.52727],VPR=[62.3,0,20.3],VPD=446.129): Meshing compatible helical gears
 //   zrot($t*360/18)spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=-29);
 //     right(gear_dist(mod=5,teeth1=18,teeth2=18,helical=29))
 //       zrot(360/18/2)zrot(-$t*360/18)spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=29);
@@ -216,9 +218,18 @@ function _inherit_gear_thickness(thickness) =
 //   sometimes called "screw gears".  In fact, the general requirement for two helical gears to mesh is that the angle 
 //   between the gears' axes must equal the sum of the helical angles of the two gears, thus for parallel axes, the helical
 //   angles must sum to zero.  
-// Figure(Anim,Frames=10): NOT WORKING NOW Two helical gears with 22.5 degree helical angle meshing with their axes at a 45 degree angle. 
-//   //color("lightblue")   zrot($t*360/18)spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=22.5);
-//   //   right(2*mesh_radius(mod=5,teeth=18,helical=22.5))xrot(45)zrot(360/18/2)zrot(-$t*360/18)spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=22.5);
+// Figure(Anim,Frames=10,VPT=[46,0,0],VPR=[55,0,25],VPD=713):
+//   dist = gear_dist(mod=5, teeth1=18, teeth2=18, helical=22.5);
+//   color("lightblue")
+//       zrot($t*360/18)
+//           spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=22.5);
+//   right(dist)
+//       xrot(45)
+//           zrot(360/18/2)
+//               zrot(-$t*360/18)
+//                   spur_gear(mod=5,teeth=18,pressure_angle=20,thickness=25,helical=22.5);
+
+
 // Section: Herringbone Gears
 //   The herringbone gear addresses the problem of axial forces that afflict helical gears by having one section that slopes to the
 //   right and another that slopes to the left.  Herringbone gears also have the advantage of being self-aligning.
