@@ -2947,6 +2947,7 @@ function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, tee
 // Example: 
 //   circ_pitch=5; teeth1=5; teeth2=7; ha1=45; ha2=30; thick=10;
 
+/*
 
    circ_pitch=5; teeth1=10; teeth2=14; ha1=45; ha2=30; thick=10;
    d = .4+gear_dist_skew(circ_pitch=circ_pitch, teeth1, teeth2, helical1=ha1, helical2=ha2);//,profile_shift1=0,profile_shift2=0)+2;
@@ -2962,7 +2963,7 @@ color_overlaps()
    right(d/2) xrot(ang) spur_gear(circ_pitch, teeth2, helical=ha2, thickness=thick,gear_spin=180/teeth2);
 }
 
-
+*/
 
 
 /*
