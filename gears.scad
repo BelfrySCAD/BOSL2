@@ -102,7 +102,6 @@ function _inherit_gear_thickness(thickness) =
 //   }  
 //   base = _base_radius(mod=5, teeth=30);
 //   pitchpt = pitch_radius(mod=5, teeth=30);
-//   color("blue") rot(98.1) stroke([[base,0], [base+12,0]],width=0.25);
 //   color("red"){
 //     zrot(87-360/30) zrot(20,cp=[pitchpt,0]) stroke([[base-5,0],[base+15,0]], width=0.25);
 //     zrot(87-360/30) stroke([[pitchpt,0],[pitchpt+11,0]], width=0.25);
@@ -115,8 +114,8 @@ function _inherit_gear_thickness(thickness) =
 //   `PI*d/teeth` where `d` is the diameter of the pitch circle and `teeth` is the number of teeth on the gear.
 //   This simply divides up the pitch circle into the specified number of teeth.  However, the customary
 //   way to specify metric gears is using the module, the number of teeth that would fit on the diameter of the gear: `m=d/teeth`.
-//   The module is hence the circular pitch divided by a factor of PI.  A third way to specify gear sizes is the diametral pitch,
-//   which is the number of teeth that fit on a gear with a diameter of one inch, or PI times the number of teeth per inch.
+//   The module is hence the circular pitch divided by a factor of π.  A third way to specify gear sizes is the diametral pitch,
+//   which is the number of teeth that fit on a gear with a diameter of one inch, or π times the number of teeth per inch.
 //   Note that for the module or circular pitch, larger values make larger teeth,
 //   but for the diametral pitch, the opposite is true.  Throughout this library, module and circular pitch
 //   are specified basic OpenSCAD units, so if you work in millimeters and want to give circular pitch in inches, be
@@ -126,6 +125,7 @@ function _inherit_gear_thickness(thickness) =
 //   The critical requirements for two gears to mesh are that
 //   - The teeth are the same size
 //   - The pressure angles are identical
+//   .
 //   Increasing pressure angle makes the tooth stronger, increases power transmission, and can reduce tooth interference for
 //   gears with a small number of teeth, but it also increases gear wear and meshing noise.  Higher pressure angles also
 //   increase the force that tries to push the gears apart, and hence the load on the gear axles.  The current standard pressure
@@ -142,7 +142,7 @@ function _inherit_gear_thickness(thickness) =
 // Continues:
 //   In order for the gear teeth to fit together, and to allow space for lubricant, the valleys of the teeth
 //   are made deeper by the `clearance` distance.
-// Figure(2D,Med,NoAxes,VPT=[5.62512,-1.33268,-0.0144912],VPR=[0,0,0],VPD=126): The clearance is extra space at the tooth valley that separates the tooth tip (in green) from the tooth valley below it.  the gap between the top of the tooth (in green) and the bot
+// Figure(2D,Med,NoAxes,VPT=[5.62512,-1.33268,-0.0144912],VPR=[0,0,0],VPD=126): The clearance is extra space at the tooth valley that separates the tooth tip (in green) from the tooth valley below it.  
 //   intersection(){
 //     rack2d(mod=5, teeth=10, height=15, pressure_angle=14.5);
 //     rect([35,20]);
@@ -174,33 +174,34 @@ function _inherit_gear_thickness(thickness) =
 //   A solution to the problem of undercutting is to use profile shifting.  Profile shifting uses a different portion of the
 //   involute curve to form the gear teeth, and this adjustment to the tooth form can eliminate undercutting, while
 //   still allowing the gear to mesh with unmodified gears.  Profile shifting
-//   changes the diameter at which the gear meshes.  A profile shift of `x` will increase the gear mesh radius by `x*m` where m
-//   is the gear modulus.  This means that profile shifting can also be used to fine tune the spacing between gears.
-//   When the gear has many teeth a negative profile shift may be able to bring the
-//   gears slightly closer together, while still avoiding undercutting.  
+//   changes the diameter at which the gear meshes so it no longer meshes at the pitch circle.  A profile shift of `x`
+//   will increase the mesh distance by approximately `x*m` where `m` is the gear module.  The exact adjustment is
+//   a complex calculation that depends on the profile shifts of both meshing gears.  This means that profile shifting
+//   can also be used to fine tune the spacing between gears.  When the gear has many teeth a negative profile shift may
+//   be able to bring the gears slightly closer together, while still avoiding undercutting.  
 //   .
 //   The minimum number of teeth to avoid undercutting is 17 for a pressure angle of 20, but it is 32 for a pressure
 //   angle of 14.5 degrees.  It can be computed as `2/(sin(alpha))^2` where `alpha` is the pressure angle.
 //   By default, the gear modules produce corrected gears.  You can override this by specifying the profile shift
-//   yourself.  A small undercut maybe acceptable, for example: a rule of thumb indicates that gears as small as 14
+//   yourself.  A small undercut may be acceptable, for example: a rule of thumb indicates that gears as small as 14
 //   teeth are OK with a 20 degree pressure angle, because the undercut is too small to weaken the teeth significantly.  
 // Figure(2D,Med,NoAxes,VPT=[1.33179,10.6532,-0.0144912],VPR=[0,0,0],VPD=155.556): Basic five tooth gear form on the left.  Corrected gear with profile shifting on the right.  The profile shifted teeth lack the weak undercut section.  The axis of the corrected gear is shifted away from the mating rack.
 //   $fn=32;
 //   ang1=-20;
 //   ang2=20;
+//   color("blue")
 //   left(2*PI*pitch_radius(mod=5, teeth=5)*ang1/360)
 //   left(3*5*PI/2)
-//     back(gear_dist(mod=5,teeth1=5,profile_shift1=0,teeth2=0))
+//     back(gear_dist(mod=5,teeth1=5,profile_shift1=0,teeth2=0,pressure_angle=14.5))
 //       zrot(ang1)
-//          spur_gear2d(mod=5, teeth=5, profile_shift=0, pressure_angle=14.5, shaft_diam=5);
+//          spur_gear2d(mod=5, teeth=5, profile_shift=0, pressure_angle=14.5, shaft_diam=2);
+//   color("green")
 //   left(2*PI*pitch_radius(mod=5, teeth=5)*ang2/360)
 //   right(3*5*PI/2)
-//     back(gear_dist(mod=5, teeth1=5, teeth2=0))
+//     back(gear_dist(mod=5, teeth1=5, teeth2=0,pressure_angle=14.5))
 //       zrot(ang2)
-//         spur_gear2d(mod=5, teeth=5, pressure_angle=14.5, shaft_diam=5);
-//   rack2d(teeth=4, height=15, mod=5);
-
-
+//         spur_gear2d(mod=5, teeth=5, pressure_angle=14.5, shaft_diam=2);
+//   rack2d(teeth=4, height=15, mod=5, pressure_angle=14.5);
 // Section: Helical Gears
 //   Helicals gears are a modification of spur gears.  They can replace spur gears in any application.  The teeth are cut
 //   following a slanted, helical path.  The angled teeth engage more gradually than spur gear teeth, so they run more smoothly
@@ -2831,20 +2832,30 @@ function gear_dist(
     mod,
     pitch
 ) =
+
     let(
         mod = circular_pitch(pitch, mod, circ_pitch, diam_pitch)/PI,
         profile_shift1 = default(profile_shift1, teeth1>0? auto_profile_shift(teeth1,pressure_angle,helical) : 0),
-        profile_shift2 = default(profile_shift2, teeth2>0? auto_profile_shift(teeth2,pressure_angle,helical) : 0),
+        profile_shift2 = default(profile_shift2, teeth2>0? auto_profile_shift(teeth2,pressure_angle,helical) : 0)
+    )
+    teeth1==0 || teeth2==0? pitch_radius(mod=mod, teeth=teeth1+teeth2, helical=helical) + (profile_shift1+profile_shift2)*mod
+    :
+    let(
         pa_eff = _working_pressure_angle(teeth1,profile_shift1,teeth2,profile_shift2,pressure_angle,helical),
-        pa_transv = atan(tan(pressure_angle)/cos(helical))
+        pa_transv = atan(tan(pressure_angle)/cos(helical)),
+fda=        echo(pa_eff=pa_eff,pa_transv=pa_transv,mod*(teeth1+teeth2)*cos(pa_transv)/cos(pa_eff)/cos(helical)/2)
     )
     mod*(teeth1+teeth2)*cos(pa_transv)/cos(pa_eff)/cos(helical)/2;
 
 function _invol(a) = tan(a) - a*PI/180;
 
-function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, pressure_angle, helical) = 
+function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, pressure_angle, helical) =
   let(
-      pressure_angle = atan(tan(pressure_angle)/cos(helical)),
+      pressure_angle = atan(tan(pressure_angle)/cos(helical))
+  )
+  teeth1==0 || teeth2==0 ? pressure_angle
+  :
+  let(
       rhs = 2*(profile_shift1+profile_shift2)/(teeth1+teeth2)*cos(helical)*tan(pressure_angle) + _invol(pressure_angle),
       pa_eff = root_find(function (x) _invol(x)-rhs, 5, 75)
   )
@@ -2942,14 +2953,16 @@ function get_profile_shift(desired,circ_pitch,teeth1,teeth2,pressure_angle=20,mo
 //   ---
 //   min_teeth = If given, the minimum number of teeth on a gear that has acceptable undercut.
 
-function auto_profile_shift(teeth, pressure_angle=20, helical, min_teeth) =
+function auto_profile_shift(teeth, pressure_angle=20, helical=0, min_teeth) =
+    teeth==0 ? 0:
     let(
+        pressure_angle=atan(tan(pressure_angle)/cos(helical)),
         min_teeth = is_undef(min_teeth)
           ? 2 / pow(sin(pressure_angle),2)
           : min_teeth
     )
-    teeth > floor(min_teeth)? 0 :
-    1 - (teeth / min_teeth);
+    teeth > floor(min_teeth)? 0
+  : (1 - (teeth / min_teeth))/cos(helical);
 
 
 
