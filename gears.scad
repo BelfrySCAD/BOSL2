@@ -154,10 +154,10 @@ function _inherit_gear_thickness(thickness) =
 //   }
 // Continues:
 //   In order for the gear teeth to fit together, and to allow space for lubricant, the valleys of the teeth
-//   are made deeper by the `clearance` distance.
+//   are made deeper by the `clearance` distance.  This defaults to `module/4`.  
 // Figure(2D,Med,NoAxes,VPT=[5.62512,-1.33268,-0.0144912],VPR=[0,0,0],VPD=126): The clearance is extra space at the tooth valley that separates the tooth tip (in green) from the tooth valley below it.  
 //   intersection(){
-//     rack2d(mod=5, teeth=10, height=15, pressure_angle=14.5);
+//     rack2d(mod=5, teeth=10, bottom=15, pressure_angle=14.5);
 //     rect([35,20]);
 //   }  
 //   color("lightgreen")render()
@@ -176,7 +176,7 @@ function _inherit_gear_thickness(thickness) =
 //   teeth may interfere with each other.  This may require undercutting the gear teeth to create space, which weakens the teeth. 
 // Figure(2D,Med,NoAxes,VPT=[0.042845,6.5338,-0.0144912],VPR=[0,0,0],VPD=126):  The green gear with only five teeth has a severe undercut, which weakens its teeth.  This undercut is necessary to avoid interference with the teeth from the other gear during rotation.  Note that the yellow rack tooth is deep into the undercut space.
 //   ang=16;
-//   rack2d(mod=5, teeth=3, height=15, clearance=.00001, pressure_angle=14.5);
+//   rack2d(mod=5, teeth=3, bottom=15, pressure_angle=14.5, rounding=0);
 //   left(2*PI*pitch_radius(mod=5, teeth=5)*ang/360)
 //   color("lightgreen")
 //     back(gear_dist(mod=5, teeth1=5, profile_shift1=0, teeth2=0))
@@ -216,7 +216,7 @@ function _inherit_gear_thickness(thickness) =
 //     back(gear_dist(mod=5, teeth1=5, teeth2=0,pressure_angle=14.5))
 //       zrot(ang2)
 //         spur_gear2d(mod=5, teeth=5, pressure_angle=14.5, shaft_diam=2);
-//   rack2d(teeth=4, height=15, mod=5, pressure_angle=14.5);
+//   rack2d(teeth=4, bottom=15, mod=5, pressure_angle=14.5);
 // Subsection: Helical Gears
 //   Helicals gears are a modification of spur gears.  They can replace spur gears in any application.  The teeth are cut
 //   following a slanted, helical path.  The angled teeth engage more gradually than spur gear teeth, so they run more smoothly
@@ -360,7 +360,7 @@ function _inherit_gear_thickness(thickness) =
 //       profile_shift = 0;
 //       d = gear_dist(circ_pitch=circ_pitch,teeth,0,profile_shift1=profile_shift);
 //       back(d) spur_gear(circ_pitch, teeth, thick, shaft, profile_shift=profile_shift);
-//       rack(circ_pitch, teeth=3, thickness=thick, height=5, orient=BACK);
+//       rack(circ_pitch, teeth=3, thickness=thick, orient=BACK);
 //       color("black") up(thick/2) linear_extrude(height=0.1) {
 //           back(d) dashed_stroke(circle(r=pr), width=strokewidth, closed=true);
 //           dashed_stroke([[-7.5,0],[7.5,0]], width=strokewidth);
@@ -370,7 +370,7 @@ function _inherit_gear_thickness(thickness) =
 //       profile_shift = 0.59;
 //       d = gear_dist(circ_pitch=circ_pitch,teeth,0,profile_shift1=profile_shift);
 //       back(d) spur_gear(circ_pitch, teeth, thick, shaft, profile_shift=profile_shift);
-//       rack(circ_pitch, teeth=3, thickness=thick, height=5, orient=BACK);
+//       rack(circ_pitch, teeth=3, thickness=thick, orient=BACK);
 //       color("black") up(thick/2) linear_extrude(height=0.1) {
 //           back(d)
 //               dashed_stroke(circle(r=pr), width=strokewidth, closed=true);
@@ -401,7 +401,7 @@ function _inherit_gear_thickness(thickness) =
 //   color("#77f") right(d13) zrot(a3) spur_gear(circ_pitch,n3,thickness,hole);
 //   color("#fc7") left(d14)  zrot(a4) spur_gear(circ_pitch,n4,thickness,hole,hide=n4-3);
 //   color("#ccc") fwd(d1r) right(circ_pitch*$t)
-//       rack(pitch=circ_pitch,teeth=n5,thickness=thickness,height=rack_base,anchor=CENTER,orient=BACK);
+//       rack(pitch=circ_pitch,teeth=n5,thickness=thickness,width=rack_base,anchor=CENTER,orient=BACK);
 // Example(NoAxes,VPT=[1.13489,-4.48517,1.04995],VPR=[55,0,25],VPD=139.921): Helical gears meshing with non-parallel shafts
 //   ang1 = 30;
 //   ang2 = 10;
@@ -691,7 +691,7 @@ module spur_gear(
 //   }
 //   module the_rack() {
 //       $fn=72;
-//       rack2d(circ_pitch, teeth=3, height=5);
+//       rack2d(circ_pitch, teeth=3);
 //       up(0.1) color("black")
 //           dashed_stroke([[-7.5,0],[7.5,0]], width=strokewidth);
 //   }
@@ -1040,6 +1040,7 @@ module ring_gear2d(
         assert(is_finite(gear_spin));
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
     ar = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=true);
+    echo(ar=ar);
     attachable(anchor,spin, two_d=true, r=pr) {
         zrot(gear_spin)
         difference() {
@@ -1052,7 +1053,7 @@ module ring_gear2d(
                 clearance = clearance,
                 backlash = backlash,
                 profile_shift = profile_shift,
-                internal = true
+                internal = true && false
             );
         }
         children();
@@ -1066,32 +1067,38 @@ module ring_gear2d(
 // Topics: Gears, Parts
 // See Also: rack2d(), spur_gear(), spur_gear2d(), bevel_gear()
 // Usage: As a Module
-//   rack(pitch, teeth, thickness, height, [pressure_angle=], [backlash=], [clearance=], [helical=]) [ATTACHMENTS];
-//   rack(mod=, teeth=, thickness=, height=, [pressure_angle=], [backlash]=, [clearance=], [helical=]) [ATTACHMENTS];
+//   rack(pitch, teeth, thickness, [base|bottom=|width=], [helical=], [pressure_angle=], [backlash=], [clearance=]) [ATTACHMENTS];
+//   rack(mod=, teeth=, thickness=, [base=|bottom=|width=], [helical=], [pressure_angle=], [backlash]=, [clearance=]) [ATTACHMENTS];
 // Usage: As a Function
-//   vnf = rack(pitch, teeth, thickness, height, [pressure_angle=], [backlash=], [clearance=], [helical=]);
-//   vnf = rack(mod=, teeth=, thickness=, height=, [pressure_angle=], [backlash=], [clearance=], [helical=]);
+//   vnf = rack(pitch, teeth, thickness, [base|bottom=|width=], [helical=], [pressure_angle=], [backlash=], [clearance=]);
+//   vnf = rack(mod=, teeth=, thickness=, [base=|bottom=|width=], [helical=], [pressure_angle=], [backlash=], [clearance=]);
 // Description:
 //   This is used to create a 3D rack, which is a linear bar with teeth that a gear can roll along.
 //   A rack can mesh with any gear that has the same `pitch` and `pressure_angle`.  A helical rack meshes with a gear with the opposite
 //   helical angle.   The rack appears oriented with
-//   its teeth pointed UP, which makes it easy to use the `orient=` argument to point the rack in the direction you require.
+//   its teeth pointed UP, so it will need to be oriented to mesh with gears.  
 //   The pitch line of the rack is aligned with the x axis.  
 //   When called as a function, returns a 3D [VNF](vnf.scad) for the rack.
 //   When called as a module, creates a 3D rack shape.
+//   .
+//   By default the rack has a backing whose height is equal to the height of the teeth.  You can specify a different backing size
+//   or you can specify the total width of the rack (from the bottom of the rack to tooth tips) or the
+//   bottom point of the rack, which is the distance from the pitch line to the bottom of the rack.  
 // Arguments:
 //   pitch = The pitch, or distance in mm between teeth along the rack. Matches up with circular pitch on a spur gear.  Default: 5
 //   teeth = Total number of teeth along the rack.  Default: 20
 //   thickness = Thickness of rack in mm (affects each tooth).  Default: 5
-//   height = Distance from the pitch line of the rack to the back (bottom) of the rack.  Default: 10
+//   backing = Distance from bottom of rack to the roots of the rack's teeth.  (Alternative to bottom or width.)  Default: height of rack teeth
 //   ---
-//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.  Default: 20
-//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
-//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
+//   bottom = Distance from rack's pitch line (the x-axis) to the bottom of the rack.  (Alternative to backing or width)
+//   width = Distance from base of rack to tips of teeth (alternative to bottom and backing).
+//   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
+//   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   helical = The angle of the rack teeth away from perpendicular to the rack length.  Used to match helical spur gear pinions.  Default: 0
 //   profile_shift = Profile shift factor x.
-//   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
-//   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.  Default: 20
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1107,18 +1114,18 @@ module ring_gear2d(
 //   "root-back" = At the base of the teeth, at the back of the rack.
 //   "root-front" = At the base of the teeth, at the front of the rack.
 // Example(NoScales,VPR=[60,0,325],VPD=130):
-//   rack(pitch=5, teeth=10, thickness=5, height=5, pressure_angle=20);
+//   rack(pitch=5, teeth=10, thickness=5);
 // Example(NoScales,VPT=[0.317577,3.42688,7.83665],VPR=[27.7,0,359.8],VPD=139.921): Rack for Helical Gear
-//   rack(pitch=5, teeth=10, thickness=5, height=5, helical=30);
+//   rack(pitch=5, teeth=10, thickness=5, backing=5, helical=30);
 // Example(NoScales): Metric Rack, oriented BACK to align with a gear in default orientation
-//   rack(mod=2, teeth=10, thickness=5, height=5, pressure_angle=14.5,orient=BACK);
+//   rack(mod=2, teeth=10, thickness=5, bottom=5, pressure_angle=14.5,orient=BACK);
 // Example(NoScales,Anim,VPT=[0,0,12],VPD=100,Frames=18): Rack and Pinion with helical teeth
 //   teeth1 = 16; teeth2 = 16;
 //   pitch = 5; thick = 5; helical = 30;
 //   pr = pitch_radius(pitch, teeth2, helical=helical);
 //   pos = 3*(1-2*abs($t-1/2))-1.5;
 //   right(pr*2*PI/teeth2*pos)
-//       rack(pitch, teeth1, thickness=thick, height=5, helical=helical);
+//       rack(pitch, teeth1, thickness=thick, helical=helical);
 //   up(pr)
 //       spur_gear(
 //           pitch, teeth2,
@@ -1130,7 +1137,7 @@ module ring_gear2d(
 // Example(NoAxes,VPT=[-7.10396,-9.70691,3.50121],VPR=[60.2,0,325],VPD=213.262): Skew axis helical gear and rack engagement.
 //    mod=5; teeth=8; helical1=17.5; helical2=22.5;
 //    d = gear_dist_skew(mod=mod, teeth, 0, helical1,helical2);
-//    rack(mod=mod, teeth=5, height=29,thickness=30, helical=helical2, orient=FWD);
+//    rack(mod=mod, teeth=5, thickness=30, helical=helical2, orient=FWD);
 //    color("lightblue")
 //      yrot(-helical1-helical2) fwd(d)
 //      spur_gear(mod=mod, teeth=teeth, helical=helical1, gear_spin=180/teeth, thickness=30);
@@ -1139,7 +1146,8 @@ module rack(
     pitch,
     teeth,
     thickness,
-    height = 10,
+    backing,
+    width, bottom,
     pressure_angle,
     backlash = 0.0,
     clearance,
@@ -1160,7 +1168,6 @@ module rack(
     checks=
         assert(is_integer(teeth) && teeth>0)
         assert(is_finite(thickness) && thickness>0)
-        assert(is_finite(height) && height>0)
         assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
         assert(clearance==undef || (is_finite(clearance) && clearance>=0))
         assert(is_finite(backlash) && backlash>=0)
@@ -1171,6 +1178,16 @@ module rack(
     trans_pitch = pitch / cos(helical);
     a = _adendum(pitch, profile_shift);
     d = _dedendum(pitch, clearance, profile_shift);
+    bottom = is_def(bottom) ?
+                 assert(is_finite(bottom) && bottom>d, "bottom is invalid or too small for teeth")
+                 bottom
+           : is_def(width) ?
+                 assert(is_finite(width) && width>a+d, "Width is invalid or too small for teeth")
+                 width - a
+           : is_def(backing) ?
+                 assert(all_positive([backing]), "Backing must be a positive value")
+                 backing+d
+           : 2*d+a;  // default case
     l = teeth * trans_pitch;
     anchors = [
         named_anchor("tip",         [0,0,a],             BACK),
@@ -1184,7 +1201,7 @@ module rack(
         named_anchor("root-front",  [0,-thickness/2,-d], DOWN),
         named_anchor("root-back",   [0, thickness/2,-d], UP),
     ];
-    size = [l, thickness, 2*height];
+    size = [l, thickness, 2*bottom];
     attachable(anchor,spin,orient, size=size, anchors=anchors) {
         right(gear_travel)
         skew(sxy=-tan(helical)) xrot(90) {
@@ -1192,7 +1209,7 @@ module rack(
                 rack2d(
                     pitch = pitch,
                     teeth = teeth,
-                    height = height,
+                    bottom=bottom, 
                     pressure_angle = PA,
                     backlash = backlash,
                     clearance = clearance,
@@ -1210,7 +1227,7 @@ function rack(
     pitch,
     teeth,
     thickness,
-    height = 10,
+    backing, bottom, width, 
     pressure_angle,
     backlash = 0.0,
     clearance,
@@ -1232,7 +1249,6 @@ function rack(
     )
     assert(is_integer(teeth) && teeth>0)
     assert(is_finite(thickness) && thickness>0)
-    assert(is_finite(height) && height>0)
     assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
     assert(clearance==undef || (is_finite(clearance) && clearance>=0))
     assert(is_finite(backlash) && backlash>=0)
@@ -1244,11 +1260,21 @@ function rack(
         trans_pitch = pitch / cos(helical),
         a = _adendum(pitch, profile_shift),
         d = _dedendum(pitch, clearance, profile_shift),
+        bottom = is_def(bottom) ?
+                     assert(is_finite(bottom) && bottom>d, "bottom is invalid or too small for teeth")
+                     bottom
+               : is_def(width) ?
+                     assert(is_finite(width) && width>a+d, "Width is invalid or too small for teeth")
+                     width - a
+               : is_def(backing) ?
+                     assert(all_positive([backing]), "Backing must be a positive value")
+                     backing+d
+               : 2*d+a,  // default case
         l = teeth * trans_pitch,
         path = rack2d(
             pitch = pitch,
             teeth = teeth,
-            height = height,
+            bottom=bottom, 
             pressure_angle = PA,
             backlash = backlash,
             clearance = clearance,
@@ -1261,7 +1287,7 @@ function rack(
             if (helical) skew(sxy=-tan(helical))
         ]),
         out = apply(m, vnf),
-        size = [l, thickness, 2*height],
+        size = [l, thickness, 2*bottom],
         anchors = [
             named_anchor("tip",         [0,0,a],             BACK),
             named_anchor("tip-left",    [-l/2,0,a],          LEFT),
@@ -1285,39 +1311,45 @@ function rack(
 // Topics: Gears, Parts
 // See Also: rack(), spur_gear(), spur_gear2d(), bevel_gear()
 // Usage: As a Module
-//   rack2d(pitch, teeth, height, [pressure_angle=], [backlash=], [clearance=]) [ATTACHMENTS];
-//   rack2d(mod=, teeth=, height=, [pressure_angle=], [backlash=], [clearance=]) [ATTACHMENTS];
+//   rack2d(pitch, teeth, [base|bottom=|width=], [pressure_angle=], [backlash=], [clearance=]) [ATTACHMENTS];
+//   rack2d(mod=, teeth=, [base=|bottom=|width=], [pressure_angle=], [backlash=], [clearance=]) [ATTACHMENTS];
 // Usage: As a Function
-//   path = rack2d(pitch, teeth, height, [pressure_angle=], [backlash=], [clearance=]);
-//   path = rack2d(mod=, teeth=, height=, [pressure_angle=], [backlash=], [clearance=]);
+//   path = rack2d(pitch, teeth, [base|bottom=|width=], [pressure_angle=], [backlash=], [clearance=]);
+//   path = rack2d(mod=, teeth=, [base=|bottom=|width=], [pressure_angle=], [backlash=], [clearance=]);
 // Description:
-//   This is used to create a 2D rack, which is a linear bar with teeth that a gear can roll along.
-//   A rack can mesh with any gear that has the same `pitch` and `pressure_angle`.
+//   Create a 2D rack, a linear bar with teeth that a gear can roll along.
+//   A rack can mesh with any spur gear or helical gear that has the same `pitch` and `pressure_angle`.  
 //   When called as a function, returns a 2D path for the outline of the rack.
 //   When called as a module, creates a 2D rack shape.
+//   .
+//   By default the rack has a backing whose height is equal to the height of the teeth.  You can specify a different backing size
+//   or you can specify the total width of the rack (from the bottom of the rack to tooth tips) or the
+//   bottom point of the rack, which is the distance from the pitch line to the bottom of the rack.  
 // Arguments:
 //   pitch = The pitch, or distance in mm between teeth along the rack. Matches up with circular pitch on a spur gear.  Default: 5
 //   teeth = Total number of teeth along the rack
-//   height = Height of rack in mm, from pitch line to back of rack.
+//   backing = Distance from bottom of rack to the roots of the rack's teeth.  (Alternative to bottom or width.)  Default: height of rack teeth
 //   ---
-//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
-//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
-//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
+//   bottom = Distance from rack's pitch line (the x-axis) to the bottom of the rack.  (Alternative to backing or width)
+//   width = Distance from base of rack to tips of teeth (alternative to bottom and backing).
+//   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
+//   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   helical = The angle of the rack teeth away from perpendicular to the rack length.  Stretches out the tooth shapes.  Used to match helical spur gear pinions.  Default: 0
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
 //   profile_shift = Profile shift factor x for tooth shape.
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   gear_travel = The distance the rack should be moved by linearly.  Default: 0
 //   rounding = If true, rack tips and valleys are slightly rounded.  Default: true
-//   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
-//   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Extra Anchors:
-//   "adendum" = At the tips of the teeth, at the center of rack.
-//   "adendum-left" = At the tips of the teeth, at the left end of the rack.
-//   "adendum-right" = At the tips of the teeth, at the right end of the rack.
-//   "dedendum" = At the height of the teeth, at the center of rack.
-//   "dedendum-left" = At the height of the teeth, at the left end of the rack.
-//   "dedendum-right" = At the height of the teeth, at the right end of the rack.
+//   "tip" = At the tips of the teeth, at the center of rack.
+//   "tip-left" = At the tips of the teeth, at the left end of the rack.
+//   "tip-right" = At the tips of the teeth, at the right end of the rack.
+//   "root" = At the height of the teeth, at the center of rack.
+//   "root-left" = At the height of the teeth, at the left end of the rack.
+//   "root-right" = At the height of the teeth, at the right end of the rack.
 // Example(2D):
 //   rack2d(pitch=5, teeth=10, height=10, pressure_angle=20);
 // Example(2D): Called as a Function
@@ -1327,7 +1359,7 @@ function rack(
 function rack2d(
     pitch,
     teeth,
-    height = 10,
+    backing,
     pressure_angle,
     backlash = 0,
     clearance,
@@ -1336,6 +1368,7 @@ function rack2d(
     circ_pitch,
     diam_pitch,
     mod,
+    width, bottom,
     gear_travel = 0,
     rounding = true,
     anchor = CENTER,
@@ -1346,18 +1379,27 @@ function rack2d(
         helical = _inherit_gear_helical(helical)
     )
     assert(is_integer(teeth) && teeth>0)
-    assert(is_finite(height) && height>0)
     assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
     assert(clearance==undef || (is_finite(clearance) && clearance>=0))
     assert(is_finite(backlash) && backlash>=0)
     assert(is_finite(helical) && abs(helical)<90)
     assert(is_finite(profile_shift) && abs(profile_shift)<1)
     assert(is_finite(gear_travel))
+    assert(num_defined([width,backing,bottom])<=1, "Can define only one of width, backing and bottom")
     let(
         adendum = _adendum(pitch, profile_shift),
-        dedendum = _dedendum(pitch, clearance, profile_shift)
+        dedendum = _dedendum(pitch, clearance, profile_shift),
+        bottom = is_def(bottom) ?
+                     assert(is_finite(bottom) && bottom>dedendum, "bottom is invalid or too small for teeth")
+                     bottom
+               : is_def(width) ?
+                     assert(is_finite(width) && width>adendum+dedendum, "Width is invalid or too small for teeth")
+                     width - adendum
+               : is_def(backing) ?
+                     assert(all_positive([backing]), "Backing must be a positive value")
+                     backing+dedendum
+               : 2*dedendum+adendum  // default case
     )
-    assert(dedendum < height, "height= is not large enough.")
     let(
         trans_pitch = pitch / cos(helical),
         trans_pa = atan(tan(PA)/cos(helical)),
@@ -1396,18 +1438,18 @@ function rack2d(
                 each apply(m,tooth)
         ],
         path = right(gear_travel, p=[
-            [path2[0].x, -height],
+            [path2[0].x, -bottom],
             each path2,
-            [last(path2).x, -height],
+            [last(path2).x, -bottom],
         ]),
-        size=[l,2*height],
+        size=[l,2*bottom],
         anchors = [
-            named_anchor("adendum",         [   0, adendum,0],  BACK),
-            named_anchor("adendum-left",    [-l/2, adendum,0],  LEFT),
-            named_anchor("adendum-right",   [ l/2, adendum,0],  RIGHT),
-            named_anchor("dedendum",        [   0,-dedendum,0],  BACK),
-            named_anchor("dedendum-left",   [-l/2,-dedendum,0],  LEFT),
-            named_anchor("dedendum-right",  [ l/2,-dedendum,0],  RIGHT),
+            named_anchor("tip",         [   0, adendum,0],  BACK),
+            named_anchor("tip-left",    [-l/2, adendum,0],  LEFT),
+            named_anchor("tip-right",   [ l/2, adendum,0],  RIGHT),
+            named_anchor("root",        [   0,-dedendum,0],  BACK),
+            named_anchor("root-left",   [-l/2,-dedendum,0],  LEFT),
+            named_anchor("root-right",  [ l/2,-dedendum,0],  RIGHT),
         ]
     ) reorient(anchor,spin, two_d=true, size=size, anchors=anchors, p=path);
 
@@ -1416,7 +1458,8 @@ function rack2d(
 module rack2d(
     pitch,
     teeth,
-    height = 10,
+    backing,
+    width, bottom,
     pressure_angle,
     backlash = 0.0,
     clearance,
@@ -1425,7 +1468,7 @@ module rack2d(
     gear_travel = 0,
     circ_pitch,
     diam_pitch,
-    mod,
+    mod, rounding=true, 
     anchor = CENTER,
     spin = 0
 ) {
@@ -1434,42 +1477,52 @@ module rack2d(
     helical = _inherit_gear_helical(helical);
     checks =
         assert(is_integer(teeth) && teeth>0)
-        assert(is_finite(height) && height>0)
         assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
         assert(clearance==undef || (is_finite(clearance) && clearance>=0))
         assert(is_finite(backlash) && backlash>=0)
         assert(is_finite(helical) && abs(helical)<90)
         assert(is_finite(profile_shift) && abs(profile_shift)<1)
-        assert(is_finite(gear_travel));
+        assert(is_finite(gear_travel))
+        assert(num_defined([width,backing,bottom])<=1, "Can define only one of width, backing and bottom");
     trans_pitch = pitch / cos(helical);
     a = _adendum(pitch, profile_shift);
     d = _dedendum(pitch, clearance, profile_shift);
+    bottom = is_def(bottom) ?
+                 assert(is_finite(bottom) && bottom>d, "bottom is invalid or too small for teeth")
+                 bottom
+           : is_def(width) ?
+                 assert(is_finite(width) && width>a+d, "Width is invalid or too small for teeth")
+                 width - a
+           : is_def(backing) ?
+                 assert(all_positive([backing]), "Backing must be a positive value")
+                 backing+d
+           : 2*d+a;  // default case
     l = teeth * trans_pitch;
     path = rack2d(
         pitch = pitch,
         teeth = teeth,
-        height = height,
+        bottom=bottom, 
         pressure_angle = PA,
         backlash = backlash,
         clearance = clearance,
         helical = helical,
+        rounding=rounding, 
         profile_shift= profile_shift
     );
-    size = [l, 2*height];
+    size = [l, 2*bottom];
     anchors = [
-        named_anchor("adendum",         [   0, a,0],  BACK),
-        named_anchor("adendum-left",    [-l/2, a,0],  LEFT),
-        named_anchor("adendum-right",   [ l/2, a,0],  RIGHT),
-        named_anchor("dedendum",        [   0,-d,0],  BACK),
-        named_anchor("dedendum-left",   [-l/2,-d,0],  LEFT),
-        named_anchor("dedendum-right",  [ l/2,-d,0],  RIGHT),
+        named_anchor("tip",         [   0, a,0],  BACK),
+        named_anchor("tip-left",    [-l/2, a,0],  LEFT),
+        named_anchor("tip-right",   [ l/2, a,0],  RIGHT),
+        named_anchor("root",        [   0,-d,0],  BACK),
+        named_anchor("root-left",   [-l/2,-d,0],  LEFT),
+        named_anchor("root-right",  [ l/2,-d,0],  RIGHT),
     ];
     attachable(anchor,spin, two_d=true, size=size, anchors=anchors) {
         right(gear_travel) polygon(path);
         children();
     }
 }
-
 
 
 
@@ -1520,7 +1573,7 @@ module rack2d(
 //   shaft_diam = Diameter of the hole in the center, in mm.  Module use only.  Default: 0 (no shaft hole)
 //   hide = Number of teeth to delete to make this only a fraction of a circle.  Default: 0
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
-//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
 //   cutter_radius = Radius of spiral arc for teeth.  If 0, then gear will not be spiral.  Default: 0
 //   spiral_angle = The base angle for spiral teeth.  Default: 0
@@ -1775,7 +1828,7 @@ module bevel_gear(
 //   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
-//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   profile_shift = Profile shift factor x.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
@@ -1939,7 +1992,7 @@ module worm(
 //   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
-//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   profile_shift = Profile shift factor x.
 //   slices = The number of vertical slices to refine the curve of the worm throat.  Default: 10
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
@@ -2522,7 +2575,7 @@ function _adendum(
 ///   The depth of the gear tooth valley, below the pitch radius.
 /// Arguments:
 ///   circ_pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-///   clearance = If given, sets the clearance between meshing teeth.
+///   clearance = If given, sets the clearance between meshing teeth.  Default: module/4
 ///   profile_shift = Profile shift factor x.
 ///   ---
 ///   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
@@ -2617,7 +2670,7 @@ function pitch_radius(
 //   circ_pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = The number of teeth on the gear.
 //   ---
-//   clearance = If given, sets the clearance between meshing teeth.
+//   clearance = If given, sets the clearance between meshing teeth.  Default: module/4
 //   profile_shift = Profile shift factor x.
 //   internal = If true, calculate for an internal gear.
 //   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
@@ -2663,7 +2716,7 @@ function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, p
 ///   circ_pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 ///   teeth = The number of teeth on the gear.
 ///   ---
-///   clearance = If given, sets the clearance between meshing teeth.
+///   clearance = If given, sets the clearance between meshing teeth.  Default: module/4
 ///   internal = If true, calculate for an internal gear.
 ///   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
 ///   profile_shift = Profile shift factor x.
@@ -2773,7 +2826,7 @@ function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
 //   ---
 //   worm_arc = The arc of the worm to mate with, in degrees. Default: 60 degrees
 //   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fit the work easier.  Default: 1
-//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 // Example:
@@ -2851,7 +2904,7 @@ function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning
 // Example(2D): Profile shifted gear and a rack
 //   mod=3; teeth=8;
 //   d = gear_dist(mod=mod, teeth, 0);
-//   rack2d(mod=mod, teeth=5, height=9);
+//   rack2d(mod=mod, teeth=5, bottom=9);
 //   back(d) spur_gear2d(mod=mod, teeth=teeth, gear_spin=180/teeth);
 // Example(VPT=[-0.0608489,1.3772,-3.68839],VPR=[63.4,0,29.7],VPD=113.336): Profile shifted helical gear and rack 
 //   mod=3; teeth=8; helical=29;
