@@ -2273,17 +2273,14 @@ function _gear_tooth_profile(
 
     steps = 16,
     circ_pitch = circular_pitch(pitch=pitch, circ_pitch=circ_pitch, diam_pitch=diam_pitch, mod=mod),
+    mod = module_value(circ_pitch=circ_pitch),
+    clear = default(clearance, 0.25 * mod),
 
     // Calculate the important circle radii
     arad = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal),
     prad = pitch_radius(circ_pitch, teeth, helical=helical),
     brad = _base_radius(circ_pitch, teeth, pressure_angle, helical=helical),
     rrad = _root_radius(circ_pitch, teeth, clearance, helical=helical, profile_shift=profile_shift, internal=internal),
-
-    adendum = _adendum(circ_pitch=circ_pitch, profile_shift=profile_shift),
-    dedendum = _dedendum(circ_pitch=circ_pitch, clearance=clearance, profile_shift=profile_shift),
-    mod = module_value(circ_pitch=circ_pitch),
-    clear = default(clearance, 0.25 * mod),
 
     srad = max(rrad,brad),
     tthick = circ_pitch/PI / cos(helical) * (PI/2 + 2*profile_shift * tan(pressure_angle)) - backlash,
