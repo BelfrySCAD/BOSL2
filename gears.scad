@@ -2273,6 +2273,8 @@ function _gear_tooth_profile(
 
     steps = 16,
     circ_pitch = circular_pitch(pitch=pitch, circ_pitch=circ_pitch, diam_pitch=diam_pitch, mod=mod),
+    mod = module_value(circ_pitch=circ_pitch),
+    clear = default(clearance, 0.25 * mod),
 
     // Calculate the important circle radii
     arad = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal),
@@ -2281,18 +2283,11 @@ function _gear_tooth_profile(
     rrad = _root_radius(circ_pitch, teeth, clearance, helical=helical, profile_shift=profile_shift, internal=internal),
 
     srad = max(rrad,brad),
-    clear = default(clearance, circ_pitch/PI * 0.25),
     tthick = circ_pitch/PI / cos(helical) * (PI/2 + 2*profile_shift * tan(pressure_angle)) - backlash,
     tang = tthick / prad / 2 * 180 / PI,
 
     // Generate a lookup table for the involute curve angles, by radius
     involute_lup = [
-        if (rrad < brad)
-            each xy_to_polar(arc(n=4, r=min(brad-rrad,clear), corner=[
-                polar_to_xy(rrad,90+180/teeth),
-                polar_to_xy(rrad,90),
-                polar_to_xy(brad,90),
-            ])),
         for (i=[0:5:arad/PI/brad*360])
             let(
                 xy = _involute(brad,i),
@@ -2335,10 +2330,7 @@ function _gear_tooth_profile(
     undercut_lup = [for (i=idx(undercut)) if (i>=uc_min) undercut[i]],
 
     // The u values to use when generating the tooth.
-    us = [
-        for (i=[0.0:0.02:0.2-EPSILON]) i,
-        for (i=[0:1:steps-1]) 0.2 + i/(steps-1)*0.8,
-    ],
+    us = [for (i=[0:1:steps*2]) i/steps/2],
 
     // Find top of undercut.
     undercut_max = max([
@@ -2354,15 +2346,41 @@ function _gear_tooth_profile(
 
     // Generate the left half of the tooth.
     tooth_half_raw = deduplicate([
-        for (u = us) let(
-            r = lerp(rrad, ma_rad, u),
-            a1 = lookup(r, involute_lup) + soff,
-            a2 = lookup(r, undercut_lup),
-            a = internal || r < undercut_lup[0].x? a1 : min(a1,a2)
-        ) if(a<90+180/teeth) polar_to_xy(r, a),
-        for (i=[0:1:cap_steps-1]) let(
-            a = ma_ang + soff - i * (cap_step-1)
-        ) polar_to_xy(ma_rad, a),
+        for (u = us)
+            let(
+                r = lerp(rrad, ma_rad, u),
+                a1 = lookup(r, involute_lup) + soff,
+                a2 = lookup(r, undercut_lup),
+                a = internal || r < undercut_lup[0].x? a1 : min(a1,a2)
+            )
+            if ( internal || r > (rrad+clear) )
+            if (!internal || r < (ma_rad-clear) )
+            if (a < 90+180/teeth)
+            polar_to_xy(r, a),
+        if (!internal)
+            for (i=[0:1:cap_steps-1]) let(
+                a = ma_ang + soff - i * (cap_step-1)
+            ) polar_to_xy(ma_rad, a),
+    ]),
+
+    // Round out the clearance valley
+    rcircum = 2 * PI * (internal? ma_rad : rrad),
+    rpart = (180/teeth-tang)/360,
+    round_r = min(clear, rcircum*rpart),
+    line1 = internal
+          ? select(tooth_half_raw,-2,-1)
+          : select(tooth_half_raw,0,1),
+    line2 = internal
+          ? [[0,ma_rad],[-1,ma_rad]]
+          : zrot(180/teeth, p=[[0,rrad],[1,rrad]]),
+    isect_pt = line_intersection(line1,line2),
+    rcorner = internal
+      ? [last(line1), isect_pt, line2[0]]
+      : [line2[0], isect_pt, line1[0]],
+    rounded_tooth_half = deduplicate([
+        if (!internal) each arc(n=8, r=round_r, corner=rcorner),
+        each tooth_half_raw,
+        if (internal) each arc(n=8, r=round_r, corner=rcorner),
     ]),
 
     // Strip "jaggies" if found.
@@ -2381,14 +2399,20 @@ function _gear_tooth_profile(
             mti = !angs? 0 : min_index(angs),
             out = concat([path[i]], strip_left(path, i + mti + 1))
         ) out,
-    tooth_half = !undercut_max? tooth_half_raw :
-        strip_left(tooth_half_raw, 0),
+    tooth_half = !undercut_max? rounded_tooth_half :
+        strip_left(rounded_tooth_half, 0),
 
     // Mirror the tooth to complete it.
-    tooth = deduplicate([
+    full_tooth = deduplicate([
         each tooth_half,
         each reverse(xflip(tooth_half)),
     ]),
+
+    // Reduce number of vertices.
+    tooth = path_merge_collinear(
+        resample_path(full_tooth, n=ceil(2*steps), closed=false)
+    ),
+
     out = center? fwd(prad, p=tooth) : tooth
 ) out;
 
