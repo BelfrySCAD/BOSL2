@@ -2413,7 +2413,7 @@ function _gear_tooth_profile(
 
     // Reduce number of vertices.
     tooth = path_merge_collinear(
-        resample_path(full_tooth, n=ceil(2*steps), closed=false),
+        resample_path(full_tooth, n=ceil(2*steps), closed=false)
     ),
 
     out = center? fwd(prad, p=tooth) : tooth
