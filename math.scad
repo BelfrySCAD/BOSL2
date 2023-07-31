@@ -602,12 +602,12 @@ function posmod(x,m) =
 // Description:
 //   Takes an angle in degrees and normalizes it to an equivalent angle value between -180 and 180.
 // Example:
-//   a1 = modang(-700,360);  // Returns: 20
-//   a2 = modang(-270,360);  // Returns: 90
-//   a3 = modang(-120,360);  // Returns: -120
-//   a4 = modang(120,360);   // Returns: 120
-//   a5 = modang(270,360);   // Returns: -90
-//   a6 = modang(700,360);   // Returns: -20
+//   a1 = modang(-700);  // Returns: 20
+//   a2 = modang(-270);  // Returns: 90
+//   a3 = modang(-120);  // Returns: -120
+//   a4 = modang(120);   // Returns: 120
+//   a5 = modang(270);   // Returns: -90
+//   a6 = modang(700);   // Returns: -20
 function modang(x) =
     assert( is_finite(x), "Input must be a finite number.")
     let(xx = posmod(x,360)) xx<180? xx : xx-360;
