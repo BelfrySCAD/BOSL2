@@ -2282,7 +2282,8 @@ function _gear_tooth_profile(
 
     adendum = _adendum(circ_pitch=circ_pitch, profile_shift=profile_shift),
     dedendum = _dedendum(circ_pitch=circ_pitch, clearance=clearance, profile_shift=profile_shift),
-    clear = abs(dedendum-adendum),
+    mod = module_value(circ_pitch=circ_pitch),
+    clear = default(clearance, 0.25 * mod),
 
     srad = max(rrad,brad),
     tthick = circ_pitch/PI / cos(helical) * (PI/2 + 2*profile_shift * tan(pressure_angle)) - backlash,
@@ -2290,12 +2291,6 @@ function _gear_tooth_profile(
 
     // Generate a lookup table for the involute curve angles, by radius
     involute_lup = [
-        if (clear > 0 && false)
-            each xy_to_polar(
-                arc(n=16, r=clear, corner=[
-                    [-0.1,rrad], [0,rrad], [0,rrad+clear]
-                ])
-            ),
         for (i=[0:5:arad/PI/brad*360])
             let(
                 xy = _involute(brad,i),
@@ -2361,9 +2356,9 @@ function _gear_tooth_profile(
                 a2 = lookup(r, undercut_lup),
                 a = internal || r < undercut_lup[0].x? a1 : min(a1,a2)
             )
-            if( internal || r > (rrad+clear) )
-            if(!internal || r < (ma_rad-clear) )
-            if(a<90+180/teeth)
+            if ( internal || r > (rrad+clear) )
+            if (!internal || r < (ma_rad-clear) )
+            if (a < 90+180/teeth)
             polar_to_xy(r, a),
         if (!internal)
             for (i=[0:1:cap_steps-1]) let(
