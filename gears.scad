@@ -1040,7 +1040,6 @@ module ring_gear2d(
         assert(is_finite(gear_spin));
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
     ar = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=true);
-    echo(ar=ar);
     attachable(anchor,spin, two_d=true, r=pr) {
         zrot(gear_spin)
         difference() {
@@ -1053,7 +1052,7 @@ module ring_gear2d(
                 clearance = clearance,
                 backlash = backlash,
                 profile_shift = profile_shift,
-                internal = true && false
+                internal = true 
             );
         }
         children();
