@@ -1510,7 +1510,8 @@ function rack2d(
 ) = let(
         pitch = _inherit_gear_pitch("rack2d()",pitch, circ_pitch, diam_pitch, mod, warn=false),
         PA = _inherit_gear_pa(pressure_angle),
-        helical = _inherit_gear_helical(helical)
+        helical = _inherit_gear_helical(helical),
+        mod = module_value(circ_pitch=pitch)
     )
     assert(is_integer(teeth) && teeth>0)
     assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
@@ -1523,6 +1524,7 @@ function rack2d(
     let(
         adendum = _adendum(pitch, profile_shift),
         dedendum = _dedendum(pitch, clearance, profile_shift),
+        clear = default(clearance, 0.25 * mod),
         bottom = is_def(bottom) ?
                      assert(is_finite(bottom) && bottom>dedendum, "bottom is invalid or too small for teeth")
                      bottom
@@ -1541,7 +1543,6 @@ function rack2d(
         l = teeth * trans_pitch,
         ax = ang_adj_to_opp(trans_pa, adendum),
         dx = ang_adj_to_opp(trans_pa, dedendum),
-        clear = dedendum - adendum,
         poff = tthick/2 - backlash,
         tooth = [
             [-trans_pitch/2, -dedendum],
