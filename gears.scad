@@ -1351,9 +1351,9 @@ function rack(
 //   "root-left" = At the height of the teeth, at the left end of the rack.
 //   "root-right" = At the height of the teeth, at the right end of the rack.
 // Example(2D):
-//   rack2d(pitch=5, teeth=10, height=10, pressure_angle=20);
+//   rack2d(pitch=5, teeth=10);
 // Example(2D): Called as a Function
-//   path = rack2d(pitch=8, teeth=8, height=10, pressure_angle=20);
+//   path = rack2d(pitch=8, teeth=8, pressure_angle=25);
 //   polygon(path);
 
 function rack2d(
@@ -2909,8 +2909,9 @@ function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning
 // Example(VPT=[-0.0608489,1.3772,-3.68839],VPR=[63.4,0,29.7],VPD=113.336): Profile shifted helical gear and rack 
 //   mod=3; teeth=8; helical=29;
 //   d = gear_dist(mod=mod, teeth, 0, helical);
-//   rack(mod=mod, teeth=5, height=9, helical=helical, orient=FWD);
-//   fwd(d) spur_gear(mod=mod, teeth=teeth, helical=-helical, gear_spin=180/teeth);
+//   rack(mod=mod, teeth=5, helical=helical, orient=FWD);
+//   color("lightblue")
+//     fwd(d) spur_gear(mod=mod, teeth=teeth, helical=-helical, gear_spin=180/teeth);
 function gear_dist(
     teeth1,
     teeth2,
