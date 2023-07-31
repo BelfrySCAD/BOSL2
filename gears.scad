@@ -2441,7 +2441,7 @@ function _gear_tooth_profile(
 //   ---
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
-// Example(VPT=[0,31,0];VPR=[0,0,0];VPD=40):
+// Example(2D,Med,VPT=[0,31,0],VPR=[0,0,0],VPD=40):
 //   $fn=144;
 //   teeth=20;
 //   circ_pitch = circular_pitch(diam_pitch=8);
@@ -2457,9 +2457,9 @@ function _gear_tooth_profile(
 //          zrot(30) text("Circular Pitch", size=1);
 //   }
 // Example:
-//   circ_pitch = circular_pitch(circ_pitch=5);
-//   circ_pitch = circular_pitch(diam_pitch=12);
-//   circ_pitch = circular_pitch(mod=2);
+//   circ_pitch1 = circular_pitch(circ_pitch=5);
+//   circ_pitch2 = circular_pitch(diam_pitch=12);
+//   circ_pitch3 = circular_pitch(mod=2);
 
 function circular_pitch(circ_pitch, mod, pitch, diam_pitch) =
     assert(one_defined([pitch, mod, circ_pitch, diam_pitch], "pitch,mod,circ_pitch,diam_pitch"))
@@ -2487,9 +2487,9 @@ function circular_pitch(circ_pitch, mod, pitch, diam_pitch) =
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 // Example:
-//   diam_pitch = diametral_pitch(mod=2);
-//   diam_pitch = diametral_pitch(circ_pitch=8);
-//   diam_pitch = diametral_pitch(diam_pitch=16);
+//   diam_pitch1 = diametral_pitch(mod=2);
+//   diam_pitch2 = diametral_pitch(circ_pitch=8);
+//   diam_pitch3 = diametral_pitch(diam_pitch=16);
 
 function diametral_pitch(circ_pitch, mod, pitch, diam_pitch) =
     let( circ_pitch = circular_pitch(pitch, mod, circ_pitch, diam_pitch) )
@@ -2541,9 +2541,9 @@ function pitch_value(mod, circ_pitch, diam_pitch) =
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 // Example:
-//   mod = module_value(circ_pitch=8);
-//   mod = module_value(mod=2);
-//   mod = module_value(diam_pitch=16);
+//   mod1 = module_value(circ_pitch=8);
+//   mod2 = module_value(mod=2);
+//   mod3 = module_value(diam_pitch=16);
 
 function module_value(circ_pitch, mod, pitch, diam_pitch) =
     let( circ_pitch = circular_pitch(pitch, mod, circ_pitch, diam_pitch) )
@@ -2653,12 +2653,12 @@ function _dedendum(
 //   pr = pitch_radius(diam_pitch=10, teeth=11);
 //   pr = pitch_radius(mod=2, teeth=20);
 //   pr = pitch_radius(mod=2, teeth=20, helical=30);
-// Example(2D):
+// Example(2D,Med,NoScales):
 //   $fn=144;
 //   teeth=17; circ_pitch = 5;
 //   pr = pitch_radius(circ_pitch, teeth);
-//   stroke(spur_gear2d(circ_pitch, teeth), width=0.1);
-//   color("blue") dashed_stroke(circle(r=pr), width=0.1);
+//   stroke(spur_gear2d(circ_pitch, teeth), width=0.2);
+//   color("blue") dashed_stroke(circle(r=pr), width=0.2);
 //   color("black") {
 //       stroke([[0,0],polar_to_xy(pr,45)],
 //           endcaps="arrow", width=0.3);
@@ -2704,12 +2704,12 @@ function pitch_radius(
 //   or = outer_radius(circ_pitch=5, teeth=20, helical=30);
 //   or = outer_radius(diam_pitch=10, teeth=17);
 //   or = outer_radius(mod=2, teeth=16);
-// Example(2D):
+// Example(2D,Med,NoScales):
 //   $fn=144;
 //   teeth=17; circ_pitch = 5;
 //   or = outer_radius(circ_pitch, teeth);
-//   stroke(spur_gear2d(circ_pitch, teeth), width=0.1);
-//   color("blue") dashed_stroke(circle(r=or), width=0.1);
+//   stroke(spur_gear2d(circ_pitch, teeth), width=0.2);
+//   color("blue") dashed_stroke(circle(r=or), width=0.2);
 //   color("black") {
 //       stroke([[0,0],polar_to_xy(or,45)],
 //           endcaps="arrow", width=0.3);
@@ -2909,7 +2909,7 @@ function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning
 //   d = gear_dist(circ_pitch=circ_pitch, teeth1, teeth2);
 //   spur_gear2d(circ_pitch, teeth1, gear_spin=-90);
 //   right(d) spur_gear2d(circ_pitch, teeth2, gear_spin=90-180/teeth2);
-// Example: Helical gears (with auto profile shifting on one of the gears)
+// Example(2D): Helical gears (with auto profile shifting on one of the gears)
 //   circ_pitch=5; teeth1=7; teeth2=24; helical=37;
 //   d = gear_dist(circ_pitch=circ_pitch, teeth1, teeth2, helical);
 //   spur_gear(circ_pitch, teeth1, helical=helical, gear_spin=-90);
@@ -2929,7 +2929,7 @@ function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning
 //   d = gear_dist(mod=mod, teeth, 0);
 //   rack2d(mod=mod, teeth=5, bottom=9);
 //   back(d) spur_gear2d(mod=mod, teeth=teeth, gear_spin=180/teeth);
-// Example(VPT=[-0.0608489,1.3772,-3.68839],VPR=[63.4,0,29.7],VPD=113.336): Profile shifted helical gear and rack 
+// Example(3D,VPT=[-0.0608489,1.3772,-3.68839],VPR=[63.4,0,29.7],VPD=113.336): Profile shifted helical gear and rack 
 //   mod=3; teeth=8; helical=29;
 //   d = gear_dist(mod=mod, teeth, 0, helical);
 //   rack(mod=mod, teeth=5, helical=helical, orient=FWD);
@@ -2998,7 +2998,7 @@ function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, 
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   circ_pitch = distance between teeth around the pitch circle.
 //   pressure_angle = The pressure angle of the gear.
-// Example: Non-parallel Helical Gears (without any profile shifting)
+// Example(3D): Non-parallel Helical Gears (without any profile shifting)
 //   circ_pitch=5; teeth1=15; teeth2=24; ha1=45; ha2=30; thick=10;
 //   d = gear_dist_skew(circ_pitch=circ_pitch, teeth1, teeth2, helical1=ha1, helical2=ha2);
 //   left(d/2) spur_gear(circ_pitch, teeth1, helical=ha1, thickness=thick, gear_spin=-90);
@@ -3035,7 +3035,7 @@ function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, tee
 //   Compute the correct skew angle between the axes of two profile shifted helical gears.  When profile shifting is zero, or when one of
 //   the gears is a rack, this angle is simply the sum of the helical angles of the two gears.  But with profile shifted gears, a small
 //   correction to the skew angle is needed for proper meshing.  
-// Example(Med,NoAxes,VPT=[-2.62091,2.01048,-1.31405],VPR=[55,0,25],VPD=74.4017): These gears are auto profile shifted and as a result, do not mesh at the sum of their helical angles, but at 2.5 degrees more.  
+// Example(3D,Med,NoAxes,VPT=[-2.62091,2.01048,-1.31405],VPR=[55,0,25],VPD=74.4017): These gears are auto profile shifted and as a result, do not mesh at the sum of their helical angles, but at 2.5 degrees more.  
 //   circ_pitch=5; teeth1=12; teeth2=7; ha1=25; ha2=30; thick=10;
 //   d = gear_dist_skew(circ_pitch=circ_pitch, teeth1, teeth2, ha1, ha2);
 //   ang = gear_skew_angle(circ_pitch=circ_pitch, teeth1, teeth2, helical1=ha1, helical2=ha2);  // Returns 57.7
@@ -3094,7 +3094,7 @@ function get_profile_shift(desired,circ_pitch,teeth1,teeth2,pressure_angle=20,mo
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), pitch_radius(), outer_radius()
 // Usage:
-//   x = auto_profile_shift(teeth, pressure_angle);
+//   x = auto_profile_shift(teeth, [pressure_angle], [helical]);
 //   x = auto_profile_shift(teeth, min_teeth=);
 // Description:
 //   Calculates the recommended profile shift to avoid gear tooth undercutting.
