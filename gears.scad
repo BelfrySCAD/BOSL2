@@ -270,7 +270,7 @@ function _inherit_gear_thickness(thickness) =
 // Subsection: Ring Gears (Internal Gears)
 //   A ring gear (or internal gear) is a gear where the teeth are on the inside of a circle.  Such gears must be mated
 //   to a regular (external) gear, which rotates around the inside.
-// Figure(2D,Med,NoAxes,VPT=[0.491171,1.07815,0.495977],VPD=292.705): A interior or ring gear (yellow) with a mating spur gear (blue)
+// Figure(2D,Med,NoAxes,VPT=[0.491171,1.07815,0.495977],VPR=[0,0,0],VPD=292.705): A interior or ring gear (yellow) with a mating spur gear (blue)
 //   teeth1=18;
 //   teeth2=30;
 //   ps1=undef;
@@ -290,7 +290,7 @@ function _inherit_gear_thickness(thickness) =
 //    teeth is small or the teeth counts of the ring gear and spur gear are too close together.  The mating spur gear must
 //    have few enough teeth so that the teeth don't interfere on the other side of the ring.  Very small spur gears can interfere
 //    on the tips of the ring gear's teeth.  
-// Figure(2D,Med,NoAxes,VPT=[-1.16111,0.0525612,0.495977],VPD=213.382): The red regions show interference between the two gears: the 18 tooth spur gear does not fit inside the 20 tooth ring gear. 
+// Figure(2D,Med,NoAxes,VPT=[-1.16111,0.0525612,0.495977],VPR=[0,0,0],VPD=213.382): The red regions show interference between the two gears: the 18 tooth spur gear does not fit inside the 20 tooth ring gear. 
 //    teeth1=18;
 //    teeth2=20;
 //    ps1=undef;
