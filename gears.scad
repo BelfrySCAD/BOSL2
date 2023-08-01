@@ -1997,8 +1997,8 @@ module bevel_gear(
 // Example: Left Handed
 //   worm(circ_pitch=8, d=30, l=50, starts=3, left_handed=true, $fn=72);
 // Example: Called as Function
-   vnf = worm(circ_pitch=8, d=35, l=50, starts=2, left_handed=true, pressure_angle=20, $fn=72);
-   vnf_polyhedron(vnf);
+//   vnf = worm(circ_pitch=8, d=35, l=50, starts=2, left_handed=true, pressure_angle=20, $fn=72);
+//   vnf_polyhedron(vnf);
 
 function worm(
     circ_pitch,
