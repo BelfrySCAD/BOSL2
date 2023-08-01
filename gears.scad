@@ -1232,6 +1232,7 @@ module ring_gear2d(
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   helical = The angle of the rack teeth away from perpendicular to the rack length.  Used to match helical spur gear pinions.  Default: 0
+//   herringbone = If true, and helical is set, creates a herringbone rack.
 //   profile_shift = Profile shift factor x.
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.  Default: 20
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
@@ -1289,8 +1290,9 @@ module rack(
     backlash = 0.0,
     clearance,
     helical,
+    herringbone = false,
     profile_shift = 0,
-    gear_travel=0,
+    gear_travel = 0,
     circ_pitch,
     diam_pitch,
     mod,
@@ -1309,7 +1311,7 @@ module rack(
         assert(clearance==undef || (is_finite(clearance) && clearance>=0))
         assert(is_finite(backlash) && backlash>=0)
         assert(is_finite(helical) && abs(helical)<90)
-        //assert(is_bool(herringbone))
+        assert(is_bool(herringbone))
         assert(is_finite(profile_shift) && abs(profile_shift)<1)
         assert(is_finite(gear_travel));
     trans_pitch = pitch / cos(helical);
@@ -1341,18 +1343,36 @@ module rack(
     size = [l, thickness, 2*bottom];
     attachable(anchor,spin,orient, size=size, anchors=anchors) {
         right(gear_travel)
-        skew(sxy=-tan(helical)) xrot(90) {
-            linear_extrude(height=thickness, center=true, convexity=teeth*2) {
-                rack2d(
-                    pitch = pitch,
-                    teeth = teeth,
-                    bottom=bottom, 
-                    pressure_angle = PA,
-                    backlash = backlash,
-                    clearance = clearance,
-                    helical = helical,
-                    profile_shift = profile_shift
-                );
+        xrot(90) {
+            if (herringbone) {
+                zflip_copy()
+                skew(axz=-helical) down(0.01)
+                linear_extrude(height=thickness/2, center=false, convexity=teeth*2) {
+                    rack2d(
+                        pitch = pitch,
+                        teeth = teeth,
+                        bottom = bottom,
+                        pressure_angle = PA,
+                        backlash = backlash,
+                        clearance = clearance,
+                        helical = helical,
+                        profile_shift = profile_shift
+                    );
+                }
+            } else {
+                skew(axz=helical)
+                linear_extrude(height=thickness, center=true, convexity=teeth*2) {
+                    rack2d(
+                        pitch = pitch,
+                        teeth = teeth,
+                        bottom = bottom,
+                        pressure_angle = PA,
+                        backlash = backlash,
+                        clearance = clearance,
+                        helical = helical,
+                        profile_shift = profile_shift
+                    );
+                }
             }
         }
         children();
@@ -1369,11 +1389,12 @@ function rack(
     backlash = 0.0,
     clearance,
     helical,
+    herringbone = false,
     profile_shift = 0,
     circ_pitch,
     diam_pitch,
     mod,
-    gear_travel=0,
+    gear_travel = 0,
     anchor = CENTER,
     spin = 0,
     orient = UP
@@ -1390,7 +1411,7 @@ function rack(
     assert(clearance==undef || (is_finite(clearance) && clearance>=0))
     assert(is_finite(backlash) && backlash>=0)
     assert(is_finite(helical) && abs(helical)<90)
-    //assert(is_bool(herringbone))
+    assert(is_bool(herringbone))
     assert(is_finite(profile_shift) && abs(profile_shift)<1)
     assert(is_finite(gear_travel))
     let(
@@ -1411,19 +1432,23 @@ function rack(
         path = rack2d(
             pitch = pitch,
             teeth = teeth,
-            bottom=bottom, 
+            bottom = bottom,
             pressure_angle = PA,
             backlash = backlash,
             clearance = clearance,
             helical = helical,
             profile_shift = profile_shift
         ),
-        vnf = linear_sweep(path, height=thickness, anchor="origin", orient=FWD),
-        m = product([
-            right(gear_travel),
-            if (helical) skew(sxy=-tan(helical))
-        ]),
-        out = apply(m, vnf),
+        vnf = herringbone
+          ? sweep(path, [
+                left(adj_ang_to_opp(thickness/2,helical)) *
+                    back(thickness/2) * xrot(90),
+                xrot(90),
+                left(adj_ang_to_opp(thickness/2,helical)) *
+                    fwd(thickness/2) * xrot(90),
+            ], style="alt", orient=FWD)
+          : skew(axy=-helical, p=linear_sweep(path, height=thickness, anchor="origin", orient=FWD)),
+        out = right(gear_travel, p=vnf),
         size = [l, thickness, 2*bottom],
         anchors = [
             named_anchor("tip",         [0,0,a],             BACK),
