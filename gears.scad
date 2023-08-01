@@ -49,10 +49,10 @@ function _inherit_gear_pitch(fname,pitch,circ_pitch,diam_pitch,mod,warn=true) =
         circ_pitch :
     diam_pitch != undef?
         assert(is_finite(diam_pitch) && diam_pitch>0)
-        pitch_value(diam_pitch=diam_pitch) :
+        circular_pitch(diam_pitch=diam_pitch) :
     mod != undef?
         assert(is_finite(mod) && mod>0)
-        pitch_value(mod) :
+        circular_pitch(mod=mod) :
     $parent_gear_pitch != undef? $parent_gear_pitch :
     5;
 
@@ -270,7 +270,7 @@ function _inherit_gear_thickness(thickness) =
 // Subsection: Ring Gears (Internal Gears)
 //   A ring gear (or internal gear) is a gear where the teeth are on the inside of a circle.  Such gears must be mated
 //   to a regular (external) gear, which rotates around the inside.
-// Figure(2D,Med,NoAxes,VPT =[0.491171,1.07815,0.495977],VPD=292.705): A interior or ring gear (yellow) with a mating spur gear (blue)
+// Figure(2D,Med,NoAxes,VPT=[0.491171,1.07815,0.495977],VPD=292.705): A interior or ring gear (yellow) with a mating spur gear (blue)
 //   teeth1=18;
 //   teeth2=30;
 //   ps1=undef;
@@ -348,7 +348,7 @@ function _inherit_gear_thickness(thickness) =
 //    ps2=auto_profile_shift(teeth=teeth1);
 //    mod=3;
 //    d = gear_dist(mod=mod, teeth1=teeth1, teeth2=teeth2,profile_shift1=ps1, profile_shift2=ps2,helical=0, internal2=true);
-//    ang = 1;
+//    ang = .5;
 //    color_overlaps(){
 //      ring_gear2d(mod=mod, teeth=teeth2,profile_shift=ps2,helical=0,backing=4);
 //      zrot(ang*360/teeth2)
@@ -417,7 +417,7 @@ function _inherit_gear_thickness(thickness) =
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   internal = If true, create a mask for difference()ing from something else.
-//   profile_shift = Profile shift factor x.
+//   profile_shift = Profile shift factor x.  Default: "auto"
 //   herringbone = If true, and helical is set, creates a herringbone gear.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -551,7 +551,7 @@ function spur_gear(
     helical,
     interior,
     internal,
-    profile_shift,
+    profile_shift="auto",
     slices,
     herringbone=false,
     diam_pitch,
@@ -569,7 +569,7 @@ function spur_gear(
         PA = _inherit_gear_pa(pressure_angle),
         helical = _inherit_gear_helical(helical, invert=!internal),
         thickness = _inherit_gear_thickness(thickness),
-        profile_shift = default(profile_shift, auto_profile_shift(teeth,PA,helical))
+        profile_shift = auto_profile_shift(teeth,PA,helical,profile_shift=profile_shift)
     )
     assert(is_integer(teeth) && teeth>3)
     assert(is_finite(thickness) && thickness>0)
@@ -581,7 +581,6 @@ function spur_gear(
     assert(is_finite(helical) && abs(helical)<90)
     assert(is_bool(herringbone))
     assert(slices==undef || (is_integer(slices) && slices>0))
-    assert(is_finite(profile_shift) && abs(profile_shift)<1)
     assert(is_finite(gear_spin))
     let(
         pr = pitch_radius(circ_pitch, teeth, helical),
@@ -626,7 +625,7 @@ module spur_gear(
     helical,
     internal,
     interior,
-    profile_shift,
+    profile_shift="auto",
     slices,
     herringbone=false,
     pitch,
@@ -643,7 +642,7 @@ module spur_gear(
     PA = _inherit_gear_pa(pressure_angle);
     helical = _inherit_gear_helical(helical, invert=!internal);
     thickness = _inherit_gear_thickness(thickness);
-    profile_shift = default(profile_shift, auto_profile_shift(teeth,PA,helical));
+    profile_shift = auto_profile_shift(teeth,PA,helical,profile_shift=profile_shift);
     checks =
         assert(is_integer(teeth) && teeth>3)
         assert(is_finite(thickness) && thickness>0)
@@ -654,7 +653,6 @@ module spur_gear(
         assert(is_finite(backlash) && backlash>=0)
         assert(is_finite(helical) && abs(helical)<90)
         assert(is_bool(herringbone))
-        assert(is_finite(profile_shift) && abs(profile_shift)<1)
         assert(slices==undef || (is_integer(slices) && slices>0))
         assert(is_finite(gear_spin));
     pr = pitch_radius(circ_pitch, teeth, helical);
@@ -747,7 +745,7 @@ module spur_gear(
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   helical = The angle of the rack teeth away from perpendicular to the gear axis of rotation.  Stretches out the tooth shapes.  Used to match helical spur gear pinions.  Default: 0
 //   internal = If true, create a mask for difference()ing from something else.
-//   profile_shift = Profile shift factor x.
+//   profile_shift = Profile shift factor x.  Default: "auto"
 //   shaft_diam = If given, the diameter of the central shaft hole.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
@@ -819,7 +817,7 @@ function spur_gear2d(
     backlash = 0.0,
     internal,
     interior,
-    profile_shift,
+    profile_shift="auto",
     helical,
     shaft_diam = 0,
     pitch,
@@ -834,7 +832,7 @@ function spur_gear2d(
         circ_pitch = _inherit_gear_pitch("spur_gear2d()", pitch, circ_pitch, diam_pitch, mod),
         PA = _inherit_gear_pa(pressure_angle),
         helical = _inherit_gear_helical(helical, invert=!internal),
-        profile_shift = default(profile_shift, auto_profile_shift(teeth,PA,helical))
+        profile_shift = auto_profile_shift(teeth,PA,helical,profile_shift=profile_shift)
     )
     assert(is_integer(teeth) && teeth>3)
     assert(is_finite(shaft_diam) && shaft_diam>=0)
@@ -842,7 +840,6 @@ function spur_gear2d(
     assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
     assert(clearance==undef || (is_finite(clearance) && clearance>=0))
     assert(is_finite(backlash) && backlash>=0)
-    assert(is_finite(profile_shift) && abs(profile_shift)<1)
     assert(is_finite(helical) && abs(helical)<90)
     assert(is_finite(gear_spin))
     let(
@@ -879,7 +876,7 @@ module spur_gear2d(
     backlash = 0.0,
     internal,
     interior,
-    profile_shift,
+    profile_shift="auto",
     helical,
     shaft_diam = 0,
     pitch,
@@ -894,7 +891,7 @@ module spur_gear2d(
     circ_pitch = _inherit_gear_pitch("spur_gear2d()", pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
     helical = _inherit_gear_helical(helical, invert=!internal);
-    profile_shift = default(profile_shift, auto_profile_shift(teeth,PA,helical));
+    profile_shift = auto_profile_shift(teeth,PA,helical,profile_shift=profile_shift);
     checks =
         assert(is_integer(teeth) && teeth>3)
         assert(is_finite(shaft_diam) && shaft_diam>=0)
@@ -902,7 +899,6 @@ module spur_gear2d(
         assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
         assert(clearance==undef || (is_finite(clearance) && clearance>=0))
         assert(is_finite(backlash) && backlash>=0)
-        assert(is_finite(profile_shift) && abs(profile_shift)<1)
         assert(is_finite(helical) && abs(helical)<90)
         assert(is_finite(gear_spin));
     rgn = spur_gear2d(
@@ -961,7 +957,7 @@ module spur_gear2d(
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
 //   helical = The angle of the rack teeth away from perpendicular to the gear axis of rotation.  Stretches out the tooth shapes.  Used to match helical spur gear pinions.  Default: 0
 //   herringbone = If true, and helical is set, creates a herringbone gear.
-//   profile_shift = Profile shift factor x for tooth profile.
+//   profile_shift = Profile shift factor x for tooth profile.  Default: 0
 //   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
@@ -990,7 +986,7 @@ module ring_gear(
     pressure_angle,
     helical,
     herringbone = false,
-    profile_shift,
+    profile_shift=0,
     clearance,
     backlash = 0.0,
     or,od,width,
@@ -1007,8 +1003,8 @@ module ring_gear(
     PA = _inherit_gear_pa(pressure_angle);
     helical = _inherit_gear_helical(helical);
     thickness = _inherit_gear_thickness(thickness);
-    profile_shift = default(profile_shift, auto_profile_shift(teeth,PA,helical));
     checks =
+        assert(is_finite(profile_shift), "Profile shift for ring gears must be numerical")
         assert(is_integer(teeth) && teeth>3)
         assert(is_finite(thickness) && thickness>0)
         assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
@@ -1016,7 +1012,6 @@ module ring_gear(
         assert(is_bool(herringbone))
         assert(clearance==undef || (is_finite(clearance) && clearance>=0))
         assert(is_finite(backlash) && backlash>=0)
-        assert(is_finite(profile_shift) && abs(profile_shift)<1)
         assert(slices==undef || (is_integer(slices) && slices>0))
         assert(num_defined([backing,or,od,width])<=1, "Cannot define more than one of backing, or, od and width")
         assert(is_finite(gear_spin));
@@ -1107,7 +1102,7 @@ module ring_gear(
 //   width = width of the ring, measuring from tips of teeth to outside of ring.  
 //   helical = The angle of the rack teeth away from perpendicular to the gear axis of rotation.  Stretches out the tooth shapes.  Used to match helical spur gear pinions.  Default: 0
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
-//   profile_shift = Profile shift factor x for tooth profile.
+//   profile_shift = Profile shift factor x for tooth profile.  Default: 0
 //   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
@@ -1136,7 +1131,7 @@ module ring_gear2d(
     backing,
     pressure_angle,
     helical,
-    profile_shift,
+    profile_shift=0,
     clearance,
     backlash = 0.0,
     or,od,width,
@@ -1150,15 +1145,14 @@ module ring_gear2d(
     circ_pitch = _inherit_gear_pitch("ring_gear2d()",pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
     helical = _inherit_gear_helical(helical);
-    profile_shift = default(profile_shift, auto_profile_shift(teeth,PA,helical));
     checks =
+        assert(is_finite(profile_shift), "Profile shift for ring gears must be numerical")
         assert(is_integer(teeth) && teeth>3)
         assert(num_defined([backing,or,od,width])<=1, "Cannot define more than one of backing, or, od and width")
         assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
         assert(is_finite(helical) && abs(helical)<90)
         assert(clearance==undef || (is_finite(clearance) && clearance>=0))
         assert(is_finite(backlash) && backlash>=0)
-        assert(is_finite(profile_shift) && abs(profile_shift)<1)
         assert(is_finite(gear_spin));
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
     ar = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=true);
@@ -1233,7 +1227,7 @@ module ring_gear2d(
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   helical = The angle of the rack teeth away from perpendicular to the rack length.  Used to match helical spur gear pinions.  Default: 0
 //   herringbone = If true, and helical is set, creates a herringbone rack.
-//   profile_shift = Profile shift factor x.
+//   profile_shift = Profile shift factor x.  Default: 0
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.  Default: 20
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
@@ -1312,7 +1306,7 @@ module rack(
         assert(is_finite(backlash) && backlash>=0)
         assert(is_finite(helical) && abs(helical)<90)
         assert(is_bool(herringbone))
-        assert(is_finite(profile_shift) && abs(profile_shift)<1)
+        assert(is_finite(profile_shift))
         assert(is_finite(gear_travel));
     trans_pitch = pitch / cos(helical);
     a = _adendum(pitch, profile_shift);
@@ -1412,7 +1406,7 @@ function rack(
     assert(is_finite(backlash) && backlash>=0)
     assert(is_finite(helical) && abs(helical)<90)
     assert(is_bool(herringbone))
-    assert(is_finite(profile_shift) && abs(profile_shift)<1)
+    assert(is_finite(profile_shift))
     assert(is_finite(gear_travel))
     let(
         trans_pitch = pitch / cos(helical),
@@ -1498,7 +1492,7 @@ function rack(
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   helical = The angle of the rack teeth away from perpendicular to the rack length.  Stretches out the tooth shapes.  Used to match helical spur gear pinions.  Default: 0
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
-//   profile_shift = Profile shift factor x for tooth shape.
+//   profile_shift = Profile shift factor x for tooth shape.  Default: 0
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   gear_travel = The distance the rack should be moved by linearly.  Default: 0
@@ -1546,7 +1540,6 @@ function rack2d(
     assert(clearance==undef || (is_finite(clearance) && clearance>=0))
     assert(is_finite(backlash) && backlash>=0)
     assert(is_finite(helical) && abs(helical)<90)
-    assert(is_finite(profile_shift) && abs(profile_shift)<1)
     assert(is_finite(gear_travel))
     assert(num_defined([width,backing,bottom])<=1, "Can define only one of width, backing and bottom")
     let(
@@ -1644,7 +1637,6 @@ module rack2d(
         assert(clearance==undef || (is_finite(clearance) && clearance>=0))
         assert(is_finite(backlash) && backlash>=0)
         assert(is_finite(helical) && abs(helical)<90)
-        assert(is_finite(profile_shift) && abs(profile_shift)<1)
         assert(is_finite(gear_travel))
         assert(num_defined([width,backing,bottom])<=1, "Can define only one of width, backing and bottom");
     trans_pitch = pitch / cos(helical);
@@ -1992,7 +1984,7 @@ module bevel_gear(
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
-//   profile_shift = Profile shift factor x.
+//   profile_shift = Profile shift factor x.  Default: 0
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -2005,8 +1997,8 @@ module bevel_gear(
 // Example: Left Handed
 //   worm(circ_pitch=8, d=30, l=50, starts=3, left_handed=true, $fn=72);
 // Example: Called as Function
-//   vnf = worm(circ_pitch=8, d=35, l=50, starts=2, left_handed=true, pressure_angle=20, $fn=72);
-//   vnf_polyhedron(vnf);
+   vnf = worm(circ_pitch=8, d=35, l=50, starts=2, left_handed=true, pressure_angle=20, $fn=72);
+   vnf_polyhedron(vnf);
 
 function worm(
     circ_pitch,
@@ -2016,7 +2008,7 @@ function worm(
     pressure_angle,
     backlash=0,
     clearance,
-    profile_shift,
+    profile_shift=0,
     diam_pitch,
     mod,
     pitch,
@@ -2027,8 +2019,7 @@ function worm(
 ) =
     let(
         circ_pitch = _inherit_gear_pitch("worm()", pitch, circ_pitch, diam_pitch, mod),
-        PA = _inherit_gear_pa(pressure_angle),
-        profile_shift = default(profile_shift, 0)
+        PA = _inherit_gear_pa(pressure_angle)
     )
     assert(is_integer(starts) && starts>0)
     assert(is_finite(l) && l>0)
@@ -2037,7 +2028,6 @@ function worm(
     assert(clearance==undef || (is_finite(clearance) && clearance>=0))
     assert(is_finite(backlash) && backlash>=0)
     assert(is_bool(left_handed))
-    assert(is_finite(profile_shift) && abs(profile_shift)<1)
     assert(is_finite(gear_spin))
     let(
         helical = asin(starts * circ_pitch / PI / d),
@@ -2101,7 +2091,7 @@ module worm(
 ) {
     circ_pitch = _inherit_gear_pitch("worm()", pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
-    profile_shift = default(profile_shift, auto_profile_shift(starts,PA));
+    profile_shift = auto_profile_shift(starts,PA,profile_shift=profile_shift);
     checks =
         assert(is_integer(starts) && starts>0)
         assert(is_finite(l) && l>0)
@@ -2156,7 +2146,7 @@ module worm(
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
-//   profile_shift = Profile shift factor x.
+//   profile_shift = Profile shift factor x.  Default: "auto"
 //   slices = The number of vertical slices to refine the curve of the worm throat.  Default: 10
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
@@ -2215,7 +2205,7 @@ function worm_gear(
     pressure_angle,
     backlash = 0,
     clearance,
-    profile_shift,
+    profile_shift="auto",
     slices = 10,
     gear_spin=0,
     pitch,
@@ -2229,7 +2219,7 @@ function worm_gear(
     let(
         circ_pitch = _inherit_gear_pitch("worm_gear()", pitch, circ_pitch, diam_pitch, mod),
         PA = _inherit_gear_pa(pressure_angle),
-        profile_shift = default(profile_shift, auto_profile_shift(teeth,PA))
+        profile_shift = auto_profile_shift(teeth,PA,profile_shift=profile_shift)
     )
     assert(is_integer(teeth) && teeth>10)
     assert(is_finite(worm_diam) && worm_diam>0)
@@ -2327,7 +2317,7 @@ module worm_gear(
     backlash = 0,
     shaft_diam = 0,
     slices = 10,
-    profile_shift,
+    profile_shift="auto",
     gear_spin=0,
     pitch,
     diam_pitch,
@@ -2338,7 +2328,7 @@ module worm_gear(
 ) {
     circ_pitch = _inherit_gear_pitch("worm_gear()", pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
-    profile_shift = default(profile_shift, auto_profile_shift(teeth,PA));
+    profile_shift = auto_profile_shift(teeth,PA,profile_shift=profile_shift);
     checks =
         assert(is_integer(teeth) && teeth>10)
         assert(is_finite(worm_diam) && worm_diam>0)
@@ -2591,7 +2581,7 @@ function _gear_tooth_profile(
 // Function: circular_pitch()
 // Synopsis: Returns tooth density expressed as "circular pitch".
 // Topics: Gears, Parts
-// See Also: spur_gear(), diametral_pitch(), circular_pitch(), pitch_value(), module_value()
+// See Also: spur_gear(), diametral_pitch(), circular_pitch(), module_value()
 // Usage:
 //   circ_pitch = circular_pitch(circ_pitch);
 //   circ_pitch = circular_pitch(mod=);
@@ -2636,7 +2626,7 @@ function circular_pitch(circ_pitch, mod, pitch, diam_pitch) =
 // Function: diametral_pitch()
 // Synopsis: Returns tooth density expressed as "diametral pitch".
 // Topics: Gears, Parts
-// See Also: spur_gear(), diametral_pitch(), circular_pitch(), pitch_value(), module_value()
+// See Also: spur_gear(), diametral_pitch(), circular_pitch(), module_value()
 // Usage:
 //   dp = diametral_pitch(circ_pitch);
 //   dp = diametral_pitch(mod=);
@@ -2660,37 +2650,10 @@ function diametral_pitch(circ_pitch, mod, pitch, diam_pitch) =
     PI / circ_pitch / INCH;
 
 
-// Function: pitch_value()
-// Synopsis: Returns tooth density expressed as "circular pitch".
-// Topics: Gears, Parts
-// See Also: spur_gear(), diametral_pitch(), circular_pitch(), pitch_value(), module_value()
-// Usage:
-//   circ_pitch = pitch_value(mod);
-//   circ_pitch = pitch_value(circ_pitch=);
-//   circ_pitch = pitch_value(diam_pitch=);
-// Description:
-//   Returns the circular pitch in mm from module/modulus or diametral pitch.
-//   The circular pitch of a gear is the number of millimeters per tooth around the pitch radius circle.
-//   For example, if you have a gear with 11 teeth, and the pitch diameter is 35mm, then the circumfrence
-//   of the pitch diameter is really close to 110mm, making the circular pitch of that gear about 10mm/tooth.
-// Arguments:
-//   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
-//   ---
-//   circ_pitch = The circular pitch, or distance in mm between teeth around the pitch circle.
-//   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
-// Example:
-//   circ_pitch = pitch_value(mod=2);
-//   circ_pitch = pitch_value(circ_pitch=8);
-//   circ_pitch = pitch_value(diam_pitch=16);
-
-function pitch_value(mod, circ_pitch, diam_pitch) =
-    circular_pitch(mod=mod, circ_pitch=circ_pitch, diam_pitch=diam_pitch);
-
-
 // Function: module_value()
 // Synopsis: Returns tooth density expressed as "module" or "modulus" in millimeters.
 // Topics: Gears, Parts
-// See Also: spur_gear(), diametral_pitch(), circular_pitch(), pitch_value(), module_value()
+// See Also: spur_gear(), diametral_pitch(), circular_pitch(), module_value()
 // Usage:
 //   mod = module_value(circ_pitch);
 //   mod = module_value(mod=);
@@ -2724,7 +2687,7 @@ function module_value(circ_pitch, mod, pitch, diam_pitch) =
 ///   The height of the top of a gear tooth above the pitch radius circle.
 /// Arguments:
 ///   circ_pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-///   profile_shift = Profile shift factor x.
+///   profile_shift = Profile shift factor x.  Default: 0 
 ///   ---
 ///   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 ///   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
@@ -2763,7 +2726,7 @@ function _adendum(
 /// Arguments:
 ///   circ_pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 ///   clearance = If given, sets the clearance between meshing teeth.  Default: module/4
-///   profile_shift = Profile shift factor x.
+///   profile_shift = Profile shift factor x.  Default: 0
 ///   ---
 ///   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 ///   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
@@ -2797,7 +2760,7 @@ function _dedendum(
 // Function: pitch_radius()
 // Synopsis: Returns the pitch radius for a gear.
 // Topics: Gears, Parts
-// See Also: spur_gear(), diametral_pitch(), circular_pitch(), pitch_value(), module_value(), outer_radius()
+// See Also: spur_gear(), diametral_pitch(), circular_pitch(), module_value(), outer_radius()
 // Usage:
 //   pr = pitch_radius(pitch, teeth, [helical]);
 //   pr = pitch_radius(mod=, teeth=, [helical=]);
@@ -2846,21 +2809,24 @@ function pitch_radius(
 // Function: outer_radius()
 // Synopsis: Returns the outer radius for a gear.
 // Topics: Gears, Parts
-// See Also: spur_gear(), diametral_pitch(), circular_pitch(), pitch_value(), module_value(), pitch_radius(), outer_radius()
+// See Also: spur_gear(), diametral_pitch(), circular_pitch(), module_value(), pitch_radius(), outer_radius()
 // Usage:
 //   or = outer_radius(circ_pitch, teeth, [helical=], [clearance=], [internal=], [profile_shift=]);
 //   or = outer_radius(mod=, teeth=, [helical=], [clearance=], [internal=], [profile_shift=]);
 //   or = outer_radius(diam_pitch=, teeth=, [helical=], [clearance=], [internal=], [profile_shift=]);
 // Description:
-//   Calculates the outer radius for the gear. The gear fits entirely within a cylinder of this radius.
+//   Calculates the outer radius for the gear. The gear fits entirely within a cylinder of this radius, unless
+//   it has been strongly profile shifted, in which case it will be undersized due to tip clipping.
+//   This function does not apply automatic profile shifting.  
 // Arguments:
 //   circ_pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = The number of teeth on the gear.
 //   ---
 //   clearance = If given, sets the clearance between meshing teeth.  Default: module/4
-//   profile_shift = Profile shift factor x.
-//   internal = If true, calculate for an internal gear.
+//   profile_shift = Profile shift factor x.  Default: "auto"
+//   pressure_angle = Pressure angle.  Default: 20
 //   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
+//   internal = If true, calculate for an internal gear.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 // Example:
@@ -2882,8 +2848,11 @@ function pitch_radius(
 //               halign="center", valign="top");
 //   }
 
-function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, profile_shift=0, mod, pitch, diam_pitch) =
-    let( circ_pitch = circular_pitch(pitch, mod, circ_pitch, diam_pitch) )
+function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, profile_shift=0, pressure_angle=20, mod, pitch, diam_pitch) =
+    let(
+       circ_pitch = circular_pitch(pitch, mod, circ_pitch, diam_pitch),
+       profile_shift = auto_profile_shift(teeth, pressure_angle, helical, profile_shift=profile_shift)
+    )
     pitch_radius(circ_pitch, teeth, helical) + (
         internal
           ? _dedendum(circ_pitch, clearance, profile_shift=-profile_shift)
@@ -2898,7 +2867,7 @@ function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, p
 ///   rr = _root_radius(mod=, teeth=, [helical=], [clearance=], [internal=], [profile_shift=]);
 /// Topics: Gears
 /// Description:
-///   Calculates the root radius for the gear, at the base of the dedendum.
+///   Calculates the root radius for the gear, at the base of the dedendum.  Does not apply auto profile shifting. 
 /// Arguments:
 ///   circ_pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 ///   teeth = The number of teeth on the gear.
@@ -2906,7 +2875,7 @@ function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, p
 ///   clearance = If given, sets the clearance between meshing teeth.  Default: module/4
 ///   internal = If true, calculate for an internal gear.
 ///   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
-///   profile_shift = Profile shift factor x.
+///   profile_shift = Profile shift factor x.  Default:0 
 ///   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 ///   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 /// Example:
@@ -3125,8 +3094,8 @@ function gear_dist(
     assert(!(internal1 || internal2) || (teeth1>0 && teeth2>0), "Cannot specify internal gear with rack (zero tooth count)")
     let(
         mod = module_value(mod=mod,circ_pitch= circ_pitch, diam_pitch=diam_pitch),
-        profile_shift1 = default(profile_shift1, auto_profile_shift(teeth1,pressure_angle,helical)),
-        profile_shift2 = default(profile_shift2, auto_profile_shift(teeth2,pressure_angle,helical)),
+        profile_shift1 = auto_profile_shift(teeth1,pressure_angle,helical,profile_shift=profile_shift1),
+        profile_shift2 = auto_profile_shift(teeth2,pressure_angle,helical,profile_shift=profile_shift2),
         teeth1 = internal2? -teeth1 : teeth1,
         teeth2 = internal1? -teeth2 : teeth2
     )
@@ -3207,8 +3176,8 @@ function gear_dist_skew(teeth1,teeth2,helical1,helical2,profile_shift1,profile_s
   assert(all_nonnegative([teeth1,teeth2]),"Must give nonnegative values for teeth")
   assert(teeth1>0 || teeth2>0, "One of the teeth counts must be nonzero")
   let(
-      profile_shift1 = default(profile_shift1, auto_profile_shift(teeth1,pressure_angle,helical1)),
-      profile_shift2 = default(profile_shift2, auto_profile_shift(teeth2,pressure_angle,helical2)),
+      profile_shift1 = auto_profile_shift(teeth1,pressure_angle,helical1,profile_shift=profile_shift1),
+      profile_shift2 = auto_profile_shift(teeth2,pressure_angle,helical2,profile_shift=profile_shift2),
       mod = module_value(circ_pitch=circ_pitch, diam_pitch=diam_pitch, mod=mod)
   )
   teeth1==0 || teeth2==0? pitch_radius(mod=mod, teeth=teeth1+teeth2, helical=teeth1?helical1:helical2) + (profile_shift1+profile_shift2)*mod
@@ -3248,8 +3217,8 @@ function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_
    assert(all_nonnegative([teeth1,teeth2]),"Must give nonnegative values for teeth")
    assert(teeth1>0 || teeth2>0, "One of the teeth counts must be nonzero")
    let(
-       profile_shift1 = default(profile_shift1, auto_profile_shift(teeth1,pressure_angle,helical1)),
-       profile_shift2 = default(profile_shift2, auto_profile_shift(teeth2,pressure_angle,helical2))
+       profile_shift1 = auto_profile_shift(teeth1,pressure_angle,helical1,profile_shift=profile_shift1),
+       profile_shift2 = auto_profile_shift(teeth2,pressure_angle,helical2,profile_shift=profile_shift2)
    )
    profile_shift1==0 && profile_shift2==0 ? helical1+helical2
  : teeth1==0 || teeth2==0 ? helical1+helical2
@@ -3304,10 +3273,14 @@ function get_profile_shift(desired,circ_pitch,teeth1,teeth2,pressure_angle=20,mo
 //   helical = helical angle
 //   ---
 //   min_teeth = If given, the minimum number of teeth on a gear that has acceptable undercut.
+//   profile_shift = If numerical then just return this value; if "auto" or not given then compute the automatic profile shift.
 
-function auto_profile_shift(teeth, pressure_angle=20, helical=0, min_teeth) =
-    teeth==0 ? 0:
-    let(
+
+function auto_profile_shift(teeth, pressure_angle=20, helical=0, min_teeth, profile_shift) =
+    assert(is_undef(profile_shift) || is_finite(profile_shift) || profile_shift=="auto", "Profile shift must be \"auto\" or a number")
+    is_num(profile_shift) ? profile_shift
+  : teeth==0 ? 0
+  : let(
         pressure_angle=atan(tan(pressure_angle)/cos(helical)),
         min_teeth = is_undef(min_teeth)
           ? 2 / pow(sin(pressure_angle),2)
