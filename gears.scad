@@ -529,7 +529,7 @@ function _inherit_gear_thickness(thickness) =
 //          shaft_diam=5, helical=ang2, slices=12,
 //          gear_spin=90-180/n
 //      );
-// Example(Anim,Med,NoAxes,Frames=36,VPT=[0,0,0],VPR=[55,0,25],VPD=375): Planetary Gear Assembly
+// Example(Anim,Big,NoAxes,Frames=36,VPT=[0,0,0],VPR=[55,0,25],VPD=375): Planetary Gear Assembly
 //   rteeth=56; pteeth=16; cteeth=24;
 //   circ_pitch=5; thick=10; pa=20;
 //   gd = gear_dist(circ_pitch=circ_pitch, cteeth, pteeth);
@@ -1135,7 +1135,7 @@ module ring_gear(
 //   ring_gear2d(circ_pitch=circ_pitch, teeth=teeth1);
 //   color("lightblue")back(dist)
 //     spur_gear2d(circ_pitch=circ_pitch, teeth=teeth2);
-// Example(2D,Med,VPT=[-0.117844,-0.439102,-0.372203],VPD=192.044): Meshing a ring gear with an auto-profile-shifted spur gear:
+// Example(2D,Med,VPT=[-0.117844,-0.439102,-0.372203],VPR=[0,0,0],VPD=192.044): Meshing a ring gear with an auto-profile-shifted spur gear:
 //   teeth1=7;    teeth2=15;
 //   ps1=undef;     // Allow auto profile shifting for first gear
 //   ps2=auto_profile_shift(teeth=teeth1);
@@ -2774,7 +2774,7 @@ function _dedendum(
 //   pr = pitch_radius(diam_pitch=10, teeth=11);
 //   pr = pitch_radius(mod=2, teeth=20);
 //   pr = pitch_radius(mod=2, teeth=20, helical=30);
-// Example(2D,Med,NoScales):
+// Example(2D,Med,NoScales,VPT=[-0.20531,0.133721,0.658081],VPR=[0,0,0],VPD=82.6686):
 //   $fn=144;
 //   teeth=17; circ_pitch = 5;
 //   pr = pitch_radius(circ_pitch, teeth);
@@ -2828,7 +2828,7 @@ function pitch_radius(
 //   or = outer_radius(circ_pitch=5, teeth=20, helical=30);
 //   or = outer_radius(diam_pitch=10, teeth=17);
 //   or = outer_radius(mod=2, teeth=16);
-// Example(2D,Med,NoScales):
+// Example(2D,Med,NoScales,VPT=[-0.20531,0.133721,0.658081],VPR=[0,0,0],VPD=82.6686):
 //   $fn=144;
 //   teeth=17; circ_pitch = 5;
 //   or = outer_radius(circ_pitch, teeth);
@@ -3036,32 +3036,32 @@ function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning
 //   internal2 = second gear is an internal (ring) gear.  Default: false
 //   circ_pitch = distance between teeth around the pitch circle.
 //   pressure_angle = The pressure angle of the gear.
-// Example(2D): Spur gears (with automatic profile shifting on both)
+// Example(2D,NoAxes): Spur gears (with automatic profile shifting on both)
 //   circ_pitch=5; teeth1=7; teeth2=24;
 //   d = gear_dist(circ_pitch=circ_pitch, teeth1, teeth2);
 //   spur_gear2d(circ_pitch, teeth1, gear_spin=-90);
 //   right(d) spur_gear2d(circ_pitch, teeth2, gear_spin=90-180/teeth2);
-// Example: Helical gears (with auto profile shifting on one of the gears)
+// Example(3D,NoAxes,Med,VPT=[23.9049,5.42594,-4.68026],VPR=[64.8,0,353.5],VPD=126): Helical gears (with auto profile shifting on one of the gears)
 //   circ_pitch=5; teeth1=7; teeth2=24; helical=37;
 //   d = gear_dist(circ_pitch=circ_pitch, teeth1, teeth2, helical);
-//   spur_gear(circ_pitch, teeth1, helical=helical, gear_spin=-90);
-//   right(d) spur_gear(circ_pitch, teeth2, helical=-helical, gear_spin=-90-180/teeth2);
-// Example(2D): Disable Auto Profile Shifting on the smaller gear
+//   spur_gear(circ_pitch, teeth1, helical=helical, gear_spin=-90,slices=15);
+//   right(d) spur_gear(circ_pitch, teeth2, helical=-helical, gear_spin=-90-180/teeth2,slices=9);
+// Example(2D,NoAxes): Disable Auto Profile Shifting on the smaller gear
 //   circ_pitch=5; teeth1=7; teeth2=24;
 //   d = gear_dist(circ_pitch=circ_pitch, teeth1, teeth2, profile_shift1=0);
 //   spur_gear2d(circ_pitch, teeth1, profile_shift=0, gear_spin=-90);
 //   right(d) spur_gear2d(circ_pitch, teeth2, gear_spin=90-180/teeth2);
-// Example(2D): Manual Profile Shifting
+// Example(2D,NoAxes): Manual Profile Shifting
 //   circ_pitch=5; teeth1=7; teeth2=24; ps1 = 0.5; ps2 = -0.2;
 //   d = gear_dist(circ_pitch=circ_pitch, teeth1, teeth2, profile_shift1=ps1, profile_shift2=ps2);
 //   spur_gear2d(circ_pitch, teeth1, profile_shift=ps1, gear_spin=-90);
 //   right(d) spur_gear2d(circ_pitch, teeth2, profile_shift=ps2, gear_spin=90-180/teeth2);
-// Example(2D): Profile shifted gear and a rack
+// Example(2D,NoAxes): Profile shifted gear and a rack
 //   mod=3; teeth=8;
 //   d = gear_dist(mod=mod, teeth, 0);
 //   rack2d(mod=mod, teeth=5, bottom=9);
 //   back(d) spur_gear2d(mod=mod, teeth=teeth, gear_spin=180/teeth);
-// Example(VPT=[-0.0608489,1.3772,-3.68839],VPR=[63.4,0,29.7],VPD=113.336): Profile shifted helical gear and rack 
+// Example(3D,Med,NoAxes,VPT=[-0.0608489,1.3772,-3.68839],VPR=[63.4,0,29.7],VPD=113.336): Profile shifted helical gear and rack 
 //   mod=3; teeth=8; helical=29;
 //   d = gear_dist(mod=mod, teeth, 0, helical);
 //   rack(mod=mod, teeth=5, helical=helical, orient=FWD);
@@ -3161,7 +3161,7 @@ function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, 
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   circ_pitch = distance between teeth around the pitch circle.
 //   pressure_angle = The pressure angle of the gear.
-// Example(3D): Non-parallel Helical Gears (without any profile shifting)
+// Example(3D,Med,NoAxes,VPT=[-0.302111,3.7924,-9.252],VPR=[55,0,25],VPD=155.556): Non-parallel Helical Gears (without any profile shifting)
 //   circ_pitch=5; teeth1=15; teeth2=24; ha1=45; ha2=30; thick=10;
 //   d = gear_dist_skew(circ_pitch=circ_pitch, teeth1, teeth2, helical1=ha1, helical2=ha2);
 //   left(d/2) spur_gear(circ_pitch, teeth1, helical=ha1, thickness=thick, gear_spin=-90);
