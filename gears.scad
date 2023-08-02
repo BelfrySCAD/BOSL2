@@ -342,7 +342,6 @@ function _inherit_gear_thickness(thickness) =
 //    ps2=0;
 //    mod=3;
 //    d = gear_dist(mod=mod, teeth1=teeth1, teeth2=teeth2,profile_shift1=ps1, profile_shift2=ps2,helical=0, internal2=true);
-//    echo(d=d);
 //    ang = 1;
 //    color_overlaps(){
 //      ring_gear2d(mod=mod, teeth=teeth2,profile_shift=ps2,helical=0,backing=4);
@@ -3314,7 +3313,6 @@ function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_
 //   desired=115;
 //   pshift = get_profile_shift(desired,teeth1,teeth2,mod=mod);  // Returns 0.82
 //   shorten = pshift - (desired-112)/mod;     // Returns 0.07
-//      echo(shorten=shorten);
 //   ps1 = pshift/2;
 //   ps2 = pshift/2;
 //   d = gear_dist(mod=mod, teeth1,teeth2,0,ps1,ps2);
@@ -3331,7 +3329,6 @@ function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_
 //   shorten = pshift - (desired-112)/mod;     // Returns 0.04
 //   ps1 = 0.8*pshift;
 //   ps2 = 0.2*pshift;
-//   echo(ps2=ps2);
 //   d = gear_dist(mod=mod, teeth1,teeth2,0,ps1,ps2);
 //   spur_gear2d(mod=mod,teeth=teeth1,profile_shift=ps1,shorten=shorten,gear_spin=-90,shaft_diam=5);
 //   right(d)
@@ -3344,8 +3341,7 @@ function get_profile_shift(desired,teeth1,teeth2,helical=0,pressure_angle=20,mod
        pressure_angle_trans = atan(tan(pressure_angle)/cos(helical)),
        y = desired/mod - teethsum/2/cos(helical),
        thing=teethsum*cos(pressure_angle_trans) / (teethsum+2*y*cos(helical)),
-       pa_eff = acos(teethsum*cos(pressure_angle_trans) / (teethsum+2*y*cos(helical))),
-       fff=echo(desired=desired,y=y,thing=thing,pa_eff=pa_eff)
+       pa_eff = acos(teethsum*cos(pressure_angle_trans) / (teethsum+2*y*cos(helical)))
   )
   teethsum * (_invol(pa_eff)-_invol(pressure_angle_trans))/2/tan(pressure_angle);
 
