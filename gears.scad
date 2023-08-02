@@ -66,19 +66,6 @@ function _inherit_gear_thickness(thickness) =
     _inherit_gear_param("thickness", thickness, $parent_gear_thickness, dflt=10);
 
 
-//// Section: Terminology
-////   The outline of a gear is a smooth circle (the "pitch circle") which has
-////   mountains and valleys added so it is toothed.  There is an inner
-////   circle (the "root circle") that touches the base of all the teeth, an
-////   outer circle that touches the tips of all the teeth, and the invisible
-////   pitch circle in between them.  There is also a "base circle", which can
-////   be smaller than all three of the others, which controls the shape of
-////   the teeth.  The side of each tooth lies on the path that the end of a
-////   string would follow if it were wrapped tightly around the base circle,
-////   then slowly unwound.  That shape is an "involute", which gives this
-////   type of gear its name.
-
-
 // Section: Quick Introduction to Gears
 //   This section gives a quick overview of gears with a focus on the information you need
 //   to know to understand the gear parameters and create some gears.  The topic of gears is very complex and highly technical and
@@ -218,6 +205,42 @@ function _inherit_gear_thickness(thickness) =
 //       zrot(ang2)
 //         spur_gear2d(mod=5, teeth=5, pressure_angle=14.5, shaft_diam=2);
 //   rack2d(teeth=4, bottom=15, mod=5, pressure_angle=14.5);
+// Continues:
+//   Profile shifting brings with it another complication: in order to maintain the specified clearance, the tips of the
+//   gear teeth need to be shortened.  The shortening factor depends on characteristics of both gears, so it cannot
+//   be automatically incorporated.  (Consider the situation where one gear mates with multiple other gears.)  With modest
+//   profile shifts, you can probably ignore this adjustment, but with more extreme profile shifts, it may be important.
+//   You can compute the shortening parameter using {{gear_shorten()}}.  Note that the actual shortening distance is obtained
+//   by scaling the shortening fator by the gear's module.  
+// Figure(2D,Big,NoAxes,VPT=[55.8861,-4.31463,8.09832],VPR=[0,0,0],VPD=325.228): With large profile shifts the teeth need to be shortened or they don't have clearance in the valleys of the teeth in the meshing gear.  
+//   teeth1=25;
+//   teeth2=19;
+//   mod=4;
+//   ps1 = 0.75;
+//   ps2 = 0.75;
+//   d = gear_dist(mod=mod, teeth1,teeth2,0,ps1,ps2);
+//   color("lightblue")
+//     spur_gear2d(mod=mod,teeth=teeth1,profile_shift=ps1,gear_spin=-90);
+//   right(d)
+//     spur_gear2d(mod=mod,teeth=teeth2,profile_shift=ps2,gear_spin=-90);
+//   right(9)stroke([[1.3*d/2,0],[d/2+4,0]], endcap2="arrow2",color="black");
+//   fwd(2)right(d/2+25)color("black"){back(4)text("No clearance",size=6);
+//                           fwd(4)text("at tooth tip",size=6);}
+// Figure(2D,Big,NoAxes,VPT=[55.8861,-4.31463,8.09832],VPR=[0,0,0],VPD=325.228): Applying the correct shortening factor restores the clearance to its set value.  
+//   teeth1=25;
+//   teeth2=19;
+//   mod=4;
+//   ps1 = 0.75;
+//   ps2 = 0.75;
+//   d = gear_dist(mod=mod, teeth1,teeth2,0,ps1,ps2);
+//   shorten=gear_shorten(teeth1,teeth2,0,ps1,ps2);
+//   color("lightblue")
+//     spur_gear2d(mod=mod,teeth=teeth1,profile_shift=ps1,shorten=shorten,gear_spin=-90);
+//   right(d)
+//     spur_gear2d(mod=mod,teeth=teeth2,profile_shift=ps2,shorten=shorten,gear_spin=-90);
+//   right(9)stroke([[1.3*d/2,0],[d/2+4,0]], endcap2="arrow2",color="black");
+//   fwd(2)right(d/2+25)color("black"){back(4)text("Normal",size=6);
+//                           fwd(4)text("Clearance",size=6);}
 // Subsection: Helical Gears
 //   Helicals gears are a modification of spur gears.  They can replace spur gears in any application.  The teeth are cut
 //   following a slanted, helical path.  The angled teeth engage more gradually than spur gear teeth, so they run more smoothly
@@ -230,7 +253,7 @@ function _inherit_gear_thickness(thickness) =
 //   the helical angles must be opposite each other, so a gear with a helical angle of 35 must mesh with one
 //   that has an angle of −35.  The industry convention refers to these as left-handed and right handed.  In
 //   this library, positive helical angles produce a left handed gear and negative angles produce a right handed gear.
-// Figure(3D,Med,NoAxes,VPT=[73.6023,-29.9518,-12.535],VPR=[76,0,1.2],VPD=550.777): Left and right handed helical gears at 35 degrees.
+// Figure(3D,Med,NoAxes,VPT=[73.6023,-29.9518,-12.535],VPR=[76,0,1.2],VPD=610): Left and right handed helical gears at 35 degrees.
 //   spur_gear(mod=5, teeth=20, helical=35, thickness=70,slices=15);
 //   right(150)
 //   spur_gear(mod=5, teeth=20, helical=-35, thickness=70,slices=15);
@@ -529,7 +552,8 @@ function _inherit_gear_thickness(thickness) =
 //          shaft_diam=5, helical=ang2, slices=12,
 //          gear_spin=90-180/n
 //      );
-// Example(Anim,Big,NoAxes,Frames=36,VPT=[0,0,0],VPR=[55,0,25],VPD=375): Planetary Gear Assembly
+// Example(Anim,Big,NoAxes,Frames=36,VPT=[0,0,0],VPR=[55,0,25],VPD=220): Planetary Gear Assembly
+//   $fn=128;
 //   rteeth=56; pteeth=16; cteeth=24;
 //   circ_pitch=5; thick=10; pa=20;
 //   gd = gear_dist(circ_pitch=circ_pitch, cteeth, pteeth);
@@ -558,7 +582,7 @@ function _inherit_gear_thickness(thickness) =
 //       thickness=thick,
 //       shaft_diam=5,
 //       pressure_angle=pa);
-//
+
 function spur_gear(
     circ_pitch,
     teeth,
@@ -574,6 +598,7 @@ function spur_gear(
     profile_shift="auto",
     slices,
     herringbone=false,
+    shorten=0,
     diam_pitch,
     mod,
     pitch,
@@ -616,6 +641,7 @@ function spur_gear(
                 clearance = clearance,
                 backlash = backlash,
                 internal = internal,
+                shorten = shorten,
                 profile_shift = profile_shift,
                 shaft_diam = shaft_diam
             ),
@@ -648,6 +674,7 @@ module spur_gear(
     profile_shift="auto",
     slices,
     herringbone=false,
+    shorten=0,
     pitch,
     diam_pitch,
     mod,
@@ -698,6 +725,7 @@ module spur_gear(
                         clearance = clearance,
                         backlash = backlash,
                         internal = internal,
+                        shorten = shorten, 
                         profile_shift = profile_shift,
                         shaft_diam = shaft_diam
                     );
@@ -840,6 +868,7 @@ function spur_gear2d(
     profile_shift="auto",
     helical,
     shaft_diam = 0,
+    shorten = 0, 
     pitch,
     diam_pitch,
     mod,
@@ -872,6 +901,7 @@ function spur_gear2d(
                 backlash=backlash,
                 profile_shift=profile_shift,
                 helical=helical,
+                shorten=shorten,
                 internal=internal
             ),
         perim = [
@@ -898,6 +928,7 @@ module spur_gear2d(
     interior,
     profile_shift="auto",
     helical,
+    shorten = 0, 
     shaft_diam = 0,
     pitch,
     diam_pitch,
@@ -931,6 +962,7 @@ module spur_gear2d(
         backlash = backlash,
         profile_shift = profile_shift,
         internal = internal,
+        shorten = shorten, 
         shaft_diam = shaft_diam
     );
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
@@ -2436,6 +2468,7 @@ function _gear_tooth_profile(
     helical = 0,
     internal = false,
     profile_shift = 0.0,
+    shorten = 0, 
     mod,
     diam_pitch,
     pitch,
@@ -2451,7 +2484,7 @@ function _gear_tooth_profile(
     clear = default(clearance, 0.25 * mod),
 
     // Calculate the important circle radii
-    arad = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal),
+    arad = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal, shorten=shorten),
     prad = pitch_radius(circ_pitch, teeth, helical=helical),
     brad = _base_radius(circ_pitch, teeth, pressure_angle, helical=helical),
     rrad = _root_radius(circ_pitch, teeth, clearance, helical=helical, profile_shift=profile_shift, internal=internal),
@@ -2727,12 +2760,13 @@ function module_value(circ_pitch, mod, pitch, diam_pitch) =
 function _adendum(
     circ_pitch,
     profile_shift=0,
+    shorten=0,
     diam_pitch,
     mod,
     pitch
 ) =
     let( mod = module_value(circ_pitch, mod, pitch, diam_pitch) )
-    mod * (1 + profile_shift);
+    mod * (1 + profile_shift - shorten);
 
 
 
@@ -2751,6 +2785,7 @@ function _adendum(
 ///   ---
 ///   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 ///   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
+///   shorten = amount to shorten tip 
 /// Example:
 ///   ddn = _dedendum(circ_pitch=5);
 ///   ddn = _dedendum(mod=2);
@@ -2838,7 +2873,6 @@ function pitch_radius(
 // Description:
 //   Calculates the outer radius for the gear. The gear fits entirely within a cylinder of this radius, unless
 //   it has been strongly profile shifted, in which case it will be undersized due to tip clipping.
-//   This function does not apply automatic profile shifting.  
 // Arguments:
 //   circ_pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = The number of teeth on the gear.
@@ -2847,6 +2881,7 @@ function pitch_radius(
 //   profile_shift = Profile shift factor x.  Default: "auto"
 //   pressure_angle = Pressure angle.  Default: 20
 //   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
+//   shorten = Shortening factor, needed to maintain clearance with profile shifting.  Default: 0
 //   internal = If true, calculate for an internal gear.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
@@ -2869,7 +2904,7 @@ function pitch_radius(
 //               halign="center", valign="top");
 //   }
 
-function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, profile_shift=0, pressure_angle=20, mod, pitch, diam_pitch) =
+function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, profile_shift="auto", pressure_angle=20, shorten=0, mod, pitch, diam_pitch) =
     let(
        circ_pitch = circular_pitch(pitch, mod, circ_pitch, diam_pitch),
        profile_shift = auto_profile_shift(teeth, pressure_angle, helical, profile_shift=profile_shift)
@@ -2877,7 +2912,7 @@ function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, p
     pitch_radius(circ_pitch, teeth, helical) + (
         internal
           ? _dedendum(circ_pitch, clearance, profile_shift=-profile_shift)
-          : _adendum(circ_pitch, profile_shift=profile_shift)
+          : _adendum(circ_pitch, profile_shift=profile_shift, shorten=shorten)
     );
 
 
@@ -3041,7 +3076,7 @@ function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), pitch_radius(), outer_radius()
 // Usage:
-//   dist = gear_dist([mod=|diam_pitch=|circ_pitch=], teeth1, teeth2, [helical], [profile_shift1], [profile_shift2], [pressure_angle=]);
+//   dist = gear_dist(mod=|diam_pitch=|circ_pitch=, teeth1, teeth2, [helical], [profile_shift1], [profile_shift2], [pressure_angle=]);
 // Description:
 //   Calculate the distance between the centers of two spur gears gears or helical gears with parallel axes,
 //   taking into account profile shifting and helical angle.  You can give the helical angle as either positive or negative.  
@@ -3057,18 +3092,18 @@ function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning
 //   profile_shift1 = Profile shift factor x for the first gear.  Default: 0
 //   profile_shift2 = Profile shift factor x for the second gear.  Default: 0
 //   --
-//   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
+//   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
+//   circ_pitch = distance between teeth around the pitch circle.
 //   internal1 = first gear is an internal (ring) gear.  Default: false
 //   internal2 = second gear is an internal (ring) gear.  Default: false
-//   circ_pitch = distance between teeth around the pitch circle.
 //   pressure_angle = The pressure angle of the gear.
 // Example(2D,NoAxes): Spur gears (with automatic profile shifting on both)
 //   circ_pitch=5; teeth1=7; teeth2=24;
 //   d = gear_dist(circ_pitch=circ_pitch, teeth1, teeth2);
 //   spur_gear2d(circ_pitch, teeth1, gear_spin=-90);
 //   right(d) spur_gear2d(circ_pitch, teeth2, gear_spin=90-180/teeth2);
-// Example(3D,NoAxes,Med,VPT=[23.9049,5.42594,-4.68026],VPR=[64.8,0,353.5],VPD=126): Helical gears (with auto profile shifting on one of the gears)
+// Example(3D,NoAxes,Med,VPT=[23.9049,5.42594,-4.68026],VPR=[64.8,0,353.5],VPD=140): Helical gears (with auto profile shifting on one of the gears)
 //   circ_pitch=5; teeth1=7; teeth2=24; helical=37;
 //   d = gear_dist(circ_pitch=circ_pitch, teeth1, teeth2, helical);
 //   spur_gear(circ_pitch, teeth1, helical=helical, gear_spin=-90,slices=15);
@@ -3125,7 +3160,7 @@ function gear_dist(
         profile_shift1 = internal2? -profile_shift1 : profile_shift1,
         profile_shift2 = internal1? -profile_shift2 : profile_shift2
     )
-    assert(profile_shift1+profile_shift2>=0, "Internal gear must have profile shift equal or greater than mated external gear")
+    assert(!(internal1||internal2) || profile_shift1+profile_shift2>=0, "Internal gear must have profile shift equal or greater than mated external gear")
     teeth1==0 || teeth2==0? pitch_radius(mod=mod, teeth=teeth1+teeth2, helical=helical) + (profile_shift1+profile_shift2)*mod
     :
     let(
@@ -3143,27 +3178,14 @@ function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, 
   teeth1==0 || teeth2==0 ? pressure_angle
   :
   let(
-      rhs = 2*(profile_shift1+profile_shift2)/(teeth1+teeth2)*cos(helical)*tan(pressure_angle) + _invol(pressure_angle),
-      f=echo(rhs=rhs, ps=profile_shift1, profile_shift2),
-      pa_eff = root_find(function (x) _invol(x)-rhs, 5, 75)
+      rhs = 2*(profile_shift1+profile_shift2)/(teeth1+teeth2)*cos(helical)*tan(pressure_angle) + _invol(pressure_angle)
+  )
+  assert(rhs>0, "Total profile shift is too small, so working pressure angle is negative, and no valid gear separation exists")
+  let(
+      pa_eff = root_find(function (x) _invol(x)-rhs, -40, 75)
   )
   pa_eff;
 
-
-
-function _invol(a) = tan(a) - a*PI/180;
-
-function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, pressure_angle, helical) =
-  let(
-      pressure_angle = atan(tan(pressure_angle)/cos(helical))
-  )
-  teeth1==0 || teeth2==0 ? pressure_angle
-  :
-  let(
-      rhs = 2*(profile_shift1+profile_shift2)/(teeth1+teeth2)*cos(helical)*tan(pressure_angle) + _invol(pressure_angle),
-      pa_eff = root_find(function (x) _invol(x)-rhs, 5, 75)
-  )
-  pa_eff;
 
 
 // Function: gear_dist_skew()
@@ -3225,6 +3247,15 @@ function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, tee
 //   Compute the correct skew angle between the axes of two profile shifted helical gears.  When profile shifting is zero, or when one of
 //   the gears is a rack, this angle is simply the sum of the helical angles of the two gears.  But with profile shifted gears, a small
 //   correction to the skew angle is needed for proper meshing.  
+// Arguments:
+//   teeth1 = Total number of teeth in the first gear.  If given 0, we assume this is a rack or worm.
+//   teeth2 = Total number of teeth in the second gear.  If given 0, we assume this is a rack or worm.
+//   helical1 = The helical angle (from vertical) of the teeth on the first gear. 
+//   helical1 = The helical angle (from vertical) of the teeth on the second gear.
+//   profile_shift1 = Profile shift factor x for the first gear.  Default: 0
+//   profile_shift2 = Profile shift factor x for the second gear.  Default: 0
+//   --
+//   pressure_angle = The pressure angle of the gear.
 // Example(3D,Med,NoAxes,VPT=[-2.62091,2.01048,-1.31405],VPR=[55,0,25],VPD=74.4017): These gears are auto profile shifted and as a result, do not mesh at the sum of their helical angles, but at 2.5 degrees more.  
 //   circ_pitch=5; teeth1=12; teeth2=7; ha1=25; ha2=30; thick=10;
 //   d = gear_dist_skew(circ_pitch=circ_pitch, teeth1, teeth2, ha1, ha2);
@@ -3234,10 +3265,11 @@ function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, tee
 //   right(d/2) color("lightblue")
 //     xrot(ang) spur_gear(circ_pitch, teeth2, helical=ha2, thickness=thick, gear_spin=90-180/teeth2);
 
-function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_shift2,pressure_angle=20, mod, circ_pitch, diam_pitch) =
+function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_shift2,pressure_angle=20) =
    assert(all_nonnegative([teeth1,teeth2]),"Must give nonnegative values for teeth")
    assert(teeth1>0 || teeth2>0, "One of the teeth counts must be nonzero")
    let(
+       mod = 1,  // This is independent of module size
        profile_shift1 = auto_profile_shift(teeth1,pressure_angle,helical1,profile_shift=profile_shift1),
        profile_shift2 = auto_profile_shift(teeth2,pressure_angle,helical2,profile_shift=profile_shift2)
    )
@@ -3259,24 +3291,63 @@ function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_
 
 // Function: get_profile_shift()
 // Usage:
-//   total_shift = get_profile_shift(desired,....)
+//   total_shift = get_profile_shift(mod=|diam_pitch=|circ_pitch=, desired, teeth1, teeth2, [helical], [pressure_angle=],
 // Description:
 //   Compute the total profile shift, split between two gears, needed to place those gears with a specified separation.
-//   If the requested separation is impossible, returns nan.  Note that the profile shift returned may also be impractically
-//   large.
+//   If the requested separation is too small, returns NaN.  Note that the profile shift returned may also be impractically
+//   large or small and does not necessarily lead to a valid gear configuration.  You will need to split the profile shift
+//   between the two gears.  Note that for helical gears, much more adjustment is available by modifying the helical angle.  
 // Arguments:
-//   circ_pitch = circular pitch of gear teeth
+//   desired = desired gear center separation
 //   teeth1 = number of teeth on first gear
 //   teeth2 = number of teeth on second gear
+//   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
+//   ---
+//   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
+//   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
+//   circ_pitch = distance between teeth around the pitch circle.
 //   pressure_angle = normal pressure angle of gear teeth.  Default: 20
-//   mod = gear module, an alternative to circ_pitch for giving gear size
-//   diam_pitch = specify dimetral pitch
-function get_profile_shift(desired,circ_pitch,teeth1,teeth2,pressure_angle=20,mod,diam_pitch,pitch) =
+// Example(2D,Med,NoAxes,VPT=[37.0558,0.626722,9.78411],VPR=[0,0,0],VPD=496): For a pair of module 4 gears with 19, and 37 teeth, the separation without profile shifting is 112.  Suppose we want it instead to be 115.  A positive profile shift, split evenly between the gears, achieves the goal, as shown by the red rectangle, with width 115.  
+//   teeth1=37;
+//   teeth2=19;
+//   mod=4;
+//   desired=115;
+//   pshift = get_profile_shift(desired,teeth1,teeth2,mod=mod);  // Returns 0.82
+//   shorten = pshift - (desired-112)/mod;     // Returns 0.07
+//      echo(shorten=shorten);
+//   ps1 = pshift/2;
+//   ps2 = pshift/2;
+//   d = gear_dist(mod=mod, teeth1,teeth2,0,ps1,ps2);
+//   spur_gear2d(mod=mod,teeth=teeth1,profile_shift=ps1,shorten=shorten,gear_spin=-90,shaft_diam=5);
+//   right(d)
+//     spur_gear2d(mod=mod,teeth=teeth2,profile_shift=ps2,shorten=shorten,gear_spin=-90,shaft_diam=5);
+//   stroke([rect([desired,40], anchor=LEFT)],color="red");
+// Example(2D,Med,NoAxes,VPT=[37.0558,0.626722,9.78411],VPR=[0,0,0],VPD=496): For the same pair of module 4 gears with 19, and 37 teeth, suppose we want a closer spacing of 110 instead of 112.  A positive profile shift does the job, as shown by the red rectangle with width 110.  More of the negative shift is assigned to the large gear, to avoid undercutting the smaller gear.  
+//   teeth1=37;
+//   teeth2=19;
+//   mod=4;
+//   desired=110;
+//   pshift = get_profile_shift(desired,teeth1,teeth2,mod=mod);  // Returns -0.46
+//   shorten = pshift - (desired-112)/mod;     // Returns 0.04
+//   ps1 = 0.8*pshift;
+//   ps2 = 0.2*pshift;
+//   echo(ps2=ps2);
+//   d = gear_dist(mod=mod, teeth1,teeth2,0,ps1,ps2);
+//   spur_gear2d(mod=mod,teeth=teeth1,profile_shift=ps1,shorten=shorten,gear_spin=-90,shaft_diam=5);
+//   right(d)
+//     spur_gear2d(mod=mod,teeth=teeth2,profile_shift=ps2,shorten=shorten,gear_spin=-90,shaft_diam=5);
+//   stroke([rect([desired,40], anchor=LEFT)],color="red");
+function get_profile_shift(desired,teeth1,teeth2,helical=0,pressure_angle=20,mod,diam_pitch,circ_pitch) =
   let(
-       mod = circular_pitch(pitch, mod, circ_pitch, diam_pitch)/PI,
-       pa_eff = acos(mod*(teeth1+teeth2)*cos(pressure_angle)/2/desired)
+       mod = module_value(mod=mod, circ_pitch=circ_pitch, diam_pitch=diam_pitch),
+       teethsum = teeth1+teeth2,
+       pressure_angle_trans = atan(tan(pressure_angle)/cos(helical)),
+       y = desired/mod - teethsum/2/cos(helical),
+       thing=teethsum*cos(pressure_angle_trans) / (teethsum+2*y*cos(helical)),
+       pa_eff = acos(teethsum*cos(pressure_angle_trans) / (teethsum+2*y*cos(helical))),
+       fff=echo(desired=desired,y=y,thing=thing,pa_eff=pa_eff)
   )
-  (_invol(pa_eff)-_invol(pressure_angle))/2/tan(pressure_angle) * (teeth1+teeth2);
+  teethsum * (_invol(pa_eff)-_invol(pressure_angle_trans))/2/tan(pressure_angle);
 
 
 // Function: auto_profile_shift()
@@ -3284,33 +3355,113 @@ function get_profile_shift(desired,circ_pitch,teeth1,teeth2,pressure_angle=20,mo
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), pitch_radius(), outer_radius()
 // Usage:
-//   x = auto_profile_shift(teeth, [pressure_angle], [helical]);
+//   x = auto_profile_shift(teeth, [pressure_angle], [helical], [profile_shift=]);
+//   x = auto_profile_shift(teeth, [pressure_angle], [helical], get_min=);
 //   x = auto_profile_shift(teeth, min_teeth=);
 // Description:
-//   Calculates the recommended profile shift to avoid gear tooth undercutting.
+//   Calculates the recommended profile shift to avoid gear tooth undercutting.  You can set `min_teeth` to a
+//   value to allow small undercutting, and only activate the profile shift for more extreme cases.  Is is common
+//   practice to make gears with 15-17 teeth with undercutting with the standard 20 deg pressure angle.
+//   .
+//   The `get_min` argument returns the minimum profile shift needed to avoid undercutting regardless of the
+//   number of teeth.  This will be a negative value for gears with a large number of teeth; such gears can
+//   be given a negative profile shift without undercutting.  
 // Arguments:
 //   teeth = Total number of teeth in the gear.
 //   pressure_angle = The pressure angle of the gear.
 //   helical = helical angle
 //   ---
 //   min_teeth = If given, the minimum number of teeth on a gear that has acceptable undercut.
+//   get_min = If true then return the minimum profile shift to avoid undercutting, which may be a negative value for large gears.  
 //   profile_shift = If numerical then just return this value; if "auto" or not given then compute the automatic profile shift.
-
-
-function auto_profile_shift(teeth, pressure_angle=20, helical=0, min_teeth, profile_shift) =
+function auto_profile_shift(teeth, pressure_angle=20, helical=0, min_teeth, profile_shift, get_min=false) =
     assert(is_undef(profile_shift) || is_finite(profile_shift) || profile_shift=="auto", "Profile shift must be \"auto\" or a number")
     is_num(profile_shift) ? profile_shift
   : teeth==0 ? 0
   : let(
         pressure_angle=atan(tan(pressure_angle)/cos(helical)),
-        min_teeth = is_undef(min_teeth)
-          ? 2 / pow(sin(pressure_angle),2)
-          : min_teeth
+        min_teeth = default(min_teeth, 2 / sin(pressure_angle)^2)
     )
-    teeth > floor(min_teeth)? 0
+    !get_min && teeth > floor(min_teeth)? 0
   : (1 - (teeth / min_teeth))/cos(helical);
+
+
+// Function: gear_shorten()
+// Usage:
+//    shorten = gear_shorten(teeth1, teeth2, [helical], [profile_shift1], [profile_shift2], [pressure_angle=]);
+// Description:
+//    Compute the gear tip shortening factor for gears that have profile shifts.  This factor depends on both
+//    gears in a pair and when applied, will results in teeth that meet the specified clearance distance.
+//    Generally if you don't apply it the teeth clearance will be decreased due to the profile shifting.
+//    Because it operates pairwise, if a gear mates with more than one other gear, you may have to decide
+//    which shortening factor to use.  The shortening factor is independent of the size of the teeth.
+// Arguments:
+//   teeth1 = number of teeth on first gear
+//   teeth2 = number of teeth on second gear
+//   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
+//   profile_shift1 = Profile shift factor x for the first gear.  Default: 0
+//   profile_shift2 = Profile shift factor x for the second gear.  Default: 0
+//   ---
+//   pressure_angle = normal pressure angle of gear teeth.  Default: 20
+// Example(2D,Med,VPT=[53.9088,1.83058,26.0319],VPR=[0,0,0],VPD=140): Big profile shift eliminates the clearance between the teeth
+//   teeth1=25;
+//   teeth2=19;
+//   mod=4;
+//   ps1 = 0.75;
+//   ps2 = 0.75;
+//   d = gear_dist(mod=mod, teeth1,teeth2,0,ps1,ps2);
+//   color("lightblue")
+//     spur_gear2d(mod=mod,teeth=teeth1,profile_shift=ps1,gear_spin=-90);
+//   right(d)
+//     spur_gear2d(mod=mod,teeth=teeth2,profile_shift=ps2,gear_spin=-90);
+// Example(2D,Med,VPT=[53.9088,1.83058,26.0319],VPR=[0,0,0],VPD=140): Applying the correct shortening factor restores the clearance to its normal value.  
+//   teeth1=25;
+//   teeth2=19;
+//   mod=4;
+//   ps1 = 0.75;
+//   ps2 = 0.75;
+//   d = gear_dist(mod=mod, teeth1,teeth2,0,ps1,ps2);
+//   shorten=gear_shorten(teeth1,teeth2,0,ps1,ps2);
+//   color("lightblue")
+//     spur_gear2d(mod=mod,teeth=teeth1,profile_shift=ps1,shorten=shorten,gear_spin=-90);
+//   right(d)
+//     spur_gear2d(mod=mod,teeth=teeth2,profile_shift=ps2,shorten=shorten,gear_spin=-90);
+function gear_shorten(teeth1,teeth2,helical=0,profile_shift1=0,profile_shift2=0,pressure_angle=20) =
+    let(
+         ax = gear_dist(mod=1,teeth1,teeth2,helical,profile_shift1,profile_shift2,pressure_angle=pressure_angle),
+         y = ax - (teeth1+teeth2)/2/cos(helical)
+    )
+    profile_shift1+profile_shift2-y;
+
+
+// Function: gear_shorten_skew()
+// Usage:
+//    shorten = gear_shorten(teeth1, teeth2, helical1, helical2, [profile_shift1], [profile_shift2], [pressure_angle=]);
+// Description:
+//    Compute the gear tip shortening factor for skew axis helical gears that have profile shifts.  This factor depends on both
+//    gears in a pair and when applied, will results in teeth that meet the specified clearance distance.
+//    Generally if you don't apply it the teeth clearance will be decreased due to the profile shifting.
+//    Because it operates pairwise, if a gear mates with more than one other gear, you may have to decide
+//    which shortening factor to use.  The shortening factor is independent of the size of the teeth.
+// Arguments:
+//   teeth1 = Total number of teeth in the first gear.  If given 0, we assume this is a rack or worm.
+//   teeth2 = Total number of teeth in the second gear.  If given 0, we assume this is a rack or worm.
+//   helical1 = The helical angle (from vertical) of the teeth on the first gear. 
+//   helical1 = The helical angle (from vertical) of the teeth on the second gear.
+//   profile_shift1 = Profile shift factor x for the first gear.  Default: 0
+//   profile_shift2 = Profile shift factor x for the second gear.  Default: 0
+//   --
+//   pressure_angle = The pressure angle of the gear.
+function gear_shorten_skew(teeth1,teeth2,helical1,helical2,profile_shift1=0,profile_shift2=0,pressure_angle=20) =
+    let(
+         ax = gear_dist(mod=1,teeth1,teeth2,helical,profile_shift1,profile_shift2,pressure_angle=pressure_angle),
+         y = ax - (teeth1+teeth2)/2/cos(helical)
+    )
+    profile_shift1+profile_shift2-y;
 
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+
+
 
