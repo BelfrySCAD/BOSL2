@@ -213,19 +213,19 @@ function _inherit_gear_thickness(thickness) =
 //   You can compute the shortening parameter using {{gear_shorten()}}.  Note that the actual shortening distance is obtained
 //   by scaling the shortening fator by the gear's module.  
 // Figure(2D,Big,NoAxes,VPT=[55.8861,-4.31463,8.09832],VPR=[0,0,0],VPD=325.228): With large profile shifts the teeth need to be shortened or they don't have clearance in the valleys of the teeth in the meshing gear.  
-   teeth1=25;
-   teeth2=19;
-   mod=4;
-   ps1 = 0.75;
-   ps2 = 0.75;
-   d = gear_dist(mod=mod, teeth1,teeth2,0,ps1,ps2);
-   color("lightblue")
-     spur_gear2d(mod=mod,teeth=teeth1,profile_shift=ps1,gear_spin=-90);
-   right(d)
-     spur_gear2d(mod=mod,teeth=teeth2,profile_shift=ps2,gear_spin=-90);
-   right(9)stroke([[1.3*d/2,0],[d/2+4,0]], endcap2="arrow2",color="black");
-   fwd(2)right(d/2+25)color("black"){back(4)text("No clearance",size=6);
-                           fwd(4)text("at tooth tip",size=6);}
+//   teeth1=25;
+//   teeth2=19;
+//   mod=4;
+//   ps1 = 0.75;
+//   ps2 = 0.75;
+//   d = gear_dist(mod=mod, teeth1,teeth2,0,ps1,ps2);
+//   color("lightblue")
+//     spur_gear2d(mod=mod,teeth=teeth1,profile_shift=ps1,gear_spin=-90);
+//   right(d)
+//     spur_gear2d(mod=mod,teeth=teeth2,profile_shift=ps2,gear_spin=-90);
+//   right(9)stroke([[1.3*d/2,0],[d/2+4,0]], endcap2="arrow2",color="black");
+//   fwd(2)right(d/2+25)color("black"){back(4)text("No clearance",size=6);
+//                           fwd(4)text("at tooth tip",size=6);}
 // Figure(2D,Big,NoAxes,VPT=[55.8861,-4.31463,8.09832],VPR=[0,0,0],VPD=325.228): Applying the correct shortening factor restores the clearance to its set value.  
 //   teeth1=25;
 //   teeth2=19;
