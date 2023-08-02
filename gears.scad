@@ -3256,13 +3256,13 @@ function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, tee
 //   --
 //   pressure_angle = The pressure angle of the gear.
 // Example(3D,Med,NoAxes,VPT=[-2.62091,2.01048,-1.31405],VPR=[55,0,25],VPD=74.4017): These gears are auto profile shifted and as a result, do not mesh at the sum of their helical angles, but at 2.5 degrees more.  
-//   circ_pitch=5; teeth1=12; teeth2=7; ha1=25; ha2=30; thick=10;
-//   d = gear_dist_skew(circ_pitch=circ_pitch, teeth1, teeth2, ha1, ha2);
-//   ang = gear_skew_angle(teeth1, teeth2, helical1=ha1, helical2=ha2);  // Returns 57.7
-//   left(d/2)
-//     spur_gear(circ_pitch, teeth1, helical=ha1, thickness=thick, gear_spin=-90);
-//   right(d/2) color("lightblue")
-//     xrot(ang) spur_gear(circ_pitch, teeth2, helical=ha2, thickness=thick, gear_spin=90-180/teeth2);
+   circ_pitch=5; teeth1=12; teeth2=7; ha1=25; ha2=30; thick=10;
+   d = gear_dist_skew(circ_pitch=circ_pitch, teeth1, teeth2, ha1, ha2);
+   ang = gear_skew_angle(teeth1, teeth2, helical1=ha1, helical2=ha2);  // Returns 57.7
+   left(d/2)
+     spur_gear(circ_pitch, teeth1, helical=ha1, thickness=thick, gear_spin=-90);
+   right(d/2) color("lightblue")
+     xrot(ang) spur_gear(circ_pitch, teeth2, helical=ha2, thickness=thick, gear_spin=90-180/teeth2);
 
 function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_shift2,pressure_angle=20) =
    assert(all_nonnegative([teeth1,teeth2]),"Must give nonnegative values for teeth")
@@ -3275,7 +3275,6 @@ function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_
    profile_shift1==0 && profile_shift2==0 ? helical1+helical2
  : teeth1==0 || teeth2==0 ? helical1+helical2
  : let(
-        mod = module_value(mod=mod, circ_pitch=circ_pitch, diam_pitch=diam_pitch),
         a = gear_dist_skew(mod=mod,teeth1,teeth2,helical1,helical2,profile_shift1,profile_shift2,pressure_angle=pressure_angle),
         b = gear_dist_skew(mod=mod,teeth1,teeth2,helical1,helical2,0,0,pressure_angle=pressure_angle),
         d1 = 2*pitch_radius(mod=mod,teeth=teeth1,helical=helical1),
