@@ -636,6 +636,11 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //        ]
 //   ];
 //   linear_sweep(path, texture=tex, tex_size=[5,5], h=40);
+// Example: Textured with twist and scale.
+//   linear_sweep(regular_ngon(n=3, d=50),
+//       texture="rough", h=100, tex_scale=2,
+//       tex_size=[20,20], style="min_edge",
+//       convexity=10, scale=0.2, twist=120);
 // Example: As Function
 //   path = glued_circles(r=15, spread=40, tangent=45);
 //   vnf = linear_sweep(
@@ -664,7 +669,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //  linear_sweep(circle(20), texture=tile,
 //               tex_size=[30,20],tex_scale=15,
 //               h=40,convexity=4);
-// Example: This example shoes some endcap polygons missing and a spurious triangle
+// Example: This example shows some endcap polygons missing and a spurious triangle
 //   shape = skin([rect(2/5),
 //                 rect(2/3),
 //                 rect(2/5)],
@@ -3634,14 +3639,15 @@ function _textured_linear_sweep(
                                     let(
                                         v = (i + (ti/texcnt.y)) / counts.y,
                                         sc = lerp([1, 1, 1], scale, v),
-                                        mat = down((v-0.5)*h) *
+                                        mat = up((v-0.5)*h) *
                                               scale(sc) *
                                               zrot(twist*v)
-                                    ) apply(mat, tile_rows[ti])
+                                    ) apply(mat, tile_rows[texcnt.y-ti-1])
                                 ]
                             ) vnf_vertex_array(
                                 tiles, caps=false, style=style,
-                                col_wrap=true, row_wrap=false
+                                col_wrap=true, row_wrap=false,
+                                reverse=true
                             )
                     ) vnf
                 ]),
@@ -3670,8 +3676,10 @@ function _textured_linear_sweep(
                         ]
                     ) nupath
                 ],
-                bot_vnf = !caps[0] || brgn==[[]] ? EMPTY_VNF:vnf_from_region(brgn, down(h/2), reverse=true),
-                top_vnf = !caps[1] || brgn==[[]] ? EMPTY_VNF:vnf_from_region(brgn, tmat, reverse=false)
+                bot_vnf = !caps[0] || brgn==[[]] ? EMPTY_VNF
+                    : vnf_from_region(brgn, down(h/2), reverse=true),
+                top_vnf = !caps[1] || brgn==[[]] ? EMPTY_VNF
+                    : vnf_from_region(brgn, tmat, reverse=false)
             ) vnf_join([walls_vnf, bot_vnf, top_vnf])
         ]),
         skmat = down(h/2) * skew(sxz=shift.x/h, syz=shift.y/h) * up(h/2),
