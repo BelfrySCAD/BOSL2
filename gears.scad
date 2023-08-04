@@ -311,8 +311,19 @@ function _inherit_gear_thickness(thickness) =
 // Subsection: Ring Gears (Internal Gears)
 //   A ring gear (or internal gear) is a gear where the teeth are on the inside of a circle.  Such gears must be mated
 //   to a regular (external) gear, which rotates around the inside.
-// Figure(3D,Med,NoAxes,VPT=[10.3822,-19.892,16.1929],VPR=[55.7,0,30.6],VPD=401.516): A interior or ring gear
-//   ring_gear(mod=5, teeth=35,thickness=25,$fn=128);
+// Figure(2D,Med,NoAxes,VPT=[0.491171,1.07815,0.495977],VPR=[0,0,0],VPD=292.705): A interior or ring gear (yellow) with a mating spur gear (blue)
+//   teeth1=18;
+//   teeth2=30;
+//   ps1=undef;
+//   ps2=auto_profile_shift(teeth=teeth1);
+//   mod=3;
+//   d = gear_dist(mod=mod, teeth1=teeth1, teeth2=teeth2,profile_shift1=ps1, profile_shift2=ps2,helical=0, internal2=true);
+//   ang = 0;
+//     ring_gear2d(mod=mod, teeth=teeth2,profile_shift=ps2,helical=0,backing=4);
+//     zrot(ang*360/teeth2)
+//     color("lightblue")
+//     fwd(d)
+//        spur_gear2d(mod=mod, teeth=teeth1, profile_shift=ps1,gear_spin=-ang*360/teeth1,helical=0);
 // Continues:
 //    Ring gears are subject to all the usual mesh requirements: the teeth must be the same size, the pressure angles must
 //    match and they must have opposite helical angles.  The {{gear_dist()}} function can give the center separation of
@@ -320,7 +331,7 @@ function _inherit_gear_thickness(thickness) =
 //    teeth is small or the teeth counts of the ring gear and spur gear are too close together.  The mating spur gear must
 //    have few enough teeth so that the teeth don't interfere on the other side of the ring.  Very small spur gears can interfere
 //    on the tips of the ring gear's teeth.  
-// Figure(2D,Med,NoAxes,VPR=[0,0,0],VPT=[-1.16111,0.0525612,0.495977],VPD=213.382): The red regions show interference between the two gears: the 18 tooth spur gear does not fit inside the 20 tooth ring gear. 
+// Figure(2D,Med,NoAxes,VPT=[-1.16111,0.0525612,0.495977],VPR=[0,0,0],VPD=213.382): The red regions show interference between the two gears: the 18 tooth spur gear does not fit inside the 20 tooth ring gear. 
 //    teeth1=18;
 //    teeth2=20;
 //    ps1=undef;
