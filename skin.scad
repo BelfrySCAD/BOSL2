@@ -3642,7 +3642,7 @@ function _textured_linear_sweep(
                                         mat = up((v-0.5)*h) *
                                               scale(sc) *
                                               zrot(twist*v)
-                                    ) apply(mat, tile_rows[texcnt.y-ti-1])
+                                    ) apply(mat, tile_rows[(texcnt.y-ti)%texcnt.y])
                                 ]
                             ) vnf_vertex_array(
                                 tiles, caps=false, style=style,
