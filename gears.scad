@@ -409,6 +409,73 @@ function _inherit_gear_thickness(thickness) =
 //      color("lightblue")
 //      fwd(d)
 //         spur_gear(mod=mod, teeth=teeth1, profile_shift=ps1,gear_spin=-ang*360/teeth1,helical=-30,thickness=15);
+// Subsection: Backlash (Fitting Real Gears Together)
+//   You may have noticed that the example gears shown fit together perfectly, making contact on both sides of
+//   the teeth.  Real gears need space between the teeth to prevent the gears from jamming, to provide space
+//   for lubricant, and to provide allowance for fabrication error.  This space is called backlash.  Excessive backlash
+//   is undesirable, especially if the drive reverses frequently.
+//   .
+//   Backlash can be introduced in two ways.  One is to make the teeth narrower, so the gaps between the teeth are
+//   larger than the teeth.  Alternatively, you can move the gears farther apart than their ideal spacing.
+//   Backlash can be measured in several different ways.  The gear modules in this library accept a backlash
+//   parameter which specifies backlash as a circular distance at the pitch circle.  The modules narrow
+//   the teeth by the amount specified, which means the spaces between the teeth grow larger.  Of course, if you apply
+//   backlash to both gears then the total backlash in the system is the combined amount from both gears.
+//   Usually it is best to apply backlash symmetrically to both gears, but if one gear is very small it may
+//   be better to place the backlash entirely on the larger gear to avoid weakening the teeth of the small gear.  
+// Figure(2D,Big,VPT=[4.5244,64.112,0.0383045],VPR=[0,0,0],VPD=48.517,NoAxes): Backlash narrows the teeth by the specified length along the pitch circle.  Below a very large backlash appears, with half of the backlash on either side of the tooth.  
+//   teeth1=20;
+//   mod=5;
+//   r1 = pitch_radius(mod=mod,teeth=teeth1,helical=40);
+//   bang=4/(2*PI*r1) * 360 ;
+//   zrot(-180/teeth1*.5){
+//   color("white")
+//   dashed_stroke(arc(r=r1, n=30, angle=[80,110]), width=.05);
+//     spur_gear2d(mod=mod, teeth=teeth1,backlash=0+.5*0,profile_shift="auto",gear_spin=180/teeth1*.5,helical=40);
+//   %spur_gear2d(mod=mod, teeth=teeth1,backlash=4+.5*0,profile_shift="auto",gear_spin=180/teeth1*.5,helical=40);
+//   color("black")stroke(arc(n=32,r=r1,angle=[90+bang/2,90]),width=.1,endcaps="arrow2");
+//   }    
+//   color("black")back(r1+.25)right(5.5)text("backlash/2",size=1);
+// Figure(2D,Med,VPT=[0.532987,50.0891,0.0383045],VPR=[0,0,0],VPD=53.9078): Here two gears appear together with a more reasonable backlash applied to both gears. 
+//   teeth1=20;teeth2=33;
+//   mod=5;
+//   ha=0;
+//   r1 = pitch_radius(mod=mod,teeth=teeth1,helical=ha);
+//   r2=pitch_radius(mod=mod,teeth=teeth2,helical=ha);
+//   bang=4/(2*PI*r1) * 360 ;
+//   
+//   back(r1+pitch_radius(mod=mod,teeth=teeth2,helical=ha)){
+//      spur_gear2d(mod=mod, teeth=teeth2,backlash=.5*0,helical=ha,gear_spin=-180/teeth2/2);
+//      %spur_gear2d(mod=mod, teeth=teeth2,backlash=1,helical=ha,gear_spin=-180/teeth2/2);
+//      }
+//   {
+//     spur_gear2d(mod=mod, teeth=teeth1,backlash=0+.5*0,profile_shift=0,gear_spin=180/teeth1*.5,helical=ha);
+//   %spur_gear2d(mod=mod, teeth=teeth1,backlash=1+.5*0,profile_shift=0,gear_spin=180/teeth1*.5,helical=ha);
+//   *color("white"){
+//     dashed_stroke(arc(r=r1, n=30, angle=[80,110]), width=.05);
+//     back(r1+r2)
+//        dashed_stroke(arc(r=r2, n=30, angle=[-80,-110]), width=.05);
+//   }
+//   //color("black")stroke(arc(n=32,r=r1,angle=[90+bang/2,90]),width=.1,endcaps="arrow2");
+//   }
+// Figure(2D,Med,VPT=[0.532987,50.0891,0.0383045],VPR=[0,0,0],VPD=53.9078): Here the same gears appear with backlash applied using the `backlash` parameter to {{gear_dist()}} to shift them apart.  
+//   teeth1=20;teeth2=33;
+//   mod=5;
+//   ha=0;
+//   r1 = pitch_radius(mod=mod,teeth=teeth1,helical=ha);
+//   r2 = pitch_radius(mod=mod,teeth=teeth2,helical=ha);
+//   bang=4/(2*PI*r1) * 360 ;
+//   shift = 1 * cos(ha)/2/tan(20);
+//   back(r1+pitch_radius(mod=mod,teeth=teeth2,helical=ha)){
+//      zrot(-180/teeth2/2){
+//      %back(shift)spur_gear2d(mod=mod, teeth=teeth2,backlash=0,helical=ha);
+//      spur_gear2d(mod=mod, teeth=teeth2,backlash=0,helical=ha);
+//      }
+//      }
+//   zrot(180/teeth1*.5){
+//     %fwd(shift)spur_gear2d(mod=mod, teeth=teeth1,backlash=0+.5*0,profile_shift=0,helical=ha);     
+//     spur_gear2d(mod=mod, teeth=teeth1,backlash=0,profile_shift=0,helical=ha);
+//   }  
 
 // Section: Gears
 
@@ -2869,6 +2936,8 @@ function pitch_radius(
     pitch
 ) =
     let( circ_pitch = circular_pitch(pitch, mod, circ_pitch, diam_pitch) )
+    assert(is_finite(helical))
+    assert(is_finite(circ_pitch))
     circ_pitch * teeth / PI / 2 / cos(helical);
 
 
@@ -3108,6 +3177,7 @@ function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning
 //   internal1 = first gear is an internal (ring) gear.  Default: false
 //   internal2 = second gear is an internal (ring) gear.  Default: false
 //   pressure_angle = The pressure angle of the gear.
+//   backlash = Add extra space to produce the specified backlash
 // Example(2D,NoAxes): Spur gears (with automatic profile shifting on both)
 //   circ_pitch=5; teeth1=7; teeth2=24;
 //   d = gear_dist(circ_pitch=circ_pitch, teeth1, teeth2);
@@ -3147,6 +3217,7 @@ function gear_dist(
     profile_shift2,
     internal1=false,
     internal2=false,
+    backlash = 0,
     pressure_angle=20,
     diam_pitch,
     circ_pitch,
@@ -3177,7 +3248,7 @@ function gear_dist(
         pa_eff = _working_pressure_angle(teeth1,profile_shift1,teeth2,profile_shift2,pressure_angle,helical),
         pa_transv = atan(tan(pressure_angle)/cos(helical))
     )
-    mod*(teeth1+teeth2)*cos(pa_transv)/cos(pa_eff)/cos(helical)/2;
+    mod*(teeth1+teeth2)*cos(pa_transv)/cos(pa_eff)/cos(helical)/2 + backlash*cos(helical)/2/tan(pressure_angle);
 
 function _invol(a) = tan(a) - a*PI/180;
 
@@ -3253,6 +3324,7 @@ function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, tee
 // Function: gear_skew_angle()
 // Usage:
 //   ang = gear_skew_angle(teeth1, teeth2, helical1, helical2, [profile_shift1], [profile_shift2], [pressure_angle=]
+// Synopsis: Returns corrected skew angle between two profile shifted helical gears.  
 // Description:
 //   Compute the correct skew angle between the axes of two profile shifted helical gears.  When profile shifting is zero, or when one of
 //   the gears is a rack, this angle is simply the sum of the helical angles of the two gears.  But with profile shifted gears, a small
@@ -3301,6 +3373,7 @@ function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_
 // Function: get_profile_shift()
 // Usage:
 //   total_shift = get_profile_shift(mod=|diam_pitch=|circ_pitch=, desired, teeth1, teeth2, [helical], [pressure_angle=],
+// Synopsis: Returns total profile shift needed to achieve a desired spacing between two gears
 // Description:
 //   Compute the total profile shift, split between two gears, needed to place those gears with a specified separation.
 //   If the requested separation is too small, returns NaN.  Note that the profile shift returned may also be impractically
@@ -3395,6 +3468,7 @@ function auto_profile_shift(teeth, pressure_angle=20, helical=0, min_teeth, prof
 // Function: gear_shorten()
 // Usage:
 //    shorten = gear_shorten(teeth1, teeth2, [helical], [profile_shift1], [profile_shift2], [pressure_angle=]);
+// Synopsis: Returns the tip shortening parameter for profile shifted parallel axis gears.
 // Description:
 //    Compute the gear tip shortening factor for gears that have profile shifts.  This factor depends on both
 //    gears in a pair and when applied, will results in teeth that meet the specified clearance distance.
@@ -3446,6 +3520,7 @@ function gear_shorten(teeth1,teeth2,helical=0,profile_shift1="auto",profile_shif
 // Function: gear_shorten_skew()
 // Usage:
 //    shorten = gear_shorten(teeth1, teeth2, helical1, helical2, [profile_shift1], [profile_shift2], [pressure_angle=]);
+// Synopsis: Returns the tip shortening parameter for profile shifted skew axis helical gears.
 // Description:
 //    Compute the gear tip shortening factor for skew axis helical gears that have profile shifts.  This factor depends on both
 //    gears in a pair and when applied, will results in teeth that meet the specified clearance distance.
