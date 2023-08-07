@@ -72,6 +72,7 @@ function _inherit_gear_thickness(thickness) =
 //   this section provides the minimal information needed for gear making.  If you want more information about the
 //   details of gears, consult the references below, which are the ones that we consulted when writing the library code.
 //   - Tec Science
+//       * [Involute Gears](https://www.tec-science.com/mechanical-power-transmission/involute-gear/geometry-of-involute-gears/)
 //       * [Gear engagement](https://www.tec-science.com/mechanical-power-transmission/involute-gear/meshing-line-action-contact-pitch-circle-law/)
 //       * [Gears meshing with racks](https://www.tec-science.com/mechanical-power-transmission/involute-gear/rack-meshing/)
 //       * [Gear undercutting](https://www.tec-science.com/mechanical-power-transmission/involute-gear/undercut/)
@@ -2567,7 +2568,7 @@ function _gear_tooth_profile(
     rrad = _root_radius(circ_pitch, teeth, clearance, helical=helical, profile_shift=profile_shift, internal=internal),
 
     srad = max(rrad,brad),
-    tthick = circ_pitch/PI / cos(helical) * (PI/2 + 2*profile_shift * tan(pressure_angle)) - backlash,
+    tthick = circ_pitch/PI / cos(helical) * (PI/2 + 2*profile_shift * tan(pressure_angle)) + (internal?backlash:-backlash),
     tang = tthick / prad / 2 * 180 / PI,
 
     // Generate a lookup table for the involute curve angles, by radius
