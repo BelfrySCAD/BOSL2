@@ -1709,7 +1709,7 @@ function f_is_function(a) = f_1arg(function (a) is_function(a))(a);
 //   A factory that returns function literals equivalent to `is_vector(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_vector(a,b) = f_2arg(function (a,b) is_vector(a,b));
+function f_is_vector(a,b) = f_2arg(function (a,b) is_vector(a,b))(a,b);
 
 
 // Function: f_is_path()
@@ -1722,7 +1722,7 @@ function f_is_vector(a,b) = f_2arg(function (a,b) is_vector(a,b));
 //   A factory that returns function literals equivalent to `is_path(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_path(a,b) = f_2arg(function (a,b) is_path(a,b));
+function f_is_path(a,b) = f_2arg(function (a,b) is_path(a,b))(a,b);
 
 
 // Function: f_is_region()
