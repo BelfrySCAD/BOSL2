@@ -2666,7 +2666,7 @@ function reorient(
 
 
 // Function: named_anchor()
-// Synopsis: Creates an anchro data structure.
+// Synopsis: Creates an anchor data structure.
 // Topics: Attachments
 // See Also: reorient(), attachable()
 // Usage:
