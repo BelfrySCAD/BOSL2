@@ -806,7 +806,7 @@ module test_f_is_bool() {
         ["foo",   false],
         [[4,5,6], false]
     ]) {
-        assert(testfn(test[0]), test[1]);
+        assert(testfn(test[0]) == test[1]);
     }
 }
 test_f_is_bool();
@@ -823,7 +823,7 @@ module test_f_is_def() {
         ["foo",   true],
         [[4,5,6], true]
     ]) {
-        assert(testfn(test[0]), test[1]);
+        assert(testfn(test[0]) == test[1]);
     }
 }
 test_f_is_def();
@@ -840,7 +840,7 @@ module test_f_is_undef() {
         ["foo",   false],
         [[4,5,6], false]
     ]) {
-        assert(testfn(test[0]), test[1]);
+        assert(testfn(test[0]) == test[1]);
     }
 }
 test_f_is_undef();
@@ -863,7 +863,7 @@ module test_f_is_num() {
         ["foo",   false],
         [[4,5,6], false]
     ]) {
-        assert(testfn(test[0]), test[1]);
+        assert(testfn(test[0]) == test[1]);
     }
 }
 test_f_is_num();
@@ -886,7 +886,7 @@ module test_f_is_int() {
         ["foo",   false],
         [[4,5,6], false]
     ]) {
-        assert(testfn(test[0]), test[1]);
+        assert(testfn(test[0]) == test[1]);
     }
 }
 test_f_is_int();
@@ -909,7 +909,7 @@ module test_f_is_nan() {
         ["foo",   false],
         [[4,5,6], false]
     ]) {
-        assert(testfn(test[0]), test[1]);
+        assert(testfn(test[0]) == test[1]);
     }
 }
 test_f_is_nan();
@@ -931,7 +931,7 @@ module test_f_is_finite() {
         ["foo",   false],
         [[4,5,6], false]
     ]) {
-        assert(testfn(test[0]), test[1]);
+        assert(testfn(test[0]) == test[1]);
     }
 }
 test_f_is_finite();
@@ -955,7 +955,7 @@ module test_f_is_string() {
         [[4,5,6], false],
         [[4:1:6], false]
     ]) {
-        assert(testfn(test[0]), test[1]);
+        assert(testfn(test[0]) == test[1]);
     }
 }
 test_f_is_string();
@@ -979,7 +979,7 @@ module test_f_is_list() {
         [[4,5,6], true],
         [[4:1:6], false]
     ]) {
-        assert(testfn(test[0]), test[1]);
+        assert(testfn(test[0]) == test[1]);
     }
 }
 test_f_is_list();
@@ -1005,7 +1005,7 @@ module test_f_is_path() {
         [square(100), true],
         [circle(100), true]
     ]) {
-        assert(testfn(test[0]), test[1]);
+        assert(testfn(test[0]) == test[1], str(test[0]," should be ",test[1]));
     }
 }
 test_f_is_path();
