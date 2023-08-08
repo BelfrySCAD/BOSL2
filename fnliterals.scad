@@ -1566,7 +1566,7 @@ function f_cross(a,b) = f_2arg(function(a,b) cross(a,b))(a,b);
 //   A factory that returns function literals equivalent to `is_def(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_def(x) = f_1arg(function (x) is_def(x));
+function f_is_def(a) = f_1arg(function (a) is_def(a))(a);
 
 
 // Function: f_is_undef()
@@ -1579,7 +1579,7 @@ function f_is_def(x) = f_1arg(function (x) is_def(x));
 //   A factory that returns function literals equivalent to `is_undef(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_undef(x) = f_1arg(function (x) is_undef(x));
+function f_is_undef(a) = f_1arg(function (a) is_undef(a))(a);
 
 
 // Function: f_is_bool()
@@ -1592,7 +1592,7 @@ function f_is_undef(x) = f_1arg(function (x) is_undef(x));
 //   A factory that returns function literals equivalent to `is_bool(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_bool(x) = f_1arg(function (x) is_bool(x));
+function f_is_bool(a) = f_1arg(function (a) is_bool(a))(a);
 
 
 // Function: f_is_num()
@@ -1605,7 +1605,7 @@ function f_is_bool(x) = f_1arg(function (x) is_bool(x));
 //   A factory that returns function literals equivalent to `is_num(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_num(x) = f_1arg(function (x) is_num(x));
+function f_is_num(a) = f_1arg(function (a) is_num(a))(a);
 
 
 // Function: f_is_int()
@@ -1618,7 +1618,7 @@ function f_is_num(x) = f_1arg(function (x) is_num(x));
 //   A factory that returns function literals equivalent to `is_int(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_int(x) = f_1arg(function (x) is_int(x));
+function f_is_int(a) = f_1arg(function (a) is_int(a))(a);
 
 
 // Function: f_is_nan()
@@ -1631,7 +1631,7 @@ function f_is_int(x) = f_1arg(function (x) is_int(x));
 //   A factory that returns function literals equivalent to `is_nan(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_nan(x) = f_1arg(function (x) is_nan(x));
+function f_is_nan(a) = f_1arg(function (a) is_nan(a))(a);
 
 
 // Function: f_is_finite()
@@ -1644,7 +1644,7 @@ function f_is_nan(x) = f_1arg(function (x) is_nan(x));
 //   A factory that returns function literals equivalent to `is_finite(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_finite(x) = f_1arg(function (x) is_finite(x));
+function f_is_finite(a) = f_1arg(function (a) is_finite(a))(a);
 
 
 // Function: f_is_string()
@@ -1657,7 +1657,7 @@ function f_is_finite(x) = f_1arg(function (x) is_finite(x));
 //   A factory that returns function literals equivalent to `is_string(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_string(x) = f_1arg(function (x) is_string(x));
+function f_is_string(a) = f_1arg(function (a) is_string(a))(a);
 
 
 // Function: f_is_list()
@@ -1670,7 +1670,7 @@ function f_is_string(x) = f_1arg(function (x) is_string(x));
 //   A factory that returns function literals equivalent to `is_list(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_list(x) = f_1arg(function (x) is_list(x));
+function f_is_list(a) = f_1arg(function (a) is_list(a))(a);
 
 
 // Function: f_is_range()
@@ -1683,7 +1683,7 @@ function f_is_list(x) = f_1arg(function (x) is_list(x));
 //   A factory that returns function literals equivalent to `is_range(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_range(x) = f_1arg(function (x) is_range(x));
+function f_is_range(a) = f_1arg(function (a) is_range(a))(a);
 
 
 // Function: f_is_function()
@@ -1696,7 +1696,7 @@ function f_is_range(x) = f_1arg(function (x) is_range(x));
 //   A factory that returns function literals equivalent to `is_function(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_function(x) = f_1arg(function (x) is_function(x));
+function f_is_function(a) = f_1arg(function (a) is_function(a))(a);
 
 
 // Function: f_is_vector()
@@ -1709,7 +1709,7 @@ function f_is_function(x) = f_1arg(function (x) is_function(x));
 //   A factory that returns function literals equivalent to `is_vector(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_vector(a,b) = f_2arg(function (a,b) is_vector(a,b));
+function f_is_vector(a,b) = f_2arg(function (a,b) is_vector(a,b))(a,b);
 
 
 // Function: f_is_path()
@@ -1722,7 +1722,7 @@ function f_is_vector(a,b) = f_2arg(function (a,b) is_vector(a,b));
 //   A factory that returns function literals equivalent to `is_path(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_path(a,b) = f_2arg(function (a,b) is_path(a,b));
+function f_is_path(a,b) = f_2arg(function (a,b) is_path(a,b))(a,b);
 
 
 // Function: f_is_region()
@@ -1735,7 +1735,7 @@ function f_is_path(a,b) = f_2arg(function (a,b) is_path(a,b));
 //   A factory that returns function literals equivalent to `is_region(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_region(a) = f_1arg(function (a) is_region(a));
+function f_is_region(a) = f_1arg(function (a) is_region(a))(a);
 
 
 // Function: f_is_vnf()
@@ -1748,7 +1748,7 @@ function f_is_region(a) = f_1arg(function (a) is_region(a));
 //   A factory that returns function literals equivalent to `is_vnf(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_vnf(a) = f_1arg(function (a) is_vnf(a));
+function f_is_vnf(a) = f_1arg(function (a) is_vnf(a))(a);
 
 
 // Function: f_is_patch()
@@ -1761,7 +1761,7 @@ function f_is_vnf(a) = f_1arg(function (a) is_vnf(a));
 //   A factory that returns function literals equivalent to `is_patch(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_patch(a) = f_1arg(function (a) is_patch(a));
+function f_is_patch(a) = f_1arg(function (a) is_patch(a))(a);
 
 
 
