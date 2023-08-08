@@ -72,6 +72,7 @@ function _inherit_gear_thickness(thickness) =
 //   this section provides the minimal information needed for gear making.  If you want more information about the
 //   details of gears, consult the references below, which are the ones that we consulted when writing the library code.
 //   - Tec Science
+//       * [Involute Gears](https://www.tec-science.com/mechanical-power-transmission/involute-gear/geometry-of-involute-gears/)
 //       * [Gear engagement](https://www.tec-science.com/mechanical-power-transmission/involute-gear/meshing-line-action-contact-pitch-circle-law/)
 //       * [Gears meshing with racks](https://www.tec-science.com/mechanical-power-transmission/involute-gear/rack-meshing/)
 //       * [Gear undercutting](https://www.tec-science.com/mechanical-power-transmission/involute-gear/undercut/)
@@ -211,7 +212,7 @@ function _inherit_gear_thickness(thickness) =
 //   be automatically incorporated.  (Consider the situation where one gear mates with multiple other gears.)  With modest
 //   profile shifts, you can probably ignore this adjustment, but with more extreme profile shifts, it may be important.
 //   You can compute the shortening parameter using {{gear_shorten()}}.  Note that the actual shortening distance is obtained
-//   by scaling the shortening fator by the gear's module.  
+//   by scaling the shortening factor by the gear's module.  
 // Figure(2D,Big,NoAxes,VPT=[55.8861,-4.31463,8.09832],VPR=[0,0,0],VPD=325.228): With large profile shifts the teeth need to be shortened or they don't have clearance in the valleys of the teeth in the meshing gear.  
 //   teeth1=25;
 //   teeth2=19;
@@ -1692,7 +1693,7 @@ function rack2d(
         tthick = trans_pitch/PI * (PI/2 + 2*profile_shift * tan(PA)) - backlash,
         l = teeth * trans_pitch,
         ax = ang_adj_to_opp(trans_pa, adendum),
-        dx = ang_adj_to_opp(trans_pa, dedendum),
+        dx = dedendum*tan(trans_pa),
         poff = tthick/2 - backlash,
         tooth = [
             [-trans_pitch/2, -dedendum],
@@ -2365,7 +2366,7 @@ function worm_gear(
     assert(is_finite(gear_spin))
     let(
         helical = asin(worm_starts * circ_pitch / PI / worm_diam),
-        pr = pitch_radius(circ_pitch, teeth, helical),
+        pr = pitch_radius(circ_pitch, teeth,helical),
         hob_rad = worm_diam / 2 + crowning,
         thickness = worm_gear_thickness(circ_pitch=circ_pitch, teeth=teeth, worm_diam=worm_diam, worm_arc=worm_arc, crowning=crowning, clearance=clearance),
         tooth_profile = _gear_tooth_profile(
@@ -2567,7 +2568,7 @@ function _gear_tooth_profile(
     rrad = _root_radius(circ_pitch, teeth, clearance, helical=helical, profile_shift=profile_shift, internal=internal),
 
     srad = max(rrad,brad),
-    tthick = circ_pitch/PI / cos(helical) * (PI/2 + 2*profile_shift * tan(pressure_angle)) - backlash,
+    tthick = circ_pitch/PI / cos(helical) * (PI/2 + 2*profile_shift * tan(pressure_angle)) + (internal?backlash:-backlash),
     tang = tthick / prad / 2 * 180 / PI,
 
     // Generate a lookup table for the involute curve angles, by radius
@@ -2662,9 +2663,11 @@ function _gear_tooth_profile(
       ? [last(line1), isect_pt, line2[0]]
       : [line2[0], isect_pt, line1[0]],
     rounded_tooth_half = deduplicate([
-        if (!internal) each arc(n=8, r=round_r, corner=rcorner),
+        if (!internal && round_r>0) each arc(n=8, r=round_r, corner=rcorner),
+        if (!internal && round_r<=0) isect_pt,
         each tooth_half_raw,
-        if (internal) each arc(n=8, r=round_r, corner=rcorner),
+        if (internal && round_r>0) each arc(n=8, r=round_r, corner=rcorner),
+        if (internal && round_r<=0) isect,
     ]),
 
     // Strip "jaggies" if found.
@@ -3163,7 +3166,10 @@ function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning
 //   distance between the rack's pitch line and the gear's center.  If you set internal1 or internal2 to true then the
 //   specified gear is a ring gear;  the returned distance is still the distance between the centers of the gears.  Note that
 //   for a regular gear and ring gear to be compatible the ring gear must have more teeth and at least as much profile shift
-//   as the regular gear.  
+//   as the regular gear.
+//   .
+//   The backlash parameter computes the distance offset that produces a total backlash of `2*backlash` in the
+//   two gear mesh system.  This is equivalent to giving the same backlash argument to both gears.  
 // Arguments:
 //   teeth1 = Total number of teeth in the first gear.  If given 0, we assume this is a rack or worm.
 //   teeth2 = Total number of teeth in the second gear.  If given 0, we assume this is a rack or worm.
@@ -3177,7 +3183,7 @@ function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning
 //   internal1 = first gear is an internal (ring) gear.  Default: false
 //   internal2 = second gear is an internal (ring) gear.  Default: false
 //   pressure_angle = The pressure angle of the gear.
-//   backlash = Add extra space to produce the specified backlash
+//   backlash = Add extra space to produce a total of 2*backlash between the two gears. 
 // Example(2D,NoAxes): Spur gears (with automatic profile shifting on both)
 //   circ_pitch=5; teeth1=7; teeth2=24;
 //   d = gear_dist(circ_pitch=circ_pitch, teeth1, teeth2);
@@ -3248,7 +3254,7 @@ function gear_dist(
         pa_eff = _working_pressure_angle(teeth1,profile_shift1,teeth2,profile_shift2,pressure_angle,helical),
         pa_transv = atan(tan(pressure_angle)/cos(helical))
     )
-    mod*(teeth1+teeth2)*cos(pa_transv)/cos(pa_eff)/cos(helical)/2 + backlash*cos(helical)/2/tan(pressure_angle);
+    mod*(teeth1+teeth2)*cos(pa_transv)/cos(pa_eff)/cos(helical)/2 + backlash*cos(helical)/tan(pressure_angle);
 
 function _invol(a) = tan(a) - a*PI/180;
 

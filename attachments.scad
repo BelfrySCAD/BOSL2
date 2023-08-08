@@ -2278,6 +2278,14 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   * Rotates this part so it's anchor direction vector exactly opposes the parent's anchor direction vector.
 //   * Rotates this part so it's anchor spin matches the parent's anchor spin.
 //   .
+//   This module is also responsible for handing coloring of objects with {{recolor()}} and {{color_this()}}, and
+//   it is responsible for processing tags and determining whether the object should
+//   display or not in the current context.  The determination to display the attachable object
+//   occurs in this module, which means that an object which does not display (e.g. a "remove" tagged object
+//   inside {{diff()}} cannot have internal {{tag()}} calls that change its tags and cause submodel
+//   portions to display: the entire child simply does not run.  
+
+
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 //
 // Arguments:
