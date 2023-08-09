@@ -3233,6 +3233,7 @@ function gear_dist(
     assert(teeth1>0 || teeth2>0, "One of the teeth counts must be nonzero")
     assert(is_bool(internal1))
     assert(is_bool(internal2))
+    assert(is_finite(helical))
     assert(!(internal1&&internal2), "Cannot specify both gears as internal")
     assert(!(internal1 || internal2) || (teeth1>0 && teeth2>0), "Cannot specify internal gear with rack (zero tooth count)")
     let(
@@ -3254,7 +3255,8 @@ function gear_dist(
         pa_eff = _working_pressure_angle(teeth1,profile_shift1,teeth2,profile_shift2,pressure_angle,helical),
         pa_transv = atan(tan(pressure_angle)/cos(helical))
     )
-    mod*(teeth1+teeth2)*cos(pa_transv)/cos(pa_eff)/cos(helical)/2 + backlash*cos(helical)/tan(pressure_angle);
+    mod*(teeth1+teeth2)*cos(pa_transv)/cos(pa_eff)/cos(helical)/2
+        + (internal1||internal2?-1:1) * backlash*cos(helical)/tan(pressure_angle);
 
 function _invol(a) = tan(a) - a*PI/180;
 
