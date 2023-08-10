@@ -3561,7 +3561,7 @@ function gear_shorten(teeth1,teeth2,helical=0,profile_shift1="auto",profile_shif
 
 // Function: gear_shorten_skew()
 // Usage:
-//    shorten = gear_shorten(teeth1, teeth2, helical1, helical2, [profile_shift1], [profile_shift2], [pressure_angle=]);
+//    shorten = gear_shorten_skew(teeth1, teeth2, helical1, helical2, [profile_shift1], [profile_shift2], [pressure_angle=]);
 // Synopsis: Returns the tip shortening parameter for profile shifted skew axis helical gears.
 // Description:
 //    Compute the gear tip shortening factor for skew axis helical gears that have profile shifts.  This factor depends on both
@@ -3590,6 +3590,3 @@ function gear_shorten_skew(teeth1,teeth2,helical1,helical2,profile_shift1="auto"
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
-
-
-
