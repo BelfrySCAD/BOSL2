@@ -1694,7 +1694,7 @@ function rack2d(
         l = teeth * trans_pitch,
         ax = ang_adj_to_opp(trans_pa, adendum),
         dx = dedendum*tan(trans_pa),
-        poff = tthick/2 - backlash,
+        poff = tthick/2,
         tooth = [
             [-trans_pitch/2, -dedendum],
             if (rounding) each arc(n=4, r=clear, corner=[
@@ -2566,7 +2566,6 @@ function _gear_tooth_profile(
     prad = pitch_radius(circ_pitch, teeth, helical=helical),
     brad = _base_radius(circ_pitch, teeth, pressure_angle, helical=helical),
     rrad = _root_radius(circ_pitch, teeth, clearance, helical=helical, profile_shift=profile_shift, internal=internal),
-
     srad = max(rrad,brad),
     tthick = circ_pitch/PI / cos(helical) * (PI/2 + 2*profile_shift * tan(pressure_angle)) + (internal?backlash:-backlash),
     tang = tthick / prad / 2 * 180 / PI,
@@ -3153,12 +3152,43 @@ function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning
     ) thickness;
 
 
+// Function: worm_dist()
+// Synopsis: Returns the distance between a worm and a worm gear
+// Topics: Gears, Parts
+// See Also: worm(), worm_gear(), pitch_radius(), outer_radius()
+// Usage:
+//   dist = worm_dist(mod=|diam_pitch=|circ_pitch=, d, starts, teeth, [profile_shift], [pressure_angle=]);
+// Description:
+//   Calculate the distance between the centers of a worm and its mating worm gear, taking account
+//   possible profile shifting of the worm gear.
+// Arguments:
+//   d = diameter of worm
+//   starts = number of starts of worm
+//   teeth = number of teeth on worm gear
+//   profile_shift = profile shift of worm gear
+//   ---
+//   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
+//   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
+//   circ_pitch = distance between teeth around the pitch circle.
+//   pressure_angle = The pressure angle of the gear.
+//   backlash = Add extra space to produce a total of 2*backlash between the two gears. 
+
+function worm_dist(d,starts,teeth,mod,profile_shift=0,diam_pitch,circ_pitch,pressure_angle=20,backlash=0) =
+  let(
+      mod = module_value(mod=mod,diam_pitch=diam_pitch,circ_pitch=circ_pitch),
+      lead_angle = asin(mod*starts/d),
+      pitch_diam = mod*teeth/cos(lead_angle)
+  )
+  (d+pitch_diam)/2 + profile_shift*mod + backlash * (cos(lead_angle)+cos(90-lead_angle)) / tan(pressure_angle);
+
+
+
 // Function: gear_dist()
 // Synopsis: Returns the distance between two gear centers for spur gears or parallel axis helical gears.
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), pitch_radius(), outer_radius()
 // Usage:
-//   dist = gear_dist(mod=|diam_pitch=|circ_pitch=, teeth1, teeth2, [helical], [profile_shift1], [profile_shift2], [pressure_angle=]);
+//   dist = gear_dist(mod=|diam_pitch=|circ_pitch=, teeth1, teeth2, [helical], [profile_shift1], [profile_shift2], [pressure_angle=], [backlash=]);
 // Description:
 //   Calculate the distance between the centers of two spur gears gears or helical gears with parallel axes,
 //   taking into account profile shifting and helical angle.  You can give the helical angle as either positive or negative.  
@@ -3299,12 +3329,14 @@ function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, 
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   circ_pitch = distance between teeth around the pitch circle.
 //   pressure_angle = The pressure angle of the gear.
+//   backlash = Add extra space to produce a total of 2*backlash between the two gears. 
 // Example(3D,Med,NoAxes,VPT=[-0.302111,3.7924,-9.252],VPR=[55,0,25],VPD=155.556): Non-parallel Helical Gears (without any profile shifting)
 //   circ_pitch=5; teeth1=15; teeth2=24; ha1=45; ha2=30; thick=10;
 //   d = gear_dist_skew(circ_pitch=circ_pitch, teeth1, teeth2, helical1=ha1, helical2=ha2);
 //   left(d/2) spur_gear(circ_pitch, teeth1, helical=ha1, thickness=thick, gear_spin=-90);
 //   right(d/2) xrot(ha1+ha2) spur_gear(circ_pitch, teeth2, helical=ha2, thickness=thick, gear_spin=90-180/teeth2);
-function gear_dist_skew(teeth1,teeth2,helical1,helical2,profile_shift1,profile_shift2,pressure_angle=20, mod, circ_pitch, diam_pitch) =
+function gear_dist_skew(teeth1,teeth2,helical1,helical2,profile_shift1,profile_shift2,pressure_angle=20,
+                        mod, circ_pitch, diam_pitch, backlash=0) =
   assert(all_nonnegative([teeth1,teeth2]),"Must give nonnegative values for teeth")
   assert(teeth1>0 || teeth2>0, "One of the teeth counts must be nonzero")
   let(
@@ -3318,7 +3350,9 @@ function gear_dist_skew(teeth1,teeth2,helical1,helical2,profile_shift1,profile_s
       pa_normal_eff = _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1,teeth2,profile_shift2,helical2,pressure_angle),
       dist_adj = 0.5*(teeth1/cos(helical1)^3+teeth2/cos(helical2)^3)*(cos(pressure_angle)/cos(pa_normal_eff)-1)
   )
-  mod*(teeth1/2/cos(helical1)+teeth2/2/cos(helical2)+dist_adj);
+  mod*(teeth1/2/cos(helical1)+teeth2/2/cos(helical2)+dist_adj) 
+      + backlash * (cos(helical1+helical2)) / tan(pressure_angle);
+
 
 function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, teeth2, profile_shift2, helical2, pressure_angle) = 
   let(
