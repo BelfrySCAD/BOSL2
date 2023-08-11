@@ -2177,7 +2177,7 @@ function worm(
             for (t = xcopies(trans_pitch, n=2*ceil(l/trans_pitch)+1))
                 each apply(t, tooth)
         ],
-        steps = max(36, segs(d/2))*4,
+        steps = max(36, segs(d/2)),
         step = 360 / steps,
         zsteps = ceil(l / trans_pitch / starts * steps),
         zstep = l / zsteps,
