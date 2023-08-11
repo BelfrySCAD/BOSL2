@@ -2177,7 +2177,7 @@ function worm(
             for (t = xcopies(trans_pitch, n=2*ceil(l/trans_pitch)+1))
                 each apply(t, tooth)
         ],
-        steps = max(36, segs(d/2)),
+        steps = max(36, segs(d/2))*4,
         step = 360 / steps,
         zsteps = ceil(l / trans_pitch / starts * steps),
         zstep = l / zsteps,
@@ -3179,7 +3179,10 @@ function worm_dist(d,starts,teeth,mod,profile_shift=0,diam_pitch,circ_pitch,pres
       lead_angle = asin(mod*starts/d),
       pitch_diam = mod*teeth/cos(lead_angle)
   )
-  (d+pitch_diam)/2 + profile_shift*mod + backlash * (cos(lead_angle)+cos(90-lead_angle)) / tan(pressure_angle);
+  (d+pitch_diam)/2 + profile_shift*mod
+//   + backlash * (cos(lead_angle)+cos(90-lead_angle)) / tan(pressure_angle);
+//    + backlash * cos(45-lead_angle) / tan(pressure_angle);
+     + backlash * cos(lead_angle) / tan(pressure_angle);
 
 
 
@@ -3350,8 +3353,10 @@ function gear_dist_skew(teeth1,teeth2,helical1,helical2,profile_shift1,profile_s
       pa_normal_eff = _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1,teeth2,profile_shift2,helical2,pressure_angle),
       dist_adj = 0.5*(teeth1/cos(helical1)^3+teeth2/cos(helical2)^3)*(cos(pressure_angle)/cos(pa_normal_eff)-1)
   )
-  mod*(teeth1/2/cos(helical1)+teeth2/2/cos(helical2)+dist_adj) 
-      + backlash * (cos(helical1+helical2)) / tan(pressure_angle);
+  mod*(teeth1/2/cos(helical1)+teeth2/2/cos(helical2)+dist_adj)
+      // This expression is a guess based on finding the cross section where pressure angles match so that there is a single
+      // pressure angle to reference the movement by. 
+      + backlash * cos((helical1-helical2)/2) / tan(pressure_angle);
 
 
 function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, teeth2, profile_shift2, helical2, pressure_angle) = 
