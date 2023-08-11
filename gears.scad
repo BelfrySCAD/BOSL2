@@ -2252,6 +2252,169 @@ module worm(
 }
 
 
+// Function&Module: double_enveloping_worm()
+// Synopsis: Creates a double-enveloping worm that will mate with a worm gear.
+// SynTags: Geom, VNF
+// Topics: Gears, Parts
+// See Also: worm(), worm_gear(), rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
+// Usage: As a Module
+//   double_enveloping_worm(circ_pitch, mate_teeth, d, [left_handed=], [starts=], [arc=], [pressure_angle=]);
+//   double_enveloping_worm(mod=, mate_teeth=, d=, [left_handed=], [starts=], [arc=], [pressure_angle=]);
+//   double_enveloping_worm(diam_pitch=, mate_teeth=, d=, [left_handed=], [starts=], [arc=], [pressure_angle=]);
+// Usage: As a Function
+//   vnf = double_enveloping_worm(circ_pitch, mate_teeth, d, [left_handed=], [starts=], [arc=], [pressure_angle=]);
+//   vnf = double_enveloping_worm(mod=, mate_teeth=, d=, [left_handed=], [starts=], [arc=], [pressure_angle=]);
+//   vnf = double_enveloping_worm(diam_pitch=, mate_teeth=, d=, [left_handed=], [starts=], [arc=], [pressure_angle=]);
+// Description:
+//   Creates a double-enveloping worm shape that can be matched to a worm gear.
+// Arguments:
+//   circ_pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.  Default: 5
+//   mate_teeth = The number of teeth in the mated worm gear.
+//   d = The pitch diameter of the worm at its middle.
+//   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
+//   ---
+//   starts = The number of lead starts.  Default: 1
+//   arc = Arc angle of the mated worm gear to envelop.  Default: 45º
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
+//   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
+//   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example:
+//   double_enveloping_worm(circ_pitch=8, mate_teeth=45, d=30, $fn=72);
+// Example: Multiple Starts.
+//   double_enveloping_worm(circ_pitch=8, mate_teeth=33, d=30, starts=3, $fn=72);
+// Example: Left Handed
+//   double_enveloping_worm(circ_pitch=8, mate_teeth=33, d=30, starts=3, left_handed=true, $fn=72);
+// Example: Called as Function
+//   vnf = double_enveloping_worm(circ_pitch=8, mate_teeth=37, d=35, starts=2, left_handed=true, pressure_angle=20, $fn=72);
+//   vnf_polyhedron(vnf);
+
+function double_enveloping_worm(
+    circ_pitch,
+    mate_teeth,
+    d,
+    left_handed=false,
+    starts=1,
+    arc=45,
+    pressure_angle=20,
+    gear_spin=0,
+    anchor=CTR,
+    diam_pitch,
+    mod,
+    pitch,
+    spin=0,
+    orient=UP
+) =
+    assert(is_integer(mate_teeth) && mate_teeth>10)
+    assert(is_finite(d) && d>0)
+    assert(is_bool(left_handed))
+    assert(is_integer(starts) && starts>0)
+    assert(is_finite(arc) && arc>10 && arc<75)
+    assert(is_finite(pressure_angle) && pressure_angle>0 && pressure_angle<45)
+    assert(is_finite(gear_spin))
+    let(
+        circ_pitch = circular_pitch(circ_pitch=circ_pitch, diam_pitch=diam_pitch, pitch=pitch, mod=mod),
+        hsteps = segs(d/2),
+        vsteps = hsteps*3,
+        helical = asin(starts * circ_pitch / PI / d),
+        pr = pitch_radius(circ_pitch, mate_teeth, helical=helical),
+        taper_table = [
+            [-180, 0],
+            [-arc/2, 0],
+            [-arc/2*0.85, 0.75],
+            [-arc/2*0.8, 0.93],
+            [-arc/2*0.75, 1],
+            [+arc/2*0.75, 1],
+            [+arc/2*0.8, 0.93],
+            [+arc/2*0.85, 0.75],
+            [+arc/2, 0],
+            [+180, 0],
+        ],
+        tarc = 360 / mate_teeth,
+        rteeth = quantup(ceil(mate_teeth*arc/360),2)+1+2*starts,
+        rack_path = select(
+            rack2d(
+                circ_pitch, rteeth,
+                pressure_angle=pressure_angle,
+                rounding=true, spin=90
+            ),
+            1,-2
+        ),
+        adendum = _adendum(circ_pitch, profile_shift=0),
+        m1 = yscale(360/(circ_pitch*mate_teeth)) * left(adendum),
+        rows = [
+            for (i = [0:1:hsteps-1]) let(
+                u = i / hsteps,
+                theta = (1-u) * 360,
+                m2 = back(circ_pitch*starts*u),
+                polars = [
+                    for (p=apply(m1*m2, rack_path))
+                    if(p.y>=-arc-tarc && p.y<=arc+tarc)
+                    [pr+p.x*lookup(p.y,taper_table)+adendum, p.y]
+                ],
+                rpolars = mirror([-1,1],p=polars)
+            ) [
+                for (j = [0:1:vsteps-1]) let(
+                    v = j / (vsteps-1),
+                    phi = (v-0.5) * arc,
+                    minor_r = lookup(phi, rpolars),
+                    xy = [d/2+pr,0] + polar_to_xy(minor_r,180-phi),
+                    xyz = xrot(90,p=point3d(xy))
+                ) zrot(theta, p=xyz)
+            ]
+        ],
+        ys = column(flatten(rows),1),
+        miny = min(ys),
+        maxy = max(ys),
+        vnf1 = vnf_vertex_array(transpose(rows), col_wrap=true, caps=true),
+        m = product([
+            zrot(gear_spin),
+            if (!left_handed) xflip(),
+            zrot(90),
+        ]),
+        vnf = apply(m, vnf1)
+    ) reorient(anchor,spin,orient, d=d, l=maxy-miny, p=vnf);
+
+
+module double_enveloping_worm(
+    circ_pitch,
+    mate_teeth,
+    d,
+    left_handed=false,
+    starts=1,
+    arc=45,
+    pressure_angle=20,
+    gear_spin=0,
+    diam_pitch,
+    mod,
+    pitch,
+    anchor=CTR,
+    spin=0,
+    orient=UP
+) {
+    vnf = double_enveloping_worm(
+        mate_teeth=mate_teeth,
+        d=d,
+        left_handed=left_handed,
+        starts=starts,
+        arc=arc,
+        pressure_angle=pressure_angle,
+        gear_spin=gear_spin,
+        circ_pitch=circ_pitch,
+        diam_pitch=diam_pitch,
+        mod=mod,
+        pitch=pitch
+    );
+    bounds = pointlist_bounds(vnf[0]);
+    delta = bounds[1] - bounds[0];
+    attachable(anchor,spin,orient, d=max(delta.x,delta.y), l=delta.z) {
+        vnf_polyhedron(vnf, convexity=mate_teeth);
+        children();
+    }
+}
+
 // Function&Module: worm_gear()
 // Synopsis: Creates a worm gear that will mate with a worm.
 // SynTags: Geom, VNF
@@ -2429,6 +2592,7 @@ function worm_gear(
         m = product([
             zrot(gear_spin),
             if (left_handed) xflip(),
+            zrot(90),
         ]),
         vnf = apply(m,vnf1)
     ) reorient(anchor,spin,orient, r=pr, l=thickness, p=vnf);
