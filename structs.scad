@@ -36,6 +36,15 @@
 //   value = value to set the key to (when giving a single key and value)
 //   ---
 //   grow = Set to true to allow structure to grow, or false for new keys to generate an error.  Default: true
+// Example: Create a struct containing just one key-value pair
+//   some_struct = struct_set([], "answer", 42);
+//   // 'some_struct' now contains a single value, 42, under one key, "answer".
+// Example: Create a struct containing more than one key-value pair. Note that keys and values need not be the same type.
+//   some_struct = struct_set([], ["answer", 42, 2, "two", "quote", "What a nice day"]);
+//   // 'some struct' now contains these key-value pairs:
+//   // answer: 42
+//   // 2: two
+//   // quote: What a nice day
 function struct_set(struct, key, value, grow=true) =
   is_def(value) ? struct_set(struct,[key,value],grow=grow)
   :
