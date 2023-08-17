@@ -2252,19 +2252,19 @@ module worm(
 }
 
 
-// Function&Module: double_enveloping_worm()
+// Function&Module: enveloping_worm()
 // Synopsis: Creates a double-enveloping worm that will mate with a worm gear.
 // SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: worm(), worm_gear(), rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
 // Usage: As a Module
-//   double_enveloping_worm(circ_pitch, mate_teeth, d, [left_handed=], [starts=], [arc=], [pressure_angle=]);
-//   double_enveloping_worm(mod=, mate_teeth=, d=, [left_handed=], [starts=], [arc=], [pressure_angle=]);
-//   double_enveloping_worm(diam_pitch=, mate_teeth=, d=, [left_handed=], [starts=], [arc=], [pressure_angle=]);
+//   enveloping_worm(circ_pitch, mate_teeth, d, [left_handed=], [starts=], [arc=], [pressure_angle=]);
+//   enveloping_worm(mod=, mate_teeth=, d=, [left_handed=], [starts=], [arc=], [pressure_angle=]);
+//   enveloping_worm(diam_pitch=, mate_teeth=, d=, [left_handed=], [starts=], [arc=], [pressure_angle=]);
 // Usage: As a Function
-//   vnf = double_enveloping_worm(circ_pitch, mate_teeth, d, [left_handed=], [starts=], [arc=], [pressure_angle=]);
-//   vnf = double_enveloping_worm(mod=, mate_teeth=, d=, [left_handed=], [starts=], [arc=], [pressure_angle=]);
-//   vnf = double_enveloping_worm(diam_pitch=, mate_teeth=, d=, [left_handed=], [starts=], [arc=], [pressure_angle=]);
+//   vnf = enveloping_worm(circ_pitch, mate_teeth, d, [left_handed=], [starts=], [arc=], [pressure_angle=]);
+//   vnf = enveloping_worm(mod=, mate_teeth=, d=, [left_handed=], [starts=], [arc=], [pressure_angle=]);
+//   vnf = enveloping_worm(diam_pitch=, mate_teeth=, d=, [left_handed=], [starts=], [arc=], [pressure_angle=]);
 // Description:
 //   Creates a double-enveloping worm shape that can be matched to a worm gear.
 // Arguments:
@@ -2282,16 +2282,16 @@ module worm(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
-//   double_enveloping_worm(circ_pitch=8, mate_teeth=45, d=30, $fn=72);
+//   enveloping_worm(circ_pitch=8, mate_teeth=45, d=30, $fn=72);
 // Example: Multiple Starts.
-//   double_enveloping_worm(circ_pitch=8, mate_teeth=33, d=30, starts=3, $fn=72);
+//   enveloping_worm(circ_pitch=8, mate_teeth=33, d=30, starts=3, $fn=72);
 // Example: Left Handed
-//   double_enveloping_worm(circ_pitch=8, mate_teeth=33, d=30, starts=3, left_handed=true, $fn=72);
+//   enveloping_worm(circ_pitch=8, mate_teeth=33, d=30, starts=3, left_handed=true, $fn=72);
 // Example: Called as Function
-//   vnf = double_enveloping_worm(circ_pitch=8, mate_teeth=37, d=35, starts=2, left_handed=true, pressure_angle=20, $fn=72);
+//   vnf = enveloping_worm(circ_pitch=8, mate_teeth=37, d=35, starts=2, left_handed=true, pressure_angle=20, $fn=72);
 //   vnf_polyhedron(vnf);
 
-function double_enveloping_worm(
+function enveloping_worm(
     circ_pitch,
     mate_teeth,
     d,
@@ -2300,10 +2300,12 @@ function double_enveloping_worm(
     arc=45,
     pressure_angle=20,
     gear_spin=0,
-    anchor=CTR,
+    rounding=true,
+    taper=true,
     diam_pitch,
     mod,
     pitch,
+    anchor=CTR,
     spin=0,
     orient=UP
 ) =
@@ -2320,25 +2322,34 @@ function double_enveloping_worm(
         vsteps = hsteps*3,
         helical = asin(starts * circ_pitch / PI / d),
         pr = pitch_radius(circ_pitch, mate_teeth, helical=helical),
-        taper_table = [
-            [-180, 0],
-            [-arc/2, 0],
-            [-arc/2*0.85, 0.75],
-            [-arc/2*0.8, 0.93],
-            [-arc/2*0.75, 1],
-            [+arc/2*0.75, 1],
-            [+arc/2*0.8, 0.93],
-            [+arc/2*0.85, 0.75],
-            [+arc/2, 0],
-            [+180, 0],
-        ],
+        taper_table = taper
+          ? [
+                [-180, 0],
+                [-arc/2, 0],
+                [-arc/2*0.85, 0.75],
+                [-arc/2*0.8, 0.93],
+                [-arc/2*0.75, 1],
+                [+arc/2*0.75, 1],
+                [+arc/2*0.8, 0.93],
+                [+arc/2*0.85, 0.75],
+                [+arc/2, 0],
+                [+180, 0],
+            ]
+          : [
+                [-180, 0],
+                [-arc/2-0.00001, 0],
+                [-arc/2, 1],
+                [+arc/2, 1],
+                [+arc/2+0.00001, 0],
+                [+180, 0],
+            ],
         tarc = 360 / mate_teeth,
         rteeth = quantup(ceil(mate_teeth*arc/360),2)+1+2*starts,
         rack_path = select(
             rack2d(
                 circ_pitch, rteeth,
                 pressure_angle=pressure_angle,
-                rounding=true, spin=90
+                rounding=rounding, spin=90
             ),
             1,-2
         ),
@@ -2378,7 +2389,7 @@ function double_enveloping_worm(
     ) reorient(anchor,spin,orient, d=d, l=maxy-miny, p=vnf);
 
 
-module double_enveloping_worm(
+module enveloping_worm(
     circ_pitch,
     mate_teeth,
     d,
@@ -2387,6 +2398,8 @@ module double_enveloping_worm(
     arc=45,
     pressure_angle=20,
     gear_spin=0,
+    rounding=true,
+    taper=true,
     diam_pitch,
     mod,
     pitch,
@@ -2394,7 +2407,7 @@ module double_enveloping_worm(
     spin=0,
     orient=UP
 ) {
-    vnf = double_enveloping_worm(
+    vnf = enveloping_worm(
         mate_teeth=mate_teeth,
         d=d,
         left_handed=left_handed,
@@ -2402,6 +2415,8 @@ module double_enveloping_worm(
         arc=arc,
         pressure_angle=pressure_angle,
         gear_spin=gear_spin,
+        rounding=rounding,
+        taper=taper,
         circ_pitch=circ_pitch,
         diam_pitch=diam_pitch,
         mod=mod,
@@ -2540,6 +2555,7 @@ function worm_gear(
             backlash=backlash,
             helical=helical,
             profile_shift=profile_shift,
+            internal=true,
             center=true
         ),
         tbot = min(column(tooth_profile,1)),
