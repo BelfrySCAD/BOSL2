@@ -1590,7 +1590,7 @@ function cyl(
                             [r1, -l/2] + polar_to_xy(chamf1l,90+vang),
                         ]
                     else if (!approx(round1,0) && td_ang < 90)
-                        each _teardrop_corner(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]], ang=td_ang)
+                        each _teardrop_corner(r=round1, corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]], ang=td_ang)
                     else if (!approx(round1,0) && td_ang >= 90)
                         each arc(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]])
                     else [r1,-l/2],
@@ -1623,16 +1623,18 @@ function cyl(
 
 function _teardrop_corner(r, corner, ang=45) =
     let(
-        check = assert(len(corner)==3) assert(is_finite(r)) assert(is_finite(ang)),
-        cp = circle_2tangents(r, corner)[0],
-        path1 = arc(r=r, corner=corner),
+        check = assert(len(corner)==3)
+            assert(is_finite(r))
+            assert(is_finite(ang)),
+        cp = circle_2tangents(abs(r), corner)[0],
+        path1 = arc(r=abs(r), corner=corner),
         path2 = [
             for (p = select(path1,0,-2))
-                if (v_theta(p-cp) >= -ang) p,
+                if (abs(modang(v_theta(p-cp)-90)) <= 180-ang) p,
             last(path1)
         ],
         path = [
-            line_intersection([corner[0],corner[1]],[path2[0],path2[0]+polar_to_xy(1,-90-ang)]),
+            line_intersection([corner[0],corner[1]],[path2[0],path2[0]+polar_to_xy(1,-90-ang*sign(r))]),
             each path2
         ]
     ) path;
