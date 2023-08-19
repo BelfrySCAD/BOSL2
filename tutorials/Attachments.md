@@ -509,7 +509,7 @@ Both position() and align() can accept a list of anchor locations and
 makes several copies of the children, but
 if you want the children positioned flush, each copy 
 requires a different anchor, so it is impossible to do this with a
-singlke call to position(), but easily done using align():
+single call to position(), but easily done using align():
 
 ```openscad-3D
 include<BOSL2/std.scad>
