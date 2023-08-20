@@ -466,7 +466,7 @@ function zmove(z=0, p=_NO_ARG) =
 // Synopsis: Rotates children in various ways.
 // SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Rotation
-// See Also: xrot(), yrot(), zrot()
+// See Also: xrot(), yrot(), zrot(), tilt()
 //
 // Usage: As a Module
 //   rot(a, [cp=], [reverse=]) CHILDREN;
@@ -537,7 +537,7 @@ module rot(a=0, v, cp, from, to, reverse=false)
     multmatrix(m) children();
 }
 
-function rot(a=0, v, cp, from, to, reverse=false, p=_NO_ARG, _m) =
+function rot(a=0, v, cp, from, to, reverse=false, p=_NO_ARG) =
     assert(is_undef(from)==is_undef(to), "from and to must be specified together.")
     assert(is_undef(from) || is_vector(from, zero=false), "'from' must be a non-zero vector.")
     assert(is_undef(to) || is_vector(to, zero=false), "'to' must be a non-zero vector.")
@@ -572,7 +572,7 @@ function rot(a=0, v, cp, from, to, reverse=false, p=_NO_ARG, _m) =
 // Synopsis: Rotates children around the X axis using the right-hand rule.
 // SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), yrot(), zrot()
+// See Also: rot(), yrot(), zrot(), tilt()
 //
 // Usage: As Module
 //   xrot(a, [cp=]) CHILDREN;
@@ -620,7 +620,7 @@ function xrot(a=0, p=_NO_ARG, cp) = rot([a,0,0], cp=cp, p=p);
 // Synopsis: Rotates children around the Y axis using the right-hand rule.
 // SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), xrot(), zrot()
+// See Also: rot(), xrot(), zrot(), tilt()
 //
 // Usage: As Module
 //   yrot(a, [cp=]) CHILDREN;
@@ -668,7 +668,7 @@ function yrot(a=0, p=_NO_ARG, cp) = rot([0,a,0], cp=cp, p=p);
 // Synopsis: Rotates children around the Z axis using the right-hand rule.
 // Topics: Affine, Matrices, Transforms, Rotation
 // SynTags: Trans, Path, VNF, Mat
-// See Also: rot(), xrot(), yrot()
+// See Also: rot(), xrot(), yrot(), tilt()
 //
 // Usage: As Module
 //   zrot(a, [cp=]) CHILDREN;
@@ -709,6 +709,65 @@ module zrot(a=0, p, cp)
 }
 
 function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
+
+
+// Function&Module: tilt()
+//
+// Synopsis: Tilts children towards a direction
+// SynTags: Trans, Path, VNF, Mat
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), xrot(), yrot(), zrot()
+//
+// Usage: As a Module
+//   tilt(to=, [reverse=], [cp=]) CHILDREN;
+// Usage: As a Function to transform data in `p`
+//   pts = tilt(to=, p=, [reverse=], [cp=]);
+// Usage: As a Function to return a transform matrix
+//   M = tilt(to=, [reverse=], [cp=]);
+//
+// Description:
+//   This is shorthand for `rot(from=UP,to=x)` and operates similarly.  It tilts that which is pointing UP until it is pointing at the given direction vector.
+//   * If the `cp` centerpoint argument is given, then the tilt/rotation is performed around that centerpoint.  So `tilt(...,cp=[1,2,3])` is equivalent to `move([1,2,3]) tilt(...) move([-1,-2,-3])`.
+//   * If the `reverse` argument is true, then the tilt/rotation performed will be exactly reversed.
+//   .
+//   The behavior and return value varies depending on how `rot()` is called:
+//   * Called as a module, tilts all children.
+//   * Called as a function with a `p` argument containing a point, returns the tilted/rotated point.
+//   * Called as a function with a `p` argument containing a list of points, returns the list of tilted/rotated points.
+//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the tilted/rotated patch.
+//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the tilted/rotated VNF.
+//   * Called as a function without a `p` argument, returns the affine3d rotational matrix.
+//   Note that unlike almost all the other transformations, the `p` argument must be given as a named argument.
+//
+// Arguments:
+//   to = Target vector for vector-based rotations.
+//   ---
+//   cp = centerpoint to tilt/rotate around. Default: [0,0,0]
+//   reverse = If true, exactly reverses the rotation.  Default: false
+//   p = If called as a function, this contains data to rotate: a point, list of points, bezier patch or a VNF.
+//
+// Example:
+//   #cube([2,4,9]);
+//   tilt(LEFT+BACK) cube([2,4,9]);
+//
+// Example(2D):
+//   path = square([50,30], center=true);
+//   #stroke(path, closed=true);
+//   stroke(tilt(RIGHT+FWD,p=path3d(path)), closed=true);
+module tilt(to, cp, reverse=false)
+{
+    req_children($children);
+    m = rot(from=UP, to=to, cp=cp, reverse=reverse);
+    multmatrix(m) children();
+}
+
+
+function tilt(to, cp, reverse=false, p=_NO_ARG) =
+    assert(is_vector(to, zero=false), "'to' must be a non-zero vector.")
+    assert(is_undef(cp) || is_vector(cp), "'cp' must be a vector.")
+    assert(is_bool(reverse))
+    let( m = tilt(to=to, cp=cp, reverse=reverse) )
+    p==_NO_ARG ? m : apply(m, p);
 
 
 
