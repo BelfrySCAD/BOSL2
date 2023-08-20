@@ -766,7 +766,7 @@ function tilt(to, cp, reverse=false, p=_NO_ARG) =
     assert(is_vector(to, zero=false), "'to' must be a non-zero vector.")
     assert(is_undef(cp) || is_vector(cp), "'cp' must be a vector.")
     assert(is_bool(reverse))
-    let( m = tilt(to=to, cp=cp, reverse=reverse) )
+    let( m = rot(from=UP, to=to, cp=cp, reverse=reverse) )
     p==_NO_ARG ? m : apply(m, p);
 
 
