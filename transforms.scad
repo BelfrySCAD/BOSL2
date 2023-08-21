@@ -730,7 +730,7 @@ function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
 //   * If the `cp` centerpoint argument is given, then the tilt/rotation is performed around that centerpoint.  So `tilt(...,cp=[1,2,3])` is equivalent to `move([1,2,3]) tilt(...) move([-1,-2,-3])`.
 //   * If the `reverse` argument is true, then the tilt/rotation performed will be exactly reversed.
 //   .
-//   The behavior and return value varies depending on how `rot()` is called:
+//   The behavior and return value varies depending on how `tilt()` is called:
 //   * Called as a module, tilts all children.
 //   * Called as a function with a `p` argument containing a point, returns the tilted/rotated point.
 //   * Called as a function with a `p` argument containing a list of points, returns the list of tilted/rotated points.
