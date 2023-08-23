@@ -147,10 +147,12 @@ function  pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 // Topics: Bottles, Threading
 // See Also: pco1810_neck()
 // Usage:
-//   pco1810_cap([wall], [texture]) [ATTACHMENTS];
+//   pco1810_cap([r|d], [wall], [texture]) [ATTACHMENTS];
 // Description:
 //   Creates a basic cap for a PCO1810 threaded beverage bottle.
 // Arguments:
+//   r = Outer radius of the cap.
+//   d = Outer diameter of the cap.
 //   wall = Wall thickness in mm.
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
 //   ---
@@ -169,7 +171,7 @@ function  pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 //   expose_anchors(0.3)
 //       pco1810_cap(texture="ribbed")
 //           show_anchors(std=false);
-module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
+module pco1810_cap(r, d, wall, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 {
     cap_id = 28.58;
     tamper_ring_h = 14.10;
@@ -178,11 +180,17 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
     thread_od = cap_id;
     thread_depth = 1.6;
 
+    rr = get_radius(r=r, d=d, dflt=undef);
+    wwall = default(u_sub(rr,cap_id/2), default(wall, 2));
+    echo(wwall=wwall, wwall >= 0);
+    checks =
+        assert(wwall >= 0, "wall can't be negative.");
+
     $fn = segs(33/2);
-    w = cap_id + 2*wall;
-    h = tamper_ring_h + wall;
+    w = cap_id + 2*wwall;
+    h = tamper_ring_h + wwall;
     anchors = [
-        named_anchor("inside-top", [0,0,-(h/2-wall)])
+        named_anchor("inside-top", [0,0,-(h/2-wwall)])
     ];
     attachable(anchor,spin,orient, d=w, l=h, anchors=anchors) {
         down(h/2) zrot(45) {
@@ -193,18 +201,18 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                     } else if (texture == "ribbed") {
                         cyl(d=w, h=h, texture="ribs", tex_size=[3,3], tex_style="min_edge", anchor=BOT);
                     } else {
-                        cyl(d=w, l=tamper_ring_h+wall, anchor=BOTTOM);
+                        cyl(d=w, l=tamper_ring_h+wwall, anchor=BOTTOM);
                     }
                 }
-                up(wall) cyl(d=cap_id, h=tamper_ring_h+wall, anchor=BOTTOM);
+                up(wwall) cyl(d=cap_id, h=tamper_ring_h+wwall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, turns=810/360, lead_in=-thread_depth, internal=true, anchor=BOTTOM);
+            up(wwall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, turns=810/360, lead_in=-thread_depth, internal=true, anchor=BOTTOM);
         }
         children();
     }
 }
 
-function pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
+function pco1810_cap(r, d, wall, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
     no_function("pco1810_cap");
 
 
