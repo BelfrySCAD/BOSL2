@@ -2235,7 +2235,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 // Usage: 2D Region Geometry
 //   attachable(anchor, spin, two_d=true, region=, [extent=], ...) {OBJECT; children();}
 // Usage: Cubical/Prismoidal Geometry
-//   attachable(anchor, spin, [orient], size=, [size2=], [shift=], ...) {OBJECT; children();}
+//   attachable(anchor, spin, [orient], size=, [size2=], [shift=], [override=],  ...) {OBJECT; children();}
 // Usage: Cylindrical Geometry
 //   attachable(anchor, spin, [orient], r=|d=, l=, [axis=], ...) {OBJECT; children();}
 // Usage: Conical Geometry
@@ -2312,7 +2312,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
-//   override = Function that takes an anchor and returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction]]` entries.  If the direction/position that is returned is undef then the default will be used.
+//   override = Function that takes an anchor and for 3d returns a triple `[position, direction, spin]` or for 2d returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction, spin]]` entries.  If the direction/position/spin that is returned is undef then the default will be used.  This option applies only to the "trapezoid" and "prismoid" geometry types.  
 //   geom = If given, uses the pre-defined (via {{attach_geom()}} geometry.
 //
 // Side Effects:
@@ -3391,7 +3391,6 @@ function _find_anchor(anchor, geom) =
             frpt = [size.x/2*anchor.x, -size.y/2],
             bkpt = [size2/2*anchor.x+shift,  size.y/2],
             override = geom[4](anchor),
-            f=echo(o=override),
             pos = default(override[0],point2d(cp) + lerp(frpt, bkpt, u) + point2d(offset)),
             svec = point3d(line_normal(bkpt,frpt)*anchor.x),
             vec = is_def(override[1]) ? override[1]
