@@ -2827,13 +2827,15 @@ function attach_geom(
     assert(is_bool(two_d))
     assert(is_vector(axis))
     !is_undef(size)? (
+        let(
+            over_f = is_undef(override) ? function(anchor) [undef,undef,undef]
+                   : is_func(override) ? override
+                   : function(anchor) _local_struct_val(override,anchor)
+        )
         two_d? (
             let(
                 size2 = default(size2, size.x),
-                shift = default(shift, 0),
-                over_f = is_undef(override) ? function(anchor) [undef,undef]
-                       : is_func(override) ? override
-                       : function(anchor) _local_struct_val(override,anchor)
+                shift = default(shift, 0)
             )
             assert(is_vector(size,2))
             assert(is_num(size2))
@@ -2847,7 +2849,7 @@ function attach_geom(
             assert(is_vector(size,3))
             assert(is_vector(size2,2))
             assert(is_vector(shift,2))
-            ["prismoid", size, size2, shift, axis, cp, offset, anchors]
+            ["prismoid", size, size2, shift, axis, over_f, cp, offset, anchors]
         )
     ) : !is_undef(vnf)? (
         assert(is_vnf(vnf))
@@ -3250,6 +3252,7 @@ function _find_anchor(anchor, geom) =
         let(
             size=geom[1], size2=geom[2],
             shift=point2d(geom[3]), axis=point3d(geom[4]),
+            override = geom[5](anchor),
             anch = rot(from=axis, to=UP, p=anchor),
             offset = rot(from=axis, to=UP, p=offset),
             h = size.z,
@@ -3276,9 +3279,9 @@ function _find_anchor(anchor, geom) =
                     v3 = unit(line[1]-line[0],UP) * anch.z
                 )
                 unit(v3,UP),
-            vec = rot(from=UP, to=axis, p=vec2),
-            pos2 = rot(from=UP, to=axis, p=pos)
-        ) [anchor, pos2, vec, oang]
+            vec = default(override[1],rot(from=UP, to=axis, p=vec2)),
+            pos2 = default(override[0],rot(from=UP, to=axis, p=pos))
+        ) [anchor, pos2, vec, default(override[2],oang)]
     ) : type == "conoid"? ( //r1, r2, l, shift
         assert(anchor.z == sign(anchor.z), "The Z component of an anchor for a cylinder/cone must be -1, 0, or 1")
         let(
@@ -3388,6 +3391,7 @@ function _find_anchor(anchor, geom) =
             frpt = [size.x/2*anchor.x, -size.y/2],
             bkpt = [size2/2*anchor.x+shift,  size.y/2],
             override = geom[4](anchor),
+            f=echo(o=override),
             pos = default(override[0],point2d(cp) + lerp(frpt, bkpt, u) + point2d(offset)),
             svec = point3d(line_normal(bkpt,frpt)*anchor.x),
             vec = is_def(override[1]) ? override[1]
