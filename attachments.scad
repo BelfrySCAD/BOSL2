@@ -2235,7 +2235,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 // Usage: 2D Region Geometry
 //   attachable(anchor, spin, two_d=true, region=, [extent=], ...) {OBJECT; children();}
 // Usage: Cubical/Prismoidal Geometry
-//   attachable(anchor, spin, [orient], size=, [size2=], [shift=], ...) {OBJECT; children();}
+//   attachable(anchor, spin, [orient], size=, [size2=], [shift=], [override=],  ...) {OBJECT; children();}
 // Usage: Cylindrical Geometry
 //   attachable(anchor, spin, [orient], r=|d=, l=, [axis=], ...) {OBJECT; children();}
 // Usage: Conical Geometry
@@ -2312,7 +2312,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
-//   override = Function that takes an anchor and returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction]]` entries.  If the direction/position that is returned is undef then the default will be used.
+//   override = Function that takes an anchor and for 3d returns a triple `[position, direction, spin]` or for 2d returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction, spin]]` entries.  If the direction/position/spin that is returned is undef then the default will be used.  This option applies only to the "trapezoid" and "prismoid" geometry types.  
 //   geom = If given, uses the pre-defined (via {{attach_geom()}} geometry.
 //
 // Side Effects:
@@ -2827,13 +2827,15 @@ function attach_geom(
     assert(is_bool(two_d))
     assert(is_vector(axis))
     !is_undef(size)? (
+        let(
+            over_f = is_undef(override) ? function(anchor) [undef,undef,undef]
+                   : is_func(override) ? override
+                   : function(anchor) _local_struct_val(override,anchor)
+        )
         two_d? (
             let(
                 size2 = default(size2, size.x),
-                shift = default(shift, 0),
-                over_f = is_undef(override) ? function(anchor) [undef,undef]
-                       : is_func(override) ? override
-                       : function(anchor) _local_struct_val(override,anchor)
+                shift = default(shift, 0)
             )
             assert(is_vector(size,2))
             assert(is_num(size2))
@@ -2847,7 +2849,7 @@ function attach_geom(
             assert(is_vector(size,3))
             assert(is_vector(size2,2))
             assert(is_vector(shift,2))
-            ["prismoid", size, size2, shift, axis, cp, offset, anchors]
+            ["prismoid", size, size2, shift, axis, over_f, cp, offset, anchors]
         )
     ) : !is_undef(vnf)? (
         assert(is_vnf(vnf))
@@ -3250,6 +3252,7 @@ function _find_anchor(anchor, geom) =
         let(
             size=geom[1], size2=geom[2],
             shift=point2d(geom[3]), axis=point3d(geom[4]),
+            override = geom[5](anchor),
             anch = rot(from=axis, to=UP, p=anchor),
             offset = rot(from=axis, to=UP, p=offset),
             h = size.z,
@@ -3276,9 +3279,9 @@ function _find_anchor(anchor, geom) =
                     v3 = unit(line[1]-line[0],UP) * anch.z
                 )
                 unit(v3,UP),
-            vec = rot(from=UP, to=axis, p=vec2),
-            pos2 = rot(from=UP, to=axis, p=pos)
-        ) [anchor, pos2, vec, oang]
+            vec = default(override[1],rot(from=UP, to=axis, p=vec2)),
+            pos2 = default(override[0],rot(from=UP, to=axis, p=pos))
+        ) [anchor, pos2, vec, default(override[2],oang)]
     ) : type == "conoid"? ( //r1, r2, l, shift
         assert(anchor.z == sign(anchor.z), "The Z component of an anchor for a cylinder/cone must be -1, 0, or 1")
         let(
