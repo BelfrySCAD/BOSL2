@@ -2193,7 +2193,6 @@ module bevel_gear(
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
-//   profile_shift = Profile shift factor x.  Default: 0
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -2217,7 +2216,6 @@ function worm(
     pressure_angle,
     backlash=0,
     clearance,
-    profile_shift=0,
     diam_pitch,
     mod,
     pitch,
@@ -2249,7 +2247,7 @@ function worm(
                 clearance=clearance,
                 backlash=backlash,
                 helical=helical,
-                profile_shift=profile_shift
+                profile_shift=0
             ), 1, -2)
         ),
         rack_profile = [
@@ -2289,7 +2287,6 @@ module worm(
     pressure_angle,
     backlash=0,
     clearance,
-    profile_shift=0,
     pitch,
     diam_pitch,
     mod,
@@ -2300,7 +2297,6 @@ module worm(
 ) {
     circ_pitch = _inherit_gear_pitch("worm()", pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
-    profile_shift = auto_profile_shift(starts,PA,profile_shift=profile_shift);
     checks =
         assert(is_integer(starts) && starts>0)
         assert(is_finite(l) && l>0)
@@ -2309,8 +2305,7 @@ module worm(
         assert(clearance==undef || (is_finite(clearance) && clearance>=0))
         assert(is_finite(backlash) && backlash>=0)
         assert(is_bool(left_handed))
-        assert(is_finite(gear_spin))
-        assert(is_finite(profile_shift) && abs(profile_shift)<1);
+        assert(is_finite(gear_spin));
     helical = asin(starts * circ_pitch / PI / d);
     trans_pitch = circ_pitch / cos(helical);
     vnf = worm(
@@ -2321,7 +2316,6 @@ module worm(
         pressure_angle=PA,
         backlash=backlash,
         clearance=clearance,
-        profile_shift=profile_shift,
         mod=mod
     );
     attachable(anchor,spin,orient, d=d, l=l) {
@@ -2585,112 +2579,109 @@ function worm_gear(
     circ_pitch,
     teeth,
     worm_diam,
-    worm_starts = 1,
-    worm_arc = 60,
-    crowning = 0.1,
-    left_handed = false,
+    worm_starts=1,
+    worm_arc=60,
+    crowning=0.1,
+    left_handed=false,
     pressure_angle,
-    backlash = 0,
+    backlash=0,
     clearance,
     profile_shift="auto",
-    slices = 10,
+    slices=10,
     gear_spin=0,
     pitch,
     diam_pitch,
     mod,
-    anchor = CENTER,
-    spin = 0,
-    orient = UP
+    anchor=CTR,
+    spin=0,
+    orient=UP
 ) =
-    assert(worm_arc >= 10 && worm_arc <= 60)
     let(
         circ_pitch = _inherit_gear_pitch("worm_gear()", pitch, circ_pitch, diam_pitch, mod),
         PA = _inherit_gear_pa(pressure_angle),
         profile_shift = auto_profile_shift(teeth,PA,profile_shift=profile_shift)
     )
-    assert(is_integer(teeth) && teeth>10)
     assert(is_finite(worm_diam) && worm_diam>0)
+    assert(is_integer(teeth) && teeth>7)
+    assert(is_finite(worm_arc) && worm_arc>0 && worm_arc <= 60)
     assert(is_integer(worm_starts) && worm_starts>0)
-    assert(is_finite(worm_arc) && worm_arc>0 && worm_arc<90)
-    assert(is_finite(crowning) && crowning>=0)
     assert(is_bool(left_handed))
-    assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+    assert(is_finite(backlash))
+    assert(is_finite(crowning) && crowning>=0)
     assert(clearance==undef || (is_finite(clearance) && clearance>=0))
-    assert(is_finite(backlash) && backlash>=0)
-    //assert(is_finite(shaft_diam) && shaft_diam>=0)
-    assert(slices==undef || (is_integer(slices) && slices>0))
-    assert(is_finite(profile_shift) && abs(profile_shift)<1)
-    assert(is_finite(gear_spin))
+    assert(is_finite(profile_shift))
     let(
+        gear_arc = 2 * PA,
         helical = asin(worm_starts * circ_pitch / PI / worm_diam),
-        pr = pitch_radius(circ_pitch, teeth,helical),
-        hob_rad = worm_diam / 2 + crowning,
-        thickness = worm_gear_thickness(circ_pitch=circ_pitch, teeth=teeth, worm_diam=worm_diam, worm_arc=worm_arc, crowning=crowning, clearance=clearance),
-        tooth_profile = _gear_tooth_profile(
-            circ_pitch=circ_pitch,
-            teeth=teeth,
-            pressure_angle=PA,
-            clearance=clearance,
-            backlash=backlash,
-            helical=helical,
-            profile_shift=profile_shift,
-            internal=true,
-            center=true
+        full_tooth = apply(
+            zrot(90) * scale(0.99),
+            _gear_tooth_profile(
+                circ_pitch, teeth=teeth,
+                pressure_angle=PA,
+                profile_shift=-profile_shift,
+                clearance=clearance,
+                helical=helical,
+                center=true
+            )
         ),
-        tbot = min(column(tooth_profile,1)),
-        arcthick = hob_rad * sin(worm_arc/2) * 2,
-        twist = sin(helical)*arcthick / (2*PI*pr) * 360,
-        profiles = [
-            for (slice = [0:1:slices]) let(
-                u = slice/slices - 0.5
-            ) [
-                for (i = [0:1:teeth-1]) each
-                apply(
-                    zrot(-i*360/teeth + twist*u - 0.5) *
-                        right(pr+hob_rad) *
-                        yrot(u*worm_arc) *
-                        left(hob_rad) *
-                        zrot(-90) *
-                        back(tbot) *
-                        scale(pow(cos(u*worm_arc),2)) *
-                        fwd(tbot),
-                    path3d(tooth_profile)
-                )
+        ftl = len(full_tooth),
+        tooth_half1 = (select(full_tooth, 0, ftl/2-1)),
+        tooth_half2 = (select(full_tooth, ftl/2, -1)),
+        tang = 360 / teeth,
+        rteeth = quantdn(teeth * gear_arc / 360, 2) / 2 + 0.5,
+        pr = pitch_radius(circ_pitch, teeth, helical=helical),
+        rows = [
+            for (data = [[tooth_half1,1], [tooth_half2,-1]])
+            let (
+                tooth_half = data[0],
+                dir = data[1]
+            )
+            for (pt = tooth_half) [
+                for (i = [0:1:slices])
+                let (
+                    u = i / slices,
+                    w_ang = worm_arc * (u - 0.5),
+                    g_ang_delta = w_ang/360 * tang * worm_starts * (left_handed?1:-1),
+                    m = zrot(dir*(rteeth-0.0)*tang, cp=[worm_diam/2+pr,0,0]) *
+                        left(crowning) *
+                        yrot(w_ang) *
+                        right(worm_diam/2+crowning) *
+                        zrot(-1*dir*(rteeth+0.0)*tang+g_ang_delta, cp=[pr,0,0]) *
+                        xrot(180)
+                ) apply(m, point3d(pt))
             ]
         ],
-        top_verts = last(profiles),
-        bot_verts = profiles[0],
-        face_pts = len(tooth_profile),
-        gear_pts = face_pts * teeth,
-        top_faces =[
-            for (i=[0:1:teeth-1], j=[0:1:(face_pts/2)-2]) each [
-                [i*face_pts+j, (i+1)*face_pts-j-1, (i+1)*face_pts-j-2],
-                [i*face_pts+j, (i+1)*face_pts-j-2, i*face_pts+j+1]
+        zs = column(flatten(rows),2),
+        minz = min(zs),
+        maxz = max(zs),
+        zmax = max(abs(minz), abs(max(zs)))+0.1,
+        twang = modang(v_theta(rows[0][0]) - v_theta(last(rows[0]))) / (maxz-minz),
+        tip_pt1 = rows[ftl/2][0],
+        tip_pt2 = rows[ftl/2+1][0]
+    )
+    assert(tip_pt1.x < tip_pt2.x, "worm_arc is too large to make a viable worm gear tooth geometry.")
+    let(
+        tooth_rows = [
+            for (row = rows) [
+                zrot(twang*(zmax-row[0].z), p=[row[0].x, row[0].y, zmax]),
+                each row,
+                zrot(twang*(-zmax-last(row).z), p=[last(row).x, last(row).y, -zmax]),
             ],
-            for (i=[0:1:teeth-1]) each [
-                [gear_pts, (i+1)*face_pts-1, i*face_pts],
-                [gear_pts, ((i+1)%teeth)*face_pts, (i+1)*face_pts-1]
-            ]
         ],
-        sides_vnf = vnf_vertex_array(profiles, caps=false, col_wrap=true, style="min_edge"),
-        vnf1 = vnf_join([
-            [
-                [each top_verts, [0,0,top_verts[0].z]],
-                [for (x=top_faces) reverse(x)]
-            ],
-            [
-                [each bot_verts, [0,0,bot_verts[0].z]],
-                top_faces
-            ],
-            sides_vnf
-        ]),
-        m = product([
-            zrot(gear_spin),
-            if (left_handed) xflip(),
-            zrot(90),
-        ]),
-        vnf = apply(m,vnf1)
-    ) reorient(anchor,spin,orient, r=pr, l=thickness, p=vnf);
+        gear_rows = [
+            for (i = [0:1:teeth-1])
+            let(
+                m = zrot(i*tang) *
+                    back(pr) *
+                    zrot(-90) *
+                    left(worm_diam/2)
+            )
+            for (row = tooth_rows)
+            apply(m, row)
+        ],
+        vnf1 = vnf_vertex_array(transpose(gear_rows), col_wrap=true, caps=true),
+        vnf = apply(zrot(gear_spin), vnf1)
+    ) reorient(anchor,spin,orient, r=pr, h=2*zmax, p=vnf);
 
 
 module worm_gear(
@@ -2702,11 +2693,11 @@ module worm_gear(
     crowning = 0.1,
     left_handed = false,
     pressure_angle,
-    clearance,
     backlash = 0,
-    shaft_diam = 0,
-    slices = 10,
+    clearance,
     profile_shift="auto",
+    slices = 10,
+    shaft_diam = 0,
     gear_spin=0,
     pitch,
     diam_pitch,
@@ -3850,6 +3841,74 @@ function gear_shorten_skew(teeth1,teeth2,helical1,helical2,profile_shift1="auto"
          y = ax - (teeth1+teeth2)/2/cos(helical)
     )
     profile_shift1+profile_shift2-y;
+
+
+module _show_gear_tooth_profile(
+    circ_pitch,
+    teeth,
+    pressure_angle=20,
+    profile_shift,
+    helical=0,
+    internal=false,
+    clearance,
+    backlash=0,
+    show_verts=false,
+    diam_pitch,
+    mod
+) {
+    mod = module_value(circ_pitch=circ_pitch, diam_pitch=diam_pitch, mod=mod);
+    profile_shift = default(profile_shift, auto_profile_shift(teeth, pressure_angle, helical));
+    or = outer_radius(mod=mod, teeth=teeth, clearance=clearance, helical=helical, profile_shift=profile_shift, internal=internal);
+    pr = pitch_radius(mod=mod, teeth=teeth, helical=helical);
+    rr = _root_radius(mod=mod, teeth=teeth, helical=helical, profile_shift=profile_shift, clearance=clearance, internal=internal);
+    br = _base_radius(mod=mod, teeth=teeth, helical=helical, pressure_angle=pressure_angle);
+    tang = 360/teeth;
+    rang = tang * 1.075;
+    tsize = (or-rr) / 20;
+    clear = (1-profile_shift)*mod;
+    tooth = _gear_tooth_profile(
+        mod=mod, teeth=teeth,
+        pressure_angle=pressure_angle,
+        clearance=clearance,
+        backlash=backlash,
+        helical=helical,
+        internal=internal,
+        profile_shift=profile_shift
+    );
+    $fn=360;
+    union() {
+        color("cyan") { // Pitch circle
+            stroke(arc(r=pr,start=90-rang/2,angle=rang), width=0.05);
+            zrot(-tang/2*1.10) back(pr) text("pitch", size=tsize, halign="left", valign="center");
+        }
+        color("lightgreen") { // Outer and Root circles
+            stroke(arc(r=or,start=90-rang/2,angle=rang), width=0.05);
+            stroke(arc(r=rr,start=90-rang/2,angle=rang), width=0.05);
+            zrot(-tang/2*1.10) back(or) text("tip", size=tsize, halign="left", valign="center");
+            zrot(-tang/2*1.10) back(rr) text("root", size=tsize, halign="left", valign="center");
+        }
+        color("#fcf") { // Base circle
+            stroke(arc(r=br,start=90-rang/2,angle=rang), width=0.05);
+            zrot(tang/2*1.10) back(br) text("base", size=tsize, halign="right", valign="center");
+        }
+        color("#ddd") { // Clearance area
+            if (internal) {
+                dashed_stroke(arc(r=pr+clear, start=90-rang/2, angle=rang), width=0.05);
+                back((pr+clear+or)/2) text("clearance", size=tsize, halign="center", valign="center");
+            } else {
+                dashed_stroke(arc(r=pr-clear, start=90-rang/2, angle=rang), width=0.05);
+                back((pr-clear+rr)/2) text("clearance", size=tsize, halign="center", valign="center");
+            }
+        }
+        color("#ddd") { // Tooth width markers
+            stroke([polar_to_xy(min(rr,br)-mod/10,90-180/teeth),polar_to_xy(or+mod/10,90-180/teeth)], width=0.05, closed=true);
+            stroke([polar_to_xy(min(rr,br)-mod/10,90+180/teeth),polar_to_xy(or+mod/10,90+180/teeth)], width=0.05, closed=true);
+        }
+        zrot_copies([0]) { // Tooth profile overlay
+            stroke(tooth, width=0.1, dots=(show_verts?"dot":false), endcap_color1="green");
+        }
+    }
+}
 
 
 
