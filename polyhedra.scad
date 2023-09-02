@@ -328,7 +328,7 @@ module regular_polyhedron(
         anchor=anchor, 
         facedown=facedown,
         stellate=stellate,
-        longside=longside, h=h, height=height,
+        longside=longside, h=h, height=height
     );
     scaled_points = entry[0];
     translation = entry[1];
