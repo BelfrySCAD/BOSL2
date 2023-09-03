@@ -2521,7 +2521,7 @@ module enveloping_worm(
 //   teeth = Total number of teeth along the rack.  Default: 30
 //   worm_diam = The pitch diameter of the worm gear to match to.  Default: 30
 //   worm_starts = The number of lead starts on the worm gear to match to.  Default: 1
-//   worm_arc = The arc of the worm to mate with, in degrees. Default: 60 degrees
+//   worm_arc = The arc of the worm to mate with, in degrees. Default: 45 degrees
 //   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fit the work easier.  Default: 1
 //   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
@@ -2580,7 +2580,7 @@ function worm_gear(
     teeth,
     worm_diam,
     worm_starts=1,
-    worm_arc=60,
+    worm_arc=45,
     crowning=0.1,
     left_handed=false,
     pressure_angle,
@@ -2592,6 +2592,7 @@ function worm_gear(
     pitch,
     diam_pitch,
     mod,
+    get_thickness=false,
     anchor=CTR,
     spin=0,
     orient=UP
@@ -2654,20 +2655,29 @@ function worm_gear(
         zs = column(flatten(rows),2),
         minz = min(zs),
         maxz = max(zs),
-        zmax = max(abs(minz), abs(max(zs)))+0.1,
+        zmax = max(abs(minz), abs(maxz))+0.1,
         twang = modang(v_theta(rows[0][0]) - v_theta(last(rows[0]))) / (maxz-minz),
-        tip_pt1 = rows[ftl/2][0],
-        tip_pt2 = rows[ftl/2+1][0]
-    )
-    assert(tip_pt1.x < tip_pt2.x, "worm_arc is too large to make a viable worm gear tooth geometry.")
-    let(
+        midrow = len(rows)/2,
+        goodcols = [
+            for (i = idx(rows[0]))
+            let(
+                p1 = rows[midrow-1][i],
+                p2 = rows[midrow][i]
+            )
+            if (p1.y > p2.y) i
+        ],
+        dowarn = goodcols[0]==0? 0 : echo("Worm gear tooth arc reduced to fit."),
+        truncrows = [for (row = rows) [ for (i=goodcols) row[i] ] ],
         tooth_rows = [
-            for (row = rows) [
+            for (row = truncrows) [
                 zrot(twang*(zmax-row[0].z), p=[row[0].x, row[0].y, zmax]),
                 each row,
                 zrot(twang*(-zmax-last(row).z), p=[last(row).x, last(row).y, -zmax]),
             ],
-        ],
+        ]
+    )
+    get_thickness? zmax*2 :
+    let(
         gear_rows = [
             for (i = [0:1:teeth-1])
             let(
@@ -3367,7 +3377,7 @@ function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
 //   teeth = Total number of teeth along the rack.  Default: 30
 //   worm_diam = The pitch diameter of the worm gear to match to.  Default: 30
 //   ---
-//   worm_arc = The arc of the worm to mate with, in degrees. Default: 60 degrees
+//   worm_arc = The arc of the worm to mate with, in degrees. Default: 45 degrees
 //   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fit the work easier.  Default: 1
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
@@ -3376,13 +3386,23 @@ function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
 //   thick = worm_gear_thickness(circ_pitch=5, teeth=36, worm_diam=30);
 //   thick = worm_gear_thickness(mod=2, teeth=28, worm_diam=25);
 // Example(2D):
-//   circ_pitch = 5;  teeth=17;
-//   worm_diam = 30; starts=2;
-//   y = worm_gear_thickness(circ_pitch=circ_pitch, teeth=teeth, worm_diam=worm_diam);
-//   #worm_gear(
-//       circ_pitch=circ_pitch, teeth=teeth,
+//   circ_pitch = 5;
+//   teeth = 17;
+//   worm_diam = 30;
+//   worm_starts = 2;
+//   worm_arc = 40;
+//   y = worm_gear_thickness(
+//       circ_pitch=circ_pitch,
+//       teeth=teeth,
 //       worm_diam=worm_diam,
-//       worm_starts=starts,
+//       worm_arc=worm_arc
+//   );
+//   #worm_gear(
+//       circ_pitch=circ_pitch,
+//       teeth=teeth,
+//       worm_diam=worm_diam,
+//       worm_arc=worm_arc,
+//       worm_starts=worm_starts,
 //       orient=BACK
 //   );
 //   color("black") {
@@ -3390,15 +3410,27 @@ function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
 //       stroke([[-20,-y/2],[-20,y/2]],width=0.5,endcaps="arrow");
 //   }
 
-function worm_gear_thickness(circ_pitch, teeth, worm_diam, worm_arc=60, crowning=1, clearance, diam_pitch, mod, pitch) =
-    let(
+function worm_gear_thickness(
+    circ_pitch,
+    teeth,
+    worm_diam,
+    worm_arc=45,
+    crowning=0.1,
+    clearance,
+    diam_pitch,
+    mod,
+    pitch
+) = let(
         circ_pitch = circular_pitch(pitch, mod, circ_pitch, diam_pitch),
-        r = worm_diam/2 + crowning,
-        pitch_thick = r * sin(worm_arc/2) * 2,
-        pr = pitch_radius(circ_pitch, teeth),
-        rr = _root_radius(circ_pitch, teeth, clearance, false),
-        pitchoff = (pr-rr) * sin(worm_arc/2),
-        thickness = pitch_thick + 2*pitchoff
+        thickness = worm_gear(
+            circ_pitch=circ_pitch,
+            teeth=teeth,
+            worm_diam=worm_diam,
+            worm_arc=worm_arc,
+            crowning=crowning,
+            clearance=clearance,
+            get_thickness=true
+        )
     ) thickness;
 
 
