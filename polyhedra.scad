@@ -51,10 +51,16 @@ function _unique_groups(m) = [
 //   regular_polyhedron("trapezohedron", [longside=],[h=], ...) [CHILDREN];
 // Description:
 //   Creates a regular polyhedron with optional rounding.  Children are placed on the polyhedron's faces.  (Note that this is not attachable.)
+//   The regular_polyhedron module knows about many different regular and semi-regular polyhedra.  You can refer to them
+//   by name.  The complete list with their names appears below in the examples.  You can also search the polyhedra
+//   for ones that meet various critera using `type=`, `faces=`, `facetype=` or `hasfaces=`.  This will result in a list of polyhedra in a
+//   canonical order that might include several options.  By default if you give specifications that produce several polyhedra, the first
+//   one will be returned.  You can use the `index=` argument to select others from your list of hits.  Examples of polyhedron selection appear
+//   after the full list of polyhedra below.  
 //   .
 //   **Selecting the polyhedron:**
 //   You constrain the polyhedra list by specifying different characteristics, that must all be met
-//   * `name`: e.g. `"dodecahedron"` or `"pentagonal icositetrahedron"`
+//   * `name`: e.g. `"dodecahedron"` or `"pentagonal icositetrahedron"`.  The name fully identifies the polyhedron, so no other characteristic should be given.
 //   * `type`: Options are `"platonic"`, `"archimedean"` and `"catalan"`
 //   * `faces`: The required number of faces
 //   * `facetype`: The required face type(s).  List of vertex counts for the faces.  Exactly the listed types of faces must appear:
@@ -114,31 +120,31 @@ function _unique_groups(m) = [
 //   parameters.
 //   * Trapezohedron: a family of solids with an even number of kite shaped sides.
 //     One example of a trapezohedron is the d10 die, which is a 10 face trapezohedron.
-//     You must specify exactly two of `side`, `longside`, `h`, and `r` (or `d`).
+//     You must specify exactly two of `side`, `longside`, `h` (or `height`), and `r` (or `d`).
 //     You cannot create trapezohedron shapes using `mr`, `ir`, or `or`.
 //     * `side`: Length of the short side.
 //     * `longside`: Length of the long side that extends to the apex.
-//     * `h`: Distance from the center to the apex.
+//     * `h` or `height`: Distance from the center to the apex.
 //     * `r`: Radius of the polygon that defines the equatorial vertices.
 //     * `d`: Diameter of the polygon that defines the equatorial vertices.
 //   .
-//   * Named stellations: various polyhedra such as the Kepler-Poinsot solids are stellations with
+//   * Named stellations: various polyhedra such as three of the four Kepler-Poinsot solids are stellations with
 //    specific pyramid heights.  To make them easier to generate you can specify them by name.
 //    This is equivalent to giving the name of the appropriate base solid and the magic stellate
 //    parameter needed to produce that shape.  The supported solids are:
 //     * `"great dodecahedron"`
 //     * `"small stellated dodecahedron"`
 //     * `"great stellated dodecahedron"`
-//     * `"small triambic icosahedron"`
+//     * `"small triambic icosahedron"` (not a Kepler-Poinsot solid)
 //
 // Arguments:
 //   name = Name of polyhedron to create.
 //   ---
-//   index = Index to select from polyhedron list.  Default: 0.
 //   type = Type of polyhedron: "platonic", "archimedean", "catalan".
 //   faces = Number of faces.
 //   facetype = Scalar or vector listing required type of faces as vertex count.  Polyhedron must have faces of every type listed and no other types.
 //   hasfaces = Scalar of vector list face vertex counts.  Polyhedron must have at least one of the listed types of face.
+//   index = Index to select from polyhedron list.  Default: 0.
 //   side = Length of the smallest edge of the polyhedron.  Default: 1 (if no radius or diameter is given).  
 //   ir = inner radius.  Polyhedron is scaled so it has the specified inner radius. 
 //   mr = middle radius.  Polyhedron is scaled so it has the specified middle radius.  
@@ -197,7 +203,7 @@ function _unique_groups(m) = [
 //   regular_polyhedron("small triambic icosahedron");
 // Example: Third Archimedean solid
 //   regular_polyhedron(type="archimedean", index=2);
-// Example(Med): Solids that have 8 or 10 vertex faces
+// Example(Med): Solids that have at least one face with either 8 vertices or 10 vertices
 //   N = len(regular_polyhedron_info("index set", hasfaces=[8,10]));
 //   for(i=[0:N-1]) right(3*i)
 //     regular_polyhedron(hasfaces=[8,10], index=i, mr=1);
@@ -237,7 +243,7 @@ function _unique_groups(m) = [
 //     cylinder(r=.1, h=.5);
 //   right(2) regular_polyhedron(name="tetrahedron", anchor=UP, rotate_children=false)
 //     cylinder(r=.1, h=.5);
-// Example(FlatSpin,Med,VPD=15): Using `$face` you can have full control of the construction of your children.  This example constructs the Great Icosahedron.
+// Example(FlatSpin,Med,VPD=15): Using `$face` you can have full control of the construction of your children.  This example constructs the Great Icosahedron, the one Kepler-Poinsot solid that cannot be made directly with {{regular_polyhedron()}}.  
 //   module makestar(pts) {    // Make a star from a point list
 //       polygon(
 //         [
@@ -309,8 +315,8 @@ module regular_polyhedron(
     draw=true,
     rotate_children=true,
     stellate = false,
-    longside=undef, // special parameter for trapezohedron
-    h=undef         // special parameter for trapezohedron
+    longside=undef,       // special parameter for trapezohedron
+    h=undef,height=undef  // special parameter for trapezohedron
 ) {
     dummy=assert(is_num(rounding) && rounding>=0, "'rounding' must be nonnegative");
     entry = regular_polyhedron_info(
@@ -322,7 +328,7 @@ module regular_polyhedron(
         anchor=anchor, 
         facedown=facedown,
         stellate=stellate,
-        longside=longside, h=h
+        longside=longside, h=h, height=height
     );
     scaled_points = entry[0];
     translation = entry[1];
@@ -584,11 +590,11 @@ _stellated_polyhedra_ = [
 //   info = Desired information to return for the polyhedron
 //   name = Name of polyhedron to create.
 //   ---
-//   index = Index to select from polyhedron list.  Default: 0.
 //   type = Type of polyhedron: "platonic", "archimedean", "catalan".
 //   faces = Number of faces.
 //   facetype = Scalar or vector listing required type of faces as vertex count.  Polyhedron must have faces of every type listed and no other types.
 //   hasfaces = Scalar of vector list face vertex counts.  Polyhedron must have at least one of the listed types of face.
+//   index = Index to select from polyhedron list.  Default: 0.
 //   side = Length of the smallest edge of the polyhedron.  Default: 1 (if no radius or diameter is given).
 //   or / r / d = outer radius.   Polyhedron is scaled so it has the specified outer radius or diameter. 
 //   mr = middle radius.  Polyhedron is scaled so it has the specified middle radius.  
@@ -607,11 +613,12 @@ function regular_polyhedron_info(
     r=undef, d=undef,
     anchor=CENTER,
     facedown=true, stellate=false,
-    longside=undef, h=undef  // special parameters for trapezohedron
+    longside=undef, h=undef, height=undef  // special parameters for trapezohedron
 ) = let(
         argcount = num_defined([side,ir,mr,or,r,d])
     )
-    assert(argcount<=1, "You must specify only one of 'side', 'ir', 'mr', 'or', 'r', and 'd'")
+    assert(name=="trapezohedron" || argcount<=1, "You must specify only one of 'side', 'ir', 'mr', 'or', 'r', and 'd'")
+    assert(name!="trapezohedron" || num_defined([ir,mr,or])==0, "Trapezohedron does not accept 'ir', 'mr' or 'or'")
     let(  
         //////////////////////
         //Index values into the _polyhedra_ array
@@ -662,7 +669,7 @@ function regular_polyhedron_info(
     let(
         entry = (
             name == "trapezohedron"? (
-                _trapezohedron(faces=faces, side=side, longside=longside, h=h, r=r)
+                _trapezohedron(faces=faces, side=side, longside=longside, h=h, r=r, d=d, height=height)
             ) : (
                 _polyhedra_[!is_undef(index)?
                     indexlist[index] :
@@ -671,7 +678,7 @@ function regular_polyhedron_info(
         ),
         valid_facedown = is_bool(facedown) || in_list(facedown, entry[facevertices])
     )
-    assert(name == "trapezohedron" || num_defined([longside,h])==0, "The 'longside' and 'h' parameters are only allowed with trapezohedrons")
+    assert(name == "trapezohedron" || num_defined([longside,h,height])==0, "The 'longside', 'h' and 'height' parameters are only allowed with trapezohedrons")
     assert(valid_facedown,str("'facedown' set to ",facedown," but selected polygon only has faces with size(s) ",entry[facevertices]))
     let(
         scalefactor = (
@@ -739,14 +746,16 @@ function _stellate_faces(scalefactor,stellate,vertices,faces_normals) =
     ) [newfaces, normals, allpts];
 
 
-function _trapezohedron(faces, r, side, longside, h, d) =
+function _trapezohedron(faces, r, side, longside, h, height, d) =
     assert(faces%2==0, "Must set 'faces' to an even number for trapezohedron")
+    assert(is_undef(h) || is_undef(height), "Cannot define both 'h' and 'height'")
     let(
         r = get_radius(r=r, d=d),
+        h = first_defined([h,height]),
         N = faces/2,
         parmcount = num_defined([r,side,longside,h])
     )
-    assert(parmcount==2,"Must define exactly two of 'r', 'side', 'longside', and 'height'")
+    assert(parmcount==2,"Must define exactly two of 'r' (or 'd'), 'side', 'longside', and 'h' (or 'height')")
     let(       
         separation = (     // z distance between non-apex vertices that aren't in the same plane
             !is_undef(h) ? 2*h*sqr(tan(90/N)) :
