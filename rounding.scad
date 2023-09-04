@@ -591,8 +591,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
                                 _bezcorner([[0,0],[0,z_dir*abs(joint)],[-joint,z_dir*abs(joint)]], k, $fn=N+2)
                         )
         )
-  
-        quant(extra > 0? concat(offsets, [last(offsets)+[0,z_dir*extra]]) : offsets, 1/1024);
+        quant(extra > 0 && len(offsets)>0 ? concat(offsets, [last(offsets)+[0,z_dir*extra]]) : offsets, 1/1024);
 
 
 
