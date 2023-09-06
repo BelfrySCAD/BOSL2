@@ -2347,7 +2347,7 @@ module worm(
 //   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
 //   ---
 //   starts = The number of lead starts.  Default: 1
-//   arc = Arc angle of the mated worm gear to envelop.  Default: 45º
+//   arc = Arc angle of the mated worm gear to envelop.  Default: `2 * pressure_angle`
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
@@ -2370,8 +2370,8 @@ function enveloping_worm(
     d,
     left_handed=false,
     starts=1,
-    arc=45,
-    pressure_angle=20,
+    arc,
+    pressure_angle,
     gear_spin=0,
     rounding=true,
     taper=true,
@@ -2382,15 +2382,18 @@ function enveloping_worm(
     spin=0,
     orient=UP
 ) =
+    let(
+        circ_pitch = _inherit_gear_pitch("worm_gear()", pitch, circ_pitch, diam_pitch, mod),
+        pressure_angle = _inherit_gear_pa(pressure_angle),
+        arc = default(arc, 2*pressure_angle)
+    )
     assert(is_integer(mate_teeth) && mate_teeth>10)
     assert(is_finite(d) && d>0)
     assert(is_bool(left_handed))
     assert(is_integer(starts) && starts>0)
-    assert(is_finite(arc) && arc>10 && arc<75)
-    assert(is_finite(pressure_angle) && pressure_angle>0 && pressure_angle<45)
+    assert(is_finite(arc) && arc>10 && arc<=2*pressure_angle)
     assert(is_finite(gear_spin))
     let(
-        circ_pitch = circular_pitch(circ_pitch=circ_pitch, diam_pitch=diam_pitch, pitch=pitch, mod=mod),
         hsteps = segs(d/2),
         vsteps = hsteps*3,
         helical = asin(starts * circ_pitch / PI / d),
@@ -2468,7 +2471,7 @@ module enveloping_worm(
     d,
     left_handed=false,
     starts=1,
-    arc=45,
+    arc,
     pressure_angle=20,
     gear_spin=0,
     rounding=true,
@@ -2631,6 +2634,7 @@ function worm_gear(
         tang = 360 / teeth,
         rteeth = quantdn(teeth * gear_arc / 360, 2) / 2 + 0.5,
         pr = pitch_radius(circ_pitch, teeth, helical=helical),
+        oslices = slices * 4,
         rows = [
             for (data = [[tooth_half1,1], [tooth_half2,-1]])
             let (
@@ -2638,9 +2642,9 @@ function worm_gear(
                 dir = data[1]
             )
             for (pt = tooth_half) [
-                for (i = [0:1:slices])
+                for (i = [0:1:oslices])
                 let (
-                    u = i / slices,
+                    u = i / oslices,
                     w_ang = worm_arc * (u - 0.5),
                     g_ang_delta = w_ang/360 * tang * worm_starts * (left_handed?1:-1),
                     m = zrot(dir*(rteeth-0.0)*tang, cp=[worm_diam/2+pr,0,0]) *
@@ -2652,11 +2656,6 @@ function worm_gear(
                 ) apply(m, point3d(pt))
             ]
         ],
-        zs = column(flatten(rows),2),
-        minz = min(zs),
-        maxz = max(zs),
-        zmax = max(abs(minz), abs(maxz))+0.1,
-        twang = modang(v_theta(rows[0][0]) - v_theta(last(rows[0]))) / (maxz-minz),
         midrow = len(rows)/2,
         goodcols = [
             for (i = idx(rows[0]))
@@ -2668,8 +2667,16 @@ function worm_gear(
         ],
         dowarn = goodcols[0]==0? 0 : echo("Worm gear tooth arc reduced to fit."),
         truncrows = [for (row = rows) [ for (i=goodcols) row[i] ] ],
+        zs = column(flatten(truncrows),2),
+        minz = min(zs),
+        maxz = max(zs),
+        zmax = max(abs(minz), abs(maxz))+0.05,
+        twang1 = v_theta(truncrows[0][0]),
+        twang2 = v_theta(last(truncrows[0])),
+        twang = modang(twang1 - twang2) / (maxz-minz),
+        resampled_rows = [for (row = truncrows) resample_path(row, n=slices, closed=false)],
         tooth_rows = [
-            for (row = truncrows) [
+            for (row = resampled_rows) [
                 zrot(twang*(zmax-row[0].z), p=[row[0].x, row[0].y, zmax]),
                 each row,
                 zrot(twang*(-zmax-last(row).z), p=[last(row).x, last(row).y, -zmax]),
