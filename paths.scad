@@ -532,13 +532,13 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
         pcnt = len(path),
         plen = path_length(path, closed=closed),
         subpaths = [ for (p = pair(corners)) [for(i = [p.x:1:p.y]) path[i%pcnt]] ],
-        n = is_undef(n)? n : closed? n+1 : n
+        n = is_undef(n)? undef : closed? n+1 : n
     )
     assert(n==undef || n >= len(corners), "There are nore than `n=` corners whose angle is greater than `keep_corners=`.")
     let(
         lens = [for (subpath = subpaths) path_length(subpath)],
         part_ns = is_undef(n)
-          ? [for (i=idx(subpaths)) ceil(lens[i]/spacing)-1]
+          ? [for (i=idx(subpaths)) max(1,round(lens[i]/spacing)-1)]
           : let(
                 ccnt = len(corners),
                 parts = [for (l=lens) (n-ccnt) * l/plen],
@@ -549,8 +549,8 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
                 let(
                     subpath = subpaths[i],
                     splen = lens[i],
-                    n = part_ns[i] + 1,
-                    distlist = lerpn(0, splen, n, false),
+                    pn = part_ns[i] + 1,
+                    distlist = lerpn(0, splen, pn, false),
                     cuts = path_cut_points(subpath, distlist, closed=false)
                 )
                 each column(cuts,0),
