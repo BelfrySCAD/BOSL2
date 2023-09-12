@@ -541,7 +541,7 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
           ? [for (i=idx(subpaths)) max(1,round(lens[i]/spacing)-1)]
           : let(
                 ccnt = len(corners),
-                parts = [for (l=lens) (n-ccnt) * l/plen],
+                parts = [for (l=lens) (n-ccnt) * l/plen]
             )
             _sum_preserving_round(parts),
         out = [
