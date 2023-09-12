@@ -2395,7 +2395,7 @@ function enveloping_worm(
     assert(is_finite(gear_spin))
     let(
         hsteps = segs(d/2),
-        vsteps = hsteps*3,
+        vsteps = hsteps,
         helical = asin(starts * circ_pitch / PI / d),
         pr = pitch_radius(circ_pitch, mate_teeth, helical=helical),
         taper_table = taper
@@ -2647,11 +2647,11 @@ function worm_gear(
                     u = i / oslices,
                     w_ang = worm_arc * (u - 0.5),
                     g_ang_delta = w_ang/360 * tang * worm_starts * (left_handed?1:-1),
-                    m = zrot(dir*(rteeth-0.0)*tang, cp=[worm_diam/2+pr,0,0]) *
+                    m = zrot(dir*rteeth*tang+g_ang_delta, cp=[worm_diam/2+pr,0,0]) *
                         left(crowning) *
                         yrot(w_ang) *
                         right(worm_diam/2+crowning) *
-                        zrot(-1*dir*(rteeth+0.0)*tang+g_ang_delta, cp=[pr,0,0]) *
+                        zrot(-dir*rteeth*tang+g_ang_delta, cp=[pr,0,0]) *
                         xrot(180)
                 ) apply(m, point3d(pt))
             ]
@@ -2674,7 +2674,7 @@ function worm_gear(
         twang1 = v_theta(truncrows[0][0]),
         twang2 = v_theta(last(truncrows[0])),
         twang = modang(twang1 - twang2) / (maxz-minz),
-        resampled_rows = [for (row = truncrows) resample_path(row, n=slices, closed=false)],
+        resampled_rows = [for (row = truncrows) resample_path(row, n=slices, keep_corners=30, closed=false)],
         tooth_rows = [
             for (row = resampled_rows) [
                 zrot(twang*(zmax-row[0].z), p=[row[0].x, row[0].y, zmax]),
@@ -2963,7 +2963,7 @@ function _gear_tooth_profile(
 
     // Reduce number of vertices.
     tooth = path_merge_collinear(
-        resample_path(full_tooth, n=ceil(2*steps), closed=false)
+        resample_path(full_tooth, n=ceil(2*steps), keep_corners=30, closed=false)
     ),
 
     out = center? fwd(prad, p=tooth) : tooth
@@ -3944,7 +3944,7 @@ module _show_gear_tooth_profile(
             stroke([polar_to_xy(min(rr,br)-mod/10,90+180/teeth),polar_to_xy(or+mod/10,90+180/teeth)], width=0.05, closed=true);
         }
         zrot_copies([0]) { // Tooth profile overlay
-            stroke(tooth, width=0.1, dots=(show_verts?"dot":false), endcap_color1="green");
+            stroke(tooth, width=0.1, dots=(show_verts?"dot":false), endcap_color1="green", endcap_color2="red");
         }
     }
 }

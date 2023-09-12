@@ -168,14 +168,14 @@ function is_collinear(a, b, c, eps=EPSILON) =
 // Topics: Geometry, Points, Lines, Distance
 // See Also: is_collinear(), is_point_on_line(), point_line_distance(), line_from_points()
 // Usage:
-//   dist = point_line_distance(line, pt, [bounded]);
+//   dist = point_line_distance(pt, line, [bounded]);
 // Description:
 //   Finds the shortest distance from the point `pt` to the specified line, segment or ray.
 //   The bounded parameter specifies the whether the endpoints give a ray or segment.
 //   By default assumes an unbounded line.  
 // Arguments:
-//   line = A list of two points defining a line.
 //   pt = A point to find the distance of from the line.
+//   line = A list of two points defining a line.
 //   bounded = a boolean or list of two booleans specifiying whether each end is bounded.  Default: false
 // Example:
 //   dist1 = point_line_distance([3,8], [[-10,0], [10,0]]);  // Returns: 8

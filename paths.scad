@@ -473,7 +473,8 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 // Description:
 //   Compute a uniform resampling of the input path.  If you specify `n` then the output path will have n
 //   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the
-//   input path that are guaranteed to appear in the output path are the starting and ending points.
+//   input path that are guaranteed to appear in the output path are the starting and ending points, and any
+//   points that have an angular deflection of at least the number of degrees given in `keep_corners`.
 //   If you specify `spacing` then the length you give will be rounded to the nearest spacing that gives
 //   a uniform sampling of the path and the resulting uniformly sampled path is returned.
 //   Note that because this function operates on a discrete input path the quality of the output depends on
@@ -483,6 +484,7 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 //   n = Number of points in output
 //   ---
 //   spacing = Approximate spacing desired
+//   keep_corners = If given a scalar, path vertices with deflection angle greater than this are preserved in the output.
 //   closed = set to true if path is closed.  Default: true
 // Example(2D):  Subsampling lots of points from a smooth curve
 //   path = xscale(2,circle($fn=250, r=10));
@@ -494,9 +496,14 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 //   sampled = resample_path(path, spacing=17);
 //   stroke(path);
 //   color("red")move_copies(sampled) circle($fn=16);
-// Example(2D): Notice that the corners are excluded
+// Example(2D): Notice that the corners are excluded.
 //   path = square(20);
 //   sampled = resample_path(path, spacing=6);
+//   stroke(path,closed=true);
+//   color("red")move_copies(sampled) circle($fn=16);
+// Example(2D): Forcing preservation of corners.
+//   path = square(20);
+//   sampled = resample_path(path, spacing=6, keep_corners=90);
 //   stroke(path,closed=true);
 //   color("red")move_copies(sampled) circle($fn=16);
 // Example(2D): Closed set to false
@@ -505,24 +512,51 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 //   stroke(path);
 //   color("red")move_copies(sampled) circle($fn=16);
 
-
-function resample_path(path, n, spacing, closed=true) =
-   let(path = force_path(path))
-   assert(is_path(path))
-   assert(num_defined([n,spacing])==1,"Must define exactly one of n and spacing")
-   assert(is_bool(closed))
-   let(
-       length = path_length(path,closed),
-       // In the open path case decrease n by 1 so that we don't try to get
-       // path_cut to return the endpoint (which might fail due to rounding)
-       // Add last point later
-       n = is_def(n) ? n-(closed?0:1) : round(length/spacing),
-       distlist = lerpn(0,length,n,false), 
-       cuts = path_cut_points(path, distlist, closed=closed)
-   )
-   [ each column(cuts,0),
-     if (!closed) last(path)     // Then add last point here
-   ];
+function resample_path(path, n, spacing, keep_corners, closed=true) =
+    let(path = force_path(path))
+    assert(is_path(path))
+    assert(num_defined([n,spacing])==1,"Must define exactly one of n and spacing")
+    assert(n==undef || (is_integer(n) && n>0))
+    assert(spacing==undef || (is_finite(spacing) && spacing>0))
+    assert(is_bool(closed))
+    let(
+        corners = is_undef(keep_corners)
+          ? [0, len(path)-(closed?0:1)]
+          : [
+                0,
+                for (i = [1:1:len(path)-(closed?1:2)])
+                    let( ang = abs(modang(vector_angle(select(path,i-1,i+1))-180)) )
+                    if (ang >= keep_corners) i,
+                len(path)-(closed?0:1),
+            ],
+        pcnt = len(path),
+        plen = path_length(path, closed=closed),
+        subpaths = [ for (p = pair(corners)) [for(i = [p.x:1:p.y]) path[i%pcnt]] ],
+        n = is_undef(n)? n : closed? n+1 : n
+    )
+    assert(n==undef || n >= len(corners), "There are nore than `n=` corners whose angle is greater than `keep_corners=`.")
+    let(
+        lens = [for (subpath = subpaths) path_length(subpath)],
+        part_ns = is_undef(n)
+          ? [for (i=idx(subpaths)) ceil(lens[i]/spacing)-1]
+          : let(
+                ccnt = len(corners),
+                parts = [for (l=lens) (n-ccnt) * l/plen],
+            )
+            _sum_preserving_round(parts),
+        out = [
+            for (i = idx(subpaths))
+                let(
+                    subpath = subpaths[i],
+                    splen = lens[i],
+                    n = part_ns[i] + 1,
+                    distlist = lerpn(0, splen, n, false),
+                    cuts = path_cut_points(subpath, distlist, closed=false)
+                )
+                each column(cuts,0),
+            if (!closed) last(path)
+        ]
+    ) out;
 
 
 // Section: Path Geometry
