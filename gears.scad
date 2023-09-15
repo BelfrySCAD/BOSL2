@@ -2706,7 +2706,7 @@ module worm_gear(
     teeth,
     worm_diam,
     worm_starts = 1,
-    worm_arc = 60,
+    worm_arc = 45,
     crowning = 0.1,
     left_handed = false,
     pressure_angle,
@@ -3385,6 +3385,7 @@ function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
 //   worm_diam = The pitch diameter of the worm gear to match to.  Default: 30
 //   ---
 //   worm_arc = The arc of the worm to mate with, in degrees. Default: 45 degrees
+//   pressure_angle = Pressure angle in degrees.  Controls how straight or bulged the tooth sides are.  Default: 20º
 //   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fit the work easier.  Default: 1
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
@@ -3422,6 +3423,7 @@ function worm_gear_thickness(
     teeth,
     worm_diam,
     worm_arc=45,
+    pressure_angle=20,
     crowning=0.1,
     clearance,
     diam_pitch,
@@ -3435,6 +3437,7 @@ function worm_gear_thickness(
             worm_diam=worm_diam,
             worm_arc=worm_arc,
             crowning=crowning,
+            pressure_angle=pressure_angle,
             clearance=clearance,
             get_thickness=true
         )
