@@ -21,7 +21,7 @@
 // Synopsis: Connect a sequence of arbitrary polygons into a 3D object. 
 // SynTags: VNF, Geom
 // Topics: Extrusion, Skin
-// See Also: sweep(), linear_sweep(), rotate_sweep(), spiral_sweep(), path_sweep()
+// See Also: sweep(), linear_sweep(), rotate_sweep(), spiral_sweep(), path_sweep(), offset_sweep()
 // Usage: As module:
 //   skin(profiles, slices, [z=], [refine=], [method=], [sampling=], [caps=], [closed=], [style=], [convexity=], [anchor=],[cp=],[spin=],[orient=],[atype=]) [ATTACHMENTS];
 // Usage: As function:
@@ -513,7 +513,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 // Synopsis: Create a linear extrusion from a path, with optional texturing. 
 // SynTags: VNF, Geom
 // Topics: Extrusion, Textures, Sweep
-// See Also: rotate_sweep(), sweep(), spiral_sweep(), path_sweep()
+// See Also: rotate_sweep(), sweep(), spiral_sweep(), path_sweep(), offset_sweep()
 // Usage: As Module
 //   linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [caps=], [convexity=]) [ATTACHMENTS];
 // Usage: With Texturing
@@ -839,7 +839,7 @@ function linear_sweep(
 // Synopsis: Create a surface of revolution from a path with optional texturing. 
 // SynTags: VNF, Geom
 // Topics: Extrusion, Sweep, Revolution, Textures
-// See Also: linear_sweep(), sweep(), spiral_sweep(), path_sweep()
+// See Also: linear_sweep(), sweep(), spiral_sweep(), path_sweep(), offset_sweep()
 // Usage: As Function
 //   vnf = rotate_sweep(shape, [angle], ...);
 // Usage: As Module
@@ -872,7 +872,6 @@ function linear_sweep(
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
-// See Also: linear_sweep(), sweep()
 // Example:
 //   rgn = [
 //       for (a = [0, 120, 240]) let(
@@ -1064,7 +1063,7 @@ module rotate_sweep(
 // Synopsis: Sweep a path along a helix.
 // SynTags: VNF, Geom
 // Topics: Extrusion, Sweep, Spiral
-// See Also: linear_sweep(), rotate_sweep(), sweep(), path_sweep()
+// See Also: thread_helix(), linear_sweep(), rotate_sweep(), sweep(), path_sweep(), offset_sweep()
 // Usage: As Module
 //   spiral_sweep(poly, h, r|d=, turns, [taper=], [center=], [taper1=], [taper2=], [internal=], ...)[ATTACHMENTS];
 //   spiral_sweep(poly, h, r1=|d1=, r2=|d2=, turns, [taper=], [center=], [taper1=], [taper2=], [internal=], ...)[ATTACHMENTS];
@@ -1110,7 +1109,6 @@ module rotate_sweep(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// See Also: sweep(), linear_sweep(), rotate_sweep(), path_sweep(), thread_helix()
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   spiral_sweep(poly, h=200, r=50, turns=3, $fn=36);
@@ -1294,7 +1292,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 // Synopsis: Sweep a 2d polygon path along a 2d or 3d path. 
 // SynTags: VNF, Geom
 // Topics: Extrusion, Sweep, Paths
-// See Also: linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep2d()
+// See Also: linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep2d(), offset_sweep()
 // Usage: As module
 //   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As function
@@ -1453,7 +1451,6 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
-// See Also: sweep(), linear_sweep(), rotate_sweep(), spiral_sweep()
 // Example(NoScales): A simple sweep of a square along a sine wave:
 //   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
 //   sq = square(6,center=true);
@@ -1892,7 +1889,7 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
 // Synopsis: Sweep a 2d polygon path along a 2d path allowing self-intersection. 
 // SynTags: VNF, Geom
 // Topics: Extrusion, Sweep, Paths
-// See Also: linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep()
+// See Also: linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep(), offset_sweep()
 // Usage: as module
 //   path_sweep2d(shape, path, [closed], [caps], [quality], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=], [cp=]) [ATTACHMENTS];
 // Usage: as function
@@ -2023,7 +2020,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 // Synopsis: Construct a 3d object from arbitrary transformations of a 2d polygon path.
 // SynTags: VNF, Geom
 // Topics: Extrusion, Sweep, Paths
-// See Also: linear_sweep(), rotate_sweep(), spiral_sweep(), path_sweep(), path_sweep2d()
+// See Also: linear_sweep(), rotate_sweep(), spiral_sweep(), path_sweep(), path_sweep2d(), offset_sweep()
 // Usage: As Module
 //   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As Function
@@ -2628,7 +2625,7 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
 // Synopsis: Create vertex association to control how {{skin()}} links vertices. 
 // SynTags: PathList
 // Topics: Extrusion, Skinning, Paths
-// See Also: skin(), sweep()
+// See Also: skin()
 // Usage:
 //   newpoly = associate_vertices(polygons, split);
 // Description:
@@ -3424,6 +3421,7 @@ function texture(tex, n, inset, gap, roughness) =
 ///   _textured_linear_sweep(region, texture, tex_size, h, ...) [ATTACHMENTS];
 ///   _textured_linear_sweep(region, texture, counts=, h=, ...) [ATTACHMENTS];
 /// Topics: Sweep, Extrusion, Textures, Knurling
+/// See Also: heightfield(), cylindrical_heightfield(), texture()
 /// Description:
 ///   Given a [[Region|regions.scad]], creates a linear extrusion of it vertically, optionally twisted, scaled, and/or shifted,
 ///   with a given texture tiled evenly over the side surfaces.  The texture can be given in one of three ways:
@@ -3456,7 +3454,6 @@ function texture(tex, n, inset, gap, roughness) =
 ///   centroid_top = The centroid of the top of the shape, oriented UP.
 ///   centroid = The centroid of the center of the shape, oriented UP.
 ///   centroid_bot = The centroid of the bottom of the shape, oriented DOWN.
-/// See Also: heightfield(), cylindrical_heightfield(), texture()
 
 function _get_vnf_tile_edges(texture) =
     let(
@@ -3720,6 +3717,7 @@ function _find_vnf_tile_edge_path(vnf, val) =
 ///   _textured_revolution(shape, texture, tex_size, [tex_scale=], ...) [ATTACHMENTS];
 ///   _textured_revolution(shape, texture, counts=, [tex_scale=], ...) [ATTACHMENTS];
 /// Topics: Sweep, Extrusion, Textures, Knurling
+/// See Also: heightfield(), cylindrical_heightfield(), texture()
 /// Description:
 ///   Given a 2D region or path, fully in the X+ half-plane, revolves that shape around the Z axis (after rotating its Y+ to Z+).
 ///   This creates a solid from that surface of revolution, possibly capped top and bottom, with the sides covered in a given tiled texture.
@@ -3749,7 +3747,6 @@ function _find_vnf_tile_edge_path(vnf, val) =
 ///   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 ///   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 ///   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-/// See Also: heightfield(), cylindrical_heightfield(), texture()
 /// Anchor Types:
 ///   "hull" = Anchors to the virtual convex hull of the shape.
 ///   "intersect" = Anchors to the surface of the shape.
