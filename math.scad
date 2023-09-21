@@ -763,29 +763,38 @@ function _product(v, i=0, _tot) =
 // Synopsis: Returns the running cumulative product of a list of values.
 // Topics: Math, Statistics
 // See Also: sum(), mean(), median(), product(), cumsum()
+// Usage:
+//   prod_list = cumprod(list, [right]);
 // Description:
 //   Returns a list where each item is the cumulative product of all items up to and including the corresponding entry in the input list.
-//   If passed an array of vectors, returns a list of elementwise vector products.  If passed a list of square matrices returns matrix
-//   products multiplying on the left, so a list `[A,B,C]` will produce the output `[A,BA,CBA]`.  
+//   If passed an array of vectors, returns a list of elementwise vector products.  If passed a list of square matrices by default returns matrix
+//   products multiplying on the left, so a list `[A,B,C]` will produce the output `[A,BA,CBA]`.  If you set `right=true` then it returns
+//   the product of multiplying on the right, so a list `[A,B,C]` will produce the output `[A,AB,ABC]` in that case.
 // Arguments:
-//   list = The list to get the product of.
+//   list = The list to get the cumulative product of.
+//   right = if true multiply matrices on the right
 // Example:
 //   cumprod([1,3,5]);  // returns [1,3,15]
 //   cumprod([2,2,2]);  // returns [2,4,8]
 //   cumprod([[1,2,3], [3,4,5], [5,6,7]]));  // returns [[1, 2, 3], [3, 8, 15], [15, 48, 105]]
-function cumprod(list) =
+function cumprod(list,right=false) =
    is_vector(list) ? _cumprod(list) :
    assert(is_consistent(list), "Input must be a consistent list of scalars, vectors or square matrices")
-   is_matrix(list[0]) ? assert(len(list[0])==len(list[0][0]), "Matrices must be square") _cumprod(list) 
+   assert(is_bool(right))
+   is_matrix(list[0]) ? assert(len(list[0])==len(list[0][0]), "Matrices must be square") _cumprod(list,right) 
                       : _cumprod_vec(list);
 
-function _cumprod(v,_i=0,_acc=[]) =
+function _cumprod(v,right,_i=0,_acc=[]) = 
     _i==len(v) ? _acc :
     _cumprod(
-        v, _i+1,
+        v, right, _i+1,
         concat(
             _acc,
-            [_i==0 ? v[_i] : v[_i]*_acc[len(_acc)-1]]
+            [
+              _i==0 ? v[_i]
+             : right? _acc[len(_acc)-1]*v[_i]
+             : v[_i]*_acc[len(_acc)-1]
+            ]
         )
     );
 

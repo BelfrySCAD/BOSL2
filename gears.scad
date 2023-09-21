@@ -78,7 +78,8 @@ function _inherit_gear_thickness(thickness) =
 //       * [Gear undercutting](https://www.tec-science.com/mechanical-power-transmission/involute-gear/undercut/)
 //       * [Profile shifting](https://www.tec-science.com/mechanical-power-transmission/involute-gear/profile-shift/)
 //       * [Detailed gear calculations](https://www.tec-science.com/mechanical-power-transmission/involute-gear/calculation-of-involute-gears/)
-//   - SDPSI
+//       * [Worm drive](https://www.tec-science.com/mechanical-power-transmission/gear-types/worms-and-worm-gears/)
+//   - SDPSI (A long document covering a variety of gear types and gear calculations)
 //       * [Elements of Gear Technology](https://www.sdp-si.com/resources/elements-of-metric-gear-technology/index.php)
 // Subsection: Involute Spur Gears
 // The simplest gear form is the involute spur gear, which is an extrusion of a two dimensional form.
@@ -410,6 +411,90 @@ function _inherit_gear_thickness(thickness) =
 //      color("lightblue")
 //      fwd(d)
 //         spur_gear(mod=mod, teeth=teeth1, profile_shift=ps1,gear_spin=-ang*360/teeth1,helical=-30,thickness=15);
+// Subsection: Worm Drive
+//   A worm drive is a gear system for connecting skew shafts at 90 degrees.  They offer higher load capacity compared to
+//   crossed helical gears.  The assembly is driven by the "worm", which is a gear that resembles a screw.
+//   Like a screw, it can have one, or several starts.  These starts correspond to teeth on a helical gear;
+//   in fact, the worm can be regarded as a type of helical gear at a very extreme angle, where the teeth wrap
+//   around the gear.  The worm mates with the "worm gear" which is also called the "worm wheel".  The worm gear
+//   resembles a helical gear at a very slight angle.
+// Figure(3D,Med,NoAxes):  Worm drive assembly, with worm on the left and worm gear (worm wheel) on the right.  When the worm turns its screwing action drives the worm gear.  
+//   starts=2;
+//   ps=0;
+//   dist_ba=0;
+//   gear_ba=0;
+//     worm(
+//          d=44, // mate_teeth=30,
+//          circ_pitch=3*PI,
+//          starts=starts,orient=BACK);
+//   right(worm_dist(d=44,mod=3,teeth=30, starts=starts,profile_shift=ps,backlash=dist_ba))
+//     zrot(360/30*.5) 
+//       worm_gear(
+//          circ_pitch=3*PI, 
+//          teeth=30,
+//          worm_diam=44,profile_shift=ps,
+//          worm_starts=starts,backlash=gear_ba);
+// Continues:
+//   A close look at the worm gear reveals that it differs significantly from a helical or spur gear.
+//   This gear is an "enveloping" gear, which is designed to follow the curved profile of the worm,
+//   resulting in much better contact between the teeth of the worm and the teeth of the worm gear.
+//   The worm shown above is a cylindrical worm, which is the most common type.
+//   It is possible to design the worm to follow the curved shape of its mated gear, resulting
+//   in an enveloping (also called "globoid") worm.  This type of worm makes better contact with
+//   the worm gear, but is less often used due to manufacturing complexity and consequent expense.  
+// Figure(3D,Big,NoAxes,VPT=[0,0,0],VPR=[192,0,180],VPD=172.84): A cylindrical worm appears on the left in green.  Note it's straight sides.  The enveloping (globoid) worm gears appears on the right in green.  Note that its sides curve so several teeth can mate with the worm gear, and it requires a complex tooth form
+//   tilt=20;
+//   starts=1;
+//   ps=0;
+//   pa=27;
+//   dist_ba=0;
+//   gear_ba=0;
+//   xdistribute(spacing=25){
+//      xflip()yrot(-tilt)  
+//      union(){
+//       color("lightgreen")
+//         xrot(90) 
+//         zrot(-90)
+//         enveloping_worm(     mate_teeth=60,$fn=128,
+//             d=14, pressure_angle=pa,  mod=3/2,
+//             starts=starts);
+//        right(worm_dist(d=14,mod=3/2,teeth=60, starts=starts,profile_shift=ps,backlash=dist_ba,pressure_angle=pa))
+//          zrot(360/30*.25)
+//            worm_gear(
+//             mod=3/2,pressure_angle=pa,
+//             teeth=60,crowning=0,
+//             worm_diam=14,profile_shift=ps,
+//             worm_starts=starts,backlash=gear_ba);
+//      }
+//      yrot(-tilt)
+//      union(){
+//       color("lightgreen")
+//         xrot(90) 
+//         zrot(-90)
+//                                worm(l=43, $fn=128,
+//             d=14, pressure_angle=pa, left_handed=true,
+//             mod=3/2,//circ_pitch=3*PI/2,
+//             starts=starts);
+//        right(worm_dist(d=14,mod=3/2,teeth=60, starts=starts,profile_shift=ps,backlash=dist_ba,pressure_angle=pa))
+//          zrot(360/30*.25)
+//            worm_gear(
+//             mod=3/2,pressure_angle=pa,
+//             teeth=60,crowning=0,left_handed=true,
+//             worm_diam=14,profile_shift=ps,
+//             worm_starts=starts,backlash=gear_ba);
+//      }  
+//   }
+// Continues:
+//   Worm drives are often "self-locking", which means that torque transmission can occur only from the worm to the worm gear,
+//   so they must be driven by the worm.  Self-locking results from the small lead angle of the worm threads, which produces
+//   high frictional forces at contact.  A multi-start worm has a higher lead angle and as a result is less likely
+//   to be self-locking, so a multi-start worm can be chosen to avoid self-locking.
+//   Since self-locking is associated with friction, self-locking drives have lower efficiency,
+//   usually less than 50%.  Worm drive efficiency can exceed 90% if self-locking is not required.  One consideration
+//   with self-locking systems is that if the worm gear moves a large mass and the drive is suddenly shut off, the
+//   worm wheel is still trying to move due to inertia, which can create large loads that fracture the worm.
+//   In such cases, the worm cannot be stopped abruptly but must rotate a little further (called "over travel")
+//   after switching off the drive
 // Subsection: Backlash (Fitting Real Gears Together)
 //   You may have noticed that the example gears shown fit together perfectly, making contact on both sides of
 //   the teeth.  Real gears need space between the teeth to prevent the gears from jamming, to provide space

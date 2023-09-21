@@ -591,8 +591,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
                                 _bezcorner([[0,0],[0,z_dir*abs(joint)],[-joint,z_dir*abs(joint)]], k, $fn=N+2)
                         )
         )
-  
-        quant(extra > 0? concat(offsets, [last(offsets)+[0,z_dir*extra]]) : offsets, 1/1024);
+        quant(extra > 0 && len(offsets)>0 ? concat(offsets, [last(offsets)+[0,z_dir*extra]]) : offsets, 1/1024);
 
 
 
@@ -1269,7 +1268,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 // Synopsis: Make a solid from a polygon with offset that changes along its length.
 // SynTags: Geom, VNF
 // Topics: Rounding, Offsets
-// See Also: offset_sweep(), convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), join_prism()
+// See Also: convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), join_prism(), linear_sweep()
 // Usage: most common module arguments.  See Arguments list below for more.
 //   offset_sweep(path, [height|length|h|l|], [bottom], [top], [offset=], [convexity=],...) [ATTACHMENTS];
 // Usage: most common function arguments.  See Arguments list below for more.
@@ -1739,7 +1738,7 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 // Synopsis: Make a solid from geometry where offset changes along the object's length.
 // SynTags: Geom
 // Topics: Rounding, Offsets
-// See Also: offset_sweep(), convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), join_prism()
+// See Also: offset_sweep(), rounded_prism(), bent_cutout_mask(), join_prism(), linear_sweep()
 // Usage: Basic usage.  See below for full options
 //   convex_offset_extrude(height, [bottom], [top], ...) 2D-CHILDREN;
 // Description:
