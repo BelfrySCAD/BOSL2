@@ -113,9 +113,9 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   "addlength"|x | length             | Add `length` to the turtle move distance
 //   "repeat"   |x | count, commands    | Repeats a list of commands `count` times.  (To repeat a compound command put it in a list: `[["move",10,"grow",2]]`)
 //   "arcleft"  |x | radius, [angle]    | Draw an arc from the current position toward the left at the specified radius and angle.  The turtle turns by `angle`.
-//   "arcright" |x | radius, [angle]    | Draw an arc from the current position upward at the specified radius and angle
-//   "arcup"    |x | radius, [angle]    | Draw an arc from the current position down at the specified radius and angle
-//   "arcdown"  |x | radius, [angle]    | Draw an arc from the current position down at the specified radius and angle
+//   "arcright" |x | radius, [angle]    | Draw an arc from the current position toward the right at the specified radius and angle.  The turtle turns by `angle`.
+//   "arcup"    |x | radius, [angle]    | Draw an arc from the current position upward at the specified radius and angle
+//   "arcdown"  |x | radius, [angle]    | Draw an arc from the current position downward at the specified radius and angle
 //   "arcxrot"  |x | radius, [angle]    | Draw an arc turning around x-axis by specified angle or default angle
 //   "arcyrot"  |x | radius, [angle]    | Draw an arc turning around y-axis by specified angle or default angle
 //   "arczrot"  |x | radius, [angle]    | Draw an arc turning around z-axis by specified angle or default angle
