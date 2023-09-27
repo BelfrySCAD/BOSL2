@@ -1909,14 +1909,15 @@ module rack2d(
     backing,
     width, bottom,
     pressure_angle,
-    backlash = 0.0,
+    backlash = 0,
     clearance,
     helical,
     profile_shift = 0,
     gear_travel = 0,
     circ_pitch,
     diam_pitch,
-    mod, rounding=true, 
+    mod,
+    rounding = true, 
     anchor = CENTER,
     spin = 0
 ) {
@@ -1973,6 +1974,209 @@ module rack2d(
     }
 }
 
+
+
+// Function&Module: crown_gear()
+// Synopsis: Creates a crown gear that can mesh with a spur gear.
+// SynTags: Geom, VNF
+// Topics: Gears, Parts
+// See Also: rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
+// Usage: As a Module
+//   crown_gear(circ_pitch, teeth, backing, face_width, [pressure_angle=], [clearance=], [backlash=], [profile_shift=], [slices=]);
+//   crown_gear(diam_pitch=, teeth=, backing=, face_width=, [pressure_angle=], [clearance=], [backlash=], [profile_shift=], [slices=]);
+//   crown_gear(mod=, teeth=, backing=, face_width=, [pressure_angle=], [clearance=], [backlash=], [profile_shift=], [slices=]);
+// Usage: As a Function
+//   vnf = crown_gear(circ_pitch, teeth, backing, face_width, [pressure_angle=], [clearance=], [backlash=], [profile_shift=], [slices=]);
+//   vnf = crown_gear(diam_pitch=, teeth=, backing=, face_width=, [pressure_angle=], [clearance=], [backlash=], [profile_shift=], [slices=]);
+//   vnf = crown_gear(mod=, teeth=, backing=, face_width=, [pressure_angle=], [clearance=], [backlash=], [profile_shift=], [slices=]);
+// Description:
+//   Creates a crown gear.  The module `crown_gear()` gives a crown gear, with reasonable defaults
+//   for all the parameters.  Normally, you should just choose the first 4 parameters, and let the
+//   rest be default values.
+//   .
+//   The module `crown_gear()` gives a crown gear in the XY plane, centered on the origin, with one tooth
+//   centered on the positive Y axis.  The crown gear will have the pitch circle of the teeth at Z=0 by default.
+//   The inner radius of the crown teeth can be calculated with the `pitch_radius()` function, and the outer
+//   radius of the teeth is `face_width=` more than that.
+// Arguments:
+//   circ_pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.  Default: 5
+//   teeth = Total number of teeth around the entire perimeter.  Default: 20
+//   backing = Distance from base of crown gear to roots of teeth (alternative to bottom and backing).
+//   face_width = Width of the toothed surface in mm, from inside radius to outside.  Default: 5
+//   ---
+//   bottom = Distance from crown's pitch plane (Z=0) to the bottom of the crown gear.  (Alternative to backing or thickness)
+//   thickness = Distance from base of crown gear to tips of teeth (alternative to bottom and backing).
+//   pitch_angle = Angle of beveled gear face.  Default: 45
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
+//   slices = Number of vertical layers to divide gear into.  Useful for refining gears with `spiral`.  Default: 1
+//   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
+//   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example:
+//   crown_gear(mod=1, teeth=40, backing=3, face_width=5, pressure_angle=20);
+// Example:
+//   mod=1; cteeth=40; pteeth=17; backing=3; PA=20; face=5;
+//   cpr = pitch_radius(mod=mod, teeth=cteeth);
+//   ppr = pitch_radius(mod=mod, teeth=pteeth);
+//   crown_gear(mod=mod, teeth=cteeth, backing=backing,
+//       face_width=face, pressure_angle=PA);
+//   back(cpr+face/2)
+//     up(ppr)
+//       spur_gear(mod=mod, teeth=pteeth,
+//           pressure_angle=PA, thickness=face,
+//           orient=BACK, gear_spin=180/pteeth,
+//           profile_shift=0);
+
+function crown_gear(
+    circ_pitch,
+    teeth,
+    backing,
+    face_width=5,
+    pressure_angle=20,
+    clearance,
+    backlash=0,
+    profile_shift=0,
+    slices=10,
+    bottom,
+    thickness,
+    diam_pitch,
+    pitch,
+    mod,
+    gear_spin=0,
+    anchor=CTR,
+    spin=0,
+    orient=UP
+) = let(
+        pitch = _inherit_gear_pitch("crown_gear()", pitch, circ_pitch, diam_pitch, mod, warn=false),
+        PA = _inherit_gear_pa(pressure_angle)
+    )
+    assert(is_integer(teeth) && teeth>0)
+    assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+    assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+    assert(is_finite(backlash) && backlash>=0)
+    assert(is_finite(gear_spin))
+    assert(num_defined([thickness,backing,bottom])<=1, "Can define only one of thickness, backing and bottom")
+    let(
+        a = _adendum(pitch, profile_shift),
+        d = _dedendum(pitch, clearance, profile_shift),
+        bottom = is_def(bottom) ?
+                     assert(is_finite(bottom) && bottom>d, "bottom is invalid or too small for teeth")
+                     bottom
+               : is_def(thickness) ?
+                     assert(is_finite(thickness) && thickness>a+d, "Width is invalid or too small for teeth")
+                     thickness - a
+               : is_def(backing) ?
+                     assert(all_positive([backing]), "Backing must be a positive value")
+                     backing+d
+               : 2*d+a,  // default case
+        mod = module_value(circ_pitch=pitch),
+        ir = mod * teeth / 2,
+        or = ir + face_width,
+        profiles = [
+            for (slice = [0:1:slices-1])
+            let(
+                u = slice / (slices-1),
+                r = or - u*face_width,
+                wpa = acos(ir * cos(PA) / r),
+                profile = select(
+                    rack2d(
+                        mod=mod, teeth=1,
+                        pressure_angle=wpa,
+                        clearance=clearance,
+                        backlash=backlash,
+                        rounding=false
+                    ), 2, -3
+                ),
+                delta = profile[1] - profile[0],
+                slope = delta.y / delta.x,
+                C = profile[0].y - slope * profile[0].x,
+                profile2 = profile[1].x > 0
+                  ? [profile[0], [0,C], [0,C], profile[3]]
+                  : profile,
+                m = back(r) * xrot(90),
+                tooth = apply(m, path3d(profile2)),
+                rpitch = pitch * r / ir,
+            )
+            assert(profile[3].x <= rpitch/2, "face_width is too wide for the given gear geometry.  Either decrease face_width, or increase the module or tooth count.")
+            [
+                for (i = [0:1:teeth-1])
+                let(a = gear_spin - i * 360 / teeth) 
+                each zrot(a, p=tooth)
+            ]
+        ],
+        rows = [
+            [for (p=profiles[0]) [p.x,p.y,-bottom]],
+            each profiles,
+            [for (p=last(profiles)) [p.x,p.y,last(profiles)[0].z]],
+        ],
+        vnf = vnf_vertex_array(rows, col_wrap=true, caps=true)
+    ) reorient(anchor,spin,orient, r=or, h=2*bottom, p=vnf);
+
+
+module crown_gear(
+    circ_pitch,
+    teeth,
+    backing,
+    face_width=10,
+    pressure_angle=20,
+    clearance,
+    backlash=0,
+    profile_shift=0,
+    slices=10,
+    bottom,
+    thickness,
+    diam_pitch,
+    pitch,
+    mod,
+    gear_spin=0,
+    anchor=CTR,
+    spin=0,
+    orient=UP
+) {
+    pitch = _inherit_gear_pitch("crown_gear()", pitch, circ_pitch, diam_pitch, mod, warn=false);
+    PA = _inherit_gear_pa(pressure_angle);
+    checks =
+        assert(is_integer(teeth) && teeth>0)
+        assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
+        assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+        assert(is_finite(backlash) && backlash>=0)
+        assert(is_finite(gear_spin))
+        assert(num_defined([thickness,backing,bottom])<=1, "Can define only one of width, backing and bottom")
+        ;
+    pr = pitch_radius(circ_pitch=pitch, teeth=teeth);
+    a = _adendum(pitch, profile_shift);
+    d = _dedendum(pitch, clearance, profile_shift);
+    bottom = is_def(bottom) ?
+                 assert(is_finite(bottom) && bottom>d, "bottom is invalid or too small for teeth")
+                 bottom
+           : is_def(thickness) ?
+                 assert(is_finite(thickness) && thickness>a+d, "Width is invalid or too small for teeth")
+                 thickness - a
+           : is_def(backing) ?
+                 assert(all_positive([backing]), "Backing must be a positive value")
+                 backing+d
+           : 2*d+a;  // default case
+    vnf = crown_gear(
+        circ_pitch=pitch,
+        teeth=teeth,
+        bottom=bottom,
+        face_width=face_width,
+        pressure_angle=PA,
+        clearance=clearance,
+        backlash=backlash,
+        profile_shift=profile_shift,
+        slices=slices,
+        gear_spin=gear_spin
+    );
+    attachable(anchor,spin,orient, r=pr+face_width, h=2*bottom) {
+        vnf_polyhedron(vnf, convexity=teeth/2);
+        children();
+    }
+}
 
 
 // Function&Module: bevel_gear()
@@ -3157,7 +3361,7 @@ function diametral_pitch(circ_pitch, mod, pitch, diam_pitch) =
 //   mod3 = module_value(diam_pitch=16);
 
 function module_value(circ_pitch, mod, pitch, diam_pitch) =
-    let( circ_pitch = circular_pitch(pitch, mod, circ_pitch, diam_pitch) )
+    let( circ_pitch = circular_pitch(circ_pitch, mod, pitch, diam_pitch) )
     circ_pitch / PI;
 
 
