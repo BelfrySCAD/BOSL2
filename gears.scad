@@ -2088,6 +2088,7 @@ function crown_gear(
                         pressure_angle=wpa,
                         clearance=clearance,
                         backlash=backlash,
+                        profile_shift=profile_shift,
                         rounding=false
                     ), 2, -3
                 ),
