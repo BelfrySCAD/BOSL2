@@ -2099,7 +2099,7 @@ function crown_gear(
                   : profile,
                 m = back(r) * xrot(90),
                 tooth = apply(m, path3d(profile2)),
-                rpitch = pitch * r / ir,
+                rpitch = pitch * r / ir
             )
             assert(profile[3].x <= rpitch/2, "face_width is too wide for the given gear geometry.  Either decrease face_width, or increase the module or tooth count.")
             [
