@@ -180,7 +180,7 @@ function vnf_vertex_array(
                           [[i1,i4,i2],[i2,i4,i3]]
                       : style=="min_area"?
                           let(
-                               area42 = norm(cross(pts[i2]-pts[i1], pts[14]-pts[i1]))+norm(cross(pts[i4]-pts[i3], pts[i2]-pts[i3])),
+                               area42 = norm(cross(pts[i2]-pts[i1], pts[i4]-pts[i1]))+norm(cross(pts[i4]-pts[i3], pts[i2]-pts[i3])),
                                area13 = norm(cross(pts[i1]-pts[i4], pts[i3]-pts[i4]))+norm(cross(pts[i3]-pts[i2], pts[i1]-pts[i2])),
                                minarea_edge = area42 < area13 + EPSILON
                                  ? [[i1,i4,i2],[i2,i4,i3]]
