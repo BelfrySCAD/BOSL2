@@ -418,7 +418,7 @@ function _inherit_gear_thickness(thickness) =
 //   in fact, the worm can be regarded as a type of helical gear at a very extreme angle, where the teeth wrap
 //   around the gear.  The worm mates with the "worm gear" which is also called the "worm wheel".  The worm gear
 //   resembles a helical gear at a very slight angle.
-// Figure(3D,Med,NoAxes):  Worm drive assembly, with worm on the left and worm gear (worm wheel) on the right.  When the worm turns its screwing action drives the worm gear.  
+// Figure(3D,Med,NoAxes,VPT=[38.1941,-7.67869,7.95996],VPR=[56.4,0,25],VPD=361.364):  Worm drive assembly, with worm on the left and worm gear (worm wheel) on the right.  When the worm turns its screwing action drives the worm gear.  
 //   starts=2;
 //   ps=0;
 //   dist_ba=0;
@@ -485,6 +485,14 @@ function _inherit_gear_thickness(thickness) =
 //      }  
 //   }
 // Continues:
+//   As usual, a proper mesh requires that the pressure angles match and the teeth of the worm and worm gear
+//   are the same size.  Additionally the worm gear must be constructed to match the diameter of the worm
+//   and the number of starts on the worm.  Note that the number of starts changes the angle at of the 
+//   teeth on the worm, and hence requires a change to the angle of teeth on the worm gear.  
+//   Of course an enveloping worm needs to know the diameter of the worm gear; you provide this
+//   information indirectly by giving the number of teeth on the worm gear.
+//   The {{worm_dist()}} function will give the correct center spacing for the worm from its mating worm gear.  
+//   .  
 //   Worm drives are often "self-locking", which means that torque transmission can occur only from the worm to the worm gear,
 //   so they must be driven by the worm.  Self-locking results from the small lead angle of the worm threads, which produces
 //   high frictional forces at contact.  A multi-start worm has a higher lead angle and as a result is less likely
@@ -495,6 +503,27 @@ function _inherit_gear_thickness(thickness) =
 //   worm wheel is still trying to move due to inertia, which can create large loads that fracture the worm.
 //   In such cases, the worm cannot be stopped abruptly but must rotate a little further (called "over travel")
 //   after switching off the drive
+// Subsection: Crown Gears (Face Gears)
+//   Crown gears, sometimes called Face Crown Gears or just Face Gears, are gears with teeth pointing straight up so
+//   the gear resembles a crown.  This type of gear is not the same as a bevel gear with vertical teeth, which would mate
+//   to another bevel gear.  A crown gear mates to a spur gear at a ninety degree angle.  A feature of the crown gear assembly
+//   is that the spur gear can shift along its axis without affecting the mesh.  
+// Figure(2D,Med,VPT=[-2.19006,-1.67419,-4.49379],VPR=[67.6,0,131.9],VPD=113.4): A Crown or Face gear with its mating spur gear in blue.  
+//   crown_gear(mod=1, teeth=32, backing=3, face_width=7);
+//   color("lightblue")
+//   back(pitch_radius(mod=1,teeth=32)+7/2)
+//     up(gear_dist(mod=1,teeth1=0,teeth2=9))spur_gear(mod=1, teeth=9,orient=BACK,thickness=7,gear_spin=360/9/2);
+// Continues:
+//   When constructing a crown gear you need to make it with the same given pressure and and tooth size as
+//   the spur gear you wish to mate to it.  However, the teeth of a crown gear have pressure angle that varies
+//   along the width of the tooth.  The vertical separation of the spur gear from the crown gear is given
+//   by {{gear_dist()}} where you treat the crown gear as a rack.  The inner radius of the teeth on the
+//   crown gear is the pitch radius determined by the gear's tooth size and number of teeth.  The face width
+//   of a crown gear is limited by geometry, so if you make it too large you will get an error.
+//   .
+//   Note that the geometry of these crown gears is tricky and not well documented by sources we have found.
+//   If you know something about crown gears that could improve the implementation, please open an issue
+//   on github.  
 // Subsection: Backlash (Fitting Real Gears Together)
 //   You may have noticed that the example gears shown fit together perfectly, making contact on both sides of
 //   the teeth.  Real gears need space between the teeth to prevent the gears from jamming, to provide space
