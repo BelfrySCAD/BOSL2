@@ -33,7 +33,7 @@
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
-//   Sets the default_tag to "remove".
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   chamfer_edge_mask(l=50, chamfer=10);
 // Example:
@@ -77,7 +77,7 @@ module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CEN
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
-//   Sets the default_tag to "remove".
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   chamfer_corner_mask(chamfer=10);
 // Example:
@@ -125,7 +125,7 @@ module chamfer_corner_mask(chamfer=1, anchor=CENTER, spin=0, orient=UP) {
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
-//   Sets the default_tag to "remove".
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   difference() {
 //       cylinder(r=50, h=100, center=true);
@@ -198,7 +198,7 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
-//   Sets the default_tag to "remove".
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(VPD=200,VPR=[55,0,120]):
 //   rounding_edge_mask(l=50, r1=10, r2=25);
 // Example:
@@ -277,7 +277,7 @@ module rounding_edge_mask(l, r, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, sp
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
-//   Sets the default_tag to "remove".
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   rounding_corner_mask(r=20.0);
 // Example:
@@ -340,7 +340,7 @@ module rounding_corner_mask(r, d, style="octa", excess=0.1, anchor=CENTER, spin=
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
-//   Sets the default_tag to "remove".
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   difference() {
 //       pie_slice(ang=70, h=50, d=100, center=true);
@@ -410,7 +410,7 @@ module rounding_angled_edge_mask(h, r, r1, r2, d, d1, d2, ang=90, anchor=CENTER,
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
-//   Sets the default_tag to "remove".
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(Med):
 //   ang=60;
 //   difference() {
@@ -467,7 +467,7 @@ module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=U
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
-//   Sets the default_tag to "remove".
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   difference() {
 //     cylinder(r=50, h=50, center=false);
@@ -524,7 +524,7 @@ module rounding_cylinder_mask(r, rounding, d, anchor=CENTER, spin=0, orient=UP)
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
-//   Sets the default_tag to "remove".
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   rounding_hole_mask(r=40, rounding=20, $fa=2, $fs=2);
 // Example(Med):
@@ -579,7 +579,7 @@ module rounding_hole_mask(r, rounding, excess=0.1, d, anchor=CENTER, spin=0, ori
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
-//   Sets the default_tag to "remove".
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(VPD=50,VPR=[55,0,120]):
 //   teardrop_edge_mask(l=20, r=10, angle=40);
 // Example(VPD=300,VPR=[75,0,25]):
@@ -625,7 +625,7 @@ module teardrop_edge_mask(l, r, angle=45, excess=0.1, d, anchor=CTR, spin=0, ori
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
-//   Sets the default_tag to "remove".
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   teardrop_corner_mask(r=20, angle=40);
 // Example:
