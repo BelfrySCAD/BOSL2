@@ -1004,7 +1004,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //   its socket in yellow.  The left clip has a nonzero clearance, so its socket is bigger than the clip all around.
 //   The right hand locking clip has no clearance, but it has a lock clearance, which provides some space behind
 //   the lock to allow the clip to fit.  (Note that depending on your printer, this can be set to zero.)
-// Figure(2DMed):
+// Figure(2DMed,NoAxes):
 //   snap=1.5;
 //   comp=0.75;
 //   mid = 8.053;  // computed in rabbit_clip
@@ -1032,7 +1032,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //   }
 //   }
 //
-// Figure(2DMed):
+// Figure(2DMed,NoAxes):
 //   snap=1.5;
 //   comp=0;
 //   translate([29,3]){

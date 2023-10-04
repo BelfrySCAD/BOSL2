@@ -1959,10 +1959,14 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
                     let(
                        prev_corner = prev_offset + abs(rtop_in)*in_prev,
                        next_corner = next_offset + abs(rtop_in)*in_next,
-                       prev_degenerate = is_undef(line_intersection(path2d([far_corner, far_corner+prev]),
-                                                                   path2d([prev_offset, prev_offset+in_prev]),RAY,RAY)),
-                       next_degenerate = is_undef(line_intersection(path2d([far_corner, far_corner+next]),
-                                                                   path2d([next_offset, next_offset+in_next]),RAY,RAY))
+                       line = project_plane(plane, [
+                                                       [far_corner, far_corner+prev],
+                                                       [prev_offset, prev_offset+in_prev],
+                                                       [far_corner, far_corner+next],
+                                                       [next_offset, next_offset+in_next]
+                                                   ]),
+                       prev_degenerate = is_undef(line_intersection(line[0],line[1],RAY,RAY)),
+                       next_degenerate = is_undef(line_intersection(line[2],line[3],RAY,RAY))
                     )
                     [ prev_degenerate ? far_corner : prev_corner,
                       far_corner,
