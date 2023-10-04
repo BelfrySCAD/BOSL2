@@ -17,7 +17,7 @@
 // Synopsis: Creates a shape to chamfer a 90° edge.
 // SynTags: Geom
 // Topics: Masking, Chamfers, Shapes (3D)
-// See Also: chamfer_corner_mask(), chamfer_cylinder_mask(), chamfer_edge_mask()
+// See Also: chamfer_corner_mask(), chamfer_cylinder_mask(), chamfer_edge_mask(), default_tag(), diff()
 // Usage:
 //   chamfer_edge_mask(l|h=|length=|height=, chamfer, [excess]) [ATTACHMENTS];
 // Description:
@@ -32,6 +32,8 @@
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   chamfer_edge_mask(l=50, chamfer=10);
 // Example:
@@ -48,9 +50,11 @@
 function chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CENTER, spin=0, orient=UP) = no_function("chamfer_edge_mask");
 module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CENTER, spin=0, orient=UP) {
     l = one_defined([l, h, height, length], "l,h,height,length");
-    attachable(anchor,spin,orient, size=[chamfer*2, chamfer*2, l]) {
-        cylinder(r=chamfer, h=l+excess, center=true, $fn=4);
-        children();
+    default_tag("remove") {
+        attachable(anchor,spin,orient, size=[chamfer*2, chamfer*2, l]) {
+            cylinder(r=chamfer, h=l+excess, center=true, $fn=4);
+            children();
+        }
     }
 }
 
@@ -59,7 +63,7 @@ module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CEN
 // Synopsis: Creates a shape to chamfer a 90° corner.
 // SynTags: Geom
 // Topics: Masking, Chamfers, Shapes (3D)
-// See Also: chamfer_corner_mask(), chamfer_cylinder_mask(), chamfer_edge_mask()
+// See Also: chamfer_corner_mask(), chamfer_cylinder_mask(), chamfer_edge_mask(), default_tag(), diff()
 // Usage:
 //   chamfer_corner_mask(chamfer) [ATTACHMENTS];
 // Description:
@@ -72,6 +76,8 @@ module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CEN
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   chamfer_corner_mask(chamfer=10);
 // Example:
@@ -90,7 +96,9 @@ module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CEN
 //       show_anchors();
 function chamfer_corner_mask(chamfer=1, anchor=CENTER, spin=0, orient=UP) = no_function("chamfer_corner_mask");
 module chamfer_corner_mask(chamfer=1, anchor=CENTER, spin=0, orient=UP) {
-    octahedron(chamfer*4, anchor=anchor, spin=spin, orient=orient) children();
+    default_tag("remove") {
+        octahedron(chamfer*4, anchor=anchor, spin=spin, orient=orient) children();
+    }
 }
 
 
@@ -98,7 +106,7 @@ module chamfer_corner_mask(chamfer=1, anchor=CENTER, spin=0, orient=UP) {
 // Synopsis: Creates a shape to chamfer the end of a cylinder.
 // SynTags: Geom
 // Topics: Masking, Chamfers, Cylinders
-// See Also: chamfer_corner_mask(), chamfer_cylinder_mask(), chamfer_edge_mask()
+// See Also: chamfer_corner_mask(), chamfer_cylinder_mask(), chamfer_edge_mask(), default_tag(), diff()
 // Usage:
 //   chamfer_cylinder_mask(r|d=, chamfer, [ang], [from_end]) [ATTACHMENTS];
 // Description:
@@ -116,6 +124,8 @@ module chamfer_corner_mask(chamfer=1, anchor=CENTER, spin=0, orient=UP) {
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   difference() {
 //       cylinder(r=50, h=100, center=true);
@@ -147,12 +157,14 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
     r = get_radius(r=r, d=d, dflt=1);
     dummy = assert(all_nonnegative([chamfer]), "Chamfer must be a nonnegative number");
     ch = from_end? chamfer : opp_ang_to_adj(chamfer,90-ang);
-    attachable(anchor,spin,orient, r=r, l=ch*2) {
-        difference() {
-            cyl(r=r+chamfer, l=ch*2, anchor=CENTER);
-            cyl(r=r, l=ch*3, chamfer=chamfer, chamfang=ang, from_end=from_end, anchor=TOP);
+    default_tag("remove"){
+        attachable(anchor,spin,orient, r=r, l=ch*2) {
+            difference() {
+                cyl(r=r+chamfer, l=ch*2, anchor=CENTER);
+                cyl(r=r, l=ch*3, chamfer=chamfer, chamfang=ang, from_end=from_end, anchor=TOP);
+            }
+            children();
         }
-        children();
     }
 }
 
@@ -164,7 +176,7 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 // Synopsis: Creates a shape to round a 90° edge.
 // SynTags: Geom
 // Topics: Masks, Rounding, Shapes (3D)
-// See Also: rounding_angled_edge_mask(), rounding_corner_mask(), rounding_angled_corner_mask() 
+// See Also: rounding_angled_edge_mask(), rounding_corner_mask(), rounding_angled_corner_mask(), default_tag(), diff() 
 // Usage:
 //   rounding_edge_mask(l|h=|length=|height=, r|d=, [excess=]) [ATTACHMENTS];
 //   rounding_edge_mask(l|h=|length=|height=, r1=|d1=, r2=|d2=, [excess=]) [ATTACHMENTS];
@@ -185,6 +197,8 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(VPD=200,VPR=[55,0,120]):
 //   rounding_edge_mask(l=50, r1=10, r2=25);
 // Example:
@@ -217,25 +231,27 @@ module rounding_edge_mask(l, r, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, sp
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     sides = quantup(segs(max(r1,r2)),4);
-    attachable(anchor,spin,orient, size=[2*r1,2*r1,l], size2=[2*r2,2*r2]) {
-        if (r1<r2) {
-            zflip() {
-                linear_extrude(height=l, convexity=4, center=true, scale=r1/r2) {
+    default_tag("remove") {
+        attachable(anchor,spin,orient, size=[2*r1,2*r1,l], size2=[2*r2,2*r2]) {
+            if (r1<r2) {
+                zflip() {
+                    linear_extrude(height=l, convexity=4, center=true, scale=r1/r2) {
+                        difference() {
+                            translate(-excess*[1,1]) square(r2+excess);
+                            translate([r2,r2]) circle(r=r2, $fn=sides);
+                        }
+                    }
+                }
+            } else {
+                linear_extrude(height=l, convexity=4, center=true, scale=r2/r1) {
                     difference() {
-                        translate(-excess*[1,1]) square(r2+excess);
-                        translate([r2,r2]) circle(r=r2, $fn=sides);
+                        translate(-excess*[1,1]) square(r1+excess);
+                        translate([r1,r1]) circle(r=r1, $fn=sides);
                     }
                 }
             }
-        } else {
-            linear_extrude(height=l, convexity=4, center=true, scale=r2/r1) {
-                difference() {
-                    translate(-excess*[1,1]) square(r1+excess);
-                    translate([r1,r1]) circle(r=r1, $fn=sides);
-                }
-            }
+            children();
         }
-        children();
     }
 }
 
@@ -244,7 +260,7 @@ module rounding_edge_mask(l, r, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, sp
 // Synopsis: Creates a shape to round 90° corners.
 // SynTags: Geom
 // Topics: Masking, Rounding, Shapes (3D)
-// See Also: rounding_angled_corner_mask(), rounding_edge_mask(), rounding_angled_edge_mask()
+// See Also: rounding_angled_corner_mask(), rounding_edge_mask(), rounding_angled_edge_mask(), default_tag(), diff()
 // Usage:
 //   rounding_corner_mask(r|d, [excess=], [style=]) [ATTACHMENTS];
 // Description:
@@ -260,6 +276,8 @@ module rounding_edge_mask(l, r, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, sp
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   rounding_corner_mask(r=20.0);
 // Example:
@@ -282,14 +300,16 @@ function rounding_corner_mask(r, d, style="octa", excess=0.1, anchor=CENTER, spi
 module rounding_corner_mask(r, d, style="octa", excess=0.1, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
-    attachable(anchor,spin,orient, size=[2,2,2]*r) {
-        difference() {
-            translate(-excess*[1,1,1])
-                cube(size=r+excess, center=false);
-            translate([r,r,r])
-                spheroid(r=r, style=style);
+    default_tag("remove") {
+        attachable(anchor,spin,orient, size=[2,2,2]*r) {
+            difference() {
+                translate(-excess*[1,1,1])
+                    cube(size=r+excess, center=false);
+                translate([r,r,r])
+                    spheroid(r=r, style=style);
+            }
+            children();
         }
-        children();
     }
 }
 
@@ -298,7 +318,7 @@ module rounding_corner_mask(r, d, style="octa", excess=0.1, anchor=CENTER, spin=
 // Synopsis: Creates a shape to round edges of any angle.
 // SynTags: Geom
 // Topics: Masks, Rounding
-// See Also: rounding_angled_corner_mask(), rounding_edge_mask(), rounding_corner_mask()
+// See Also: rounding_angled_corner_mask(), rounding_edge_mask(), rounding_corner_mask(), default_tag(), diff()
 // Usage:
 //   rounding_angled_edge_mask(h|l=|length=|height=, r|d=, [ang=]) [ATTACHMENTS];
 //   rounding_angled_edge_mask(h|l=|length=|height=, r1=|d1=, r2=|d2=, [ang=]) [ATTACHMENTS];
@@ -319,6 +339,8 @@ module rounding_corner_mask(r, d, style="octa", excess=0.1, anchor=CENTER, spin=
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   difference() {
 //       pie_slice(ang=70, h=50, d=100, center=true);
@@ -345,20 +367,24 @@ module rounding_angled_edge_mask(h, r, r1, r2, d, d1, d2, ang=90, anchor=CENTER,
     n = ceil(segs(max(r1,r2))*sweep/360);
     x = sin(90-(ang/2))/sin(ang/2) * (r1<r2? r2 : r1);
     if(r1<r2) {
-        attachable(anchor,spin,orient, size=[2*x*r1/r2,2*r1,h], size2=[2*x,2*r2]) {
-            zflip() {
-                linear_extrude(height=h, convexity=4, center=true, scale=r1/r2) {
-                    polygon(_mask_shape(r2));
+        default_tag("remove") {
+            attachable(anchor,spin,orient, size=[2*x*r1/r2,2*r1,h], size2=[2*x,2*r2]) {
+                zflip() {
+                    linear_extrude(height=h, convexity=4, center=true, scale=r1/r2) {
+                        polygon(_mask_shape(r2));
+                    }
                 }
+                children();
             }
-            children();
         }
     } else {
-        attachable(anchor,spin,orient, size=[2*x,2*r1,h], size2=[2*x*r2/r1,2*r2]) {
-            linear_extrude(height=h, convexity=4, center=true, scale=r2/r1) {
-                polygon(_mask_shape(r1));
+        default_tag("remove") {
+            attachable(anchor,spin,orient, size=[2*x,2*r1,h], size2=[2*x*r2/r1,2*r2]) {
+                linear_extrude(height=h, convexity=4, center=true, scale=r2/r1) {
+                    polygon(_mask_shape(r1));
+                }
+                children();
             }
-            children();
         }
     }
 }
@@ -368,7 +394,7 @@ module rounding_angled_edge_mask(h, r, r1, r2, d, d1, d2, ang=90, anchor=CENTER,
 // Synopsis: Creates a shape to round the corner of an arbitrary angle.
 // SynTags: Geom
 // Topics: Masks, Rounding, Shapes (3D)
-// See Also: rounding_angled_edge_mask(), rounding_corner_mask(), rounding_edge_mask()
+// See Also: rounding_angled_edge_mask(), rounding_corner_mask(), rounding_edge_mask(), default_tag(), diff()
 // Usage:
 //   rounding_angled_corner_mask(r|d=, [ang]) [ATTACHMENTS];
 // Description:
@@ -383,6 +409,8 @@ module rounding_angled_edge_mask(h, r, r1, r2, d, d1, d2, ang=90, anchor=CENTER,
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(Med):
 //   ang=60;
 //   difference() {
@@ -396,22 +424,24 @@ module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=U
     dx = r / tan(ang/2);
     dx2 = dx / cos(ang/2) + 1;
     fn = quantup(segs(r), 4);
-    attachable(anchor,spin,orient, d=dx2, l=2*r) {
-        difference() {
-            down(r) cylinder(r=dx2, h=r+1, center=false);
-            yflip_copy() {
-                translate([dx, r, -r]) {
-                    hull() {
-                        sphere(r=r, $fn=fn);
-                        down(r*3) sphere(r=r, $fn=fn);
-                        zrot_copies([0,ang]) {
-                            right(r*3) sphere(r=r, $fn=fn);
+    default_tag("remove") {
+        attachable(anchor,spin,orient, d=dx2, l=2*r) {
+            difference() {
+                down(r) cylinder(r=dx2, h=r+1, center=false);
+                yflip_copy() {
+                    translate([dx, r, -r]) {
+                        hull() {
+                            sphere(r=r, $fn=fn);
+                            down(r*3) sphere(r=r, $fn=fn);
+                            zrot_copies([0,ang]) {
+                                right(r*3) sphere(r=r, $fn=fn);
+                            }
                         }
                     }
                 }
             }
+            children();
         }
-        children();
     }
 }
 
@@ -420,7 +450,7 @@ module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=U
 // Synopsis: Creates a shape to round the end of a cylinder.
 // SynTags: Geom
 // Topics: Masking, Rounding, Cylinders
-// See Also: rounding_hole_mask(), rounding_angled_edge_mask(), rounding_corner_mask(), rounding_angled_corner_mask() 
+// See Also: rounding_hole_mask(), rounding_angled_edge_mask(), rounding_corner_mask(), rounding_angled_corner_mask(), default_tag(), diff()
 // Usage:
 //   rounding_cylinder_mask(r|d=, rounding);
 // Description:
@@ -436,6 +466,8 @@ module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=U
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   difference() {
 //     cylinder(r=50, h=50, center=false);
@@ -457,12 +489,14 @@ function rounding_cylinder_mask(r, rounding, d, anchor, spin, orient) = no_funct
 module rounding_cylinder_mask(r, rounding, d, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
-    attachable(anchor,spin,orient, r=r+rounding, l=rounding*2) {
-        difference() {
-            cyl(r=r+rounding, l=rounding*2, anchor=CENTER);
-            cyl(r=r, l=rounding*3, rounding=rounding, anchor=TOP);
+    default_tag("remove") {
+        attachable(anchor,spin,orient, r=r+rounding, l=rounding*2) {
+            difference() {
+                cyl(r=r+rounding, l=rounding*2, anchor=CENTER);
+                cyl(r=r, l=rounding*3, rounding=rounding, anchor=TOP);
+            }
+            children();
         }
-        children();
     }
 }
 
@@ -472,7 +506,7 @@ module rounding_cylinder_mask(r, rounding, d, anchor=CENTER, spin=0, orient=UP)
 // Synopsis: Creates a shape to round the edge of a round hole.
 // SynTags: Geom
 // Topics: Masking, Rounding
-// See Also: rounding_cylinder_mask(), rounding_hole_mask(), rounding_angled_edge_mask(), rounding_corner_mask(), rounding_angled_corner_mask() 
+// See Also: rounding_cylinder_mask(), rounding_hole_mask(), rounding_angled_edge_mask(), rounding_corner_mask(), rounding_angled_corner_mask(), default_tag(), diff()
 // Usage:
 //   rounding_hole_mask(r|d, rounding, [excess]) [ATTACHMENTS];
 // Description:
@@ -489,6 +523,8 @@ module rounding_cylinder_mask(r, rounding, d, anchor=CENTER, spin=0, orient=UP)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   rounding_hole_mask(r=40, rounding=20, $fa=2, $fs=2);
 // Example(Med):
@@ -507,14 +543,16 @@ function rounding_hole_mask(r, rounding, excess=0.1, d, anchor=CENTER, spin=0, o
 module rounding_hole_mask(r, rounding, excess=0.1, d, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
-    attachable(anchor,spin,orient, r=r+rounding, l=2*rounding) {
-        rotate_extrude(convexity=4) {
-            difference() {
-                right(r-excess) fwd(rounding) square(rounding+excess, center=false);
-                right(r+rounding) fwd(rounding) circle(r=rounding);
+    default_tag("remove") {
+        attachable(anchor,spin,orient, r=r+rounding, l=2*rounding) {
+            rotate_extrude(convexity=4) {
+                difference() {
+                    right(r-excess) fwd(rounding) square(rounding+excess, center=false);
+                    right(r+rounding) fwd(rounding) circle(r=rounding);
+                }
             }
+            children();
         }
-        children();
     }
 }
 
@@ -525,7 +563,7 @@ module rounding_hole_mask(r, rounding, excess=0.1, d, anchor=CENTER, spin=0, ori
 // Synopsis: Creates a shape to round a 90° edge but limit the angle of overhang.
 // SynTags: Geom
 // Topics: Masking, Rounding, Shapes (3D), FDM Optimized
-// See Also: teardrop_corner_mask(), teardrop_edge_mask()
+// See Also: teardrop_corner_mask(), teardrop_edge_mask(), default_tag(), diff()
 // Usage:
 //   teardrop_edge_mask(l|h=|length=|height=, r|d=, [angle], [excess], [anchor], [spin], [orient]) [ATTACHMENTS];
 // Description:
@@ -540,6 +578,8 @@ module rounding_hole_mask(r, rounding, excess=0.1, d, anchor=CENTER, spin=0, ori
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(VPD=50,VPR=[55,0,120]):
 //   teardrop_edge_mask(l=20, r=10, angle=40);
 // Example(VPD=300,VPR=[75,0,25]):
@@ -560,7 +600,9 @@ module teardrop_edge_mask(l, r, angle=45, excess=0.1, d, anchor=CTR, spin=0, ori
       assert(is_num(excess));
     r = get_radius(r=r, d=d, dflt=1);
     path = mask2d_teardrop(r=r, angle=angle, excess=excess);
-    linear_sweep(path, height=l, center=true, atype="bbox", anchor=anchor, spin=spin, orient=orient) children();
+    default_tag("remove") {
+        linear_sweep(path, height=l, center=true, atype="bbox", anchor=anchor, spin=spin, orient=orient) children();
+    }
 }
 
 
@@ -568,7 +610,7 @@ module teardrop_edge_mask(l, r, angle=45, excess=0.1, d, anchor=CTR, spin=0, ori
 // Synopsis: Creates a shape to round a 90° corner but limit the angle of overhang.
 // SynTags: Geom
 // Topics: Masking, Rounding, Shapes (3D), FDM Optimized
-// See Also: teardrop_corner_mask(), teardrop_edge_mask()
+// See Also: teardrop_corner_mask(), teardrop_edge_mask(), default_tag(), diff()
 // Usage:
 //   teardrop_corner_mask(r|d=, [angle], [excess], [anchor], [spin], [orient]) [ATTACHMENTS];
 // Description:
@@ -582,6 +624,8 @@ module teardrop_edge_mask(l, r, angle=45, excess=0.1, d, anchor=CTR, spin=0, ori
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Side Effects:
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
 //   teardrop_corner_mask(r=20, angle=40);
 // Example:
@@ -601,12 +645,14 @@ module teardrop_corner_mask(r, angle=45, excess=0.1, d, anchor=CTR, spin=0, orie
     r = get_radius(r=r, d=d, dflt=1);
     size = (r+excess) * [1,1,1];
     midpt = (r-excess)/2 * [1,1,1];
-    attachable(anchor,spin,orient, size=size, offset=midpt) {
-        difference() {
-            translate(-[1,1,1]*excess) cube(r+excess, center=false);
-            translate([1,1,1]*r) onion(r=r, ang=angle, orient=DOWN);
+    default_tag("remove") {
+        attachable(anchor,spin,orient, size=size, offset=midpt) {
+            difference() {
+                translate(-[1,1,1]*excess) cube(r+excess, center=false);
+                translate([1,1,1]*r) onion(r=r, ang=angle, orient=DOWN);
+            }
+            children();
         }
-        children();
     }
 }
 

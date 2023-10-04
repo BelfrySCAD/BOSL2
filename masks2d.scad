@@ -37,6 +37,9 @@
 //   d = Diameter of the roundover.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Side Effects:
+//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
+//
 // Example(2D): 2D Roundover Mask
 //   mask2d_roundover(r=10);
 // Example(2D): 2D Bead Mask
@@ -60,9 +63,11 @@
 //           mask2d_roundover(r=10);
 module mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, d, anchor=CENTER,spin=0) {
     path = mask2d_roundover(r=r, d=d, inset=inset, mask_angle=mask_angle, excess=excess);
-    attachable(anchor,spin, two_d=true, path=path) {
-        polygon(path);
-        children();
+    default_tag("remove") {
+        attachable(anchor,spin, two_d=true, path=path) {
+            polygon(path);
+            children();
+        }
     }
 }
 
@@ -114,6 +119,8 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, d, anchor=CENT
 //   d = Diameter of the cove.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Side Effects:
+//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(2D): 2D Cove Mask
 //   mask2d_cove(r=10);
 // Example(2D): 2D Inset Cove Mask
@@ -137,9 +144,11 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, d, anchor=CENT
 //           mask2d_cove(r=5, inset=5);
 module mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, d, anchor=CENTER, spin=0) {
     path = mask2d_cove(r=r, d=d, inset=inset, mask_angle=mask_angle, excess=excess);
-    attachable(anchor,spin, two_d=true, path=path) {
-        polygon(path);
-        children();
+    default_tag("remove") {
+        attachable(anchor,spin, two_d=true, path=path) {
+            polygon(path);
+            children();
+        }
     }
 }
 
@@ -198,6 +207,8 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, d, anchor=CENTER, s
 //   y = The height of the chamfer.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Side Effects:
+//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(2D): 2D Chamfer Mask
 //   mask2d_chamfer(x=10);
 // Example(2D): 2D Chamfer Mask by Width.
@@ -221,9 +232,11 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, d, anchor=CENTER, s
 //           mask2d_chamfer(edge=10);
 module mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTER,spin=0) {
     path = mask2d_chamfer(x=x, y=y, edge=edge, angle=angle, excess=excess, inset=inset);
-    attachable(anchor,spin, two_d=true, path=path, extent=true) {
-        polygon(path);
-        children();
+    default_tag("remove") {
+        attachable(anchor,spin, two_d=true, path=path, extent=true) {
+            polygon(path);
+            children();
+        }
     }
 }
 
@@ -269,6 +282,8 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Side Effects:
+//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(2D): 2D Rabbet Mask
 //   mask2d_rabbet(size=10);
 // Example(2D): 2D Asymmetrical Rabbet Mask
@@ -290,9 +305,11 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 //           mask2d_rabbet(size=[5,10]);
 module mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) {
     path = mask2d_rabbet(size=size, mask_angle=mask_angle, excess=excess);
-    attachable(anchor,spin, two_d=true, path=path, extent=false) {
-        polygon(path);
-        children();
+    default_tag("remove") {
+        attachable(anchor,spin, two_d=true, path=path, extent=false) {
+            polygon(path);
+            children();
+        }
     }
 }
 
@@ -344,6 +361,8 @@ function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
 //   y = The height of the dovetail.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Side Effects:
+//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(2D): 2D Dovetail Mask
 //   mask2d_dovetail(x=10);
 // Example(2D): 2D Dovetail Mask by Width.
@@ -367,9 +386,11 @@ function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
 //           mask2d_dovetail(x=10);
 module mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, anchor=CENTER, spin=0) {
     path = mask2d_dovetail(x=x, y=y, edge=edge, angle=angle, inset=inset, shelf=shelf, excess=excess);
-    attachable(anchor,spin, two_d=true, path=path) {
-        polygon(path);
-        children();
+    default_tag("remove") {
+        attachable(anchor,spin, two_d=true, path=path) {
+            polygon(path);
+            children();
+        }
     }
 }
 
@@ -420,6 +441,8 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 //   d = Diameter of the rounding.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Side Effects:
+//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(2D): 2D Teardrop Mask
 //   mask2d_teardrop(r=10);
 // Example(2D): 2D Teardrop Mask for a Non-Right Edge
@@ -469,9 +492,11 @@ function mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, d, anchor=CENT
 
 module mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, d, anchor=CENTER, spin=0) {
     path = mask2d_teardrop(r=r, d=d, angle=angle, mask_angle=mask_angle, excess=excess);
-    attachable(anchor,spin, two_d=true, path=path) {
-        polygon(path);
-        children();
+    default_tag("remove") {
+        attachable(anchor,spin, two_d=true, path=path) {
+            polygon(path);
+            children();
+        }
     }
 }
 
@@ -510,6 +535,9 @@ module mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, d, anchor=CENTER
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //
+// Side Effects:
+//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
+//
 // Example(2D): 2D Ogee Mask
 //   mask2d_ogee([
 //       "xstep",1,  "ystep",1,  // Starting shoulder.
@@ -539,9 +567,11 @@ module mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, d, anchor=CENTER
 //           ]);
 module mask2d_ogee(pattern, excess=0.01, anchor=CENTER,spin=0) {
     path = mask2d_ogee(pattern, excess=excess);
-    attachable(anchor,spin, two_d=true, path=path) {
-        polygon(path);
-        children();
+    default_tag("remove") {
+        attachable(anchor,spin, two_d=true, path=path) {
+            polygon(path);
+            children();
+        }
     }
 }
 
