@@ -3594,7 +3594,7 @@ module show_anchors(s=10, std=true, custom=true) {
 // Synopsis: Shows a 3d anchor orientation arrow.
 // SynTags: Geom
 // Topics: Attachments
-// See Also: anchor_arrow2d(), show_anchors(), expose_anchors(), frame_ref()
+// See Also: anchor_arrow2d(), show_anchors(), expose_anchors(), frame_ref(), generic_airplane()
 // Usage:
 //   anchor_arrow([s], [color], [flag], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
@@ -3635,7 +3635,7 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow",
 // Topics: Attachments
 // See Also: anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
 // Usage:
-//   anchor_arrow2d([s], [color], [flag]);
+//   anchor_arrow2d([s], [color]);
 // Description:
 //   Show an anchor orientation arrow.
 // Arguments:
@@ -3671,6 +3671,90 @@ module expose_anchors(opacity=0.2) {
                                 : point3d($color),
               opacity)
             children();
+}
+
+
+
+// Module: show_transform_list()
+// Synopsis: Shows a list of transforms and how they connect.
+// SynTags: Geom
+// Topics: Attachments
+// See Also: generic_airplane(), anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
+// Usage:
+//   show_transform_list(tlist, [s]);
+//   show_transform_list(tlist) {CHILDREN};
+// Description:
+//   Given a list of transformation matrices, shows the position and orientation of each one.
+//   A line is drawn from each transform position to the next one, and an orientation indicator is
+//   shown at each position.  If a child is passed, that child will be used as the orientation indicator.
+//   By default, a {{generic_airplane()}} is used as the orientation indicator.
+// Arguments:
+//   s = Length of the {{generic_airplane()}}.  Default: 5
+// Example:
+//   tlist = [
+//       zrot(90),
+//       zrot(90) * fwd(30) * zrot(30),
+//       zrot(90) * fwd(30) * zrot(30) *
+//           fwd(35) * xrot(-30),
+//       zrot(90) * fwd(30) * zrot(30) *
+//           fwd(35) * xrot(-30) * fwd(40) * yrot(15),
+//   ];
+//   show_transform_list(tlist, s=20);
+// Example:
+//   tlist = [
+//       zrot(90),
+//       zrot(90) * fwd(30) * zrot(30),
+//       zrot(90) * fwd(30) * zrot(30) *
+//           fwd(35) * xrot(-30),
+//       zrot(90) * fwd(30) * zrot(30) *
+//           fwd(35) * xrot(-30) * fwd(40) * yrot(15),
+//   ];
+//   show_transform_list(tlist) frame_ref();
+module show_transform_list(tlist, s=5) {
+    path = [for (m = tlist) apply(m, [0,0,0])];
+    stroke(path, width=s*0.03);
+    for (m = tlist) {
+        multmatrix(m) {
+            if ($children>0) children();
+            else generic_airplane(s=s);
+        }
+    }
+}
+
+
+// Module: generic_airplane()
+// Synopsis: Shows a generic airplane shape, useful for viewing orientations.
+// SynTags: Geom
+// Topics: Attachments
+// See Also: anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
+// Usage:
+//   generic_airplane([s]);
+// Description:
+//   Creates a generic airplane shape.  This can be useful for viewing the orientation of 3D transforms.
+// Arguments:
+//   s = Length of the airplane.  Default: 5
+// Example:
+//   generic_airplane(s=20);
+module generic_airplane(s=5) {
+    $fn = max(segs(0.05*s), 12);
+    color("#ddd")
+    fwd(s*0.05)
+    ycyl(l=0.7*s, d=0.1*s) {
+        attach(FWD) top_half(s=s) zscale(2) sphere(d=0.1*s);
+        attach(BACK,FWD) ycyl(l=0.2*s, d1=0.1*s, d2=0.05*s) {
+            yrot_copies([-90,0,90])
+                prismoid(s*[0.01,0.2], s*[0.01,0.05],
+                    h=0.2*s, shift=s*[0,0.15], anchor=BOT);
+        }
+        yrot_copies([-90,90])
+            prismoid(s*[0.01,0.2], s*[0.01,0.05],
+                h=0.5*s, shift=s*[0,0.15], anchor=BOT);
+    }
+    color("#777") zcopies(0.1*s) sphere(d=0.02*s);
+    back(0.09*s) {
+        color("#f00") right(0.46*s) sphere(d=0.04*s);
+        color("#0f0") left(0.46*s) sphere(d=0.04*s);
+    }
 }
 
 
