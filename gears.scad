@@ -81,6 +81,11 @@ function _inherit_gear_thickness(thickness) =
 //       * [Worm drive](https://www.tec-science.com/mechanical-power-transmission/gear-types/worms-and-worm-gears/)
 //   - SDPSI (A long document covering a variety of gear types and gear calculations)
 //       * [Elements of Gear Technology](https://www.sdp-si.com/resources/elements-of-metric-gear-technology/index.php)
+//   - Crown Face Gears
+//       * [Crown Gearboxes](https://mag.ebmpapst.com/en/industries/drives/crown-gearboxes-efficiency-energy-savings-decentralized-drive-technology_14834/)
+//       * [Crown gear pressure angle](https://mag.ebmpapst.com/en/industries/drives/the-formula-for-the-pressure-angle_14624/)
+//       * [Face Gears: Geometry and Strength](https://www.geartechnology.com/ext/resources/issues/0107x/kissling.pdf)
+
 // Subsection: Involute Spur Gears
 // The simplest gear form is the involute spur gear, which is an extrusion of a two dimensional form.
 // Figure(3D,Med,NoAxes,VPT=[4.62654,-1.10349,0.281802],VPR=[55,0,25],VPD=236.957): Involute Spur Gear
@@ -503,6 +508,59 @@ function _inherit_gear_thickness(thickness) =
 //   worm wheel is still trying to move due to inertia, which can create large loads that fracture the worm.
 //   In such cases, the worm cannot be stopped abruptly but must rotate a little further (called "over travel")
 //   after switching off the drive
+// Subsection: Bevel Gears
+//   Bevel gearing is another way of dealing with intersecting gear shafts.  For bevel gears, the teeth centers lie on
+//   the surface of an imaginary cone, which is the pitch cone of the bevel gear.  Two bevel gears mesh when their pitch cones
+//   touch along their length.  The teeth of bevel gears narrow as they get closer to the center of the gear.
+//   Tooth dimensions and pitch diameter are referenced to the outer end of the teeth.
+//   Bevel gears can be made with straight teeth, analogous to spur gears, and with the
+//   same disadvantage of sudden full contact that is noisy.  Spiral teeth are analogous to helical
+//   teeth on cylindrical gears: the teeth engage gradually and smoothly, transmitting motion more smoothly
+//   and quietly.  Also like helical gears, they have the disadvantage of introducing axial forces, and
+//   usually they can only operate in one rotation direction.  
+//   A third type of tooth is the zerol tooth, which has curved teeth like the spiral teeth,
+//   but with a zero angle.  These share advantages of straight teeth and spiral teeth: they are quiet like
+//   straight teeth but they lack the axial thrust of spiral gears, and they can operate in both directions.
+//   They are also reportedly stronger than either spiral or bevel gears.
+// Figure(3D,Med,VPT=[-5.10228,-3.09311,3.06426],VPR=[67.6,0,131.9],VPD=237.091,NoAxes): Straight tooth bevel gear with 45 degree angled teeth.  To get a gear like this you must specify a spiral angle of zero and a cutter radius of zero.  
+//   bevel_gear(mod=3,teeth=35,face_width=20,spiral_angle=0,cutter_radius=0);
+// Figure(3D,Med,VPT=[-5.10228,-3.09311,3.06426],VPR=[67.6,0,131.9],VPD=237.091,NoAxes): Straight tooth bevel gear with 45 degree angled teeth.  A gear like this has a positive spiral angle, which determines how sloped the teeth are and a positive cutter radius, which determines how curved the teeth are.  
+//   bevel_gear(mod=3,teeth=35,face_width=20);
+// Figure(3D,Med,VPT=[-5.10228,-3.09311,3.06426],VPR=[67.6,0,131.9],VPD=237.091,NoAxes): Zerol tooth bevel gear with 45 degree angled teeth.  A gear like this has a spiral angle of zero, but a positive cutter radius, which determines how curved the teeth are.  
+//   bevel_gear(mod=3,teeth=35,face_width=20,spiral_angle=0);
+// Continues:
+//   Bevel gears have demanding requirements for successful mating of two gears.  Of course the tooth size
+//   and pressure angle must match.  But beyond that, their pitch cones have to meet at their points.
+//   This means that if you specify the tooth counts
+//   of two gears and the desired shaft angle, then that information completely determines the pitch cones, and hence
+//   the geometry of the gear.  You cannot simply mate two arbitary gears that have the same tooth size
+//   and pressure angle like you can with helical gears: the gears must be designed in pairs to work together.
+//   .
+//   It is most common to design bevel gears so operate with their shafts at 90 degree angles, but
+//   this is not required, and you can design pairs of bevel gears for any desired shaft angle.
+//   Note, however, that given a pair of teeth counts, a bevel gear pair is not possible at all angles.  
+// Figure(3D,Med,VPT=[-40.9281,-1.23739,2.11767],VPR=[68.3,0,119.8],VPD=54.2389,NoAxes): Two zerol bevel gears mated with shafts at 90 degrees.  
+//   bevel_gear(mod=3,teeth=35,face_width=10,spiral_angle=0,mate_teeth=15);
+//   color("lightblue")left(pitch_radius(mod=3,teeth=35))up(pitch_radius(mod=3,teeth=15))
+//   yrot(90)zrot(360/15/2)bevel_gear(mod=3,teeth=15,face_width=10,spiral_angle=0,cutter_radius=-30,mate_teeth=35);
+// Figure(3D,Med,VPT=[1.55215,1.94725,16.4524],VPR=[76,0,181.4],VPD=263.435): Two zerol bevel gears mated with shafts at a 35 deg angle.  
+//   function bevel_angles(z1,z2,shaft) =
+//     [atan(sin(shaft)/((z2/z1)+cos(shaft))),
+//      atan(sin(shaft)/((z1/z2)+cos(shaft)))];
+//   angles = bevel_angles(35,15,115);
+//   bevel_gear(mod=3,teeth=35,face_width=10,spiral_angle=0,pitch_angle=angles[0],cutter_radius=30);
+//   cyl(h=40,d=3,$fn=16,anchor=BOT);
+//   color("lightblue")
+//   left(pitch_radius(mod=3,teeth=35))yrot(20)up(pitch_radius(mod=3,teeth=15))
+//   yrot(90)zrot(360/15/2){
+//       bevel_gear(mod=3,teeth=15,face_width=10,spiral_angle=0,cutter_radius=-30,pitch_angle=(angles[1]));
+//       cyl(h=60,d=3,$fn=16,anchor=BOT);
+//   }
+// Continues:
+//   In the above figure you can see a gear that is very flat.  A bevel gear like this is called a planar gear or
+//   sometimes also a crown gear.  The latter term may be confusing because it also refers to a similar looking
+//   but very different type of gear that is described below.  A planar bevel gear can only mate with another
+//   compatible bevel gear, and never at a 90 degree angle.  
 // Subsection: Crown Gears (Face Gears)
 //   Crown gears, sometimes called Face Crown Gears or just Face Gears, are gears with teeth pointing straight up so
 //   the gear resembles a crown.  This type of gear is not the same as a bevel gear with vertical teeth, which would mate
@@ -524,7 +582,7 @@ function _inherit_gear_thickness(thickness) =
 //   Note that the geometry of these crown gears is tricky and not well documented by sources we have found.
 //   If you know something about crown gears that could improve the implementation, please open an issue
 //   on github.  
-// Subsection: Backlash (Fitting Real Gears Together)
+// Section: Backlash (Fitting Real Gears Together)
 //   You may have noticed that the example gears shown fit together perfectly, making contact on both sides of
 //   the teeth.  Real gears need space between the teeth to prevent the gears from jamming, to provide space
 //   for lubricant, and to provide allowance for fabrication error.  This space is called backlash.  Excessive backlash
@@ -2258,8 +2316,8 @@ module crown_gear(
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
-//   cutter_radius = Radius of spiral arc for teeth.  If 0, then gear will not be spiral.  Default: 0
-//   spiral_angle = The base angle for spiral teeth.  Default: 0
+//   cutter_radius = Radius of spiral arc for teeth.  If 0, then gear will have straight teeth.  Default: 30
+//   spiral_angle = The base angle for spiral teeth.  If zero the teeth will be zerol or straight.  Default: 30
 //   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
 //   slices = Number of vertical layers to divide gear into.  Useful for refining gears with `spiral`.  Default: 1
 //   internal = If true, create a mask for difference()ing from something else.
