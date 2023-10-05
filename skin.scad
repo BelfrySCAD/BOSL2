@@ -527,6 +527,12 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   of the given 2D region or polygon.  The benefit of using this, over using `linear_extrude region(rgn)` is
 //   that it supports `anchor`, `spin`, `orient` and attachments.  You can also make more refined
 //   twisted extrusions by using `maxseg` to subsample flat faces.
+//   .
+//   Anchoring for linear_sweep is based on the anchors for the swept region rather than from the polyhedron that is created.  This can produce more
+//   predictable anchors for LEFT, RIGHT, FWD and BACK in many cases, but the anchors may only
+//   be aproximately correct for twisted objects, and corner anchors may point in unexpected directions in some cases.
+//   If you need anchors directly computed from the surface you can pass the vnf from linear_sweep
+//   to {{vnf_polyhedron()}}, which will compute anchors directly from the full VNF.  
 // Arguments:
 //   region = The 2D [Region](regions.scad) or polygon that is to be extruded.
 //   h / height / l / length = The height to extrude the region.  Default: 1

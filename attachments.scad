@@ -2495,7 +2495,7 @@ module attachable(
     two_d=false,
     axis=UP,override,
     geom
-) {
+) { 
     dummy1 =
         assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
@@ -3463,9 +3463,16 @@ function _find_anchor(anchor, geom) =
         let(
             newrgn = apply(mat, rgn),
             newgeom = attach_geom(two_d=true, region=newrgn, extent=type=="extrusion_extent", cp=cp),
+            topmat = anchor.z!=0 ? []
+                   : move(shift)*scale(scale)*zrot(-twist),
+            topgeom = anchor.z!=0? []
+                    : attach_geom(two_d=true, region=apply(topmat,rgn), extent=type=="extrusion_extent", cp=cp),
+            top2d =  anchor.z!=0? []
+                  : _find_anchor(anchor_xy, topgeom),
             result2d = _find_anchor(anchor_xy, newgeom),
             pos = point3d(result2d[1], anchor.z*L/2),
-            vec = unit(point3d(result2d[2], anchor.z),UP),
+            vec = anchor.z==0? rot(from=UP,to=point3d(top2d[1],L/2)-point3d(result2d[1]),p=point3d(result2d[2]))
+                : unit(point3d(result2d[2], anchor.z),UP),
             oang = atan2(vec.y,vec.x) + 90
         )
         [anchor, pos, vec, oang]
