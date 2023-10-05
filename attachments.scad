@@ -1543,8 +1543,7 @@ module face_mask(faces=[LEFT,RIGHT,FRONT,BACK,BOT,TOP]) {
     assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "Vector in faces doesn't point at a face.");
     assert($parent_geom != undef, "No object to attach to!");
     attach(faces) {
-       if ($tag=="") tag("remove") children();
-       else children();
+       default_tag("remove") children();
     }
 }
 
@@ -1574,8 +1573,6 @@ module face_mask(faces=[LEFT,RIGHT,FRONT,BACK,BOT,TOP]) {
 // Arguments:
 //   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
-// Side Effects:
-//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 //   `$idx` is set to the index number of each edge.
@@ -1608,8 +1605,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
             vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
             [-90,0,180+v_theta(vec)];
         translate(anch[1]) rot(rotang)
-           if ($tag=="") tag("remove") children();
-           else children();
+           default_tag("remove") children();
     }
 }
 
@@ -1659,8 +1655,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
             [  0,0,180+v_theta(vec)-45] :
             [180,0,-90+v_theta(vec)-45];
         translate(anch[1]) rot(rotang)
-           if ($tag=="") tag("remove") children();
-           else children();
+            default_tag("remove") children();
     }
 }
 
@@ -2167,7 +2162,7 @@ module edge_profile_asym(
 //   d = Diameter of corner mask.
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
-//   Tags the children with "remove" (and hence sets $tag) if no tag is already set.
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 //   `$idx` is set to the index number of each corner.
 //   `$attach_anchor` is set for each corner given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
 //   `$profile_type` is set to `"corner"`.
@@ -2195,21 +2190,22 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
         rotang = vec.z<0?
             [  0,0,180+v_theta(vec)-45] :
             [180,0,-90+v_theta(vec)-45];
-        $tag = $tag=="" ? str($tag_prefix,"remove") : $tag;
-        translate(anch[1]) {
-            rot(rotang) {
-                down(0.01) {
-                    linear_extrude(height=r+0.01, center=false) {
-                        difference() {
-                            translate(-[0.01,0.01]) square(r);
-                            translate([r,r]) circle(r=r*0.999);
+        default_tag("remove"){
+            translate(anch[1]) {
+                rot(rotang) {
+                    down(0.01) {
+                        linear_extrude(height=r+0.01, center=false) {
+                            difference() {
+                                translate(-[0.01,0.01]) square(r);
+                                translate([r,r]) circle(r=r*0.999);
+                            }
                         }
                     }
-                }
-                translate([r,r]) zrot(180) {
-                    rotate_extrude(angle=90, convexity=convexity) {
-                        right(r) xflip() {
-                            children();
+                    translate([r,r]) zrot(180) {
+                        rotate_extrude(angle=90, convexity=convexity) {
+                            right(r) xflip() {
+                                children();
+                            }
                         }
                     }
                 }
