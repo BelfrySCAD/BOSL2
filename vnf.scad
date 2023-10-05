@@ -959,7 +959,6 @@ function _slice_3dpolygons(polys, dir, cuts) =
 // Arguments:
 //   vnf = A VNF structure, or list of VNF structures.
 //   convexity = Max number of times a line could intersect a wall of the shape.
-//   extent = If true, calculate anchors by extents, rather than intersection.  Default: true.
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -970,7 +969,7 @@ function _slice_3dpolygons(polys, dir, cuts) =
 //   "intersect" = Anchors to the surface of the shape.
 // Extra Anchors:
 //   "origin" = Anchor at the origin, oriented UP.
-module vnf_polyhedron(vnf, convexity=2, extent=true, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") {
+module vnf_polyhedron(vnf, convexity=2, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") {
     vnf = is_vnf_list(vnf)? vnf_join(vnf) : vnf;
     assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
     attachable(anchor,spin,orient, vnf=vnf, extent=atype=="hull", cp=cp) {
