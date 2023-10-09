@@ -539,11 +539,13 @@ function _inherit_gear_thickness(thickness) =
 //   It is most common to design bevel gears so operate with their shafts at 90 degree angles, but
 //   this is not required, and you can design pairs of bevel gears for any desired shaft angle.
 //   Note, however, that given a pair of teeth counts, a bevel gear pair is not possible at all angles.  
-// Figure(3D,Med,VPT=[-40.9281,-1.23739,2.11767],VPR=[68.3,0,119.8],VPD=54.2389,NoAxes): Two zerol bevel gears mated with shafts at 90 degrees.  
+// Figure(3D,Med,NoAxes,VPT=[-1.42254,-1.98925,13.5702],VPR=[76,0,145],VPD=263.435): Two zerol bevel gears mated with shafts at 90 degrees.  
 //   bevel_gear(mod=3,teeth=35,face_width=10,spiral_angle=0,mate_teeth=15);
+//   cyl(h=40,d=3,$fn=16,anchor=BOT);
 //   color("lightblue")left(pitch_radius(mod=3,teeth=35))up(pitch_radius(mod=3,teeth=15))
-//   yrot(90)zrot(360/15/2)bevel_gear(mod=3,teeth=15,face_width=10,spiral_angle=0,cutter_radius=-30,mate_teeth=35);
-// Figure(3D,Med,VPT=[1.55215,1.94725,16.4524],VPR=[76,0,181.4],VPD=263.435): Two zerol bevel gears mated with shafts at a 35 deg angle.  
+//   yrot(90){zrot(360/15/2)bevel_gear(mod=3,teeth=15,face_width=10,spiral_angle=0,cutter_radius=-30,mate_teeth=35);
+//             cyl(h=60,d=3,$fn=16,anchor=BOT);}
+// Figure(3D,Med,NoAxes,VPT=[1.55215,1.94725,16.4524],VPR=[76,0,181.4],VPD=263.435): Two zerol bevel gears mated with shafts at a 35 deg angle.  Note that if the blue gear is tipped slightly more its shaft will intersect the shaft of the yellow gear underneath that gear; that indicates an impossible angle for this pair of teeth counts. 
 //   function bevel_angles(z1,z2,shaft) =
 //     [atan(sin(shaft)/((z2/z1)+cos(shaft))),
 //      atan(sin(shaft)/((z1/z2)+cos(shaft)))];
@@ -557,16 +559,17 @@ function _inherit_gear_thickness(thickness) =
 //       cyl(h=60,d=3,$fn=16,anchor=BOT);
 //   }
 // Continues:
-//   In the above figure you can see a gear that is very flat.  A bevel gear like this is called a planar gear or
+//   In the above figure you can see a gear that is very flat.  A bevel gear that is perfectly flat is called a planar bevel gear or
 //   sometimes also a crown gear.  The latter term may be confusing because it also refers to a similar looking
 //   but very different type of gear that is described below.  A planar bevel gear can only mate with another
-//   compatible bevel gear, and never at a 90 degree angle.  
+//   compatible bevel gear.  It has a degenerate cone with its apex on the gear itself, so the mating pinion gear cannot
+//   mate at a 90 degree angle because if it did, it's cone could not meet the center of the planar bevel gear.  
 // Subsection: Crown Gears (Face Gears)
 //   Crown gears, sometimes called Face Crown Gears or just Face Gears, are gears with teeth pointing straight up so
 //   the gear resembles a crown.  This type of gear is not the same as a bevel gear with vertical teeth, which would mate
 //   to another bevel gear.  A crown gear mates to a spur gear at a ninety degree angle.  A feature of the crown gear assembly
 //   is that the spur gear can shift along its axis without affecting the mesh.  
-// Figure(2D,Med,VPT=[-2.19006,-1.67419,-4.49379],VPR=[67.6,0,131.9],VPD=113.4): A Crown or Face gear with its mating spur gear in blue.  
+// Figure(2D,Med,NoAxes,VPT=[-2.19006,-1.67419,-4.49379],VPR=[67.6,0,131.9],VPD=113.4): A Crown or Face gear with its mating spur gear in blue.  
 //   crown_gear(mod=1, teeth=32, backing=3, face_width=7);
 //   color("lightblue")
 //   back(pitch_radius(mod=1,teeth=32)+7/2)
