@@ -599,7 +599,7 @@ function _inherit_gear_thickness(thickness) =
 //   backlash to both gears then the total backlash in the system is the combined amount from both gears.
 //   Usually it is best to apply backlash symmetrically to both gears, but if one gear is very small it may
 //   be better to place the backlash entirely on the larger gear to avoid weakening the teeth of the small gear.  
-// Figure(2D,Big,VPT=[4.5244,64.112,0.0383045],VPR=[0,0,0],VPD=48.517,NoAxes): Backlash narrows the teeth by the specified length along the pitch circle.  Below a very large backlash appears, with half of the backlash on either side of the tooth.  
+// Figure(2D,Big,VPT=[4.5244,64.112,0.0383045],VPR=[0,0,0],VPD=48.517,NoAxes): Backlash narrows the teeth by the specified length along the pitch circle.  Below the ideal gear appears in the lighter color and the darker color shows the same gear with a very large backlash, which appears with half of the backlash on either side of the tooth.  
 //   teeth1=20;
 //   mod=5;
 //   r1 = pitch_radius(mod=mod,teeth=teeth1,helical=40);
@@ -612,7 +612,7 @@ function _inherit_gear_thickness(thickness) =
 //   color("black")stroke(arc(n=32,r=r1,angle=[90+bang/2,90]),width=.1,endcaps="arrow2");
 //   }    
 //   color("black")back(r1+.25)right(5.5)text("backlash/2",size=1);
-// Figure(2D,Med,VPT=[0.532987,50.0891,0.0383045],VPR=[0,0,0],VPD=53.9078): Here two gears appear together with a more reasonable backlash applied to both gears. 
+// Figure(2D,Med,VPT=[0.532987,50.0891,0.0383045],VPR=[0,0,0],VPD=53.9078): Here two gears appear together with a more reasonable backlash applied to both gears. Again the lighter color shows the ideal gears and the darker shade shows the gear with backlash.  Note that in this example, backlash is present on both of the meshing gears, so the total backlash of the system is the combined backlash from both gears.
 //   teeth1=20;teeth2=33;
 //   mod=5;
 //   ha=0;
@@ -634,7 +634,7 @@ function _inherit_gear_thickness(thickness) =
 //   }
 //   //color("black")stroke(arc(n=32,r=r1,angle=[90+bang/2,90]),width=.1,endcaps="arrow2");
 //   }
-// Figure(2D,Med,VPT=[0.532987,50.0891,0.0383045],VPR=[0,0,0],VPD=53.9078): Here the same gears appear with backlash applied using the `backlash` parameter to {{gear_dist()}} to shift them apart.  
+// Figure(2D,Med,VPT=[0.532987,50.0891,0.0383045],VPR=[0,0,0],VPD=53.9078): Here the same gears as in the previous figure appear with backlash applied using the `backlash` parameter to {{gear_dist()}} to shift them apart.  The original ideal gears are in the lighter shade and the darker colored gears have been separated to create the backlash.  
 //   teeth1=20;teeth2=33;
 //   mod=5;
 //   ha=0;
