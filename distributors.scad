@@ -151,16 +151,16 @@ function move_copies(a=[[0,0,0]],p=_NO_ARG) =
 // See Also: move_copies(), ycopies(), zcopies(), line_copies(), grid_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Usage:
-//   xcopies(spacing, [n], [sp]) CHILDREN;
-//   xcopies(l, [n], [sp]) CHILDREN;
+//   xcopies(spacing, [n], [sp=]) CHILDREN;
+//   xcopies(l=, [n=], [sp=]) CHILDREN;
 //   xcopies(LIST) CHILDREN;
 // Usage: As a function to translate points, VNF, or Bezier patches
-//   copies = xcopies(spacing, [n], [sp], p=);
-//   copies = xcopies(l, [n], [sp], p=);
+//   copies = xcopies(spacing, [n], [sp=], p=);
+//   copies = xcopies(l=, [n=], [sp=], p=);
 //   copies = xcopies(LIST, p=);
 // Usage: Get Translation Matrices
-//   mats = xcopies(spacing, [n], [sp]);
-//   mats = xcopies(l, [n], [sp]);
+//   mats = xcopies(spacing, [n], [sp=]);
+//   mats = xcopies(l=, [n=], [sp=]);
 //   mats = xcopies(LIST);
 // Description:
 //   When called as a module, places `n` copies of the children along a line on the X axis.
@@ -168,17 +168,16 @@ function move_copies(a=[[0,0,0]],p=_NO_ARG) =
 //   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
 //
 // Arguments:
-//   ---
 //   spacing = Given a scalar, specifies a uniform spacing between copies. Given a list of scalars, each one gives a specific position along the line. (Default: 1.0)
 //   n = Number of copies to place. (Default: 2)
-//   l = Length to place copies over.
+//   ---
+//   l = If given, the length to place copies over.
 //   sp = If given as a point, copies will be placed on a line to the right of starting position `sp`.  If given as a scalar, copies will be placed on a line segment to the right of starting position `[sp,0,0]`.  If not given, copies will be placed along a line segment that is centered at [0,0,0].
 //   p = Either a point, pointlist, VNF or Bezier patch to be translated when used as a function.
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
-//
 //
 // Examples:
 //   xcopies(20) sphere(3);
@@ -237,16 +236,16 @@ function xcopies(spacing, n, l, sp, p=_NO_ARG) =
 // See Also: move_copies(), xcopies(), zcopies(), line_copies(), grid_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Usage:
-//   ycopies(spacing, [n], [sp]) CHILDREN;
-//   ycopies(l, [n], [sp]) CHILDREN;
+//   ycopies(spacing, [n], [sp=]) CHILDREN;
+//   ycopies(l=, [n=], [sp=]) CHILDREN;
 //   ycopies(LIST) CHILDREN;
 // Usage: As a function to translate points, VNF, or Bezier patches
-//   copies = ycopies(spacing, [n], [sp], p=);
-//   copies = ycopies(l, [n], [sp], p=);
+//   copies = ycopies(spacing, [n], [sp=], p=);
+//   copies = ycopies(l=, [n=], [sp=], p=);
 //   copies = ycopies(LIST, p=);
 // Usage: Get Translation Matrices
-//   mats = ycopies(spacing, [n], [sp]);
-//   mats = ycopies(l, [n], [sp]);
+//   mats = ycopies(spacing, [n], [sp=]);
+//   mats = ycopies(l=, [n=], [sp=]);
 //   mats = ycopies(LIST);
 // Description:
 //   When called as a module, places `n` copies of the children along a line on the Y axis.
@@ -254,17 +253,16 @@ function xcopies(spacing, n, l, sp, p=_NO_ARG) =
 //   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
 //
 // Arguments:
-//   ---
 //   spacing = Given a scalar, specifies a uniform spacing between copies. Given a list of scalars, each one gives a specific position along the line. (Default: 1.0)
 //   n = Number of copies to place on the line. (Default: 2)
-//   l = Length to place copies over.
+//   ---
+//   l = If given, the length to place copies over.
 //   sp = If given as a point, copies will be place on a line back from starting position `sp`.  If given as a scalar, copies will be placed on a line back from starting position `[0,sp,0]`.  If not given, copies will be placed along a line that is centered at [0,0,0].
 //   p = Either a point, pointlist, VNF or Bezier patch to be translated when used as a function.
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
-//
 //
 // Examples:
 //   ycopies(20) sphere(3);
@@ -323,16 +321,16 @@ function ycopies(spacing, n, l, sp, p=_NO_ARG) =
 // See Also: move_copies(), xcopies(), ycopies(), line_copies(), grid_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Usage:
-//   zcopies(spacing, [n], [sp]) CHILDREN;
-//   zcopies(l, [n], [sp]) CHILDREN;
+//   zcopies(spacing, [n], [sp=]) CHILDREN;
+//   zcopies(l=, [n=], [sp=]) CHILDREN;
 //   zcopies(LIST) CHILDREN;
 // Usage: As a function to translate points, VNF, or Bezier patches
-//   copies = zcopies(spacing, [n], [sp], p=);
-//   copies = zcopies(l, [n], [sp], p=);
+//   copies = zcopies(spacing, [n], [sp=], p=);
+//   copies = zcopies(l=, [n=], [sp=], p=);
 //   copies = zcopies(LIST, p=);
 // Usage: Get Translation Matrices
-//   mats = zcopies(spacing, [n], [sp]);
-//   mats = zcopies(l, [n], [sp]);
+//   mats = zcopies(spacing, [n], [sp=]);
+//   mats = zcopies(l=, [n=], [sp=]);
 //   mats = zcopies(LIST);
 // Description:
 //   When called as a module, places `n` copies of the children along a line on the Z axis.
@@ -340,17 +338,16 @@ function ycopies(spacing, n, l, sp, p=_NO_ARG) =
 //   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
 //
 // Arguments:
-//   ---
 //   spacing = Given a scalar, specifies a uniform spacing between copies. Given a list of scalars, each one gives a specific position along the line. (Default: 1.0)
 //   n = Number of copies to place. (Default: 2)
-//   l = Length to place copies over.
+//   ---
+//   l = If given, the length to place copies over.
 //   sp = If given as a point, copies will be placed on a line up from starting position `sp`.  If given as a scalar, copies will be placed on a line up from starting position `[0,0,sp]`.  If not given, copies will be placed on a line that is centered at [0,0,0].
 //   p = Either a point, pointlist, VNF or Bezier patch to be translated when used as a function.
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
-//
 //
 // Examples:
 //   zcopies(20) sphere(3);
@@ -478,7 +475,6 @@ function zcopies(spacing, n, l, sp, p=_NO_ARG) =
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
 //
-//
 // Examples:
 //   line_copies(10) sphere(d=1.5);
 //   line_copies(10, n=5) sphere(d=3);
@@ -591,7 +587,6 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$col` is set to the integer column number for each child.
 //   `$row` is set to the integer row number for each child.
-//
 //
 // Examples:
 //   grid_copies(size=50, spacing=10) cylinder(d=10, h=1);
@@ -851,7 +846,7 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, p=_
 //   rot_copies(n=6, v=DOWN+BACK, delta=[20,0,0], subrot=false)
 //       yrot(90) cylinder(h=20, r1=5, r2=0);
 //   color("red",0.333) yrot(90) cylinder(h=20, r1=5, r2=0);
-module rot_copies(rots=[], v=undef, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], subrot=true)
+module rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], subrot=true)
 {
     req_children($children);  
     sang = sa + offset;

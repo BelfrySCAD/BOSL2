@@ -3248,7 +3248,11 @@ function _find_anchor(anchor, geom) =
         let(
             size=geom[1], size2=geom[2],
             shift=point2d(geom[3]), axis=point3d(geom[4]),
-            override = geom[5](anchor),
+            override = geom[5](anchor)
+        )
+        let(
+            size = [for (c = size) max(0,c)],
+            size2 = [for (c = size2) max(0,c)],
             anch = rot(from=axis, to=UP, p=anchor),
             offset = rot(from=axis, to=UP, p=offset),
             h = size.z,
@@ -3259,8 +3263,8 @@ function _find_anchor(anchor, geom) =
             pos = point3d(cp) + lerp(bot,top,u) + offset,
             vecs = anchor==CENTER? [UP]
               : [
-                    if (anch.x!=0) unit(rot(from=UP, to=[(top-bot).x,0,h], p=[axy.x,0,0]), UP),
-                    if (anch.y!=0) unit(rot(from=UP, to=[0,(top-bot).y,h], p=[0,axy.y,0]), UP),
+                    if (anch.x!=0) unit(rot(from=UP, to=[(top-bot).x,0,max(0.01,h)], p=[axy.x,0,0]), UP),
+                    if (anch.y!=0) unit(rot(from=UP, to=[0,(top-bot).y,max(0.01,h)], p=[0,axy.y,0]), UP),
                     if (anch.z!=0) unit([0,0,anch.z],UP)
                 ],
             vec2 = anchor==CENTER? UP
@@ -3385,10 +3389,12 @@ function _find_anchor(anchor, geom) =
             size=geom[1], size2=geom[2], shift=geom[3],
             u = (anchor.y+1)/2,  // 0<=u<=1
             frpt = [size.x/2*anchor.x, -size.y/2],
-            bkpt = [size2/2*anchor.x+shift,  size.y/2],
+            bkpt = [size2/2*anchor.x+shift, size.y/2],
             override = geom[4](anchor),
-            pos = default(override[0],point2d(cp) + lerp(frpt, bkpt, u) + point2d(offset)),
-            svec = point3d(line_normal(bkpt,frpt)*anchor.x),
+            pos = override[0] != undef? override[0] :
+                point2d(cp) + lerp(frpt, bkpt, u) + point2d(offset),
+            svec = approx(bkpt,frpt)? [anchor.x,0,0] :
+                point3d(line_normal(bkpt,frpt)*anchor.x),
             vec = is_def(override[1]) ? override[1]
                 : anchor.y == 0? ( anchor.x == 0? BACK : svec )
                 : anchor.x == 0? [0,anchor.y,0]
@@ -3398,13 +3404,16 @@ function _find_anchor(anchor, geom) =
         let(
             anchor = unit(_force_anchor_2d(anchor),[0,0]),
             r = force_list(geom[1],2),
-            pos = approx(anchor.x,0) ? [0,sign(anchor.y)*r.y]
-                      : let(
-                             m = anchor.y/anchor.x,
-                             px = sign(anchor.x) * sqrt(1/(1/sqr(r.x) + m*m/sqr(r.y)))
-                        )
-                        [px,m*px],
-            vec = unit([r.y/r.x*pos.x, r.x/r.y*pos.y],BACK)
+            pos = approx(anchor.x,0)
+                ? [0,sign(anchor.y)*r.y]
+                : let(
+                       m = anchor.y/anchor.x,
+                       px = approx(min(r),0)? 0 :
+                           sign(anchor.x) * sqrt(1/(1/sqr(r.x) + m*m/sqr(r.y)))
+                  )
+                  [px,m*px],
+            vec = approx(min(r),0)? (approx(norm(anchor),0)? BACK : anchor) :
+                unit([r.y/r.x*pos.x, r.x/r.y*pos.y],BACK)
         ) [anchor, point2d(cp+offset)+pos, vec, 0]
     ) : type == "rgn_isect"? ( //region
         let(
