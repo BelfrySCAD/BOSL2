@@ -288,7 +288,7 @@ function circle(r, d, points, corner, anchor=CENTER, spin=0) =
                 r = get_radius(r=r, d=d, dflt=1)
             ) [cp, r],
         cp = data[0],
-        r = data[1],
+        r = data[1]
     )
     assert(r>0, "Radius/diameter must be positive")
     let(
