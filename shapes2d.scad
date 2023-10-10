@@ -51,21 +51,26 @@ use <builtins.scad>
 function square(size=1, center, anchor, spin=0) =
     let(
         anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]),
-        size = is_num(size)? [size,size] : point2d(size),
+        size = is_num(size)? [size,size] : point2d(size)
+    )
+    assert(all_positive(size), "All components of size must be positive.")
+    let(
         path = [
             [ size.x,-size.y],
             [-size.x,-size.y],
             [-size.x, size.y],
-            [ size.x, size.y]
+            [ size.x, size.y],
         ] / 2
     ) reorient(anchor,spin, two_d=true, size=size, p=path);
 
 
 module square(size=1, center, anchor, spin) {
     anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]);
-    size = is_num(size)? [size,size] : point2d(size);
+    rsize = is_num(size)? [size,size] : point2d(size);
+    size = [for (c = rsize) max(0,c)];
     attachable(anchor,spin, two_d=true, size=size) {
-        _square(size, center=true);
+        if (all_positive(size))
+            _square(size, center=true);
         children();
     }
 }
@@ -127,8 +132,13 @@ module square(size=1, center, anchor, spin) {
 //   move_copies(path) color("blue") circle(d=2,$fn=8);
 module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0) {
     errchk = assert(in_list(atype, ["box", "perim"]));
-    size = force_list(size,2);
-    if (rounding==0 && chamfer==0) {
+    size = [for (c = force_list(size,2)) max(0,c)];
+    if (!all_positive(size)) {
+        attachable(anchor,spin, two_d=true, size=size) {
+            union();
+            children();
+        }
+    } else if (rounding==0 && chamfer==0) {
         attachable(anchor, spin, two_d=true, size=size) {
             square(size, center=true);
             children();
@@ -138,8 +148,8 @@ module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0) {
         pts = pts_over[0];
         override = pts_over[1];
         attachable(anchor, spin, two_d=true, size=size,override=override) {
-                polygon(pts);
-                children();
+            polygon(pts);
+            children();
         }
     }
 }
@@ -153,18 +163,19 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
     assert(in_list(atype, ["box", "perim"]))
     let(
         anchor=_force_anchor_2d(anchor),
-        size = force_list(size,2),
+        size = [for (c = force_list(size,2)) max(0,c)],
         chamfer = force_list(chamfer,4), 
         rounding = force_list(rounding,4)
     )
+    assert(all_nonnegative(size), "All components of size must be >=0")
     all_zero(concat(chamfer,rounding),0) ?
         let(
              path = [
-                     [ size.x/2, -size.y/2],
-                     [-size.x/2, -size.y/2],
-                     [-size.x/2,  size.y/2],
-                     [ size.x/2,  size.y/2] 
-                    ]
+                 [ size.x/2, -size.y/2],
+                 [-size.x/2, -size.y/2],
+                 [-size.x/2,  size.y/2],
+                 [ size.x/2,  size.y/2],
+             ]
         )
         rot(spin, p=move(-v_mul(anchor,size/2), p=path))
     :
@@ -277,7 +288,10 @@ function circle(r, d, points, corner, anchor=CENTER, spin=0) =
                 r = get_radius(r=r, d=d, dflt=1)
             ) [cp, r],
         cp = data[0],
-        r = data[1],
+        r = data[1]
+    )
+    assert(r>0, "Radius/diameter must be positive")
+    let(
         sides = segs(r),
         path = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]+cp]
     ) reorient(anchor,spin, two_d=true, r=r, p=path);
@@ -290,7 +304,7 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
         r = c[1];
         translate(cp) {
             attachable(anchor,spin, two_d=true, r=r) {
-                _circle(r=r);
+                if (r>0) _circle(r=r);
                 children();
             }
         }
@@ -301,14 +315,14 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
         cp = c[0];
         translate(cp) {
             attachable(anchor,spin, two_d=true, r=r) {
-                _circle(r=r);
+                if (r>0) _circle(r=r);
                 children();
             }
         }
     } else {
         r = get_radius(r=r, d=d, dflt=1);
         attachable(anchor,spin, two_d=true, r=r) {
-            _circle(r=r);
+            if (r>0) _circle(r=r);
             children();
         }
     }
@@ -485,18 +499,26 @@ function ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER
         r = force_list(get_radius(r=r, d=d, dflt=1),2),
         sides = segs(max(r))
     )
-    uniform ? assert(!circum, "Circum option not allowed when \"uniform\" is true")
-                 reorient(anchor,spin,two_d=true,r=[r.x,r.y],
-                          p=realign ? reverse(_ellipse_refine_realign(r.x,r.y,sides))
-                                    : reverse_polygon(_ellipse_refine(r.x,r.y,sides)))
-    :
-    let(
-        offset = realign? 180/sides : 0,
-        sc = circum? (1 / cos(180/sides)) : 1,
-        rx = r.x * sc,
-        ry = r.y * sc,
-        pts = [for (i=[0:1:sides-1]) let(a=360-offset-i*360/sides) [rx*cos(a), ry*sin(a)]]
-    ) reorient(anchor,spin, two_d=true, r=[rx,ry], p=pts);
+    assert(all_positive(r), "All components of the radius must be positive.")
+    uniform
+      ? assert(!circum, "Circum option not allowed when \"uniform\" is true")
+        reorient(anchor,spin,
+            two_d=true, r=[r.x,r.y],
+            p=realign
+              ? reverse(_ellipse_refine_realign(r.x,r.y,sides))
+              : reverse_polygon(_ellipse_refine(r.x,r.y,sides))
+        )
+      : let(
+            offset = realign? 180/sides : 0,
+            sc = circum? (1 / cos(180/sides)) : 1,
+            rx = r.x * sc,
+            ry = r.y * sc,
+            pts = [
+                for (i=[0:1:sides-1])
+                let (a = 360-offset-i*360/sides)
+                [rx*cos(a), ry*sin(a)]
+            ]
+        ) reorient(anchor,spin, two_d=true, r=[rx,ry], p=pts);
 
 
 // Section: Polygons
