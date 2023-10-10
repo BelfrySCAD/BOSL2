@@ -167,7 +167,7 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
         chamfer = force_list(chamfer,4), 
         rounding = force_list(rounding,4)
     )
-    assert(all_positive(size), "All components of size must be positive")
+    assert(all_nonnegative(size), "All components of size must be >=0")
     all_zero(concat(chamfer,rounding),0) ?
         let(
              path = [
