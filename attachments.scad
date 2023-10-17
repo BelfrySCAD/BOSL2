@@ -3248,7 +3248,11 @@ function _find_anchor(anchor, geom) =
         let(
             size=geom[1], size2=geom[2],
             shift=point2d(geom[3]), axis=point3d(geom[4]),
-            override = geom[5](anchor),
+            override = geom[5](anchor)
+        )
+        let(
+            size = [for (c = size) max(0,c)],
+            size2 = [for (c = size2) max(0,c)],
             anch = rot(from=axis, to=UP, p=anchor),
             offset = rot(from=axis, to=UP, p=offset),
             h = size.z,
@@ -3259,8 +3263,8 @@ function _find_anchor(anchor, geom) =
             pos = point3d(cp) + lerp(bot,top,u) + offset,
             vecs = anchor==CENTER? [UP]
               : [
-                    if (anch.x!=0) unit(rot(from=UP, to=[(top-bot).x,0,h], p=[axy.x,0,0]), UP),
-                    if (anch.y!=0) unit(rot(from=UP, to=[0,(top-bot).y,h], p=[0,axy.y,0]), UP),
+                    if (anch.x!=0) unit(rot(from=UP, to=[(top-bot).x,0,max(0.01,h)], p=[axy.x,0,0]), UP),
+                    if (anch.y!=0) unit(rot(from=UP, to=[0,(top-bot).y,max(0.01,h)], p=[0,axy.y,0]), UP),
                     if (anch.z!=0) unit([0,0,anch.z],UP)
                 ],
             vec2 = anchor==CENTER? UP
@@ -3385,10 +3389,12 @@ function _find_anchor(anchor, geom) =
             size=geom[1], size2=geom[2], shift=geom[3],
             u = (anchor.y+1)/2,  // 0<=u<=1
             frpt = [size.x/2*anchor.x, -size.y/2],
-            bkpt = [size2/2*anchor.x+shift,  size.y/2],
+            bkpt = [size2/2*anchor.x+shift, size.y/2],
             override = geom[4](anchor),
-            pos = default(override[0],point2d(cp) + lerp(frpt, bkpt, u) + point2d(offset)),
-            svec = point3d(line_normal(bkpt,frpt)*anchor.x),
+            pos = override[0] != undef? override[0] :
+                point2d(cp) + lerp(frpt, bkpt, u) + point2d(offset),
+            svec = approx(bkpt,frpt)? [anchor.x,0,0] :
+                point3d(line_normal(bkpt,frpt)*anchor.x),
             vec = is_def(override[1]) ? override[1]
                 : anchor.y == 0? ( anchor.x == 0? BACK : svec )
                 : anchor.x == 0? [0,anchor.y,0]
@@ -3398,13 +3404,16 @@ function _find_anchor(anchor, geom) =
         let(
             anchor = unit(_force_anchor_2d(anchor),[0,0]),
             r = force_list(geom[1],2),
-            pos = approx(anchor.x,0) ? [0,sign(anchor.y)*r.y]
-                      : let(
-                             m = anchor.y/anchor.x,
-                             px = sign(anchor.x) * sqrt(1/(1/sqr(r.x) + m*m/sqr(r.y)))
-                        )
-                        [px,m*px],
-            vec = unit([r.y/r.x*pos.x, r.x/r.y*pos.y],BACK)
+            pos = approx(anchor.x,0)
+                ? [0,sign(anchor.y)*r.y]
+                : let(
+                       m = anchor.y/anchor.x,
+                       px = approx(min(r),0)? 0 :
+                           sign(anchor.x) * sqrt(1/(1/sqr(r.x) + m*m/sqr(r.y)))
+                  )
+                  [px,m*px],
+            vec = approx(min(r),0)? (approx(norm(anchor),0)? BACK : anchor) :
+                unit([r.y/r.x*pos.x, r.x/r.y*pos.y],BACK)
         ) [anchor, point2d(cp+offset)+pos, vec, 0]
     ) : type == "rgn_isect"? ( //region
         let(
@@ -3594,7 +3603,7 @@ module show_anchors(s=10, std=true, custom=true) {
 // Synopsis: Shows a 3d anchor orientation arrow.
 // SynTags: Geom
 // Topics: Attachments
-// See Also: anchor_arrow2d(), show_anchors(), expose_anchors(), frame_ref()
+// See Also: anchor_arrow2d(), show_anchors(), expose_anchors(), frame_ref(), generic_airplane()
 // Usage:
 //   anchor_arrow([s], [color], [flag], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
@@ -3635,7 +3644,7 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow",
 // Topics: Attachments
 // See Also: anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
 // Usage:
-//   anchor_arrow2d([s], [color], [flag]);
+//   anchor_arrow2d([s], [color]);
 // Description:
 //   Show an anchor orientation arrow.
 // Arguments:
@@ -3671,6 +3680,90 @@ module expose_anchors(opacity=0.2) {
                                 : point3d($color),
               opacity)
             children();
+}
+
+
+
+// Module: show_transform_list()
+// Synopsis: Shows a list of transforms and how they connect.
+// SynTags: Geom
+// Topics: Attachments
+// See Also: generic_airplane(), anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
+// Usage:
+//   show_transform_list(tlist, [s]);
+//   show_transform_list(tlist) {CHILDREN};
+// Description:
+//   Given a list of transformation matrices, shows the position and orientation of each one.
+//   A line is drawn from each transform position to the next one, and an orientation indicator is
+//   shown at each position.  If a child is passed, that child will be used as the orientation indicator.
+//   By default, a {{generic_airplane()}} is used as the orientation indicator.
+// Arguments:
+//   s = Length of the {{generic_airplane()}}.  Default: 5
+// Example:
+//   tlist = [
+//       zrot(90),
+//       zrot(90) * fwd(30) * zrot(30),
+//       zrot(90) * fwd(30) * zrot(30) *
+//           fwd(35) * xrot(-30),
+//       zrot(90) * fwd(30) * zrot(30) *
+//           fwd(35) * xrot(-30) * fwd(40) * yrot(15),
+//   ];
+//   show_transform_list(tlist, s=20);
+// Example:
+//   tlist = [
+//       zrot(90),
+//       zrot(90) * fwd(30) * zrot(30),
+//       zrot(90) * fwd(30) * zrot(30) *
+//           fwd(35) * xrot(-30),
+//       zrot(90) * fwd(30) * zrot(30) *
+//           fwd(35) * xrot(-30) * fwd(40) * yrot(15),
+//   ];
+//   show_transform_list(tlist) frame_ref();
+module show_transform_list(tlist, s=5) {
+    path = [for (m = tlist) apply(m, [0,0,0])];
+    stroke(path, width=s*0.03);
+    for (m = tlist) {
+        multmatrix(m) {
+            if ($children>0) children();
+            else generic_airplane(s=s);
+        }
+    }
+}
+
+
+// Module: generic_airplane()
+// Synopsis: Shows a generic airplane shape, useful for viewing orientations.
+// SynTags: Geom
+// Topics: Attachments
+// See Also: anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
+// Usage:
+//   generic_airplane([s]);
+// Description:
+//   Creates a generic airplane shape.  This can be useful for viewing the orientation of 3D transforms.
+// Arguments:
+//   s = Length of the airplane.  Default: 5
+// Example:
+//   generic_airplane(s=20);
+module generic_airplane(s=5) {
+    $fn = max(segs(0.05*s), 12);
+    color("#ddd")
+    fwd(s*0.05)
+    ycyl(l=0.7*s, d=0.1*s) {
+        attach(FWD) top_half(s=s) zscale(2) sphere(d=0.1*s);
+        attach(BACK,FWD) ycyl(l=0.2*s, d1=0.1*s, d2=0.05*s) {
+            yrot_copies([-90,0,90])
+                prismoid(s*[0.01,0.2], s*[0.01,0.05],
+                    h=0.2*s, shift=s*[0,0.15], anchor=BOT);
+        }
+        yrot_copies([-90,90])
+            prismoid(s*[0.01,0.2], s*[0.01,0.05],
+                h=0.5*s, shift=s*[0,0.15], anchor=BOT);
+    }
+    color("#777") zcopies(0.1*s) sphere(d=0.02*s);
+    back(0.09*s) {
+        color("#f00") right(0.46*s) sphere(d=0.04*s);
+        color("#0f0") left(0.46*s) sphere(d=0.04*s);
+    }
 }
 
 

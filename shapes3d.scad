@@ -67,7 +67,10 @@ module cube(size=1, center, anchor, spin=0, orient=UP)
 
 function cube(size=1, center, anchor, spin=0, orient=UP) =
     let(
-        siz = scalar_vec3(size),
+        siz = scalar_vec3(size)
+    )
+    assert(all_positive(siz), "All size components must be positive.")
+    let(
         anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]),
         unscaled = [
             [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
@@ -332,7 +335,7 @@ module cuboid(
     rounding = approx(rounding,0) ? undef : rounding;
     checks =
         assert(is_vector(size,3))
-        assert(all_positive(size))
+        assert(all_nonnegative(size), "All components of size= must be >=0")
         assert(is_undef(chamfer) || is_finite(chamfer),"chamfer must be a finite value")
         assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value")
         assert(is_undef(rounding) || is_undef(chamfer), "Cannot specify nonzero value for both chamfer and rounding")
