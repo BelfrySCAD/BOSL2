@@ -510,9 +510,10 @@ function _inherit_gear_thickness(thickness) =
 //   after switching off the drive
 // Subsection: Bevel Gears
 //   Bevel gearing is another way of dealing with intersecting gear shafts.  For bevel gears, the teeth centers lie on
-//   the surface of an imaginary cone, which is the pitch cone of the bevel gear.  Two bevel gears mesh when their pitch cones
-//   touch along their length.  The teeth of bevel gears narrow as they get closer to the center of the gear.
-//   Tooth dimensions and pitch diameter are referenced to the outer end of the teeth.
+//   the surface of an imaginary cone, which is the pitch cone of the bevel gear.  Two bevel gears mesh when their pitch cone
+//   apexes coincide and the cones touch along their length.  The teeth of bevel gears narrow as they get closer to the center of the gear.
+//   Tooth dimensions and pitch diameter (the base of the pitch cone) are referenced to the outer end of the teeth.
+//   Note that the pitch radius, computed the same was as for other gears, gives the radius of the pitch cone's base.  
 //   Bevel gears can be made with straight teeth, analogous to spur gears, and with the
 //   same disadvantage of sudden full contact that is noisy.  Spiral teeth are analogous to helical
 //   teeth on cylindrical gears: the teeth engage gradually and smoothly, transmitting motion more smoothly
@@ -2305,10 +2306,15 @@ module crown_gear(
 //   every tooth on the other, for more even wear.  So relatively prime numbers of teeth are good.
 //   .
 //   The gear appears centered on the origin, with one tooth
-//   centered on the positive Y axis.  The pitch base will lie in the XY plane.  By default backing will be added to ensure
-//   that the center of the gear (where there are no teeth) is at least half the face width in thickness.  
-//   In order to mesh the mating gear must be positioned so their pitch bases are tangent.
-//   The apexes of the pitch cones must coincide.  
+//   centered on the positive Y axis.  The base of the pitch cone (the "pitchbase") will lie in the XY plane.  This is
+//   the natural position: in order to mesh the mating gear must be positioned so their pitch bases are tangent.
+//   The apexes of the pitch cones must coincide.
+//   . 
+//   By default backing will be added to ensure
+//   that the center of the gear (where there are no teeth) is at least half the face width in thickness.
+//   You can change this using the `backing`, `thickness` or `bottom` parameters.  The backing appears with
+//   a conical shape, extended the sloped edges of the teeth.  You can set `cone_backing=false` if your application
+//   requires cylindrical backing.  
 // Arguments:
 //   teeth = Number of teeth on the gear
 //   mate_teeth = Number of teeth on the gear that will mate to this gear
@@ -2332,12 +2338,12 @@ module crown_gear(
 //   right_handed = If true, the gear returned will have a right-handed teeth.  Default: false 
 //   slices = Number of vertical layers to divide gear into.  Useful for refining gears with `spiral`.  Default: 1
 //   gear_spin = Rotate gear and children around the gear center, regardless of how gear is anchored.  Default: 0
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: "pitchbase"
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Extra Anchors:
+//   "pitchbase" = With the base of the pitch cone in the XY plane, centered at the origin.  This is the natural height for the gear, and the default anchor.
 //   "apex" = At the pitch cone apex for the bevel gear.
-//   "pitchbase" = At the natural height of the pitch radius of the beveled gear.
 //   "flattop" = At the top of the flat top of the bevel gear.
 // Example(NoAxes): Bevel Gear with zerol teeth
 //   bevel_gear(
@@ -2379,12 +2385,12 @@ module crown_gear(
 //     bevel_gear(mod=3,15,35,ang,spiral_angle=0,right_handed=true,anchor="apex")
 //       cyl(h=65,d=3,$fn=16,anchor=BOT);
 // Example(VPT=[6.39483,26.2195,8.93229],VPD=192.044,VPR=[76.7,0,63.3],NoAxes): At this extreme 135 degree angle the yellow gear has internal teeth.  This is a rare configuration.  
-   ang=135;
-   bevel_gear(mod=3,35,15,ang);   
-   color("lightblue")
-     back(pitch_radius(mod=3,teeth=35)+pitch_radius(mod=3,teeth=15))
-     xrot(ang,cp=[0,-pitch_radius(mod=3,teeth=15),0])
-         bevel_gear(mod=3,15,35,ang,right_handed=true);       
+//   ang=135;
+//   bevel_gear(mod=3,35,15,ang);   
+//   color("lightblue")
+//     back(pitch_radius(mod=3,teeth=35)+pitch_radius(mod=3,teeth=15))
+//     xrot(ang,cp=[0,-pitch_radius(mod=3,teeth=15),0])
+//         bevel_gear(mod=3,15,35,ang,right_handed=true);       
 function bevel_gear(
     teeth,
     mate_teeth,
