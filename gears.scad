@@ -544,7 +544,7 @@ function _inherit_gear_thickness(thickness) =
 //   bevel_gear(mod=3,teeth=35,face_width=10,spiral=0,mate_teeth=15,backing=3);
 //   cyl(h=28,d=3,$fn=16,anchor=BOT);
 //   color("lightblue")left(pitch_radius(mod=3,teeth=35))up(pitch_radius(mod=3,teeth=15))
-//   yrot(90){zrot(360/15/2)bevel_gear(mod=3,teeth=15,face_width=10,spiral=0,cutter_radius=-30,mate_teeth=35);
+//   yrot(90){zrot(360/15/2)bevel_gear(mod=3,teeth=15,face_width=10,spiral=0,right_handed=true,mate_teeth=35);
 //             cyl(h=57,d=3,$fn=16,anchor=BOT);}
 // Figure(3D,Med,NoAxes,VPT=[2.01253,-0.673328,8.98056],VPD=263.435,VPR=[79.5,0,68.6]): Two zerol bevel gears mated with shafts at a 115.38 deg angle.  This is a planar bevel gear.  The axes intersect on the pitch base of the yellow gear.  If the blue gear is tipped slightly more its shaft will intersect the shaft of the yellow gear underneath that gear's pitch base, indicating an impossible angle for a normal bevel gear at this pair of teeth counts.
 //   ang=acos(-15/35);
