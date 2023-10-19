@@ -545,8 +545,8 @@ function _inherit_gear_thickness(thickness) =
 //   color("lightblue")left(pitch_radius(mod=3,teeth=35))up(pitch_radius(mod=3,teeth=15))
 //   yrot(90){zrot(360/15/2)bevel_gear(mod=3,teeth=15,face_width=10,spiral_angle=0,cutter_radius=-30,mate_teeth=35);
 //             cyl(h=57,d=3,$fn=16,anchor=BOT);}
-// Figure(3D,Med,NoAxes,VPT=[2.01253,-0.673328,8.98056],VPD=263.435,VPR=[79.5,0,68.6]): Two zerol bevel gears mated with shafts at a 110 deg angle.  Note that if the blue gear is tipped slightly more its shaft will intersect the shaft of the yellow gear underneath that gear; that indicates an impossible angle for this pair of teeth counts.
-//   ang=110;
+// Figure(3D,Med,NoAxes,VPT=[2.01253,-0.673328,8.98056],VPD=263.435,VPR=[79.5,0,68.6]): Two zerol bevel gears mated with shafts at a 115.38 deg angle.  This is a planar bevel gear.  The axes intersect on the pitch base of the yellow gear.  If the blue gear is tipped slightly more its shaft will intersect the shaft of the yellow gear underneath that gear's pitch base, indicating an impossible angle for a normal bevel gear at this pair of teeth counts.
+//   ang=acos(-15/35);
 //   bevel_gear(mod=3,35,15,ang,spiral_angle=0,backing=5,anchor="apex")   
 //     cyl(h=25,d=3,$fn=16,anchor=BOT);
 //   color("lightblue")
@@ -558,7 +558,19 @@ function _inherit_gear_thickness(thickness) =
 //   sometimes also a crown gear.  The latter term may be confusing because it also refers to a similar looking
 //   but very different type of gear that is described below.  A planar bevel gear can only mate with another
 //   compatible bevel gear.  It has a degenerate cone with its apex on the gear itself, so the mating pinion gear cannot
-//   mate at a 90 degree angle because if it did, it's cone could not meet the center of the planar bevel gear.  
+//   mate at a 90 degree angle because if it did, its cone could not meet the center of the planar bevel gear.
+//   If you request a larger shaft angle, the teeth of the bevel gear will tilt inward, producing an internal bevel gear.
+//   Gears with this design are rarely used.  The mate of an interior gear is always an exterior gear.  
+// Figure(VPT=[-1.07698,0.67915,-2.25898],VPD=263.435,VPR=[69.7,0,49.3],NoAxes): Internal bevel gear (yellow) mated to an external bevel gear (blue) to achieve a 135 degree shaft angle.  
+//   ang=135;
+//   bevel_gear(mod=3,35,15,ang,spiral_angle=0,cone_backing=false);
+//      down(15)cyl(h=40,d=3,$fn=16,anchor=BOT);
+//   color("lightblue")
+//     back(pitch_radius(mod=3,teeth=35)+pitch_radius(mod=3,teeth=15))
+//     xrot(ang,cp=[0,-pitch_radius(mod=3,teeth=15),0]){
+//         bevel_gear(mod=3,15,35,ang,right_handed=true,spiral_angle=0);
+//               cyl(h=40,d=3,$fn=16,anchor=BOT);
+//     }
 // Subsection: Crown Gears (Face Gears)
 //   Crown gears, sometimes called Face Crown Gears or just Face Gears, are gears with teeth pointing straight up so
 //   the gear resembles a crown.  This type of gear is not the same as a bevel gear with vertical teeth, which would mate
@@ -2266,14 +2278,14 @@ module crown_gear(
 
 
 // Function&Module: bevel_gear()
-// Synopsis: Creates a straight or spiral bevel gear.
+// Synopsis: Creates a straight, zerol, or spiral bevel gear.
 // SynTags: Geom, VNF
 // Topics: Gears, Parts
 // See Also: rack(), rack2d(), spur_gear(), spur_gear2d(), bevel_pitch_angle(), bevel_gear()
 // Usage: As a Module
-//   gear_dist(mod=|diam_pitch=|circ_pitch=, teeth, mate_teeth, [shaft_angle], [shaft_diam], [face_width=], [hide=], [spiral_angle=], [cutter_radius=], [right_handed=], [pressure_angle=], [backlash=], [slices=], [internal=], [gear_spin=], ...) [ATTACHMENTS];
+//   gear_dist(mod=|diam_pitch=|circ_pitch=, teeth, mate_teeth, [shaft_angle], [shaft_diam], [face_width=], [hide=], [spiral_angle=], [cutter_radius=], [right_handed=], [pressure_angle=], [backing=|thickness=|bottom=], [cone_backing=], [backlash=], [slices=], [internal=], [gear_spin=], ...) [ATTACHMENTS];
 // Usage: As a Function
-//   vnf = gear_dist(mod=|diam_pitch=|circ_pitch=, teeth, mate_teeth, [shaft_angle], [face_width=], [hide=], [spiral_angle=], [cutter_radius=], [right_handed=], [pressure_angle=], [backlash=], [slices=], [internal=], [gear_spin=], ...);
+//   vnf = gear_dist(mod=|diam_pitch=|circ_pitch=, teeth, mate_teeth, [shaft_angle], [face_width=], [hide=], [spiral_angle=], [cutter_radius=], [right_handed=], [pressure_angle=], , [backing=|thickness=|bottom=], [cone_backing=], [backlash=], [slices=], [internal=], [gear_spin=], ...);
 // Description:
 //   Creates a spiral, zerol, or straight bevel gear.  In straight bevel gear sets, when each tooth
 //   engages it inpacts the corresponding tooth.  The abrupt tooth engagement causes impact stress
@@ -2293,8 +2305,9 @@ module crown_gear(
 //   every tooth on the other, for more even wear.  So relatively prime numbers of teeth are good.
 //   .
 //   The gear appears centered on the origin, with one tooth
-//   centered on the positive Y axis.  The pitch base will lie in the XY plane.
-//   In order to mesh the mating gear must be positioned so their pitch bases are tagent.
+//   centered on the positive Y axis.  The pitch base will lie in the XY plane.  By default backing will be added to ensure
+//   that the center of the gear (where there are no teeth) is at least half the face width in thickness.  
+//   In order to mesh the mating gear must be positioned so their pitch bases are tangent.
 //   The apexes of the pitch cones must coincide.  
 // Arguments:
 //   teeth = Number of teeth on the gear
@@ -2304,9 +2317,10 @@ module crown_gear(
 //   mod = The metric module/modulus of the gear, or mm of pitch diameter per tooth.
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   circ_pitch = distance between teeth around the pitch circle.
-//   backing = Distance from bottom of bevel gear to bottom corner of teeth (Alternative to bottom or thickness).  Default: 0
+//   backing = Distance from bottom of bevel gear to bottom corner of teeth (Alternative to bottom or thickness).  Default: 0 if the gear is thick enough (see above)
 //   bottom = Distance from bevel gear's pitch base to the bottom of the bevel gear.  (Alternative to backing or thickness)
-//   thickness = Thickness of bevel gear.  (Alternative to backing or bottom)
+//   thickness = Thickness of bevel gear at the center, where there are no teeth.  (Alternative to backing or bottom). 
+//   cone_backing = If true backing extends conical shape of the gear; otherwise backing is an attached cylinder.  Default: true
 //   face_width = Width of teeth.  Default: 10
 //   shaft_diam = Diameter of the hole in the center, or zero for no hole.  (Module only.)  Default: 0
 //   hide = Number of teeth to delete to make this only a fraction of a circle.  Default: 0
@@ -2317,7 +2331,6 @@ module crown_gear(
 //   cutter_radius = Radius of spiral arc for teeth.  If 0, then gear will have straight teeth.  Default: 30
 //   right_handed = If true, the gear returned will have a right-handed teeth.  Default: false 
 //   slices = Number of vertical layers to divide gear into.  Useful for refining gears with `spiral`.  Default: 1
-//   internal = If true, create a mask for difference()ing from something else.
 //   gear_spin = Rotate gear and children around the gear center, regardless of how gear is anchored.  Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -2326,14 +2339,12 @@ module crown_gear(
 //   "apex" = At the pitch cone apex for the bevel gear.
 //   "pitchbase" = At the natural height of the pitch radius of the beveled gear.
 //   "flattop" = At the top of the flat top of the bevel gear.
-// Side Effects:
-//   If internal is true then the default tag is "remove"
 // Example(NoAxes): Bevel Gear with zerol teeth
 //   bevel_gear(
 //       circ_pitch=5, teeth=36, mate_teeth=36,
 //       shaft_diam=5, spiral_angle=0
 //   );
-// Example(NoAxes): Spiral Beveled Gear and Pinion
+// Example(NoAxes): Spiral Beveled Gear and Pinion.  Note conical backing added to the yellow gear to prevent it from being thin.
 //   t1 = 16; t2 = 28;
 //   color("lightblue")bevel_gear(
 //       circ_pitch=5, teeth=t1, mate_teeth=t2,
@@ -2343,7 +2354,7 @@ module crown_gear(
 //       circ_pitch=5, teeth=t2, mate_teeth=t1, right_handed=true,
 //       slices=12, anchor="apex", backing=3, spin=180/t2
 //   );
-// Example(Anim,Frames=4,VPD=175,NoAxes): Manual Spacing of Pinion and Gear
+// Example(Anim,Frames=4,VPD=175,NoAxes): Manual Spacing of Pinion and Gear.  Here conical backing has been turned off.  
 //   t1 = 14; t2 = 28; circ_pitch=5;
 //   color("lightblue")back(pitch_radius(circ_pitch, t2)) {
 //     yrot($t*360/t1)
@@ -2356,7 +2367,7 @@ module crown_gear(
 //     zrot($t*360/t2)
 //     bevel_gear(
 //       circ_pitch=circ_pitch, teeth=t2, mate_teeth=t1, right_handed=true,
-//       shaft_diam=5, slices=12, backing=3, spin=180/t2
+//       shaft_diam=5, slices=12, backing=3, spin=180/t2, cone_backing=false
 //     );
 //   }
 // Example(NoAxes,VPT=[24.4306,-9.20912,-29.3331],VPD=292.705,VPR=[71.8,0,62.5]): Bevel gears at a non right angle, positioned by aligning the pitch cone apexes.  
@@ -2367,7 +2378,13 @@ module crown_gear(
 //   xrot(ang)
 //     bevel_gear(mod=3,15,35,ang,spiral_angle=0,right_handed=true,anchor="apex")
 //       cyl(h=65,d=3,$fn=16,anchor=BOT);
-
+// Example(VPT=[6.39483,26.2195,8.93229],VPD=192.044,VPR=[76.7,0,63.3],NoAxes): At this extreme 135 degree angle the yellow gear has internal teeth.  This is a rare configuration.  
+   ang=135;
+   bevel_gear(mod=3,35,15,ang);   
+   color("lightblue")
+     back(pitch_radius(mod=3,teeth=35)+pitch_radius(mod=3,teeth=15))
+     xrot(ang,cp=[0,-pitch_radius(mod=3,teeth=15),0])
+         bevel_gear(mod=3,15,35,ang,right_handed=true);       
 function bevel_gear(
     teeth,
     mate_teeth,
@@ -2382,8 +2399,7 @@ function bevel_gear(
     spiral_angle = 35,
     right_handed = false,
     slices = 5,
-    internal,
-    interior,
+    cone_backing = true,
     pitch,
     circ_pitch,
     diam_pitch,
@@ -2395,21 +2411,19 @@ function bevel_gear(
     _return_anchors = false
 ) = assert(all_integer([teeth,mate_teeth]) && teeth>=3 && mate_teeth>=3, "Must give teeth and mate_teeth, integers greater than or equal to 3")
     let(
-        dummy = !is_undef(interior) ? echo("In bevel_gear(), the argument 'interior=' has been deprecated, and may be removed in the future.  Please use 'internal=' instead."):0,
-        internal = first_defined([internal,interior,false]),
         circ_pitch = _inherit_gear_pitch("bevel_gear()",pitch, circ_pitch, diam_pitch, mod),
         PA = _inherit_gear_pa(pressure_angle),
-        spiral_angle = _inherit_gear_helical(spiral_angle, invert=!internal),
+        spiral_angle = _inherit_gear_helical(spiral_angle),
         face_width = _inherit_gear_thickness(face_width),
         slices = cutter_radius==0? 1 : slices,
         max_ang = acos(-min(mate_teeth/teeth, teeth/mate_teeth)),
-        dummy2 = assert(is_finite(shaft_angle) && shaft_angle>0 && shaft_angle<max_ang,
-                        str("For given teeth pairing, shaft_angle must be strictly between 0 and ",max_ang)),
-        pitch_angle = atan(sin(shaft_angle)/((mate_teeth/teeth)+cos(shaft_angle))),
+        dummy2 = assert(is_finite(shaft_angle) && shaft_angle>0 && shaft_angle<180,"shaft_angle must be strictly between 0 and 180"),
+        pitch_angle = posmod(atan(sin(shaft_angle)/((mate_teeth/teeth)+cos(shaft_angle))),180),
         pr = pitch_radius(circ_pitch, teeth),
-        rr = _root_radius(circ_pitch, teeth, clearance, internal),
+        rr = _root_radius(circ_pitch, teeth, clearance),
         pitchoff = (pr-rr) * sin(pitch_angle),
-        ocone_rad = opp_ang_to_hyp(pr, pitch_angle),
+        ocone_rad = pitch_angle<90 ? opp_ang_to_hyp(pr, pitch_angle)
+                                   : opp_ang_to_hyp(pitch_radius(circ_pitch,mate_teeth), shaft_angle-pitch_angle),
         icone_rad = ocone_rad - face_width,
         cutter_radius = cutter_radius==0? 1000 : cutter_radius,
         midpr = (icone_rad + ocone_rad) / 2,
@@ -2425,7 +2439,6 @@ function bevel_gear(
             pressure_angle = PA,
             clearance = clearance,
             backlash = backlash,
-            internal = internal,
             center = true
         )),
         verts1 = [
@@ -2447,27 +2460,31 @@ function bevel_gear(
                 each apply(xflip() * zrot(360*tooth/teeth) * m, path3d(profile))
             ]
         ],
-        botz = verts1[0][0].z,
-        topz = last(verts1)[0].z,
-        teeth_thickness = abs(topz - botz),
+        botz = verts1[0][0].z,      // bottom of center
+        topz = last(verts1)[0].z,   // top of center
+        ctr_thickness = topz - botz,  
         vertices = [for (x=verts1) reverse(x)],
         sides_vnf = vnf_vertex_array(vertices, caps=false, col_wrap=true, reverse=true),
         top_verts = last(vertices),
         bot_verts = vertices[0],
         gear_pts = len(top_verts),
         face_pts = gear_pts / teeth,
+        minbacking = -min(0,ctr_thickness),  
         backing = is_def(backing) ?
                       assert(all_nonnegative([backing]), "backing must be a non-negative value")
-                      backing
+                      assert(ctr_thickness>0 || backing>0, "internal gears require backing>0")
+                      backing-min(0,ctr_thickness)
                 : is_def(thickness) ?
-                      assert(is_finite(thickness) && thickness>= teeth_thickness, "thickness is invalid or too small for teeth")
-                      thickness-teeth_thickness
+                      let(thick_OK=is_finite(thickness) && (thickness>abs(ctr_thickness) || (thickness==ctr_thickness && ctr_thickness>0)))
+                      assert(thick_OK, str("thickness is invalid or too small for teeth; thickness must be larger than ",abs(ctr_thickness)))
+                      thickness-ctr_thickness
                 : is_def(bottom)?
-                      assert(is_finite(bottom) && bottom>=pitchoff, "bottom is invalid or too small for teeth")
-                      bottom-pitchoff
-                : 0,
-        cpz = (topz + botz-backing) / 2,//+backing,
-                
+                    assert(is_finite(bottom) && bottom-pitchoff>minbacking,
+                           str("bottom is invalid or too small for teeth, must exceed ",minbacking+pitchoff))
+                    bottom-pitchoff
+                : ctr_thickness>face_width/2 ? 0
+                : -ctr_thickness+face_width/2,
+        cpz = (topz + botz - backing) / 2,
         teeth_top_faces =[
             for (i=[0:1:teeth-1], j=[0:1:(face_pts/2)-1]) each [
                 [i*face_pts+j, (i+1)*face_pts-j-1, (i+1)*face_pts-j-2],
@@ -2481,7 +2498,17 @@ function bevel_gear(
             ]
         ],
         backing_vert = backing==0? []
-                   : down(backing,[for(i=[0:1:teeth-1]) each( [bot_verts[i*face_pts], bot_verts[(i+1)*face_pts-1]])]),
+                     : !cone_backing ? down(backing,[for(i=[0:1:teeth-1]) each( [bot_verts[i*face_pts], bot_verts[(i+1)*face_pts-1]])])
+                     : let(
+                           factor = tan(pitch_angle-90)*backing
+                       )
+                       [for(i=[0:1:teeth-1]) let(
+                           A = bot_verts[i*face_pts],
+                           B = bot_verts[(i+1)*face_pts-1],
+                           adjA = point3d(factor*unit(point2d(A)),-backing),
+                           adjB = point3d(factor*unit(point2d(B)),-backing)
+                       )
+                       each [ A+adjA, B+adjB]],
         shift = len(bot_verts),
         backing_bot_faces = backing==0? flat_top_faces
                           :[for (i=idx(backing_vert))
@@ -2511,21 +2538,21 @@ function bevel_gear(
         lvnf = right_handed? vnf1 : xflip(p=vnf1),
         vnf = zrot(gear_spin,down(cpz, p=lvnf)),
         anchors = [
-            named_anchor("pitchbase", [0,0,pitchoff-teeth_thickness/2+backing/2]),
-            named_anchor("flattop", [0,0,teeth_thickness/2+backing/2]),
-            named_anchor("apex", [0,0,hyp_ang_to_opp(ocone_rad,90-pitch_angle)+pitchoff-teeth_thickness/2+backing/2])
+            named_anchor("pitchbase", [0,0,pitchoff-ctr_thickness/2+backing/2]),
+            named_anchor("flattop", [0,0,ctr_thickness/2+backing/2]),
+            named_anchor("apex", [0,0,hyp_ang_to_opp(pitch_angle<90?ocone_rad:icone_rad,90-pitch_angle)+pitchoff-ctr_thickness/2+backing/2])
         ],
         final_vnf = reorient(anchor,spin,orient, vnf=vnf, extent=true, anchors=anchors, p=vnf)
     )
     _return_anchors==false ? final_vnf
-                        : [final_vnf, anchors, teeth_thickness+backing];
+                        : [final_vnf, anchors, ctr_thickness+backing];
 
 
 module bevel_gear(
     teeth,
     mate_teeth,
     shaft_angle=90,
-    bottom,backing,thickness,
+    bottom,backing,thickness,cone_backing=true,
     face_width = 10,
     shaft_diam = 0,
     pressure_angle = 20,
@@ -2535,8 +2562,6 @@ module bevel_gear(
     spiral_angle = 35,
     right_handed = false,
     slices = 5,
-    internal,
-    interior,
     pitch,
     diam_pitch,
     circ_pitch,
@@ -2546,24 +2571,22 @@ module bevel_gear(
     gear_spin=0, 
     orient = UP
 ) {
-    dummy = !is_undef(interior) ? echo("In bevel_gear(), the argument 'interior=' has been deprecated, and may be removed in the future.  Please use 'internal=' instead."):0;
-    internal = first_defined([internal,interior,false]);
     circ_pitch = _inherit_gear_pitch("bevel_gear()",pitch, circ_pitch, diam_pitch, mod);
     PA = _inherit_gear_pa(pressure_angle);
-    spiral_angle = _inherit_gear_helical(spiral_angle, invert=!internal);
+    spiral_angle = _inherit_gear_helical(spiral_angle);
     face_width = _inherit_gear_thickness(face_width);
     slices = cutter_radius==0? 1 : slices;
     pitch_angle = atan(sin(shaft_angle)/((mate_teeth/teeth)+cos(shaft_angle)));
     pr = pitch_radius(circ_pitch, teeth);
     ipr = pr - face_width*sin(pitch_angle);
-    rr = _root_radius(circ_pitch, teeth, clearance, internal);
+    rr = _root_radius(circ_pitch, teeth, clearance);
     pitchoff = (pr-rr) * sin(pitch_angle);
     vnf_anchors = bevel_gear(
         circ_pitch = circ_pitch,
         teeth = teeth,
         mate_teeth = mate_teeth,
         shaft_angle=shaft_angle,
-        bottom=bottom,thickness=thickness,backing=backing,
+        bottom=bottom,thickness=thickness,backing=backing,cone_backing=cone_backing,
         face_width = face_width,
         pressure_angle = PA,
         clearance = clearance,
@@ -2572,7 +2595,6 @@ module bevel_gear(
         spiral_angle = spiral_angle,
         right_handed = right_handed,
         slices = slices,
-        internal = internal,
         anchor=CENTER,
         gear_spin=gear_spin,
         _return_anchors=true
@@ -2580,17 +2602,13 @@ module bevel_gear(
     vnf=vnf_anchors[0];
     anchors=vnf_anchors[1];
     thickness = vnf_anchors[2];
-    default_tag("remove",internal) {
-        //attachable(anchor,spin,orient, vnf=r1=pr, r2=ipr, h=thickness, anchors=anchors) {
-        attachable(anchor,spin,orient, vnf=vnf, extent=true, anchors=anchors) {        
-            difference() {
-                vnf_polyhedron(vnf, convexity=teeth/2);
-                if (shaft_diam > 0) {
-                    cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
-                }
-            }
-            children();
+    attachable(anchor,spin,orient, vnf=vnf, extent=true, anchors=anchors) {        
+        difference() {
+           vnf_polyhedron(vnf, convexity=teeth/2);
+           if (shaft_diam > 0)
+               cylinder(h=2*thickness, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
         }
+        children();
     }
 }
 
