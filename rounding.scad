@@ -851,6 +851,7 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
       d_next = is_vector(joint[i]) ? joint[i][1] : joint[i]
   )
   assert(d_first>=0 && d_next>=0, str("Joint value negative when adding path ",i+1))
+  
   assert(d_first<path_length(revresult),str("Path ",i," is too short for specified cut distance ",d_first))
   assert(d_next<path_length(nextpath), str("Path ",i+1," is too short for specified cut distance ",d_next))
   let(
@@ -861,7 +862,8 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
   let(
      first_dir=firstcut[2],
      next_dir=nextcut[2],
-     corner = line_intersection([firstcut[0], firstcut[0]-first_dir], [nextcut[0], nextcut[0]-next_dir],RAY,RAY)
+     corner = approx(firstcut[0],nextcut[0]) ? firstcut[0]
+            : line_intersection([firstcut[0], firstcut[0]-first_dir], [nextcut[0], nextcut[0]-next_dir],RAY,RAY)
   )
   assert(is_def(corner), str("Curve directions at cut points don't intersect in a corner when ",
                              loop?"closing the path":str("adding path ",i+1)))

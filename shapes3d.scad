@@ -3352,7 +3352,7 @@ module fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTE
 //   data = This is either the 2D rectangular array of heights, or a function literal that takes X and Y arguments.
 //   size = The [X,Y] size of the surface to create.  If given as a scalar, use it for both X and Y sizes. Default: `[100,100]`
 //   bottom = The Z coordinate for the bottom of the heightfield object to create.  Any heights lower than this will be truncated to very slightly above this height.  Default: -20
-//   maxz = The maximum height to model.  Truncates anything taller to this height.  Default: 99
+//   maxz = The maximum height to model.  Truncates anything taller to this height.  Set to INF for no truncation.  Default: 100
 //   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
 //   yrange = A range of values to iterate Y over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
 //   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".  Default: "default"
@@ -3420,7 +3420,7 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
                     for (x = [0:1:xcnt-1]) [
                         size.x * (x/(xcnt-1)-0.5),
                         size.y * (y/(ycnt-1)-0.5),
-                        data[y][x]
+                        min(data[y][x],maxz)
                     ]
                 ]
             ] : [

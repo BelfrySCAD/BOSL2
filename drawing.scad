@@ -798,6 +798,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
         )
         dir ? arcpts : reverse(arcpts)
     ) :
+    assert(is_def(points), "Arc not specified: must give points, angle, or width and thickness")
     assert(is_path(points,[2,3]),"Point list is invalid")
     // Arc is 3D, so transform points to 2D and make a recursive call, then remap back to 3D
     len(points[0]) == 3? (
