@@ -2413,7 +2413,6 @@ function bevel_gear(
     shaft_angle=90,
     backing,thickness,bottom,
     face_width,
-    hide = 0,
     pressure_angle = 20,
     clearance,
     backlash = 0.0,
