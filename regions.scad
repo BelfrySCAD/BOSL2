@@ -339,7 +339,7 @@ module region(r, anchor="origin", spin=0, cp="centroid", atype="hull")
 
 
 
-// Section: Gometrical calculations with regions
+// Section: Geometrical calculations with regions
 
 // Function: point_in_region()
 // Synopsis: Tests if a point is inside, outside, or on the border of a region. 

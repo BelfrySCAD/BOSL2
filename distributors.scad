@@ -1518,8 +1518,8 @@ module path_copies(path, n, spacing, sp=undef, dist, rotate_children=true, dist,
     for(i=[0:1:len(cutlist)-1]) {
         $pos = cutlist[i][0];
         $idx = is_def(dist) ? distind[i] : i;
-        $dir = rotate_children ? (planar?[1,0]:[1,0,0]) : cutlist[i][2];
-        $normal = rotate_children? (planar?[0,1]:[0,0,1]) : cutlist[i][3];
+        $dir = !rotate_children ? (planar?[1,0]:[1,0,0]) : cutlist[i][2];
+        $normal = !rotate_children? (planar?[0,1]:[0,0,1]) : cutlist[i][3];
         translate($pos) {
             if (rotate_children) {
                 if(planar) {
