@@ -1,4 +1,4 @@
-name: Checks
+name: VersionBump
 on:
   pull_request:
     types:
