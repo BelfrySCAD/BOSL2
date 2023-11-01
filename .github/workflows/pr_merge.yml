@@ -26,9 +26,10 @@ jobs:
         ./scripts/increment_version.sh
 
     - name: Push changes
-      uses: ad-m/github-push-action@master
+    - uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        github_token: ${{ secrets.GH_PAT }}
-        branch: ${{ github.ref }}
+        commit_user_email: github+actions@gmail.com
+        commit_message: Version Bump
+
 
 
