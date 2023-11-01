@@ -1,0 +1,34 @@
+name: Checks
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  if_merged:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Apt Update
+      run: sudo apt update
+
+    - name: Bump Version
+      id: commit
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cd $GITHUB_WORKSPACE
+        git config user.name "GitHub Actions"
+        git config user.email "github+actions@gmail.com"
+        git pull origin master
+        ./scripts/increment_version.sh
+        git add .
+        if [[ -n "$(git status --porcelain)" ]]; then
+          git commit -m "chore (automated): update version"
+          git push origin master
+        fi
+
+
