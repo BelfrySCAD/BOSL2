@@ -5,9 +5,11 @@ on:
       - closed
 
 jobs:
-  if_merged:
+  VersionBump:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -21,14 +23,12 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GH_PAT }}
       run: |
         cd $GITHUB_WORKSPACE
-        git config user.name "GitHub Actions"
-        git config user.email "github+actions@gmail.com"
-        git pull origin master
         ./scripts/increment_version.sh
-        git add .
-        if [[ -n "$(git status --porcelain)" ]]; then
-          git commit -m "chore (automated): update version"
-          git push origin master
-        fi
+
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GH_PAT }}
+        branch: ${{ github.ref }}
 
 
