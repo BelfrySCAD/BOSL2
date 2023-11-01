@@ -18,7 +18,7 @@ jobs:
     - name: Bump Version
       id: commit
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GH_PAT }}
       run: |
         cd $GITHUB_WORKSPACE
         git config user.name "GitHub Actions"
