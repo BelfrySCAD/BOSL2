@@ -10,7 +10,6 @@ jobs:
       with:
         github-token: ${{github.token}}
         diffContains: '^BOSL_VERSION'
-        waivedUsers: ["dependabot[bot]"]
 
   Regressions:
     runs-on: ubuntu-latest
