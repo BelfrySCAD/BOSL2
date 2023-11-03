@@ -2,6 +2,17 @@ name: Checks
 on: [pull_request]
 
 jobs:
+  VersionCheck:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Verify Version Bump
+      run: |
+        git fetch origin master
+        git diff --summary FETCH_HEAD version.scad | grep -q '^BOSL_VERSION'
+
   Regressions:
     runs-on: ubuntu-latest
     steps:

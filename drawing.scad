@@ -863,6 +863,75 @@ module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=fa
 }
 
 
+// Function: catenary_path()
+// Synopsis: Returns a 2D Catenary chain or arch path.
+// SynTags: Path
+// Topics: Paths
+// See Also: circle(), stroke()
+// Usage:
+//   path = catenary_path(width, droop=|angle=, n=);
+// Description:
+//   Returns a 2D Catenary path, which is the path a chain held at both ends will take.
+//   The path will have the endpoints at `[±width/2, 0]`, and the middle of the path will droop
+//   towards Y- if the given droop= or angle= is positive.  It will droop towards Y+ if the
+//   droop= or angle= is negative.  You *must* specify one of droop= or angle=.
+// Arguments:
+//   width = The straight-line distance between the endpoints of the path.
+//   droop = If given, specifies the height difference between the endpoints and the hanging middle of the path.  If given a negative value, returns an arch *above* the Y axis.
+//   n = The number of points to return in the path.  Default: 100
+//   ---
+//   angle = If given, specifies the angle that the path will droop by at the endpoints.  If given a negative value, returns an arch *above* the Y axis.
+// Example(2D): By Droop
+//   stroke(catenary_path(100, droop=30));
+// Example(2D): By Angle
+//   stroke(catenary_path(100, angle=30));
+// Example(2D): Upwards Arch by Angle
+//   stroke(catenary_path(100, angle=30));
+// Example(2D): Upwards Arch by Height Delta
+//   stroke(catenary_path(100, droop=-30));
+// Example(2D): Specifying Vertex Count
+//   stroke(catenary_path(100, angle=-85, n=11), dots="dot");
+// Example: Sweeping a Catenary Path
+//   path = xrot(90, p=path3d(catenary_path(100, droop=20, n=41)));
+//   path_sweep(circle(r=1.5, $fn=24), path);
+function catenary_path(width, droop, n=100, angle) =
+    assert(one_defined([droop, angle],"droop,angle"))
+    let(
+        sgn = is_undef(droop)? sign(angle) : sign(droop),
+        droop = droop==undef? undef : abs(droop),
+        angle = angle==undef? undef : abs(angle)
+    )
+    assert(is_finite(width) && width>0, "Bad width= value.")
+    assert(is_integer(n) && n>0, "Bad n= value.  Must be a positive  integer.")
+    assert(is_undef(droop) || is_finite(droop), "Bad droop= value.")
+    assert(is_undef(angle) || (is_finite(angle) && angle != 0 && abs(angle) < 90), "Bad angle= value.")
+    let(
+        lup = is_undef(droop)
+          ? [
+                for (x=[0:0.01:10])
+                let(
+                    p1 = [x-0.001, cosh(x-0.001)-1],
+                    p2 = [x+0.001, cosh(x+0.001)-1],
+                    delta = p2-p1,
+                    ang = atan2(delta.y, delta.x)
+                )
+                [ang, x]
+            ]
+          : [ for (x=[0.001:0.1:10]) [(cosh(x)-1)/x, x] ],
+        lval = is_undef(droop)
+          ? angle
+          : droop / (width/2),
+        scx = lookup(lval, lup),
+        droop = !is_undef(droop)? droop :
+            (cosh(scx)-1) * width/2 / scx,
+        path = [
+            for (x = lerpn(-scx,scx,n))
+            [x, cosh(x)-1] * width/2 / scx - [0,droop]
+        ],
+        out = sgn>0? path : yflip(p=path)
+    ) out;
+
+
 // Function: helix()
 // Synopsis: Creates a 2d spiral or 3d helical path.
 // SynTags: Path
