@@ -5,19 +5,12 @@ jobs:
   VersionCheck:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-
-    - name: Fetch Origin
-      run: |
-        cd $GITHUB_WORKSPACE
-        git fetch origin master
-
-    - name: Verify Version Change
-      run: |
-        cd $GITHUB_WORKSPACE
-        verstr=$(git diff --summary FETCH_HEAD version.scad | grep '^BOSL_VERSION')
-        [ "$verstr" != "" ]
+    - name: Check Version
+      uses: JJ/github-pr-contains-action@releases/v11
+      with:
+        github-token: ${{github.token}}
+        diffContains: '^BOSL_VERSION'
+        waivedUsers: ["dependabot[bot]"]
 
   Regressions:
     runs-on: ubuntu-latest

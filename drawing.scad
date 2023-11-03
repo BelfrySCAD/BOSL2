@@ -863,13 +863,13 @@ module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=fa
 }
 
 
-// Function: catenary_path()
+// Function: catenary()
 // Synopsis: Returns a 2D Catenary chain or arch path.
 // SynTags: Path
 // Topics: Paths
 // See Also: circle(), stroke()
 // Usage:
-//   path = catenary_path(width, droop=|angle=, n=);
+//   path = catenary(width, droop=|angle=, n=);
 // Description:
 //   Returns a 2D Catenary path, which is the path a chain held at both ends will take.
 //   The path will have the endpoints at `[±width/2, 0]`, and the middle of the path will droop
@@ -882,19 +882,19 @@ module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=fa
 //   ---
 //   angle = If given, specifies the angle that the path will droop by at the endpoints.  If given a negative value, returns an arch *above* the Y axis.
 // Example(2D): By Droop
-//   stroke(catenary_path(100, droop=30));
+//   stroke(catenary(100, droop=30));
 // Example(2D): By Angle
-//   stroke(catenary_path(100, angle=30));
+//   stroke(catenary(100, angle=30));
 // Example(2D): Upwards Arch by Angle
-//   stroke(catenary_path(100, angle=30));
+//   stroke(catenary(100, angle=30));
 // Example(2D): Upwards Arch by Height Delta
-//   stroke(catenary_path(100, droop=-30));
+//   stroke(catenary(100, droop=-30));
 // Example(2D): Specifying Vertex Count
-//   stroke(catenary_path(100, angle=-85, n=11), dots="dot");
+//   stroke(catenary(100, angle=-85, n=11), dots="dot");
 // Example: Sweeping a Catenary Path
-//   path = xrot(90, p=path3d(catenary_path(100, droop=20, n=41)));
+//   path = xrot(90, p=path3d(catenary(100, droop=20, n=41)));
 //   path_sweep(circle(r=1.5, $fn=24), path);
-function catenary_path(width, droop, n=100, angle) =
+function catenary(width, droop, n=100, angle) =
     assert(one_defined([droop, angle],"droop,angle"))
     let(
         sgn = is_undef(droop)? sign(angle) : sign(droop),
