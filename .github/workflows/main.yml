@@ -8,10 +8,16 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Verify Version Bump
+    - name: Fetch Origin
       run: |
+        cd $GITHUB_WORKSPACE
         git fetch origin master
-        git diff --summary FETCH_HEAD version.scad | grep -q '^BOSL_VERSION'
+
+    - name: Verify Version Change
+      run: |
+        cd $GITHUB_WORKSPACE
+        verstr=$(git diff --summary FETCH_HEAD version.scad | grep '^BOSL_VERSION')
+        [ "$verstr" != "" ]
 
   Regressions:
     runs-on: ubuntu-latest
