@@ -415,7 +415,7 @@ module folding_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=unde
 // Example(Med):
 //   size=100;
 //   apply_folding_hinges_and_snaps(
-//       thick=3, foldangle=54.74,
+//       thick=3, foldangle=acos(1/3),
 //       hinges=[
 //           for (a=[0,120,240], b=[-size/2,size/4]) each [
 //               [200, polar_to_xy(b,a), a+90]

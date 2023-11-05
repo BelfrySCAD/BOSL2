@@ -668,6 +668,7 @@ function u_div(a,b) =
 //   - Otherwise, if `center` is not `undef` and `center` evaluates as false, then the value of `uncentered` is returned.
 //   - Otherwise, if `anchor` is not `undef`, then the value of `anchor` is returned.
 //   - Otherwise, the value of `dflt` is returned.
+//   .
 //   This ordering ensures that `center` will override `anchor`.
 // Arguments:
 //   anchor = The anchor name or vector.

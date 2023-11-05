@@ -798,6 +798,7 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, p=_
 //   - If given a centerpoint `cp`, centers the ring around that centerpoint.
 //   - If `subrot` is true, each child will be rotated in place to keep the same size towards the center when making rings.
 //   - The first (unrotated) copy will be placed at the relative starting angle `sa`.
+//   .
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
 //   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
 //
@@ -918,6 +919,7 @@ function rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], su
 //   - If given a centerpoint `cp`, centers the rotation around that centerpoint.
 //   - If `subrot` is true, each child will be rotated in place to keep the same size towards the center when making rings.
 //   - The first (unrotated) copy will be placed at the relative starting angle `sa`.
+//   .
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
 //   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
 //
@@ -998,6 +1000,7 @@ function xrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 //   - If given a centerpoint `cp`, centers the rotation around that centerpoint.
 //   - If `subrot` is true, each child will be rotated in place to keep the same size towards the center when making rings.
 //   - The first (unrotated) copy will be placed at the relative starting angle `sa`.
+//   .
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
 //   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
 //
@@ -1079,6 +1082,7 @@ function yrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 //   - If given a centerpoint `cp`, centers the rotation around that centerpoint.
 //   - If `subrot` is true, each child will be rotated in place to keep the same size towards the center when making rings.
 //   - The first (unrotated) copy will be placed at the relative starting angle `sa`.
+//   .
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
 //   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
 //
@@ -1392,7 +1396,8 @@ function sphere_copies(n=100, r=undef, d=undef, cone_ang=90, scale=[1,1,1], perp
 //   - placed at uniformly spaced points along the path.  If you specify `n` but not `spacing` then `n` copies will be placed
 //   - with one at path[0] if `closed` is true, or spanning the entire path from start to end if `closed` is false.
 //   - If you specify `spacing` but not `n` then copies will spread out starting from one set at path[0] for `closed=true` or at the path center for open paths.
-//   - If you specify `sp` then the copies will start at distance `sp` from the start of the path.  
+//   - If you specify `sp` then the copies will start at distance `sp` from the start of the path.
+//   .
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
 //   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
 //

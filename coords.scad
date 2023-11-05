@@ -306,8 +306,9 @@ function project_plane(plane,p) =
 //   - A list of three points.  The planar coordinate system will have [0,0] at plane[0], and plane[1] will lie on the Y+ axis.
 //   - A list of coplanar points that define a plane (not-collinear)
 //   - A plane definition `[A,B,C,D]` where `Ax+By+CZ=D`.  The closest point on that plane to the origin will map to the origin in the new coordinate system.
-// If you do not supply `p` then you get a transformation matrix which operates in 3D, assuming that the Z coordinate of the points is zero.
-// This matrix is a rotation, the inverse of the one produced by project_plane.
+//   .
+//   If you do not supply `p` then you get a transformation matrix which operates in 3D, assuming that the Z coordinate of the points is zero.
+//   This matrix is a rotation, the inverse of the one produced by project_plane.
 // Arguments:
 //   plane = Plane specification or list of points to define a plane
 //   p = points, path, region, VNF, or bezier patch to transform. 
