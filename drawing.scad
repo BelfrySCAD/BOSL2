@@ -881,6 +881,8 @@ module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=fa
 //   n = The number of points to return in the path.  Default: 100
 //   ---
 //   angle = If given, specifies the angle that the path will droop by at the endpoints.  If given a negative value, returns an arch *above* the Y axis.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  (Module only) Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  (Module only) Default: `0`
 // Example(2D): By Droop
 //   stroke(catenary(100, droop=30));
 // Example(2D): By Angle
@@ -902,34 +904,46 @@ function catenary(width, droop, n=100, angle) =
         angle = angle==undef? undef : abs(angle)
     )
     assert(is_finite(width) && width>0, "Bad width= value.")
-    assert(is_integer(n) && n>0, "Bad n= value.  Must be a positive  integer.")
+    assert(is_integer(n) && n>0, "Bad n= value.  Must be a positive integer.")
     assert(is_undef(droop) || is_finite(droop), "Bad droop= value.")
     assert(is_undef(angle) || (is_finite(angle) && angle != 0 && abs(angle) < 90), "Bad angle= value.")
     let(
-        lup = is_undef(droop)
-          ? [
-                for (x=[0:0.01:10])
-                let(
-                    p1 = [x-0.001, cosh(x-0.001)-1],
-                    p2 = [x+0.001, cosh(x+0.001)-1],
-                    delta = p2-p1,
-                    ang = atan2(delta.y, delta.x)
-                )
-                [ang, x]
-            ]
-          : [ for (x=[0.001:0.1:10]) [(cosh(x)-1)/x, x] ],
-        lval = is_undef(droop)
-          ? angle
-          : droop / (width/2),
-        scx = lookup(lval, lup),
-        droop = !is_undef(droop)? droop :
-            (cosh(scx)-1) * width/2 / scx,
+        catlup_fn = is_undef(droop)
+          ? function(x) let(
+                p1 = [x-0.001, cosh(x-0.001)-1],
+                p2 = [x+0.001, cosh(x+0.001)-1],
+                delta = p2-p1,
+                ang = atan2(delta.y, delta.x)
+            ) ang
+          : function(x) (cosh(x)-1)/x,
+        binsearch_fn = function(targ,x=0,inc=4)
+            inc < 1e-9? lookup(targ,[[catlup_fn(x),x],[catlup_fn(x+inc),x+inc]]) :
+            catlup_fn(x+inc) > targ? binsearch_fn(targ,x,inc/2) :
+            binsearch_fn(targ,x+inc,inc),
+        scx = is_undef(droop)? binsearch_fn(angle) :
+            binsearch_fn(droop / (width/2)),
+        sc = width/2 / scx,
+        droop = !is_undef(droop)? droop : (cosh(scx)-1) * sc,
         path = [
             for (x = lerpn(-scx,scx,n))
-            [x, cosh(x)-1] * width/2 / scx - [0,droop]
+            let(
+                xval = x * sc,
+                yval = approx(abs(x),scx)? 0 :
+                    (cosh(x)-1) * sc - droop
+            )
+            [xval, yval]
         ],
         out = sgn>0? path : yflip(p=path)
     ) out;
+
+
+module catenary(width, droop, n=100, angle, anchor=CTR, spin=0) {
+    path = catenary(width=width, droop=droop, n=n, angle=angle);
+    attachable(anchor,spin, two_d=true, path=path, extent=true) {
+        polygon(path);
+        children();
+    }
+}
 
 
 // Function: helix()
