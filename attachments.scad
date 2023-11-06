@@ -47,6 +47,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //     The direction and spin are used to orient other objects to match when using `attach()`.
 //   - Spin is a simple rotation around the Z axis.
 //   - Orientation is rotating an object so that its top is pointed towards a given vector.
+//   .
 //   An object will first be translated to its anchor position, then spun, then oriented.
 //   For a detailed step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 //   .
@@ -206,6 +207,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //           [X-Y-, X+Y-, X-Y+, X+Y+]
 //       ]
 //       ```
+//   .
 //   You can specify edge descriptors directly by giving a vector, or you can use sums of the
 //   named direction vectors described above.  Below we show all of the edge sets you can
 //   describe with sums of the direction vectors, and then we show some examples of combining
@@ -310,6 +312,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //       ```
 //       [X-Y-Z-, X+Y-Z-, X-Y+Z-, X+Y+Z-, X-Y-Z+, X+Y-Z+, X-Y+Z+, X+Y+Z+]
 //       ```
+//   .
 //   You can specify corner descriptors directly by giving a vector, or you can use sums of the
 //   named direction vectors described above.  Below we show all of the corner sets you can
 //   describe with sums of the direction vectors and then we show some examples of combining

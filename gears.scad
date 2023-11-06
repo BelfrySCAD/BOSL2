@@ -3436,16 +3436,16 @@ function _gear_tooth_profile(
 //   gear_data = planetary_gears(mod=|circ_pitch=|diam_pitch=, n, max_teeth, ring_carrier=|carrier_ring=|sun_carrier=|carrier_sun=|sun_ring=|ring_sun=, [helical=], [gear_spin=]);
 // Description:
 //   Calculates a planetary gear assembly that approximates a desired transmission ratio.  A planetary gear assembly can be regarded as having three
-//   elements: the outer ring gear, the central sun gear, and a carrier that holds several planet gears, which fit between the sun and ring
+//   elements: the outer ring gear, the central sun gear, and a carrier that holds several planet gears, which fit between the sun and ring.
 //   The transmission ratio of a planetary gear assembly depends on which element is fixed and which ones are considered the input and output shafts.
 //   The fixed element can be the ring gear, the sun gear, or the carrier, and then you specify the desired ratio between the other two.
 //   You must also specify a maximum number of teeth on the ring gear.  The function calculates the best approximation to your desired
-//   transmission ratio under that constraint:  allowing more teeth will generally give a more accurate approximation.  Note that the planet gears
+//   transmission ratio under that constraint: a large enough increase in the allowed number of teeth will yield a more accurate approximation.  Note that the planet gears
 //   appear uniformly spaced around the sun gear, but this uniformity is often only approximate.  Exact uniformity occurs when teeth_sun+teeth_ring
 //   is a multiple of the number of planet gears.
 //   .
-//   You specify the dedsired ratio using one of six parameters that identify which ratio you want to specify, and which is the driven element.
-//   Each different ratio is limited to certain bounds.  For the case of the fixed carrier system, the run and ring rotate in opposite directions.
+//   You specify the desired ratio using one of six parameters that identify which ratio you want to specify, and which is the driven element.
+//   Each different ratio is limited to certain bounds.  For the case of the fixed carrier system, the sun and ring rotate in opposite directions.
 //   This is sometimes indicated by a negative transmission ratio.  For these cases you can give a positive or negative value.  
 //   .
 //   The return is a list of entries that describe the elements of the planetary assembly.  The list entries are:
@@ -3453,8 +3453,9 @@ function _gear_tooth_profile(
 //   - ["ring", teeth, profile_shift, spin]
 //   - ["planets", teeth, profile_shift, spins, positions, angles]
 //   - ["ratio", realized_ratio]
+//   .
 //   The sun and ring gear are assumed to be placed at the origin.  The planet gears are placed at the list of positions.  The gears all
-//   have a spin in degrees.  The planets list also includes the angular position of each planet in the `angels` list.
+//   have a spin in degrees.  The planets list also includes the angular position of each planet in the `angles` list.
 //   One of the planets always appears on the X+ axis when `gear_spin` is zero.  The final list entry gives the realized ratio of
 //   the assembly, so you can determine how closely it approaches your desired ratio.  This will always be a positive value.  
 //   .
@@ -3465,7 +3466,7 @@ function _gear_tooth_profile(
 //   The computation of planetary gear assembles is about determining the teeth counts on the sun, ring and planet gears,
 //   and the angular positions of the planet gears.
 //   The tooth size or helical angle are needed only for determining proper profile shifting and for determining the
-//   gear separation for the planet gears.  If you need a particular size assembly, you can do a planetary calculation
+//   gear positions for the profiled shifted gears.  To control the size of the assembly, do a planetary calculation
 //   with a module of 1 and then scale the module to produce the required gear dimensions.  Remember, you should never
 //   use `scale()` on gears; change their size by scaling the module or one of the other tooth size parameters.  
 // Arguments:
@@ -3503,7 +3504,7 @@ function _gear_tooth_profile(
 // Example(3D,Med,NoAxes,Anim,Frames=5,VPT=[0.128673,0.24149,0.651451],VPR=[38.5,0,21],VPD=222.648): Here we request a sun/ring ratio of 3 and it is exactly achieved.  The carrier, shown in blue, is fixed.  This example is shown with helical gears.  It is important to remember to flip the sign of the helical angle for the planet gears.  
 //   mod=1;
 //   helical=25;
-//   gear_data = planetary_gears(mod=mod, n=4, max_teeth=82, sun_ring=3, helical=helical,gear_spin=360/33*$t);
+//   gear_data = planetary_gears(mod=mod, n=4, max_teeth=82, sun_ring=3, helical=helical,gear_spin=360/27*$t);
 //   ring_gear(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], helical=helical, gear_spin=gear_data[1][3],backing=4,thickness=7);
 //   color("blue"){
 //       move_copies(gear_data[2][4]) cyl(h=12,d=4);

@@ -601,6 +601,7 @@ module stroke(
 //   path or region boundary with the given dash pattern.
 //   - When called as a function, returns a list of dash sub-paths.
 //   - When called as a module, draws all those subpaths using `stroke()`.
+//   .
 //   When called as a module the dash pattern is multiplied by the line width.  When called as
 //   a function the dash pattern applies as you specify it.  
 // Arguments:

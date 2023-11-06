@@ -2814,6 +2814,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   Given a texture name, returns a texture.  Textures can come in two varieties:
 //   - Heightfield textures which are 2D arrays of scalars.  These are usually faster to render, but can be less precise and prone to triangulation errors.  The table below gives the recommended style for the best triangulation.  If results are still incorrect, switch to the similar VNF tile by adding the "_vnf" suffix.
 //   - VNF Tile textures, which are VNFs that cover the unit square [0,0] x [1,1].  These tend to be slower to render, but allow greater flexibility and precision for shapes that don't align with a grid.
+//   .
 //   In the descriptions below, imagine the textures positioned on the XY plane, so "horizontal" refers to the "sideways" dimensions of the texture and
 //   "up" and "down" refer to the depth dimension.  If a texture is placed on a cylinder the "depth" will become the radial direction and the "horizontal"
 //   direction will be the vertical and tangential directions on the cylindrical surface.  All horizontal dimensions for VNF textures are relative to the unit square
@@ -3436,6 +3437,7 @@ function texture(tex, n, inset, gap, roughness) =
 ///   - As a VNF texture tile.  A VNF tile exactly defines a surface from `[0,0]` to `[1,1]`, with the Z coordinates
 ///     being the height of the texture point from the surface.  VNF tiles MUST be able to tile in both X and Y
 ///     directions with no gaps, with the front and back edges aligned exactly, and the left and right edges as well.
+///   . 
 ///   One script to convert a grayscale image to a texture heightfield array in a .scad file can be found at:
 ///   https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py
 /// Arguments:
@@ -3733,6 +3735,7 @@ function _find_vnf_tile_edge_path(vnf, val) =
 ///   - As a VNF texture tile.  A VNF tile exactly defines a surface from `[0,0]` to `[1,1]`, with the Z coordinates
 ///     being the height of the texture point from the surface.  VNF tiles MUST be able to tile in both X and Y
 ///     directions with no gaps, with the front and back edges aligned exactly, and the left and right edges as well.
+///   .
 ///   One script to convert a grayscale image to a texture heightfield array in a .scad file can be found at:
 ///   https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py
 /// Arguments:
