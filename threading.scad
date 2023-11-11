@@ -2011,7 +2011,8 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 // Topics: Threading, Screws
 // See Also: generic_threaded_rod()
 // Usage:
-//   thread_helix(d, pitch, [thread_depth], [flank_angle], [turns], [profile=], [left_handed=], [higbee=], [internal=]);
+//     thread_helix(d, pitch, turns=, [thread_depth=], [thread_angle=|flank_angle=], [profile=], [starts=], [internal=], ...) {ATTACHMENTS};
+//     thread_helix(d1=,d2=, pitch=, turns=, [thread_depth=], [thread_angle=|flank_angle=], [profile=], [starts=], [internal=], ...) {ATTACHMENTS};
 // Description:
 //   Creates a right-handed helical thread with optional end tapering.  Unlike
 //   {{generic_threaded_rod()}, this module just generates the thread, and you specify the total
@@ -2036,9 +2037,12 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 //   unlike the threaded_rod modules, thread_helix does not adjust the diameter for faceting, nor does it
 //   subtract any $slop for clearance.  
 //   .
-//   The taper options specify tapering at of the threads at each end, and is given as the linear distance
-//   over which to taper.  If taper is positive the threads are lengthened by the specified distance; if taper
-//   is negative, the taper is included in the thread length specified by `turns`.  Tapering works on both internal and external threads.  
+//   The lead_in options specify a lead-in section where the ends of the threads scale down to avoid a sharp face at the thread ends.
+//   You can specify the length of this scaling directly with the lead_in parameters or as an angle using the lead_in_ang parameters.
+//   If you give a positive value, the extrusion is lengthenend by the specified distance or angle; if you give a negative
+//   value then the scaled end is included in the extrusion length specified by `turns`.  If the value is zero then no scaled ends
+//   are produced.  The shape of the scaled ends can be controlled with the lead_in_shape parameter.  Supported options are "sqrt", "linear"
+//   "smooth" and "cut".  Lead-in works on both internal and external threads.
 // Figure(2D,Med,NoAxes):
 //   pa_delta = tan(15)/4;
 //      rr1 = -1/2;
@@ -2091,24 +2095,23 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
 //   d = Base diameter of threads.  Default: 10
 //   pitch = Distance between threads.  Default: 2
 //   ---
+//   turns = Number of revolutions to rotate thread around.
 //   thread_depth = Depth of threads from top to bottom.
 //   flank_angle = Angle of thread faces to plane perpendicular to screw.  Default: 15 degrees.
-//   turns = Number of revolutions to rotate thread around.
 //   thread_angle = Angle between two thread faces.  
 //   profile = If an asymmetrical thread profile is needed, it can be specified here.
 //   starts = The number of thread starts.  Default: 1
 //   left_handed = If true, thread has a left-handed winding.
-//   internal = if true make internal threads.  The only effect this has is to change how the threads taper if tapering is selected. When true, threads taper towards the outside; when false, they taper towards the inside.  Default: false
+//   internal = if true make internal threads.  The only effect this has is to change how the thread lead_in is constructed. When true, the lead-in section tapers towards the outside; when false, it tapers towards the inside.  Default: false
 //   d1 = Bottom inside base diameter of threads.
 //   d2 = Top inside base diameter of threads.
-//   thread_angle = Angle between 
 //   lead_in = Specify linear length of the lead in section of the threading with blunt start threads
 //   lead_in1 = Specify linear length of the lead in section of the threading at the bottom with blunt start threads
 //   lead_in2 = Specify linear length of the lead in section of the threading at the top with blunt start threads
 //   lead_in_ang = Specify angular length in degrees of the lead in section of the threading with blunt start threads
 //   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
-//   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
+//   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "sqrt"
 //   lead_in_sample = Factor to increase sample rate in the lead-in section.  Default: 10
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
