@@ -1021,15 +1021,13 @@ function offset(
                     || !outsidecorner[i]        // Don't round inside corners
                     || (!closed && (i==0 || i==len(goodsegs)-1))  // Don't round ends of an open path
                 ? (is_def(sharpcorners[i]) ? [sharpcorners[i]] : basepts)
-                : chamfer //&& is_def(sharpcorners[i])
-                              ? _offset_chamfer(
+                : chamfer ? _offset_chamfer(
                                   goodpath[i], [
                                       select(goodsegs,i-1)[1],
                                       sharpcorners[i],
                                       goodsegs[i][0]
                                   ], d
                               )
-                : chamfer ? basepts
                 : // rounded case
                   let(
                       class =_tri_class( [ each select(goodsegs,i-1), goodsegs[i][0]]),
