@@ -1013,7 +1013,8 @@ function offset(
                      // floor is important here to ensure we don't generate extra segments when nearly straight paths expand outward
                   : let(vang = vector_angle(select(goodsegs,i-1)[1]-goodpath[i],
                                             goodsegs[i][0]-goodpath[i]))
-                    assert(vang!=0,"Offset computation failed, probably because validity check mistakenly removed a valid segment.  Increasing quality might fix this.")
+                    assert(!outsidecorner[i] || vang!=0,    // If outsidecorner[i] is true then vang>0 needed to give valid step count
+                           "Offset computation failed, probably because validity check mistakenly removed a valid segment.  Increasing quality might fix this.")
                     1+floor(segs(r)*vang/360)
                 ],
         // newcorners is a list where each entry is a list of the points that correspond to a single point in the sharpcorners 
