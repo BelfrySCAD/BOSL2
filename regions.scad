@@ -1006,7 +1006,7 @@ function offset(
         // Otherwise it's the same as sharpcorners
         // If rounding is on then newcorners[i] will be the point list that replaces goodpath[i] and newcorners later
         // gets flattened.  If rounding is off then we set it to [sharpcorners] so we can later flatten it and get
-        // plain sharpcorners back.
+        // plain sharpcorners back.  If path is open then first and last entries in newcorners are ignored
         newcorners =
             is_def(delta) && !chamfer
               ? [sharpcorners]
@@ -1020,7 +1020,8 @@ function offset(
                   (!chamfer && steps[i] <=1)  // Don't round if steps is smaller than 2
                     || !outsidecorner[i]        // Don't round inside corners
                     || (!closed && (i==0 || i==len(goodsegs)-1))  // Don't round ends of an open path
-                ? (is_def(sharpcorners[i]) ? [sharpcorners[i]] : basepts)
+                ? (is_def(sharpcorners[i] || (!closed && (i==0 || i==len(goodsegs)-1)))
+                     ? [sharpcorners[i]] : basepts)
                 : chamfer ? _offset_chamfer(
                                   goodpath[i], [
                                       select(goodsegs,i-1)[1],
