@@ -636,10 +636,14 @@ function _offset_chamfer(center, points, delta) =
     is_undef(points[1])?
         let( points = select(points,[0,2]),
              center = mean(points),
-             sign = -_tri_class( [points[0],sign(delta)*line_normal(points),points[1]]),
-             startvec = (points[0]-center)/cos(22.5)+center
+             dir = sign(delta)*line_normal(points),
+             halfside = tan(22.5)*abs(delta)
         )
-        [for(ang=lerpn(22.5, 157.6,4)) zrot(ang,startvec,cp=center)]
+        [ points[0]+dir*halfside,
+          center + dir*abs(delta) + unit(points[0]-center)*halfside,
+          center + dir*abs(delta) + unit(points[1]-center)*halfside, 
+          points[1]+dir*halfside
+        ]
     :
     let(
         dist = sign(delta)*norm(center-line_intersection(select(points,[0,2]), [center, points[1]])),
@@ -845,22 +849,31 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   stroke(closed=true, width=3, star, color="red");
 //   stroke(closed=true, width=3,
 //          offset(star, r=-15, closed=true, $fn=20));
-// Example(2D): Open path.  The path moves from left to right and the positive offset shifts to the left of the initial red path.
+// Example(2D): Open path.  The red path moves from left to right as shown by the arrow and the positive offset shifts to the left of the initial red path.
 //   sinpath = 2*[for(theta=[-180:5:180]) [theta/4,45*sin(theta)]];
-//   stroke(sinpath, width=2, color="red");
+//   stroke(sinpath, width=2, color="red", endcap2="arrow2");
 //   stroke(offset(sinpath, r=17.5),width=2);
-// Example(2D,NoAxes): Offsetting a line segment with closed=false on the left, chamfered with closed=true in the center, and rounded on the right.  When the path turns back on itself, chamfering produces a simple flat end and rounding produces a semicircle.  This offset is invalid in the closed case with delta offsetting and chamfer=false.  
+// Example(2D,NoAxes): An open path in red with with its positive offset in yellow and its negative offset in blue. 
+//   seg = [[0,0],[0,50]];
+//   stroke(seg,color="red",endcap2="arrow2"); 
+//   stroke(offset(seg,r=15,closed=false));
+//   stroke(offset(seg,r=-15,closed=false),color="blue");
+// Example(2D,NoAxes): Offsetting the same line segment closed=true.  On the left, we use delta with chamfer=false, in the middle, chamfer=true, and on the right, rounding with r=.  A "closed" path here means that the path backtracks over itself.  When this happens, a flat end occurs in the first case, an end with chamfered corners if chamfering is on, or a semicircular rounding in the rounded case.  
 //   seg = [[0,0],[0,50]];
 //   stroke(seg,color="red"); 
-//   stroke(offset(seg,r=15,closed=false));
-//   right(30){
+//   stroke([offset(seg,delta=15,closed=true)]);
+//   right(45){
 //     stroke(seg,color="red");
 //     stroke([offset(seg,delta=15,chamfer=true,closed=true)]);
 //   }
-//   right(80){
+//   right(90){
 //     stroke(seg,color="red");
 //     stroke([offset(seg,r=15,closed=true)]);
 //   }
+// Example(2D,NoAxes): Cutting a notch out of a square with a path reversal
+//   path = [[-10,-10],[-10,10],[0,10],[0,0],[0,10],[10,10],[10,-10]];
+//   stroke([path],width=.25,color="red");
+//   stroke([offset(path, r=-2,$fn=32,closed=true)],width=.25);
 // Example(2D,NoAxes): A more complex example where the path turns back on itself several times.  
 //   $fn=32;
 //   path = [
@@ -870,18 +883,18 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //           [5,10],[5,5],
 //           [-1,4],[5,5]
 //           ];
-//   op=offset(path, r=1.5,chamfer=true,closed=true);
+//   op=offset(path, r=1.5,closed=true);
+//   stroke([path],width=.1,color="red");
 //   stroke([op],width=.1);
-// Example(2D,NoAxes):  This case produces an incorrect result because the offset edge corresponding to the long left edge (shown in green) is erroneously flagged as invalid.  If you use `delta=` instead of `r=` with this example, it will fail with an error.  
+// Example(2D,NoAxes):  With the default quality value, this case produces the wrong answer.  This happens because the offset edge corresponding to the long left edge (shown in green) is erroneously flagged as invalid.  If you use `r=` instead of `delta=` then this will fail with an error.  
 //   test = [[0,0],[10,0],[10,7],[0,7], [-1,-3]];
-//   polygon(offset(test,r=-1.9, closed=true));
-//   //polygon(offset(test,delta=-1.9, closed=true));   // Fails with erroneous 180 deg path error
+//   polygon(offset(test,delta=-1.9, closed=true)); 
 //   stroke([test],width=.1,color="red");
 //   stroke(select(test,-2,-1), width=.1, color="green");
 // Example(2D,NoAxes):  Using `quality=2` produces the correct result
 //   test = [[0,0],[10,0],[10,7],[0,7], [-1,-3]];
-//   polygon(offset(test,r=-1.9, closed=true, quality=2));
-//   stroke([test],width=.1,color="red");  
+//   polygon(offset(test,r=-1.9, closed=true, quality=2));   
+//   stroke([test],width=.1,color="red");
 // Example(2D,NoAxes): This case fails if `check_valid=true` when delta is large enough because segments are too close to the opposite side of the curve so they all get flagged as invalid and deleted from the output.  
 //   star = star(5, r=22, ir=13);
 //   stroke(star,width=.3,closed=true);                                                           
@@ -960,68 +973,64 @@ function offset(
     )
     assert(len(goodsegs)-(!closed && select(good,-1)?1:0)>0,"Offset of path is degenerate")
     let(
-        // Extend the shifted segments to their intersection points
-        sharpcorners = [for(i=[0:len(goodsegs)-1]) _segment_extension(select(goodsegs,i-1), select(goodsegs,i))],
-        // If some segments are parallel then the extended segments are undefined.  This case is not handled
-        // Note if !closed the last corner doesn't matter, so exclude it
+        // Extend the shifted segments to their intersection points.  For open curves the endpoints
+        // are simply the endpoints of the shifted segments.  If segments are parallel then the intersection
+        // points will be undef
+        sharpcorners = [for(i=[0:len(goodsegs)-1])
+                             !closed && i==0 ? goodsegs[0][0]
+                           : !closed && i==len(goodsegs)-1 ? goodsegs[len(goodsegs)-2][1]
+                           : _segment_extension(select(goodsegs,i-1), select(goodsegs,i))],
 
-        // true if sharpcorner is defined or if the corner has a reversal; false if corner has two parallel
-        // segments going in the same direction
+        // true if sharpcorner has two parallel segments that go in the same direction 
         cornercheck = [for(i=idx(goodsegs)) (!closed && (i==0 || i==len(goodsegs)-1))
                                           || is_def(sharpcorners[i])
                                           || approx(unit(deltas(select(goodsegs,i-1))[0]) * unit(deltas(goodsegs[i])[0]),-1)],
         dummyA = assert(len(sharpcorners)==2 || all(cornercheck),"Two consecutive valid offset segments are parallel but do not meet at their ends, maybe because path contains very short segments that were mistakenly flagged as invalid; unable to compute offset"),
-        reversecheck =
-            !(is_def(delta) && !chamfer)            // Reversals only a problem in delta mode without chamfers
-              || (len(sharpcorners)==2 && !closed)
-              || all_defined(closed? sharpcorners : select(sharpcorners, 1,-2)),
-        dummyB = assert(reversecheck, "Either validity check failed and removed a valid segment or the input 'path' contains a segment that reverses direction (180 deg turn), which is only allowed with r= or chamfer=true"),
+        reversecheck = 
+            !same_length 
+              || !(is_def(delta) && !chamfer)            // Reversals only a problem in delta mode without chamfers
+              || all_defined(sharpcorners),
+        dummyB = assert(reversecheck, "Either validity check failed and removed a valid segment or the input 'path' contains a segment that reverses direction (180 deg turn).  Path reversals are not allowed when same_length is true because they increase path length."),
         // This is a Boolean array that indicates whether a corner is an outside or inside corner
-        // For outside corners, the newcorner is an extension (angle 0), for inside corners, it turns backward
+        // For outside corners, the new corner is an extension (angle 0), for inside corners, it turns backward (angle 180)
         // If either side turns back it is an inside corner---must check both.
         // Outside corners can get rounded (if r is specified and there is space to round them)
-        outsidecorner = len(sharpcorners)==2 ? [closed,closed]
-           :
-            [for(i=[0:len(goodsegs)-1])
-                let(prevseg=select(goodsegs,i-1))
-                (i==0 || i==len(goodsegs)-1) && !closed ? false  // In open case first entry is bogus
-               :is_undef(sharpcorners[i]) ? true
-               :
+        // We flag endpoints of open paths as inside corners so that we don't try to round
+        outsidecorner =
+            len(sharpcorners)==2 ? [closed,closed]
+          : [for(i=idx(goodsegs))
+                !closed && (i==0 || i==len(goodsegs)-1) ? false  // endpoints of open path never get rounded
+              : is_undef(sharpcorners[i]) ? true
+              : let(prevseg=select(goodsegs,i-1))
                 (goodsegs[i][1]-goodsegs[i][0]) * (goodsegs[i][0]-sharpcorners[i]) > 0
-                 && (prevseg[1]-prevseg[0]) * (sharpcorners[i]-prevseg[1]) > 0
+                  && (prevseg[1]-prevseg[0]) * (sharpcorners[i]-prevseg[1]) > 0
             ],
-        steps = is_def(delta) ? [] : [
-            for(i=[0:len(goodsegs)-1])  
-                r==0 ? 0
-                // if path is open but first and last entries match value is not used, but
-                // computation below gives error, so special case handle it
-              : i==len(goodsegs)-1 && !closed && approx(goodpath[i],goodsegs[i][0]) ? 0 
-                // floor is important here to ensure we don't generate extra segments when nearly straight paths expand outward
-              : 1+floor(segs(r)*vector_angle(   
-                                             select(goodsegs,i-1)[1]-goodpath[i],
-                                             goodsegs[i][0]-goodpath[i])
-                        /360)
-        ],
-        // If rounding is true then newcorners replaces sharpcorners with rounded arcs where needed
-        // Otherwise it's the same as sharpcorners
-        // If rounding is on then newcorners[i] will be the point list that replaces goodpath[i] and newcorners later
-        // gets flattened.  If rounding is off then we set it to [sharpcorners] so we can later flatten it and get
-        // plain sharpcorners back.  If path is open then first and last entries in newcorners are ignored
+        steps = is_def(delta) ? undef
+              : [
+                 for(i=[0:len(goodsegs)-1])  
+                    r==0 ? 0
+                  : !closed && (i==0 || i==len(goodsegs)-1) ? 0    // We don't round ends of open paths
+                     // floor is important here to ensure we don't generate extra segments when nearly straight paths expand outward
+                  : let(vang = vector_angle(select(goodsegs,i-1)[1]-goodpath[i],
+                                            goodsegs[i][0]-goodpath[i]))
+                    assert(!outsidecorner[i] || vang!=0,    // If outsidecorner[i] is true then vang>0 needed to give valid step count
+                           "Offset computation failed, probably because validity check mistakenly removed a valid segment.  Increasing quality might fix this.")
+                    1+floor(segs(r)*vang/360)
+                ],
+        // newcorners is a list where each entry is a list of the points that correspond to a single point in the sharpcorners 
+        // list: newcorners[i] is the point list that replaces goodpath[i].  Without rounding or chamfering (or reversals),
+        // this means each entry of newcorners is a singleton list.  But in the other cases, multiple points may appear at
+        // a given position; newcorners later gets flattened to produce the final list, but the structure is needed to
+        // establish point alignment for creating faces, or for duplicating points if same_length is true.  
         newcorners =
-            is_def(delta) && !chamfer
-              ? [sharpcorners]
-              : [for(i=[0:len(goodsegs)-1])
-                  let(
-                       basepts = [
-                                 select(goodsegs,i-1)[1],
-                                 goodsegs[i][0]
-                                ]
-                  )
-                  (!chamfer && steps[i] <=1)  // Don't round if steps is smaller than 2
-                    || !outsidecorner[i]        // Don't round inside corners
-                    || (!closed && (i==0 || i==len(goodsegs)-1))  // Don't round ends of an open path
-                ? (is_def(sharpcorners[i] || (!closed && (i==0 || i==len(goodsegs)-1)))
-                     ? [sharpcorners[i]] : basepts)
+            [for(i=idx(goodsegs))
+                 let(
+                     basepts = [ select(goodsegs,i-1)[1], goodsegs[i][0] ]
+                 )
+                 is_def(sharpcorners[i]) &&
+                   ((is_def(steps) && steps[i] <=1)  // Don't round if steps is smaller than 2
+                     || !outsidecorner[i])           // Don't round inside corners
+                ? [sharpcorners[i]]
                 : chamfer ? _offset_chamfer(
                                   goodpath[i], [
                                       select(goodsegs,i-1)[1],
@@ -1029,6 +1038,12 @@ function offset(
                                       goodsegs[i][0]
                                   ], d
                               )
+                : is_def(delta) ?
+                      (
+                         is_def(sharpcorners[i]) ? [sharpcorners[i]]
+                       : let(normal = d*line_normal(basepts))
+                         basepts + [normal,normal]
+                      )
                 : // rounded case
                   let(
                       class =_tri_class( [ each select(goodsegs,i-1), goodsegs[i][0]]),
@@ -1037,21 +1052,15 @@ function offset(
                   )
                   arc(cp=goodpath[i], cw=cw, ccw=ccw,
                       points=basepts,
-                      n=steps[i])
+                      n=steps[i]+3)
               ],
-        pointcount = (is_def(delta) && !chamfer)?
-            repeat(1,len(sharpcorners)) :
-            [for(i=[0:len(goodsegs)-1]) len(newcorners[i])],
-        start = [goodsegs[0][0]],
-        end = [goodsegs[len(goodsegs)-2][1]],
-        edges =  closed?
-            flatten(newcorners) :
-            concat(start,slice(flatten(newcorners),1,-2),end),
-        faces = !return_faces? [] :
-            _makefaces(
-                flip_faces, firstface_index, good,
-                pointcount, closed
-            ),
+        pointcount = [for(entry=newcorners) len(entry)],
+        edges = flatten(newcorners),
+        faces = !return_faces? []
+              : _makefaces(
+                           flip_faces, firstface_index, good,
+                           pointcount, closed
+                          ),
         final_edges = same_length ? select(edges,
                                            [0,
                                             each list_head(cumsum([for(g=good) g?1:0]))
