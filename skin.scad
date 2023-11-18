@@ -1082,7 +1082,7 @@ module rotate_sweep(
 //   If turns is positive the path will be right-handed;  if turns is negative the path will be left-handed.
 //   Such an extrusion can be used to make screw threads.  
 //   .
-//   The lead_in options specify a lead-in setiton where the ends of the spiral scale down to avoid a sharp cut face at the ends.
+//   The lead_in options specify a lead-in section where the ends of the spiral scale down to avoid a sharp cut face at the ends.
 //   You can specify the length of this scaling directly with the lead_in parameters or as an angle using the lead_in_ang parameters.
 //   If you give a positive value, the extrusion is lengthenend by the specified distance or angle; if you give a negative
 //   value then the scaled end is included in the extrusion length specified by `turns`.  If the value is zero then no scaled ends

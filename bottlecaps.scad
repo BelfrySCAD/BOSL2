@@ -1204,7 +1204,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 
     extra_bot = type==400 && bead ? -min(column(beadpts,1))+max(isect400) : 0;
     bead_shift = type==400 ? H+max(isect400) : entry[5]+W/2;  // entry[5] is L
-    
+
     attachable(anchor,spin,orient,r=bead ? beadmax : T/2, l=H+extra_bot){
         up((H+extra_bot)/2){
             difference(){

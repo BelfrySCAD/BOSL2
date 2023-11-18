@@ -515,7 +515,7 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //   with self-locking systems is that if the worm gear moves a large mass and the drive is suddenly shut off, the
 //   worm wheel is still trying to move due to inertia, which can create large loads that fracture the worm.
 //   In such cases, the worm cannot be stopped abruptly but must rotate a little further (called "over travel")
-//   after switching off the drive
+//   after switching off the drive.
 // Subsection: Bevel Gears
 //   Bevel gearing is another way of dealing with intersecting gear shafts.  For bevel gears, the teeth centers lie on
 //   the surface of an imaginary cone, which is the "pitch cone" of the bevel gear.  Two bevel gears can mesh when their pitch cone
@@ -3484,7 +3484,7 @@ function _gear_tooth_profile(
 //   sun_ring = set sun/ring ratio to this value in a sun driven system, must have absolute value smaller than 1
 //   helical = create gears with specified helical angle.  Default: 0
 //   gear_spin = rotate the driven gear by this number of degrees.  Default:0
-// Example(2D,NoAxes,Anim,Frames=180,VPT=[-0.875705,-0.110537,-66.3877],VPR=[0,0,0],VPD=102,Med): In this example we request a ring/carrier ratio of 1.341 and the system produced has a ratio of 4/3.  The sun is fixed, the input is carried by the ring, and the carrier, shown as the blue triangle, is the output, rotating approximately in accordance with the requested ratio.  
+// Example(2D,NoAxes,Anim,Frames=90,FrameMS=30,VPT=[-0.875705,-0.110537,-66.3877],VPR=[0,0,0],VPD=102,Med): In this example we request a ring/carrier ratio of 1.341 and the system produced has a ratio of 4/3.  The sun is fixed, the input is carried by the ring, and the carrier, shown as the blue triangle, is the output, rotating approximately in accordance with the requested ratio.  
 //   mod=1;
 //   gear_data = planetary_gears(mod=mod, n=3, max_teeth=28, ring_carrier=1.341, gear_spin=4/3*360/3*$t);
 //   ring_gear2d(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], gear_spin=gear_data[1][3],backing=2);
@@ -3501,7 +3501,7 @@ function _gear_tooth_profile(
 //     spur_gear2d(mod=mod, teeth=gear_data[0][1], profile_shift=gear_data[0][2], gear_spin=gear_data[0][3]);  //sun
 //   color("red")move_copies(gear_data[2][4])
 //       spur_gear2d(mod=mod, teeth=gear_data[2][1], profile_shift=gear_data[2][2], gear_spin=gear_data[2][3][$idx]);
-// Example(3D,Med,NoAxes,Anim,Frames=5,VPT=[0.128673,0.24149,0.651451],VPR=[38.5,0,21],VPD=222.648): Here we request a sun/ring ratio of 3 and it is exactly achieved.  The carrier, shown in blue, is fixed.  This example is shown with helical gears.  It is important to remember to flip the sign of the helical angle for the planet gears.  
+// Example(3D,Med,NoAxes,Anim,Frames=7,FrameMS=50,VPT=[0.128673,0.24149,0.651451],VPR=[38.5,0,21],VPD=222.648): Here we request a sun/ring ratio of 3 and it is exactly achieved.  The carrier, shown in blue, is fixed.  This example is shown with helical gears.  It is important to remember to flip the sign of the helical angle for the planet gears.  
 //   mod=1;
 //   helical=25;
 //   gear_data = planetary_gears(mod=mod, n=4, max_teeth=82, sun_ring=3, helical=helical,gear_spin=360/27*$t);
