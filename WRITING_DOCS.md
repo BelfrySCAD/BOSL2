@@ -633,6 +633,7 @@ metadata directives:
 - `Anim`: Make an animation where `$t` varies from `0.0` to almost `1.0`.
 - `Frames=36`: Number of animation frames to make.
 - `FrameMS=250`: Sets the number of milliseconds per frame for spins and animation.
+- `FPS=8`: Sets the number of frames per second for spins and animation.
 - `Small`: Make the image small sized.
 - `Med`: Make the image medium sized.
 - `Big`: Make the image big sized.
