@@ -232,8 +232,6 @@ function _inset_isect(inset,mask_angle,flat_top,excess,r,size) =
 //   mask2d_cove(r=10,inset=3,mask_angle=75);
 // Example(2D): Disabling flat_top=
 //   mask2d_cove(r=10, inset=3, flat_top=false, mask_angle=75);
-// Example(2D): 2D Angled Inset Cove Mask by Joint Length
-//   mask2d_cove(joint=10, inset=3, mask_angle=75);
 // Example(2D): Increasing the Excess
 //   mask2d_cove(r=10,inset=3,mask_angle=75, excess=2);
 // Example: Masking by Edge Attachment
@@ -632,6 +630,7 @@ module mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, flat_top=true, d
         }
     }
 }
+
 
 // Function&Module: mask2d_ogee()
 // Synopsis: Creates a 2D ogee mask shape.
