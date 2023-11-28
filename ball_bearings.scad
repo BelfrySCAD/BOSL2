@@ -41,10 +41,14 @@
 //   ball_bearing(id=12,od=32,width=10,shield=false, $fn=72);
 // Example:
 //   ball_bearing(id=12,od=24,width=6,shield=true, flange=true, fd=26.5, fw=1.5, $fn=72);
-module ball_bearing(trade_size, id, od, width, shield=true, flange=false, fd=0, fw=0, anchor=CTR, spin=0, orient=UP) {
-    info = is_undef(trade_size)? [id, od, width, shield] :
+module ball_bearing(trade_size, id, od, width, shield=true, flange=false, fd, fw, anchor=CTR, spin=0, orient=UP) {
+    info = is_undef(trade_size)? [id, od, width, shield, flange, fd, fw] :
         ball_bearing_info(trade_size);
-    check = assert(all_defined(info), "Bad Input");
+    check = assert(all_defined(select(info, 0,4)), "Bad Input");
+    if(flange){
+        assert(!is_undef(fd), "If flange is set you must specify it's diameter");
+        assert(!is_undef(fw), "If flange is set you must specify it's width");
+    }
     id = info[0];
     od = info[1];
     width = info[2];
@@ -266,7 +270,26 @@ function ball_bearing_info(trade_size) =
             [ "F6900ZZ",  10,  22,   6, true,  true,  24.5,  1.5 ],
             [ "F6901ZZ",  12,  24,   6, true,  true,  26.5,  1.5 ],
             
-            [    "MF85",   5,   8,   2, false, true,   9.2,  0.6 ],
+            [  "F683ZZ",   3,   7,   3, false, true,   8.1,  0.6 ],
+            [  "F684ZZ",   4,   9,   4, false, true,  10.3,  0.6 ],
+            [  "F685ZZ",   5,  11,   5, false, true,  12.5,  1   ],
+            [  "F686ZZ",   6,  13,   5, false, true,    15,  1   ],
+            [  "F687ZZ",   7,  14,   5, false, true,    16,  1   ],
+            [  "F688ZZ",   8,  16,   5, false, true,    18,  1   ],
+            [  "F689ZZ",   9,  17,   5, false, true,    19,  1   ],
+            [ "F6900ZZ",  10,  22,   6, false, true,    25,  1.5 ],
+            [ "F6901ZZ",  12,  24,   6, false, true,  26.5,  1.5 ],
+            [ "F6902ZZ",  15,  28,   7, false, true,  31.5,  1.5 ],
+            [ "F6903ZZ",  17,  30,   7, false, true,  33.5,  1.5 ],
+            [ "F6904ZZ",  20,  37,   9, false, true,  40.5,  1.5 ],
+            [ "F6905ZZ",  25,  42,   9, false, true,  45.5,  1.5 ],
+            [ "F6000ZZ",  10,  26,   8, false, true,  28.5,  1.5 ],
+            [ "F6001ZZ",  12,  28,   8, false, true,  30.5,  1.5 ],
+            [ "F6001ZZ",  15,  32,   9, false, true,  34.5,  1.5 ],
+            [ "F6003ZZ",  17,  35,  10, false, true,  37.5,  1.5 ],
+            [ "F6004ZZ",  20,  42,  12, false, true,  44.5,  1.5 ],
+            [ "F6005ZZ",  25,  47,  12, false, true,  49.5,  1.5 ],
+            [ "F6006ZZ",  30,  55,  13, false, true,  57.5,  1.5 ],
         ],
         found = search([trade_size], data, 1)[0]
     )
