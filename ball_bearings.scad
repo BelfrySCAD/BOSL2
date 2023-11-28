@@ -40,6 +40,10 @@
 // Example:
 //   ball_bearing(id=12,od=32,width=10,shield=false, $fn=72);
 // Example:
+//   ball_bearing("MF105ZZ", $fn=72);
+// Example:
+//   ball_bearing("F688ZZ", $fn=72);
+// Example:
 //   ball_bearing(id=12,od=24,width=6,shield=true, flange=true, fd=26.5, fw=1.5, $fn=72);
 module ball_bearing(trade_size, id, od, width, shield=true, flange=false, fd, fw, anchor=CTR, spin=0, orient=UP) {
     info = is_undef(trade_size)? [id, od, width, shield, flange, fd, fw] :
