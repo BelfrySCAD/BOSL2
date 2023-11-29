@@ -1,0 +1,27 @@
+name: VersionBump
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  VersionCheck:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }}
+
+    - name: Bump Version
+      run: ./scripts/increment_version.sh
+
+    - name: Checkin
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: Version Bump
+        file_pattern: version.scad
+

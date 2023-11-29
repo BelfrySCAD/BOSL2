@@ -2,15 +2,6 @@ name: Checks
 on: [pull_request]
 
 jobs:
-  VersionCheck:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Check Version
-      uses: JJ/github-pr-contains-action@releases/v11
-      with:
-        github-token: ${{github.token}}
-        diffContains: '^BOSL_VERSION'
-
   Regressions:
     runs-on: ubuntu-latest
     steps:
