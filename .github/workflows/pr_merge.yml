@@ -1,12 +1,13 @@
 name: VersionBump
 on:
-  pull_request:
-    types: [closed]
+  push:
+    branches:
+      - main
 
 jobs:
   VersionBumpJob:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+
     permissions:
       contents: write
 
