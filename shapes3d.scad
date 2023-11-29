@@ -574,7 +574,7 @@ function cuboid(
 // Synopsis: Creates a rectangular prismoid shape with optional roundovers and chamfering.
 // SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators
-// See Also: cuboid(), rounded_prism(), trapezoid()
+// See Also: cuboid(), rounded_prism(), trapezoid(), edge_profile()
 // Usage: 
 //   prismoid(size1, size2, [h|l|height|length], [shift], [xang=], [yang=], ...) [ATTACHMENTS];
 // Usage: Chamfered and/or Rounded Prismoids
@@ -659,6 +659,13 @@ function cuboid(
 //       chamfer1=[0,5,0,10], chamfer2=[5,0,10,0],
 //       rounding1=[5,0,10,0], rounding2=[0,5,0,10]
 //   );
+// Example: How to Round a Top or Bottom Edge
+//   diff()
+//   prismoid([50,30], [30,20], shift=[3,6], h=15, rounding=[5,0,5,0]) {
+//       edge_profile([TOP+RIGHT, BOT+FRONT], excess=10, convexity=20) {
+//           mask2d_roundover(h=5,mask_angle=$edge_angle);
+//       }
+//   }
 // Example(Spin,VPD=160,VPT=[0,0,10]): Standard Connectors
 //   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5])
 //       show_anchors();

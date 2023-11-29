@@ -1258,9 +1258,10 @@ function spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fa
             points, col_wrap=true, caps=true, reverse=dir>0,
         //    style=higbee1>0 || higbee2>0 ? "quincunx" : "alt"
             style="convex"
-        )
+        ),
+        vnf2 = vnf_triangulate(vnf)
     )
-    reorient(anchor,spin,orient, vnf=vnf, r1=r1, r2=r2, l=h, p=vnf);
+    reorient(anchor,spin,orient, vnf=vnf2, r1=r1, r2=r2, l=h, p=vnf2);
 
 
 
