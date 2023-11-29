@@ -33,7 +33,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 // Topics: VNF Generators, Lists
 // See Also: vnf_tri_array(), vnf_join(), vnf_from_polygons(), vnf_from_region()
 // Usage:
-//   vnf = vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=]);
+//   vnf = vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=], [triangulate=]);
 // Description:
 //   Creates a VNF structure from a rectangular vertex list, by dividing the vertices into columns and rows,
 //   adding faces to tile the surface.  You can optionally have faces added to wrap the last column
@@ -55,6 +55,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   row_wrap = If true, add faces to connect the last row to the first.
 //   reverse = If true, reverse all face normals.
 //   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "min_edge", "quincunx", "convex" and "concave".
+//   triangulate = If true, triangulates endcaps to resolve possible CGAL issues.  This can be an expensive operation if the endcaps are complex.  Default: false
 // Example(3D):
 //   vnf = vnf_vertex_array(
 //       points=[
@@ -131,13 +132,15 @@ function vnf_vertex_array(
     col_wrap=false,
     row_wrap=false,
     reverse=false,
-    style="default"
+    style="default",
+    triangulate = false
 ) =
     assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested")
     assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
     assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area"]))
     assert(is_matrix(points[0], n=3),"Point array has the wrong shape or points are not 3d")
     assert(is_consistent(points), "Non-rectangular or invalid point array")
+    assert(is_bool(triangulate))
     let(
         pts = flatten(points),
         pcnt = len(pts),
@@ -226,9 +229,9 @@ function vnf_vertex_array(
                    rfaces = reverse? [for (face=culled_faces) reverse(face)] : culled_faces
                )
                rfaces,
-        ]
-    )
-    [verts,allfaces];
+        ],
+        vnf = [verts, allfaces]
+    ) triangulate? vnf_triangulate(vnf) : vnf;
 
 
 // Function: vnf_tri_array()

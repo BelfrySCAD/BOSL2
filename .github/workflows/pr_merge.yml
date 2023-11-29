@@ -1,36 +1,27 @@
 name: VersionBump
 on:
   pull_request:
-    types:
-      - closed
+    types: [closed]
 
 jobs:
-  VersionBump:
-    if: github.event.pull_request.merged == true
+  VersionBumpJob:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
     permissions:
       contents: write
+
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
-
-    - name: Apt Update
-      run: sudo apt update
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }}
 
     - name: Bump Version
-      id: commit
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-      run: |
-        cd $GITHUB_WORKSPACE
-        ./scripts/increment_version.sh
+      run: ./scripts/increment_version.sh
 
-    - name: Push changes
+    - name: Checkin
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        branch: master
-        commit_user_email: github+actions@gmail.com
         commit_message: Version Bump
-
-
+        file_pattern: version.scad
 
