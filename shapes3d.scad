@@ -2966,7 +2966,7 @@ module text3d(text, h, size=10, font="Helvetica", spacing=1.0, direction="ltr", 
               anchor, spin=0, orient=UP) {
     no_children($children);
     h = one_defined([h,height,thickness],"h,height,thickness",dflt=1);
-    assert(is_undef(atype) || in_list(atype,["ycenter","baseline"]), "atype must be \"center\" or \"baseline\"");
+    assert(is_undef(atype) || in_list(atype,["ycenter","baseline"]), "atype must be \"ycenter\" or \"baseline\"");
     assert(is_bool(center));
     atype = default(atype, center?"ycenter":"baseline");
     anchor = default(anchor, center?CENTER:LEFT);
