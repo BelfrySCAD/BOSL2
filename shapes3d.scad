@@ -2946,7 +2946,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   direction = The text direction.  `"ltr"` for left to right.  `"rtl"` for right to left. `"ttb"` for top to bottom. `"btt"` for bottom to top.  Default: `"ltr"`
 //   language = The language the text is in.  Default: `"en"`
 //   script = The script the text is in.  Default: `"latin"`
-//   atype = Change vertical center between "baseline" and "center".  Default: "baseline"
+//   atype = Change vertical center between "baseline" and "ycenter".  Default: "baseline"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
 //   center = Center the text.  Equivalent to `atype="center", anchor=CENTER`.  Default: false
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -2966,7 +2966,7 @@ module text3d(text, h, size=10, font="Helvetica", spacing=1.0, direction="ltr", 
               anchor, spin=0, orient=UP) {
     no_children($children);
     h = one_defined([h,height,thickness],"h,height,thickness",dflt=1);
-    assert(is_undef(atype) || in_list(atype,["ycenter","baseline"]), "atype must be \"center\" or \"baseline\"");
+    assert(is_undef(atype) || in_list(atype,["ycenter","baseline"]), "atype must be \"ycenter\" or \"baseline\"");
     assert(is_bool(center));
     atype = default(atype, center?"ycenter":"baseline");
     anchor = default(anchor, center?CENTER:LEFT);
