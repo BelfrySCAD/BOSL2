@@ -986,7 +986,7 @@ function rotate_sweep(
         style=style
     ) :
     let(
-        steps = segs(max_x),
+        steps = ceil(segs(max_x) * angle / 360) + 1,
         skmat = down(min_y) * skew(sxz=shift.x/h, syz=shift.y/h) * up(min_y),
         transforms = [
             if (angle==360) for (i=[0:1:steps-1]) skmat * rot([90,0,360-i*360/steps]),
@@ -1027,7 +1027,6 @@ module rotate_sweep(
     max_y = bounds[1].y;
     h = max_y - min_y;
     check2 = assert(min_x>=0, "Input region must exist entirely in the X+ half-plane.");
-    steps = segs(max_x);
     if (!is_undef(texture)) {
         _textured_revolution(
             shape,
@@ -1047,6 +1046,7 @@ module rotate_sweep(
             spin=spin, orient=orient
         ) children();
     } else {
+        steps = ceil(segs(max_x) * angle / 360) + 1;
         skmat = down(min_y) * skew(sxz=shift.x/h, syz=shift.y/h) * up(min_y);
         transforms = [
             if (angle==360) for (i=[0:1:steps-1]) skmat * rot([90,0,360-i*360/steps]),
