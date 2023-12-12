@@ -570,7 +570,7 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //   mate at a 90 degree angle because if it did, its cone could not meet the center of the planar bevel gear.
 //   If you request a larger shaft angle, the teeth of the bevel gear will tilt inward, producing an internal bevel gear.
 //   Gears with this design are rarely used.  The mate of an interior gear is always an exterior gear.  
-// Figure(VPT=[-1.07698,0.67915,-2.25898],VPD=263.435,VPR=[69.7,0,49.3],NoAxes): Internal bevel gear (yellow) mated to an external bevel gear (blue) to achieve a 135 degree shaft angle.  
+// Figure(Med,VPT=[-1.07698,0.67915,-2.25898],VPD=263.435,VPR=[69.7,0,49.3],NoAxes): Internal bevel gear (yellow) mated to an external bevel gear (blue) to achieve a 135 degree shaft angle.  
 //   ang=135;
 //   bevel_gear(mod=3,35,15,ang,spiral=0,cone_backing=false);
 //      down(15)cyl(h=40,d=3,$fn=16,anchor=BOT);
@@ -3492,7 +3492,7 @@ function _gear_tooth_profile(
 //     spur_gear2d(mod=mod, teeth=gear_data[0][1], profile_shift=gear_data[0][2], gear_spin=gear_data[0][3]);  //sun
 //   color("red")move_copies(gear_data[2][4])
 //     spur_gear2d(mod=mod, teeth=gear_data[2][1], profile_shift=gear_data[2][2], gear_spin=gear_data[2][3][$idx]);
-// Example(2D,Med,NoAxes,Anim,Frames=45,VPT=[-0.125033,0.508151,-66.3877],VPR=[0,0,0],VPD=192.044): In this example we request a sun/carrier ratio of 3.6 and get exactly that ratio.  The carrier shown as the blue pentagon moves very slowly as the central sun turns.  The ring is fixed.  
+// Example(2D,Med,NoAxes,Anim,FrameMS=60,Frames=90,VPT=[-0.125033,0.508151,-66.3877],VPR=[0,0,0],VPD=192.044): In this example we request a sun/carrier ratio of 3.6 and get exactly that ratio.  The carrier shown as the blue pentagon moves very slowly as the central sun turns.  The ring is fixed.  
 //   mod=1;
 //   gear_data = planetary_gears(mod=mod, n=5, max_teeth=70, sun_carrier=3.6, gear_spin=3.6*360/5*$t);
 //   ring_gear2d(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], gear_spin=gear_data[1][3],backing=2);
@@ -3502,13 +3502,14 @@ function _gear_tooth_profile(
 //   color("red")move_copies(gear_data[2][4])
 //       spur_gear2d(mod=mod, teeth=gear_data[2][1], profile_shift=gear_data[2][2], gear_spin=gear_data[2][3][$idx]);
 // Example(3D,Med,NoAxes,Anim,Frames=7,FrameMS=50,VPT=[0.128673,0.24149,0.651451],VPR=[38.5,0,21],VPD=222.648): Here we request a sun/ring ratio of 3 and it is exactly achieved.  The carrier, shown in blue, is fixed.  This example is shown with helical gears.  It is important to remember to flip the sign of the helical angle for the planet gears.  
+//   $fn=81;
 //   mod=1;
 //   helical=25;
 //   gear_data = planetary_gears(mod=mod, n=4, max_teeth=82, sun_ring=3, helical=helical,gear_spin=360/27*$t);
 //   ring_gear(mod=mod, teeth=gear_data[1][1], profile_shift=gear_data[1][2], helical=helical, gear_spin=gear_data[1][3],backing=4,thickness=7);
 //   color("blue"){
 //       move_copies(gear_data[2][4]) cyl(h=12,d=4);
-//       down(10)linear_extrude(height=3)scale(1.2)polygon(gear_data[2][4]);
+//       down(9)linear_extrude(height=3)scale(1.2)polygon(gear_data[2][4]);
 //   }    
 //   spur_gear(mod=mod, teeth=gear_data[0][1], profile_shift=gear_data[0][2], helical=helical, gear_spin=gear_data[0][3]);  //sun
 //   color("red")move_copies(gear_data[2][4])

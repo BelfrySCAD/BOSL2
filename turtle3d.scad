@@ -368,7 +368,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                       ["move", seg1_len, "grow", seg1_bot_ID/seg2_bot_ID]
 //                    ],
 //                    state=UP, transforms=true);
-//   back_half()      // Remove this to get a usable part
+//   back_half(s=300)    // Remove this to get a usable part
 //     sweep(circle(d=seg1_bot_OD, $fn=128), trans, closed=true);
 // Example(3D): Closed spiral
 //   include<BOSL2/skin.scad>
