@@ -508,8 +508,8 @@ module snap_lock(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hi
     attachable(anchor,spin,orient, size=size) {
         back(snap_x) {
             cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
-                attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn = max(16,segs(snapdiam/2) - segs(snapdiam/2) % 4));
-                attach(TOP) xcopies(snaplen-snapdiam/4/3) xscale(0.333) sphere(d=snapdiam*0.8, $fn = max(12,segs(snapdiam/2) - segs(snapdiam/2) % 4));
+                attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn = max(16,quant(segs(snapdiam/2),4)));
+                attach(TOP) xcopies(snaplen-snapdiam/4/3) xscale(0.333) sphere(d=snapdiam*0.8, $fn = max(12,quant(segs(snapdiam/2),4)));
             }
         }
         children();
@@ -550,8 +550,8 @@ module snap_socket(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, 
             zrot_copies([0,180], r=snaplen+get_slop()) {
                 diff("divot")
                 cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
-                    attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=max(16,segs(snapdiam/2) - segs(snapdiam/2) % 4));
-                    tag("divot") attach(TOP) left((snaplen+snapdiam/4/3)/2) xscale(0.333) sphere(d=snapdiam*0.8, $fn = max(12,segs(snapdiam/2) - segs(snapdiam/2) % 4));
+                    attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=max(16,quant(segs(snapdiam/2),4)));
+                    tag("divot") attach(TOP) left((snaplen+snapdiam/4/3)/2) xscale(0.333) sphere(d=snapdiam*0.8, $fn = max(12,quant(segs(snapdiam/2),4)));
                 }
             }
         }
