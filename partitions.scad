@@ -95,7 +95,7 @@ function half_of(p, v=UP, cp) =
       assert(is_vector(v,2) || (is_vector(v,3) && v.z==0),"Must give 2-vector")
       assert(!all_zero(v), "Vector v must be nonzero")
       let(
-          bounds = pointlist_bounds(move(-cp,p)),
+          bounds = pointlist_bounds(move(-cp,flatten(force_region(p)))),
           L = 2*max(flatten(bounds)),
           n = unit(v),
           u = [-n.y,n.x],
