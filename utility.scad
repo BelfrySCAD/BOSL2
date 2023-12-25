@@ -779,7 +779,7 @@ function scalar_vec3(v, dflt) =
 //   r = Radius of circle to get the number of segments for.
 // Example:
 //   $fn=12; sides=segs(10);  // Returns: 12
-//   $fa=2; $fs=3, sides=segs(10);  // Returns: 21
+//   $fa=2; $fs=3; sides=segs(10);  // Returns: 21
 function segs(r) = 
     $fn>0? ($fn>3? $fn : 3) :
     let( r = is_finite(r)? r : 0 )

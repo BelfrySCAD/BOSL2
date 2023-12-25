@@ -986,7 +986,7 @@ function rotate_sweep(
         style=style
     ) :
     let(
-        steps = ceil(segs(max_x) * angle / 360) + 1,
+        steps = ceil(segs(max_x) * angle / 360) + (angle<360? 1 : 0),
         skmat = down(min_y) * skew(sxz=shift.x/h, syz=shift.y/h) * up(min_y),
         transforms = [
             if (angle==360) for (i=[0:1:steps-1]) skmat * rot([90,0,360-i*360/steps]),
@@ -1046,7 +1046,7 @@ module rotate_sweep(
             spin=spin, orient=orient
         ) children();
     } else {
-        steps = ceil(segs(max_x) * angle / 360) + 1;
+        steps = ceil(segs(max_x) * angle / 360) + (angle<360? 1 : 0);
         skmat = down(min_y) * skew(sxz=shift.x/h, syz=shift.y/h) * up(min_y);
         transforms = [
             if (angle==360) for (i=[0:1:steps-1]) skmat * rot([90,0,360-i*360/steps]),
