@@ -755,7 +755,7 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 
 // Function: offset()
 // Synopsis: Takes a 2D path, polygon or region and returns a path offset by an amount.
-// SynTags: Path, Region
+// SynTags: Path, Region, Ext
 // Topics: Paths, Polygons, Regions
 // Usage:
 //   offsetpath = offset(path, [r=|delta=], [chamfer=], [closed=], [check_valid=], [quality=], [same_length=])

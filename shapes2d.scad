@@ -22,7 +22,7 @@ use <builtins.scad>
 
 // Function&Module: square()
 // Synopsis: Creates a 2D square or rectangle.
-// SynTags: Geom, Path
+// SynTags: Geom, Path, Ext
 // Topics: Shapes (2D), Path Generators (2D)
 // See Also: rect()
 // Usage: As a Module
@@ -32,7 +32,7 @@ use <builtins.scad>
 // Usage: As a Function
 //   path = square(size, [center], ...);
 // Description:
-//   When called as the builtin module, creates a 2D square or rectangle of the given size.
+//   When called as the built-in module, creates a 2D square or rectangle of the given size.
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
 // Arguments:
 //   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
@@ -224,7 +224,7 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
 
 // Function&Module: circle()
 // Synopsis: Creates the approximation of a circle.
-// SynTags: Geom, Path
+// SynTags: Geom, Path, Ext
 // Topics: Shapes (2D), Path Generators (2D)
 // See Also: ellipse(), circle_2tangents(), circle_3points()
 // Usage: As a Module
@@ -236,7 +236,7 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
 //   path = circle(points=);
 //   path = circle(r|d=, corner=);
 // Description:
-//   When called as the builtin module, creates a 2D polygon that approximates a circle of the given size.
+//   When called as the built-in module, creates a 2D polygon that approximates a circle of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
 //   If `corner=` is given three 2D points, centers the circle so that it will be tangent to both segments of the path, on the inside corner.
 //   If `points=` is given three 2D points, centers and sizes the circle so that it passes through all three points.

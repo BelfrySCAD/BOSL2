@@ -1311,8 +1311,8 @@ module tag_intersect(tag,intersect="intersect",keep="keep")
 
 // Module: conv_hull()
 // Synopsis:  Performs a hull operation on the children using tags to determine what happens.
-// Topics: Attachments
-// See Also: tag(), recolor(), show_only(), hide(), diff(), intersect()
+// Topics: Attachments, Hulling
+// See Also: tag(), recolor(), show_only(), hide(), diff(), intersect(), hull()
 // Usage:
 //   conv_hull([keep]) CHILDREN;
 // Description:
