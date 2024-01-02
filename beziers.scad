@@ -1201,7 +1201,7 @@ function bezier_vnf(patches=[], splinesteps=16, style="default") =
 //         ];
 //   vnf_wireframe(bezier_vnf_degenerate_patch(patch, splinesteps),width=0.1);
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
-// Example(3D,NoAxes): A more extreme degeneracy occurs when the top half of a patch is degenerate to a line.  (For odd length patches the middle row must be degenerate to trigger this style.)  In this case the number of points in each row decreases by 1 for every row.  It doesn't matter of splinesteps is odd or even. 
+// Example(3D,NoAxes): A more extreme degeneracy occurs when the top half of a patch is degenerate to a line.  (For odd length patches the middle row must be degenerate to trigger this style.)  In this case the number of points in each row decreases by 1 for every row.  It doesn't matter if splinesteps is odd or even. 
 //   splinesteps=8;
 //   patch = [[[10, 0, 0], [10, -10.4, 0], [10, -20.8, 0], [1.876, -14.30, 0], [-6.24, -7.8, 0]],
 //            [[5, 0, 0], [5, -5.2, 0], [5, -10.4, 0], [0.938, -7.15, 0], [-3.12, -3.9, 0]],
@@ -1391,7 +1391,7 @@ function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, retur
 //        stroke([pts[i][j],pts[i][j]-8*normals[i][j]], width=0.5,
 //               endcap1="dot",endcap2="arrow2",color=color);
 //   }
-// Example(3D,Med,NoAxes,VPR=[56.4,0,71.9],VPD=66.9616,VPT=[10.2954,1.33721,19.4484]): This degenerate patch has normals everywhere, but computational of the normal fails at the point of degeneracy, the top corner.  
+// Example(3D,Med,NoAxes,VPR=[56.4,0,71.9],VPD=66.9616,VPT=[10.2954,1.33721,19.4484]): This degenerate patch has normals everywhere, but computation of the normal fails at the point of degeneracy, the top corner.  
 //    patch=[
 //             repeat([-12.5, 12.5, 15],5),
 //              [[-6.25, 11.25, 15], [-6.25, 8.75, 15], [-6.25, 6.25, 15], [-8.75, 6.25, 15], [-11.25, 6.25, 15]],
