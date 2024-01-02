@@ -2339,7 +2339,7 @@ function ___is_polygon_in_list(poly, polys, i) =
 
 // Function: hull()
 // Synopsis: Convex hull of a list of 2d or 3d points.
-// Syntags: Ext,
+// SynTags: Ext
 // Topics: Geometry, Hulling
 // See Also: hull_points(), hull2d_path(), hull3d_faces()
 // Usage:
