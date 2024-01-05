@@ -19,7 +19,7 @@ use <builtins.scad>
 
 // Function&Module: cube()
 // Synopsis: Creates a cube with anchors for attaching children.
-// SynTags: Geom, VNF
+// SynTags: Geom, VNF, Ext
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: cuboid(), prismoid()
 // Usage: As Module (as in native OpenSCAD)
@@ -1184,7 +1184,7 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 
 // Function&Module: cylinder()
 // Synopsis: Creates an attachable cylinder.
-// SynTags: Geom, VNF
+// SynTags: Geom, VNF, Ext
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: cyl()
 // Usage: As Module (as in native OpenSCAD)
@@ -2155,7 +2155,7 @@ function pie_slice(
 
 // Function&Module: sphere()
 // Synopsis: Creates an attachable spherical object.
-// SynTags: Geom, VNF
+// SynTags: Geom, VNF, Ext
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: spheroid()
 // Usage: As Module (native OpenSCAD)

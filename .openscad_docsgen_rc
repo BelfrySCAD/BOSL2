@@ -68,6 +68,7 @@ DefineHeader(Table;Headers=Anchor Type|What it is): Anchor Types
 DefineHeader(Table;Headers=Name|Definition): Terminology
 DefineHeader(BulletList): Requirements
 DefineSynTags:
+  Ext = Extends the OpenScad keyword of the same name.
   Geom = Can return geometry.
   Mat = Can return a transformation matrix.
   MatList = Can return a list of transformation matrices.

@@ -779,7 +779,7 @@ function tilt(to, cp, reverse=false, p=_NO_ARG) =
 // Function&Module: scale()
 //
 // Synopsis: Scales children arbitrarily.
-// SynTags: Trans, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat, Ext
 // Topics: Affine, Matrices, Transforms, Scaling
 // See Also: xscale(), yscale(), zscale()
 //
@@ -1008,7 +1008,7 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 // Function&Module: mirror()
 //
 // Synopsis: Reflects children across an arbitrary plane.
-// SynTags: Trans, Path, VNF, Mat
+// SynTags: Trans, Path, VNF, Mat, Ext
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: xflip(), yflip(), zflip()
 //
