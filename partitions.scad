@@ -95,10 +95,10 @@ function half_of(p, v=UP, cp) =
       assert(is_vector(v,2) || (is_vector(v,3) && v.z==0),"Must give 2-vector")
       assert(!all_zero(v), "Vector v must be nonzero")
       let(
-          bounds = pointlist_bounds(move(-cp,p)),
-          L = 2*max(flatten(bounds)),
-          n = unit(v),
-          u = [-n.y,n.x],
+          v=unit(v), 
+          bounds = pointlist_bounds(is_region(p)?flatten(p):p),
+          L = 2*max(norm(bounds[0]-cp), norm(bounds[1]-cp)),
+          u = [-v.y,v.x],
           box = [cp+u*L, cp+(v+u)*L, cp+(v-u)*L, cp-u*L]
       )
       intersection(box,p)
