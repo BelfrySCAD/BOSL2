@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 $cubetruss_size = 30;
-$cubetruss_strut_size = 3;
+$cubetruss_strut_size = 4;
 $cubetruss_bracing = true;
 $cubetruss_clip_thickness = 1.6;
 
@@ -471,7 +471,7 @@ module cubetruss_segment(size, strut, bracing, anchor=CENTER, spin=0, orient=UP)
                 // Start with a cube.
                 cube([size, size, h], center=true);
 
-                cube([size-strut*2, size-strut*2, h-strut*2], center=true);
+                cube([size-strut*2, size-strut*2, h-strut*2+1], center=true);
 
                 // Hollow out octogons in X and Y axes.
                 zrot_copies([0,90]) {
