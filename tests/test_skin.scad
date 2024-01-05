@@ -16,4 +16,21 @@ module test_skin() {
 test_skin();
 
 
+module test_sweep() {
+    multi_region = [
+        [[10, 0], [ 0, 0], [ 0, 10], [10, 10]],
+        [[30, 0], [20, 0], [20, 10], [30, 10]]
+    ];
+    transforms = [ up(10), down(10) ];
+
+    vnf1 = sweep(multi_region,transforms,closed=false,caps=false);
+    assert(len(vnf1[0])==8*2 && len(vnf1[1])==8*2);
+
+    vnf2 = sweep(multi_region,transforms,closed=false,caps=false,style="quincunx");
+    assert(len(vnf2[0])==8*3 && len(vnf2[1])==8*4);
+}
+test_sweep();
+
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

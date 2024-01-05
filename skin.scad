@@ -2099,7 +2099,7 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge",
         capsOK = is_bool(caps) || is_bool_list(caps,2),
         fullcaps = is_bool(caps) ? [caps,caps] : caps
     )
-    assert(len(transforms), "transformation must be length 2 or more")
+    assert(len(transforms)>=2, "transformation must be length 2 or more")
     assert(capsOK, "caps must be boolean or a list of two booleans")
     assert(!closed || !caps, "Cannot make closed shape with caps")
     is_region(shape)? let(
@@ -2108,7 +2108,7 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge",
         vnfs = [
             for (rgn=regions) each [
                 for (path=rgn)
-                    sweep(path, transforms, closed=closed, caps=false),
+                    sweep(path, transforms, closed=closed, caps=false, style=style),
                 if (fullcaps[0]) vnf_from_region(rgn, transform=transforms[0], reverse=true),
                 if (fullcaps[1]) vnf_from_region(rgn, transform=last(transforms)),
             ],
