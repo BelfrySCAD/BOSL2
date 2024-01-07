@@ -1511,13 +1511,13 @@ function cyl(
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
     tex_scale=1, tex_samples, length, height, 
-    tex_taper, style="min_edge", tex_style,
+    tex_taper, style, tex_style,
     anchor, spin=0, orient=UP
 ) =
     assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameters has been replaced by 'style'.  You cannot give both.")
     let(
         style = is_def(tex_style)? echo("In cyl the 'tex_style()' parameters is deprecated and has been replaced by 'style'")tex_style
-              : style,
+              : default(style,"min_edge"),
         l = one_defined([l, h, length, height],"l,h,length,height",dflt=1),
         _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
         _r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
@@ -1666,9 +1666,11 @@ module cyl(
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
     tex_scale=1, tex_samples, length, height, 
-    tex_taper, style="min_edge", tex_style,
+    tex_taper, style, tex_style,
     anchor, spin=0, orient=UP
 ) {
+    style = is_def(tex_style)? echo("In cyl the 'tex_style()' parameters is deprecated and has been replaced by 'style'")tex_style
+          : default(style,"min_edge");
     l = one_defined([l, h, length, height],"l,h,length,height",dflt=1);
     _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     _r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
@@ -1695,7 +1697,7 @@ module cyl(
                     texture=texture, tex_size=tex_size,
                     tex_counts=tex_counts, tex_scale=tex_scale,
                     tex_inset=tex_inset, tex_rot=tex_rot,
-                    style=style, tex_style=tex_style, tex_taper=tex_taper,
+                    style=style, tex_taper=tex_taper,
                     tex_samples=tex_samples
                 );
                 vnf_polyhedron(vnf, convexity=texture!=undef? 2 : 10);
