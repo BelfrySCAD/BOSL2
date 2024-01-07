@@ -2824,8 +2824,8 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   tex = The name of the texture to get.
 //   ---
 //   n = The general number of vertices to use to refine the resolution of the texture.
-//   inset = The amount to inset part of a VNF tile texture.  Generally between 0 and 0.5.
-//   gap = The gap between logically distinct parts of a VNF tile.  (ie: gap between bricks, gap between truncated ribs, etc.)
+//   border = The size of a border region on some VNF tile textures.  Generally between 0 and 0.5.
+//   gap = The gap between logically distinct parts of some VNF tiles.  (ie: gap between bricks, gap between truncated ribs, etc.)
 //   roughness = The amount of roughness used on the surface of some heightfield textures.  Generally between 0 and 0.5.
 // Example(3D): **"bricks"** (Heightfield) = A brick-wall pattern.  Giving `n=` sets the number of heightfield samples to `n x n`.  Default: 24.  Giving `roughness=` adds a level of height randomization to add roughness to the texture.  Default: 0.05.  Use `style="convex"`.
 //   tex = texture("bricks");
@@ -2833,31 +2833,31 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"bricks_vnf"** (VNF) = VNF version of "bricks".  Giving `gap=` sets the "mortar" gap between adjacent bricks, default 0.05.  Giving `inset=` specifies that the top face of the brick is smaller than the bottom of the brick by `inset` on each of the four sides.  If `gap` is zero then an `inset` value close to 0.5 will cause bricks to come to a sharp pointed edge, with just a tiny flat top surface.  Note that `gap+inset` must be strictly smaller than 0.5.   Default is `inset=0.05`.  
+// Example(3D): **"bricks_vnf"** (VNF) = VNF version of "bricks".  Giving `gap=` sets the "mortar" gap between adjacent bricks, default 0.05.  Giving `border=` specifies that the top face of the brick is smaller than the bottom of the brick by `border` on each of the four sides.  If `gap` is zero then a `border` value close to 0.5 will cause bricks to come to a sharp pointed edge, with just a tiny flat top surface.  Note that `gap+border` must be strictly smaller than 0.5.   Default is `border=0.05`.  
 //   tex = texture("bricks_vnf");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): "bricks_vnf" texture with large inset. 
-//   tex = texture("bricks_vnf",inset=0.25);
+// Example(3D): "bricks_vnf" texture with large border. 
+//   tex = texture("bricks_vnf",border=0.25);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D,VPR=[84.4,0,4.7],VPT=[2.44496,6.53317,14.6135],VPD = 126): **"checkers"** (VNF) = A pattern of alternating checkerboard squares.  Giving `inset=` specifies that the top face of the checker surface is smaller than the bottom by `inset` on each of the four sides.  As `inset` approaches 0.5 the tops come to sharp corners.  You must set `inset` strictly between 0 and 0.5.  Default: 0.05.
+// Example(3D,VPR=[84.4,0,4.7],VPT=[2.44496,6.53317,14.6135],VPD = 126): **"checkers"** (VNF) = A pattern of alternating checkerboard squares.  Giving `border=` specifies that the top face of the checker surface is smaller than the bottom by `border` on each of the four sides.  As `border` approaches 0.5 the tops come to sharp corners.  You must set `border` strictly between 0 and 0.5.  Default: 0.05.
 //   tex = texture("checkers");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D,VPR=[84.4,0,4.7],VPT=[2.44496,6.53317,14.6135],VPD = 126): "checkers" texture with large inset.  
-//   tex = texture("checkers",inset=0.25);
+// Example(3D,VPR=[84.4,0,4.7],VPT=[2.44496,6.53317,14.6135],VPD = 126): "checkers" texture with large border.  
+//   tex = texture("checkers",border=0.25);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"cones"** (VNF) = Raised conical spikes.  Giving `n=` sets `$fn` for the cone (will be rounded to a multiple of 4).  Default: 16.  Giving `inset=` specifies the horizontal inset of the base of the cone, relative to the tile edges.  The `inset` value must be nonnegative and smaller than 0.5.  Default: 0.
+// Example(3D): **"cones"** (VNF) = Raised conical spikes.  Giving `n=` sets `$fn` for the cone (will be rounded to a multiple of 4).  Default: 16.  Giving `border=` specifies the horizontal border width between the edge of the tile and the base of the cone.  The `border` value must be nonnegative and smaller than 0.5.  Default: 0.
 //   tex = texture("cones");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30, tex_scale=3,
@@ -2899,32 +2899,32 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"dimples"** (VNF) = Round divots.  Giving `n=` sets `$fn` for the curve (will be rounded to a multiple of 4).  Default: 16.  Giving `inset=` specifies the horizontal distance of the flat region around the dimple relative to the edge of the tile.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.  
+// Example(3D): **"dimples"** (VNF) = Round divots.  Giving `n=` sets `$fn` for the curve (will be rounded to a multiple of 4).  Default: 16.  Giving `border=` specifies the horizontal width of the flat border region between the tile edges and the edge of the dimple.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.  
 //   tex = texture("dimples");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30, 
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"dots"** (VNF) = Raised round bumps.  Giving `n=` sets `$fn` for the curve (will be rounded to a multiple of 4).  Default: 16.   Giving `inset=` specifies the horizontal inset of the dots, relative to the edge of the tile.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.
+// Example(3D): **"dots"** (VNF) = Raised round bumps.  Giving `n=` sets `$fn` for the curve (will be rounded to a multiple of 4).  Default: 16.   Giving `border=` specifies the horizontal width of the flat border region between the tile edge and the edge of the dots.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.
 //   tex = texture("dots");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"hex_grid"** (VNF) = A hexagonal grid defined by V-grove borders.  Giving `inset=` specifies the horizontal inset of the left and right edges of the hexagonal tops, relative to their bottoms.  This means the V-groove top width for grooves running parallel to the Y axis will be double the inset value.  If the texture is scaled in the Y direction by sqrt(3) then the groove will be uniform on all six sides of the hexagon.  Inset must be strictly between 0 and 0.5, default: 0.1.
+// Example(3D): **"hex_grid"** (VNF) = A hexagonal grid defined by V-grove borders.  Giving `border=` specifies that the top face of the hexagon is smaller than the bottom by `border` on the left and right sides.  This means the V-groove top width for grooves running parallel to the Y axis will be double the border value.  If the texture is scaled in the Y direction by sqrt(3) then the groove will be uniform on all six sides of the hexagon.  Border must be strictly between 0 and 0.5, default: 0.1.
 //   tex = texture("hex_grid");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): "hex_grid" texture with large inset
-//   tex = texture("hex_grid", inset=0.4);
+// Example(3D): "hex_grid" texture with large border
+//   tex = texture("hex_grid", border=0.4);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "hex_grid" scaled in Y by sqrt(3) so hexagons are regular and grooves are all the same width.  Note height of cube is also scaled so tile fits without being automatically adjusted to fit, ruining our choice of scale.
-//   tex = texture("hex_grid",inset=.07);
+//   tex = texture("hex_grid",border=.07);
 //   linear_sweep(
 //       rect(30), texture=tex, h=quantup(30,10*sqrt(3)),
 //       tex_size=[10,10*sqrt(3)], tex_scale=3
@@ -2971,20 +2971,20 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10], style="min_edge"
 //   );
-// Example(3D): **"tri_grid"** (VNF) = A triangular grid defined by V-groove borders  Giving `inset=` specifies the horizontal inset of the triangular tops, relative to their bottoms, along the horizontal edges (parallel to the X axis) of the triangles.  This means the V-groove top width of the grooves parallel to the X axis will be double the inset value.  (The other grooves are wider.) If the tile is scaled in the Y direction by sqrt(3) then the groove will be uniform on the three sides of the triangle.  The inset must be strictly between 0 and 1/6, default: 0.05.
+// Example(3D): **"tri_grid"** (VNF) = A triangular grid defined by V-groove borders  Giving `border=` specifies that the top face of the triangular surface is smaller than the bottom by `border` along the horizontal edges (parallel to the X axis).  This means the V-groove top width of the grooves parallel to the X axis will be double the border value.  (The other grooves are wider.) If the tile is scaled in the Y direction by sqrt(3) then the groove will be uniform on the three sides of the triangle.  The border must be strictly between 0 and 1/6, default: 0.05.
 //   tex = texture("tri_grid");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): "tri_grid" texture with large inset.  (Max inset for tri_grid is 1/6.)  
-//   tex = texture("tri_grid",inset=.12);
+// Example(3D): "tri_grid" texture with large border.  (Max border for tri_grid is 1/6.)  
+//   tex = texture("tri_grid",border=.12);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
 // Example(3D): "tri_grid" texture scaled in Y by sqrt(3) so triangles are equilateral and grooves are all the same width.  Note we have to ensure the height evenly fits the scaled texture tiles.
-//   tex = texture("tri_grid",inset=.04);
+//   tex = texture("tri_grid",border=.04);
 //   linear_sweep(
 //       rect(30), texture=tex, h=quantup(30,10*sqrt(3)),
 //       tex_size=[10,10*sqrt(3)], tex_scale=3
@@ -2995,14 +2995,14 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=34,
 //       tex_size=[10,17]
 //   );
-// Example(3D): **"trunc_diamonds"** (VNF) = Truncated diamonds, four-sided pyramids with the base corners aligned with the axes and the top cut off.  Or you can interpret it as V-groove lines at 45º angles.  Giving `inset=` specifies the horizontal inset of the square top face compared to the bottom face along all four edges.  This means the V-groove top width will be double the inset value.  The inset must be strictly between 0 and sqrt(2)/4, which is about 0.35.  Default: 0.1.
+// Example(3D): **"trunc_diamonds"** (VNF) = Truncated diamonds, four-sided pyramids with the base corners aligned with the axes and the top cut off.  Or you can interpret it as V-groove lines at 45º angles.  Giving `border=` specifies that the width and height of the top surface of the diamond are smaller by `border` at the left, right, top and bottom.  The border is measured in the **horizontal** direction.  This means the V-groove width will be sqrt(2) times the border value.  The border must be strictly between 0 and sqrt(2)/4, which is about 0.35.  Default: 0.1.
 //   tex = texture("trunc_diamonds");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): "trunc_diamonds" texture with large inset. 
-//   tex = texture("trunc_diamonds",inset=.25);
+// Example(3D): "trunc_diamonds" texture with large border. 
+//   tex = texture("trunc_diamonds",border=.25);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
@@ -3013,14 +3013,14 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10], style="convex"
 //   );
-// Example(3D): **"trunc_pyramids_vnf"** (VNF) = Truncated pyramids, four sided pyramids with the base edges aligned to the axes and the top cut off.  You can also regard this as a grid of V-grooves.  Giving `inset=` specifies the horizontal inset of the flat square tops on all four sides relative to their bottoms.  This means the V-groove top width will be double the inset value.  The inset must be strictly between 0 and 0.5.  Default: 0.1.
+// Example(3D): **"trunc_pyramids_vnf"** (VNF) = Truncated pyramids, four sided pyramids with the base edges aligned to the axes and the top cut off.  You can also regard this as a grid of V-grooves.  Giving `border=` specifies that the top face is smaller than the top by `border` on all four sides.  This means the V-groove top width will be double the border value.  The border must be strictly between 0 and 0.5.  Default: 0.1.
 //   tex = texture("trunc_pyramids_vnf");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): "trunc_pyramids_vnf" texture with large inset
-//   tex = texture("trunc_pyramids_vnf", inset=.4);
+// Example(3D): "trunc_pyramids_vnf" texture with large border
+//   tex = texture("trunc_pyramids_vnf", border=.4);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
@@ -3032,8 +3032,8 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       tex_scale=3, tex_size=[10,10],
 //       style="concave"
 //   );
-// Example(3D): **"trunc_ribs_vnf"** (VNF) = Vertically aligned triangular ribs with the tops cut off.  Giving `gap=` sets the bottom gap between ribs.  Giving `inset=` specifies the horizontal inset of the rib top face, relative to the bottom on both sides.  In order to fit, gap+2*inset must be less than 1.  (This is because the gap is counted once but the inset counts on both sides.)  Defaults: gap=1/4, inset=1/4.
-//   tex = texture("trunc_ribs_vnf", gap=0.25, inset=1/6);
+// Example(3D): **"trunc_ribs_vnf"** (VNF) = Vertically aligned triangular ribs with the tops cut off.  Giving `gap=` sets the bottom gap between ribs.  Giving `border=` specifies that the top rib face is smaller than its base by `border` on both the left and right sides.  The gap measures the flat part between ribs and the border the width of the sloping portion. In order to fit, gap+2*border must be less than 1.  (This is because the gap is counted once but the border counts on both sides.)  Defaults: gap=1/4, border=1/4.
+//   tex = texture("trunc_ribs_vnf", gap=0.25, border=1/6);
 //   linear_sweep(
 //       rect(30), h=30, texture=tex,
 //       tex_scale=3, tex_size=[10,10]
@@ -3045,13 +3045,19 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       tex_size=[10,10], tex_scale=3, style="concave"
 //   );
 
-function texture(tex, n, inset, gap, roughness) =
+function texture(tex, n, border, gap, roughness, inset) =
+    assert(num_defined([border,inset])<2, "In texture() the 'inset' parameter has been replaced by 'border'.  You cannot give both parameters.")
+    let(
+        border = is_def(inset)?echo("In texture() the argument 'inset' has been deprecated and will be removed.  Use 'border' instead")
+                               inset
+                              :border
+    )
     assert(is_undef(n) || all_positive([n]), "n must be a positive value if given")
-    assert(is_undef(inset) || is_finite(inset), "inset must be a number if given")
+    assert(is_undef(border) || is_finite(border), "border must be a number if given")
     assert(is_undef(gap) || is_finite(gap), "gap must be a number if given")
     assert(is_undef(roughness) || all_nonnegative([roughness]), "roughness must be a nonnegative value if given")  
     tex=="ribs"?
-        assert(num_defined([gap, inset, roughness])==0, "ribs texture does not accept gap, inset or roughness")
+        assert(num_defined([gap, border, roughness])==0, "ribs texture does not accept gap, border or roughness")
 
         let(
             n = quantup(default(n,2),2)
@@ -3060,7 +3066,7 @@ function texture(tex, n, inset, gap, roughness) =
             each lerpn(0,1,n/2,endpoint=false),
         ]] :
     tex=="trunc_ribs"?
-        assert(num_defined([gap, inset, roughness])==0, "trunc_ribs texture does not accept gap, inset or roughness")
+        assert(num_defined([gap, border, roughness])==0, "trunc_ribs texture does not accept gap, border or roughness")
         let(
             n = quantup(default(n,4),4)
         ) [[
@@ -3072,25 +3078,25 @@ function texture(tex, n, inset, gap, roughness) =
     tex=="trunc_ribs_vnf"?
         assert(is_undef(n), "trunc_ribs_vnf texture does not accept n")
         let(
-            inset = default(inset,1/4)*2,
+            border = default(border,1/4)*2,
             gap = default(gap,1/4)
         )
-        assert(all_nonnegative([inset,gap]), "trunc_ribs_vnf texture requires gap>=0 and inset>=0")
-        assert(gap+inset > 0, "trunc_ribs_vnf texture requires that gap+inset>0")
-        assert(gap+inset <= 1, "trunc_ribs_vnf texture requires that gap+2*inset<=1")
+        assert(all_nonnegative([border,gap]), "trunc_ribs_vnf texture requires gap>=0 and border>=0")
+        assert(gap+border > 0, "trunc_ribs_vnf texture requires that gap+border>0")
+        assert(gap+border <= 1, "trunc_ribs_vnf texture requires that gap+2*border<=1")
         [
             [
                each move([0.5,0.5], p=path3d(rect([1-gap,1]),0)),
-               each move([0.5,0.5], p=path3d(rect([1-gap-inset,1]),1)),
+               each move([0.5,0.5], p=path3d(rect([1-gap-border,1]),1)),
                each path3d(square(1)),
             ], [
                 [1,2,6], [1,6,5], [0,4,3], [3,4,7],
-                if (gap+inset < 1-EPSILON) each [[4,5,6], [4,6,7]],
+                if (gap+border < 1-EPSILON) each [[4,5,6], [4,6,7]],
                 if (gap > EPSILON) each [[1,9,10], [1,10,2], [0,3,8], [3,11,8]],
             ]
         ] :
     tex=="wave_ribs"?
-        assert(num_defined([gap, inset, roughness])==0, "wave_ribs texture does not accept gap, inset or roughness")  
+        assert(num_defined([gap, border, roughness])==0, "wave_ribs texture does not accept gap, border or roughness")  
         let(
             n = max(6,default(n,8))
         ) [[
@@ -3098,7 +3104,7 @@ function texture(tex, n, inset, gap, roughness) =
             (cos(a)+1)/2
         ]] :
     tex=="diamonds"?
-        assert(num_defined([gap, inset, roughness])==0, "diamonds texture does not accept gap, inset or roughness")  
+        assert(num_defined([gap, border, roughness])==0, "diamonds texture does not accept gap, border or roughness")  
         let(
             n = quantup(default(n,2),2)
         ) [
@@ -3116,7 +3122,7 @@ function texture(tex, n, inset, gap, roughness) =
             ],
         ] :
     tex=="diamonds_vnf"?
-        assert(num_defined([n,gap, inset, roughness])==0, "diamonds_vnf texture does not accept n, gap, inset or roughness")
+        assert(num_defined([n,gap, border, roughness])==0, "diamonds_vnf texture does not accept n, gap, border or roughness")
         [
             [
                 [0,   1, 1], [1/2,   1, 0], [1,   1, 1],
@@ -3128,7 +3134,7 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="pyramids"?
-        assert(num_defined([gap, inset, roughness])==0, "pyramids texture does not accept gap, inset or roughness")
+        assert(num_defined([gap, border, roughness])==0, "pyramids texture does not accept gap, border or roughness")
         let(
             n = quantup(default(n,2),2)
         ) [
@@ -3138,13 +3144,13 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="pyramids_vnf"?
-        assert(num_defined([n,gap, inset, roughness])==0, "pyramids_Vnf texture does not accept n, gap, inset or roughness")  
+        assert(num_defined([n,gap, border, roughness])==0, "pyramids_Vnf texture does not accept n, gap, border or roughness")  
         [
             [ [0,1,0], [1,1,0], [1/2,1/2,1], [0,0,0], [1,0,0] ],
             [ [2,0,1], [2,1,4], [2,4,3], [2,3,0] ]
         ] :
     tex=="trunc_pyramids"?
-        assert(num_defined([gap, inset, roughness])==0, "trunc_pyramids texture does not accept gap, inset or roughness")  
+        assert(num_defined([gap, border, roughness])==0, "trunc_pyramids texture does not accept gap, border or roughness")  
         let(
             n = quantup(default(n,6),3)
         ) [
@@ -3156,13 +3162,13 @@ function texture(tex, n, inset, gap, roughness) =
     tex=="trunc_pyramids_vnf"?
         assert(num_defined([gap, n, roughness])==0, "trunc_pyramids_vnf texture does not accept gap, n or roughness")
         let(
-            inset = default(inset,0.1)
+            border = default(border,0.1)
         )
-        assert(inset>0 && inset<.5, "trunc_pyramids_vnf texture requires inset in (0,0.5)")
+        assert(border>0 && border<.5, "trunc_pyramids_vnf texture requires border in (0,0.5)")
         [
             [
                 each path3d(square(1)),
-                each move([1/2,1/2,1], p=path3d(rect(1-2*inset))),
+                each move([1/2,1/2,1], p=path3d(rect(1-2*border))),
             ], [
                 for (i=[0:3]) each [
                     [i, (i+1)%4, i+4],
@@ -3172,7 +3178,7 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="hills"?
-        assert(num_defined([gap, inset, roughness])==0, "hills texture does not accept gap, inset or roughness")  
+        assert(num_defined([gap, border, roughness])==0, "hills texture does not accept gap, border or roughness")  
         let(
             n = default(n,12)
         ) [
@@ -3182,7 +3188,7 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="bricks"?
-        assert(num_defined([gap,inset])==0, "bricks texture does not accept gap or inset")  
+        assert(num_defined([gap,border])==0, "bricks texture does not accept gap or border")  
         let(
             n = quantup(default(n,24),2),
             rough = default(roughness,0.05)
@@ -3198,21 +3204,21 @@ function texture(tex, n, inset, gap, roughness) =
     tex=="bricks_vnf"?
         assert(num_defined([n,roughness])==0, "bricks_vnf texture does not accept n or roughness")
         let(
-            inset = default(inset,0.05),
+            border = default(border,0.05),
             gap = default(gap,0.05)
         )
-        assert(inset>=0,"bricks_vnf texture requires nonnegative inset")
+        assert(border>=0,"bricks_vnf texture requires nonnegative border")
         assert(gap>0, "bricks_vnf requires gap greater than 0")
-        assert(gap+inset<0.5, "bricks_vnf requires gap+inset<0.5")
+        assert(gap+border<0.5, "bricks_vnf requires gap+border<0.5")
           [
             [
                 each path3d(square(1)),
                 each move([gap/2, gap/2, 0], p=path3d(square([1-gap, 0.5-gap]))),
-                each move([gap/2+inset/2, gap/2+inset/2, 1], p=path3d(square([1-gap-inset, 0.5-gap-inset]))),
+                each move([gap/2+border/2, gap/2+border/2, 1], p=path3d(square([1-gap-border, 0.5-gap-border]))),
                 each move([0, 0.5+gap/2, 0], p=path3d(square([0.5-gap/2, 0.5-gap]))),
-                each move([0, 0.5+gap/2+inset/2, 1], p=path3d(square([0.5-gap/2-inset/2, 0.5-gap-inset]))),
+                each move([0, 0.5+gap/2+border/2, 1], p=path3d(square([0.5-gap/2-border/2, 0.5-gap-border]))),
                 each move([0.5+gap/2, 0.5+gap/2, 0], p=path3d(square([0.5-gap/2, 0.5-gap]))),
-                each move([0.5+gap/2+inset/2, 0.5+gap/2+inset/2, 1], p=path3d(square([0.5-gap/2-inset/2, 0.5-gap-inset]))),
+                each move([0.5+gap/2+border/2, 0.5+gap/2+border/2, 1], p=path3d(square([0.5-gap/2-border/2, 0.5-gap-border]))),
             ], [
                 [ 8, 9,10], [ 8,10,11], [16,17,18], [16,18,19], [24,25,26],
                 [24,26,27], [ 0, 1, 5], [ 0, 5, 4], [ 1,13, 6], [ 1, 6, 5],
@@ -3228,19 +3234,19 @@ function texture(tex, n, inset, gap, roughness) =
     tex=="checkers"?
         assert(num_defined([gap, n, roughness])==0, "checkers texture does not accept gap, n or roughness")
         let(
-            inset = default(inset,0.05)
+            border = default(border,0.05)
         )
-        assert(inset>0 && inset<.5, "checkers texture requires inset in (0,0.5)")
+        assert(border>0 && border<.5, "checkers texture requires border in (0,0.5)")
           [
             [
-                each move([0,0], p=path3d(square(0.5-inset),1)),
-                each move([0,0.5], p=path3d(square(0.5-inset))),
-                each move([0.5,0], p=path3d(square(0.5-inset))),
-                each move([0.5,0.5], p=path3d(square(0.5-inset),1)),
-                [1/2-inset/2,1/2-inset/2,1/2], [0,1,1], [1/2-inset,1,1],
-                [1/2,1,0], [1-inset,1,0], [1,0,1], [1,1/2-inset,1],
-                [1,1/2,0], [1,1-inset,0], [1,1,1], [1/2-inset/2,1-inset/2,1/2],
-                [1-inset/2,1-inset/2,1/2], [1-inset/2,1/2-inset/2,1/2],
+                each move([0,0], p=path3d(square(0.5-border),1)),
+                each move([0,0.5], p=path3d(square(0.5-border))),
+                each move([0.5,0], p=path3d(square(0.5-border))),
+                each move([0.5,0.5], p=path3d(square(0.5-border),1)),
+                [1/2-border/2,1/2-border/2,1/2], [0,1,1], [1/2-border,1,1],
+                [1/2,1,0], [1-border,1,0], [1,0,1], [1,1/2-border,1],
+                [1,1/2,0], [1,1-border,0], [1,1,1], [1/2-border/2,1-border/2,1/2],
+                [1-border/2,1-border/2,1/2], [1-border/2,1/2-border/2,1/2],
             ], [
                 for (i=[0:4:12]) each [[i,i+1,i+2], [i, i+2, i+3]],
                 [10,13,11], [13,12,11], [2,5,4], [4,3,2],
@@ -3257,22 +3263,22 @@ function texture(tex, n, inset, gap, roughness) =
         assert(num_defined([gap,roughness])==0, "cones texture does not accept gap or roughness")  
         let(
             n = quant(default(n,16),4),
-            inset = default(inset,0)
+            border = default(border,0)
         )
-        assert(inset>=0 && inset<0.5)
+        assert(border>=0 && border<0.5)
         [
             [
-                each move([1/2,1/2], p=path3d(circle(d=1-2*inset,$fn=n))),
+                each move([1/2,1/2], p=path3d(circle(d=1-2*border,$fn=n))),
                 [1/2,1/2,1],
                 each path3d(square(1)),
             ], [
                 for (i=[0:1:n-1]) [i, (i+1)%n, n],
                 for (i=[0:1:3], j=[0:1:n/4-1]) [n+1+i, (i*n/4+j+1)%n, i*n/4+j],
-                if (inset > 0) for (i = [0:1:3]) [i+n+1, (i+1)%4+n+1, ((i+1)*n/4)%n],
+                if (border > 0) for (i = [0:1:3]) [i+n+1, (i+1)%4+n+1, ((i+1)*n/4)%n],
             ]
         ] :
     tex=="cubes"?
-        assert(num_defined([n, gap, inset, roughness])==0, "cubes texture does not accept n, gap, inset or roughness")  
+        assert(num_defined([n, gap, border, roughness])==0, "cubes texture does not accept n, gap, border or roughness")  
         [
             [
                 [0,1,1/2], [1,1,1/2], [1/2,5/6,1], [0,4/6,0], [1,4/6,0],
@@ -3287,14 +3293,14 @@ function texture(tex, n, inset, gap, roughness) =
     tex=="trunc_diamonds"?
         assert(num_defined([gap, n, roughness])==0, "trunc_diamonds texture does not accept gap, n or roughness")
         let(
-            inset = default(inset,0.1)/sqrt(2)*2
+            border = default(border,0.1)/sqrt(2)*2
         )
-        assert(inset>0 && inset<0.5)
+        assert(border>0 && border<0.5)
         [
             [
                 each move([1/2,1/2,0], p=path3d(circle(d=1,$fn=4))),
-                each move([1/2,1/2,1], p=path3d(circle(d=1-inset*2,$fn=4))),
-                for (a=[0:90:359]) each move([1/2,1/2], p=zrot(-a, p=[[1/2,inset,1], [inset,1/2,1], [1/2,1/2,1]]))
+                each move([1/2,1/2,1], p=path3d(circle(d=1-border*2,$fn=4))),
+                for (a=[0:90:359]) each move([1/2,1/2], p=zrot(-a, p=[[1/2,border,1], [border,1/2,1], [1/2,1/2,1]]))
             ], [
                 for (i=[0:3]) each let(j=i*3+8) [
                     [i,(i+1)%4,(i+1)%4+4], [i,(i+1)%4+4,i+4],
@@ -3307,12 +3313,12 @@ function texture(tex, n, inset, gap, roughness) =
         assert(num_defined([gap,roughness])==0, str(tex," texture does not accept gap or roughness"))
         let(
             n = quant(default(n,16),4),
-            inset = default(inset,0.05)
+            border = default(border,0.05)
         )
-        assert(inset>=0 && inset < 0.5)
+        assert(border>=0 && border < 0.5)
         let(
             rows=ceil(n/4),
-            r=adj_ang_to_hyp(1/2-inset,45),
+            r=adj_ang_to_hyp(1/2-border,45),
             dots = tex=="dots",
             cp = [1/2, 1/2, r*sin(45)*(dots?-1:1)],
             sc = 1 / (r - abs(cp.z)),
@@ -3333,18 +3339,18 @@ function texture(tex, n, inset, gap, roughness) =
                     [4+i*n+j, 4+i*n+(j+1)%n, 4+(i+1)*n+(j+1)%n],
                 ],
                 for (i=[0:1:n-1]) [4+(rows-1)*n+i, 4+(rows-1)*n+(i+1)%n, 4+rows*n],
-                if (inset>0) for (i=[0:3]) [i, (i+1)%4, 4+(i+1)%4*n/4]
+                if (border>0) for (i=[0:3]) [i, (i+1)%4, 4+(i+1)%4*n/4]
             ]
         ) [verts, faces] :
     tex=="tri_grid"?
         assert(num_defined([gap, n, roughness])==0, str(tex," texture does not accept gap, n or roughness"))  
         let(
-            inset = default(inset,0.05)*sqrt(3)
+            border = default(border,0.05)*sqrt(3)
         )
-        assert(inset>0 && inset<sqrt(3)/6, "tri_grid texture requires inset in (0,1/6)")
+        assert(border>0 && border<sqrt(3)/6, "tri_grid texture requires border in (0,1/6)")
         let(
-            adj = opp_ang_to_adj(inset, 30),
-            y1 = inset / adj_ang_to_opp(1,60),     // i/sqrt(3)
+            adj = opp_ang_to_adj(border, 30),
+            y1 = border / adj_ang_to_opp(1,60),     // i/sqrt(3)
             y2 = 2*y1,            // 2*i/sqrt(3)
             y3 = 0.5 - y1,
             y4 = 0.5 + y1,
@@ -3377,11 +3383,11 @@ function texture(tex, n, inset, gap, roughness) =
     tex=="hex_grid"?
         assert(num_defined([gap, n, roughness])==0, str(tex," texture does not accept gap, n or roughness"))
         let(
-            inset=default(inset,0.1)
+            border=default(border,0.1)
         )
-        assert(inset>0 && inset<0.5)
+        assert(border>0 && border<0.5)
         let(
-            diag=opp_ang_to_hyp(inset,60),
+            diag=opp_ang_to_hyp(border,60),
             side=adj_ang_to_opp(1,30),
             hyp=adj_ang_to_hyp(0.5,30),
             sc = 1/3/hyp,
@@ -3389,15 +3395,15 @@ function texture(tex, n, inset, gap, roughness) =
         ) [
             [
                 each hex,
-                each move([0.5,0.5], p=yscale(sc, p=path3d(ellipse(d=1-2*inset, circum=true, spin=-30,$fn=6),1))),
+                each move([0.5,0.5], p=yscale(sc, p=path3d(ellipse(d=1-2*border, circum=true, spin=-30,$fn=6),1))),
                 hex[0]-[0,diag*sc,-1],
                 for (ang=[270+60,270-60]) hex[1]+yscale(sc, p=cylindrical_to_xyz(diag,ang,1)),
                 hex[2]-[0,diag*sc,-1],
-                [0,0,1], [0.5-inset,0,1], [0.5,0,0], [0.5+inset,0,1], [1,0,1],
+                [0,0,1], [0.5-border,0,1], [0.5,0,0], [0.5+border,0,1], [1,0,1],
                 hex[3]+[0,diag*sc,1],
                 for (ang=[90+60,90-60]) hex[4]+yscale(sc, p=cylindrical_to_xyz(diag,ang,1)),
                 hex[5]+[0,diag*sc,1],
-                [0,1,1], [0.5-inset,1,1], [0.5,1,0], [0.5+inset,1,1], [1,1,1],
+                [0,1,1], [0.5-border,1,1], [0.5,1,0], [0.5+border,1,1], [1,1,1],
             ], [
                 for (i=[0:2:5]) let(b=6) [b+i, b+(i+1)%6, b+(i+2)%6], [6,8,10],
                 for (i=[0:1:5]) each [ [i, (i+1)%6, (i+1)%6+6], [i, (i+1)%6+6, i+6] ],
@@ -3410,7 +3416,7 @@ function texture(tex, n, inset, gap, roughness) =
             ]
         ] :
     tex=="rough"?
-        assert(num_defined([gap,inset])==0, str(tex," texture does not accept gap or inset"))
+        assert(num_defined([gap,border])==0, str(tex," texture does not accept gap or border"))
         let(
             n = default(n,32),
             rough = default(roughness, 0.2)

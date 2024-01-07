@@ -1292,9 +1292,9 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   cyl(l|h|length|height, r|d, rounding1=, rounding2=, ...);
 //
 // Usage: Textured Cylinders
-//   cyl(l|h|length|height, r|d, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
-//   cyl(l|h|length|height, r1=, r2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
-//   cyl(l|h|length|height, d1=, d2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [tex_style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, r|d, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, r1=, r2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, d1=, d2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
 //
 // Usage: Caled as a function to get a VNF
 //   vnf = cyl(...);
@@ -1368,8 +1368,8 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   tex_rot = If true, rotates the texture 90º.
 //   tex_scale = Scaling multiplier for the texture depth.
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
-//   tex_style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
 //   tex_taper = If given as a number, tapers the texture height to zero over the first and last given percentage of the path.  If given as a lookup table with indices between 0 and 100, uses the percentage lookup table to ramp the texture heights.  Default: `undef` (no taper)
+//   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1434,12 +1434,12 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 // Example: Texturing with heightfield pyramids
 //   cyl(h=40, r1=20, r2=15,
 //       texture="pyramids", tex_size=[5,5],
-//       tex_style="convex");
+//       style="convex");
 //
 // Example: Texturing with heightfield truncated pyramids
 //   cyl(h=40, r1=20, r2=15, chamfer=5,
 //       texture="trunc_pyramids",
-//       tex_size=[5,5], tex_style="convex");
+//       tex_size=[5,5], style="convex");
 //
 // Example: Texturing with VNF tile "dots"
 //   cyl(h=40, r1=20, r2=15, rounding=9,
@@ -1449,7 +1449,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 // Example: Texturing with VNF tile "bricks_vnf"
 //   cyl(h=50, r1=25, r2=20, shift=[0,10], rounding1=-10,
 //       texture="bricks_vnf", tex_size=[10,10],
-//       tex_scale=0.5, tex_style="concave");
+//       tex_scale=0.5, style="concave");
 //
 // Example: No Texture Taper
 //   cyl(d1=25, d2=20, h=30, rounding=5,
@@ -1488,7 +1488,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   diff()
 //   cyl(d=20*10/PI, h=10, chamfer=0,
 //       texture=tex, tex_counts=[20,1], tex_scale=-1,
-//       tex_taper=undef, tex_style="concave") {
+//       tex_taper=undef, style="concave") {
 //           attach([TOP,BOT]) {
 //               cyl(d1=20*10/PI, d2=30, h=5, anchor=BOT)
 //                   attach(TOP) {
@@ -1511,10 +1511,13 @@ function cyl(
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
     tex_scale=1, tex_samples, length, height, 
-    tex_taper, tex_style="min_edge", 
+    tex_taper, style="min_edge", tex_style,
     anchor, spin=0, orient=UP
 ) =
+    assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameters has been replaced by 'style'.  You cannot give both.")
     let(
+        style = is_def(tex_style)? echo("In cyl the 'tex_style()' parameters is deprecated and has been replaced by 'style'")tex_style
+              : style,
         l = one_defined([l, h, length, height],"l,h,length,height",dflt=1),
         _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
         _r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
@@ -1620,7 +1623,7 @@ function cyl(
                 texture=texture, tex_counts=tex_counts, tex_size=tex_size,
                 tex_inset=tex_inset, tex_rot=tex_rot,
                 tex_scale=tex_scale, tex_samples=tex_samples,
-                tex_taper=tex_taper, style=tex_style, closed=false
+                tex_taper=tex_taper, style=style, closed=false
             ),
         skmat = down(l/2) *
             skew(sxz=shift.x/l, syz=shift.y/l) *
@@ -1663,7 +1666,7 @@ module cyl(
     texture, tex_size=[5,5], tex_counts,
     tex_inset=false, tex_rot=false,
     tex_scale=1, tex_samples, length, height, 
-    tex_taper, tex_style="min_edge",
+    tex_taper, style="min_edge", tex_style,
     anchor, spin=0, orient=UP
 ) {
     l = one_defined([l, h, length, height],"l,h,length,height",dflt=1);
@@ -1692,7 +1695,7 @@ module cyl(
                     texture=texture, tex_size=tex_size,
                     tex_counts=tex_counts, tex_scale=tex_scale,
                     tex_inset=tex_inset, tex_rot=tex_rot,
-                    tex_style=tex_style, tex_taper=tex_taper,
+                    style=style, tex_style=tex_style, tex_taper=tex_taper,
                     tex_samples=tex_samples
                 );
                 vnf_polyhedron(vnf, convexity=texture!=undef? 2 : 10);
