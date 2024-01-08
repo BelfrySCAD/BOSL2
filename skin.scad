@@ -517,10 +517,10 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 // Usage: As Module
 //   linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [caps=], [convexity=]) [ATTACHMENTS];
 // Usage: With Texturing
-//   linear_sweep(region, [height], [center=], texture=, [tex_size=]|[tex_counts=], [tex_scale=], [style=], [tex_samples=], ...) [ATTACHMENTS];
+//   linear_sweep(region, [height], [center=], texture=, [tex_size=]|[tex_reps=], [tex_scale=], [style=], [tex_samples=], ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [caps=]);
-//   vnf = linear_sweep(region, [height], [center=], texture=, [tex_size=]|[tex_counts=], [tex_scale=], [style=], [tex_samples=], ...);
+//   vnf = linear_sweep(region, [height], [center=], texture=, [tex_size=]|[tex_reps=], [tex_scale=], [style=], [tex_samples=], ...);
 // Description:
 //   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or polygon.
 //   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
@@ -545,7 +545,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   maxseg = If given, then any long segments of the region will be subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
+//   tex_reps = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
 //   tex_inset = If numeric, lowers the texture into the surface by that amount, before the tex_scale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
 //   tex_rot = If true, rotates the texture 90º.
 //   tex_scale = Scaling multiplier for the texture depth.
@@ -707,7 +707,7 @@ module linear_sweep(
     region, height, center,
     twist=0, scale=1, shift=[0,0],
     slices, maxseg, style="default", convexity, caps=true, 
-    texture, tex_size=[5,5], tex_counts,
+    texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=false,
     tex_scale=1, tex_samples,
     cp, atype="hull", h,l,length,
@@ -724,6 +724,7 @@ module linear_sweep(
         twist=twist, scale=scale, shift=shift,
         texture=texture,
         tex_size=tex_size,
+        tex_reps=tex_reps,
         tex_counts=tex_counts,
         tex_inset=tex_inset,
         tex_rot=tex_rot,
@@ -759,12 +760,17 @@ function linear_sweep(
     twist=0, scale=1, shift=[0,0],
     slices, maxseg, style="default", caps=true, 
     cp, atype="hull", h,
-    texture, tex_size=[5,5], tex_counts,
+    texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=false,
     tex_scale=1, tex_samples, h, l, length, 
     anchor, spin=0, orient=UP
 ) =
-    let( region = force_region(region) )
+    assert(num_defined([tex_reps,tex_counts])<2, "In linear_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
+    let(
+        region = force_region(region),
+        tex_reps = is_def(tex_counts)? echo("In cyl() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
+                 : tex_reps
+    )
     assert(is_region(region), "Input is not a region or polygon.")
     assert(is_num(scale) || is_vector(scale))
     assert(is_vector(shift, 2), str(shift))
@@ -775,7 +781,7 @@ function linear_sweep(
     !is_undef(texture)? _textured_linear_sweep(
         region, h=h, caps=caps, 
         texture=texture, tex_size=tex_size,
-        counts=tex_counts, inset=tex_inset,
+        counts=tex_reps, inset=tex_inset,
         rot=tex_rot, tex_scale=tex_scale,
         twist=twist, scale=scale, shift=shift,
         style=style, samples=tex_samples,
@@ -851,7 +857,7 @@ function linear_sweep(
 // Usage: As Module
 //   rotate_sweep(shape, [angle], ...) [ATTACHMENTS];
 // Usage: With Texturing
-//   rotate_sweep(shape, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_samples=], [tex_rot=], [tex_inset=], ...) [ATTACHMENTS];
+//   rotate_sweep(shape, texture=, [tex_size=]|[tex_reps=], [tex_scale=], [tex_samples=], [tex_rot=], [tex_inset=], ...) [ATTACHMENTS];
 // Description:
 //   Takes a polygon or [region](regions.scad) and sweeps it in a rotation around the Z axis, with optional texturing.
 //   When called as a function, returns a [VNF](vnf.scad).
@@ -862,7 +868,7 @@ function linear_sweep(
 //   ---
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
+//   tex_reps = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
 //   tex_inset = If numeric, lowers the texture into the surface by that amount, before the tex_scale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
 //   tex_rot = If true, rotates the texture 90º.
 //   tex_scale = Scaling multiplier for the texture depth.
@@ -951,7 +957,7 @@ function linear_sweep(
 
 function rotate_sweep(
     shape, angle=360,
-    texture, tex_size=[5,5], tex_counts,
+    texture, tex_size=[5,5], tex_counts, tex_reps, 
     tex_inset=false, tex_rot=false,
     tex_scale=1, tex_samples,
     tex_taper, shift=[0,0], closed=true,
@@ -959,7 +965,11 @@ function rotate_sweep(
     atype="hull", anchor="origin",
     spin=0, orient=UP
 ) =
-    let( region = force_region(shape) )
+    assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
+    let( region = force_region(shape),
+         tex_reps = is_def(tex_counts)? echo("In rotate_sweep() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
+                  : tex_reps
+    )
     assert(is_region(region), "Input is not a region or polygon.")
     let(
         bounds = pointlist_bounds(flatten(region)),
@@ -974,7 +984,7 @@ function rotate_sweep(
         shape,
         texture=texture,
         tex_size=tex_size,
-        counts=tex_counts,
+        counts=tex_reps,
         tex_scale=tex_scale,
         inset=tex_inset,
         rot=tex_rot,
@@ -1005,7 +1015,7 @@ function rotate_sweep(
 
 module rotate_sweep(
     shape, angle=360,
-    texture, tex_size=[5,5], tex_counts,
+    texture, tex_size=[5,5], tex_counts, tex_reps,
     tex_inset=false, tex_rot=false,
     tex_scale=1, tex_samples,
     tex_taper, shift=[0,0],
@@ -1018,6 +1028,10 @@ module rotate_sweep(
     spin=0,
     orient=UP
 ) {
+    dummy =
+       assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.");
+    tex_reps = is_def(tex_counts)? echo("In rotate_sweep() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
+             : tex_reps;
     region = force_region(shape);
     check = assert(is_region(region), "Input is not a region or polygon.");
     bounds = pointlist_bounds(flatten(region));
@@ -1032,7 +1046,7 @@ module rotate_sweep(
             shape,
             texture=texture,
             tex_size=tex_size,
-            counts=tex_counts,
+            counts=tex_reps,
             tex_scale=tex_scale,
             inset=tex_inset,
             rot=tex_rot,

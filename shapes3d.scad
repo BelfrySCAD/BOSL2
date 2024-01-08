@@ -1292,9 +1292,9 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   cyl(l|h|length|height, r|d, rounding1=, rounding2=, ...);
 //
 // Usage: Textured Cylinders
-//   cyl(l|h|length|height, r|d, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
-//   cyl(l|h|length|height, r1=, r2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
-//   cyl(l|h|length|height, d1=, d2=, texture=, [tex_size=]|[tex_counts=], [tex_scale=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, r|d, texture=, [tex_size=]|[tex_reps=], [tex_scale=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, r1=, r2=, texture=, [tex_size=]|[tex_reps=], [tex_scale=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, d1=, d2=, texture=, [tex_size=]|[tex_reps=], [tex_scale=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
 //
 // Usage: Caled as a function to get a VNF
 //   vnf = cyl(...);
@@ -1363,7 +1363,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   teardrop = If given as a number, rounding around the bottom edge of the cylinder won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
+//   tex_reps = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
 //   tex_inset = If numeric, lowers the texture into the surface by that amount, before the tex_scale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
 //   tex_rot = If true, rotates the texture 90º.
 //   tex_scale = Scaling multiplier for the texture depth.
@@ -1487,7 +1487,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   ];
 //   diff()
 //   cyl(d=20*10/PI, h=10, chamfer=0,
-//       texture=tex, tex_counts=[20,1], tex_scale=-1,
+//       texture=tex, tex_reps=[20,1], tex_scale=-1,
 //       tex_taper=undef, style="concave") {
 //           attach([TOP,BOT]) {
 //               cyl(d1=20*10/PI, d2=30, h=5, anchor=BOT)
@@ -1508,16 +1508,19 @@ function cyl(
     circum=false, realign=false, shift=[0,0],
     teardrop=false,
     from_end, from_end1, from_end2,
-    texture, tex_size=[5,5], tex_counts,
+    texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=false,
     tex_scale=1, tex_samples, length, height, 
     tex_taper, style, tex_style,
     anchor, spin=0, orient=UP
 ) =
     assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameters has been replaced by 'style'.  You cannot give both.")
+    assert(num_defined([tex_reps,tex_counts])<2, "In cyl() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")    
     let(
-        style = is_def(tex_style)? echo("In cyl the 'tex_style()' parameters is deprecated and has been replaced by 'style'")tex_style
+        style = is_def(tex_style)? echo("In cyl() the 'tex_style' parameter is deprecated and has been replaced by 'style'")tex_style
               : default(style,"min_edge"),
+        tex_reps = is_def(tex_counts)? echo("In cyl() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
+                 : tex_reps,
         l = one_defined([l, h, length, height],"l,h,length,height",dflt=1),
         _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
         _r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
@@ -1620,7 +1623,7 @@ function cyl(
                     if (texture==undef) [0,l/2],
                 ]
             ) rotate_sweep(path,
-                texture=texture, tex_counts=tex_counts, tex_size=tex_size,
+                texture=texture, tex_reps=tex_reps, tex_size=tex_size,
                 tex_inset=tex_inset, tex_rot=tex_rot,
                 tex_scale=tex_scale, tex_samples=tex_samples,
                 tex_taper=tex_taper, style=style, closed=false
@@ -1663,14 +1666,19 @@ module cyl(
     circum=false, realign=false, shift=[0,0],
     teardrop=false,
     from_end, from_end1, from_end2,
-    texture, tex_size=[5,5], tex_counts,
+    texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=false,
     tex_scale=1, tex_samples, length, height, 
     tex_taper, style, tex_style,
     anchor, spin=0, orient=UP
 ) {
+    dummy=
+      assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameters has been replaced by 'style'.  You cannot give both.")
+      assert(num_defined([tex_reps,tex_counts])<2, "In cyl() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.");
     style = is_def(tex_style)? echo("In cyl the 'tex_style()' parameters is deprecated and has been replaced by 'style'")tex_style
           : default(style,"min_edge");
+    tex_reps = is_def(tex_counts)? echo("In cyl() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
+             : tex_reps;
     l = one_defined([l, h, length, height],"l,h,length,height",dflt=1);
     _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     _r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
@@ -1695,7 +1703,7 @@ module cyl(
                     from_end=from_end, from_end1=from_end1, from_end2=from_end2,
                     teardrop=teardrop,
                     texture=texture, tex_size=tex_size,
-                    tex_counts=tex_counts, tex_scale=tex_scale,
+                    tex_reps=tex_reps, tex_scale=tex_scale,
                     tex_inset=tex_inset, tex_rot=tex_rot,
                     style=style, tex_taper=tex_taper,
                     tex_samples=tex_samples
