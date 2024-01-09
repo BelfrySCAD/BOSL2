@@ -517,10 +517,10 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 // Usage: As Module
 //   linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [caps=], [convexity=]) [ATTACHMENTS];
 // Usage: With Texturing
-//   linear_sweep(region, [height], [center=], texture=, [tex_size=]|[tex_reps=], [tex_scale=], [style=], [tex_samples=], ...) [ATTACHMENTS];
+//   linear_sweep(region, [height], [center=], texture=, [tex_size=]|[tex_reps=], [tex_depth=], [style=], [tex_samples=], ...) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = linear_sweep(region, [height], [center=], [slices=], [twist=], [scale=], [style=], [caps=]);
-//   vnf = linear_sweep(region, [height], [center=], texture=, [tex_size=]|[tex_reps=], [tex_scale=], [style=], [tex_samples=], ...);
+//   vnf = linear_sweep(region, [height], [center=], texture=, [tex_size=]|[tex_reps=], [tex_depth=], [style=], [tex_samples=], ...);
 // Description:
 //   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or polygon.
 //   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
@@ -545,10 +545,10 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   maxseg = If given, then any long segments of the region will be subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_reps = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
-//   tex_inset = If numeric, lowers the texture into the surface by that amount, before the tex_scale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
-//   tex_rot = If true, rotates the texture 90º.
-//   tex_scale = Scaling multiplier for the texture depth.
+//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions on the extrusion.
+//   tex_inset = If numeric, lowers the texture into the surface by that amount, before the tex_depth multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
+//   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  A value of true is equivalent to 90 deg, and false to 0.  Default: 0
+//   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
 //   caps = If false do not create end caps.  Can be a boolean vector.  Default: true
@@ -616,7 +616,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   path = glued_circles(r=15, spread=40, tangent=45);
 //   linear_sweep(
 //       path, texture="bricks_vnf", tex_size=[10,10],
-//       tex_scale=0.25, h=40);
+//       tex_depth=0.25, h=40);
 // Example: User defined heightfield texture.
 //   path = ellipse(r=[20,10]);
 //   texture = [for (i=[0:9])
@@ -644,14 +644,14 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   linear_sweep(path, texture=tex, tex_size=[5,5], h=40);
 // Example: Textured with twist and scale.
 //   linear_sweep(regular_ngon(n=3, d=50),
-//       texture="rough", h=100, tex_scale=2,
+//       texture="rough", h=100, tex_depth=2,
 //       tex_size=[20,20], style="min_edge",
 //       convexity=10, scale=0.2, twist=120);
 // Example: As Function
 //   path = glued_circles(r=15, spread=40, tangent=45);
 //   vnf = linear_sweep(
 //       path, h=40, texture="trunc_pyramids", tex_size=[5,5],
-//       tex_scale=1, style="convex");
+//       tex_depth=1, style="convex");
 //   vnf_polyhedron(vnf, convexity=10);
 // Example: VNF tile that has no top/bottom edges and produces a disconnected result
 //   shape = skin([rect(2/5),
@@ -662,7 +662,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //                caps=false);
 //   tile = move([0,1/2,2/3],yrot(90,shape));
 //   linear_sweep(circle(20), texture=tile,
-//                tex_size=[10,10],tex_scale=5,
+//                tex_size=[10,10],tex_depth=5,
 //                h=40,convexity=4);
 // Example: The same tile from above, turned 90 degrees, creates problems at the ends, because the end cap is not a connected polygon.  When the ends are disconnected you may find that some parts of the end cap are missing and spurious polygons included.  
 //  shape = skin([rect(2/5),
@@ -673,7 +673,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //               caps=false);
 //  tile = move([1/2,1,2/3],xrot(90,shape));
 //  linear_sweep(circle(20), texture=tile,
-//               tex_size=[30,20],tex_scale=15,
+//               tex_size=[30,20],tex_depth=15,
 //               h=40,convexity=4);
 // Example: This example shows some endcap polygons missing and a spurious triangle
 //   shape = skin([rect(2/5),
@@ -685,7 +685,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   tile = xscale(.5,move([1/2,1,2/3],xrot(90,shape)));
 //   doubletile = vnf_join([tile, right(.5,tile)]);
 //   linear_sweep(circle(20), texture=doubletile,
-//                tex_size=[45,45],tex_scale=15, h=40);
+//                tex_size=[45,45],tex_depth=15, h=40);
 // Example: You can fix ends for disconnected cases using {{top_half()}} and {{bottom_half()}}
 //   shape = skin([rect(2/5),
 //                 rect(2/3),
@@ -698,7 +698,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //     top_half(
 //       bottom_half(
 //         linear_sweep(circle(20), texture=tile,
-//                     tex_size=[30,20],tex_scale=15,
+//                     tex_size=[30,20],tex_depth=15,
 //                     h=40.2,caps=false),
 //       z=20),
 //     z=-20)); 
@@ -709,7 +709,7 @@ module linear_sweep(
     slices, maxseg, style="default", convexity, caps=true, 
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=false,
-    tex_scale=1, tex_samples,
+    tex_depth, tex_scale, tex_samples,
     cp, atype="hull", h,l,length,
     anchor, spin=0, orient=UP
 ) {
@@ -728,7 +728,7 @@ module linear_sweep(
         tex_counts=tex_counts,
         tex_inset=tex_inset,
         tex_rot=tex_rot,
-        tex_scale=tex_scale,
+        tex_scale=tex_depth,
         tex_samples=tex_samples,
         slices=slices,
         maxseg=maxseg,
@@ -762,14 +762,17 @@ function linear_sweep(
     cp, atype="hull", h,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=false,
-    tex_scale=1, tex_samples, h, l, length, 
+    tex_scale, tex_depth, tex_samples, h, l, length, 
     anchor, spin=0, orient=UP
 ) =
-    assert(num_defined([tex_reps,tex_counts])<2, "In linear_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
+    assert(num_defined([tex_reps,tex_counts])<2, "In linear_sweep() the 'tex_counts' parameter has been replaced by 'tex_reps'.  You cannot give both.")
+    assert(num_defined([tex_scale,tex_depth])<2, "In linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
     let(
         region = force_region(region),
-        tex_reps = is_def(tex_counts)? echo("In cyl() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
-                 : tex_reps
+        tex_reps = is_def(tex_counts)? echo("In linear_sweep() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
+                 : tex_reps,
+        tex_depth = is_def(tex_scale)? echo("In linear_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
+                  : default(tex_depth,1)
     )
     assert(is_region(region), "Input is not a region or polygon.")
     assert(is_num(scale) || is_vector(scale))
@@ -782,7 +785,7 @@ function linear_sweep(
         region, h=h, caps=caps, 
         texture=texture, tex_size=tex_size,
         counts=tex_reps, inset=tex_inset,
-        rot=tex_rot, tex_scale=tex_scale,
+        rot=tex_rot, tex_scale=tex_depth,
         twist=twist, scale=scale, shift=shift,
         style=style, samples=tex_samples,
         anchor=anchor, spin=spin, orient=orient
@@ -857,7 +860,7 @@ function linear_sweep(
 // Usage: As Module
 //   rotate_sweep(shape, [angle], ...) [ATTACHMENTS];
 // Usage: With Texturing
-//   rotate_sweep(shape, texture=, [tex_size=]|[tex_reps=], [tex_scale=], [tex_samples=], [tex_rot=], [tex_inset=], ...) [ATTACHMENTS];
+//   rotate_sweep(shape, texture=, [tex_size=]|[tex_reps=], [tex_depth=], [tex_samples=], [tex_rot=], [tex_inset=], ...) [ATTACHMENTS];
 // Description:
 //   Takes a polygon or [region](regions.scad) and sweeps it in a rotation around the Z axis, with optional texturing.
 //   When called as a function, returns a [VNF](vnf.scad).
@@ -868,10 +871,10 @@ function linear_sweep(
 //   ---
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_reps = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
-//   tex_inset = If numeric, lowers the texture into the surface by that amount, before the tex_scale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
-//   tex_rot = If true, rotates the texture 90º.
-//   tex_scale = Scaling multiplier for the texture depth.
+//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the direction perpendicular to extrusion and in the direction parallel to extrusion.  
+//   tex_inset = If numeric, lowers the texture into the surface by that amount, before the tex_depth multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
+//   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  A value of true is equivalent to 90 deg, and false to 0.  Default: 0
+//   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   style = {{vnf_vertex_array()}} style.  Default: "min_edge"
 //   closed = If false, and shape is given as a path, then the revolved path will be sealed to the axis of rotation with untextured caps.  Default: `true`
@@ -899,7 +902,7 @@ function linear_sweep(
 //   rotate_sweep(rgn);
 // Example:
 //   path = right(50, p=circle(d=40));
-//   rotate_sweep(path, texture="bricks_vnf", tex_size=[10,10], tex_scale=0.5, style="concave");
+//   rotate_sweep(path, texture="bricks_vnf", tex_size=[10,10], tex_depth=0.5, style="concave");
 // Example:
 //   tex = [
 //       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -919,7 +922,7 @@ function linear_sweep(
 //   rotate_sweep(
 //       path, closed=false,
 //       texture=tex, tex_size=[20,20],
-//       tex_scale=1, style="concave");
+//       tex_depth=1, style="concave");
 // Example:
 //   include <BOSL2/beziers.scad>
 //   bezpath = [
@@ -932,7 +935,7 @@ function linear_sweep(
 //   rotate_sweep(
 //       path, closed=false,
 //       texture="diamonds", tex_size=[10,10],
-//       tex_scale=1, style="concave");
+//       tex_depth=1, style="concave");
 // Example:
 //   path = [
 //       [20, 30], [20, 20],
@@ -942,7 +945,7 @@ function linear_sweep(
 //   vnf = rotate_sweep(
 //       path, closed=false,
 //       texture="trunc_pyramids",
-//       tex_size=[5,5], tex_scale=1,
+//       tex_size=[5,5], tex_depth=1,
 //       style="convex");
 //   vnf_polyhedron(vnf, convexity=10);
 // Example:
@@ -952,23 +955,26 @@ function linear_sweep(
 //   ];
 //   rotate_sweep(
 //       rgn, texture="diamonds",
-//       tex_size=[10,10], tex_scale=1,
+//       tex_size=[10,10], tex_depth=1,
 //       angle=240, style="concave");
 
 function rotate_sweep(
     shape, angle=360,
     texture, tex_size=[5,5], tex_counts, tex_reps, 
     tex_inset=false, tex_rot=false,
-    tex_scale=1, tex_samples,
+    tex_scale, tex_depth, tex_samples,
     tex_taper, shift=[0,0], closed=true,
     style="min_edge", cp="centroid",
     atype="hull", anchor="origin",
     spin=0, orient=UP
 ) =
     assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
+    assert(num_defined([tex_scale,tex_depth])<2, "In linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
     let( region = force_region(shape),
          tex_reps = is_def(tex_counts)? echo("In rotate_sweep() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
-                  : tex_reps
+                  : tex_reps,
+        tex_depth = is_def(tex_scale)? echo("In rotate_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
+                  : default(tex_depth,1)
     )
     assert(is_region(region), "Input is not a region or polygon.")
     let(
@@ -985,7 +991,7 @@ function rotate_sweep(
         texture=texture,
         tex_size=tex_size,
         counts=tex_reps,
-        tex_scale=tex_scale,
+        tex_scale=tex_depth,
         inset=tex_inset,
         rot=tex_rot,
         samples=tex_samples,
@@ -1017,7 +1023,7 @@ module rotate_sweep(
     shape, angle=360,
     texture, tex_size=[5,5], tex_counts, tex_reps,
     tex_inset=false, tex_rot=false,
-    tex_scale=1, tex_samples,
+    tex_scale, tex_depth, tex_samples,
     tex_taper, shift=[0,0],
     style="min_edge",
     closed=true,
@@ -1029,9 +1035,12 @@ module rotate_sweep(
     orient=UP
 ) {
     dummy =
-       assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.");
+       assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
+       assert(num_defined([tex_scale,tex_depth])<2, "In rotate_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.");
     tex_reps = is_def(tex_counts)? echo("In rotate_sweep() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
              : tex_reps;
+    tex_depth = is_def(tex_scale)? echo("In rotate_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
+              : default(tex_depth,1);
     region = force_region(shape);
     check = assert(is_region(region), "Input is not a region or polygon.");
     bounds = pointlist_bounds(flatten(region));
@@ -1047,7 +1056,7 @@ module rotate_sweep(
             texture=texture,
             tex_size=tex_size,
             counts=tex_reps,
-            tex_scale=tex_scale,
+            tex_scale=tex_depth,
             inset=tex_inset,
             rot=tex_rot,
             samples=tex_samples,
@@ -2727,7 +2736,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   height values which specify the height of the texture on a grid.
 //   Values in the height field should range from 0 to 1.  A zero height
 //   in the height field corresponds to the height of the surface and 1
-//   the heighest point in the texture.
+//   the highest point in the texture above the surface being textured.
 // Figure(2D,Big,NoScales): Here is a 2d texture described by a "grid" that just contains a single row.  Such a texture can be used to create ribbing. The texture is `[[0, 1, 1, 0]]`, and the fixture shows three repetitions of the basic texture unit.
 //   ftex1 = [0,1,1,0,0];
 //   stroke( transpose([count(5),ftex1]), dots=true, dots_width=3,width=.05);
@@ -2738,8 +2747,43 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Continues:
 //   Line segments connect the dots within the texture and also the dots between adjacent texture tiles.
 //   The size of the texture (specified with `tex_size`) includes the segment that connects the tile to the next one.
-//   Note that the grid is always uniformly spaced.  If you want to keep the texture the same size but make the slope
-//   steeper you need to add more points.  
+//   Note that the grid is always uniformly spaced.
+//   By default textures are created with unit depth, meaning that the top surface
+//   of the texture is 1 unit above the surface being textured, assuming that the texture
+//   is correctly designed to span the range from 0 to 1.  The `tex_depth` parameter can adjust
+//   this dimension of a texture without changing anything else, and setting `tex_depth` negative
+//   will invert a texture.
+// Figure(2D,Big,NoScales): 
+//   ftex1 = [0,1,1,0,0];
+//   left(0)color(.6*[1,1,1])rect([12,1],anchor=BACK+LEFT);
+//   stroke( transpose([count(5),ftex1]), dots=true, dots_width=3,width=.05);
+//   polygon( transpose([count(5),ftex1]));
+//   right(4){stroke( transpose([count(5),ftex1]), dots=true, width=.05,dots_width=3);
+//        polygon( transpose([count(5),ftex1]));
+//        }
+//   right(8){stroke( transpose([count(5),ftex1]), dots=true, dots_width=3,width=.05);
+//             polygon( transpose([count(5),ftex1]));
+//        }
+//   stroke([[12.25,0],[12.25,1]],width=.05,endcaps="arrow2",color="black");
+//   move([12.35,.5])color("black")text("Depth=1", size=0.3,anchor=LEFT);
+//   fwd(4){
+//   left(0)color(.6*[1,1,1])rect([12,1],anchor=BACK+LEFT);
+//   stroke( transpose([count(5),2*ftex1]), dots=true, dots_width=3,width=.05);
+//   polygon( transpose([count(5),2*ftex1]));
+//   right(4){stroke( transpose([count(5),2*ftex1]), dots=true, width=.05,dots_width=3);
+//        polygon( transpose([count(5),2*ftex1]));
+//        }
+//   right(8){stroke( transpose([count(5),2*ftex1]), dots=true, dots_width=3,width=.05);
+//             polygon( transpose([count(5),2*ftex1]));
+//        }
+//   stroke([[12.25,0],[12.25,2]],width=.05,endcaps="arrow2",color="black");
+//   move([12.35,1])color("black")text("Depth=2", size=0.3,anchor=LEFT);
+//  }
+// Continues:
+//   If you want to keep the texture the same size but make the slope
+//   steeper you need to add more points to make the uniform grid fine enough
+//   to represent the slope you want.  This means that creating sharp edges
+//   can require a large number of points, resulting in longer run times.  
 // Figure(2D,Big,NoScales):  
 //   ftex2 = xscale(4/11,transpose([count(12),[0,1,1,1,1,1,1,1,1,1,0,0]]));
 //   stroke( ftex2, dots=true, dots_width=3,width=.05);
@@ -2749,7 +2793,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   move([6,-.4])color("black")text("Texture Size", size=0.3,anchor=BACK);
 // Continues:
 //   A more serious limitation of height field textures is that some shapes, such as hexagons or circles, cannot be accurately represented because
-//   their points don't fall on a grid.  Trying to create such shapes is difficult and will require many points to approximate the
+//   their points don't fall on any grid.  Trying to create such shapes is difficult and will require many points to approximate the
 //   true point positions for the desired shape.  This will make the texture slow to compute.  
 //   Another serious limitation is more subtle.  In the 2D examples above, it is obvious how to connect the
 //   dots together.  But in 3D example we need to triangulate the points on a grid, and this triangulation is not unique.
@@ -2874,7 +2918,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Example(3D): **"cones"** (VNF) = Raised conical spikes.  Giving `n=` sets `$fn` for the cone (will be rounded to a multiple of 4).  Default: 16.  Giving `border=` specifies the horizontal border width between the edge of the tile and the base of the cone.  The `border` value must be nonnegative and smaller than 0.5.  Default: 0.
 //   tex = texture("cones");
 //   linear_sweep(
-//       rect(30), texture=tex, h=30, tex_scale=3,
+//       rect(30), texture=tex, h=30, tex_depth=3,
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"cubes"** (VNF) = Corner-cubes texture.  This texture needs to be scaled in vertically by sqrt(3) to have its correct aspect
@@ -2886,7 +2930,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Example(3D): "cubes" texture at the correct scale.  
 //   tex = texture("cubes");
 //   linear_sweep(
-//       rect(30), texture=tex, h=20*sqrt(3), tex_scale=3,
+//       rect(30), texture=tex, h=20*sqrt(3), tex_depth=3,
 //       tex_size=[10,10*sqrt(3)]
 //   );
 // Example(3D): **"diamonds"** (Heightfield) = Four-sided pyramid with the corners of the base aligned with the axes.  Compare to "pyramids".  Useful for knurling.  Giving `n=` sets the number of heightfield samples to `n x n`. Default: 2.  Use `style="concave"` for pointed bumps, or `style="default"` or `style="alt"` for a diagonal ribs.  
@@ -2941,7 +2985,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   tex = texture("hex_grid",border=.07);
 //   linear_sweep(
 //       rect(30), texture=tex, h=quantup(30,10*sqrt(3)),
-//       tex_size=[10,10*sqrt(3)], tex_scale=3
+//       tex_size=[10,10*sqrt(3)], tex_depth=3
 //   );
 // Example(3D): "hex_grid" texture, with approximate scaling because 17 is close to sqrt(3) times 10.
 //   tex = texture("hex_grid");
@@ -2976,7 +3020,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Example(3D): **"ribs"** (Heightfield) = Vertically aligned triangular ribs.  Giving `n=` sets the number of heightfield samples to `n` by 1.  Default: 2.  The choice of style does not matter.
 //   tex = texture("ribs");
 //   linear_sweep(
-//       rect(30), texture=tex, h=30, tex_scale=3,
+//       rect(30), texture=tex, h=30, tex_depth=3,
 //       tex_size=[10,10], style="concave"
 //   );
 // Example(3D): **"rough"** (Heightfield) = A pseudo-randomized rough texture.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Default: 32.  The `roughness=` parameter specifies the height of the random texture.  Default: 0.2.
@@ -3001,7 +3045,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   tex = texture("tri_grid",border=.04);
 //   linear_sweep(
 //       rect(30), texture=tex, h=quantup(30,10*sqrt(3)),
-//       tex_size=[10,10*sqrt(3)], tex_scale=3
+//       tex_size=[10,10*sqrt(3)], tex_depth=3
 //   );
 // Example(3D): "tri_grid" texture.  Here scale makes Y approximately sqrt(3) larger than X so triangles are close to equilateral.
 //   tex = texture("tri_grid");
@@ -3043,20 +3087,20 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   tex = texture("trunc_ribs");
 //   linear_sweep(
 //       rect(30), h=30, texture=tex,
-//       tex_scale=3, tex_size=[10,10],
+//       tex_depth=3, tex_size=[10,10],
 //       style="concave"
 //   );
 // Example(3D): **"trunc_ribs_vnf"** (VNF) = Vertically aligned triangular ribs with the tops cut off.  Giving `gap=` sets the bottom gap between ribs.  Giving `border=` specifies that the top rib face is smaller than its base by `border` on both the left and right sides.  The gap measures the flat part between ribs and the border the width of the sloping portion. In order to fit, gap+2*border must be less than 1.  (This is because the gap is counted once but the border counts on both sides.)  Defaults: gap=1/4, border=1/4.
 //   tex = texture("trunc_ribs_vnf", gap=0.25, border=1/6);
 //   linear_sweep(
 //       rect(30), h=30, texture=tex,
-//       tex_scale=3, tex_size=[10,10]
+//       tex_depth=3, tex_size=[10,10]
 //   );
 // Example(3D): **"wave_ribs"** (Heightfield) = Vertically aligned wavy ribs.  Giving `n=` sets the number of heightfield samples to `n` by `1`.  Default: 8.  The style does not matter.  
 //   tex = texture("wave_ribs");
 //   linear_sweep(
 //       rect(30), h=30, texture=tex, 
-//       tex_size=[10,10], tex_scale=3, style="concave"
+//       tex_size=[10,10], tex_depth=3, style="concave"
 //   );
 
 function texture(tex, n, border, gap, roughness, inset) =
@@ -3612,7 +3656,8 @@ function _textured_linear_sweep(
                                                 for (vert = group) let(
                                                     u = floor((j + vert.x) * samples),
                                                     uu = ((j + vert.x) * samples) - u,
-                                                    texh = (vert.z - inset) * tex_scale,
+                                                    texh = tex_scale<0 ? -(1-vert.z - inset) * tex_scale
+                                                                       : (vert.z - inset) * tex_scale,
                                                     base = lerp(bases[u], select(bases,u+1), uu),
                                                     norm = unit(lerp(norms[u], select(norms,u+1), uu)),
                                                     xy = base + norm * texh
@@ -3652,7 +3697,8 @@ function _textured_linear_sweep(
                                             part = (j + (tj/texcnt.x)) * samples,
                                             u = floor(part),
                                             uu = part - u,
-                                            texh = (texture[ti][tj] - inset) * tex_scale,
+                                            texh = tex_scale<0 ? -(1-texture[ti][tj] - inset) * tex_scale
+                                                               : (texture[ti][tj] - inset) * tex_scale,
                                             base = lerp(bases[u], select(bases,u+1), uu),
                                             norm = unit(lerp(norms[u], select(norms,u+1), uu)),
                                             xy = base + norm * texh
@@ -3694,7 +3740,8 @@ function _textured_linear_sweep(
                                 part = (j + vert.x) * samples,
                                 u = floor(part),
                                 uu = part - u,
-                                texh = (vert.y - inset) * tex_scale,
+                                texh = tex_scale<0 ? -(1-vert.y - inset) * tex_scale
+                                                   : (vert.y - inset) * tex_scale,
                                 base = lerp(bases[u], select(bases,u+1), uu),
                                 norm = unit(lerp(norms[u], select(norms,u+1), uu)),
                                 xy = base + norm * texh
@@ -3900,7 +3947,8 @@ function _textured_revolution(
                                                 base = lerp(select(bases,u), select(bases,u+1), uu),
                                                 norm = unit(lerp(select(norms,u), select(norms,u+1), uu)),
                                                 tex_scale = tex_scale * lookup(part/samples/counts_y, taper_lup),
-                                                texh = (vert.z - inset) * tex_scale * (base.x / maxx),
+                                                texh = tex_scale<0 ? -(1-vert.z - inset) * tex_scale * (base.x / maxx)
+                                                                   : (vert.z - inset) * tex_scale * (base.x / maxx),
                                                 xyz = base - norm * texh
                                             ) zrot(vert.x*angle/counts_x, p=xyz)
                                         ]
@@ -3926,7 +3974,8 @@ function _textured_revolution(
                                             base = lerp(bases[u], select(bases,u+1), uu),
                                             norm = unit(lerp(norms[u], select(norms,u+1), uu)),
                                             tex_scale = tex_scale * lookup(part/samples/counts_y, taper_lup),
-                                            texh = (texture[ti][tj] - inset) * tex_scale * (base.x / maxx),
+                                            texh = tex_scale<0 ? -(1-texture[ti][tj] - inset) * tex_scale * (base.x / maxx)
+                                                               : (texture[ti][tj] - inset) * tex_scale * (base.x / maxx),
                                             xyz = base - norm * texh
                                         ) xyz
                                     ])
@@ -3963,7 +4012,8 @@ function _textured_revolution(
                                             base = lerp(select(bases,u), select(bases,u+1), uu),
                                             norm = unit(lerp(select(norms,u), select(norms,u+1), uu)),
                                             tex_scale = tex_scale * lookup(part/samples/counts_y, taper_lup),
-                                            texh = (vert.z - inset) * tex_scale * (base.x / maxx),
+                                            texh = tex_scale<0 ? -(1-vert.z - inset) * tex_scale * (base.x / maxx)
+                                                               : (vert.z - inset) * tex_scale * (base.x / maxx),
                                             xyz = base - norm * texh
                                         ) xyz
                                     ]
@@ -3979,7 +4029,8 @@ function _textured_revolution(
                                             base = lerp(bases[u], select(bases,u+1), uu),
                                             norm = unit(lerp(norms[u], select(norms,u+1), uu)),
                                             tex_scale = tex_scale * lookup(part/samples/counts_y, taper_lup),
-                                            texh = (texture[ti][0] - inset) * tex_scale * (base.x / maxx),
+                                            texh = tex_scale<0 ? -(1-texture[ti][0] - inset) * tex_scale * (base.x / maxx)
+                                                               : (texture[ti][0] - inset) * tex_scale * (base.x / maxx),
                                             xyz = base - norm * texh
                                         ) xyz
                                     ],
@@ -4012,7 +4063,8 @@ function _textured_revolution(
                                     for (vert = bpath) let(
                                         uang = vert.x / counts_x,
                                         tex_scale = tex_scale * lookup([0,1][j+1], taper_lup),
-                                        texh = (vert.y - inset) * tex_scale * (base.x / maxx),
+                                        texh = tex_scale<0 ? -(1-vert.y - inset) * tex_scale * (base.x / maxx)
+                                                           : (vert.y - inset) * tex_scale * (base.x / maxx),
                                         xyz = base - norm * texh
                                     ) zrot(angle*uang, p=xyz)
                                 ],

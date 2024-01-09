@@ -1363,10 +1363,10 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   teardrop = If given as a number, rounding around the bottom edge of the cylinder won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_reps = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
+//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by that amount, before the tex_scale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
-//   tex_rot = If true, rotates the texture 90º.
-//   tex_scale = Scaling multiplier for the texture depth.
+//   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  A value of true is equivalent to 90 deg, and false to 0.  Default: 0
+//   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   tex_taper = If given as a number, tapers the texture height to zero over the first and last given percentage of the path.  If given as a lookup table with indices between 0 and 100, uses the percentage lookup table to ramp the texture heights.  Default: `undef` (no taper)
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
@@ -1510,17 +1510,20 @@ function cyl(
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=false,
-    tex_scale=1, tex_samples, length, height, 
+    tex_scale, tex_depth, tex_samples, length, height, 
     tex_taper, style, tex_style,
     anchor, spin=0, orient=UP
 ) =
     assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameters has been replaced by 'style'.  You cannot give both.")
     assert(num_defined([tex_reps,tex_counts])<2, "In cyl() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")    
+    assert(num_defined([tex_scale,tex_depth])<2, "In linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
     let(
         style = is_def(tex_style)? echo("In cyl() the 'tex_style' parameter is deprecated and has been replaced by 'style'")tex_style
               : default(style,"min_edge"),
         tex_reps = is_def(tex_counts)? echo("In cyl() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
                  : tex_reps,
+        tex_depth = is_def(tex_scale)? echo("In rotate_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
+                  : default(tex_depth,1),
         l = one_defined([l, h, length, height],"l,h,length,height",dflt=1),
         _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
         _r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
@@ -1668,17 +1671,20 @@ module cyl(
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=false,
-    tex_scale=1, tex_samples, length, height, 
+    tex_scale, tex_depth, tex_samples, length, height, 
     tex_taper, style, tex_style,
     anchor, spin=0, orient=UP
 ) {
     dummy=
       assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameters has been replaced by 'style'.  You cannot give both.")
-      assert(num_defined([tex_reps,tex_counts])<2, "In cyl() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.");
+      assert(num_defined([tex_reps,tex_counts])<2, "In cyl() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
+      assert(num_defined([tex_scale,tex_depth])<2, "In cyl() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.");
     style = is_def(tex_style)? echo("In cyl the 'tex_style()' parameters is deprecated and has been replaced by 'style'")tex_style
           : default(style,"min_edge");
     tex_reps = is_def(tex_counts)? echo("In cyl() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
              : tex_reps;
+    tex_depth = is_def(tex_scale)? echo("In rotate_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
+              : default(tex_depth,1);
     l = one_defined([l, h, length, height],"l,h,length,height",dflt=1);
     _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     _r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
