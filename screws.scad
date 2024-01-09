@@ -1495,7 +1495,8 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
                          [20, .165]];
              intersection() {
                cyl(h=head_height/4, d=head_size, anchor=BOT)
-                  attach(TOP) cyl(l=head_height*3/4, d=head_size, anchor=BOT, texture="trunc_ribs", tex_reps=[31,1], tex_scale=-lookup(adj_diam,rib_size));
+                  attach(TOP) cyl(l=head_height*3/4, d=head_size, anchor=BOT, texture="trunc_ribs", tex_reps=[31,1],
+                                  tex_inset=true, tex_depth=-lookup(adj_diam,rib_size));
                cyl(h=head_height,d=head_size, chamfer2=adj_diam/10, anchor=BOT);
              }
            }

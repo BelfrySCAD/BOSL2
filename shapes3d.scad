@@ -1292,9 +1292,9 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   cyl(l|h|length|height, r|d, rounding1=, rounding2=, ...);
 //
 // Usage: Textured Cylinders
-//   cyl(l|h|length|height, r|d, texture=, [tex_size=]|[tex_reps=], [tex_scale=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
-//   cyl(l|h|length|height, r1=, r2=, texture=, [tex_size=]|[tex_reps=], [tex_scale=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
-//   cyl(l|h|length|height, d1=, d2=, texture=, [tex_size=]|[tex_reps=], [tex_scale=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, r|d, texture=, [tex_size=]|[tex_reps=], [tex_depth=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, r1=, r2=, texture=, [tex_size=]|[tex_reps=], [tex_depth=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(l|h|length|height, d1=, d2=, texture=, [tex_size=]|[tex_reps=], [tex_depth=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
 //
 // Usage: Caled as a function to get a VNF
 //   vnf = cyl(...);
@@ -1364,7 +1364,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
-//   tex_inset = If numeric, lowers the texture into the surface by that amount, before the tex_scale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
+//   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  A value of true is equivalent to 90 deg, and false to 0.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
@@ -1449,7 +1449,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 // Example: Texturing with VNF tile "bricks_vnf"
 //   cyl(h=50, r1=25, r2=20, shift=[0,10], rounding1=-10,
 //       texture="bricks_vnf", tex_size=[10,10],
-//       tex_scale=0.5, style="concave");
+//       tex_depth=0.5, style="concave");
 //
 // Example: No Texture Taper
 //   cyl(d1=25, d2=20, h=30, rounding=5,
@@ -1487,7 +1487,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   ];
 //   diff()
 //   cyl(d=20*10/PI, h=10, chamfer=0,
-//       texture=tex, tex_reps=[20,1], tex_scale=-1,
+//       texture=tex, tex_reps=[20,1], tex_depth=-1,
 //       tex_taper=undef, style="concave") {
 //           attach([TOP,BOT]) {
 //               cyl(d1=20*10/PI, d2=30, h=5, anchor=BOT)
@@ -1628,7 +1628,7 @@ function cyl(
             ) rotate_sweep(path,
                 texture=texture, tex_reps=tex_reps, tex_size=tex_size,
                 tex_inset=tex_inset, tex_rot=tex_rot,
-                tex_scale=tex_scale, tex_samples=tex_samples,
+                tex_depth=tex_depth, tex_samples=tex_samples,
                 tex_taper=tex_taper, style=style, closed=false
             ),
         skmat = down(l/2) *
@@ -1709,7 +1709,7 @@ module cyl(
                     from_end=from_end, from_end1=from_end1, from_end2=from_end2,
                     teardrop=teardrop,
                     texture=texture, tex_size=tex_size,
-                    tex_reps=tex_reps, tex_scale=tex_scale,
+                    tex_reps=tex_reps, tex_depth=tex_depth,
                     tex_inset=tex_inset, tex_rot=tex_rot,
                     style=style, tex_taper=tex_taper,
                     tex_samples=tex_samples

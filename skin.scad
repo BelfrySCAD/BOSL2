@@ -546,7 +546,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions on the extrusion.
-//   tex_inset = If numeric, lowers the texture into the surface by that amount, before the tex_depth multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
+//   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  A value of true is equivalent to 90 deg, and false to 0.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
@@ -872,7 +872,7 @@ function linear_sweep(
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the direction perpendicular to extrusion and in the direction parallel to extrusion.  
-//   tex_inset = If numeric, lowers the texture into the surface by that amount, before the tex_depth multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
+//   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  A value of true is equivalent to 90 deg, and false to 0.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
@@ -2778,7 +2778,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //        }
 //   stroke([[12.25,0],[12.25,2]],width=.05,endcaps="arrow2",color="black");
 //   move([12.35,1])color("black")text("Depth=2", size=0.3,anchor=LEFT);
-//  }
+//   }
 // Continues:
 //   If you want to keep the texture the same size but make the slope
 //   steeper you need to add more points to make the uniform grid fine enough
