@@ -766,7 +766,6 @@ function scalar_vec3(v, dflt) =
     is_list(v)? [for (i=[0:2]) default(v[i], default(dflt, 0))] :
     !is_undef(dflt)? [v,dflt,dflt] : [v,v,v];
 
-
 // Function: segs()
 // Synopsis: Returns the number of sides for a circle given `$fn`, `$fa`, and `$fs`.
 // Topics: Geometry

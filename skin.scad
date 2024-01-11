@@ -547,7 +547,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions on the extrusion.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
-//   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  A value of true is equivalent to 90 deg, and false to 0.  Default: 0
+//   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
@@ -873,7 +873,7 @@ function linear_sweep(
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the direction perpendicular to extrusion and in the direction parallel to extrusion.  
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
-//   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  A value of true is equivalent to 90 deg, and false to 0.  Default: 0
+//   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   style = {{vnf_vertex_array()}} style.  Default: "min_edge"
@@ -2875,13 +2875,13 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   - VNF Tile textures, which are VNFs that cover the unit square [0,0] x [1,1].  These tend to be slower to render, but allow greater flexibility and precision for shapes that don't align with a grid.
 //   .
 //   In the descriptions below, imagine the textures positioned on the XY plane, so "horizontal" refers to the "sideways" dimensions of the texture and
-//   "up" and "down" refer to the depth dimension.  If a texture is placed on a cylinder the "depth" will become the radial direction and the "horizontal"
+//   "up" and "down" refer to the depth dimension, perpendicular to the surface being textured.  If a texture is placed on a cylinder the "depth" will become the radial direction and the "horizontal"
 //   direction will be the vertical and tangential directions on the cylindrical surface.  All horizontal dimensions for VNF textures are relative to the unit square
-//   on which the textures are defined, so a value of 0.25 for a gap or inset will refer to 1/4 of the texture's full length and/or width.  All supported textures appear below in the examples.  
+//   on which the textures are defined, so a value of 0.25 for a gap or border will refer to 1/4 of the texture's full length and/or width.  All supported textures appear below in the examples.  
 // Arguments:
 //   tex = The name of the texture to get.
 //   ---
-//   n = The general number of vertices to use to refine the resolution of the texture.
+//   n = The number of samples to use for defining a heightfield texture.  Depending on the texture, result will be either n x n or 1 x n.  Not allowed for VNF textures.  See the `tex_samples` argument to {{cyl()}}, {{linear_sweep()}} and {{rotate_sweep()}} for controlling the sampling of VNF textures.
 //   border = The size of a border region on some VNF tile textures.  Generally between 0 and 0.5.
 //   gap = The gap between logically distinct parts of some VNF tiles.  (ie: gap between bricks, gap between truncated ribs, etc.)
 //   roughness = The amount of roughness used on the surface of some heightfield textures.  Generally between 0 and 0.5.
@@ -2915,8 +2915,8 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"cones"** (VNF) = Raised conical spikes.  Giving `n=` sets `$fn` for the cone (will be rounded to a multiple of 4).  Default: 16.  Giving `border=` specifies the horizontal border width between the edge of the tile and the base of the cone.  The `border` value must be nonnegative and smaller than 0.5.  Default: 0.
-//   tex = texture("cones");
+// Example(3D): **"cones"** (VNF) = Raised conical spikes.  Specify `$fn` to set the number of segments on the cone (will be rounded to a multiple of 4).  If you use $fa and $fs then the number of segments is determined for the original VNF scale of 1x1.  Giving `border=` specifies the horizontal border width between the edge of the tile and the base of the cone.  The `border` value must be nonnegative and smaller than 0.5.  Default: 0.
+//   tex = texture("cones", $fn=16);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30, tex_depth=3,
 //       tex_size=[10,10]
@@ -2957,13 +2957,13 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"dimples"** (VNF) = Round divots.  Giving `n=` sets `$fn` for the curve (will be rounded to a multiple of 4).  Default: 16.  Giving `border=` specifies the horizontal width of the flat border region between the tile edges and the edge of the dimple.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.  
+// Example(3D): **"dimples"** (VNF) = Round divots.  Specify `$fn` to set the number of segments on the cone (will be rounded to a multiple of 4).  If you use $fa and $fs then the number of segments is determined for the original VNF scale of 1x1.  Giving `border=` specifies the horizontal width of the flat border region between the tile edges and the edge of the dimple.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.  
 //   tex = texture("dimples");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30, 
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"dots"** (VNF) = Raised round bumps.  Giving `n=` sets `$fn` for the curve (will be rounded to a multiple of 4).  Default: 16.   Giving `border=` specifies the horizontal width of the flat border region between the tile edge and the edge of the dots.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.
+// Example(3D): **"dots"** (VNF) = Raised round bumps.  Specify `$fn` to set the number of segments on the cone (will be rounded to a multiple of 4).  If you use $fa and $fs then the number of segments is determined for the original VNF scale of 1x1.  Giving `border=` specifies the horizontal width of the flat border region between the tile edge and the edge of the dots.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.
 //   tex = texture("dots");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
@@ -3103,6 +3103,9 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       tex_size=[10,10], tex_depth=3, style="concave"
 //   );
 
+
+__vnf_no_n_mesg=" texture is a VNF so it does not accept n.  Set sample rate for VNF textures using the tex_samples parameter to cyl(), linear_sweep() or rotate_sweep().";
+
 function texture(tex, n, border, gap, roughness, inset) =
     assert(num_defined([border,inset])<2, "In texture() the 'inset' parameter has been replaced by 'border'.  You cannot give both parameters.")
     let(
@@ -3134,7 +3137,7 @@ function texture(tex, n, border, gap, roughness, inset) =
             each lerpn(1,0,n/4,endpoint=false),
         ]] :
     tex=="trunc_ribs_vnf"?
-        assert(is_undef(n), "trunc_ribs_vnf texture does not accept n")
+        assert(is_undef(n), str(tex,__vnf_no_n_mesg))
         let(
             border = default(border,1/4)*2,
             gap = default(gap,1/4)
@@ -3180,7 +3183,8 @@ function texture(tex, n, border, gap, roughness, inset) =
             ],
         ] :
     tex=="diamonds_vnf"?
-        assert(num_defined([n,gap, border, roughness])==0, "diamonds_vnf texture does not accept n, gap, border or roughness")
+        assert(is_undef(n), str(tex,__vnf_no_n_mesg))
+        assert(num_defined([gap, border, roughness])==0, "diamonds_vnf texture does not accept gap, border or roughness")
         [
             [
                 [0,   1, 1], [1/2,   1, 0], [1,   1, 1],
@@ -3202,7 +3206,8 @@ function texture(tex, n, border, gap, roughness, inset) =
             ]
         ] :
     tex=="pyramids_vnf"?
-        assert(num_defined([n,gap, border, roughness])==0, "pyramids_Vnf texture does not accept n, gap, border or roughness")  
+        assert(is_undef(n), str(tex,__vnf_no_n_mesg))
+        assert(num_defined([gap, border, roughness])==0, "pyramids_vnf texture does not accept gap, border or roughness")  
         [
             [ [0,1,0], [1,1,0], [1/2,1/2,1], [0,0,0], [1,0,0] ],
             [ [2,0,1], [2,1,4], [2,4,3], [2,3,0] ]
@@ -3218,7 +3223,8 @@ function texture(tex, n, border, gap, roughness, inset) =
             ]
         ] :
     tex=="trunc_pyramids_vnf"?
-        assert(num_defined([gap, n, roughness])==0, "trunc_pyramids_vnf texture does not accept gap, n or roughness")
+        assert(is_undef(n), str(tex,__vnf_no_n_mesg))
+        assert(num_defined([gap, roughness])==0, "trunc_pyramids_vnf texture does not accept gap, or roughness")
         let(
             border = default(border,0.1)
         )
@@ -3260,7 +3266,8 @@ function texture(tex, n, border, gap, roughness, inset) =
             ]
         ] :
     tex=="bricks_vnf"?
-        assert(num_defined([n,roughness])==0, "bricks_vnf texture does not accept n or roughness")
+        assert(is_undef(n), str(tex,__vnf_no_n_mesg))
+        assert(num_defined([roughness])==0, "bricks_vnf texture does not accept roughness")
         let(
             border = default(border,0.05),
             gap = default(gap,0.05)
@@ -3290,7 +3297,8 @@ function texture(tex, n, border, gap, roughness, inset) =
             ]
         ] :
     tex=="checkers"?
-        assert(num_defined([gap, n, roughness])==0, "checkers texture does not accept gap, n or roughness")
+        assert(is_undef(n), str(tex,__vnf_no_n_mesg))
+        assert(num_defined([gap, roughness])==0, "checkers texture does not accept gap, or roughness")
         let(
             border = default(border,0.05)
         )
@@ -3318,10 +3326,11 @@ function texture(tex, n, border, gap, roughness, inset) =
             ]
         ] :
     tex=="cones"?
+        assert(is_undef(n),str("To set number of segments on cones use $fn. ", tex,__vnf_no_n_mesg))
         assert(num_defined([gap,roughness])==0, "cones texture does not accept gap or roughness")  
         let(
-            n = quant(default(n,16),4),
-            border = default(border,0)
+            border = default(border,0),
+            n = quant(segs(1/2-border),4)
         )
         assert(border>=0 && border<0.5)
         [
@@ -3336,7 +3345,8 @@ function texture(tex, n, border, gap, roughness, inset) =
             ]
         ] :
     tex=="cubes"?
-        assert(num_defined([n, gap, border, roughness])==0, "cubes texture does not accept n, gap, border or roughness")  
+        assert(is_undef(n), str(tex,__vnf_no_n_mesg))
+        assert(num_defined([gap, border, roughness])==0, "cubes texture does not accept gap, border or roughness")  
         [
             [
                 [0,1,1/2], [1,1,1/2], [1/2,5/6,1], [0,4/6,0], [1,4/6,0],
@@ -3349,7 +3359,8 @@ function texture(tex, n, border, gap, roughness, inset) =
             ]
         ] :
     tex=="trunc_diamonds"?
-        assert(num_defined([gap, n, roughness])==0, "trunc_diamonds texture does not accept gap, n or roughness")
+        assert(is_undef(n), str(tex,__vnf_no_n_mesg))  
+        assert(num_defined([gap, roughness])==0, "trunc_diamonds texture does not accept gap or roughness")
         let(
             border = default(border,0.1)/sqrt(2)*2
         )
@@ -3368,10 +3379,11 @@ function texture(tex, n, border, gap, roughness, inset) =
             ]
         ] :
     tex=="dimples" || tex=="dots" ?
+        assert(is_undef(n),str("To set number of segments on ",tex," use $fn. ", tex,__vnf_no_n_mesg))
         assert(num_defined([gap,roughness])==0, str(tex," texture does not accept gap or roughness"))
         let(
-            n = quant(default(n,16),4),
-            border = default(border,0.05)
+            border = default(border,0.05),
+            n = quant(segs(1/2-border),4)
         )
         assert(border>=0 && border < 0.5)
         let(
@@ -3401,7 +3413,8 @@ function texture(tex, n, border, gap, roughness, inset) =
             ]
         ) [verts, faces] :
     tex=="tri_grid"?
-        assert(num_defined([gap, n, roughness])==0, str(tex," texture does not accept gap, n or roughness"))  
+        assert(is_undef(n), str(tex,__vnf_no_n_mesg))  
+        assert(num_defined([gap, roughness])==0, str(tex," texture does not accept gap or roughness"))  
         let(
             border = default(border,0.05)*sqrt(3)
         )
@@ -3439,7 +3452,8 @@ function texture(tex, n, border, gap, roughness, inset) =
             ]
         ] :
     tex=="hex_grid"?
-        assert(num_defined([gap, n, roughness])==0, str(tex," texture does not accept gap, n or roughness"))
+        assert(is_undef(n), str(tex,__vnf_no_n_mesg))  
+        assert(num_defined([gap, roughness])==0, str(tex," texture does not accept gap or roughness"))
         let(
             border=default(border,0.1)
         )
@@ -3574,7 +3588,7 @@ function _validate_texture(texture) =
 
 function _textured_linear_sweep(
     region, texture, tex_size=[5,5],
-    h, counts, inset=false, rot=false,
+    h, counts, inset=false, rot=0,
     tex_scale=1, twist, scale, shift,
     style="min_edge", l, caps=true, 
     height, length, samples,
@@ -3590,6 +3604,8 @@ function _textured_linear_sweep(
         caps = is_bool(caps) ? [caps,caps] : caps,
         regions = is_path(region,2)? [[region]] : region_parts(region),
         tex = is_string(texture)? texture(texture) : texture,
+        dummy = assert(is_undef(samples) || is_vnf(tex), "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
+        dummy2=is_bool(rot)?echo("boolean value for tex_rot is deprecated.  Use a numerical angle, one of 0, 90, 180, or 270.")0:0,
         texture = !rot? tex :
             is_vnf(tex)? zrot(is_num(rot)?rot:90, cp=[1/2,1/2], p=tex) :
             rot==180? reverse([for (row=tex) reverse(row)]) :
@@ -3863,6 +3879,8 @@ function _textured_revolution(
     assert(closed || is_path(shape,2))
     let(
         tex = is_string(texture)? texture(texture) : texture,
+        dummy = assert(is_undef(samples) || is_vnf(tex), "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
+        dummy2=is_bool(rot)?echo("boolean value for tex_rot is deprecated.  Use a numerical angle, one of 0, 90, 180, or 270.")0:0,        
         texture = !rot? tex :
             is_vnf(tex)? zrot(is_num(rot)?rot:90, cp=[1/2,1/2], p=tex) :
             rot==180? reverse([for (row=tex) reverse(row)]) :
