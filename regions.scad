@@ -1396,4 +1396,39 @@ module exclusive_or() {
 }
 
 
+
+// Function&Module: hull_region()
+// Synopsis: Compute convex hull of region or 2d path
+// SynTags: Geom, Path
+// Topics: Regions, Polygons, Shapes2D
+// Usage:
+//    path = hull_region(region);
+//    hull_region(region);
+// Description:
+//   Given a path, or a region, compute the convex hull
+//   and return it as a path.  This differs from {{hull()}} and {{hull2d_path()}} which
+//   return an index list into the point list.  As a module invokes the native hull() on
+//   the specified region.  
+// Arguments:
+//   region = region or path listing points to compute the hull from.  
+// Example(2D, NoAxes):
+//   data = [star(id=10,od=20,n=9),
+//           right(30, star(id=12,od=25, n=7))];
+//   stroke(data);
+//   stroke([hull_region(data)],color="red");
+function hull_region(region) =
+  assert(is_path(region) || is_region(region))
+  let(
+      pts = is_region(region) ? flatten(region)
+                              : region,
+      order = hull2d_path(pts)
+  )
+  select(pts,order);
+
+module hull_region(region)
+{
+  hull()region(region);
+}
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

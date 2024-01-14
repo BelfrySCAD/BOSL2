@@ -708,7 +708,7 @@ module linear_sweep(
     twist=0, scale=1, shift=[0,0],
     slices, maxseg, style="default", convexity, caps=true, 
     texture, tex_size=[5,5], tex_reps, tex_counts,
-    tex_inset=false, tex_rot=false,
+    tex_inset=false, tex_rot=0,
     tex_depth, tex_scale, tex_samples,
     cp, atype="hull", h,l,length,
     anchor, spin=0, orient=UP
@@ -761,7 +761,7 @@ function linear_sweep(
     slices, maxseg, style="default", caps=true, 
     cp, atype="hull", h,
     texture, tex_size=[5,5], tex_reps, tex_counts,
-    tex_inset=false, tex_rot=false,
+    tex_inset=false, tex_rot=0,
     tex_scale, tex_depth, tex_samples, h, l, length, 
     anchor, spin=0, orient=UP
 ) =
@@ -961,7 +961,7 @@ function linear_sweep(
 function rotate_sweep(
     shape, angle=360,
     texture, tex_size=[5,5], tex_counts, tex_reps, 
-    tex_inset=false, tex_rot=false,
+    tex_inset=false, tex_rot=0,
     tex_scale, tex_depth, tex_samples,
     tex_taper, shift=[0,0], closed=true,
     style="min_edge", cp="centroid",
@@ -1022,7 +1022,7 @@ function rotate_sweep(
 module rotate_sweep(
     shape, angle=360,
     texture, tex_size=[5,5], tex_counts, tex_reps,
-    tex_inset=false, tex_rot=false,
+    tex_inset=false, tex_rot=0,
     tex_scale, tex_depth, tex_samples,
     tex_taper, shift=[0,0],
     style="min_edge",
@@ -2737,7 +2737,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   Values in the height field should range from 0 to 1.  A zero height
 //   in the height field corresponds to the height of the surface and 1
 //   the highest point in the texture above the surface being textured.
-// Figure(2D,Big,NoScales): Here is a 2d texture described by a "grid" that just contains a single row.  Such a texture can be used to create ribbing. The texture is `[[0, 1, 1, 0]]`, and the fixture shows three repetitions of the basic texture unit.
+// Figure(2D,Big,NoScales,VPT=[6.21418,0.242814,0],VPD=28.8248,VPR=[0,0,0]): Here is a 2d texture described by a "grid" that just contains a single row.  Such a texture can be used to create ribbing. The texture is `[[0, 1, 1, 0]]`, and the fixture shows three repetitions of the basic texture unit.
 //   ftex1 = [0,1,1,0,0];
 //   stroke( transpose([count(5),ftex1]), dots=true, dots_width=3,width=.05);
 //   right(4)stroke( transpose([count(5),ftex1]), dots=true, width=.05,dots_color="red",color="blue",dots_width=3);
@@ -2753,7 +2753,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   is correctly designed to span the range from 0 to 1.  The `tex_depth` parameter can adjust
 //   this dimension of a texture without changing anything else, and setting `tex_depth` negative
 //   will invert a texture.
-// Figure(2D,Big,NoScales): 
+// Figure(2D,Big,NoScales,VPR=[0,0,0],VPT=[6.86022,-1.91238,0],VPD=28.8248):
 //   ftex1 = [0,1,1,0,0];
 //   left(0)color(.6*[1,1,1])rect([12,1],anchor=BACK+LEFT);
 //   stroke( transpose([count(5),ftex1]), dots=true, dots_width=3,width=.05);
@@ -2783,8 +2783,10 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   If you want to keep the texture the same size but make the slope
 //   steeper you need to add more points to make the uniform grid fine enough
 //   to represent the slope you want.  This means that creating sharp edges
-//   can require a large number of points, resulting in longer run times.  
-// Figure(2D,Big,NoScales):  
+//   can require a large number of points, resulting in longer run times.
+//   When using the built-in textures you can control the number of points
+//   using the `n=` argument to {{texture()}}.  
+// Figure(2D,Big,NoScales,VPT=[6.21418,0.242814,0],VPD=28.8248,VPR=[0,0,0]):  
 //   ftex2 = xscale(4/11,transpose([count(12),[0,1,1,1,1,1,1,1,1,1,0,0]]));
 //   stroke( ftex2, dots=true, dots_width=3,width=.05);
 //   right(4)stroke( ftex2, dots=true, width=.05,dots_color="red",color="blue",dots_width=3);
@@ -2806,7 +2808,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //        [0,0,0,0]]
 //   ```
 //   and we show the 3D triangulations produced by the different styles:
-// Figure(3D,Big,NoAxes,VPR=[39.2,0,13.3],VPT=[3.76242,-5.50969,4.51854],VPD=32.0275):
+// Figure(3D,Big,NoAxes,VPR=[45.5,0,18.2],VPT=[2.3442,-6.25815,3.91529],VPD=35.5861):
 //   tex = [
 //          [0,0,0,0,0],
 //          [0,1,1,0,0],
@@ -2815,18 +2817,20 @@ function associate_vertices(polygons, split, curpoly=0) =
 //          [0,0,0,0,0]       
 //         ];
 //   hm = [for(i=[0:4]) [for(j=[0:4]) [i,-j,tex[i][j]]]];      
-//   types = ["quincunx", "convex", "concave","default","alt","min_edge"]; 
-//   grid2d(spacing=5, n=[3,2]){
-//     let(s = types[$row*3+$col]){
+//   types = ["quincunx", "convex", "concave","min_area", "default","alt","min_edge"]; 
+//   grid_copies(spacing=5, n=[4,2]){
+//     let(s = types[$row*4+$col]){
+//       if (is_def(s)){
 //       vnf_polyhedron(vnf_vertex_array(hm,style=s));
 //       if ($row==1)
 //         back(.8)right(2)rotate($vpr)color("black")text(s,size=.5,anchor=CENTER);
 //       else
-//         fwd(4.7)right(2)rotate($vpr)color("black")text(s,size=.5,anchor=CENTER);    
+//         fwd(4.7)right(2)rotate($vpr)color("black")text(s,size=.5,anchor=CENTER);
+//       }
 //     }
 //   }  
 // Continues:
-//   Note that of the six available styles, five produce a different result.  There may exist some concave shape where none of the styles
+//   Note that of the seven available styles, five produce a different result.  There may exist some concave shape where none of the styles
 //   produce the right result everywhere on the shape.  If this happens it would be another limitation of height field textures.  (If you have an
 //   example of such a texture and shape please let us know!)
 // Subsection: VNF Textures
@@ -2859,8 +2863,19 @@ function associate_vertices(polygons, split, curpoly=0) =
 //                caps=false);
 //   tile = move([0,1/2,2/3],yrot(90,shape));
 //   vnf_polyhedron(tile);
-
-
+// Continues:
+//   A VNF texture provides a flat structure.  In order to apply this structure to a cylinder or other curved object, the VNF must be sliced
+//   and "folded" so it can follow the curve.  This folding is controlled by the `tex_samples` parameter to {{cyl()}}, {{linear_sweep()}},
+//   and {{rotate_sweep()}}.  Note that you specify it when you **use** the texture, not when you create it.  This differs from height
+//   fields, where the analogous parameter is the `n=` parameter of the {{texture()}} function.  When `tex_samples` is too small, only the
+//   points given in the VNF will follow the surface, resulting in a blocky look and geometrical artifacts.  
+// Figure(3D,NoAxes): On the left the `tex_samples` value is small and the texture is blocky.  On the right, the default value of 8 allows a reasonable fit to the cylinder. 
+//   xdistribute(spacing=5){
+//      cyl(d=10/PI, h=5, chamfer=0,
+//         texture=texture("bricks_vnf"), tex_samples=1, tex_reps=[6,3], tex_depth=.2);
+//      cyl(d=10/PI, h=5, chamfer=0,
+//         texture=texture("bricks_vnf"), tex_samples=8, tex_reps=[6,3], tex_depth=.2);
+//   }
 
 // Function: texture()
 // Topics: Textures, Knurling
@@ -2958,13 +2973,13 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"dimples"** (VNF) = Round divots.  Specify `$fn` to set the number of segments on the cone (will be rounded to a multiple of 4).  If you use $fa and $fs then the number of segments is determined for the original VNF scale of 1x1.  Giving `border=` specifies the horizontal width of the flat border region between the tile edges and the edge of the dimple.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.  
-//   tex = texture("dimples");
+//   tex = texture("dimples", $fn=16);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30, 
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"dots"** (VNF) = Raised round bumps.  Specify `$fn` to set the number of segments on the cone (will be rounded to a multiple of 4).  If you use $fa and $fs then the number of segments is determined for the original VNF scale of 1x1.  Giving `border=` specifies the horizontal width of the flat border region between the tile edge and the edge of the dots.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.
-//   tex = texture("dots");
+//   tex = texture("dots", $fn=16);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
