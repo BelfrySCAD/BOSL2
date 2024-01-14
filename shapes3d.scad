@@ -1509,7 +1509,7 @@ function cyl(
     teardrop=false,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
-    tex_inset=false, tex_rot=false,
+    tex_inset=false, tex_rot=0,
     tex_scale, tex_depth, tex_samples, length, height, 
     tex_taper, style, tex_style,
     anchor, spin=0, orient=UP
@@ -1670,7 +1670,7 @@ module cyl(
     teardrop=false,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
-    tex_inset=false, tex_rot=false,
+    tex_inset=false, tex_rot=0,
     tex_scale, tex_depth, tex_samples, length, height, 
     tex_taper, style, tex_style,
     anchor, spin=0, orient=UP
