@@ -1412,10 +1412,10 @@ module exclusive_or() {
 // Arguments:
 //   region = region or path listing points to compute the hull from.  
 // Example(2D, NoAxes):
-   data = [star(id=10,od=20,n=9),
-           right(30, star(id=12,od=25, n=7))];
-   stroke(data);
-   stroke([hull_region(data)],color="red");
+//   data = [star(id=10,od=20,n=9),
+//           right(30, star(id=12,od=25, n=7))];
+//   stroke(data);
+//   stroke([hull_region(data)],color="red");
 function hull_region(region) =
   assert(is_path(region) || is_region(region))
   let(
