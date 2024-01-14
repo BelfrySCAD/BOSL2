@@ -1414,6 +1414,53 @@ function vnf_bend(vnf,r,d,axis="Z") =
    ) [new_vert,sliced[1]];
 
 
+
+// Function&Module: vnf_hull()
+// Synopsis: Compute convex hull of VNF or 3d path
+// Usage:
+//    vnf_hull = hull_vnf(vnf);
+//    hull_vnf(vnf,[fast]);
+// Description:
+//   Given a VNF or a list of 3d points, compute the convex hull
+//   and return it as a VNF.  This differs from {{hull()}} and {{hull3d_faces()}} which
+//   return just the face list referenced to the input point list.  Note that the point
+//   list that is returned will contain all the points that are actually used in the input
+//   VNF, which may be many more points than are needed to represent the convex hull.
+//   This is not usually a problem, but you can run the somewhat slow {{vnf_drop_unused_points()}}
+//   function to fix this if necessary.  
+// Arguments:
+//   region = region or path listing points to compute the hull from.
+//   fast = (module only) if input is a point list (not a VNF) use a fasterer cheat that may handle more points, but could emit warnings.  Ignored if input is a VNF.  Default: false.  
+// Example(3D,Big,NoAxes): Input is a VNF
+//   ellipse = xscale(2, p=circle($fn=48, r=3));
+//   pentagon = subdivide_path(pentagon(r=1), 20);
+//   vnf=path_sweep(pentagon, path3d(ellipse),
+//                  closed=true, twist=360*2);
+//   vnfhull = vnf_hull(vnf);
+//   vnf_polyhedron(vnf);
+//   move([10,10])
+//     vnf_polyhedron(vnfhull);
+// Example(2D, NoAxes): Input is a point list
+//   h=helix(l=40, turns=1, r=8);
+//   color("red")move_copies(h)
+//     sphere(r=0.5,$fn=12);
+//   vnf_polyhedron(vnf_hull(h));
+function vnf_hull(vnf) =
+  assert(is_vnf(vnf) || is_path(vnf,3),"Input must be a VNF or a 3d path")
+  let(
+      pts = is_vnf(vnf) ? select(vnf[0],unique(flatten(vnf[1])))
+                        : vnf,
+      faces = hull3d_faces(pts)
+  )
+  [pts, faces];
+
+module vnf_hull(vnf, fast=false)
+{
+  if (is_vnf(vnf)) hull()vnf_polyhedron(vnf);
+  else hull_points(vnf, fast);
+}  
+    
+
 // Section: Debugging Polyhedrons
 
 /// Internal Module: _show_vertices()

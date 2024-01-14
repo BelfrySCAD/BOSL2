@@ -2958,13 +2958,13 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"dimples"** (VNF) = Round divots.  Specify `$fn` to set the number of segments on the cone (will be rounded to a multiple of 4).  If you use $fa and $fs then the number of segments is determined for the original VNF scale of 1x1.  Giving `border=` specifies the horizontal width of the flat border region between the tile edges and the edge of the dimple.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.  
-//   tex = texture("dimples");
+//   tex = texture("dimples", $fn=16);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30, 
 //       tex_size=[10,10]
 //   );
 // Example(3D): **"dots"** (VNF) = Raised round bumps.  Specify `$fn` to set the number of segments on the cone (will be rounded to a multiple of 4).  If you use $fa and $fs then the number of segments is determined for the original VNF scale of 1x1.  Giving `border=` specifies the horizontal width of the flat border region between the tile edge and the edge of the dots.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.
-//   tex = texture("dots");
+//   tex = texture("dots", $fn=16);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
