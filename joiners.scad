@@ -791,7 +791,7 @@ module _pin_shaft(r, lStraight, nub, nubscale, stretch, d, pointed)
 function _pin_size(size) =
   is_undef(size) ? [] :
   let(sizeok = in_list(size,["tiny", "small","medium", "large", "standard"]))
-  assert(sizeok,"Pin size must be one of \"tiny\", \"small\", or \"standard\"")
+  assert(sizeok,"Pin size must be one of \"tiny\", \"small\", \"medium\" or \"standard\"")
   size=="standard" || size=="large" ?
      struct_set([], ["length", 10.8,
                      "diameter", 7,
@@ -846,7 +846,7 @@ function _pin_size(size) =
 //    and a modified version at https://www.thingiverse.com/thing:3218332 by acwest
 //    and distributed under the Creative Commons - Attribution - Share Alike License
 // Arguments:
-//    size = text string to select from a list of predefined sizes, one of "standard", "small", or "tiny".
+//    size = text string to select from a list of predefined sizes, one of "standard", "medium", "small", or "tiny".
 //    ---
 //    pointed = set to true to get a pointed pin, false to get one with a rounded end.  Default: true
 //    r/radius = radius of the pin
@@ -917,7 +917,7 @@ module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, 
 //   The "large" or "standard" size pin has a length of 10.8 and diameter of 7.  The "medium" pin has a length of 8 and diameter of 4.6.  The "small" pin
 //   has a length of 6 and diameter of 3.2.  The "tiny" pin has a length of 4 and a diameter of 2.5.
 // Arguments:
-//   size = text string to select from a list of predefined sizes, one of "standard", "small", or "tiny".
+//   size = text string to select from a list of predefined sizes, one of "standard", "medium", "small", or "tiny".
 //   ---
 //   pointed = set to true to get a pointed pin, false to get one with a rounded end.  Default: true
 //   r/radius = radius of the pin
