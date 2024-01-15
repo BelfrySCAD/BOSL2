@@ -728,7 +728,7 @@ module linear_sweep(
         tex_counts=tex_counts,
         tex_inset=tex_inset,
         tex_rot=tex_rot,
-        tex_scale=tex_depth,
+        tex_depth=tex_depth,
         tex_samples=tex_samples,
         slices=slices,
         maxseg=maxseg,
@@ -2869,7 +2869,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   and {{rotate_sweep()}}.  Note that you specify it when you **use** the texture, not when you create it.  This differs from height
 //   fields, where the analogous parameter is the `n=` parameter of the {{texture()}} function.  When `tex_samples` is too small, only the
 //   points given in the VNF will follow the surface, resulting in a blocky look and geometrical artifacts.  
-// Figure(3D,NoAxes): On the left the `tex_samples` value is small and the texture is blocky.  On the right, the default value of 8 allows a reasonable fit to the cylinder. 
+// Figure(3D,Med,NoAxes): On the left the `tex_samples` value is small and the texture is blocky.  On the right, the default value of 8 allows a reasonable fit to the cylinder. 
 //   xdistribute(spacing=5){
 //      cyl(d=10/PI, h=5, chamfer=0,
 //         texture=texture("bricks_vnf"), tex_samples=1, tex_reps=[6,3], tex_depth=.2);

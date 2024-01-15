@@ -1431,7 +1431,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
 // Arguments:
 //   region = region or path listing points to compute the hull from.
 //   fast = (module only) if input is a point list (not a VNF) use a fasterer cheat that may handle more points, but could emit warnings.  Ignored if input is a VNF.  Default: false.  
-// Example(3D,Big,NoAxes): Input is a VNF
+// Example(3D,Big,NoAxes,VPR=[55,0,25],VPT=[9.47096,-4.50217,8.45727],VPD=60.2654): Input is a VNF
 //   ellipse = xscale(2, p=circle($fn=48, r=3));
 //   pentagon = subdivide_path(pentagon(r=1), 20);
 //   vnf=path_sweep(pentagon, path3d(ellipse),
@@ -1440,7 +1440,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
 //   vnf_polyhedron(vnf);
 //   move([10,10])
 //     vnf_polyhedron(vnfhull);
-// Example(2D, NoAxes): Input is a point list
+// Example(3D,Med,NoAxes,VPR=[70.4,0,110.4],VPT=[5.97456,1.26459,18.0317],VPD=126): Input is a point list
 //   h=helix(l=40, turns=1, r=8);
 //   color("red")move_copies(h)
 //     sphere(r=0.5,$fn=12);
