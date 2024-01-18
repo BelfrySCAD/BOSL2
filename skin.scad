@@ -2876,6 +2876,16 @@ function associate_vertices(polygons, split, curpoly=0) =
 //      cyl(d=10/PI, h=5, chamfer=0,
 //         texture=texture("bricks_vnf"), tex_samples=8, tex_reps=[6,3], tex_depth=.2);
 //   }
+// Continues:
+//   Note that when the VNF is sliced,
+//   extra points can be introduced in the interior of faces leading to unexpected irregularities in the textures, which appear
+//   as extra triangles.  These artifacts can be minimized by making the VNF texture's faces as large as possible rather than using
+//   a triangulated VNF, but depending on the specific VNF texture, it may be impossible to entirely eliminate them.
+// Figure(3D,Big,NoAxes,VPR=[140.9,0,345.7],VPT=[9.48289,-0.88709,5.7837],VPD=39.5401): The left shows a normal bricks_vnf texture.  The right shows a texture that was first passed through {{vnf_triangulate()}}.  Note the extra triangle artifacts visible across the brick faces.
+//   tex = texture("bricks_vnf");
+//   cyl(d=10,h=15,texture=tex, tex_reps=[4,2],tex_samples=5);
+//   up(7)fwd(-3)right(15)cyl(d=10,h=15,texture=vnf_triangulate(tex), tex_reps=[4,2],tex_samples=5);
+
 
 // Function: texture()
 // Topics: Textures, Knurling
