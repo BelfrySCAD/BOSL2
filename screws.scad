@@ -588,8 +588,7 @@ module screw(spec, head, drive, thread, drive_size,
             assert(is_finite(length) && length>0, "Must specify positive screw length")
             assert(is_finite(_shoulder_len) && _shoulder_len>=0, "Must specify a nonegative shoulder length")
             assert(is_finite(_shoulder_diam) && _shoulder_diam>=0, "Must specify nonnegative shoulder diameter")
-            assert(is_undef(user_thread_len) || (is_finite(user_thread_len) && user_thread_len>=0), "Must specify nonnegative thread length")
-            assert(!_teardrop || pitch==0);
+            assert(is_undef(user_thread_len) || (is_finite(user_thread_len) && user_thread_len>=0), "Must specify nonnegative thread length");
    sides = max(pitch==0 ? 3 : 12, segs(nominal_diam/2));
    head_height = headless || flathead ? 0 
                : counterbore==true || is_undef(counterbore) || counterbore==0 ? struct_val(spec, "head_height")
@@ -716,7 +715,7 @@ module screw(spec, head, drive, thread, drive_size,
                       pitch = struct_val(threadspec, "pitch"),
                       l=thread_len+eps_thread, left_handed=false, internal=_internal, 
                       bevel1=bevel1,
-                      bevel2=bevel2,
+                      bevel2=bevel2,teardrop=_teardrop,
                       blunt_start=blunt_start, blunt_start1=blunt_start1, blunt_start2=blunt_start2, 
                       $fn=sides, anchor=TOP);
             }
@@ -774,7 +773,7 @@ module screw(spec, head, drive, thread, drive_size,
 //   head = head type.  See [screw heads](#subsection-screw-heads)  Default: none
 //   ---
 //   thread = thread type or specification for threaded masks, true to make a threaded mask with the standard threads, or false to make an unthreaded mask.  See [screw pitch](#subsection-standard-screw-pitch). Default: false
-//   teardrop = if true produce teardrop hole.  Only compatible with clearance holes, not threaded.  Default: false
+//   teardrop = if true produce teardrop hole.  Default: false
 //   oversize = amount to increase diameter of the screw hole (hole and countersink).  A scalar or length 2 vector.  Default: use computed tolerance
 //   hole_oversize = amount to increase diameter of the hole.  Overrides the use of tolerance and replaces any settings given in the screw specification. 
 //   head_oversize = amount to increase diameter of head.  Overrides the user of tolerance and replaces any settings given in the screw specification.  
@@ -852,7 +851,6 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
    counterbore = default(counterbore, default_counterbore);
    dummy = _validate_screw_spec(screwspec);
    threaded = thread==true || (is_finite(thread) && thread>0) || (is_undef(thread) && struct_val(screwspec,"pitch")>0);
-   dummy2 = assert(!threaded || !teardrop, "Cannot make threaded teardrop holes");
    oversize = force_list(oversize,2);
    hole_oversize = first_defined([hole_oversize, oversize[0],struct_val(screwspec,"shaft_oversize")]);
    head_oversize = first_defined([head_oversize, oversize[1],struct_val(screwspec,"head_oversize")]);
