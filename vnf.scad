@@ -825,15 +825,15 @@ function vnf_triangulate(vnf) =
 // Arguments:
 //   vnf = vnf whose faces you want to unify
 // Example(3D,Med,NoAxes): Original prism on the left is triangulated.  On the right, the result of unifying the faces.
-//   $fn=16;
-//   poly = linear_sweep(hexagon(side=10),h=35);
-//   vnf = vnf_unify_faces(poly);
-//   vnf_wireframe(poly);
-//   color([0,1,1,.70])vnf_polyhedron(poly);
-//   right(25){
-//     vnf_wireframe(vnf);
-//     color([0,1,1,.70])vnf_polyhedron(vnf);
-//   }
+   $fn=16;
+   poly = linear_sweep(hexagon(side=10),h=35);
+   vnf = vnf_unify_faces(poly);
+   vnf_wireframe(poly);
+   color([0,1,1,.70])vnf_polyhedron(poly);
+   right(25){
+     vnf_wireframe(vnf);
+     color([0,1,1,.70])vnf_polyhedron(vnf);
+   }
 
 function vnf_unify_faces(vnf) =
    let(
@@ -860,7 +860,7 @@ function _detri_combine_faces(edgelist,faces,normals,facelist,curface) =
                            good_choice=[for(choice=choices)
                               if (choice[1]!=curface && in_list(choice[1],facelist) && normals[choice[1]]*normals[curface]>1-EPSILON)
                                 choice],
-                           d=assert(len(good_choice)<=1),
+                           d=assert(len(good_choice)<=1)
                        )
                        len(good_choice)==1 ? good_choice[0][1] : -1
                     ],
