@@ -824,15 +824,15 @@ function vnf_triangulate(vnf) =
 //   the boundary to all of those vertices.
 // Arguments:
 //   vnf = vnf whose faces you want to unify
-// Example(3D): Original prism on the left is triangulated.  On the right, the result of unifying the faces.
+// Example(3D,Med,NoAxes): Original prism on the left is triangulated.  On the right, the result of unifying the faces.
 //   $fn=16;
 //   poly = linear_sweep(hexagon(side=10),h=35);
 //   vnf = vnf_unify_faces(poly);
-//   color([0,1,1,.5])vnf_polyhedron(poly);
 //   vnf_wireframe(poly);
+//   color([0,1,1,.70])vnf_polyhedron(poly);
 //   right(25){
-//     color([0,1,1,.5])vnf_polyhedron(vnf);
 //     vnf_wireframe(vnf);
+//     color([0,1,1,.70])vnf_polyhedron(vnf);
 //   }
 
 function vnf_unify_faces(vnf) =
