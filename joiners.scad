@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: joiners.scad
-//   Modules for joining separately printed parts including screw together, snap-together and dovetails. 
+//   Modules for joining separately printed parts including screw together, snap-together and dovetails.
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/joiners.scad>
@@ -565,14 +565,14 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   Produces a possibly tapered dovetail joint shape to attach to or subtract from two parts you wish to join together.
 //   The tapered dovetail is particularly advantageous for long joints because the joint assembles without binding until
 //   it is fully closed, and then wedges tightly.  You can chamfer or round the corners of the dovetail shape for better
-//   printing and assembly, or choose a fully rounded joint that looks more like a puzzle piece.  The dovetail appears 
+//   printing and assembly, or choose a fully rounded joint that looks more like a puzzle piece.  The dovetail appears
 //   parallel to the Y axis and projecting upwards, so in its default orientation it will slide together with a translation
 //   in the positive Y direction.  The gender determines whether the shape is meant to be added to your model or
 //   differenced, and it also changes the anchor and orientation.  The default anchor for dovetails is BOTTOM;
 //   the default orientation depends on the gender, with male dovetails oriented UP and female ones DOWN.  The dovetails by default
 //   have extra extension of 0.01 for unions and differences.  You should ensure that attachment is done with overlap=0 to ensure that
 //   the sizing and positioning is correct.  To adjust the fit, use the $slop variable, which increases the depth and width of
-//   the female part of the joint to allow a clearance gap of $slop on each of the three sides.  
+//   the female part of the joint to allow a clearance gap of $slop on each of the three sides.
 //
 // Arguments:
 //   gender = A string, "male" or "female", to specify the gender of the dovetail.
@@ -580,14 +580,14 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   h / height = Height of the dovetail (the amount it projects from its base)
 //   slide / thickness = Distance the dovetail slides when you assemble it (length of sliding dovetails, thickness of regular dovetails)
 //   ---
-//   slope = slope of the dovetail.  Standard woodworking slopes are 4, 6, or 8.  Default: 6.  
+//   slope = slope of the dovetail.  Standard woodworking slopes are 4, 6, or 8.  Default: 6.
 //   angle = angle (in degrees) of the dovetail.  Specify only one of slope and angle.
 //   taper = taper angle (in degrees). Dovetail gets narrower by this angle.  Default: no taper
-//   back_width = width of right hand end of the dovetail.  This alternate method of specifying the taper may be easier to manage.  Specify only one of `taper` and `back_width`.  Note that `back_width` should be smaller than `width` to taper in the customary direction, with the smaller end at the back.  
+//   back_width = width of right hand end of the dovetail.  This alternate method of specifying the taper may be easier to manage.  Specify only one of `taper` and `back_width`.  Note that `back_width` should be smaller than `width` to taper in the customary direction, with the smaller end at the back.
 //   chamfer = amount to chamfer the corners of the joint (Default: no chamfer)
 //   r / radius = amount to round over the corners of the joint (Default: no rounding)
 //   round = true to round both corners of the dovetail and give it a puzzle piece look.  Default: false.
-//   $slop = Increase the width of socket by double this amount and depth by this amount to allow adjustment of the fit. 
+//   $slop = Increase the width of socket by double this amount and depth by this amount to allow adjustment of the fit.
 //   extra = amount of extra length and base extension added to dovetails for unions and differences.  Default: 0.01
 // Example: Ordinary straight dovetail, male version (sticking up) and female version (below the xy plane)
 //   dovetail("male", width=15, height=8, slide=30);
@@ -601,7 +601,7 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //       attach(BACK) dovetail("male", slide=10, width=15, height=8);
 //       tag("remove")attach(FRONT) dovetail("female", slide=10, width=15, height=8);
 //     }
-// Example: Setting the dovetail angle.  This is too extreme to be useful.  
+// Example: Setting the dovetail angle.  This is too extreme to be useful.
 //   diff()
 //     cuboid([50,30,10]){
 //       attach(BACK) dovetail("male", slide=10, width=15, height=8, angle=30);
@@ -626,14 +626,14 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //       attach(BACK) dovetail("male", slide=10, width=15, height=8, radius=1.5, round=true);
 //       tag("remove")attach(FRONT) dovetail("female", slide=10, width=15, height=8, radius=1.5, round=true);
 //   }
-// Example: With a long joint like this, a taper makes the joint easy to assemble.  It will go together easily and wedge tightly if you get the tolerances right.  Specifying the taper with `back_width` may be easier than using a taper angle.    
+// Example: With a long joint like this, a taper makes the joint easy to assemble.  It will go together easily and wedge tightly if you get the tolerances right.  Specifying the taper with `back_width` may be easier than using a taper angle.
 //   cuboid([50,30,10])
 //     attach(TOP) dovetail("male", slide=50, width=18, height=4, back_width=15, spin=90);
 //   fwd(35)
 //     diff("remove")
 //       cuboid([50,30,10])
 //         tag("remove") attach(TOP) dovetail("female", slide=50, width=18, height=4, back_width=15, spin=90);
-// Example: A series of dovetails forming a tail board, with the inside of the joint up.  A standard wood joint would have a zero taper. 
+// Example: A series of dovetails forming a tail board, with the inside of the joint up.  A standard wood joint would have a zero taper.
 //   cuboid([50,30,10])
 //     attach(BACK) xcopies(10,5) dovetail("male", slide=10, width=7, taper=4, height=4);
 // Example: Mating pin board for a half-blind right angle joint, where the joint only shows on the side but not the front.  Note that the anchor method and use of `spin` ensures that the joint works even with a taper.
@@ -653,7 +653,7 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
     count = num_defined([angle,slope]);
     count2 = num_defined([taper,back_width]);
     count3 = num_defined([chamfer, radius]);
-    dummy = 
+    dummy =
         assert(count<=1, "Do not specify both angle and slope")
         assert(count2<=1, "Do not specify both taper and back_width")
         assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
@@ -684,7 +684,7 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
     fullsize = round ? [size,size]
              : gender == "male" ? [size,0]
              : [0,size];
-    
+
     type = is_def(chamfer) && chamfer>0 ? "chamfer" : "circle";
 
     smallend_half = round_corners(
@@ -707,14 +707,14 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
     bigend_points = move([offset+2*extra_offset,slide+2*extra,0], p=smallend_points);
 
     bigenough = all_nonnegative(column(smallend_half,0)) && all_nonnegative(column(bigend_points,0));
-    
+
     assert(bigenough, "Width of dovetail is not large enough for its geometry (angle and taper");
-    
+
     //adjustment = $overlap * (gender == "male" ? -1 : 1);  // Adjustment for default overlap in attach()
     adjustment = 0;    // Default overlap is assumed to be zero
 
     // This code computes the true normal from which the exact width factor can be obtained
-    // as the x component.  Comparing to wfactor above shows that they agree.  
+    // as the x component.  Comparing to wfactor above shows that they agree.
     //   pts = [smallend_points[0], smallend_points[1], bigend_points[1],bigend_points[0]];
     //   n = -polygon_normal(pts);
     //   echo(n=n);
@@ -752,7 +752,7 @@ module _pin_nub(r, nub, h)
         [-r-nub, nub/2+L],
         [-r, h],
         [0, h]]);
-     }  
+     }
 }
 
 
@@ -761,7 +761,7 @@ module _pin_slot(l, r, t, d, nub, depth, stretch) {
     intersection() {
       translate([t, 0, d + t / 4])
           _pin_nub(r = r + t, nub = nub, h = l - (d + t / 4));
-      translate([-t, 0, d + t / 4]) 
+      translate([-t, 0, d + t / 4])
           _pin_nub(r = r + t, nub = nub, h = l - (d + t / 4));
     }
   cube([2 * r, depth, 2 * l], center = true);
@@ -791,7 +791,7 @@ module _pin_shaft(r, lStraight, nub, nubscale, stretch, d, pointed)
 function _pin_size(size) =
   is_undef(size) ? [] :
   let(sizeok = in_list(size,["tiny", "small","medium", "large", "standard"]))
-  assert(sizeok,"Pin size must be one of \"tiny\", \"small\", or \"standard\"")
+  assert(sizeok,"Pin size must be one of \"tiny\", \"small\", \"medium\" or \"standard\"")
   size=="standard" || size=="large" ?
      struct_set([], ["length", 10.8,
                      "diameter", 7,
@@ -806,15 +806,15 @@ function _pin_size(size) =
                      "nub_depth", 1.5,
                      "thickness", 1.4,
                      "preload", 0.2]) :
-  size=="small" ? 
-     struct_set([], ["length", 6, 
+  size=="small" ?
+     struct_set([], ["length", 6,
                      "diameter", 3.2,
                      "snap", 0.4,
                      "nub_depth", 1.2,
                      "thickness", 1.0,
                      "preload", 0.16]) :
-  size=="tiny" ? 
-     struct_set([], ["length", 4, 
+  size=="tiny" ?
+     struct_set([], ["length", 4,
                      "diameter", 2.5,
                      "snap", 0.25,
                      "nub_depth", 0.9,
@@ -837,16 +837,16 @@ function _pin_size(size) =
 //    override the standard parameters by specifying other ones.  The pins have flat sides so they can
 //    be printed.  When oriented UP the shaft of the pin runs in the Z direction and the flat sides are the front and back.  The default
 //    orientation (FRONT) and anchor (FRONT) places the pin in a printable configuration, flat side down on the xy plane.
-//    The tightness of fit is determined by `preload` and `clearance`.  To make pins tighter increase `preload` and/or decrease `clearance`.  
+//    The tightness of fit is determined by `preload` and `clearance`.  To make pins tighter increase `preload` and/or decrease `clearance`.
 //    .
 //    The "large" or "standard" size pin has a length of 10.8 and diameter of 7.  The "medium" pin has a length of 8 and diameter of 4.6.  The "small" pin
-//    has a length of 6 and diameter of 3.2.  The "tiny" pin has a length of 4 and a diameter of 2.5.  
+//    has a length of 6 and diameter of 3.2.  The "tiny" pin has a length of 4 and a diameter of 2.5.
 //    .
 //    This pin is based on https://www.thingiverse.com/thing:213310 by Emmett Lalishe
 //    and a modified version at https://www.thingiverse.com/thing:3218332 by acwest
 //    and distributed under the Creative Commons - Attribution - Share Alike License
 // Arguments:
-//    size = text string to select from a list of predefined sizes, one of "standard", "small", or "tiny".
+//    size = text string to select from a list of predefined sizes, one of "standard", "medium", "small", or "tiny".
 //    ---
 //    pointed = set to true to get a pointed pin, false to get one with a rounded end.  Default: true
 //    r/radius = radius of the pin
@@ -877,7 +877,7 @@ module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, 
 
   // The basic pin assumes a rounded cap of length sqrt(2)*r, which defines lStraight.
   // If the point is enabled the cap length is instead 2*r
-  // preload shrinks the length, bringing the nubs closer together  
+  // preload shrinks the length, bringing the nubs closer together
 
   rInner = radius - clearance;
   stretch = sqrt(2)*radius/rInner;  // extra stretch factor to make cap have proper length even though r is reduced.
@@ -911,13 +911,13 @@ module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, 
 //   if you add a lubricant.  If `pointed` is true the socket is pointed to receive a pointed pin, otherwise it has a rounded and and
 //   will be shorter.  If `fins` is set to true then two fins are included inside the socket to act as supports (which may help when printing tip up,
 //   especially when `pointed=false`).  The default orientation is DOWN with anchor BOTTOM so that you can difference() the socket away from an object.
-//   The socket extends 0.02 extra below its bottom anchor point so that differences will work correctly.  (You must have $overlap smaller than 0.02 in 
-//   attach or the socket will be beneath the surface of the parent object.)  
+//   The socket extends 0.02 extra below its bottom anchor point so that differences will work correctly.  (You must have $overlap smaller than 0.02 in
+//   attach or the socket will be beneath the surface of the parent object.)
 //   .
 //   The "large" or "standard" size pin has a length of 10.8 and diameter of 7.  The "medium" pin has a length of 8 and diameter of 4.6.  The "small" pin
-//   has a length of 6 and diameter of 3.2.  The "tiny" pin has a length of 4 and a diameter of 2.5.  
+//   has a length of 6 and diameter of 3.2.  The "tiny" pin has a length of 4 and a diameter of 2.5.
 // Arguments:
-//   size = text string to select from a list of predefined sizes, one of "standard", "small", or "tiny".
+//   size = text string to select from a list of predefined sizes, one of "standard", "medium", "small", or "tiny".
 //   ---
 //   pointed = set to true to get a pointed pin, false to get one with a rounded end.  Default: true
 //   r/radius = radius of the pin
@@ -952,13 +952,13 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
   lStraight = lPin - (pointed?sqrt(2)*radius:radius);
   attachable(anchor=anchor,spin=spin,orient=orient,
              size=[2*(radius+snap),radius*sqrt(2),lPin])
-  {  
+  {
   down(lPin/2)
     intersection() {
-      cube([3 * (radius + snap), fixed ? radius * sqrt(2) : 3*(radius+snap), 3 * lPin + 3 * radius], center = true);        
+      cube([3 * (radius + snap), fixed ? radius * sqrt(2) : 3*(radius+snap), 3 * lPin + 3 * radius], center = true);
       union() {
         _pin_shaft(radius,lStraight,snap,1,1,nub_depth,pointed);
-        if (fins) 
+        if (fins)
           up(lStraight){
             cube([2 * radius, 0.01, 2 * tip], center = true);
             cube([0.01, 2 * radius, 2 * tip], center = true);
@@ -966,7 +966,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
       }
     }
   children();
-  } 
+  }
 }
 
 
@@ -998,7 +998,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //   .
 //   By default clips appear with orient=UP and sockets with orient=DOWN.  The clips and sockets extend 0.02 units below
 //   their base so that unions and differences will work without trouble, but be sure that the attach overlap is smaller
-//   than 0.02.  
+//   than 0.02.
 //   .
 //   The first figure shows the dimensions of the rabbit clip.  The second figure shows the clip in red overlayed on
 //   its socket in yellow.  The left clip has a nonzero clearance, so its socket is bigger than the clip all around.
@@ -1022,7 +1022,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //      translate([6+comp/2,19.5])text("compression", size=1, halign="center");
 //      stroke([[6+comp/2,19.3], [6+comp/2,17.7]], endcap2="arrow2", width=.15);
 //      fwd(1.1)text("width",size=1,halign="center");
-//      xflip_copy()stroke([[2,-.7], [6,-.7]], endcap2="arrow2", width=.15);     
+//      xflip_copy()stroke([[2,-.7], [6,-.7]], endcap2="arrow2", width=.15);
 //      move([-6.7,mid])rot(90)text("length", size=1, halign="center");
 //      stroke([[-7,10.3], [-7,18]], width=.15, endcap2="arrow2");
 //      stroke([[-7,0], [-7,5.8]], width=.15,endcap1="arrow2");
@@ -1096,7 +1096,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //   }
 // Example: Double clip to connect two sockets
 //   rabbit_clip("double",length=8, width=7, snap=0.75, thickness=0.8, compression=0.2,depth=5);
-// Example:  A modified version of the clip that acts like a backpack strap clip, where it locks tightly but you can squeeze to release. 
+// Example:  A modified version of the clip that acts like a backpack strap clip, where it locks tightly but you can squeeze to release.
 //   cuboid([25,15,5],anchor=BOTTOM)
 //       attach(BACK)rabbit_clip("pin", length=25, width=25, thickness=1.5, snap=2, compression=0, lock=true, depth=5, lock_clearance=3);
 //   left(32)
@@ -1116,10 +1116,10 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
                    splinesteps=8, anchor, orient, spin=0)
 {
   legal_types = ["pin","socket","male","female","double"];
-  check = 
+  check =
     assert(is_num(width) && width>0,"Width must be a positive value")
     assert(is_num(length) && length>0, "Length must be a positive value")
-    assert(is_num(thickness) && thickness>0, "Thickness must be a positive value")  
+    assert(is_num(thickness) && thickness>0, "Thickness must be a positive value")
     assert(is_num(snap) && snap>=0, "Snap must be a non-negative value")
     assert(is_num(depth) && depth>0, "Depth must be a positive value")
     assert(is_num(compression) && compression >= 0, "Compression must be a nonnegative value")
@@ -1165,11 +1165,11 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
               ];
     fullpath = concat(
                       sidepath,
-                      [bottom_pt], 
+                      [bottom_pt],
                       reverse(apply(xflip(),sidepath))
                       );
     dummy2 = assert(fullpath[4].y < fullpath[3].y, "Pin is too wide for its length");
-    
+
     snapmargin = -snap + last(sidepath).x;// - compression;
     if (is_pin){
       if (snapmargin<0) echo("WARNING: The snap is too large for the clip to squeeze to fit its socket")
@@ -1181,7 +1181,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
     subset = is_pin ? [0:10] : [0,1,2,3, 7,8,9,10];  // Remove internal points from the socket
     tangent = select(fulltangent, subset);
     path = select(fullpath, subset);
-    
+
     socket_smooth = .04;
     pin_smooth = [.075, .075, .15, .12, .06];
     smoothing = is_pin
