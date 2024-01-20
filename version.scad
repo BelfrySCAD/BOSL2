@@ -12,8 +12,6 @@
 BOSL_VERSION = [2,0,696];
 
 
-
-
 // Section: BOSL Library Version Functions
 
 
