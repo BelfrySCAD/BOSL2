@@ -806,8 +806,8 @@ function vnf_triangulate(vnf) =
 
 
 
-// Function vnf_unify_faces()
-// Synposis: Remove triangulation from VNF, returning a copy with full faces
+// Function: vnf_unify_faces()
+// Synopsis: Remove triangulation from VNF, returning a copy with full faces
 // SynTags: VNF
 // Topics: VNF Manipulation
 // See Also: vnf_reverse_faces(), vnf_quantize(), vnf_merge_points(), vnf_triangulate(), vnf_slice() 
@@ -999,7 +999,9 @@ function _slice_3dpolygons(polys, dir, cuts) =
     )
     flatten([
         for (poly = polys)
-            let( plane = plane_from_polygon(poly))
+            if (polygon_area(poly)>EPSILON)   // Discard zero area polygons
+            let( 
+                 plane = plane_from_polygon(poly,1e-4))
             assert(plane,"Found non-coplanar face.")
             let(
                 normal = point3d(plane),
