@@ -682,7 +682,7 @@ function vnf_faces(vnf) = vnf[1];
 // Synopsis: Reverses the faces of a VNF.
 // SynTags: VNF
 // Topics: VNF Manipulation
-// See Also: vnf_quantize(), vnf_merge_points(), vnf_drop_unused_points(), vnf_triangulate(), vnf_slice() 
+// See Also: vnf_quantize(), vnf_merge_points(), vnf_drop_unused_points(), vnf_triangulate(), vnf_slice(), vnf_unify_faces() 
 // Usage:
 //   rvnf = vnf_reverse_faces(vnf);
 // Description:
@@ -712,7 +712,7 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
 // Synopsis: Consolidates duplicate vertices of a VNF.
 // SynTags: VNF
 // Topics: VNF Manipulation
-// See Also: vnf_reverse_faces(), vnf_quantize(), vnf_drop_unused_points(), vnf_triangulate(), vnf_slice() 
+// See Also: vnf_reverse_faces(), vnf_quantize(), vnf_drop_unused_points(), vnf_triangulate(), vnf_slice(), vnf_unify_faces() 
 // Usage:
 //   new_vnf = vnf_merge_points(vnf, [eps]);
 // Description:
@@ -748,7 +748,7 @@ function vnf_merge_points(vnf,eps=EPSILON) =
 // Synopsis: Removes unreferenced vertices from a VNF.
 // SynTags: VNF
 // Topics: VNF Manipulation
-// See Also: vnf_reverse_faces(), vnf_quantize(), vnf_merge_points(), vnf_triangulate(), vnf_slice() 
+// See Also: vnf_reverse_faces(), vnf_quantize(), vnf_merge_points(), vnf_triangulate(), vnf_slice(), vnf_unify_faces() 
 // Usage:
 //   clean_vnf = vnf_drop_unused_points(vnf);
 // Description:
@@ -780,7 +780,7 @@ function _link_indicator(l,imin,imax) =
 // Synopsis: Triangulates the faces of a VNF.
 // SynTags: VNF
 // Topics: VNF Manipulation
-// See Also: vnf_reverse_faces(), vnf_quantize(), vnf_merge_points(), vnf_drop_unused_points(), vnf_slice() 
+// See Also: vnf_reverse_faces(), vnf_quantize(), vnf_merge_points(), vnf_drop_unused_points(), vnf_slice(), vnf_unify_faces() 
 // Usage:
 //   vnf2 = vnf_triangulate(vnf);
 // Description:
@@ -803,6 +803,84 @@ function vnf_triangulate(vnf) =
                     tris ) ]
     )
     [verts, faces];
+
+
+
+// Function: vnf_unify_faces()
+// Synopsis: Remove triangulation from VNF, returning a copy with full faces
+// SynTags: VNF
+// Topics: VNF Manipulation
+// See Also: vnf_reverse_faces(), vnf_quantize(), vnf_merge_points(), vnf_triangulate(), vnf_slice() 
+// Usage:
+//   newvnf = vnf_unify_faces(vnf);
+// Description:
+//   When a VNF has been triangulated, the polygons that form the true faces have been chopped up into
+//   triangles.  This can create problems for algorithms that operate on the VNF itself, where you might
+//   want to be able to identify the true faces.  This function merges together the triangles that
+//   form those true faces, turning a VNF where each true face is represented by a single entry
+//   in the faces list of the VNF.  This function requires that the true faces have no internal vertices.
+//   This will always be true for a triangulated VNF, but might fail for a VNF with some other
+//   face partition.  If internal vertices are present, the output will include backtracking paths from
+//   the boundary to all of those vertices.
+// Arguments:
+//   vnf = vnf whose faces you want to unify
+// Example(3D,Med,NoAxes): Original prism on the left is triangulated.  On the right, the result of unifying the faces.
+//   $fn=16;
+//   poly = linear_sweep(hexagon(side=10),h=35);
+//   vnf = vnf_unify_faces(poly);
+//   vnf_wireframe(poly);
+//   color([0,1,1,.70])vnf_polyhedron(poly);
+//   right(25){
+//     vnf_wireframe(vnf);
+//     color([0,1,1,.70])vnf_polyhedron(vnf);
+//   }
+
+function vnf_unify_faces(vnf) =
+   let(
+       faces = vnf[1],
+       edges =  [for(i=idx(faces), edge=pair(faces[i],wrap=true))
+                   [[min(edge),max(edge)],i]],
+       normals = [for(face=faces) polygon_normal(select(vnf[0],face))],
+       facelist = count(faces), //[for(i=[1:1:len(faces)-1]) i],
+       newfaces = _detri_combine_faces(edges,faces,normals,facelist,0)
+   )
+   [vnf[0],newfaces];
+
+
+function _detri_combine_faces(edgelist,faces,normals,facelist,curface) =
+    curface==len(faces)? select(faces,facelist)
+  : !in_list(curface,facelist) ? _detri_combine_faces(edgelist,faces,normals,facelist,curface+1)
+  :
+    let(
+        thisface=faces[curface],
+        neighbors = [for(i=idx(thisface))
+                       let(
+                           edgepair = search([sort(select(thisface,i,i+1))],edgelist,0)[0],
+                           choices = select(edgelist,edgepair),
+                           good_choice=[for(choice=choices)
+                              if (choice[1]!=curface && in_list(choice[1],facelist) && normals[choice[1]]*normals[curface]>1-EPSILON)
+                                choice],
+                           d=assert(len(good_choice)<=1)
+                       )
+                       len(good_choice)==1 ? good_choice[0][1] : -1
+                    ],
+        // Check for duplicates in the neighbor list so we don't add them twice
+        dups = search([for(n=neighbors) if (n>=0) n], neighbors,0),
+        goodind = column(dups,0),
+        newface = [for(i=idx(thisface))
+                    each
+                     !in_list(i,goodind) ? [thisface[i]]
+                    :
+                     let(
+                         ind = search(select(thisface,i,i+1), faces[neighbors[i]])
+                     )
+                     select(faces[neighbors[i]],ind[0],ind[1]-1)
+                   ],
+        usedfaces = [for(n=neighbors) if (n>=0) n],
+        faces = list_set(faces,curface,newface),
+        facelist = list_remove_values(facelist,usedfaces)
+     )
+     _detri_combine_faces(edgelist,faces,normals,facelist,len(usedfaces)==0?curface+1:curface);
 
 
 
@@ -843,7 +921,8 @@ function _vnf_sort_vertices(vnf, idx=[2,1,0]) =
 //   color("red")vnf_wireframe(sliced,width=.3);
 function vnf_slice(vnf,dir,cuts) =
     let(
-        cuts = [for (cut=cuts) _shift_cut_plane(vnf,dir,cut)],
+        //  Code below seems to be unnecessary
+        //cuts = [for (cut=cuts) _shift_cut_plane(vnf,dir,cut)],
         vert = vnf[0],
         faces = [for(face=vnf[1]) select(vert,face)],
         poly_list = _slice_3dpolygons(faces, dir, cuts)
@@ -920,26 +999,28 @@ function _slice_3dpolygons(polys, dir, cuts) =
     )
     flatten([
         for (poly = polys)
-        let( plane = plane_from_polygon(poly))
-        assert(plane,"Found non-coplanar face.")
-        let(
-            normal = point3d(plane),
-            pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
-        )
-        approx(pnormal,[0,0,0]) ? [poly] :
-        let (
-            pind = max_index(v_abs(pnormal)),  // project along this direction
-            otherind = 3-pind-dir_ind,         // keep dir_ind and this direction
-            keep = [I[dir_ind], I[otherind]],  // dir ind becomes the x dir
-            poly2d = poly*transpose(keep),     // project to 2d, putting selected direction in the X position
-            poly_list = [for(p=_split_2dpolygons_at_each_x([poly2d], cuts))
-                            let(
-                                a = p*keep,    // unproject, but pind dimension data is missing
-                                ofs = outer_product((repeat(plane[3], len(a))-a*normal)/plane[pind],I[pind])
-                             )
-                             a+ofs]    // ofs computes the missing pind dimension data and adds it back in
-        )
-        poly_list
+            if (polygon_area(poly)>EPSILON)   // Discard zero area polygons
+            let( 
+                 plane = plane_from_polygon(poly,1e-4))
+            assert(plane,"Found non-coplanar face.")
+            let(
+                normal = point3d(plane),
+                pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
+            )
+            approx(pnormal,[0,0,0]) ? [poly]     // Polygons parallel to cut plane just pass through
+          : let(
+                pind = max_index(v_abs(pnormal)),  // project along this direction
+                otherind = 3-pind-dir_ind,         // keep dir_ind and this direction
+                keep = [I[dir_ind], I[otherind]],  // dir ind becomes the x dir
+                poly2d = poly*transpose(keep),     // project to 2d, putting selected direction in the X position
+                poly_list = [for(p=_split_2dpolygons_at_each_x([poly2d], cuts))
+                                let(
+                                    a = p*keep,    // unproject, but pind dimension data is missing
+                                    ofs = outer_product((repeat(plane[3], len(a))-a*normal)/plane[pind],I[pind])
+                                 )
+                                 a+ofs]    // ofs computes the missing pind dimension data and adds it back in
+            )
+            poly_list
     ]);
 
 
