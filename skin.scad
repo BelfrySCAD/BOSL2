@@ -2876,6 +2876,16 @@ function associate_vertices(polygons, split, curpoly=0) =
 //      cyl(d=10/PI, h=5, chamfer=0,
 //         texture=texture("bricks_vnf"), tex_samples=8, tex_reps=[6,3], tex_depth=.2);
 //   }
+// Continues:
+//   Note that when the VNF is sliced,
+//   extra points can be introduced in the interior of faces leading to unexpected irregularities in the textures, which appear
+//   as extra triangles.  These artifacts can be minimized by making the VNF texture's faces as large as possible rather than using
+//   a triangulated VNF, but depending on the specific VNF texture, it may be impossible to entirely eliminate them.
+// Figure(3D,Big,NoAxes,VPR=[140.9,0,345.7],VPT=[9.48289,-0.88709,5.7837],VPD=39.5401): The left shows a normal bricks_vnf texture.  The right shows a texture that was first passed through {{vnf_triangulate()}}.  Note the extra triangle artifacts visible across the brick faces.
+//   tex = texture("bricks_vnf");
+//   cyl(d=10,h=15,texture=tex, tex_reps=[4,2],tex_samples=5);
+//   up(7)fwd(-3)right(15)cyl(d=10,h=15,texture=vnf_triangulate(tex), tex_reps=[4,2],tex_samples=5);
+
 
 // Function: texture()
 // Topics: Textures, Knurling
@@ -3155,10 +3165,10 @@ function texture(tex, n, border, gap, roughness, inset) =
         assert(is_undef(n), str(tex,__vnf_no_n_mesg))
         let(
             border = default(border,1/4)*2,
-            gap = default(gap,1/4)
+            gap = default(gap,1/4),
+            f=echo(gap, border, gap+border, gap+2*border)
         )
         assert(all_nonnegative([border,gap]), "trunc_ribs_vnf texture requires gap>=0 and border>=0")
-        assert(gap+border > 0, "trunc_ribs_vnf texture requires that gap+border>0")
         assert(gap+border <= 1, "trunc_ribs_vnf texture requires that gap+2*border<=1")
         [
             [
@@ -3166,9 +3176,9 @@ function texture(tex, n, border, gap, roughness, inset) =
                each move([0.5,0.5], p=path3d(rect([1-gap-border,1]),1)),
                each path3d(square(1)),
             ], [
-                [1,2,6], [1,6,5], [0,4,3], [3,4,7],
-                if (gap+border < 1-EPSILON) each [[4,5,6], [4,6,7]],
-                if (gap > EPSILON) each [[1,9,10], [1,10,2], [0,3,8], [3,11,8]],
+                [4,7,3,0], [1,2,6,5],
+                if (gap+border < 1-EPSILON) [4,5,6,7],
+                if (gap > EPSILON) each [[1,9,10,2], [0,3,11,8]],
             ]
         ] :
     tex=="wave_ribs"?
@@ -3249,11 +3259,9 @@ function texture(tex, n, border, gap, roughness, inset) =
                 each path3d(square(1)),
                 each move([1/2,1/2,1], p=path3d(rect(1-2*border))),
             ], [
-                for (i=[0:3]) each [
-                    [i, (i+1)%4, i+4],
-                    [(i+1)%4, (i+1)%4+4, i+4],
-                ],
-                [4,5,6], [4,6,7],
+                for (i=[0:3])
+                    [i, (i+1)%4, (i+1)%4+4,i+4],
+                [4,5,6,7]
             ]
         ] :
     tex=="hills"?
@@ -3300,15 +3308,9 @@ function texture(tex, n, border, gap, roughness, inset) =
                 each move([0.5+gap/2, 0.5+gap/2, 0], p=path3d(square([0.5-gap/2, 0.5-gap]))),
                 each move([0.5+gap/2+border/2, 0.5+gap/2+border/2, 1], p=path3d(square([0.5-gap/2-border/2, 0.5-gap-border]))),
             ], [
-                [ 8, 9,10], [ 8,10,11], [16,17,18], [16,18,19], [24,25,26],
-                [24,26,27], [ 0, 1, 5], [ 0, 5, 4], [ 1,13, 6], [ 1, 6, 5],
-                [ 6,13,12], [ 6,12,21], [ 7,21,20], [ 6,21, 7], [ 0, 4, 7],
-                [ 0, 7,20], [21,12,15], [21,15,22], [ 3,23,22], [ 3,22,15],
-                [ 2,15,14], [ 2, 3,15], [23,27,26], [23,26,22], [21,22,26],
-                [21,26,25], [21,25,24], [21,24,20], [12,16,19], [12,19,15],
-                [14,15,19], [14,19,18], [13,17,16], [13,16,12], [ 6,10, 9],
-                [ 6, 9, 5], [ 5, 9, 8], [ 5, 8, 4], [ 4, 8,11], [ 4,11, 7],
-                [ 7,11,10], [ 7,10, 6],
+                [0,4,7,20], [4,8,11,7], [9,8,4,5], [4,0,1,5], [10,9,5,6],
+                [20,7,6,13,12,21] ,[2,3,23,22,15,14], [15,19,18,14], [22,23,27,26], [16,19,15,12],[13,6,5,1],
+                [26,25,21,22], [8,9,10,11],[7,11,10,6],[17,16,12,13],[22,21,12,15],[16,17,18,19],[24,25,26,27],[25,24,20,21]
             ]
         ] :
     tex=="checkers"?
@@ -3329,15 +3331,11 @@ function texture(tex, n, border, gap, roughness, inset) =
                 [1,1/2,0], [1,1-border,0], [1,1,1], [1/2-border/2,1-border/2,1/2],
                 [1-border/2,1-border/2,1/2], [1-border/2,1/2-border/2,1/2],
             ], [
-                for (i=[0:4:12]) each [[i,i+1,i+2], [i, i+2, i+3]],
-                [10,13,11], [13,12,11], [2,5,4], [4,3,2],
-                [0,3,10], [10,9,0], [4,7,14], [4,14,13],
-                [4,13,16], [10,16,13], [10,3,16], [3,4,16],
-                [7,6,17], [7,17,18], [14,19,20], [14,20,15],
-                [8,11,22], [8,22,21], [12,15,24], [12,24,23],
-                [7,18,26], [7,26,14], [14,26,19], [18,19,26],
-                [15,20,27], [20,25,27], [24,27,25], [15,27,24],
-                [11,12,28], [12,23,28], [11,28,22], [23,22,28],
+                for (i=[0:4:12]) each [[i,i+1,i+2,i+3]],
+                [10,16,13,12,28,11],[9,0,3,16,10], [11,28,22,21,8],
+                [4,7,26,14,13,16], [7,6,17,18,26], [5,4,16,3,2],
+                [19,20,27,15,14,26], [20,25,27], [19,26,18],
+                [23,28,12,15,27,24], [23,22,28], [24,27,25]
             ]
         ] :
     tex=="cones"?
@@ -3352,11 +3350,13 @@ function texture(tex, n, border, gap, roughness, inset) =
             [
                 each move([1/2,1/2], p=path3d(circle(d=1-2*border,$fn=n))),
                 [1/2,1/2,1],
-                each path3d(square(1)),
+                each border>0 ? path3d(subdivide_path(square(1),refine=2,closed=true))
+                              : path3d(square(1))
             ], [
                 for (i=[0:1:n-1]) [i, (i+1)%n, n],
-                for (i=[0:1:3], j=[0:1:n/4-1]) [n+1+i, (i*n/4+j+1)%n, i*n/4+j],
-                if (border > 0) for (i = [0:1:3]) [i+n+1, (i+1)%4+n+1, ((i+1)*n/4)%n],
+                if (border>0) for (i=[0:3]) [for(j=[(i+1)*n/4:-1:i*n/4]) j%n,
+                                            (2*i+7)%8+n+1,(2*i)%8+n+1, (2*i+1)%8+n+1],
+                if (border==0) for (i=[0:3]) [for(j=[(i+1)*n/4:-1:i*n/4]) j%n, i+n+1]
             ]
         ] :
     tex=="cubes"?
@@ -3387,10 +3387,10 @@ function texture(tex, n, border, gap, roughness, inset) =
                 for (a=[0:90:359]) each move([1/2,1/2], p=zrot(-a, p=[[1/2,border,1], [border,1/2,1], [1/2,1/2,1]]))
             ], [
                 for (i=[0:3]) each let(j=i*3+8) [
-                    [i,(i+1)%4,(i+1)%4+4], [i,(i+1)%4+4,i+4],
-                    [j,j+1,j+2], [i, (i+3)%4, j], [(i+3)%4, j+1, j],
+                    [i,(i+1)%4,(i+1)%4+4,i+4],
+                    [j,j+1,j+2], [i, (i+3)%4,j+1, j], 
                 ],
-                [4,5,6], [4,6,7],
+                [4,5,6,7],
             ]
         ] :
     tex=="dimples" || tex=="dots" ?
@@ -3408,23 +3408,25 @@ function texture(tex, n, border, gap, roughness, inset) =
             cp = [1/2, 1/2, r*sin(45)*(dots?-1:1)],
             sc = 1 / (r - abs(cp.z)),
             uverts = [
-                each path3d(square(1)),
                 for (p=[0:1:rows-1], t=[0:360/n:359.999])
                     cp + (
                         dots? spherical_to_xyz(r, -t, 45-45*p/rows) :
                         spherical_to_xyz(r, -t, 135+45*p/rows)
                     ),
                 cp + r * (dots?UP:DOWN),
+                each border>0 ? path3d(subdivide_path(square(1),refine=2,closed=true))
+                              : path3d(square(1)),
+                      
             ],
             verts = zscale(sc, p=uverts),
             faces = [
-                for (i=[0:1:3], j=[0:1:n/4-1]) [i, 4+(i*n/4+j+1)%n, 4+i*n/4+j],
                 for (i=[0:1:rows-2], j=[0:1:n-1]) each [
-                    [4+i*n+j, 4+(i+1)*n+(j+1)%n, 4+(i+1)*n+j],
-                    [4+i*n+j, 4+i*n+(j+1)%n, 4+(i+1)*n+(j+1)%n],
+                    [i*n+j, i*n+(j+1)%n, (i+1)*n+(j+1)%n,(i+1)*n+j],
                 ],
-                for (i=[0:1:n-1]) [4+(rows-1)*n+i, 4+(rows-1)*n+(i+1)%n, 4+rows*n],
-                if (border>0) for (i=[0:3]) [i, (i+1)%4, 4+(i+1)%4*n/4]
+                for (i=[0:1:n-1]) [(rows-1)*n+i, (rows-1)*n+(i+1)%n, rows*n],
+                if (border>0) for (i=[0:3]) [for(j=[(i+1)*n/4:-1:i*n/4]) j%n,
+                                            (2*i+7)%8+rows*n+1,(2*i)%8+rows*n+1, (2*i+1)%8+rows*n+1],
+                if (border==0) for (i=[0:3]) [for(j=[(i+1)*n/4:-1:i*n/4]) j%n, i+rows*n+1]
             ]
         ) [verts, faces] :
     tex=="tri_grid"?
@@ -3457,13 +3459,15 @@ function texture(tex, n, border, gap, roughness, inset) =
                 [adj,y6,1], [1-adj,y6,1],
                 [0,1,0], [1,1,0],
             ], [
-               [0,2,3], [0,3,1], [2,6,3], [0,12,2], [2,12,6], [3,6,12], [3,12,1],
-               [0,4,8], [0,8,12], [4,7,8], [7,11,12], [7,12,8],
-               [1,12,9], [1,9,5], [5,9,10], [9,12,13], [9,13,10],
-               [11,14,15], [11,15,12], [19,15,14], [19,23,12], [19,12,15],
-               [12,16,13], [16,17,13], [16,20,17], [12,24,20], [12,20,16],
-               [21,22,18], [21,23,24], [21,24,22], [12,23,21], [12,21,18],
-               [12,18,22], [12,22,24],
+               [0,2,3,1],
+               [21,23,24,22],
+               [2,6,3], [0,12,6,2], [1,3,6,12],
+               [0,4,8,12], [4,7,8], [8,7,11,12],
+               [1,12,9,5], [5,9,10], [10,9,12,13], 
+               [11,14,15,12], [19,15,14], [19,23,12,15],
+               [16,17,13,12], [16,20,17], [12,24,20,16], 
+               [21,22,18], [12,23,21,18],
+               [12,18,22,24],
             ]
         ] :
     tex=="hex_grid"?
@@ -3492,14 +3496,14 @@ function texture(tex, n, border, gap, roughness, inset) =
                 hex[5]+[0,diag*sc,1],
                 [0,1,1], [0.5-border,1,1], [0.5,1,0], [0.5+border,1,1], [1,1,1],
             ], [
-                for (i=[0:2:5]) let(b=6) [b+i, b+(i+1)%6, b+(i+2)%6], [6,8,10],
-                for (i=[0:1:5]) each [ [i, (i+1)%6, (i+1)%6+6], [i, (i+1)%6+6, i+6] ],
-                [19,13,12], [19,12,20], [17,16,15], [17,15,14],
-                [21,25,26], [21,26,22], [23,28,29], [23,29,24],
-                [0,12,13], [0,13,1], [1,14,15], [1,15,2],
-                [3,21,22], [3,22,4], [4,23,24], [4,24,5],
-                [1,13,19], [1,19,18], [1,18,17], [1,17,14],
-                [4,22,26], [4,26,27], [4,27,28], [4,28,23],
+                count(6,s=6),
+                for (i=[0:1:5]) [i,(i+1)%6, (i+1)%6+6, i+6],
+                [20,19,13,12], [17,16,15,14],
+                [21,25,26,22], [23,28,29,24],
+                [0,12,13,1], [1,14,15,2],
+                [3,21,22,4], [4,23,24,5],
+                [1,13,19,18], [1,18,17,14], 
+                [4,22,26,27], [4,27,28,23],
             ]
         ] :
     tex=="rough"?
