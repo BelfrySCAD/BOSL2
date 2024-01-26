@@ -20,7 +20,7 @@
 // Synopsis: Draws a line along a path or region boundry.
 // SynTags: Geom
 // Topics: Paths (2D), Paths (3D), Drawing Tools
-// See Also: offset_stroke(), path_sweep()
+// See Also: dashed_stroke(), offset_stroke(), path_sweep()
 // Usage:
 //   stroke(path, [width], [closed], [endcaps], [endcap_width], [endcap_length], [endcap_extent], [trim]);
 //   stroke(path, [width], [closed], [endcap1], [endcap2], [endcap_width1], [endcap_width2], [endcap_length1], [endcap_length2], [endcap_extent1], [endcap_extent2], [trim1], [trim2]);
@@ -641,8 +641,8 @@ function dashed_stroke(path, dashpat=[3,3], closed=false, fit=true, mindash=0.5)
         sc = plen / tlen,
         cuts = [
             for (i = [0:1:reps], off = doff*sc)
-            let (x = i*dlen*sc + off)
-            if (x > 0 && x < plen) x
+              let (x = i*dlen*sc + off)
+              if (x > 0 && x < plen-EPSILON) x
         ],
         dashes = path_cut(path, cuts, closed=false),
         dcnt = len(dashes),
@@ -671,7 +671,7 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 // Synopsis: Draws a 2D pie-slice or returns 2D or 3D path forming an arc.
 // SynTags: Geom, Path
 // Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators
-// See Also: pie_slice(), stroke()
+// See Also: pie_slice(), stroke(), ring()
 //
 // Usage: 2D arc from 0º to `angle` degrees.
 //   path=arc(n, r|d=, angle);
@@ -687,10 +687,12 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   path=arc(n, points=[P0,P1,P2]);
 // Usage: 2D or 3D arc, fron tangent point on segment `[P0,P1]` to the tangent point on segment `[P1,P2]`.
 //   path=arc(n, corner=[P0,P1,P2], r=);
+// Usage: Create a wedge using any other arc parameters
+//   path=arc(wedge=true,...)
 // Usage: as module
 //   arc(...) [ATTACHMENTS];
 // Description:
-//   If called as a function, returns a 2D or 3D path forming an arc.
+//   If called as a function, returns a 2D or 3D path forming an arc.  If `wedge` is true, the centerpoint of the arc appears as the first point in the result.
 //   If called as a module, creates a 2D arc polygon or pie slice shape.
 // Arguments:
 //   n = Number of vertices to form the arc curve from.
@@ -706,7 +708,7 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   ccw = if given with cp and 2 points takes the arc in the counter-clockwise direction.  Default: false
 //   width = If given with `thickness`, arc starts and ends on X axis, to make a circle segment.
 //   thickness = If given with `width`, arc starts and ends on X axis, to make a circle segment.
-//   start = Start angle of arc.
+//   start = Start angle of arc.  Default: 0
 //   wedge = If true, include centerpoint `cp` in output to form pie slice shape.  Default: false
 //   endpoint = If false exclude the last point (function only).  Default: true
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  (Module only) Default: `CENTER`
@@ -739,16 +741,20 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
     assert(is_bool(endpoint))
     !endpoint ?
         assert(!wedge, "endpoint cannot be false if wedge is true")
-        list_head(arc(u_add(n,1),r,angle,d,cp,points,corner,width,thickness,start,wedge,long,cw,ccw,true)) :
+        list_head(arc(u_add(n,1),r,angle,d,cp,points,corner,width,thickness,start,wedge,long,cw,ccw,true))
+  :
+    assert(is_undef(start) || is_def(angle), "start requires angle")
+    assert(is_undef(angle) || !any_defined([thickness,width,points,corner]), "Cannot give angle with points, corner, width or thickness")
     assert(is_undef(n) || (is_integer(n) && n>=2), "Number of points must be an integer 2 or larger")
+    assert(is_undef(points) || is_path(points, [2,3]), "Points must be a list of 2d or 3d points")
+    assert((is_def(points) && len(points)==2) || !any([cw,ccw,long]), "cw, ccw, and long are only allowed when points is a list of length 2")
     // First try for 2D arc specified by width and thickness
-    is_def(width) && is_def(thickness)? (
-        assert(!any_defined([r,cp,points]) && !any([cw,ccw,long]),"Conflicting or invalid parameters to arc")
+    is_def(width) && is_def(thickness)? 
+        assert(!any_defined([r,cp,points,angle,start]),"Conflicting or invalid parameters to arc")
         assert(width>0, "Width must be postive")
         assert(thickness>0, "Thickness must be positive")
         arc(n,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge)
-    ) :
-    is_def(angle)? (
+  : is_def(angle)? 
         let(
             parmok = !any_defined([points,width,thickness]) &&
                 ((is_vector(angle,2) && is_undef(start)) || is_finite(angle))
@@ -769,18 +775,16 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             extra = wedge? [cp] : []
         )
         concat(extra,arcpoints)
-    ) : is_def(corner)? (
-        assert(is_path(corner,[2,3]),"Point list is invalid")
+  : is_def(corner)? 
+        assert(is_path(corner,[2,3]) && len(corner)==3,str("Point list is invalid"))
+        assert(is_undef(cp) && !any([long,cw,ccw]), "Cannot use cp, long, cw, or ccw with corner")
         // Arc is 3D, so transform corner to 2D and make a recursive call, then remap back to 3D
         len(corner[0]) == 3? (
-            assert(!(cw || ccw), "(Counter)clockwise isn't meaningful in 3d, so `cw` and `ccw` must be false")
-            assert(is_undef(cp) || is_vector(cp,3),"corner are 3d so cp must be 3d")
             let(
-                plane = [is_def(cp) ? cp : corner[2], corner[0], corner[1]],
-                center2d = is_def(cp) ? project_plane(plane,cp) : undef,
+                plane = [corner[2], corner[0], corner[1]],
                 points2d = project_plane(plane, corner)
             )
-            lift_plane(plane,arc(n,cp=center2d,corner=points2d,wedge=wedge,long=long))
+            lift_plane(plane,arc(n,corner=points2d,wedge=wedge,long=long))
         ) :
         assert(is_path(corner) && len(corner) == 3)
         let(col = is_collinear(corner[0],corner[1],corner[2]))
@@ -797,12 +801,11 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             angle = posmod(theta_end-theta_start, 360),
             arcpts = arc(n,cp=cp,r=r,start=theta_start,angle=angle,wedge=wedge)
         )
-        dir ? arcpts : reverse(arcpts)
-    ) :
-    assert(is_def(points), "Arc not specified: must give points, angle, or width and thickness")
+        dir ? arcpts : wedge ? reverse_polygon(arcpts) : reverse(arcpts)
+  : assert(is_def(points), "Arc not specified: must give points, angle, or width and thickness")
     assert(is_path(points,[2,3]),"Point list is invalid")
-    // Arc is 3D, so transform points to 2D and make a recursive call, then remap back to 3D
-    len(points[0]) == 3? (
+         // If arc is 3D, transform points to 2D and make a recursive call, then remap back to 3D
+    len(points[0]) == 3? 
         assert(!(cw || ccw), "(Counter)clockwise isn't meaningful in 3d, so `cw` and `ccw` must be false")
         assert(is_undef(cp) || is_vector(cp,3),"points are 3d so cp must be 3d")
         let(
@@ -811,11 +814,10 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             points2d = project_plane(plane, points)
         )
         lift_plane(plane,arc(n,cp=center2d,points=points2d,wedge=wedge,long=long))
-    ) :
-    is_def(cp)? (
+  : len(points)==2?  
         // Arc defined by center plus two points, will have radius defined by center and points[0]
         // and extent defined by direction of point[1] from the center
-        assert(is_vector(cp,2), "Centerpoint must be a 2d vector")
+        assert(is_vector(cp,2), "Centerpoint is required when points has length 2 and it must be a 2d vector")
         assert(len(points)==2, "When pointlist has length 3 centerpoint is not allowed")
         assert(points[0]!=points[1], "Arc endpoints are equal")
         assert(cp!=points[0]&&cp!=points[1], "Centerpoint equals an arc endpoint")
@@ -835,8 +837,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             sa = atan2(v1.y,v1.x)
         )
         arc(n,cp=cp,r=r,start=sa,angle=final_angle,wedge=wedge)
-    ) : (
-        // Final case is arc passing through three points, starting at point[0] and ending at point[3]
+  : // Final case is arc passing through three points, starting at point[0] and ending at point[3]
         let(col = is_collinear(points[0],points[1],points[2]))
         assert(!col, "Collinear inputs do not define an arc")
         let(
@@ -850,8 +851,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             angle = posmod(theta_end-theta_start, 360),
             arcpts = arc(n,cp=cp,r=r,start=theta_start,angle=angle,wedge=wedge)
         )
-        dir ? arcpts : reverse(arcpts)
-    );
+        dir ? arcpts : wedge?reverse_polygon(arcpts):reverse(arcpts);
 
 
 module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, anchor=CENTER, spin=0)
