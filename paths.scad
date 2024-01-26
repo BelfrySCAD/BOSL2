@@ -798,8 +798,8 @@ function path_cut(path,cutdist,closed) =
   let(closed=default(closed,false))
   assert(is_bool(closed))
   assert(is_vector(cutdist))
-  assert(last(cutdist)<path_length(path,closed=closed),"Cut distances must be smaller than the path length")
-  assert(cutdist[0]>0, "Cut distances must be strictly positive")
+  assert(last(cutdist)<path_length(path,closed=closed)-EPSILON,"Cut distances must be smaller than the path length")
+  assert(cutdist[0]>EPSILON, "Cut distances must be strictly positive")
   let(
       cutlist = path_cut_points(path,cutdist,closed=closed)
   )
