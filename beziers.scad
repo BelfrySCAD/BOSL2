@@ -457,7 +457,8 @@ function bezpath_points(bezpath, curveind, u, N=3) =
 //       [60,25], [70,0], [80,-25],
 //       [80,-50], [50,-50]
 //   ];
-//   debug_bezier(bez, N=3, width=2);
+//   path = bezpath_curve(bez);
+//   stroke(path,dots=true,dots_color="red");
 function bezpath_curve(bezpath, splinesteps=16, N=3, endpoint=true) =
     assert(is_path(bezpath))
     assert(is_int(N))
