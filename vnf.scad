@@ -423,20 +423,23 @@ function vnf_join(vnfs) =
 // Topics: VNF Generators, Lists
 // See Also: vnf_tri_array(), vnf_join(), vnf_vertex_array(), vnf_from_region()
 // Usage:
-//   vnf = vnf_from_polygons(polygons);
+//   vnf = vnf_from_polygons(polygons, [eps]);
 // Description:
 //   Given a list of 3D polygons, produces a VNF containing those polygons.
 //   It is up to the caller to make sure that the points are in the correct order to make the face
 //   normals point outwards.  No checking for duplicate vertices is done.  If you want to
-//   remove duplicate vertices use {{vnf_merge_points()}}.
+//   remove duplicate vertices use {{vnf_merge_points()}}.  Polygons with zero area are discarded from the face list by default. 
 // Arguments:
 //   polygons = The list of 3D polygons to turn into a VNF
-function vnf_from_polygons(polygons) =
+//   eps = Polygons with area small than this are discarded.  Default: EPSILON
+function vnf_from_polygons(polygons,eps=EPSILON) =
    assert(is_list(polygons) && is_path(polygons[0]),"Input should be a list of polygons")
    let(
        offs = cumsum([0, for(p=polygons) len(p)]),
        faces = [for(i=idx(polygons))
-                  [for (j=idx(polygons[i])) offs[i]+j]
+                  let(area=polygon_area(polygons[i]))
+                  if (is_def(area) && area > eps)
+                    [for (j=idx(polygons[i])) offs[i]+j]
                ]
    )
    [flatten(polygons), faces];
