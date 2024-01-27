@@ -1603,7 +1603,7 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
         full = is_def(angle) ? false : full
     )
     assert(is_undef(start) || is_def(angle), "start requires angle")
-    assert(is_undef(angle) || num_defined([thickness,width,points,corner]), "Cannot give angle with points, corner, width or thickness")
+    assert(is_undef(angle) || !any_defined([thickness,width,points,corner]), "Cannot give angle with points, corner, width or thickness")
     assert(!is_vector(angle,2) || abs(angle[1]-angle[0]) <= 360, "angle gives more than 360 degrees")
     assert(is_undef(points) || is_path(points,2), str("Points must be a 2d vector",points))
     assert(!any_defined([points,thickness,width]) || num_defined([r1,r2])==0, "Cannot give r1, r2, d1, or d2 with points, width or thickness")

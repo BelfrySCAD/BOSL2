@@ -450,9 +450,6 @@ function affine3d_rot_from_to(from, to) =
     ];
 
 
-
-
-
 // Function: affine3d_mirror()
 // Synopsis: Returns a 3D (4x4) reflection transformation matrix.
 // SynTags: Mat
