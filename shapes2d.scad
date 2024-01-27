@@ -1503,6 +1503,179 @@ module egg(length,r1,r2,R,d1,d2,D,anchor=CENTER, spin=0)
 }
 
 
+// Function&Module: ring()
+// Synopsis: Draws a 2D ring or partial ring or returns a region or path
+// SynTags: Geom, Region, Path
+// Topics: Shapes (2D), Paths (2D), Path Generators, Regions, Attachable
+// See Also: arc(), circle()
+//
+// Usage: ring or partial ring from radii/diameters
+//   region=ring(n, r1=|d1=, r2=|d2=, [full=], [angle=], [start=]);
+// Usage: ring or partial ring from radius and ring width
+//   region=ring(n, ring_width, r=|d=, [full=], [angle=], [start=]);
+// Usage: ring or partial ring passing through three points
+//   region=ring(n, [ring_width], [r=,d=], points=[P0,P1,P2], [full=]);
+// Usage: ring or partial ring from tangent point on segment `[P0,P1]` to the tangent point on segment `[P1,P2]`.
+//   region=ring(n, [ring_width], corner=[P0,P1,P2], [r=,d=], [r1|d1=], [r2=|d2=], [full=]);
+// Usage: ring or partial ring based on setting a width at the X axis and height above the X axis
+//   region=ring(n, [ring_width], [r=|d=], width=, thickness=, [full=]);
+// Usage: as a module
+//   ring(...) [ATTACHMENTS];
+// Description:
+//   If called as a function returns a region or path for a ring or part of a ring.  If called as a module, creates the corresponding 2D ring or partial ring shape.
+//   The geometry of the ring can be specified using any of the methods supported by {{arc()}}.  If `full` is true (the default) the ring will be complete and the
+//   returned value a region.  If `full` is false then the return is a path describing a partial ring.  The returned path is always clockwise with the larger radius arc first.
+//   A ring has two radii, the inner and outer.  When specifying geometry you must somehow specify one radius, which can be directly with `r=` or `r1=` or by giving a point list with 
+//   or without a center point.  You specify the second radius by giving `r=` directly, or `r2=` if you used `r1=` for the first radius, or by giving `ring_width`.  If `ring_width`
+//   the second radius will be larger than the first; if `ring_width` is negative the second radius will be smaller. 
+// Arguments:
+//   n = Number of vertices to use for the inner and outer portions of the ring
+//   ring_width = width of the ring.  Can be positive or negative
+//   ---
+//   r1/d1 = inner radius or diameter of the ring
+//   r2/d2 = outer radius or diameter of the ring
+//   r/d = second radius or diameter of ring when r1 or d1 are not given
+//   full = if true create a full ring, if false create a partial ring.  Default: true unless `angle` is given
+//   cp = Centerpoint of ring.
+//   points = Points on the ring boundary.
+//   corner = A path of two segments to fit the ring tangent to.
+//   long = if given with cp and points takes the long arc instead of the default short arc.  Default: false
+//   cw = if given with cp and 2 points takes the arc in the clockwise direction.  Default: false
+//   ccw = if given with cp and 2 points takes the arc in the counter-clockwise direction.  Default: false
+//   width = If given with `thickness`, ring is defined based on an arc with ends on X axis.
+//   thickness = If given with `width`, ring is defined based on an arc with ends on X axis, and this height above the X axis. 
+//   start = Start angle of ring.  Default: 0
+//   angle = If scalar, the end angle in degrees relative to start parameter.  If a vector specifies start and end angles of ring.  
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  (Module only) Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  (Module only) Default: `0`
+// Examples(2D):
+//   ring(r1=5,r2=7, n=32);
+//   ring(r=5,ring_width=-1, n=32);
+//   ring(r=7, n=5, ring_width=-4);
+//   ring(points=[[0,0],[3,3],[5,2]], ring_width=2, n=32);
+//   ring(points=[[0,0],[3,3],[5,2]], r=1, n=32);
+//   ring(cp=[3,3], points=[[4,4],[1,3]], ring_width=1);
+//   ring(corner=[[0,0],[4,4],[7,3]], r2=2, r1=1.5,n=22,full=false);
+//   ring(r1=5,r2=7, angle=[33,110], n=32);
+//   ring(r1=5,r2=7, angle=[0,360], n=32);  // full circle
+//   ring(r=5, points=[[0,0],[3,3],[5,2]], full=false, n=32);
+//   ring(32,-2, cp=[1,1], points=[[4,4],[-3,6]], full=false);
+//   ring(r=5,ring_width=-1, n=32);
+//   ring(points=[[0,0],[3,3],[5,2]], ring_width=2, n=32);
+//   ring(points=[[0,0],[3,3],[5,2]], r=1, n=32);
+//   ring(cp=[3,3], points=[[4,4],[1,3]], ring_width=1);
+// Example(2D): Using corner, the outer radius is the one tangent to the corner
+//   corner = [[0,0],[4,4],[7,3]];
+//   ring(corner=corner, r2=3, r1=2,n=22);
+//   stroke(corner, width=.1,color="red");
+// Example(2D): For inner radius tangent to a corner, specify `r=` and `ring_width`.
+//   corner = [[0,0],[4,4],[7,3]];
+//   ring(corner=corner, r=3, ring_width=1,n=22,full=false);
+//   stroke(corner, width=.1,color="red");
+// Example(2D):
+//   $fn=128;
+//   region = ring(width=5,thickness=1.5,ring_width=2);   
+//   path = ring(width=5,thickness=1.5,ring_width=2,full=false);
+//   stroke(region,width=.25);
+//   color("red") dashed_stroke(path,dashpat=[1.5,1.5],closed=true,width=.25);
+
+module ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickness,start, long=false, full=true, cw=false,ccw=false, anchor=CENTER, spin=0)
+{
+  R = ring(n=n,r=r,ring_width=ring_width,r1=r1,r2=r2,angle=angle,d=d,d1=d1,d2=d2,cp=cp,points=points,corner=corner, width=width,thickness=thickness,start=start,
+           long=long, full=full, cw=cw, ccw=ccw);
+  attachable(anchor,spin,two_d=true,region=is_region(R)?R:undef,path=is_region(R)?undef:R,extent=false) {
+     region(R);
+     children();
+  }
+}  
+
+function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickness,start, long=false, full=true, cw=false,ccw=false) =
+    let(
+        r1 = is_def(r1) ? assert(is_undef(d),"Cannot define r1 and d1")r1
+           : is_def(d1) ? d1/2
+           : undef,
+        r2 = is_def(r2) ? assert(is_undef(d),"Cannot define r2 and d2")r2
+           : is_def(d2) ? d2/2
+           : undef,
+        r = is_def(r) ? assert(is_undef(d),"Cannot define r and d")r
+          : is_def(d) ? d/2
+          : undef,
+        full = is_def(angle) ? false : full
+    )
+    assert(is_undef(start) || is_def(angle), "start requires angle")
+    assert(is_undef(angle) || num_defined([thickness,width,points,corner]), "Cannot give angle with points, corner, width or thickness")
+    assert(!is_vector(angle,2) || abs(angle[1]-angle[0]) <= 360, "angle gives more than 360 degrees")
+    assert(is_undef(points) || is_path(points,2), str("Points must be a 2d vector",points))
+    assert(!any_defined([points,thickness,width]) || num_defined([r1,r2])==0, "Cannot give r1, r2, d1, or d2 with points, width or thickness")
+    is_def(width) && is_def(thickness)?
+       assert(!any_defined([r,cp,points,angle,start]), "Conflicting or invalid parameters to ring")
+       assert(all_positive([width,thickness]), "Width and thickness must be positive")
+       ring(n=n,r=r,ring_width=ring_width,points=[[width/2,0], [0,thickness], [-width/2,0]],full=full)
+  : full && is_undef(cp) && is_def(points) ?
+       assert(is_def(points) && len(points)==3, "Without cp given, must provide exactly three points")
+       assert(num_defined([r,ring_width]), "Must give r or ring_width with point list")
+       let(
+            ctr_rad = circle_3points(points),
+            dummy=assert(is_def(ctr_rad[0]), "Collinear points given to ring()"),
+            part1 = move(ctr_rad[0],circle(r=ctr_rad[1], $fn=is_def(n) ? n : $fn)),
+            first_r = norm(part1[0]-ctr_rad[0]),
+            r = is_def(r) ? r : first_r+ring_width,
+            part2 = move(ctr_rad[0],circle(r=r, $fn=is_def(n) ? n : $fn))
+       )
+       assert(first_r!=r, "Ring has zero width")
+       (first_r>r ? [part1, reverse(part2)] : [part2, reverse(part1)])
+  : full && is_def(corner) ?
+       assert(is_path(corner,2) && len(corner)==3, "corner must be a list of 3 points")
+       assert(!any_defined([thickness,width,points,cp,angle.start]), "Conflicting or invalid parameters to ring")
+       let(parmok = (all_positive([r1,r2]) && num_defined([r,ring_width])==0) 
+                      || (num_defined([r1,r2])==0 && all_positive([r]) && is_finite(ring_width)))
+       assert(parmok, "With corner must give (r1 and r2) or (r and ring_width), but you gave some other combination")
+       let(
+           newr1 = is_def(r1) ? min(r1,r2) : min(r,r+ring_width),
+           newr2 = is_def(r2) ? max(r2,r1) : max(r,r+ring_width),
+           data = circle_2tangents(newr2,corner[0],corner[1],corner[2]),
+           cp=data[0]
+       )
+       [move(cp,circle($fn=is_def(n) ? n : $fn, r=newr2)),move(cp, circle( $fn=is_def(n) ? n : $fn, r=newr1))]
+  : full && is_def(cp) && is_def(points) ?
+       assert(in_list(len(points),[1,2]), "With cp must give a list of one or two points.")
+       assert(num_defined([r,ring_width]), "Must give r or ring_width with point list")
+       let(
+           first_r=norm(points[0]-cp),
+           part1 = move(cp,circle(r=first_r, $fn=is_def(n) ? n : $fn)),
+           r = is_def(r) ? r : first_r+ring_width,
+           part2 = move(cp,circle(r=r, $fn=is_def(n) ? n : $fn))
+       )
+       assert(first_r!=r, "Ring has zero width")
+       first_r>r ? [part1, reverse(part2)] : [part2, reverse(part1)]
+  : full || angle==360 || (is_vector(angle,2) && abs(angle[1]-angle[0])==360) ?
+      let(parmok = (all_positive([r1,r2]) && num_defined([r,ring_width])==0) 
+                     || (num_defined([r1,r2])==0 && all_positive([r]) && is_finite(ring_width)))
+      assert(parmok, "Must give (r1 and r2) or (r and ring_width), but you gave some other combination")
+      let(
+          newr1 = is_def(r1) ? min(r1,r2) : min(r,r+ring_width),
+          newr2 = is_def(r2) ? max(r2,r1) : max(r,r+ring_width),
+          cp = default(cp,[0,0])
+      )
+      [move(cp,circle($fn=is_def(n) ? n : $fn, r=newr2)),move(cp, circle( $fn=is_def(n) ? n : $fn, r=newr1))]
+  :  let(
+         parmRok = (all_positive([r1,r2]) && num_defined([r,ring_width])==0) 
+                     || (num_defined([r1,r2])==0 && all_positive([r]) && is_finite(ring_width)),
+         pass_r = any_defined([points,thickness]) ? assert(!any_defined([r1,r2]),"Cannot give r1, d1, r2, or d2 with a point list or width & thickness")
+                                                    assert(num_defined([ring_width,r])==1, "Must defined exactly one of r and ring_width when using a pointlist or width & thickness")
+                                                    undef 
+                : assert(num_defined([r,r2])==1,"Cannot give r or d and r1 or d1") first_defined([r,r2]),
+         base_arc = clockwise_polygon(arc(r=pass_r,n=n,angle=angle,cp=cp,points=points, corner=corner, width=width, thickness=thickness,start=start, long=long, cw=cw,ccw=ccw,wedge=true)),
+         center = base_arc[0],
+         arc1 = list_tail(base_arc,1),
+         r_actual = norm(center-arc1[0]),
+         new_r = is_def(ring_width) ? r_actual+ring_width
+               : first_defined([r,r1]),
+         pts = [center+new_r*unit(arc1[0]-center), center+new_r*unit(arc1[floor(len(arc1)/2)]-center), center+new_r*unit(last(arc1)-center)],
+         second=arc(n=n,points=pts),
+         arc2 = is_polygon_clockwise(second) ? second : reverse(second) 
+     ) new_r>r_actual ? concat(arc2, reverse(arc1)) : concat(arc1,reverse(arc2));
+
 
 // Function&Module: glued_circles()
 // Synopsis: Creates a shape of two circles joined by a curved waist.
