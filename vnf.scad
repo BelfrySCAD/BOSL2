@@ -428,16 +428,22 @@ function vnf_join(vnfs) =
 //   Given a list of 3D polygons, produces a VNF containing those polygons.
 //   It is up to the caller to make sure that the points are in the correct order to make the face
 //   normals point outwards.  No checking for duplicate vertices is done.  If you want to
-//   remove duplicate vertices use {{vnf_merge_points()}}.  Polygons with zero area are discarded from the face list by default. 
+//   remove duplicate vertices use {{vnf_merge_points()}}.  Polygons with zero area are discarded from the face list by default.
+//   If you give non-coplanar faces an error is displayed.  These checks increase run time by about 2x for triangular polygons, but
+//   about 10x for pentagons; the checks can be disabled by setting fast=true.  
 // Arguments:
 //   polygons = The list of 3D polygons to turn into a VNF
+//   fast = Set to true to skip area and coplanarity checks for increased speed.  Default: false
 //   eps = Polygons with area small than this are discarded.  Default: EPSILON
-function vnf_from_polygons(polygons,eps=EPSILON) =
+function vnf_from_polygons(polygons,fast=false,eps=EPSILON) =
    assert(is_list(polygons) && is_path(polygons[0]),"Input should be a list of polygons")
    let(
        offs = cumsum([0, for(p=polygons) len(p)]),
        faces = [for(i=idx(polygons))
-                  let(area=polygon_area(polygons[i]))
+                  let(
+                      area=fast ? 1 : polygon_area(polygons[i]),
+                      dummy=assert(is_def(area) || is_collinear(polygons[i],eps=eps),str("Polygon ", i, " is not coplanar"))
+                  )
                   if (is_def(area) && area > eps)
                     [for (j=idx(polygons[i])) offs[i]+j]
                ]
