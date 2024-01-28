@@ -906,6 +906,8 @@ function _vnf_sort_vertices(vnf, idx=[2,1,0]) =
     ) sorted_vnf;
 
 
+
+
 // Function: vnf_slice()
 // Synopsis: Slice the faces of a VNF along an axis.
 // SynTags: VNF
@@ -1613,34 +1615,28 @@ module _show_faces(vertices, faces, size=1, filter) {
         for (i = [0:1:len(faces)-1]) {
             face = faces[i];
             if (face[0] < 0 || face[1] < 0 || face[2] < 0 || face[0] >= vlen || face[1] >= vlen || face[2] >= vlen) {
-                echo("BAD FACE: ", vlen=vlen, face=face);
-            } else if (is_undef(filter) || any(face,filter)) {
+                echo(str("INVALID FACE: indices of face ",i," are out of bounds [0,",vlen-1,"]: face=",face));
+            }
+            else if (is_undef(filter) || any(face,filter)) {
                 verts = select(vertices,face);
-                c = mean(verts);
-                v0 = verts[0];
-                v1 = verts[1];
-                v2 = verts[2];
-                dv0 = unit(v1 - v0);
-                dv1 = unit(v2 - v0);
-                nrm0 = cross(dv0, dv1);
-                nrm1 = UP;
-                axis = vector_axis(nrm0, nrm1);
-                ang = vector_angle(nrm0, nrm1);
-                theta = atan2(nrm0[1], nrm0[0]);
-                translate(c) {
-                    rotate(a=180-ang, v=axis) {
-                        zrot(theta-90)
-                        linear_extrude(height=size/10, center=true, convexity=10) {
-                            union() {
+                normal = polygon_normal(verts);
+                if (is_undef(normal))
+                    echo(str("DEGENERATE FACE: face ",i," has no normal vector, face=", face));
+                else {
+                    axis = vector_axis(normal, DOWN);
+                    ang = vector_angle(normal, DOWN);
+                    theta = atan2(normal[1], normal[0]);
+                    translate(mean(verts)) 
+                      rotate(a=(180-ang), v=axis)
+                      zrot(theta+90)
+                      linear_extrude(height=size/10, center=true, convexity=10) {
                                 text(text=str(i), size=size, halign="center");
                                 text(text=str("_"), size=size, halign="center");
-                            }
-                        }
-                    }
+                      }
                 }
             }
         }
-    }
+    }        
 }
 
 
