@@ -906,7 +906,6 @@ function _vnf_sort_vertices(vnf, idx=[2,1,0]) =
     ) sorted_vnf;
 
 
-
 // Function: vnf_slice()
 // Synopsis: Slice the faces of a VNF along an axis.
 // SynTags: VNF
