@@ -83,7 +83,7 @@ cuboid([100,80,60], rounding=-20, edges = BOTTOM);
 
 If you do need to add a fillet on a Z-aligned edge, use [fillet()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#module-fillet):
 
-```openscad-3d
+```openscad-3D
 include <BOSL2/std.scad>
 cuboid([100,80,60], rounding = -10, edges = BOT+FRONT) 
   position(FRONT+RIGHT)
@@ -152,7 +152,7 @@ In addition to the simple roundover mask, there are masks for [cove](https://git
 
 The mask2d_ogee() only works on [cube()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-cube) and [cuboid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#module-cuboid) shapes, or a [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid) where size2 >= size1 in both the X and Y dimensions.
 
-```openscad-3d
+```openscad-3D
 include <BOSL2/std.scad>
 diff()
 	prismoid(size1 = [50,50],size2 = [80,80], rounding1 = 25, height = 80)
@@ -246,7 +246,7 @@ Two parameters control the roundover k and joint.  The joint parameter is specif
 
 The k parameter ranges from 0 to 1 with a default of 0.5. Larger values give a more abrupt transition and smaller ones a more gradual transition. A k value of .93 approximates the circular roundover of other rounding methods.
 
- If you want a very smooth roundover, set the joint parameter as large as possible and then adjust the k value down as low as gives a sufficiently large roundover.
+ If you want a very smooth roundover, set the joint parameter as large as possible and then adjust the k value down low enough to achieve a sufficiently large roundover.
 
 
 ```openscad-3D
@@ -276,7 +276,7 @@ rounded_prism(rect(20), height=20,
 
 A k value of 1:
 
-```openscad-3d
+```openscad-3D
 include <BOSL2/std.scad>
 include <BOSL2/rounding.scad>
 rounded_prism(rect(20), height=20, 
