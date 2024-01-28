@@ -6,7 +6,7 @@ There are four different 3d shape primitives that you can use to make cube-like 
 
 * [**cuboid()**](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#module-cuboid) - Creates a cube with chamfering and roundovers. 
 
-* [**cube()**](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-cube) -  An extended version of OpenSCAD's cube() with anchors for attaching children. (See the [Attachments Tutorial](https://github.com/BelfrySCAD/BOSL2/wiki/Tutorial-Attachments)).
+* [**cube()**](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-cube) -  An extended version of OpenSCAD's [cube()](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Primitive_Solids#cube) with anchors for attaching children. (See the [Attachments Tutorial](https://github.com/BelfrySCAD/BOSL2/wiki/Tutorial-Attachments)).
 
 * [**prismoid()**](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid) - Creates a rectangular prismoid shape with optional roundovers and chamfering. 
  
