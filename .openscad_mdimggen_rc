@@ -1,4 +1,4 @@
-docs_dir: "/Users/RAM/Desktop/BOSL2.wiki"
+docs_dir: "BOSL2.wiki"
 image_root: "images/tutorials"
 file_prefix: "Tutorial-"
 source_files: "tutorials/*.md"
