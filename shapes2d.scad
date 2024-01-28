@@ -214,7 +214,7 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
             assert(is_undef(cornerpt) || len(cornerpt)==1,"Cannot find corner point to anchor")
             [move(cp, p=qrpts), is_undef(cornerpt)? undef : move(cp,p=cornerpt[0])]
         ],
-        path = flatten(column(corners,0)),
+        path = deduplicate(flatten(column(corners,0)),closed=true),
         override = [for(i=[0:3])
                       let(quad=quadorder[i])
                       if (is_def(corners[i][1])) [quadpos[quad], [corners[i][1], min(chamfer[quad],rounding[quad])<0 ? [quadpos[quad].x,0] : undef]]]

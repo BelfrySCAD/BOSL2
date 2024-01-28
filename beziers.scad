@@ -1252,8 +1252,8 @@ function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, retur
     assert(is_bezier_patch(patch), "Input is not a Bezier patch")
     assert(is_int(splinesteps) && splinesteps>0, "splinesteps must be a positive integer")
     let(
-        row_degen = [for(row=patch) all_equal(row)],
-        col_degen = [for(col=transpose(patch)) all_equal(col)],
+        row_degen = [for(row=patch) all_equal(row,eps=EPSILON)],
+        col_degen = [for(col=transpose(patch)) all_equal(col,eps=EPSILON)],
         top_degen = row_degen[0],
         bot_degen = last(row_degen),
         left_degen = col_degen[0],

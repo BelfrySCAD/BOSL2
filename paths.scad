@@ -280,7 +280,7 @@ function _path_self_intersections(path, closed=true, eps=EPSILON) =
             // [a1,a2]. The variable signals is zero when abs(vals[j]-ref) is less than
             // eps and the sign of vals[j]-ref otherwise.  
           signals = [for(j=[i+2:1:plen-(i==0 && closed? 2: 1)]) 
-                        abs(vals[j]-ref) <  eps ? 0 : sign(vals[j]-ref) ] 
+                        abs(vals[j]-ref) <  eps ? 0 : sign(vals[j]-ref) ]
         )
         if(max(signals)>=0 && min(signals)<=0 ) // some remaining edge intersects line [a1,a2]
         for(j=[i+2:1:plen-(i==0 && closed? 3: 2)])
@@ -581,6 +581,9 @@ function is_path_simple(path, closed, eps=EPSILON) =
     let(closed=default(closed,false))
     assert(is_path(path, 2),"Must give a 2D path")
     assert(is_bool(closed))
+    let(
+        path = deduplicate(path,closed=closed,eps=eps)
+    )
     // check for path reversals
     [for(i=[0:1:len(path)-(closed?2:3)])
          let(v1=path[i+1]-path[i],
