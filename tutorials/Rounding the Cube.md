@@ -1,6 +1,6 @@
 # Rounding the Cube
 
-One of the shape primitives you'll use most often in your OpenSCAD designs is the cube.  Rounding the edges of cube-like objects impacts both the visual appeal and functional aspects of the final product. The BOSL2 library provides a variety of methods for rounding edges and corners.
+One of the shape primitives you'll use most often in your OpenSCAD designs is the cube.  Rounding the edges of cube-like objects impacts both the visual appeal and functional aspects of the final design. The BOSL2 library provides a variety of methods for rounding edges and corners.
 
 There are four different 3d shape primitives that you can use to make cube-like objects:
 
@@ -17,30 +17,31 @@ BOSL2 provides two different methods for rounding the edges of the cube-like pri
 
 * **Built-in Rounding** - [Cuboid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#module-cuboid), [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid), and [rounded_prism()](https://github.com/BelfrySCAD/BOSL2/wiki/rounding.scad#functionmodule-rounded_prism) all have built-in arguments for rounding some or all of their edges.
 
-* **Masking** -  BOSL2 includes a number of options for masking the edges and corners of objects. Masking can accomplish rounding tasks that are not possible with the built-in rounding arguments.
+* **Masking** -  BOSL2 includes a number of options for masking the edges and corners of objects. Masking can accomplish rounding tasks that are not possible with the built-in rounding arguments. For example with masking you can have a cube with a different rounding radius on the top edges than the rounding radius on the bottom edges.
 
 
 ## Cuboid Rounding
 
-You can round the edges of a [cuboid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#module-cuboid) with the `rounding=` argument by specifying the radius of curvature:
+You can round the edges of a [cuboid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#module-cuboid) with the `rounding` argument by specifying the radius of curvature:
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cuboid(100, rounding=20);
 ```
 
-If you want to round selected edges you can specify which edges using combinations of the named directions **LEFT, RIGHT, TOP, BOT, FWD, BACK**. See [specifying edges](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#subsection-specifying-edges) for more details.
 
-![](https://github.com/BelfrySCAD/BOSL2/wiki/images/attachments/subsection-specifying-edges_fig1.png)
+Cube-like objects have six named faces.
 
-You can round just the top edges:
+![](https://github.com/BelfrySCAD/BOSL2/wiki/images/attachments/subsection-specifying-edges_fig2.png)
+
+You can round just the edges on one of the faces. Here we're rounding only the top edges:
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cuboid([100,80,60], rounding=20, edges = TOP);
 ```
 
-...or just the bottom edges.  Here we're using the *teardrop* parameter to limit the overhang angle to enable 3d printing without supports:
+...or just the bottom edges.  Here we're using the `teardrop` parameter to limit the overhang angle to enable 3d printing on FDM printers without requiring supports:
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -53,6 +54,10 @@ We can round only the edges aligned with one of the axes, X, Y, or Z:
 include <BOSL2/std.scad>
 cuboid([100,80,60], rounding=20, edges = "Z");
 ```
+
+If you want to round selected edges you can specify which edges using combinations of the named directions **LEFT, RIGHT, TOP, BOT, FWD, BACK**. See [Specifying Edges](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#subsection-specifying-edges) for more details.
+
+![](https://github.com/BelfrySCAD/BOSL2/wiki/images/attachments/subsection-specifying-edges_fig1.png)
 
 
 It is possible to round one or more of the edges while leaving others unrounded:
@@ -69,21 +74,30 @@ include <BOSL2/std.scad>
 cuboid([100,80,60], rounding=20, except = TOP+FRONT);
 ```
 
-You can fillet edges by using negative rounding values:
+You can fillet top or bottom edges by using negative rounding values. Note that you cannot use negative rounding values on Z-aligned (side) edges.  
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cuboid([100,80,60], rounding=-20, edges = BOTTOM);
 ```
 
-Chamfering the edges of the cuboid() can be done in a similar fashion:
+If you do need to add a fillet on a Z-aligned edge, use [fillet()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#module-fillet):
+
+```openscad-3d
+include <BOSL2/std.scad>
+cuboid([100,80,60], rounding = -10, edges = BOT+FRONT) 
+  position(FRONT+RIGHT)
+    fillet(l=60, r=10, spin=180);
+```
+
+Chamfering the edges of the cuboid() can be done in a manner similar to rounding:
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cuboid([100,80,60], chamfer=20);
 ```
 
-You can specify edges as with rounding.
+You can specify edges as with rounding:
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -182,11 +196,11 @@ include <BOSL2/std.scad>
 diff()
 	cuboid([60,80,40])  {
 		edge_mask(TOP+FWD)
-			rounding_edge_mask(r = 10, l = $parent_size.x);
+			rounding_edge_mask(r = 10, l = $parent_size.x + 0.1);
 		edge_mask(TOP+RIGHT)
-			rounding_edge_mask(r = 10, l = $parent_size.y);
+			rounding_edge_mask(r = 10, l = $parent_size.y + 0.1);
 		edge_mask(RIGHT+FWD)
-			rounding_edge_mask(r = 10, l = $parent_size.z);
+			rounding_edge_mask(r = 10, l = $parent_size.z + 0.1);
 	}	
 ```
 
@@ -197,30 +211,30 @@ include <BOSL2/std.scad>
 diff()
 	cuboid([60,80,40]) {
 		edge_mask(TOP+FWD)
-			rounding_edge_mask(r = 10, l = $parent_size.x);
+			rounding_edge_mask(r = 10, l = $parent_size.x + 0.1);
 		edge_mask(TOP+RIGHT)
-			rounding_edge_mask(r = 10, l = $parent_size.y);
+			rounding_edge_mask(r = 10, l = $parent_size.y + 0.1);
 		edge_mask(RIGHT+FWD)
-			rounding_edge_mask(r = 10, l = $parent_size.z);
+			rounding_edge_mask(r = 10, l = $parent_size.z + 0.1);
         corner_mask(TOP+RIGHT+FWD)
             rounding_corner_mask(r = 10);
 	}
 	
 ```
 
-As with the built-in rounding arguments, you can use [edge\_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_mask) and [corner\_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-corner_mask) to apply teardrop roundings using [teardrop\_edge_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks3d.scad#module-teardrop_edge_mask) and [teardrop\_corner_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks3d.scad#module-teardrop_corner_mask) to limit the overhang angle for better printing on FDM printers.
+As with the built-in rounding arguments, you can use [edge\_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_mask) and [corner\_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-corner_mask) to apply teardrop roundings using [teardrop\_edge_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks3d.scad#module-teardrop_edge_mask) and [teardrop\_corner_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks3d.scad#module-teardrop_corner_mask) to limit the overhang angle for better printing on FDM printers. Note that the vertical mask on the RIGHT_FWD edge is a rounding\_edge\_mask().
 
 ```openscad-3D
 include <BOSL2/std.scad>
 diff()
 	cuboid([60,80,40]) {
-		edge_mask(TOP+FWD)
-			teardrop_edge_mask(r = 10, l = $parent_size.x, angle = 40);
-		edge_mask(TOP+RIGHT)
-			teardrop_edge_mask(r = 10, l = $parent_size.y, angle = 40);
+		edge_mask(BOT+FWD)
+			teardrop_edge_mask(r = 10, l = $parent_size.x + 0.1, angle = 40);
+		edge_mask(BOT+RIGHT)
+			teardrop_edge_mask(r = 10, l = $parent_size.y + 0.1, angle = 40);
 		edge_mask(RIGHT+FWD)
-			teardrop_edge_mask(r = 10, l = $parent_size.z, angle = 40);
-        corner_mask(TOP+RIGHT+FWD)
+			rounding_edge_mask(r = 10, l = $parent_size.z + 0.1);
+        corner_mask(BOT+RIGHT+FWD)
             teardrop_corner_mask(r = 10, angle = 40);
 	}
 	
@@ -228,7 +242,7 @@ diff()
 ##Rounded Prism
 You can construct cube-like objects, as well as a variety of other prisms using [rounded_prism()](https://github.com/BelfrySCAD/BOSL2/wiki/rounding.scad#functionmodule-rounded_prism).  The unique feature of [rounded_prism()](https://github.com/BelfrySCAD/BOSL2/wiki/rounding.scad#functionmodule-rounded_prism) is the ability to use continuous curvature rounding. Rather than using constant radius arcs, continuous curvature rounding uses 4th order Bezier curves. For complete details on how this works see [Types of Roundovers](https://github.com/BelfrySCAD/BOSL2/wiki/rounding.scad#section-types-of-roundovers).
 
-Two parameters control the roundover k and joint.  The joint parameter is specified separately for the top, bottom and side edges; joint_top, joint_bot, and joint_sides.
+Two parameters control the roundover k and joint.  The joint parameter is specified separately for the top, bottom and side edges; joint\_top, joint\_bot, and joint_sides.
 
 The k parameter ranges from 0 to 1 with a default of 0.5. Larger values give a more abrupt transition and smaller ones a more gradual transition. A k value of .93 approximates the circular roundover of other rounding methods.
 
