@@ -1743,7 +1743,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   e = [ 50,-50, 50];
 //   vnf = vnf_from_polygons([
 //       [a, b, e], [a, c, b], [a, d, c], [a, e, d], [b, c, d, e]
-//   ]);
+//   ],fast=true);
 //   vnf_validate(vnf);
 // Example(3D,Edges): MULTCONN Errors; More Than Two Faces Attached to the Same Edge.  This confuses CGAL, and can lead to failed renders.
 //   vnf = vnf_triangulate(linear_sweep(union(square(50), square(50,anchor=BACK+RIGHT)), height=50));
@@ -1948,14 +1948,9 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false) =
     ) hole_edges? issues :
     let(
         nonplanars = unique([
-            for (i = idx(faces)) let(
-                face = faces[i],
-                area = face_areas[i],
-                faceverts = [for (k=face) varr[k]]
-            )
-            if (is_num(area) && abs(area) > EPSILON)
-            if (!is_coplanar(faceverts))
-            _vnf_validate_err("NONPLANAR", face)
+            for (i = idx(faces))
+               if (is_undef(face_areas[i])) 
+                  _vnf_validate_err("NONPLANAR", faces[i])
         ]),
         issues = concat(issues, nonplanars)
     ) issues;
