@@ -1702,7 +1702,7 @@ module cyl(
                 cylinder(h=l, r1=r1, r2=r2, center=true, $fn=sides);
             } else {
                 vnf = cyl(
-                    l=l, r1=r1, r2=r2, center=true, $fn=sides,
+                    l=l, r1=r1, r2=r2, center=true, 
                     chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
                     chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
                     rounding=rounding, rounding1=rounding1, rounding2=rounding2,

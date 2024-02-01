@@ -298,5 +298,11 @@ test_path_torsion();
 
 
 
-//echo(fmt_float(sampled));
+module test_is_path_simple(){
+    assert(is_path_simple([[0,0],[1,1],[1,1],[2,1]]));
+    assert(is_path_simple([[0,0],[10,0],[0,20],[10,20]],closed=false));
+    assert(!is_path_simple([[0,0],[10,0],[0,20],[10,20]],closed=true));    
+    assert(is_path_simple(circle($fn=20, r=10)));
+}    
+
   

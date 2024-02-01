@@ -36,9 +36,9 @@ test_vnf_faces();
 
 module test_vnf_from_polygons() {
     verts = [[-1,-1,-1],[1,-1,-1],[0,1,-1],[0,0,1]];
-    faces = [[0,1,2],[0,1,3,2],[2,3,0]];
+    faces = [[0,1,2],[0,3,1],[2,3,0],[0,1,0]];      // Last face has zero area
     assert(vnf_merge_points(
-                     vnf_from_polygons([for (face=faces) select(verts,face)])) == [verts,faces]);
+                     vnf_from_polygons([for (face=faces) select(verts,face)])) == [verts,select(faces,0,-2)]); 
 }
 test_vnf_from_polygons();
 

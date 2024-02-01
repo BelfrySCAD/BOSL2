@@ -423,20 +423,29 @@ function vnf_join(vnfs) =
 // Topics: VNF Generators, Lists
 // See Also: vnf_tri_array(), vnf_join(), vnf_vertex_array(), vnf_from_region()
 // Usage:
-//   vnf = vnf_from_polygons(polygons);
+//   vnf = vnf_from_polygons(polygons, [eps]);
 // Description:
 //   Given a list of 3D polygons, produces a VNF containing those polygons.
 //   It is up to the caller to make sure that the points are in the correct order to make the face
 //   normals point outwards.  No checking for duplicate vertices is done.  If you want to
-//   remove duplicate vertices use {{vnf_merge_points()}}.
+//   remove duplicate vertices use {{vnf_merge_points()}}.  Polygons with zero area are discarded from the face list by default.
+//   If you give non-coplanar faces an error is displayed.  These checks increase run time by about 2x for triangular polygons, but
+//   about 10x for pentagons; the checks can be disabled by setting fast=true.  
 // Arguments:
 //   polygons = The list of 3D polygons to turn into a VNF
-function vnf_from_polygons(polygons) =
+//   fast = Set to true to skip area and coplanarity checks for increased speed.  Default: false
+//   eps = Polygons with area small than this are discarded.  Default: EPSILON
+function vnf_from_polygons(polygons,fast=false,eps=EPSILON) =
    assert(is_list(polygons) && is_path(polygons[0]),"Input should be a list of polygons")
    let(
        offs = cumsum([0, for(p=polygons) len(p)]),
        faces = [for(i=idx(polygons))
-                  [for (j=idx(polygons[i])) offs[i]+j]
+                  let(
+                      area=fast ? 1 : polygon_area(polygons[i]),
+                      dummy=assert(is_def(area) || is_collinear(polygons[i],eps=eps),str("Polygon ", i, " is not coplanar"))
+                  )
+                  if (is_def(area) && area > eps)
+                    [for (j=idx(polygons[i])) offs[i]+j]
                ]
    )
    [flatten(polygons), faces];
@@ -895,6 +904,7 @@ function _vnf_sort_vertices(vnf, idx=[2,1,0]) =
             [ for (face = faces) [ for (i = face) rvidx[i] ] ],
         ]
     ) sorted_vnf;
+
 
 
 
@@ -1605,34 +1615,28 @@ module _show_faces(vertices, faces, size=1, filter) {
         for (i = [0:1:len(faces)-1]) {
             face = faces[i];
             if (face[0] < 0 || face[1] < 0 || face[2] < 0 || face[0] >= vlen || face[1] >= vlen || face[2] >= vlen) {
-                echo("BAD FACE: ", vlen=vlen, face=face);
-            } else if (is_undef(filter) || any(face,filter)) {
+                echo(str("INVALID FACE: indices of face ",i," are out of bounds [0,",vlen-1,"]: face=",face));
+            }
+            else if (is_undef(filter) || any(face,filter)) {
                 verts = select(vertices,face);
-                c = mean(verts);
-                v0 = verts[0];
-                v1 = verts[1];
-                v2 = verts[2];
-                dv0 = unit(v1 - v0);
-                dv1 = unit(v2 - v0);
-                nrm0 = cross(dv0, dv1);
-                nrm1 = UP;
-                axis = vector_axis(nrm0, nrm1);
-                ang = vector_angle(nrm0, nrm1);
-                theta = atan2(nrm0[1], nrm0[0]);
-                translate(c) {
-                    rotate(a=180-ang, v=axis) {
-                        zrot(theta-90)
-                        linear_extrude(height=size/10, center=true, convexity=10) {
-                            union() {
+                normal = polygon_normal(verts);
+                if (is_undef(normal))
+                    echo(str("DEGENERATE FACE: face ",i," has no normal vector, face=", face));
+                else {
+                    axis = vector_axis(normal, DOWN);
+                    ang = vector_angle(normal, DOWN);
+                    theta = atan2(normal[1], normal[0]);
+                    translate(mean(verts)) 
+                      rotate(a=(180-ang), v=axis)
+                      zrot(theta+90)
+                      linear_extrude(height=size/10, center=true, convexity=10) {
                                 text(text=str(i), size=size, halign="center");
                                 text(text=str("_"), size=size, halign="center");
-                            }
-                        }
-                    }
+                      }
                 }
             }
         }
-    }
+    }        
 }
 
 
@@ -1734,7 +1738,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   e = [ 50,-50, 50];
 //   vnf = vnf_from_polygons([
 //       [a, b, e], [a, c, b], [a, d, c], [a, e, d], [b, c, d, e]
-//   ]);
+//   ],fast=true);
 //   vnf_validate(vnf);
 // Example(3D,Edges): MULTCONN Errors; More Than Two Faces Attached to the Same Edge.  This confuses CGAL, and can lead to failed renders.
 //   vnf = vnf_triangulate(linear_sweep(union(square(50), square(50,anchor=BACK+RIGHT)), height=50));
@@ -1939,14 +1943,9 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false) =
     ) hole_edges? issues :
     let(
         nonplanars = unique([
-            for (i = idx(faces)) let(
-                face = faces[i],
-                area = face_areas[i],
-                faceverts = [for (k=face) varr[k]]
-            )
-            if (is_num(area) && abs(area) > EPSILON)
-            if (!is_coplanar(faceverts))
-            _vnf_validate_err("NONPLANAR", face)
+            for (i = idx(faces))
+               if (is_undef(face_areas[i])) 
+                  _vnf_validate_err("NONPLANAR", faces[i])
         ]),
         issues = concat(issues, nonplanars)
     ) issues;
