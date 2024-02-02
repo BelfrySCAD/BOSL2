@@ -457,7 +457,8 @@ function bezpath_points(bezpath, curveind, u, N=3) =
 //       [60,25], [70,0], [80,-25],
 //       [80,-50], [50,-50]
 //   ];
-//   debug_bezier(bez, N=3, width=2);
+//   path = bezpath_curve(bez);
+//   stroke(path,dots=true,dots_color="red");
 function bezpath_curve(bezpath, splinesteps=16, N=3, endpoint=true) =
     assert(is_path(bezpath))
     assert(is_int(N))
@@ -1251,8 +1252,8 @@ function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, retur
     assert(is_bezier_patch(patch), "Input is not a Bezier patch")
     assert(is_int(splinesteps) && splinesteps>0, "splinesteps must be a positive integer")
     let(
-        row_degen = [for(row=patch) all_equal(row)],
-        col_degen = [for(col=transpose(patch)) all_equal(col)],
+        row_degen = [for(row=patch) all_equal(row,eps=EPSILON)],
+        col_degen = [for(col=transpose(patch)) all_equal(col,eps=EPSILON)],
         top_degen = row_degen[0],
         bot_degen = last(row_degen),
         left_degen = col_degen[0],

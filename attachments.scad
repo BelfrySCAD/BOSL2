@@ -1814,8 +1814,16 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 //   If no tag is set then `edge_profile_asym()` sets the tag for children to "remove" so that it will work
 //   with the default {{diff()}} tag.  For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
-//   Profile orientation will be made consistent for all connected edges and corners.  This prohibits having three
-//   edges meeting at any one corner.  You can intert the orientations of all edges with `flip=true`.
+//   .
+//   The asymmetric profiles are joined consistently at the corners.  This is impossible if all three edges at a corner use the profile, hence
+//   this situation is not permitted.  The profile orientation can be inverted using the `flip=true` parameter.
+//   .
+//   The standard profiles are located in the first quadrant and have positive X values.  If you provide a profile located in the second quadrant,
+//   where the X values are negative, then it will produce a fillet.  You can flip any of the standard profiles using {{xflip()}}.  
+//   Fillets are always asymmetric because at a given edge, they can blend in two different directions, so even for symmetric profiles,
+//   the asymmetric logic is required.  You can set the `corner_type` parameter to select rounded, chamfered or sharp corners.
+//   However, when the corners are inside (concave) corners, you must provide the size of the profile ([width,height]), because the
+//   this information is required to produce the correct corner and cannot be obtain from the profile itself, which is a child object.  
 // Arguments:
 //   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
@@ -1890,7 +1898,7 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 //   cuboid(40) {
 //       edge_profile_asym(
 //           [FWD+DOWN,FWD+LEFT],
-//           corner_type="chamfer", size=[7,10]
+//           corner_type="chamfer", size=[10,10]/sqrt(2)
 //        ) xflip() mask2d_chamfer(10);
 //   }
 // Example: Rounding internal corners.

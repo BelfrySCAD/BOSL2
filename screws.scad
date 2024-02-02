@@ -552,7 +552,9 @@ module screw(spec, head, drive, thread, drive_size,
              : undersize;
    dummyA=assert(is_undef(undersize) || is_vector(undersize,2), "Undersize must be a scalar or 2-vector")
           assert(is_undef(undersize) || num_defined([shaft_undersize, head_undersize])==0,
-                 "Cannot combine \"undersize\" with other more specific undersize parameters");
+                 "Cannot combine \"undersize\" with other more specific undersize parameters")
+          assert(is_bool(_teardrop) ||_teardrop=="max" || all_nonnegative([_teardrop]), str("Invalid teardrop parameter",_teardrop));
+   _teardrop = _teardrop==true ? .05 : _teardrop;   // set teardrop default
    shaft_undersize = first_defined([shaft_undersize, undersize[0]]);
    head_undersize = first_defined([head_undersize, undersize[1]]);
    dummyB=assert(is_undef(shaft_undersize) || is_finite(shaft_undersize), "shaft_undersize must be a number")
@@ -683,8 +685,9 @@ module screw(spec, head, drive, thread, drive_size,
                       slop=islop,teardrop=_teardrop);
            if (_shoulder_len>0)
              up(eps_shoulder-flat_height){
-               if (_teardrop)
-                 teardrop(d=_shoulder_diam*rad_scale+islop, h=_shoulder_len+eps_shoulder, anchor=FRONT, orient=BACK, $fn=sides);
+               if (_teardrop!=false) //////
+                 teardrop(d=_shoulder_diam*rad_scale+islop,cap_h=is_num(_teardrop) ? (_shoulder_diam*rad_scale+islop)/2*(1+_teardrop):undef,
+                          h=_shoulder_len+eps_shoulder, anchor=FRONT, orient=BACK, $fn=sides);
                else
                  cyl(d=_shoulder_diam*rad_scale+islop, h=_shoulder_len+eps_shoulder, anchor=TOP, $fn=sides, chamfer1=details ? _shoulder_diam/30:0);
              }
@@ -702,8 +705,9 @@ module screw(spec, head, drive, thread, drive_size,
                   : bevel2=="reverse" ? -bevsize
                   : bevel2;
              down(_shoulder_len+flat_height-eps_shank)
-               if (_teardrop)
-                 teardrop(d=d_major*rad_scale+islop, h=L+eps_shank, anchor=FRONT, orient=BACK, $fn=sides, chamfer1=bev1, chamfer2=bev2);
+               if (_teardrop!=false)  ///////
+                 teardrop(d=d_major*rad_scale+islop, cap_h=is_num(_teardrop) ? (d_major*rad_scale+islop)/2*(1+_teardrop) : undef,
+                          h=L+eps_shank, anchor=FRONT, orient=BACK, $fn=sides, chamfer1=bev1, chamfer2=bev2);
                else
                  cyl(d=d_major*rad_scale+islop, h=L+eps_shank, anchor=TOP, $fn=sides, chamfer1=bev1, chamfer2=bev2);
            }
@@ -773,7 +777,7 @@ module screw(spec, head, drive, thread, drive_size,
 //   head = head type.  See [screw heads](#subsection-screw-heads)  Default: none
 //   ---
 //   thread = thread type or specification for threaded masks, true to make a threaded mask with the standard threads, or false to make an unthreaded mask.  See [screw pitch](#subsection-standard-screw-pitch). Default: false
-//   teardrop = if true produce teardrop hole.  Default: false
+//   teardrop = If true, adds a teardrop profile to the hole for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
 //   oversize = amount to increase diameter of the screw hole (hole and countersink).  A scalar or length 2 vector.  Default: use computed tolerance
 //   hole_oversize = amount to increase diameter of the hole.  Overrides the use of tolerance and replaces any settings given in the screw specification. 
 //   head_oversize = amount to increase diameter of head.  Overrides the user of tolerance and replaces any settings given in the screw specification.  
@@ -1419,7 +1423,7 @@ function _parse_drive(drive=undef, drive_size=undef) =
 //    details = true for more detailed model.  Default: false
 //    counterbore = counterbore height.  Default: no counterbore
 //    flat_height = height of flat head
-//    teardrop = if true make flathead and counterbores teardrop shaped
+//    teardrop = if true make flathead and counterbores teardrop shaped with the flat 5% away from the edge of the screw.  If numeric, specify the fraction of extra to add.  Set to "max" for a pointed teardrop.  Default: false
 //    slop = enlarge diameter by this extra amount (beyond that specified in the screw specification).  Default: 0
 function screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=false,slop=0) = no_function("screw_head");
 module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=false,slop=0) {
@@ -1428,7 +1432,9 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
    head = struct_val(screw_info, "head");
    head_size = struct_val(screw_info, "head_size",0) + head_oversize;
    head_height = struct_val(screw_info, "head_height");
-   dum0=assert(is_def(head_height) || in_list(head,["flat","none"]), "Undefined head height only allowed with flat head or headless screws");
+   dum0=assert(is_def(head_height) || in_list(head,["flat","none"]), "Undefined head height only allowed with flat head or headless screws")
+        assert(is_bool(teardrop) || teardrop=="max" || all_nonnegative([teardrop]),"Teardrop parameter invalid");
+   teardrop = teardrop==true ? .05 : teardrop;
    heightok = (is_undef(head_height) && in_list(head,["flat","none"])) || all_positive(head_height);
    dum1=assert(heightok, "Head hight must be a postive number");
    dum2=assert(counterbore==0 || counterbore==false || head!="none", "Cannot counterbore a headless screw");
@@ -1444,8 +1450,8 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
      union(){
          if (head!="flat" && counterbore>0){
            d = head=="hex"? 2*head_size/sqrt(3) : head_size;
-           if (teardrop)
-             teardrop(d=d, l=counterbore, orient=BACK, anchor=BACK);
+           if (teardrop!=false)
+             teardrop(d=d, l=counterbore, cap_h=is_num(teardrop) ? d/2*(1+teardrop):undef, orient=BACK, anchor=BACK);
            else                    
              cyl(d=d, l=counterbore, anchor=BOTTOM);
          }  
@@ -1458,8 +1464,8 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
            r1 = head_size/2;
            r2 = r1 - tan(angle)*slopeheight;
            n = segs(r1);
-           prof1 = teardrop ? teardrop2d(r=r1,$fn=n) : circle(r=r1, $fn=n);
-           prof2 = teardrop ? teardrop2d(r=r2,$fn=n) : circle(r=r2, $fn=n);
+           prof1 = teardrop!=false ? teardrop2d(r=r1,cap_h=is_num(teardrop)?r1*(1+teardrop):undef,$fn=n) : circle(r=r1, $fn=n);
+           prof2 = teardrop!=false ? teardrop2d(r=r2,cap_h=is_num(teardrop)?r2*(1+teardrop):undef,$fn=n) : circle(r=r2, $fn=n);
            skin([prof2,prof1,prof1], z=[-flat_height, -flat_height+slopeheight, counterbore],slices=0);
          }
          if (head!="flat" && counterbore==0) {
