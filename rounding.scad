@@ -1365,8 +1365,13 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
 //   orient = Vector to rotate top towards after spin  (module only)
-//   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
+//   atype = Select "hull", "intersect", "surf_hull" or "surf_intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+// Anchor Types:
+//   hull = Anchors to the convex hull of the linear sweep of the path, ignoring any end roundings. 
+//   intersect = Anchors to the surface of the linear sweep of the path, ignoring any end roundings.
+//   surf_hull = Anchors to the convex hull of the offset_sweep shape, including end treatments.
+//   surf_intersect = Anchors to the surface of the offset_sweep shape, including any end treatments.
 // Example: Rounding a star shaped prism with postive radius values
 //   star = star(5, r=22, ir=13);
 //   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
@@ -1641,12 +1646,21 @@ module offset_sweep(path, height,
                     convexity=10,anchor="origin",cp="centroid",
                     spin=0, orient=UP, atype="hull")
 {
-    assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
+    assert(in_list(atype, ["intersect","hull","surf_hull","surf_intersect"]), "Anchor type must be \"hull\" or \"intersect\"");
     vnf = offset_sweep(path=path, height=height, h=h, l=l, top=top, bottom=bottom, offset=offset, r=r, steps=steps,
                        quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
                        chamfer_height=chamfer_height, joint=joint, k=k, angle=angle);
-    vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
-        children();
+
+    if (in_list(atype,["hull","intersect"])){
+        h=first_defined([h,l,height]);
+        attachable(anchor,spin,orient,region=[path],h=h,extent=atype=="hull",cp=cp){
+            down(h/2)polyhedron(vnf[0],vnf[1],convexity=convexity);
+            children();
+        }
+    }
+    else
+        vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype=="surf_hull"?"hull":"intersect", cp=cp)
+            children();
 }   
 
 
@@ -2032,7 +2046,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   k = continuous curvature rounding parameter for all edges.  Default: 0.5
 //   k_top = continuous curvature rounding parameter for top
 //   k_bot = continuous curvature rounding parameter for bottom
-//   k_bot = continuous curvature rounding parameter for bottom
+//   k_sides = continuous curvature rounding parameter side edges, a number or vector.  
 //   splinesteps = number of segments to use for curved patches.  Default: 16
 //   debug = turn on debug mode which displays illegal polyhedra and shows the bezier corner patches for troubleshooting purposes.  Default: False
 //   convexity = convexity parameter for polyhedron(), only for module version.  Default: 10
