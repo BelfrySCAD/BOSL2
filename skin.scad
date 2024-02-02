@@ -1832,14 +1832,58 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
     spathfrac = scale_by_length ? path_length_fractions(path, closed) : [for(i=[0:1:len(path)]) i / (len(path)-(closed?0:1))],    
     L = len(path),
     unscaled_transform_list =
-        method=="incremental" ?
+        method=="old_incremental" ?
           let(rotations =
                  [for( i  = 0,
                        ynormal = normal - (normal * tangents[0])*tangents[0],
                        rotation = frame_map(y=ynormal, z=tangents[0])
                          ;
-                       i < len(tangents) + (closed?1:0) ;
+                       i < len(tangents) + (closed?1:0)
+                         ;
                        rotation = i<len(tangents)-1+(closed?1:0)? rot(from=tangents[i],to=tangents[(i+1)%L])*rotation : undef,
+                       i=i+1
+                      )
+                   rotation],
+              // The mismatch is the inverse of the last transform times the first one for the closed case, or the inverse of the
+              // desired final transform times the realized final transform in the open case.  Note that when closed==true the last transform
+              // is a actually looped around and applies to the first point position, so if we got back exactly where we started
+              // then it will be the identity, but we might have accumulated some twist which will show up as a rotation around the
+              // X axis.  Similarly, in the closed==false case the desired and actual transformations can only differ in the twist,
+              // so we can need to calculate the twist angle so we can apply a correction, which we distribute uniformly over the whole path.
+              reference_rot = closed ? rotations[0] :
+                           is_undef(last_normal) ? last(rotations) :
+                             let(
+                                 last_tangent = last(tangents),
+                                 lastynormal = last_normal - (last_normal * last_tangent) * last_tangent
+                             )
+                           frame_map(y=lastynormal, z=last_tangent),
+              mismatch = transpose(last(rotations)) * reference_rot,
+              correction_twist = atan2(mismatch[1][0], mismatch[0][0]),
+              // Spread out this extra twist over the whole sweep so that it doesn't occur
+              // abruptly as an artifact at the last step.
+              twistfix = correction_twist%(360/symmetry),
+              adjusted_final = !closed ? undef :
+                            translate(path[0]) * rotations[0] * zrot(-correction_twist+correction_twist%(360/symmetry)-twist)
+          )  [for(i=idx(path)) translate(path[i]) * rotations[i] * zrot((twistfix-twist)*tpathfrac[i]), if(closed) adjusted_final] 
+      : method=="incremental" ?   // Implements Rotation Minimizing Frame from "Computation of Rotation Minimizing Frames"
+                                  // by Wenping Yang, Bert Büttler, Dayue Zheng, Yang Liu, 2008
+                                  // http://doi.acm.org/10.1145/1330511.1330513
+          let(rotations =         // https://www.microsoft.com/en-us/research/wp-content/uploads/2016/12/Computation-of-rotation-minimizing-frames.pdf
+                 [for( i  = 0,
+                       ynormal = normal - (normal * tangents[0])*tangents[0],
+                       rotation = frame_map(y=ynormal, z=tangents[0]),
+                       r=ynormal
+                         ;
+                       i < len(tangents) + (closed?1:0)
+                         ;
+                       v1 = path[(i+1)%L]-path[i%L],
+                       c1 = v1*v1,
+                       rL = r - 2*(v1*r)/c1 * v1,
+                       tL = tangents[i%L] - 2*(v1*tangents[i%L])/c1 * v1,
+                       v2 = tangents[(i+1)%L]-tL,
+                       c2 = v2*v2,
+                       r = rL - (2/c2)*(v2*rL)*v2,
+                       rotation = i<len(tangents)-1+(closed?1:0)? frame_map(y=r,z=tangents[(i+1)%L]) : undef,
                        i=i+1
                       )
                    rotation],
@@ -1873,21 +1917,6 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
                    assert(approx(ynormal*znormal,0),str("Supplied normal is parallel to the path tangent at point ",i))
                    translate(path[i%L])*rotation*zrot(-twist*tpathfrac[i])
               ]
-      : method=="cross"?
-              let(
-                  crossnormal_mid = [for(i=[(closed?0:1):L-(closed?1:2)])
-                                       let(v=    cross(  select(path,i+1)-path[i], path[i]-select(path,i-1)),
-                                           f=assert(norm(v)>EPSILON)
-                                       )
-                                       v
-                                    ],
-                  crossnormal = closed ? crossnormal_mid : [crossnormal_mid[0], each crossnormal_mid, last(crossnormal_mid)]
-              )
-              [for(i=[0:L-(closed?0:1)]) let(
-                       rotation = frame_map(x=crossnormal[i%L], z=tangents[i%L])
-                   )
-                   translate(path[i%L])*rotation*zrot(-twist*tpathfrac[i])
-                 ] 
       : method=="natural" ?   // map x axis of shape to the path normal, which points in direction of curvature
               let (pathnormal = path_normals(path, tangents, closed))
               assert(all_defined(pathnormal),"Natural normal vanishes on your curve, select a different method")
@@ -2940,7 +2969,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"cones"** (VNF) = Raised conical spikes.  Specify `$fn` to set the number of segments on the cone (will be rounded to a multiple of 4).  If you use $fa and $fs then the number of segments is determined for the original VNF scale of 1x1.  Giving `border=` specifies the horizontal border width between the edge of the tile and the base of the cone.  The `border` value must be nonnegative and smaller than 0.5.  Default: 0.
+// Example(3D): **"cones"** (VNF) = Raised conical spikes.  Specify `$fn` to set the number of segments on the cone (will be rounded to a multiple of 4).  The default is `$fn=16`.  Note that `$fa` and `$fs` are ignored, since the scale of the texture is unknown at the time of definition.  Giving `border=` specifies the horizontal border width between the edge of the tile and the base of the cone.  The `border` value must be nonnegative and smaller than 0.5.  Default: 0.
 //   tex = texture("cones", $fn=16);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30, tex_depth=3,
@@ -2982,13 +3011,13 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"dimples"** (VNF) = Round divots.  Specify `$fn` to set the number of segments on the cone (will be rounded to a multiple of 4).  If you use $fa and $fs then the number of segments is determined for the original VNF scale of 1x1.  Giving `border=` specifies the horizontal width of the flat border region between the tile edges and the edge of the dimple.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.  
+// Example(3D): **"dimples"** (VNF) = Round divots.  Specify `$fn` to set the number of segments on the dimples (will be rounded to a multiple of 4).  The default is `$fn=16`.  Note that `$fa` and `$fs` are ignored, since the scale of the texture is unknown at the time of definition.  Giving `border=` specifies the horizontal width of the flat border region between the tile edges and the edge of the dimple.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.  
 //   tex = texture("dimples", $fn=16);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30, 
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"dots"** (VNF) = Raised round bumps.  Specify `$fn` to set the number of segments on the cone (will be rounded to a multiple of 4).  If you use $fa and $fs then the number of segments is determined for the original VNF scale of 1x1.  Giving `border=` specifies the horizontal width of the flat border region between the tile edge and the edge of the dots.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.
+// Example(3D): **"dots"** (VNF) = Raised round bumps.  Specify `$fn` to set the number of segments on the dots (will be rounded to a multiple of 4).  The default is `$fn=16`.  Note that `$fa` and `$fs` are ignored, since the scale of the texture is unknown at the time of definition.  Giving `border=` specifies the horizontal width of the flat border region between the tile edge and the edge of the dots.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.
 //   tex = texture("dots", $fn=16);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
@@ -3128,6 +3157,8 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       tex_size=[10,10], tex_depth=3, style="concave"
 //   );
 
+
+function _tex_fn_default() = 16;
 
 __vnf_no_n_mesg=" texture is a VNF so it does not accept n.  Set sample rate for VNF textures using the tex_samples parameter to cyl(), linear_sweep() or rotate_sweep().";
 
@@ -3343,7 +3374,7 @@ function texture(tex, n, border, gap, roughness, inset) =
         assert(num_defined([gap,roughness])==0, "cones texture does not accept gap or roughness")  
         let(
             border = default(border,0),
-            n = quant(segs(1/2-border),4)
+            n = $fn > 0 ? quantup($fn,4) : _tex_fn_default()
         )
         assert(border>=0 && border<0.5)
         [
@@ -3398,7 +3429,7 @@ function texture(tex, n, border, gap, roughness, inset) =
         assert(num_defined([gap,roughness])==0, str(tex," texture does not accept gap or roughness"))
         let(
             border = default(border,0.05),
-            n = quant(segs(1/2-border),4)
+            n = $fn > 0 ? quantup($fn,4) : _tex_fn_default()
         )
         assert(border>=0 && border < 0.5)
         let(
@@ -3622,7 +3653,7 @@ function _textured_linear_sweep(
     let(
         caps = is_bool(caps) ? [caps,caps] : caps,
         regions = is_path(region,2)? [[region]] : region_parts(region),
-        tex = is_string(texture)? texture(texture) : texture,
+        tex = is_string(texture)? texture(texture,$fn=_tex_fn_default()) : texture,
         dummy = assert(is_undef(samples) || is_vnf(tex), "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
         dummy2=is_bool(rot)?echo("boolean value for tex_rot is deprecated.  Use a numerical angle, one of 0, 90, 180, or 270.")0:0,
         texture = !rot? tex :
@@ -3870,7 +3901,7 @@ function _textured_revolution(
     counts, samples,
     style="min_edge", atype="intersect",
     anchor=CENTER, spin=0, orient=UP
-) =
+) = 
     assert(angle>0 && angle<=360)
     assert(is_path(shape,[2]) || is_region(shape))
     assert(is_undef(samples) || is_int(samples))
@@ -3897,7 +3928,7 @@ function _textured_revolution(
     )
     assert(closed || is_path(shape,2))
     let(
-        tex = is_string(texture)? texture(texture) : texture,
+        tex = is_string(texture)? texture(texture,$fn=_tex_fn_default()) : texture,
         dummy = assert(is_undef(samples) || is_vnf(tex), "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
         dummy2=is_bool(rot)?echo("boolean value for tex_rot is deprecated.  Use a numerical angle, one of 0, 90, 180, or 270.")0:0,        
         texture = !rot? tex :

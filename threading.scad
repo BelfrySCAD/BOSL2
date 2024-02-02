@@ -170,7 +170,7 @@
 //   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
-//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, to help with making a threaded hole mask. Default: false
+//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -496,7 +496,7 @@ module threaded_nut(
 //   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
-//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, to help with making a threaded hole mask. Default: false
+//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -765,7 +765,7 @@ module trapezoidal_threaded_nut(
 //   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
-//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, to help with making a threaded hole mask. Default: false
+//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1102,7 +1102,7 @@ module npt_threaded_rod(
 //   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
-//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, to help with making a threaded hole mask. Default: false
+//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1318,7 +1318,7 @@ module buttress_threaded_nut(
 //   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
-//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, to help with making a threaded hole mask. Default: false
+//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1625,6 +1625,11 @@ module ball_screw_rod(
 //   running off the end of the shaft and leaving a sharp edged partial thread at the end of the screw.  This makes
 //   screws easier to start and prevents cross threading.  Blunt start threads should always be superior, and they are
 //   faster to model, but if you really need standard threads that run off the end you can set `blunt_start=false`.
+//   .
+//   The teardrop option cuts off the threads with a teardrop for 3d printability of horizontal holes.  By default,
+//   if the screw outer radius is r then the flat top will be at distance 1.05r from the center, adding a 5% space.  
+//   You can set teardrop to a numerical value to adjust that percentage, e.g. a value of 0.1 would give a 10% space.
+//   You can set teardrop to "max" to create a pointy-top teardrop with no flat section.  
 // Arguments:
 //   d = Outer diameter of threaded rod.
 //   l / length / h / height = Length of threaded rod.
@@ -1652,7 +1657,7 @@ module ball_screw_rod(
 //   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
-//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, to help with making a threaded hole mask. Default: false
+//   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop (see above). Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1922,9 +1927,30 @@ module generic_threaded_rod(
               up(len/2+.001)cyl(l=-clip_bev2, r1=r2adj+profmin, r2=r2adj+profmin+slope*clip_bev1-clip_bev2,anchor=TOP);
 
           // Add teardrop profile
-          if (teardrop) {
-              ang = min(45,opp_hyp_to_ang(rmax+profmin, rmax+pmax));
-              xrot(-90) teardrop(l=l, r1=r1adj+profmin, r2=r2adj+profmin, ang=ang, cap_h1=r1adj+pmax, cap_h2=r2adj+pmax);
+          if (teardrop!=false) {
+              fact = is_num(teardrop) ? assert(teardrop>=0,"teardrop value cannot be negative")1-1/sqrt(2)+teardrop
+                   : is_bool(teardrop) ? 1-1/sqrt(2)+0.05
+                   : teardrop=="max" ? 1/sqrt(2)
+                   : assert(false,"invalid teardrop value");
+              dummy = assert(fact<=1/sqrt(2), "teardrop value too large");
+              pdepth = pmax-profmin;              
+              trap1 = back((r1adj+pmax)/sqrt(2),path3d(list_rotate(trapezoid(ang=45,w1 = (r1adj+pmax)*sqrt(2), h = (r1adj+pmax)*fact,anchor=FWD),1),-l/2));
+              trap2 = back((r2adj+pmax)/sqrt(2),path3d(list_rotate(trapezoid(ang=45,w1 = (r2adj+pmax)*sqrt(2), h = (r2adj+pmax)*fact,anchor=FWD),1), l/2));
+              yproj = [[1,0,0],[0,0,0],[0,0,1]];
+              p1a=trap1[0]+unit([0,0,-l/2]-trap1[0])*pdepth*3/4;
+              p1b=last(trap1)+unit([0,0,-l/2]-last(trap1))*pdepth*3/4;
+              p2a=trap2[0]+unit([0,0,l/2]-trap2[0])*pdepth*3/4;
+              p2b=last(trap2)+  unit([0,0,l/2]-last(trap2))*pdepth*3/4     ;
+              cut1 = reverse([p1a, p1a*yproj, p1b*yproj, p1b]);
+              cut2 = reverse([p2a, p2a*yproj, p2b*yproj, p2b]);
+              vert = [
+                      [each cut1, each trap1],
+                      [each cut2, each trap2]
+              ];
+              vnf_polyhedron(vnf_vertex_array(vert,caps=true,col_wrap=true));
+              //     Old code creates an internal teardrop which unfortunately doesn't print well
+              //ang = min(45,opp_hyp_to_ang(rmax+profmin, rmax+pmax));
+              //xrot(-90) teardrop(l=l, r1=r1adj+profmin, r2=r2adj+profmin, ang=ang, cap_h1=r1adj+pmax, cap_h2=r2adj+pmax);
           }
         }
         children();
@@ -2072,7 +2098,6 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
    intersection(){
        if (shape=="hex")
          cyl(d=nutwidth, circum=true, $fn=6, l=h, chamfer1=bevel1?0:nutwidth*.01, chamfer2=bevel2?0:nutwidth*.01);
-        //vnf_polyhedron(vnf);
        else
          cuboid([nutwidth,nutwidth,h],chamfer=nutwidth*.01, except=[if (bevel1) BOT, if(bevel2) TOP]);
        fn = quantup(segs(r=nutwidth/2),shape=="hex"?6:4);
