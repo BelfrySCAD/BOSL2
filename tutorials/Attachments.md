@@ -1637,3 +1637,71 @@ sphere_pt = apply(
 ```
 
 
+## Overriding Standard Anchors
+
+Sometimes you may want to use the standard anchors but override some
+of them.  Returning to the square barebell example above, the anchors
+at the right and left sides are on the cubes at each end, but the
+anchors at x=0 are in floating in space.  For prismoidal/cubic anchors
+in 3D and trapezoidal/rectangular anchors in 2D we can override a single anchor by
+specifying the override option and giving the anchor that is being
+overridden, and then the replacement in the form
+`[position, direction, spin]`.  Below we override the FWD anchor:
+
+```
+module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
+    override = [
+                 [FWD,  [[0,-s/8,0], FWD, 0]]
+               ];
+    attachable(anchor,spin,orient, size=[s*3,s,s],override=override) {
+        union() {
+            xcopies(2*s) cube(s, center=true);
+            xcyl(h=2*s, d=s/4);
+        }
+        children();
+    }
+}
+cubic_barbell(100) show_anchors(30);
+```
+
+Note how the FWD anchor is now rooted on the cylindrical portion.  You
+can override all of the x=0 anchors by supplying a list like this:
+
+```
+module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
+    override = [
+                 for(j=[-1:1:1], k=[-1:1:1])
+                   if ([j,k]!=[0,0]) [[0,j,k], [s/8*unit([0,j,k]), unit([0,j,k]),0]]
+               ];
+    attachable(anchor,spin,orient, size=[s*3,s,s],override=override) {
+        union() {
+            xcopies(2*s) cube(s, center=true);
+            xcyl(h=2*s, d=s/4);
+        }
+        children();
+    }
+}
+cubic_barbell(100) show_anchors(30);
+```
+
+Now the anchors in the middle are all rooted to the cylinder.  Another
+way to do the same thing is to use a function literal for override.
+It will be called with the anchor and need to return undef to just use
+the default, or a `[position, direction, spin]` triple to override the
+default.  Here is the same example using a function literal for the override:
+
+```
+module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
+    override = function (anchor) 
+          anchor.x!=0 || anchor==CTR ? undef  // Keep these
+        : [s/8*unit(anchor), anchor, 0];
+    attachable(anchor,spin,orient, size=[s*3,s,s],override=override) {
+        union() {
+            xcopies(2*s) cube(s, center=true);
+            xcyl(h=2*s, d=s/4);
+        }
+        children();
+    }
+}
+cubic_barbell(100) show_anchors(30);
+```
