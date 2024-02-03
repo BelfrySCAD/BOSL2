@@ -98,21 +98,13 @@ cuboid([100,80,60], rounding=20, except = [[1,0,1,0],[0,1,0,1],[1,0,0,1]]);
 
 ###Negative Rounding
 
-You can fillet top or bottom edges by using negative rounding values. Note that you cannot use negative rounding values on Z-aligned (side) edges.  
+You can fillet top or bottom edges by using negative rounding values. Note that you cannot use negative rounding values on Z-aligned (side) edges.  If you need to add a fillet on a Z-aligned edge, use [fillet()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#module-fillet):
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cuboid([100,80,60], rounding=-20, edges = BOTTOM);
 ```
 
-If you need to add a fillet on a Z-aligned edge, use [fillet()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#module-fillet):
-
-```openscad-3D
-include <BOSL2/std.scad>
-cuboid([100,80,60], rounding = -10, edges = BOT+FRONT) 
-  position(FRONT+RIGHT)
-    fillet(l=60, r=10, spin=180);
-```
 
 ###Chamfering
 
@@ -312,6 +304,27 @@ right(0){
 right(30){
     rounded_prism(rect(20), height=20, joint_top=10, joint_bot=10, joint_sides=9.99, k = 0.75);
     move([0,-12,-12]) xrot(90) color("black") text3d("k=0.75", size=3, h = 0.01, anchor= CENTER);
+}
+```
+
+Alternatively, we can keep k constant at k=0.5 and vary the joint length:
+
+```openscad-3D;ImgOnly NoScales Med VPD=170 VPR=[75,0,25]
+include <BOSL2/std.scad>
+include <BOSL2/rounding.scad>
+ left(30) {
+    rounded_prism(rect(20), height=20, joint_top=1, joint_bot=1, joint_sides=1, k = 0.5);
+    move([0,-13,-13]) xrot(90) color("black") text3d("joint=1", size=3, h = 0.01, anchor= CENTER);
+}
+
+right(0){
+    rounded_prism(rect(20), height=20, joint_top=5, joint_bot=5, joint_sides=5, k = 0.5);  
+    move([0,-13,-13]) xrot(90) color("black") text3d("joint=5", size=3, h = 0.01, anchor= CENTER); 
+}
+
+right(30){
+    rounded_prism(rect(20), height=20, joint_top=9, joint_bot=9, joint_sides=9, k = 0.5);
+    move([0,-13,-13]) xrot(90) color("black") text3d("joint=9", size=3, h = 0.01, anchor= CENTER);
 }
 ```
 
