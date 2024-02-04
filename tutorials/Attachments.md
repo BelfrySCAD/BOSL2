@@ -1262,7 +1262,7 @@ module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
         children();
     }
 }
-cubic_barbell(100) show_anchors(30);
+cubic_barbell(100) show_anchors(60);
 ```
 
 When the shape is prismoidal, where the top is a different size from the bottom, you can use
@@ -1646,12 +1646,15 @@ anchors at x=0 are in floating in space.  For prismoidal/cubic anchors
 in 3D and trapezoidal/rectangular anchors in 2D we can override a single anchor by
 specifying the override option and giving the anchor that is being
 overridden, and then the replacement in the form
-`[position, direction, spin]`.  Below we override the FWD anchor:
+`[position, direction, spin]`.  Most often you will only want to
+override the position.  If you omit the other list items then the
+value drived from the standard anchor will be used. Below we override
+position of the FWD anchor:
 
 ```
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = [
-                 [FWD,  [[0,-s/8,0], FWD, 0]]
+                 [FWD,  [[0,-s/8,0]]]
                ];
     attachable(anchor,spin,orient, size=[s*3,s,s],override=override) {
         union() {
@@ -1661,17 +1664,41 @@ module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
         children();
     }
 }
-cubic_barbell(100) show_anchors(30);
+cubic_barbell(100) show_anchors(60);
 ```
 
-Note how the FWD anchor is now rooted on the cylindrical portion.  You
-can override all of the x=0 anchors by supplying a list like this:
+Note how the FWD anchor is now rooted on the cylindrical portion.  If
+you wanted to also change its direction and spin you could do it like
+this:
 
+```
+module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
+    override = [
+                 [FWD,  [[0,-s/8,0], FWD+LEFT, 225]]
+               ];
+    attachable(anchor,spin,orient, size=[s*3,s,s],override=override) {
+        union() {
+            xcopies(2*s) cube(s, center=true);
+            xcyl(h=2*s, d=s/4);
+        }
+        children();
+    }
+}
+cubic_barbell(100) show_anchors(60);
+```
+
+In the above example we give three values for the override.  As
+before, the first one places the anchor on the cylinder.  We have
+added the second entry which points the anchor off to the left.
+The third entry gives a spin override, whose effect is shown by the
+position of the red flag on the arrow.  If you want to override all of
+the x=0 anchors to be on the cylinder, with their standard directions,
+you can do that by supplying a list: 
 ```
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = [
                  for(j=[-1:1:1], k=[-1:1:1])
-                   if ([j,k]!=[0,0]) [[0,j,k], [s/8*unit([0,j,k]), unit([0,j,k]),0]]
+                   if ([j,k]!=[0,0]) [[0,j,k], [s/8*unit([0,j,k])]]
                ];
     attachable(anchor,spin,orient, size=[s*3,s,s],override=override) {
         union() {
@@ -1684,17 +1711,18 @@ module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
 cubic_barbell(100) show_anchors(30);
 ```
 
-Now the anchors in the middle are all rooted to the cylinder.  Another
+Now all of the anchors in the middle are all rooted to the cylinder.  Another
 way to do the same thing is to use a function literal for override.
-It will be called with the anchor and need to return undef to just use
+It will be called with the anchor as its argument and needs to return undef to just use
 the default, or a `[position, direction, spin]` triple to override the
-default.  Here is the same example using a function literal for the override:
+default.  As before, you can omit values to keep their default.
+Here is the same example using a function literal for the override:
 
 ```
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = function (anchor) 
           anchor.x!=0 || anchor==CTR ? undef  // Keep these
-        : [s/8*unit(anchor), anchor, 0];
+        : [s/8*unit(anchor)];
     attachable(anchor,spin,orient, size=[s*3,s,s],override=override) {
         union() {
             xcopies(2*s) cube(s, center=true);
