@@ -358,3 +358,33 @@ rounded_prism(rect(20), height=20,
     k_top=0.5, k_bot=0.1, k_sides=[0,0.7,0.3,0.7]);
 ```
 
+You can specify a 2-vector for the joint distance to produce asymmetric rounding which is different on the two sides of the edge. This may be useful when one one edge in your polygon is much larger than another. 
+
+```openscad-3D
+include <BOSL2/std.scad>
+include <BOSL2/rounding.scad>
+rounded_prism(rect([50.1,20.1]), height=6.1, 
+   joint_top=[15,3], joint_bot=[15,3],
+   joint_sides=[[10,25],[25,10],[10,25],[25,10]], 
+   k_sides=0.3);
+```
+
+For the top and bottom you can specify negative joint distances. If you give a scalar negative value then the roundover will flare outward. 
+
+```openscad-3D
+include <BOSL2/std.scad>
+include <BOSL2/rounding.scad>
+rounded_prism(rect(20), height=20, 
+    joint_top=5, joint_bot=-5, joint_sides=8, k=0.5);
+```
+
+If you give a 2-vector then if joint\_top[0] is negative the shape will flare outward, but if joint\_top[1] is negative the shape will flare upward. At least one value must be non-negative. The same rules apply for joint\_bot. The joint\_sides parameter must be entirely nonnegative.
+
+Flaring the top upward. The bottom has an asymmetric rounding with a small flare but a large rounding up the side.
+
+```openscad-3D
+include <BOSL2/std.scad>
+include <BOSL2/rounding.scad>
+rounded_prism(rect(20), height=20, 
+joint_top=[3,-3], joint_bot=[-3,10], joint_sides=8, k=0.5);
+```
