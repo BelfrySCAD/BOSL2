@@ -3349,7 +3349,11 @@ module fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTE
         arc[0] + polar_to_xy(overlap, 90+ang),
         each arc
     ];
-    attachable(anchor,spin,orient, size=[2*maxx,2*maxy,l]) {
+    override = function (anchor)
+        anchor.x>=0 && anchor.y>=0 ? undef
+      : 
+        [[max(0,anchor.x)*maxx, max(0,anchor.y)*maxy, anchor.z*l/2]];
+    attachable(anchor,spin,orient, size=[2*maxx,2*maxy,l],override=override) {      
         if (l > 0) {
             linear_extrude(height=l, convexity=4, center=true) {
                 polygon(path);

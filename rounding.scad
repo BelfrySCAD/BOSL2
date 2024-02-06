@@ -1365,8 +1365,13 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
 //   orient = Vector to rotate top towards after spin  (module only)
-//   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
+//   atype = Select "hull", "intersect", "surf_hull" or "surf_intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+// Anchor Types:
+//   hull = Anchors to the convex hull of the linear sweep of the path, ignoring any end roundings. 
+//   intersect = Anchors to the surface of the linear sweep of the path, ignoring any end roundings.
+//   surf_hull = Anchors to the convex hull of the offset_sweep shape, including end treatments.
+//   surf_intersect = Anchors to the surface of the offset_sweep shape, including any end treatments.
 // Example: Rounding a star shaped prism with postive radius values
 //   star = star(5, r=22, ir=13);
 //   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
@@ -1378,15 +1383,15 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 // Example: If the shape has sharp corners, make sure to set `$fn/$fs/$fa`.  The corners of this triangle are not round, even though `offset="round"` (the default) because the number of segments is small.
 //   triangle = [[0,0],[10,0],[5,10]];
 //   offset_sweep(triangle, height=6, bottom = os_circle(r=-2),steps=4);
-// Example: Can improve the result by increasing $fn
+// Example: Can improve the result by increasing `$fn`
 //   $fn=12;
 //   triangle = [[0,0],[10,0],[5,10]];
 //   offset_sweep(triangle, height=6, bottom = os_circle(r=-2),steps=4);
-// Example: Using $fa and $fs works too; it produces a different looking triangulation of the rounded corner
+// Example: Using `$fa` and `$fs` works too; it produces a different looking triangulation of the rounded corner
 //   $fa=1;$fs=0.3;
 //   triangle = [[0,0],[10,0],[5,10]];
 //   offset_sweep(triangle, height=6, bottom = os_circle(r=-2),steps=4);
-// Example: Here is the star chamfered at the top with a teardrop rounding at the bottom. Check out the rounded corners on the chamfer.  The large $fn value ensures a smooth curve on the concave corners of the chamfer.  It has no effect anywhere else on the model.  Observe how the rounded star points vanish at the bottom in the teardrop: the number of vertices does not remain constant from layer to layer.
+// Example: Here is the star chamfered at the top with a teardrop rounding at the bottom. Check out the rounded corners on the chamfer.  The large `$fn` value ensures a smooth curve on the concave corners of the chamfer.  It has no effect anywhere else on the model.  Observe how the rounded star points vanish at the bottom in the teardrop: the number of vertices does not remain constant from layer to layer.
 //    star = star(5, r=22, ir=13);
 //    rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //    offset_sweep(rounded_star, height=20, bottom=os_teardrop(r=4), top=os_chamfer(width=4),$fn=64);
@@ -1641,12 +1646,21 @@ module offset_sweep(path, height,
                     convexity=10,anchor="origin",cp="centroid",
                     spin=0, orient=UP, atype="hull")
 {
-    assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
+    assert(in_list(atype, ["intersect","hull","surf_hull","surf_intersect"]), "Anchor type must be \"hull\" or \"intersect\"");
     vnf = offset_sweep(path=path, height=height, h=h, l=l, top=top, bottom=bottom, offset=offset, r=r, steps=steps,
                        quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
                        chamfer_height=chamfer_height, joint=joint, k=k, angle=angle);
-    vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
-        children();
+
+    if (in_list(atype,["hull","intersect"])){
+        h=first_defined([h,l,height]);
+        attachable(anchor,spin,orient,region=[path],h=h,extent=atype=="hull",cp=cp){
+            down(h/2)polyhedron(vnf[0],vnf[1],convexity=convexity);
+            children();
+        }
+    }
+    else
+        vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype=="surf_hull"?"hull":"intersect", cp=cp)
+            children();
 }   
 
 
@@ -2012,6 +2026,11 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   joint_top[1] is negative the shape will flare upward.  At least one value must be non-negative.  The same rules apply for joint_bot.
 //   The joint_sides parameter must be entirely nonnegative.
 //   .
+//   If the roundings at two adjacent side edges exceed the width of the face then the polyhedron will have self-intersecting faces, so it will be invalid.
+//   Similarly, if the roundings on the top or bottom edges cross the top face and intersect with each other, the resulting polyhedron is invalid:
+//   the top face after the roundings are applied must be a valid, non-degenerate polyhedron.  There are two exceptions:  it is permissible to
+//   construct a top that is a single point or two points.  This means you can completely round a cube by setting the joint to half of
+//   the cube's width.  
 //   If you set `debug` to true the module version will display the polyhedron even when it is invalid and it will show the bezier patches at the corners.
 //   This can help troubleshoot problems with your parameters.  With the function form setting debug to true causes it to return [patches,vnf] where
 //   patches is a list of the bezier control points for the corner patches.
@@ -2032,7 +2051,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   k = continuous curvature rounding parameter for all edges.  Default: 0.5
 //   k_top = continuous curvature rounding parameter for top
 //   k_bot = continuous curvature rounding parameter for bottom
-//   k_bot = continuous curvature rounding parameter for bottom
+//   k_sides = continuous curvature rounding parameter side edges, a number or vector.  
 //   splinesteps = number of segments to use for curved patches.  Default: 16
 //   debug = turn on debug mode which displays illegal polyhedra and shows the bezier corner patches for troubleshooting purposes.  Default: False
 //   convexity = convexity parameter for polyhedron(), only for module version.  Default: 10
@@ -2196,23 +2215,44 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
      bot_patch = _rp_compute_patches(bottom, top, joint_bot, joint_sides_vec, k_bot, k_sides_vec, concave),
 
      vertbad = [for(i=[0:N-1])
-                   if (norm(top[i]-top_patch[i][4][2]) + norm(bottom[i]-bot_patch[i][4][2]) > norm(bottom[i]-top[i])) i],
+                   if (norm(top[i]-top_patch[i][4][2]) + norm(bottom[i]-bot_patch[i][4][2]) > EPSILON + norm(bottom[i]-top[i])) i],
+     // Check that the patch fits on the polygon edge
      topbad = [for(i=[0:N-1])
                    if (norm(top_patch[i][2][4]-top_patch[i][2][2]) + norm(select(top_patch,i+1)[2][0]-select(top_patch,i+1)[2][2])
-                  > norm(top_patch[i][2][2] - select(top_patch,i+1)[2][2]))   [i,(i+1)%N]],
+                  > EPSILON + norm(top_patch[i][2][2] - select(top_patch,i+1)[2][2]))   [i,(i+1)%N]],
      botbad = [for(i=[0:N-1])
                    if (norm(bot_patch[i][2][4]-bot_patch[i][2][2]) + norm(select(bot_patch,i+1)[2][0]-select(bot_patch,i+1)[2][2])
-                  > norm(bot_patch[i][2][2] - select(bot_patch,i+1)[2][2]))   [i,(i+1)%N]],
-     topinbad = [for(i=[0:N-1])
+                  > EPSILON + norm(bot_patch[i][2][2] - select(bot_patch,i+1)[2][2]))   [i,(i+1)%N]],
+     // If top/bot is L-shaped, check that arms of L from adjacent patches don't cross
+     topLbad = [for(i=[0:N-1])
                    if (norm(top_patch[i][0][2]-top_patch[i][0][4]) + norm(select(top_patch,i+1)[0][0]-select(top_patch,i+1)[0][2])
-                          > norm(top_patch[i][0][2]-select(top_patch,i+1)[0][2])) [i,(i+1)%N]],
-     botinbad = [for(i=[0:N-1])
+                          > EPSILON + norm(top_patch[i][0][2]-select(top_patch,i+1)[0][2])) [i,(i+1)%N]],
+     botLbad = [for(i=[0:N-1])
                    if (norm(bot_patch[i][0][2]-bot_patch[i][0][4]) + norm(select(bot_patch,i+1)[0][0]-select(bot_patch,i+1)[0][2])
-                          > norm(bot_patch[i][0][2]-select(bot_patch,i+1)[0][2])) [i,(i+1)%N]]
+                          > EPSILON + norm(bot_patch[i][0][2]-select(bot_patch,i+1)[0][2])) [i,(i+1)%N]],
+     // Check that the inner edges of the patch don't cross
+     topinbad = [for(i=[0:N-1]) 
+                     let(
+                          line1 = project_plane(top,[top_patch[i][2][0],top_patch[i][0][0]]),
+                          line2 = project_plane(top,[select(top_patch,i+1)[2][4],select(top_patch,i+1)[0][4]])
+                     )
+                     if (!approx(line1[0],line1[1]) && !approx(line2[0],line2[1]) &&
+                         line_intersection(line1,line2, SEGMENT,SEGMENT))
+                          [i,(i+1)%N]],
+     botinbad = [for(i=[0:N-1])
+                     let(
+                          line1 = project_plane(bottom,[bot_patch[i][2][0],bot_patch[i][0][0]]),
+                          line2 = project_plane(bottom,[select(bot_patch,i+1)[2][4],select(bot_patch,i+1)[0][4]])
+                     )
+                     if (!approx(line1[0],line1[1]) && !approx(line2[0],line2[1]) &&
+                         line_intersection(line1,line2, SEGMENT,SEGMENT))
+                          [i,(i+1)%N]]
    )
    assert(debug || vertbad==[], str("Top and bottom joint lengths are too large; they interfere with each other at vertices: ",vertbad))
-   assert(debug || topbad==[], str("Joint lengths too large at top edges: ",topbad))
-   assert(debug || botbad==[], str("Joint lengths too large at bottom edges: ",botbad))
+   assert(debug || topbad==[], str("Joint lengths too large at top or side edges: ",topbad))
+   assert(debug || botbad==[], str("Joint lengths too large at bottom or side edges: ",botbad))
+   assert(debug || topLbad==[], str("Joint length too large on the top face or side at edges: ", topLbad))
+   assert(debug || botLbad==[], str("Joint length too large on the bottom face or side at edges: ", botLbad))
    assert(debug || topinbad==[], str("Joint length too large on the top face at edges: ", topinbad))
    assert(debug || botinbad==[], str("Joint length too large on the bottom face at edges: ", botinbad))
    let(
@@ -2242,8 +2282,12 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
                                  top_patch[i][4][4]
                              ]
              ],
-     top_simple = is_path_simple(project_plane(faces[0],faces[0]),closed=true),
-     bot_simple = is_path_simple(project_plane(faces[1],faces[1]),closed=true),
+     top_collinear = is_collinear(faces[0]),
+     bot_collinear = is_collinear(faces[1]),
+     top_degen_ok = top_collinear && len(deduplicate(faces[0]))<=2,
+     bot_degen_ok = bot_collinear && len(deduplicate(faces[1]))<=2,
+     top_simple = top_degen_ok || (!top_collinear && is_path_simple(project_plane(faces[0],faces[0]),closed=true)),
+     bot_simple = bot_degen_ok || (!bot_collinear && is_path_simple(project_plane(faces[1],faces[1]),closed=true)),                                   
      // verify vertical edges
      verify_vert =
        [for(i=[0:N-1],j=[0:4])
