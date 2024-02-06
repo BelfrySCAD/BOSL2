@@ -3333,7 +3333,7 @@ function _find_anchor(anchor, geom) =
         ) [anchor, pos, vec, oang]
     ) : type == "vnf_isect"? ( //vnf
         let( vnf=geom[1] )
-        approx(anchor,CTR)? [anchor, [0,0,0], UP, 0] :
+        approx(anchor,CTR)? [anchor, cp, UP, 0] :      // CENTER anchors anchor on cp, "origin" anchors on [0,0]
         vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
         let(
             eps = 1/2048,
@@ -3383,7 +3383,7 @@ function _find_anchor(anchor, geom) =
         [anchor, pos, n, oang]
     ) : type == "vnf_extent"? ( //vnf
         let( vnf=geom[1] )
-        approx(anchor,CTR)? [anchor, [0,0,0], UP, 0] :
+        approx(anchor,CTR)? [anchor, cp, UP, 0] :      // CENTER anchors anchor on cp, "origin" anchors on [0,0]
         vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor,UP), 0] :
         let(
             rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
@@ -3432,7 +3432,7 @@ function _find_anchor(anchor, geom) =
             anchor = _force_anchor_2d(anchor),
             rgn = force_region(move(-point2d(cp), p=geom[1]))
         )
-        approx(anchor,[0,0])? [anchor, [0,0,0], BACK, 0] :
+        approx(anchor,[0,0])? [anchor, cp, BACK, 0] :     // CENTER anchors anchor on cp, "origin" anchors on [0,0]
         let(
             isects = [
                 for (path=rgn, t=triplet(path,true)) let(
@@ -3456,7 +3456,7 @@ function _find_anchor(anchor, geom) =
         ) [anchor, pos, vec, 0]
     ) : type == "rgn_extent"? ( //region
         let( anchor = _force_anchor_2d(anchor) )
-        approx(anchor,[0,0])? [anchor, [0,0,0], BACK, 0] :
+        approx(anchor,[0,0])? [anchor, cp, BACK, 0] :   // CENTER anchors anchor on cp, "origin" anchors on [0,0]
         let(
             rgn = force_region(geom[1]),
             rpts = rot(from=anchor, to=RIGHT, p=flatten(rgn)),
