@@ -283,7 +283,7 @@ The joint parameter is specified separately for the top, bottom and side edges; 
 include <BOSL2/std.scad>
 include <BOSL2/rounding.scad>
 rounded_prism(rect(20), height=20, 
-    joint_top=10, joint_bot=10, joint_sides=9.99, k = 0.5);
+    joint_top=10, joint_bot=10, joint_sides=10, k = 0.5);
 ```
 
 Here we're using the same cube size of 20, setting the joint paramater to 10 and varying the k parameter.
@@ -292,17 +292,17 @@ Here we're using the same cube size of 20, setting the joint paramater to 10 and
 include <BOSL2/std.scad>
 include <BOSL2/rounding.scad>
  left(30) {
-    rounded_prism(rect(20), height=20, joint_top=10, joint_bot=10, joint_sides=9.99, k = 0.15);
+    rounded_prism(rect(20), height=20, joint_top=10, joint_bot=10, joint_sides=10, k = 0.15);
     move([0,-12,-12]) xrot(90) color("black") text3d("k=0.15", size=3, h = 0.01, anchor= CENTER);
 }
 
 right(0){
-    rounded_prism(rect(20), height=20, joint_top=10, joint_bot=10, joint_sides=9.99, k = 0.5);  
+    rounded_prism(rect(20), height=20, joint_top=10, joint_bot=10, joint_sides=10, k = 0.5);  
     move([0,-12,-12]) xrot(90) color("black") text3d("k=0.5", size=3, h = 0.01, anchor= CENTER); 
 }
 
 right(30){
-    rounded_prism(rect(20), height=20, joint_top=10, joint_bot=10, joint_sides=9.99, k = 0.75);
+    rounded_prism(rect(20), height=20, joint_top=10, joint_bot=10, joint_sides=10, k = 0.75);
     move([0,-12,-12]) xrot(90) color("black") text3d("k=0.75", size=3, h = 0.01, anchor= CENTER);
 }
 ```
