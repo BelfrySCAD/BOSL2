@@ -472,12 +472,12 @@ _ANCHOR_TYPES = ["intersect","hull"];
 // Topics: Attachments
 // See Also: attachable(), attach(), orient()
 // Usage:
-//   PARENT() position(from) CHILDREN;
+//   PARENT() position(at) CHILDREN;
 // Description:
 //   Attaches children to a parent object at an anchor point.  For a step-by-step explanation
 //   of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
-//   from = The vector, or name of the parent anchor point to attach to.
+//   at = The vector, or name of the parent anchor point to attach to.
 // Side Effects:
 //   `$attach_anchor` for each `from=` anchor given, this is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
 //   `$attach_to` is set to `undef`.
@@ -488,11 +488,16 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //       position(RIGHT) cyl(l=10, d1=10, d2=5, anchor=BOTTOM);
 //       position(FRONT) cyl(l=10, d1=10, d2=5, anchor=BOTTOM);
 //   }
-module position(from)
+module position(at,from)
 {
+    if (is_def(from)){
+      echo("'from' argument of position() has changed to 'at' and will be removed in a future version");
+    }
+    dummy0=assert(num_defined([at,from])==1, "Cannot give both `at` argument and the deprectated `from` argument to position()");
+    at = first_defined([at,from]);
     req_children($children);
     dummy1=assert($parent_geom != undef, "No object to position relative to.");
-    anchors = (is_vector(from)||is_string(from))? [from] : from;
+    anchors = (is_vector(at)||is_string(at))? [at] : at;
     two_d = _attach_geom_2d($parent_geom);
     for (anchr = anchors) {
         anch = _find_anchor(anchr, $parent_geom);
@@ -2289,11 +2294,12 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   This module is also responsible for handing coloring of objects with {{recolor()}} and {{color_this()}}, and
 //   it is responsible for processing tags and determining whether the object should
 //   display or not in the current context.  The determination to display the attachable object
-//   occurs in this module, which means that an object which does not display (e.g. a "remove" tagged object
+//   usually occurs in this module, which means that an object which does not display (e.g. a "remove" tagged object
 //   inside {{diff()}} cannot have internal {{tag()}} calls that change its tags and cause submodel
-//   portions to display: the entire child simply does not run.  
-
-
+//   portions to display: the entire child simply does not run.  If you want the child tags to be respected,
+//   you can set `use_child_tags=true` which delays the determination to display objects to the children.
+//   For this to work correctly, all of the children must be attachables.  
+//   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 //
 // Arguments:
@@ -2322,6 +2328,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
 //   override = Function that takes an anchor and for 3d returns a triple `[position, direction, spin]` or for 2d returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction, spin]]` entries.  If the direction/position/spin that is returned is undef then the default will be used.  This option applies only to the "trapezoid" and "prismoid" geometry types.  
 //   geom = If given, uses the pre-defined (via {{attach_geom()}} geometry.
+//   use_child_tags = if true then delay the decision to display or not display this object to the children.  Default: false
 //
 // Side Effects:
 //   `$parent_anchor` is set to the parent object's `anchor` value.
@@ -2463,7 +2470,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //       children();
 //   }
 //
-// Example: An object can be designed to attach as negative space using {{diff()}}, but if you want an object to include both positive and negative space then you need to call attachable() twice, because tags inside the attachable() call don't work as expected.  This example shows how you can call attachable twice to create an object with positive and negative space.  Note, however, that children in the negative space are differenced away: the highlighted little cube does not survive into the final model.
+// Example: An object can be designed to attach as negative space using {{diff()}}, but if you want an object to include both positive and negative space then you run into trouble because tags inside the `attachable()` are ignored.  One solution is to call attachable() twice.  This example shows how two calls to  attachable can create an object with positive and negative space.  Note, however, that children in the negative space are differenced away: the highlighted little cube does not survive into the final model.
 //   module thing(anchor,spin,orient) {
 //      tag("remove") attachable(size=[15,15,15],anchor=anchor,spin=spin,orient=orient){
 //        cuboid([10,10,16]);
@@ -2495,6 +2502,36 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //        attach([FRONT,TOP],overlap=-4)
 //          thing(anchor=TOP)
 //            tube(ir=12,h=10);
+// Example: A different way to achieve similar effects to the above to examples is to use the `use_child_tags` parameter.  This parameter allows you to use just one call to attachable.  The second example above can also be rewritten like this. 
+//   module thing(anchor,spin,orient) {
+//      attachable(size=[15,15,15],anchor=anchor,spin=spin,orient=orient,use_child_tags=true){
+//        union(){
+//          cuboid([15,15,15]);
+//          tag("remove")cuboid([10,10,16]);
+//        }
+//        children();
+//      }
+//   }
+//   diff()
+//     cube([19,10,19])
+//       attach([FRONT],overlap=-4)
+//         thing(anchor=TOP);
+// Example: An advantage of using `use_child_tags` is that it can work on nested constructions.  Here the child cylinder is aligned relative to its parent and removed from the calling parent object.
+//   $fn=64;
+//   module thing(anchor=BOT){
+//     attachable(anchor = anchor,d=9,h=6,use_child_tags=true){
+//       cyl(d = 9, h = 6) 
+//         tag("remove") 
+//            align(RIGHT+TOP,inside=true) 
+//                 left(1)up(1)cyl(l=11, d=3);
+//       children();
+//     }
+//   }
+//   back_half()
+//     diff()
+//       cuboid(10)
+//         position(TOP)thing(anchor=BOT);
+
 module attachable(
     anchor, spin, orient,
     size, size2, shift,
@@ -2506,7 +2543,8 @@ module attachable(
     anchors=[],
     two_d=false,
     axis=UP,override,
-    geom
+    geom,
+    use_child_tags=false
 ) { 
     dummy1 =
         assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
@@ -2537,7 +2575,7 @@ module attachable(
         $parent_size   = _attach_geom_size(geom);
         $attach_to   = undef;
         $anchor_override=undef;
-        if (_is_shown())
+        if (use_child_tags || _is_shown())
             _color($color) children(0);
         if (is_def($save_color)) {
             $color=$save_color;
