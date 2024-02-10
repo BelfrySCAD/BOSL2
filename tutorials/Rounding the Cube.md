@@ -263,7 +263,7 @@ You can construct cube-like objects, as well as a variety of other prisms using 
 A feature unique to [rounded_prism()](https://github.com/BelfrySCAD/BOSL2/wiki/rounding.scad#functionmodule-rounded_prism) is that it uses continuous curvature rounding. Rather than using constant radius arcs, continuous curvature rounding uses 4th-order Bezier curves. For complete details on how this works see [Types of Roundovers](https://github.com/BelfrySCAD/BOSL2/wiki/rounding.scad#section-types-of-roundovers).
 
 
-Two parameters control the roundover k and joint.  The joint parameter is the distance from where the rounding starts to the unrounded edge. The k parameter ranges from 0 to 1 with a default of 0.5. Larger values give a more abrupt transition and smaller ones a more gradual transition. 
+Two parameters control the roundover, k and joint.  The joint parameter is the distance from where the rounding starts to the unrounded edge. The k parameter ranges from 0 to 1 with a default of 0.5. Larger values give a more abrupt transition and smaller ones a more gradual transition. 
 
 Parameters of a "smooth" roundover, with k=0.75. 
 
@@ -276,33 +276,33 @@ Parameters of a "smooth" roundover, with k=0.15. The transition is so gradual th
 The joint parameter is specified separately for the top, bottom and side edges; joint\_top, joint\_bot, and joint_sides.
 
 
- If you want a very smooth roundover, set the joint parameter as large as possible and then adjust the k value down low enough to achieve a sufficiently large roundover.
+ If you want a very smooth roundover, set the joint parameter as large as possible and then adjust the k value down low enough to achieve a sufficiently large roundover.  Joint parameters usually need to be < side/2.
 
 
 ```openscad-3D
 include <BOSL2/std.scad>
 include <BOSL2/rounding.scad>
 rounded_prism(rect(20), height=20, 
-    joint_top=10, joint_bot=10, joint_sides=10, k = 0.5);
+    joint_top=9.99, joint_bot=9.99, joint_sides=9.99, k = 0.5);
 ```
 
-Here we're using the same cube size of 20, setting the joint paramater to 10 and varying the k parameter.
+Here we're using the same cube size and joint sizes, but varying the k parameter.
 
 ```openscad-3D;ImgOnly NoScales Med VPD=170 VPR=[75,0,25]
 include <BOSL2/std.scad>
 include <BOSL2/rounding.scad>
  left(30) {
-    rounded_prism(rect(20), height=20, joint_top=10, joint_bot=10, joint_sides=10, k = 0.15);
+    rounded_prism(rect(20), height=20, joint_top=9.99, joint_bot=9.99, joint_sides=9.99, k = 0.15);
     move([0,-12,-12]) xrot(90) color("black") text3d("k=0.15", size=3, h = 0.01, anchor= CENTER);
 }
 
 right(0){
-    rounded_prism(rect(20), height=20, joint_top=10, joint_bot=10, joint_sides=10, k = 0.5);  
+    rounded_prism(rect(20), height=20, joint_top=9.99, joint_bot=9.99, joint_sides=9.99, k = 0.5);  
     move([0,-12,-12]) xrot(90) color("black") text3d("k=0.5", size=3, h = 0.01, anchor= CENTER); 
 }
 
 right(30){
-    rounded_prism(rect(20), height=20, joint_top=10, joint_bot=10, joint_sides=10, k = 0.75);
+    rounded_prism(rect(20), height=20, joint_top=9.99, joint_bot=9.99, joint_sides=9.99, k = 0.75);
     move([0,-12,-12]) xrot(90) color("black") text3d("k=0.75", size=3, h = 0.01, anchor= CENTER);
 }
 ```
@@ -330,13 +330,34 @@ right(30){
 
 You can match the cicrular roundover of cuboid() by setting the joint values to the rounding used in cuboid() and setting the k value to 0.93:
 
-```openscad-3D: Med
+```openscad-3D: Med, VPR=[75,0,25], VPD=180
 include <BOSL2/std.scad>
 include <BOSL2/rounding.scad>
-rounded_prism(rect(20), height=20, 
-    joint_top=4, joint_bot=4, joint_sides=4, k = 0.93);
-right(30)  
+left(15) 
+    rounded_prism(rect(20), height=20, joint_top=4, joint_bot=4, joint_sides=4, k = 0.93);
+right(15)  
     cuboid(20, rounding = 4, $fn = 72);
+```
+
+Unlike other cube-like objects, the rounded prism smoothness is not affected by the special variable $fn, but by the splinesteps argument. Splinesteps defaults to 16. 
+
+```openscad-3D;ImgOnly NoScales, Med, VPD=170, VPR=[75,0,45]
+include <BOSL2/std.scad>
+include <BOSL2/rounding.scad>
+ left(35) {
+    rounded_prism(rect(20), height=20, joint_top=9.99, joint_bot=9.99, joint_sides=9.99, k = 0.5, splinesteps = 4 )
+    move([0,-12,-12]) xrot(90) color("black") text3d("splinesteps=4", size=3, h = 0.01, anchor= CENTER);
+}
+
+right(0){
+    rounded_prism(rect(20), height=20, joint_top=9.99, joint_bot=9.99, joint_sides=9.99, k = 0.5, splinesteps = 16)  
+    move([0,-12,-12]) xrot(90) color("black") text3d("splinesteps=16", size=3, h = 0.01, anchor= CENTER); 
+}
+
+right(35){
+    rounded_prism(rect(20), height=20, joint_top=9.99, joint_bot=9.99, joint_sides=9.99, k = 0.5, splinesteps = 64)
+    move([0,-12,-12]) xrot(90) color("black") text3d("splinesteps=64", size=3, h = 0.01, anchor= CENTER);
+}
 ```
 
 The joint size can be set to different values for each side of the prism:
