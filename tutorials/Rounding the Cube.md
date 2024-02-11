@@ -140,7 +140,7 @@ prismoid(100, 80, rounding1=[0,50,0,50], rounding2=[40,0,40,0], h=50);
 
 
 ##Masking Edges of the Cuboid, Cube and Prismoid
-###2D Edge Masking with [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile)
+###2D Edge Masking with [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile) and [edge_profile_asym()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile_asym)
 
 One limitation of using rounding arguments in [cuboid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#module-cuboid) is that all the rounded edges must have the same rounding radius.  Using masking we have the flexibility to apply different edge treatments to the same cube.  Masking can also be used on the [cube()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-cube) and [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid) shapes.
 
@@ -154,6 +154,27 @@ diff()
     cuboid([50,60,70], rounding = -10, edges = BOT)
         edge_profile(TOP)
             mask2d_roundover(r=10);
+```
+
+We could also fillet the bottom of the cube using [edge_profile_asym()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile_asym) and [xflip()](https://github.com/BelfrySCAD/BOSL2/wiki/transforms.scad#functionmodule-xflip)
+
+```openscad-3D
+include<BOSL2/std.scad>
+cuboid(50)
+	edge_profile_asym(BOT, corner_type="round")
+		xflip() mask2d_roundover(10);
+```
+
+The flip argumet in [edge_profile_asym()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile_asym) determines whether the fillet flares out or up.  The corner_type argument is used to shape the corners of external fillets.
+
+```openscad-3D
+include<BOSL2/std.scad>
+cuboid(50){
+	edge_profile_asym(TOP, flip = true)
+		xflip() mask2d_roundover(10);
+   edge_profile_asym(BOT, corner_type="round")
+		xflip() mask2d_roundover(10);
+   }	
 ```
 
 See [mask2d_roundover()](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_roundover) for additional mask parameters.  Here we use the *inset* parameter in mask2d_roundover:
