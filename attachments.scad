@@ -2296,9 +2296,17 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   display or not in the current context.  The determination to display the attachable object
 //   usually occurs in this module, which means that an object which does not display (e.g. a "remove" tagged object
 //   inside {{diff()}} cannot have internal {{tag()}} calls that change its tags and cause submodel
-//   portions to display: the entire child simply does not run.  If you want the child tags to be respected,
+//   portions to display: the entire object simply does not run.  If you want the attachable object internal tags to be respected,
 //   you can set `use_child_tags=true` which delays the determination to display objects to the children.
-//   For this to work correctly, all of the children must be attachables.  
+//   For this to work correctly, all of the children must be attachables.
+//   .
+//   Application of {{recolor()}} and {{color_this()}} also happens in this module and normally it applies to the
+//   entire attachable object, so coloring commands that you give in the first child to `attachable()` have no effect.
+//   Generally it makes sense that if a user specifies a color for an attachable object, the entire object is displayed
+//   in that color, but if you want to retain control of color for sub-parts of an attachable object, you can use
+//   the `use_child_color=true` option, which delays the assignment of colors to the child level.  For this to work
+//   correctly, all of the sub-parts of your attachable object must be attachables.  Also note that this option could
+//   be confusing to users who don't understand why color commands are not working on the object.  
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 //
@@ -2531,6 +2539,34 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //     diff()
 //       cuboid(10)
 //         position(TOP)thing(anchor=BOT);
+// Example(3D,NoAxes): Here an attachable module uses {{recolor()}} to change the color of a sub-part, producing the result shown on the left.  But if the caller applies color to the attachable, then both the green and yellow are changed, as shown on the right.  
+//   module thing(anchor=CENTER) {
+//       attachable(anchor,size=[10,10,10]) {
+//           cuboid(10)
+//             position(TOP) recolor("green")
+//               cuboid(5,anchor=BOT);
+//           children();
+//       }
+//   }
+//   move([-15,-15])
+//   thing()
+//     attach(RIGHT,BOT)
+//       recolor("blue") cyl(d=5,h=5);
+//   recolor("pink") thing()
+//     attach(RIGHT,BOT)
+//       recolor("blue") cyl(d=5,h=5);
+// Example(3D,NoAxes): Using the `use_child_color=true` option enables the green color to persist, even when the user specifies a color.
+//   module thing(anchor=CENTER) {
+//       attachable(anchor,size=[10,10,10],use_child_color=true) {
+//           cuboid(10)
+//             position(TOP) recolor("green")
+//               cuboid(5,anchor=BOT);
+//           children();
+//       }
+//   }
+//   recolor("pink") thing()
+//     attach(RIGHT,BOT)
+//       recolor("blue") cyl(d=5,h=5);
 
 module attachable(
     anchor, spin, orient,
@@ -2544,7 +2580,7 @@ module attachable(
     two_d=false,
     axis=UP,override,
     geom,
-    use_child_tags=false
+    use_child_tags=false, use_child_color=false
 ) { 
     dummy1 =
         assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
@@ -2575,8 +2611,12 @@ module attachable(
         $parent_size   = _attach_geom_size(geom);
         $attach_to   = undef;
         $anchor_override=undef;
-        if (use_child_tags || _is_shown())
+        if (use_child_tags || _is_shown()){
+           if (!use_child_color)
             _color($color) children(0);
+           else
+               children(0);
+        }
         if (is_def($save_color)) {
             $color=$save_color;
             $save_color=undef;
