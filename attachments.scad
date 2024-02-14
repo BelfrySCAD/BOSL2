@@ -1842,6 +1842,7 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 //   `$idx` is set to the index number of each edge.
 //   `$attach_anchor` is set for each edge given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
 //   `$profile_type` is set to `"edge"`.
+//   `$edge_angle` is set to the inner angle of the current edge.
 // Example:
 //   ogee = [
 //       "xstep",1,  "ystep",1,  // Starting shoulder.
