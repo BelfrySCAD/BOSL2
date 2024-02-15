@@ -1251,14 +1251,14 @@ function _path_line_intersection(path, line, ind=0) =
                 _path_line_intersection(path, line, ind+1);
 
 module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, quality=1, chamfer=false, closed=false,
-                     atype="hull", anchor, spin, cp="centroid")
+                     atype="hull", anchor="origin", spin, cp="centroid")
 {
         result = offset_stroke(
                 path, width=width, rounded=rounded,
                 start=start, end=end,
                 check_valid=check_valid, quality=quality,
                 chamfer=chamfer,
-                closed=closed
+                closed=closed,anchor="origin"
         );
         region(result,atype=atype, anchor=anchor, spin=spin, cp=cp) children();
 }
