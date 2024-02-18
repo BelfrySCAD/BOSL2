@@ -23,7 +23,7 @@ You can find the full BOSL2 library documentation at: https://github.com/BelfryS
 1. Download the .zip or .tar.gz release file for this library.  Currently you should be able to find this at https://github.com/BelfrySCAD/BOSL2/archive/refs/heads/master.zip
 2. Unpack it. Make sure that you unpack the whole file structure. Some zipfile unpackers call this option "Use folder names". It should create either a `BOSL-v2.0` or `BOSL2-master` directory with the library files within it.  You should see "examples", "scripts", "tests", and other subdirectories.
 3. Rename the unpacked main directory to `BOSL2`.
-4. Move the `BOSL2` directory into the apropriate OpenSCAD library directory for your platform:
+4. Move the `BOSL2` directory into the apropriate OpenSCAD library directory.  The library directory may be on the list below, but for SNAP or other prepackaged installations, it is probably somewhere else.  To find it, run OpenSCAD and select Help&rarr;Library Info, and look for the entry that says "User Library Path".  This is your default library directory.  You may choose to change it to something more convenient by setting the environment variable OPENSCADPATH.  Using this variable also means that all versions of OpenSCAD you install will look for libraries in the same location.  
     - Windows: `My Documents\OpenSCAD\libraries\`
     - Linux: `$HOME/.local/share/OpenSCAD/libraries/`
     - Mac OS X: `$HOME/Documents/OpenSCAD/libraries/`
