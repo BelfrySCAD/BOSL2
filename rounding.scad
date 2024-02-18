@@ -1653,7 +1653,7 @@ module offset_sweep(path, height,
 
     if (in_list(atype,["hull","intersect"])){
         h=first_defined([h,l,height]);
-        attachable(anchor,spin,orient,region=[path],h=h,extent=atype=="hull",cp=cp){
+        attachable(anchor,spin,orient,region=force_region(path),h=h,extent=atype=="hull",cp=cp){
             down(h/2)polyhedron(vnf[0],vnf[1],convexity=convexity);
             children();
         }
