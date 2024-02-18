@@ -319,7 +319,6 @@ module _knuckle_hinge_profile(offset, arm_height, arm_angle=45, knuckle_diam=4, 
   ofs = arm_height+offset/tan(arm_angle);
   start=round_bot==0 && round_top==0 ? os_flat(abs_angle=90)
                                      : os_round(abs_angle=90, cut=[-round_top,-round_bot],k=.8);
-  f=echo(clearance=clearance);
   back(clearance)
   difference(){
     union(){

@@ -2292,20 +2292,23 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   * Rotates this part so it's anchor direction vector exactly opposes the parent's anchor direction vector.
 //   * Rotates this part so it's anchor spin matches the parent's anchor spin.
 //   .
-//   This module is also responsible for handing coloring of objects with {{recolor()}} and {{color_this()}}, and
+//   In addition to handling positioning of the attachable object, 
+//   this module is also responsible for handing coloring of objects with {{recolor()}} and {{color_this()}}, and
 //   it is responsible for processing tags and determining whether the object should
-//   display or not in the current context.  The determination to display the attachable object
-//   usually occurs in this module, which means that an object which does not display (e.g. a "remove" tagged object
-//   inside {{diff()}} cannot have internal {{tag()}} calls that change its tags and cause submodel
-//   portions to display: the entire object simply does not run.  If you want the attachable object internal tags to be respected,
-//   you can set `use_child_tags=true` which delays the determination to display objects to the children.
-//   For this to work correctly, all of the children must be attachables.
+//   display or not in the current context.  The determination based on the tags of whether to display the attachable object
+//   often occurs in this module, which means that an object which does not display (e.g. a "remove" tagged object
+//   inside {{diff()}}) cannot have internal {{tag()}} calls that change its tags and cause submodel
+//   portions to display: the entire object simply does not run.  If you want the use the attachable object's internal tags outside
+//   of the attachable object you can set `expose_tags=true` which delays the determination to display objects to the children.
+//   For this to work correctly, all of the children must be attachables.  An example situation where you should set
+//   `expose_tags=true` is when you want to have negative space in an attachable object that gets removed from the parent via
+//   a "remove" tagged component of your attachable.  
 //   .
 //   Application of {{recolor()}} and {{color_this()}} also happens in this module and normally it applies to the
-//   entire attachable object, so coloring commands that you give in the first child to `attachable()` have no effect.
+//   entire attachable object, so coloring commands that you give internally in the first child to `attachable()` have no effect.
 //   Generally it makes sense that if a user specifies a color for an attachable object, the entire object is displayed
 //   in that color, but if you want to retain control of color for sub-parts of an attachable object, you can use
-//   the `use_child_color=true` option, which delays the assignment of colors to the child level.  For this to work
+//   the `keep_color=true` option, which delays the assignment of colors to the child level.  For this to work
 //   correctly, all of the sub-parts of your attachable object must be attachables.  Also note that this option could
 //   be confusing to users who don't understand why color commands are not working on the object.  
 //   .
@@ -2337,7 +2340,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
 //   override = Function that takes an anchor and for 3d returns a triple `[position, direction, spin]` or for 2d returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction, spin]]` entries.  If the direction/position/spin that is returned is undef then the default will be used.  This option applies only to the "trapezoid" and "prismoid" geometry types.  
 //   geom = If given, uses the pre-defined (via {{attach_geom()}} geometry.
-//   use_child_tags = if true then delay the decision to display or not display this object to the children.  Default: false
+//   expose_tags = If true then delay the decision to display or not display this object to the children, which it possible for tags to respond to operations like {{diff()}} used outside the attachble object.  Only works correctly if everything in the attachable is also attachable.  Default: false
+//   keep_color = If true then delay application of color to the children, which means that externally applied color is overridden by color specified within the attachable.  Only works properly if everything in the attachable is also attacahble.  Default: false
 //
 // Side Effects:
 //   `$parent_anchor` is set to the parent object's `anchor` value.
@@ -2511,9 +2515,9 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //        attach([FRONT,TOP],overlap=-4)
 //          thing(anchor=TOP)
 //            tube(ir=12,h=10);
-// Example: A different way to achieve similar effects to the above to examples is to use the `use_child_tags` parameter.  This parameter allows you to use just one call to attachable.  The second example above can also be rewritten like this. 
+// Example: A different way to achieve similar effects to the above to examples is to use the `expose_tags` parameter.  This parameter allows you to use just one call to attachable.  The second example above can also be rewritten like this. 
 //   module thing(anchor,spin,orient) {
-//      attachable(size=[15,15,15],anchor=anchor,spin=spin,orient=orient,use_child_tags=true){
+//      attachable(size=[15,15,15],anchor=anchor,spin=spin,orient=orient,expose_tags=true){
 //        union(){
 //          cuboid([15,15,15]);
 //          tag("remove")cuboid([10,10,16]);
@@ -2525,10 +2529,10 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //     cube([19,10,19])
 //       attach([FRONT],overlap=-4)
 //         thing(anchor=TOP);
-// Example: An advantage of using `use_child_tags` is that it can work on nested constructions.  Here the child cylinder is aligned relative to its parent and removed from the calling parent object.
+// Example: An advantage of using `expose_tags` is that it can work on nested constructions.  Here the child cylinder is aligned relative to its parent and removed from the calling parent object.
 //   $fn=64;
 //   module thing(anchor=BOT){
-//     attachable(anchor = anchor,d=9,h=6,use_child_tags=true){
+//     attachable(anchor = anchor,d=9,h=6,expose_tags=true){
 //       cyl(d = 9, h = 6) 
 //         tag("remove") 
 //            align(RIGHT+TOP,inside=true) 
@@ -2556,9 +2560,9 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   recolor("pink") thing()
 //     attach(RIGHT,BOT)
 //       recolor("blue") cyl(d=5,h=5);
-// Example(3D,NoAxes): Using the `use_child_color=true` option enables the green color to persist, even when the user specifies a color.
+// Example(3D,NoAxes): Using the `keep_color=true` option enables the green color to persist, even when the user specifies a color.
 //   module thing(anchor=CENTER) {
-//       attachable(anchor,size=[10,10,10],use_child_color=true) {
+//       attachable(anchor,size=[10,10,10],keep_color=true) {
 //           cuboid(10)
 //             position(TOP) recolor("green")
 //               cuboid(5,anchor=BOT);
@@ -2581,7 +2585,7 @@ module attachable(
     two_d=false,
     axis=UP,override,
     geom,
-    use_child_tags=false, use_child_color=false
+    expose_tags=false, keep_color=false
 ) { 
     dummy1 =
         assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
@@ -2612,14 +2616,16 @@ module attachable(
         $parent_size   = _attach_geom_size(geom);
         $attach_to   = undef;
         $anchor_override=undef;
-        if (use_child_tags || _is_shown()){
-           if (!use_child_color)
-            _color($color) children(0);
-           else
-               children(0);
+        if (expose_tags || _is_shown()){
+            if (!keep_color)
+                _color($color) children(0);
+            else {
+                $save_color=undef; // Force color_this() color in effect to persist for the entire object
+                children(0); 
+            }
         }
         if (is_def($save_color)) {
-            $color=$save_color;
+            $color=$save_color;    // Revert to the color before color_this() call
             $save_color=undef;
             children(1);
         }
