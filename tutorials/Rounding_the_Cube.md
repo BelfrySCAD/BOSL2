@@ -76,6 +76,13 @@ include <BOSL2/std.scad>
 cuboid([100,80,60], rounding=20, except = TOP+FRONT);
 ```
 
+Multiple edges can be specified in the form of a list:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cuboid([100,80,60], rounding=20, edges=[FWD,TOP], except=[TOP+LEFT,FWD+RIGHT]);
+```
+
 You can also specify which edges to round using a 3x4 array, where each entry corresponds to one of the 12 edges and is set to 1 if that edge is included and 0 if the edge is not. The edge ordering is:
 
 [  
