@@ -694,6 +694,7 @@ module grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero)
         ];
     for(i=idx(poslist)){
       $idx=i;
+      $pos=poslist[i][0];
       $row=poslist[i][1];
       $col=poslist[i][2];
       translate(poslist[i][0])children();
