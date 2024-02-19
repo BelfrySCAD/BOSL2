@@ -134,7 +134,8 @@ function _path_select(path, s1, u1, s2, u2, closed=false) =
 // SynTags: Path
 // Topics: Paths, Regions
 // Description:
-//   Takes a path and removes unnecessary sequential collinear points.
+//   Takes a path and removes unnecessary sequential collinear points.  Note that when `closed=true` either of the path
+//   endpoints may be removed.  
 // Usage:
 //   path_merge_collinear(path, [eps])
 // Arguments:
@@ -146,17 +147,14 @@ function path_merge_collinear(path, closed, eps=EPSILON) =
     let(closed=default(closed,false))
     assert(is_bool(closed))
     assert( is_path(path), "Invalid path in path_merge_collinear." )
-    assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "Invalid tolerance." )    
+    assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "Invalid tolerance." )
     len(path)<=2 ? path :
-    let(
-        indices = [
-            0,
-            for (i=[1:1:len(path)-(closed?1:2)]) 
-                if (!is_collinear(path[i-1], path[i], select(path,i+1), eps=eps)) i, 
-            if (!closed) len(path)-1 
-        ]
-    ) [for (i=indices) path[i]];
-
+    [
+      if(!closed) path[0],
+      for(triple=triplet(path,wrap=closed))
+        if (!is_collinear(triple,eps=eps)) triple[1],
+      if(!closed) last(path)
+    ];
 
 
 // Section: Path length calculation
