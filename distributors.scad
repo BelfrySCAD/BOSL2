@@ -587,6 +587,7 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$col` is set to the integer column number for each child.
 //   `$row` is set to the integer row number for each child.
+//   `$idx` is set to a unique index for each child, progressing across rows first, from the bottom
 //
 // Examples:
 //   grid_copies(size=50, spacing=10) cylinder(d=10, h=1);
@@ -654,46 +655,49 @@ module grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero)
         size!=undef && spacing!=undef? v_floor(v_div(size,spacing))+[1,1] :
         [2,2];
     offset = v_mul(spacing, n-[1,1])/2;
-    if (stagger == false) {
-        for (row = [0:1:n.y-1]) {
-            for (col = [0:1:n.x-1]) {
-                pos = v_mul([col,row],spacing) - offset;
-                if (
-                    is_undef(inside) ||
-                    (is_path(inside) && point_in_polygon(pos, inside, nonzero=nonzero)>=0) ||
-                    (is_region(inside) && point_in_region(pos, inside)>=0)
-                ) {
-                    $col = col;
-                    $row = row;
-                    $pos = pos;
-                    translate(pos) children();
-                }
-            }
-        }
-    } else {
-        // stagger == true or stagger == "alt"
-        staggermod = (stagger == "alt")? 1 : 0;
-        cols1 = ceil(n.x/2);
-        cols2 = n.x - cols1;
-        for (row = [0:1:n.y-1]) {
-            rowcols = ((row%2) == staggermod)? cols1 : cols2;
-            if (rowcols > 0) {
-                for (col = [0:1:rowcols-1]) {
-                    rowdx = (row%2 != staggermod)? spacing.x : 0;
-                    pos = v_mul([2*col,row],spacing) + [rowdx,0] - offset;
+
+    poslist = 
+      stagger==false ? 
+               [for (row = [0:1:n.y-1], col = [0:1:n.x-1])
+                   let(
+                       pos = v_mul([col,row],spacing) - offset
+                   )
+                   if (
+                           is_undef(inside) ||
+                           (is_path(inside) && point_in_polygon(pos, inside, nonzero=nonzero)>=0) ||
+                           (is_region(inside) && point_in_region(pos, inside)>=0)
+                   )
+                   [pos,row,col]
+               ]
+      :
+        let(  // stagger == true or stagger == "alt"
+            staggermod = (stagger == "alt")? 1 : 0,
+            cols1 = ceil(n.x/2),
+            cols2 = n.x - cols1
+         )
+         [for (row = [0:1:n.y-1])
+              let(
+                rowcols = ((row%2) == staggermod)? cols1 : cols2
+              )
+              if (rowcols > 0) 
+                for (col = [0:1:rowcols-1])
+                  let(
+                    rowdx = (row%2 != staggermod)? spacing.x : 0,
+                    pos = v_mul([2*col,row],spacing) + [rowdx,0] - offset
+                  )
                     if (
                         is_undef(inside) ||
                         (is_path(inside) && point_in_polygon(pos, inside, nonzero=nonzero)>=0) ||
                         (is_region(inside) && point_in_region(pos, inside)>=0)
-                    ) {
-                        $col = col * 2 + ((row%2!=staggermod)? 1 : 0);
-                        $row = row;
-                        $pos = pos;
-                        translate(pos) children();
-                    }
-                }
-            }
-        }
+                    )
+                    [pos, row, col * 2 + ((row%2!=staggermod)? 1 : 0)]
+        ];
+    for(i=idx(poslist)){
+      $idx=i;
+      $pos=poslist[i][0];
+      $row=poslist[i][1];
+      $col=poslist[i][2];
+      translate(poslist[i][0])children();
     }
 }
 
