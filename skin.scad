@@ -966,7 +966,8 @@ function rotate_sweep(
     tex_taper, shift=[0,0], closed=true,
     style="min_edge", cp="centroid",
     atype="hull", anchor="origin",
-    spin=0, orient=UP
+    spin=0, orient=UP,
+    _tex_inhibit_y_slicing=false
 ) =
     assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
     assert(num_defined([tex_scale,tex_depth])<2, "In linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
@@ -995,6 +996,7 @@ function rotate_sweep(
         inset=tex_inset,
         rot=tex_rot,
         samples=tex_samples,
+        inhibit_y_slicing=_tex_inhibit_y_slicing,
         taper=tex_taper,
         shift=shift,
         closed=closed,
@@ -1032,7 +1034,8 @@ module rotate_sweep(
     atype="hull",
     anchor="origin",
     spin=0,
-    orient=UP
+    orient=UP,
+    _tex_inhibit_y_slicing=false
 ) {
     dummy =
        assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
@@ -1063,6 +1066,7 @@ module rotate_sweep(
             taper=tex_taper,
             shift=shift,
             closed=closed,
+            inhibit_y_slicing=_tex_inhibit_y_slicing,
             angle=angle,
             style=style,
             atype=atype, anchor=anchor,
@@ -3676,7 +3680,9 @@ function _textured_linear_sweep(
                 s = 1 / max(1, samples),
                 vnf = samples<=1? texture :
                     let(
-                        vnft = vnf_slice(texture, "X", list([s:s:1-s/2])),
+                        slice_us = list([s:s:1-s/2]),
+                        vnft1 = vnf_slice(texture, "X", slice_us),
+                        vnft = twist? vnf_slice(vnft1, "Y", slice_us) : vnft1,
                         zvnf = [
                             [
                                 for (p=vnft[0]) [
@@ -3713,44 +3719,49 @@ function _textured_linear_sweep(
                         bases = list_wrap(obases),
                         norms = list_wrap(onorms),
                         vnf = is_vnf(texture)
-                          ? let( // VNF tile texture
-                                row_vnf = vnf_join([
-                                    for (j = [0:1:counts.x-1]) [
-                                        [
-                                            for (group = vertzs)
-                                            each [
-                                                for (vert = group) let(
-                                                    u = floor((j + vert.x) * samples),
-                                                    uu = ((j + vert.x) * samples) - u,
-                                                    texh = tex_scale<0 ? -(1-vert.z - inset) * tex_scale
-                                                                       : (vert.z - inset) * tex_scale,
-                                                    base = lerp(bases[u], select(bases,u+1), uu),
-                                                    norm = unit(lerp(norms[u], select(norms,u+1), uu)),
-                                                    xy = base + norm * texh
-                                                ) point3d(xy,vert.y)
-                                            ]
-                                        ],
-                                        sorted_tile[1]
-                                    ]
-                                ]),
-                                sorted_row = _vnf_sort_vertices(row_vnf, idx=[1,0]),
-                                rvertzs = group_sort(sorted_row[0], idx=1),
-                                vnf1 = vnf_join([
-                                    for (i = [0:1:counts.y-1]) [
-                                        [
-                                            for (group = rvertzs) let(
-                                                v = (i + group[0].z) / counts.y,
-                                                sc = lerp([1,1,1], scale, v),
-                                                mat = scale(sc) *
-                                                    zrot(twist*v) *
-                                                    up(((i/counts.y)-0.5)*h) *
-                                                    zscale(h/counts.y)
-                                            ) each apply(mat, group)
-                                        ],
-                                        sorted_row[1]
-                                    ]
-                                ])
-                            ) vnf1
+                          ? vnf_join( // VNF tile texture
+                                let(
+                                    row_vnf = vnf_join([
+                                        for (i = [0:1:(scale==1?0:counts.y-1)], j = [0:1:counts.x-1]) [
+                                            [
+                                                for (group = vertzs)
+                                                each [
+                                                    for (vert = group) let(
+                                                        u = floor((j + vert.x) * samples),
+                                                        uu = ((j + vert.x) * samples) - u,
+                                                        texh = tex_scale<0 ? -(1-vert.z - inset) * tex_scale
+                                                                           : (vert.z - inset) * tex_scale,
+                                                        base = lerp(bases[u], select(bases,u+1), uu),
+                                                        norm = unit(lerp(norms[u], select(norms,u+1), uu)),
+                                                        xy = base + norm * texh,
+                                                        pt = point3d(xy,vert.y),
+                                                        v = vert.y / counts.y,
+                                                        vv = i / counts.y,
+                                                        sc = lerp([1,1,1], scale, vv+v),
+                                                        mat =
+                                                            up((vv-0.5)*h) *
+                                                            scale(sc) *
+                                                            zrot(twist*(v+vv)) *
+                                                            zscale(h/counts.y)
+                                                    ) apply(mat, pt)
+                                                ]
+                                            ],
+                                            sorted_tile[1]
+                                        ]
+                                    ])
+                                ) [
+                                    for (i = [0:1:0*(scale!=1?0:counts.y-1)])
+                                    let(
+                                        v = i / (scale==1?counts.y:1),
+                                        sc = lerp([1,1,1], scale, v),
+                                        mat =
+                                            up((v)*h) *
+                                            scale(sc) *
+                                            zrot(twist*v)
+                                    )
+                                    apply(mat, row_vnf)
+                                ]
+                            )
                           : let( // Heightfield texture
                                 texcnt = [len(texture[0]), len(texture)],
                                 tile_rows = [
@@ -3898,6 +3909,7 @@ function _textured_revolution(
     shape, texture, tex_size, tex_scale=1,
     inset=false, rot=false, shift=[0,0],
     taper, closed=true, angle=360,
+    inhibit_y_slicing=false,
     counts, samples,
     style="min_edge", atype="intersect",
     anchor=CENTER, spin=0, orient=UP
@@ -3953,7 +3965,7 @@ function _textured_revolution(
                         s = 1 / samples,
                         slices = list([s : s : 1-s/2]),
                         vnfx = vnf_slice(texture, "X", slices),
-                        vnfy = vnf_slice(vnfx, "Y", slices),
+                        vnfy = inhibit_y_slicing? vnfx : vnf_slice(vnfx, "Y", slices),
                         vnft = vnf_triangulate(vnfy),
                         zvnf = [
                             [
@@ -4171,6 +4183,7 @@ module _textured_revolution(
     inset=false, rot=false, shift=[0,0],
     taper, closed=true, angle=360,
     style="min_edge", atype="intersect",
+    inhibit_y_slicing=false,
     convexity=10, counts, samples,
     anchor=CENTER, spin=0, orient=UP
 ) {
@@ -4180,7 +4193,8 @@ module _textured_revolution(
         tex_scale=tex_scale, inset=inset, rot=rot,
         taper=taper, closed=closed, style=style,
         shift=shift, angle=angle,
-        samples=samples, counts=counts
+        samples=samples, counts=counts,
+        inhibit_y_slicing=inhibit_y_slicing
     );
     geom = atype=="intersect"
           ? attach_geom(vnf=vnf, extent=false)
