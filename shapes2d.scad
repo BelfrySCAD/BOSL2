@@ -1318,7 +1318,7 @@ module jittered_poly(path, dist=1/512) {
 // Synopsis: Creates a 2D teardrop shape.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: teardrop(), onion()
+// See Also: teardrop(), onion(), keyhole()
 // Description:
 //   When called as a module, makes a 2D teardrop shape. Useful for extruding into 3D printable holes as it limits overhang to 45 degrees.  Uses "intersect" style anchoring.  
 //   The cap_h parameter truncates the top of the teardrop.  If cap_h is taller than the untruncated form then
@@ -1418,7 +1418,7 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
 // Synopsis: Creates an egg-shaped 2d object.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), ellipse(), glued_circles()
+// See Also: circle(), ellipse(), glued_circles(), keyhole()
 // Usage: As Module
 //   egg(length, r1|d1=, r2|d2=, R|D=) [ATTACHMENTS];
 // Usage: As Function
@@ -1681,7 +1681,7 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
 // Synopsis: Creates a shape of two circles joined by a curved waist.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), ellipse(), egg()
+// See Also: circle(), ellipse(), egg(), keyhole()
 // Usage: As Module
 //   glued_circles(r/d=, [spread], [tangent], ...) [ATTACHMENTS];
 // Usage: As Function
@@ -1743,9 +1743,87 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 }
 
 
+// Function&Module: keyhole()
+// Synopsis: Creates a 2D keyhole shape.
+// SynTags: Geom, Path
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), ellipse(), egg(), glued_circles()
+// Usage: As Module
+//   keyhole(l/length=, r1/d1=, r2/d2=, [shoulder_r=], ...) [ATTACHMENTS];
+// Usage: As Function
+//   path = keyhole(l/length=, r1/d1=, r2/d2=, [shoulder_r=], ...);
+// Description:
+//   When called as a function, returns a 2D path forming a shape of two differently sized circles joined by a straight slot, making what looks like a keyhole.
+//   When called as a module, creates a 2D shape of two differently sized circles joined by a straight slot, making what looks like a keyhole.  Uses "hull" style anchoring.  
+// Arguments:
+//   l = The distance between the centers of the two circles.  Default: `15`
+//   r1= The radius of the back circle, centered on `[0,0]`.  Default: `2.5`
+//   r2= The radius of the forward circle, centered on `[0,-length]`.  Default: `5`
+//   ---
+//   shoulder_r = The radius of the rounding of the shoulder between the larger circle, and the slot that leads to the smaller circle.  Default: `0`
+//   d1= The diameter of the back circle, centered on `[0,0]`.
+//   d2= The diameter of the forward circle, centered on `[0,-l]`.
+//   length = An alternate name for the `l=` argument.
+//   anchor = Translate so anchor point is at origin (0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Examples(2D):
+//   keyhole(40, 10, 30);
+//   keyhole(l=60, r1=20, r2=40);
+// Example(2D): Making the forward circle larger than the back circle
+//   keyhole(l=60, r1=40, r2=20);
+// Example(2D): Centering on the larger hole:
+//   keyhole(l=60, r1=40, r2=20, spin=180);
+// Example(2D): Rounding the shoulders
+//   keyhole(l=60, r1=20, r2=40, shoulder_r=20);
+// Example(2D): Called as Function
+//   stroke(closed=true, keyhole(l=60, r1=20, r2=40));
 
-function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
-    pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
+function keyhole(l, r1, r2, shoulder_r=0, d1, d2, length, anchor=CTR, spin=0) =
+    let(
+        l = first_defined([l,length,15]),
+        r1 = get_radius(r=r1, d=d1, dflt=5),
+        r2 = get_radius(r=r2, d=d2, dflt=10)
+    )
+    assert(is_num(l) && l>0)
+    assert(l>=max(r1,r2))
+    assert(is_undef(shoulder_r) || (is_num(shoulder_r) && shoulder_r>=0))
+    let(
+        cp1 = [0,0],
+        cp2 = cp1 + [0,-l],
+        shoulder_r = is_num(shoulder_r)? shoulder_r : min(r1,r2) / 2,
+        minr = min(r1, r2) + shoulder_r,
+        maxr = max(r1, r2) + shoulder_r,
+        dy = opp_hyp_to_adj(minr, maxr),
+        spt1 = r1>r2? cp1+[minr,-dy] : cp2+[minr,dy],
+        spt2 = [-spt1.x, spt1.y],
+        ds = spt1 - (r1>r2? cp1 : cp2),
+        ang = atan2(abs(ds.y), abs(ds.x)),
+        path = r1>r2? [
+                if (shoulder_r<=0) spt1
+                  else each arc(r=shoulder_r, cp=spt1, start=180-ang, angle=ang, endpoint=false),
+                each arc(r=r2, cp=cp2, start=0, angle=-180, endpoint=false),
+                if (shoulder_r<=0) spt2
+                  else each arc(r=shoulder_r, cp=spt2, start=0, angle=ang, endpoint=false),
+                each arc(r=r1, cp=cp1, start=180+ang, angle=-180-2*ang, endpoint=false),
+            ] : [
+                if (shoulder_r<=0) spt1
+                  else each arc(r=shoulder_r, cp=spt1, start=180, angle=ang, endpoint=false),
+                each arc(r=r2, cp=cp2, start=ang, angle=-180-2*ang, endpoint=false),
+                if (shoulder_r<=0) spt2
+                  else each arc(r=shoulder_r, cp=spt2, start=360-ang, angle=ang, endpoint=false),
+                each arc(r=r1, cp=cp1, start=180, angle=-180, endpoint=false),
+            ]
+    ) reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
+
+
+module keyhole(l, r1, r2, shoulder_r=0, d1, d2, length, anchor=CTR, spin=0) {
+    path = keyhole(l=l, r1=r1, r2=r2, shoulder_r=shoulder_r, d1=d1, d2=d2, length=length);
+    attachable(anchor,spin, two_d=true, path=path, extent=true) {
+        polygon(path);
+        children();
+    }
+}
+
 
 // Function&Module: supershape()
 // Synopsis: Creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
@@ -1828,6 +1906,9 @@ module supershape(step=0.5,n,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=u
         children();
     }
 }
+
+function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
+    pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
 
 
 // Function&Module: reuleaux_polygon()
