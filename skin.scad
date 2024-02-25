@@ -1479,7 +1479,8 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   atype  = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Side Effects:
-//   `$transforms` is set to the array of transformation matrices that define the swept object.  
+//   `$transforms` is set to the array of transformation matrices that define the swept object.
+//   `$scales` is set to the array of scales that were applied at each point to create the swept object.  
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
@@ -1775,14 +1776,13 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //     attach(["start-centroid","end-centroid"]) anchor_arrow(s=5);
 //   }
 // Example(Med,NoScales,VPR=[78.1,0,43.2],VPT=[2.18042,-0.485127,1.90371],VPD=74.4017): Note that the "start" anchors are backwards compared to the direction of the sweep, so you have to attach the TOP to align the shape with its ends.  
-//   shape = back_half(right_half(star(n=5,id=5,od=10)),y=-1);
+//   shape = back_half(right_half(star(n=5,id=5,od=10)),y=-1)[0];
 //   path = arc(angle=[0,180],d=30);
-//   path_sweep(shape,path,method="natural")
+//   path_sweep(shape,path,method="natural",scale=[1,1.5])
 //     recolor("red"){
-//       attach("start",TOP) stroke([path3d(shape[0])],width=.5);
-//       attach("end") stroke([path3d(last(shape))],width=.5);       
+//       attach("start",TOP) stroke([path3d(shape)],width=.5);
+//       attach("end") stroke([path3d(yscale(1.5,shape))],width=.5);       
 //     }
-
 
 module path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true,
                     symmetry=1, last_normal, tangent, uniform=true, relaxed=false, caps, style="min_edge", convexity=10,
@@ -1790,18 +1790,24 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
 {
     dummy = assert(is_region(shape) || is_path(shape,2), "shape must be a 2D path or region")
             assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
-    transforms = path_sweep(shape, path, method, normal, closed, twist, twist_by_length, scale, scale_by_length,
-                            symmetry, last_normal, tangent, uniform, relaxed, caps, style, transforms=true);
+    trans_scale = path_sweep(shape, path, method, normal, closed, twist, twist_by_length, scale, scale_by_length,
+                            symmetry, last_normal, tangent, uniform, relaxed, caps, style, transforms=true,_return_scales=true);
+    transforms = trans_scale[0];
+    scales = trans_scale[1];
+    firstscale = [1/scales[0].x, 1/scales[0].y];
+    lastscale = [1/last(scales).x, 1/last(scales).y];
+    echo(scales=firstscale,lastscale);
     vnf = sweep(is_path(shape)?clockwise_polygon(shape):shape, transforms, closed=false, caps=caps,style=style);
     shapecent = point3d(centroid(shape));
     $transforms = transforms;
+    $scales = scales;
     anchors = closed ? []
             :
               [
-                transform_anchor("start", transforms[0], flip=true), 
-                transform_anchor("end", last(transforms)),
-                transform_anchor("start-centroid", transforms[0]*move(shapecent), flip=true),
-                transform_anchor("end-centroid", last(transforms)*move(shapecent))
+                named_anchor("start", rot=transforms[0]*scale(firstscale), flip=true), 
+                named_anchor("end", rot=last(transforms)*scale(lastscale)),
+                named_anchor("start-centroid", rot=transforms[0]*move(shapecent)*scale(firstscale), flip=true),
+                named_anchor("end-centroid", rot=last(transforms)*move(shapecent)*scale(lastscale))
     ];
     if (profiles){
         rshape = is_path(shape) ? [path3d(shape)]
@@ -1821,11 +1827,11 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
 
 function path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true, 
                     symmetry=1, last_normal, tangent, uniform=true, relaxed=false, caps, style="min_edge", transforms=false,
-                    anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull") =
+                    anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull",_return_scales=false) =
   is_1region(path) ? path_sweep(shape=shape,path=path[0], method=method, normal=normal, closed=default(closed,true), 
                                 twist=twist, scale=scale, scale_by_length=scale_by_length, twist_by_length=twist_by_length, symmetry=symmetry, last_normal=last_normal,
                                 tangent=tangent, uniform=uniform, relaxed=relaxed, caps=caps, style=style, transforms=transforms,
-                                anchor=anchor, cp=cp, spin=spin, orient=orient, atype=atype) :
+                                anchor=anchor, cp=cp, spin=spin, orient=orient, atype=atype, _return_scales=_return_scales) :
   let(closed=default(closed,false))
   assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
   assert(!closed || twist % (360/symmetry)==0, str("For a closed sweep, twist must be a multiple of 360/symmetry = ",360/symmetry))
@@ -1977,7 +1983,9 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
                                      apply(transform_list[L], rshape)),
     dummy = ends_match ? 0 : echo("WARNING: ***** The points do not match when closing the model in path_sweep() *****")
   )
-  transforms ? transform_list
+  transforms && _return_scales
+             ? [transform_list,scale]
+: transforms ? transform_lislt
              : sweep(is_path(shape)?clockwise_polygon(shape):shape, transform_list, closed=false, caps=fullcaps,style=style,
                        anchor=anchor,cp=cp,spin=spin,orient=orient,atype=atype);
 

@@ -2763,51 +2763,46 @@ function reorient(
 // See Also: reorient(), attachable()
 // Usage:
 //   a = named_anchor(name, pos, [orient], [spin]);
+//   a = named_anchor(name, [pos], rot=, [flip=]);
 // Description:
-//   Creates an anchor data structure.  For a step-by-step explanation of attachments,
+//   Creates an anchor data structure.  You can specify the position, orient direction and spin directly.
+//   Alternatively for the 3D case you can give a 4x4 rotation matrix which can specify the orient and spin, and optionally
+//   the position, using a translation component of the matrix.  If you specify `pos` along with `rot` then the position you
+//   give overrides any translation included in `rot`.  For a step-by-step explanation of attachments,
 //   see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
 //   name = The string name of the anchor.  Lowercase.  Words separated by single dashes.  No spaces.
 //   pos = The [X,Y,Z] position of the anchor.
 //   orient = A vector pointing in the direction parts should project from the anchor position.  Default: UP
 //   spin = If needed, the angle to rotate the part around the direction vector.  Default: 0
-function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
-
+//   ---
+//   rot = A 4x4 rotations matrix, which may include a translation
+//   flip = If true, flip the anchor the opposite direction.  Default: false
+function named_anchor(name, pos, orient, spin, rot, flip) =
+  assert(num_defined([orient,spin])==0 || num_defined([rot,flip])==0, "Cannot mix orient or spin with rot or flip")
+  assert(num_defined([pos,rot])>0, "Must give pos or rot")
+  is_undef(rot) ? [name, pos, default(orient,UP), default(spin,0)]
+ : 
+  let(
+      flip = default(flip,false),
+      pos = default(pos,apply(rot,CTR)),
+      rotpart = _force_rot(rot),
+      dummy = assert(approx(det4(rotpart),1), "Input rotation is not a rotation matrix"),
+      dir = flip ? apply(rotpart,DOWN)
+                 : apply(rotpart,UP),
+      rot = flip? affine3d_rot_by_axis(apply(rotpart,BACK),180)*rot
+                      : rot,
+      decode=rot_decode(rot(to=UP,from=dir)*_force_rot(rot)),
+      spin = decode[0]*sign(decode[1].z)
+  )
+  [name, pos, dir, spin];
+  
 
 function _force_rot(T) =
    [for(i=[0:3])
        [for(j=[0:3]) j<3 ? T[i][j] :
                      i==3 ? 1
                        : 0]];
-
-// Function: transform_anchor()
-// Synopsis: Creates an anchor data structure from a transformation matrix
-// Topics: Attachments
-// See Also: reorient(), attachable()
-// Usage:
-//   a = transform_anchor(name, transform, [flip]);
-// Description:
-//   Creates an anchor data structure from a transformation matrix.  For a step-by-step explanation of attachments,
-//   see the [Attachments Tutorial](Tutorial-Attachments).
-// Arguments:
-//   name = The string name of the anchor.  Lowercase.  Words separated by single dashes.  No spaces.
-//   transform = A rotation matrix (which may include translation)
-//   flip = If true, flip the anchor the opposite direction.  Default: false
-
-function transform_anchor(name, transform, flip=false) =
-  let(
-       pos = apply(transform,CTR),
-       rotpart = _force_rot(transform), 
-       dir = flip ? apply(rotpart,DOWN)
-                    : apply(rotpart,UP),
-       transform = flip? affine3d_rot_by_axis(apply(rotpart,BACK),180)*transform
-                         : transform,
-       decode=rot_decode(rot(to=UP,from=dir)*_force_rot(transform)),
-       spin = decode[0]*sign(decode[1].z)
-  )
-  [name, pos,dir,spin];
-
-
 
 // Function: attach_geom()
 // Synopsis: Returns the internal geometry description of an attachable object.
