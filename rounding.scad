@@ -956,12 +956,12 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   path = [[0,0],[6,2],[9,7],[8,10]];
 //   xdistribute(spacing=10){
 //     offset_stroke(path, width = 2);
-//     offset_stroke(path, start="round", end="round", width = 2);
+//     offset_stroke(path, start="round", end="round", width = 2, $fn=32);
 //     offset_stroke(path, start="pointed", end="pointed", width = 2);
 //   }
 //   fwd(10) xdistribute(spacing=10){
 //     offset_stroke(arc, width = 2);
-//     offset_stroke(arc, start="round", end="round", width = 2);
+//     offset_stroke(arc, start="round", end="round", width = 2, $fn=32);
 //     offset_stroke(arc, start="pointed", end="pointed", width = 2);
 //   }
 // Example(2D):  The effect of the `rounded` and `chamfer` options is most evident at sharp corners.  This only affects the middle of the path, not the ends.
