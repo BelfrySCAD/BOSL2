@@ -1985,7 +1985,7 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
   )
   transforms && _return_scales
              ? [transform_list,scale]
-: transforms ? transform_lislt
+: transforms ? transform_list
              : sweep(is_path(shape)?clockwise_polygon(shape):shape, transform_list, closed=false, caps=fullcaps,style=style,
                        anchor=anchor,cp=cp,spin=spin,orient=orient,atype=atype);
 
