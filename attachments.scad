@@ -2774,6 +2774,41 @@ function reorient(
 function named_anchor(name, pos, orient=UP, spin=0) = [name, pos, orient, spin];
 
 
+function _force_rot(T) =
+   [for(i=[0:3])
+       [for(j=[0:3]) j<3 ? T[i][j] :
+                     i==3 ? 1
+                       : 0]];
+
+// Function: transform_anchor()
+// Synopsis: Creates an anchor data structure from a transformation matrix
+// Topics: Attachments
+// See Also: reorient(), attachable()
+// Usage:
+//   a = transform_anchor(name, transform, [flip]);
+// Description:
+//   Creates an anchor data structure from a transformation matrix.  For a step-by-step explanation of attachments,
+//   see the [Attachments Tutorial](Tutorial-Attachments).
+// Arguments:
+//   name = The string name of the anchor.  Lowercase.  Words separated by single dashes.  No spaces.
+//   transform = A rotation matrix (which may include translation)
+//   flip = If true, flip the anchor the opposite direction.  Default: false
+
+function transform_anchor(name, transform, flip=false) =
+  let(
+       pos = apply(transform,CTR),
+       rotpart = _force_rot(transform), 
+       dir = flip ? apply(rotpart,DOWN)
+                    : apply(rotpart,UP),
+       transform = flip? affine3d_rot_by_axis(apply(rotpart,BACK),180)*transform
+                         : transform,
+       decode=rot_decode(rot(to=UP,from=dir)*_force_rot(transform)),
+       spin = decode[0]*sign(decode[1].z)
+  )
+  [name, pos,dir,spin];
+
+
+
 // Function: attach_geom()
 // Synopsis: Returns the internal geometry description of an attachable object.
 // Topics: Attachments
@@ -3201,7 +3236,6 @@ function _attach_transform(anchor, spin, orient, geom, p) =
     assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient))
     let(
         anchor = default(anchor, CENTER),
-        
         spin   = default(spin,   0),
         orient = default(orient, UP),
         two_d = _attach_geom_2d(geom),
@@ -3209,12 +3243,13 @@ function _attach_transform(anchor, spin, orient, geom, p) =
             let(
                 anch = _find_anchor($attach_to, geom),
                 pos = anch[1]
-            ) two_d? (
-                assert(two_d && is_num(spin))
-                affine3d_zrot(spin) *
-                rot(to=FWD, from=point3d(anch[2])) *
-                affine3d_translate(point3d(-pos))
-            ) : (
+            )
+            two_d?
+                assert(is_num(spin))
+                affine3d_zrot(spin) 
+                   * rot(to=FWD, from=point3d(anch[2])) 
+                   * affine3d_translate(point3d(-pos))
+            :
                 assert(is_num(spin) || is_vector(spin,3))
                 let(
                     ang = vector_angle(anch[2], DOWN),
@@ -3222,40 +3257,33 @@ function _attach_transform(anchor, spin, orient, geom, p) =
                     ang2 = (anch[2]==UP || anch[2]==DOWN)? 0 : 180-anch[3],
                     axis2 = rot(p=axis,[0,0,ang2])
                 )
-                affine3d_rot_by_axis(axis2,ang) * (
-                    is_num(spin)? affine3d_zrot(ang2+spin) : (
-                        affine3d_zrot(spin.z) *
-                        affine3d_yrot(spin.y) *
-                        affine3d_xrot(spin.x) *
-                        affine3d_zrot(ang2)
-                    )
-                ) * affine3d_translate(point3d(-pos))
-            )
+                affine3d_rot_by_axis(axis2,ang)
+                   * (is_num(spin)? affine3d_zrot(ang2+spin)
+                                  : affine3d_zrot(spin.z) * affine3d_yrot(spin.y) * affine3d_xrot(spin.x) 
+                                     * affine3d_zrot(ang2))
+                   * affine3d_translate(point3d(-pos))
         ) : (
             let(
                 pos = _find_anchor(anchor, geom)[1]
-            ) two_d? (
-                assert(two_d && is_num(spin))
-                affine3d_zrot(spin) *
-                affine3d_translate(point3d(-pos))
-            ) : (
+            )
+            two_d? 
+                assert(is_num(spin))
+                affine3d_zrot(spin) * affine3d_translate(point3d(-pos))
+            :
                 assert(is_num(spin) || is_vector(spin,3))
                 let(
                     axis = vector_axis(UP,orient),
                     ang = vector_angle(UP,orient)
                 )
-                affine3d_rot_by_axis(axis,ang) * (
-                    is_num(spin)? affine3d_zrot(spin) : (
-                        affine3d_zrot(spin.z) *
-                        affine3d_yrot(spin.y) *
-                        affine3d_xrot(spin.x)
-                    )
-                ) * affine3d_translate(point3d(-pos))
-            )
+                affine3d_rot_by_axis(axis,ang) 
+                    * ( is_num(spin)? affine3d_zrot(spin)  
+                                    : affine3d_zrot(spin.z) * affine3d_yrot(spin.y) * affine3d_xrot(spin.x))
+                    * affine3d_translate(point3d(-pos))
         )
-    ) is_undef(p)? m :
-    is_vnf(p)? [(p==EMPTY_VNF? p : apply(m, p[0])), p[1]] :
-    apply(m, p);
+    )
+    is_undef(p)? m
+  : is_vnf(p) && p==EMPTY_VNF? p 
+  : apply(m, p);
 
 
 function _get_cp(geom) =

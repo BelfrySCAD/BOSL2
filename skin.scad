@@ -1481,6 +1481,11 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
+// Extra Anchors:
+//   start = When `closed==false`, the origin point of the shape, on the starting face of the object
+//   end = When `closed==false`, the origin point of the shape, on the ending face of the object
+//   start-centroid = When `closed==false`, the centroid of the shape, on the starting face of the object
+//   end-centroid = When `closed==false`, the centroid of the shape, on the ending face of the object
 // Example(NoScales): A simple sweep of a square along a sine wave:
 //   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
 //   sq = square(6,center=true);
@@ -1755,29 +1760,60 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //     path_sweep(left(.05,square([1.1,1])), curve, closed=true,
 //                method="manual", normal=UP);
 //   }
+// Example(Med,NoScales,VPR=[78.1,0,43.2],VPT=[2.18042,-0.485127,1.90371],VPD=74.4017): The "start" and "end" anchors are located at the origin point of the swept shape.
+//   shape = back_half(right_half(star(n=5,id=5,od=10)),y=-1);
+//   path = arc(angle=[0,180],d=30);
+//   path_sweep(shape,path,method="natural"){
+//     attach(["start","end"]) anchor_arrow(s=5);
+//   }
+// Example(Med,NoScales,VPR=[78.1,0,43.2],VPT=[2.18042,-0.485127,1.90371],VPD=74.4017): The "start" and "end" anchors are located at the origin point of the swept shape.
+//   shape = back_half(right_half(star(n=5,id=5,od=10)),y=-1);
+//   path = arc(angle=[0,180],d=30);
+//   path_sweep(shape,path,method="natural"){
+//     attach(["start-centroid","end-centroid"]) anchor_arrow(s=5);
+//   }
+// Example(Med,NoScales,VPR=[78.1,0,43.2],VPT=[2.18042,-0.485127,1.90371],VPD=74.4017): Note that the "start" anchors are backwards compared to the direction of the sweep, so you have to attach the TOP to align the shape with its ends.  
+//   shape = back_half(right_half(star(n=5,id=5,od=10)),y=-1);
+//   path = arc(angle=[0,180],d=30);
+//   path_sweep(shape,path,method="natural")
+//     recolor("red"){
+//       attach("start",TOP) stroke([path3d(shape[0])],width=.5);
+//       attach("end") stroke([path3d(last(shape))],width=.5);       
+//     }
+
 
 module path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true,
                     symmetry=1, last_normal, tangent, uniform=true, relaxed=false, caps, style="min_edge", convexity=10,
                     anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull",profiles=false,width=1)
 {
-    dummy = assert(is_region(shape) || is_path(shape,2), "shape must be a 2D path or region");
-    vnf = path_sweep(shape, path, method, normal, closed, twist, twist_by_length, scale, scale_by_length,
-                    symmetry, last_normal, tangent, uniform, relaxed, caps, style);
-
+    dummy = assert(is_region(shape) || is_path(shape,2), "shape must be a 2D path or region")
+            assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
+    transforms = path_sweep(shape, path, method, normal, closed, twist, twist_by_length, scale, scale_by_length,
+                            symmetry, last_normal, tangent, uniform, relaxed, caps, style, transforms=true);
+    vnf = sweep(is_path(shape)?clockwise_polygon(shape):shape, transforms, closed=false, caps=caps,style=style);
+    shapecent = point3d(centroid(shape));
+    $transforms = transforms;
+    anchors = closed ? []
+            :
+              [
+                transform_anchor("start", transforms[0], invert=true), 
+                transform_anchor("end", last(transforms)),
+                transform_anchor("start-centroid", transforms[0]*move(shapecent), invert=true),
+                transform_anchor("end-centroid", last(transforms)*move(shapecent))
+    ];
     if (profiles){
-        assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
-        tran = path_sweep(shape, path, method, normal, closed, twist, twist_by_length, scale, scale_by_length, 
-                          symmetry, last_normal, tangent, uniform, relaxed,transforms=true);
         rshape = is_path(shape) ? [path3d(shape)]
                                 : [for(s=shape) path3d(s)];
-        attachable(anchor,spin,orient, vnf=vnf, extent=atype=="hull", cp=cp) {
-            for(T=tran) stroke([for(part=rshape)apply(T,part)],width=width);
+        attachable(anchor,spin,orient, vnf=vnf, extent=atype=="hull", cp=cp, anchors=anchors) {
+            for(T=transforms) stroke([for(part=rshape)apply(T,part)],width=width);
             children();
         }
     }
     else
-      vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
+      attachable(anchor,spin,orient,vnf=vnf,extent=atype=="hull", cp=cp,anchors=anchors){
+          vnf_polyhedron(vnf,convexity=convexity);
           children();
+      }
 }
 
 
