@@ -1796,9 +1796,9 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
     anchors = closed ? []
             :
               [
-                transform_anchor("start", transforms[0], invert=true), 
+                transform_anchor("start", transforms[0], flip=true), 
                 transform_anchor("end", last(transforms)),
-                transform_anchor("start-centroid", transforms[0]*move(shapecent), invert=true),
+                transform_anchor("start-centroid", transforms[0]*move(shapecent), flip=true),
                 transform_anchor("end-centroid", last(transforms)*move(shapecent))
     ];
     if (profiles){
