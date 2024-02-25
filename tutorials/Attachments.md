@@ -1242,7 +1242,36 @@ create using `linear_extrude()` or `rotate_extrude()`.
 To make a shape attachable, you just need to wrap it with an `attachable()` module with a
 basic description of the shape's geometry.  By default, the shape is expected to be centered
 at the origin.  The `attachable()` module expects exactly two children.  The first will be
-the shape to make attachable, and the second will be `children()`, literally.
+the shape to make attachable, and the second will be `children()`,
+literally.
+
+### Pass-through Attachables
+The simplest way to make your own attachable module is to simply pass
+through to a pre-existing attachable submodule.  This could be
+appropriate if you want to rename a module, or if the anchors of an
+existing module are suited to (or good enough for) your object.  In
+order for your attachable module to work properly you need to accept
+the `anchor`, `spin` and `orient` parameters, give them suitable
+defaults, and pass them to the attachable submodule.  Don't forget to
+pass the children to the attachable submodule as well, or your new
+module will ignore its children.  
+
+```openscad-3D
+include <BOSL2/std.scad>
+module cutcube(anchor=CENTER,spin=0,orient=UP)
+{
+   tag_scope(){
+     diff()
+       cuboid(15, rounding=2, anchor=anchor,spin=spin,orient=orient){
+         tag("remove")attach(TOP)cuboid(5);
+         children();
+       }
+   }
+}
+diff()
+cutcube()
+  tag("remove")attach(RIGHT) cyl(d=2,h=8);
+```
 
 ### Prismoidal/Cuboidal Attachables
 To make a cuboidal or prismoidal shape attachable, you use the `size`, `size2`, and `offset`
