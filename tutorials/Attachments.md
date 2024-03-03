@@ -1258,6 +1258,7 @@ module will ignore its children.
 
 ```openscad-3D
 include <BOSL2/std.scad>
+$fn=32;
 module cutcube(anchor=CENTER,spin=0,orient=UP)
 {
    tag_scope(){

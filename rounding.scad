@@ -1272,9 +1272,9 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 // Topics: Rounding, Offsets
 // See Also: convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), join_prism(), linear_sweep()
 // Usage: most common module arguments.  See Arguments list below for more.
-//   offset_sweep(path, [height|length|h|l|], [bottom], [top], [offset=], [convexity=],...) [ATTACHMENTS];
+//   offset_sweep(path, [height|length=|h=|l=], [bottom], [top], [offset=], [convexity=],...) [ATTACHMENTS];
 // Usage: most common function arguments.  See Arguments list below for more.
-//   vnf = offset_sweep(path, [height|h|l|length], [bottom], [top], [offset=], ...);
+//   vnf = offset_sweep(path, [height|length=|h=|l=], [bottom], [top], [offset=], ...);
 // Description:
 //   Takes a 2d path as input and extrudes it upwards and/or downward.  Each layer in the extrusion is produced using `offset()` to expand or shrink the previous layer.  When invoked as a function returns a VNF; when invoked as a module produces geometry.  
 //   Using the `top` and/or `bottom` arguments you can specify a sequence of offsets values, or you can use several built-in offset profiles that
@@ -1309,7 +1309,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   - mask: os_mask(mask, [out]).  Create a profile from one of the [2d masking shapes](shapes2d.scad#5-2d-masking-shapes).  The `out` parameter specifies that the mask should flare outward (like crown molding or baseboard).  This is set false by default.  
 //   .
 //   The general settings that you can use with all of the helper functions are mostly used to control how offset_sweep() calls the offset() function.
-//   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step will extend the resulting object beyond the height you specify.  Default: 0
+//   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step will extend the resulting object beyond the height you specify.  It is ignored by anchoring.  Default: 0
 //   - check_valid: passed to offset().  Default: true
 //   - quality: passed to offset().  Default: 1
 //   - steps: Number of vertical steps to use for the profile.  (Not used by os_profile).  Default: 16
@@ -1346,15 +1346,17 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //
 // Arguments:
 //   path = 2d path (list of points) to extrude
-//   height / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.
-//   bottom = rounding spec for the bottom end
+//   height / length / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.
+//   bottom / bot = rounding spec for the bottom end
 //   top = rounding spec for the top end.
 //   ---
+//   ends = give a rounding spec that applies to both the top and bottom
 //   offset = default offset, `"round"` or `"delta"`.  Default: `"round"`
 //   steps = default step count.  Default: 16
 //   quality = default quality.  Default: 1
 //   check_valid = default check_valid.  Default: true.
 //   extra = default extra height.  Default: 0
+//   caps = if false do not create end faces.  Can be a boolean vector to control ends independent.  (function only) Default: true. 
 //   cut = default cut value.
 //   chamfer_width = default width value for chamfers.
 //   chamfer_height = default height value for chamfers.
@@ -1362,9 +1364,9 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   joint = default joint value for smooth roundover.
 //   k = default curvature parameter value for "smooth" roundover
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
-//   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
-//   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
-//   orient = Vector to rotate top towards after spin  (module only)
+//   anchor = Translate so anchor point is at the origin.  Default: "base"
+//   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
+//   orient = Vector to rotate top towards after spin  
 //   atype = Select "hull", "intersect", "surf_hull" or "surf_intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Anchor Types:
@@ -1372,6 +1374,10 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   intersect = Anchors to the surface of the linear sweep of the path, ignoring any end roundings.
 //   surf_hull = Anchors to the convex hull of the offset_sweep shape, including end treatments.
 //   surf_intersect = Anchors to the surface of the offset_sweep shape, including any end treatments.
+// Extra Anchors:
+//   "base" = Anchor to the base of the shape in its native position, ignoring any "extra"
+//   "top" = Anchor to the top of the shape in its native position, ignoring any "extra"
+//   "zcenter" = Center shape in the Z direction in the native XY position, ignoring any "extra"
 // Example: Rounding a star shaped prism with postive radius values
 //   star = star(5, r=22, ir=13);
 //   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
@@ -1500,40 +1506,42 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 
 // This function does the actual work of repeatedly calling offset() and concatenating the resulting face and vertex lists to produce
 // the inputs for the polyhedron module.
-function _make_offset_polyhedron(path,offsets, offset_type, flip_faces, quality, check_valid, offsetind=0,
-                                 vertexcount=0, vertices=[], faces=[] )=
-        offsetind==len(offsets)? (
-                let(
-                        bottom = count(len(path),vertexcount),
-                        oriented_bottom = !flip_faces? bottom : reverse(bottom)
-                ) [vertices, concat(faces,[oriented_bottom])]
-        ) : (
-                let(
-                        this_offset = offsetind==0? offsets[0][0] : offsets[offsetind][0] - offsets[offsetind-1][0],
-                        delta = offset_type=="delta" || offset_type=="chamfer" ? this_offset : undef,
-                        r = offset_type=="round"? this_offset : undef,
-                        do_chamfer = offset_type == "chamfer"
-                )
-                let(
-                        vertices_faces = offset(
-                                path, r=r, delta=delta, chamfer = do_chamfer, closed=true,
-                                check_valid=check_valid, quality=quality,
-                                return_faces=true,
-                                firstface_index=vertexcount,
-                                flip_faces=flip_faces
-                        )
-                )
-                _make_offset_polyhedron(
-                        vertices_faces[0], offsets, offset_type,
-                        flip_faces, quality, check_valid, 
-                        offsetind+1, vertexcount+len(path),
-                        vertices=concat(
-                                vertices,
-                                path3d(vertices_faces[0],offsets[offsetind][1])
-                        ),
-                        faces=concat(faces, vertices_faces[1])
-                )
-        );
+function _make_offset_polyhedron(path,offsets, offset_type, flip_faces, quality, check_valid, cap=true,
+                                 offsetind=0, vertexcount=0, vertices=[], faces=[] )=
+    offsetind==len(offsets)? 
+        let(
+            bottom = count(len(path),vertexcount),
+            oriented_bottom = !flip_faces? bottom : reverse(bottom)
+        )
+        [
+         vertices,
+         [each faces,
+          if (cap) oriented_bottom]
+        ]
+  :
+        let(
+            this_offset = offsetind==0? offsets[0][0] : offsets[offsetind][0] - offsets[offsetind-1][0],
+            delta = offset_type=="delta" || offset_type=="chamfer" ? this_offset : undef,
+            r = offset_type=="round"? this_offset : undef,
+            do_chamfer = offset_type == "chamfer",
+            vertices_faces = offset(
+                    path, r=r, delta=delta, chamfer = do_chamfer, closed=true,
+                    check_valid=check_valid, quality=quality,
+                    return_faces=true,
+                    firstface_index=vertexcount,
+                    flip_faces=flip_faces
+            )
+        )
+        _make_offset_polyhedron(
+                vertices_faces[0], offsets, offset_type,
+                flip_faces, quality, check_valid, cap, 
+                offsetind+1, vertexcount+len(path),
+                vertices=concat(
+                        vertices,
+                        path3d(vertices_faces[0],offsets[offsetind][1])
+                ),
+                faces=concat(faces, vertices_faces[1])
+        );  
 
 
 function _struct_valid(spec, func, name) =
@@ -1543,13 +1551,15 @@ function _struct_valid(spec, func, name) =
 
 function offset_sweep(
                        path, height, 
-                       bottom=[], top=[], 
-                       h, l, length, 
+                       bottom, top, 
+                       h, l, length,
+                       ends,bot,
                        offset="round", r=0, steps=16,
                        quality=1, check_valid=true,
-                       extra=0,
+                       extra=0, caps=true, 
                        cut=undef, chamfer_width=undef, chamfer_height=undef,
-                       joint=undef, k=0.75, angle=45
+                       joint=undef, k=0.75, angle=45, anchor="base", orient=UP, spin=0,atype="hull", cp="centroid",
+                       _return_height=false
                       ) =
     let(
         argspec = [
@@ -1572,15 +1582,16 @@ function offset_sweep(
         path = force_path(path)
     )
     assert(is_path(path,2), "Input path must be a 2D path")
+    assert(is_bool(caps) || is_bool_list(caps,2), "caps must be boolean or a list of two booleans")
     let(
+        caps = is_bool(caps) ? [caps,caps] : caps, 
         clockwise = is_polygon_clockwise(path),
-        dummy1 = _struct_valid(top,"offset_sweep","top"),
-        dummy2 = _struct_valid(bottom,"offset_sweep","bottom"),
-        top = struct_set(argspec, top, grow=false),
-        bottom = struct_set(argspec, bottom, grow=false),
-
-        //  This code does not work.  It hits the error in _make_offset_polyhedron from offset being wrong
-        //  before this code executes.  Had to move the test into _make_offset_polyhedron, which is ugly since it's in the loop
+        top_temp = one_defined([ends,top],"ends,top",dflt=[]),
+        bottom_temp = one_defined([ends,bottom,bot],"ends,bottom,bot",dflt=[]),
+        dummy1 = _struct_valid(top_temp,"offset_sweep","top"),
+        dummy2 = _struct_valid(bottom_temp,"offset_sweep","bottom"),
+        top = struct_set(argspec, top_temp, grow=false),
+        bottom = struct_set(argspec, bottom_temp, grow=false),
         offsetsok = in_list(struct_val(top, "offset"),["round","delta","chamfer"])
                     && in_list(struct_val(bottom, "offset"),["round","delta","chamfer"])
     )
@@ -1598,20 +1609,17 @@ function offset_sweep(
         top_height = len(offsets_top)==0 ? 0 : abs(last(offsets_top)[1]) - struct_val(top,"extra"),
 
         height = one_defined([l,h,height,length], "l,h,height,length", dflt=u_add(bottom_height,top_height)),
-        middle = height-bottom_height-top_height
-    )
-    assert(height>0, "Height must be positive") 
-    assert(middle>=0, str("Specified end treatments (bottom height = ",bottom_height,
-                          " top_height = ",top_height,") are too large for extrusion height (",height,")"
-                         )
-    )
-    let(
+        dummy1 = assert(is_finite(height) && height>0, "Height must be positive"),
+        middle = height-bottom_height-top_height,
+        dummy2= assert(middle>=0, str("Specified end treatments (bottom height = ",bottom_height,
+                                      " top_height = ",top_height,") are too large for extrusion height (",height,")")),
         initial_vertices_bot = path3d(path),
 
         vertices_faces_bot = _make_offset_polyhedron(
                 path, offsets_bot, struct_val(bottom,"offset"), clockwise,
                 struct_val(bottom,"quality"),
                 struct_val(bottom,"check_valid"),
+                caps[0], 
                 vertices=initial_vertices_bot
         ),
 
@@ -1622,6 +1630,7 @@ function offset_sweep(
                 struct_val(top,"offset"), !clockwise,
                 struct_val(top,"quality"),
                 struct_val(top,"check_valid"),
+                caps[1],
                 vertexcount=top_start_ind,
                 vertices=initial_vertices_top
         ),
@@ -1629,40 +1638,53 @@ function offset_sweep(
                 for(i=[0:len(path)-1]) let(
                         oneface=[i, (i+1)%len(path), top_start_ind+(i+1)%len(path), top_start_ind+i]
                 ) !clockwise ? reverse(oneface) : oneface
-        ]
-    )
-    [up(bottom_height, concat(vertices_faces_bot[0],vertices_faces_top[0])),  // Vertices
-     concat(vertices_faces_bot[1], vertices_faces_top[1], middle_faces)];     // Faces
-
+        ],
+        vnf = [up(bottom_height-height/2, concat(vertices_faces_bot[0],vertices_faces_top[0])),  // Vertices
+               concat(vertices_faces_bot[1], vertices_faces_top[1], middle_faces)],     // Faces
+        anchors = [
+          named_anchor("zcenter", [0,0,0], UP),
+          named_anchor("base", [0,0,-height/2], UP),
+          named_anchor("top", [0,0,height/2], UP)          
+        ],
+        final_vnf = in_list(atype,["hull","intersect"])
+                  ? reorient(anchor,spin,orient, path=path, h=height, extent=atype=="hull", cp=cp, p=vnf, anchors=anchors)
+                  : reorient(anchor,spin,orient, vnf=vnf, p=vnf, extent=atype=="surf_hull", cp=cp, anchors=anchors)
+     ) _return_height ? [final_vnf,height] : final_vnf;
 
 module offset_sweep(path, height, 
-                    bottom=[], top=[], 
-                    h, l,
+                    bottom, top, 
+                    h, l, length, ends, bot,
                     offset="round", r=0, steps=16,
                     quality=1, check_valid=true,
                     extra=0,
                     cut=undef, chamfer_width=undef, chamfer_height=undef,
                     joint=undef, k=0.75, angle=45,
-                    convexity=10,anchor="origin",cp="centroid",
+                    convexity=10,anchor="base",cp="centroid",
                     spin=0, orient=UP, atype="hull")
 {
     assert(in_list(atype, ["intersect","hull","surf_hull","surf_intersect"]), "Anchor type must be \"hull\" or \"intersect\"");
-    vnf = offset_sweep(path=path, height=height, h=h, l=l, top=top, bottom=bottom, offset=offset, r=r, steps=steps,
-                       quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
-                       chamfer_height=chamfer_height, joint=joint, k=k, angle=angle);
-
-    if (in_list(atype,["hull","intersect"])){
-        h=first_defined([h,l,height]);
-        attachable(anchor,spin,orient,region=force_region(path),h=h,extent=atype=="hull",cp=cp){
-            down(h/2)polyhedron(vnf[0],vnf[1],convexity=convexity);
+    vnf_h = offset_sweep(path=path, height=height, h=h, l=l, length=length, bot=bot, top=top, bottom=bottom, ends=ends,
+                         offset=offset, r=r, steps=steps,
+                         quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
+                         chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _return_height=true);
+    vnf = vnf_h[0];
+    height = vnf_h[1];
+    anchors = [
+          named_anchor("zcenter", [0,0,0], UP),
+          named_anchor("base", [0,0,-height/2], UP),
+          named_anchor("top", [0,0,height/2], UP)          
+        ];
+    if (in_list(atype,["hull","intersect"]))
+        attachable(anchor,spin,orient,region=force_region(path),h=height,cp=cp,anchors=anchors,extent=atype=="hull"){
+            down(height/2)polyhedron(vnf[0],vnf[1],convexity=convexity);
             children();
         }
-    }
     else
-        vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype=="surf_hull"?"hull":"intersect", cp=cp)
+        attachable(anchor,spin.orient,vnf=vnf, cp=cp,anchors=anchors, extent = atype=="surf_hull"){
+            vnf_polyhedron(vnf,convexity=convexity);
             children();
+        }
 }   
-
 
 
 function os_circle(r,cut,extra,check_valid, quality,steps, offset) =
