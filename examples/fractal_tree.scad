@@ -1,7 +1,7 @@
 include <BOSL2/std.scad>
 module tree(l=1500, sc=0.7, depth=10)
     recolor("lightgray")
-    cylinder(l=l, d1=l/5, d2=l/5*sc)
+    cylinder(h=l, d1=l/5, d2=l/5*sc)
         attach(TOP)
             if (depth>0)
                 zrot(90)
