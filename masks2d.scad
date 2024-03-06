@@ -464,7 +464,6 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, hei
                               [radius,0]
                             ],
                             mask_angle, inset, excess, flat_top),
-        eff=echo(outside=outside_corner[0])echo(corner=outside_corner[1]),
         quarter_round_big_fix = quarter_round && mask_angle>135 ? quarter_round_ofs+radius
                       : 0,
         flatfix = !quarter_round && is_undef(bulge) && flat_top && mask_angle>90 ? radius/tan(mask_angle)
@@ -477,7 +476,6 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, hei
                   mean(corners)+bulge*normal,
         dummy=assert(corners[1].x>=0, str("inset.y is too large to fit cove at angle ",mask_angle)),
         cp = quarter_round ? [corners[0].x,inset.y] : outside_corner[1][1],
-        ff=echo(cp=cp)echo(corners=corners),
         path = deduplicate([
                             [corners[1].x,-excess],
                             each select(outside_corner[0],1,-1),
@@ -750,14 +748,15 @@ function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
 // Topics: Masks (2D), Shapes (2D), Paths (2D), Path Generators, Attachable 
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
-//   mask2d_dovetail(edge, [angle], [inset], [shelf], [excess], ...) [ATTACHMENTS];
-//   mask2d_dovetail(x=, [angle=], [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
-//   mask2d_dovetail(y=, [angle=], [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
+//   mask2d_dovetail(edge, angle, [inset], [shelf], [excess], ...) [ATTACHMENTS];
+//   mask2d_dovetail(width=, angle=, [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
+//   mask2d_dovetail(height=, angle=, [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
+//   mask2d_dovetail(width=, height=, [inset=], [shelf=], [excess=], ...) [ATTACHMENTS];
 // Usage: As Function
 //   path = mask2d_dovetail(edge, [angle], [inset], [shelf], [excess]);
 // Description:
-//   Creates a 2D dovetail mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   Conversely, you can use that same extruded shape to make an interior dovetail between two walls at a 90º angle.
+//   Creates a 2D dovetail mask shape that is useful for extruding into a 3D mask for a 90Â° edge.
+//   Conversely, you can use that same extruded shape to make an interior dovetail between two walls at a 90Âº angle.
 //   As a 2D mask, this is designed to be differenced away from the edge of a shape that with its corner at the origin and one edge on the X+ axis and the other mask_angle degrees counterclockwise from the X+ axis.  
 //   If called as a function, returns a 2D path of the outline of the mask shape.
 // Arguments:
@@ -768,8 +767,8 @@ function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
 //   mask_angle = Number of degrees in the corner angle to mask.  Default: 90
 //   excess = Extra amount of mask shape to creates on the X and quasi-Y sides of the shape.  Default: 0.01
 //   ---
-//   x = The width of the dovetail.
-//   h = The height of the dovetail. 
+//   width = The width of the dovetail (excluding any inset)
+//   height = The height of the dovetail (excluding any inset or shelf). 
 //   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  Default: true.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -802,8 +801,8 @@ function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
 //   xrot(90)
 //       linear_extrude(height=30, center=true)
 //           mask2d_dovetail(width=10,angle=30);
-module mask2d_dovetail(edge, angle, shelf=0, inset=0, mask_angle=90, excess=0.01, flat_top=true, w,h,width,height, slope, anchor=CENTER, spin=0) {
-    path = mask2d_dovetail(w=w,width=width,h=h,height=height, edge=edge, angle=angle, inset=inset, shelf=shelf, excess=excess, slope=slope, flat_top=flat_top, mask_angle=mask_angle);
+module mask2d_dovetail(edge, angle, shelf=0, inset=0, mask_angle=90, excess=0.01, flat_top=true, w,h,width,height, slope, anchor=CENTER, spin=0,x,y) {
+    path = mask2d_dovetail(w=w,width=width,h=h,height=height, edge=edge, angle=angle, inset=inset, shelf=shelf, excess=excess, slope=slope, flat_top=flat_top, mask_angle=mask_angle,x=x,y=y);
     default_tag("remove") {
         attachable(anchor,spin, two_d=true, path=path) {
             polygon(path);
@@ -812,7 +811,7 @@ module mask2d_dovetail(edge, angle, shelf=0, inset=0, mask_angle=90, excess=0.01
     }
 }
 
-function mask2d_dovetail(edge, angle, slope, shelf=0, inset=0, mask_angle=90, excess=0.01, flat_top=true, w,width,h,height, anchor=CENTER, spin=0) =
+function mask2d_dovetail(edge, angle, slope, shelf=0, inset=0, mask_angle=90, excess=0.01, flat_top=true, w,width,h,height, anchor=CENTER, spin=0,x,y) =
     assert(num_defined([slope,angle])<=1, "Cannot give both slope and angle")
     assert(is_finite(excess))
     assert(is_undef(w) || all_positive([w]))
@@ -821,8 +820,8 @@ function mask2d_dovetail(edge, angle, slope, shelf=0, inset=0, mask_angle=90, ex
     assert(is_undef(width) || all_positive([width]))
     assert(is_finite(inset)||is_vector(inset,2))
     let(
-        y = one_defined([h,height],"h,height",dflt=undef),
-        x = one_defined([w,width],"w,width",dflt=undef),
+        y = one_defined([h,height,y],"h,height,y",dflt=undef),
+        x = one_defined([w,width,x],"w,width,x",dflt=undef),
         angle = is_def(slope) ? atan(slope) : angle,
         dummy2=//assert(num_defined([x,y])==2 || (all_positive([angle]) && angle<90), "Invalid angle or slope")
                assert(num_defined([x,y])<2 || is_undef(angle), "Cannot give both width and height if you give slope or angle"),
@@ -861,8 +860,8 @@ function mask2d_dovetail(edge, angle, slope, shelf=0, inset=0, mask_angle=90, ex
 //   path = mask2d_ogee(pattern, [excess], ...);
 //
 // Description:
-//   Creates a 2D Ogee mask shape that is useful for extruding into a 3D mask for a 90° edge.
-//   Conversely, you can use that same extruded shape to make an interior ogee decoration between two walls at a 90º angle.
+//   Creates a 2D Ogee mask shape that is useful for extruding into a 3D mask for a 90Â° edge.
+//   Conversely, you can use that same extruded shape to make an interior ogee decoration between two walls at a 90Âº angle.
 //   As a 2D mask, this is designed to be differenced away from the edge of a shape that with its corner at the origin and one edge on the X+ axis and the other mask_angle degrees counterclockwise from the X+ axis.  
 //   Since there are a number of shapes that fall under the name ogee, the shape of this mask is given as a pattern.
 //   Patterns are given as TYPE, VALUE pairs.  ie: `["fillet",10, "xstep",2, "step",[5,5], ...]`.  See Patterns below.
