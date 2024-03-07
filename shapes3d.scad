@@ -3382,7 +3382,7 @@ module fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTE
 // Arguments:
 //   data = This is either the 2D rectangular array of heights, or a function literal that takes X and Y arguments.
 //   size = The [X,Y] size of the surface to create.  If given as a scalar, use it for both X and Y sizes. Default: `[100,100]`
-//   bottom = The Z coordinate for the bottom of the heightfield object to create.  Any heights lower than this will be truncated to very slightly above this height.  Default: -20
+//   bottom = The Z coordinate for the bottom of the heightfield object to create. Bottom must be < 0. Any heights lower than this will be truncated to very slightly above this height.  Default: -1
 //   maxz = The maximum height to model.  Truncates anything taller to this height.  Set to INF for no truncation.  Default: 100
 //   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
 //   yrange = A range of values to iterate Y over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
@@ -3419,7 +3419,7 @@ module fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTE
 //       xrange=[-180:2:180], yrange=[-180:2:180]
 //   );
 
-module heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04:1], yrange=[-1:0.04:1], style="default", convexity=10, anchor=CENTER, spin=0, orient=UP)
+module heightfield(data, size=[100,100], bottom=-1, maxz=100, xrange=[-1:0.04:1], yrange=[-1:0.04:1], style="default", convexity=10, anchor=CENTER, spin=0, orient=UP)
 {
     size = is_num(size)? [size,size] : point2d(size);
     vnf = heightfield(data=data, size=size, xrange=xrange, yrange=yrange, bottom=bottom, maxz=maxz, style=style);
@@ -3430,8 +3430,9 @@ module heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04:1
 }
 
 
-function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04:1], yrange=[-1:0.04:1], style="default", anchor=CENTER, spin=0, orient=UP) =
+function heightfield(data, size=[100,100], bottom=-1, maxz=100, xrange=[-1:0.04:1], yrange=[-1:0.04:1], style="default", anchor=CENTER, spin=0, orient=UP) =
     assert(is_list(data) || is_function(data))
+    assert(is_finite(bottom) && bottom<0, "Must supply bottom as a finite negative number.")
     let(
         size = is_num(size)? [size,size] : point2d(size),
         xvals = is_list(data)
@@ -3521,7 +3522,7 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 //   d = The diameter of the cylinder to wrap around.
 //   d1 = The diameter of the bottom of the cylinder to wrap around.
 //   d2 = The diameter of the top of the cylinder to wrap around.
-//   base = The radius for the bottom of the heightfield object to create.  Any heights smaller than this will be truncated to very slightly above this height.  Default: -20
+//   base = The radius for the bottom of the heightfield object to create.  Any heights smaller than this will be truncated to very slightly above this height.  Default: 1
 //   transpose = If true, swaps the radial and length axes of the data.  Default: false
 //   aspect = The aspect ratio of the generated heightfield at the surface of the cylinder.  Default: 1
 //   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
