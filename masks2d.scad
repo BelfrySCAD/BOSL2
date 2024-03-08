@@ -44,7 +44,7 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 //   As a 2D mask, this is designed to be differenced away from the edge of a shape that with its corner at the origin and one edge on the X+ axis and the other mask_angle degrees counterclockwise from the X+ axis.  
 //   If called as a function, returns a 2D path of the outline of the mask shape.
 //   .
-//  The roundover can be specified by radius, diameter, height, cut, or joint length.
+//   The roundover can be specified by radius, diameter, height, cut, or joint length.
 //   ![Types of Roundovers](images/rounding/section-types-of-roundovers_fig1.png)
 //   If you need roundings to agree on edges of different mask_angle, e.g. to round the base of a prismoid, then you need all of the
 //   masks used to have the same height.  (Note that it may appear that matching joint would also work, but it does not because the joint distances are measured
@@ -67,7 +67,7 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Side Effects:
-//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 //
 // Example(2D): 2D Roundover Mask by Radius
 //   mask2d_roundover(r=10);
@@ -858,7 +858,6 @@ function mask2d_dovetail(edge, angle, slope, shelf=0, inset=0, mask_angle=90, ex
 //   mask2d_ogee(pattern, [excess], ...) [ATTAHCMENTS];
 // Usage: As Function
 //   path = mask2d_ogee(pattern, [excess], ...);
-//
 // Description:
 //   Creates a 2D Ogee mask shape that is useful for extruding into a 3D mask for a 90° edge.
 //   Conversely, you can use that same extruded shape to make an interior ogee decoration between two walls at a 90º angle.
@@ -885,7 +884,7 @@ function mask2d_dovetail(edge, angle, slope, shelf=0, inset=0, mask_angle=90, ex
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //
 // Side Effects:
-//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
+//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 //
 // Example(2D): 2D Ogee Mask
 //   mask2d_ogee([
