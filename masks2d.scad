@@ -581,7 +581,7 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, hei
 //   diff()
 //   prismoid([50,60], [20,30], h=20, shift=[25,16])
 //       edge_profile(TOP, excess=20)//let(f=$edge_angle)
-//           mask2d_chamfer(h=5,mask_angle=$edge_angle,angle=60);
+//           mask2d_chamfer(h=5,mask_angle=$edge_angle,angle=64);
 // Example: Chamfering an extreme prismoid by setting height with inset and flat_top=true.
 //   diff()
 //   prismoid([50,60], [20,30], h=20, shift=[25,16])
@@ -787,7 +787,7 @@ function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
 // Example(2D): 2D dovetail mask by edge length and angle
 //   mask2d_dovetail(edge=10,width=4);
 // Example(2D): 2D dovetail mask by width and height
-//   mask2d_dovetail(width=5,height=25,angle=12);
+//   mask2d_dovetail(width=5,height=25);
 // Example: Masking by Edge Attachment
 //   diff()
 //   cube([50,60,70],center=true)
