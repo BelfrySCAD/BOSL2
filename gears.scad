@@ -196,8 +196,11 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //   which you compute with {{gear_dist()}}, is a complex calculation that depends on the profile shifts of both meshing gears.  This means that profile shifting
 //   can also be used to fine tune the spacing between gears.  When the gear has many teeth a negative profile shift may
 //   be able to bring the gears slightly closer together, while still avoiding undercutting.
-//   Profile shifting also changes the effective pressure angle of the gear engagement.  
-//   .
+//   Profile shifting also changes the effective pressure angle of the gear engagement.
+// Figure(2D,Med,NoAxes): The green gear is a 7 tooth gear without profile shifting.  In yellow is the same gear, profile shifted.  Note that the teeth too longer narrow at their base.  Also note that the effective root circle has a larger radius, and the teeth are also longer.
+//   spur_gear2d(mod=5, teeth=7);
+//   color("green")spur_gear2d(mod=5, teeth=7, profile_shift=0);
+// Continues:
 //   The minimum number of teeth to avoid undercutting is 17 for a pressure angle of 20, but it is 32 for a pressure
 //   angle of 14.5 degrees.  It can be computed as `2/(sin(alpha))^2` where `alpha` is the pressure angle.
 //   By default, the gear modules produce corrected gears.  You can override this by specifying the profile shift
