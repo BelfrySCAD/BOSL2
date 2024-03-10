@@ -235,7 +235,7 @@ function are_ends_equal(list, eps=EPSILON) =
 
 
 // Function: is_increasing()
-// Synopsis: Returns true if exery item in a list is greater than the previous item. 
+// Synopsis: Returns true if every item in a list is greater than the previous item. 
 // Topics: Comparisons, List Handling
 // See Also: max_index(), min_index(), is_increasing(), is_decreasing()
 // Usage:
