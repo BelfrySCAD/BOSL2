@@ -30,7 +30,7 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 // Section: 2D Masking Shapes
 
 // Function&Module: mask2d_roundover()
-// Synopsis: Creates a 2D beading mask shape useful for rounding edges.
+// Synopsis: Creates a circular mask shape for rounding edges or beading.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile(), fillet()
@@ -204,7 +204,7 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, quar
 
 
 // Function&Module: mask2d_teardrop()
-// Synopsis: Creates a 2D teardrop mask shape with a controllable maximum angle from vertical.
+// Synopsis: Creates a 2D teardrop shape with specified max angle from vertical.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D), FDM Optimized
 // See Also: corner_profile(), edge_profile(), face_profile()
