@@ -623,7 +623,7 @@ function split_region_at_region_crossings(region1, region2, closed1=true, closed
                 
 
 // Function: region_parts()
-// Synopsis: Splits a region into a list of regions.
+// Synopsis: Splits a region into a list of connected regions.
 // SynTags: RegList
 // Topics: Regions, List Handling
 // See Also: split_region_at_region_crossings()
