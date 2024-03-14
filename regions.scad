@@ -300,7 +300,7 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 // Synopsis: Creates the 2D polygons described by the given region or list of polygons.
 // SynTags: Geom
 // Topics: Regions, Paths, Polygons, List Handling
-// See Also: make_region(), region()
+// See Also: make_region(), debug_region()
 // Usage:
 //   region(r, [anchor], [spin=], [cp=], [atype=]) [ATTACHMENTS];
 // Description:
@@ -335,6 +335,51 @@ module region(r, anchor="origin", spin=0, cp="centroid", atype="hull")
       polygon(points=points, paths=paths);
       children();
     }
+}
+
+
+
+// Module: debug_region()
+// Synopsis: Draws an annotated region.
+// SynTags: Geom
+// Topics: Shapes (2D)
+// See Also: region(), debug_polygon(), debug_vnf(), debug_bezier()
+//
+// Usage:
+//   debug_region(region, [vertices=], [edges=], [convexity=], [size=]);
+// Description:
+//   A replacement for {{region()}} that displays the region and labels the vertices and
+//   edges.  The region vertices and edges are labeled with letters to identify the path
+//   component in the region, starting with A.  
+//   The start of each path is marked with a blue circle and the end with a pink diamond.
+//   You can suppress the display of vertex or edge labeling using the `vertices` and `edges` arguments.
+// Arguments:
+//   region = region to display
+//   ---
+//   vertices = if true display vertex labels and start/end markers.  Default: true
+//   edges = if true display edge labels.  Default: true
+//   convexity = The max number of walls a ray can pass through the given polygon paths.
+//   size = The base size of the line and labels.
+// Example(2D,Big):
+//   region = make_region([square(15), move([5,5],square(15))]);
+//   debug_region(region,size=1);
+module debug_region(region, vertices=true, edges=true, convexity=2, size=1)
+{
+  
+  if (is_path(region) || (is_region(region) && len(region)==1))
+    debug_polygon(force_path(region), vertices=vertices, edges=edges, convexity=convexity, size=size);
+  else {
+    for(i=idx(region))
+      echo(str("points_",chr(97+i)," = ",region[i]))
+    linear_extrude(height=0.01, convexity=convexity, center=true) 
+      region(region);
+    if(vertices)
+        _debug_poly_verts(region,size);
+    for(j=idx(region)){
+      if(edges)
+        _debug_poly_edges(j,region[j],vertices=vertices,size=size);
+    }      
+  }      
 }
 
 
@@ -578,7 +623,7 @@ function split_region_at_region_crossings(region1, region2, closed1=true, closed
                 
 
 // Function: region_parts()
-// Synopsis: Splits a region into a list of regions.
+// Synopsis: Splits a region into a list of connected regions.
 // SynTags: RegList
 // Topics: Regions, List Handling
 // See Also: split_region_at_region_crossings()

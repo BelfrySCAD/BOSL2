@@ -30,7 +30,7 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 // Section: 2D Masking Shapes
 
 // Function&Module: mask2d_roundover()
-// Synopsis: Creates a 2D beading mask shape useful for rounding edges.
+// Synopsis: Creates a circular mask shape for rounding edges or beading.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile(), fillet()
@@ -78,9 +78,9 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 // Example(2D): 2D Bead Mask by Radius, acute angle
 //   mask2d_roundover(r=10, inset=2, mask_angle=50);
 // Example(2D): 2D Bead Mask for obtuse angle, by height
-//   mask2d_roundover(h=10, inset=2, mask_angle=135);
+//   mask2d_roundover(h=10, inset=2, mask_angle=135, $fn=64);
 // Example(2D): 2D Bead Mask for obtuse angle, by height with flat top
-//   mask2d_roundover(h=10, inset=2, mask_angle=135, flat_top=true);
+//   mask2d_roundover(h=10, inset=2, mask_angle=135, flat_top=true, $fn=64);
 // Example(2D): 2D Angled Bead Mask by Joint Length.  Joint length does not include the inset.  
 //   mask2d_roundover(joint=10, inset=2, mask_angle=75);
 // Example(2D): Increasing the Excess
@@ -102,31 +102,31 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 //   xrot(90)
 //       linear_extrude(height=30, center=true)
 //           mask2d_roundover(r=10);
-// Example: Rounding over top of an extreme prismoid using height option
+// Example(3D,Med): Rounding over top of an extreme prismoid using height option
 //   diff()
 //     prismoid([30,20], [50,60], h=50, shift=[40,50])
 //        edge_profile(TOP, excess=20)
-//           mask2d_roundover(height=5, mask_angle=$edge_angle);
-// Example: Using the quarter_round option results in a lip on obtuse angles, so it may not be the best choice for pure roundings.  
+//           mask2d_roundover(height=5, mask_angle=$edge_angle, $fn=128);
+// Example(3D,Med): Using the quarter_round option results in a lip on obtuse angles, so it may not be the best choice for pure roundings.  
 //   diff()
 //     prismoid([30,20], [50,60], h=50, shift=[40,50])
 //        edge_profile(TOP, excess=20)
-//           mask2d_roundover(r=5, mask_angle=$edge_angle, quarter_round=true);
-// Example: Can improve the quarter round option by using it only for acute angles and falling back on regular rounding for obtuse angles. Note that in this case, obtuse angles are fully rounded, but acute angles still have a corner, but one that is not as sharp as the original angle.  
+//           mask2d_roundover(r=5, mask_angle=$edge_angle, quarter_round=true, $fn=128);
+// Example(3D,Med): Can improve the quarter round option by using it only for acute angles and falling back on regular rounding for obtuse angles. Note that in this case, obtuse angles are fully rounded, but acute angles still have a corner, but one that is not as sharp as the original angle.  
 //   diff()
 //     prismoid([30,20], [50,60], h=50, shift=[40,50])
 //        edge_profile(TOP, excess=20)
-//           mask2d_roundover(r=5, mask_angle=$edge_angle, quarter_round=$edge_angle<90);
-// Example: Creating a bead on the prismoid using the height option with flat_top=true:
+//           mask2d_roundover(r=5, mask_angle=$edge_angle, quarter_round=$edge_angle<90, $fn=32);
+// Example(3D,Med): Creating a bead on the prismoid using the height option with flat_top=true:
 //   diff()
 //     prismoid([30,20], [50,60], h=50, shift=[40,50])
 //        edge_profile(TOP, excess=20)
-//           mask2d_roundover(height=5, mask_angle=$edge_angle, inset=1.5, flat_top=true);
-// Example: Bead may be more pleasing using the quarter_round option, with curves terminating in a plane parallel to the prismoid top.  The size of the inset edge will be larger than requested when the angle is obtuse.  
+//           mask2d_roundover(height=5, mask_angle=$edge_angle, inset=1.5, flat_top=true, $fn=128);
+// Example(3D,Med): Bead may be more pleasing using the quarter_round option, with curves terminating in a plane parallel to the prismoid top.  The size of the inset edge will be larger than requested when the angle is obtuse.  
 //   diff()
 //     prismoid([30,20], [50,60], h=50, shift=[40,50])
 //        edge_profile(TOP, excess=20)
-//           mask2d_roundover(r=5, mask_angle=$edge_angle, quarter_round=true, inset=1.5);
+//           mask2d_roundover(r=5, mask_angle=$edge_angle, quarter_round=true, inset=1.5, $fn=128);
 module mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, height, cut, quarter_round=false, joint, anchor=CENTER,spin=0) {
     path = mask2d_roundover(r=r, d=d, h=h, height=height, cut=cut, joint=joint, inset=inset,
                             flat_top=flat_top, mask_angle=mask_angle, excess=excess, quarter_round=quarter_round);
@@ -204,7 +204,7 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, quar
 
 
 // Function&Module: mask2d_teardrop()
-// Synopsis: Creates a 2D teardrop mask shape with a controllable maximum angle from vertical.
+// Synopsis: Creates a 2D teardrop shape with specified max angle from vertical.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D), FDM Optimized
 // See Also: corner_profile(), edge_profile(), face_profile()
@@ -237,15 +237,15 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, quar
 // Side Effects:
 //  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(2D): 2D Teardrop Mask
-//   mask2d_teardrop(r=10);
+//   mask2d_teardrop(r=10,$fn=64);
 // Example(2D): 2D Teardrop Mask for acute angle
-//   mask2d_teardrop(r=10, mask_angle=75);
+//   mask2d_teardrop(r=10, mask_angle=75,$fn=64);
 // Example(2D): 2D Teardrop Mask for obtuse angle, specifying height
-//   mask2d_teardrop(h=10, mask_angle=115);
+//   mask2d_teardrop(h=10, mask_angle=115,$fn=128);
 // Example(2D): Increasing Excess
 //   mask2d_teardrop(r=10, mask_angle=75, excess=2);
 // Example(2D): Using a Custom Angle
-//   mask2d_teardrop(r=10,angle=30);
+//   mask2d_teardrop(r=10,angle=30,$fn=128);
 // Example(2D): With an acute mask_angle you can choose an angle of zero:
 //   mask2d_teardrop(r=10,mask_angle=44,angle=0);
 // Example(2D): With an acute mask_angle you can even choose a negative angle
@@ -379,7 +379,7 @@ module mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, inset=0, flat_to
 // Example(2D): 2D Cove Mask for obtuse angle with flat top.  This is one solution to the problem of the previous example.  Max height is achieved at the left corner. 
 //   mask2d_cove(h=10,mask_angle=145,flat_top=true);
 // Example(2D): 2D Cove Mask for obtuse angle, specified by height with bulge parameter.  Another way to fix the problem of the previous example: the max height is again achieved at the left corner.  
-//   mask2d_cove(h=10,mask_angle=145, bulge=3);
+//   mask2d_cove(h=10,mask_angle=145, bulge=3, $fn=128);
 // Example(2D): 2D Cove Mask for acute angle with quarter_round enabled
 //   mask2d_cove(r=10,mask_angle=55,quarter_round=true);
 // Example(2D): 2D Cove Mask for obtuse angle, specified by height.  Note that flat_top is on by default in quarter_round mode.  
@@ -399,21 +399,21 @@ module mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, inset=0, flat_to
 //   xrot(90)
 //       linear_extrude(height=30, center=true)
 //           mask2d_cove(r=5, inset=5);
-// Example: A cove on top of an extreme prismoid top by setting height and using flat_top mode.  This creates **long** flat tops sections at obtuse angles. 
+// Example(3D,Med): A cove on top of an extreme prismoid top by setting height and using flat_top mode.  This creates **long** flat tops sections at obtuse angles. 
 //   diff()
 //   prismoid([50,60], [20,30], h=20, shift=[25,16])
 //       edge_profile(TOP, excess=20)
-//           mask2d_cove(h=5, inset=0, mask_angle=$edge_angle, flat_top=true);
-// Example: Cove on an extreme prismoid top by setting height and bulge.  Obtuse angles have long **curved** sections.  
+//           mask2d_cove(h=5, inset=0, mask_angle=$edge_angle, flat_top=true, $fn=128);
+// Example(3D,Med): Cove on an extreme prismoid top by setting height and bulge.  Obtuse angles have long **curved** sections.  
 //   diff()
 //   prismoid([50,60], [20,30], h=20, shift=[25,16])
 //       edge_profile(TOP, excess=20)
-//           mask2d_cove(h=5, inset=0, mask_angle=$edge_angle, bulge=1);
-// Example: Rounding an extreme prismoid top using quarter_round.  Another way to handle this situation. 
+//           mask2d_cove(h=5, inset=0, mask_angle=$edge_angle, bulge=1, $fn=128);
+// Example(3D,Med): Rounding an extreme prismoid top using quarter_round.  Another way to handle this situation. 
 //   diff()
 //   prismoid([50,60], [20,30], h=20, shift=[25,16])
 //       edge_profile(TOP, excess=20)
-//           mask2d_cove(r=5, inset=0, mask_angle=$edge_angle, quarter_round=true);
+//           mask2d_cove(r=5, inset=0, mask_angle=$edge_angle, quarter_round=true, $fn=128);
 
 module mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, bulge, d, h, height, quarter_round=false, anchor=CENTER, spin=0) {
     path = mask2d_cove(r=r, d=d, h=h, height=height, bulge=bulge, flat_top=flat_top, quarter_round=quarter_round, inset=inset, mask_angle=mask_angle, excess=excess);
@@ -572,17 +572,17 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, hei
 //   xrot(90)
 //       linear_extrude(height=30, center=true)
 //           mask2d_chamfer(edge=10);
-// Example: Chamfering an extreme prismoid by setting height
+// Example(3D,Med): Chamfering an extreme prismoid by setting height
 //   diff()
 //   prismoid([50,60], [20,30], h=20, shift=[25,16])
 //       edge_profile(TOP, excess=20)//let(f=$edge_angle)
 //           mask2d_chamfer(h=5,mask_angle=$edge_angle);
-// Example: Chamfering an extreme prismoid with a fixed chamfer angle.  Note that a very large chamfer angle is required because of the large obtuse angles.  
+// Example(3D,Med): Chamfering an extreme prismoid with a fixed chamfer angle.  Note that a very large chamfer angle is required because of the large obtuse angles.  
 //   diff()
 //   prismoid([50,60], [20,30], h=20, shift=[25,16])
 //       edge_profile(TOP, excess=20)//let(f=$edge_angle)
 //           mask2d_chamfer(h=5,mask_angle=$edge_angle,angle=64);
-// Example: Chamfering an extreme prismoid by setting height with inset and flat_top=true.
+// Example(3D,Med): Chamfering an extreme prismoid by setting height with inset and flat_top=true.
 //   diff()
 //   prismoid([50,60], [20,30], h=20, shift=[25,16])
 //       edge_profile(TOP, excess=20)//let(f=$edge_angle)
