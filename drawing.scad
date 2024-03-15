@@ -1272,7 +1272,7 @@ function _turtle_command(command, parm, parm2, state, index) =
 // Synopsis: Draws an annotated polygon.
 // SynTags: Geom
 // Topics: Shapes (2D)
-// See Also: debug_vnf(), debug_bezier()
+// See Also: debug_region(), debug_vnf(), debug_bezier()
 //
 // Usage:
 //   debug_polygon(points, paths, [vertices=], [edges=], [convexity=], [size=]);
@@ -1302,19 +1302,32 @@ function _turtle_command(command, parm, parm2, state, index) =
 module debug_polygon(points, paths, vertices=true, edges=true, convexity=2, size=1)
 {
     no_children($children);
+    print_paths=is_def(paths);
+    echo(points=points);
+    if (print_paths)
+      echo(paths=paths);
     paths = is_undef(paths)? [count(points)] :
         is_num(paths[0])? [paths] :
         paths;
-    echo(points=points);
-    echo(paths=paths);
     linear_extrude(height=0.01, convexity=convexity, center=true) {
         polygon(points=points, paths=paths, convexity=convexity);
     }
-    dups = vector_search(points, EPSILON, points);
-    
-    if (vertices) color("red") {
+    if (vertices)
+      _debug_poly_verts(points,size);
+    if (edges)
+      for (j = [0:1:len(paths)-1]) _debug_poly_edges(j, points, paths[j], vertices, size);
+}
+
+
+module _debug_poly_verts(points, size)
+{
+     labels=is_vector(points[0]) ? [for(i=idx(points)) str(i)]
+           :[for(j=idx(points), i=idx(points[j])) str(chr(97+j),i)];
+     points = is_vector(points[0]) ? points : flatten(points);
+     dups = vector_search(points, EPSILON, points);
+     color("red") {
         for (ind=dups){
-            numstr = str_join([for(i=ind) str(i)],",");
+            numstr = str_join(select(labels,ind),",");
             up(0.2) {
                 translate(points[ind[0]]) {
                     linear_extrude(height=0.1, convexity=10, center=true) {
@@ -1324,10 +1337,13 @@ module debug_polygon(points, paths, vertices=true, edges=true, convexity=2, size
             }
         }
     }
-    if (edges)
-    for (j = [0:1:len(paths)-1]) {
-        path = paths[j];
-        if (vertices){
+}
+
+
+module _debug_poly_edges(j,points, path,vertices,size)
+{  
+       path = default(path, count(len(points)));
+       if (vertices){
             translate(points[path[0]]) {
                 color("cyan") up(0.1) cylinder(d=size*1.5, h=0.01, center=false, $fn=12);
             }
@@ -1347,8 +1363,6 @@ module debug_polygon(points, paths, vertices=true, edges=true, convexity=2, size
                 }
             }
         }
-    }
-}
-
+ }
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
