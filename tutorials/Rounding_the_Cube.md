@@ -226,7 +226,7 @@ include<BOSL2/std.scad>
 diff()
    prismoid([30,20], [40,30], rounding = 2, h = 20, $fn = 64)
       edge_profile(BOT, excess = 15)
-         mask2d_teardrop(h = 5, angle = 40, mask_angle = $edge_angle, $fn = 64);
+         mask2d_teardrop(h = 5, angle = 50, mask_angle = $edge_angle, $fn = 64);
 ```
 
 ```openscad-3d; ImgOnly VPR=[88.5,0,6.4] VPT=[0,16,10] VPD=110
@@ -234,7 +234,7 @@ include<BOSL2/std.scad>
 diff()
    prismoid([30,20], [40,30], rounding = 2, h = 20, $fn = 64)
       edge_profile(BOT, excess = 15)
-         mask2d_teardrop(h = 5, angle = 40, mask_angle = $edge_angle, $fn = 64);
+         mask2d_teardrop(h = 5, angle = 50, mask_angle = $edge_angle, $fn = 64);
 ```
 
 In addition to the simple [roundover](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_roundover) mask, and the [teardrop](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_teardrop) mask, there are masks for [cove](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_cove), [chamfer](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_chamfer), [rabbet](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_rabbet), [dovetail](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_dovetail) and [ogee](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_ogee) edges.  
