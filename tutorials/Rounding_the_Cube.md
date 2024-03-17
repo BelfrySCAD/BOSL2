@@ -229,7 +229,7 @@ diff()
          mask2d_teardrop(h = 5, angle = 40, mask_angle = $edge_angle, $fn = 64);
 ```
 
-```openscad-3d; ImgOnly VPR=[85,0,5]
+```openscad-3d; ImgOnly VPR=[88.5,0,6.4] VPT=[0,16,10] VPD=110
 include<BOSL2/std.scad>
 diff()
    prismoid([30,20], [40,30], rounding = 2, h = 20, $fn = 64)
