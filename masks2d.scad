@@ -102,30 +102,30 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 //   xrot(90)
 //       linear_extrude(height=30, center=true)
 //           mask2d_roundover(r=10);
-// Example(3D,Med): Rounding over top of an extreme prismoid using height option
+// Example(3D,Med,VPT=[25,30,12],VPR=[68,0,12],VPD=180): Rounding over top of an extreme prismoid using height option
 //   diff()
-//     prismoid([30,20], [50,60], h=50, shift=[40,50])
-//        edge_profile(TOP, excess=20)
+//     prismoid([30,20], [50,60], h=20, shift=[40,50])
+//        edge_profile(TOP, excess=27)
 //           mask2d_roundover(height=5, mask_angle=$edge_angle, $fn=128);
-// Example(3D,Med): Using the quarter_round option results in a lip on obtuse angles, so it may not be the best choice for pure roundings.  
+// Example(3D,Med,VPT=[25,30,12],VPR=[68,0,12],VPD=180): Using the quarter_round option results in a lip on obtuse angles, so it may not be the best choice for pure roundings.  
 //   diff()
-//     prismoid([30,20], [50,60], h=50, shift=[40,50])
-//        edge_profile(TOP, excess=20)
+//     prismoid([30,20], [50,60], h=20, shift=[40,50])
+//        edge_profile(TOP, excess=27)
 //           mask2d_roundover(r=5, mask_angle=$edge_angle, quarter_round=true, $fn=128);
-// Example(3D,Med): Can improve the quarter round option by using it only for acute angles and falling back on regular rounding for obtuse angles. Note that in this case, obtuse angles are fully rounded, but acute angles still have a corner, but one that is not as sharp as the original angle.  
+// // Example(3D,Med,VPT=[25,30,12],VPR=[68,0,12],VPD=180): Can improve the quarter round option by using it only for acute angles and falling back on regular rounding for obtuse angles. Note that in this case, obtuse angles are fully rounded, but acute angles still have a corner, but one that is not as sharp as the original angle.  
 //   diff()
-//     prismoid([30,20], [50,60], h=50, shift=[40,50])
-//        edge_profile(TOP, excess=20)
+//     prismoid([30,20], [50,60], h=20, shift=[40,50])
+//        edge_profile(TOP, excess=27)
 //           mask2d_roundover(r=5, mask_angle=$edge_angle, quarter_round=$edge_angle<90, $fn=32);
-// Example(3D,Med): Creating a bead on the prismoid using the height option with flat_top=true:
+// Example(3D,Med,VPT=[25,30,12],VPR=[68,0,12],VPD=180): Creating a bead on the prismoid using the height option with flat_top=true:
 //   diff()
-//     prismoid([30,20], [50,60], h=50, shift=[40,50])
-//        edge_profile(TOP, excess=20)
+//     prismoid([30,20], [50,60], h=20, shift=[40,50])
+//        edge_profile(TOP, excess=27)
 //           mask2d_roundover(height=5, mask_angle=$edge_angle, inset=1.5, flat_top=true, $fn=128);
-// Example(3D,Med): Bead may be more pleasing using the quarter_round option, with curves terminating in a plane parallel to the prismoid top.  The size of the inset edge will be larger than requested when the angle is obtuse.  
+// Example(3D,Med,VPT=[25,30,12],VPR=[68,0,12],VPD=180): Bead may be more pleasing using the quarter_round option, with curves terminating in a plane parallel to the prismoid top.  The size of the inset edge will be larger than requested when the angle is obtuse.  
 //   diff()
-//     prismoid([30,20], [50,60], h=50, shift=[40,50])
-//        edge_profile(TOP, excess=20)
+//     prismoid([30,20], [50,60], h=20, shift=[40,50])
+//        edge_profile(TOP, excess=27)
 //           mask2d_roundover(r=5, mask_angle=$edge_angle, quarter_round=true, inset=1.5, $fn=128);
 module mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, height, cut, quarter_round=false, joint, anchor=CENTER,spin=0) {
     path = mask2d_roundover(r=r, d=d, h=h, height=height, cut=cut, joint=joint, inset=inset,
