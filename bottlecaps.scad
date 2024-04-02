@@ -544,37 +544,40 @@ function generic_bottle_neck(
 // Synopsis: Creates a generic cap for a bottle.
 // SynTags: Geom
 // Topics: Bottles, Threading
-// See Also: generic_bottle_neck()
+// See Also: generic_bottle_neck(), sp_cap()
 // Usage:
 //   generic_bottle_cap(wall, [texture], ...) [ATTACHMENTS];
 // Description:
-//   Creates a basic threaded cap given specifications.
+//   Creates a basic threaded cap given specifications.  You must give exactly two of `thread_od`, `neck_od` and `thread_depth` to
+//   specify the thread geometry.  Note that most glass bottles conform to the SPI standard and caps for them may be more easily produced using {{sp_cap()}}.
 // Arguments:
-//   wall = Wall thickness in mm.
+//   wall = Wall thickness.  Default: 2
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
 //   ---
-//   height = Interior height of the cap in mm.
-//   thread_od = Outer diameter of the threads in mm.
-//   tolerance = Extra space to add to the outer diameter of threads and neck in mm.  Applied to radius.
-//   neck_od = Outer diameter of neck in mm.
-//   flank_angle = Angle of taper on threads.
-//   pitch = Thread pitch in mm.
+//   height = Interior height of the cap
+//   thread_od = Outer diameter of the threads
+//   neck_od = Outer diameter of neck
+//   thread_depth = Depth of the threads 
+//   tolerance = Extra space to add to the outer diameter of threads and neck.  Applied to radius.  Default: 0.2
+//   flank_angle = Angle of taper on threads.  Default: 15
+//   pitch = Thread pitch.  Default: 4
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Extra Anchors:
 //   "inside-top" = Centered on the inside top of the cap.
 // Examples:
-//   generic_bottle_cap();
-//   generic_bottle_cap(texture="knurled");
-//   generic_bottle_cap(texture="ribbed");
+//   generic_bottle_cap(thread_depth=2,neck_od=INCH,height=INCH/2);
+//   generic_bottle_cap(texture="knurled",neck_od=25,thread_od=30,height=10);
+//   generic_bottle_cap(texture="ribbed",thread_depth=3,thread_od=25,height=13);
 module generic_bottle_cap(
     wall = 2,
     texture = "none",
-    height = 11.2,
-    thread_depth = 2.34,
+    height,
+    thread_depth,
+    thread_od, 
     tolerance = .2,
-    neck_od = 25.5,
+    neck_od,
     flank_angle = 15,
     pitch = 4,
     anchor = BOTTOM,
@@ -582,8 +585,14 @@ module generic_bottle_cap(
     orient = UP
 ) {
     $fn = segs(33 / 2);
-    threadOuterDTol = neck_od + 2*(thread_depth - 0.8) + 2 * tolerance;   // WTF; Engineered for consistency with old code, but 
-    w = threadOuterDTol + 2 * wall;                                       // no clue why this was chosen
+    dummy = assert(num_defined([thread_od,neck_od,thread_depth])==2, "Must define exactly two of thread_od, neck_od and thread_depth")
+            assert(is_def(thread_depth) || (all_positive([neck_od,thread_od]) && thread_od>neck_od), "thread_od must be larger than neck_od")
+            assert(is_undef(thread_depth) || all_positive([thread_depth,first_defined([neck_od,thread_od])]), "thread_depth, and neck_od/thread_od must be positive");
+    thread_depth = !is_undef(thread_depth) ? thread_depth :  (thread_od - neck_od)/2;
+    neck_od = !is_undef(neck_od) ? neck_od : thread_od-2*thread_depth;
+    thread_od = !is_undef(thread_od) ? thread_od : neck_od+2*thread_depth;
+    threadOuterDTol = thread_od + 2*tolerance;
+    w = threadOuterDTol + 2 * wall;                               
     h = height + wall;
     neckOuterDTol = neck_od + 2 * tolerance;
 
@@ -600,21 +609,18 @@ module generic_bottle_cap(
                     // For the knurled and ribbed caps the PCO caps in BOSL2 cut into the wall
                     // thickness so the wall+texture are the specified wall thickness.  That
                     // seems wrong so this does specified thickness+texture
-                    if (texture == "knurled") {
+                    if (texture == "knurled") 
                         cyl(d=w + 1.5*diamMagMult, l=h, texture="diamonds", tex_size=[3,3], tex_style="concave", anchor=BOT);
-                    } else if (texture == "ribbed") {
+                    else if (texture == "ribbed") 
                         cyl(d=w + 1.5*diamMagMult, l=h, texture="ribs", tex_size=[3,3], tex_style="min_edge", anchor=BOT);
-                    } else {
+                    else 
                         cyl(d = w, l = h, anchor = BOTTOM);
-                    }
                 }
                 up(wall) cyl(d = threadOuterDTol, h = h, anchor = BOTTOM);
             }
-            difference(){
-                up(wall + pitch / 2) {
-                    thread_helix(d = neckOuterDTol, pitch = pitch, thread_depth = thread_depth, flank_angle = flank_angle,
-                                 turns = ((height - pitch) / pitch), lead_in = -thread_depth, internal = true, anchor = BOTTOM);
-                }
+            up(wall + pitch / 2) {
+                thread_helix(d = neckOuterDTol+.02, pitch = pitch, thread_depth = thread_depth+.01, flank_angle = flank_angle,
+                             turns = ((height - pitch) / pitch), lead_in = -thread_depth, internal = true, anchor = BOTTOM);
             }
         }
         children();

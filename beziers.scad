@@ -1448,7 +1448,7 @@ function bezier_patch_normals(patch, u, v) =
 
 
 // Module: debug_bezier()
-// Synopsis: Shows a bezier path and it's associated control points.
+// Synopsis: Shows a bezier path and its associated control points.
 // SynTags: Geom
 // Topics: Bezier Paths, Debugging
 // See Also: bezpath_curve()
@@ -1518,7 +1518,7 @@ module debug_bezier(bezpath, width=1, N=3) {
 //   showcps = If true, show the controlpoints as well as the surface.  Default: true.
 //   showdots = If true, shows the calculated surface vertices.  Default: false.
 //   showpatch = If true, shows the surface faces.  Default: true.
-//   size = Size to show control points and lines.
+//   size = Size to show control points and lines.  Default: 1% of the maximum side length of a box bounding the patch.
 //   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".
 //   convexity = Max number of times a line could intersect a wall of the shape.
 // Example:
