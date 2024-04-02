@@ -2806,7 +2806,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   are based on rectangular tiling, this means adding textures to curved shapes may result in distortion of the basic texture unit.  For example, if you
 //   texture a cone, the scale of the texture will be larger at the wide end of the cone and smaller at the narrower end of the cone.
 //   .
-//   You can specify a texture using to method: a height field or a VNF.  For each method you also must specify the scale of the texture, which
+//   You can specify a texture using two methods: a height field or a VNF.  For each method you also must specify the scale of the texture, which
 //   gives the size of the rectangular unit in your object that will correspond to one texture tile.  Note that this scale does not preserve
 //   aspect ratio: you can stretch the texture as desired.  
 // Subsection: Height Field Texture Maps
@@ -2959,10 +2959,10 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   extra points can be introduced in the interior of faces leading to unexpected irregularities in the textures, which appear
 //   as extra triangles.  These artifacts can be minimized by making the VNF texture's faces as large as possible rather than using
 //   a triangulated VNF, but depending on the specific VNF texture, it may be impossible to entirely eliminate them.
-// Figure(3D,Big,NoAxes,VPR=[140.9,0,345.7],VPT=[9.48289,-0.88709,5.7837],VPD=39.5401): The left shows a normal bricks_vnf texture.  The right shows a texture that was first passed through {{vnf_triangulate()}}.  Note the extra triangle artifacts visible across the brick faces.
+// Figure(3D,Big,NoAxes,VPR=[140.9,0,345.7],VPT=[9.48289,-0.88709,5.7837],VPD=39.5401): The left shows a normal bricks_vnf texture.  The right shows a texture that was first passed through {{vnf_triangulate()}}.  Note the extra triangle artifacts visible at the ends on the brick faces.
 //   tex = texture("bricks_vnf");
-//   cyl(d=10,h=15,texture=tex, tex_reps=[4,2],tex_samples=5);
-//   up(7)fwd(-3)right(15)cyl(d=10,h=15,texture=vnf_triangulate(tex), tex_reps=[4,2],tex_samples=5);
+//   cyl(d=10,h=15,texture=tex, tex_reps=[4,2],tex_samples=5,rounding=2);
+//   up(7)fwd(-3)right(15)cyl(d=10,h=15,texture=vnf_triangulate(tex), tex_reps=[4,2],tex_samples=5,rounding=2);
 
 
 // Function: texture()
