@@ -568,7 +568,7 @@ function generic_bottle_neck(
 //   "inside-top" = Centered on the inside top of the cap.
 // Examples:
 //   generic_bottle_cap(thread_depth=2,neck_od=INCH,height=INCH/2);
-//   generic_bottle_cap(texture="knurled",neck_od=30,thread_od=25,height=10);
+//   generic_bottle_cap(texture="knurled",neck_od=25,thread_od=30,height=10);
 //   generic_bottle_cap(texture="ribbed",thread_depth=3,thread_od=25,height=13);
 module generic_bottle_cap(
     wall = 2,
