@@ -19,6 +19,10 @@ module test_struct_set() {
     assert(st7 == [["Bar", 28],["Foo",91],[3,4],[[5,7],99]]);
     st8 = struct_set(st3,[]);
     assert(st8==st3);
+    st9 = struct_set(st2, ["Baz", undef]);
+    assert(st9 == st2);
+    st10 = struct_set(st2, ["Foo", 91, "Baz", undef]);
+    assert(st10 == st3);
 }
 test_struct_set();
 
