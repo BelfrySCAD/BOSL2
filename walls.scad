@@ -62,15 +62,76 @@ module sparse_wall(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anch
     maxy = min(2 * hyp * sin(maxang), max_bridge+strut);
 
     yreps = ceil(2*yoff/maxy);
+
+    size = [thick, l, h];
+    attachable(anchor,spin,orient, size=size) {
+        yrot(90) {
+            linear_extrude(height=thick, convexity=4*yreps, center=true) {
+                sparse_wall2d([h,l], maxang=maxang, strut=strut, max_bridge=max_bridge);
+            }
+        }
+        children();
+    }
+}
+
+
+// Module: sparse_wall2d()
+// Synopsis: Makes an open cross-braced rectangular wall.
+// SynTags: Geom
+// Topics: FDM Optimized, Walls
+// See Also: sparse_wall(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
+//
+// Usage:
+//   sparse_wall2d(size, [maxang=], [strut=], [max_bridge=]) [ATTACHMENTS];
+//
+// Description:
+//   Makes a 2D open rectangular square with X-shaped cross-bracing, designed to be extruded, to make a strut that reduces
+//   the need for support material in 3D printing.
+//
+// Arguments:
+//   size = The `[X,Y]` size of the outer rectangle.
+//   ---
+//   maxang = maximum overhang angle of cross-braces.
+//   strut = the width of the cross-braces.
+//   max_bridge = maximum bridging distance between cross-braces.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//
+// See Also: corrugated_wall(), thinning_wall()
+//
+// Example: Typical Shape
+//   sparse_wall2d(size=[40,100]);
+// Example: Thinner Strut
+//   sparse_wall2d(size=[40,100], strut=2);
+// Example: Larger maxang
+//   sparse_wall2d(size=[40,100], strut=2, maxang=45);
+// Example: Longer max_bridge
+//   sparse_wall2d(size=[40,100], strut=2, maxang=45, max_bridge=30);
+module sparse_wall2d(size=[50,100], maxang=30, strut=5, max_bridge=20, anchor=CENTER, spin=0)
+{
+    h = size.x;
+    l = size.y;
+
+    zoff = h/2 - strut/2;
+    yoff = l/2 - strut/2;
+
+    maxhyp = 1.5 * (max_bridge+strut)/2 / sin(maxang);
+    maxz = 2 * maxhyp * cos(maxang);
+
+    zreps = ceil(2*zoff/maxz);
+    zstep = 2*zoff / zreps;
+
+    hyp = zstep/2 / cos(maxang);
+    maxy = min(2 * hyp * sin(maxang), max_bridge+strut);
+
+    yreps = ceil(2*yoff/maxy);
     ystep = 2*yoff / yreps;
 
     ang = atan(ystep/zstep);
     len = zstep / cos(ang);
 
-    size = [thick, l, h];
-    attachable(anchor,spin,orient, size=size) {
-        yrot(90)
-        linear_extrude(height=thick, convexity=4*yreps, center=true) {
+    attachable(anchor,spin, two_d=true, size=size) {
+        union() {
             difference() {
                 square([h, l], center=true);
                 square([h-2*strut, l-2*strut], center=true);

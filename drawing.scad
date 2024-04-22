@@ -894,7 +894,7 @@ module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=fa
 //   stroke(catenary(100, droop=-30));
 // Example(2D): Specifying Vertex Count
 //   stroke(catenary(100, angle=-85, n=11), dots="dot");
-// Example: Sweeping a Catenary Path
+// Example(3D): Sweeping a Catenary Path
 //   path = xrot(90, p=path3d(catenary(100, droop=20, n=41)));
 //   path_sweep(circle(r=1.5, $fn=24), path);
 function catenary(width, droop, n=100, angle) =
