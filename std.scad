@@ -7,7 +7,7 @@
 
 assert(version_num()>=20190500, "BOSL2 requires OpenSCAD version 2019.05 or later.");
 
-echo("ALERT: The syntax of align() has changed on April 24, 2024.  See the wiki.  See also the 'align=' parameter to attach()");
+//echo("ALERT: The syntax of align() has changed on April 24, 2024.  See the wiki.  See also the 'align=' parameter to attach()");
 
 include <version.scad>
 
