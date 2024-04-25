@@ -702,7 +702,6 @@ module align(anchor,align=CENTER,inside=false,inset=0,shiftout=0,overlap)
         for(j = idx(align)) {
           edge=align[j];
           $idx = j+len(align)*i;
-          echo($idx);
           $align=edge;
           dummy1=assert(is_vector(edge) && (len(edge)==2 || len(edge)==3),
                         "align direction must be a 2-vector or 3-vector");
@@ -804,7 +803,7 @@ function _make_anchor_legal(anchor,geom) =
 //       attach(FRONT, BOTTOM, overlap=1.5) cyl(l=11.5, d1=10, d2=5);
 //   }
 
-module newattach(from, to, overlap, align, spin=0, norot)
+module attach(from, to, overlap, align, spin=0, norot)
 {
     req_children($children);
     if (norot)
