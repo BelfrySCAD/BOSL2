@@ -3449,7 +3449,7 @@ function _get_cp(geom) =
 
 
 function _force_anchor_2d(anchor) =
-  is_undef(anchor) ? anchor :
+  is_undef(anchor) || len(anchor)==2 ? anchor :
   assert(anchor.y==0 || anchor.z==0, "Anchor for a 2D shape cannot be fully 3D.  It must have either Y or Z component equal to zero.")
   anchor.y==0 ? [anchor.x,anchor.z] : point2d(anchor);
 
