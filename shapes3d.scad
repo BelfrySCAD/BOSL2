@@ -2935,7 +2935,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 // Usage:
 //   text3d(text, [h], [size], [font], [language=], [script=], [direction=], [atype=], [anchor=], [spin=], [orient=]);
 // Description:
-//   Creates a 3D text block that supports anchoring and attachment to attachable objects.  You cannot attach children to text.
+//   Creates a 3D text block that supports anchoring and single-parameter attachment to attachable objects.  You cannot attach children to text.
 //   .
 //   Historically fonts were specified by their "body size", the height of the metal body
 //   on which the glyphs were cast.  This means the size was an upper bound on the size
@@ -2988,6 +2988,7 @@ module text3d(text, h, size=10, font="Helvetica", spacing=1.0, direction="ltr", 
     h = one_defined([h,height,thickness],"h,height,thickness",dflt=1);
     assert(is_undef(atype) || in_list(atype,["ycenter","baseline"]), "atype must be \"ycenter\" or \"baseline\"");
     assert(is_bool(center));
+    assert(is_undef($attach_to),"text3d() does not support parent-child anchor attachment with two parameters");
     atype = default(atype, center?"ycenter":"baseline");
     anchor = default(anchor, center?CENTER:LEFT);
     geom = attach_geom(size=[size,size,h]);

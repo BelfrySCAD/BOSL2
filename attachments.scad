@@ -735,8 +735,8 @@ function _make_anchor_legal(anchor,geom) =
 // Topics: Attachments
 // See Also: attachable(), position(), align(), face_profile(), edge_profile(), corner_profile()
 // Usage:
-//   PARENT() attach(from, to, [align=], [spin=], [overlap=]) CHILDREN;
-//   PARENT() attach(from, [overlap=], [spin=]) CHILDREN;
+//   PARENT() attach(parent, child, [align=], [spin=], [overlap=]) CHILDREN;
+//   PARENT() attach(parent, [overlap=], [spin=]) CHILDREN;
 // Description:
 //   Attaches children to a parent object at an anchor point or points, oriented in the anchor direction.
 //   This module differs from {{position()}} and {{align()}} in that it rotates the children to
@@ -744,8 +744,8 @@ function _make_anchor_legal(anchor,geom) =
 //   There are two modes of operation, single argument and double argument.
 //   .
 //   The double argument version is usually easier to use, and it is more powerful because it supports
-//   alignment.  You provide an anchor on the parent `from` and an anchor on the child `to`.
-//   This connects the `to` anchor on the child to the `from` anchor on the parent.  
+//   alignment.  You provide an anchor on the parent `parent` and an anchor on the child `child`.
+//   This connects the `child` anchor on the child to the `parent` anchor on the parent.  
 //   They are connected to the parent by pointing their anchor arrows at each other.  The most basic case
 //   is `attach(TOP,BOT)` which puts the bottom of the child onto the top of the parent.  If you
 //   do `attach(RIGHT,BOT)` this puts the bottom of the child onto the right anchor of the parent.
@@ -767,7 +767,7 @@ function _make_anchor_legal(anchor,geom) =
 //   ignored with the **double argument** version of `attach()`.  As noted above, you can give `spin=` to the
 //   child but using the `spin=` parameter to `attach()` is more likely to be useful. 
 //   .
-//   For the single parameter version of `attach()` you give only the `from` anchor.  The `align` direction
+//   For the single parameter version of `attach()` you give only the `parent` anchor.  The `align` direction
 //   is not permitted.  In this case the child is placed at the specified parent anchor point
 //   and rotated to the anchor direction.  For example, `attach(TOP) cuboid(2);` will place a small
 //   cube **with its center** located at the TOP anchor of the parent, so just half the cube will project
@@ -786,10 +786,10 @@ function _make_anchor_legal(anchor,geom) =
 //   For a step-by-step explanation of
 //   attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
-//   from = The parent anchor point to attach to or a list of parent anchor points.
-//   to = Optional name of the child anchor point.  If given, orients the child to connect this anchor point to the parent anchor.
+//   parent = The parent anchor point to attach to or a list of parent anchor points.
+//   child = Optional child anchor point.  If given, orients the child to connect this anchor point to the parent anchor.
 //   ---
-//   align = If `to` is given you can specify alignment to shift the child to an edge or corner of the parent.  
+//   align = If `child` is given you can specify alignment to shift the child to an edge or corner of the parent.  
 //   overlap = Amount to sink child into the parent.  Equivalent to `down(X)` after the attach.  This defaults to the value in `$overlap`, which is `0` by default.
 //   spin = Amount to rotate the parent around the axis of the parent anchor.  
 // Side Effects:
@@ -803,45 +803,57 @@ function _make_anchor_legal(anchor,geom) =
 //       attach(FRONT, BOTTOM, overlap=1.5) cyl(l=11.5, d1=10, d2=5);
 //   }
 
-module attach(from, to, overlap, align, spin=0, norot)
+module attach(parent, child, overlap, align, spin=0, norot, from, to)
 {
-    req_children($children);
+    dummy3=
+      assert(num_defined([to,child])<2, "Cannot combine deprecated 'to' argument with 'child' parameter")
+      assert(num_defined([from,parent])<2, "Cannot combine deprecated 'from' argument with 'parent' parameter");
+    if (is_def(to))
+      echo("The 'to' option to attach() is deprecated and will be removed in the future.  Use 'child' instead.");
+    if (is_def(from))
+      echo("The 'from' option to attach(0 is deprecated and will be removed in the future.  Use 'parent' instead");
     if (norot)
       echo("The 'norot' option to attach() is deprecated and will be removed in the future.  Use position() instead.");
+    req_children($children);
+    
     dummy=assert($parent_geom != undef, "No object to attach to!")
           assert(is_undef(align) || (is_vector(align) && (len(align)==2 || len(align)==3)), "align must be a 2-vector or 3-vector")
-          assert(is_undef(to) || is_string(to) || (is_vector(to) && (len(to)==2 || len(to)==3)), "to must be a named anchor (a string) or a 2-vector or 3-vector")
-          assert(is_undef(align) || !is_string(to), "to is a named anchor.  Named anchors are not supported with align=");
+          assert(is_undef(child) || is_string(child) || (is_vector(child) && (len(child)==2 || len(child)==3)), "child must be a named anchor (a string) or a 2-vector or 3-vector")
+          assert(is_undef(align) || !is_string(child), "child is a named anchor.  Named anchors are not supported with align=");
     overlap = (overlap!=undef)? overlap : $overlap;
-    anchors = (is_vector(from)||is_string(from))? [from] : from;
+    anchors = (is_vector(parent)||is_string(parent))? [parent] : parent;
     two_d = _attach_geom_2d($parent_geom);
-    to = two_d ? _force_anchor_2d(to) : to;
+    parent = one_defined([parent,from],"parent,from");
+    dummy4 = assert(is_string(parent) || is_list(parent), "Invalid parent anchor or anchor list");
+    child = two_d ? _force_anchor_2d(child) : child;
     align = is_undef(align) ? undef
           : two_d ? _force_anchor_2d(align) : point3d(align);
-    dummy2=assert(is_undef(align) || is_def(to), "Cannot use 'align' without 'to'");
+    dummy2=assert(is_undef(align) || is_def(child), "Cannot use 'align' without 'child'");
     for ($idx = idx(anchors)) {
         dummy2=
           assert(is_string(anchors[$idx]) || (is_vector(anchors[$idx]) && (len(anchors[$idx])==2 || len(anchors[$idx])==3)),
-                 str("from[",$idx,"] is ",anchors[$idx]," but it must be a named anchor (string) or a 2-vector or 3-vector"))
+                 str("parent[",$idx,"] is ",anchors[$idx]," but it must be a named anchor (string) or a 2-vector or 3-vector"))
           assert(is_undef(align) || !is_string(anchors[$idx]),
-                 str("from[",$idx,"] is a named anchor (",anchors[$idx],"), but named anchors are not wupported with align="));
+                 str("parent[",$idx,"] is a named anchor (",anchors[$idx],"), but named anchors are not wupported with align="));
         anchr = is_string(anchors[$idx])? anchors[$idx]
               : two_d?_force_anchor_2d(anchors[$idx])
               :anchors[$idx];
         dummy=assert(is_undef(align) || all_zero(v_mul(anchr,align)),
-                       str("align (",align,") cannot include component parallel to anchor (",anchr,")"));
+                       str("align (",align,") cannot include component parallel to parent anchor (",anchr,")"));
         anch = _find_anchor(anchr, $parent_geom);
         pos = is_undef(align) ? anch[1] : _find_anchor(anchr+align, $parent_geom)[1];
-        $attach_to = to;
+        $attach_to = child;
         $attach_anchor = list_set(anch, 1, pos);      ///
         startdir = anchr==UP || anchr==DOWN ? BACK : UP;
-        enddir = is_undef(to) || to.z==0 ? UP : BACK;
+        enddir = is_undef(child) || child.z==0 ? UP : BACK;
         anchor_adjustment = is_undef(align)? CTR
-                          : two_d ? zrot(spin, rot(to=to,from=-anchr,p=align))
-                          : zrot(spin,frame_map(x=to, z=enddir,p=frame_map(x=-anchr, z=startdir, reverse=true, p=align)));
+                          : two_d ? zrot(spin, rot(to=child,from=-anchr,p=align))
+                          : apply( frame_map(x=child, z=enddir)
+                                  *frame_map(x=-anchr, z=startdir, reverse=true)
+                                  *rot(v=parent,-spin), align);
 
         $anchor_override=all_zero(anchor_adjustment)?undef
-                                                    :to+anchor_adjustment;
+                                                    :child+anchor_adjustment;
         olap = two_d? [0,-overlap,0] : [0,0,-overlap];
         anchrvec = two_d? BACK : UP;
         spinaxis = two_d? UP : anch[2];
