@@ -722,7 +722,7 @@ right(60)cylinder(d1=30,d2=15,h=25) attach(BOT,BOT) anchor_arrow(30);
 ```openscad-3D
 include <BOSL2/std.scad>
 prismoid([50,50],[35,35],h=50,anchor=BOT)
-  attach(RIGHT,BOT) ylinder(d1=30,d2=15,h=25);
+  attach(RIGHT,BOT) cylinder(d1=30,d2=15,h=25);
 ```
 
 In this case we attach the curved side of the cone to a cube by lining
@@ -841,7 +841,32 @@ color_this("orange")
   }
 ```
 
-The last feature provided by the double argument form of `attach()` is
+By default, `attach()` places the child exactly flush with the surface
+of the parent.  Sometimes it's useful to have the child overlap the
+parent by translating it into the parent.  You can do this with the
+`overlap=` argument to `attach()`.  A positive value will cause the
+child to overlap the parent, and a negative value will move the child
+away from the parent, leaving a small gap, which may be helpful when
+doing differences.  In the first example we use a very large value of
+overlap so the cube is sunk deeply into the parent.  In the second
+example a large negative overlap value raises the child high above the
+parent.  
+
+```openscad-3D
+include <BOSL2/std.scad>
+cuboid(50)
+    attach(TOP,BOT,overlap=15)
+        color("green")cuboid(20);
+```
+
+```openscad-3D
+include <BOSL2/std.scad>
+cube(50,center=true)
+    attach(TOP,BOT,overlap=-20)
+        cyl(d=20,h=20);
+```
+
+Another feature provided by the double argument form of `attach()` is
 alignment, which works in a similar way to `align()`.  You can specify
 `align=` to align the attached child to an edge or corner.  The
 example below shows five different alignments.  
@@ -889,51 +914,92 @@ cube(30)
    }
 ```
 
-Attachment with CENTER anchors can be surprising because the anchors
-point upwards, so in the example below, the child's CENTER anchor
-points up, so it is inverted when it is attached to the parent cone.
-Note that the anchors are CENTER anchors, so the bases of the anchors are
-hidden in the middle of the objects. 
+When using the `align` option to `attach()` you can also set `inset`,
+which works the same way as the `inset` parameter to `align()`.  It
+shifts the child away from the edge or edges where it is aligned by
+the specified amount.  
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cylinder(d1=30,d2=15,h=25) attach(CENTER) anchor_arrow(40);
-right(40)cylinder(d1=30,d2=15,h=25) attach(CENTER) anchor_arrow(40);
+prismoid([50,50],[50,25],25){
+  attach(FWD,BOT,align=TOP,inset=3) color("lavender")cuboid(5);
+  attach(FWD,BOT,align=BOT+RIGHT,inset=3) color("purple")cuboid(5);
+}
 ```
 
+The last capability provided by `attach()` is to attach the child
+**inside** the parent object.  This is useful if you want to subtract
+the child from the parent.  Doing this requires using tagged
+operations with `diff()` which is explained in more detail below. 
+For the examples here, note that the `diff()` and `tag()` operations
+that appear cause the child to be subtracted.  We return to the
+example that started this section, with anchor arrows shown on the two
+objects.  
+
 ```openscad-3D
 include <BOSL2/std.scad>
-cylinder(d1=30,d2=15,h=25)
-    attach(CENTER,CENTER)
-        cylinder(d1=30,d2=15,h=25);
+cube(50,anchor=BOT) attach(TOP) anchor_arrow(30);
+right(60)cylinder(d1=30,d2=15,h=25) attach(TOP) anchor_arrow(30);
 ```
 
-By default, `attach()` places the child exactly flush with the surface
-of the parent.  Sometimes it's useful to have the child overlap the
-parent by translating it into the parent.  You can do this with the
-`overlap=` argument to `attach()`.  A positive value will cause the
-child to overlap the parent, and a negative value will move the child
-away from the parent, leaving a small gap, which may be helpful when
-doing differences.  In the first example we use a very large value of
-overlap so the cube is sunk deeply into the parent.  In the second
-example a large negative overlap value raises the child high above the
-parent.  
+Inside attachment is activated using `inside=true` and it lines up the
+anchor arrows so they point together the **same** direction instead of
+opposite directions like regular outside attachment.  The result in
+this case is appears below, where we have cut away the front half to
+show the interior: 
 
 ```openscad-3D
 include <BOSL2/std.scad>
+back_half(s=200)
+diff()
+cube(50,anchor=BOT)
+  attach(TOP,TOP,inside=true)
+    cylinder(d1=30,d2=15,h=25);
+```
+
+The top of the cavity has a thin layer on it, which occurs because the
+two objects share a face in the difference.  To fix this you can use
+the `shiftout` parameter to `attach()`.  In this case you could also
+use a negative `overlay` value, but the `shiftout` parameter shifts
+out in every direction that is needed, which may be three directions
+if you align the child at a corner.  The above example looks like this
+with with the shift added:
+
+```openscad-3D
+include <BOSL2/std.scad>
+back_half(s=200)
+diff()
+cube(50,anchor=BOT)
+  attach(TOP,TOP,inside=true,shiftout=0.01)
+    cylinder(d1=30,d2=15,h=25);
+```
+
+Here is an example of connecting the same object on the right, but
+this time with the BOTTOM anchor.  Note how the BOTTOM anchor is
+aligned to the RIGHT so it is parallel and pointing in the same
+direction as the RIGHT anchor.  
+
+```openscad-3D
+include <BOSL2/std.scad>
+back_half(s=200)
+diff()
 cuboid(50)
-    attach(TOP,BOT,overlap=15)
-        color("green")cuboid(20);
+  attach(RIGHT,BOT,inside=true,shiftout=0.01)
+    cylinder(d1=30,d2=15,h=25);
 ```
+
+Here is an example where alignment moves the object into the corner,
+and we benefit from shiftout providing 3 dimensions of adjustment:
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cube(50,center=true)
-    attach(TOP,BOT,overlap=-20)
-        cyl(d=20,h=20);
+diff()
+cuboid(10)
+  attach(TOP,TOP,align=RIGHT+FWD,inside=true,shiftout=.01)
+    cuboid([2,5,9]);
 ```
 
-As with `position()`, you can still apply your own translations and
+As with `position()`, with any use of `attach()` you can still apply your own translations and
 other transformations even after attaching an object.  However, the
 order of operations now matters.  If you apply a translation outside
 of the anchor then it acts in the parent's global coordinate system, so the
@@ -966,6 +1032,24 @@ cuboid(50){
 }
 ```
 
+Attachment with CENTER anchors can be surprising because the anchors
+point upwards, so in the example below, the child's CENTER anchor
+points up, so it is inverted when it is attached to the parent cone.
+Note that the anchors are CENTER anchors, so the bases of the anchors are
+hidden in the middle of the objects.  
+
+```openscad-3D
+include <BOSL2/std.scad>
+cylinder(d1=30,d2=15,h=25) attach(CENTER) anchor_arrow(40);
+right(40)cylinder(d1=30,d2=15,h=25) attach(CENTER) anchor_arrow(40);
+```
+
+```openscad-3D
+include <BOSL2/std.scad>
+cylinder(d1=30,d2=15,h=25)
+    attach(CENTER,CENTER)
+        cylinder(d1=30,d2=15,h=25);
+```
 
 ## Parent Anchor Attachment (Single Argument Attachment)
 
