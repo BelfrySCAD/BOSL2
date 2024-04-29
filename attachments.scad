@@ -861,7 +861,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
         anch = _find_anchor(anchr, $parent_geom);
         pos = is_undef(align) ? anch[1] : _find_anchor(anchr+align, $parent_geom)[1];
         factor = inside?-1:1;
-        $attach_to = u_mul(factor,child);
+        $attach_to = is_vector(child) ? factor*child : child;
         $attach_anchor = list_set(anch, 1, pos);      ///
         startdir = anchr==UP || anchr==DOWN ? BACK : UP;
         enddir = is_undef(child) || child.z==0 ? UP : BACK;
