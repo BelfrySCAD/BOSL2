@@ -923,7 +923,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
                          str("Invalid alignment: align value (",align,") includes component parallel to parent anchor (",anchor,")"));
             pos = is_undef(align) ? anchor_data[1] : _find_anchor(anchor+align, $parent_geom)[1];
             $attach_anchor = list_set(anchor_data, 1, pos);      ///
-            startdir = two_d? undef
+            startdir = two_d || is_undef(align)? undef
                      : anchor==UP || anchor==DOWN ? BACK
                      : UP - (anchor*UP)*anchor/(anchor*anchor);
             enddir = is_undef(child) || child.z==0 ? UP : BACK;
