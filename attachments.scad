@@ -683,11 +683,14 @@ module align(anchor,align=CENTER,inside=false,inset=0,shiftout=0,overlap)
     overlap = (overlap!=undef)? overlap : $overlap;
     dummy1=assert($parent_geom != undef, "No object to align to.")
            assert(is_undef($attach_to), "Cannot use align() as a child of attach()");
+    if (is_undef($align_msg) || $align_msg)
+        echo("ALERT: align() has changed, May 1, 2024.  See the wiki and attach(align=). $align_msg=false disables this message");
     anchor = is_vector(anchor) ? [anchor] : anchor;
     align = is_vector(align) ? [align] : align;
     two_d = _attach_geom_2d($parent_geom);
     factor = inside?-1:1;
     for (i = idx(anchor)) {
+        $align_msg=false;     // Remove me when removing the message above
         face = anchor[i];
         $anchor=face;
         dummy=
@@ -807,9 +810,9 @@ function _make_anchor_legal(anchor,geom) =
 //   ---
 //   align = If `child` is given you can specify alignment or list of alistnments to shift the child to an edge or corner of the parent. 
 //   inset = Shift aligned children away from their alignment edge/corner by this amount.  Default: 0
-//   shiftout = Shift an inside object outward so that it overlaps all the aligned faces.  Default: 0
-//   inside = If `child` is given you can set `inside=true` to attach the child to the inside of the parent for diff() operations.  Default: false
 //   overlap = Amount to sink child into the parent.  Equivalent to `down(X)` after the attach.  This defaults to the value in `$overlap`, which is `0` by default.
+//   inside = If `child` is given you can set `inside=true` to attach the child to the inside of the parent for diff() operations.  Default: false
+//   shiftout = Shift an inside object outward so that it overlaps all the aligned faces.  Default: 0
 //   spin = Amount to rotate the parent around the axis of the parent anchor.  (Only permitted in 3D.)
 // Side Effects:
 //   `$anchor` set to the parent anchor value used for the child.
@@ -855,7 +858,7 @@ function _make_anchor_legal(anchor,geom) =
 //     attach(BACK+TOP, BOT) color("lightblue")cuboid(2);
 //     attach(RIGHT+BOT, RIGHT,spin=90) color("orange")cyl(h=8,d=1);
 //   }
-// Example: Attaching inside the parent.  For inside attachment the anchors are lined up pointing the same direction, so the most natural way to anchor the child is using its TOP anchor.  
+// Example: Attaching inside the parent.  For inside attachment the anchors are lined up pointing the same direction, so the most natural way to anchor the child is using its TOP anchor.  This is equivalent to anchoring outside with the BOTTOM anchor and then lowering the child into the parent by its full depth.  
 //   back_half()
 //     diff()
 //     cuboid(20)
@@ -901,7 +904,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
            assert(inset==0 || is_def(child), "Cannot specify 'inset' without 'child'")
            assert(shiftout==0 || is_def(child), "Cannot specify 'shiftout' without 'child'");
     factor = inside?-1:1;
-    $attach_to = u_mul(factor,child);
+    $attach_to = child;
     for (anch_ind = idx(anchors)) {
         dummy=assert(is_string(anchors[anch_ind]) || (is_vector(anchors[anch_ind]) && (len(anchors[anch_ind])==2 || len(anchors[anch_ind])==3)),
                      str("parent[",anch_ind,"] is ",anchors[anch_ind]," but it must be a named anchor (string) or a 2-vector or 3-vector"))
@@ -911,6 +914,9 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
                : two_d?_force_anchor_2d(anchors[anch_ind])
                : point3d(anchors[anch_ind]);
         anchor_data = _find_anchor(anchor, $parent_geom);
+        anchor_pos = anchor_data[1];
+        anchor_dir = factor*anchor_data[2];
+        anchor_spin = !inside || anchor_data[3]==0 ? anchor_data[3] : 180+anchor_data[3];
         $anchor=anchor;
         for(align_ind = idx(align_list)){
             align = is_undef(align_list[align_ind]) ? undef
@@ -928,26 +934,25 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
                      : UP - (anchor*UP)*anchor/(anchor*anchor);
             enddir = is_undef(child) || child.z==0 ? UP : BACK;
             child_adjustment = is_undef(align)? CTR
-                              : two_d ? rot(to=factor*child,from=-anchor,p=align)
-                              : apply( frame_map(x=factor*child, z=enddir)
-                                      *frame_map(x=-anchor, z=startdir, reverse=true)
+                              : two_d ? rot(to=child,from=-factor*anchor,p=align)
+                              : apply( frame_map(x=child, z=enddir)
+                                      *frame_map(x=-factor*anchor, z=startdir, reverse=true)
                                       *rot(v=anchor,-spin), align);
             $anchor_override = all_zero(child_adjustment)? inside?child:undef
-                             : two_d ? zrot(-spin, child+child_adjustment)
                              : child+child_adjustment;
             reference = two_d? BACK : UP;
             inset_dir = is_undef(align) ? CTR
-                      : two_d ? zrot(-spin, rot(to=reference, from=anchor,p=align))
-                      : apply(zrot(-spin)*frame_map(x=reference, z=BACK)*frame_map(x=anchor, z=startdir, reverse=true),
+                      : two_d ? rot(to=reference, from=anchor,p=align)
+                      : apply(zrot(-factor*spin)*frame_map(x=reference, z=BACK)*frame_map(x=factor*anchor, z=startdir, reverse=true),
                               align);
-            spinaxis = two_d? UP : anchor_data[2];
-            olap = - overlap * reference - inset*inset_dir - shiftout * (-inset_dir - reference);
-            if (norot || (approx(anchor_data[2],reference) && anchor_data[3]==0)) {
-                translate(pos) rot(v=spinaxis,a=spin) translate(olap) default_tag("remove",inside) children();
+            spinaxis = two_d? UP : anchor_dir;
+            olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference);
+            if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) {
+                translate(pos) rot(v=spinaxis,a=factor*spin) translate(olap) default_tag("remove",inside) children();
             } else {
                 translate(pos)
-                    rot(v=spinaxis,a=spin)
-                    rot(anchor_data[3],from=reference,to=anchor_data[2]){
+                    rot(v=spinaxis,a=factor*spin)
+                    rot(anchor_spin,from=reference,to=anchor_dir){
                     translate(olap)
                         default_tag("remove",inside) children();}}
         }
