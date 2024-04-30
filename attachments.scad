@@ -602,14 +602,13 @@ module orient(anchor, spin) {
 //   align = optional alignment direction or directions for aligning the children.  Default: CENTER
 //   ---
 //   inside = if true, place object inside the parent instead of outside.  Default: false
-//   inset = a value to shift the child inward, away from the alignent location.  Default: 0
-//   shiftout = A value to shift an inside object outward so that it overlaps all the aligned faces.  Default: 0
+//   inset = shift the child away from the alignment edge/corner by this amount.  Default: 0
+//   shiftout = Shift an inside object outward so that it overlaps all the aligned faces.  Default: 0
 //   overlap = Amount to sink the child into the parent.  Defaults to `$overlap` which is zero by default.
 // Side Effects:
 //   `$anchor` set to the anchor value used for the child.
 //   `$align` set to the align value used for the child.
 //   `$idx` set to a unique index for each child, increasing by alignment first.
-//   `$pos` position where child was placed.  
 //   `$attach_anchor` for each anchor given, this is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
 //   if inside is true then set default tag to "remove"
 // Example:  Cuboid positioned on the right of its parent.  Note that it is in its native orientation.  
@@ -687,9 +686,7 @@ module align(anchor,align=CENTER,inside=false,inset=0,shiftout=0,overlap)
     anchor = is_vector(anchor) ? [anchor] : anchor;
     align = is_vector(align) ? [align] : align;
     two_d = _attach_geom_2d($parent_geom);
-    
     factor = inside?-1:1;
-    
     for (i = idx(anchor)) {
         face = anchor[i];
         $anchor=face;
@@ -731,7 +728,7 @@ function _quant_anch(x) = approx(x,0) ? 0 : sign(x);
 
 // Make arbitrary anchor legal for a given geometry
 function _make_anchor_legal(anchor,geom) =
-   in_list(geom[0], ["prismoid","trapzeoid"]) ? [for(v=anchor) _quant_anch(v)]
+   in_list(geom[0], ["prismoid","trapezoid"]) ? [for(v=anchor) _quant_anch(v)]
  : in_list(geom[0], ["conoid", "extrusion_extent"]) ? [anchor.x,anchor.y, _quant_anch(anchor.z)]
  : anchor;
     
@@ -743,7 +740,7 @@ function _make_anchor_legal(anchor,geom) =
 // Topics: Attachments
 // See Also: attachable(), position(), align(), face_profile(), edge_profile(), corner_profile()
 // Usage:
-//   PARENT() attach(parent, child, [align=], [spin=], [overlap=], [inside=]) CHILDREN;
+//   PARENT() attach(parent, child, [align=], [spin=], [overlap=], [inside=], [inset=], [shiftout=]) CHILDREN;
 //   PARENT() attach(parent, [overlap=], [spin=]) CHILDREN;
 // Description:
 //   Attaches children to a parent object at an anchor point or points, oriented in the anchor direction.
@@ -762,23 +759,29 @@ function _make_anchor_legal(anchor,geom) =
 //   When an object is attached to one of the other anchors its FRONT will be pointed DOWN and its
 //   BACK pointed UP.  You can change this using the `spin=` argument to attach().  Note that this spin
 //   rotates around the attachment vector and is not the same as the spin argument to the child, which
-//   will usually rotate around some other direction that may be hard to predict.
+//   will usually rotate around some other direction that may be hard to predict.  For 2D objects you cannot
+//   give spin because it is not possible to spin around the attachment vector; spinning the object around the Z axis
+//   would change the child orientation so that the anchors are no longer parallel.  Furthermore, any spin
+//   parameter you give to the child will be ignored so that the attachment condition of parallel anchors is preserved.  
 //   .
 //   As with {{align()}} you can use the `align=` parameter to align the child to an edge or corner of the
 //   face where that child is attached.  For example `attach(TOP,BOT,align=RIGHT)` would stand the child
-//   up on the top while aligning it with the right edge of the top, and `attach(RIGHT,BOT,align=TOP)` which
+//   up on the top while aligning it with the right edge of the top face, and `attach(RIGHT,BOT,align=TOP)` which
 //   stand the object on the right face while aligning with the top edge.  If you apply spin using the
 //   argument to `attach()` then it will be taken into account for the alignment.  If you apply spin with
-//   a parameter to the child it will NOT be taken into account.
-//   .
-//   Because the attachment process forces an orientation and anchor point for the child, it overrides
-//   any such specifications you give to the child:  both `anchor=` and `orient=` given to the child are
-//   ignored with the **double argument** version of `attach()`.  As noted above, you can give `spin=` to the
-//   child but using the `spin=` parameter to `attach()` is more likely to be useful.
+//   a parameter to the child it will NOT be taken into account.  Note that spin is not permitted for
+//   2D objects because it would change the child orientation so that the anchors are no longer parallel.  
+//   When you use `align=` you can also adjust the position using `inset=`, which shifts the child
+//   away from the edge or corner it is aligned to.  
 //   .
 //   If you give `inside=true` then the anchor arrows are lined up so they are pointing the same direction and
 //   the child object will be located inside the parent.  In this case a default "remove" tag is applied to
-//   the children.  
+//   the children.
+//   .
+//   Because the attachment process forces an orientation and anchor point for the child, it overrides
+//   any such specifications you give to the child:  **both `anchor=` and `orient=` given to the child are
+//   ignored** with the **double argument** version of `attach()`.  As noted above, you can give `spin=` to the
+//   child but using the `spin=` parameter to `attach()` is more likely to be useful.
 //   .
 //   For the single parameter version of `attach()` you give only the `parent` anchor.  The `align` direction
 //   is not permitted.  In this case the child is placed at the specified parent anchor point
@@ -787,7 +790,7 @@ function _make_anchor_legal(anchor,geom) =
 //   from the parent.  If you want the cube sitting on the parent you need to anchor the cube to its bottom:
 //   `attach(TOP) cuboid(2,anchor=BOT);`.
 //   .
-//   The **single argument** version of `attach()` respects `anchor=` and `orient=` given to the child.
+//   The **single argument** version of `attach()` **respects `anchor=` and `orient=` given to the child.**
 //   These options will probably be necessary, in fact, to get the child correctly positioned.  Note that
 //   giving `spin=` to `attach()` in this case is the same as applying `zrot()` to the child. 
 //   .
@@ -802,18 +805,68 @@ function _make_anchor_legal(anchor,geom) =
 //   parent = The parent anchor point to attach to or a list of parent anchor points.
 //   child = Optional child anchor point.  If given, orients the child to connect this anchor point to the parent anchor.
 //   ---
-//   align = If `child` is given you can specify alignment to shift the child to an edge or corner of the parent.  
+//   align = If `child` is given you can specify alignment or list of alistnments to shift the child to an edge or corner of the parent. 
+//   inset = Shift aligned children away from their alignment edge/corner by this amount.  Default: 0
+//   shiftout = Shift an inside object outward so that it overlaps all the aligned faces.  Default: 0
+//   inside = If `child` is given you can set `inside=true` to attach the child to the inside of the parent for diff() operations.  Default: false
 //   overlap = Amount to sink child into the parent.  Equivalent to `down(X)` after the attach.  This defaults to the value in `$overlap`, which is `0` by default.
-//   spin = Amount to rotate the parent around the axis of the parent anchor.  
+//   spin = Amount to rotate the parent around the axis of the parent anchor.  (Only permitted in 3D.)
 // Side Effects:
-//   `$idx` is set to the index number of each anchor if a list of anchors is given.  Otherwise is set to `0`.
-//   `$attach_anchor` for each `from=` anchor given, this is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
-//   `$attach_to` is set to the value of the `to=` argument, if given.  Otherwise, `undef`
-// Example:
-//   spheroid(d=20) {
-//       attach(TOP) down(1.5) cyl(l=11.5, d1=10, d2=5, anchor=BOTTOM);
-//       attach(RIGHT, BOTTOM) down(1.5) cyl(l=11.5, d1=10, d2=5);
-//       attach(FRONT, BOTTOM, overlap=1.5) cyl(l=11.5, d1=10, d2=5);
+//   `$anchor` set to the parent anchor value used for the child.
+//   `$align` set to the align value used for the child.  
+//   `$idx` set to a unique index for each child, increasing by alignment first.
+//   `$attach_anchor` for each anchor given, this is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
+//   if inside is true then set default tag to "remove"
+//   `$attach_to` is set to the value of the `child` argument, if given.  Otherwise, `undef`
+// Example: Cylinder placed on top of cube:
+//   cuboid(50)
+//     attach(TOP,BOT) cylinder(d1=30,d2=15,h=25);
+// Example: Cylinder on right and front side of cube:
+//   cuboid(50)
+//     attach([RIGHT,FRONT],BOT) cylinder(d1=30,d2=15,h=25);
+// Example:  Using `align` can align child object(s) with edges
+//   prismoid(50,25,25) color("green"){
+//     attach(TOP,BOT,align=[BACK,FWD]) cuboid(4);
+//     attach(RIGHT,BOT,align=[TOP,BOT]) cuboid(4);
+//   }
+// Example: One aligned to the corner upside down (light blue) and one inset fromt the corner (pink), one aligned on a side (orange) and one rotated and aligned (green).
+//   cuboid(30) {
+//     attach(TOP,TOP,align=FRONT+RIGHT) color("lightblue") prismoid(5,3,3);
+//     attach(TOP,BOT,inset=3,align=FRONT+LEFT) color("pink") prismoid(5,3,3);
+//     attach(FRONT,RIGHT,align=TOP) color("orange") prismoid(5,3,3);
+//     attach(FRONT,RIGHT,align=RIGHT,spin=90) color("lightgreen") prismoid(5,3,3);    
+//   }
+// Example: Rotation not a multiple of 90 degrees with alignment.  The children are aligned on a corner.  
+//   cuboid(30)
+//     attach(FRONT,BOT,spin=33,align=[RIGHT,LEFT,TOP,BOT,RIGHT+TOP])
+//       color("lightblue")cuboid(4);
+// Example: Anchoring the cone onto the sphere gives a single point of contact. 
+//   spheroid(d=20) 
+//       attach([1,1.5,1], BOTTOM) cyl(l=11.5, d1=10, d2=5);
+// Example: Using the `overlap` option can help:
+//   spheroid(d=20) 
+//       attach([1,1.5,1], BOTTOM, overlap=1.5) cyl(l=11.5, d1=10, d2=5);
+// Example: Alignment works for cylinders but you can only align with either the top or bototm face:
+//   cyl(h=30,d=10)
+//     attach([LEFT,[1,1.3]], BOT,align=TOP) cuboid(6);
+// Example: Attaching to edges.  The light blue and orange objects are attached to edges.  The purple object is attached to an edge and aligned. 
+//   prismoid([20,10],[10,10],7){
+//     attach(RIGHT+TOP,BOT,align=FRONT) color("pink")cuboid(2);
+//     attach(BACK+TOP, BOT) color("lightblue")cuboid(2);
+//     attach(RIGHT+BOT, RIGHT,spin=90) color("orange")cyl(h=8,d=1);
+//   }
+// Example: Attaching inside the parent.  For inside attachment the anchors are lined up pointing the same direction, so the most natural way to anchor the child is using its TOP anchor.  
+//   back_half()
+//     diff()
+//     cuboid(20)
+//       attach(TOP,TOP,inside=true,shiftout=0.01) cyl(d1=10,d2=5,h=10);
+// Example: Attaching inside the parent with alignment
+//   diff()
+//   cuboid(20){
+//     attach(TOP,TOP,inside=true,align=RIGHT,shiftout=.01) cuboid([8,7,3]);
+//     attach(TOP,TOP,inside=true,align=LEFT+FRONT,shiftout=0.01) cuboid([3,4,5]);
+//     attach(RIGHT+FRONT, TOP, inside=true) cuboid([10,3,5]);
+//     attach(RIGHT+FRONT, TOP, inside=true, align=TOP,shiftout=.01) cuboid([5,1,2]);  
 //   }
 
 module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0, inside=false, from, to)
@@ -830,62 +883,72 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
     req_children($children);
     
     dummy=assert($parent_geom != undef, "No object to attach to!")
-          assert(is_undef(align) || (is_vector(align) && (len(align)==2 || len(align)==3)), "align must be a 2-vector or 3-vector")
           assert(is_undef(child) || is_string(child) || (is_vector(child) && (len(child)==2 || len(child)==3)), "child must be a named anchor (a string) or a 2-vector or 3-vector")
           assert(is_undef(align) || !is_string(child), "child is a named anchor.  Named anchors are not supported with align=");
           
-    overlap = (overlap!=undef)? overlap : $overlap;
-    anchors = (is_vector(parent)||is_string(parent))? [parent] : parent;
     two_d = _attach_geom_2d($parent_geom);
+    overlap = (overlap!=undef)? overlap : $overlap;
     parent = first_defined([parent,from]);
-    dummy4 = assert(is_string(parent) || is_list(parent), "Invalid parent anchor or anchor list");
+    anchors = is_vector(parent) || is_string(parent) ? [parent] : parent;
+    align_list = is_undef(align) ? [undef]
+               : is_vector(align) || is_string(align) ? [align] : align;
+    dummy4 = assert(is_string(parent) || is_list(parent), "Invalid parent anchor or anchor list")
+             assert(spin==0 || (!two_d || is_undef(child)), "spin is not allowed for 2d objects when 'child' is given");
     child_temp = first_defined([child,to]);
     child = two_d ? _force_anchor_2d(child_temp) : child_temp;
-    align = is_undef(align) ? undef
-          : two_d ? _force_anchor_2d(align) : point3d(align);
-    dummy2=assert(is_undef(align) || is_def(child), "Cannot use 'align' without 'child'")
+    dummy2=assert(align_list==[undef] || is_def(child), "Cannot use 'align' without 'child'")
            assert(!inside || is_def(child), "Cannot use 'inside' without 'child'")
            assert(inset==0 || is_def(child), "Cannot specify 'inset' without 'child'")
            assert(shiftout==0 || is_def(child), "Cannot specify 'shiftout' without 'child'");
-    for ($idx = idx(anchors)) {
-        dummy2=
-          assert(is_string(anchors[$idx]) || (is_vector(anchors[$idx]) && (len(anchors[$idx])==2 || len(anchors[$idx])==3)),
-                 str("parent[",$idx,"] is ",anchors[$idx]," but it must be a named anchor (string) or a 2-vector or 3-vector"))
-          assert(is_undef(align) || !is_string(anchors[$idx]),
-                 str("parent[",$idx,"] is a named anchor (",anchors[$idx],"), but named anchors are not wupported with align="));
-        anchr = is_string(anchors[$idx])? anchors[$idx]
-              : two_d?_force_anchor_2d(anchors[$idx])
-              :anchors[$idx];
-        dummy=assert(is_undef(align) || all_zero(v_mul(anchr,align)),
-                       str("align (",align,") cannot include component parallel to parent anchor (",anchr,")"));
-        anch = _find_anchor(anchr, $parent_geom);
-        pos = is_undef(align) ? anch[1] : _find_anchor(anchr+align, $parent_geom)[1];
-        factor = inside?-1:1;
-        $attach_to = is_vector(child) ? factor*child : child;
-        $attach_anchor = list_set(anch, 1, pos);      ///
-        startdir = anchr==UP || anchr==DOWN ? BACK : UP;
-        enddir = is_undef(child) || child.z==0 ? UP : BACK;
-        anchor_adjustment = is_undef(align)? CTR
-                          : two_d ? zrot(spin, rot(to=factor*child,from=-anchr,p=align))
-                          : apply( frame_map(x=factor*child, z=enddir)
-                                  *frame_map(x=-anchr, z=startdir, reverse=true)
-                                  *rot(v=parent,-spin), align);
-        $anchor_override=all_zero(anchor_adjustment)? inside?child:undef
-                                                    :child+anchor_adjustment;
-        reference = two_d? BACK : UP;
-        offsetdir = is_undef(align) ? CTR 
-                  : apply(zrot(-spin)*frame_map(x=reference, z=BACK)*frame_map(x=anchr, z=startdir, reverse=true),
-                          align);
-        spinaxis = two_d? UP : anch[2];
-        olap = - overlap * reference - inset*offsetdir - shiftout * (-offsetdir - reference);
-        if (norot || (approx(anch[2],reference) && anch[3]==0)) {
-            translate(pos) rot(v=spinaxis,a=spin) translate(olap) default_tag("remove",inside) children();
-        } else {
-            translate(pos)
-                rot(v=spinaxis,a=spin)
-                rot(anch[3],from=reference,to=anch[2]){
-                translate(olap)
-                    default_tag("remove",inside) children();}}
+    factor = inside?-1:1;
+    $attach_to = u_mul(factor,child);
+    for (anch_ind = idx(anchors)) {
+        dummy=assert(is_string(anchors[anch_ind]) || (is_vector(anchors[anch_ind]) && (len(anchors[anch_ind])==2 || len(anchors[anch_ind])==3)),
+                     str("parent[",anch_ind,"] is ",anchors[anch_ind]," but it must be a named anchor (string) or a 2-vector or 3-vector"))
+              assert(align_list==[undef] || !is_string(anchors[anch_ind]),
+                     str("parent[",anch_ind,"] is a named anchor (",anchors[anch_ind],"), but named anchors are not supported with align="));
+        anchor = is_string(anchors[anch_ind])? anchors[anch_ind]
+               : two_d?_force_anchor_2d(anchors[anch_ind])
+               : point3d(anchors[anch_ind]);
+        anchor_data = _find_anchor(anchor, $parent_geom);
+        $anchor=anchor;
+        for(align_ind = idx(align_list)){
+            align = is_undef(align_list[align_ind]) ? undef
+                  : assert(is_vector(align_list[align_ind],2) || is_vector(align_list[align_ind],3), "align direction must be a 2-vector or 3-vector")
+                    two_d ? _force_anchor_2d(align_list[align_ind])
+                  : point3d(align_list[align_ind]);
+            $idx = align_ind+len(align_list)*anch_ind;
+            $align=align;
+            dummy=assert(is_undef(align) || all_zero(v_mul(anchor,align)),
+                         str("Invalid alignment: align value (",align,") includes component parallel to parent anchor (",anchor,")"));
+            pos = is_undef(align) ? anchor_data[1] : _find_anchor(anchor+align, $parent_geom)[1];
+            $attach_anchor = list_set(anchor_data, 1, pos);      ///
+            startdir = anchor==UP || anchor==DOWN ? BACK : UP - (anchor*UP)*anchor/(anchor*anchor);
+            enddir = is_undef(child) || child.z==0 ? UP : BACK;
+            child_adjustment = is_undef(align)? CTR
+                              : two_d ? rot(to=factor*child,from=-anchor,p=align)
+                              : apply( frame_map(x=factor*child, z=enddir)
+                                      *frame_map(x=-anchor, z=startdir, reverse=true)
+                                      *rot(v=anchor,-spin), align);
+            $anchor_override = all_zero(child_adjustment)? inside?child:undef
+                             : two_d ? zrot(-spin, child+child_adjustment)
+                             : child+child_adjustment;
+            reference = two_d? BACK : UP;
+            inset_dir = is_undef(align) ? CTR
+                      : two_d ? zrot(-spin, rot(to=reference, from=anchor,p=align))
+                      : apply(zrot(-spin)*frame_map(x=reference, z=BACK)*frame_map(x=anchor, z=startdir, reverse=true),
+                              align);
+            spinaxis = two_d? UP : anchor_data[2];
+            olap = - overlap * reference - inset*inset_dir - shiftout * (-inset_dir - reference);
+            if (norot || (approx(anchor_data[2],reference) && anchor_data[3]==0)) {
+                translate(pos) rot(v=spinaxis,a=spin) translate(olap) default_tag("remove",inside) children();
+            } else {
+                translate(pos)
+                    rot(v=spinaxis,a=spin)
+                    rot(anchor_data[3],from=reference,to=anchor_data[2]){
+                    translate(olap)
+                        default_tag("remove",inside) children();}}
+        }
     }
 }
 
@@ -3399,8 +3462,8 @@ function _attach_transform(anchor, spin, orient, geom, p) =
             )
             two_d?
                 assert(is_num(spin))
-                affine3d_zrot(spin) 
-                   * rot(to=FWD, from=point3d(anch[2])) 
+                /*affine3d_zrot(spin) * */
+                    rot(to=FWD, from=point3d(anch[2])) 
                    * affine3d_translate(point3d(-pos))
             :
                 assert(is_num(spin) || is_vector(spin,3))

@@ -1172,23 +1172,32 @@ cube(50, center=true)
 
 ## Attaching 2D Children
 You can use attachments in 2D as well.  As usual for the 2D case you
-can use TOP and BOTTOM as alternative to BACK and FORWARD.  
+can use TOP and BOTTOM as alternative to BACK and FORWARD.  With
+parent-child anchor attachment you cannot use the spin parameter to
+`attach()` nor can you specify spin to the child.  Spinning the child
+on the Z axis would rotate the anchor arrows out of alignment.  
 
 ```openscad-2D
 include <BOSL2/std.scad>
-square(50,center=true)
+rect(50){
     attach(RIGHT,FRONT)
-        trapezoid(w1=30,w2=0,h=30);
+        color("red")trapezoid(w1=30,w2=0,h=30);
+    attach(LEFT,FRONT,align=[FRONT,BACK],inset=3)
+        color("green") trapezoid(w1=25, w2=0,h=30);
+}
 ```
 
 ```openscad-2D
 include <BOSL2/std.scad>
-circle(d=50)
+diff()
+circle(d=50){
     attach(TOP,BOT,overlap=5)
         trapezoid(w1=30,w2=0,h=30);
+    attach(BOT,BOT,inside=true)
+        tag("remove")
+        trapezoid(w1=30,w2=0,h=30);
+}        
 ```
-
-
 
 
 ## Tagged Operations
