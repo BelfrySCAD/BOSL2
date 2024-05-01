@@ -3652,7 +3652,8 @@ module cylindrical_heightfield(
 // Usage:
 //   ruler(length, width, [thickness=], [depth=], [labels=], [pipscale=], [maxscale=], [colors=], [alpha=], [unit=], [inch=]) [ATTACHMENTS];
 // Description:
-//   Creates an attachable ruler for checking dimensions of the model.
+//   Creates an attachable ruler for checking dimensions of the model.  The rule appears only in preview mode (F5) and is not displayed
+//   when the model is rendered (F6).  
 // Arguments:
 //   length = length of the ruler.  Default 100
 //   width = width of the ruler.  Default: size of the largest unit division
@@ -3683,64 +3684,64 @@ module cylindrical_heightfield(
 module ruler(length=100, width, thickness=1, depth=3, labels=false, pipscale=1/3, maxscale,
              colors=["black","white"], alpha=1.0, unit=1, inch=false, anchor=LEFT+BACK+TOP, spin=0, orient=UP)
 {
-    inchfactor = 25.4;
-    checks =
-        assert(depth<=5, "Cannot render scales smaller than depth=5")
-        assert(len(colors)==2, "colors must contain a list of exactly two colors.");
-    length = inch ? inchfactor * length : length;
-    unit = inch ? inchfactor*unit : unit;
-    maxscale = is_def(maxscale)? maxscale : floor(log(length/unit-EPSILON));
-    scales = unit * [for(logsize = [maxscale:-1:maxscale-depth+1]) pow(10,logsize)];
-    widthfactor = (1-pipscale) / (1-pow(pipscale,depth));
-    width = default(width, scales[0]);
-    widths = width * widthfactor * [for(logsize = [0:-1:-depth+1]) pow(pipscale,-logsize)];
-    offsets = concat([0],cumsum(widths));
-    attachable(anchor,spin,orient, size=[length,width,thickness]) {
-        translate([-length/2, -width/2, 0])
-        for(i=[0:1:len(scales)-1]) {
-            count = ceil(length/scales[i]);
-            fontsize = 0.5*min(widths[i], scales[i]/ceil(log(count*scales[i]/unit)));
-            back(offsets[i]) {
-                xcopies(scales[i], n=count, sp=[0,0,0]) union() {
-                    actlen = ($idx<count-1) || approx(length%scales[i],0) ? scales[i] : length % scales[i];
-                    color(colors[$idx%2], alpha=alpha) {
-                        w = i>0 ? quantup(widths[i],1/1024) : widths[i];    // What is the i>0 test supposed to do here?
-                        cube([quantup(actlen,1/1024),quantup(w,1/1024),thickness], anchor=FRONT+LEFT);
-                    }
-                    mark =
-                        i == 0 && $idx % 10 == 0 && $idx != 0 ? 0 :
-                        i == 0 && $idx % 10 == 9 && $idx != count-1 ? 1 :
-                        $idx % 10 == 4 ? 1 :
-                        $idx % 10 == 5 ? 0 : -1;
-                    flip = 1-mark*2;
-                    if (mark >= 0) {
-                        marklength = min(widths[i]/2, scales[i]*2);
-                        markwidth = marklength*0.4;
-                        translate([mark*scales[i], widths[i], 0]) {
-                            color(colors[1-$idx%2], alpha=alpha) {
+    if ($preview){
+        checks =
+            assert(depth<=5, "Cannot render scales smaller than depth=5")
+            assert(len(colors)==2, "colors must contain a list of exactly two colors.");
+        length = inch ? INCH * length : length;
+        unit = inch ? INCH*unit : unit;
+        maxscale = is_def(maxscale)? maxscale : floor(log(length/unit-EPSILON));
+        scales = unit * [for(logsize = [maxscale:-1:maxscale-depth+1]) pow(10,logsize)];
+        widthfactor = (1-pipscale) / (1-pow(pipscale,depth));
+        width = default(width, scales[0]);
+        widths = width * widthfactor * [for(logsize = [0:-1:-depth+1]) pow(pipscale,-logsize)];
+        offsets = concat([0],cumsum(widths));
+        attachable(anchor,spin,orient, size=[length,width,thickness]) {
+            translate([-length/2, -width/2, 0])
+            for(i=[0:1:len(scales)-1]) {
+                count = ceil(length/scales[i]);
+                fontsize = 0.5*min(widths[i], scales[i]/ceil(log(count*scales[i]/unit)));
+                back(offsets[i]) {
+                    xcopies(scales[i], n=count, sp=[0,0,0]) union() {
+                        actlen = ($idx<count-1) || approx(length%scales[i],0) ? scales[i] : length % scales[i];
+                        color(colors[$idx%2], alpha=alpha) {
+                            w = i>0 ? quantup(widths[i],1/1024) : widths[i];    // What is the i>0 test supposed to do here?
+                            cube([quantup(actlen,1/1024),quantup(w,1/1024),thickness], anchor=FRONT+LEFT);
+                        }
+                        mark =
+                            i == 0 && $idx % 10 == 0 && $idx != 0 ? 0 :
+                            i == 0 && $idx % 10 == 9 && $idx != count-1 ? 1 :
+                            $idx % 10 == 4 ? 1 :
+                            $idx % 10 == 5 ? 0 : -1;
+                        flip = 1-mark*2;
+                        if (mark >= 0) {
+                            marklength = min(widths[i]/2, scales[i]*2);
+                            markwidth = marklength*0.4;
+                            translate([mark*scales[i], widths[i], 0]) {
+                                color(colors[1-$idx%2], alpha=alpha) {
+                                    linear_extrude(height=thickness+scales[i]/100, convexity=2, center=true) {
+                                        polygon(scale([flip*markwidth, marklength],p=[[0,0], [1, -1], [0,-0.9]]));
+                                    }
+                                }
+                            }
+                        }
+                        if (labels && scales[i]/unit+EPSILON >= 1) {
+                            color(colors[($idx+1)%2], alpha=alpha) {
                                 linear_extrude(height=thickness+scales[i]/100, convexity=2, center=true) {
-                                    polygon(scale([flip*markwidth, marklength],p=[[0,0], [1, -1], [0,-0.9]]));
+                                    back(scales[i]*.02) {
+                                        text(text=str( $idx * scales[i] / unit), size=fontsize, halign="left", valign="baseline");
+                                    }
                                 }
                             }
                         }
-                    }
-                    if (labels && scales[i]/unit+EPSILON >= 1) {
-                        color(colors[($idx+1)%2], alpha=alpha) {
-                            linear_extrude(height=thickness+scales[i]/100, convexity=2, center=true) {
-                                back(scales[i]*.02) {
-                                    text(text=str( $idx * scales[i] / unit), size=fontsize, halign="left", valign="baseline");
-                                }
-                            }
-                        }
-                    }
 
+                    }
                 }
             }
+            children();
         }
-        children();
     }
 }
-
 
 
 
