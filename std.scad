@@ -7,6 +7,7 @@
 
 assert(version_num()>=20190500, "BOSL2 requires OpenSCAD version 2019.05 or later.");
 
+
 include <version.scad>
 
 include <constants.scad>
