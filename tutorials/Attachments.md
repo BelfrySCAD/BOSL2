@@ -89,7 +89,7 @@ For cylindrical type attachables, the Z component of the vector will be −1, 0,
 to the bottom rim, the middle side, or the top rim of the cylindrical or conical shape.
 The X and Y components can be any value, pointing towards the circular perimeter of the cone.
 These combined let you point at any place on the bottom or top rims, or at an arbitrary
-side wall:
+side wall. 
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -101,16 +101,18 @@ include <BOSL2/std.scad>
 cylinder(r1=25, r2=15, h=60, anchor=BOTTOM+FRONT);
 ```
 
+Here we convert a 30 deg angle into an anchor using [cylindrical_to_xyz()](https://github.com/BelfrySCAD/BOSL2/wiki/coords.scad#function-cylindrical_to_xyz)
+
 ```openscad-3D
 include <BOSL2/std.scad>
-cylinder(r1=25, r2=15, h=60, anchor=UP+spherical_to_xyz(1,30,90));
+cylinder(r1=25, r2=15, h=60, anchor=cylindrical_to_xyz(1,30,1));
 ```
 
 ---
 
 For Spherical type attachables, you can pass a vector that points at any arbitrary place on
 the surface of the sphere:
-p
+
 ```openscad-3D
 include <BOSL2/std.scad>
 sphere(r=50, anchor=TOP);
@@ -120,6 +122,9 @@ sphere(r=50, anchor=TOP);
 include <BOSL2/std.scad>
 sphere(r=50, anchor=TOP+FRONT);
 ```
+
+Here the [spherical_to_xyz()](https://github.com/BelfrySCAD/BOSL2/wiki/coords.scad#function-spherical_to_xyz) function converts spherical coordinates into
+a vector you can use as an anchor:
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -484,8 +489,9 @@ cuboid([50,40,15])
         color("lightblue")cuboid(5,anchor=LEFT);
 ```
 
-Using align(), the determination of the anchor is automatic.  Any
-anchor you do specify is ignored.
+When you use align() it automatically determines the correct anchor to
+use for the child and this anchor overrides any anchor specified to
+the child:  any anchor you specify for the child is ignored.
 
 ```openscad-3D
 include<BOSL2/std.scad>
@@ -1057,7 +1063,7 @@ cylinder(d1=30,d2=15,h=25)
 The second form of attachment is parent anchor attachment, which just
 uses a single argument.  This form of attachment is less useful in
 general and does not provide alignment.  When you give `attach()` a parent anchor but no child anchor it
-orients the child according to the pafrent anchor direction but then
+orients the child according to the parent anchor direction but then
 simply places the child based on its internally defined anchor at the
 parent anchor position.  For most objects the default anchor is the
 CENTER anchor, so objects will appear sunk half-way into the parent.
