@@ -588,7 +588,7 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //   the gear resembles a crown.  This type of gear is not the same as a bevel gear with vertical teeth, which would mate
 //   to another bevel gear.  A crown gear mates to a spur gear at a ninety degree angle.  A feature of the crown gear assembly
 //   is that the spur gear can shift along its axis without affecting the mesh.  
-// Figure(2D,Med,NoAxes,VPT=[-2.19006,-1.67419,-4.49379],VPR=[67.6,0,131.9],VPD=113.4): A Crown or Face gear with its mating spur gear in blue.  
+// Figure(2D,Med,NoAxes,VPR=[50.1,0,52.5],VPD=121.5,VPT=[8.28415,-8.1257,9.45986]): A Crown or Face gear with its mating spur gear in blue.  
 //   crown_gear(mod=1, teeth=32, backing=3, face_width=7);
 //   color("lightblue")
 //   back(pitch_radius(mod=1,teeth=32)+7/2)
