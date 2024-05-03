@@ -745,13 +745,15 @@ specified in the child: **with parent-child anchor attachment the
 `anchor=` and `orient=` parameters to the child are ignored.**
 
 When you specify attachment using a pair of anchors, the attached
-child can spin around the parent anchor while still being attached.
-As noted earlier, this ambiguity is resolved by anchors having a
+child can spin around the parent anchor while still being attached at
+the designated anchors: specifying the anchors leaves one unspecified
+degree of freedom.  As noted earlier, this ambiguity is resolved by anchors having a
 defined spin which specifies where the Y+ axis is located.
 The way that BOSL2 positions objects can be understood by viewing the
 anchor arrows as shown above, or you can remember these rules:
-1. When attaching to the TOP or BOTTOM the FRONT of the child points to the front if possible;  otherwise the TOP of the child points BACK.
+1. When attaching to the TOP or BOTTOM: the FRONT of the child points to the front if possible;  otherwise the TOP of the child points BACK.
 2. When attaching to other faces, if possible the child's UP anchor will point UP; otherwise, the BACK of the child points up (so the FRONT is pointed down).  
+
 To show how this works we use this prismoid where the blue arrow is
 pointing to the front and the green arrow points up.  Also note that
 the front left edge is the only right angle.  
@@ -780,11 +782,11 @@ color_this("orange")
 
 If we attach to the RIGHT using the same LEFT side anchor on the
 prismoid then we get the result below.  Note that the green UP anchor
-is pointing (approximately) UP, in accordance with rule 2 from above.  
+is pointing UP, in accordance with rule 2 from above.  
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cube(30) attach(TOP,LEFT)
+cube(30) attach(RIGHT,LEFT)
 color_this("orange")
   prismoid([8,8],[6,6],shift=-[1,1],h=8) {
     attach(TOP,BOT) anchor_arrow(color=[0,1,0],s=12);
@@ -846,8 +848,7 @@ of the parent.  Sometimes it's useful to have the child overlap the
 parent by translating it into the parent.  You can do this with the
 `overlap=` argument to `attach()`.  A positive value will cause the
 child to overlap the parent, and a negative value will move the child
-away from the parent, leaving a small gap, which may be helpful when
-doing differences.  In the first example we use a very large value of
+away from the parent, leaving a small gap.  In the first example we use a very large value of
 overlap so the cube is sunk deeply into the parent.  In the second
 example a large negative overlap value raises the child high above the
 parent.  
@@ -871,7 +872,7 @@ alignment, which works in a similar way to `align()`.  You can specify
 `align=` to align the attached child to an edge or corner.  The
 example below shows five different alignments.  
 
-```openscad-3D
+```openscad-3D;Big
 include <BOSL2/std.scad>
 module thing(){
   color_this("orange")
@@ -1032,8 +1033,8 @@ cuboid(50){
 }
 ```
 
-Attachment with CENTER anchors can be surprising because the anchors
-point upwards, so in the example below, the child's CENTER anchor
+Parent-child Anchor attachment with CENTER anchors can be surprising because the anchors
+both point upwards, so in the example below, the child's CENTER anchor
 points up, so it is inverted when it is attached to the parent cone.
 Note that the anchors are CENTER anchors, so the bases of the anchors are
 hidden in the middle of the objects.  

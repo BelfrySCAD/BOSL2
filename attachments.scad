@@ -581,7 +581,7 @@ module orient(anchor, spin) {
 //   do the same thing but you would have to figure out the correct child anchor, which is not always obvious.
 //   .
 //   Because `align()` works by setting the child anchor, it overrides any anchor you specify to the child:
-//   any `anchor=` value given to the child is ignored.  
+//   **any `anchor=` value given to the child is ignored.**
 //   .
 //   Several options can adjust how the child is positioned.  You can specify `inset=` to inset the
 //   aligned object from its alignment location. If you set `inside=true` then the
@@ -648,14 +648,14 @@ module orient(anchor, spin) {
 //   cyl(h=20,d=10,$fn=128)
 //     align([1,.3],TOP)
 //       color("lightblue")cuboid(5);
-// Example: Orienting the child is done in the global coordinate system (as usual) not in the parent coordinate system.  Note that the blue prismoid is not lined up with the parent face.  (To place the child on the face used {{attach()}}.
+// Example: Orienting the child is done in the global coordinate system (as usual) not in the parent coordinate system.  Note that the blue prismoid is not lined up with the parent face.  (To place the child on the face use {{attach()}}.
 //   prismoid(50,30,25)
 //     align(RIGHT)
 //      color("lightblue")prismoid([10,5],[7,4],height=4,orient=RIGHT);
-// Example: Setting inside=true enables us to subtract the child from the parent with {{diff()}.  The "remove" tag is automatically applied when you set `inside=true`, and we used `out=0.01` to prevent z-fighting on the faces.  
+// Example: Setting `inside=true` enables us to subtract the child from the parent with {{diff()}}.  The "remove" tag is automatically applied when you set `inside=true`, and we used `shiftout=0.01` to prevent z-fighting on the faces.  
 //   diff()
 //     cuboid([40,30,10])
-//       align(FRONT,TOP,inside=true,shiftout=.01)
+//       align(FRONT,TOP,inside=true,shiftout=0.01)
 //         prismoid([10,5],[7,5],height=4);
 // Example: Setting inset shifts all of the children away from their aligned edge, which is a different direction for each child.  
 //   cuboid([40,30,30])
