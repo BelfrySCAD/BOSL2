@@ -1326,7 +1326,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 // Synopsis: Sweep a 2d polygon path along a 2d or 3d path. 
 // SynTags: VNF, Geom
 // Topics: Extrusion, Sweep, Paths
-// See Also: path_sweep_attach(), linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep2d(), offset_sweep()
+// See Also: sweep_attach(), linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep2d(), offset_sweep()
 // Usage: As module
 //   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As function
@@ -2136,7 +2136,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 // Synopsis: Construct a 3d object from arbitrary transformations of a 2d polygon path.
 // SynTags: VNF, Geom
 // Topics: Extrusion, Sweep, Paths
-// See Also: linear_sweep(), rotate_sweep(), spiral_sweep(), path_sweep(), path_sweep2d(), offset_sweep()
+// See Also: sweep_attach(), linear_sweep(), rotate_sweep(), spiral_sweep(), path_sweep(), path_sweep2d(), offset_sweep()
 // Usage: As Module
 //   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As Function
@@ -2247,7 +2247,7 @@ module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=
 
 // Module: sweep_attach()
 // Synopsis: Attach children to sides of a path_sweep parent object
-// Syntags: Geom
+// SynTags: Geom
 // Topics: Extrusion, Sweep, Paths
 // See Also: path_sweep()
 // Usage:
@@ -2322,7 +2322,7 @@ module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=
 //      sweep_attach(BACK,BOT,1/3)
 //         color_this("lightblue")prismoid(3,1,3);
 //   }
-// Examples(Med): This pentagonal torus is a mobius strip.  It takes five times around to return to your starting point.  Here the red box has gone 4.4 times around.  
+// Example(Med): This pentagonal torus is a mobius strip.  It takes five times around to return to your starting point.  Here the red box has gone 4.4 times around.  
 //   ellipse = xscale(2, p=circle($fn=64, r=3));
 //   pentagon = subdivide_path(pentagon(r=1), 30);
 //   path_sweep(pentagon, path3d(ellipse),
