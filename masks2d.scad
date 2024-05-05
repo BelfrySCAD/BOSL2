@@ -45,7 +45,7 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 //   If called as a function, returns a 2D path of the outline of the mask shape.
 //   .
 //   The roundover can be specified by radius, diameter, height, cut, or joint length.
-//   ![Types of Roundovers](images/rounding/section-types-of-roundovers_fig1.png)
+//   ![Types of Roundovers](images/rounding/figure_1_1.png)
 //   .
 //   If you need roundings to agree on edges of different mask_angle, e.g. to round the base of a prismoid, then you need all of the
 //   masks used to have the same height.  (Note that it may appear that matching joint would also work, but it does not because the joint distances are measured
@@ -220,7 +220,7 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, quar
 //   If called as a function, returns a 2D path of the outline of the mask shape.
 //   This is particularly useful to make partially rounded bottoms, that don't need support to print.
 //   The roundover can be specified by radius, diameter, height, cut, or joint length.
-//   ![Types of Roundovers](images/rounding/section-types-of-roundovers_fig1.png)
+//   ![Types of Roundovers](images/rounding/figure_1_1.png)
 // Arguments:
 //   r = Radius of the rounding.
 //   angle = The angle from vertical of the flat section.  Must be between mask_angle-90 and 90 degrees.  Default: 45.  
