@@ -23,7 +23,7 @@ PrioritizeFiles:
   distributors.scad
   color.scad
   partitions.scad
-  mutators.scad
+  miscellaneous.scad
   paths.scad
   regions.scad
   skin.scad

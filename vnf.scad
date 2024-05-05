@@ -35,15 +35,17 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 // Usage:
 //   vnf = vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=], [triangulate=]);
 // Description:
-//   Creates a VNF structure from a rectangular vertex list, by dividing the vertices into columns and rows,
-//   adding faces to tile the surface.  You can optionally have faces added to wrap the last column
+//   Creates a VNF structure from a rectangular vertex list, creating edges that connect the adjacent vertices in the vertex list
+//   and creating the faces defined by those edges.  You can optionally create the edges and faces to wrap the last column
 //   back to the first column, or wrap the last row to the first.  Endcaps can be added to either
 //   the first and/or last rows.  The style parameter determines how the quadrilaterals are divided into
 //   triangles.  The default style is an arbitrary, systematic subdivision in the same direction.  The "alt" style
-//   is the uniform subdivision in the other (alternate) direction.  The "min_edge" style picks the shorter edge to
+//   is the uniform subdivision in the other (alternate) direction.  The "flip1" style is an arbitrary division which alternates the
+//   direction for any adjacent pair of quadrilaterals.  The "flip2" style is the alternating division that is the opposite of "flip1". 
+//   The "min_edge" style picks the shorter edge to
 //   subdivide for each quadrilateral, so the division may not be uniform across the shape.  The "quincunx" style
 //   adds a vertex in the center of each quadrilateral and creates four triangles, and the "convex" and "concave" styles
-//   chooses the locally convex/concave subdivision.  Degenerate faces
+//   choose the locally convex/concave subdivision.  The "min_area" option creates the triangulation with the minimal area.  Degenerate faces
 //   are not included in the output, but if this results in unused vertices they will still appear in the output.
 // Arguments:
 //   points = A list of vertices to divide into columns and rows.
@@ -54,7 +56,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   col_wrap = If true, add faces to connect the last column to the first.
 //   row_wrap = If true, add faces to connect the last row to the first.
 //   reverse = If true, reverse all face normals.
-//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "min_edge", "min_area", "quincunx", "convex" and "concave".
+//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "flip1", "flip2",  "min_edge", "min_area", "quincunx", "convex" and "concave".
 //   triangulate = If true, triangulates endcaps to resolve possible CGAL issues.  This can be an expensive operation if the endcaps are complex.  Default: false
 // Example(3D):
 //   vnf = vnf_vertex_array(
@@ -137,7 +139,7 @@ function vnf_vertex_array(
 ) =
     assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested")
     assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
-    assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area"]))
+    assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area","flip1","flip2"]))
     assert(is_matrix(points[0], n=3),"Point array has the wrong shape or points are not 3d")
     assert(is_consistent(points), "Non-rectangular or invalid point array")
     assert(is_bool(triangulate))
@@ -179,7 +181,7 @@ function vnf_vertex_array(
                         style=="quincunx"?
                           let(i5 = pcnt + r*colcnt + c)
                           [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
-                      : style=="alt"?
+                      : style=="alt" || (style=="flip1" && ((r+c)%2==0)) || (style=="flip2" && ((r+c)%2==1)) || (style=="random" && rands(0,1,1)[0]<.5)?
                           [[i1,i4,i2],[i2,i4,i3]]
                       : style=="min_area"?
                           let(
