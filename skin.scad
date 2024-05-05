@@ -1326,7 +1326,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 // Synopsis: Sweep a 2d polygon path along a 2d or 3d path. 
 // SynTags: VNF, Geom
 // Topics: Extrusion, Sweep, Paths
-// See Also: linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep2d(), offset_sweep()
+// See Also: sweep_attach(), linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep2d(), offset_sweep()
 // Usage: As module
 //   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As function
@@ -1483,8 +1483,12 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   atype  = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Side Effects:
-//   `$transforms` is set to the array of transformation matrices that define the swept object.
-//   `$scales` is set to the array of scales that were applied at each point to create the swept object.  
+//   `$sweep_path` is set to the path thd defining the swept object
+//   `$sweep_shape` is set to the shape being swept
+//   `$sweep_closed` is true if the sweep is closed and false otherwise
+//   `$sweep_transforms` is set to the array of transformation matrices that define the swept object.
+//   `$sweep_scales` is set to the array of scales that were applied at each point to create the swept object.
+//   `$sweep_twist` set to a scalar value giving the total twist across the path sweep object.
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
@@ -1802,8 +1806,12 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
     lastscale = is_num(last(scales)) ? 1/last(scales) : [1/last(scales).x, 1/last(scales).y];
     vnf = sweep(is_path(shape)?clockwise_polygon(shape):shape, transforms, closed=false, caps=caps,style=style);
     shapecent = point3d(centroid(shape));
-    $transforms = transforms;
-    $scales = scales;
+    $sweep_transforms = transforms;
+    $sweep_scales = scales;
+    $sweep_shape = shape;
+    $sweep_path = path;
+    $sweep_closed = closed;
+    $sweep_twist = twist;
     anchors = closed ? []
             :
               [
@@ -2128,7 +2136,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 // Synopsis: Construct a 3d object from arbitrary transformations of a 2d polygon path.
 // SynTags: VNF, Geom
 // Topics: Extrusion, Sweep, Paths
-// See Also: linear_sweep(), rotate_sweep(), spiral_sweep(), path_sweep(), path_sweep2d(), offset_sweep()
+// See Also: sweep_attach(), linear_sweep(), rotate_sweep(), spiral_sweep(), path_sweep(), path_sweep2d(), offset_sweep()
 // Usage: As Module
 //   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As Function
@@ -2224,10 +2232,231 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge",
 module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=10,
              anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull")
 {
+    $sweep_transforms=transforms;
+    $sweep_shape=shape;
+    $sweep_closed=closed;
     vnf = sweep(shape, transforms, closed, caps, style);
     vnf_polyhedron(vnf, convexity=convexity, anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
         children();
 }
+
+
+
+// Section: Attaching children to sweeps
+
+
+// Module: sweep_attach()
+// Synopsis: Attach children to sides of a path_sweep parent object
+// SynTags: Geom
+// Topics: Extrusion, Sweep, Paths
+// See Also: path_sweep()
+// Usage:
+//   path_sweep(...) { sweep_attach(parent, [child], [frac], [idx=], [len=], [spin=], [overlap=], [atype=]) CHILDREN; }
+//   sweep(...) { sweep_attach(parent, [child], [frac], [idx=], [len=], [spin=], [overlap=], [atype=]) CHILDREN; }
+// Description:
+//   Attaches children to the sides of a {{path_sweep()}} or {{sweep()}} object.  You supply a position along the path,
+//   either by path fraction, length, or index.  In the case of `sweep()` objects the path is defined as the path traced out
+//   by the origin of the shape under the transformation list.  Objects are attached with their UP direction aligned with
+//   the anchor for the profile and their BACK direction pointing in the direction of the sweep.
+//   .
+//   Like {{attach()}} this module has a parent-child anchor mode where you specify the child anchor and it is
+//   aligned with the anchor on the sweep.  As with {{attach()}}, the child `anchor` and `orient` parameters are ignored.
+//   Alternative you can use parent anchor mode where give only the parent anchor and the child appears at its
+//   child-specified (default) anchor point.  The spin parameter spins the child around the attachment anchor axis.  
+//   .
+//   For a path_sweep() with no scaling, if you give a location or index that is exactly at one of the sections the normal will be in the plane
+//   of the section.  In the general case if you give a location in between sections the normal will be normal to the facet.  If you
+//   give a location at a section in the general case the normal will be the average of the normals of the two adjacent facets.  
+//   For twisted or other complicated sweeps the normals may not be accurate.  If you need accurate normals for such shapes, you must
+//   use the anchors for the VNF swept shape directly---it is a tradeoff between easy specification of the anchor location on the
+//   swept object, which may be very difficult with direct anchors, and accuracy of the normal.
+//   .
+//   For closed sweeps the index will wrap around and can be positive or negative.  For sweeps that are not closed the index must
+//   be positive and no longer than the length of the path.  In some cases for closed path_sweeps the shape can be a mobius strip
+//   and it may take more than one cycle to return to the starting point.  The extra twist will be properly handled in this case.
+//   If you construct a mobius strip using the generic {{sweep()}} then information about the amount of twist is not available
+//   to `sweep_attach()` so it will not be handled automatically.  
+//   .
+//   The anchor you give acts as a 2D anchor to the path or region used by the sweep, in the XY plane as that shape appears
+//   before it is transformed to form the swept object.  As with {{region()}}, you can control the anchor using `cp` and `atype`, 
+//   and you can check the anchors by using the same anchors with {{region()}} in a two dimensional test case.
+//   .
+//   Note that {{path_sweep2d()}} does not support `sweep_attach()` because it doesn't compute the transform list, which is
+//   the input used to calculate the attachment transform.  
+// Arguments:
+//   anchor = 2d anchor to the shape used in the path_sweep parent
+//   frac = position along the path_sweep path as a fraction of total length
+//   ---
+//   idx = index into the path_sweep path (use instead of frac)
+//   len = absolute length along the path_sweep path (use instead of frac)
+//   spin = spin the child this amount around the anchor axis.  Default: 0
+//   overlap = Amount to lower the shape into the parent.  Default: 0
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 2D point.  Default: "centroid"
+//   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
+// Anchor Types:
+//   "hull" = Anchors to the virtual convex hull of the region.
+//   "intersect" = Anchors to the outer edge of the region.
+// Example(Med,NoAxes,VPT=[4.75027,0.805639,-3.50893],VPR=[66.9,0,219.6],VPD=213.382): This example shows several children positioned at different places on the parent.  The blue cone is positioned using its TOP anchor and is sunk into the parent with overlay.  The three orange cubes show how they rotate to follow the local sweep direction.  
+//   function a(h) = arc(points=[[-20,0],[0,h],[20,0]],n=24);
+//   shape = concat(
+//                  a(2), // bottom
+//                  back(6,reverse(a(4))) // top
+//           );
+//   path = xrot(90,path3d(arc(points=[[-40,0],[0,5],[40,-20]],n=36)));
+//   path_sweep(shape,path) {
+//       sweep_attach(BACK,BOT,0.2) recolor("red") cyl(d1=5,d2=0,h=8,$fn=12);
+//       sweep_attach(BACK,TOP,0.5,overlap=3) recolor("blue") cyl(d1=5,d2=0,h=8,$fn=12);
+//       sweep_attach(RIGHT,BOT,idx=15) recolor("orange") cuboid([3,3,5]);
+//       sweep_attach(RIGHT,BOT,idx=1) recolor("orange") cuboid([3,3,5]);
+//       sweep_attach(RIGHT,BOT,idx=32) recolor("orange") cuboid([3,3,5]);        
+//   }
+// Example(VPT=[20.7561,8.89872,0.901718],VPR=[32.6,0,338.8],VPD=66.9616,NoAxes): In this example with scaling the objects' normals are not in the plane of the path_sweep sections.  
+//   shape = hexagon(r=4);
+//   path = xscale(2,arc(r=15, angle=[0,75],n=10));
+//   path_sweep(shape,path,scale=3)
+//   {  
+//      sweep_attach(RIGHT,BOT,0)
+//         color_this("red")cuboid([1,1,4]);
+//      sweep_attach(RIGHT,BOT,0.5)
+//         color_this("blue")cuboid([1,1,4]);
+//      sweep_attach(BACK,BOT,1/3)
+//         color_this("lightblue")prismoid(3,1,3);
+//   }
+// Example(Med): This pentagonal torus is a mobius strip.  It takes five times around to return to your starting point.  Here the red box has gone 4.4 times around.  
+//   ellipse = xscale(2, p=circle($fn=64, r=3));
+//   pentagon = subdivide_path(pentagon(r=1), 30);
+//   path_sweep(pentagon, path3d(ellipse),
+//              closed=true, twist=360*2/5,symmetry=5)
+//     sweep_attach(RIGHT,BOT,4.4) color("red") cuboid([.25,.25,3]);
+// Example(VPT=[17.1585,9.05454,50.69],VPR=[67.6,0,64.9],VPD=292.705,NoAxes): Example using {{sweep()}}
+//   function f(x) = 3 - 2.5 * x;
+//   function r(x) = 2 * 180 * x * x * x;
+//   pathstep = 1;
+//   height = 100;
+//   shape_points = subdivide_path(square(10),40,closed=true);
+//   path_transforms = [for (i=[0:pathstep:height]) let(t=i/height) up(i) * scale([f(t),f(t),i]) * zrot(r(t))];
+//   sweep(shape_points, path_transforms){
+//     sweep_attach(RIGHT,BOT,idx=33)
+//           color_this("red")cuboid([5,5,5]);
+//     sweep_attach(FWD,BOT,idx=65)
+//           color_this("red")cuboid([5,5,5]);
+//   }
+
+module sweep_attach(parent, child, frac, idx, pathlen, spin=0, overlap=0, atype="hull", cp="centroid")
+{
+   $attach_to=child;
+   req_children($children);
+   dummy =  assert(!is_undef($sweep_transforms), "sweep_attach() must be used as a child of sweep() or path_sweep()")
+            assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
+            assert(num_defined([idx,frac,pathlen])==1, "Must define exactly one of idx, frac and pathlen")
+            assert(is_undef(idx) || is_finite(idx), "idx must be a number")
+            assert(is_undef(frac) || is_finite(frac), "frac must be a number");
+   parmset = is_def(frac) ? "frac"
+           : is_def(pathlen) ? "pathlen"
+           : "idx";
+   path = !is_undef($sweep_path) ? $sweep_path
+        : [for(T=$sweep_transforms) apply(T,CTR)];
+   seglen = path_segment_lengths(path,closed=$sweep_closed);
+   pathcum = [0, each cumsum(seglen)];
+   totlen = last(pathcum);
+   pathtable = [for(i=idx(pathcum)) [pathcum[i],i]];
+   i = _force_int(is_def(idx) ? idx
+                :let(
+                      pathlen = is_def(pathlen) ? pathlen : frac*totlen
+                  )
+                  lookup(posmod(pathlen,totlen),pathtable)+len($sweep_transforms)*floor(pathlen/totlen) //floor(abs(pathlen)/totlen)*sign(pathlen)
+   );
+   twist = is_undef($sweep_twist) ? ident(4)
+         : let(
+                L = len($sweep_transforms),
+                absturn = floor(abs(i)/L),
+                turns = floor(i/L) //sign(i)*absturn-1
+           )
+           zrot(-turns*$sweep_twist);
+   geom = attach_geom(region=force_region($sweep_shape), two_d=true, extent=atype=="hull", cp=cp);
+   anchor_data = _find_anchor(parent, geom);
+   anchor_pos = point3d(anchor_data[1]);
+   anchor_dir = point3d(anchor_data[2]);
+   length = len($sweep_transforms);
+   nextind = is_int(i) ? i>=length-1 && !$sweep_closed ? assert(i==length-1,str(parmset," is too large for the path")) undef
+                       : i+1
+          : $sweep_closed ?  posmod(ceil(i),length)
+          : assert(i<length-1,str(parmset," is too large for the path")) ceil(i);
+   prevind = is_int(i) ? i<=0 && !$sweep_closed ? assert(i==0,str(parmset," must be nonnegative")) undef
+                       : i-1 
+           : $sweep_closed ? floor(i)
+           : assert(i>0,str(parmset, " must be nonnegative")) floor(i);
+   uniform = is_undef($sweep_scales) ? false
+           : let( 
+                   slist = [if (is_def(prevind)) select($sweep_scales,prevind),
+                            select($sweep_scales,i),
+                            if (is_def(nextind)) select($sweep_scales,nextind)]
+             )
+             all_equal(slist);
+   if (is_int(i) && uniform){      // Unscaled integer case: just use the profile transformation
+       multmatrix(select($sweep_transforms,i)*twist)
+         translate(anchor_pos)
+         yrot(spin)
+           frame_map(z=point3d(anchor_dir),y=UP) down(overlap) children();
+   }
+   else if (is_int(i) && all_defined([nextind,prevind])) {      // Scaled integer case, must average two adjacent facets
+       frac1 = 0.1*min(seglen[i-1],seglen[i])/seglen[i-1];   // But can't average two facets at ends so exclude that case    
+       frac2 = 0.1*min(seglen[i-1],seglen[i])/seglen[i];       
+       dirsprev = _find_ps_dir(frac1,prevind,i,twist,anchor_pos,anchor_dir); 
+       dirsnext = _find_ps_dir(frac2,i,nextind,twist,anchor_pos,anchor_dir);
+       pos = apply($sweep_transforms[i]*twist, anchor_pos);
+       mixdir = dirsprev[2]+dirsnext[2];   // Normal direction
+       ydir=cross(cross(mixdir, dirsprev[1]+dirsnext[1]),mixdir);  // y direction perpendicular to mixdir
+       translate(pos)
+         rotate(v=mixdir,a=spin)
+         frame_map(y=ydir, z=mixdir)
+           down(overlap)
+           children();
+  }
+  else {                       // Non-integer case or scaled integer at the ends: compute directions from single facet
+    interp = is_undef(prevind)?0
+           : is_undef(nextind)?1
+           : i-floor(i);
+    dirs = _find_ps_dir(interp,first_defined([prevind,i]),first_defined([nextind,i]),twist,anchor_pos,anchor_dir);
+    translate(dirs[0])
+        rotate(v=dirs[2],a=spin)
+        frame_map(y=dirs[1], z=dirs[2])
+        down(overlap) children();
+  }
+}     
+
+function _force_int(x) = approx(round(x),x) ? round(x) : x;
+
+// This function finds the normal to a facet on the path sweep
+// prevind and nextind are the indices into the path, frac is the
+// interpolation value bewteen them.
+// anchor_pos and anchor_dir are the anchor data for the 2d shape
+// Return is [position, ydirection, zdirection], where zdirection
+// is normal to the facet.  Note that frac is only needed because
+// of the possibility of twist.  
+
+function _find_ps_dir(frac,prevind,nextind,twist,anchor_pos,anchor_dir) =
+  let(
+      length = len($sweep_transforms),
+      prevpos = apply(select($sweep_transforms,prevind)*twist,anchor_pos),
+      nextpos = apply(select($sweep_transforms,nextind)*twist,anchor_pos),
+      curpos = lerp(prevpos,nextpos,frac),
+
+      prevposdir = apply(select($sweep_transforms,prevind)*twist,anchor_pos+anchor_dir),
+      nextposdir = apply(select($sweep_transforms,nextind)*twist,anchor_pos+anchor_dir),
+      curposdir = lerp(prevposdir, nextposdir, frac),
+      dir = curposdir-curpos,
+      
+      normal_plane = plane_from_normal(nextpos-prevpos,curpos),
+      other_plane = plane3pt(nextpos, prevpos, curposdir),
+      normal=plane_intersection(normal_plane, other_plane),
+      ndir = unit(normal[1]-normal[0]),
+      flip = sign(ndir*dir)
+  )
+  [curpos, nextpos-prevpos, flip*ndir];
+
+
+
 
 
 

@@ -662,21 +662,21 @@ sphere(d=100)
         anchor_arrow(s=50);
 ```
 
-To show all the standard cardinal anchor points, you can use the `show_anchors()` module.
+To show all the standard cardinal anchor points, you can use the [show_anchors()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-show_anchors) module.
 
-```openscad-3D
+```openscad-3D;Big
 include <BOSL2/std.scad>
 cube(40, center=true)
     show_anchors();
 ```
 
-```openscad-3D
+```openscad-3D;Big
 include <BOSL2/std.scad>
 cylinder(h=40, d=40, center=true)
     show_anchors();
 ```
 
-```openscad-3D
+```openscad-3D;Big
 include <BOSL2/std.scad>
 sphere(d=40)
     show_anchors();
@@ -684,10 +684,10 @@ sphere(d=40)
 
 For large objects, you can again change the size of the arrows with the `s=` argument.
 
-```openscad-3D
+```openscad-3D;Big
 include <BOSL2/std.scad>
-cylinder(h=100, d=100, center=true)
-    show_anchors(s=30);
+prismoid(150,60,100)
+    show_anchors(s=35);
 ```
 
 ## Parent-Child Anchor Attachment (Double Argument Attachment)
