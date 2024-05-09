@@ -177,7 +177,7 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 // Synopsis: Creates a shape to round a 90° edge.
 // SynTags: Geom
 // Topics: Masks, Rounding, Shapes (3D)
-// See Also: rounding_angled_edge_mask(), rounding_corner_mask(), rounding_angled_corner_mask(), default_tag(), diff() 
+// See Also: rounding_corner_mask(), rounding_angled_corner_mask(), default_tag(), diff() 
 // Usage:
 //   rounding_edge_mask(l|h=|length=|height=, r|d=, [ang], [excess=]) [ATTACHMENTS];
 //   rounding_edge_mask(l|h=|length=|height=, r1=|d1=, r2=|d2=, [ang=], [excess=]) [ATTACHMENTS];
@@ -227,7 +227,7 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 // Example: Varying Rounding Radius
 //   difference() {
 //       pie_slice(ang=70, h=50, d=100, center=true);
-//       #rounding_angled_edge_mask(h=51, r1=10, r2=25, ang=70, $fn=32);
+//       #rounding_edge_mask(h=51, r1=10, r2=25, ang=70, $fn=32);
 //   }
 // Example: Rounding a non-right angled edge, with a zero radius at the bottom.  
 //   difference(){
@@ -327,7 +327,7 @@ module rounding_edge_mask(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,r,length, 
 // Synopsis: Creates a shape to round 90° corners.
 // SynTags: Geom
 // Topics: Masking, Rounding, Shapes (3D)
-// See Also: rounding_angled_corner_mask(), rounding_edge_mask(), rounding_angled_edge_mask(), default_tag(), diff()
+// See Also: rounding_angled_corner_mask(), rounding_edge_mask(), default_tag(), diff()
 // Usage:
 //   rounding_corner_mask(r|d, [excess=], [style=]) [ATTACHMENTS];
 // Description:
@@ -394,25 +394,26 @@ module rounding_angled_edge_mask(h, r, r1, r2, d, d1, d2, ang=90, anchor=CENTER,
 // Synopsis: Creates a shape to round the corner of an arbitrary angle.
 // SynTags: Geom
 // Topics: Masks, Rounding, Shapes (3D)
-// See Also: rounding_angled_edge_mask(), rounding_corner_mask(), rounding_edge_mask(), default_tag(), diff()
+// See Also: rounding_corner_mask(), rounding_edge_mask(), default_tag(), diff()
 // Usage:
 //   rounding_angled_corner_mask(r|d=, [ang]) [ATTACHMENTS];
 // Description:
-//   Creates a shape that can be used to round the corner of an angle.
+//   Creates a shape that can be used to round a corner where the top is parallel to the XY plane
+//   and the other two planes are vertical and separated by an arbitrary angle.  
 //   Difference it from the object to be rounded.  The center of the mask
 //   object should align exactly with the point of the corner to be rounded.
 // Arguments:
 //   r = Radius of the rounding.
+//   ang = Angle between planes that you need to round the corner of.  Default: 90
 //   ---
 //   d = Diameter of the rounding.
-//   ang = Angle between planes that you need to round the corner of.  Default: 90
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(Med):
-//   ang=60;
+//   ang=90;
 //   difference() {
 //       pie_slice(ang=ang, h=50, r=200, center=true);
 //       up(50/2) #rounding_angled_corner_mask(r=20, ang=ang);
@@ -450,7 +451,7 @@ module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=U
 // Synopsis: Creates a shape to round the end of a cylinder.
 // SynTags: Geom
 // Topics: Masking, Rounding, Cylinders
-// See Also: rounding_hole_mask(), rounding_angled_edge_mask(), rounding_corner_mask(), rounding_angled_corner_mask(), default_tag(), diff()
+// See Also: rounding_hole_mask(), rounding_corner_mask(), rounding_angled_corner_mask(), default_tag(), diff()
 // Usage:
 //   rounding_cylinder_mask(r|d=, rounding);
 // Description:
@@ -506,7 +507,7 @@ module rounding_cylinder_mask(r, rounding, d, anchor=CENTER, spin=0, orient=UP)
 // Synopsis: Creates a shape to round the edge of a round hole.
 // SynTags: Geom
 // Topics: Masking, Rounding
-// See Also: rounding_cylinder_mask(), rounding_hole_mask(), rounding_angled_edge_mask(), rounding_corner_mask(), rounding_angled_corner_mask(), default_tag(), diff()
+// See Also: rounding_cylinder_mask(), rounding_hole_mask(), rounding_corner_mask(), rounding_angled_corner_mask(), default_tag(), diff()
 // Usage:
 //   rounding_hole_mask(r|d, rounding, [excess]) [ATTACHMENTS];
 // Description:
