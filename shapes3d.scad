@@ -3279,9 +3279,8 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 // Section: Miscellaneous
 
 
-
-
 // Module: fillet()
+// Aliases: rounding_edge_mask()
 // Synopsis: Creates a smooth fillet between two faces.
 // SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable
@@ -3290,15 +3289,15 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 //   Creates a shape that can be unioned into a concave joint between two faces, to fillet them.
 //   Center this part along the concave edge to be chamfered and union it in.
 //
-// Usage: Typical
-//   fillet(l, r, [ang], [overlap], ...) [ATTACHMENTS];
-//   fillet(l|length=|h=|height=, d=, [ang=], [overlap=], ...) [ATTACHMENTS];
+// Usage: 
+//   fillet(l|h=|length=|height=, r|d=, [ang=], [excess=]) [ATTACHMENTS];
+//   fillet(l|h=|length=|height=, r1=|d1=, r2=|d2=, [ang=], [excess=]) [ATTACHMENTS];
 //
 // Arguments:
 //   l / length / h / height = Length of edge to fillet.
 //   r = Radius of fillet.
 //   ang = Angle between faces to fillet.
-//   overlap = Overlap size for unioning with faces.
+//   excess = Overlap size for unioning with faces.
 //   ---
 //   d = Diameter of fillet.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `FRONT+LEFT`
@@ -3330,6 +3329,11 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 //     position(BOT+FRONT)
 //       fillet(l=50, r=10, spin=180, orient=RIGHT);
 //   }
+// Example: 
+//   cuboid(50){
+//     align(TOP,RIGHT,inset=10) fillet(l=50,r=10,orient=FWD);
+//     align(TOP,RIGHT,inset=20) cuboid([4,50,20],anchor=BOT);
+//   }   
 
 module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTER, spin=0, orient=UP)
 {
@@ -3338,32 +3342,13 @@ module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anc
 }
 
 
-module fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTER, spin=0, orient=UP) {
-    l = one_defined([l,length,h,height],"l,length,h,height");
-    r = get_radius(r=r, d=d, dflt=1);
-    steps = ceil(segs(r)*(180-ang)/360);
-    arc = arc(n=steps+1, r=r, corner=[polar_to_xy(r,ang),[0,0],[r,0]]);
-    maxx = last(arc).x;
-    maxy = arc[0].y;
-    path = [
-        [maxx, -overlap],
-        polar_to_xy(overlap, 180+ang/2),
-        arc[0] + polar_to_xy(overlap, 90+ang),
-        each arc
-    ];
-    override = function (anchor)
-        anchor.x>=0 && anchor.y>=0 ? undef
-      : 
-        [[max(0,anchor.x)*maxx, max(0,anchor.y)*maxy, anchor.z*l/2]];
-    attachable(anchor,spin,orient, size=[2*maxx,2*maxy,l],override=override) {      
-        if (l > 0) {
-            linear_extrude(height=l, convexity=4, center=true) {
-                polygon(path);
-            }
-        }
-        children();
-    }
-}
+function fillet(l, r, ang, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, spin=0, orient=UP, h,height,length) = no_function("fillet");
+module fillet(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor=CENTER, spin=0, orient=UP)
+{
+  rounding_edge_mask(l=l, r1=r1, r2=r2, ang=ang, excess=excess, d1=d1, d2=d2,d=d,r=r,length=length, h=h, height=height,
+                     anchor=anchor, spin=spin, orient=orient, _remove_tag=false)
+    children();
+}  
 
 
 // Function&Module: heightfield()
