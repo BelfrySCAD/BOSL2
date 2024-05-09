@@ -3280,14 +3280,14 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 
 
 // Module: fillet()
-// Aliases: rounding_edge_mask()
 // Synopsis: Creates a smooth fillet between two faces.
 // SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable
 // See Also: mask2d_roundover()
 // Description:
 //   Creates a shape that can be unioned into a concave joint between two faces, to fillet them.
-//   Center this part along the concave edge to be chamfered and union it in.
+//   Note that this module is the same as {{rounding_edge_mask()}}, except that it does not
+//   apply the default "remove" tag.  
 //
 // Usage: 
 //   fillet(l|h=|length=|height=, r|d=, [ang=], [excess=]) [ATTACHMENTS];

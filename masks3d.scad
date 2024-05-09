@@ -173,7 +173,6 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 // Section: Rounding Masks
 
 // Module: rounding_edge_mask()
-// Aliases: fillet()
 // Synopsis: Creates a shape to round a 90° edge.
 // SynTags: Geom
 // Topics: Masks, Rounding, Shapes (3D)
@@ -182,9 +181,12 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 //   rounding_edge_mask(l|h=|length=|height=, r|d=, [ang], [excess=]) [ATTACHMENTS];
 //   rounding_edge_mask(l|h=|length=|height=, r1=|d1=, r2=|d2=, [ang=], [excess=]) [ATTACHMENTS];
 // Description:
-//   Creates a shape that can be used to round a vertical 90° edge.
+//   Creates a shape that can be used to round a straight edge at any angle.  
 //   Difference it from the object to be rounded.  The center of the mask
-//   object should align exactly with the edge to be rounded.
+//   object should align exactly with the edge to be rounded.  You can use it with {{diff()}} and
+//   {{edge_mask()}} to attach masks automatically to objects.  The default "remove" tag is set
+//   automatically.  
+//   
 // Arguments:
 //   l/h/length/height = Length of mask.
 //   r = Radius of the rounding.
