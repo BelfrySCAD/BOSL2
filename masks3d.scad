@@ -176,7 +176,7 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 // Synopsis: Creates a shape to round a 90° edge.
 // SynTags: Geom
 // Topics: Masks, Rounding, Shapes (3D)
-// See Also: rounding_corner_mask(), rounding_angled_corner_mask(), default_tag(), diff() 
+// See Also: rounding_corner_mask(), default_tag(), diff() 
 // Usage:
 //   rounding_edge_mask(l|h=|length=|height=, r|d=, [ang], [excess=]) [ATTACHMENTS];
 //   rounding_edge_mask(l|h=|length=|height=, r1=|d1=, r2=|d2=, [ang=], [excess=]) [ATTACHMENTS];
@@ -248,6 +248,20 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 //           edge_mask(TOP)
 //               rounding_edge_mask(l=p.z, r=25);
 //       }
+//   }
+// Example: Acute angle 
+//   ang=60;
+//   difference() {
+//       pie_slice(ang=ang, h=50, r=100);
+//       zflip_copy(z=25)
+//          #rounding_corner_mask(r=20, ang=ang);
+//   }
+// Example: Obtuse angle 
+//   ang=120;
+//   difference() {
+//       pie_slice(ang=ang, h=50, r=30);
+//       zflip_copy(z=25)
+//          #rounding_corner_mask(r=20, ang=ang);
 //   }
 
 function rounding_edge_mask(l, r, ang=90, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, spin=0, orient=UP, h,height,length) = no_function("rounding_edge_mask");
@@ -329,15 +343,17 @@ module rounding_edge_mask(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,r,length, 
 // Synopsis: Creates a shape to round 90° corners.
 // SynTags: Geom
 // Topics: Masking, Rounding, Shapes (3D)
-// See Also: rounding_angled_corner_mask(), rounding_edge_mask(), default_tag(), diff()
+// See Also: rounding_edge_mask(), default_tag(), diff()
 // Usage:
-//   rounding_corner_mask(r|d, [excess=], [style=]) [ATTACHMENTS];
+//   rounding_corner_mask(r|d, [ang], [excess=], [style=]) [ATTACHMENTS];
 // Description:
-//   Creates a shape that you can use to round 90° corners.
+//   Creates a shape that you can use to round corners where the top and bottom faces are parallel and the two side
+//   faces are perpendicular to the top and bottom, e.g. cubes or pie_slice corners.  
 //   Difference it from the object to be rounded.  The center of the mask
 //   object should align exactly with the corner to be rounded.
 // Arguments:
 //   r = Radius of corner rounding.
+//   ang = Angle of corner (measured around the z axis).  Default: 90
 //   ---
 //   d = Diameter of corner rounding.
 //   excess = Extra size for the mask.  Defaults: 0.1
@@ -348,8 +364,10 @@ module rounding_edge_mask(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,r,length, 
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example:
-//   rounding_corner_mask(r=20.0);
-// Example:
+//   rounding_corner_mask(r=20);
+// Example: Adding a huge excess
+//   rounding_corner_mask(r=20, excess=5);
+// Example: Position masks manually
 //   difference() {
 //       cube(size=[50, 60, 70], center=true);
 //       translate([-25, -30, 35])
@@ -365,16 +383,25 @@ module rounding_edge_mask(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,r,length, 
 //       corner_mask(TOP)
 //           #rounding_corner_mask(r=20);
 //   }
-function rounding_corner_mask(r, d, style="octa", excess=0.1, anchor=CENTER, spin=0, orient=UP) = no_function("rounding_corner_mask");
-module rounding_corner_mask(r, d, style="octa", excess=0.1, anchor=CENTER, spin=0, orient=UP)
+// Example: Acute angle mask
+// 
+function rounding_corner_mask(r, ang, d, style="octa", excess=0.1, anchor=CENTER, spin=0, orient=UP) = no_function("rounding_corner_mask");
+module rounding_corner_mask(r, ang=90, d, style="octa", excess=0.1, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
+    joint = r/tan(ang/2);
+    path = [
+             [joint,r],
+             [joint,-excess],
+             [-excess/tan(ang/2),-excess],
+             polar_to_xy(joint,ang)+polar_to_xy(excess,90+ang)
+           ];
     default_tag("remove") {
         attachable(anchor,spin,orient, size=[2,2,2]*r) {
             difference() {
-                translate(-excess*[1,1,1])
-                    cube(size=r+excess, center=false);
-                translate([r,r,r])
+                down(excess)
+                    linear_extrude(height=r+excess) polygon(path);
+                translate([joint,r,r])
                     spheroid(r=r, style=style);
             }
             children();
@@ -392,60 +419,12 @@ module rounding_angled_edge_mask(h, r, r1, r2, d, d1, d2, ang=90, anchor=CENTER,
 }
 
 
-// Module: rounding_angled_corner_mask()
-// Synopsis: Creates a shape to round the corner of an arbitrary angle.
-// SynTags: Geom
-// Topics: Masks, Rounding, Shapes (3D)
-// See Also: rounding_corner_mask(), rounding_edge_mask(), default_tag(), diff()
-// Usage:
-//   rounding_angled_corner_mask(r|d=, [ang]) [ATTACHMENTS];
-// Description:
-//   Creates a shape that can be used to round a corner where the top is parallel to the XY plane
-//   and the other two planes are vertical and separated by an arbitrary angle.  
-//   Difference it from the object to be rounded.  The center of the mask
-//   object should align exactly with the point of the corner to be rounded.
-// Arguments:
-//   r = Radius of the rounding.
-//   ang = Angle between planes that you need to round the corner of.  Default: 90
-//   ---
-//   d = Diameter of the rounding.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Side Effects:
-//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
-// Example(Med):
-//   ang=90;
-//   difference() {
-//       pie_slice(ang=ang, h=50, r=200, center=true);
-//       up(50/2) #rounding_angled_corner_mask(r=20, ang=ang);
-//   }
 function rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=UP) = no_function("rounding_angled_corner_mask");
 module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=UP)
 {
-    r = get_radius(r=r, d=d, dflt=1);
-    dx = r / tan(ang/2);
-    dx2 = dx / cos(ang/2) + 1;
-    fn = quantup(segs(r), 4);
-    default_tag("remove") {
-        attachable(anchor,spin,orient, d=dx2, l=2*r) {
-            difference() {
-                down(r) cylinder(r=dx2, h=r+1, center=false);
-                yflip_copy() {
-                    translate([dx, r, -r]) {
-                        hull() {
-                            sphere(r=r, $fn=fn);
-                            down(r*3) sphere(r=r, $fn=fn);
-                            zrot_copies([0,ang]) {
-                                right(r*3) sphere(r=r, $fn=fn);
-                            }
-                        }
-                    }
-                }
-            }
-            children();
-        }
-    }
+    deprecate("rounding_corner_mask");
+    zflip()rounding_corner_mask(r=r,ang=ang,d=d,anchor=anchor,spin=spin,orient=orient)
+       children();
 }
 
 
@@ -453,7 +432,7 @@ module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=U
 // Synopsis: Creates a shape to round the end of a cylinder.
 // SynTags: Geom
 // Topics: Masking, Rounding, Cylinders
-// See Also: rounding_hole_mask(), rounding_corner_mask(), rounding_angled_corner_mask(), default_tag(), diff()
+// See Also: rounding_hole_mask(), rounding_corner_mask(), default_tag(), diff()
 // Usage:
 //   rounding_cylinder_mask(r|d=, rounding);
 // Description:
@@ -509,7 +488,7 @@ module rounding_cylinder_mask(r, rounding, d, anchor=CENTER, spin=0, orient=UP)
 // Synopsis: Creates a shape to round the edge of a round hole.
 // SynTags: Geom
 // Topics: Masking, Rounding
-// See Also: rounding_cylinder_mask(), rounding_hole_mask(), rounding_corner_mask(), rounding_angled_corner_mask(), default_tag(), diff()
+// See Also: rounding_cylinder_mask(), rounding_hole_mask(), rounding_corner_mask(), default_tag(), diff()
 // Usage:
 //   rounding_hole_mask(r|d, rounding, [excess]) [ATTACHMENTS];
 // Description:
