@@ -118,9 +118,12 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //     right(8.3) back(74) zrot(87-360/30) zrot(10,cp=[pitchpt,0]) stroke(arc(angle=[0,20],r=10.5),endcaps="arrow2",width=.25);
 //     back(84) right(13) text("pressure angle",size=2.5);
 //   }
+//   stroke(arc(r=pitch_radius(mod=5,teeth=30),angle=[87,87+12]),width=.4,endcaps="arrow2",color="red");
+//   color([1,0,0,1])     back(70)right(-13)zrot(4)text("circular pitch", size=2.5);
 // Continues:
-//   The size of the teeth can be specified as the circular pitch, the distance along the pitch circle
-//   from the start of one tooth to the start of the text tooth.  The circular pitch can be computed as
+//   The size of the teeth can be specified as the *circular pitch*, which is the tooth width, or more precisely,
+//   the distance along the pitch circle from the start of one tooth to the start of the text tooth.
+//   The circular pitch can be computed as
 //   `PI*d/teeth` where `d` is the diameter of the pitch circle and `teeth` is the number of teeth on the gear.
 //   This simply divides up the pitch circle into the specified number of teeth.  However, the customary
 //   way to specify metric gears is using the module, ratio of the diameter of the gear to the number of teeth: `m=d/teeth`.
