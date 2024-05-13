@@ -1800,11 +1800,14 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
             assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
     trans_scale = path_sweep(shape, path, method, normal, closed, twist, twist_by_length, scale, scale_by_length,
                             symmetry, last_normal, tangent, uniform, relaxed, caps, style, transforms=true,_return_scales=true);
+    caps = is_def(caps) ? caps :
+           closed ? false : true;
+    fullcaps = is_bool(caps) ? [caps,caps] : caps;
     transforms = trans_scale[0];
     scales = trans_scale[1];
     firstscale = is_num(scales[0]) ? 1/scales[0] : [1/scales[0].x, 1/scales[0].y];
     lastscale = is_num(last(scales)) ? 1/last(scales) : [1/last(scales).x, 1/last(scales).y];
-    vnf = sweep(is_path(shape)?clockwise_polygon(shape):shape, transforms, closed=false, caps=caps,style=style);
+    vnf = sweep(is_path(shape)?clockwise_polygon(shape):shape, transforms, closed=false, caps=fullcaps,style=style);
     shapecent = point3d(centroid(shape));
     $sweep_transforms = transforms;
     $sweep_scales = scales;
