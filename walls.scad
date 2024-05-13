@@ -66,7 +66,6 @@ module sparse_wall(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anch
 
     ang = atan(ystep/zstep);
     len = zstep / cos(ang);
-
     size = [thick, l, h];
     attachable(anchor,spin,orient, size=size) {
         yrot(90)
@@ -77,8 +76,8 @@ module sparse_wall(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anch
             }
             ycopies(ystep, n=yreps) {
                 xcopies(zstep, n=zreps) {
-                    skew(syx=tan(-ang)) square([(h-strut)/zreps, strut], center=true);
-                    skew(syx=tan( ang)) square([(h-strut)/zreps, strut], center=true);
+                    skew(syx=tan(-ang)) square([(h-strut)/zreps, strut/cos(ang)], center=true);
+                    skew(syx=tan( ang)) square([(h-strut)/zreps, strut/cos(ang)], center=true);
                 }
             }
         }
@@ -98,7 +97,8 @@ module sparse_wall(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anch
 //   Makes an open rectangular cuboid with X-shaped cross-bracing to reduce the need for material in 3d printing.
 //   The direction of the cross bracing can be aligned with the X, Y or Z axis.  This module can be
 //   used as a drop-in replacement for {{cuboid()}} if you belatedly decide that your model would benefit from
-//   the sparse construction.  
+//   the sparse construction.  Note that for Z aligned bracing the max_bridge parameter contrains the gaps that are parallel
+//   to the Y axis, and the angle is measured relative to the X direction.  
 // Arguments:
 //   size = The size of sparse wall, a number or length 3 vector.
 //   dir = direction of holes through the cuboid, must be a vector parallel to the X, Y or Z axes, or one of "X", "Y" or "Z".  Default: "Y"
@@ -119,7 +119,7 @@ module sparse_wall(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anch
 //   sparse_cuboid([10,20,30], strut=1);
 //   sparse_cuboid([10,20,30], "Y", strut=1);
 //   sparse_cuboid([10,20,30], UP, strut=1);
-//   sparse_cuboid(30, FWD, strut=2, rounding=2);
+//   sparse_cuboid(30, FWD, strut=2, rounding=2, $fn=24);
 module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
     chamfer,
     rounding,
