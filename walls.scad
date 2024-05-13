@@ -16,7 +16,7 @@
 // Synopsis: Makes an open cross-braced rectangular wall.
 // SynTags: Geom
 // Topics: FDM Optimized, Walls
-// See Also: sparse_wall(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
+// See Also: corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
 //
 // Usage:
 //   sparse_wall(h, l, thick, [maxang=], [strut=], [max_bridge=]) [ATTACHMENTS];
@@ -30,9 +30,9 @@
 //   l = length of strut wall.
 //   thick = thickness of strut wall.
 //   ---
-//   maxang = maximum overhang angle of cross-braces.
-//   strut = the width of the cross-braces.
-//   max_bridge = maximum bridging distance between cross-braces.
+//   maxang = maximum overhang angle of cross-braces, measured down from vertical.  Default: 30 
+//   strut = the width of the cross-braces. Default: 5
+//   max_bridge = maximum bridging distance between cross-braces.  Default: 20
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -84,6 +84,75 @@ module sparse_wall(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anch
         }
         children();
     }
+}
+
+
+// Module: sparse_cuboid()
+// Synopsis: Makes an open cross-braced cuboid
+// SynTags: Geom
+// Topics: FDM Optimized, Walls
+// See Also: sparse_wall(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut(), cuboid()
+// Usage:
+//   sparse_cuboid(size, [dir], [maxang=], [struct=]
+// Description:
+//   Makes an open rectangular cuboid with X-shaped cross-bracing to reduce the need for material in 3d printing.
+//   The direction of the cross bracing can be aligned with the X, Y or Z axis.  This module can be
+//   used as a drop-in replacement for {{cuboid()}} if you belatedly decide that your model would benefit from
+//   the sparse construction.  
+// Arguments:
+//   size = The size of sparse wall, a number or length 3 vector.
+//   dir = direction of holes through the cuboid, must be a vector parallel to the X, Y or Z axes, or one of "X", "Y" or "Z".  Default: "Y"
+//   ---
+//   maxang = maximum overhang angle of cross-braces, measured down from vertical.  Default: 30 
+//   strut = the width of the cross-braces. Default: 5
+//   max_bridge = maximum bridging distance between cross-braces.  Default: 20
+//   chamfer = Size of chamfer, inset from sides.  Default: No chamfering.
+//   rounding = Radius of the edge rounding.  Default: No rounding.
+//   edges = Edges to mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: all edges.
+//   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: No edges.
+//   trimcorners = If true, rounds or chamfers corners where three chamfered/rounded edges meet.  Default: `true`
+//   teardrop = If given as a number, rounding around the bottom edge of the cuboid won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Examples:
+//   sparse_cuboid([10,20,30], strut=1);
+//   sparse_cuboid([10,20,30], "Y", strut=1);
+//   sparse_cuboid([10,20,30], UP, strut=1);
+//   sparse_cuboid(30, FWD, strut=2, rounding=2);
+module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
+    chamfer,
+    rounding,
+    edges=EDGES_ALL,
+    except=[],
+    except_edges,
+    trimcorners=true,
+    teardrop=false,
+    anchor=CENTER, spin=0, orient=UP)
+{
+  size = scalar_vec3(size);
+  dummy1=assert(in_list(dir,["X","Y","Z"]) || is_vector(dir,3), "dir must be a 3-vector or one of \"X\", \"Y\", or \"Z\"");
+  count = len([for(d=dir) if (d!=0) d]);
+  dummy2=assert(is_string(dir) || (count==1 && len(dir)<=3), "vector valued dir must have exactly one non-zero component");
+  dir = is_string(dir) ? dir
+      : dir.x ? "X"
+      : dir.y ? "Y"
+      : "Z";
+  attachable(anchor,spin,orient,size=size){
+    intersection(){
+      if (dir=="X")
+         sparse_wall(size.z,size.y,size.x,strut=strut,maxang=maxang, max_bridge=max_bridge);
+      else if (dir=="Y")
+         zrot(90)
+           sparse_wall(size.z,size.x,size.y,strut=strut,maxang=maxang, max_bridge=max_bridge);
+      else
+         yrot(90)
+           sparse_wall(size.x,size.y,size.z,strut=strut,maxang=maxang, max_bridge=max_bridge);
+      cuboid(size=size, chamfer=chamfer, rounding=rounding,edges=edges, except=except, except_edges=except_edges,
+           trimcorners=trimcorners, teardrop=teardrop);
+    }
+    children();
+  }    
 }
 
 
