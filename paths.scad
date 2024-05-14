@@ -149,6 +149,7 @@ function path_merge_collinear(path, closed, eps=EPSILON) =
     assert( is_path(path), "Invalid path in path_merge_collinear." )
     assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "Invalid tolerance." )
     len(path)<=2 ? path :
+    let(path = deduplicate(path, closed=closed))
     [
       if(!closed) path[0],
       for(triple=triplet(path,wrap=closed))
