@@ -129,16 +129,8 @@ module sparse_wall2d(size=[50,100], maxang=30, strut=5, max_bridge=20, anchor=CE
 
     ang = atan(ystep/zstep);
     len = zstep / cos(ang);
-<<<<<<< master
-    size = [thick, l, h];
-    attachable(anchor,spin,orient, size=size) {
-        yrot(90)
-        linear_extrude(height=thick, convexity=4*yreps, center=true) {
-=======
-
     attachable(anchor,spin, two_d=true, size=size) {
         union() {
->>>>>>> master
             difference() {
                 square([h, l], center=true);
                 square([h-2*strut, l-2*strut], center=true);
