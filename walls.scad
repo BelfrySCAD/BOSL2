@@ -443,17 +443,6 @@ module _bevelWall(shape, bevel, thickness) {
         linear_extrude(l) polygon(path);
 }
 
-include<BOSL2/walls.scad>
-//corrugated_wall(h=50, l=100, strut=0);
-
-
-// corrugated wall: strut = width of frame
-// note on intersection() etc about slowness and avoid use if possible
-
-//echo(os=offset_stroke(circle(r=10),closed=false, width=0));
-
-
-
 
 // Module: corrugated_wall()
 // Synopsis: Makes a corrugated rectangular wall.
