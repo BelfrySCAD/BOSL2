@@ -3365,10 +3365,12 @@ module fillet(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,length, h, height, anc
 //   surface where the height at any given point is the scalar value for that position.
 //   One script to convert a grayscale image to a heightfield array in a .scad file can be found at:
 //   https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py
+//   The bottom value defines a planar base for the resulting shape and it must be strictly less than
+//   the model data to produce valid geometry, so data which is too small is set to 0.1 units above the bottom value. 
 // Arguments:
 //   data = This is either the 2D rectangular array of heights, or a function literal that takes X and Y arguments.
 //   size = The [X,Y] size of the surface to create.  If given as a scalar, use it for both X and Y sizes. Default: `[100,100]`
-//   bottom = The Z coordinate for the bottom of the heightfield object to create.  Any heights lower than this will be truncated to very slightly above this height.  Default: -20
+//   bottom = The Z coordinate for the bottom of the heightfield object to create.  Any heights lower than this will be truncated to very slightly (0.1) above this height.  Default: -20
 //   maxz = The maximum height to model.  Truncates anything taller to this height.  Set to INF for no truncation.  Default: 100
 //   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
 //   yrange = A range of values to iterate Y over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
@@ -3437,7 +3439,7 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
                     for (x = [0:1:xcnt-1]) [
                         size.x * (x/(xcnt-1)-0.5),
                         size.y * (y/(ycnt-1)-0.5),
-                        min(data[y][x],maxz)
+                        min(max(data[y][x],bottom+0.1),maxz)
                     ]
                 ]
             ] : [
