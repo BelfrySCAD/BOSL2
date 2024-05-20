@@ -1121,9 +1121,9 @@ function rect_tube(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Extra Anchors:
-//   hypot = Center of angled wedge face, perpendicular to that face.
-//   hypot_left = Left side of angled wedge face, bisecting the angle between the left side and angled faces.
-//   hypot_right = Right side of angled wedge face, bisecting the angle between the right side and angled faces.
+//   "hypot" = Center of angled wedge face, perpendicular to that face.
+//   "hypot_left" = Left side of angled wedge face, bisecting the angle between the left side and angled faces.
+//   "hypot_right" = Right side of angled wedge face, bisecting the angle between the right side and angled faces.
 //
 // Example: Centered
 //   wedge([20, 40, 15], center=true);
@@ -2742,9 +2742,9 @@ function torus(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Extra Anchors:
-//   cap = The center of the top of the cap, oriented with the cap face normal.
-//   cap_fwd = The front edge of the cap.
-//   cap_back = The back edge of the cap.
+//   "cap" = The center of the top of the cap, oriented with the cap face normal.
+//   "cap_fwd" = The front edge of the cap.
+//   "cap_back" = The back edge of the cap.
 //
 // Example: Typical Shape
 //   teardrop(r=30, h=10, ang=30);
@@ -2863,8 +2863,8 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
 // Extra Anchors:
-//   cap = The center of the top of the cap, oriented with the cap face normal.
-//   tip = The position where an un-capped onion would come to a point, oriented in the direction the point is from the center.
+//   "cap" = The center of the top of the cap, oriented with the cap face normal.
+//   "tip" = The position where an un-capped onion would come to a point, oriented in the direction the point is from the center.
 //
 // Example: Typical Shape
 //   onion(r=30, ang=30);

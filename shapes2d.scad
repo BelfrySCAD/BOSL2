@@ -864,7 +864,7 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Extra Anchors:
-//   hypot = Center of angled side, perpendicular to that side.
+//   "hypot" = Center of angled side, perpendicular to that side.
 // Example(2D):
 //   right_triangle([40,30]);
 // Example(2D): With `center=true`
