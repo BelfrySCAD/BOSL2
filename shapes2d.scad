@@ -549,7 +549,7 @@ function ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Extra Anchors:
+// Named Anchors:
 //   "tip0", "tip1", etc. = Each tip has an anchor, pointing outwards.
 //   "side0", "side1", etc. = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
@@ -691,7 +691,7 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Extra Anchors:
+// Named Anchors:
 //   "tip0" ... "tip4" = Each tip has an anchor, pointing outwards.
 //   "side0" ... "side4" = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
@@ -752,7 +752,7 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Extra Anchors:
+// Named Anchors:
 //   "tip0" ... "tip5" = Each tip has an anchor, pointing outwards.
 //   "side0" ... "side5" = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
@@ -812,7 +812,7 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Extra Anchors:
+// Named Anchors:
 //   "tip0" ... "tip7" = Each tip has an anchor, pointing outwards.
 //   "side0" ... "side7" = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
@@ -863,7 +863,7 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Extra Anchors:
+// Named Anchors:
 //   "hypot" = Center of angled side, perpendicular to that side.
 // Example(2D):
 //   right_triangle([40,30]);
@@ -1144,7 +1144,7 @@ module trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, ancho
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   atype = Choose "hull" or "intersect" anchor methods.  Default: "hull"
-// Extra Anchors:
+// Named Anchors:
 //   "tip0" ... "tip4" = Each tip has an anchor, pointing outwards.
 //   "pit0" ... "pit4" = The inside corner between each tip has an anchor, pointing outwards.
 //   "midpt0" ... "midpt4" = The center-point between each pair of tips has an anchor, pointing outwards.
@@ -1439,7 +1439,7 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
 //   d1 = diameter of the left-hand circle
 //   d2 = diameter of the right-hand circle
 //   D = diameter of the joining arcs
-// Extra Anchors:
+// Named Anchors:
 //   "left" = center of the left circle
 //   "right" = center of the right circle
 // Example(2D,NoAxes): This first example shows how the egg is constructed from two circles and two joining arcs.
@@ -1930,7 +1930,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Extra Anchors:
+// Named Anchors:
 //   "tip0", "tip1", etc. = Each tip has an anchor, pointing outwards.
 // Examples(2D):
 //   reuleaux_polygon(n=3, r=50);
@@ -2025,7 +2025,7 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 //   script = The script the text is in.  Default: `"latin"`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Extra Anchors:
+// Named Anchors:
 //   "baseline" = Anchors at the baseline of the text, at the start of the string.
 //   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
 // Examples(2D):

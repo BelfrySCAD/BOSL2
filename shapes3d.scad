@@ -1120,7 +1120,7 @@ function rect_tube(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
-// Extra Anchors:
+// Named Anchors:
 //   "hypot" = Center of angled wedge face, perpendicular to that face.
 //   "hypot_left" = Left side of angled wedge face, bisecting the angle between the left side and angled faces.
 //   "hypot_right" = Right side of angled wedge face, bisecting the angle between the right side and angled faces.
@@ -2741,7 +2741,7 @@ function torus(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
-// Extra Anchors:
+// Named Anchors:
 //   "cap" = The center of the top of the cap, oriented with the cap face normal.
 //   "cap_fwd" = The front edge of the cap.
 //   "cap_back" = The back edge of the cap.
@@ -2862,7 +2862,7 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
-// Extra Anchors:
+// Named Anchors:
 //   "cap" = The center of the top of the cap, oriented with the cap face normal.
 //   "tip" = The position where an un-capped onion would come to a point, oriented in the direction the point is from the center.
 //

@@ -373,7 +373,7 @@ function get_metric_nut_thickness(size) = lookup(size, [
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Extra Anchors:
+// Named Anchors:
 //   "base" = At the base of the head.
 //   "countersunk" = At the head height that would be just barely exposed when countersunk.
 // Examples:
@@ -434,7 +434,7 @@ module generic_screw(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Extra Anchors:
+// Named Anchors:
 //   "base" = At the base of the head.
 //   "countersunk" = At the head height that would be just barely exposed when countersunk.
 //   "shank" = At the bottom start of the unthreaded shank.

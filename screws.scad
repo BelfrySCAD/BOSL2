@@ -277,7 +277,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   shaft = screw shaft
 //   shank = unthreaded section of shaft (invalid if screw is fully threaded)
 //   threads = threaded section of screw     
-// Extra Anchors:
+// Named Anchors:
 //   "top" = top of screw
 //   "bot" = bottom of screw
 //   "center" = center of screw
@@ -803,7 +803,7 @@ module screw(spec, head, drive, thread, drive_size,
 //   shaft = screw shaft
 //   shank = unthreaded section of shaft (invalid if screw is fully threaded)
 //   threads = threaded section of screw     
-// Extra Anchors:
+// Named Anchors:
 //   "top" = top of screw
 //   "bot" = bottom of screw
 //   "center" = center of screw
@@ -1037,7 +1037,7 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
 //   shoulder = the shoulder
 //   shaft = screw shaft
 //   threads = threaded section of screw     
-// Extra Anchors:
+// Named Anchors:
 //   "top" = top of screw
 //   "bot" = bottom of screw
 //   "center" = center of screw

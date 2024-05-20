@@ -163,7 +163,7 @@
 //   atype = Select "hull" or "intersect" anchor types. Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   style = vnf_vertex_array style.  Default: "min_edge"
-// Extra Anchors:
+// Named Anchors:
 //   "origin" = The native position of the shape.  
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
@@ -564,7 +564,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
 //   "bbox" = Anchors to the bounding box of the extruded shape.
-// Extra Anchors:
+// Named Anchors:
 //   "origin" = Centers the extruded shape vertically only, but keeps the original path positions in the X and Y.  Oriented UP.
 //   "original_base" = Keeps the original path positions in the X and Y, but at the bottom of the extrusion.  Oriented UP.
 // Example: Extruding a Compound Region.
@@ -886,7 +886,7 @@ function linear_sweep(
 //   anchor = Translate so anchor point is at the origin. Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor. Default: 0
 //   orient = Vector to rotate top towards after spin  (module only)
-// Extra Anchors:
+// Named Anchors:
 //   "origin" = The native position of the shape.  
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
@@ -1496,7 +1496,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
-// Extra Anchors:
+// Named Anchors:
 //   "origin" = The native position of the shape
 //   "start" = When `closed==false`, the origin point of the shape, on the starting face of the object
 //   "end" = When `closed==false`, the origin point of the shape, on the ending face of the object
@@ -2045,7 +2045,7 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
 //   orient = Vector to rotate top towards after spin
 //   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
-// Extra Anchors:
+// Named Anchors:
 //   "origin" = The native position of the shape.  
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
@@ -2178,7 +2178,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   anchor = Translate so anchor point is at the origin. Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor. Default: 0
 //   orient = Vector to rotate top towards after spin  (module only)
-// Extra Anchors:
+// Named Anchors:
 //   "origin" = The native position of the shape.  
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
@@ -3877,7 +3877,7 @@ function texture(tex, n, border, gap, roughness, inset) =
 ///   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 ///   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 ///   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-/// Extra Anchors:
+/// Named Anchors:
 ///   "centroid_top" = The centroid of the top of the shape, oriented UP.
 ///   "centroid" = The centroid of the center of the shape, oriented UP.
 ///   "centroid_bot" = The centroid of the bottom of the shape, oriented DOWN.

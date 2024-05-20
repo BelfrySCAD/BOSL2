@@ -1374,7 +1374,7 @@ function quadratic_roots(a,b,c,real=false) =
 
 
 // Function: polynomial() 
-// Synopsis: Calculates a polynomial equation at a given value.
+// Synopsis: Evaluate a polynomial at a real or complex value.
 // Topics: Math, Complex Numbers
 // See Also: quadratic_roots(), polynomial(), poly_mult(), poly_div(), poly_add(), poly_roots()
 // Usage:
@@ -1394,7 +1394,7 @@ function polynomial(p,z,k,total) =
 
 
 // Function: poly_mult()
-// Synopsis: Returns the polynomial result of multiplying two polynomial equations.
+// Synopsis: Compute product of two polynomials, returning a polynomial.
 // Topics: Math
 // See Also: quadratic_roots(), polynomial(), poly_mult(), poly_div(), poly_add(), poly_roots()
 // Usage:
@@ -1416,7 +1416,7 @@ function poly_mult(p,q) =
 
     
 // Function: poly_div()
-// Synopsis: Returns the polynomial quotient and remainder results of dividing two polynomial equations.
+// Synopsis: Returns the polynomial quotient and remainder results of dividing two polynomials.
 // Topics: Math
 // See Also: quadratic_roots(), polynomial(), poly_mult(), poly_div(), poly_add(), poly_roots()
 // Usage:
@@ -1457,7 +1457,7 @@ function _poly_trim(p,eps=0) =
 
 
 // Function: poly_add()
-// Synopsis: Returns the polynomial sum of adding two polynomial equations.
+// Synopsis: Returns the polynomial sum of adding two polynomials.
 // Topics: Math
 // See Also: quadratic_roots(), polynomial(), poly_mult(), poly_div(), poly_add(), poly_roots()
 // Usage:
@@ -1475,7 +1475,7 @@ function poly_add(p,q) =
 
 
 // Function: poly_roots()
-// Synopsis: Returns all complex number roots of the given real polynomial.
+// Synopsis: Returns all complex valued roots of the given real polynomial.
 // Topics: Math, Complex Numbers
 // See Also: quadratic_roots(), polynomial(), poly_mult(), poly_div(), poly_add(), poly_roots()
 // Usage:
@@ -1563,7 +1563,8 @@ function _poly_roots(p, pderiv, s, z, tol, i=0) =
 //   parts are zero.  You can specify eps, in which case the test is
 //   z.y/(1+norm(z)) < eps.  Because
 //   of poor convergence and higher error for repeated roots, such roots may
-//   be missed by the algorithm because their imaginary part is large.
+//   be missed by the algorithm because error can make their imaginary parts
+//   large enough to appear non-zero.  
 // Arguments:
 //   p = polynomial to solve as coefficient list, highest power term first
 //   eps = used to determine whether imaginary parts of roots are zero

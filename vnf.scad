@@ -1063,7 +1063,7 @@ function _slice_3dpolygons(polys, dir, cuts) =
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
-// Extra Anchors:
+// Named Anchors:
 //   "origin" = Anchor at the origin, oriented UP.
 module vnf_polyhedron(vnf, convexity=2, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") {
     vnf = is_vnf_list(vnf)? vnf_join(vnf) : vnf;

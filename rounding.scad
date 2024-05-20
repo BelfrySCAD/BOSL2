@@ -951,7 +951,7 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   spin = Rotate this many degrees after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 2D point.  Default: "centroid"
 //   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
-// Extra Anchors:
+// Named Anchors:
 //   "origin" = The native position of the region.
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the region.
@@ -1379,7 +1379,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   intersect = Anchors to the surface of the linear sweep of the path, ignoring any end roundings.
 //   surf_hull = Anchors to the convex hull of the offset_sweep shape, including end treatments.
 //   surf_intersect = Anchors to the surface of the offset_sweep shape, including any end treatments.
-// Extra Anchors:
+// Named Anchors:
 //   "base" = Anchor to the base of the shape in its native position, ignoring any "extra"
 //   "top" = Anchor to the top of the shape in its native position, ignoring any "extra"
 //   "zcenter" = Center shape in the Z direction in the native XY position, ignoring any "extra"
@@ -2087,7 +2087,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   orient = Vector to rotate top towards after spin  (module only)
 //   atype = Select "hull" or "intersect" anchor types.  (module only) Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  (module only) Default: "centroid"
-// Extra Anchors:
+// Named Anchors:
 //   "origin" = The native position of the prism.
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the prism. 
@@ -2802,7 +2802,7 @@ Access to the derivative smoothing parameter?
 //   orient = Vector to rotate top towards after spin  (module only)
 //   atype = Select "hull" or "intersect" anchor types.  (module only) Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  (module only) Default: "centroid"
-// Extra Anchors:
+// Named Anchors:
 //   "root" = Root point of the joiner prism, pointing out in the direction of the prism axis
 //   "end" = End point of the joiner prism, pointing out in the direction of the prism axis
 // Example(3D,NoScales): Here is the simplest case, a circular prism with a specified length standing vertically on a plane.  

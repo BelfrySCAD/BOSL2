@@ -1643,7 +1643,7 @@ module ring_gear2d(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Extra Anchors:
+// Named Anchors:
 //   "root" = At the base of the teeth, at the center of rack.
 //   "root-left" = At the base of the teeth, at the left end of the rack.
 //   "root-right" = At the base of the teeth, at the right end of the rack.
@@ -1912,7 +1912,7 @@ function rack(
 //   rounding = If true, rack tips and valleys are slightly rounded.  Default: true
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Extra Anchors:
+// Named Anchors:
 //   "root" = At the height of the teeth, at the center of rack.
 //   "root-left" = At the height of the teeth, at the left end of the rack.
 //   "root-right" = At the height of the teeth, at the right end of the rack.
@@ -2363,7 +2363,7 @@ module crown_gear(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: "pitchbase"
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Extra Anchors:
+// Named Anchors:
 //   "pitchbase" = With the base of the pitch cone in the XY plane, centered at the origin.  This is the natural height for the gear, and the default anchor.
 //   "apex" = At the pitch cone apex for the bevel gear.
 //   "flattop" = At the top of the flat top of the bevel gear.

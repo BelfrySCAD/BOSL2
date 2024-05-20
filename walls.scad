@@ -256,7 +256,7 @@ module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   atype = Select "hull", "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
-// Extra Anchors:
+// Named Anchors:
 //   "base" = Anchor to the base of the shape in its native position
 //   "top" = Anchor to the top of the shape in its native position
 //   "zcenter" = Center shape in the Z direction in the native XY position (default)
