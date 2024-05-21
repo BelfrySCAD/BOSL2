@@ -2957,7 +2957,7 @@ function reorient(
     axis=UP, override, 
     geom,
     p=undef
-) =
+) = 
     assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
     assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
     assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient))
@@ -3571,7 +3571,7 @@ function _force_anchor_2d(anchor) =
 ///   geom = The geometry description of the shape.
 function _find_anchor(anchor, geom) =
     is_string(anchor)? (
-          anchor=="origin"? [anchor, CENTER, UP, 0]
+          anchor=="origin"? [anchor, CENTER, UP, 0]    // Ok that this returns 3d anchor in the 2d case?
         : let(
               anchors = last(geom),
               found = search([anchor], anchors, num_returns_per_match=1)[0]

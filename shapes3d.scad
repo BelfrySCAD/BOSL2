@@ -1120,10 +1120,10 @@ function rect_tube(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
-// Extra Anchors:
-//   hypot = Center of angled wedge face, perpendicular to that face.
-//   hypot_left = Left side of angled wedge face, bisecting the angle between the left side and angled faces.
-//   hypot_right = Right side of angled wedge face, bisecting the angle between the right side and angled faces.
+// Named Anchors:
+//   "hypot" = Center of angled wedge face, perpendicular to that face.
+//   "hypot_left" = Left side of angled wedge face, bisecting the angle between the left side and angled faces.
+//   "hypot_right" = Right side of angled wedge face, bisecting the angle between the right side and angled faces.
 //
 // Example: Centered
 //   wedge([20, 40, 15], center=true);
@@ -2741,10 +2741,10 @@ function torus(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
-// Extra Anchors:
-//   cap = The center of the top of the cap, oriented with the cap face normal.
-//   cap_fwd = The front edge of the cap.
-//   cap_back = The back edge of the cap.
+// Named Anchors:
+//   "cap" = The center of the top of the cap, oriented with the cap face normal.
+//   "cap_fwd" = The front edge of the cap.
+//   "cap_back" = The back edge of the cap.
 //
 // Example: Typical Shape
 //   teardrop(r=30, h=10, ang=30);
@@ -2862,9 +2862,9 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
-// Extra Anchors:
-//   cap = The center of the top of the cap, oriented with the cap face normal.
-//   tip = The position where an un-capped onion would come to a point, oriented in the direction the point is from the center.
+// Named Anchors:
+//   "cap" = The center of the top of the cap, oriented with the cap face normal.
+//   "tip" = The position where an un-capped onion would come to a point, oriented in the direction the point is from the center.
 //
 // Example: Typical Shape
 //   onion(r=30, ang=30);
@@ -3365,10 +3365,12 @@ module fillet(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,length, h, height, anc
 //   surface where the height at any given point is the scalar value for that position.
 //   One script to convert a grayscale image to a heightfield array in a .scad file can be found at:
 //   https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py
+//   The bottom value defines a planar base for the resulting shape and it must be strictly less than
+//   the model data to produce valid geometry, so data which is too small is set to 0.1 units above the bottom value. 
 // Arguments:
 //   data = This is either the 2D rectangular array of heights, or a function literal that takes X and Y arguments.
 //   size = The [X,Y] size of the surface to create.  If given as a scalar, use it for both X and Y sizes. Default: `[100,100]`
-//   bottom = The Z coordinate for the bottom of the heightfield object to create.  Any heights lower than this will be truncated to very slightly above this height.  Default: -20
+//   bottom = The Z coordinate for the bottom of the heightfield object to create.  Any heights lower than this will be truncated to very slightly (0.1) above this height.  Default: -20
 //   maxz = The maximum height to model.  Truncates anything taller to this height.  Set to INF for no truncation.  Default: 100
 //   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
 //   yrange = A range of values to iterate Y over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
@@ -3437,7 +3439,7 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
                     for (x = [0:1:xcnt-1]) [
                         size.x * (x/(xcnt-1)-0.5),
                         size.y * (y/(ycnt-1)-0.5),
-                        min(data[y][x],maxz)
+                        min(max(data[y][x],bottom+0.1),maxz)
                     ]
                 ]
             ] : [

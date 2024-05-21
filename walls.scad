@@ -9,6 +9,8 @@
 //////////////////////////////////////////////////////////////////////
 
 
+include<rounding.scad>
+
 // Section: Walls
 
 
@@ -16,7 +18,7 @@
 // Synopsis: Makes an open cross-braced rectangular wall.
 // SynTags: Geom
 // Topics: FDM Optimized, Walls
-// See Also: sparse_wall(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
+// See Also: corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
 //
 // Usage:
 //   sparse_wall(h, l, thick, [maxang=], [strut=], [max_bridge=]) [ATTACHMENTS];
@@ -30,9 +32,9 @@
 //   l = length of strut wall.
 //   thick = thickness of strut wall.
 //   ---
-//   maxang = maximum overhang angle of cross-braces.
-//   strut = the width of the cross-braces.
-//   max_bridge = maximum bridging distance between cross-braces.
+//   maxang = maximum overhang angle of cross-braces, measured down from vertical.  Default: 30 
+//   strut = the width of the cross-braces. Default: 5
+//   max_bridge = maximum bridging distance between cross-braces.  Default: 20
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -129,7 +131,6 @@ module sparse_wall2d(size=[50,100], maxang=30, strut=5, max_bridge=20, anchor=CE
 
     ang = atan(ystep/zstep);
     len = zstep / cos(ang);
-
     attachable(anchor,spin, two_d=true, size=size) {
         union() {
             difference() {
@@ -138,13 +139,310 @@ module sparse_wall2d(size=[50,100], maxang=30, strut=5, max_bridge=20, anchor=CE
             }
             ycopies(ystep, n=yreps) {
                 xcopies(zstep, n=zreps) {
-                    skew(syx=tan(-ang)) square([(h-strut)/zreps, strut], center=true);
-                    skew(syx=tan( ang)) square([(h-strut)/zreps, strut], center=true);
+                    skew(syx=tan(-ang)) square([(h-strut)/zreps, strut/cos(ang)], center=true);
+                    skew(syx=tan( ang)) square([(h-strut)/zreps, strut/cos(ang)], center=true);
                 }
             }
         }
         children();
     }
+}
+
+
+// Module: sparse_cuboid()
+// Synopsis: Makes an open cross-braced cuboid
+// SynTags: Geom
+// Topics: FDM Optimized, Walls
+// See Also: sparse_wall(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut(), cuboid()
+// Usage:
+//   sparse_cuboid(size, [dir], [maxang=], [struct=]
+// Description:
+//   Makes an open rectangular cuboid with X-shaped cross-bracing to reduce the need for material in 3d printing.
+//   The direction of the cross bracing can be aligned with the X, Y or Z axis.  This module can be
+//   used as a drop-in replacement for {{cuboid()}} if you belatedly decide that your model would benefit from
+//   the sparse construction.  Note that for Z aligned bracing the max_bridge parameter contrains the gaps that are parallel
+//   to the Y axis, and the angle is measured relative to the X direction.  
+// Arguments:
+//   size = The size of sparse wall, a number or length 3 vector.
+//   dir = direction of holes through the cuboid, must be a vector parallel to the X, Y or Z axes, or one of "X", "Y" or "Z".  Default: "Y"
+//   ---
+//   maxang = maximum overhang angle of cross-braces, measured down from vertical.  Default: 30 
+//   strut = the width of the cross-braces. Default: 5
+//   max_bridge = maximum bridging distance between cross-braces.  Default: 20
+//   chamfer = Size of chamfer, inset from sides.  Default: No chamfering.
+//   rounding = Radius of the edge rounding.  Default: No rounding.
+//   edges = Edges to mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: all edges.
+//   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: No edges.
+//   trimcorners = If true, rounds or chamfers corners where three chamfered/rounded edges meet.  Default: `true`
+//   teardrop = If given as a number, rounding around the bottom edge of the cuboid won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Examples:
+//   sparse_cuboid([10,20,30], strut=1);
+//   sparse_cuboid([10,20,30], "Y", strut=1);
+//   sparse_cuboid([10,20,30], UP, strut=1);
+//   sparse_cuboid(30, FWD, strut=2, rounding=2, $fn=24);
+module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
+    chamfer,
+    rounding,
+    edges=EDGES_ALL,
+    except=[],
+    except_edges,
+    trimcorners=true,
+    teardrop=false,
+    anchor=CENTER, spin=0, orient=UP)
+{
+  size = scalar_vec3(size);
+  dummy1=assert(in_list(dir,["X","Y","Z"]) || is_vector(dir,3), "dir must be a 3-vector or one of \"X\", \"Y\", or \"Z\"");
+  count = len([for(d=dir) if (d!=0) d]);
+  dummy2=assert(is_string(dir) || (count==1 && len(dir)<=3), "vector valued dir must have exactly one non-zero component");
+  dir = is_string(dir) ? dir
+      : dir.x ? "X"
+      : dir.y ? "Y"
+      : "Z";
+  attachable(anchor,spin,orient,size=size){
+    intersection(){
+      if (dir=="X")
+         sparse_wall(size.z,size.y,size.x,strut=strut,maxang=maxang, max_bridge=max_bridge);
+      else if (dir=="Y")
+         zrot(90)
+           sparse_wall(size.z,size.x,size.y,strut=strut,maxang=maxang, max_bridge=max_bridge);
+      else
+         yrot(90)
+           sparse_wall(size.x,size.y,size.z,strut=strut,maxang=maxang, max_bridge=max_bridge);
+      cuboid(size=size, chamfer=chamfer, rounding=rounding,edges=edges, except=except, except_edges=except_edges,
+           trimcorners=trimcorners, teardrop=teardrop);
+    }
+    children();
+  }    
+}
+
+
+// Module: hex_panel()
+// Usage:
+//   hex_panel(shape, wall, spacing, [frame=], [bevel=], [bevel_frame=], [h=|height=|l=|length=], [anchor=], [orient=], [spin=])
+// Description:
+//   Produces a panel with a honeycomb interior. The panel consists of a frame containing
+//   a honeycob interior. The frame is laid out in the XY plane with the honeycob interior 
+//   and then extruded to the height h. The shape argument defines the outer bounderies of
+//   the frame.
+//   .
+//   The simplest way to define the frame shape is to give a cuboid size as a 3d vector for
+//   the shape argument.  The h argument is not allowed in this case.  With rectangular frames you can supply the
+//   bevel argument which applies a 45 deg bevel on the specified list of edges.  These edges
+//   can be LEFT, RIGHT, FRONT, or BACK to place a bevel the edge facing upward.  You can add
+//   BOTTOM, as in LEFT+BOT, to get a bevel that faces down.  When beveling a separate beveled frame
+//   is added to the model.  You can independently control its thickness by setting `bevel_frame`, which
+//   defaults to the frame thickness.  Note also that `frame` and `bevel_frame` can be set to zero
+//   to produce just the honeycomb.  
+//   . 
+//   The other option is to provide a 2D path as the shape argument. The path must not intersect
+//   itself.  You must give the height argument in this case and you cannot give the bevel argument.
+//   The panel is made from a linear extrusion of the specified shape.  In this case, anchoring
+//   is done as usual for linear sweeps.  The shape appears by default on its base and you can
+//   choose "hull" or "intersect" anchor types.  
+// Arguments:
+//   shape = 3D size vector or a 2D path
+//   strut = thickness of hexagonal bracing
+//   spacing = center-to-center spacing of hex cells in the honeycomb.
+//   --
+//   frame = width of the frame around the honeycomb.  Default: same as strut
+//   bevel = list of edges to bevel on rectangular case when shape is a size vector; allowed options are RIGHT, LEFT, BACK, or FRONT, or those directions with BOTTOM added.  Default: []
+//   bevel_frame = width of the frame applied at bevels.  Default: same as frame
+//   h / height / l / length = thickness of the panel when shape is a path 
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER` for rectangular panels, `"zcenter"` for extrusions.  
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   atype = Select "hull", "intersect" anchor types.  Default: "hull"
+//   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+// Named Anchors:
+//   "base" = Anchor to the base of the shape in its native position
+//   "top" = Anchor to the top of the shape in its native position
+//   "zcenter" = Center shape in the Z direction in the native XY position (default)
+// Anchor Types:
+//   hull = Anchors to the convex hull of the linear sweep of the path, ignoring any end roundings. 
+//   intersect = Anchors to the surface of the linear sweep of the path, ignoring any end roundings.
+// Examples
+//     hex_panel([50, 100, 5], strut=1.5, spacing=10);
+//     hex_panel([50, 100, 5], 1.5, 10, frame = 5);
+//     hex_panel([50, 100, 5], 5, 10.05);
+//     hex_panel([50, 100, 5], 1.5, 20, frame = 5);
+//     hex_panel([50, 100, 5], 1.5, 12, frame = 0);
+//     hex_panel([50, 100, 5], frame = 10, spacing = 20, strut = 4);
+//     hex_panel([50, 100, 10], 1.5, 10, frame = 5, bevel = [LEFT, RIGHT]);
+//     hex_panel([50, 100, 10], 1.5, 10, frame = 5, bevel = [FWD,  BACK]);
+//     hex_panel([50, 100, 10], 1.5, 10, frame = 3, bevel = [LEFT, RIGHT, FWD, BACK]);
+//     hex_panel([50, 100, 10], 1.5, 10, frame = 1, bevel = [LEFT, RIGHT, FWD+BOTTOM, BACK+BOTTOM]);
+//     hex_panel([50, 100, 10], 1.5, 10, frame=2, bevel_frame=0, bevel = [FWD, BACK+BOT, RIGHT, LEFT]);
+// Example: Triangle
+//     s = [[0, -40], [0, 40], [60, 0]];
+//     hex_panel(s, strut=1.5, spacing=10, h = 10, frame = 5); 
+// Example: Concave polygon
+//     s = [[0, -40], [0, 70], [60, 0], [80, 20], [70, -20]];
+//     hex_panel(s, 1.5, 10, h = 10, frame = 5); 
+// Example: Another concave example
+//     s = [[0, -40], [0, 40], [30, 20], [60, 40], [60, -40], [30, -20]];
+//     hex_panel(s, 1.5, 10, h = 10, frame = 5); 
+// Example: Circular panel
+//     hex_panel(circle(30), 1.5, 10, h = 10, frame = 5);
+// Example: More complicated shape
+//     s = glued_circles(d=50, spread=50, tangent=30);
+//     hex_panel(s, 1.5, 10, h = 10, frame = 5);
+// Example: Care is required when arranging panels vertically for 3d printability.  Setting `orient=RIGHT` produces the correct result. 
+//     hex_panel([50, 100, 10], 1.5, 10, frame = 5, bevel = [FWD, BACK], anchor = BACK + RIGHT + BOTTOM, orient = RIGHT);
+//     zrot(-90)hex_panel([50, 100, 10], 1.5, 10, frame = 5,  bevel = [FWD, BACK], anchor = FWD + RIGHT + BOTTOM, orient = RIGHT);
+// Example: In this example panels one of the panels is positioned with `orient=FWD` which produces hexagons with 60 deg overhang edges that may not be 3d printable.  This example alsu uses `bevel_frame` to thin the material at the corner.  
+//     hex_panel([50, 100, 10], 1.5, 10, frame = 5, bevel_frame=1, bevel = [FWD,  BACK], anchor = BACK + RIGHT + BOTTOM, orient = RIGHT);
+//     hex_panel([100, 50, 10], 1.5, 10, frame = 5, bevel_frame=1, bevel = [LEFT, RIGHT], anchor = FWD + LEFT + BOTTOM, orient = FWD);
+// Example: Joining panels with {{attach()}}.  In this case panels were joined front beveled edge to back beveled edge, which means the hex structure doesn't align at the joint
+//     hex_panel([50, 100, 10], 1.5, 10, frame = 5, bevel_frame=0, bevel = [FWD, BACK], anchor = BACK + RIGHT + BOTTOM, orient = RIGHT)
+//       attach(BACK,FRONT) 
+//          hex_panel([50, 100, 10], 1.5, 10, frame = 5, bevel_frame=0, bevel = [FWD, BACK]);
+// Example: Joining panels with {{attach()}}.  Attaching BACK to BACK aligns the hex structure which looks better.  
+//     hex_panel([50, 100, 10], 1.5, 10, frame = 1, bevel = [FWD, BACK], anchor = BACK + RIGHT + BOTTOM, orient = RIGHT)
+//       attach(BACK,BACK) 
+//          hex_panel([50, 100, 10], 1.5, 10, frame = 1, bevel = [FWD, BACK]);
+module hex_panel(
+    shape,
+    strut,
+    spacing,
+    frame,
+    bevel_frame,
+    h, height, l, length, 
+    bevel = [],
+    anchor, 
+    orient = UP, cp="centroid", atype="hull",
+    spin = 0) 
+{
+    frame = first_defined([frame,strut]);
+    bevel_frame = first_defined([bevel_frame, frame]);
+    shape = force_path(shape,"shape");
+    bevel = is_vector(bevel) ? [bevel] : bevel;
+    bevOK = len([for(bev=bevel) if (norm([bev.x,bev.y])==1 && (bev.x==0 || bev.y==0) && (bev.z==0 || bev.z==-1)) 1]) == len(bevel);
+    dummy=
+      assert(is_finite(strut) && strut > 0, "strut must be positive")
+      assert(is_finite(frame) && frame >= 0, "frame must be nonnegative")
+      assert(is_finite(bevel_frame) && bevel_frame >= 0, "bevel_frame must be nonnegative")
+      assert(is_finite(spacing) && spacing>0, "spacing must be positive")
+      assert(is_path(shape,2) || is_vector(shape, 3), "shape must be a path or a 3D vector")
+      assert(len(bevel) == 0 || is_vector(shape, 3), "bevel must be used only on rectangular panels")
+      assert(is_path(shape) || all_positive(shape), "when shape is a size vector all components must be positive")
+      assert(bevOK, "bevel list contains an invalid entry")
+      assert(!(in_list(FRONT, bevel) && in_list(FRONT+BOTTOM, bevel)), "conflicting FRONT bevels")
+      assert(!(in_list(BACK,  bevel) && in_list(BACK+BOTTOM,  bevel)), "conflicting BACK bevels")
+      assert(!(in_list(RIGHT, bevel) && in_list(RIGHT+BOTTOM, bevel)), "conflicting RIGHT bevels")
+      assert(!(in_list(LEFT,  bevel) && in_list(LEFT+BOTTOM,  bevel)), "conflicting LEFT bevels")
+      assert(is_undef(h) || is_path(shape), "cannot give h with a size vector");
+    shp = is_path(shape) ? shape : square([shape.x, shape.y], center = true);
+    ht = is_path(shape) ? one_defined([h,l,height,length],"height,length,l,h")
+       : shape.z;
+    
+    bounds = pointlist_bounds(shp);
+    sizes = bounds[1] - bounds[0]; // [xsize, ysize]
+    assert(frame*2 + spacing < sizes[0], "There must be room for at least 1 cell in the honeycomb");
+    assert(frame*2 + spacing < sizes[1], "There must be room for at least 1 cell in the honeycomb");
+
+    bevpaths = len(bevel)==0 ? []
+             : _bevelSolid(shape,bevel);
+    if (len(bevel) > 0) {
+         size1 = [bevpaths[0][0].x-bevpaths[0][1].x, bevpaths[0][2].y-bevpaths[0][1].y,ht];
+         size2 = [bevpaths[1][0].x-bevpaths[1][1].x, bevpaths[1][2].y-bevpaths[1][1].y];
+         shift = point2d(centroid(bevpaths[1])-centroid(bevpaths[0]));
+         offset = (centroid(bevpaths[0]));
+         attachable(anchor,spin,orient,size=size1,size2=size2,shift=shift,offset=offset){
+             down(ht/2)
+                 intersection() {
+                     union() {
+                         linear_extrude(height = ht, convexity=8) {
+                             _honeycomb(shp, spacing = spacing, hex_wall = strut);
+                             offset_stroke(shp, width=[-frame, 0], closed=true);
+                         }
+                         for (b = bevel) _bevelWall(shape, b, bevel_frame);
+                     }
+                     vnf_polyhedron(vnf_vertex_array(bevpaths, col_wrap=true, caps=true));
+                 }
+             children();
+         }
+     }
+     else if (is_vector(shape)){
+         attachable(anchor = anchor, spin = spin, orient = orient, size = shape) {        
+             down(ht/2) 
+                 linear_extrude(height = ht, convexity=8) {
+                     _honeycomb(shp, spacing = spacing, hex_wall = strut);
+                     offset_stroke(shp, width=[-frame, 0], closed=true);
+                 }
+             children();
+         }
+    }
+    else {
+         anchors = [
+           named_anchor("zcenter", [0,0,0], UP),
+           named_anchor("base", [0,0,-ht/2], UP),
+           named_anchor("top", [0,0,ht/2], UP)          
+         ];
+         attachable(anchor = default(anchor,"zcenter"), spin = spin, orient = orient, path=shp, h=ht, cp=cp, extent=atype=="hull",anchors=anchors) {        
+              down(ht/2) 
+                 linear_extrude(height = ht, convexity=8) {
+                     _honeycomb(shp, spacing = spacing, hex_wall = strut);
+                     offset_stroke(shp, width=[-frame, 0], closed=true);
+                 }
+             children();
+         }
+
+    } 
+}
+
+
+module _honeycomb(shape, spacing=10, hex_wall=1) 
+{
+        hex = hexagon(id=spacing-hex_wall, spin=180/6);
+        bounds = pointlist_bounds(shape);
+        size = bounds[1] - bounds[0];
+        hex_rgn2 = grid_copies(spacing=spacing, size=size, stagger=true, p=hex);
+        center = (bounds[0] + bounds[1]) / 2;
+        hex_rgn = move(center, p=hex_rgn2);
+        difference(){
+            polygon(shape);
+            region(hex_rgn);
+        }
+}
+
+
+function _bevelSolid(shape, bevel) =
+  let(
+    tX = in_list(RIGHT,          bevel) ? -shape.z : 0,
+    tx = in_list(LEFT,           bevel) ?  shape.z : 0,
+    tY = in_list(BACK,           bevel) ? -shape.z : 0,
+    ty = in_list(FRONT,          bevel) ?  shape.z : 0,
+    bX = in_list(RIGHT + BOTTOM, bevel) ? -shape.z : 0,
+    bx = in_list(LEFT  + BOTTOM, bevel) ?  shape.z : 0,
+    bY = in_list(BACK  + BOTTOM, bevel) ? -shape.z : 0,
+    by = in_list(FRONT + BOTTOM, bevel) ?  shape.z : 0,
+    pathB = path3d(rect(select(shape,0,1)) + [[bX,by],[bx,by],[bx,bY],[bX,bY]]),
+    pathT = path3d(rect(select(shape,0,1)) + [[tX,ty],[tx,ty],[tx,tY],[tX,tY]],shape.z)
+  )
+  [pathB,pathT];
+
+module _bevelWall(shape, bevel, thickness) {
+
+    l = bevel.y != 0 ? shape.x : shape.y;
+    d = bevel.y != 0 ? shape.y : shape.x;
+    zr = bevel.y == -1 ? 180 
+       : bevel.y ==  1 ? 0 
+       : bevel.x == -1 ? 90 
+       : bevel.x ==  1 ? 270 
+       : undef;
+    xr = bevel.x != 0 && bevel.z < 0 ? 180 : 0;
+    yr = bevel.y != 0 && bevel.z < 0 ? 180 : 0;
+    
+    path = [[-thickness, 0], [0, 0], [-shape.z, -shape.z], [-shape.z-thickness, -shape.z]];
+
+    up(shape.z/2)
+    xrot(xr) yrot(yr) zrot(zr) down(shape.z/2)
+      back(d/2) right(l/2) 
+      zrot(90) xrot(-90)
+        linear_extrude(l) polygon(path);
 }
 
 
@@ -166,7 +464,7 @@ module sparse_wall2d(size=[50,100], maxang=30, strut=5, max_bridge=20, anchor=CE
 //   l = length of strut wall.
 //   thick = thickness of strut wall.
 //   ---
-//   strut = the width of the cross-braces.
+//   strut = the width of the frame.
 //   wall = thickness of corrugations.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`

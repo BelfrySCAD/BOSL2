@@ -249,20 +249,6 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 //               rounding_edge_mask(l=p.z, r=25);
 //       }
 //   }
-// Example: Acute angle 
-//   ang=60;
-//   difference() {
-//       pie_slice(ang=ang, h=50, r=100);
-//       zflip_copy(z=25)
-//          #rounding_corner_mask(r=20, ang=ang);
-//   }
-// Example: Obtuse angle 
-//   ang=120;
-//   difference() {
-//       pie_slice(ang=ang, h=50, r=30);
-//       zflip_copy(z=25)
-//          #rounding_corner_mask(r=20, ang=ang);
-//   }
 
 function rounding_edge_mask(l, r, ang=90, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, spin=0, orient=UP, h,height,length) = no_function("rounding_edge_mask");
 module rounding_edge_mask(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,r,length, h, height, anchor=CENTER, spin=0, orient=UP,
@@ -274,7 +260,7 @@ module rounding_edge_mask(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,r,length, 
     dummy = assert(all_nonnegative([r1,r2]), "radius/diameter value(s) must be nonnegative")
             assert(all_positive([length]), "length/l/h/height must be a positive value")
             assert(is_finite(ang) && ang>0 && ang<180, "ang must be a number between 0 and 180");
-    steps = ceil(segs(r)*(180-ang)/360);
+    steps = ceil(segs(max(r1,r2))*(180-ang)/360);
     function make_path(r) =
         let(
              arc = r==0 ? repeat([0,0],steps+1)
@@ -383,8 +369,21 @@ module rounding_edge_mask(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,r,length, 
 //       corner_mask(TOP)
 //           #rounding_corner_mask(r=20);
 //   }
-// Example: Acute angle mask
-// 
+// Example(VPR=[71.8,0,345.8],VPT=[57.0174,43.8496,24.5863],VPD=263.435,NoScales): Acute angle 
+//   ang=60;
+//   difference() {
+//       pie_slice(ang=ang, h=50, r=100);
+//       zflip_copy(z=25)
+//          #rounding_corner_mask(r=20, ang=ang);
+//   }
+// Example(VPR=[62.7,0,5.4],VPT=[6.9671,22.7592,20.7513],VPD=192.044): Obtuse angle 
+//   ang=120;
+//   difference() {
+//       pie_slice(ang=ang, h=50, r=30);
+//       zflip_copy(z=25)
+//          #rounding_corner_mask(r=20, ang=ang);
+//   }
+
 function rounding_corner_mask(r, ang, d, style="octa", excess=0.1, anchor=CENTER, spin=0, orient=UP) = no_function("rounding_corner_mask");
 module rounding_corner_mask(r, ang=90, d, style="octa", excess=0.1, anchor=CENTER, spin=0, orient=UP)
 {

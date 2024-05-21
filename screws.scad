@@ -277,22 +277,22 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 //   shaft = screw shaft
 //   shank = unthreaded section of shaft (invalid if screw is fully threaded)
 //   threads = threaded section of screw     
-// Extra Anchors:
-//   top = top of screw
-//   bot = bottom of screw
-//   center = center of screw
-//   head_top = top of head (same as top for headless screws)
-//   head_bot = bottom of head (same as top for headless screws)
-//   head_center = center of head (same as top for headless screws)
-//   shaft_top = top of shaft
-//   shaft_bot = bottom of shaft
-//   shaft_center = center of shaft
-//   shank_top = top of shank (invalid if screw is fully threaded)
-//   shank_bot = bottom of shank (invalid if screw is fully threaded)
-//   shank_center = center of shank (invalid if screw is fully threaded)
-//   threads_top = top of threaded portion of screw (invalid if thread_len=0)
-//   threads_bot = bottom of threaded portion of screw (invalid if thread_len=0)
-//   threads_center = center of threaded portion of screw (invalid if thread_len=0)
+// Named Anchors:
+//   "top" = top of screw
+//   "bot" = bottom of screw
+//   "center" = center of screw
+//   "head_top" = top of head (same as top for headless screws)
+//   "head_bot" = bottom of head (same as top for headless screws)
+//   "head_center" = center of head (same as top for headless screws)
+//   "shaft_top" = top of shaft
+//   "shaft_bot" = bottom of shaft
+//   "shaft_center" = center of shaft
+//   "shank_top" = top of shank (invalid if screw is fully threaded)
+//   "shank_bot" = bottom of shank (invalid if screw is fully threaded)
+//   "shank_center" = center of shank (invalid if screw is fully threaded)
+//   "threads_top" = top of threaded portion of screw (invalid if thread_len=0)
+//   "threads_bot" = bottom of threaded portion of screw (invalid if thread_len=0)
+//   "threads_center" = center of threaded portion of screw (invalid if thread_len=0)
 // Example(Med): Selected UTS (English) screws
 //   $fn=32;
 //   xdistribute(spacing=8){
@@ -803,22 +803,22 @@ module screw(spec, head, drive, thread, drive_size,
 //   shaft = screw shaft
 //   shank = unthreaded section of shaft (invalid if screw is fully threaded)
 //   threads = threaded section of screw     
-// Extra Anchors:
-//   top = top of screw
-//   bot = bottom of screw
-//   center = center of screw
-//   head_top = top of head (invalid for headless screws)
-//   head_bot = bottom of head (invalid for headless screws)
-//   head_center = center of head (invalid for headless screws)
-//   shaft_top = top of shaft
-//   shaft_bot = bottom of shaft
-//   shaft_center = center of shaft
-//   shank_top = top of shank (invalid if screw is fully threaded)
-//   shank_bot = bottom of shank (invalid if screw is fully threaded)
-//   shank_center = center of shank (invalid if screw is fully threaded)
-//   threads_top = top of threaded portion of screw (invalid if thread_len=0)
-//   threads_bot = bottom of threaded portion of screw (invalid if thread_len=0)
-//   threads_center = center of threaded portion of screw (invalid if thread_len=0)
+// Named Anchors:
+//   "top" = top of screw
+//   "bot" = bottom of screw
+//   "center" = center of screw
+//   "head_top" = top of head (invalid for headless screws)
+//   "head_bot" = bottom of head (invalid for headless screws)
+//   "head_center" = center of head (invalid for headless screws)
+//   "shaft_top" = top of shaft
+//   "shaft_bot" = bottom of shaft
+//   "shaft_center" = center of shaft
+//   "shank_top" = top of shank (invalid if screw is fully threaded)
+//   "shank_bot" = bottom of shank (invalid if screw is fully threaded)
+//   "shank_center" = center of shank (invalid if screw is fully threaded)
+//   "threads_top" = top of threaded portion of screw (invalid if thread_len=0)
+//   "threads_bot" = bottom of threaded portion of screw (invalid if thread_len=0)
+//   "threads_center" = center of threaded portion of screw (invalid if thread_len=0)
 // Example: Counterbored clearance hole
 //   diff()
 //     cuboid(20)
@@ -1037,22 +1037,22 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
 //   shoulder = the shoulder
 //   shaft = screw shaft
 //   threads = threaded section of screw     
-// Extra Anchors:
-//   top = top of screw
-//   bot = bottom of screw
-//   center = center of screw
-//   head_top = top of head (invalid for headless screws)
-//   head_bot = bottom of head (invalid for headless screws)
-//   head_center = center of head (invalid for headless screws)
-//   shoulder_top = top of shoulder
-//   shoulder_bot = bottom of shoulder
-//   shoulder_center = center of shoulder
-//   shaft_top = top of shaft
-//   shaft_bot = bottom of shaft
-//   shaft_center = center of shaft
-//   threads_top = top of threaded portion of screw (invalid if thread_len=0)
-//   threads_bot = bottom of threaded portion of screw (invalid if thread_len=0)
-//   threads_center = center of threaded portion of screw (invalid if thread_len=0)
+// Named Anchors:
+//   "top" = top of screw
+//   "bot" = bottom of screw
+//   "center" = center of screw
+//   "head_top" = top of head (invalid for headless screws)
+//   "head_bot" = bottom of head (invalid for headless screws)
+//   "head_center" = center of head (invalid for headless screws)
+//   "shoulder_top" = top of shoulder
+//   "shoulder_bot" = bottom of shoulder
+//   "shoulder_center" = center of shoulder
+//   "shaft_top" = top of shaft
+//   "shaft_bot" = bottom of shaft
+//   "shaft_center" = center of shaft
+//   "threads_top" = top of threaded portion of screw (invalid if thread_len=0)
+//   "threads_bot" = bottom of threaded portion of screw (invalid if thread_len=0)
+//   "threads_center" = center of threaded portion of screw (invalid if thread_len=0)
 // Example: ISO shoulder screw
 //   shoulder_screw("iso",10,length=20);
 // Example: English shoulder screw

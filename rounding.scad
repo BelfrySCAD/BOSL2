@@ -951,6 +951,11 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   spin = Rotate this many degrees after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 2D point.  Default: "centroid"
 //   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
+// Named Anchors:
+//   "origin" = The native position of the region.
+// Anchor Types:
+//   "hull" = Anchors to the virtual convex hull of the region.
+//   "intersect" = Anchors to the outer edge of the region.
 // Example(2D):  Basic examples illustrating flat, round, and pointed ends, on a finely sampled arc and a path made from 3 segments.
 //   arc = arc(points=[[1,1],[3,4],[6,3]],n=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];
@@ -1047,7 +1052,7 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   right(12)
 //     offset_stroke(path, width=1, closed=true);
 function offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, quality=1, chamfer=false, closed=false,
-                       atype="hull", anchor, spin, cp="centroid") =
+                       atype="hull", anchor="origin", spin, cp="centroid") =
         let(path = force_path(path))
         assert(is_path(path,2),"path is not a 2d path")
         let(
@@ -1091,7 +1096,7 @@ function offset_stroke(path, width=1, rounded=true, start, end, check_valid=true
                           reverse(slice(right_path,startpath[2],-1-endpath[1])),
                           startpath[0]
                   )
-         )
+         ) 
          reorient(anchor=anchor, spin=spin, two_d=true, path=pts, extent=atype=="hull", cp=cp, p=pts);
 
 function os_pointed(dist,loc=0) =
@@ -1374,7 +1379,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   intersect = Anchors to the surface of the linear sweep of the path, ignoring any end roundings.
 //   surf_hull = Anchors to the convex hull of the offset_sweep shape, including end treatments.
 //   surf_intersect = Anchors to the surface of the offset_sweep shape, including any end treatments.
-// Extra Anchors:
+// Named Anchors:
 //   "base" = Anchor to the base of the shape in its native position, ignoring any "extra"
 //   "top" = Anchor to the top of the shape in its native position, ignoring any "extra"
 //   "zcenter" = Center shape in the Z direction in the native XY position, ignoring any "extra"
@@ -2082,6 +2087,11 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   orient = Vector to rotate top towards after spin  (module only)
 //   atype = Select "hull" or "intersect" anchor types.  (module only) Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  (module only) Default: "centroid"
+// Named Anchors:
+//   "origin" = The native position of the prism.
+// Anchor Types:
+//   "hull" = Anchors to the virtual convex hull of the prism. 
+//   "intersect" = Anchors to the surface of the prism.
 // Example: Uniformly rounded pentagonal prism
 //   rounded_prism(pentagon(3), height=3,
 //                 joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
@@ -2792,7 +2802,7 @@ Access to the derivative smoothing parameter?
 //   orient = Vector to rotate top towards after spin  (module only)
 //   atype = Select "hull" or "intersect" anchor types.  (module only) Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  (module only) Default: "centroid"
-// Extra Anchors:
+// Named Anchors:
 //   "root" = Root point of the joiner prism, pointing out in the direction of the prism axis
 //   "end" = End point of the joiner prism, pointing out in the direction of the prism axis
 // Example(3D,NoScales): Here is the simplest case, a circular prism with a specified length standing vertically on a plane.  

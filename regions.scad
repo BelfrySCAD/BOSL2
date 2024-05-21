@@ -314,6 +314,8 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 //   spin = Rotate this many degrees after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 2D point.  Default: "centroid"
 //   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
+// Named Anchors:
+//   "origin" = The native position of the region.
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the region.
 //   "intersect" = Anchors to the outer edge of the region.
@@ -1192,6 +1194,8 @@ function _list_three(a,b,c) =
 //   When called as a function and given a list of regions or 2D polygons,
 //   returns the union of all given regions and polygons.  Result is a single region.
 //   When called as the built-in module, makes the union of the given children.
+//   This function is **much** slower than the native union module acting on geometry,
+//   so you should only use it when you need a point list for further processing.  
 // Arguments:
 //   regions = List of regions to union.
 // Example(2D):
@@ -1227,6 +1231,8 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   takes the first region or polygon and differences away all other regions/polygons from it.  The resulting
 //   region is returned.
 //   When called as the built-in module, makes the set difference of the given children.
+//   This function is **much** slower than the native difference module acting on geometry,
+//   so you should only use it when you need a point list for further processing.  
 // Arguments:
 //   regions = List of regions or polygons to difference.
 // Example(2D):
@@ -1299,6 +1305,8 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   When called as a module, performs a Boolean exclusive-or of up to 10 children.  Note that when
 //   the input regions cross each other the exclusive-or operator will produce shapes that
 //   meet at corners (non-simple regions), which do not render in CGAL.  
+//   This function is **much** slower than the native intersection module acting on geometry,
+//   so you should only use it when you need a point list for further processing.  
 // Arguments:
 //   regions = List of regions or polygons to exclusive_or
 // Example(2D): As Function.  A linear_sweep of this shape fails to render in CGAL.  
