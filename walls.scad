@@ -18,7 +18,7 @@ include<rounding.scad>
 // Synopsis: Makes an open cross-braced rectangular wall.
 // SynTags: Geom
 // Topics: FDM Optimized, Walls
-// See Also: corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
+// See Also: hex_panel(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
 //
 // Usage:
 //   sparse_wall(h, l, thick, [maxang=], [strut=], [max_bridge=]) [ATTACHMENTS];
@@ -81,7 +81,7 @@ module sparse_wall(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anch
 // Synopsis: Makes an open cross-braced rectangular wall.
 // SynTags: Geom
 // Topics: FDM Optimized, Walls
-// See Also: sparse_wall(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
+// See Also: sparse_wall(), hex_panel(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
 //
 // Usage:
 //   sparse_wall2d(size, [maxang=], [strut=], [max_bridge=]) [ATTACHMENTS];
@@ -153,7 +153,7 @@ module sparse_wall2d(size=[50,100], maxang=30, strut=5, max_bridge=20, anchor=CE
 // Synopsis: Makes an open cross-braced cuboid
 // SynTags: Geom
 // Topics: FDM Optimized, Walls
-// See Also: sparse_wall(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut(), cuboid()
+// See Also: sparse_wall(), hex_panel(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut(), cuboid()
 // Usage:
 //   sparse_cuboid(size, [dir], [maxang=], [struct=]
 // Description:
@@ -220,10 +220,15 @@ module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
 
 
 // Module: hex_panel()
+// Synopsis: Create a hexagon braced panel of any shape
+// SynTags: Geom
+// Topics: FDM Optimized, Walls
+// See Also: sparse_wall(), hex_panel(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
 // Usage:
 //   hex_panel(shape, wall, spacing, [frame=], [bevel=], [bevel_frame=], [h=|height=|l=|length=], [anchor=], [orient=], [spin=])
 // Description:
-//   Produces a panel with a honeycomb interior. The panel consists of a frame containing
+//   Produces a panel with a honeycomb interior that can be rectangular with optional beveling, or
+//   an arbitrary polygon shape without beveling. The panel consists of a frame containing
 //   a honeycob interior. The frame is laid out in the XY plane with the honeycob interior 
 //   and then extruded to the height h. The shape argument defines the outer bounderies of
 //   the frame.
@@ -246,7 +251,7 @@ module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
 //   shape = 3D size vector or a 2D path
 //   strut = thickness of hexagonal bracing
 //   spacing = center-to-center spacing of hex cells in the honeycomb.
-//   --
+//   ---
 //   frame = width of the frame around the honeycomb.  Default: same as strut
 //   bevel = list of edges to bevel on rectangular case when shape is a size vector; allowed options are RIGHT, LEFT, BACK, or FRONT, or those directions with BOTTOM added.  Default: []
 //   bevel_frame = width of the frame applied at bevels.  Default: same as frame

@@ -1772,8 +1772,8 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   vnf_validate(vnf);
 // Example(3D,Edges): FACE_ISECT Errors; Faces Intersect
 //   vnf = vnf_join([
-//       vnf_triangulate(linear_sweep(square(100,center=true), height=100)),
-//       move([75,35,30],p=vnf_triangulate(linear_sweep(square(100,center=true), height=100)))
+//       linear_sweep(square(100,center=true), height=100),
+//       move([75,35,30],p=linear_sweep(square(100,center=true), height=100))
 //   ]);
 //   vnf_validate(vnf,size=2,check_isects=true);
 // Example(3D,Edges): HOLE_EDGE Errors; Edges Adjacent to Holes.
@@ -1893,43 +1893,51 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false) =
     ) t_juncts? issues :
     let(
         isect_faces = !check_isects? [] : unique([
-            for (i = [0:1:len(faces)-2]) let(
-                f1 = faces[i],
-                poly1   = select(varr, faces[i]),
-                plane1  = plane3pt(poly1[0], poly1[1], poly1[2]),
-                normal1 = [plane1[0], plane1[1], plane1[2]]
-            )
-            for (j = [i+1:1:len(faces)-1]) let(
-                f2 = faces[j],
-                poly2 = select(varr, f2),
-                val = poly2 * normal1
-            )
-            if( min(val)<=plane1[3] && max(val)>=plane1[3] ) let(
-                plane2  = plane_from_polygon(poly2),
-                normal2 = [plane2[0], plane2[1], plane2[2]],
-                val = poly1 * normal2
-            )
-            if( min(val)<=plane2[3] && max(val)>=plane2[3] ) let(
-                shared_edges = [
-                    for (edge1 = pair(f1, true), edge2 = pair(f2, true))
-                    if (edge1 == [edge2[1], edge2[0]]) 1
-                ]
-            )
-            if (!shared_edges) let(
-                line = plane_intersection(plane1, plane2)
-            )
-            if (!is_undef(line)) let(
-                isects = polygon_line_intersection(poly1, line)
-            )
-            if (!is_undef(isects))
-            for (isect = isects)
-            if (len(isect) > 1) let(
-                isects2 = polygon_line_intersection(poly2, isect, bounded=true)
-            )
-            if (!is_undef(isects2))
-            for (seg = isects2)
-            if (seg[0] != seg[1])
-            _vnf_validate_err("FACE_ISECT", seg)
+            for (i = [0:1:len(faces)-2])
+              let(
+                  f1 = faces[i],
+                  poly1   = select(varr, faces[i]),
+                  plane1  = plane3pt(poly1[0], poly1[1], poly1[2]),
+                  normal1 = [plane1[0], plane1[1], plane1[2]]
+              )
+              for (j = [i+1:1:len(faces)-1])
+                let(
+                  f2 = faces[j],
+                  poly2 = select(varr, f2),
+                  val = poly2 * normal1
+                )
+                // The next test skips f2 if it lies entirely on one side of the plane of poly1
+                if( min(val)<=plane1[3] && max(val)>=plane1[3] )
+                  let(
+                      plane2  = plane_from_polygon(poly2),
+                      normal2 = [plane2[0], plane2[1], plane2[2]],
+                      val = poly1 * normal2
+                  )
+                  // Skip if f1 lies entirely on one side of the plane defined by poly2
+                  if( min(val)<=plane2[3] && max(val)>=plane2[3] )
+                    let(
+                        shared_edges = [
+                                        for (edge1 = pair(f1, true), edge2 = pair(f2, true))
+                                           if (edge1 == [edge2[1], edge2[0]]) 1
+                                       ]
+                    )
+                    if (shared_edges==[])
+                       let(
+                           line = plane_intersection(plane1, plane2)
+                       )
+                       if (is_def(line))
+                          let(
+                              isects = polygon_line_intersection(poly1, line)
+                          )
+                          if (is_def(isects))
+                            for (isect = isects)
+                              if (len(isect) > 1)
+                                let(
+                                    isects2 = polygon_line_intersection(poly2, isect, bounded=true)
+                                )
+                                if (is_def(isects2))
+                                  for (seg = isects2) 
+                                    if (len(seg)>1 && seg[0] != seg[1]) _vnf_validate_err("FACE_ISECT", seg)
         ]),
         issues = concat(issues, isect_faces)
     ) isect_faces? issues :

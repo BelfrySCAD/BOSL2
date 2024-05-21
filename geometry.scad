@@ -1711,7 +1711,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 // Description:
 //   Takes a possibly bounded line, and a 2D or 3D planar polygon, and finds their intersection.  Note the polygon is
 //   treated as its boundary and interior, so the intersection may include both points and line segments.  
-//   If the line does not intersect the polygon returns `undef`.  
+//   If the line does not intersect the polygon then returns `undef`.  
 //   In 3D if the line is not on the plane of the polygon but intersects it then you get a single intersection point.
 //   Otherwise the polygon and line are in the same plane, or when your input is 2D, you will get a list of segments and 
 //   single point lists.  Use `is_vector` to distinguish these two cases.
