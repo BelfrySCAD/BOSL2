@@ -268,7 +268,7 @@ module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
 // Anchor Types:
 //   hull = Anchors to the convex hull of the linear sweep of the path, ignoring any end roundings. 
 //   intersect = Anchors to the surface of the linear sweep of the path, ignoring any end roundings.
-// Examples
+// Examples:
 //     hex_panel([50, 100, 5], strut=1.5, spacing=10);
 //     hex_panel([50, 100, 5], 1.5, 10, frame = 5);
 //     hex_panel([50, 100, 5], 5, 10.05);
