@@ -852,15 +852,17 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             theta_end = atan2(points[1].y-cp.y, points[1].x-cp.x),
             angle = posmod(theta_end-theta_start, 360),
             // Specify endpoints exactly; skip those endpoints when producing arc points
+            // Generating the whole arc and clipping ends is the easiest way to ensure that we
+            // generate the proper number of points.  
             arcpts = [ if (wedge) cp, 
                        points[0],
-                       each arc(n-2,cp=cp,r=r,start=theta_start+angle/(n-1),angle=angle-2*angle/(n-1)),
+                       each select(arc(n,cp=cp,r=r,start=theta_start,angle=angle),1,-2),
                        points[1]
                      ]
                                            
         )
         dir ? arcpts
-            : wedge ? reverse_polygon(arcpts)
+            : wedge ? reverse_polygon(arcpts)   // Keep the centerpoint at position 0 in the list
                     : reverse(arcpts);
 
 
