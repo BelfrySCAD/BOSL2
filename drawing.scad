@@ -854,7 +854,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             // Specify endpoints exactly; skip those endpoints when producing arc points
             arcpts = [ if (wedge) cp, 
                        points[0],
-                       each arc(n,cp=cp,r=r,start=theta_start+angle/(n+1),angle=angle-2*angle/(n+1)),
+                       each arc(n-2,cp=cp,r=r,start=theta_start+angle/(n-1),angle=angle-2*angle/(n-1)),
                        points[1]
                      ]
                                            
