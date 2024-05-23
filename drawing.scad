@@ -771,10 +771,12 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
         assert(is_def(r) && r>0, "Arc radius invalid")
         let(
             n = is_def(n) ? n : max(3, ceil(segs(r)*abs(angle)/360)),
-            arcpoints = [for(i=[0:n-1]) let(theta = start + i*angle/(n-1)) r*[cos(theta),sin(theta)]+cp],
-            extra = wedge? [cp] : []
+            arcpoints = [for(i=[0:n-1]) let(theta = start + i*angle/(n-1)) r*[cos(theta),sin(theta)]+cp]
         )
-        concat(extra,arcpoints)
+        [
+          if (wedge) cp,
+          each arcpoints
+        ]
   : is_def(corner)? 
         assert(is_path(corner,[2,3]) && len(corner)==3,str("Point list is invalid"))
         assert(is_undef(cp) && !any([long,cw,ccw]), "Cannot use cp, long, cw, or ccw with corner")
@@ -849,9 +851,17 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             theta_start = atan2(points[0].y-cp.y, points[0].x-cp.x),
             theta_end = atan2(points[1].y-cp.y, points[1].x-cp.x),
             angle = posmod(theta_end-theta_start, 360),
-            arcpts = arc(n,cp=cp,r=r,start=theta_start,angle=angle,wedge=wedge)
+            // Specify endpoints exactly; skip those endpoints when producing arc points
+            arcpts = [ if (wedge) cp, 
+                       points[0],
+                       each arc(n,cp=cp,r=r,start=theta_start+angle/(n+1),angle=angle-2*angle/(n+1)),
+                       points[1]
+                     ]
+                                           
         )
-        dir ? arcpts : wedge?reverse_polygon(arcpts):reverse(arcpts);
+        dir ? arcpts
+            : wedge ? reverse_polygon(arcpts)
+                    : reverse(arcpts);
 
 
 module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, anchor=CENTER, spin=0)
