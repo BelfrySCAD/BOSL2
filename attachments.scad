@@ -916,7 +916,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
         anchor_data = _find_anchor(anchor, $parent_geom);
         anchor_pos = anchor_data[1];
         anchor_dir = factor*anchor_data[2];
-        anchor_spin = !inside || anchor_data[3]==0 ? anchor_data[3] : 180+anchor_data[3];
+        anchor_spin = !inside || anchor==TOP || anchor==BOT ? anchor_data[3] : 180+anchor_data[3];
         $anchor=anchor;
         for(align_ind = idx(align_list)){
             align = is_undef(align_list[align_ind]) ? undef

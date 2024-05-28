@@ -130,6 +130,10 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example: Simple regular cube.
 //   cuboid(40);
+// Example: Cuboid with a corner at the origin
+//   cuboid(40, anchor=FRONT+LEFT+BOT);
+// Example: Cuboid anchored on its right face
+//   cuboid(40, anchor=RIGHT);
 // Example: Cube with minimum cornerpoint given.
 //   cuboid(20, p1=[10,0,0]);
 // Example: Rectangular cube, with given X, Y, and Z sizes.
