@@ -1455,14 +1455,18 @@ function bezier_patch_normals(patch, u, v) =
 // Usage:
 //   debug_bezier(bez, [size], [N=]);
 // Description:
-//   Renders 2D or 3D bezier paths and their associated control points.
-//   Useful for debugging bezier paths.
+//   Renders 2D or 3D bezier paths and their associated control points to help debug bezier paths. 
+//   The endpoints of each bezier curve in the bezier path are marked with a blue circle and the intermediate control
+//   points with a red plus sign.  For cubic (degree 3) bezier paths, the module displays the standard representation
+//   of the control points as "handles" at each endpoint.  For other degrees the control points are drawn as
+//   a polygon.  You can of course give a single bezier curve as input, but you must in that case explicitly specify
+//   the bezier degree when it is not a cubic bezier.  
 // Arguments:
 //   bez = the array of points in the bezier.
 //   size = diameter of the lines drawn.
 //   ---
-//   N = Mark the first and every Nth vertex after in a different color and shape.
-// Example(2D):
+//   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+// Example(2D): Cubic bezier path
 //   bez = [
 //       [-10,   0],  [-15,  -5],
 //       [ -5, -10],  [  0, -10],  [ 5, -10],
@@ -1470,6 +1474,15 @@ function bezier_patch_normals(patch, u, v) =
 //       [  5,  10],  [  0,  10]
 //   ];
 //   debug_bezier(bez, N=3, width=0.5);
+// Example(2D): Quartic (degree 4) bezier path
+//   bez = [
+//       [-10,   0],  [-15,  -5],
+//       [ -9, -10],  [  0, -12],  [ 5, -10],
+//       [ 14,  -5],  [ 18,   0],  [16,   5],
+//       [  5,  10] 
+//   ];
+//   debug_bezier(bez, N=4, width=0.5);
+
 module debug_bezier(bezpath, width=1, N=3) {
     no_children($children);
     check = 
