@@ -779,7 +779,7 @@ function _make_anchor_legal(anchor,geom) =
 //   .
 //   If you give `inside=true` then the anchor arrows are lined up so they are pointing the same direction and
 //   the child object will be located inside the parent.  In this case a default "remove" tag is applied to
-//   the children.
+//   the children.  
 //   .
 //   Because the attachment process forces an orientation and anchor point for the child, it overrides
 //   any such specifications you give to the child:  **both `anchor=` and `orient=` given to the child are
@@ -797,10 +797,17 @@ function _make_anchor_legal(anchor,geom) =
 //   These options will probably be necessary, in fact, to get the child correctly positioned.  Note that
 //   giving `spin=` to `attach()` in this case is the same as applying `zrot()` to the child. 
 //   .
-//   Attached children may be ovarlapped into the parent a bit, as given by the `$overlap` value
+//   You can overlap attached children into the parent by giving the `$overlap` value
 //   which is 0 by default, or by the `overlap=` argument.    This is to prevent OpenSCAD
 //   from making non-manifold objects.  You can define `$overlap=` as an argument in a parent
-//   module to set the default for all attachments to it.
+//   module to set the default for all attachments to it.  When you give `inside=true`, a positive overlap
+//   value shifts the child object outward.
+//   .
+//   If you specify an `inset=` value then the child is shifted away from any edges it is aligned to, towards the middle
+//   of the parent.  The `shiftout=` parameter is intended to simplify differences with aligned objects
+//   placed inside the parent.  It will shift the child outward along every direction where it is aligned with
+//   the parent.  For an inside child this is equivalent to giving a positive overlap and negative inset value.
+//   For a child with `inside=false` it is equivalent to a negative overlap and negative inset.  
 //   .
 //   For a step-by-step explanation of
 //   attachments, see the [Attachments Tutorial](Tutorial-Attachments).
@@ -916,7 +923,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
         anchor_data = _find_anchor(anchor, $parent_geom);
         anchor_pos = anchor_data[1];
         anchor_dir = factor*anchor_data[2];
-        anchor_spin = !inside || anchor_data[3]==0 ? anchor_data[3] : 180+anchor_data[3];
+        anchor_spin = !inside || anchor==TOP || anchor==BOT ? anchor_data[3] : 180+anchor_data[3];
         $anchor=anchor;
         for(align_ind = idx(align_list)){
             align = is_undef(align_list[align_ind]) ? undef
