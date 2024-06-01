@@ -878,6 +878,7 @@ function linear_sweep(
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
+//   tex_taper = If given as a number, tapers the texture height to zero over the first and last given percentage of the path.  If given as a lookup table with indices between 0 and 100, uses the percentage lookup table to ramp the texture heights.  Default: `undef` (no taper)
 //   style = {{vnf_vertex_array()}} style.  Default: "min_edge"
 //   closed = If false, and shape is given as a path, then the revolved path will be sealed to the axis of rotation with untextured caps.  Default: `true`
 //   convexity = (Module only) Convexity setting for use with polyhedron.  Default: 10
@@ -961,6 +962,32 @@ function linear_sweep(
 //       rgn, texture="diamonds",
 //       tex_size=[10,10], tex_depth=1,
 //       angle=240, style="concave");
+// Example: Tapering off the ends of the texturing.
+//   path = [
+//       [20, 30], [20, 20],
+//       each arc(r=20, corner=[[20,20],[10,0],[20,-20]]),
+//       [20,-20], [20,-30],
+//   ];
+//   rotate_sweep(
+//       path, closed=false,
+//       texture="trunc_pyramids",
+//       tex_size=[5,5], tex_depth=1,
+//       tex_taper=20,
+//       style="convex",
+//       convexity=10);
+// Example: Tapering of textures via lookup table.
+//   path = [
+//       [20, 30], [20, 20],
+//       each arc(r=20, corner=[[20,20],[10,0],[20,-20]]),
+//       [20,-20], [20,-30],
+//   ];
+//   rotate_sweep(
+//       path, closed=false,
+//       texture="trunc_pyramids",
+//       tex_size=[5,5], tex_depth=1,
+//       tex_taper=[[0,0], [10,0], [10.1,1], [100,1]],
+//       style="convex",
+//       convexity=10);
 
 function rotate_sweep(
     shape, angle=360,
