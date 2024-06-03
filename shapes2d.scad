@@ -154,6 +154,8 @@ module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0, c
     }
 }
 
+
+
 function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0, _return_override, cswap = [0,0,0,0]) =
     assert(is_num(size)     || is_vector(size,2))
     assert(is_num(chamfer)  || is_vector(chamfer,4))
@@ -198,7 +200,7 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
                 qchamf = chamfer[quad],
                 qround = rounding[quad],
                 cverts = quant(segs(abs(qinset)),4)/4,
-                step = 90/cverts,          
+                step = 90/cverts,
                 cp = v_mul(size/2 + (cswap[quad] ? (qinset > 0 ? 0 : 1) : -1)*[qinset,abs(qinset)], qpos),
 
                 qpts = abs(qchamf) >= eps? [[0,abs(qinset)], [qinset,0]] :
