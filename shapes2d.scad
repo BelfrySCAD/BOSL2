@@ -130,7 +130,7 @@ module square(size=1, center, anchor, spin) {
 //   path = rect([40,30], chamfer=5, anchor=FRONT, spin=30);
 //   stroke(path, closed=true);
 //   move_copies(path) color("blue") circle(d=2,$fn=8);
-module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0) {
+module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0, cswap = [0,0,0,0]) {
     errchk = assert(in_list(atype, ["box", "perim"]));
     size = [for (c = force_list(size,2)) max(0,c)];
     if (!all_positive(size)) {
@@ -144,7 +144,7 @@ module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0) {
             children();
         }
     } else {
-        pts_over = rect(size=size, rounding=rounding, chamfer=chamfer, atype=atype, _return_override=true);
+        pts_over = rect(size=size, rounding=rounding, chamfer=chamfer, atype=atype, cswap = cswap, _return_override=true);
         pts = pts_over[0];
         override = pts_over[1];
         attachable(anchor, spin, two_d=true, size=size,override=override) {
@@ -154,9 +154,7 @@ module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0) {
     }
 }
 
-
-
-function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0, _return_override) =
+function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0, _return_override, cswap = [0,0,0,0]) =
     assert(is_num(size)     || is_vector(size,2))
     assert(is_num(chamfer)  || is_vector(chamfer,4))
     assert(is_num(rounding) || is_vector(rounding,4))
@@ -200,13 +198,14 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
                 qchamf = chamfer[quad],
                 qround = rounding[quad],
                 cverts = quant(segs(abs(qinset)),4)/4,
-                step = 90/cverts,
-                cp = v_mul(size/2-[qinset,abs(qinset)], qpos),
+                step = 90/cverts,          
+                cp = v_mul(size/2 + (cswap[quad] ? (qinset > 0 ? 0 : 1) : -1)*[qinset,abs(qinset)], qpos),
+
                 qpts = abs(qchamf) >= eps? [[0,abs(qinset)], [qinset,0]] :
                     abs(qround) >= eps? [for (j=[0:1:cverts]) let(a=90-j*step) v_mul(polar_to_xy(abs(qinset),a),[sign(qinset),1])] :
                     [[0,0]],
-                qfpts = [for (p=qpts) v_mul(p,qpos)],
-                qrpts = qpos.x*qpos.y < 0? reverse(qfpts) : qfpts,
+                qfpts = [for (p=qpts) v_mul(p,cswap[quad] ? -qpos : qpos)],
+                qrpts =  (cswap[quad] && qinset > 0 ? -1 : 1) * qpos.x*qpos.y < 0? reverse(qfpts) : qfpts,
                 cornerpt = atype=="box" || (qround==0 && qchamf==0) ? undef
                          : qround<0 || qchamf<0 ? [[0,-qpos.y*min(qround,qchamf)]]
                          : [for(seg=pair(qrpts)) let(isect=line_intersection(seg, [[0,0],qpos],SEGMENT,LINE)) if (is_def(isect) && isect!=seg[0]) isect]
@@ -214,10 +213,11 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
             assert(is_undef(cornerpt) || len(cornerpt)==1,"Cannot find corner point to anchor")
             [move(cp, p=qrpts), is_undef(cornerpt)? undef : move(cp,p=cornerpt[0])]
         ],
-        path = deduplicate(flatten(column(corners,0)),closed=true),
+        path = flatten(column(corners,0)),
         override = [for(i=[0:3])
                       let(quad=quadorder[i])
                       if (is_def(corners[i][1])) [quadpos[quad], [corners[i][1], min(chamfer[quad],rounding[quad])<0 ? [quadpos[quad].x,0] : undef]]]
+
       ) _return_override ? [reorient(anchor,spin, two_d=true, size=size, p=path, override=override), override]
                        : reorient(anchor,spin, two_d=true, size=size, p=path, override=override);
 
@@ -549,7 +549,7 @@ function ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Named Anchors:
+// Extra Anchors:
 //   "tip0", "tip1", etc. = Each tip has an anchor, pointing outwards.
 //   "side0", "side1", etc. = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
@@ -691,7 +691,7 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Named Anchors:
+// Extra Anchors:
 //   "tip0" ... "tip4" = Each tip has an anchor, pointing outwards.
 //   "side0" ... "side4" = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
@@ -752,7 +752,7 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Named Anchors:
+// Extra Anchors:
 //   "tip0" ... "tip5" = Each tip has an anchor, pointing outwards.
 //   "side0" ... "side5" = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
@@ -812,7 +812,7 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Named Anchors:
+// Extra Anchors:
 //   "tip0" ... "tip7" = Each tip has an anchor, pointing outwards.
 //   "side0" ... "side7" = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
@@ -863,8 +863,8 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Named Anchors:
-//   "hypot" = Center of angled side, perpendicular to that side.
+// Extra Anchors:
+//   hypot = Center of angled side, perpendicular to that side.
 // Example(2D):
 //   right_triangle([40,30]);
 // Example(2D): With `center=true`
@@ -1144,7 +1144,7 @@ module trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, ancho
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   atype = Choose "hull" or "intersect" anchor methods.  Default: "hull"
-// Named Anchors:
+// Extra Anchors:
 //   "tip0" ... "tip4" = Each tip has an anchor, pointing outwards.
 //   "pit0" ... "pit4" = The inside corner between each tip has an anchor, pointing outwards.
 //   "midpt0" ... "midpt4" = The center-point between each pair of tips has an anchor, pointing outwards.
@@ -1318,7 +1318,7 @@ module jittered_poly(path, dist=1/512) {
 // Synopsis: Creates a 2D teardrop shape.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: teardrop(), onion(), keyhole()
+// See Also: teardrop(), onion()
 // Description:
 //   When called as a module, makes a 2D teardrop shape. Useful for extruding into 3D printable holes as it limits overhang to 45 degrees.  Uses "intersect" style anchoring.  
 //   The cap_h parameter truncates the top of the teardrop.  If cap_h is taller than the untruncated form then
@@ -1418,7 +1418,7 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
 // Synopsis: Creates an egg-shaped 2d object.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), ellipse(), glued_circles(), keyhole()
+// See Also: circle(), ellipse(), glued_circles()
 // Usage: As Module
 //   egg(length, r1|d1=, r2|d2=, R|D=) [ATTACHMENTS];
 // Usage: As Function
@@ -1439,7 +1439,7 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
 //   d1 = diameter of the left-hand circle
 //   d2 = diameter of the right-hand circle
 //   D = diameter of the joining arcs
-// Named Anchors:
+// Extra Anchors:
 //   "left" = center of the left circle
 //   "right" = center of the right circle
 // Example(2D,NoAxes): This first example shows how the egg is constructed from two circles and two joining arcs.
@@ -1503,185 +1503,12 @@ module egg(length,r1,r2,R,d1,d2,D,anchor=CENTER, spin=0)
 }
 
 
-// Function&Module: ring()
-// Synopsis: Draws a 2D ring or partial ring or returns a region or path
-// SynTags: Geom, Region, Path
-// Topics: Shapes (2D), Paths (2D), Path Generators, Regions, Attachable
-// See Also: arc(), circle()
-//
-// Usage: ring or partial ring from radii/diameters
-//   region=ring(n, r1=|d1=, r2=|d2=, [full=], [angle=], [start=]);
-// Usage: ring or partial ring from radius and ring width
-//   region=ring(n, ring_width, r=|d=, [full=], [angle=], [start=]);
-// Usage: ring or partial ring passing through three points
-//   region=ring(n, [ring_width], [r=,d=], points=[P0,P1,P2], [full=]);
-// Usage: ring or partial ring from tangent point on segment `[P0,P1]` to the tangent point on segment `[P1,P2]`.
-//   region=ring(n, [ring_width], corner=[P0,P1,P2], [r=,d=], [r1|d1=], [r2=|d2=], [full=]);
-// Usage: ring or partial ring based on setting a width at the X axis and height above the X axis
-//   region=ring(n, [ring_width], [r=|d=], width=, thickness=, [full=]);
-// Usage: as a module
-//   ring(...) [ATTACHMENTS];
-// Description:
-//   If called as a function returns a region or path for a ring or part of a ring.  If called as a module, creates the corresponding 2D ring or partial ring shape.
-//   The geometry of the ring can be specified using any of the methods supported by {{arc()}}.  If `full` is true (the default) the ring will be complete and the
-//   returned value a region.  If `full` is false then the return is a path describing a partial ring.  The returned path is always clockwise with the larger radius arc first.
-//   A ring has two radii, the inner and outer.  When specifying geometry you must somehow specify one radius, which can be directly with `r=` or `r1=` or by giving a point list with 
-//   or without a center point.  You specify the second radius by giving `r=` directly, or `r2=` if you used `r1=` for the first radius, or by giving `ring_width`.  If `ring_width`
-//   the second radius will be larger than the first; if `ring_width` is negative the second radius will be smaller. 
-// Arguments:
-//   n = Number of vertices to use for the inner and outer portions of the ring
-//   ring_width = width of the ring.  Can be positive or negative
-//   ---
-//   r1/d1 = inner radius or diameter of the ring
-//   r2/d2 = outer radius or diameter of the ring
-//   r/d = second radius or diameter of ring when r1 or d1 are not given
-//   full = if true create a full ring, if false create a partial ring.  Default: true unless `angle` is given
-//   cp = Centerpoint of ring.
-//   points = Points on the ring boundary.
-//   corner = A path of two segments to fit the ring tangent to.
-//   long = if given with cp and points takes the long arc instead of the default short arc.  Default: false
-//   cw = if given with cp and 2 points takes the arc in the clockwise direction.  Default: false
-//   ccw = if given with cp and 2 points takes the arc in the counter-clockwise direction.  Default: false
-//   width = If given with `thickness`, ring is defined based on an arc with ends on X axis.
-//   thickness = If given with `width`, ring is defined based on an arc with ends on X axis, and this height above the X axis. 
-//   start = Start angle of ring.  Default: 0
-//   angle = If scalar, the end angle in degrees relative to start parameter.  If a vector specifies start and end angles of ring.  
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  (Module only) Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  (Module only) Default: `0`
-// Examples(2D):
-//   ring(r1=5,r2=7, n=32);
-//   ring(r=5,ring_width=-1, n=32);
-//   ring(r=7, n=5, ring_width=-4);
-//   ring(points=[[0,0],[3,3],[5,2]], ring_width=2, n=32);
-//   ring(points=[[0,0],[3,3],[5,2]], r=1, n=32);
-//   ring(cp=[3,3], points=[[4,4],[1,3]], ring_width=1);
-//   ring(corner=[[0,0],[4,4],[7,3]], r2=2, r1=1.5,n=22,full=false);
-//   ring(r1=5,r2=7, angle=[33,110], n=32);
-//   ring(r1=5,r2=7, angle=[0,360], n=32);  // full circle
-//   ring(r=5, points=[[0,0],[3,3],[5,2]], full=false, n=32);
-//   ring(32,-2, cp=[1,1], points=[[4,4],[-3,6]], full=false);
-//   ring(r=5,ring_width=-1, n=32);
-//   ring(points=[[0,0],[3,3],[5,2]], ring_width=2, n=32);
-//   ring(points=[[0,0],[3,3],[5,2]], r=1, n=32);
-//   ring(cp=[3,3], points=[[4,4],[1,3]], ring_width=1);
-// Example(2D): Using corner, the outer radius is the one tangent to the corner
-//   corner = [[0,0],[4,4],[7,3]];
-//   ring(corner=corner, r2=3, r1=2,n=22);
-//   stroke(corner, width=.1,color="red");
-// Example(2D): For inner radius tangent to a corner, specify `r=` and `ring_width`.
-//   corner = [[0,0],[4,4],[7,3]];
-//   ring(corner=corner, r=3, ring_width=1,n=22,full=false);
-//   stroke(corner, width=.1,color="red");
-// Example(2D):
-//   $fn=128;
-//   region = ring(width=5,thickness=1.5,ring_width=2);   
-//   path = ring(width=5,thickness=1.5,ring_width=2,full=false);
-//   stroke(region,width=.25);
-//   color("red") dashed_stroke(path,dashpat=[1.5,1.5],closed=true,width=.25);
-
-module ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickness,start, long=false, full=true, cw=false,ccw=false, anchor=CENTER, spin=0)
-{
-  R = ring(n=n,r=r,ring_width=ring_width,r1=r1,r2=r2,angle=angle,d=d,d1=d1,d2=d2,cp=cp,points=points,corner=corner, width=width,thickness=thickness,start=start,
-           long=long, full=full, cw=cw, ccw=ccw);
-  attachable(anchor,spin,two_d=true,region=is_region(R)?R:undef,path=is_region(R)?undef:R,extent=false) {
-     region(R);
-     children();
-  }
-}  
-
-function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickness,start, long=false, full=true, cw=false,ccw=false) =
-    let(
-        r1 = is_def(r1) ? assert(is_undef(d),"Cannot define r1 and d1")r1
-           : is_def(d1) ? d1/2
-           : undef,
-        r2 = is_def(r2) ? assert(is_undef(d),"Cannot define r2 and d2")r2
-           : is_def(d2) ? d2/2
-           : undef,
-        r = is_def(r) ? assert(is_undef(d),"Cannot define r and d")r
-          : is_def(d) ? d/2
-          : undef,
-        full = is_def(angle) ? false : full
-    )
-    assert(is_undef(start) || is_def(angle), "start requires angle")
-    assert(is_undef(angle) || !any_defined([thickness,width,points,corner]), "Cannot give angle with points, corner, width or thickness")
-    assert(!is_vector(angle,2) || abs(angle[1]-angle[0]) <= 360, "angle gives more than 360 degrees")
-    assert(is_undef(points) || is_path(points,2), str("Points must be a 2d vector",points))
-    assert(!any_defined([points,thickness,width]) || num_defined([r1,r2])==0, "Cannot give r1, r2, d1, or d2 with points, width or thickness")
-    is_def(width) && is_def(thickness)?
-       assert(!any_defined([r,cp,points,angle,start]), "Conflicting or invalid parameters to ring")
-       assert(all_positive([width,thickness]), "Width and thickness must be positive")
-       ring(n=n,r=r,ring_width=ring_width,points=[[width/2,0], [0,thickness], [-width/2,0]],full=full)
-  : full && is_undef(cp) && is_def(points) ?
-       assert(is_def(points) && len(points)==3, "Without cp given, must provide exactly three points")
-       assert(num_defined([r,ring_width]), "Must give r or ring_width with point list")
-       let(
-            ctr_rad = circle_3points(points),
-            dummy=assert(is_def(ctr_rad[0]), "Collinear points given to ring()"),
-            part1 = move(ctr_rad[0],circle(r=ctr_rad[1], $fn=is_def(n) ? n : $fn)),
-            first_r = norm(part1[0]-ctr_rad[0]),
-            r = is_def(r) ? r : first_r+ring_width,
-            part2 = move(ctr_rad[0],circle(r=r, $fn=is_def(n) ? n : $fn))
-       )
-       assert(first_r!=r, "Ring has zero width")
-       (first_r>r ? [part1, reverse(part2)] : [part2, reverse(part1)])
-  : full && is_def(corner) ?
-       assert(is_path(corner,2) && len(corner)==3, "corner must be a list of 3 points")
-       assert(!any_defined([thickness,width,points,cp,angle.start]), "Conflicting or invalid parameters to ring")
-       let(parmok = (all_positive([r1,r2]) && num_defined([r,ring_width])==0) 
-                      || (num_defined([r1,r2])==0 && all_positive([r]) && is_finite(ring_width)))
-       assert(parmok, "With corner must give (r1 and r2) or (r and ring_width), but you gave some other combination")
-       let(
-           newr1 = is_def(r1) ? min(r1,r2) : min(r,r+ring_width),
-           newr2 = is_def(r2) ? max(r2,r1) : max(r,r+ring_width),
-           data = circle_2tangents(newr2,corner[0],corner[1],corner[2]),
-           cp=data[0]
-       )
-       [move(cp,circle($fn=is_def(n) ? n : $fn, r=newr2)),move(cp, circle( $fn=is_def(n) ? n : $fn, r=newr1))]
-  : full && is_def(cp) && is_def(points) ?
-       assert(in_list(len(points),[1,2]), "With cp must give a list of one or two points.")
-       assert(num_defined([r,ring_width]), "Must give r or ring_width with point list")
-       let(
-           first_r=norm(points[0]-cp),
-           part1 = move(cp,circle(r=first_r, $fn=is_def(n) ? n : $fn)),
-           r = is_def(r) ? r : first_r+ring_width,
-           part2 = move(cp,circle(r=r, $fn=is_def(n) ? n : $fn))
-       )
-       assert(first_r!=r, "Ring has zero width")
-       first_r>r ? [part1, reverse(part2)] : [part2, reverse(part1)]
-  : full || angle==360 || (is_vector(angle,2) && abs(angle[1]-angle[0])==360) ?
-      let(parmok = (all_positive([r1,r2]) && num_defined([r,ring_width])==0) 
-                     || (num_defined([r1,r2])==0 && all_positive([r]) && is_finite(ring_width)))
-      assert(parmok, "Must give (r1 and r2) or (r and ring_width), but you gave some other combination")
-      let(
-          newr1 = is_def(r1) ? min(r1,r2) : min(r,r+ring_width),
-          newr2 = is_def(r2) ? max(r2,r1) : max(r,r+ring_width),
-          cp = default(cp,[0,0])
-      )
-      [move(cp,circle($fn=is_def(n) ? n : $fn, r=newr2)),move(cp, circle( $fn=is_def(n) ? n : $fn, r=newr1))]
-  :  let(
-         parmRok = (all_positive([r1,r2]) && num_defined([r,ring_width])==0) 
-                     || (num_defined([r1,r2])==0 && all_positive([r]) && is_finite(ring_width)),
-         pass_r = any_defined([points,thickness]) ? assert(!any_defined([r1,r2]),"Cannot give r1, d1, r2, or d2 with a point list or width & thickness")
-                                                    assert(num_defined([ring_width,r])==1, "Must defined exactly one of r and ring_width when using a pointlist or width & thickness")
-                                                    undef 
-                : assert(num_defined([r,r2])==1,"Cannot give r or d and r1 or d1") first_defined([r,r2]),
-         base_arc = clockwise_polygon(arc(r=pass_r,n=n,angle=angle,cp=cp,points=points, corner=corner, width=width, thickness=thickness,start=start, long=long, cw=cw,ccw=ccw,wedge=true)),
-         center = base_arc[0],
-         arc1 = list_tail(base_arc,1),
-         r_actual = norm(center-arc1[0]),
-         new_r = is_def(ring_width) ? r_actual+ring_width
-               : first_defined([r,r1]),
-         pts = [center+new_r*unit(arc1[0]-center), center+new_r*unit(arc1[floor(len(arc1)/2)]-center), center+new_r*unit(last(arc1)-center)],
-         second=arc(n=n,points=pts),
-         arc2 = is_polygon_clockwise(second) ? second : reverse(second) 
-     ) new_r>r_actual ? concat(arc2, reverse(arc1)) : concat(arc1,reverse(arc2));
-
 
 // Function&Module: glued_circles()
 // Synopsis: Creates a shape of two circles joined by a curved waist.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), ellipse(), egg(), keyhole()
+// See Also: circle(), ellipse(), egg()
 // Usage: As Module
 //   glued_circles(r/d=, [spread], [tangent], ...) [ATTACHMENTS];
 // Usage: As Function
@@ -1743,87 +1570,9 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 }
 
 
-// Function&Module: keyhole()
-// Synopsis: Creates a 2D keyhole shape.
-// SynTags: Geom, Path
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), ellipse(), egg(), glued_circles()
-// Usage: As Module
-//   keyhole(l/length=, r1/d1=, r2/d2=, [shoulder_r=], ...) [ATTACHMENTS];
-// Usage: As Function
-//   path = keyhole(l/length=, r1/d1=, r2/d2=, [shoulder_r=], ...);
-// Description:
-//   When called as a function, returns a 2D path forming a shape of two differently sized circles joined by a straight slot, making what looks like a keyhole.
-//   When called as a module, creates a 2D shape of two differently sized circles joined by a straight slot, making what looks like a keyhole.  Uses "hull" style anchoring.  
-// Arguments:
-//   l = The distance between the centers of the two circles.  Default: `15`
-//   r1= The radius of the back circle, centered on `[0,0]`.  Default: `2.5`
-//   r2= The radius of the forward circle, centered on `[0,-length]`.  Default: `5`
-//   ---
-//   shoulder_r = The radius of the rounding of the shoulder between the larger circle, and the slot that leads to the smaller circle.  Default: `0`
-//   d1= The diameter of the back circle, centered on `[0,0]`.
-//   d2= The diameter of the forward circle, centered on `[0,-l]`.
-//   length = An alternate name for the `l=` argument.
-//   anchor = Translate so anchor point is at origin (0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Examples(2D):
-//   keyhole(40, 10, 30);
-//   keyhole(l=60, r1=20, r2=40);
-// Example(2D): Making the forward circle larger than the back circle
-//   keyhole(l=60, r1=40, r2=20);
-// Example(2D): Centering on the larger hole:
-//   keyhole(l=60, r1=40, r2=20, spin=180);
-// Example(2D): Rounding the shoulders
-//   keyhole(l=60, r1=20, r2=40, shoulder_r=20);
-// Example(2D): Called as Function
-//   stroke(closed=true, keyhole(l=60, r1=20, r2=40));
 
-function keyhole(l, r1, r2, shoulder_r=0, d1, d2, length, anchor=CTR, spin=0) =
-    let(
-        l = first_defined([l,length,15]),
-        r1 = get_radius(r=r1, d=d1, dflt=5),
-        r2 = get_radius(r=r2, d=d2, dflt=10)
-    )
-    assert(is_num(l) && l>0)
-    assert(l>=max(r1,r2))
-    assert(is_undef(shoulder_r) || (is_num(shoulder_r) && shoulder_r>=0))
-    let(
-        cp1 = [0,0],
-        cp2 = cp1 + [0,-l],
-        shoulder_r = is_num(shoulder_r)? shoulder_r : min(r1,r2) / 2,
-        minr = min(r1, r2) + shoulder_r,
-        maxr = max(r1, r2) + shoulder_r,
-        dy = opp_hyp_to_adj(minr, maxr),
-        spt1 = r1>r2? cp1+[minr,-dy] : cp2+[minr,dy],
-        spt2 = [-spt1.x, spt1.y],
-        ds = spt1 - (r1>r2? cp1 : cp2),
-        ang = atan2(abs(ds.y), abs(ds.x)),
-        path = r1>r2? [
-                if (shoulder_r<=0) spt1
-                  else each arc(r=shoulder_r, cp=spt1, start=180-ang, angle=ang, endpoint=false),
-                each arc(r=r2, cp=cp2, start=0, angle=-180, endpoint=false),
-                if (shoulder_r<=0) spt2
-                  else each arc(r=shoulder_r, cp=spt2, start=0, angle=ang, endpoint=false),
-                each arc(r=r1, cp=cp1, start=180+ang, angle=-180-2*ang, endpoint=false),
-            ] : [
-                if (shoulder_r<=0) spt1
-                  else each arc(r=shoulder_r, cp=spt1, start=180, angle=ang, endpoint=false),
-                each arc(r=r2, cp=cp2, start=ang, angle=-180-2*ang, endpoint=false),
-                if (shoulder_r<=0) spt2
-                  else each arc(r=shoulder_r, cp=spt2, start=360-ang, angle=ang, endpoint=false),
-                each arc(r=r1, cp=cp1, start=180, angle=-180, endpoint=false),
-            ]
-    ) reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
-
-
-module keyhole(l, r1, r2, shoulder_r=0, d1, d2, length, anchor=CTR, spin=0) {
-    path = keyhole(l=l, r1=r1, r2=r2, shoulder_r=shoulder_r, d1=d1, d2=d2, length=length);
-    attachable(anchor,spin, two_d=true, path=path, extent=true) {
-        polygon(path);
-        children();
-    }
-}
-
+function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
+    pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
 
 // Function&Module: supershape()
 // Synopsis: Creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
@@ -1907,9 +1656,6 @@ module supershape(step=0.5,n,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=u
     }
 }
 
-function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
-    pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
-
 
 // Function&Module: reuleaux_polygon()
 // Synopsis: Creates a constant-width shape that is not circular.
@@ -1930,7 +1676,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Named Anchors:
+// Extra Anchors:
 //   "tip0", "tip1", etc. = Each tip has an anchor, pointing outwards.
 // Examples(2D):
 //   reuleaux_polygon(n=3, r=50);
@@ -2025,7 +1771,7 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 //   script = The script the text is in.  Default: `"latin"`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Named Anchors:
+// Extra Anchors:
 //   "baseline" = Anchors at the baseline of the text, at the start of the string.
 //   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
 // Examples(2D):
