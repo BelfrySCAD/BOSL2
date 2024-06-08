@@ -94,6 +94,7 @@ module square(size=1, center, anchor, spin) {
 //   ---
 //   rounding = The rounding radius for the corners.  If negative, produces external roundover spikes on the X axis. If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
 //   chamfer = The chamfer size for the corners.  If negative, produces external chamfer spikes on the X axis. If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
+//   corner_flip = Flips the direction of the rouding curve or roudover and chamfer spikes. If true it produces spikes on the Y axis. If false it produces spikes on the X axis. If given as a list of four booleans it flips the direction for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: false (no flip)
 //   atype = The type of anchoring to use with `anchor=`.  Valid opptions are "box" and "perim".  This lets you choose between putting anchors on the rounded or chamfered perimeter, or on the square bounding box of the shape. Default: "box"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -114,6 +115,8 @@ module square(size=1, center, anchor, spin) {
 //   rect([40,30], chamfer=-5);
 // Example(2D): Negative-Rounded Rect
 //   rect([40,30], rounding=-5);
+// Example(2D): Combined Rounded-Chamfered Rect with corner flips
+//     rect(chamfer = 0.25*[0,1,-1,0], rounding=.25*[1,0,0,-1], corner_flip = true);
 // Example(2D): Default "box" Anchors
 //   color("red") rect([40,30]);
 //   rect([40,30], rounding=10)
@@ -130,7 +133,7 @@ module square(size=1, center, anchor, spin) {
 //   path = rect([40,30], chamfer=5, anchor=FRONT, spin=30);
 //   stroke(path, closed=true);
 //   move_copies(path) color("blue") circle(d=2,$fn=8);
-module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0) {
+module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0, corner_flip = false) {
     errchk = assert(in_list(atype, ["box", "perim"]));
     size = [for (c = force_list(size,2)) max(0,c)];
     if (!all_positive(size)) {
@@ -144,7 +147,7 @@ module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0) {
             children();
         }
     } else {
-        pts_over = rect(size=size, rounding=rounding, chamfer=chamfer, atype=atype, _return_override=true);
+        pts_over = rect(size=size, rounding=rounding, chamfer=chamfer, atype=atype, corner_flip = corner_flip, _return_override=true);
         pts = pts_over[0];
         override = pts_over[1];
         attachable(anchor, spin, two_d=true, size=size,override=override) {
@@ -156,7 +159,7 @@ module rect(size=1, rounding=0, atype="box", chamfer=0, anchor=CENTER, spin=0) {
 
 
 
-function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0, _return_override) =
+function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0, _return_override, corner_flip = false) =
     assert(is_num(size)     || is_vector(size,2))
     assert(is_num(chamfer)  || is_vector(chamfer,4))
     assert(is_num(rounding) || is_vector(rounding,4))
@@ -164,6 +167,7 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
     let(
         anchor=_force_anchor_2d(anchor),
         size = [for (c = force_list(size,2)) max(0,c)],
+        corner_flip = [for (c = force_list(corner_flip,4)) c ? true : false],
         chamfer = force_list(chamfer,4), 
         rounding = force_list(rounding,4)
     )
@@ -201,23 +205,24 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
                 qround = rounding[quad],
                 cverts = quant(segs(abs(qinset)),4)/4,
                 step = 90/cverts,
-                cp = v_mul(size/2-[qinset,abs(qinset)], qpos),
+                cp = v_mul(size/2 + (corner_flip[quad] ? (qinset > 0 ? 0 : 1) : -1)*[qinset,abs(qinset)], qpos),
                 qpts = abs(qchamf) >= eps? [[0,abs(qinset)], [qinset,0]] :
                     abs(qround) >= eps? [for (j=[0:1:cverts]) let(a=90-j*step) v_mul(polar_to_xy(abs(qinset),a),[sign(qinset),1])] :
                     [[0,0]],
-                qfpts = [for (p=qpts) v_mul(p,qpos)],
-                qrpts = qpos.x*qpos.y < 0? reverse(qfpts) : qfpts,
+                qfpts = [for (p=qpts) v_mul(p,corner_flip[quad] ? -qpos : qpos)],
+                qrpts =  (corner_flip[quad] && qinset > 0 ? -1 : 1) * qpos.x*qpos.y < 0? reverse(qfpts) : qfpts,
                 cornerpt = atype=="box" || (qround==0 && qchamf==0) ? undef
                          : qround<0 || qchamf<0 ? [[0,-qpos.y*min(qround,qchamf)]]
                          : [for(seg=pair(qrpts)) let(isect=line_intersection(seg, [[0,0],qpos],SEGMENT,LINE)) if (is_def(isect) && isect!=seg[0]) isect]
               )
             assert(is_undef(cornerpt) || len(cornerpt)==1,"Cannot find corner point to anchor")
-            [move(cp, p=qrpts), is_undef(cornerpt)? undef : move(cp,p=cornerpt[0])]
+            [move(cp, p=qrpts), is_undef(cornerpt)? undef : move(cp,p=
+                         (min(chamfer[quad],rounding[quad])<0 && corner_flip[quad] ? [quadpos[quad].x*quadpos[quad].y*cornerpt[0].y, cornerpt[0].x] : cornerpt[0]))]
         ],
         path = deduplicate(flatten(column(corners,0)),closed=true),
         override = [for(i=[0:3])
                       let(quad=quadorder[i])
-                      if (is_def(corners[i][1])) [quadpos[quad], [corners[i][1], min(chamfer[quad],rounding[quad])<0 ? [quadpos[quad].x,0] : undef]]]
+                      if (is_def(corners[i][1])) [quadpos[quad], [corners[i][1], min(chamfer[quad],rounding[quad])<0 ? (corner_flip[quad] ? [0, quadpos[quad].y] : [quadpos[quad].x, 0]) : undef]]]
       ) _return_override ? [reorient(anchor,spin, two_d=true, size=size, p=path, override=override), override]
                        : reorient(anchor,spin, two_d=true, size=size, p=path, override=override);
 
