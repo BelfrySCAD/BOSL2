@@ -116,7 +116,8 @@ module square(size=1, center, anchor, spin) {
 // Example(2D): Negative-Rounded Rect
 //   rect([40,30], rounding=-5);
 // Example(2D): Combined Rounded-Chamfered Rect with corner flips
-//     rect(chamfer = 0.25*[0,1,-1,0], rounding=.25*[1,0,0,-1], corner_flip = true);
+//   rect([1,1], chamfer = 0.25*[0,1,-1,0],
+//        rounding=.25*[1,0,0,-1], corner_flip = true, $fn=32);
 // Example(2D): Default "box" Anchors
 //   color("red") rect([40,30]);
 //   rect([40,30], rounding=10)
