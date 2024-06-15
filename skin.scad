@@ -1237,7 +1237,7 @@ function spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fa
         ang_step = 360/sides,
         turns = abs(turns),
         lead_in1 = first_defined([lead_in1, lead_in]),
-        lead_in2 = first_defined([lead_in1, lead_in]),        
+        lead_in2 = first_defined([lead_in2, lead_in]),
         lead_in_ang1 =
                       let(
                            user_ang = first_defined([lead_in_ang1,lead_in_ang])
@@ -1253,7 +1253,7 @@ function spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fa
         minang = -max(0,lead_in_ang1),
         maxang = 360*turns + max(0,lead_in_ang2),
         cut_ang1 = minang+abs(lead_in_ang1),
-        cut_ang2 = maxang-abs(lead_in_ang1),        
+        cut_ang2 = maxang-abs(lead_in_ang2),        
         lead_in_shape1 = first_defined([lead_in_shape1, lead_in_shape, "default"]),
         lead_in_shape2 = first_defined([lead_in_shape2, lead_in_shape, "default"]),             
         lead_in_func1 = is_func(lead_in_shape1) ? lead_in_shape1
