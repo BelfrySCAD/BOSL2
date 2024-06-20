@@ -1190,7 +1190,7 @@ function _vnf_centroid(vnf,eps=EPSILON) =
 
 // Function: projection()
 // Synopsis: Returns projection or intersection of vnf with XY plane
-// SynTags: VNF:
+// SynTags: VNF
 // Topics: VNF Manipulation
 // See Also: vnf_halfspace()
 // Usage:
