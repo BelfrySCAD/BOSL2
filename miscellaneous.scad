@@ -270,7 +270,7 @@ module path_extrude(path, convexity=10, clipsize=100) {
 //   ---
 //   od = The outer diameter to extrude to.
 //   id = The inner diameter to extrude from.
-//   size = If a scalar, the width of the 2D children.  If a vector, the [X,Y] size of the 2D children.  Default: [2*PI*or,1000]
+//   size = If a scalar, the width of the 2D children.  If a vector, the [X,Y] size of the 2D children.  Default: [`2*PI*or`,1000]
 //   convexity = The max number of times a line could pass though a wall.  Default: 10
 //   spin = Amount in degrees to spin around cylindrical axis.  Default: 0
 //   orient = The orientation of the cylinder to wrap around, given as a vector.  Default: UP
