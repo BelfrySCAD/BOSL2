@@ -1205,7 +1205,7 @@ function _vnf_centroid(vnf,eps=EPSILON) =
 //   XY plane, which is again a region.  If the VNF does not intersect
 //   the XY plane then returns the empty set.  This operation is
 //   much faster than `cut=false`.
-// Example: Here's a VNF with two linked toruses and a small cube
+// Example(3D): Here's a VNF with two linked toruses and a small cube
 //   vnf = vnf_join([
 //            xrot(90,torus(id=15,od=24,$fn=5)),
 //            right(12,torus(id=15,od=24,$fn=4)),
@@ -1220,7 +1220,7 @@ function _vnf_centroid(vnf,eps=EPSILON) =
 //         ]);
 //   reg = projection(vnf);
 //   region(reg);
-// Example: Tilted torus
+// Example(3D): Tilted torus
 //   vnf = xrot(35,torus(id=4,od=12,$fn=32));
 //   vnf_polyhedron(vnf);
 // Example(2D): Projection of tilted torus using `cut=true`
