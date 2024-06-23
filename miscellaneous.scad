@@ -251,19 +251,30 @@ module path_extrude(path, convexity=10, clipsize=100) {
 // Usage:
 //   cylindrical_extrude(ir|id=, or|od=, [size=], [convexity=], [spin=], [orient=]) 2D-CHILDREN;
 // Description:
-//   Extrudes its 2D children outwards, curved around a cylindrical shape.  Uses $fn/$fa/$fs to
-//   control the faceting of the extrusion.  
+//   Chops the 2D children into rectangles and extrudes each rectangle as a facet around an
+//   approximate cylindrical shape.  Uses $fn/$fa/$fs to control the number of facets.
+//   By default the calculation assumes that the children occupy in the X direction one revolution of the
+//   cylinder of specified radius/diameter and are not more than 1000 units tall (in the Y direction).
+//   If the children are in fact much smaller in width then this assumption is inefficient.  If the children
+//   are wider then they will be truncated at one revolution.  To address either of these problems you can set
+//   the `size` parameter.  Note that the specified height isn't very important: it just needs to be larger than
+//   the actual height of the children, which is why it defaults to 1000. If you set `size` to a scalar then
+//   that only changes the X value and the Y value remains at the default of 1000.
+//   .
+//   When performing the wrap, the X=0 line of the children maps to the Y- axis and the facets are centered on the Y- axis.
+//   This is not consistent with how cylinder() creates its facets.  If `$fn` is a multiple of 4 then the facets will line
+//   up with a cylinder.  Otherwise you must rotate a cylinder by 90 deg in the case of `$fn` even or `90-360/$fn/2` if `$fn` is odd.
 // Arguments:
 //   ir = The inner radius to extrude from.
 //   or = The outer radius to extrude to.
 //   ---
 //   od = The outer diameter to extrude to.
 //   id = The inner diameter to extrude from.
-//   size = The [X,Y] size of the 2D children to extrude.  Default: [1000,1000]
+//   size = If a scalar, the width of the 2D children.  If a vector, the [X,Y] size of the 2D children.  Default: [2*PI*or,1000]
 //   convexity = The max number of times a line could pass though a wall.  Default: 10
 //   spin = Amount in degrees to spin around cylindrical axis.  Default: 0
 //   orient = The orientation of the cylinder to wrap around, given as a vector.  Default: UP
-// Example:
+// Example:  Basic example with defaults.  This will run faster with large facet counts if you set `size=100`
 //   cylindrical_extrude(or=50, ir=45)
 //       text(text="Hello World!", size=10, halign="center", valign="center");
 // Example: Spin Around the Cylindrical Axis
@@ -272,29 +283,33 @@ module path_extrude(path, convexity=10, clipsize=100) {
 // Example: Orient to the Y Axis.
 //   cylindrical_extrude(or=40, ir=35, orient=BACK)
 //       text(text="Hello World!", size=10, halign="center", valign="center");
-module cylindrical_extrude(ir, or, od, id, size=1000, convexity=10, spin=0, orient=UP) {
+// Example(Med): You must give a size argument for this example where the child wraps fully around the cylinder
+//   cylindrical_extrude(or=27, ir=25, size=300, spin=-85)
+//       zrot(-10)text(text="This long text wraps around the cylinder.", size=10, halign="center", valign="center");
+module cylindrical_extrude(ir, or, od, id, size, convexity=10, spin=0, orient=UP) {
     req_children($children);
-    check1 = assert(is_num(size) || is_vector(size,2));
-    size = is_num(size)? [size,size] : size;
     ir = get_radius(r=ir,d=id);
     or = get_radius(r=or,d=od);
     check2 = assert(all_positive([ir,or]), "Must supply positive inner and outer radius or diameter");
-    index_r = or;
-    circumf = 2 * PI * index_r;
-    width = min(size.x, circumf);
-    check3 = assert(width <= circumf, "Shape would more than completely wrap around.");
+    circumf = 2 * PI * or;
+    size = is_undef(size) ? [circumf, 1000]
+         : is_num(size) ? [size, 1000]
+         : size;
+    check1 = assert(is_vector(size,2) && all_positive(size), "Size must be a positive number or 2-vector");
     sides = segs(or);
     step = circumf / sides;
-    steps = ceil(width / step);
+    steps = ceil(size.x / step);
+    scalefactor = sides/PI*sin(180/sides); // Scale from circle to polygon, which has shorter length
     attachable() {
       rot(from=UP, to=orient) rot(spin) {
-          for (i=[0:1:steps-2]) {
+          for (i=[0:1:steps-1]) {
               x = (i+0.5-steps/2) * step;
               zrot(360 * x / circumf) {
                   fwd(or*cos(180/sides)) {
                       xrot(-90) {
                           linear_extrude(height=or-ir, scale=[ir/or,1], center=false, convexity=convexity) {
                               yflip()
+                              xscale(scalefactor)
                               intersection() {
                                   left(x) children();
                                   rect([quantup(step,pow(2,-15)),size.y]);
