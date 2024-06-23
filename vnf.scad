@@ -1188,6 +1188,70 @@ function _vnf_centroid(vnf,eps=EPSILON) =
     pos[1]/pos[0]/4;
 
 
+// Function: projection()
+// Synopsis: Returns projection or intersection of vnf with XY plane
+// SynTags: VNF
+// Topics: VNF Manipulation
+// See Also: vnf_halfspace()
+// Usage:
+//   region = projection(vnf, [cut]);
+// Description:
+//   When `cut=false`, which is the default, projects the input VNF
+//   onto the XY plane, returning a region.  Note that as currently implemented,  this operation
+//   involves the 2D union of all the projected faces and can be very
+//   slow if the VNF has many faces.  Minimize the face count of the VNF for best performance. 
+//   .
+//   When `cut=true`, returns the intersection of the VNF with the
+//   XY plane, which is again a region.  If the VNF does not intersect
+//   the XY plane then returns the empty set.  This operation is
+//   much faster than `cut=false`.
+// Example(3D): Here's a VNF with two linked toruses and a small cube
+//   vnf = vnf_join([
+//            xrot(90,torus(id=15,od=24,$fn=5)),
+//            right(12,torus(id=15,od=24,$fn=4)),
+//            up(13,right(15,cube(3,center=true)))
+//         ]);
+//   vnf_polyhedron(vnf);
+// Example(2D): Projection of above VNF with default behavior, `cut=false`
+//   vnf = vnf_join([
+//            xrot(90,torus(id=15,od=24,$fn=5)),
+//            right(12,torus(id=15,od=24,$fn=4)),
+//            up(13,right(15,cube(3,center=true)))
+//         ]);
+//   reg = projection(vnf);
+//   region(reg);
+// Example(3D): Tilted torus
+//   vnf = xrot(35,torus(id=4,od=12,$fn=32));
+//   vnf_polyhedron(vnf);
+// Example(2D): Projection of tilted torus using `cut=true`
+//   vnf = xrot(35,torus(id=4,od=12,$fn=32));
+//   reg = projection(vnf,cut=true);
+//   region(reg);
+
+function projection(vnf,cut=false,eps=EPSILON) =
+   assert(is_vnf(vnf))
+   cut ?
+         let(
+              vnf_bdy = vnf_halfspace([0,0,1,0],vnf, boundary=true),
+              ind = vnf_bdy[1],
+              pts = path2d(vnf_bdy[0][0])
+         )
+         ind==[] ? []
+                 : [for (path=ind) select(pts, path)]
+  :
+   let(
+        pts = vnf[0],
+        faces = vnf[1], 
+        facets = [for(face=faces)
+                     let(projface = path2d(select(pts,face)))
+                     if (!approx(polygon_area(projface),0,eps=eps))
+                        projface
+                 ]
+   )
+   union(facets);
+
+
+
 // Function: vnf_halfspace()
 // Synopsis: Returns the intersection of the vnf with a half space.
 // SynTags: VNF
