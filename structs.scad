@@ -50,7 +50,10 @@ function struct_set(struct, key, value, grow=true) =
   :
   assert(is_list(key) && len(key)%2==0, "[key,value] pair list is not a list or has an odd length")
   let(
-      new_entries = [for(i=[0:1:len(key)/2-1]) [key[2*i], key[2*i+1]]],
+      new_entries = [for(i=[0:1:len(key)/2-1]) if (is_def(key[2*i+1])) [key[2*i], key[2*i+1]]]
+  )
+  len(new_entries) == 0 ? struct :
+  let(
       newkeys = column(new_entries,0),
       indlist = search(newkeys, struct,0,0),
       badkeys = grow ? (search([undef],new_entries,1,0)[0] != [] ? [undef] : [])
