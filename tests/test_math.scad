@@ -371,6 +371,7 @@ test_deltas();
 
 
 module test_product() {
+    assert_equal(product([]),[]);
     assert_equal(product([2,3,4]), 24);
     assert_equal(product([[1,2,3], [3,4,5], [5,6,7]]), [15, 48, 105]);
     m1 = [[2,3,4],[4,5,6],[6,7,8]];
@@ -613,6 +614,7 @@ module test_cumprod(){
   assert_equal(cumprod([]),[]);
   assert_equal(cumprod([[2,3],[4,5],[6,7]]), [[2,3],[8,15],[48,105]]);
   assert_equal(cumprod([[5,6,7]]),[[5,6,7]]);
+  assert_equal(cumprod([up(5),down(5)]), [up(5),IDENT]);
   assert_equal(cumprod([
                         [[1,2],[3,4]],
                         [[-4,5],[6,4]],
@@ -622,6 +624,16 @@ module test_cumprod(){
                         [[1,2],[3,4]],
                         [[11,12],[18,28]],
                         [[45,24],[98,132]]
+                       ]);
+  assert_equal(cumprod([
+                        [[1,2],[3,4]],
+                        [[-4,5],[6,4]],
+                        [[9,-3],[4,3]]
+                       ],right=true),
+                       [
+                        [[1,2],[3,4]],
+                        [[8, 13],[12,31]],
+                        [[124, 15],[232,57]]
                        ]);
   assert_equal(cumprod([[[1,2],[3,4]]]), [[[1,2],[3,4]]]);
 }
