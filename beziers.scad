@@ -466,12 +466,15 @@ function bezpath_curve(bezpath, splinesteps=16, N=3, endpoint=true) =
     assert(len(bezpath)%N == 1, str("A degree ",N," bezier path should have a multiple of ",N," points in it, plus 1."))
     let(
         segs = (len(bezpath)-1) / N,
-        step = 1 / splinesteps
-    ) [
-        for (seg = [0:1:segs-1])
-            each bezier_points(select(bezpath, seg*N, (seg+1)*N), [0:step:1-step/2]),
-        if (endpoint) last(bezpath)
-    ];
+        step = 1 / splinesteps,
+        path = [
+            for (seg = [0:1:segs-1])
+                each bezier_points(select(bezpath, seg*N, (seg+1)*N), [0:step:1-step/2]),
+            if (endpoint) last(bezpath)
+        ],
+        is_closed = approx(path[0], last(path)),
+        out = path_merge_collinear(path, closed=is_closed)
+    ) out;
 
 
 // Function: bezpath_closest_point()
