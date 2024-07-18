@@ -1274,8 +1274,8 @@ function _ISO_thread_tolerance(diameter, pitch, internal=false, tolerance=undef)
                                                           && str_find("3456789", tol_str[0]) != undef
                                                           && str_find("468", tol_str[2]) !=undef)
   )
-  assert(internalok,str("Invalid internal thread tolerance, ",tolerance,".  Must have form <digit><letter>"))
-  assert(externalok,str("invalid external thread tolerance, ",tolerance,".  Must have form <digit><letter> or <digit><letter><digit><letter>"))
+  assert(internalok,str("Invalid ISO internal thread tolerance, ",tolerance,".  Must have form <digit><letter>"))
+  assert(externalok,str("invalid ISO external thread tolerance, ",tolerance,".  Must have form <digit><letter> or <digit><letter><digit><letter>"))
   let(
     tol_num_pitch = parse_num(tol_str[0]),
     tol_num_crest = parse_num(tol_str[2]),
