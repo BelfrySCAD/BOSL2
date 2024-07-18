@@ -972,8 +972,8 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
              : in_list(downcase(tolerance), ["loose", "coarse"]) ? 2
              : in_list(tolerance, ["H12","H13","H14"]) ?
                    assert(struct_val(screwspec,"system")=="ISO", str("Hole tolerance ", tolerance, " only allowed with ISO screws"))
-                   parse_int(substr(tolerance,1))
-             : assert(false,str("Unknown tolerance ",tolerance, " for clearance hole"));
+                   parse_int(substr(tolerance,1))-12
+             : assert(false,str("Unknown tolerance ",tolerance, " for unthreaded clearance hole.  Use one of \"close\", \"normal\", or \"loose\""));
      tol_table = struct_val(screwspec,"system")=="UTS" ? UTS_clearance[tol_ind] : ISO_clearance[tol_ind];
      tol_gap = lookup(_nominal_diam(screwspec), tol_table);
      // If we got here, hole_oversize is undefined and oversize is undefined
