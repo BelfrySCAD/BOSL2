@@ -664,7 +664,7 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
 
     // Need taper angle for computing width adjustment, but not used elsewhere
     taper_ang = is_def(taper) ? taper
-              : is_def(back_width) ? atan((back_width-width)/2/slide)
+              : is_def(back_width) ? atan((back_width-w)/2/slide)
               : 0;
     // This is the adjustment factor for width to grow in the direction normal to the dovetail face
     wfactor = sqrt( 1/slope^2 + 1/cos(taper_ang)^2 );
@@ -708,7 +708,7 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
 
     bigenough = all_nonnegative(column(smallend_half,0)) && all_nonnegative(column(bigend_points,0));
 
-    assert(bigenough, "Width of dovetail is not large enough for its geometry (angle and taper");
+    assert(bigenough, "Width (or back_width) of dovetail is not large enough for its geometry (angle and taper");
 
     //adjustment = $overlap * (gender == "male" ? -1 : 1);  // Adjustment for default overlap in attach()
     adjustment = 0;    // Default overlap is assumed to be zero
