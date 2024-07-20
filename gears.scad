@@ -2341,7 +2341,7 @@ module crown_gear(
 //   teeth = Number of teeth on the gear
 //   mate_teeth = Number of teeth on the gear that will mate to this gear
 //   shaft_angle = Angle between the shafts of the two gears.  Default: 90
-//   --
+//   ---
 //   mod = The module of the gear (pitch diameter / teeth)
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   circ_pitch = The circular pitch, the distance between teeth centers around the pitch circle.
@@ -2398,6 +2398,22 @@ module crown_gear(
 //       shaft_diam=5, slices=12, backing=3, spin=180/t2, cone_backing=false
 //     );
 //   }
+// Example(NoAxes,VPT=[-12.7062,12.914,17.7517],VPR=[71.1,0,35.5],VPD=213.382): Placing bevel gears onto a frame using the `bottom=` parameter to get the correct position, and with holes cut in the frame for the shafts.  
+//   t1=17; t2=29; mod=2; bot=4; wall=2; shaft=5;
+//   r1 = pitch_radius(mod=mod, teeth=t1);
+//   r2 = pitch_radius(mod=mod, teeth=t2);
+//   difference(){
+//     move([0,bot,-bot]){
+//        cuboid([60,40,wall], anchor=TOP+BACK);
+//        down(wall)cuboid([60,wall,70], anchor=BOT+FWD);
+//     }
+//     up(r2) ycyl(d=shaft, l=100);
+//     fwd(r1) zcyl(d=shaft, l=100);
+//   }  
+//   fwd(r1) color("lightblue")
+//     bevel_gear(mod=mod, teeth=t1,mate_teeth=t2, bottom=bot, shaft_diam=shaft, slices=12);
+//   up(r2) color("orange")
+//     bevel_gear(mod=mod, teeth=t2,mate_teeth=t1, bottom=bot, right_handed=true, orient=FWD, shaft_diam=shaft, slices=12);
 // Example(NoAxes,VPT=[24.4306,-9.20912,-29.3331],VPD=292.705,VPR=[71.8,0,62.5]): Bevel gears at a non right angle, positioned by aligning the pitch cone apexes.  
 //   ang=65;
 //   bevel_gear(mod=3,35,15,ang,spiral=0,backing=5,anchor="apex")   
@@ -2406,13 +2422,38 @@ module crown_gear(
 //   xrot(ang)
 //     bevel_gear(mod=3,15,35,ang,spiral=0,right_handed=true,anchor="apex")
 //       cyl(h=65,d=3,$fn=16,anchor=BOT);
-// Example(VPT=[6.39483,26.2195,8.93229],VPD=192.044,VPR=[76.7,0,63.3],NoAxes): At this extreme 135 degree angle the yellow gear has internal teeth.  This is a rare configuration.  
+// Example(NoAxes,VPT=[-6.28233,3.60349,15.6594],VPR=[71.1,0,52.1],VPD=213.382): Non-right angled bevel gear pair positioned in a frame, with holes cut in the frame for the shafts.  
+//   include<BOSL2/rounding.scad>
+//   angle = 60;
+//   t1=17; t2=29; mod=2; bot=4; wall=2; shaft=5;
+//   r1 = pitch_radius(mod=mod, teeth=t1);
+//   r2 = pitch_radius(mod=mod, teeth=t2);
+//   difference(){
+//     move(bot*[0, 1/tan(90-angle/2),-1])
+//       rot(90)xrot(90)
+//       linear_extrude(height=60,center=true,convexity=5)
+//       offset_stroke([[-40,0],[0,0], polar_to_xy(60,angle)], width=[-wall,0]);
+//     move(r2*[0,cos(angle),sin(angle)])
+//       xrot(angle)zcyl(d=shaft, l=50);
+//     fwd(r1)
+//       zcyl(d=shaft, l=50);
+//   }
+//   fwd(r1) color("lightblue")
+//     bevel_gear(mod=mod, teeth=t1,mate_teeth=t2, bottom=bot, shaft_angle=angle, shaft_diam=shaft, slices=12);
+//   xrot(angle) back(r2) color("orange")
+//     bevel_gear(mod=mod, teeth=t2,mate_teeth=t1, bottom=bot, shaft_angle=angle, shaft_diam=shaft, right_handed=true, slices=12);
+// Example(NoAxes,VPT=[-0.482968,-0.51139,-4.48142],VPR=[69.7,0,40.9],VPD=263.435): At this extreme 135 degree angle the yellow gear has internal teeth.  This is a rare configuration.  
 //   ang=135;
 //   bevel_gear(mod=3,35,15,ang);   
 //   color("lightblue")
 //     back(pitch_radius(mod=3,teeth=35)+pitch_radius(mod=3,teeth=15))
 //     xrot(ang,cp=[0,-pitch_radius(mod=3,teeth=15),0])
-//         bevel_gear(mod=3,15,35,ang,right_handed=true);       
+//         bevel_gear(mod=3,15,35,ang,right_handed=true);
+
+echo(VPT=$vpt,VPR=$vpr,VPD=$vpd);
+
+
+
 function bevel_gear(
     teeth,
     mate_teeth,
@@ -3831,7 +3872,6 @@ function pitch_radius(
     assert(is_finite(circ_pitch))
     circ_pitch * teeth / PI / 2 / cos(helical);
 
-
 // Function: outer_radius()
 // Synopsis: Returns the outer radius for a gear.
 // Topics: Gears, Parts
@@ -4123,7 +4163,7 @@ function worm_dist(d,starts,teeth,mod,profile_shift=0,diam_pitch,circ_pitch,pres
 //   helical = The value of the helical angle (from vertical) of the teeth on the two gears (either sign).  Default: 0
 //   profile_shift1 = Profile shift factor x for the first gear.  Default: 0
 //   profile_shift2 = Profile shift factor x for the second gear.  Default: 0
-//   --
+//   ---
 //   mod = The module of the gear (pitch diameter / teeth)
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   circ_pitch = The circular pitch, the distance between teeth centers around the pitch circle.
@@ -4241,7 +4281,7 @@ function _working_pressure_angle(teeth1,profile_shift1, teeth2, profile_shift2, 
 //   helical1 = The helical angle (from vertical) of the teeth on the second gear.
 //   profile_shift1 = Profile shift factor x for the first gear.  Default: "auto"
 //   profile_shift2 = Profile shift factor x for the second gear.  Default: "auto"
-//   --
+//   ---
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The module of the gear (pitch diameter / teeth)
 //   circ_pitch = The circular pitch, the distance between teeth centers around the pitch circle.
@@ -4297,7 +4337,7 @@ function _working_normal_pressure_angle_skew(teeth1,profile_shift1,helical1, tee
 //   helical1 = The helical angle (from vertical) of the teeth on the second gear.
 //   profile_shift1 = Profile shift factor x for the first gear.  Default: "auto"
 //   profile_shift2 = Profile shift factor x for the second gear.  Default: "auto"
-//   --
+//   ---
 //   pressure_angle = The pressure angle of the gear.
 // Example(3D,Med,NoAxes,VPT=[-2.62091,2.01048,-1.31405],VPR=[55,0,25],VPD=74.4017): These gears are auto profile shifted and as a result, do not mesh at the sum of their helical angles, but at 2.5 degrees more.  
 //   circ_pitch=5; teeth1=12; teeth2=7; ha1=25; ha2=30; thick=10;
