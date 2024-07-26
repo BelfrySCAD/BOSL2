@@ -2422,8 +2422,8 @@ module crown_gear(
 //   xrot(ang)
 //     bevel_gear(mod=3,15,35,ang,spiral=0,right_handed=true,anchor="apex")
 //       cyl(h=65,d=3,$fn=16,anchor=BOT);
-// Example(NoAxes,VPT=[-6.28233,3.60349,15.6594],VPR=[71.1,0,52.1],VPD=213.382): Non-right angled bevel gear pair positioned in a frame, with holes cut in the frame for the shafts.  
-//   include<BOSL2/rounding.scad>
+// Example(NoAxes,VPT=[-6.28233,3.60349,15.6594],VPR=[71.1,0,52.1],VPD=213.382): Non-right angled bevel gear pair positioned in a frame, with holes cut in the frame for the shafts.  Note that when rotating a gear to its appropriate angle, you must rotate around an axis tangent to the gear's pitch base, **not** the gear center.  This is accomplished by shifting the gear by its pitch radius before applying the rotation.    
+//   include <BOSL2/rounding.scad>
 //   angle = 60;
 //   t1=17; t2=29; mod=2; bot=4; wall=2; shaft=5;
 //   r1 = pitch_radius(mod=mod, teeth=t1);
