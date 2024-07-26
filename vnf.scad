@@ -1728,7 +1728,7 @@ function vnf_boundary(vnf,merge=true,idx=false) =
 //     vnf_polyhedron(vnf_small_offset(vnf,18));
 //   }
 // Example(3D): The polyhedron on the left is enlarged to match the size of the offset polyhedron on the right.  Note that the offset does **not** preserve coplanarity of faces.  This is because the vertices all move independently, so nothing constrains faces to remain coplanar.  
-//   include <BOSL2-fork/polyhedra.scad>
+//   include <BOSL2/polyhedra.scad>
 //   vnf = regular_polyhedron_info("vnf","pentagonal icositetrahedron",d=25);
 //   xdistribute(spacing=300){
 //     scale(11)vnf_polyhedron(vnf);
