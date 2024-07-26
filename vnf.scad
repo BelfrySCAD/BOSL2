@@ -1765,7 +1765,7 @@ function vnf_small_offset(vnf, delta, merge=true) =
 // Synopsis: Extends a VNF into a thin sheet by forming a small offset
 // SynTags: VNF
 // Topics: VNF Manipulation
-// See Also: vnf_small_offset(), vnf_boundary(), vnf_merge_points(), 
+// See Also: vnf_small_offset(), vnf_boundary(), vnf_merge_points()
 // Usage:
 //   newvnf = vnf_sheet(vnf, thickness, [style=], [merge=]);
 // Description:
