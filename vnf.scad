@@ -1655,7 +1655,7 @@ function _sort_pairs0(arr) =
 //   ---
 //   merge = set to false to suppress the automatic invocation of {{vnf_merge_points()}}.  Default: true
 //   idx = if true, return indices into VNF vertices instead of actual 3D points.  Must set `merge=false` to enable this.  Default: false
-// Example(NoAxes,VPT=[7.06325,-20.8414,20.1803],VPD=292.705,VPR=[55,0,25.7]):  In this example we know that the bezier patch VNF has no duplicate vertices, so we do not need to run {{vnf_merge_points()}}.
+// Example(3D,NoAxes,VPT=[7.06325,-20.8414,20.1803],VPD=292.705,VPR=[55,0,25.7]):  In this example we know that the bezier patch VNF has no duplicate vertices, so we do not need to run {{vnf_merge_points()}}.
 //   include <BOSL2/beziers.scad>
 //   patch = [
 //        // u=0,v=0                                         u=1,v=0
@@ -1669,7 +1669,7 @@ function _sort_pairs0(arr) =
 //   boundary = vnf_boundary(bezvnf);
 //   vnf_polyhedron(bezvnf);
 //   stroke(boundary,color="green");
-// Example(NoAxes,VPT=[-11.1252,-19.7333,8.39927],VPD=82.6686,VPR=[71.8,0,335.3]): An example with two path components on the boundary.  The output from {{vnf_halfspace()}} can contain duplicate vertices, so we must invoke {{vnf_merge_points()}}.  
+// Example(3D,NoAxes,VPT=[-11.1252,-19.7333,8.39927],VPD=82.6686,VPR=[71.8,0,335.3]): An example with two path components on the boundary.  The output from {{vnf_halfspace()}} can contain duplicate vertices, so we must invoke {{vnf_merge_points()}}.  
 //   vnf = torus(id=20,od=40,$fn=28);
 //   cutvnf=vnf_halfspace([0,1,0,0],
 //            vnf_halfspace([-1,.5,-2.5,-12], vnf, closed=false),
@@ -1721,13 +1721,13 @@ function vnf_boundary(vnf,merge=true,idx=false) =
 //   delta = distance of offset, positive to offset out, negative to offset in
 //   ---
 //   merge = set to false to suppress the automatic invocation of {{vnf_merge_points()}}.  Default: true
-// Example:  The original sphere is on the left and an offset sphere on the right.  
+// Example(3D):  The original sphere is on the left and an offset sphere on the right.  
 //   vnf = sphere(d=100);
 //   xdistribute(spacing=125){
 //     vnf_polyhedron(vnf);
 //     vnf_polyhedron(vnf_small_offset(vnf,18));
 //   }
-// Example: The polyhedron on the left is enlarged to match the size of the offset polyhedron on the right.  Note that the offset does **not** preserve coplanarity of faces.  This is because the vertices all move independently, so nothing constrains faces to remain coplanar.  
+// Example(3D): The polyhedron on the left is enlarged to match the size of the offset polyhedron on the right.  Note that the offset does **not** preserve coplanarity of faces.  This is because the vertices all move independently, so nothing constrains faces to remain coplanar.  
 //   include <BOSL2-fork/polyhedra.scad>
 //   vnf = regular_polyhedron_info("vnf","pentagonal icositetrahedron",d=25);
 //   xdistribute(spacing=300){
@@ -1796,17 +1796,17 @@ function vnf_small_offset(vnf, delta, merge=true) =
 //   ---
 //   style = {{vnf_vertex_array()}} style to use.  Default: "default"
 //   merge = if false then do not run {{vnf_merge_points()}}.  Default: true
-// Example: 
+// Example(3D): 
 //   pts = [for(x=[30:5:180]) [for(y=[-6:0.5:6])  [7*y,x, sin(x)*y^2]]];
 //   vnf=vnf_vertex_array(pts);
 //   vnf_polyhedron(vnf_sheet(vnf,-10));
-// Example: This example has multiple holes
+// Example(3D): This example has multiple holes
 //   pts = [for(x=[-10:2:10]) [ for(y=[-10:2:10]) [x,1.4*y,(-abs(x)^3+y^3)/250]]];
 //   vnf = vnf_vertex_array(pts);
 //   newface = list_remove(vnf[1], [43,42,63,88,108,109,135,134,129,155,156,164,165]);
 //   newvnf = [vnf[0],newface];
 //   vnf_polyhedron(vnf_sheet(newvnf,2));
-// Example: When applied to a sphere the sheet is constructed inward, so the object appears unchanged, but cutting it in half reveals that we have changed the sphere into a shell.  
+// Example(3D): When applied to a sphere the sheet is constructed inward, so the object appears unchanged, but cutting it in half reveals that we have changed the sphere into a shell.  
 //   vnf = sphere(d=100, $fn=28);
 //   left_half()
 //     vnf_polyhedron(vnf_sheet(vnf,15));
