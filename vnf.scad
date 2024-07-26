@@ -1638,7 +1638,7 @@ function _sort_pairs0(arr) =
 // Usage:
 //   boundary = vnf_boundary(vnf, [merge=], [idx=]);
 // Description:
-//   Returns the boundary of a VNF as a list of paths.  **The input VNF must not contain duplicate points.**  By default, vnf_boundary() calls {{vnf_point_merge()}}
+//   Returns the boundary of a VNF as a list of paths.  **The input VNF must not contain duplicate points.**  By default, vnf_boundary() calls {{vnf_merge_points()}}
 //   to remove duplicate points.  Note, however, that this operation can be slow.  If you are **certain** there are no duplicate points you can
 //   set `merge=false` to disable the automatic point merge and save time.  The result of running on a VNF with duplicate points is likely to
 //   be incorrect or invalid; it may produce obscure errors.   
