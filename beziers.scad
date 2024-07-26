@@ -1446,6 +1446,56 @@ function bezier_patch_normals(patch, u, v) =
     :             column(bezier_patch_normals(patch,u,force_list(v)),0);
 
 
+// Function: bezier_sheet()
+// Topics: Bezier Patches
+// See Also: bezier_patch_normals(), vnf_sheet()
+// Description:
+//   Constructs a thin sheet from a bezier patch by offsetting the given patch along the normal vectors
+//   to the patch surface.  The thickness value must be small enough so that no points cross each other
+//   when the offset is computed, because that results in invalid geometry and will give rendering errors.
+//   Rendering errors may not manifest until you add other objects to your model.  
+//   **It is your responsibility to avoid invalid geometry!**
+//   .
+//   The normals are computed using {{bezier_patch_normals()}} and if they are degenerate then
+//   the computation will fail or produce incorrect results.  See {{bezier_patch_normals()}} for
+//   examples of various ways the normals can be degenerate.
+//   .
+//   When thickness is positive, the given bezier patch is extended towards its "inside", which is the
+//   side that appears purple in the "thrown together" view.  You can extend the patch in the other direction
+//   using a negative thickness value.
+// Arguments:
+//   patch = bezier patch to process
+//   thickness = amount to offset; can be positive or negative
+//   ---
+//   splinesteps = Number of segments on the border edges of the bezier surface.  You can specify [USTEPS,VSTEPS].  Default: 16
+//   style = {{vnf_vertex_array()}} style to use.  Default: "default"
+// Example:
+//   patch = [
+//        // u=0,v=0                                         u=1,v=0
+//        [[-50,-50,  0], [-16,-50,  20], [ 16,-50, -20], [50,-50,  0]],
+//        [[-50,-16, 20], [-16,-16,  20], [ 16,-16, -20], [50,-16, 20]],
+//        [[-50, 16, 20], [-16, 16, -20], [ 16, 16,  20], [50, 16, 20]],
+//        [[-50, 50,  0], [-16, 50, -20], [ 16, 50,  20], [50, 50,  0]],
+//        // u=0,v=1                                         u=1,v=1
+//   ];
+//   vnf_polyhedron(bezier_sheet(patch, 10));
+function bezier_sheet(patch, thickness, splinesteps=16, style="default") =
+  assert(is_bezier_patch(patch))
+  assert(all_nonzero([thickness]), "thickness must be nonzero")
+  let(
+        splinesteps = force_list(splinesteps,2),
+        uvals = lerpn(0,1,splinesteps.x+1),
+        vvals = lerpn(1,0,splinesteps.y+1),
+        pts = bezier_patch_points(patch, uvals, vvals),
+        normals = bezier_patch_normals(patch, uvals, vvals),
+        dummy=assert(is_matrix(flatten(normals)),"Bezier patch has degenerate normals"),
+        offset = pts + thickness*normals,
+        allpoints = [for(i=idx(pts)) concat(pts[i], reverse(offset[i]))],
+        vnf = vnf_vertex_array(allpoints, col_wrap=true, caps=true, style=style)        
+  )
+  thickness<0 ? vnf_reverse_faces(vnf) : vnf;
+
+
 
 // Section: Debugging Beziers
 
