@@ -618,7 +618,7 @@ function _bridge(pt, outer,eps) =
 //   color("gray")down(.125)
 //        linear_extrude(height=.125)region(region);
 //   vnf_wireframe(vnf,width=.25);
-function vnf_from_region(region, transform, reverse=false) =
+function vnf_from_region(region, transform, reverse=false, triangulate=true) =
     let (
         region = [for (path = region) deduplicate(path, closed=true)],
         regions = region_parts(force_region(region)),
@@ -636,7 +636,7 @@ function vnf_from_region(region, transform, reverse=false) =
             ],
         outvnf = vnf_join(vnfs)
     )
-    vnf_triangulate(outvnf);
+    triangulate ? vnf_triangulate(outvnf) : outvnf;
 
 
 
@@ -1616,7 +1616,214 @@ module vnf_hull(vnf, fast=false)
   if (is_vnf(vnf)) hull()vnf_polyhedron(vnf);
   else hull_points(vnf, fast);
 }  
-    
+
+
+
+function _sort_pairs0(arr) =
+    len(arr)<=1 ? arr : 
+    let(
+        pivot   = arr[floor(len(arr)/2)][0],
+        lesser  = [ for (y = arr) if (y[0].x  < pivot.x || (y[0].x==pivot.x && y[0].y<pivot.y)) y ],
+        equal   = [ for (y = arr) if (y[0] == pivot) y ],
+        greater = [ for (y = arr) if (y[0].x > pivot.x || (y[0].x==pivot.x && y[0].y>pivot.y)) y ]
+    ) 
+    concat( _sort_pairs0(lesser), equal, _sort_pairs0(greater) );
+
+
+// Function: vnf_boundary()
+// Synopsis: Returns the boundary of a VNF as an list of paths
+// SynTags: VNF
+// Topics: VNF Manipulation
+// See Also: vnf_halfspace(), vnf_merge_points()
+// Usage:
+//   boundary = vnf_boundary(vnf, [merge=], [idx=]);
+// Description:
+//   Returns the boundary of a VNF as a list of paths.  **The input VNF must not contain duplicate points.**  By default, vnf_boundary() calls {{vnf_point_merge()}}
+//   to remove duplicate points.  Note, however, that this operation can be slow.  If you are **certain** there are no duplicate points you can
+//   set `merge=false` to disable the automatic point merge and save time.  The result of running on a VNF with duplicate points is likely to
+//   be incorrect or invalid; it may produce obscure errors.   
+//   .
+//   The output will be a list of closed 3D paths.  If the VNF has no boundary then the output is `[]`.  The boundary path(s) are
+//   traversed in the same direction as the edges in the original VNF.  
+//   .
+//   It is sometimes desirable to have the boundary available as an index list into the VNF vertex list.  However, merging the points in the VNF changes the 
+//   VNF vertex point list.  If you set `merge=false` you can also set `idx=true` to get an index list.  As noted above, you must be certain
+//   that your in put VNF has no duplicate vertices, perhaps by running {{vnf_merge_points()}} yourself on it.  With `idx=true`
+//   the output will be indices into the VNF vertex list, which enables you to associate the vertices on the boundary path with the original VNF.
+// Arguments:
+//   vnf = input vnf
+//   ---
+//   merge = set to false to suppress the automatic invocation of {{vnf_merge_points()}}.  Default: true
+//   idx = if true, return indices into VNF vertices instead of actual 3D points.  Must set `merge=false` to enable this.  Default: false
+// Example(NoAxes,VPT=[7.06325,-20.8414,20.1803],VPD=292.705,VPR=[55,0,25.7]):  In this example we know that the bezier patch VNF has no duplicate vertices, so we do not need to run {{vnf_merge_points()}}.
+//   include <BOSL2/beziers.scad>
+//   patch = [
+//        // u=0,v=0                                         u=1,v=0
+//        [[-50,-50,  0], [-16,-50,  20], [ 16,-50, -20], [50,-50,  0]],
+//        [[-50,-16, 20], [-16,-16,  20], [ 16,-16, -20], [50,-16, 20]],
+//        [[-50, 16, 20], [-16, 16, -20], [ 16, 16,  20], [50, 16, 20]],
+//        [[-50, 50,  0], [-16, 50, -20], [ 16, 50,  20], [50, 50,  0]],
+//        // u=0,v=1                                         u=1,v=1
+//   ];                
+//   bezvnf = bezier_vnf(patch);
+//   boundary = vnf_boundary(bezvnf);
+//   vnf_polyhedron(bezvnf);
+//   stroke(boundary,color="green");
+// Example(NoAxes,VPT=[-11.1252,-19.7333,8.39927],VPD=82.6686,VPR=[71.8,0,335.3]): An example with two path components on the boundary.  The output from {{vnf_halfspace()}} can contain duplicate vertices, so we must invoke {{vnf_merge_points()}}.  
+//   vnf = torus(id=20,od=40,$fn=28);
+//   cutvnf=vnf_halfspace([0,1,0,0],
+//            vnf_halfspace([-1,.5,-2.5,-12], vnf, closed=false),
+//            closed=false);
+//   vnf_polyhedron(cutvnf);
+//   boundary = vnf_boundary(vnf_merge_points(cutvnf));
+//   stroke(boundary,color="green");
+function vnf_boundary(vnf,merge=true,idx=false) =
+   assert(!idx || !merge, "Cannot request indices unless marge=false and VNF contains no duplicate vertices")
+   let(
+       vnf = merge ? vnf_merge_points(vnf) : vnf,
+       edgelist= [ for(face=vnf[1], edge=pair(face,wrap=true))
+                      [edge.x<edge.y ? edge : [edge.y,edge.x],edge]
+                 ],
+       sortedge = _sort_pairs0(edgelist),  
+       edges=  [
+                if (sortedge[0][0]!=sortedge[1][0]) sortedge[0][1],
+                for(i=[1:1:len(sortedge)-2])
+                     if (sortedge[i][0]!=sortedge[i-1][0] && sortedge[i][0]!=sortedge[i+1][0]) sortedge[i][1],
+                if (last(sortedge)[0] != sortedge[len(sortedge)-2][0]) last(sortedge)[1]
+               ],
+       paths = _assemble_paths(vnf[0], edges)    // could be made cleaner and maybe more robust with an _assemble_path version that 
+   )                                             // uses edge vertex indices instead of actual point values
+   idx ? paths : [for(path=paths) select(vnf[0],path)];
+
+
+// Function: vnf_small_offset()
+// Synopsis: Computes an offset surface to a VNF for small offset distances
+// SynTags: VNF
+// Topics: VNF Manipulation
+// See Also: vnf_sheet(), vnf_merge_points()
+// Usage:
+//   newvnf = vnf(vnf, delta, [merge=]);
+// Description:
+//   Computes a simple offset of a VNF by estimating the normal at every point based on the weighted average of surrounding polygons
+//   in the mesh.  The offset distance, `delta`, must be small enough so that no self-intersection occurs, which is no issue when the
+//   curvature is positive (like the outside of a sphere) but for negative curvature it means the offset distance must be smaller
+//   than the smallest radius of curvature of the VNF.  If self-intersection
+//   occurs, the resulting geometry will be invalid and you will get an error when you introduce a second object into the model.
+//   **It is your responsibility to avoid invalid geometry!**  It cannot be detected automatically.  
+//   The positive offset direction is towards the outside of the VNF, the faces that are colored yellow in the "thrown together" view.  
+//   .
+//   **The input VNF must not contain duplicate points.**  By default, vnf_small_offset() calls {{vnf_merge_points()}}
+//   to remove duplicate points.  Note, however, that this operation can be slow.  If you are **certain** there are no duplicate points you can
+//   set `merge=false` to disable the automatic point merge and save time.  The result of running on a VNF with duplicate points is likely to
+//   be incorrect or invalid.
+// Arguments:
+//   vnf = vnf to offset
+//   delta = distance of offset, positive to offset out, negative to offset in
+//   ---
+//   merge = set to false to suppress the automatic invocation of {{vnf_merge_points()}}.  Default: true
+// Example:  The original sphere is on the left and an offset sphere on the right.  
+//   vnf = sphere(d=100);
+//   xdistribute(spacing=125){
+//     vnf_polyhedron(vnf);
+//     vnf_polyhedron(vnf_small_offset(vnf,18));
+//   }
+// Example: The polyhedron on the left is enlarged to match the size of the offset polyhedron on the right.  Note that the offset does **not** preserve coplanarity of faces.  This is because the vertices all move independently, so nothing constrains faces to remain coplanar.  
+//   include <BOSL2-fork/polyhedra.scad>
+//   vnf = regular_polyhedron_info("vnf","pentagonal icositetrahedron",d=25);
+//   xdistribute(spacing=300){
+//     scale(11)vnf_polyhedron(vnf);
+//     vnf_polyhedron(vnf_small_offset(vnf,125));
+//   }
+function vnf_small_offset(vnf, delta, merge=true) =
+   let(
+        vnf = merge ? vnf_merge_points(vnf) : vnf, 
+        vertices = vnf[0],
+        faces = vnf[1],
+        vert_faces = group_data(
+            [for (i = idx(faces), vert = faces[i]) vert],
+            [for (i = idx(faces), vert = faces[i]) i]
+        ),
+        normals = [for(face=faces) polygon_normal(select(vertices,face))],   // Normals for each face
+        offset = [for(vertex=idx(vertices))
+                    let(
+                        vfaces = vert_faces[vertex], // Faces that surround this vertex
+                        adjacent_normals = select(normals,vfaces),
+                        angles = [for(faceind=vfaces)
+                                    let(
+                                        thisface = faces[faceind],
+                                        vind = search(vertex,thisface)[0]
+                                    )
+                                    vector_angle(select(vertices, select(thisface,vind-1,vind+1)))
+                                 ]
+                    )
+                    vertices[vertex] +unit(angles*adjacent_normals)*delta
+                 ]
+    )
+    [offset,faces];
+
+// Function: vnf_sheet()
+// Synopsis: Extends a VNF into a thin sheet by forming a small offset
+// SynTags: VNF
+// Topics: VNF Manipulation
+// See Also: vnf_small_offset(), vnf_boundary(), vnf_merge_points(), 
+// Usage:
+//   newvnf = vnf_sheet(vnf, thickness, [style=], [merge=]);
+// Description:
+//   Constructs a thin sheet from a vnf by offsetting the vnf along the normal vectors estimated at
+//   each vertex by averaging the normals of the adjacent faces.  This is done using {{vnf_small_offset()}.
+//   The thickness value must be small enough so that no points cross each other
+//   when the offset is computed, because that results in invalid geometry and will give rendering errors.
+//   Rendering errors may not manifest until you add other objects to your model.  
+//   **It is your responsibility to avoid invalid geometry!**
+//   .
+//   Once the offset to the original VNF is computed the original and offset VNF are connected by filling
+//   in the boundary strip(s) between them
+//   .
+//   When thickness is positive, the given bezier patch is extended towards its "inside", which is the
+//   side that appears purple in the "thrown together" view.  Note that this is the opposite direction
+//   of {{vnf_small_offset()}}.  Extending toward the inside means that your original VNF remains unchanged
+//   in the output.  You can extend the patch in the other direction
+//   using a negative thickness value.   When you extend to the outside with a negative thickness, your VNF needs to have all
+//   of its faces reversed to produce a valid polyhedron, so your original VNF is reversed in the output.
+//   .
+//   **The input VNF must not contain duplicate points.**  By default, vnf_sheet() calls {{vnf_merge_points()}}
+//   to remove duplicate points.  Note, however, that this operation can be slow.  If you are **certain** there are no duplicate points you can
+//   set `merge=false` to disable the automatic point merge and save time.  The result of running on a VNF with duplicate points is likely to
+//   be incorrect or invalid, or it may result in cryptic errors.  
+// Arguments:
+//   vnf = vnf to process
+//   thickness = thickness of sheet to produce; can be positive or negative
+//   ---
+//   style = {{vnf_vertex_array()}} style to use.  Default: "default"
+//   merge = if false then do not run {{vnf_merge_points()}}.  Default: true
+// Example: 
+//   pts = [for(x=[30:5:180]) [for(y=[-6:0.5:6])  [7*y,x, sin(x)*y^2]]];
+//   vnf=vnf_vertex_array(pts);
+//   vnf_polyhedron(vnf_sheet(vnf,-10));
+// Example: This example has multiple holes
+//   pts = [for(x=[-10:2:10]) [ for(y=[-10:2:10]) [x,1.4*y,(-abs(x)^3+y^3)/250]]];
+//   vnf = vnf_vertex_array(pts);
+//   newface = list_remove(vnf[1], [43,42,63,88,108,109,135,134,129,155,156,164,165]);
+//   newvnf = [vnf[0],newface];
+//   vnf_polyhedron(vnf_sheet(newvnf,2));
+// Example: When applied to a sphere the sheet is constructed inward, so the object appears unchanged, but cutting it in half reveals that we have changed the sphere into a shell.  
+//   vnf = sphere(d=100, $fn=28);
+//   left_half()
+//     vnf_polyhedron(vnf_sheet(vnf,15));
+
+function vnf_sheet(vnf, thickness, style="default", merge=true) =
+  let(
+       vnf = merge ? vnf_merge_points(vnf) : vnf,
+       offset = vnf_small_offset(vnf, -thickness, merge=false),
+       boundary = vnf_boundary(vnf,merge=false,idx=true),
+       newvnf = vnf_join([vnf,
+                         vnf_reverse_faces(offset),
+                         for(p=boundary) vnf_vertex_array([select(offset[0],p),select(vnf[0],p)],col_wrap=true,style=style)
+                         ])
+  )
+  thickness < 0 ? vnf_reverse_faces(newvnf) : newvnf;
+
+
 
 // Section: Debugging Polyhedrons
 
