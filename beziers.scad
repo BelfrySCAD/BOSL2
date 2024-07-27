@@ -1444,6 +1444,8 @@ function bezier_patch_normals(patch, u, v) =
 
 
 // Function: bezier_sheet()
+// Synopsis: Creates a thin sheet from a bezier patch by extruding in normal to the patch
+// SynTags: VNF
 // Topics: Bezier Patches
 // See Also: bezier_patch_normals(), vnf_sheet()
 // Description:

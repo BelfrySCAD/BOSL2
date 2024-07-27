@@ -852,21 +852,25 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, p=_
 //       yrot(90) cylinder(h=20, r1=5, r2=0);
 //   color("red",0.333) yrot(90) cylinder(h=20, r1=5, r2=0);
 module rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], subrot=true)
-{
+{  echo("hi");
     req_children($children);  
     sang = sa + offset;
+    echo(sang=sang);
     angs = !is_undef(n)?
         (n<=0? [] : [for (i=[0:1:n-1]) i/n*360+sang]) :
         rots==[]? [] :
         assert(!is_string(rots), "Argument rots must be an angle, a list of angles, or a range of angles.")
         assert(!is_undef(rots[0]), "Argument rots must be an angle, a list of angles, or a range of angles.")
         [for (a=rots) a];
+    echo(angs=angs);
+    echo(subrot=subrot);
     for ($idx = idx(angs)) {
         $ang = angs[$idx];
         $axis = v;
         translate(cp) {
+            echo(rotang=$ang);
             rotate(a=$ang, v=v) {
-                translate(delta) {
+                translate(delta) { echo(sang=sang);
                     rot(a=(subrot? sang : $ang), v=v, reverse=true) {
                         translate(-cp) {
                             children();
