@@ -1469,7 +1469,7 @@ function bezier_patch_normals(patch, u, v) =
 //   ---
 //   splinesteps = Number of segments on the border edges of the bezier surface.  You can specify [USTEPS,VSTEPS].  Default: 16
 //   style = {{vnf_vertex_array()}} style to use.  Default: "default"
-// Example:
+// Example(3D):
 //   patch = [
 //        // u=0,v=0                                         u=1,v=0
 //        [[-50,-50,  0], [-16,-50,  20], [ 16,-50, -20], [50,-50,  0]],
