@@ -814,7 +814,7 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, p=_
 //   n = Optional number of evenly distributed copies, rotated around the axis.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise.  Default: 0
 //   delta = [X,Y,Z] amount to move away from cp before rotating.  Makes rings of copies.  Default: `[0,0,0]`
-//   subrot = If false, don't sub-rotate children as they are copied around the ring.  Only makes sense when used with `delta`.  Default: `true`
+//   subrot = If false, don't sub-rotate children as they are copied around the ring.  Instead maintain their native orientation.  The false setting is only allowed when `delta` is given.  Default: `true`
 //   p = Either a point, pointlist, VNF or Bezier patch to be translated when used as a function.
 //
 // Side Effects:
@@ -853,6 +853,7 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, p=_
 //   color("red",0.333) yrot(90) cylinder(h=20, r1=5, r2=0);
 module rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], subrot=true)
 {
+    assert(subrot || norm(delta)>0, "subrot can only be false if delta is not zero");
     req_children($children);  
     sang = sa + offset;
     angs = !is_undef(n)?
@@ -866,8 +867,8 @@ module rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], subr
         $axis = v;
         translate(cp) {
             rotate(a=$ang, v=v) {
-                translate(delta) {
-                    rot(a=(subrot? sang : $ang), v=v, reverse=true) {
+                translate(delta) { 
+                    rot(a=subrot? 0 : $ang, v=v, reverse=true) {
                         translate(-cp) {
                             children();
                         }
@@ -880,6 +881,7 @@ module rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], subr
 
 
 function rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], subrot=true, p=_NO_ARG) =
+    assert(subrot || norm(delta)>0, "subrot can only be false if delta is not zero")
     let(
         sang = sa + offset,
         angs = !is_undef(n)?
@@ -893,7 +895,7 @@ function rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], su
             translate(cp) *
                 rot(a=ang, v=v) *
                 translate(delta) *
-                rot(a=(subrot? sang : ang), v=v, reverse=true) *
+                rot(a=subrot? 0 : ang, v=v, reverse=true) *
                 translate(-cp)
         ]
     )
@@ -935,6 +937,7 @@ function rot_copies(rots=[], v, cp=[0,0,0], n, sa=0, offset=0, delta=[0,0,0], su
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from Y+, when facing the origin from X+.  First unrotated copy is placed at that angle.
 //   r = If given, makes a ring of child copies around the X axis, at the given radius.  Default: 0
 //   d = If given, makes a ring of child copies around the X axis, at the given diameter.
+//   subrot = If false, don't sub-rotate children as they are copied around the ring.  Instead maintain their native orientation.  The false setting is only allowed when `d` or `r` is given.  Default: `true`
 //   subrot = If false, don't sub-rotate children as they are copied around the ring.
 //   p = Either a point, pointlist, VNF or Bezier patch to be translated when used as a function.
 //
@@ -972,12 +975,16 @@ module xrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true)
 {
     req_children($children);  
     r = get_radius(r=r, d=d, dflt=0);
+    assert(all_nonnegative([r]), "d/r must be nonnegative");
+    assert(subrot || r>0, "subrot can only be false if d or r is given");
     rot_copies(rots=rots, v=RIGHT, cp=cp, n=n, sa=sa, delta=[0, r, 0], subrot=subrot) children();
 }
 
 
 function xrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG) =
     let( r = get_radius(r=r, d=d, dflt=0) )
+    assert(all_nonnegative([r]), "d/r must be nonnegative")
+    assert(subrot || r>0, "subrot can only be false if d or r is given")
     rot_copies(rots=rots, v=RIGHT, cp=cp, n=n, sa=sa, delta=[0, r, 0], subrot=subrot, p=p);
 
 
@@ -1016,7 +1023,7 @@ function xrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from X-, when facing the origin from Y+.
 //   r = If given, makes a ring of child copies around the Y axis, at the given radius.  Default: 0
 //   d = If given, makes a ring of child copies around the Y axis, at the given diameter.
-//   subrot = If false, don't sub-rotate children as they are copied around the ring.
+//   subrot = If false, don't sub-rotate children as they are copied around the ring.  Instead maintain their native orientation.  The false setting is only allowed when `d` or `r` is given.  Default: `true`
 //   p = Either a point, pointlist, VNF or Bezier patch to be translated when used as a function.
 //
 // Side Effects:
@@ -1053,12 +1060,16 @@ module yrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true)
 {
     req_children($children);
     r = get_radius(r=r, d=d, dflt=0);
+    assert(all_nonnegative([r]), "d/r must be nonnegative");
+    assert(subrot || r>0, "subrot can only be false if d or r is given");
     rot_copies(rots=rots, v=BACK, cp=cp, n=n, sa=sa, delta=[-r, 0, 0], subrot=subrot) children();
 }
 
 
 function yrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG) =
     let( r = get_radius(r=r, d=d, dflt=0) )
+    assert(all_nonnegative([r]), "d/r must be nonnegative")
+    assert(subrot || r>0, "subrot can only be false if d or r is given")
     rot_copies(rots=rots, v=BACK, cp=cp, n=n, sa=sa, delta=[-r, 0, 0], subrot=subrot, p=p);
 
 
@@ -1098,7 +1109,7 @@ function yrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from X+, when facing the origin from Z+.  Default: 0
 //   r = If given, makes a ring of child copies around the Z axis, at the given radius.  Default: 0
 //   d = If given, makes a ring of child copies around the Z axis, at the given diameter.
-//   subrot = If false, don't sub-rotate children as they are copied around the ring.  Default: true
+//   subrot = If false, don't sub-rotate children as they are copied around the ring.  Instead maintain their native orientation.  The false setting is only allowed when `d` or `r` is given.  Default: `true`
 //   p = Either a point, pointlist, VNF or Bezier patch to be translated when used as a function.
 //
 // Side Effects:
@@ -1133,13 +1144,18 @@ function yrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 //   color("red",0.333) yrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
 module zrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true)
 {
+    req_children($children);
     r = get_radius(r=r, d=d, dflt=0);
+    assert(all_nonnegative([r]), "d/r must be nonnegative");
+    assert(subrot || r>0, "subrot can only be false if d or r is given");
     rot_copies(rots=rots, v=UP, cp=cp, n=n, sa=sa, delta=[r, 0, 0], subrot=subrot) children();
 }
 
 
 function zrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG) =
     let( r = get_radius(r=r, d=d, dflt=0) )
+    assert(all_nonnegative([r]), "d/r must be nonnegative")
+    assert(subrot || r>0, "subrot can only be false if d or r is given")
     rot_copies(rots=rots, v=UP, cp=cp, n=n, sa=sa, delta=[r, 0, 0], subrot=subrot, p=p);
 
 
