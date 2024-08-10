@@ -592,6 +592,8 @@ module screw(spec, head, drive, thread, drive_size,
             assert(is_finite(_shoulder_diam) && _shoulder_diam>=0, "Must specify nonnegative shoulder diameter")
             assert(is_undef(user_thread_len) || (is_finite(user_thread_len) && user_thread_len>=0), "Must specify nonnegative thread length");
    sides = max(pitch==0 ? 3 : 12, segs(nominal_diam/2));
+   rad_scale = _internal? (1/cos(180/sides)) : 1;
+   islop = _internal ? 4*get_slop() : 0;
    head_height = headless || flathead ? 0 
                : counterbore==true || is_undef(counterbore) || counterbore==0 ? struct_val(spec, "head_height")
                : counterbore;
@@ -599,7 +601,8 @@ module screw(spec, head, drive, thread, drive_size,
    flat_height = !flathead ? 0 
                : let( given_height = struct_val(spec, "head_height"))
                  all_positive(given_height) ? given_height
-               : (struct_val(spec,"head_size_sharp")+struct_val(spec,"head_oversize",0)-d_major)/2/tan(struct_val(spec,"head_angle")/2);
+               : (struct_val(spec,"head_size_sharp")+struct_val(spec,"head_oversize",0)-d_major*rad_scale-islop)/2/tan(struct_val(spec,"head_angle")/2);
+
    flat_cbore_height = flathead && is_num(counterbore) ? counterbore : 0;
 
    blunt_start1 = first_defined([blunt_start1,blunt_start,true]);
@@ -650,8 +653,6 @@ module screw(spec, head, drive, thread, drive_size,
           named_anchor("threads_bot", [0,0,-length-shoulder_full+offset]),
           named_anchor("threads_center", [0,0,(-shank_len-length-_shoulder_len-shoulder_full-flat_height)/2+offset])
    ];
-   rad_scale = _internal? (1/cos(180/sides)) : 1;
-   islop = _internal ? 4*get_slop() : 0;
    vnf = head=="hex" && atype=="head" && counterbore==0 ? linear_sweep(hexagon(id=head_diam*rad_scale),height=head_height,center=true) : undef;
    head_diam_full = head=="hex" ? 2*head_diam/sqrt(3) : head_diam;
    attach_d = in_list(atype,["threads","shank","shaft"]) ? d_major 
@@ -1422,8 +1423,8 @@ function _parse_drive(drive=undef, drive_size=undef) =
 //    ---
 //    details = true for more detailed model.  Default: false
 //    counterbore = counterbore height.  Default: no counterbore
-//    flat_height = height of flat head
-//    teardrop = if true make flathead and counterbores teardrop shaped with the flat 5% away from the edge of the screw.  If numeric, specify the fraction of extra to add.  Set to "max" for a pointed teardrop.  Default: false
+//    flat_height = height of flat head (required for flat heads)
+//    teardrop = if true make flatheads and counterbores teardrop shaped with the flat 5% away from the edge of the screw.  If numeric, specify the fraction of extra to add.  Set to "max" for a pointed teardrop.  Default: false
 //    slop = enlarge diameter by this extra amount (beyond that specified in the screw specification).  Default: 0
 function screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=false,slop=0) = no_function("screw_head");
 module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=false,slop=0) {
@@ -1456,6 +1457,7 @@ module screw_head(screw_info,details=false, counterbore=0,flat_height,teardrop=f
              cyl(d=d, l=counterbore, anchor=BOTTOM);
          }  
          if (head=="flat") {   // For flat head, counterbore is integrated
+           dummy = assert(all_positive([flat_height]), "flat_height must be given for flat heads");
            angle = struct_val(screw_info, "head_angle")/2;
            sharpsize = struct_val(screw_info, "head_size_sharp")+head_oversize;
            sidewall_height = (sharpsize - head_size)/2 / tan(angle);

@@ -1024,7 +1024,7 @@ function _normal_segment(p1,p2) =
 // Usage:
 //   path = turtle(commands, [state], [full_state=], [repeat=])
 // Description:
-//   Use a sequence of [turtle graphics]{https://en.wikipedia.org/wiki/Turtle_graphics} commands to generate a path.  The parameter `commands` is a list of
+//   Use a sequence of [turtle graphics](https://en.wikipedia.org/wiki/Turtle_graphics) commands to generate a path.  The parameter `commands` is a list of
 //   turtle commands and optional parameters for each command.  The turtle state has a position, movement direction,
 //   movement distance, and default turn angle.  If you do not give `state` as input then the turtle starts at the
 //   origin, pointed along the positive x axis with a movement distance of 1.  By default, `turtle` returns just
