@@ -1406,7 +1406,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //    star = star(5, r=22, ir=13);
 //    rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //    offset_sweep(rounded_star, height=20, bottom=os_teardrop(r=4), top=os_chamfer(width=4),$fn=64);
-// Example: We round a cube using the continous curvature rounding profile.  But note that the corners are not smooth because the curved square collapses into a square with corners.    When a collapse like this occurs, we cannot turn `check_valid` off.  For a better result use `rounded_prism()` instead.
+// Example: We round a cube using the continous curvature rounding profile.  But note that the corners are not smooth because the curved square collapses into a square with corners.    When a collapse like this occurs, we cannot turn `check_valid` off.  For a better result use {{rounded_prism()}} instead.
 //   square = square(1);
 //   rsquare = round_corners(square, method="smooth", cut=0.1, k=0.7, $fn=36);
 //   end_spec = os_smooth(cut=0.1, k=0.7, steps=22);
@@ -2619,8 +2619,8 @@ Access to the derivative smoothing parameter?
 //   When joining between planes this function produces similar results to {{rounded_prism()}}.  This function works best when the prism
 //   cross section is a continuous shape with a high sampling rate and without sharp corners.  If you have sharp corners you should consider
 //   giving them a small rounding first.  When the prism cross section has concavities the fillet size will be limited by the curvature of those concavities.
-//   In contrast, {{rounded_prism()}} works best on a prism that has fewer points.  A high sampling rate can lead to problems, and rounding
-//   over sharp corners leads to poor results.  
+//   In contrast, {{rounded_prism()}} works best on a prism that has fewer points and does well with sharp corners, but may encounter problems
+//   with a high sampling rate.  
 //   .
 //   You specify the prism by giving its cross section as a 2D path.  The cross section will always be the orthogonal cross
 //   section of the prism.  Depending on end conditions, the ends may not be perpendicular to the
@@ -2707,7 +2707,7 @@ Access to the derivative smoothing parameter?
 //   For joins to convex objects you can choose a small value, but when joining to a concave object the overlap may need to be
 //   very large to ensure that the base of the joiner prism is well-behaved.  In such cases you may need to use an intersection
 //   remove excess base.
-// Figure(2D,Med,NoAxes): Uniform fillet method.  This image shows how the fillet we construct a uniform fillet.  The pictures shows the cross section that is perpendicular to the prism.  The blue curve represents the base object surface.  The vertical line is the side of the prism.  To construct a fillet we travel along the surface of the base, following the curve, until we have moved the fillet length, `a`.  This defines the point `u`.  We then construct a tangent line to the base and find its intersection, `v`, with the prism.  Note that if the base is steeply curved, this tangent may fail to intersect, and the algorithm will fail with an error because `v` does not exist.  Finally we locate `w` to be distance `a` above the point where the prism intersects the base object.  The fillet is defined by the `[u,v,w]` triple and is shown in red.  Note that with this method, the fillet is always height `a` above the base, so it makes a uniform curve parallel to the base object.  However, when the base curvature is more extreme, point `v` may end up above point `w`, resulting in an invalid configuration.  It also happens that point `v`, while below `w`, is very close to `w`, so the resulting fillet has an abrupt angle near `w` instead of a smooth transition.  
+// Figure(2D,Med,NoAxes): Uniform fillet method.  This image shows how we construct a uniform fillet.  The pictures shows the cross section that is perpendicular to the prism.  The blue curve represents the base object surface.  The vertical line is the side of the prism.  To construct a fillet we travel along the surface of the base, following the curve, until we have moved the fillet length, `a`.  This defines the point `u`.  We then construct a tangent line to the base and find its intersection, `v`, with the prism.  Note that if the base is steeply curved, this tangent may fail to intersect, and the algorithm will fail with an error because `v` does not exist.  Finally we locate `w` to be distance `a` above the point where the prism intersects the base object.  The fillet is defined by the `[u,v,w]` triple and is shown in red.  Note that with this method, the fillet is always height `a` above the base, so it makes a uniform curve parallel to the base object.  However, when the base curvature is more extreme, point `v` may end up above point `w`, resulting in an invalid configuration.  It also happens that point `v`, while below `w`, is very close to `w`, so the resulting fillet has an abrupt angle near `w` instead of a smooth transition.  
 //   R=60;
 //   base = R*[cos(70),sin(70)];
 //   end = R*[cos(45),sin(45)];
