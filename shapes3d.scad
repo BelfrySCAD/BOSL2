@@ -1147,10 +1147,15 @@ module wedge(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
     size = scalar_vec3(size);
     anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
     vnf = wedge(size, anchor="origin");
+    spindir = unit([0,-size.y,size.z]);
+    hypot_dir = unit([0,size.z,size.y],UP);
+    left_dir = unit(hypot_dir+LEFT);
+    right_dir = unit(hypot_dir+RIGHT);
+    hedge_spin=vector_angle(spindir,rot(from=UP,to=left_dir, p=BACK));
     anchors = [
-        named_anchor("hypot", CTR, unit([0,size.z,size.y],UP)),
-        named_anchor("hypot_left", [-size.x/2,0,0], unit(unit([0,size.z,size.y],UP)+LEFT)),
-        named_anchor("hypot_right", [size.x/2,0,0], unit(unit([0,size.z,size.y],UP)+RIGHT)),
+        named_anchor("hypot", CTR, hypot_dir, 180),
+        named_anchor("hypot_left", [-size.x/2,0,0], left_dir,-hedge_spin),
+        named_anchor("hypot_right", [size.x/2,0,0], right_dir,hedge_spin),
     ];
     attachable(anchor,spin,orient, size=size, anchors=anchors) {
         if (size.z > 0) {
@@ -1174,10 +1179,15 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
             [1,4,2], [2,4,5], [2,5,3], [0,2,3],
         ],
         vnf = [scale(size/2,p=pts), faces],
+        spindir = unit([0,-size.y,size.z]),
+        hypot_dir = unit([0,size.z,size.y],UP),
+        left_dir = unit(hypot_dir+LEFT),
+        right_dir = unit(hypot_dir+RIGHT),
+        hedge_spin=vector_angle(spindir,rot(from=UP,to=left_dir, p=BACK)),
         anchors = [
-            named_anchor("hypot", CTR, unit([0,size.z,size.y],UP)),
-            named_anchor("hypot_left", [-size.x/2,0,0], unit(unit([0,size.z,size.y],UP)+LEFT)),
-            named_anchor("hypot_right", [size.x/2,0,0], unit(unit([0,size.z,size.y],UP)+RIGHT)),
+            named_anchor("hypot", CTR, hypot_dir, 180),
+            named_anchor("hypot_left", [-size.x/2,0,0], left_dir,-hedge_spin),
+            named_anchor("hypot_right", [size.x/2,0,0], right_dir,hedge_spin),
         ]
     )
     reorient(anchor,spin,orient, size=size, anchors=anchors, p=vnf);
