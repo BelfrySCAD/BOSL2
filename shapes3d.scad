@@ -858,7 +858,7 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   Creates a prism whose ends are similar `n`-sided regular polygons, with optional rounding, chamfers or textures.
 //   You can specify the size of the ends using diameter or radius measured either inside or outside.  Alternatively
 //   you can give the length of the side of the polygon.  You can specify chamfers and roundings for the ends, but not
-//   the vertical edges.  See {{rounded_prism}} for prisms with rounded vertical edges.  You can also specify texture for the side
+//   the vertical edges.  See {{rounded_prism()}} for prisms with rounded vertical edges.  You can also specify texture for the side
 //   faces, but note that texture is not compatible with any roundings or chamfers.  
 //   .
 //   Anchors are based on the VNF of the prism.  Especially for tapered or shifted prisms, this may give unexpected anchor positions, such as top side anchors
