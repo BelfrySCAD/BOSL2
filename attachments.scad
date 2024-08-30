@@ -921,11 +921,13 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
         anchor = is_string(anchors[anch_ind])? anchors[anch_ind]
                : two_d?_force_anchor_2d(anchors[anch_ind])
                : point3d(anchors[anch_ind]);
+        $anchor=anchor;
         anchor_data = _find_anchor(anchor, $parent_geom);
         anchor_pos = anchor_data[1];
         anchor_dir = factor*anchor_data[2];
-        anchor_spin = !inside || anchor==TOP || anchor==BOT ? anchor_data[3] : 180+anchor_data[3];
-        $anchor=anchor;
+        anchor_spin = !inside || anchor==TOP || anchor==BOT ? anchor_data[3]
+                    : let(spin_dir = rot(anchor_data[3],from=UP, to=-anchor_dir, p=BACK))
+                      _compute_spin(anchor_dir,spin_dir);
         for(align_ind = idx(align_list)){
             align = is_undef(align_list[align_ind]) ? undef
                   : assert(is_vector(align_list[align_ind],2) || is_vector(align_list[align_ind],3), "align direction must be a 2-vector or 3-vector")
@@ -959,18 +961,16 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
                       : two_d ? rot(to=reference, from=anchor,p=align)
                       : apply(zrot(-factor*spin)*frame_map(x=reference, z=BACK)*frame_map(x=factor*anchor, z=startdir, reverse=true),
                               align);
-
             spinaxis = two_d? UP : anchor_dir;
             olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference);
-            
-            if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) {
+            if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) 
                 translate(pos) rot(v=spinaxis,a=factor*spin) translate(olap) default_tag("remove",inside) children();
-            } else { 
+            else  
                 translate(pos)
                     rot(v=spinaxis,a=factor*spin)
-                    rot(anchor_spin,from=reference,to=anchor_dir){
+                    rot(anchor_spin,from=reference,to=anchor_dir)
                     translate(olap)
-                        default_tag("remove",inside) children();}}
+                    default_tag("remove",inside) children();
         }
     }
 }
