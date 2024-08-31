@@ -925,7 +925,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
         anchor_data = _find_anchor(anchor, $parent_geom);
         anchor_pos = anchor_data[1];
         anchor_dir = factor*anchor_data[2];
-        anchor_spin = !inside || anchor==TOP || anchor==BOT ? anchor_data[3]
+        anchor_spin = two_d || !inside || anchor==TOP || anchor==BOT ? anchor_data[3]
                     : let(spin_dir = rot(anchor_data[3],from=UP, to=-anchor_dir, p=BACK))
                       _compute_spin(anchor_dir,spin_dir);
         for(align_ind = idx(align_list)){
