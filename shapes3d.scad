@@ -873,12 +873,12 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   different `$fn` than the number of prism faces, you can apply texture to the flat faces without forcing a high facet count,
 //   anchors are located on the true object instead of the ideal cylinder and you can anchor to the edges and faces.  
 // Named Anchors:
-//   "edge0", "edge1", etc. = Center of each side edge
-//   "face0", "face1", etc. = Center of each side face
-//   "topedge0", "topedge1", etc = Center of each top edge, pointing in direction of associated side face
-//   "botedge0", "botedge1", etc = Center of each bottom edge, pointing in direction of associated side face
-//   "topcorner0", "topcorner1", etc = Top corner, pointing in direction of associated edge anchor
-//   "botcorner0", "botcorner1", etc = Bottom corner, pointing in direction of associated edge anchor
+//   "edge0", "edge1", etc. = Center of each side edge, spin pointing up along the edge
+//   "face0", "face1", etc. = Center of each side face, spin pointing up
+//   "topedge0", "topedge1", etc = Center of each top edge, pointing in direction of associated side face, spin up
+//   "botedge0", "botedge1", etc = Center of each bottom edge, pointing in direction of associated side face, spin up
+//   "topcorner0", "topcorner1", etc = Top corner, pointing in direction of associated edge anchor, spin up along associated edge
+//   "botcorner0", "botcorner1", etc = Bottom corner, pointing in direction of associated edge anchor, spin up along associated edge
 // Arguments:
 //   l / h / length / height = Length of prism
 //   r = Outer radius of prism.  
@@ -1162,7 +1162,8 @@ function regular_prism(n,
                            Mface = skmat*zrot(-(i+1/2)*360/n),
                            faceedge = faces[i][1],
                            facenormal = faces[i][0], 
-                           facespin = _compute_spin(facenormal, faceedge), 
+                           //facespin = _compute_spin(facenormal, faceedge), // spin along centerline of face instea of pointing up---seems to be wrong choice
+                           facespin = _compute_spin(facenormal, UP), 
                            edgenormal = unit(vector_bisect(facenormal,select(faces,i-1)[0])),
                            Medge = skmat*zrot(-i*360/n),
                            edge = faces[i][2], 
@@ -1179,7 +1180,9 @@ function regular_prism(n,
                     ],
                     override = approx(shift,[0,0]) ? undef : [[UP, [point3d(shift,height/2), UP]]]
     )        
-    [reorient(anchor,spin,orient, vnf=ovnf, p=ovnf,anchors=anchors, override=override),anchors,override];
+    [reorient(anchor,spin,orient, vnf=ovnf,  p=ovnf,anchors=anchors, override=override),anchors,override];
+
+
 
 
 // Module: rect_tube()

@@ -3180,12 +3180,12 @@ function attach_geom(
     assert(is_list(anchors))
     assert(is_bool(two_d))
     assert(is_vector(axis))
+    let(
+        over_f = is_undef(override) ? function(anchor) [undef,undef,undef]
+               : is_func(override) ? override
+               : function(anchor) _local_struct_val(override,anchor)
+    )
     !is_undef(size)? (
-        let(
-            over_f = is_undef(override) ? function(anchor) [undef,undef,undef]
-                   : is_func(override) ? override
-                   : function(anchor) _local_struct_val(override,anchor)
-        )
         two_d? (
             let(
                 size2 = default(size2, size.x),
@@ -3208,8 +3208,8 @@ function attach_geom(
     ) : !is_undef(vnf)? (
         assert(is_vnf(vnf))
         assert(two_d == false)
-        extent? ["vnf_extent", vnf, cp, offset, anchors] :
-        ["vnf_isect", vnf, cp, offset, anchors]
+        extent? ["vnf_extent", vnf, over_f, cp, offset, anchors] 
+              : ["vnf_isect", vnf, over_f, cp, offset, anchors]
     ) : !is_undef(region)? (
         assert(is_region(region),2)
         let( l = default(l, h) )
@@ -3467,32 +3467,32 @@ function _attach_transform(anchor, spin, orient, geom, p) =
         spin   = default(spin,   0),
         orient = default(orient, UP),
         two_d = _attach_geom_2d(geom),
-        m = ($attach_to != undef)? (       // $attach_to is the attachment point on this object
-            let(                           // which will attach to the parent
-                anch = _find_anchor($attach_to, geom),
-                // if $anchor_override is set it defines the object position anchor (but note not direction or spin).  
-                // Otherwise we use the provided anchor for the object.  
-                pos = is_undef($anchor_override) ? anch[1]
-                    : _find_anchor(_make_anchor_legal($anchor_override,geom),geom)[1]
-            )
-            two_d?
-                assert(is_num(spin))
-                /*affine3d_zrot(spin) * */
-                    rot(to=FWD, from=point3d(anch[2])) 
-                   * affine3d_translate(point3d(-pos))
-            :
-                let(
-                    ang = vector_angle(anch[2], DOWN),       // anch[2] is the anchor direction vector
-                    axis = vector_axis(anch[2], DOWN),
-                    ang2 = (anch[2]==UP || anch[2]==DOWN)? 0 : 180-anch[3],
-                    axis2 = rot(p=axis,[0,0,ang2])
-                )
-                affine3d_rot_by_axis(axis2,ang)
-                   * (is_num(spin)? affine3d_zrot(ang2+spin)
-                                  : affine3d_zrot(spin.z) * affine3d_yrot(spin.y) * affine3d_xrot(spin.x) 
-                                     * affine3d_zrot(ang2))
-                   * affine3d_translate(point3d(-pos))
-        ) : (
+        m = ($attach_to != undef) ?   // $attach_to is the attachment point on this object
+              (                       // which will attach to the parent
+               let(                           
+                    anch = _find_anchor($attach_to, geom),
+                    // if $anchor_override is set it defines the object position anchor (but note not direction or spin).  
+                    // Otherwise we use the provided anchor for the object.  
+                    pos = is_undef($anchor_override) ? anch[1]
+                        : _find_anchor(_make_anchor_legal($anchor_override,geom),geom)[1]
+               )
+               two_d?
+                 assert(is_num(spin))
+                 affine3d_zrot(spin)  
+                    * rot(to=FWD, from=point3d(anch[2])) 
+                    * affine3d_translate(point3d(-pos))
+             :
+               let(
+                    spinT = is_num(spin) ? affine3d_zrot(-anch[3]-spin)
+                                         : affine3d_zrot(-spin.z) * affine3d_yrot(-spin.y) * affine3d_xrot(-spin.x)
+                                            * affine3d_zrot(-anch[3])
+               )
+               affine3d_yrot(180)
+                  * spinT
+                  * rot(from=anch[2],to=UP)
+                  * affine3d_translate(point3d(-pos))
+              )
+          :
             let(
                 anchor = is_undef($attach_alignment) ? anchor
                        : two_d? _make_anchor_legal(zrot(-spin,$attach_alignment),geom)
@@ -3503,7 +3503,6 @@ function _attach_transform(anchor, spin, orient, geom, p) =
                 assert(is_num(spin))
                 affine3d_zrot(spin) * affine3d_translate(point3d(-pos))
             :
-                assert(is_num(spin) || is_vector(spin,3))
                 let(
                     axis = vector_axis(UP,orient),    // Returns BACK if orient is UP
                     ang = vector_angle(UP,orient)
@@ -3512,7 +3511,6 @@ function _attach_transform(anchor, spin, orient, geom, p) =
                     * ( is_num(spin)? affine3d_zrot(spin)  
                                     : affine3d_zrot(spin.z) * affine3d_yrot(spin.y) * affine3d_xrot(spin.x))
                     * affine3d_translate(point3d(-pos))
-        )
     )
     is_undef(p)? m
   : is_vnf(p) && p==EMPTY_VNF? p 
@@ -3681,8 +3679,11 @@ function _find_anchor(anchor, geom) =
             vec = unit(v_mul(r,anchor),UP)
         ) [anchor, pos, vec, oang]
     ) : type == "vnf_isect"? ( //vnf
-        let( vnf=geom[1] )
-        approx(anchor,CTR)? [anchor, cp, UP, 0] :      // CENTER anchors anchor on cp, "origin" anchors on [0,0]
+        let(
+            vnf=geom[1],
+            override = geom[2](anchor)
+        )                                                   // CENTER anchors anchor on cp, "origin" anchors on [0,0]
+        approx(anchor,CTR)? [anchor, default(override[0],cp),default(override[1],UP),default(override[2], 0)] :     
         vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
         let(
             eps = 1/2048,
@@ -3729,10 +3730,13 @@ function _find_anchor(anchor, geom) =
             n = unit(sum(unorms)),
             oang = approx(point2d(n), [0,0])? 0 : atan2(n.y, n.x) + 90
         )
-        [anchor, pos, n, oang]
+        [anchor, default(override[0],pos),default(override[1], n),default(override[2], oang)]
     ) : type == "vnf_extent"? ( //vnf
-        let( vnf=geom[1] )
-        approx(anchor,CTR)? [anchor, cp, UP, 0] :      // CENTER anchors anchor on cp, "origin" anchors on [0,0]
+        let(
+            vnf=geom[1],
+            override = geom[2](anchor)
+        )                                                   // CENTER anchors anchor on cp, "origin" anchors on [0,0]
+        approx(anchor,CTR)? [anchor, default(override[0],cp),default(override[1],UP),default(override[2], 0)] :     
         vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor,UP), 0] :
         let(
             rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
@@ -3741,7 +3745,7 @@ function _find_anchor(anchor, geom) =
             avep = sum(select(rpts,idxs))/len(idxs),
             mpt = approx(point2d(anchor),[0,0])? [maxx,0,0] : avep,
             pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
-        ) [anchor, pos, anchor, oang]
+        ) [anchor, default(override[0],pos),default(override[1],anchor),default(override[2],oang)]
     ) : type == "trapezoid"? ( //size, size2, shift, override
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "All components of an anchor for a rectangle/trapezoid must be -1, 0, or 1")
