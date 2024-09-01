@@ -977,7 +977,8 @@ module regular_prism(n,
                                   texture=texture, tex_size=tex_size, tex_reps=tex_reps,
                                   tex_inset=tex_inset, tex_rot=tex_rot,
                                   tex_depth=tex_depth, tex_samples=tex_samples,
-                                  tex_taper=tex_taper, style=style);
+                                  tex_taper=tex_taper, style=style,
+                                  _return_anchors=true);
     attachable(anchor=anchor, orient=orient, spin=spin, vnf=vnf_anchors_ovr[0], anchors=vnf_anchors_ovr[1],override=vnf_anchors_ovr[2]){
        vnf_polyhedron(vnf_anchors_ovr[0],convexity=is_def(texture)?10:2);
        children();
@@ -1003,7 +1004,7 @@ function regular_prism(n,
     tex_inset=false, tex_rot=0,
     tex_depth, tex_samples, length, height, 
     tex_taper, style,
-    anchor, spin=0, orient=UP
+    anchor, spin=0, orient=UP,_return_anchors=false
 ) = 
     assert(is_integer(n) && n>2, "n must be an integer 3 or greater")
     let(
@@ -1132,32 +1133,33 @@ function regular_prism(n,
         anchors = approx(shift,[0,0]) ? 
                      [for(i=[0:n-1], j=[0:1])
                        let(
-                        M = zrot(-(i+j/2-(realign?1/2:0))*360/n),
-                        edge =  apply(M,edge_face[j]),
-                        dir = apply(M,[height,0,-edge_face[j].x]),
-                        spin = sign(dir.x)*vector_angle(edge - (edge*dir)*dir, rot(from=UP,to=dir,p=BACK))
-                    )
-                    each
-                    [
-                      named_anchor(str(names[j],i), apply(M,[(r1+r2)/2/(j==0?1:sc),0,0]), dir, spin),
-                      named_anchor(str(j==0?"top_corner":"top_edge",i), apply(M,[r2/(j==0?1:sc),0,height/2]), dir, spin),
-                      named_anchor(str(j==0?"bot_corner":"bot_edge",i), apply(M,[r1/(j==0?1:sc),0,-height/2]), dir, spin),                      
-                    ]
-                  ]:let(
-                        faces = [
-                                 for(i=[0:n-1])
-                                 let(
-                                     M1 = skmat*zrot(-i*360/n),
-                                     M2 = skmat*zrot(-(i+1)*360/n),
-                                     edge1 = apply(M1,[[r2,0,height/2], [r1,0,-height/2]]),
-                                     edge2 = apply(M2,[[r2,0,height/2], [r1,0,-height/2]]),
-                                     face_edge = (edge1+edge2)/2,
-                                     facenormal = unit(cross(edge1[0]-edge1[1], edge2[1]-edge1[0]))
-                                 )
-                                 [facenormal,face_edge[0]-face_edge[1],edge1[0]-edge1[1]]  // [normal to face, edge through face center, actual edge]
-                                ]
-                    )
-                    [for(i=[0:n-1])
+                           M = zrot(-(i+j/2-(realign?1/2:0))*360/n),
+                           edge =  apply(M,edge_face[j]),
+                           dir = apply(M,[height,0,-edge_face[j].x]),
+                           spin = sign(dir.x)*vector_angle(edge - (edge*dir)*dir, rot(from=UP,to=dir,p=BACK))
+                       )
+                       each [
+                          named_anchor(str(names[j],i), apply(M,[(r1+r2)/2/(j==0?1:sc),0,0]), dir, spin),
+                          named_anchor(str(j==0?"top_corner":"top_edge",i), apply(M,[r2/(j==0?1:sc),0,height/2]), dir, spin),
+                          named_anchor(str(j==0?"bot_corner":"bot_edge",i), apply(M,[r1/(j==0?1:sc),0,-height/2]), dir, spin),                      
+                       ]
+                     ]
+                :
+                  let(
+                      faces = [
+                               for(i=[0:n-1])
+                                  let(
+                                      M1 = skmat*zrot(-i*360/n),
+                                      M2 = skmat*zrot(-(i+1)*360/n),
+                                      edge1 = apply(M1,[[r2,0,height/2], [r1,0,-height/2]]),
+                                      edge2 = apply(M2,[[r2,0,height/2], [r1,0,-height/2]]),
+                                      face_edge = (edge1+edge2)/2,
+                                      facenormal = unit(cross(edge1[0]-edge1[1], edge2[1]-edge1[0]))
+                                  )
+                                  [facenormal,face_edge[0]-face_edge[1],edge1[0]-edge1[1]]  // [normal to face, edge through face center, actual edge]
+                              ]
+                  )
+                  [for(i=[0:n-1])
                       let(
                            Mface = skmat*zrot(-(i+1/2)*360/n),
                            faceedge = faces[i][1],
@@ -1177,12 +1179,12 @@ function regular_prism(n,
                           named_anchor(str("bot_edge",i), apply(Mface,[r1/sc,0,-height/2]), facenormal, facespin),
                           named_anchor(str("bot_corner",i), apply(Medge,[r1,0,-height/2]), edgenormal, edgespin)
                       ]
-                    ],
-                    override = approx(shift,[0,0]) ? undef : [[UP, [point3d(shift,height/2), UP]]]
-    )        
-    [reorient(anchor,spin,orient, vnf=ovnf,  p=ovnf,anchors=anchors, override=override),anchors,override];
-
-
+                  ],
+        override = approx(shift,[0,0]) ? undef : [[UP, [point3d(shift,height/2), UP]]],
+        final_vnf = reorient(anchor,spin,orient, vnf=ovnf,  p=ovnf,anchors=anchors, override=override)
+    )
+    _return_anchors ? [final_vnf,anchors,override]
+                    : final_vnf;
 
 
 // Module: rect_tube()
