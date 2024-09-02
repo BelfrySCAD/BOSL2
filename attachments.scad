@@ -3755,7 +3755,7 @@ function _find_anchor(anchor, geom) =
                                              direction= unit(mean([for(face=edgefaces) polygon_normal(select(vnf[0],vnf[1][face]))])),
                                              edgedir = edge[1]-edge[0],
                                              nz = [for(i=[0:2]) if (!approx(edgedir[i],0)) i],
-                                             flip = last(nz) < 0 ? -1 : 1, 
+                                             flip = edgedir[last(nz)] < 0 ? -1 : 1,
                                              spin = _compute_spin(direction, flip*edgedir)
                                         )
                                         [direction,spin]
