@@ -3742,10 +3742,42 @@ function _find_anchor(anchor, geom) =
             rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
             maxx = max(column(rpts,0)),
             idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
+            dir = len(idxs)>2 ? [anchor,oang]
+                : len(idxs)==2 ?
+                    let(
+                        edgefaces = _vnf_find_edge_faces(vnf,idxs),
+                        edge = select(vnf[0],idxs)
+                    ) 
+                    len(edgefaces)==0 ? [anchor,oang]
+                                      : assert(len(edgefaces)==2, "Invalid polyhedron encountered while computing VNF anchor")
+                                        edge[0]==edge[1] ? [anchor,oang]   // two "edge" points are the same, so give up 
+                                      : let( 
+                                             direction= unit(mean([for(face=edgefaces) polygon_normal(select(vnf[0],vnf[1][face]))])),
+                                             edgedir = edge[1]-edge[0],
+                                             nz = [for(i=[0:2]) if (!approx(edgedir[i],0)) i],
+                                             flip = last(nz) < 0 ? -1 : 1, 
+                                             spin = _compute_spin(direction, flip*edgedir)
+                                        )
+                                        [direction,spin]
+                :   let(
+                       vertices = vnf[0],
+                       faces = vnf[1],
+                       cornerfaces = _vnf_find_corner_faces(vnf,idxs[0]),    // faces = [3,9,12] indicating which faces
+                       normals = [for(faceind=cornerfaces) polygon_normal(select(vnf[0], faces[faceind]))],
+                       angles = [for(faceind=cornerfaces)
+                                    let(
+                                        thisface = faces[faceind],
+                                        vind = search(idxs[0],thisface)[0]
+                                    )
+                                    vector_angle(select(vertices, select(thisface,vind-1,vind+1)))
+                                 ],
+                       direc = unit(angles*normals)
+                    )
+                    [direc, atan2(direc.y,direc.x)+90],
             avep = sum(select(rpts,idxs))/len(idxs),
             mpt = approx(point2d(anchor),[0,0])? [maxx,0,0] : avep,
             pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
-        ) [anchor, default(override[0],pos),default(override[1],anchor),default(override[2],oang)]
+        ) [anchor, default(override[0],pos),default(override[1],dir[0]),default(override[2],dir[1])]
     ) : type == "trapezoid"? ( //size, size2, shift, override
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "All components of an anchor for a rectangle/trapezoid must be -1, 0, or 1")

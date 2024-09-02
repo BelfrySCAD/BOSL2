@@ -2331,5 +2331,29 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, opacity=0.
 }
 
 
+function _vnf_find_edge_faces(vnf,edge) =
+  let(
+      faces = vnf[1],
+      goodind = [for(i=idx(faces))
+                    let(result=search(edge,faces[i]))
+                    if (result*0==[0,0] && 
+                          (abs(result[0]-result[1])==1
+                           || (min(result)==0 && max(result)==len(faces[i])-1)))
+                       i
+                ]
+  )
+  goodind;
+
+
+function _vnf_find_corner_faces(vnf,corner) =
+  let(
+      faces = vnf[1]
+  )
+  [for(i=idx(faces))
+     let(result=search([corner],faces[i])[0])
+     if (result!=[])
+        i];
+
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
