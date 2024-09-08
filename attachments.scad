@@ -909,6 +909,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
     dummy2=assert(align_list==[undef] || is_def(child), "Cannot use 'align' without 'child'")
            assert(!inside || is_def(child), "Cannot use 'inside' without 'child'")
            assert(inset==0 || is_def(child), "Cannot specify 'inset' without 'child'")
+           assert(inset==0 || is_def(align), "Cannot specify 'inset' without 'align'")
            assert(shiftout==0 || is_def(child), "Cannot specify 'shiftout' without 'child'");
     factor = inside?-1:1;
     $attach_to = child;
@@ -920,11 +921,13 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
         anchor = is_string(anchors[anch_ind])? anchors[anch_ind]
                : two_d?_force_anchor_2d(anchors[anch_ind])
                : point3d(anchors[anch_ind]);
+        $anchor=anchor;
         anchor_data = _find_anchor(anchor, $parent_geom);
         anchor_pos = anchor_data[1];
         anchor_dir = factor*anchor_data[2];
-        anchor_spin = !inside || anchor==TOP || anchor==BOT ? anchor_data[3] : 180+anchor_data[3];
-        $anchor=anchor;
+        anchor_spin = two_d || !inside || anchor==TOP || anchor==BOT ? anchor_data[3]
+                    : let(spin_dir = rot(anchor_data[3],from=UP, to=-anchor_dir, p=BACK))
+                      _compute_spin(anchor_dir,spin_dir);
         for(align_ind = idx(align_list)){
             align = is_undef(align_list[align_ind]) ? undef
                   : assert(is_vector(align_list[align_ind],2) || is_vector(align_list[align_ind],3), "align direction must be a 2-vector or 3-vector")
@@ -934,34 +937,40 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
             $align=align;
             dummy=assert(is_undef(align) || all_zero(v_mul(anchor,align)),
                          str("Invalid alignment: align value (",align,") includes component parallel to parent anchor (",anchor,")"));
+            // Now compute position on the parent (including alignment but not inset) where the child will be anchored
             pos = is_undef(align) ? anchor_data[1] : _find_anchor(anchor+align, $parent_geom)[1];
-            $attach_anchor = list_set(anchor_data, 1, pos);      ///
+            $attach_anchor = list_set(anchor_data, 1, pos);      // Never used;  For user informational use?  Should this be set at all?
             startdir = two_d || is_undef(align)? undef
                      : anchor==UP || anchor==DOWN ? BACK
-                     : UP - (anchor*UP)*anchor/(anchor*anchor);
+                     : UP - (anchor*UP)*anchor/(anchor*anchor);   // Component of UP perpendicular to anchor
             enddir = is_undef(child) || child.z==0 ? UP : BACK;
+            // Compute adjustment to the child anchor for position purposes.  This adjustment
+            // accounts for the change in the anchor needed to to alignment.  
             child_adjustment = is_undef(align)? CTR
                               : two_d ? rot(to=child,from=-factor*anchor,p=align)
                               : apply( frame_map(x=child, z=enddir)
-                                      *frame_map(x=-factor*anchor, z=startdir, reverse=true)
+                                      *frame_map(x=-factor*anchor, z=startdir, reverse=true)  
                                       *rot(v=anchor,-spin), align);
+            // The $anchor_override anchor value forces an override of the *position* only for the anchor
+            // used when attachable() places the child
             $anchor_override = all_zero(child_adjustment)? inside?child:undef
                              : child+child_adjustment;
             reference = two_d? BACK : UP;
+            // inset_dir is the direction for insetting when alignment is in effect
             inset_dir = is_undef(align) ? CTR
                       : two_d ? rot(to=reference, from=anchor,p=align)
                       : apply(zrot(-factor*spin)*frame_map(x=reference, z=BACK)*frame_map(x=factor*anchor, z=startdir, reverse=true),
                               align);
             spinaxis = two_d? UP : anchor_dir;
             olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference);
-            if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) {
+            if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) 
                 translate(pos) rot(v=spinaxis,a=factor*spin) translate(olap) default_tag("remove",inside) children();
-            } else {
+            else  
                 translate(pos)
                     rot(v=spinaxis,a=factor*spin)
-                    rot(anchor_spin,from=reference,to=anchor_dir){
+                    rot(anchor_spin,from=reference,to=anchor_dir)
                     translate(olap)
-                        default_tag("remove",inside) children();}}
+                    default_tag("remove",inside) children();
         }
     }
 }
@@ -2044,7 +2053,7 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_profile(), edge_mask(), face_mask(), corner_mask()
 // Usage:
-//   PARENT() edge_profile([edges], [except=], [convexity=], [flip=], [corner_type=]) CHILDREN;
+//   PARENT() edge_profile([edges], [except], [convexity=], [flip=], [corner_type=]) CHILDREN;
 // Description:
 //   Takes an asymmetric 2D mask shape and attaches it to the selected edges and corners, with the appropriate
 //   orientation and extruded length to be `diff()`ed away, to give the edges and corners a matching profile.
@@ -2064,6 +2073,7 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 // Arguments:
 //   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
+//   ---
 //   excess = Excess length to extrude the profile to make edge masks.  Default: 0.01
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 //   flip = If true, reverses the orientation of any external profile parts at each edge.  Default false
@@ -2818,9 +2828,9 @@ module attachable(
 ) { 
     dummy1 =
         assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
-        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
-        assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
-        assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient));
+        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
+        assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Invalid spin: ",spin))
+        assert(is_undef(orient) || is_vector(orient,3), str("Invalid orient: ",orient));
     anchor = first_defined([anchor, CENTER]);
     spin =   default(spin,   0);
     orient = is_def($anchor_override)? UP : default(orient, UP);
@@ -3031,12 +3041,6 @@ function named_anchor(name, pos, orient, spin, rot, flip) =
   [name, pos, dir, spin];
   
 
-function _force_rot(T) =
-   [for(i=[0:3])
-       [for(j=[0:3]) j<3 ? T[i][j] :
-                     i==3 ? 1
-                       : 0]];
-
 // Function: attach_geom()
 // Synopsis: Returns the internal geometry description of an attachable object.
 // Topics: Attachments
@@ -3157,11 +3161,6 @@ function _force_rot(T) =
 //   geom = attach_geom(region=region, l=length, extent=false);
 //
 
-function _local_struct_val(struct, key)=
-    assert(is_def(key),"key is missing")
-    let(ind = search([key],struct)[0])
-    ind == [] ? undef : struct[ind][1];
-
 
 function attach_geom(
     size, size2,
@@ -3181,12 +3180,12 @@ function attach_geom(
     assert(is_list(anchors))
     assert(is_bool(two_d))
     assert(is_vector(axis))
+    let(
+        over_f = is_undef(override) ? function(anchor) [undef,undef,undef]
+               : is_func(override) ? override
+               : function(anchor) _local_struct_val(override,anchor)
+    )
     !is_undef(size)? (
-        let(
-            over_f = is_undef(override) ? function(anchor) [undef,undef,undef]
-                   : is_func(override) ? override
-                   : function(anchor) _local_struct_val(override,anchor)
-        )
         two_d? (
             let(
                 size2 = default(size2, size.x),
@@ -3209,8 +3208,8 @@ function attach_geom(
     ) : !is_undef(vnf)? (
         assert(is_vnf(vnf))
         assert(two_d == false)
-        extent? ["vnf_extent", vnf, cp, offset, anchors] :
-        ["vnf_isect", vnf, cp, offset, anchors]
+        extent? ["vnf_extent", vnf, over_f, cp, offset, anchors] 
+              : ["vnf_isect", vnf, over_f, cp, offset, anchors]
     ) : !is_undef(region)? (
         assert(is_region(region),2)
         let( l = default(l, h) )
@@ -3460,39 +3459,40 @@ function _attach_geom_edge_path(geom, edge) =
 ///   p = If given as a VNF, path, or point, applies the affine3d transformation matrix to it and returns the result.
 
 function _attach_transform(anchor, spin, orient, geom, p) =
-    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
-    assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
-    assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient))
+    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
+    assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Invalid spin: ",spin))
+    assert(is_undef(orient) || is_vector(orient,3), str("Invalid orient: ",orient))
     let(
         anchor = default(anchor, CENTER),
         spin   = default(spin,   0),
         orient = default(orient, UP),
         two_d = _attach_geom_2d(geom),
-        m = ($attach_to != undef)? (
-            let(
-                anch = _find_anchor($attach_to, geom),
-                pos = is_undef($anchor_override) ? anch[1]
-                    : _find_anchor(_make_anchor_legal($anchor_override,geom),geom)[1]
-            )
-            two_d?
-                assert(is_num(spin))
-                /*affine3d_zrot(spin) * */
-                    rot(to=FWD, from=point3d(anch[2])) 
-                   * affine3d_translate(point3d(-pos))
-            :
-                assert(is_num(spin) || is_vector(spin,3))
-                let(
-                    ang = vector_angle(anch[2], DOWN),
-                    axis = vector_axis(anch[2], DOWN),
-                    ang2 = (anch[2]==UP || anch[2]==DOWN)? 0 : 180-anch[3],
-                    axis2 = rot(p=axis,[0,0,ang2])
-                )
-                affine3d_rot_by_axis(axis2,ang)
-                   * (is_num(spin)? affine3d_zrot(ang2+spin)
-                                  : affine3d_zrot(spin.z) * affine3d_yrot(spin.y) * affine3d_xrot(spin.x) 
-                                     * affine3d_zrot(ang2))
-                   * affine3d_translate(point3d(-pos))
-        ) : (
+        m = ($attach_to != undef) ?   // $attach_to is the attachment point on this object
+              (                       // which will attach to the parent
+               let(                           
+                    anch = _find_anchor($attach_to, geom),
+                    // if $anchor_override is set it defines the object position anchor (but note not direction or spin).  
+                    // Otherwise we use the provided anchor for the object.  
+                    pos = is_undef($anchor_override) ? anch[1]
+                        : _find_anchor(_make_anchor_legal($anchor_override,geom),geom)[1]
+               )
+               two_d?
+                 assert(is_num(spin))
+                 affine3d_zrot(spin)  
+                    * rot(to=FWD, from=point3d(anch[2])) 
+                    * affine3d_translate(point3d(-pos))
+             :
+               let(
+                    spinT = is_num(spin) ? affine3d_zrot(-anch[3]-spin)
+                                         : affine3d_zrot(-spin.z) * affine3d_yrot(-spin.y) * affine3d_xrot(-spin.x)
+                                            * affine3d_zrot(-anch[3])
+               )
+               affine3d_yrot(180)
+                  * spinT
+                  * rot(from=anch[2],to=UP)
+                  * affine3d_translate(point3d(-pos))
+              )
+          :
             let(
                 anchor = is_undef($attach_alignment) ? anchor
                        : two_d? _make_anchor_legal(zrot(-spin,$attach_alignment),geom)
@@ -3503,16 +3503,14 @@ function _attach_transform(anchor, spin, orient, geom, p) =
                 assert(is_num(spin))
                 affine3d_zrot(spin) * affine3d_translate(point3d(-pos))
             :
-                assert(is_num(spin) || is_vector(spin,3))
                 let(
-                    axis = vector_axis(UP,orient),
+                    axis = vector_axis(UP,orient),    // Returns BACK if orient is UP
                     ang = vector_angle(UP,orient)
                 )
                 affine3d_rot_by_axis(axis,ang) 
                     * ( is_num(spin)? affine3d_zrot(spin)  
                                     : affine3d_zrot(spin.z) * affine3d_yrot(spin.y) * affine3d_xrot(spin.x))
                     * affine3d_translate(point3d(-pos))
-        )
     )
     is_undef(p)? m
   : is_vnf(p) && p==EMPTY_VNF? p 
@@ -3555,12 +3553,6 @@ function _get_cp(geom) =
   : cp=="box" ? mean(pointlist_bounds(points))
   : assert(false,"Invalid cp specification");
 
-
-
-function _force_anchor_2d(anchor) =
-  is_undef(anchor) || len(anchor)==2 ? anchor :
-  assert(anchor.y==0 || anchor.z==0, "Anchor for a 2D shape cannot be fully 3D.  It must have either Y or Z component equal to zero.")
-  anchor.y==0 ? [anchor.x,anchor.z] : point2d(anchor);
 
 
 /// Internal Function: _find_anchor()
@@ -3618,28 +3610,37 @@ function _find_anchor(anchor, geom) =
             axy = point2d(anch),
             bot = point3d(v_mul(point2d(size )/2, axy), -h/2),
             top = point3d(v_mul(point2d(size2)/2, axy) + shift, h/2),
+            edge = top-bot, 
             pos = point3d(cp) + lerp(bot,top,u) + offset,
-            vecs = anchor==CENTER? [UP]
-              : [
-                    if (anch.x!=0) unit(rot(from=UP, to=[(top-bot).x,0,max(0.01,h)], p=[axy.x,0,0]), UP),
-                    if (anch.y!=0) unit(rot(from=UP, to=[0,(top-bot).y,max(0.01,h)], p=[0,axy.y,0]), UP),
+               // Find vectors of the faces involved in the anchor
+            facevecs = 
+                [
+                    if (anch.x!=0) unit(rot(from=UP, to=[edge.x,0,max(0.01,h)], p=[axy.x,0,0]), UP),
+                    if (anch.y!=0) unit(rot(from=UP, to=[0,edge.y,max(0.01,h)], p=[0,axy.y,0]), UP),
                     if (anch.z!=0) unit([0,0,anch.z],UP)
                 ],
-            vec2 = anchor==CENTER? UP
-              : len(vecs)==1? unit(vecs[0],UP)
-              : len(vecs)==2? vector_bisect(vecs[0],vecs[1])
-              : let(
-                    v1 = vector_bisect(vecs[0],vecs[2]),
-                    v2 = vector_bisect(vecs[1],vecs[2]),
-                    p1 = plane_from_normal(yrot(90,p=v1)),
-                    p2 = plane_from_normal(xrot(-90,p=v2)),
-                    line = plane_intersection(p1,p2),
-                    v3 = unit(line[1]-line[0],UP) * anch.z
-                )
-                unit(v3,UP),
-            vec = default(override[1],rot(from=UP, to=axis, p=vec2)),
-            pos2 = default(override[0],rot(from=UP, to=axis, p=pos))
-        ) [anchor, pos2, vec, default(override[2],oang)]
+            dir = anchor==CENTER? UP
+                : len(facevecs)==1? unit(facevecs[0],UP)
+                : len(facevecs)==2? vector_bisect(facevecs[0],facevecs[1])
+                : let(
+                      v1 = vector_bisect(facevecs[0],facevecs[2]),
+                      v2 = vector_bisect(facevecs[1],facevecs[2]),
+                      p1 = plane_from_normal(yrot(90,p=v1)),
+                      p2 = plane_from_normal(xrot(-90,p=v2)),
+                      line = plane_intersection(p1,p2),
+                      v3 = unit(line[1]-line[0],UP) * anch.z
+                  )
+                  unit(v3,UP),
+            final_dir = default(override[1],rot(from=UP, to=axis, p=dir)),
+            final_pos = default(override[0],rot(from=UP, to=axis, p=pos)),
+            // If the anchor is on a face or horizontal edge we take the oang value for spin
+            // If the anchor is on a vertical or sloped edge or corner we want to align the spin to point upward along the edge
+            // The "native" spin direction is the rotation of UP to the anchor direction
+            // The desired spin direction is the edge vector
+            // The axis of rotation is the direction vector, so we need component of edge perpendicular to dir
+            spin = anchor.x!=0 && anchor.y!=0 ? _compute_spin(dir, edge) //sign(anchor.x)*vector_angle(edge - (edge*dir)*dir/(dir*dir), rot(from=UP,to=dir,p=BACK))
+                 : oang
+        ) [anchor, final_pos, final_dir, default(override[2],spin)]
     ) : type == "conoid"? ( //r1, r2, l, shift
         assert(anchor.z == sign(anchor.z), "The Z component of an anchor for a cylinder/cone must be -1, 0, or 1")
         let(
@@ -3678,8 +3679,11 @@ function _find_anchor(anchor, geom) =
             vec = unit(v_mul(r,anchor),UP)
         ) [anchor, pos, vec, oang]
     ) : type == "vnf_isect"? ( //vnf
-        let( vnf=geom[1] )
-        approx(anchor,CTR)? [anchor, cp, UP, 0] :      // CENTER anchors anchor on cp, "origin" anchors on [0,0]
+        let(
+            vnf=geom[1],
+            override = geom[2](anchor)
+        )                                                   // CENTER anchors anchor on cp, "origin" anchors on [0,0]
+        approx(anchor,CTR)? [anchor, default(override[0],cp),default(override[1],UP),default(override[2], 0)] :     
         vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
         let(
             eps = 1/2048,
@@ -3726,19 +3730,54 @@ function _find_anchor(anchor, geom) =
             n = unit(sum(unorms)),
             oang = approx(point2d(n), [0,0])? 0 : atan2(n.y, n.x) + 90
         )
-        [anchor, pos, n, oang]
+        [anchor, default(override[0],pos),default(override[1], n),default(override[2], oang)]
     ) : type == "vnf_extent"? ( //vnf
-        let( vnf=geom[1] )
-        approx(anchor,CTR)? [anchor, cp, UP, 0] :      // CENTER anchors anchor on cp, "origin" anchors on [0,0]
+        let(
+            vnf=geom[1],
+            override = geom[2](anchor)
+        )                                                   // CENTER anchors anchor on cp, "origin" anchors on [0,0]
+        approx(anchor,CTR)? [anchor, default(override[0],cp),default(override[1],UP),default(override[2], 0)] :     
         vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor,UP), 0] :
         let(
             rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
             maxx = max(column(rpts,0)),
             idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
+            dir = len(idxs)>2 ? [anchor,oang]
+                : len(idxs)==2 ?
+                    let(
+                        edgefaces = _vnf_find_edge_faces(vnf,idxs),
+                        edge = select(vnf[0],idxs)
+                    ) 
+                    len(edgefaces)==0 ? [anchor,oang]
+                                      : assert(len(edgefaces)==2, "Invalid polyhedron encountered while computing VNF anchor")
+                                        edge[0]==edge[1] ? [anchor,oang]   // two "edge" points are the same, so give up 
+                                      : let( 
+                                             direction= unit(mean([for(face=edgefaces) polygon_normal(select(vnf[0],vnf[1][face]))])),
+                                             edgedir = edge[1]-edge[0],
+                                             nz = [for(i=[0:2]) if (!approx(edgedir[i],0)) i],
+                                             flip = edgedir[last(nz)] < 0 ? -1 : 1,
+                                             spin = _compute_spin(direction, flip*edgedir)
+                                        )
+                                        [direction,spin]
+                :   let(
+                       vertices = vnf[0],
+                       faces = vnf[1],
+                       cornerfaces = _vnf_find_corner_faces(vnf,idxs[0]),    // faces = [3,9,12] indicating which faces
+                       normals = [for(faceind=cornerfaces) polygon_normal(select(vnf[0], faces[faceind]))],
+                       angles = [for(faceind=cornerfaces)
+                                    let(
+                                        thisface = faces[faceind],
+                                        vind = search(idxs[0],thisface)[0]
+                                    )
+                                    vector_angle(select(vertices, select(thisface,vind-1,vind+1)))
+                                 ],
+                       direc = unit(angles*normals)
+                    )
+                    [direc, atan2(direc.y,direc.x)+90],
             avep = sum(select(rpts,idxs))/len(idxs),
             mpt = approx(point2d(anchor),[0,0])? [maxx,0,0] : avep,
             pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
-        ) [anchor, pos, anchor, oang]
+        ) [anchor, default(override[0],pos),default(override[1],dir[0]),default(override[2],dir[1])]
     ) : type == "trapezoid"? ( //size, size2, shift, override
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "All components of an anchor for a rectangle/trapezoid must be -1, 0, or 1")
@@ -4567,5 +4606,40 @@ module _show_cube_faces(faces, size=20, toplabel,botlabel) {
    }
    color("yellow",0.7) cuboid(size=size);
 }
+
+
+
+/// Internal utility function
+
+function _force_rot(T) =
+   [for(i=[0:3])
+       [for(j=[0:3]) j<3 ? T[i][j] :
+                     i==3 ? 1
+                       : 0]];
+
+function _local_struct_val(struct, key)=
+    assert(is_def(key),"key is missing")
+    let(ind = search([key],struct)[0])
+    ind == [] ? undef : struct[ind][1];
+
+
+function _force_anchor_2d(anchor) =
+  is_undef(anchor) || len(anchor)==2 ? anchor :
+  assert(anchor.y==0 || anchor.z==0, "Anchor for a 2D shape cannot be fully 3D.  It must have either Y or Z component equal to zero.")
+  anchor.y==0 ? [anchor.x,anchor.z] : point2d(anchor);
+
+// Compute spin angle based on a anchor direction and desired spin direction
+// anchor_dir assumed to be a unit vector; no assumption on spin_dir
+// Takes the component of the spin direction perpendicular to the anchor
+// direction and gives the spin angle that achieves it.  
+function _compute_spin(anchor_dir, spin_dir) =
+   let(
+        native_dir = rot(from=UP, to=anchor_dir, p=BACK),
+        spin_dir = spin_dir - (spin_dir*anchor_dir)*anchor_dir,  // component of spin_dir perpendicular to anchor_dir
+        angle = vector_angle(native_dir,spin_dir),
+        sign = cross(native_dir,spin_dir)*anchor_dir<0 ? -1 : 1
+   )
+   sign*angle;
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

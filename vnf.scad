@@ -1055,7 +1055,7 @@ function _slice_3dpolygons(polys, dir, cuts) =
 // Arguments:
 //   vnf = A VNF structure, or list of VNF structures.
 //   convexity = Max number of times a line could intersect a wall of the shape.
-//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -2329,6 +2329,30 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, opacity=0.
         color([0.5,1,0.5,opacity]) vnf_polyhedron(adj_vnf);
     }
 }
+
+
+function _vnf_find_edge_faces(vnf,edge) =
+  let(
+      faces = vnf[1],
+      goodind = [for(i=idx(faces))
+                    let(result=search(edge,faces[i]))
+                    if (result*0==[0,0] && 
+                          (abs(result[0]-result[1])==1
+                           || (min(result)==0 && max(result)==len(faces[i])-1)))
+                       i
+                ]
+  )
+  goodind;
+
+
+function _vnf_find_corner_faces(vnf,corner) =
+  let(
+      faces = vnf[1]
+  )
+  [for(i=idx(faces))
+     let(result=search([corner],faces[i])[0])
+     if (result!=[])
+        i];
 
 
 

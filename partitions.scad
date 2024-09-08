@@ -437,7 +437,7 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 //   Creates a mask that you can use to difference or intersect with an object to remove half of it,
 //   leaving behind a side designed to allow assembly of the sub-parts.
 // Arguments:
-//   l = The length of the cut axis.
+//   l = The length of the cut axis.  
 //   w = The width of the part to be masked, back from the cut plane.
 //   h = The height of the part to be masked.
 //   cutsize = The width of the cut pattern to be used.
@@ -487,16 +487,15 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
 // Topics: Partitions, Masking, Paths
 // See Also: partition_mask(), partition()
 // Usage:
-//   partition_cut_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   partition_cut_mask(l, [cutsize], [cutpath], [gap], [inverse], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates a mask that you can use to difference with an object to cut it into two sub-parts that can be assembled.
 //   The `$slop` value is important to get the proper fit and should probably be smaller than 0.2.  The examples below
 //   use larger values to make the mask easier to see.  
 // Arguments:
 //   l = The length of the cut axis.
-//   w = The width of the part to be masked, back from the cut plane.
 //   h = The height of the part to be masked.
-//   cutsize = The width of the cut pattern to be used.
+//   cutsize = The width of the cut pattern to be used.  Default: 10
 //   cutpath = The cutpath to use.  Standard named paths are "flat", "sawtooth", "sinewave", "comb", "finger", "dovetail", "hammerhead", and "jigsaw".  Alternatively, you can give a cutpath as a 2D path, where X is between 0 and 1, and Y is between -0.5 and 0.5.  Default: "jigsaw"
 //   gap = Empty gaps between cutpath iterations.  Default: 0
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
