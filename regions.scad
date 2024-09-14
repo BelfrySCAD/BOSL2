@@ -814,8 +814,10 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   Takes a 2D input path, polygon or region and returns a path offset by the specified amount.  As with the built-in
 //   offset() module, you can use `r` to specify rounded offset and `delta` to specify offset with
 //   corners.  If you used `delta` you can set `chamfer` to true to get chamfers.
-//   For paths and polygons positive offsets make the polygons larger.  For paths, 
-//   positive offsets shift the path to the left, relative to the direction of the path.
+//   When `closed=true` (the default), the input is treated as a polygon.  If the input is a region it is treated as a collection
+//   of polygons.  In this case, positive offset values make the shape larger.  If you set `closed=false` then the input is treated as a path
+//   with distinct start and end points.  For paths, positive offsets shifts the path to the left, relative to the direction of the path.
+//   Note that a path that happens to end at its starting point is not the same as a polygon and the offset result may differ.  
 //   .
 //   If you use `delta` without chamfers, the path must not include any 180 degree turns, where the path
 //   reverses direction.  Such reversals result in an offset with two parallel segments, so they cannot be
@@ -863,7 +865,7 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   r = offset radius.  Distance to offset.  Will round over corners.
 //   delta = offset distance.  Distance to offset with pointed corners.
 //   chamfer = chamfer corners when you specify `delta`.  Default: false
-//   closed = if true path is treate as a polygon. Default: False.
+//   closed = if true path is treated as a polygon. Default: True.
 //   check_valid = perform segment validity check.  Default: True.
 //   quality = validity check quality parameter, a small integer.  Default: 1.
 //   same_length = return a path with the same length as the input.  Only compatible with `delta=`.  Default: false
@@ -902,7 +904,7 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 // Example(2D): Open path.  The red path moves from left to right as shown by the arrow and the positive offset shifts to the left of the initial red path.
 //   sinpath = 2*[for(theta=[-180:5:180]) [theta/4,45*sin(theta)]];
 //   stroke(sinpath, width=2, color="red", endcap2="arrow2");
-//   stroke(offset(sinpath, r=17.5),width=2);
+//   stroke(offset(sinpath, r=17.5,closed=false),width=2);
 // Example(2D,NoAxes): An open path in red with with its positive offset in yellow and its negative offset in blue. 
 //   seg = [[0,0],[0,50]];
 //   stroke(seg,color="red",endcap2="arrow2"); 
@@ -985,12 +987,13 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 
 function offset(
     path, r=undef, delta=undef, chamfer=false,
-    closed=false, check_valid=true,
+    closed=true, check_valid=true,
     quality=1, return_faces=false, firstface_index=0,
     flip_faces=false, same_length=false
 ) =
     assert(!(same_length && return_faces), "Cannot combine return_faces with same_length")
     is_region(path)?
+        assert(closed, "cannot set closed=false for a region")
         assert(!return_faces, "return_faces not supported for regions.")
         let(
             ofsregs = [for(R=region_parts(path))
@@ -1035,7 +1038,7 @@ function offset(
         cornercheck = [for(i=idx(goodsegs)) (!closed && (i==0 || i==len(goodsegs)-1))
                                           || is_def(sharpcorners[i])
                                           || approx(unit(deltas(select(goodsegs,i-1))[0]) * unit(deltas(goodsegs[i])[0]),-1)],
-        dummyA = assert(len(sharpcorners)==2 || all(cornercheck),"Two consecutive valid offset segments are parallel but do not meet at their ends, maybe because path contains very short segments that were mistakenly flagged as invalid; unable to compute offset"),
+        dummyA = assert(len(sharpcorners)==2 || all(cornercheck),"Two consecutive valid offset segments are parallel but do not meet at their ends, maybe because path contains very short segments that were mistakenly flagged as invalid; unable to compute offset.  If you get this error from offset_sweep() try setting ofset=\"delta\""),
         reversecheck = 
             !same_length 
               || !(is_def(delta) && !chamfer)            // Reversals only a problem in delta mode without chamfers
