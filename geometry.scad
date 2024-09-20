@@ -1585,8 +1585,8 @@ function polygon_normal(poly) =
 //   b=30;
 //   ofs = 17;
 //   curve = [for(theta=[0:10:140])  [a * theta/360*2*PI - b*sin(theta), a-b*cos(theta)-20]];
-//   path = deduplicate(concat( reverse(offset(curve,r=ofs)),
-//                  xflip(offset(curve,r=ofs)),
+//   path = deduplicate(concat( reverse(offset(curve,r=ofs,closed=false)),
+//                  xflip(offset(curve,r=ofs,closed=false)),
 //                  xflip(reverse(curve)),
 //                  curve
 //                ));
@@ -1612,8 +1612,8 @@ function polygon_normal(poly) =
 //   b=30*2/3;
 //   ofs = 17*2/3;
 //   curve = [for(theta=[0:10:140])  [a * theta/360*2*PI - b*sin(theta), a-b*cos(theta)]];
-//   path = deduplicate(concat( reverse(offset(curve,r=ofs)),
-//                  xflip(offset(curve,r=ofs)),
+//   path = deduplicate(concat( reverse(offset(curve,r=ofs,closed=false)),
+//                  xflip(offset(curve,r=ofs,closed=false)),
 //                  xflip(reverse(curve)),
 //                  curve
 //                ));
@@ -1628,8 +1628,8 @@ function polygon_normal(poly) =
 //   b=30*2/3;
 //   ofs = 17*2/3;
 //   curve = [for(theta=[0:10:140])  [a * theta/360*2*PI - b*sin(theta), a-b*cos(theta)]];
-//   path = deduplicate(concat( reverse(offset(curve,r=ofs)),
-//                  xflip(offset(curve,r=ofs)),
+//   path = deduplicate(concat( reverse(offset(curve,r=ofs,closed=false)),
+//                  xflip(offset(curve,r=ofs,closed=false)),
 //                  xflip(reverse(curve)),
 //                  curve
 //                ));

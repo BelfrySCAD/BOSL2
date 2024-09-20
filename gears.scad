@@ -3523,12 +3523,12 @@ function _gear_tooth_profile(
 //   mod = The module of the gear, pitch diameter divided by tooth count. 
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   circ_pitch = distance between teeth centers around the pitch circle.
-//   ring_carrier = set ring/carrier ratio to this value in a ring driven system, must be between 1 and 2
-//   carrier_ring = set carrier/ring ratio to this value in a carrier driven system, must be between 1/2 and 1
-//   sun_carrier = set sun/carrier ratio to this value in a sun driven system, must be larger than 2
-//   carrier_sun = set carrier/sun ratio to this value in a carrier driven system, must be smaller than 1/2
-//   ring_sun = set ring/sun ratio to this value in a ring driven system, must have absolute value larger than 1
-//   sun_ring = set sun/ring ratio to this value in a sun driven system, must have absolute value smaller than 1
+//   ring_carrier = set ring/carrier transmission ratio to this value in a ring driven system, must be between 1 and 2
+//   carrier_ring = set carrier/ring transmission ratio to this value in a carrier driven system, must be between 1/2 and 1
+//   sun_carrier = set sun/carrier transmission ratio to this value in a sun driven system, must be larger than 2
+//   carrier_sun = set carrier/sun transmission ratio to this value in a carrier driven system, must be smaller than 1/2
+//   ring_sun = set ring/sun transmission ratio to this value in a ring driven system, must have absolute value smaller than 1
+//   sun_ring = set sun/ring transmission ratio to this value in a sun driven system, must have absolute value larger than 1
 //   helical = create gears with specified helical angle.  Default: 0
 //   gear_spin = rotate the driven gear by this number of degrees.  Default:0
 // Example(2D,NoAxes,Anim,Frames=90,FrameMS=30,VPT=[-0.875705,-0.110537,-66.3877],VPR=[0,0,0],VPD=102,Med): In this example we request a ring/carrier ratio of 1.341 and the system produced has a ratio of 4/3.  The sun is fixed, the input is carried by the ring, and the carrier, shown as the blue triangle, is the output, rotating approximately in accordance with the requested ratio.  

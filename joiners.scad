@@ -1193,7 +1193,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
     bounds = pointlist_bounds(rounded);
     extrapt = is_pin ? [] : [rounded[0] - [0,extra]];
     finalpath = is_pin ? rounded
-                       : let(withclearance=offset(rounded, r=-clearance))
+                       : let(withclearance=offset(rounded, r=-clearance, closed=false))
                          concat( [[withclearance[0].x,-extra]],
                                  withclearance,
                                  [[-withclearance[0].x,-extra]]);
