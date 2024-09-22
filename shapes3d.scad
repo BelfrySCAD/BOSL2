@@ -3355,12 +3355,12 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   ycenter = Anchor center is relative to the actualy y direction center of the text
 // Examples:
 //   text3d("Fogmobar", h=3, size=10);
-//   text3d("Fogmobar", h=2, size=12, font="Helvetica");
+//   text3d("Fogmobar", h=2, size=12, font="Courier");
 //   text3d("Fogmobar", h=2, anchor=CENTER);
 //   text3d("Fogmobar", h=2, anchor=CENTER, atype="ycenter");
 //   text3d("Fogmobar", h=2, anchor=RIGHT);
 //   text3d("Fogmobar", h=2, anchor=RIGHT+BOT, atype="ycenter");
-module text3d(text, h, size=10, font="Helvetica", spacing=1.0, direction="ltr", language="en", script="latin",
+module text3d(text, h, size=10, font, spacing=1.0, direction="ltr", language="en", script="latin",
               height, thickness, atype, center=false,
               anchor, spin=0, orient=UP) {
     no_children($children);
@@ -3475,7 +3475,7 @@ function _cut_interp(pathcut, path, data) =
 //   text = text to create
 //   size = The font will be created at this size divided by 0.72.   
 //   thickness / h / height = thickness of letters (not allowed for 2D path)
-//   font = font to use.  Default: "Liberation Sans"
+//   font = Font to use.  Default: "Liberation Sans" (standard OpenSCAD default)
 //   ---
 //   lettersize = scalar or array giving size of letters
 //   center = center text on the path instead of starting at the first point.  Default: false
