@@ -3107,7 +3107,7 @@ Access to the derivative smoothing parameter?
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))
 //             (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]];
 //   aux_T = up(12)*xrot(-22);
-//   join_prism(flower,base="plane",fillet=4, n=12,
+//   join_prism(flower,base="plane",fillet=2.75, n=12,
 //              aux="plane", aux_T=aux_T); 
 //   multmatrix(aux_T)cuboid([42,42,4],anchor=BOT);
 //   cuboid([40,40,4],anchor=TOP);
@@ -3115,7 +3115,7 @@ Access to the derivative smoothing parameter?
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))
 //             (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]];
 //   aux_T = xrot(-22)*up(12);
-//   join_prism(flower,base="plane",fillet=4, n=12,
+//   join_prism(flower,base="plane",fillet=2.75, n=12,
 //              aux="plane", aux_T=aux_T);
 //   multmatrix(aux_T)cuboid([42,42,4],anchor=BOT);
 //   cuboid([43,43,4],anchor=TOP);
@@ -3351,7 +3351,6 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
       dir = aux=="none" ? apply(aux_T,UP)
           : aux_T_horiz && in_list([base,aux], [["sphere","sphere"], ["cyl","cylinder"],["cylinder","cyl"], ["cyl","cyl"], ["cylinder", "cylinder"]]) ?
             unit(apply(aux_T, aux_r*UP))
-          : aux_T_horiz ? assert(false,"Horizontal translation only supported for spheres and cylinders")0
           : apply(aux_T,CENTER)==CENTER ? apply(aux_T,UP)
           : apply(aux_T,CENTER),
       flip = short ? -1 : 1,
