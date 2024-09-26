@@ -2675,7 +2675,7 @@ Access to the derivative smoothing parameter?
 //   Note that the joint with a curved base may significantly extend the length of the joiner prism: it's total length will often be larger than
 //   the length you request.  
 //   .
-//   For the cylinder and spherical objects you may with to joint a prism to the concave surface.  You can do this by setting a negative
+//   For the cylinder and spherical objects you may wish to joint a prism to the concave surface.  You can do this by setting a negative
 //   radius for the base or auxiliary object.  When `base_r` is negative, and the joiner prism axis is vertical, the prism root will be **below** the
 //   XY plane.  In this case it is actually possible to use the same object for base and aux and you can get a joiner prism that crosses a cylindrical
 //   or spherical hole.
@@ -3212,6 +3212,45 @@ Access to the derivative smoothing parameter?
 //   multmatrix(aux_T)
 //     linear_sweep(flower,height=60,center=true,orient=RIGHT);
 //   linear_sweep(flower,height=60,center=true,orient=RIGHT);
+// Example(3D,NoScales): By setting the base and auxiliary to the same thing you can create a hole cutting mask with rounded ends.  
+//   difference(){
+//     spheroid(r=30,circum=true);    
+//     join_prism(circle(r=15),base="sphere",base_r=-30, n=15,
+//                aux="sphere",aux_r=-30,fillet=8, overlap=17);
+//   }
+// Example(3D,VPT=[0.59633,-3.01826,-3.89606],VPR=[129.2,0,26.4],VPD=192.044,NoScales): Here we have rotated the auxiliary sphere which results in a hole that is off-center through the sphere.  Because we rotate the auxiliary object, both ends of the prism have moved.  Note that setting k to a large value better matches the bezier curve to the curvature of the sphere, resulting in a better result.  
+//  difference(){
+//    spheroid(r=30,circum=true);    
+//    join_prism(circle(r=15),base="sphere",base_r=-30, n=15,
+//               aux="sphere",aux_T=xrot(30), aux_r=-30,fillet=8, overlap=17, k=0.9);
+//  }
+// Example(3D,VPT=[-12.5956,-5.1125,-0.322237],VPR=[82.3,0,116.7],VPD=213.382,NoScales): Here we adjust just the auxiliary end, which note is at the bottom.  We rotate it by 45 deg, but this rotation would normally be relative to the other prism end, so we add a centerpoint based on the radius so that the rotation is relative to the sphere center instead.
+//   difference(){
+//     spheroid(r=30,circum=true);    
+//     join_prism(circle(r=15),base="sphere",base_r=-30, n=15,
+//                aux="sphere",prism_end_T=xrot(45,cp=[0,0,-30]), aux_r=-30,fillet=8, overlap=17, k=0.9);               
+//   }
+// Example(3D,NoScales,VPT=[12.3373,11.6037,-1.87883],VPR=[40.3,0,323.4],VPD=292.705): A diagonal hole through a cylinder with rounded ends, created by shifting the auxiliary prism end along the prism length.  
+//  back_half(200)
+//     difference(){
+//       right(15)xcyl(r=30,l=100,circum=true); 
+//       join_prism(circle(r=15),base="cyl",base_r=-30, n=15,
+//                  aux="cyl",prism_end_T=right(35),aux_r=-30,fillet=7, overlap=17);
+//     }
+// Example(3D,NoScales,VPT=[-7.63774,-0.808304,13.8874],VPR=[46.6,0,71.2],VPD=237.091): A hole created by shifting along prism width.  
+//  left_half()
+//     difference(){
+//       xcyl(r=30,l=100,circum=true); 
+//       join_prism(circle(r=15),base="cyl",base_r=-30, n=15,
+//                  aux="cyl",prism_end_T=fwd(9),aux_r=-30,fillet=7, overlap=17);
+//     }
+// Example(3D,NoScales,VPT=[1.99307,-2.05618,-0.363144],VPR=[64.8,0,15],VPD=237.091): Shifting the auxiliary cylinder changes both ends of the prism
+//   back_half(200)
+//      difference(){
+//         xcyl(r=30,l=100,circum=true); 
+//         join_prism(circle(r=15),base="cyl",base_r=-30, n=15,
+//                    aux="cyl",aux_T=right(20),aux_r=-30,fillet=7, overlap=17);
+//      }
 // Example(3D): Positioning a joiner prism as an attachment
 //   cuboid([20,30,40])
 //     attach(RIGHT,"root")
@@ -3308,8 +3347,12 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
       base_r=default(base_r,0),
       polygon=clockwise_polygon(polygon),
       start_center = CENTER,
+      aux_T_horiz = submatrix(aux_T,[0:2],[0:2]) == ident(3) && aux_T[2][3]==0, 
       dir = aux=="none" ? apply(aux_T,UP)
-          : apply(aux_T,CENTER) == CENTER ? apply(aux_T,UP)
+          : aux_T_horiz && in_list([base,aux], [["sphere","sphere"], ["cyl","cylinder"],["cylinder","cyl"], ["cyl","cyl"], ["cylinder", "cylinder"]]) ?
+            unit(apply(aux_T, aux_r*UP))
+          : aux_T_horiz ? assert(false,"Horizontal translation only supported for spheres and cylinders")0
+          : apply(aux_T,CENTER)==CENTER ? apply(aux_T,UP)
           : apply(aux_T,CENTER),
       flip = short ? -1 : 1,
       start = base=="sphere" ?
@@ -3317,6 +3360,7 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
                 assert(answer,"Prism center doesn't intersect sphere (base)")
                 answer
             : base=="cyl" || base=="cylinder" ?
+                assert(dir.y!=0 || dir.z!=0, "Prism direction parallel to the cylinder")
                 let(
                      mapped = apply(yrot(90),[CENTER,flip*dir]),
                      answer = _cyl_line_intersection(abs(base_r),mapped,sign(base_r)*mapped[1])
@@ -3384,14 +3428,14 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
       base_trans = rot_inverse(base_T),
       base_top = apply(base_trans, truetop),
       base_bot = apply(base_trans, truebot),
-      botmesh = apply(base_T,_prism_fillet("base", base, base_r, base_bot, base_top, base_fillet, base_k, n, base_overlap,base_uniform,debug)),
+      botmesh = apply(base_T,_prism_fillet("base", base, base_r, base_bot, base_top, base_fillet, base_k, base_n, base_overlap,base_uniform,debug)),
       aux_trans = rot_inverse(aux_T),
       aux_top = apply(aux_trans, reverse_polygon(truetop)),
       aux_bot = apply(aux_trans, reverse_polygon(truebot)),
-      topmesh_reversed = _prism_fillet("aux",aux, aux_r, aux_top, aux_bot, aux_fillet, aux_k, n, aux_overlap,aux_uniform,debug),
+      topmesh_reversed = _prism_fillet("aux",aux, aux_r, aux_top, aux_bot, aux_fillet, aux_k, aux_n, aux_overlap,aux_uniform,debug),
       topmesh = apply(aux_T,[for(i=[len(topmesh_reversed)-1:-1:0]) reverse_polygon(topmesh_reversed[i])]),
       round_dir = select(topmesh,-1)-botmesh[0],
-      roundings_cross = [for(i=idx(topmesh)) if (round_dir[i]*(truetop[i]-truebot[i])<0) i],
+      roundings_cross = [for(i=idx(truetop)) if (round_dir[i]*(truetop[i]-truebot[i])<0) i],
       vnf = vnf_vertex_array(concat(topmesh,botmesh),col_wrap=true, caps=true, reverse=true)
   )
   assert(debug || roundings_cross==[],"Roundings from the two ends cross on the prism: decrease size of roundings")
@@ -3409,6 +3453,7 @@ function _fix_angle_list(list,ind=0, result=[]) =
 // intersection with cylinder of radius R oriented on Z axis, with infinite extent
 // if ref is given, return point with larger inner product with ref.  
 function _cyl_line_intersection(R, line, ref) =
+   assert(point2d(line[1]-line[0]) != [0,0], "Prism appears to be parallel to cylinder.  Unable to find prism endpoints.")
    let(
        line2d = path2d(line),
        cisect = circle_line_intersection(r=R, cp=[0,0], line=line2d)
