@@ -437,7 +437,7 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //   in fact, the worm can be regarded as a type of helical gear at a very extreme angle, where the teeth wrap
 //   around the gear.  The worm mates with the "worm gear" which is also called the "worm wheel".  The worm gear
 //   resembles a helical gear at a very slight angle.
-// Figure(3D,Med,NoAxes,VPT=[38.1941,-7.67869,7.95996],VPR=[56.4,0,25],VPD=361.364):  Worm drive assembly, with worm on the left and worm gear (worm wheel) on the right.  When the worm turns its screwing action drives the worm gear.  
+// Figure(3D,Med,NoAxes,VPT=[38.1941,-7.67869,7.95996],VPR=[56.4,0,25],VPD=361.364):  Worm drive assembly, with worm on the left and worm gear (worm wheel) on the right.  When the worm turns, its screwing action drives the worm gear.  
 //   starts=2;
 //   ps=0;
 //   dist_ba=0;
@@ -453,6 +453,10 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //          teeth=30,
 //          worm_diam=44,profile_shift=ps,
 //          worm_starts=starts,backlash=gear_ba);
+//   color("black"){
+//      rot($vpr)left(45)back(25)text3d("worm",size=8);
+//      rot($vpr)right(55)back(27)text3d("worm gear",size=8);  
+//   }
 // Continues:
 //   A close look at the worm gear reveals that it differs significantly from a helical or spur gear.
 //   This gear is an "enveloping" gear, which is designed to follow the curved profile of the worm,
@@ -519,8 +523,8 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //   Since self-locking is associated with friction, self-locking drives have lower efficiency,
 //   usually less than 50%.  Worm drive efficiency can exceed 90% if self-locking is not required.  One consideration
 //   with self-locking systems is that if the worm gear moves a large mass and the drive is suddenly shut off, the
-//   worm wheel is still trying to move due to inertia, which can create large loads that fracture the worm.
-//   In such cases, the worm cannot be stopped abruptly but must rotate a little further (called "over travel")
+//   worm gear is still trying to move due to inertia, which can create large loads that fracture the worm.
+//   In such cases, the worm cannot be stopped abruptly but must be allowed to rotate a little further (called "over travel")
 //   after switching off the drive.
 // Subsection: Bevel Gears
 //   Bevel gearing is another way of dealing with intersecting gear shafts.  For bevel gears, the teeth centers lie on
