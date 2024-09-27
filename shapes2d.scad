@@ -2036,7 +2036,7 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 //   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
 // Examples(2D):
 //   text("Foobar", size=10);
-//   text("Foobar", size=12, font="Courier");
+//   text("Foobar", size=12, font="Liberation Mono");
 //   text("Foobar", anchor=CENTER);
 //   text("Foobar", anchor=str("baseline",CENTER));
 // Example: Using line_copies() distributor
