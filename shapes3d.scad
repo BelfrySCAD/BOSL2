@@ -3355,12 +3355,12 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   ycenter = Anchor center is relative to the actualy y direction center of the text
 // Examples:
 //   text3d("Fogmobar", h=3, size=10);
-//   text3d("Fogmobar", h=2, size=12, font="Helvetica");
+//   text3d("Fogmobar", h=2, size=12, font=":style=bold");
 //   text3d("Fogmobar", h=2, anchor=CENTER);
 //   text3d("Fogmobar", h=2, anchor=CENTER, atype="ycenter");
 //   text3d("Fogmobar", h=2, anchor=RIGHT);
 //   text3d("Fogmobar", h=2, anchor=RIGHT+BOT, atype="ycenter");
-module text3d(text, h, size=10, font="Helvetica", spacing=1.0, direction="ltr", language="en", script="latin",
+module text3d(text, h, size=10, font, spacing=1.0, direction="ltr", language="en", script="latin",
               height, thickness, atype, center=false,
               anchor, spin=0, orient=UP) {
     no_children($children);
@@ -3438,7 +3438,7 @@ function _cut_interp(pathcut, path, data) =
 //   .
 //   If you do not have the experimental textmetrics feature enabled then you must specify the space for the letters
 //   using lettersize, which can be a scalar or array.  You will have the easiest time getting good results by using
-//   a monospace font such as Courier.  Note that even with text metrics, spacing may be different because path_text()
+//   a monospace font such as "Liberation Mono".  Note that even with text metrics, spacing may be different because path_text()
 //   doesn't do kerning to adjust positions of individual glyphs.  Also if your font has ligatures they won't be used.
 //   .
 //   By default letters appear centered on the path.  The offset can be specified to shift letters toward the reader (in
@@ -3475,7 +3475,7 @@ function _cut_interp(pathcut, path, data) =
 //   text = text to create
 //   size = The font will be created at this size divided by 0.72.   
 //   thickness / h / height = thickness of letters (not allowed for 2D path)
-//   font = font to use.  Default: "Liberation Sans"
+//   font = Font to use.  Default: "Liberation Sans" (standard OpenSCAD default)
 //   ---
 //   lettersize = scalar or array giving size of letters
 //   center = center text on the path instead of starting at the first point.  Default: false
@@ -3488,18 +3488,18 @@ function _cut_interp(pathcut, path, data) =
 //   kern = scalar or array giving spacing adjusments between each letter.  If it's an array it should have one less entry than the text string.  Default: 0
 //   language = text language, passed to OpenSCAD `text()`.  Default: "en"
 //   script = text script, passed to OpenSCAD `text()`.  Default: "latin" 
-// Example(3D,NoScales):  The examples use Courier, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder.
+// Example(3D,NoScales):  The examples use Liberation Mono, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder.
 //   path = path3d(arc(100, r=25, angle=[245, 370]));
 //   color("red")stroke(path, width=.3);
-//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2);
+//   path_text(path, "Example text", font="Liberation Mono", size=5, lettersize = 5/1.2);
 // Example(3D,NoScales): By setting the normal to UP we can get text that lies flat, for writing around the edge of a disk:
 //   path = path3d(arc(100, r=25, angle=[245, 370]));
 //   color("red")stroke(path, width=.3);
-//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, normal=UP);
+//   path_text(path, "Example text", font="Liberation Mono", size=5, lettersize = 5/1.2, normal=UP);
 // Example(3D,NoScales):  If we want text that reads from the other side we can use reverse.  Note we have to reverse the direction of the path and also set the reverse option.
 //   path = reverse(path3d(arc(100, r=25, angle=[65, 190])));
 //   color("red")stroke(path, width=.3);
-//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, reverse=true);
+//   path_text(path, "Example text", font="Liberation Mono", size=5, lettersize = 5/1.2, reverse=true);
 // Example(3D,Med,NoScales): text debossed onto a cylinder in a spiral.  The text is 1 unit deep because it is half in, half out.
 //   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
 //   L = 5*len(text);
@@ -3507,7 +3507,7 @@ function _cut_interp(pathcut, path, data) =
 //   spiral = [for(a=[0:1:maxang]) [25*cos(a), 25*sin(a), 10-30/maxang*a]];
 //   difference(){
 //     cyl(d=50, l=50, $fn=120);
-//     path_text(spiral, text, size=5, lettersize=5/1.2, font="Courier", thickness=2);
+//     path_text(spiral, text, size=5, lettersize=5/1.2, font="Liberation Mono", thickness=2);
 //   }
 // Example(3D,Med,NoScales): Same example but text embossed.  Make sure you have enough depth for the letters to fully overlap the object.
 //   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
@@ -3515,40 +3515,40 @@ function _cut_interp(pathcut, path, data) =
 //   maxang = 360*L/(PI*50);
 //   spiral = [for(a=[0:1:maxang]) [25*cos(a), 25*sin(a), 10-30/maxang*a]];
 //   cyl(d=50, l=50, $fn=120);
-//   path_text(spiral, text, size=5, lettersize=5/1.2, font="Courier", thickness=2);
+//   path_text(spiral, text, size=5, lettersize=5/1.2, font="Liberation Mono", thickness=2);
 // Example(3D,NoScales): Here the text baseline sits on the path.  (Note the default orientation makes text readable from below, so we specify the normal.)
 //   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
 //   color("red")stroke(path,width=.2);
-//   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Courier", normal=FRONT);
+//   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Liberation Mono", normal=FRONT);
 // Example(3D,NoScales): If we use top to orient the text upward, the text baseline is no longer aligned with the path.
 //   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
 //   color("red")stroke(path,width=.2);
-//   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Courier", top=UP);
+//   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Liberation Mono", top=UP);
 // Example(3D,Med,NoScales): This sine wave wrapped around the cylinder has a twisting normal that produces wild letter layout.  We fix it with a custom normal which is different at every path point.
 //   path = [for(theta = [0:360]) [25*cos(theta), 25*sin(theta), 4*cos(theta*4)]];
 //   normal = [for(theta = [0:360]) [cos(theta), sin(theta),0]];
 //   zrot(-120)
 //   difference(){
 //     cyl(r=25, h=20, $fn=120);
-//     path_text(path, "A sine wave wiggles", font="Courier", lettersize=5/1.2, size=5, normal=normal);
+//     path_text(path, "A sine wave wiggles", font="Liberation Mono", lettersize=5/1.2, size=5, normal=normal);
 //   }
 // Example(3D,Med,NoScales): The path center of curvature changes, and the text flips.
 //   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
 //   color("red")stroke(path,width=.2);
-//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier", thickness=2);
+//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Liberation Mono", thickness=2);
 // Example(3D,Med,NoScales): We can fix it with top:
 //   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
 //   color("red")stroke(path,width=.2);
-//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier", thickness=2, top=UP);
+//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Liberation Mono", thickness=2, top=UP);
 // Example(2D,NoScales): With a 2D path instead of 3D there's no ambiguity about direction and it works by default:
 //   path =  zrot(-120,p=concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180]))));
 //   color("red")stroke(path,width=.2);
-//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier");
+//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Liberation Mono");
 // Example(3D,NoScales): The kern parameter lets you adjust the letter spacing either with a uniform value for each letter, or with an array to make adjustments throughout the text.  Here we show a case where adding some extra space gives a better look in a tight circle.  When textmetrics are off, `lettersize` can do this job, but with textmetrics, you'll need to use `kern` to make adjustments relative to the text metric sizes.
 //   path = path3d(arc(100, r=12, angle=[150, 450]));
 //   color("red")stroke(path, width=.3);
 //   kern = [1,1.2,1,1,.3,-.2,1,0,.8,1,1.1];
-//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, kern=kern, normal=UP);
+//   path_text(path, "Example text", font="Liberation Mono", size=5, lettersize = 5/1.2, kern=kern, normal=UP);
 
 module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false,
                  textmetrics=false, kern=0, height,h, valign="baseline", language, script)

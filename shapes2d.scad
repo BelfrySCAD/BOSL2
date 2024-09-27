@@ -2021,7 +2021,7 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 // Arguments:
 //   text = Text to create.
 //   size = The font will be created at this size divided by 0.72.   Default: 10
-//   font = Font to use.  Default: "Liberation Sans"
+//   font = Font to use.  Default: "Liberation Sans" (standard OpenSCAD default)
 //   ---
 //   halign = If given, specifies the horizontal alignment of the text.  `"left"`, `"center"`, or `"right"`.  Overrides `anchor=`.
 //   valign = If given, specifies the vertical alignment of the text.  `"top"`, `"center"`, `"baseline"` or `"bottom"`.  Overrides `anchor=`.
@@ -2036,7 +2036,7 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 //   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
 // Examples(2D):
 //   text("Foobar", size=10);
-//   text("Foobar", size=12, font="Helvetica");
+//   text("Foobar", size=12, font="Liberation Mono");
 //   text("Foobar", anchor=CENTER);
 //   text("Foobar", anchor=str("baseline",CENTER));
 // Example: Using line_copies() distributor
@@ -2047,7 +2047,7 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 //   txt = "This is the string";
 //   arc_copies(r=50, n=len(txt), sa=0, ea=180)
 //       text(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
-module text(text, size=10, font="Helvetica", halign, valign, spacing=1.0, direction="ltr", language="en", script="latin", anchor="baseline", spin=0) {
+module text(text, size=10, font, halign, valign, spacing=1.0, direction="ltr", language="en", script="latin", anchor="baseline", spin=0) {
     no_children($children);
     dummy1 =
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
