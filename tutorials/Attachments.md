@@ -223,15 +223,6 @@ include <BOSL2/std.scad>
 cube([20,20,40], center=true, spin=45);
 ```
 
-You can also spin around other axes, or multiple axes at once, by giving 3 angles (in degrees) to
-`spin=` as a vector, like [Xang,Yang,Zang].  Similarly to `rotate()`,
-the rotations apply in the order given, X-axis spin, then Y-axis, then Z-axis:
-
-```openscad-3D
-include <BOSL2/std.scad>
-cube([20,20,40], center=true, spin=[10,20,30]);
-```
-
 This example shows a cylinder which has been anchored at its FRONT,
 with a rotated copy in gray.  The rotation is performed around the
 origin, but the cylinder is off the origin, so the rotation **does**
@@ -666,13 +657,13 @@ To show all the standard cardinal anchor points, you can use the [show_anchors()
 
 ```openscad-3D;Big
 include <BOSL2/std.scad>
-cube(40, center=true)
+cube(20, center=true)
     show_anchors();
 ```
 
 ```openscad-3D;Big
 include <BOSL2/std.scad>
-cylinder(h=40, d=40, center=true)
+cylinder(h=25, d=25, center=true)
     show_anchors();
 ```
 
@@ -687,7 +678,7 @@ For large objects, you can again change the size of the arrows with the `s=` arg
 ```openscad-3D;Big
 include <BOSL2/std.scad>
 prismoid(150,60,100)
-    show_anchors(s=35);
+    show_anchors(s=45);
 ```
 
 ## Parent-Child Anchor Attachment (Double Argument Attachment)
@@ -2019,7 +2010,7 @@ override the position.  If you omit the other list items then the
 value drived from the standard anchor will be used. Below we override
 position of the FWD anchor:
 
-```
+```openscad-3D
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = [
                  [FWD,  [[0,-s/8,0]]]
@@ -2039,7 +2030,7 @@ Note how the FWD anchor is now rooted on the cylindrical portion.  If
 you wanted to also change its direction and spin you could do it like
 this:
 
-```
+```openscad-3D
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = [
                  [FWD,  [[0,-s/8,0], FWD+LEFT, 225]]
@@ -2062,7 +2053,8 @@ The third entry gives a spin override, whose effect is shown by the
 position of the red flag on the arrow.  If you want to override all of
 the x=0 anchors to be on the cylinder, with their standard directions,
 you can do that by supplying a list: 
-```
+
+```openscad-3D
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = [
                  for(j=[-1:1:1], k=[-1:1:1])
@@ -2086,7 +2078,7 @@ the default, or a `[position, direction, spin]` triple to override the
 default.  As before, you can omit values to keep their default.
 Here is the same example using a function literal for the override:
 
-```
+```openscad-3D
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = function (anchor) 
           anchor.x!=0 || anchor==CTR ? undef  // Keep these
