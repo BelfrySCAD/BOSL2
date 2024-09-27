@@ -904,10 +904,10 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
                  "child must be a named anchor (a string) or a 2-vector or 3-vector")
           assert(is_undef(align) || !is_string(child), "child is a named anchor.  Named anchors are not supported with align=");
 
+    two_d = _attach_geom_2d($parent_geom);
     basegeom = $parent_geom[0]=="conoid" ? attach_geom(r=2,h=2)
              : attach_geom(size=[2,2,2]);
-    child_abstract_anchor = is_vector(child)? _find_anchor(child, basegeom) : undef;
-    two_d = _attach_geom_2d($parent_geom);
+    child_abstract_anchor = is_vector(child) && !two_d ? _find_anchor(child, basegeom) : undef;
     overlap = (overlap!=undef)? overlap : $overlap;
     parent = first_defined([parent,from]);
     anchors = is_vector(parent) || is_string(parent) ? [parent] : parent;
@@ -939,7 +939,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
         anchor_spin = two_d || !inside || anchor==TOP || anchor==BOT ? anchor_data[3]
                     : let(spin_dir = rot(anchor_data[3],from=UP, to=-anchor_dir, p=BACK))
                       _compute_spin(anchor_dir,spin_dir);
-        parent_abstract_anchor = is_vector(parent) ? _find_anchor(parent,basegeom) :  undef;
+        parent_abstract_anchor = is_vector(parent) && !two_d ? _find_anchor(parent,basegeom) :  undef;
         for(align_ind = idx(align_list)){
             align = is_undef(align_list[align_ind]) ? undef
                   : assert(is_vector(align_list[align_ind],2) || is_vector(align_list[align_ind],3), "align direction must be a 2-vector or 3-vector")
