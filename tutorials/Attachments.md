@@ -2011,6 +2011,7 @@ value drived from the standard anchor will be used. Below we override
 position of the FWD anchor:
 
 ```openscad-3D
+include<BOSL2/std.scad>
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = [
                  [FWD,  [[0,-s/8,0]]]
@@ -2031,6 +2032,7 @@ you wanted to also change its direction and spin you could do it like
 this:
 
 ```openscad-3D
+include<BOSL2/std.scad>
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = [
                  [FWD,  [[0,-s/8,0], FWD+LEFT, 225]]
@@ -2055,6 +2057,7 @@ the x=0 anchors to be on the cylinder, with their standard directions,
 you can do that by supplying a list: 
 
 ```openscad-3D
+include<BOSL2/std.scad>
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = [
                  for(j=[-1:1:1], k=[-1:1:1])
@@ -2079,6 +2082,7 @@ default.  As before, you can omit values to keep their default.
 Here is the same example using a function literal for the override:
 
 ```openscad-3D
+include<BOSL2/std.scad>
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = function (anchor) 
           anchor.x!=0 || anchor==CTR ? undef  // Keep these

@@ -906,6 +906,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
 
     two_d = _attach_geom_2d($parent_geom);
     basegeom = $parent_geom[0]=="conoid" ? attach_geom(r=2,h=2)
+             : $parent_geom[0]=="spheroid" ? echo("here")attach_geom(r=2)
              : attach_geom(size=[2,2,2]);
     child_abstract_anchor = is_vector(child) && !two_d ? _find_anchor(child, basegeom) : undef;
     overlap = (overlap!=undef)? overlap : $overlap;
@@ -939,7 +940,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
         anchor_spin = two_d || !inside || anchor==TOP || anchor==BOT ? anchor_data[3]
                     : let(spin_dir = rot(anchor_data[3],from=UP, to=-anchor_dir, p=BACK))
                       _compute_spin(anchor_dir,spin_dir);
-        parent_abstract_anchor = is_vector(parent) && !two_d ? _find_anchor(parent,basegeom) :  undef;
+        parent_abstract_anchor = is_vector(anchor) && !two_d ? _find_anchor(anchor,basegeom) : undef;
         for(align_ind = idx(align_list)){
             align = is_undef(align_list[align_ind]) ? undef
                   : assert(is_vector(align_list[align_ind],2) || is_vector(align_list[align_ind],3), "align direction must be a 2-vector or 3-vector")
@@ -953,7 +954,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
             pos = is_undef(align) ? anchor_data[1] : _find_anchor(anchor+align, $parent_geom)[1];
             $attach_anchor = list_set(anchor_data, 1, pos);      // Never used;  For user informational use?  Should this be set at all?
             // Compute adjustment to the child anchor for position purposes.  This adjustment
-            // accounts for the change in the anchor needed to to alignment.  
+            // accounts for the change in the anchor needed to to alignment.
             child_adjustment = is_undef(align)? CTR
                               : two_d ? rot(to=child,from=-factor*anchor,p=align)
                               : apply(   rot(to=child_abstract_anchor[2],from=UP)
@@ -3569,8 +3570,7 @@ function _attach_transform(anchor, spin, orient, geom, p) =
                     // if $anchor_override is set it defines the object position anchor (but note not direction or spin).  
                     // Otherwise we use the provided anchor for the object.  
                     pos = is_undef($anchor_override) ? anch[1]
-                        : _find_anchor(_make_anchor_legal($anchor_override,geom),geom)[1],
-                    f=is_undef($anchor_override) ? 0 : echo(geo=_find_anchor(_make_anchor_legal($anchor_override,geom),geom)[1])
+                        : _find_anchor(_make_anchor_legal($anchor_override,geom),geom)[1]
                )
                two_d?
                  assert(is_num(spin))
@@ -3861,7 +3861,8 @@ function _find_anchor(anchor, geom) =
             // may appear twice WITH DIFFERENT VERTEX INDICES if repeated points appear in the vnf.  
             edges_faces = len(idxs)==2 ?  // Simple case, no repeated points, [idxs] gives the edge
                                approx(vnf[0][idxs[0]],vnf[0][idxs[1]]) ? []   // Are edge points identical?
-                                           : [[idxs],_vnf_find_edge_faces(vnf,idxs)]
+                             : let( facelist = _vnf_find_edge_faces(vnf,idxs))
+                               len(facelist)==2 ? [[idxs], facelist] : []
                         : len(idxs)!=4 ? []       // If we don't have four points it's not an edge pair
                         : let(
                               pts = select(vnf[0],idxs),
@@ -4784,7 +4785,6 @@ function _force_anchor_2d(anchor) =
 // direction and gives the spin angle that achieves it.  
 function _compute_spin(anchor_dir, spin_dir) =
    let(
-     f=echo(ad=anchor_dir, spin_dir),
         native_dir = rot(from=UP, to=anchor_dir, p=BACK),
         spin_dir = spin_dir - (spin_dir*anchor_dir)*anchor_dir,  // component of spin_dir perpendicular to anchor_dir
         dummy = assert(!approx(spin_dir,[0,0,0]),"spin direction is parallel to anchor"),
