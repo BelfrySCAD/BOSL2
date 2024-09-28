@@ -778,7 +778,12 @@ function _make_anchor_legal(anchor,geom) =
 //   Note that spin is not permitted for
 //   2D objects because it would change the child orientation so that the anchors are no longer parallel.  
 //   When you use `align=` you can also adjust the position using `inset=`, which shifts the child
-//   away from the edge or corner it is aligned to.  
+//   away from the edge or corner it is aligned to.
+//   .
+//   Note that the concept of alignment doesn't always make sense for objects without corners, such as spheres or cylinders.
+//   In same cases the alignments using such children will be odd because the alignment computation is trying to
+//   place a non-existent corner somewhere.  Because attach() doesn't have in formation about the child when
+//   it runs it cannot handle curved shapes differently from cubes, so this behavior cannot be changed.  
 //   .
 //   If you give `inside=true` then the anchor arrows are lined up so they are pointing the same direction and
 //   the child object will be located inside the parent.  In this case a default "remove" tag is applied to
@@ -881,6 +886,29 @@ function _make_anchor_legal(anchor,geom) =
 //     attach(RIGHT+FRONT, TOP, inside=true) cuboid([10,3,5]);
 //     attach(RIGHT+FRONT, TOP, inside=true, align=TOP,shiftout=.01) cuboid([5,1,2]);  
 //   }
+// Example: Attaching a 3d edge mask.  Simple 2d masks can be done using {{edge_profile()}} but this mask varies along its length.
+//   module wavy_edge(length,cycles, r, steps, n)
+//   {
+//     rmin = is_vector(r) ? r[0] : 0.01;
+//     rmax = is_vector(r) ? r[1] : r;
+//     layers = [for(z=[0:steps])
+//                   let(
+//                        r=rmin+(rmax-rmin)/2*(cos(z*360*cycles/steps)+1),ff=echo(r=r)
+//                   )
+//                   path3d( concat([[0,0]],
+//                                  arc(corner=path2d([BACK,CTR,RIGHT]), n=n, r=r)),
+//                           z/steps*length-length/2)
+//               ];
+//     attachable([rmax,rmax,length]){
+//         skin(layers,slices=0);
+//         children();
+//     }  
+//   }            
+//   diff()
+//   cuboid(25)
+//     attach([TOP+RIGHT,TOP+LEFT,TOP+FWD, FWD+RIGHT], FWD+LEFT, inside=true, shiftout=.01)
+//       wavy_edge(length=25.1,cycles=1.4,r=4,steps=24,n=15); 
+
 
 module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0, inside=false, from, to)
 {
@@ -905,10 +933,11 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
           assert(is_undef(align) || !is_string(child), "child is a named anchor.  Named anchors are not supported with align=");
 
     two_d = _attach_geom_2d($parent_geom);
-    basegeom = $parent_geom[0]=="conoid" ? attach_geom(r=2,h=2)
-             : $parent_geom[0]=="spheroid" ? echo("here")attach_geom(r=2)
+    basegeom = $parent_geom[0]=="conoid" ? attach_geom(r=2,h=2,axis=$parent_geom[5])
+             : $parent_geom[0]=="prismoid" ? attach_geom(size=[2,2,2],axis=$parent_geom[4])
              : attach_geom(size=[2,2,2]);
-    child_abstract_anchor = is_vector(child) && !two_d ? _find_anchor(child, basegeom) : undef;
+    childgeom = attach_geom([2,2,2]);
+    child_abstract_anchor = is_vector(child) && !two_d ? _find_anchor(_make_anchor_legal(child,childgeom), childgeom) : undef;
     overlap = (overlap!=undef)? overlap : $overlap;
     parent = first_defined([parent,from]);
     anchors = is_vector(parent) || is_string(parent) ? [parent] : parent;
@@ -940,16 +969,42 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
         anchor_spin = two_d || !inside || anchor==TOP || anchor==BOT ? anchor_data[3]
                     : let(spin_dir = rot(anchor_data[3],from=UP, to=-anchor_dir, p=BACK))
                       _compute_spin(anchor_dir,spin_dir);
-        parent_abstract_anchor = is_vector(anchor) && !two_d ? _find_anchor(anchor,basegeom) : undef;
+        parent_abstract_anchor = is_vector(anchor) && !two_d ? _find_anchor(_make_anchor_legal(anchor,basegeom),basegeom) : undef;
         for(align_ind = idx(align_list)){
             align = is_undef(align_list[align_ind]) ? undef
                   : assert(is_vector(align_list[align_ind],2) || is_vector(align_list[align_ind],3), "align direction must be a 2-vector or 3-vector")
                     two_d ? _force_anchor_2d(align_list[align_ind])
                   : point3d(align_list[align_ind]);
+            spin = is_num(spin) ? spin
+                 : align==CENTER ? 0
+                 : sum(v_abs(anchor))==1 ?   // parent anchor is a face
+                   let(
+                       spindir = in_list(anchor,[TOP,BOT]) ? BACK : UP,
+                       proj = project_plane(point4d(anchor),[spindir,align]),
+                       ang = v_theta(proj[1])-v_theta(proj[0])
+                   )
+                   ang
+                 : // parent anchor is not a face, so must be an edge (corners not allowed)
+                   let(
+                        nativeback = apply(rot(to=parent_abstract_anchor[2],from=UP)
+                                       *affine3d_zrot(parent_abstract_anchor[3]), BACK)
+                    )
+                    nativeback*align<0 ? -180:0;
             $idx = align_ind+len(align_list)*anch_ind;
             $align=align;
+            goodcyl = $parent_geom[0] != "conoid" || is_undef(align) || align==CTR ? true
+                    : let(
+                           align=rot(from=$parent_geom[5],to=UP,p=align),
+                           anchor=rot(from=$parent_geom[5],to=UP,p=anchor)
+                      )
+                      anchor==TOP || anchor==BOT || align==TOP || align==BOT;
+            badcorner = !in_list($parent_geom[0],["conoid","spheroid"]) && !is_undef(align) && align!=CTR && sum(v_abs(anchor))==3;
+            badsphere = $parent_geom[0]=="spheroid" && !is_undef(align) && align!=CTR;
             dummy=assert(is_undef(align) || all_zero(v_mul(anchor,align)),
-                         str("Invalid alignment: align value (",align,") includes component parallel to parent anchor (",anchor,")"));
+                         str("Invalid alignment: align value (",align,") includes component parallel to parent anchor (",anchor,")"))
+                  assert(goodcyl, str("Cannot use align with an anchor on a curved edge or surface of a cylinder at parent anchor (",anchor,")"))
+                  assert(!badcorner, str("Cannot use align at a corner anchor (",anchor,")"))
+                  assert(!badsphere, "Cannot use align on spheres.");
             // Now compute position on the parent (including alignment but not inset) where the child will be anchored
             pos = is_undef(align) ? anchor_data[1] : _find_anchor(anchor+align, $parent_geom)[1];
             $attach_anchor = list_set(anchor_data, 1, pos);      // Never used;  For user informational use?  Should this be set at all?
@@ -963,7 +1018,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
                                        * affine3d_zrot(-parent_abstract_anchor[3])
                                             *  rot(from=parent_abstract_anchor[2],to=UP)
                                             * rot(v=anchor,-spin),
-                                      align); 
+                                      align);
             // The $anchor_override anchor value forces an override of the *position* only for the anchor
             // used when attachable() places the child
             $anchor_override = all_zero(child_adjustment)? inside?child:undef
@@ -3687,8 +3742,10 @@ function _find_anchor(anchor, geom) =
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "All components of an anchor for a cuboid/prismoid must be -1, 0, or 1")
         let(
-            size=geom[1], size2=geom[2],
-            shift=point2d(geom[3]), axis=point3d(geom[4]),
+            size=geom[1],
+            size2=geom[2],
+            shift=point2d(geom[3]),
+            axis=point3d(geom[4]),
             override = geom[5](anchor)
         )
         let(
@@ -3737,7 +3794,6 @@ function _find_anchor(anchor, geom) =
             //     : oang
         ) [anchor, final_pos, final_dir, default(override[2],spin)]
     ) : type == "conoid"? ( //r1, r2, l, shift
-        assert(anchor.z == sign(anchor.z), "The Z component of an anchor for a cylinder/cone must be -1, 0, or 1")
         let(
             rr1=geom[1],
             rr2=geom[2],
@@ -3747,6 +3803,11 @@ function _find_anchor(anchor, geom) =
             r1 = is_num(rr1)? [rr1,rr1] : point2d(rr1),
             r2 = is_num(rr2)? [rr2,rr2] : point2d(rr2),
             anch = rot(from=axis, to=UP, p=anchor),
+            axisname = axis==UP ? "Z"
+                     : axis==RIGHT ? "X"
+                     : axis==BACK ? "Y"
+                     : "",
+            dummy = assert(anch.z == sign(anch.z), str("The ",axisname," component of an anchor for the cylinder/cone must be -1, 0, or 1")),
             offset = rot(from=axis, to=UP, p=offset),
             u = (anch.z+1)/2,
             // Returns [point,tangent_dir]
