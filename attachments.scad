@@ -12,6 +12,7 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+include<structs.scad>
 
 // Default values for attachment code.
 $tags=undef;      // for backward compatibility
@@ -836,6 +837,8 @@ function _make_anchor_legal(anchor,geom) =
 //   `$attach_anchor` for each anchor given, this is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
 //   if inside is true then set default tag to "remove"
 //   `$attach_to` is set to the value of the `child` argument, if given.  Otherwise, `undef`
+//   `$edge_angle` is set to the angle of the edge if the anchor is on an edge and the parent is a prismoid or vnf with "hull" anchoring
+//   `$edge_length` is set to the length of the edge if the anchor is on an edge and the parent is a prismoid or vnf with "hull" anchoring
 // Example: Cylinder placed on top of cube:
 //   cuboid(50)
 //     attach(TOP,BOT) cylinder(d1=30,d2=15,h=25);
@@ -964,6 +967,8 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
                : point3d(anchors[anch_ind]);
         $anchor=anchor;
         anchor_data = _find_anchor(anchor, $parent_geom);
+        $edge_angle = len(anchor_data)==5 ? struct_val(anchor_data[4],"edge_angle") : undef;
+        $edge_length = len(anchor_data)==5 ? struct_val(anchor_data[4],"edge_length") : undef;
         anchor_pos = anchor_data[1];
         anchor_dir = factor*anchor_data[2];
         anchor_spin = two_d || !inside || anchor==TOP || anchor==BOT ? anchor_data[3]
@@ -3714,7 +3719,7 @@ function _get_cp(geom) =
 /// Arguments:
 ///   anchor = Vector or named anchor string.
 ///   geom = The geometry description of the shape.
-function _find_anchor(anchor, geom) =
+function _find_anchor(anchor, geom)=
     is_string(anchor)? (
           anchor=="origin"? [anchor, CENTER, UP, 0]    // Ok that this returns 3d anchor in the 2d case?
         : let(
@@ -3779,20 +3784,20 @@ function _find_anchor(anchor, geom) =
                       v3 = unit(line[1]-line[0],UP) * anch.z
                   )
                   unit(v3,UP),
+            edgeang = len(facevecs)==2 ? 180-vector_angle(facevecs[0], facevecs[1]) : undef,
             final_dir = default(override[1],anch==CENTER?UP:rot(from=UP, to=axis, p=dir)),
             final_pos = default(override[0],rot(from=UP, to=axis, p=pos)),
 
             // If the anchor is on a face or horizontal edge we take the oang value for spin
             // If the anchor is on a vertical or sloped edge or corner we want to align the spin to point upward along the edge
 
-            spin = anch.x!=0 && anch.y!=0 ? _compute_spin(final_dir, rot(from=UP, to=axis, p=edge))   // Set "vertical" edge and corner anchors point along the edge
-                 : anch.z!=0 && sum(v_abs(anch))==2 ? _compute_spin(final_dir, rot(from=UP, to=axis, p=anch.z*[anch.y,-anch.x,0])) // Horizontal anchors point clockwise
+                       // Set "vertical" edge and corner anchors point along the edge
+            spin = anch.x!=0 && anch.y!=0 ? _compute_spin(final_dir, rot(from=UP, to=axis, p=edge))
+                       // Horizontal anchors point clockwise
+                 : anch.z!=0 && sum(v_abs(anch))==2 ? _compute_spin(final_dir, rot(from=UP, to=axis, p=anch.z*[anch.y,-anch.x,0])) 
                  : norm(anch)==3 ? _compute_spin(final_dir, final_dir==DOWN || final_dir==UP ? BACK : UP)
                  : oang        // face anchors point UP/BACK
-            //spin = anchor.x!=0 && anchor.y!=0 ? _compute_spin(dir, edge)
-            //     : anchor.z!=0 && (anchor.x!=0 || anchor.y!=0) ? _compute_spin(dir, _canonical_edge([anchor.y,anchor.x,0]))
-            //     : oang
-        ) [anchor, final_pos, final_dir, default(override[2],spin)]
+        ) [anchor, final_pos, final_dir, default(override[2],spin), if (is_def(edgeang)) [["edge_angle",edgeang],["edge_length",norm(edge)]]]
     ) : type == "conoid"? ( //r1, r2, l, shift
         let(
             rr1=geom[1],
@@ -3969,8 +3974,8 @@ function _find_anchor(anchor, geom) =
                                        edgedir = edge[1]-edge[0]
                                    )
                                    _compute_spin(direction, flip*edgedir)
-                    )
-                    [direction,spin]
+                    ) 
+                    [direction,spin,[["edge_angle",ang],["edge_length",norm(edge[0]-edge[1])]]]
                 :   let(   // This section handles corner anchors, currently spins just point up
                        vertices = vnf[0],
                        faces = vnf[1],
@@ -3989,7 +3994,7 @@ function _find_anchor(anchor, geom) =
             avep = sum(select(rpts,idxs))/len(idxs),
             mpt = approx(point2d(anchor),[0,0])? [maxx,0,0] : avep,
             pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
-        ) [anchor, default(override[0],pos),default(override[1],dir[0]),default(override[2],dir[1])]
+        ) [anchor, default(override[0],pos),default(override[1],dir[0]),default(override[2],dir[1]),if (len(dir)==3) dir[2]]
     ) : type == "trapezoid"? ( //size, size2, shift, override
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "All components of an anchor for a rectangle/trapezoid must be -1, 0, or 1")
