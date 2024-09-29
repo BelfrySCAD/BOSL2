@@ -550,6 +550,8 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
 //   partition(spread=12, gap=30, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=20, gap=20, cutsize=15, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=25, gap=15, cutsize=[20,20], cutpath="dovetail") cylinder(h=50, d=80, center=false);
+// Side Effects:
+//   `$idx` is set to 0 on the back part and 1 on the front part.
 // Examples(2DMed):
 //   partition(cutpath="sawtooth") cylinder(h=50, d=80, center=false);
 //   partition(cutpath="sinewave") cylinder(h=50, d=80, center=false);
@@ -566,12 +568,14 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, spin=
     rsize = v_abs(rot(spin,p=size));
     vec = rot(spin,p=BACK)*spread/2;
     move(vec) {
+        $idx = 0;
         intersection() {
             children();
             partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, spin=spin);
         }
     }
     move(-vec) {
+        $idx = 1;
         intersection() {
             children();
             partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, inverse=true, spin=spin);
