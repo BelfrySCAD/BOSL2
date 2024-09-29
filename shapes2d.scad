@@ -2050,10 +2050,9 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 module text(text, size=10, font, halign, valign, spacing=1.0, direction="ltr", language="en", script="latin", anchor="baseline", spin=0) {
     no_children($children);
     dummy1 =
-        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
-        assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin));
+        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
+        assert(is_finite(spin), str("Invalid spin: ",spin));
     anchor = default(anchor, CENTER);
-    spin =   default(spin,   0);
     geom = attach_geom(size=[size,size],two_d=true);
     anch = !any([for (c=anchor) c=="["])? anchor :
         let(

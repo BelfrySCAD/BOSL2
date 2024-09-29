@@ -101,19 +101,22 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   motors have anchors for `"screw1"`, `"screw2"`, etc. to refer to the various screwholes on the
 //   stepper motor shape.  The names, positions, directions, and spins of these anchors are
 //   specific to the object, and are documented when they exist.
+//   .
+//   The anchor argument is ignored if you use {{align()}} or the two-argument form of {{attach()}} because
+//   these modules provide their own anchoring for their children.  
 // Subsection: Spin
-//   Spin is specified with the `spin` argument in most shape modules.  Specifying a spin`
+//   Spin is specified with the `spin` argument in most shape modules.  Specifying a spin
 //   angle when creating an object will rotate the object counter-clockwise around the Z axis by the given
 //   number of degrees.  Spin is always applied after anchoring, and before orientation.
-//   Since spin is applied after anchoring it is not always what you might think of intuitively
-//   as spinning the shape.  To do that, apply `zrot()` to the shape before anchoring.
+//   Since spin is applied **after** anchoring it does not, in general, rotate around the object's center,
+//   so it is not always what you might think of intuitively as spinning the shape.  
 // Subsection: Orient
 //   Orientation is specified with the `orient` argument in most shape modules.  Specifying `orient`
 //   when creating an object will rotate the object such that the top of the object will be pointed
 //   at the vector direction given in the `orient` argument.  Orientation is always applied after
 //   anchoring and spin.  The constants `UP`, `DOWN`, `FRONT`, `BACK`, `LEFT`, and `RIGHT` can be
 //   added together to form the directional vector for this (e.g. `LEFT+BACK`).  The orient parameter
-//   is ignored when you use {{attach()}} because {{attach()}} provides its own orientation. 
+//   is ignored when you use {{attach()}} with two arguments, because {{attach()}} provides its own orientation. 
 // Subsection: Specifying Directions
 //   You can use direction vectors to specify anchors for objects or to specify edges, faces, and
 //   corners of cubes.  You can simply specify these direction vectors numerically, but another
@@ -612,7 +615,7 @@ module orient(anchor, spin) {
 //   `$align` set to the align value used for the child.
 //   `$idx` set to a unique index for each child, increasing by alignment first.
 //   `$attach_anchor` for each anchor given, this is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
-//   if inside is true then set default tag to "remove"
+//   if `inside` is true then set default tag to "remove"
 // Example:  Cuboid positioned on the right of its parent.  Note that it is in its native orientation.  
 //   cuboid([20,35,25])
 //     align(RIGHT)
@@ -659,10 +662,10 @@ module orient(anchor, spin) {
 //     cuboid([40,30,10])
 //       align(FRONT,TOP,inside=true,shiftout=0.01)
 //         prismoid([10,5],[7,5],height=4);
-// Example: Setting inset shifts all of the children away from their aligned edge, which is a different direction for each child.  
+// Example: Setting `inset` shifts all of the children away from their aligned edge, which is a different direction for each child.  
 //   cuboid([40,30,30])
 //     align(FRONT,[TOP,BOT,LEFT,RIGHT,TOP+RIGHT,BOT+LEFT], inset=3)
-//       color("green") cuboid(2);
+//       color("green") cuboid(5);
 // Example: Changing the child characteristics based on the alignment
 //   cuboid([20,20,8])
 //     align(TOP,[for(i=[-1:1], j=[-1:1]) [i,j]])
@@ -867,14 +870,14 @@ function _make_anchor_legal(anchor,geom) =
 // Example: Using the `overlap` option can help:
 //   spheroid(d=20) 
 //       attach([1,1.5,1], BOTTOM, overlap=1.5) cyl(l=11.5, d1=10, d2=5);
-// Example: Alignment works for cylinders but you can only align with either the top or bototm face:
+// Example: Alignment works on the sides of cylinders but you can only align with either the top or bototm face:
 //   cyl(h=30,d=10)
 //     attach([LEFT,[1,1.3]], BOT,align=TOP) cuboid(6);
 // Example: Attaching to edges.  The light blue and orange objects are attached to edges.  The purple object is attached to an edge and aligned. 
 //   prismoid([20,10],[10,10],7){
 //     attach(RIGHT+TOP,BOT,align=FRONT) color("pink")cuboid(2);
 //     attach(BACK+TOP, BOT) color("lightblue")cuboid(2);
-//     attach(RIGHT+BOT, RIGHT,spin=90) color("orange")cyl(h=8,d=1);
+//     attach(RIGHT+BOT, RIGHT) color("orange")cyl(h=8,d=1);
 //   }
 // Example: Attaching inside the parent.  For inside attachment the anchors are lined up pointing the same direction, so the most natural way to anchor the child is using its TOP anchor.  This is equivalent to anchoring outside with the BOTTOM anchor and then lowering the child into the parent by its full depth.  
 //   back_half()
@@ -2973,8 +2976,9 @@ module attachable(
     dummy1 =
         assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
-        assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Invalid spin: ",spin))
+        assert(is_finite(spin), str("Invalid spin: ",spin))
         assert(is_undef(orient) || is_vector(orient,3), str("Invalid orient: ",orient));
+        assert(in_list(axis,[UP,RIGHT,BACK]), "axis must be a positive coordinate direction, either UP, BACK or RIGHT")
     anchor = first_defined([anchor, CENTER]);
     spin =   default(spin,   0);
     orient = is_def($anchor_override)? UP : default(orient, UP);
@@ -3131,9 +3135,9 @@ function reorient(
     geom,
     p=undef
 ) = 
-    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
-    assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
-    assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient))
+    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
+    assert(is_finite(spin) str("Invalid spin: ",spin))
+    assert(is_undef(orient) || is_vector(orient,3), str("Invalid orient: ",orient))
     let(
         anchor = default(anchor, CENTER),
         spin =   default(spin,   0),
@@ -3616,7 +3620,7 @@ function _attach_geom_edge_path(geom, edge) =
 
 function _attach_transform(anchor, spin, orient, geom, p) =
     assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
-    assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Invalid spin: ",spin))
+    assert(is_finite(spin), str("Invalid spin: ",spin))
     assert(is_undef(orient) || is_vector(orient,3), str("Invalid orient: ",orient))
     let(
         anchor = default(anchor, CENTER),
