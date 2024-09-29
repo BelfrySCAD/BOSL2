@@ -2978,7 +2978,7 @@ module attachable(
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
         assert(is_undef(spin) || is_finite(spin), str("Invalid spin: ",spin))
         assert(is_undef(orient) || is_vector(orient,3), str("Invalid orient: ",orient));
-        assert(in_list(axis,[UP,RIGHT,BACK]), "axis must be a positive coordinate direction, either UP, BACK or RIGHT");
+        assert(in_list(v_abs(axis),[UP,RIGHT,BACK]), "axis must be a coordinate direction");
     anchor = default(anchor,CENTER);
     spin = default(spin,0); 
     orient = is_def($anchor_override)? UP : default(orient, UP);

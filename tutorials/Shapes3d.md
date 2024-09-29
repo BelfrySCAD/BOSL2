@@ -47,20 +47,11 @@ include <BOSL2/std.scad>
 cube([50,40,20], anchor=TOP+FRONT+LEFT);
 ```
 
-You can use `spin=` to rotate around the Z axis:
+You can use `spin=` to rotate around the Z axis **after** anchoring:
 
 ```openscad-3D
 include <BOSL2/std.scad>
 cube([50,40,20], anchor=FRONT, spin=30);
-```
-
-3D objects also gain the ability to use an extra trick with `spin=`;
-if you pass a list of `[X,Y,Z]` rotation angles to `spin=`, it will
-rotate by the three given axis angles, similar to using `rotate()`:
-
-```openscad-3D
-include <BOSL2/std.scad>
-cube([50,40,20], anchor=FRONT, spin=[15,0,30]);
 ```
 
 3D objects also can be given an `orient=` argument as a vector, pointing
