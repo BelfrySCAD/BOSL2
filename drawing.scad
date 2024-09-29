@@ -786,7 +786,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
                 plane = [corner[2], corner[0], corner[1]],
                 points2d = project_plane(plane, corner)
             )
-            lift_plane(plane,arc(n,corner=points2d,wedge=wedge,long=long))
+            lift_plane(plane,arc(n,corner=points2d,wedge=wedge,r=r, d=d))
         ) :
         assert(is_path(corner) && len(corner) == 3)
         let(col = is_collinear(corner[0],corner[1],corner[2]))

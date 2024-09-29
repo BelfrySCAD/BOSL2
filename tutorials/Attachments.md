@@ -223,15 +223,6 @@ include <BOSL2/std.scad>
 cube([20,20,40], center=true, spin=45);
 ```
 
-You can also spin around other axes, or multiple axes at once, by giving 3 angles (in degrees) to
-`spin=` as a vector, like [Xang,Yang,Zang].  Similarly to `rotate()`,
-the rotations apply in the order given, X-axis spin, then Y-axis, then Z-axis:
-
-```openscad-3D
-include <BOSL2/std.scad>
-cube([20,20,40], center=true, spin=[10,20,30]);
-```
-
 This example shows a cylinder which has been anchored at its FRONT,
 with a rotated copy in gray.  The rotation is performed around the
 origin, but the cylinder is off the origin, so the rotation **does**
@@ -666,13 +657,13 @@ To show all the standard cardinal anchor points, you can use the [show_anchors()
 
 ```openscad-3D;Big
 include <BOSL2/std.scad>
-cube(40, center=true)
+cube(20, center=true)
     show_anchors();
 ```
 
 ```openscad-3D;Big
 include <BOSL2/std.scad>
-cylinder(h=40, d=40, center=true)
+cylinder(h=25, d=25, center=true)
     show_anchors();
 ```
 
@@ -687,7 +678,56 @@ For large objects, you can again change the size of the arrows with the `s=` arg
 ```openscad-3D;Big
 include <BOSL2/std.scad>
 prismoid(150,60,100)
-    show_anchors(s=35);
+    show_anchors(s=45);
+```
+
+Is is also possible to attach to edges and corners of the parent
+object.  The anchors for edges spin the child so its BACK direction is
+aligned with the edge.  If the edge belongs to a top or bottom
+horizontal face, then the BACK directions will point clockwise around
+the face, as seen from outside the shape.  (This is the same direction
+required for construction of valid faces in OpenSCAD.)  Otherwise, the
+BACK direction will point upwards.
+
+Examine the red flags below, where only edge anchors appear on a
+prismoid.  The top face shows the red flags pointing clockwise.
+The sloped side edges point along the edges, generally upward, and
+the bottom ones appear to point counter-clockwise, but if we viewed
+the shape from the bottom they would also appear clockwise.  
+
+```openscad-3D;Big
+include <BOSL2/std.scad>
+prismoid([100,175],[55,88], h=55)
+  for(i=[-1:1], j=[-1:1], k=[-1:1])
+    let(anchor=[i,j,k])
+       if (sum(v_abs(anchor))==2)
+         attach(anchor,BOT)anchor_arrow(40);
+```
+
+In this example cylinders sink half-way into the top edges of the
+prismoid:
+
+```openscad-3D;Big
+include <BOSL2/std.scad>
+$fn=16;
+r=6;
+prismoid([100,175],[55,88], h=55){
+   attach([TOP+RIGHT,TOP+LEFT],LEFT,overlap=r/2) cyl(r=r,l=88+2*r,rounding=r);
+   attach([TOP+FWD,TOP+BACK],LEFT,overlap=r/2) cyl(r=r,l=55+2*r, rounding=r);   
+}
+```
+
+This type of edge attachment is useful for attaching 3d edge masks to
+edges:
+
+```openscad-3D;Big
+include <BOSL2/std.scad>
+$fn=32;
+diff()
+cuboid(75)
+   attach([FRONT+LEFT, FRONT+RIGHT, BACK+LEFT, BACK+RIGHT],
+          FWD+LEFT,inside=true)
+     rounding_edge_mask(l=76, r1=8,r2=28);
 ```
 
 ## Parent-Child Anchor Attachment (Double Argument Attachment)
@@ -2019,7 +2059,8 @@ override the position.  If you omit the other list items then the
 value drived from the standard anchor will be used. Below we override
 position of the FWD anchor:
 
-```
+```openscad-3D
+include<BOSL2/std.scad>
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = [
                  [FWD,  [[0,-s/8,0]]]
@@ -2039,7 +2080,8 @@ Note how the FWD anchor is now rooted on the cylindrical portion.  If
 you wanted to also change its direction and spin you could do it like
 this:
 
-```
+```openscad-3D
+include<BOSL2/std.scad>
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = [
                  [FWD,  [[0,-s/8,0], FWD+LEFT, 225]]
@@ -2062,7 +2104,9 @@ The third entry gives a spin override, whose effect is shown by the
 position of the red flag on the arrow.  If you want to override all of
 the x=0 anchors to be on the cylinder, with their standard directions,
 you can do that by supplying a list: 
-```
+
+```openscad-3D
+include<BOSL2/std.scad>
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = [
                  for(j=[-1:1:1], k=[-1:1:1])
@@ -2086,7 +2130,8 @@ the default, or a `[position, direction, spin]` triple to override the
 default.  As before, you can omit values to keep their default.
 Here is the same example using a function literal for the override:
 
-```
+```openscad-3D
+include<BOSL2/std.scad>
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     override = function (anchor) 
           anchor.x!=0 || anchor==CTR ? undef  // Keep these
