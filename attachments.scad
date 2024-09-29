@@ -2960,7 +2960,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //       recolor("blue") cyl(d=5,h=5);
 
 module attachable(
-    anchor=CENTER, spin=0, orient,
+    anchor, spin, orient,
     size, size2, shift,
     r,r1,r2, d,d1,d2, l,h,
     vnf, path, region,
@@ -2975,10 +2975,12 @@ module attachable(
 ) { 
     dummy1 =
         assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
-        assert(is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
-        assert(is_finite(spin), str("Invalid spin: ",spin))
+        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
+        assert(is_undef(spin) || is_finite(spin), str("Invalid spin: ",spin))
         assert(is_undef(orient) || is_vector(orient,3), str("Invalid orient: ",orient));
         assert(in_list(axis,[UP,RIGHT,BACK]), "axis must be a positive coordinate direction, either UP, BACK or RIGHT");
+    anchor = default(anchor,CENTER);
+    spin = default(spin,0); 
     orient = is_def($anchor_override)? UP : default(orient, UP);
     region = !is_undef(region)? region :
         !is_undef(path)? [path] :
@@ -3120,7 +3122,7 @@ module attachable(
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
 //   p = The VNF, path, or point to transform.
 function reorient(
-    anchor=CENTER, spin=0, orient=UP,
+    anchor, spin, orient,
     size, size2, shift,
     r,r1,r2, d,d1,d2, l,h,
     vnf, path, region,
@@ -3133,10 +3135,13 @@ function reorient(
     geom,
     p=undef
 ) = 
-    assert(is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
-    assert(is_finite(spin), str("Invalid spin: ",spin))
-    assert(is_vector(orient,3), str("Invalid orient: ",orient))
+    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
+    assert(is_undef(spin) || is_finite(spin), str("Invalid spin: ",spin))
+    assert(is_undef(orient) || is_vector(orient,3), str("Invalid orient: ",orient))
     let(
+        anchor = default(anchor, CENTER),
+        spin =   default(spin,   0),
+        orient = default(orient, UP),
         region = !is_undef(region)? region :
             !is_undef(path)? [path] :
             undef,
@@ -3613,11 +3618,14 @@ function _attach_geom_edge_path(geom, edge) =
 ///   geom = The geometry description of the shape.
 ///   p = If given as a VNF, path, or point, applies the affine3d transformation matrix to it and returns the result.
 
-function _attach_transform(anchor=CENTER, spin=0, orient=UP, geom, p) =
-    assert(is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
-    assert(is_finite(spin), str("Invalid spin: ",spin))
-    assert(is_vector(orient,3), str("Invalid orient: ",orient))
+function _attach_transform(anchor, spin, orient, geom, p) =
+    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
+    assert(is_undef(spin) || is_finite(spin), str("Invalid spin: ",spin))
+    assert(is_undef(orient) || is_vector(orient,3), str("Invalid orient: ",orient))
     let(
+        anchor=default(anchor,CENTER),
+        spin=default(spin,0),
+        orient=default(orient,UP),
         two_d = _attach_geom_2d(geom),
         m = ($attach_to != undef) ?   // $attach_to is the attachment point on this object
               (                       // which will attach to the parent
