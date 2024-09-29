@@ -566,12 +566,14 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, spin=
     rsize = v_abs(rot(spin,p=size));
     vec = rot(spin,p=BACK)*spread/2;
     move(vec) {
+        $partition_part = FIRST;
         intersection() {
             children();
             partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, spin=spin);
         }
     }
     move(-vec) {
+        $partition_part = SECOND;
         intersection() {
             children();
             partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, inverse=true, spin=spin);

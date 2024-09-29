@@ -257,4 +257,14 @@ RAY = [true, false];
 LINE = [false, false];
 
 
+// Constant: FIRST
+// Synopsis: A constant specifying the first part in partition(). `1`.
+FIRST = 1;
+
+
+// Constant: SECOND
+// Synopsis: A constant specifying the second part in partition(). `2`.
+SECOND = 2;
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
