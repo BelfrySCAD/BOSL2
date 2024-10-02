@@ -1246,11 +1246,11 @@ module default_tag(tag,do_tag=true)
 //   Note that if you directly set the `$tag` variable then tag scoping will not work correctly.
 // Side Effects:
 //   `$tag_prefix` is set to the value of `scope=` if given, otherwise is set to a random string.
-// Example: In this example the ring module uses "remove" tags which will conflict with use of the same tags by the parent.
+// Example: In this example the ring module uses "remove" tags which will conflict with use of the same tags by the parent without tag_scope.
 //   module ring(r,h,w=1,anchor,spin,orient)
 //   {
-//     tag_scope("ringscope")
 //       attachable(anchor,spin,orient,r=r,h=h){
+//         tag_scope("ringscope")
 //         diff()
 //           cyl(r=r,h=h)
 //             tag("remove") cyl(r=r-w,h=h+1);
