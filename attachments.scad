@@ -35,8 +35,13 @@ $parent_orient = UP;
 $parent_size = undef;
 $parent_geom = undef;
 
+$edge_angle = undef;
+$edge_length = undef;
+
 $tags_shown = "ALL";
 $tags_hidden = [];
+
+
 
 _ANCHOR_TYPES = ["intersect","hull"];
 
@@ -972,6 +977,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
         anchor_data = _find_anchor(anchor, $parent_geom);
         $edge_angle = len(anchor_data)==5 ? struct_val(anchor_data[4],"edge_angle") : undef;
         $edge_length = len(anchor_data)==5 ? struct_val(anchor_data[4],"edge_length") : undef;
+        $edge_end1 = len(anchor_data)==5 ? struct_val(anchor_data[4],"vec") : undef;
         anchor_pos = anchor_data[1];
         anchor_dir = factor*anchor_data[2];
         anchor_spin = two_d || !inside || anchor==TOP || anchor==BOT ? anchor_data[3]
@@ -1955,7 +1961,7 @@ module face_mask(faces=[LEFT,RIGHT,FRONT,BACK,BOT,TOP]) {
 // Usage:
 //   PARENT() edge_mask([edges], [except]) CHILDREN;
 // Description:
-//   Takes a 3D mask shape, and attaches it to the given edges, with the appropriate orientation to be
+//   Takes a 3D mask shape, and attaches it to the given edges of a cuboid parent, with the appropriate orientation to be
 //   differenced away.  The mask shape should be vertically oriented (Z-aligned) with the back-right
 //   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.  If no tag is set
 //   then `edge_mask` sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.
@@ -3179,12 +3185,13 @@ function reorient(
 //   orient = A vector pointing in the direction parts should project from the anchor position.  Default: UP
 //   spin = If needed, the angle to rotate the part around the direction vector.  Default: 0
 //   ---
+//   info = structure listing info to be propagated to the attached child, e.g. "edge_anchor"
 //   rot = A 4x4 rotations matrix, which may include a translation
 //   flip = If true, flip the anchor the opposite direction.  Default: false
-function named_anchor(name, pos, orient, spin, rot, flip) =
+function named_anchor(name, pos, orient, spin, rot, flip, info) =
   assert(num_defined([orient,spin])==0 || num_defined([rot,flip])==0, "Cannot mix orient or spin with rot or flip")
   assert(num_defined([pos,rot])>0, "Must give pos or rot")
-  is_undef(rot) ? [name, pos, default(orient,UP), default(spin,0)]
+  is_undef(rot) ? [name, pos, default(orient,UP), default(spin,0), if (info) info]
  : 
   let(
       flip = default(flip,false),
@@ -3198,7 +3205,7 @@ function named_anchor(name, pos, orient, spin, rot, flip) =
       decode=rot_decode(rot(to=UP,from=dir)*_force_rot(rot)),
       spin = decode[0]*sign(decode[1].z)
   )
-  [name, pos, dir, spin];
+  [name, pos, dir, spin, if (info) info];
   
 
 // Function: attach_geom()
@@ -3789,6 +3796,26 @@ function _find_anchor(anchor, geom)=
                   )
                   unit(v3,UP),
             edgeang = len(facevecs)==2 ? 180-vector_angle(facevecs[0], facevecs[1]) : undef,
+            edgelen = anch.z==0 ? norm(edge)
+                    : anch.z>0 ? abs([size2.y,size2.x]*axy)
+                    : abs([size.y,size.x]*axy),
+            endvecs = len(facevecs)!=2 ? undef
+                    : anch.z==0 ? [DOWN, UP]
+                    : let(
+                          raxy = zrot(-90,axy),
+                          bot1 = point3d(v_mul(point2d(size )/2, raxy), -h/2),
+                          top1 = point3d(v_mul(point2d(size2)/2, raxy) + shift, h/2),
+                          edge1 = top1-bot1,
+                          vec1 = (raxy.x!=0) ? unit(rot(from=UP, to=[edge1.x,0,max(0.01,h)], p=[raxy.x,0,0]), UP)
+                               :               unit(rot(from=UP, to=[0,edge1.y,max(0.01,h)], p=[0,raxy.y,0]), UP),
+                          raxy2 = zrot(90,axy),
+                          bot2 = point3d(v_mul(point2d(size )/2, raxy2), -h/2),
+                          top2 = point3d(v_mul(point2d(size2)/2, raxy2) + shift, h/2),
+                          edge2 = top2-bot2,
+                          vec2 = (raxy2.y!=0) ? unit(rot(from=UP, to=[edge.x,0,max(0.01,h)], p=[raxy2.x,0,0]), UP)
+                               :               unit(rot(from=UP, to=[0,edge.y,max(0.01,h)], p=[0,raxy2.y,0]), UP)
+                      )
+                      [vec1,vec2],
             final_dir = default(override[1],anch==CENTER?UP:rot(from=UP, to=axis, p=dir)),
             final_pos = default(override[0],rot(from=UP, to=axis, p=pos)),
 
@@ -3801,7 +3828,8 @@ function _find_anchor(anchor, geom)=
                  : anch.z!=0 && sum(v_abs(anch))==2 ? _compute_spin(final_dir, rot(from=UP, to=axis, p=anch.z*[anch.y,-anch.x,0])) 
                  : norm(anch)==3 ? _compute_spin(final_dir, final_dir==DOWN || final_dir==UP ? BACK : UP)
                  : oang        // face anchors point UP/BACK
-        ) [anchor, final_pos, final_dir, default(override[2],spin), if (is_def(edgeang)) [["edge_angle",edgeang],["edge_length",norm(edge)]]]
+        ) [anchor, final_pos, final_dir, default(override[2],spin),
+           if (is_def(edgeang)) [["edge_angle",edgeang],["edge_length",edgelen], ["vec", endvecs]]]
     ) : type == "conoid"? ( //r1, r2, l, shift
         let(
             rr1=geom[1],

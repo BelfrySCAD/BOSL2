@@ -25,7 +25,7 @@
 //   Difference it from the object to be chamfered.  The center of
 //   the mask object should align exactly with the edge to be chamfered.
 // Arguments:
-//   l/h/length/height = Length of mask.
+//   l/h/length/height = Length of mask.  Default: $edge_length if defined
 //   chamfer = Size of chamfer.
 //   excess = The extra amount to add to the length of the mask so that it differences away from other shapes cleanly.  Default: `0.1`
 //   ---
@@ -49,7 +49,8 @@
 //   }
 function chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CENTER, spin=0, orient=UP) = no_function("chamfer_edge_mask");
 module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CENTER, spin=0, orient=UP) {
-    l = one_defined([l, h, height, length], "l,h,height,length");
+    l = is_def($edge_length) && !any_defined([l,length,h,height]) ? $edge_length
+      : one_defined([l,length,h,height],"l,length,h,height");
     default_tag("remove") {
         attachable(anchor,spin,orient, size=[chamfer*2, chamfer*2, l]) {
             cylinder(r=chamfer, h=l+excess, center=true, $fn=4);
@@ -169,28 +170,35 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 }
 
 
-
 // Section: Rounding Masks
 
 // Module: rounding_edge_mask()
 // Synopsis: Creates a shape to round a 90° edge.
 // SynTags: Geom
 // Topics: Masks, Rounding, Shapes (3D)
-// See Also: rounding_corner_mask(), default_tag(), diff() 
+// See Also: edge_profile(), rounding_corner_mask(), default_tag(), diff() 
 // Usage:
-//   rounding_edge_mask(l|h=|length=|height=, r|d=, [ang], [excess=]) [ATTACHMENTS];
-//   rounding_edge_mask(l|h=|length=|height=, r1=|d1=, r2=|d2=, [ang=], [excess=]) [ATTACHMENTS];
+//   rounding_edge_mask(l|h=|length=|height=, r|d=, [ang], [excess=], [rounding=|chamfer=], ) [ATTACHMENTS];
+//   rounding_edge_mask(l|h=|length=|height=, r1=|d1=, r2=|d2=, [ang=], [excess=], [rounding=|chamfer=]) [ATTACHMENTS];
 // Description:
-//   Creates a shape that can be used to round a straight edge at any angle.  
-//   Difference it from the object to be rounded.  The center of the mask
-//   object should align exactly with the edge to be rounded.  You can use it with {{diff()}} and
-//   {{edge_mask()}} to attach masks automatically to objects.  The default "remove" tag is set
-//   automatically.  
+//   Creates a mask shape that can be used to round a straight edge at any angle, with
+//   different rounding radii at each end.  The corner of the mask appears on the Z axis with one face on the XZ plane.
+//   You must align the mask corner with the edge you want to round.  If your parent object is a cuboid, the easiest way to
+//   do this is to use {{diff()}} and {{edge_mask()}}.  However, this method is somewhat inflexible regarding orientation of a tapered
+//   mask, and it does not support other parent shapes.  You can attach the mask to a larger range of shapes using 
+//   {{attach()}} to anchor the `LEFT+FWD` anchor of the mask to a desired corner on the parent with `inside=true`.
+//   Many shapes propagate `$edge_angle` and `$edge_length` which can aid in configuring the mask, and you can adjust the
+//   mask as needed to align the taper as desired.  The default "remove" tag is set so {{diff()}} will automatically difference
+//   away the mask.  You can of course also position the mask manually and use `difference()`.
+//   .
+//   For mating with other roundings or chamfers on cuboids or regular prisms, you can choose end roundings and end chamfers.  These affect
+//   only the curved edge of the mask ends and will only work if the terminating face is perpendicular to the masked edge.  The `excess`
+//   parameter will add extra length to the mask when you use these settings.  
 //   
 // Arguments:
-//   l/h/length/height = Length of mask.
+//   l/h/length/height = Length of mask.  Default: $edge_length if defined
 //   r = Radius of the rounding.
-//   ang = Angle between faces for rounding.  Default: 90
+//   ang = Angle between faces for rounding.  Default: $edge_angle if defined, otherwise 90
 //   ---
 //   r1 = Bottom radius of rounding.
 //   r2 = Top radius of rounding.
@@ -198,6 +206,12 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 //   d1 = Bottom diameter of rounding.
 //   d2 = Top diameter of rounding.
 //   excess = Extra size for the mask.  Defaults: 0.1
+//   rounding = Radius of roundong along ends.  Default: 0
+//   rounding1 = Radius of rounding along bottom end
+//   rounding2 = Radius of rounding along top end
+//   chamfer = Chamfer size of end chamfers.  Default: 0
+//   chamfer1 = Chamfer size of chamfer at bottom end
+//   chamfer2 = Chamfer size of chamfer at top end
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -249,34 +263,85 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 //               rounding_edge_mask(l=p.z, r=25);
 //       }
 //   }
+// Example(3D,VPT=[5.02872,6.37039,-0.503894],VPR=[75.3,0,107.4],VPD=74.4017): Mask shape with end rounding at the top, chamfer at the bottom, and a large excess value:
+//   rounding_edge_mask(r=10,h=20, chamfer1=3, rounding2=3, excess=1);
+// Example(3D,VPT=[1.05892,1.10442,2.20513],VPR=[60.6,0,118.1],VPD=74.4017): Attaching masks using {{attach()}} with automatic angle and length from the parent.  Note that sometimes the automatic length is too short because it is the length of the edge itself.  
+//   diff()
+//   prismoid([20,30],[12,19], h=10,shift=[4,7])
+//     attach([TOP+RIGHT,RIGHT+FRONT],LEFT+FWD,inside=true)
+//       rounding_edge_mask(r1=2,r2=4);
+// Example(3D): The mask does not need to be the full length of the edge
+//   diff()
+//   cuboid(20)
+//     attach(RIGHT+TOP,LEFT+FWD,inside=true,inset=-.1,align=FWD)
+//       rounding_edge_mask(r1=0,r2=10,length=10);
 
 function rounding_edge_mask(l, r, ang=90, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, spin=0, orient=UP, h,height,length) = no_function("rounding_edge_mask");
-module rounding_edge_mask(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,r,length, h, height, anchor=CENTER, spin=0, orient=UP,
+module rounding_edge_mask(l, r, ang, r1, r2, excess=0.01, d1, d2,d,r,length, h, height, anchor=CENTER, spin=0, orient=UP,
+                          rounding,rounding1,rounding2,chamfer,chamfer1,chamfer2,
                          _remove_tag=true)
 {
-    length = one_defined([l,length,h,height],"l,length,h,height");
+    ang = first_defined([ang,$edge_angle,90]);
+    length = is_def($edge_length) && !any_defined([l,length,h,height]) ? $edge_length
+           : one_defined([l,length,h,height],"l,length,h,height");
     r1 = get_radius(r1=r1, d1=d1,d=d,r=r);
     r2 = get_radius(r2=r2, d1=d2,d=d,r=r);
+    dummy1 = assert(num_defined([chamfer,rounding])<2, "Cannot give both rounding and chamfer")
+            assert(num_defined([chamfer1,rounding1])<2, "Cannot give both rounding1 and chamfer1")
+            assert(num_defined([chamfer2,rounding2])<2, "Cannot give both rounding2 and chamfer2");
+    rounding1 = first_defined([rounding1,rounding,0]);
+    rounding2 = first_defined([rounding2,rounding,0]);
+    chamfer1 = first_defined([chamfer1,chamfer,0]);
+    chamfer2 = first_defined([chamfer2,chamfer,0]);
     dummy = assert(all_nonnegative([r1,r2]), "radius/diameter value(s) must be nonnegative")
             assert(all_positive([length]), "length/l/h/height must be a positive value")
-            assert(is_finite(ang) && ang>0 && ang<180, "ang must be a number between 0 and 180");
+            assert(is_finite(ang) && ang>0 && ang<180, "ang must be a number between 0 and 180")
+            assert(all_nonnegative([chamfer1,chamfer2,rounding1,rounding2]), "chamfers and roundings must be nonnegative");
     steps = ceil(segs(max(r1,r2))*(180-ang)/360);
     function make_path(r) =
-        let(
-             arc = r==0 ? repeat([0,0],steps+1)
-                        : arc(n=steps+1, r=r, corner=[polar_to_xy(r,ang),[0,0],[r,0]]),
-             maxx = last(arc).x,
-             maxy = arc[0].y,
-             cp = [-excess/tan(ang/2),-excess]
-        )
-        [
-          [maxx, -excess],
-          cp, 
-          arc[0] + polar_to_xy(excess, 90+ang),
-          each arc
-        ];
+         r==0 ? repeat([0,0],steps+1)
+              : arc(n=steps+1, r=r, corner=[polar_to_xy(r,ang),[0,0],[r,0]]);
     path1 = path3d(make_path(r1),-length/2);
     path2 = path3d(make_path(r2),length/2);
+
+    function getarc(bigr,r,chamfer,p1,p2,h,print=false) =
+      r==0 && chamfer==0? [p2]
+    :  
+      let(
+          steps = ceil(segs(r)/4)+1,
+          center = [bigr/tan(ang/2), bigr,h],
+          refplane = plane_from_normal([-(p2-center).y, (p2-center).x, 0], p2),
+          refnormal = plane_normal(refplane), 
+          mplane = plane3pt(p2,p1,center),
+          A = plane_normal(mplane),
+          basept = lerp(p2,p1,max(r,chamfer)/2/h),
+          corner = [basept+refnormal*(refplane[3]-basept*refnormal)/(refnormal*refnormal),
+                    p2,
+                    center],
+          bare_arc = chamfer ? [p2+chamfer*unit(corner[0]-corner[1]),p2+chamfer*unit(corner[2]-corner[1])]
+                  : arc(r=r, corner = corner, n=steps),
+          arc_with_excess = [each bare_arc, up(excess, last(bare_arc))], 
+          arc = [for(pt=arc_with_excess) pt+refnormal*(mplane[3]-pt*A)/(refnormal*A)]
+      )
+      arc;
+    cp = [-excess/tan(ang/2), -excess];
+    extra1 = rounding1 || chamfer1 ? [0,0,excess] : CTR;
+    extra2 = rounding2 || chamfer2 ? [0,0,excess] : CTR;    
+    pathlist = [for(i=[0:len(path1)-1])
+                  let(
+                       path = [
+                               if (i==0) move(polar_to_xy( excess, 90+ang),path1[i]-extra1)
+                                 else if (i==len(path1)-1) fwd(excess,last(path1)-extra1)
+                                 else point3d(cp,-length/2-extra1.z),
+                               each reverse(zflip(getarc(r1,rounding1,chamfer1,zflip(path2[i]), zflip(path1[i]),length/2))),
+                               each getarc(r2,rounding2,chamfer2,path1[i],path2[i],length/2,print=rounding2!=0&&!is_undef(rounding2)&&i==3),
+                               if (i==0) move(polar_to_xy( excess, 90+ang),path2[i]+extra2)
+                                 else if (i==len(path2)-1) fwd(excess,last(path2)+extra2)
+                                 else point3d(cp, length/2+extra2.z),
+                       ]
+                   )
+                   path];
+
     left_normal = cylindrical_to_xyz(1,90+ang,0);
     left_dir = cylindrical_to_xyz(1,ang,0);
     zdir = unit([length, 0,-(r2-r1)/tan(ang/2)]);
@@ -315,7 +380,7 @@ module rounding_edge_mask(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,r,length, 
        [BACK+RIGHT+TOP, [cylindrical_to_xyz(cutfact*r2,ang/2,length/2), zrot(ang/2,zdir)+UP,ang/2+90]],
        [BACK+RIGHT+BOT, [cylindrical_to_xyz(cutfact*r1,ang/2,-length/2), zrot(ang/2,zdir)+DOWN,ang/2+90]],
        ];
-    vnf = vnf_vertex_array([path1,path2],caps=true,col_wrap=true);
+    vnf = vnf_vertex_array(reverse(pathlist), col_wrap=true,caps=true);
     default_tag("remove", _remove_tag)
       attachable(anchor,spin,orient,size=[1,1,length],override=override){
         vnf_polyhedron(vnf);
