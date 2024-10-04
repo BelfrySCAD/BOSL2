@@ -217,7 +217,7 @@ CENTER = [ 0,  0,  0];  // Centered zero vector.
 CTR = CENTER;
 CENTRE = CENTER;
 
-// Constant: EDGE
+// Function: EDGE()
 // Synopsis: Named edge anchor constants
 // Topics: Constants, Attachment
 // Usage:
@@ -238,7 +238,7 @@ function EDGE(a,b) =
     )
     str(choices[ind+1],"edge",b);
 
-// Constant: FACE
+// Function: FACE()
 // Synopsis: Named face anchor constants
 // Topics: Constants, Attachment
 // Usage:
