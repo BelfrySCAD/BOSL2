@@ -44,6 +44,8 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 //   The correct hole should hold the plug when the long block is turned upside-down.
 //   The number in front of that hole will indicate the `$slop` value that is ideal for your printer.
 //   Remember to set that slop value in your scripts after you include the BOSL2 library:  ie: `$slop = 0.15;`
+//   .
+//   Note that the `$slop` value may be different using different materials even on the same printer.  
 // Example(3D,Med): Slop Calibration Part.
 //   min_slop = 0.00;
 //   slop_step = 0.05;
@@ -215,6 +217,36 @@ CENTER = [ 0,  0,  0];  // Centered zero vector.
 CTR = CENTER;
 CENTRE = CENTER;
 
+// Function: EDGE()
+// Synopsis: Named edge anchor constants
+// Topics: Constants, Attachment
+// Usage:
+//   EDGE(i)
+//   EDGE(direction,i)
+// Description:
+//   A shorthand for the named anchors "edge0", "top_edge0", "bot_edge0", etc.
+//   Use `EDGE(i)` to get "edge<i>".  Use `EDGE(TOP,i)` to get "top_edge<i>" and
+//   use `EDGE(BOT,i)` to get "bot_edge(i)".  You can also use
+//   `EDGE(CTR,i)` to get "edge<i>" and you can replace TOP or BOT with simply 1 or -1.
+
+function EDGE(a,b) =
+    is_undef(b) ? str("edge",a)
+  : assert(in_list(a,[TOP,BOT,CTR,1,0,-1]),str("Invalid direction: ",a))
+    let(
+        choices=["bot_","","top_"],
+        ind=is_vector(a) ? a.z : a
+    )
+    str(choices[ind+1],"edge",b);
+
+// Function: FACE()
+// Synopsis: Named face anchor constants
+// Topics: Constants, Attachment
+// Usage:
+//   FACE(i)
+// Description:
+//   A shorthand for the named anchors "face0", "face1", etc. 
+
+function FACE(i) = str("face",i);
 
 // Section: Line specifiers
 //   Used by functions in geometry.scad for specifying whether two points

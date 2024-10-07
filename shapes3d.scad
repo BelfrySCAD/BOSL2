@@ -599,8 +599,8 @@ function cuboid(
 //   specifying `size2=[100,undef]` sets the size in the X direction but allows the size in the Y direction to be computed based on yang.
 //   .
 //   The anchors on the top and bottom faces have spin pointing back.  The anchors on the side faces have spin point UP.
-//   The anchors on the top and bottom edges also have anchors that point up.  The anchors on the side edges and the corners
-//   have spin with positive Z component, pointing along the edge where the anchor is located. 
+//   The anchors on the top and bottom edges also have anchors that point clockwise as viewed from outside the shapep.
+//   The anchors on the side edges and the corners have spin with positive Z component, pointing along the edge where the anchor is located.
 // Arguments:
 //   size1 = [width, length] of the bottom end of the prism.
 //   size2 = [width, length] of the top end of the prism.
@@ -835,7 +835,7 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 // Synopsis: Creates a regular prism with roundovers and chamfering
 // SynTags: Geom, VNF
 // Topics: Textures, Rounding, Chamfers
-// See Also: cyl(), rounded_prism(), texture(), linear_sweep()
+// See Also: cyl(), rounded_prism(), texture(), linear_sweep(), EDGE(), FACE()
 // Usage: Normal prisms
 //   regular_prism(n, h|l=|height=|length=, r, [center=], [realign=]) [ATTACHMENTS];
 //   regular_prism(n, h|l=|height=|length=, d=|id=|od=|ir=|or=|side=, ...) [ATTACHMENTS];
@@ -863,7 +863,8 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   .
 //   Anchors are based on the VNF of the prism.  Especially for tapered or shifted prisms, this may give unexpected anchor positions, such as top side anchors
 //   being located at the bottom of the shape, so confirm anchor positions before use.  
-//   Additional face and edge anchors are located on the side faces and vertical edges of the prism.
+//   Additional named face and edge anchors are located on the side faces and vertical edges of the prism.
+//   You can use `EDGE(i)`, `EDGE(TOP,i)` and `EDGE(BOT,i)` as a shorthand for accessing the named edge anchors, and `FACE(i)` for the face anchors.
 //   When you use `shift`, which moves the top face of the prism, the spin for the side face and edges anchors will align the child with the edge or face direction.
 //   Named anchors located along the top and bottom edges and corners are pointed in the direction of the associated face or edge to enable positioning
 //   in the direction of the side faces but positioned at the top/bottom, since {{align()}} cannot be used for this task.  These edge and corners anchors do
@@ -875,8 +876,8 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 // Named Anchors:
 //   "edge0", "edge1", etc. = Center of each side edge, spin pointing up along the edge
 //   "face0", "face1", etc. = Center of each side face, spin pointing up
-//   "topedge0", "topedge1", etc = Center of each top edge, pointing in direction of associated side face, spin up
-//   "botedge0", "botedge1", etc = Center of each bottom edge, pointing in direction of associated side face, spin up
+//   "top_edge0", "top_edge1", etc = Center of each top edge, spin pointing clockwise (from top)
+//   "bot_edge0", "bot_edge1", etc = Center of each bottom edge, spin pointing clockwise (from bottom)
 //   "topcorner0", "topcorner1", etc = Top corner, pointing in direction of associated edge anchor, spin up along associated edge
 //   "botcorner0", "botcorner1", etc = Bottom corner, pointing in direction of associated edge anchor, spin up along associated edge
 // Arguments:
@@ -1131,33 +1132,18 @@ function regular_prism(n,
         ovnf = apply(skmat, vnf),
         edge_face = [ [r2-r1,0,height],[(r2-r1)/sc,0,height]],  // regular edge, then face edge, in xz plane
         names = ["edge","face"],
-        anchors = approx(shift,[0,0]) ? 
-                     [for(i=[0:n-1], j=[0:1])
-                       let(
-                           M = zrot(-(i+j/2-(realign?1/2:0))*360/n),
-                           edge =  apply(M,edge_face[j]),
-                           dir = apply(M,[height,0,-edge_face[j].x]),
-                           spin = sign(dir.x)*vector_angle(edge - (edge*dir)*dir, rot(from=UP,to=dir,p=BACK))
-                       )
-                       each [
-                          named_anchor(str(names[j],i), apply(M,[(r1+r2)/2/(j==0?1:sc),0,0]), dir, spin),
-                          named_anchor(str(j==0?"top_corner":"top_edge",i), apply(M,[r2/(j==0?1:sc),0,height/2]), dir, spin),
-                          named_anchor(str(j==0?"bot_corner":"bot_edge",i), apply(M,[r1/(j==0?1:sc),0,-height/2]), dir, spin),                      
-                       ]
-                     ]
-                :
-                  let(
+        anchors = let(
                       faces = [
                                for(i=[0:n-1])
                                   let(
-                                      M1 = skmat*zrot(-i*360/n),
-                                      M2 = skmat*zrot(-(i+1)*360/n),
-                                      edge1 = apply(M1,[[r2,0,height/2], [r1,0,-height/2]]),
-                                      edge2 = apply(M2,[[r2,0,height/2], [r1,0,-height/2]]),
-                                      face_edge = (edge1+edge2)/2,
+                                      M1 = skmat*zrot(-i*360/n),      // map to point i
+                                      M2 = skmat*zrot(-(i+1)*360/n),  // map to point i+1
+                                      edge1 = apply(M1,[[r2,0,height/2], [r1,0,-height/2]]),  // "vertical" edge at i
+                                      edge2 = apply(M2,[[r2,0,height/2], [r1,0,-height/2]]),  // "vertical" edge at i+1
+                                      face_edge = (edge1+edge2)/2,         // "vertical" edge across side face between i and i+1
                                       facenormal = unit(cross(edge1[0]-edge1[1], edge2[1]-edge1[0]))
-                                  )
-                                  [facenormal,face_edge[0]-face_edge[1],edge1[0]-edge1[1]]  // [normal to face, edge through face center, actual edge]
+                                  )   // [normal to face, edge through face center vector, actual edge vector, top edge vector]
+                                  [facenormal,face_edge[0]-face_edge[1],edge1[0]-edge1[1],edge2[0]-edge1[0]]  
                               ]
                   )
                   [for(i=[0:n-1])
@@ -1165,20 +1151,31 @@ function regular_prism(n,
                            Mface = skmat*zrot(-(i+1/2)*360/n),
                            faceedge = faces[i][1],
                            facenormal = faces[i][0], 
-                           //facespin = _compute_spin(facenormal, faceedge), // spin along centerline of face instea of pointing up---seems to be wrong choice
+                           //facespin = _compute_spin(facenormal, faceedge), // spin along centerline of face instead of pointing up---seems to be wrong choice
                            facespin = _compute_spin(facenormal, UP), 
                            edgenormal = unit(vector_bisect(facenormal,select(faces,i-1)[0])),
                            Medge = skmat*zrot(-i*360/n),
                            edge = faces[i][2], 
-                           edgespin = _compute_spin(edgenormal, edge)
+                           edgespin = _compute_spin(edgenormal, edge),
+                           topedge = unit(faces[i][3]),
+                           topnormal = unit(facenormal+UP),
+                           botnormal = unit(facenormal+DOWN),
+                           topedgespin = _compute_spin(topnormal, topedge),
+                           botedgespin = _compute_spin(botnormal, -topedge),
+                           topedgeangle = 180-vector_angle(UP,facenormal),
+                           sideedgeangle = 180-vector_angle(facenormal, select(faces,i-1)[0]),
+                           edgelen = norm(select(faces,i)[2])
                       )
                       each [
                           named_anchor(str("face",i), apply(Mface,[(r1+r2)/2/sc,0,0]), facenormal, facespin),
-                          named_anchor(str("edge",i), apply(Medge,[(r1+r2)/2,0,0]), edgenormal, edgespin),
-                          named_anchor(str("top_edge",i), apply(Mface,[r2/sc,0,height/2]), facenormal, facespin),
-                          named_anchor(str("top_corner",i), apply(Medge,[r2,0,height/2]), edgenormal, edgespin),
-                          named_anchor(str("bot_edge",i), apply(Mface,[r1/sc,0,-height/2]), facenormal, facespin),
-                          named_anchor(str("bot_corner",i), apply(Medge,[r1,0,-height/2]), edgenormal, edgespin)
+                          named_anchor(str("edge",i), apply(Medge,[(r1+r2)/2,0,0]), edgenormal, edgespin,
+                                       info=[["edge_angle",sideedgeangle], ["edge_length",edgelen]]),
+                          named_anchor(str("top_edge",i), apply(Mface,[r2/sc,0,height/2]), topnormal, topedgespin,
+                                       info=[["edge_angle",topedgeangle],["edge_length",2*sin(180/n)*r2]]),
+                          named_anchor(str("bot_edge",i), apply(Mface,[r1/sc,0,-height/2]), botnormal, botedgespin,
+                                       info=[["edge_angle",180-topedgeangle],["edge_length",2*sin(180/n)*r1]]),
+                          named_anchor(str("top_corner",i), apply(Medge,[r2,0,height/2]), unit(edgenormal+UP), edgespin),
+                          named_anchor(str("bot_corner",i), apply(Medge,[r1,0,-height/2]), unit(edgenormal+DOWN), edgespin)
                       ]
                   ],
         override = approx(shift,[0,0]) ? undef : [[UP, [point3d(shift,height/2), UP]]],
@@ -3666,20 +3663,34 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 // Description:
 //   Creates a shape that can be unioned into a concave joint between two faces, to fillet them.
 //   Note that this module is the same as {{rounding_edge_mask()}}, except that it does not
-//   apply the default "remove" tag.  
-//
+//   apply the default "remove" tag and has a different default angle.
+//   It can be convenient to {{attach()}} the fillet to the edge of a parent object.
+//   Many objects propagate the $edge_angle and $edge_length which are used as defaults for the fillet.
+//   If you attach the fillet to the edge, it will be hovering in space and you need to apply {{yrot()}}
+//   to place it on the parent object, generally either 90 degrees or -90 degrees dependong on which
+//   face you want the fillet.  
 // Usage: 
-//   fillet(l|h=|length=|height=, r|d=, [ang=], [excess=]) [ATTACHMENTS];
-//   fillet(l|h=|length=|height=, r1=|d1=, r2=|d2=, [ang=], [excess=]) [ATTACHMENTS];
+//   fillet(l|h=|length=|height=, r|d=, [ang=], [excess=], [rounding=|chamfer=]) [ATTACHMENTS];
+//   fillet(l|h=|length=|height=, r1=|d1=, r2=|d2=, [ang=], [excess=], [rounding=|chamfer=]) [ATTACHMENTS];
 //
 // Arguments:
-//   l / length / h / height = Length of edge to fillet.
-//   r = Radius of fillet.
-//   ang = Angle between faces to fillet.
-//   excess = Overlap size for unioning with faces.
+//   l/h/length/height = Length of mask.  Default: $edge_length if defined
+//   r = Radius of the rounding.
+//   ang = Angle between faces for rounding.  Default: 180-$edge_angle if defined, otherwise 90
 //   ---
-//   d = Diameter of fillet.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `FRONT+LEFT`
+//   r1 = Bottom radius of fillet.
+//   r2 = Top radius of fillet.
+//   d = Diameter of the fillet.
+//   d1 = Bottom diameter of fillet.
+//   d2 = Top diameter of fillet.
+//   excess = Extra size for the fillet.  Defaults: .1
+//   rounding = Radius of roundong along ends.  Default: 0
+//   rounding1 = Radius of rounding along bottom end
+//   rounding2 = Radius of rounding along top end
+//   chamfer = Chamfer size of end chamfers.  Default: 0
+//   chamfer1 = Chamfer size of chamfer at bottom end
+//   chamfer2 = Chamfer size of chamfer at top end
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //
@@ -3712,7 +3723,15 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 //   cuboid(50){
 //     align(TOP,RIGHT,inset=10) fillet(l=50,r=10,orient=FWD);
 //     align(TOP,RIGHT,inset=20) cuboid([4,50,20],anchor=BOT);
-//   }   
+//   }
+// Example(3D,VPT=[3.03052,-2.34905,8.07573],VPR=[70.4,0,326.2],VPD=82.6686): Automatic positioning of the fillet at the odd angle of this shifted prismoid is simple using {{attach()}} with the inherited $edge_angle.  
+//  $fn=64;
+//  prismoid([20,15],[12,17], h=10, shift=[3,5]){
+//    attach(TOP+RIGHT,FWD+LEFT,inside=false)  
+//      yrot(90)fillet(r=4);
+//    attach(RIGHT,BOT)
+//      cuboid([22,22,2]);
+//  }
 
 module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anchor=CENTER, spin=0, orient=UP)
 {
@@ -3722,9 +3741,13 @@ module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, length, h, height, anc
 
 
 function fillet(l, r, ang, r1, r2, d, d1, d2, excess=0.1, anchor=CENTER, spin=0, orient=UP, h,height,length) = no_function("fillet");
-module fillet(l, r, ang=90, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor=CENTER, spin=0, orient=UP)
+module fillet(l, r, ang, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor=CENTER, spin=0, orient=UP,
+                                        rounding,rounding1,rounding2,chamfer,chamfer1,chamfer2)
 {
+  ang = first_defined([ang, u_add(u_mul($edge_angle,-1),180), 90]);
+  //echo(ang,180-$edge_angle);
   rounding_edge_mask(l=l, r1=r1, r2=r2, ang=ang, excess=excess, d1=d1, d2=d2,d=d,r=r,length=length, h=h, height=height,
+                     chamfer1=chamfer1, chamfer2=chamfer2, chamfer=chamfer, rounding1=rounding1, rounding2=rounding2, rounding=rounding,
                      anchor=anchor, spin=spin, orient=orient, _remove_tag=false)
     children();
 }  
