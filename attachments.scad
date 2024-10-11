@@ -1249,8 +1249,8 @@ module default_tag(tag,do_tag=true)
 // Example: In this example the ring module uses "remove" tags which will conflict with use of the same tags by the parent without tag_scope.
 //   module ring(r,h,w=1,anchor,spin,orient)
 //   {
+//       tag_scope("ringscope")    
 //       attachable(anchor,spin,orient,r=r,h=h){
-//         tag_scope("ringscope")
 //         diff()
 //           cyl(r=r,h=h)
 //             tag("remove") cyl(r=r-w,h=h+1);
@@ -1269,6 +1269,56 @@ module default_tag(tag,do_tag=true)
 //          tag("rem")ring(9.5,8,w=.3);
 //       }
 //     }
+// Example: tag_scope can interact unexpectedly with attachable() depending on if you place it before attachable() or just inside it. If placed outside, the tag_scope will also apply to the attachable's children(). If placed inside it will only apply to the attachable's parent object.
+//   module outside_attachable(){
+//       tag_scope("outside_attachable")
+//       attachable(anchor=CENTER, spin=0, d=60, l=60) {
+//           color_this("white")
+//           diff()
+//           cyl(d=60, l=60){
+//               
+//               tag("remove")
+//               color_this("red")
+//               cyl(d=30, l=61);
+//           }      
+//           children();
+//       }
+//   }
+//   
+//   module inside_attachable(){
+//       attachable(anchor=CENTER, spin=0, d=60, l=60) {
+//           tag_scope("inside_attachable")
+//           color_this("green")
+//           diff()
+//           cyl(d=60, l=60){        
+//               tag("remove")
+//               color_this("blue")
+//               cyl(d=30, l=61);
+//           }        
+//           children();
+//       }
+//   }
+//   
+//   diff()
+//   outside_attachable(){
+//       color_this("orange")
+//       cyl(d=20, l=61){
+//           tag("remove")
+//           color_this("yellow")
+//           cyl(d=10, l=65);
+//       }
+//   }
+//   
+//   right(60)
+//   diff()
+//   inside_attachable(){
+//       color_this("orange")
+//       cyl(d=20, l=61){
+//           tag("remove")
+//           color_this("yellow")
+//           cyl(d=10, l=65);
+//       }
+//   }
 module tag_scope(scope){
   req_children($children);
   scope = is_undef(scope) ? rand_str(20) : scope;
