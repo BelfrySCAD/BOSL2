@@ -2455,7 +2455,7 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
                     downedge=anchors[((i+ofs)%4)*6+2],                    
                     faceanch=anchors[((i+ofs)%4)*6+3],
                     upcorner=anchors[((i+ofs)%4)*6+4],
-                    downcorner=anchors[((i+ofs)%4)*6+5],
+                    downcorner=anchors[((i+ofs)%4)*6+5]
                 )    
                 each [
                       [stddir[i],select(faceanch,1,3)],
@@ -2465,7 +2465,7 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
                       [stddir[i]+select(stddir,i-1)+UP, select(upcorner,1,3)],
                       [stddir[i]+select(stddir,i-1)+DOWN, select(downcorner,1,3)],
                      ] 
-           ],
+           ]
     )
     !debug && !_full_info ? vnf
   : _full_info ? [concat(top_patch, bot_patch), vnf, anchors, override]
