@@ -1348,7 +1348,10 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   will get a similar or better looking model with fewer vertices using "round" instead of
 //   "chamfer".  Use the "chamfer" style offset only in cases where the number of steps is very small or just one (such as when using
 //   the `os_chamfer` profile type).
-//
+//   .
+//   This module offers four anchor types.  The default is "hull" in which VNF anchors are placed on the VNF of the **unrounded** object.  You
+//   can also use "intersect" to get the intersection anchors to the unrounded object. If you prefer anchors that respect the rounding
+//   then use "surf_hull" or "intersect_hull". 
 // Arguments:
 //   path = 2d path (list of points) to extrude
 //   height / length / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.
@@ -1375,7 +1378,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   atype = Select "hull", "intersect", "surf_hull" or "surf_intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Anchor Types:
-//   hull = Anchors to the convex hull of the linear sweep of the path, ignoring any end roundings. 
+//   hull = Anchors to the convex hull of the linear sweep of the path, ignoring any end roundings.  (default)
 //   intersect = Anchors to the surface of the linear sweep of the path, ignoring any end roundings.
 //   surf_hull = Anchors to the convex hull of the offset_sweep shape, including end treatments.
 //   surf_intersect = Anchors to the surface of the offset_sweep shape, including any end treatments.
@@ -2030,7 +2033,11 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   vnf = rounded_prism(bottom, [top], [height=|h=|length=|l=], [joint_top=], [joint_bot=], [joint_sides=], [k=], [k_top=], [k_bot=], [k_sides=], [splinesteps=], [debug=]);
 // Description:
 //   Construct a generalized prism with continuous curvature rounding.  You supply the polygons for the top and bottom of the prism.  The only
-//   limitation is that joining the edges must produce a valid polyhedron with coplanar side faces.  You specify the rounding by giving
+//   limitation is that joining the edges must produce a valid polyhedron with coplanar side faces.  The vertices of the top and bottom
+//   are joined in the order listed.  The top should have the standard vertex order for a polyhedron: clockwise as seen when viewing the prism
+//   from the outside. 
+//   .
+//   You specify the rounding by giving
 //   the joint distance away from the corner for the rounding curve.  The k parameter ranges from 0 to 1 with a default of 0.5.  Larger
 //   values give a more abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
 //   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
@@ -2059,14 +2066,30 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   construct a top that is a single point or two points.  This means you can completely round a cube by setting the joint to half of
 //   the cube's width.  
 //   If you set `debug` to true the module version will display the polyhedron even when it is invalid and it will show the bezier patches at the corners.
-//   This can help troubleshoot problems with your parameters.  With the function form setting debug to true causes it to return [patches,vnf] where
+//   This can help troubleshoot problems with your parameters.  With the function form setting debug to true causes run even on invalid cases and to return [patches,vnf] where
 //   patches is a list of the bezier control points for the corner patches.
+//   .
+//   This module offers five anchor types.  The default is "hull" in which VNF anchors are placed on the VNF of the **unrounded** object.  You
+//   can also use "intersect" to get the intersection anchors to the unrounded object. If you prefer anchors that respect the rounding
+//   then use "surf_hull" or "intersect_hull".  Lastly, in the special case of a prism with four sides, you can use "prismoid" anchoring
+//   which will attempt to assign standard prismoid anchors to the shape by assigning as RIGHT the face that is closest to the RIGHT direction,
+//   and defining the other anchors around the shape baesd on that choice.  
 //   .
 //   Note that rounded_prism() is not well suited to rounding shapes that have already been rounded, or that have many points.
 //   It works best when the top and bottom are polygons with well-defined corners.  When the polygons have been rounded already,
 //   further rounding generates tiny bezier patches patches that can more easily
 //   interfere, giving rise to an invalid polyhedron.  It's also slow because you get bezier patches for every corner in the model.  
 //   .
+// Named Anchors:
+//   "origin" = The native position of the prism.
+//   "top" = Top face, with spin BACK if face is parallel to the XY plane, or with positive Z otherwise
+//   "bot" = Bottom face, with spin BACK if face is parallel to the XY plane, or with positive Z otherwise
+//   "edge0", "edge1", etc. = Center of each side edge, spin pointing up along the edge
+//   "face0", "face1", etc. = Center of each side face, spin pointing up
+//   "top_edge0", "top_edge1", etc = Center of each top edge, spin pointing clockwise (from top)
+//   "bot_edge0", "bot_edge1", etc = Center of each bottom edge, spin pointing clockwise (from bottom)
+//   "top_corner0", "top_corner1", etc = Top corner, pointing in direction of associated edge anchor, spin up along associated edge
+//   "bot_corner0", "bot_2corner1", etc = Bottom corner, pointing in direction of associated edge anchor, spin up along associated edge
 // Arguments:
 //   bottom = 2d or 3d path describing bottom polygon
 //   top = 2d or 3d path describing top polygon (must be the same dimension as bottom)
@@ -2085,11 +2108,23 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
 //   orient = Vector to rotate top towards after spin  (module only)
-//   atype = Select "hull" or "intersect" anchor types.  (module only) Default: "hull"
+//   atype = Select "prismoid", "hull", "intersect", "surf_hull" or "surf_intersect" anchor types. (module only) Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  (module only) Default: "centroid"
 // Named Anchors:
-//   "origin" = The native position of the prism.
+//   "top" = center of top face pointing normal to that face
+//   "bot" = center of bottom face pointing normal to that face
+//   "edge0", "edge1", etc. = Center of each side edge, spin pointing up along the edge.  Can access with EDGE(i)
+//   "face0", "face1", etc. = Center of each side face, spin pointing up.  Can access with FACE(i)
+//   "top_edge0", "top_edge1", etc = Center of each top edge, spin pointing clockwise (from top). Can access with EDGE(TOP,i)
+//   "bot_edge0", "bot_edge1", etc = Center of each bottom edge, spin pointing clockwise (from bottom).  Can access with EDGE(BOT,i)
+//   "top_corner0", "top_corner1", etc = Top corner, pointing in direction of associated edge anchor, spin up along associated edge
+//   "bot_corner0", "bot_corner1", etc = Bottom corner, pointing in direction of associated edge anchor, spin up along associated edge
 // Anchor Types:
+//   hull = Anchors to the convex hull of the linear sweep of the path, ignoring any end roundings.  (default)
+//   intersect = Anchors to the surface of the linear sweep of the path, ignoring any end roundings.
+//   surf_hull = Anchors to the convex hull of the offset_sweep shape, including end treatments.
+//   surf_intersect = Anchors to the surface of the offset_sweep shape, including any end treatments.
+
 //   "hull" = Anchors to the virtual convex hull of the prism. 
 //   "intersect" = Anchors to the surface of the prism.
 // Example: Uniformly rounded pentagonal prism
@@ -2172,11 +2207,24 @@ module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot
                      k=0.5, splinesteps=16, h, length, l, height, convexity=10, debug=false,
                      anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull")
 {
-  assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
+  dummy1 = assert(in_list(atype, ["intersect","hull","surf_intersect","surf_hull","prismoid"]),
+                  "Anchor type must be one of: \"hull\", \"intersect\", \"surf_hull\", \"surf_intersect\" or \"prismoid\"")
+           assert(atype!="prismoid" || len(bottom)==4, "Anchor type \"prismoid\" requires that len(bottom)=4");
   result = rounded_prism(bottom=bottom, top=top, joint_bot=joint_bot, joint_top=joint_top, joint_sides=joint_sides,
-                         k_bot=k_bot, k_top=k_top, k_sides=k_sides, k=k, splinesteps=splinesteps, h=h, length=length, height=height, l=l,debug=debug);
-  vnf = debug ? result[1] : result;
-  attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=atype=="hull", cp=cp)
+                         k_bot=k_bot, k_top=k_top, k_sides=k_sides, k=k, splinesteps=splinesteps, h=h, length=length, height=height, l=l,
+                         debug=debug, _full_info=true);
+
+  top = is_undef(top) ? path3d(bottom,height/2) :
+        len(top[0])==2 ? path3d(top,height/2) :
+        top;
+  bottom = len(bottom[0])==2 ? path3d(bottom,-height/2) : bottom;
+  unrounded = vnf_vertex_array([top,bottom],caps=true, col_wrap=true,reverse=true);
+
+  vnf = result[1];
+  geom = atype=="prismoid" ? attach_geom(size=[1,1,1],anchors=result[2], override=result[3])
+       : in_list(atype,["hull","intersect"]) ? attach_geom(vnf=unrounded, extent=atype=="hull", cp=cp, anchors=result[2])
+       : attach_geom(vnf=vnf, extent=atype=="surf_hull", cp=cp, anchors=result[2]);
+  attachable(anchor=anchor, spin=spin, orient=orient, geom=geom)
   {
     if (debug){
         vnf_polyhedron(vnf, convexity=convexity);
@@ -2189,7 +2237,7 @@ module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot
 
 
 function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot, k_top, k_sides, k=0.5, splinesteps=16,
-                       h, length, l, height, debug=false) =
+                       h, length, l, height, debug=false, _full_info=false) =
    let(
        bottom = force_path(bottom,"bottom"),
        top = force_path(top,"top")
@@ -2347,9 +2395,81 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
                           for(pts=edge_points) vnf_vertex_array(pts),
                           debug ? vnf_from_polygons(faces,fast=true) 
                                 : vnf_triangulate(vnf_from_polygons(faces))
-                       ])
+                       ]),
+        topnormal = unit(cross(top[0]-top[1],top[2]-top[1])),
+        botnormal = -unit(cross(bottom[0]-bottom[1],bottom[2]-bottom[1])),
+        sidenormal = [for(i=idx(top))
+                         unit(cross(select(top,i+1)-top[i], bottom[i]-top[i]))],
+
+        //pos, orient, spin, info=...
+        
+        anchors = [
+            for(i=idx(top))
+              let(
+                   face = concat(select(top,[i+1,i]), select(bottom,i,i+1)),
+                   face_ctr = mean(concat(select(top,[i+1,i]), select(bottom,i,i+1))),
+                   bot_edge = bottom[i]-select(bottom,i+1), 
+                   bot_edge_ctr = mean(select(bottom,i,i+1)),
+                   bot_edge_normal = unit(mean([sidenormal[i],botnormal])),
+                   top_edge_normal = unit(mean([sidenormal[i],topnormal])),
+                   top_edge = select(top,i+1)-top[i],
+                   top_edge_ctr = mean(select(top,i,i+1)),
+                   top_edge_dir = select(top,i+1)-top[i],
+                   edge = [top[i],bottom[i]],
+                   edge_ctr = mean([top[i],bottom[i]]),
+                   edge_normal = unit(mean(select(sidenormal,[i,i-1]))),
+                   top_corner_dir = _three_edge_corner_dir([select(sidenormal,i-1),sidenormal[i],topnormal],
+                                                           [top[i]-select(top,i-1), top_edge]),
+                   bot_corner_dir = _three_edge_corner_dir([select(sidenormal,i-1),sidenormal[i],botnormal],
+                                                           [bottom[i]-select(bottom,i-1), bot_edge])
+              )
+              each[
+                named_anchor(EDGE(i),edge_ctr,edge_normal, _compute_spin(edge_normal,top[i]-bottom[i]),
+                             info=[["edge_angle",180-vector_angle(sidenormal[i],select(sidenormal,i-1))], ["edge_length",norm(top[i]-bottom[i])]]),
+                named_anchor(EDGE(UP,i),top_edge_ctr, top_edge_normal, _compute_spin(top_edge_normal,  top_edge),
+                             info=[["edge_angle",180-vector_angle(topnormal,sidenormal[i])], ["edge_length",norm(top_edge)]]),
+                named_anchor(EDGE(DOWN,i),bot_edge_ctr, bot_edge_normal, _compute_spin(bot_edge_normal,  bot_edge),
+                             info=[["edge_angle",180-vector_angle(botnormal,sidenormal[i])], ["edge_length",norm(bot_edge)]]), 
+                named_anchor(FACE(i),mean(face), sidenormal[i], _compute_spin(sidenormal[i],UP)),
+                named_anchor(str("top_corner",i),top[i], top_corner_dir, _compute_spin(top_corner_dir,UP)), 
+                named_anchor(str("bot_corner",i),bottom[i], bot_corner_dir, _compute_spin(bot_corner_dir,UP)) 
+              ],
+            named_anchor("top", mean(top), topnormal, _compute_spin(topnormal, approx(v_abs(topnormal),UP)?BACK:UP)),
+            named_anchor("bot", mean(bottom), botnormal, _compute_spin(botnormal, approx(v_abs(botnormal),UP)?BACK:UP)),
+        ],
+        override = len(top)!=4 ? undef
+           :
+            let(
+                stddir = [RIGHT,FWD,LEFT,BACK],
+                getanch = function(name) search([name], anchors, num_returns_per_match=1)[0],
+                dir_angle = [for(i=[0:3])  vector_angle(anchors[6*i+3][2],RIGHT)],
+                ofs = search([min(dir_angle)], dir_angle, num_returns_per_match=1)[0]
+            )
+            [
+              [UP, select(anchors[24],1,3)],
+              [DOWN, select(anchors[25],1,3)],
+              for(i=[0:3])
+                let(
+                    edgeanch=anchors[((i+ofs)%4)*6],
+                    upedge=anchors[((i+ofs)%4)*6+1],
+                    downedge=anchors[((i+ofs)%4)*6+2],                    
+                    faceanch=anchors[((i+ofs)%4)*6+3],
+                    upcorner=anchors[((i+ofs)%4)*6+4],
+                    downcorner=anchors[((i+ofs)%4)*6+5],
+                )    
+                each [
+                      [stddir[i],select(faceanch,1,3)],
+                      [stddir[i]+select(stddir,i-1), select(edgeanch,1,3)],
+                      [stddir[i]+UP, select(upedge,1,3)], 
+                      [stddir[i]+DOWN, select(downedge,1,3)],
+                      [stddir[i]+select(stddir,i-1)+UP, select(upcorner,1,3)],
+                      [stddir[i]+select(stddir,i-1)+DOWN, select(downcorner,1,3)],
+                     ] 
+           ],
     )
-    debug ? [concat(top_patch, bot_patch), vnf] : vnf;
+    !debug && !_full_info ? vnf
+  : _full_info ? [concat(top_patch, bot_patch), vnf, anchors, override]
+  : [concat(top_patch, bot_patch), vnf];
 
 
 

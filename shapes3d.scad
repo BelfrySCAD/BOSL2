@@ -865,21 +865,22 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   being located at the bottom of the shape, so confirm anchor positions before use.  
 //   Additional named face and edge anchors are located on the side faces and vertical edges of the prism.
 //   You can use `EDGE(i)`, `EDGE(TOP,i)` and `EDGE(BOT,i)` as a shorthand for accessing the named edge anchors, and `FACE(i)` for the face anchors.
-//   When you use `shift`, which moves the top face of the prism, the spin for the side face and edges anchors will align the child with the edge or face direction.
-//   Named anchors located along the top and bottom edges and corners are pointed in the direction of the associated face or edge to enable positioning
-//   in the direction of the side faces but positioned at the top/bottom, since {{align()}} cannot be used for this task.  These edge and corners anchors do
-//   not split the edge/corner angle like the standard anchors.  
+//   When you use `shift`, which moves the top face of the prism, the spin for the side face and edges anchors will align
+//   the child with the edge or face direction.  The "edge0" anchor identifies an edge located along the X+ axis, and then edges
+//   are labeled counting up in the clockwise direction.  Similarly "face0" is the face immediately clockwise from "edge0", and face
+//   labeling proceeds clockwise.  The top and bottom edge anchors label edges directly above and below the face with the same label.
+//   If you set `realign=true` then "face0" is oriented in the X+ direction.  
 //   .
 //   This module is very similar to {{cyl()}}.  It differs in the following ways:  you can specify side length or inner radius/diameter, you can apply roundings with
 //   different `$fn` than the number of prism faces, you can apply texture to the flat faces without forcing a high facet count,
 //   anchors are located on the true object instead of the ideal cylinder and you can anchor to the edges and faces.  
 // Named Anchors:
-//   "edge0", "edge1", etc. = Center of each side edge, spin pointing up along the edge
-//   "face0", "face1", etc. = Center of each side face, spin pointing up
-//   "top_edge0", "top_edge1", etc = Center of each top edge, spin pointing clockwise (from top)
-//   "bot_edge0", "bot_edge1", etc = Center of each bottom edge, spin pointing clockwise (from bottom)
-//   "topcorner0", "topcorner1", etc = Top corner, pointing in direction of associated edge anchor, spin up along associated edge
-//   "botcorner0", "botcorner1", etc = Bottom corner, pointing in direction of associated edge anchor, spin up along associated edge
+//   "edge0", "edge1", etc. = Center of each side edge, spin pointing up along the edge.  Can access with EDGE(i)
+//   "face0", "face1", etc. = Center of each side face, spin pointing up.  Can access with FACE(i)
+//   "top_edge0", "top_edge1", etc = Center of each top edge, spin pointing clockwise (from top). Can access with EDGE(TOP,i)
+//   "bot_edge0", "bot_edge1", etc = Center of each bottom edge, spin pointing clockwise (from bottom).  Can access with EDGE(BOT,i)
+//   "top_corner0", "top_corner1", etc = Top corner, pointing in direction of associated edge anchor, spin up along associated edge
+//   "bot_corner0", "bot_corner1", etc = Bottom corner, pointing in direction of associated edge anchor, spin up along associated edge
 // Arguments:
 //   l / h / length / height = Length of prism
 //   r = Outer radius of prism.  
@@ -1174,8 +1175,11 @@ function regular_prism(n,
                                        info=[["edge_angle",topedgeangle],["edge_length",2*sin(180/n)*r2]]),
                           named_anchor(str("bot_edge",i), apply(Mface,[r1/sc,0,-height/2]), botnormal, botedgespin,
                                        info=[["edge_angle",180-topedgeangle],["edge_length",2*sin(180/n)*r1]]),
-                          named_anchor(str("top_corner",i), apply(Medge,[r2,0,height/2]), unit(edgenormal+UP), edgespin),
-                          named_anchor(str("bot_corner",i), apply(Medge,[r1,0,-height/2]), unit(edgenormal+DOWN), edgespin)
+                          named_anchor(str("top_corner",i), apply(Medge,[r2,0,height/2]), unit(edgenormal+UP),
+                                       _compute_spin(unit(edgenormal+UP),edge)),
+                          named_anchor(str("bot_corner",i), apply(Medge,[r1,0,-height/2]), unit(edgenormal+DOWN),
+                                       _compute_spin(unit(edgenormal+DOWN),edge))
+                          
                       ]
                   ],
         override = approx(shift,[0,0]) ? undef : [[UP, [point3d(shift,height/2), UP]]],
