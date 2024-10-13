@@ -491,6 +491,8 @@ _ANCHOR_TYPES = ["intersect","hull"];
 // Side Effects:
 //   `$attach_anchor` for each `from=` anchor given, this is set to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
 //   `$attach_to` is set to `undef`.
+//   `$edge_angle` is set to the angle of the edge if the anchor is on an edge and the parent is a prismoid, or vnf with "hull" anchoring
+//   `$edge_length` is set to the length of the edge if the anchor is on an edge and the parent is a prismoid, or vnf with "hull" anchoring
 // Example:
 //   spheroid(d=20) {
 //       position(TOP) cyl(l=10, d1=10, d2=5, anchor=BOTTOM);
@@ -510,6 +512,8 @@ module position(at,from)
     two_d = _attach_geom_2d($parent_geom);
     for (anchr = anchors) {
         anch = _find_anchor(anchr, $parent_geom);
+        $edge_angle = len(anch)==5 ? struct_val(anch[4],"edge_angle") : undef;
+        $edge_length = len(anch)==5 ? struct_val(anch[4],"edge_length") : undef;
         $attach_to = undef;
         $attach_anchor = anch;
         translate(anch[1]) children();
@@ -2002,6 +2006,8 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
         vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
         dummy=assert(vcount == 2, "Not an edge vector!");
         anch = _find_anchor(vec, $parent_geom);
+        $edge_angle = len(anch)==5 ? struct_val(anch[4],"edge_angle") : undef;
+        $edge_length = len(anch)==5 ? struct_val(anch[4],"edge_length") : undef;
         $attach_to = undef;
         $attach_anchor = anch;
         rotang =
@@ -3259,7 +3265,7 @@ function named_anchor(name, pos, orient, spin, rot, flip, info) =
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
-//   override = Function that takes an anchor and returns a pair `[position,direction]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction]]` entries.  If the direction/position that is returned is undef then the default will be used.
+//   override = Function that takes an anchor and returns a pair `[position,direction,spin]` to use for that anchor to override the normal one.  You can also supply a lookup table that is a list of `[anchor, [position, direction,spin]]` entries.  If the direction/position/spin that is returned is undef then the default will be used.
 //
 // Example(NORENDER): Null/Point Shape
 //   geom = attach_geom();
@@ -3730,6 +3736,18 @@ function _get_cp(geom) =
 /// Arguments:
 ///   anchor = Vector or named anchor string.
 ///   geom = The geometry description of the shape.
+
+function _three_edge_corner_dir(facevecs,edges) =
+      let(
+           v1 = vector_bisect(facevecs[0],facevecs[2]),
+           v2 = vector_bisect(facevecs[1],facevecs[2]),
+           p1 = plane_from_normal(rot(v=edges[0],a=90,p=v1)),
+           p2 = plane_from_normal(rot(v=edges[1],a=-90,p=v2)),
+           line = plane_intersection(p1,p2),
+           v3 = unit(line[1]-line[0],UP)
+       )
+       unit(v3,UP);
+
 function _find_anchor(anchor, geom)=
     is_string(anchor)? (
           anchor=="origin"? [anchor, CENTER, UP, 0]    // Ok that this returns 3d anchor in the 2d case?
@@ -3786,15 +3804,7 @@ function _find_anchor(anchor, geom)=
             dir = anch==CENTER? UP
                 : len(facevecs)==1? unit(facevecs[0],UP)
                 : len(facevecs)==2? vector_bisect(facevecs[0],facevecs[1])
-                : let(
-                      v1 = vector_bisect(facevecs[0],facevecs[2]),
-                      v2 = vector_bisect(facevecs[1],facevecs[2]),
-                      p1 = plane_from_normal(yrot(90,p=v1)),
-                      p2 = plane_from_normal(xrot(-90,p=v2)),
-                      line = plane_intersection(p1,p2),
-                      v3 = unit(line[1]-line[0],UP) * anch.z
-                  )
-                  unit(v3,UP),
+                : _three_edge_corner_dir(facevecs,[FWD,LEFT])*anch.z,            
             edgeang = len(facevecs)==2 ? 180-vector_angle(facevecs[0], facevecs[1]) : undef,
             edgelen = anch.z==0 ? norm(edge)
                     : anch.z>0 ? abs([size2.y,size2.x]*axy)
@@ -3969,16 +3979,41 @@ function _find_anchor(anchor, geom)=
                           len(matchind)!=1 ? []
                         : let(   // After this runs we have two edges as index pairs, and their associated faces as index values
                               match1 = select(idxs,[0,matchind[0]]),
-                              match2 = list_remove_values(idxs,match1),
+                              match2 = list_remove(idxs,[0,matchind[0]]),
+                              facelists = [for(i=[0:1], j=[0:1])
+                                              let(
+                                                   ed = [match1[i],match2[j]],
+                                                   fl = _vnf_find_edge_faces(vnf,ed)
+                                              )
+                                              if (fl!=[]) [ed,fl]
+                                          ],
+                              final = [column(facelists,0), flatten(column(facelists,1))]
+                          )
+                          assert(len(final[1])==2, "invalid!")
+                          final,
+
+
+            /*[column(facelists,0), column(facelists
+
+                              
+
+                              
                               face1 = _vnf_find_edge_faces(vnf,[match1[0],match2[0]]),
                               face2 = _vnf_find_edge_faces(vnf,[match1[0],match2[1]]),
+                              face1a = _vnf_find_edge_faces(vnf,[match1[1],match2[0]]),
+                              face2a = _vnf_find_edge_faces(vnf,[match1[1],match2[1]]),
+feet=                              echo(facelist1 =select(vnf[1],face1a), facelist2=select(vnf[1],face2a)),
                               edge1 = [match1[0], face1==[] ? match2[1] : match2[0]],
                               edge2 = list_remove_values(idxs,edge1),
+                              fee=echo(edxs=idxs, edge1=edge1, edge2=edge2,alt=[match1[1],match2[0]],[match1[1],match2[1]],
+                                       edgefaces = _vnf_find_edge_faces(vnf,edge1),_vnf_find_edge_faces(vnf,edge2)  ),
                               face3 = _vnf_find_edge_faces(vnf,edge2),
-                              allfaces = concat(face1,face2,face3)
+                              allfaces = concat(face1,face2,face3),
+                              f=echo(pts=pts,matchind=matchind,match1=match1,match2=match2,face1=face1,face2=face2,face3=face3,edge1=edge1,edge2=edge2,face1a=face1a,face2a=face2a)
                           )
-                          assert(len(allfaces)==2, "Invalid polyhedron encountered while computing VNF anchor")
-                          [[edge1,edge2], allfaces],
+                          assert(len(allfaces)==2, str("Invalid polyhedron encountered while computing VNF anchor",len(allfaces)))
+                          [[edge1,edge2], allfaces],*/
+//            fe=echo(edge_faces=edges_faces),
             dir = len(idxs)>2 && edges_faces==[] ? [anchor,oang]
                 : edges_faces!=[] ?
                     let( 
@@ -3989,6 +4024,7 @@ function _find_anchor(anchor, geom)=
                         projnormals = project_plane(point4d(cross(facenormals[0],facenormals[1])), facenormals),
                         ang = 180- posmod(v_theta(projnormals[1])-v_theta(projnormals[0]),360),
                         horiz_face = [for(i=[0:1]) if (approx(v_abs(facenormals[i]),UP)) i],
+fda=                        echo(horiz=horiz_face),
                         spin = horiz_face==[] ?
                                    let(  
                                        edgedir = edge[1]-edge[0],
