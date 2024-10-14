@@ -3722,7 +3722,7 @@ function _prism_fillet_cyl(name, R, bot, top, d, k, N, overlap, uniform, debug) 
                d_step = abs(d)*unit(top[i]-isect[i])+(uniform?isect[i]:corner)
            )
            assert(is_vector(corner,3),str("Fillet does not fit.  Decrease size of fillet (",name,")."))
-           assert(debug || R<0 || (d_step-corner)*(corner-isect[i])>=0,
+           assert(debug || R<0 || (d_step-corner)*(corner-isect[i])>=-EPSILON,
                  str("Unable to fit fillet, probably due to steep curvature of the cylinder (",name,")."))
            let(
                 bez = _smooth_bez_fill([d_step,corner,edgepoint], k)
