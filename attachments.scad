@@ -908,7 +908,7 @@ function _make_anchor_legal(anchor,geom) =
 //     rmax = is_vector(r) ? r[1] : r;
 //     layers = [for(z=[0:steps])
 //                   let(
-//                        r=rmin+(rmax-rmin)/2*(cos(z*360*cycles/steps)+1),
+//                        r=rmin+(rmax-rmin)/2*(cos(z*360*cycles/steps)+1)
 //                   )
 //                   path3d( concat([[0,0]],
 //                                  arc(corner=path2d([BACK,CTR,RIGHT]), n=n, r=r)),
