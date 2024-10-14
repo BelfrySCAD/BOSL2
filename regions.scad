@@ -817,7 +817,7 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   When `closed=true` (the default), the input is treated as a polygon.  If the input is a region it is treated as a collection
 //   of polygons.  In this case, positive offset values make the shape larger.  If you set `closed=false` then the input is treated as a path
 //   with distinct start and end points.  For paths, positive offsets shifts the path to the left, relative to the direction of the path.
-//   Note that a path that happens to end at its starting point is not the same as a polygon and the offset result may differ.  
+//   Note that a path that happens to end at its starting point is not the same as a polygon and the offset result may differ and the ends.  
 //   .
 //   If you use `delta` without chamfers, the path must not include any 180 degree turns, where the path
 //   reverses direction.  Such reversals result in an offset with two parallel segments, so they cannot be

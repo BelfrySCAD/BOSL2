@@ -1472,7 +1472,7 @@ function egg(length, r1, r2, R, d1, d2, D, anchor=CENTER, spin=0) =
     let(
         r1 = get_radius(r1=r1,d1=d1),
         r2 = get_radius(r1=r2,d1=d2),
-        D = get_radius(r1=R, d1=D)
+        R = get_radius(r1=R, d1=D)
     )
     assert(length>0)
     assert(R>length/2, "Side radius R must be larger than length/2")
@@ -1500,6 +1500,8 @@ function egg(length, r1, r2, R, d1, d2, D, anchor=CENTER, spin=0) =
 module egg(length,r1,r2,R,d1,d2,D,anchor=CENTER, spin=0)
 {
   path = egg(length,r1,r2,R,d1,d2,D);
+  r1 = get_radius(r1=r1,d1=d1);
+  r2 = get_radius(r1=r2,d1=d2);
   anchors = [named_anchor("left", [-length/2+r1,0], BACK, 0),
              named_anchor("right", [length/2-r2,0], BACK, 0)];
   attachable(anchor, spin, two_d=true, path=path, extent=true, anchors=anchors){
