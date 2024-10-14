@@ -2095,9 +2095,9 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   top = 2d or 3d path describing top polygon (must be the same dimension as bottom)
 //   ---
 //   height/length/h/l = height of the shape when you give 2d bottom
-//   joint_top = rounding length for top (number or 2-vector).  Default: 0
-//   joint_bot = rounding length for bottom (number or 2-vector).  Default: 0
-//   joint_sides = rounding length for side edges, a number/2-vector or list of them.  Default: 0
+//   joint_top = joint distance or [joint,k] pair for top roundover (number or 2-vector).  Default: 0
+//   joint_bot = joint distance or [joint,k] for bottom roundover (number or 2-vector).  Default: 0
+//   joint_sides = joint distance or [joint,k] for rounding of side edges, a number/2-vector or list of them.  Default: 0
 //   k = continuous curvature rounding parameter for all edges.  Default: 0.5
 //   k_top = continuous curvature rounding parameter for top
 //   k_bot = continuous curvature rounding parameter for bottom
