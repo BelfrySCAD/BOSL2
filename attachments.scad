@@ -908,7 +908,7 @@ function _make_anchor_legal(anchor,geom) =
 //     rmax = is_vector(r) ? r[1] : r;
 //     layers = [for(z=[0:steps])
 //                   let(
-//                        r=rmin+(rmax-rmin)/2*(cos(z*360*cycles/steps)+1),ff=echo(r=r)
+//                        r=rmin+(rmax-rmin)/2*(cos(z*360*cycles/steps)+1)
 //                   )
 //                   path3d( concat([[0,0]],
 //                                  arc(corner=path2d([BACK,CTR,RIGHT]), n=n, r=r)),
@@ -3991,29 +3991,6 @@ function _find_anchor(anchor, geom)=
                           )
                           assert(len(final[1])==2, "invalid!")
                           final,
-
-
-            /*[column(facelists,0), column(facelists
-
-                              
-
-                              
-                              face1 = _vnf_find_edge_faces(vnf,[match1[0],match2[0]]),
-                              face2 = _vnf_find_edge_faces(vnf,[match1[0],match2[1]]),
-                              face1a = _vnf_find_edge_faces(vnf,[match1[1],match2[0]]),
-                              face2a = _vnf_find_edge_faces(vnf,[match1[1],match2[1]]),
-feet=                              echo(facelist1 =select(vnf[1],face1a), facelist2=select(vnf[1],face2a)),
-                              edge1 = [match1[0], face1==[] ? match2[1] : match2[0]],
-                              edge2 = list_remove_values(idxs,edge1),
-                              fee=echo(edxs=idxs, edge1=edge1, edge2=edge2,alt=[match1[1],match2[0]],[match1[1],match2[1]],
-                                       edgefaces = _vnf_find_edge_faces(vnf,edge1),_vnf_find_edge_faces(vnf,edge2)  ),
-                              face3 = _vnf_find_edge_faces(vnf,edge2),
-                              allfaces = concat(face1,face2,face3),
-                              f=echo(pts=pts,matchind=matchind,match1=match1,match2=match2,face1=face1,face2=face2,face3=face3,edge1=edge1,edge2=edge2,face1a=face1a,face2a=face2a)
-                          )
-                          assert(len(allfaces)==2, str("Invalid polyhedron encountered while computing VNF anchor",len(allfaces)))
-                          [[edge1,edge2], allfaces],*/
-//            fe=echo(edge_faces=edges_faces),
             dir = len(idxs)>2 && edges_faces==[] ? [anchor,oang]
                 : edges_faces!=[] ?
                     let( 
@@ -4024,7 +4001,6 @@ feet=                              echo(facelist1 =select(vnf[1],face1a), faceli
                         projnormals = project_plane(point4d(cross(facenormals[0],facenormals[1])), facenormals),
                         ang = 180- posmod(v_theta(projnormals[1])-v_theta(projnormals[0]),360),
                         horiz_face = [for(i=[0:1]) if (approx(v_abs(facenormals[i]),UP)) i],
-fda=                        echo(horiz=horiz_face),
                         spin = horiz_face==[] ?
                                    let(  
                                        edgedir = edge[1]-edge[0],
