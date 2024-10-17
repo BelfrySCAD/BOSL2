@@ -904,10 +904,10 @@ function mask2d_dovetail(edge, angle, slope, shelf=0, inset=0, mask_angle=90, ex
 //           ]);
 module mask2d_ogee(pattern, excess=0.01, anchor=CENTER,spin=0) {
     path = mask2d_ogee(pattern, excess=excess);
-        attachable(anchor,spin, two_d=true, path=path) {
-            polygon(path);
-            children();
-        }
+    attachable(anchor,spin, two_d=true, path=path) {
+        polygon(path);
+        children();
+    }
 }
 
 function mask2d_ogee(pattern, excess=0.01, anchor=CENTER, spin=0) =
