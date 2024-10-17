@@ -67,8 +67,6 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 //   quarter_round = If true, make a roundover independent of the mask_angle, defined based on a quarter circle of the specified size.  Creates mask with angle-independent height.  Default: false.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Side Effects:
-//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 //
 // Example(2D): 2D Roundover Mask by Radius
 //   mask2d_roundover(r=10);
@@ -233,8 +231,6 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, quar
 //   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  Default: true.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Side Effects:
-//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(2D): 2D Teardrop Mask
 //   mask2d_teardrop(r=10,$fn=64);
 // Example(2D): 2D Teardrop Mask for acute angle
@@ -363,8 +359,6 @@ module mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, inset=0, flat_to
 //   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  In the case of obtuse angles force the mask to have a flat section at its left side instead of a circular arc.  Default: true if quarter_round is set, false otherwise.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Side Effects:
-//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(2D): 2D Cove Mask by Radius
 //   mask2d_cove(r=10);
 // Example(2D): 2D Inset Cove Mask (not much different than a regular cove of larger radius)
@@ -518,8 +512,6 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, hei
 //   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  Default: true.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Side Effects:
-//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(2D): 2D Chamfer Mask, at 45 deg by default
 //   mask2d_chamfer(x=10);
 // Example(2D): 2D Chamfer Mask, at 30 deg (measured down from vertical)
@@ -681,8 +673,6 @@ function mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle=90, flat_t
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Side Effects:
-//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(2D): 2D Rabbet Mask
 //   mask2d_rabbet(size=10);
 // Example(2D): 2D Asymmetrical Rabbet Mask
@@ -763,8 +753,6 @@ function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
 //   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  Default: true.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Side Effects:
-//  Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 // Example(2D): 2D Dovetail Mask
 //   mask2d_dovetail(width=10,angle=14);
 // Example(2D): 2D Dovetail Mask by height and slope.  A slope of 1/6 is a common choice. 
@@ -871,9 +859,6 @@ function mask2d_dovetail(edge, angle, slope, shelf=0, inset=0, mask_angle=90, ex
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//
-// Side Effects:
-//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 //
 // Example(2D): 2D Ogee Mask
 //   mask2d_ogee([
