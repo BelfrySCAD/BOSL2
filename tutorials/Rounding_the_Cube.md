@@ -398,13 +398,11 @@ A feature unique to [rounded_prism()](https://github.com/BelfrySCAD/BOSL2/wiki/r
 
 Two parameters control the roundover, k and joint.  The joint parameter is the distance from where the rounding starts to the unrounded edge. The k parameter ranges from 0 to 1 with a default of 0.5. Larger values give a more abrupt transition and smaller ones a more gradual transition.
 
-Parameters of a "smooth" roundover, with k=0.75.
+A smooth roundover with a joint length of 18 and the value of k set to 0.75.
+![](https://github.com/BelfrySCAD/BOSL2/wiki/images/rounding/figure_1_3.png)
 
-![](https://github.com/BelfrySCAD/BOSL2/wiki/images/rounding/section-types-of-roundovers_fig3.png)
-
-Parameters of a "smooth" roundover, with k=0.15. The transition is so gradual that it appears that the roundover is much smaller than specified. The cut length is much smaller for the same joint length.
-
-![](https://github.com/BelfrySCAD/BOSL2/wiki/images/rounding/section-types-of-roundovers_fig4.png)
+A smooth roundover, with the value of k set to 0.15.  The transition is so gradual that it appears that the roundover is much smaller than specified.  The cut length is much smaller for the same joint length.  
+![](https://github.com/BelfrySCAD/BOSL2/wiki/images/rounding/figure_1_4.png)
 
 The joint parameter is specified separately for the top, bottom and side edges; joint\_top, joint\_bot, and joint_sides.
 
