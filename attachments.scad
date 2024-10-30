@@ -2686,9 +2686,9 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   for the anchor points referred to by `from` and `to` are fetched,
 //   which will include position, direction, and spin.  With that info,
 //   the following transformations are performed:
-//   * Translates this part so it's anchor position matches the parent's anchor position.
-//   * Rotates this part so it's anchor direction vector exactly opposes the parent's anchor direction vector.
-//   * Rotates this part so it's anchor spin matches the parent's anchor spin.
+//   * Translates this part so its anchor position matches the parent's anchor position.
+//   * Rotates this part so its anchor direction vector exactly opposes the parent's anchor direction vector.
+//   * Rotates this part so its anchor spin matches the parent's anchor spin.
 //   .
 //   In addition to handling positioning of the attachable object, 
 //   this module is also responsible for handing coloring of objects with {{recolor()}} and {{color_this()}}, and
