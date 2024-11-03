@@ -2214,7 +2214,7 @@ module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot
   result = rounded_prism(bottom=bottom, top=top, joint_bot=joint_bot, joint_top=joint_top, joint_sides=joint_sides,
                          k_bot=k_bot, k_top=k_top, k_sides=k_sides, k=k, splinesteps=splinesteps, h=h, length=length, height=height, l=l,
                          debug=debug, _full_info=true);
-  height = one_defined([l,h,height,length], "l,h,height,length", dflt=u_add(bottom_height,top_height));
+  height = one_defined([l,h,height,length], "l,h,height,length", dflt=undef);
   top = is_undef(top) ? path3d(bottom,height/2) :
         len(top[0])==2 ? path3d(top,height/2) :
         top;
