@@ -479,7 +479,7 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
                mult,
         knots = is_vector(knots) || is_undef(knots) ? [knots,knots]
               : assert((is_undef(knots[0]) || is_vector(knots[0])) && (is_undef(knots[1]) || is_vector(knots[1])), "knots must be a vector or list of two vectors")
-                knots,
+                knots
     )
     is_num(u) && is_num(v)? nurbs_curve([for (control=patch) nurbs_curve(control, degree[1], u=v, type=type[1], mult=mult[1], knots=knots[1])],
                                         degree[0], u=u, type=type[0], mult=mult[0], knots=knots[0])
@@ -570,7 +570,7 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
 function nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, knots, style="default") =
    assert(is_nurbs_patch(patch),"Input patch is not a rectangular aray of points")
    let(
-        pts = nurbs_patch_points(patch=patch, degree=degree, splinesteps=splinesteps, type=type, mult=mult, knots=knots, weights=weights),
+        pts = nurbs_patch_points(patch=patch, degree=degree, splinesteps=splinesteps, type=type, mult=mult, knots=knots, weights=weights)
    )
    vnf_vertex_array(pts, style=style, row_wrap=type[0]=="closed", col_wrap=type[1]=="closed");
 
