@@ -12,8 +12,6 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
-include<structs.scad>
-
 // Default values for attachment code.
 $tags=undef;      // for backward compatibility
 $tag = "";
@@ -1487,7 +1485,7 @@ module diff(remove="remove", keep="keep")
 // Topics: Attachments
 // See Also: tag(), force_tag(), recolor(), show_only(), hide(), diff(), intersect(), tag_intersect()
 // Usage:
-//   tag_diff(tag, [remove], [keep]) PARENT() CHILDREN;
+//   tag_diff([tag], [remove], [keep]) PARENT() CHILDREN;
 // Description:
 //   Perform a differencing operation in the manner of {{diff()}} using tags to control what happens,
 //   and then tag the resulting difference object with the specified tag.  This forces the specified
@@ -1497,7 +1495,7 @@ module diff(remove="remove", keep="keep")
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
-//   tag = Tag string to apply to this difference object
+//   tag = Tag string to apply to this difference object.  Default: `""` (no tag)
 //   remove = String containing space delimited set of tag names of children to difference away.  Default: `"remove"`
 //   keep = String containing space delimited set of tag names of children to keep; that is, to union into the model after differencing is completed.  Default: `"keep"`
 // Side Effects:
@@ -1534,7 +1532,7 @@ module diff(remove="remove", keep="keep")
 //         cyl(r=7,h=7)
 //           tag("remove")cyl(r=6,h=8)
 //           tag("keep")cyl(r=5,h=9);
-module tag_diff(tag,remove="remove", keep="keep")
+module tag_diff(tag="",remove="remove", keep="keep")
 {
     req_children($children);
     assert(is_string(remove),"remove must be a string of tags");
@@ -1630,7 +1628,7 @@ module intersect(intersect="intersect",keep="keep")
 // Topics: Attachments
 // See Also: tag(), force_tag(), recolor(), show_only(), hide(), diff(), tag_diff(), intersect()
 // Usage:
-//   tag_intersect(tag, [intersect], [keep]) PARENT() CHILDREN;
+//   tag_intersect([tag], [intersect], [keep]) PARENT() CHILDREN;
 // Description:
 //   Perform an intersection operation in the manner of {{intersect()}} using tags to control what happens,
 //   and then tag the resulting difference object with the specified tag.  This forces the specified
@@ -1640,7 +1638,7 @@ module intersect(intersect="intersect",keep="keep")
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
-//   tag = Tag to set for the intersection
+//   tag = Tag to set for the intersection.  Default: `""` (no tag)
 //   intersect = String containing space delimited set of tag names of children to intersect.  Default: "intersect"
 //   keep = String containing space delimited set of tag names of children to keep whole.  Default: "keep"
 // Side Effects:
@@ -1663,7 +1661,7 @@ module intersect(intersect="intersect",keep="keep")
 //         tag("intersect")position(RIGHT) cyl(r=7,h=10);
 //         tag("keep")position(LEFT)cyl(r=4,h=10);
 //       }
-module tag_intersect(tag,intersect="intersect",keep="keep")
+module tag_intersect(tag="",intersect="intersect",keep="keep")
 {
    assert(is_string(intersect),"intersect must be a string of tags");
    assert(is_string(keep),"keep must be a string of tags");
@@ -1725,7 +1723,7 @@ module conv_hull(keep="keep")
 // Topics: Attachments
 // See Also: tag(), recolor(), show_only(), hide(), diff(), intersect()
 // Usage:
-//   tag_conv_hull(tag, [keep]) CHILDREN;
+//   tag_conv_hull([tag], [keep]) CHILDREN;
 // Description:
 //   Perform a convex hull operation in the manner of {{conv_hull()}} using tags to control what happens,
 //   and then tag the resulting hull object with the specified tag.  This forces the specified
@@ -1735,6 +1733,7 @@ module conv_hull(keep="keep")
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
+//   tag = Tag string to apply to this convex hull object.  Default: `""` (no tag)
 //   keep = String containing space delimited set of tag names of children to keep out of the hull.  Default: "keep"
 // Side Effects:
 //   Sets `$tag` to the tag you specify, possibly with a scope prefix.
@@ -1756,7 +1755,7 @@ module conv_hull(keep="keep")
 //            tag("keep")position(FRONT+LEFT)cyl(r=4,h=10);
 //          }
 //   }
-module tag_conv_hull(tag,keep="keep")
+module tag_conv_hull(tag="",keep="keep")
 {
     req_children($children);
     assert(is_string(keep),"keep must be a string of tags");
@@ -1838,7 +1837,6 @@ module hide_this()
     tag_this("child")
     children();
 }
-
 
 // Module: show_only()
 // Synopsis: Show only the children with the listed tags.
@@ -3102,9 +3100,9 @@ module attachable(
 //   .
 //   If `$attach_to` is defined, as a consequence of `attach(from,to)`, then
 //   the following transformations are performed in order:
-//   * Translates this part so it's anchor position matches the parent's anchor position.
-//   * Rotates this part so it's anchor direction vector exactly opposes the parent's anchor direction vector.
-//   * Rotates this part so it's anchor spin matches the parent's anchor spin.
+//   * Translates this part so its anchor position matches the parent's anchor position.
+//   * Rotates this part so its anchor direction vector exactly opposes the parent's anchor direction vector.
+//   * Rotates this part so its anchor spin matches the parent's anchor spin.
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 //
