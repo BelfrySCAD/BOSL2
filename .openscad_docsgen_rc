@@ -35,6 +35,7 @@ PrioritizeFiles:
   skin.scad
   vnf.scad
   beziers.scad
+  nurbs.scad
   rounding.scad
   turtle3d.scad
   math.scad
