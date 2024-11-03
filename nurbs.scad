@@ -258,7 +258,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
     )
     uniform?
            let(
-               msum = cumsum(mult),
+               msum = cumsum(mult)
            )
            [for(uval=adjusted_u)
               let(

@@ -1254,7 +1254,7 @@ module default_tag(tag,do_tag=true)
 //   Note that if you directly set the `$tag` variable then tag scoping will not work correctly.
 //   Usually you will want to use tag_scope in the first child of {{attachable()}} to isolate the geometry
 //   of your attachable object.  If you put it **outside** the {{attachable()}} call, then it will
-//   set a scope that also applies to the children passed to your attachable object.  
+//   set a scope that also applies to the children passed to your attachable object, which is probably not what you want.  
 // Side Effects:
 //   `$tag_prefix` is set to the value of `scope=` if given, otherwise is set to a random string.
 // Example(3D,NoAxes): In this example, tag_scope() is required for things to work correctly. 
@@ -1290,7 +1290,7 @@ module default_tag(tag,do_tag=true)
 //     myring()
 //       color_this("green") cyl(d=20, l=61)
 //         tag("remove") color_this("yellow") cyl(d=10, l=65);
-// Example(3D,NoAxes): If the tag_scope() is outside the attachable() call then something different goes wrong:
+// Example(3D,NoAxes): If the tag_scope() is outside the attachable() call then the scope applies to the children and something different goes wrong:
 //   module myring(){
 //      tag_scope()
 //      attachable(anchor=CENTER, spin=0, d=60, l=60) {
