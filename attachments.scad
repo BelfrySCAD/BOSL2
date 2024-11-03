@@ -1252,13 +1252,66 @@ module default_tag(tag,do_tag=true)
 //   Creates a tag scope with locally altered tag names to avoid tag name conflict with other code.
 //   This is necessary when writing modules because the module's caller might happen to use the same tags.
 //   Note that if you directly set the `$tag` variable then tag scoping will not work correctly.
+//   Usually you will want to use tag_scope in the first child of {{attachable()}} to isolate the geometry
+//   of your attachable object.  If you put it **outside** the {{attachable()}} call, then it will
+//   set a scope that also applies to the children passed to your attachable object.  
 // Side Effects:
 //   `$tag_prefix` is set to the value of `scope=` if given, otherwise is set to a random string.
-// Example: In this example the ring module uses "remove" tags which will conflict with use of the same tags by the parent.
-//   module ring(r,h,w=1,anchor,spin,orient)
+// Example(3D,NoAxes): In this example, tag_scope() is required for things to work correctly. 
+//   module myring(){
+//      attachable(anchor=CENTER, spin=0, d=60, l=60) {
+//         tag_scope()
+//         diff()
+//           cyl(d=60, l=60){
+//              tag("remove")
+//                color_this("lightblue")
+//                cyl(d=30, l=61);
+//           }      
+//         children();
+//      }
+//   }
+//   diff()
+//     myring()
+//       color_this("green") cyl(d=20, l=61)
+//         tag("remove") color_this("yellow") cyl(d=10, l=65);
+// Example(3D,NoAxes): Without tag_scope() we get this result
+//   module myring(){
+//      attachable(anchor=CENTER, spin=0, d=60, l=60) {
+//         diff()
+//           cyl(d=60, l=60){
+//              tag("remove")
+//                color_this("lightblue")
+//                cyl(d=30, l=61);
+//           }      
+//         children();
+//      }
+//   }
+//   diff()
+//     myring()
+//       color_this("green") cyl(d=20, l=61)
+//         tag("remove") color_this("yellow") cyl(d=10, l=65);
+// Example(3D,NoAxes): If the tag_scope() is outside the attachable() call then something different goes wrong:
+//   module myring(){
+//      tag_scope()
+//      attachable(anchor=CENTER, spin=0, d=60, l=60) {
+//         diff()
+//           cyl(d=60, l=60){
+//              tag("remove")
+//                color_this("lightblue")
+//                cyl(d=30, l=61);
+//           }      
+//         children();
+//      }
+//   }
+//   diff()
+//     myring()
+//       color_this("green") cyl(d=20, l=61)
+//         tag("remove") color_this("yellow") cyl(d=10, l=65);
+// Example: In this example the myring module uses "remove" tags which will conflict with use of the same tags elsewhere in a diff() operation, even without a parent-child relationship.  Without the tag_scope() the result is a solid cylinder.    
+//   module myring(r,h,w=1,anchor,spin,orient)
 //   {
-//     tag_scope("ringscope")
 //       attachable(anchor,spin,orient,r=r,h=h){
+//         tag_scope("myringscope")
 //         diff()
 //           cyl(r=r,h=h)
 //             tag("remove") cyl(r=r-w,h=h+1);
@@ -1267,14 +1320,14 @@ module default_tag(tag,do_tag=true)
 //   }
 //   // Calling the module using "remove" tags
 //   // will conflict with internal tag use in
-//   // the ring module.
+//   // the myring module.
 //   $fn=32;
 //   diff(){
-//       ring(10,7,w=4);
-//       tag("remove")ring(8,8);
+//       myring(10,7,w=4);
+//       tag("remove")myring(8,8);
 //       tag("remove")diff("rem"){
-//          ring(9.5,8,w=1);
-//          tag("rem")ring(9.5,8,w=.3);
+//          myring(9.5,8,w=1);
+//          tag("rem")myring(9.5,8,w=.3);
 //       }
 //     }
 module tag_scope(scope){
