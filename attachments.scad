@@ -12,8 +12,6 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
-include<structs.scad>
-
 // Default values for attachment code.
 $tags=undef;      // for backward compatibility
 $tag = "";
@@ -1254,13 +1252,66 @@ module default_tag(tag,do_tag=true)
 //   Creates a tag scope with locally altered tag names to avoid tag name conflict with other code.
 //   This is necessary when writing modules because the module's caller might happen to use the same tags.
 //   Note that if you directly set the `$tag` variable then tag scoping will not work correctly.
+//   Usually you will want to use tag_scope in the first child of {{attachable()}} to isolate the geometry
+//   of your attachable object.  If you put it **outside** the {{attachable()}} call, then it will
+//   set a scope that also applies to the children passed to your attachable object, which is probably not what you want.  
 // Side Effects:
 //   `$tag_prefix` is set to the value of `scope=` if given, otherwise is set to a random string.
-// Example: In this example the ring module uses "remove" tags which will conflict with use of the same tags by the parent.
-//   module ring(r,h,w=1,anchor,spin,orient)
+// Example(3D,NoAxes): In this example, tag_scope() is required for things to work correctly. 
+//   module myring(){
+//      attachable(anchor=CENTER, spin=0, d=60, l=60) {
+//         tag_scope()
+//         diff()
+//           cyl(d=60, l=60){
+//              tag("remove")
+//                color_this("lightblue")
+//                cyl(d=30, l=61);
+//           }      
+//         children();
+//      }
+//   }
+//   diff()
+//     myring()
+//       color_this("green") cyl(d=20, l=61)
+//         tag("remove") color_this("yellow") cyl(d=10, l=65);
+// Example(3D,NoAxes): Without tag_scope() we get this result
+//   module myring(){
+//      attachable(anchor=CENTER, spin=0, d=60, l=60) {
+//         diff()
+//           cyl(d=60, l=60){
+//              tag("remove")
+//                color_this("lightblue")
+//                cyl(d=30, l=61);
+//           }      
+//         children();
+//      }
+//   }
+//   diff()
+//     myring()
+//       color_this("green") cyl(d=20, l=61)
+//         tag("remove") color_this("yellow") cyl(d=10, l=65);
+// Example(3D,NoAxes): If the tag_scope() is outside the attachable() call then the scope applies to the children and something different goes wrong:
+//   module myring(){
+//      tag_scope()
+//      attachable(anchor=CENTER, spin=0, d=60, l=60) {
+//         diff()
+//           cyl(d=60, l=60){
+//              tag("remove")
+//                color_this("lightblue")
+//                cyl(d=30, l=61);
+//           }      
+//         children();
+//      }
+//   }
+//   diff()
+//     myring()
+//       color_this("green") cyl(d=20, l=61)
+//         tag("remove") color_this("yellow") cyl(d=10, l=65);
+// Example: In this example the myring module uses "remove" tags which will conflict with use of the same tags elsewhere in a diff() operation, even without a parent-child relationship.  Without the tag_scope() the result is a solid cylinder.    
+//   module myring(r,h,w=1,anchor,spin,orient)
 //   {
-//     tag_scope("ringscope")
 //       attachable(anchor,spin,orient,r=r,h=h){
+//         tag_scope("myringscope")
 //         diff()
 //           cyl(r=r,h=h)
 //             tag("remove") cyl(r=r-w,h=h+1);
@@ -1269,14 +1320,14 @@ module default_tag(tag,do_tag=true)
 //   }
 //   // Calling the module using "remove" tags
 //   // will conflict with internal tag use in
-//   // the ring module.
+//   // the myring module.
 //   $fn=32;
 //   diff(){
-//       ring(10,7,w=4);
-//       tag("remove")ring(8,8);
+//       myring(10,7,w=4);
+//       tag("remove")myring(8,8);
 //       tag("remove")diff("rem"){
-//          ring(9.5,8,w=1);
-//          tag("rem")ring(9.5,8,w=.3);
+//          myring(9.5,8,w=1);
+//          tag("rem")myring(9.5,8,w=.3);
 //       }
 //     }
 module tag_scope(scope){
@@ -1487,7 +1538,7 @@ module diff(remove="remove", keep="keep")
 // Topics: Attachments
 // See Also: tag(), force_tag(), recolor(), show_only(), hide(), diff(), intersect(), tag_intersect()
 // Usage:
-//   tag_diff(tag, [remove], [keep]) PARENT() CHILDREN;
+//   tag_diff([tag], [remove], [keep]) PARENT() CHILDREN;
 // Description:
 //   Perform a differencing operation in the manner of {{diff()}} using tags to control what happens,
 //   and then tag the resulting difference object with the specified tag.  This forces the specified
@@ -1497,7 +1548,7 @@ module diff(remove="remove", keep="keep")
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
-//   tag = Tag string to apply to this difference object
+//   tag = Tag string to apply to this difference object.  Default: `""` (no tag)
 //   remove = String containing space delimited set of tag names of children to difference away.  Default: `"remove"`
 //   keep = String containing space delimited set of tag names of children to keep; that is, to union into the model after differencing is completed.  Default: `"keep"`
 // Side Effects:
@@ -1534,7 +1585,7 @@ module diff(remove="remove", keep="keep")
 //         cyl(r=7,h=7)
 //           tag("remove")cyl(r=6,h=8)
 //           tag("keep")cyl(r=5,h=9);
-module tag_diff(tag,remove="remove", keep="keep")
+module tag_diff(tag="",remove="remove", keep="keep")
 {
     req_children($children);
     assert(is_string(remove),"remove must be a string of tags");
@@ -1630,7 +1681,7 @@ module intersect(intersect="intersect",keep="keep")
 // Topics: Attachments
 // See Also: tag(), force_tag(), recolor(), show_only(), hide(), diff(), tag_diff(), intersect()
 // Usage:
-//   tag_intersect(tag, [intersect], [keep]) PARENT() CHILDREN;
+//   tag_intersect([tag], [intersect], [keep]) PARENT() CHILDREN;
 // Description:
 //   Perform an intersection operation in the manner of {{intersect()}} using tags to control what happens,
 //   and then tag the resulting difference object with the specified tag.  This forces the specified
@@ -1640,7 +1691,7 @@ module intersect(intersect="intersect",keep="keep")
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
-//   tag = Tag to set for the intersection
+//   tag = Tag to set for the intersection.  Default: `""` (no tag)
 //   intersect = String containing space delimited set of tag names of children to intersect.  Default: "intersect"
 //   keep = String containing space delimited set of tag names of children to keep whole.  Default: "keep"
 // Side Effects:
@@ -1663,7 +1714,7 @@ module intersect(intersect="intersect",keep="keep")
 //         tag("intersect")position(RIGHT) cyl(r=7,h=10);
 //         tag("keep")position(LEFT)cyl(r=4,h=10);
 //       }
-module tag_intersect(tag,intersect="intersect",keep="keep")
+module tag_intersect(tag="",intersect="intersect",keep="keep")
 {
    assert(is_string(intersect),"intersect must be a string of tags");
    assert(is_string(keep),"keep must be a string of tags");
@@ -1725,7 +1776,7 @@ module conv_hull(keep="keep")
 // Topics: Attachments
 // See Also: tag(), recolor(), show_only(), hide(), diff(), intersect()
 // Usage:
-//   tag_conv_hull(tag, [keep]) CHILDREN;
+//   tag_conv_hull([tag], [keep]) CHILDREN;
 // Description:
 //   Perform a convex hull operation in the manner of {{conv_hull()}} using tags to control what happens,
 //   and then tag the resulting hull object with the specified tag.  This forces the specified
@@ -1735,6 +1786,7 @@ module conv_hull(keep="keep")
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 // Arguments:
+//   tag = Tag string to apply to this convex hull object.  Default: `""` (no tag)
 //   keep = String containing space delimited set of tag names of children to keep out of the hull.  Default: "keep"
 // Side Effects:
 //   Sets `$tag` to the tag you specify, possibly with a scope prefix.
@@ -1756,7 +1808,7 @@ module conv_hull(keep="keep")
 //            tag("keep")position(FRONT+LEFT)cyl(r=4,h=10);
 //          }
 //   }
-module tag_conv_hull(tag,keep="keep")
+module tag_conv_hull(tag="",keep="keep")
 {
     req_children($children);
     assert(is_string(keep),"keep must be a string of tags");
@@ -1838,7 +1890,6 @@ module hide_this()
     tag_this("child")
     children();
 }
-
 
 // Module: show_only()
 // Synopsis: Show only the children with the listed tags.
@@ -2686,9 +2737,9 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   for the anchor points referred to by `from` and `to` are fetched,
 //   which will include position, direction, and spin.  With that info,
 //   the following transformations are performed:
-//   * Translates this part so it's anchor position matches the parent's anchor position.
-//   * Rotates this part so it's anchor direction vector exactly opposes the parent's anchor direction vector.
-//   * Rotates this part so it's anchor spin matches the parent's anchor spin.
+//   * Translates this part so its anchor position matches the parent's anchor position.
+//   * Rotates this part so its anchor direction vector exactly opposes the parent's anchor direction vector.
+//   * Rotates this part so its anchor spin matches the parent's anchor spin.
 //   .
 //   In addition to handling positioning of the attachable object, 
 //   this module is also responsible for handing coloring of objects with {{recolor()}} and {{color_this()}}, and
@@ -3102,9 +3153,9 @@ module attachable(
 //   .
 //   If `$attach_to` is defined, as a consequence of `attach(from,to)`, then
 //   the following transformations are performed in order:
-//   * Translates this part so it's anchor position matches the parent's anchor position.
-//   * Rotates this part so it's anchor direction vector exactly opposes the parent's anchor direction vector.
-//   * Rotates this part so it's anchor spin matches the parent's anchor spin.
+//   * Translates this part so its anchor position matches the parent's anchor position.
+//   * Rotates this part so its anchor direction vector exactly opposes the parent's anchor direction vector.
+//   * Rotates this part so its anchor spin matches the parent's anchor spin.
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 //

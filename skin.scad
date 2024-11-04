@@ -38,7 +38,11 @@
 //   2d curves with heights given in the `z` parameter.  It is your responsibility to ensure
 //   that the resulting polyhedron is free from self-intersections, which would make it invalid
 //   and can result in cryptic CGAL errors upon rendering with a second object present, even though the polyhedron appears
-//   OK during preview or when rendered by itself.
+//   OK during preview or when rendered by itself.  The order of points in your profiles must be
+//   consistent from slice to slice so that points match up without creating twists.  You can specify
+//   profiles in any consistent order: if necessary, skin() will reverse the faces to ensure that the final
+//   result has clockwise faces as required by CGAL.  Note that the face reversal test may give random results
+//   if you use skin to construct self-intersecting (invalid) polyhedra.  
 //   .
 //   For this operation to be well-defined, the profiles must all have the same vertex count and
 //   we must assume that profiles are aligned so that vertex `i` links to vertex `i` on all polygons.
@@ -502,10 +506,11 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
                refine[i] * len(pair[0])
           )
           subdivide_and_slice(pair,slices[i], nsamples, method=sampling)],
-      vnf=vnf_join(
+      pvnf=vnf_join(
           [for(i=idx(full_list))
               vnf_vertex_array(full_list[i], cap1=i==0 && fullcaps[0], cap2=i==len(full_list)-1 && fullcaps[1],
-                               col_wrap=true, style=style)])
+                               col_wrap=true, style=style)]),
+      vnf = vnf_volume(pvnf)<0 ? vnf_reverse_faces(pvnf) : pvnf
   )
   reorient(anchor,spin,orient,vnf=vnf,p=vnf,extent=atype=="hull",cp=cp);
 

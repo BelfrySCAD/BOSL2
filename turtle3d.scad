@@ -460,7 +460,7 @@ function _turtle3d_command_len(commands, index) =
     in_list(commands[index],["repeat","arctodir","arcrot"]) ? 3 :   // Repeat, arctodir and arcrot commands require 2 args
     // For these, the first arg is required, second arg is present if it is not a string or list
     in_list(commands[index], one_or_two_arg) && len(commands)>index+2 && !is_string(commands[index+2]) && !is_list(commands[index+2])  ? 3 :  
-    is_string(commands[index+1]) || is_list(commands[index])? 1 :  // If 2nd item is a string it's must be a new command; 
+    is_string(commands[index+1]) || is_list(commands[index])? 1 :  // If 2nd item is a string it must be a new command; 
                                                                    // If first item is a list it's a compound command
     2;                                 // Otherwise we have command and arg
        

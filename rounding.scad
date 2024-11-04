@@ -1249,7 +1249,7 @@ function _stroke_end(width,left, right, spec) =
 function _path_line_intersection(path, line, ind=0) =
         ind==len(path)-1 ? undef :
         let(intersect=line_intersection(line, select(path,ind,ind+1),LINE,SEGMENT))
-        // If it intersects the segment excluding it's final point, then we're done
+        // If it intersects the segment excluding its final point, then we're done
         // The final point is treated as part of the next segment
         is_def(intersect) && intersect != path[ind+1]?
                 [intersect, ind+1] :
@@ -2210,10 +2210,11 @@ module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot
   dummy1 = assert(in_list(atype, ["intersect","hull","surf_intersect","surf_hull","prismoid"]),
                   "Anchor type must be one of: \"hull\", \"intersect\", \"surf_hull\", \"surf_intersect\" or \"prismoid\"")
            assert(atype!="prismoid" || len(bottom)==4, "Anchor type \"prismoid\" requires that len(bottom)=4");
+  
   result = rounded_prism(bottom=bottom, top=top, joint_bot=joint_bot, joint_top=joint_top, joint_sides=joint_sides,
                          k_bot=k_bot, k_top=k_top, k_sides=k_sides, k=k, splinesteps=splinesteps, h=h, length=length, height=height, l=l,
                          debug=debug, _full_info=true);
-
+  height = one_defined([l,h,height,length], "l,h,height,length", dflt=undef);
   top = is_undef(top) ? path3d(bottom,height/2) :
         len(top[0])==2 ? path3d(top,height/2) :
         top;
@@ -2792,7 +2793,7 @@ Access to the derivative smoothing parameter?
 //   prism axis with the auxiliary object.  Note that this means that if `aux_T` is a rotation it will change the joiner prism root, because
 //   the rotated prism axis will intersect the base in a different location.  If you do not give an auxiliary object then you must give
 //   the length/height parameter to specify the prism length.  This gives the length of the prism measured from the root to the end point.
-//   Note that the joint with a curved base may significantly extend the length of the joiner prism: it's total length will often be larger than
+//   Note that the joint with a curved base may significantly extend the length of the joiner prism: its total length will often be larger than
 //   the length you request.  
 //   .
 //   For the cylinder and spherical objects you may wish to joint a prism to the concave surface.  You can do this by setting a negative
@@ -3722,7 +3723,7 @@ function _prism_fillet_cyl(name, R, bot, top, d, k, N, overlap, uniform, debug) 
                d_step = abs(d)*unit(top[i]-isect[i])+(uniform?isect[i]:corner)
            )
            assert(is_vector(corner,3),str("Fillet does not fit.  Decrease size of fillet (",name,")."))
-           assert(debug || R<0 || (d_step-corner)*(corner-isect[i])>=0,
+           assert(debug || R<0 || (d_step-corner)*(corner-isect[i])>=-EPSILON,
                  str("Unable to fit fillet, probably due to steep curvature of the cylinder (",name,")."))
            let(
                 bez = _smooth_bez_fill([d_step,corner,edgepoint], k)

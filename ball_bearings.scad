@@ -50,8 +50,8 @@ module ball_bearing(trade_size, id, od, width, shield=true, flange=false, fd, fw
         ball_bearing_info(trade_size);
     check = assert(all_defined(select(info, 0,4)), "Bad Input");
     if(flange){
-        assert(!is_undef(fd), "If flange is set you must specify it's diameter");
-        assert(!is_undef(fw), "If flange is set you must specify it's width");
+        assert(!is_undef(fd), "If flange is set you must specify its diameter");
+        assert(!is_undef(fw), "If flange is set you must specify its width");
     }
     id = info[0];
     od = info[1];

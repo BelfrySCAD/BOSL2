@@ -3353,7 +3353,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Anchor Types:
 //   baseline = Anchor center is relative to text baseline
-//   ycenter = Anchor center is relative to the actualy y direction center of the text
+//   ycenter = Anchor center is relative to the actual y direction center of the text
 // Examples:
 //   text3d("Fogmobar", h=3, size=10);
 //   text3d("Fogmobar", h=2, size=12, font=":style=bold");
