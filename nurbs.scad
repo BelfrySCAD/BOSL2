@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////
-// LibFile: beziers.scad
+// LibFile: nurbs.scad
 //   B-Splines and Non-uniform Rational B-Splines (NURBS) are a way to represent smooth curves and smoothly curving
 //   surfaces with a set of control points.  The curve or surface is defined by
 //   the control points and a set of "knot" points.  The NURBS can be "clamped" in which case the curve passes through
