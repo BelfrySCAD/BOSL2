@@ -1238,10 +1238,10 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 //   assuming that they are rotated correctly.  The bottom anchors will be at the bottom of the spline base.  The top
 //   anchors are at an arbitrary location and are not useful.  
 //   .
-//   By default the spline is created as a polygon with `2n` edges.  For large choices of `n` this will produce a nice
-//   result, but the inner radius will be only approximately the value requested.  if you want a cylindrical result with
-//   exactly accurate radii then set `crop=true`, which will intersect the shape with a suitable cylinder.  Note that cropping
-//   makes the most difference when the tooth count is low.  
+//   By default the spline is created as a polygon with `2n` edges and the radius is the outer radius to the unchamfered corners.
+//   For large choices of `n` this will produce result that is close to circular.  For small `n` the result will be obviously polygonal.
+//   If you want a cylindrical result then set `crop=true`, which will intersect an oversized version of the joint with a suitable cylinder.
+//   Note that cropping makes the most difference when the tooth count is low.  
 //   .
 //   The teeth are chamfered proportionally based on the `chamfer` argument which specifies the fraction of the teeth tips
 //   to remove.  The teeth valleys are chamfered by half the specified value to ensure that there is room for the parts
@@ -1327,7 +1327,11 @@ module hirth(n, ir, or, id, od, tooth_angle=60, cone_angle=0, chamfer=0.05, base
 
   // For uncropped case we scale to match user's desired radius exactly
   real_or = topspan[1].x;
+  real_ir = topspan[0].x;
+
   scale = crop ? 1 : or/real_or;
+
+  echo(scaled_ir=real_ir*scale);
 
   // used to get true bottom at true target radius; has the endpoints of the bottom valley without chamfer/rounding
   botspan = zrot(-180/n, [
