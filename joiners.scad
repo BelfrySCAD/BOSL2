@@ -1268,15 +1268,17 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 // Example: Raise cone angle
 //   hirth(32,20,50,cone_angle=30);
 // Example: Lower cone angle
-//   hirth(32,20,50 cone_angle=-30);
+//   hirth(32,20,50,cone_angle=-30);
+// Example: Adding a large base
+//   hirth(20,20,50,base=20);
 // Example: Only 8 teeth, with chamfering
-//   hirth(8,20,50, tooth_angle=60,base=10,chamfer=.05);
+//   hirth(8,20,50,tooth_angle=60,base=10,chamfer=.1);
 // Example: Only 8 teeth, cropped
-//   hirth(8,20,50, tooth_angle=60,base=10,chamfer=.05, crop=true);
+//   hirth(8,20,50,tooth_angle=60,base=10,chamfer=.1, crop=true);
 // Example: Only 8 teeth, with rounding
-//   hirth(8,20,50, tooth_angle=60,base=10,rounding=.05);
+//   hirth(8,20,50,tooth_angle=60,base=10,rounding=.1);
 // Example: Only 8 teeth, different tooth angle, cropping with $fn to crop cylinder aligned with teeth
-//   hirth(8,20,50, tooth_angle=90,base=10,rounding=.05,crop=true,$fn=48);
+//   hirth(8,20,50,tooth_angle=90,base=10,rounding=.05,crop=true,$fn=48);
 // Example: Two identical parts joined together (with 1 unit offset to reveal the joint line).  With odd tooth count you can use the CENTER anchor for the child and the teeth line up correctly.  
 //   hirth(27,20,50, tooth_angle=60,base=2,chamfer=.05)
 //     up(1) attach(CENTER,CENTER)
@@ -1325,9 +1327,12 @@ module hirth(n, ir, or, id, od, tooth_angle=60, cone_angle=0, chamfer, rounding,
                              [  -angle*rounding, ridge_angle-vround],
                              [  0, ridge_angle-vround]
                           ],
-                rpts = round_corners(profpts, joint=[rounding/2, rounding]*180/n,closed=false,$fn=128)
+                // Using computed values for the joints lead to round-off error issues
+                joints = [(profpts[1]-profpts[0]).x, (profpts[3]-profpts[2]).x],
+                segs = max(16,segs(or*rounding)),
+                rpts = round_corners(profpts, joint=joints,closed=false,$fn=segs)
             )
-            concat(rpts, reverse(xflip(rpts)));
+            concat(rpts, reverse(xflip(select(rpts,1,-2))));
   // project spherical coordinate point onto cylinder of radius r
   cyl_proj = function (r,theta_phi) 
      [for(pt=theta_phi)
