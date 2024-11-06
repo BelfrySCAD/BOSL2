@@ -1223,6 +1223,8 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 // Section: Splines
 
 // Module: hirth()
+// Synopsis: Creates a Hirth face spline that locks together two cylinders.
+// Syntags: Geom
 // Usage:
 //   hirth(n, ir|id=, or|od=, tooth_angle, [cone_angle=], [chamfer=], [rounding=], [base=], [crop=], [anchor=], [spin=], [orient=]
 // Description:
@@ -1232,7 +1234,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 //   Each tooth is a triangle that grows larger with radius.  You specify a nominal tooth angle; the actual tooth
 //   angle will be slightly different.
 //   .
-//   You can also specify a cone_angle which raises or lowers the angle of the teeth.  When you do this you ened to
+//   You can also specify a cone_angle which raises or lowers the angle of the teeth.  When you do this you need to
 //   mate splines with opposite angles such as -20 and +20.  The splines appear centered at the origin so that two
 //   splines will mate if their centers coincide.  Therefore `attach(CENTER,CENTER)` will produce two mating splines
 //   assuming that they are rotated correctly.  The bottom anchors will be at the bottom of the spline base.  The top
