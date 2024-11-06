@@ -1319,7 +1319,7 @@ module hirth(n, ir, or, id, od, tooth_angle=60, cone_angle=0, chamfer, rounding,
                            ]
                 )
                 concat(pts, reverse(xflip(pts)))
-          : let( f=echo(dround=rounding),
+          : let( 
                 vround=rounding*(ridge_angle-valley_angle),
                 profpts = [
                              [  -angle, valley_angle+vround/2],
@@ -1333,6 +1333,9 @@ module hirth(n, ir, or, id, od, tooth_angle=60, cone_angle=0, chamfer, rounding,
                 rpts = round_corners(profpts, joint=joints,closed=false,$fn=segs)
             )
             concat(rpts, reverse(xflip(select(rpts,1,-2))));
+
+
+  
   // project spherical coordinate point onto cylinder of radius r
   cyl_proj = function (r,theta_phi) 
      [for(pt=theta_phi)
