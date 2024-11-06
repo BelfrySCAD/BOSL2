@@ -104,7 +104,7 @@ include<BOSL2/beziers.scad>
 // Example(2D,NoAxes): Same control points, degree 4, closed
 //   pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
 //   debug_nurbs(pts,4,type="closed");
-// Example(2D,NoAxes): Adding weights
+// Example(2D,Med,NoAxes): Adding weights
 //   pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
 //   weights = [1,1,1,3,1,1,3,1,1,1];
 //   debug_nurbs(pts,4,type="clamped",weights=weights);
@@ -145,7 +145,7 @@ include<BOSL2/beziers.scad>
 //   pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
 //   knots = [0,1,3,13,13,13,19,21,27,28,33];
 //   debug_nurbs(pts,5,knots=knots,type="closed");
-// Example(2D,NoAxes): Closed quintic spline with explicit knots and weights
+// Example(2D,Med,NoAxes): Closed quintic spline with explicit knots and weights
 //   pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
 //   weights = [1,2,3,4,5,6,7,6,5,4];
 //   knots = [0,1,3,13,13,13,19,21,27,28,33];
@@ -436,7 +436,7 @@ function is_nurbs_patch(x) =
 //   knots = a single list of pair of lists giving the knot vector in each of the two directions.  Default: uniform
 //   weights = a single list or pair of lists giving the weight at each control point in the patch.  Default: all 1
 //   type = a single string or pair of strings giving the NURBS type, where each entry is one of "clamped", "open" or "closed".  Default: "clamped"
-// Example(NoScale): Computing points on a patch using ranges
+// Example(3D,NoScale): Computing points on a patch using ranges
 //   patch = [
 //       [[-50, 50,  0], [-16, 50,  20], [ 16, 50,  20], [50, 50,  0]],
 //       [[-50, 16, 20], [-16, 16,  40], [ 16, 16,  40], [50, 16, 20]],
@@ -445,7 +445,7 @@ function is_nurbs_patch(x) =
 //   ];
 //   pts = nurbs_patch_points(patch, 3, u=[0:.1:1], v=[0:.3:1]);
 //   move_copies(flatten(pts)) sphere(r=2,$fn=16);
-// Example(NoScale): Computing points using splinesteps
+// Example(3D,NoScale): Computing points using splinesteps
 //   patch = [
 //       [[-50, 50,  0], [-16, 50,  20], [ 16, 50,  20], [50, 50,  0]],
 //       [[-50, 16, 20], [-16, 16,  40], [ 16, 16,  40], [50, 16, 20]],
@@ -515,7 +515,7 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
 //   weights = a single list or pair of lists giving the weight at each control point in the.  Default: all 1
 //   type = a single string or pair of strings giving the NURBS type, where each entry is one of "clamped", "open" or "closed".  Default: "clamped"
 //   style = {{vnf_vertex_array ()}} style to use for triangulating the surface.  Default: "default"
-// Example: Quadratic B-spline surface
+// Example(3D): Quadratic B-spline surface
 //   patch = [
 //       [[-50, 50,  0], [-16, 50,  20], [ 16, 50,  20], [50, 50,  0]],
 //       [[-50, 16, 20], [-16, 16,  40], [ 16, 16,  40], [50, 16, 20]],
@@ -524,7 +524,7 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
 //   ];
 //   vnf = nurbs_vnf(patch, 2);
 //   vnf_polyhedron(vnf);
-// Example: Cubic B-spline surface
+// Example(3D): Cubic B-spline surface
 //   patch = [
 //       [[-50, 50,  0], [-16, 50,  20], [ 16, 50,  20], [50, 50,  0]],
 //       [[-50, 16, 20], [-16, 16,  40], [ 16, 16,  40], [50, 16, 20]],
@@ -533,7 +533,7 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
 //   ];
 //   vnf = nurbs_vnf(patch, 3);
 //   vnf_polyhedron(vnf); 
-// Example: Cubic B-spline surface, closed in one direction
+// Example(3D): Cubic B-spline surface, closed in one direction
 //   patch = [
 //       [[-50, 50,  0], [-16, 50,  20], [ 16, 50,  20], [50, 50,  0]],
 //       [[-50, 16, 20], [-16, 16,  40], [ 16, 16,  40], [50, 16, 20]],
@@ -542,7 +542,7 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
 //   ];
 //   vnf = nurbs_vnf(patch, 3, type=["closed","clamped"]);
 //   vnf_polyhedron(vnf); 
-// Example: B-spline surface cubic in one direction, quadratic in the other
+// Example(3D): B-spline surface cubic in one direction, quadratic in the other
 //   patch = [
 //       [[-50, 50,  0], [-16, 50,  20], [ 16, 50,  20], [50, 50,  0]],
 //       [[-50, 16, 20], [-16, 16,  40], [ 16, 16,  40], [50, 16, 20]],
@@ -551,7 +551,7 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
 //   ];
 //   vnf = nurbs_vnf(patch, [3,2],type=["closed","clamped"]);
 //   vnf_polyhedron(vnf); 
-// Example: The sphere can be represented using NURBS
+// Example(3D): The sphere can be represented using NURBS
 //   patch = [
 //             [[0,0,1], [0,0,1], [0,0,1],  [0,0,1],  [0,0,1],    [0,0,1],  [0,0,1]],
 //             [[2,0,1], [2,4,1], [-2,4,1], [-2,0,1], [-2,-4,1],  [2,-4,1], [2,0,1]],
