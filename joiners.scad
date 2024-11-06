@@ -1224,7 +1224,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 
 // Module: hirth()
 // Usage:
-//   hirth(n, ir|id=, or|od=, tooth_angle, [cone_angle=], [chamfer=], [base=], [crop=], [anchor=], [spin=], [orient=]
+//   hirth(n, ir|id=, or|od=, tooth_angle, [cone_angle=], [chamfer=], [rounding=], [base=], [crop=], [anchor=], [spin=], [orient=]
 // Description:
 //   Create a Hirth face spline.  The Hirth face spline is a joint that locks together two cylinders using radially
 //   positioned triangular teeth on the ends of the cylinders.  If the joint is held together (e.g. with a screw) then
@@ -1256,22 +1256,27 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 //   or/od = outer radius or diameter
 //   tooth_angle = nominal tooth angle.  Default: 60
 //   cone_angle = raise or lower the angle of the teeth in the radial direction.  Default: 0
-//   chamfer = chamfer teeth by this fraction at tips and half this fraction at valleys.  Default: 0.05
+//   chamfer = chamfer teeth by this fraction at tips and half this fraction at valleys.  Default: 0
+//   roudning = round the teeth by this fraction at the tips, and half this fraction at valleys.  Default: 0
 //   base = add base of this height to the bottom.  Default: 1
 //   crop = crop to a cylindrical shape.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:  Basic uncropped hirth spline
-//   hirth(32,20,50, tooth_angle=60,chamfer=.05);
+//   hirth(32,20,50);
 // Example: Raise cone angle
-//   hirth(32,20,50, tooth_angle=60,cone_angle=30,chamfer=.05);
+//   hirth(32,20,50,cone_angle=30);
 // Example: Lower cone angle
-//   hirth(32,20,50, tooth_angle=60,cone_angle=-30,chamfer=.05);
-// Example: Only 8 teeth
+//   hirth(32,20,50 cone_angle=-30);
+// Example: Only 8 teeth, with chamfering
 //   hirth(8,20,50, tooth_angle=60,base=10,chamfer=.05);
 // Example: Only 8 teeth, cropped
 //   hirth(8,20,50, tooth_angle=60,base=10,chamfer=.05, crop=true);
+// Example: Only 8 teeth, with rounding
+//   hirth(8,20,50, tooth_angle=60,base=10,rounding=.05);
+// Example: Only 8 teeth, different tooth angle, cropping with $fn to crop cylinder aligned with teeth
+//   hirth(8,20,50, tooth_angle=90,base=10,rounding=.05,crop=true,$fn=48);
 // Example: Two identical parts joined together (with 1 unit offset to reveal the joint line).  With odd tooth count you can use the CENTER anchor for the child and the teeth line up correctly.  
 //   hirth(27,20,50, tooth_angle=60,base=2,chamfer=.05)
 //     up(1) attach(CENTER,CENTER)
@@ -1281,102 +1286,80 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 //     up(1) attach(CENTER,"mate")
 //       hirth(26,20,50, tooth_angle=60,base=2,cone_angle=-30, chamfer=.05);
 
-module hirth(n, ir, or, id, od, tooth_angle=60, cone_angle=0, chamfer=0.05, base=1, crop=false, orient,anchor,spin)
+module hirth(n, ir, or, id, od, tooth_angle=60, cone_angle=0, chamfer, rounding, base=1, crop=false, orient,anchor,spin)
 {
   ir = get_radius(r=ir,d=id);
   or = get_radius(r=or,d=od);
   dummy = assert(all_positive([ir]), "ir/id must be a positive value")
-          assert(all_positive([or]), "or/od must be a positive value")    
+          assert(all_positive([or]), "or/od must be a positive value")
+          assert(is_int(n) && n>1, "n must be an integer larger than 1")
           assert(ir<or, "inside radius (ir/id) must be smaller than outside radius (or/od)")
           assert(all_positive([tooth_angle]) && tooth_angle<360*(n-1)/2/n, str("tooth angle must be between 0 and ",360*(n-1)/2/n," for spline with ",n," teeth."))
-          assert(all_nonnegative([chamfer]) && chamfer<1/2, "chamfer must be a non-negative value smaller than 1/2")
+          assert(num_defined([chamfer,rounding]) <=1, "Cannot define both chamfer and rounding")
+          assert(is_undef(chamfer) || all_nonnegative([chamfer]) && chamfer<1/2, "chamfer must be a non-negative value smaller than 1/2")
+          assert(is_undef(rounding) || all_nonnegative([rounding]) && rounding<1/2, "rounding must be a non-negative value smaller than 1/2")
           assert(all_positive([base]), "base must be a positive value") ;
-
-  factor = crop ? 2/cos(cone_angle) : 1;
+  tooth_height = sin(180/n) / tan(tooth_angle/2);     // Normalized tooth height
+  conic_ht = tan(cone_angle);                         // Normalized height change corresponding to the cone angle
+  ridge_angle = atan(tooth_height/2 + conic_ht);
+  valley_angle = atan(-tooth_height/2 + conic_ht);
+  angle = 180/n;    // Half the angle occupied by each tooth going around the circle
   
-  // inner/outer radius to the side face of the end of a tooth profile, adjusted to provide excess for making the shape round at the end
-  ir_side = ir/factor*cos(180/n);
-  or_side = or*factor*cos(180/n);
+  factor = crop ? 3 : 1;   // Make it oversized when crop is true
 
-  outside_halfseg = or_side*2*tan(90/n);   // Side length of 2n-gon
-  outside_botseg = or_side*2*tan(180/n);   // Side length of n-gon
+  profile = is_undef(rounding) || rounding==0 ?
+                let(
+                     chamfer=default(chamfer,0),
+                     vchamf = chamfer*(ridge_angle-valley_angle),
+                     pts = [
+                             [-angle*(1-chamfer/2), valley_angle+vchamf/2],
+                             [-angle*chamfer, ridge_angle-vchamf]
+                           ]
+                )
+                concat(pts, reverse(xflip(pts)))
+          : let( f=echo(dround=rounding),
+                vround=rounding*(ridge_angle-valley_angle),
+                profpts = [
+                             [  -angle, valley_angle+vround/2],
+                             [  -angle*(1-rounding/2), valley_angle+vround/2],
+                             [  -angle*rounding, ridge_angle-vround],
+                             [  0, ridge_angle-vround]
+                          ],
+                rpts = round_corners(profpts, joint=[rounding/2, rounding]*180/n,closed=false,$fn=128)
+            )
+            concat(rpts, reverse(xflip(rpts)));
+  // project spherical coordinate point onto cylinder of radius r
+  cyl_proj = function (r,theta_phi) 
+     [for(pt=theta_phi)
+        let(xyz = spherical_to_xyz(1,pt[0], 90-pt[1]))
+        r * xyz / norm(point2d(xyz))];
 
-    // Decrease in outer radius needed for the triangles to touch each other around the edge
-  delta = or_side*(1 - 2*outside_halfseg/outside_botseg);  
+  bottom = min([tan(valley_angle)*ir,tan(valley_angle)*or])-base;
+  safebottom = min([tan(valley_angle)*ir/factor,tan(valley_angle)*or*factor])-base-(crop?1:0);
 
-  tooth_height = 0.5/tan(tooth_angle/2);    // Unscaled tooth height (for tooth with width 1)
-  h = tooth_height * 2*outside_halfseg;     // Scaled tooth height
-
-  lean = asin(2*delta/h);   // Angle at which triangle needs to tilt for valid joint
-  
-  profpts = [
-              [0,-1/2+chamfer/4,(-1/2+chamfer/2)*tooth_height],
-              [0,-chamfer/2,(1/2-chamfer)*tooth_height]
-            ];
-  profile = concat(profpts, reverse(yflip(profpts)));
-
-  trans_prof = function(R,data)
-    let(halfseg = R*2*tan(90/n))
-    yrot(cone_angle,right(R, 2*halfseg*cos(cone_angle)*yrot(lean-cone_angle,data)));
-
-  // used to get top ridge line range
-  topspan = [
-    trans_prof(ir_side, [0,1/2,tooth_height/2]),
-    trans_prof(or_side, [0,1/2,tooth_height/2])
-  ];
-
-  // For uncropped case we scale to match user's desired radius exactly
-  real_or = topspan[1].x;
-  real_ir = topspan[0].x;
-
-  scale = crop ? 1 : or/real_or;
-
-  echo(scaled_ir=real_ir*scale);
-
-  // used to get true bottom at true target radius; has the endpoints of the bottom valley without chamfer/rounding
-  botspan = zrot(-180/n, [
-    trans_prof(ir_side, [0,1/2,-tooth_height/2]),
-    trans_prof(or_side, [0,1/2,-tooth_height/2])
-  ]);
-
-  // Bottom guaranteed to be lower than anything in the polyhedron so it doesn't self-intersect
-  safebottom = min(column(botspan,2))-base/scale-(crop?1:0);
-
-  // Actual bottom interpolated at the specified ir/or
-  bottom = crop ? let(bottab = submatrix(botspan, [0,1], [0,2]))
-                  min(lookup(ir,bottab), lookup(or,bottab))-base/scale
-         : safebottom;
-
-  // Vertical correction for cone angle so that center of the joint is at the origin
-  zshift = crop ? sin(cone_angle)*or : sin(cone_angle)*real_or;
-  
-  topouter = [for(ang=lerpn(0,360,n,endpoint=false)) each zrot(ang,trans_prof(or_side, profile))];
-  topinner = [for(ang=lerpn(0,360,n,endpoint=false)) each zrot(ang,trans_prof(ir_side, profile))];
+  topinner = [for(ang=lerpn(0,360,n,endpoint=false))
+                                  each zrot(ang,cyl_proj(ir/factor,profile))];
+  topouter = [for(ang=lerpn(0,360,n,endpoint=false))
+                                  each zrot(ang,cyl_proj(factor*or,profile))];
   botinner = [for(val=topinner) [val.x,val.y,safebottom]];
   botouter = [for(val=topouter) [val.x,val.y,safebottom]];  
   vert = [topouter, topinner, botinner, botouter];
 
   anchors = [
-             named_anchor("teeth_bot", [0,0,(bottom+zshift)*scale+base], DOWN),
+             named_anchor("teeth_bot", [0,0,bottom], DOWN),
              named_anchor("mate", [0,0,0], UP, spin=n%2==0 ? 180/n : 0)
             ];
   
-  attachable(anchor=anchor,spin=spin,orient=orient, r=or, h=-2*(bottom+zshift)*scale,anchors=anchors){
-    scale(scale)
-    up(zshift){
-        zrot_copies(n=n)
-    stroke(trans_prof(or_side,profile),color="red", closed=false,width=.01);
-
+  attachable(anchor=anchor,spin=spin,orient=orient, r=or, h=-2*bottom,anchors=anchors){
       intersection(){
-        vnf_polyhedron(vnf_vertex_array(vert, reverse=true, col_wrap=true, row_wrap=true),convexity=20);
+        vnf_polyhedron(vnf_vertex_array(vert, reverse=true, col_wrap=true, row_wrap=true),convexity=min(10,n));
         if (crop)
            zmove(bottom)tube(or=or,ir=ir,height=4*or,anchor=BOT);
       }
-      }
     children();
   }
-
 }
+
 
 
 
