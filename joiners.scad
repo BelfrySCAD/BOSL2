@@ -1329,39 +1329,36 @@ module hirth(n, ir, or, id, od, tooth_angle=60, cone_angle=0, chamfer, rounding,
   
   factor = crop ? 3 : 1;   // Make it oversized when crop is true
 
-  profile = is_undef(rounding) || rounding==0 ?
-                let(
-                     chamfer=default(chamfer,0),
-                     vchamf = chamfer*(ridge_angle-valley_angle),
-                     pts = [
-                             [-angle*(1-chamfer/2), valley_angle+vchamf/2],
-                             [-angle*chamfer, ridge_angle-vchamf]
-                           ],
-                     full = deduplicate(concat(pts, reverse(xflip(pts))))
-                )
-                back(valley_angle, skew(sxy=skew*angle/(ridge_angle-valley_angle),fwd(valley_angle,full)))
-          : let( 
-                vround=rounding*(ridge_angle-valley_angle),
-                profpts = [
-                             [  -angle, valley_angle+vround/2],
-                             [  -angle*(1-rounding/2), valley_angle+vround/2],
-                             [  -angle*rounding, ridge_angle-vround],
-                          ],
-                segs = max(16,segs(or*rounding)),
-                full = concat(profpts, reverse(xflip(profpts))),
-                skewed = back(valley_angle, skew(sxy=skew*angle/(ridge_angle-valley_angle),fwd(valley_angle,full))),
-                                // Using computed values for the joints lead to round-off error issues
-                joints = [(skewed[1]-skewed[0]).x, (skewed[3]-skewed[2]).x/2, (skewed[3]-skewed[2]).x/2,(skewed[5]-skewed[4]).x ],
-                roundpts = round_corners(skewed, joint=joints, closed=false,$fn=segs)
-            )
-            roundpts; 
-  
-  // project spherical coordinate point onto cylinder of radius r
-  cyl_proj = function (r,theta_phi) 
+// project spherical coordinate point onto cylinder of radius r
+  cyl_proj = function (r,theta_phi)
      [for(pt=theta_phi)
         let(xyz = spherical_to_xyz(1,pt[0], 90-pt[1]))
         r * xyz / norm(point2d(xyz))];
 
+  edge = cyl_proj(or,[[-angle, valley_angle], [0, ridge_angle]]);
+  cutfrac = first_defined([chamfer,rounding,0]);
+  rounding = rounding==0? undef:rounding;
+  ridgecut=xyz_to_spherical(lerp(edge[0],edge[1], 1-cutfrac));
+  valleycut=xyz_to_spherical(lerp(edge[0],edge[1], cutfrac/2));
+  ridge_chamf = [ridgecut.y,90-ridgecut.z];
+  valley_chamf = [valleycut.y,90-valleycut.z];
+  basicprof = [
+                if (is_def(rounding)) [-angle, valley_chamf.y],
+                valley_chamf,
+                ridge_chamf
+              ];
+  full = deduplicate(concat(basicprof, reverse(xflip(basicprof))));
+  skewed = back(valley_angle, skew(sxy=skew*angle/(ridge_angle-valley_angle),fwd(valley_angle,full)));
+  profile = is_undef(rounding) ? skewed
+          :
+            let(
+                segs = max(16,segs(or*rounding)),
+                                // Using computed values for the joints lead to round-off error issues
+                joints = [(skewed[1]-skewed[0]).x, (skewed[3]-skewed[2]).x/2, (skewed[3]-skewed[2]).x/2,(skewed[5]-skewed[4]).x ],
+                roundpts = round_corners(skewed, joint=joints, closed=false,$fn=segs)
+            )
+            roundpts;
+  
   bottom = min([tan(valley_angle)*ir,tan(valley_angle)*or])-base-cone_height*ir;
   safebottom = min([tan(valley_angle)*ir/factor,tan(valley_angle)*or*factor])-base-(crop?1:0)-cone_height*ir;
   ang_ofs = !rot ? -skew*angle
