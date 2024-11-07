@@ -1223,6 +1223,8 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 // Section: Splines
 
 // Module: hirth()
+// Synopsis: Creates a Hirth face spline that locks together two cylinders.
+// Syntags: Geom
 // Usage:
 //   hirth(n, ir|id=, or|od=, tooth_angle, [cone_angle=], [chamfer=], [rounding=], [base=], [crop=], [anchor=], [spin=], [orient=]
 // Description:
@@ -1232,7 +1234,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 //   Each tooth is a triangle that grows larger with radius.  You specify a nominal tooth angle; the actual tooth
 //   angle will be slightly different.
 //   .
-//   You can also specify a cone_angle which raises or lowers the angle of the teeth.  When you do this you ened to
+//   You can also specify a cone_angle which raises or lowers the angle of the teeth.  When you do this you need to
 //   mate splines with opposite angles such as -20 and +20.  The splines appear centered at the origin so that two
 //   splines will mate if their centers coincide.  Therefore `attach(CENTER,CENTER)` will produce two mating splines
 //   assuming that they are rotated correctly.  The bottom anchors will be at the bottom of the spline base.  The top
@@ -1249,7 +1251,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 //   based on the unchamfered dimensions.
 //   .
 //   By default the teeth are symmetric, which is ideal for registration and for situations where loading may occur in either
-//   direction.   The skew parameter will skew the teeth by the specified amount, where a skew of ±1 gives a tooth with a vertical
+//   direction.   The skew parameter will skew the teeth by the specified amount, where a skew of Â±1 gives a tooth with a vertical
 //   side either on the left or the right.  Intermediate values will produce partially skewed teeth.  Note that the skew
 //   applies after the tooth profile is computed with the specified tooth_angle, which means that the skewed tooth will
 //   have an altered tooth angle from the one specified.
@@ -1302,7 +1304,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 //       hirth(26,20,50, tooth_angle=60,base=2,cone_angle=-30, chamfer=.05, rot=true);
 // Example(3D,NoScale): Using skew to create teeth with vertical faces
 //   hirth(17,20,50,skew=-1, base=5, chamfer=0.05);
-// Example(3D,NoScale): If you want to change how tall the teeth are you do that by chaging the tooth angle.  Increasing the tooth angle makes the teeth shorter:
+// Example(3D,NoScale): If you want to change how tall the teeth are you do that by changing the tooth angle.  Increasing the tooth angle makes the teeth shorter:
 //   hirth(17,20,50,tooth_angle=120,skew=0, base=5, rounding=0.05, crop=true);
 
 module hirth(n, ir, or, id, od, tooth_angle=60, cone_angle=0, chamfer, rounding, base=1, crop=false,skew=0, rot=false, orient,anchor,spin)
