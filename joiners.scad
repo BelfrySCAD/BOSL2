@@ -1224,7 +1224,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 
 // Module: hirth()
 // Synopsis: Creates a Hirth face spline that locks together two cylinders.
-// Syntags: Geom
+// SynTags: Geom
 // Usage:
 //   hirth(n, ir|id=, or|od=, tooth_angle, [cone_angle=], [chamfer=], [rounding=], [base=], [crop=], [anchor=], [spin=], [orient=]
 // Description:
