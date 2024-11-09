@@ -2759,7 +2759,10 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   in that color, but if you want to retain control of color for sub-parts of an attachable object, you can use
 //   the `keep_color=true` option, which delays the assignment of colors to the child level.  For this to work
 //   correctly, all of the sub-parts of your attachable object must be attachables.  Also note that this option could
-//   be confusing to users who don't understand why color commands are not working on the object.  
+//   be confusing to users who don't understand why color commands are not working on the object.
+//   .
+//   Note that anchors created by attachable() are generally intended for use by the user-supplied children of the attachable object, but they
+//   are available internally and can be used in the object's definition.  
 //   .
 //   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
 //
@@ -3021,6 +3024,38 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   recolor("pink") thing()
 //     attach(RIGHT,BOT)
 //       recolor("blue") cyl(d=5,h=5);
+// Example(3D,NoScale): This example defines named anchors and then uses them internally in the object definition to make a cutout in the socket() object and to attach the plug on the plug() object.  These objects can be connected using the "socket" and "plug" named anchors, which will fit the plug into the socket.
+//   module socket(anchor, spin, orient) {
+//       sz = 50;
+//       prong_size = 10;
+//       anchors = [
+//           named_anchor("socket", [sz/2,.15*sz,.2*sz], RIGHT, 0)
+//       ];
+//       attachable(anchor, spin, orient, size=[sz,sz,sz], anchors=anchors) {
+//           diff() {
+//               cuboid(sz);
+//               tag("remove") attach("socket") zcyl(d=prong_size, h=prong_size*2);
+//           }
+//           children();
+//       }
+//   }
+//   module plug(anchor, spin, orient) {
+//       sz = 30;
+//       prong_size = 9.5;
+//       anchors=[
+//           named_anchor("plug", [0,sz/3,sz/2], UP, 0)
+//       ];
+//       attachable(anchor, spin, orient, size=[sz,sz,sz], anchors=anchors) {
+//          union(){
+//            cuboid(sz);
+//            attach("plug") cyl(d=prong_size, h=prong_size*2,$fn=6);
+//          }
+//          children();
+//       }
+//   }
+//   socket();
+//   right(75) plug();
+
 
 module attachable(
     anchor, spin, orient,
