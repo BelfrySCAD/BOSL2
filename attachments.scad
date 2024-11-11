@@ -3034,7 +3034,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //       attachable(anchor, spin, orient, size=[sz,sz,sz], anchors=anchors) {
 //           diff() {
 //               cuboid(sz);
-//               tag("remove") attach("socket") zcyl(d=prong_size, h=prong_size*2);
+//               tag("remove") attach("socket") zcyl(d=prong_size, h=prong_size*2, $fn=6);
 //           }
 //           children();
 //       }

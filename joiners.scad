@@ -1247,7 +1247,10 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 //   .
 //   The teeth are chamfered proportionally based on the `chamfer` argument which specifies the fraction of the teeth tips
 //   to remove.  The teeth valleys are chamfered by half the specified value to ensure that there is room for the parts
-//   to mate.  The base is added based on the unchamfered dimensions of the joint, and the "teeth_bot" anchor is located
+//   to mate.  If you use the rounding parameter then the roundings cut away the chamfer corners, so chamfered and rounded
+//   joints are compatible with each other.  Note that rounding doesn't always produce a smooth transition to the roundover,
+//   particularly with large cone angle.  
+//   The base is added based on the unchamfered dimensions of the joint, and the "teeth_bot" anchor is located
 //   based on the unchamfered dimensions.
 //   .
 //   By default the teeth are symmetric, which is ideal for registration and for situations where loading may occur in either
@@ -1260,7 +1263,6 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 //   For two hirth joints to mate they must have the same tooth count, opposite cone angles, and the chamfer/rounding values
 //   must be equal.  (One can be chamfered and one rounded, but with the same value.)  The rotation required to mate the parts
 //   depends on the skew and whether the tooth count is odd or even.  To apply this rotation automatically, set `rot=true`.  
-
 // Named Anchors:
 //   "teeth_bot" = center of the joint, aligned with the bottom of the (unchamfered/unrounded) teeth, pointing DOWN.  
 // Arguments:
