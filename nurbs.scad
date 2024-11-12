@@ -67,6 +67,16 @@ include<BOSL2/beziers.scad>
 //   weights = vector whose length is the same as control giving weights at each control point.  Default: all 1
 //   type = One of "clamped", "closed" or "open" to define end point handling of the spline.  Default: "clamped"
 //   knots = List of knot values.  Default: uniform
+// Example(2D,NoAxes): Compute some points and draw a curve and also some specific points:
+//   control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+//   curve = nurbs_curve(control,2,splinesteps=16);
+//   pts = nurbs_curve(control,2,u=[0.4,0.8]);
+//   stroke(curve);
+//   color("red")move_copies(pts) circle(r=1.5,$fn=16);
+// Example(2D,NoAxes): Compute NURBS points and make a polygon
+//   control = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+//   curve = nurbs_curve(control,2,splinesteps=16,type="closed");
+//   polygon(curve);
 // Example(2D,NoAxes): Simple quadratic uniform clamped b-spline with some points computed using splinesteps.  
 //   pts = [[13,43],[30,52],[49,22],[24,3]];
 //   debug_nurbs(pts,2);
@@ -167,7 +177,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
     assert(num_defined([splinesteps,u])==1, "Must define exactly one of u and splinesteps")
     is_finite(u) ? nurbs_curve(control,degree,[u],mult,weights,type=type)[0]
   : assert(is_undef(splinesteps) || (is_int(splinesteps) || splinesteps>0), "splinesteps must be a positive integer")
-    let(u=is_range(u) ? list(u) : u,f=echo(u=u))                  
+    let(u=is_range(u) ? list(u) : u)                  
     assert(is_undef(u) || (is_vector(u) && min(u)>=0 && max(u)<=1), "u must be a list of points on the interval [0,1] or a range contained in that interval")
     is_def(weights) ? assert(is_vector(weights, len(control)), "Weights should be a vector whose length is the number of control points")
                       let(
@@ -205,8 +215,6 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
          control = type=="open" ? control
                  : type=="clamped" ? control  //concat(repeat(control[0], degree),control, repeat(last(control),degree))
                  : /*type=="closed"*/ concat(control, select(control,count(degree))),
-         //         n = len(control)-1,   // number of control pts -1
-         //         m = n+p+1,            // number of knots - 1
          mult = !uniform ? mult
               : type=="clamped" ? assert(is_undef(mult) || mult[0]==1 && last(mult)==1,"For clamped b-splines, first and last multiplicity must be 1")
                                   [degree+1,each slice(default(mult, repeat(1,len(control)-degree+1)),1,-2),degree+1]
@@ -266,7 +274,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                   knotidxR=msum[mind]-1,
                   knotidx = knotidxR<len(control) ? knotidxR : knotidxR - mult[mind]
               )
-              bspline_pt_recurse(knot,select(control,knotidx-degree,knotidx),uval,1,degree,0,degree,knotidx)
+              _nurbs_pt(knot,select(control,knotidx-degree,knotidx),uval,1,degree,knotidx)
            ]
        : let(
            kmult = _calc_mult(knot),
@@ -292,22 +300,22 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
               if (is_def(output)) output]
          )
          [for(i=idx(adjusted_u))
-            bspline_pt_recurse(knot,select(control, knotidx[i]-degree,knotidx[i]), adjusted_u[i], 1, degree, 0, degree, knotidx[i])
+            _nurbs_pt(knot,select(control, knotidx[i]-degree,knotidx[i]), adjusted_u[i], 1, degree, knotidx[i])
          ];
        
 
-function bspline_pt_recurse(knot, control, u, r, h,s,p,k) = 
-    r>h ? control[0]
+function _nurbs_pt(knot, control, u, r, p, k) = 
+    r>p ? control[0]
   :                          
     let( 
-         ctrl_new = [for(i=[k-p+r:1:k-s])
+         ctrl_new = [for(i=[k-p+r:1:k])
                        let(
                             alpha = (u-knot[i]) / (knot[i+p-r+1]-knot[i])
                        )
                        (1-alpha) * control[i-1-(k-p)-r+1] + alpha*control[i-(k-p)-r+1]
                     ]
     )
-    bspline_pt_recurse(knot,ctrl_new,u,r+1,h,s,p,k);
+    _nurbs_pt(knot,ctrl_new,u,r+1,p,k);
 
 
 function _extend_knot_mult(mult, next, len) =
@@ -355,7 +363,16 @@ function _calc_mult(knots) =
 //   show_index = if true then display index of each control point vertex.  Default: true
 //   show_weights = if true then display any non-unity weights.  Default: true if weights vector is supplied, false otherwise
 //   show_knots = If true then show the knots on the spline curve.  Default: false
-
+// Example(2D,Med,NoAxes): The default display includes the control point polygon with its vertices numbered, and the NURBS curve
+//   pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+//   debug_nurbs(pts,4,type="closed");
+// Example(2D,Med,NoAxes): If you want to see the knots set `show_knots=true`:
+//   pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+//   debug_nurbs(pts,4,type="clamped",show_knots=true);
+// Example(2D,Med,NoAxes): Non-unity weights are displayed if you give a weight vector
+//   pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
+//   weights = [1,1,1,7,1,1,7,1,1,1];
+//   debug_nurbs(pts,4,type="closed",weights=weights);
 
 module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,type="clamped",knots, show_weights, show_knots=false, show_index=true)
 {  
@@ -369,7 +386,8 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
   stroke(control, width=width/2, color="lightblue", closed=type=="closed");
   if (show_knots){
     knotpts = nurbs_curve(control=control, degree=degree, splinesteps=1, mult=mult, weights=weights, type=type, knots=knots);
-    color("green")
+    echo(knotpts);
+    color([1,.5,1])
       move_copies(knotpts)
         if (twodim)circle(r=width);
         else sphere(r=width);
