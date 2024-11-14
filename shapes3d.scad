@@ -1423,8 +1423,8 @@ module rect_tube(
         assert(checksignr2, "irounding/irounding2 must be non-negative")
         assert(checksignc1, "ichamfer/ichamfer1 must be non-negative")
         assert(checksignc2, "ichamfer/ichamfer2 must be non-negative")
-        assert(checkconflict1, "irounding1 and ichamfer1 (possibly inherited from irounding and ichamfer) cannot both be nonzero at the swame corner")
-        assert(checkconflict2, "irounding2 and ichamfer2 (possibly inherited from irounding and ichamfer) cannot both be nonzero at the swame corner");
+        assert(checkconflict1, "irounding1 and ichamfer1 (possibly inherited from irounding and ichamfer) cannot both be nonzero at the same corner")
+        assert(checkconflict2, "irounding2 and ichamfer2 (possibly inherited from irounding and ichamfer) cannot both be nonzero at the same corner");
     irounding1 = _rect_tube_rounding(1,irounding1_temp, rounding1, ichamfer1_temp, size1, isize1);
     irounding2 = _rect_tube_rounding(1,irounding2_temp, rounding2, ichamfer2_temp, size2, isize2);
     ichamfer1 = _rect_tube_rounding(1/sqrt(2),ichamfer1_temp, chamfer1, irounding1_temp, size1, isize1);
@@ -2355,7 +2355,6 @@ module zcyl(
 }
 
 
-
 // Module: tube()
 // Synopsis: Creates a cylindrical or conical tube.
 // SynTags: Geom
@@ -2372,6 +2371,9 @@ module zcyl(
 // Usage: Conical tubes
 //   tube(h|l, ir1=|id1=, ir2=|id2=, or1=|od1=, or2=|od2=, ...) [ATTACHMENTS];
 //   tube(h|l, or1=|od1=, or2=|od2=, wall=, ...) [ATTACHMENTS];
+// Usage: Rounded and chamfered tubes
+//   tube(..., [rounding=], [irounding=], [orounding=], [rounding1=], [rounding2=], [irounding1=], [irounding2=], [orounding1=], [orounding2=], [teardrop=]);
+//   tube(..., [chamfer=], [ichamfer=], [ochamfer=], [chamfer1=], [chamfer2=], [ichamfer1=], [ichamfer2=], [ochamfer1=], [ochamfer2=]);
 // Arguments:
 //   h / l = height of tube. Default: 1
 //   or = Outer radius of tube. Default: 1
@@ -2389,6 +2391,25 @@ module zcyl(
 //   ir2 = Inner radius of top of tube.
 //   id1 = Inner diameter of bottom of tube.
 //   id2 = Inner diameter of top of tube.
+//   rounding = The radius of the rounding on the ends of the tube.  Default: none.
+//   rounding1 = The radius of the rounding on the bottom end of the tube.
+//   rounding2 = The radius of the rounding on the top end of the tube.
+//   irounding = The radius of the rounding on the inside of the ends of the tube.  
+//   irounding1 = The radius of the rounding on the bottom inside end of the tube.
+//   irounding2 = The radius of the rounding on the top inside end of the tube.
+//   orounding = The radius of the rounding on the outside of the ends of the tube.
+//   orounding1 = The radius of the rounding on the bottom outside end of the tube.
+//   orounding2 = The radius of the rounding on the top outside end of the tube.
+//   chamfer = The size of the chamfer on the ends of the tube.  Default: none.
+//   chamfer1 = The size of the chamfer on the bottom end of the tube.
+//   chamfer2 = The size of the chamfer on the top end of the tube.
+//   ichamfer = The size of the chamfer on the inside of the ends of the tube.  
+//   ichamfer1 = The size of the chamfer on the bottom inside end of the tube.
+//   ichamfer2 = The size of the chamfer on the top inside end of the tube.
+//   ochamfer = The size of the chamfer on the outside of the ends of the tube. 
+//   ochamfer1 = The size of the chamfer on the bottom outside end of the tube.
+//   ochamfer2 = The size of the chamfer on the top outside end of the tube.
+//   teardrop = if true roundings on the bottom use a teardrop shape.  Default: false
 //   realign = If true, rotate the tube by half the angle of one face.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -2407,15 +2428,26 @@ module zcyl(
 //   tube(h=30, or1=40, or2=30, ir1=20, ir2=30);
 // Example: Standard Connectors
 //   tube(h=30, or=40, wall=5) show_anchors();
+// Example: Chamfered tube
+//   back_half()
+//     tube(ir=10,or=20, h=30, chamfer=2);
+// Example: Rounded conical tube, with negative rounding at base
+//   back_half()
+//     tube(ir=10,or=20,or2=5,ir2=2, h=30, rounding1=-5,rounding2=1.5);
+// Example: Mixing chamfers and roundings
+//   back_half()
+//     tube(ir=10,or=20,h=30, ochamfer1=-5,irounding1=-3, orounding2=6, ichamfer2=2);
 
 function tube(
-     h, or, ir, center,
+    h, or, ir, center,
     od, id, wall,
     or1, or2, od1, od2,
     ir1, ir2, id1, id2,
     realign=false, l, length, height,
-    anchor, spin=0, orient=UP
+    anchor, spin=0, orient=UP, orounding1,irounding1,orounding2,irounding2,rounding1,rounding2,rounding,
+    ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer, teardrop=false
 ) = no_function("tube");
+
 
 module tube(
     h, or, ir, center,
@@ -2423,7 +2455,8 @@ module tube(
     or1, or2, od1, od2,
     ir1, ir2, id1, id2,
     realign=false, l, length, height,
-    anchor, spin=0, orient=UP
+    anchor, spin=0, orient=UP, orounding1,irounding1,orounding2,irounding2,rounding1,rounding2,rounding,
+    ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer, teardrop=false
 ) {
     h = one_defined([h,l,height,length],"h,l,height,length",dflt=1);
     orr1 = get_radius(r1=or1, r=or, d1=od1, d=od, dflt=undef);
@@ -2438,19 +2471,56 @@ module tube(
     checks =
         assert(all_defined([r1, r2, ir1, ir2]), "Must specify two of inner radius/diam, outer radius/diam, and wall width.")
         assert(ir1 <= r1, "Inner radius is larger than outer radius.")
-        assert(ir2 <= r2, "Inner radius is larger than outer radius.");
-    sides = segs(max(r1,r2));
+        assert(ir2 <= r2, "Inner radius is larger than outer radius.")
+        assert(num_defined([rounding,chamfer])<2, "Cannot give both rounding and chamfer")
+        assert(num_defined([irounding,ichamfer])<2, "Cannot give both irounding and ichamfer")
+        assert(num_defined([orounding,ochamfer])<2, "Cannot give both orounding and ochamfer")
+        assert(num_defined([rounding1,chamfer1])<2, "Cannot give both rounding1 and chamfer1")
+        assert(num_defined([irounding1,ichamfer1])<2, "Cannot give both irounding1 and ichamfern")
+        assert(num_defined([orounding1,ochamfer1])<2, "Cannot give both orounding1 and ochamfer1")
+        assert(num_defined([rounding2,chamfer2])<2, "Cannot give both rounding2 and chamfer2")
+        assert(num_defined([irounding2,ichamfer2])<2, "Cannot give both irounding2 and ichamfern")
+        assert(num_defined([orounding2,ochamfer2])<2, "Cannot give both orounding2 and ochamfer2");
+    names = ["irounding","orounding","rounding","irounding1","irounding2","orounding1","orounding2",
+             "ichamfer","ochamfer","chamfer","ichamfer1","ichamfer2","ochamfer1","ochamfer2"];
+    vals =  [irounding,orounding,rounding,irounding1,irounding2,orounding1,orounding2,
+             ichamfer,ochamfer,chamfer,ichamfer1,ichamfer2,ochamfer1,ochamfer2];
+    bad = [for(i=idx(names)) if (is_def(vals[i]) && !is_finite(vals[i])) i];
+    checks2 = assert(bad==[],str("Rounding/chamfer parameters must be numbers.  The following are invalid: ",
+                                 select(names,bad)));
+    findval = function (factor,vlist,i=0)
+         i>=len(vlist) || is_def(vlist[i][1]) ? undef
+                      : is_def(vlist[i][0]) ? factor*vlist[i][0]
+                      : findval(factor,vlist,i+1);
+    irounding1 = findval(-1,[[irounding1,ichamfer1],[rounding1,chamfer1],[irounding,ichamfer],[rounding,chamfer]]);
+    irounding2 = findval(-1,[[irounding2,ichamfer2],[rounding2,chamfer2],[irounding,ichamfer],[rounding,chamfer]]);
+    orounding1 = findval(1,[[orounding1,ochamfer1],[rounding1,chamfer1],[orounding,ochamfer],[rounding,chamfer]]);
+    orounding2 = findval(1,[[orounding2,ochamfer2],[rounding2,chamfer2],[orounding,ochamfer],[rounding,chamfer]]);
+    ichamfer1 = findval(-1,[[ichamfer1,irounding1],[chamfer1,rounding1],[ichamfer,irounding],[chamfer,rounding]]);
+    ichamfer2 = findval(-1,[[ichamfer2,irounding2],[chamfer2,rounding2],[ichamfer,irounding],[chamfer,rounding]]);
+    ochamfer1 = findval(1,[[ochamfer1,orounding1],[chamfer1,rounding1],[ochamfer,orounding],[chamfer,rounding]]);
+    ochamfer2 = findval(1,[[ochamfer2,orounding2],[chamfer2,rounding2],[ochamfer,orounding],[chamfer,rounding]]);
+
+    /*  This is too restrictive, at least on cones 
+    dummy = 
+      assert( first_defined([irounding1,ichamfer1,0])+first_defined([orounding1,ochamfer1,0]) <= r1-ir1, "Chamfer/rounding doesn't fit at bottom")
+      assert( first_defined([irounding2,ichamfer2,0])+first_defined([orounding2,ochamfer2,0]) <= r2-ir2, "Chamfer/rounding doesn't fit at top")
+      assert( -first_defined([irounding1,ichamfer1,0])<ir1, "Negative inside chamfer/rounding doesn't fit at bottom")
+      assert( -first_defined([irounding2,ichamfer2,0])<ir1, "Negative inside chamfer/rounding doesn't fit at top");
+    */
+
     anchor = get_anchor(anchor, center, BOT, CENTER);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
-        zrot(realign? 180/sides : 0) {
-            difference() {
-                cyl(h=h, r1=r1, r2=r2, $fn=sides) children();
-                cyl(h=h+0.05, r1=ir1, r2=ir2);
-            }
+        difference() {
+            cyl(h=h, r1=r1, r2=r2, realign=realign, teardrop=teardrop,
+                rounding1=orounding1,rounding2=orounding2,chamfer1=ochamfer1, chamfer2=ochamfer2);
+            cyl(h=h+0.01, r1=ir1, r2=ir2, realign=realign, teardrop=teardrop,
+                rounding1=irounding1,rounding2=irounding2, chamfer1=ichamfer1, chamfer2=ichamfer2);
         }
         children();
     }
 }
+
 
 
 
