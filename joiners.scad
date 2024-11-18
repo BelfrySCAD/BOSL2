@@ -1262,7 +1262,14 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 //   The joint is constructed with a tooth peak aligned with the X+ axis.  
 //   For two hirth joints to mate they must have the same tooth count, opposite cone angles, and the chamfer/rounding values
 //   must be equal.  (One can be chamfered and one rounded, but with the same value.)  The rotation required to mate the parts
-//   depends on the skew and whether the tooth count is odd or even.  To apply this rotation automatically, set `rot=true`.  
+//   depends on the skew and whether the tooth count is odd or even.  To apply this rotation automatically, set `rot=true`.
+//   .
+//   When you pick extreme parameters such as very large cone angle, or very small tooth count (e.g. 2 or 3), the joint may
+//   develop a weird shape, and the shape may be unexpectedly sensitive to things like whether chamfering is enabled.  It is difficult
+//   to identify the point where the shapes become odd, or even perhaps invalid.  For example, with 2 teeth a skew of 0.95 works fine, but
+//   a skew of 0.97 produces a truncated shape and 0.99 produces a 2-part shape.  A skew of 1 produces a degenerate, invalid shape.  
+//   Since it's hard to determine which parameters, exactly, produce "bad" outcomes, we have chosen not to limit the production
+//   of the extreme shapes, so take care if using extreme parameter values.  
 // Named Anchors:
 //   "teeth_bot" = center of the joint, aligned with the bottom of the (unchamfered/unrounded) teeth, pointing DOWN.  
 // Arguments:
@@ -1351,7 +1358,7 @@ module hirth(n, ir, or, id, od, tooth_angle=60, cone_angle=0, chamfer, rounding,
               ];
   full = deduplicate(concat(basicprof, reverse(xflip(basicprof))));
   skewed = back(valley_angle, skew(sxy=skew*angle/(ridge_angle-valley_angle),fwd(valley_angle,full)));
-  profile = is_undef(rounding) ? skewed
+  pprofile = is_undef(rounding) ? skewed
           :
             let(
                 segs = max(16,segs(or*rounding)),
@@ -1360,20 +1367,43 @@ module hirth(n, ir, or, id, od, tooth_angle=60, cone_angle=0, chamfer, rounding,
                 roundpts = round_corners(skewed, joint=joints, closed=false,$fn=segs)
             )
             roundpts;
+  profile = [
+               for(i=[0:1:len(pprofile)-2]) each [pprofile[i],
+                                                  if (pprofile[i+1].x-pprofile[i].x > 90)    // Interpolate an extra point if angle > 90 deg
+                                                       let(
+                                                            edge = cyl_proj(or, select(pprofile,i,i+1)),
+                                                            cutpt = xyz_to_spherical(lerp(edge[0],edge[1],.48))  // Exactly .5 is too close to or crosses the origin
+                                                       )
+                                                       [cutpt.y,90-cutpt.z]
+                                                 ], 
+               last(pprofile)
+             ];
+
+  // This code computes the realized tooth angle
+  //  out = cyl_proj(or, pprofile);
+  //  in = cyl_proj(ir,pprofile);
+  //  p1 = plane3pt(out[0], out[1], in[1]);
+  //  p2 = plane3pt(out[2], out[1], in[1]);
+  //  echo(toothang=vector_angle(plane_normal(p1), plane_normal(p2)));
   
   bottom = min([tan(valley_angle)*ir,tan(valley_angle)*or])-base-cone_height*ir;
-  safebottom = min([tan(valley_angle)*ir/factor,tan(valley_angle)*or*factor])-base-(crop?1:0)-cone_height*ir;
   ang_ofs = !rot ? -skew*angle
           :  n%2==0 ? -(angle-skew*angle)  - skew*angle
           :  -angle*(2-skew)-skew*angle;
+
   topinner = down(cone_height*ir,[for(ang=lerpn(0,360,n,endpoint=false))
                                   each zrot(ang+ang_ofs,cyl_proj(ir/factor,profile))]);
   topouter = down(cone_height*ir,[for(ang=lerpn(0,360,n,endpoint=false))
                                   each zrot(ang+ang_ofs,cyl_proj(factor*or,profile))]);
+
+  safebottom = min(min(column(topinner,2)), min(column(topouter,2))) - base - (crop?1:0);
+  
   botinner = [for(val=topinner) [val.x,val.y,safebottom]];
   botouter = [for(val=topouter) [val.x,val.y,safebottom]];  
   vert = [topouter, topinner, botinner, botouter];
 
+  datamin = min(min(column(topinner,2)), min(column(topouter,2)));
+  
   anchors = [
              named_anchor("teeth_bot", [0,0,bottom], DOWN)
             ];

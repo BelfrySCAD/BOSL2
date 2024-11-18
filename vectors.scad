@@ -47,7 +47,7 @@
 //   is_vector([],zero=false);              // Returns false
 function is_vector(v, length, zero, all_nonzero=false, eps=EPSILON) =
     is_list(v) && len(v)>0 && []==[for(vi=v) if(!is_finite(vi)) 0] 
-    && (is_undef(length) || len(v)==length)
+    && (is_undef(length) || (assert(is_num(length))len(v)==length))
     && (is_undef(zero) || ((norm(v) >= eps) == !zero))
     && (!all_nonzero || all_nonzero(v)) ;
 
