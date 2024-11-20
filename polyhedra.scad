@@ -330,6 +330,7 @@ module regular_polyhedron(
         stellate=stellate,
         longside=longside, h=h, height=height
     );
+    assert(len(entry)>0, "No polyhedra meet your specification");
     scaled_points = entry[0];
     translation = entry[1];
     face_triangles = entry[2];
@@ -585,6 +586,7 @@ _stellated_polyhedra_ = [
 //     * `"center"`: center for the polyhedron
 //     * `"type"`: polyhedron type, one of "platonic", "archimedean", "catalan", or "trapezohedron"
 //     * `"name"`: name of selected polyhedron
+//   If you specify an impossible selection of polyhedrons, then `[]` is returned.  
 //
 // Arguments:
 //   info = Desired information to return for the polyhedron
@@ -657,7 +659,8 @@ function regular_polyhedron_info(
             ]
         )
     )
-    assert(len(indexlist)>0, "No polyhedra meet your specification")
+    len(indexlist)==0 ? []
+  :
     let(validindex = is_undef(index) || (index>=0 && index<len(indexlist)))
     assert(validindex, str(
         len(indexlist),
