@@ -586,6 +586,7 @@ _stellated_polyhedra_ = [
 //     * `"center"`: center for the polyhedron
 //     * `"type"`: polyhedron type, one of "platonic", "archimedean", "catalan", or "trapezohedron"
 //     * `"name"`: name of selected polyhedron
+//   If you specify an impossible selection of polyhedrons, then `[]` is returned.  
 //
 // Arguments:
 //   info = Desired information to return for the polyhedron
