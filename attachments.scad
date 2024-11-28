@@ -3729,25 +3729,24 @@ function _attach_transform(anchor, spin, orient, geom, p) =
         spin=default(spin,0),
         orient=default(orient,UP),
         two_d = _attach_geom_2d(geom),
-        m = ($attach_to != undef) ?   // $attach_to is the attachment point on this object
+        m = is_def($attach_to) ?   // $attach_to is the attachment point on this object
               (                       // which will attach to the parent
-               let(                           
-                    anch = _find_anchor($attach_to, geom),
-                    // if $anchor_override is set it defines the object position anchor (but note not direction or spin).  
-                    // Otherwise we use the provided anchor for the object.  
-                    pos = is_undef($anchor_override) ? anch[1]
-                        : _find_anchor(_make_anchor_legal($anchor_override,geom),geom)[1]
-               )
-               two_d?
-                 assert(is_num(spin))
-                 affine3d_zrot(spin)  
-                    * rot(to=FWD, from=point3d(anch[2])) 
-                    * affine3d_translate(point3d(-pos))
-             :
-               affine3d_yrot(180)
-                  * affine3d_zrot(-anch[3]-spin)
-                  * rot(from=anch[2],to=UP)
-                  * affine3d_translate(point3d(-pos))
+                   let(                           
+                        anch = _find_anchor($attach_to, geom),
+                        // if $anchor_override is set it defines the object position anchor (but note not direction or spin).  
+                        // Otherwise we use the provided anchor for the object.  
+                        pos = is_undef($anchor_override) ? anch[1]
+                            : _find_anchor(_make_anchor_legal($anchor_override,geom),geom)[1]
+                   )
+                   two_d?
+                     affine3d_zrot(spin)  
+                        * rot(to=FWD, from=point3d(anch[2])) 
+                        * affine3d_translate(point3d(-pos))
+                 :
+                   affine3d_yrot(180)
+                      * affine3d_zrot(-anch[3]-spin)
+                      * rot(from=anch[2],to=UP)
+                      * affine3d_translate(point3d(-pos))
               )
           :
             let(
@@ -3756,17 +3755,14 @@ function _attach_transform(anchor, spin, orient, geom, p) =
                        : _make_anchor_legal(rot(spin, from=UP,to=orient,reverse=true,p=$attach_alignment),geom),
                 pos = _find_anchor(anchor, geom)[1]
             )
-            two_d? 
-                assert(is_num(spin))
-                affine3d_zrot(spin) * affine3d_translate(point3d(-pos))
+            two_d? affine3d_zrot(spin) * affine3d_translate(point3d(-pos))
             :
                 let(
                     axis = vector_axis(UP,orient),    // Returns BACK if orient is UP
                     ang = vector_angle(UP,orient)
                 )
                 affine3d_rot_by_axis(axis,ang) 
-                    * ( is_num(spin)? affine3d_zrot(spin)  
-                                    : affine3d_zrot(spin.z) * affine3d_yrot(spin.y) * affine3d_xrot(spin.x))
+                    * affine3d_zrot(spin)  
                     * affine3d_translate(point3d(-pos))
     )
     is_undef(p)? m
