@@ -161,6 +161,50 @@ module color_overlaps(color="red") {
     %children();
 }
 
+// Module: ghost()
+// Synopsis: Sets transparency for attachable children and their descendents.
+// SynTags: Trans
+// Topics: Attachments
+// See Also: ghost_this(), recolor(), color_this()
+// Usage:
+//   ghost([ghost]) CHILDREN;
+// Description:
+//   Sets the transparency for the attachable children and their descendents until another {{ghost()}} or {{ghost_this()}}.
+//   By default, turns transparency on.  Give the `false` parameter to disable transparency.
+//   Do not mix this with user supplied `%` operators anywhere in the geometry tree.  
+// Arguments:
+//   ghost = If true set the descendents to be transparent; if false, disable transparency.  Default: true
+// Example(3D):
+//   ghost() cuboid(10)
+//     ghost(false) cuboid(5);
+function ghost(ghost) = no_function("ghost");
+module ghost(ghost=true)
+{
+   $ghost=ghost;
+   children();
+}
+
+
+// Module: ghost_this()
+// Synopsis: Makes the children at a single level transparent. 
+// SynTags: Trans
+// Topics: Attachments
+// See Also: ghost(), recolor(), color_this()
+// Usage:
+//   ghost_this() CHILDREN;
+// Description:
+//   Makes the children transparent for one level, reverting to the previous transparency state for further descendents.  
+//   This works only with attachables and you cannot give the `%` operator anywhere in the geometry tree.  
+// Example(3D):
+//   ghost_this() cuboid(10)
+//      cuboid(5);
+function ghost_this() = no_function("ghost_this");
+module ghost_this()
+{
+   $ghost_this=true;
+   children();
+}
+
 
 // Section: Colorspace Conversion
 

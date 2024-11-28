@@ -39,7 +39,9 @@ $edge_length = undef;
 $tags_shown = "ALL";
 $tags_hidden = [];
 
-
+$ghost_this=false;
+$ghost=false;
+$ghosting=false;    // Ghosting is in effect, so don't apply it again
 
 _ANCHOR_TYPES = ["intersect","hull"];
 
@@ -3070,7 +3072,7 @@ module attachable(
     axis=UP,override,
     geom,
     expose_tags=false, keep_color=false
-) { 
+) {
     dummy1 =
         assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
@@ -3104,31 +3106,32 @@ module attachable(
         $attach_alignment=undef;
         if (expose_tags || _is_shown()){
             if (!keep_color)
-                _color($color) children(0);
+                _color($color)
+                    if (($ghost || $ghost_this) && !$ghosting)
+                        %union(){
+                           $ghosting=true;
+                           children(0);
+                        }
+                    else children(0);
             else {
                 $save_color=undef; // Force color_this() color in effect to persist for the entire object
-                children(0); 
+                    if (($ghost || $ghost_this) && !$ghosting)
+                        %union(){
+                           $ghosting=true;
+                           children(0);
+                        }
+                    else children(0);
             }
         }
-        if (is_def($save_tag) && is_def($save_color)){
-            $tag=$save_tag;
-            $save_tag=undef;
-            $color=$save_color;    // Revert to the color before color_this() call
-            $save_color=undef;
-            children(1);
-        }
-        else if (is_def($save_color)) {
-            $color=$save_color;    // Revert to the color before color_this() call
-            $save_color=undef;
-            children(1);
-        }
-        else if (is_def($save_tag)) {
-            $tag=$save_tag;
-            $save_tag=undef;
-            children(1);
-        }
-        else children(1);
-    }
+        let(
+            $ghost_this=false,
+            $tag=default($save_tag,$tag),
+            $save_tag=undef,
+            $color=default($save_color,$color),
+            $save_color=undef
+        )
+        children(1);
+   }
 }
 
 // Function: reorient()
@@ -3926,7 +3929,7 @@ function _find_anchor(anchor, geom)=
                  : oang        // face anchors point UP/BACK
         ) [anchor, final_pos, final_dir, default(override[2],spin),
            if (is_def(edgeang)) [["edge_angle",edgeang],["edge_length",edgelen], ["vec", endvecs]]]
-    ) : type == "conoid"? ( //r1, r2, l, shift
+    ) : type == "conoid"? ( //r1, r2, l, shift, axis
         let(
             rr1=geom[1],
             rr2=geom[2],
