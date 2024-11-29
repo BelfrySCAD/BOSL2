@@ -39,7 +39,9 @@ $edge_length = undef;
 $tags_shown = "ALL";
 $tags_hidden = [];
 
-
+$ghost_this=false;
+$ghost=false;
+$ghosting=false;    // Ghosting is in effect, so don't apply it again
 
 _ANCHOR_TYPES = ["intersect","hull"];
 
@@ -3070,7 +3072,7 @@ module attachable(
     axis=UP,override,
     geom,
     expose_tags=false, keep_color=false
-) { 
+) {
     dummy1 =
         assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
@@ -3104,31 +3106,32 @@ module attachable(
         $attach_alignment=undef;
         if (expose_tags || _is_shown()){
             if (!keep_color)
-                _color($color) children(0);
+                _color($color)
+                    if (($ghost || $ghost_this) && !$ghosting)
+                        %union(){
+                           $ghosting=true;
+                           children(0);
+                        }
+                    else children(0);
             else {
                 $save_color=undef; // Force color_this() color in effect to persist for the entire object
-                children(0); 
+                    if (($ghost || $ghost_this) && !$ghosting)
+                        %union(){
+                           $ghosting=true;
+                           children(0);
+                        }
+                    else children(0);
             }
         }
-        if (is_def($save_tag) && is_def($save_color)){
-            $tag=$save_tag;
-            $save_tag=undef;
-            $color=$save_color;    // Revert to the color before color_this() call
-            $save_color=undef;
-            children(1);
-        }
-        else if (is_def($save_color)) {
-            $color=$save_color;    // Revert to the color before color_this() call
-            $save_color=undef;
-            children(1);
-        }
-        else if (is_def($save_tag)) {
-            $tag=$save_tag;
-            $save_tag=undef;
-            children(1);
-        }
-        else children(1);
-    }
+        let(
+            $ghost_this=false,
+            $tag=default($save_tag,$tag),
+            $save_tag=undef,
+            $color=default($save_color,$color),
+            $save_color=undef
+        )
+        children(1);
+   }
 }
 
 // Function: reorient()
@@ -3726,25 +3729,24 @@ function _attach_transform(anchor, spin, orient, geom, p) =
         spin=default(spin,0),
         orient=default(orient,UP),
         two_d = _attach_geom_2d(geom),
-        m = ($attach_to != undef) ?   // $attach_to is the attachment point on this object
+        m = is_def($attach_to) ?   // $attach_to is the attachment point on this object
               (                       // which will attach to the parent
-               let(                           
-                    anch = _find_anchor($attach_to, geom),
-                    // if $anchor_override is set it defines the object position anchor (but note not direction or spin).  
-                    // Otherwise we use the provided anchor for the object.  
-                    pos = is_undef($anchor_override) ? anch[1]
-                        : _find_anchor(_make_anchor_legal($anchor_override,geom),geom)[1]
-               )
-               two_d?
-                 assert(is_num(spin))
-                 affine3d_zrot(spin)  
-                    * rot(to=FWD, from=point3d(anch[2])) 
-                    * affine3d_translate(point3d(-pos))
-             :
-               affine3d_yrot(180)
-                  * affine3d_zrot(-anch[3]-spin)
-                  * rot(from=anch[2],to=UP)
-                  * affine3d_translate(point3d(-pos))
+                   let(                           
+                        anch = _find_anchor($attach_to, geom),
+                        // if $anchor_override is set it defines the object position anchor (but note not direction or spin).  
+                        // Otherwise we use the provided anchor for the object.  
+                        pos = is_undef($anchor_override) ? anch[1]
+                            : _find_anchor(_make_anchor_legal($anchor_override,geom),geom)[1]
+                   )
+                   two_d?
+                     affine3d_zrot(spin)  
+                        * rot(to=FWD, from=point3d(anch[2])) 
+                        * affine3d_translate(point3d(-pos))
+                 :
+                   affine3d_yrot(180)
+                      * affine3d_zrot(-anch[3]-spin)
+                      * rot(from=anch[2],to=UP)
+                      * affine3d_translate(point3d(-pos))
               )
           :
             let(
@@ -3753,17 +3755,14 @@ function _attach_transform(anchor, spin, orient, geom, p) =
                        : _make_anchor_legal(rot(spin, from=UP,to=orient,reverse=true,p=$attach_alignment),geom),
                 pos = _find_anchor(anchor, geom)[1]
             )
-            two_d? 
-                assert(is_num(spin))
-                affine3d_zrot(spin) * affine3d_translate(point3d(-pos))
+            two_d? affine3d_zrot(spin) * affine3d_translate(point3d(-pos))
             :
                 let(
                     axis = vector_axis(UP,orient),    // Returns BACK if orient is UP
                     ang = vector_angle(UP,orient)
                 )
                 affine3d_rot_by_axis(axis,ang) 
-                    * ( is_num(spin)? affine3d_zrot(spin)  
-                                    : affine3d_zrot(spin.z) * affine3d_yrot(spin.y) * affine3d_xrot(spin.x))
+                    * affine3d_zrot(spin)  
                     * affine3d_translate(point3d(-pos))
     )
     is_undef(p)? m
@@ -3926,7 +3925,7 @@ function _find_anchor(anchor, geom)=
                  : oang        // face anchors point UP/BACK
         ) [anchor, final_pos, final_dir, default(override[2],spin),
            if (is_def(edgeang)) [["edge_angle",edgeang],["edge_length",edgelen], ["vec", endvecs]]]
-    ) : type == "conoid"? ( //r1, r2, l, shift
+    ) : type == "conoid"? ( //r1, r2, l, shift, axis
         let(
             rr1=geom[1],
             rr2=geom[2],
