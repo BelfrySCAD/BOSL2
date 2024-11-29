@@ -304,7 +304,7 @@ function last(list) =
 // Example:
 //   hlist1 = list_head(["foo", "bar", "baz"]);  // Returns: ["foo", "bar"]
 //   hlist2 = list_head(["foo", "bar", "baz"], -3); // Returns: ["foo"]
-//   hlist3 = list_head(["foo", "bar", "baz"], 2);  // Returns: ["foo","bar"]
+//   hlist3 = list_head(["foo", "bar", "baz"], 1);  // Returns: ["foo","bar"]
 //   hlist4 = list_head(["foo", "bar", "baz"], -5); // Returns: []
 //   hlist5 = list_head(["foo", "bar", "baz"], 5);  // Returns: ["foo","bar","baz"]
 function list_head(list, to=-2) =

@@ -654,6 +654,7 @@ module grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero)
         is_vector(n)? assert(len(n)==2) n :
         size!=undef && spacing!=undef? v_floor(v_div(size,spacing))+[1,1] :
         [2,2];
+    dummy2 = assert(is_int(n[0]) && is_int(n[1]), "The number of rows/columns must be an integer");
     offset = v_mul(spacing, n-[1,1])/2;
 
     poslist = 

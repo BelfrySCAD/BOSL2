@@ -219,8 +219,9 @@ color("blue",0.25) down(20) cube([40,40,0.1], center=true);
 ```
 
 
-## Skewing
-One transform that OpenSCAD does not perform natively is skewing.
+## Skewing / Shearing
+One transform that OpenSCAD does not perform natively is skewing, also
+known as shearing.  
 BOSL2 provides the `skew()` command for that.  You give it multipliers
 for the skews you want to perform.  The arguments used all start with `s`,
 followed by the axis you want to skew along, followed by the axis that
