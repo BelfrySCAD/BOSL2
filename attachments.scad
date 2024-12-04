@@ -4998,4 +4998,122 @@ function _canonical_edge(edge) =
   flip * edge;
 
 
+// Section: Attachable Descriptions for Operating on Attachables or Restoring a Previous State
+
+// Function: parent()
+// Topics: Transforms, Attachments, Descriptions
+// See Also: restore()
+// Synopsis: Returns a description (transformation state and attachment geometry) of the parent
+// Usage:
+//   let( desc = parent() ) CHILDREN;
+// Description:
+//   Returns a description of the closest attachable ancestor in the geometry tree, along with the current transformation.  You can use this
+//   description to create new objects based on the described object or perform computations based on the described object.  You can also use it to
+//   restore the context of the parent object and transformation state using {{restore()}}.  Note that with OpenSCAD 2021.01 you need to use `let` for
+//   this function to work, and the definition of the variable is scoped to the children of the let module.
+//   (In development versions the use of let is no longer necessary.)  Note that if OpenSCAD displays any warnings
+//   related to transformation operations then the transformation that parent() returns is likely to be incorrect, even if OpenSCAD
+//   continues to run and produces a valid result.  
+function parent() =
+    let(
+        geom = default($parent_geom, attach_geom([0,0,0]))
+    )                 
+    [$transform, geom];
+
+
+// Module: restore()
+// Synopsis: Restores transformation state and attachment geometry from a description
+// SynTags: Trans
+// Topics: Transforms, Attachments, Descriptions
+// See Also: parent()
+// Usage:
+//   restore([desc]) CHILDREN;
+// Description:
+//   Restores the transformation and parent geometry contained in the specified description which you obtained with {{parent()}}.  
+//   If you don't give a description then restores the global world coordinate system with a zero size cuboid object as the parent.
+// Arguments:
+//   desc = saved description to restore.  Default: restore to world coordinates
+// Example(3D):  The pink cube is a child of the green cube, but {{restore()}} restores the state to the yellow parent cube, so the pink cube attaches to the yellow cube
+//  left(5) cuboid(10)
+//    let(save_pt = parent())
+//    attach(RIGHT,BOT) recolor("green") cuboid(3)
+//    restore(save_pt)
+//      attach(FWD,BOT) recolor("pink") cuboid(3);
+
+module restore(desc)
+{
+   req_children($children);
+   if (is_undef(desc)){
+     T = matrix_inverse($transform);
+     $parent_geom = ["prismoid", [CTR, UP, 0]];
+     multmatrix(T) children();
+   }
+   else{
+     assert(!is_undef(desc) && is_list(desc) && len(desc)==2, "Invalid desc");
+     T = linear_solve($transform, desc[0]);
+     $parent_geom = desc[1];
+     multmatrix(T) children();
+   }
+}
+
+// Function desc_point()
+// Synopsis: Computes the location in the current context of an anchor point from an attachable description
+// Topics: Descriptions, Attachments
+// See Also: parent(), desc_dist()
+// Usage:
+//   point = desc_point(desc,[anchor]);
+// Description:
+//   Computes the coordinates of the specified anchor point in the given description relative to the current transformation state.
+// Arguments:
+//   desc = Description to use to get the point
+//   anchor = Anchor point that you want to extract.  Default: CENTER
+// Example(3D): In this example we translate away from the parent object and then compute points on that object.  Note that with OpenSCAD 2021.01 you must use union() or alternatively place the pt1 and pt2 assignments in a let() statement.  This is not necessary in development versions.  
+//  cuboid(10) let(desc=parent())
+//    right(12) up(27)
+//      union(){
+//        pt1 = desc_point(desc,TOP+BACK+LEFT);
+//        pt2 = desc_point(desc,TOP+FWD+RIGHT);
+//        stroke([pt1,pt2,CENTER], closed=true, width=.5,color="red");
+//      }
+// Example(3D): Here we compute the point on the parent so we can draw a line anchored on the child object that connects to a computed point on the parent
+//  cuboid(10) let(desc=parent())
+//    attach(FWD,BOT) cuboid([3,3,7])
+//    attach(TOP+BACK+RIGHT, BOT)
+//    stroke([[0,0,0], desc_point(desc,TOP+FWD+RIGHT)],width=.5,color="red");
+function desc_point(desc, anchor=CENTER) =
+    is_undef(desc) ? linear_solve($transform, [0,0,0,0])
+  : let(
+         anch = _find_anchor(anchor, desc[1]),
+         T = linear_solve($transform, desc[0])
+    )
+    apply(T, anch[1]);
+
+
+
+// Function desc_dist()
+// Synopsis: Computes the distance between two points specified by attachable descriptions
+// Topics: Descriptions, Attachments
+// See Also: parent(), desc_point()
+// Usage:
+//   dist = desc_dist(desc1,anchor1,desc2,anchor2);
+//   dest = desc_dist(desc1=, desc2=, [anchor1=], [anchor2=]);
+// Example: Computes the distance between a point on each cube. 
+//  cuboid(10) let(desc=parent())
+//    right(15) cuboid(10) 
+//      echo(desc_dist(parent(),TOP+RIGHT+BACK, desc, TOP+LEFT+FWD));
+
+function desc_dist(desc1,anchor1=CENTER, desc2, anchor2=CENTER)=
+   let(
+         anch1 = _find_anchor(anchor1, desc1[1]),
+         anch2 = _find_anchor(anchor2, desc2[1]),         
+         Tinv = matrix_inverse($transform),
+         T1 = Tinv*desc1[0],
+         T2 = Tinv*desc2[0],
+         pt1 = apply(T1,anch1[1]),
+         pt2 = apply(T2,anch2[1])
+    )
+    norm(pt1-pt2);
+
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
