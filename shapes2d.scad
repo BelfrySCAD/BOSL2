@@ -1992,27 +1992,31 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 // Synopsis: Creates a shape between a circle and a square, centered on the origin.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), square()
+// See Also: circle(), square(), supershape()
 // Usage: As Module
 //   squircle(squareness, size) [ATTACHMENTS];
 // Usage: As Function
 //   path = squircle(squareness, size);
 // Description:
-//   A squircle is a shape intermediate between a square/rectangle and a circle/ellipse. Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard buttons, and smartphone icons. Old CRT television screens also resembled squircles.
-// When called as a module, creates a 2D squircle with the desired squareness. Uses "intersect" type anchoring.  
+//   A squircle is a shape intermediate between a square/rectangle and a circle/ellipse. A squircle is a special case of supershape (shown in `supershape()` example 3), but this implementation uses a different method that requires just two parameters, and the vertex distribution is optimized for smoothness.
+//   Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard buttons, and smartphone icons. Old CRT television screens also resembled squircles.
+//   When called as a module, creates a 2D squircle with the desired squareness. Uses "intersect" type anchoring.  
 //   When called as a function, returns a 2D path for a squircle.
 // Arguments:
-//   squareness = Value between 0 and 1. Controls the shape of the squircle. When `squareness=0` the shape is a circle, and when `squareness=1` the shape is a square.  Default: 0.8
+//   squareness = Value between 0 and 1. Controls the shape of the squircle. When `squareness=0` the shape is a circle, and when `squareness=1` the shape is a square.  Default: 0.7
 //   size = Bounding box of the squircle, same as the `size` parameter in `square()`, can be a single number or an `[xsize,ysize]` vector. Default: [10,10]
 //    $fn = Number of points. Special variables `$fs` and `$fa` are ignored. If set, `$fn` must be 12 or greater, and is rounded to the nearest multiple of 4. Points are generated non-uniformly around the squircle so they are more dense sharper curves. Default if not set: 40
 // Examples(2D):
-//   squircle(squareness=0.5, size=50);
-//   squircle(0.95, [80,60], $fn=64);
+//   squircle(squareness=0.4, size=50);
+//   squircle(0.8, [80,60], $fn=64);
+// Examples(2D): Ten increments of squareness parameter
+//   for(sq=[0:0.1:1])
+//       stroke(squircle(sq, 100, $fn=128), closed=true, width=0.5);
 // Examples(2D): Standard vector anchors are based on extents
 //   squircle(0.8, 50) show_anchors(custom=false);
 // Examples(2D): Named anchors exist for the sides and corners
 //   squircle(0.8, 50) show_anchors(std=false);
-module squircle(squareness=0.8, size=[10,10], anchor=CENTER, spin=0) {
+module squircle(squareness=0.7, size=[10,10], anchor=CENTER, spin=0) {
     check = assert(squareness >= 0 && squareness <= 1);
     bbox = is_num(size) ? [size,size] : point2d(size);
     assert(all_positive(bbox), "All components of size must be positive.");
@@ -2034,10 +2038,11 @@ module squircle(squareness=0.8, size=[10,10], anchor=CENTER, spin=0) {
 }
 
 
-function squircle(squareness=0.8, size=[10,10]) =
+function squircle(squareness=0.7, size=[10,10]) =
     assert(squareness >= 0 && squareness <= 1) [
     let(
-        sq = sqrt(squareness), // somewhat linearize the squareness response
+        sqlim = max(0, min(1, squareness)),
+        sq = sqrt(sqlim*(2-sqlim)), // somewhat linearize squareness response
         bbox = is_num(size) ? [size,size] : point2d(size),
         aspect = bbox[1] / bbox[0],
         r = 0.5 * bbox[0],
