@@ -1992,14 +1992,15 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 // Synopsis: Creates a shape between a circle and a square, centered on the origin.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), square()
+// See Also: circle(), square(), supershape()
 // Usage: As Module
 //   squircle(squareness, size) [ATTACHMENTS];
 // Usage: As Function
 //   path = squircle(squareness, size);
 // Description:
-//   A squircle is a shape intermediate between a square/rectangle and a circle/ellipse. Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard buttons, and smartphone icons. Old CRT television screens also resembled squircles.
-// When called as a module, creates a 2D squircle with the desired squareness. Uses "intersect" type anchoring.  
+//   A squircle is a shape intermediate between a square/rectangle and a circle/ellipse. A squircle is a special case of supershape (shown in `supershape()` example 3), but this implementation uses a different method that requires just two parameters, and the vertex distribution is optimized for smoothness.
+//   Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard buttons, and smartphone icons. Old CRT television screens also resembled squircles.
+//   When called as a module, creates a 2D squircle with the desired squareness. Uses "intersect" type anchoring.  
 //   When called as a function, returns a 2D path for a squircle.
 // Arguments:
 //   squareness = Value between 0 and 1. Controls the shape of the squircle. When `squareness=0` the shape is a circle, and when `squareness=1` the shape is a square.  Default: 0.8
