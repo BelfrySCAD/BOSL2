@@ -1929,7 +1929,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 // Usage: As Function
 //   path = reuleaux_polygon(n, r|d=, ...);
 // Description:
-//   When called as a module, reates a 2D Reuleaux Polygon; a constant width shape that is not circular.  Uses "intersect" type anchoring.  
+//   When called as a module, creates a 2D Reuleaux Polygon; a constant width shape that is not circular.  Uses "intersect" type anchoring.  
 //   When called as a function, returns a 2D path for a Reulaux Polygon.
 // Arguments:
 //   n = Number of "sides" to the Reuleaux Polygon.  Must be an odd positive number.  Default: 3
@@ -1985,6 +1985,73 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
             ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
         ]
     ) reorient(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors, p=path);
+
+
+
+// Function&Module: squircle()
+// Synopsis: Creates a shape between a circle and a square, centered on the origin.
+// SynTags: Geom, Path
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), square()
+// Usage: As Module
+//   squircle(squareness, size) [ATTACHMENTS];
+// Usage: As Function
+//   path = squircle(squareness, size);
+// Description:
+//   A squircle is a shape intermediate between a square/rectangle and a circle/ellipse. Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard buttons, and smartphone icons. Old CRT television screens also resembled squircles.
+// When called as a module, creates a 2D squircle with the desired squareness. Uses "intersect" type anchoring.  
+//   When called as a function, returns a 2D path for a squircle.
+// Arguments:
+//   squareness = Value between 0 and 1. Controls the shape of the squircle. When `squareness=0` the shape is a circle, and when `squareness=1` the shape is a square.  Default: 0.8
+//   size = Bounding box of the squircle, same as the `size` parameter in `square()`, can be a single number or an `[xsize,ysize]` vector. Default: [10,10]
+//    $fn = Number of points. Special variables `$fs` and `$fa` are ignored. If set, `$fn` must be 12 or greater, and is rounded to the nearest multiple of 4. Points are generated non-uniformly around the squircle so they are more dense sharper curves. Default if not set: 40
+// Examples(2D):
+//   squircle(squareness=0.5, size=50);
+//   squircle(0.95, [80,60], $fn=64);
+// Examples(2D): Standard vector anchors are based on extents
+//   squircle(0.8, 50) show_anchors(custom=false);
+// Examples(2D): Named anchors exist for the sides and corners
+//   squircle(0.8, 50) show_anchors(std=false);
+module squircle(squareness=0.8, size=[10,10], anchor=CENTER, spin=0) {
+    check = assert(squareness >= 0 && squareness <= 1);
+    bbox = is_num(size) ? [size,size] : point2d(size);
+    assert(all_positive(bbox), "All components of size must be positive.");
+    path = squircle(squareness, size);
+    anchors = [
+        for (i = [0:1:3]) let(
+            ca = 360 - i*90,
+            cp = polar_to_xy(squircle_radius(squareness, bbox[0], ca), ca)
+        ) named_anchor(str("side",i), cp, unit(cp,BACK), 0),
+        for (i = [0:1:3]) let(
+            ca = 360-45 - i*90,
+            cp = polar_to_xy(squircle_radius(squareness, bbox[0], ca), ca)
+        ) named_anchor(str("corner",i), cp, unit(cp,BACK), 0)
+    ];
+    attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
+        polygon(path);
+        children();
+    }
+}
+
+
+function squircle(squareness=0.8, size=[10,10]) =
+    assert(squareness >= 0 && squareness <= 1) [
+    let(
+        sq = sqrt(squareness), // somewhat linearize the squareness response
+        bbox = is_num(size) ? [size,size] : point2d(size),
+        aspect = bbox[1] / bbox[0],
+        r = 0.5 * bbox[0],
+        astep = $fn>=12 ? 90/round($fn/4) : 9
+    ) for(a=[360:-astep:0.01]) let(
+        theta = a + sq * sin(4*a) * 30/PI, // tighter angle steps at corners
+        p = squircle_radius(sq, r, theta)
+    ) [p*cos(theta), aspect*p*sin(theta)]
+];
+
+
+function squircle_radius(squareness, r, angle) = let(
+    s2a = abs(squareness*sin(2*angle))
+    ) s2a>0 ? r*sqrt(2)/s2a * sqrt(1 - sqrt(1 - s2a*s2a)) : r;
 
 
 
