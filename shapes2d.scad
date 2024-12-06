@@ -1929,7 +1929,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 // Usage: As Function
 //   path = reuleaux_polygon(n, r|d=, ...);
 // Description:
-//   When called as a module, creates a 2D Reuleaux Polygon; a constant width shape that is not circular.  Uses "intersect" type anchoring.  
+//   When called as a module, reates a 2D Reuleaux Polygon; a constant width shape that is not circular.  Uses "intersect" type anchoring.  
 //   When called as a function, returns a 2D path for a Reulaux Polygon.
 // Arguments:
 //   n = Number of "sides" to the Reuleaux Polygon.  Must be an odd positive number.  Default: 3
@@ -2021,14 +2021,14 @@ module squircle(squareness=0.7, size=[10,10], anchor=CENTER, spin=0) {
     bbox = is_num(size) ? [size,size] : point2d(size);
     assert(all_positive(bbox), "All components of size must be positive.");
     path = squircle(squareness, size);
-    anchors = [
+    anchors = let(sq = _linearize_squareness(squareness)) [
         for (i = [0:1:3]) let(
             ca = 360 - i*90,
-            cp = polar_to_xy(squircle_radius(squareness, bbox[0]/2, ca), ca)
+            cp = polar_to_xy(squircle_radius(sq, bbox[0]/2, ca), ca)
         ) named_anchor(str("side",i), cp, unit(cp,BACK), 0),
         for (i = [0:1:3]) let(
             ca = 360-45 - i*90,
-            cp = polar_to_xy(squircle_radius(squareness, bbox[0]/2, ca), ca)
+            cp = polar_to_xy(squircle_radius(sq, bbox[0]/2, ca), ca)
         ) named_anchor(str("corner",i), cp, unit(cp,BACK), 0)
     ];
     attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
@@ -2041,8 +2041,7 @@ module squircle(squareness=0.7, size=[10,10], anchor=CENTER, spin=0) {
 function squircle(squareness=0.7, size=[10,10]) =
     assert(squareness >= 0 && squareness <= 1) [
     let(
-        sqlim = max(0, min(1, squareness)),
-        sq = sqrt(sqlim*(2-sqlim)), // somewhat linearize squareness response
+        sq = _linearize_squareness(squareness),
         bbox = is_num(size) ? [size,size] : point2d(size),
         aspect = bbox[1] / bbox[0],
         r = 0.5 * bbox[0],
@@ -2057,6 +2056,13 @@ function squircle(squareness=0.7, size=[10,10]) =
 function squircle_radius(squareness, r, angle) = let(
     s2a = abs(squareness*sin(2*angle))
     ) s2a>0 ? r*sqrt(2)/s2a * sqrt(1 - sqrt(1 - s2a*s2a)) : r;
+
+    
+function _linearize_squareness(s) =
+    // from Chamberlain Fong (2016). "Squircular Calculations". arXiv.
+    // https://arxiv.org/vc/arxiv/papers/1604/1604.02174v1.pdf
+    let(c = 2 - 2*sqrt(2), d = 1 - 0.5*c*s)
+    2 * sqrt((1+c)*s*s - c*s) / (d*d);
 
 
 
