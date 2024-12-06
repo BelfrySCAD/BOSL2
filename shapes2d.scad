@@ -2060,7 +2060,7 @@ function squircle_radius(squareness, r, angle) = let(
     
 function _linearize_squareness(s) =
     // from Chamberlain Fong (2016). "Squircular Calculations". arXiv.
-    // https://arxiv.org/vc/arxiv/papers/1604/1604.02174v1.pdf
+    // https://arxiv.org/pdf/1604.02174v5
     let(c = 2 - 2*sqrt(2), d = 1 - 0.5*c*s)
     2 * sqrt((1+c)*s*s - c*s) / (d*d);
 
