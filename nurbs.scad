@@ -242,7 +242,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                 type=="open" ? assert(len(xknots)==len(control)+degree+1, str("For open spline, knot vector with multiplicity must have length ",
                                                                         len(control)+degree+1," but has length ", len(xknots)))
                                xknots
-              : type=="clamped" ? assert(len(xknots) == len(control)+1-degree, str("For clamped spline, knot vector with multiplicity must have length ",
+              : type=="clamped" ? assert(len(xknots) == len(control)+1-degree, str("For clamped spline of degree ",degree,", knot vector with multiplicity must have length ",
                                                                         len(control)+1-degree," but has length ", len(xknots)))
                                   assert(xknots[0]!=xknots[1] && last(xknots)!=select(xknots,-2),
                                          "For clamped splint, first and last knots cannot repeat (must have multiplicity one")

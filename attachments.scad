@@ -5005,7 +5005,9 @@ function _canonical_edge(edge) =
 // See Also: restore()
 // Synopsis: Returns a description (transformation state and attachment geometry) of the parent
 // Usage:
-//   let( desc = parent() ) CHILDREN;
+//   PARENT() let( desc = parent() ) CHILDREN;
+// Usage: in development releases only
+//   PARENT() { desc=parent(); CHILDREN; }
 // Description:
 //   Returns a description of the closest attachable ancestor in the geometry tree, along with the current transformation.  You can use this
 //   description to create new objects based on the described object or perform computations based on the described object.  You can also use it to
@@ -5097,6 +5099,9 @@ function desc_point(desc, anchor=CENTER) =
 // Usage:
 //   dist = desc_dist(desc1,anchor1,desc2,anchor2);
 //   dest = desc_dist(desc1=, desc2=, [anchor1=], [anchor2=]);
+// Description:
+//   Computes the distance between two points specified using attachable descriptions and optional anchor
+//   points.  If you omit the anchor point(s) then the computation uses the CENTER anchor.  
 // Example: Computes the distance between a point on each cube. 
 //  cuboid(10) let(desc=parent())
 //    right(15) cuboid(10) 
