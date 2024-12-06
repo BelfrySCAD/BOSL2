@@ -2024,11 +2024,11 @@ module squircle(squareness=0.7, size=[10,10], anchor=CENTER, spin=0) {
     anchors = [
         for (i = [0:1:3]) let(
             ca = 360 - i*90,
-            cp = polar_to_xy(squircle_radius(squareness, bbox[0], ca), ca)
+            cp = polar_to_xy(squircle_radius(squareness, bbox[0]/2, ca), ca)
         ) named_anchor(str("side",i), cp, unit(cp,BACK), 0),
         for (i = [0:1:3]) let(
             ca = 360-45 - i*90,
-            cp = polar_to_xy(squircle_radius(squareness, bbox[0], ca), ca)
+            cp = polar_to_xy(squircle_radius(squareness, bbox[0]/2, ca), ca)
         ) named_anchor(str("corner",i), cp, unit(cp,BACK), 0)
     ];
     attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
