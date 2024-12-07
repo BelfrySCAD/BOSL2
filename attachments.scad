@@ -1155,7 +1155,7 @@ module tag_this(tag)
 //   - `polygon()`
 //   - `projection()`
 //   - `polyhedron()`  (or use [`vnf_polyhedron()`](vnf.scad#vnf_polyhedron))
-//   - `linear_extrude()`  (or use [`linear_sweep()`](regions.scad#linear_sweep))
+//   - `linear_extrude()`  (or use [`linear_sweep()`](skin.scad#functionmodule-linear_sweep))
 //   - `rotate_extrude()`
 //   - `surface()`
 //   - `import()`
