@@ -137,7 +137,7 @@ include<BOSL2/beziers.scad>
 // Example(2D,NoAxes): Explicitly specified knots only change the quadratic clamped curve slightly.  Knot count is len(control)-degree+1 = 9.
 //   pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
 //   knots = [0,1,3,5,9,13,14,19,21];
-//   debug_nurbs(pts,2);
+//   debug_nurbs(pts,2,knots=knots);
 // Example(2D,NoAxes): Combining explicit knots with mult for the quadratic curve to add a corner
 //   pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
 //   knots = [0,1,3,9,13,14,19,21];
@@ -288,7 +288,8 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                      ;
                   !done
                      ;
-                  output = (uind<len(adjusted_u) && approx(adjusted_u[uind],knot[kind]) && ((kmultind>=len(kmult)-1 || kind+kmult[kmultind]>=len(control)))) ? kind-kmult[kmultind-1]
+                  output = (uind<len(adjusted_u) && approx(adjusted_u[uind],knot[kind]) && kind>kmult[0]-1 && ((kmultind>=len(kmult)-1 || kind+kmult[kmultind]>=len(control))))
+                                            ?kind-kmult[kmultind-1]
                          : (uind<len(adjusted_u) && adjusted_u[uind]>=knot[kind] && adjusted_u[uind]>=knot[kind] && adjusted_u[uind]<knot[kind+kmult[kmultind]]) ? kind
                          : undef,
                   done =  uind==len(adjusted_u), 
@@ -300,7 +301,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
               if (is_def(output)) output]
          )
          [for(i=idx(adjusted_u))
-            _nurbs_pt(knot,select(control, knotidx[i]-degree,knotidx[i]), adjusted_u[i], 1, degree, knotidx[i])
+            _nurbs_pt(knot,slice(control, knotidx[i]-degree,knotidx[i]), adjusted_u[i], 1, degree, knotidx[i])
          ];
        
 
