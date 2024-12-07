@@ -161,6 +161,8 @@ module color_overlaps(color="red") {
     %children();
 }
 
+// Section: Setting Object Transparency
+
 // Module: ghost()
 // Synopsis: Sets transparency for attachable children and their descendents.
 // SynTags: Trans

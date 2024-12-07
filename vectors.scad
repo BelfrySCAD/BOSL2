@@ -343,6 +343,26 @@ function vector_bisect(v1,v2) =
     ) v3;
 
 
+// Function: vector_perp()
+// Synopsis: Returns component of a vector perpendicular to a second vector
+// Topics: Vectors, Math
+// Usage:
+//   perp = vector_perp(v,w);
+// Description:
+//   Returns the component of vector w that is perpendicular to vector v.  Vectors must have the same length.  
+// Arguments:
+//   v = reference vector
+//   w = vector whose perpendicular component is returned
+// Example(2D):  We extract the component of the red vector that is perpendicular to the yellow vector.  That component appears in blue.  
+//   v = [12,6];
+//   w = [13,22];
+//   stroke([[0,0],v],endcap2="arrow2");
+//   stroke([[0,0],w],endcap2="arrow2",color="red");
+//   stroke([[0,0],vector_perp(v,w)], endcap2="arrow2", color="blue");
+function vector_perp(v,w) =
+    assert(is_vector(v) && is_vector(w) && len(v)==len(w), "Invalid or mismatched inputs")
+    w - w*v*v/(v*v);
+
 
 // Section: Vector Searching
 

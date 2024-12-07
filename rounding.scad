@@ -1378,10 +1378,10 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   atype = Select "hull", "intersect", "surf_hull" or "surf_intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Anchor Types:
-//   hull = Anchors to the convex hull of the linear sweep of the path, ignoring any end roundings.  (default)
-//   intersect = Anchors to the surface of the linear sweep of the path, ignoring any end roundings.
-//   surf_hull = Anchors to the convex hull of the offset_sweep shape, including end treatments.
-//   surf_intersect = Anchors to the surface of the offset_sweep shape, including any end treatments.
+//   "hull" = Anchors to the convex hull of the linear sweep of the path, ignoring any end roundings.  (default)
+//   "intersect" = Anchors to the surface of the linear sweep of the path, ignoring any end roundings.
+//   "surf_hull" = Anchors to the convex hull of the offset_sweep shape, including end treatments.
+//   "surf_intersect" = Anchors to the surface of the offset_sweep shape, including any end treatments.
 // Named Anchors:
 //   "base" = Anchor to the base of the shape in its native position, ignoring any "extra"
 //   "top" = Anchor to the top of the shape in its native position, ignoring any "extra"
@@ -2120,13 +2120,11 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   "top_corner0", "top_corner1", etc = Top corner, pointing in direction of associated edge anchor, spin up along associated edge
 //   "bot_corner0", "bot_corner1", etc = Bottom corner, pointing in direction of associated edge anchor, spin up along associated edge
 // Anchor Types:
-//   hull = Anchors to the convex hull of the linear sweep of the path, ignoring any end roundings.  (default)
-//   intersect = Anchors to the surface of the linear sweep of the path, ignoring any end roundings.
-//   surf_hull = Anchors to the convex hull of the offset_sweep shape, including end treatments.
-//   surf_intersect = Anchors to the surface of the offset_sweep shape, including any end treatments.
-
-//   "hull" = Anchors to the virtual convex hull of the prism. 
-//   "intersect" = Anchors to the surface of the prism.
+//   "hull" = Anchors to the VNF of the **unrounded** prism using VNF hull anchors (default)
+//   "intersect" = Anchors to the VNF of the **unrounded** prism using VNF intersection anchors (default)
+//   "surf_hull" = Use VNF hull anchors to the rounded VNF
+//   "surf_intersect" = USe VFN intersection anchors to the rounded VNF
+//   "prismoid" = For four sided prisms only, defined standard prismsoid anchors, with RIGHT set to the face closest to the RIGHT direction.  
 // Example: Uniformly rounded pentagonal prism
 //   rounded_prism(pentagon(3), height=3,
 //                 joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
@@ -3384,7 +3382,7 @@ module join_prism(polygon, base, base_r, base_d, base_T=IDENT,
                     overlap, base_overlap,aux_overlap,
                     n=15, base_n, end_n, aux_n,
                     fillet, base_fillet,aux_fillet,end_round,
-                    k=0.7, base_k,aux_k,end_k,
+                    k=0.7, base_k,aux_k,end_k,start,end,
                     uniform=true, base_uniform, aux_uniform, 
                     debug=false, anchor="origin", extent=true, cp="centroid", atype="hull", orient=UP, spin=0,
                     convexity=10)
@@ -3399,7 +3397,7 @@ module join_prism(polygon, base, base_r, base_d, base_T=IDENT,
                    fillet=fillet, base_fillet=base_fillet, aux_fillet=aux_fillet, end_round=end_round,
                    k=k, base_k=base_k, aux_k=aux_k, end_k=end_k,
                    uniform=uniform, base_uniform=base_uniform, aux_uniform=aux_uniform, 
-                   debug=debug,
+                   debug=debug, start=start, end=end,
                    return_axis=true
     );
     axis = vnf_start_end[2] - vnf_start_end[1];
@@ -3424,7 +3422,7 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
                     fillet, base_fillet,aux_fillet,end_round,
                     k=0.7, base_k,aux_k,end_k,
                     uniform=true, base_uniform, aux_uniform, 
-                    debug=false, return_axis=false) =
+                    debug=false, return_axis=false, start, end) =
   let(
       objects=["cyl","cylinder","plane","sphere"],
       length = one_defined([h,height,l,length], "h,height,l,length", dflt=undef)
@@ -3442,6 +3440,7 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
   assert(is_num(scale) && scale>=0, "Prism scale must be non-negative")
   assert(num_defined([end_k,aux_k])<2, "Cannot define both end_k and aux_k")
   assert(num_defined([end_n,aux_n])<2, "Cannot define both end_n and aux_n")
+  assert(prism_end_T==IDENT || num_defined([start,end])==0, "Cannot give prism_end_T with either start or end")
   let(
       base_r = get_radius(r=base_r,d=base_d),
       aux_r = get_radius(r=aux_r,d=aux_d),
@@ -3469,31 +3468,33 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
       polygon=clockwise_polygon(polygon),
       start_center = CENTER,
       aux_T_horiz = submatrix(aux_T,[0:2],[0:2]) == ident(3) && aux_T[2][3]==0, 
-      dir = aux=="none" ? apply(aux_T,UP)
+      dir = num_defined([start,end])==2 ? end-start
+          : aux=="none" ? apply(aux_T,UP)
           : aux_T_horiz && in_list([base,aux], [["sphere","sphere"], ["cyl","cylinder"],["cylinder","cyl"], ["cyl","cyl"], ["cylinder", "cylinder"]]) ?
             unit(apply(aux_T, aux_r*UP))
           : apply(aux_T,CENTER)==CENTER ? apply(aux_T,UP)
           : apply(aux_T,CENTER),
       flip = short ? -1 : 1,
+      axisline = [CENTER, flip*dir] +  repeat(default(start,CENTER),2), 
       start = base=="sphere" ?
-                let( answer = _sphere_line_isect_best(abs(base_r),[CENTER,flip*dir], sign(base_r)*flip*dir))
+                let( answer = _sphere_line_isect_best(abs(base_r),axisline, sign(base_r)*flip*dir))
                 assert(answer,"Prism center doesn't intersect sphere (base)")
                 answer
             : base=="cyl" || base=="cylinder" ?
                 assert(dir.y!=0 || dir.z!=0, "Prism direction parallel to the cylinder")
                 let(
-                     mapped = apply(yrot(90),[CENTER,flip*dir]),
+                     mapped = apply(yrot(90),axisline),
                      answer = _cyl_line_intersection(abs(base_r),mapped,sign(base_r)*mapped[1])
                  )
                  assert(answer,"Prism center doesn't intersect cylinder (base)")
                  apply(yrot(-90),answer)
             : is_path(base) ?
                 let( 
-                     mapped = apply(yrot(90),[CENTER,flip*dir]),
+                     mapped = apply(yrot(-90),axisline),
                      answer = _prism_line_isect(pair(base,wrap=true),mapped,mapped[1])[0]
                  )
                  assert(answer,"Prism center doesn't intersect prism (base)")
-                 apply(yrot(-90),answer)
+                 apply(yrot(90),answer)
             : start_center,
       aux_T = aux=="none" ? move(start)*prism_end_T*move(-start)*move(length*dir)*move(start)
               : aux_T,
@@ -3501,7 +3502,8 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
       aux = aux=="none" && aux_fillet!=0 ? "plane" : aux, 
       end_center = apply(aux_T,CENTER), 
       ndir = base_r<0 ? unit(start_center-start) : unit(end_center-start_center,UP),
-      end_prelim = apply(move(start)*prism_end_T*move(-start),
+      end_prelim = is_def(end) ? end
+        :apply(move(start)*prism_end_T*move(-start),
             aux=="sphere" ?
                 let( answer = _sphere_line_isect_best(abs(aux_r), [start,start+ndir], -sign(aux_r)*ndir))
                 assert(answer,"Prism center doesn't intersect sphere (aux)")
@@ -3608,6 +3610,7 @@ function _sphere_line_isect_best(R, line, ref) =
 // point, ind ind and u are the segment index and u value.  Prism is z-aligned.  
 function _prism_line_isect(poly_pairs, line, ref) =
    let(
+
        line2d = path2d(line),
        ref=point2d(ref),
        ilist = [for(j=idx(poly_pairs)) 
@@ -3621,7 +3624,7 @@ function _prism_line_isect(poly_pairs, line, ref) =
        isect2d = ilist[ind][0],
        isect_ind = ilist[ind][1],
        isect_u = ilist[ind][2],
-       slope = (line[1].z-line[0].z)/norm(line[1]-line[0]),
+       slope = (line[1].z-line[0].z)/norm(line2d[1]-line2d[0]),
        z = slope * norm(line2d[0]-isect2d) + line[0].z
    )
    [point3d(isect2d,z),isect_ind, isect_u];
@@ -3635,35 +3638,6 @@ function _prism_fillet(name, base, R, bot, top, d, k, N, overlap,uniform,debug) 
   : is_path(base,2) ? _prism_fillet_prism(name, base, bot, top, d, k, N, overlap,uniform,debug)
   : assert(false,"Unknown base type");
 
-function _prism_fillet_plane(name, bot, top, d, k, N, overlap,debug) = 
-    let(
-        dir = sign(top[0].z-bot[0].z),
-        isect = [for (i=idx(top)) plane_line_intersection([0,0,1,0], [top[i],bot[i]])],
-        base_normal = -path3d(path_normals(path2d(isect), closed=true)),
-        mesh = transpose([for(i=idx(top))
-          let(
-              
-              base_angle = vector_angle(top[i],isect[i],isect[i]+sign(d)*base_normal[i]),
-              // joint length
-              // d = r,
-              r=abs(d)*tan(base_angle/2),
-              // radius
-              //d = r/tan(base_angle/2),
-              // cut
-              //r = r / (1/sin(base_angle/2) - 1),
-              //d = r/tan(base_angle/2),
-              prev = unit(top[i]-isect[i]),
-              next = sign(d)*dir*base_normal[i],
-              center = r/sin(base_angle/2) * unit(prev+next) + isect[i]
-          )
-          [
-            each arc(N, cp=center, points = [isect[i]+prev*abs(d), isect[i]+next*d]),
-            isect[i]+next*d+[0,0,-overlap*dir]
-          ]
-        ])
-    )
-    assert(debug || is_path_simple(path2d(select(mesh,-2)),closed=true),"Fillet doesn't fit: it intersects itself")
-    mesh;
 
 function _prism_fillet_plane(name, bot, top, d, k, N, overlap,debug) = 
     let(

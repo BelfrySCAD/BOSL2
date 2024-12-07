@@ -551,7 +551,7 @@ function rot(a=0, v, cp, from, to, reverse=false, p=_NO_ARG) =
                 to = is_undef(to)? undef : point3d(to),
                 cp = is_undef(cp)? undef : point3d(cp),
                 m1 = !is_undef(from) ?
-                        assert(is_num(a))
+                        assert(is_num(a)) 
                         affine3d_rot_from_to(from,to) * affine3d_rot_by_axis(from,a)
                    : !is_undef(v)?
                         assert(is_num(a))
@@ -1355,9 +1355,9 @@ module frame_map(x,y,z,p,reverse=false)
 
 // Function&Module: skew()
 //
-// Synopsis: Skews children along various axes.
+// Synopsis: Skews (or shears) children along various axes.
 // SynTags: Trans, Path, VNF, Mat
-// Topics: Affine, Matrices, Transforms, Skewing
+// Topics: Affine, Matrices, Transforms, Skewing, Shearing
 // See Also: move(), rot(), scale()
 //
 // Usage: As Module
@@ -1368,7 +1368,7 @@ module frame_map(x,y,z,p,reverse=false)
 //   mat = skew([sxy=]|[axy=], [sxz=]|[axz=], [syx=]|[ayx=], [syz=]|[ayz=], [szx=]|[azx=], [szy=]|[azy=]);
 //
 // Description:
-//   Skews geometry by the given skew factors.
+//   Skews geometry by the given skew factors.  Skewing is also referred to as shearing.  
 //   * Called as the built-in module, skews all children.
 //   * Called as a function with a point in the `p` argument, returns the skewed point.
 //   * Called as a function with a list of points in the `p` argument, returns the list of skewed points.
@@ -1570,6 +1570,50 @@ function _apply(transform,points) =
             [for(p=points) concat(p,[0,1])]*matrix
   : assert(false, str("Unsupported combination: ",len(transform),"x",len(transform[0])," transform (dimension ",tdim,
                           "), data of dimension ",datadim));
+
+
+// Section: Saving and restoring 
+
+
+$transform = IDENT;
+
+module translate(v)
+{
+  $transform = $transform * (is_vector(v) && (len(v)==2 || len(v)==3) ? affine3d_translate(point3d(v)) : IDENT);
+  _translate(v) children();                   
+}  
+
+
+module rotate(a,v)
+{
+  rot3 = is_finite(a) && is_vector(v) && (len(v)==2 || len(v)==3) ? affine3d_rot_by_axis(v,a)
+       : is_finite(a) ? affine3d_zrot(a)
+       : same_shape(a,[0]) ? affine3d_xrot(a.x)
+       : same_shape(a,[0,0]) ? affine3d_yrot(a.y)*affine3d_xrot(a.x)
+       : same_shape(a,[0,0,0])? affine3d_zrot(a.z)*affine3d_yrot(a.y)*affine3d_xrot(a.x)
+       : IDENT;
+  $transform = $transform * rot3;
+  _rotate(a=a,v=v) children();
+}  
+
+module scale(v)
+{
+  s3 = is_finite(v) ? affine3d_scale([v,v,v])
+     : is_vector(v) ? affine3d_scale(v)
+     : IDENT;
+  $transform = $transform * s3;
+  _scale(v) children();
+}
+
+
+module multmatrix(m)
+{
+   m3 = !is_matrix(m) ? IDENT
+      : len(m)>0 && len(m)<=4 && len(m[0])>0 && len(m[0])<=4 ? submatrix_set(IDENT, m)
+      : IDENT;
+   $transform = $transform * m3;
+   _multmatrix(m) children();
+}
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
