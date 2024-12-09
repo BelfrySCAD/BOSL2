@@ -1994,75 +1994,149 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), square(), supershape()
 // Usage: As Module
-//   squircle(squareness, size) [ATTACHMENTS];
+//   squircle(squareness, size, [style]) [ATTACHMENTS];
 // Usage: As Function
-//   path = squircle(squareness, size);
+//   path = squircle(squareness, size, [style]);
 // Description:
-//   A squircle is a shape intermediate between a square/rectangle and a circle/ellipse. A squircle is a special case of supershape (shown in `supershape()` example 3), but this implementation uses a different method that requires just two parameters, and the vertex distribution is optimized for smoothness.
-//   Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard buttons, and smartphone icons. Old CRT television screens also resembled squircles.
-//   When called as a module, creates a 2D squircle with the desired squareness. Uses "intersect" type anchoring.  
+//   A [squircle](https://en.wikipedia.org/wiki/Squircle) is a shape intermediate between a square/rectangle and a circle/ellipse.Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard buttons, and smartphone icons. Old CRT television screens also resembled elongated squircles.
+//   There are multiple approaches to constructing a squircle. One approach is a special case of superellipse (shown in {{supershape}} example 3), and uses exponents to adjust the shape. Another, called Fernández-Guasti squircle or FG squircle, arises from work in optics and uses a "squareness" parameter between 0 and 1 to adjust the shape.
+//   The FG style and superellipse style squircles are visually almost indistinguishable, with the superellipse having slightly rounder "corners" than FG for a given value of squareness. Either style requires just the two parameters `squareness` and `size`. The vertex distribution is adjusted to be more dense at the corners for smoothness at low values of `$fn`.
+//   When called as a module, creates a 2D squircle with the desired squareness. 
 //   When called as a function, returns a 2D path for a squircle.
 // Arguments:
-//   squareness = Value between 0 and 1. Controls the shape of the squircle. When `squareness=0` the shape is a circle, and when `squareness=1` the shape is a square.  Default: 0.7
-//   size = Bounding box of the squircle, same as the `size` parameter in `square()`, can be a single number or an `[xsize,ysize]` vector. Default: [10,10]
-//    $fn = Number of points. Special variables `$fs` and `$fa` are ignored. If set, `$fn` must be 12 or greater, and is rounded to the nearest multiple of 4. Points are generated non-uniformly around the squircle so they are more dense sharper curves. Default if not set: 40
+//   squareness = Value between 0 and 1. Controls the shape of the squircle. When `squareness=0` the shape is a circle, and when `squareness=1` the shape is a square. Otherwise, this parameter sets the location of a squircle "corner" at the specified interpolated position between a circle and a square. For the "superellipse" style, the special case where the superellipse exponent is 4 (also known as *Lamé's quartic curve*) results in a squircle at the geometric mean between radial points on the circle and square, corresponding to squareness=0.456786. Default: 0.5
+//   size = Same as the `size` parameter in `square()`, can be a single number or an `[xsize,ysize]` vector. Default: [1,1]
+//   style = method for generating a squircle, "fg" for Fernández-Guasti and "superellipse" for superellipse. Default: "fg"
+//   atype = anchor type, "box" for bounding box corners and sides, "perim" for the squircle corners
+//   $fn = Number of points. The special variables `$fs` and `$fa` are ignored. If set, `$fn` must be 12 or greater, and is rounded to the nearest multiple of 4. Points are generated non-uniformly around the squircle so they are more dense at sharper curves. Default if not set: 40
 // Examples(2D):
 //   squircle(squareness=0.4, size=50);
 //   squircle(0.8, [80,60], $fn=64);
-// Examples(2D): Ten increments of squareness parameter
+// Examples(2D): Ten increments of squareness parameter for a superellipse squircle
 //   for(sq=[0:0.1:1])
-//       stroke(squircle(sq, 100, $fn=128), closed=true, width=0.5);
-// Examples(2D): Standard vector anchors are based on extents
-//   squircle(0.8, 50) show_anchors(custom=false);
-// Examples(2D): Named anchors exist for the sides and corners
-//   squircle(0.8, 50) show_anchors(std=false);
-module squircle(squareness=0.7, size=[10,10], anchor=CENTER, spin=0) {
+//       stroke(squircle(sq, 100, style="superellipse", $fn=128), closed=true, width=0.5);
+// Examples(2D): Standard vector anchors are based on the bounding box
+//   squircle(0.6, 50) show_anchors();
+// Examples(2D): Perimeter anchors, anchoring at bottom left and spinning 20°
+//   squircle(0.5, [60,40], anchor=(BOTTOM+LEFT), atype="perim", spin=20)
+//       show_anchors();
+
+module squircle(squareness=0.5, size=[1,1], style="fg", atype="box", anchor=CENTER, spin=0) {
     check = assert(squareness >= 0 && squareness <= 1);
-    bbox = is_num(size) ? [size,size] : point2d(size);
-    assert(all_positive(bbox), "All components of size must be positive.");
-    path = squircle(squareness, size);
-    anchors = let(sq = _linearize_squareness(squareness)) [
-        for (i = [0:1:3]) let(
-            ca = 360 - i*90,
-            cp = polar_to_xy(squircle_radius(sq, bbox[0]/2, ca), ca)
-        ) named_anchor(str("side",i), cp, unit(cp,BACK), 0),
-        for (i = [0:1:3]) let(
-            ca = 360-45 - i*90,
-            cp = polar_to_xy(squircle_radius(sq, bbox[0]/2, ca), ca)
-        ) named_anchor(str("corner",i), cp, unit(cp,BACK), 0)
-    ];
-    attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
-        polygon(path);
-        children();
+    anchorchk = assert(in_list(atype, ["box", "perim"]));
+    size = is_num(size) ? [size,size] : point2d(size);
+    assert(all_positive(size), "All components of size must be positive.");
+    if (atype == "box") {
+        path = squircle(squareness, size, style);
+        attachable(anchor, spin, two_d=true, size=size) {
+            polygon(path);
+            children();
+        }
+    } else { // atype=="perim"
+        override_path = squircle(squareness, size, style, atype, _return_override=true);
+        attachable(anchor, spin, two_d=true, size=size, extent=false, override=override_path[1]) {
+            polygon(override_path[0]);
+            children();
+        }
     }
 }
 
 
-function squircle(squareness=0.7, size=[10,10]) =
-    assert(squareness >= 0 && squareness <= 1) [
+function squircle(squareness=0.5, size=[1,1], style="fg", atype="box", anchor=CENTER, spin=0, _return_override=false) =
+    assert(squareness >= 0 && squareness <= 1)
+    assert(is_num(size)     || is_vector(size,2))
+    assert(in_list(atype, ["box", "perim"]))
+    let(
+        path =
+            style == "fg" ? _squircle_fg(squareness, size)
+            : style == "superellipse" ? _squircle_se(squareness, size)
+            : assert(false, "Style must be \"fg\" or \"superellipse\""),
+        size = is_num(size) ? [size,size] : point2d(size),
+        a = 0.5 * size[0],
+        b = 0.5 * size[1],
+        override = atype == "box" ? undef
+            : let(
+            sn = style=="fg" ? _linearize_squareness(squareness)
+                : _squircle_se_exponent(squareness),
+            derivq1 = style=="fg" ?  // 1+derivative of squircle in first quadrant
+                function (x) let(s2=sn*sn, a2=a*a, b2=b*b, x2=x*x, denom=a2-s2*x2) a2*b*(s2-1)*x/(denom*denom*sqrt((a2-x2)/denom)) + 1
+                : function (x) let(n=sn) 1 - (b/a)*((a/x)^n - 1)^(1/n-1),
+            xc = root_find(derivq1, 0.01, a-0.01), // find where slope=-1
+            yc = style=="fg" ?
+                let(s2=sn*sn, a2=a*a, b2=b*b, x2=xc*xc) sqrt(b2*(a2-x2)/(a2-s2*x2))
+                : b*(1-(xc/a)^sn)^(1/sn),
+            corners = [[xc,yc], [-xc,yc], [-xc,-yc], [xc,-yc]],
+            anchorpos = [[1,1],[-1,1],[-1,-1],[1,-1]]
+        ) [ for(i=[0:3]) [anchorpos[i], [corners[i]]] ]
+    ) _return_override
+        ? [reorient(anchor, spin, two_d=true, size=size, p=path, extent=false, override=override), override]
+        :  reorient(anchor, spin, two_d=true, size=size, p=path, extent=false, override=override);
+
+function _squircle_anchor_radius(squareness, angle, style) =
+    style == "fg"
+    ? let(sq = _linearize_squareness(squareness))
+        squircle_radius_fg(sq, 1, angle)
+    : let(n = _squircle_se_exponent(squareness))
+        squircle_radius_se(n, 1, angle);
+        //_superformula(theta=angle, m1=4,m2=4,n1=n,n2=n,n3=n,a=1,b=1);
+        
+
+/* FG squircle functions */
+
+function _squircle_fg(squareness, size) = [
     let(
         sq = _linearize_squareness(squareness),
-        bbox = is_num(size) ? [size,size] : point2d(size),
-        aspect = bbox[1] / bbox[0],
-        r = 0.5 * bbox[0],
+        size = is_num(size) ? [size,size] : point2d(size),
+        aspect = size[1] / size[0],
+        r = 0.5 * size[0],
         astep = $fn>=12 ? 90/round($fn/4) : 9
     ) for(a=[360:-astep:0.01]) let(
         theta = a + sq * sin(4*a) * 30/PI, // tighter angle steps at corners
-        p = squircle_radius(sq, r, theta)
-    ) [p*cos(theta), aspect*p*sin(theta)]
+        p = squircle_radius_fg(sq, r, theta)
+    ) p*[cos(theta), aspect*sin(theta)]
 ];
 
-
-function squircle_radius(squareness, r, angle) = let(
+function squircle_radius_fg(squareness, r, angle) = let(
     s2a = abs(squareness*sin(2*angle))
     ) s2a>0 ? r*sqrt(2)/s2a * sqrt(1 - sqrt(1 - s2a*s2a)) : r;
 
-    
 function _linearize_squareness(s) =
     // from Chamberlain Fong (2016). "Squircular Calculations". arXiv.
     // https://arxiv.org/pdf/1604.02174v5
     let(c = 2 - 2*sqrt(2), d = 1 - 0.5*c*s)
     2 * sqrt((1+c)*s*s - c*s) / (d*d);
+
+
+/* Superellipse squircle functions */
+
+function _squircle_se(squareness, size) = [
+    let(
+        n = _squircle_se_exponent(squareness),
+        size = is_num(size) ? [size,size] : point2d(size),
+        ra = 0.5*size[0],
+        rb = 0.5*size[1],
+        astep = $fn>=12 ? 90/round($fn/4) : 9,
+        fgsq = _linearize_squareness(min(0.998,squareness)) // works well for distributing theta
+    ) for(a=[360:-astep:0.01]) let(
+        theta = a + fgsq*sin(4*a)*30/PI, // tighter angle steps at corners
+        x = cos(theta),
+        y = sin(theta),
+        r = (abs(x)^n + abs(y)^n)^(1/n), // superellipse
+        //r = _superformula(theta=theta, m1=4,m2=4,n1=n,n2=n,n3=n,a=1,b=1)
+    ) [ra*x, rb*y] / r
+];
+
+function squircle_radius_se(n, r, angle) = let(
+    x = cos(angle),
+    y = sin(angle)
+) (abs(x)^n + abs(y)^n)^(1/n) / r;
+
+function _squircle_se_exponent(squareness) = let(
+    // limit squareness; error if >0.99889, limit is smaller for r>1
+    s=min(0.998,squareness),
+    rho = 1 + s*(sqrt(2)-1),
+    x = rho / sqrt(2)
+) log(0.5) / log(x);
 
 
 
