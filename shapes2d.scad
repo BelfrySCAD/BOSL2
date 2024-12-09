@@ -2075,14 +2075,6 @@ function squircle(squareness=0.5, size=[1,1], style="fg", atype="box", anchor=CE
         ? [reorient(anchor, spin, two_d=true, size=size, p=path, extent=false, override=override), override]
         :  reorient(anchor, spin, two_d=true, size=size, p=path, extent=false, override=override);
 
-function _squircle_anchor_radius(squareness, angle, style) =
-    style == "fg"
-    ? let(sq = _linearize_squareness(squareness))
-        squircle_radius_fg(sq, 1, angle)
-    : let(n = _squircle_se_exponent(squareness))
-        squircle_radius_se(n, 1, angle);
-        //_superformula(theta=angle, m1=4,m2=4,n1=n,n2=n,n3=n,a=1,b=1);
-        
 
 /* FG squircle functions */
 
