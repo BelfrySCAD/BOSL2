@@ -1999,9 +1999,12 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 //   path = squircle(squareness, size, [style]);
 // Description:
 //   A [squircle](https://en.wikipedia.org/wiki/Squircle) is a shape intermediate between a square/rectangle and a circle/ellipse.Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard buttons, and smartphone icons. Old CRT television screens also resembled elongated squircles.
+//   .
 //   There are multiple approaches to constructing a squircle. One approach is a special case of superellipse (shown in {{supershape}} example 3), and uses exponents to adjust the shape. Another, called Fernández-Guasti squircle or FG squircle, arises from work in optics and uses a "squareness" parameter between 0 and 1 to adjust the shape.
+//   .
 //   The FG style and superellipse style squircles are visually almost indistinguishable, with the superellipse having slightly rounder "corners" than FG for a given value of squareness. Either style requires just the two parameters `squareness` and `size`. The vertex distribution is adjusted to be more dense at the corners for smoothness at low values of `$fn`.
-//   When called as a module, creates a 2D squircle with the desired squareness. 
+//   .
+//   When called as a module, creates a 2D squircle with the desired squareness.    
 //   When called as a function, returns a 2D path for a squircle.
 // Arguments:
 //   squareness = Value between 0 and 1. Controls the shape of the squircle. When `squareness=0` the shape is a circle, and when `squareness=1` the shape is a square. Otherwise, this parameter sets the location of a squircle "corner" at the specified interpolated position between a circle and a square. For the "superellipse" style, the special case where the superellipse exponent is 4 (also known as *Lamé's quartic curve*) results in a squircle at the geometric mean between radial points on the circle and square, corresponding to squareness=0.456786. Default: 0.5
