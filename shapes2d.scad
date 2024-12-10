@@ -1929,7 +1929,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 // Usage: As Function
 //   path = reuleaux_polygon(n, r|d=, ...);
 // Description:
-//   When called as a module, reates a 2D Reuleaux Polygon; a constant width shape that is not circular.  Uses "intersect" type anchoring.  
+//   When called as a module, creates a 2D Reuleaux Polygon; a constant width shape that is not circular.  Uses "intersect" type anchoring.  
 //   When called as a function, returns a 2D path for a Reulaux Polygon.
 // Arguments:
 //   n = Number of "sides" to the Reuleaux Polygon.  Must be an odd positive number.  Default: 3
@@ -2029,7 +2029,7 @@ module squircle(size, squareness=0.5, style="fg", atype="box", anchor=CENTER, sp
     anchorchk = assert(in_list(atype, ["box", "perim"]));
     size = is_num(size) ? [size,size] : point2d(size);
     assert(all_positive(size), "All components of size must be positive.");
-    path = squircle(size, squareness, style, atype, _module_call=true);
+    path = squircle(size, squareness, style, atype="box");
     if (atype == "box") {
         attachable(anchor, spin, two_d=true, size=size, extent=false) {
             polygon(path);
@@ -2044,7 +2044,7 @@ module squircle(size, squareness=0.5, style="fg", atype="box", anchor=CENTER, sp
 }
 
 
-function squircle(size, squareness=0.5, style="fg", atype="box", anchor=CENTER, spin=0, _module_call=false) =
+function squircle(size, squareness=0.5, style="fg", atype="box", anchor=CENTER, spin=0) =
     assert(squareness >= 0 && squareness <= 1)
     assert(is_num(size) || is_vector(size,2))
     assert(in_list(atype, ["box", "perim"]))
@@ -2052,8 +2052,8 @@ function squircle(size, squareness=0.5, style="fg", atype="box", anchor=CENTER, 
         size = is_num(size) ? [size,size] : point2d(size),
         path = style == "fg" ? _squircle_fg(size, squareness)
             : style == "superellipse" ? _squircle_se(size, squareness)
-            : assert(false, "Style must be \"fg\" or \"superellipse\""),
-    ) reorient(anchor, spin, two_d=true, size=atype=="box"?size:undef, path=_module_call?undef:path, p=path, extent=true);
+            : assert(false, "Style must be \"fg\" or \"superellipse\"")
+    ) reorient(anchor, spin, two_d=true, size=atype=="box"?size:undef, path=atype=="box"?undef:path, p=path, extent=true);
 
 
 /* FG squircle functions */
