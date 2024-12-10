@@ -2015,12 +2015,12 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 // Examples(2D):
 //   squircle(size=50, squareness=0.4);
 //   squircle([80,60], 0.7, $fn=64);
-// Examples(2D): Ten increments of squareness parameter for a superellipse squircle
+// Example(2D): Ten increments of squareness parameter for a superellipse squircle
 //   for(sq=[0:0.1:1])
 //       stroke(squircle(100, sq, style="superellipse", $fn=128), closed=true, width=0.5);
-// Examples(2D): Standard vector anchors are based on the bounding box
+// Example(2D): Standard vector anchors are based on the bounding box
 //   squircle(50, 0.6) show_anchors();
-// Examples(2D): Perimeter anchors, anchoring at bottom left and spinning 20°
+// Example(2D): Perimeter anchors, anchoring at bottom left and spinning 20°
 //   squircle([60,40], 0.5, anchor=(BOTTOM+LEFT), atype="perim", spin=20)
 //       show_anchors();
 
