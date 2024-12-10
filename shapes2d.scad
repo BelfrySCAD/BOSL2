@@ -2096,7 +2096,7 @@ function _squircle_se(size, squareness) = [
         theta = a + fgsq*sin(4*a)*30/PI, // tighter angle steps at corners
         x = cos(theta),
         y = sin(theta),
-        r = (abs(x)^n + abs(y)^n)^(1/n), // superellipse
+        r = (abs(x)^n + abs(y)^n)^(1/n) // superellipse
         //r = _superformula(theta=theta, m1=4,m2=4,n1=n,n2=n,n3=n,a=1,b=1)
     ) [ra*x, rb*y] / r
 ];
