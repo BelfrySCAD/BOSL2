@@ -413,7 +413,7 @@ function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[],
     _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse, concat(trilist, [triangle]), d12<d21 ? i1 : t1, d12<d21 ? t2 : i2)
 
     : // equal row lengths
-    let(
+    let(n=n1,
     t = i < n ? i+1 : n,   // test point
     d12 = t>=n ? 9e+9 : norm(p2[t]-p1[i]), // distance from p1 to new p2
     d21 = t>=n ? 9e+9 : norm(p1[t]-p2[i]), // distance from p2 to new p1
