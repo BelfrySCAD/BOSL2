@@ -318,8 +318,8 @@ function vnf_vertex_array(
 // Example(3D,NoAxes,Edges): Model of a cymbal with roughly same-size facets, using a different number of points for each concentric ring of vertices.
 //   include <BOSL2/beziers.scad>
 //   bez = [
-//       [[0,22], [35,22], [30,0], [80,14], [102,0]], //top
-//       [[99,-1], [79,13], [29,-1], [34,21], [-1,21]] // bottom
+//      [[0,24], [35,24], [30,0], [80,15], [102,0]], //top
+//      [[99,-1], [79,14], [29,-1], [34,23], [-1,23]] // bottom
 //   ];
 //   points = [
 //       for(b=bez)
@@ -413,7 +413,7 @@ function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[],
     _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse, concat(trilist, [triangle]), d12<d21 ? i1 : t1, d12<d21 ? t2 : i2)
 
     : // equal row lengths
-    let(n=n1,
+    let(n=n1, i=i1,
     t = i < n ? i+1 : n,   // test point
     d12 = t>=n ? 9e+9 : norm(p2[t]-p1[i]), // distance from p1 to new p2
     d21 = t>=n ? 9e+9 : norm(p1[t]-p2[i]), // distance from p2 to new p1
@@ -424,7 +424,7 @@ function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[],
         [i2offset+t, i1offset+t, d12<d21 ? i1offset+i : i2offset+i] :
         [i1offset+t, i2offset+t, d12<d21 ? i1offset+i : i2offset+i]
 ) t>=n ? trilist :
-    _lofttri_eq(p1, p2, i1offset, i2offset, n, reverse, concat(trilist, [triangle1, triangle2]), t);
+    _lofttri(p1, p2, i1offset, i2offset, n, n, reverse, concat(trilist, [triangle1, triangle2]), t, t);
 
 /*
 function _lofttri_eq(p1, p2, i1offset, i2offset, n, reverse=false, trilist=[], i=0) = let(
