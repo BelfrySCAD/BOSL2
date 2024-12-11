@@ -315,11 +315,11 @@ function vnf_vertex_array(
 //       vnf_polyhedron(vnf4);
 //       color("green") vnf_wireframe(vnf4);
 //   }
-// Example(3D,NoAxes,Edges): Model of a cymbal with roughly same-size facets, using a different number of points for each concentric ring of vertices.
+// Example(3D,NoAxes,Edges,VPR=[65,0,25]): Model of a cymbal with roughly same-size facets, using a different number of points for each concentric ring of vertices.
 //   include <BOSL2/beziers.scad>
 //   bez = [
-//      [[0,24], [35,24], [30,0], [80,15], [102,0]], //top
-//      [[99,-1], [79,14], [29,-1], [34,23], [-1,23]] // bottom
+//       [[0,26], [35,26], [29,0], [80,16], [102,0]], //top
+//       [[99,-1], [79,15], [28,-1], [34,25], [-1,25]] // bottom
 //   ];
 //   points = [
 //       for(b=bez)
@@ -426,20 +426,6 @@ function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[],
 ) t>=n ? trilist :
     _lofttri(p1, p2, i1offset, i2offset, n, n, reverse, concat(trilist, [triangle1, triangle2]), t, t);
 
-/*
-function _lofttri_eq(p1, p2, i1offset, i2offset, n, reverse=false, trilist=[], i=0) = let(
-    t = i < n ? i+1 : n,   // test point
-    d12 = t>=n ? 9e+9 : norm(p2[t]-p1[i]), // distance from p1 to new p2
-    d21 = t>=n ? 9e+9 : norm(p1[t]-p2[i]), // distance from p2 to new p1
-    triangle1 = reverse ?
-        [i1offset+i, i2offset+i, d12<d21 ? i2offset+t : i1offset+t] :
-        [i2offset+i, i1offset+i, d12<d21 ? i2offset+t : i1offset+t],
-    triangle2 = reverse ?
-        [i2offset+t, i1offset+t, d12<d21 ? i1offset+i : i2offset+i] :
-        [i1offset+t, i2offset+t, d12<d21 ? i1offset+i : i2offset+i]
-) t>=n ? trilist :
-    _lofttri_eq(p1, p2, i1offset, i2offset, n, reverse, concat(trilist, [triangle1, triangle2]), t);
-*/
 
 // Function: vnf_join()
 // Synopsis: Returns a single VNF structure from a list of VNF structures.
