@@ -50,7 +50,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 // Arguments:
 //   points = A list of vertices to divide into columns and rows.
 //   ---
-//   caps = If true, add endcap faces to the first AND last rows.
+//   caps = If true, add endcap faces to the first **and** last rows.
 //   cap1 = If true, add an endcap face to the first row.
 //   cap2 = If true, add an endcap face to the last row.
 //   col_wrap = If true, add faces to connect the last column to the first.
@@ -69,6 +69,38 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //       col_wrap=true, caps=true, reverse=true, style="alt"
 //   );
 //   vnf_polyhedron(vnf);
+// Example(3D,NoAxes,ThrownTogether,VPD=183): Open shape made from a three arcs.
+//   rows = [
+//       for(h=[-20:20:20])
+//           path3d(arc(r=40-abs(h), angle=280, 10), h)
+//   ];
+//   vnf = vnf_vertex_array(rows, reverse=true);
+//   vnf_polyhedron(vnf);
+//   color("green") vnf_wireframe(vnf);
+// Example(3D,NoAxes,ThrownTogether,VPD=183): Open shape made from a three arcs, with `row_wrap=true`.
+//   rows = [
+//       for(h=[-20:20:20])
+//           path3d(arc(r=40-abs(h), angle=280, 10), h)
+//   ];
+//   vnf = vnf_vertex_array(rows, reverse=true, row_wrap=true);
+//   vnf_polyhedron(vnf);
+//   color("green") vnf_wireframe(vnf);
+// Example(3D,NoAxes,ThrownTogether,VPD=183): Open shape made from a three arcs, with `col_wrap=true`.
+//   rows = [
+//       for(h=[-20:20:20])
+//           path3d(arc(r=40-abs(h), angle=280, 10), h)
+//   ];
+//   vnf = vnf_vertex_array(rows, reverse=true, col_wrap=true);
+//   vnf_polyhedron(vnf);
+//   color("green") vnf_wireframe(vnf);
+// Example(3D,NoAxes,ThrownTogether,VPD=183): Open shape made from a three arcs, with `caps=true` and `col_wrap=true`.
+//   rows = [
+//       for(h=[-20:20:20])
+//           path3d(arc(r=40-abs(h), angle=280, 10), h)
+//   ];
+//   vnf = vnf_vertex_array(rows, reverse=true, caps=true, col_wrap-true);
+//   vnf_polyhedron(vnf);
+//   color("green") vnf_wireframe(vnf);
 // Example(3D): Both `col_wrap` and `row_wrap` are true to make a torus.
 //   vnf = vnf_vertex_array(
 //       points=[
@@ -242,22 +274,23 @@ function vnf_vertex_array(
 // Topics: VNF Generators, Lists
 // See Also: vnf_vertex_array(), vnf_join(), vnf_from_polygons(), vnf_merge_points()
 // Usage:
-//   vnf = vnf_tri_array(points, [row_wrap], [reverse], [col_wrap], [caps], [cap1], [cap2])
+//   vnf = vnf_tri_array(points, [caps=], [cap1=], [cap2=], [reverse=], [col_wrap=], [row_wrap=])
 // Description:
 //   Produces a VNF from an array of points where each row length can differ from the adjacent rows by any amount. This enables the construction of triangular or even irregular VNF patches. The resulting VNF can be wrapped along the rows by setting `row_wrap` to true, and wrapped along columns by setting `col_wrap` to true. It is possible to do both at once.
-//   If `row_wrap` is false, end caps can be generated across either the top and bottom rows.
+//   If `row_wrap` is false or not provided, end caps can be generated across the top and/or bottom rows.
 //   .
 //   The algorithm starts with the first point on each row and recursively walks around finding the minimum-length edge to make each new triangle face. This may result in several triangles being connected to one vertex. When triangulating two rows that happen to be equal length, the result is equivalent to {{vnf_vertex_array()}} using the "min_edge" style. If you already have a rectangular vertex list (equal length rows), you should use `vnf_vertex_array()` if you need a different triangulation style.
 //   .
 //   If you need to merge two VNF arrays that share edges using `vnf_join()` you can remove the duplicated vertices using `vnf_merge_points()`.
 // Arguments:
 //   points = List of point lists for each row.
-//   row_wrap = If true, then add faces connecting the first row and last row. The rows may be unequal length.
-//   reverse = If true, reverses the direction of the faces.
-//   col_wrap = If true, then add faces connecting the first column and last column.
-//   caps = Close both first and last rows with end caps, if `row_wrap=false`.
-//   cap1 = Close first row with an end cap, if `row_wrap=false`.
-//   cap2 = Close last row with an end cap, if `row_wrap=false`.
+//   ---
+//   caps = If true, add endcap faces to the first **and** last rows.
+//   cap1 = If true, add an endcap face to the first row.
+//   cap2 = If true, add an endcap face to the last row.
+//   col_wrap = If true, add faces to connect the last column to the first.
+//   row_wrap = If true, add faces to connect the last row to the first.
+//   reverse = If true, reverse all face normals.
 // Example(3D,NoAxes): Each row has one more point than the preceeding one.
 //   pts = [for(y=[1:1:10]) [for(x=[0:y-1]) [x,y,y]]];
 //   vnf = vnf_tri_array(pts);
@@ -288,34 +321,7 @@ function vnf_vertex_array(
 //   vnf = vnf_tri_array(pts);
 //   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
-// Example(3D,NoAxes,ThrownTogether): A simple open-ended shape made from a series of arcs with different number of vertices at different elevations. Clockwise from upper left: (1) no row or column wrapping, (2) wrap rows only, (3) wrap rows and columns, (4) wrap columns only, with caps. The `reverse=true` parameter is needed because arcs generate counterclockwise, while `vnf_tri_array()` expects clockwise, as with polygons.
-//   polypoints = [12, 16, 25, 26, 25, 18, 10];
-//   arc_elev = [1, 0, 6, 8, 10, 15, 14];
-//   rows = [
-//       for(i = [0:len(arc_elev)-1])
-//           path3d(arc(r=polypoints[i]*2, angle=280, $fn=polypoints[i]), 5*arc_elev[i])
-//   ];
-//   vnf1 = vnf_tri_array(rows, reverse=true); // no row or column wrapping
-//   translate([-60,60,0]) {
-//       vnf_polyhedron(vnf1);
-//       color("green") vnf_wireframe(vnf1);
-//   }
-//   vnf2 = vnf_tri_array(rows, reverse=true, row_wrap=true); // wrap rows only
-//   translate([60,60,0]) {
-//       vnf_polyhedron(vnf2);
-//       color("green") vnf_wireframe(vnf2);
-//   }
-//   vnf3 = vnf_tri_array(rows, reverse=true, row_wrap=true, col_wrap=true); // wrap rows and columns
-//   translate([60,-60,0]) {
-//       vnf_polyhedron(vnf3);
-//       color("green") vnf_wireframe(vnf3);
-//   }
-//   vnf4 = vnf_tri_array(rows, reverse=true, col_wrap=true, caps=true); // wrap columns only, with caps
-//   translate([-60,-60,0]) {
-//       vnf_polyhedron(vnf4);
-//       color("green") vnf_wireframe(vnf4);
-//   }
-// Example(3D,NoAxes,Edges,VPR=[65,0,25]): Model of a cymbal with roughly same-size facets, using a different number of points for each concentric ring of vertices.
+// Example(3D,NoAxes,Edges,VPR=[65,0,25],VPD=380,Med): Model of a cymbal with roughly same-size facets, using a different number of points for each concentric ring of vertices.
 //   include <BOSL2/beziers.scad>
 //   bez = [
 //       [[0,26], [35,26], [29,0], [80,16], [102,0]], //top
@@ -334,9 +340,14 @@ function vnf_vertex_array(
 //       vnf_polyhedron(vnf);
 //       cylinder(30, d=8);
 //   }
-
-function vnf_tri_array(points, row_wrap=false, reverse=false, col_wrap=false, caps=false, cap1=false, cap2=false) =
-    assert(!(row_wrap && (caps || cap1 || cap2)), "Caps cannot exist when row_wrap=true")
+function vnf_tri_array(
+    points,
+    caps, cap1, cap2,
+    col_wrap=false,
+    row_wrap=false,
+    reverse=false
+) =
+    assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
     let(
         plen = len(points),
         // append first vertex of each polygon to its end if wrapping columns
@@ -348,10 +359,9 @@ function vnf_tri_array(points, row_wrap=false, reverse=false, col_wrap=false, ca
         ] : points,
         addcol = col_wrap ? len(st[0])-len(points[0]) : 0,
         rowstarts = [ for(i=[0:plen-1]) len(st[i]) ],
-        capfirst = caps ? true : cap1,
-        caplast = caps ? true : cap2,
+        capfirst = first_defined([cap1,caps,false]),
+        caplast = first_defined([cap2,caps,false]),
         pcumlen = [0, each cumsum(rowstarts)],
-
         faces = flatten([
             // close first end
             if (capfirst)
@@ -367,7 +377,6 @@ function vnf_tri_array(points, row_wrap=false, reverse=false, col_wrap=false, ca
         ]),
         vnf = [flatten(st), faces]
     ) col_wrap ? vnf_merge_points(vnf) : vnf;
-
 
 /*
 Recursively triangulate between two 3D paths (which can be different
