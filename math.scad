@@ -1609,6 +1609,14 @@ function real_roots(p,eps=undef,tol=1e-14) =
 //    x0 = endpoint of interval to search for root
 //    x1 = second endpoint of interval to search for root
 //    tol = tolerance for solution.  Default: 1e-15
+// Example(2D): Solve x*sin(x)=4
+//    f = function (x) x*sin(x)-4;
+//    root=root_find(f, 0,25); // root = 15.2284
+//        // Graphical verification
+//    stroke([for(x=[0:25]) [x,f(x)]],width=.2);
+//    color("red")move([root,f(root)])
+//        circle(r=.25,$fn=16);
+
 
 //   The algorithm is based on Brent's method and is a combination of
 //   bisection and inverse quadratic approximation, where bisection occurs

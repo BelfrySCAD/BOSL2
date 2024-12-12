@@ -43,6 +43,9 @@ $ghost_this=false;
 $ghost=false;
 $ghosting=false;    // Ghosting is in effect, so don't apply it again
 
+$highlight_this=false;
+$highlight=false;
+
 _ANCHOR_TYPES = ["intersect","hull"];
 
 
@@ -1154,8 +1157,8 @@ module tag_this(tag)
 //   that don't use {{attachable()}} or built in modules such as
 //   - `polygon()`
 //   - `projection()`
-//   - `polyhedron()`  (or use [`vnf_polyhedron()`](vnf.scad#vnf_polyhedron))
-//   - `linear_extrude()`  (or use [`linear_sweep()`](regions.scad#linear_sweep))
+//   - `polyhedron()`  (or use {{vnf_polyhedron()}})
+//   - `linear_extrude()`  (or use {{linear_sweep()}})
 //   - `rotate_extrude()`
 //   - `surface()`
 //   - `import()`
@@ -3107,24 +3110,15 @@ module attachable(
         if (expose_tags || _is_shown()){
             if (!keep_color)
                 _color($color)
-                    if (($ghost || $ghost_this) && !$ghosting)
-                        %union(){
-                           $ghosting=true;
-                           children(0);
-                        }
-                    else children(0);
+                  _show_ghost() children(0);
             else {
                 $save_color=undef; // Force color_this() color in effect to persist for the entire object
-                    if (($ghost || $ghost_this) && !$ghosting)
-                        %union(){
-                           $ghosting=true;
-                           children(0);
-                        }
-                    else children(0);
+                _show_ghost() children(0);
             }
         }
         let(
             $ghost_this=false,
+            $highlight_this=false,
             $tag=default($save_tag,$tag),
             $save_tag=undef,
             $color=default($save_color,$color),
@@ -3133,6 +3127,26 @@ module attachable(
         children(1);
    }
 }
+
+module _show_highlight()
+{
+  if ($highlight || $highlight_this)
+    #children();
+  else
+    children();
+}  
+
+
+module _show_ghost()
+{  
+    if (($ghost || $ghost_this) && !$ghosting)
+        %union(){
+           $ghosting=true;
+           _show_highlight()children();
+        }
+    else _show_highlight()children();
+}
+
 
 // Function: reorient()
 // Synopsis: Calculates the transformation matrix needed to reorient an object.
