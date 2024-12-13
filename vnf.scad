@@ -98,7 +98,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //       for(h=[-20:20:20])
 //           path3d(arc(r=40-abs(h), angle=280, 10), h)
 //   ];
-//   vnf = vnf_vertex_array(rows, reverse=true, caps=true, col_wrap-true);
+//   vnf = vnf_vertex_array(rows, reverse=true, caps=true, col_wrap=true);
 //   vnf_polyhedron(vnf);
 //   color("green") vnf_wireframe(vnf);
 // Example(3D): Both `col_wrap` and `row_wrap` are true to make a torus.
