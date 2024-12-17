@@ -161,21 +161,74 @@ module color_overlaps(color="red") {
     %children();
 }
 
-// Section: Setting Object Transparency
+// Section: Setting Object Modifiers
+
+
+
+
+// Module: highlight()
+// Synopsis: Sets # modifier for attachable children and their descendents.
+// SynTags: Trans
+// Topics: Attachments, Modifiers
+// See Also: highlight_this(), ghost(), ghost_this(), recolor(), color_this()
+// Usage:
+//   highlight([highlight]) CHILDREN;
+// Description:
+//   Sets the `#` modifier for the attachable children and their descendents until another {{highlight()}} or {{highlight_this()}}.
+//   By default, turns `#` on, which makes the children transparent pink and displays them even if they are subtracted from the model.
+//   Give the `false` parameter to disable the modifier and restore children to normal.  
+//   Do not mix this with user supplied `#` modifiers anywhere in the geometry tree.  
+// Arguments:
+//   highlight = If true set the descendents to use `#`; if false, disable `#` for descendents.  Default: true
+// Example(3D):
+//   highlight() cuboid(10)
+//     highlight(false) attach(RIGHT,BOT)cuboid(5);
+function highlight(highlight) = no_function("highlight");
+module highlight(highlight=true)
+{
+   $highlight=highlight;
+   children();
+}
+
+
+// Module: highlight_this()
+// Synopsis: Apply # modifier to children at a single level.
+// SynTags: Trans
+// Topics: Attachments, Modifiers
+// See Also: highlight(), ghost(), ghost_this(), recolor(), color_this()
+// Usage:
+//   highlight_this() CHILDREN;
+// Description:
+//   Applies the `#` modifier to the children at a single level, reverting to the previous highlight state for further descendents.  
+//   This works only with attachables and you cannot give the `#` operator anywhere in the geometry tree.  
+// Example(3D):
+//   highlight_this()
+//   cuboid(10)
+//      attach(TOP,BOT)cuboid(5);
+function highlight_this() = no_function("highlight_this");
+module highlight_this()
+{
+   $highlight_this=true;
+   children();
+}
+
+
+
 
 // Module: ghost()
-// Synopsis: Sets transparency for attachable children and their descendents.
+// Synopsis: Sets % modifier for attachable children and their descendents.
 // SynTags: Trans
-// Topics: Attachments
+// Topics: Attachments, Modifiers
 // See Also: ghost_this(), recolor(), color_this()
 // Usage:
 //   ghost([ghost]) CHILDREN;
 // Description:
-//   Sets the transparency for the attachable children and their descendents until another {{ghost()}} or {{ghost_this()}}.
-//   By default, turns transparency on.  Give the `false` parameter to disable transparency.
-//   Do not mix this with user supplied `%` operators anywhere in the geometry tree.  
+//   Sets the `%` modifier for the attachable children and their descendents until another {{ghost()}} or {{ghost_this()}}.
+//   By default, turns `%` on, which makes the children gray and also removes them from interaction with the model.
+//   Give the `false` parameter to disable the modifier and restore children to normal.  
+//   Do not mix this with user supplied `%` modifiers anywhere in the geometry tree.  
 // Arguments:
-//   ghost = If true set the descendents to be transparent; if false, disable transparency.  Default: true
+//   ghost = If true set the descendents to use `%`; if false, disable `%` for descendents.  Default: true
 // Example(3D):
 //   ghost() cuboid(10)
 //     ghost(false) cuboid(5);
@@ -188,14 +241,14 @@ module ghost(ghost=true)
 
 
 // Module: ghost_this()
-// Synopsis: Makes the children at a single level transparent. 
+// Synopsis: Apply % modifier to children at a single level.
 // SynTags: Trans
-// Topics: Attachments
+// Topics: Attachments, Modifiers
 // See Also: ghost(), recolor(), color_this()
 // Usage:
 //   ghost_this() CHILDREN;
 // Description:
-//   Makes the children transparent for one level, reverting to the previous transparency state for further descendents.  
+//   Applies the `%` modifier to the children at a single level, reverting to the previous ghost state for further descendents.  
 //   This works only with attachables and you cannot give the `%` operator anywhere in the geometry tree.  
 // Example(3D):
 //   ghost_this() cuboid(10)

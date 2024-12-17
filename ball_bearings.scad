@@ -24,10 +24,11 @@
 //   id = Inner diameter of ball bearing assembly.
 //   od = Outer diameter of ball bearing assembly.
 //   width = Width of ball bearing assembly.
-//   shield = Does the ball bearing assembly have a shield.
-//   flange = Does the ball bearing assembly have a flange.
-//   fd = Diameter of the flange (only used if `flange=true`).
-//   fw = Width of the flange (only used if `flange=true`).
+//   shield = If true, the ball bearing assembly has a shield.
+//   flange = If true, the ball bearing assembly has a flange.
+//   fd = Diameter of the flange (required if `flange=true`).
+//   fw = Width of the flange (required if `flange=true`).
+//   rounding = Edge rounding radius, if any. The outermost top and bottom edges are rounded by this amount. The edges of the inner hole are also rounded. If you set `trade_size` and you want edges rounded, you must set `rounding` yourself. This parameter has no default value because the rounding depends on manufacturer and bearing size.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -43,9 +44,9 @@
 //   ball_bearing("MF105ZZ", $fn=72);
 // Example:
 //   ball_bearing("F688ZZ", $fn=72);
-// Example:
-//   ball_bearing(id=12,od=24,width=6,shield=true, flange=true, fd=26.5, fw=1.5, $fn=72);
-module ball_bearing(trade_size, id, od, width, shield=true, flange=false, fd, fw, anchor=CTR, spin=0, orient=UP) {
+// Example: With flange, shield, and rounded edges.
+//   ball_bearing(id=12,od=24,width=6,shield=true, flange=true, fd=26.5, fw=1.5, rounding=0.6, $fn=72);
+module ball_bearing(trade_size, id, od, width, shield=true, flange=false, fd, fw, rounding, anchor=CTR, spin=0, orient=UP) {
     info = is_undef(trade_size)? [id, od, width, shield, flange, fd, fw] :
         ball_bearing_info(trade_size);
     check = assert(all_defined(select(info, 0,4)), "Bad Input");
@@ -65,18 +66,18 @@ module ball_bearing(trade_size, id, od, width, shield=true, flange=false, fd, fw
     color("silver")
     attachable(anchor,spin,orient, d=od, l=width) {
         if (shield) {
-            tube(id=id, wall=wall, h=width);
-            tube(od=od, wall=wall, h=width);
+            tube(id=id, wall=wall, h=width, irounding=rounding);
+            tube(od=od, wall=wall, h=width, orounding1=flange?undef:rounding, orounding2=rounding);
             tube(id=id+0.1, od=od-0.1, h=(wall*2+width)/2);
             if (flange){
-                translate([0,0,-width/2+fw/2])tube(id=od, od=fd, h=fw);
+                translate([0,0,-width/2+fw/2])tube(id=od, od=fd, h=fw, orounding1=rounding);
             }
         } else {
             ball_cnt = floor(PI*mid_d*0.95 / (wall*2));
             difference() {
                 union() {
-                    tube(id=id, wall=wall, h=width);
-                    tube(od=od, wall=wall, h=width);
+                    tube(id=id, wall=wall, h=width, irounding=rounding);
+                    tube(od=od, wall=wall, h=width, orounding1=flange?undef:rounding, orounding2=rounding);
                 }
                 torus(r_maj=mid_d/2, r_min=wall);
             }
@@ -84,11 +85,9 @@ module ball_bearing(trade_size, id, od, width, shield=true, flange=false, fd, fw
                 zrot(i*360/ball_cnt) right(mid_d/2) sphere(d=wall*2);
             }
             if (flange){
-                translate([0,0,-width/2+fw/2])tube(id=od, od=fd, h=fw);
+                translate([0,0,-width/2+fw/2])tube(id=od, od=fd, h=fw, orounding1=rounding);
             }
         }
-
-
         children();
     }
 }

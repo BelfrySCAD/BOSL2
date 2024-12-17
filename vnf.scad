@@ -50,7 +50,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 // Arguments:
 //   points = A list of vertices to divide into columns and rows.
 //   ---
-//   caps = If true, add endcap faces to the first AND last rows.
+//   caps = If true, add endcap faces to the first **and** last rows.
 //   cap1 = If true, add an endcap face to the first row.
 //   cap2 = If true, add an endcap face to the last row.
 //   col_wrap = If true, add faces to connect the last column to the first.
@@ -69,6 +69,38 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //       col_wrap=true, caps=true, reverse=true, style="alt"
 //   );
 //   vnf_polyhedron(vnf);
+// Example(3D,NoAxes,ThrownTogether,VPD=183): Open shape made from a three arcs.
+//   rows = [
+//       for(h=[-20:20:20])
+//           path3d(arc(r=40-abs(h), angle=280, 10), h)
+//   ];
+//   vnf = vnf_vertex_array(rows, reverse=true);
+//   vnf_polyhedron(vnf);
+//   color("green") vnf_wireframe(vnf);
+// Example(3D,NoAxes,ThrownTogether,VPD=183): Open shape made from a three arcs, with `row_wrap=true`.
+//   rows = [
+//       for(h=[-20:20:20])
+//           path3d(arc(r=40-abs(h), angle=280, 10), h)
+//   ];
+//   vnf = vnf_vertex_array(rows, reverse=true, row_wrap=true);
+//   vnf_polyhedron(vnf);
+//   color("green") vnf_wireframe(vnf);
+// Example(3D,NoAxes,ThrownTogether,VPD=183): Open shape made from a three arcs, with `col_wrap=true`.
+//   rows = [
+//       for(h=[-20:20:20])
+//           path3d(arc(r=40-abs(h), angle=280, 10), h)
+//   ];
+//   vnf = vnf_vertex_array(rows, reverse=true, col_wrap=true);
+//   vnf_polyhedron(vnf);
+//   color("green") vnf_wireframe(vnf);
+// Example(3D,NoAxes,ThrownTogether,VPD=183): Open shape made from a three arcs, with `caps=true` and `col_wrap=true`.
+//   rows = [
+//       for(h=[-20:20:20])
+//           path3d(arc(r=40-abs(h), angle=280, 10), h)
+//   ];
+//   vnf = vnf_vertex_array(rows, reverse=true, caps=true, col_wrap=true);
+//   vnf_polyhedron(vnf);
+//   color("green") vnf_wireframe(vnf);
 // Example(3D): Both `col_wrap` and `row_wrap` are true to make a torus.
 //   vnf = vnf_vertex_array(
 //       points=[
@@ -237,21 +269,28 @@ function vnf_vertex_array(
 
 
 // Function: vnf_tri_array()
-// Synopsis: Returns a VNF from an array of points.
+// Synopsis: Returns a VNF from an array of points. The array need not be rectangular.
 // SynTags: VNF
 // Topics: VNF Generators, Lists
-// See Also: vnf_vertex_array(), vnf_join(), vnf_from_polygons(), vnf_from_region()
+// See Also: vnf_vertex_array(), vnf_join(), vnf_from_polygons(), vnf_merge_points()
 // Usage:
-//   vnf = vnf_tri_array(points, [row_wrap], [reverse])
+//   vnf = vnf_tri_array(points, [caps=], [cap1=], [cap2=], [reverse=], [col_wrap=], [row_wrap=])
 // Description:
-//   Produces a VNF from an array of points where each row length can differ from the adjacent rows by up to 2 in length.  This enables
-//   the construction of triangular VNF patches.  The resulting VNF can be wrapped along the rows by setting `row_wrap` to true.
-//   You cannot wrap columns: if you need to do that you'll need to merge two VNF arrays that share edges.  Degenerate faces
-//   are not included in the output, but if this results in unused vertices they will still appear in the output.
+//   Produces a VNF from an array of points where each row length can differ from the adjacent rows by any amount. This enables the construction of triangular or even irregular VNF patches. The resulting VNF can be wrapped along the rows by setting `row_wrap` to true, and wrapped along columns by setting `col_wrap` to true. It is possible to do both at once.
+//   If `row_wrap` is false or not provided, end caps can be generated across the top and/or bottom rows.
+//   .
+//   The algorithm starts with the first point on each row and recursively walks around finding the minimum-length edge to make each new triangle face. This may result in several triangles being connected to one vertex. When triangulating two rows that happen to be equal length, the result is equivalent to {{vnf_vertex_array()}} using the "min_edge" style. If you already have a rectangular vertex list (equal length rows), you should use `vnf_vertex_array()` if you need a different triangulation style.
+//   .
+//   If you need to merge two VNF arrays that share edges using `vnf_join()` you can remove the duplicated vertices using `vnf_merge_points()`.
 // Arguments:
-//   points = List of point lists for each row
-//   row_wrap = If true then add faces connecting the first row and last row.  These rows must differ by at most 2 in length.
-//   reverse = Set this to reverse the direction of the faces
+//   points = List of point lists for each row.
+//   ---
+//   caps = If true, add endcap faces to the first **and** last rows.
+//   cap1 = If true, add an endcap face to the first row.
+//   cap2 = If true, add an endcap face to the last row.
+//   col_wrap = If true, add faces to connect the last column to the first.
+//   row_wrap = If true, add faces to connect the last row to the first.
+//   reverse = If true, reverse all face normals.
 // Example(3D,NoAxes): Each row has one more point than the preceeding one.
 //   pts = [for(y=[1:1:10]) [for(x=[0:y-1]) [x,y,y]]];
 //   vnf = vnf_tri_array(pts);
@@ -276,60 +315,125 @@ function vnf_vertex_array(
 //                    vnf_tri_array(pts2)]);
 //   color("green")vnf_wireframe(vnf,width=0.1);
 //   vnf_polyhedron(vnf);
-// Example(3D,NoAxes): Point count can change irregularly
-//   lens = [10,9,7,5,6,8,8,10];
+// Example(3D,NoAxes): The number of points per row can change irregularly by any amount.
+//   lens = [10,9,8,6,4,8,2,5,3,10,4];
 //   pts = [for(y=idx(lens)) lerpn([-lens[y],y,y],[lens[y],y,y],lens[y])];
 //   vnf = vnf_tri_array(pts);
 //   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
-function vnf_tri_array(points, row_wrap=false, reverse=false) =
+// Example(3D,NoAxes,Edges,VPR=[65,0,25],VPD=380,Med): Model of a cymbal with roughly same-size facets, using a different number of points for each concentric ring of vertices.
+//   include <BOSL2/beziers.scad>
+//   bez = [
+//       [[0,26], [35,26], [29,0], [80,16], [102,0]], //top
+//       [[99,-1], [79,15], [28,-1], [34,25], [-1,25]] // bottom
+//   ];
+//   points = [
+//       for(b=bez)
+//           for(u=[0.01:0.04:1]) let(
+//               bzp = bezier_points(b,u),
+//               r = bzp[0],
+//               n = max(3, round(360 / (6/r * 180/PI)))
+//           ) path3d(regular_ngon(n, r=r), bzp[1])
+//   ];
+//   vnf = vnf_tri_array(points, reverse=true, col_wrap=true, caps=true);
+//   color("brown") difference() {
+//       vnf_polyhedron(vnf);
+//       cylinder(30, d=8);
+//   }
+function vnf_tri_array(
+    points,
+    caps, cap1, cap2,
+    col_wrap=false,
+    row_wrap=false,
+    reverse=false
+) =
+    assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
     let(
-       lens = [for(row=points) len(row)],
-       rowstarts = [0,each cumsum(lens)],
-       faces =
-          [for(i=[0:1:len(points) - 1 - (row_wrap ? 0 : 1)]) each
-            let(
-                rowstart = rowstarts[i],
-                nextrow = select(rowstarts,i+1),
-                delta = select(lens,i+1)-lens[i]
-            )
-            delta == 0 ?
-              [for(j=[0:1:lens[i]-2]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow] : [j+rowstart, j+rowstart+1, j+nextrow],
-               for(j=[0:1:lens[i]-2]) reverse ? [j+rowstart+1, j+nextrow, j+nextrow+1] : [j+rowstart+1, j+nextrow+1, j+nextrow]] :
-            delta == 1 ?
-              [for(j=[0:1:lens[i]-2]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow+1] : [j+rowstart, j+rowstart+1, j+nextrow+1],
-               for(j=[0:1:lens[i]-1]) reverse ? [j+rowstart, j+nextrow, j+nextrow+1] : [j+rowstart, j+nextrow+1, j+nextrow]] :
-            delta == -1 ?
-              [for(j=[0:1:lens[i]-3]) reverse ? [j+rowstart+1, j+nextrow, j+nextrow+1]: [j+rowstart+1, j+nextrow+1, j+nextrow],
-               for(j=[0:1:lens[i]-2]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow] : [j+rowstart, j+rowstart+1, j+nextrow]] :
-            let(count = floor((lens[i]-1)/2))
-            delta == 2 ?
-              [
-               for(j=[0:1:count-1]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow+1] : [j+rowstart, j+rowstart+1, j+nextrow+1],       // top triangles left
-               for(j=[count:1:lens[i]-2]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow+2] : [j+rowstart, j+rowstart+1, j+nextrow+2], // top triangles right
-               for(j=[0:1:count]) reverse ? [j+rowstart, j+nextrow, j+nextrow+1] : [j+rowstart, j+nextrow+1, j+nextrow],                        // bot triangles left
-               for(j=[count+1:1:select(lens,i+1)-2]) reverse ? [j+rowstart-1, j+nextrow, j+nextrow+1] : [j+rowstart-1, j+nextrow+1, j+nextrow], // bot triangles right
-              ] :
-            delta == -2 ?
-              [
-               for(j=[0:1:count-2]) reverse ? [j+nextrow, j+nextrow+1, j+rowstart+1] : [j+nextrow, j+rowstart+1, j+nextrow+1],
-               for(j=[count-1:1:lens[i]-4]) reverse ? [j+nextrow,j+nextrow+1,j+rowstart+2] : [j+nextrow,j+rowstart+2, j+nextrow+1],
-               for(j=[0:1:count-1]) reverse ? [j+nextrow, j+rowstart+1, j+rowstart] : [j+nextrow, j+rowstart, j+rowstart+1],
-               for(j=[count:1:select(lens,i+1)]) reverse ? [ j+nextrow-1, j+rowstart+1, j+rowstart]: [ j+nextrow-1, j+rowstart, j+rowstart+1],
-              ] :
-            assert(false,str("Unsupported row length difference of ",delta, " between row ",i," and ",(i+1)%len(points)))
-          ],
-       verts = flatten(points),
-       culled_faces=
-           [for(face=faces)
-               if (norm(verts[face[0]]-verts[face[1]])>EPSILON &&
-                   norm(verts[face[1]]-verts[face[2]])>EPSILON &&
-                   norm(verts[face[2]]-verts[face[0]])>EPSILON)
-                   face
-           ]
-    )
-    [flatten(points), culled_faces];
+        plen = len(points),
+        // append first vertex of each polygon to its end if wrapping columns
+        st = col_wrap ? [
+            for(i=[0:plen-1])
+            points[i][0] != points[i][len(points[i])-1]
+                ? concat(points[i], [points[i][0]])
+                : points[i]
+        ] : points,
+        addcol = col_wrap ? len(st[0])-len(points[0]) : 0,
+        rowstarts = [ for(i=[0:plen-1]) len(st[i]) ],
+        capfirst = first_defined([cap1,caps,false]),
+        caplast = first_defined([cap2,caps,false]),
+        pcumlen = [0, each cumsum(rowstarts)],
+        faces = flatten([
+            // close first end
+            if (capfirst)
+                if (reverse) [[ for(i=[0:rowstarts[0]-1-addcol]) i ]]
+                else [[ for(i=[rowstarts[0]-1-addcol:-1:0]) i ]],
+            // triangulate between the two polygons
+            for(i = [0:plen-2+(row_wrap?1:0)]) let(j = (i+1)%plen)
+                _lofttri(st[i], st[j], pcumlen[i], pcumlen[j], rowstarts[i], rowstarts[j], reverse),
+            // close up the last end
+            if (caplast)
+                if (reverse) [[ for(i=[pcumlen[plen]-1-addcol:-1:pcumlen[plen-1]]) i ]]
+                else [[ for(i=[pcumlen[plen-1]:pcumlen[plen]-1-addcol]) i ]]
+        ]),
+        vnf = [flatten(st), faces]
+    ) col_wrap ? vnf_merge_points(vnf) : vnf;
 
+/*
+Recursively triangulate between two 3D paths (which can be different
+in length by any amount), starting at index 0 and generate a list of
+triangles with minimum new-side length.
+The first side of the first triangle always connects the two first
+vertices of each path.
+To triangulate between two closed paths, the first and last vertices
+must be the same.
+Parameters:
+    p1 = first path, an array of [x,y,z] vertices
+    p2 = second path, an array of [x,y,z] vertices
+    i1offset = index offset of first vertex in the first path
+        (sum of any prior path lengths)
+    i2offset = index offset of first vertex in the second path
+        (sum of any prior path lengths)
+    n1 = number of vertices in first path
+    n2 = number of vertices in second path
+    reverse = if true, assume a polygon path goes around
+        counterclockwise with respect to the direction from
+        p1 to p2 (right hand rule), clockwise if false
+Other parameters are for internal use:
+    trilist[] = array of triangles to return
+    i1 = vertex index on p1 of the next triangle
+    i2 = vertex index on p2 of the next triangle
+(next triangle vertex found can be on either p1 or p2, depending
+on which triangle is smaller.)
+
+Returns an array of triangles using vertex indices offset by
+i1offset and i2offset
+*/
+function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[], i1=0, i2=0) = n1!=n2 ?
+    // unequal row lengths
+    let(
+    t1 = i1 < n1 ? i1+1 : n1,   // test point 1
+    t2 = i2 < n2 ? i2+1 : n2,   // test point 2
+    d12 = t2>=n2 ? 9e+9 : norm(p2[t2]-p1[i1]), // distance from i1 to t2
+    d21 = t1>=n1 ? 9e+9 : norm(p1[t1]-p2[i2]), // distance from i2 to t1
+    triangle = reverse ?
+        [i1offset+i1, i2offset+i2, d12<d21 ? i2offset+t2 : i1offset+t1] :
+        [i2offset+i2, i1offset+i1, d12<d21 ? i2offset+t2 : i1offset+t1]
+) t1>=n1 && t2>=n2 ? trilist :
+    _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse, concat(trilist, [triangle]), d12<d21 ? i1 : t1, d12<d21 ? t2 : i2)
+
+    : // equal row lengths
+    let(n=n1, i=i1,
+    t = i < n ? i+1 : n,   // test point
+    d12 = t>=n ? 9e+9 : norm(p2[t]-p1[i]), // distance from p1 to new p2
+    d21 = t>=n ? 9e+9 : norm(p1[t]-p2[i]), // distance from p2 to new p1
+    triangle1 = reverse ?
+        [i1offset+i, i2offset+i, d12<d21 ? i2offset+t : i1offset+t] :
+        [i2offset+i, i1offset+i, d12<d21 ? i2offset+t : i1offset+t],
+    triangle2 = reverse ?
+        [i2offset+t, i1offset+t, d12<d21 ? i1offset+i : i2offset+i] :
+        [i1offset+t, i2offset+t, d12<d21 ? i1offset+i : i2offset+i]
+) t>=n ? trilist :
+    _lofttri(p1, p2, i1offset, i2offset, n, n, reverse, concat(trilist, [triangle1, triangle2]), t, t);
 
 
 // Function: vnf_join()
@@ -436,7 +540,22 @@ function vnf_join(vnfs) =
 // Arguments:
 //   polygons = The list of 3D polygons to turn into a VNF
 //   fast = Set to true to skip area and coplanarity checks for increased speed.  Default: false
-//   eps = Polygons with area small than this are discarded.  Default: EPSILON
+//   eps = Polygons with area smaller than this are discarded.  Default: EPSILON
+// Example(3D,VPR=[60,0,40]): Construction of a dodecahedron from pentagon faces.
+//   dihedral = 2*atan(PHI);   // dodecahedron face dihedral
+//   rpenta = 10;              // pentagon face radius
+//   edge = 2*rpenta*sin(36);  // edge length
+//   inrad = 0.5*edge * PHI*PHI/sqrt(3-PHI);   // inner radius
+//   face3d = path3d(pentagon(rpenta), inrad); // single face
+//   facepoints = [
+//       face3d,
+//       for(a=[36:72:360]) zrot(a, yrot(180-dihedral, face3d)),
+//       for(a=[36:72:360]) zrot(a, yrot(360-dihedral, face3d)),
+//       yrot(180, face3d)
+//   ];
+//   vnf = vnf_from_polygons(facepoints, fast=true);
+//   vnf_polyhedron(vnf);
+
 function vnf_from_polygons(polygons,fast=false,eps=EPSILON) =
    assert(is_list(polygons) && is_path(polygons[0]),"Input should be a list of polygons")
    let(
