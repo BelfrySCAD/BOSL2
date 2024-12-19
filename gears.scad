@@ -1013,7 +1013,7 @@ module spur_gear(
                : assert(false,"atype must be one of \"root\", \"tip\" or \"pitch\"");
     circum = 2 * PI * pr;
     twist = 360*thickness*tan(helical)/circum;
-    slices = default(slices, ceil(twist/360*segs(pr)+1));
+    slices = default(slices, ceil(abs(twist)/360*segs(pr)+1));
     default_tag("remove", internal) {
         attachable(anchor,spin,orient, r=anchor_rad, l=thickness) {
             zrot(gear_spin)
