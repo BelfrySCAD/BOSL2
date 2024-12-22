@@ -3353,8 +3353,7 @@ function _gear_tooth_profile(
                 xy = _involute(brad,i),
                 pol = xy_to_polar(xy)
             )
-            if (pol.x <= arad * 1.1)
-            [pol.x, 90-pol.y]
+            if (pol.x <= arad * 1.1) [pol.x, 90-pol.y]
     ],
 
     // Generate reverse lookup table for involute radii, by angle
@@ -3442,7 +3441,7 @@ function _gear_tooth_profile(
         if (!internal && round_r<=0) isect_pt,
         each tooth_half_raw,
         if (internal && round_r>0) each arc(n=8, r=round_r, corner=rcorner),
-        if (internal && round_r<=0) isect,
+        if (internal && round_r<=0) isect_pt,
     ]),
 
     // Strip "jaggies" if found.
