@@ -932,7 +932,7 @@ function spur_gear(
                    : assert(false,"atype must be one of \"root\", \"tip\" or \"pitch\""),
         circum = 2 * PI * pr,
         twist = 360*thickness*tan(helical)/circum,
-        slices = default(slices, ceil(twist/360*segs(pr)+1)),
+        slices = default(slices, ceil(abs(twist)/360*segs(pr)+1)),
         rgn = spur_gear2d(
                 circ_pitch = circ_pitch,
                 teeth = teeth,
@@ -1437,7 +1437,7 @@ module ring_gear(
        : 2*ar - rr;    // default case
     circum = 2 * PI * pr;
     twist = 360*thickness*tan(-helical)/circum;
-    slices = default(slices, ceil(twist/360*segs(pr)+1));
+    slices = default(slices, ceil(abs(twist)/360*segs(pr)+1));
     attachable(anchor,spin,orient, h=thickness, r=atype=="outside"?or:pr) {
         zrot(gear_spin)
         if (herringbone) {
