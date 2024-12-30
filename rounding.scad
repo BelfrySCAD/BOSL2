@@ -623,8 +623,9 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   ---
 //   relsize = relative size specification for the curve, a number or vector.  Default: 0.1
 //   size = absolute size specification for the curve, a number or vector
+//   splinesteps = Number of steps for each bezier curve section. Default: 10
 //   uniform = set to true to compute tangents with uniform=true.  Default: false
-//   closed = true if the curve is closed.  Default: false. 
+//   closed = true if the curve is closed.  Default: false.
 // Example(2D): Original path in green, smoothed path in yellow:
 //   color("green")stroke(square(4), width=0.1);
 //   stroke(smooth_path(square(4),size=0.4), width=0.1);
@@ -643,7 +644,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   color("green")stroke(square([10,4]), closed=true, width=0.1);
 //   stroke(smooth_path(square([10,4]),relsize=0.1,closed=true),
 //          width=0.1);
-// Example(2D): Settting uniform to true biases the tangents to aline more with the line sides
+// Example(2D): Settting uniform to true biases the tangents to align more with the line sides
 //   color("green")
 //     stroke(square([10,4]), closed=true, width=0.1);
 //   stroke(smooth_path(square([10,4]),uniform=true,
@@ -665,9 +666,11 @@ function _rounding_offsets(edgespec,z_dir=1) =
 // Example(2D): Or you can give a different size for each segment
 //   polygon(smooth_path(square(4),size = [.4, .05, 1, .3],
 //                       closed=true));
-// Example(FlatSpin,VPD=35,VPT=[4.5,4.5,1]):  Works on 3d paths as well
+// Example(FlatSpin,VPD=35,VPT=[4.5,4.5,1]): Works on 3d paths also.
 //   path = [[0,0,0],[3,3,2],[6,0,1],[9,9,0]];
 //   stroke(smooth_path(path,relsize=.1),width=.3);
+//   color("red") for(p=path) translate(p) sphere(d=0.3);
+//   stroke(path, width=0.1, color="red");
 // Example(2D): This shows the type of overshoot that can occur with uniform=true.  You can produce overshoots like this if you supply a tangent that is difficult to connect to the adjacent points  
 //   pts = [[-3.3, 1.7], [-3.7, -2.2], [3.8, -4.8], [-0.9, -2.4]];
 //   stroke(smooth_path(pts, uniform=true, relsize=0.1),width=.1);
@@ -684,6 +687,93 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
      smoothed = bezpath_curve(bez,splinesteps=splinesteps)
   )
   closed ? list_unwrap(smoothed) : smoothed;
+
+
+  // Function: curvy_path()
+// Synopsis: Create smoothed path that passes tangentially through all the midpoints of each segment of a given path.
+// SynTags: Path
+// Topics: Rounding, Paths
+// See Also: round_corners(), smooth_path(), path_join(), offset_stroke(), squircle()
+// Usage:
+//   curve = curvy_path(path, [sharpness], [cutlimit], [splinesteps=], [closed=]);
+// Description:
+//   This is a complement to `smooth_path()`, which also smooths the input path using a cubic spline. However, instead of
+//   connecting each corner by a curved path, `curvy_path()` *replaces* every corner of the path by two cubic curves that join at
+//   the corner bisector, and are tangent to the midpoints of the segments making up the corner.
+//   The shortest leg of the corner determines the maximum radius of a circular corner for half the corner, and this half is
+//   circular when `sharpness=0`. The other half uses a bigger circle arc stretched to fit. The circle arc at `sharpness=0`
+//   is approximated by a cubic Bezier curve such that the maximum radial error is less than 0.0003 of the actual radius.
+//   .
+//   A sharply acute corner can result in much of the corner being cut off by the curve.
+//   An optional parameter `cutlimit` can be used to limit how much is cut from the corner vertex.
+// Arguments:
+//   path = path to smooth
+//   sharpness = the sharpness of the curve from the midpoint of the shortest side of a corner to the corner bisector. When `sharpness=0`, the curve is circular. When `sharpness=1`, the curve matches the corner. Default: 0.5
+//   ---
+//   cutlimit = if included, limits the depth of the amount "cut" from the curner by the curve. If the `sharpness` value results in a curve less than the cut limit, the curved corner is unaffected. A curved corner that cuts off more than this limit is stretched outward to the corner, to the cut limit.
+//   splinesteps = Number of steps for each bezier curve section (two per corner). Default: 10
+//   closed = true if the curve is closed. If false, the curve starts from the start of the first segment and ends at the end of the last segment, rather than making curves from the midpoint of each segment as is done for corners. Default: false. 
+// Example(2D): Original path in green, curved path in yellow. Compare to `smooth_path()` Example 1 above.
+//   color("green")stroke(square(4), width=0.1);
+//   stroke(curvy_path(square(4), sharpness=0.2), width=0.1);
+// Example(2D): Closing the path changes the end behavior. See also {{squircle()}}.
+//   color("green")stroke(square(4), width=0.1, closed=true);
+//   stroke(curvy_path(square(4), sharpness=0.2, closed=true),
+//       width=0.1, closed=true);
+// Example(2D): Here's a wide rectangle. 
+//   color("green")
+//     stroke(square([10,4]), closed=true, width=0.1);
+//   stroke(curvy_path(square([10,4]), sharpness=0.2, closed=true),
+//          width=0.1);
+// Example(2D): In the top figure, the rounding cuts off a significant length of the upper right corner. Setting `cutlimit=3` in the bottom figure limits the amount cut from the corner to 3 units.
+//   shape = [[0,0], [10,0], [15,12], [6,5], [-1,7]];
+//   polygon(curvy_path(shape, sharpness=0, closed=true));
+//   color("red") down(.1) polygon(path2d(shape));
+//   curve2 = curvy_path(shape, sharpness=0, cutlimit=2, closed=false);
+//   translate([0,-10,0]) {
+//       polygon(curvy_path(shape, sharpness=0, cutlimit=3, closed=true));
+//       color("red") down(.1) polygon(path2d(shape));
+//   }
+// Example(2D): Comparison of `smooth_path()` (yellow) with `curvy_path()` (red), showing the different behaviors of each type of curve, with `smooth_path()` passing through the vertices of the polygon, and `curvy_path()` passing through the polygon's segment midpoint tangents.
+//   path = [[0,0], [4,0], [7,14], [-3,12]];
+//   polygon(smooth_path(path,size=1,closed=true));
+//   color("red") polygon(curvy_path(path,sharpness=0.3,closed=true));
+//   stroke(path, color="green", width=0.2, closed=true);
+// Example(2D): You can give a different sharpness for each corner. The first corner starts at the lower right, going around clockwise:
+//   polygon(curvy_path(square(4),
+//           sharpness = [0, 0.25, 0.75, 1],
+//           closed=true));
+// Example(FlatSpin,VPD=45: A curvy 3D path resembling a trefoil knot.
+//   shape = [[8.66, -5, -5], [8.66, 5, 5], [-2, 3.46, 0],
+//       [-8.66, -5, -5], [0, -10, 5], [4, 0, 0],
+//       [0, 10, -5], [-8.66, 5, 5], [-2, -3.46, 0]];
+//   stroke(curvy_path(shape, sharpness=0, closed=true), closed=true);
+//   stroke(shape, color="green", width=0.15, closed=true);
+
+module curvy_path(path, sharpness=0.5, splinesteps=10, cutlimit, closed=false) {no_module();}
+
+function curvy_path(path, sharpness=0.5, splinesteps=16, cutlimit, closed=false) =
+let(pathlen = len(path), sharplen = is_num(sharpness) ? undef : len(sharpness))
+assert(pathlen>=3, "path must have at least 3 points")
+assert(is_undef(sharplen) || sharplen==pathlen, "if sharpness is an array, it must have the same length as path")
+assert(is_def(sharplen) || sharpness>=0 && sharpness<=1, "sharpness must be in the range [0...1]")
+let(
+    p = is_1region(path) ? path[0] : path,
+    istart = closed ? 0 : 1,
+    istop = closed ? pathlen-1 : pathlen-2,
+    cutlim = is_undef(cutlimit) ? 999999 : cutlimit,
+    sharpvec = is_num(sharpness) ? repeat(sharpness, pathlen) : sharpness,
+    // bend_path_corner() is in paths.scad
+    roundpath = closed ? [
+        for(i=[0:pathlen-1])
+            _bend_path_corner(select(p,[i-1:i+1]), sharpvec[i], cutlim, splinesteps)
+    ]
+    : [ for(i=[1:pathlen-2])
+        _bend_path_corner(select(p,[i-1:i+1]), sharpvec[i], cutlim, splinesteps, midpoint=[i>1,i<pathlen-2]),
+        [p[pathlen-1]]
+    ]
+) flatten(roundpath);
+
 
 
 function _scalar_to_vector(value,length,varname) = 
