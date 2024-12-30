@@ -1752,7 +1752,7 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 // Synopsis: Creates a shape between a circle and a square.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), square(), rect(), ellipse(), supershape(), curvy_path()
+// See Also: circle(), square(), rect(), ellipse(), supershape()
 // Usage: As Module
 //   squircle(size, [sharpness], [style=]) [ATTACHMENTS];
 // Usage: As Function
