@@ -1054,6 +1054,7 @@ module spur_gear(
                         clearance = clearance,
                         backlash = backlash,
                         internal = internal,
+                        shorten = shorten,
                         profile_shift = profile_shift,
                         shaft_diam = shaft_diam
                     );
