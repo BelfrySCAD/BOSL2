@@ -1823,8 +1823,16 @@ module mirror_copy(v=[0,0,1], offset=0, cp)
             children();
         }
     } else {
-        translate(off) children();
-        translate(cp) mirror(nv) translate(-cp) translate(off) children();
+        translate(off) {
+            $orig = true;
+            $idx = 0;
+            children();
+        }
+        translate(cp) mirror(nv) translate(-cp) translate(off) {
+            $orig = false;
+            $idx = 1;
+            children();
+        }
     }
 }
 
