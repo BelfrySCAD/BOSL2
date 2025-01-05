@@ -559,16 +559,17 @@ function bezpath_length(bezpath, N=3, max_deflect=0.001) =
 //   bezpath = path_to_bezpath(path, [closed], [tangents], [uniform], [size=]|[relsize=]);
 // Description:
 //   Given a 2d or 3d input path and optional list of tangent vectors, computes a cubic (degree 3) bezier
-//   path that passes through every point on the input path and matches the tangent vectors.  If you do
-//   not supply the tangent it will be computed using `path_tangents()`.  If the path is closed specify this
-//   by setting `closed=true`.  The size or relsize parameter determines how far the curve can deviate from
+//   path that passes through every point on the input path and matches the tangent vectors. If you do not
+//   supply the tangents then they are computed using `path_tangents()` with `uniform=false` by default.
+//   Only the direction of the tangent vectors matter, not their magnitudes.
+//   If the path is closed, specify this by setting `closed=true`.
+//   The `size` or `relsize` parameter determines how far the curve can deviate from
 //   the input path.  In the case where the curve has a single hump, the size specifies the exact distance
 //   between the specified path and the bezier.  If you give relsize then it is relative to the segment
 //   length (e.g. 0.05 means 5% of the segment length).  In 2d when the bezier curve makes an S-curve
 //   the size parameter specifies the sum of the deviations of the two peaks of the curve.  In 3-space
 //   the bezier curve may have three extrema: two maxima and one minimum.  In this case the size specifies
-//   the sum of the maxima minus the minimum.  If you do not supply the tangents then they are computed
-//   using `path_tangents()` with `uniform=false` by default.  Tangents computed on non-uniform data tend
+//   the sum of the maxima minus the minimum. Tangents computed on non-uniform data tend
 //   to display overshoots.  See `smooth_path()` for examples.
 // Arguments:
 //   path = 2D or 3D point list or 1-region that the curve must pass through
@@ -635,6 +636,118 @@ function path_to_bezpath(path, closed, tangents, uniform=false, size, relsize) =
         select(path,lastpt)
     ];
 
+
+
+/// Function: path_to_bezcornerpath()
+/// Synopsis: Generates a bezier path tangent to all midpoints of the path segments, deviating from the corners by a specified amount or proportion.
+/// SynTags: Path
+/// Topics: Bezier Paths, Rounding
+/// See Also: path_to_bezpath()
+/// Usage:
+///   bezpath = path_to_bezcornerpath(path, [closed], [size=]|[relsize=]);
+/// Description:
+///   Given a 2d or 3d input path, computes a cubic (degree 3) bezier path passing through, and tangent to,
+///   every segment midpoint on the input path and deviating from the corners by a specified amount.
+///   If the path is closed, specify this by setting `closed=true`.
+///   The `size` or `relsize` parameter determines how far the curve can deviate from
+///   the corners of the input path. The `size` parameter specifies the exact distance
+///   between the specified path and the corner.  If you give a `relsize` between 0 and 1, then it is
+///   relative to the maximum distance from the corner that would produce a circular rounding, with 0 being
+///   the actual corner and 1 being the circular rounding from the midpoint of the shortest leg of the corner.
+///   For example, `relsize=0.25` means the "corner" of the rounded path is 25% of the distance from the path
+///   corner to the theoretical circular rounding.
+///   See `smooth_path()` for examples.
+/// Arguments:
+///   path = 2D or 3D point list or 1-region that the curve must pass through
+///   closed = true if the curve is closed .  Default: false
+///   ---
+///   size = absolute curve deviation from the corners, a number or vector
+///   relsize = relative curve deviation (between 0 and 1) from the corners, a number or vector. Default: 0.5. 
+function path_to_bezcornerpath(path, closed, size, relsize) =
+    is_1region(path) ? path_to_bezcornerpath(path[0], default(closed,true), tangents, size, relsize) :
+    let(closed=default(closed,false))
+        assert(is_bool(closed))
+        assert(num_defined([size,relsize])<=1, "Can't define both size and relsize")
+        assert(is_path(path,[2,3]),"Input path is not a valid 2d or 3d path")
+        let(
+            curvesize = first_defined([size,relsize,0.5]),
+            relative = is_undef(size),
+            pathlen = len(path)
+        )
+        assert(is_num(curvesize) || len(curvesize)==pathlen, str("Size or relsize must have length ",pathlen))
+        let(sizevect = is_num(curvesize) ? repeat(curvesize, pathlen) : curvesize)
+            assert(min(sizevect)>0, "Size or relsize must be greater than zero")
+        let(
+            roundpath = closed ? [
+            for(i=[0:pathlen-1]) let(p3=select(path,[i-1:i+1]))
+                _bez_path_corner([0.5*(p3[0]+p3[1]), p3[1], 0.5*(p3[1]+p3[2])], sizevect[i], relative),
+            [0.5*(path[0]+path[pathlen-1])]
+        ]
+        : [ for(i=[1:pathlen-2]) let(p3=select(path,[i-1:i+1]))
+            _bez_path_corner(
+                [i>1?0.5*(p3[0]+p3[1]):p3[0], p3[1], i<pathlen-2?0.5*(p3[1]+p3[2]):p3[2]],
+                sizevect[i], relative),
+            [path[pathlen-1]]
+        ]
+    )
+    flatten(roundpath);
+
+
+/// Internal function: _bez_path_corner()
+/// Usage:
+///   _bez_path_corner(three_point_path, curvesize, relative);
+/// Description:
+///   Used by path_to_bezcornerpath()
+///   Given a path with three points [p1, p2, p3] (2D or 3D), return a bezier path (minus the last control point) that creates a curve from p1 to p3.
+///   The curvesize (roundness or inverse sharpness) parameter determines how close to a perfect circle (curvesize=1) or the p2 corner (curvesize=0) the path is, coming from the shortest leg. The longer leg path is stretched appropriately.
+///   The error in using a cubic bezier curve to approximate a circular arc is about 0.00026 for a unit circle, with zero error at the endpoint and the corner bisector.
+/// Arguments:
+///   p = List of 3 points [p1, p2, p3]. The points may be 2D or 3D.
+///   curvesize = curve is circular (curvesize=1) or sharp to the corner (curvesize=0) or anywhere in between
+///   relative = if true, curvesize is a proportion between 0 and 1. If false, curvesize is an absolute distance that gets converted to a proportion internally.
+function _bez_path_corner(p, curvesize, relative, mincurvesize=0.001) =
+let(
+    p1 = p[0], p2 = p[1], p3 = p[2],
+    a0 = 0.5*vector_angle(p1, p2, p3),
+    d1 = norm(p1-p2),
+    d3 = norm(p3-p2),
+    tana = tan(a0),
+    rmin = min(d1, d3) * tana,
+    rmax = max(d1, d3) * tana,
+    // A "perfect" unit circle quadrant constructed from cubic bezier points [1,0], [1,d], [d,1], [0,1], with d=0.55228474983 has exact radius=1 at 0°, 45°, and 90°, with a maximum radius (at 22.5° and 67.5°) of 1.00026163152; nearly a perfect circle arc.
+    fleg = let(a2=a0*a0)
+    // model of "perfect" circle leg lengths for a bezier unit circle arc depending on arc angle a0; the model error is ~1e-5
+        -4.4015E-08 * a2*a0 // tiny term, but reduces error by an order of magnitude
+        +0.0000113366 * a2
+        -0.00680018 * a0
+        +0.552244,
+    leglenmin = rmin * fleg,
+    leglenmax = rmax * fleg,
+    cp = circle_2tangents(rmin, p1, p2, p3)[0], // circle center
+    middir = unit(cp-p2), // unit vector from corner pointing to circle center
+    bzmid = cp - rmin*middir, // location of bezier point joining both halves of curve
+    maxcut = norm(bzmid-p2), // maximum possible distance from corner to curve
+    roundness = max(mincurvesize, relative ? curvesize : min(1, curvesize/maxcut)),
+    bzdist = maxcut * roundness, // distance from corner to tip of curve
+    cornerlegmin = min(leglenmin, bzdist*tana),
+    cornerlegmax = min(leglenmax, bzdist*tana),
+    p21unit = unit(p1-p2),
+    p23unit = unit(p3-p2),
+    midto12unit = unit(p21unit-p23unit),
+    // bezier points around the corner p1,p2,p3 (p2 is the vertex):
+    // bz0 is p1
+    // bz1 is on same leg as p1
+    // bz2 is on line perpendicular to bisector for first half of curve
+    // bz3 is bezier start/end point on the corner bisector
+    // bz4 is on line perpendicular to bisector for second half of curve
+    // bz5 is on same leg as p3
+    // bz6 is p3
+    bz3 = p2 + middir * bzdist, // center control point
+    bz2 = bz3 + midto12unit*(d1<d3 ? cornerlegmin : cornerlegmax),
+    bz1 = p1 - (d1<=d3 ? leglenmin : leglenmax)*p21unit,
+    bz4 = bz3 - midto12unit*(d3<d1 ? cornerlegmin : cornerlegmax),
+    bz5 = p3 - (d3<=d1 ? leglenmin : leglenmax)*p23unit
+) [p1, bz1, bz2, bz3, bz4, bz5]; // do not include last control point
 
 
 
