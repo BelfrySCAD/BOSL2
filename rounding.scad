@@ -605,7 +605,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 // Description:
 //   Smooths the input path, creating a continuous curve using a cubic spline, using one of two methods.
 //   .
-//   For `method="edges"`, every segment of the path is replaced by a cubic curve with `splinesteps` points,
+//   For `method="edges"`, every segment (edge) of the path is replaced by a cubic curve with `splinesteps` points,
 //   and the cubic interpolation passes through every input point on the path, matching the tangents at every
 //   point. If you do not specify `tangents`, they are computed using path_tangents with `uniform=false` by
 //   default. Only the dirction of a tangent vector matters, not the vector length.
@@ -613,24 +613,24 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   produces curves that overshoot the point on the path.  
 //   .
 //   For `method="corners"`, every corner of the path is replaced by two cubic curves, each with
-//   `splinesteps` points. The two curves are joined at the corner bisector, and the cubic interpolation
-//   is tangent to the midpoint of every segment.
-//   The `tangents` and `uniform` parameters don't apply to the "corners" method. Using `tangents` with "corners" causes an error.
+//   `splinesteps` points. The two curves are joined at the corner bisector, and the cubic interpolations
+//   are tangent to the midpoint of every segment. The `tangents` and `uniform` parameters don't apply to the
+//   "corners" method. Using `tangents` with "corners" causes an error.
 //   .
 //   The `size` or `relsize` parameters apply to both methods. They determine how far the curve can bend away
 //   from the input path. In the case where the path has three non-collinear points, the size specifies the
 //   exact distance between the specified path and the curve (maximum distance from edge if for the "edges"
 //   method, or distance from corner with the "corners" method).
-//   In 2d when the spline may make an S-curve, for the "edges" method the size parameter specifies the sum
+//   In 2D when the spline may make an S-curve, for the "edges" method the size parameter specifies the sum
 //   of the deviations of the two peaks of the curve. In 3-space the bezier curve may have three extrema: two
 //   maxima and one minimum.  In this case the size specifies the sum of the maxima minus the minimum.
 //   .
 //   If you give `relsize` instead, then for the "edges" method, the maximum deviation from the segment is
 //   relative to  the segment length (e.g. 0.05 means 5% of the segment length). For the "corners" method,
-//   `relsize` determines where the curve intersects the corner bisector relative to the maximum deviation
+//   `relsize` determines where the curve intersects the corner bisector, relative to the maximum deviation
 //   possible (which corresponds to a circle rounding from the shortest leg of the corner). For example,
-//  `relsize=1` is the maximum deviation from the corner, and `relsize=0.5` causes the curve to intersect the
-//   corner bisector halfway between the maximum and the tip of the corner.
+//  `relsize=1` is the maximum deviation from the corner (a circle arc from the shortest leg), and `relsize=0.5`
+//   causes the curve to intersect the corner bisector halfway between the maximum and the tip of the corner.
 //   .
 //   At a given segment or corner (depending on the method) there is a maximum size: a size value that is too
 //   large is rounded down. See also path_to_bezpath().
