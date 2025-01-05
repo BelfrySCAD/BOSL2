@@ -90,7 +90,6 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 //   path_extrude2d(arc(d=100,angle=[180,270]),caps=true)
 //       trapezoid(w1=10, w2=5, h=10, anchor=BACK);
 // Example:
-//   include <BOSL2/beziers.scad>
 //   path = bezpath_curve([
 //       [-50,0], [-25,50], [0,0], [50,0]
 //   ]);

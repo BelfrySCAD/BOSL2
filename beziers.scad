@@ -8,9 +8,9 @@
 //   computing the Bezier curves and surfaces given by the control points, 
 // Includes:
 //   include <BOSL2/std.scad>
-//   include <BOSL2/beziers.scad>
 // FileGroup: Advanced Modeling
 // FileSummary: Bezier curves and surfaces.
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 // Terminology:

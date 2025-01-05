@@ -934,7 +934,6 @@ function linear_sweep(
 //       texture=tex, tex_size=[20,20],
 //       tex_depth=1, style="concave");
 // Example:
-//   include <BOSL2/beziers.scad>
 //   bezpath = [
 //       [15, 30], [10,15],
 //       [10,  0], [20, 10], [30,12],

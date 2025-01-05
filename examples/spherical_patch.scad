@@ -1,5 +1,4 @@
 include <BOSL2/std.scad>
-include <BOSL2/beziers.scad>
 
 // Makes a pseudo-sphere from a rectangular patch and its mirror.
 s = 50/sqrt(2);
