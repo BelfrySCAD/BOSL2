@@ -16,6 +16,8 @@
 //////////////////////////////////////////////////////////////////////
 
 use <builtins.scad>
+include <beziers.scad>
+
 
 
 // Section: 2D Primitives
@@ -1754,9 +1756,9 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), square(), rect(), ellipse(), supershape()
 // Usage: As Module
-//   squircle(size, [sharpness], [style=]) [ATTACHMENTS];
+//   squircle(size, [squareness], [style=]) [ATTACHMENTS];
 // Usage: As Function
-//   path = squircle(size, [sharpness], [style=]);
+//   path = squircle(size, [squareness], [style=]);
 // Description:
 //   A [squircle](https://en.wikipedia.org/wiki/Squircle) is a shape intermediate between a square/rectangle and a
 //   circle/ellipse. Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard
@@ -1766,21 +1768,22 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 //   (see {{supershape()}} Example 3, also known as the Lamé upper squircle), and a squircle constructed from Bezier curves.
 //   They are visually almost indistinguishable, with the superellipse having slightly rounder "corners" than FG at the same
 //   corner radius, and the Bezier version having slightly sharper corners. These squircles have different, unintuitive methods
-//   for controlling how square or circular the shape is. The `sharpness` parameter determines the shape, specifying the
-//   corner position linearly, with 0 giving the circle and 1 giving the square. Vertices are positioned to be more dense near
-//   the corners to preserve smoothness at low values of `$fn`.
+//   for controlling how square or circular the shape is. The `squareness` parameter determines the shape, specifying the
+//   corner position linearly, with 0 giving the circle and 1 giving the square. For the FG and superellipse squircles,
+//   vertices are positioned to be more dense near the corners to preserve smoothness at low values of `$fn`.
 //   .
 //   For the "superellipse" style, the special case where the superellipse exponent is 4 results in a squircle with corners at
-//   the geometric mean between radial points on the circle and square, corresponding to sharpness=0.456786.
+//   the geometric mean between radial points on the circle and square, corresponding to squareness=0.456786.
 //   .
-//   For the "bezier" style with sharpness=0, the "circle" approximated by Bezier curves is exact every 45°, with a maximum
-//   error of 0.00026 times the radius in between those eight angles.
+//   For the "bezier" style with `squareness=0`, the ideal circular arc corner is closely approximated by Bezier curves.
+//   Unlike the other styles, when the `size` parameter defines a rectangle, the bezier style retains the the corner
+//   proportions for the short side of the corner rather than stretching the entire corner.
 //   .
-//   When called as a module, creates a 2D squircle with the specified sharpness.    
+//   When called as a module, creates a 2D squircle with the specified squareness.    
 //   When called as a function, returns a 2D path for a squircle.
 // Arguments:
 //   size = Same as the `size` parameter in `square()`, can be a single number or a vector `[xsize,ysize]`.
-//   sharpness = Value between 0 and 1. Controls the shape, setting the location of a squircle "corner" at the specified interpolated position between a circle and a square. When `sharpness=0` the shape is a circle, and when `sharpness=1` the shape is a square. Default: 0.5
+//   squareness = Value between 0 and 1. Controls the shape, setting the location of a squircle "corner" at the specified interpolated position between a circle and a square. When `squareness=0` the shape is a circle, and when `squareness=1` the shape is a square. Default: 0.5
 //   ---
 //   style = method for generating a squircle, "fg" for Fernández-Guasti, "superellipse" for superellipse, or "bezier" for Bezier. Default: "fg"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1788,13 +1791,13 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 //   atype = anchor type, "box" for bounding box corners and sides, "perim" for the squircle corners. Default: "box"
 //   $fn = Number of points. The special variables `$fs` and `$fa` are ignored. If set, `$fn` must be 12 or greater, and is rounded to the nearest multiple of 4. Points are generated so they are more dense around sharper curves. Default if not set: 48
 // Examples(2D):
-//   squircle(size=50, sharpness=0.4);
+//   squircle(size=50, squareness=0.4);
 //   squircle([80,60], 0.7, $fn=64);
-// Example(2D,VPD=48,VPR=[40,0,40],NoAxes): Corner differences between the three squircle styles for sharpness=0.5. Style "superellipse" is pink, "fg" is gold, "bezier" is blue.
-//   color("pink") squircle(size=50, style="superellipse", sharpness=0.5, $fn=256);
-//   color("yellow") up(1) squircle(size=50, style="fg", sharpness=0.5, $fn=256);
-//   color("lightblue") up(2) squircle(size=50, style="bezier", sharpness=0.5, $fn=256);
-// Example(2D,VPD=265,NoAxes): Ten increments of sharpness parameter for a superellipse squircle
+// Example(2D,VPD=48,VPR=[40,0,40],NoAxes): Corner differences between the three squircle styles for squareness=0.5. Style "superellipse" is pink, "fg" is gold, "bezier" is blue.
+//   color("pink") squircle(size=50, style="superellipse", squareness=0.5, $fn=256);
+//   color("yellow") up(1) squircle(size=50, style="fg", squareness=0.5, $fn=256);
+//   color("lightblue") up(2) squircle(size=50, style="bezier", squareness=0.5, $fn=256);
+// Example(2D,VPD=265,NoAxes): Ten increments of squareness parameter for a superellipse squircle
 //   color("green") for(sq=[0:0.1:1])
 //       stroke(squircle(100, sq, style="superellipse", $fn=96), closed=true, width=0.5);
 // Example(2D): Standard vector anchors are based on the bounding box
@@ -1803,12 +1806,12 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 //   squircle([60,40], 0.5, anchor=(BOTTOM+LEFT), atype="perim", spin=20)
 //       show_anchors();
 
-module squircle(size, sharpness=0.5, style="fg", anchor=CENTER, spin=0, atype="box" ) {
-    check = assert(sharpness >= 0 && sharpness <= 1);
+module squircle(size, squareness=0.5, style="fg", anchor=CENTER, spin=0, atype="box" ) {
+    check = assert(squareness >= 0 && squareness <= 1);
     anchorchk = assert(in_list(atype, ["box", "perim"]));
     size = is_num(size) ? [size,size] : point2d(size);
     assert(all_positive(size), "All components of size must be positive.");
-    path = squircle(size, sharpness, style, atype="box");
+    path = squircle(size, squareness, style, atype="box");
     if (atype == "box") {
         attachable(anchor, spin, two_d=true, size=size, extent=false) {
             polygon(path);
@@ -1823,24 +1826,24 @@ module squircle(size, sharpness=0.5, style="fg", anchor=CENTER, spin=0, atype="b
 }
 
 
-function squircle(size, sharpness=0.5, style="fg", anchor=CENTER, spin=0, atype="box") =
-    assert(sharpness >= 0 && sharpness <= 1)
+function squircle(size, squareness=0.5, style="fg", anchor=CENTER, spin=0, atype="box") =
+    assert(squareness >= 0 && squareness <= 1)
     assert(is_num(size) || is_vector(size,2))
     assert(in_list(atype, ["box", "perim"]))
     let(
         size = is_num(size) ? [size,size] : point2d(size),
-        path = style == "fg" ? _squircle_fg(size, sharpness)
-            : style == "superellipse" ? _squircle_se(size, sharpness)
-            : style == "bezier" ? _squircle_bz(size, sharpness)
+        path = style == "fg" ? _squircle_fg(size, squareness)
+            : style == "superellipse" ? _squircle_se(size, squareness)
+            : style == "bezier" ? _squircle_bz(size, squareness)
             : assert(false, "Style must be \"fg\" or \"superellipse\"")
     ) reorient(anchor, spin, two_d=true, size=atype=="box"?size:undef, path=atype=="box"?undef:path, p=path, extent=true);
 
 
 /* FG squircle functions */
 
-function _squircle_fg(size, sharpness) = [
+function _squircle_fg(size, squareness) = [
     let(
-        sq = _linearize_sharpness(sharpness),
+        sq = _linearize_squareness(squareness),
         size = is_num(size) ? [size,size] : point2d(size),
         aspect = size[1] / size[0],
         r = 0.5 * size[0],
@@ -1851,11 +1854,11 @@ function _squircle_fg(size, sharpness) = [
     ) p*[cos(theta), aspect*sin(theta)]
 ];
 
-function squircle_radius_fg(sharpness, r, angle) = let(
-    s2a = abs(sharpness*sin(2*angle))
+function squircle_radius_fg(squareness, r, angle) = let(
+    s2a = abs(squareness*sin(2*angle))
     ) s2a>0 ? r*sqrt(2)/s2a * sqrt(1 - sqrt(1 - s2a*s2a)) : r;
 
-function _linearize_sharpness(s) =
+function _linearize_squareness(s) =
     // from Chamberlain Fong (2016). "Squircular Calculations". arXiv.
     // https://arxiv.org/pdf/1604.02174v5
     let(c = 2 - 2*sqrt(2), d = 1 - 0.5*c*s)
@@ -1864,14 +1867,14 @@ function _linearize_sharpness(s) =
 
 /* Superellipse squircle functions */
 
-function _squircle_se(size, sharpness) = [
+function _squircle_se(size, squareness) = [
     let(
-        n = _squircle_se_exponent(sharpness),
+        n = _squircle_se_exponent(squareness),
         size = is_num(size) ? [size,size] : point2d(size),
         ra = 0.5*size[0],
         rb = 0.5*size[1],
         astep = $fn>=12 ? 90/round($fn/4) : 360/48,
-        fgsq = _linearize_sharpness(min(0.998,sharpness)) // works well for distributing theta
+        fgsq = _linearize_squareness(min(0.998,squareness)) // works well for distributing theta
     ) for(a=[360:-astep:0.01]) let(
         theta = a + fgsq*sin(4*a)*30/PI, // tighter angle steps at corners
         x = cos(theta),
@@ -1886,9 +1889,9 @@ function squircle_radius_se(n, r, angle) = let(
     y = sin(angle)
 ) (abs(x)^n + abs(y)^n)^(1/n) / r;
 
-function _squircle_se_exponent(sharpness) = let(
-    // limit sharpness; error if >0.99889, limit is smaller for r>1
-    s=min(0.998,sharpness),
+function _squircle_se_exponent(squareness) = let(
+    // limit squareness; error if >0.99889, limit is smaller for r>1
+    s=min(0.998,squareness),
     rho = 1 + s*(sqrt(2)-1),
     x = rho / sqrt(2)
 ) log(0.5) / log(x);
@@ -1896,14 +1899,13 @@ function _squircle_se_exponent(sharpness) = let(
 
 /* Bezier squircle function */
 
-function _squircle_bz(size, sharpness) = let(
+function _squircle_bz(size, squareness) = let(
     splinesteps = $fn>=12 ? round($fn/4) : 10,
     size = is_num(size) ? [size,size] : point2d(size),
     sq = square(size, center=true),
-    roundpath = [ for(i=[0:3])
-        _bend_path_corner(select(sq,[i-1:i+1]), sharpness, 999999, splinesteps)
-    ]
-) flatten(roundpath);
+    bez = path_to_bezcornerpath(sq, relsize=1-squareness, closed=true)
+) bezpath_curve(bez, splinesteps=splinesteps);
+
 
 
 // Function&Module: keyhole()
