@@ -595,18 +595,20 @@ function _rounding_offsets(edgespec,z_dir=1) =
 
 
 // Function: smooth_path()
-// Synopsis: Create smoothed path that passes through all the points of a given path.
+// Synopsis: Create a smoothed path passing through all the points of a given path, or passing through all the segment midpoint tangents.
 // SynTags: Path
 // Topics: Rounding, Paths
 // See Also: round_corners(), smooth_path(), path_join(), offset_stroke()
-// Usage:
-//   smoothed = smooth_path(path, [tangents], [size=|relsize=], [splinesteps=], [closed=], [uniform=]);
+// Usage ("edges" method) (default):
+//   smoothed = smooth_path(path, [tangents], [size=|relsize=], [method="edges"], [splinesteps=], [closed=], [uniform=]);
+// Usage ("corners" method):
+//   smoothed = smooth_path(path, [size=|relsize=], method="corners", [splinesteps=], [closed=]);
 // Description:
 //   Smooths the input path, creating a continuous curve using a cubic spline, using one of two methods.
 //   .
-//   For `method="edges"`, every segment (edge) of the path is replaced by a cubic curve with `splinesteps` points,
-//   and the cubic interpolation passes through every input point on the path, matching the tangents at every
-//   point. If you do not specify `tangents`, they are computed using path_tangents with `uniform=false` by
+//   For `method="edges"` (default), every segment (edge) of the path is replaced by a cubic curve with `splinesteps`
+//   points, and the cubic interpolation passes through every input point on the path, matching the tangents at every
+//   point. If you do not specify `tangents`, they are computed using {{path_tangents()}} with `uniform=false` by
 //   default. Only the dirction of a tangent vector matters, not the vector length.
 //   Setting `uniform=true` with non-uniform sampling may be desirable in some cases but tends to
 //   produces curves that overshoot the point on the path.  
@@ -614,7 +616,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   For `method="corners"`, every corner of the path is replaced by two cubic curves, each with
 //   `splinesteps` points. The two curves are joined at the corner bisector, and the cubic interpolations
 //   are tangent to the midpoint of every segment. The `tangents` and `uniform` parameters don't apply to the
-//   "corners" method. Using `tangents` with "corners" causes an error.
+//   "corners" method. Using either one with "corners" causes an error.
 //   .
 //   The `size` or `relsize` parameters apply to both methods. They determine how far the curve can bend away
 //   from the input path. In the case where the path has three non-collinear points, the size specifies the
@@ -629,7 +631,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   `relsize` determines where the curve intersects the corner bisector, relative to the maximum deviation
 //   possible (which corresponds to a circle rounding from the shortest leg of the corner). For example,
 //   `relsize=1` is the maximum deviation from the corner (a circle arc from the shortest leg), and `relsize=0.5`
-//   causes the curve to intersect the corner bisector halfway between the maximum and the tip of the corner.
+//   causes the curve to intersect the corner bisector halfway between that maximum and the tip of the corner.
 //   .
 //   At a given segment or corner (depending on the method) there is a maximum size: a size value that is too
 //   large is rounded down. See also path_to_bezpath().
@@ -637,8 +639,8 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   path = path to smooth
 //   tangents = tangents constraining curve direction vectors (vector length doesn't matter) at each point for `method="edges"`. Default: computed automatically
 //   ---
-//   relsize = relative maximum devation between the curve and edge (for method="edges") or corner (for method="corner"), a number or vector, expressed as proportion of edge length or proportion of max distance from corner (typically between 0 and 1). Default: 0.1
-//   size = absolute deviation between the curve and edge (for method="edges") or corner (for method="corner"), a number or vector.
+//   relsize = relative maximum devation between the curve and edge (for method="edges") or corner (for method="corners"), a number or vector, expressed as proportion of edge length or proportion of max distance from corner (typically between 0 and 1). Default: 0.1 for `method="edges"` or 0.5 for `method="corners"`
+//   size = absolute deviation between the curve and edge (for method="edges") or corner (for method="corners"), a number or vector.
 //   method = type of curve; "edges" makes a curve that intersects all the path vertices but deviates from the path edges, and "corners" makes a curve that is tangent to all segment midpoints but deviates from the corners. Default: "edges"
 //   splinesteps = Number of steps for each bezier curve section. Default: 10
 //   uniform = set to true to compute tangents with uniform=true. Applies only to "edges" method. Default: false
@@ -658,11 +660,11 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   color("red") polygon(smooth_path(square(4),
 //        method="corners",size=.25,closed=true));
 //   stroke(square(4), closed=true, color="green", width=0.05);
-// Example(2D): Turning on uniform tangent calculation also changes the end derivatives for the "edges" curve (it has no effect on the "corners" curve):
+// Example(2D): Turning on uniform tangent calculation also changes the end derivatives for the "edges" curve:
 //   color("green")stroke(square(4), width=0.1);
 //   stroke(smooth_path(square(4),size=0.4,uniform=true),
 //          width=0.1);
-// Example(2D): Here's a wide rectangle. With `method="edges" (yellow), using `size` means all edges bulge the same amount, regardless of their length. With `method="corners"` (red), the curve is `size' distance from the corners (up to a maximum theoretical circular arc).
+// Example(2D): Here's a wide rectangle. With `method="edges"` (yellow), using `size` means all edges bulge the same amount, regardless of their length. With `method="corners"` (red), the curve is `size` distance from the corners (up to a maximum theoretical circular arc).
 //   color("green")
 //     stroke(square([10,5]), closed=true, width=0.06);
 //   stroke(smooth_path(square([10,5]), method="edges",
@@ -673,18 +675,14 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   color("green")stroke(square([10,4]), closed=true, width=0.1);
 //   stroke(smooth_path(square([10,4]),relsize=0.1,closed=true),
 //          width=0.1);
-// Example(2D): For the "corners" curve, with relsize the distance from the corner is proportional to the maximum distance corresponding to a circular arc (shown in red) from the shorter leg of the corner. As `relsize` approaches zero, the curve approaches the corner.
-//   stroke(smooth_path(square([20,15]), method="corners",
-//          relsize=1, closed=true),
+// Example(2D,Med,NoScales): For the "corners" curve, with relsize the distance from the corner is proportional to the maximum distance corresponding to a circular arc (shown in red) from the shorter leg of the corner. As `relsize` approaches zero, the curve approaches the corner.
+//   stroke(smooth_path(square([20,15]), method="corners", relsize=1, closed=true),
 //          color="red", closed=true, width=0.1);
-//   stroke(smooth_path(square([20,15]), method="corners",
-//          relsize=0.66, closed=true),
+//   stroke(smooth_path(square([20,15]), method="corners", relsize=0.66, closed=true),
 //          color="gold", closed=true, width=0.1);
-//   stroke(smooth_path(square([20,15]), method="corners",
-//          relsize=0.33, closed=true),
+//   stroke(smooth_path(square([20,15]), method="corners", relsize=0.33, closed=true),
 //          color="blue", closed=true, width=0.1);
-//   stroke(smooth_path(square([20,15]), method="corners",
-//          relsize=0.001, closed=true), // relsize must be >0
+//   stroke(smooth_path(square([20,15]), method="corners", relsize=0.001, closed=true),
 //          color="green", closed=true, width=0.1);
 // Example(2D): Settting uniform to true biases the tangents to align more with the line sides (applicable only to "edges" method).
 //   color("green")
@@ -697,7 +695,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   polygon(smooth_path(path,size=1,closed=true));
 //   color("red") polygon(smooth_path(path,method="corners",relsize=0.7,closed=true));
 //   stroke(path, color="green", width=0.2, closed=true);
-// Example(2D): Here's the square with a size that's too big to achieve, giving the the maximum possible curve with `method="edges"` (yellow). For `method="corners"` (red), the maximum possible distance from the corners is a circle.
+// Example(2D,NoScales): Here's the square with a size that's too big to achieve, giving the the maximum possible curve with `method="edges"` (yellow). For `method="corners"` (red), the maximum possible distance from the corners is a circle.
 //   color("green")stroke(square(4), width=0.06,closed=true);
 //   stroke(smooth_path(square(4), method="edges", size=4, closed=true),
 //          closed=true, width=0.1);
@@ -719,7 +717,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   stroke(smooth_path(path,relsize=.1),width=.3);
 //   color("red") for(p=path) translate(p) sphere(d=0.3);
 //   stroke(path, width=0.1, color="red");
-// Example(FlatSpin,VPD=45: Comparison of "edges" and "corners" 3D path resembling a [trefoil knot](https://en.wikipedia.org/wiki/Trefoil_knot).
+// Example(FlatSpin,VPD=45): Comparison of "edges" and "corners" 3D path resembling a [trefoil knot](https://en.wikipedia.org/wiki/Trefoil_knot).
 //   shape = [[8.66, -5, -5], [8.66, 5, 5], [-2, 3.46, 0],
 //       [-8.66, -5, -5], [0, -10, 5], [4, 0, 0],
 //       [0, 10, -5], [-8.66, 5, 5], [-2, -3.46, 0]];
