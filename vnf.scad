@@ -322,7 +322,6 @@ function vnf_vertex_array(
 //   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
 // Example(3D,NoAxes,Edges,VPR=[65,0,25],VPD=380,Med): Model of a cymbal with roughly same-size facets, using a different number of points for each concentric ring of vertices.
-//   include <BOSL2/beziers.scad>
 //   bez = [
 //       [[0,26], [35,26], [29,0], [80,16], [102,0]], //top
 //       [[99,-1], [79,15], [28,-1], [34,25], [-1,25]] // bottom
@@ -1443,7 +1442,6 @@ function projection(vnf,cut=false,eps=EPSILON) =
 //   vnf4=vnf_join([vnf3, zflip(vnf3,1)]);
 //   vnf_polyhedron(vnf4);
 // Example: When the input VNF is a surface with a boundary, if you use the default setting closed=true, then vnf_halfspace() tries to construct closing faces from the edges created by the cut.  These faces may be invalid, for example if the cut points are collinear.  In this example the constructed face is a valid face.
-//   include <BOSL2/beziers.scad>
 //   patch=[
 //          [[10,-10,0],[1,-1,0],[-1,-1,0],[-10,-10,0]],
 //          [[10,-10,20],[1,-1,20],[-1,-1,20],[-10,-10,20]]
@@ -1452,7 +1450,6 @@ function projection(vnf,cut=false,eps=EPSILON) =
 //   vnfcut = vnf_halfspace([-.8,0,-1,-14],vnf);
 //   vnf_polyhedron(vnfcut);
 // Example: Setting closed to false eliminates this (possibly invalid) face:
-//   include <BOSL2/beziers.scad>
 //   patch=[
 //          [[10,-10,0],[1,-1,0],[-1,-1,0],[-10,-10,0]],
 //          [[10,-10,20],[1,-1,20],[-1,-1,20],[-10,-10,20]]
@@ -1775,7 +1772,6 @@ function _sort_pairs0(arr) =
 //   merge = set to false to suppress the automatic invocation of {{vnf_merge_points()}}.  Default: true
 //   idx = if true, return indices into VNF vertices instead of actual 3D points.  Must set `merge=false` to enable this.  Default: false
 // Example(3D,NoAxes,VPT=[7.06325,-20.8414,20.1803],VPD=292.705,VPR=[55,0,25.7]):  In this example we know that the bezier patch VNF has no duplicate vertices, so we do not need to run {{vnf_merge_points()}}.
-//   include <BOSL2/beziers.scad>
 //   patch = [
 //        // u=0,v=0                                         u=1,v=0
 //        [[-50,-50,  0], [-16,-50,  20], [ 16,-50, -20], [50,-50,  0]],

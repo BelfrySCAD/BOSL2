@@ -11,7 +11,6 @@
 // FileGroup: Advanced Modeling
 // FileSummary: Round path corners, rounded prisms, rounded cutouts in tubes, filleted prism joints
 //////////////////////////////////////////////////////////////////////
-include <beziers.scad>
 include <structs.scad>
 
 // Section: Types of Roundovers

@@ -135,7 +135,7 @@ To declare what code the user needs to add to their code to include or use this 
 
     // Includes:
     //   include <BOSL2/std.scad>
-    //   include <BOSL2/beziers.scad>
+    //   include <BOSL2/gears.scad>
 
 Which outputs Markdown code that renders like:
 
@@ -145,7 +145,7 @@ Which outputs Markdown code that renders like:
 >
 > ```openscad
 >  include <BOSL2/std.scad>
->  include <BOSL2/beziers.scad>
+>  include <BOSL2/gears.scad>
 > ```
 
 

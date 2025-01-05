@@ -16,6 +16,7 @@ include <distributors.scad>
 include <miscellaneous.scad>
 include <color.scad>
 include <attachments.scad>
+include <beziers.scad>
 include <shapes3d.scad>
 include <shapes2d.scad>
 include <drawing.scad>
