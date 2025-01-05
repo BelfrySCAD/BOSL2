@@ -629,7 +629,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   relative to  the segment length (e.g. 0.05 means 5% of the segment length). For the "corners" method,
 //   `relsize` determines where the curve intersects the corner bisector, relative to the maximum deviation
 //   possible (which corresponds to a circle rounding from the shortest leg of the corner). For example,
-//  `relsize=1` is the maximum deviation from the corner (a circle arc from the shortest leg), and `relsize=0.5`
+//   `relsize=1` is the maximum deviation from the corner (a circle arc from the shortest leg), and `relsize=0.5`
 //   causes the curve to intersect the corner bisector halfway between the maximum and the tip of the corner.
 //   .
 //   At a given segment or corner (depending on the method) there is a maximum size: a size value that is too
@@ -3402,11 +3402,11 @@ Access to the derivative smoothing parameter?
 //                aux="sphere",aux_r=-30,fillet=8, overlap=17);
 //   }
 // Example(3D,VPT=[0.59633,-3.01826,-3.89606],VPR=[129.2,0,26.4],VPD=192.044,NoScales): Here we have rotated the auxiliary sphere which results in a hole that is off-center through the sphere.  Because we rotate the auxiliary object, both ends of the prism have moved.  Note that setting k to a large value better matches the bezier curve to the curvature of the sphere, resulting in a better result.  
-//  difference(){
-//    spheroid(r=30,circum=true);    
-//    join_prism(circle(r=15),base="sphere",base_r=-30, n=15,
-//               aux="sphere",aux_T=xrot(30), aux_r=-30,fillet=8, overlap=17, k=0.9);
-//  }
+//   difference(){
+//     spheroid(r=30,circum=true);    
+//     join_prism(circle(r=15),base="sphere",base_r=-30, n=15,
+//                aux="sphere",aux_T=xrot(30), aux_r=-30,fillet=8, overlap=17, k=0.9);
+//   }
 // Example(3D,VPT=[-12.5956,-5.1125,-0.322237],VPR=[82.3,0,116.7],VPD=213.382,NoScales): Here we adjust just the auxiliary end, which note is at the bottom.  We rotate it by 45 deg, but this rotation would normally be relative to the other prism end, so we add a centerpoint based on the radius so that the rotation is relative to the sphere center instead.
 //   difference(){
 //     spheroid(r=30,circum=true);    
@@ -3414,14 +3414,14 @@ Access to the derivative smoothing parameter?
 //                aux="sphere",prism_end_T=xrot(45,cp=[0,0,-30]), aux_r=-30,fillet=8, overlap=17, k=0.9);               
 //   }
 // Example(3D,NoScales,VPT=[12.3373,11.6037,-1.87883],VPR=[40.3,0,323.4],VPD=292.705): A diagonal hole through a cylinder with rounded ends, created by shifting the auxiliary prism end along the prism length.  
-//  back_half(200)
+//   back_half(200)
 //     difference(){
 //       right(15)xcyl(r=30,l=100,circum=true); 
 //       join_prism(circle(r=15),base="cyl",base_r=-30, n=15,
 //                  aux="cyl",prism_end_T=right(35),aux_r=-30,fillet=7, overlap=17);
 //     }
 // Example(3D,NoScales,VPT=[-7.63774,-0.808304,13.8874],VPR=[46.6,0,71.2],VPD=237.091): A hole created by shifting along prism width.  
-//  left_half()
+//   left_half()
 //     difference(){
 //       xcyl(r=30,l=100,circum=true); 
 //       join_prism(circle(r=15),base="cyl",base_r=-30, n=15,
