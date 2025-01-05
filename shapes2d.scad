@@ -1793,7 +1793,7 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 // Examples(2D):
 //   squircle(size=50, squareness=0.4);
 //   squircle([80,60], 0.7, $fn=64);
-// Example(2D,VPD=48,VPR=[40,0,40],NoAxes): Corner differences between the three squircle styles for squareness=0.5. Style "superellipse" is pink, "fg" is gold, "bezier" is blue.
+// Example(3D,VPD=48,VPR=[40,0,40],NoAxes): Corner differences between the three squircle styles for squareness=0.5. Style "superellipse" is pink, "fg" is gold, "bezier" is blue.
 //   color("pink") squircle(size=50, style="superellipse", squareness=0.5, $fn=256);
 //   color("yellow") up(1) squircle(size=50, style="fg", squareness=0.5, $fn=256);
 //   color("lightblue") up(2) squircle(size=50, style="bezier", squareness=0.5, $fn=256);
