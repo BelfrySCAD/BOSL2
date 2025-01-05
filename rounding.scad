@@ -735,18 +735,20 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   pts = [[-3.3, 1.7], [-3.7, -2.2], [3.8, -4.8], [-0.9, -2.4]];
 //   stroke(smooth_path(pts, uniform=false, relsize=0.1),width=.1);
 //   color("red")move_copies(pts)circle(r=.15,$fn=12);
-module smooth_path(path, tangents, size, relsize, method="edges", splinesteps=10, uniform=false, closed=false) {no_module();}
-function smooth_path(path, tangents, size, relsize, method="edges", splinesteps=10, uniform=false, closed) =
-  is_1region(path) ? smooth_path(path[0], tangents, size, relsize, method, splinesteps, uniform, default(closed,true)) :
-  assert(method=="edges" || method=="corners", "method must be \"edges\" or \"corners\".")
-  assert(method=="edges" || is_undef(tangent), "The tangents parameter is incompatible with method=\"corners\".")
-  let (
-     bez = method=="edges" ?
-        path_to_bezpath(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=default(closed,false))
+module smooth_path(path, tangents, size, relsize, method="edges", splinesteps=10, uniform, closed=false) {no_module();}
+function smooth_path(path, tangents, size, relsize, method="edges", splinesteps=10, uniform, closed) =
+is_1region(path)
+    ? smooth_path(path[0], tangents, size, relsize, method, splinesteps, uniform, default(closed,true))
+    : assert(method=="edges" || method=="corners", "method must be \"edges\" or \"corners\".")
+assert(method=="edges" || (is_undef(tangents) && is_undef(uniform)), "The tangents and uniform parameters are incompatible with method=\"corners\".")
+let (
+    uniform = default(uniform,false),
+    bez = method=="edges"
+        ? path_to_bezpath(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=default(closed,false))
         : path_to_bezcornerpath(path, size=size, relsize=relsize, closed=default(closed,false)),
-     smoothed = bezpath_curve(bez,splinesteps=splinesteps)
-  )
-  closed ? list_unwrap(smoothed) : smoothed;
+    smoothed = bezpath_curve(bez,splinesteps=splinesteps)
+)
+closed ? list_unwrap(smoothed) : smoothed;
 
 
 

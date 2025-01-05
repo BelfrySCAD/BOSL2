@@ -634,7 +634,7 @@ function path_to_bezpath(path, closed, tangents, uniform=false, size, relsize) =
                   second + L*tangent2 
                  ],
         select(path,lastpt)
-];
+    ];
 
 
 
@@ -666,30 +666,31 @@ function path_to_bezpath(path, closed, tangents, uniform=false, size, relsize) =
 function path_to_bezcornerpath(path, closed, size, relsize) =
     is_1region(path) ? path_to_bezcornerpath(path[0], default(closed,true), tangents, size, relsize) :
     let(closed=default(closed,false))
-    assert(is_bool(closed))
-    assert(num_defined([size,relsize])<=1, "Can't define both size and relsize")
-    assert(is_path(path,[2,3]),"Input path is not a valid 2d or 3d path")
-    let(
-        curvesize = first_defined([size,relsize,0.5]),
-        relative = is_undef(size),
-        pathlen = len(path)
+        assert(is_bool(closed))
+        assert(num_defined([size,relsize])<=1, "Can't define both size and relsize")
+        assert(is_path(path,[2,3]),"Input path is not a valid 2d or 3d path")
+        let(
+            curvesize = first_defined([size,relsize,0.5]),
+            relative = is_undef(size),
+            pathlen = len(path)
+        )
+        assert(is_num(curvesize) || len(curvesize)==pathlen, str("Size or relsize must have length ",pathlen))
+        let(sizevect = is_num(curvesize) ? repeat(curvesize, pathlen) : curvesize)
+            assert(min(sizevect)>0, "Size or relsize must be greater than zero")
+        let(
+            roundpath = closed ? [
+            for(i=[0:pathlen-1]) let(p3=select(path,[i-1:i+1]))
+                _bez_path_corner([0.5*(p3[0]+p3[1]), p3[1], 0.5*(p3[1]+p3[2])], sizevect[i], relative),
+            [0.5*(path[0]+path[pathlen-1])]
+        ]
+        : [ for(i=[1:pathlen-2]) let(p3=select(path,[i-1:i+1]))
+            _bez_path_corner(
+                [i>1?0.5*(p3[0]+p3[1]):p3[0], p3[1], i<pathlen-2?0.5*(p3[1]+p3[2]):p3[2]],
+                sizevect[i], relative),
+            [path[pathlen-1]]
+        ]
     )
-    assert(is_num(curvesize) || len(curvesize)==pathlen, str("Size or relsize must have length ",pathlen))
-    let(sizevect = is_num(curvesize) ? repeat(curvesize, pathlen) : curvesize)
-        assert(min(sizevect)>0, "Size or relsize must be greater than zero")
-    let(
-        roundpath = closed ? [
-        for(i=[0:pathlen-1]) let(p3=select(path,[i-1:i+1]))
-            _bez_path_corner([0.5*(p3[0]+p3[1]), p3[1], 0.5*(p3[1]+p3[2])], sizevect[i], relative),
-        [0.5*(path[0]+path[pathlen-1])]
-    ]
-    : [ for(i=[1:pathlen-2]) let(p3=select(path,[i-1:i+1]))
-        _bez_path_corner(
-            [i>1?0.5*(p3[0]+p3[1]):p3[0], p3[1], i<pathlen-2?0.5*(p3[1]+p3[2]):p3[2]],
-            sizevect[i], relative),
-        [path[pathlen-1]]
-    ]
-) flatten(roundpath);
+    flatten(roundpath);
 
 
 /// Internal function: _bez_path_corner()
@@ -743,9 +744,7 @@ let(
     // bz6 is p3
     bz3 = p2 + middir * bzdist, // center control point
     bz2 = bz3 + midto12unit*(d1<d3 ? cornerlegmin : cornerlegmax),
-    bz1 = p1 - (d1<=d3 ? leglenmin :
-        leglenmax)*p21unit,
-        //norm(0.333*(bz2-p1)))*p21unit,
+    bz1 = p1 - (d1<=d3 ? leglenmin : leglenmax)*p21unit,
     bz4 = bz3 - midto12unit*(d3<d1 ? cornerlegmin : cornerlegmax),
     bz5 = p3 - (d3<=d1 ? leglenmin : leglenmax)*p23unit
 ) [p1, bz1, bz2, bz3, bz4, bz5]; // do not include last control point

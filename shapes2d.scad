@@ -1854,15 +1854,17 @@ function _squircle_fg(size, squareness) = [
     ) p*[cos(theta), aspect*sin(theta)]
 ];
 
-function squircle_radius_fg(squareness, r, angle) = let(
-    s2a = abs(squareness*sin(2*angle))
-    ) s2a>0 ? r*sqrt(2)/s2a * sqrt(1 - sqrt(1 - s2a*s2a)) : r;
+function squircle_radius_fg(squareness, r, angle) =
+    let(
+        s2a = abs(squareness*sin(2*angle))
+    )
+    s2a>0 ? r*sqrt(2)/s2a * sqrt(1 - sqrt(1 - s2a*s2a)) : r;
 
 function _linearize_squareness(s) =
     // from Chamberlain Fong (2016). "Squircular Calculations". arXiv.
     // https://arxiv.org/pdf/1604.02174v5
     let(c = 2 - 2*sqrt(2), d = 1 - 0.5*c*s)
-    2 * sqrt((1+c)*s*s - c*s) / (d*d);
+        2 * sqrt((1+c)*s*s - c*s) / (d*d);
 
 
 /* Superellipse squircle functions */
@@ -1884,27 +1886,33 @@ function _squircle_se(size, squareness) = [
     ) [ra*x, rb*y] / r
 ];
 
-function squircle_radius_se(n, r, angle) = let(
-    x = cos(angle),
-    y = sin(angle)
-) (abs(x)^n + abs(y)^n)^(1/n) / r;
+function squircle_radius_se(n, r, angle) =
+    let(
+        x = cos(angle),
+        y = sin(angle)
+    )
+    (abs(x)^n + abs(y)^n)^(1/n) / r;
 
-function _squircle_se_exponent(squareness) = let(
-    // limit squareness; error if >0.99889, limit is smaller for r>1
-    s=min(0.998,squareness),
-    rho = 1 + s*(sqrt(2)-1),
-    x = rho / sqrt(2)
-) log(0.5) / log(x);
+function _squircle_se_exponent(squareness) =
+    let(
+        // limit squareness; error if >0.99889, limit is smaller for r>1
+        s=min(0.998,squareness),
+        rho = 1 + s*(sqrt(2)-1),
+        x = rho / sqrt(2)
+    )
+    log(0.5) / log(x);
 
 
 /* Bezier squircle function */
 
-function _squircle_bz(size, squareness) = let(
-    splinesteps = $fn>=12 ? round($fn/4) : 10,
-    size = is_num(size) ? [size,size] : point2d(size),
-    sq = square(size, center=true),
-    bez = path_to_bezcornerpath(sq, relsize=1-squareness, closed=true)
-) bezpath_curve(bez, splinesteps=splinesteps);
+function _squircle_bz(size, squareness) =
+    let(
+        splinesteps = $fn>=12 ? round($fn/4) : 10,
+        size = is_num(size) ? [size,size] : point2d(size),
+        sq = square(size, center=true),
+        bez = path_to_bezcornerpath(sq, relsize=1-squareness, closed=true)
+    )
+    bezpath_curve(bez, splinesteps=splinesteps);
 
 
 
