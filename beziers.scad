@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: beziers.scad
-//   Bezier curves and surfaces are way to represent smooth curves and smoothly curving
+//   Bezier curves and surfaces are ways to represent smooth curves and smoothly curving
 //   surfaces with a set of control points.  The curve or surface is defined by
 //   the control points, but usually only passes through the first and last control point (the endpoints).
 //   This file provides some
