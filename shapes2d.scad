@@ -18,6 +18,7 @@
 use <builtins.scad>
 
 
+
 // Section: 2D Primitives
 
 // Function&Module: square()
@@ -1568,10 +1569,6 @@ module egg(length,r1,r2,R,d1,d2,D,anchor=CENTER, spin=0)
 //   ring(r1=5,r2=7, angle=[0,360], n=32);  // full circle
 //   ring(r=5, points=[[0,0],[3,3],[5,2]], full=false, n=32);
 //   ring(32,-2, cp=[1,1], points=[[4,4],[-3,6]], full=false);
-//   ring(r=5,ring_width=-1, n=32);
-//   ring(points=[[0,0],[3,3],[5,2]], ring_width=2, n=32);
-//   ring(points=[[0,0],[3,3],[5,2]], r=1, n=32);
-//   ring(cp=[3,3], points=[[4,4],[1,3]], ring_width=1);
 // Example(2D): Using corner, the outer radius is the one tangent to the corner
 //   corner = [[0,0],[4,4],[7,3]];
 //   ring(corner=corner, r2=3, r1=2,n=22);
@@ -1751,29 +1748,43 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 }
 
 
+
 // Function&Module: squircle()
-// Synopsis: Creates a shape between a circle and a square, centered on the origin.
+// Synopsis: Creates a shape between a circle and a square.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), square(), supershape()
+// See Also: circle(), square(), rect(), ellipse(), supershape()
 // Usage: As Module
-//   squircle(size, [squareness], [style]) [ATTACHMENTS];
+//   squircle(size, [squareness], [style=]) [ATTACHMENTS];
 // Usage: As Function
-//   path = squircle(size, [squareness], [style]);
+//   path = squircle(size, [squareness], [style=]);
 // Description:
-//   A [squircle](https://en.wikipedia.org/wiki/Squircle) is a shape intermediate between a square/rectangle and a circle/ellipse. Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard buttons, and smartphone icons. Old CRT television screens also resembled elongated squircles.
+//   A [squircle](https://en.wikipedia.org/wiki/Squircle) is a shape intermediate between a square/rectangle and a
+//   circle/ellipse. Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard
+//   buttons, and smartphone icons. Old CRT television screens also resembled elongated squircles.
 //   .
-//   Multiple definitions exist for the squircle. We support two versions: the superellipse {{supershape()}} Example 3, also known as the Lamé upper squircle), and the Fernandez-Guasti squircle. They are visually almost indistinguishable, with the superellipse having slightly rounder "corners" than FG at the same corner radius. These two squircles have different, unintuitive methods for controlling how square or circular the shape is. A `squareness` parameter determines the shape, specifying the corner position linearly, with 0 being on the circle and 1 being the square. Vertices are positioned to be more dense near the corners to preserve smoothness at low values of `$fn`'.
+//   Multiple definitions exist for the squircle. We support three versions: the Fernandez-Guasti squircle, the superellipse
+//   (see {{supershape()}} Example 3, also known as the Lamé upper squircle), and a squircle constructed from Bezier curves.
+//   They are visually almost indistinguishable, with the superellipse having slightly rounder "corners" than FG at the same
+//   corner radius, and the Bezier version having slightly sharper corners. These squircles have different, unintuitive methods
+//   for controlling how square or circular the shape is. The `squareness` parameter determines the shape, specifying the
+//   corner position linearly, with 0 giving the circle and 1 giving the square. For the FG and superellipse squircles,
+//   vertices are positioned to be more dense near the corners to preserve smoothness at low values of `$fn`.
 //   .
-//   For the "superellipse" style, the special case where the superellipse exponent is 4 results in a squircle at the geometric mean between radial points on the circle and square, corresponding to squareness=0.456786.
+//   For the "superellipse" style, the special case where the superellipse exponent is 4 results in a squircle with corners at
+//   the geometric mean between radial points on the circle and square, corresponding to squareness=0.456786.
 //   .
-//   When called as a module, creates a 2D squircle with the desired squareness.    
+//   For the "bezier" style with `squareness=0`, the ideal circular arc corner is closely approximated by Bezier curves.
+//   Unlike the other styles, when the `size` parameter defines a rectangle, the bezier style retains the the corner
+//   proportions for the short side of the corner rather than stretching the entire corner.
+//   .
+//   When called as a module, creates a 2D squircle with the specified squareness.    
 //   When called as a function, returns a 2D path for a squircle.
 // Arguments:
 //   size = Same as the `size` parameter in `square()`, can be a single number or a vector `[xsize,ysize]`.
 //   squareness = Value between 0 and 1. Controls the shape, setting the location of a squircle "corner" at the specified interpolated position between a circle and a square. When `squareness=0` the shape is a circle, and when `squareness=1` the shape is a square. Default: 0.5
 //   ---
-//   style = method for generating a squircle, "fg" for Fernández-Guasti and "superellipse" for superellipse. Default: "fg"
+//   style = method for generating a squircle, "fg" for Fernández-Guasti, "superellipse" for superellipse, or "bezier" for Bezier. Default: "fg"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   atype = anchor type, "box" for bounding box corners and sides, "perim" for the squircle corners. Default: "box"
@@ -1781,6 +1792,10 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 // Examples(2D):
 //   squircle(size=50, squareness=0.4);
 //   squircle([80,60], 0.7, $fn=64);
+// Example(3D,VPD=48,VPR=[40,0,40],VPT=[11,-11,-10],NoAxes): Corner differences between the three squircle styles for squareness=0.5. Style "superellipse" is pink, "fg" is gold, "bezier" is blue.
+//   color("pink") squircle(size=50, style="superellipse", squareness=0.5, $fn=256);
+//   color("yellow") up(1) squircle(size=50, style="fg", squareness=0.5, $fn=256);
+//   color("lightblue") up(2) squircle(size=50, style="bezier", squareness=0.5, $fn=256);
 // Example(2D,VPD=265,NoAxes): Ten increments of squareness parameter for a superellipse squircle
 //   color("green") for(sq=[0:0.1:1])
 //       stroke(squircle(100, sq, style="superellipse", $fn=96), closed=true, width=0.5);
@@ -1818,6 +1833,7 @@ function squircle(size, squareness=0.5, style="fg", anchor=CENTER, spin=0, atype
         size = is_num(size) ? [size,size] : point2d(size),
         path = style == "fg" ? _squircle_fg(size, squareness)
             : style == "superellipse" ? _squircle_se(size, squareness)
+            : style == "bezier" ? _squircle_bz(size, squareness)
             : assert(false, "Style must be \"fg\" or \"superellipse\"")
     ) reorient(anchor, spin, two_d=true, size=atype=="box"?size:undef, path=atype=="box"?undef:path, p=path, extent=true);
 
@@ -1837,15 +1853,17 @@ function _squircle_fg(size, squareness) = [
     ) p*[cos(theta), aspect*sin(theta)]
 ];
 
-function squircle_radius_fg(squareness, r, angle) = let(
-    s2a = abs(squareness*sin(2*angle))
-    ) s2a>0 ? r*sqrt(2)/s2a * sqrt(1 - sqrt(1 - s2a*s2a)) : r;
+function squircle_radius_fg(squareness, r, angle) =
+    let(
+        s2a = abs(squareness*sin(2*angle))
+    )
+    s2a>0 ? r*sqrt(2)/s2a * sqrt(1 - sqrt(1 - s2a*s2a)) : r;
 
 function _linearize_squareness(s) =
     // from Chamberlain Fong (2016). "Squircular Calculations". arXiv.
     // https://arxiv.org/pdf/1604.02174v5
     let(c = 2 - 2*sqrt(2), d = 1 - 0.5*c*s)
-    2 * sqrt((1+c)*s*s - c*s) / (d*d);
+        2 * sqrt((1+c)*s*s - c*s) / (d*d);
 
 
 /* Superellipse squircle functions */
@@ -1867,17 +1885,33 @@ function _squircle_se(size, squareness) = [
     ) [ra*x, rb*y] / r
 ];
 
-function squircle_radius_se(n, r, angle) = let(
-    x = cos(angle),
-    y = sin(angle)
-) (abs(x)^n + abs(y)^n)^(1/n) / r;
+function squircle_radius_se(n, r, angle) =
+    let(
+        x = cos(angle),
+        y = sin(angle)
+    )
+    (abs(x)^n + abs(y)^n)^(1/n) / r;
 
-function _squircle_se_exponent(squareness) = let(
-    // limit squareness; error if >0.99889, limit is smaller for r>1
-    s=min(0.998,squareness),
-    rho = 1 + s*(sqrt(2)-1),
-    x = rho / sqrt(2)
-) log(0.5) / log(x);
+function _squircle_se_exponent(squareness) =
+    let(
+        // limit squareness; error if >0.99889, limit is smaller for r>1
+        s=min(0.998,squareness),
+        rho = 1 + s*(sqrt(2)-1),
+        x = rho / sqrt(2)
+    )
+    log(0.5) / log(x);
+
+
+/* Bezier squircle function */
+
+function _squircle_bz(size, squareness) =
+    let(
+        splinesteps = $fn>=12 ? round($fn/4) : 10,
+        size = is_num(size) ? [size,size] : point2d(size),
+        sq = square(size, center=true),
+        bez = path_to_bezcornerpath(sq, relsize=1-squareness, closed=true)
+    )
+    bezpath_curve(bez, splinesteps=splinesteps);
 
 
 
@@ -1961,6 +1995,78 @@ module keyhole(l, r1, r2, shoulder_r=0, d1, d2, length, anchor=CTR, spin=0) {
         children();
     }
 }
+
+
+
+// Function&Module: reuleaux_polygon()
+// Synopsis: Creates a constant-width shape that is not circular.
+// SynTags: Geom, Path
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: regular_ngon(), pentagon(), hexagon(), octagon()
+// Usage: As Module
+//   reuleaux_polygon(n, r|d=, ...) [ATTACHMENTS];
+// Usage: As Function
+//   path = reuleaux_polygon(n, r|d=, ...);
+// Description:
+//   When called as a module, creates a 2D Reuleaux Polygon; a constant width shape that is not circular.  Uses "intersect" type anchoring.  
+//   When called as a function, returns a 2D path for a Reulaux Polygon.
+// Arguments:
+//   n = Number of "sides" to the Reuleaux Polygon.  Must be an odd positive number.  Default: 3
+//   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
+//   ---
+//   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Named Anchors:
+//   "tip0", "tip1", etc. = Each tip has an anchor, pointing outwards.
+// Examples(2D):
+//   reuleaux_polygon(n=3, r=50);
+//   reuleaux_polygon(n=5, d=100);
+// Examples(2D): Standard vector anchors are based on extents
+//   reuleaux_polygon(n=3, d=50) show_anchors(custom=false);
+// Examples(2D): Named anchors exist for the tips
+//   reuleaux_polygon(n=3, d=50) show_anchors(std=false);
+module reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) {
+    check = assert(n>=3 && (n%2)==1);
+    r = get_radius(r=r, d=d, dflt=1);
+    path = reuleaux_polygon(n=n, r=r);
+    anchors = [
+        for (i = [0:1:n-1]) let(
+            ca = 360 - i * 360/n,
+            cp = polar_to_xy(r, ca)
+        ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
+    ];
+    attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
+        polygon(path);
+        children();
+    }
+}
+
+
+function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
+    assert(n>=3 && (n%2)==1)
+    let(
+        r = get_radius(r=r, d=d, dflt=1),
+        ssegs = max(3,ceil(segs(r)/n)),
+        slen = norm(polar_to_xy(r,0)-polar_to_xy(r,180-180/n)),
+        path = [
+            for (i = [0:1:n-1]) let(
+                ca = 180 - (i+0.5) * 360/n,
+                sa = ca + 180 + (90/n),
+                ea = ca + 180 - (90/n),
+                cp = polar_to_xy(r, ca)
+            ) each arc(n=ssegs-1, r=slen, cp=cp, angle=[sa,ea], endpoint=false)
+        ],
+        anchors = [
+            for (i = [0:1:n-1]) let(
+                ca = 360 - i * 360/n,
+                cp = polar_to_xy(r, ca)
+            ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
+        ]
+    ) reorient(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors, p=path);
+
+
+
 
 
 // Function&Module: supershape()
@@ -2047,74 +2153,6 @@ module supershape(step=0.5,n,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=u
 
 function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
     pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
-
-
-// Function&Module: reuleaux_polygon()
-// Synopsis: Creates a constant-width shape that is not circular.
-// SynTags: Geom, Path
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: regular_ngon(), pentagon(), hexagon(), octagon()
-// Usage: As Module
-//   reuleaux_polygon(n, r|d=, ...) [ATTACHMENTS];
-// Usage: As Function
-//   path = reuleaux_polygon(n, r|d=, ...);
-// Description:
-//   When called as a module, creates a 2D Reuleaux Polygon; a constant width shape that is not circular.  Uses "intersect" type anchoring.  
-//   When called as a function, returns a 2D path for a Reulaux Polygon.
-// Arguments:
-//   n = Number of "sides" to the Reuleaux Polygon.  Must be an odd positive number.  Default: 3
-//   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
-//   ---
-//   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Named Anchors:
-//   "tip0", "tip1", etc. = Each tip has an anchor, pointing outwards.
-// Examples(2D):
-//   reuleaux_polygon(n=3, r=50);
-//   reuleaux_polygon(n=5, d=100);
-// Examples(2D): Standard vector anchors are based on extents
-//   reuleaux_polygon(n=3, d=50) show_anchors(custom=false);
-// Examples(2D): Named anchors exist for the tips
-//   reuleaux_polygon(n=3, d=50) show_anchors(std=false);
-module reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) {
-    check = assert(n>=3 && (n%2)==1);
-    r = get_radius(r=r, d=d, dflt=1);
-    path = reuleaux_polygon(n=n, r=r);
-    anchors = [
-        for (i = [0:1:n-1]) let(
-            ca = 360 - i * 360/n,
-            cp = polar_to_xy(r, ca)
-        ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
-    ];
-    attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
-        polygon(path);
-        children();
-    }
-}
-
-
-function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
-    assert(n>=3 && (n%2)==1)
-    let(
-        r = get_radius(r=r, d=d, dflt=1),
-        ssegs = max(3,ceil(segs(r)/n)),
-        slen = norm(polar_to_xy(r,0)-polar_to_xy(r,180-180/n)),
-        path = [
-            for (i = [0:1:n-1]) let(
-                ca = 180 - (i+0.5) * 360/n,
-                sa = ca + 180 + (90/n),
-                ea = ca + 180 - (90/n),
-                cp = polar_to_xy(r, ca)
-            ) each arc(n=ssegs-1, r=slen, cp=cp, angle=[sa,ea], endpoint=false)
-        ],
-        anchors = [
-            for (i = [0:1:n-1]) let(
-                ca = 360 - i * 360/n,
-                cp = polar_to_xy(r, ca)
-            ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
-        ]
-    ) reorient(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors, p=path);
 
 
 

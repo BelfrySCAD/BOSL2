@@ -932,7 +932,7 @@ function spur_gear(
                    : assert(false,"atype must be one of \"root\", \"tip\" or \"pitch\""),
         circum = 2 * PI * pr,
         twist = 360*thickness*tan(helical)/circum,
-        slices = default(slices, ceil(twist/360*segs(pr)+1)),
+        slices = default(slices, ceil(abs(twist)/360*segs(pr)+1)),
         rgn = spur_gear2d(
                 circ_pitch = circ_pitch,
                 teeth = teeth,
@@ -1013,7 +1013,7 @@ module spur_gear(
                : assert(false,"atype must be one of \"root\", \"tip\" or \"pitch\"");
     circum = 2 * PI * pr;
     twist = 360*thickness*tan(helical)/circum;
-    slices = default(slices, ceil(twist/360*segs(pr)+1));
+    slices = default(slices, ceil(abs(twist)/360*segs(pr)+1));
     default_tag("remove", internal) {
         attachable(anchor,spin,orient, r=anchor_rad, l=thickness) {
             zrot(gear_spin)
@@ -1054,6 +1054,7 @@ module spur_gear(
                         clearance = clearance,
                         backlash = backlash,
                         internal = internal,
+                        shorten = shorten,
                         profile_shift = profile_shift,
                         shaft_diam = shaft_diam
                     );
@@ -1437,7 +1438,7 @@ module ring_gear(
        : 2*ar - rr;    // default case
     circum = 2 * PI * pr;
     twist = 360*thickness*tan(-helical)/circum;
-    slices = default(slices, ceil(twist/360*segs(pr)+1));
+    slices = default(slices, ceil(abs(twist)/360*segs(pr)+1));
     attachable(anchor,spin,orient, h=thickness, r=atype=="outside"?or:pr) {
         zrot(gear_spin)
         if (herringbone) {
@@ -3353,8 +3354,7 @@ function _gear_tooth_profile(
                 xy = _involute(brad,i),
                 pol = xy_to_polar(xy)
             )
-            if (pol.x <= arad * 1.1)
-            [pol.x, 90-pol.y]
+            if (pol.x <= arad * 1.1) [pol.x, 90-pol.y]
     ],
 
     // Generate reverse lookup table for involute radii, by angle
@@ -3442,7 +3442,7 @@ function _gear_tooth_profile(
         if (!internal && round_r<=0) isect_pt,
         each tooth_half_raw,
         if (internal && round_r>0) each arc(n=8, r=round_r, corner=rcorner),
-        if (internal && round_r<=0) isect,
+        if (internal && round_r<=0) isect_pt,
     ]),
 
     // Strip "jaggies" if found.

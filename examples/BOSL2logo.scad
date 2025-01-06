@@ -1,6 +1,5 @@
 include <BOSL2/std.scad>
 include <BOSL2/gears.scad>
-include <BOSL2/beziers.scad>
 include <BOSL2/screws.scad>
 include <BOSL2/cubetruss.scad>
 
