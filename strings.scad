@@ -31,6 +31,7 @@
 //   substr("abcdefg",[2,4]);   // Returns "cde"
 //   substr("abcdefg",len=-2);  // Returns ""
 function substr(str, pos=0, len=undef) =
+    assert(is_str(str))
     is_list(pos) ? _substr(str, pos[0], pos[1]-pos[0]+1) :
     len == undef ? _substr(str, pos, len(str)-pos) :
     _substr(str,pos,len);
@@ -53,6 +54,8 @@ function _substr(str,pos,len,substr="") =
 //   str = The string to get the suffix of.
 //   len = The number of characters of suffix to get.
 function suffix(str,len) =
+    assert(is_str(str))
+    assert(is_int(len))
     len>=len(str)? str : substr(str, len(str)-len,len);
 
 
@@ -96,6 +99,8 @@ function suffix(str,len) =
 //   str_find("abc123def123abc","1234",all=true);  // Returns []
 //   str_find("abc","",all=true);                  // Returns [0,1,2]
 function str_find(str,pattern,start=undef,last=false,all=false) =
+    assert(is_str(str))
+    assert(is_str(pattern))
     all? _str_find_all(str,pattern) :
     let( start = first_defined([start,last?len(str)-len(pattern):0]) )
     pattern==""? start :
@@ -144,6 +149,7 @@ function _str_find_all(str,pattern) =
 //    cuts run time in half when the string is long.  Two other string
 //    comparison methods were slower.
 function substr_match(str,start,pattern) =
+   assert(is_str(str))
      len(str)-start <len(pattern)? false
    : _substr_match_recurse(str,start,pattern,len(pattern));
 
@@ -220,6 +226,7 @@ function ends_with(str,pattern) = substr_match(str,len(str)-len(pattern),pattern
 //   str_split("abc+def-qrs*iop",["+","-","*"]);     // Returns ["abc", "def", "qrs", "iop"]
 //   str_split("abc+def-qrs*iop",["-","+","*"]);     // Returns ["abc+def", "qrs*iop", "", ""]
 function str_split(str,sep,keep_nulls=true) =
+    assert(is_string(str))
     !keep_nulls ? _remove_empty_strs(str_split(str,sep,keep_nulls=true)) :
     is_list(sep) ? _str_split_recurse(str,sep,i=0,result=[]) :
     let( cutpts = concat([-1],sort(flatten(search(sep, str,0))),[len(str)]))
@@ -261,10 +268,12 @@ function _remove_empty_strs(list) =
 //   str_join(["abc","def","ghi"]);        // Returns "abcdefghi"
 //   str_join(["abc","def","ghi"], " + ");  // Returns "abc + def + ghi"
 function str_join(list,sep="",_i=0, _result="") =
-    _i >= len(list)-1 ? (_i==len(list) ? _result : str(_result,list[_i])) :
-    str_join(list,sep,_i+1,str(_result,list[_i],sep));
-
-
+    assert(is_list(list))
+    _i >= len(list)-1 ? (_i==len(list) ? _result
+                                       : assert(is_str(list[_i]), str("Entry ", _i, " in the list is not a string"))
+                                         str(_result,list[_i]))
+                      : assert(is_str(list[_i]), str("Entry ", _i, " in the list is not a string"))
+                        str_join(list,sep,_i+1,str(_result,list[_i],sep));
 
 
 // Function: str_strip()
@@ -303,6 +312,8 @@ function _str_count_trailing(s,c,_i=0) =
     _str_count_trailing(s,c,_i=_i+1);
 
 function str_strip(s,c,start,end) =
+  assert(is_str(s))
+  assert(is_str(c))
   let(
       nstart = (is_undef(start) && !end) ? true : start,
       nend = (is_undef(end) && !start) ? true : end,
@@ -370,6 +381,7 @@ function str_replace_char(str,char,replace) =
 // Example:
 //   downcase("ABCdef");   // Returns "abcdef"
 function downcase(str) =
+    assert(is_str(str))
     str_join([for(char=str) let(code=ord(char)) code>=65 && code<=90 ? chr(code+32) : char]);
 
 
@@ -387,6 +399,7 @@ function downcase(str) =
 // Example:
 //   upcase("ABCdef");   // Returns "ABCDEF"
 function upcase(str) =
+    assert(is_str(str))
     str_join([for(char=str) let(code=ord(char)) code>=97 && code<=122 ? chr(code-32) : char]);
 
 
