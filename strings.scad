@@ -150,6 +150,7 @@ function _str_find_all(str,pattern) =
 //    comparison methods were slower.
 function substr_match(str,start,pattern) =
    assert(is_str(str))
+   assert(is_str(pattern))
      len(str)-start <len(pattern)? false
    : _substr_match_recurse(str,start,pattern,len(pattern));
 
@@ -167,7 +168,7 @@ function _substr_match_recurse(str,sindex,pattern,plen,pindex=0,) =
 //    bool = starts_with(str,pattern);
 // Description:
 //    Returns true if the input string `str` starts with the specified string pattern, `pattern`.
-//    Otherwise returns false.
+//    Otherwise returns false.  (If the input is not a string, returns false.)
 // Arguments:
 //   str = String to search.
 //   pattern = String pattern to search for.
@@ -175,7 +176,7 @@ function _substr_match_recurse(str,sindex,pattern,plen,pindex=0,) =
 //   starts_with("abcdef","abc");  // Returns true
 //   starts_with("abcdef","def");  // Returns false
 //   starts_with("abcdef","");     // Returns true
-function starts_with(str,pattern) = substr_match(str,0,pattern);
+function starts_with(str,pattern) = is_string(str) && substr_match(str,0,pattern);
 
 
 // Function: ends_with()
@@ -186,7 +187,7 @@ function starts_with(str,pattern) = substr_match(str,0,pattern);
 //    bool = ends_with(str,pattern);
 // Description:
 //    Returns true if the input string `str` ends with the specified string pattern, `pattern`.
-//    Otherwise returns false.
+//    Otherwise returns false.  (If the input is not a string, returns false.)
 // Arguments:
 //   str = String to search.
 //   pattern = String pattern to search for.
@@ -194,7 +195,7 @@ function starts_with(str,pattern) = substr_match(str,0,pattern);
 //   ends_with("abcdef","def");  // Returns true
 //   ends_with("abcdef","de");   // Returns false
 //   ends_with("abcdef","");     // Returns true
-function ends_with(str,pattern) = substr_match(str,len(str)-len(pattern),pattern);
+function ends_with(str,pattern) = is_str(str) && substr_match(str,len(str)-len(pattern),pattern);
 
 
 
