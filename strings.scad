@@ -9,6 +9,9 @@
 //////////////////////////////////////////////////////////////////////
 
 
+function _is_liststr(s) = is_list(s) || is_str(s);
+
+
 // Section: Extracting substrings
 
 // Function: substr()
@@ -31,6 +34,7 @@
 //   substr("abcdefg",[2,4]);   // Returns "cde"
 //   substr("abcdefg",len=-2);  // Returns ""
 function substr(str, pos=0, len=undef) =
+    assert(is_string(str))
     is_list(pos) ? _substr(str, pos[0], pos[1]-pos[0]+1) :
     len == undef ? _substr(str, pos, len(str)-pos) :
     _substr(str,pos,len);
@@ -54,7 +58,6 @@ function _substr(str,pos,len,substr="") =
 //   len = The number of characters of suffix to get.
 function suffix(str,len) =
     len>=len(str)? str : substr(str, len(str)-len,len);
-
 
 
 // Section: String Searching
@@ -96,6 +99,8 @@ function suffix(str,len) =
 //   str_find("abc123def123abc","1234",all=true);  // Returns []
 //   str_find("abc","",all=true);                  // Returns [0,1,2]
 function str_find(str,pattern,start=undef,last=false,all=false) =
+    assert(_is_liststr(str), "str must be a string or list")
+    assert(_is_liststr(pattern), "pattern must be a string or list")
     all? _str_find_all(str,pattern) :
     let( start = first_defined([start,last?len(str)-len(pattern):0]) )
     pattern==""? start :
@@ -144,6 +149,8 @@ function _str_find_all(str,pattern) =
 //    cuts run time in half when the string is long.  Two other string
 //    comparison methods were slower.
 function substr_match(str,start,pattern) =
+     assert(_is_liststr(str), "str must be a string or list")
+     assert(_is_liststr(pattern), "pattern must be a string or list")
      len(str)-start <len(pattern)? false
    : _substr_match_recurse(str,start,pattern,len(pattern));
 
@@ -160,8 +167,8 @@ function _substr_match_recurse(str,sindex,pattern,plen,pindex=0,) =
 // Usage:
 //    bool = starts_with(str,pattern);
 // Description:
-//    Returns true if the input string `str` starts with the specified string pattern, `pattern`.
-//    Otherwise returns false.
+//    Returns true if the input string (or list) `str` starts with the specified string (or list) pattern, `pattern`.
+//    Otherwise returns false.  (If `str` is not a string or list then always returns false.)
 // Arguments:
 //   str = String to search.
 //   pattern = String pattern to search for.
@@ -169,7 +176,7 @@ function _substr_match_recurse(str,sindex,pattern,plen,pindex=0,) =
 //   starts_with("abcdef","abc");  // Returns true
 //   starts_with("abcdef","def");  // Returns false
 //   starts_with("abcdef","");     // Returns true
-function starts_with(str,pattern) = substr_match(str,0,pattern);
+function starts_with(str,pattern) = _is_liststr(str) && substr_match(str,0,pattern);
 
 
 // Function: ends_with()
@@ -179,8 +186,8 @@ function starts_with(str,pattern) = substr_match(str,0,pattern);
 // Usage:
 //    bool = ends_with(str,pattern);
 // Description:
-//    Returns true if the input string `str` ends with the specified string pattern, `pattern`.
-//    Otherwise returns false.
+//    Returns true if the input string (or list) `str` ends with the specified string (or list) pattern, `pattern`.
+//    Otherwise returns false.  (If `str` is not a string or list then always returns false.)
 // Arguments:
 //   str = String to search.
 //   pattern = String pattern to search for.
@@ -188,7 +195,7 @@ function starts_with(str,pattern) = substr_match(str,0,pattern);
 //   ends_with("abcdef","def");  // Returns true
 //   ends_with("abcdef","de");   // Returns false
 //   ends_with("abcdef","");     // Returns true
-function ends_with(str,pattern) = substr_match(str,len(str)-len(pattern),pattern);
+function ends_with(str,pattern) = _is_liststr(str) && substr_match(str,len(str)-len(pattern),pattern);
 
 
 
@@ -261,6 +268,7 @@ function _remove_empty_strs(list) =
 //   str_join(["abc","def","ghi"]);        // Returns "abcdefghi"
 //   str_join(["abc","def","ghi"], " + ");  // Returns "abc + def + ghi"
 function str_join(list,sep="",_i=0, _result="") =
+    assert(is_list(list))
     _i >= len(list)-1 ? (_i==len(list) ? _result : str(_result,list[_i])) :
     str_join(list,sep,_i+1,str(_result,list[_i],sep));
 
@@ -370,6 +378,7 @@ function str_replace_char(str,char,replace) =
 // Example:
 //   downcase("ABCdef");   // Returns "abcdef"
 function downcase(str) =
+    assert(is_string(str))
     str_join([for(char=str) let(code=ord(char)) code>=65 && code<=90 ? chr(code+32) : char]);
 
 
@@ -387,6 +396,7 @@ function downcase(str) =
 // Example:
 //   upcase("ABCdef");   // Returns "ABCDEF"
 function upcase(str) =
+    assert(is_string(str))
     str_join([for(char=str) let(code=ord(char)) code>=97 && code<=122 ? chr(code-32) : char]);
 
 
@@ -436,12 +446,13 @@ function rand_str(n, charset, seed) =
 //   parse_int("CEDE", 16);   // Returns 52958
 //   parse_int("");           // Returns 0
 function parse_int(str,base=10) =
-    str==undef ? undef :
-    len(str)==0 ? 0 :
-    let(str=downcase(str))
-    str[0] == "-" ? -_parse_int_recurse(substr(str,1),base,len(str)-2) :
-    str[0] == "+" ?  _parse_int_recurse(substr(str,1),base,len(str)-2) :
-    _parse_int_recurse(str,base,len(str)-1);
+    str==undef ? undef
+  : assert(is_str(str))
+    len(str)==0 ? 0
+  : let(str=downcase(str))
+    str[0] == "-" ? -_parse_int_recurse(substr(str,1),base,len(str)-2)
+  : str[0] == "+" ?  _parse_int_recurse(substr(str,1),base,len(str)-2)
+  : _parse_int_recurse(str,base,len(str)-1);
 
 function _parse_int_recurse(str,base,i) =
     let(
@@ -471,14 +482,15 @@ function _parse_int_recurse(str,base,i) =
 //   parse_float("7.342e-4"); // Returns 0.0007342
 //   parse_float("");         // Returns 0
 function parse_float(str) =
-    str==undef ? undef :
-    len(str) == 0 ? 0 :
-    in_list(str[1], ["+","-"]) ? (0/0) : // Don't allow --3, or +-3
-    str[0]=="-" ? -parse_float(substr(str,1)) :
-    str[0]=="+" ?  parse_float(substr(str,1)) :
-    let(esplit = str_split(str,"eE") )
-    len(esplit)==2 ? parse_float(esplit[0]) * pow(10,parse_int(esplit[1])) :
-    let( dsplit = str_split(str,["."]))
+    str==undef ? undef
+  : assert(is_str(str))
+    len(str) == 0 ? 0
+  : in_list(str[1], ["+","-"]) ? (0/0)  // Don't allow --3, or +-3
+  : str[0]=="-" ? -parse_float(substr(str,1))
+  : str[0]=="+" ?  parse_float(substr(str,1))
+  : let(esplit = str_split(str,"eE") )
+    len(esplit)==2 ? parse_float(esplit[0]) * pow(10,parse_int(esplit[1]))
+  : let( dsplit = str_split(str,["."]))
     parse_int(dsplit[0])+parse_int(dsplit[1])/pow(10,len(dsplit[1]));
 
 
@@ -520,7 +532,8 @@ function parse_float(str) =
 //   parse_frac("2 1/4",mixed=false);      // Returns nan
 function parse_frac(str,mixed=true,improper=true,signed=true) =
     str == undef ? undef
-  : len(str)==0 ? 0
+  : assert(is_str(str))
+    len(str)==0 ? 0
   : str[0]==" " ? NAN
   : signed && str[0]=="-" ? -parse_frac(substr(str,1),mixed=mixed,improper=improper,signed=false)
   : signed && str[0]=="+" ?  parse_frac(substr(str,1),mixed=mixed,improper=improper,signed=false)
@@ -552,6 +565,7 @@ function parse_frac(str,mixed=true,improper=true,signed=true) =
 //   parse_num("3.4e-2"); // Returns 0.034
 function parse_num(str) =
     str == undef ? undef :
+    assert(is_str(str))
     let( val = parse_frac(str) )
     val == val ? val :
     parse_float(str);
@@ -756,6 +770,7 @@ function _format_matrix(M, sig=4, sep=1, eps=1e-9) =
 //   format("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostamus27.440"
 //   format("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostam 27.440"
 function format(fmt, vals) =
+    assert(is_str(fmt))
     let(
         parts = str_split(fmt,"{")
     ) str_join([
