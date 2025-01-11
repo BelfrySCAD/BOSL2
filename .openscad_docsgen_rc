@@ -24,6 +24,7 @@ PrioritizeFiles:
   shapes2d.scad
   shapes3d.scad
   drawing.scad
+  text.scad
   masks2d.scad
   masks3d.scad
   distributors.scad
