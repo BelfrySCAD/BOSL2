@@ -17,6 +17,20 @@ use <builtins.scad>
 
 
 // Section: 2D Text
+//   The 2D text operations include a replacement for OpenSCAD's `text()` that creates an attachable block of text,
+//   another replacement called `write()` that can display multi-line text with optional margin justification,
+//   and a `textwrap()` function to word-wrap text within a specified width
+//   .
+//   **Text wrapping with proportional fonts requires an OpenSCAD snapshot or stable build released after 2021-08-16.**
+//   While you *can* pass a proportional font to `wraptext()` in older versions of OpenSCAD, and display the wrapped
+//   text using that proportional font, the wrapping algorithm still treats it as a monospace font. This can give reasonable
+//   results much of the time but the line lengths would not be the same as from text wrapped using proportional character spacing.
+//   .
+//   If you are using a version of OpenSCAD dated earlier than 2021-08-16 when `textmetrics()` appeared the OpenSCAD snapshots,
+//   then only monospace fonts are supported, and unless specified otherwise in `textwrap()`,
+//   the width of all characters is assumed to be 83.35% of the font size, corresponding to the font "Liberation Mono:style=Bold".
+//   Results may be different with other monospace fonts.
+
 
 // Module: text()
 // Synopsis: Creates an attachable block of text.
@@ -128,38 +142,25 @@ module text(text, size=10, font, halign, valign, spacing=1.0, direction="ltr", l
 }
 
 
-
-// Section: Text Wrapping
-//   **Text wrapping with proportional fonts requires an OpenSCAD snapshot or stable build released after 2021-08-16.**
-//   While you *can* pass a proportional font to `wraptext()` in older versions of OpenSCAD, and display the wrapped
-//   text using that proportional font, the wrapping algorithm still treats it as a monospace font. This actually works
-//   much of the time but the line lengths would not be the same as from text wrapped using proportional character spacing.
-//   .
-//   If you are using a version of OpenSCAD dated earlier than 2021-08-16 when `textmetrics()` appeared the OpenSCAD snapshots,
-//   then only monospace fonts are supported, and unless specified otherwise in `textwrap()`,
-//   the width of all characters is assumed to be 83.35% of the font size, corresponding to the font "Liberation Mono:style=Bold".
-//   Results may be different with other monospace fonts.
-
-
 // Function: textwrap()
 // Synopsis: Wraps a text string with a specified font to fit within a specified width, returning an array of strings.
 // Topics: Text
-// See Also: text(), str_split(), textarray_boundingbox()
+// See Also: text(), str_split(), text_array_size()
 // Usage:
-//   textarray = textwrap(string, width, [optimize=], [line_spacing=], ...);
+//   text_array = textwrap(string, width, [optimize=], [line_spacing=], ...);
 // Description:
-//   Returns an array of paragrahs, where each paragraph is an array of substrings of the original text,
+//   Returns an array of paragraphs, where each paragraph is an array of substrings of the original text,
 //   such that each substring fits within a specified width when displayed with the specified font.
 //   By default, the text wrapping is optimized so that each line of text is roughly the same
 //   length to minimize the occurrence of an unusually short final line.
 //   The actual overall width of the final text is less than or equal to the requested width.
-//   You can use `{{textarray_boundingbox()}}` to get the actual bounding box of the wrapped text.
+//   You can use `{{text_array_size()}}` to get the actual bounding box of the wrapped text.
 //   .
 //   Multple paragraphs are returned if the `string` argument contains newline (`\n`) characters that split the string.
 //   To insert a blank line, use two newlines with a space in between (`\n \n`).
-//   Referring to Example 3 below, if the return value is in `textarray`, then the lines of text are in the paragraph `textarray[paragraph_number]`.
-//   If the string contains no newlines, then a single paragraph is returned in `textarray`,
-//   and `textarray[0]` contains the substrings lines from the wrapped text, as shown in Examples 1 and 2.
+//   Referring to Example 3 below, if the return value is in `text_array`, then the lines of text are in the paragraph `text_array[paragraph_number]`.
+//   If the string contains no newlines, then a single paragraph is returned in `text_arra`,
+//   and `text_array[0]` contains the substrings lines from the wrapped text, as shown in Examples 1 and 2.
 //   .
 //   Several parameters are the same as for OpenSCAD's builtin `text()`. Some don't seem to have any effect, but are present here for compatibility: `direction`, `language`, and `script`.
 // Arguments:
@@ -178,9 +179,9 @@ module text(text, size=10, font, halign, valign, spacing=1.0, direction="ltr", l
 //   sample = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, \
 //   sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 //   textwidth = 240;
-//   textarray = textwrap(sample, textwidth, font="Liberation Serif");
+//   text_array = textwrap(sample, textwidth, font="Liberation Serif");
 //   /*
-//   textarray contains one paragraph of four lines roughly equal in size:
+//   text_array contains one paragraph of four lines roughly equal in size:
 //   [
 //       [
 //           "Lorem ipsum dolor sit amet,",
@@ -194,9 +195,9 @@ module text(text, size=10, font, halign, valign, spacing=1.0, direction="ltr", l
 //   sample = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, \
 //   sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 //   textwidth = 240;
-//   textarray = textwrap(sample, textwidth, font="Liberation Serif", optimize=false);
+//   text_array = textwrap(sample, textwidth, font="Liberation Serif", optimize=false);
 //   /*
-//   textarray is one paragraph of four lines consuming the maximum width:
+//   text_array is one paragraph of four lines consuming the maximum width:
 //   [
 //       [
 //           "Lorem ipsum dolor sit amet, consectetur",
@@ -212,10 +213,9 @@ module text(text, size=10, font, halign, valign, spacing=1.0, direction="ltr", l
 //   aliqua.\n \nUt enim ad minim veniam, quis nostrud exercitation \
 //   ullamco laboris nisi ut aliquip ex ea commodo consequat.";
 //   textwidth = 240;
-//   textarray = textwrap(sample, textwidth, font="Liberation Serif");
-//   echo(textarray);
+//   text_array = textwrap(sample, textwidth, font="Liberation Serif");
 //   /*
-//   textarray contains one paragraph with four lines of roughly equal length:
+//   text_array contains one paragraph with four lines of roughly equal length:
 //   [
 //       // first paragraph
 //       [
@@ -238,48 +238,47 @@ module text(text, size=10, font, halign, valign, spacing=1.0, direction="ltr", l
 function textwrap(string, width, optimize=true, size=10, font, spacing=1, direction="ltr", language="en", script="latin", charwidth, _fdata) =
 assert(version_num()<20210816 || is_undef(charwidth), "Parameter charwidth cannot be specified for OpenSCAD builds dated after 2021-08-16.")
 assert(is_def(width), "Width units must be specified.")
-let(
-    fontname = is_def(font) ? font
-        : version_num()>=20210816 ? "Liberation Sans:style=Bold"
-        : "Liberation Mono:style=Bold",
-    gd = is_undef(_fdata) ? _glyphdata(fontname) * (size/10) : _fdata,
-    charwid = version_num()>=20210816 ? undef : is_def(charwidth) ? charwidth : gd[1],
-    spc = is_def(charwid) ? charwid
-        : textmetrics(text=" ", size=size, font=fontname, direction=direction, language=language, script=script, spacing=spacing).advance[0],
-    words = [
-        for(p=str_split(string, "\n", false)) let(
-            line = list_remove_values(str_split(str_strip(p," \t\r\n"), " \t"), "", all=true)
-            ) len(line)==0 ? [""] : line
-    ],
-    wlens = [
-        for(p=words) [
-            for(w=p) is_def(charwid)
-            ? len(w)*charwid + spc // only for old builds of OpenSCAD
-            : textmetrics(text=w, size=size, font=fontname, direction=direction, language=language, script=script, spacing=spacing).advance[0]
-                + spc // all words must have a trailing space; EOL is accounted for later
-        ]
-    ],
-    maxwordwid = max(flatten(wlens)) - spc // length of longest word in text
+    let(
+        fontname = is_def(font) ? font
+            : version_num()>=20210816 ? "Liberation Sans:style=Bold"
+            : "Liberation Mono:style=Bold",
+        gd = is_undef(_fdata) ? _glyphdata(fontname, size) : _fdata,
+        charwid = version_num()>=20210816 ? undef : is_def(charwidth) ? charwidth : gd[1],
+        spc = is_def(charwid) ? charwid
+            : textmetrics(text=" ", size=size, font=fontname, direction=direction, language=language, script=script, spacing=spacing).advance[0],
+        words = [
+            for(p=str_split(string, "\n", false)) let(
+                line = list_remove_values(str_split(str_strip(p," \t\r\n"), " \t"), "", all=true)
+                ) len(line)==0 ? [""] : line
+        ],
+        wlens = [
+            for(p=words) [
+                for(w=p) is_def(charwid)
+                ? len(w)*charwid + spc // only for old builds of OpenSCAD
+                : textmetrics(text=w, size=size, font=fontname, direction=direction, language=language, script=script, spacing=spacing).advance[0]
+                    + spc // all words must have a trailing space; EOL is accounted for later
+            ]
+        ],
+        maxwordwid = max(flatten(wlens)) - spc // length of longest word in text
 ) assert(maxwordwid <= width, "A word width exceeds the specified width.")
-// Create the array line_indexes with same paragraph structure as words.
-// Each line of wrapped text is represented by an array of [start,end] pairs,
-// with start and end pointing to indexes in cumlen, which is a cumulative list
-// of line lengths at the end of each word, and also has the same paragraph structure.
-let(
-    cumlen = [ for(wl=wlens) cumsum(wl) ],
-    npara = len(words),
-    line_indexes = [ for(cl=cumlen) _getlines(width, spc, cl, len(cl)) ],
-    maxlinewid=_get_lines_maxwid(line_indexes, spc, cumlen),
-    final_line_indexes = optimize
-    ? _wrap_optimize(len(flatten(line_indexes)), maxwordwid, line_indexes, maxlinewid-0.01, spc, cumlen)
-    : line_indexes,
-    nlines = len(line_indexes)
-) // output an array of paragraphs containing lists of wordwrapped strings
-//echo(str("maxlines=", len(flatten(line_indexes)), " minwid=", maxwordwid, " final _get_lines_maxwid=", maxlinewid, " final=", _get_lines_maxwid(final_line_indexes, spc, cumlen)))
-[   for(i=[0:nlines-1]) let(li=final_line_indexes[i]) [
-        for(j=[0:len(li)-1]) str_join(slice(words[i], li[j][0], li[j][1]), " ")
-    ]
-];
+    // Create the array line_indexes with same paragraph structure as words.
+    // Each line of wrapped text is represented by an array of [start,end] pairs,
+    // with start and end pointing to indexes in cumlen, which is a cumulative list
+    // of line lengths at the end of each word, and also has the same paragraph structure.
+    let(
+        cumlen = [ for(wl=wlens) cumsum(wl) ],
+        npara = len(words),
+        line_indexes = [ for(cl=cumlen) _getlines(width, spc, cl, len(cl)) ],
+        maxlinewid=_get_lines_maxwid(line_indexes, spc, cumlen),
+        final_line_indexes = optimize
+        ? _wrap_optimize(len(flatten(line_indexes)), maxwordwid, line_indexes, maxlinewid-0.01, spc, cumlen)
+        : line_indexes,
+        nlines = len(line_indexes)
+    ) [ // output an array of paragraphs containing lists of wordwrapped strings
+        for(i=[0:nlines-1]) let(li=final_line_indexes[i]) [
+            for(j=[0:len(li)-1]) str_join(slice(words[i], li[j][0], li[j][1]), " ")
+        ]
+    ];
 
 /// Private function: _wrap_optimize(), called by textwrap()
 /// Recursively find minimum wrap width in all paragraphs represented by line_indexes
@@ -293,15 +292,14 @@ let(
 ///   cumlen = cumulative list of line lengths with same paragraph structure as line_indexes
 ///   iter = maximum number of recursions allowed
 function _wrap_optimize(maxlines, minwid, line_indexes, reqwid, spc, cumlen, iter=50) =
-//echo(str("lines=", len(flatten(line_indexes))," reqwid=", reqwid, " initialwid=",_get_lines_maxwid(line_indexes, spc, cumlen), " iter=",iter))
-let(
-    new_li = [ for(cl=cumlen) _getlines(reqwid, spc, cl, len(cl)) ],
-    nlines = len(flatten(new_li)),
-    newreqwid = _get_lines_maxwid(new_li, spc, cumlen) - 0.01
-)
-iter<=0 || nlines>maxlines || newreqwid<=minwid ? line_indexes
-: _wrap_optimize(maxlines, minwid, new_li, newreqwid, spc, cumlen, iter-1);
-
+    let(
+        new_li = [ for(cl=cumlen) _getlines(reqwid, spc, cl, len(cl)) ],
+        nlines = len(flatten(new_li)),
+        newreqwid = _get_lines_maxwid(new_li, spc, cumlen) - 0.01
+    )
+    iter<=0 || nlines>maxlines || newreqwid<=minwid
+        ? line_indexes
+        : _wrap_optimize(maxlines, minwid, new_li, newreqwid, spc, cumlen, iter-1);
 
 /// Private function: _getlines(), called by wraptext() and _wrap_optimize()
 /// "Greedy" word-wrap, returns a list of text strings that fit within the specified width.
@@ -312,56 +310,60 @@ iter<=0 || nlines>maxlines || newreqwid<=minwid ? line_indexes
 ///   nwords = number of words total
 /// The parameters istart and res are maintained internally.
 function _getlines(width, spc, cl, nwords, istart=0, res=[]) =
-istart >= nwords ? res
-: let(
-    prevlinelen = istart>0 ? cl[istart-1] : 0,
-    lastindx = _bsearch_lowindex(width+prevlinelen+spc, cl, nwords, istart, nwords-1)
-) _getlines(width, spc, cl, nwords, lastindx+1, concat(res, [[istart,lastindx]]));
+    istart >= nwords ? res
+    : let(
+        prevlinelen = istart>0 ? cl[istart-1] : 0,
+        lastindx = _bsearch_lowindex(width+prevlinelen+spc, cl, nwords, istart, nwords-1)
+    ) _getlines(width, spc, cl, nwords, lastindx+1, concat(res, [[istart,lastindx]]));
 
 /// Private function: _bsearch_lowindex(), binary search called by _getlines()
 /// Return the index of the element in ordered_list of length n that is less than or equal to value.
 /// The parameters low and high should initially be set to 0 and n-1, respectively.
 function _bsearch_lowindex(value, ordered_list, n, low, high) =
-high < low ? -1
-: let(mid = low + floor(0.5*(high-low)))
-    mid >= n-1 ? n-1 :
-    (ordered_list[mid] <= value && value < ordered_list[min(mid+1,n-1)] ? mid
-    : (ordered_list[mid] > value
-        ? _bsearch_lowindex(value, ordered_list, n, low, mid-1)
-        : _bsearch_lowindex(value, ordered_list, n, mid+1, high))
-    );
+    high < low ? -1
+    : let(mid = low + floor(0.5*(high-low)))
+        mid >= n-1
+            ? n-1
+            : (ordered_list[mid] <= value && value < ordered_list[min(mid+1,n-1)]
+                ? mid
+                : (ordered_list[mid] > value
+                    ? _bsearch_lowindex(value, ordered_list, n, low, mid-1)
+                    : _bsearch_lowindex(value, ordered_list, n, mid+1, high))
+            );
 
 /// Private function: _get_lines_maxwid(), called by textwrap() and _wrap_optimize()
 /// Return the maximum width of the lines represented by line_indexes, which contains array indexes pointing into cumlen, a list of cumulative lengths at end of each word.
 function _get_lines_maxwid(line_indexes, spc, cumlen) =
-let(widths = [
-    for(i=[0:len(line_indexes)-1])
-        for(j = [0:len(line_indexes[i])-1])
-            cumlen[i][line_indexes[i][j][1]] - (j>0 ? cumlen[i][line_indexes[i][j-1][1]] : 0)
-]) max(widths) - spc; // all words have a trailing space, so subtract EOL trailing space
+    let(widths = [
+        for(i=[0:len(line_indexes)-1])
+            for(j = [0:len(line_indexes[i])-1])
+                cumlen[i][line_indexes[i][j][1]] - (j>0 ? cumlen[i][line_indexes[i][j-1][1]] : 0)
+    ]) max(widths) - spc; // all words have a trailing space, so subtract EOL trailing space
 
 
-// Module: array_text()
-// Synopsis: Render an array of text as an attachable 2D block using the specified font characteristics.
+// Module: write()
+// Synopsis: Render multi-line text as an attachable 2D block using the specified font characteristics.
 // SynTags: Geom
 // Topics: Attachments, Text
 // See Also: textwrap()
 // Usage:
-//   array_text(textarray, width, [line_spacing=], ...);
+//   write(text_array, width, [line_spacing=], ...);
 // Usage: With attachments
-//   array_text(textarray, width, [line_spacing=], ...) [ATTACHMENTS];
+//   write(text_array, width, [line_spacing=], ...) [ATTACHMENTS];
 // Description:
 //   Creates a 2D geometry of the array of text strings, using the given line spacing and font specifications.
 //   The font parameters work the same as with OpenSCAD's builtin text() command.
-//   The `valign` parameter is not used because it is not relevant for fitting multi-line text inside a bounding box.
+//   The 'halign' and `valign` parameters are not used because they is not relevant for fitting multi-line text inside a bounding box.
+//   The `justify` parameter can be used to justify the text left, right, center, or full within the bounding box.
 //   You would use the `anchor` parameter to set the origin of the block to position it.
 // Arguments:
-//   textarray = An array of text strings to display. The array may be a simple list of strings, or a list of paragraphs as returned from `textwrap()`, with each paragraph being a list of strings.
+//   text_array = An array of text strings to display. The array may be a simple list of strings, or a list of paragraphs as returned from `textwrap()`, with each paragraph being a list of strings.
 //   ---
 //   line_spacing = the proportion of font interline height to use for line spacing. The interline height accounts for the nominal extents of ascenders and descenders in the font glyphs. The actual character size is typically about 72% of the interline height. Default: 1.0
+//   justify = The horizontal alignment for the text within its bounding box. Possible values are "left", "center", "right", and "full". When `justify="full"` the spaces between words are stretched so that the left and right ends of each line align with the sides of the bounding box. Default: "left"
+//   justify_last = How to justify the last line of multi-line text in a paragraph. Possible values are the same as for `justify`. This overrides the `justify` parameter if the paragraph consists of a single line. Default: "left"
 //   size = font size (decimal number). See the [OpenSCAD documentation](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Text) for this and following parameters. Default: 10
 //   font = The name of the font that should be used, including an optional style parameter. Default: `"Liberation Sans:style=Bold"` (for OpenSCAD builds before 2021-08-16, the default is `"Liberation Mono:style=Bold"`)
-//   halign = The horizontal alignment for the text within its bounding box. Possible values are "left", "center" and "right". Default: "left"
 //   spacing = Factor to change the character spacing. Default: 1.0
 //   direction = Direction of the text flow, "ltr" (left-to-right), "rtl" (right-to-left). This function does not support "ttb" (top-to-bottom), or "btt" (bottom-to-top). Default: "ltr"
 //   language = Two-letter language code for the text. Default: "en"
@@ -373,102 +375,144 @@ let(widths = [
 //   string = "Go placidly amid the noise and haste, \
 //   and remember what peace there may be in silence.";
 //   fontname = "Lucida Serif:style=Bold Italic";
-//   textarray = textwrap(string, width=130, font=fontname);
-//   color("lightblue") linear_extrude(4) array_text(textarray, font=fontname);
+//   text_array = textwrap(string, width=130, font=fontname);
+//   color("lightblue") linear_extrude(4) write(text_array, font=fontname);
 
-module array_text(textarray, line_spacing=1, size=10, font, halign="left", spacing=1, direction="ltr", language="en", script="latin", anchor=BOTTOM+LEFT, spin=0) {
+module write(text_array, line_spacing=1, justify="left", justify_last="left", size=10, font, spacing=1, direction="ltr", language="en", script="latin", anchor=BOTTOM+LEFT, spin=0) {
     assert(direction=="ltr" || direction=="rtl", "Only directions 'ltr' and 'rtl' are supported.");
-    lines = flatten(textarray);
+    lines = flatten(text_array);
     nlines = len(lines);
     fontname = is_def(font) ? font
         : version_num()>=20210816 ? "Liberation Sans:style=Bold"
         : "Liberation Mono:style=Bold";
-    gd = _glyphdata(fontname) * (size/10);
-    lineht = gd[0];
-    bbox = textarray_boundingbox(lines, line_spacing, size, fontname, spacing, gd);
-    height = bbox[1];
-    width = bbox[0];
-    ank = anchor[1]==0 && anchor[2] != 0 ? [anchor[0], anchor[2]] : [anchor[0], anchor[1]];
-    xoff = -width/2 * (1+ank[0]);
-    yoff = height/2 * (1-ank[1]);
-    rotate([0,0,spin]) translate([xoff + (halign=="right" ? width : halign=="center" ? width/2 : 0), yoff-size]) {
-        for(i=[0:nlines-1]) translate([0,-i*lineht*line_spacing+gd[3]])
-            _text(lines[i], size=size, font=fontname, halign=halign, valign="baseline", spacing=spacing, direction=direction, language=language, script=script);
+    gd = _glyphdata(fontname, size);
+    lineht = gd[0] * line_spacing;
+    bboxsize = text_array_size(lines, line_spacing, size, fontname, spacing, gd);
+    height = bboxsize[1];
+    width = bboxsize[0];
+    attachable(anchor, spin, two_d=true, size=bboxsize) {
+        translate([0,height/2 + gd[3]]) {
+            for(i=[0:nlines-1]) translate([0,-i*lineht]) {
+dum=echo("width in array_text:", width);
+                _justify_text(lines[i], width=width,
+                    justify=(i==nlines-1 ? justify_last : justify),
+                size=size, font=fontname, valign="baseline", spacing=spacing, direction=direction, language=language, script=script, gd);
+            }
+        }
+        children();
     }
 }
 
-/// Private function: _glyphdata(), called by textwrap(), array_text(), and textarray_boundingbox()
+// was going to make this public, but might make it private
+module _justify_text(string, width, justify="left", size=10, font, valign="baseline", spacing=1, direction="ltr", language="en", script="latin", charwidth, _fdata) {
+dum=echo("width in _justify_text:", width);
+    dummy = assert(is_num(width), "The width parameter must be specified as a number.");
+    fontname = is_def(font) ? font
+        : version_num()>=20210816 ? "Liberation Sans:style=Bold"
+        : "Liberation Mono:style=Bold";
+    gd = is_undef(_fdata) ? _glyphdata(fontname, size) : _fdata;
+    charwid = version_num()>=20210816 ? undef : is_def(charwidth) ? charwidth : gd[1];
+    txheight = gd[0];
+    union() {
+        translate([-width/2,-txheight/2]) {
+            if (justify=="full") {
+                words = list_remove_values(str_split(str_strip(string," \t\r\n"), " \t"), "", all=true);
+                wlens = [
+                for(w=words) is_def(charwid)
+                    ? len(w)*charwid    // only for old builds of OpenSCAD
+                    : textmetrics(text=w, size=size, font=fontname, direction=direction, language=language, script=script, spacing=spacing).advance[0]
+                ];
+                cumwid = cumsum(wlens);
+                nwords = len(words);
+                totalwordwidth = cumwid[nwords-1];
+                spc = nwords<=1 ? 0 : (width - totalwordwidth) / (len(words)-1);
+                for(i=[0:nwords-1])
+                    translate([i*spc + (i>0 ? cumwid[i-1] : 0), 0])
+                        _text(words[i], size=size, font=fontname, halign="left", valign=valign, spacing=spacing, direction=direction, language=language, script=script);
+            } else {
+                translate([justify=="right"?width:justify=="center"?width/2:0, 0])
+                    _text(string, size=size, font=fontname, halign=justify, valign=valign, spacing=spacing, direction=direction, language=language, script=script);
+            }
+        }
+    }
+}
+
+/// Private function: _glyphdata(), called by textwrap(), write(), and text_array_size()
 /// Get font data, used for positioning lines of text in bounding box.
-function _glyphdata(fontname) =
+function _glyphdata(fontname, size=10) =
 // textmetrics() added to OpenSCAD on 2021-08-16 in https://github.com/openscad/openscad/pull/3684
     version_num() >= 20210816
-? let(
-    fm = fontmetrics(10, fontname),
-    tmN = textmetrics("N", 10, fontname)
-) [
-    fm.interline,       // line height
-    tmN.advance[0],     // monospace N width (here only for index compatibility)
-    fm.nominal.ascent,  // nominal char height from baseline
-    fm.nominal.descent  // nominal char descent from baseline
-    
-] : [ // For OpenSCAD older than 2021-08-16
-    15.7335,    // line height from fontmetrics 'interline'
-    8.3347,     // glyph width of "Liberation Mono:style=Bold" N from textmetrics 'advance'
-    11.5628,    // glyph height from baseline
-    -4.1707     // descent from baseline
-];
+    ? let(
+        fm = fontmetrics(size, fontname),
+        tmN = textmetrics("N", size, fontname)
+    ) [
+        fm.interline,       // line height
+        tmN.advance[0],     // monospace N width (here only for index compatibility)
+        fm.nominal.ascent,  // nominal char height from baseline
+        fm.nominal.descent  // nominal char descent from baseline
+        
+    ]
+    : let(scl=size/10) [ // For OpenSCAD older than 2021-08-16
+        scl*15.7335,    // line height from fontmetrics 'interline'
+        scl*8.3347,     // glyph width of "Liberation Mono:style=Bold" N from textmetrics 'advance'
+        scl*11.5628,    // glyph height from baseline
+        -scl*4.1707     // descent from baseline
+    ];
 
 
-// Function: textarray_boundingbox()
+// Function: text_array_size()
 // Synopsis: Returns the bounding box dimensions of an array of text given the line spacing and font specifications.
 // Topics: Text
-// See Also: textwrap(), array_text()
+// See Also: textwrap(), write()
 // Usage:
-//   bbox = textarray_boundingbox((string, line_spacing, size, font, spacing);
+//   bbox = text_array_size((text_array, line_spacing, size, font, spacing);
 // Description:
-//   Returns the bounding box dimensions of an array of text strings (paragraphs or simple list) given the line spacing and font specifications. While only `text_array` is required, you must pass any font specification if you use any value other than the default values.
+//   Returns the bounding box dimensions `[width, height]` of an array of text strings (paragraphs or simple list)
+//   given the line spacing and font specifications. While only `text_array` is required as an argument,
+//   you must pass the font specifications if you use other than the default values.
 // Arguments:
-//   textarray = An array of text strings to display. The array may be a simple list of strings, or a list of paragraphs as returned from `textwrap()`, with each paragraph being a list of strings.
+//   text_array = An array of text strings. The array may be a simple list of strings, or a list of paragraphs as returned from `textwrap()`, with each paragraph being a list of strings. If you have a single string of text, then convert it to a list by surrounding it with square brackets; that is, `string` would be passed as `[string]`.
 //   ---
 //   line_spacing = the proportion of font interline height to use for line spacing. Default: 1.0
 //   size = font size (decimal number). See the [OpenSCAD documentation](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Text) for this and following parameters. Default: 10
 //   font = The name of the font that should be used, including an optional style parameter. Default: "Liberation Sans:style=Bold" (for OpenSCAD builds before 2021-08-16, default is "Liberation Mono:style=Bold")
 //   spacing = Factor to increase/decrease the character spacing. Default: 1.0
-// Example(2D,Med): This example demonstrates several things at once. The text is wrapped using the default font and size. The original requested width of 280 units is the yellow rectangle, and anchored to it are the wrapped text displayed by `array_text()` in black, and the bounding box of the wrapped text in green.
+// Example(2D,Med): This example demonstrates several things at once. The text is wrapped using the default font and size. The original requested width of 280 units is the yellow rectangle, and anchored to it are the wrapped text displayed by `write()` in black, and the bounding box of the wrapped text in green.
 //   sample = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, \
 //   sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n \n\
 //   Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris \
 //   nisi ut aliquip ex ea commodo consequat.";
 //   textwidth = 280;
-//   textarray = textwrap(sample, textwidth);
-//   bbox = textarray_boundingbox(textarray);
+//   text_array = textwrap(sample, textwidth);
+//   bbox = text_array_size(text_array);
 //   cube([textwidth, bbox[1], 1]) attach(TOP,BOT) {
 //       color("palegreen") cube(point3d(bbox,1));
-//       color("black") linear_extrude(2) array_text(textarray, anchor=CENTER);
+//       color("black") linear_extrude(2) write(text_array, anchor=CENTER);
 //   }
-function textarray_boundingbox(textarray, line_spacing=1, size=10, font, spacing=1, gd) =
+function text_array_size(text_array, line_spacing=1, size=10, font, spacing=1, _fdata) =
+assert(is_type(text_array, "list") && is_type(text_array[0], ["string","list"]), "text_array must be an array of paragraphs or strings.")
 let(
     fontname = is_def(font) ? font
         : version_num()>=20210816 ? "Liberation Sans:style=Bold"
         : "Liberation Mono:style=Bold",
-    fdata = is_undef(gd) ? _glyphdata(fontname) * (size/10) : gd,
-    sl = flatten(textarray),
-    width = _stringlist_width(sl, fdata, size, fontname, spacing),
-    height = len(sl)*line_spacing*fdata[0]
+    gd = is_undef(_fdata) ? _glyphdata(fontname, size) : _fdata,
+    sl = flatten(text_array),
+    width = _stringlist_width(sl, gd, size, fontname, spacing),
+    height = len(sl)*line_spacing*gd[0]
 ) [width, height];
 
-/// Private function: _stringlist_width(), called by textarray_boundingbox()
+/// Private function: _stringlist_width(), called by text_array_size()
 /// Recursively find maximum width in CAD units (not characters) of array of text strings
 /// sl = string list
 /// gd = glyph data
 /// size, font, spacing = font specs
 function _stringlist_width(sl, gd, size, font, spacing, width=0, i=0) =
-i>=len(sl)
-? width
-: let(
-    strwid = version_num() < 20210816 ? len(sl[i])*gd[1] : textmetrics(sl[i], size, font, spacing=spacing).advance[0]
-)
-_stringlist_width(sl, gd, size, font, spacing, max(width, strwid), i+1);
+    i>=len(sl)
+    ? width
+    : let(
+        strwid = version_num() < 20210816 ? len(sl[i])*gd[1] : textmetrics(sl[i], size, font, spacing=spacing).advance[0]
+    )
+    _stringlist_width(sl, gd, size, font, spacing, max(width, strwid), i+1);
 
 
 
