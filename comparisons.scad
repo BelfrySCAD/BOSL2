@@ -356,7 +356,7 @@ function compare_lists(a, b) =
 //   If `all` is true then returns a list of all indices where the minimum value occurs.
 // Arguments:
 //   vals = vector of values
-//   all = set to true to return indices of all occurences of the minimum.  Default: false
+//   all = set to true to return indices of all occurrences of the minimum.  Default: false
 // Example:
 //   a = min_index([5,3,9,6,2,7,8,2,1]); // Returns: 8
 //   b = min_index([5,3,9,6,2,7,8,2,7],all=true); // Returns: [4,7]
@@ -377,7 +377,7 @@ function min_index(vals, all=false) =
 //   If `all` is true then returns a list of all indices where the maximum value occurs.
 // Arguments:
 //   vals = vector of values
-//   all = set to true to return indices of all occurences of the maximum.  Default: false
+//   all = set to true to return indices of all occurrences of the maximum.  Default: false
 // Example:
 //   max_index([5,3,9,6,2,7,8,9,1]); // Returns: 2
 //   max_index([5,3,9,6,2,7,8,9,1],all=true); // Returns: [2,7]
