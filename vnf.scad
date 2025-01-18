@@ -1427,16 +1427,16 @@ function projection(vnf,cut=false,eps=EPSILON) =
 //   cut_knot = vnf_halfspace([1,0,0,0], knot);
 //   vnf_polyhedron(cut_knot);
 // Example(3D,VPR=[80,0,15]): Cut a sphere with an arbitrary plane
-//   vnf1=sphere(r=50, style="icosa", $fn=16);
+//   vnf1=spheroid(r=50, style="icosa", $fn=16);
 //   vnf2=vnf_halfspace([.8,1,-1.5,0], vnf1);
 //   vnf_polyhedron(vnf2);
 // Example(3D,VPR=[80,0,15]): Cut it again, but with closed=false to leave an open boundary. 
-//   vnf1=sphere(r=50, style="icosa", $fn=16);
+//   vnf1=spheroid(r=50, style="icosa", $fn=16);
 //   vnf2=vnf_halfspace([.8,1,-1.5,0], vnf1);
 //   vnf3=vnf_halfspace([0,0,-1,0], vnf2, closed=false);
 //   vnf_polyhedron(vnf3);
 // Example(3D,VPR=[80,0,15]): Use {vnf_join()} to combine with a mating vnf, in this case a reflection of the part we made. 
-//   vnf1=sphere(r=50, style="icosa", $fn=16);
+//   vnf1=spheroid(r=50, style="icosa", $fn=16);
 //   vnf2=vnf_halfspace([.8,1,-1.5,0], vnf1);
 //   vnf3=vnf_halfspace([0,0,-1,0], vnf2, closed=false);
 //   vnf4=vnf_join([vnf3, zflip(vnf3,1)]);
@@ -1471,7 +1471,7 @@ function projection(vnf,cut=false,eps=EPSILON) =
 // Example(3D): If boundary=true then the return is a list with the VNF and boundary data.  
 //   vnf = path_sweep(circle(r=4, $fn=16),
 //                    circle(r=20, $fn=64),closed=true);
-//   cut_bnd = vnf_halfspace([-1,1,-4,0], vnf, boundary=true);*/
+//   cut_bnd = vnf_halfspace([-1,1,-4,0], vnf, boundary=true);
 //   cutvnf = cut_bnd[0];
 //   boundary = [for(b=cut_bnd[1]) select(cutvnf[0],b)];
 //   vnf_polyhedron(cutvnf);
