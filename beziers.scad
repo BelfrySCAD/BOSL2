@@ -17,12 +17,12 @@
 //   Path = A series of points joined by straight line segements.
 //   Bezier Curve = A polynomial curve defined by a list of control points.  The curve starts at the first control point and ends at the last one.  The other control points define the shape of the curve and they are often *NOT* on the curve
 //   Control Point = A point that influences the shape of the Bezier curve.
-//   Degree = The degree of the polynomial used to make the bezier curve.  A bezier curve of degree N will have N+1 control points.  Most beziers are cubic (degree 3).  The higher the degree, the more the curve can wiggle.  
+//   Degree = The degree of the polynomial used to make the bezier curve.  A bezier curve of degree N has N+1 control points.  Most beziers are cubic (degree 3).  The higher the degree, the more the curve can wiggle.  
 //   Bezier Parameter = A parameter, usually `u` below, that ranges from 0 to 1 to trace out the bezier curve.  When `u=0` you get the first control point and when `u=1` you get the last control point. Intermediate points are traced out *non-uniformly*.  
-//   Bezier Path = A list of bezier control points corresponding to a series of Bezier curves that connect together, end to end.  Because they connect, the endpoints are shared between control points and are not repeated, so a degree 3 bezier path representing two bezier curves will have seven entries to represent two sets of four control points.    **NOTE:** A "bezier path" is *NOT* a standard path
+//   Bezier Path = A list of bezier control points corresponding to a series of Bezier curves that connect together, end to end.  Because they connect, the endpoints are shared between control points and are not repeated, so a degree 3 bezier path representing two bezier curves has seven entries to represent two sets of four control points. **A "bezier path" is *NOT* a standard path.**
 //   Bezier Patch = A two-dimensional arrangement of Bezier control points that generate a bounded curved Bezier surface.  A Bezier patch is a (N+1) by (M+1) grid of control points, which defines surface with four edges (in the non-degenerate case). 
 //   Bezier Surface = A surface defined by a list of one or more bezier patches.
-//   Spline Steps = The number of straight-line segments used to approximate a Bezier curve.  The more spline steps, the better the approximation to the curve, but the slower it will be to generate.  This plays a role analogous to `$fn` for circles.  Usually defaults to 16.
+//   Spline Steps = The number of straight-line segments used to approximate a Bezier curve.  The more spline steps, the better the approximation to the curve, but the slower it generates. This plays a role analogous to `$fn` for circles. Usually defaults to 16.
 
 
 // Section: Bezier Curves
@@ -189,10 +189,10 @@ function _bezier_matrix(N) =
 //   Takes a list of bezier control points and generates splinesteps segments (splinesteps+1 points)
 //   along the bezier curve they define.
 //   Points start at the first control point and are sampled uniformly along the bezier parameter.
-//   The endpoints of the output will be *exactly* equal to the first and last bezier control points
+//   The endpoints of the output are *exactly* equal to the first and last bezier control points
 //   when endpoint is true.  If endpoint is false the sampling stops one step before the final point
 //   of the bezier curve, but you still get the same number of (more tightly spaced) points.  
-//   The distance between the points will *not* be equidistant.  
+//   The distance between the points are *not* equidistant.  
 //   The degree of the bezier curve is one less than the number of points in `curve`.
 // Arguments:
 //   bezier = The list of control points that define the Bezier curve. 
@@ -271,8 +271,8 @@ function bezier_tangent(bezier, u) =
 // Description:
 //   Returns the curvature value for the given parameters `u` on the bezier curve with control points `bezier`. 
 //   The curvature is the inverse of the radius of the tangent circle at the given point.
-//   Thus, the tighter the curve, the larger the curvature value.  Curvature will be 0 for
-//   a position with no curvature, since 1/0 is not a number.
+//   Thus, the tighter the curve, the larger the curvature value. Curvature is 0 for
+//   a position with no curvature, because 1/0 is not a number.
 // Arguments:
 //   bezier = The list of control points that define the Bezier curve.
 //   u = Parameter values for evaluating the curve, given as a single value, a list or a range.
@@ -449,7 +449,7 @@ function bezpath_points(bezpath, curveind, u, N=3) =
 //   bezpath = A bezier path to approximate.
 //   splinesteps = Number of straight lines to split each bezier curve into. default=16
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
-//   endpoint = If true, include the very last point of the bezier path.  Default: true
+//   endpoint = If true, include the last point of the bezier path.  Default: true
 // Example(2D):
 //   bez = [
 //       [0,0], [-5,30],
@@ -506,13 +506,15 @@ function bezpath_closest_point(bezpath, pt, N=3, max_err=0.01, seg=0, min_seg=un
     assert(is_num(max_err))
     assert(len(bezpath)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
     let(curve = select(bezpath,seg*N,(seg+1)*N))
-    (seg*N+1 >= len(bezpath))? (
-        let(curve = select(bezpath, min_seg*N, (min_seg+1)*N))
-        [min_seg, bezier_closest_point(curve, pt, max_err=max_err)]
+    (seg*N+1 >= len(bezpath))
+    ? (
+        let(curve = select(bezpath, min_seg*N, (min_seg+1)*N),
+            u = bezier_closest_point(curve, pt, max_err=max_err)
+            ) bezier_points(curve, u)
     ) : (
         let(
             curve = select(bezpath,seg*N,(seg+1)*N),
-            u = bezier_closest_point(curve, pt, max_err=0.05),
+            u = bezier_closest_point(curve, pt, max_err=max_err),
             dist = norm(bezier_points(curve, u)-pt),
             mseg = (min_dist==undef || dist<min_dist)? seg : min_seg,
             mdist = (min_dist==undef || dist<min_dist)? dist : min_dist,
@@ -520,7 +522,6 @@ function bezpath_closest_point(bezpath, pt, N=3, max_err=0.01, seg=0, min_seg=un
         )
         bezpath_closest_point(bezpath, pt, N, max_err, seg+1, mseg, mu, mdist)
     );
-
 
 
 // Function: bezpath_length()
@@ -609,7 +610,7 @@ function path_to_bezpath(path, closed, tangents, uniform=false, size, relsize) =
                 dummy = assert(seglength>0, str("Path segment has zero length from index ",i," to ",i+1)),
                 segdir = (second-first)/seglength,
                 tangent1 = tangents[i],
-                tangent2 = -select(tangents,i+1),                        // Need this to point backwards, in direction of the curve
+                tangent2 = -select(tangents,i+1),                        // Need this to point backward, in direction of the curve
                 parallel = abs(tangent1*segdir) + abs(tangent2*segdir), // Total component of tangents parallel to the segment
                 Lmax = seglength/parallel,    // May be infinity
                 size = relative ? sizevect[i]*seglength : sizevect[i],
@@ -625,7 +626,7 @@ function path_to_bezpath(path, closed, tangents, uniform=false, size, relsize) =
                 scale = len(distlist)==0 ? 0 :
                         len(distlist)==1 ? distlist[0]
                                          : sum(distlist) - 2*min(distlist),
-                Ldesired = size/scale,   // This will be infinity when the polynomial is zero
+                Ldesired = size/scale,   // This is infinity when the polynomial is zero
                 L = min(Lmax, Ldesired)
             )
             each [
@@ -917,7 +918,7 @@ function bez_begin(pt,a,r,p) =
 // Description:
 //   This creates a smooth joint in a cubic bezier path.  It creates three points, being the
 //   approaching control point, the fixed bezier control point, and the departing control
-//   point.  The two control points will be collinear with the fixed point, making for a
+//   point.  The two control points are collinear with the fixed point, making for a
 //   smooth bezier curve at the fixed point. See {{bez_begin()}} for examples.
 // Arguments:
 //   pt = The fixed point for the bezier path.
@@ -1082,9 +1083,9 @@ function bezier_patch_reverse(patch) =
 //   ptgrid = bezier_patch_points(patch, RANGE, RANGE);
 // Description:
 //   Sample a bezier patch on a listed point set.  The bezier patch must be a rectangular array of
-//   points, and it will be sampled at all the (u,v) pairs that you specify.  If you give u and v
-//   as single numbers you'll get a single point back.  If you give u and v as lists or ranges you'll
-//   get a 2d rectangular array of points.  If one but not both of u and v is a list or range then you'll
+//   points, and it is sampled at all the (u,v) pairs that you specify. If you give u and v
+//   as single numbers you get back a single point. If you give u and v as lists or ranges you
+//   get a 2d rectangular array of points. If one but not both of u and v is a list or range then you
 //   get a list of points.  
 // Arguments:
 //   patch = The 2D array of control points for a Bezier patch.
@@ -1148,7 +1149,7 @@ function _bezier_rectangle(patch, splinesteps=16, style="default") =
 //   It can be a scalar, which gives a uniform grid, or
 //   it can be [USTEPS, VSTEPS], which gives difference spacing in the U and V parameters. 
 //   Note that the surface you produce may be disconnected and is not necessarily a valid manifold in OpenSCAD.
-//   You must also ensure that the patches mate exactly along their edges, or the VNF will be invalid.  
+//   You must also ensure that the patches mate exactly along their edges, otherwise rendering errors result from the invalid VNF.  
 // Arguments:
 //   patches = The bezier patch or list of bezier patches to convert into a vnf.
 //   splinesteps = Number of segments on the border of the bezier surface.  You can specify [USTEPS,VSTEPS].  Default: 16
@@ -1460,15 +1461,15 @@ function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, retur
 //   ngrid = bezier_patch_normals(patch, RANGE, RANGE);
 // Description:
 //   Compute the unit normal vector to a bezier patch at the listed point set.  The bezier patch must be a rectangular array of
-//   points, and the normal will be computed at all the (u,v) pairs that you specify.  If you give u and v
-//   as single numbers you'll get a single point back.  If you give u and v as lists or ranges you'll
-//   get a 2d rectangular array of points.  If one but not both of u and v is a list or range then you'll
+//   points, and the normal is computed at all the (u,v) pairs that you specify.  If you give u and v
+//   as single numbers you get back a single point.  If you give u and v as lists or ranges you
+//   get a 2d rectangular array of points.  If one but not both of u and v is a list or range then you
 //   get a list of points.
 //   .
 //   This function works by computing the cross product of the tangents.  In some degenerate cases the one of the tangents
 //   can be zero, so the normal vector does not exist.  In this case, undef is returned.  Another degenerate case
-//   occurs when the tangents are parallel, or nearly parallel.  In this case you will get a unit vector returned but it will not
-//   be the correct normal vector.   This can happen if you use a degenerate patch, or if you give two of the edges of your patch a smooth "corner"
+//   occurs when the tangents are parallel, or nearly parallel.  In this case a unit vector is returned, but not
+//   the correct normal vector. This can happen if you use a degenerate patch, or if you give two of the edges of your patch a smooth "corner"
 //   so that the u and v directions are parallel at the corner.  
 // Arguments:
 //   patch = The 2D array of control points for a Bezier patch.
@@ -1525,7 +1526,7 @@ function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, retur
 //          stroke([pts[i][j],pts[i][j]-2*normals[i][j]], width=0.1,
 //                 endcap1="dot",endcap2="arrow2",color="blue");
 //    }
-// Example(3D,Med,NoAxes,VPR=[48,0,23.6],VPD=32.0275,VPT=[-0.145727,-0.0532125,1.74224]): This example has a singularities where the tangent lines don't exist, so the normal will be undef at those points.  
+// Example(3D,Med,NoAxes,VPR=[48,0,23.6],VPD=32.0275,VPT=[-0.145727,-0.0532125,1.74224]): This example has a singularities where the tangent lines don't exist, so the normal is undef at those points.  
 //    pts1 = [ [-5,0,0], [5,0,5], [-5,0,5], [5,0,0] ];
 //    pts2 = [ [0,-5,0], [0,5,5], [0,-5,5], [0,5,0] ];
 //    patch = [for(i=[0:3])
@@ -1567,15 +1568,15 @@ function bezier_patch_normals(patch, u, v) =
 // Description:
 //   Constructs a thin sheet from a bezier patch by offsetting the given patch along the normal vectors
 //   to the patch surface.  The thickness value must be small enough so that no points cross each other
-//   when the offset is computed, because that results in invalid geometry and will give rendering errors.
+//   when the offset is computed, because that results in invalid geometry and rendering errors.
 //   Rendering errors may not manifest until you add other objects to your model.  
 //   **It is your responsibility to avoid invalid geometry!**
 //   .
 //   The normals are computed using {{bezier_patch_normals()}} and if they are degenerate then
-//   the computation will fail or produce incorrect results.  See {{bezier_patch_normals()}} for
+//   the computation fails or produces incorrect results. See {{bezier_patch_normals()}} for
 //   examples of various ways the normals can be degenerate.
 //   .
-//   When thickness is positive, the given bezier patch is extended towards its "inside", which is the
+//   When thickness is positive, the given bezier patch is extended toward its "inside", which is the
 //   side that appears purple in the "thrown together" view.  You can extend the patch in the other direction
 //   using a negative thickness value.
 // Arguments:
