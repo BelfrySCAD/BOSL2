@@ -40,13 +40,13 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   back to the first column, or wrap the last row to the first.  Endcaps can be added to either
 //   the first and/or last rows.  The style parameter determines how the quadrilaterals are divided into
 //   triangles.  The default style is an arbitrary, systematic subdivision in the same direction.  The "alt" style
-//   is the uniform subdivision in the other (alternate) direction.  The "flip1" style is an arbitrary division which alternates the
+//   is the uniform subdivision in the other (alternate) direction.  The "flip1" style is an arbitrary division that alternates the
 //   direction for any adjacent pair of quadrilaterals.  The "flip2" style is the alternating division that is the opposite of "flip1". 
 //   The "min_edge" style picks the shorter edge to
 //   subdivide for each quadrilateral, so the division may not be uniform across the shape.  The "quincunx" style
 //   adds a vertex in the center of each quadrilateral and creates four triangles, and the "convex" and "concave" styles
 //   choose the locally convex/concave subdivision.  The "min_area" option creates the triangulation with the minimal area.  Degenerate faces
-//   are not included in the output, but if this results in unused vertices they will still appear in the output.
+//   are not included in the output, but if this results in unused vertices they still appear in the output.
 // Arguments:
 //   points = A list of vertices to divide into columns and rows.
 //   ---
@@ -445,14 +445,14 @@ function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[],
 // Description:
 //   Given a list of VNF structures, merges them all into a single VNF structure.
 //   Combines all the points of the input VNFs and labels the faces appropriately.
-//   All the points in the input VNFs will appear in the output, even if they are
-//   duplicates of each other.  It is valid to repeat points in a VNF, but if you
-//   with to remove the duplicates that will occur along joined edges, use {{vnf_merge_points()}}.
+//   All the points in the input VNFs appear in the output, even if they are
+//   duplicated. It is valid to repeat points in a VNF, but if you
+//   with to remove the duplicates that occur along joined edges, use {{vnf_merge_points()}}.
 //   .
-//   Note that this is a tool for manipulating polyhedron data.  It is for
+//   Note that this is a tool for manipulating polyhedron data. It is for
 //   building up a full polyhedron from partial polyhedra.
-//   It is *not* a union operator for VNFs.  The VNFs to be joined must not intersect each other,
-//   except at edges, or the result will be an invalid polyhedron.  Similarly the
+//   It is *not* a union operator for VNFs. The VNFs to be joined must not intersect each other,
+//   except at edges, otherwise the result is an invalid polyhedron. Also, the
 //   result must not have any other illegal polyhedron characteristics, such as creating
 //   more than two faces sharing the same edge.
 //   If you want a valid result it is your responsibility to ensure that the polyhedron
@@ -492,7 +492,7 @@ function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[],
 //                     for(theta=[0:90:359]) zrot(theta,top)
 //                    ]);
 //   vnf_polyhedron(full);
-// Example(3D): The vnf_join function is not a union operator for polyhedra.  If any faces intersect, like they do in this example where we combine the faces of two cubes, the result is invalid and will give rise to CGAL errors when you add more objects into the model.
+// Example(3D): The vnf_join function is not a union operator for polyhedra.  If any faces intersect, like they do in this example where we combine the faces of two cubes, the result is invalid and results in CGAL errors when you add more objects into the model.
 //   cube1 = cube(5);
 //   cube2 = move([2,2,2],cube1);
 //   badvnf = vnf_join([cube1,cube2]);
@@ -532,7 +532,7 @@ function vnf_join(vnfs) =
 // Description:
 //   Given a list of 3D polygons, produces a VNF containing those polygons.
 //   It is up to the caller to make sure that the points are in the correct order to make the face
-//   normals point outwards.  No checking for duplicate vertices is done.  If you want to
+//   normals point outward.  No checking for duplicate vertices is done.  If you want to
 //   remove duplicate vertices use {{vnf_merge_points()}}.  Polygons with zero area are discarded from the face list by default.
 //   If you give non-coplanar faces an error is displayed.  These checks increase run time by about 2x for triangular polygons, but
 //   about 10x for pentagons; the checks can be disabled by setting fast=true.  
@@ -725,9 +725,9 @@ function _bridge(pt, outer,eps) =
 //   Given a (two-dimensional) region, applies the given transformation matrix to it and makes a (three-dimensional) triangulated VNF of
 //   faces for that region, reversed if desired.
 // Arguments:
-//   region = The region to convert to a vnf.
-//   transform = If given, a transformation matrix to apply to the faces generated from the region.  Default: No transformation applied.
-//   reverse = If true, reverse the normals of the faces generated from the region.  An untransformed region will have face normals pointing `UP`.  Default: false
+//   region = The region to convert to a VNF.
+//   transform = If given, a transformation matrix to apply to the faces generated from the region. Default: No transformation applied.
+//   reverse = If true, reverse the normals of the faces generated from the region. An untransformed region has face normals pointing `UP`. Default: false
 // Example(3D):
 //   region = [square([20,10],center=true),
 //             right(5,square(4,center=true)),
@@ -948,8 +948,8 @@ function vnf_triangulate(vnf) =
 //   want to be able to identify the true faces.  This function merges together the triangles that
 //   form those true faces, turning a VNF where each true face is represented by a single entry
 //   in the faces list of the VNF.  This function requires that the true faces have no internal vertices.
-//   This will always be true for a triangulated VNF, but might fail for a VNF with some other
-//   face partition.  If internal vertices are present, the output will include backtracking paths from
+//   This is always true for a triangulated VNF, but might fail for a VNF with some other
+//   face partition. If internal vertices are present, the output includes backtracking paths from
 //   the boundary to all of those vertices.
 // Arguments:
 //   vnf = vnf whose faces you want to unify
@@ -1176,7 +1176,7 @@ function _slice_3dpolygons(polys, dir, cuts) =
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   atype = Select "hull" or "intersect" anchor type.  Default: "hull"
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
@@ -1205,19 +1205,19 @@ module vnf_polyhedron(vnf, convexity=2, cp="centroid", anchor="origin", spin=0, 
 //   each edge and a sphere at each vertex.  The width parameter specifies the width of the sticks
 //   that form the wire frame and the diameter of the balls.
 // Arguments:
-//   vnf = A vnf structure
+//   vnf = A VNF structure
 //   width = width of the cylinders forming the wire frame.  Default: 1
-// Example:
+// Example(3D):
 //   $fn=32;
 //   ball = sphere(r=20, $fn=6);
 //   vnf_wireframe(ball,width=1);
-// Example:
+// Example(3D):
 //   include <BOSL2/polyhedra.scad>
 //   $fn=32;
 //   cube_oct = regular_polyhedron_info("vnf",
 //                      name="cuboctahedron", or=20);
 //   vnf_wireframe(cube_oct);
-// Example: The spheres at the vertex are imperfect at aligning with the cylinders, so especially at low $fn things look prety ugly.  This is normal.
+// Example(3D): The spheres at the vertex are imperfect at aligning with the cylinders, so especially at low $fn things look prety ugly.  This is normal.
 //   include <BOSL2/polyhedra.scad>
 //   $fn=8;
 //   octahedron = regular_polyhedron_info("vnf",
@@ -1386,8 +1386,8 @@ function projection(vnf,cut=false,eps=EPSILON) =
 //   then closed=true is may produce invalid results when it tries to construct closing faces
 //   on the cut plane.  Set closed=false for such inputs.
 //   .
-//   If you set boundary to true then the return will be the pair [vnf,boundary] where vnf is the
-//   vnf as usual (with closed=false) and boundary is a list giving each connected component of the cut
+//   If you set `boundary=true` then the return is the pair `[vnf,boundary]`, where `vnf` is the
+//   VNF as usual (with `closed=false`) and boundary is a list giving each connected component of the cut
 //   boundary surface.  Each entry in boundary is a list of index values that index into the vnf vertex list (vnf[0]).
 //   This makes it possible to construct mating shapes, e.g. with {{skin()}} or {{vnf_vertex_array()}} that
 //   can be combined using {{vnf_join()}} to make a valid polyhedron.
@@ -1426,22 +1426,22 @@ function projection(vnf,cut=false,eps=EPSILON) =
 //   knot=path_sweep(ushape, knot_path, closed=true, method="incremental");
 //   cut_knot = vnf_halfspace([1,0,0,0], knot);
 //   vnf_polyhedron(cut_knot);
-// Example(VPR=[80,0,15]): Cut a sphere with an arbitrary plane
+// Example(3D,VPR=[80,0,15]): Cut a sphere with an arbitrary plane
 //   vnf1=sphere(r=50, style="icosa", $fn=16);
 //   vnf2=vnf_halfspace([.8,1,-1.5,0], vnf1);
 //   vnf_polyhedron(vnf2);
-// Example(VPR=[80,0,15]): Cut it again, but with closed=false to leave an open boundary. 
+// Example(3D,VPR=[80,0,15]): Cut it again, but with closed=false to leave an open boundary. 
 //   vnf1=sphere(r=50, style="icosa", $fn=16);
 //   vnf2=vnf_halfspace([.8,1,-1.5,0], vnf1);
 //   vnf3=vnf_halfspace([0,0,-1,0], vnf2, closed=false);
 //   vnf_polyhedron(vnf3);
-// Example(VPR=[80,0,15]): Use {vnf_join()} to combine with a mating vnf, in this case a reflection of the part we made. 
+// Example(3D,VPR=[80,0,15]): Use {vnf_join()} to combine with a mating vnf, in this case a reflection of the part we made. 
 //   vnf1=sphere(r=50, style="icosa", $fn=16);
 //   vnf2=vnf_halfspace([.8,1,-1.5,0], vnf1);
 //   vnf3=vnf_halfspace([0,0,-1,0], vnf2, closed=false);
 //   vnf4=vnf_join([vnf3, zflip(vnf3,1)]);
 //   vnf_polyhedron(vnf4);
-// Example: When the input VNF is a surface with a boundary, if you use the default setting closed=true, then vnf_halfspace() tries to construct closing faces from the edges created by the cut.  These faces may be invalid, for example if the cut points are collinear.  In this example the constructed face is a valid face.
+// Example(3D): When the input VNF is a surface with a boundary, if you use the default setting closed=true, then vnf_halfspace() tries to construct closing faces from the edges created by the cut.  These faces may be invalid, for example if the cut points are collinear.  In this example the constructed face is a valid face.
 //   patch=[
 //          [[10,-10,0],[1,-1,0],[-1,-1,0],[-10,-10,0]],
 //          [[10,-10,20],[1,-1,20],[-1,-1,20],[-10,-10,20]]
@@ -1449,7 +1449,7 @@ function projection(vnf,cut=false,eps=EPSILON) =
 //   vnf=bezier_vnf(patch);
 //   vnfcut = vnf_halfspace([-.8,0,-1,-14],vnf);
 //   vnf_polyhedron(vnfcut);
-// Example: Setting closed to false eliminates this (possibly invalid) face:
+// Example(3D): Setting closed to false eliminates this (possibly invalid) face:
 //   patch=[
 //          [[10,-10,0],[1,-1,0],[-1,-1,0],[-10,-10,0]],
 //          [[10,-10,20],[1,-1,20],[-1,-1,20],[-10,-10,20]]
@@ -1457,18 +1457,18 @@ function projection(vnf,cut=false,eps=EPSILON) =
 //   vnf=bezier_vnf(patch);
 //   vnfcut = vnf_halfspace([-.8,0,-1,-14],vnf,closed=false);
 //   vnf_polyhedron(vnfcut);
-// Example: Here is a VNF that has holes, so it is not a valid manifold. 
+// Example(3D): Here is a VNF that has holes, so it is not a valid manifold. 
 //   outside = linear_sweep(circle(r=30), h=100, caps=false);
 //   inside = yrot(7,linear_sweep(circle(r=10), h=120, caps=false));
 //   open_vnf=vnf_join([outside, vnf_reverse_faces(inside)]);
 //   vnf_polyhedron(open_vnf);
-// Example: By cutting it at each end we can create closing faces, resulting in a valid manifold without holes.
+// Example(3D): By cutting it at each end we can create closing faces, resulting in a valid manifold without holes.
 //   outside = linear_sweep(circle(r=30), h=100, caps=false);
 //   inside = yrot(11,linear_sweep(circle(r=10), h=120, caps=false));
 //   open_vnf=vnf_join([outside, vnf_reverse_faces(inside)]);
 //   vnf = vnf_halfspace([0,0,1,5], vnf_halfspace([0,.7,-1,-75], open_vnf));
 //   vnf_polyhedron(vnf);
-// Example: If boundary=true then the return is a list with the VNF and boundary data.  
+// Example(3D): If boundary=true then the return is a list with the VNF and boundary data.  
 //   vnf = path_sweep(circle(r=4, $fn=16),
 //                    circle(r=20, $fn=64),closed=true);
 //   cut_bnd = vnf_halfspace([-1,1,-4,0], vnf, boundary=true);*/
@@ -1586,8 +1586,8 @@ function _triangulate_planar_convex_polygons(polys) =
 //   it may intersect itself, which produces an invalid polyhedron.  It is your responsibility to
 //   avoid this situation.  The 1:1
 //   radius is where the curved length of the bent VNF matches the length of the original VNF.  If the
-//   `r` or `d` arguments are given, then they will specify the 1:1 radius or diameter.  If they are
-//   not given, then the 1:1 radius will be defined by the distance of the furthest vertex in the
+//   `r` or `d` arguments are given, then they specify the 1:1 radius or diameter.  If they are
+//   not given, then the 1:1 radius is defined by the distance of the furthest vertex in the
 //   original VNF from the Z=0 plane.  You can adjust the granularity of the bend using the standard
 //   `$fa`, `$fs`, and `$fn` variables.
 // Arguments:
@@ -1695,9 +1695,9 @@ function vnf_bend(vnf,r,d,axis="Z") =
 //    hull_vnf(vnf,[fast]);
 // Description:
 //   Given a VNF or a list of 3d points, compute the convex hull
-//   and return it as a VNF.  This differs from {{hull()}} and {{hull3d_faces()}} which
-//   return just the face list referenced to the input point list.  Note that the point
-//   list that is returned will contain all the points that are actually used in the input
+//   and return it as a VNF.  This differs from {{hull()}} and {{hull3d_faces()}}, which
+//   return just the face list referenced to the input point list.  Note that the returned
+//   point list contains all the points that are actually used in the input
 //   VNF, which may be many more points than are needed to represent the convex hull.
 //   This is not usually a problem, but you can run the somewhat slow {{vnf_drop_unused_points()}}
 //   function to fix this if necessary.  
@@ -1747,7 +1747,7 @@ function _sort_pairs0(arr) =
 
 
 // Function: vnf_boundary()
-// Synopsis: Returns the boundary of a VNF as an list of paths
+// Synopsis: Returns the boundary of a VNF as a list of paths
 // SynTags: VNF
 // Topics: VNF Manipulation
 // See Also: vnf_halfspace(), vnf_merge_points()
@@ -1759,13 +1759,13 @@ function _sort_pairs0(arr) =
 //   set `merge=false` to disable the automatic point merge and save time.  The result of running on a VNF with duplicate points is likely to
 //   be incorrect or invalid; it may produce obscure errors.   
 //   .
-//   The output will be a list of closed 3D paths.  If the VNF has no boundary then the output is `[]`.  The boundary path(s) are
+//   The output is a list of closed 3D paths.  If the VNF has no boundary then the output is `[]`.  The boundary path(s) are
 //   traversed in the same direction as the edges in the original VNF.  
 //   .
 //   It is sometimes desirable to have the boundary available as an index list into the VNF vertex list.  However, merging the points in the VNF changes the 
 //   VNF vertex point list.  If you set `merge=false` you can also set `idx=true` to get an index list.  As noted above, you must be certain
 //   that your in put VNF has no duplicate vertices, perhaps by running {{vnf_merge_points()}} yourself on it.  With `idx=true`
-//   the output will be indices into the VNF vertex list, which enables you to associate the vertices on the boundary path with the original VNF.
+//   the output consists of indices into the VNF vertex list, which enables you to associate the vertices on the boundary path with the original VNF.
 // Arguments:
 //   vnf = input vnf
 //   ---
@@ -1822,10 +1822,10 @@ function vnf_boundary(vnf,merge=true,idx=false) =
 //   Computes a simple offset of a VNF by estimating the normal at every point based on the weighted average of surrounding polygons
 //   in the mesh.  The offset distance, `delta`, must be small enough so that no self-intersection occurs, which is no issue when the
 //   curvature is positive (like the outside of a sphere) but for negative curvature it means the offset distance must be smaller
-//   than the smallest radius of curvature of the VNF.  If self-intersection
-//   occurs, the resulting geometry will be invalid and you will get an error when you introduce a second object into the model.
+//   than the smallest radius of curvature of the VNF. Any self-intersection that occurs
+//   invalidates the resulting geometry, giving you an error when you introduce a second object into the model.
 //   **It is your responsibility to avoid invalid geometry!**  It cannot be detected automatically.  
-//   The positive offset direction is towards the outside of the VNF, the faces that are colored yellow in the "thrown together" view.  
+//   The positive offset direction is toward the outside of the VNF, the faces that are colored yellow in the "thrown together" view.  
 //   .
 //   **The input VNF must not contain duplicate points.**  By default, vnf_small_offset() calls {{vnf_merge_points()}}
 //   to remove duplicate points.  Note, however, that this operation can be slow.  If you are **certain** there are no duplicate points you can
@@ -1887,14 +1887,14 @@ function vnf_small_offset(vnf, delta, merge=true) =
 //   Constructs a thin sheet from a vnf by offsetting the vnf along the normal vectors estimated at
 //   each vertex by averaging the normals of the adjacent faces.  This is done using {{vnf_small_offset()}.
 //   The thickness value must be small enough so that no points cross each other
-//   when the offset is computed, because that results in invalid geometry and will give rendering errors.
+//   when the offset is computed, because that results in invalid geometry and rendering errors.
 //   Rendering errors may not manifest until you add other objects to your model.  
 //   **It is your responsibility to avoid invalid geometry!**
 //   .
 //   Once the offset to the original VNF is computed the original and offset VNF are connected by filling
 //   in the boundary strip(s) between them
 //   .
-//   When thickness is positive, the given bezier patch is extended towards its "inside", which is the
+//   When thickness is positive, the given bezier patch is extended toward its "inside", which is the
 //   side that appears purple in the "thrown together" view.  Note that this is the opposite direction
 //   of {{vnf_small_offset()}}.  Extending toward the inside means that your original VNF remains unchanged
 //   in the output.  You can extend the patch in the other direction
@@ -1984,8 +1984,8 @@ module _show_vertices(vertices, size=1, filter) {
 ///   _show_faces(vertices, faces, [size=], [filter=]);
 /// Description:
 ///   Draws all the vertices at their 3D position, numbered in blue by their
-///   position in the vertex array.  Each face will have their face number drawn
-///   in red, aligned with the center of face.  All children of this module are drawn
+///   position in the vertex array. Each face has its face number drawn
+///   in red, aligned with the center of the face.  All children of this module are drawn
 ///   with transparency.
 /// Arguments:
 ///   vertices = Array of point vertices.
@@ -2039,8 +2039,8 @@ module _show_faces(vertices, faces, size=1, filter) {
 // Description:
 //   A drop-in module to replace `vnf_polyhedron()` to help debug vertices and faces.
 //   Draws all the vertices at their 3D position, numbered in blue by their
-//   position in the vertex array.  Each face will have its face number drawn
-//   in red, aligned with the center of face.  All given faces are drawn with
+//   position in the vertex array. Each face has its face number drawn
+//   in red, aligned with the center of the face. All given faces are drawn with
 //   transparency. All children of this module are drawn with transparency.
 //   Works best with Thrown-Together preview mode, to see reversed faces.
 //   You can set opacity to 0 if you want to supress the display of the polyhedron faces.
@@ -2056,7 +2056,7 @@ module _show_faces(vertices, faces, size=1, filter) {
 //   opacity = Opacity of the polyhedron faces.  Default: 0.5
 //   convexity = The max number of walls a ray can pass through the given polygon paths.
 //   size = The size of the text used to label the faces and vertices.  Default: 1
-//   filter = If given a function literal of signature `function(i)`, will only show labels for vertices and faces that have a vertex index that gets a true result from that function.  Default: no filter.
+//   filter = If given a function literal of signature `function(i)`, shows only labels for vertices and faces that have a vertex index that gets a true result from that function.  Default: no filter.
 // Example(EdgesMed):
 //   verts = [for (z=[-10,10], a=[0:120:359.9]) [10*cos(a),10*sin(a),z]];
 //   faces = [[0,1,2], [5,4,3], [0,3,4], [0,4,1], [1,4,5], [1,5,2], [2,5,3], [2,3,0]];
@@ -2111,8 +2111,8 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   label_verts = If true, shows labels at each vertex that show the vertex number.    Default: false
 //   label_faces = If true, shows labels at the center of each face that show the face number.    Default: false
 //   wireframe = If true, shows edges more clearly so you can see them in Thrown Together mode.    Default: false
-//   adjacent = If true, only display faces adjacent to a vertex listed in the errors.    Default: false
-// Example(3D,Edges): BIG_FACE Warnings; Faces with More Than 3 Vertices.  CGAL often will fail to accept that a face is planar after a rotation, if it has more than 3 vertices.
+//   adjacent = If true, display only faces that are adjacent to a vertex listed in the errors.    Default: false
+// Example(3D,Edges): BIG_FACE Warnings; Faces with More Than 3 Vertices. CGAL often fails to accept that a face is planar after a rotation, if it has more than 3 vertices.
 //   vnf = skin([
 //       path3d(regular_ngon(n=3, d=100),0),
 //       path3d(regular_ngon(n=5, d=100),100)
@@ -2251,7 +2251,7 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false) =
             for(i = idx(dfaces), j = idx(dfaces)) if(i != j)
             for(edge1 = pair(faces[i],true))
             for(edge2 = pair(faces[j],true))
-            if(edge1 == edge2)  // Valid adjacent faces will never have the same vertex ordering.
+            if(edge1 == edge2)  // Valid adjacent faces must never have the same vertex ordering.
             if(_edge_not_reported(edge1, varr, multconn_edges))
             _vnf_validate_err("REVERSAL", edge1)
         ]),
