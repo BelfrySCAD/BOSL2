@@ -23,7 +23,7 @@
 // Arguments:
 //   a = First value.
 //   b = Second value.
-//   eps = The maximum allowed difference between `a` and `b` that will return true. Defaults to 1e-9.
+//   eps = The maximum allowed difference between `a` and `b` to consider as "no difference". Default: 1e-9.
 // Example:
 //   test1 = approx(-0.3333333333,-1/3);  // Returns: true
 //   test2 = approx(0.3333333333,1/3);    // Returns: true
@@ -47,7 +47,7 @@ function approx(a,b,eps=EPSILON) =
 
 
 // Function: all_zero()
-// Synopsis: Returns true if the value(s) given are aproximately zero.
+// Synopsis: Returns true if the value(s) given are approximately zero.
 // Topics: Comparisons, List Handling
 // See Also: approx(), all_zero(), all_nonzero()
 // Usage:
@@ -70,7 +70,7 @@ function all_zero(x, eps=EPSILON) =
 
 
 // Function: all_nonzero()
-// Synopsis: Returns true if the value(s) given are not aproximately zero.
+// Synopsis: Returns true if the value(s) given are not approximately zero.
 // Topics: Comparisons, List Handling
 // See Also: approx(), all_zero(), all_nonzero()
 // Usage:
@@ -242,7 +242,7 @@ function are_ends_equal(list, eps=EPSILON) =
 //    bool = is_increasing(list, [strict]);
 // Description:
 //   Returns true if the list is (non-strictly) increasing, or strictly increasing if `strict=true`.
-//   The list can be a list of any items that OpenSCAD can compare, or it can be a string which will be
+//   The list can be a list of any items that OpenSCAD can compare, or it can be a string, which gets
 //   evaluated character by character.
 // Arguments:
 //   list = list (or string) to check
@@ -267,7 +267,7 @@ function is_increasing(list,strict=false) =
 //   bool = is_decreasing(list, [strict]);
 // Description:
 //   Returns true if the list is (non-strictly) decreasing, or strictly decreasing if `strict=true`.
-//   The list can be a list of any items that OpenSCAD can compare, or it can be a string which will be
+//   The list can be a list of any items that OpenSCAD can compare, or it can be a string, which gets
 //   evaluated character by character.  
 // Arguments:
 //   list = list (or string) to check
@@ -345,7 +345,7 @@ function compare_lists(a, b) =
 
 
 // Function: min_index()
-// Synopsis: Returns the index of the minimal value in the given list.
+// Synopsis: Returns the index of the minimum value in the given list.
 // Topics: List Handling
 // See Also: max_index(), is_increasing(), is_decreasing()
 // Usage:
@@ -356,7 +356,7 @@ function compare_lists(a, b) =
 //   If `all` is true then returns a list of all indices where the minimum value occurs.
 // Arguments:
 //   vals = vector of values
-//   all = set to true to return indices of all occurences of the minimum.  Default: false
+//   all = set to true to return indices of all occurrences of the minimum.  Default: false
 // Example:
 //   a = min_index([5,3,9,6,2,7,8,2,1]); // Returns: 8
 //   b = min_index([5,3,9,6,2,7,8,2,7],all=true); // Returns: [4,7]
@@ -366,7 +366,7 @@ function min_index(vals, all=false) =
 
 
 // Function: max_index()
-// Synopsis: Returns the index of the minimal value in the given list.
+// Synopsis: Returns the index of the maximum value in the given list.
 // Topics: List Handling
 // See Also: min_index(), is_increasing(), is_decreasing()
 // Usage:
@@ -377,7 +377,7 @@ function min_index(vals, all=false) =
 //   If `all` is true then returns a list of all indices where the maximum value occurs.
 // Arguments:
 //   vals = vector of values
-//   all = set to true to return indices of all occurences of the maximum.  Default: false
+//   all = set to true to return indices of all occurrences of the maximum.  Default: false
 // Example:
 //   max_index([5,3,9,6,2,7,8,9,1]); // Returns: 2
 //   max_index([5,3,9,6,2,7,8,9,1],all=true); // Returns: [2,7]
@@ -390,7 +390,7 @@ function max_index(vals, all=false) =
 
 
 // Function: find_approx()
-// Synopsis: Finds the indexes of the item(s) in the given list that are aproximately the given value.
+// Synopsis: Finds the indexes of the item(s) in the given list that are approximately the given value.
 // Topics: List Handling
 // See Also: in_list()
 // Usage:
@@ -763,7 +763,7 @@ function _indexed_sort(arrind) =
 // Usage:
 //   slist = sort(list, [idx]);
 // Description:
-//   Sorts the given list in lexicographic order. The sort is stable, meaning equivalent items will not change order. 
+//   Sorts the given list in lexicographic order. The sort is stable, meaning equivalent items do not change order. 
 //   If the input is a homogeneous simple list or a homogeneous 
 //   list of vectors (see function is_homogeneous), the sorting method uses the native comparison operator and is faster. 
 //   When sorting non homogeneous list the elements are compared with `compare_vals`, with types ordered according to
@@ -808,9 +808,9 @@ function sort(list, idx=undef) =
 // Description:
 //   Given a list, sort it as function `sort()`, and returns
 //   a list of indexes into the original list in that sorted order.
-//   The sort is stable, so equivalent items will not change order.  
+//   The sort is stable, so equivalent items so not change order.  
 //   If you iterate the returned list in order, and use the list items
-//   to index into the original list, you will be iterating the original
+//   to index into the original list, then you are accessing the original
 //   values in sorted order.
 // Arguments:
 //   list = The list to sort.
@@ -862,8 +862,8 @@ function sortidx(list, idx=undef) =
 //   ulist = group_sort(list,[idx]);
 // Description:
 //   Given a list of numbers, sorts the list into a sequence of lists, where each list contains any repeated values.
-//   If there are no repeated values the output will be a list of singleton lists.  
-//   If you apply {{flatten()}} to the output, the result will be a simple sorted list.  
+//   If there are no repeated values, the output is a list of singleton lists.  
+//   If you apply {{flatten()}} to the output, the result is a simple sorted list.  
 //   .
 //   When the input is a list of lists, the sorting is done based on index `idx` of the entries in `list`.
 //   In this case, `list[i][idx]` must be a number for every `i`, and the entries in `list` are grouped
@@ -897,9 +897,9 @@ function group_sort(list, idx) =
 // Description:
 //   Given a list of integer group numbers, and an equal-length list of values,
 //   returns a list of groups with the values sorted into the corresponding groups.
-//   Ie: if you have a groups index list of `[2,3,2]` and values of `["A","B","C"]`, then
-//   the values `"A"` and `"C"` will be put in group 2, and `"B"` will be in group 3.
-//   Groups that have no values grouped into them will be an empty list.  So the
+//   For example: if you have a groups index list of `[2,3,2]` and values of `["A","B","C"]`, then
+//   the values `"A"` and `"C"` are put in group 2, and `"B"` is in group 3.
+//   Groups that have no values grouped into them are empty lists. Therefore, the
 //   above would return `[[], [], ["A","C"], ["B"]]`
 // Arguments:
 //   groups = A list of integer group index numbers.
@@ -936,8 +936,8 @@ function group_data(groups, values) =
 //   small = list_smallest(list, k)
 // Description:
 //   Returns a set of the k smallest items in list in arbitrary order.  The items must be
-//   mutually comparable with native OpenSCAD comparison operations.  You will get "undefined operation"
-//   errors if you provide invalid input. 
+//   mutually comparable with native OpenSCAD comparison operations.
+//   You get "undefined operation" errors if you provide invalid input. 
 // Arguments:
 //   list = list to process
 //   k = number of items to return
