@@ -96,18 +96,18 @@ function _bbox_faces(v0, voxsize, bbox) = let(
 
 /// Pair of vertex indices for each edge on the voxel
 _MCEdgeVertexIndices = [
-	[0, 1],
-	[1, 3],
-	[3, 2],
-	[2, 0],
-	[4, 5],
-	[5, 7],
-	[7, 6],
-	[6, 4],
-	[0, 4],
-	[1, 5],
-	[3, 7],
-	[2, 6],
+    [0, 1],
+    [1, 3],
+    [3, 2],
+    [2, 0],
+    [4, 5],
+    [5, 7],
+    [7, 6],
+    [6, 4],
+    [0, 4],
+    [1, 5],
+    [3, 7],
+    [2, 6],
 ];
 
 /// For each of the 255 configurations of a marching cube, define a list of triangles, specified as triples of edge indices.
