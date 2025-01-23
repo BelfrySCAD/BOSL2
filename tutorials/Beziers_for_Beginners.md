@@ -1,6 +1,6 @@
 # Béziers for Beginners
 
-Bézier curves are parametric curves defined by polynomial equations. To work with Béziers in OpenSCAD we need to load the Bézier extension BOSL2/beziers.scad in addition to BOSL2/std.scad.
+Bézier curves are parametric curves defined by polynomial equations. To work with Béziers in OpenSCAD we need to load BOSL2/std.scad, which includes the extension beziers.scad.
 
 Bézier curves vary by the degree of the polynomial that defines the curve.
 
@@ -49,7 +49,7 @@ debug_bezier(bez, N = 3);
 
 For a live example of cubic Béziers see the [Desmos Graphing Calculator](https://www.desmos.com/calculator/cahqdxeshd).
 
-Higher order Béziers such as Quartic (degree 4) and Quintic (degree 5) Béziers exist as well.  Degree 4 Béziers are used by [round_corners()](https://github.com/BelfrySCAD/BOSL2/wiki/rounding.scad#function-round_corners) and in the continuous rounding operations of [rounded_prism()](https://github.com/BelfrySCAD/BOSL2/wiki/rounding.scad#functionmodule-rounded_prism).
+Higher order Béziers such as quartic (degree 4) and quintic (degree 5) Béziers exist as well.  Degree 4 Béziers are used by [round_corners()](https://github.com/BelfrySCAD/BOSL2/wiki/rounding.scad#function-round_corners) and in the continuous rounding operations of [rounded_prism()](https://github.com/BelfrySCAD/BOSL2/wiki/rounding.scad#functionmodule-rounded_prism).
 
 
 ![Image courtesy Wikipedia](images/bezier_4_big.gif "Quartic Bézier Animation courtesy Wikipedia")
@@ -81,9 +81,9 @@ debug_bezier(bez, N = 3);
 
 ## Bézier Paths
 
-A Bézier path is when we string together a sequence of Béiers with coincident endpoints.
+A Bézier path is when we string together a sequence of Béziers with coincident endpoints.
 
-The point counts arise as a natural consequence of what a bezier path is.  If you have k beziers of order N then that's k(N+1) points, except we have k-1 overlaps, so instead it's 
+The point counts arise as a natural consequence of what a Bézier path is.  If you have k Béziers of order N, then that's k(N+1) points, except we have k-1 overlaps, so instead it's 
 
 ```math
 k(N+1)-(k-1) = kN +k -k+1 = kN+1.
@@ -94,7 +94,7 @@ The list of control points for a Bézier is not an OpenSCAD path. If we treat th
 ```openscad-2D
 include<BOSL2/std.scad>
 
-bez = [[0,0], [30,30], [0,50], {70,30]  [0,100]];
+bez = [[0,0], [30,30], [0,50], [70,30], [0,100]];
 debug_bezier(bez, N = 2);
 
 
@@ -120,7 +120,7 @@ stroke(path);
 
 Bézier paths can be made up of more than one Bézier curve.  Quadratic Bezier paths have a multiple of 2 points plus 1, and cubic Bézier paths have a multiple of 3 points plus 1  
 
-This means that a series of 7 control points can be grouped into three (overlapping) sets of 3 and treated as a sequence of 3 quadratic beziers.  The same 7 points can be grouped into two overlapping sets of 4 and treated as a sequence of two cubic beziers.   The two paths have significantly different shapes.
+This means that a series of 7 control points can be grouped into three (overlapping) sets of 3 and treated as a sequence of 3 quadratic Béziers.  The same 7 points can be grouped into two overlapping sets of 4 and treated as a sequence of two cubic Béziers.   The two paths have significantly different shapes.
 
 ```openscad-2D
 include<BOSL2/std.scad>
@@ -138,7 +138,7 @@ path = bezpath_curve(bez, N=3);  //make a cubic Bézier path
 stroke(path);
 ```
 
-By default [bezpath_curve()](https://github.com/BelfrySCAD/BOSL2/wiki/beziers.scad#function-bezpath_curve) takes a Bézier path and converts it to an OpenSCAD path by splitting each Bézier curve into 16 straight-line segments. The segments are not necessarily of equal length. Note that the special variable $fn has no effect on the number of steps. You can control this number using the **splinesteps** argument.
+By default [bezpath_curve()](https://github.com/BelfrySCAD/BOSL2/wiki/beziers.scad#function-bezpath_curve) takes a Bézier path and converts it to an OpenSCAD path by splitting each Bézier curve into 16 straight-line segments. The segments are not necessarily of equal length. The special variable $fn has no effect on the number of steps. You can control this number using the **splinesteps** argument.
 
 ```openscad-2D
 include<BOSL2/std.scad>
@@ -222,9 +222,9 @@ path = offset_stroke(bezier_curve(bez, splinesteps = 32), [2,0]);
 back_half(s = 200) rotate_sweep(path,360);
 ```
 
-We'll use a cylinder with a height of 2 for the floor of our vase.  At the bottom of the vase the radius of the hole is bez[0].x but we need to find the radius at y = 2.  The function [bezier_line_intersection()](https://github.com/BelfrySCAD/BOSL2/wiki/beziers.scad#function-bezier_line_intersection) returns a list of u-values where a given line intersects our Bézier curve. 
+We use a cylinder with a height of 2 for the floor of our vase.  At the bottom of the vase the radius of the hole is bez[0].x but we need to find the radius at y = 2.  The function [bezier_line_intersection()](https://github.com/BelfrySCAD/BOSL2/wiki/beziers.scad#function-bezier_line_intersection) returns a list of u-values where a given line intersects our Bézier curve. 
 
-The u-value is a number between 0 and 1 that designates how far along the curve the intersections occur. In our case the line only crosses the Bézier at one point so we get the single-element list [0.0168783].
+The u-value is a number between 0 and 1 that designates how far along the curve the intersections occur. In our case the line crosses the Bézier only at one point so we get the single-element list [0.0168783].
 
 The function [bezier_points()](https://github.com/BelfrySCAD/BOSL2/wiki/beziers.scad#function-bezpath_points) converts that list of u-values to a list of x,y coordinates.  Drawing a line at y = 2 gives us the single-element list  [[17.1687, 2]].  
 
@@ -281,7 +281,7 @@ BOSL2 includes four functions for constructing Cubic Bézier paths:
 
 [bez_begin()](https://github.com/BelfrySCAD/BOSL2/wiki/beziers.scad#function-bez_begin) and [bez_end()](https://github.com/BelfrySCAD/BOSL2/wiki/beziers.scad#function-bez_end) define the endpoints of a simple cubic Bézier curve.
 
-Because each constructor function produces a list of points , we'll use the [flatten()](https://github.com/BelfrySCAD/BOSL2/wiki/lists.scad#function-flatten) function to consolidate them into a single list.
+Because each constructor function produces a list of points , we use the [flatten()](https://github.com/BelfrySCAD/BOSL2/wiki/lists.scad#function-flatten) function to consolidate them into a single list.
 
 There are three different ways to specify the location of the endpoints and control points.
 
@@ -332,7 +332,7 @@ bez = flatten([
 debug_bezier(bez,N=3);
 ```
 
-The fourth cubic Bézier path constructor is [bez_tang()](https://github.com/BelfrySCAD/BOSL2/wiki/beziers.scad#function-bez_tang).  This constructor makes smooth joint. It also has three control points, one on the path and the approaching and departing control points.  Because all three points lie on a single line, we need only specify the angle of the departing control point.  As in this example you can specify different distances for the approaching and departing controls points.  If you specify only a single distance, it is used for both.
+The fourth cubic Bézier path constructor is [bez_tang()](https://github.com/BelfrySCAD/BOSL2/wiki/beziers.scad#function-bez_tang).  This constructor makes smooth joint. It also has three control points, one on the path and the approaching and departing control points.  Because all three points lie on a single line, we need to specify only the angle of the departing control point.  As in this example you can specify different distances for the approaching and departing controls points.  If you specify only a single distance, it is used for both.
 
 We can add a smooth joint to the last example:
 
@@ -391,7 +391,7 @@ bez = flatten([
 debug_bezier(bez, N=3);
 ```
 
-Similarly, for the heart-shaped path we'll replace a corner point with the start and end points:
+Similarly, for the heart-shaped path we replace a corner point with the start and end points:
 
 ```openscad-2D
 include<BOSL2/std.scad>
@@ -511,7 +511,7 @@ debug_bezier(bez, N=3);
 
 ### A Bud Vase Design using both 2D and 3D Bézier Paths 
 
-We can use a 2D Bézier path to define the shape of our bud vase as we did in the examples above. Instead of using a [rotate_sweep()](https://github.com/BelfrySCAD/BOSL2/wiki/skin.scad#functionmodule-rotate_sweep) to make a vase with a circular cross section we'll use a 3D Bèzier path that both defines the cross section and makes the top more interesting. This design uses the [skin()](https://github.com/BelfrySCAD/BOSL2/wiki/skin.scad#functionmodule-skin) module to create the final geometry. 
+We can use a 2D Bézier path to define the shape of our bud vase as we did in the examples above. Instead of using a [rotate_sweep()](https://github.com/BelfrySCAD/BOSL2/wiki/skin.scad#functionmodule-rotate_sweep) to make a vase with a circular cross section we use a 3D Bèzier path that both defines the cross section and makes the top more interesting. This design uses the [skin()](https://github.com/BelfrySCAD/BOSL2/wiki/skin.scad#functionmodule-skin) module to create the final geometry. 
 
 ```openscad-3d,Big
 include<BOSL2/std.scad>
