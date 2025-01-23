@@ -691,7 +691,7 @@ _MCTriangleTable_reverse = [
 //   
 //   bbox = [[-100,-100,-100], [100,100,100]];
 //   isosurface(voxel_size=5, bounding_box=bbox, isovalue=0,
-//              gyroid, additional=200, close_clip=false);
+//       field_function=gyroid, additional=200, close_clip=false);
 // Example(3D,NoAxes): If we remove the `close_clip` parameter or set it to true, the isosurface algorithm encloses the entire half-space bounded by the "inner" gyroid surface, leaving only the "outer" surface exposed. This is a manifold shape but not what we want if trying to model a gyroid.
 //   gyroid = function (xyz, wavelength) let(
 //       p = 360/wavelength,
@@ -702,7 +702,7 @@ _MCTriangleTable_reverse = [
 //   
 //   bbox = [[-100,-100,-100], [100,100,100]];
 //   isosurface(voxel_size=5, bounding_box=bbox, isovalue=0,
-//              gyroid, additional=200);
+//       field_function=gyroid, additional=200);
 // Example(3D,ThrownTogether,NoAxes): To make the gyroid a double-sided surface, we need to specify a small range around zero for `isovalue`. Now we have a double-sided surface although with `clip_close=false` the edges are not closed where the surface is clipped by the bounding box.
 //   gyroid = function (xyz, wavelength) let(
 //       p = 360/wavelength,
@@ -713,7 +713,7 @@ _MCTriangleTable_reverse = [
 //   
 //   bbox = [[-100,-100,-100], [100,100,100]];
 //   isosurface(voxel_size=5, bounding_box=bbox, isovalue=[-0.3, 0.3],
-//              gyroid, additional=200, close_clip=false);
+//       field_function=gyroid, additional=200, close_clip=false);
 // Example(3D,ThrownTogether,NoAxes): To make the gyroid a valid manifold 3D object, we remove the `close_clip` parameter (same as setting `close_clip=true`), which closes the edges where the surface is clipped by the bounding box. The resulting object can be tiled, the VNF returned by the functional version can be wrapped around an axis using `{{vnf_bend()}}`, and other operations.
 //   gyroid = function (xyz, wavelength) let(
 //       p = 360/wavelength,
@@ -724,7 +724,7 @@ _MCTriangleTable_reverse = [
 //   
 //   bbox = [[-100,-100,-100], [100,100,100]];
 //   isosurface(voxel_size=5, bounding_box=bbox, isovalue=[-0.3, 0.3],
-//              gyroid, additional=200);
+//       field_function=gyroid, additional=200);
 // Example(3D,NoAxes): An approximation of the triply-periodic minimal surface known as [Schwartz P](https://en.wikipedia.org/wiki/Schwarz_minimal_surface).
 //   schwartz_p = function (xyz, wavelength) let(
 //       p = 360/wavelength,
@@ -735,7 +735,7 @@ _MCTriangleTable_reverse = [
 //   
 //   bbox = [[-100,-100,-100], [100,100,100]];
 //   isosurface(voxel_size=4, bounding_box=bbox, isovalue=[-0.2,0.2],
-//              schwartz_p, additional=100);
+//       field_function=schwartz_p, additional=100);
 // Example(3D,NoAxes): Another approximation of the triply-periodic minimal surface known as [Neovius](https://en.wikipedia.org/wiki/Neovius_surface).
 //   neovius = function (xyz, wavelength) let(
 //       p = 360/wavelength,
@@ -746,7 +746,7 @@ _MCTriangleTable_reverse = [
 //   
 //   bbox = [[-100,-100,-100], [100,100,100]];
 //   isosurface(voxel_size=4, bounding_box=bbox, isovalue=[-0.3,0.3],
-//              neovius, additional=200);
+//       field_function=neovius, additional=200);
 
 module isosurface(voxel_size, bounding_box, isovalue, field_function, additional, reverse=false, close_clip=true, show_stats=false) {
     vnf = isosurface(voxel_size, bounding_box, isovalue, field_function, additional, reverse, close_clip, show_stats);
