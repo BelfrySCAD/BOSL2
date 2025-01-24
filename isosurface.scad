@@ -32,37 +32,38 @@ Rotations are prioritized over inversions so that 3 of the 6 cases containing am
 The cube index determines the sequence of edges to split. The index ranges from 0 to 255, representing all possible combinations of the 8 corners of the cube being greater or less than the isosurface threshold. For example, 10000110 (8-bit binary for decimal index 134) has corners 7, 2, and 3 greater than the threshold. After determining the cube's index value, the triangulation order is looked up in a table.
 
 Axes are:
-     y
-   (back)
-     |  z (up)
+     z
+   (top)
+     |  y (back)
      | /
      |/
      +----- x (right)
 
 Vertex and edge layout (heavier = and # indicate closer to viewer):
 
-        6          7
-        +==========+            +=====6====+
-       /#         /#           /#         /#
-      / #        / #         11 7       10 5
-   2 +- # - - - +3 #         +- # -2- - +  #
-     | 4+==========+ 5       |  +=====4====+
-     | /        : /          3 8        1 9
-     |/         :/           |/         :/
-   0 +----------+ 1          +-----0----+      
+      3 +----------+ 7          +----10----+
+       /:         /|           /:         /|
+      / :        / |          1 2        5 6
+   1 +==========+5 |         +=====9====+  |
+     # 2+ - - - # -+ 6       #  +- - 11-# -+
+     # /        # /          0 3        4 7
+     #/         #/           #/         #/
+   0 +==========+ 4          +=====8=====+
+
+z changes fastest, then y, then x
 
 -----------------------------------------------------------
 Addition by Alex Matulich:
-Vertex and face layout for triangulating one voxel face that corrsesponds to a side of the box bounding all voxels. Corner labels are different to account for rotations assumed in the triangle tables, but the array arrangement is the same, corresponding to indices [x][y][z], with z changing most rapidly.
+Vertex and face layout for triangulating one voxel face that corrsesponds to a side of the box bounding all voxels.
 
                     4(back)
-               3 +==========+ 7
-                /#  5(top) /#
-               / #        / #
-            2 +- # - - - +6 #    <-- 3 (side)
-0(side) -->   | 1+==========+ 5
-              | /        : /
-              |/  2(bot) :/
+               3 +----------+ 7
+                /:  5(top) /#
+               / :        / #
+            1 +==========+5 #    <-- 3 (side)
+0(side) -->   # 2+ - - - # -+ 6
+              # /        # /
+              #/  2(bot) #/
             0 +----------+ 4
                 1(front)
 */
@@ -642,7 +643,7 @@ _MCTriangleTable_reverse = [
 //   vnf = isosurface(voxel_size, bounding_box, isovalue, field_function, [additional=], [close_clip=], [show_stats=]);
 // Description:
 //   When called as a function, returns a [VNF structure](vnf.scad) (list of triangles and faces) representing a 3D isosurface within the specified bounding box at a single isovalue or range of isovalues.
-//   When called as a module, displays the isosurface within the specified bounding box at a single isovalue or range of isovalues. This module just passes the parameters to the function, and then calls `{{vnf_polyhedron()}}` to display the isosurface.
+//   When called as a module, displays the isosurface within the specified bounding box at a single isovalue or range of isovalues. This module just passes the parameters to the function, and then calls {{vnf_polyhedron()}} to display the isosurface.
 //   .
 //   A [marching cubes](https://en.wikipedia.org/wiki/Marching_cubes) algorithm is used
 //   to identify an envelope containing the isosurface within the bounding box. The surface
@@ -660,7 +661,7 @@ _MCTriangleTable_reverse = [
 //   generates fairly quickly, just a handful of seconds. A good rule is to keep the
 //   number of field values below 10,000 for preview, and adjust the voxel size
 //   smaller for final rendering. If the isosurface fits completely within the bounding
-//   box, you can call `{{pointlist_bounds()}}` on `vnf[0]` returned from the
+//   box, you can call {{pointlist_bounds()}} on `vnf[0]` returned from the
 //   `isosurface()` function to get an idea of a more optimal smaller bounding box to use,
 //   possibly allowing increasing resolution by decresing the voxel size.
 //   .
@@ -673,13 +674,13 @@ _MCTriangleTable_reverse = [
 //   and are not normally necessary.
 // Arguments:
 //   voxel_size = The size (scalar) of the voxel cube that determines the resolution of the surface.
-//   bounding_box = A pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum box corner coordinates. You don't have ensure that the voxels fit perfectly inside the bounding box. While the voxel at the minimum bounding box corner is aligned on that corner, the last voxel at the maximum box corner may extend a bit beyond it.
+//   bounding_box = A pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum corner coordinates of the bounding box. You don't have ensure that the voxels fit perfectly inside the bounding box. While the voxel at the minimum bounding box corner is aligned on that corner, the last voxel at the maximum box corner may extend a bit beyond it.
 //   isovalue = As a scalar, specifies the output value of `field_function` corresponding to the isosurface. As a vector `[min_isovalue, max_isovalue]`, specifies the range of isovalues around which to generate a surface. For closed surfaces, a single value results in a closed volume, and a range results in a shell (with an inside and outside surface) enclosing a volume. A range must be specified for infinite-extent surfaces (such as gyroids) to create a manifold shape within the bounding box. 
 //   field_function = A [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals) taking as input an `[x,y,z]` coordinate and optional additional parameters, and returns a single value.
 //   ---
-//   additional = A single value, or an array of optional additional parameters that may be required by the field function. It is your responsibility to create a function literal compatible with these inputs. Nothing is passed to the function literal if `additional` is not set. Default: undef
-//   reverse = when true, reverses the orientation of the facets in the mesh. Default: false
-//   close_clip = when true, maintains a manifold surface where the bounding box clips it (there is a nearly negligible speed penalty in doing this). When false, the bounding box clips the surface, exposing the back sides of facets. Setting this to false can be useful with OpenSCAD's "View > Thrown together" menu option to distinguish inside from outside. Default: true
+//   additional = A single value, or an array of optional additional parameters that may be required by the field function. It is your responsibility to create a function literal compatible with these inputs. If `additional` is not set, only the `[x,y,z]` parameter is passed to the function; no additional parameters are passed. Default: undef
+//   reverse = When true, reverses the orientation of the facets in the mesh. Default: false
+//   close_clip = When true, maintains a manifold surface where the bounding box clips it (there is a negligible speed penalty in doing this). When false, the bounding box clips the surface, exposing the back sides of facets. Setting this to false can be useful with OpenSCAD's "View > Thrown Together" menu option to distinguish inside from outside. Default: true
 //   show_stats = If true, display statistics about the isosurface in the console window. Besides the number of voxels found to contain the surface, and the number of triangles making up the surface, this is useful for getting information about a smaller bounding box possible for the isosurface, to improve speed for subsequent renders. Enabling this parameter has a speed penalty. Default: false
 // Example(3D,ThrownTogether,NoAxes): A gyroid is an isosurface defined by all the zero values of a 3D periodic function. To illustrate what the surface looks like, `close_clip=false` has been set to expose both sides of the surface. The surface is periodic and tileable along all three axis directions. This a non-manifold surface as displayed, not useful for 3D modeling. This example also demonstrates the use of the `additional` parameter, which in this case controls the wavelength of the gyroid.
 //   gyroid = function (xyz, wavelength) let(
@@ -714,7 +715,7 @@ _MCTriangleTable_reverse = [
 //   bbox = [[-100,-100,-100], [100,100,100]];
 //   isosurface(voxel_size=5, bounding_box=bbox, isovalue=[-0.3, 0.3],
 //       field_function=gyroid, additional=200, close_clip=false);
-// Example(3D,ThrownTogether,NoAxes): To make the gyroid a valid manifold 3D object, we remove the `close_clip` parameter (same as setting `close_clip=true`), which closes the edges where the surface is clipped by the bounding box. The resulting object can be tiled, the VNF returned by the functional version can be wrapped around an axis using `{{vnf_bend()}}`, and other operations.
+// Example(3D,ThrownTogether,NoAxes): To make the gyroid a valid manifold 3D object, we remove the `close_clip` parameter (same as setting `close_clip=true`), which closes the edges where the surface is clipped by the bounding box. The resulting object can be tiled, the VNF returned by the functional version can be wrapped around an axis using {{vnf_bend()}}, and other operations.
 //   gyroid = function (xyz, wavelength) let(
 //       p = 360/wavelength,
 //       px = p*xyz[0],
@@ -777,22 +778,23 @@ function isosurface(voxel_size, bounding_box, isovalue, field_function, addition
 // SynTags: Geom,VNF
 // Topics: Advanced Modeling
 // Usage: As a module
-//   isosurface_array(voxel_size, isovalue, fields, [reverse=], [close_clip=], [show_stats=]);
+//   isosurface_array(voxel_size, isovalue, fields, [origin=], [reverse=], [close_clip=], [show_stats=]);
 // Usage: As a function
-//   vnf = isosurface_array(voxel_size, isovalue, fields, [reverse=], [close_clip=], [show_stats=]);
+//   vnf = isosurface_array(voxel_size, isovalue, fields, [origin=], [reverse=], [close_clip=], [show_stats=]);
 // Description:
 //   When called as a function, returns a [VNF structure](vnf.scad) (list of triangles and
 //   faces) representing a 3D isosurface within the passed array at a single isovalue or
 //   range of isovalues.
 //   When called as a module, displays the isosurface within the passed array at a single
 //   isovalue or range of isovalues. This module just passes the parameters to the function,
-//   and then calls `{{vnf_polyhedron()}}` to display the isosurface.
+//   and then calls {{vnf_polyhedron()}} to display the isosurface.
 //   .
 //   Use this when you already have a 3D array of intensity or density data, for example like
-//   what you may get from a CT scan.
+//   what you may get from a [CT scan](https://en.wikipedia.org/wiki/CT_scan).
 //   . 
-//   The returned VNF structure occupies a volume with its origin at [0,0,0] extending in the
-//   positive x, y, and z directions by multiples of `voxel_size`.
+//   By default, the returned VNF structure occupies a volume with its origin at [0,0,0]
+//   extending in the positive x, y, and z directions by multiples of `voxel_size`.
+//   This origin can be overridden by the `origin` parameter.
 //   .
 //   The point list in the VNF structure contains many duplicated points. This is not a
 //   problem for rendering the shape, but if you want to eliminate these, you can pass
@@ -803,11 +805,12 @@ function isosurface(voxel_size, bounding_box, isovalue, field_function, addition
 //   and are not normally necessary.
 // Arguments:
 //   voxel_size = The size (scalar) of the voxel cube that determines the resolution of the surface.
-//   isovalue = As a scalar, specifies the output value of `field_function` corresponding to the isosurface. As a vector `[min_isovalue, max_isovalue]`, specifies the range of isovalues around which to generate a surface. For closed surfaces, a single value results in a closed volume, and a range results in a shell (with an inside and outside surface) enclosing a volume. A range must be specified for infinite-extent surfaces (such as gyroids) to create a manifold shape within the bounding box. 
+//   isovalue = As a scalar, specifies the output value of `field_function` corresponding to the isosurface. As a vector `[min_isovalue, max_isovalue]`, specifies the range of isovalues around which to generate a surface. For closed surfaces, a single value results in a closed volume, and a range results in a shell (with an inside and outside surface) enclosing a volume. A range must be specified for surfaces (such as gyroids) that have both sides exposed within the bounding box. 
 //   fields = 3D array of field intesities. This array should be organized so that the indices are in order of x, y, and z when the array is referenced; that is, `fields[x_index][y_index][z_index]` has `z_index` changing most rapidly as the array is traversed. If you organize the array differently, you may have to perform a `rotate()` or `mirror()` operation on the final result to orient it properly.
 //   ---
-//   origin = origin in 3D space of the [0,0,0] index of the `fields` array. Default: [0,0,0]
-//   close_clip = when true, maintains a manifold surface where the bounding box clips it (there is a nearly negligible speed penalty in doing this). When false, the bounding box clips the surface, exposes the back sides of facets. Setting this to false can be useful with OpenSCAD's "View > Thrown together" menu option to distinguish inside from outside. Default: true
+//   origin = Origin in 3D space corresponding to `fields[0][0][0]`. The bounding box of the isosurface extends from this origin by multiples of `voxel_size` according to the size of the `fields` array. Default: [0,0,0]
+//   reverse = When true, reverses the orientation of the facets in the mesh. Default: false
+//   close_clip = When true, maintains a manifold surface where the bounding box clips it (there is a negligible speed penalty in doing this). When false, the bounding box clips the surface, exposes the back sides of facets. Setting this to false can be useful with OpenSCAD's "View > Thrown together" menu option to distinguish inside from outside. Default: true
 //   show_stats = If true, display statistics about the isosurface in the console window. Besides the number of voxels found to contain the surface, and the number of triangles making up the surface, this is useful for getting information about a smaller bounding box possible for the isosurface, to improve speed for subsequent renders. Enabling this parameter has a speed penalty. Default: false
 // Example(3D):
 //   fields = [
@@ -835,7 +838,9 @@ function isosurface(voxel_size, bounding_box, isovalue, field_function, addition
 //     ],
 //     repeat(0,[6,6])
 //   ];
-//   rotate([0,-90,180]) isosurface_array(voxel_size=10, isovalue=0.5, fields=fields);
+//   rotate([0,-90,180])
+//      isosurface_array(voxel_size=10,
+//                       isovalue=0.5, fields=fields);
 
 module isosurface_array(voxel_size, isovalue, fields, origin=[0,0,0], reverse=false, close_clip=true, show_stats=false) {
     vnf = isosurface_array(voxel_size, isovalue, fields, origin, reverse, close_clip, show_stats);
@@ -1112,13 +1117,13 @@ MB_CUSTOM=6;
 /// additional (named whatever's convenient) = additional value or array of values needed by the function.
 /// rcutoff = radial cutoff; effect suppression increases with distance until zero at the rcutoff distance, and is zero from that point farther out. Default: INF
 
-_metaball_sphere = function (cdist, charge, unused, rotm_unused, rcutoff=INF)
+_metaball_sphere = function (cdist, charge, unused, rotm, rcutoff)
 let(
     r = norm(cdist),
     suppress = let(a=min(r,rcutoff)/rcutoff) 1-a*a
 ) r==0 ? 10000*charge : suppress*charge / r;
 
-_metaball_ellipsoid = function (cdist, charge, unused, rotm, rcutoff=INF)
+_metaball_ellipsoid = function (cdist, charge, unused, rotm, rcutoff)
 let(
     dist = concat(cdist,1) * rotm,
     r = norm([dist[0]/charge[0], dist[1]/charge[1], dist[2]/charge[2]]),
@@ -1127,28 +1132,28 @@ let(
 ) r==0 ? 10000*sgn*max(abs(charge[0]), abs(charge[1]), abs(charge[2]))
     : suppress*sgn / r;
 
-_metaball_roundcube = function (cdist, charge, exponent, rotm, rcutoff=INF)
+_metaball_roundcube = function (cdist, charge, exponent, rotm, rcutoff)
 let(
     dist = concat(cdist,1) * rotm,
     r = abs(dist[0])^exponent + abs(dist[1])^exponent + abs(dist[2])^exponent,
     suppress = let(a=min(r,rcutoff)/rcutoff) 1-a*a
 ) r==0 ? 10000*charge : suppress*sign(charge)*abs(charge)^exponent / r;
 
-_metaball_cube = function (cdist, charge, unused, rotm, rcutoff=INF)
+_metaball_cube = function (cdist, charge, unused, rotm, rcutoff)
 let(
     dist = concat(cdist,1) * rotm,
     r = max(abs(dist[0]), abs(dist[1]), abs(dist[2])),
     suppress = let(a=min(r,rcutoff)/rcutoff) 1-a*a
 ) r==0 ? 10000*charge : suppress*sign(charge)*abs(charge) / r;
 
-_metaball_octahedron = function (cdist, charge, unused, rotm, rcutoff=INF)
+_metaball_octahedron = function (cdist, charge, unused, rotm, rcutoff)
 let(
     dist = concat(cdist,1) * rotm,
     r = abs(dist[0]) + abs(dist[1]) + abs(dist[2]),
     suppress = let(a=min(r,rcutoff)/rcutoff) 1-a*a
 ) r==0 ? 10000*charge : suppress*sign(charge)*abs(charge) / r;
 
-_metaball_torus = function (cdist, charge, axis, rotm, rcutoff=INF)
+_metaball_torus = function (cdist, charge, axis, rotm, rcutoff)
 let(
     tmp = concat(cdist,1) * rotm,
     dist = [tmp[0], tmp[1], tmp[2]],
@@ -1176,7 +1181,7 @@ let(
 
 // Function&Module: metaballs()
 // Synopsis: Creates a model of metaballs within a bounding box.
-// SynTags: Geom
+// SynTags: Geom,VNF
 // Topics: Advanced Modeling
 // Usage: As a module
 //   metaballs(voxel_size, bounding_box, isovalue, ball_centers, [ball_sizes=], [ball_type=], [rotation=], [field_function=], [radial_cutoff=], [close_clip=], [show_stats=]);
@@ -1187,15 +1192,17 @@ let(
 //   are organic-looking ball-shaped blobs that meld together when in close proximity.
 //   The melding property is determined by an interaction formula based on the "charge" of
 //   each ball and their distance from one another. If you consider a "ball" to be a point
-//   charge in 3D space, the "charge" of a ball is the electric field surrounding that
-//   charge, and the metaball is the isosurface corresponding to a constant field value.
-//   The stronger the charge, the stronger the electric field, and the farther away a
-//   surface of constant field intensity is from the ball center.
+//   charge in 3D space, the electric field surrounding that charge decreases in intensity
+//   with distance from the charge. The metaball is the isosurface corresponding to all value
+//   where the electric field intensity is a constant value.
+//   A stronger charge results in a stronger the electric field, and correspondingly a
+//   larger metaball. Fields from two charges add together, changing the shape of the two
+//   corresponding metaballs when they are in close proximity.
 //   .
 //   In physics, the electric field intensity falls off as an inverse-square relationship
-//   with distance; that is, the field is proportional to 1/r^2 where r is the radial
+//   with distance; that is, the field is proportional to $1/r^2$ where $r$ is the radial
 //   distance from the point charge. However, most implementations of metaballs instead use
-//   a simple inverse relationship proportional to 1/r. That is true for most of the field
+//   a simple inverse relationship proportional to $1/r$. That is true for the field
 //   types available here, or you can define your own falloff function as the
 //   `field_function` parameter.
 //   .
@@ -1209,7 +1216,7 @@ let(
 //   * `MB_OCTAHEDRON` - an octahedron-shaped metaball with sharp edges and corners, resulting from using [taxicab distance](https://en.wikipedia.org/wiki/Taxicab_geometry) rather than Euclidean distance calculations.
 //   * `MB_TORUS` - a toroidal field oriented perpendicular to the x, y, or z axis. The `charge` is a two-element vector determining the major and minor diameters, and the `additional` paramater sets the axis directions for each ball center (defaults to [0,0,1] if not set).
 //   * `MB_CUSTOM` - your own custom field definition, requiring you to set the `field_function` parameter to your own function literal.
-//   If either MB_ELLIPSOID or MB_TORUS occur in the list, the list of charges **must** be explicitly defined rather than supplying a single value for all.
+//   If either `MB_ELLIPSOID` or `MB_TORUS` occur in the list, the list of charges **must** be explicitly defined rather than supplying a single value for all.
 // Arguments:
 //   voxel_size = The size (scalar) of the voxel cube that determines the resolution of the metaball surface.
 //   bounding_box = A pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum box corner coordinates. The voxels needn't fit perfectly inside the bounding box.
@@ -1217,14 +1224,14 @@ let(
 //   ball_centers = an array of 3D points specifying each of the metaball centers.
 //   ---
 //   charge = a single value, or an array of values corresponding to `ball_centers`, specifying the charge intensity of each ball center. Default: 10
-//   ball_type = shape of field that falls off from the metaball center. Can be one of `MB_SPHERE`, `MB_ELLIPSOID`, `MB_ROUNDCUBE, `MB_CUBE`, `MB_OCTAHEDRON`, `MB_TORUS`, or `MB_CUSTOM`.  This may be an array of values corresponding to each ball. Where this value is `MB_CUSTOM`, the corresponding array element in `field_function` must also be set. Default: _MB_SPHERE
+//   ball_type = shape of field that falls off from the metaball center. Can be one of `MB_SPHERE`, `MB_ELLIPSOID`, `MB_ROUNDCUBE`, `MB_CUBE`, `MB_OCTAHEDRON`, `MB_TORUS`, or `MB_CUSTOM`.  This may be an array of values corresponding to each ball. Where this value is `MB_CUSTOM`, the corresponding array element in `field_function` must also be set. Default: `_MB_SPHERE`
 //   rotation = A vector `[x_rotation, y_rotation, z_rotation]`, or list of vectors for each ball, specifying the rotation angle in degrees around the x, y, and z axes. This is meaningless for `_MB_SPHERE` but allows you to orient the other metaball types. Default: undef
-//   field_function = A single [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals) or array of function literals that return a single field value from one metaball, and takes as inputs a 3D distance vector, a single charge or list of charges, and a single additional parameter or list of parameters (that third parameter must exist even if it isn't used). If the corresponding `ball_type` parameter is not `MB_CUSTOM`, then the function specified in `ball_type` is used instead; only where `ball_type` is `MB_CUSTOM` does this custom field function get invoked. Default: undef
+//   field_function = A single [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals) or array of function literals that return a single field value from one metaball, and takes as inputs a 3D distance vector, a single charge or list of charges, and a single additional parameter or list of parameters (that third parameter must exist in the function definition even if it isn't used). If the corresponding `ball_type` parameter is not `MB_CUSTOM`, then the function specified in `ball_type` is used instead; only where `ball_type` is `MB_CUSTOM` does this custom field function get invoked. Default: undef
 //   additional = A single value, or a list of optional additional parameters that may be required by the field function. If you make a custom function, it is your responsibility to create a function literal compatible with these inputs. Nothing is passed to the function literal if `additional` is not set. This parameter must be specified as an entire list for all metaballs if MB_ELLIPSOID or MB_TORUS is included in `ball_type`. Default: `undef` for `ball_type=CUSTOM`
 //   radial_cutoff = Maximum radial distance of a metaball's influence. This isn't a sharp cutoff; rather, the suppression increases with distance until the influence is zero at the `radial_cutoff` distance. Can be a single value or an array of values corresponding to each ball center, but typically it's sufficient to supply a single value approximately the average separation of each ball, so each ball mostly acts on its nearest neighbors. Default: INF
-//   close_clip = when true, maintains a manifold surface where the bounding box clips it (there is a nearly negligible speed penalty in doing this). When false, the bounding box clips the surface, exposing the back sides of facets. Setting this to false can be useful with OpenSCAD's "View > Thrown together" menu option to distinguish inside from outside. Default: true
+//   close_clip = When true, maintains a manifold surface where the bounding box clips it (there is a negligible speed penalty in doing this). When false, the bounding box clips the surface, exposing the back sides of facets. Setting this to false can be useful with OpenSCAD's "View > Thrown together" menu option to distinguish inside from outside. Default: true
 //   show_stats = If true, display statistics about the metaball isosurface in the console window. Besides the number of voxels found to contain the surface, and the number of triangles making up the surface, this is useful for getting information about a smaller bounding box possible, to improve speed for subsequent renders. Enabling this parameter has a speed penalty. Default: false
-// Example(3D): A group of five spherical metaballs with different charges. The parameter `show_stats=true` (not shown here) was used to find a compact bounding box for this figure.
+// Example(3D,NoAxes): A group of five spherical metaballs with different charges. The parameter `show_stats=true` (not shown here) was used to find a compact bounding box for this figure.
 //   centers = [[-20,-20,-20], [-0,-20,-20],
 //              [0,0,0], [0,0,20], [20,20,10] ];
 //   charges = [5, 4, 3, 5, 7];
@@ -1234,7 +1241,7 @@ let(
 //   boundingbox = [[-30,-31,-31], [32,31,31]];
 //   metaballs(voxelsize, boundingbox, isovalue=isovalue,
 //       ball_centers=centers, charge=charges, ball_type=type);
-// Example(3D,NoAxes): A metaball can have negative charge. In this case we have two metaballs in close proximity, with the small negative metaball creating a dent in the large positive one. The large metaball is shown transparent with small spheres at the center of each. The small one isn't visible because its field is negative; the isosurface encloses only field values greater than the isovalue of 1.
+// Example(3D,NoAxes): A metaball can have negative charge. In this case we have two metaballs in close proximity, with the small negative metaball creating a dent in the large positive one. The positive metaball is shown transparent, and small spheres show the center of each metaball. The negative metaball isn't visible because its field is negative; the isosurface encloses only field values greater than the isovalue of 1.
 //   centers = [[-1,0,0], [1.25,0,0]];
 //   charges = [8, -3];
 //   type = MB_SPHERE;
@@ -1264,9 +1271,11 @@ let(
 //   isovalue = 1;
 //   boundingbox = [[-19,-9,9], [18,10,32]];
 //   
-//   metaballs(voxelsize, boundingbox, isovalue=isovalue, ball_centers=centers,
-//       charge=charges, ball_type=type, additional=axis_orient);
-// Example(3D): Demonstration of including a custom metaball function, in this case a sphere with some noise added to its electric field.
+//   metaballs(voxelsize, boundingbox, isovalue=isovalue,
+//      ball_centers=centers, charge=charges, ball_type=type,
+//      additional=axis_orient);
+// Example(3D): Demonstration of a custom metaball function, in this case a sphere with some random noise added to its electric field.
+//   
 //   noisy_sphere = function (cdist, charge, additional,
 //                   rotation_matrix_unused, rcutoff=INF)
 //       let(
@@ -1284,7 +1293,7 @@ let(
 //   metaballs(voxelsize, boundingbox, isovalue=1,
 //       ball_centers=centers, charge=charge, ball_type=type,
 //       field_function=fieldfuncs);
-// Example(3D,NoAxes): A complex example using ellipsoids, spheres, and a torus to make a tetrahedral object with rounded feet and a ring on top. The bottoms of the feet are flattened by limiting the minimum z value of the bounding box. The center of the object is thick due to the contributions of four ellipsoids converging. Designing an object like this using metaballs requires trial and error with low-resolution renders.
+// Example(3D,Med,NoAxes,VPR=[55,0,0],VPD=200,VPT=[7,2,2]): A complex example using ellipsoids, spheres, and a torus to make a tetrahedral object with rounded feet and a ring on top. The bottoms of the feet are flattened by limiting the minimum z value of the bounding box. The center of the object is thick due to the contributions of four ellipsoids converging. Designing an object like this using metaballs requires trial and error with low-resolution renders.
 //   ztheta = 90-acos(-1/3);
 //   cz = cos(ztheta);
 //   sz = sin(ztheta);
@@ -1302,8 +1311,7 @@ let(
 //       zrot(-120, p=[32*cz,0,32*sz])];
 //   cutoff = 40; // extent of influence of each ball
 //   rotation = [
-//       [0,90,0], [0,-ztheta,0],
-//       [0,-ztheta,120], [0,-ztheta,-120],
+//       [0,90,0], [0,-ztheta,0], [0,-ztheta,120], [0,-ztheta,-120],
 //       [0,0,0], undef, undef, undef];
 //   axis = [
 //       undef, undef, undef, undef,
@@ -1319,9 +1327,9 @@ let(
 //   boundingbox = [[-23,-36,-15], [39,36,46]];
 //   
 //   // useful to save as VNF for copies and manipulations
-//   vnf = metaballs(voxelsize, boundingbox, isovalue=isovalue,
-//       ball_centers=centers, charge=charge, ball_type=type,
-//       additional=axis, rotation=rotation, radial_cutoff=cutoff);
+//   vnf = metaballs(voxelsize, boundingbox, isovalue=isovalue, ball_centers=centers,
+//       charge=charge, ball_type=type, additional=axis, rotation=rotation,
+//       radial_cutoff=cutoff);
 //   vnf_polyhedron(vnf);
 
 module metaballs(voxel_size, bounding_box, isovalue, ball_centers, charge=10, ball_type=MB_SPHERE, rotation=undef, field_function=undef, additional=undef, radial_cutoff=INF, close_clip=true, show_stats=false) {
