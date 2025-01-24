@@ -31,7 +31,7 @@ Rotations are prioritized over inversions so that 3 of the 6 cases containing am
 
 The cube index determines the sequence of edges to split. The index ranges from 0 to 255, representing all possible combinations of the 8 corners of the cube being greater or less than the isosurface threshold. For example, 10000110 (8-bit binary for decimal index 134) has corners 7, 2, and 3 greater than the threshold. After determining the cube's index value, the triangulation order is looked up in a table.
 
-Axes are:
+Axes are
      z
    (top)
      |  y (back)
@@ -1276,7 +1276,6 @@ let(
 //      ball_centers=centers, charge=charges, ball_type=type,
 //      additional=axis_orient);
 // Example(3D): Demonstration of a custom metaball function, in this case a sphere with some random noise added to its electric field.
-//   
 //   noisy_sphere = function (cdist, charge, additional,
 //                   rotation_matrix_unused, rcutoff=INF)
 //       let(
