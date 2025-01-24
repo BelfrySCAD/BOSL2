@@ -636,7 +636,7 @@ _MCTriangleTable_reverse = [
 // Function&Module: isosurface()
 // Synopsis: Creates a 3D isosurface.
 // SynTags: Geom,VNF
-// Topics: Advanced Modeling
+// Topics: Isosurfaces, VNF Generators
 // Usage: As a module
 //   isosurface(voxel_size, bounding_box, isovalue, field_function, [additional=], [reverse=], [close_clip=], [show_stats=]);
 // Usage: As a function
@@ -776,7 +776,7 @@ function isosurface(voxel_size, bounding_box, isovalue, field_function, addition
 // Function&Module: isosurface_array()
 // Synopsis: Creates a 3D isosurface from a 3D array of densities.
 // SynTags: Geom,VNF
-// Topics: Advanced Modeling
+// Topics: Isosurfaces, VNF Generators
 // Usage: As a module
 //   isosurface_array(voxel_size, isovalue, fields, [origin=], [reverse=], [close_clip=], [show_stats=]);
 // Usage: As a function
@@ -1182,7 +1182,8 @@ let(
 // Function&Module: metaballs()
 // Synopsis: Creates a model of metaballs within a bounding box.
 // SynTags: Geom,VNF
-// Topics: Advanced Modeling
+// Topics: Metaballs, Isosurfaces, VNF Generators
+// See Also: isosurface_array()
 // Usage: As a module
 //   metaballs(voxel_size, bounding_box, isovalue, ball_centers, [ball_sizes=], [ball_type=], [rotation=], [field_function=], [radial_cutoff=], [close_clip=], [show_stats=]);
 // Usage: As a function
