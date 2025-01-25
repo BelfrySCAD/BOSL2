@@ -29,7 +29,7 @@ Unlike the original paper (Marching Cubes: A High Resolution 3D Surface Construc
 
 Rotations are prioritized over inversions so that 3 of the 6 cases containing ambiguous faces are never added. 3 extra cases are added as a post-process, overriding inversions through custom-built rotations to eliminate the remaining ambiguities.
 
-The cube index determines the sequence of edges to split. The index ranges from 0 to 255, representing all possible combinations of the 8 corners of the cube being greater or less than the isosurface threshold. For example, 10000110 (8-bit binary for decimal index 134) has corners 7, 2, and 3 greater than the threshold. After determining the cube's index value, the triangulation order is looked up in a table.
+The cube index determines the sequence of edges to split. The index ranges from 0 to 255, representing all possible combinations of the 8 corners of the cube being greater or less than the isosurface threshold. For example, 10000110 (8-bit binary for decimal index 134) has corners 2, 3, and 7 greater than the threshold. After determining the cube's index value, the triangulation order is looked up in a table.
 
 Axes are
      z
@@ -58,9 +58,9 @@ Vertex and face layout for triangulating one voxel face that corrsesponds to a s
 
                     4(back)
                3 +----------+ 7
-                /:  5(top) /#
-               / :        / #
-            1 +==========+5 #    <-- 3 (side)
+                /:  5(top) /|
+               / :        / |
+            1 +==========+5 |    <-- 3 (side)
 0(side) -->   # 2+ - - - # -+ 6
               # /        # /
               #/  2(bot) #/
@@ -663,7 +663,8 @@ _MCTriangleTable_reverse = [
 //   smaller for final rendering. If the isosurface fits completely within the bounding
 //   box, you can call {{pointlist_bounds()}} on `vnf[0]` returned from the
 //   `isosurface()` function to get an idea of a more optimal smaller bounding box to use,
-//   possibly allowing increasing resolution by decresing the voxel size.
+//   possibly allowing increasing resolution by decresing the voxel size. You can also set
+//   the parameter `show_stats=true` to get the bounds of the voxels containing the surface.
 //   .
 //   The point list in the VNF structure contains many duplicated points. This is not a
 //   problem for rendering the shape, but if you want to eliminate these, you can pass
@@ -704,7 +705,7 @@ _MCTriangleTable_reverse = [
 //   bbox = [[-100,-100,-100], [100,100,100]];
 //   isosurface(voxel_size=5, bounding_box=bbox, isovalue=0,
 //       field_function=gyroid, additional=200);
-// Example(3D,ThrownTogether,NoAxes): To make the gyroid a double-sided surface, we need to specify a small range around zero for `isovalue`. Now we have a double-sided surface although with `clip_close=false` the edges are not closed where the surface is clipped by the bounding box.
+// Example(3D,ThrownTogether,NoAxes): To make the gyroid a double-sided surface, we need to specify a small range around zero for `isovalue`. Now we have a double-sided surface although with `close_clip=false` the edges are not closed where the surface is clipped by the bounding box.
 //   gyroid = function (xyz, wavelength) let(
 //       p = 360/wavelength,
 //       px = p*xyz[0],
