@@ -69,6 +69,7 @@ PrioritizeFiles:
   tripod_mounts.scad
   walls.scad
   wiring.scad
+  isosurface.scad
 DefineHeader(BulletList): Side Effects
 DefineHeader(Table;Headers=Anchor Name|Position): Named Anchors
 DefineHeader(Table;Headers=Anchor Type|What it is): Anchor Types
