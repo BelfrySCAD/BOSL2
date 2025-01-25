@@ -42,6 +42,9 @@
 //   and intermediate values of `u` fill in the curve in a non-uniform fashion.  This function uses an optimized method which
 //   is best when `u` is a long list and the bezier degree is 10 or less.  The degree of the bezier
 //   curve is `len(bezier)-1`.
+//   .
+//   Note that if you have a bezier **path** (see below) then you should use {{bezpath_points()}} to
+//   evaluate the points on that bezier path.  This function is for a single bezier.  
 // Arguments:
 //   bezier = The list of endpoints and control points for this bezier curve.
 //   u = Parameter values for evaluating the curve, given as a single value, a list or a range.  
@@ -194,6 +197,9 @@ function _bezier_matrix(N) =
 //   of the bezier curve, but you still get the same number of (more tightly spaced) points.  
 //   The distance between the points will *not* be equidistant.  
 //   The degree of the bezier curve is one less than the number of points in `curve`.
+//   .
+//   Note that if you have a bezier **path** (see below) then you should use {{bezpath_curve()}} to
+//   evaluate the that bezier path.  This function is for a single bezier.  
 // Arguments:
 //   bezier = The list of control points that define the Bezier curve. 
 //   splinesteps = The number of segments to create on the bezier curve.  Default: 16
