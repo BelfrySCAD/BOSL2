@@ -707,7 +707,7 @@ function path_to_bezcornerpath(path, closed, size, relsize) =
 ///   relative = if true, curvesize is a proportion between 0 and 1. If false, curvesize is an absolute distance that gets converted to a proportion internally.
 function _bez_path_corner(p, curvesize, relative, mincurvesize=0.001) =
 is_collinear(p)
-? lerpn(p[0], p[2], 6)
+? lerpn(p[0], lerp(p[0],p[2],5/6), 6)
 : let(
     p1 = p[0], p2 = p[1], p3 = p[2],
     a0 = 0.5*vector_angle(p1, p2, p3),
