@@ -23,13 +23,13 @@ include <structs.scad>
 //   .
 //   The `cut` parameter specifies the distance from the unrounded corner to the rounded tip, so how
 //   much of the corner to "cut" off.  This can be easier to understand than setting a circular radius, which can be
-//   unexpectedly extreme when the corner is very sharp.  It also allows a systematic specification of
+//   unexpectedly extreme when the corner is sharp.  It also allows a systematic specification of
 //   corner treatments that are the same size for all corner treatments.
 //   .
 //   The `joint` parameter specifies the distance
 //   away from the corner along the path where the roundover or chamfer should start.  This parameter is good for ensuring that
-//   your roundover will fit on the polygon or polyhedron, since you can easily tell whether you have enough space, and whether
-//   adjacent corner treatments will interfere.
+//   your roundover fits on the polygon or polyhedron, because you can easily tell whether you have enough space, and whether
+//   adjacent corner treatments interfere.
 //   .
 //   For circular rounding you can use the `radius` or `r` parameter to set the rounding radius.
 //   .
@@ -39,8 +39,8 @@ include <structs.scad>
 //   ranges from 0 to 1, with a default of 0.5.  Larger values gives a more 
 //   abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
 //   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
-//   not be continuous in practice.  If you set it very small then the transition is so gradual that
-//   the length of the roundover may be extremely long, and the actual rounded part of the curve may be very small.  
+//   not be continuous in practice.  If you set it small then the transition is so gradual that
+//   the length of the roundover may be extremely long, and the actual rounded part of the curve may be small.  
 // Figure(2D,Med,NoAxes):  Parameters of a "circle" roundover
 //   h = 18;
 //   w = 12.6;
@@ -154,7 +154,7 @@ include <structs.scad>
 //   * The `cut` parameter specifies the distance from the unrounded corner to the rounded tip, so how
 //   much of the corner to "cut" off.  
 //   * The `joint` parameter specifies the distance
-//   away from the corner along the path where the roundover or chamfer should start.  This makes it easy to ensure your roundover will fit,
+//   away from the corner along the path where the roundover or chamfer should start.  This makes it easy to ensure your roundover fits,
 //   so use it if you want the largest possible roundover.  
 //   * For circular rounding you can use the `radius` or `r` parameter to set the rounding radius.
 //   * For chamfers you can use the `width` parameter, which sets the width of the chamfer edge.  
@@ -163,10 +163,10 @@ include <structs.scad>
 //   type of rounding also accepts the `k` parameter, between 0 and 1, which specifies how fast the curvature changes at
 //   the joint.  The default is `k=0.5`.  
 //   .
-//   If you select curves that are too large to fit the function will fail with an error.  You can set `verbose=true` to
+//   If you select curves that are too large to fit, the function fails with an error.  You can set `verbose=true` to
 //   get a message showing a list of scale factors you can apply to your rounding parameters so that the
-//   roundovers will fit on the curve.  If the scale factors are larger than one
-//   then they indicate how much you can increase the curve sizes before collisions will occur.
+//   roundovers fit on the curve.  If the scale factors are larger than one
+//   then they indicate how much you can increase the curve sizes before collisions occur.
 //   .
 //   The parameters `radius`, `cut`, `joint` and `k` can be numbers, which round every corner using the same parameters, or you
 //   can specify a list to round each corner with different parameters.  If the curve is not closed then the first and last points
@@ -174,8 +174,8 @@ include <structs.scad>
 //   or you can specify a list that has length len(path)-2, omitting the two dummy values.
 //   .
 //   If your input path includes collinear points you must use a cut or radius value of zero for those "corners".  You can
-//   choose a nonzero joint parameter when the collinear points form a 180 degree angle.  This will cause extra points to be inserted. 
-//   If the collinear points form a spike (0 degree angle) then round_corners will fail. 
+//   choose a nonzero joint parameter when the collinear points form a 180 degree angle.  This causes extra points to be inserted. 
+//   If the collinear points form a spike (0 degree angle), then `round_corners()` fails. 
 //   .
 //   Examples:
 //   * `method="circle", radius=2`:
@@ -183,18 +183,18 @@ include <structs.scad>
 //   * `method="smooth", cut=2`:
 //       Rounds every point with continuous curvature rounding with a cut of 2, and a default 0.5 smoothing parameter
 //   * `method="smooth", cut=2, k=0.3`:
-//       Rounds every point with continuous curvature rounding with a cut of 2, and a very gentle 0.3 smoothness setting
+//       Rounds every point with continuous curvature rounding with a cut of 2, and a gentle 0.3 smoothness setting
 //   .
 //   The number of segments used for roundovers is determined by `$fa`, `$fs` and `$fn` as usual for
 //   circular roundovers.  For continuous curvature roundovers `$fs` and `$fn` are used and `$fa` is
 //   ignored.  Note that $fn is interpreted as the number of points on the roundover curve, which is
 //   not equivalent to its meaning for rounding circles because roundovers are usually small fractions
-//   of a circular arc.  As usual, $fn overrides $fs.  When doing continuous curvature rounding be sure to use lots of segments or the effect
-//   will be hidden by the discretization.  Note that if you use $fn with "smooth" then $fn points are added at each corner.
+//   of a circular arc.  As usual, $fn overrides $fs.  When doing continuous curvature rounding, be sure to use lots of segments or the effect
+//   would be hidden by the discretization.  Note that if you use $fn with "smooth" then $fn points are added at each corner.
 //   This guarantees a specific output length.  It also means that if
-//   you set `joint` nonzero on a flat "corner", with collinear points, you will get $fn points at that "corner."
-//   If you have two roundovers that fully consume a segment then they share a point where they meet in the segment, which means the output
-//   point count will be decreased by one.  
+//   you set `joint` nonzero on a flat "corner", with collinear points, you get `$fn` points at that "corner."
+//   If you have two roundovers that fully consume a segment, then they share a point where they meet in the segment, which means the output
+//   point count decreases by one.  
 // Arguments:
 //   path = list of 2d or 3d points defining the path to be rounded.
 //   method = rounding method to use.  Set to "chamfer" for chamfers, "circle" for circular rounding and "smooth" for continuous curvature 4th order bezier rounding.  Default: "circle"
@@ -232,7 +232,7 @@ include <structs.scad>
 //   radii = [1.8, 0, 2, 0.3, 1.2, 0];
 //   polygon(round_corners(shape, radius = radii,$fn=64));
 //   color("red") down(.1) polygon(shape);
-// Example(2D,Med): Continuous curvature rounding, different at every corner, with varying smoothness parameters as well, and `$fs` set very small.  Note that `$fa` is ignored here with method set to "smooth".
+// Example(2D,Med): Continuous curvature rounding, different at every corner, with varying smoothness parameters as well, and `$fs` set small.  Note that `$fa` is ignored here with method set to "smooth".
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   cuts = [1.5,0,2,0.3, 1.2, 0];
 //   k = [0.6, 0.5, 0.5, 0.7, 0.3, 0.5];
@@ -302,7 +302,7 @@ include <structs.scad>
 //   z = count(40)*.2+squareind;
 //   path3d = hstack(spiral,z);                                   // 3D spiral
 //   rounding = squareind/20;
-//       // Setting k=1 means curvature won't be continuous, but curves are as round as possible
+//       // Setting k=1 means curvature is not continuous, but curves are as round as possible
 //       // Try changing the value to see the effect.
 //   rpath = round_corners(path3d, joint=rounding, k=1, method="smooth", closed=false);
 //   path_sweep( regular_ngon(n=36, or=.1), rpath);
@@ -322,7 +322,7 @@ include <structs.scad>
 //   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
 //   polygon(round_corners(path,cut = [0.85,3*0.85,2.13, 10.15],
 //                         method="circle",verbose=true));
-// Example(2D): Using the `joint` parameter it's easier to understand whether your roundvers will fit.  We can guarantee a fairly large roundover on any path by picking each one to use up half the segment distance along the shorter of its two segments:
+// Example(2D): Using the `joint` parameter, it's easier to understand whether your roundvers can fit.  We can guarantee a fairly large roundover on any path by picking each one to use up half the segment distance along the shorter of its two segments:
 //   $fn=64;
 //   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
 //   path_len = path_segment_lengths(path,closed=true);
@@ -467,10 +467,10 @@ function round_corners(path, method="circle", radius, r, cut, joint, width, k, c
 // Computes the continuous curvature control points for a corner when given as
 // input three points in a list defining the corner.  The points must be
 // equidistant from each other to produce the continuous curvature result.
-// The output control points will include the 3 input points plus two
+// The output control points include the 3 input points plus two
 // interpolated points.
 //
-// k is the curvature parameter, ranging from 0 for very slow transition
+// k is the curvature parameter, ranging from 0 for slow transition
 // up to 1 for a sharp transition that doesn't have continuous curvature any more
 function _smooth_bez_fill(points,k) = [
         points[0],
@@ -486,7 +486,7 @@ function _smooth_bez_fill(points,k) = [
 // If parm is a scalar then it is treated as the curvature and the control
 // points are calculated using _smooth_bez_fill.  Otherwise, parm is assumed
 // to be a pair [d,k] where d is the length of the curve.  The length is
-// calculated from the input point list and the control point list will not
+// calculated from the input point list and the control point list does not
 // necessarily include points[0] or points[2] on its output.
 //
 // The number of points output is $fn if it is set.  Otherwise $fs is used
@@ -599,9 +599,9 @@ function _rounding_offsets(edgespec,z_dir=1) =
 // SynTags: Path
 // Topics: Rounding, Paths
 // See Also: round_corners(), smooth_path(), path_join(), offset_stroke()
-// Usage ("edges" method) (default):
+// Usage: "edges" method
 //   smoothed = smooth_path(path, [tangents], [size=|relsize=], [method="edges"], [splinesteps=], [closed=], [uniform=]);
-// Usage ("corners" method):
+// Usage: "corners" method
 //   smoothed = smooth_path(path, [size=|relsize=], method="corners", [splinesteps=], [closed=]);
 // Description:
 //   Smooths the input path, creating a continuous curve using a cubic spline, using one of two methods.
@@ -781,7 +781,7 @@ function _scalar_to_vector(value,length,varname) =
 //   .
 //   The rounding is created by extending the two clipped paths to define a corner point.  If the extensions of
 //   the paths do not intersect, the function issues an error.  When closed=true the final path should actually close
-//   the shape, repeating the starting point of the shape.  If it does not, then the rounding will fill the gap.
+//   the shape, repeating the starting point of the shape.  If it does not, then the rounding fills the gap.
 //   .
 //   The number of segments in the roundovers is set based on $fn and $fs.  If you use $fn it specifies the number of
 //   segments in the roundover, regardless of its angular extent.
@@ -965,13 +965,13 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   .
 //   The `check_valid` and `quality`  parameters are passed through to `offset()`
 //   .
-//   If `width` is a scalar then the output will be a centered stroke of the specified width.  If width
-//   is a list of two values then those two values will define the stroke side positions relative to the center line, where
+//   If `width` is a scalar then the output is a centered stroke of the specified width.  If width
+//   is a list of two values then those two values define the stroke side positions relative to the center line, where
 //   as with offset(), the shift is to the left for open paths and outward for closed paths.  For example,
-//   setting `width` to `[0,1]` will create a stroke of width 1 that extends entirely to the left of the input, and and [-4,-6]
-//   will create a stroke of width 2 offset 4 units to the right of the input path.
+//   setting `width` to `[0,1]` creates a stroke of width 1 that extends entirely to the left of the input, and and [-4,-6]
+//   creates a stroke of width 2 offset 4 units to the right of the input path.
 //   .
-//   If closed==false then the function form will return a path.  If closed==true then it will return a region.  The `start` and
+//   If closed==false then the function form returns a path.  If closed==true then it returns a region. The `start` and
 //   `end` parameters are forbidden for closed paths.
 //   .
 //   Three simple end treatments are supported, "flat" (the default), "round" and "pointed".  The "flat" treatment
@@ -993,12 +993,12 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //      - os_round(cut, [angle|absangle], [k]).  Rounded ends with the specified cut distance, based on the specified angle or absolute angle.  The `k` parameter is the smoothness parameter for continuous curvature rounding.  See [Types of Roundover](rounding.scad#subsection-types-of-roundover) for more details on
 //        continuous curvature rounding.  
 //   .
-//   Note that `offset_stroke()` will attempt to apply roundovers and angles at the ends even when it means deleting segments of the stroke, unlike round_corners which only works on a segment adjacent to a corner.  If you specify an overly extreme angle it will fail to find an intersection with the stroke and display an error.  When you specify an angle the end segment is rotated around the center of the stroke and the last segment of the stroke one one side is extended to the corner.
+//   Note that `offset_stroke()` attempts to apply roundovers and angles at the ends even when it means deleting segments of the stroke, unlike `round_corners()`, which works only on a segment adjacent to a corner.  If you specify an overly extreme angle, it fails to find an intersection with the stroke and display an error.  When you specify an angle, the end segment is rotated around the center of the stroke and the last segment of the stroke one one side is extended to the corner.
 //   .
 //   The `$fn` and `$fs` variables are used in the usual way to determine the number of segments for roundings produced by the offset
 //   invocations and roundings produced by the semi-circular "round" end treatment.  The os_round() end treatment
-//   uses a bezier curve, and will produce segments of approximate length `$fs` or it will produce `$fn` segments.
-//   (This means that even a quarter circle will have `$fn` segments, unlike the usual case where it would have `$fn/4` segments.)
+//   uses a bezier curve, and produces segments of approximate length `$fs` or it produces `$fn` segments.
+//   This means that even a quarter circle has `$fn` segments, unlike the usual case where it would have `$fn/4` segments.
 // Arguments:
 //   path = 2d path that defines the stroke
 //   width = width of the stroke, a scalar or a vector of 2 values giving the offset from the path.  Default: 1
@@ -1078,7 +1078,7 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //     color("red")down(.1)offset_stroke(arc, width=2, rounded=false, start=os_flat(-45),
 //                                                                    end=os_flat(20));
 //   }
-// Example(2D):  Negative cut values produce a flaring end.  Note how the absolute angle aligns the ends of the first example withi the axes.  In the second example positive and negative cut values are combined.  Note also that very different cuts are needed at the start end to produce a similar looking flare.
+// Example(2D):  Negative cut values produce a flaring end.  Note how the absolute angle aligns the ends of the first example withi the axes.  In the second example positive and negative cut values are combined.  Also, different cuts are needed at the start end to produce a similar-looking flare.
 //   arc = arc(points=[[1,1],[3,4],[6,3]],n=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];
 //   offset_stroke(path, width=2, rounded=false,start=os_round(cut=-1, abs_angle=90),
@@ -1090,7 +1090,7 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
 //   for(i=[0:.25:2])
 //     offset_stroke(path, rounded=false,width = [i,i+.08]);
-// Example(2D):  Setting rounded=true in the above example makes a very big difference in the result.  
+// Example(2D):  Setting rounded=true in the above example makes a big difference in the result.  
 //   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
 //   for(i=[0:.25:2])
 //     offset_stroke(path, rounded=true,width = [i,i+.08], $fn=36);
@@ -1344,24 +1344,24 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 // Usage: most common function arguments.  See Arguments list below for more.
 //   vnf = offset_sweep(path, [height|length=|h=|l=], [bottom], [top], [offset=], ...);
 // Description:
-//   Takes a 2d path as input and extrudes it upwards and/or downward.  Each layer in the extrusion is produced using `offset()` to expand or shrink the previous layer.  When invoked as a function returns a VNF; when invoked as a module produces geometry.  
+//   Takes a 2d path as input and extrudes it upward and/or downward.  Each layer in the extrusion is produced using `offset()` to expand or shrink the previous layer.  When invoked as a function returns a VNF; when invoked as a module produces geometry.  
 //   Using the `top` and/or `bottom` arguments you can specify a sequence of offsets values, or you can use several built-in offset profiles that
 //   provide end treatments such as roundovers.
 //   The height of the resulting object can be specified using the `height` argument, in which case `height` must be larger than the combined height
-//   of the end treatments.  If you omit `height` then the object height will be the height of just the top and bottom end treatments.  
+//   of the end treatments.  If you omit `height`, then the object height is the height of just the top and bottom end treatments.  
 //   .
 //   The path is shifted by `offset()` multiple times in sequence
-//   to produce the final shape (not multiple shifts from one parent), so coarse definition of the input path will degrade
+//   to produce the final shape (not multiple shifts from one parent), so coarse definition of the input path degrades
 //   from the successive shifts.  If the result seems rough or strange try increasing the number of points you use for
 //   your input.  If you get unexpected corners in your result you may have forgotten to set `$fn` or `$fa` and `$fs`.  
 //   Be aware that large numbers of points (especially when check_valid is true) can lead to lengthy run times.  If your
 //   shape doesn't develop new corners from the offsetting you may be able to save a lot of time by setting `check_valid=false`.  Be aware that
-//   disabling the validity check when it is needed can generate invalid polyhedra that will produce CGAL errors upon
-//   rendering.  Such validity errors will also occur if you specify a self-intersecting shape.
-//   The offset profile is quantized to 1/1024 steps to avoid failures in offset() that can occur with very tiny offsets.
+//   disabling the validity check when it is needed can generate invalid polyhedra that produce CGAL errors upon
+//   rendering.  Such validity errors also occur if you specify a self-intersecting shape.
+//   The offset profile is quantized to 1/1024 steps to avoid failures in offset() that can occur with tiny offsets.
 //   .
 //   The build-in profiles are: circular rounding, teardrop rounding, continuous curvature rounding, and chamfer.
-//   Also note that when a rounding radius is negative the rounding will flare outwards.  The easiest way to specify
+//   Also, when a rounding radius is negative, the rounding flares outward.  The easiest way to specify
 //   the profile is by using the profile helper functions.  These functions take profile parameters, as well as some
 //   general settings and translate them into a profile specification, with error checking on your input.  The description below
 //   describes the helper functions and the parameters specific to each function.  Below that is a description of the generic
@@ -1369,15 +1369,15 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   on continuous curvature rounding, see [Types of Roundover](rounding.scad#subsection-types-of-roundover). 
 //   .
 //   - profile: os_profile(points)
-//     Define the offset profile with a list of points.  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  If the y value ever decreases then you might create a self-intersecting polyhedron, which is invalid.  Such invalid polyhedra will create cryptic assertion errors when you render your model and it is your responsibility to avoid creating them.  Note that the starting point of the profile is the center of the extrusion.  If you use a profile as the top it will rise upwards.  If you use it as the bottom it will be inverted, and will go downward.
+//     Define the offset profile with a list of points.  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  If the y value ever decreases then you might create a self-intersecting polyhedron, which is invalid.  Such invalid polyhedra create cryptic assertion errors when you render your model and it is your responsibility to avoid creating them.  Note that the starting point of the profile is the center of the extrusion.  If you use a profile as the top, it rises upward.  If you use it as the bottom, it is inverted and goes downward.
 //   - circle: os_circle(r|cut).  Define circular rounding either by specifying the radius or cut distance.
 //   - smooth: os_smooth(cut|joint, [k]).  Define continuous curvature rounding, with `cut` and `joint` as for round_corners. The k parameter controls how fast the curvature changes and should be between 0 and 1.  
 //   - teardrop: os_teardrop(r|cut).  Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
-//   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle will be ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
+//   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle is ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
 //   - mask: os_mask(mask, [out]).  Create a profile from one of the [2d masking shapes](shapes2d.scad#5-2d-masking-shapes).  The `out` parameter specifies that the mask should flare outward (like crown molding or baseboard).  This is set false by default.  
 //   .
 //   The general settings that you can use with all of the helper functions are mostly used to control how offset_sweep() calls the offset() function.
-//   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step will extend the resulting object beyond the height you specify.  It is ignored by anchoring.  Default: 0
+//   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step extends the resulting object beyond the height you specify.  It is ignored by anchoring.  Default: 0
 //   - check_valid: passed to offset().  Default: true
 //   - quality: passed to offset().  Default: 1
 //   - steps: Number of vertical steps to use for the profile.  (Not used by os_profile).  Default: 16
@@ -1386,7 +1386,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   Many of the arguments are described as setting "default" values because they establish settings which may be overridden by
 //   the top and bottom profile specifications.
 //   .
-//   You will generally want to use the above helper functions to generate the profiles.
+//   You should use the above helper functions to generate the profiles.
 //   The profile specification is a list of pairs of keywords and values, e.g. ["for","offset_sweep","r",12, type, "circle"]. The keywords are
 //   - "for" - must appear first in the list and have the value "offset_sweep"
 //   - "type" - type of rounding to apply, one of "circle", "teardrop", "chamfer", "smooth", or "profile" (Default: "circle")
@@ -1408,8 +1408,8 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   each offset operation.  Since the offsets are done one after another, each on the output of the previous one, this leads to
 //   exponential growth in the number of vertices.  This can lead to long run times or yield models that
 //   run out of recursion depth and give a cryptic error.  Furthermore, the generated vertices are distributed non-uniformly.  Generally you
-//   will get a similar or better looking model with fewer vertices using "round" instead of
-//   "chamfer".  Use the "chamfer" style offset only in cases where the number of steps is very small or just one (such as when using
+//   get a similar or better looking model with fewer vertices using "round" instead of
+//   "chamfer".  Use the "chamfer" style offset only in cases where the number of steps is small or just one (such as when using
 //   the `os_chamfer` profile type).
 //   .
 //   This module offers four anchor types.  The default is "hull" in which VNF anchors are placed on the VNF of the **unrounded** object.  You
@@ -1437,7 +1437,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
 //   anchor = Translate so anchor point is at the origin.  Default: "base"
 //   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
-//   orient = Vector to rotate top towards after spin  
+//   orient = Vector to rotate top toward after spin  
 //   atype = Select "hull", "intersect", "surf_hull" or "surf_intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Anchor Types:
@@ -1860,7 +1860,7 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 //   unexpected results.
 //   .
 //   The build-in profiles are: circular rounding, teardrop rounding, continuous curvature rounding, and chamfer.
-//   Also note that when a rounding radius is negative the rounding will flare outwards.  The easiest way to specify
+//   Also, when a rounding radius is negative, the rounding flares outward.  The easiest way to specify
 //   the profile is by using the profile helper functions.  These functions take profile parameters, as well as some
 //   general settings and translate them into a profile specification, with error checking on your input.  The description below
 //   describes the helper functions and the parameters specific to each function.  Below that is a description of the generic
@@ -1869,25 +1869,25 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 //   on continuous curvature rounding, see [Types of Roundover](rounding.scad#subsection-types-of-roundover). 
 //   .
 //   The final shape is created by combining convex hulls of small extrusions.  The thickness of these small extrusions may result
-//   your model being slightly too long (if the curvature at the end is flaring outward), so if the exact length is very important
+//   your model being slightly too long (if the curvature at the end is flaring outward), so if the exact length is important,
 //   you may need to intersect with a bounding cube.  (Note that extra length can also be intentionally added with the `extra` argument.)
 //   .
 //   - profile: os_profile(points)
-//     Define the offset profile with a list of points.  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  If the y value ever decreases then you might create a self-intersecting polyhedron, which is invalid.  Such invalid polyhedra will create cryptic assertion errors when you render your model and it is your responsibility to avoid creating them.  Note that the starting point of the profile is the center of the extrusion.  If you use a profile as the top it will rise upwards.  If you use it as the bottom it will be inverted, and will go downward.
+//     Define the offset profile with a list of points.  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  If the y value ever decreases then you might create a self-intersecting polyhedron, which is invalid.  Such invalid polyhedra create cryptic assertion errors when you render your model and it is your responsibility to avoid creating them.  Note that the starting point of the profile is the center of the extrusion.  If you use a profile as the top, it rises upward. If you use it as the bottom, it is inverted and goes downward.
 //   - circle: os_circle(r|cut).  Define circular rounding either by specifying the radius or cut distance.
 //   - smooth: os_smooth(cut|joint, [k]).  Define continuous curvature rounding, with `cut` and `joint` as for round_corners.  The k parameter controls how fast the curvature changes and should be between 0 and 1.
 //   - teardrop: os_teardrop(r|cut).  Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
-//   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle will be ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
+//   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle is ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
 //   .
 //   The general settings that you can use with all of the helper functions are mostly used to control how offset_sweep() calls the offset() function.
-//   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step will extend the resulting object beyond the height you specify.  Default: 0
+//   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step extends the resulting object beyond the height you specify.  Default: 0
 //   - steps: Number of vertical steps to use for the profile.  (Not used by os_profile).  Default: 16
 //   - offset: Select "round" (r=), "delta" (delta=), or "chamfer" offset types for offset.  Default: "round"
 //   .
 //   Many of the arguments are described as setting "default" values because they establish settings which may be overridden by
 //   the top and bottom profile specifications.
 //   .
-//   You will generally want to use the above helper functions to generate the profiles.
+//   You should use the above helper functions to generate the profiles.
 //   The profile specification is a list of pairs of keywords and values, e.g. ["r",12, type, "circle"]. The keywords are
 //   - "type" - type of rounding to apply, one of "circle", "teardrop", "chamfer", "smooth", or "profile" (Default: "circle")
 //   - "r" - the radius of the roundover, which may be zero for no roundover, or negative to round or flare outward.  Default: 0
@@ -1920,7 +1920,7 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 //   joint = default joint value for smooth roundover.
 //   k = default curvature parameter value for "smooth" roundover
 //   convexity = convexity setting for use with polyhedron.  Default: 10
-// Example: Chamfered elliptical prism.  If you stretch a chamfered cylinder the chamfer will be uneven.
+// Example: Chamfered elliptical prism.  If you stretch a chamfered cylinder, the chamfer becomes uneven.
 //   convex_offset_extrude(bottom = os_chamfer(height=-2),
 //                         top=os_chamfer(height=1), height=7)
 //     xscale(4)circle(r=6,$fn=64);
@@ -2104,38 +2104,38 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   the joint distance away from the corner for the rounding curve.  The k parameter ranges from 0 to 1 with a default of 0.5.  Larger
 //   values give a more abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
 //   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
-//   not be continuous in practice.  A value of 0.92 is a good approximation to a circle.  If you set it very small then the transition
-//   is so gradual that the roundover may be very small.  If you want a very smooth roundover, set the joint parameter as large as possible and
+//   not be continuous in practice.  A value of 0.92 is a good approximation to a circle.  If you set it small then the transition
+//   is so gradual that the roundover may be small.  If you want a smooth roundover, set the joint parameter as large as possible and
 //   then adjust the k value down as low as gives a sufficiently large roundover.  See
 //   [Types of Roundover](rounding.scad#subsection-types-of-roundover) for more information on continuous curvature rounding.  
 //   .
 //   You can specify the bottom and top polygons by giving two compatible 3d paths.  You can also give 2d paths and a height/length and the
-//   two shapes will be offset in the z direction from each other.  The final option is to specify just the bottom along with a height/length;
-//   in this case the top will be a copy of the bottom, offset in the z direction by the specified height.
+//   two shapes are offset in the z direction from each other.  The final option is to specify just the bottom along with a height/length;
+//   in this case the top is a copy of the bottom, offset in the z direction by the specified height.
 //   .
 //   You define rounding for all of the top edges, all of the bottom edges, and independently for each of the connecting side edges.
 //   You specify rounding the rounding by giving the joint distance for where the curved section should start.  If the joint distance is 1 then
 //   it means the curved section begins 1 unit away from the edge (in the perpendicular direction).  Typically each joint distance is a scalar
 //   value and the rounding is symmetric around each edge.  However, you can specify a 2-vector for the joint distance to produce asymmetric
 //   rounding which is different on the two sides of the edge.  This may be useful when one one edge in your polygon is much larger than another.
-//   For the top and bottom you can specify negative joint distances.  If you give a scalar negative value then the roundover will flare
-//   outward.  If you give a vector value then a negative value then if joint_top[0] is negative the shape will flare outward, but if
-//   joint_top[1] is negative the shape will flare upward.  At least one value must be non-negative.  The same rules apply for joint_bot.
+//   For the top and bottom you can specify negative joint distances.  If you give a scalar negative value, then the roundover flares
+//   outward.  If you give a vector value then a negative value, then if `joint_top[0]` is negative the shape flares outward, but if
+//   `joint_top[1]` is negative, the shape flares upward.  At least one value must be non-negative.  The same rules apply for joint_bot.
 //   The joint_sides parameter must be entirely nonnegative.
 //   .
-//   If the roundings at two adjacent side edges exceed the width of the face then the polyhedron will have self-intersecting faces, so it will be invalid.
+//   If the roundings at two adjacent side edges exceed the width of the face then the polyhedron becomes invalid due to self-intersecting faces.
 //   Similarly, if the roundings on the top or bottom edges cross the top face and intersect with each other, the resulting polyhedron is invalid:
 //   the top face after the roundings are applied must be a valid, non-degenerate polyhedron.  There are two exceptions:  it is permissible to
 //   construct a top that is a single point or two points.  This means you can completely round a cube by setting the joint to half of
 //   the cube's width.  
-//   If you set `debug` to true the module version will display the polyhedron even when it is invalid and it will show the bezier patches at the corners.
+//   If you set `debug` to true, the module version displays the polyhedron even when it is invalid and it shows the bezier patches at the corners.
 //   This can help troubleshoot problems with your parameters.  With the function form setting debug to true causes run even on invalid cases and to return [patches,vnf] where
 //   patches is a list of the bezier control points for the corner patches.
 //   .
 //   This module offers five anchor types.  The default is "hull" in which VNF anchors are placed on the VNF of the **unrounded** object.  You
 //   can also use "intersect" to get the intersection anchors to the unrounded object. If you prefer anchors that respect the rounding
 //   then use "surf_hull" or "intersect_hull".  Lastly, in the special case of a prism with four sides, you can use "prismoid" anchoring
-//   which will attempt to assign standard prismoid anchors to the shape by assigning as RIGHT the face that is closest to the RIGHT direction,
+//   which attempts to assign standard prismoid anchors to the shape by assigning as RIGHT the face that is closest to the RIGHT direction,
 //   and defining the other anchors around the shape baesd on that choice.  
 //   .
 //   Note that rounded_prism() is not well suited to rounding shapes that have already been rounded, or that have many points.
@@ -2170,7 +2170,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   convexity = convexity parameter for polyhedron(), only for module version.  Default: 10
 //   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
-//   orient = Vector to rotate top towards after spin  (module only)
+//   orient = Vector to rotate top toward after spin  (module only)
 //   atype = Select "prismoid", "hull", "intersect", "surf_hull" or "surf_intersect" anchor types. (module only) Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  (module only) Default: "centroid"
 // Named Anchors:
@@ -2568,7 +2568,7 @@ function _circle_mask(r) =
 //   same dimensions that is has on the plane, with y axis mapping to the z axis and the x axis bending
 //   around the curve of the cylinder.  The angular span of the path on the cylinder must be somewhat
 //   less than 180 degrees, and the path shouldn't have closely spaced points at concave points of high curvature because
-//   this will cause self-intersection in the mask polyhedron, resulting in CGAL failures.
+//   this causes self-intersection in the mask polyhedron, resulting in CGAL failures.
 // Arguments:
 //   r / radius = center radius of the cylindrical shell to cut a hole in
 //   thickness = thickness of cylindrical shell (may need to be slighly oversized)
@@ -2627,7 +2627,7 @@ function _circle_mask(r) =
 //           supershape(step=12,m1=5, n1=0.1,n2=1.7)),$fn=32);
 //     }
 //   }
-// Example: uniform resampling produces a somewhat better result, but room remains for improvement.  The lesson is that concave corners in your cutout cause trouble.  To get a very good result we need to non-uniformly sample the supershape with more points at the star tips and few points at the inner corners.
+// Example: uniform resampling produces a somewhat better result, but room remains for improvement.  The lesson is that concave corners in your cutout cause trouble.  To get a good result we need to non-uniformly sample the supershape with more points at the star tips and few points at the inner corners.
 //   rot(-90) {
 //     $fn=128;
 //     difference(){
@@ -2641,7 +2641,7 @@ function _circle_mask(r) =
 //     }
 //   }
 // Example: The cutout spans 177 degrees.  If you decrease the tube radius to 2.5 the cutout spans over 180 degrees and the model fails.
-//   r=2.6;     // Don't make this much smaller or it will fail
+//   r=2.6;     // Don't make this much smaller or it fails
 //   rot(-90) {
 //     $fn=128;
 //     difference(){
@@ -2794,20 +2794,20 @@ Access to the derivative smoothing parameter?
 //   vnf = join_prism( ... );
 // Description:
 //   This function creates a smooth fillet between one or both ends of an arbitrary prism and various other shapes: a plane, a sphere, a cylinder,
-//   or another arbitrary prism.  The fillet is a continuous curvature rounding with a specified width/height.  This module is very general
-//   and hence has a complex interface.  The examples below form a tutorial on how to use `join_prism` that steps
+//   or another arbitrary prism.  The fillet is a continuous curvature rounding with a specified width/height.  This module is general
+//   and therefore has a complex interface.  The examples below form a tutorial on how to use `join_prism` that steps
 //   through the various options and how they affect the results.  Be sure to check the examples for help understanding how the various options work.
 //   .
 //   When joining between planes this function produces similar results to {{rounded_prism()}}.  This function works best when the prism
 //   cross section is a continuous shape with a high sampling rate and without sharp corners.  If you have sharp corners you should consider
-//   giving them a small rounding first.  When the prism cross section has concavities the fillet size will be limited by the curvature of those concavities.
+//   giving them a small rounding first.  When the prism cross section has concavities the fillet size is limited by the curvature of those concavities.
 //   In contrast, {{rounded_prism()}} works best on a prism that has fewer points and does well with sharp corners, but may encounter problems
 //   with a high sampling rate.  
 //   .
-//   You specify the prism by giving its cross section as a 2D path.  The cross section will always be the orthogonal cross
+//   You specify the prism by giving its cross section as a 2D path.  The cross section is always the orthogonal cross
 //   section of the prism.  Depending on end conditions, the ends may not be perpendicular to the
 //   axis of the prism, but the cross section you give *is* always perpendicular to that cross section.
-// Figure(3D,Big,NoScales,VPR=[74.6, 0, 329.7], VPT=[28.5524, 35.3006, 22.522], VPD=325.228): The layout and terminology used by `join_prism`.  The "base object" is centered on the origin.  The "auxiliary object" (if present) is some distance away so there is room for the "joiner prism" to connect the two objects.  The blue line is the axis of the jointer prism.  It will be at the origin of the shape you supply for defining that prism.  The "root" point of the joiner prism is the point where the prism axis intersects the base.  The prism end point is where the prism axis intersects the auxiliary object.  If you don't give an auxiliary object then the prism end point is distance `length` along the axis from the root.  
+// Figure(3D,Big,NoScales,VPR=[74.6, 0, 329.7], VPT=[28.5524, 35.3006, 22.522], VPD=325.228): The layout and terminology used by `join_prism`.  The "base object" is centered on the origin.  The "auxiliary object" (if present) is some distance away so there is room for the "joiner prism" to connect the two objects.  The blue line is the axis of the jointer prism.  It is at the origin of the shape you supply for defining that prism.  The "root" point of the joiner prism is the point where the prism axis intersects the base.  The prism end point is where the prism axis intersects the auxiliary object.  If you don't give an auxiliary object then the prism end point is distance `length` along the axis from the root.  
 //   aT = right(-10)*back(0)*up(75)*xrot(-35)*zrot(75);
 //   br = 17;
 //   ar = 15;
@@ -2834,50 +2834,49 @@ Access to the derivative smoothing parameter?
 //   You must include a base ("plane", "sphere", "cylinder", "cyl"), or a polygon describing the cross section of a base prism.  If you specify a
 //   sphere or cylinder you must give `base_r` or `base_d` to specify the radius or diameter of the base object.  If you choose a cylinder or a polygonal
 //   prism then the base object appears aligned with the X axis.  In the case of the planar base, the
-//   joining prism will have one end of its axis at the origin.  As shown above, the point where the joining prism attaches to its base is the "root" of the prism.
-//   If you use some other base shape, the root will be adjusted so that it is on the boundary of your shape.  This happens by finding the intersection
+//   joining prism has one end of its axis at the origin.  As shown above, the point where the joining prism attaches to its base is the "root" of the prism.
+//   If you use some other base shape, the root is adjusted so that it is on the boundary of your shape.  This happens by finding the intersection
 //   of the joiner prisms's axis and using that as the root.  By default the prism axis is parallel to the Z axis.  
 //   .
-//   You may give `base_T`, a rotation operator that will be applied to the base.  This is
+//   You may give `base_T`, a rotation operator that is applied to the base.  This is
 //   useful to tilt a planar or cylindrical base.  The `base_T` operator must be an origin-centered rotation like yrot(25).  
 //   .
 //   You may optionally specify an auxiliary shape.  When you do this, the joining prism connects the base to the auxiliary shape,
 //   which must be one of "none", "plane", "sphere", "cyl", or "cylinder".  You can also set it to a polygon to create an arbitrary
 //   prism for the auxiliary shape.  As is the case for the base, auxiliary cylinders and prisms appear oriented along the X axis.  
 //   For a cylinder or sphere you must use `aux_r` or `aux_d` to specify the radius or diameter.
-//   The auxiliary shape appears centered on the origin and will most likely be invalid as an end location unless you translate it to a position
+//   The auxiliary shape appears centered on the origin and is likely to be an invalid end location unless you translate it to a position
 //   away from the base object.  The `aux_T` operator operates on the auxiliary object, and unlike `base_T` can be a rotation that includes translation
 //   operations (or is a non-centered rotation).
 //   .
 //   When you specify an auxiliary object, the joiner prism axis is initially the line connecting the origin (the base center point) to the auxiliary
 //   object center point.  The joiner prism end point is determined analogously to how the root is determined, by intersecting the joiner
-//   prism axis with the auxiliary object.  Note that this means that if `aux_T` is a rotation it will change the joiner prism root, because
-//   the rotated prism axis will intersect the base in a different location.  If you do not give an auxiliary object then you must give
+//   prism axis with the auxiliary object.  Note that this means that if `aux_T` is a rotation it changes the joiner prism root, because
+//   the rotated prism axis intersects the base in a different location.  If you do not give an auxiliary object then you must give
 //   the length/height parameter to specify the prism length.  This gives the length of the prism measured from the root to the end point.
-//   Note that the joint with a curved base may significantly extend the length of the joiner prism: its total length will often be larger than
+//   Note that the joint with a curved base may significantly extend the length of the joiner prism: its total length is often larger than
 //   the length you request.  
 //   .
 //   For the cylinder and spherical objects you may wish to joint a prism to the concave surface.  You can do this by setting a negative
-//   radius for the base or auxiliary object.  When `base_r` is negative, and the joiner prism axis is vertical, the prism root will be **below** the
+//   radius for the base or auxiliary object.  When `base_r` is negative, and the joiner prism axis is vertical, the prism root is **below** the
 //   XY plane.  In this case it is actually possible to use the same object for base and aux and you can get a joiner prism that crosses a cylindrical
 //   or spherical hole.
 //   .
-//   When placing prisms inside a hole, an ambiguity can arise about how to identify the root and end of the joiner prism.  The prism axis will have
+//   When placing prisms inside a hole, an ambiguity can arise about how to identify the root and end of the joiner prism.  The prism axis has
 //   two intersections with a cylinder and both are potentially valid roots.  When the auxiliary object is entirely inside the hole, or the auxiliary
 //   object is a sphere or cylinder with negative radius that intersections the base, both prism directions produce a valid
-//   joiner prism that meets the hole's concave surface, so two valid interpretations exist.  By default, the longer prism will be returned.
+//   joiner prism that meets the hole's concave surface, so two valid interpretations exist.  By default, the longer prism is returned.
 //   You can select the shorter prism by setting `short=true`.  If you specify `short=true` when the base has a negative radius, but only one valid
-//   prism exists, you'll get an error, but it won't clearly identify that a bogus `short=true` was the real cause.  
+//   prism exists, you get an error that doesn't clearly identify that a bogus `short=true` was the real cause.  
 //   .
 //   You can also alter your prism by using the `prism_end_T` operator which applies to the end point of the prism.  It does not effect
 //   the root  of the prism.  The `prism_end_T` operator is applied in a coordinate system where the root of the
-//   prism is the origin, so if you set it to a rotation the prism base will stay rooted at the same location and the prism will rotate 
-//   in the specified fashion.  After `prism_end_T` is applied, the prism axis will probably be different and the resulting new end point will
-//   probably not be on the auxiliary object, or it will have changed the length of the prism.  Therefore, the end point is recalculated
+//   prism is the origin, so if you set it to a rotation, the prism base remains rooted at the same location and the prism rotates
+//   in the specified fashion.  Applying `prism_end_T` likely results in the prism axis being different and the new end point not being on the auxiliary object, or the length of the prism may change.  Therefore, the end point is recalculated
 //   to achieve the specified length (if aux is "none") or to contact the auxiliary object, if you have specified one.  This means, for example,
-//   that setting `prism_end_T` to a scale operation won't change the result because it doesn't alter the prism axis.  
+//   that setting `prism_end_T` to a scale operation doesn't change the result because it doesn't alter the prism axis.  
 //   .
-//   The size of the fillets is determined by the fillet, `fillet_base`, and `fillet_aux` parameters.  The fillet parameter will control both
+//   The size of the fillets is determined by the fillet, `fillet_base`, and `fillet_aux` parameters.  The fillet parameter controls both
 //   ends of the prism, or you can set the ends independently.  The fillets must be nonnegative except when the prism joints a plane.
 //   In this case a negative fillet gives a roundover.  In the case of no auxiliary object you can use `round_end` to round over the planar
 //   far end of the joiner prism.  By default, the fillet is constructed using a method that produces a fillet with a uniform height along
@@ -2887,9 +2886,9 @@ Access to the derivative smoothing parameter?
 //   The overlap is a potentially tricky parameter.  It specifies how much extra material to
 //   create underneath the filleted prism so it overlaps the object that it joins to, ensuring valid unions.
 //   For joins to convex objects you can choose a small value, but when joining to a concave object the overlap may need to be
-//   very large to ensure that the base of the joiner prism is well-behaved.  In such cases you may need to use an intersection
+//   large to ensure that the base of the joiner prism is well-behaved.  In such cases you may need to use an intersection
 //   remove excess base.
-// Figure(2D,Med,NoAxes): Uniform fillet method.  This image shows how we construct a uniform fillet.  The pictures shows the cross section that is perpendicular to the prism.  The blue curve represents the base object surface.  The vertical line is the side of the prism.  To construct a fillet we travel along the surface of the base, following the curve, until we have moved the fillet length, `a`.  This defines the point `u`.  We then construct a tangent line to the base and find its intersection, `v`, with the prism.  Note that if the base is steeply curved, this tangent may fail to intersect, and the algorithm will fail with an error because `v` does not exist.  Finally we locate `w` to be distance `a` above the point where the prism intersects the base object.  The fillet is defined by the `[u,v,w]` triple and is shown in red.  Note that with this method, the fillet is always height `a` above the base, so it makes a uniform curve parallel to the base object.  However, when the base curvature is more extreme, point `v` may end up above point `w`, resulting in an invalid configuration.  It also happens that point `v`, while below `w`, is very close to `w`, so the resulting fillet has an abrupt angle near `w` instead of a smooth transition.  
+// Figure(2D,Med,NoAxes): Uniform fillet method.  This image shows how we construct a uniform fillet.  The pictures shows the cross section that is perpendicular to the prism.  The blue curve represents the base object surface.  The vertical line is the side of the prism.  To construct a fillet we travel along the surface of the base, following the curve, until we have moved the fillet length, `a`.  This defines the point `u`.  We then construct a tangent line to the base and find its intersection, `v`, with the prism.  Note that if the base is steeply curved, this tangent may fail to intersect, and the algorithm fails with an error because `v` does not exist.  Finally we locate `w` to be distance `a` above the point where the prism intersects the base object.  The fillet is defined by the `[u,v,w]` triple and is shown in red.  Note that with this method, the fillet is always height `a` above the base, so it makes a uniform curve parallel to the base object.  However, when the base curvature is more extreme, point `v` may end up above point `w`, resulting in an invalid configuration.  It also happens that point `v`, while below `w`, is close to `w`, so the resulting fillet has an abrupt angle near `w` instead of a smooth transition.  
 //   R=60;
 //   base = R*[cos(70),sin(70)];
 //   end = R*[cos(45),sin(45)];
@@ -2919,7 +2918,7 @@ Access to the derivative smoothing parameter?
 //      left(3)move( base+[0,PI*R*25/360]) text("a", size=5,anchor=RIGHT);
 //      left(2)stroke( [base, toppt],endcaps="arrow2",width=.6);
 //   }
-// Figure(2D,Med,NoAxes): Non-Uniform fillet method.  This method differs because point `w` is found by moving the fillet distance `a` starting at the intersection point `v` instead of at the base surface.  This means that the `[u,v,w]` triple is always in the correct order to produce a valid fillet.  However, the height of the fillet above the surface will vary.  When the base concave, point `v` is below the surface of the base, which in more extreme cases can produce a fillet that goes below the base surface.  The uniform method is less likely to produce this kind of result.  When the base surface is a plane, the uniform and non-uniform methods are identical.
+// Figure(2D,Med,NoAxes): Non-Uniform fillet method.  This method differs because point `w` is found by moving the fillet distance `a` starting at the intersection point `v` instead of at the base surface.  This means that the `[u,v,w]` triple is always in the correct order to produce a valid fillet.  However, the height of the fillet above the surface varies.  When the base concave, point `v` is below the surface of the base, which in more extreme cases can produce a fillet that goes below the base surface.  The uniform method is less likely to produce this kind of result.  When the base surface is a plane, the uniform and non-uniform methods are identical.
 //   R=60;
 //   base = R*[cos(70),sin(70)];
 //   end = R*[cos(45),sin(45)];
@@ -2981,7 +2980,7 @@ Access to the derivative smoothing parameter?
 //   debug = set to true to allow return of various cases where self-intersection was detected
 //   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
-//   orient = Vector to rotate top towards after spin  (module only)
+//   orient = Vector to rotate top toward after spin  (module only)
 //   atype = Select "hull" or "intersect" anchor types.  (module only) Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  (module only) Default: "centroid"
 // Named Anchors:
@@ -2996,7 +2995,7 @@ Access to the derivative smoothing parameter?
 //             (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]];
 //   join_prism(flower,base="plane",length=18, fillet=3, n=12);
 //   cube([50,50,5],anchor=TOP);
-// Example(3D,NoScales): Here we apply a rotation of the prism, using prism_end_T, which rotates around the prism root.  Note that aux_T will rotate around the origin, which is the same when the prism is joined to a plane.  
+// Example(3D,NoScales): Here we apply a rotation of the prism, using prism_end_T, which rotates around the prism root.  Note that aux_T rotates around the origin, which is the same when the prism is joined to a plane.  
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))
 //             (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]];
 //   join_prism(flower,base="plane",length=18, fillet=3,
@@ -3008,7 +3007,7 @@ Access to the derivative smoothing parameter?
 //   join_prism(flower,base="plane",length=18, fillet=3,
 //              n=12, prism_end_T=yrot(25), end_round=4);
 //   cube([50,50,5],anchor=TOP);
-// Example(3D,NoScales): We can tilt the base plane by applying a base rotation.  Note that because we did not tilt the prism, it still points upwards.  
+// Example(3D,NoScales): We can tilt the base plane by applying a base rotation.  Note that because we did not tilt the prism, it still points upward.  
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))
 //             (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]];
 //   join_prism(flower,base="plane",length=18, fillet=3,
@@ -3020,7 +3019,7 @@ Access to the derivative smoothing parameter?
 //   join_prism(flower,base="sphere",base_r=30, length=18,
 //              fillet=3, n=12);
 //   spheroid(r=30,circum=true,$fn=64);
-// Example(3D,NoScales): Rotating using the prism_end_T option rotates around the attachment point.  Note that if you rotate too far, some points of the prism will miss the sphere, which is an error.  
+// Example(3D,NoScales): Rotating using the prism_end_T option rotates around the attachment point.  Note that if you rotate too far, some points of the prism miss the sphere, which is an error.  
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))
 //             (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]];
 //   join_prism(flower,base="sphere",base_r=30, length=18,
@@ -3032,7 +3031,7 @@ Access to the derivative smoothing parameter?
 //   join_prism(flower,base="sphere",base_r=30, length=18,
 //              fillet=3, n=12, aux_T=yrot(-45));
 //   spheroid(r=30,circum=true,$fn=64);
-// Example(3D,NoScales): The origin in the prism cross section always aligns with the origin of the object you attach to.  If you want to attach off center, then shift your prism cross section.  If you shift too far so that parts of the prism miss the base object then you will get an error.  
+// Example(3D,NoScales): The origin in the prism cross section always aligns with the origin of the object you attach to.  If you want to attach off center, then shift your prism cross section.  If you shift too far so that parts of the prism miss the base object then you get an error.  
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))
 //             (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]];
 //   join_prism(right(10,flower),base="sphere",base_r=30,
@@ -3221,12 +3220,12 @@ Access to the derivative smoothing parameter?
 //   tube(ir=30,wall=4,l=24,$fn=64,orient=RIGHT,anchor=CENTER);
 //   multmatrix(auxT)
 //     tube(ir=40,wall=4,l=24,$fn=64,orient=RIGHT,anchor=CENTER);
-// Example(3D,NoScales): Many of the preceeding examples feature a prism with a concave shape cross section.  Concave regions can limit the amount of rounding that is possible.  This occurs because the algorithm is not able to handle a fillet that intersects itself.  Fillets on a convex prism always grow larger as they move away from the prism, so they cannot self intersect.  This means that you can make the fillet as big as will fit on the base shape.  The fillet will fail to fit if the tangent plane to the base at the fillet distance from the prism fails to intersect the prism.  Here is an extreme example, almost the largest possible fillet to the convex elliptical convex prism.  
+// Example(3D,NoScales): Many of the preceeding examples feature a prism with a concave shape cross section.  Concave regions can limit the amount of rounding that is possible.  This occurs because the algorithm is not able to handle a fillet that intersects itself.  Fillets on a convex prism always grow larger as they move away from the prism, so they cannot self intersect.  This means that you can make the fillet as big as can fit on the base shape.  The fillet fails to fit if the tangent plane to the base at the fillet distance from the prism fails to intersect the prism.  Here is an extreme example, almost the largest possible fillet to the convex elliptical convex prism.  
 //   ellipse = ellipse([17,10],$fn=164);  
 //   join_prism(ellipse,base="sphere",base_r=30, length=18,
 //              fillet=18, n=25, overlap=1);
 //   spheroid(r=30,circum=true, $fn=96);
-// Example(3D,NoScales): This example shows a failed rounding attempt where the result is self-intersecting.  Using the `debug=true` option makes it possible to view the result to understand what went wrong.  Note that the concave corners have a crease where the fillet crosses itself.  The error message will advise you to decrease the size of the fillet.  You can also fix the problem by making your concave curves shallower.  
+// Example(3D,NoScales): This example shows a failed rounding attempt where the result is self-intersecting.  Using the `debug=true` option makes it possible to view the result to understand what went wrong.  Note that the concave corners have a crease where the fillet crosses itself.  The error message advises you to decrease the size of the fillet.  You can also fix the problem by making your concave curves shallower.  
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))
 //             (15+2.5*sin(6*theta))*[cos(theta),sin(theta)]];
 //   join_prism(flower,base="cylinder",base_r=30, length=18,
@@ -3285,7 +3284,7 @@ Access to the derivative smoothing parameter?
 //              aux="plane", aux_T=up(12));
 //   %up(12)cuboid([40,40,4],anchor=BOT); 
 //   cuboid([40,40,4],anchor=TOP);
-// Example(3D,NoScales,VPR=[78,0,42],VPT=[12.45,-12.45,10.4],VPD=130): Here's an example where the second object is rotated.  Note that the prism will go from the origin to the origin point of the object.  In this case because the rotation is applied first, the prism is vertical.  
+// Example(3D,NoScales,VPR=[78,0,42],VPT=[12.45,-12.45,10.4],VPD=130): Here's an example where the second object is rotated.  The prism goes from the origin to the origin point of the object.  In this case because the rotation is applied first, the prism is vertical.  
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))
 //             (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]];
 //   aux_T = up(12)*xrot(-22);
@@ -3400,13 +3399,13 @@ Access to the derivative smoothing parameter?
 //     join_prism(circle(r=15),base="sphere",base_r=-30, n=15,
 //                aux="sphere",aux_r=-30,fillet=8, overlap=17);
 //   }
-// Example(3D,VPT=[0.59633,-3.01826,-3.89606],VPR=[129.2,0,26.4],VPD=192.044,NoScales): Here we have rotated the auxiliary sphere which results in a hole that is off-center through the sphere.  Because we rotate the auxiliary object, both ends of the prism have moved.  Note that setting k to a large value better matches the bezier curve to the curvature of the sphere, resulting in a better result.  
+// Example(3D,VPT=[0.59633,-3.01826,-3.89606],VPR=[129.2,0,26.4],VPD=192.044,NoScales): Here we have rotated the auxiliary sphere, resulting in a hole that is off-center through the sphere.  Because we rotate the auxiliary object, both ends of the prism have moved.  Note that setting k to a large value better matches the bezier curve to the curvature of the sphere, resulting in a better result.  
 //   difference(){
 //     spheroid(r=30,circum=true);    
 //     join_prism(circle(r=15),base="sphere",base_r=-30, n=15,
 //                aux="sphere",aux_T=xrot(30), aux_r=-30,fillet=8, overlap=17, k=0.9);
 //   }
-// Example(3D,VPT=[-12.5956,-5.1125,-0.322237],VPR=[82.3,0,116.7],VPD=213.382,NoScales): Here we adjust just the auxiliary end, which note is at the bottom.  We rotate it by 45 deg, but this rotation would normally be relative to the other prism end, so we add a centerpoint based on the radius so that the rotation is relative to the sphere center instead.
+// Example(3D,VPT=[-12.5956,-5.1125,-0.322237],VPR=[82.3,0,116.7],VPD=213.382,NoScales): Here we adjust just the auxiliary end, which is at the bottom.  We rotate it by 45 deg, but this rotation would normally be relative to the other prism end, so we add a centerpoint based on the radius so that the rotation is relative to the sphere center instead.
 //   difference(){
 //     spheroid(r=30,circum=true);    
 //     join_prism(circle(r=15),base="sphere",base_r=-30, n=15,
@@ -3815,7 +3814,7 @@ function _prism_fillet_sphere(name, R,bot, top, d, k, N, overlap, uniform, debug
            ]
         ])
       )
-      // this test will fail if the prism isn't "vertical".  Project along prism direction?  
+      // this test fails if the prism isn't "vertical".  Project along prism direction?  
       assert(debug || is_path_simple(path2d(select(mesh,-2)),closed=true),str("Fillet doesn't fit: it intersects itself (",name,")"))
       mesh;
 
@@ -3840,8 +3839,8 @@ function _getnormal(polygon,index,u,) =
 
 
 // Start at segment ind, position u on the polygon and find a point length units
-// from that starting point.  If dir<0 goes backwards through polygon segments
-// and if dir>0 goes forwards through polygon segments.
+// from that starting point.  If dir<0 goes backward through polygon segments
+// and if dir>0 goes forward through polygon segments.
 // Returns [ point, ind, u] where point is the actual point desired.  
 function _polygon_step(poly, ind, u, dir, length) =
     let(ind = posmod(ind,len(poly)))

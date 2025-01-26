@@ -1677,7 +1677,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
         step = (extent[1]-extent[0]) / steps,
         bend_at = [for(i = [1:1:steps-1]) i*step+extent[0]],
         slicedir = axis=="X"? "Y" : "X",   // slice in y dir for X axis case, and x dir otherwise
-        sliced = vnf_slice(vnf, slicedir, bend_at),
+        sliced = vnf_triangulate(vnf_slice(vnf, slicedir, bend_at)),
         coord = axis=="X" ? [0,sign(bmax.z),0] : axis=="Y" ? [sign(bmax.z),0,0] : [sign(bmax.y),0,0],
         new_vert = [for(p=sliced[0])
                        let(a=coord*p*180/(PI*r))
