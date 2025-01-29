@@ -1224,11 +1224,11 @@ let(
 //   .
 //   These are the built-in metaball functions. Arguments with default values are optional:
 //   * `mb_sphere(coeff, cutoff=INF)` - the standard spherical metaball with a $1/r$ field strength falloff. The intensity coefficient `coeff` must be specified as a scalar value.
-//   * `mb_ellipsoid(coeff_vec, cutoff=INF)` - an ellipsoid-shaped field that requires specifying a [x,y,z] vector for `coeff_vec`, representing intensity of influence in each of the x, y, and z directions
+//   * `mb_ellipsoid(coeff_vec, cutoff=INF)` - an ellipsoid-shaped field that requires specifying a [x,y,z] vector for `coeff_vec`, representing intensity of influence in each of the x, y, and z directions. One could accomplish a similar effect by combining `mb_sphere()` with scaling transforms, but this is a convenient alternative.
 //   * `mb_roundcube(coeff, squareness=0.5, cutoff=INF)` - a cube-shaped metaball with corners that get more rounded with size, determined by the scalar `coeff` that you must specify. The squareness can be controlled with a value between 0 (spherical) or 1 (cubical) in the `squareness` parameter, and defaults to 0.5 if omitted.
 //   * `mb_cube(coeff, cutoff=INF)` - a cube-shaped metaball with sharp edges and corners, resulting from using [Chebyshev distance](https://en.wikipedia.org/wiki/Chebyshev_distance) rather than Euclidean distance calculations. 
 //   * `mb_octahedron(coeff, cutoff=INF)` - an octahedron-shaped metaball with sharp edges and corners, resulting from using [taxicab distance](https://en.wikipedia.org/wiki/Taxicab_geometry) rather than Euclidean distance calculations.
-//   * `mb_torus(rbig, rsmall, axis=[0,0,1], cutoff=INF)` - a toroidal field oriented perpendicular to the x, y, or z axis specified by `axis`. The parameter `rsmall` and `rbig` control the major and minor radii. `rsmall` can be negative to create a negative influence on the surrounding volume.
+//   * `mb_torus(rbig, rsmall, axis=[0,0,1], cutoff=INF)` - a toroidal field oriented perpendicular to the x, y, or z axis specified by `axis`. The parameter `rsmall` and `rbig` control the major and minor radii. `rsmall` can be negative to create a negative influence on the surrounding volume. The `axis` parameter is unnecessessary because you can specify rotation transforms anyway, but it is sometimes convenient to have the torus start aligned with a particular axis before rotating it.
 //   .
 //   Your own custom function must be written as a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
 //   and take `dv` as the first argument. `dv` is passed to your function as a 3D distance vector from the ball center
