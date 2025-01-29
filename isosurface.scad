@@ -1219,7 +1219,7 @@ let(
 //   Six shapes of metaball field density functions are built into this library. You can specify
 //   different ones for each metaball in the list, and you can also specify your own
 //   custom function. All of them require a coefficient weight. The coefficient must be a value or a vector, as described below.
-//  .
+//   .
 //   Any other parameters are optional. In all cases, `cutoff` specifies the distance beyond which the metaball has no influence. Default: `INF`
 //   .
 //   These are the built-in metaball functions. Arguments with default values are optional:
