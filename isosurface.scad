@@ -787,8 +787,9 @@ function isosurface(f, isovalue, bounding_box, voxel_size, reverse=false, closed
 //   isovalue or range of isovalues. This module just passes the parameters to the function,
 //   and then calls {{vnf_polyhedron()}} to display the isosurface.
 //   .
-//   Use this when you already have a 3D array of intensity or density data, for example like
-//   what you may get from a [CT scan](https://en.wikipedia.org/wiki/CT_scan).
+//   Use this when you already have a 3D array of field density values, for example like
+//   what you may get from a [CT scan](https://en.wikipedia.org/wiki/CT_scan). This function is also
+//   used by {{metaballs()}} after precalculating the array of points in the bounding volume. 
 //   . 
 //   By default, the returned VNF structure occupies a volume with its origin at [0,0,0]
 //   extending in the positive x, y, and z directions by multiples of `voxel_size`.
@@ -802,9 +803,9 @@ function isosurface(f, isovalue, bounding_box, voxel_size, reverse=false, closed
 //   structure to {{vnf_unify_faces()}}. These steps can be expensive for execution time
 //   and are not normally necessary.
 // Arguments:
-//   voxel_size = The size (scalar) of the voxel cube that determines the resolution of the surface.
-//   isovalue = As a scalar, specifies the output value of `field_function` corresponding to the isosurface. As a vector `[min_isovalue, max_isovalue]`, specifies the range of isovalues around which to generate a surface. For closed surfaces, a single value results in a closed volume, and a range results in a shell (with an inside and outside surface) enclosing a volume. A range must be specified for surfaces (such as gyroids) that have both sides exposed within the bounding box. 
 //   field = 3D array of numbers. This array should be organized so that the indices are in order of x, y, and z when the array is referenced; that is, `field[x_index][y_index][z_index]` has `z_index` changing most rapidly as the array is traversed. If you organize the array differently, you may have to perform a `rotate()` or `mirror()` operation on the final result to orient it properly.
+//   isovalue = As a scalar, specifies the output value of `field_function` corresponding to the isosurface. As a vector `[min_isovalue, max_isovalue]`, specifies the range of isovalues around which to generate a surface. For closed surfaces, a single value results in a closed volume, and a range results in a shell (with an inside and outside surface) enclosing a volume. A range must be specified for surfaces (such as gyroids) that have both sides exposed within the bounding box. 
+//   voxel_size = The size (scalar) of the voxel cube that determines the resolution of the surface.
 //   ---
 //   origin = Origin in 3D space corresponding to `field[0][0][0]`. The bounding box of the isosurface extends from this origin by multiples of `voxel_size` according to the size of the `field` array. Default: [0,0,0]
 //   reverse = When true, reverses the orientation of the facets in the mesh. Default: false
@@ -1239,7 +1240,7 @@ let(
 //   .
 //   Now for the arguments to this metaball() module or function....
 // Arguments:
-//   funcs = a 1-D list of transform and function pairs in the form `[trans0, func0, trans1, func1, ...]`, with one pair for each metaball. The transform should be, at a minimum, a translation such as `move([x,y,z])` to specify the location of the metaball center, but you can also include rotations with the translation, such as `move([x,y,z])*rotate([ax,ay,az])` (you can multiply together any of BOSL2's affine operations like {{xrot()}}, {{scale()}}, and {{skew()}}). This is useful for orienting non-spherical metaballs.
+//   funcs = a 1-D list of transform and function pairs in the form `[trans0, func0, trans1, func1, ...]`, with one pair for each metaball. The transform should be at least `move([x,y,z])` to specify the location of the metaball center, but you can also include rotations with the translation, such as `move([x,y,z])*rot([ax,ay,az])`. You can multiply together any of BOSL2's affine operations like {{xrot()}}, {{scale()}}, and {{skew()}}. This is useful for orienting non-spherical metaballs. The priority order of the transforms is right to left, that is, `move([4,5,6])*rot([45,0,90])` does the rotation first, and then the move, similar to normal OpenSCAD syntax `translate([4,5,6]) rotate([45,0,90]) children()`.
 //   isovalue = A scalar value specifying the isosurface value of the metaballs.
 //   bounding_box = A pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum box corner coordinates. The voxels needn't fit perfectly inside the bounding box.
 //   voxel_size = The size (scalar) of the voxel cube that determines the resolution of the metaball surface. **Start with a larger size for experimenting, and refine it gradually.** A small voxel size can significantly slow down processing time, especially with a large `bounding_box`.
