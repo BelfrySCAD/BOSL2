@@ -1150,24 +1150,24 @@ let(
 function mb_octahedron(coeff, cutoff=INF) = function (dv) _mb_octahedron(dv, coeff, cutoff);
 
 
-_mb_torus = function (dv, rbig, rsmall, axis, cutoff)
-let(
+_mb_torus = function (dv, rbig, rsmall, cutoff)
+let( axis=[0,0,1],
     d_axisplane = norm(v_mul([1,1,1]-axis, dv)) - rbig,
     d_axis = axis*dv,
     r = norm([d_axisplane, d_axis]),
     suppress = let(a = min(r,cutoff)/cutoff) 1-a*a
 ) r==0 ? 1e9 : suppress*rsmall / r;
 
-function mb_torus(rbig, rsmall, axis=[0,0,1], cutoff=INF) = function (dv) _mb_torus(dv, rbig, rsmall, axis, cutoff);
+function mb_torus(rbig, rsmall, cutoff=INF) = function (dv) _mb_torus(dv, rbig, rsmall, cutoff);
 
 
 /// metaball field function, calling any of the other metaball functions above to accumulate
 /// the contribution of each metaball at point xyz
-_metaball_fieldfunc = function(xyz, nballs, transform, funcs)
+_metaball_fieldfunc = function(xyz1, nballs, transform, funcs)
 let(
     contrib = [
         for(i=[0:nballs-1])
-            let(dv = concat(xyz,1) * transform[i])
+            let(dv = xyz1 * transform[i])
                 funcs[i+i+1](dv)
     ]
 ) sum(contrib);
@@ -1228,12 +1228,13 @@ let(
 //   * `mb_roundcube(coeff, squareness=0.5, cutoff=INF)` - a cube-shaped metaball with corners that get more rounded with size, determined by the scalar `coeff` that you must specify. The squareness can be controlled with a value between 0 (spherical) or 1 (cubical) in the `squareness` parameter, and defaults to 0.5 if omitted.
 //   * `mb_cube(coeff, cutoff=INF)` - a cube-shaped metaball with sharp edges and corners, resulting from using [Chebyshev distance](https://en.wikipedia.org/wiki/Chebyshev_distance) rather than Euclidean distance calculations. 
 //   * `mb_octahedron(coeff, cutoff=INF)` - an octahedron-shaped metaball with sharp edges and corners, resulting from using [taxicab distance](https://en.wikipedia.org/wiki/Taxicab_geometry) rather than Euclidean distance calculations.
-//   * `mb_torus(rbig, rsmall, axis=[0,0,1], cutoff=INF)` - a toroidal field oriented perpendicular to the x, y, or z axis specified by `axis`. The parameter `rsmall` and `rbig` control the major and minor radii. `rsmall` can be negative to create a negative influence on the surrounding volume. The `axis` parameter is unnecessessary because you can specify rotation transforms anyway, but it is sometimes convenient to have the torus start aligned with a particular axis before rotating it.
+//   * `mb_torus(rbig, rsmall, cutoff=INF)` - a toroidal field oriented perpendicular to the z axis. The parameter `rbig` and `rsmall` control the major and minor radii. `rsmall` can be negative to create a negative influence on the surrounding volume.
 //   .
 //   Your own custom function must be written as a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
 //   and take `dv` as the first argument. `dv` is passed to your function as a 3D distance vector from the ball center
-//   to the point in the bounding box volume to calculate the field intensity. The function retun must be a single
+//   to the point in the bounding box volume for which to calculate the field intensity. The function retun must be a single
 //   number such that higher values are enclosed by the metaball and lower values are outside the metaball.
+//   In this case, if you have written `my_func()` , the array element you initialize must appear as `function (dv) my_func(dv, ...)`.
 //   See Example 5 below.
 //   .
 //   Now for the arguments to this metaball() module or function....
@@ -1267,7 +1268,7 @@ let(
 //   isovalue = 1;
 //   boundingbox = [[-7,-6,-6], [3,6,6]];
 //   #metaballs(funcs, isovalue, boundingbox, voxelsize);
-//   color("green") for(c=centers) translate(c) sphere(d=1, $fn=16);
+//   color("green") move_copies(centers) sphere(d=1, $fn=16);
 // Example(3D,NoAxes): A cube, a rounded cube, and an octahedron interacting.
 //   funcs = [
 //       move([-7,-3,27]), mb_cube(5),
@@ -1280,8 +1281,8 @@ let(
 //   metaballs(funcs, isovalue, boundingbox, voxelsize);
 // Example(3D,NoAxes): Interaction between two torus-shaped fields in different orientations.
 //   funcs = [
-//       move([-10,0,17]), mb_torus(rbig=6, rsmall=2, axis=[0,0,1]),
-//       move([7,6,21]),   mb_torus(rbig=7, rsmall=3, axis=[0,1,0])
+//       move([-10,0,17]),        mb_torus(rbig=6, rsmall=2),
+//       move([7,6,21])*xrot(90), mb_torus(rbig=7, rsmall=3)
 //   ];
 //   voxelsize = 0.5;
 //   isovalue = 1;
@@ -1318,7 +1319,7 @@ let(
 //       move(zrot(-120, p=[20*cz,0,20*sz]))*rot([0,-ztheta,-120]),
 //           mb_ellipsoid([7,2,2], cutoff=40),
 //       // ring on top
-//       move([0,0,35]), mb_torus(rbig=8, rsmall=2, axis=[0,1,0], cutoff=40),
+//       move([0,0,35])*xrot(90), mb_torus(rbig=8, rsmall=2, cutoff=40),
 //       // feet
 //       move([32*cz,0,32*sz]), mb_sphere(5, cutoff=40),
 //       move(zrot(120, p=[32*cz,0,32*sz])), mb_sphere(5, cutoff=40),
@@ -1359,7 +1360,7 @@ let(
         for(x=[v0[0]:voxel_size:b1[0]+halfvox]) [
             for(y=[v0[1]:voxel_size:b1[1]+halfvox]) [
                 for(z=[v0[2]:voxel_size:b1[2]+halfvox])
-                    _metaball_fieldfunc([x,y,z], nballs, transmatrix, funcs)
+                    _metaball_fieldfunc([x,y,z,1], nballs, transmatrix, funcs)
             ]
         ]
     ]
