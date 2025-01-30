@@ -11,7 +11,7 @@
 //   that is, the isosurface of a function $f(x,y,z)$ is the set of points where
 //   $f(x,y,z)=c$ for some constant value $c$. The constant $c$ is referred to as the "isovalue". 
 //   .
-//   A [gryoid](https://en.wikipedia.org/wiki/Gyroid) (often used as a volume infill pattern in [FDM 3D printing](https://en.wikipedia.org/wiki/Fused_filament_fabrication))
+//   A [gryoid](https://en.wikipedia.org/wiki/Gyroid) (often used as a volume infill pattern in [fused filament fabrication](https://en.wikipedia.org/wiki/Fused_filament_fabrication))
 //   is an exmaple of an isosurface that is unbounded and periodic in all three dimensions.
 //   Other typical examples in 3D graphics are [metaballs](https://en.wikipedia.org/wiki/Metaballs) (also known as "blobby objects"),
 //   which are bounded and closed organic-looking surfaces that smoothly meld together when in close proximity.
