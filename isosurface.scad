@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 /////////////////////////////////////////////////////////////////////
 // LibFile: isosurface.scad
 //   An isosurface is a three-dimensional surface representing points of a constant
@@ -1413,6 +1414,8 @@ for(i=[0:nballs-1]) let(
     ) 0
 ];
 =======
+=======
+>>>>>>> Stashed changes
 /////////////////////////////////////////////////////////////////////
 // LibFile: isosurface.scad
 //   [metaballs](https://en.wikipedia.org/wiki/Metaballs) (also known as "blobby objects"),
@@ -2894,4 +2897,7 @@ function isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed
         faces = [ for(i=[0:3:len(trianglepoints)-1]) [i,i+1,i+2] ],
         dummy = show_stats ? _showstats(voxel_size, bbox, isovalmin, cubes, faces) : 0
 ) [trianglepoints, faces];
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
