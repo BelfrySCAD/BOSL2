@@ -1444,11 +1444,11 @@ function metaballs(funcs, voxel_size, bounding_box, isovalue=1, closed=true, sho
 //     repeat(0,[6,6])
 //   ];
 //   rotate([0,-90,180])
-//      isosurface_array(field, isovalue=0.5,
+//      isosurface(field, isovalue=0.5,
 //          voxel_size=10);
 
 module isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed=true, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, _origin=undef) {
-    vnf = isosurface(f, isovalue, bounding_box, voxel_size, reverse, closed, show_stats, _origin);
+    vnf = isosurface(f, isovalue, voxel_size, bounding_box, reverse, closed, show_stats, _origin);
     vnf_polyhedron(vnf, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
         children();
 }
@@ -1472,7 +1472,7 @@ function isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed
             nz = len(f[0][0])-1
         ) is_def(_origin) ? [_origin, _origin+voxel_size*[nx,ny,nz]]
             : [-0.5*voxel_size*[nx,ny,nz], 0.5*voxel_size*[nx, ny, nz]],
-        cubes = _isosurface_cubes(voxel_size, bbox, fieldarray=f, isovalmin=isovalmin, isovalmax=isovalmax, closed=closed),
+        cubes = _isosurface_cubes(voxel_size, bbox, fieldarray=is_function(f)?undef:f, fieldfunc=is_function(f)?f:undef, isovalmin=isovalmin, isovalmax=isovalmax, closed=closed),
         tritablemin = reverse ? _MCTriangleTable_reverse : _MCTriangleTable,
         tritablemax = reverse ? _MCTriangleTable : _MCTriangleTable_reverse,
         trianglepoints = _isosurface_triangles(cubes, voxel_size, isovalmin, isovalmax, tritablemin, tritablemax),
