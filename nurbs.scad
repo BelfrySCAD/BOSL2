@@ -19,7 +19,7 @@ include<BOSL2/std.scad>
 // Section: NURBS Curves
 
 // Function: nurbs_curve()
-// Synopsis: Computes one more more points on a NURBS curve.
+// Synopsis: Computes one or more points on a NURBS curve.
 // SynTags: Path
 // Topics: NURBS Curves
 // See Also: debug_nurbs()
@@ -174,8 +174,8 @@ include<BOSL2/std.scad>
 
 function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",knots) =
     assert(num_defined([splinesteps,u])==1, "Must define exactly one of u and splinesteps")
-    is_finite(u) ? nurbs_curve(control,degree,[u],mult,weights,type=type)[0]
-  : assert(is_undef(splinesteps) || (is_int(splinesteps) || splinesteps>0), "splinesteps must be a positive integer")
+    is_finite(u) ? nurbs_curve(control,degree,u=[u],mult,weights,type=type)[0]
+  : assert(is_undef(splinesteps) || (is_int(splinesteps) && splinesteps>0), "splinesteps must be a positive integer")
     let(u=is_range(u) ? list(u) : u)                  
     assert(is_undef(u) || (is_vector(u) && min(u)>=0 && max(u)<=1), "u must be a list of points on the interval [0,1] or a range contained in that interval")
     is_def(weights) ? assert(is_vector(weights, len(control)), "Weights should be a vector whose length is the number of control points")
