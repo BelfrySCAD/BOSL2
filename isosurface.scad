@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////////////////////////
 // LibFile: isosurface.scad
 //   [metaballs](https://en.wikipedia.org/wiki/Metaballs) (also known as "blobby objects"),
-//   are bounded and closed organic surfaces that smoothly blend together.  
-//   Metaballs are one specific kind of isosurface.  
-//   .   
+//   are bounded and closed organic surfaces that smoothly blend together.
+//   Metaballs are one specific kind of isosurface.
+//   . 
 //   An isosurface, or implicit surface, is a three-dimensional surface representing all points of a
 //   constant value (e.g. pressure, temperature, electric potential, density) in a
 //   3D volume. It's the 3D version of a 2D contour; in fact, any 2D cross-section of an
@@ -19,14 +19,14 @@
 //   fashion. The resulting metaball model appears as smoothly blended blobby shapes. The
 //   implementation below provides metaballs of a variety of types including spheres, cuboids and
 //   cylinders (cones), with optional parameters to adjust the influence of one metaball on others,
-//   and the cutoff distance where the metaball's influence stops.  
+//   and the cutoff distance where the metaball's influence stops.
 //   .
 //   An isosurface can be defined using any function of three variables:
 //   the isosurface of a function $f(x,y,z)$ is the set of points where
 //   $f(x,y,z)=c$ for some constant value $c$. The constant $c$ is referred to as the "isovalue".
 //   Changing the isovalue will tend to grow or shrink the isosurface, depending on how the function is
 //   defined.  Since metaballs are isosurfaces, they also have an isovalue. The isovalue is also known
-//   as the "threshold".   
+//   as the "threshold".
 //   .
 //   Some isosurface functions are unbounded, extending infinitely in all directions. A familiar example may
 //   be a [gryoid](https://en.wikipedia.org/wiki/Gyroid), which is often used as a volume infill pattern in
@@ -723,55 +723,84 @@ function _isosurface_cubes(voxsize, bbox, fieldarray, fieldfunc, isovalmin, isov
                     cubefound_outer = len(bfaces)==0 ? false
                     : let(
                         bf = flatten([for(i=bfaces) _MCFaceVertexIndices[i]]),
-                        sumcond = sum([for(b=bf) isovalmin<=cf[b] && cf[b]<=isovalmax ? 1 : 0])
+                        sumcond = len([for(b=bf) if(isovalmin<=cf[b] && cf[b]<=isovalmax) 1 ])
                     ) sumcond == len(bf),
                     cubeindex_isomin = cubefound_isomin ? _cubeindex(cf, isovalmin) : 0,
                     cubeindex_isomax = cubefound_isomax ? _cubeindex(cf, isovalmax) : 0
-                ) if(cubefound_isomin || cubefound_isomax || cubefound_outer) [
-                    cubecoord, 
-                    cubeindex_isomin, cubeindex_isomax,
-                    cf, bfaces
-                ]
+                ) if(cubefound_isomin || cubefound_isomax || cubefound_outer)
+                    [ // return data structure:
+                        cubecoord,                          // voxel lower coordinate
+                        cubeindex_isomin, cubeindex_isomax, // cube IDs for isomin and isomax
+                        [for(f=cf) min(1e9, max(-1e9, f))], // clamped voxel corner values
+                        bfaces                              // list of bounding box faces, if any
+                    ]
 ];
 
 
 /// _isosurface_trangles() - called by isosurface()
 /// Given a list of voxel cubes structures, triangulate the isosurface(s) that intersect each cube and return a list of triangle vertices.
 function _isosurface_triangles(cubelist, cubesize, isovalmin, isovalmax, tritablemin, tritablemax) = [
-    for(cl=cubelist) let(
-        v = cl[0],
-        cbidxmin = cl[1],
-        cbidxmax = cl[2],
-        f = cl[3],
-        bbfaces = cl[4],
-        vcube = [
-            v, v+[0,0,cubesize], v+[0,cubesize,0], v+[0,cubesize,cubesize],
-            v+[cubesize,0,0], v+[cubesize,0,cubesize],
-            v+[cubesize,cubesize,0], v+[cubesize,cubesize,cubesize]
-        ],
-        epathmin = tritablemin[cbidxmin],
-        epathmax = tritablemax[cbidxmax],
-        lenmin = len(epathmin),
-        lenmax = len(epathmax),
-        outfacevertices = flatten([
-            for(bf = bbfaces)
-                _bbfacevertices(vcube, f, bf, isovalmax, isovalmin)
-        ]),
-        n_outer = len(outfacevertices)
-    )
-    // some repeated code here in an attempt to gain some speed to avoid function calls and calls to flatten().
-    // Where the face of the bounding box clips a voxel, those are done in separate if() blocks and require require a concat(), but the majority of voxels can have triangles generated directly. If there is no clipping, the list of trianges is generated all at once.
-    if(lenmin>0 && lenmax>0) let(
+    for(cl=cubelist)
+        let(
+            v = cl[0],
+            cbidxmin = cl[1],
+            cbidxmax = cl[2],
+            f = cl[3],
+            bbfaces = cl[4],
+            vcube = [
+                v, v+[0,0,cubesize], v+[0,cubesize,0], v+[0,cubesize,cubesize],
+                v+[cubesize,0,0], v+[cubesize,0,cubesize],
+                v+[cubesize,cubesize,0], v+[cubesize,cubesize,cubesize]
+            ],
+            epathmin = tritablemin[cbidxmin],
+            epathmax = tritablemax[cbidxmax],
+            lenmin = len(epathmin),
+            lenmax = len(epathmax),
+            outfacevertices = flatten([
+                for(bf = bbfaces)
+                    _bbfacevertices(vcube, f, bf, isovalmax, isovalmin)
+            ]),
+            n_outer = len(outfacevertices)
+        )
+
+/* // this block of commented code shorter and easier to read, but a bit slower to execute
+        each [
+            if(lenmin>0) for(ei=epathmin)    // min surface
+                let(
+                    edge = _MCEdgeVertexIndices[ei],
+                    vi0 = edge[0],
+                    vi1 = edge[1],
+                    denom = f[vi1] - f[vi0],
+                    u = abs(denom)<0.00001 ? 0.5 : (isovalmin-f[vi0]) / denom
+                )
+                vcube[vi0] + u*(vcube[vi1]-vcube[vi0]),
+            if(lenmax>0) for(ei=epathmax)    // max surface
+                let(
+                    edge = _MCEdgeVertexIndices[ei],
+                    vi0 = edge[0],
+                    vi1 = edge[1],
+                    denom = f[vi1] - f[vi0],
+                    u = abs(denom)<0.00001 ? 0.5 : (isovalmax-f[vi0]) / denom
+                )
+                vcube[vi0] + u*(vcube[vi1]-vcube[vi0]),
+            if(n_outer>0) for(bf = bbfaces)
+                  each _bbfacevertices(vcube, f, bf, isovalmax, isovalmin)
+           ]
+];
+*/
+    // Some repeated code here, marginally faster (3% or so) than the commented section above.
+    // Where the face of the bounding box clips a voxel, those are done in separate if() blocks and require a 'each', but the majority of voxels can have triangles generated directly. If there is no clipping, the list of trianges is generated all at once.
 
     // both min and max surfaces intersect a voxel clipped by bounding box
-        list = concat(
+    if(lenmin>0 && lenmax>0)
+        each concat(
           // min surface
           [ for(ei=epathmin) let(
             edge = _MCEdgeVertexIndices[ei],
             vi0 = edge[0],
             vi1 = edge[1],
             denom = f[vi1] - f[vi0],
-            u = abs(denom)<0.0001 || denom==-INF ? 0.5 : (isovalmin-f[vi0]) / denom
+            u = abs(denom)<0.00001 ? 0.5 : (isovalmin-f[vi0]) / denom
           ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0]) ],
           // max surface
           [ for(ei=epathmax) let(
@@ -779,57 +808,57 @@ function _isosurface_triangles(cubelist, cubesize, isovalmin, isovalmax, tritabl
             vi0 = edge[0],
             vi1 = edge[1],
             denom = f[vi1] - f[vi0],
-            u = abs(denom)<0.0001 || denom==-INF ? 0.5 : (isovalmax-f[vi0]) / denom
-          ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0]) ], outfacevertices)
-        ) for(ls = list) ls
-    else if(n_outer>0 && lenmin>0) let(
+            u = abs(denom)<0.00001 ? 0.5 : (isovalmax-f[vi0]) / denom
+          ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0]) ], outfacevertices
+        )
 
     // only min surface intersects a voxel clipped by bounding box
-        list = concat(
+    else if(n_outer>0 && lenmin>0)
+        each concat(
           [ for(ei=epathmin) let(
             edge = _MCEdgeVertexIndices[ei],
             vi0 = edge[0],
             vi1 = edge[1],
             denom = f[vi1] - f[vi0],
-            u = abs(denom)<0.0001 || denom==-INF ? 0.5 : (isovalmin-f[vi0]) / denom
-          ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0]) ], outfacevertices)
-        ) for(ls = list) ls
-    else if(lenmin>0)
+            u = abs(denom)<0.00001 ? 0.5 : (isovalmin-f[vi0]) / denom
+          ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0]) ], outfacevertices
+        )
 
     // only min surface intersects a voxel
+    else if(lenmin>0)
         for(ei=epathmin) let(
             edge = _MCEdgeVertexIndices[ei],
             vi0 = edge[0],
             vi1 = edge[1],
             denom = f[vi1] - f[vi0],
-            u = abs(denom)<0.0001 || denom==-INF ? 0.5 : (isovalmin-f[vi0]) / denom
+            u = abs(denom)<0.00001 ? 0.5 : (isovalmin-f[vi0]) / denom
         ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0])
-    else if(n_outer>0 && lenmax>0) let(
 
     // only max surface intersects the voxel on the bounding box
-        list = concat(
+    else if(n_outer>0 && lenmax>0)
+        each concat(
           [ for(ei=epathmax) let(
             edge = _MCEdgeVertexIndices[ei],
             vi0 = edge[0],
             vi1 = edge[1],
             denom = f[vi1] - f[vi0],
-            u = abs(denom)<0.0001 || denom==-INF ? 0.5 : (isovalmax-f[vi0]) / denom
-          ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0]) ], outfacevertices)
-        ) for(ls = list) ls
-    else if(lenmax>0)
+            u = abs(denom)<0.00001 ? 0.5 : (isovalmax-f[vi0]) / denom
+          ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0]) ], outfacevertices
+        )
 
     // only max surface intersects the voxel
+    else if(lenmax>0)
         for(ei=epathmax) let(
             edge = _MCEdgeVertexIndices[ei],
             vi0 = edge[0],
             vi1 = edge[1],
             denom = f[vi1] - f[vi0],
-            u = abs(denom)<0.0001 || denom==-INF ? 0.5 : (isovalmax-f[vi0]) / denom
+            u = abs(denom)<0.00001 ? 0.5 : (isovalmax-f[vi0]) / denom
         ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0])
-    else if(n_outer>0)
 
     // no surface intersects a voxel clipped by bounding box but the bounding box at this voxel is inside the volume between isomin and isomax
-        for(ls = outfacevertices) ls
+    else if(n_outer>0)
+        each outfacevertices
 ];
 
 
@@ -849,20 +878,20 @@ function _bbfacevertices(vcube, f, bbface, isovalmax, isovalmin) = let(
             fmax = max(f0, f1),
             fbetweenlow = (fmin <= isovalmin && isovalmin <= fmax),
             fbetweenhigh = (fmin <= isovalmax && isovalmax <= fmax),
-            denom = f1==INF || f0==INF ? 0 : f1-f0
+            denom = f1-f0
         ) [
             if(isovalmin <= f0 && f0 <= isovalmax) vcube[vi0],
             if(fbetweenlow && f0<=f1) let(
-                u = abs(denom)<0.0001 ? 0.5 : (isovalmin-f0)/denom
+                u = abs(denom)<0.00001 ? 0.5 : (isovalmin-f0)/denom
             ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0]),
             if(fbetweenhigh && f0<=f1) let(
-                u = abs(denom)<0.0001 ? 0.5 : (isovalmax-f0)/denom
+                u = abs(denom)<0.00001 ? 0.5 : (isovalmax-f0)/denom
             ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0]),
             if(fbetweenhigh && f0>=f1) let(
-                u = abs(denom)<0.0001 ? 0.5 : (isovalmax-f0)/denom
+                u = abs(denom)<0.00001 ? 0.5 : (isovalmax-f0)/denom
             ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0]),
             if(fbetweenlow && f0>=f1) let(
-                u = abs(denom)<0.0001 ? 0.5 : (isovalmin-f0)/denom
+                u = abs(denom)<0.00001 ? 0.5 : (isovalmin-f0)/denom
             ) vcube[vi0] + u*(vcube[vi1]-vcube[vi0])
 
         ]
@@ -900,33 +929,9 @@ function _showstats(voxelsize, bbox, isoval, cubes, faces) = let(
 /// Animated metaball demo made with BOSL2 here: https://imgur.com/a/m29q8Qd
 
 /// Built-in metaball functions corresponding to each MB_ index.
-/// Each function takes three parameters:
-/// dv = cartesian distance, a vector [dx,dy,dz] being the distances from the ball center to the volume sample point
-/// coeff = the intensity (weight, charge, density, etc.) of the metaball, can be a vector if warranted.
-/// additional value or array of values needed by the function.
-/// cutoff = radial cutoff distance; effect suppression increases with distance until zero at the cutoff distance, and is zero from that point farther out. Default: INF
-/// influence = inverse exponent to 1/r, the higher the influence, the further the "reach" of the metaball. Default: 1
+/// For speed, they are split into four functions, each handling a different combination of influence != 1 or influence == 1, and cutoff < INF or cutoff == INF.
 
-/// metaball field function, calling any of the other metaball functions above to accumulate
-/// the contribution of each metaball at point xyz
-
-/*
-/// metaball suppression and cutoff function to control shape of the falloff
-function mb_shaping(dist, coeff, cutoff, influence) =
-    sign(influence) * 0.5*(cos(180*(dist/cutoff)^4)+1)
-    * (coeff/dist)^(1/abs(influence));
-
-
-function _mb_sphere(dv, coeff, cutoff, influence) =
-    let(r=norm(dv)) r>=cutoff ? 0
-    : mb_shaping(r, coeff, cutoff, influence);
-
-
-//function mb_sphere(coeff=10, cutoff=INF, influence=1) = function (dv) _mb_sphere(dv, coeff, cutoff, influence);
-*/
-
-
-/// metaball cutoff function
+/// public metaball cutoff function if anyone wants it (demonstrated in example)
 
 function mb_cutoff(dist, cutoff) = dist>=cutoff ? 0 : 0.5*(cos(180*(dist/cutoff)^4)+1);
 
@@ -936,7 +941,7 @@ function _mb_sphere_basic(dv, r, neg) = neg*r/norm(dv);
 function _mb_sphere_influence(dv, r, ex, neg) = neg * (r/norm(dv))^ex;
 function _mb_sphere_cutoff(dv, r, cutoff, neg) = let(dist=norm(dv))
     neg * mb_cutoff(dist, cutoff) * r/dist;
-function _mb_sphere_full(dv, r, ex, cutoff, neg) = let(dist=norm(dv))
+function _mb_sphere_full(dv, r, cutoff, ex, neg) = let(dist=norm(dv))
     neg * mb_cutoff(dist, cutoff) * (r/dist)^ex;
 
 function mb_sphere(r, cutoff=INF, influence=1, negative=false, d) =
@@ -950,7 +955,182 @@ function mb_sphere(r, cutoff=INF, influence=1, negative=false, d) =
    !is_finite(cutoff) && influence==1 ? function(dv) _mb_sphere_basic(dv,r,neg)
  : !is_finite(cutoff) ? function(dv) _mb_sphere_influence(dv,r,1/influence, neg)
  : influence==1 ? function(dv) _mb_sphere_cutoff(dv,r,cutoff,neg)
- : function(dv) _mb_sphere_full(dv,r,1/influence,cutoff,neg);
+ : function(dv) _mb_sphere_full(dv,r,cutoff,1/influence,neg);
+
+// metaball rounded cube
+
+function _mb_cuboid_basic(dv, siz, xp, neg) = let(
+    dist = xp >= 1100 ? max(v_abs(dv))
+    : (abs(dv.x)^xp + abs(dv.y)^xp + abs(dv.z)^xp) ^ (1/xp)
+) neg*siz/dist;
+function _mb_cuboid_influence(dv, siz, xp, ex, neg) = let(
+    dist = xp >= 1100 ? max(v_abs(dv))
+    :(abs(dv.x)^xp + abs(dv.y)^xp + abs(dv.z)^xp) ^ (1/xp)
+) neg * (siz/dist)^ex;
+function _mb_cuboid_cutoff(dv, siz, xp, cutoff, neg) = let(
+    dist = xp >= 1100 ? max(v_abs(dv))
+    : (abs(dv.x)^xp + abs(dv.y)^xp + abs(dv.z)^xp) ^ (1/xp)
+) neg * mb_cutoff(dist, cutoff) * siz/dist;
+function _mb_cuboid_full(dv, siz, xp, cutoff, ex, neg) = let(
+    dist = xp >= 1100 ? max(v_abs(dv))
+    :(abs(dv.x)^xp + abs(dv.y)^xp + abs(dv.z)^xp) ^ (1/xp)
+) neg * mb_cutoff(dist, cutoff) * (siz/dist)^ex;
+
+function mb_cuboid(size, squareness=0.5, cutoff=INF, influence=1, negative=false) =
+   assert(is_num(cutoff) && cutoff>0, "\ncutoff must be a positive number.")
+   assert(is_finite(influence) && influence>0, "\ninfluence must be a positive number.")
+   assert(is_finite(size) && size>0, "\nsize must be a positive number.")
+   let(
+       dummy=assert(is_num(size) && size>0, "\ninvalid size."),
+       xp = _squircle_se_exponent(squareness),
+       neg = negative ? -1 : 1
+   )
+   !is_finite(cutoff) && influence==1 ? function(dv) _mb_cuboid_basic(dv, size/2, xp, neg)
+ : !is_finite(cutoff) ? function(dv) _mb_cuboid_influence(dv, size/2, xp, 1/influence, neg)
+ : influence==1 ? function(dv) _mb_cuboid_cutoff(dv, size/2, xp, cutoff, neg)
+ : function (dv) _mb_cuboid_full(dv, size/2, xp, cutoff, 1/influence, neg);
+
+// metaball rounded newcube that takes a 3-vector as size
+
+function _mb_newcuboid_basic(dv, inv_size, xp, neg) =
+   let(
+       dv=inv_size * dv,
+       dist = xp >= 1100 ? max(v_abs(dv))
+                         : (abs(dv.x)^xp + abs(dv.y)^xp + abs(dv.z)^xp) ^ (1/xp)
+      ) neg/dist;
+function _mb_newcuboid_influence(dv, inv_size, xp, ex, neg) = let(
+    dv=inv_size * dv,
+    dist = xp >= 1100 ? max(v_abs(dv))
+                      :(abs(dv.x)^xp + abs(dv.y)^xp + abs(dv.z)^xp) ^ (1/xp)
+) neg / dist^ex;
+function _mb_newcuboid_cutoff(dv, inv_size, xp, cutoff, neg) = let(
+    dv = inv_size * dv, 
+    dist = xp >= 1100 ? max(v_abs(dv))
+                      : (abs(dv.x)^xp + abs(dv.y)^xp + abs(dv.z)^xp) ^ (1/xp)
+) neg * mb_cutoff(dist, cutoff) / dist;
+function _mb_newcuboid_full(dv, inv_size, xp, ex, cutoff, neg) = let(
+    dv = inv_size * dv,
+    dist = xp >= 1100 ? max(v_abs(dv))
+                      :(abs(dv.x)^xp + abs(dv.y)^xp + abs(dv.z)^xp) ^ (1/xp)
+) neg * mb_cutoff(dist, cutoff) / dist^ex;
+
+function mb_newcuboid(size, squareness=0.5, cutoff=INF, influence=1, negative=false) =
+   assert(is_num(cutoff) && cutoff>0, "\ncutoff must be a positive number.")
+   assert(is_finite(influence) && influence>0, "\ninfluence must be a positive number.")
+   assert((is_finite(size) && size>0) || (is_vector(size) && all_positive(size)), "\nsize must be a positive number or a 3-vector of positive values.")
+   let(
+       xp = _squircle_se_exponent(squareness),
+       neg = negative ? -1 : 1,
+       inv_size = is_num(size) ? 2/size
+                : [[2/size.x,0,0],[0,2/size.y,0],[0,0,2/size.z]]
+   )
+   !is_finite(cutoff) && influence==1 ? function(dv) _mb_cuboid_basic(dv, inv_size, xp, neg)
+ : !is_finite(cutoff) ? function(dv) _mb_cuboid_influence(dv, inv_size, xp, 1/influence, neg)
+ : influence==1 ? function(dv) _mb_cuboid_cutoff(dv, inv_size, xp, cutoff, neg)
+ : function (dv) _mb_cuboid_full(dv, inv_size, xp, 1/influence, cutoff, neg);
+
+
+// metaball rounded cylinder / cone
+
+function _revsurf_basic(dv, path, coef, neg) =
+    let(
+         pt = [norm([dv.x,dv.y]), dv.z],
+         segs = pair(path),
+         dist = min([for(seg=segs)
+                       let(
+                           c=seg[1]-seg[0],
+                           s0 = seg[0]-pt,
+                           t = -s0*c/(c*c)
+                        )
+                        t<0 ? norm(s0)
+                      : t>1 ? norm(seg[1]-pt)
+                      : norm(s0+t*c)]),
+         inside_check = [for(seg=segs)
+                     if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+    )
+    neg * (inside_check==[] ? coef*(1+dist) : coef/(1+dist));
+
+function _revsurf_influence(dv, path, coef, exp, neg) =
+    let(
+         pt = [norm([dv.x,dv.y]), dv.z],
+         segs = pair(path),
+         dist = min([for(seg=segs)
+                       let(
+                           c=seg[1]-seg[0],
+                           s0 = seg[0]-pt,
+                           t = -s0*c/(c*c)
+                        )
+                        t<0 ? norm(s0)
+                      : t>1 ? norm(seg[1]-pt)
+                      : norm(s0+t*c)]),
+         inside_check = [for(seg=segs)
+                     if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+    )
+    neg * (inside_check==[] ? (coef*(1+dist))^exp : (coef/(1+dist))^exp);
+
+function _revsurf_cutoff(dv, path, coef, cutoff, neg) =
+    let(
+         pt = [norm([dv.x,dv.y]), dv.z],
+         segs = pair(path),
+         dist = min([for(seg=segs)
+                       let(
+                           c=seg[1]-seg[0],
+                           s0 = seg[0]-pt,
+                           t = -s0*c/(c*c)
+                        )
+                        t<0 ? norm(s0)
+                      : t>1 ? norm(seg[1]-pt)
+                      : norm(s0+t*c)]),
+         inside_check = [for(seg=segs)
+                     if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+    )
+    neg * (inside_check==[]
+        ? (coef*(1+dist)) : mb_cutoff(dist-coef, cutoff) * (coef/(1+dist)) );
+
+function _revsurf_full(dv, path, coef, cutoff, exp, neg) =
+    let(
+         pt = [norm([dv.x,dv.y]), dv.z],
+         segs = pair(path),
+         dist = min([for(seg=segs)
+                       let(
+                           c=seg[1]-seg[0],
+                           s0 = seg[0]-pt,
+                           t = -s0*c/(c*c)
+                        )
+                        t<0 ? norm(s0)
+                      : t>1 ? norm(seg[1]-pt)
+                      : norm(s0+t*c)]),
+         inside_check = [for(seg=segs)
+                     if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+    )
+    neg * (inside_check==[]
+        ? (coef*(1+dist))^exp : mb_cutoff(dist-coef, cutoff) * (coef/(1+dist))^exp );
+
+function mb_cyl(h,r,rounding=0,r1,r2,l,height,length,d1,d2,d, cutoff=INF, influence=1, negative=false) =
+    let(
+         r1 = get_radius(r1=r1,r=r, d1=d1, d=d),
+         r2 = get_radius(r1=r2,r=r, d1=d2, d=d),
+         h = first_defined([h,l,height,length],"h,l,height,length")
+    )
+    assert(is_finite(rounding) && rounding>=0, "rounding must be a nonnegative number")
+    assert(is_finite(r1) && r1>0, "r/r1/d/d1 must be a positive number")
+    assert(is_finite(r2) && r2>0, "r/r2/d/d2 must be a positive number")
+    let(
+         vang = atan2(r1-r2,h),
+         facelen = adj_ang_to_hyp(h, abs(vang)),
+         roundlen1 = rounding/tan(45-vang/2),
+         roundlen2 = rounding/tan(45+vang/2),
+         sides = [[0,h/2], [r2,h/2], [r1,-h/2], [0,-h/2]],
+         neg = negative ? -1 : 1
+    )
+    assert(roundlen1 <= r1, "size of rounding is larger than the r1 radius of the cylinder/cone")
+    assert(roundlen2 <= r2, "size of rounding is larger than the r2 radius of the cylinder/cone")
+    assert(roundlen1+roundlen2 < facelen, "Roundings don't fit on the edge length of the cylinder/cone")
+    let(shifted = offset(sides, delta=-rounding, closed=false))
+       !is_finite(cutoff) && influence==1 ? function(dv) _revsurf_basic(dv, shifted, 1+rounding, neg)
+     : !is_finite(cutoff) ? function(dv) _revsurf_influence(dv, shifted, 1+rounding, 1/influence, neg)
+     : influence==1 ? function(dv) _revsurf_cutoff(dv, shifted, 1+rounding, cutoff, neg)
+     : function (dv) _revsurf_full(dv, shifted, 1+rounding, cutoff, 1/influence, neg);
 
 // metaball capsule (round-ended cylinder)
 
@@ -966,7 +1146,7 @@ function _mb_capsule_cutoff(dv, hl, r, cutoff, neg) = let(
     dist = dv.z<-hl ? norm(dv-[0,0,-hl])
       : dv.z<hl ? norm([dv.x,dv.y]) : norm(dv-[0,0,hl])
 ) neg * mb_cutoff(dist, cutoff) * r/dist;
-function _mb_capsule_full(dv, hl, r, ex, cutoff, neg) = let(
+function _mb_capsule_full(dv, hl, r, cutoff, ex, neg) = let(
     dist = dv.z<-hl ? norm(dv-[0,0,-hl])
       : dv.z<hl ? norm([dv.x,dv.y]) : norm(dv-[0,0,hl])
 ) neg * mb_cutoff(dist, cutoff) * (r/dist)^ex;
@@ -986,7 +1166,48 @@ function mb_capsule(h, r, cutoff=INF, influence=1, negative=false, d,l,height,le
    !is_finite(cutoff) && influence==1 ? function(dv) _mb_capsule_basic(dv,sh/2,r,neg)
  : !is_finite(cutoff) ? function(dv) _mb_capsule_influence(dv,sh/2,r,1/influence, neg)
  : influence==1 ? function(dv) _mb_capsule_cutoff(dv,sh/2,r,cutoff,neg)
- : function (dv) _mb_capsule_full(dv, sh/2, r, 1/influence, cutoff, neg);
+ : function (dv) _mb_capsule_full(dv, sh/2, r, cutoff, 1/influence, neg);
+
+// metaball disk with rounded edge
+
+function _mb_disk_basic(dv, hl, r, neg) =
+    let(
+        rdist=norm([dv.x,dv.y]), 
+        dist = rdist<r ? abs(dv.z) : norm([rdist-r,dv.z])
+    ) neg*hl/dist;
+function _mb_disk_influence(dv, hl, r, ex, neg) =
+    let(
+        rdist=norm([dv.x,dv.y]), 
+        dist = rdist<r ? abs(dv.z) : norm([rdist-r,dv.z])
+    ) neg*(hl/dist)^ex;
+function _mb_disk_cutoff(dv, hl, r, cutoff, neg) =
+    let(
+        rdist=norm([dv.x,dv.y]), 
+        dist = rdist<r ? abs(dv.z) : norm([rdist-r,dv.z])
+    ) neg * mb_cutoff(dist, cutoff) * hl/dist;
+function _mb_disk_full(dv, hl, r, cutoff, ex, neg) =
+    let(
+        rdist=norm([dv.x,dv.y]), 
+        dist = rdist<r ? abs(dv.z) : norm([rdist-r,dv.z])
+    ) neg* mb_cutoff(dist, cutoff) * (hl/dist)^ex;
+
+function mb_disk(h, r, cutoff=INF, influence=1, negative=false, d,l,height,length) =
+    assert(is_num(cutoff) && cutoff>0, "\ncutoff must be a positive number.")
+    assert(is_finite(influence) && influence>0, "\ninfluence must be a positive number.")
+    let(
+        h = one_defined([h,l,height,length],"h,l,height,length"),
+        dum1 = assert(is_finite(h) && h>0, "\ncylinder height must be a positive number."),
+        h2 = h/2,
+        or = get_radius(r=r,d=d),
+        dum2 = assert(is_finite(r) && or>0, "\ninvalid radius or diameter."),
+        r = or - h2,
+        dum3 = assert(r>0, "\nDiameter must be greater than height."),
+        neg = negative ? -1 : 1
+   )
+   !is_finite(cutoff) && influence==1 ? function(dv) _mb_disk_basic(dv,h2,r,neg)
+ : !is_finite(cutoff) ? function(dv) _mb_disk_influence(dv,h2,r,1/influence, neg)
+ : influence==1 ? function(dv) _mb_disk_cutoff(dv,h2,r,cutoff,neg)
+ : function (dv) _mb_disk_full(dv, h2, r, cutoff, 1/influence, neg);
 
 // metaball connector cylinder - calls mb_capsule* functions after transform
 
@@ -994,10 +1215,11 @@ function mb_connector(p1, p2, r, cutoff=INF, influence=1, negative=false, d) =
     assert(is_num(cutoff) && cutoff>0, "\ncutoff must be a positive number.")
     assert(is_finite(influence) && influence>0, "\ninfluence must be a positive number.")
     let(
-        dum1 = assert(is_matrix([p1],1,3), "\nConnector start point p1 must be a 3D coordinate."),
-        dum2 = assert(is_matrix([p2],1,3), "\nConnector end point p2 must be a 3D coordinate."),
+        dum1 = assert(is_vector(p1,3), "\nConnector start point p1 must be a 3D coordinate.")
+            assert(is_vector(p2,3), "\nConnector end point p2 must be a 3D coordinate.")
+            assert(p1 != p2, "\nStart and end points p1 and p2 cannot be the same."),
         r = get_radius(r=r,d=d),
-        dum3 = assert(is_finite(r) && r>0, "\ninvalid radius or diameter."),
+        dum2 = assert(is_finite(r) && r>0, "\ninvalid radius or diameter."),
         neg = negative ? -1 : 1,
         dc = p2-p1, // center-to-center distance
         midpt = reverse(-0.5*(p1+p2)),
@@ -1015,87 +1237,7 @@ function mb_connector(p1, p2, r, cutoff=INF, influence=1, negative=false, d) =
             _mb_capsule_cutoff(newdv,h,r,cutoff,neg)
  : function (dv)
         let(newdv = transform * [each dv,1])
-            _mb_capsule_full(newdv, h, r, 1/influence, cutoff, neg);
-
-// metaball rounded cylinder / cone
-
-function revsurf(dv, path, coef, exp, cutoff) = 
-    let(
-         pt = [norm([dv.x,dv.y]), dv.z],
-         segs = pair(path),
-         dist = min([for(seg=segs)
-                       let(
-                           c=seg[1]-seg[0],
-                           s0 = seg[0]-pt,
-                           t = -s0*c/(c*c)
-                        )
-                        t<0 ? norm(s0)
-                      : t>1 ? norm(seg[1]-pt)
-                      : norm(s0+t*c)]),
-         inside_check = [for(seg=segs)
-                     if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
-    )
-    mb_cutoff(dist, cutoff) * (inside_check==[]
-        ? (coef*(1+dist))^exp : (coef/(1+dist))^exp );
-
-function revsurf_rounded(path, rounding, cutoff, influence) =
-    let(shifted = offset(path, delta=-rounding, closed=false))
-        function (dv) revsurf(dv, shifted, 1+rounding, 1/influence, cutoff);
-
-function mb_cyl(h,r,rounding=0,r1,r2,l,height,length,d1,d2,d, cutoff=INF, influence=1, negative=false) =
-    let(
-         r1 = get_radius(r1=r1,r=r, d1=d1, d=d),
-         r2 = get_radius(r1=r2,r=r, d1=d2, d=d),
-         h = first_defined([h,l,height,length],"h,l,height,length")
-    )
-    assert(is_finite(rounding) && rounding>=0, "rounding must be a nonnegative number")
-    assert(is_finite(r1) && r1>0, "r/r1/d/d1 must be a positive number")
-    assert(is_finite(r2) && r2>0, "r/r2/d/d2 must be a positive number")
-    let(
-         vang = atan2(r1-r2,h),
-         facelen = adj_ang_to_hyp(h, abs(vang)),
-         roundlen1 = rounding/tan(45-vang/2),
-         roundlen2 = rounding/tan(45+vang/2),
-         sides = [[0,h/2],[r2,h/2],[r1,-h/2], [0, -h/2]],         
-    )
-    assert(roundlen1 <= r1, "size of rounding is larger than the r1 radius of the cylinder/cone")
-    assert(roundlen2 <= r2, "size of rounding is larger than the r2 radius of the cylinder/cone")
-    assert(roundlen1+roundlen2 <=facelen, "Roundings don't fit on the edge length of the cylinder/cone")
-    revsurf_rounded(sides, rounding, influence);
-
-
-// metaball rounded cube
-
-function _mb_cuboid_basic(dv, siz, xp, neg) = let(
-    dist = xp >= 1100 ? max(v_abs(dv))
-    : (abs(dv.x)^xp + abs(dv.y)^xp + abs(dv.z)^xp) ^ (1/xp)
-) neg*siz/dist;
-function _mb_cuboid_influence(dv, siz, xp, ex, neg) = let(
-    dist = xp >= 1100 ? max(v_abs(dv))
-    :(abs(dv.x)^xp + abs(dv.y)^xp + abs(dv.z)^xp) ^ (1/xp)
-) neg * (siz/dist)^ex;
-function _mb_cuboid_cutoff(dv, siz, xp, cutoff, neg) = let(
-    dist = xp >= 1100 ? max(v_abs(dv))
-    : (abs(dv.x)^xp + abs(dv.y)^xp + abs(dv.z)^xp) ^ (1/xp)
-) neg * mb_cutoff(dist, cutoff) * siz/dist;
-function _mb_cuboid_full(dv, siz, xp, ex, cutoff, neg) = let(
-    dist = xp >= 1100 ? max(v_abs(dv))
-    :(abs(dv.x)^xp + abs(dv.y)^xp + abs(dv.z)^xp) ^ (1/xp)
-) neg * mb_cutoff(dist, cutoff) * (siz/dist)^ex;
-
-function mb_cuboid(size, squareness=0.5, cutoff=INF, influence=1, negative=false) =
-   assert(is_num(cutoff) && cutoff>0, "\ncutoff must be a positive number.")
-   assert(is_finite(influence) && influence>0, "\ninfluence must be a positive number.")
-   assert(is_finite(size) && size>0, "\nsize must be a positive number.")
-   let(
-       dummy=assert(is_num(size) && size>0, "\ninvalid size."),
-       xp = _squircle_se_exponent(squareness),
-       neg = negative ? -1 : 1
-   )
-   !is_finite(cutoff) && influence==1 ? function(dv) _mb_cuboid_basic(dv, size/2, xp, neg)
- : !is_finite(cutoff) ? function(dv) _mb_cuboid_influence(dv, size/2, xp, 1/influence, neg)
- : influence==1 ? function(dv) _mb_cuboid_cutoff(dv, size/2, xp, cutoff, neg)
- : function (dv) _mb_cuboid_full(dv, size/2, xp, 1/influence, cutoff, neg);
+            _mb_capsule_full(newdv, h, r, cutoff, 1/influence, neg);
 
 // metaball octahedron
 
@@ -1105,7 +1247,7 @@ function _mb_octahedron_influence(dv, r, ex, neg) =
     let(dist = abs(dv.x) + abs(dv.y) + abs(dv.z)) neg * (r/dist)^ex;
 function _mb_octahedron_cutoff(dv, r, cutoff, neg) =
     let(dist = abs(dv.x) + abs(dv.y) + abs(dv.z)) neg * mb_cutoff(dist, cutoff) * r/dist;
-function _mb_octahedron_full(dv, r, ex, cutoff, neg) =
+function _mb_octahedron_full(dv, r, cutoff, ex, neg) =
     let(dist = abs(dv.x) + abs(dv.y) + abs(dv.z)) neg * mb_cutoff(dist, cutoff) * (r/dist)^ex;
 
 function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
@@ -1119,7 +1261,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
    !is_finite(cutoff) && influence==1 ? function(dv) _mb_octahedron_basic(dv,r,neg)
  : !is_finite(cutoff) ? function(dv) _mb_octahedron_influence(dv,r,1/influence, neg)
  : influence==1 ? function(dv) _mb_octahedron_cutoff(dv,r,cutoff,neg)
- : function(dv) _mb_octahedron_full(dv,r,1/influence,cutoff,neg);
+ : function(dv) _mb_octahedron_full(dv,r,cutoff,1/influence,neg);
 
 // torus
 
@@ -1130,7 +1272,7 @@ function _mb_torus_influence(dv, rmaj, rmin, ex, neg) =
 function _mb_torus_cutoff(dv, rmaj, rmin, cutoff, neg) =
     let(dist = norm([norm([dv.x,dv.y])-rmaj, dv.z]))
         neg * mb_cutoff(dist, cutoff) * rmin/dist;
-function _mb_torus_full(dv, rmaj, rmin, ex, cutoff, neg) =
+function _mb_torus_full(dv, rmaj, rmin, cutoff, ex, neg) =
     let(dist = norm([norm([dv.x,dv.y])-rmaj, dv.z]))
         neg * mb_cutoff(dist, cutoff) * (rmin/dist)^ex;
 
@@ -1156,19 +1298,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
    !is_finite(cutoff) && influence==1 ? function(dv) _mb_torus_basic(dv, r_maj, r_min, neg)
  : !is_finite(cutoff) ? function(dv) _mb_torus_influence(dv, r_maj, r_min, 1/influence, neg)
  : influence==1 ? function(dv) _mb_torus_cutoff(dv, r_maj, r_min, cutoff, neg)
- : function(dv) _mb_torus_full(dv, r_maj, r_min, 1/influence, cutoff, neg);
-
-
-
-/* hard-edge cylinder
-_mb_capsule = function (dv, coeff, length, cutoff, influence)
-let(
-    dist = max(abs(dv.z*2*coeff/length), norm([dv.x,dv.y])),
-    suppress = let(a = min(r,cutoff)/cutoff) 1-a*a,
-) suppress*coeff / dist;
-
-function mb_capsule(coeff=10, length=10, cutoff=INF, influence=1) = function (dv) _mb_capsule(dv, coeff, length, cutoff, influence);
-*/
+ : function(dv) _mb_torus_full(dv, r_maj, r_min, cutoff, 1/influence, neg);
 
 
 // Function&Module: metaballs()
@@ -1198,16 +1328,18 @@ function mb_capsule(coeff=10, length=10, cutoff=INF, influence=1) = function (dv
 //   write `up(5) xrot(25) zrot(45) scale(4)`. You would provide that transformation
 //   as the transformation matrix `up(5) * xrot(25) * zrot(45) * scale(4)`.  You can use
 //   scaling to produce an ellipse from a sphere, and you can even use {{skew()}} if desired. 
-//   When no transformation is needed, give `IDENT` as the transformation.  
+//   When no transformation is needed, give `IDENT` as the transformation.
 //   .
 //   You can create metaballs in a variety of standard shapes using the predefined functions
 //   listed below. If you wish, you can also create custom metaball shapes using your own functions
-//   (see Example 11). Three parameters are available on all of the built-in metaballs to control the
+//   (see Example 12). Three parameters are available on all of the built-in metaballs to control the
 //   interaction of the metaballs with each other: `cutoff`, `influence`, and `negative'.
 //   .
 //   The `cutoff` parameter specifies the distance beyond which the metaball has no interaction with
 //   other balls. When you apply `cutoff`, a smooth suppression factor begins begins decreasing the
 //   interaction strength at half the cutoff distance and reduces the interaction to zero at the cutoff.
+//   The smooth decrease may cause the influence to appear negligible slightly before the cutoff distance
+//   distance specified, depending on the voxel size and influence of the ball.
 //   . 
 //   The `influence` parameter adjusts the strength of the interaction metaball objects have with each
 //   other. If you increase `influence` from its default of 1, the metaball interacts with other
@@ -1221,7 +1353,7 @@ function mb_capsule(coeff=10, length=10, cutoff=INF, influence=1) = function (dv
 //   The `negative` parameter, if set to `true`, creates a negative metaball, which can create
 //   hollows or dents in other metaballs, or swallow other metaballs entirely, making them disappear.
 //   Negative metaballs are always below the isovalue, so they are never directly visible;
-//   only their effects are visible. See Example 7.
+//   only their effects are visible. See Examples 7 and 8.
 //   .
 //   For complicated metaball assemblies you may wish to repeat a structure in different locations or
 //   otherwise transformed. Nesting metaball specifications are supported:
@@ -1230,7 +1362,7 @@ function mb_capsule(coeff=10, length=10, cutoff=INF, influence=1) = function (dv
 //   `hand=[u0,finger,u1,finger,...]` and then invoke metaball with `[s0, hand]`.
 //   Basically, any list of metaballs is, itself, a metaball. It can be used in place of a function in another list.
 //   This is a powerful technique that lets you make groups of metaballs that you can use as individual
-//   metaballs in other groups, and can make your code compact and simpler to understand. See Example 13.
+//   metaballs in other groups, and can make your code compact and simpler to understand. See Example 14.
 //   .
 //   .h3 Built-in metaball functions
 //   Several metaballs are defined for you to use in your models. 
@@ -1243,35 +1375,37 @@ function mb_capsule(coeff=10, length=10, cutoff=INF, influence=1) = function (dv
 //   if `isovalue<1` and smaller than their specified sizes if `isovalue>1`.
 //   .
 //   All of the built-in functions all accept these named arguments, which are not repeated in the list below:
-//   * `cutoff` - specifies the distance beyond which the metaball has no influence.  Default: INF
-//   * `influence` - a positive number that determines how much influence the metaball has on others.  Default: 1
-//   * `negative` - when true, causes the metaball to have a negative influence on its surroundings.  Default: false
+//   * `cutoff` - specifies the distance beyond which the metaball has no influence. **If you scale the metaball, the cutoff gets scaled also. Because cutoff is a smoothly decreasing function, the influence may effectively disappear slightly before the cutoff distance distance specified, depending on the voxel size and influence of the ball. ** Depending on the value of `influence`, a cutoff that ends in the middle of another ball can result in strange shapes, as shown in Example 8, with the metaball being simultaneously influenced and not influenced on either side of the boundary.  Default: INF
+//   * `influence` - a positive number that determines how much influence the metaball has on others. Default: 1
+//   * `negative` - when true, causes the metaball to have a negative influence on its surroundings. Default: false
 //   .
 //   The built-in metaball functions are:
 //   * `mb_sphere(r|d=)` - spherical metaball, with radius r or diameter d.  You can create an ellipsoid using `scale()` as the last transformation entry of the metaball `funcs` array.
-//   * `mb_cuboid(size, [squareness=0.5])` - cuboid metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (cubical), and defaults to 0.5.  The `size` specifies the dimensions of the cuboid shape between the face centers, but except when `squareness=1`, the faces are always a little bit curved.  
-//   * `mb_cyl(h|l|height|length=, [r|d=], [r1=|d1=], [r2=|d2=], [rounding=0])` - vertical cylinder or cone metaball with the same dimenional arguments as {{cyl()}}. The rounding is the same at both ends.  If you just want a cylindrical shape, consider `mb_capsule()`, which has a faster execution time.
-//   * `mb_capsule(h|l|height|length=, r|d=)` - vertical cylinder of radius `r` or diameter `d` with hemispherical caps.  The height or length specifies the **total** height including the rounded ends.  
-//   * `mb_connector(p1, p2, r|d=)` - cylinder of radius `r` or diameter `d` with hemispherical caps (like mb_capsule), but specified to connect point `p1` to point `p2` (where `p1` and `p2` are 3D vectors).  The specified points are at the ends of the straight portion of the shape (the centers of the two capping hemispheres).  
-//   * `mb_octahedron(r|d=])` - octahedral metaball with sharp edges and corners. The `r` parameter specifies the distance from center to tip. The vertex parameter specifies the distance between the two opposite tips.  
-//   * `mb_torus([r_maj|d_maj=], [r_min|d_min=],[or=|od=],[ir=|id=])` - torus metaball oriented perpendicular to the z axis. You can specify the torus dimensions using the same arguments as {{torus()}}; that is, major radius (or diameter) with `r_maj` or `d_maj`, and minor radius and diameter using `r_min` or `d_min`.  Alternatively you can give the inner radius or diameter with `ir` or `id` and the outer radius or diameter with `or` or `od`.  
+//   * `mb_cuboid(size, [squareness=0.5])` - cuboid metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (cubical), and defaults to 0.5.  The `size` is a scalar that specifies the width of the cuboid shape between the face centers. Except when `squareness=1`, the faces are always a little bit curved.
+//   * `mb_cyl(h|l|height|length=, [r|d=], [r1=|d1=], [r2=|d2=], [rounding=0])` - vertical cylinder or cone metaball with the same dimenional arguments as {{cyl()}}. Only one rounding value is allowed; the rounding is the same at both ends. If you just want a cylindrical shape, consider `mb_capsule()` or `mb_disc()`, which hav faster execution times.
+//   * `mb_capsule(h|l|height|length=, r|d=)` - vertical cylinder of radius `r` or diameter `d` with hemispherical caps. The height or length specifies the **total** height including the rounded ends.
+//   * `mb_disk(h|l|height|length=, [r|d=], [r1=|d1=], [r2=|d2=])` - This is the complement of `mb_capsule()` but instead of a cylinder with round ends, this is a disk with flat ends and rounded sides. The diameter you specify must be greater than its height.
+//   * `mb_connector(p1, p2, r|d=)` - cylinder of radius `r` or diameter `d` with hemispherical caps (like mb_capsule), but specified to connect point `p1` to point `p2` (where `p1` and `p2` must be different 3D vectors). The specified points are at the ends of the straight portion of the shape (the centers of the two capping hemispheres).
+//   * `mb_octahedron(r|d=])` - octahedral metaball with sharp edges and corners. The `r` parameter specifies the distance from center to tip. The vertex parameter specifies the distance between the two opposite tips.
+//   * `mb_torus([r_maj|d_maj=], [r_min|d_min=],[or=|od=],[ir=|id=])` - torus metaball oriented perpendicular to the z axis. You can specify the torus dimensions using the same arguments as {{torus()}}; that is, major radius (or diameter) with `r_maj` or `d_maj`, and minor radius and diameter using `r_min` or `d_min`. Alternatively you can give the inner radius or diameter with `ir` or `id` and the outer radius or diameter with `or` or `od`.
 //   .
 //   .h3 Metaball functions and user defined functions
 //   Each metaball function is defined as a function of a 3-vector that gives the value of the metaball function
 //   for that point in space. As is common in metaball implementations, we define the built-in metaballs using an
-//   inverse relationship where the metaball functions fall off as $1/d$.  The spherical metaball therefore has
-//   a simple basic definition as `f(v) = 1/norm(v)`.  Note that with this framework, `f(v)>=c` defines a bounded
-//   object.  Increasing the isovalue shrinks the object, and decreasing the isovalue grows the object.  
+//   inverse relationship where the metaball functions fall off as $1/d$, where $d$ is distance from the
+//   metaball center. The spherical metaball therefore has a simple basic definition as `f(v) = 1/norm(v)`.
+//   Note that with this framework, `f(v) >= c` defines a bounded object. Increasing the isovalue shrinks the
+//   object, and decreasing the isovalue grows the object.
 //   .
-//   In order to adjust interaction strength, the influence parameter applies an exponent, so if `influence=a` then the
-//   decay becomes $1/d^(1/a)$.  This means, for example, that if you set influence to 2 you get a $1/d^2$ falloff. 
-//   Changing this exponent changes how the balls interact.  
+//   In order to adjust interaction strength, the influence parameter applies an exponent, so if `influence=a`
+//   then the decay becomes $1/d^(1/a)$. This means, for example, that if you set influence to 2 you get a
+//   $1/d^2$ falloff. Changing this exponent changes how the balls interact.
 //   .
 //   You can pass a custom function as a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
 //   that takes a single argument (a 3-vector) and returns a single numerical value. 
-//   The returned value should define a function where in isovalue range [c,INF] defines a bounded object.  See Example 11.  
+//   The returned value should define a function where in isovalue range [c,INF] defines a bounded object. See Example 12.
 // Arguments:
-//   funcs = a 1-D list of transform and function pairs in the form `[trans0, func0, trans1, func1, ...]`, with one pair for each metaball. The transform should be at least a position such as `move([x,y,z])` to specify the location of the metaball center, but you can also include rotations, such as `move([x,y,z])*rot([ax,ay,az])`. You can multiply together any of BOSL2's affine operations like {{xrot()}}, {{scale()}}, and {{skew()}}. This is useful for orienting non-spherical metaballs. The priority order of the transforms is right to left, that is, `move([4,5,6])*rot([45,0,90])` does the rotation first, and then the move, similar to normal OpenSCAD syntax `translate([4,5,6]) rotate([45,0,90]) children()`. The transform `IDENT` may be used if you don't want to specify a transform, resulting in a metaball positioned at the origin. **Any function in the list may, itself, be another list of metaballs instead of a function name.** See Example 13 for a demonstration.
+//   funcs = a 1-D list of transform and function pairs in the form `[trans0, func0, trans1, func1, ...]`, with one pair for each metaball. The transform should be at least a position such as `move([x,y,z])` to specify the location of the metaball center, but you can also include rotations, such as `move([x,y,z])*rot([ax,ay,az])`. You can multiply together any of BOSL2's affine operations like {{xrot()}}, {{scale()}}, and {{skew()}}. This is useful for orienting non-spherical metaballs. The priority order of the transforms is right to left, that is, `move([4,5,6])*rot([45,0,90])` does the rotation first, and then the move, similar to normal OpenSCAD syntax `translate([4,5,6]) rotate([45,0,90]) children()`. The transform `IDENT` may be used if you don't want to specify a transform, resulting in a metaball positioned at the origin. **Any function in the list may, itself, be another list of metaballs instead of a function name.** See Example 14 for a demonstration.
 //   voxel_size = The size (scalar) of the voxel cube that determines the resolution of the metaball surface. **Start with a larger size for experimenting, and refine it gradually.** A small voxel size can significantly slow down processing time, especially with a large `bounding_box`.
 //   bounding_box = A pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum box corner coordinates. The voxels needn't fit perfectly inside the bounding box.
 //   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. Default: 1.0
@@ -1359,6 +1493,15 @@ function mb_capsule(coeff=10, length=10, cutoff=INF, influence=1) = function (dv
 //   boundingbox = [[-7,-6,-6], [3,6,6]];
 //   #metaballs(funcs, voxelsize, boundingbox, isovalue);
 //   color("green") move_copies(centers) sphere(d=1, $fn=16);
+// Example(3D,VPD=100): When a positive and negative metaball interact, the negative metaball reduces the influence of the positive one, causing it to shrink but not disappear because its contribution approaches infinity at its center. In this example we have a large positive metaball near a small negative metaball at the origin. The negative ball as high influence and a cutoff limiting its influence to 20 units. The negative metaball influences the positive one up to the cutoff, causing the positive metaball to appear smaller inside the cutoff range, and appear its normal size outside the cutoff range. The positive metaball has a small dimple at the origin (the center of the negative metaball) because it cannot overcome the infinite negative contribution of the negative metaball at the origin.
+//   funcs = [
+//       back(10), mb_sphere(20),
+//       IDENT, mb_sphere(2, influence = 30, cutoff = 20, negative = true),
+//   ];
+//   isovalue = 1;
+//   voxelsize = 0.5;
+//   boundingbox = [[-20,-4,-20], [20,30,20]];
+//   metaballs(funcs, voxelsize, boundingbox, isovalue);
 // Example(3D,NoAxes): A cube, a rounded cube, and an octahedron interacting. Because the surface is generated through cubical voxels, voxel corners are always cut off, resulting in difficulty resolving some sharp edges.
 //   funcs = [
 //       move([-7,-3,27])*zrot(55), mb_cuboid(6, squareness=1),
@@ -1421,16 +1564,16 @@ function mb_capsule(coeff=10, length=10, cutoff=INF, influence=1) = function (dv
 //   // useful to save as VNF for copies and manipulations
 //   vnf = metaballs(funcs, voxelsize, boundingbox, isovalue=1);
 //   vnf_polyhedron(vnf);
-// Example(3D,Med,NoAxes): Example of grouping metaballs together and nesting them in lists of other metaballs. Here, just one finger is defined, and a thumb is defined from one less joint in the finger. Individual fingers are grouped together with different positions and scaling, along with the thumb. Finally, this group of all fingers is used to combine with a rounded cuboid, with a slight dent subtracted to hollow out the palm, to make the hand.
+// Example(3D,Med,NoAxes,VPR=[70,0,30],VPD=520,VPT=[0,0,80]): Example of grouping metaballs together and nesting them in lists of other metaballs. Here, just one finger is defined, and a thumb is defined from one less joint in the finger. Individual fingers are grouped together with different positions and scaling, along with the thumb. Finally, this group of all fingers is used to combine with a rounded cuboid, with a slight ellipsoid dent subtracted to hollow out the palm, to make the hand.
 //   joints = [[0,0,1], [0,0,85], [0,-5,125], [0,-16,157], [0,-30,178]];
 //   finger = [
-//       for(i=[0:3]) each [IDENT, mb_connector(joints[i], joints[i+1], 6+i/4, influence=.5)]
+//       for(i=[0:3]) each [IDENT, mb_connector(joints[i], joints[i+1], 9+i/5, influence=.3)]
 //   ];
 //   thumb = [
-//       for(i=[0:2]) each [IDENT, mb_connector(joints[i], joints[i+1], 6+i, influence=.4)]
+//       for(i=[0:2]) each [scale([1,1,1.2]), mb_connector(joints[i], joints[i+1], 9+i/2, influence=.3)]
 //   ];
 //   allfingers = [
-//       left(25)*zrot(5)*yrot(-50)*scale([1,1,0.6])*zrot(30), thumb,
+//       left(15)*zrot(5)*yrot(-50)*scale([1,1,0.6])*zrot(30), thumb,
 //       left(15)*yrot(-9)*scale([1,1,0.9]), finger,
 //       IDENT, finger,
 //       right(15)*yrot(8)*scale([1,1,0.92]), finger,
@@ -1438,8 +1581,8 @@ function mb_capsule(coeff=10, length=10, cutoff=INF, influence=1) = function (dv
 //   ];
 //   hand = [
 //       IDENT, allfingers,
-//       scale([1,0.25,1.4]), mb_cuboid(75, squareness=0.3, cutoff=80),
-//       move([-10,-100,55])*yrot(10)*scale([2,2,1]),
+//       move([-5,0,5])*scale([1,0.3,1.4]), mb_cuboid(90, squareness=0.3, cutoff=80),
+//       move([-10,-95,50])*yrot(10)*scale([2,2,0.95]),
 //           mb_sphere(r=15, cutoff=50, influence=2, negative=true)
 //   ];
 //   bbox = [[-100,-40,-10], [76,18,186]];
@@ -1532,14 +1675,14 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   returning a single numerical value.
 //   You can also define an isosurface using a 3D array of values instead of a function, in which
 //   case the isosurface is the set of points where the array is equal to the isovalue. The array
-//   indices are in the order `[x][y][z]`.  
+//   indices are in the order `[x][y][z]`.
 //   .
 //   The VNF that is computed has the isosurface as its bounding surface, with all the points where
 //   $f(x,y,z)>c$ on the interior side of the surface.
 //   When the isovalue is a range, `[c1, c2]`, then the resulting VNF has two bounding surfaces
 //   corresponding to `c1` and `c2`, and the interior of the object are the points with intermediate
 //   isovalues; this generally produces a shell object that has an inside and outside surface. The
-//   range can start at `-INF` or end at `INF`. A single isovalue `c` is equivalent to `[c,INF]`.  
+//   range can start at `-INF` or end at `INF`. A single isovalue `c` is equivalent to `[c,INF]`.
 //   .
 //   The isosurface is evaluated over a bounding box which is divided into voxels of the specified
 //   `voxel_size`. Smaller voxels produce a finer, smoother result at the expense of execution time.
@@ -1571,9 +1714,9 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   and are not normally necessary.
 // Arguments:
 //   f = The isosurface function or array.
-//   isovalue = a scalar giving the isovalue parameter or a 2-vector giving an isovalue range.  
+//   isovalue = a scalar giving the isovalue parameter or a 2-vector giving an isovalue range.
 //   voxel_size = scalar size of the voxel cube that is used to sample the surface. 
-//   bounding_box = When `f` is a function, a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum corner coordinates of the bounding box.  The actual bounding box enlarged if necessary to make the voxels fit perfectly, and centered around your requested box.  
+//   bounding_box = When `f` is a function, a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum corner coordinates of the bounding box.  The actual bounding box enlarged if necessary to make the voxels fit perfectly, and centered around your requested box.
 //   ---
 //   closed = When true, close the surface if it intersects the bounding box by adding a closing face. When false, do not add a closing face and instead produce a non-manfold VNF that has holes.  Default: true
 //   reverse = When true, reverses the orientation of the VNF faces. Default: false
@@ -1616,7 +1759,7 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   isovalue = [-0.3, 0.3];
 //   bbox = [[-100,-100,-100], [100,100,100]];
 //   isosurface(function (x,y,z) gyroid(x,y,z, wavelength=200),
-//       isovalue, voxel_size=5, bounding_box=bbox],
+//       isovalue, voxel_size=5, bounding_box=bbox,
 //       closed = false);
 // Example(3D,ThrownTogether,NoAxes): To make the gyroid a valid manifold 3D object, we remove the `closed` parameter (same as setting `closed=true`), which closes the edges where the surface is clipped by the bounding box. The resulting object can be tiled, the VNF returned by the functional version can be wrapped around an axis using {{vnf_bend()}}, and other operations.
 //   function gyroid(x,y,z, wavelength) = let(
