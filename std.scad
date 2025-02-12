@@ -39,6 +39,8 @@ include <vnf.scad>
 include <utility.scad>
 include <partitions.scad>
 include <structs.scad>
+include <text.scad>
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
 
