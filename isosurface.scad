@@ -1297,35 +1297,35 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //       left(9), mb_sphere(5),
 //       right(9), mb_sphere(5)
 //       ], 0.5, [[-16,-7,-7], [16,7,7]], 1);
-// Continue:
+// Continues:
 //   `mb_cuboid(size, [squareness=0.5])` - cuboid metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (cubical), and defaults to 0.5.  The `size` is a scalar that specifies the width of the cuboid shape between the face centers. Except when `squareness=1`, the faces are always a little bit curved.
 // Figure(3D,NoAxes): Two rounded cuboids interacting
 //   metaballs([
 //       move([-8,-5,-5]), mb_cuboid(10),
 //       move([8,5,5]), mb_cuboid(10)
 //       ], 0.5, [[-15,-12,-12], [15,12,12]], 1);
-// Continue:
+// Continues:
 //   `mb_cyl(h|l|height|length=, [r|d=], [r1=|d1=], [r2=|d2=], [rounding=0])` - vertical cylinder or cone metaball with the same dimenional arguments as {{cyl()}}. Only one rounding value is allowed: the rounding is the same at both ends. For a fully rounded cylindrical shape, consider `mb_capsule()` or `mb_disk()`, which are less flexible but have faster execution times.  For this metaball, the cutoff is measured from surface of the cone with the specified dimensions.
 // Figure(3D,NoAxes): Two rounded `mb_cyl()` cones interacting
 //   metaballs([
 //       left(10), mb_cyl(15, r1=8, r2=5, rounding=3),
 //       right(10), mb_cyl(15, r1=8, r2=5, rounding=3)
 //       ], 0.5, [[-19,-9,-10], [19,9,10]], 1);
-// Continue:
+// Continues:
 //   `mb_disk(h|l|height|length=, [r|d=])` - rounded disk with flat ends. The diameter specifies the total diameter of the shape including the rounded sides and must be greater than its height.
 // Figure(3D,NoAxes): Two disks interacting
 //   metaballs([
 //       move([-10,0,2]), mb_disk(5,9),
 //       move([10,0,-2]), mb_disk(5,9)
 //       ], 0.5, [[-20,-10,-6], [20,10,6]], 1);
-// Continue:
+// Continues:
 //   `mb_capsule(h|l|height|length=, r|d=)` - cylinder of radius `r` or diameter `d` with hemispherical caps. The height or length specifies the **total** height including the rounded ends.
 // Figure(3D,NoAxes): Two capsules interacting
 //   metaballs([
 //       move([-8,0,4])*yrot(90), mb_capsule(16,3),
 //       move([8,0,-4])*yrot(90), mb_capsule(16,3)
 //       ], 0.5, [[-17,-5,-8], [17,5,8]], 1);
-// Continue:
+// Continues:
 //   `mb_connector(p1, p2, r|d=)` - cylinder of radius `r` or diameter `d` with hemispherical caps (like mb_capsule), but specified to connect point `p1` to point `p2` (where `p1` and `p2` must be different 3D vectors). The specified points are at the ends of the straight portion of the shape (the centers of the two capping hemispheres). You may want to set `influence` quite low; the connectors themselves are still influenced by other metaballs, but it may be undesirable to have them influence others, or each other. If two connectors are connected, the joint may appear large and swollen unless `influence` is reduced.
 // Figure(3D,NoAxes): A sphere with two connectors
 //   metaballs([
@@ -1333,20 +1333,21 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //       IDENT, mb_connector([-20,0,0], [0,0,10], 2, influence=0.5),
 //       IDENT, mb_connector([0,0,10], [0,-10,0], 2, influence=0.5)
 //       ], 0.5, [[-27,-13,-7], [4,7,14]], 1);
-// Continue:
+// Continues:
 //   `mb_torus([r_maj|d_maj=], [r_min|d_min=],[or=|od=],[ir=|id=])` - torus metaball oriented perpendicular to the z axis. You can specify the torus dimensions using the same arguments as {{torus()}}; that is, major radius (or diameter) with `r_maj` or `d_maj`, and minor radius and diameter using `r_min` or `d_min`. Alternatively you can give the inner radius or diameter with `ir` or `id` and the outer radius or diameter with `or` or `od`.
 // Figure(3D,NoAxes): Two tori interacting
 //   metaballs([
 //       move([-10,0,3]), mb_torus(8,3),
 //       move([10,0,-3]), mb_torus(8,3)
 //       ], 0.5, [[-23,-13,-8], [23,13,8]], 1);
-// Continue:
+// Continues:
 //   `mb_octahedron(r|d=])` - octahedral metaball with sharp edges and corners. The `r` parameter specifies the distance from center to tip. The vertex parameter specifies the distance between the two opposite tips.
 // Figure(3D,NoAxes,VPR=[75,0,20]): Two octahedrons interacting
 //   metaballs([
 //       move([-10,0,3]), mb_octahedron(8),
 //       move([10,0,-3]), mb_octahedron(8)
 //       ], 0.5, [[-21,-11,-13], [21,11,13]], 1);
+// Continues:
 //   .
 //   .h3 Metaball functions and user defined functions
 //   Each metaball function is defined as a function of a 3-vector that gives the value of the metaball function
