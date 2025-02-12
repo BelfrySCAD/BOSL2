@@ -833,7 +833,7 @@ function _bbfacevertices(vcube, f, bbface, isovalmax, isovalmin) = let(
     ]) flatten(triangles);
 
 
-/// _showstats() (Private function) - called by isosurface() and isosurface_array()
+/// _showstats() (Private function) - called by isosurface() and metaballs()
 /// Display statistics about isosurface
 function _showstats(voxelsize, bbox, isoval, cubes, faces) = let(
     v = column(cubes, 0), // extract cube vertices
@@ -1211,7 +1211,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 // Synopsis: Creates a group of 3D metaballs (smoothly connected blobs).
 // SynTags: Geom,VNF
 // Topics: Metaballs, Isosurfaces, VNF Generators
-// See Also: isosurface_array()
+// See Also: isosurface()
 // Usage: As a module
 //   metaballs(funcs, bounding_box, voxel_size, [isovalue=], [closed=], [show_stats=], ...) [ATTACHMENTS];
 // Usage: As a function
@@ -1346,7 +1346,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   metaballs([
 //       move([-10,0,3]), mb_octahedron(8),
 //       move([10,0,-3]), mb_octahedron(8)
-//       ], 0.5, [[-21,-11,-13], [21,11,13]], 1, show_stats=true);
+//       ], 0.5, [[-21,-11,-13], [21,11,13]], 1);
 //   .
 //   .h3 Metaball functions and user defined functions
 //   Each metaball function is defined as a function of a 3-vector that gives the value of the metaball function
