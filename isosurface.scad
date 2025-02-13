@@ -1217,7 +1217,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 // Usage: As a function
 //   vnf = metaballs(spec, voxel_size, bounding_box, [isovalue=], [closed=], [convexity=], [show_stats=]);
 // Description:
-//   ![Metaball andimation](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/metaball_demo.png)
+//   ![Metaball animation](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/metaball_demo.png)
 //   .
 //   [Metaballs](https://en.wikipedia.org/wiki/Metaballs), also known as "blobby objects",
 //   can produce smoothly varying blobs and organic forms. You create metaballs by placing metaball
@@ -1243,7 +1243,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   .
 //   You can create metaballs in a variety of standard shapes using the predefined functions
 //   listed below. If you wish, you can also create custom metaball shapes using your own functions
-//   (see Example 12). Three parameters are available on all of the built-in metaballs to control the
+//   (see Example 19). Three parameters are available on all of the built-in metaballs to control the
 //   interaction of the metaballs with each other: `cutoff`, `influence`, and `negative`.
 //   .
 //   The `cutoff` parameter specifies the distance beyond which the metaball has no interaction
@@ -1252,7 +1252,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   zero at the cutoff.  Note that the smooth decrease may cause the interaction to be negligible
 //   closer than the cutoff distance distance, depending on the voxel size and `influence` of the
 //   ball.  Also, depending on the value of `influence`, a cutoff that ends in the middle of
-//   another ball can result in strange shapes, as shown in Example 8, with the metaball
+//   another ball can result in strange shapes, as shown in Example 16, with the metaball
 //   interacting one one side of the boundary and not interacting on the other side.  If you scale
 //   a ball, the cutoff values is also scaled.  The exact way that cutoff is defined
 //   geometrically varies for different ball types; see below for details.
@@ -1278,7 +1278,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   `hand=[u0,finger,u1,finger,...]` and then invoke metaball with `[s0, hand]`.
 //   In effect, any list of metaballs can be treated as a single metaball.
 //   This is a powerful technique that lets you make groups of metaballs that you can use as individual
-//   metaballs in other groups, and can make your code compact and simpler to understand. See Example 14.
+//   metaballs in other groups, and can make your code compact and simpler to understand. See Example 21.
 //   .
 //   ###Built-in metaball functions
 //   .
@@ -1296,80 +1296,17 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   * `influence` &em; a positive number specifying the strength of interaction this ball has with other balls.  Default: 1
 //   * `negative` &em; when true, create a negative metaball. Default: false
 //   .
-//   The built-in metaball functions are:
+//   The built in metaballs functions are listed below. As usual, named arguments appear in the parameter list with a trailing `=`.
+//   The list of examples below illustrates each type of metaball interacting with another of the same type.
 //   .
-//   **Sphere:**   
-//   `mb_sphere(r|d=)` &em; spherical metaball, with radius r or diameter d.  You can create an ellipsoid using `scale()` as the last transformation entry of the metaball `spec` array.
-// Figure(3D,NoAxes): Two spheres interacting
-//   metaballs([
-//       left(9), mb_sphere(5),
-//       right(9), mb_sphere(5)
-//       ], 0.5, [[-16,-7,-7], [16,7,7]], 1);
-// Continues:
-//   .
-//   **Cuboid:**   
-//   `mb_cuboid(size, [squareness=0.5])` &em; cuboid metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (cubical), and defaults to 0.5.  The `size` is a scalar that specifies the width of the cuboid shape between the face centers. Except when `squareness=1`, the faces are always a little bit curved.
-// Figure(3D,NoAxes): Two rounded cuboids interacting
-//   metaballs([
-//       move([-8,-5,-5]), mb_cuboid(10),
-//       move([8,5,5]), mb_cuboid(10)
-//       ], 0.5, [[-15,-12,-12], [15,12,12]], 1);
-// Continues:
-//   .
-//   **Cylinder or cone:**   
-//   `mb_cyl(h|l|height|length=, [r|d=], [r1=|d1=], [r2=|d2=], [rounding=0])` &em; vertical cylinder or cone metaball with the same dimenional arguments as {{cyl()}}. Only one rounding value is allowed: the rounding is the same at both ends. For a fully rounded cylindrical shape, consider `mb_capsule()` or `mb_disk()`, which are less flexible but have faster execution times.  For this metaball, the cutoff is measured from surface of the cone with the specified dimensions.
-// Figure(3D,NoAxes): Two rounded `mb_cyl()` cones interacting
-//   metaballs([
-//       left(10), mb_cyl(15, r1=8, r2=5, rounding=3),
-//       right(10), mb_cyl(15, r1=8, r2=5, rounding=3)
-//       ], 0.5, [[-19,-9,-10], [19,9,10]], 1);
-// Continues:
-//   .
-//   **Disk:**   
-//   `mb_disk(h|l|height|length=, [r|d=])` &em; rounded disk with flat ends. The diameter specifies the total diameter of the shape including the rounded sides and must be greater than its height.
-// Figure(3D,NoAxes): Two disks interacting
-//   metaballs([
-//       move([-10,0,2]), mb_disk(5,9),
-//       move([10,0,-2]), mb_disk(5,9)
-//       ], 0.5, [[-20,-10,-6], [20,10,6]], 1);
-// Continues:
-//   .
-//   **Capsule:**   
-//   `mb_capsule(h|l|height|length=, r|d=)` &em; cylinder of radius `r` or diameter `d` with hemispherical caps. The height or length specifies the **total** height including the rounded ends.
-// Figure(3D,NoAxes): Two capsules interacting
-//   metaballs([
-//       move([-8,0,4])*yrot(90), mb_capsule(16,3),
-//       move([8,0,-4])*yrot(90), mb_capsule(16,3)
-//       ], 0.5, [[-17,-5,-8], [17,5,8]], 1);
-// Continues:
-//   .
-//   **Connecting rod:**   
-//   `mb_connector(p1, p2, r|d=)` &em; cylinder of radius `r` or diameter `d` with hemispherical caps (like mb_capsule), but specified to connect point `p1` to point `p2` (where `p1` and `p2` must be different 3D vectors). The specified points are at the ends of the straight portion of the shape (the centers of the two capping hemispheres). You may want to set `influence` quite low; the connectors themselves are still influenced by other metaballs, but it may be undesirable to have them influence others, or each other. If two connectors are connected, the joint may appear large and swollen unless `influence` is reduced.
-// Figure(3D,NoAxes): A sphere with two connectors
-//   metaballs([
-//       left(20), mb_sphere(6),
-//       IDENT, mb_connector([-20,0,0], [0,0,10], 2, influence=0.5),
-//       IDENT, mb_connector([0,0,10], [0,-10,0], 2, influence=0.5)
-//       ], 0.5, [[-27,-13,-7], [4,7,14]], 1);
-// Continues:
-//   .
-//   **Torus:**   
-//   `mb_torus([r_maj|d_maj=], [r_min|d_min=],[or=|od=],[ir=|id=])` &em; torus metaball oriented perpendicular to the z axis. You can specify the torus dimensions using the same arguments as {{torus()}}; that is, major radius (or diameter) with `r_maj` or `d_maj`, and minor radius and diameter using `r_min` or `d_min`. Alternatively you can give the inner radius or diameter with `ir` or `id` and the outer radius or diameter with `or` or `od`.
-// Figure(3D,NoAxes): Two tori interacting
-//   metaballs([
-//       move([-10,0,3]), mb_torus(8,3),
-//       move([10,0,-3]), mb_torus(8,3)
-//       ], 0.5, [[-23,-13,-8], [23,13,8]], 1);
-// Continues:
-//   .
-//   **Octahedron:**   
-//   `mb_octahedron(r|d=])` &em; octahedral metaball with sharp edges and corners. The `r` parameter specifies the distance from center to tip. The vertex parameter specifies the distance between the two opposite tips.
-// Figure(3D,NoAxes,VPR=[75,0,20]): Two octahedrons interacting
-//   metaballs([
-//       move([-10,0,3]), mb_octahedron(8),
-//       move([10,0,-3]), mb_octahedron(8)
-//       ], 0.5, [[-21,-11,-13], [21,11,13]], 1);
-// Continues:
+//   * `mb_sphere(r|d=)` &em; spherical metaball, with radius r or diameter d.  You can create an ellipsoid using `scale()` as the last transformation entry of the metaball `spec` array. 
+//   * `mb_cuboid(size, [squareness=])` &em; cuboid metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (cubical), and defaults to 0.5. The `size` is a scalar that specifies the width of the cuboid shape between the face centers. Except when `squareness=1`, the faces are always a little bit curved.
+//   * `mb_cyl(h|l=|height=|length=, [r|d=], [r1=|d1=], [r2=|d2=], [rounding=0])` &em; vertical cylinder or cone metaball with the same dimenional arguments as {{cyl()}}. Only one rounding value is allowed: the rounding is the same at both ends. For a fully rounded cylindrical shape, consider `mb_capsule()` or `mb_disk()`, which are less flexible but have faster execution times.  For this metaball, the cutoff is measured from surface of the cone with the specified dimensions.
+//   * `mb_disk(h|l=|height=|length=, [r|d=])` &em; rounded disk with flat ends. The diameter specifies the total diameter of the shape including the rounded sides and must be greater than its height.
+//   * `mb_capsule(h|l=|height=|length=, r|d=)` &em; cylinder of radius `r` or diameter `d` with hemispherical caps. The height or length specifies the **total** height including the rounded ends.
+//   * `mb_connector(p1, p2, r|d=)` &em; a connecting rod of radius `r` or diameter `d` with hemispherical caps (like `mb_capsule()`), but specified to connect point `p1` to point `p2` (where `p1` and `p2` must be different 3D vectors). The specified points are at the centers of the two capping hemispheres. You may want to set `influence` quite low; the connectors themselves are still influenced by other metaballs, but it may be undesirable to have them influence others, or each other. If two connectors are connected, the joint may appear large and swollen unless `influence` is reduced.
+//   * `mb_torus([r_maj|d_maj=], [r_min|d_min=],[or=|od=],[ir=|id=])` &em; torus metaball oriented perpendicular to the z axis. You can specify the torus dimensions using the same arguments as {{torus()}}; that is, major radius (or diameter) with `r_maj` or `d_maj`, and minor radius and diameter using `r_min` or `d_min`. Alternatively you can give the inner radius or diameter with `ir` or `id` and the outer radius or diameter with `or` or `od`.
+//   *`mb_octahedron(r|d=])` &em; octahedral metaball with sharp edges and corners. The `r` parameter specifies the distance from center to tip. The vertex parameter specifies the distance between the two opposite tips.
 //   .
 //   ###Metaball functions and user defined functions
 //   .
@@ -1386,7 +1323,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   .
 //   You can pass a custom function as a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
 //   that takes a single argument (a 3-vector) and returns a single numerical value. 
-//   The returned value should define a function where in isovalue range [c,INF] defines a bounded object. See Example 12.
+//   The returned value should define a function where in isovalue range [c,INF] defines a bounded object. See Example 19.
 //   .
 //   ###Voxel size and bounding box
 //   .
@@ -1425,7 +1362,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   structure to {{vnf_unify_faces()}}. These steps can be computationall expensive
 //   and are not normally necessary.
 // Arguments:
-//   spec = Metaball specification in the form `[trans0, spec0, trans1, spec1, ...]`, with alternating transformation matrices and metaball specs, where `spec0`, `spec1`, etc. can be a metaball function or another metaball specification. See above for more details, and see Example 14 for a demonstration.
+//   spec = Metaball specification in the form `[trans0, spec0, trans1, spec1, ...]`, with alternating transformation matrices and metaball specs, where `spec0`, `spec1`, etc. can be a metaball function or another metaball specification. See above for more details, and see Example 21 for a demonstration.
 //   voxel_size = scalar size of the voxel cube that is used to sample the surface. 
 //   bounding_box = A pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum box corner coordinates. The actual bounding box enlarged if necessary to make the voxels fit perfectly, and centered around your requested box.
 //   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. Default: 1.0
@@ -1443,7 +1380,51 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   "intersect" = Anchors to the surface of the shape.
 // Named Anchors:
 //   "origin" = Anchor at the origin, oriented UP.
-// Example(3D,VPD=110): This is the first of a series of five examples demonstrating the differnent types of metaball interactions. We start with two spheres 30 units apart. Each would have a radius of 10 in isolation, but because they are influencing their surroundings, each sphere mutually contributes to the size of the other. The sum of contributions between the spheres add up so that a surface plotted around the region exceeding the threshold defined by `isovalue=1` looks like a peanut shape surrounding the two spheres.
+// Example(3D,NoAxes): Two spheres interacting.
+//   metaballs([
+//       left(9), mb_sphere(5),
+//       right(9), mb_sphere(5)
+//       ], 0.5, [[-16,-7,-7], [16,7,7]]);
+// Example(3D,NoAxes): Two rounded cuboids interacting.
+//   metaballs([
+//       move([-8,-5,-5]), mb_cuboid(10),
+//       move([8,5,5]), mb_cuboid(10)
+//       ], 0.5, [[-15,-12,-12], [15,12,12]]);
+// Example(3D,NoAxes): Two rounded `mb_cyl()` cones interacting.
+//   metaballs([
+//       left(10), mb_cyl(15, r1=8, r2=5, rounding=3),
+//       right(10), mb_cyl(15, r1=8, r2=5, rounding=3)
+//       ], 0.5, [[-19,-9,-10], [19,9,10]]);
+// Example(3D,NoAxes): Two disks interacting.
+//   metaballs([
+//       move([-10,0,2]), mb_disk(5,9),
+//       move([10,0,-2]), mb_disk(5,9)
+//       ], 0.5, [[-20,-10,-6], [20,10,6]]);
+// Example(3D,NoAxes): Two capsules interacting.
+//   metaballs([
+//       move([-8,0,4])*yrot(90), mb_capsule(16,3),
+//       move([8,0,-4])*yrot(90), mb_capsule(16,3)
+//       ], 0.5, [[-17,-5,-8], [17,5,8]]);
+// Example(3D,NoAxes): A sphere with two connectors.
+//   metaballs([
+//       left(20), mb_sphere(6),
+//       IDENT, mb_connector([-20,0,0], [0,0,10], 2, influence=0.5),
+//       IDENT, mb_connector([0,0,10], [0,-10,0], 2, influence=0.5)
+//       ], 0.5, [[-27,-13,-7], [4,7,14]]);
+// Example(3D,NoAxes): Interaction between two tori in different orientations.
+//    spec = [
+//        move([-10,0,17]),        mb_torus(r_maj=6, r_min=2),
+//        move([7,6,21])*xrot(90), mb_torus(r_maj=7, r_min=3)
+//    ];
+//    voxelsize = 0.5;
+//    boundingbox = [[-19,-9,9], [18,10,32]];
+//    metaballs(spec, voxelsize, boundingbox);
+// Example(3D,NoAxes,VPR=[75,0,20]): Two octahedrons interacting.
+//   metaballs([
+//       move([-10,0,3]), mb_octahedron(8),
+//       move([10,0,-3]), mb_octahedron(8)
+//       ], 0.5, [[-21,-11,-13], [21,11,13]]);
+// Example(3D,VPD=110): These next five examples demonstrate the differnent types of metaball interactions. We start with two spheres 30 units apart. Each would have a radius of 10 in isolation, but because they are influencing their surroundings, each sphere mutually contributes to the size of the other. The sum of contributions between the spheres add up so that a surface plotted around the region exceeding the threshold defined by `isovalue=1` looks like a peanut shape surrounding the two spheres.
 //   spec = [
 //       left(15),  mb_sphere(10),
 //       right(15), mb_sphere(10)
@@ -1467,7 +1448,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   voxelsize = 1;
 //   boundingbox = [[-30,-19,-19], [30,19,19]];
 //   metaballs(spec, voxelsize, boundingbox);
-// Example(3D,VPD=110): In this example, we have two size-10 spheres as before and one tiny sphere of 1.5 units radius offset a bit on the y axis. With an isovalue of 1, this figure would appear similar to Example 1 above, but here the isovalue has been set to 2, causing the surface to shrink around a smaller volume values greater than 2. Remember, higher isovalue thresholds cause metaballs to shrink.
+// Example(3D,VPD=110): In this example, we have two size-10 spheres as before and one tiny sphere of 1.5 units radius offset a bit on the y axis. With an isovalue of 1, this figure would appear similar to Example 9 above, but here the isovalue has been set to 2, causing the surface to shrink around a smaller volume values greater than 2. Remember, higher isovalue thresholds cause metaballs to shrink.
 //   spec = [
 //      left(15),  mb_sphere(10),
 //      right(15), mb_sphere(10),
@@ -1526,14 +1507,6 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   voxelsize = 0.5; // a bit slow at this resolution
 //   boundingbox = [[-12,-9,3], [18,10,32]];
 //   metaballs(spec, voxelsize, boundingbox);
-// Example(3D,NoAxes): Interaction between two tori in different orientations.
-//    spec = [
-//        move([-10,0,17]),        mb_torus(r_maj=6, r_min=2),
-//        move([7,6,21])*xrot(90), mb_torus(r_maj=7, r_min=3)
-//    ];
-//    voxelsize = 0.5;
-//    boundingbox = [[-19,-9,9], [18,10,32]];
-//    metaballs(spec, voxelsize, boundingbox);
 // Example(3D,NoAxes,VPD=205,Med): A toy airplane, constructed only from metaball spheres with scaling. The bounding box is used to clip the wingtips, tail, and belly of the fuselage.
 //   bounding_box = [[-55,-50,-5],[35,50,17]];
 //   spec = [
