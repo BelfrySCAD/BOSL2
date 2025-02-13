@@ -1226,7 +1226,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   and melding together. The closer the objects are, the more they blend and meld.
 //   .
 //   The simplest metaball specification is a 1D list of alternating transformation matrices and
-//   metaball functions: `[trans0, spec0, trans1, spec1, ... ]`.  The transformation matrix
+//   metaball functions: `[trans0, func0, trans1, func1, ... ]`. Each transformation matrix
 //   you supply can be constructed using the usual transformation commands such as {{up()}},
 //   {{right()}}, {{back()}}, {{move()}}, {{scale()}}, {{rot()}} and so on.  You can multiply
 //   the transformations together, similar to how the transformations can be applied
@@ -1287,10 +1287,10 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   .
 //   For complicated metaball assemblies you may wish to repeat a structure in different locations or
 //   otherwise transformed. Nesting metaball specifications are supported:
-//   Instad of specifying a transform and function, you specify a transform and then a metaball
+//   Instead of specifying a transform and function, you specify a transform and then another metaball
 //   specification. For example, you could set `finger=[t0,f0,t1,f1,t2,f2]` and then set
 //   `hand=[u0,finger,u1,finger,...]` and then invoke metaball with `[s0, hand]`.
-//   In effect, any list of metaballs can be treated as a single metaball.
+//   In effect, any metaball specification array can be treated as a single metaball.
 //   This is a powerful technique that lets you make groups of metaballs that you can use as individual
 //   metaballs in other groups, and can make your code compact and simpler to understand. See Example 21.
 //   .
