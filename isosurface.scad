@@ -1286,7 +1286,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   changes the entire model, possibly dramatically.
 //   .
 //   For complicated metaball assemblies you may wish to repeat a structure in different locations or
-//   otherwise transformed. Nesting metaball specifications are supported:
+//   otherwise transformed. Nested metaball specifications are supported:
 //   Instead of specifying a transform and function, you specify a transform and then another metaball
 //   specification. For example, you could set `finger=[t0,f0,t1,f1,t2,f2]` and then set
 //   `hand=[u0,finger,u1,finger,...]` and then invoke metaball with `[s0, hand]`.
