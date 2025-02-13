@@ -1289,7 +1289,7 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 //   otherwise transformed. Nested metaball specifications are supported:
 //   Instead of specifying a transform and function, you specify a transform and then another metaball
 //   specification. For example, you could set `finger=[t0,f0,t1,f1,t2,f2]` and then set
-//   `hand=[u0,finger,u1,finger,...]` and then invoke metaball with `[s0, hand]`.
+//   `hand=[u0,finger,u1,finger,...]` and then invoke `metaballs()` with `[s0, hand]`.
 //   In effect, any metaball specification array can be treated as a single metaball.
 //   This is a powerful technique that lets you make groups of metaballs that you can use as individual
 //   metaballs in other groups, and can make your code compact and simpler to understand. See Example 21.
