@@ -871,7 +871,7 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   labeling proceeds clockwise.  The top and bottom edge anchors label edges directly above and below the face with the same label.
 //   If you set `realign=true` then "face0" is oriented in the X+ direction.  
 //   .
-//   This module is very similar to {{cyl()}}.  It differs in the following ways:  you can specify side length or inner radius/diameter, you can apply roundings with
+//   This module is similar to {{cyl()}}.  It differs in the following ways:  you can specify side length or inner radius/diameter, you can apply roundings with
 //   different `$fn` than the number of prism faces, you can apply texture to the flat faces without forcing a high facet count,
 //   anchors are located on the true object instead of the ideal cylinder and you can anchor to the edges and faces.  
 // Named Anchors:
@@ -2732,7 +2732,7 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 //   spheroid(d=100, style="stagger", circum=true, $fn=10);
 // Example: style="octa", octahedral based tesselation.  In this style, $fn is quantized to a multiple of 4.
 //   spheroid(d=100, style="octa", $fn=10);
-// Example: style="octa", with circum=true, produces mostly very irregular hexagonal faces
+// Example: style="octa", with circum=true, produces mostly irregular hexagonal faces
 //   spheroid(d=100, style="octa", circum=true, $fn=16);
 // Example: style="icosa", icosahedral based tesselation.  In this style, $fn is quantized to a multiple of 5.
 //   spheroid(d=100, style="icosa", $fn=10);
@@ -2781,7 +2781,7 @@ module spheroid(r, style="aligned", d, circum=false, dual=false, anchor=CENTER, 
             scale(r) rotate(180) rotate_extrude(convexity=2,$fn=sides) polygon(path);
         }
         // Don't now how to construct faces for these efficiently, so use hull_points, which
-        // is very much faster than using hull() as happens in the spheroid() function
+        // is much faster than using hull() as happens in the spheroid() function
         else if (circum && (style=="octa" || style=="icosa")) {
             orig_sphere = spheroid(r,style,circum=false);
             dualvert = _dual_vertices(orig_sphere);
@@ -3375,356 +3375,6 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
     ) reorient(anchor,spin,orient, r=r, anchors=anchors, p=vnf);
 
 
-// Section: Text
-
-// Module: text3d()
-// Synopsis: Creates an attachable 3d text block.
-// SynTags: Geom
-// Topics: Attachments, Text
-// See Also: path_text(), text() 
-// Usage:
-//   text3d(text, [h], [size], [font], [language=], [script=], [direction=], [atype=], [anchor=], [spin=], [orient=]);
-// Description:
-//   Creates a 3D text block that supports anchoring and single-parameter attachment to attachable objects.  You cannot attach children to text.
-//   .
-//   Historically fonts were specified by their "body size", the height of the metal body
-//   on which the glyphs were cast.  This means the size was an upper bound on the size
-//   of the font glyphs, not a direct measurement of their size.  In digital typesetting,
-//   the metal body is replaced by an invisible box, the em square, whose side length is
-//   defined to be the font's size.  The glyphs can be contained in that square, or they
-//   can extend beyond it, depending on the choices made by the font designer.  As a
-//   result, the meaning of font size varies between fonts: two fonts at the "same" size
-//   can differ significantly in the actual size of their characters.  Typographers
-//   customarily specify the size in the units of "points".  A point is 1/72 inch.  In
-//   OpenSCAD, you specify the size in OpenSCAD units (often treated as millimeters for 3d
-//   printing), so if you want points you will need to perform a suitable unit conversion.
-//   In addition, the OpenSCAD font system has a bug: if you specify size=s you will
-//   instead get a font whose size is s/0.72.  For many fonts this means the size of
-//   capital letters will be approximately equal to s, because it is common for fonts to
-//   use about 70% of their height for the ascenders in the font.  To get the customary
-//   font size, you should multiply your desired size by 0.72.
-//   .
-//   To find the fonts that you have available in your OpenSCAD installation,
-//   go to the Help menu and select "Font List".
-// Arguments:
-//   text = Text to create.
-//   h / height / thickness = Extrusion height for the text.  Default: 1
-//   size = The font will be created at this size divided by 0.72.   Default: 10
-//   font = Font to use.  Default: "Liberation Sans" (standard OpenSCAD default)
-//   ---
-//   spacing = The relative spacing multiplier between characters.  Default: `1.0`
-//   direction = The text direction.  `"ltr"` for left to right.  `"rtl"` for right to left. `"ttb"` for top to bottom. `"btt"` for bottom to top.  Default: `"ltr"`
-//   language = The language the text is in.  Default: `"en"`
-//   script = The script the text is in.  Default: `"latin"`
-//   atype = Change vertical center between "baseline" and "ycenter".  Default: "baseline"
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
-//   center = Center the text.  Equivalent to `atype="center", anchor=CENTER`.  Default: false
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Anchor Types:
-//   baseline = Anchor center is relative to text baseline
-//   ycenter = Anchor center is relative to the actual y direction center of the text
-// Examples:
-//   text3d("Fogmobar", h=3, size=10);
-//   text3d("Fogmobar", h=2, size=12, font=":style=bold");
-//   text3d("Fogmobar", h=2, anchor=CENTER);
-//   text3d("Fogmobar", h=2, anchor=CENTER, atype="ycenter");
-//   text3d("Fogmobar", h=2, anchor=RIGHT);
-//   text3d("Fogmobar", h=2, anchor=RIGHT+BOT, atype="ycenter");
-module text3d(text, h, size=10, font, spacing=1.0, direction="ltr", language="en", script="latin",
-              height, thickness, atype, center=false,
-              anchor, spin=0, orient=UP) {
-    no_children($children);
-    h = one_defined([h,height,thickness],"h,height,thickness",dflt=1);
-    assert(is_undef(atype) || in_list(atype,["ycenter","baseline"]), "atype must be \"ycenter\" or \"baseline\"");
-    assert(is_bool(center));
-    assert(is_undef($attach_to),"text3d() does not support parent-child anchor attachment with two parameters");
-    atype = default(atype, center?"ycenter":"baseline");
-    anchor = default(anchor, center?CENTER:LEFT);
-    geom = attach_geom(size=[size,size,h]);
-    ha = anchor.x<0? "left" 
-       : anchor.x>0? "right" 
-       : "center";
-    va = anchor.y<0? "bottom" 
-       : anchor.y>0? "top" 
-       : atype=="baseline"? "baseline"
-       : "center";
-    m = _attach_transform([0,0,anchor.z],spin,orient,geom);
-    multmatrix(m) {
-        $parent_anchor = anchor;
-        $parent_spin   = spin;
-        $parent_orient = orient;
-        $parent_geom   = geom;
-        $parent_size   = _attach_geom_size(geom);
-        $attach_to   = undef;
-        if (_is_shown()) {
-            _color($color) {
-                linear_extrude(height=h, center=true)
-                    _text(
-                        text=text, size=size, font=font,
-                        halign=ha, valign=va, spacing=spacing,
-                        direction=direction, language=language,
-                        script=script
-                    );
-            }
-        }
-    }
-}
-
-
-// This could be replaced with _cut_to_seg_u_form
-function _cut_interp(pathcut, path, data) =
-  [for(entry=pathcut)
-    let(
-       a = path[entry[1]-1],
-        b = path[entry[1]],
-        c = entry[0],
-        i = max_index(v_abs(b-a)),
-        factor = (c[i]-a[i])/(b[i]-a[i])
-    )
-    (1-factor)*data[entry[1]-1]+ factor * data[entry[1]]
-  ];
-
-
-// Module: path_text()
-// Synopsis: Creates 2d or 3d text placed along a path.
-// SynTags: Geom
-// Topics: Text, Paths, Paths (2D), Paths (3D), Path Generators, Path Generators (2D)
-// See Also, text(), text2d()
-// Usage:
-//   path_text(path, text, [size], [thickness], [font], [lettersize=], [offset=], [reverse=], [normal=], [top=], [textmetrics=], [kern=])
-// Description:
-//   Place the text letter by letter onto the specified path using textmetrics (if available and requested)
-//   or user specified letter spacing.  The path can be 2D or 3D.  In 2D the text appears along the path with letters upright
-//   as determined by the path direction.  In 3D by default letters are positioned on the tangent line to the path with the path normal
-//   pointing toward the reader.  The path normal points away from the center of curvature (the opposite of the normal produced
-//   by path_normals()).  Note that this means that if the center of curvature switches sides the text will flip upside down.
-//   If you want text on such a path you must supply your own normal or top vector.
-//   .
-//   Text appears starting at the beginning of the path, so if the 3D path moves right to left
-//   then a left-to-right reading language will display in the wrong order. (For a 2D path text will appear upside down.)
-//   The text for a 3D path appears positioned to be read from "outside" of the curve (from a point on the other side of the
-//   curve from the center of curvature).  If you need the text to read properly from the inside, you can set reverse to
-//   true to flip the text, or supply your own normal.
-//   .
-//   If you do not have the experimental textmetrics feature enabled then you must specify the space for the letters
-//   using lettersize, which can be a scalar or array.  You will have the easiest time getting good results by using
-//   a monospace font such as "Liberation Mono".  Note that even with text metrics, spacing may be different because path_text()
-//   doesn't do kerning to adjust positions of individual glyphs.  Also if your font has ligatures they won't be used.
-//   .
-//   By default letters appear centered on the path.  The offset can be specified to shift letters toward the reader (in
-//   the direction of the normal).
-//   .
-//   You can specify your own normal by setting `normal` to a direction or a list of directions.  Your normal vector should
-//   point toward the reader.  You can also specify
-//   top, which directs the top of the letters in a desired direction.  If you specify your own directions and they
-//   are not perpendicular to the path then the direction you specify will take priority and the
-//   letters will not rest on the tangent line of the path.  Note that the normal or top directions that you
-//   specify must not be parallel to the path.
-//   .
-//   Historically fonts were specified by their "body size", the height of the metal body
-//   on which the glyphs were cast.  This means the size was an upper bound on the size
-//   of the font glyphs, not a direct measurement of their size.  In digital typesetting,
-//   the metal body is replaced by an invisible box, the em square, whose side length is
-//   defined to be the font's size.  The glyphs can be contained in that square, or they
-//   can extend beyond it, depending on the choices made by the font designer.  As a
-//   result, the meaning of font size varies between fonts: two fonts at the "same" size
-//   can differ significantly in the actual size of their characters.  Typographers
-//   customarily specify the size in the units of "points".  A point is 1/72 inch.  In
-//   OpenSCAD, you specify the size in OpenSCAD units (often treated as millimeters for 3d
-//   printing), so if you want points you will need to perform a suitable unit conversion.
-//   In addition, the OpenSCAD font system has a bug: if you specify size=s you will
-//   instead get a font whose size is s/0.72.  For many fonts this means the size of
-//   capital letters will be approximately equal to s, because it is common for fonts to
-//   use about 70% of their height for the ascenders in the font.  To get the customary
-//   font size, you should multiply your desired size by 0.72.
-//   .
-//   To find the fonts that you have available in your OpenSCAD installation,
-//   go to the Help menu and select "Font List".
-// Arguments:
-//   path = path to place the text on
-//   text = text to create
-//   size = The font will be created at this size divided by 0.72.   
-//   thickness / h / height = thickness of letters (not allowed for 2D path)
-//   font = Font to use.  Default: "Liberation Sans" (standard OpenSCAD default)
-//   ---
-//   lettersize = scalar or array giving size of letters
-//   center = center text on the path instead of starting at the first point.  Default: false
-//   offset = distance to shift letters "up" (towards the reader).  Not allowed for 2D path.  Default: 0
-//   normal = direction or list of directions pointing towards the reader of the text.  Not allowed for 2D path.
-//   top = direction or list of directions pointing toward the top of the text
-//   reverse = reverse the letters if true.  Not allowed for 2D path.  Default: false
-//   textmetrics = if set to true and lettersize is not given then use the experimental textmetrics feature.  You must be running a dev snapshot that includes this feature and have the feature turned on in your preferences.  Default: false
-//   valign = align text to the path using "top", "bottom", "center" or "baseline".  You can also adjust position with a numerical offset as in "top-5" or "bottom+2".  This only works with textmetrics enabled.  You can give a simple numerical offset, which will be relative to the baseline and works even without textmetrics.  Default: "baseline"
-//   kern = scalar or array giving spacing adjusments between each letter.  If it's an array it should have one less entry than the text string.  Default: 0
-//   language = text language, passed to OpenSCAD `text()`.  Default: "en"
-//   script = text script, passed to OpenSCAD `text()`.  Default: "latin" 
-// Example(3D,NoScales):  The examples use Liberation Mono, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder.
-//   path = path3d(arc(100, r=25, angle=[245, 370]));
-//   color("red")stroke(path, width=.3);
-//   path_text(path, "Example text", font="Liberation Mono", size=5, lettersize = 5/1.2);
-// Example(3D,NoScales): By setting the normal to UP we can get text that lies flat, for writing around the edge of a disk:
-//   path = path3d(arc(100, r=25, angle=[245, 370]));
-//   color("red")stroke(path, width=.3);
-//   path_text(path, "Example text", font="Liberation Mono", size=5, lettersize = 5/1.2, normal=UP);
-// Example(3D,NoScales):  If we want text that reads from the other side we can use reverse.  Note we have to reverse the direction of the path and also set the reverse option.
-//   path = reverse(path3d(arc(100, r=25, angle=[65, 190])));
-//   color("red")stroke(path, width=.3);
-//   path_text(path, "Example text", font="Liberation Mono", size=5, lettersize = 5/1.2, reverse=true);
-// Example(3D,Med,NoScales): text debossed onto a cylinder in a spiral.  The text is 1 unit deep because it is half in, half out.
-//   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
-//   L = 5*len(text);
-//   maxang = 360*L/(PI*50);
-//   spiral = [for(a=[0:1:maxang]) [25*cos(a), 25*sin(a), 10-30/maxang*a]];
-//   difference(){
-//     cyl(d=50, l=50, $fn=120);
-//     path_text(spiral, text, size=5, lettersize=5/1.2, font="Liberation Mono", thickness=2);
-//   }
-// Example(3D,Med,NoScales): Same example but text embossed.  Make sure you have enough depth for the letters to fully overlap the object.
-//   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
-//   L = 5*len(text);
-//   maxang = 360*L/(PI*50);
-//   spiral = [for(a=[0:1:maxang]) [25*cos(a), 25*sin(a), 10-30/maxang*a]];
-//   cyl(d=50, l=50, $fn=120);
-//   path_text(spiral, text, size=5, lettersize=5/1.2, font="Liberation Mono", thickness=2);
-// Example(3D,NoScales): Here the text baseline sits on the path.  (Note the default orientation makes text readable from below, so we specify the normal.)
-//   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
-//   color("red")stroke(path,width=.2);
-//   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Liberation Mono", normal=FRONT);
-// Example(3D,NoScales): If we use top to orient the text upward, the text baseline is no longer aligned with the path.
-//   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
-//   color("red")stroke(path,width=.2);
-//   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Liberation Mono", top=UP);
-// Example(3D,Med,NoScales): This sine wave wrapped around the cylinder has a twisting normal that produces wild letter layout.  We fix it with a custom normal which is different at every path point.
-//   path = [for(theta = [0:360]) [25*cos(theta), 25*sin(theta), 4*cos(theta*4)]];
-//   normal = [for(theta = [0:360]) [cos(theta), sin(theta),0]];
-//   zrot(-120)
-//   difference(){
-//     cyl(r=25, h=20, $fn=120);
-//     path_text(path, "A sine wave wiggles", font="Liberation Mono", lettersize=5/1.2, size=5, normal=normal);
-//   }
-// Example(3D,Med,NoScales): The path center of curvature changes, and the text flips.
-//   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
-//   color("red")stroke(path,width=.2);
-//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Liberation Mono", thickness=2);
-// Example(3D,Med,NoScales): We can fix it with top:
-//   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
-//   color("red")stroke(path,width=.2);
-//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Liberation Mono", thickness=2, top=UP);
-// Example(2D,NoScales): With a 2D path instead of 3D there's no ambiguity about direction and it works by default:
-//   path =  zrot(-120,p=concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180]))));
-//   color("red")stroke(path,width=.2);
-//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Liberation Mono");
-// Example(3D,NoScales): The kern parameter lets you adjust the letter spacing either with a uniform value for each letter, or with an array to make adjustments throughout the text.  Here we show a case where adding some extra space gives a better look in a tight circle.  When textmetrics are off, `lettersize` can do this job, but with textmetrics, you'll need to use `kern` to make adjustments relative to the text metric sizes.
-//   path = path3d(arc(100, r=12, angle=[150, 450]));
-//   color("red")stroke(path, width=.3);
-//   kern = [1,1.2,1,1,.3,-.2,1,0,.8,1,1.1];
-//   path_text(path, "Example text", font="Liberation Mono", size=5, lettersize = 5/1.2, kern=kern, normal=UP);
-
-module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false,
-                 textmetrics=false, kern=0, height,h, valign="baseline", language, script)
-{
-  no_children($children);
-  dummy2=assert(is_path(path,[2,3]),"Must supply a 2d or 3d path")
-         assert(num_defined([normal,top])<=1, "Cannot define both \"normal\" and \"top\"")
-         assert(all_positive([size]), "Must give positive text size");
-  dim = len(path[0]);
-  normalok = is_undef(normal) || is_vector(normal,3) || (is_path(normal,3) && len(normal)==len(path));
-  topok = is_undef(top) || is_vector(top,dim) || (dim==2 && is_vector(top,3) && top[2]==0)
-                        || (is_path(top,dim) && len(top)==len(path));
-  dummy4 = assert(dim==3 || !any_defined([thickness,h,height]), "Cannot give a thickness or height with 2d path")
-           assert(dim==3 || !reverse, "Reverse not allowed with 2d path")
-           assert(dim==3 || offset==0, "Cannot give offset with 2d path")
-           assert(dim==3 || is_undef(normal), "Cannot define \"normal\" for a 2d path, only \"top\"")
-           assert(normalok,"\"normal\" must be a vector or path compatible with the given path")
-           assert(topok,"\"top\" must be a vector or path compatible with the given path");
-  thickness = one_defined([thickness,h,height],"thickness,h,height",dflt=1);
-  normal = is_vector(normal) ? repeat(normal, len(path))
-         : is_def(normal) ? normal
-         : undef;
-
-  top = is_vector(top) ? repeat(dim==2?point2d(top):top, len(path))
-         : is_def(top) ? top
-         : undef;
-
-  kern = force_list(kern, len(text)-1);
-  dummy3 = assert(is_list(kern) && len(kern)==len(text)-1, "kern must be a scalar or list whose length is len(text)-1");
-
-  lsize = is_def(lettersize) ? force_list(lettersize, len(text))
-        : textmetrics ? [for(letter=text) let(t=textmetrics(letter, font=font, size=size)) t.advance[0]]
-        : assert(false, "textmetrics disabled: Must specify letter size");
-  lcenter = convolve(lsize,[1,1]/2)+[0,each kern,0] ;
-  textlength = sum(lsize)+sum(kern);
-
-  ascent = !textmetrics ? undef
-         : textmetrics(text, font=font, size=size).ascent;
-  descent = !textmetrics ? undef
-          : textmetrics(text, font=font, size=size).descent;
-
-  vadjustment = is_num(valign) ? -valign
-              : !textmetrics ? assert(valign=="baseline","valign requires textmetrics support") 0
-              : let(
-                     table = [
-                              ["baseline", 0],
-                              ["top", -ascent],
-                              ["bottom", descent],
-                              ["center", (descent-ascent)/2]
-                             ],
-                     match = [for(i=idx(table)) if (starts_with(valign,table[i][0])) i]
-                )
-                assert(len(match)==1, "Invalid valign value")
-                table[match[0]][1] - parse_num(substr(valign,len(table[match[0]][0])));
-
-  dummy1 = assert(textlength<=path_length(path),"Path is too short for the text");
-
-  start = center ? (path_length(path) - textlength)/2 : 0;
-   
-  pts = path_cut_points(path, add_scalar(cumsum(lcenter),start), direction=true);
-
-  usernorm = is_def(normal);
-  usetop = is_def(top);
-  normpts = is_undef(normal) ? (reverse?1:-1)*column(pts,3) : _cut_interp(pts,path, normal);
-  toppts = is_undef(top) ? undef : _cut_interp(pts,path,top);
-  attachable(){
-    for (i = idx(text)) {
-      tangent = pts[i][2];
-      checks =
-          assert(!usetop || !approx(tangent*toppts[i],norm(top[i])*norm(tangent)),
-                 str("Specified top direction parallel to path at character ",i))
-          assert(usetop || !approx(tangent*normpts[i],norm(normpts[i])*norm(tangent)),
-                 str("Specified normal direction parallel to path at character ",i));
-      adjustment = usetop ?  (tangent*toppts[i])*toppts[i]/(toppts[i]*toppts[i])
-                 : usernorm ?  (tangent*normpts[i])*normpts[i]/(normpts[i]*normpts[i])
-                 : [0,0,0];
-      move(pts[i][0]) {
-        if (dim==3) {
-          frame_map(
-            x=tangent-adjustment,
-            z=usetop ? undef : normpts[i],
-            y=usetop ? toppts[i] : undef
-          ) up(offset-thickness/2) {
-            linear_extrude(height=thickness)
-              back(vadjustment)
-              {
-              left(lsize[i]/2)
-                text(text[i], font=font, size=size, language=language, script=script);
-              }
-          }
-        } else {
-            frame_map(
-              x=point3d(tangent-adjustment),
-              y=point3d(usetop ? toppts[i] : -normpts[i])
-            ) left(lsize[0]/2) {
-                text(text[i], font=font, size=size, language=language, script=script);
-            }
-        }
-      }
-    }
-    union();
-  }
-}
-
-
 
 // Section: Miscellaneous
 
@@ -3846,7 +3496,7 @@ module fillet(l, r, ang, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor
 // Arguments:
 //   data = This is either the 2D rectangular array of heights, or a function literal that takes X and Y arguments.
 //   size = The [X,Y] size of the surface to create.  If given as a scalar, use it for both X and Y sizes. Default: `[100,100]`
-//   bottom = The Z coordinate for the bottom of the heightfield object to create.  Any heights lower than this will be truncated to very slightly (0.1) above this height.  Default: -20
+//   bottom = The Z coordinate for the bottom of the heightfield object to create.  Any heights lower than this will be truncated to slightly (0.1) above this height.  Default: -20
 //   maxz = The maximum height to model.  Truncates anything taller to this height.  Set to INF for no truncation.  Default: 100
 //   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
 //   yrange = A range of values to iterate Y over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
@@ -3985,7 +3635,7 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 //   d = The diameter of the cylinder to wrap around.
 //   d1 = The diameter of the bottom of the cylinder to wrap around.
 //   d2 = The diameter of the top of the cylinder to wrap around.
-//   base = The radius for the bottom of the heightfield object to create.  Any heights smaller than this will be truncated to very slightly above this height.  Default: -20
+//   base = The radius for the bottom of the heightfield object to create.  Any heights smaller than this will be truncated to slightly above this height.  Default: -20
 //   transpose = If true, swaps the radial and length axes of the data.  Default: false
 //   aspect = The aspect ratio of the generated heightfield at the surface of the cylinder.  Default: 1
 //   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
@@ -4208,7 +3858,4 @@ module ruler(length=100, width, thickness=1, depth=3, labels=false, pipscale=1/3
 
 
 
-
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
-
-
