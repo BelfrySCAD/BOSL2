@@ -29,14 +29,15 @@
 //   base = Height of slider base.
 //   wall = Width of wall behind each side of the slider.
 //   ang = Overhang angle for slider, to facilitate supportless printig.
+//   chamfer = Size of chamfer. Default: 2.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value to make parts fit just right.
 // Example:
 //   slider(l=30, base=10, wall=4, $slop=0.2, spin=90);
-function slider(l=30, w=10, h=10, base=10, wall=5, ang=30, anchor=BOTTOM, spin=0, orient=UP) = no_function("slider");
-module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, anchor=BOTTOM, spin=0, orient=UP)
+function slider(l=30, w=10, h=10, base=10, wall=5, ang=30, chamfer=2, anchor=BOTTOM, spin=0, orient=UP) = no_function("slider");
+module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, chamfer=2, anchor=BOTTOM, spin=0, orient=UP)
 {
     full_width = w + 2*wall;
     full_height = h + base;
@@ -45,11 +46,11 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, anchor=BOTTOM, spin=0, 
         zrot(90)
         down(base+h/2) {
             // Base
-            cuboid([full_width, l, base-get_slop()], chamfer=2, edges=[FRONT,BACK], except_edges=BOT, anchor=BOTTOM);
+            cuboid([full_width, l, base-get_slop()], chamfer=chamfer, edges=[FRONT,BACK], except_edges=BOT, anchor=BOTTOM);
 
             // Wall
             xflip_copy(offset=w/2+get_slop()) {
-                cuboid([wall, l, full_height], chamfer=2, edges=RIGHT, except_edges=BOT, anchor=BOTTOM+LEFT);
+                cuboid([wall, l, full_height], chamfer=chamfer, edges=RIGHT, except_edges=BOT, anchor=BOTTOM+LEFT);
             }
 
             // Sliders
