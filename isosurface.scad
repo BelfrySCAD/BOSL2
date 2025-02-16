@@ -1447,12 +1447,13 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 // Arguments:
 //   spec = Metaball specification in the form `[trans0, spec0, trans1, spec1, ...]`, with alternating transformation matrices and metaball specs, where `spec0`, `spec1`, etc. can be a metaball function or another metaball specification. See above for more details, and see Example 21 for a demonstration.
 //   voxel_size = scalar size of the voxel cube that is used to sample the bounding box volume. 
-//   bounding_box = A pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum box corner coordinates. The actual bounding box is enlarged if necessary to make the voxels fit perfectly, and centered around your requested box.
+//   bounding_box = A designation of volume in which to perform computations, expressed as pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum box corner coordinates. The actual bounding box is enlarged if necessary to fit whole voxels, and centered around your requested box.
 //   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. Default: 1.0
 //   ---
 //   closed = When true, close the surface if it intersects the bounding box by adding a closing face. When false, do not add a closing face, possibly producing a non-manfold VNF that has holes.  Default: true
 //   show_stats = If true, display statistics about the metaball isosurface in the console window. Besides the number of voxels that the surface passes through, and the number of triangles making up the surface, this is useful for getting information about a possibly smaller bounding box to improve speed for subsequent renders. Enabling this parameter has a small speed penalty. Default: false
 //   convexity = (Module only) Maximum number of times a line could intersect a wall of the shape. Affects preview only. Default: 6
+//   show_box = (Module only) display the requested bounding box as transparent. This box may appear slightly inside the bounds of the figure if the actual bounding box had to be expanded to accommodate whole voxels. Default: false
 //   cp = (Module only) Center point for determining intersection anchors or centering the shape.  Determines the base of the anchor vector. Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = (Module only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = (Module only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -1674,10 +1675,12 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   bbox = [[-104,-40,-10], [79,18,188]];
 //   metaballs(hand, voxsize, bbox, isovalue=1);
 
-module metaballs(spec, voxel_size, bounding_box, isovalue=1, closed=true, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false) {
+module metaballs(spec, voxel_size, bounding_box, isovalue=1, closed=true, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false) {
         vnf = metaballs(spec, voxel_size, bounding_box, isovalue, closed, show_stats);
         vnf_polyhedron(vnf, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
             children();
+    if(show_box)
+        #translate(bounding_box[0]) cube(bounding_box[1]-bounding_box[0]);
 }
 
 function metaballs(spec, voxel_size, bounding_box, isovalue=1, closed=true, show_stats=false) =
@@ -1787,7 +1790,7 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   number of voxels below 10,000 for preview, and adjust the voxel size smaller for final
 //   rendering. A bounding box that is larger than your isosurface wastes time computing function
 //   values that are not needed. If the isosurface fits completely within the bounding box, you can
-//   call {{vnf_bounds()}} on the VNF structure returned from the `isosurface()` function to get an
+//   call {{pointlist_bounds()}} on the `[vnf[0]` structure returned from the `isosurface()` function to get an
 //   idea of a the optimal bounding box to use. You may be able to decrease run time, or keep the
 //   same run time but increase the resolution. You can also set the parameter `show_stats=true` to
 //   get the bounds of the voxels containing the surface.
@@ -1803,11 +1806,12 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   f = The isosurface function or array.
 //   isovalue = a scalar giving the isovalue parameter or a 2-vector giving an isovalue range.
 //   voxel_size = scalar size of the voxel cube that is used to sample the volume.
-//   bounding_box = When `f` is a function, a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum corner coordinates of the bounding box.  The actual bounding box is enlarged if necessary to make the voxels fit perfectly, and centered around your requested box. When `f` is an array of values, `bounding_box` is already implied by the array size combined with `voxel_size`, in which case this implied bounding box is centered around the origin.
+//   bounding_box = When `f` is a function, a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum corner coordinates of the volume of space in which to perform computations. The actual bounding box is enlarged if necessary to fit whole the voxels, and centered around your requested box. When `f` is an array of values, `bounding_box` is already implied by the array size combined with `voxel_size`, in which case this implied bounding box is centered around the origin.
 //   ---
 //   closed = When true, close the surface if it intersects the bounding box by adding a closing face. When false, do not add a closing face and instead produce a non-manfold VNF that has holes.  Default: true
 //   reverse = When true, reverses the orientation of the VNF faces. Default: false
 //   show_stats = If true, display statistics in the console window about the isosurface: number of voxels that the surface passes through, number of triangles, bounding box of the voxels, and voxel-rounded bounding box of the surface, which may help you reduce your bounding box to improve speed. Enabling this parameter has a slight speed penalty. Default: false
+//   show_box = (Module only) display the requested bounding box as transparent. This box may appear slightly inside the bounds of the figure if the actual bounding box had to be expanded to accommodate whole voxels. Default: false
 //   convexity = (Module only) Maximum number of times a line could intersect a wall of the shape. Affects preview only. Default: 6
 //   cp = (Module only) Center point for determining intersection anchors or centering the shape. Determines the base of the anchor vector. Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = (Module only) Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
@@ -1905,10 +1909,12 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //      isosurface(field, isovalue=0.5,
 //          voxel_size=10);
 
-module isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed=true, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, _mb_origin=undef) {
+module isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed=true, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false, _mb_origin=undef) {
     vnf = isosurface(f, isovalue, voxel_size, bounding_box, reverse, closed, show_stats, _mb_origin);
     vnf_polyhedron(vnf, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
         children();
+    if(show_box)
+        #translate(bounding_box[0]) cube(bounding_box[1]-bounding_box[0]);
 }
 
 function isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed=true, show_stats=false, _mb_origin=undef) =
