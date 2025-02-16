@@ -77,49 +77,7 @@ Vertex and edge layout (heavier = and # indicate closer to viewer):
    0 +==========+ 4          +=====8=====+
 
 z changes fastest, then y, then x.
-
------------------------------------------------------------
-Addition by Alex:
-Vertex and face layout for triangulating one voxel face that corrsesponds to a side of the box bounding all voxels.
-
-                    4(back)
-               3 +----------+ 7
-                /:  5(top) /|
-               / :        / |
-            1 +==========+5 |    <-- 3(side)
-0(side) -->   # 2+ - - - # -+ 6
-              # /        # /
-              #/  2(bot) #/
-            0 +----------+ 4
-                1(front)
 */
-
-/// four indices for each face of the cube, counterclockwise looking from inside out
-_MCFaceVertexIndices = [
-    [],
-    [0,2,3,1], // left, x=0 plane
-    [0,1,5,4], // front, y=0 plane
-    [0,4,6,2], // bottom, z=0 plane
-    [4,5,7,6], // right, x=voxsize plane
-    [2,6,7,3], // back, y=voxsize plane
-    [1,3,7,5], // top, z=voxsize plane
-];
-
-/// return an array of face indices in _MCFaceVertexIndices if the voxel at coordinate v0 corresponds to the bounding box.
-function _bbox_faces(v0, voxsize, bbox) = let(
-    a = v0-bbox[0],
-    bb1 = bbox[1] - [voxsize,voxsize,voxsize],
-    b = v0-bb1
-) [
-    if(a[0]==0) 1,
-    if(a[1]==0) 2,
-    if(a[2]==0) 3,
-    if(b[0]>=0) 4,
-    if(b[1]>=0) 5,
-    if(b[2]>=0) 6
-];
-/// End of bounding-box face-clipping stuff. Back to the marching cubes triangulation....
-
 
 /// Pair of vertex indices for each edge on the voxel
 _MCEdgeVertexIndices = [
@@ -671,6 +629,95 @@ function _cubeindex(f, isoval) =
     (f[6] > isoval ? 64 : 0) +
     (f[7] > isoval ? 128 : 0);
 
+/*
+-----------------------------------------------------------
+Bounding box clipping support:
+
+Vertex and face layout for triangulating one voxel face that corrsesponds to a side of the box bounding all voxels.
+
+                    4(back)
+               3 +----------+ 7
+                /:  5(top) /|
+               / :        / |
+            1 +==========+5 |    <-- 3(side)
+0(side) -->   # 2+ - - - # -+ 6
+              # /        # /
+              #/  2(bot) #/
+            0 +----------+ 4
+                1(front)
+
+The clip face uses different indexing. After vertex coordinates and function values are assigned to each corner from the original voxel based on _MCFaceVertexIndices below, this is the clip face diagram:
+
+(1)           (2)
+   +----1----+
+   |         |
+   0         2
+   |         |
+   +----3----+
+(0)           (3)
+*/
+
+/// four indices for each face of the cube, counterclockwise looking from inside out
+_MCFaceVertexIndices = [
+    [],
+    [0,2,3,1], // left, x=0 plane
+    [0,1,5,4], // front, y=0 plane
+    [0,4,6,2], // bottom, z=0 plane
+    [4,5,7,6], // right, x=voxsize plane
+    [2,6,7,3], // back, y=voxsize plane
+    [1,3,7,5], // top, z=voxsize plane
+];
+
+/// Pair of vertex indices for each edge on the clip face (using clip face indexing)
+_MCClipEdgeVertexIndices = [
+    [0,1], [1,2], [2,3], [3,0]
+];
+
+/// For each of the 16 configurations of a clip face, define a list of triangles, specified as pairs of corner ID and edge ID arrays, with a total of 3 points in each pair. Each pair has the form [corner],[edge1,edge2] or [corner1,corner2],[edge].
+/// In keeping with the convention for triangulating an isosurface through a voxel, analogous to the case in which two surfaces separate two diagonally opposite greater-than-isovalue corners of one face, in 2D contour terms it is assumed there is a valley separating two diagonally-opposite high corners, not a ridge connecting them. The two triangulation cases for opposing corners are set up accordingly.
+_MCClipTriangleTable = [
+    [],                     // 0 - 0000 - ignored
+    [[0],[0,3]],            // 1 - 0001
+    [[1],[1,0]],            // 2 - 0010
+    [[0,1],[1], [0],[1,3]], // 3 - 0011
+    [[2],[2,1]],            // 4 - 0100
+    [[0],[0,3], [2],[2,1]], // 5 - 0101 - opposing corners
+    [[1,2],[0], [2],[2,0]], // 6 - 0110
+    [[0,1],[3], [1],[2,3], [1,2],[2]], // 7 - 0111
+    [[3],[3,2]],                       // 8 - 1000
+    [[3,0],[0], [3],[0,2]],            // 9 - 1001
+    [[1],[1,0], [3],[3,2]],            //10 - 1010 - opposing corners
+    [[0,1],[1], [0],[1,2], [3,0],[2]], //11 - 1011
+    [[2,3],[3], [2],[3,1]],            //12 - 1100
+    [[3,0],[0], [3],[0,1], [2,3],[1]], //13 - 1101
+    [[2,3],[3], [2],[3,0], [1,2],[0]], //14 - 1110
+    [[0,1,2],[], [0,2,3],[]],          //15 - 1111
+];
+
+/// _clipfacindex() - private function, called by _clipfacevertices()
+/// Return the index ID of a voxel face depending on the field strength at each corner exceeding isoval.
+function _clipfacindex(f, isoval) =
+    (f[0] > isoval ? 1 : 0) +
+    (f[1] > isoval ? 2 : 0) +
+    (f[2] > isoval ? 4 : 0) +
+    (f[3] > isoval ? 8 : 0);
+
+/// return an array of face indices in _MCFaceVertexIndices if the voxel at coordinate v0 corresponds to the bounding box.
+function _bbox_faces(v0, voxsize, bbox) = let(
+    a = v0-bbox[0],
+    bb1 = bbox[1] - [voxsize,voxsize,voxsize],
+    b = v0-bb1
+) [
+    if(a[0]==0) 1,
+    if(a[1]==0) 2,
+    if(a[2]==0) 3,
+    if(b[0]>=0) 4,
+    if(b[1]>=0) 5,
+    if(b[2]>=0) 6
+];
+/// End of bounding-box face-clipping stuff
+/// -----------------------------------------------------------
+
 
 /// isosurface_cubes() - private function, called by isosurface()
 /// This implements a marching cubes algorithm, sacrificing some memory in favor of speed.
@@ -753,11 +800,7 @@ function _isosurface_triangles(cubelist, cubesize, isovalmin, isovalmax, tritabl
                 v, v+[0,0,cubesize], v+[0,cubesize,0], v+[0,cubesize,cubesize],
                 v+[cubesize,0,0], v+[cubesize,0,cubesize],
                 v+[cubesize,cubesize,0], v+[cubesize,cubesize,cubesize]
-            ],
-            outfacevertices = flatten([
-                for(bf = bbfaces)
-                    _bbfacevertices(vcube, f, bf, isovalmax, isovalmin)
-            ])
+            ]
         )
         each [
             if(len(tritablemin[cbidxmin])>0) for(ei=tritablemin[cbidxmin]) // min surface
@@ -778,13 +821,51 @@ function _isosurface_triangles(cubelist, cubesize, isovalmin, isovalmax, tritabl
                     u = abs(denom)<0.00001 ? 0.5 : (isovalmax-f[vi0]) / denom
                 )
                 vcube[vi0] + u*(vcube[vi1]-vcube[vi0]),
-            if(len(outfacevertices)>0) for(bf = bbfaces)
+            if(len(bbfaces)>0) for(bf = bbfaces)
                   each _bbfacevertices(vcube, f, bf, isovalmax, isovalmin)
         ]
 ];
 
+/*
+/// Generate triangles for the special case of voxel faces clipped by the bounding box
+// (more efficient than _bbfacevertices below but doesn't work with isovalue ranges)
+function _clipfacevertices(vcube, f, bbface, isovalmax, isovalmin) =
+    let(
+        vi = _MCFaceVertexIndices[bbface], // four voxel face vertex indices
+        vfc = [ for(i=vi) vcube[i] ], // four voxel face vertex coordinates
+        fld = [ for(i=vi) f[i] ],   // four corner field values
+        minidx = _clipfacindex(fld, isovalmin),
+        maxidx = _clipfacindex(fld, isovalmax)
+    ) [
+        if(minidx>0)
+            let(tabl = _MCClipTriangleTable[minidx])
+                for(i=[0:2:len(tabl)-1]) each [
+                    for(c=tabl[i]) vfc[c],
+                    for(ei=tabl[i+1]) let(
+                        edge = _MCClipEdgeVertexIndices[ei],
+                        vi0 = edge[0],
+                        vi1 = edge[1],
+                        denom = fld[vi1] - fld[vi0],
+                        u = abs(denom)<0.00001 ? 0.5 : (isovalmin-fld[vi0]) / denom
+                    ) vfc[vi0] + u*(vfc[vi1]-vfc[vi0])
+                ],
+        if(false && maxidx>0)
+            let(tabl = _MCClipTriangleTable[maxidx])
+                for(i=[0:2:len(tabl)-1]) each [
+                    for(c=tabl[i]) vfc[c],
+                    for(ei=tabl[i+1]) let(
+                        edge = _MCClipEdgeVertexIndices[ei],
+                        vi0 = edge[0],
+                        vi1 = edge[1],
+                        denom = fld[vi1] - fld[vi0],
+                        u = abs(denom)<0.00001 ? 0.5 : (isovalmin-fld[vi0]) / denom
+                    ) vfc[vi0] + u*(vfc[vi1]-vfc[vi0])
+                ]
+    ];
+*/
 
 /// Generate triangles for the special case of voxel faces clipped by the bounding box
+/// TODO: Address isolated manifold error in edge case where two different isosurfaces intersect the same voxel AND that voxel is on a box boundary. This can be contrived but hasn't yet come up in actual testing.
 function _bbfacevertices(vcube, f, bbface, isovalmax, isovalmin) = let(
     vi = _MCFaceVertexIndices[bbface], // four voxel face vertex indices 
     //vfc = [ for(i=vi) vcube[i] ], // four voxel face vertex coordinates
@@ -827,9 +908,9 @@ function _bbfacevertices(vcube, f, bbface, isovalmax, isovalmin) = let(
     ]) flatten(triangles);
 
 
-/// _showstats() (Private function) - called by isosurface() and metaballs()
+/// _showstats_isosurface() (Private function) - called by isosurface()
 /// Display statistics about isosurface
-function _showstats(voxelsize, bbox, isoval, cubes, faces) = let(
+function _showstats_isosurface(voxelsize, bbox, isoval, cubes, faces) = let(
     v = column(cubes, 0), // extract cube vertices
     x = column(v,0),    // extract x values
     y = column(v,1),    // extract y values
@@ -1317,9 +1398,12 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   * `mb_capsule(h|l|height|length, r|d=)` &mdash; cylinder of radius `r` or diameter `d` with hemispherical caps. The height or length specifies the total height including the rounded ends.
 //   * `mb_connector(p1, p2, r|d=)` &mdash; a connecting rod of radius `r` or diameter `d` with hemispherical caps (like `mb_capsule()`), but specified to connect point `p1` to point `p2` (where `p1` and `p2` must be different 3D coordinates). The specified points are at the centers of the two capping hemispheres. You may want to set `influence` quite low; the connectors themselves are still influenced by other metaballs, but it may be undesirable to have them influence others, or each other. If two connectors are connected, the joint may appear swollen unless `influence` is reduced.
 //   * `mb_torus([r_maj|d_maj=], [r_min|d_min=], [or=|od=], [ir=|id=])` &mdash; torus metaball oriented perpendicular to the z axis. You can specify the torus dimensions using the same arguments as {{torus()}}; that is, major radius (or diameter) with `r_maj` or `d_maj`, and minor radius and diameter using `r_min` or `d_min`. Alternatively you can give the inner radius or diameter with `ir` or `id` and the outer radius or diameter with `or` or `od`. Both major and minor radius/diameter must be specified regardless of how they are named.
-//   *`mb_octahedron(r|d=])` &mdash; octahedral metaball with sharp edges and corners. The `r` parameter specifies the distance from center to tip, while `d=` is the distance between two opposite tips.
+//   * `mb_octahedron(r|d=])` &mdash; octahedral metaball with sharp edges and corners. The `r` parameter specifies the distance from center to tip, while `d=` is the distance between two opposite tips.
 //   .
 //   ***Metaball functions and user defined functions***
+//   .
+//   You can construct complicated metaball models using only the built-in metaball functions above.
+//   However, you can create your own custom metaballs if desired.
 //   .
 //   Each metaball is defined as a function of a 3-vector that gives the value of the metaball function
 //   for that point in space. As is common in metaball implementations, we define the built-in metaballs using an
@@ -1334,7 +1418,9 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   .
 //   You can pass a custom function as a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
 //   that takes a single argument (a 3-vector) and returns a single numerical value. 
-//   The returned value should define a function where in isovalue range [c,INF] defines a bounded object. See Example 19 for a demonstration of creating a custom metaball function.
+//   Generally, the function should return a scalar value that decreases from the metaball center and
+//   drops below the isovalue at some distance (in all directions) from the metaball center. See
+//   Example 19 for a demonstration of creating a custom metaball function.
 //   .
 //   ***Voxel size and bounding box***
 //   .
@@ -1346,7 +1432,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   number of voxels below 10,000 for preview, and adjust the voxel size smaller for final
 //   rendering.  A bounding box that is larger than your isosurface wastes time computing function
 //   values that are not needed. If the metaballs fit completely within the bounding box, you can
-//   call {{pointlist_bounds()}} on `vnf[0]` returned from the `metaballs()` function to get an
+//   call {{vnf__bounds()}} on the VNF structure returned from the `metaballs()` function to get an
 //   idea of a the optimal bounding box to use.  You may be able to decrease run time, or keep the
 //   same run time but increase the resolution. You can also set the parameter `show_stats=true` to
 //   get the bounds of the voxels containing the generated surfaces.
@@ -1361,12 +1447,12 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 // Arguments:
 //   spec = Metaball specification in the form `[trans0, spec0, trans1, spec1, ...]`, with alternating transformation matrices and metaball specs, where `spec0`, `spec1`, etc. can be a metaball function or another metaball specification. See above for more details, and see Example 21 for a demonstration.
 //   voxel_size = scalar size of the voxel cube that is used to sample the bounding box volume. 
-//   bounding_box = A pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum box corner coordinates. The actual bounding box enlarged if necessary to make the voxels fit perfectly, and centered around your requested box.
+//   bounding_box = A pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum box corner coordinates. The actual bounding box is enlarged if necessary to make the voxels fit perfectly, and centered around your requested box.
 //   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. Default: 1.0
 //   ---
 //   closed = When true, close the surface if it intersects the bounding box by adding a closing face. When false, do not add a closing face, possibly producing a non-manfold VNF that has holes.  Default: true
-//   show_stats = If true, display statistics about the metaball isosurface in the console window. Besides the number of voxels found to contain the surface, and the number of triangles making up the surface, this is useful for getting information about a possibly smaller bounding box to improve speed for subsequent renders. Enabling this parameter has a small speed penalty. Default: false
-//   convexity = Maximum number of times a line could intersect a wall of the shape. Affects preview only. Default: 6
+//   show_stats = If true, display statistics about the metaball isosurface in the console window. Besides the number of voxels that the surface passes through, and the number of triangles making up the surface, this is useful for getting information about a possibly smaller bounding box to improve speed for subsequent renders. Enabling this parameter has a small speed penalty. Default: false
+//   convexity = (Module only) Maximum number of times a line could intersect a wall of the shape. Affects preview only. Default: 6
 //   cp = (Module only) Center point for determining intersection anchors or centering the shape.  Determines the base of the anchor vector. Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = (Module only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = (Module only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -1439,7 +1525,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   voxelsize = 1;
 //   boundingbox = [[-30,-19,-19], [30,19,19]];
 //   metaballs(spec, voxelsize, boundingbox);
-// Example(3D,VPD=110): Adding a cutoff of 25 to the left sphere causes its influence to disappear completely 25 units away (which is the center of the right sphere). The left sphere is bigger because it still receives the full influence of the right sphere, but the right sphere is smaller because the left sphere has no contribution past 25 units. The right sphere is not abruptly cut off because the cutoff function is smooth and influence is normal. Setting cutoff too small can remove the interactions of one metaball from all other metaballs, leaving that metaball alone by itself.
+// Example(3D,VPD=110): Adding a cutoff of 25 to the left sphere causes its influence to disappear completely 25 units away (5 units from the center of the right sphere). The left sphere is bigger because it still receives the full influence of the right sphere, but the right sphere is smaller because the left sphere has no contribution past 25 units. The right sphere is not abruptly cut off because the cutoff function is smooth and influence is normal. Setting cutoff too small can remove the interactions of one metaball from all other metaballs, leaving that metaball alone by itself.
 //   spec = [
 //       left(15),  mb_sphere(10, cutoff=25),
 //       right(15), mb_sphere(10)
@@ -1497,7 +1583,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   boundingbox = [[-7,-6,-6], [3,6,6]];
 //   #metaballs(spec, voxelsize, boundingbox, isovalue);
 //   color("green") move_copies(centers) sphere(d=1, $fn=16);
-// Example(3D,VPD=105,VPT=[3,5,4.7]): When a positive and negative metaball interact, the negative metaball reduces the influence of the positive one, causing it to shrink, but not disappear because its contribution approaches infinity at its center. In this example we have a large positive metaball near a small negative metaball at the origin. The negative ball as high influence, and a cutoff limiting its influence to 20 units. The negative metaball influences the positive one up to the cutoff, causing the positive metaball to appear smaller inside the cutoff range, and appear its normal size outside the cutoff range. The positive metaball has a small dimple at the origin (the center of the negative metaball) because it cannot overcome the infinite negative contribution of the negative metaball at the origin.
+// Example(3D,VPD=105,VPT=[3,5,4.7]): When a positive and negative metaball interact, the negative metaball reduces the influence of the positive one, causing it to shrink, but not disappear because its contribution approaches infinity at its center. In this example we have a large positive metaball near a small negative metaball at the origin. The negative ball has high influence, and a cutoff limiting its influence to 20 units. The negative metaball influences the positive one up to the cutoff, causing the positive metaball to appear smaller inside the cutoff range, and appear its normal size outside the cutoff range. The positive metaball has a small dimple at the origin (the center of the negative metaball) because it cannot overcome the infinite negative contribution of the negative metaball at the origin.
 //   spec = [
 //       back(10), mb_sphere(20),
 //       IDENT, mb_sphere(2, influence=30,
@@ -1669,8 +1755,8 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   Computes a [VNF structure](vnf.scad) of a 3D isosurface within a bounded box at a single
 //   isovalue or range of isovalues.
 //   The isosurface of a function $f(x,y,z)$ is the set of points where $f(x,y,z)=c$ for some
-//   constant isovalue, $c$.
-//   To provide a function you supply a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
+//   constant isovalue $c$.
+//   To provide a function, you supply a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
 //   taking three parameters as input to define the grid coordinate location (e.g. `x,y,z`) and
 //   returning a single numerical value.
 //   You can also define an isosurface using a 3D array of values instead of a function, in which
@@ -1701,7 +1787,7 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   number of voxels below 10,000 for preview, and adjust the voxel size smaller for final
 //   rendering. A bounding box that is larger than your isosurface wastes time computing function
 //   values that are not needed. If the isosurface fits completely within the bounding box, you can
-//   call {{pointlist_bounds()}} on `vnf[0]` returned from the `isosurface()` function to get an
+//   call {{vnf_bounds()}} on the VNF structure returned from the `isosurface()` function to get an
 //   idea of a the optimal bounding box to use. You may be able to decrease run time, or keep the
 //   same run time but increase the resolution. You can also set the parameter `show_stats=true` to
 //   get the bounds of the voxels containing the surface.
@@ -1716,13 +1802,13 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 // Arguments:
 //   f = The isosurface function or array.
 //   isovalue = a scalar giving the isovalue parameter or a 2-vector giving an isovalue range.
-//   voxel_size = scalar size of the voxel cube that is used to sample the surface. 
-//   bounding_box = When `f` is a function, a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum corner coordinates of the bounding box.  The actual bounding box enlarged if necessary to make the voxels fit perfectly, and centered around your requested box. When `f` is an array of values, `bounding_box` is already implied by the array size combined with `voxel_size`, in which case this implied bounding box is centered around the origin.
+//   voxel_size = scalar size of the voxel cube that is used to sample the volume.
+//   bounding_box = When `f` is a function, a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum corner coordinates of the bounding box.  The actual bounding box is enlarged if necessary to make the voxels fit perfectly, and centered around your requested box. When `f` is an array of values, `bounding_box` is already implied by the array size combined with `voxel_size`, in which case this implied bounding box is centered around the origin.
 //   ---
 //   closed = When true, close the surface if it intersects the bounding box by adding a closing face. When false, do not add a closing face and instead produce a non-manfold VNF that has holes.  Default: true
 //   reverse = When true, reverses the orientation of the VNF faces. Default: false
-//   show_stats = If true, display statistics in the console window about the isosurface: number of voxels that contain the surface, number of triangles, bounding box of the voxels, and voxel-rounded bounding box of the surface, which may help you reduce your bounding box to improve speed. Enabling this parameter has a slight speed penalty. Default: false
-//   convexity = Maximum number of times a line could intersect a wall of the shape. Affects preview only. Default: 6
+//   show_stats = If true, display statistics in the console window about the isosurface: number of voxels that the surface passes through, number of triangles, bounding box of the voxels, and voxel-rounded bounding box of the surface, which may help you reduce your bounding box to improve speed. Enabling this parameter has a slight speed penalty. Default: false
+//   convexity = (Module only) Maximum number of times a line could intersect a wall of the shape. Affects preview only. Default: 6
 //   cp = (Module only) Center point for determining intersection anchors or centering the shape. Determines the base of the anchor vector. Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = (Module only) Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = (Module only) Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -1826,7 +1912,7 @@ module isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed=t
 }
 
 function isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed=true, show_stats=false, _mb_origin=undef) =
-    assert(all_defined([f, isovalue, voxel_size]), "\nThe parameters f, isovalue, and bounding_box must all be defined.")
+    assert(all_defined([f, isovalue, voxel_size]), "\nThe parameters f, isovalue, and voxel_size must all be defined.")
     assert((is_function(f) && is_def(bounding_box)) || (is_list(f) && is_undef(bounding_box)),
         "\nbounding_box must be passed if f is a function, and cannot be passed if f is an array.")
     let(
@@ -1851,5 +1937,5 @@ function isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed
         tritablemax = reverse ? _MCTriangleTable : _MCTriangleTable_reverse,
         trianglepoints = _isosurface_triangles(cubes, voxel_size, isovalmin, isovalmax, tritablemin, tritablemax),
         faces = [ for(i=[0:3:len(trianglepoints)-1]) [i,i+1,i+2] ],
-        dum2 = show_stats ? _showstats(voxel_size, bbox, isovalmin, cubes, faces) : 0
+        dum2 = show_stats ? _showstats_isosurface(voxel_size, bbox, isovalmin, cubes, faces) : 0
 ) [trianglepoints, faces];
