@@ -1329,7 +1329,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   .
 //   You can create metaballs in a variety of standard shapes using the predefined functions
 //   listed below. If you wish, you can also create custom metaball shapes using your own functions
-//   (see Example 19). For all of the built-in metaballs, three parameters are availableto control the
+//   (see Examples 19 and 20). For all of the built-in metaballs, three parameters are availableto control the
 //   interaction of the metaballs with each other: `cutoff`, `influence`, and `negative`.
 //   .
 //   The `cutoff` parameter specifies the distance beyond which the metaball has no interaction
@@ -1369,7 +1369,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   `hand=[u0,finger,u1,finger,...]` and then invoke `metaballs()` with `[s0, hand]`.
 //   In effect, any metaball specification array can be treated as a single metaball in another specification array.
 //   This is a powerful technique that lets you make groups of metaballs that you can use as individual
-//   metaballs in other groups, and can make your code compact and simpler to understand. See Example 21.
+//   metaballs in other groups, and can make your code compact and simpler to understand. See Example 22.
 //   .
 //   ***Built-in metaball functions***
 //   .
@@ -1420,7 +1420,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   that takes a single argument (a 3-vector) and returns a single numerical value. 
 //   Generally, the function should return a scalar value that decreases from the metaball center and
 //   drops below the isovalue at some distance (in all directions) from the metaball center. See
-//   Example 19 for a demonstration of creating a custom metaball function.
+//   Examples 19 and 20 for demonstrations of creating custom metaball functions.
 //   .
 //   ***Voxel size and bounding box***
 //   .
@@ -1445,7 +1445,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   structure to {{vnf_unify_faces()}}. These steps can be computationally expensive
 //   and are not normally necessary.
 // Arguments:
-//   spec = Metaball specification in the form `[trans0, spec0, trans1, spec1, ...]`, with alternating transformation matrices and metaball specs, where `spec0`, `spec1`, etc. can be a metaball function or another metaball specification. See above for more details, and see Example 21 for a demonstration.
+//   spec = Metaball specification in the form `[trans0, spec0, trans1, spec1, ...]`, with alternating transformation matrices and metaball specs, where `spec0`, `spec1`, etc. can be a metaball function or another metaball specification. See above for more details, and see Example 22 for a demonstration.
 //   voxel_size = scalar size of the voxel cube that is used to sample the bounding box volume. 
 //   bounding_box = A designation of volume in which to perform computations, expressed as pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]`, specifying the minimum and maximum box corner coordinates. The actual bounding box is enlarged if necessary to fit whole voxels, and centered around your requested box.
 //   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. Default: 1.0
@@ -1612,7 +1612,21 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   ];
 //   voxel_size = 1;
 //   metaballs(spec, voxel_size, bounding_box);
-// Example(3D): Demonstration of a custom metaball function, in this case a sphere with some random noise added to its value. The `dv` argument must be first; it is calculated internally as a distance vector from the metaball center to a probe point inside the bounding box, and you convert it to a scalar distance `dist` that is calculated inside your function (`dist` could be a more complicated expression, depending on the shape of the metaball). The call to `mb_cutoff()` at the end handles the cutoff function for the noisy ball consistent with the other internal metaball functions; it requires `dist` and `cutoff` as arguments. You are not required to include the `cutoff` and `influence` arguments in a custom function, but this example shows how.
+// Example(3D,VPD=60,VPR=[57,0,50],VPT=[0.5,2,1.8]): Here we show a simple custom metaball function, which is defined as a function literal that takes a single internal argument: the coordinate relative to the metaball center, called dv (for distance vector) but can be given any name. This distance vector is calculated internally and always passed to the function. The `spec` argument invokes your custom function as a function literal that passes `dv` into it.
+//   function multilobe(dv) =
+//      let( lobes=3,
+//           ang=atan2(dv.y,dv.x),
+//           r = norm([dv.x,dv.y])*(1.3+cos(lobes*ang)),
+//           dist=norm([dv.z,r])
+//      ) 3/dist;
+//   metaballs(
+//       spec = [
+//           IDENT, function (dv) multilobe(dv),
+//           up(7), mb_sphere(r=4)
+//       ],
+//       voxel_size=0.5,
+//       bounding_box = [[-14,-12,-5],[8,13,13]]);
+// Example(3D): Demonstration of a custom metaball function with more arguments, in this case a sphere with some random noise added to its value. The `dv` argument must be first; it is calculated internally as a distance vector from the metaball center to a probe point inside the bounding box. Inside the function, it is converted to a scalar distance `dist` (which could be a more complicated calculation, depending on the shape of the metaball). The call to `mb_cutoff()` at the end handles the cutoff function for the noisy ball consistent with the other internal metaball functions; it requires `dist` and `cutoff` as arguments. You are not required to include the `cutoff` and `influence` arguments in a custom function, but this example shows how.
 //   function noisy_sphere(dv, r, noise_level, cutoff=INF, influence=1) =
 //       let(
 //           noise = rands(0, noise_level, 1)[0],
