@@ -739,7 +739,7 @@ function _isosurface_cubes(voxsize, bbox, fieldarray, fieldfunc, isovalmin, isov
         for(x=[v.x:voxsize:b1.x]) [
             for(y=[v.y:voxsize:b1.y]) [
                 for(z=[v.z:voxsize:b1.z])
-                    fieldfunc(x,y,z)
+                    fieldfunc([x,y,z])
             ]
         ]
     ],
@@ -1441,10 +1441,9 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   number of voxels below 10,000 for preview, and adjust the voxel size smaller for final
 //   rendering.  A bounding box that is larger than your isosurface wastes time computing function
 //   values that are not needed. If the metaballs fit completely within the bounding box, you can
-//   call {{vnf__bounds()}} on the VNF structure returned from the `metaballs()` function to get an
-//   idea of a the optimal bounding box to use.  You may be able to decrease run time, or keep the
-//   same run time but increase the resolution. You can also set the parameter `show_stats=true` to
-//   get the bounds of the voxels containing the generated surfaces.
+//   set the parameter `show_stats=true` to get the bounds of the voxels containing the generated
+//   surfacesto get an idea of a the optimal bounding box to use.  You may be able to decrease run
+//   time, or keep the same run time but increase the resolution. .
 //   .
 //   The point list in the returned VNF structure contains many duplicated points. This is not a
 //   problem for rendering the shape, but if you want to eliminate these, you can pass
