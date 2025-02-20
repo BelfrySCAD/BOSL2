@@ -1335,7 +1335,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   .
 //   You can create metaballs in a variety of standard shapes using the predefined functions
 //   listed below. If you wish, you can also create custom metaball shapes using your own functions
-//   (see Examples 19 and 20). For all of the built-in metaballs, three parameters are availableto control the
+//   (see Examples 20 and 21). For all of the built-in metaballs, three parameters are availableto control the
 //   interaction of the metaballs with each other: `cutoff`, `influence`, and `negative`.
 //   .
 //   The `cutoff` parameter specifies the distance beyond which the metaball has no interaction
@@ -1344,7 +1344,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   zero at the cutoff. Note that the smooth decrease may cause the interaction to become negligible
 //   closer than the actual cutoff distance, depending on the voxel size and `influence` of the
 //   ball. Also, depending on the value of `influence`, a cutoff that ends in the middle of
-//   another ball can result in strange shapes, as shown in Example 16, with the metaball
+//   another ball can result in strange shapes, as shown in Example 17, with the metaball
 //   interacting on one side of the boundary and not interacting on the other side. If you scale
 //   a ball, the cutoff value is also scaled. The exact way that cutoff is defined
 //   geometrically varies for different ball types; see below for details.
@@ -1361,7 +1361,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   The `negative` parameter, if set to `true`, creates a negative metaball, which can result in
 //   hollows or dents in other metaballs, or swallow other metaballs almost entirely. 
 //   Negative metaballs are never directly visible; only their effects are visible. The `influence`
-//   argument may also behave in ways you don't expect with a negative metaball. See Examples 15 and 16.
+//   argument may also behave in ways you don't expect with a negative metaball. See Examples 16 and 17.
 //   .
 //   For complicated metaball assemblies you may wish to repeat a structure in different locations or
 //   otherwise transformed. Nested metaball specifications are supported:
@@ -1370,7 +1370,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   `hand=[u0,finger,u1,finger,...]` and then invoke `metaballs()` with `[s0, hand]`.
 //   In effect, any metaball specification array can be treated as a single metaball in another specification array.
 //   This is a powerful technique that lets you make groups of metaballs that you can use as individual
-//   metaballs in other groups, and can make your code compact and simpler to understand. See Example 22.
+//   metaballs in other groups, and can make your code compact and simpler to understand. See Example 23.
 //   .
 //   Be aware that the `isovalue` parameter in `metaballs()` applies globally to **all** metaballs and defaults
 //   to 1. Changing the isovalue changes the entire model, possibly dramatically. If you increase the
@@ -1429,8 +1429,8 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   that takes a single argument (a 3-vector) and returns a single numerical value. 
 //   Generally, the function should return a scalar value that drops below the isovalue somewhere within your
 //   bounding box. If you want your custom metaball function to behave similar to to the built-in functions,
-//   the return value should fall off with distance as $1/d$. See Examples 19, 20, and 21 for demonstrations
-//   of creating custom metaball functions. Example 21 also shows how to make a metaball that works wtih
+//   the return value should fall off with distance as $1/d$. See Examples 20, 21, and 22 for demonstrations
+//   of creating custom metaball functions. Example 22 also shows how to make a metaball that works wtih
 //   `influence` and `cutoff`.
 //   .
 //   ***Voxel size and bounding box***
@@ -1455,7 +1455,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   structure to {{vnf_unify_faces()}}. These steps can be computationally expensive
 //   and are not normally necessary.
 // Arguments:
-//   spec = Metaball specification in the form `[trans0, spec0, trans1, spec1, ...]`, with alternating transformation matrices and metaball specs, where `spec0`, `spec1`, etc. can be a metaball function or another metaball specification. See above for more details, and see Example 22 for a demonstration.
+//   spec = Metaball specification in the form `[trans0, spec0, trans1, spec1, ...]`, with alternating transformation matrices and metaball specs, where `spec0`, `spec1`, etc. can be a metaball function or another metaball specification. See above for more details, and see Example 23 for a demonstration.
 //   voxel_size = size of the voxel that is used to sample the bounding box volume. This can be "auto", a scalar size for a cubical voxel, or a 3-vector if you want non-cubical voxels. For "auto", the voxel size is set so that approximately `auto_voxels` (default 8000) quantity of voxels fit inside the bounding box. If you set `grow_bounds=false`, then bounding box is held fixed in size, and the voxel size is adjusted as needed so that whole voxels fit inside the bounding box.
 //   bounding_box = A designation of volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. With the default `grow_bounds=true`, the actual bounding box is enlarged if necessary to fit whole voxels, and centered around your requested box.
 //   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. Default: 1.0
@@ -1573,6 +1573,13 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   boundingbox = [[-30,-19,-19], [30,19,19]];
 //   metaballs(spec, voxel_size, boundingbox,
 //       isovalue=2);
+// Example(3D,Med): Here is what happens when you set `influence` to less than 1. The only difference between these two spheres is influence. Both have `cutoff` set to prevent them from affecting each other. The sphere on the right has a low influence of 0.02, which translates to a falloff with distance $d$ proportional to $\frac{1}{d^50}$. That high exponent causes an extremely steep gradient of values near the surface, so steep that the interpolation of the surface through the voxels runs into double-precision rounding errors, causing ridges to appear. You could use this to create a texture deliberately (as with the trunk of the elephant in a later example), but it is usually better to use `cutoff` to limit the range of influence than reducing `influence` significantly below 1.
+//   spec = [
+//       left(10), mb_sphere(8, cutoff=10, influence=1),
+//       right(10), mb_sphere(8, cutoff=10, influence=0.02)
+//   ];
+//   bbox = [[-18,-8,-8], [18,8,8]];
+//   metaballs(spec, voxel_size=0.4, bounding_box=bbox);
 // Example(3D,NoAxes): A group of five spherical metaballs with different sizes. The parameter `show_stats=true` (not shown here) was used to find a compact bounding box for this figure.
 //   spec = [ // spheres of different sizes
 //       move([-20,-20,-20]), mb_sphere(5),
@@ -1737,21 +1744,21 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   legD2 = 6;
 //   spec = [
 //       // legs
-//       fwd(8)*left(10), mb_cyl(d1=legD1, d2=legD2, h=20),
-//       fwd(8)*right(10), mb_cyl(d1=legD1, d2=legD2, h=20),
-//       back(8)*left(10), mb_cyl(d1=legD1, d2=legD2, h=20),
-//       back(8)*right(10), mb_cyl(d1=legD1, d2=legD2, h=20),
-//       up(20)*yrot(90), mb_capsule(d=25,h=40, influence=0.5),  // body
-//       right(20)*up(25)*yrot(-20), mb_capsule(r=7, h = 25, influence=0.1),  // head
-//       right(23)*up(10)*yrot(15), mb_cyl(d1 = 3, d2=6, h = 15, influence=0.2),    // trunk
+//       up(1)*fwd(8)*left(11), mb_cyl(d1=legD1, d2=legD2, h=22),
+//       up(1)*fwd(8)*right(10), mb_cyl(d1=legD1, d2=legD2, h=22),
+//       up(1)*back(8)*left(11), mb_cyl(d1=legD1, d2=legD2, h=22),
+//       up(1)*back(8)*right(10), mb_cyl(d1=legD1, d2=legD2, h=22),
+//       up(20)*yrot(90), mb_capsule(d=25, h=40, influence=0.5), // body
+//       right(21)*up(25)*yrot(-20), mb_capsule(r=7, h=25, influence=0.5, cutoff=9), // head
+//       right(24)*up(10)*yrot(15), mb_cyl(d1=3, d2=6, h=15, cutoff=2, influence=0.4), // trunk
 //       // ears
-//       right(20)*up(29)*fwd(11)*yrot(80)*scale([1.7,1,1]), mb_disk(r=5,h=6, influence=0.1),
-//       right(20)*up(29)*back(11)*yrot(80)*scale([1.7,1,1]), mb_disk(r=5,h=6, influence=0.1),
+//       right(18)*up(29)*fwd(11)*zrot(-20)*yrot(80)*scale([1.4,1,1]), mb_disk(r=5,h=2, cutoff=3),
+//       right(18)*up(29)*back(11)*zrot(20)*yrot(80)*scale([1.4,1,1]), mb_disk(r=5,h=2, cutoff=3),
 //       // tusks
-//       right(25)*up(13)*fwd(5)*yrot(135), mb_capsule(r=1, h = 10, influence=0.1),
-//       right(25)*up(13)*back(5)*yrot(135), mb_capsule(r=1, h = 10, influence=0.1),
+//       right(26)*up(13)*fwd(5)*yrot(135), mb_capsule(r=1, h=10, cutoff=1),
+//       right(26)*up(13)*back(5)*yrot(135), mb_capsule(r=1, h=10, cutoff=1)
 //   ];
-//   bbox = [[-22,-17,-9], [30,17,39]];
+//   bbox = [[-22,-17,-9], [31,17,38]];
 //   metaballs(spec, voxel_size=1, bounding_box=bbox, isovalue=1);
 
 module metaballs(spec, voxel_size, bounding_box, isovalue=1, closed=true, grow_bounds=true, auto_voxels=8000, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false) {
