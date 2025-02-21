@@ -620,14 +620,14 @@ _MCTriangleTable_reverse = [
 /// _cubindex() - private function, called by _isosurface_cubes()
 /// Return the index ID of a voxel depending on the field strength at each corner exceeding isoval.
 function _cubeindex(f, isoval) =
-    (f[0] > isoval ? 1 : 0) +
-    (f[1] > isoval ? 2 : 0) +
-    (f[2] > isoval ? 4 : 0) +
-    (f[3] > isoval ? 8 : 0) +
-    (f[4] > isoval ? 16 : 0) +
-    (f[5] > isoval ? 32 : 0) +
-    (f[6] > isoval ? 64 : 0) +
-    (f[7] > isoval ? 128 : 0);
+    (f[0] >= isoval ? 1 : 0) +
+    (f[1] >= isoval ? 2 : 0) +
+    (f[2] >= isoval ? 4 : 0) +
+    (f[3] >= isoval ? 8 : 0) +
+    (f[4] >= isoval ? 16 : 0) +
+    (f[5] >= isoval ? 32 : 0) +
+    (f[6] >= isoval ? 64 : 0) +
+    (f[7] >= isoval ? 128 : 0);
 
 /*
 -----------------------------------------------------------
@@ -768,12 +768,12 @@ function _isosurface_cubes(voxsize, bbox, fieldarray, fieldfunc, isovalmin, isov
                     maxcf = max(cf),
                     cubecoord = [x,y,z],
                     bfaces = closed ? _bbox_faces(cubecoord, voxsize, bbox) : [],
-                    cubefound_isomin = (mincf<=isovalmin && isovalmin<maxcf),
-                    cubefound_isomax = (mincf<=isovalmax && isovalmax<maxcf),
+                    cubefound_isomin = (mincf<=isovalmin && isovalmin<=maxcf),
+                    cubefound_isomax = (mincf<=isovalmax && isovalmax<=maxcf),
                     cubefound_outer = len(bfaces)==0 ? false
                     : let(
                         bf = flatten([for(i=bfaces) _MCFaceVertexIndices[i]]),
-                        sumcond = len([for(b=bf) if(isovalmin<cf[b] && cf[b]<=isovalmax) 1 ])
+                        sumcond = len([for(b=bf) if(isovalmin<=cf[b] && cf[b]<=isovalmax) 1 ])
                     ) sumcond == len(bf), // true if full faces are inside
                     cubeindex_isomin = cubefound_isomin ? _cubeindex(cf, isovalmin) : 0,
                     cubeindex_isomax = cubefound_isomax ? _cubeindex(cf, isovalmax) : 0
@@ -827,6 +827,7 @@ function _isosurface_triangles(cubelist, voxsize, isovalmin, isovalmax, tritable
                   each _bbfacevertices(vcube, f, bf, isovalmax, isovalmin)
         ]
 ];
+
 
 /*
 /// Generate triangles for the special case of voxel faces clipped by the bounding box
@@ -1461,6 +1462,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. Default: 1.0
 //   ---
 //   closed = When true, close the surface if it intersects the bounding box by adding a closing face. When false, do not add a closing face, possibly producing non-manfold metaballs with holes where the bounding box intersects them.  Default: true
+//   grow_bounds = When true, enlarges `bounding_box` as needed to fit whole voxels of `voxel_size`, and centers the new bounding box over the requested box. When false, shrinks voxels as needed to fit whole voxels inside the requested bounding box. Default: true
 //   show_stats = If true, display statistics about the metaball isosurface in the console window. Besides the number of voxels that the surface passes through, and the number of triangles making up the surface, this is useful for getting information about a possibly smaller bounding box to improve speed for subsequent renders. Enabling this parameter has a small speed penalty. Default: false
 //   auto_voxels = Approximate quanity of voxels to have in the bounding box when `voxel_size="auto"`. Useful for fast preview of a reasonable number of voxels. Use with `show_stats=true` to see the corresponding voxel size. Default: 8000
 //   convexity = (Module only) Maximum number of times a line could intersect a wall of the shape. Affects preview only. Default: 6
@@ -1573,7 +1575,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   boundingbox = [[-30,-19,-19], [30,19,19]];
 //   metaballs(spec, voxel_size, boundingbox,
 //       isovalue=2);
-// Example(3D,Med): Here is what happens when you set `influence` to less than 1. The only difference between these two spheres is influence. Both have `cutoff` set to prevent them from affecting each other. The sphere on the right has a low influence of 0.02, which translates to a falloff with distance $d$ proportional to $\frac{1}{d^50}$. That high exponent causes an extremely steep gradient of values near the surface, so steep that the interpolation of the surface through the voxels runs into double-precision rounding errors, causing ridges to appear. You could use this to create a texture deliberately (as with the trunk of the elephant in a later example), but it is usually better to use `cutoff` to limit the range of influence than reducing `influence` significantly below 1.
+// Example(3D,Med): Here is what happens when you set `influence` to less than 1. The only difference between these two spheres is influence. Both have `cutoff` set to prevent them from affecting each other. The sphere on the right has a low influence of 0.02, which translates to a falloff with distance $d$ proportional to $\frac{1}{d^50}$. That high exponent increases the *non-linear* nature of the function gradient at the isosurface, reducing the accuracy of the *linear* interpolation of where the the surface intersects each voxel, which causes ridges to appear. You could use this to create a texture deliberately (as with the trunk of the elephant in a later example), but it is usually better to use `cutoff` to limit the range of influence rather than reducing `influence` significantly below 1.
 //   spec = [
 //       left(10), mb_sphere(8, cutoff=10, influence=1),
 //       right(10), mb_sphere(8, cutoff=10, influence=0.02)
@@ -2088,7 +2090,13 @@ function isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed
         tritablemin = reverse ? _MCTriangleTable_reverse : _MCTriangleTable,
         tritablemax = reverse ? _MCTriangleTable : _MCTriangleTable_reverse,
         trianglepoints = _isosurface_triangles(cubes, voxsize, isovalmin, isovalmax, tritablemin, tritablemax),
-        faces = [ for(i=[0:3:len(trianglepoints)-1]) [i,i+1,i+2] ],
+        faces = [
+            for(i=[0:3:len(trianglepoints)-1])
+                let(i1=i+1, i2=i+2)
+                    if (norm(cross(trianglepoints[i1]-trianglepoints[i],
+                        trianglepoints[i2]-trianglepoints[i])) > EPSILON)
+                            [i,i1,i2]
+        ],
         dum2 = show_stats ? _showstats_isosurface(voxsize, bbox, isovalue, cubes, trianglepoints, faces) : 0
 ) [trianglepoints, faces];
 
