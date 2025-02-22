@@ -831,7 +831,7 @@ function _isosurface_triangles(cubelist, voxsize, isovalmin, isovalmax, tritable
 
 /*
 /// Generate triangles for the special case of voxel faces clipped by the bounding box
-// (more efficient than _bbfacevertices below but doesn't work with isovalue ranges)
+/// (more efficient than _bbfacevertices below but doesn't work with isovalue ranges)
 function _clipfacevertices(vcube, f, bbface, isovalmax, isovalmin) =
     let(
         vi = _MCFaceVertexIndices[bbface], // four voxel face vertex indices
@@ -1928,7 +1928,7 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   f = The isosurface function or array.
 //   isovalue = A 2-vector giving an isovalue range. For an unbounded range, use `[-INF, max_isovalue]` or `[min_isovalue, INF]`.
 //   voxel_size = size of the voxel that is used to sample the bounding box volume. This can be "auto", a scalar size for a cubical voxel, or a 3-vector if you want non-cubical voxels. For "auto", the voxel size is set so that approximately `auto_voxels` (default 8000) quantity of voxels fit inside the bounding box. If you set `fixed_bounds=true`, then bounding box is held fixed in size, and the voxel size is adjusted as needed so that whole voxels fit inside the bounding box.
-//  bounding_box = A designation of volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. By default, the actual bounding box is enlarged if necessary to fit whole voxels, and centered around your requested box. Set `fixed_bounds=true` to hold the box size fixed, in which case the voxel changes size instead. When `f` is an array of values, `bounding_box` is already implied by the array size combined with `voxel_size`, in which case this implied bounding box is centered around the origin.
+//   bounding_box = A designation of volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. By default, the actual bounding box is enlarged if necessary to fit whole voxels, and centered around your requested box. Set `fixed_bounds=true` to hold the box size fixed, in which case the voxel changes size instead. When `f` is an array of values, `bounding_box` is already implied by the array size combined with `voxel_size`, in which case this implied bounding box is centered around the origin.
 //   ---
 //   closed = When true, close the surface if it intersects the bounding box by adding a closing face. When false, do not add a closing face and instead produce a non-manfold VNF that has holes.  Default: true
 //   reverse = When true, reverses the orientation of the VNF faces. Default: false
@@ -2149,7 +2149,7 @@ function isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed
         dum2 = show_stats ? _showstats_isosurface(voxsize, bbox, isovalue, cubes, trianglepoints, faces) : 0
 ) [trianglepoints, faces];
 
-// internal function: get "auto" voxel size given a desired number of voxels in a bounding box
+/// internal function: get "auto" voxel size given a desired number of voxels in a bounding box
 function _getautovoxsize(bbox, numvoxels) =
     let(
         bbsiz = bbox[1]-bbox[0],
@@ -2157,7 +2157,7 @@ function _getautovoxsize(bbox, numvoxels) =
         voxvol = bbvol/numvoxels
     ) voxvol^(1/3);
 
-// internal function: get voxel size, adjusted if necessary to fit bounding box
+/// internal function: get voxel size, adjusted if necessary to fit bounding box
 function _getvoxsize(voxel_size, bounding_box, fixed_bounds) =
     let(voxsize0 = is_num(voxel_size) ? [voxel_size, voxel_size, voxel_size] : voxel_size)
         fixed_bounds ? 
