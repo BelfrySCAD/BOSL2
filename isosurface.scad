@@ -2028,6 +2028,17 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //       function (p) (p.x*p.y*p.z^3 - 3*p.x^2*p.z^2)/norm(p)^2 + norm(p)^2,
 //       isovalue=[-INF,35], bounding_box=[[-32,-32,-14],[32,32,14]],
 //       voxel_size = 0.8, show_box=true);
+// Example(3D,NoAxes): Nonlinear functions with steep gradients between voxel corners at the isosurface value can have interpolation artifacts because the surface position is approximated by a linear interpolation of a highly nonlinear function. The appearance of the artifacts depends on the combination of function, voxel size, and isovalue. If your isovalue is positive, then you may be able to smooth out the artifacts by using the log of your function and the log of your isovalue range. On the left, an isosurface around a steep nonlinear function (clipped on the left by the bounding box) exhibits severe interpolation artifacts. On the right, the log of the isosurface around the log of the function smooths it out nicely.
+//   function shape(p) = let(x=p.x, y=p.y, z=p.z)
+//       exp(-((x+5)/5-3)^2-y^2)*exp(-((x+5)/3)^2-y^2-z^2)
+//       + exp(-((y+4)/5-3)^2-x^2)*exp(-((y+4)/3)^2-x^2-0.5*z^2);
+//   
+//   left(6) isosurface(function (p) shape(p),
+//       isovalue=[EPSILON,INF],
+//           bounding_box=[[0,-10,-5],[9,10,6]], voxel_size=0.25);
+//   right(6) isosurface(function (p) log(shape(p)),
+//       isovalue=[log(EPSILON),INF],
+//           bounding_box=[[0,-10,-5],[9,10,6]], voxel_size=0.25);
 // Example(3D): Using an array for the `f` argument instead of a function literal. Each row of the array represents an X index for a YZ plane with the array Z indices changing fastest in each plane. The final object may need rotation to get the orientation you want. You don't pass the `bounding_box` argument here; it is implied by the array size and voxel size, and centered on the origin.
 //   field = [
 //     repeat(0,[6,6]),
