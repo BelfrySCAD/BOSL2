@@ -192,7 +192,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   cuboid(40) show_anchors();
 
 module cuboid(
-    size=[1,1,1],
+    size,
     p1, p2,
     chamfer,
     rounding,
@@ -331,8 +331,9 @@ module cuboid(
             }
         }
     }
-
-    size = scalar_vec3(size);
+    sizecheck = assert(num_defined([size,p1,p2])!=3, "\nCannot give size if p2 is given (did you forget braces on the size argument?)")
+                assert(is_def(p1) || is_undef(p2), "If p2 is given you must also give p1");
+    size = scalar_vec3(default(size,[1,1,1]));
     edges = _edges(edges, except=first_defined([except_edges,except]));
     teardrop = is_bool(teardrop)&&teardrop? 45 : teardrop;
     chamfer = approx(chamfer,0) ? undef : chamfer;
@@ -344,8 +345,8 @@ module cuboid(
         assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value")
         assert(is_undef(rounding) || is_undef(chamfer), "Cannot specify nonzero value for both chamfer and rounding")
         assert(teardrop==false || (is_finite(teardrop) && teardrop>0 && teardrop<=90), "teardrop must be either false or an angle number between 0 and 90")
-        assert(is_undef(p1) || is_vector(p1))
-        assert(is_undef(p2) || is_vector(p2))
+        assert(is_undef(p1) || is_vector(p1,3), "p1 must be a 3-vector")
+        assert(is_undef(p2) || is_vector(p2,3), "p2 must be a 3-vector")
         assert(is_bool(trimcorners));
     if (!is_undef(p1)) {
         if (!is_undef(p2)) {
