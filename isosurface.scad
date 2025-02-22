@@ -913,26 +913,30 @@ function _bbfacevertices(vcube, f, bbface, isovalmax, isovalmin) = let(
 
 /// _showstats_isosurface() (Private function) - called by isosurface()
 /// Display statistics about isosurface
-function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) = let(
-    v = column(cubes, 0), // extract cube vertices
-    x = column(v,0),    // extract x values
-    y = column(v,1),    // extract y values
-    z = column(v,2),    // extract z values
-    xmin = min(x),
-    xmax = max(x)+voxsize.x,
-    ymin = min(y),
-    ymax = max(y)+voxsize.y,
-    zmin = min(z),
-    zmax = max(z)+voxsize.z,
-    ntri = len(faces),
-    nvox = len(cubes)
-) echo(str("\nIsosurface statistics:\n   Isovalue = ", isoval, "\n   Voxel size = ", voxsize,
-    "\n   Voxels intersected by the surface = ", nvox,
-    "\n   Triangles = ", ntri,
-    "\n   VNF bounds = ", pointlist_bounds(triangles),
-    "\n   Bounds for all data = ", bbox,
-    "\n   Voxel bounding box for isosurface = ", [[xmin,ymin,zmin], [xmax,ymax,zmax]],
-    "\n")) 0;
+function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
+    let(
+        voxbounds = len(cubes)>0 ? let(
+            v = column(cubes, 0), // extract cube vertices
+            x = column(v,0),    // extract x values
+            y = column(v,1),    // extract y values
+            z = column(v,2),    // extract z values
+            xmin = min(x),
+            xmax = max(x)+voxsize.x,
+            ymin = min(y),
+            ymax = max(y)+voxsize.y,
+            zmin = min(z),
+            zmax = max(z)+voxsize.z
+        ) [[xmin,ymin,zmin], [xmax,ymax,zmax]] : "N/A",
+        nvox = len(cubes),
+        ntri = len(triangles),
+        tribounds = ntri>0 ? pointlist_bounds(triangles) : "N/A"
+    ) echo(str("\nIsosurface statistics:\n   Isovalue = ", isoval, "\n   Voxel size = ", voxsize,
+        "\n   Voxels intersected by the surface = ", nvox,
+        "\n   Triangles = ", ntri,
+        "\n   VNF bounds = ", tribounds,
+        "\n   Bounds for all data = ", bbox,
+        "\n   Voxel bounding box for isosurface = ", voxbounds,
+        "\n"));
 
 
 
@@ -980,7 +984,7 @@ function _mb_cuboid_basic(point, inv_size, xp, neg) =
                          : (abs(point.x)^xp + abs(point.y)^xp + abs(point.z)^xp) ^ (1/xp)
       ) neg/dist;
 function _mb_cuboid_influence(point, inv_size, xp, ex, neg) = let(
-    point=inv_size * point,
+    point = inv_size * point,
     dist = xp >= 1100 ? max(v_abs(point))
                       :(abs(point.x)^xp + abs(point.y)^xp + abs(point.z)^xp) ^ (1/xp)
 ) neg / dist^ex;
@@ -1295,9 +1299,9 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 // Topics: Metaballs, Isosurfaces, VNF Generators
 // See Also: isosurface()
 // Usage: As a module
-//   metaballs(spec, voxel_size, bounding_box, [isovalue=], [closed=], [auto_voxels=], [convexity=], [show_stats=], ...) [ATTACHMENTS];
+//   metaballs(spec, voxel_size, bounding_box, [isovalue=], [closed=], [fixed_bounds=], [auto_voxels=], [convexity=], [show_stats=], ...) [ATTACHMENTS];
 // Usage: As a function
-//   vnf = metaballs(spec, voxel_size, bounding_box, [isovalue=], [closed=], [auto_voxels=], [convexity=], [show_stats=]);
+//   vnf = metaballs(spec, voxel_size, bounding_box, [isovalue=], [closed=], [fixed_bounds=], [auto_voxels=], [convexity=], [show_stats=]);
 // Description:
 //   ![Metaball animation](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/metaball_demo.gif)
 //   .
@@ -1457,12 +1461,12 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   and are not normally necessary.
 // Arguments:
 //   spec = Metaball specification in the form `[trans0, spec0, trans1, spec1, ...]`, with alternating transformation matrices and metaball specs, where `spec0`, `spec1`, etc. can be a metaball function or another metaball specification. See above for more details, and see Example 23 for a demonstration.
-//   voxel_size = size of the voxel that is used to sample the bounding box volume. This can be "auto", a scalar size for a cubical voxel, or a 3-vector if you want non-cubical voxels. For "auto", the voxel size is set so that approximately `auto_voxels` (default 8000) quantity of voxels fit inside the bounding box. If you set `grow_bounds=false`, then bounding box is held fixed in size, and the voxel size is adjusted as needed so that whole voxels fit inside the bounding box.
-//   bounding_box = A designation of volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. With the default `grow_bounds=true`, the actual bounding box is enlarged if necessary to fit whole voxels, and centered around your requested box.
+//   voxel_size = size of the voxel that is used to sample the bounding box volume. This can be "auto", a scalar size for a cubical voxel, or a 3-vector if you want non-cubical voxels. For "auto", the voxel size is set so that approximately `auto_voxels` (default 8000) quantity of voxels fit inside the bounding box. If you set `fixed_bounds=true`, then bounding box is held fixed in size, and the voxel size is adjusted as needed so that whole voxels fit inside the bounding box.
+//   bounding_box = A designation of volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. With the default `fixed_bounds=false`, the actual bounding box is enlarged if necessary to fit whole voxels, and centered around your requested box.
 //   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. Default: 1.0
 //   ---
 //   closed = When true, close the surface if it intersects the bounding box by adding a closing face. When false, do not add a closing face, possibly producing non-manfold metaballs with holes where the bounding box intersects them.  Default: true
-//   grow_bounds = When true, enlarges `bounding_box` as needed to fit whole voxels of `voxel_size`, and centers the new bounding box over the requested box. When false, shrinks voxels as needed to fit whole voxels inside the requested bounding box. Default: true
+//   fixed_bounds = When true, shrinks voxels as needed to fit whole voxels inside the requested bounding box. When false, enlarges `bounding_box` as needed to fit whole voxels of `voxel_size`, and centers the new bounding box over the requested box. Default: false
 //   show_stats = If true, display statistics about the metaball isosurface in the console window. Besides the number of voxels that the surface passes through, and the number of triangles making up the surface, this is useful for getting information about a possibly smaller bounding box to improve speed for subsequent renders. Enabling this parameter has a small speed penalty. Default: false
 //   auto_voxels = Approximate quanity of voxels to have in the bounding box when `voxel_size="auto"`. Useful for fast preview of a reasonable number of voxels. Use with `show_stats=true` to see the corresponding voxel size. Default: 8000
 //   convexity = (Module only) Maximum number of times a line could intersect a wall of the shape. Affects preview only. Default: 6
@@ -1575,7 +1579,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   boundingbox = [[-30,-19,-19], [30,19,19]];
 //   metaballs(spec, voxel_size, boundingbox,
 //       isovalue=2);
-// Example(3D,Med): Here is what happens when you set `influence` to less than 1. The only difference between these two spheres is influence. Both have `cutoff` set to prevent them from affecting each other. The sphere on the right has a low influence of 0.02, which translates to a falloff with distance $d$ proportional to $\frac{1}{d^50}$. That high exponent increases the *non-linear* nature of the function gradient at the isosurface, reducing the accuracy of the *linear* interpolation of where the the surface intersects each voxel, which causes ridges to appear. You could use this to create a texture deliberately (as with the trunk of the elephant in a later example), but it is usually better to use `cutoff` to limit the range of influence rather than reducing `influence` significantly below 1.
+// Example(3D,Med): Setting `influence` to less than 0.5 can cause interpolation artifacts in the surface. The only difference between these two spheres is `influence`. Both have `cutoff` set to prevent them from affecting each other. The sphere on the right has a low influence of 0.02, which translates to a falloff with distance $d$ proportional to $\frac{1}{d^50}$. That high exponent increases the *non-linear* nature of the function gradient at the isosurface, reducing the accuracy of the *linear* interpolation of where the the surface intersects each voxel, causing ridges to appear. You could use this to create a texture deliberately (as with the trunk of the elephant in a later example), but it is usually better to use `cutoff` to limit the range of influence rather than reducing `influence` significantly below 1.
 //   spec = [
 //       left(10), mb_sphere(8, cutoff=10, influence=1),
 //       right(10), mb_sphere(8, cutoff=10, influence=0.02)
@@ -1763,15 +1767,15 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   bbox = [[-22,-17,-9], [31,17,38]];
 //   metaballs(spec, voxel_size=1, bounding_box=bbox, isovalue=1);
 
-module metaballs(spec, voxel_size, bounding_box, isovalue=1, closed=true, grow_bounds=true, auto_voxels=8000, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false) {
-        vnf = metaballs(spec, voxel_size, bounding_box, isovalue, closed, grow_bounds, auto_voxels, show_stats);
+module metaballs(spec, voxel_size, bounding_box, isovalue=1, closed=true, fixed_bounds=false, auto_voxels=8000, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false) {
+        vnf = metaballs(spec, voxel_size, bounding_box, isovalue, closed, fixed_bounds, auto_voxels, show_stats);
         vnf_polyhedron(vnf, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
             children();
     if(show_box)
         #translate(bounding_box[0]) cube(bounding_box[1]-bounding_box[0]);
 }
 
-function metaballs(spec, voxel_size, bounding_box, isovalue=1, closed=true, grow_bounds=true, auto_voxels=8000, show_stats=false) =
+function metaballs(spec, voxel_size, bounding_box, isovalue=1, closed=true, fixed_bounds=false, auto_voxels=8000, show_stats=false) =
     assert(all_defined([spec, isovalue, bounding_box, voxel_size]), "\nThe parameters spec, isovalue, bounding_box, and voxel_size must all be defined.")
     assert(voxel_size=="auto" || (is_finite(voxel_size) && voxel_size>0) || (is_vector(voxel_size) && all_positive(voxel_size)), "\nvoxel_size must be a positive number, a 3-vector of positive values, or \"auto\".")
     assert(is_finite(isovalue) || (is_list(isovalue) && len(isovalue)==2 && is_num(isovalue[0]) && is_num(isovalue[1])), "\nIsovalue must be a number or a range; a number is the same as [number,INF].")
@@ -1793,12 +1797,12 @@ function metaballs(spec, voxel_size, bounding_box, isovalue=1, closed=true, grow
         ],
 
         // new voxel or bounding box centered around original, to fit whole voxels
-        autovoxsize = voxel_size == "auto" ? _getautovoxsize(bounding_box, auto_voxels) : voxel_size,
-        voxsize = _getvoxsize(autovoxsize, bounding_box, grow_bounds),
         bbox0 = is_num(bounding_box)
-            ? let(hb=0.5*bounding_box) _getbbox(autovoxsize, [[-hb,-hb,-hb],[hb,hb,hb]])
+            ? let(hb=0.5*bounding_box) [[-hb,-hb,-hb],[hb,hb,hb]]
             : bounding_box,
-        newbbox = _getbbox(autovoxsize, bbox0, grow_bounds),
+        autovoxsize = voxel_size == "auto" ? _getautovoxsize(bbox0, auto_voxels) : voxel_size,
+        voxsize = _getvoxsize(autovoxsize, bbox0, fixed_bounds),
+        newbbox = _getbbox(voxsize, bbox0, fixed_bounds),
 
         // set up field array
         bot = newbbox[0],
@@ -1845,9 +1849,9 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 // SynTags: Geom,VNF
 // Topics: Isosurfaces, VNF Generators
 // Usage: As a module
-//   isosurface(f, isovalue, voxel_size, bounding_box, [reverse=], [closed=], [grow_bounds=], [auto_voxels=], [show_stats=], ...) [ATTACHMENTS];
+//   isosurface(f, isovalue, voxel_size, bounding_box, [reverse=], [closed=], [fixed_bounds=], [auto_voxels=], [show_stats=], ...) [ATTACHMENTS];
 // Usage: As a function
-//   vnf = isosurface(f, isovalue, voxel_size, bounding_box, [reverse=], [closed=], [grow_bounds=], [auto_voxels=], [show_stats=]);
+//   vnf = isosurface(f, isovalue, voxel_size, bounding_box, [reverse=], [closed=], [fixed_bounds=], [auto_voxels=], [show_stats=]);
 // Description:
 //   Computes a [VNF structure](vnf.scad) of an object bounded by an isosurface or a range between two isosurfaces, within a specified bounding box.
 //   The isosurface of a function $f(x,y,z)$ is the set of points where $f(x,y,z)=c$ for some
@@ -1859,36 +1863,38 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   case the isosurface is the set of points equal to the isovalue as interpolated from the array.
 //   The array indices are in the order `[x][y][z]`.
 //   .
-//   The specified isovalue must be a range $[c_1,c_2]$. The returned object is the set of points $p$ that
-//   satisfy $c_1 \leq f(p) \leq c_2$. If $f$ has values larger than $c_2$ and values smaller than $c_1$,
-//   then the result is a VNF with two bounding surfaces corresponding to the isosurfaces at $c_1$ and
-//   $c_2$. This is a shell object having two surfaces with a gap between them: the front faces of each
-//   surface face away from each other, and the backs face each other across the gap. If $f(p)<c_2$
-//   everywhere (which is true when $c_2 = \infty$), then no isosurface exists for $c_2$, so the object
-//   has only one bounding surface &mdash; the one defined by $c_1$. This can result in a bounded object
+//   The isovalue must be specified as a range `[c_min,c_max]`. The range can be finite or unbounded at one
+//   end, with either `c_min=-INF` or `c_max=INF`. The returned object is the set of points `p` that
+//   satisfy `c_min <= f(p) <= c_max`. If `f(p)` has values larger than `c_min` and values smaller than
+//   `c_max`, then the result is a shell object with two bounding surfaces corresponding to the
+//   isosurfaces at `c_min` and `c_max`. If `f(p) < c_max`
+//   everywhere (which is true when `c_max = INF`), then no isosurface exists for `c_max`, so the object
+//   has only one bounding surface: the one defined by `c_min`. This can result in a bounded object
 //   like a sphere, or it can result an an unbounded object such as all the points outside of a sphere out
-//   to infinity. A similar situation arises if $f(p)>c_1$ everywhere (which is true when
-//   $c_1 = -\infty$). Setting isovalue to `[-INF,c2]` or `[c1,INF]` always produces an object with a
+//   to infinity. A similar situation arises if `f(p) > c_min` everywhere (which is true when
+//   `c_min = -INF`). Setting isovalue to `[-INF,c_max]` or `[c_min,INF]` always produces an object with a
 //   single bounding isosurface. To obtain a bounded object, think about whether the function values
 //   inside your object are smaller or larger than your isosurface value. If the values inside are
-//   smaller, you produce a bounded object using `[-INF,c]`. If the values inside are larger, you get a
-//   bounded object using `[c,INF]`.
+//   smaller, you produce a bounded object using `[-INF,c_max]`. If the values inside are larger, you get a
+//   bounded object using `[c_min,INF]`.
 //   .
 //   The isosurface is evaluated over a bounding box defined by its minimum and maximum corners,
 //   `[[xmin,ymin,zmin],[xmax,ymax,zmax]]`. This bounding box is divided into voxels of the
 //   specified `voxel_size`. Smaller voxels produce a finer, smoother result at the expense of
 //   execution time. By default, if the voxel size doesn't exactly divide your specified bounding box, then
 //   the bounding box is enlarged to contain whole voxels, and centered on your requested box (or, you can
-//   set `grow_bounds=false` to force the voxels to adjust in size to fit instead). If
+//   set `fixed_bounds=true` to force the voxels to adjust in size to fit instead). If
 //   the bounding box clips the isosurface and `closed=true` (the default), a surface is added to create
 //   a closed manifold object. Setting `closed=false` causes the VNF to end at the bounding box,
 //   resulting in a non-manifold shape that exposes the inside of the object.
 //   .
-//   If your object is unbounded then when it intersects with the bounding box and `closed=true`, the
-//   result may appear like a solid cube, because the clipping faces are all you can see and the bounding
-//   surface is hidden inside. Setting `closed=false` removes the bounding box faces and exposes the
-//   inside structure. If you want the bounded object, you can correct this problem by changing the
-//   isovalue range: one of `[-INF,c2]` or `[c1,INF]` or `[c1,c2]` should do the job.
+//   ***Why does my object appear as a cube?*** If your object is unbounded, then when it intersects with
+//   the bounding box and `closed=true`, the result may appear to be a solid cube, because the clipping
+//   faces are all you can see and the bounding surface is hidden inside. Setting `closed=false` removes
+//   the bounding box faces and exposes the inside structure (with inverted faces). If you want the bounded
+//   object, you can correct this problem by changing your isovalue range. If you were using a finite range
+//   `[c1,c2]`, try changing it to `[c2,INF]` or `[-INF,c1]`. If you were using an unbounded range like
+//   `[c,INF]`, try switching the range to `[-INF,c]`.
 //   .
 //   The `voxel_size` and `bounding_box` parameters affect the run time, which can be long.
 //   A voxel size of 1 with a bounding box volume of 200×200×200 may be slow because it requires the
@@ -1911,12 +1917,12 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 // Arguments:
 //   f = The isosurface function or array.
 //   isovalue = A 2-vector giving an isovalue range. For an unbounded range, use `[-INF, max_isovalue]` or `[min_isovalue, INF]`.
-//   voxel_size = size of the voxel that is used to sample the bounding box volume. This can be "auto", a scalar size for a cubical voxel, or a 3-vector if you want non-cubical voxels. For "auto", the voxel size is set so that approximately `auto_voxels` (default 8000) quantity of voxels fit inside the bounding box. If you set `grow_bounds=false`, then bounding box is held fixed in size, and the voxel size is adjusted as needed so that whole voxels fit inside the bounding box.
-//   bounding_box = A designation of volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin] [xmax,ymax,zmax]]`, specifying the minimum and maximum box corner coordinates. With the default `grow_bounds=true`, the actual bounding box is enlarged if necessary to fit whole voxels, and centered around your requested box. When `f` is an array of values, `bounding_box` is already implied by the array size combined with `voxel_size`, in which case this implied bounding box is centered around the origin.
+//   voxel_size = size of the voxel that is used to sample the bounding box volume. This can be "auto", a scalar size for a cubical voxel, or a 3-vector if you want non-cubical voxels. For "auto", the voxel size is set so that approximately `auto_voxels` (default 8000) quantity of voxels fit inside the bounding box. If you set `fixed_bounds=true`, then bounding box is held fixed in size, and the voxel size is adjusted as needed so that whole voxels fit inside the bounding box.
+//   bounding_box = A designation of volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin] [xmax,ymax,zmax]]`, specifying the minimum and maximum box corner coordinates. With the default `fixed_bounds=false`, the actual bounding box is enlarged if necessary to fit whole voxels, and centered around your requested box. When `f` is an array of values, `bounding_box` is already implied by the array size combined with `voxel_size`, in which case this implied bounding box is centered around the origin.
 //   ---
 //   closed = When true, close the surface if it intersects the bounding box by adding a closing face. When false, do not add a closing face and instead produce a non-manfold VNF that has holes.  Default: true
 //   reverse = When true, reverses the orientation of the VNF faces. Default: false
-//   grow_bounds = When true, enlarges `bounding_box` as needed to fit whole voxels of `voxel_size`, and centers the new bounding box over the requested box. When false, shrinks voxels as needed to fit whole voxels inside the requested bounding box. Default: true
+//   fixed_bounds = When true, shrinks voxels as needed to fit whole voxels inside the requested bounding box. When false, enlarges `bounding_box` as needed to fit whole voxels of `voxel_size`, and centers the new bounding box over the requested box. Default: false
 //   show_stats = If true, display statistics in the console window about the isosurface: number of voxels that the surface passes through, number of triangles, bounding box of the voxels, and voxel-rounded bounding box of the surface, which may help you reduce your bounding box to improve speed. Enabling this parameter has a slight speed penalty. Default: false
 //   show_box = (Module only) display the requested bounding box as transparent. This box may appear slightly inside the bounds of the figure if the actual bounding box had to be expanded to accommodate whole voxels. Default: false
 //   auto_voxels = Approximate quanity of voxels to have in the bounding box when `voxel_size="auto"`. Useful for fast preview of a reasonable number of voxels. Use with `show_stats=true` to see the corresponding voxel size. Default: 8000
@@ -2052,15 +2058,15 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //      isosurface(field, isovalue=[0.5,INF],
 //          voxel_size=10);
 
-module isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed=true, grow_bounds=true, auto_voxels=8000, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false, _mb_origin=undef) {
-    vnf = isosurface(f, isovalue, voxel_size, bounding_box, reverse, closed, grow_bounds, auto_voxels, show_stats, _mb_origin);
+module isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed=true, fixed_bounds=false, auto_voxels=8000, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false, _mb_origin=undef) {
+    vnf = isosurface(f, isovalue, voxel_size, bounding_box, reverse, closed, fixed_bounds, auto_voxels, show_stats, _mb_origin);
     vnf_polyhedron(vnf, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
         children();
     if(show_box)
         %translate(bounding_box[0]) cube(bounding_box[1]-bounding_box[0]);
 }
 
-function isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed=true, grow_bounds=true, auto_voxels=8000, show_stats=false, _mb_origin=undef) =
+function isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed=true, fixed_bounds=false, auto_voxels=8000, show_stats=false, _mb_origin=undef) =
     assert(all_defined([f, isovalue, voxel_size]), "\nThe parameters f, isovalue, and voxel_size must all be defined.")
     assert(voxel_size=="auto" || (is_finite(voxel_size) && voxel_size>0) || (is_vector(voxel_size) && all_positive(voxel_size)), "\nvoxel_size must be a positive number, a 3-vector of positive values, or \"auto\".")
     assert(is_list(isovalue) && len(isovalue)==2 && is_num(isovalue[0]) && is_num(isovalue[1]), "\nIsovalue must be a range; use [minvalue,INF] or [-INF,maxvalue] for an unbounded range.")
@@ -2072,12 +2078,12 @@ function isosurface(f, isovalue, voxel_size, bounding_box, reverse=false, closed
         isovalmax = is_list(isovalue) ? isovalue[1] : INF,
         dumiso1 = assert(isovalmin < isovalmax, str("\nBad isovalue range (", isovalmin, ", >= ", isovalmax, "), should be expressed as [min_value, max_value].")),
         dumiso2 = assert(isovalmin != -INF || isovalmin != INF, "\nIsovalue range must be finite on one end."),
-        autovoxsize = voxel_size == "auto" ? _getautovoxsize(bounding_box, auto_voxels) : voxel_size,
-        voxsize = _getvoxsize(autovoxsize, bounding_box, grow_bounds),
         bbox0 = is_num(bounding_box)
-            ? let(hb=0.5*bounding_box) _getbbox(autovoxsize, [[-hb,-hb,-hb],[hb,hb,hb]])
+            ? let(hb=0.5*bounding_box) [[-hb,-hb,-hb],[hb,hb,hb]]
             : bounding_box,
-        bbox = is_function(f) ? _getbbox(autovoxsize, bbox0, grow_bounds)
+        autovoxsize = voxel_size == "auto" ? _getautovoxsize(bbox0, auto_voxels) : voxel_size,
+        voxsize = _getvoxsize(autovoxsize, bbox0, fixed_bounds),
+        bbox = is_function(f) ? _getbbox(voxsize, bbox0, fixed_bounds)
         : let( // new bounding box, either centered on origin or using metaball origin
             hv = 0.5*voxsize,
             dims = list_shape(f) - [1,1,1]
@@ -2109,22 +2115,23 @@ function _getautovoxsize(bbox, numvoxels) =
     ) voxvol^(1/3);
 
 // internal function: get voxel size, adjusted if necessary to fit bounding box
-function _getvoxsize(voxel_size, bounding_box, grow_bounds) =
+function _getvoxsize(voxel_size, bounding_box, fixed_bounds) =
     let(voxsize0 = is_num(voxel_size) ? [voxel_size, voxel_size, voxel_size] : voxel_size)
-        grow_bounds ? voxsize0 // if grow_bounds==true, we don't adjust voxel size
-        : let(
-            reqboxsize = bounding_box[1] - bounding_box[0],
-            bbnums = v_ceil(v_div(bounding_box[1]-bounding_box[0], voxsize)),
-            newboxsize = v_mul(bbnums, voxsize0)
-        ) v_mul(voxsize0, v_div(reqboxsize, newboxsize));
+        fixed_bounds ? 
+            let(
+                reqboxsize = bounding_box[1] - bounding_box[0],
+                bbnums = v_ceil(v_div(bounding_box[1]-bounding_box[0], voxsize)),
+                newboxsize = v_mul(bbnums, voxsize0)
+            ) v_mul(voxsize0, v_div(reqboxsize, newboxsize))
+        : voxsize0; // if fixed_bounds==false, we don't adjust voxel size
 
 /// internal function: get bounding box, adjusted in size and centered on requested box
-function _getbbox(voxel_size, bounding_box, grow_bounds) =
+function _getbbox(voxel_size, bounding_box, fixed_bounds) =
     let(voxsize0 = is_num(voxel_size) ? [voxel_size, voxel_size, voxel_size] : voxel_size)
-        grow_bounds ?
-        let(    // adjust bounding box
+        fixed_bounds ?
+            bounding_box // if grow_bounds==false, we don't adjust bounding box
+        : let(    // adjust bounding box
             bbcenter = mean(bounding_box),
             bbnums = v_ceil(v_div(bounding_box[1]-bounding_box[0], voxsize0)),
             halfbb = 0.5 * v_mul(voxsize0, bbnums)
-        ) [bbcenter - halfbb, bbcenter + halfbb]
-        : bounding_box; // if grow_bounds==false, we don't adjust bounding box
+        ) [bbcenter - halfbb, bbcenter + halfbb];
