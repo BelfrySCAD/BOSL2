@@ -448,7 +448,7 @@ function zcopies(spacing, n, l, sp, p=_NO_ARG) =
 //   When called as a module, copies `children()` at one or more evenly spaced positions along a line.
 //   By default, the line will be centered at the origin, unless the starting point `p1` is given.
 //   The line will be pointed towards `RIGHT` (X+) unless otherwise given as a vector in `l`,
-//   `spacing`, or `p1`/`p2`.  The psotion of the copies is specified in one of several ways:
+//   `spacing`, or `p1`/`p2`.  The position of the copies is specified in one of several ways:
 //   .
 //   If You Know...                   | Then Use Something Like...
 //   -------------------------------- | --------------------------------
@@ -520,6 +520,7 @@ module line_copies(spacing, n, l, p1, p2)
 
 function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
     assert(is_undef(spacing) || is_finite(spacing) || is_vector(spacing))
+    assert(!is_list(spacing) || len(spacing)==2 || len(spacing)==3, "Vector `spacing` must have length 2 or 3")
     assert(is_undef(n) || is_finite(n))
     assert(is_undef(l) || is_finite(l) || is_vector(l))
     assert(is_undef(p1) || is_vector(p1))
@@ -527,9 +528,11 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
     assert(is_undef(p2) || is_def(p1), "If p2 is given must also give p1")
     assert(is_undef(p2) || is_undef(l), "Cannot give both p2 and l")
     assert(is_undef(n) || num_defined([l,spacing,p2])==1,"If n is given then must give exactly one of 'l', 'spacing', or the 'p1'/'p2' pair")
-    assert(is_def(n) || num_defined([l,spacing,p2])>=1,"If n is given then must give at least one of 'l', 'spacing', or the 'p1'/'p2' pair")    
+    assert(is_def(n) || num_defined([l,spacing,p2])>=1,"If n is not given then must give at least one of 'l', 'spacing', or the 'p1'/'p2' pair")
+    assert(!(is_vector(spacing) && is_vector(l)), "Cannot give vector 'spacing' and vector 'l' value.")
+    assert(!(is_vector(spacing) && is_def(p2)), "Cannot combine vector 'spacing' with the 'p1'/'p2' pair")
     let(
-        ll = is_def(l)? scalar_vec3(l, 0)
+        ll = is_def(l)? scalar_vec3(l)
            : is_def(spacing) && is_def(n)? (n-1) * scalar_vec3(spacing, 0)
            : is_def(p1) && is_def(p2)? point3d(p2-p1)
            : undef,
@@ -538,13 +541,12 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
             : 2,
         spc = cnt<=1? [0,0,0]
             : is_undef(spacing) && is_def(ll)? ll/(cnt-1) 
-            : is_num(spacing) && is_def(ll)? (ll/(cnt-1)) 
+            : is_num(spacing) && is_def(ll)? ll/(cnt-1)
             : scalar_vec3(spacing, 0)
     )
     assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `line_copies()`.")
     let( spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc )
     [for (i=[0:1:cnt-1]) translate(i * spc + spos, p=p)];
-
 
 
 // Function&Module: grid_copies()

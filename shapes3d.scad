@@ -58,8 +58,8 @@ use <builtins.scad>
 module cube(size=1, center, anchor, spin=0, orient=UP)
 {
     anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
-    size = scalar_vec3(size);
-    attachable(anchor,spin,orient, size=size) {
+    size = force_list(size,3);      // Native cube prints a warning and gives a unit cube when parameters are bogus
+    attachable(anchor,spin,orient, size=is_vector(size,3)?size:[1,1,1]) {
         _cube(size, center=true);
         children();
     }
@@ -67,18 +67,17 @@ module cube(size=1, center, anchor, spin=0, orient=UP)
 
 function cube(size=1, center, anchor, spin=0, orient=UP) =
     let(
-        siz = scalar_vec3(size)
+        size = force_list(size,3)
     )
-    assert(all_positive(siz), "All size components must be positive.")
+    assert(is_vector(size,3), "\nSize parameter cannot be converted to a 3-vector")
+    assert(all_positive(size), "\nAll size components must be positive.")
     let(
         anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]),
         unscaled = [
             [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
             [-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1],
         ]/2,
-        verts = is_num(size)? unscaled * size :
-            is_vector(size,3)? [for (p=unscaled) v_mul(p,size)] :
-            assert(is_num(size) || is_vector(size,3)),
+        verts = [for (p=unscaled) v_mul(p,size)],
         faces = [
             [0,1,2], [0,2,3],  //BOTTOM
             [0,4,5], [0,5,1],  //FRONT
@@ -87,7 +86,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
             [3,7,4], [3,4,0],  //LEFT
             [6,4,7], [6,5,4]   //TOP
         ]
-    ) [reorient(anchor,spin,orient, size=siz, p=verts), faces];
+    ) [reorient(anchor,spin,orient, size=size, p=verts), faces];
 
 
 
@@ -333,13 +332,13 @@ module cuboid(
     }
     sizecheck = assert(num_defined([size,p1,p2])!=3, "\nCannot give size if p2 is given (did you forget braces on the size argument?)")
                 assert(is_def(p1) || is_undef(p2), "If p2 is given you must also give p1");
-    size = scalar_vec3(default(size,[1,1,1]));
+    size = default(force_list(size,3),[1,1,1]);
     edges = _edges(edges, except=first_defined([except_edges,except]));
     teardrop = is_bool(teardrop)&&teardrop? 45 : teardrop;
     chamfer = approx(chamfer,0) ? undef : chamfer;
     rounding = approx(rounding,0) ? undef : rounding;
     checks =
-        assert(is_vector(size,3))
+        assert(is_vector(size,3),"Size must be a scalar or 3-vector")
         assert(all_nonnegative(size), "All components of size= must be >=0")
         assert(is_undef(chamfer) || is_finite(chamfer),"chamfer must be a finite value")
         assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value")
@@ -804,7 +803,7 @@ function prismoid(
 //   When called as a module, creates an octahedron with axis-aligned points.
 //   When called as a function, creates a [VNF](vnf.scad) of an octahedron with axis-aligned points.
 // Arguments:
-//   size = Width of the octahedron, tip to tip.
+//   size = Width of the octahedron, tip to tip.  Can be a 3-vector.  Default: [1,1,1]
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -813,6 +812,8 @@ function prismoid(
 //   octahedron(size=40);
 // Example: Anchors
 //   octahedron(size=40) show_anchors();
+// Example:
+//   octahedron([10,15,25]);
 
 module octahedron(size=1, anchor=CENTER, spin=0, orient=UP) {
     vnf = octahedron(size=size);
@@ -824,8 +825,8 @@ module octahedron(size=1, anchor=CENTER, spin=0, orient=UP) {
 
 function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
     let(
-        size = scalar_vec3(size),
-        s = size/2,
+        s = force_list(size,3)/2,
+        dummy=assert(is_vector(s,3) && all_positive(s), "\nsize must be a positive scalar or 3-vector"),
         vnf = [
             [ [0,0,s.z], [s.x,0,0], [0,s.y,0], [-s.x,0,0], [0,-s.y,0], [0,0,-s.z] ],
             [ [0,2,1], [0,3,2], [0,4,3], [0,1,4], [5,1,2], [5,2,3], [5,3,4], [5,4,1] ]
@@ -1482,7 +1483,7 @@ function rect_tube(
 //   direction of the sloped edge.  
 //
 // Arguments:
-//   size = [width, thickness, height]
+//   size = [width, thickness, height].  Default: [1,1,1]
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `FRONT+LEFT+BOTTOM`
@@ -1509,7 +1510,8 @@ function rect_tube(
 
 module wedge(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
 {
-    size = scalar_vec3(size);
+    size = force_list(size,3);
+    check=assert(is_vector(size,3) && all_positive(size), "\nsize must be a positive scalar or 3-vector");
     anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
     vnf = wedge(size, anchor="origin");
     spindir = unit([0,-size.y,size.z]);
@@ -1533,7 +1535,8 @@ module wedge(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
 
 function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
     let(
-        size = scalar_vec3(size),
+        size = force_list(size,3),
+        check=assert(is_vector(size,3) && all_positive(size), "\nsize must be a positive scalar or 3-vector"),
         anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]),
         pts = [
             [ 1,1,-1], [ 1,-1,-1], [ 1,-1,1],
