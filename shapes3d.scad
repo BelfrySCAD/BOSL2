@@ -332,7 +332,7 @@ module cuboid(
     }
     sizecheck = assert(num_defined([size,p1,p2])!=3, "\nCannot give size if p2 is given (did you forget braces on the size argument?)")
                 assert(is_def(p1) || is_undef(p2), "If p2 is given you must also give p1");
-    size = default(force_list(size,3),[1,1,1]);
+    size = force_list(default(size,1),3);
     edges = _edges(edges, except=first_defined([except_edges,except]));
     teardrop = is_bool(teardrop)&&teardrop? 45 : teardrop;
     chamfer = approx(chamfer,0) ? undef : chamfer;
