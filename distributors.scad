@@ -529,7 +529,7 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
     assert(is_undef(p2) || is_undef(l), "Cannot give both p2 and l")
     assert(is_undef(n) || num_defined([l,spacing,p2])==1,"If n is given then must give exactly one of 'l', 'spacing', or the 'p1'/'p2' pair")
     assert(is_def(n) || num_defined([l,spacing,p2])>=1,"If n is not given then must give at least one of 'l', 'spacing', or the 'p1'/'p2' pair")
-    assert(!(is_vector(spacing) && is_vector(l)), "Cannot give vector 'spacing' and vector 'l' value.")
+    assert(!(is_vector(spacing) && is_vector(l) && vector_angle(spacing,l)>EPSILON), "Cannot give conflicting vector 'spacing' and vector 'l' value.")
     assert(!(is_vector(spacing) && is_def(p2)), "Cannot combine vector 'spacing' with the 'p1'/'p2' pair")
     let(
         ll = is_def(l)? scalar_vec3(l, 0)
