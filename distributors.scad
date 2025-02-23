@@ -532,7 +532,7 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
     assert(!(is_vector(spacing) && is_vector(l)), "Cannot give vector 'spacing' and vector 'l' value.")
     assert(!(is_vector(spacing) && is_def(p2)), "Cannot combine vector 'spacing' with the 'p1'/'p2' pair")
     let(
-        ll = is_def(l)? scalar_vec3(l)
+        ll = is_def(l)? scalar_vec3(l, 0)
            : is_def(spacing) && is_def(n)? (n-1) * scalar_vec3(spacing, 0)
            : is_def(p1) && is_def(p2)? point3d(p2-p1)
            : undef,
