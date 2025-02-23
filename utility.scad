@@ -748,9 +748,9 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 //   same way that OpenSCAD expands short vectors in some contexts, e.g. cube(10) or rotate([45,90]).  
 //   If `v` is a scalar, and `dflt==undef`, returns `[v, v, v]`.
 //   If `v` is a scalar, and `dflt!=undef`, returns `[v, dflt, dflt]`.
-//   if `v` is a list of length 3 or more then reutnrs `v`
+//   if `v` is a list of length 3 or more then returns `v`
 //   If `v` is a list and dflt is defined, returns a length 3 list by padding with `dflt`
-//   If `v` is a list and dflt is undef, returns a length 3 list by padding with 0.
+//   If `v` is a list and dflt is undef, returns a length 3 list by padding with 0
 //   If `v` is `undef`, returns `undef`.
 // Arguments:
 //   v = Value to return vector from.
@@ -762,14 +762,10 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 //   vec = scalar_vec3([10,10],1);  // Returns: [10,10,1]
 //   vec = scalar_vec3([10,10]);    // Returns: [10,10,0]
 //   vec = scalar_vec3([10]);       // Returns: [10,0,0]
-function scalar_vec3(v, dflt) = 
-    is_undef(v)? undef
-   :
-    is_list(v)? len(v)>=3 ? v
-                          : [for (i=[0:2]) default(v[i], default(dflt, 0))]
-   :
-    !is_undef(dflt) ? [v,dflt,dflt]
-                    : [v,v,v];
+function scalar_vec3(v, dflt) =
+    is_undef(v)? undef :
+    is_list(v)? [for (i=[0:2]) default(v[i], default(dflt, 0))] :
+    !is_undef(dflt)? [v,dflt,dflt] : [v,v,v];
 
 // Function: segs()
 // Synopsis: Returns the number of sides for a circle given `$fn`, `$fa`, and `$fs`.
