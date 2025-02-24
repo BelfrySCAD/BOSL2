@@ -1796,9 +1796,8 @@ function metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, clos
         allvals = [for(i=[0:nballs-1]) [for(pt=trans_pts[i]) funclist[2*i+1](pt)]],
         //total = _sum(allvals,allvals[0]*EPSILON),
         total = _sum(slice(allvals,1,-1), allvals[0]),
-        fieldarray = list_to_matrix(list_to_matrix(total,len(zset)),len(yset)),
-        voxcount = (len(fieldarray)-1) * (len(fieldarray[0])-1) * (len(fieldarray[0][0])-1)
-    ) isosurface(fieldarray, isoval, newbbox, voxel_size=undef, voxel_count=voxcount, closed=closed, exact_bounds=true, show_stats=show_stats);
+        fieldarray = list_to_matrix(list_to_matrix(total,len(zset)),len(yset))
+    ) isosurface(fieldarray, isoval, newbbox, voxsize, closed=closed, exact_bounds=true, show_stats=show_stats, _mball=true);
 
 /// internal function: unwrap nested metaball specs in to a single list
 function _mb_unwind_list(list, parent_trans=[IDENT]) =
@@ -2062,8 +2061,8 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //      isosurface(field, isovalue=[0.5,INF],
 //          voxel_size=10);
 
-module isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reverse=false, closed=true, exact_bounds=false, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false) {
-    vnf = isosurface(f, isovalue, bounding_box, voxel_size, voxel_count, reverse, closed, exact_bounds, show_stats);
+module isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reverse=false, closed=true, exact_bounds=false, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false, _mball=false) {
+    vnf = isosurface(f, isovalue, bounding_box, voxel_size, voxel_count, reverse, closed, exact_bounds, show_stats, _mball);
     vnf_polyhedron(vnf, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
         children();
     if(show_box)
@@ -2071,14 +2070,20 @@ module isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reve
             %translate(bbox[0]) cube(bbox[1]-bbox[0]);
 }
 
-function isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reverse=false, closed=true, exact_bounds=false, show_stats=false, ) =
+function isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reverse=false, closed=true, exact_bounds=false, show_stats=false, _mball=false) =
+
     assert(all_defined([f, isovalue]), "\nThe parameters f and isovalue must both be defined.")
     assert(num_defined([voxel_size, voxel_count])<=1, "\nOnly one of voxel_size or voxel_count can be defined.")
     assert(is_undef(voxel_size) || (is_finite(voxel_size) && voxel_size>0) || (is_vector(voxel_size) && all_positive(voxel_size)), "\nvoxel_size must be a positive number, a 3-vector of positive values, or undef.")
     assert(is_list(isovalue) && len(isovalue)==2 && is_num(isovalue[0]) && is_num(isovalue[1]), "\nIsovalue must be a range; use [minvalue,INF] or [-INF,maxvalue] for an unbounded range.")
-    assert(is_function(f) || (is_list(f) &&
-        ((is_def(bounding_box) && is_undef(voxel_size)) || (is_undef(bounding_box) && is_def(voxel_size)))),
-        "\nWhen f is an array, either bounding_box or voxel_size is required (but not both).")
+    assert(is_function(f) ||
+        (is_list(f) &&
+            // _mball=true allows voxel_size and bounding_box to coexist with f as array, because metaballs() already calculated them
+            (_mball || 
+                ((is_def(bounding_box) && is_undef(voxel_size)) || (is_undef(bounding_box) && is_def(voxel_size)))
+            )
+        )
+        , "\nWhen f is an array, either bounding_box or voxel_size is required (but not both).")
     let(
         isovalmin = is_list(isovalue) ? isovalue[0] : isovalue,
         isovalmax = is_list(isovalue) ? isovalue[1] : INF,
@@ -2091,8 +2096,8 @@ function isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, re
             ? let(hb=0.5*bounding_box) [[-hb,-hb,-hb],[hb,hb,hb]]
             : bounding_box,
         autovoxsize = is_def(voxel_size) ? voxel_size : _getautovoxsize(bbox0, default(voxel_count,22^3)),
-        voxsize = _getvoxsize(autovoxsize, bbox0, exactbounds),
-        bbox = _getbbox(voxsize, bbox0, exactbounds, f),
+        voxsize = _mball ? voxel_size : _getvoxsize(autovoxsize, bbox0, exactbounds),
+        bbox = _mball ? bounding_box : _getbbox(voxsize, bbox0, exactbounds, f),
         // proceed with isosurface computations
         cubes = _isosurface_cubes(voxsize, bbox,
             fieldarray=is_function(f)?undef:f, fieldfunc=is_function(f)?f:undef,
