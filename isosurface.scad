@@ -989,7 +989,7 @@ function mb_cuboid(size, squareness=0.5, cutoff=INF, influence=1, negative=false
 
 /// metaball rounded cylinder / cone
 
-function _revsurf_basic(point, path, coef, neg) =
+function _revsurf_basic(point, path, coef, neg, maxdist) =
     let(
          pt = [norm([point.x,point.y]), point.z],
          segs = pair(path),
@@ -1002,12 +1002,13 @@ function _revsurf_basic(point, path, coef, neg) =
                         t<0 ? norm(s0)
                       : t>1 ? norm(seg[1]-pt)
                       : norm(s0+t*c)]),
-         inside_check = [for(seg=segs)
-                     if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+         inside = [] == [for(seg=segs)
+                          if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+                  ? -1 : 1
     )
-    neg * (inside_check==[] ? coef*(1+dist) : coef/(1+dist));
+    neg * coef / (inside*dist+maxdist);
 
-function _revsurf_influence(point, path, coef, exp, neg) =
+function _revsurf_influence(point, path, coef, exp, neg, maxdist) =
     let(
          pt = [norm([point.x,point.y]), point.z],
          segs = pair(path),
@@ -1020,12 +1021,13 @@ function _revsurf_influence(point, path, coef, exp, neg) =
                         t<0 ? norm(s0)
                       : t>1 ? norm(seg[1]-pt)
                       : norm(s0+t*c)]),
-         inside_check = [for(seg=segs)
-                     if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+         inside = [] == [for(seg=segs)
+                          if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+                  ? -1 : 1
     )
-    neg * (inside_check==[] ? (coef*(1+dist))^exp : (coef/(1+dist))^exp);
+    neg * (coef / (inside*dist+maxdist))^exp;
 
-function _revsurf_cutoff(point, path, coef, cutoff, neg) =
+function _revsurf_cutoff(point, path, coef, cutoff, neg, maxdist) =
     let(
          pt = [norm([point.x,point.y]), point.z],
          segs = pair(path),
@@ -1038,13 +1040,14 @@ function _revsurf_cutoff(point, path, coef, cutoff, neg) =
                         t<0 ? norm(s0)
                       : t>1 ? norm(seg[1]-pt)
                       : norm(s0+t*c)]),
-         inside_check = [for(seg=segs)
-                     if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+         inside = [] == [for(seg=segs)
+                          if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+                  ? -1 : 1,
+         d=inside*dist+maxdist
     )
-    neg * (inside_check==[]
-        ? (coef*(1+dist)) : mb_cutoff(dist-coef, cutoff) * (coef/(1+dist)) );
+    neg * mb_cutoff(d, cutoff) * coef/d;
 
-function _revsurf_full(point, path, coef, cutoff, exp, neg) =
+function _revsurf_full(point, path, coef, cutoff, exp, neg, maxdist) =
     let(
         pt = [norm([point.x,point.y]), point.z],
         segs = pair(path),
@@ -1057,13 +1060,12 @@ function _revsurf_full(point, path, coef, cutoff, exp, neg) =
             t<0 ? norm(s0)
             : t>1 ? norm(seg[1]-pt)
             : norm(s0+t*c)]),
-         inside_check = [
-            for(seg=segs)
-                if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1
-        ]
+         inside = [] == [for(seg=segs)
+                          if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+                  ? -1 : 1,
+         d=inside*dist+maxdist
     )
-    neg * (inside_check==[]
-        ? (coef*(1+dist))^exp : mb_cutoff(dist-coef, cutoff) * (coef/(1+dist))^exp );
+    neg * mb_cutoff(d, cutoff) * (coef/d)^exp;
 
 function mb_cyl(h,r,rounding=0,r1,r2,l,height,length,d1,d2,d, cutoff=INF, influence=1, negative=false) =
     let(
@@ -1071,62 +1073,37 @@ function mb_cyl(h,r,rounding=0,r1,r2,l,height,length,d1,d2,d, cutoff=INF, influe
          r2 = get_radius(r1=r2,r=r, d1=d2, d=d),
          h = first_defined([h,l,height,length],"h,l,height,length")
     )
+    assert(all_positive([influence]), "influence must be a positive number")
     assert(is_finite(rounding) && rounding>=0, "rounding must be a nonnegative number")
     assert(is_finite(r1) && r1>0, "r/r1/d/d1 must be a positive number")
     assert(is_finite(r2) && r2>0, "r/r2/d/d2 must be a positive number")
+    assert(is_num(cutoff) && cutoff>0, "cutoff must be a positive number")
     let(
-         vang = atan2(r1-r2,h),
-         facelen = adj_ang_to_hyp(h, abs(vang)),
-         roundlen1 = rounding/tan(45-vang/2),
-         roundlen2 = rounding/tan(45+vang/2),
-         sides = [[0,h/2], [r2,h/2], [r1,-h/2], [0,-h/2]],
-         neg = negative ? -1 : 1
+        vang = atan2(r1-r2,h),
+        facelen = adj_ang_to_hyp(h, abs(vang)),
+        roundlen1 = rounding/tan(45-vang/2),
+        roundlen2 = rounding/tan(45+vang/2),
+        sides = [[0,h/2], [r2,h/2], [r1,-h/2], [0,-h/2]],
+        neg = negative ? -1 : 1
     )
     assert(roundlen1 <= r1, "size of rounding is larger than the r1 radius of the cylinder/cone")
     assert(roundlen2 <= r2, "size of rounding is larger than the r2 radius of the cylinder/cone")
     assert(roundlen1+roundlen2 < facelen, "Roundings don't fit on the edge length of the cylinder/cone")
-    let(shifted = offset(sides, delta=-rounding, closed=false))
-       !is_finite(cutoff) && influence==1 ? function(point) _revsurf_basic(point, shifted, 1+rounding, neg)
-     : !is_finite(cutoff) ? function(point) _revsurf_influence(point, shifted, 1+rounding, 1/influence, neg)
-     : influence==1 ? function(point) _revsurf_cutoff(point, shifted, 1+rounding, cutoff, neg)
-     : function (point) _revsurf_full(point, shifted, 1+rounding, cutoff, 1/influence, neg);
-
-
-/// metaball capsule (round-ended cylinder)
-
-function _mb_capsule_basic(point, hl, r, neg) = let(
-    dist = point.z<-hl ? norm(point-[0,0,-hl])
-      : point.z<=hl ? norm([point.x,point.y]) : norm(point-[0,0,hl])
-) neg*r/dist;
-function _mb_capsule_influence(point, hl, r, ex, neg) = let(
-    dist = point.z<-hl ? norm(point-[0,0,-hl])
-      : point.z<=hl ? norm([point.x,point.y]) : norm(point-[0,0,hl])
-) neg * (r/dist)^ex;
-function _mb_capsule_cutoff(point, hl, r, cutoff, neg) = let(
-    dist = point.z<-hl ? norm(point-[0,0,-hl])
-      : point.z<hl ? norm([point.x,point.y]) : norm(point-[0,0,hl])
-) neg * mb_cutoff(dist, cutoff) * r/dist;
-function _mb_capsule_full(point, hl, r, cutoff, ex, neg) = let(
-    dist = point.z<-hl ? norm(point-[0,0,-hl])
-      : point.z<hl ? norm([point.x,point.y]) : norm(point-[0,0,hl])
-) neg * mb_cutoff(dist, cutoff) * (r/dist)^ex;
-
-function mb_capsule(h, r, cutoff=INF, influence=1, negative=false, d,l,height,length) =
-    assert(is_num(cutoff) && cutoff>0, "\ncutoff must be a positive number.")
-    assert(is_finite(influence) && influence>0, "\ninfluence must be a positive number.")
     let(
-        h = one_defined([h,l,height,length],"h,l,height,length"),
-        dum1 = assert(is_finite(h) && h>0, "\ncylinder height must be a positive number."),
-        r = get_radius(r=r,d=d),
-        dum2 = assert(is_finite(r) && r>0, "\ninvalid radius or diameter."),
-        sh = h-2*r, // straight side length
-        dum3 = assert(sh>0, "\nTotal length must accommodate rounded ends of cylinder."),
-        neg = negative ? -1 : 1
-   )
-   !is_finite(cutoff) && influence==1 ? function(point) _mb_capsule_basic(point,sh/2,r,neg)
- : !is_finite(cutoff) ? function(point) _mb_capsule_influence(point,sh/2,r,1/influence, neg)
- : influence==1 ? function(point) _mb_capsule_cutoff(point,sh/2,r,cutoff,neg)
- : function (point) _mb_capsule_full(point, sh/2, r, cutoff, 1/influence, neg);
+        shifted = offset(sides, delta=-rounding, closed=false, check_valid=false),
+        bisect1 = [shifted[1],unit(shifted[0]-shifted[1])+unit(shifted[2]-shifted[1])+shifted[1]],
+        bisect2 = [shifted[2],unit(shifted[3]-shifted[2])+unit(shifted[1]-shifted[2])+shifted[2]],
+        side_isect = line_intersection(bisect1,bisect2),
+        top_isect = line_intersection(bisect1,[[0,0],[0,1]]),
+        bot_isect = line_intersection(bisect2,[[0,0],[0,1]]),
+        maxdist = side_isect.x>0 ?point_line_distance(side_isect, select(shifted,1,2))
+                : max(point_line_distance(top_isect, select(shifted,1,2)),
+                      point_line_distance(bot_isect, select(shifted,1,2)))
+    )
+       !is_finite(cutoff) && influence==1 ? function(point) _revsurf_basic(point, shifted, maxdist+rounding, neg, maxdist)
+     : !is_finite(cutoff) ? function(point) _revsurf_influence(point, shifted, maxdist+rounding, 1/influence, neg, maxdist)
+     : influence==1 ? function(point) _revsurf_cutoff(point, shifted, maxdist+rounding, cutoff, neg, maxdist)
+     : function (point) _revsurf_full(point, shifted, maxdist+rounding, cutoff, 1/influence, neg, maxdist);
 
 
 /// metaball disk with rounded edge
@@ -1171,6 +1148,43 @@ function mb_disk(h, r, cutoff=INF, influence=1, negative=false, d,l,height,lengt
  : function (point) _mb_disk_full(point, h2, r, cutoff, 1/influence, neg);
 
 
+/// metaball capsule (round-ended cylinder)
+
+function _mb_capsule_basic(dv, hl, r, neg) = let(
+    dist = dv.z<-hl ? norm(dv-[0,0,-hl])
+      : dv.z<=hl ? norm([dv.x,dv.y]) : norm(dv-[0,0,hl])
+) neg*r/dist;
+function _mb_capsule_influence(dv, hl, r, ex, neg) = let(
+    dist = dv.z<-hl ? norm(dv-[0,0,-hl])
+      : dv.z<=hl ? norm([dv.x,dv.y]) : norm(dv-[0,0,hl])
+) neg * (r/dist)^ex;
+function _mb_capsule_cutoff(dv, hl, r, cutoff, neg) = let(
+    dist = dv.z<-hl ? norm(dv-[0,0,-hl])
+      : dv.z<hl ? norm([dv.x,dv.y]) : norm(dv-[0,0,hl])
+) neg * mb_cutoff(dist, cutoff) * r/dist;
+function _mb_capsule_full(dv, hl, r, cutoff, ex, neg) = let(
+    dist = dv.z<-hl ? norm(dv-[0,0,-hl])
+      : dv.z<hl ? norm([dv.x,dv.y]) : norm(dv-[0,0,hl])
+) neg * mb_cutoff(dist, cutoff) * (r/dist)^ex;
+
+function mb_capsule(h, r, cutoff=INF, influence=1, negative=false, d,l,height,length) =
+    assert(is_num(cutoff) && cutoff>0, "\ncutoff must be a positive number.")
+    assert(is_finite(influence) && influence>0, "\ninfluence must be a positive number.")
+    let(
+        h = one_defined([h,l,height,length],"h,l,height,length"),
+        dum1 = assert(is_finite(h) && h>0, "\ncylinder height must be a positive number."),
+        r = get_radius(r=r,d=d),
+        dum2 = assert(is_finite(r) && r>0, "\ninvalid radius or diameter."),
+        sh = h-2*r, // straight side length
+        dum3 = assert(sh>0, "\nTotal length must accommodate rounded ends of cylinder."),
+        neg = negative ? -1 : 1
+   )
+   !is_finite(cutoff) && influence==1 ? function(dv) _mb_capsule_basic(dv,sh/2,r,neg)
+ : !is_finite(cutoff) ? function(dv) _mb_capsule_influence(dv,sh/2,r,1/influence, neg)
+ : influence==1 ? function(dv) _mb_capsule_cutoff(dv,sh/2,r,cutoff,neg)
+ : function (dv) _mb_capsule_full(dv, sh/2, r, cutoff, 1/influence, neg);
+
+
 /// metaball connector cylinder - calls mb_capsule* functions after transform
 
 function mb_connector(p1, p2, r, cutoff=INF, influence=1, negative=false, d) =
@@ -1188,20 +1202,20 @@ function mb_connector(p1, p2, r, cutoff=INF, influence=1, negative=false, d) =
         h = norm(dc)/2, // center-to-center length (cylinder height)
         transform = submatrix(down(h)*rot(from=dc,to=UP)*move(-p1) ,[0:2], [0:3])
    )
-   !is_finite(cutoff) && influence==1 ? function(point)
-        let(newpoint = transform * [each point,1])
-            _mb_capsule_basic(newpoint,h,r,neg)
- : !is_finite(cutoff) ? function(point)
-        let(newpoint = transform * [each point,1])
-            _mb_capsule_influence(newpoint,h,r,1/influence, neg)
- : influence==1 ? function(point)
-        let(newpoint = transform * [each point,1])
-            _mb_capsule_cutoff(newpoint,h,r,cutoff,neg)
- : function (point)
-        let(newpoint = transform * [each point,1])
-            _mb_capsule_full(newpoint, h, r, cutoff, 1/influence, neg);
+   !is_finite(cutoff) && influence==1 ? function(dv)
+        let(newdv = transform * [each dv,1])
+            _mb_capsule_basic(newdv,h,r,neg)
+ : !is_finite(cutoff) ? function(dv)
+        let(newdv = transform * [each dv,1])
+            _mb_capsule_influence(newdv,h,r,1/influence, neg)
+ : influence==1 ? function(dv)
+        let(newdv = transform * [each dv,1])
+            _mb_capsule_cutoff(newdv,h,r,cutoff,neg)
+ : function (dv)
+        let(newdv = transform * [each dv,1])
+            _mb_capsule_full(newdv, h, r, cutoff, 1/influence, neg);
 
-
+ 
 /// metaball torus
 
 function _mb_torus_basic(point, rmaj, rmin, neg) =
@@ -1374,11 +1388,11 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   .
 //   * `mb_sphere(r|d=)` &mdash; spherical metaball, with radius r or diameter d.  You can create an ellipsoid using `scale()` as the last transformation entry of the metaball `spec` array. 
 //   * `mb_cuboid(size, [squareness=])` &mdash; cuboid metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (cubical), and defaults to 0.5. The `size` specifies the width of the cuboid shape between the face centers; `size` may be a scalar or a vector, as in {{cuboid()}}. Except when `squareness=1`, the faces are always a little bit curved.
-//   * `mb_cyl(h|l|height|length, [r|d=], [r1=|d1=], [r2=|d2=], [rounding=])` &mdash; vertical cylinder or cone metaball with the same dimenional arguments as {{cyl()}}. At least one of the radius or diameter arguments is required. The `rounding` argument defaults to 0 (sharp edge) if not specified. Only one rounding value is allowed: the rounding is the same at both ends. For a fully rounded cylindrical shape, consider using `mb_capsule()` or `mb_disk()`, which are less flexible but have faster execution times.  For this metaball, the cutoff is measured from surface of the cone with the specified dimensions.
+//   * `mb_cyl(h|l|height|length, [r|d=], [r1=|d1=], [r2=|d2=], [rounding=])` &mdash; vertical cylinder or cone metaball with the same dimenional arguments as {{cyl()}}. At least one of the radius or diameter arguments is required. The `rounding` argument defaults to 0 (sharp edge) if not specified. Only one rounding value is allowed: the rounding is the same at both ends. For a fully rounded cylindrical shape, consider using `mb_capsule()` or `mb_disk()`, which are less flexible but have faster execution times.
 //   * `mb_disk(h|l|height|length, r|d=)` &mdash; rounded disk with flat ends. The diameter specifies the total diameter of the shape including the rounded sides, and must be greater than its height.
-//   * `mb_capsule(h|l|height|length, r|d=)` &mdash; cylinder of radius `r` or diameter `d` with hemispherical caps. The height or length specifies the total height including the rounded ends. For this shape, `cutoff` is measured from the line of the center, not the origin of the center. 
-//   * `mb_connector(p1, p2, r|d=)` &mdash; a connecting rod of radius `r` or diameter `d` with hemispherical caps (like `mb_capsule()`), but specified to connect point `p1` to point `p2` (where `p1` and `p2` must be different 3D coordinates). The specified points are at the centers of the two capping hemispheres. You may want to set `influence` quite low; the connectors themselves are still influenced by other metaballs, but it may be undesirable to have them influence others, or each other. If two connectors are connected, the joint may appear swollen unless `influence` is reduced.
-//   * `mb_torus([r_maj|d_maj=], [r_min|d_min=], [or=|od=], [ir=|id=])` &mdash; torus metaball oriented perpendicular to the z axis. You can specify the torus dimensions using the same arguments as {{torus()}}; that is, major radius (or diameter) with `r_maj` or `d_maj`, and minor radius and diameter using `r_min` or `d_min`. Alternatively you can give the inner radius or diameter with `ir` or `id` and the outer radius or diameter with `or` or `od`. You must provide a combination of inputs that completely specifies the torus.
+//   * `mb_capsule(h|l|height|length, [r|d=], [r1=|d1=], [r2=|d2=])` &mdash; vertical cylinder or cone with rounded caps, using the same dimensional arguments as {{cyl()}}. The object resembles two spheres with a hull around them. The height or length specifies the distance between the spherical centers of the ends. Cutoff is measured from the line segment between the two cap centers.
+//   * `mb_connector(p1, p2, [r|d=], [r1=|d1=], [r2=|d2=])` &mdash; a connecting rod of radius `r` or diameter `d` with hemispherical caps (like `mb_capsule()`), but specified to connect point `p1` to point `p2` (where `p1` and `p2` must be different 3D coordinates). As with `mb_capsule()`, the radius of each cap can be different, and the object resembles two spheres wrapped in a null. The points `p1` and `p2` are at the centers of the two round caps. The connectors themselves are still influenced by other metaballs, but it may be undesirable to have them influence others, or each other. If two connectors are connected, the joint may appear swollen unless `influence` or `cutoff` is reduced. Reducing `cutoff` is preferable if feasible, because reducing `influence` can produce interpolation artifacts.
+//   * `mb_torus([r_maj|d_maj=], [r_min|d_min=], [or=|od=], [ir=|id=])` &mdash; torus metaball oriented perpendicular to the z axis. You can specify the torus dimensions using the same arguments as {{torus()}}; that is, major radius (or diameter) with `r_maj` or `d_maj`, and minor radius and diameter using `r_min` or `d_min`. Alternatively you can give the inner radius or diameter with `ir` or `id` and the outer radius or diameter with `or` or `od`. You must provide a combination of inputs that completely specifies the torus. If `cutoff` is applied, it is measured from the circle represented by `r_min=0`.
 //   * `mb_octahedron(r|d=])` &mdash; octahedral metaball with sharp edges and corners. The `r` parameter specifies the distance from center to tip, while `d=` is the distance between two opposite tips.
 //   .
 //   In addition to the dimensional arguments described above, all of the built-in functions accept the
@@ -1473,12 +1487,12 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   metaballs(spec, voxel_size=0.5,
 //       bounding_box=[[-15,-12,-12], [15,12,12]]);
 // Example(3D,NoAxes): Two rounded `mb_cyl()` cones interacting.
-//   spec = [
-//       left(10), mb_cyl(15, r1=8, r2=5, rounding=3),
-//       right(10), mb_cyl(15, r1=8, r2=5, rounding=3)
-//   ];
-//   metaballs(spec, voxel_size=0.5,
-//       bounding_box=[[-19,-9,-10], [19,9,10]]);
+//      spec = [
+//          left(10), mb_cyl(15, r1=6, r2=4, rounding=2),
+//          right(10), mb_cyl(15, r1=6, r2=4, rounding=2)
+//      ];
+//      metaballs(spec, voxel_size=0.5,
+//          bounding_box=[[-17,-8,-10], [17,8,10]]);
 // Example(3D,NoAxes): Two disks interacting. Here the arguments are in order and not named.
 //   metaballs([
 //       move([-10,0,2]), mb_disk(5,9),
@@ -1556,7 +1570,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   boundingbox = [[-30,-19,-19], [30,19,19]];
 //   metaballs(spec, boundingbox, voxel_size,
 //       isovalue=2);
-// Example(3D,Med): Setting `influence` to less than 0.5 can cause interpolation artifacts in the surface. The only difference between these two spheres is `influence`. Both have `cutoff` set to prevent them from affecting each other. The sphere on the right has a low influence of 0.02, which translates to a falloff with distance $d$ proportional to $\frac{1}{d^50}$. That high exponent increases the *non-linear* nature of the function gradient at the isosurface, reducing the accuracy of the *linear* interpolation of where the the surface intersects each voxel, causing ridges to appear. You could use this to create a texture deliberately (as with the trunk of the elephant in a later example), but it is usually better to use `cutoff` to limit the range of influence rather than reducing `influence` significantly below 1.
+// Example(3D,Med): Setting `influence` to less than 0.5 can cause interpolation artifacts in the surface. The only difference between these two spheres is `influence`. Both have `cutoff` set to prevent them from affecting each other. The sphere on the right has a low influence of 0.02, which translates to a falloff with distance $d$ proportional to $\frac{1}{d^50}$. That high exponent increases the *non-linear* nature of the function gradient at the isosurface, reducing the accuracy of the *linear* interpolation of where the the surface intersects each voxel, causing ridges to appear. You could use this to create a texture deliberately, but it is usually better to use `cutoff` to limit the range of influence rather than reducing `influence` significantly below 1.
 //   spec = [
 //       left(10), mb_sphere(8, cutoff=10, influence=1),
 //       right(10), mb_sphere(8, cutoff=10, influence=0.02)
@@ -1642,7 +1656,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //              function (point) multilobe(point, 3, 3)
 //       ],
 //       bounding_box = [[-16,-13,-5],[18,13,6]],
-//       voxel_size=0.3);
+//       voxel_size=0.4);
 // Example(3D): Next we show how to create a function that works like the built-ins. **This is a full-fledged implementation** that allows you to specify the function directly by name in the `spec` argument without needing the function literal syntax, and without needing the `point` argument in `spec`, as in the prior examples. You must define a calculation function that accepts the `point` position argument and then whatever other parameters your metaball uses (here `r` and `noise_level`). Then there is a "master" function that does some error checking and returns a function literal expression that sets all of your parameters. The call to `mb_cutoff()` at the end handles the cutoff function for the noisy ball consistent with the other internal metaball functions; it requires `dist` and `cutoff` as arguments. You are not required to use this implementation in your own custom functions; in fact it's easier simply to declare the function literal in your `spec` argument, but this example shows how to do it all.
 //   //
 //   // noisy sphere internal calculation function 
@@ -1723,17 +1737,17 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   bbox = [[-104,-40,-10], [79,18,188]];
 //   metaballs(hand, bbox, voxel_size, isovalue=1);
 // Example(3D,Med,NoAxes,VPR=[76,0,40],VPD=128,VPT=[4,-1,13]): A model of an elephant using cylinders, capsules, and disks.
-//   legD1 = 11;
-//   legD2 = 6;
+//   legD1 = 4.6;
+//   legD2 = 1;
 //   spec = [
 //       // legs
-//       up(1)*fwd(8)*left(11), mb_cyl(d1=legD1, d2=legD2, h=22),
-//       up(1)*fwd(8)*right(10), mb_cyl(d1=legD1, d2=legD2, h=22),
-//       up(1)*back(8)*left(11), mb_cyl(d1=legD1, d2=legD2, h=22),
-//       up(1)*back(8)*right(10), mb_cyl(d1=legD1, d2=legD2, h=22),
-//       up(20)*yrot(90), mb_capsule(d=25, h=40, influence=0.5), // body
+//       up(1)*fwd(8)*left(13), mb_cyl(d1=legD1, d2=legD2, h=20),
+//       up(1)*fwd(8)*right(10), mb_cyl(d1=legD1, d2=legD2, h=20),
+//       up(1)*back(8)*left(13), mb_cyl(d1=legD1, d2=legD2, h=20),
+//       up(1)*back(8)*right(10), mb_cyl(d1=legD1, d2=legD2, h=20),
+//       up(20)*yrot(90), mb_capsule(d=21, h=36, influence=0.5), // body
 //       right(21)*up(25)*yrot(-20), mb_capsule(r=7, h=25, influence=0.5, cutoff=9), // head
-//       right(24)*up(10)*yrot(15), mb_cyl(d1=3, d2=6, h=15, cutoff=2, influence=0.4), // trunk
+//       right(24)*up(10)*yrot(15), mb_cyl(d1=3, d2=6, h=15, cutoff=3), // trunk
 //       // ears
 //       right(18)*up(29)*fwd(11)*zrot(-20)*yrot(80)*scale([1.4,1,1]), mb_disk(r=5,h=2, cutoff=3),
 //       right(18)*up(29)*back(11)*zrot(20)*yrot(80)*scale([1.4,1,1]), mb_disk(r=5,h=2, cutoff=3),
@@ -1741,8 +1755,104 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //       right(26)*up(13)*fwd(5)*yrot(135), mb_capsule(r=1, h=10, cutoff=1),
 //       right(26)*up(13)*back(5)*yrot(135), mb_capsule(r=1, h=10, cutoff=1)
 //   ];
-//   bbox = [[-22,-17,-9], [31,17,38]];
+//   bbox = [[-21,-17,-9], [31,17,38]];
 //   metaballs(spec, bounding_box=bbox, voxel_size=1, isovalue=1);
+// Example(3D,NoAxes,Med,VPD=235,VPR=[83,0,320],VPT=[-5,-5,43]): A model of a giraffe using a variety of different metaball shapes. Features such as the tail and lower legs are thin, so a small voxel size is required to render them.
+//   legD = 1;
+//   tibia = 14; 
+//   femur = 12;
+//   head = [-35,0,78];  // head position
+//   stance = [12,6];    // leg position offsets
+//   
+//   spec = [
+//       // Legs
+//       move([-stance.x,-stance.y]), mb_connector([-4,0,0],[-6,0,tibia],legD, influence = 0.2),
+//       move([-stance.x,stance.y]),  mb_connector([0,0,0],[0,0,tibia],legD, influence = 0.2),
+//       move([stance.x,-stance.y]),  mb_connector([-2,0,0],[-3,0,tibia],legD, influence = 0.2),
+//       move([stance.x,stance.y]),   mb_connector([0,0,0],[0,0,tibia],legD, influence = 0.2),
+//   
+//       move([-stance.x,-stance.y,tibia]), mb_connector([-6,0,0],[-2,0,femur],legD),
+//       move([-stance.x,stance.y,tibia]),  mb_connector([0,0,0],[0,0,femur],legD),
+//       move([stance.x,-stance.y,tibia]),  mb_connector([-3,0,0],[-1,0,femur],legD),
+//       move([stance.x,stance.y,tibia]),   mb_connector([0,0,0],[0,0,femur],legD),
+//   
+//       // Hooves
+//       move([-stance.x-6,-stance.y,1]),    mb_capsule(d= 2, h = 3, cutoff = 2),
+//       move([-stance.x-1,stance.y,1]),     mb_capsule(d= 2, h = 3, cutoff = 2),
+//       move([stance.x-3.5,-stance.y,1]),   mb_capsule(d= 2, h = 3, cutoff = 2),
+//       move([stance.x-1,stance.y,1]),      mb_capsule(d= 2, h = 3, cutoff = 2),
+//   
+//       // Body
+//       up(tibia+femur+10) * yrot(10),        mb_cuboid([16,7,7]),
+//       up(tibia+femur+15)*left(10),          mb_sphere(2),
+//       up(tibia+femur+8)*right(13)*xrot(90), mb_disk(1,4),
+//       
+//       // Tail
+//       up(tibia+femur+8), mb_connector([18,0,0],[22,0,-16], 0.4, cutoff = 1),
+//       
+//       // Neck
+//       up(tibia+femur+35)*left(22)*yrot(-30)* yscale(0.75), mb_cyl(d1 = 5, d2 = 3, l = 38),
+//       
+//       // Head
+//       move(head + [-4,0,-3])*yrot(45)*xscale(0.75), mb_cyl(d1 = 1.5, d2 = 4, l = 12, rounding=0),
+//       move(head), mb_cuboid(2),    
+//   
+//       // Horns
+//       move(head), mb_connector([0,-2,5],[0,-2.5,8],0.3, cutoff = 1),
+//       move(head + [0,-2.5,8]), mb_sphere(0.5, cutoff = 1),
+//       move(head), mb_connector([0,2,5],[0,2.5,8],0.3, cutoff = 1),
+//       move(head + [0,2.5,8]), mb_sphere(0.5, cutoff = 1),
+//       
+//       // Ears
+//       move(head + [2,-8,4])* xrot(60) * scale([0.5,1,3]) , mb_sphere(d = 2, cutoff = 2),
+//       move(head + [2,8,4])* xrot(-60) * scale([0.5,1,3]) , mb_sphere(d = 2, cutoff = 2),
+//   ];
+//   vsize = 0.85;
+//   bbox =  [[-45.5, -11.5, 0], [23, 11.5, 87.55]];
+//   metaballs(spec, bbox, voxel_size=vsize);
+// Example(3D,Med,NoAxes): A model of a bunny, made from separate body components made with metaballs, with each component rendered at a different voxel size, and then combined together along with eyes and teeth. In this way, smaller bounding boxes can be defined for each component, which speeds up rendering. A bit more time is saved by saving the repeated components (ear, front leg, hind leg) in VNF structures, to render copies with {{vnf_polyhedron()}}.
+//   torso = [
+//       up(20) * scale([1,1.2,2]), mb_sphere(10), 
+//       up(10), mb_sphere(5) // fatten lower torso
+//   ];
+//   head = [
+//       up(50) * scale([1.2,0.8,1]), mb_sphere(10, cutoff = 15),
+//       // nose
+//       move([0,-11,50]), mb_cuboid(2),
+//       // eye sockets
+//       move([5,-10,54]), mb_sphere(0.5, negative = true),
+//       move([-5,-10,54]), mb_sphere(0.5, negative = true),
+//       // tail
+//       move([0,15,6]), mb_sphere(2, cutoff = 5)
+//   ];
+//   hind_leg = [ 
+//       move([-15,-5,3]) * scale([1.5,4,1.75]), mb_sphere(5),
+//       move([-15,10,3]), mb_sphere(3, negative = true)
+//   ];
+//   front_leg = [ 
+//       move([-9,-4,30]) * zrot(30) * scale([1.5,5,1.75]), mb_sphere(3),
+//       move([-9,10,30]), mb_sphere(2, negative = true)
+//   ];
+//   ear = [
+//       yrot(10) * move([0,0,65]) * scale([4,1,7]), mb_sphere(2),
+//       yrot(10)*move([0,-3,65])*scale([3,2,6]), mb_sphere(2, cutoff = 2, influence =2, negative = true)
+//   ];
+//   vnf_hindleg = metaballs(hind_leg, [[-22,-24,0],[-8,7,11]], voxel_size=0.8);
+//   vnf_frontleg = metaballs(front_leg, [[-16,-17,25], [-1,7,35]], voxel_size=0.6);
+//   vnf_ear = metaballs(ear, [[3,-2,50],[20,2,78]], voxel_size=0.6);
+//   color("BurlyWood") {
+//       metaballs([IDENT, torso, IDENT, head],
+//           [[-16,-17,0],[16,20,63]], voxel_size=0.7);
+//       xflip_copy() {
+//           vnf_polyhedron(vnf_hindleg);
+//           vnf_polyhedron(vnf_frontleg);
+//           vnf_polyhedron(vnf_ear);;
+//       }
+//   }
+//   // add eyes
+//   xflip_copy() move([5,-8,54]) color("skyblue") sphere(2, $fn = 32);
+//   // add teeth
+//   xflip_copy() move([1.1,-10,44]) color("white") cuboid([2,0.5,4], rounding = 0.15);
 
 module metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, closed=true, exact_bounds=false, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false) {
         vnf = metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue, closed, exact_bounds, show_stats);
@@ -1993,6 +2103,13 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //       isovalue = [0.1,INF],
 //       bounding_box = [[-8,-7,-8],[6,7,8]],
 //       voxel_size = 0.25);
+// Example(3D,NoAxes): Another example of a bounded isosurface.
+//   isosurface(function (p)
+//       let(x=p.x, y=p.y, z=p.z)
+//         2*(x^4 - 2*x*x + y^4 
+//            - 2*y*y + z^4 - 2*z*z) + 3,
+//       bounding_box=3, voxel_size=0.07,
+//       isovalue=[-INF,0]);
 // Example(3D,NoAxes): For shapes that occupy a cubical bounding box centered on the origin, you can simply specify a scalar for the size of the box.
 //   isosurface(
 //       function (p) (p.x*p.y*p.z^3 + 19*p.x^2*p.z^2)/norm(p)^2 + norm(p)^2,
