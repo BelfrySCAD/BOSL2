@@ -35,7 +35,16 @@
 //   isosurface is unbounded and periodic in all three dimensions.
 //   .
 //   This file provides modules and functions to create a [VNF](vnf.scad) using metaballs, or from general isosurfaces.
-//   
+//   .
+//   The point list in the generated VNF structure contains many duplicated points. This is normally not a
+//   problem for rendering the shape, but machine roundoff differences may result in Manifold issuing
+//   warnings when doing the final render, causing rendering to abort if you have enabled the "stop on
+//   first warning" setting. You can prevent this by passing the VNF through {{vnf_quantize()}} using a
+//   quantization of 0.000001, or you can pass the VNF structure into {{vnf_merge_points()}}, which also
+//   removes the duplicates. Additionally, flat surfaces (often resulting from clipping by the bounding
+//   box) are triangulated at the voxel size resolution, and these can be unified into a single face by
+//   passing the vnf structure to {{vnf_unify_faces()}}. These steps can be computationally expensive
+//   and are not normally necessary.
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/isosurface.scad>
@@ -741,7 +750,7 @@ function _isosurface_cubes(voxsize, bbox, fieldarray, fieldfunc, isovalmin, isov
         for(x=[v.x:voxsize.x:b1.x]) [
             for(y=[v.y:voxsize.y:b1.y]) [
                 for(z=[v.z:voxsize.z:b1.z])
-                    fieldfunc([x,y,z])
+                    fieldfunc(x,y,z)
             ]
         ]
     ],
@@ -1442,14 +1451,6 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   box that is too large wastes time computing function values that are not needed, you can also set the
 //   parameter `show_stats=true` to get the actual bounds of the voxels intersected by the surface. With this
 //   information, you may be able to decrease run time, or keep the same run time but increase the resolution. 
-//   .
-//   The point list in the returned VNF structure contains many duplicated points. This is not a
-//   problem for rendering the shape, but if you want to eliminate these, you can pass
-//   the structure to {{vnf_merge_points()}}. Additionally, flat surfaces (often
-//   resulting from clipping by the bounding box) are triangulated at the voxel size
-//   resolution, and these can be unified into a single face by passing the vnf
-//   structure to {{vnf_unify_faces()}}. These steps can be computationally expensive
-//   and are not normally necessary.
 // Arguments:
 //   spec = Metaball specification in the form `[trans0, spec0, trans1, spec1, ...]`, with alternating transformation matrices and metaball specs, where `spec0`, `spec1`, etc. can be a metaball function or another metaball specification. See above for more details, and see Example 23 for a demonstration.
 //   bounding_box = A designation of volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. By default, the actual bounding box is enlarged if necessary to fit whole voxels, and centered around your requested box. Set `exact_bounds=true` to hold the box size fixed, in which case the voxel changes size instead.
@@ -1997,15 +1998,8 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   box that is too large wastes time computing function values that are not needed, you can also set the
 //   parameter `show_stats=true` to get the actual bounds of the voxels intersected by the surface. With this
 //   information, you may be able to decrease run time, or keep the same run time but increase the resolution. 
-//   .
-//   The point list in the VNF structure contains many duplicated points. This is not a problem for
-//   rendering the shape, but if you want to eliminate these, you can pass the structure to
-//   {{vnf_merge_points()}}. Additionally, flat surfaces (often resulting from clipping by the bounding
-//   box) are triangulated at the voxel size resolution, and these can be unified into a single face by
-//   passing the vnf structure to {{vnf_unify_faces()}}. These steps can be computationally expensive
-//   and are not normally necessary.
 // Arguments:
-//   f = The isosurface function or array.
+//   f = The isosurface function literal or array. As a function literal, `x,y,z` must be the first arguments. 
 //   isovalue = A 2-vector giving an isovalue range. For an unbounded range, use `[-INF, max_isovalue]` or `[min_isovalue, INF]`.
 //   bounding_box = A designation of volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. By default, the actual bounding box is enlarged if necessary to fit whole voxels, and centered around your requested box. Set `exact_bounds=true` to hold the box size fixed, in which case the voxel changes size instead. When `f` is an array of values, `bounding_box` cannot be supplied if `voxel_size` is supplied because the bounding box is already implied by the array size combined with `voxel_size`, in which case this implied bounding box is centered around the origin.
 //   voxel_size = size of the voxel that is used to sample the bounding box volume. This can be undef, a scalar size for a cubical voxel, or a 3-vector if you want non-cubical voxels. For `undef`, the voxel size is set so that approximately `voxel_count` quantity of voxels fit inside the bounding box. If both `voxel_size=undef` and `voxel_count=undef`, then a fast preview is generated using about 10000 voxels. If you set `exact_bounds=true`, then bounding box is held fixed in size, and the voxel size is adjusted as needed so that whole voxels fit inside the bounding box.
@@ -2027,75 +2021,75 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   "intersect" = Anchors to the surface of the shape.
 // Named Anchors:
 //   "origin" = Anchor at the origin, oriented UP.
-// Example(3D,VPD=85,VPT=[0,0,2],VPR=[55,0,30]): These first three examples demonstrate the effect of isovalue range for the simplest of all surfaces: a sphere where $r=\sqrt{x^2+y^2+z^2}$, or `r = norm([x,y,z])` in OpenSCAD. Then, the isosurface corresponding to an isovalue of 10 is every point where the expression `norm(x,y,z)` equals a radius of 10. We use the isovalue range `[-INF,10]` here to make the sphere, with a bounding box that cuts off half the sphere. The isovalue range could also be `[0,10]` because the minimum value of the expression is zero.
+// Example(3D,VPD=85,VPT=[0,0,2],VPR=[55,0,30]): These first three examples demonstrate the effect of isovalue range for the simplest of all surfaces: a sphere where $r=\sqrt{x^2+y^2+z^2}$, or `r = norm([x,y,z])` in OpenSCAD. Then, the isosurface corresponding to an isovalue of 10 is every point where the expression `norm([x,y,z])` equals a radius of 10. We use the isovalue range `[-INF,10]` here to make the sphere, with a bounding box that cuts off half the sphere. The isovalue range could also be `[0,10]` because the minimum value of the expression is zero.
 //   isovalue = [-INF,10];
 //   bbox = [[-11,-11,-11], [0,11,11]];
-//   isosurface(function (xyz) norm(xyz),
+//   isosurface(function (x,y,z) norm([x,y,z]),
 //      isovalue, bbox, voxel_size = 1);
 // Example(3D,VPD=85,VPT=[0,0,2],VPR=[55,0,30]): An isovalue range `[8,10]` gives a shell with inner radius 8 and outer radius 10.
 //   isovalue = [8,10];
 //   bbox = [[-11,-11,-11], [0,11,11]];
-//   isosurface(function (xyz) norm(xyz),
+//   isosurface(function (x,y,z) norm([x,y,z]),
 //      isovalue, bbox, voxel_size = 1);
 // Example(3D,VPD=85,VPT=[0,0,2],VPR=[55,0,30]): Here we set the isovalue range to `[10,INF]`. Because the sphere expression `norm(xyz)` has larger values growing to infinity with distance from the origin, the resulting object appears as the bounding box with a radius-10 spherical hole.
 //   isovalue = [10,INF];
 //   bbox = [[-11,-11,-11], [0,11,11]];
-//   isosurface(function (xyz) norm(xyz),
+//   isosurface(function (x,y,z) norm([x,y,z]),
 //      isovalue, bbox, voxel_size = 1);
 // Example(3D,ThrownTogether,NoAxes): Unlike a sphere, a gyroid is unbounded; it's an isosurface defined by all the zero values of a 3D periodic function. To illustrate what the surface looks like, `closed=false` has been set to expose both sides of the surface. The surface is periodic and tileable along all three axis directions. This is a non-manifold surface as displayed, not useful for 3D modeling. This example also demonstrates using an additional parameter in the field function beyond just the `[x,y,z]` input; in this case to control the wavelength of the gyroid.
-//   function gyroid(xyz, wavelength) = let(
-//       p = 360/wavelength * xyz
+//   function gyroid(x,y,z, wavelength) = let(
+//       p = 360/wavelength * [x,y,z]
 //   ) sin(p.x)*cos(p.y)+sin(p.y)*cos(p.z)+sin(p.z)*cos(p.x);
 //   isovalue = [0,INF];
 //   bbox = [[-100,-100,-100], [100,100,100]];
-//   isosurface(function (xyz) gyroid(xyz, wavelength=200),
+//   isosurface(function(x,y,z) gyroid(x,y,z, wavelength=200),
 //       isovalue, bbox, voxel_size=5, closed=false);
 // Example(3D,NoAxes): If we remove the `closed` parameter or set it to true, the isosurface algorithm encloses the entire half-space bounded by the "inner" gyroid surface, leaving only the "outer" surface exposed. This is a manifold shape but not what we want if trying to model a gyroid.
-//   function gyroid(xyz, wavelength) = let(
-//       p = 360/wavelength * xyz
+//   function gyroid(x,y,z, wavelength) = let(
+//       p = 360/wavelength * [x,y,z]
 //   ) sin(p.x)*cos(p.y)+sin(p.y)*cos(p.z)+sin(p.z)*cos(p.x);
 //   isovalue = [0,INF];
 //   bbox = [[-100,-100,-100], [100,100,100]];
-//   isosurface(function (xyz) gyroid(xyz, wavelength=200),
+//   isosurface(function(x,y,z) gyroid(x,y,z, wavelength=200),
 //       isovalue, bbox, voxel_size=5, closed=true);
 // Example(3D,ThrownTogether,NoAxes): To make the gyroid a double-sided surface, we need to specify a small range around zero for `isovalue`. Now we have a double-sided surface although with `closed=false` the edges are not closed where the surface is clipped by the bounding box.
-//   function gyroid(xyz, wavelength) = let(
-//       p = 360/wavelength * xyz
+//   function gyroid(x,y,z, wavelength) = let(
+//       p = 360/wavelength * [x,y,z]
 //   ) sin(p.x)*cos(p.y)+sin(p.y)*cos(p.z)+sin(p.z)*cos(p.x);
 //   isovalue = [-0.3, 0.3];
 //   bbox = [[-100,-100,-100], [100,100,100]];
-//   isosurface(function (xyz) gyroid(xyz, wavelength=200),
+//   isosurface(function(x,y,z) gyroid(x,y,z, wavelength=200),
 //       isovalue, bbox, voxel_size=5, closed=false);
 // Example(3D,ThrownTogether,NoAxes): To make the gyroid a valid manifold 3D object, we remove the `closed` parameter (same as setting `closed=true`), which closes the edges where the surface is clipped by the bounding box.
-//   function gyroid(xyz, wavelength) = let(
-//       p = 360/wavelength * xyz
+//   function gyroid(x,y,z, wavelength) = let(
+//       p = 360/wavelength * [x,y,z]
 //   ) sin(p.x)*cos(p.y)+sin(p.y)*cos(p.z)+sin(p.z)*cos(p.x);
 //   isovalue = [-0.3, 0.3];
 //   bbox = [[-100,-100,-100], [100,100,100]];
-//   isosurface(function (xyz) gyroid(xyz, wavelength=200),
+//   isosurface(function(x,y,z) gyroid(x,y,z, wavelength=200),
 //       isovalue, bbox, voxel_size=5);
 // Example(3D,NoAxes): An approximation of the triply-periodic minimal surface known as [Schwartz P](https://en.wikipedia.org/wiki/Schwarz_minimal_surface).
-//   function schwartz_p(xyz, wavelength) = let(
+//   function schwartz_p(x,y,z, wavelength) = let(
 //       p = 360/wavelength,
-//       px = p*xyz.x, py = p*xyz.y, pz = p*xyz.z
+//       px = p*x, py = p*y, pz = p*z
 //   )  cos(px) + cos(py) + cos(pz);
 //   isovalue = [-0.2, 0.2];
 //   bbox = [[-100,-100,-100], [100,100,100]];
-//   isosurface(function (xyz) schwartz_p(xyz, 100),
+//   isosurface(function (x,y,z) schwartz_p(x,y,z, 100),
 //       isovalue, bounding_box=bbox, voxel_size=4);
 // Example(3D,NoAxes): Another approximation of the triply-periodic minimal surface known as [Neovius](https://en.wikipedia.org/wiki/Neovius_surface).
-//   function neovius(xyz, wavelength) = let(
+//   function neovius(x,y,z, wavelength) = let(
 //       p = 360/wavelength,
-//       px = p*xyz.x, py = p*xyz.y, pz = p*xyz.z
+//       px = p*x, py = p*y, pz = p*z
 //   )  3*(cos(px) + cos(py) + cos(pz)) + 4*cos(px)*cos(py)*cos(pz);
 //   bbox = [[-100,-100,-100], [100,100,100]];
-//   isosurface(function (xyz) neovius(xyz, 200),
+//   isosurface(function (x,y,z) neovius(x,y,z, 200),
 //       isovalue = [-0.3, 0.3],
 //       bounding_box = bbox, voxel_size=4);
 // Example(3D,NoAxes): Example of a bounded isosurface.
 //   isosurface(
-//       function (xyz)
-//           let(a=xyz_to_spherical(xyz), 
+//       function (x,y,z)
+//           let(a=xyz_to_spherical([x,y,z]), 
 //               r=a[0],
 //               phi=a[1],
 //               theta=a[2]
@@ -2104,48 +2098,48 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //       bounding_box = [[-8,-7,-8],[6,7,8]],
 //       voxel_size = 0.25);
 // Example(3D,NoAxes): Another example of a bounded isosurface.
-//   isosurface(function (p)
-//       let(x=p.x, y=p.y, z=p.z)
+//   isosurface(function (x,y,z)
 //         2*(x^4 - 2*x*x + y^4 
 //            - 2*y*y + z^4 - 2*z*z) + 3,
 //       bounding_box=3, voxel_size=0.07,
 //       isovalue=[-INF,0]);
 // Example(3D,NoAxes): For shapes that occupy a cubical bounding box centered on the origin, you can simply specify a scalar for the size of the box.
 //   isosurface(
-//       function (p) (p.x*p.y*p.z^3 + 19*p.x^2*p.z^2)/norm(p)^2 + norm(p)^2,
+//       function (x,y,z) let(np=norm([x,y,z]))
+//          (x*y*z^3 + 19*x^2*z^2) / np^2 + np^2,
 //       isovalue=[-INF,35], bounding_box=12, voxel_size=0.25);
 // Example(3D,Med,NoAxes,VPD=165,VPR=[72,0,290],VPT=[0,0,0]): An object that could be a sort of support pillar. Here we set `show_box=true` to reveal that the bounding box is slightly bigger than it needs to be. The argument `show_stats=true` also outputs the voxel bounding box size as a suggestion of what it should be.
 //   isosurface(
-//       function (p) (p.x*p.y*p.z^3 - 3*p.x^2*p.z^2)/norm(p)^2 + norm(p)^2,
+//       function (x,y,z) let(np=norm([x,y,z]))
+//          (x*y*z^3 - 3*x^2*z^2) / np^2 + np^2,
 //       isovalue=[-INF,35], bounding_box=[[-32,-32,-14],[32,32,14]],
 //       voxel_size = 0.8, show_box=true);
 // Example(3D,NoAxes): You can specify non-cubical voxels for efficiency. This example shows the result of two identical surface functions. The figure on the left uses a `voxel_size=1`, which washes out the detail in the z direction. The figure on the right shows the same shape with `voxel_size=[0.5,1,0.2]` to give a bit more resolution in the x direction and much more resolution in the z direction. This example runs about six times faster than if we used a cubical voxel of size 0.2 to capture the detail in only one axis at the expense of unnecessary detail in other axes.
-//   function shape(p, r=5) =
-//       r / sqrt(p.x^2 + 0.5*(p.y^2 + p.z^2)
-//           + 0.5*r*cos(200*p.z));
+//   function shape(x,y,z, r=5) =
+//       r / sqrt(x^2 + 0.5*(y^2 + z^2)
+//           + 0.5*r*cos(200*z));
 //   bbox = [[-6,-8,0], [6,8,7]];
 //   
-//   left(6) isosurface(function (p) shape(p),
+//   left(6) isosurface(function (x,y,z) shape(x,y,z),
 //       isovalue=[1,INF], bounding_box=bbox,
 //       voxel_size=1);
 //   
-//   right(6) isosurface(function (p) shape(p),
+//   right(6) isosurface(function (x,y,z) shape(x,y,z),
 //       isovalue=[1,INF], bounding_box=bbox,
 //       voxel_size=[0.5,1,0.2]);
 // Example(3D,NoAxes): Nonlinear functions with steep gradients between voxel corners at the isosurface value can show interpolation ridges because the surface position is approximated by a linear interpolation of a highly nonlinear function. The appearance of the artifacts depends on the combination of function, voxel size, and isovalue, and can look different in different circumstances. If your isovalue is positive, then you may be able to smooth out the artifacts by using the log of your function and the log of your isovalue range to get the same isosurface without artifacts. On the left, an isosurface around a steep nonlinear function (clipped on the left by the bounding box) exhibits severe interpolation artifacts. On the right, the log of the isosurface around the log of the function smooths it out nicely.
 //   bbox = [[0,-10,-5],[9,10,6]];
 //   
-//   function shape(p) =
-//       let(x=p.x, y=p.y, z=p.z)
+//   function shape(x,y,z) =
 //           exp(-((x+5)/5-3)^2-y^2)
 //           *exp(-((x+5)/3)^2-y^2-z^2)
 //           + exp(-((y+4)/5-3)^2-x^2)
 //           *exp(-((y+4)/3)^2-x^2-0.5*z^2);
 //   
-//   left(6) isosurface(function(p) shape(p),
+//   left(6) isosurface(function(x,y,z) shape(x,y,z),
 //       isovalue = [EPSILON,INF],
 //       bounding_box=bbox, voxel_size=0.25);
-//   right(6) isosurface(function(p) log(shape(p)),
+//   right(6) isosurface(function(x,y,z) log(shape(x,y,z)),
 //       isovalue = [log(EPSILON),INF],
 //       bounding_box=bbox, voxel_size=0.25);
 // Example(3D): Using an array for the `f` argument instead of a function literal. Each row of the array represents an X index for a YZ plane with the array Z indices changing fastest in each plane. The final object may need rotation to get the orientation you want. You don't pass the `bounding_box` argument here; it is implied by the array size and voxel size, and centered on the origin.
