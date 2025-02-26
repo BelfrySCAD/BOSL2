@@ -358,7 +358,6 @@ function sinh(x) =
     assert(is_finite(x), "The input must be a finite number.")
     (exp(x)-exp(-x))/2;
 
-
 // Function: cosh()
 // Synopsis: Returns the hyperbolic cosine of the given value.
 // Topics: Math, Trigonometry
@@ -378,10 +377,11 @@ function cosh(x) =
 // Usage:
 //   a = tanh(x);
 // Description: Takes a value `x`, and returns the hyperbolic tangent of it.
+
 function tanh(x) =
     assert(is_finite(x), "The input must be a finite number.")
-    sinh(x)/cosh(x);
-
+    let (e = exp(2*x) + 1)
+    e == INF ? 1 : (e-2)/e;
 
 // Function: asinh()
 // Synopsis: Returns the hyperbolic arc-sine of the given value.
