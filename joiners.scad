@@ -556,7 +556,7 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 // Synopsis: Creates a possibly tapered dovetail shape.
 // SynTags: Geom
 // Topics: Joiners, Parts
-// See Also: joiner(), snap_pin(), rabbit_clip()
+// See Also: joiner(), snap_pin(), rabbit_clip(), partition(), partition_mask(), partition_cut_mask()
 //
 // Usage:
 //   dovetail(gender, w=|width, h=|height, slide|thickness=, [slope=|angle=], [taper=|back_width=], [chamfer=], [r=|radius=], [round=], [extra=], [$slop=])
