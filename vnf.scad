@@ -1245,6 +1245,8 @@ module vnf_wireframe(vnf, width=1)
 
 // Section: Operations on VNFs
 
+       
+
 // Function: vnf_volume()
 // Synopsis: Returns the volume of a VNF.
 // Topics: VNF Manipulation
@@ -1305,6 +1307,29 @@ function _vnf_centroid(vnf,eps=EPSILON) =
     assert(!approx(pos[0],0, eps), "The vnf has self-intersections.")
     pos[1]/pos[0]/4;
 
+// Function: vnf_bounds()
+// Synopsis: Returns the min and max bounding coordinates for the VNF.
+// Topics: VNF Manipulation, Bounding Boxes, Bounds
+// See Also: pointlist_bounds()
+// Usage:
+//   min_max = vnf_bounds(vnf, [fast]);
+// Description:
+//   Finds the bounds of the VNF.  By default the calculation skips any points listed in the VNF vertex list
+//   that are not used by the VNF.  However, this calculation may be slow on large VNFS.  If you set `fast=true`
+//   then the calculation uses all the points listed in the VNF, regardless of whether they appear in the
+//   actual object.  The returned list has the form `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`.
+// Arguments:
+//   vnf = vnf to get the bounds of
+//   fast = if true then ignore face data and process all vertices; if false only look at vertices actually used in the geometry.  Default: false
+// Example:
+//   echo(vnf_bounds(cube([2,3,4],center=true)));   // Displays [[-1, -1.5, -2], [1, 1.5, 2]]
+function vnf_bounds(vnf,fast=false) =
+  assert(is_vnf(vnf), "Invalid VNF")
+  fast ? pointlist_bounds(vnf[0])
+       : let(
+             vert = vnf[0]
+         )
+         pointlist_bounds([for(face=vnf[1]) each select(vert,face)]);
 
 // Function: projection()
 // Synopsis: Returns projection or intersection of vnf with XY plane
@@ -1690,9 +1715,10 @@ function vnf_bend(vnf,r,d,axis="Z") =
 
 // Function&Module: vnf_hull()
 // Synopsis: Compute convex hull of VNF or 3d path
-// Usage:
+// Usage: (as a function)
 //    vnf_hull = hull_vnf(vnf);
-//    hull_vnf(vnf,[fast]);
+// Usage: (as a module)
+//    vnf_hull(vnf,[fast]);
 // Description:
 //   Given a VNF or a list of 3d points, compute the convex hull
 //   and return it as a VNF.  This differs from {{hull()}} and {{hull3d_faces()}}, which
@@ -1700,7 +1726,11 @@ function vnf_bend(vnf,r,d,axis="Z") =
 //   point list contains all the points that are actually used in the input
 //   VNF, which may be many more points than are needed to represent the convex hull.
 //   This is not usually a problem, but you can run the somewhat slow {{vnf_drop_unused_points()}}
-//   function to fix this if necessary.  
+//   function to fix this if necessary.
+//   .
+//   If you call this as a module with a VNF it invokes hull() on the polyhedron described by the VNF.
+//   The `fast` argument is ignored in this case.  If you call this as a module on a list of points then
+//   it calls {{hull_points()}} and passes the `fast` argument.  
 // Arguments:
 //   region = region or path listing points to compute the hull from.
 //   fast = (module only) if input is a point list (not a VNF) use a fasterer cheat that may handle more points, but could emit warnings.  Ignored if input is a VNF.  Default: false.  
@@ -1718,6 +1748,9 @@ function vnf_bend(vnf,r,d,axis="Z") =
 //   color("red")move_copies(h)
 //     sphere(r=0.5,$fn=12);
 //   vnf_polyhedron(vnf_hull(h));
+// Example(3D): As a module with a VNF as input
+//   vnf = torus(d_maj=4, d_min=4);
+//   vnf_hull(vnf);
 function vnf_hull(vnf) =
   assert(is_vnf(vnf) || is_path(vnf,3),"Input must be a VNF or a 3d path")
   let(

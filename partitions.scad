@@ -430,7 +430,7 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 // Synopsis: Creates a mask to remove half an object with the remaining half suitable for reassembly.
 // SynTags: Geom
 // Topics: Partitions, Masking, Paths
-// See Also: partition_cut_mask(), partition()
+// See Also: partition_cut_mask(), partition(), dovetail()
 // Usage:
 //   partition_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
@@ -485,7 +485,7 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
 // Synopsis: Creates a mask to cut an object into two subparts that can be reassembled.
 // SynTags: Geom
 // Topics: Partitions, Masking, Paths
-// See Also: partition_mask(), partition()
+// See Also: partition_mask(), partition(), dovetail()
 // Usage:
 //   partition_cut_mask(l, [cutsize], [cutpath], [gap], [inverse], [$slop=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
@@ -531,7 +531,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
 // Synopsis: Cuts an object in two with matched joining edges, then separates the parts.
 // SynTags: Geom, VNF, Path, Region
 // Topics: Partitions, Masking, Paths
-// See Also: partition_cut_mask(), partition_mask()
+// See Also: partition_cut_mask(), partition_mask(), dovetail()
 // Usage:
 //   partition(size, [spread], [cutsize], [cutpath], [gap], [spin], [$slop=]) CHILDREN;
 // Description:

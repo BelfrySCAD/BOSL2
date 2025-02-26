@@ -193,8 +193,9 @@ module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
     teardrop=false,
     anchor=CENTER, spin=0, orient=UP)
 {
-  size = scalar_vec3(size);
-  dummy1=assert(in_list(dir,["X","Y","Z"]) || is_vector(dir,3), "dir must be a 3-vector or one of \"X\", \"Y\", or \"Z\"");
+  size = force_list(size,3);
+  dummy1= assert(is_vector(size,3) && all_positive(size), "size must be a positive number or 3-vector")
+          assert(in_list(dir,["X","Y","Z"]) || is_vector(dir,3), "dir must be a 3-vector or one of \"X\", \"Y\", or \"Z\"");
   count = len([for(d=dir) if (d!=0) d]);
   dummy2=assert(is_string(dir) || (count==1 && len(dir)<=3), "vector valued dir must have exactly one non-zero component");
   dir = is_string(dir) ? dir

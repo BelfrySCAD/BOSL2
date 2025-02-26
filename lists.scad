@@ -461,7 +461,7 @@ function list(l) = is_list(l)? l : [for (x=l) x];
 // Arguments:
 //   value = The value or list to coerce into a list.
 //   n = The number of items in the coerced list.  Default: 1
-//   fill = The value to pad the coerced list with, after the firt value.  Default: undef (pad with copies of `value`)
+//   fill = The value to pad the coerced list with, after the first value.  Default: undef (pad with copies of `value`)
 // Example:
 //   x = force_list([3,4,5]);  // Returns: [3,4,5]
 //   y = force_list(5);  // Returns: [5]

@@ -5061,7 +5061,7 @@ module restore(desc)
    req_children($children);
    if (is_undef(desc)){
      T = matrix_inverse($transform);
-     $parent_geom = ["prismoid", [CTR, UP, 0]];
+     $parent_geom = attach_geom([0,0,0]);
      multmatrix(T) children();
    }
    else{

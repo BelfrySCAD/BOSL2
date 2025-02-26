@@ -488,7 +488,7 @@ module chain_hull()
 // Synopsis: Removes diff shapes from base shape surface.
 // SynTags: Geom
 // Topics: Miscellaneous
-// See Also: offset3d()
+// See Also: offset3d(), round3d()
 // Usage:
 //   minkowski_difference() { BASE; DIFF1; DIFF2; ... }
 // Description:
@@ -536,14 +536,15 @@ module minkowski_difference(planar=false) {
 // Usage:
 //   offset3d(r, [size], [convexity]) CHILDREN;
 // Description:
-//   Expands or contracts the surface of a 3D object by a given amount.  This is very, very slow.
+//   Expands or contracts the surface of a 3D object by a given amount.  The children must
+//   fit in a centered cube of the specified size.  This is very, very slow.
 //   No really, this is unbearably slow.  It uses `minkowski()`.  Use this as a last resort.
 //   This is so slow that no example images will be rendered.
 // Arguments:
 //   r = Radius to expand object by.  Negative numbers contract the object. 
-//   size = Maximum size of object to be contracted, given as a scalar.  Default: 100
+//   size = Scalar size of a centered cube containing the children.  Default: 1000
 //   convexity = Max number of times a line could intersect the walls of the object.  Default: 10
-module offset3d(r, size=100, convexity=10) {
+module offset3d(r, size=1000, convexity=10) {
     req_children($children);
     n = quant(max(8,segs(abs(r))),4);
     attachable(){
@@ -589,14 +590,16 @@ module offset3d(r, size=100, convexity=10) {
 //   Rounds arbitrary 3D objects.  Giving `r` rounds all concave and convex corners.  Giving just `ir`
 //   rounds just concave corners.  Giving just `or` rounds convex corners.  Giving both `ir` and `or`
 //   can let you round to different radii for concave and convex corners.  The 3D object must not have
-//   any parts narrower than twice the `or` radius.  Such parts will disappear.  This is an *extremely*
+//   any parts narrower than twice the `or` radius.  Such parts will disappear.   The children must fit
+//   inside a cube of the specified size.  This is an *extremely*
 //   slow operation.  I cannot emphasize enough just how slow it is.  It uses `minkowski()` multiple times.
 //   Use this as a last resort.  This is so slow that no example images will be rendered.
 // Arguments:
 //   r = Radius to round all concave and convex corners to.
 //   or = Radius to round only outside (convex) corners to.  Use instead of `r`.
 //   ir = Radius to round only inside (concave) corners to.  Use instead of `r`.
-module round3d(r, or, ir, size=100)
+//   size = size of centered cube that contains the children.  Default: 1000
+module round3d(r, or, ir, size=1000)
 {
     req_children($children);
     or = get_radius(r1=or, r=r, dflt=0);

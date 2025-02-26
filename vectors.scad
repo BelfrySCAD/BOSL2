@@ -370,7 +370,7 @@ function vector_perp(v,w) =
 // Function: pointlist_bounds()
 // Synopsis: Returns the min and max bounding coordinates for the given list of points.
 // Topics: Geometry, Bounding Boxes, Bounds
-// See Also: closest_point()
+// See Also: closest_point(), vnf_bounds()
 // Usage:
 //   pt_pair = pointlist_bounds(pts);
 // Description:

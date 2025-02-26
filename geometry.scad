@@ -1907,8 +1907,8 @@ function _merge_segments(insegs,outsegs, eps, i=1) =
 //   the input polygon. For 3d polygons, the triangle windings will induce a normal
 //   vector with the same direction of the polygon normal.
 //   .
-//   The function produce correct triangulations for some non-twisted non-simple polygons. 
-//   A polygon is non-twisted iff it is simple or it has a partition in
+//   The function produces correct triangulations for some non-twisted non-simple polygons. 
+//   A polygon is non-twisted if it is simple or it has a partition in
 //   simple polygons with the same winding such that the intersection of any two partitions is
 //   made of full edges and/or vertices of both partitions. These polygons may have "touching" vertices 
 //   (two vertices having the same coordinates, but distinct adjacencies) and "contact" edges 
@@ -1972,7 +1972,11 @@ function polygon_triangulate(poly, ind, error=true, eps=EPSILON) =
     len(ind) == 3 
       ? _degenerate_tri([poly[ind[0]], poly[ind[1]], poly[ind[2]]], eps) ? [] : 
         // non zero area
-        let( degen = norm(scalar_vec3(cross(poly[ind[1]]-poly[ind[0]], poly[ind[2]]-poly[ind[0]]))) < 2*eps )
+        let(
+            cp = cross(poly[ind[1]]-poly[ind[0]], poly[ind[2]]-poly[ind[0]]), 
+            degen = is_num(cp) ? abs(cp) < 2*eps
+                               : norm(cp) < 2*eps
+        )
         assert( ! error || ! degen, "The polygon vertices are collinear.") 
         degen ? undef : [ind]
       : len(poly[ind[0]]) == 3 
