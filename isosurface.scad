@@ -40,7 +40,7 @@
 //   problem for rendering the shape, but machine roundoff differences may result in Manifold issuing
 //   warnings when doing the final render, causing rendering to abort if you have enabled the "stop on
 //   first warning" setting. You can prevent this by passing the VNF through {{vnf_quantize()}} using a
-//   quantization of 0.000001, or you can pass the VNF structure into {{vnf_merge_points()}}, which also
+//   quantization of 1e-7, or you can pass the VNF structure into {{vnf_merge_points()}}, which also
 //   removes the duplicates. Additionally, flat surfaces (often resulting from clipping by the bounding
 //   box) are triangulated at the voxel size resolution, and these can be unified into a single face by
 //   passing the vnf structure to {{vnf_unify_faces()}}. These steps can be computationally expensive
@@ -1451,6 +1451,18 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   box that is too large wastes time computing function values that are not needed, you can also set the
 //   parameter `show_stats=true` to get the actual bounds of the voxels intersected by the surface. With this
 //   information, you may be able to decrease run time, or keep the same run time but increase the resolution. 
+//   .
+//   ***Duplicated vertices***
+//   .
+//   The point list in the generated VNF structure contains many duplicated points. This is normally not a
+//   problem for rendering the shape, but machine roundoff differences may result in Manifold issuing
+//   warnings when doing the final render, causing rendering to abort if you have enabled the "stop on
+//   first warning" setting. You can prevent this by passing the VNF through {{vnf_quantize()}} using a
+//   quantization of 1e-7, or you can pass the VNF structure into {{vnf_merge_points()}}, which also
+//   removes the duplicates. Additionally, flat surfaces (often resulting from clipping by the bounding
+//   box) are triangulated at the voxel size resolution, and these can be unified into a single face by
+//   passing the vnf structure to {{vnf_unify_faces()}}. These steps can be computationally expensive
+//   and are not normally necessary.
 // Arguments:
 //   spec = Metaball specification in the form `[trans0, spec0, trans1, spec1, ...]`, with alternating transformation matrices and metaball specs, where `spec0`, `spec1`, etc. can be a metaball function or another metaball specification. See above for more details, and see Example 23 for a demonstration.
 //   bounding_box = A designation of volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. By default, the actual bounding box is enlarged if necessary to fit whole voxels, and centered around your requested box. Set `exact_bounds=true` to hold the box size fixed, in which case the voxel changes size instead.
@@ -1987,7 +1999,7 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   `[c1,c2]`, try changing it to `[c2,INF]` or `[-INF,c1]`. If you were using an unbounded range like
 //   `[c,INF]`, try switching the range to `[-INF,c]`.
 //   .
-//   The `voxel_size` and `bounding_box` parameters affect the run time, which can be long.
+//   ***Run time:*** The `voxel_size` and `bounding_box` parameters affect the run time, which can be long.
 //   A voxel size of 1 with a bounding box volume of 200×200×200 may be slow because it requires the
 //   calculation and storage of 8,000,000 function values, and more processing and memory to generate
 //   the triangulated mesh.  On the other hand, a voxel size of 5 over a 100×100×100 bounding box
@@ -1998,6 +2010,16 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 //   box that is too large wastes time computing function values that are not needed, you can also set the
 //   parameter `show_stats=true` to get the actual bounds of the voxels intersected by the surface. With this
 //   information, you may be able to decrease run time, or keep the same run time but increase the resolution. 
+//   .
+//   ***Manifold warnings:*** The point list in the generated VNF structure contains many duplicated points. This is normally not a
+//   problem for rendering the shape, but machine roundoff differences may result in Manifold issuing
+//   warnings when doing the final render, causing rendering to abort if you have enabled the "stop on
+//   first warning" setting. You can prevent this by passing the VNF through {{vnf_quantize()}} using a
+//   quantization of 1e-7, or you can pass the VNF structure into {{vnf_merge_points()}}, which also
+//   removes the duplicates. Additionally, flat surfaces (often resulting from clipping by the bounding
+//   box) are triangulated at the voxel size resolution, and these can be unified into a single face by
+//   passing the vnf structure to {{vnf_unify_faces()}}. These steps can be computationally expensive
+//   and are not normally necessary.
 // Arguments:
 //   f = The isosurface function literal or array. As a function literal, `x,y,z` must be the first arguments. 
 //   isovalue = A 2-vector giving an isovalue range. For an unbounded range, use `[-INF, max_isovalue]` or `[min_isovalue, INF]`.
