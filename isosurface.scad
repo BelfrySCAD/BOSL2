@@ -1265,28 +1265,42 @@ function mb_torus(r_maj, r_min, cutoff=INF, influence=1, negative=false, d_maj, 
 
 /// metaball octahedron
 
-function _mb_octahedron_basic(point, r, neg) =
-    let(dist = abs(point.x) + abs(point.y) + abs(point.z)) neg*r/dist;
-function _mb_octahedron_influence(point, r, ex, neg) =
-    let(dist = abs(point.x) + abs(point.y) + abs(point.z)) neg * (r/dist)^ex;
-function _mb_octahedron_cutoff(point, r, cutoff, neg) =
-    let(dist = abs(point.x) + abs(point.y) + abs(point.z)) neg * mb_cutoff(dist, cutoff) * r/dist;
-function _mb_octahedron_full(point, r, cutoff, ex, neg) =
-    let(dist = abs(point.x) + abs(point.y) + abs(point.z)) neg * mb_cutoff(dist, cutoff) * (r/dist)^ex;
+function _mb_octahedron_basic(point, invr, xp, neg) =
+   let( p = point*invr,
+        dist = xp>1100 ? abs(p.x)+abs(p.y)+abs(p.z)
+        : (abs(p.x+p.y+p.z)^xp + abs(-p.x-p.y+p.z)^xp + abs(-p.x+p.y-p.z)^xp + abs(p.x-p.y-p.z)^xp) ^ (1/xp)
+    ) neg/dist;
+function _mb_octahedron_influence(point, invr, xp, ex, neg) =
+   let( p = point*invr,
+        dist = xp>1100 ? abs(p.x)+abs(p.y)+abs(p.z)
+        : (abs(p.x+p.y+p.z)^xp + abs(-p.x-p.y+p.z)^xp + abs(-p.x+p.y-p.z)^xp + abs(p.x-p.y-p.z)^xp) ^ (1/xp)
+    ) neg * (r/dist)^ex;
+function _mb_octahedron_cutoff(point, invr, xp, cutoff, neg) =
+   let( p = point*invr,
+        dist = xp>1100 ? abs(p.x)+abs(p.y)+abs(p.z)
+        : (abs(p.x+p.y+p.z)^xp + abs(-p.x-p.y+p.z)^xp + abs(-p.x+p.y-p.z)^xp + abs(p.x-p.y-p.z)^xp) ^ (1/xp)
+    ) neg * mb_cutoff(dist, cutoff) * r/dist;
+function _mb_octahedron_full(point, invr, xp, cutoff, ex, neg) =
+   let( p = point*invr,
+        dist = xp>1100 ? abs(p.x)+abs(p.y)+abs(p.z)
+        : (abs(p.x+p.y+p.z)^xp + abs(-p.x-p.y+p.z)^xp + abs(-p.x+p.y-p.z)^xp + abs(p.x-p.y-p.z)^xp) ^ (1/xp)
+    ) neg * mb_cutoff(dist, cutoff) * (r/dist)^ex;
 
-function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
+function mb_octahedron(r, squareness=0.5, cutoff=INF, influence=1, negative=false, d) =
    assert(is_num(cutoff) && cutoff>0, "\ncutoff must be a positive number.")
    assert(is_finite(influence) && is_num(influence) && influence>0, "\ninfluence must be a positive number.")
-   let(
-       r = get_radius(r=r,d=d),
-       dummy=assert(is_finite(r) && r>0, "\ninvalid radius or diameter."),
-       neg = negative ? -1 : 1
-   )
-   !is_finite(cutoff) && influence==1 ? function(point) _mb_octahedron_basic(point,r,neg)
- : !is_finite(cutoff) ? function(point) _mb_octahedron_influence(point,r,1/influence, neg)
- : influence==1 ? function(point) _mb_octahedron_cutoff(point,r,cutoff,neg)
- : function(point) _mb_octahedron_full(point,r,cutoff,1/influence,neg);
+    let(
+        xp = _squircle_se_exponent(squareness),
+        r = get_radius(r=r,d=d),
+        dummy=assert(is_finite(r) && r>0, "\ninvalid radius or diameter."),
+        neg = negative ? -1 : 1
+    )
+    !is_finite(cutoff) && influence==1 ? function(point) _mb_octahedron_basic(point,1/r,xp,neg)
+  : !is_finite(cutoff) ? function(point) _mb_octahedron_influence(point,1/r,xp,1/influence, neg)
+  : influence==1 ? function(point) _mb_octahedron_cutoff(point,1/r,xp,cutoff,neg)
+  : function(point) _mb_octahedron_full(point,1/r,xp,cutoff,1/influence,neg);
 
+ 
 
 // Function&Module: metaballs()
 // Synopsis: Creates a group of 3D metaballs (smoothly connected blobs).
@@ -1402,7 +1416,7 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   * `mb_capsule(h|l|height|length, [r|d=], [r1=|d1=], [r2=|d2=])` &mdash; vertical cylinder or cone with rounded caps, using the same dimensional arguments as {{cyl()}}. The object resembles two spheres with a hull around them. The height or length specifies the distance between the spherical centers of the ends. Cutoff is measured from the line segment between the two cap centers.
 //   * `mb_connector(p1, p2, [r|d=], [r1=|d1=], [r2=|d2=])` &mdash; a connecting rod of radius `r` or diameter `d` with hemispherical caps (like `mb_capsule()`), but specified to connect point `p1` to point `p2` (where `p1` and `p2` must be different 3D coordinates). As with `mb_capsule()`, the radius of each cap can be different, and the object resembles two spheres wrapped in a null. The points `p1` and `p2` are at the centers of the two round caps. The connectors themselves are still influenced by other metaballs, but it may be undesirable to have them influence others, or each other. If two connectors are connected, the joint may appear swollen unless `influence` or `cutoff` is reduced. Reducing `cutoff` is preferable if feasible, because reducing `influence` can produce interpolation artifacts.
 //   * `mb_torus([r_maj|d_maj=], [r_min|d_min=], [or=|od=], [ir=|id=])` &mdash; torus metaball oriented perpendicular to the z axis. You can specify the torus dimensions using the same arguments as {{torus()}}; that is, major radius (or diameter) with `r_maj` or `d_maj`, and minor radius and diameter using `r_min` or `d_min`. Alternatively you can give the inner radius or diameter with `ir` or `id` and the outer radius or diameter with `or` or `od`. You must provide a combination of inputs that completely specifies the torus. If `cutoff` is applied, it is measured from the circle represented by `r_min=0`.
-//   * `mb_octahedron(r|d=])` &mdash; octahedral metaball with sharp edges and corners. The `r` parameter specifies the distance from center to tip, while `d=` is the distance between two opposite tips.
+//   * `mb_octahedron(r|d=])` &mdash; octahedron metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (cubical), and defaults to 0.5. The radius `r` specifies the radius to the sharp-corner octahedron, while `d=` is the distance between two opposite tips. The actual shape is smaller when `squareness<1`, reducing to a sphere that would fit inside the full octahedron at `squareness=0`. Except when `squareness=1`, the faces are always curved.
 //   .
 //   In addition to the dimensional arguments described above, all of the built-in functions accept the
 //   following named arguments:
@@ -1536,9 +1550,9 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //    metaballs(spec, boundingbox, voxel_size);
 // Example(3D,NoAxes,VPR=[75,0,20]): Two octahedrons interacting. Here `voxel_size` is not given, so it defaults to a value that results in approximately 10,000 voxels in the bounding box. Adding the parameter `show_stats=true` displays the voxel size used, along with other information.
 //   metaballs([
-//       move([-10,0,3]), mb_octahedron(8),
-//       move([10,0,-3]), mb_octahedron(8)
-//       ], [[-21,-11,-13], [21,11,13]], 0.5);
+//       move([-11,0,4]), mb_octahedron(10),
+//       move([11,0,-4]), mb_octahedron(10)
+//       ], [[-21,-11,-14], [21,11,14]]);
 // Example(3D,VPD=110): These next five examples demonstrate the different types of metaball interactions. We start with two spheres 30 units apart. Each would have a radius of 10 in isolation, but because they are influencing their surroundings, each sphere mutually contributes to the size of the other. The sum of contributions between the spheres add up so that a surface plotted around the region exceeding the threshold defined by `isovalue=1` looks like a peanut shape surrounding the two spheres.
 //   spec = [
 //       left(15),  mb_sphere(10),
@@ -1621,11 +1635,11 @@ function mb_octahedron(r, cutoff=INF, influence=1, negative=false, d) =
 //   voxel_size = 0.5;
 //   boundingbox = [[-20,-4,-20], [20,30,20]];
 //   metaballs(spec, boundingbox, voxel_size);
-// Example(3D,NoAxes): A cube, a rounded cube, and an octahedron interacting. Because the surface is generated through cubical voxels, voxel corners are always cut off, resulting in difficulty resolving some sharp edges.
+// Example(3D,NoAxes): A sharp cube, a rounded cube, and a sharp octahedron interacting. Because the surface is generated through cubical voxels, voxel corners are always cut off, resulting in difficulty resolving some sharp edges.
 //   spec = [
 //       move([-7,-3,27])*zrot(55), mb_cuboid(6, squareness=1),
 //       move([5,5,21]),   mb_cuboid(5),
-//       move([10,0,10]),  mb_octahedron(5)
+//       move([10,0,10]),  mb_octahedron(5, squareness=1)
 //   ];
 //   voxel_size = 0.5; // a bit slow at this resolution
 //   boundingbox = [[-12,-9,3], [18,10,32]];
