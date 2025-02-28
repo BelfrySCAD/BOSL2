@@ -1275,17 +1275,17 @@ function _mb_octahedron_influence(point, invr, xp, ex, neg) =
    let( p = point*invr,
         dist = xp>1100 ? abs(p.x)+abs(p.y)+abs(p.z)
         : (abs(p.x+p.y+p.z)^xp + abs(-p.x-p.y+p.z)^xp + abs(-p.x+p.y-p.z)^xp + abs(p.x-p.y-p.z)^xp) ^ (1/xp)
-    ) neg * (r/dist)^ex;
+    ) neg/dist^ex;
 function _mb_octahedron_cutoff(point, invr, xp, cutoff, neg) =
    let( p = point*invr,
         dist = xp>1100 ? abs(p.x)+abs(p.y)+abs(p.z)
         : (abs(p.x+p.y+p.z)^xp + abs(-p.x-p.y+p.z)^xp + abs(-p.x+p.y-p.z)^xp + abs(p.x-p.y-p.z)^xp) ^ (1/xp)
-    ) neg * mb_cutoff(dist, cutoff) * r/dist;
+    ) neg * mb_cutoff(dist, cutoff) / dist;
 function _mb_octahedron_full(point, invr, xp, cutoff, ex, neg) =
    let( p = point*invr,
         dist = xp>1100 ? abs(p.x)+abs(p.y)+abs(p.z)
         : (abs(p.x+p.y+p.z)^xp + abs(-p.x-p.y+p.z)^xp + abs(-p.x+p.y-p.z)^xp + abs(p.x-p.y-p.z)^xp) ^ (1/xp)
-    ) neg * mb_cutoff(dist, cutoff) * (r/dist)^ex;
+    ) neg * mb_cutoff(dist, cutoff) / dist^ex;
 
 function mb_octahedron(r, squareness=0.5, cutoff=INF, influence=1, negative=false, d) =
    assert(is_num(cutoff) && cutoff>0, "\ncutoff must be a positive number.")
@@ -1295,14 +1295,13 @@ function mb_octahedron(r, squareness=0.5, cutoff=INF, influence=1, negative=fals
         xp = _squircle_se_exponent(squareness),
         r = get_radius(r=r,d=d),
         dummy=assert(is_finite(r) && r>0, "\ninvalid radius or diameter."),
-        cf = let(s=squareness, s2=s*s) -0.299215*s*s2 + 0.737254*s2 - 0.59552*s + 1.1577,
-        rcor = cf*r, // apply correction factor to r based on squareness
+        invr = _mb_octahedron_basic([1/3,1/3,1/3],1,xp,1)/r, // correct 1/r based on squareness
         neg = negative ? -1 : 1
     )
-    !is_finite(cutoff) && influence==1 ? function(point) _mb_octahedron_basic(point,1/rcor,xp,neg)
-  : !is_finite(cutoff) ? function(point) _mb_octahedron_influence(point,1/rcor,xp,1/influence, neg)
-  : influence==1 ? function(point) _mb_octahedron_cutoff(point,1/rcor,xp,cutoff,neg)
-  : function(point) _mb_octahedron_full(point,1/rcor,xp,cutoff,1/influence,neg);
+    !is_finite(cutoff) && influence==1 ? function(point) _mb_octahedron_basic(point,invr,xp,neg)
+  : !is_finite(cutoff) ? function(point) _mb_octahedron_influence(point,invr,xp,1/influence, neg)
+  : influence==1 ? function(point) _mb_octahedron_cutoff(point,invr,xp,cutoff,neg)
+  : function(point) _mb_octahedron_full(point,invr,xp,cutoff,1/influence,neg);
 
  
 
