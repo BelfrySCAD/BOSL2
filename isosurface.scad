@@ -1287,15 +1287,15 @@ function _mb_octahedron_full(point, invr, xp, cutoff, ex, neg) =
         : (abs(p.x+p.y+p.z)^xp + abs(-p.x-p.y+p.z)^xp + abs(-p.x+p.y-p.z)^xp + abs(p.x-p.y-p.z)^xp) ^ (1/xp)
     ) neg * mb_cutoff(dist, cutoff) / dist^ex;
 
-function mb_octahedron(r, squareness=0.5, cutoff=INF, influence=1, negative=false, d) =
+function mb_octahedron(size, squareness=0.5, cutoff=INF, influence=1, negative=false) =
    assert(is_num(cutoff) && cutoff>0, "\ncutoff must be a positive number.")
    assert(squareness>=0 && squareness<=1, "\nsquareness must be inside the range [0,1].")
    assert(is_finite(influence) && is_num(influence) && influence>0, "\ninfluence must be a positive number.")
+   assert((is_finite(size) && size>0) || (is_vector(size) && all_positive(size)), "\nsize must be a positive number or a 3-vector of positive values.")
     let(
         xp = _squircle_se_exponent(squareness),
-        r = get_radius(r=r,d=d),
-        dummy=assert(is_finite(r) && r>0, "\ninvalid radius or diameter."),
-        invr = _mb_octahedron_basic([1/3,1/3,1/3],1,xp,1)/r, // correct 1/r based on squareness
+        invr = _mb_octahedron_basic([1/3,1/3,1/3],1,xp,1) * // correction factor
+            (is_num(size) ? 2/size : [[2/size.x,0,0],[0,2/size.y,0],[0,0,2/size.z]]),
         neg = negative ? -1 : 1
     )
     !is_finite(cutoff) && influence==1 ? function(point) _mb_octahedron_basic(point,invr,xp,neg)
@@ -1415,13 +1415,13 @@ function mb_octahedron(r, squareness=0.5, cutoff=INF, influence=1, negative=fals
 //   The built-in metaball functions are listed below. As usual, arguments without a trailing `=` can be used positionally; arguments with a trailing `=` must be used as named arguments.
 //   .
 //   * `mb_sphere(r|d=)` &mdash; spherical metaball, with radius r or diameter d.  You can create an ellipsoid using `scale()` as the last transformation entry of the metaball `spec` array. 
-//   * `mb_cuboid(size, [squareness=])` &mdash; cuboid metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (cubical), and defaults to 0.5. The `size` specifies the width of the cuboid shape between the face centers; `size` may be a scalar or a vector, as in {{cuboid()}}. Except when `squareness=1`, the faces are always a little bit curved.
+//   * `mb_cuboid(size, [squareness=])` &mdash; cuboid metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (cubical), and defaults to 0.5. The `size` parameter specifies the dimensions of the cuboid that circumscribes the rounded shape, which is tangent to the center of each cube face. `size` may be a scalar or a vector, as in {{cuboid()}}. Except when `squareness=1`, the faces are always a little bit curved.
 //   * `mb_cyl(h|l|height|length, [r|d=], [r1=|d1=], [r2=|d2=], [rounding=])` &mdash; vertical cylinder or cone metaball with the same dimensional arguments as {{cyl()}}. At least one of the radius or diameter arguments is required. The `rounding` argument defaults to 0 (sharp edge) if not specified. Only one rounding value is allowed: the rounding is the same at both ends. For a fully rounded cylindrical shape, consider using `mb_capsule()` or `mb_disk()`, which are less flexible but have faster execution times.
 //   * `mb_disk(h|l|height|length, r|d=)` &mdash; rounded disk with flat ends. The diameter specifies the total diameter of the shape including the rounded sides, and must be greater than its height.
 //   * `mb_capsule(h|l|height|length, [r|d=]` &mdash; vertical cylinder or cone with rounded caps, using the same dimensional arguments as {{cyl()}}. The object resembles a convex hull of two spheres. The height or length specifies the distance between the spherical centers of the ends.
 //   * `mb_connector(p1, p2, [r|d=])` &mdash; a connecting rod of radius `r` or diameter `d` with hemispherical caps (like `mb_capsule()`), but specified to connect point `p1` to point `p2` (where `p1` and `p2` must be different 3D coordinates). As with `mb_capsule()`, the object resembles a convex hull of two spheres. The points `p1` and `p2` are at the centers of the two round caps. The connectors themselves are still influenced by other metaballs, but it may be undesirable to have them influence others, or each other. If two connectors are connected, the joint may appear swollen unless `influence` or `cutoff` is reduced. Reducing `cutoff` is preferable if feasible, because reducing `influence` can produce interpolation artifacts.
 //   * `mb_torus([r_maj|d_maj=], [r_min|d_min=], [or=|od=], [ir=|id=])` &mdash; torus metaball oriented perpendicular to the z axis. You can specify the torus dimensions using the same arguments as {{torus()}}; that is, major radius (or diameter) with `r_maj` or `d_maj`, and minor radius and diameter using `r_min` or `d_min`. Alternatively you can give the inner radius or diameter with `ir` or `id` and the outer radius or diameter with `or` or `od`. You must provide a combination of inputs that completely specifies the torus. If `cutoff` is applied, it is measured from the circle represented by `r_min=0`.
-//   * `mb_octahedron(r|d=, [squareness=])` &mdash; octahedron metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (sharp), and defaults to 0.5. The radius `r` specifies the radius to the sharp-corner octahedron, while `d=` is the distance between two opposite tips. The actual shape is smaller when `squareness<1`, reducing to a sphere that would fit inside the full octahedron at `squareness=0`. Except when `squareness=1`, the faces are always curved.
+//   * `mb_octahedron(size, [squareness=])` &mdash; octahedron metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (sharp), and defaults to 0.5. The `size` parameter specifies the tip-to-tip distance of the octahedron that circumscribes the rounded shape, which is tangent to the center of each octahedron face. `size` may be a scalar or a vector, as in {{octahedron()}}. At `squareness=0`, the shape reduces to a sphere curcumscribed by the octahedron. Except when `squareness=1`, the faces are always curved.
 //   .
 //   In addition to the dimensional arguments described above, all of the built-in functions accept the
 //   following named arguments:
@@ -1484,8 +1484,8 @@ function mb_octahedron(r, squareness=0.5, cutoff=INF, influence=1, negative=fals
 //   and are not normally necessary.
 // Arguments:
 //   spec = Metaball specification in the form `[trans0, spec0, trans1, spec1, ...]`, with alternating transformation matrices and metaball specs, where `spec0`, `spec1`, etc. can be a metaball function or another metaball specification. See above for more details, and see Example 23 for a demonstration.
-//   bounding_box = A designation of volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. Unless you set `exact_bounds=true`, the bounding box size may be enlarged to fit whole voxels.
-//   voxel_size = size of the voxel that is used to sample the bounding box volume. This can be undef, a scalar size for a cubical voxel, or a 3-vector if you want non-cubical voxels. For `undef`, the voxel size is set so that approximately `voxel_count` quantity of voxels fit inside the bounding box. If both `voxel_size=undef` and `voxel_count=undef`, then a fast preview is generated using about 10000 voxels. If you set `exact_bounds=true`, then bounding box is held fixed in size, and the voxel size is adjusted as needed so that whole voxels fit inside the bounding box.
+//   bounding_box = The volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. Unless you set `exact_bounds=true`, the bounding box size may be enlarged to fit whole voxels.
+//   voxel_size = Size of the voxels used to sample the bounding box volume, can be a scalar or 3-vector, or omitted if `voxel_count` is set. You may get a non-cubical voxels of a slightly different size than requested if `exact_bounds=true`.
 //   ---
 //   voxel_count = Approximate number of voxels in the bounding box. If `exact_bounds=true` then the voxels may not be cubes. Use with `show_stats=true` to see the corresponding voxel size. Default: 10000 (if `voxel_size` not set)
 //   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. Default: 1.0
@@ -1555,8 +1555,8 @@ function mb_octahedron(r, squareness=0.5, cutoff=INF, influence=1, negative=fals
 //    metaballs(spec, boundingbox, voxel_size);
 // Example(3D,NoAxes,VPR=[75,0,20]): Two octahedrons interacting. Here `voxel_size` is not given, so it defaults to a value that results in approximately 10,000 voxels in the bounding box. Adding the parameter `show_stats=true` displays the voxel size used, along with other information.
 //   metaballs([
-//       move([-11,0,4]), mb_octahedron(10),
-//       move([11,0,-4]), mb_octahedron(10)
+//       move([-11,0,4]), mb_octahedron(20),
+//       move([11,0,-4]), mb_octahedron(20)
 //       ], [[-21,-11,-14], [21,11,14]]);
 // Example(3D,VPD=110): These next five examples demonstrate the different types of metaball interactions. We start with two spheres 30 units apart. Each would have a radius of 10 in isolation, but because they are influencing their surroundings, each sphere mutually contributes to the size of the other. The sum of contributions between the spheres add up so that a surface plotted around the region exceeding the threshold defined by `isovalue=1` looks like a peanut shape surrounding the two spheres.
 //   spec = [
@@ -1644,7 +1644,7 @@ function mb_octahedron(r, squareness=0.5, cutoff=INF, influence=1, negative=fals
 //   spec = [
 //       move([-7,-3,27])*zrot(55), mb_cuboid(6, squareness=1),
 //       move([5,5,21]),   mb_cuboid(5),
-//       move([10,0,10]),  mb_octahedron(5, squareness=1)
+//       move([10,0,10]),  mb_octahedron(10, squareness=1)
 //   ];
 //   voxel_size = 0.5; // a bit slow at this resolution
 //   boundingbox = [[-12,-9,3], [18,10,32]];
@@ -1898,7 +1898,7 @@ module metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, closed
 function metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, closed=true, exact_bounds=false, show_stats=false) =
     assert(all_defined([spec, bounding_box]), "\nThe parameters spec and bounding_box must both be defined.")
     assert(num_defined([voxel_size, voxel_count])<=1, "\nOnly one of voxel_size or voxel_count can be defined.")
-    assert(is_undef(voxel_size) || (is_finite(voxel_size) && voxel_size>0) || (is_vector(voxel_size) && all_positive(voxel_size)), "\nvoxel_size must be a positive number, a 3-vector of positive values, or undef.")
+    assert(is_undef(voxel_size) || (is_finite(voxel_size) && voxel_size>0) || (is_vector(voxel_size) && all_positive(voxel_size)), "\nvoxel_size must be a positive number, a 3-vector of positive values, or not given.")
     assert(is_finite(isovalue) || (is_list(isovalue) && len(isovalue)==2 && is_num(isovalue[0]) && is_num(isovalue[1])), "\nIsovalue must be a number or a range; a number is the same as [number,INF].")
     assert(len(spec)%2==0, "\nThe spec parameter must be an even-length list of alternating transforms and functions")
     let(
@@ -2042,8 +2042,8 @@ function _mb_unwind_list(list, parent_trans=[IDENT]) =
 // Arguments:
 //   f = The isosurface function literal or array. As a function literal, `x,y,z` must be the first arguments. 
 //   isovalue = A 2-vector giving an isovalue range. For an unbounded range, use `[-INF, max_isovalue]` or `[min_isovalue, INF]`.
-//   bounding_box = A designation of volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. Unless you set `exact_bounds=true`, the bounding box size may be enlarged to fit whole voxels. When `f` is an array of values, `bounding_box` cannot be supplied if `voxel_size` is supplied because the bounding box is already implied by the array size combined with `voxel_size`, in which case this implied bounding box is centered around the origin.
-//   voxel_size = size of the voxel that is used to sample the bounding box volume. This can be undef, a scalar size for a cubical voxel, or a 3-vector if you want non-cubical voxels. For `undef`, the voxel size is set so that approximately `voxel_count` quantity of voxels fit inside the bounding box. If both `voxel_size=undef` and `voxel_count=undef`, then a fast preview is generated using about 10000 voxels. If you set `exact_bounds=true`, then bounding box is held fixed in size, and the voxel size is adjusted as needed so that whole voxels fit inside the bounding box.
+//   bounding_box = The volume in which to perform computations, expressed as a scalar size of a cube centered on the origin, or a pair of 3D points `[[xmin,ymin,zmin], [xmax,ymax,zmax]]` specifying the minimum and maximum box corner coordinates. Unless you set `exact_bounds=true`, the bounding box size may be enlarged to fit whole voxels. When `f` is an array of values, `bounding_box` cannot be supplied if `voxel_size` is supplied because the bounding box is already implied by the array size combined with `voxel_size`, in which case this implied bounding box is centered around the origin.
+//   voxel_size = Size of the voxels used to sample the bounding box volume, can be a scalar or 3-vector, or omitted if `voxel_count` is set. You may get a non-cubical voxels of a slightly different size than requested if `exact_bounds=true`.
 //   ---
 //   voxel_count = Approximate number of voxels in the bounding box. If `exact_bounds=true` then the voxels may not be cubes. Use with `show_stats=true` to see the corresponding voxel size. Default: 10000 (if `voxel_size` not set)
 //   closed = When true, close the surface if it intersects the bounding box by adding a closing face. When false, do not add a closing face and instead produce a non-manfold VNF that has holes.  Default: true
