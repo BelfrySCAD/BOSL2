@@ -541,7 +541,7 @@ function _turtle3d_command(command, parm, parm2, state, index) =
     command=="jump" ? _tupdate(state,[move(parm-lastpt)*lastT],[lastPre]):
     command=="xjump" ? _tupdate(state,[move([parm,lastpt.y,lastpt.z]-lastpt)*lastT],[lastPre]):
     command=="yjump" ? _tupdate(state,[move([lastpt.x,parm,lastpt.z]-lastpt)*lastT],[lastPre]):
-    command=="yjump" ? _tupdate(state,[move([lastpt.x,lastpt.y,parm]-lastpt)*lastT],[lastPre]):
+    command=="zjump" ? _tupdate(state,[move([lastpt.x,lastpt.y,parm]-lastpt)*lastT],[lastPre]):
     command=="angle" ? assert(parm!=0,str("\"",command,"\" requires nonnegative argument at index ",index))
                        list_set(state, angle, parm) :
     command=="length" ? list_set(state, movestep, parm) :
