@@ -2125,8 +2125,7 @@ module cyl(
                     tex_inset=tex_inset, tex_rot=tex_rot,
                     style=style, tex_taper=tex_taper,
                     tex_samples=tex_samples,
-                    extra1=extra1,extra2=extra2,extra=extra, 
-                    
+                    extra1=extra1,extra2=extra2,extra=extra 
                 );
                 vnf_polyhedron(vnf, convexity=texture!=undef? 2 : 10);
             }
