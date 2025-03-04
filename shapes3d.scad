@@ -2009,10 +2009,9 @@ function cyl(
         sc = circum? 1/cos(180/sides) : 1,
         r1 = _r1 * sc,
         r2 = _r2 * sc,
-        phi = atan2(l, r2-r1),
         anchor = get_anchor(anchor,center,BOT,CENTER),
         extra1 = first_defined([extra1,extra,0]),
-        extra2 = first_defined([extra2,extra,0]),
+        extra2 = first_defined([extra2,extra,0])
     )
     assert(all_nonnegative([extra1,extra2]), "extra/extra1/extra2 must be positive")
     assert(is_finite(l), "l/h/length/height must be a finite number.")
@@ -2106,7 +2105,6 @@ module cyl(
     sc = circum? 1/cos(180/sides) : 1;
     r1 = _r1 * sc;
     r2 = _r2 * sc;
-    phi = atan2(l, r2-r1);
     anchor = get_anchor(anchor,center,BOT,CENTER);
     skmat = down(l/2) * skew(sxz=shift.x/l, syz=shift.y/l) * up(l/2);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, shift=shift) {
