@@ -1946,7 +1946,7 @@ function _cyl_path(
     assert(is_finite(round1), "rounding1 must be a number if given.")
     assert(is_finite(round2), "rounding2 must be a number if given.")
     assert(chamf1r <= r1, "chamfer1 is larger than the r1 radius of the cylinder.")
-    assert(chamf2r <= r2, "chamfer2 is larger than the r2 radius of the cylinder.",chamf2r)
+    assert(chamf2r <= r2, "chamfer2 is larger than the r2 radius of the cylinder.")
     assert(roundlen1 <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
     assert(roundlen2 <= r2, "size of rounding2 is larger than the r2 radius of the cylinder.")
     assert(dy1+dy2 <= facelen, "Chamfers/roundings don't fit on the cylinder/cone.  They exceed the length of the cylinder/cone face.")
