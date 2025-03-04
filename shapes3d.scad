@@ -1687,7 +1687,8 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   or `r1`|`d1` and `r2`|`d2`.  Note: the chamfers and rounding cannot be cumulatively longer than
 //   the cylinder or cone's sloped side.  The more specific parameters like chamfer1 or rounding2 override the more
 //   general ones like chamfer or rounding, so if you specify `rounding=3, chamfer2=3` you will get a chamfer at the top and
-//   rounding at the bottom.
+//   rounding at the bottom.  You can specify extra height at either end for use with difference(); the extra height is ignored by
+//   anchoring.  
 //   .
 //   When creating a textured cylinder, the number of facets is determined by the sampling of the texture.  Any `$fn`, `$fa` or `$fs` values in
 //   effect are ignored.  To create a textured prism with a specified number of flat facets use {{regular_prism()}}.  Anchors for cylinders
@@ -1745,6 +1746,9 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   rounding = The radius of the rounding on the ends of the cylinder.  Default: none.
 //   rounding1 = The radius of the rounding on the bottom end of the cylinder.
 //   rounding2 = The radius of the rounding on the top end of the cylinder.
+//   extra = Add extra height at both ends that is invisible to anchoring for use with differencing.  Default: 0
+//   extra1 = Add extra height to the bottom end
+//   extra2 = Add extra height to the top end.  
 //   realign = If true, rotate the cylinder by half the angle of one face.
 //   teardrop = If given as a number, rounding around the bottom edge of the cylinder won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
@@ -1883,6 +1887,93 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //           }
 //   }
 
+function _cyl_path(
+    r1, r2, l, 
+    chamfer, chamfer1, chamfer2,
+    chamfang, chamfang1, chamfang2,
+    rounding, rounding1, rounding2,
+    from_end, from_end1, from_end2,
+    teardrop=false,
+) =
+    let(  
+        vang = atan2(r1-r2,l),
+        _chamf1 = first_defined([chamfer1, if (is_undef(rounding1)) chamfer, 0]),
+        _chamf2 = first_defined([chamfer2, if (is_undef(rounding2)) chamfer, 0]),
+        _fromend1 = first_defined([from_end1, from_end, false]),
+        _fromend2 = first_defined([from_end2, from_end, false]),
+        chang1 = first_defined([chamfang1, chamfang, 45+sign(_chamf1)*vang/2]),
+        chang2 = first_defined([chamfang2, chamfang, 45-sign(_chamf2)*vang/2]),
+        round1 = first_defined([rounding1, if (is_undef(chamfer1)) rounding, 0]),
+        round2 = first_defined([rounding2, if (is_undef(chamfer2)) rounding, 0]),
+        checks1 =
+            assert(is_finite(_chamf1), "chamfer1 must be a finite number if given.")
+            assert(is_finite(_chamf2), "chamfer2 must be a finite number if given.")
+            assert(is_finite(chang1) && chang1>0, "chamfang1 must be a positive number if given.")
+            assert(is_finite(chang2) && chang2>0, "chamfang2 must be a positive number if given.")
+            assert(chang1<90+sign(_chamf1)*vang, "chamfang1 must be smaller than the cone face angle")
+            assert(chang2<90-sign(_chamf2)*vang, "chamfang2 must be smaller than the cone face angle")
+            assert(num_defined([chamfer1,rounding1])<2, "cannot define both chamfer1 and rounding1")
+            assert(num_defined([chamfer2,rounding2])<2, "cannot define both chamfer2 and rounding2")
+            assert(num_defined([chamfer,rounding])<2, "cannot define both chamfer and rounding")                                
+            undef,
+        chamf1r = !_chamf1? 0
+                : !_fromend1? _chamf1
+                : law_of_sines(a=_chamf1, A=chang1, B=180-chang1-(90-sign(_chamf2)*vang)),
+        chamf2r = !_chamf2? 0
+                : !_fromend2? _chamf2
+                : law_of_sines(a=_chamf2, A=chang2, B=180-chang2-(90+sign(_chamf2)*vang)),
+        chamf1l = !_chamf1? 0
+                : _fromend1? abs(_chamf1)
+                : abs(law_of_sines(a=_chamf1, A=180-chang1-(90-sign(_chamf1)*vang), B=chang1)),
+        chamf2l = !_chamf2? 0
+                : _fromend2? abs(_chamf2)
+                : abs(law_of_sines(a=_chamf2, A=180-chang2-(90+sign(_chamf2)*vang), B=chang2)),
+        facelen = adj_ang_to_hyp(l, abs(vang)),
+
+        roundlen1 = round1 >= 0 ? round1/tan(45-vang/2)
+                                : round1/tan(45+vang/2),
+        roundlen2 = round2 >=0 ? round2/tan(45+vang/2)
+                               : round2/tan(45-vang/2),
+        dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1 : 0), 
+        dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0),
+
+        td_ang = teardrop == true? 45 :
+            teardrop == false? 90 :
+            assert(is_finite(teardrop))
+            assert(teardrop>=0 && teardrop<=90)
+            teardrop
+    ) 
+    assert(is_finite(round1), "rounding1 must be a number if given.")
+    assert(is_finite(round2), "rounding2 must be a number if given.")
+    assert(chamf1r <= r1, "chamfer1 is larger than the r1 radius of the cylinder.")
+    assert(chamf2r <= r2, "chamfer2 is larger than the r2 radius of the cylinder.",chamf2r)
+    assert(roundlen1 <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
+    assert(roundlen2 <= r2, "size of rounding2 is larger than the r2 radius of the cylinder.")
+    assert(dy1+dy2 <= facelen, "Chamfers/roundings don't fit on the cylinder/cone.  They exceed the length of the cylinder/cone face.")
+    [
+       if (!approx(chamf1r,0))
+           each [
+               [r1, -l/2] + polar_to_xy(chamf1r,180),
+               [r1, -l/2] + polar_to_xy(chamf1l,90+vang),
+           ]
+       else if (!approx(round1,0) && td_ang < 90)
+           each _teardrop_corner(r=round1, corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]], ang=td_ang)
+       else if (!approx(round1,0) && td_ang >= 90)
+           each arc(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]])
+       else [r1,-l/2],
+
+       if (is_finite(chamf2r) && !approx(chamf2r,0))
+           each [
+               [r2, l/2] + polar_to_xy(chamf2l,270+vang),
+               [r2, l/2] + polar_to_xy(chamf2r,180),
+           ]
+       else if (is_finite(round2) && !approx(round2,0))
+           each arc(r=abs(round2), corner=[[r1,-l/2],[r2,l/2],[max(0,r2-2*roundlen2),l/2]])
+       else [r2,l/2],
+    ];
+
+
+
 function cyl(
     h, r, center,
     l, r1, r2,
@@ -1898,6 +1989,7 @@ function cyl(
     tex_inset=false, tex_rot=0,
     tex_scale, tex_depth, tex_samples, length, height, 
     tex_taper, style, tex_style,
+    extra, extra1, extra2, 
     anchor, spin=0, orient=UP
 ) =
     assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameters has been replaced by 'style'.  You cannot give both.")
@@ -1918,97 +2010,32 @@ function cyl(
         r1 = _r1 * sc,
         r2 = _r2 * sc,
         phi = atan2(l, r2-r1),
-        anchor = get_anchor(anchor,center,BOT,CENTER)
+        anchor = get_anchor(anchor,center,BOT,CENTER),
+        extra1 = first_defined([extra1,extra,0]),
+        extra2 = first_defined([extra2,extra,0]),
     )
+    assert(all_nonnegative([extra1,extra2]), "extra/extra1/extra2 must be positive")
     assert(is_finite(l), "l/h/length/height must be a finite number.")
-    assert(is_finite(r1), "r/r1/d/d1 must be a finite number.")
-    assert(is_finite(r2), "r2 or d2 must be a finite number.")
+    assert(is_finite(r1) && r1>=0, "r/r1/d/d1 must be a non-negative number.")
+    assert(is_finite(r2) && r2>=0, "r2 or d2 must be a non-negative number.")
     assert(is_vector(shift,2), "shift must be a 2D vector.")
     let(
-        vnf = !any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2, texture])
-          ? cylinder(h=l, r1=r1, r2=r2, center=true, $fn=sides)
+        vnf = !any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2, texture, extra1, extra2])
+          ? cylinder(h=l+extra1+extra2, r1=r1, r2=r2, center=true, $fn=sides)
           : let(
-                vang = atan2(r1-r2,l),
-                _chamf1 = first_defined([chamfer1, if (is_undef(rounding1)) chamfer, 0]),
-                _chamf2 = first_defined([chamfer2, if (is_undef(rounding2)) chamfer, 0]),
-                _fromend1 = first_defined([from_end1, from_end, false]),
-                _fromend2 = first_defined([from_end2, from_end, false]),
-                chang1 = first_defined([chamfang1, chamfang, 45+sign(_chamf1)*vang/2]),
-                chang2 = first_defined([chamfang2, chamfang, 45-sign(_chamf2)*vang/2]),
-                round1 = first_defined([rounding1, if (is_undef(chamfer1)) rounding, 0]),
-                round2 = first_defined([rounding2, if (is_undef(chamfer2)) rounding, 0]),
-                checks1 =
-                    assert(is_finite(_chamf1), "chamfer1 must be a finite number if given.")
-                    assert(is_finite(_chamf2), "chamfer2 must be a finite number if given.")
-                    assert(is_finite(chang1) && chang1>0, "chamfang1 must be a positive number if given.")
-                    assert(is_finite(chang2) && chang2>0, "chamfang2 must be a positive number if given.")
-                    assert(chang1<90+sign(_chamf1)*vang, "chamfang1 must be smaller than the cone face angle")
-                    assert(chang2<90-sign(_chamf2)*vang, "chamfang2 must be smaller than the cone face angle")
-                    assert(num_defined([chamfer1,rounding1])<2, "cannot define both chamfer1 and rounding1")
-                    assert(num_defined([chamfer2,rounding2])<2, "cannot define both chamfer2 and rounding2")
-                    assert(num_defined([chamfer,rounding])<2, "cannot define both chamfer and rounding")                                
-                    undef,
-                chamf1r = !_chamf1? 0
-                        : !_fromend1? _chamf1
-                        : law_of_sines(a=_chamf1, A=chang1, B=180-chang1-(90-sign(_chamf2)*vang)),
-                chamf2r = !_chamf2? 0
-                        : !_fromend2? _chamf2
-                        : law_of_sines(a=_chamf2, A=chang2, B=180-chang2-(90+sign(_chamf2)*vang)),
-                chamf1l = !_chamf1? 0
-                        : _fromend1? abs(_chamf1)
-                        : abs(law_of_sines(a=_chamf1, A=180-chang1-(90-sign(_chamf1)*vang), B=chang1)),
-                chamf2l = !_chamf2? 0
-                        : _fromend2? abs(_chamf2)
-                        : abs(law_of_sines(a=_chamf2, A=180-chang2-(90+sign(_chamf2)*vang), B=chang2)),
-                facelen = adj_ang_to_hyp(l, abs(vang)),
-
-                roundlen1 = round1 >= 0 ? round1/tan(45-vang/2)
-                                        : round1/tan(45+vang/2),
-                roundlen2 = round2 >=0 ? round2/tan(45+vang/2)
-                                       : round2/tan(45-vang/2),
-                dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1 : 0), 
-                dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0),
-
-                td_ang = teardrop == true? 45 :
-                    teardrop == false? 90 :
-                    assert(is_finite(teardrop))
-                    assert(teardrop>=0 && teardrop<=90)
-                    teardrop,
-
-                checks2 =
-                    assert(is_finite(round1), "rounding1 must be a number if given.")
-                    assert(is_finite(round2), "rounding2 must be a number if given.")
-                    assert(chamf1r <= r1, "chamfer1 is larger than the r1 radius of the cylinder.")
-                    assert(chamf2r <= r2, "chamfer2 is larger than the r2 radius of the cylinder.")
-                    assert(roundlen1 <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
-                    assert(roundlen2 <= r2, "size of rounding2 is larger than the r2 radius of the cylinder.")
-                    assert(dy1+dy2 <= facelen, "Chamfers/roundings don't fit on the cylinder/cone.  They exceed the length of the cylinder/cone face.")
-                    undef,
-                path = [
-                    if (texture==undef) [0,-l/2],
-
-                    if (!approx(chamf1r,0))
-                        each [
-                            [r1, -l/2] + polar_to_xy(chamf1r,180),
-                            [r1, -l/2] + polar_to_xy(chamf1l,90+vang),
+                 cpath = _cyl_path(r1, r2, l, 
+                                   chamfer, chamfer1, chamfer2,
+                                   chamfang, chamfang1, chamfang2,
+                                   rounding, rounding1, rounding2,
+                                   from_end, from_end1, from_end2,
+                                   teardrop),
+                 path = [
+                          if (texture==undef) [0,-l/2-extra1],
+                          if (extra1>0) cpath[0]-[0,extra1],
+                          each cpath,
+                          if (extra2>0) last(cpath)+[0,extra2],
+                          if (texture==undef) [0,l/2+extra2]
                         ]
-                    else if (!approx(round1,0) && td_ang < 90)
-                        each _teardrop_corner(r=round1, corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]], ang=td_ang)
-                    else if (!approx(round1,0) && td_ang >= 90)
-                        each arc(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]])
-                    else [r1,-l/2],
-
-                    if (is_finite(chamf2r) && !approx(chamf2r,0))
-                        each [
-                            [r2, l/2] + polar_to_xy(chamf2l,270+vang),
-                            [r2, l/2] + polar_to_xy(chamf2r,180),
-                        ]
-                    else if (is_finite(round2) && !approx(round2,0))
-                        each arc(r=abs(round2), corner=[[r1,-l/2],[r2,l/2],[max(0,r2-2*roundlen2),l/2]])
-                    else [r2,l/2],
-
-                    if (texture==undef) [0,l/2],
-                ]
             ) rotate_sweep(path,
                 texture=texture, tex_reps=tex_reps, tex_size=tex_size,
                 tex_inset=tex_inset, tex_rot=tex_rot,
@@ -2023,6 +2050,7 @@ function cyl(
         ovnf = apply(skmat, vnf)
     )
     reorient(anchor,spin,orient, r1=r1, r2=r2, l=l, shift=shift, p=ovnf);
+
 
 
 function _teardrop_corner(r, corner, ang=45) =
@@ -2058,6 +2086,7 @@ module cyl(
     tex_inset=false, tex_rot=0,
     tex_scale, tex_depth, tex_samples, length, height, 
     tex_taper, style, tex_style,
+    extra, extra1, extra2, 
     anchor, spin=0, orient=UP
 ) {
     dummy=
@@ -2083,7 +2112,7 @@ module cyl(
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, shift=shift) {
         multmatrix(skmat)
         zrot(realign? 180/sides : 0) {
-            if (!any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2, texture])) {
+            if (!any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2, texture, extra1, extra2, extra])) {
                 cylinder(h=l, r1=r1, r2=r2, center=true, $fn=sides);
             } else {
                 vnf = cyl(
@@ -2097,7 +2126,9 @@ module cyl(
                     tex_reps=tex_reps, tex_depth=tex_depth,
                     tex_inset=tex_inset, tex_rot=tex_rot,
                     style=style, tex_taper=tex_taper,
-                    tex_samples=tex_samples
+                    tex_samples=tex_samples,
+                    extra1=extra1,extra2=extra2,extra=extra, 
+                    
                 );
                 vnf_polyhedron(vnf, convexity=texture!=undef? 2 : 10);
             }
@@ -2379,7 +2410,7 @@ module zcyl(
 //   tube(..., [rounding=], [irounding=], [orounding=], [rounding1=], [rounding2=], [irounding1=], [irounding2=], [orounding1=], [orounding2=], [teardrop=]);
 //   tube(..., [chamfer=], [ichamfer=], [ochamfer=], [chamfer1=], [chamfer2=], [ichamfer1=], [ichamfer2=], [ochamfer1=], [ochamfer2=]);
 // Arguments:
-//   h / l = height of tube. Default: 1
+//   h / l / height / length = height of tube. Default: 1
 //   or = Outer radius of tube. Default: 1
 //   ir = Inner radius of tube.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
@@ -2395,6 +2426,9 @@ module zcyl(
 //   ir2 = Inner radius of top of tube.
 //   id1 = Inner diameter of bottom of tube.
 //   id2 = Inner diameter of top of tube.
+//   ifn = Set the number of facets on the inside of the tube.
+//   circum = If true, the tube hold will circumscribe the circle of the given size.  Otherwise inscribes.  Default: `false`
+//   shift = [X,Y] amount to shift the center of the top end with respect to the center of the bottom end.
 //   rounding = The radius of the rounding on the ends of the tube.  Default: none.
 //   rounding1 = The radius of the rounding on the bottom end of the tube.
 //   rounding2 = The radius of the rounding on the top end of the tube.
@@ -2404,6 +2438,7 @@ module zcyl(
 //   orounding = The radius of the rounding on the outside of the ends of the tube.
 //   orounding1 = The radius of the rounding on the bottom outside end of the tube.
 //   orounding2 = The radius of the rounding on the top outside end of the tube.
+//   rounding_fn = Set `$fn` for roundings.  
 //   chamfer = The size of the chamfer on the ends of the tube.  Default: none.
 //   chamfer1 = The size of the chamfer on the bottom end of the tube.
 //   chamfer2 = The size of the chamfer on the top end of the tube.
@@ -2414,7 +2449,7 @@ module zcyl(
 //   ochamfer1 = The size of the chamfer on the bottom outside end of the tube.
 //   ochamfer2 = The size of the chamfer on the top outside end of the tube.
 //   teardrop = if true roundings on the bottom use a teardrop shape.  Default: false
-//   realign = If true, rotate the tube by half the angle of one face.
+//   realign = If true, rotate the inner and outer parts tube by half the angle of one face so that a face is aligned at the X+ axis.  Default: False
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -2426,7 +2461,7 @@ module zcyl(
 //   tube(h=30, od=80, id=70);
 // Example: These all Produce the Same Conical Tube
 //   tube(h=30, or1=40, or2=25, wall=5);
-//   tube(h=30, ir1=35, or2=20, wall=5);
+//   tube(h=30, ir1=35, ir2=20, wall=5);
 //   tube(h=30, or1=40, or2=25, ir1=35, ir2=20);
 // Example: Circular Wedge
 //   tube(h=30, or1=40, or2=30, ir1=20, ir2=30);
@@ -2441,6 +2476,11 @@ module zcyl(
 // Example: Mixing chamfers and roundings
 //   back_half()
 //     tube(ir=10,or=20,h=30, ochamfer1=-5,irounding1=-3, orounding2=6, ichamfer2=2);
+// Example: Tube with hexagonal hole circumscribing its diameter
+//   tube(od=22, id=9, h=10, $fn=48, ifn=4, circum=true);
+//   half_of(v=[-1,1])color("lightblue") cyl(d=9, h=12);
+// Example: Round ended hexagonal tube using `rounding_fn` to get sufficient facets on the roundings
+//   tube(or=10, ir=7, h=10, $fn=6, rounding_fn=64, rounding=1.3, teardrop=true);
 
 function tube(
     h, or, ir, center,
@@ -2453,6 +2493,7 @@ function tube(
 ) = no_function("tube");
 
 
+
 module tube(
     h, or, ir, center,
     od, id, wall,
@@ -2460,7 +2501,9 @@ module tube(
     ir1, ir2, id1, id2,
     realign=false, l, length, height,
     anchor, spin=0, orient=UP, orounding1,irounding1,orounding2,irounding2,rounding1,rounding2,rounding,
-    ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer, teardrop=false
+    ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer, teardrop=false, shift=[0,0],
+    ifn, rounding_fn, circum=false
+    
 ) {
     h = one_defined([h,l,height,length],"h,l,height,length",dflt=1);
     orr1 = get_radius(r1=or1, r=or, d1=od1, d=od, dflt=undef);
@@ -2473,9 +2516,8 @@ module tube(
     ir1 = default(irr1, u_sub(orr1,wall));
     ir2 = default(irr2, u_sub(orr2,wall));
     checks =
+        assert(is_vector(shift,2), "shift must be a 2D vector.")
         assert(all_defined([r1, r2, ir1, ir2]), "Must specify two of inner radius/diam, outer radius/diam, and wall width.")
-        assert(ir1 <= r1, "Inner radius is larger than outer radius.")
-        assert(ir2 <= r2, "Inner radius is larger than outer radius.")
         assert(num_defined([rounding,chamfer])<2, "Cannot give both rounding and chamfer")
         assert(num_defined([irounding,ichamfer])<2, "Cannot give both irounding and ichamfer")
         assert(num_defined([orounding,ochamfer])<2, "Cannot give both orounding and ochamfer")
@@ -2514,17 +2556,48 @@ module tube(
     */
 
     anchor = get_anchor(anchor, center, BOT, CENTER);
+
+    osides = segs(max(r1,r2));
+    isides = default(ifn, segs(max(ir1,ir2)));
+
+    adj_ir1 = circum ? ir1/cos(180/isides) : ir1;
+    adj_ir2 = circum ? ir2/cos(180/isides) : ir2;
+
+    
+    morecheck=
+        assert(adj_ir1 <= r1, "Inner radius is larger than outer radius.")
+        assert(adj_ir2 <= r2, "Inner radius is larger than outer radius.");
+
+
+    $fn = default(rounding_fn,$fn);
+
+    outside= [
+               [0,-h/2],
+               each _cyl_path(r1,r2,h, 
+                              chamfer1=ochamfer1, chamfer2=ochamfer2,
+                              rounding1=orounding1, rounding2=orounding2,
+                              teardrop=teardrop),
+               [0,h/2]
+             ];
+    ipath = _cyl_path(adj_ir1,adj_ir2,h, 
+                      chamfer1=ichamfer1, chamfer2=ichamfer2,
+                      rounding1=irounding1,rounding2=irounding2);
+    inside = [
+               [0,-h/2-1],
+               ipath[0]-[0,1],
+               each ipath, 
+               last(ipath)+[0,1],
+               [0,h/2+1]
+             ];
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
-        difference() {
-            cyl(h=h, r1=r1, r2=r2, realign=realign, teardrop=teardrop,
-                rounding1=orounding1,rounding2=orounding2,chamfer1=ochamfer1, chamfer2=ochamfer2);
-            cyl(h=h+0.01, r1=ir1, r2=ir2, realign=realign, teardrop=teardrop,
-                rounding1=irounding1,rounding2=irounding2, chamfer1=ichamfer1, chamfer2=ichamfer2);
-        }
+        down(h/2) skew(sxz=shift.x/h, syz=shift.y/h) up(h/2) 
+          difference(){
+            zrot(realign? 180/osides : 0)rotate_extrude($fn=osides,angle=360) polygon(outside);
+            zrot(realign? 180/isides : 0)rotate_extrude($fn=isides,angle=360) polygon(inside);
+          }
         children();
     }
-}
-
+}    
 
 
 
