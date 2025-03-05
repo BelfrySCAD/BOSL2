@@ -871,11 +871,14 @@ function linear_sweep(
 // Description:
 //   Takes a polygon or [region](regions.scad) and sweeps it in a rotation around the Z axis, with optional texturing.
 //   When called as a function, returns a [VNF](vnf.scad).
-//   When called as a module, creates the sweep as geometry.
+//   When called as a module, creates the sweep as geometry.  By default the sweep starts on the X+ axis.  For 360 degree sweeps this
+//   may be inconsistent with the native rotate_extrude(), which historically started on the X- axis.  The `start` parameter changes where
+//   the sweep starts; set it to 180 to get the historical rotate_extrude() behavior.  
 // Arguments:
 //   shape = The polygon or [region](regions.scad) to sweep around the Z axis.
 //   angle = If given, specifies the number of degrees to sweep the shape around the Z axis, counterclockwise from the X+ axis.  Default: 360 (full rotation)
 //   ---
+//   start = Start extrusion at this angle counterclockwise from the X+ axis.  Default:0
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the direction perpendicular to extrusion and in the direction parallel to extrusion.  
@@ -1001,7 +1004,7 @@ function rotate_sweep(
     tex_taper, shift=[0,0], closed=true,
     style="min_edge", cp="centroid",
     atype="hull", anchor="origin",
-    spin=0, orient=UP,
+    spin=0, orient=UP, start=0, 
     _tex_inhibit_y_slicing=false
 ) =
     assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
@@ -1036,14 +1039,15 @@ function rotate_sweep(
         shift=shift,
         closed=closed,
         angle=angle,
-        style=style
+        style=style,
+        start=start
     ) :
     let(
         steps = ceil(segs(max_x) * angle / 360) + (angle<360? 1 : 0),
         skmat = down(min_y) * skew(sxz=shift.x/h, syz=shift.y/h) * up(min_y),
         transforms = [
-            if (angle==360) for (i=[0:1:steps-1]) skmat * rot([90,0,360-i*360/steps]),
-            if (angle<360) for (i=[0:1:steps-1]) skmat * rot([90,0,angle-i*angle/(steps-1)]),
+            if (angle==360) for (i=[0:1:steps-1]) skmat * rot([90,0,start+360-i*360/steps]),
+            if (angle<360) for (i=[0:1:steps-1]) skmat * rot([90,0,start+angle-i*angle/(steps-1)]),
         ],
         vnf = sweep(
             region, transforms,
@@ -1069,7 +1073,7 @@ module rotate_sweep(
     atype="hull",
     anchor="origin",
     spin=0,
-    orient=UP,
+    orient=UP, start=0, 
     _tex_inhibit_y_slicing=false
 ) {
     dummy =
@@ -1105,14 +1109,14 @@ module rotate_sweep(
             angle=angle,
             style=style,
             atype=atype, anchor=anchor,
-            spin=spin, orient=orient
+            spin=spin, orient=orient, start=start
         ) children();
     } else {
         steps = ceil(segs(max_x) * angle / 360) + (angle<360? 1 : 0);
         skmat = down(min_y) * skew(sxz=shift.x/h, syz=shift.y/h) * up(min_y);
         transforms = [
-            if (angle==360) for (i=[0:1:steps-1]) skmat * rot([90,0,360-i*360/steps]),
-            if (angle<360) for (i=[0:1:steps-1]) skmat * rot([90,0,angle-i*angle/(steps-1)]),
+            if (angle==360) for (i=[0:1:steps-1]) skmat * rot([90,0,start+360-i*360/steps]),
+            if (angle<360) for (i=[0:1:steps-1]) skmat * rot([90,0,start+angle-i*angle/(steps-1)]),
         ];
         sweep(
             region, transforms,
@@ -4227,7 +4231,7 @@ function _textured_revolution(
     inset=false, rot=false, shift=[0,0],
     taper, closed=true, angle=360,
     inhibit_y_slicing=false,
-    counts, samples,
+    counts, samples, start=0,
     style="min_edge", atype="intersect",
     anchor=CENTER, spin=0, orient=UP
 ) = 
@@ -4487,7 +4491,7 @@ function _textured_revolution(
                     ) caps_vnf
             ) vnf_join([walls_vnf, endcap_vnf, allcaps_vnf])
         ]),
-        skmat = down(-miny) * skew(sxz=shift.x/h, syz=shift.y/h) * up(-miny),
+        skmat = zrot(start) * down(-miny) * skew(sxz=shift.x/h, syz=shift.y/h) * up(-miny),
         skvnf = apply(skmat, full_vnf),
         geom = atype=="intersect"
               ? attach_geom(vnf=skvnf, extent=false)
@@ -4501,7 +4505,7 @@ module _textured_revolution(
     taper, closed=true, angle=360,
     style="min_edge", atype="intersect",
     inhibit_y_slicing=false,
-    convexity=10, counts, samples,
+    convexity=10, counts, samples, start=0,
     anchor=CENTER, spin=0, orient=UP
 ) {
     dummy = assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
@@ -4510,7 +4514,7 @@ module _textured_revolution(
         tex_scale=tex_scale, inset=inset, rot=rot,
         taper=taper, closed=closed, style=style,
         shift=shift, angle=angle,
-        samples=samples, counts=counts,
+        samples=samples, counts=counts, start=start, 
         inhibit_y_slicing=inhibit_y_slicing
     );
     geom = atype=="intersect"
