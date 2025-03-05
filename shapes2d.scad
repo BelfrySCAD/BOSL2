@@ -889,7 +889,7 @@ function right_triangle(size=[1,1], center, anchor, spin=0) =
         size = is_num(size)? [size,size] : size,
         anchor = get_anchor(anchor, center, [-1,-1], [-1,-1])
     )
-    assert(is_vector(size,2))
+    assert(is_vector(size,2), "Size must be a scalar or 2-vector")
     assert(min(size)>0, "Must give positive size")
     let(
         path = [ [size.x/2,-size.y/2], [-size.x/2,-size.y/2], [-size.x/2,size.y/2] ],
@@ -901,7 +901,7 @@ function right_triangle(size=[1,1], center, anchor, spin=0) =
 module right_triangle(size=[1,1], center, anchor, spin=0) {
     size = is_num(size)? [size,size] : size;
     anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]);
-    check = assert(is_vector(size,2));
+    check = assert(is_vector(size,2), "Size must be a scalar or 2-vector");
     path = right_triangle(size, anchor="origin");
     anchors = [
         named_anchor("hypot", CTR, unit([size.y,size.x])),
