@@ -1381,8 +1381,8 @@ function _debug_octahedron(size, squareness) =
         ]
     ) [pts, faces]; // vnf structure
 
-/// simplest and smallest possible VNF, to display for hide_debug metaballs
-function debug_tetra(size) = [
+/// simplest and smallest possible VNF, to display for hide_debug or undefined metaballs; r=corner radius
+function debug_tetra(r) = let(size=r/norm([1,1,1])) [
     size*[[1,1,1], [-1,-1,1], [1,-1,-1], [-1,1,-1]],
     [[0,1,3],[0,3,2],[1,2,3],[1,0,2]]
 ];
@@ -1422,16 +1422,16 @@ function debug_tetra(size) = [
 //   or specified as a scalar size of a cube centered on the origin. The contributions from **all**
 //   metaballs, even those outside the box, are evaluated over the bounding box. This bounding box is
 //   divided into voxels of the specified `voxel_size`, which can also be a scalar cube or a vector size.
-//   Alternately, `voxel_count` may be specified to set the voxel size according to the requested
-//   count of voxels in the bounding box.
+//   Alternately, you can set `voxel_count` to fit approximately the specified number of boxels into the
+//   bounding box.
 //   .
 //   Smaller voxels produce a finer, smoother result at the expense of execution time. Larger voxels
 //   shorten execution time. Objects in the scene having any dimension smaller than the voxel may not
-//   be displayed, so if objects seem to be missing, try making `voxel_size` smaller. By default, if the
-//   voxel size doesn't exactly divide your specified bounding box, then the bounding box is enlarged to
-//   contain whole voxels, and centered on your requested box. Alternatively, you may set
-//   `exact_bounds=true` to cause the voxels to adjust in size to fit instead. Either way, if the
-//   bounding box clips a metaball and `closed=true` (the default), the object is closed at the
+//   be displayed, so if objects seem to be missing, try making `voxel_size` smaller or `voxel_count`
+//   larger. By default, if the voxel size doesn't exactly divide your specified bounding box, then the
+//   bounding box is enlarged to  contain whole voxels, and centered on your requested box. Alternatively,
+//   you may set `exact_bounds=true` to cause the voxels to adjust in size to fit instead. Either way, if
+//   the bounding box clips a metaball and `closed=true` (the default), the object is closed at the
 //   intersection surface. Setting `closed=false` causes the [VNF](vnf.scad) faces to end at the bounding
 //   box, resulting in a non-manifold shape with holes, exposing the inside of the object.
 //   .
@@ -1476,8 +1476,8 @@ function debug_tetra(size) = [
 //   matrices and metaball functions. It can also be a list of alternating transforms and *other specs*,
 //   as `[trans0, spec0, trans1, spec1, ...]`, in which `spec0`, `spec1`, etc. can be one of:
 //   * A built-in metaball function name as described below, such as `mb_sphere(r=10)`.
-//   * A function literal in the form `function (point) custom_func(point, arg1, arg2...)` where `point` is supplied internally as a vector distance from the metaball center, and `arg1`, `arg2` etc. are your own custom function arguments.
-//   * An array containing a function literal and a debug VNF, as `[function (point) custom_func(point, arg1,...), [sign, vnf]]`, where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true` is set.
+//   * A function literal accepting a 3-vector representing a point in space relative to the metaball's center.
+//   * An array containing a function literal and a debug VNF, as `[custom_func, [sign, vnf]]`, where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true` is set.
 //   * Another spec array, for nesting metaball specs together.
 //   .
 //   Nested metaball specs allow for complicated assemblies in which you can arrange components in a logical
@@ -1512,8 +1512,8 @@ function debug_tetra(size) = [
 //   * `mb_sphere(r|d=)` &mdash; spherical metaball, with radius r or diameter d.  You can create an ellipsoid using `scale()` as the last transformation entry of the metaball `spec` array. 
 //   * `mb_cuboid(size, [squareness=])` &mdash; cuboid metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (cubical), and defaults to 0.5. The `size` parameter specifies the dimensions of the cuboid that circumscribes the rounded shape, which is tangent to the center of each cube face. The `size` parameter may be a scalar or a vector, as in {{cuboid()}}. Except when `squareness=1`, the faces are always a little bit curved.
 //   * `mb_cyl(h|l|height|length, [r|d=], [r1=|d1=], [r2=|d2=], [rounding=])` &mdash; vertical cylinder or cone metaball with the same dimensional arguments as {{cyl()}}. At least one of the radius or diameter arguments is required. The `rounding` argument defaults to 0 (sharp edge) if not specified. Only one rounding value is allowed: the rounding is the same at both ends. For a fully rounded cylindrical shape, consider using `mb_capsule()` or `mb_disk()`, which are less flexible but have faster execution times.
-//   * `mb_disk(h|l|height|length, r|d=)` &mdash; rounded disk with flat ends. The diameter specifies the total diameter of the shape including the rounded sides, and must be greater than its height.
-//   * `mb_capsule(h|l|height|length, [r|d=]` &mdash; vertical cylinder or cone with rounded caps, using the same dimensional arguments as {{cyl()}}. The object resembles a convex hull of two spheres. The height or length specifies the distance between the spherical centers of the ends.
+//   * `mb_disk(h|l|height|length, r|d=)` &mdash; flat disk with rounded edge. The diameter specifies the total diameter of the shape including the rounded sides, and must be greater than its height.
+//   * `mb_capsule(h|l|height|length, [r|d=]` &mdash; vertical cylinder with rounded caps, using the same dimensional arguments as {{cyl()}}. The object resembles a convex hull of two spheres. The height or length specifies the distance between the spherical centers of the ends.
 //   * `mb_connector(p1, p2, [r|d=])` &mdash; a connecting rod of radius `r` or diameter `d` with hemispherical caps (like `mb_capsule()`), but specified to connect point `p1` to point `p2` (where `p1` and `p2` must be different 3D coordinates). As with `mb_capsule()`, the object resembles a convex hull of two spheres. The points `p1` and `p2` are at the centers of the two round caps. The connectors themselves are still influenced by other metaballs, but it may be undesirable to have them influence others, or each other. If two connectors are connected, the joint may appear swollen unless `influence` or `cutoff` is reduced. Reducing `cutoff` is preferable if feasible, because reducing `influence` can produce interpolation artifacts.
 //   * `mb_torus([r_maj|d_maj=], [r_min|d_min=], [or=|od=], [ir=|id=])` &mdash; torus metaball oriented perpendicular to the z axis. You can specify the torus dimensions using the same arguments as {{torus()}}; that is, major radius (or diameter) with `r_maj` or `d_maj`, and minor radius and diameter using `r_min` or `d_min`. Alternatively you can give the inner radius or diameter with `ir` or `id` and the outer radius or diameter with `or` or `od`. You must provide a combination of inputs that completely specifies the torus. If `cutoff` is applied, it is measured from the circle represented by `r_min=0`.
 //   * `mb_octahedron(size, [squareness=])` &mdash; octahedron metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (sharp), and defaults to 0.5. The `size` parameter specifies the tip-to-tip distance of the octahedron that circumscribes the rounded shape, which is tangent to the center of each octahedron face. The `size` parameter may be a scalar or a vector, as in {{octahedron()}}. At `squareness=0`, the shape reduces to a sphere curcumscribed by the octahedron. Except when `squareness=1`, the faces are always curved.
@@ -1546,23 +1546,30 @@ function debug_tetra(size) = [
 //   0.5 you get a $1/d^2$ falloff. Changing this exponent changes how the balls interact.
 //   .
 //   You can pass a custom function as a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
-//   that takes a single argument (a 3-vector) and returns a single numerical value. In the `spec` array
+//   that takes a 3-vector as its first argument and returns a single numerical value. In the `spec` array
 //   Generally, the function should return a scalar value that drops below the isovalue somewhere within your
 //   bounding box. If you want your custom metaball function to behave similar to to the built-in functions,
 //   the return value should fall off with distance as $1/d$. See Examples 20, 21, and 22 for demonstrations
 //   of creating custom metaball functions. Example 22 also shows how to make a complete custom metaball
 //   function that handles the `influence` and `cutoff` parameters.
 //   .
-//   ***User-defined functions in debug view***
+//   ***Debug view***
 //   .
-//   When you set `debug=true` in `metaballs()`, the scene is rendered as a transparency with the primitive
-//   metaball shapes shown inside, colored blue for positive and orange for negative metaballs. User-defined
-//   metaball functions, however, are displayed as small gray spheres unless you also designate a VNF. To specify
-//   a custom VNF for a custom function literal, enclose it in square brackets to make a list with the function
-//   literal as the first element, and another list as the second element:   
+//   The module form of `metaballs()` can take a `debug` argument. When you set `debug=true`, the scene is
+//   rendered as a transparency with the primitive metaball shapes shown inside, colored blue for positive,
+//   orange for negative, and gray for unsigned metaballs. These shapes are displayed at the sizes specified by
+//   the dimensional parameters in the corresponding metaball functions, regardless of isovalue. Setting
+//   `hide_debug=true` in individual metaball functions hides primitive shape from the debug view. Regardless
+//   the `debug` setting, child modules can access the metaball VNF via `$metaball_vnf`.
+//   .
+//   User-defined metaball functions are displayed by default as gray tetrahedrons with a corner radius of 5,
+//   unless you also designate a VNF for your custom function. To specify a custom VNF for a custom function
+//   literal, enclose it in square brackets to make a list with the function literal as the first element, and
+//   another list as the second element, for example:   
 //   `[ function (point) custom_func(point, arg1,...), [sign, vnf] ]`   
-//   where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true`
-//   is set.
+//   where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true`.
+//   The sign determines the color of the debug object: `1` is blue, `-1` is orange, and `0` is gray.
+//   Example 31 below demonstrates setting a VNF for a custom function.
 //   .
 //   ***Voxel size and bounding box***
 //   .
@@ -1601,7 +1608,7 @@ function debug_tetra(size) = [
 //   show_stats = If true, display statistics about the metaball isosurface in the console window. Besides the number of voxels that the surface passes through, and the number of triangles making up the surface, this is useful for getting information about a possibly smaller bounding box to improve speed for subsequent renders. Enabling this parameter has a small speed penalty. Default: false
 //   convexity = (Module only) Maximum number of times a line could intersect a wall of the shape. Affects preview only. Default: 6
 //   show_box = (Module only) Display the requested bounding box as transparent. This box may appear slightly inside the bounds of the figure if the actual bounding box had to be expanded to accommodate whole voxels. Default: false
-//   debug = (Module only) Display the underlying primitive metaball shapes using your specified dimensional arguments, overlaid by the transparent metaball scene. Positive metaballs appear blue, negative appears orange, and any custom function with no debug VNF defined appears as a gray sphere of diameter 10.
+//   debug = (Module only) Display the underlying primitive metaball shapes using your specified dimensional arguments, overlaid by the transparent metaball scene. Positive metaballs appear blue, negative appears orange, and any custom function with no debug VNF defined appears as a gray tetrahedron of corner radius 5.
 //   cp = (Module only) Center point for determining intersection anchors or centering the shape.  Determines the base of the anchor vector. Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = (Module only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = (Module only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -1612,6 +1619,8 @@ function debug_tetra(size) = [
 //   "intersect" = Anchors to the surface of the shape.
 // Named Anchors:
 //   "origin" = Anchor at the origin, oriented UP.
+// Side Effects:
+//   `$metaball_vnf` is set to the VNF of the metaball scene.
 // Example(3D,NoAxes): Two spheres interacting.
 //   spec = [
 //       left(9), mb_sphere(5),
@@ -1797,7 +1806,7 @@ function debug_tetra(size) = [
 //       ],
 //       bounding_box = [[-16,-13,-5],[18,13,6]],
 //       voxel_size=0.4);
-// Example(3D): Next we show how to create a function that works like the built-ins. **This is a full-fledged implementation** that allows you to specify the function directly by name in the `spec` argument without needing the function literal syntax, and without needing the `point` argument in `spec`, as in the prior examples. Here, `noisy_sphere_calcs() is the calculation function that accepts the `point` position argument and any other parameters needed (here `r` and `noise_level`), and returns a single value. Then there is a "master" function `noisy_sphere() that does some error checking and returns an array consisting of (a) a function literal expression that sets all of your parameters, and (b) another array containing the metaball sign and a simple "debug" VNF representation of the metaball for viewing when `debug=true` is passed to `metaballs()`. The call to `mb_cutoff()` at the end handles the cutoff function for the noisy ball consistent with the other internal metaball functions; it requires `dist` and `cutoff` as arguments. You are not required to use this implementation in your own custom functions; in fact it's easier simply to declare the function literal in your `spec` argument, but this example shows how to do it all.
+// Example(3D): Next we show how to create a function that works like the built-ins. **This is a full implementation** that allows you to specify the function directly by name in the `spec` argument without needing the function literal syntax, and without needing the `point` argument in `spec`, as in the prior examples. Here, `noisy_sphere_calcs() is the calculation function that accepts the `point` position argument and any other parameters needed (here `r` and `noise_level`), and returns a single value. Then there is a "master" function `noisy_sphere() that does some error checking and returns an array consisting of (a) a function literal expression that sets all of your parameters, and (b) another array containing the metaball sign and a simple "debug" VNF representation of the metaball for viewing when `debug=true` is passed to `metaballs()`. The call to `mb_cutoff()` at the end handles the cutoff function for the noisy ball consistent with the other internal metaball functions; it requires `dist` and `cutoff` as arguments. You are not required to use this implementation in your own custom functions; in fact it's easier simply to declare the function literal in your `spec` argument, but this example shows how to do it all.
 //   //
 //   // noisy sphere internal calculation function 
 //   
@@ -2108,12 +2117,15 @@ function debug_tetra(size) = [
 //       bounding_box = [[-20,-20,-8],[20,20,8]],
 //       voxel_size=0.5, debug=true);
 
+$metaball_vnf = undef; // set by module for possible use with children()
+
 module metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, closed=true, exact_bounds=false, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false, debug=false) {
     vnflist = metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue, closed, exact_bounds, show_stats, _debug=debug);
+    $metaball_vnf = debug ? vnflist[0] : vnflist; // for possible use with children
     if(debug) {
         // display debug polyhedrons
         for(a=vnflist[1])
-            color(a[0]==0 ? "silver" : a[0]>0 ? "#3399FF" : "#FF9933")
+            color(a[0]==0 ? "gray" : a[0]>0 ? "#3399FF" : "#FF9933")
                 vnf_polyhedron(a[1]);
         // display metaball surface as transparent
         %vnf_polyhedron(vnflist[0], convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
@@ -2194,7 +2206,13 @@ function _mb_unwind_list(list, parent_trans=[IDENT], depth=0) =
                 trans = parent_trans[0] * list[i],
                 j=i+1
             )   if (is_function(list[j])) // for custom function without brackets...
-                    each [trans, [list[j], [0, sphere(5,$fn=16)]]] // ...add brackets and default vnf
+                    each [trans, [list[j], [0, debug_tetra(5)]]] // ...add brackets and default vnf
+                else if (is_function(list[j][0]) &&  // for bracketed function with undef or empty VNF...
+                   (is_undef(list[j][1]) || len(list[j][1])==0))
+                    each [trans, [list[j][0], [0, debug_tetra(5)]]] // ...add brackets and default vnf
+                else if (is_function(list[j][0]) &&  // for bracketed function with only empty VNF...
+                   (len(list[j][1])>0 && is_num(list[j][1][0]) && len(list[j][1][1])==0))
+                    each [trans, [list[j][0], [list[j][1][0], debug_tetra(5)]]] // ...do a similar thing
                 else if(is_function(list[j][0]))
                     each [trans, list[j]]
                 else if (is_list(list[j][0])) // likely a nested spec if not a function
