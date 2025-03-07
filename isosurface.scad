@@ -1476,8 +1476,8 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   matrices and metaball functions. It can also be a list of alternating transforms and *other specs*,
 //   as `[trans0, spec0, trans1, spec1, ...]`, in which `spec0`, `spec1`, etc. can be one of:
 //   * A built-in metaball function name as described below, such as `mb_sphere(r=10)`.
-//   * A function literal accepting as its first argument a 3-vector representing a point in space relative to the metaball's center.
-//   * An array containing a function literal and a debug VNF, as `[custom_func(point, arg1,...), [sign, vnf]]`, where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true` is set.
+//   * A function literal accepting a 3-vector representing a point in space relative to the metaball's center.
+//   * An array containing a function literal and a debug VNF, as `[custom_func, [sign, vnf]]`, where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true` is set.
 //   * Another spec array, for nesting metaball specs together.
 //   .
 //   Nested metaball specs allow for complicated assemblies in which you can arrange components in a logical
@@ -1620,7 +1620,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 // Named Anchors:
 //   "origin" = Anchor at the origin, oriented UP.
 // Side Effects:
-//   `$metaball_vnf` is available to child modules to get the VNF of the metaball scene.
+//   `$metaball_vnf` is set to the VNF of the metaball scene.
 // Example(3D,NoAxes): Two spheres interacting.
 //   spec = [
 //       left(9), mb_sphere(5),
