@@ -1381,8 +1381,8 @@ function _debug_octahedron(size, squareness) =
         ]
     ) [pts, faces]; // vnf structure
 
-/// simplest and smallest possible VNF, to display for hide_debug metaballs
-function debug_tetra(size) = [
+/// simplest and smallest possible VNF, to display for hide_debug or undefined metaballs; r=corner radius
+function debug_tetra(r) = let(size=r/norm([1,1,1])) [
     size*[[1,1,1], [-1,-1,1], [1,-1,-1], [-1,1,-1]],
     [[0,1,3],[0,3,2],[1,2,3],[1,0,2]]
 ];
@@ -1422,16 +1422,16 @@ function debug_tetra(size) = [
 //   or specified as a scalar size of a cube centered on the origin. The contributions from **all**
 //   metaballs, even those outside the box, are evaluated over the bounding box. This bounding box is
 //   divided into voxels of the specified `voxel_size`, which can also be a scalar cube or a vector size.
-//   Alternately, `voxel_count` may be specified to set the voxel size according to the requested
-//   count of voxels in the bounding box.
+//   Alternately, you can set `voxel_count` to fit approximately the specified number of boxels into the
+//   bounding box.
 //   .
 //   Smaller voxels produce a finer, smoother result at the expense of execution time. Larger voxels
 //   shorten execution time. Objects in the scene having any dimension smaller than the voxel may not
-//   be displayed, so if objects seem to be missing, try making `voxel_size` smaller. By default, if the
-//   voxel size doesn't exactly divide your specified bounding box, then the bounding box is enlarged to
-//   contain whole voxels, and centered on your requested box. Alternatively, you may set
-//   `exact_bounds=true` to cause the voxels to adjust in size to fit instead. Either way, if the
-//   bounding box clips a metaball and `closed=true` (the default), the object is closed at the
+//   be displayed, so if objects seem to be missing, try making `voxel_size` smaller or `voxel_count`
+//   larger. By default, if the voxel size doesn't exactly divide your specified bounding box, then the
+//   bounding box is enlarged to  contain whole voxels, and centered on your requested box. Alternatively,
+//   you may set `exact_bounds=true` to cause the voxels to adjust in size to fit instead. Either way, if
+//   the bounding box clips a metaball and `closed=true` (the default), the object is closed at the
 //   intersection surface. Setting `closed=false` causes the [VNF](vnf.scad) faces to end at the bounding
 //   box, resulting in a non-manifold shape with holes, exposing the inside of the object.
 //   .
@@ -1476,8 +1476,8 @@ function debug_tetra(size) = [
 //   matrices and metaball functions. It can also be a list of alternating transforms and *other specs*,
 //   as `[trans0, spec0, trans1, spec1, ...]`, in which `spec0`, `spec1`, etc. can be one of:
 //   * A built-in metaball function name as described below, such as `mb_sphere(r=10)`.
-//   * A function literal in the form `function (point) custom_func(point, arg1, arg2...)` where `point` is supplied internally as a vector distance from the metaball center, and `arg1`, `arg2` etc. are your own custom function arguments.
-//   * An array containing a function literal and a debug VNF, as `[function (point) custom_func(point, arg1,...), [sign, vnf]]`, where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true` is set.
+//   * A function literal accepting as its first argument a 3-vector representing a point in space relative to the metaball's center.
+//   * An array containing a function literal and a debug VNF, as `[custom_func(point, arg1,...), [sign, vnf]]`, where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true` is set.
 //   * Another spec array, for nesting metaball specs together.
 //   .
 //   Nested metaball specs allow for complicated assemblies in which you can arrange components in a logical
@@ -1546,23 +1546,30 @@ function debug_tetra(size) = [
 //   0.5 you get a $1/d^2$ falloff. Changing this exponent changes how the balls interact.
 //   .
 //   You can pass a custom function as a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
-//   that takes a single argument (a 3-vector) and returns a single numerical value. In the `spec` array
+//   that takes a 3-vector as its first argument and returns a single numerical value. In the `spec` array
 //   Generally, the function should return a scalar value that drops below the isovalue somewhere within your
 //   bounding box. If you want your custom metaball function to behave similar to to the built-in functions,
 //   the return value should fall off with distance as $1/d$. See Examples 20, 21, and 22 for demonstrations
 //   of creating custom metaball functions. Example 22 also shows how to make a complete custom metaball
 //   function that handles the `influence` and `cutoff` parameters.
 //   .
-//   ***User-defined functions in debug view***
+//   ***Debug view***
 //   .
-//   When you set `debug=true` in `metaballs()`, the scene is rendered as a transparency with the primitive
-//   metaball shapes shown inside, colored blue for positive and orange for negative metaballs. User-defined
-//   metaball functions, however, are displayed as small gray spheres unless you also designate a VNF. To specify
-//   a custom VNF for a custom function literal, enclose it in square brackets to make a list with the function
-//   literal as the first element, and another list as the second element:   
+//   The module form of `metaballs()` can take a `debug` argument. When you set `debug=true`, the scene is
+//   rendered as a transparency with the primitive metaball shapes shown inside, colored blue for positive,
+//   orange for negative, and gray for unsigned metaballs. These shapes are displayed at the sizes specified by
+//   the dimensional parameters in the corresponding metaball functions, regardless of isovalue. Setting
+//   `hide_debug=true` in individual metaball functions hides primitive shape from the debug view. Regardless
+//   the `debug` setting, child modules can access the metaball VNF via `$metaball_vnf`.
+//   .
+//   User-defined metaball functions are displayed by default as gray tetrahedrons with a corner radius of 5,
+//   unless you also designate a VNF for your custom function. To specify a custom VNF for a custom function
+//   literal, enclose it in square brackets to make a list with the function literal as the first element, and
+//   another list as the second element, for example:   
 //   `[ function (point) custom_func(point, arg1,...), [sign, vnf] ]`   
-//   where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true`
-//   is set.
+//   where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true`.
+//   The sign determines the color of the debug object: `1` is blue, `-1` is orange, and `0` is gray.
+//   Example 31 below demonstrates setting a VNF for a custom function.
 //   .
 //   ***Voxel size and bounding box***
 //   .
@@ -1601,7 +1608,7 @@ function debug_tetra(size) = [
 //   show_stats = If true, display statistics about the metaball isosurface in the console window. Besides the number of voxels that the surface passes through, and the number of triangles making up the surface, this is useful for getting information about a possibly smaller bounding box to improve speed for subsequent renders. Enabling this parameter has a small speed penalty. Default: false
 //   convexity = (Module only) Maximum number of times a line could intersect a wall of the shape. Affects preview only. Default: 6
 //   show_box = (Module only) Display the requested bounding box as transparent. This box may appear slightly inside the bounds of the figure if the actual bounding box had to be expanded to accommodate whole voxels. Default: false
-//   debug = (Module only) Display the underlying primitive metaball shapes using your specified dimensional arguments, overlaid by the transparent metaball scene. Positive metaballs appear blue, negative appears orange, and any custom function with no debug VNF defined appears as a gray sphere of diameter 10.
+//   debug = (Module only) Display the underlying primitive metaball shapes using your specified dimensional arguments, overlaid by the transparent metaball scene. Positive metaballs appear blue, negative appears orange, and any custom function with no debug VNF defined appears as a gray tetrahedron of corner radius 5.
 //   cp = (Module only) Center point for determining intersection anchors or centering the shape.  Determines the base of the anchor vector. Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = (Module only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = (Module only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -1612,6 +1619,8 @@ function debug_tetra(size) = [
 //   "intersect" = Anchors to the surface of the shape.
 // Named Anchors:
 //   "origin" = Anchor at the origin, oriented UP.
+// Side Effects:
+//   `$metaball_vnf` is available to child modules to get the VNF of the metaball scene.
 // Example(3D,NoAxes): Two spheres interacting.
 //   spec = [
 //       left(9), mb_sphere(5),
@@ -2108,12 +2117,15 @@ function debug_tetra(size) = [
 //       bounding_box = [[-20,-20,-8],[20,20,8]],
 //       voxel_size=0.5, debug=true);
 
+$metaball_vnf = undef; // set by module for possible use with children()
+
 module metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, closed=true, exact_bounds=false, convexity=6, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull", show_stats=false, show_box=false, debug=false) {
     vnflist = metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue, closed, exact_bounds, show_stats, _debug=debug);
+    $metaball_vnf = debug ? vnflist[0] : vnflist; // for possible use with children
     if(debug) {
         // display debug polyhedrons
         for(a=vnflist[1])
-            color(a[0]==0 ? "silver" : a[0]>0 ? "#3399FF" : "#FF9933")
+            color(a[0]==0 ? "gray" : a[0]>0 ? "#3399FF" : "#FF9933")
                 vnf_polyhedron(a[1]);
         // display metaball surface as transparent
         %vnf_polyhedron(vnflist[0], convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype)
@@ -2194,7 +2206,13 @@ function _mb_unwind_list(list, parent_trans=[IDENT], depth=0) =
                 trans = parent_trans[0] * list[i],
                 j=i+1
             )   if (is_function(list[j])) // for custom function without brackets...
-                    each [trans, [list[j], [0, sphere(5,$fn=16)]]] // ...add brackets and default vnf
+                    each [trans, [list[j], [0, debug_tetra(5)]]] // ...add brackets and default vnf
+                else if (is_function(list[j][0]) &&  // for bracketed function with undef or empty VNF...
+                   (is_undef(list[j][1]) || len(list[j][1])==0))
+                    each [trans, [list[j][0], [0, debug_tetra(5)]]] // ...add brackets and default vnf
+                else if (is_function(list[j][0]) &&  // for bracketed function with only empty VNF...
+                   (len(list[j][1])>0 && is_num(list[j][1][0]) && len(list[j][1][1])==0))
+                    each [trans, [list[j][0], [list[j][1][0], debug_tetra(5)]]] // ...do a similar thing
                 else if(is_function(list[j][0]))
                     each [trans, list[j]]
                 else if (is_list(list[j][0])) // likely a nested spec if not a function
