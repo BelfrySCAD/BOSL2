@@ -93,7 +93,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 // Module: cuboid()
 // Synopsis: Creates a cube with chamfering and roundovers.
 // SynTags: Geom
-// Topics: Shapes (3D), Attachable, VNF Generators
+// Topics: Shapes (3D), Attachable
 // See Also: prismoid(), rounded_prism()
 // Usage: Standard Cubes
 //   cuboid(size, [anchor=], [spin=], [orient=]);
