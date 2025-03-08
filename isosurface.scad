@@ -1394,7 +1394,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 // Topics: Metaballs, Isosurfaces, VNF Generators
 // See Also: isosurface()
 // Usage: As a module
-//   metaballs(spec, bounding_box, voxel_size, [isovalue=], [closed=], [exact_bounds=], [convexity=], [show_stats=], ...) [ATTACHMENTS];
+//   metaballs(spec, bounding_box, voxel_size, [isovalue=], [closed=], [exact_bounds=], [convexity=], [show_stats=], [show_box=], [debug=] ...) [ATTACHMENTS];
 // Usage: As a function
 //   vnf = metaballs(spec, bounding_box, voxel_size, [isovalue=], [closed=], [exact_bounds=], [convexity=], [show_stats=]);
 // Description:
@@ -1963,7 +1963,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   vsize = 0.85;
 //   bbox =  [[-45.5, -11.5, 0], [23, 11.5, 87.55]];
 //   metaballs(spec, bbox, voxel_size=vsize);
-// Example(3D,Med,NoAxes,VPD=228,VPT=[1,-5,35]): A model of a bunny, made from separate body components made with metaballs, with each component rendered at a different voxel size, and then combined together along with eyes and teeth. In this way, smaller bounding boxes can be defined for each component, which speeds up rendering. A bit more time is saved by saving the repeated components (ear, front leg, hind leg) in VNF structures, to render copies with {{vnf_polyhedron()}}.
+// Example(3D,Med,NoAxes,VPD=228,VPT=[1,-5,35]): A model of a bunny, assembled from separate body components made with metaballs, with each component rendered at a different voxel size, and then combined together along with eyes and teeth. In this way, smaller bounding boxes can be defined for each component, which speeds up rendering. A bit more time is saved by saving the repeated components (ear, front leg, hind leg) in VNF structures, to render copies with {{vnf_polyhedron()}}.
 //   torso = [
 //       up(20) * scale([1,1.2,2]), mb_sphere(10), 
 //       up(10), mb_sphere(5) // fatten lower torso
