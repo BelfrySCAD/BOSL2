@@ -1509,12 +1509,12 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   .
 //   The built-in metaball functions are listed below. As usual, arguments without a trailing `=` can be used positionally; arguments with a trailing `=` must be used as named arguments.
 //   .
-//   * `mb_sphere(r|d=)` &mdash; spherical metaball, with radius r or diameter d.  You can create an ellipsoid using `scale()` as the last transformation entry of the metaball `spec` array. 
+//   * `mb_sphere(r|d=)` &mdash; spherical metaball, with radius `r` or diameter `d`.  You can create an ellipsoid using `scale()` as the last transformation entry of the metaball `spec` array. 
 //   * `mb_cuboid(size, [squareness=])` &mdash; cuboid metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (cubical), and defaults to 0.5. The `size` parameter specifies the dimensions of the cuboid that circumscribes the rounded shape, which is tangent to the center of each cube face. The `size` parameter may be a scalar or a vector, as in {{cuboid()}}. Except when `squareness=1`, the faces are always a little bit curved.
-//   * `mb_cyl(h|l|height|length, [r|d=], [r1=|d1=], [r2=|d2=], [rounding=])` &mdash; vertical cylinder or cone metaball with the same dimensional arguments as {{cyl()}}. At least one of the radius or diameter arguments is required. The `rounding` argument defaults to 0 (sharp edge) if not specified. Only one rounding value is allowed: the rounding is the same at both ends. For a fully rounded cylindrical shape, consider using `mb_capsule()` or `mb_disk()`, which are less flexible but have faster execution times.
-//   * `mb_disk(h|l|height|length, r|d=)` &mdash; flat disk with rounded edge. The diameter specifies the total diameter of the shape including the rounded sides, and must be greater than its height.
+//   * `mb_cyl(h|l|height|length, [r|d=], [r1=|d1=], [r2=|d2=], [rounding=])` &mdash; vertical cylinder or cone metaball with the same dimensional arguments as {{cyl()}}. At least one of the radius or diameter arguments is required. The `rounding` argument defaults to 0 (sharp edge) if not specified. Only one rounding value is allowed: the rounding is the same at both ends. For a fully rounded cylindrical shape, consider using `mb_disk()` or `mb_capsule()`, which are less flexible but have faster execution times.
+//   * `mb_disk(h|l|height|length, r|d=)` &mdash; flat disk with rounded edge, using the same dimensional arguments as {{cyl()}}. The diameter specifies the total diameter of the shape including the rounded sides, and must be greater than its height.
 //   * `mb_capsule(h|l|height|length, [r|d=]` &mdash; vertical cylinder with rounded caps, using the same dimensional arguments as {{cyl()}}. The object resembles a convex hull of two spheres. The height or length specifies the distance between the spherical centers of the ends.
-//   * `mb_connector(p1, p2, [r|d=])` &mdash; a connecting rod of radius `r` or diameter `d` with hemispherical caps (like `mb_capsule()`), but specified to connect point `p1` to point `p2` (where `p1` and `p2` must be different 3D coordinates). As with `mb_capsule()`, the object resembles a convex hull of two spheres. The points `p1` and `p2` are at the centers of the two round caps. The connectors themselves are still influenced by other metaballs, but it may be undesirable to have them influence others, or each other. If two connectors are connected, the joint may appear swollen unless `influence` or `cutoff` is reduced. Reducing `cutoff` is preferable if feasible, because reducing `influence` can produce interpolation artifacts.
+//   * `mb_connector(p1, p2, [r|d=])` &mdash; a connecting rod of radius `r` or diameter `d` with hemispherical caps (like `mb_capsule()`), but specified to connect point `p1` to point `p2` (which must be different 3D coordinates). As with `mb_capsule()`, the object resembles a convex hull of two spheres. The points `p1` and `p2` are at the centers of the two round caps. The connectors themselves are still influenced by other metaballs, but it may be undesirable to have them influence others, or each other. If two connectors are connected, the joint may appear swollen unless `influence` or `cutoff` is reduced. Reducing `cutoff` is preferable if feasible, because reducing `influence` can produce interpolation artifacts.
 //   * `mb_torus([r_maj|d_maj=], [r_min|d_min=], [or=|od=], [ir=|id=])` &mdash; torus metaball oriented perpendicular to the z axis. You can specify the torus dimensions using the same arguments as {{torus()}}; that is, major radius (or diameter) with `r_maj` or `d_maj`, and minor radius and diameter using `r_min` or `d_min`. Alternatively you can give the inner radius or diameter with `ir` or `id` and the outer radius or diameter with `or` or `od`. You must provide a combination of inputs that completely specifies the torus. If `cutoff` is applied, it is measured from the circle represented by `r_min=0`.
 //   * `mb_octahedron(size, [squareness=])` &mdash; octahedron metaball with rounded edges and corners. The corner sharpness is controlled by the `squareness` parameter ranging from 0 (spherical) to 1 (sharp), and defaults to 0.5. The `size` parameter specifies the tip-to-tip distance of the octahedron that circumscribes the rounded shape, which is tangent to the center of each octahedron face. The `size` parameter may be a scalar or a vector, as in {{octahedron()}}. At `squareness=0`, the shape reduces to a sphere curcumscribed by the octahedron. Except when `squareness=1`, the faces are always curved.
 //   .
@@ -1546,7 +1546,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   0.5 you get a $1/d^2$ falloff. Changing this exponent changes how the balls interact.
 //   .
 //   You can pass a custom function as a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
-//   that takes a 3-vector as its first argument and returns a single numerical value. In the `spec` array
+//   that takes a 3-vector as its first argument and returns a single numerical value.
 //   Generally, the function should return a scalar value that drops below the isovalue somewhere within your
 //   bounding box. If you want your custom metaball function to behave similar to to the built-in functions,
 //   the return value should fall off with distance as $1/d$. See Examples 20, 21, and 22 for demonstrations
@@ -1557,16 +1557,16 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   .
 //   The module form of `metaballs()` can take a `debug` argument. When you set `debug=true`, the scene is
 //   rendered as a transparency with the primitive metaball shapes shown inside, colored blue for positive,
-//   orange for negative, and gray for unsigned metaballs. These shapes are displayed at the sizes specified by
-//   the dimensional parameters in the corresponding metaball functions, regardless of isovalue. Setting
-//   `hide_debug=true` in individual metaball functions hides primitive shape from the debug view. Regardless
-//   the `debug` setting, child modules can access the metaball VNF via `$metaball_vnf`.
+//   orange for negative, or gray for custom metaballs with no sign specified. These shapes are displayed at
+//   the sizes specified by the dimensional parameters in the corresponding metaball functions, regardless of
+//   isovalue. Setting `hide_debug=true` in individual metaball functions hides primitive shape from the debug
+//   view. Regardless the `debug` setting, child modules can access the metaball VNF via `$metaball_vnf`.
 //   .
 //   User-defined metaball functions are displayed by default as gray tetrahedrons with a corner radius of 5,
 //   unless you also designate a VNF for your custom function. To specify a custom VNF for a custom function
 //   literal, enclose it in square brackets to make a list with the function literal as the first element, and
-//   another list as the second element, for example:   
-//   `[ function (point) custom_func(point, arg1,...), [sign, vnf] ]`   
+//   another list as the second element, for example:    
+//   `[ function (point) custom_func(point, arg1,...), [sign, vnf] ]`    
 //   where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true`.
 //   The sign determines the color of the debug object: `1` is blue, `-1` is orange, and `0` is gray.
 //   Example 31 below demonstrates setting a VNF for a custom function.
