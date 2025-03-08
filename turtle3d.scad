@@ -343,7 +343,6 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   cookie_shape = star(5, r=10, ir=5);
 //   sweep(cookie_shape, cutter, closed=true);
 // Example(3D): angled shopvac adapter.  Shopvac tubing wedges together because the tubes are slightly tapered.  We can make this part without using any difference() operations by using "reverse" to trace out the interior portion of the part.  Note that it's "arcright" even when reversed.  
-//   include<BOSL2/skin.scad>
 //   inch = 25.4;
 //   insert_ID = 2.3*inch;        // Size of shopvac tube at larger end of taper
 //   wall = 1.7;                  // Desired wall thickness
@@ -368,7 +367,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                       ["move", seg1_len, "grow", seg1_bot_ID/seg2_bot_ID]
 //                    ],
 //                    state=UP, transforms=true);
-//   back_half(s=300)    // Remove this to get a usable part
+//   back_half(s=400)    // Remove this to get a usable part
 //     sweep(circle(d=seg1_bot_OD, $fn=128), trans, closed=true);
 // Example(3D): Closed spiral
 //   include<BOSL2/skin.scad>
