@@ -17,7 +17,7 @@
 // Section: Line Drawing
 
 // Module: stroke()
-// Synopsis: Draws a line along a path or region boundry.
+// Synopsis: Draws a line along a path or region boundary.
 // SynTags: Geom
 // Topics: Paths (2D), Paths (3D), Drawing Tools
 // See Also: dashed_stroke(), offset_stroke(), path_sweep()
@@ -36,8 +36,8 @@
 //   .
 //   In 2d the stroke module works by creating a sequence of rectangles (or trapezoids if line width varies) and
 //   filling in the gaps with rounded wedges.  This is fast and produces a good result.  In 3d the modules
-//   creates a cylinders (or cones) and fills the gaps with rounded wedges made using rotate_extrude.  This process will be slow for
-//   long paths due to the 3d unions, and the faces on sequential cylinders may not line up.  In many cases, {{path_sweep()}} will be
+//   creates a cylinders (or cones) and fills the gaps with rounded wedges made using rotate_extrude.  This process is slow for
+//   long paths due to the 3d unions, and the faces on sequential cylinders may not line up.  In many cases, {{path_sweep()}} is
 //   a better choice, both running faster and producing superior output, when working in three dimensions. 
 // Figure(Med,NoAxes,2D,VPR=[0,0,0],VPD=250): Endcap Types
 //   cap_pairs = [
@@ -588,7 +588,7 @@ module stroke(
 
 
 // Function&Module: dashed_stroke()
-// Synopsis: Draws a dashed line along a path or region boundry.
+// Synopsis: Draws a dashed line along a path or region boundary.
 // SynTags: Geom, PathList
 // Topics: Paths, Drawing Tools
 // See Also: stroke(), path_cut()
