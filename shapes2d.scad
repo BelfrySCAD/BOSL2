@@ -585,7 +585,7 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
     assert(is_int(n) && n>=3)
     assert(is_undef(align_tip) || is_vector(align_tip))
     assert(is_undef(align_side) || is_vector(align_side))
-    assert(is_undef(align_tip) || is_undef(align_side), "Can only specify one of align_tip and align-side")
+    assert(is_undef(align_tip) || is_undef(align_side), "Can only specify one of align_tip and align_side")
     let(
         sc = 1/cos(180/n),
         ir = is_finite(ir)? ir*sc : undef,
@@ -1525,34 +1525,41 @@ module egg(length,r1,r2,R,d1,d2,D,anchor=CENTER, spin=0)
 // Usage: ring or partial ring passing through three points
 //   region=ring(n, [ring_width], [r=,d=], points=[P0,P1,P2], [full=]);
 // Usage: ring or partial ring from tangent point on segment `[P0,P1]` to the tangent point on segment `[P1,P2]`.
-//   region=ring(n, [ring_width], corner=[P0,P1,P2], [r=,d=], [r1|d1=], [r2=|d2=], [full=]);
+//   region=ring(n, corner=[P0,P1,P2], r1=|d1=, r2=|d2=, [full=]);
 // Usage: ring or partial ring based on setting a width at the X axis and height above the X axis
 //   region=ring(n, [ring_width], [r=|d=], width=, thickness=, [full=]);
 // Usage: as a module
 //   ring(...) [ATTACHMENTS];
 // Description:
-//   If called as a function returns a region or path for a ring or part of a ring.  If called as a module, creates the corresponding 2D ring or partial ring shape.
+//   If called as a function, returns a region or path for a ring or part of a ring.  If called as a module, creates the corresponding 2D ring or partial ring shape.
 //   The geometry of the ring can be specified using any of the methods supported by {{arc()}}.  If `full` is true (the default) the ring will be complete and the
 //   returned value a region.  If `full` is false then the return is a path describing a partial ring.  The returned path is always clockwise with the larger radius arc first.
-//   A ring has two radii, the inner and outer.  When specifying geometry you must somehow specify one radius, which can be directly with `r=` or `r1=` or by giving a point list with 
-//   or without a center point.  You specify the second radius by giving `r=` directly, or `r2=` if you used `r1=` for the first radius, or by giving `ring_width`.  If `ring_width`
-//   the second radius will be larger than the first; if `ring_width` is negative the second radius will be smaller. 
+//   .
+//   You can specify the ring dimensions in a variety of ways similar to how you can use {{arc()}}.
+//   * Provide two radii or diameters using `r1` or `d1` and `r2` or `d2`.
+//   * Specify `r` or `d` and `ring_width`.  A positive `ring_width` value will grow the ring outward from your given radius/diameter; if you give a negative `ring_width` then the ring will grow inward from your given radius/diameter.
+//   * Set `points` to a list of three points then an arc is chosen to pass through those points and the second arc of the ring is defined by either `ring_width`, `r` or `d`. 
+//   * Give `width`, `thickness`, and either `r`, `d` or `ring_width`.  The `width` and `thickness` define an arc whose endpoints lie on the X axis with the specified width between them, and whose height is `thickness`.  The ring is defined by that arc, combined with either `ring_width` or the given radius/diameter.
+//   .
+//   If you specify the ring using `points` or using `width` and `thickness` then that determine its location.  Otherwise the ring appears centered at the origin.
+//   In that case, you can shift it to a different center point by setting `cp`.  Alternatively you can set `corner` to a list of three points defining a corner and the
+//   ring will be placed tangent to that corner.  
 // Arguments:
 //   n = Number of vertices to use for the inner and outer portions of the ring
 //   ring_width = width of the ring.  Can be positive or negative
 //   ---
-//   r1/d1 = inner radius or diameter of the ring
-//   r2/d2 = outer radius or diameter of the ring
-//   r/d = second radius or diameter of ring when r1 or d1 are not given
+//   r1/d1 = one of the radii or diameters of the ring.  Must combine with `r2/d2`.
+//   r2/d2 = one of the radii or diameters of the ring.  Must combine with `r1/d1`.
+//   r/d = radius or diameter of the ring.  Must combine with `ring_width`, `points` or `center`
 //   full = if true create a full ring, if false create a partial ring.  Default: true unless `angle` is given
 //   cp = Centerpoint of ring.
-//   points = Points on the ring boundary.
-//   corner = A path of two segments to fit the ring tangent to.
+//   points = Points on the ring boundary.  Combine with `r/d` or `ring_width`
+//   corner = A path of two segments to fit the ring tangent to.  Combine with `r1/d1` and `r2/d2` or with `r/d` and `ring_width`.  
 //   long = if given with cp and points takes the long arc instead of the default short arc.  Default: false
 //   cw = if given with cp and 2 points takes the arc in the clockwise direction.  Default: false
 //   ccw = if given with cp and 2 points takes the arc in the counter-clockwise direction.  Default: false
-//   width = If given with `thickness`, ring is defined based on an arc with ends on X axis.
-//   thickness = If given with `width`, ring is defined based on an arc with ends on X axis, and this height above the X axis. 
+//   width = If given with `thickness`, ring is defined based on an arc with ends on X axis.  Must combine with `thickness` and one of `ring_width`, `r` or `d`. 
+//   thickness = If given with `width`, ring is defined based on an arc with ends on X axis, and this height above the X axis.   Must combine with `width` and one of`ring_width`, `r` or `d`. 
 //   start = Start angle of ring.  Default: 0
 //   angle = If scalar, the end angle in degrees relative to start parameter.  If a vector specifies start and end angles of ring.  
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  (Module only) Default: `CENTER`
@@ -1577,7 +1584,7 @@ module egg(length,r1,r2,R,d1,d2,D,anchor=CENTER, spin=0)
 //   corner = [[0,0],[4,4],[7,3]];
 //   ring(corner=corner, r=3, ring_width=1,n=22,full=false);
 //   stroke(corner, width=.1,color="red");
-// Example(2D):
+// Example(2D): Here the red dashed area shows the partial ring bounded by the specified width and thickness arc at the inside and then expanding by the ring width of 2.   
 //   $fn=128;
 //   region = ring(width=5,thickness=1.5,ring_width=2);   
 //   path = ring(width=5,thickness=1.5,ring_width=2,full=false);
@@ -1613,8 +1620,9 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
     assert(is_undef(points) || is_path(points,2), str("Points must be a 2d vector",points))
     assert(!any_defined([points,thickness,width]) || num_defined([r1,r2])==0, "Cannot give r1, r2, d1, or d2 with points, width or thickness")
     is_def(width) && is_def(thickness)?
-       assert(!any_defined([r,cp,points,angle,start]), "Conflicting or invalid parameters to ring")
+       assert(!any_defined([cp,points,angle,start]), "Can only give 'ring_width', 'r' or 'd' with 'width' and 'thickness'")
        assert(all_positive([width,thickness]), "Width and thickness must be positive")
+       assert(num_defined([r,ring_width])==1, "Must give 'r' or 'ring_width' (but not both) with 'width' and 'thickness'")
        ring(n=n,r=r,ring_width=ring_width,points=[[width/2,0], [0,thickness], [-width/2,0]],full=full)
   : full && is_undef(cp) && is_def(points) ?
        assert(is_def(points) && len(points)==3, "Without cp given, must provide exactly three points")
