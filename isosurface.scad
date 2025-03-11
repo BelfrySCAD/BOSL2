@@ -1093,7 +1093,8 @@ function _contour_pixels(pixsize, bbox, fieldarray, fieldfunc, pixcenters, isova
                     // get center value of pixel
                     if (pixcenters)
                         is_def(fieldfunc)
-                            ? fieldfunc(x+hp, y+hp) : 0.25*(f0 + f1 + f2 + f3)
+                            ? min(1e9,max(-1e9,fieldfunc(x+hp.x, y+hp.y)))
+                            : 0.25*(f0 + f1 + f2 + f3)
                 ],
                 pixcoord = [x,y],
                 pixfound_isoval = (min(pf) < isovalue && isovalue < max(pf)),
