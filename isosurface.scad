@@ -2580,7 +2580,7 @@ function mb_trapezoid(h,w,rounding=0,w1,w2, cutoff=INF, influence=1, negative=fa
 
 function _mb_stadium_full(dv, hl, r, cutoff, ex, neg) = let(
     dist = dv.y<-hl ? norm(dv-[0,-hl])
-      : dv.y<hl ? abs(dv.x) : norm(dv-[0,hl]),
+      : dv.y<hl ? abs(dv.x) : norm(dv-[0,hl])
 ) neg * mb_cutoff(dist, cutoff) * (r/dist)^ex;
 
 function mb_stadium(h, r, cutoff=INF, influence=1, negative=false, hide_debug=false, d,l,height,length) =
