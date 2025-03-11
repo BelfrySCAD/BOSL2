@@ -3211,8 +3211,7 @@ module isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reve
 }
 
 function isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reverse=false, closed=true, exact_bounds=false, show_stats=false, _mball=false) =
-    assert(all_defined([f, bounding_box, isovalue]), "\nThe parameters f, bounding_box, and isovalue must all be defined.")
-    assert(is_num(bounding_box) || len(bounding_box[0])==2, "\nBounding box must be 2D.")
+    assert(all_defined([f, isovalue]), "\nThe parameters f and isovalue must both be defined.")
     assert(num_defined([voxel_size, voxel_count])<=1, "\nOnly one of voxel_size or voxel_count can be defined.")
     assert(is_undef(voxel_size) || (is_finite(voxel_size) && voxel_size>0) || (is_vector(voxel_size) && all_positive(voxel_size)), "\nvoxel_size must be a positive number, a 3-vector of positive values, or undef.")
     assert(is_list(isovalue) && len(isovalue)==2 && is_num(isovalue[0]) && is_num(isovalue[1]), "\nIsovalue must be a range; use [minvalue,INF] or [-INF,maxvalue] for an unbounded range.")
@@ -3419,7 +3418,7 @@ module contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, px_cent
 }
 
 function contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, px_centers=true, closed=true, exact_bounds=false, show_stats=false, anchor=CENTER, spin=0, _mball=false) =
-    assert(all_defined([f, isovalue, pixel_size]), "\nThe sparameters f, isovalue, and pixel_size must all be defined.")
+    assert(all_defined([f, isovalue]), "\nThe sparameters f and isovalue must both be defined.")
     assert(is_function(f) ||
         (is_list(f) &&
             // _mball=true allows pixel_size and bounding_box to coexist with f as array, because metaballs2d() already calculated them
