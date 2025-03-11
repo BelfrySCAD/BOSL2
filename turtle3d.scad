@@ -31,7 +31,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 // Description:
 //   Like the classic two dimensional turtle, the 3d turtle flies through space following a sequence
 //   of turtle graphics commands to generate either a sequence of transformations (suitable for input
-//   to sweep) or a 3d path.  The turtle state keeps track of the position and orientation (including twist)
+//   to {{sweep()}}) or a 3d path.  The turtle state keeps track of the position and orientation (including twist)
 //   and scale of the turtle.  By default the turtle begins pointing along the X axis with the "right" direction
 //   along the -Y axis and the "up" direction aligned with the Z axis.  You can give a direction vector
 //   for the state input to change the starting direction.  Because of the complexity of object positioning
@@ -43,15 +43,14 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   to the turtle's current orientation.   This is sometimes confusing, so you can also use absolute
 //   commands which turn the turtle relative to the absolute coordinate system, the "xrot", "yrot" and "zrot"
 //   commands.  You can use "setdir" to point the turtle along a given vector.
-//   If you want a valid transformation list for use with sweep you will usually want to avoid abrupt changes
+//   If you want a valid transformation list for use with {{sweep()}} you will usually want to avoid abrupt changes
 //   in the orientation of the turtle.  To do this, use the "arc"
 //   forms for turns.  This form, with commands like "arcright" and "arcup" creates an arc with a gradual
 //   change in the turtle orientation, which usually produces a better result for sweep operations.
 //   .
-//   Another potential problem for sweep is a command that makes movements not relative to the turtle's current direction such as
-//   "jump" or "untily".  These commands are not a problem for tracing out a path, but if you want a swept shape to
-//   maintain a constant cross sectional shape then you need to avoid them.  operations and avoid the movement commands
-//   which do not move relative to the turtle direction such as the "jump" commands.
+//   Another potential problem for sweeps is a command that makes a movement that does not proceed in the turtle's current direction
+//   such as "jump" or "untily".  These commands cause no issues when you trace out a path, but if you want a swept shape to
+//   maintain a constant cross sectional shape then you need to avoid them.  
 //   .
 //   If you use sweep to convert a turtle path into a 3d shape the result depends both on the path the shape traces out but also
 //   the twist and size of the shape.  The "twist" parameter described below to the compound commands has no effect on
@@ -65,7 +64,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   turtle direction to point backwards.  This enables you to back out to create a hollow shape.  But be
 //   aware that everything is reversed, so turns will be the opposite direction.  So for example if you
 //   used "arcright" on the outside you might expect arcleft when reversed on the inside, but it will
-//   be "arcright" again.  (Note that "reverse" is the only command that appears by itself with no argument
+//   be "arcright" again.  (Note that "reverse" is the only command that appears by itself with no argument.)
 //   .
 //   By default you get a simple path (like the 2d turtle) which ignores growing/shrinking or twisting in the
 //   transformation.  If you select transform=true then you will get a list of transformations returned.  Some of
@@ -97,7 +96,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   "jump"     |  | point              | Move the turtle to the specified point
 //   "xjump"    |  | x                  | Move the turtle's x position to the specified value
 //   "yjump     |  | y                  | Move the turtle's y position to the specified value
-//   "zjump     |  | y                  | Move the turtle's y position to the specified value
+//   "zjump     |  | z                  | Move the turtle's z position to the specified value
 //   "left"     |  | [angle]            | Turn turtle left by specified angle or default angle
 //   "right"    |  | [angle]            | Turn turtle to the right by specified angle or default angle
 //   "up"       |  | [angle]            | Turn turtle up by specified angle or default angle
@@ -343,7 +342,6 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   cookie_shape = star(5, r=10, ir=5);
 //   sweep(cookie_shape, cutter, closed=true);
 // Example(3D): angled shopvac adapter.  Shopvac tubing wedges together because the tubes are slightly tapered.  We can make this part without using any difference() operations by using "reverse" to trace out the interior portion of the part.  Note that it's "arcright" even when reversed.  
-//   include<BOSL2/skin.scad>
 //   inch = 25.4;
 //   insert_ID = 2.3*inch;        // Size of shopvac tube at larger end of taper
 //   wall = 1.7;                  // Desired wall thickness
@@ -368,7 +366,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                       ["move", seg1_len, "grow", seg1_bot_ID/seg2_bot_ID]
 //                    ],
 //                    state=UP, transforms=true);
-//   back_half(s=300)    // Remove this to get a usable part
+//   back_half(s=400)    // Remove this to get a usable part
 //     sweep(circle(d=seg1_bot_OD, $fn=128), trans, closed=true);
 // Example(3D): Closed spiral
 //   include<BOSL2/skin.scad>

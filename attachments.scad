@@ -3490,11 +3490,11 @@ function attach_geom(
         assert(is_region(region),2)
         let( l = default(l, h) )
         two_d==true
-          ? assert(is_undef(l))
+          ? assert(is_undef(l), "Cannot give l/h with region anchor types (when two_d is set)")
             extent==true
               ? ["rgn_extent", region, cp, offset, anchors]
               : ["rgn_isect",  region, cp, offset, anchors]
-          : assert(is_finite(l))
+          : assert(is_finite(l), "Must give l/h with extrusion anchor types (did you forget to set two_d?)")
             let(
                 shift = default(shift, [0,0]),
                 scale = is_num(scale)? [scale,scale] : default(scale, [1,1]),
