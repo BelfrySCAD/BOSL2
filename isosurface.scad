@@ -2891,7 +2891,7 @@ module metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, clos
         wid = 0.5 * (is_num(pixel_size) ? pixel_size : min(pixel_size));
         for(a=regionlist[1])
             color(a[0]==0 ? "gray" : a[0]>0 ? "#3399FF" : "#FF9933")
-                region(a[1], cp=cp, anchor=anchor, spin=spin, atype=atype);
+                region(a[1]);
         // display metaball as outline
         attachable(anchor, spin, two_d=true, region=regionlist[0]) {
             stroke(regionlist[0], width=wid, closed=true);
@@ -2899,7 +2899,7 @@ module metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, clos
         }
     } else { // debug==false, just display the metaball surface
         attachable(anchor, spin, two_d=true, region=regionlist) {
-            region(regionlist, cp=cp, anchor=anchor, spin=spin, atype=atype);
+            region(regionlist);
             children();
         }
     }
