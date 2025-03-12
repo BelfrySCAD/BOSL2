@@ -1076,6 +1076,7 @@ function _contour_pixels(pixsize, bbox, fieldarray, fieldfunc, pixcenters, isova
                 fieldfunc(x,y)
         ]
     ],
+    has_center_array = is_list(pixcenters),
     nx = len(field)-2,
     ny = len(field[0])-2,
     v0 = bbox[0]
@@ -1091,7 +1092,9 @@ function _contour_pixels(pixsize, bbox, fieldarray, fieldfunc, pixcenters, isova
                 ) [  // pixel corner field values
                     f0, f1, f2, f3,
                     // get center value of pixel
-                    if (pixcenters)
+                    if (has_center_array)
+                        pixcenters[i][j]
+                    else if(pixcenters)
                         is_def(fieldfunc)
                             ? min(1e9,max(-1e9,fieldfunc(x+hp.x, y+hp.y)))
                             : 0.25*(f0 + f1 + f2 + f3)
@@ -2752,14 +2755,19 @@ function mb_ring(ir,or, cutoff=INF, influence=1, negative=false, hide_debug=fals
 //   pixel_count = Approximate number of pixels in the bounding box. If `exact_bounds=true` then the pixels may not be squares. Use with `show_stats=true` to see the corresponding pixel size. Default: 1024 (if `pixel_size` not set)
 //   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. Default: 1.0
 //   closed = When true, close the path if it intersects the bounding box by adding a closing side. When false, do not add a closing side.  Default: true
+//   px_centers = When true, uses the center value of each pixel as an additional data point to refine the contour path through the pixel. Default: false
 //   exact_bounds = When true, shrinks pixels as needed to fit whole pixels inside the requested bounding box. When false, enlarges `bounding_box` as needed to fit whole pixels of `pixel_size`, and centers the new bounding box over the requested box. Default: false
 //   show_stats = If true, display statistics about the metaball isosurface in the console window. Besides the number of pixels that the contour passes through, and the number of segments making up the contour, this is useful for getting information about a possibly smaller bounding box to improve speed for subsequent renders. Default: false
 //   show_box = (Module only) Display the requested bounding box as a transparent thin rectangle. This box may appear slightly inside the bounds of the figure if the actual bounding box had to be expanded to accommodate whole pixels. Default: false
 //   debug = (Module only) Display the underlying primitive metaball shapes using your specified dimensional arguments, overlaid by the transparent metaball scene. Positive metaballs appear blue, negative appears orange, and any custom function with no debug VNF defined appears as a gray tetrahedron of corner radius 5.
-//   anchor = (Module only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
-//   spin = (Module only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Named Anchors:
-//   "origin" = Anchor at the origin.
+//   cp = (Module only) Center point for determining intersection anchors or centering the shape. Determines the base of the anchor vector. Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+//   anchor = (Module only) Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
+//   spin = (Module only) Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = (Module only) Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   atype = (Module only) Select "hull" or "intersect" anchor type.  Default: "hull"
+// Anchor Types:
+//   "hull" = Anchors to the virtual convex hull of the shape.
+//   "intersect" = Anchors to the surface of the shape.
 // Example(2D,NoAxes): Two circles interacting.
 //   spec = [
 //       left(9), mb_circle(5),
@@ -2876,14 +2884,14 @@ function mb_ring(ir,or, cutoff=INF, influence=1, negative=false, hide_debug=fals
 //   ];
 //   metaballs2d(spec, [[-20,-20],[20,17]], pixel_size=0.5, debug=true);
 
-module metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, closed=true, px_centers=false, exact_bounds=false, convexity=6, anchor="origin", spin=0, show_stats=false, show_box=false, debug=false) {
+module metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, closed=true, px_centers=false, exact_bounds=false, convexity=6, cp="centroid", anchor=CENTER, spin=0, atype="hull", show_stats=false, show_box=false, debug=false) {
     regionlist = metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue, closed, px_centers, exact_bounds, show_stats, _debug=debug);
     if(debug) {
         // display debug polyhedrons
         wid = 0.5 * (is_num(pixel_size) ? pixel_size : min(pixel_size));
         for(a=regionlist[1])
             color(a[0]==0 ? "gray" : a[0]>0 ? "#3399FF" : "#FF9933")
-                region(a[1]);
+                region(a[1], cp=cp, anchor=anchor, spin=spin, atype=atype);
         // display metaball as outline
         attachable(anchor, spin, two_d=true, region=regionlist[0]) {
             stroke(regionlist[0], width=wid, closed=true);
@@ -2891,7 +2899,7 @@ module metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, clos
         }
     } else { // debug==false, just display the metaball surface
         attachable(anchor, spin, two_d=true, region=regionlist) {
-            region(regionlist);
+            region(regionlist, cp=cp, anchor=anchor, spin=spin, atype=atype);
             children();
         }
     }
@@ -3327,9 +3335,9 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 // SynTags: Geom,Path,Region
 // Topics: Isosurfaces, Path Generators (2D), Regions
 // Usage: As a module
-//   contour(f, isovalue, bounding_box, pixel_size, [pixel_count=], [px_centers=], [closed=], [exact_bounds=], [show_stats=], ...) [ATTACHMENTS];
+//   contour(f, isovalue, bounding_box, pixel_size, [pixel_count=], [px_centers=], [smoothing=], [closed=], [exact_bounds=], [show_stats=], ...) [ATTACHMENTS];
 // Usage: As a function
-//   region = contour(f, isovalue, bounding_box, pixel_size, [pixel_count=], [pc_centers=], [closed=], [show_stats=]);
+//   region = contour(f, isovalue, bounding_box, pixel_size, [pixel_count=], [pc_centers=], [smoothing=], [closed=], [show_stats=]);
 // Description:
 //   Computes a [region](regions.scad) that contains one or more 2D contour [paths](paths.scad)
 //   within a bounding box at a single isovalue.
@@ -3367,12 +3375,19 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   pixel_size = Size of the pixels used to sample the bounding box volume, can be a scalar or 2-vector, or omitted if `pixel_count` is set. You may get rectangular pixels of a slightly different size than requested if `exact_bounds=true`.
 //   ---
 //   pixel_count = Approximate number of pixels in the bounding box. If `exact_bounds=true` then the pixels may not be square. Use with `show_stats=true` to see the corresponding pixel size. Default: 1024 (if `pixel_size` not set)
-//   px_centers = When true, uses the center value of each pixel as an additional data point to refine the contour path through the pixel. The center value is the function value if `f` is a function, or the average of the four pixel corners if `f` is an array. Default: true
+//   px_centers = When true, uses the center value of each pixel as an additional data point to refine the contour path through the pixel. The center value is the function value if `f` is a function, or the average of the four pixel corners if `f` is an array. If `px_centers` is set to another array of center values, then those values are used. If false, the contour path doesn't account for the pixel center. Default: true
+//   smoothing = Number of times to apply a 2-point moving average to the contours. This can remove small zig-zag artifacts resulting from a contour that follows the profile of a triangulated 3D surface when `px_centers` is set. When not given, two smoothing passes are applied only if `px_centers` is set. Default: undef
 //   closed = When true, close the contour path if it intersects the bounding box by adding closing edges. When false, do not add closing edges. Default: true
 //   exact_bounds = When true, shrinks pixels as needed to fit whole pixels inside the requested bounding box. When false, enlarges `bounding_box` as needed to fit whole pixels of `pixel_size`, and centers the new bounding box over the requested box. Default: false
 //   show_stats = If true, display statistics in the console window about the contour: number of pixels that the surface passes through, number of points in all contours, bounding box of the pixels, and pixel-rounded bounding box of the contours, which may help you reduce your bounding box to improve speed. Default: false
+//   cp = (Module only) Center point for determining intersection anchors or centering the shape. Determines the base of the anchor vector. Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = (Module only) Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = (Module only) Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = (Module only) Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   atype = (Module only) Select "hull" or "intersect" anchor type.  Default: "hull"
+// Anchor Types:
+//   "hull" = Anchors to the virtual convex hull of the shape.
+//   "intersect" = Anchors to the surface of the shape.
 // Example(2D,NoAxes): A small height map consisting of 8×8 data values to create a 7×7 pixel area, showing a contour at one isovalue. When passing an array as a function, rotating the output 90° clockwise using `zrot(-90)` causes the features of the contour to correspond visually to features in the array. Setting `px_centers=false` results in only the corner values of each pixel to be considered when drawing contour lines, resulting in coarse outlines.
 //   field =[
 //       [0,2,2,1,0,0,0,0],
@@ -3409,16 +3424,34 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //           px_centers=true);
 //   color("blue") down(1)
 //       square((len(field)-1)*pixsize, true);
+// Example(3D,NoAxes): You can pass a function literal taking x,y arguments, in which case the center value of each pixel is computed in addition to the corners for somewhat greater resolution than the specified pixel size. By default, two smoothing passes are performed on the output paths when making contours from a function, which result in somewhat rounded corners where the contour is clipped by the bounding box. Setting `smoothing=0` preserves these corners at the expense of some additional roughness in the contour path. Here the contour is displayed with a height field of the same function.
+//   function wave2d(x,y,wavelen) =
+//       40*cos(180/wavelen*norm([x,y]));
+//   
+//   isoval=-30;
+//   pixsize = 10;
+//   wavelen=42;
+//   translate([0,0,isoval]) color("green") zrot(-90)
+//       contour(function(x,y) wave2d(x,y,wavelen),
+//           bounding_box=[[-50,-50],[50,50]],
+//           isovalue=isoval, pixel_size=pixsize);
+//   
+//   %heightfield(size=[100,100], bottom=-45, data=[
+//       for (y=[-50:pixsize:50]) [
+//           for(x=[-50:pixsize:50])
+//               wave2d(x,y,wavelen)
+//       ]
+//   ], style="quincunx");
 
-module contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, px_centers=true, exact_bounds=false, closed=true, anchor=CENTER, spin=0, show_stats=false, _mball=false) {
-    pathlist = contour(f, isovalue, bounding_box, pixel_size, pixel_count, px_centers, closed, exact_bounds, show_stats, anchor, spin, _mball);
+module contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, px_centers=true, smoothing=undef, closed=true, exact_bounds=false, cp="centroid", anchor=CENTER, spin=0, atype="hull", show_stats=false, _mball=false) {
+    pathlist = contour(f, isovalue, bounding_box, pixel_size, pixel_count, px_centers, smoothing, closed, exact_bounds, show_stats, _mball);
     attachable(anchor, spin, two_d=true, region=pathlist) {
-        region(pathlist);
+        region(pathlist, cp=cp, anchor=anchor, spin=spin, atype=atype);
         children();
     }
 }
 
-function contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, px_centers=true, closed=true, exact_bounds=false, show_stats=false, anchor=CENTER, spin=0, _mball=false) =
+function contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, px_centers=true, smoothing=undef, closed=true, exact_bounds=false, show_stats=false, _mball=false) =
     assert(all_defined([f, isovalue]), "\nThe sparameters f and isovalue must both be defined.")
     assert(is_function(f) ||
         (is_list(f) &&
@@ -3430,6 +3463,7 @@ function contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, px_ce
         , "\nWhen f is an array, either bounding_box or pixel_size is required (but not both).")
     let(
         exactbounds = is_def(exact_bounds) ? exact_bounds : is_list(f),
+        smoothpasses = is_undef(smoothing) ? ((is_list(px_centers) || px_centers==true) ? 2 : 0) : abs(smoothing),
         // new pixel or bounding box centered around original, to fit whole pixels
         bbox0 = is_num(bounding_box)
             ? let(hb=0.5*bounding_box) [[-hb,-hb],[hb,hb]]
@@ -3441,11 +3475,25 @@ function contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, px_ce
         pixels = _contour_pixels(pixsize, bbox,
             fieldarray=is_function(f)?undef:f, fieldfunc=is_function(f)?f:undef,
             pixcenters=px_centers, isovalue=isovalue),
-        segtable = px_centers ? _MTriSegmentTable : _MSquareSegmentTable,
+        segtable = is_list(px_centers) || px_centers ? _MTriSegmentTable : _MSquareSegmentTable,
         pathlist = _contour_vertices(pixels, pixsize, isovalue, segtable),
         region = _assemble_partial_paths(pathlist),
-        dum2 = show_stats ? _showstats_contour(pixsize, bbox, isovalue, pixels, region) : 0
-) region;
+        finalregion = _region_smooth(region, smoothpasses, closed),
+        dum2 = show_stats ? _showstats_contour(pixsize, bbox, isovalue, pixels, finalregion) : 0
+) finalregion;
+
+
+/// internal function: do multiple 2-point smoothing passes of all the paths in a region
+function _region_smooth(reg, passes, closed, count=0) =
+    count >= passes ? reg :
+    let(sm = [
+            for(r=reg) let(n=len(r)-1) [
+                closed ? 0.5*(r[0]+r[1]) : r[0],
+                for(i=[1:n-1]) 0.5*(r[i]+r[i+1]),
+                closed ? 0.5*(r[n]+r[0]) : r[n]
+            ]
+        ]
+    ) _region_smooth(sm, passes, closed, count+1);
 
 
 /// internal function: get pixel size given a desired number of pixels in a bounding box
