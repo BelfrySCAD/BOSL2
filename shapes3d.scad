@@ -93,7 +93,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 // Module: cuboid()
 // Synopsis: Creates a cube with chamfering and roundovers.
 // SynTags: Geom
-// Topics: Shapes (3D), Attachable, VNF Generators
+// Topics: Shapes (3D), Attachable
 // See Also: prismoid(), rounded_prism()
 // Usage: Standard Cubes
 //   cuboid(size, [anchor=], [spin=], [orient=]);
@@ -2424,7 +2424,7 @@ module zcyl(
 //   id1 = Inner diameter of bottom of tube.
 //   id2 = Inner diameter of top of tube.
 //   ifn = Set the number of facets on the inside of the tube.
-//   circum = If true, the tube hold will circumscribe the circle of the given size.  Otherwise inscribes.  Default: `false`
+//   circum = If true, the tube hole will circumscribe the circle of the given size.  Otherwise inscribes.  Default: `false`
 //   shift = [X,Y] amount to shift the center of the top end with respect to the center of the bottom end.
 //   rounding = The radius of the rounding on the ends of the tube.  Default: none.
 //   rounding1 = The radius of the rounding on the bottom end of the tube.
@@ -2473,9 +2473,9 @@ module zcyl(
 // Example: Mixing chamfers and roundings
 //   back_half()
 //     tube(ir=10,or=20,h=30, ochamfer1=-5,irounding1=-3, orounding2=6, ichamfer2=2);
-// Example: Tube with hexagonal hole circumscribing its diameter
+// Example: Tube with a square hole circumscribing its diameter
 //   tube(od=22, id=9, h=10, $fn=48, ifn=4, circum=true);
-//   half_of(v=[-1,1])color("lightblue") cyl(d=9, h=12);
+//   half_of(v=[-1,1]) color("lightblue") cyl(d=9, h=12, $fn=32);
 // Example: Round ended hexagonal tube using `rounding_fn` to get sufficient facets on the roundings
 //   tube(or=10, ir=7, h=10, $fn=6, rounding_fn=64, rounding=1.3, teardrop=true);
 
@@ -2486,7 +2486,8 @@ function tube(
     ir1, ir2, id1, id2,
     realign=false, l, length, height,
     anchor, spin=0, orient=UP, orounding1,irounding1,orounding2,irounding2,rounding1,rounding2,rounding,
-    ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer, teardrop=false
+    ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer, teardrop=false, shift=[0,0],
+    ifn, rounding_fn, circum=false
 ) = no_function("tube");
 
 
@@ -2500,7 +2501,6 @@ module tube(
     anchor, spin=0, orient=UP, orounding1,irounding1,orounding2,irounding2,rounding1,rounding2,rounding,
     ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer, teardrop=false, shift=[0,0],
     ifn, rounding_fn, circum=false
-    
 ) {
     h = one_defined([h,l,height,length],"h,l,height,length",dflt=1);
     orr1 = get_radius(r1=or1, r=or, d1=od1, d=od, dflt=undef);
