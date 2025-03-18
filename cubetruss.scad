@@ -53,7 +53,7 @@ module cubetruss(extents=6, clips=[], bracing, size, strut, clipthick, anchor=CE
     w = extents[0];
     l = extents[1];
     h = extents[2];
-    s = [cubetruss_dist(w,1), cubetruss_dist(l,1), cubetruss_dist(h,1)];
+    s = [cubetruss_dist(w,1,size,strut), cubetruss_dist(l,1,size,strut), cubetruss_dist(h,1,size,strut)];
     attachable(anchor,spin,orient, size=s) {
         union() {
             for (zrow = [0:h-1]) {
@@ -122,8 +122,8 @@ module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing, size, strut, clipthic
     clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
     exts = is_vector(extents)? list_pad(extents,5,fill=0) : [extents, extents, 0, 0, extents];
     dummy = assert(len(exts)==5, "Input extents must be a scalar or vector with length 5 or less.");
-    s = [cubetruss_dist(exts[0]+1+exts[2],1), cubetruss_dist(exts[1]+1+exts[3],1), cubetruss_dist(h+exts[4],1)];
-    offset = [cubetruss_dist(exts[0]-exts[2],0), cubetruss_dist(exts[1]-exts[3],0), cubetruss_dist(h+exts[4]-1,0)]/2;
+    s = [cubetruss_dist(exts[0]+1+exts[2],1,size,strut), cubetruss_dist(exts[1]+1+exts[3],1,size,strut), cubetruss_dist(h+exts[4],1,size,strut)];
+    offset = [cubetruss_dist(exts[0]-exts[2],0,size,strut), cubetruss_dist(exts[1]-exts[3],0,size,strut), cubetruss_dist(h+exts[4]-1,0,size,strut)]/2;
     attachable(anchor,spin,orient, size=s, offset=offset) {
         union() {
             for (zcol = [0:h-1]) {
@@ -341,7 +341,7 @@ module cubetruss_joiner(w=1, vert=true, size, strut, clipthick, anchor=CENTER, s
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
     clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
     clipsize = 0.5;
-    s = [cubetruss_dist(w,1)+2*clipthick, cubetruss_dist(2,0)-0.1, strut+clipthick];
+    s = [cubetruss_dist(w,1,size,strut)+2*clipthick, cubetruss_dist(2,0,size,strut)-0.1, strut+clipthick];
     attachable(anchor,spin,orient, size=s, offset=[0,0,-(clipthick-strut)/2]) {
         down(clipthick) {
             // Base
