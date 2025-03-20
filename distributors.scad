@@ -1180,7 +1180,7 @@ function zrot_copies(rots=[], cp=[0,0,0], n, sa=0, r, d, subrot=true, p=_NO_ARG)
 //
 //
 // Description:
-//   When called as a module, evenly distributes n duplicate children around an ovoid arc on the XY plane.
+//   When called as a module, evenly distributes n duplicate children around an elliptical arc on the XY plane.
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
 //   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
 //
