@@ -5039,7 +5039,6 @@ function parent() =
 
 // Module: restore()
 // Synopsis: Restores transformation state and attachment geometry from a description
-// SynTags: Trans
 // Topics: Transforms, Attachments, Descriptions
 // See Also: parent()
 // Usage:
@@ -5072,7 +5071,7 @@ module restore(desc)
    }
 }
 
-// Function desc_point()
+// Function: desc_point()
 // Synopsis: Computes the location in the current context of an anchor point from an attachable description
 // Topics: Descriptions, Attachments
 // See Also: parent(), desc_dist()
@@ -5097,7 +5096,7 @@ module restore(desc)
 //    attach(TOP+BACK+RIGHT, BOT)
 //    stroke([[0,0,0], desc_point(desc,TOP+FWD+RIGHT)],width=.5,color="red");
 function desc_point(desc, anchor=CENTER) =
-    is_undef(desc) ? linear_solve($transform, [0,0,0,0])
+    is_undef(desc) ? linear_solve($transform, [0,0,0,1])
   : let(
          anch = _find_anchor(anchor, desc[1]),
          T = linear_solve($transform, desc[0])
@@ -5105,8 +5104,39 @@ function desc_point(desc, anchor=CENTER) =
     apply(T, anch[1]);
 
 
+// Function: desc_dir()
+// Synopsis: Computes the direction in the current context of a direction from an attachable description
+// Topics: Descriptions, Attachment
+// See Also: parent(), desc_point()
+// Usage:
+//   dir = desc_dir([desc],[anchor]);
+// Description:
+//   Computes the direction in the current context of an anchor direction from an attachable description.  If you don't give a description
+//   then the direction is computed relative to global world coordinates. 
+// Arguments:
+//   desc = Description to use.  Default: use the global world coordinate system
+//   anchor = Anchor to get the direction from.  Default: UP
+// Example(3D): Here we don't give a description so the reference is to the global world coordinate system, and we don't give a direction, so the default of UP applies.  This lets the cylinder be placed so it is horizontal in world coordinates.  
+//   prismoid(20,10,h=15)
+//     attach(RIGHT,BOT) cuboid([4,4,15])
+//     position(TOP) cyl(d=12,h=5,orient=desc_dir(),anchor=BACK);
+// Example(3D,VPR=[78.1,0,76.1]): Here we use the description of the prismoid, which lets us place the rod so that it is oriented in the direction of the prismoid's face. 
+//   prismoid(20,10,h=15) let(pris=parent())
+//      attach(RIGHT,BOT) cuboid([4,4,15])
+//      position(TOP) cyl(d=2,h=15,orient=desc_dir(pris,FWD),anchor=LEFT);
+function desc_dir(desc, anchor=UP) =
+    let(
+         T = is_undef(desc) ? matrix_inverse($transform) 
+                            : linear_solve($transform, desc[0]),
+         dir = is_undef(desc) ? anchor
+             : let(anch = _find_anchor(anchor, desc[1]))
+               anch[2]
+    )
+    apply(T, dir)-apply(T,CENTER);
+  
 
-// Function desc_dist()
+
+// Function: desc_dist()
 // Synopsis: Computes the distance between two points specified by attachable descriptions
 // Topics: Descriptions, Attachments
 // See Also: parent(), desc_point()
@@ -5116,7 +5146,7 @@ function desc_point(desc, anchor=CENTER) =
 // Description:
 //   Computes the distance between two points specified using attachable descriptions and optional anchor
 //   points.  If you omit the anchor point(s) then the computation uses the CENTER anchor.  
-// Example: Computes the distance between a point on each cube. 
+// Example(3D): Computes the distance between a point on each cube. 
 //  cuboid(10) let(desc=parent())
 //    right(15) cuboid(10) 
 //      echo(desc_dist(parent(),TOP+RIGHT+BACK, desc, TOP+LEFT+FWD));
@@ -5134,5 +5164,25 @@ function desc_dist(desc1,anchor1=CENTER, desc2, anchor2=CENTER)=
     norm(pt1-pt2);
 
 
+// Function: trans_desc()
+// Synopsis: Applies a transformation matrix to a description
+// Topics: Descriptions, Attachments
+// See Also: parent()
+// Usage:
+//   new_desc = trans_desc(T, desc);
+// Description:
+//   Applies a transformation matrix to a description, producing a new transformed description as
+//   output.  The transformation matrix can be produced using any of the usual transform commands.
+//   The resulting description is as if it was produced from an object that had the transformation
+//   applied.  You can also give a list of transformation matrices, in which case the output is
+//   a list of descriptions.  
+// Arguments:
+//   T = transformation or list of transformations to apply (a 4x4 matrix or list of them)
+//   desc = description to transform
+
+function trans_desc(T,desc) =
+    is_consistent(T, ident(4)) ? [for(t=T) [t*desc[0], desc[1]]]
+  : is_matrix(T,4,4) ? [T*desc[0], desc[1]]
+  : assert(false,"T must be a 4x4 matrix or list of 4x4 matrices");
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

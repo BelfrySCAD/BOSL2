@@ -124,6 +124,18 @@ module test_modang() {
 test_modang();
 
 
+module test_mean_angle() {
+    assert_equal(mean_angle(33,95), 64);
+    assert_equal(mean_angle(355,5), 0);
+    assert_equal(mean_angle(-270, 180), 135);
+    assert_equal(mean_angle(155,155+180), 155+90);
+    assert_equal(mean_angle(155+180,155), posmod(155+180+90,360));
+    assert_equal(mean_angle(-75,-75+180), -75+90);
+    assert_equal(mean_angle(-75+180,-75), -75+90+180);    
+}
+test_mean_angle();
+
+
 module test_sqr() {
     assert_equal(sqr(-3), 9);
     assert_equal(sqr(0), 0);
