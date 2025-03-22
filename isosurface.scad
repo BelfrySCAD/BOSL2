@@ -1643,7 +1643,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
     [[0,1,3],[0,3,2],[1,2,3],[1,0,2]]
 ];
 
-// Section: Metaballs (3D and 2D)
+// Section: Metaballs
 //   ![Metaball animation](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/metaball_demo.gif)
 //   ![Metaball animation](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/metaball_demo2d.gif)
 //   .
@@ -1756,6 +1756,47 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   computing function values that are not needed, you can also set the parameter `show_stats=true` to get
 //   the actual bounds of the voxels intersected by the surface. With this information, you may be able to
 //   decrease run time, or keep the same run time but increase the resolution. 
+//   .
+//   ***Metaball functions and user defined functions***
+//   .
+//   You can construct complicated metaball models using only the built-in metaball functions described in
+//   the documentation below for {{metaballs()}} and {{metaballs2d()}}.
+//   However, you can create your own custom metaballs if desired.
+//   .
+//   When multiple metaballs are in a model, their functions are summed and compared to the isovalue to
+//   determine the final shape of the metaball object.
+//   Each metaball is defined as a function of a vector that gives the value of the metaball function
+//   for that point in space. As is common in metaball implementations, we define the built-in metaballs
+//   using an inverse relationship where the metaball functions fall off as $1/d$, where $d$ is distance
+//   measured from the center or core of the metaball. The 3D spherical metaball and 2D circular metaball
+//   therefore has a simple basic definition as $f(v) = 1/\text{norm}(v)$. If we choose an isovalue $c$,
+//   then the set of points $v$ such that $f(v) >= c$ defines a bounded set; for example, a sphere with radius
+//   depending on the isovalue $c$. The default isovalue is $c=1$. Increasing the isovalue shrinks the object,
+//   and decreasing the isovalue grows the object.
+//   .
+//   To adjust interaction strength, the influence parameter applies an exponent, so if `influence=a`
+//   then the decay becomes $1/d^{1/a}$. This means, for example, that if you set influence to
+//   0.5 you get a $1/d^2$ falloff. Changing this exponent changes how the balls interact.
+//   .
+//   You can pass a custom function as a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
+//   that takes a vector as its first argument and returns a single numerical value.
+//   Generally, the function should return a scalar value that drops below the isovalue somewhere within your
+//   bounding box. If you want your custom metaball function to behave similar to to the built-in functions,
+//   the return value should fall off with distance as $1/d$. See `metaballs()` Examples 20, 21, and 22 for
+//   demonstrations of creating custom metaball functions. Example 22 also shows how to make a complete custom
+//   metaball function that handles the `influence` and `cutoff` parameters.
+//   .
+//   By default, when `debug=true`, a custom 3D metaball function displays a gray tetrahedron with corner
+//   radius 5, and a custom 2D metaball function displays a gray triangle with corner radius 5.
+//   To specify a custom VNF for a custom function literal, enclose it in square brackets to make a  list with
+//   the function literal as the first element, and another list as the second element, for example:
+//   .
+//   `[ function (point) custom_func(point, arg1,...), [sign, vnf] ]`
+//   .
+//   where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true`.
+//   For 2D metaballs, you would specify a polygon path instead of a VNF.
+//   The sign determines the color of the debug object: `1` is blue, `-1` is orange, and `0` is gray.
+//   See `metaballs()` Example 31 below for a demonstration of setting a VNF for a custom function.
 
 
 
@@ -1771,10 +1812,12 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 // Description:
 //   Computes a [VNF structure](vnf.scad) of a 3D metaball scene within a specified bounding box.
 //   .
-//   The [subsection on parameters](#metaball-parameters) above describes in
-//   detail how the primary parameters work for metaballs(). The `spec` parameter is described in more
-//   detail here. The `spec` parameter completely defines the metaballs in your scene, including their
-//   position, orientation, and scaling, as well as different shapes.
+//   See [metaball parameters](#metaball-parameters) for details on the primary parameters common to
+//   `metaballs()` and `metaballs2d()`. The `spec` parameter is described in more detail there. The `spec`
+//   parameter is a 1D list of alternating transforms and metaball functions; for example, the array
+//   `spec= [ left(9), mb_sphere(5), right(9), mb_sphere(5) ]` defines a scene with two spheres of radius
+//   5 shifted 9 units to the left and right of the origin. The `spec` parameter completely defines the
+//   metaballs in your scene, including their position, orientation, and scaling, as well as different shapes.
 //   .
 //   You can create metaballs in a variety of standard shapes using the predefined functions
 //   listed below. If you wish, you can also create custom metaball shapes using your own functions
@@ -1840,43 +1883,6 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   * `influence` &mdash; a positive number specifying the strength of interaction this ball has with other balls.  Default: 1
 //   * `negative` &mdash; when true, creates a negative metaball. Default: false
 //   * `hide_debug` &mdash; when true, suppresses the display of the underlying metaball shape when `debug=true` is set in the `metaballs()` module. This is useful to hide shapes that may be overlapping others in the debug view. Default: false
-//   .
-//   ***Metaball functions and user defined functions***
-//   .
-//   You can construct complicated metaball models using only the built-in metaball functions above.
-//   However, you can create your own custom metaballs if desired.
-//   .
-//   When multiple metaballs are in a model, their functions are summed and compared to the isovalue to
-//   determine the final shape of the metaball object.
-//   Each metaball is defined as a function of a 3-vector that gives the value of the metaball function
-//   for that point in space. As is common in metaball implementations, we define the built-in metaballs
-//   using an inverse relationship where the metaball functions fall off as $1/d$, where $d$ is distance
-//   measured from the center or core of the metaball. The spherical metaball therefore has a simple basic
-//   definition as $f(v) = 1/\text{norm}(v)$. If we choose an isovalue $c$, then the set of points $v$ such
-//   that $f(v) >= c$ defines a bounded set; for example, a sphere with radius depending on the isovalue $c$.
-//   The default isovalue is $c=1$. Increasing the isovalue shrinks the object, and decreasing the isovalue
-//   grows the object.
-//   .
-//   To adjust interaction strength, the influence parameter applies an exponent, so if `influence=a`
-//   then the decay becomes $1/d^{1/a}$. This means, for example, that if you set influence to
-//   0.5 you get a $1/d^2$ falloff. Changing this exponent changes how the balls interact.
-//   .
-//   You can pass a custom function as a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
-//   that takes a 3-vector as its first argument and returns a single numerical value.
-//   Generally, the function should return a scalar value that drops below the isovalue somewhere within your
-//   bounding box. If you want your custom metaball function to behave similar to to the built-in functions,
-//   the return value should fall off with distance as $1/d$. See Examples 20, 21, and 22 for demonstrations
-//   of creating custom metaball functions. Example 22 also shows how to make a complete custom metaball
-//   function that handles the `influence` and `cutoff` parameters.
-//   .
-//   By default, when `debug=true`, a custom 3D metaball function displays a gray tetrahedron with corner
-//   radius 5. To specify a custom VNF for a custom function literal, enclose it in square brackets to make a
-//   list with the function literal as the first element, and another list as the second element, for
-//   example:
-//   `[ function (point) custom_func(point, arg1,...), [sign, vnf] ]`    
-//   where `sign` is the sign of the metaball and `vnf` is the VNF to show in the debug view when `debug=true`.
-//   The sign determines the color of the debug object: `1` is blue, `-1` is orange, and `0` is gray.
-//   Example 31 below demonstrates setting a VNF for a custom function.
 //   .
 //   ***Duplicated vertices***
 //   .
@@ -2461,6 +2467,7 @@ function metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, clos
         autovoxsize = is_def(voxel_size) ? voxel_size : _getautovoxsize(bbox0, default(voxel_count,22^3)),
         voxsize = _getvoxsize(autovoxsize, bbox0, exact_bounds),
         newbbox = _getbbox(voxsize, bbox0, exact_bounds),
+        bbcheck = assert(all_positive(newbbox[1]-newbbox[0]), "\nbounding_box must be a vector range [[xmin,ymin,zmin],[xmax,ymax,zmax]]."),
 
         // set up field array
         bot = newbbox[0],
@@ -2709,15 +2716,20 @@ function mb_ring(r1,r2, cutoff=INF, influence=1, negative=false, hide_debug=fals
 // Usage: As a function
 //   region = metaballs2d(spec, bounding_box, pixel_size, [isovalue=], [closed=], [use_centers=], [smoothing=], [exact_bounds=], [show_stats=]);
 // Description:
-//   Computes a [region](regions.scad) (list of 2D polygon paths) of 2D metaball scene within a specified bounding box.
-//   .
 //   2D metaball shapes can be useful to create interesting polygons for extrusion. When invoked as a
-//   module, a 2D metaball scene is displayed. When called as a function, a list containing one or more\
+//   module, a 2D metaball scene is displayed. When called as a function, a list containing one or more
 //   [paths](paths.scad) is returned.
 //   .
-//   For a full explanation of metaballs, see [introduction](#section-metaballs-3d-and-2d) above. The
-//   specification method, tranformations, and bounding box, and other parameters are the same as in 3D, but
-//   in 2D, pixels replace voxels.
+//   For a full explanation of metaballs, see [introduction](#section-metaballs) above. The
+//   specification method, tranformations, bounding box, and other parameters are the same as in 3D,
+//   but in 2D, pixels replace voxels.
+//   .
+//   See [metaball parameters](#metaball-parameters) for details on the primary parameters common to
+//   `metaballs()` and `metaballs2d()`. The `spec` parameter is described in more detail there. The `spec`
+//   parameter is a 1D list of alternating transforms and metaball functions; for example, the array
+//   `spec= [ left(9), mb_circle(5), right(9), mb_circle(5) ]` defines a scene with two circles of radius
+//   5 shifted 9 units to the left and right of the origin. The `spec` parameter completely defines the
+//   metaballs in your scene, including their position, orientation, and scaling, as well as different shapes.
 //   .
 //   You can create 2D metaballs in a variety of standard shapes using the predefined functions
 //   listed below. If you wish, you can also create custom metaball shapes using your own functions.
@@ -2777,40 +2789,6 @@ function mb_ring(r1,r2, cutoff=INF, influence=1, negative=false, hide_debug=fals
 //   * `influence` &mdash; a positive number specifying the strength of interaction this ball has with other balls.  Default: 1
 //   * `negative` &mdash; when true, creates a negative metaball. Default: false
 //   * `hide_debug` &mdash; when true, suppresses the display of the underlying metaball shape when `debug=true` is set in the `metaballs()` module. This is useful to hide shapes that may be overlapping others in the debug view. Default: false
-//   .
-//   ***Metaball functions and user defined functions***
-//   .
-//   You can construct complicated metaball models using only the built-in metaball functions above.
-//   However, you can create your own custom metaballs if desired.
-//   .
-//   When multiple metaballs are in a model, their functions are summed and compared to the isovalue to
-//   determine the final shape of the metaball object.
-//   Each metaball is defined as a function of a 2-vector that gives the value of the metaball function
-//   for that point in space. As is common in metaball implementations, we define the built-in metaballs using an
-//   inverse relationship where the metaball functions fall off as $1/d$, where $d$ is distance measured from
-//   the center or core of the metaball. The circular metaball therefore has a simple basic definition as
-//   $f(v) = 1/\text{norm}(v)$. If we choose an isovalue $c$, then the set of points $v$ such that $f(v) >= c$
-//   defines a bounded set; for example, a circle with radius depending on the isovalue $c$. The
-//   default isovalue is $c=1$. Increasing the isovalue shrinks the object, and decreasing the isovalue grows
-//   the object.
-//   .
-//   To adjust interaction strength, the influence parameter applies an exponent, so if `influence=a`
-//   then the decay becomes $1/d^{1/a}$. This means, for example, that if you set influence to
-//   0.5 you get a $1/d^2$ falloff. Changing this exponent changes how the balls interact.
-//   .
-//   You can pass a custom function as a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
-//   that takes a 2-vector as its first argument and returns a single numerical value.
-//   Generally, the function should return a scalar value that drops below the isovalue somewhere within your
-//   bounding box. If you want your custom metaball function to behave similar to to the built-in functions,
-//   the return value should fall off with distance as $1/d$.
-//   .
-//   User-defined metaball functions are displayed by default as gray triangles with a corner radius of 5,
-//   unless you also designate a polygon path for your custom function. To specify a custom polygon for a custom function
-//   literal, enclose it in square brackets to make a list with the function literal as the first element, and
-//   another list as the second element, for example:    
-//   `[ function (point) custom_func(point, arg1,...), [sign, path] ]`    
-//   where `sign` is the sign of the metaball and `path` is the path of the polygon to show in the debug view when `debug=true`.
-//   The sign determines the color of the debug object: `1` is blue, `-1` is orange, and `0` is gray.
 //   .
 //   ***Closed and unclosed paths***
 //   .
@@ -3022,9 +3000,10 @@ function metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, cl
         bbox0 = is_num(bounding_box)
             ? let(hb=0.5*bounding_box) [[-hb,-hb],[hb,hb]]
             : bounding_box,
-        autopixsize = is_def(pixel_size) ? pixel_size : _getautopixsize(bbox0, default(pixel_count,32^2)),
+       autopixsize = is_def(pixel_size) ? pixel_size : _getautopixsize(bbox0, default(pixel_count,32^2)),
         pixsize = _getpixsize(autopixsize, bbox0, exact_bounds),
         newbbox = _getbbox2d(pixsize, bbox0, exact_bounds),
+        bbcheck = assert(all_positive(newbbox[1]-newbbox[0]), "\nbounding_box must be a vector range [[xmin,ymin],[xmax,ymax]]."),
         fieldarray = _metaballs2dfield(funclist, transmatrix, newbbox, pixsize, nballs),
         pxcenters = use_centers ? _metaballs2dfield(funclist, transmatrix,
             [newbbox[0]+0.5*pixsize, newbbox[1]-0.499*pixsize], pixsize, nballs)
@@ -3140,8 +3119,8 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 // Description:
 //   Computes a [VNF structure](vnf.scad) of an object bounded by an isosurface or a range between two isosurfaces, within a specified bounding box.
 //   .
-//   The [subsection on parameters](#isosurface-contour-parameters) above describes in
-//   detail how the primary parameters work for isosurfaces.
+//   See [Isosurface contour parameters](#isosurface-contour-parameters) for details about
+//   how the primary parameters work for isosurfaces.
 //   .
 //   **Why does my object appear as a cube?** If your object is unbounded, then when it intersects with
 //   the bounding box and `closed=true`, the result may appear to be a solid cube, because the clipping
@@ -3368,6 +3347,7 @@ function isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, re
         autovoxsize = is_def(voxel_size) ? voxel_size : _getautovoxsize(bbox0, default(voxel_count,22^3)),
         voxsize = _mball ? voxel_size : _getvoxsize(autovoxsize, bbox0, exactbounds),
         bbox = _mball ? bounding_box : _getbbox(voxsize, bbox0, exactbounds, f),
+        bbcheck = assert(all_positive(bbox[1]-bbox[0]), "\nbounding_box must be a vector range [[xmin,ymin,zmin],[xmax,ymax,zmax]]."),
         // proceed with isosurface computations
         cubes = _isosurface_cubes(voxsize, bbox,
             fieldarray=is_function(f)?undef:f, fieldfunc=is_function(f)?f:undef,
@@ -3469,8 +3449,8 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   Computes a [region](regions.scad) that contains one or more 2D contour [paths](paths.scad)
 //   within a bounding box at a single isovalue.
 //   .
-//   The [subsection on parameters](#isosurface-contour-parameters) above describes in
-//   detail how the primary parameters work for contours.
+//   See [Isosurface contour parameters](#isosurface-contour-parameters) for details about
+//   how the primary parameters work for contours.
 //   .
 //   To provide a function, you supply a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
 //   taking two parameters as input to define the grid coordinate location (e.g. `x,y`) and
@@ -3489,6 +3469,15 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   .
 //   ***Closed and unclosed paths***
 //   .
+//   The functional form of `metaballs2d()` supports a `closed` parameter. When `closed=true` (the default)
+//   and a polygon is clipped by the bounding box, the bounding box edges are included in the polygon. The
+//   resulting path list is a valid region with no duplicated vertices in any path.
+//   .
+//   When `closed=false`, paths that intersect the edge of the bounding box end at the bounding box. This
+//   means that the list of paths may include a mixture of closed and open paths. Regardless of whether
+//   any of the output paths are open, all closed paths have identical first and last points so that  closed and open paths can be distinguished. You can use {{are_ends_equal()}} to determine if a path is closed. A path list that includes open paths is not a region, since regions are lists of closed polygons. Duplicating the ends of closed paths can cause problems for some functions such as {{offset()}} which will complain about repeated points; to deal with this problem you can pass the closed components to {{list_unwrap()}} to remove the extra endpoint.
+
+
 //   The parameter `closed=true` is set by default, which causes polygon segments to be generated wherever a
 //   contour is clipped by the bounding box, so that all contours are closed polygons. When `closed=true`,
 //   the list of paths returned by `contour()` is a valid [region](regions.scad) with no duplicated
@@ -3600,6 +3589,7 @@ function contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, use_c
         autopixsize = is_def(pixel_size) ? pixel_size : _getautopixsize(bbox0, default(pixel_count,32^2)),
         pixsize = _mball ? pixel_size : _getpixsize(autopixsize, bbox0, exactbounds),
         bbox = _mball ? bounding_box : _getbbox2d(pixsize, bbox0, exactbounds, f),
+        bbcheck = assert(all_positive(bbox[1]-bbox[0]), "\nbounding_box must be a vector range [[xmin,ymin],[xmax,ymax]]."),
         // proceed with isosurface computations
         pixels = _contour_pixels(pixsize, bbox,
             fieldarray=is_function(f)?undef:f, fieldfunc=is_function(f)?f:undef,
