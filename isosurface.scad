@@ -1163,7 +1163,7 @@ function mb_disk(h, r, cutoff=INF, influence=1, negative=false, hide_debug=false
         dum1 = assert(is_finite(h) && h>0, "\ncylinder height must be a positive number."),
         h2 = h/2,
         or = get_radius(r=r,d=d),
-        dum2 = assert(is_finite(r) && or>0, "\ninvalid radius or diameter."),
+        dum2 = assert(is_finite(or) && or>0, "\ninvalid radius or diameter."),
         r = or - h2,
         dum3 = assert(r>0, "\nDiameter must be greater than height."),
         neg = negative ? -1 : 1,

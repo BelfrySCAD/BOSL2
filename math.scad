@@ -576,7 +576,7 @@ function constrain(v, minval, maxval) =
 // Usage:
 //   mod = posmod(x, m)
 // Description:
-//   Returns the positive modulo `m` of `x`.  Value returned will be in the range 0 ... `m`-1.
+//   Returns the positive modulo `m` of `x`.  Value returned will be satisfy `0 <= mod < m`.  
 // Arguments:
 //   x = The value to constrain.
 //   m = Modulo value.
@@ -611,6 +611,31 @@ function posmod(x,m) =
 function modang(x) =
     assert( is_finite(x), "Input must be a finite number.")
     let(xx = posmod(x,360)) xx<180? xx : xx-360;
+
+
+// Function: mean_angle()
+// Synopsis: Returns the mean angle of two angles
+// Topics: Math
+// See Also: modang()
+// Usage:
+//   half_ang = mean_angle(angle1,angle2);
+// Description:
+//   Takes two angles (degrees) in any range and finds the angle halfway between
+//   the given angles, where halfway is interpreted using the shorter direction.
+//   In the case where the angles are exactly 180 degrees apart,
+//   it will return `angle1+90`.  The returned angle is always in the interval [0,360).  
+// Arguments:
+//   angle1 = first angle
+//   angle2 = second angle
+function mean_angle(angle1,angle2) =
+    assert(is_vector([angle1,angle2]), "Inputs must be finite numbers.")
+    let(
+        ang1 = posmod(angle1,360),
+        ang2 = posmod(angle2,360)
+    )
+    approx(abs(ang1-ang2),180) ? posmod(angle1+90,360)
+  : abs(ang1-ang2)<=180 ? (ang1+ang2)/2
+  : posmod((ang1+ang2-360)/2,360);
 
 
 
