@@ -1080,15 +1080,16 @@ function _contour_pixels(pixsize, bbox, fieldarray, fieldfunc, pixcenters, isova
     nx = len(field)-2,
     ny = len(field[0])-2,
     v0 = bbox[0]
-) [
+) let(isocorrect = sign(isovalue)*max(abs(isovalue)*1.000001, isovalue+0.0000001)) [
     for(i=[0:nx]) let(x=v0.x+pixsize.x*i)
         for(j=[0:ny]) let(y=v0.y+pixsize.y*j)
             let(i1=i+1, j1=j+1,
                 pf = let(
-                    f0=min(1e9,max(-1e9,field[i][j])),
-                    f1=min(1e9,max(-1e9,field[i][j1])),
-                    f2=min(1e9,max(-1e9,field[i1][j])),
-                    f3=min(1e9,max(-1e9,field[i1][j1]))
+                    // clamp corner values to ±1e9, make sure no corner=isovalue
+                    f0=let(c=min(1e9,max(-1e9,field[i][j]))) abs(c-isovalue)<EPSILON ? isocorrect : c,
+                    f1=let(c=min(1e9,max(-1e9,field[i][j1]))) abs(c-isovalue)<EPSILON ? isocorrect : c,
+                    f2=let(c=min(1e9,max(-1e9,field[i1][j]))) abs(c-isovalue)<EPSILON ? isocorrect : c,
+                    f3=let(c=min(1e9,max(-1e9,field[i1][j1]))) abs(c-isovalue)<EPSILON ? isocorrect : c
                 ) [  // pixel corner field values
                     f0, f1, f2, f3,
                     // get center value of pixel
@@ -1153,8 +1154,9 @@ function _contour_vertices(pxlist, pxsize, isoval, segtable=_MTriSegmentTable) =
 
 function _assemble_partial_paths(paths,closed=false,eps=EPSILON) =
     let(
-        pathlist = _assemble_partial_paths_recur(paths),
-        splitpaths = 
+        pathlist = _assemble_partial_paths_recur(paths) /*,
+        // this eliminates crossing paths - commented out now that it's no longer possible for the input segments to cross
+        splitpaths =
             [for(path=pathlist) each
                let(
                    searchlist = vector_search(path,eps,path),
@@ -1167,9 +1169,10 @@ function _assemble_partial_paths(paths,closed=false,eps=EPSILON) =
                )
                len(fragments)==1 ? fragments
                                  : _assemble_path_fragments(fragments)
-            ]
+            ]*/
     )
-    [for(path=splitpaths) list_unwrap(path)];
+    //[for(path=splitpaths) list_unwrap(path)];
+    closed ? [for(path=pathlist) list_unwrap(path)] : pathlist;
 
 
 function _assemble_partial_paths_recur(edges, paths=[],i=0) =
@@ -1181,11 +1184,11 @@ function _assemble_partial_paths_recur(edges, paths=[],i=0) =
      )
      let(
           keep_path = list_remove(paths,[if (len(left)>0) left[0],if (len(right)>0) right[0]]),
-          update_path = left==[] && right==[] ? edges[i]
+          update_path =  left==[] && right==[] ? edges[i]
                       : left==[] ? concat(list_head(edges[i]),paths[right[0]])
                       : right==[] ?  concat(paths[left[0]],slice(edges[i],1,-1))
-                      : left[0] != right[0] ? concat(paths[left[0]], paths[right[0]])
-                      : concat(paths[left[0]], slice(edges[i],1,-1)) // last arg should be -2 to avoid duplicating endpoints on closed path
+                      : left[0] != right[0] ? concat(paths[left[0]],slice(edges[i],1,-2), paths[right[0]])
+                      : concat(paths[left[0]], slice(edges[i],1,-1)) // last arg -2 removes duplicate endpoints but this is handled in passthrough function
      )
      _assemble_partial_paths_recur(edges, concat(keep_path, [update_path]), i+1);
 
@@ -3609,7 +3612,7 @@ function _region_smooth(reg, passes, bbox, count=0) =
     count >= passes ? reg :
     let(sm = [
         for(r=reg) let(
-            n=len(r),
+            n = r[0]==last(r) ? len(r)-1 : len(r),
             pb = [for(i=[0:n-1]) _is_pt_on_bbox(r[i],bbox)]
             ) [
                 for(i=[0:n-1]) let(j=(i+1)%n) each [
