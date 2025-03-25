@@ -1046,7 +1046,7 @@ module shape_compare(eps=1/1024) {
 // Description:
 //   Returns true if the `state` value indicates the current loop should continue.  This is useful
 //   when using C-style for loops to iteratively calculate a value.  Used with `loop_while()` and
-//   `loop_done()`.  See [Looping Helpers](section-looping-helpers) for an example.
+//   `loop_done()`.  See [Looping Helpers](utility.scad#section-c-style-for-loop-helpers) for an example.
 // Arguments:
 //   state = The loop state value.
 function looping(state) = state < 2;
@@ -1062,7 +1062,7 @@ function looping(state) = state < 2;
 //   Given the current `state`, and a boolean `continue` that indicates if the loop should still be
 //   continuing, returns the updated state value for the the next loop.  This is useful when using
 //   C-style for loops to iteratively calculate a value.  Used with `looping()` and `loop_done()`.
-//   See [Looping Helpers](section-looping-helpers) for an example.
+//   See [Looping Helpers](utility.scad#section-c-style-for-loop-helpers) for an example.
 // Arguments:
 //   state = The loop state value.
 //   continue = A boolean value indicating whether the current loop should progress.
@@ -1080,7 +1080,7 @@ function loop_while(state, continue) =
 // Description:
 //   Returns true if the `state` value indicates the loop is finishing.  This is useful when using
 //   C-style for loops to iteratively calculate a value.  Used with `looping()` and `loop_while()`.
-//   See [Looping Helpers](#5-looping-helpers) for an example.
+//   See [Looping Helpers](utility.scad#section-c-style-for-loop-helpers) for an example.
 // Arguments:
 //   state = The loop state value.
 function loop_done(state) = state > 0;

@@ -41,9 +41,10 @@ function _is_point_on_line(point, line, bounded=false, eps=EPSILON) =
         v1 = (line[1]-line[0]),
         v0 = (point-line[0]),
         t  = v0*v1/(v1*v1),
-        bounded = force_list(bounded,2)
+        bounded = force_list(bounded,2),
+        norm_crossprod = len(v1)==2 ? abs(cross(v0,v1)) : norm(cross(v0,v1))
     ) 
-    abs(cross(v0,v1))<=eps*norm(v1) 
+    norm_crossprod <= eps*norm(v1) 
     && (!bounded[0] || t>=-eps) 
     && (!bounded[1] || t<1+eps) ;
 
@@ -902,6 +903,48 @@ function are_points_on_plane(points, plane, eps=EPSILON) =
 ///   point = The 3D point to test.
 function _is_point_above_plane(plane, point) =
     point_plane_distance(plane, point) > EPSILON;
+
+
+// Module: show_plane()
+// Synopsis: Display (part of) a plane
+// SynTags: Geom
+// Topics: Planes
+// Usage:
+//   show_plane(plane, size, [offset]) [ATTACHMENTS];
+// Description:
+//   Display a rectangular portion of the specified plane for debugging or visualization purposes.
+//   The size parameter specifies the size of the plane when projected along the coordinate axis that is closest to
+//   the plane's normal vector.  The offset parameter will shift the plane location perpendicular to the normal vector.
+//   This object is a non-manifold VNF (it has edges) so it will not render.
+// Arguments:
+//   plane = Plane to display
+//   size = scalar or 2-vector size parameter
+//   offset = scalar of 2-vector offset
+// Example(3D):
+//   sphere(r=15,$fn=48);
+//   plane = plane_from_normal([2,-3,9],[4,-5,12]);
+//   %show_plane(plane, [35,25], [4,-7]);
+
+module show_plane(plane, size, offset=0)
+{
+    size = force_list(size,2);
+    offset = force_list(offset, 2, 0);
+    checks =
+      assert(is_vector(size,2), "The size parameter must be a scalar or 2-vector")
+      assert(is_vector(offset,2), "The offset parameter must be a scalar or 2-vector");
+    pts = move(offset,rect(size));
+    axes = [UP, BACK, RIGHT];
+    n = plane_normal(plane);
+    ang = [for(v=axes) abs(plane_line_angle(plane, [CTR,v]))];
+    axis = axes[max_index(ang)];
+    face = [for(pt=pts)
+             axis==UP? [pt.x,pt.y,(plane[3]-plane.x*pt.x-plane.y*pt.y)/plane.z]
+           : axis==BACK? [pt[0],(plane[3]-plane.x*pt[0]-plane.z*pt[1])/plane.y,pt[1]]
+           :             [(plane[3]-plane.y*pt[0]-plane.z*pt[1])/plane.x,pt[0],pt[1]]
+           ];
+    vnf = [face, [count(face)]];
+    vnf_polyhedron(vnf) children();
+}
 
 
 
