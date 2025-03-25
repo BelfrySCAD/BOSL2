@@ -302,9 +302,9 @@ module stroke(
     attachable(){
       for (path = paths) {
           pathvalid = is_path(path,[2,3]) || same_shape(path,[[0,0]]) || same_shape(path,[[0,0,0]]);
-          assert(pathvalid,"The path argument must be a list of 2D or 3D points, or a region.");
 
-          check4 = assert(is_num(width) || len(width)==len(path),
+          check4 = assert(pathvalid,"The path argument must be a list of 2D or 3D points, or a region.")
+                   assert(is_num(width) || len(width)==len(path),
                           "width must be a number or a vector the same length as the path (or all components of a region)");
           path = deduplicate( closed? list_wrap(path) : path );
           width = is_num(width)? [for (x=path) width]
@@ -1232,15 +1232,16 @@ function _turtle_command(command, parm, parm2, state, index) =
             lrsign = command=="arcleft" ? 1 : -1,
             radius = parm*sign(myangle),
             center = lastpt + lrsign*radius*line_normal([0,0],state[step]),
-            steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps], 
-            arcpath = myangle == 0 || radius == 0 ? [] : arc(
-                steps,
-                points = [
-                    lastpt,
-                    rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle/2),
-                    rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle)
-                ]
-            )
+            steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps],
+            arcpath = myangle == 0 || radius == 0 ? []
+                    : arc(
+                           steps,
+                           points = [
+                               lastpt,
+                               rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle/2),
+                               rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle)
+                           ]
+                         )
         )
         list_set(
             state, [path,step], [

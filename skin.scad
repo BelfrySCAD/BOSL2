@@ -1817,7 +1817,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   path_sweep(shape,path,method="natural"){
 //     attach(["start","end"]) anchor_arrow(s=5);
 //   }
-// Example(Med,NoScales,VPR=[78.1,0,43.2],VPT=[2.18042,-0.485127,1.90371],VPD=74.4017): The "start" and "end" anchors are located at the origin point of the swept shape.
+// Example(Med,NoScales,VPR=[78.1,0,43.2],VPT=[2.18042,-0.485127,1.90371],VPD=74.4017): The "start-centroid" and "end-centroid" anchors are located at the centroid the swept shape.
 //   shape = back_half(right_half(star(n=5,id=5,od=10)),y=-1);
 //   path = arc(angle=[0,180],d=30);
 //   path_sweep(shape,path,method="natural"){
