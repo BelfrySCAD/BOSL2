@@ -3259,7 +3259,7 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 //          (x*y*z^3 - 3*x^2*z^2) / np^2 + np^2,
 //       isovalue=[-INF,35], bounding_box=[[-32,-32,-14],[32,32,14]],
 //       voxel_size = 0.8, show_box=true);
-// Example(3D,Med,NoAxes,VPD=47,VPT=[0,0,2]): You can specify non-cubical voxels for efficiency. This example shows the result of two identical surface functions. The figure on the left uses a `voxel_size=1`, which washes out the detail in the z direction. The figure on the right shows the same shape with `voxel_size=[0.5,1,0.2]` to give a bit more resolution in the x direction and much more resolution in the z direction. This example runs about six times faster than if we used a cubical voxel of size 0.2 to capture the detail in only one axis at the expense of unnecessary detail in other axes.
+// Example(3D,Med,NoAxes,VPD=47,VPT=[0,0,2]): You can specify non-cubical voxels for efficiency. This example shows the result of two identical surface functions. The figure on the left uses `voxel_size=1`, which washes out the detail in the z direction. The figure on the right shows the same shape with `voxel_size=[0.5,1,0.2]` to give a bit more resolution in the x direction and much more resolution in the z direction. This example runs about six times faster than if we used a cubical voxel of size 0.2 to capture the detail in only one axis at the expense of unnecessary detail in other axes.
 //   function shape(x,y,z, r=5) =
 //       r / sqrt(x^2 + 0.5*(y^2 + z^2) + 0.5*r*cos(200*z));
 //   bbox = [[-6,-8,0], [6,8,7]];
@@ -3478,18 +3478,11 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   .
 //   When `closed=false`, paths that intersect the edge of the bounding box end at the bounding box. This
 //   means that the list of paths may include a mixture of closed and open paths. Regardless of whether
-//   any of the output paths are open, all closed paths have identical first and last points so that  closed and open paths can be distinguished. You can use {{are_ends_equal()}} to determine if a path is closed. A path list that includes open paths is not a region, since regions are lists of closed polygons. Duplicating the ends of closed paths can cause problems for some functions such as {{offset()}} which will complain about repeated points; to deal with this problem you can pass the closed components to {{list_unwrap()}} to remove the extra endpoint.
-
-
-//   The parameter `closed=true` is set by default, which causes polygon segments to be generated wherever a
-//   contour is clipped by the bounding box, so that all contours are closed polygons. When `closed=true`,
-//   the list of paths returned by `contour()` is a valid [region](regions.scad) with no duplicated
-//   vertices in any path, and all paths are treated as as closed polygons by the `contour()` module.
-//   When calling `contour()` as a module, the `closed` parameter is unavailable and always true.
-//   .
-//   When `closed=false`, however, the list of paths returned by the `contour()` function may include a
-//   mixture of closed and unclosed paths, in which the closed paths can be identified as having equivalent
-//   start and end points (this duplication makes the path list an invalid [region](regions.scad)).
+//   any of the output paths are open, all closed paths have identical first and last points so that  closed and
+//   open paths can be distinguished. You can use {{are_ends_equal()}} to determine if a path is closed. A path
+//   list that includes open paths is not a region, because regions are lists of closed polygons. Duplicating the
+//   ends of closed paths can cause problems for functions such as {{offset()}}, which would complain about
+//   repeated points. You can pass a closed path to {{list_unwrap()}} to remove the extra endpoint.
 // Arguments:
 //   f = The contour function or array.
 //   isovalue = a scalar giving the isovalue parameter.
