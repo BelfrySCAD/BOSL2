@@ -4272,7 +4272,6 @@ function _prismoid_isect(geom, line, bounded, flip=false) =
                ],
        faceanch = [TOP, BOT, FWD, LEFT, BACK, RIGHT],
        hits = [for(i=idx(isect)) if (isect[i]) [faceanch[i], isect[i]]],
-fda=       echo(hits=hits),
        check = assert(len(hits)>0, "Line does not intersect the prismoid."), 
        anchor = rot(from=UP,to=axis,p=sum(column(hits,0))),
        anchlen = sum(v_abs(anchor)), 
@@ -4283,9 +4282,7 @@ fda=       echo(hits=hits),
                : let(
                      z = anch[2],
                      y = rot(from=UP,to=z, p=zrot(anch[3], BACK)),
-                     x = cross(y,z),
-                     fee=echo(anchor=anchor,x=x,y=y,z=z, x*(ipt-anchpt), y*(ipt-anchpt), [x,y]*(ipt-anchpt)),
-                     ee=echo(errs=norm([x,y]*(ipt-anchpt)),norm(ipt-anchpt) )
+                     x = cross(y,z)
                  )
                  anchlen==2 ? (ipt-anchpt) * y * RIGHT
                : (!flip?ident(2):[[0,1],[-1,0]])*[x,y]*(ipt-anchpt)
@@ -4386,8 +4383,6 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2
     aux_anchor=is_string(anchor2) ? anchor2
                : is_def(corrected_aux_anchor) ? corrected_aux_anchor[0]
                : point3d(anchor2);
-
-    
     
     base=desc1;
     aux=desc2;
@@ -4398,10 +4393,7 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2
 
     dummy = assert(is_vector(base_anchor) || is_string(base_anchor), "anchor1 must be a string or a 3-vector")
             assert(is_vector(aux_anchor) || is_string(aux_anchor), "anchor2 must be a string or a 3-vector")    
-//            assert(aux_anchor!=CENTER, "CENTER anchor not supported for desc2")
-//            assert(base_anchor!=CENTER, "CENTER anchor not supported for desc1")
             assert(is_rotation(auxmap), "desc1 and desc2 are not related to each other by a rotation (and translation)");
-
     
     base_type = _get_obj_type(1,base[1],base_anchor,profile);
     base_axis = base_type=="cyl" ? base[1][5] : RIGHT;
