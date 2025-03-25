@@ -1238,13 +1238,13 @@ module arc_copies(
     sa=0, ea=360,
     rot=true
 ) {
-    req_children($children);  
+    req_children($children);
     rx = get_radius(r1=rx, r=r, d1=dx, d=d, dflt=1);
     ry = get_radius(r1=ry, r=r, d1=dy, d=d, dflt=1);
     sa = posmod(sa, 360);
     ea = posmod(ea, 360);
-    n = (abs(ea-sa)<0.01)?(n+1):n;
-    delt = (((ea<=sa)?360.0:0)+ea-sa)/(n-1);
+    extra_n = (abs(ea-sa)<0.01)?1:0;
+    delt = (((ea<=sa)?360.0:0)+ea-sa)/(n-1+extra_n);
     for ($idx = [0:1:n-1]) {
         $ang = sa + ($idx * delt);
         $pos =[rx*cos($ang), ry*sin($ang), 0];
@@ -1271,8 +1271,8 @@ function arc_copies(
         ry = get_radius(r1=ry, r=r, d1=dy, d=d, dflt=1),
         sa = posmod(sa, 360),
         ea = posmod(ea, 360),
-        n = (abs(ea-sa)<0.01)?(n+1):n,
-        delt = (((ea<=sa)?360.0:0)+ea-sa)/(n-1),
+        extra_n = (abs(ea-sa)<0.01)?1:0,
+        delt = (((ea<=sa)?360.0:0)+ea-sa)/(n-1+extra_n),
         mats = [
             for (i = [0:1:n-1])
             let(
