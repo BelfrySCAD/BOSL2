@@ -4318,7 +4318,7 @@ function _cone_isect(geom,line,bounded,flip) =
                        x = cross(y,z),
                        shift = (!flip?ident(2):[[0,1],[-1,0]])*[x,y]*(rot(from=UP,to=axis,p=btisect[tbhit[0]])-anch[1])
                    )
-                   [anchor,shift],
+                   [anchor,shift]
     )
     is_def(tbresult) ? tbresult
   :
