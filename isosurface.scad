@@ -1648,7 +1648,6 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 
 // Section: Metaballs
 //   ![Metaball animation](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/metaball_demo.gif)
-//   ![Metaball animation](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/metaball_demo2d.gif)
 //   .
 //   [Metaballs](https://en.wikipedia.org/wiki/Metaballs), also known as "blobby objects",
 //   can produce smoothly varying blobs and organic forms. You create metaballs by placing metaball
@@ -2653,13 +2652,13 @@ function mb_stadium(size, cutoff=INF, influence=1, negative=false, hide_debug=fa
         length = shape>=0 ? siz[1] : siz[0],
         r = shape>=0 ? siz[0]/2 : siz[1]/2,
         sl = length-2*r, // straight side length
-        dum3 = assert(sl>0, "\nTotal length must accommodate rounded ends of rectangle."),
+        //dum3 = assert(sl>=0, "\nTotal length must accommodate rounded ends of rectangle."),
         neg = negative ? -1 : 1,
-        poly = shape<=EPSILON ? [neg, hide_debug ? circle(r=0.02, $fn=3) : circle(r=r, $fn=20)]
+        poly = abs(shape)<=EPSILON ? [neg, hide_debug ? circle(r=0.02, $fn=3) : circle(r=r, $fn=20)]
         : shape>0 ? [neg, hide_debug ? square(0.02,center=true) : rect([2*r,length], rounding=0.999*r, $fn=20)]
         : [neg, hide_debug ? square(0.02,center=true) : rect([length,2*r], rounding=0.999*r, $fn=20)]
    ) abs(shape)<EPSILON ?
-    [function (dv) _mb_circle_full(point, r, cutoff, 1/influence, neg), poly]
+    [function (dv) _mb_circle_full(dv, r, cutoff, 1/influence, neg), poly]
     : shape>0 ? [function (dv) _mb_stadium_full(dv, sl/2, r, cutoff, 1/influence, neg), poly]
     : [function (dv) _mb_stadium_sideways_full(dv, sl/2, r, cutoff, 1/influence, neg), poly];
 
@@ -2719,6 +2718,8 @@ function mb_ring(r1,r2, cutoff=INF, influence=1, negative=false, hide_debug=fals
 // Usage: As a function
 //   region = metaballs2d(spec, bounding_box, pixel_size, [isovalue=], [closed=], [use_centers=], [smoothing=], [exact_bounds=], [show_stats=]);
 // Description:
+//   ![Metaball animation](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/metaball_demo2d.gif)
+//   .
 //   2D metaball shapes can be useful to create interesting polygons for extrusion. When invoked as a
 //   module, a 2D metaball scene is displayed. When called as a function, a list containing one or more
 //   [paths](paths.scad) is returned.
@@ -2954,7 +2955,7 @@ function mb_ring(r1,r2, cutoff=INF, influence=1, negative=false, hide_debug=fals
 module metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, use_centers=false, smoothing=undef, exact_bounds=false, convexity=6, cp="centroid", anchor="origin", spin=0, atype="hull", show_stats=false, show_box=false, debug=false) {
     regionlist = metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue, true, use_centers, smoothing, exact_bounds, show_stats, _debug=debug);
     $metaball_pathlist = debug ? regionlist[0] : regionlist; // for possible use with children
-    wid = min(0.5, 0.25 * (is_num(pixel_size) ? pixel_size : 0.5*(pixel_size[0]+pixel_size[1])));
+    wid = min(0.5, 0.5 * (is_num(pixel_size) ? pixel_size : 0.5*(pixel_size[0]+pixel_size[1])));
     if(debug) {
         // display debug polygons
         for(a=regionlist[1])
