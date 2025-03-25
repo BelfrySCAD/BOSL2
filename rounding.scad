@@ -3958,7 +3958,9 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   to {{join_prism()}}, and the arguments which describe the prism are the same.  You obtain the
 //   object descriptions using {{parent()}}, which can enable prisms to be constructed between objects
 //   at different levels in the object tree.  You can also connect an object with itself, for example to
-//   create a hole through an object, or to create an interior connection through a hole.  
+//   create a hole through an object, or to create an interior connection through a hole.
+//   If you specify a CENTER anchor for an object then the prism will be aimed at the object's CENTER anchor
+//   and joined at a shifted anchor located on the object's surface.  
 //   .
 //   The prism will connect anchor points described by the two descriptions you supply.  The supported object
 //   types are prismoids, VNFs, cylinders, spheres, and linear sweeps.  For prismoids and VNFs can use any anchor on a face
@@ -4174,6 +4176,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //        prism_connector(circ, prev(),BACK+LEFT, next(), FWD+LEFT, fillet=5, debug_pos=false);
 // Example(3D,Med): When using {{desc_copies()}} with a varying shape you have to conditionally show only the correct shape for each index, but still specify all the shapes so you can collect their descriptions.  
 //  desc_copies(arc_copies(rx=60,ry=80,n=5,sa=-20,ea=200))
+//     circ = circle(r=3, $fn=64);
 //     hide($idx%2==0?"cyl":"cube")
 //     tag_this("cyl")cyl(d=30,h=30) let(cyl=parent())
 //     tag_this("cube")cuboid([22,22,30])
@@ -4191,7 +4194,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 
 // Get the object type from the specified geometry and anchor point
 
-// Note: profile is needed just to find its dimensions for making a big enough edge profile
+// Note that profile is needed just to find its dimensions for making a big enough edge profile
 function _get_obj_type(ind,geom,anchor,prof) =
      geom[0]=="spheroid" ? "sphere"
    : geom[0]=="conoid" ? let(

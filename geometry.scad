@@ -906,7 +906,7 @@ function _is_point_above_plane(plane, point) =
 
 
 // Module: show_plane()
-// Summary: Display (part of) a plane
+// Synopsis: Display (part of) a plane
 // SynTags: Geom
 // Topics: Planes
 // Usage:
