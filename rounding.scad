@@ -4175,8 +4175,8 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //     spheroid(11,circum=true) let(next=$next,prev=$prev)
 //        prism_connector(circ, prev(),BACK+LEFT, next(), FWD+LEFT, fillet=5, debug_pos=false);
 // Example(3D,Med): When using {{desc_copies()}} with a varying shape you have to conditionally show only the correct shape for each index, but still specify all the shapes so you can collect their descriptions.  
+//  circ = circle(r=3, $fn=64);
 //  desc_copies(arc_copies(rx=60,ry=80,n=5,sa=-20,ea=200))
-//     circ = circle(r=3, $fn=64);
 //     hide($idx%2==0?"cyl":"cube")
 //     tag_this("cyl")cyl(d=30,h=30) let(cyl=parent())
 //     tag_this("cube")cuboid([22,22,30])
