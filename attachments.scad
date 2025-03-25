@@ -1881,7 +1881,7 @@ module hide(tags)
 //         attach(RIGHT,BOT) cyl(r=1,h=5);
 //         attach(LEFT,BOT) cyl(r=1,h=5);
 //       }
-// Example: Nexting applications of hide_this()
+// Example: Nesting applications of hide_this()
 //   $fn=32;
 //   hide_this() cuboid(10)
 //     attach(TOP,BOT) cyl(r=2,h=5)
@@ -3982,8 +3982,8 @@ function _find_anchor(anchor, geom)=
             pos2 = rot(from=UP, to=axis, p=pos),
             vec2 = anch==CENTER? UP : rot(from=UP, to=axis, p=vec),
                // Set spin for top/bottom to be clockwise
-            spin = anch.z!=0 && (anch.x!=0 || anch.y!=0) ? _compute_spin(vec2,rot(from=UP,to=axis,p=point3d(tangent)*anch.z))
-                 : anch.z==0 && norm(anch)>0 ? _compute_spin(vec2, (vec2==DOWN || vec2==UP)?BACK:UP)
+            spin = anch.z!=0 && (!approx(anch.x,0) || !approx(anch.y,0)) ? _compute_spin(vec2,rot(from=UP,to=axis,p=point3d(tangent)*anch.z))
+                 : anch.z==0 && norm(anch)>EPSILON ? _compute_spin(vec2, (approx(vec2,DOWN) || approx(vec2,UP))?BACK:UP)
                  : oang
         ) [anchor, pos2, vec2, spin]
     ) : type == "point"? (
@@ -4448,7 +4448,7 @@ module expose_anchors(opacity=0.2) {
 // See Also: generic_airplane(), anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
 // Usage:
 //   show_transform_list(tlist, [s]);
-//   show_transform_list(tlist) {CHILDREN};
+//   show_transform_list(tlist) CHILDREN;
 // Description:
 //   Given a list of transformation matrices, shows the position and orientation of each one.
 //   A line is drawn from each transform position to the next one, and an orientation indicator is
@@ -5012,6 +5012,7 @@ function _canonical_edge(edge) =
   flip * edge;
 
 
+
 // Section: Attachable Descriptions for Operating on Attachables or Restoring a Previous State
 
 // Function: parent()
@@ -5064,7 +5065,7 @@ module restore(desc)
      multmatrix(T) children();
    }
    else{
-     assert(!is_undef(desc) && is_list(desc) && len(desc)==2, "Invalid desc");
+     check=assert(is_description(desc), "Invalid description");
      T = linear_solve($transform, desc[0]);
      $parent_geom = desc[1];
      multmatrix(T) children();
@@ -5076,46 +5077,61 @@ module restore(desc)
 // Topics: Descriptions, Attachments
 // See Also: parent(), desc_dist()
 // Usage:
-//   point = desc_point(desc,[anchor]);
+//   point = desc_point(desc,[p],[anchor]);
 // Description:
-//   Computes the coordinates of the specified anchor point in the given description relative to the current transformation state.
+//   Computes the coordinates of the specified point or anchor point in the given description relative to the current transformation state.
 // Arguments:
 //   desc = Description to use to get the point
-//   anchor = Anchor point that you want to extract.  Default: CENTER
+//   p = Point or point list to transform.  Default: CENTER (if anchor not given)
+//   --
+//   anchor = Anchor point (only one) that you want to extract.  Default: CENTER
 // Example(3D): In this example we translate away from the parent object and then compute points on that object.  Note that with OpenSCAD 2021.01 you must use union() or alternatively place the pt1 and pt2 assignments in a let() statement.  This is not necessary in development versions.  
 //  cuboid(10) let(desc=parent())
 //    right(12) up(27)
 //      union(){
-//        pt1 = desc_point(desc,TOP+BACK+LEFT);
-//        pt2 = desc_point(desc,TOP+FWD+RIGHT);
+//        pt1 = desc_point(desc,anchor=TOP+BACK+LEFT);
+//        pt2 = desc_point(desc,anchor=TOP+FWD+RIGHT);
 //        stroke([pt1,pt2,CENTER], closed=true, width=.5,color="red");
 //      }
 // Example(3D): Here we compute the point on the parent so we can draw a line anchored on the child object that connects to a computed point on the parent
 //  cuboid(10) let(desc=parent())
 //    attach(FWD,BOT) cuboid([3,3,7])
 //    attach(TOP+BACK+RIGHT, BOT)
-//    stroke([[0,0,0], desc_point(desc,TOP+FWD+RIGHT)],width=.5,color="red");
-function desc_point(desc, anchor=CENTER) =
-    is_undef(desc) ? linear_solve($transform, [0,0,0,1])
-  : let(
-         anch = _find_anchor(anchor, desc[1]),
-         T = linear_solve($transform, desc[0])
+//    stroke([[0,0,0], desc_point(desc,anchor=TOP+FWD+RIGHT)],width=.5,color="red");
+function desc_point(desc, p, anchor) =
+    is_undef(desc) ?
+       assert(is_undef(anchor), "Cannot give anchor withot desc")
+       let(
+            T = matrix_inverse($transform)
+       )
+       apply(T, default(p,UP))
+  : assert(is_description(desc), "Invalid description")
+    assert(num_defined([anchor,p])<2, "Cannot give both anchor and p")
+    let (
+         T = linear_solve($transform, desc[0]),
+         p = is_def(p) ? p
+           :  let(anch = _find_anchor(anchor, desc[1]))
+              anch[1]
     )
-    apply(T, anch[1]);
+    apply(T, p);
 
 
 // Function: desc_dir()
-// Synopsis: Computes the direction in the current context of a direction from an attachable description
+// Synopsis: Computes the direction in the current context of a direction or anchor in a description's context
 // Topics: Descriptions, Attachment
 // See Also: parent(), desc_point()
 // Usage:
-//   dir = desc_dir([desc],[anchor]);
+//   dir = desc_anchor(desc,[dir], [anchor]);
 // Description:
-//   Computes the direction in the current context of an anchor direction from an attachable description.  If you don't give a description
-//   then the direction is computed relative to global world coordinates. 
+//   Computes the direction in the current context of a direction in the context of the description.  You can specify
+//   the direction by giving a direction vector, or you can give an anchor that will be interpreted from the description.
+//   If you don't give a description then the direction is computed relative to global world coordinates; in this case you
+//   cannot give an anchor as the direction.  
 // Arguments:
 //   desc = Description to use.  Default: use the global world coordinate system
-//   anchor = Anchor to get the direction from.  Default: UP
+//   dir = Direction or list of directions to use.  Default: UP (if anchor is not given)
+//   --
+//   anchor = Anchor (only one) to get the direction from.
 // Example(3D): Here we don't give a description so the reference is to the global world coordinate system, and we don't give a direction, so the default of UP applies.  This lets the cylinder be placed so it is horizontal in world coordinates.  
 //   prismoid(20,10,h=15)
 //     attach(RIGHT,BOT) cuboid([4,4,15])
@@ -5123,17 +5139,39 @@ function desc_point(desc, anchor=CENTER) =
 // Example(3D,VPR=[78.1,0,76.1]): Here we use the description of the prismoid, which lets us place the rod so that it is oriented in the direction of the prismoid's face. 
 //   prismoid(20,10,h=15) let(pris=parent())
 //      attach(RIGHT,BOT) cuboid([4,4,15])
-//      position(TOP) cyl(d=2,h=15,orient=desc_dir(pris,FWD),anchor=LEFT);
-function desc_dir(desc, anchor=UP) =
+//      position(TOP) cyl(d=2,h=15,orient=desc_dir(pris,anchor=FWD),anchor=LEFT);
+function desc_dir(desc, dir, anchor) =
+    is_undef(desc) ?
+       assert(is_undef(anchor), "Cannot give anchor without desc")
+       let(
+            T = matrix_inverse($transform)
+       )
+       move(-apply(T,CENTER), apply(T, default(dir,UP)))
+  :
+    assert(is_description(desc), "Invalid description")
+    assert(num_defined([dir,anchor])<2, "Cannot give both dir and anchor")
     let(
-         T = is_undef(desc) ? matrix_inverse($transform) 
-                            : linear_solve($transform, desc[0]),
-         dir = is_undef(desc) ? anchor
-             : let(anch = _find_anchor(anchor, desc[1]))
+         T = linear_solve($transform, desc[0]),
+         dir = is_def(dir) ? dir
+             : let(
+                   anch = _find_anchor(anchor, desc[1])
+               )
                anch[2]
     )
-    apply(T, dir)-apply(T,CENTER);
-  
+    move(-apply(T,CENTER),apply(T, dir));
+
+function desc_attach(desc, anchor=UP, p, reverse=false) =
+    assert(is_description(desc), "Invalid description")
+    let(
+         T = linear_solve($transform, desc[0]),
+         anch = _find_anchor(anchor,desc[1]),
+         centerpoint = apply(T,CENTER),
+         pos = apply(T, anch[1]),
+         y = apply(T*rot(from=UP,to=anch[2])*zrot(anch[3]),BACK)-centerpoint,
+         z = apply(T,anch[2])-centerpoint
+    )
+    reverse ? frame_map(z=z,y=y,reverse=true, p=move(-pos,p))
+            : move(pos,frame_map(z=z,y=y, p=p));
 
 
 // Function: desc_dist()
@@ -5145,13 +5183,20 @@ function desc_dir(desc, anchor=UP) =
 //   dest = desc_dist(desc1=, desc2=, [anchor1=], [anchor2=]);
 // Description:
 //   Computes the distance between two points specified using attachable descriptions and optional anchor
-//   points.  If you omit the anchor point(s) then the computation uses the CENTER anchor.  
+//   points.  If you omit the anchor point(s) then the computation uses the CENTER anchor.
+// Arguments:
+//   desc1 = First description
+//   anchor1 = Anchor for first description
+//   desc2 = Second description
+//   anchor2 = Anchor for second description
 // Example(3D): Computes the distance between a point on each cube. 
 //  cuboid(10) let(desc=parent())
 //    right(15) cuboid(10) 
 //      echo(desc_dist(parent(),TOP+RIGHT+BACK, desc, TOP+LEFT+FWD));
 
 function desc_dist(desc1,anchor1=CENTER, desc2, anchor2=CENTER)=
+   assert(is_description(desc1),"Invalid description: desc1")
+   assert(is_description(desc2),"Invalid description: desc2")
    let(
          anch1 = _find_anchor(anchor1, desc1[1]),
          anch2 = _find_anchor(anchor2, desc2[1]),         
@@ -5163,13 +5208,12 @@ function desc_dist(desc1,anchor1=CENTER, desc2, anchor2=CENTER)=
     )
     norm(pt1-pt2);
 
-
-// Function: trans_desc()
+// Function: transform_desc()
 // Synopsis: Applies a transformation matrix to a description
 // Topics: Descriptions, Attachments
 // See Also: parent()
 // Usage:
-//   new_desc = trans_desc(T, desc);
+//   new_desc = transform_desc(T, desc);
 // Description:
 //   Applies a transformation matrix to a description, producing a new transformed description as
 //   output.  The transformation matrix can be produced using any of the usual transform commands.
@@ -5180,9 +5224,81 @@ function desc_dist(desc1,anchor1=CENTER, desc2, anchor2=CENTER)=
 //   T = transformation or list of transformations to apply (a 4x4 matrix or list of them)
 //   desc = description to transform
 
-function trans_desc(T,desc) =
+function transform_desc(T,desc) =
+    assert(is_description(desc), "Invalid description")
     is_consistent(T, ident(4)) ? [for(t=T) [t*desc[0], desc[1]]]
   : is_matrix(T,4,4) ? [T*desc[0], desc[1]]
   : assert(false,"T must be a 4x4 matrix or list of 4x4 matrices");
+
+
+// Module: desc_copies()
+// Synopsis: Places copies according to a list of transformation matrices and supplies descriptions for the copies.
+// SynTags: MatList, Trans
+// Topics: Transformations, Distributors, Copiers, Descriptions
+// See Also: line_copies(), move_copies(), xcopies(), ycopies(), zcopies(), grid_copies(), xflip_copy(), yflip_copy(), zflip_copy(), mirror_copy()
+// Usage:
+//   desc_copies(transforms) CHILDREN;
+// Description:
+//   Makes a copy of the children and applies each matrix in the list of transformation matrices.
+//   This is equivalent to running `multmatrix()` over all the transformations for the children.
+//   This function provides a method for working with descriptions of the whole set of copies by
+//   making all of their descriptions available to the children.  This functionality will primarly
+//   be useful when the transformation consists only of translations and rotations and hence
+//   does not change the size or shape of the children.  If you change the shape of the objects, care
+//   is required to ensure that the descriptions match correctly. 
+//   .
+//   In a child object you obtain its description using {{parent()}} as usual.  Once you have
+//   that description you can also access descriptions of the other objects, assuming they have
+//   identical geometry.  (The geometry can vary if you make your object conditional on `$idx` for example.)
+//   To get the next object use `$next()` and to get the previous one use `$prev()`.  You can also
+//   get an arbitrary object description by index using `$desc(i)`.  You can use these descriptions
+//   with {{prism_connector()}} to create prisms between the corresponding objects.
+//   .
+//   Note that in OpenSCAD version 2021.01 you cannot directly call `$next` or the other `$` functions.
+//   You have to write `let(next=$next)` and then you can use the `next()` function.  Similar steps
+//   are necessary for the other functions.  In development versions you can directly invoke `$next()`
+//   and the other functions.  
+//   .
+//   The descriptions are made available through function literals provided in the `$` variables.  The
+//   available functions are
+//   * $next([di], [desc]): Returns the description of the next object, or if i is given, the object i steps forward.  The indexing wraps around.
+//   * $prev([di], [desc]): Returns the description of the previoud object, or if i is given, the object i steps before.  The indexing wraps around.
+//   * $desc(i, [desc]): Returns a description of the object with index `i`.  Indexing does not wrap around.  
+//   All of these functions have an optional `desc` parameter, which is the description that will be transformed to produce the next, previous, or indexed
+//   description.  By default `desc` is set to {{parent()}}, but you may wish to use a different description if you have objects that vary.
+//   .
+//   See the last examples in {{prism_connector()}} for examples using this module.  
+// Arguments:
+//   transforms = list of transformation matrices to apply to the children
+
+module desc_copies(transforms)
+{
+  $count=len(transforms);
+  for(i=idx(transforms))
+     let(
+          $idx=i,
+          $is_last = i==len(transforms)-1,
+          $desc = function(i,desc) transform_desc(transforms[i]*matrix_inverse(transforms[i]),default(desc,parent())),
+          $next = function(di=1,desc) transform_desc(select(transforms,i+di)*matrix_inverse(transforms[i]), default(desc,parent())),
+          $prev = function(di=1,desc) transform_desc(select(transforms,i-di)*matrix_inverse(transforms[i]), default(desc,parent()))
+     )
+     multmatrix(transforms[i])children();
+}       
+
+           
+// Function: is_description()
+// Synopsis: Check if its argument is a descriptioni
+// Topics: Descriptions
+// Usage:
+//   bool = is_description(desc);
+// Description:
+//   Returns true if the argument appears to be a description.  
+// Arguments:
+//   desc = argument to check
+function is_description(desc) =
+  is_list(desc) && len(desc)==2 && is_matrix(desc[0],4,4) && is_list(desc[1]) && is_string(desc[1][0]);
+
+
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
