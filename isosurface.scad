@@ -3478,18 +3478,12 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   .
 //   When `closed=false`, paths that intersect the edge of the bounding box end at the bounding box. This
 //   means that the list of paths may include a mixture of closed and open paths. Regardless of whether
-//   any of the output paths are open, all closed paths have identical first and last points so that  closed and open paths can be distinguished. You can use {{are_ends_equal()}} to determine if a path is closed. A path list that includes open paths is not a region, since regions are lists of closed polygons. Duplicating the ends of closed paths can cause problems for some functions such as {{offset()}} which will complain about repeated points; to deal with this problem you can pass the closed components to {{list_unwrap()}} to remove the extra endpoint.
-
-
-//   The parameter `closed=true` is set by default, which causes polygon segments to be generated wherever a
-//   contour is clipped by the bounding box, so that all contours are closed polygons. When `closed=true`,
-//   the list of paths returned by `contour()` is a valid [region](regions.scad) with no duplicated
-//   vertices in any path, and all paths are treated as as closed polygons by the `contour()` module.
-//   When calling `contour()` as a module, the `closed` parameter is unavailable and always true.
-//   .
-//   When `closed=false`, however, the list of paths returned by the `contour()` function may include a
-//   mixture of closed and unclosed paths, in which the closed paths can be identified as having equivalent
-//   start and end points (this duplication makes the path list an invalid [region](regions.scad)).
+//   any of the output paths are open, all closed paths have identical first and last points so that  closed and
+//   open paths can be distinguished. You can use {{are_ends_equal()}} to determine if a path is closed. A path
+//   list that includes open paths is not a region, since regions are lists of closed polygons. Duplicating the
+//   ends of closed paths can cause problems for some functions such as {{offset()}} which will complain about
+//   repeated points; to deal with this problem you can pass the closed components to {{list_unwrap()}} to remove
+//   the extra endpoint.
 // Arguments:
 //   f = The contour function or array.
 //   isovalue = a scalar giving the isovalue parameter.
