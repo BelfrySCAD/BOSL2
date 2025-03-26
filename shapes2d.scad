@@ -2075,8 +2075,6 @@ function reuleaux_polygon(n=3, r, d, anchor=CENTER, spin=0) =
 
 
 
-
-
 // Function&Module: supershape()
 // Synopsis: Creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
 // SynTags: Geom, Path
@@ -2162,118 +2160,6 @@ module supershape(step=0.5,n,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=u
 function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
     pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
 
-
-
-// Section: Text
-
-// Module: text()
-// Synopsis: Creates an attachable block of text.
-// SynTags: Geom
-// Topics: Attachments, Text
-// See Also: text3d(), attachable()
-// Usage:
-//   text(text, [size], [font], ...);
-// Description:
-//   Creates a 3D text block that can be attached to other attachable objects.
-//   You cannot attach children to text.
-//   .
-//   Historically fonts were specified by their "body size", the height of the metal body
-//   on which the glyphs were cast.  This means the size was an upper bound on the size
-//   of the font glyphs, not a direct measurement of their size.  In digital typesetting,
-//   the metal body is replaced by an invisible box, the em square, whose side length is
-//   defined to be the font's size.  The glyphs can be contained in that square, or they
-//   can extend beyond it, depending on the choices made by the font designer.  As a
-//   result, the meaning of font size varies between fonts: two fonts at the "same" size
-//   can differ significantly in the actual size of their characters.  Typographers
-//   customarily specify the size in the units of "points".  A point is 1/72 inch.  In
-//   OpenSCAD, you specify the size in OpenSCAD units (often treated as millimeters for 3d
-//   printing), so if you want points you will need to perform a suitable unit conversion.
-//   In addition, the OpenSCAD font system has a bug: if you specify size=s you will
-//   instead get a font whose size is s/0.72.  For many fonts this means the size of
-//   capital letters will be approximately equal to s, because it is common for fonts to
-//   use about 70% of their height for the ascenders in the font.  To get the customary
-//   font size, you should multiply your desired size by 0.72.
-//   .
-//   To find the fonts that you have available in your OpenSCAD installation,
-//   go to the Help menu and select "Font List".  
-// Arguments:
-//   text = Text to create.
-//   size = The font will be created at this size divided by 0.72.   Default: 10
-//   font = Font to use.  Default: "Liberation Sans" (standard OpenSCAD default)
-//   ---
-//   halign = If given, specifies the horizontal alignment of the text.  `"left"`, `"center"`, or `"right"`.  Overrides `anchor=`.
-//   valign = If given, specifies the vertical alignment of the text.  `"top"`, `"center"`, `"baseline"` or `"bottom"`.  Overrides `anchor=`.
-//   spacing = The relative spacing multiplier between characters.  Default: `1.0`
-//   direction = The text direction.  `"ltr"` for left to right.  `"rtl"` for right to left. `"ttb"` for top to bottom. `"btt"` for bottom to top.  Default: `"ltr"`
-//   language = The language the text is in.  Default: `"en"`
-//   script = The script the text is in.  Default: `"latin"`
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"baseline"`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Named Anchors:
-//   "baseline" = Anchors at the baseline of the text, at the start of the string.
-//   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
-// Examples(2D):
-//   text("Foobar", size=10);
-//   text("Foobar", size=12, font="Liberation Mono");
-//   text("Foobar", anchor=CENTER);
-//   text("Foobar", anchor=str("baseline",CENTER));
-// Example: Using line_copies() distributor
-//   txt = "This is the string.";
-//   line_copies(spacing=[10,-5],n=len(txt))
-//       text(txt[$idx], size=10, anchor=CENTER);
-// Example: Using arc_copies() distributor
-//   txt = "This is the string";
-//   arc_copies(r=50, n=len(txt), sa=0, ea=180)
-//       text(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
-module text(text, size=10, font, halign, valign, spacing=1.0, direction="ltr", language="en", script="latin", anchor="baseline", spin=0) {
-    no_children($children);
-    dummy1 =
-        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
-        assert(is_finite(spin), str("Invalid spin: ",spin));
-    anchor = default(anchor, CENTER);
-    geom = attach_geom(size=[size,size],two_d=true);
-    anch = !any([for (c=anchor) c=="["])? anchor :
-        let(
-            parts = str_split(str_split(str_split(anchor,"]")[0],"[")[1],","),
-            vec = [for (p=parts) parse_float(str_strip(p," ",start=true))]
-        ) vec;
-    ha = halign!=undef? halign :
-        anchor=="baseline"? "left" :
-        anchor==anch && is_string(anchor)? "center" :
-        anch.x<0? "left" :
-        anch.x>0? "right" :
-        "center";
-    va = valign != undef? valign :
-        starts_with(anchor,"baseline")? "baseline" :
-        anchor==anch && is_string(anchor)? "center" :
-        anch.y<0? "bottom" :
-        anch.y>0? "top" :
-        "center";
-    base = anchor=="baseline"? CENTER :
-        anchor==anch && is_string(anchor)? CENTER :
-        anch.z<0? BOTTOM :
-        anch.z>0? TOP :
-        CENTER;
-    m = _attach_transform(base,spin,undef,geom);
-    multmatrix(m) {
-        $parent_anchor = anchor;
-        $parent_spin   = spin;
-        $parent_orient = undef;
-        $parent_geom   = geom;
-        $parent_size   = _attach_geom_size(geom);
-        $attach_to   = undef;
-        if (_is_shown()){
-            _color($color) {
-                _text(
-                    text=text, size=size, font=font,
-                    halign=ha, valign=va, spacing=spacing,
-                    direction=direction, language=language,
-                    script=script
-                );
-            }
-        }
-    }
-}
 
 
 // Section: Rounding 2D shapes
