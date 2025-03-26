@@ -2860,7 +2860,8 @@ Access to the derivative smoothing parameter?
 //   For the cylinder and spherical objects you may wish to joint a prism to the concave surface.  You can do this by setting a negative
 //   radius for the base or auxiliary object.  When `base_r` is negative, and the joiner prism axis is vertical, the prism root is **below** the
 //   XY plane.  In this case it is actually possible to use the same object for base and aux and you can get a joiner prism that crosses a cylindrical
-//   or spherical hole.
+//   or spherical hole.  You can also attach to the inside of a prism object by setting the corresponding radius to a negative value.  Only the sign
+//   matters in this case.  
 //   .
 //   When placing prisms inside a hole, an ambiguity can arise about how to identify the root and end of the joiner prism.  The prism axis has
 //   two intersections with a cylinder and both are potentially valid roots.  When the auxiliary object is entirely inside the hole, or the auxiliary
@@ -3559,7 +3560,8 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
   assert(!in_list(aux,["sphere","cyl","cylinder"]) || (is_num(aux_r) && !approx(aux_r,0)), str("Must give nonzero aux_r with base ",base))
   assert(!short || (in_list(base,["sphere","cyl","cylinder"]) && base_r<0), "You can only set short to true if the base is a sphere or cylinder with radius<0")
   let(
-      base_r=default(base_r,0),
+      base_r=default(base_r,1),
+      aux_r=default(aux_r,1),
       polygon=clockwise_polygon(polygon),
       start_center = CENTER,
       aux_T_horiz = submatrix(aux_T,[0:2],[0:2]) == ident(3) && aux_T[2][3]==0, 
@@ -3586,7 +3588,7 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
             : is_path(base) ?
                 let( 
                      mapped = apply(yrot(-90),axisline),
-                     answer = _prism_line_isect(pair(base,wrap=true),mapped,mapped[1])[0]
+                     answer = _prism_line_isect(pair(base,wrap=true),mapped,sign(base_r)*mapped[1])[0]
                  )
                  assert(answer,"Prism center doesn't intersect prism (base)")
                  apply(yrot(90),answer)
@@ -3596,7 +3598,7 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
       prism_end_T = aux=="none" ? IDENT : prism_end_T,
       aux = aux=="none" && aux_fillet!=0 ? "plane" : aux, 
       end_center = apply(aux_T,CENTER), 
-      ndir = base_r<0 ? unit(start_center-start) : unit(end_center-start_center,UP),
+      ndir = base_r<0 && in_list(base,["cylinder","cyl","sphere"]) ? unit(start_center-start) : unit(end_center-start_center,UP),
       end_prelim = is_def(end) ? end
         :apply(move(start)*prism_end_T*move(-start),
             aux=="sphere" ?
@@ -3613,7 +3615,7 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
           : is_path(aux) ?
                 let( 
                      mapped = apply(yrot(90),[start,start+ndir]),
-                     answer = _prism_line_isect(pair(aux,wrap=true),mapped,mapped[0]-mapped[1])[0]
+                     answer = _prism_line_isect(pair(aux,wrap=true),mapped,sign(aux_r)*(mapped[0]-mapped[1]))[0] //!!!
                  )
                  assert(answer,"Prism center doesn't intersect prism (aux)")
                  apply(aux_T*yrot(-90),answer)
@@ -3634,7 +3636,7 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
           : is_path(aux) ?
                 let( 
                      mapped = apply(yrot(90)*move(-end_center),[start,end_prelim]),
-                     answer = _prism_line_isect(pair(aux,wrap=true),mapped,mapped[0]-mapped[1])[0]
+                     answer = _prism_line_isect(pair(aux,wrap=true),mapped,sign(aux_r)*(mapped[0]-mapped[1]))[0]
                  )
                  assert(answer,"Prism center doesn't intersect prism (aux)")
                  apply(move(end_center)*yrot(-90),answer)
@@ -3652,7 +3654,7 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
       topmesh_reversed = _prism_fillet(_name2,aux, aux_r, aux_top, aux_bot, aux_fillet, aux_k, aux_n, aux_overlap,aux_uniform,aux_smooth_normals,debug),
       topmesh = apply(aux_T,[for(i=[len(topmesh_reversed)-1:-1:0]) reverse_polygon(topmesh_reversed[i])]),
       round_dir = select(topmesh,-1)-botmesh[0],
-      roundings_cross = [for(i=idx(truetop)) if (round_dir[i]*(truetop[i]-truebot[i])<0) echo(truetop[i],truebot[i],round_dir[i]) i],
+      roundings_cross = [for(i=idx(truetop)) if (round_dir[i]*(truetop[i]-truebot[i])<0) i],
       vnf = vnf_vertex_array(concat(topmesh,botmesh),col_wrap=true, caps=true, reverse=true)
   )
   assert(debug || roundings_cross==[],"Roundings from the two ends cross on the prism: decrease size of roundings")
@@ -3730,7 +3732,7 @@ function _prism_fillet(name, base, R, bot, top, d, k, N, overlap,uniform,smooth_
   : base=="plane" ? _prism_fillet_plane(name,bot, top, d, k, N, overlap,debug)
   : base=="cyl" || base=="cylinder" ? _prism_fillet_cyl(name, R, bot, top, d, k, N, overlap,uniform,debug)
   : base=="sphere" ? _prism_fillet_sphere(name, R, bot, top, d, k, N, overlap,uniform,debug)
-  : is_path(base,2) ? _prism_fillet_prism(name, base, bot, top, d, k, N, overlap,uniform,smooth_normals, debug)
+  : is_path(base,2) ? _prism_fillet_prism(name, base, bot, top, d, k, N, overlap,uniform,smooth_normals, R, debug)
   : assert(false,"Unknown base type");
 
 
@@ -3739,7 +3741,10 @@ function _prism_fillet_plane(name, bot, top, d, k, N, overlap,debug) =
         dir = sign(top[0].z-bot[0].z),    // Negative if we are upside down, with "top" below "bot"
         isect = [for (i=idx(top)) plane_line_intersection([0,0,1,0], [top[i],bot[i]])]
     )
-    d==0 ? [isect, if (overlap!=0) move(overlap*dir*DOWN,isect)] :
+    d==0 ? [isect,
+            if (overlap!=0) isect,
+            if (overlap!=0) move(overlap*dir*DOWN,isect),
+      ] :
     let(
         base_normal = -path3d(path_normals(path2d(isect), closed=true)),
         mesh = transpose([for(i=idx(top))
@@ -3774,6 +3779,7 @@ function _prism_fillet_cyl(name, R, bot, top, d, k, N, overlap, uniform, debug) 
     )
     d==0 ? yrot(90,[ 
                     isect,
+                    if (overlap!=0) isect,
                     if (overlap!=0) [for(p=isect) point3d(unit(point2d(p))*(norm(point2d(p))-sign(R)*overlap),p.z)]
                    ])
   :
@@ -3821,7 +3827,8 @@ function _prism_fillet_sphere(name, R,bot, top, d, k, N, overlap, uniform, debug
                 ]
     )
     d==0 ? [isect,
-            if (overlap!=0) [for(p=isect) echo(p=p, overlap=overlap, R=R) p - 0*overlap*sign(R)*unit(p)]
+            if (overlap!=0) isect,
+            if (overlap!=0) [for(p=isect) p - overlap*sign(R)*unit(p)]
            ] :
     let(          
         tangent = path_tangents(isect,closed=true),
@@ -3896,14 +3903,15 @@ function _polygon_step(poly, ind, u, dir, length) =
 
 // This function needs more error checking?
 // Needs check for zero overlap case and zero joint case
-function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform, smooth_normals, debug)=
+function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform, smooth_normals,inside, debug)=
     let(
+         inside=sign(inside), 
          top = yrot(-90,top),
          bot = yrot(-90,bot),
          basepoly = clockwise_polygon(basepoly),
          segpairs = pair(basepoly,wrap=true),
          isect_ind = [for (i=idx(top))
-                         let(isect = _prism_line_isect(segpairs, [top[i], bot[i]], top[i]))
+                         let(isect = _prism_line_isect(segpairs, [top[i], bot[i]], inside*top[i]))
                          assert(isect, str("Prism doesn't fully intersect prism (",name,")"))
                          isect
                      ],
@@ -3914,6 +3922,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
      )
      d==0 ? yrot(90,[ 
                     isect,
+                    if (overlap!=0) isect,
                     if (overlap!=0) 
                          [for(i=idx(isect))
                              let(normal = point3d(_getnormal(basepoly,index[i],uval[i],smooth_normals)))
@@ -3924,7 +3933,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
          mesh = transpose([for(i=idx(top))
            let(
                normal = point3d(_getnormal(basepoly,index[i],uval[i],smooth_normals)),
-               dir = unit(cross(normal,tangent[i])),
+               dir = inside*unit(cross(normal,tangent[i])),
                zpart = d*dir.z,
                length_needed = d*norm(point2d(dir)),
                edgept2d = _polygon_step(basepoly, index[i], uval[i], sign(cross(point2d(dir),point2d(normal))), length_needed),
@@ -3949,7 +3958,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
            )
            [ 
              each bezier_curve(bez, N, endpoint=true),
-             if (overlap!=0) edgepoint-unit(point3d(normal))*overlap
+             if (overlap!=0) edgepoint-unit(point3d(normal))*overlap*inside
            ]
           ])
          )
@@ -3964,7 +3973,6 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 // See Also: parent(), join_prism(), linear_sweep()
 // Usage:
 //   prism_connector(desc1, anchor1, desc2, anchor2, [spin_align=]);
-
 // Description:
 //   Given descriptions and anchors for two objects, construct a filleted prism that connects the
 //   anchor points on those objects, with a filleted joint at each end.  This is an alternative interface
@@ -4496,21 +4504,22 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2
     dummy = assert(is_vector(base_anchor) || is_string(base_anchor), "anchor1 must be a string or a 3-vector")
             assert(is_vector(aux_anchor) || is_string(aux_anchor), "anchor2 must be a string or a 3-vector")    
             assert(is_rotation(auxmap), "desc1 and desc2 are not related to each other by a rotation (and translation)");
-    
+
     base_type = _get_obj_type(1,base[1],base_anchor,profile);
     base_axis = base_type=="cyl" ? base[1][5] : RIGHT;
     base_edge = _is_geom_an_edge(base[1],base_anchor);
-    base_r = in_list(base_type,["cyl","sphere"]) ? base[1][1] : undef;
+    base_r = in_list(base_type,["cyl","sphere"]) ? base[1][1] : 1;
     base_anch = _find_anchor(base_anchor, base[1]);
     base_spin = base_anch[3];
     base_anch_pos = base_anch[1];
     base_anch_dir = base_anch[2];
+
     prelim_shift1 = _check_join_shift(1,base_type,shift1,true);
     shift1 = corrected_base_anchor ? corrected_base_anchor[1] + prelim_shift1 : prelim_shift1;
     aux_type = _get_obj_type(2,aux[1],aux_anchor,profile);
     aux_anch = _find_anchor(aux_anchor, aux[1]);
     aux_edge = _is_geom_an_edge(aux[1],aux_anchor);
-    aux_r = aux_type=="plane" ? undef : aux[1][1];
+    aux_r = in_list(aux_type,["cyl","sphere"]) ? aux[1][1] : 1;
     aux_anch_pos = aux_anch[1];
     aux_anch_dir = aux_anch[2];
     aux_spin = aux_anch[3];
@@ -4551,6 +4560,7 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2
              : apply(aux_T * matrix_inverse(aux_to_canonical), aux_anch_pos);
 
     base_root = base_type=="plane" || is_list(base_type) || base_anchor==CTR ? CENTER : base_r*UP;
+
     prism_axis = aux_root-base_root;
 
     base_inside = prism_axis.z<0 ? -1 : 1;
@@ -4592,8 +4602,6 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2
           move(base_root)rot(from=UP,to=prism_axis) 
             linear_extrude(height=norm(base_root-aux_root))zrot(base_spin-spin)polygon(profile);
         else{
-//          aux_type = is_string(aux_type) ? aux_type : _flip(aux_type);
-//          base_type = is_string(base_type) ? base_type : _flip(base_type);          
           join_prism(zrot(base_spin-spin,profile),
                      base=base_type, base_r=u_mul(base_r,base_inside),
                      aux=aux_type, aux_T=aux_T, aux_r=u_mul(aux_r,aux_inside),
@@ -4607,14 +4615,6 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2
           }
       }
 }
-
-function _flip(prof) =
-    [
-     prof[0],
-     each xflip(prof),
-     last(prof)
-    ];
-                 
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
