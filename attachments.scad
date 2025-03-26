@@ -5270,7 +5270,7 @@ function transform_desc(T,desc) =
 //   See the last examples in {{prism_connector()}} for examples using this module.  
 // Arguments:
 //   transforms = list of transformation matrices to apply to the children
-// Side Effect:
+// Side Effects:
 //   `$count` is set to the number of transformations
 //   `$idx` is set to the index number of the current transformation
 //   `$is_last` is set to true if this is the last copy and false otherwise
