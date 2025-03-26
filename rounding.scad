@@ -3560,7 +3560,8 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
   assert(!in_list(aux,["sphere","cyl","cylinder"]) || (is_num(aux_r) && !approx(aux_r,0)), str("Must give nonzero aux_r with base ",base))
   assert(!short || (in_list(base,["sphere","cyl","cylinder"]) && base_r<0), "You can only set short to true if the base is a sphere or cylinder with radius<0")
   let(
-      base_r=default(base_r,0),
+      base_r=default(base_r,1),
+      aux_r=default(aux_r,1),
       polygon=clockwise_polygon(polygon),
       start_center = CENTER,
       aux_T_horiz = submatrix(aux_T,[0:2],[0:2]) == ident(3) && aux_T[2][3]==0, 
@@ -3972,7 +3973,6 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 // See Also: parent(), join_prism(), linear_sweep()
 // Usage:
 //   prism_connector(desc1, anchor1, desc2, anchor2, [spin_align=]);
-
 // Description:
 //   Given descriptions and anchors for two objects, construct a filleted prism that connects the
 //   anchor points on those objects, with a filleted joint at each end.  This is an alternative interface

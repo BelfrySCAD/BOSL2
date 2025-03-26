@@ -5270,6 +5270,13 @@ function transform_desc(T,desc) =
 //   See the last examples in {{prism_connector()}} for examples using this module.  
 // Arguments:
 //   transforms = list of transformation matrices to apply to the children
+// Side Effect:
+//   `$count` is set to the number of transformations
+//   `$idx` is set to the index number of the current transformation
+//   `$is_last` is set to true if this is the last copy and false otherwise
+//   `$next()` is set to a function literal that produces the next description (see above)
+//   `$prev()` is set to a function literal that produces the previous description (see above)
+//   `$desc()` is set to a function literal that produces the description at a specified index (see above)
 
 module desc_copies(transforms)
 {
