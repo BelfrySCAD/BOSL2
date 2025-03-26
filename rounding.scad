@@ -2283,7 +2283,17 @@ module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot
   unrounded = vnf_vertex_array([top,bottom],caps=true, col_wrap=true,reverse=true);
 
   vnf = result[1];
-  geom = atype=="prismoid" ? attach_geom(size=[1,1,1],anchors=result[2], override=result[3])
+  geom = atype=="prismoid" ?
+               let(
+                    botbounds = pointlist_bounds(bottom),
+                    topbounds = pointlist_bounds(top),
+                    allz = column(concat(bottom,top),2),
+                    height = max(allz)-min(allz),
+                    size = [botbounds[1].x-botbounds[0].x, botbounds[1].x-botbounds[0].x, height],
+                    size2 = [topbounds[1].x-topbounds[0].x, topbounds[1].x-topbounds[0].x],
+                    shift = point2d(mean(topbounds)-mean(botbounds))
+                )    
+                attach_geom(size=size, size2=size2, shift=shift,anchors=result[2], override=result[3])
        : in_list(atype,["hull","intersect"]) ? attach_geom(vnf=unrounded, extent=atype=="hull", cp=cp, anchors=result[2])
        : attach_geom(vnf=vnf, extent=atype=="surf_hull", cp=cp, anchors=result[2]);
   attachable(anchor=anchor, spin=spin, orient=orient, geom=geom)
@@ -2458,6 +2468,7 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
                           debug ? vnf_from_polygons(faces,fast=true) 
                                 : vnf_triangulate(vnf_from_polygons(faces))
                        ]),
+
         topnormal = unit(cross(top[0]-top[1],top[2]-top[1])),
         botnormal = -unit(cross(bottom[0]-bottom[1],bottom[2]-bottom[1])),
         sidenormal = [for(i=idx(top))
@@ -4119,7 +4130,19 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   let(sweep=parent())
 //     move([24,-22,20]) sphere(d=10)
 //       prism_connector(circle(r=2.2,$fn=32), sweep, CTR, parent(),CTR, fillet=2);
-
+// Example: The {{rounded_prism()}} module supplies anchors for its faces and edges that you can use with this module.  It also has an `atype="prismoid"` anchor type, which provides a prismoid geometry object.  This prismoid geometry is sometimes not accurate enough to find center anchors of rounded prism objects.  It will work properly only if your object could be constructed (without rounding) by the {{prismoid()}} module.  Here is an example where it works correctly.  Note that the top and bottom are rectangular and parallel to the XY plane.
+//  ellipse = ellipse([2,1.5],$fn=64);
+//  cuboid([40,40,5]) let(cubeframe=parent())
+//    align(TOP,LEFT)
+//      rounded_prism(top=rect([10,15]), bottom=rect([14,21]), height=13,
+//                    joint_sides=3, joint_top=3, atype="prismoid",anchor=BOT) 
+//      let(first=parent())
+//      restore(cubeframe)
+//      align(TOP,RIGHT+BACK)
+//        rounded_prism(top=rect([10,15]), bottom=rect([14,21]), height=17,
+//                      joint_sides=3, joint_top=3, atype="prismoid",anchor=BOT) 
+//        let(second=parent())
+//          prism_connector(ellipse, first, CTR, parent(), CTR, fillet=2);
 // Example:  Connecting to edges.  In this example the triangular prism is aligned with object1, the big cube, so its corner is at the edge.  You can't align it with both edges at the same time; that would requires twisting the prism.  
 //  $fn=32;
 //  tri = subdivide_path(round_corners([[-3,-2],[0,5],[3,-2]], cut=1), maxlen=1,closed=true);
@@ -4220,10 +4243,9 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //     spheroid(11,circum=true) let(next=$next,prev=$prev)
 //        prism_connector(circ, prev(),BACK+LEFT, next(), FWD+LEFT, fillet=5, debug_pos=false);
 // Example(3D,Med): Using CENTER anchors can make a construction like this much easier.  In this example the anchors need to shift around from the pointy end to the flat end of the ellipse, which would be annoying to calculate by hand.  
-//   desc_copies(arc_copies(rx=85,ry=45,n=12))
-//     cyl(d=15,h=27,circum=true,rounding=5,$fn=64)
-//       prism_connector(circle(r=3,$fn=32), parent(), CTR, $next(), CTR, fillet=4);
-
+//   desc_copies(arc_copies(rx=85,ry=45,n=12)) let(next=$next)
+//     cyl(d=15,h=27,circum=true,rounding=5,$fn=64) 
+//       prism_connector(circle(r=3,$fn=32), parent(), CTR, next(), CTR, fillet=4);
 // Example(3D,Med): When using {{desc_copies()}} with a varying shape you have to conditionally show only the correct shape for each index, but still specify all the shapes so you can collect their descriptions.  
 //  circ = circle(r=3, $fn=64);
 //  desc_copies(arc_copies(rx=60,ry=80,n=5,sa=-20,ea=200))
