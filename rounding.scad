@@ -4243,9 +4243,9 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //     spheroid(11,circum=true) let(next=$next,prev=$prev)
 //        prism_connector(circ, prev(),BACK+LEFT, next(), FWD+LEFT, fillet=5, debug_pos=false);
 // Example(3D,Med): Using CENTER anchors can make a construction like this much easier.  In this example the anchors need to shift around from the pointy end to the flat end of the ellipse, which would be annoying to calculate by hand.  
-//   desc_copies(arc_copies(rx=85,ry=45,n=12))
-//     cyl(d=15,h=27,circum=true,rounding=5,$fn=64)
-//       prism_connector(circle(r=3,$fn=32), parent(), CTR, $next(), CTR, fillet=4);
+//   desc_copies(arc_copies(rx=85,ry=45,n=12)) let(next=$next)
+//     cyl(d=15,h=27,circum=true,rounding=5,$fn=64) 
+//       prism_connector(circle(r=3,$fn=32), parent(), CTR, next(), CTR, fillet=4);
 // Example(3D,Med): When using {{desc_copies()}} with a varying shape you have to conditionally show only the correct shape for each index, but still specify all the shapes so you can collect their descriptions.  
 //  circ = circle(r=3, $fn=64);
 //  desc_copies(arc_copies(rx=60,ry=80,n=5,sa=-20,ea=200))
