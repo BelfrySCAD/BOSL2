@@ -3964,6 +3964,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 // See Also: parent(), join_prism(), linear_sweep()
 // Usage:
 //   prism_connector(desc1, anchor1, desc2, anchor2, [spin_align=]);
+
 // Description:
 //   Given descriptions and anchors for two objects, construct a filleted prism that connects the
 //   anchor points on those objects, with a filleted joint at each end.  This is an alternative interface
@@ -4110,6 +4111,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   let(sweep=parent())
 //     move([24,-22,20]) sphere(d=10)
 //       prism_connector(circle(r=2.2,$fn=32), sweep, CTR, parent(),CTR, fillet=2);
+
 // Example:  Connecting to edges.  In this example the triangular prism is aligned with object1, the big cube, so its corner is at the edge.  You can't align it with both edges at the same time; that would requires twisting the prism.  
 //  $fn=32;
 //  tri = subdivide_path(round_corners([[-3,-2],[0,5],[3,-2]], cut=1), maxlen=1,closed=true);
@@ -4213,6 +4215,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   desc_copies(arc_copies(rx=85,ry=45,n=12))
 //     cyl(d=15,h=27,circum=true,rounding=5,$fn=64)
 //       prism_connector(circle(r=3,$fn=32), parent(), CTR, $next(), CTR, fillet=4);
+
 // Example(3D,Med): When using {{desc_copies()}} with a varying shape you have to conditionally show only the correct shape for each index, but still specify all the shapes so you can collect their descriptions.  
 //  circ = circle(r=3, $fn=64);
 //  desc_copies(arc_copies(rx=60,ry=80,n=5,sa=-20,ea=200))
@@ -4430,7 +4433,6 @@ function _extrusion_isect(geom,line,bounded,flip) =
     [anchor,shift*RIGHT];
 
 
-
 function _find_center_anchor(desc1, desc2, anchor2, flip) =
   let(
        pt2 = desc_point(desc2, anchor=anchor2),
@@ -4442,6 +4444,7 @@ function _find_center_anchor(desc1, desc2, anchor2, flip) =
   : geom[0]=="spheroid" ? [unit(line[1]-line[0]), [0,0,0]]
   : starts_with(geom[0],"extrusion") ? _extrusion_isect(geom,line,RAY,flip)
   : assert(false,str("Center anchor not supported with geometry type ",geom[0]));
+
        
 
 
@@ -4474,6 +4477,7 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2
 
     corrected_base_anchor = is_vector(anchor1) && norm(anchor1)==0 ? _find_center_anchor(desc1,desc2,anchor2,true) : undef;
     corrected_aux_anchor = is_vector(anchor2) && norm(anchor2)==0 ? _find_center_anchor(desc2,desc1,anchor1,false) : undef;      
+
 
     base_anchor=is_string(anchor1) ? anchor1
                : is_def(corrected_base_anchor) ? corrected_base_anchor[0]
