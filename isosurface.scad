@@ -1648,7 +1648,6 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 
 // Section: Metaballs
 //   ![Metaball animation](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/metaball_demo.gif)
-//   ![Metaball animation](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/metaball_demo2d.gif)
 //   .
 //   [Metaballs](https://en.wikipedia.org/wiki/Metaballs), also known as "blobby objects",
 //   can produce smoothly varying blobs and organic forms. You create metaballs by placing metaball
@@ -2653,13 +2652,13 @@ function mb_stadium(size, cutoff=INF, influence=1, negative=false, hide_debug=fa
         length = shape>=0 ? siz[1] : siz[0],
         r = shape>=0 ? siz[0]/2 : siz[1]/2,
         sl = length-2*r, // straight side length
-        dum3 = assert(sl>0, "\nTotal length must accommodate rounded ends of rectangle."),
+        //dum3 = assert(sl>=0, "\nTotal length must accommodate rounded ends of rectangle."),
         neg = negative ? -1 : 1,
-        poly = shape<=EPSILON ? [neg, hide_debug ? circle(r=0.02, $fn=3) : circle(r=r, $fn=20)]
+        poly = abs(shape)<=EPSILON ? [neg, hide_debug ? circle(r=0.02, $fn=3) : circle(r=r, $fn=20)]
         : shape>0 ? [neg, hide_debug ? square(0.02,center=true) : rect([2*r,length], rounding=0.999*r, $fn=20)]
         : [neg, hide_debug ? square(0.02,center=true) : rect([length,2*r], rounding=0.999*r, $fn=20)]
    ) abs(shape)<EPSILON ?
-    [function (dv) _mb_circle_full(point, r, cutoff, 1/influence, neg), poly]
+    [function (dv) _mb_circle_full(dv, r, cutoff, 1/influence, neg), poly]
     : shape>0 ? [function (dv) _mb_stadium_full(dv, sl/2, r, cutoff, 1/influence, neg), poly]
     : [function (dv) _mb_stadium_sideways_full(dv, sl/2, r, cutoff, 1/influence, neg), poly];
 
@@ -2719,6 +2718,8 @@ function mb_ring(r1,r2, cutoff=INF, influence=1, negative=false, hide_debug=fals
 // Usage: As a function
 //   region = metaballs2d(spec, bounding_box, pixel_size, [isovalue=], [closed=], [use_centers=], [smoothing=], [exact_bounds=], [show_stats=]);
 // Description:
+//   ![Metaball animation](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/metaball_demo2d.gif)
+//   .
 //   2D metaball shapes can be useful to create interesting polygons for extrusion. When invoked as a
 //   module, a 2D metaball scene is displayed. When called as a function, a list containing one or more
 //   [paths](paths.scad) is returned.
@@ -2954,7 +2955,7 @@ function mb_ring(r1,r2, cutoff=INF, influence=1, negative=false, hide_debug=fals
 module metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, use_centers=false, smoothing=undef, exact_bounds=false, convexity=6, cp="centroid", anchor="origin", spin=0, atype="hull", show_stats=false, show_box=false, debug=false) {
     regionlist = metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue, true, use_centers, smoothing, exact_bounds, show_stats, _debug=debug);
     $metaball_pathlist = debug ? regionlist[0] : regionlist; // for possible use with children
-    wid = min(0.5, 0.25 * (is_num(pixel_size) ? pixel_size : 0.5*(pixel_size[0]+pixel_size[1])));
+    wid = min(0.5, 0.5 * (is_num(pixel_size) ? pixel_size : 0.5*(pixel_size[0]+pixel_size[1])));
     if(debug) {
         // display debug polygons
         for(a=regionlist[1])
@@ -3259,7 +3260,7 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 //          (x*y*z^3 - 3*x^2*z^2) / np^2 + np^2,
 //       isovalue=[-INF,35], bounding_box=[[-32,-32,-14],[32,32,14]],
 //       voxel_size = 0.8, show_box=true);
-// Example(3D,Med,NoAxes,VPD=47,VPT=[0,0,2]): You can specify non-cubical voxels for efficiency. This example shows the result of two identical surface functions. The figure on the left uses a `voxel_size=1`, which washes out the detail in the z direction. The figure on the right shows the same shape with `voxel_size=[0.5,1,0.2]` to give a bit more resolution in the x direction and much more resolution in the z direction. This example runs about six times faster than if we used a cubical voxel of size 0.2 to capture the detail in only one axis at the expense of unnecessary detail in other axes.
+// Example(3D,Med,NoAxes,VPD=47,VPT=[0,0,2]): You can specify non-cubical voxels for efficiency. This example shows the result of two identical surface functions. The figure on the left uses `voxel_size=1`, which washes out the detail in the z direction. The figure on the right shows the same shape with `voxel_size=[0.5,1,0.2]` to give a bit more resolution in the x direction and much more resolution in the z direction. This example runs about six times faster than if we used a cubical voxel of size 0.2 to capture the detail in only one axis at the expense of unnecessary detail in other axes.
 //   function shape(x,y,z, r=5) =
 //       r / sqrt(x^2 + 0.5*(y^2 + z^2) + 0.5*r*cos(200*z));
 //   bbox = [[-6,-8,0], [6,8,7]];
@@ -3478,18 +3479,11 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   .
 //   When `closed=false`, paths that intersect the edge of the bounding box end at the bounding box. This
 //   means that the list of paths may include a mixture of closed and open paths. Regardless of whether
-//   any of the output paths are open, all closed paths have identical first and last points so that  closed and open paths can be distinguished. You can use {{are_ends_equal()}} to determine if a path is closed. A path list that includes open paths is not a region, since regions are lists of closed polygons. Duplicating the ends of closed paths can cause problems for some functions such as {{offset()}} which will complain about repeated points; to deal with this problem you can pass the closed components to {{list_unwrap()}} to remove the extra endpoint.
-
-
-//   The parameter `closed=true` is set by default, which causes polygon segments to be generated wherever a
-//   contour is clipped by the bounding box, so that all contours are closed polygons. When `closed=true`,
-//   the list of paths returned by `contour()` is a valid [region](regions.scad) with no duplicated
-//   vertices in any path, and all paths are treated as as closed polygons by the `contour()` module.
-//   When calling `contour()` as a module, the `closed` parameter is unavailable and always true.
-//   .
-//   When `closed=false`, however, the list of paths returned by the `contour()` function may include a
-//   mixture of closed and unclosed paths, in which the closed paths can be identified as having equivalent
-//   start and end points (this duplication makes the path list an invalid [region](regions.scad)).
+//   any of the output paths are open, all closed paths have identical first and last points so that  closed and
+//   open paths can be distinguished. You can use {{are_ends_equal()}} to determine if a path is closed. A path
+//   list that includes open paths is not a region, because regions are lists of closed polygons. Duplicating the
+//   ends of closed paths can cause problems for functions such as {{offset()}}, which would complain about
+//   repeated points. You can pass a closed path to {{list_unwrap()}} to remove the extra endpoint.
 // Arguments:
 //   f = The contour function or array.
 //   isovalue = a scalar giving the isovalue parameter.
