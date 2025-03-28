@@ -2184,7 +2184,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   "bot_corner0", "bot_corner1", etc = Bottom corner, pointing in direction of associated edge anchor, spin up along associated edge
 // Anchor Types:
 //   "hull" = Anchors to the VNF of the **unrounded** prism using VNF hull anchors (default)
-//   "intersect" = Anchors to the VNF of the **unrounded** prism using VNF intersection anchors (default)
+//   "intersect" = Anchors to the VNF of the **unrounded** prism using VNF intersection anchors
 //   "surf_hull" = Use VNF hull anchors to the rounded VNF
 //   "surf_intersect" = USe VFN intersection anchors to the rounded VNF
 //   "prismoid" = For four sided prisms only, defined standard prismsoid anchors, with RIGHT set to the face closest to the RIGHT direction.  
@@ -2283,7 +2283,17 @@ module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot
   unrounded = vnf_vertex_array([top,bottom],caps=true, col_wrap=true,reverse=true);
 
   vnf = result[1];
-  geom = atype=="prismoid" ? attach_geom(size=[1,1,1],anchors=result[2], override=result[3])
+  geom = atype=="prismoid" ?
+               let(
+                    botbounds = pointlist_bounds(bottom),
+                    topbounds = pointlist_bounds(top),
+                    allz = column(concat(bottom,top),2),
+                    height = max(allz)-min(allz),
+                    size = [botbounds[1].x-botbounds[0].x, botbounds[1].x-botbounds[0].x, height],
+                    size2 = [topbounds[1].x-topbounds[0].x, topbounds[1].x-topbounds[0].x],
+                    shift = point2d(mean(topbounds)-mean(botbounds))
+                )    
+                attach_geom(size=size, size2=size2, shift=shift,anchors=result[2], override=result[3])
        : in_list(atype,["hull","intersect"]) ? attach_geom(vnf=unrounded, extent=atype=="hull", cp=cp, anchors=result[2])
        : attach_geom(vnf=vnf, extent=atype=="surf_hull", cp=cp, anchors=result[2]);
   attachable(anchor=anchor, spin=spin, orient=orient, geom=geom)
@@ -2458,6 +2468,7 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
                           debug ? vnf_from_polygons(faces,fast=true) 
                                 : vnf_triangulate(vnf_from_polygons(faces))
                        ]),
+
         topnormal = unit(cross(top[0]-top[1],top[2]-top[1])),
         botnormal = -unit(cross(bottom[0]-bottom[1],bottom[2]-bottom[1])),
         sidenormal = [for(i=idx(top))
@@ -3615,7 +3626,7 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
           : is_path(aux) ?
                 let( 
                      mapped = apply(yrot(90),[start,start+ndir]),
-                     answer = _prism_line_isect(pair(aux,wrap=true),mapped,sign(aux_r)*(mapped[0]-mapped[1]))[0] //!!!
+                     answer = _prism_line_isect(pair(aux,wrap=true),mapped,sign(aux_r)*(mapped[0]-mapped[1]))[0] 
                  )
                  assert(answer,"Prism center doesn't intersect prism (aux)")
                  apply(aux_T*yrot(-90),answer)
@@ -4051,42 +4062,42 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 // Named Anchors:
 //   "root" = Root point of the connector prism at the desc1 end, pointing out in the direction of the prism axis (anchor inherited from {{join_prism()}}
 //   "end" = Root point of the connector prism at the desc2 end, pointing out in the direction of the prism axis (anchor inherited from {{join_prism()}}
-// Example: A circular prism connects a prismoid to a sphere.  Note different fillet sizes at each length.  
+// Example(3D,NoAxes,VPT=[11.5254,0.539284,6.44131],VPR=[71.8,0,29.2],VPD=113.4): A circular prism connects a prismoid to a sphere.  Note different fillet sizes at each length.  
 //   circ = circle(r=3, $fn=48);
 //   prismoid(20,13,shift=[-2,1],h=15) let(prism=parent())
 //     right(30) zrot(20) yrot(12) spheroid(r=10,circum=true,$fn=48) let(ball=parent())
 //       prism_connector(circ,prism,RIGHT,ball,LEFT,fillet1=4,fillet2=1);
-// Example: Here we attach a rounded triangular prism to a prismoid on the left and a regular prism (vnf geometry type) on the right.  Note that the point of the triangle which is on the Y axis is aligned with the spin direction on the prismoid, which is the first object.  
+// Example(3D,NoAxes,VPT=[17.1074,4.56034,8.8345],VPR=[71.8,0,29.2],VPD=126): Here we attach a rounded triangular prism to a prismoid on the left and a regular prism (vnf geometry type) on the right.  Note that the point of the triangle which is on the Y axis is aligned with the spin direction on the prismoid, which is the first object.  
 //   $fn=32;
 //   tri = subdivide_path(round_corners([[-3,-2],[0,5],[3,-2]], cut=1), n=32);
 //   prismoid(20,15,h=19) let(p1=parent())
 //     back(15)right(33)zrot(62)xrot(37)zrot(0) regular_prism(n=5, h=30, side=13) let(p2=parent())
 //       prism_connector(tri, p1, RIGHT, p2, FACE(2), fillet=3);
-// Example: Here is the same example with `spin_align=2` which aligns the connecting prism on the second object
+// Example(3D,NoAxes,VPT=[17.1074,4.56034,8.8345],VPR=[71.8,0,29.2],VPD=126): Here is the same example with `spin_align=2` which aligns the connecting prism on the second object
 //   $fn=32;
 //   tri = subdivide_path(round_corners([[-3,-2],[0,5],[3,-2]], cut=1), n=32);
 //   prismoid(20,15,h=19) let(p1=parent())
 //     back(15)right(33)zrot(62)xrot(37)zrot(0) regular_prism(n=5, h=30, side=13) let(p2=parent())
 //       prism_connector(tri, p1, RIGHT, p2, FACE(2), fillet=3, spin_align=2);
-// Example: Here the connector prism is aligned midway between the spins on the two described objects using `spin_align=12`.
+// Example(3D,NoAxes,VPT=[17.1074,4.56034,8.8345],VPR=[71.8,0,29.2],VPD=126): Here the connector prism is aligned midway between the spins on the two described objects using `spin_align=12`.
 //   $fn=32;
 //   tri = subdivide_path(round_corners([[-3,-2],[0,5],[3,-2]], cut=1), n=32);
 //   prismoid(20,15,h=19) let(p1=parent())
 //     back(15)right(33)zrot(62)xrot(37)zrot(0) regular_prism(n=5, h=30, side=13) let(p2=parent())
 //       prism_connector(tri, p1, RIGHT, p2, FACE(2), fillet=3, spin_align=12);
-// Example: Here we apply a shift on object 1. Since this object has a planar connection surface the shift is a 2-vector.  Note that the prism has shifted a little too far and is poking out of the connecting cube.  When connecting to a planar surface there is no constraint on the extent of the joined prism.  It may be much larger than the object it connects to.  Note also that the connection on the sphere has shifted to accomodate the change in direction of the prism. If you shift it just a little bit farther forward (perhaps to fit onto a larger cube) the connection to the sphere will fail because the prism doesn't fully intersect the sphere.  
+// Example(3D,NoAxes,Med,VPT=[17.2141,0.995544,-0.788367],VPR=[55,0,25],VPD=140): Here we apply a shift on object 1. Since this object has a planar connection surface the shift is a 2-vector.  Note that the prism has shifted a little too far and is poking out of the connecting cube.  When connecting to a planar surface there is no constraint on the extent of the joined prism.  It may be much larger than the object it connects to.  Note also that the connection on the sphere has shifted to accomodate the change in direction of the prism. If you shift it just a little bit farther forward (perhaps to fit onto a larger cube) the connection to the sphere will fail because the prism doesn't fully intersect the sphere.  
 //  circ = circle(r=3, $fn=64);
 //  cuboid(25) let(cube=parent())
 //    right(40) spheroid(r=15, circum=true,$fn=32) let(ball=parent()){
 //      prism_connector(circ,cube,RIGHT, ball, [-1,0,.4], fillet=2);
 //      %prism_connector(circ,cube,RIGHT, ball, [-1,0,.4], fillet=2,shift1=[-6,0]);
 //    }
-// Example: In this case because of how the connecting prism is shifted, it does not fully intersect the sphere and you will get an error message stating this.  To understand what is happening you can enable the `debug_pos` option which displays an unfilleted prism. You can inspect the result and see that the edge of the prism will not intersect the sphere, especially after a fillet is added.   
+// Example(3D,NoAxes,VPT=[17.2141,0.995544,-0.788367],VPR=[55,0,25],VPD=140): In this case because of how the connecting prism is shifted, it does not fully intersect the sphere and you will get an error message stating this.  To understand what is happening you can enable the `debug_pos` option which displays an unfilleted prism. You can inspect the result and see that the edge of the prism will not intersect the sphere, especially after a fillet is added.   
 //  circ = circle(r=3, $fn=64);
 //  cuboid(25) let(cube=parent())
 //    right(40) spheroid(r=15, circum=true,$fn=32) let(ball=parent())
 //      prism_connector(circ,cube,RIGHT, ball, [-1,0,.4], fillet=4, shift1=[0,-6],debug_pos=true);
-// Example: Here two cylinders are connected using a prism shift a shift at each end.  Note that the shift is always along the axis of the cylinder.  Note that the prisms are a little above the faceted cylinders, exposing a small edge.  Using the circum option to enlarge the cylinders will hide this edge inside the cylinders.
+// Example(3D,Med,NoAxes,VPT=[15.9312,-2.44829,-4.47156],VPR=[55,0,25],VPD=155.556): Here two cylinders are connected using a prism shift a shift at each end.  Note that the shift is always along the axis of the cylinder.  Note that the prisms are a little above the faceted cylinders, exposing a small edge.  Using the circum option to enlarge the cylinders will hide this edge inside the cylinders.
 //   circ = circle(r=3, $fn=64);
 //   zrot(-20)
 //   ycyl(l=40,d=20) let(x=parent())
@@ -4094,57 +4105,76 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //       prism_connector(circ, x, RIGHT, z, LEFT+FWD, fillet=2);
 //       %prism_connector(circ, x, RIGHT, z, LEFT+FWD, fillet=2, shift1=-9, shift2=8);
 //   }
-// Example: Here the model has an error and attachment point on the cylinder is on the wrong side so the prism passes through the cylinder.  The shape you see on the front is the base of the prism connector that would usually be buried inside an object.  Later we will see that this can be used for making holes.  
+// Example(Med,NoAxes,VPT=[18.1393,-0.425481,0.777083],VPR=[64.1,0,8.2],VPD=113.4): Here the model has an error and attachment point on the cylinder is on the wrong side so the prism passes through the cylinder.  The shape you see on the front is the base of the prism connector that would usually be buried inside an object.  Later we will see that this can be used for making holes.  
 //   circ = circle(r=3, $fn=64);
 //   prismoid(20,13,shift=[-2,1],h=15) let(a=parent())
 //     right(30) fwd(9) rot([20,15,17]) cyl(r=10,h=30)
 //       prism_connector(circ,parent(),FWD,a,RIGHT,fillet=2);
-// Example: Using the CENTER anchor lets you create a connection, especially for spheres and cylinders, that puts the connecting prism in the best spot, without the need to figure out what the right anchor is.  
+// Example(3D,NoAxes,VPT=[16.5169,0.0116901,1.07281],VPR=[79.5,0,336.7],VPD=91.854): Using the CENTER anchor lets you create a connection, especially for spheres and cylinders, that puts the connecting prism in the best spot, without the need to figure out what the right anchor is.  
 //  circ = circle(r=3, $fn=64);
 //  cuboid([18,10,20],anchor=LEFT) let(cube=parent())
 //    move([11,-23,14])
 //      sphere(d=10) let(ball=parent())
 //        prism_connector(circ,cube,CTR,ball,CTR,fillet=2);
-// Example: You can still apply shifts with CENTER anchors.  In this case we shift the two connectors outward so that their fillets don't interfere on the cube.  Note that we give shift as a scalar, which is interpreted as shift in just the x direction.  
+// Example(3D,VPT=[-3.84547,-8.36131,0.0624037],VPR=[71.1,0,15.9],VPD=113.4): You can still apply shifts with CENTER anchors.  In this case we shift the two connectors outward so that their fillets don't interfere on the cube.  Note that we give shift as a scalar, which is interpreted as shift in just the x direction.  
 //  circ = circle(r=3, $fn=64);
 //  cuboid([30,10,20]) let(cube=parent())
 //    fwd(22)
 //      xcopies(n=2,spacing=45)
 //        cyl(d=10,h=10,circum=true,$fn=64) let(cyl=parent())
 //          prism_connector(circ,cube,CTR,cyl,CTR,fillet1=3,fillet2=2,shift1=2*(2*$idx-1));
-// Example: Here is a center anchor connection using an extrusion
+// Example(3D,NoAxes,VPT=[2.5679,-1.74152,15.5561],VPR=[72.5,0,14.5],VPD=113.4): Here is a center anchor connection using an extrusion
 //   flower = [for(theta=lerpn(0,360,180,endpoint=false))
 //             (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]];
 //   linear_sweep(flower, height=29,scale=1,atype="intersect")
 //   let(sweep=parent())
 //     move([24,-22,20]) sphere(d=10)
 //       prism_connector(circle(r=2.2,$fn=32), sweep, CTR, parent(),CTR, fillet=2);
-
-// Example:  Connecting to edges.  In this example the triangular prism is aligned with object1, the big cube, so its corner is at the edge.  You can't align it with both edges at the same time; that would requires twisting the prism.  
+// Example(3D,NoAxes,VPT=[2.96309,-4.73627,6.77988],VPR=[55,0,25],VPD=113.4): The {{rounded_prism()}} module supplies anchors for its faces and edges that you can use with this module.  It also has an `atype="prismoid"` anchor type, which provides a prismoid geometry object.  This prismoid geometry is sometimes not accurate enough to find center anchors of rounded prism objects.  It will work properly only if your object could be constructed (without rounding) by the {{prismoid()}} module.  Here is an example where it works correctly.  Note that the top and bottom are rectangular and parallel to the XY plane.  If you instead use `atype="intersect"` with {{rounded_prism()}} then the CENTER anchor will be more robust, but the model below doesn't work in that case because the resulting object has VNF geometry, which {{attach()}} may not properly align.  
+//  ellipse = ellipse([2,1.5],$fn=64);
+//  cuboid([40,40,5]) let(cubeframe=parent())
+//    align(TOP,LEFT)
+//      rounded_prism(top=rect([10,15]), bottom=rect([14,21]), height=13,
+//                    joint_sides=3, joint_top=3, atype="prismoid",anchor=BOT) 
+//      let(first=parent())
+//      restore(cubeframe)
+//      align(TOP,RIGHT+BACK)
+//        rounded_prism(top=rect([10,15]), bottom=rect([14,21]), height=17,
+//                      joint_sides=3, joint_top=3, atype="prismoid",anchor=BOT) 
+//        let(second=parent())
+//          prism_connector(ellipse, first, CTR, parent(), CTR, fillet=2);
+// Example(3D,NoAxes,VPT=[60.3443,19.0185,6.2929],VPR=[50.8,0,8.9],VPD=263.435): Here arbitrary rounded prisms are connected using CENTER anchors with `atype="intersect"`.  
+//   shape1 = [[0,0],[22,-5],[41,27], [-3,21]];
+//   shape2 = scale(1.5,[[-12,0],[14,0],[6,8],[0,30]]);
+//   flower = [for(theta=lerpn(0,360,180,endpoint=false))
+//             (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]]/2;
+//   rounded_prism(bottom=shape1,top=move([5,7],shape1), h=40, joint_top=5, joint_bot=5, joint_sides=7, atype="intersect")
+//   let(first=parent())
+//     move([70,15,12])
+//     zrot(-72)
+//     rounded_prism(bottom=shape2,top=move([9,11],shape2), h=37, joint_top=5, joint_bot=5, joint_sides=3, atype="intersect")
+//     let(second=parent())
+//       prism_connector(flower, first, CTR, second, CTR, fillet=2);
+// Example(3D,Med,VPT=[29.1489,9.51572,-4.02049],VPR=[53.6,0,15.9],VPD=126):  Connecting to edges.  In this example the triangular prism is aligned with object1, the big cube, so its corner is at the edge. 
 //  $fn=32;
 //  tri = subdivide_path(round_corners([[-3,-2],[0,5],[3,-2]], cut=1), maxlen=1,closed=true);
 //  zrot(55)
 //   cuboid(30) let(big=parent())
 //     move([30,-30,-10]) xrot(40) cuboid(20) let(small=parent())
 //       prism_connector(tri, big,RIGHT+FWD, small, BACK+LEFT, fillet=2);
-// Example: Here is the same example again, but with the spin aligned to object2, the small cube.  Note now that the corner is **not** aligned on the edge of the big cube.  You can't align it with both edges at the same time; that would requires twisting the prism.  
+// Example(3D,Med,VPT=[29.1489,9.51572,-4.02049],VPR=[53.6,0,15.9],VPD=126): Here is the same example again, but with the spin aligned to object2, the small cube.  Note now that the corner is **not** aligned on the edge of the big cube.  You can't align it with both edges at the same time; that would requires twisting the prism.  
 //  $fn=32;
 //  tri = subdivide_path(round_corners([[-3,-2],[0,5],[3,-2]], cut=1), maxlen=1,closed=true);
 //  zrot(55)
 //   cuboid(30) let(big=parent())
 //     move([30,-30,-10]) xrot(40) cuboid(20) let(small=parent())
 //       prism_connector(tri, big,RIGHT+FWD, small, BACK+LEFT, spin_align=2,fillet=2);
-// Example: attaching to edges doesn't always produce a good looking result, and sometimes you may get unexpected errors about the fit of the fillet.  If you connect a circular prism to an edge you definitely want an even number of points so the top and bottom can line up with the edge.  But increasing the point count may make the result appear worse, like this artifact:
-//   circ = circle(r=3, $fn=64);
-//   cuboid(20) let(edge=parent())
-//     move([30,-30,-8]) zrot(-45) cuboid(20) let(extra=parent())
-//       prism_connector(circ, edge, RIGHT+FWD, extra, LEFT, fillet=2);
 // Example(3D,VPR=[80.9,0,55.8],VPT=[11.9865,-12.0228,4.48816],VPD=15.3187): Attaching to edges doesn't always produce a good looking result, and sometimes you may get unexpected errors about the fit of the fillet.  If you connect a circular prism to an edge you definitely want an even number of points so the top and bottom can line up with the edge.  But you may find that artifacts appear when you increase the point count like in this example below where the prism's joint to the edge has a little groove:
 //   circ = circle(r=3, $fn=64);
 //   cuboid(20) let(edge=parent())
 //     move([30,-30,-8]) zrot(-45) cuboid(20) let(extra=parent())
 //       prism_connector(circ, edge, RIGHT+FWD, extra, LEFT, fillet=2);
-// Example(3D,VPR=[80.9,0,55.8],VPT=[11.9865,-12.0228,4.48816],VPD=15.3187): This artifact happens because of normals to the prism that cross the edge at a shallow angle, and you can remove it by either decreasing the number of points (32 works in this case) or by stretching out the circle so that the top is flatter.  Generally results will be best if you can get a point on the edge and if the top surface is perpendicular to the edge. 
+// Example(3D,VPR=[80.9,0,55.8],VPT=[11.9865,-12.0228,4.48816],VPD=15.3187): The artifact shown above occurs because of normals to the prism that cross the edge at a small angle.  You can remove it by either decreasing the number of points (32 works in this case) or as shown below, by stretching out the circle so that the top is flatter, which makes the normals parallel to the edge so they don't cross it.  Generally results will be best if you can get a point on the edge and if the top surface is perpendicular to the edge. 
 //   circ = xscale(1.2,circle(r=3, $fn=64));
 //   cuboid(20) let(edge=parent())
 //     move([30,-30,-8]) zrot(-45) cuboid(20) let(extra=parent())
@@ -4154,45 +4184,45 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   cuboid(20) let(edge=parent())
 //     move([30,-30,-8]) zrot(-45) cuboid(20) let(extra=parent())
 //       #prism_connector(circ, edge, RIGHT+FWD, extra, LEFT, fillet=2);
-// Example: We can attach to the top surface of a shifted cone, but when attaching to the curved surface, only a right angle cylinder is supported.
+// Example(3D,NoAxes): We can attach to the top surface of a shifted cone, but when attaching to the curved surface, only a right angle cylinder is supported.
 //   $fn=32;
 //   flower = scale(.6,[for(theta=lerpn(0,360,90,endpoint=false)) (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]]);
 //   cyl(d1=40, d2=30,h=30, shift=[4,9]) let(cone=parent())
 //     up(40) back(30)xcyl(d=30,l=30,$fn=64,circum=true)
 //       prism_connector(flower, cone, TOP, parent(), FWD+BOT, fillet=2.5);
-// Example(3D,VPT=[2.33096,4.77324,9.30076],VPR=[85.8,0,358.4],VPD=102.06): This example scales the end of the prism, has different fillets at each end, and uses shifting to adjust its position.  
+// Example(3D,NoAxes,VPT=[2.33096,4.77324,9.30076],VPR=[85.8,0,358.4],VPD=102.06): This example scales the end of the prism, has different fillets at each end, and uses shifting to adjust its position.  
 //  cyl(d=30,h=8) let(bot=parent())
 //    up(20)right(8)xrot(-20)yrot(11)cyl(d=18,h=8) let(top=parent())
 //      prism_connector(circle(d=20,$fn=64), bot, TOP, top, BOT, scale=0.4,
 //                      fillet1=2.5, shift1=3,fillet2=2, shift2=[-2,-2.2]);
-// Example: Here we connect a prism to a linear sweep.  (Note that you must use {{linear_sweep()}}, not linear_extrude().)
+// Example(3D,NoAxes,VPT=[15.0136,12.2965,5.31287],VPR=[62.7,0,25.7],VPD=113.4): Here we connect a prism to a linear sweep.  (Note that you must use {{linear_sweep()}}, not linear_extrude().)
 //  circ = circle(r=3, $fn=64);
 //  flower = scale(.4,[for(theta=lerpn(0,360,180,endpoint=false)) (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]]);
 //  zrot(-90)
 //  linear_sweep(flower, h=22) let(sweep=parent())
 //    zrot(90)right(40)zrot(15)yrot(12) cuboid(12) let(cube=parent())
 //      prism_connector(circ,sweep,BACK,cube,LEFT,fillet=2);
-// Example: You can use the same object for `desc1` and `desc2` with different anchors to create a filleted hole.  Note that if you don't enlarge overlap from its default value of 1 then parts of the cylinder don't get removed by the difference.  
+// Example(3D,NoAxes): You can use the same object for `desc1` and `desc2` with different anchors to create a filleted hole.  Note that if you don't enlarge overlap from its default value of 1 then parts of the cylinder don't get removed by the difference.  
 //   circ = circle(r=8, $fn=64);
 //   back_half()
 //   diff()
 //     cyl(d=40,h=50,$fn=32)
 //        tag("remove") prism_connector(circ,parent(),LEFT,parent(),RIGHT,
 //                                      shift1=-8,shift2=7,fillet=6,overlap=3);
-// Example: You can also use interior connectors to bridge across holes as shown in this example.  Note also that you can apply operations like rotation to the connector.
+// Example(3D,NoAxes,VPT=[1.42957,2.47871,-3.63111],VPR=[40.3,0,29.2],VPD=263.435): You can also use interior connectors to bridge across holes as shown in this example.  Note also that you can apply operations like rotation to the connector.
 //   circ = circle(r=3, $fn=64);
 //   diff()
 //     highlight_this() cyl(d=85,h=39)
 //       tag("remove") cyl(d=75,h=40,$fn=128)
 //       tag("keep") zrot_copies(n=4)
 //         prism_connector(circ,parent(),[-1,.2],parent(),[1,.4],shift1=12,shift2=-12,fillet=2);
-// Example(3D,Med): Here we use the {{zrot_copies()}} distributor to create copies of objects and create a connector to a non-symmetrically placed object.  All all the connectors are different because we change the anchor point that goes with the second description.
+// Example(3D,Med,NoAxes,VPT=[1.42957,2.47871,-3.63111],VPR=[40.3,0,29.2],VPD=263.435): Here we use the {{zrot_copies()}} distributor to create copies of objects and create a connector to a non-symmetrically placed object.  All all the connectors are different because we change the anchor point that goes with the second description.
 //   circ = circle(r=3, $fn=64);
 //   right(4)up(25)xrot(15) cyl(r=20,h=30,circum=true,$fn=64) let(cyl=parent())
 //     restore()
 //     zrot_copies(n=5) right(40)zrot(45)cuboid(18)
 //       prism_connector(circ, parent(), TOP, cyl, [cos(360/5*$idx), sin(360/5*$idx), 0], fillet1=3,fillet2=7);
-// Example(3D,Med): In the previous example we used a distributor to create copies of an object and build connectors from those copies to a different object.  What if you want to create connectors between copies created by a distributor?  One powerful way to do this is to create an array of descriptions and use that array to make the connectors.  It's convenient to put your object into a module so you don't have to repeat it, but make sure that your module takes children, or the connectors won't run!  Here we create the objects first, and then we separately create the connectors as a child of a single hidden instance of the object.  That second construction is needed so we can get the description of the object, but we don't want it to show up in the model.
+// Example(3D,Med,NoAxes,VPT=[-4.51969,7.59952,4.54054],VPR=[48.7,0,30.6],VPD=361.364): In the previous example we used a distributor to create copies of an object and build connectors from those copies to a different object.  What if you want to create connectors between copies created by a distributor?  One powerful way to do this is to create an array of descriptions and use that array to make the connectors.  It's convenient to put your object into a module so you don't have to repeat it, but make sure that your module takes children, or the connectors won't run!  Here we create the objects first, and then we separately create the connectors as a child of a single hidden instance of the object.  That second construction is needed so we can get the description of the object, but we don't want it to show up in the model.
 //   circ = circle(r=3, $fn=64);
 //   module object() cuboid(18)children();
 //   T_list = arc_copies(rx=80,ry=60,n=5,sa=0,ea=180);
@@ -4201,7 +4231,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //     let(desc = transform_desc(T_list,parent()))
 //     for(d=pair(desc))
 //       prism_connector(circ, d[0], BACK, d[1], FWD, fillet=5);
-// Example(3D,Med): We can change the object in the above example to vary between cube and cylinder.  
+// Example(3D,NoAxes,Med,VPT=[-4.51969,7.59952,4.54054],VPR=[48.7,0,30.6],VPD=361.364):  We can change the object in the above example to vary between cube and cylinder.  
 //   circ = circle(r=3, $fn=64);
 //   T_list = arc_copies(rx=80,ry=60,n=5,sa=0,ea=180);
 //   module object(ind)
@@ -4214,17 +4244,16 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //         prism_connector(circ, transform_desc(T_list[i],select(obj,i)),BACK,
 //                               transform_desc(T_list[i+1],select(obj,i+1)), FWD,
 //                         fillet=4);
-// Example(3D,Med): Another way to establish connections between objects is with {{desc_copies()}} which provides functions to access the descriptions of the other objects in the set.  Note that in OpenSCAD 2021.01 you cannot call `$prev()` and `$next()` directly.  In development versions you can call them directly and hence the example could be slightly simplified.  
+// Example(3D,NoAxes,Med,VPT=[-0.963453,0.924861,-2.75661],VPR=[34,0,31.3],VPD=401.516): Another way to establish connections between objects is with {{desc_copies()}} which provides functions to access the descriptions of the other objects in the set.  Note that in OpenSCAD 2021.01 you cannot call `$prev()` and `$next()` directly.  In development versions you can call them directly and hence the example could be slightly simplified.  
 //   circ = circle(r=3, $fn=64);
 //   desc_copies(arc_copies(rx=80,ry=60,n=7,sa=0,ea=360))
 //     spheroid(11,circum=true) let(next=$next,prev=$prev)
 //        prism_connector(circ, prev(),BACK+LEFT, next(), FWD+LEFT, fillet=5, debug_pos=false);
-// Example(3D,Med): Using CENTER anchors can make a construction like this much easier.  In this example the anchors need to shift around from the pointy end to the flat end of the ellipse, which would be annoying to calculate by hand.  
-//   desc_copies(arc_copies(rx=85,ry=45,n=12))
-//     cyl(d=15,h=27,circum=true,rounding=5,$fn=64)
-//       prism_connector(circle(r=3,$fn=32), parent(), CTR, $next(), CTR, fillet=4);
-
-// Example(3D,Med): When using {{desc_copies()}} with a varying shape you have to conditionally show only the correct shape for each index, but still specify all the shapes so you can collect their descriptions.  
+// Example(3D,Med,NoAxes,VPT=[1.15472,1.59934,-3.16205],VPR=[55,0,25],VPD=361.364): Using CENTER anchors can make a construction like this much easier.  In this example the anchors need to shift around from the pointy end to the flat end of the ellipse, which would be annoying to calculate by hand.  
+//   desc_copies(arc_copies(rx=85,ry=45,n=12)) let(next=$next)
+//     cyl(d=15,h=27,circum=true,rounding=5,$fn=64) 
+//       prism_connector(circle(r=3,$fn=32), parent(), CTR, next(), CTR, fillet=4);
+// Example(3D,NoAxes,Med,VPT=[-3.18586,5.10784,4.59099],VPR=[58.5,0,19.4],VPD=325.228): When using {{desc_copies()}} with a varying shape you have to conditionally show only the correct shape for each index, but still specify all the shapes so you can collect their descriptions.  
 //  circ = circle(r=3, $fn=64);
 //  desc_copies(arc_copies(rx=60,ry=80,n=5,sa=-20,ea=200))
 //     hide($idx%2==0?"cyl":"cube")
@@ -4256,7 +4285,7 @@ function _get_obj_type(ind,geom,anchor,prof) =
                          assert(geom[4]==[0,0], str("For anchors other than TOP/BOTTOM, cylinder from desc",ind," must be a right-angle cylinder with zero shift"))
                          assert(anchor.z==0,str("Anchor for cylinder for desc",ind," is on the cylinder's edge.  This is not supported."))
                          "cyl"
-   : geom[0]=="prismoid" || geom[0]=="vnf_extent" ?
+   : in_list(geom[0],["prismoid","vnf_extent","vnf_isect"]) ?
                            assert(geom[0]!="prismoid" || sum(v_abs(anchor))<3, "Cannot give a corner anchor for prismoid geometry")
                            let(
                                 anch = _find_anchor(anchor, geom),
@@ -4318,7 +4347,7 @@ function _prismoid_isect(geom, line, bounded, flip=false) =
        h=size.z,
        bot=path3d(rect(point2d(size)),-h/2),
        top=path3d(move(shift, rect(size2)),h/2),
-       modline = rot(from=axis,to=UP, p=line), 
+       modline = move(shift/2,rot(from=axis,to=UP, p=line)), 
        isect = [ polygon_line_intersection(top, modline, bounded),
                  polygon_line_intersection(bot, modline, bounded),
                  for(i=[0:3]) polygon_line_intersection([top[i], bot[i], select(bot,i+1),select(top,i+1)], modline, bounded)
@@ -4451,9 +4480,10 @@ function _find_center_anchor(desc1, desc2, anchor2, flip) =
   : geom[0]=="conoid" ? _cone_isect(geom,line,RAY,flip)
   : geom[0]=="spheroid" ? [unit(line[1]-line[0]), [0,0,0]]
   : starts_with(geom[0],"extrusion") ? _extrusion_isect(geom,line,RAY,flip)
+  : geom[0]=="vnf_isect" ? [unit(line[1]-line[0]), [0,0,0]]
   : assert(false,str("Center anchor not supported with geometry type ",geom[0]));
 
-       
+
 
 
 module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2=0, spin_align=1,
