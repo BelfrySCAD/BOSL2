@@ -3443,6 +3443,7 @@ module isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, reve
             ? let(hb=0.5*bounding_box) [[-hb,-hb,-hb],[hb,hb,hb]]
             : bounding_box,
             autovoxsize = is_def(voxel_size) ? voxel_size : _getautovoxsize(bbox0, default(voxel_count,22^3)),
+            exactbounds = is_def(exact_bounds) ? exact_bounds : is_list(f),
             voxsize = _mball ? voxel_size : _getvoxsize(autovoxsize, bbox0, exactbounds),
             bbox = _mball ? bounding_box : _getbbox(voxsize, bbox0, exactbounds, f)
         ) %translate(bbox[0]) cube(bbox[1]-bbox[0]);
