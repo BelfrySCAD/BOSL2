@@ -3057,6 +3057,7 @@ module metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, use_
             if(len(a[1])>0)
                 color(a[0]==0 ? "gray" : a[0]>0 ? "#3399FF" : "#FF9933")
                     region(a[1]);
+            //else echo("WARNING: Empty metaball path found!");
         // display metaball as outline
         attachable(anchor, spin, two_d=true, region=regionlist[0], extent=atype=="hull", cp=cp) {
             wid = is_def(pixel_size) ? min(0.5, 0.5 * (is_num(pixel_size) ? pixel_size : 0.5*(pixel_size[0]+pixel_size[1]))) : 0.2;
@@ -3064,11 +3065,12 @@ module metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, use_
             children();
         }
     } else { // debug==false, just display the metaball polygons
-        attachable(anchor, spin, two_d=true, region=regionlist, extent=atype=="hull", cp=cp) {
-            if(len(regionlist)>0)
-                region(regionlist, anchor=anchor, spin=spin, cp=cp, atype=atype);
-            children();
-        }
+        assert(len(regionlist)>0, "\nNo metaball polygons found! Check your isovalue.")
+            attachable(anchor, spin, two_d=true, region=regionlist, extent=atype=="hull", cp=cp) {
+                if(len(regionlist)>0)
+                    region(regionlist, anchor=anchor, spin=spin, cp=cp, atype=atype);
+                children();
+            }
     }
     if(show_box)
         let(
@@ -3722,7 +3724,7 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 
 module contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, use_centers=true, smoothing=undef, exact_bounds=false, cp="centroid", anchor="origin", spin=0, atype="hull", show_stats=false, show_box=false, _mball=false) {
     pathlist = contour(f, isovalue, bounding_box, pixel_size, pixel_count, use_centers, smoothing, true, exact_bounds, show_stats, _mball);
-    assert(len(pathlist)>0, "\nNo contour lines found! Cannot generate polygon.")
+    assert(len(pathlist)>0, "\nNo contour lines found! Cannot generate polygon. Check your isovalue.")
         attachable(anchor, spin, two_d=true, region=pathlist, extent=atype=="hull", cp=cp) {
             region(pathlist, anchor=anchor, spin=spin, cp=cp, atype=atype);
             children();
@@ -3734,7 +3736,7 @@ module contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, use_cen
             : bounding_box,
             autopixsize = is_def(pixel_size) ? pixel_size : _getautopixsize(bbox0, default(pixel_count,32^2)),
             pixsize = _mball ? pixel_size : _getpixsize(autopixsize, bbox0, exact_bounds),
-            bbox = _mball ? bounding_box : _getbbox2d(pixsize, bbox0, exact_bounds, f),
+            bbox = _mball ? bounding_box : _getbbox2d(pixsize, bbox0, exact_bounds, f)
         ) %translate([bbox[0][0],bbox[0][1],-0.05]) linear_extrude(0.1) square(bbox[1]-bbox[0]);
 }
 
