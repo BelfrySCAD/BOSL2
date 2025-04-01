@@ -5261,9 +5261,9 @@ function transform_desc(T,desc) =
 //   .
 //   The descriptions are made available through function literals provided in the `$` variables.  The
 //   available functions are
-//   * $next([di], [desc]): Returns the description of the next object, or if i is given, the object i steps forward.  The indexing wraps around.
-//   * $prev([di], [desc]): Returns the description of the previoud object, or if i is given, the object i steps before.  The indexing wraps around.
-//   * $desc(i, [desc]): Returns a description of the object with index `i`.  Indexing does not wrap around.  
+//   * $next([di], [desc]): Returns the description of the next object, or if `di` is given, the object `di` steps forward.  The indexing wraps around.
+//   * $prev([di], [desc]): Returns the description of the previous object, or if `di` is given, the object `di` steps before.  The indexing wraps around.
+//   * $desc(i, [desc]): Returns a description of the object with index `i`.  Indexing does **not** wrap around.  
 //   All of these functions have an optional `desc` parameter, which is the description that will be transformed to produce the next, previous, or indexed
 //   description.  By default `desc` is set to {{parent()}}, but you may wish to use a different description if you have objects that vary.
 //   .
