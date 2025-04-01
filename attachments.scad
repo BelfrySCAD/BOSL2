@@ -1052,7 +1052,9 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
                                 * affine3d_zrot(-parent_abstract_anchor[3])
                                 * rot(from=parent_abstract_anchor[2],to=UP)
                                 * rot(v=anchor,-spin),
-                              align); 
+                              align);
+
+            
             spinaxis = two_d? UP : anchor_dir;
             olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference);
             if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) 
@@ -3532,7 +3534,8 @@ function attach_geom(
             )
         )
     ) :
-    ["point", cp, offset, anchors];
+    two_d?     ["point2d", cp, offset, anchors]
+    : ["point", cp, offset, anchors];
 
 
 
@@ -3554,7 +3557,7 @@ function attach_geom(
 function _attach_geom_2d(geom) =
     let( type = geom[0] )
     type == "trapezoid" || type == "ellipse" ||
-    type == "rgn_isect" || type == "rgn_extent";
+    type == "rgn_isect" || type == "rgn_extent" || type=="point2d";
 
 
 /// Internal Function: _attach_geom_size()
@@ -3567,6 +3570,7 @@ function _attach_geom_2d(geom) =
 function _attach_geom_size(geom) =
     let( type = geom[0] )
     type == "point"? [0,0,0] :
+    type == "point2d"? [0,0] :
     type == "prismoid"? ( //size, size2, shift, axis
         let(
             size=geom[1], size2=geom[2], shift=point2d(geom[3]),
@@ -3991,6 +3995,12 @@ function _find_anchor(anchor, geom)=
             anchor = unit(point3d(anchor),CENTER),
             pos = point3d(cp) + point3d(offset),
             vec = unit(anchor,UP)
+        ) [anchor, pos, vec, oang]
+    ) : type == "point2d"? (
+        let(
+            anchor = unit(_force_anchor_2d(anchor), [0,0]),
+            pos = point2d(cp) + point2d(offset),
+            vec = unit(anchor,BACK)
         ) [anchor, pos, vec, oang]
     ) : type == "spheroid"? ( //r
         let(
@@ -4984,7 +4994,7 @@ function _local_struct_val(struct, key)=
 
 
 function _force_anchor_2d(anchor) =
-  is_undef(anchor) || len(anchor)==2 ? anchor :
+  is_undef(anchor) || len(anchor)==2 || is_string(anchor) ? anchor :
   assert(anchor.y==0 || anchor.z==0, "Anchor for a 2D shape cannot be fully 3D.  It must have either Y or Z component equal to zero.")
   anchor.y==0 ? [anchor.x,anchor.z] : point2d(anchor);
 

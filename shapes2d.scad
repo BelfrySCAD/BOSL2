@@ -260,14 +260,14 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
 // Example(2D): Fit to Three Points
 //   pts = [[50,25], [25,-25], [-10,0]];
 //   circle(points=pts);
-//   color("red") move_copies(pts) circle();
+//   color("red") move_copies(pts) circle(r=1.5,$fn=12);
 // Example(2D): Fit Tangent to Inside Corner of Two Segments
 //   path = [[50,25], [-10,0], [25,-25]];
 //   circle(corner=path, r=15);
 //   color("red") stroke(path);
 // Example(2D): Called as Function
 //   path = circle(d=50, anchor=FRONT, spin=45);
-//   stroke(path);
+//   stroke(path,closed=true);
 function circle(r, d, points, corner, anchor=CENTER, spin=0) =
     assert(is_undef(corner) || (is_path(corner,[2]) && len(corner) == 3))
     assert(is_undef(points) || is_undef(corner), "Cannot specify both points and corner.")
@@ -377,41 +377,41 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
 //   r=[10,3];
 //   ydistribute(7){
 //     union(){
-//       stroke([ellipse(r=r, $fn=100)],width=0.05,color="blue");
-//       stroke([ellipse(r=r, $fn=6)],width=0.1,color="red");
+//       stroke([ellipse(r=r, $fn=100)],width=0.1,color="blue");
+//       stroke([ellipse(r=r, $fn=6)],width=0.2,color="red");
 //     }
 //     union(){
-//       stroke([ellipse(r=r, $fn=100)],width=0.05,color="blue");
-//       stroke([ellipse(r=r, $fn=6,uniform=true)],width=0.1,color="red");
+//       stroke([ellipse(r=r, $fn=100)],width=0.1,color="blue");
+//       stroke([ellipse(r=r, $fn=6,uniform=true)],width=0.2,color="red");
 //     }
 //   }
-// Example(2D): The realigned hexagons are even more different
+// Example(2D,NoAxes): The realigned hexagons are even more different
 //   r=[10,3];
 //   ydistribute(7){
 //     union(){
-//       stroke([ellipse(r=r, $fn=100)],width=0.05,color="blue");
-//       stroke([ellipse(r=r, $fn=6,realign=true)],width=0.1,color="red");
+//       stroke([ellipse(r=r, $fn=100)],width=0.1,color="blue");
+//       stroke([ellipse(r=r, $fn=6,realign=true)],width=0.2,color="red");
 //     }
 //     union(){
-//       stroke([ellipse(r=r, $fn=100)],width=0.05,color="blue");
-//       stroke([ellipse(r=r, $fn=6,realign=true,uniform=true)],width=0.1,color="red");
+//       stroke([ellipse(r=r, $fn=100)],width=0.1,color="blue");
+//       stroke([ellipse(r=r, $fn=6,realign=true,uniform=true)],width=0.2,color="red");
 //     }
 //   }
-// Example(2D): For odd $fn the result may not look very elliptical:
+// Example(2D,NoAxes): For odd $fn the result may not look very elliptical:
 //    r=[10,3];
 //    ydistribute(7){
 //      union(){
-//        stroke([ellipse(r=r, $fn=100)],width=0.05,color="blue");
-//        stroke([ellipse(r=r, $fn=5,realign=false)],width=0.1,color="red");
+//        stroke([ellipse(r=r, $fn=100)],width=0.1,color="blue");
+//        stroke([ellipse(r=r, $fn=5,realign=false)],width=0.2,color="red");
 //      }
 //      union(){
-//        stroke([ellipse(r=r, $fn=100)],width=0.05,color="blue");
-//        stroke([ellipse(r=r, $fn=5,realign=false,uniform=true)],width=0.1,color="red");
+//        stroke([ellipse(r=r, $fn=100)],width=0.1,color="blue");
+//        stroke([ellipse(r=r, $fn=5,realign=false,uniform=true)],width=0.2,color="red");
 //      }
 //    }
-// Example(2D): The same ellipse, turned 90 deg, gives a very different result:
+// Example(2D,NoAxes): The same ellipse, turned 90 deg, gives a very different result:
 //   r=[3,10];
-//   xdistribute(7){
+//   xdistribute(9){
 //     union(){
 //       stroke([ellipse(r=r, $fn=100)],width=0.1,color="blue");
 //       stroke([ellipse(r=r, $fn=5,realign=false)],width=0.2,color="red");

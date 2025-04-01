@@ -299,7 +299,8 @@ module stroke(
     // We want to allow "paths" with length 1, so we can't use the normal path/region checks
     paths = is_matrix(path) ? [path] : path;
     assert(is_list(paths),"The path argument must be a list of 2D or 3D points, or a region.");
-    attachable(){
+    attachable(two_d=true)
+    {
       for (path = paths) {
           pathvalid = is_path(path,[2,3]) || same_shape(path,[[0,0]]) || same_shape(path,[[0,0,0]]);
 
