@@ -2998,15 +2998,15 @@ function mb_ring(r1,r2, cutoff=INF, influence=1, negative=false, hide_debug=fals
 //       bounding_box = [[-16,-13],[18,13]],
 //       pixel_size=0.4);
 // Example(2D,Med,NoAxes: Demonstration of `debug=true` with a variety of metaball shapes. The metaballs themselves are shown as outlines, with the underlying primitive shape shown in blue (for positive metaballs) or orange (for negative metaballs).
-//   spec = [
-//       IDENT,          mb_ring(r1=6, r2=9),
-//       move([15,0]),   mb_circle(3),
-//       IDENT,          mb_connector2d([10,10],[15,15],1),
-//       move([-12,12])*zrot(45),    mb_rect([3,5]),
-//       move([-14,-14])*zrot(-45),  mb_trapezoid(10,w1=7,w2=2,rounding=0.99),
-//       move([10,-10]), mb_circle(2, cutoff=10, negative=true)
-//   ];
-//   metaballs2d(spec, [[-20,-20],[20,17]], pixel_size=0.5, debug=true);
+   spec = [
+       IDENT,          mb_ring(r1=6, r2=9),
+       move([15,0]),   mb_circle(3),
+       IDENT,          mb_connector2d([10,10],[15,15],1),
+       move([-12,12])*zrot(45),    mb_rect([3,5]),
+       move([-14,-14])*zrot(-45),  mb_trapezoid(10,w1=7,w2=2,rounding=0.99),
+       move([10,-10]), mb_circle(2, cutoff=10, negative=true)
+   ];
+   metaballs2d(spec, [[-20,-20],[20,17]], pixel_size=0.5, debug=true);
 
 module metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, use_centers=false, smoothing=undef, exact_bounds=false, convexity=6, cp="centroid", anchor="origin", spin=0, atype="hull", show_stats=false, show_box=false, debug=false) {
     regionlist = metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue, true, use_centers, smoothing, exact_bounds, show_stats, _debug=debug);
@@ -3051,7 +3051,7 @@ function metaballs2d(spec, bounding_box, pixel_size, pixel_count, isovalue=1, cl
     assert(is_finite(isovalue) || (is_list(isovalue) && len(isovalue)==2 && is_num(isovalue[0]) && is_num(isovalue[1])), "\nIsovalue must be a number or a range; a number is the same as [number,INF].")
     assert(len(spec)%2==0, "\nThe spec parameter must be an even-length list of alternating transforms and functions")
     let(
-        isoval = is_list(isovalue) ? (is_finite(isovalue[0]) ? isovalue[0] : isovalue[1]) : isovalue,
+        isoval = is_list(isovalue) ? isovalue : [isovalue,INF], 
         funclist = _mb_unwind_list(spec, twoD=true),
         nballs = len(funclist)/2,
         dummycheck = [
