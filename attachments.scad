@@ -3784,7 +3784,7 @@ function _attach_transform(anchor, spin, orient, geom, p) =
                     * affine3d_translate(point3d(-pos))
     )
     is_undef(p)? m
-  : is_vnf(p) && p==EMPTY_VNF? p 
+  : is_vnf(p) && p==[[],[]] ? p 
   : apply(m, p);
 
 
@@ -5093,7 +5093,7 @@ module restore(desc)
 // Arguments:
 //   desc = Description to use to get the point
 //   p = Point or point list to transform.  Default: CENTER (if anchor not given)
-//   --
+//   ---
 //   anchor = Anchor point (only one) that you want to extract.  Default: CENTER
 // Example(3D): In this example we translate away from the parent object and then compute points on that object.  Note that with OpenSCAD 2021.01 you must use union() or alternatively place the pt1 and pt2 assignments in a let() statement.  This is not necessary in development versions.  
 //  cuboid(10) let(desc=parent())
@@ -5140,7 +5140,7 @@ function desc_point(desc, p, anchor) =
 // Arguments:
 //   desc = Description to use.  Default: use the global world coordinate system
 //   dir = Direction or list of directions to use.  Default: UP (if anchor is not given)
-//   --
+//   ---
 //   anchor = Anchor (only one) to get the direction from.
 // Example(3D): Here we don't give a description so the reference is to the global world coordinate system, and we don't give a direction, so the default of UP applies.  This lets the cylinder be placed so it is horizontal in world coordinates.  
 //   prismoid(20,10,h=15)
@@ -5200,9 +5200,13 @@ function desc_attach(desc, anchor=UP, p, reverse=false) =
 //   desc2 = Second description
 //   anchor2 = Anchor for second description
 // Example(3D): Computes the distance between a point on each cube. 
-//  cuboid(10) let(desc=parent())
-//    right(15) cuboid(10) 
-//      echo(desc_dist(parent(),TOP+RIGHT+BACK, desc, TOP+LEFT+FWD));
+//  cuboid(10) let(desc=parent()) {
+//      color("red")attach(TOP+LEFT+FWD) sphere(r=0.75,$fn=12);
+//      right(15) cuboid(10) {
+//        color("red") attach(TOP+RIGHT+BACK) sphere(r=0.75,$fn=12);
+//        echo(desc_dist(parent(),TOP+RIGHT+BACK, desc, TOP+LEFT+FWD));  // Prints 26.9258
+//      }
+//  }
 
 function desc_dist(desc1,anchor1=CENTER, desc2, anchor2=CENTER)=
    assert(is_description(desc1),"Invalid description: desc1")
