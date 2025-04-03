@@ -1238,46 +1238,6 @@ function _contour_vertices(pxlist, pxsize, isovalmin, isovalmax, segtablemin, se
 ];
 
 
-function _assemble_partial_paths(paths, closed=false, eps=1e-7) =
-    let(
-        pathlist = _assemble_partial_paths_recur(paths, eps) /*,
-        // this eliminates crossing paths - commented out now that it's no longer possible for the input segments to cross
-        splitpaths =
-            [for(path=pathlist) each
-               let(
-                   searchlist = vector_search(path,eps,path),
-                   duplist = [for(i=idx(searchlist)) if (len(searchlist[i])>1) i]
-               )
-               duplist==[] ? [path]
-              :               
-               let(
-                   fragments = [for(i=idx(duplist)) select(path, duplist[i], select(duplist,i+1))]
-               )
-               len(fragments)==1 ? fragments
-                                 : _assemble_path_fragments(fragments)
-            ]*/
-    )
-    //[for(path=splitpaths) list_unwrap(path)];
-    closed ? [for(path=pathlist) list_unwrap(path)] : pathlist;
-
-
-function _assemble_partial_paths_recur(edges, eps, paths=[], i=0) =
-    i==len(edges) ? paths :
-    norm(edges[i][0]-last(edges[i]))<eps ? _assemble_partial_paths_recur(edges, eps, paths,i+1) :
-    let(    // Find paths that connects on left side and right side of the edges (if one exists)
-        
-        left = [for(j=idx(paths)) if (approx(last(paths[j]),edges[i][0],eps)) j],
-        right = [for(j=idx(paths)) if (approx(last(edges[i]),paths[j][0],eps)) j]
-    )
-    let(
-        keep_path = list_remove(paths,[if (len(left)>0) left[0],if (len(right)>0) right[0]]),
-        update_path =  left==[] && right==[] ? edges[i]
-                    : left==[] ? concat(list_head(edges[i]),paths[right[0]])
-                    : right==[] ?  concat(paths[left[0]],slice(edges[i],1,-1))
-                    : left[0] != right[0] ? concat(paths[left[0]],slice(edges[i],1,-2), paths[right[0]])
-                    : concat(paths[left[0]], slice(edges[i],1,-1)) // last arg -2 removes duplicate endpoints but this is handled in passthrough function
-    )
-    _assemble_partial_paths_recur(edges, eps, concat(keep_path, [update_path]), i+1);
 
 
 /// ---------- 3D metaball stuff starts here ----------
@@ -3158,43 +3118,32 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 //   <a name="isosurface-contour-parameters"></a>
 //   ***Parameters common to `isosurface()` and `contour()`***
 //   .
-//   **Parameter `f` (function):** To provide a function, you supply a [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
-//   taking a 3D coordinate `[x,y,z]` (for `isosurface()`) or a 2D coordinate `[x,y]` (for `contour()`) as
-//   input to define the grid coordinate location and returning a single numerical value.
-//   You can also define an isosurface using an array of values instead of a function, in which
-//   case the isosurface is the set of points equal to the isovalue as interpolated from the array.
+//   **Parameter `f` (function):** The [function literal](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/User-Defined_Functions_and_Modules#Function_literals)
+//   must take 3 parameters (x, y and z) for isosurface or two parameters (x and y) for contour, and must return a single numerical value.
+//   You can also define an isosurface or contour using an array of values instead of a function, in which
+//   case the isosurface or contour is the set of points equal to the isovalue as interpolated from the array.
 //   The array indices are in the order `[x][y][z]` in 3D, and `[x][y]` in 2D.
 //   .
-//   **Parameter `isovalue:`** For isosurfaces, the isovalue must be specified as a range `[c_min,c_max]`.
-//   For contours, the isovalue can be specified as either a range or a single value; for a height field, the
-//   contour isovalue is its elevation. A single contour isovalue is equivalent to the range `[isovalue,INF]`.
-//   .
-//   For isosurfaces, the range can be finite or unbounded at one end, with either `c_min=-INF` or `c_max=INF`.
-//   The returned object is the set of points `[x,y,z]` that satisfy `c_min <= f(x,y,z) <= c_max`. If `f(x,y,z)`
-//   has values larger than `c_min` and values smaller than `c_max`, then the result is a shell object with two
-//   bounding surfaces corresponding to the isosurfaces at `c_min` and `c_max`. If `f(x,y,z) < c_max`
-//   everywhere (which is true when `c_max = INF`), then no isosurface exists for `c_max`, so the object
-//   has only one bounding surface: the one defined by `c_min`. This can result in a bounded object
-//   like a sphere, or it can result an an unbounded object such as all the points outside of a sphere out
-//   to infinity. A similar situation arises if `f(x,y,z) > c_min` everywhere (which is true when
+//   **Parameter `isovalue:`** The isovalue must be specified as a range `[c_min,c_max]`.
+//   The range can be finite or unbounded at one end, with either `c_min=-INF` or `c_max=INF`.
+//   For isosurface, the returned object is the set of points `[x,y,z]` that satisfy `c_min <= f(x,y,z) <= c_max`,
+//   or in 2D, the points `[x,y]` satisfying `c_min <= f(x,y) <= c_max`.  Strictly speaking, the isothis means the
+//   isosurface and contour modules don't return a single contour or isovalue by the shape **bounded** by isosurfaces
+//   or contours.  If the function has values larger than `c_min` and values smaller than `c_max`, then the result
+//   is a shell object (3D) or ring object (2D) with two
+//   bounding surfaces/curves corresponding to the isovalues of `c_min` and `c_max`. If the function is smaller
+//   than `c_max` everywhere (which is true when `c_max = INF`), then no isosurface exists for `c_max`, so the object
+//   has only one bounding surface: the one defined by `c_min`. This can result in a bounded object&mdash;a sphere 
+//   or circle&mdash;or an unbounded object such as all the points outside of a sphere out
+//   to infinity. A similar situation arises if the function is larger than `c_min` everywhere (which is true when
 //   `c_min = -INF`). Setting isovalue to `[-INF,c_max]` or `[c_min,INF]` always produces an object with a
-//   single bounding isosurface, which itself can be unbounded. To obtain a bounded object, think about
-//   whether the function values inside your object are smaller or larger than your isosurface value. If
+//   single bounding isosurface or contour, which itself can be unbounded. To obtain a bounded object, think about
+//   whether the function values inside your object are smaller or larger than your iso value. If
 //   the values inside are smaller, you produce a bounded object using `[-INF,c_max]`. If the values
-//   inside are larger, you get a bounded object using `[c_min,INF]`.
+//   inside are larger, you get a bounded object using `[c_min,INF]`.  When your object is unbounded, it will
+//   be truncated at the bounded box, which can result in an object that looks like a simple cube. 
 //   .
-//   The previous paragraph also applies to contours: the isovalue range can also be finite or unbounded  at one
-//   end, with either `c_min=-INF` or `c_max=INF`. A scalar isovalue is equivalent to the range `[isovalue,INF]`.
-//   The returned polygon is the set of points `[x,y]` that satisfy `c_min <= f(x,y) <= c_max`. If `f(x,y)`
-//   has values larger than `c_min` and values smaller than `c_max`, then the result is a polygon bounded by two
-//   paths corresponding to the contours at `c_min` and `c_max`, as well as being clipped by the bounding box.
-//   Setting isovalue to `[-INF,c_max]` or `[c_min,INF]` always produces a polygon with a single bounding contour,
-//   which itself can be unbounded (and truncated by the bounding box). If you find that your contour appears as
-//   a hole inside a solid rectangle, think about whether the function values inside the polygon are smaller or
-//   larger than your isovalue. If the values inside are smaller, use `isovalue=[-INF,c_max]`. If the values
-//   inside are larger, you get a bounded object using a scalar `isovalue=c_min` or the range `isovalue=[c_min,INF]`.
-//   .
-//   **Parameters `bounding_box` and grid units:** The isosurface is evaluated over a bounding box. The
+//   **Parameters `bounding_box` and grid units:** The isosurface or contour is evaluated over a bounding box. The
 //   `bounding_box` parameter can be specified by its minimum and maximum corners:
 //   `[[xmin,ymin,zmin],[xmax,ymax,zmax]]` in 3D, or `[[xmin,ymin],[xmax,ymax]]` in 2D. The bounding box can
 //   also be specified as a scalar of a cube (in 3D) or square (in 2D) centered on the origin.
@@ -3209,9 +3158,12 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 //   larger. By default, if the voxel size or pixel size doesn't exactly divide your specified bounding box,
 //   then the bounding box is enlarged to contain whole grid units, and centered on your requested box.
 //   Alternatively, you may set `exact_bounds=true` to cause the grid units to adjust in size to fit instead,
-//   resulting in non-square grid units. Either way, if the bounding box clips the isosurface and `closed=true`
-//   (the default), the object is closed at the intersection. Setting `closed=false` causes the object to end
-//   at the bounding box. In 3D, this results in a non-manifold shape with holes, exposing the inside of the
+//   resulting in non-square grid units.
+//   .
+//   The isosurface or contour object is clipped by the bounding box.  The contour module always closes the shapes
+//   at the boundary to produce displayable polygons.  The isosurface module and the function forms
+//   accept a `closed` parameter.  Setting `closed=false` causes the closing segments or surfaces along the bounding
+//   box to be excluded from the model.  In 3D, this results in a non-manifold shape with holes, exposing the inside of the
 //   object. In 2D, this results in an open-ended contour path with higher values on the right with respect to
 //   the path direction.
 //   .
@@ -3598,18 +3550,18 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   .
 //   ***Closed and unclosed paths***
 //   .
-//   The functional form of `contour()` supports a `closed` parameter. When `closed=true` (the default)
+//   The module form of `contour()` always closes the polygons at the bounding box edges to produce
+//   valid polygons.  The functional form of `contour()` supports a `closed` parameter. When `closed=true` (the default)
 //   and a polygon is clipped by the bounding box, the bounding box edges are included in the polygon. The
-//   resulting path list is a valid region with no duplicated vertices in any path. The module form of
-//   `contour()` always closes the polygons at the bounding box edges.
+//   resulting path list is a valid region with no duplicated vertices in any path. 
 //   .
 //   When `closed=false`, paths that intersect the edge of the bounding box end at the bounding box. This
 //   means that the list of paths may include a mixture of closed and open paths. Regardless of whether
 //   any of the output paths are open, all closed paths have identical first and last points so that  closed and
 //   open paths can be distinguished. You can use {{are_ends_equal()}} to determine if a path is closed. A path
 //   list that includes open paths is not a region, because regions are lists of closed polygons. Duplicating the
-//   ends of closed paths can cause problems for functions such as {{offset()}}, which would complain about
-//   repeated points. You can pass a closed path to {{list_unwrap()}} to remove the extra endpoint.
+//   ends of closed paths can cause problems for functions such as {{offset()}}, which will complain about
+//   repeated points or produce incorrect results.  You can use {{list_unwrap()}} to remove the extra endpoint.
 // Arguments:
 //   f = The contour function or array.
 //   isovalue = A scalar giving the isovalue for the contour, or a 2-vector giving an isovalue range (resulting in a polygon bounded by two contours). For an unbounded range, use `[-INF,max_isovalue]` or `[min_isovalue,INF]`. A scalar isovalue is equivalent to the range `[isovalue,INF]`.
@@ -3641,7 +3593,7 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //       [0,0,0,1,2,3,2,0],
 //       [0,0,0,0,0,1,0,0]
 //   ];
-//   isoval=0.7;
+//   isoval=[0.7,INF];
 //   pixsize = 5;
 //   color("lightgreen") zrot(-90)
 //       contour(field, isoval, pixel_size=pixsize,
@@ -3659,7 +3611,7 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //       [0,0,0,1,2,3,2,0],
 //       [0,0,0,0,0,1,0,0]
 //   ];
-//   isoval=0.7;
+//   isoval=[0.7,INF];
 //   pixsize = 5;
 //   color("lightgreen") zrot(-90)
 //       contour(field, isoval, pixel_size=pixsize,
@@ -3676,7 +3628,7 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   translate([0,0,isoval]) color("green") zrot(-90)
 //       contour(function(x,y) wave2d(x,y,wavelen),
 //           bounding_box=[[-50,-50],[50,50]],
-//           isovalue=isoval, pixel_size=pixsize);
+//           isovalue=[isoval,INF], pixel_size=pixsize);
 //   
 //   %heightfield(size=[100,100], bottom=-45, data=[
 //       for (y=[-50:pixsize:50]) [
@@ -3684,14 +3636,14 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //               wave2d(x,y,wavelen)
 //       ]
 //   ], style="quincunx");
-// Example(2D,NoAxes): Here's a simple function that produces a contour in the shape of a flower with some petals. However, because the contour by default encloses *higher* values, and this function has higher values outside of the contour, we get a picture of the bounding box with a flower-shaped hole in it.
+// Example(2D,NoAxes): Here's a simple function that produces a contour in the shape of a flower with some petals. Note that the function has smaller values inside the shape so we choose a `-INF` bound for the isovalue.  
 //   f = function (x, y, petals=5)
 //       sin(petals*atan2(y,x)) + norm([x,y]);
-//   contour(f, isovalue=2, bounding_box=8.1);
-// Example(2D,NoAxes): Because the function in the previous example has higher values outside the contour, we specify a range for the isovalue instead of a scalar. Then the contour surrounds the values inside that range. A scalar `isovalue=3` is equivalent to the range `[3,INF]`. Instead, we force the upper end of the range to be bounded using the range `[-INF,3]`, which gives us a solid polygon flower.
+//   contour(f, isovalue=[-INF,2], bounding_box=8.1);
+// Example(2D,NoAxes): If we instead use a `+INF` bound then we get the bounding box with the flower shape removed.  
 //   f = function (x, y, petals=5)
 //       sin(petals*atan2(y,x)) + norm([x,y]);
-//   contour(f, isovalue=[-INF,3], bounding_box=8.1);
+//   contour(f, isovalue=[3,INF], bounding_box=8.1);
 // Example(3D,NoAxes): We can take the previous function a step further and make the isovalue range bounded on both ends, resulting in a hollow shell shape. The nature of the function causes the thickness to vary, which is different from the constant thickness you would get if you subtracted an `offset()` polygon from the inside. Here we extrude this polygon with a twist.
 //   f = function (x, y, petals=5)
 //      sin(petals*atan2(y,x)) + norm([x,y]);
@@ -3710,7 +3662,7 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   isovalue = 1;
 //   bbox = 720;
 //   up(isovalue) color("red") linear_extrude(1)
-//       contour(f, isovalue, bbox, pixel_size);
+//       contour(f, [isovalue,INF], bbox, pixel_size);
 //   %heightfield(size=[720,720], data = [
 //           for (y=[-360:pixel_size/2:360]) [
 //               for(x=[-360:pixel_size/2:360])
@@ -3742,7 +3694,7 @@ module contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, use_cen
 }
 
 function contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, use_centers=true, smoothing=undef, closed=true, exact_bounds=false, show_stats=false, _mball=false) =
-    assert(all_defined([f, isovalue]), "\nThe sparameters f and isovalue must both be defined.")
+    assert(all_defined([f, isovalue]), "\nThe parameters f and isovalue must both be defined.")
     assert(is_function(f) ||
         (is_list(f) &&
             // _mball=true allows pixel_size and bounding_box to coexist with f as array, because metaballs2d() already calculated them
@@ -3751,9 +3703,11 @@ function contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, use_c
             )
         )
         , "\nWhen f is an array, either bounding_box or pixel_size is required (but not both).")
+    assert(is_list(isovalue) && len(isovalue)==2 && is_num(isovalue[0]) && is_num(isovalue[1]),
+           "\nThe isovalue parameter must be a list of two numbers")
     let(
-        isovalmin = is_list(isovalue) ? isovalue[0] : isovalue,
-        isovalmax = is_list(isovalue) ? isovalue[1] : INF,
+        isovalmin = isovalue[0], 
+        isovalmax = isovalue[1], 
         dumiso1 = assert(isovalmin < isovalmax, str("\nBad isovalue range (", isovalmin, ", >= ", isovalmax, "), should be expressed as [min_value, max_value].")),
         dumiso2 = assert(isovalmin != -INF || isovalmax != INF, "\nIsovalue range must be finite on one end."),
         exactbounds = is_def(exact_bounds) ? exact_bounds : is_list(f),

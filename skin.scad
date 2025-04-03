@@ -671,7 +671,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   linear_sweep(circle(20), texture=tile,
 //                tex_size=[10,10],tex_depth=5,
 //                h=40,convexity=4);
-// Example: The same tile from above, turned 90 degrees, creates problems at the ends, because the end cap is not a connected polygon.  When the ends are disconnected you may find that some parts of the end cap are missing and spurious polygons included.  
+// Example: The same tile from above, turned 90 degrees, Note that it has endcaps on the disconnected components.  These will not appear of `caps=false`.  
 //  shape = skin([rect(2/5),
 //                rect(2/3),
 //                rect(2/5)],
@@ -682,7 +682,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //  linear_sweep(circle(20), texture=tile,
 //               tex_size=[30,20],tex_depth=15,
 //               h=40,convexity=4);
-// Example: This example shows some endcap polygons missing and a spurious triangle
+// Example: This example shows a disconnected component combined with the base component.
 //   shape = skin([rect(2/5),
 //                 rect(2/3),
 //                 rect(2/5)],
@@ -690,25 +690,38 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //                slices=0,
 //                caps=false);
 //   tile = xscale(.5,move([1/2,1,2/3],xrot(90,shape)));
-//   doubletile = vnf_join([tile, right(.5,tile)]);
-//   linear_sweep(circle(20), texture=doubletile,
-//                tex_size=[45,45],tex_depth=15, h=40);
-// Example: You can fix ends for disconnected cases using {{top_half()}} and {{bottom_half()}}
-//   shape = skin([rect(2/5),
-//                 rect(2/3),
-//                 rect(2/5)],
-//                z=[0,1/2,1],
-//                slices=0,
-//                caps=false);
-//   tile = move([1/2,1,2/3],xrot(90,shape));
-//   vnf_polyhedron(
-//     top_half(
-//       bottom_half(
-//         linear_sweep(circle(20), texture=tile,
-//                     tex_size=[30,20],tex_depth=15,
-//                     h=40.2,caps=false),
-//       z=20),
-//     z=-20)); 
+//   peak = [[[0,0,0],[1,0,0]],
+//           [[0,1/2,1/4],[1,1/2,1/4]],
+//           [[0,1,0],[1,1,0]]];
+//   peakvnf = vnf_vertex_array(peak,reverse=true);
+//   doubletile = vnf_join([tile,
+//                          right(.5,tile),
+//                          peakvnf
+//                         ]);
+//   linear_sweep(circle(20), texture=doubletile, 
+//                tex_size=[40,20],tex_depth=15, h=40);
+// Example(3D,NoAxes,VPT=[0.37913,-2.82647,5.92656],VPR=[99.8,0,9.6],VPD=48.815): Here is a simple basket weave pattern created using a texture.  We have removed the back to make the weave easier to see.  
+//    diag_weave_vnf = [
+//       [[0.2, 0, 0], [0.8, 0, 0], [1, 0.2, 0.5], [1, 0.8, 0.5], [0.7, 0.5, 0.5],
+//        [0.5, 0.3, 0], [0.2, 0, 0.5], [0.8, 0, 0.5], [1, 0.2, 1], [1, 0.8, 1],
+//        [0.7, 0.5, 1], [0.5, 0.3, 0.5], [1, 0.2, 0], [1, 0.8, 0], [0.8, 1, 0.5],
+//         [0.2, 1, 0.5], [0.5, 0.7, 0.5], [0.7, 0.5, 0], [0.8, 1, 1], [0.2, 1, 1],
+//         [0.5, 0.7, 1], [0.8, 1, 0], [0.2, 1, 0], [0, 0.8, 0.5], [0, 0.2, 0.5],
+//         [0.3, 0.5, 0.5], [0.5, 0.7, 0], [0, 0.8, 1], [0, 0.2, 1], [0.3, 0.5, 1],
+//         [0, 0.8, 0], [0, 0.2, 0], [0.3, 0.5, 0], [0.2, 0, 1], [0.8, 0, 1], [0.5, 0.3, 1]],
+//        [[0, 1, 5], [1, 2, 4, 5], [7, 11, 10, 8], [8, 10, 9], [7, 8, 2, 1], [9, 10, 4, 3],
+//         [10, 11, 5, 4], [0, 5, 11, 6], [12, 13, 17], [13, 14, 16, 17], [3, 4, 20, 18],
+//         [18, 20, 19], [3, 18, 14, 13], [19, 20, 16, 15], [20, 4, 17, 16], [12, 17, 4, 2],
+//         [21, 22, 26], [22, 23, 25, 26], [15, 16, 29, 27], [27, 29, 28], [15, 27, 23, 22],
+//         [28, 29, 25, 24], [29, 16, 26, 25], [21, 26, 16, 14], [30, 31, 32], [31, 6, 11, 32],
+//         [24, 25, 35, 33], [33, 35, 34], [24, 33, 6, 31], [34, 35, 11, 7],
+//         [35, 25, 32, 11], [30, 32, 25, 23]]
+//    ];
+//    front_half(y=3){
+//      cyl(d=14.5,h=1,anchor=BOT,rounding=1/3,$fa=1,$fs=.5);
+//      linear_sweep(circle(d=12), h=12, scale=1.3, texture=diag_weave_vnf,
+//                   tex_size=[5,5], convexity=12);
+//    }  
 
 module linear_sweep(
     region, height, center,
@@ -3976,6 +3989,18 @@ function _textured_linear_sweep(
     assert(is_bool(rot) || in_list(rot,[0,90,180,270]))
     assert(is_bool(caps) || is_bool_list(caps,2))
     let(
+        transform_pt = function(tileind,tilex,tilez,samples,inset,scale,bases,norms) 
+               let(
+                   pos = (tileind + tilex) * samples,    // tileind is which tile, tilex is position in a tile
+                   ind = floor(pos),
+                   frac = pos-ind,
+                   texh = scale<0 ? -(1-tilez - inset) * scale
+                                  : (tilez - inset) * scale,
+                   base = lerp(bases[ind], select(bases,ind+1), frac),
+                   norm = unit(lerp(norms[ind], select(norms,ind+1), frac))
+              )
+              base + norm * texh,
+        
         caps = is_bool(caps) ? [caps,caps] : caps,
         regions = is_path(region,2)? [[region]] : region_parts(region),
         tex = is_string(texture)? texture(texture,$fn=_tex_fn_default()) : texture,
@@ -4018,12 +4043,14 @@ function _textured_linear_sweep(
             ) _vnf_sort_vertices(vnf, idx=[1,0]),
         vertzs = !is_vnf(sorted_tile)? undef :
             group_sort(sorted_tile[0], idx=1),
-        tpath = is_vnf(sorted_tile)
-            ? _find_vnf_tile_edge_path(sorted_tile,0)
+        edge_paths = is_vnf(sorted_tile) ? _tile_edge_path_list(sorted_tile,1) : undef,
+        tpath = is_def(edge_paths) 
+            ? len(edge_paths[0])==0 ? [] : hstack([column(edge_paths[0][0],0), column(edge_paths[0][0],2)])
             : let(
                   row = sorted_tile[0],
                   rlen = len(row)
               ) [for (i = [0:1:rlen]) [i/rlen, row[i%rlen]]],
+        edge_closed_paths = is_def(edge_paths) ? edge_paths[1] : [],
         tmat = scale(scale) * zrot(twist) * up(h/2),
         pre_skew_vnf = vnf_join([
             for (rgn = regions) let(
@@ -4048,13 +4075,7 @@ function _textured_linear_sweep(
                                                 for (group = vertzs)
                                                 each [
                                                     for (vert = group) let(
-                                                        u = floor((j + vert.x) * samples),
-                                                        uu = ((j + vert.x) * samples) - u,
-                                                        texh = tex_scale<0 ? -(1-vert.z - inset) * tex_scale
-                                                                           : (vert.z - inset) * tex_scale,
-                                                        base = lerp(bases[u], select(bases,u+1), uu),
-                                                        norm = unit(lerp(norms[u], select(norms,u+1), uu)),
-                                                        xy = base + norm * texh,
+                                                        xy = transform_pt(j,vert.x,vert.z,samples, inset, tex_scale, bases, norms),
                                                         pt = point3d(xy,vert.y),
                                                         v = vert.y / counts.y,
                                                         vv = i / counts.y,
@@ -4091,16 +4112,7 @@ function _textured_linear_sweep(
                                         for (j = [0:1:counts.x])
                                         for (tj = [0:1:texcnt.x-1])
                                         if (j != counts.x || tj == 0)
-                                        let(
-                                            part = (j + (tj/texcnt.x)) * samples,
-                                            u = floor(part),
-                                            uu = part - u,
-                                            texh = tex_scale<0 ? -(1-texture[ti][tj] - inset) * tex_scale
-                                                               : (texture[ti][tj] - inset) * tex_scale,
-                                            base = lerp(bases[u], select(bases,u+1), uu),
-                                            norm = unit(lerp(norms[u], select(norms,u+1), uu)),
-                                            xy = base + norm * texh
-                                        ) xy
+                                        transform_pt(j, tj/texcnt.x, texture[ti][tj], samples, inset, tex_scale, bases, norms)
                                     ])
                                 ],
                                 tiles = [
@@ -4134,24 +4146,42 @@ function _textured_linear_sweep(
                         bases = list_wrap(obases),
                         norms = list_wrap(onorms),
                         nupath = [
-                            for (j = [0:1:counts.x-1], vert = tpath) let(
-                                part = (j + vert.x) * samples,
-                                u = floor(part),
-                                uu = part - u,
-                                texh = tex_scale<0 ? -(1-vert.y - inset) * tex_scale
-                                                   : (vert.y - inset) * tex_scale,
-                                base = lerp(bases[u], select(bases,u+1), uu),
-                                norm = unit(lerp(norms[u], select(norms,u+1), uu)),
-                                xy = base + norm * texh
-                            ) xy
+                            for (j = [0:1:counts.x-1], vert = tpath)
+                                transform_pt(j,vert.x,vert.y,samples,inset,tex_scale,bases,norms)
                         ]
                     ) nupath
                 ],
-                bot_vnf = !caps[0] || brgn==[[]] ? EMPTY_VNF
+                extra_edge_paths = edge_closed_paths==[] ? []
+                 : [
+                    for (path=rgn)
+                      let(
+                          path = reverse(path),
+                          plen = path_length(path, closed=true),
+                          counts = is_vector(counts,2)? counts :
+                              is_vector(tex_size,2)
+                                ? [round(plen/tex_size.x), max(1,round(h/tex_size.y)), ]
+                                : [ceil(6*plen/h), 6],
+                          obases = resample_path(path, n=counts.x * samples, closed=true),
+                          onorms = path_normals(obases, closed=true),
+                          bases = list_wrap(obases),
+                          norms = list_wrap(onorms),
+                          modpaths = [for (j = [0:1:counts.x-1], cpath = edge_closed_paths)
+                                        [for(vert = cpath)
+                                           transform_pt(j,vert.x,vert.z,samples,inset,tex_scale,bases, norms)]
+                                     ]
+                      )
+                      each modpaths
+                    ],
+                brgn_empty = [for(item=brgn) if(item!=[]) 1]==[],
+                bot_vnf = !caps[0] || brgn_empty ? EMPTY_VNF
                     : vnf_from_region(brgn, down(h/2), reverse=true),
-                top_vnf = !caps[1] || brgn==[[]] ? EMPTY_VNF
-                    : vnf_from_region(brgn, tmat, reverse=false)
-            ) vnf_join([walls_vnf, bot_vnf, top_vnf])
+                top_vnf = !caps[1] || brgn_empty ? EMPTY_VNF
+                    : vnf_from_region(brgn, tmat, reverse=false),
+                extra_vnfs = [
+                   if (caps[0] && len(extra_edge_paths)>0) for(path=extra_edge_paths) [path3d(path,-h/2),[count(len(path))]], 
+                   if (caps[1] && len(extra_edge_paths)>0) for(path=extra_edge_paths) [apply(tmat,path3d(path,0)),[count(len(path), reverse=true)]]
+                ]
+            ) vnf_join([walls_vnf, bot_vnf, top_vnf,each extra_vnfs])
         ]),
         skmat = down(h/2) * skew(sxz=shift.x/h, syz=shift.y/h) * up(h/2),
         final_vnf = apply(skmat, pre_skew_vnf),
@@ -4162,6 +4192,33 @@ function _textured_linear_sweep(
             named_anchor("centroid_bot", point3d(cent,-h/2), DOWN)
         ]
     ) reorient(anchor,spin,orient, vnf=final_vnf, extent=true, anchors=anchors, p=final_vnf);
+
+
+
+
+function _tile_edge_path_list(vnf, axis, maxopen=1) =
+    let(
+        verts = vnf[0],
+        faces = vnf[1],
+        segs = [for(face=faces, edge=pair(select(verts,face),wrap=true)) if (approx(edge[0][axis],0) && approx(edge[1][axis],0)) [edge[1],edge[0]]],
+        paths = _assemble_partial_paths(segs),
+        closedlist = [
+            for(path=paths)
+              if (len(path)>3 && approx(path[0],last(path))) list_unwrap(path)
+        ],
+        openlist = [
+            for(path=paths)
+              if (path[0]!=last(path)) path
+        ]
+    )
+    assert(len(openlist)<=1, str("VNF has ",len(openlist)," open paths on an edge and at most ",maxopen," is supported."))
+    [openlist,closedlist];
+
+
+
+
+
+
 
 
 
