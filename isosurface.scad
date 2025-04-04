@@ -3127,7 +3127,7 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 //   **Parameter `isovalue:`** The isovalue must be specified as a range `[c_min,c_max]`.
 //   The range can be finite or unbounded at one end, with either `c_min=-INF` or `c_max=INF`.
 //   For isosurface, the returned object is the set of points `[x,y,z]` that satisfy `c_min <= f(x,y,z) <= c_max`,
-//   or in 2D, the points `[x,y]` satisfying `c_min <= f(x,y) <= c_max`.  Strictly speaking, the isothis means the
+//   or in 2D, the points `[x,y]` satisfying `c_min <= f(x,y) <= c_max`.  Strictly speaking, this means the
 //   isosurface and contour modules don't return a single contour or isovalue by the shape **bounded** by isosurfaces
 //   or contours.  If the function has values larger than `c_min` and values smaller than `c_max`, then the result
 //   is a shell object (3D) or ring object (2D) with two
@@ -3564,7 +3564,7 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   repeated points or produce incorrect results.  You can use {{list_unwrap()}} to remove the extra endpoint.
 // Arguments:
 //   f = The contour function or array.
-//   isovalue = A scalar giving the isovalue for the contour, or a 2-vector giving an isovalue range (resulting in a polygon bounded by two contours). For an unbounded range, use `[-INF,max_isovalue]` or `[min_isovalue,INF]`. A scalar isovalue is equivalent to the range `[isovalue,INF]`.
+//   isovalue = A scalar giving the isovalue for the contour, or a 2-vector giving an isovalue range (resulting in a polygon bounded by two contours). For an unbounded range, use `[-INF,max_isovalue]` or `[min_isovalue,INF]`.
 //   bounding_box = The area in which to perform computations, expressed as a scalar size of a square centered on the origin, or a pair of 2D points `[[xmin,ymin], [xmax,ymax]]` specifying the minimum and maximum box corner coordinates. Unless you set `exact_bounds=true`, the bounding box size may be enlarged to fit whole pixels. When `f` is an array of values, `bounding_box` cannot be supplied if `pixel_size` is supplied because the bounding box is already implied by the array size combined with `pixel_size`, in which case this implied bounding box is centered around the origin.
 //   pixel_size = Size of the pixels used to sample the bounding box volume, can be a scalar or 2-vector, or omitted if `pixel_count` is set. You may get rectangular pixels of a slightly different size than requested if `exact_bounds=true`.
 //   ---
@@ -3639,7 +3639,7 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 // Example(2D,NoAxes): Here's a simple function that produces a contour in the shape of a flower with some petals. Note that the function has smaller values inside the shape so we choose a `-INF` bound for the isovalue.  
 //   f = function (x, y, petals=5)
 //       sin(petals*atan2(y,x)) + norm([x,y]);
-//   contour(f, isovalue=[-INF,2], bounding_box=8.1);
+//   contour(f, isovalue=[-INF,3], bounding_box=8.1);
 // Example(2D,NoAxes): If we instead use a `+INF` bound then we get the bounding box with the flower shape removed.  
 //   f = function (x, y, petals=5)
 //       sin(petals*atan2(y,x)) + norm([x,y]);
