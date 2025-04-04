@@ -1158,10 +1158,10 @@ function regular_prism(n,
 //   textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [diff=], [extra=], [skip=], ...) [ATTACHMENTS];
 //   vnf = textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [extra=], [skip=], ...);
 // Description:
-//   Create a cuboid or trapezoidal prism and place a texture on the top face.  You can specify the size by giving a `size` scalar or vector as is
+//   Creates a cuboid or trapezoidal prism and places a texture on the top face.  You can specify the size by giving a `size` scalar or vector as is
 //   usual for a cube.  If you give a scalar, however, it applies only to the X and Y dimensions: the default is to create a thin tile, not a cube.  
 //   The Z size specifies the size of the shape **not** including the applied texture (in the same way that other textured objects work).
-//   If you omit the Z value then for regular textures, the default thickness will be 0.1 which provides a thin backing layer.  Note that a zero thickness
+//   If you omit the Z value then for regular textures, the default thickness will be 0.1 which provides a thin backing layer.  A zero thickness
 //   base layer can produce invalid geometry when the texture contacts the bottom layer, so some non-zero base is necessary.  If you use a positive `inset`
 //   then the texture actually sinks into its base, so the default is set to the 0.1 more than the inset depth.  To ensure a valid geometry, with a positive
 //   `inset` or a texture that has negative values you must select a thickness strictly **larger** than the depth the texture extends below zero.
@@ -1180,18 +1180,19 @@ function regular_prism(n,
 //   set `tex_inset=true`.
 //   .
 //   To aid in the application of inset anchors into parent objects with the module form, you can set `diff=true`, which causes the module
-//   to create a "remove" tagged cuboid or prism to carve out space for the texture so that inset textures will be cut into the parent object.
-//   The texture itself will be given a "keep" tag.  For this to work you must specify {{diff()}} above the parent; if you don't do that, the
+//   to create a "remove" tagged cuboid or prism to carve out space for the texture so that inset textures are cut into the parent object.
+//   The texture itself is given a "keep" tag.  For this to work you must specify {{diff()}} above the parent; if you don't do that, the
 //   tags will be ignored and the tile will appear as a solid object with no texture visible.  The cutout object extends 0.1 units above the surface
-//   of the texture to prevent problems with exactly aligned faces.  Note that the cutout does not extend out to the sides, so if the parent shape
-//   has the exact same dimensions as the texture tile, you will have exatly aligned faces along the edges.
+//   of the texture to prevent problems with exactly aligned faces.  The cutout does not extend out beyond the sides, so if the parent shape
+//   has the exact same dimensions as the texture tile, you will have exactly aligned faces along the edges.
 //   .
 //   Most of the heightfield textures are designed to repeat in a way that requires one extra line of the texture to complete the pattern.
-//   This is the normal behavior for these textures.  If you need to disable this feature you can set the `extra` parameter to false, or
-//   you can set it to a list of two booleans to control the extra line of texture in the X and Y directions independently.  The extra parameter
-//   is ignored for VNF textures.  A heightfield texture may also have extra margin along one side that makes the texture unbalanced.  This can
-//   be removed with the `skip` parameter, which defaults to zero and similarly specifies the number of lines to skip in the X and Y directions at
-//   the edge of the tile.  Note that you have to have enough tile repetitions to accomodate the specified skip.  
+//   The `extra` parameter specifies the number of extra lines to repeat at the end of the texture and it defaults to 1 because most textures
+//   do requires this extra line.  If you need to disable this feature you can set the `extra` parameter to 0, or you can set it to a list of two
+//   booleans to control the extra line of texture in the X and Y directions independently.  The extra parameter
+//   is ignored for VNF textures.  A heightfield texture may also have extra margin along a starting side that makes the texture unbalanced.  You can 
+//   removed this using the `skip` parameter, which defaults to zero and similarly specifies the number of lines to skip in the X and Y directions at
+//   the starting edges of the tile.  You must have enough tile repetitions to accomodate the specified skip.
 // Anchor Types:
 //   "tex" = Anchors around the texture, ignoring the base object.  (default)
 //   "std" = Standard object anchors that ignore any applied texture.  

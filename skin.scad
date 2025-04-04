@@ -3157,7 +3157,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Subsection: Height Field Texture Maps
 //   The simplest way to specify a texture map is to give a 2d array of
 //   height values which specify the height of the texture on a grid.
-//   Values in the height field should range from 0 to 1.  A zero height
+//   Values in the height field should generally range from 0 to 1.  A zero height
 //   in the height field corresponds to the height of the surface and 1
 //   the highest point in the texture above the surface being textured.
 // Figure(2D,Big,NoScales,VPT=[6.21418,0.242814,0],VPD=28.8248,VPR=[0,0,0]): Here is a 2d texture described by a "grid" that just contains a single row.  Such a texture can be used to create ribbing. The texture is `[[0, 1, 1, 0]]`, and the fixture shows three repetitions of the basic texture unit.
@@ -3173,9 +3173,11 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   Note that the grid is always uniformly spaced.
 //   By default textures are created with unit depth, meaning that the top surface
 //   of the texture is 1 unit above the surface being textured, assuming that the texture
-//   is correctly designed to span the range from 0 to 1.  The `tex_depth` parameter can adjust
-//   this dimension of a texture without changing anything else, and setting `tex_depth` negative
-//   will invert a texture.
+//   is designed to span the range from 0 to 1.  The `tex_depth` parameter can adjust
+//   this dimension of a texture without changing anything else, setting `tex_depth` negative
+//   will invert a texture, and `tex_inset` will lower a texture into the textured object.
+//   Textures that extend beyond the interval [0,1] are accepted, but the behavior of the
+//   `tex_depth` and `tex_inset` parameters will be less intuitive.  
 // Figure(2D,Big,NoScales,VPR=[0,0,0],VPT=[6.86022,-1.91238,0],VPD=28.8248):
 //   ftex1 = [0,1,1,0,0];
 //   left(0)color(.6*[1,1,1])rect([12,1],anchor=BACK+LEFT);
@@ -3263,15 +3265,15 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   textures that have disconnected components, or concavities that cannot be expressed with a single valued height map.  However, you can also
 //   create invalid textures that fail to close at the ends, so care is required to ensure that your resulting shape is valid.  
 //   .
-//   A VNF texture is defined by defining the texture tile with a VNF whose projection onto the XY plane is contained in the unit square [0,1] x [0,1] so
-//   that the VNF can be tiled.   The VNF is tiled without a gap, matching the edges, so the vertices along corresponding edges must match to make a
+//   A VNF texture is defined by providing a VNF whose projection onto the XY plane is contained in the unit square [0,1] x [0,1] so
+//   that the VNF can be tiled.  The VNF is tiled without a gap, matching the edges, so the vertices along corresponding edges must match to make a
 //   consistent triangulation possible.  The VNF cannot have any X or Y values outside the interval [0,1].  If you want a valid polyhedron
 //   that OpenSCAD will render then you need to take care with edges of the tiles that correspond to endcap faces in the textured object.
 //   So for example, in a linear sweep, the top and bottom edges of tiles end abruptly to form the end cap of the object.  You can make a valid object
 //   in two ways.  One way is to create a tile with a single, complete edge along Y=0, and of course a corresponding edges along Y=1.  The second way
 //   to make a valid object is to have no points at all on the Y=0 line, and of course none on Y=1.  In this case, the resulting texture produces
-//   a collection of disconnected objects.  Note that the Z coordinates of your tile can be anything, but for the dimensional settings on textures
-//   to work intuitively, you should construct your tile so that Z ranges from 0 to 1.
+//   a collection of disconnected objects.  Note that the Z coordinates of your tile can be anything, but as with height fields, for the dimensional settings on textures
+//   to work intuitively, you should construct your tile so that Z ranges from 0 to 1.  You can then use `tex_depth` to control the depth of the tile in use.  
 // Figure(3D): This is the "hexgrid" VNF tile, which creates a hexagonal grid texture, something which doesn't work well with a height field because the edges of the hexagon don't align with the grid.  Note how the tile ranges between 0 and 1 in both X, Y and Z.  In fact, to get a proper aspect ratio in your final texture you need to use the `tex_size` parameter to introduct a sqrt(3) scale factor.  
 //   tex = texture("hex_grid");
 //   vnf_polyhedron(tex);
@@ -3333,11 +3335,11 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   border = The size of a border region on some VNF tile textures.  Generally between 0 and 0.5.
 //   gap = The gap between logically distinct parts of some VNF tiles.  (ie: gap between bricks, gap between truncated ribs, etc.)
 //   roughness = The amount of roughness used on the surface of some heightfield textures.  Generally between 0 and 0.5.
-// Example(3D): **"bricks"** (Heightfield) = A brick-wall pattern.  Giving `n=` sets the number of heightfield samples to `n x n`.  Default: 24.  Giving `roughness=` adds a level of height randomization to add roughness to the texture.  Default: 0.05.  Use `style="convex"`.
+// Example(3D): **"bricks"** (Heightfield) = A brick-wall pattern.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Default: 24.  Giving `roughness=` creates a rough surface texture to the top brick faces by randomizing the brick height to a band of the specified height (relative to the tile range of 0 to 1), so with the default of 0.1 it means the top level varies randomly in [0.9,1].  Default: 0.1.  Use `style="convex"`.
 //   tex = texture("bricks");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
-//       tex_size=[10,10]
+//       tex_depth=1/2, tex_size=[10,10]
 //   );
 // Example(3D): **"bricks_vnf"** (VNF) = VNF version of "bricks".  Giving `gap=` sets the "mortar" gap between adjacent bricks, default 0.05.  Giving `border=` specifies that the top face of the brick is smaller than the bottom of the brick by `border` on each of the four sides.  If `gap` is zero then a `border` value close to 0.5 will cause bricks to come to a sharp pointed edge, with just a tiny flat top surface.  Note that `gap+border` must be strictly smaller than 0.5.   Default is `border=0.05`.  
 //   tex = texture("bricks_vnf");
@@ -3405,17 +3407,17 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30,
 //       tex_size=[10,10]
 //   );
-// Example(3D): **"dimples"** (VNF) = Round divots.  Specify `$fn` to set the number of segments on the dimples (will be rounded to a multiple of 4).  The default is `$fn=16`.  Note that `$fa` and `$fs` are ignored, since the scale of the texture is unknown at the time of definition.  Giving `border=` specifies the horizontal width of the flat border region between the tile edges and the edge of the dimple.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.  
-//   tex = texture("dimples", $fn=16);
-//   linear_sweep(
-//       rect(30), texture=tex, h=30, 
-//       tex_size=[10,10]
-//   );
 // Example(3D): **"dots"** (VNF) = Raised round bumps.  Specify `$fn` to set the number of segments on the dots (will be rounded to a multiple of 4).  The default is `$fn=16`.  Note that `$fa` and `$fs` are ignored, since the scale of the texture is unknown at the time of definition.  Giving `border=` specifies the horizontal width of the flat border region between the tile edge and the edge of the dots.  Must be nonnegative and strictly less than 0.5.  Default: 0.05.
 //   tex = texture("dots", $fn=16);
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
-//       tex_size=[10,10]
+//       tex_depth=2, tex_size=[10,10]
+//   );
+// Example(3D): "dots" (VNF) = You can use the "dots" texture to create dimples (which used to exist as a separate texture) by specifying `tex_inset` and a negative `tex_depth`, which inverts the texture.
+//   tex = texture("dots", $fn=16);
+//   linear_sweep(
+//       rect(30), texture=tex, h=30, tex_depth=-2,
+//       tex_inset=1, tex_size=[10,10]
 //   );
 // Example(3D): **"hex_grid"** (VNF) = A hexagonal grid defined by V-grove borders.  Giving `border=` specifies that the top face of the hexagon is smaller than the bottom by `border` on the left and right sides.  This means the V-groove top width for grooves running parallel to the Y axis will be double the border value.  If the texture is scaled in the Y direction by sqrt(3) then the groove will be uniform on all six sides of the hexagon.  Border must be strictly between 0 and 0.5, default: 0.1.
 //   tex = texture("hex_grid");
@@ -3471,10 +3473,10 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30, tex_depth=3,
 //       tex_size=[10,10], style="concave"
 //   );
-// Example(3D): **"rough"** (Heightfield) = A pseudo-randomized rough texture.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Default: 32.  The `roughness=` parameter specifies the height of the random texture.  Default: 0.2.
+// Example(3D): **"rough"** (Heightfield) = A pseudo-randomized rough texture.  Giving `n=` sets the number of heightfield samples to `n` by `n`.  Default: 32.  The texture is filled with random values ranging from 0 to 1.  To control the height of the random texture use the `tex_depth` parameter.  
 //   tex = texture("rough");
 //   linear_sweep(
-//       rect(30), texture=tex, h=30,
+//       rect(30), texture=tex, h=30, tex_depth=0.2,
 //       tex_size=[10,10], style="min_edge"
 //   );
 // Example(3D): **"tri_grid"** (VNF) = A triangular grid defined by V-groove borders  Giving `border=` specifies that the top face of the triangular surface is smaller than the bottom by `border` along the horizontal edges (parallel to the X axis).  This means the V-groove top width of the grooves parallel to the X axis will be double the border value.  (The other grooves are wider.) If the tile is scaled in the Y direction by sqrt(3) then the groove will be uniform on the three sides of the triangle.  The border must be strictly between 0 and 1/6, default: 0.05.
@@ -3703,14 +3705,15 @@ function texture(tex, n, border, gap, roughness, inset) =
         assert(num_defined([gap,border])==0, "bricks texture does not accept gap or border")  
         let(
             n = quantup(default(n,24),2),
-            rough = default(roughness,0.05)
+            rough = default(roughness,0.1)
         ) [
             for (y = [0:1:n-1])
-            rands(-rough/2, rough/2, n, seed=12345+y*678) + [
+               let(rand = rands(1-rough, 1, n, seed=12345+y*678))
+               [
                 for (x = [0:1:n-1])
-                (y%(n/2) <= max(1,n/16))? 0 :
-                let( even = floor(y/(n/2))%2? n/2 : 0 )
-                (x+even) % n <= max(1,n/16)? 0 : 0.5
+                   (y%(n/2) <= max(1,n/16)) ? 0 :
+                      let( even = floor(y/(n/2))%2 ? n/2 : 0 )
+                        (x+even) % n <= max(1,n/16)? 0 : rand[x]
             ]
         ] :
     tex=="bricks_vnf"?
@@ -3818,7 +3821,8 @@ function texture(tex, n, border, gap, roughness, inset) =
                 [4,5,6,7],
             ]
         ] :
-    tex=="dimples" || tex=="dots" ?
+    tex=="dimples" ? assert(false, "The dimples texture has been removed; use \"dots\" with 'tex_inset=1' and negative 'tex_depth' instead.") 0 : 
+    tex=="dots" ?
         assert(is_undef(n),str("To set number of segments on ",tex," use $fn. ", tex,__vnf_no_n_mesg))
         assert(num_defined([gap,roughness])==0, str(tex," texture does not accept gap or roughness"))
         let(
@@ -3829,16 +3833,13 @@ function texture(tex, n, border, gap, roughness, inset) =
         let(
             rows=ceil(n/4),
             r=adj_ang_to_hyp(1/2-border,45),
-            dots = tex=="dots",
-            cp = [1/2, 1/2, r*sin(45)*(dots?-1:1)],
+            dots = true,
+            cp = [1/2, 1/2, -r*sin(45)],
             sc = 1 / (r - abs(cp.z)),
             uverts = [
                 for (p=[0:1:rows-1], t=[0:360/n:359.999])
-                    cp + (
-                        dots? spherical_to_xyz(r, -t, 45-45*p/rows) :
-                        spherical_to_xyz(r, -t, 135+45*p/rows)
-                    ),
-                cp + r * (dots?UP:DOWN),
+                    cp + spherical_to_xyz(r, -t, 45-45*p/rows),
+                cp + r * UP, 
                 each border>0 ? path3d(subdivide_path(square(1),refine=2,closed=true))
                               : path3d(square(1)),
                       
@@ -3933,12 +3934,12 @@ function texture(tex, n, border, gap, roughness, inset) =
         ] :
     tex=="rough"?
         assert(num_defined([gap,border])==0, str(tex," texture does not accept gap or border"))
+        assert(num_defined([roughness])==0, str(tex," texture no longer accepts 'roughness'.  Use tex_depth to control roughness (0.2 was the old default)"))  
         let(
             n = default(n,32),
-            rough = default(roughness, 0.2)
         ) [
             for (y = [0:1:n-1])
-            rands(0, rough, n, seed=123456+29*y)
+            rands(0, 1, n, seed=123456+29*y)
         ] :
     assert(false, str("Unrecognized texture name: ", tex));
 
