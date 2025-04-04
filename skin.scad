@@ -3592,8 +3592,7 @@ function texture(tex, n, border, gap, roughness, inset) =
         assert(is_undef(n), str(tex,__vnf_no_n_mesg))
         let(
             border = default(border,1/4)*2,
-            gap = default(gap,1/4),
-            f=echo(gap, border, gap+border, gap+2*border)
+            gap = default(gap,1/4)
         )
         assert(all_nonnegative([border,gap]), "trunc_ribs_vnf texture requires gap>=0 and border>=0")
         assert(gap+border <= 1, "trunc_ribs_vnf texture requires that gap+2*border<=1")
