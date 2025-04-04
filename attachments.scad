@@ -1052,7 +1052,9 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
                                 * affine3d_zrot(-parent_abstract_anchor[3])
                                 * rot(from=parent_abstract_anchor[2],to=UP)
                                 * rot(v=anchor,-spin),
-                              align); 
+                              align);
+
+            
             spinaxis = two_d? UP : anchor_dir;
             olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference);
             if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) 
@@ -3532,7 +3534,8 @@ function attach_geom(
             )
         )
     ) :
-    ["point", cp, offset, anchors];
+    two_d?     ["point2d", cp, offset, anchors]
+    : ["point", cp, offset, anchors];
 
 
 
@@ -3554,7 +3557,7 @@ function attach_geom(
 function _attach_geom_2d(geom) =
     let( type = geom[0] )
     type == "trapezoid" || type == "ellipse" ||
-    type == "rgn_isect" || type == "rgn_extent";
+    type == "rgn_isect" || type == "rgn_extent" || type=="point2d";
 
 
 /// Internal Function: _attach_geom_size()
@@ -3567,6 +3570,7 @@ function _attach_geom_2d(geom) =
 function _attach_geom_size(geom) =
     let( type = geom[0] )
     type == "point"? [0,0,0] :
+    type == "point2d"? [0,0] :
     type == "prismoid"? ( //size, size2, shift, axis
         let(
             size=geom[1], size2=geom[2], shift=point2d(geom[3]),
@@ -3780,7 +3784,7 @@ function _attach_transform(anchor, spin, orient, geom, p) =
                     * affine3d_translate(point3d(-pos))
     )
     is_undef(p)? m
-  : is_vnf(p) && p==EMPTY_VNF? p 
+  : is_vnf(p) && p==[[],[]] ? p 
   : apply(m, p);
 
 
@@ -3991,6 +3995,12 @@ function _find_anchor(anchor, geom)=
             anchor = unit(point3d(anchor),CENTER),
             pos = point3d(cp) + point3d(offset),
             vec = unit(anchor,UP)
+        ) [anchor, pos, vec, oang]
+    ) : type == "point2d"? (
+        let(
+            anchor = unit(_force_anchor_2d(anchor), [0,0]),
+            pos = point2d(cp) + point2d(offset),
+            vec = unit(anchor,BACK)
         ) [anchor, pos, vec, oang]
     ) : type == "spheroid"? ( //r
         let(
@@ -4984,7 +4994,7 @@ function _local_struct_val(struct, key)=
 
 
 function _force_anchor_2d(anchor) =
-  is_undef(anchor) || len(anchor)==2 ? anchor :
+  is_undef(anchor) || len(anchor)==2 || is_string(anchor) ? anchor :
   assert(anchor.y==0 || anchor.z==0, "Anchor for a 2D shape cannot be fully 3D.  It must have either Y or Z component equal to zero.")
   anchor.y==0 ? [anchor.x,anchor.z] : point2d(anchor);
 
@@ -5083,7 +5093,7 @@ module restore(desc)
 // Arguments:
 //   desc = Description to use to get the point
 //   p = Point or point list to transform.  Default: CENTER (if anchor not given)
-//   --
+//   ---
 //   anchor = Anchor point (only one) that you want to extract.  Default: CENTER
 // Example(3D): In this example we translate away from the parent object and then compute points on that object.  Note that with OpenSCAD 2021.01 you must use union() or alternatively place the pt1 and pt2 assignments in a let() statement.  This is not necessary in development versions.  
 //  cuboid(10) let(desc=parent())
@@ -5130,7 +5140,7 @@ function desc_point(desc, p, anchor) =
 // Arguments:
 //   desc = Description to use.  Default: use the global world coordinate system
 //   dir = Direction or list of directions to use.  Default: UP (if anchor is not given)
-//   --
+//   ---
 //   anchor = Anchor (only one) to get the direction from.
 // Example(3D): Here we don't give a description so the reference is to the global world coordinate system, and we don't give a direction, so the default of UP applies.  This lets the cylinder be placed so it is horizontal in world coordinates.  
 //   prismoid(20,10,h=15)
@@ -5190,9 +5200,13 @@ function desc_attach(desc, anchor=UP, p, reverse=false) =
 //   desc2 = Second description
 //   anchor2 = Anchor for second description
 // Example(3D): Computes the distance between a point on each cube. 
-//  cuboid(10) let(desc=parent())
-//    right(15) cuboid(10) 
-//      echo(desc_dist(parent(),TOP+RIGHT+BACK, desc, TOP+LEFT+FWD));
+//  cuboid(10) let(desc=parent()) {
+//      color("red")attach(TOP+LEFT+FWD) sphere(r=0.75,$fn=12);
+//      right(15) cuboid(10) {
+//        color("red") attach(TOP+RIGHT+BACK) sphere(r=0.75,$fn=12);
+//        echo(desc_dist(parent(),TOP+RIGHT+BACK, desc, TOP+LEFT+FWD));  // Prints 26.9258
+//      }
+//  }
 
 function desc_dist(desc1,anchor1=CENTER, desc2, anchor2=CENTER)=
    assert(is_description(desc1),"Invalid description: desc1")
@@ -5261,9 +5275,9 @@ function transform_desc(T,desc) =
 //   .
 //   The descriptions are made available through function literals provided in the `$` variables.  The
 //   available functions are
-//   * $next([di], [desc]): Returns the description of the next object, or if i is given, the object i steps forward.  The indexing wraps around.
-//   * $prev([di], [desc]): Returns the description of the previoud object, or if i is given, the object i steps before.  The indexing wraps around.
-//   * $desc(i, [desc]): Returns a description of the object with index `i`.  Indexing does not wrap around.  
+//   * $next([di], [desc]): Returns the description of the next object, or if `di` is given, the object `di` steps forward.  The indexing wraps around.
+//   * $prev([di], [desc]): Returns the description of the previous object, or if `di` is given, the object `di` steps before.  The indexing wraps around.
+//   * $desc(i, [desc]): Returns a description of the object with index `i`.  Indexing does **not** wrap around.  
 //   All of these functions have an optional `desc` parameter, which is the description that will be transformed to produce the next, previous, or indexed
 //   description.  By default `desc` is set to {{parent()}}, but you may wish to use a different description if you have objects that vary.
 //   .

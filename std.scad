@@ -34,8 +34,8 @@ include <coords.scad>
 include <geometry.scad>
 include <regions.scad>
 include <strings.scad>
-include <skin.scad>
 include <vnf.scad>
+include <skin.scad>
 include <utility.scad>
 include <partitions.scad>
 include <structs.scad>

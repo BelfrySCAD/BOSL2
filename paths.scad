@@ -1246,5 +1246,62 @@ function _assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
     );
 
 
+/// Different but similar path assembly function that is much faster than
+/// _assemble_path_fragments and can work in 3d, but cannot handle loops.
+///
+/// Takes a list of paths that are in the correct direction and assembles
+/// them into a list of paths.  Returns a list of assembled paths.
+/// If closed is false then any paths that are closed will have duplicate
+/// endpoints, and open paths will not have duplicate endpoints.
+/// If closed=true then all paths are assumed closed and none of the returned
+/// paths will have duplicate endpoints.
+///
+/// It is assumed that the paths do not intersect each other.
+/// Paths can be in any dimension
+
+function _assemble_partial_paths(paths, closed=false, eps=1e-7) =
+    let(
+        pathlist = _assemble_partial_paths_recur(paths, eps)
+        //// this eliminates crossing paths that cross only at vertices in the input paths lists
+        // splitpaths =
+        //     [for(path=pathlist) each
+        //        let(
+        //            searchlist = vector_search(path,eps,path),
+        //            duplist = [for(i=idx(searchlist)) if (len(searchlist[i])>1) i]
+        //        )
+        //        duplist==[] ? [path]
+        //       :               
+        //        let(
+        //            fragments = [for(i=idx(duplist)) select(path, duplist[i], select(duplist,i+1))]
+        //        )
+        //        len(fragments)==1 ? fragments
+        //                          : _assemble_path_fragments(fragments)
+        //     ]
+    )
+    closed ? [for(path=pathlist) list_unwrap(path)] : pathlist;
+
+
+function _assemble_partial_paths_recur(edges, eps, paths=[], i=0) =
+    i==len(edges) ? paths :
+    norm(edges[i][0]-last(edges[i]))<eps ? _assemble_partial_paths_recur(edges, eps, paths,i+1) :
+    let(    // Find paths that connects on left side and right side of the edges (if one exists)
+        
+        left = [for(j=idx(paths)) if (approx(last(paths[j]),edges[i][0],eps)) j],
+        right = [for(j=idx(paths)) if (approx(last(edges[i]),paths[j][0],eps)) j]
+    )
+    let(
+        keep_path = list_remove(paths,[if (len(left)>0) left[0],if (len(right)>0) right[0]]),
+        update_path =  left==[] && right==[] ? edges[i]
+                    : left==[] ? concat(list_head(edges[i]),paths[right[0]])
+                    : right==[] ?  concat(paths[left[0]],slice(edges[i],1,-1))
+                    : left[0] != right[0] ? concat(paths[left[0]],slice(edges[i],1,-2), paths[right[0]])
+                    : concat(paths[left[0]], slice(edges[i],1,-1)) // last arg -2 removes duplicate endpoints but this is handled in passthrough function
+    )
+    _assemble_partial_paths_recur(edges, eps, concat(keep_path, [update_path]), i+1);
+
+
+
+
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -1014,7 +1014,7 @@ function regular_prism(n,
     let(
         style = default(style,"min_edge"),
         tex_depth = default(tex_depth,1),
-        height = one_defined([l, h, length, height],"l,h,length,height",dflt=1),
+        height = one_defined([l, h, length, height],"l,h,length,height"),
         sc = 1/cos(180/n),
         ir1 = u_mul(default(ir1,ir), sc),
         ir2 = u_mul(default(ir2,ir), sc),
