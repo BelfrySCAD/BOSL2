@@ -1092,8 +1092,8 @@ function _split_polygon_at_x(poly, x) =
         out1 = [for (p = poly2) if(p.x <= x) p],
         out2 = [for (p = poly2) if(p.x >= x) p],
         out3 = [
-            if (len(out1)>=3) each split_path_at_self_crossings(out1),
-            if (len(out2)>=3) each split_path_at_self_crossings(out2),
+            if (len(out1)>=3 && polygon_area(out1)>EPSILON) each split_path_at_self_crossings(out1),
+            if (len(out2)>=3 && polygon_area(out2)>EPSILON) each split_path_at_self_crossings(out2),
         ],
         out = [for (p=out3) if (len(p) > 2) list_unwrap(p)]
     ) out;
