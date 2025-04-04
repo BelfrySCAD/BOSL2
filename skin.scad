@@ -4278,30 +4278,6 @@ function _tile_edge_path_list(vnf, axis, maxopen=1) =
 
 
 
-
-
-
-
-
-
-function _find_vnf_tile_edge_path(vnf, val) =
-    let(
-        verts = vnf[0],
-        fragments = [
-            for(edge = _get_vnf_tile_edges(vnf))
-            let(v0 = verts[edge[0]], v1 = verts[edge[1]])
-            if (approx(v0.y, val) && approx(v1.y, val))
-            v0.x <= v1.x? [[v0.x,v0.z], [v1.x,v1.z]] :
-            [[v1.x,v1.z], [v0.x,v0.z]]
-        ],
-        sfrags = sort(fragments, idx=[0,1]),
-        rpath = _assemble_a_path_from_fragments(sfrags)[0],
-        opath = rpath==[]? []
-              : rpath[0].x > last(rpath).x ? reverse(rpath)
-              : rpath
-    ) opath;
-
-
 /// Function&Module: _textured_revolution()
 /// Usage: As Function
 ///   vnf = _textured_revolution(shape, texture, tex_size, [tex_scale=], ...);
