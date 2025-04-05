@@ -1563,6 +1563,13 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   You can use set `transforms` to true to return a list of transformation matrices instead of the swept shape.  In this case, you can
 //   often omit shape entirely.  The exception is when `closed=true` and you are using the "incremental" method.  In this case, `path_sweep`
 //   uses the shape to correct for twist when the shape closes on itself, so you must include a valid shape.
+//   .
+//   By default path sweep objects are anchored to the named anchor "origin" which places the swept object right where you created it.
+//   Generally you will not want to set an anchor for a swept object, but instead change the path if you want to move it to a different location, 
+//   but can also anchor using VNF anchoring.  Usi either `atype="hull"` (the default) or `atype="intersect"` to create anchors based on the
+//   the object's VNF data.  The center of the object is determined based on the `cp` argument and can be "centroid" (the default), "mean" to use the mean of the object,
+//   or "box" to use the center of the bounding box.  For complicated objects you may find it difficult to get useful results from the anchoring
+//   system, which is designed for an object whose center is inside the object.  When using an anchors, confirm that it is in the location you desire.  
 // Arguments:
 //   shape = A 2D polygon path or region describing the shape to be swept.
 //   path = 2D or 3D path giving the path to sweep over
@@ -2148,7 +2155,7 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
 //   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
 //   orient = Vector to rotate top towards after spin
 //   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
-//   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+//   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Named Anchors:
 //   "origin" = The native position of the shape.  
 // Anchor Types:
