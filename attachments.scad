@@ -3908,6 +3908,8 @@ function _find_anchor(anchor, geom)=
                 : len(facevecs)==1? unit(facevecs[0],UP)
                 : len(facevecs)==2? vector_bisect(facevecs[0],facevecs[1])
                 : _three_edge_corner_dir(facevecs,[FWD,LEFT])*anch.z,            
+            edgedir = len(facevecs)!=2 ? undef
+                    : rot(from=UP,to=axis,p=unit(cross(facevecs[0], facevecs[1]))), 
             edgeang = len(facevecs)==2 ? 180-vector_angle(facevecs[0], facevecs[1]) : undef,
             edgelen = anch.z==0 ? norm(edge)
                     : anch.z>0 ? abs([size2.y,size2.x]*axy)
@@ -3932,15 +3934,18 @@ function _find_anchor(anchor, geom)=
             final_dir = default(override[1],anch==CENTER?UP:rot(from=UP, to=axis, p=dir)),
             final_pos = default(override[0],rot(from=UP, to=axis, p=pos)),
 
-            // If the anchor is on a face or horizontal edge we take the oang value for spin
-            // If the anchor is on a vertical or sloped edge or corner we want to align the spin to point upward along the edge
+            // If the anchor is an edge anchor and not horizontal we point spin UP
+            // If the anchor is horizontal edge we point spin clockwise:
+            //     cross product of UP with the edge direction will point OUT if we are on top and edge direction
+            //     is correct.  We check if it points out by comparing to the final_dir which points out at that edge,
+            //     with a correction for top/bottom (anchor.z).  
+            // Otherwise use the standard BACK/UP definition
+            // The precomputed oang value seems to be wrong, at least when axis!=UP
 
-                       // Set "vertical" edge and corner anchors point along the edge
-            spin = anch.x!=0 && anch.y!=0 ? _compute_spin(final_dir, rot(from=UP, to=axis, p=edge))
-                       // Horizontal anchors point clockwise
-                 : anch.z!=0 && sum(v_abs(anch))==2 ? _compute_spin(final_dir, rot(from=UP, to=axis, p=anch.z*[anch.y,-anch.x,0])) 
-                 : norm(anch)==3 ? _compute_spin(final_dir, final_dir==DOWN || final_dir==UP ? BACK : UP)
-                 : oang        // face anchors point UP/BACK
+            spin = is_def(edgedir) && !approx(edgedir.z,0) ? _compute_spin(final_dir, edgedir * (edgedir*UP>0?1:-1))
+                 : is_def(edgedir) ? _compute_spin(final_dir,
+                                                   edgedir * (approx(unit(cross(UP,edgedir)),unit([final_dir.x,final_dir.y,0])*anchor.z) ? 1 : -1))
+                 : _compute_spin(final_dir, final_dir==DOWN || final_dir==UP ? BACK : UP)
         ) [anchor, final_pos, final_dir, default(override[2],spin),
            if (is_def(edgeang)) [["edge_angle",edgeang],["edge_length",edgelen], ["vec", endvecs]]]
     ) : type == "conoid"? ( //r1, r2, l, shift, axis
