@@ -3935,7 +3935,7 @@ function texture(tex, n, border, gap, roughness, inset) =
         assert(num_defined([gap,border])==0, str(tex," texture does not accept gap or border"))
         assert(num_defined([roughness])==0, str(tex," texture no longer accepts 'roughness'.  Use tex_depth to control roughness (0.2 was the old default)"))  
         let(
-            n = default(n,32),
+            n = default(n,32)
         ) [
             for (y = [0:1:n-1])
             rands(0, 1, n, seed=123456+29*y)
