@@ -3674,7 +3674,16 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   a=4;  b=4.1;
 //   f = function(x,y) (x^2+y^2)^2 - 2*a^2*(x^2-y^2) + a^4;
 //   contour(f,bounding_box=[[-6,-3],[6,3]], isovalue=[-INF,b^4]);
-
+// Example(2D,NoAxes,VPD=65,VPT=[-7,0,0]): A contour of a function that looks like the contour should intersect itself at the origin, but if you zoom in, you see that it doesn't actually cross or intersect. It is theoretically possible to obtain a crossing path with `contour()` although the algorithm attempts to avoid it, primarily by disallowing the function values at the sample points to be equal to the specified isovalue.
+//   g = function(x,y)
+//       let(
+//           theta=atan2(y,x),
+//           r = norm([x,y])
+//       )
+//       r*sin(3*theta-theta^2/20+40*r);
+//   contour(g, bounding_box=[[-23,-13],[9,13]],
+//       isovalue=[0,INF], pixel_size=0.2);
+ 
 module contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, use_centers=true, smoothing=undef, exact_bounds=false, cp="centroid", anchor="origin", spin=0, atype="hull", show_stats=false, show_box=false, _mball=false) {
     pathlist = contour(f, isovalue, bounding_box, pixel_size, pixel_count, use_centers, smoothing, true, exact_bounds, show_stats, _mball);
     assert(len(pathlist)>0, "\nNo contour lines found! Cannot generate polygon. Check your isovalue.")
