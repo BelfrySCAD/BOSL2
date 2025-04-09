@@ -20,7 +20,7 @@ use <builtins.scad>
 // Function&Module: cube()
 // Synopsis: Creates a cube with anchors for attaching children.
 // SynTags: Geom, VNF, Ext
-// Topics: Shapes (3D), Attachable, VNF Generators
+// Topics: Shapes (3D), Attachable, VNF Generators, Textures
 // See Also: cuboid(), prismoid()
 // Usage: As Module (as in native OpenSCAD)
 //   cube(size, [center]);
@@ -790,48 +790,6 @@ function prismoid(
                 : reorient(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift, p=vnf);
 
 
-// Function&Module: octahedron()
-// Synopsis: Creates an octahedron with axis-aligned points.
-// SynTags: Geom, VNF
-// Topics: Shapes (3D), Attachable, VNF Generators
-// See Also: prismoid()
-// Usage: As Module
-//   octahedron(size, ...) [ATTACHMENTS];
-// Usage: As Function
-//   vnf = octahedron(size, ...);
-// Description:
-//   When called as a module, creates an octahedron with axis-aligned points.
-//   When called as a function, creates a [VNF](vnf.scad) of an octahedron with axis-aligned points.
-// Arguments:
-//   size = Width of the octahedron, tip to tip.  Can be a 3-vector.  Default: [1,1,1]
-//   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example:
-//   octahedron(size=40);
-// Example: Anchors
-//   octahedron(size=40) show_anchors();
-// Example:
-//   octahedron([10,15,25]);
-
-module octahedron(size=1, anchor=CENTER, spin=0, orient=UP) {
-    vnf = octahedron(size=size);
-    attachable(anchor,spin,orient, vnf=vnf, extent=true) {
-        vnf_polyhedron(vnf, convexity=2);
-        children();
-    }
-}
-
-function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
-    let(
-        s = force_list(size,3)/2,
-        dummy=assert(is_vector(s,3) && all_positive(s), "\nsize must be a positive scalar or 3-vector"),
-        vnf = [
-            [ [0,0,s.z], [s.x,0,0], [0,s.y,0], [-s.x,0,0], [0,-s.y,0], [0,0,-s.z] ],
-            [ [0,2,1], [0,3,2], [0,4,3], [0,1,4], [5,1,2], [5,2,3], [5,3,4], [5,4,1] ]
-        ]
-    ) reorient(anchor,spin,orient, vnf=vnf, extent=true, p=vnf);
 
 // Function&Module: regular_prism()
 // Synopsis: Creates a regular prism with roundovers and chamfering
@@ -1189,6 +1147,303 @@ function regular_prism(n,
     )
     _return_anchors ? [final_vnf,anchors,override]
                     : final_vnf;
+
+
+// Function&Module: textured_tile()
+// Synopsis: Creates a cube or trapezoidal prism with a textured top face for attaching to objects.
+// SynTags: Geom, VNF
+// Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: cuboid(), prismoid(), texture(), cyl(), rotate_sweep(), linear_sweep()
+// Usage:
+//   textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [diff=], [extra=], [skip=], ...) [ATTACHMENTS];
+//   vnf = textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [extra=], [skip=], ...);
+// Description:
+//   Creates a cuboid or trapezoidal prism and places a texture on the top face.  You can specify the size by giving a `size` scalar or vector as is
+//   usual for a cube.  If you give a scalar, however, it applies only to the X and Y dimensions: the default is to create a thin tile, not a cube.  
+//   The Z size specifies the size of the shape **not** including the applied texture (in the same way that other textured objects work).
+//   If you omit the Z value then for regular textures, the default thickness will be 0.1 which provides a thin backing layer.  A zero thickness
+//   base layer can produce invalid geometry when the texture contacts the bottom layer, so some non-zero base is necessary.  If you use a positive `inset`
+//   then the texture actually sinks into its base, so the default is set to the 0.1 more than the inset depth.  To ensure a valid geometry, with a positive
+//   `inset` or a texture that has negative values you must select a thickness strictly **larger** than the depth the texture extends below zero.
+//   .
+//   You can also specify a trapzoidal prism using parameters equivalent to those accepted by {{trapezoid()}}, with one change:  
+//   `ysize` specifies the width of the prism in the Y direction, and `h`, `height` or `thickness` are used to specify the height
+//   in the Z direction.  When you texture a trapezoid the texture will be scaled to the `w1` length if you specify it by size using `tex_size`.  The
+//   scaling transformation that maps the texture onto the trapezoid is not linear and will result in curvature of your texture.
+//   .
+//   Two anchor types are available.  The default atype is "tex" which assumes you want to place the texture on another object using
+//   {{attach()}}.  It provides anchors that ignore the base object and place the BOTTOM anchor at the bottom of the texture.  The TOP anchor
+//   will be at the top face of the texture.  Note that if your texture doesn't span the range from [0,1] these anchors won't be correctly located. 
+//   For an inset texture, the "tex" anchors are all at the top of the texture.  This anchor type works with `anchor(face,BOT)` where `face` is some
+//   face on a parent object that needs a texture. If you want to use the textured object directly the "std" anchors are probably more useful.
+//   These anchors are the usual anchors for the base object, ignoring the applied texture.  If you want the anchors to be on top of the texture,
+//   set `tex_inset=true`.
+//   .
+//   To aid in the application of inset anchors into parent objects with the module form, you can set `diff=true`, which causes the module
+//   to create a "remove" tagged cuboid or prism to carve out space for the texture so that inset textures are cut into the parent object.
+//   The texture itself is given a "keep" tag.  For this to work you must specify {{diff()}} above the parent; if you don't do that, the
+//   tags will be ignored and the tile will appear as a solid object with no texture visible.  The cutout object extends 0.1 units above the surface
+//   of the texture to prevent problems with exactly aligned faces.  The cutout does not extend out beyond the sides, so if the parent shape
+//   has the exact same dimensions as the texture tile, you will have exactly aligned faces along the edges.
+//   .
+//   Most of the heightfield textures are designed to repeat in a way that requires one extra line of the texture to complete the pattern.
+//   The `extra` parameter specifies the number of extra lines to repeat at the end of the texture and it defaults to 1 because most textures
+//   do requires this extra line.  If you need to disable this feature you can set the `extra` parameter to 0, or you can set it to a list of two
+//   booleans to control the extra line of texture in the X and Y directions independently.  The extra parameter
+//   is ignored for VNF textures.  A heightfield texture may also have extra margin along a starting side that makes the texture unbalanced.  You can 
+//   removed this using the `skip` parameter, which defaults to zero and similarly specifies the number of lines to skip in the X and Y directions at
+//   the starting edges of the tile.  You must have enough tile repetitions to accomodate the specified skip.
+// Anchor Types:
+//   "tex" = Anchors around the texture, ignoring the base object.  (default)
+//   "std" = Standard object anchors that ignore any applied texture.  
+// Arguments:
+//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
+//   size = The size the object when a cube is desired, a scalar, 2-vector or 3-vector.  If you give a scalar or 2-vector the default height is 0.1 or 0.1 more than the inset depth
+//   ---
+//   ysize = The Y axis length of the trapezoidal prism
+//   w1 = The X axis width of the front end of the trapezoidal prism.
+//   w2 = The X axis width of the back end of the trapezoidal prism
+//   ang = Specify the front angle(s) of the trapezoidal prism.  Can give a scalar for an isosceles trapezoidal prism or a list of two angles, the left angle and right angle.  You must omit one of `h`, `w1`, or `w2` to allow the freedom to control the angles. 
+//   shift = Scalar value to shift the back of the trapezoidal prism along the X axis by.  Cannot be combined with ang.  Default: 0
+//   h / height / thickness = The thickness in the Z direction of the base that the texture sits on.  Default: 0.1 or for inset textures 0.1 more than the inset depth
+//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[1,1]`
+//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
+//   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
+//   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
+//   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
+//   diff = if set to true then "remove" and "keep" tags are set to cut out a space for the texture so that inset textures can be attached.  Default: false
+//   extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 1
+//   skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
+//   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example(3D,NoScale,VPT=[-0.257402,0.467403,-0.648606],VPR=[46.6,0,16.6],VPD=29.2405): Basic textured tile
+//   textured_tile("trunc_diamonds", 10, tex_reps=[5,5]);
+// Example(3D,NoScale,VPT=[-0.0852782,0.259593,0.139667],VPR=[58.5,0,345.1],VPD=36.0994): Attaching a tile to a cube
+//   cuboid([12,12,4]) attach(TOP,BOT)
+//     textured_tile("trunc_pyramids", 10, tex_reps=[5,5], style="convex");
+// Example(3D,NoScale,VPT = [-0.0788193, 0.10015, -0.0938629], VPR = [57.8, 0, 34.1], VPD = 29.2405): This inset texture doesn't look obviously different, but you can see that the object is below the XY plane.  
+//     textured_tile("trunc_pyramids_vnf", 10, tex_reps=[5,5], tex_inset=true);
+// Example(3D,NoAxes,VPT=[0.242444,0.170054,-0.0714754],VPR=[67.6,0,33.4],VPD=36.0994): Here we use the `diff` option combined with {{diff()}} to attach the inset texture to the front of a parent cuboid.  
+//   diff()
+//     cuboid([12,5,10]) attach(FRONT, BOT)
+//       textured_tile("trunc_pyramids_vnf", [10,8],
+//                     tex_reps=[5,5], tex_inset=true, diff=true);
+// Example(3D,NoAxes,VPT=[5.86588,-0.107082,-0.311155],VPR=[17.2,0,9.6],VPD=32.4895): Tile shaped like a rhombic prism
+//   textured_tile("ribs", w1=10, w2=10,  shift=4,ysize=7);
+// Example(3D,NoAxes,VPT=[-0.487417,-0.398897,-0.143258],VPR=[10.2,0,12.4],VPD=26.3165): A tile shaped like a trapezoidal prism.  Note that trapezoidal tiles will always distort the texture, resulting in curves
+//   textured_tile("diamonds", w1=10, w2=7, ysize=7) show_anchors(2);
+// Example(3D,NoAxes,VPT=[-0.0889877,-0.31974,0.554444],VPR=[22.1,0,22.2],VPD=32.4895): An inset trapezoidal tile placed into a cube
+//   diff()cuboid([10,10,2])
+//     attach(TOP,BOT)
+//       textured_tile("trunc_diamonds", tex_reps=[5,5], tex_inset=true,
+//                     w1=8, w2=4, ysize=8, diff=true);
+// Example(3D,NoScales,VPT=[-0.0889877,-0.31974,0.554444],VPR=[58.5,0,21.5],VPD=32.4895): This example shows what happens if you set `extra` to zero for the "pyramids" texture.  Note that the texture doesn't finish.  The default of `extra=1` produces the correct result.  
+//     textured_tile("pyramids", 10, tex_reps=[5,5], extra=0);
+// Example(3D,NoScales,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): This texture has an asymmetry even with the default `extra=1`. 
+//     textured_tile("trunc_ribs", 10, tex_reps=[5,2]);
+// Example(3D,NoScales,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): It could be fixed by setting `extra=2`, which would place an extra flat strip on the right.  But another option is to use the `skip` parameter to trim the flat part from the left.  Note that we are also skipping in the y direction, but it doesn't make a difference for this texture, except that you need to have enough texture tiles to accommodate the skip.  You can also set `skip` to a vector.
+//     textured_tile("trunc_ribs", 10, tex_reps=[5,2], skip=1);
+
+
+// This is like _tile_edge_path_list in that it finds the paths
+// on the x=0 or y=0 face of a VNF tile.  But instead of returning
+// paths it turns them into a VNF.  The open path is closed to the specified
+// z coordinate.  
+
+function _tile_edge_vnf(vnf, axis, z, maxopen=1) =
+    let(
+        verts = vnf[0],
+        faces = vnf[1],
+        segs = [for(face=faces, edge=pair(select(verts,face),wrap=true)) if (approx(edge[0][axis],0) && approx(edge[1][axis],0)) [edge[1],edge[0]]],
+        paths = _assemble_partial_paths(segs),
+        facelist = [
+            for(path=paths)
+              if (!(len(path)<=3 && path[0]==last(path)))
+                 path[0]==len(path) ? [list_unwrap(path),[count(len(path)-1)]]
+               : [
+                     [
+                       point3d(point2d(path[0]),z),
+                       each path,
+                       point3d(point2d(last(path)),z)
+                     ],
+                     [count(len(path)+2)]
+                 ]
+        ],
+        openlist = [for(entry=facelist) if (!are_ends_equal(entry[0])) 1]
+    )
+    assert(len(openlist)<=maxopen, str("VNF has ",len(openlist)," open paths on an edge and at most ",maxopen," is supported."))
+    vnf_join(facelist);
+
+
+module textured_tile(
+    texture,
+    size,
+    ysize, height, w1, w2, ang, h, shift,
+    tex_size=[1,1],
+    tex_reps,       
+    tex_inset=false,
+    tex_rot=0,      
+    tex_depth=1,
+    diff=false,
+    extra=1,
+    skip=0,
+    style="min_edge",
+    atype="tex",
+    anchor=CENTER, spin=0, orient=UP
+)
+{
+
+    vnf_data = textured_tile(size=size,
+                        ysize=ysize, height=height, w1=w1, w2=w2, ang=ang, h=h, shift=shift, 
+                        texture=texture, tex_size=tex_size, tex_reps=tex_reps,extra=extra, 
+                        tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth,skip=skip,
+                        style=style, atype="std",_return_anchor=true);
+    h_w1_w2_shift = vnf_data[2];
+    is_trap = is_def(h_w1_w2_shift);
+    ysize=h_w1_w2_shift[0];
+    w1=h_w1_w2_shift[1];
+    w2=h_w1_w2_shift[2];
+    shift=h_w1_w2_shift[3];
+    size = vnf_data[1];
+    inset = is_num(tex_inset)? tex_inset : tex_inset? 1 : 0;
+    extra_ht = max(0,abs(tex_depth)*(1-inset));
+    anch_ht = atype=="tex" ? extra_ht : size.z;
+    geom = is_def(h_w1_w2_shift) ? atype=="std" ? attach_geom(axis=BACK, size=[w1,anch_ht,ysize],size2=[w2,anch_ht],shift=[-shift,0])
+                                                : attach_geom(axis=BACK, size=[w1,anch_ht,ysize],size2=[w2,anch_ht],shift=[-shift,0])
+                                 : attach_geom(size=[size.x,size.y,anch_ht]);
+    attachable(anchor=anchor,orient=orient, spin=spin, geom=geom, expose_tags=true){
+      down(atype=="tex" ? size.z/2+extra_ht/2 : 0)
+        if (diff) {
+          tag("keep") vnf_polyhedron(vnf_data[0]);
+          tag("remove")up(.05)
+              if (!is_trap) cuboid([size.x,size.y,size.z+0.1]);
+              else linear_sweep(trapezoid(w1=w1,w2=w2,h=ysize,shift=shift), h=size.z+0.1,center=true);
+        }
+        else vnf_polyhedron(vnf_data[0]);
+
+      children();
+    }
+}
+
+
+
+function textured_tile(
+    texture, 
+    size,
+    ysize, height, w1, w2, ang, h, shift, thickness,
+    tex_size=[1,1],
+    tex_reps,       
+    tex_inset=false,
+    tex_rot=0,      
+    tex_depth=1,    
+    style="min_edge",
+    atype="tex",
+    extra=1,
+    skip=0,
+    anchor=CENTER, spin=0, orient=UP,
+    _return_anchor=false
+) =
+    assert(tex_reps==undef || is_vector(tex_reps,2))
+    assert(tex_size==undef || is_vector(tex_size,2))
+    assert(in_list(tex_rot,[0,90,180,270]))
+    assert(is_undef(size) || is_num(size) || is_vector(size,2) || is_vector(size,3), "size must be a 2-vector or 3-vector")
+    assert(is_undef(size) || num_defined([ysize,h, height, thickness, w1,w2,ang])==0, "Cannot combine size with any other dimensional specifications")
+  
+    let(
+        extra = is_list(extra) ? extra : [extra,extra],
+        skip = is_list(skip) ? skip : [skip,skip],
+        inset = is_num(tex_inset)? tex_inset : tex_inset? 1 : 0,
+        default_thick = inset>0 ? 0.1+abs(tex_depth)*inset : 0.1,
+        extra_ht = max(0,abs(tex_depth)*(1-inset)),
+        h_w1_w2_shift = is_def(size) ? undef
+                      : assert(is_undef(ysize) || is_finite(ysize))
+                        assert(is_undef(w1) || is_finite(w1))
+                        assert(is_undef(w2) || is_finite(w2))
+                        assert(is_undef(ang) || is_finite(ang) || is_vector(ang,2))
+                        assert(num_defined([ysize, w1, w2, ang]) == 3, "Must give exactly 3 of the arguments ysize, w1, w2, and angle.")
+                        assert(is_undef(shift) || is_finite(shift))
+                        assert(num_defined([shift,ang])<2, "Cannot specify shift and ang together")
+                        _trapezoid_dims(ysize,w1,w2,shift,ang),
+        ysize=h_w1_w2_shift[0],
+        w1=h_w1_w2_shift[1],
+        w2=h_w1_w2_shift[2],
+        shift=h_w1_w2_shift[3],
+        height = is_def(size) ? default(size.z,default_thick) : one_defined([h,height,thickness],"h,height,thickness",dflt=default_thick),
+        size = is_def(size) ? is_num(size) ? [size,size,1] : point3d(size,1)        // We only use the x and y components of size
+             : [w1,ysize],
+          
+        tex = is_string(texture)? texture(texture,$fn=_tex_fn_default()) : texture,
+        texture = tex_rot==0? tex
+                : is_vnf(tex)? zrot(tex_rot, cp=[1/2,1/2], p=tex) 
+                : tex_rot==180? reverse([for (row=tex) reverse(row)])
+                : tex_rot==270? [for (row=transpose(tex)) reverse(row)]
+                : reverse(transpose(tex)),
+        check_tex = _validate_texture(texture),
+        tex_reps = is_def(tex_reps) ? tex_reps
+                 : [round(size.x/tex_size.x), round(size.y/tex_size.y)],
+        scale = [size.x/tex_reps.x, size.y/tex_reps.y],
+        vnf = !is_vnf(texture) ?
+                    let(         
+                        texsteps = [len(texture[0]), len(texture)], 
+                        xn=tex_reps.x*texsteps.x+extra.x-skip.x,
+                        yn=tex_reps.y*texsteps.y+extra.y-skip.y,
+                        checks = assert(yn>=2, "Skipped too many points in the y direction: decrease skip.y")
+                                 assert(xn>=2, "Skipped too many points in the x direction: decrease skip.x"),
+                        xpts=lerpn(-size.x/2,size.x/2,xn),
+                        ypts=lerpn(size.y/2,-size.y/2,yn),
+                        scaled_tex = tex_depth < 0 ? [for(row=texture) [for(p=row) -(1-p-inset)*tex_depth]]
+                                                   : [for(row=texture) [for(p=row)  (p-inset)*tex_depth]],
+                        check = [for(row=scaled_tex, p=row) if (p<=-height) p],
+                        dummy=assert(check==[], str("texture extends too far below zero (",min([each check,0]),") to fit in cube with height ",height)),
+                        pts=[for(y=idx(ypts))
+                               [ [xpts[0],ypts[y],-height/2],
+                                 for(x=idx(xpts))
+                                   [xpts[x],ypts[y], height/2 + scaled_tex[(y+skip.y)%texsteps.y][(x+skip.x)%texsteps.x]],
+                                 [last(xpts), ypts[y], -height/2]
+                               ]
+                             ]
+                    )
+                    vnf_vertex_array(pts,col_wrap=true,caps=true,style=style)
+            :
+                let(
+                    zadj_vnf = [
+                                  [for(p=texture[0]) [p.x, p.y, tex_depth<0 ? height/2-(1-p.z-inset)*tex_depth : height/2+(p.z-inset)*tex_depth]],
+                                  texture[1]
+                               ],
+                    scaled_vnf = scale(scale, zadj_vnf), 
+                    tiled_vnf = [for(i=[0:1:tex_reps.x-1], j=[0:1:tex_reps.y-1]) move([scale.x*i,scale.y*j], scaled_vnf)],
+                    unscaled_hedge=_tile_edge_vnf(zadj_vnf,1,-height/2),
+                    hedge = unscaled_hedge==EMPTY_VNF ? [] : xscale(scale.x, unscaled_hedge),
+                    unscaled_vedge=_tile_edge_vnf(zadj_vnf,0,-height/2),
+                    vedge = unscaled_vedge==EMPTY_VNF ? [] : yscale(scale.y, unscaled_vedge),
+                    hedge_flip = hedge==[] ? hedge : back(size.y,vnf_reverse_faces(hedge)), 
+                    vedge_flip = vedge==[] ? vedge : right(size.x,vnf_reverse_faces(vedge)), 
+                    front_edge = hedge==[] ? [] : [for(i=[0:1:tex_reps.x-1]) xmove(scale.x*i, hedge)],
+                    left_edge = vedge==[] ? [] : [for(j=[0:1:tex_reps.y-1]) ymove(scale.y*j, vedge)],
+                    back_edge = hedge==[] ? [] : [for(i=[0:1:tex_reps.x-1]) xmove(scale.x*i, hedge_flip)],
+                    right_edge = vedge==[] ? [] : [for(j=[0:1:tex_reps.y-1]) ymove(scale.y*j, vedge_flip)],
+                    bottom = [path3d(rect(point2d(size),anchor=FWD+LEFT),-height/2), [[3,2,1,0]]],
+                    result = vnf_join(concat(tiled_vnf, front_edge, left_edge, right_edge, back_edge, [bottom]))
+                )
+                move([-size.x/2,-size.y/2],result),
+        trans_vnf = is_undef(h_w1_w2_shift) ? vnf
+                  : let(
+                        newpts = [for(p=vnf[0])
+                                    let(factor=p.y/ysize+1/2)
+                                    [lerp(1,w2/w1,factor)*p.x+factor*shift, p.y, p.z]]
+                    )
+                    [newpts, vnf[1]],
+        anch_ht = atype=="tex" ? extra_ht : height,
+        shifted_vnf = down(atype=="tex" ? height/2+extra_ht/2 : 0, trans_vnf),
+        geom = is_def(h_w1_w2_shift) ? atype=="std" ? attach_geom(axis=BACK, size=[w1,anch_ht,ysize],size2=[w2,anch_ht],shift=[-shift,0])
+                                                    : attach_geom(axis=BACK, size=[w1,anch_ht,ysize],size2=[w2,anch_ht],shift=[-shift,0])
+                                     : attach_geom(size=[size.x,size.y,anch_ht])
+    )
+    _return_anchor ? [reorient(anchor,spin,orient,geom=geom,p=shifted_vnf), [size.x,size.y,height],h_w1_w2_shift]
+                   : reorient(anchor,spin,orient,geom=geom,p=shifted_vnf);
+
 
 
 // Module: rect_tube()
@@ -1559,6 +1814,52 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
         ]
     )
     reorient(anchor,spin,orient, size=size, anchors=anchors, p=vnf);
+
+
+// Function&Module: octahedron()
+// Synopsis: Creates an octahedron with axis-aligned points.
+// SynTags: Geom, VNF
+// Topics: Shapes (3D), Attachable, VNF Generators
+// See Also: prismoid()
+// Usage: As Module
+//   octahedron(size, ...) [ATTACHMENTS];
+// Usage: As Function
+//   vnf = octahedron(size, ...);
+// Description:
+//   When called as a module, creates an octahedron with axis-aligned points.
+//   When called as a function, creates a [VNF](vnf.scad) of an octahedron with axis-aligned points.
+// Arguments:
+//   size = Width of the octahedron, tip to tip.  Can be a 3-vector.  Default: [1,1,1]
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example:
+//   octahedron(size=40);
+// Example: Anchors
+//   octahedron(size=40) show_anchors();
+// Example:
+//   octahedron([10,15,25]);
+
+module octahedron(size=1, anchor=CENTER, spin=0, orient=UP) {
+    vnf = octahedron(size=size);
+    attachable(anchor,spin,orient, vnf=vnf, extent=true) {
+        vnf_polyhedron(vnf, convexity=2);
+        children();
+    }
+}
+
+
+function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
+    let(
+        s = force_list(size,3)/2,
+        dummy=assert(is_vector(s,3) && all_positive(s), "\nsize must be a positive scalar or 3-vector"),
+        vnf = [
+            [ [0,0,s.z], [s.x,0,0], [0,s.y,0], [-s.x,0,0], [0,-s.y,0], [0,0,-s.z] ],
+            [ [0,2,1], [0,3,2], [0,4,3], [0,1,4], [5,1,2], [5,2,3], [5,3,4], [5,4,1] ]
+        ]
+    ) reorient(anchor,spin,orient, vnf=vnf, extent=true, p=vnf);
+
 
 
 // Section: Cylinders

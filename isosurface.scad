@@ -1764,10 +1764,12 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   For metaballs with flat surfaces or sides, avoid letting any side of the bounding box coincide with one
 //   of these flat surfaces or sides, otherwise unpredictable triangulation around the edge may result.
 //   .
-//   **Parameter `isovalue`:** The `isovalue` parameter applies globally to **all** your metaballs and changes the appearance of your
-//   entire metaball object, possibly dramatically. It defaults to 1 and you don't usually need to change
-//   it. If you increase the isovalue, then all the objects in your model shrink, causing some melded
-//   objects to separate. If you decrease it, each metaball grows and melds more with others.
+//   **Parameter `isovalue`:** The `isovalue` parameter applies globally to **all** your metaballs and changes
+//   the appearance of your entire metaball object, possibly dramatically. It defaults to 1 and you don't usually
+//   need to change it. If you increase the isovalue, then all the objects in your model shrink, causing some melded
+//   objects to separate. If you decrease it, each metaball grows and melds more with others. As with `isosurface()`,
+//   a range may be specified for isovalue, which can result in hollow metaballs, although this isn't particularly
+//   useful except possibly in 2D.
 //   .
 //   ***Metaballs debug view***
 //   .
@@ -1951,7 +1953,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   voxel_size = Size of the voxels used to sample the bounding box volume, can be a scalar or 3-vector, or omitted if `voxel_count` is set. You may get a non-cubical voxels of a slightly different size than requested if `exact_bounds=true`.
 //   ---
 //   voxel_count = Approximate number of voxels in the bounding box. If `exact_bounds=true` then the voxels may not be cubes. Use with `show_stats=true` to see the corresponding voxel size. Default: 10000 (if `voxel_size` not set)
-//   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. Default: 1.0
+//   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. You can also specify an isovalue range such as `[1,1.1]`, which creates hollow metaballs, where the hollow is evident when clipped by the bounding box. A scalar isovalue is equivalent to the range `[isovalue,INF]`. Default: 1.0
 //   closed = When true, close the surface if it intersects the bounding box by adding a closing face. When false, do not add a closing face, possibly producing non-manfold metaballs with holes where the bounding box intersects them.  Default: true
 //   exact_bounds = When true, shrinks voxels as needed to fit whole voxels inside the requested bounding box. When false, enlarges `bounding_box` as needed to fit whole voxels of `voxel_size`, and centers the new bounding box over the requested box. Default: false
 //   show_stats = If true, display statistics about the metaball isosurface in the console window. Besides the number of voxels that the surface passes through, and the number of triangles making up the surface, this is useful for getting information about a possibly smaller bounding box to improve speed for subsequent renders. Enabling this parameter has a small speed penalty. Default: false
@@ -2867,7 +2869,7 @@ function mb_ring(r1,r2, cutoff=INF, influence=1, negative=false, hide_debug=fals
 //   pixel_size = Size of the pixels used to sample the bounding box area, can be a scalar or 2-vector, or omitted if `pixel_count` is set. You may get a non-square pixels of a slightly different size than requested if `exact_bounds=true`.
 //   ---
 //   pixel_count = Approximate number of pixels in the bounding box. If `exact_bounds=true` then the pixels may not be squares. Use with `show_stats=true` to see the corresponding pixel size. Default: 1024 (if `pixel_size` not set)
-//   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. Default: 1.0
+//   isovalue = A scalar value specifying the isosurface value (threshold value) of the metaballs. At the default value of 1.0, the internal metaball functions are designd so the size arguments correspond to the size parameter (such as radius) of the metaball, when rendered in isolation with no other metaballs. You can also specify a range for isovalue, such as `[1,1.1]` in which case the metaball is displayed as a shell with the hollow inside corresponding to the higher isovalue. A scalar isovalue is equivalent to the vector `[isovalue,INF]`. Default: 1.0
 //   closed = (Function only) When true, close the path if it intersects the bounding box by adding a closing side. When false, do not add a closing side. Default: true, and always true when called as a module.
 //   use_centers = When true, uses the center value of each pixel as an additional data point to refine the contour path through the pixel. Default: false
 //   smoothing = Number of times to apply a 2-point moving average to the contours. This can remove small zig-zag artifacts resulting from a contour that follows the profile of a triangulated 3D surface when `use_centers` is set. Default: 2 if `use_centers=true`, 0 otherwise.
@@ -3674,7 +3676,16 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   a=4;  b=4.1;
 //   f = function(x,y) (x^2+y^2)^2 - 2*a^2*(x^2-y^2) + a^4;
 //   contour(f,bounding_box=[[-6,-3],[6,3]], isovalue=[-INF,b^4]);
-
+// Example(2D,NoAxes,VPD=65,VPT=[-7,0,0]): A contour of a function that looks like the contour should intersect itself at the origin, but if you zoom in, you see that it doesn't actually cross or intersect. It is theoretically possible to obtain a crossing path with `contour()` although the algorithm attempts to avoid it, primarily by disallowing the function values at the sample points to be equal to the specified isovalue.
+//   g = function(x,y)
+//       let(
+//           theta=atan2(y,x),
+//           r = norm([x,y])
+//       )
+//       r*sin(3*theta-theta^2/20+40*r);
+//   contour(g, bounding_box=[[-23,-13],[9,13]],
+//       isovalue=[0,INF], pixel_size=0.2);
+ 
 module contour(f, isovalue, bounding_box, pixel_size, pixel_count=undef, use_centers=true, smoothing=undef, exact_bounds=false, cp="centroid", anchor="origin", spin=0, atype="hull", show_stats=false, show_box=false, _mball=false) {
     pathlist = contour(f, isovalue, bounding_box, pixel_size, pixel_count, use_centers, smoothing, true, exact_bounds, show_stats, _mball);
     assert(len(pathlist)>0, "\nNo contour lines found! Cannot generate polygon. Check your isovalue.")
