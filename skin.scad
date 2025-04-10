@@ -4370,6 +4370,7 @@ function _textured_revolution(
         maxy = bounds[1].y,
         h = maxy - miny,
         circumf = 2 * PI * maxx,
+        texcnt = is_vnf(texture) ? undef : [len(texture[0]), len(texture)],
         tile = !is_vnf(texture) || samples==1 ? texture :
             let(
                 s = 1 / samples,
