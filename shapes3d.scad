@@ -1287,8 +1287,8 @@ module textured_tile(
     tex_rot=0,      
     tex_depth=1,
     diff=false,
-    extra=1,
-    skip=0,
+    tex_extra=1,
+    tex_skip=0,
     style="min_edge",
     atype="tex",
     anchor=CENTER, spin=0, orient=UP
@@ -1297,8 +1297,8 @@ module textured_tile(
 
     vnf_data = textured_tile(size=size,
                         ysize=ysize, height=height, w1=w1, w2=w2, ang=ang, h=h, shift=shift, 
-                        texture=texture, tex_size=tex_size, tex_reps=tex_reps,extra=extra, 
-                        tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth,skip=skip,
+                        texture=texture, tex_size=tex_size, tex_reps=tex_reps,tex_extra=tex_extra, 
+                        tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth,tex_skip=tex_skip,
                         style=style, atype="std",_return_anchor=true);
     h_w1_w2_shift = vnf_data[2];
     is_trap = is_def(h_w1_w2_shift);
@@ -1340,8 +1340,8 @@ function textured_tile(
     tex_depth=1,    
     style="min_edge",
     atype="tex",
-    extra=1,
-    skip=0,
+    tex_extra=1,
+    tex_skip=0,
     anchor=CENTER, spin=0, orient=UP,
     _return_anchor=false
 ) =
@@ -1352,8 +1352,8 @@ function textured_tile(
     assert(is_undef(size) || num_defined([ysize,h, height, thickness, w1,w2,ang])==0, "Cannot combine size with any other dimensional specifications")
   
     let(
-        extra = is_list(extra) ? extra : [extra,extra],
-        skip = is_list(skip) ? skip : [skip,skip],
+        extra = is_list(tex_extra) ? tex_extra : [tex_extra,tex_extra],
+        skip = is_list(tex_skip) ? tex_skip : [tex_skip,tex_skip],
         inset = is_num(tex_inset)? tex_inset : tex_inset? 1 : 0,
         default_thick = inset>0 ? 0.1+abs(tex_depth)*inset : 0.1,
         extra_ht = max(0,abs(tex_depth)*(1-inset)),
