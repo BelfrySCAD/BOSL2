@@ -27,13 +27,14 @@
 EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 
 
-// Function: vnf_vertex_array()
+// Function&Module: vnf_vertex_array()
 // Synopsis: Returns a VNF structure from a rectangular vertex list.
-// SynTags: VNF
+// SynTags: VNF, Geom
 // Topics: VNF Generators, Lists
 // See Also: vnf_tri_array(), vnf_join(), vnf_from_polygons(), vnf_from_region()
 // Usage:
 //   vnf = vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=], [triangulate=]);
+//   vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=], [triangulate=],...) [ATTACHMENTS];
 // Description:
 //   Creates a VNF structure from a rectangular vertex list, creating edges that connect the adjacent vertices in the vertex list
 //   and creating the faces defined by those edges.  You can optionally create the edges and faces to wrap the last column
@@ -58,6 +59,17 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   reverse = If true, reverse all face normals.
 //   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "flip1", "flip2",  "min_edge", "min_area", "quincunx", "convex" and "concave".
 //   triangulate = If true, triangulates endcaps to resolve possible CGAL issues.  This can be an expensive operation if the endcaps are complex.  Default: false
+//   convexity = (module) Max number of times a line could intersect a wall of the shape.
+//   cp = (module) Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+//   anchor = (module) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
+//   spin = (module) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = (module) Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   atype = (module) Select "hull" or "intersect" anchor type.  Default: "hull"
+// Anchor Types:
+//   "hull" = Anchors to the virtual convex hull of the shape.
+//   "intersect" = Anchors to the surface of the shape.
+// Named Anchors:
+//   "origin" = Anchor at the origin, oriented UP.
 // Example(3D):
 //   vnf = vnf_vertex_array(
 //       points=[
@@ -160,6 +172,23 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //       apply(m, [ [rgroove[0].x,0,-z], each rgroove, [last(rgroove).x,0,-z] ])
 //   ], caps=true, col_wrap=true, reverse=true);
 //   vnf_polyhedron(vnf, convexity=8);
+
+module vnf_vertex_array(
+    points,
+    caps, cap1, cap2,
+    col_wrap=false,
+    row_wrap=false,
+    reverse=false,
+    style="default",
+    triangulate = false,
+    convexity=2, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") 
+{
+    vnf = vnf_vertex_array(points=points, caps=caps, cap1=cap2, cap2=cap2,
+                           col_wrap=col_wrap, row_wrap=row_wrap, reverse=reverse, style=style,triangulate=triangulate);
+    vnf_polyhedron(vnf, convexity=2, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") children();
+}    
+
+
 function vnf_vertex_array(
     points,
     caps, cap1, cap2,
@@ -1010,20 +1039,6 @@ function _detri_combine_faces(edgelist,faces,normals,facelist,curface) =
         facelist = list_remove_values(facelist,usedfaces)
      )
      _detri_combine_faces(edgelist,faces,normals,facelist,len(usedfaces)==0?curface+1:curface);
-
-
-
-function _vnf_sort_vertices(vnf, idx=[2,1,0]) =
-    let(
-        verts = vnf[0],
-        faces = vnf[1],
-        vidx = sortidx(verts, idx=idx),
-        rvidx = sortidx(vidx),
-        sorted_vnf = [
-            [ for (i = vidx) verts[i] ],
-            [ for (face = faces) [ for (i = face) rvidx[i] ] ],
-        ]
-    ) sorted_vnf;
 
 
 

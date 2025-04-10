@@ -1218,12 +1218,12 @@ function regular_prism(n,
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example(3D,NoScale,VPT=[-0.257402,0.467403,-0.648606],VPR=[46.6,0,16.6],VPD=29.2405): Basic textured tile
+// Example(3D,NoScales,VPT=[-0.257402,0.467403,-0.648606],VPR=[46.6,0,16.6],VPD=29.2405): Basic textured tile
 //   textured_tile("trunc_diamonds", 10, tex_reps=[5,5]);
-// Example(3D,NoScale,VPT=[-0.0852782,0.259593,0.139667],VPR=[58.5,0,345.1],VPD=36.0994): Attaching a tile to a cube
+// Example(3D,NoAxes,VPT=[-0.0852782,0.259593,0.139667],VPR=[58.5,0,345.1],VPD=36.0994): Attaching a tile to a cube
 //   cuboid([12,12,4]) attach(TOP,BOT)
 //     textured_tile("trunc_pyramids", 10, tex_reps=[5,5], style="convex");
-// Example(3D,NoScale,VPT = [-0.0788193, 0.10015, -0.0938629], VPR = [57.8, 0, 34.1], VPD = 29.2405): This inset texture doesn't look obviously different, but you can see that the object is below the XY plane.  
+// Example(3D,NoScales,VPT = [-0.0788193, 0.10015, -0.0938629], VPR = [57.8, 0, 34.1], VPD = 29.2405): This inset texture doesn't look obviously different, but you can see that the object is below the XY plane.  
 //     textured_tile("trunc_pyramids_vnf", 10, tex_reps=[5,5], tex_inset=true);
 // Example(3D,NoAxes,VPT=[0.242444,0.170054,-0.0714754],VPR=[67.6,0,33.4],VPD=36.0994): Here we use the `diff` option combined with {{diff()}} to attach the inset texture to the front of a parent cuboid.  
 //   diff()
@@ -1233,17 +1233,17 @@ function regular_prism(n,
 // Example(3D,NoAxes,VPT=[5.86588,-0.107082,-0.311155],VPR=[17.2,0,9.6],VPD=32.4895): Tile shaped like a rhombic prism
 //   textured_tile("ribs", w1=10, w2=10,  shift=4,ysize=7);
 // Example(3D,NoAxes,VPT=[-0.487417,-0.398897,-0.143258],VPR=[10.2,0,12.4],VPD=26.3165): A tile shaped like a trapezoidal prism.  Note that trapezoidal tiles will always distort the texture, resulting in curves
-//   textured_tile("diamonds", w1=10, w2=7, ysize=7) show_anchors(2);
+//   textured_tile("diamonds", w1=10, w2=7, ysize=7);
 // Example(3D,NoAxes,VPT=[-0.0889877,-0.31974,0.554444],VPR=[22.1,0,22.2],VPD=32.4895): An inset trapezoidal tile placed into a cube
 //   diff()cuboid([10,10,2])
 //     attach(TOP,BOT)
 //       textured_tile("trunc_diamonds", tex_reps=[5,5], tex_inset=true,
 //                     w1=8, w2=4, ysize=8, diff=true);
-// Example(3D,NoScales,VPT=[-0.0889877,-0.31974,0.554444],VPR=[58.5,0,21.5],VPD=32.4895): This example shows what happens if you set `extra` to zero for the "pyramids" texture.  Note that the texture doesn't finish.  The default of `extra=1` produces the correct result.  
+// Example(3D,NoAxes,VPT=[-0.0889877,-0.31974,0.554444],VPR=[58.5,0,21.5],VPD=32.4895): This example shows what happens if you set `extra` to zero for the "pyramids" texture.  Note that the texture doesn't finish.  The default of `extra=1` produces the correct result.  
 //     textured_tile("pyramids", 10, tex_reps=[5,5], extra=0);
-// Example(3D,NoScales,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): This texture has an asymmetry even with the default `extra=1`. 
-//     textured_tile("trunc_ribs", 10, tex_reps=[5,2]);
-// Example(3D,NoScales,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): It could be fixed by setting `extra=2`, which would place an extra flat strip on the right.  But another option is to use the `skip` parameter to trim the flat part from the left.  Note that we are also skipping in the y direction, but it doesn't make a difference for this texture, except that you need to have enough texture tiles to accommodate the skip.  You can also set `skip` to a vector.
+// Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): This texture has an asymmetry even with the default `extra=1`. 
+//     textured_tile("trunc_ribs", 10, tex_reps=[5,1]);
+// Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): It could be fixed by setting `extra=2`, which would place an extra flat strip on the right.  But another option is to use the `skip` parameter to trim the flat part from the left.  Note that we are also skipping in the y direction, but it doesn't make a difference for this texture, except that you need to have enough texture tiles to accommodate the skip, so we increased the Y reps value to 2.  You can also set `skip` to a vector.
 //     textured_tile("trunc_ribs", 10, tex_reps=[5,2], skip=1);
 
 
