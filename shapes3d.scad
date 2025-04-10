@@ -1155,8 +1155,8 @@ function regular_prism(n,
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: cuboid(), prismoid(), texture(), cyl(), rotate_sweep(), linear_sweep()
 // Usage:
-//   textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [diff=], [extra=], [skip=], ...) [ATTACHMENTS];
-//   vnf = textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [extra=], [skip=], ...);
+//   textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [diff=], [tex_extra=], [tex_skip=], ...) [ATTACHMENTS];
+//   vnf = textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [tex_extra=], [tex_skip=], ...);
 // Description:
 //   Creates a cuboid or trapezoidal prism and places a texture on the top face.  You can specify the size by giving a `size` scalar or vector as is
 //   usual for a cube.  If you give a scalar, however, it applies only to the X and Y dimensions: the default is to create a thin tile, not a cube.  
@@ -1187,11 +1187,11 @@ function regular_prism(n,
 //   has the exact same dimensions as the texture tile, you will have exactly aligned faces along the edges.
 //   .
 //   Most of the heightfield textures are designed to repeat in a way that requires one extra line of the texture to complete the pattern.
-//   The `extra` parameter specifies the number of extra lines to repeat at the end of the texture and it defaults to 1 because most textures
-//   do requires this extra line.  If you need to disable this feature you can set the `extra` parameter to 0, or you can set it to a list of two
-//   booleans to control the extra line of texture in the X and Y directions independently.  The extra parameter
+//   The `tex_extra` parameter specifies the number of extra lines to repeat at the end of the texture and it defaults to 1 because most textures
+//   do requires this extra line.  If you need to disable this feature you can set the `tex_extra` parameter to 0, or you can set it to a list of two
+//   booleans to control the extra line of texture in the X and Y directions independently.  The `tex_extra` parameter
 //   is ignored for VNF textures.  A heightfield texture may also have extra margin along a starting side that makes the texture unbalanced.  You can 
-//   removed this using the `skip` parameter, which defaults to zero and similarly specifies the number of lines to skip in the X and Y directions at
+//   removed this using the `tex_skip` parameter, which defaults to zero and similarly specifies the number of lines to skip in the X and Y directions at
 //   the starting edges of the tile.  You must have enough tile repetitions to accomodate the specified skip.
 // Anchor Types:
 //   "tex" = Anchors around the texture, ignoring the base object.  (default)
@@ -1206,14 +1206,14 @@ function regular_prism(n,
 //   ang = Specify the front angle(s) of the trapezoidal prism.  Can give a scalar for an isosceles trapezoidal prism or a list of two angles, the left angle and right angle.  You must omit one of `h`, `w1`, or `w2` to allow the freedom to control the angles. 
 //   shift = Scalar value to shift the back of the trapezoidal prism along the X axis by.  Cannot be combined with ang.  Default: 0
 //   h / height / thickness = The thickness in the Z direction of the base that the texture sits on.  Default: 0.1 or for inset textures 0.1 more than the inset depth
-//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[1,1]`
+//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   diff = if set to true then "remove" and "keep" tags are set to cut out a space for the texture so that inset textures can be attached.  Default: false
-//   extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 1
-//   skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
+//   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 1
+//   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -1239,12 +1239,12 @@ function regular_prism(n,
 //     attach(TOP,BOT)
 //       textured_tile("trunc_diamonds", tex_reps=[5,5], tex_inset=true,
 //                     w1=8, w2=4, ysize=8, diff=true);
-// Example(3D,NoAxes,VPT=[-0.0889877,-0.31974,0.554444],VPR=[58.5,0,21.5],VPD=32.4895): This example shows what happens if you set `extra` to zero for the "pyramids" texture.  Note that the texture doesn't finish.  The default of `extra=1` produces the correct result.  
-//     textured_tile("pyramids", 10, tex_reps=[5,5], extra=0);
-// Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): This texture has an asymmetry even with the default `extra=1`. 
+// Example(3D,NoAxes,VPT=[-0.0889877,-0.31974,0.554444],VPR=[58.5,0,21.5],VPD=32.4895): This example shows what happens if you set `tex_extra` to zero for the "pyramids" texture.  Note that the texture doesn't finish.  The default of `tex_extra=1` produces the correct result.  
+//     textured_tile("pyramids", 10, tex_reps=[5,5], tex_extra=0);
+// Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): This texture has an asymmetry even with the default `tex_extra=1`. 
 //     textured_tile("trunc_ribs", 10, tex_reps=[5,1]);
-// Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): It could be fixed by setting `extra=2`, which would place an extra flat strip on the right.  But another option is to use the `skip` parameter to trim the flat part from the left.  Note that we are also skipping in the y direction, but it doesn't make a difference for this texture, except that you need to have enough texture tiles to accommodate the skip, so we increased the Y reps value to 2.  You can also set `skip` to a vector.
-//     textured_tile("trunc_ribs", 10, tex_reps=[5,2], skip=1);
+// Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): It could be fixed by setting `tex_extra=2`, which would place an extra flat strip on the right.  But another option is to use the `tex_skip` parameter to trim the flat part from the left.  Note that we are also skipping in the y direction, but it doesn't make a difference for this texture, except that you need to have enough texture tiles to accommodate the skip, so we increased the Y reps value to 2.  You can also set `tex_skip` to a vector.
+//     textured_tile("trunc_ribs", 10, tex_reps=[5,2], tex_skip=1);
 
 
 // This is like _tile_edge_path_list in that it finds the paths
@@ -1333,7 +1333,7 @@ function textured_tile(
     texture, 
     size,
     ysize, height, w1, w2, ang, h, shift, thickness,
-    tex_size=[1,1],
+    tex_size=[5,5],
     tex_reps,       
     tex_inset=false,
     tex_rot=0,      
