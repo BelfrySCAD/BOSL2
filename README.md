@@ -41,7 +41,7 @@ A lot of the features of this library are to allow shorter, easier-to-read, inte
 `zrot_copies(n=6,r=20)`         | `for (zr=[0:5]) rotate([0,0,zr*60]) translate([20,0,0])`
 `skew(sxz=0.5,syz=0.333)`       | `multmatrix([[1,0,0.5,0],[0,1,0.333,0],[0,0,1,0],[0,0,0,1]])`
 
-[`BOSL2/shapes.scad`](https://github.com/BelfrySCAD/BOSL2/wiki/shapes.scad) Examples | Raw OpenSCAD Equivalent
+[`BOSL2/shapes.scad`](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad) Examples | Raw OpenSCAD Equivalent
 ---------------------------------- | -------------------------------
 `cube([10,20,30], anchor=BOTTOM);` | `translate([0,0,15]) cube([10,20,30], center=true);`
 `cuboid([20,20,30], rounding=5);`  | `minkowski() {cube([10,10,20], center=true); sphere(r=5, $fn=32);}`
