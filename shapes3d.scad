@@ -819,7 +819,8 @@ function prismoid(
 //   You can specify the size of the ends using diameter or radius measured either inside or outside.  Alternatively
 //   you can give the length of the side of the polygon.  You can specify chamfers and roundings for the ends, but not
 //   the vertical edges.  See {{rounded_prism()}} for prisms with rounded vertical edges.  You can also specify texture for the side
-//   faces, but note that texture is not compatible with any roundings or chamfers.  
+//   faces, but note that texture is not compatible with any roundings or chamfers.
+//   See [Texturing](skin.scad#section-texturing) for more details on how textures work.  
 //   .
 //   Anchors are based on the VNF of the prism.  Especially for tapered or shifted prisms, this may give unexpected anchor positions, such as top side anchors
 //   being located at the bottom of the shape, so confirm anchor positions before use.  
@@ -1158,7 +1159,9 @@ function regular_prism(n,
 //   textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [diff=], [tex_extra=], [tex_skip=], ...) [ATTACHMENTS];
 //   vnf = textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [tex_extra=], [tex_skip=], ...);
 // Description:
-//   Creates a cuboid or trapezoidal prism and places a texture on the top face.  You can specify the size by giving a `size` scalar or vector as is
+//   Creates a cuboid or trapezoidal prism and places a texture on the top face.
+//   See [Texturing](skin.scad#section-texturing) for more details on how textures work.  
+//   You can specify the size of the object by giving a `size` scalar or vector as is
 //   usual for a cube.  If you give a scalar, however, it applies only to the X and Y dimensions: the default is to create a thin tile, not a cube.  
 //   The Z size specifies the size of the shape **not** including the applied texture (in the same way that other textured objects work).
 //   If you omit the Z value then for regular textures, the default thickness will be 0.1 which provides a thin backing layer.  A zero thickness
@@ -1373,14 +1376,9 @@ function textured_tile(
         height = is_def(size) ? default(size.z,default_thick) : one_defined([h,height,thickness],"h,height,thickness",dflt=default_thick),
         size = is_def(size) ? is_num(size) ? [size,size,1] : point3d(size,1)        // We only use the x and y components of size
              : [w1,ysize],
-          
-        tex = is_string(texture)? texture(texture,$fn=_tex_fn_default()) : texture,
-        texture = tex_rot==0? tex
-                : is_vnf(tex)? zrot(tex_rot, cp=[1/2,1/2], p=tex) 
-                : tex_rot==180? reverse([for (row=tex) reverse(row)])
-                : tex_rot==270? [for (row=transpose(tex)) reverse(row)]
-                : reverse(transpose(tex)),
-        check_tex = _validate_texture(texture),
+
+        texture = _get_texture(texture, tex_rot),
+        
         tex_reps = is_def(tex_reps) ? tex_reps
                  : [round(size.x/tex_size.x), round(size.y/tex_size.y)],
         scale = [size.x/tex_reps.x, size.y/tex_reps.y],
@@ -1989,8 +1987,10 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   the cylinder or cone's sloped side.  The more specific parameters like chamfer1 or rounding2 override the more
 //   general ones like chamfer or rounding, so if you specify `rounding=3, chamfer2=3` you will get a chamfer at the top and
 //   rounding at the bottom.  You can specify extra height at either end for use with difference(); the extra height is ignored by
-//   anchoring.  
+//   anchoring.
 //   .
+//   You can apply a texture to the cylinder using the usual texture parameters.   
+//   See [Texturing](skin.scad#section-texturing) for more details on how textures work.  
 //   When creating a textured cylinder, the number of facets is determined by the sampling of the texture.  Any `$fn`, `$fa` or `$fs` values in
 //   effect are ignored.  To create a textured prism with a specified number of flat facets use {{regular_prism()}}.  Anchors for cylinders
 //   appear on the ideal cylinder, not on actual discretized shape the module produces. For anchors on the shape surface, use {{regular_prism()}}.  
