@@ -4369,7 +4369,7 @@ function _textured_revolution(
     assert(closed || is_path(shape,2))
     let(
         texture = _get_texture(texture, rot),
-        dummy = assert(is_undef(samples) || is_vnf(tex), "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
+        dummy = assert(is_undef(samples) || is_vnf(texture), "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
         inset = is_num(inset)? inset : inset? 1 : 0,
         samples = !is_vnf(texture)? len(texture) :
             is_num(samples)? samples : 8,
