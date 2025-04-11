@@ -701,7 +701,7 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   the exact point count, you should use `$fs` and `$fa` to control the number of points on the roundings and arc.  If you give `n` then each arc
 //   section in your curve uses `n` points, so the total number of points is `n` times one plus the number of non-zero roundings you specified.
 // Arguments:
-//   n = Number of vertices to use in the arc.
+//   n = Number of vertices to use in the arc.  If `wedge=true` you will get `n+1` points.  
 //   r = Radius of the arc.
 //   angle = If a scalar, specifies the end angle in degrees (relative to start parameter).  If a vector of two scalars, specifies start and end angles.
 //   ---
@@ -900,7 +900,8 @@ function _rounded_arc(radius, rounding=0, angle, n) =
         rounding = force_list(rounding,3),
         dir = sign(angle),
 
-        inner_corner_radius = abs(angle)==180?0 : abs(angle)>180 ? -dir*rounding[0] : dir*rounding[0],
+//        inner_corner_radius = abs(angle)==180?0 : abs(angle)>180 ? -dir*rounding[0] : dir*rounding[0],
+        inner_corner_radius = abs(angle)>180 ? -dir*rounding[0] : dir*rounding[0],        
         arc1_opt_radius = radius - rounding[1],
         arc2_opt_radius = radius - rounding[2],
         check = assert(rounding[1]<arc1_opt_radius, "rounding[1] is too big to fit")
@@ -923,11 +924,12 @@ function _rounded_arc(radius, rounding=0, angle, n) =
     assert(edge_gap1>=0, "Roundings are too large: center rounding (rounding[0]) interferes with first corner (rounding[1])")
     assert(edge_gap2>=0, "Roundings are too large: center rounding (rounding[0]) interferes with second corner (rounding[2])")   
     [
-      each if (rounding[0]>0) arc(cp=pt2,
+      each if (rounding[0]>0 && abs(angle)!=180)
+                               arc(cp=pt2,
                                    points=[polar_to_xy(r=radius_of_ctrpt_edge, theta=angle),     // origin corner curve
                                    polar_to_xy(r=radius_of_ctrpt_edge, theta=0)],
                                    endpoint=edge_gap1!=0,n=n)
-           else [[0,0]],                        
+           else repeat([0,0],rounding[0]>0 && abs(angle)==180 && is_def(n) ? n : 1),                        
       each if (rounding[1]>0) arc(r=rounding[1],cp=pt1,angle=[-90*dir,dir*arc1_angle],endpoint=dir*arc1_angle==angle,n=n),           // first corner
       each if (arc1_angle+arc2_angle<abs(angle))
                       arc(r=radius, angle=[dir*arc1_angle,angle - dir*arc2_angle], endpoint=rounding[2]==0,n=n),                 // main arc section
