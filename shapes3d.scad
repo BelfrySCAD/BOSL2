@@ -819,7 +819,8 @@ function prismoid(
 //   You can specify the size of the ends using diameter or radius measured either inside or outside.  Alternatively
 //   you can give the length of the side of the polygon.  You can specify chamfers and roundings for the ends, but not
 //   the vertical edges.  See {{rounded_prism()}} for prisms with rounded vertical edges.  You can also specify texture for the side
-//   faces, but note that texture is not compatible with any roundings or chamfers.  
+//   faces, but note that texture is not compatible with any roundings or chamfers.
+//   See [Texturing](skin.scad#section-texturing) for more details on how textures work.  
 //   .
 //   Anchors are based on the VNF of the prism.  Especially for tapered or shifted prisms, this may give unexpected anchor positions, such as top side anchors
 //   being located at the bottom of the shape, so confirm anchor positions before use.  
@@ -1155,10 +1156,12 @@ function regular_prism(n,
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: cuboid(), prismoid(), texture(), cyl(), rotate_sweep(), linear_sweep()
 // Usage:
-//   textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [diff=], [extra=], [skip=], ...) [ATTACHMENTS];
-//   vnf = textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [extra=], [skip=], ...);
+//   textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [diff=], [tex_extra=], [tex_skip=], ...) [ATTACHMENTS];
+//   vnf = textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [tex_extra=], [tex_skip=], ...);
 // Description:
-//   Creates a cuboid or trapezoidal prism and places a texture on the top face.  You can specify the size by giving a `size` scalar or vector as is
+//   Creates a cuboid or trapezoidal prism and places a texture on the top face.
+//   See [Texturing](skin.scad#section-texturing) for more details on how textures work.  
+//   You can specify the size of the object by giving a `size` scalar or vector as is
 //   usual for a cube.  If you give a scalar, however, it applies only to the X and Y dimensions: the default is to create a thin tile, not a cube.  
 //   The Z size specifies the size of the shape **not** including the applied texture (in the same way that other textured objects work).
 //   If you omit the Z value then for regular textures, the default thickness will be 0.1 which provides a thin backing layer.  A zero thickness
@@ -1187,11 +1190,11 @@ function regular_prism(n,
 //   has the exact same dimensions as the texture tile, you will have exactly aligned faces along the edges.
 //   .
 //   Most of the heightfield textures are designed to repeat in a way that requires one extra line of the texture to complete the pattern.
-//   The `extra` parameter specifies the number of extra lines to repeat at the end of the texture and it defaults to 1 because most textures
-//   do requires this extra line.  If you need to disable this feature you can set the `extra` parameter to 0, or you can set it to a list of two
-//   booleans to control the extra line of texture in the X and Y directions independently.  The extra parameter
+//   The `tex_extra` parameter specifies the number of extra lines to repeat at the end of the texture and it defaults to 1 because most textures
+//   do requires this extra line.  If you need to disable this feature you can set the `tex_extra` parameter to 0, or you can set it to a list of two
+//   booleans to control the extra line of texture in the X and Y directions independently.  The `tex_extra` parameter
 //   is ignored for VNF textures.  A heightfield texture may also have extra margin along a starting side that makes the texture unbalanced.  You can 
-//   removed this using the `skip` parameter, which defaults to zero and similarly specifies the number of lines to skip in the X and Y directions at
+//   removed this using the `tex_skip` parameter, which defaults to zero and similarly specifies the number of lines to skip in the X and Y directions at
 //   the starting edges of the tile.  You must have enough tile repetitions to accomodate the specified skip.
 // Anchor Types:
 //   "tex" = Anchors around the texture, ignoring the base object.  (default)
@@ -1206,24 +1209,24 @@ function regular_prism(n,
 //   ang = Specify the front angle(s) of the trapezoidal prism.  Can give a scalar for an isosceles trapezoidal prism or a list of two angles, the left angle and right angle.  You must omit one of `h`, `w1`, or `w2` to allow the freedom to control the angles. 
 //   shift = Scalar value to shift the back of the trapezoidal prism along the X axis by.  Cannot be combined with ang.  Default: 0
 //   h / height / thickness = The thickness in the Z direction of the base that the texture sits on.  Default: 0.1 or for inset textures 0.1 more than the inset depth
-//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[1,1]`
+//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   diff = if set to true then "remove" and "keep" tags are set to cut out a space for the texture so that inset textures can be attached.  Default: false
-//   extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 1
-//   skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
+//   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 1
+//   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example(3D,NoScale,VPT=[-0.257402,0.467403,-0.648606],VPR=[46.6,0,16.6],VPD=29.2405): Basic textured tile
+// Example(3D,NoScales,VPT=[-0.257402,0.467403,-0.648606],VPR=[46.6,0,16.6],VPD=29.2405): Basic textured tile
 //   textured_tile("trunc_diamonds", 10, tex_reps=[5,5]);
-// Example(3D,NoScale,VPT=[-0.0852782,0.259593,0.139667],VPR=[58.5,0,345.1],VPD=36.0994): Attaching a tile to a cube
+// Example(3D,NoAxes,VPT=[-0.0852782,0.259593,0.139667],VPR=[58.5,0,345.1],VPD=36.0994): Attaching a tile to a cube
 //   cuboid([12,12,4]) attach(TOP,BOT)
 //     textured_tile("trunc_pyramids", 10, tex_reps=[5,5], style="convex");
-// Example(3D,NoScale,VPT = [-0.0788193, 0.10015, -0.0938629], VPR = [57.8, 0, 34.1], VPD = 29.2405): This inset texture doesn't look obviously different, but you can see that the object is below the XY plane.  
+// Example(3D,NoScales,VPT = [-0.0788193, 0.10015, -0.0938629], VPR = [57.8, 0, 34.1], VPD = 29.2405): This inset texture doesn't look obviously different, but you can see that the object is below the XY plane.  
 //     textured_tile("trunc_pyramids_vnf", 10, tex_reps=[5,5], tex_inset=true);
 // Example(3D,NoAxes,VPT=[0.242444,0.170054,-0.0714754],VPR=[67.6,0,33.4],VPD=36.0994): Here we use the `diff` option combined with {{diff()}} to attach the inset texture to the front of a parent cuboid.  
 //   diff()
@@ -1233,18 +1236,18 @@ function regular_prism(n,
 // Example(3D,NoAxes,VPT=[5.86588,-0.107082,-0.311155],VPR=[17.2,0,9.6],VPD=32.4895): Tile shaped like a rhombic prism
 //   textured_tile("ribs", w1=10, w2=10,  shift=4,ysize=7);
 // Example(3D,NoAxes,VPT=[-0.487417,-0.398897,-0.143258],VPR=[10.2,0,12.4],VPD=26.3165): A tile shaped like a trapezoidal prism.  Note that trapezoidal tiles will always distort the texture, resulting in curves
-//   textured_tile("diamonds", w1=10, w2=7, ysize=7) show_anchors(2);
+//   textured_tile("diamonds", w1=10, w2=7, ysize=7);
 // Example(3D,NoAxes,VPT=[-0.0889877,-0.31974,0.554444],VPR=[22.1,0,22.2],VPD=32.4895): An inset trapezoidal tile placed into a cube
 //   diff()cuboid([10,10,2])
 //     attach(TOP,BOT)
 //       textured_tile("trunc_diamonds", tex_reps=[5,5], tex_inset=true,
 //                     w1=8, w2=4, ysize=8, diff=true);
-// Example(3D,NoScales,VPT=[-0.0889877,-0.31974,0.554444],VPR=[58.5,0,21.5],VPD=32.4895): This example shows what happens if you set `extra` to zero for the "pyramids" texture.  Note that the texture doesn't finish.  The default of `extra=1` produces the correct result.  
-//     textured_tile("pyramids", 10, tex_reps=[5,5], extra=0);
-// Example(3D,NoScales,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): This texture has an asymmetry even with the default `extra=1`. 
-//     textured_tile("trunc_ribs", 10, tex_reps=[5,2]);
-// Example(3D,NoScales,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): It could be fixed by setting `extra=2`, which would place an extra flat strip on the right.  But another option is to use the `skip` parameter to trim the flat part from the left.  Note that we are also skipping in the y direction, but it doesn't make a difference for this texture, except that you need to have enough texture tiles to accommodate the skip.  You can also set `skip` to a vector.
-//     textured_tile("trunc_ribs", 10, tex_reps=[5,2], skip=1);
+// Example(3D,NoAxes,VPT=[-0.0889877,-0.31974,0.554444],VPR=[58.5,0,21.5],VPD=32.4895): This example shows what happens if you set `tex_extra` to zero for the "pyramids" texture.  Note that the texture doesn't finish.  The default of `tex_extra=1` produces the correct result.  
+//     textured_tile("pyramids", 10, tex_reps=[5,5], tex_extra=0);
+// Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): This texture has an asymmetry even with the default `tex_extra=1`. 
+//     textured_tile("trunc_ribs", 10, tex_reps=[5,1]);
+// Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): It could be fixed by setting `tex_extra=2`, which would place an extra flat strip on the right.  But another option is to use the `tex_skip` parameter to trim the flat part from the left.  Note that we are also skipping in the y direction, but it doesn't make a difference for this texture, except that you need to have enough texture tiles to accommodate the skip, so we increased the Y reps value to 2.  You can also set `tex_skip` to a vector.
+//     textured_tile("trunc_ribs", 10, tex_reps=[5,2], tex_skip=1);
 
 
 // This is like _tile_edge_path_list in that it finds the paths
@@ -1287,8 +1290,8 @@ module textured_tile(
     tex_rot=0,      
     tex_depth=1,
     diff=false,
-    extra=1,
-    skip=0,
+    tex_extra=1,
+    tex_skip=0,
     style="min_edge",
     atype="tex",
     anchor=CENTER, spin=0, orient=UP
@@ -1297,8 +1300,8 @@ module textured_tile(
 
     vnf_data = textured_tile(size=size,
                         ysize=ysize, height=height, w1=w1, w2=w2, ang=ang, h=h, shift=shift, 
-                        texture=texture, tex_size=tex_size, tex_reps=tex_reps,extra=extra, 
-                        tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth,skip=skip,
+                        texture=texture, tex_size=tex_size, tex_reps=tex_reps,tex_extra=tex_extra, 
+                        tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth,tex_skip=tex_skip,
                         style=style, atype="std",_return_anchor=true);
     h_w1_w2_shift = vnf_data[2];
     is_trap = is_def(h_w1_w2_shift);
@@ -1333,15 +1336,15 @@ function textured_tile(
     texture, 
     size,
     ysize, height, w1, w2, ang, h, shift, thickness,
-    tex_size=[1,1],
+    tex_size=[5,5],
     tex_reps,       
     tex_inset=false,
     tex_rot=0,      
     tex_depth=1,    
     style="min_edge",
     atype="tex",
-    extra=1,
-    skip=0,
+    tex_extra=1,
+    tex_skip=0,
     anchor=CENTER, spin=0, orient=UP,
     _return_anchor=false
 ) =
@@ -1352,8 +1355,8 @@ function textured_tile(
     assert(is_undef(size) || num_defined([ysize,h, height, thickness, w1,w2,ang])==0, "Cannot combine size with any other dimensional specifications")
   
     let(
-        extra = is_list(extra) ? extra : [extra,extra],
-        skip = is_list(skip) ? skip : [skip,skip],
+        extra = is_list(tex_extra) ? tex_extra : [tex_extra,tex_extra],
+        skip = is_list(tex_skip) ? tex_skip : [tex_skip,tex_skip],
         inset = is_num(tex_inset)? tex_inset : tex_inset? 1 : 0,
         default_thick = inset>0 ? 0.1+abs(tex_depth)*inset : 0.1,
         extra_ht = max(0,abs(tex_depth)*(1-inset)),
@@ -1373,14 +1376,9 @@ function textured_tile(
         height = is_def(size) ? default(size.z,default_thick) : one_defined([h,height,thickness],"h,height,thickness",dflt=default_thick),
         size = is_def(size) ? is_num(size) ? [size,size,1] : point3d(size,1)        // We only use the x and y components of size
              : [w1,ysize],
-          
-        tex = is_string(texture)? texture(texture,$fn=_tex_fn_default()) : texture,
-        texture = tex_rot==0? tex
-                : is_vnf(tex)? zrot(tex_rot, cp=[1/2,1/2], p=tex) 
-                : tex_rot==180? reverse([for (row=tex) reverse(row)])
-                : tex_rot==270? [for (row=transpose(tex)) reverse(row)]
-                : reverse(transpose(tex)),
-        check_tex = _validate_texture(texture),
+
+        texture = _get_texture(texture, tex_rot),
+        
         tex_reps = is_def(tex_reps) ? tex_reps
                  : [round(size.x/tex_size.x), round(size.y/tex_size.y)],
         scale = [size.x/tex_reps.x, size.y/tex_reps.y],
@@ -1989,8 +1987,10 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   the cylinder or cone's sloped side.  The more specific parameters like chamfer1 or rounding2 override the more
 //   general ones like chamfer or rounding, so if you specify `rounding=3, chamfer2=3` you will get a chamfer at the top and
 //   rounding at the bottom.  You can specify extra height at either end for use with difference(); the extra height is ignored by
-//   anchoring.  
+//   anchoring.
 //   .
+//   You can apply a texture to the cylinder using the usual texture parameters.   
+//   See [Texturing](skin.scad#section-texturing) for more details on how textures work.  
 //   When creating a textured cylinder, the number of facets is determined by the sampling of the texture.  Any `$fn`, `$fa` or `$fs` values in
 //   effect are ignored.  To create a textured prism with a specified number of flat facets use {{regular_prism()}}.  Anchors for cylinders
 //   appear on the ideal cylinder, not on actual discretized shape the module produces. For anchors on the shape surface, use {{regular_prism()}}.  
@@ -2293,8 +2293,8 @@ function cyl(
     extra, extra1, extra2, 
     anchor, spin=0, orient=UP
 ) =
-    assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameters has been replaced by 'style'.  You cannot give both.")
-    assert(num_defined([tex_reps,tex_counts])<2, "In cyl() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")    
+    assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameter has been replaced by 'style'.  You cannot give both.")
+    assert(num_defined([tex_reps,tex_counts])<2, "In cyl() the 'tex_counts' parameter has been replaced by 'tex_reps'.  You cannot give both.")    
     assert(num_defined([tex_scale,tex_depth])<2, "In cyl() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
     let(
         style = is_def(tex_style)? echo("In cyl() the 'tex_style' parameter is deprecated and has been replaced by 'style'")tex_style
@@ -2393,7 +2393,7 @@ module cyl(
       assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameters has been replaced by 'style'.  You cannot give both.")
       assert(num_defined([tex_reps,tex_counts])<2, "In cyl() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
       assert(num_defined([tex_scale,tex_depth])<2, "In cyl() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.");
-    style = is_def(tex_style)? echo("In cyl the 'tex_style()' parameters is deprecated and has been replaced by 'style'")tex_style
+    style = is_def(tex_style)? echo("In cyl() the 'tex_style' parameter is deprecated and has been replaced by 'style'")tex_style
           : default(style,"min_edge");
     tex_reps = is_def(tex_counts)? echo("In cyl() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
              : tex_reps;

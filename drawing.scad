@@ -1050,7 +1050,7 @@ function _normal_segment(p1,p2) =
 //   "left"       | [angle]            | Same as "turn"
 //   "right"      | [angle]            | Same as "turn", -angle
 //   "angle"      | angle              | Set the default turn angle.
-//   "setdir"     | dir                | Set turtle direction.  The parameter `dir` can be an angle or a vector.
+//   "setdir"     | dir                | Set turtle direction.  The parameter `dir` can be an angle or a vector. (A 3d vector with zero Z component is allowed.)  
 //   "length"     | length             | Change the turtle move distance to `length`
 //   "scale"      | factor             | Multiply turtle move distance by `factor`
 //   "addlength"  | length             | Add `length` to the turtle move distance
@@ -1184,12 +1184,12 @@ function _turtle_command(command, parm, parm2, state, index) =
         needeither = ["setdir"],
         chvec = !in_list(command,needvec) || is_vector(parm,2),
         chnum = !in_list(command,neednum) || is_num(parm),
-        vec_or_num = !in_list(command,needeither) || (is_num(parm) || is_vector(parm,2)),
+        vec_or_num = !in_list(command,needeither) || (is_num(parm) || is_vector(parm,2) || (is_vector(parm,3)&&parm.z==0)),
         lastpt = last(state[path])
     )
     assert(chvec,str("\"",command,"\" requires a vector parameter at index ",index))
     assert(chnum,str("\"",command,"\" requires a numeric parameter at index ",index))
-    assert(vec_or_num,str("\"",command,"\" requires a vector or numeric parameter at index ",index))
+    assert(vec_or_num,str("\"",command,"\" requires a 2-vector or numeric parameter at index ",index))
 
     command=="move" ? list_set(state, path, concat(state[path],[default(parm,1)*state[step]+lastpt])) :
     command=="untilx" ? (
@@ -1219,7 +1219,7 @@ function _turtle_command(command, parm, parm2, state, index) =
     command=="angle" ? list_set(state, angle, parm) :
     command=="setdir" ? (
         is_vector(parm) ?
-            list_set(state, step, norm(state[step]) * unit(parm)) :
+            list_set(state, step, norm(state[step]) * unit(point2d(parm))) :
             list_set(state, step, norm(state[step]) * [cos(parm),sin(parm)])
     ) :
     command=="length" ? list_set(state, step, parm*unit(state[step])) :
