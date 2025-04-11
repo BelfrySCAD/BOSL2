@@ -694,9 +694,14 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   arc(...) [ATTACHMENTS];
 // Description:
 //   If called as a function, returns a 2D or 3D path forming an arc.  If `wedge` is true, the centerpoint of the arc appears as the first point in the result.
-//   If called as a module, creates a 2D arc polygon or pie slice shape.
+//   If called as a module, creates a 2D arc polygon or pie slice shape.  Numerous methods are available to specify the arc.
+//   .
+//   The `rounding` parameter is permitted only when `wedge=true` and applies specified radius roundings at each of the corners, with `rounding[0]` giving
+//   the rounding at the center point, and then the other two the two outer corners in the direction that the arc travels.  If you don't need to control
+//   the exact point count, you should use `$fs` and `$fa` to control the number of points on the roundings and arc.  If you give `n` then each arc
+//   section in your curve uses `n` points, so the total number of points is `n` times one plus the number of non-zero roundings you specified.
 // Arguments:
-//   n = Number of vertices to form the arc curve from.
+//   n = Number of vertices to use in the arc.
 //   r = Radius of the arc.
 //   angle = If a scalar, specifies the end angle in degrees (relative to start parameter).  If a vector of two scalars, specifies start and end angles.
 //   ---
@@ -712,6 +717,7 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   start = Start angle of arc.  Default: 0
 //   wedge = If true, include centerpoint `cp` in output to form pie slice shape.  Default: false
 //   endpoint = If false exclude the last point (function only).  Default: true
+//   rounding = Can set to a scalar or list of three rounding values to round the corners of an arc when wedge=true.  Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  (Module only) Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  (Module only) Default: `0`
 // Examples(2D):
@@ -738,11 +744,16 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   path = arc(corner=pts, r=20);
 //   stroke(pts, endcaps="arrow2");
 //   stroke(path, endcap2="arrow2", color="blue");
-function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true) =
+// Example(2D): Rounding the corners
+//   $fs=.5; $fa=1;
+//   arc(r=25, angle=[25,107], rounding=[6,5,7], wedge=true);
+//   stroke(arc(r=25, angle=[25,107], wedge=true), color="red",closed=true, width=.5);
+
+function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true, rounding) =
     assert(is_bool(endpoint))
     !endpoint ?
         assert(!wedge, "endpoint cannot be false if wedge is true")
-        list_head(arc(u_add(n,1),r,angle,d,cp,points,corner,width,thickness,start,wedge,long,cw,ccw,true))
+        list_head(arc(u_add(n,1),r,angle,d,cp,points,corner,width,thickness,start,wedge,long,cw,ccw,true,rounding))
   :
     assert(is_undef(start) || is_def(angle), "start requires angle")
     assert(is_undef(angle) || !any_defined([thickness,width,points,corner]), "Cannot give angle with points, corner, width or thickness")
@@ -754,7 +765,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
         assert(!any_defined([r,cp,points,angle,start]),"Conflicting or invalid parameters to arc")
         assert(width>0, "Width must be postive")
         assert(thickness>0, "Thickness must be positive")
-        arc(n,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge)
+        arc(n,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge,rounding=rounding)
   : is_def(angle)? 
         let(
             parmok = !any_defined([points,width,thickness]) &&
@@ -770,6 +781,8 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
         assert(is_vector(cp,2),"Centerpoint must be a 2d vector")
         assert(angle!=0, "Arc has zero length")
         assert(is_def(r) && r>0, "Arc radius invalid")
+        is_def(rounding) ? assert(wedge,"rounding is only supportd with wedge=true") move(cp,zrot(start,_rounded_arc(r, rounding, angle, n)))
+     :
         let(
             n = is_def(n) ? n : max(3, ceil(segs(r)*abs(angle)/360)),
             arcpoints = [for(i=[0:n-1]) let(theta = start + i*angle/(n-1)) r*[cos(theta),sin(theta)]+cp]
@@ -787,7 +800,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
                 plane = [corner[2], corner[0], corner[1]],
                 points2d = project_plane(plane, corner)
             )
-            lift_plane(plane,arc(n,corner=points2d,wedge=wedge,r=r, d=d))
+            lift_plane(plane,arc(n,corner=points2d,wedge=wedge,r=r, d=d,rounding=rounding))
         ) :
         assert(is_path(corner) && len(corner) == 3)
         let(col = is_collinear(corner[0],corner[1],corner[2]))
@@ -802,9 +815,10 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             theta_start = atan2(corner[0].y-cp.y, corner[0].x-cp.x),
             theta_end = atan2(corner[1].y-cp.y, corner[1].x-cp.x),
             angle = posmod(theta_end-theta_start, 360),
-            arcpts = arc(n,cp=cp,r=r,start=theta_start,angle=angle,wedge=wedge)
+            ang_range = dir ? [theta_start, theta_start+angle]
+                            : [theta_start+angle, theta_start]
         )
-        dir ? arcpts : wedge ? reverse_polygon(arcpts) : reverse(arcpts)
+        arc(n,cp=cp,r=r,angle=ang_range,wedge=wedge,rounding=rounding)
   : assert(is_def(points), "Arc not specified: must give points, angle, or width and thickness")
     assert(is_path(points,[2,3]),"Point list is invalid")
          // If arc is 3D, transform points to 2D and make a recursive call, then remap back to 3D
@@ -816,7 +830,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             center2d = is_def(cp) ? project_plane(plane,cp) : undef,
             points2d = project_plane(plane, points)
         )
-        lift_plane(plane,arc(n,cp=center2d,points=points2d,wedge=wedge,long=long))
+        lift_plane(plane,arc(n,cp=center2d,points=points2d,wedge=wedge,long=long,rounding=rounding))
   : len(points)==2?  
         // Arc defined by center plus two points, will have radius defined by center and points[0]
         // and extent defined by direction of point[1] from the center
@@ -839,7 +853,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
                 dir*angle,
             sa = atan2(v1.y,v1.x)
         )
-        arc(n,cp=cp,r=r,start=sa,angle=final_angle,wedge=wedge)
+        arc(n,cp=cp,r=r,start=sa,angle=final_angle,wedge=wedge,rounding=rounding)
   : // Final case is arc passing through three points, starting at point[0] and ending at point[3]
         let(col = is_collinear(points[0],points[1],points[2]))
         assert(!col, "Collinear inputs do not define an arc")
@@ -854,27 +868,72 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             angle = posmod(theta_end-theta_start, 360),
             // Specify endpoints exactly; skip those endpoints when producing arc points
             // Generating the whole arc and clipping ends is the easiest way to ensure that we
-            // generate the proper number of points.  
-            arcpts = [ if (wedge) cp, 
-                       points[0],
-                       each select(arc(n,cp=cp,r=r,start=theta_start,angle=angle),1,-2),
-                       points[1]
+            // generate the proper number of points.
+            ang_range = dir ? [theta_start, theta_start+angle]
+                            : [theta_start+angle, theta_start],
+            arcpts = is_def(rounding)? arc(n,cp=cp,r=r,angle=ang_range,wedge=wedge,rounding=rounding)
+                   : [
+                       if (wedge) cp, 
+                       points[dir ? 0 : 1],
+                       each select(arc(n,cp=cp,r=r,angle=ang_range),1,-2),
+                       points[dir ? 1 : 0]
                      ]
-                                           
         )
-        dir ? arcpts
-            : wedge ? reverse_polygon(arcpts)   // Keep the centerpoint at position 0 in the list
-                    : reverse(arcpts);
+        arcpts;
 
 
-module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, anchor=CENTER, spin=0)
+module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, rounding, anchor=CENTER, spin=0)
 {
-    path = arc(n=n, r=r, angle=angle, d=d, cp=cp, points=points, corner=corner, width=width, thickness=thickness, start=start, wedge=wedge);
+    path = arc(n=n, r=r, angle=angle, d=d, cp=cp, points=points, corner=corner, width=width, thickness=thickness, start=start, wedge=wedge, rounding=rounding);
     attachable(anchor,spin, two_d=true, path=path, extent=false) {
         polygon(path);
         children();
     }
 }
+
+
+function _rounded_arc(radius, rounding=0, angle, n) =
+    assert(is_finite(angle) && angle>-360 && angle<360, "angle must be strictly between -360 and 360")
+    assert(is_finite(rounding) || is_vector(rounding,3), "rounding must be a scalar or 3-vector")
+    assert(all_nonnegative(rounding), "rounding values must be nonnegative")
+    let(
+        rounding = force_list(rounding,3),
+        dir = sign(angle),
+
+        inner_corner_radius = abs(angle)==180?0 : abs(angle)>180 ? -dir*rounding[0] : dir*rounding[0],
+        arc1_opt_radius = radius - rounding[1],
+        arc2_opt_radius = radius - rounding[2],
+        check = assert(rounding[1]<arc1_opt_radius, "rounding[1] is too big to fit")
+                assert(rounding[2]<arc2_opt_radius, "rounding[2] is too big to fit"),
+        arc1_angle = asin(rounding[1]/arc1_opt_radius),
+        arc2_angle = asin(rounding[2]/arc2_opt_radius),
+        arc1_cut  = radius - arc1_opt_radius*cos(arc1_angle),
+        arc2_cut  = radius - arc2_opt_radius*cos(arc2_angle),
+ 
+        radius_of_ctrpt = inner_corner_radius/sin(angle/2),
+        radius_of_ctrpt_edge = radius_of_ctrpt*cos(angle/2),
+        pt1 = polar_to_xy(r=arc1_opt_radius, theta=dir*arc1_angle),
+        pt2 = polar_to_xy(r=radius_of_ctrpt, theta=0.5*angle),
+        pt3 = polar_to_xy(r=arc2_opt_radius, theta=angle - dir*arc2_angle),
+ 
+        edge_gap1=radius-arc1_cut-radius_of_ctrpt_edge,
+        edge_gap2=radius-arc2_cut-radius_of_ctrpt_edge
+    )
+    assert(arc1_angle + arc2_angle<=abs(angle), "Roundings are too large: they interfere with each other on the arc")   
+    assert(edge_gap1>=0, "Roundings are too large: center rounding (rounding[0]) interferes with first corner (rounding[1])")
+    assert(edge_gap2>=0, "Roundings are too large: center rounding (rounding[0]) interferes with second corner (rounding[2])")   
+    [
+      each if (rounding[0]>0) arc(cp=pt2,
+                                   points=[polar_to_xy(r=radius_of_ctrpt_edge, theta=angle),     // origin corner curve
+                                   polar_to_xy(r=radius_of_ctrpt_edge, theta=0)],
+                                   endpoint=edge_gap1!=0,n=n)
+           else [[0,0]],                        
+      each if (rounding[1]>0) arc(r=rounding[1],cp=pt1,angle=[-90*dir,dir*arc1_angle],endpoint=dir*arc1_angle==angle,n=n),           // first corner
+      each if (arc1_angle+arc2_angle<abs(angle))
+                      arc(r=radius, angle=[dir*arc1_angle,angle - dir*arc2_angle], endpoint=rounding[2]==0,n=n),                 // main arc section
+      each if (rounding[2]>0) arc(r=rounding[2],cp=pt3,  angle=[angle-dir*arc2_angle, angle+dir*90],endpoint=edge_gap2!=0,n=n),  // second corner
+    ];
+
 
 
 // Function: catenary()
