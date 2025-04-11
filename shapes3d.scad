@@ -2293,8 +2293,8 @@ function cyl(
     extra, extra1, extra2, 
     anchor, spin=0, orient=UP
 ) =
-    assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameters has been replaced by 'style'.  You cannot give both.")
-    assert(num_defined([tex_reps,tex_counts])<2, "In cyl() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")    
+    assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameter has been replaced by 'style'.  You cannot give both.")
+    assert(num_defined([tex_reps,tex_counts])<2, "In cyl() the 'tex_counts' parameter has been replaced by 'tex_reps'.  You cannot give both.")    
     assert(num_defined([tex_scale,tex_depth])<2, "In cyl() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
     let(
         style = is_def(tex_style)? echo("In cyl() the 'tex_style' parameter is deprecated and has been replaced by 'style'")tex_style
@@ -2393,7 +2393,7 @@ module cyl(
       assert(num_defined([style,tex_style])<2, "In cyl() the 'tex_style' parameters has been replaced by 'style'.  You cannot give both.")
       assert(num_defined([tex_reps,tex_counts])<2, "In cyl() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
       assert(num_defined([tex_scale,tex_depth])<2, "In cyl() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.");
-    style = is_def(tex_style)? echo("In cyl the 'tex_style()' parameters is deprecated and has been replaced by 'style'")tex_style
+    style = is_def(tex_style)? echo("In cyl() the 'tex_style' parameter is deprecated and has been replaced by 'style'")tex_style
           : default(style,"min_edge");
     tex_reps = is_def(tex_counts)? echo("In cyl() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
              : tex_reps;

@@ -4040,7 +4040,7 @@ function _validate_texture(texture) =
 function _tex_height(scale, inset, z) =  scale<0 ? -(1-z - inset) * scale
                                                  :  (z - inset) * scale;
  
-function _get_texture(texture, tex_rot, extra_rot=0) =
+function _get_texture(texture, tex_rot) =
     let(
          tex_rot=!is_bool(tex_rot)? tex_rot
                 : echo("boolean value for tex_rot is deprecated.  Use a numerical angle divisible by 90.") tex_rot?90:0
@@ -4049,7 +4049,7 @@ function _get_texture(texture, tex_rot, extra_rot=0) =
     let(
         tex = is_string(texture)? texture(texture,$fn=_tex_fn_default()) : texture,
         check_tex = _validate_texture(tex),       
-        tex_rot = posmod(tex_rot+extra_rot,360)
+        tex_rot = posmod(tex_rot,360)
     )
     tex_rot==0 ? tex
   : is_vnf(tex)? zrot(tex_rot, cp=[1/2,1/2], p=tex)
@@ -4088,7 +4088,7 @@ function _textured_linear_sweep(
         
         caps = is_bool(caps) ? [caps,caps] : caps,
         regions = is_path(region,2)? [[region]] : region_parts(region),
-        texture = _get_texture(texture, tex_rot),
+        texture = _get_texture(texture, rot),
         dummy = assert(is_undef(samples) || is_vnf(texture), "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
         h = first_defined([h, l, height, length, 1]),
         inset = is_num(inset)? inset : inset? 1 : 0,
@@ -4368,7 +4368,7 @@ function _textured_revolution(
     )
     assert(closed || is_path(shape,2))
     let(
-        texture = _get_texture(texture, tex_rot),
+        texture = _get_texture(texture, rot),
         dummy = assert(is_undef(samples) || is_vnf(tex), "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
         inset = is_num(inset)? inset : inset? 1 : 0,
         samples = !is_vnf(texture)? len(texture) :
