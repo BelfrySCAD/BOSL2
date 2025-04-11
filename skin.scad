@@ -4049,7 +4049,7 @@ function _get_texture(texture, tex_rot, extra_rot=0) =
     let(
         tex = is_string(texture)? texture(texture,$fn=_tex_fn_default()) : texture,
         check_tex = _validate_texture(tex),       
-        tex_rot = posmod(tex_rot+extra_rot,360),
+        tex_rot = posmod(tex_rot+extra_rot,360)
     )
     tex_rot==0 ? tex
   : is_vnf(tex)? zrot(tex_rot, cp=[1/2,1/2], p=tex)
@@ -4685,7 +4685,7 @@ function _texture_point_array(points, texture, tex_reps, tex_size, tex_samples, 
               [for(y=[0:1:fullsize.y-1])
                  [for(x=[0:1:fullsize.x-1])
                     let(yind = (y+skip.y)%texsize.y,
-                        xind = (x+skip.x)%texsize.x,
+                        xind = (x+skip.x)%texsize.x
                     )
                     res_points[y][x] + _tex_height(tex_depth,tex_inset,texture[yind][xind]) * res_normals[y][x]*(reverse?-1:1)*local_scale[y][x]/local_scale[0][0]
                   ]
