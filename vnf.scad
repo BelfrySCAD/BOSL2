@@ -27,13 +27,14 @@
 EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 
 
-// Function: vnf_vertex_array()
+// Function&Module: vnf_vertex_array()
 // Synopsis: Returns a VNF structure from a rectangular vertex list.
-// SynTags: VNF
+// SynTags: VNF, Geom
 // Topics: VNF Generators, Lists
 // See Also: vnf_tri_array(), vnf_join(), vnf_from_polygons(), vnf_from_region()
 // Usage:
 //   vnf = vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=], [triangulate=]);
+//   vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=], [triangulate=],...) [ATTACHMENTS];
 // Description:
 //   Creates a VNF structure from a rectangular vertex list, creating edges that connect the adjacent vertices in the vertex list
 //   and creating the faces defined by those edges.  You can optionally create the edges and faces to wrap the last column
@@ -47,6 +48,23 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   adds a vertex in the center of each quadrilateral and creates four triangles, and the "convex" and "concave" styles
 //   choose the locally convex/concave subdivision.  The "min_area" option creates the triangulation with the minimal area.  Degenerate faces
 //   are not included in the output, but if this results in unused vertices they still appear in the output.
+//   .
+//   You can apply a texture to the vertex array VNF using the usual texture parameters.
+//   See [Texturing](skin.scad#section-texturing) for more details on how textures work.  
+//   The top left corner of the texture tile will be aligned with `points[0][0]`, and the the X and Y directions correspond to `points[y][x]`.
+//   In practice, it is probably easiest to observe the result and apply a suitable texture tile rotation by setting `tex_rot` if the result
+//   is not what you wanted.  The reference scale of your point data is also taken from the square at the [0][0] corner.  This determines
+//   the meaning of `tex_size` and it also affects the vertical texture scale.  The size of the texture tiles will be proportional to the point
+//   spacing of the location where they are placed, so if the points are closer together, you will get small texture elements.  The `tex_depth` you
+//   specify will be correct at the `points[0][0]` but will be different at places in the point array where the scale is different.  Note that this
+//   differs from {{rotate_sweep()}} which uses a uniform resampling of the curve you specify.  
+//   .
+//   The point data for `vnf_vertex_array()` is resampled using bilinear interpolation to match the required point density of the tile count, but the
+//   sampling is based on the grid, not on the distance between points.  If you want to
+//   avoid resampling, match the point data to the required point number for your tile count.  For height field textures this means
+//   the number of data points must equal the tile count times the number of entries in the tile minus `tex_skip` plus `tex_extra`.
+//   Note that `tex_extra` defaults to 1 along dimensions that are not wrapped.  For a VNF tile you need to have the the point
+//   count equal to the tile count times tex_samples, plus one if wrapping is disabled.  
 // Arguments:
 //   points = A list of vertices to divide into columns and rows.
 //   ---
@@ -58,6 +76,29 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   reverse = If true, reverse all face normals.
 //   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "flip1", "flip2",  "min_edge", "min_area", "quincunx", "convex" and "concave".
 //   triangulate = If true, triangulates endcaps to resolve possible CGAL issues.  This can be an expensive operation if the endcaps are complex.  Default: false
+//   convexity = (module) Max number of times a line could intersect a wall of the shape.
+//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
+//   tex_size = An optional 2D target size for the textures at `points[0][0]`.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
+//   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
+//   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
+//   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  
+//   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
+//   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 1
+//   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
+//   sidecaps = if `col_wrap==false` this controls whether to cap any floating ends of a VNF tile on the texture.  Does not affect the main texture surface.  Ignored it doesn't apply.  Default: false
+//   sidecap1 = set sidecap only for the `points[][0]` edge of the output
+//   sidecap2 = set sidecap only for the `points[][max]` edge of the output
+//   cp = (module) Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+//   anchor = (module) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
+//   spin = (module) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = (module) Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   atype = (module) Select "hull" or "intersect" anchor type.  Default: "hull"
+// Anchor Types:
+//   "hull" = Anchors to the virtual convex hull of the shape.
+//   "intersect" = Anchors to the surface of the shape.
+// Named Anchors:
+//   "origin" = Anchor at the origin, oriented UP.
 // Example(3D):
 //   vnf = vnf_vertex_array(
 //       points=[
@@ -160,6 +201,28 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //       apply(m, [ [rgroove[0].x,0,-z], each rgroove, [last(rgroove).x,0,-z] ])
 //   ], caps=true, col_wrap=true, reverse=true);
 //   vnf_polyhedron(vnf, convexity=8);
+
+module vnf_vertex_array(
+    points,
+    caps, cap1, cap2,
+    col_wrap=false,
+    row_wrap=false,
+    reverse=false,
+    style="default",
+    triangulate = false,
+    texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, 
+    tex_depth=1, tex_extra, tex_skip, sidecaps,sidecap1,sidecap2,
+    convexity=2, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") 
+{
+    vnf = vnf_vertex_array(points=points, caps=caps, cap1=cap2, cap2=cap2,
+                           col_wrap=col_wrap, row_wrap=row_wrap, reverse=reverse, style=style,triangulate=triangulate,
+                           texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples, tex_inset=tex_inset, tex_rot=tex_rot, 
+                           tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip, sidecaps=sidecaps,sidecap1=sidecap1,sidecap2=sidecap2
+      );
+    vnf_polyhedron(vnf, convexity=2, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") children();
+}    
+
+
 function vnf_vertex_array(
     points,
     caps, cap1, cap2,
@@ -167,14 +230,22 @@ function vnf_vertex_array(
     row_wrap=false,
     reverse=false,
     style="default",
-    triangulate = false
+    triangulate = false,
+    texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, 
+    tex_depth=1, tex_extra, tex_skip, sidecaps,sidecap1,sidecap2
 ) =
-    assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested")
-    assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
     assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area","flip1","flip2"]))
     assert(is_matrix(points[0], n=3),"Point array has the wrong shape or points are not 3d")
     assert(is_consistent(points), "Non-rectangular or invalid point array")
     assert(is_bool(triangulate))
+    is_def(texture) ?
+          _texture_point_array(points=points, texture=texture, tex_reps=tex_reps, tex_size=tex_size,
+                               tex_inset=tex_inset, tex_samples=tex_samples, tex_rot=tex_rot,
+                               col_wrap=col_wrap, row_wrap=row_wrap, tex_depth=tex_depth, caps=caps, cap1=cap1, cap2=cap2, reverse=reverse,
+                               style=style, tex_extra=tex_extra, tex_skip=tex_skip, sidecaps=sidecaps, sidecap1=sidecap1, sidecap2=sidecap2,triangulate=triangulate)
+  :           
+    assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested (without texture)")
+    assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap (without texture)")
     let(
         pts = flatten(points),
         pcnt = len(pts),
@@ -1010,20 +1081,6 @@ function _detri_combine_faces(edgelist,faces,normals,facelist,curface) =
         facelist = list_remove_values(facelist,usedfaces)
      )
      _detri_combine_faces(edgelist,faces,normals,facelist,len(usedfaces)==0?curface+1:curface);
-
-
-
-function _vnf_sort_vertices(vnf, idx=[2,1,0]) =
-    let(
-        verts = vnf[0],
-        faces = vnf[1],
-        vidx = sortidx(verts, idx=idx),
-        rvidx = sortidx(vidx),
-        sorted_vnf = [
-            [ for (i = vidx) verts[i] ],
-            [ for (face = faces) [ for (i = face) rvidx[i] ] ],
-        ]
-    ) sorted_vnf;
 
 
 

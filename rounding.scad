@@ -3475,6 +3475,35 @@ Access to the derivative smoothing parameter?
 //     attach(RIGHT,"root")
 //       join_prism(circle(r=8,$fn=32),
 //                  l=10, base="plane", fillet=4);
+// Example(3D,NoScales,VPR=[47.3,0,14.5],VPT=[-2.8467,-2.05938,-10.6999],VPD=220): Two join_prism objects are placed on the parent cylinder using anchors, and then their descriptions are used to contruct a curved handle with a bezier.
+//   $fs=.5; $fa=4;
+//   vspace=25;
+//   bezlen=40;
+//   cylr=20;
+//   straightlen=10;
+//   circ = circle(r=6);
+//   cyl(r=cylr,h=50, rounding=3)
+//     let(cyl=parent())
+//       down(vspace/2)
+//       attach(RIGHT+FWD, "root", spin=90)
+//         join_prism(circ, base="cyl", base_r=20, height=straightlen, fillet=4)
+//         let(base1=parent())
+//     restore(cyl)
+//       up(vspace/2)
+//       attach(LEFT+FWD, "root", spin=90)
+//         join_prism(circ, base="cyl", base_r=20, height=straightlen, fillet=4)
+//           let(base2=parent())
+//     let(
+//         avg_dir = desc_dir(base1,anchor=TOP)+desc_dir(base2,anchor=TOP),
+//         bez=[
+//           desc_point(base1,anchor=TOP),
+//           desc_point(base1,anchor=TOP)+bezlen*desc_dir(base1,anchor=TOP),
+//           (cylr+straightlen+bezlen)*avg_dir,
+//           desc_point(base2,anchor=TOP)+bezlen*desc_dir(base2,anchor=TOP),
+//           desc_point(base2,anchor=TOP)]
+//       )
+//       path_sweep(circ,bezier_curve(bez,40));
+
 module join_prism(polygon, base, base_r, base_d, base_T=IDENT,
                     scale=1, prism_end_T=IDENT, short=false, 
                     length, l, height, h,
@@ -4045,6 +4074,9 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   n = number of facets to use for the fillets.  Default: 15
 //   n1 = number of facets at object1
 //   n2 = number of facets at object2
+//   fillet = fillet for both ends of the prism.  Default: 0
+//   fillet1 = fillet for the joint at object1
+//   fillet2 = fillet for the joint at object2
 //   k = fillet curvature parameter for both ends.   Default: 0.7
 //   k1 = fillet curvature parameter at object1
 //   k2 = fillet curvature parameter at object2
@@ -4513,8 +4545,8 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2
                        smooth_normals, smooth_normals1, smooth_normals2, 
                        debug=false, debug_pos=false)
 {
-    base_fillet = default(fillet1,fillet);
-    aux_fillet = default(fillet2,fillet);
+    base_fillet = first_defined([fillet1,fillet,0]);
+    aux_fillet = first_defined([fillet2,fillet,0]);
 
     base_overlap = first_defined([overlap1,overlap,1]);
     aux_overlap = first_defined([overlap2,overlap,1]);
