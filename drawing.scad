@@ -899,8 +899,6 @@ function _rounded_arc(radius, rounding=0, angle, n) =
     let(
         rounding = force_list(rounding,3),
         dir = sign(angle),
-
-//        inner_corner_radius = abs(angle)==180?0 : abs(angle)>180 ? -dir*rounding[0] : dir*rounding[0],
         inner_corner_radius = abs(angle)>180 ? -dir*rounding[0] : dir*rounding[0],        
         arc1_opt_radius = radius - rounding[1],
         arc2_opt_radius = radius - rounding[2],
