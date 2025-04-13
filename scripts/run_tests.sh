@@ -10,6 +10,16 @@ if (( ${#INFILES[@]} == 0 )); then
     INFILES=(tests/test_*.scad)
 fi
 
+
+cleanup () {
+  rm -f out.echo
+  exit
+}
+
+# clean up out.echo if we terminate due to a signal
+
+trap cleanup SIGINT SIGHUP SIGQUIT SIGABRT   
+
 OUTCODE=0
 for testfile in "${INFILES[@]}"; do
     if [[ -f "$testfile" ]] ; then
