@@ -1226,7 +1226,7 @@ function regular_prism(n,
 // Example(3D,NoAxes,VPT=[-0.0852782,0.259593,0.139667],VPR=[58.5,0,345.1],VPD=36.0994): Attaching a tile to a cube
 //   cuboid([12,12,4]) attach(TOP,BOT)
 //     textured_tile("trunc_pyramids", 10, tex_reps=[5,5], style="convex");
-// Example(3D,NoScales,VPT = [-0.0788193, 0.10015, -0.0938629], VPR = [57.8, 0, 34.1], VPD = 29.2405): This inset texture doesn't look obviously different, but you can see that the object is below the XY plane.  
+// Example(3D,NoScales,VPT = [-0.0788193, 0.10015, -0.0938629], VPR = [57.8, 0, 34.1], VPD = 29.2405): This inset texture doesn't look obviously different, but you can see that the object is below the XY plane.
 //     textured_tile("trunc_pyramids_vnf", 10, tex_reps=[5,5], tex_inset=true);
 // Example(3D,NoAxes,VPT=[0.242444,0.170054,-0.0714754],VPR=[67.6,0,33.4],VPD=36.0994): Here we use the `diff` option combined with {{diff()}} to attach the inset texture to the front of a parent cuboid.  
 //   diff()
@@ -1248,36 +1248,6 @@ function regular_prism(n,
 //     textured_tile("trunc_ribs", 10, tex_reps=[5,1]);
 // Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): It could be fixed by setting `tex_extra=2`, which would place an extra flat strip on the right.  But another option is to use the `tex_skip` parameter to trim the flat part from the left.  Note that we are also skipping in the y direction, but it doesn't make a difference for this texture, except that you need to have enough texture tiles to accommodate the skip, so we increased the Y reps value to 2.  You can also set `tex_skip` to a vector.
 //     textured_tile("trunc_ribs", 10, tex_reps=[5,2], tex_skip=1);
-
-
-// This is like _tile_edge_path_list in that it finds the paths
-// on the x=0 or y=0 face of a VNF tile.  But instead of returning
-// paths it turns them into a VNF.  The open path is closed to the specified
-// z coordinate.  
-
-function _tile_edge_vnf(vnf, axis, z, maxopen=1) =
-    let(
-        verts = vnf[0],
-        faces = vnf[1],
-        segs = [for(face=faces, edge=pair(select(verts,face),wrap=true)) if (approx(edge[0][axis],0) && approx(edge[1][axis],0)) [edge[1],edge[0]]],
-        paths = _assemble_partial_paths(segs),
-        facelist = [
-            for(path=paths)
-              if (!(len(path)<=3 && path[0]==last(path)))
-                 path[0]==len(path) ? [list_unwrap(path),[count(len(path)-1)]]
-               : [
-                     [
-                       point3d(point2d(path[0]),z),
-                       each path,
-                       point3d(point2d(last(path)),z)
-                     ],
-                     [count(len(path)+2)]
-                 ]
-        ],
-        openlist = [for(entry=facelist) if (!are_ends_equal(entry[0])) 1]
-    )
-    assert(len(openlist)<=maxopen, str("VNF has ",len(openlist)," open paths on an edge and at most ",maxopen," is supported."))
-    vnf_join(facelist);
 
 
 module textured_tile(
@@ -1382,6 +1352,7 @@ function textured_tile(
         tex_reps = is_def(tex_reps) ? tex_reps
                  : [round(size.x/tex_size.x), round(size.y/tex_size.y)],
         scale = [size.x/tex_reps.x, size.y/tex_reps.y],
+        setz=function (v,z)  [v.x,v.y,z], 
         vnf = !is_vnf(texture) ?
                     let(         
                         texsteps = [len(texture[0]), len(texture)], 
@@ -1412,18 +1383,57 @@ function textured_tile(
                                ],
                     scaled_vnf = scale(scale, zadj_vnf), 
                     tiled_vnf = [for(i=[0:1:tex_reps.x-1], j=[0:1:tex_reps.y-1]) move([scale.x*i,scale.y*j], scaled_vnf)],
-                    unscaled_hedge=_tile_edge_vnf(zadj_vnf,1,-height/2),
-                    hedge = unscaled_hedge==EMPTY_VNF ? [] : xscale(scale.x, unscaled_hedge),
-                    unscaled_vedge=_tile_edge_vnf(zadj_vnf,0,-height/2),
-                    vedge = unscaled_vedge==EMPTY_VNF ? [] : yscale(scale.y, unscaled_vedge),
-                    hedge_flip = hedge==[] ? hedge : back(size.y,vnf_reverse_faces(hedge)), 
-                    vedge_flip = vedge==[] ? vedge : right(size.x,vnf_reverse_faces(vedge)), 
-                    front_edge = hedge==[] ? [] : [for(i=[0:1:tex_reps.x-1]) xmove(scale.x*i, hedge)],
-                    left_edge = vedge==[] ? [] : [for(j=[0:1:tex_reps.y-1]) ymove(scale.y*j, vedge)],
-                    back_edge = hedge==[] ? [] : [for(i=[0:1:tex_reps.x-1]) xmove(scale.x*i, hedge_flip)],
-                    right_edge = vedge==[] ? [] : [for(j=[0:1:tex_reps.y-1]) ymove(scale.y*j, vedge_flip)],
+
+                    yedge_list = _tile_edge_path_list(zadj_vnf, 0),
+                    xedge_list = _tile_edge_path_list(zadj_vnf, 1),
+
+                    front_back_closed = [for(i=[0:1:tex_reps.x-1], cpath=xedge_list[1])
+                                                                  each [[xscale(scale.x,xmove(i,cpath)), [count(cpath)]],
+                                                                        [xscale(scale.x,move([i,size.y],cpath)),[count(cpath,reverse=true)]]]],
+                    sides_closed = [for(j=[0:1:tex_reps.y-1], cpath=yedge_list[1])
+                                                                  each [[yscale(scale.y,ymove(j,cpath)), [count(cpath)]],
+                                                                        [yscale(scale.y,move([size.x, j], cpath)),[count(cpath,reverse=true)]]]],
+
+                    leftpath = yedge_list[0]==[] ? []
+                              : deduplicate([for(j=[0:1:tex_reps.y-1]) each reverse(yscale(scale.y,ymove(j,yedge_list[0][0])))]), 
+                    frontpath = xedge_list[0]==[] ? []
+                              : deduplicate([for(i=[0:1:tex_reps.x-1]) each xscale(scale.x,xmove(i,xedge_list[0][0]))]),
+
+                    base = frontpath==[] || leftpath==[] ? [] 
+                         : [
+                            [
+                             [setz(frontpath[0],-height/2),
+                              each frontpath,
+                              setz(last(frontpath), -height/2)
+                             ],
+                             [count(len(frontpath)+2)]
+                           ],
+                            [
+                             [setz(last(leftpath),-height/2),
+                              each reverse(leftpath),
+                              setz(leftpath[0], -height/2)
+                             ],
+                             [count(len(leftpath)+2)]
+                           ],
+                            [
+                             back(size.y,
+                             [setz(last(frontpath),-height/2),
+                              each reverse(frontpath),
+                              setz(frontpath[0],-height/2)
+                             ]),
+                             [count(len(frontpath)+2)]
+                           ],
+                            [right(size.x,
+                             [setz(leftpath[0],-height/2),
+                              each leftpath,
+                              setz(last(leftpath),-height/2)
+                             ]),
+                             [count(len(leftpath)+2)]
+                           ]
+                            ],
+
                     bottom = [path3d(rect(point2d(size),anchor=FWD+LEFT),-height/2), [[3,2,1,0]]],
-                    result = vnf_join(concat(tiled_vnf, front_edge, left_edge, right_edge, back_edge, [bottom]))
+                    result = vnf_join(concat(tiled_vnf,front_back_closed, sides_closed,base,[bottom])) 
                 )
                 move([-size.x/2,-size.y/2],result),
         trans_vnf = is_undef(h_w1_w2_shift) ? vnf
