@@ -670,8 +670,8 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 
 // Function&Module: arc()
 // Synopsis: Draws a 2D pie-slice or returns 2D or 3D path forming an arc.
-// SynTags: Geom, Path, Rounding
-// Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators
+// SynTags: Geom, Path 
+// Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators, Rounding
 // See Also: pie_slice(), stroke(), ring()
 //
 // Usage: 2D arc from 0º to `angle` degrees.
