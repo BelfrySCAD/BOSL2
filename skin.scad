@@ -572,7 +572,8 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   "bbox" = Anchors to the bounding box of the extruded shape.
 // Named Anchors:
 //   "origin" = Centers the extruded shape vertically only, but keeps the original path positions in the X and Y.  Oriented UP.
-//   "original_base" = Keeps the original path positions in the X and Y, but at the bottom of the extrusion.  Oriented UP.
+//   "original_base" = Keeps the original path positions in the X and Y, but at the bottom of the extrusion.  Oriented DOWN.
+//   "original_top" = Keeps the original path positions in the X and Y, but at the top of the extrusion.  Oriented UP.
 // Example: Extruding a Compound Region.
 //   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
 //   rgn2 = [square(30,center=false)];
@@ -756,7 +757,8 @@ module linear_sweep(
         anchor="origin"
     );
     anchors = [
-        named_anchor("original_base", [0,0,-h/2], UP)
+        named_anchor("original_base", [0,0,-h/2], DOWN),
+        named_anchor("original_top", [0,0,h/2], UP),
     ];
     cp = default(cp, "centroid");
     geom = atype=="hull"?  attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
@@ -855,7 +857,8 @@ function linear_sweep(
             if (caps[1]) for (rgn = trgns) vnf_from_region(rgn, up(h/2), reverse=false)
         ]),
         anchors = [
-            named_anchor("original_base", [0,0,-h/2], UP)
+            named_anchor("original_base", [0,0,-h/2], DOWN),
+            named_anchor("original_top", [0,0,h/2], UP),
         ],
         cp = default(cp, "centroid"),
         geom = atype=="hull"?  attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
@@ -1672,7 +1675,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   // Prints 0.9, but we use pentagon with radius of 1.0 > 0.9
 //   echo(radius_of_curvature = 1/max(path_curvature(qpath)));
 //   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual");
-//   cube(0.5);    // Adding a small cube forces a CGAL computation that reveals
+//   cube(0.5);    // Adding a small cube forces a CGAL computation, which reveals
 //                 // the error by displaying nothing or giving a cryptic message
 // Example(NoScales): Using the `relax` option we allow the profiles to deviate from orthogonality to the path.  This eliminates the crease that broke the previous example because the sections are all parallel to each other.
 //   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
@@ -1698,7 +1701,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="natural");
-// Example(NoScales): When the path starts at an angle of more that 45 deg to the xy plane the initial normal for "incremental" is BACK.  This produces the effect of the shape rising up out of the xy plane.  (Using UP for a vertical path is invalid, hence the need for a split in the defaults.)
+// Example(NoScales): When the path starts at an angle of more than 45 deg to the xy plane the initial normal for "incremental" is BACK.  This produces the effect of the shape rising up out of the xy plane.  (Using UP for a vertical path is invalid, hence the need for a split in the defaults.)
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   arc = xrot(75, p=path3d(arc($fn=64, r=30, angle=[0,180])));
 //   path_sweep(ushape, arc, method="incremental");
@@ -1753,7 +1756,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, helix, method="natural");
-// Example(Med,NoScales): Note that it may look like the shape above is flat, but the profiles are slightly tilted due to the nonzero torsion of the curve.  If you want as flat as possible, specify it so with the "manual" method:
+// Example(Med,NoScales): It may look like the shape above is flat, but the profiles are slightly tilted due to the nonzero torsion of the curve.  If you want as flat as possible, specify it so with the "manual" method:
 //   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
 //                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
 //                         200 * (1 - t)];
@@ -1948,8 +1951,13 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
     scales = trans_scale[1];
     firstscale = is_num(scales[0]) ? 1/scales[0] : [1/scales[0].x, 1/scales[0].y];
     lastscale = is_num(last(scales)) ? 1/last(scales) : [1/last(scales).x, 1/last(scales).y];
+    tex_normals = is_undef(texture) || relaxed ? undef
+                : let(
+                       shape_normals = -path3d(path_normals(clockwise_polygon(shape), closed=true))
+                  )
+                  [for(T=transforms) apply(_force_rot(T),shape_normals)];
     vnf = sweep(is_path(shape)?clockwise_polygon(shape):shape, transforms, closed=false, _closed_for_normals=closed, caps=fullcaps,style=style,
-                         texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples,
+                         texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples, normals=tex_normals,
                          tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip);
     shapecent = point3d(centroid(shape));
     $sweep_transforms = transforms;
@@ -2142,7 +2150,13 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
                    )
                    are_regions_equal(apply(transform_list[0], rshape),
                                      apply(transform_list[L], rshape)),
-    dummy = ends_match ? 0 : echo("WARNING: ***** The points do not match when closing the model in path_sweep() *****")
+    dummy = ends_match ? 0 : echo("WARNING: ***** The points do not match when closing the model in path_sweep() *****"),
+    tex_normals = is_undef(texture) || relaxed ? undef
+                : let(
+                       shape_normals = -path3d(path_normals(clockwise_polygon(shape), closed=true))
+                  )
+                  [for(T=transform_list) apply(_force_rot(T),shape_normals)]
+
   )
   transforms && _return_scales
              ? [transform_list,scale]
@@ -2151,7 +2165,7 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
                        anchor=anchor,cp=cp,spin=spin,orient=orient,atype=atype,
                        texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples,
                        tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip,
-                       _closed_for_normals=closed
+                       _closed_for_normals=closed, normals=tex_normals 
                );
 
 
@@ -2334,6 +2348,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 1
 //   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
+//   normals = if provided, used this array of normals for calculating the texture.  Dimension should be len(transforms) x len(shape).  
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   anchor = Translate so anchor point is at the origin. Default: "origin"
@@ -2382,7 +2397,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 function sweep(shape, transforms, closed=false, caps, style="min_edge",
                anchor="origin", cp="centroid", spin=0, orient=UP, atype="hull",
                texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, 
-               tex_depth=1, tex_extra, tex_skip, _closed_for_normals=false) =
+               tex_depth=1, tex_extra, tex_skip, _closed_for_normals=false, normals) =
     assert(is_consistent(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
     assert(is_path(shape,2) || is_region(shape), "Input shape must be a 2d path or a region.")
     let(
@@ -2414,7 +2429,8 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge",
     assert(len(shape)>=3, "shape must be a path of at least 3 non-colinear points")
     let(
          points = [for(i=[0:len(transforms)-(closed?0:1)]) apply(transforms[i%len(transforms)],path3d(shape))],
-         normals = (!(is_def(texture) && (closed || _closed_for_normals))) ? undef
+         normals = is_def(normals) ? normals
+                 : (!(is_def(texture) && (closed || _closed_for_normals))) ? undef
                  : let(
                         n = surfnormals(select(points,0,-2), col_wrap=true, row_wrap=true)
                    )
@@ -2429,14 +2445,14 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge",
 module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=10,
              anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull",
              texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, 
-             tex_depth=1, tex_extra, tex_skip)
+             tex_depth=1, tex_extra, tex_skip, normals)
 {
     $sweep_transforms=transforms;
     $sweep_shape=shape;
     $sweep_closed=closed;
     vnf = sweep(shape, transforms, closed, caps, style,
                 texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples,
-                tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip);
+                tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip, normals=normals);
     vnf_polyhedron(vnf, convexity=convexity, anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
         children();
 }
