@@ -1801,7 +1801,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //   specify `voxel_size` or `voxel_count`, then a default count of 10,000 voxels is used,
 //   which should be reasonable for initial preview.
 //   .
-//   In 2D, If you don't specify `pixel_size` or `pixel_count`, then a default count of 1024 voxels is used,
+//   In 2D, If you don't specify `pixel_size` or `pixel_count`, then a default count of 1024 pixels is used,
 //   which is reasonable for initial preview. You may find, however, that 2D metaballs are reasonably fast
 //   even at finer resolution.
 //   .

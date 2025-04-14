@@ -794,7 +794,7 @@ function prismoid(
 // Function&Module: regular_prism()
 // Synopsis: Creates a regular prism with roundovers and chamfering
 // SynTags: Geom, VNF
-// Topics: Textures, Rounding, Chamfers
+// Topics: Textures, Rounding, Chamfers, Shapes (3D), Attachable 
 // See Also: cyl(), rounded_prism(), texture(), linear_sweep(), EDGE(), FACE()
 // Usage: Normal prisms
 //   regular_prism(n, h|l=|height=|length=, r, [center=], [realign=]) [ATTACHMENTS];
@@ -948,9 +948,6 @@ module regular_prism(n,
     }   
 }                        
                         
-                        
-
-
 
 function regular_prism(n, 
     h, r, center,
@@ -1153,7 +1150,7 @@ function regular_prism(n,
 // Function&Module: textured_tile()
 // Synopsis: Creates a cube or trapezoidal prism with a textured top face for attaching to objects.
 // SynTags: Geom, VNF
-// Topics: Shapes (3D), Attachable, VNF Generators
+// Topics: Shapes (3D), Attachable, VNF Generators, Textures
 // See Also: cuboid(), prismoid(), texture(), cyl(), rotate_sweep(), linear_sweep()
 // Usage:
 //   textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [diff=], [tex_extra=], [tex_skip=], ...) [ATTACHMENTS];

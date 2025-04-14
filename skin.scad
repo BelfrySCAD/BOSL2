@@ -41,7 +41,7 @@ __vnf_no_n_mesg=" texture is a VNF so it does not accept n.  Set sample rate for
 //   and can result in cryptic CGAL errors upon rendering with a second object present, even though the polyhedron appears
 //   OK during preview or when rendered by itself.  The order of points in your profiles must be
 //   consistent from slice to slice so that points match up without creating twists.  You can specify
-//   profiles in any consistent order: if necessary, skin() will reverse the faces to ensure that the final
+//   profiles in any consistent order: if necessary, skin() reverses the faces to ensure that the final
 //   result has clockwise faces as required by CGAL.  Note that the face reversal test may give random results
 //   if you use skin to construct self-intersecting (invalid) polyhedra.  
 //   .
@@ -70,13 +70,13 @@ __vnf_no_n_mesg=" texture is a VNF so it does not accept n.  Set sample rate for
 //   .
 //   Resampling may occur, depending on the `method` parameter, to make profiles compatible.
 //   To force (possibly additional) resampling of the profiles to increase the point density you can set `refine=N`, which
-//   will multiply the number of points on your profile by `N`.  You can choose between two resampling
+//   multiplies the number of points on your profile by `N`.  You can choose between two resampling
 //   schemes using the `sampling` option, which you can set to `"length"` or `"segment"`.
 //   The length resampling method resamples proportional to length.
 //   The segment method divides each segment of a profile into the same number of points.
-//   This means that if you refine a profile with the "segment" method you will get N points
-//   on each edge, but if you refine a profile with the "length" method you will get new points
-//   distributed around the profile based on length, so small segments will get fewer new points than longer ones.
+//   This means that if you refine a profile with the "segment" method, you get N points
+//   on each edge, but if you refine a profile with the "length" method, you get new points
+//   distributed around the profile based on length, so small segments get fewer new points than longer ones.
 //   A uniform division may be impossible, in which case the code computes an approximation, which may result
 //   in arbitrary distribution of extra points.  See {{subdivide_path()}} for more details.
 //   Note that when dealing with continuous curves it is always better to adjust the
@@ -88,20 +88,20 @@ __vnf_no_n_mesg=" texture is a VNF so it does not accept n.  Set sample rate for
 //   like a hexagon or star, because the algorithms' suitability depend on this distinction.
 //   .
 //   The default method for aligning profiles is `method="direct"`.
-//   If you simply supply a list of compatible profiles it will link them up
+//   If you simply supply a list of compatible profiles, they link up
 //   exactly as you have provided them.  You may find that profiles you want to connect define the
 //   right shapes but the point lists don't start from points that you want aligned in your skinned
 //   polyhedron.  You can correct this yourself using `reindex_polygon`, or you can use the "reindex"
-//   method which will look for the index choice that will minimize the length of all of the edges
-//   in the polyhedron&mdash;it will produce the least twisted possible result.  This algorithm has quadratic
-//   run time so it can be slow with very large profiles.
+//   method, which looks for the index choice that minimizes the length of all of the edges
+//   in the polyhedron to produce the least twisted possible result.  This algorithm has quadratic
+//   run time so it can be slow with large profiles.
 //   .
 //   When the profiles are incommensurate, the "direct" and "reindex" resample them to match.  As noted above,
 //   for continuous input curves, it is better to generate your curves directly at the desired sample size,
 //   but for mapping between a discrete profile like a hexagon and a circle, the hexagon must be resampled
 //   to match the circle.  When you use "direct" or "reindex" the default `sampling` value is
-//   of `sampling="length"` to approximate a uniform length sampling of the profile.  This will generally
-//   produce the natural result for connecting two continuously sampled profiles or a continuous
+//   of `sampling="length"` to approximate a uniform length sampling of the profile.  This generally
+//   produces the natural result for connecting two continuously sampled profiles or a continuous
 //   profile and a polygonal one.  However depending on your particular case,
 //   `sampling="segment"` may produce a more pleasing result.  These two approaches differ only when
 //   the segments of your input profiles have unequal length.
@@ -134,7 +134,7 @@ __vnf_no_n_mesg=" texture is a VNF so it does not accept n.  Set sample rate for
 //   connects all the points in one group to the same vertex on the polygon.
 //   .
 //   The "tangent" method may fail if the curved profile is non-convex, or doesn't have enough points to distinguish
-//   all of the tangent points from each other.    The algorithm treats whichever input profile has fewer points as the polygon
+//   all of the tangent points from each other. The algorithm treats whichever input profile has fewer points as the polygon,
 //   and the other one as the curve.  Using `refine` with this method will have little effect on the model, so
 //   you should do it only for agreement with other profiles, and these models are linear, so extra slices also
 //   have no effect.  For best efficiency set `refine=1` and `slices=0`.  As with the "distance" method, refinement
@@ -164,7 +164,7 @@ __vnf_no_n_mesg=" texture is a VNF so it does not accept n.  Set sample rate for
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
 //   anchor = Translate so anchor point is at the origin.  Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
-//   orient = Vector to rotate top towards after spin
+//   orient = Vector to rotate top toward after spin
 //   atype = Select "hull" or "intersect" anchor types. Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   style = vnf_vertex_array style.  Default: "min_edge"
@@ -312,7 +312,7 @@ __vnf_no_n_mesg=" texture is a VNF so it does not accept n.  Set sample rate for
 //   skin([repeat_entries(prof1,[2,2,1,1,1,1,1]),
 //         prof2],
 //        method="distance", slices=10, refine=10);
-// Example(FlatSpin,VPD=80,VPT=[0,0,7]): The "distance" method will often produces results similar to the "tangent" method if you use it with a polygon and a curve, but the results can also look like this:
+// Example(FlatSpin,VPD=80,VPT=[0,0,7]): The "distance" method often produces results similar to the "tangent" method if you use it with a polygon and a curve, but the results can also look like this:
 //   skin([path3d(circle($fn=128, r=10)), xrot(39, p=path3d(square([8,10]),10))],  method="distance", slices=0);
 // Example(FlatSpin,VPD=80,VPT=[0,0,7]): Using the "tangent" method produces:
 //   skin([path3d(circle($fn=128, r=10)), xrot(39, p=path3d(square([8,10]),10))],  method="tangent", slices=0);
@@ -448,7 +448,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
   assert(methodlistok==[], str("method list contains invalid method at ",methodlistok))
   assert(len(method) == profcount,"Method list is the wrong length")
   assert(in_list(sampling,["length","segment"]), "sampling must be set to \"length\" or \"segment\"")
-  assert(sampling=="segment" || (!in_list("distance",method) && !in_list("fast_distance",method) && !in_list("tangent",method)), "sampling is set to \"length\" which is only allowed with methods \"direct\" and \"reindex\"")
+  assert(sampling=="segment" || (!in_list("distance",method) && !in_list("fast_distance",method) && !in_list("tangent",method)), "sampling is set to \"length\", which is allowed only with methods \"direct\" and \"reindex\"")
   assert(capsOK, "caps must be boolean or a list of two booleans")
   assert(!closed || !caps, "Cannot make closed shape with caps")
   let(
@@ -537,22 +537,22 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   twisted extrusions by using `maxseg` to subsample flat faces.
 //   .
 //   Anchoring for linear_sweep is based on the anchors for the swept region rather than from the polyhedron that is created.  This can produce more
-//   predictable anchors for LEFT, RIGHT, FWD and BACK in many cases, but the anchors may only
-//   be aproximately correct for twisted objects, and corner anchors may point in unexpected directions in some cases.
+//   predictable anchors for LEFT, RIGHT, FWD and BACK in many cases, but the anchors may be approximately
+//   correct only for twisted objects, and corner anchors may point in unexpected directions in some cases.
 //   If you need anchors directly computed from the surface you can pass the vnf from linear_sweep
-//   to {{vnf_polyhedron()}}, which will compute anchors directly from the full VNF.  
+//   to {{vnf_polyhedron()}}, which computes anchors directly from the full VNF.  
 // Arguments:
 //   region = The 2D [Region](regions.scad) or polygon that is to be extruded.
 //   h / height / l / length = The height to extrude the region.  Default: 1
-//   center = If true, the created polyhedron will be vertically centered.  If false, it will be extruded upwards from the XY plane.  Default: `false`
+//   center = If true, the created polyhedron is vertically centered.  If false, it is extruded upward from the XY plane.  Default: `false`
 //   ---
 //   twist = The number of degrees to rotate the top of the shape, clockwise around the Z axis, relative to the bottom.  Default: 0
 //   scale = The amount to scale the top of the shape, in the X and Y directions, relative to the size of the bottom.  Default: 1
 //   shift = The amount to shift the top of the shape, in the X and Y directions, relative to the position of the bottom.  Default: [0,0]
 //   slices = The number of slices to divide the shape into along the Z axis, to allow refinement of detail, especially when working with a twist.  Default: `twist/5`
-//   maxseg = If given, then any long segments of the region will be subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
+//   maxseg = If given, then any long segments of the region are subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
-//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_size = An optional 2D target size for the textures.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions on the extrusion.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
@@ -565,7 +565,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
@@ -672,7 +672,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   linear_sweep(circle(20), texture=tile,
 //                tex_size=[10,10],tex_depth=5,
 //                h=40,convexity=4);
-// Example: The same tile from above, turned 90 degrees, Note that it has endcaps on the disconnected components.  These will not appear of `caps=false`.  
+// Example: The same tile from above, turned 90 degrees. Note that it has endcaps on the disconnected components.  These do not appear if `caps=false`.  
 //  shape = skin([rect(2/5),
 //                rect(2/3),
 //                rect(2/5)],
@@ -894,7 +894,7 @@ function linear_sweep(
 //   ---
 //   start = Start extrusion at this angle counterclockwise from the X+ axis.  Default:0
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
-//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_size = An optional 2D target size for the textures.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the direction perpendicular to extrusion and in the direction parallel to extrusion.  
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
@@ -902,13 +902,13 @@ function linear_sweep(
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   tex_taper = If given as a number, tapers the texture height to zero over the first and last given percentage of the path.  If given as a lookup table with indices between 0 and 100, uses the percentage lookup table to ramp the texture heights.  Default: `undef` (no taper)
 //   style = {{vnf_vertex_array()}} style.  Default: "min_edge"
-//   closed = If false, and shape is given as a path, then the revolved path will be sealed to the axis of rotation with untextured caps.  Default: `true`
+//   closed = If false, and shape is given as a path, then the revolved path is sealed to the axis of rotation with untextured caps.  Default: `true`
 //   convexity = (Module only) Convexity setting for use with polyhedron.  Default: 10
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   anchor = Translate so anchor point is at the origin. Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor. Default: 0
-//   orient = Vector to rotate top towards after spin  (module only)
+//   orient = Vector to rotate top toward after spin (module only)
 // Named Anchors:
 //   "origin" = The native position of the shape.  
 // Anchor Types:
@@ -1042,7 +1042,7 @@ function linear_sweep(
 //   path = [for(y=[-30:30]) [ 20-3*(1-cos((y+30)/60*360)),y]];
 //   rotate_sweep(path, closed=false, texture=tile, tex_rot=90,
 //                tex_size=[12,8], tex_depth=9, angle=360);
-// Example(3D,Med,NoAxes,VPR=[78.1,0,199.3],VPT=[-4.55445,1.37814,-4.39897],VPD=192.044): A basket weave texture, here only half way around the circle to avoid clutter.  
+// Example(3D,Med,NoAxes,VPR=[78.1,0,199.3],VPT=[-4.55445,1.37814,-4.39897],VPD=192.044): A basket weave texture, here only halfway around the circle to avoid clutter.  
 //     diag_weave_vnf = [
 //         [[0.2, 0, 0], [0.8, 0, 0], [1, 0.2, 0.5], [1, 0.8, 0.5], [0.7, 0.5, 0.5],
 //          [0.5, 0.3, 0], [0.2, 0, 0.5], [0.8, 0, 0.5], [1, 0.2, 1], [1, 0.8, 1],
@@ -1226,8 +1226,8 @@ module rotate_sweep(
 //   "smooth" and "cut".  
 //   .
 //   The inside argument changes how the extrusion lead-in sections are formed.  If it is true then they scale
-//   towards the outside, like would be needed for internal threading.  If internal is fale then the lead-in sections scale
-//   towards the inside, like would be appropriate for external threads.  
+//   toward the outside, like would be needed for internal threading.  If internal is fale then the lead-in sections scale
+//   toward the inside, like would be appropriate for external threads.  
 // Arguments:
 //   poly = Array of points of a polygon path, to be extruded.
 //   h = height of the spiral extrusion path
@@ -1247,10 +1247,10 @@ module rotate_sweep(
 //   lead_in_shape1 = Specify the shape of the thread lead-in at the bottom by giving a text string or function.  
 //   lead_in_shape2 = Specify the shape of the thread lead-in at the top by giving a text string or function.
 //   lead_in_sample = Factor to increase sample rate in the lead-in section.  Default: 10
-//   internal = if true make internal threads.  The only effect this has is to change how the extrusion lead-in section are formed. When true, the extrusion scales towards the outside; when false, it scales towards the inside.  Default: false
+//   internal = if true make internal threads.  The only effect this has is to change how the extrusion lead-in section are formed. When true, the extrusion scales toward the outside; when false, it scales toward the inside.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   spiral_sweep(poly, h=200, r=50, turns=3, $fn=36);
@@ -1434,7 +1434,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 // Function&Module: path_sweep()
 // Synopsis: Sweep a 2d polygon path along a 2d or 3d path. 
 // SynTags: VNF, Geom
-// Topics: Extrusion, Sweep, Paths
+// Topics: Extrusion, Sweep, Paths, Textures
 // See Also: sweep_attach(), linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep2d(), offset_sweep()
 // Usage: As module
 //   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
@@ -1450,7 +1450,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   vector for the path, so this process is constructing a shape whose normal cross sections are equal to your specified shape.
 //   If you do not supply a list of tangent vectors then an approximate tangent vector is computed
 //   based on the path points you supply using {{path_tangents()}}.
-// Figure(3D,Big,VPR=[70,0,345],VPD=20,VPT=[5.5,10.8,-2.7],NoScales): This example shows how the shape, in this case the quadrilateral defined by `[[0, 0], [0, 1], [0.25, 1], [1, 0]]`, appears as the cross section of the swept polyhedron.  The blue line shows the path.  The normal vector to the shape is shown in black; it is based at the origin and points upwards in the Z direction.  The sweep aligns this normal vector with the blue path tangent, which in this case, flips the shape around.  Note that for a 2D path like this one, the Y direction in the shape is mapped to the Z direction in the sweep.
+// Figure(3D,Big,VPR=[70,0,345],VPD=20,VPT=[5.5,10.8,-2.7],NoScales): This example shows how the shape, in this case the quadrilateral defined by `[[0, 0], [0, 1], [0.25, 1], [1, 0]]`, appears as the cross section of the swept polyhedron.  The blue line shows the path.  The normal vector to the shape is shown in black; it is based at the origin and points upward in the Z direction.  The sweep aligns this normal vector with the blue path tangent, which in this case, flips the shape around.  Note that for a 2D path like this one, the Y direction in the shape is mapped to the Z direction in the sweep.
 //   tri= [[0, 0], [0, 1], [.25,1], [1, 0]];
 //   path = arc(r=5,n=81,angle=[-20,65]);
 //   % path_sweep(tri,path);
@@ -1463,7 +1463,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   In the figure you can see that the swept polyhedron, shown in transparent gray, has the quadrilateral as its cross
 //   section.  The quadrilateral is positioned perpendicular to the path, which is shown in blue, so that the normal
 //   vector for the quadrilateral is parallel to the tangent vector for the path.  The origin for the shape is the point
-//   which follows the path.  For a 2D path, the Y axis of the shape is mapped to the Z axis and in this case,
+//   that follows the path.  For a 2D path, the Y axis of the shape is mapped to the Z axis and in this case,
 //   pointing the quadrilateral's normal vector (in black) along the tangent line of
 //   the path, which is going in the direction of the blue arrow, requires that the quadrilateral be "turned around".  If we
 //   reverse the order of points in the path we get a different result:
@@ -1478,9 +1478,9 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   stroke([CENTER,UP], width=.07,endcap2="arrow2",color="black");
 // Continues:
 //   If your shape is too large for the curves in the path you can create a situation where the shapes cross each
-//   other.  This results in an invalid polyhedron, which may appear OK when previewed or rendered alone, but will give rise
-//   to cryptic CGAL errors when rendered with a second object in your model.  You may be able to use {{path_sweep2d()}}
-//   to produce a valid model in cases like this.  You can debug models like this using the `profiles=true` option which will show all
+//   other.  This results in an invalid polyhedron, which may appear OK when previewed or rendered alone, but can result
+//   in cryptic CGAL errors when rendered with a second object in your model.  You may be able to use {{path_sweep2d()}}
+//   to produce a valid model in cases like this.  You can debug models like this using the `profiles=true` option, which shows all
 //   the cross sections in your polyhedron.  If any of them intersect, the polyhedron will be invalid.
 // Figure(3D,Big,VPR=[47,0,325],VPD=23,VPT=[6.8,4,-3.8],NoScales): We have scaled the path to an ellipse and show a large triangle as the shape.  The triangle is sometimes bigger than the local radius of the path, leading to an invalid polyhedron, which you can identify because the red lines cross in the middle.
 //   tri= scale([4.5,2.5],[[0, 0], [0, 1], [1, 0]]);
@@ -1508,12 +1508,12 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   joint.  By default `twist` is therefore required to be a multiple of 360.  However, if your shape has rotational
 //   symmetry, this requirement is overly strict.  You can specify the symmetry using the `symmetry` argument, and then
 //   you can choose smaller twists consistent with the specified symmetry.  The symmetry argument gives the number of
-//   rotations that map the shape exactly onto itself, so a pentagon has 5-fold symmetry.  This argument is only valid
-//   for closed sweeps.  When you specify symmetry, the twist must be a multiple of 360/symmetry.
+//   rotations that map the shape exactly onto itself, so a pentagon has 5-fold symmetry.  This argument is valid
+//   only for closed sweeps.  When you specify symmetry, the twist must be a multiple of 360/symmetry.
 //   .
 //   The twist is normally spread uniformly along your shape based on the path length.  If you set `twist_by_length` to
-//   false then the twist will be uniform based on the point count of your path.  Twisted shapes will produce twisted
-//   faces, so if you want them to look good you should use lots of points on your path and also lots of points on the
+//   false, then the twist is uniform based on the point count of your path.  Twisted shapes produce twisted
+//   faces, so if you want them to look good, you should use lots of points on your path and also lots of points on the
 //   shape.  If your shape is a simple polygon, use {{subdivide_path()}} to increase
 //   the number of points.
 //   .
@@ -1523,7 +1523,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   one we use in 2D.  You may find that the shape rotates unexpectedly around its axis as it traverses the path.  The
 //   `method` parameter allows you to specify how the shapes are aligned, resulting in different twist in the resulting
 //   polyhedron.  You can choose from three different methods for selecting the rotation of your shape.  None of these
-//   methods will produce good, or even valid, results on all inputs, so it is important to select a suitable method.
+//   methods produce good, or even valid, results on all inputs, so it is important to select a suitable method.
 //   .
 //   The three methods you can choose using the `method` parameter are:
 //   .
@@ -1536,12 +1536,12 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   To start the algorithm, we need an initial condition.  This is supplied by
 //   using the `normal` argument to give a direction to align the Y axis of your shape.  By default the normal points UP if the path
 //   makes an angle of 45 deg or less with the xy plane and it points BACK if the path makes a higher angle with the XY plane.  You
-//   can also supply `last_normal` which provides an ending orientation constraint.  Be aware that the curve may still exhibit
+//   can also supply `last_normal` to provide an ending orientation constraint.  Be aware that the curve may still exhibit
 //   twisting in the middle.  This method is the default because it is the most robust, not because it generally produces the best result.
 //   .
 //   The "natural" method works by computing the Frenet frame at each point on the path.  This is defined by the tangent to the curve and
-//   the normal which lies in the plane defined by the curve at each point.  This normal points in the direction of curvature of the curve.
-//   The result is a very well behaved set of shape positions without any unexpected twisting&mdash;as long as the curvature never falls to zero.  At a
+//   the normal that lies in the plane defined by the curve at each point.  This normal points in the direction of curvature of the curve.
+//   The result is a well-behaved set of shape positions without any unexpected twisting&mdash;as long as the curvature never falls to zero.  At a
 //   point of zero curvature (a flat point), the curve does not define a plane and the natural normal is not defined.  Furthermore, even if
 //   you skip over this troublesome point so the normal is defined, it can change direction abruptly when the curvature is zero, leading to
 //   a nasty twist and an invalid model.  A simple example is a circular arc joined to another arc that curves the other direction.  Note
@@ -1549,7 +1549,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   .
 //   The "manual" method allows you to specify your desired normal either globally with a single vector, or locally with
 //   a list of normal vectors for every path point.  The normal you supply is projected to be orthogonal to the tangent to the
-//   path and the Y direction of your shape will be aligned with the projected normal.  (Note this is different from the "natural" method.)
+//   path, and the Y direction of your shape is aligned with the projected normal. (This is different from the "natural" method.)
 //   Careless choice of a normal may result in a twist in the shape, or an error if your normal is parallel to the path tangent.
 //   If you set `relax=true` then the condition that the cross sections are orthogonal to the path is relaxed and the swept object
 //   uses the actual specified normal.  In this case, the tangent is projected to be orthogonal to your supplied normal to define
@@ -1558,16 +1558,16 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   .
 //   You can also apply scaling to the profile along the path.  You can give a list of scalar scale factors or a list of 2-vector scale. 
 //   In the latter scale the x and y scales of the profile are scaled separately before the profile is placed onto the path.  For non-closed
-//   paths you can also give a single scale value or a 2-vector which is treated as the final scale.  The intermediate sections
+//   paths you can also give a single scale value or a 2-vector, which is treated as the final scale.  The intermediate sections
 //   are then scaled by linear interpolation either relative to length (if scale_by_length is true) or by point count otherwise.  
 //   .
 //   You can use set `transforms` to true to return a list of transformation matrices instead of the swept shape.  In this case, you can
 //   often omit shape entirely.  The exception is when `closed=true` and you are using the "incremental" method.  In this case, `path_sweep`
 //   uses the shape to correct for twist when the shape closes on itself, so you must include a valid shape.
 //   .
-//   By default path sweep objects are anchored to the named anchor "origin" which places the swept object right where you created it.
-//   Generally you will not want to set an anchor for a swept object, but instead change the path if you want to move it to a different location, 
-//   but can also anchor using VNF anchoring.  Usi either `atype="hull"` (the default) or `atype="intersect"` to create anchors based on the
+//   By default path sweep objects are anchored to the named anchor "origin", which places the swept object right where you created it.
+//   Generally you would not want to set an anchor for a swept object, but instead change the path if you want to move it to a different location, 
+//   but you can also anchor using VNF anchoring.  Use either `atype="hull"` (the default) or `atype="intersect"` to create anchors based on the
 //   the object's VNF data.  The center of the object is determined based on the `cp` argument and can be "centroid" (the default), "mean" to use the mean of the object,
 //   or "box" to use the center of the bounding box.  For complicated objects you may find it difficult to get useful results from the anchoring
 //   system, which is designed for an object whose center is inside the object.  When using an anchors, confirm that it is in the location you desire.  
@@ -1575,7 +1575,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   You can apply a texture to the path sweep object using the usual texture parameters.
 //   See [Texturing](skin.scad#section-texturing) for more details on how textures work.
 //   This works by passing through to {{vnf_vertex_array()}}, which also has more details on
-//   texturing.  Note that textures only work when the shape is a path; you cannot apply a texture to a region.  
+//   texturing.  Note that textures work only when the shape is a path; you cannot apply a texture to a region.  
 // Arguments:
 //   shape = A 2D polygon path or region describing the shape to be swept.
 //   path = 2D or 3D path giving the path to sweep over
@@ -1599,7 +1599,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   transforms = set to true to return transforms instead of a VNF.  These transforms can be manipulated and passed to sweep().  (function only)  Default: false.
 //   convexity = convexity parameter for polyhedron().  (module only)  Default: 10
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
-//   tex_size = An optional 2D target size for the textures at `points[0][0]`.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_size = An optional 2D target size for the textures at `points[0][0]`.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
@@ -1609,7 +1609,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
 //   anchor = Translate so anchor point is at the origin. Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor. Default: 0
-//   orient = Vector to rotate top towards after spin
+//   orient = Vector to rotate top toward after spin
 //   atype  = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Side Effects:
@@ -1636,7 +1636,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
 //   sq = square(6);
 //   path_sweep(sq,path);
-// Example(Med,VPR=[34,0,8],NoScales): It may not be obvious, but the polyhedron in the previous example is invalid.  It will eventually give CGAL errors when you combine it with other shapes.  To see this, set profiles to true and look at the left side.  The profiles cross each other and intersect.  Any time this happens, your polyhedron is invalid, even if it seems to be working at first.  Another observation from the profile display is that we have more profiles than needed over a lot of the shape, so if the model is slow, using fewer profiles in the flat portion of the curve might speed up the calculation.
+// Example(Med,VPR=[34,0,8],NoScales): It may not be obvious, but the polyhedron in the previous example is invalid.  It results in CGAL errors when you combine it with other shapes.  To see this, set profiles to true and look at the left side.  The profiles cross each other and intersect.  Any time this happens, your polyhedron is invalid, even if it seems to be working at first.  Another observation from the profile display is that we have more profiles than needed over a lot of the shape, so if the model is slow, using fewer profiles in the flat portion of the curve might speed up the calculation.
 //   path = [for(theta=[-180:5:180]) [theta/10, 10*sin(theta)]];
 //   sq = square(6);
 //   path_sweep(sq,path,profiles=true,width=.1,$fn=8);
@@ -1651,7 +1651,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=30));   // Counter-clockwise
 //   path_sweep(ushape, path3d(elliptic_arc));
-// Example(NoScales): Sweep along a clockwise elliptical arc, using "natural" method, which lines up the X axis of the shape with the direction of curvature.  This means the X axis will point inward, so a counterclockwise arc gives:
+// Example(NoScales): Sweep along a clockwise elliptical arc, using "natural" method, which lines up the X axis of the shape with the direction of curvature.  This means the X axis points inward, so a counterclockwise arc gives:
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=30));  // Counter-clockwise
 //   path_sweep(ushape, elliptic_arc, method="natural");
@@ -1672,7 +1672,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   // Prints 0.9, but we use pentagon with radius of 1.0 > 0.9
 //   echo(radius_of_curvature = 1/max(path_curvature(qpath)));
 //   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual");
-//   cube(0.5);    // Adding a small cube forces a CGAL computation which reveals
+//   cube(0.5);    // Adding a small cube forces a CGAL computation that reveals
 //                 // the error by displaying nothing or giving a cryptic message
 // Example(NoScales): Using the `relax` option we allow the profiles to deviate from orthogonality to the path.  This eliminates the crease that broke the previous example because the sections are all parallel to each other.
 //   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
@@ -1753,7 +1753,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, helix, method="natural");
-// Example(Med,NoScales): Note that it may look like the shape above is flat, but the profiles are very slightly tilted due to the nonzero torsion of the curve.  If you want as flat as possible, specify it so with the "manual" method:
+// Example(Med,NoScales): Note that it may look like the shape above is flat, but the profiles are slightly tilted due to the nonzero torsion of the curve.  If you want as flat as possible, specify it so with the "manual" method:
 //   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
 //                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
 //                         200 * (1 - t)];
@@ -1774,7 +1774,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   yzcircle = yrot(90,p=path3d(circle($fn=64, r=30)));
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, yzcircle, method="manual", normal=UP, closed=true);
-// Example(NoScales): The "natural" method will introduce twists when the curvature changes direction.  A warning is displayed.
+// Example(NoScales): The "natural" method introduces twists when the curvature changes direction.  A warning is displayed.
 //   arc1 = path3d(arc(angle=90, r=30));
 //   arc2 = xrot(-90, cp=[0,30],p=path3d(arc(angle=[90,180], r=30)));
 //   two_arcs = path_merge_collinear(concat(arc1,arc2));
@@ -1807,7 +1807,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, knot_path, closed=true, method="natural");
-// Example(Med,NoScales): knot with twist.  Note if you twist it the other direction the center section untwists because of the natural twist there.  Also compare to the "incremental" method which has less twist in the center.
+// Example(Med,NoScales): knot with twist.  Note if you twist it the other direction the center section untwists because of the natural twist there.  Also compare to the "incremental" method, which has less twist in the center.
 //   function knot(a,b,t) =   // rolling knot
 //        [ a * cos (3 * t) / (1 - b* sin (2 *t)),
 //          a * sin( 3 * t) / (1 - b* sin (2 *t)),
@@ -1914,7 +1914,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   path_sweep(shape,path,method="natural"){
 //     attach(["start-centroid","end-centroid"]) anchor_arrow(s=5);
 //   }
-// Example(Med,NoScales,VPR=[78.1,0,43.2],VPT=[2.18042,-0.485127,1.90371],VPD=74.4017): Note that the "start" anchors are backwards compared to the direction of the sweep, so you have to attach the TOP to align the shape with its ends.  
+// Example(Med,NoScales,VPR=[78.1,0,43.2],VPT=[2.18042,-0.485127,1.90371],VPD=74.4017): Note that the "start" anchors are backward compared to the direction of the sweep, so you have to attach the TOP to align the shape with its ends.  
 //   shape = back_half(right_half(star(n=5,id=5,od=10)),y=-1)[0];
 //   path = arc(angle=[0,180],d=30);
 //   path_sweep(shape,path,method="natural",scale=[1,1.5])
@@ -1922,8 +1922,13 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //       attach("start",TOP) stroke([path3d(shape)],width=.5);
 //       attach("end") stroke([path3d(yscale(1.5,shape))],width=.5);       
 //     }
-
-
+// Example(Med,NoScales): Applying a texture to a sweep
+//   ellipse = xscale(2, p=circle($fn=64, r=3));
+//   pentagon = subdivide_path(pentagon(r=1), 30);
+//   path_sweep(pentagon, path3d(ellipse),
+//              closed=true, twist=360*2/5,symmetry=5,
+//              texture="bricks_vnf",tex_reps=[10,40],
+//              tex_depth=.1);
 
 
 module path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true,
@@ -2047,9 +2052,9 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
               // The mismatch is the inverse of the last transform times the first one for the closed case, or the inverse of the
               // desired final transform times the realized final transform in the open case.  Note that when closed==true the last transform
               // is a actually looped around and applies to the first point position, so if we got back exactly where we started
-              // then it will be the identity, but we might have accumulated some twist which will show up as a rotation around the
-              // X axis.  Similarly, in the closed==false case the desired and actual transformations can only differ in the twist,
-              // so we can need to calculate the twist angle so we can apply a correction, which we distribute uniformly over the whole path.
+              // then it will be the identity, but we might have accumulated some twist that appears as a rotation around the
+              // X axis. Likewise, in the closed==false case the desired and actual transformations can differ only in the twist,
+              // so we must calculate the twist angle so we can apply a correction, which we distribute uniformly over the whole path.
               reference_rot = closed ? rotations[0] :
                            is_undef(last_normal) ? last(rotations) :
                              let(
@@ -2090,9 +2095,9 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
               // The mismatch is the inverse of the last transform times the first one for the closed case, or the inverse of the
               // desired final transform times the realized final transform in the open case.  Note that when closed==true the last transform
               // is a actually looped around and applies to the first point position, so if we got back exactly where we started
-              // then it will be the identity, but we might have accumulated some twist which will show up as a rotation around the
-              // X axis.  Similarly, in the closed==false case the desired and actual transformations can only differ in the twist,
-              // so we can need to calculate the twist angle so we can apply a correction, which we distribute uniformly over the whole path.
+              // then it will be the identity, but we might have accumulated some twist that appears as a rotation around the
+              // X axis.  Similarly, in the closed==false case the desired and actual transformations can differ only in the twist,
+              // so we must calculate the twist angle so we can apply a correction, which we distribute uniformly over the whole path.
               reference_rot = closed ? rotations[0] :
                            is_undef(last_normal) ? last(rotations) :
                              let(
@@ -2169,7 +2174,7 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
 //   the path, so if you do not have local self-intersections, use {{path_sweep()}} instead.  If xmax is the largest x value (in absolute value)
 //   of the shape, then path_sweep2d() will work as long as the offset of `path` exists at `delta=xmax`.  If the offset vanishes, as in the
 //   case of a circle offset by more than its radius, then you will get an error about a degenerate offset.
-//   Note that global self-intersections will still give rise to CGAL errors.  You should be able to handle these by partitioning your model.  The y axis of the
+//   Global self-intersections still give rise to CGAL errors.  You can handle these by partitioning your model.  The y axis of the
 //   shape is mapped to the z axis in the swept polyhedron, and no twisting can occur.
 //   The quality parameter is passed to offset to determine the offset quality.
 // Arguments:
@@ -2183,7 +2188,7 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
 //   convexity = convexity parameter for polyhedron (module only)  Default: 10
 //   anchor = Translate so anchor point is at the origin.  Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
-//   orient = Vector to rotate top towards after spin
+//   orient = Vector to rotate top toward after spin
 //   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Named Anchors:
@@ -2286,7 +2291,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 // Function&Module: sweep()
 // Synopsis: Construct a 3d object from arbitrary transformations of a 2d polygon path.
 // SynTags: VNF, Geom
-// Topics: Extrusion, Sweep, Paths
+// Topics: Extrusion, Sweep, Paths, Textures
 // See Also: sweep_attach(), linear_sweep(), rotate_sweep(), spiral_sweep(), path_sweep(), path_sweep2d(), offset_sweep()
 // Usage: As Module
 //   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
@@ -2300,17 +2305,17 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   The `caps` parameter controls whether the ends of the shape are closed.
 //   As a function, returns the VNF for the polyhedron.  As a module, computes the polyhedron.
 //   .
-//   Note that this is a very powerful, general framework for producing polyhedra.  It is important
+//   This is a powerful, general framework for producing polyhedra.  It is important
 //   to ensure that your resulting polyhedron does not include any self-intersections, or it will
-//   be invalid and will generate CGAL errors.  If you get such errors, most likely you have an
-//   overlooked self-intersection.  Note also that the errors will not occur when your shape is alone
-//   in your model, but will arise if you add a second object to the model.  This may mislead you into
-//   thinking the second object caused a problem.  Even adding a simple cube to the model will reveal the problem.
+//   be invalid and generate CGAL errors.  If you get such errors, most likely you have an
+//   overlooked self-intersection.  The errors do not occur when your shape is alone
+//   in your model, but errors arise if you add a second object to the model.  This may mislead you into
+//   thinking the second object caused a problem.  Even adding a simple cube to the model reveals the problem.
 //   .
 //   You can apply a texture to the sweep object using the usual texture parameters.
 //   See [Texturing](skin.scad#section-texturing) for more details on how textures work.
 //   This works by passing through to {{vnf_vertex_array()}}, which also has more details on
-//   texturing.  Note that textures only work when the shape is a path; you cannot apply a texture to a region.
+//   texturing.  Note that textures work only when the shape is a path; you cannot apply a texture to a region.
 //   The texture tiles are oriented on the path sweep so that the Y axis of the tile is aligned with the sweep direction.
 // Arguments:
 //   shape = 2d path or region, describing the shape to be swept.
@@ -2319,9 +2324,9 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   caps = true to create endcap faces when closed is false.  Can be a singe boolean to specify endcaps at both ends, or a length 2 boolean array.  Default is true if closed is false.
 //   style = vnf_vertex_array style.  Default: "min_edge"
 //   ---
-//   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
+//   convexity = convexity setting for use with polyhedron. (module only) Default: 10
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
-//   tex_size = An optional 2D target size for the textures at `points[0][0]`.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_size = An optional 2D target size for the textures at `points[0][0]`.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
@@ -2333,7 +2338,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   anchor = Translate so anchor point is at the origin. Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor. Default: 0
-//   orient = Vector to rotate top towards after spin  (module only)
+//   orient = Vector to rotate top toward after spin (module only)
 // Named Anchors:
 //   "origin" = The native position of the shape.  
 // Anchor Types:
@@ -2460,17 +2465,17 @@ module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=
 //   Alternative you can use parent anchor mode where give only the parent anchor and the child appears at its
 //   child-specified (default) anchor point.  The spin parameter spins the child around the attachment anchor axis.  
 //   .
-//   For a path_sweep() with no scaling, if you give a location or index that is exactly at one of the sections the normal will be in the plane
-//   of the section.  In the general case if you give a location in between sections the normal will be normal to the facet.  If you
-//   give a location at a section in the general case the normal will be the average of the normals of the two adjacent facets.  
+//   For a path_sweep() with no scaling, if you give a location or index that is exactly at one of the sections, the normal is in the plane
+//   of the section.  In the general case if you give a location in between sections the normal is normal to the facet.  If you
+//   give a location at a section in the general case the normal is the average of the normals of the two adjacent facets.  
 //   For twisted or other complicated sweeps the normals may not be accurate.  If you need accurate normals for such shapes, you must
-//   use the anchors for the VNF swept shape directly---it is a tradeoff between easy specification of the anchor location on the
-//   swept object, which may be very difficult with direct anchors, and accuracy of the normal.
+//   use the anchors for the VNF swept shape directly&mdash;it is a tradeoff between easy specification of the anchor location on the
+//   swept object, which may be difficult with direct anchors, and accuracy of the normal.
 //   .
-//   For closed sweeps the index will wrap around and can be positive or negative.  For sweeps that are not closed the index must
-//   be positive and no longer than the length of the path.  In some cases for closed path_sweeps the shape can be a mobius strip
+//   For closed sweeps the index wraps around and can be positive or negative.  For sweeps that are not closed the index must
+//   be positive and no longer than the length of the path.  In some cases for closed path_sweeps the shape can be a Möbius strip
 //   and it may take more than one cycle to return to the starting point.  The extra twist will be properly handled in this case.
-//   If you construct a mobius strip using the generic {{sweep()}} then information about the amount of twist is not available
+//   If you construct a Möbius strip using the generic {{sweep()}} then information about the amount of twist is not available
 //   to `sweep_attach()` so it will not be handled automatically.  
 //   .
 //   The anchor you give acts as a 2D anchor to the path or region used by the sweep, in the XY plane as that shape appears
@@ -2628,7 +2633,7 @@ function _force_int(x) = approx(round(x),x) ? round(x) : x;
 // interpolation value bewteen them.
 // anchor_pos and anchor_dir are the anchor data for the 2d shape
 // Return is [position, ydirection, zdirection], where zdirection
-// is normal to the facet.  Note that frac is only needed because
+// is normal to the facet.  Note that frac is needed because
 // of the possibility of twist.  
 
 function _find_ps_dir(frac,prevind,nextind,twist,anchor_pos,anchor_dir) =
@@ -2669,7 +2674,7 @@ function _find_ps_dir(frac,prevind,nextind,twist,anchor_pos,anchor_dir) =
 //   Subdivides the input profiles to have length `numpoints` where `numpoints` must be at least as
 //   big as the largest input profile.  By default `numpoints` is set equal to the length of the
 //   largest profile.  You can set `numpoints="lcm"` to sample to the least common multiple of all
-//   curves, which will avoid sampling artifacts but may produce a huge output.  After subdivision,
+//   curves, which avoids sampling artifacts but may produce a huge output.  After subdivision,
 //   profiles are sliced.
 // Arguments:
 //   profiles = profiles to operate on
@@ -2767,10 +2772,10 @@ function _smooth(data,len,closed=false,angle=false) =
 //   the interpolation to be done the "long" way around the rotation instead of the short way.
 //   Note that the rotation matrix cannot distinguish which way you rotate, only the place you
 //   end after rotation.  Another ambiguity arises if your rotation is more than 360 degrees.
-//   You can add turns with the turns parameter, so giving turns=1 will add 360 degrees to the
-//   rotation so it completes one full turn plus the additional rotation given my the transform.
+//   You can add turns with the turns parameter, so giving turns=1 add 360s degrees to the
+//   rotation so it completes one full turn plus the additional rotation given by the transform.
 //   You can give long as a scalar or as a vector.  Finally if closed is true then the
-//   resampling will connect back to the beginning.
+//   resampling connects back to the beginning.
 //   .
 //   The default is to resample based on the length of the arc defined by each rotation operator.  This produces
 //   uniform sampling over all of the transformations.  It requires that each rotation has nonzero length.
@@ -3089,7 +3094,7 @@ function _skin_distance_match(poly1,poly2) =
 
 
 // This function associates vertices but with the assumption that index 0 is associated between the
-// two inputs.  This gives only quadratic run time.  As above, output is pair of polygons with
+// two inputs.  This has quadratic run time.  As above, output is pair of polygons with
 // vertices duplicated as suited to use as input to skin().
 
 function _skin_aligned_distance_match(poly1, poly2) =
@@ -3111,7 +3116,7 @@ function _skin_aligned_distance_match(poly1, poly2) =
 /// Description:
 ///   Finds a mapping of the vertices of the larger polygon onto the smaller one.  Whichever input is the
 ///   shorter path is the polygon, and the longer input is the curve.  For every edge of the polygon, the algorithm seeks a plane that contains that
-///   edge and is tangent to the curve.  There will be more than one such point.  To choose one, the algorithm centers the polygon and curve on their centroids
+///   edge and is tangent to the curve.  There is always more than one such point.  To choose one, the algorithm centers the polygon and curve on their centroids
 ///   and chooses the closer tangent point.  The algorithm works its way around the polygon, computing a series of tangent points and then maps all of the
 ///   points on the curve between two tangent points into one vertex of the polygon.  This algorithm can fail if the curve has too few points or if it is concave.
 /// Arguments:
@@ -3166,12 +3171,12 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
 //   that the input can be passed to `skin()`.  This allows you to decide how the vertices are linked up rather than accepting
 //   the automatically computed minimal distance linkage.  However, the number of vertices in the polygons must not decrease in the list.
 //   The output is a list of polygons that all have the same number of vertices with some duplicates.  You specify the vertex splitting
-//   using the `split` which is a list where each entry corresponds to a polygon: split[i] is a value or list specifying which vertices in polygon i to split.
-//   Give the empty list if you don't want a split for a particular polygon.  If you list a vertex once then it will be split and mapped to
-//   two vertices in the next polygon.  If you list it N times then N copies will be created to map to N+1 vertices in the next polygon.
+//   using the `split`, which is a list where each entry corresponds to a polygon: split[i] is a value or list specifying which vertices in polygon i to split.
+//   Give the empty list if you don't want a split for a particular polygon.  If you list a vertex once then it is split and mapped to
+//   two vertices in the next polygon.  If you list it N times then N copies are created to map to N+1 vertices in the next polygon.
 //   You must ensure that each mapping produces the correct number of vertices to exactly map onto every vertex of the next polygon.
-//   Note that if you split (only) vertex i of a polygon that means it will map to vertices i and i+1 of the next polygon.  Vertex 0 will always
-//   map to vertex 0 and the last vertices will always map to each other, so if you want something different than that you'll need to reindex
+//   If you split only vertex i of a polygon, that means it will map to vertices i and i+1 of the next polygon.  Vertex 0 always
+//   maps to vertex 0 and the last vertices always map to each other, so if you want something different than that you'll need to reindex
 //   your polygons.
 // Arguments:
 //   polygons = list of polygons to split
@@ -3227,16 +3232,16 @@ function associate_vertices(polygons, split, curpoly=0) =
 
 // Section: Texturing
 //   Some operations are able to add texture to the objects they create.  A texture can be any regularly repeated variation in the height of the surface.
-//   To define a texture you need to specify how the height should vary over a rectangular block that will be repeated to tile the object.  Because textures
+//   To define a texture you need to specify how the height should vary over a rectangular block that is repeated to tile the object.  Because textures
 //   are based on rectangular tiling, this means adding textures to curved shapes may result in distortion of the basic texture unit.  For example, if you
-//   texture a cone, the scale of the texture will be larger at the wide end of the cone and smaller at the narrower end of the cone.
+//   texture a cone, the scale of the texture is larger at the wide end of the cone and smaller at the narrower end of the cone.
 //   .
 //   You can specify a texture using two methods: a height field or a VNF.  For each method you also must specify the scale of the texture, which
-//   gives the size of the rectangular unit in your object that will correspond to one texture tile.  Note that this scale does not preserve
-//   aspect ratio: you can stretch the texture as desired.  
+//   gives the size of the rectangular unit in your object that corresponds to one texture tile.  This scale does not preserve
+//   aspect ratio: you can stretch the texture as desired.
 // Subsection: Height Field Texture Maps
 //   The simplest way to specify a texture map is to give a 2d array of
-//   height values which specify the height of the texture on a grid.
+//   height values that specify the height of the texture on a grid.
 //   Values in the height field should generally range from 0 to 1.  A zero height
 //   in the height field corresponds to the height of the surface and 1
 //   the highest point in the texture above the surface being textured.
@@ -3255,9 +3260,9 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   of the texture is 1 unit above the surface being textured, assuming that the texture
 //   is designed to span the range from 0 to 1.  The `tex_depth` parameter can adjust
 //   this dimension of a texture without changing anything else, setting `tex_depth` negative
-//   will invert a texture, and `tex_inset` will lower a texture into the textured object.
+//   inverts a texture, and `tex_inset` lowers a texture into the textured object.
 //   Textures that extend beyond the interval [0,1] are accepted, but the behavior of the
-//   `tex_depth` and `tex_inset` parameters will be less intuitive.  
+//   `tex_depth` and `tex_inset` parameters may be less intuitive.  
 // Figure(2D,Big,NoScales,VPR=[0,0,0],VPT=[6.86022,-1.91238,0],VPD=28.8248):
 //   ftex1 = [0,1,1,0,0];
 //   left(0)color(.6*[1,1,1])rect([12,1],anchor=BACK+LEFT);
@@ -3300,8 +3305,8 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   move([6,-.4])color("black")text("Texture Size", size=0.3,anchor=BACK);
 // Continues:
 //   A more serious limitation of height field textures is that some shapes, such as hexagons or circles, cannot be accurately represented because
-//   their points don't fall on any grid.  Trying to create such shapes is difficult and will require many points to approximate the
-//   true point positions for the desired shape.  This will make the texture slow to compute.  
+//   their points don't fall on any grid.  Trying to create such shapes is difficult and requires many points to approximate the
+//   true point positions for the desired shape.  This makes the texture slow to compute.  
 //   Another serious limitation is more subtle.  In the 2D examples above, it is obvious how to connect the
 //   dots together.  But in 3D example we need to triangulate the points on a grid, and this triangulation is not unique.
 //   The `style` argument lets you specify how the points are triangulated using the styles supported by {{vnf_vertex_array()}}.
@@ -3340,15 +3345,15 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   example of such a texture and shape please let us know!)
 // Subsection: VNF Textures
 //   VNF textures overcome all of the limitations of height field textures, but with two costs.  They can be more difficult to construct than
-//   a simple array of height values, and they are significantly slower to compute for a tile with the same number of points.  Note, however, for
-//   textures that don't neatly lie on a grid, a VNF tile will be more efficient than a finely sampled height field.  With VNF textures you can create
+//   a simple array of height values, and they are significantly slower to compute for a tile with the same number of points.  However, for
+//   textures that don't neatly lie on a grid, a VNF tile is more efficient than a finely sampled height field.  With VNF textures you can create
 //   textures that have disconnected components, or concavities that cannot be expressed with a single valued height map.  However, you can also
 //   create invalid textures that fail to close at the ends, so care is required to ensure that your resulting shape is valid.  
 //   .
 //   A VNF texture is defined by providing a VNF whose projection onto the XY plane is contained in the unit square [0,1] x [0,1] so
 //   that the VNF can be tiled.  The VNF is tiled without a gap, matching the edges, so the vertices along corresponding edges must match to make a
 //   consistent triangulation possible.  The VNF cannot have any X or Y values outside the interval [0,1].  If you want a valid polyhedron
-//   that OpenSCAD will render then you need to take care with edges of the tiles that correspond to endcap faces in the textured object.
+//   that OpenSCAD can render then you need to take care with edges of the tiles that correspond to endcap faces in the textured object.
 //   So for example, in a linear sweep, the top and bottom edges of tiles end abruptly to form the end cap of the object.  You can make a valid object
 //   in two ways.  One way is to create a tile with a single, complete edge along Y=0, and of course a corresponding edges along Y=1.  The second way
 //   to make a valid object is to have no points at all on the Y=0 line, and of course none on Y=1.  In this case, the resulting texture produces
@@ -3373,7 +3378,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   and "folded" so it can follow the curve.  This folding is controlled by the `tex_samples` parameter to {{cyl()}}, {{linear_sweep()}},
 //   and {{rotate_sweep()}}.  Note that you specify it when you **use** the texture, not when you create it.  This differs from height
 //   fields, where the analogous parameter is the `n=` parameter of the {{texture()}} function.  When `tex_samples` is too small, only the
-//   points given in the VNF will follow the surface, resulting in a blocky look and geometrical artifacts.  
+//   points given in the VNF follows the surface, resulting in a blocky look and geometrical artifacts.  
 // Figure(3D,Med,NoAxes): On the left the `tex_samples` value is small and the texture is blocky.  On the right, the default value of 8 allows a reasonable fit to the cylinder. 
 //   xdistribute(spacing=5){
 //      cyl(d=10/PI, h=5, chamfer=0,
@@ -3401,17 +3406,17 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   tx = texture(tex, [n=], [inset=], [gap=], [roughness=]);
 // Description:
 //   Given a texture name, returns a texture.  Textures can come in two varieties:
-//   - Heightfield textures which are 2D arrays of scalars.  These are usually faster to render, but can be less precise and prone to triangulation errors.  The table below gives the recommended style for the best triangulation.  If results are still incorrect, switch to the similar VNF tile by adding the "_vnf" suffix.
+//   - Heightfield textures, which are 2D arrays of scalars.  These are usually faster to render, but can be less precise and prone to triangulation errors.  The table below gives the recommended style for the best triangulation.  If results are still incorrect, switch to the similar VNF tile by adding the "_vnf" suffix.
 //   - VNF Tile textures, which are VNFs that cover the unit square [0,0] x [1,1].  These tend to be slower to render, but allow greater flexibility and precision for shapes that don't align with a grid.
 //   .
 //   In the descriptions below, imagine the textures positioned on the XY plane, so "horizontal" refers to the "sideways" dimensions of the texture and
-//   "up" and "down" refer to the depth dimension, perpendicular to the surface being textured.  If a texture is placed on a cylinder the "depth" will become the radial direction and the "horizontal"
-//   direction will be the vertical and tangential directions on the cylindrical surface.  All horizontal dimensions for VNF textures are relative to the unit square
-//   on which the textures are defined, so a value of 0.25 for a gap or border will refer to 1/4 of the texture's full length and/or width.  All supported textures appear below in the examples.  
+//   "up" and "down" refer to the depth dimension, perpendicular to the surface being textured.  If a texture is placed on a cylinder, the "depth" becomes the radial direction and "horizontal"
+//   refers to the vertical and tangential directions on the cylindrical surface.  All horizontal dimensions for VNF textures are relative to the unit square
+//   on which the textures are defined, so a value of 0.25 for a gap or border refers to 1/4 of the texture's full length and/or width.  All supported textures appear below in the examples.  
 // Arguments:
 //   tex = The name of the texture to get.
 //   ---
-//   n = The number of samples to use for defining a heightfield texture.  Depending on the texture, result will be either n x n or 1 x n.  Not allowed for VNF textures.  See the `tex_samples` argument to {{cyl()}}, {{linear_sweep()}} and {{rotate_sweep()}} for controlling the sampling of VNF textures.
+//   n = The number of samples to use for defining a heightfield texture.  Depending on the texture, result will be either n×n or 1×n.  Not allowed for VNF textures.  See the `tex_samples` argument to {{cyl()}}, {{linear_sweep()}} and {{rotate_sweep()}} for controlling the sampling of VNF textures.
 //   border = The size of a border region on some VNF tile textures.  Generally between 0 and 0.5.
 //   gap = The gap between logically distinct parts of some VNF tiles.  (ie: gap between bricks, gap between truncated ribs, etc.)
 //   roughness = The amount of roughness used on the surface of some heightfield textures.  Generally between 0 and 0.5.
@@ -3421,7 +3426,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //       rect(30), texture=tex, h=30,
 //       tex_depth=1/2, tex_size=[10,10]
 //   );
-// Example(3D): **"bricks_vnf"** (VNF) = VNF version of "bricks".  Giving `gap=` sets the "mortar" gap between adjacent bricks, default 0.05.  Giving `border=` specifies that the top face of the brick is smaller than the bottom of the brick by `border` on each of the four sides.  If `gap` is zero then a `border` value close to 0.5 will cause bricks to come to a sharp pointed edge, with just a tiny flat top surface.  Note that `gap+border` must be strictly smaller than 0.5.   Default is `border=0.05`.  
+// Example(3D): **"bricks_vnf"** (VNF) = VNF version of "bricks".  Giving `gap=` sets the "mortar" gap between adjacent bricks, default 0.05.  Giving `border=` specifies that the top face of the brick is smaller than the bottom of the brick by `border` on each of the four sides.  If `gap` is zero then a `border` value close to 0.5 causes the bricks to come to a sharp pointed edge, with just a tiny flat top surface.  Note that `gap+border` must be strictly smaller than 0.5.   Default is `border=0.05`.  
 //   tex = texture("bricks_vnf");
 //   linear_sweep(
 //       rect(30), texture=tex, h=30,
@@ -4046,7 +4051,7 @@ function texture(tex, n, border, gap, roughness, inset) =
 /// Arguments:
 ///   region = The [[Region|regions.scad]] to sweep/extrude.
 ///   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
-///   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+///   tex_size = An optional 2D target size for the textures.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 ///   h / l = The height to extrude/sweep the path.
 ///   ---
 ///   counts = If given instead of tex_size, gives the tile repetition counts for textures over the surface length and height.
@@ -4060,7 +4065,7 @@ function texture(tex, n, border, gap, roughness, inset) =
 ///   samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 ///   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 ///   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-///   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+///   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 /// Named Anchors:
 ///   "centroid_top" = The centroid of the top of the shape, oriented UP.
 ///   "centroid" = The centroid of the center of the shape, oriented UP.
@@ -4177,19 +4182,9 @@ function _textured_linear_sweep(
             let(
                 s = 1 / max(1, samples),
                 slice_us = list([s:s:1-s/2]),
-                vnft1 = vnf_slice(texture, "X", slice_us),
-                vnft = twist? vnf_slice(vnft1, "Y", slice_us) : vnft1,
-                zvnf = [
-                         [
-                           for (p=vnft[0]) [
-                                    approx(p.x,0)? 0 : approx(p.x,1)? 1 : p.x,
-                                    approx(p.y,0)? 0 : approx(p.y,1)? 1 : p.y,
-                                    p.z
-                                ]
-                         ],
-                         vnft[1]
-                       ]
-            ) zvnf,
+                vnf_x = vnf_slice(texture, "X", slice_us),
+                vnf_xy = twist? vnf_slice(vnf_x, "Y", slice_us) : vnf_x
+            ) vnf_quantize(vnf_xy,1e-4), 
         edge_paths = is_vnf(texture) ? _tile_edge_path_list(vnf_tile,1) : undef,
         tpath = is_def(edge_paths) 
             ? len(edge_paths[0])==0 ? [] : hstack([column(edge_paths[0][0],0), column(edge_paths[0][0],2)])
@@ -4386,13 +4381,13 @@ function _tile_edge_path_list(vnf, axis, maxopen=1) =
 /// Arguments:
 ///   shape = The path or region to sweep/extrude.
 ///   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to the revolution surface.  See {{texture()}} for what named textures are supported.
-///   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+///   tex_size = An optional 2D target size for the textures.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 ///   tex_scale = Scaling multiplier for the texture depth.
 ///   ---
 ///   inset = If numeric, lowers the texture into the surface by that amount, before the tex_scale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
 ///   rot = If true, rotates the texture 90º.
 ///   shift = [X,Y] amount to translate the top, relative to the bottom.  Default: [0,0]
-///   closed = If false, and shape is given as a path, then the revolved path will be sealed to the axis of rotation with untextured caps.  Default: `true`
+///   closed = If false, and shape is given as a path, then the revolved path are sealed to the axis of rotation with untextured caps.  Default: `true`
 ///   taper = If given, and `closed=false`, tapers the texture height to zero over the first and last given percentage of the path.  If given as a lookup table with indices between 0 and 100, uses the percentage lookup table to ramp the texture heights.  Default: `undef` (no taper)
 ///   angle = The number of degrees counter-clockwise from X+ to revolve around the Z axis.  Default: `360`
 ///   style = The triangulation style used.  See {{vnf_vertex_array()}} for valid styles.  Used only with heightfield type textures. Default: `"min_edge"`
@@ -4400,7 +4395,7 @@ function _tile_edge_path_list(vnf, axis, maxopen=1) =
 ///   samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 ///   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 ///   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-///   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+///   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 /// Anchor Types:
 ///   "hull" = Anchors to the virtual convex hull of the shape.
 ///   "intersect" = Anchors to the surface of the shape.
@@ -4453,24 +4448,15 @@ function _textured_revolution(
         h = maxy - miny,
         circumf = 2 * PI * maxx,
         texcnt = is_vnf(texture) ? undef : [len(texture[0]), len(texture)],
-        tile = !is_vnf(texture) || samples==1 ? texture :
-            let(
-                s = 1 / samples,
-                slices = list([s : s : 1-s/2]),
-                vnfx = vnf_slice(texture, "X", slices),
-                vnfy = inhibit_y_slicing? vnfx : vnf_slice(vnfx, "Y", slices),
-                vnft = vnf_triangulate(vnfy),
-                zvnf = [
-                    [
-                        for (p=vnft[0]) [
-                            approx(p.x,0)? 0 : approx(p.x,1)? 1 : p.x,
-                            approx(p.y,0)? 0 : approx(p.y,1)? 1 : p.y,
-                            p.z
-                        ]
-                    ],
-                    vnft[1]
-                ]
-            ) zvnf,
+        tile = !is_vnf(texture) || samples==1 ? texture
+             :
+              let(
+                  s = 1 / samples,
+                  slices = list([s : s : 1-s/2]),
+                  vnfx = vnf_slice(texture, "X", slices),
+                  vnfy = inhibit_y_slicing? vnfx : vnf_slice(vnfx, "Y", slices),
+                  zvnf = vnf_triangulate(vnf_quantize(vnfy,1e-4))
+              ) zvnf,
         edge_paths = is_vnf(tile) ? _tile_edge_path_list(tile,1) : undef,
         bpath = is_def(edge_paths)
             ? len(edge_paths[0])==0 ? [] : hstack([column(edge_paths[0][0],0), column(edge_paths[0][0],2)])
@@ -4483,10 +4469,7 @@ function _textured_revolution(
                    : _tile_edge_path_list(tile,0),
         side_open_path = is_undef(side_paths) ? undef : len(side_paths[0])==0 ? [] : side_paths[0][1],
         side_closed_paths = is_undef(side_paths) ? [] : side_paths[1], 
-        counts_x = is_vector(counts,2)? counts.x :
-            is_vector(tex_size,2)
-              ? max(1,round(angle/360*circumf/tex_size.x))
-              : ceil(6*angle/360*circumf/h),
+        counts_x = is_def(counts)? counts.x : max(1,round(angle/360*circumf/tex_size.x)),
         taper_lup = closed || is_undef(taper)? [[-1,1],[2,1]] :
             is_num(taper)? [[-1,0], [0,0], [taper/100+EPSILON,1], [1-taper/100-EPSILON,1], [1,0], [2,0]] :
             is_path(taper,2)? let(
@@ -4515,8 +4498,7 @@ function _textured_revolution(
                 rgn_wall_vnf = vnf_join([
                     for (path = rgn) let(
                         plen = path_length(path, closed=closed),
-                        counts_y = is_vector(counts,2)? counts.y :
-                            is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
+                        counts_y = is_def(counts) ? counts.y : max(1,round(plen/tex_size.y)),
                         obases = resample_path(path, n=counts_y * samples + (closed?0:1), closed=closed),
                         onorms = path_normals(obases, closed=closed),
                         bases = xrot(90, p=path3d(obases)),
@@ -4562,8 +4544,7 @@ function _textured_revolution(
                         cap_rgn = side_open_path == [] ? [] : [ 
                             for (path = rgn) let(
                                 plen = path_length(path, closed=closed),
-                                counts_y = is_vector(counts,2)? counts.y :
-                                    is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
+                                counts_y = is_def(counts) ? counts.y : max(1,round(plen/tex_size.y)),
                                 bases = resample_path(path, n=counts_y * samples + (closed?0:1), closed=closed),
                                 norms = path_normals(bases, closed=closed),
                                 ppath = is_vnf(texture)
@@ -4589,8 +4570,7 @@ function _textured_revolution(
                         extra_paths = side_closed_paths==[] ? [] 
                            : [for (path = rgn) let(
                                 plen = path_length(path, closed=closed),
-                                counts_y = is_vector(counts,2)? counts.y :
-                                    is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
+                                counts_y = is_def(counts) ? counts.y : max(1,round(plen/tex_size.y)),
                                 bases = resample_path(path, n=counts_y * samples + (closed?0:1), closed=closed),
                                 norms = path_normals(bases, closed=closed),
                                 modpaths = [for (j = [0:1:counts_y-1], cpath=side_closed_paths)
@@ -4608,8 +4588,7 @@ function _textured_revolution(
                 endcaps_vnf = closed? EMPTY_VNF :
                     let(
                         plen = path_length(rgn[0], closed=closed),
-                        counts_y = is_vector(counts,2)? counts.y :
-                            is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
+                        counts_y = is_def(counts) ? counts.y : max(1,round(plen/tex_size.y)),
                         obases = resample_path(rgn[0], n=counts_y * samples + (closed?0:1), closed=closed),
                         onorms = path_normals(obases, closed=closed),
                         bases = xrot(90, p=path3d(obases)),
@@ -4702,7 +4681,7 @@ module _textured_revolution(
 }
 
 
-function _texture_point_array(points, texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, triangulate=false, 
+function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, triangulate=false, 
                 col_wrap=false, tex_depth=1, row_wrap=false, caps, cap1, cap2, reverse=false, style="min_edge", tex_extra, tex_skip, sidecaps,sidecap1,sidecap2,normals) =
     assert(tex_reps==undef || is_vector(tex_reps,2))
     assert(tex_size==undef || is_num(tex_size) || is_vector(tex_size,2), "tex_size must be a scalar or 2-vector")
@@ -4722,11 +4701,11 @@ function _texture_point_array(points, texture, tex_reps, tex_size, tex_samples, 
         ptsize=[len(points[0]), len(points)],
         tex_reps = is_def(tex_reps) ? tex_reps
                  : let(
-                       tex_size = is_undef(tex_sizes) ? [5,5] : force_list(tex_size,2),
+                       tex_size = is_undef(tex_size) ? [5,5] : force_list(tex_size,2),
                        xsize = norm(points[0][0]-points[0][1])*(ptsize.x+(col_wrap?1:0)),
                        ysize = norm(points[0][0]-points[1][0])*(ptsize.y+(row_wrap?1:0))
                    )
-                   [round(xsize/tex_size.x), round(ysize/tex_size.y)],
+                   [max(1,round(xsize/tex_size.x)), max(1,round(ysize/tex_size.y))],
         normals = default(normals,surfnormals(points, col_wrap=col_wrap, row_wrap=row_wrap)),
         getscale = function(x,y) (x+y)/2
     )
@@ -4767,10 +4746,10 @@ function _texture_point_array(points, texture, tex_reps, tex_size, tex_samples, 
         vnf_vertex_array(tex_surf, row_wrap=row_wrap, col_wrap=col_wrap, reverse=reverse,style=style, caps=caps, cap1=cap1, cap2=cap2, triangulate=triangulate)
    : // VNF case
         let(
-            local_scale = [for(y=[-1:1:ptsize.y-1])
-                             [for(x=[-1:1:ptsize.x-1])
-                               ((!col_wrap && (x<0 || x==ptsize.x-1))
-                                   || (!row_wrap && (y<0 || y==ptsize.y-1))) ? undef
+            local_scale = [for(y=[-1:1:ptsize.y])
+                             [for(x=[-1:1:ptsize.x])
+                               ((!col_wrap && (x<0 || x>ptsize.x-1))
+                                   || (!row_wrap && (y<0 || y>ptsize.y-1))) ? undef
                               : let(
                                      dx = [norm(select(select(points,y),x) - select(select(points,y),x+1)),
                                           norm(select(select(points,y+1),x) - select(select(points,y+1),x+1))],
@@ -4779,32 +4758,22 @@ function _texture_point_array(points, texture, tex_reps, tex_size, tex_samples, 
                                 )
                                 getscale(mean(dx),mean(dy))]],
             samples = default(tex_samples,8),
-            vnf = samples==1? texture :
+            vnf = samples==1? texture
+                :
                   let(
                       s = 1 / samples,
                       slice_us = list([s:s:1-s/2]),
-                      vnft1 = vnf_slice(texture, "X", slice_us),
-                      vnft = vnf_slice(vnft1, "Y", slice_us),
-                      
-                      zvnf = [
-                               [
-                                 for (p=vnft[0]) [
-                                       approx(p.x,0)? 0 : approx(p.x,1)? 1 : p.x,
-                                       approx(p.y,0)? 0 : approx(p.y,1)? 1 : p.y,
-                                      p.z
-                                 ]
-                               ],
-                               vnft[1]
-                             ]
-                 )
-                 zvnf,
+                      vnf_x = vnf_slice(texture, "X", slice_us),
+                      vnf_xy = vnf_slice(vnf_x, "Y", slice_us),
+                      vnf_q = vnf_quantize(vnf_xy,1e-4)
+                  )
+                  vnf_triangulate(vnf_q),
             yedge_paths = !row_wrap ? _tile_edge_path_list(vnf,1) : undef,
             xedge_paths = !col_wrap ? _tile_edge_path_list(vnf,0) : undef,
             trans_pt = function(x,y,pt)
                let(
                    tileindx = x+pt.x,
                    tileindy = y+(1-pt.y),
-
 
                    refx = tileindx/tex_reps.x*(ptsize.x-(col_wrap?0:1)),
                    refy = tileindy/tex_reps.y*(ptsize.y-(row_wrap?0:1)),
