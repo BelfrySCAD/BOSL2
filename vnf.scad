@@ -30,7 +30,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 // Function&Module: vnf_vertex_array()
 // Synopsis: Returns a VNF structure from a rectangular vertex list.
 // SynTags: VNF, Geom
-// Topics: VNF Generators, Lists
+// Topics: VNF Generators, Lists, Textures
 // See Also: vnf_tri_array(), vnf_join(), vnf_from_polygons(), vnf_from_region()
 // Usage:
 //   vnf = vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [style=], [reverse=], [col_wrap=], [row_wrap=], [triangulate=]);
@@ -244,7 +244,7 @@ function vnf_vertex_array(
     assert(is_consistent(points), "Non-rectangular or invalid point array")
     assert(is_bool(triangulate))
     is_def(texture) ?
-          _texture_point_array(points=points, texture=texture, tex_reps=tex_reps, tex_size=tex_size,
+          _textured_point_array(points=points, texture=texture, tex_reps=tex_reps, tex_size=tex_size,
                                tex_inset=tex_inset, tex_samples=tex_samples, tex_rot=tex_rot,
                                col_wrap=col_wrap, row_wrap=row_wrap, tex_depth=tex_depth, caps=caps, cap1=cap1, cap2=cap2, reverse=reverse,
                                style=style, tex_extra=tex_extra, tex_skip=tex_skip, sidecaps=sidecaps, sidecap1=sidecap1, sidecap2=sidecap2,normals=normals,triangulate=triangulate)
