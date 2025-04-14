@@ -4455,7 +4455,7 @@ function _textured_revolution(
                   slices = list([s : s : 1-s/2]),
                   vnfx = vnf_slice(texture, "X", slices),
                   vnfy = inhibit_y_slicing? vnfx : vnf_slice(vnfx, "Y", slices),
-                  zvnf = vnf_triangulate(vnf_quantize(vnfy),1e-4)
+                  zvnf = vnf_triangulate(vnf_quantize(vnfy,1e-4))
               ) zvnf,
         edge_paths = is_vnf(tile) ? _tile_edge_path_list(tile,1) : undef,
         bpath = is_def(edge_paths)
