@@ -670,8 +670,8 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 
 // Function&Module: arc()
 // Synopsis: Draws a 2D pie-slice or returns 2D or 3D path forming an arc.
-// SynTags: Geom, Path
-// Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators
+// SynTags: Geom, Path 
+// Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators, Rounding
 // See Also: pie_slice(), stroke(), ring()
 //
 // Usage: 2D arc from 0º to `angle` degrees.
@@ -689,7 +689,7 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 // Usage: 2D or 3D arc, fron tangent point on segment `[P0,P1]` to the tangent point on segment `[P1,P2]`.
 //   path=arc(n, corner=[P0,P1,P2], r=);
 // Usage: Create a wedge using any other arc parameters
-//   path=arc(wedge=true,...)
+//   path=arc(wedge=true,[rounding=],...)
 // Usage: as module
 //   arc(...) [ATTACHMENTS];
 // Description:
@@ -744,10 +744,14 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   path = arc(corner=pts, r=20);
 //   stroke(pts, endcaps="arrow2");
 //   stroke(path, endcap2="arrow2", color="blue");
-// Example(2D): Rounding the corners
+// Example(2D, NoScales): Rounding the corners
 //   $fs=.5; $fa=1;
 //   arc(r=25, angle=[25,107], rounding=[6,5,7], wedge=true);
 //   stroke(arc(r=25, angle=[25,107], wedge=true), color="red",closed=true, width=.5);
+// Example(2D, NoScales): Negative roundings are permitted on the two outside corners, but not the center corner.  
+//   $fs=.5; $fa=1;
+//   arc(r=25, angle=[-30,45], rounding=[0,-12, -27], wedge=true);
+//   stroke(arc(r=25, angle=[-30,45], wedge=true), color="red",closed=true, width=.5);
 
 function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true, rounding) =
     assert(is_bool(endpoint))
@@ -892,33 +896,38 @@ module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=fa
 }
 
 
+                        
+
 function _rounded_arc(radius, rounding=0, angle, n) =
-    assert(is_finite(angle) && angle>-360 && angle<360, "angle must be strictly between -360 and 360")
+    assert(is_finite(angle) && abs(angle)<360, "angle must be strictly between -360 and 360")
     assert(is_finite(rounding) || is_vector(rounding,3), "rounding must be a scalar or 3-vector")
-    assert(all_nonnegative(rounding), "rounding values must be nonnegative")
     let(
         rounding = force_list(rounding,3),
+        
         dir = sign(angle),
 
-//        inner_corner_radius = abs(angle)==180?0 : abs(angle)>180 ? -dir*rounding[0] : dir*rounding[0],
         inner_corner_radius = abs(angle)>180 ? -dir*rounding[0] : dir*rounding[0],        
         arc1_opt_radius = radius - rounding[1],
         arc2_opt_radius = radius - rounding[2],
-        check = assert(rounding[1]<arc1_opt_radius, "rounding[1] is too big to fit")
+        check = assert(rounding[0]>=0, "rounding[0] must be nonnegative")
+                assert(rounding[1]<arc1_opt_radius, "rounding[1] is too big to fit")
                 assert(rounding[2]<arc2_opt_radius, "rounding[2] is too big to fit"),
-        arc1_angle = asin(rounding[1]/arc1_opt_radius),
-        arc2_angle = asin(rounding[2]/arc2_opt_radius),
-        arc1_cut  = radius - arc1_opt_radius*cos(arc1_angle),
-        arc2_cut  = radius - arc2_opt_radius*cos(arc2_angle),
- 
+        arc1_angle = asin(abs(rounding[1])/arc1_opt_radius),
+        arc2_angle = asin(abs(rounding[2])/arc2_opt_radius),
+        arc1_cut = radius - arc1_opt_radius*cos(arc1_angle),
+        arc2_cut = radius - arc2_opt_radius*cos(arc2_angle),
         radius_of_ctrpt = inner_corner_radius/sin(angle/2),
         radius_of_ctrpt_edge = radius_of_ctrpt*cos(angle/2),
+        
         pt1 = polar_to_xy(r=arc1_opt_radius, theta=dir*arc1_angle),
         pt2 = polar_to_xy(r=radius_of_ctrpt, theta=0.5*angle),
         pt3 = polar_to_xy(r=arc2_opt_radius, theta=angle - dir*arc2_angle),
- 
+        
         edge_gap1=radius-arc1_cut-radius_of_ctrpt_edge,
-        edge_gap2=radius-arc2_cut-radius_of_ctrpt_edge
+        edge_gap2=radius-arc2_cut-radius_of_ctrpt_edge,
+
+        angle_span1 = rounding[1]>0 ? [-dir*90, dir*arc1_angle] : -[dir*90, dir*180 - arc1_angle],
+        angle_span2 = [angle-dir*arc2_angle + (rounding[2]<0 ? dir*180 : 0), angle+dir*90]
     )
     assert(arc1_angle + arc2_angle<=abs(angle), "Roundings are too large: they interfere with each other on the arc")   
     assert(edge_gap1>=0, "Roundings are too large: center rounding (rounding[0]) interferes with first corner (rounding[1])")
@@ -926,14 +935,14 @@ function _rounded_arc(radius, rounding=0, angle, n) =
     [
       each if (rounding[0]>0 && abs(angle)!=180)
                                arc(cp=pt2,
-                                   points=[polar_to_xy(r=radius_of_ctrpt_edge, theta=angle),     // origin corner curve
+                                   points=[polar_to_xy(r=radius_of_ctrpt_edge, theta=angle),          // origin corner curve
                                    polar_to_xy(r=radius_of_ctrpt_edge, theta=0)],
                                    endpoint=edge_gap1!=0,n=n)
            else repeat([0,0],rounding[0]>0 && abs(angle)==180 && is_def(n) ? n : 1),                        
-      each if (rounding[1]>0) arc(r=rounding[1],cp=pt1,angle=[-90*dir,dir*arc1_angle],endpoint=dir*arc1_angle==angle,n=n),           // first corner
+      each if (rounding[1]!=0) arc(r=abs(rounding[1]),cp=pt1,angle=angle_span1,endpoint=dir*arc1_angle==angle,n=n), // first corner
       each if (arc1_angle+arc2_angle<abs(angle))
-                      arc(r=radius, angle=[dir*arc1_angle,angle - dir*arc2_angle], endpoint=rounding[2]==0,n=n),                 // main arc section
-      each if (rounding[2]>0) arc(r=rounding[2],cp=pt3,  angle=[angle-dir*arc2_angle, angle+dir*90],endpoint=edge_gap2!=0,n=n),  // second corner
+                      arc(r=radius, angle=[dir*arc1_angle,angle - dir*arc2_angle], endpoint=rounding[2]==0, n=n),   // main arc section
+      each if (rounding[2]!=0) arc(r=abs(rounding[2]),cp=pt3,  angle=angle_span2, endpoint=edge_gap2!=0, n=n)       // second corner
     ];
 
 
