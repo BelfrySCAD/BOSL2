@@ -1572,6 +1572,8 @@ function bezier_patch_normals(patch, u, v) =
 // SynTags: VNF
 // Topics: Bezier Patches
 // See Also: bezier_patch_normals(), vnf_sheet()
+// Usage:
+//   vnf = bezier_sheet(patch, thickness, [splinesteps=], [balanced=]
 // Description:
 //   Constructs a thin sheet from a bezier patch by offsetting the given patch along the normal vectors
 //   to the patch surface.  The thickness value must be small enough so that no points cross each other
@@ -1591,6 +1593,7 @@ function bezier_patch_normals(patch, u, v) =
 //   thickness = amount to offset; can be positive or negative
 //   ---
 //   splinesteps = Number of segments on the border edges of the bezier surface.  You can specify [USTEPS,VSTEPS].  Default: 16
+//   balanced = if true, then offset the bezier surface by half the specified thickness on each side. This increases execution time because two offsets must be performed. The sign of `thickness` does not matter. Default: false
 //   style = {{vnf_vertex_array()}} style to use.  Default: "default"
 // Example(3D):
 //   patch = [
@@ -1602,7 +1605,7 @@ function bezier_patch_normals(patch, u, v) =
 //        // u=0,v=1                                         u=1,v=1
 //   ];
 //   vnf_polyhedron(bezier_sheet(patch, 10));
-function bezier_sheet(patch, thickness, splinesteps=16, style="default") =
+function bezier_sheet(patch, thickness, splinesteps=16, style="default", balanced=false) =
   assert(is_bezier_patch(patch))
   assert(all_nonzero([thickness]), "thickness must be nonzero")
   let(
@@ -1612,8 +1615,9 @@ function bezier_sheet(patch, thickness, splinesteps=16, style="default") =
         pts = bezier_patch_points(patch, uvals, vvals),
         normals = bezier_patch_normals(patch, uvals, vvals),
         dummy=assert(is_matrix(flatten(normals)),"Bezier patch has degenerate normals"),
-        offset = pts + thickness*normals,
-        allpoints = [for(i=idx(pts)) concat(pts[i], reverse(offset[i]))],
+        offset0 = balanced ? pts - 0.5*thickness*normals : pts,
+        offset1 = pts + (balanced ? 0.5 : 1) * thickness*normals,
+        allpoints = [for(i=idx(offset0)) concat(offset0[i], reverse(offset1[i]))],
         vnf = vnf_vertex_array(allpoints, col_wrap=true, caps=true, style=style)        
   )
   thickness<0 ? vnf_reverse_faces(vnf) : vnf;
