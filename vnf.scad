@@ -65,6 +65,10 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   the number of data points must equal the tile count times the number of entries in the tile minus `tex_skip` plus `tex_extra`.
 //   Note that `tex_extra` defaults to 1 along dimensions that are not wrapped.  For a VNF tile you need to have the the point
 //   count equal to the tile count times tex_samples, plus one if wrapping is disabled.  
+//   .
+//   For creating the texture, `vnf_vertex_array()` uses normals to the surface that it estimates from the surface data itself.
+//   If you have more accurate normals or need the normals to take particular values, you can pass an array of normals
+//   using the `normals` parameter.
 // Arguments:
 //   points = A list of vertices to divide into columns and rows.
 //   ---
@@ -89,6 +93,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   sidecaps = if `col_wrap==false` this controls whether to cap any floating ends of a VNF tile on the texture.  Does not affect the main texture surface.  Ignored it doesn't apply.  Default: false
 //   sidecap1 = set sidecap only for the `points[][0]` edge of the output
 //   sidecap2 = set sidecap only for the `points[][max]` edge of the output
+//   normals = array of normal vectors to each point in the point array for more accurate texture height calculation
 //   cp = (module) Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = (module) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = (module) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -304,7 +309,7 @@ function vnf_vertex_array(
     style="default",
     triangulate = false,
     texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, 
-    tex_depth=1, tex_extra, tex_skip, sidecaps,sidecap1,sidecap2
+    tex_depth=1, tex_extra, tex_skip, sidecaps,sidecap1,sidecap2, normals
 ) =
     assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area","flip1","flip2"]))
     assert(is_matrix(points[0], n=3),"Point array has the wrong shape or points are not 3d")
@@ -314,7 +319,7 @@ function vnf_vertex_array(
           _textured_point_array(points=points, texture=texture, tex_reps=tex_reps, tex_size=tex_size,
                                tex_inset=tex_inset, tex_samples=tex_samples, tex_rot=tex_rot,
                                col_wrap=col_wrap, row_wrap=row_wrap, tex_depth=tex_depth, caps=caps, cap1=cap1, cap2=cap2, reverse=reverse,
-                               style=style, tex_extra=tex_extra, tex_skip=tex_skip, sidecaps=sidecaps, sidecap1=sidecap1, sidecap2=sidecap2,triangulate=triangulate)
+                               style=style, tex_extra=tex_extra, tex_skip=tex_skip, sidecaps=sidecaps, sidecap1=sidecap1, sidecap2=sidecap2,normals=normals,triangulate=triangulate)
   :           
     assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested (without texture)")
     assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap (without texture)")
