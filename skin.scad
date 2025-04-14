@@ -1434,7 +1434,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 // Function&Module: path_sweep()
 // Synopsis: Sweep a 2d polygon path along a 2d or 3d path. 
 // SynTags: VNF, Geom
-// Topics: Extrusion, Sweep, Paths
+// Topics: Extrusion, Sweep, Paths, Textures
 // See Also: sweep_attach(), linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep2d(), offset_sweep()
 // Usage: As module
 //   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
@@ -1922,8 +1922,13 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //       attach("start",TOP) stroke([path3d(shape)],width=.5);
 //       attach("end") stroke([path3d(yscale(1.5,shape))],width=.5);       
 //     }
-
-
+// Example(Med,NoScales): Applying a texture to a sweep
+//   ellipse = xscale(2, p=circle($fn=64, r=3));
+//   pentagon = subdivide_path(pentagon(r=1), 30);
+//   path_sweep(pentagon, path3d(ellipse),
+//              closed=true, twist=360*2/5,symmetry=5,
+//              texture="bricks_vnf",tex_reps=[10,40],
+//              tex_depth=.1);
 
 
 module path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true,
@@ -2286,7 +2291,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 // Function&Module: sweep()
 // Synopsis: Construct a 3d object from arbitrary transformations of a 2d polygon path.
 // SynTags: VNF, Geom
-// Topics: Extrusion, Sweep, Paths
+// Topics: Extrusion, Sweep, Paths, Textures
 // See Also: sweep_attach(), linear_sweep(), rotate_sweep(), spiral_sweep(), path_sweep(), path_sweep2d(), offset_sweep()
 // Usage: As Module
 //   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
@@ -4177,19 +4182,9 @@ function _textured_linear_sweep(
             let(
                 s = 1 / max(1, samples),
                 slice_us = list([s:s:1-s/2]),
-                vnft1 = vnf_slice(texture, "X", slice_us),
-                vnft = twist? vnf_slice(vnft1, "Y", slice_us) : vnft1,
-                zvnf = [
-                         [
-                           for (p=vnft[0]) [
-                                    approx(p.x,0)? 0 : approx(p.x,1)? 1 : p.x,
-                                    approx(p.y,0)? 0 : approx(p.y,1)? 1 : p.y,
-                                    p.z
-                                ]
-                         ],
-                         vnft[1]
-                       ]
-            ) zvnf,
+                vnf_x = vnf_slice(texture, "X", slice_us),
+                vnf_xy = twist? vnf_slice(vnf_x, "Y", slice_us) : vnf_x
+            ) vnf_quantize(vnf_xy,1e-4), 
         edge_paths = is_vnf(texture) ? _tile_edge_path_list(vnf_tile,1) : undef,
         tpath = is_def(edge_paths) 
             ? len(edge_paths[0])==0 ? [] : hstack([column(edge_paths[0][0],0), column(edge_paths[0][0],2)])
@@ -4453,24 +4448,15 @@ function _textured_revolution(
         h = maxy - miny,
         circumf = 2 * PI * maxx,
         texcnt = is_vnf(texture) ? undef : [len(texture[0]), len(texture)],
-        tile = !is_vnf(texture) || samples==1 ? texture :
-            let(
-                s = 1 / samples,
-                slices = list([s : s : 1-s/2]),
-                vnfx = vnf_slice(texture, "X", slices),
-                vnfy = inhibit_y_slicing? vnfx : vnf_slice(vnfx, "Y", slices),
-                vnft = vnf_triangulate(vnfy),
-                zvnf = [
-                    [
-                        for (p=vnft[0]) [
-                            approx(p.x,0)? 0 : approx(p.x,1)? 1 : p.x,
-                            approx(p.y,0)? 0 : approx(p.y,1)? 1 : p.y,
-                            p.z
-                        ]
-                    ],
-                    vnft[1]
-                ]
-            ) zvnf,
+        tile = !is_vnf(texture) || samples==1 ? texture
+             :
+              let(
+                  s = 1 / samples,
+                  slices = list([s : s : 1-s/2]),
+                  vnfx = vnf_slice(texture, "X", slices),
+                  vnfy = inhibit_y_slicing? vnfx : vnf_slice(vnfx, "Y", slices),
+                  zvnf = vnf_triangulate(vnf_quantize(vnfy,1e-4))
+              ) zvnf,
         edge_paths = is_vnf(tile) ? _tile_edge_path_list(tile,1) : undef,
         bpath = is_def(edge_paths)
             ? len(edge_paths[0])==0 ? [] : hstack([column(edge_paths[0][0],0), column(edge_paths[0][0],2)])
@@ -4483,10 +4469,7 @@ function _textured_revolution(
                    : _tile_edge_path_list(tile,0),
         side_open_path = is_undef(side_paths) ? undef : len(side_paths[0])==0 ? [] : side_paths[0][1],
         side_closed_paths = is_undef(side_paths) ? [] : side_paths[1], 
-        counts_x = is_vector(counts,2)? counts.x :
-            is_vector(tex_size,2)
-              ? max(1,round(angle/360*circumf/tex_size.x))
-              : ceil(6*angle/360*circumf/h),
+        counts_x = is_def(counts)? counts.x : max(1,round(angle/360*circumf/tex_size.x)),
         taper_lup = closed || is_undef(taper)? [[-1,1],[2,1]] :
             is_num(taper)? [[-1,0], [0,0], [taper/100+EPSILON,1], [1-taper/100-EPSILON,1], [1,0], [2,0]] :
             is_path(taper,2)? let(
@@ -4515,8 +4498,7 @@ function _textured_revolution(
                 rgn_wall_vnf = vnf_join([
                     for (path = rgn) let(
                         plen = path_length(path, closed=closed),
-                        counts_y = is_vector(counts,2)? counts.y :
-                            is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
+                        counts_y = is_def(counts) ? counts.y : max(1,round(plen/tex_size.y)),
                         obases = resample_path(path, n=counts_y * samples + (closed?0:1), closed=closed),
                         onorms = path_normals(obases, closed=closed),
                         bases = xrot(90, p=path3d(obases)),
@@ -4562,8 +4544,7 @@ function _textured_revolution(
                         cap_rgn = side_open_path == [] ? [] : [ 
                             for (path = rgn) let(
                                 plen = path_length(path, closed=closed),
-                                counts_y = is_vector(counts,2)? counts.y :
-                                    is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
+                                counts_y = is_def(counts) ? counts.y : max(1,round(plen/tex_size.y)),
                                 bases = resample_path(path, n=counts_y * samples + (closed?0:1), closed=closed),
                                 norms = path_normals(bases, closed=closed),
                                 ppath = is_vnf(texture)
@@ -4589,8 +4570,7 @@ function _textured_revolution(
                         extra_paths = side_closed_paths==[] ? [] 
                            : [for (path = rgn) let(
                                 plen = path_length(path, closed=closed),
-                                counts_y = is_vector(counts,2)? counts.y :
-                                    is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
+                                counts_y = is_def(counts) ? counts.y : max(1,round(plen/tex_size.y)),
                                 bases = resample_path(path, n=counts_y * samples + (closed?0:1), closed=closed),
                                 norms = path_normals(bases, closed=closed),
                                 modpaths = [for (j = [0:1:counts_y-1], cpath=side_closed_paths)
@@ -4608,8 +4588,7 @@ function _textured_revolution(
                 endcaps_vnf = closed? EMPTY_VNF :
                     let(
                         plen = path_length(rgn[0], closed=closed),
-                        counts_y = is_vector(counts,2)? counts.y :
-                            is_vector(tex_size,2)? max(1,round(plen/tex_size.y)) : 6,
+                        counts_y = is_def(counts) ? counts.y : max(1,round(plen/tex_size.y)),
                         obases = resample_path(rgn[0], n=counts_y * samples + (closed?0:1), closed=closed),
                         onorms = path_normals(obases, closed=closed),
                         bases = xrot(90, p=path3d(obases)),
@@ -4702,7 +4681,7 @@ module _textured_revolution(
 }
 
 
-function _texture_point_array(points, texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, triangulate=false, 
+function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, triangulate=false, 
                 col_wrap=false, tex_depth=1, row_wrap=false, caps, cap1, cap2, reverse=false, style="min_edge", tex_extra, tex_skip, sidecaps,sidecap1,sidecap2,normals) =
     assert(tex_reps==undef || is_vector(tex_reps,2))
     assert(tex_size==undef || is_num(tex_size) || is_vector(tex_size,2), "tex_size must be a scalar or 2-vector")
@@ -4767,10 +4746,10 @@ function _texture_point_array(points, texture, tex_reps, tex_size, tex_samples, 
         vnf_vertex_array(tex_surf, row_wrap=row_wrap, col_wrap=col_wrap, reverse=reverse,style=style, caps=caps, cap1=cap1, cap2=cap2, triangulate=triangulate)
    : // VNF case
         let(
-            local_scale = [for(y=[-1:1:ptsize.y-1])
-                             [for(x=[-1:1:ptsize.x-1])
-                               ((!col_wrap && (x<0 || x==ptsize.x-1))
-                                   || (!row_wrap && (y<0 || y==ptsize.y-1))) ? undef
+            local_scale = [for(y=[-1:1:ptsize.y])
+                             [for(x=[-1:1:ptsize.x])
+                               ((!col_wrap && (x<0 || x>ptsize.x-1))
+                                   || (!row_wrap && (y<0 || y>ptsize.y-1))) ? undef
                               : let(
                                      dx = [norm(select(select(points,y),x) - select(select(points,y),x+1)),
                                           norm(select(select(points,y+1),x) - select(select(points,y+1),x+1))],
@@ -4779,32 +4758,22 @@ function _texture_point_array(points, texture, tex_reps, tex_size, tex_samples, 
                                 )
                                 getscale(mean(dx),mean(dy))]],
             samples = default(tex_samples,8),
-            vnf = samples==1? texture :
+            vnf = samples==1? texture
+                :
                   let(
                       s = 1 / samples,
                       slice_us = list([s:s:1-s/2]),
-                      vnft1 = vnf_slice(texture, "X", slice_us),
-                      vnft = vnf_slice(vnft1, "Y", slice_us),
-                      
-                      zvnf = [
-                               [
-                                 for (p=vnft[0]) [
-                                       approx(p.x,0)? 0 : approx(p.x,1)? 1 : p.x,
-                                       approx(p.y,0)? 0 : approx(p.y,1)? 1 : p.y,
-                                      p.z
-                                 ]
-                               ],
-                               vnft[1]
-                             ]
-                 )
-                 zvnf,
+                      vnf_x = vnf_slice(texture, "X", slice_us),
+                      vnf_xy = vnf_slice(vnf_x, "Y", slice_us),
+                      vnf_q = vnf_quantize(vnf_xy,1e-4)
+                  )
+                  vnf_triangulate(vnf_q),
             yedge_paths = !row_wrap ? _tile_edge_path_list(vnf,1) : undef,
             xedge_paths = !col_wrap ? _tile_edge_path_list(vnf,0) : undef,
             trans_pt = function(x,y,pt)
                let(
                    tileindx = x+pt.x,
                    tileindy = y+(1-pt.y),
-
 
                    refx = tileindx/tex_reps.x*(ptsize.x-(col_wrap?0:1)),
                    refy = tileindy/tex_reps.y*(ptsize.y-(row_wrap?0:1)),
