@@ -4764,8 +4764,8 @@ function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples,
         let(
             local_scale = [for(y=[-1:1:ptsize.y])
                              [for(x=[-1:1:ptsize.x])
-                               ((!col_wrap && (x<0 || x>ptsize.x-1))
-                                   || (!row_wrap && (y<0 || y>ptsize.y-1))) ? undef
+                               ((!col_wrap && (x<0 || x>=ptsize.x-1))
+                                   || (!row_wrap && (y<0 || y>=ptsize.y-1))) ? undef
                               : let(
                                      dx = [norm(select(select(points,y),x) - select(select(points,y),x+1)),
                                           norm(select(select(points,y+1),x) - select(select(points,y+1),x+1))],
