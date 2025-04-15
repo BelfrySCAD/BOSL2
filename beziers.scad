@@ -1595,7 +1595,7 @@ function bezier_patch_normals(patch, u, v) =
 //   splinesteps = Number of segments on the border edges of the bezier surface.  You can specify [USTEPS,VSTEPS].  Default: 16
 //   balanced = if true, then offset the bezier surface by half the specified thickness on each side. This increases execution time because two offsets must be performed. The sign of `thickness` does not matter. Default: false
 //   style = {{vnf_vertex_array()}} style to use.  Default: "default"
-// Example(3D): Because the "inside" of this bezier patch is on the underside of this view, a positive thickness extends downward from that side of the surface.
+// Example(3D): In this case, a positive thickness extends downward from that side of the surface.
 //   patch = [
 //        // u=0,v=0                                         u=1,v=0
 //        [[-50,-50,  0], [-16,-50,  20], [ 16,-50, -20], [50,-50,  0]],
@@ -1615,7 +1615,7 @@ function bezier_patch_normals(patch, u, v) =
 //        // u=0,v=1                                         u=1,v=1
 //   ];
 //   vnf_polyhedron(bezier_vnf(patch));
-//   vnf_polyhedron(bezier_sheet(patch, 10, balanced=true));
+//   %vnf_polyhedron(bezier_sheet(patch, 10, balanced=true));
 
 function bezier_sheet(patch, thickness, splinesteps=16, style="default", balanced=false) =
   assert(is_bezier_patch(patch))
