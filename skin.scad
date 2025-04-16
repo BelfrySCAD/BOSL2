@@ -552,8 +552,8 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   slices = The number of slices to divide the shape into along the Z axis, to allow refinement of detail, especially when working with a twist.  Default: `twist/5`
 //   maxseg = If given, then any long segments of the region are subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
-//   tex_size = An optional 2D target size for the textures.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions on the extrusion.
+//   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
@@ -897,8 +897,8 @@ function linear_sweep(
 //   ---
 //   start = Start extrusion at this angle counterclockwise from the X+ axis.  Default:0
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
-//   tex_size = An optional 2D target size for the textures.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the direction perpendicular to extrusion and in the direction parallel to extrusion.  
+//   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
@@ -1602,8 +1602,8 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   transforms = set to true to return transforms instead of a VNF.  These transforms can be manipulated and passed to sweep().  (function only)  Default: false.
 //   convexity = convexity parameter for polyhedron().  (module only)  Default: 10
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
-//   tex_size = An optional 2D target size for the textures at `points[0][0]`.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
+//   tex_size = An optional 2D target size (2-vector or scalar) for the texture at the first point of your shape and first path point.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  
@@ -2340,8 +2340,8 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   ---
 //   convexity = convexity setting for use with polyhedron. (module only) Default: 10
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
-//   tex_size = An optional 2D target size for the textures at `points[0][0]`.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
+//   tex_size = An optional 2D target size (2-vector or scalar) for the texture at the first point of your shape and first transformation.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  
@@ -2432,7 +2432,7 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge",
          normals = is_def(normals) ? normals
                  : (!(is_def(texture) && (closed || _closed_for_normals))) ? undef
                  : let(
-                        n = surfnormals(select(points,0,-2), col_wrap=true, row_wrap=true)
+                        n = surface_normals(select(points,0,-2), col_wrap=true, row_wrap=true)
                    )
                    [each n, n[0]]
     )
@@ -4163,11 +4163,13 @@ function _textured_linear_sweep(
 ) =
     assert(is_path(region,[2]) || is_region(region))
     assert(is_undef(samples) || is_int(samples))
-    assert(counts==undef || is_vector(counts,2))
-    assert(tex_size==undef || is_vector(tex_size,2))
+    assert(counts==undef || is_int(counts) || (all_integer(counts) && len(counts)==2), "tex_reps must be an integer or list of two integers")
+    assert(tex_size==undef || is_vector(tex_size,2) || is_finite(tex_size))
     assert(is_bool(rot) || in_list(rot,[0,90,180,270]))
     assert(is_bool(caps) || is_bool_list(caps,2))
     let(
+        counts = is_undef(counts) ? undef : force_list(counts,2),
+        tex_size = force_list(tex_size,2),
         transform_pt = function(tileind,tilex,tilez,samples,inset,scale,bases,norms) 
                let(
                    pos = (tileind + tilex) * samples,    // tileind is which tile, tilex is position in a tile
@@ -4218,10 +4220,7 @@ function _textured_linear_sweep(
                     for (path = rgn) let(
                         path = reverse(path),
                         plen = path_length(path, closed=true),
-                        counts = is_vector(counts,2)? counts :
-                            is_vector(tex_size,2)
-                              ? [round(plen/tex_size.x), max(1,round(h/tex_size.y)), ]
-                              : [ceil(6*plen/h), 6],
+                        counts = is_def(counts) ? counts : [round(plen/tex_size.x), max(1,round(h/tex_size.y)) ],
                         bases = resample_path(path, n=counts.x * samples, closed=true),
                         norms = path_normals(bases, closed=true),
                         vnf = is_vnf(texture)
@@ -4292,10 +4291,7 @@ function _textured_linear_sweep(
                     for (path = rgn) let(
                         path = reverse(path),
                         plen = path_length(path, closed=true),
-                        counts = is_vector(counts,2)? counts :
-                            is_vector(tex_size,2)
-                              ? [round(plen/tex_size.x), max(1,round(h/tex_size.y)), ]
-                              : [ceil(6*plen/h), 6],
+                        counts = is_def(counts) ? counts : [round(plen/tex_size.x), max(1,round(h/tex_size.y)) ],
                         bases = resample_path(path, n=counts.x * samples, closed=true),
                         norms = path_normals(bases, closed=true),
                         nupath = [
@@ -4310,10 +4306,7 @@ function _textured_linear_sweep(
                       let(
                           path = reverse(path),
                           plen = path_length(path, closed=true),
-                          counts = is_vector(counts,2)? counts :
-                              is_vector(tex_size,2)
-                                ? [round(plen/tex_size.x), max(1,round(h/tex_size.y)), ]
-                                : [ceil(6*plen/h), 6],
+                          counts = is_def(counts) ? counts : [round(plen/tex_size.x), max(1,round(h/tex_size.y))],
                           bases = resample_path(path, n=counts.x * samples, closed=true),
                           norms = path_normals(bases, closed=true),
                           modpaths = [for (j = [0:1:counts.x-1], cpath = edge_closed_paths)
@@ -4430,8 +4423,8 @@ function _textured_revolution(
     assert(is_path(shape,[2]) || is_region(shape))
     assert(is_undef(samples) || is_int(samples))
     assert(is_bool(closed))
-    assert(counts==undef || is_vector(counts,2))
-    assert(tex_size==undef || is_vector(tex_size,2))
+    assert(counts==undef || is_int(counts) || (all_integer(counts) && len(counts)==2), "tex_reps must be an integer or list of two integers")
+    assert(tex_size==undef || is_vector(tex_size,2) || is_finite(tex_size))
     assert(is_bool(rot) || in_list(rot,[0,90,180,270]))
     let( taper_is_ok = is_undef(taper) || (is_finite(taper) && taper>=0 && taper<50) || is_path(taper,2) )
     assert(taper_is_ok, "Bad taper= value.")
@@ -4452,6 +4445,8 @@ function _textured_revolution(
     )
     assert(closed || is_path(shape,2))
     let(
+        counts = is_undef(counts) ? undef : force_list(counts,2),
+        tex_size = force_list(tex_size,2),
         texture = _get_texture(texture, rot),
         dummy = assert(is_undef(samples) || is_vnf(texture), "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
         inset = is_num(inset)? inset : inset? 1 : 0,
@@ -4699,7 +4694,7 @@ module _textured_revolution(
 
 function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, triangulate=false, 
                 col_wrap=false, tex_depth=1, row_wrap=false, caps, cap1, cap2, reverse=false, style="min_edge", tex_extra, tex_skip, sidecaps,sidecap1,sidecap2,normals) =
-    assert(tex_reps==undef || is_vector(tex_reps,2))
+    assert(tex_reps==undef || is_int(tex_reps) || (all_integer(tex_reps) && len(tex_reps)==2), "tex_reps must be an integer or list of two integers")
     assert(tex_size==undef || is_num(tex_size) || is_vector(tex_size,2), "tex_size must be a scalar or 2-vector")
     assert(num_defined([tex_size, tex_reps])<2, "Cannot give both tex_size and tex_reps")
     assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area","flip1","flip2"]))
@@ -4715,14 +4710,14 @@ function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples,
         dummy = assert(is_undef(tex_samples) || is_vnf(texture),
                        "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
         ptsize=[len(points[0]), len(points)],
-        tex_reps = is_def(tex_reps) ? tex_reps
+        tex_reps = is_def(tex_reps) ? force_list(tex_reps,2)
                  : let(
                        tex_size = is_undef(tex_size) ? [5,5] : force_list(tex_size,2),
                        xsize = norm(points[0][0]-points[0][1])*(ptsize.x+(col_wrap?1:0)),
                        ysize = norm(points[0][0]-points[1][0])*(ptsize.y+(row_wrap?1:0))
                    )
                    [max(1,round(xsize/tex_size.x)), max(1,round(ysize/tex_size.y))],
-        normals = default(normals,surfnormals(points, col_wrap=col_wrap, row_wrap=row_wrap)),
+        normals = default(normals,surface_normals(points, col_wrap=col_wrap, row_wrap=row_wrap)),
         getscale = function(x,y) (x+y)/2
     )
     !is_vnf(texture) ?  // heightmap case
@@ -4732,8 +4727,8 @@ function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples,
             skip = is_def(tex_skip) ? force_list(tex_skip,2) : [0,0],
             texsize = [len(texture[0]), len(texture)],
             fullsize = [texsize.x*tex_reps.x+extra.x-skip.x, texsize.y*tex_reps.y+extra.y-skip.y],
-            res_points = resample(points,fullsize, col_wrap=col_wrap, row_wrap=row_wrap),
-            res_normals=resample(normals,fullsize, col_wrap=col_wrap, row_wrap=row_wrap),
+            res_points = _resample_point_array(points,fullsize, col_wrap=col_wrap, row_wrap=row_wrap),
+            res_normals= _resample_point_array(normals,fullsize, col_wrap=col_wrap, row_wrap=row_wrap),
             local_scale = [for(y=[0:1:fullsize.y-1])
                              [for(x=[0:1:fullsize.x-1])
                                 let(
@@ -4799,7 +4794,7 @@ function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples,
                    yfrac = refy-yind, 
                    corners = [points[yind%ptsize.y][xind%ptsize.x],     points[(yind+1)%ptsize.y][xind%ptsize.x],
                               points[yind%ptsize.y][(xind+1)%ptsize.x], points[(yind+1)%ptsize.y][(xind+1)%ptsize.x]],
-                   base = bilerp(corners,xfrac, yfrac),
+                   base = bilerp(corners,yfrac, xfrac),
                    scale_list = xfrac==0 && yfrac==0 ? [local_scale[yind][xind], local_scale[yind][xind+1], local_scale[yind+1][xind], local_scale[yind+1][xind+1]]
                               : xfrac==0 ? [local_scale[yind+1][xind], local_scale[yind+1][xind+1]]
                               : yfrac==0 ? [local_scale[yind][xind+1], local_scale[yind+1][xind+1]]
@@ -4807,7 +4802,7 @@ function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples,
                    scale = mean([for(s=scale_list) if (is_def(s)) s])/local_scale[1][1],
                    normal = bilerp([normals[yind%ptsize.y][xind%ptsize.x],     normals[(yind+1)%ptsize.y][xind%ptsize.x],
                                     normals[yind%ptsize.y][(xind+1)%ptsize.x], normals[(yind+1)%ptsize.y][(xind+1)%ptsize.x]],
-                                    xfrac, yfrac)
+                                    yfrac, xfrac)
                )
                base + _tex_height(tex_depth,tex_inset,pt.z) * normal*(reverse?-1:1) * scale,
             fullvnf = vnf_join([
@@ -4839,14 +4834,13 @@ function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples,
        )
        reverse ? vnf_reverse_faces(fullvnf) : fullvnf;
 
-/////  These need to be either hidden or documented and placed somewhere.  
 
+// Resamples a point array to the specified size.
+// In use above, data is a list of points in R^3 on a grid 
+// and size is the desired dimensions of the output array covering the
+// same data. 
 
-function bilerp(pts,x,y) = 
-  [1,x,y,x*y]*[[1, 0, 0, 0],[-1, 0, 1, 0],[-1,1,0,0],[1,-1,-1,1]]*pts;
-
-
-function resample(data, size, col_wrap=false, row_wrap=false) =
+function _resample_point_array(data, size, col_wrap=false, row_wrap=false) =
   let(
       xL=len(data[0]),
       yL=len(data),
@@ -4869,21 +4863,9 @@ function resample(data, size, col_wrap=false, row_wrap=false) =
            )
            bilerp([data[yind%yL][xind%xL],     data[(yind+1)%yL][xind%xL],
                    data[yind%yL][(xind+1)%xL], data[(yind+1)%yL][(xind+1)%xL]],
-                  sx-xind, sy-yind)
+                  sy-yind, sx-xind)
       ]
   ];
-
-
-
-
-function surfnormals(data, col_wrap=false, row_wrap=false) =
-  let(
-      rowderivs = [for(y=[0:1:len(data)-1])  path_tangents(data[y],closed=col_wrap)],
-      colderivs = [for(x=[0:1:len(data[0])-1]) path_tangents(column(data,x), closed=row_wrap)]
-  )
-  [for(y=[0:1:len(data)-1])
-     [for(x=[0:1:len(data[0])-1])
-         cross(colderivs[x][y],rowderivs[y][x])]];
 
 
 
