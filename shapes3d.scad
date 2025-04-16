@@ -877,8 +877,8 @@ function prismoid(
 //   realign = If true, rotate the prism by half the angle of one face so that a face points in the X+ direction.  Default: false
 //   teardrop = If given as a number, rounding around the bottom edge of the prism won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
-//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
+//   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  
@@ -1188,8 +1188,9 @@ function regular_prism(n,
 //   .
 //   Most of the heightfield textures are designed to repeat in a way that requires one extra line of the texture to complete the pattern.
 //   The `tex_extra` parameter specifies the number of extra lines to repeat at the end of the texture and it defaults to 1 because most textures
-//   do requires this extra line.  If you need to disable this feature you can set the `tex_extra` parameter to 0, or you can set it to a list of two
-//   booleans to control the extra line of texture in the X and Y directions independently.  The `tex_extra` parameter
+//   do requires this extra line.  There is one exception: if you specify only a single tile, then you are probably using an image for your texture and do not want a repeated line, so in
+//   this case, `tex_extra` defaults to zero.  If you need to adjust the number of extra lines you can set the `tex_extra` parameter to 0, or you can set it to a list of two
+//   integers to control the extra line of texture in the X and Y directions independently.  The `tex_extra` parameter
 //   is ignored for VNF textures.  A heightfield texture may also have extra margin along a starting side that makes the texture unbalanced.  You can 
 //   removed this using the `tex_skip` parameter, which defaults to zero and similarly specifies the number of lines to skip in the X and Y directions at
 //   the starting edges of the tile.  You must have enough tile repetitions to accomodate the specified skip.
@@ -1206,13 +1207,13 @@ function regular_prism(n,
 //   ang = Specify the front angle(s) of the trapezoidal prism.  Can give a scalar for an isosceles trapezoidal prism or a list of two angles, the left angle and right angle.  You must omit one of `h`, `w1`, or `w2` to allow the freedom to control the angles. 
 //   shift = Scalar value to shift the back of the trapezoidal prism along the X axis by.  Cannot be combined with ang.  Default: 0
 //   h / height / thickness = The thickness in the Z direction of the base that the texture sits on.  Default: 0.1 or for inset textures 0.1 more than the inset depth
-//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
+//   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   diff = if set to true then "remove" and "keep" tags are set to cut out a space for the texture so that inset textures can be attached.  Default: false
-//   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 1
+//   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 0 if there is only one tile, 1 otherwise
 //   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1303,7 +1304,7 @@ function textured_tile(
     texture, 
     size,
     ysize, height, w1, w2, ang, h, shift, thickness,
-    tex_size=[5,5],
+    tex_size,
     tex_reps,       
     tex_inset=false,
     tex_rot=0,      
@@ -1315,15 +1316,13 @@ function textured_tile(
     anchor=CENTER, spin=0, orient=UP,
     _return_anchor=false
 ) =
-    assert(tex_reps==undef || is_vector(tex_reps,2))
-    assert(tex_size==undef || is_vector(tex_size,2))
-    assert(in_list(tex_rot,[0,90,180,270]))
+    assert(tex_reps==undef || is_int(tex_reps) || (all_integer(tex_reps) && len(tex_reps)==2), "tex_reps must be an integer or list of two integers")
+    assert(tex_size==undef || is_vector(tex_size,2) || is_finite(tex_size))
+    assert(num_defined([tex_size, tex_reps])<2, "Cannot give both tex_size and tex_reps")
     assert(is_undef(size) || is_num(size) || is_vector(size,2) || is_vector(size,3), "size must be a 2-vector or 3-vector")
     assert(is_undef(size) || num_defined([ysize,h, height, thickness, w1,w2,ang])==0, "Cannot combine size with any other dimensional specifications")
   
     let(
-        extra = is_list(tex_extra) ? tex_extra : [tex_extra,tex_extra],
-        skip = is_list(tex_skip) ? tex_skip : [tex_skip,tex_skip],
         inset = is_num(tex_inset)? tex_inset : tex_inset? 1 : 0,
         default_thick = inset>0 ? 0.1+abs(tex_depth)*inset : 0.1,
         extra_ht = max(0,abs(tex_depth)*(1-inset)),
@@ -1346,8 +1345,12 @@ function textured_tile(
 
         texture = _get_texture(texture, tex_rot),
         
-        tex_reps = is_def(tex_reps) ? tex_reps
-                 : [round(size.x/tex_size.x), round(size.y/tex_size.y)],
+        tex_reps = is_def(tex_reps) ? force_list(tex_reps,2)
+                 : let(tex_size=is_undef(tex_size)? [5,5] : force_list(tex_size,2))
+                   [round(size.x/tex_size.x), round(size.y/tex_size.y)],
+        extra = is_undef(extra)? tex_reps == [1,1] ? [0,0] : [1,1]
+                               : force_list(tex_extra,2), 
+        skip = force_list(tex_skip,2), 
         scale = [size.x/tex_reps.x, size.y/tex_reps.y],
         setz=function (v,z)  [v.x,v.y,z], 
         vnf = !is_vnf(texture) ?
@@ -2060,8 +2063,8 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   realign = If true, rotate the cylinder by half the angle of one face.
 //   teardrop = If given as a number, rounding around the bottom edge of the cylinder won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
-//   tex_size = An optional 2D target size for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
-//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
+//   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  

@@ -765,6 +765,32 @@ function path_torsion(path, closed=false) =
     ];
 
 
+// Function: surface_normals()
+// Synopsis: Estimates the normals to a surface defined by a point array
+// Topics: Math, Geometry
+// See Also: path_tangents(), path_normals()
+// Usage:
+//   normals = surface_normals(surf, [col_wrap=], [row_wrap=]);
+// Description:
+//   Numerically estimate the normals to a surface defined by a 2d array of 3d points, which can
+//   also be regarded as an array of paths (all of the same length).  
+// Arguments:
+//   surf = surface in 3d defined by a 2d array of points
+//   ---
+//   row_wrap = if true then wrap path in the row direction (first index)
+//   col_wrap = if true then wrap path in the column direction (second index)
+
+function surface_normals(surf, col_wrap=false, row_wrap=false) =
+  let(
+      rowderivs = [for(y=[0:1:len(surf)-1])  path_tangents(surf[y],closed=col_wrap)],
+      colderivs = [for(x=[0:1:len(surf[0])-1]) path_tangents(column(surf,x), closed=row_wrap)]
+  )
+  [for(y=[0:1:len(surf)-1])
+     [for(x=[0:1:len(surf[0])-1])
+         cross(colderivs[x][y],rowderivs[y][x])]];
+
+
+
 // Section: Breaking paths up into subpaths
 
 
