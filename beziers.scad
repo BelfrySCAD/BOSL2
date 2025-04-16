@@ -398,8 +398,8 @@ function bezier_length(bezier, start_u=0, end_u=1, max_deflect=0.01) =
 //   bezier = The list of control points that define a 2D Bezier curve. 
 //   line = a list of two distinct 2d points defining a line
 function bezier_line_intersection(bezier, line) =
-    assert(is_path(bezier,2), "The input ´bezier´ must be a 2d bezier")
-    assert(_valid_line(line,2), "The input `line` is not a valid 2d line")
+    assert(is_path(bezier,2), "\nThe input 'bezier' must be a 2d bezier.")
+    assert(_valid_line(line,2), "\nThe input 'line' is not a valid 2d line.")
     let( 
         a = _bezier_matrix(len(bezier)-1)*bezier, // bezier algebraic coeffs. 
         n = [-line[1].y+line[0].y, line[1].x-line[0].x], // line normal
@@ -469,7 +469,7 @@ function bezpath_curve(bezpath, splinesteps=16, N=3, endpoint=true) =
     assert(is_path(bezpath))
     assert(is_int(N))
     assert(is_int(splinesteps) && splinesteps>0)
-    assert(len(bezpath)%N == 1, str("A degree ",N," bezier path should have a multiple of ",N," points in it, plus 1."))
+    assert(len(bezpath)%N == 1, str("\nA degree ",N," bezier path should have a multiple of ",N," points in it, plus 1."))
     let(
         segs = (len(bezpath)-1) / N,
         step = 1 / splinesteps,
@@ -510,7 +510,7 @@ function bezpath_closest_point(bezpath, pt, N=3, max_err=0.01, seg=0, min_seg=un
     assert(is_vector(pt))
     assert(is_int(N))
     assert(is_num(max_err))
-    assert(len(bezpath)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
+    assert(len(bezpath)%N == 1, str("\nA degree ",N," bezier path should have a multiple of ",N," points in it, plus 1."))
     let(curve = select(bezpath,seg*N,(seg+1)*N))
     (seg*N+1 >= len(bezpath))? (
         let(curve = select(bezpath, min_seg*N, (min_seg+1)*N))
@@ -544,7 +544,7 @@ function bezpath_closest_point(bezpath, pt, N=3, max_err=0.01, seg=0, min_seg=un
 function bezpath_length(bezpath, N=3, max_deflect=0.001) =
     assert(is_int(N))
     assert(is_num(max_deflect))
-    assert(len(bezpath)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
+    assert(len(bezpath)%N == 1, str("\nA degree ",N," bezier path should have a multiple of ",N," points in it, plus 1."))
     sum([
         for (seg=[0:1:(len(bezpath)-1)/N-1]) (
             bezier_length(
@@ -590,29 +590,29 @@ function path_to_bezpath(path, closed, tangents, uniform=false, size, relsize) =
     let(closed=default(closed,false))
     assert(is_bool(closed))
     assert(is_bool(uniform))
-    assert(num_defined([size,relsize])<=1, "Can't define both size and relsize")
-    assert(is_path(path,[2,3]),"Input path is not a valid 2d or 3d path")
-    assert(is_undef(tangents) || is_path(tangents,[2,3]),"Tangents must be a 2d or 3d path")
-    assert(is_undef(tangents) || len(path)==len(tangents), "Input tangents must be the same length as the input path")
+    assert(num_defined([size,relsize])<=1, "\nCan't define both size and relsize.")
+    assert(is_path(path,[2,3]),"\nInput path is not a valid 2d or 3d path.")
+    assert(is_undef(tangents) || is_path(tangents,[2,3]),"\nTangents must be a 2d or 3d path.")
+    assert(is_undef(tangents) || len(path)==len(tangents), "\nInput tangents must be the same length as the input path.")
     let(
         curvesize = first_defined([size,relsize,0.1]),
         relative = is_undef(size),
         lastpt = len(path) - (closed?0:1)
     )
-    assert(is_num(curvesize) || len(curvesize)==lastpt, str("Size or relsize must have length ",lastpt))
+    assert(is_num(curvesize) || len(curvesize)==lastpt, str("\nSize or relsize must have length ",lastpt,"."))
     let(
         sizevect = is_num(curvesize) ? repeat(curvesize, lastpt) : curvesize,
-        tangents = is_def(tangents) ? [for(t=tangents) let(n=norm(t)) assert(!approx(n,0),"Zero tangent vector") t/n] :
+        tangents = is_def(tangents) ? [for(t=tangents) let(n=norm(t)) assert(!approx(n,0),"\nZero tangent vector.") t/n] :
                                       path_tangents(path, uniform=uniform, closed=closed)
     )
-    assert(min(sizevect)>0, "Size and relsize must be greater than zero")
+    assert(min(sizevect)>0, "\nSize and relsize must be greater than zero.")
     [
         for(i=[0:1:lastpt-1])
             let(
                 first = path[i],
                 second = select(path,i+1),
                 seglength = norm(second-first),
-                dummy = assert(seglength>0, str("Path segment has zero length from index ",i," to ",i+1)),
+                dummy = assert(seglength>0, str("\nPath segment has zero length from index ",i," to ",i+1,".")),
                 segdir = (second-first)/seglength,
                 tangent1 = tangents[i],
                 tangent2 = -select(tangents,i+1),                        // Need this to point backward, in direction of the curve
@@ -673,16 +673,16 @@ function path_to_bezcornerpath(path, closed, size, relsize) =
     is_1region(path) ? path_to_bezcornerpath(path[0], default(closed,true), tangents, size, relsize) :
     let(closed=default(closed,false))
         assert(is_bool(closed))
-        assert(num_defined([size,relsize])<=1, "Can't define both size and relsize")
-        assert(is_path(path,[2,3]),"Input path is not a valid 2d or 3d path")
+        assert(num_defined([size,relsize])<=1, "\nCan't define both size and relsize.")
+        assert(is_path(path,[2,3]),"\nInput path is not a valid 2d or 3d path.")
         let(
             curvesize = first_defined([size,relsize,0.5]),
             relative = is_undef(size),
             pathlen = len(path)
         )
-        assert(is_num(curvesize) || len(curvesize)==pathlen, str("Size or relsize must have length ",pathlen))
+        assert(is_num(curvesize) || len(curvesize)==pathlen, str("\nSize or relsize must have length ",pathlen,"."))
         let(sizevect = is_num(curvesize) ? repeat(curvesize, pathlen) : curvesize)
-            assert(min(sizevect)>0, "Size or relsize must be greater than zero")
+            assert(min(sizevect)>0, "\nSize or relsize must be greater than zero.")
         let(
             roundpath = closed ? [
             for(i=[0:pathlen-1]) let(p3=select(path,[i-1:i+1]))
@@ -783,9 +783,9 @@ is_collinear(p)
 //   closed = bezpath_close_to_axis(bez, axis="Y");
 //   debug_bezier(closed);
 function bezpath_close_to_axis(bezpath, axis="X", N=3) =
-    assert(is_path(bezpath,2), "bezpath_close_to_axis() works only on 2D bezier paths.")
+    assert(is_path(bezpath,2), "\nbezpath_close_to_axis() works only on 2D bezier paths.")
     assert(is_int(N))
-    assert(len(bezpath)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
+    assert(len(bezpath)%N == 1, str("\nA degree ",N," bezier path should have a multiple of ",N," points in it, plus 1."))
     let(
         sp = bezpath[0],
         ep = last(bezpath)
@@ -827,9 +827,9 @@ function bezpath_close_to_axis(bezpath, axis="X", N=3) =
 //   debug_bezier(closed);
 function bezpath_offset(offset, bezier, N=3) =
     assert(is_vector(offset,2))
-    assert(is_path(bezier,2), "bezpath_offset() works only on 2D bezier paths.")
+    assert(is_path(bezier,2), "\nbezpath_offset() works only on 2D bezier paths.")
     assert(is_int(N))
-    assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
+    assert(len(bezier)%N == 1, str("\nA degree ",N," bezier path should have a multiple of ",N," points in it, plus 1."))
     let(
         backbez = reverse([ for (pt = bezier) pt+offset ]),
         bezend = len(bezier)-1
@@ -912,7 +912,7 @@ function bez_begin(pt,a,r,p) =
     assert(len(pt)==3 || is_undef(p))
     is_vector(a)? [pt, pt+(is_undef(r)? a : r*unit(a))] :
     is_finite(a)? [pt, pt+spherical_to_xyz(r,a,default(p,90))] :
-    assert(false, "Bad arguments.");
+    assert(false, "\nBad arguments.");
 
 
 // Function: bez_tang()
@@ -948,7 +948,7 @@ function bez_tang(pt,a,r1,r2,p) =
         pt,
         pt+spherical_to_xyz(r2,a,p)
     ] :
-    assert(false, "Bad arguments.");
+    assert(false, "\nBad arguments.");
 
 
 // Function: bez_joint()
@@ -984,11 +984,11 @@ function bez_joint(pt,a1,a2,r1,r2,p1,p2) =
     ) [
         if (is_vector(a1)) (pt+r1*unit(a1))
         else if (is_finite(a1)) (pt+spherical_to_xyz(r1,a1,p1))
-        else assert(false, "Bad Arguments"),
+        else assert(false, "\nBad arguments."),
         pt,
         if (is_vector(a2)) (pt+r2*unit(a2))
         else if (is_finite(a2)) (pt+spherical_to_xyz(r2,a2,p2))
-        else assert(false, "Bad Arguments")
+        else assert(false, "\nBad arguments.")
     ];
 
 
@@ -1012,7 +1012,7 @@ function bez_end(pt,a,r,p) =
     assert(len(pt)==3 || is_undef(p))
     is_vector(a)? [pt+(is_undef(r)? a : r*unit(a)), pt] :
     is_finite(a)? [pt+spherical_to_xyz(r,a,default(p,90)), pt] :
-    assert(false, "Bad arguments.");
+    assert(false, "\nBad arguments.");
 
 
 
@@ -1119,8 +1119,8 @@ function bezier_patch_reverse(patch) =
 //   pts = bezier_patch_points(patch, [0:0.2:1], [0:0.2:1]);
 //   for (row=pts) move_copies(row) color("magenta") sphere(d=3, $fn=12);
 function bezier_patch_points(patch, u, v) =
-    assert(is_range(u) || is_vector(u) || is_finite(u), "Input u is invalid")
-    assert(is_range(v) || is_vector(v) || is_finite(v), "Input v is invalid")
+    assert(is_range(u) || is_vector(u) || is_finite(u), "\nInput u is invalid.")
+    assert(is_range(v) || is_vector(v) || is_finite(v), "\nInput v is invalid.")
       !is_num(u) && !is_num(v) ?
             let(
                 vbezes = [for (i = idx(patch[0])) bezier_points(column(patch,i), u)]
@@ -1259,12 +1259,12 @@ function bezier_vnf(patches=[], splinesteps=16, style="default") =
     assert(all_positive(splinesteps))
     let(splinesteps = force_list(splinesteps,2))
     is_bezier_patch(patches)? _bezier_rectangle(patches, splinesteps=splinesteps,style=style)
-  : assert(is_list(patches),"Invalid patch list")
+  : assert(is_list(patches),"\nInvalid patch list.")
     vnf_join(
       [
         for (patch=patches)
           is_bezier_patch(patch)? _bezier_rectangle(patch, splinesteps=splinesteps,style=style)
-        : assert(false,"Invalid patch list")
+        : assert(false,"\nInvalid patch list.")
       ]
     );
           
@@ -1373,8 +1373,8 @@ function bezier_vnf(patches=[], splinesteps=16, style="default") =
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
 function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, return_edges=false) =
     !return_edges ? bezier_vnf_degenerate_patch(patch, splinesteps, reverse, true)[0] :
-    assert(is_bezier_patch(patch), "Input is not a Bezier patch")
-    assert(is_int(splinesteps) && splinesteps>0, "splinesteps must be a positive integer")
+    assert(is_bezier_patch(patch), "\nInput is not a Bezier patch.")
+    assert(is_int(splinesteps) && splinesteps>0, "\nsplinesteps must be a positive integer.")
     let(
         row_degen = [for(row=patch) all_equal(row,eps=EPSILON)],
         col_degen = [for(col=transpose(patch)) all_equal(col,eps=EPSILON)],
@@ -1547,8 +1547,8 @@ function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, retur
 //               endcap1="dot",endcap2="arrow2",color="blue");
   
 function bezier_patch_normals(patch, u, v) =
-    assert(is_range(u) || is_vector(u) || is_finite(u), "Input u is invalid")
-    assert(is_range(v) || is_vector(v) || is_finite(v), "Input v is invalid")
+    assert(is_range(u) || is_vector(u) || is_finite(u), "\nInput u is invalid.")
+    assert(is_range(v) || is_vector(v) || is_finite(v), "\nInput v is invalid.")
       !is_num(u) && !is_num(v) ?
           let(
               vbezes = [for (i = idx(patch[0])) bezier_points(column(patch,i), u)],
@@ -1573,29 +1573,30 @@ function bezier_patch_normals(patch, u, v) =
 // Topics: Bezier Patches
 // See Also: bezier_patch_normals(), vnf_sheet()
 // Usage:
-//   vnf = bezier_sheet(patch, thickness, [splinesteps=], [balanced=]
+//   vnf = bezier_sheet(patch, delta, [splinesteps=], [style=]);
 // Description:
 //   Constructs a thin sheet from a bezier patch by offsetting the given patch along the normal vectors
-//   to the patch surface.  The thickness value must be small enough so that no points cross each other
-//   when the offset is computed, because that results in invalid geometry and gives rendering errors.
+//   to the patch surface.
+//   The `delta` parameter is a 2-vector specifying the offset distances for both surfaces that form the
+//   final sheet. The values for each offset must be small enough so that no points cross each other
+//   when the offset is computed, because that results in invalid geometry and rendering errors.
 //   Rendering errors may not manifest until you add other objects to your model.  
 //   **It is your responsibility to avoid invalid geometry!**
 //   .
-//   The normals are computed using {{bezier_patch_normals()}} and if they are degenerate then
-//   the computation fails or produces incorrect results.  See {{bezier_patch_normals()}} for
-//   examples of various ways the normals can be degenerate.
+//   Once the offset surfaces from the bezier patch are computed, they are connected by filling
+//   in the boundary strips between them.
 //   .
-//   When thickness is positive, the given bezier patch is extended toward its "inside", which is the
-//   side that appears purple in the "thrown together" view.  You can extend the patch in the other direction
-//   using a negative thickness value.
+//   A negative offset value extends the patch toward its "inside", which is the side that appears purple
+//   in the "thrown together" view when the patch is viewed by itself. Extending only toward the inside with a delta of `[0,-value]` or
+//   `[-value,0]` (the order doesn't matter) means that your original bezier patch surface remains unchanged in the output.
+//   Both offset surfaces may be extended in the same direction as long as the offset values are different.
 // Arguments:
 //   patch = bezier patch to process
-//   thickness = amount to offset; can be positive or negative
+//   delta = a 2-vector specifying two different offsets from the bezier patch, in any order. Positive values offset the patch from its "exterior" side, and negative values offset from the "interior" side.
 //   ---
 //   splinesteps = Number of segments on the border edges of the bezier surface.  You can specify [USTEPS,VSTEPS].  Default: 16
-//   balanced = if true, then offset the bezier surface by half the specified thickness on each side. This increases execution time because two offsets must be performed. The sign of `thickness` does not matter. Default: false
 //   style = {{vnf_vertex_array()}} style to use.  Default: "default"
-// Example(3D): In this case, a positive thickness extends downward from that side of the surface.
+// Example(3D): A negative delta extends downward from the "inside" surface of the bezier patch, leaving the original bezier patch unchanged on the top surface.
 //   patch = [
 //        // u=0,v=0                                         u=1,v=0
 //        [[-50,-50,  0], [-16,-50,  20], [ 16,-50, -20], [50,-50,  0]],
@@ -1604,8 +1605,8 @@ function bezier_patch_normals(patch, u, v) =
 //        [[-50, 50,  0], [-16, 50, -20], [ 16, 50,  20], [50, 50,  0]],
 //        // u=0,v=1                                         u=1,v=1
 //   ];
-//   vnf_polyhedron(bezier_sheet(patch, 10));
-// Example(3D): Using the previous example, setting `balanced=true` causes half the specified thickness to be extended from each side of the sheet. This is somewhat slower because it requires two separate offset operations. The original bezier patch is shown solid, with the thicker sheet shown transparent.
+//   vnf_polyhedron(bezier_sheet(patch, [0,-10]));
+// Example(3D): Using the previous example, setting two positive offsets results in a sheet above the original bezier patch. The original bezier patch is shown in green for comparison.
 //   patch = [
 //        // u=0,v=0                                         u=1,v=0
 //        [[-50,-50,  0], [-16,-50,  20], [ 16,-50, -20], [50,-50,  0]],
@@ -1614,25 +1615,27 @@ function bezier_patch_normals(patch, u, v) =
 //        [[-50, 50,  0], [-16, 50, -20], [ 16, 50,  20], [50, 50,  0]],
 //        // u=0,v=1                                         u=1,v=1
 //   ];
-//   vnf_polyhedron(bezier_vnf(patch));
-//   %vnf_polyhedron(bezier_sheet(patch, 10, balanced=true));
+//   color("lime") vnf_polyhedron(bezier_vnf(patch));
+//   vnf_polyhedron(bezier_sheet(patch, [10,15]));
 
-function bezier_sheet(patch, thickness, splinesteps=16, style="default", balanced=false) =
+function bezier_sheet(patch, delta, splinesteps=16, style="default", thickness=undef) =
   assert(is_bezier_patch(patch))
-  assert(all_nonzero([thickness]), "thickness must be nonzero")
+    assert(is_num(delta) || is_vector(delta,2,zero=false), "\ndelta must be a 2-vector designating two different offset distances.")
   let(
+        dumwarn = is_def(thickness) || is_num(delta) ? echo("\nThe 'thickness' parameter is deprecated and has been replaced by 'delta'. Use the range [0,-thickness] or [-thickness,0] to reproduce the former behavior.") : 0,
+        del = is_def(thickness) ? [0,-thickness] : is_num(delta) ? [0,-delta] : delta,
         splinesteps = force_list(splinesteps,2),
         uvals = lerpn(0,1,splinesteps.x+1),
         vvals = lerpn(1,0,splinesteps.y+1),
         pts = bezier_patch_points(patch, uvals, vvals),
         normals = bezier_patch_normals(patch, uvals, vvals),
-        dummy=assert(is_matrix(flatten(normals)),"Bezier patch has degenerate normals"),
-        offset0 = balanced ? pts - 0.5*thickness*normals : pts,
-        offset1 = pts + (balanced ? 0.5 : 1) * thickness*normals,
+        dummy=assert(is_matrix(flatten(normals)),"\nBezier patch has degenerate normals."),
+        offset0 = pts - del[0]*normals,
+        offset1 = pts - del[1]*normals,
         allpoints = [for(i=idx(offset0)) concat(offset0[i], reverse(offset1[i]))],
         vnf = vnf_vertex_array(allpoints, col_wrap=true, caps=true, style=style)        
   )
-  thickness<0 ? vnf_reverse_faces(vnf) : vnf;
+  del[0]<del[1] ? vnf_reverse_faces(vnf) : vnf;
 
 
 
@@ -1680,7 +1683,7 @@ module debug_bezier(bezpath, width=1, N=3) {
     check = 
       assert(is_path(bezpath),"bezpath must be a path")
       assert(is_int(N) && N>0, "N must be a positive integer")
-      assert(len(bezpath)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
+      assert(len(bezpath)%N == 1, str("A degree ",N," bezier path should have a multiple of ",N," points in it, plus 1."));
     $fn=8;
     stroke(bezpath_curve(bezpath, N=N), width=width, color="cyan");
     color("green")
