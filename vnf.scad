@@ -220,8 +220,8 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   ];
 //   vnf_vertex_array(polystack, texture="checkers", tex_depth=2, tex_reps=[8,8]);
 //   color("red") {
-//       for(p=xprofile) translate(p-[0,1,0]) sphere(1.5);
-//       for(p=yprofile) translate(p-[1,0,0]) sphere(1.5);
+//       for(p=xprofile) translate(p-[0,4,0]) sphere(1.5);
+//       for(p=yprofile) translate(p-[4,0,0]) sphere(1.5);
 //   }
 // Example(3D,Med,NoAxes,VPD=300,VPT=[48,48,0]): By passing the spline curves into {{resample_path()}}, we can get a uniform distribution of the same number of x and y profile points, as shown by the red dots. This results in a uniform distribution of the texture tiling.
 //   include <BOSL2/rounding.scad>
@@ -2156,7 +2156,7 @@ function vnf_sheet(vnf, delta, style="default", merge=true, thickness=undef) =
                 vnf_vertex_array([select(offset1[0],p),select(offset0[0],p)],col_wrap=true,style=style)
         ])
   )
-  del[0]>del[1] ? vnf_reverse_faces(newvnf) : newvnf;
+  del[0]<del[1] ? vnf_reverse_faces(newvnf) : newvnf;
 
 
 
