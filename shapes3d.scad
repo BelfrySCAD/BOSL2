@@ -1315,9 +1315,9 @@ function textured_tile(
     tex_skip=0,
     anchor=CENTER, spin=0, orient=UP,
     _return_anchor=false
-) =
-    assert(tex_reps==undef || is_int(tex_reps) || (all_integer(tex_reps) && len(tex_reps)==2), "tex_reps must be an integer or list of two integers")
-    assert(tex_size==undef || is_vector(tex_size,2) || is_finite(tex_size))
+) = let(f=echo(size=tex_size))
+    assert(is_undef(tex_reps) || is_int(tex_reps) || (all_integer(tex_reps) && len(tex_reps)==2), "tex_reps must be an integer or list of two integers")
+    assert(is_undef(tex_size) || is_vector(tex_size,2) || is_finite(tex_size))
     assert(num_defined([tex_size, tex_reps])<2, "Cannot give both tex_size and tex_reps")
     assert(is_undef(size) || is_num(size) || is_vector(size,2) || is_vector(size,3), "size must be a 2-vector or 3-vector")
     assert(is_undef(size) || num_defined([ysize,h, height, thickness, w1,w2,ang])==0, "Cannot combine size with any other dimensional specifications")
@@ -4223,6 +4223,22 @@ module fillet(l, r, ang, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor
 //   plot3d(f, xrange, yrange, [zclip=], [zspan=], [base=], [convexity=], [style=]) [ATTACHMENTS];
 // Usage: As Function
 //   vnf = plot3d(f, xrange, yrange, [zclip=], [zspan=], [base=], [style=]);
+// Description:
+//   Given a function literal taking 2 parameters and a 2d grid, generate a surface where the height at any point is
+//   the value of the function.  You can specify the grid using a range or using a list of points that
+//   need not be uniformly spaced.  To create a valid polyhedron, the graph is closed at the sides and
+//   a base is added below the smallest value.  By default this base has unit thickness, but you can
+//   adjust it by setting the `base` parameter.  If you set `base=0` then you will get a a zero thickness
+//   sheet that is not a manifold without sides or a bottom.
+//   .
+//   Your function may have have excessively large values at some points, or you may not know exactly 
+//   what its extreme values are.  To manage these situations you can use either the `zclip` or `zspan`
+//   parameter (but not both).  The `zclip` parameter is a 2-vector giving a minimum and maximum
+//   value, either of which can be infinite.  If the function falls below the minimum it is set
+//   equal to the minimum, and if it rises above the maximum it is set equal to the maximum.  The
+//   `zspan` parameter is a 2-vector giving a minum and maximum value which must both be finite.
+//   The function's values will be scaled and shifted to exactly cover the range you specifiy
+//   in `zspan`.  
 // Arguments:
 //   f = function literal accepting two arguments (x and y) that defines the function to compute
 //   xrange = A list or range of values for x
@@ -4291,7 +4307,7 @@ function plot3d(f,xrange,yrange,zclip, zspan, base=1, anchor="origin", orient=UP
    base==0 ? vnf_vertex_array(sdata,style=style)
  : 
    let(
-            minval = min(column(flatten(sdata),2)),
+       minval = min(column(flatten(sdata),2)),
        maxval = max(column(flatten(sdata),2)),
        bottom = is_def(zspan) ? zspan[0]-base : minval-base,
        data = [ [for(p=sdata[0]) [p.x,p.y,bottom]],
@@ -4304,61 +4320,61 @@ function plot3d(f,xrange,yrange,zclip, zspan, base=1, anchor="origin", orient=UP
 
 
 
-// Function&Module: heightfield()
-// Synopsis: Generates a 3D surface from a 2D grid of values.
-// SynTags: Geom, VNF
-// Topics: Textures, Heightfield
-// See Also: cylindrical_heightfield()
-// Usage: As Module
-//   heightfield(data, [size], [bottom], [maxz], [xrange], [yrange], [style], [convexity], ...) [ATTACHMENTS];
-// Usage: As Function
-//   vnf = heightfield(data, [size], [bottom], [maxz], [xrange], [yrange], [style], ...);
-// Description:
-//   Given a regular rectangular 2D grid of scalar values, or a function literal, generates a 3D
-//   surface where the height at any given point is the scalar value for that position.
-//   One script to convert a grayscale image to a heightfield array in a .scad file can be found at:
-//   https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py
-//   The bottom value defines a planar base for the resulting shape and it must be strictly less than
-//   the model data to produce valid geometry, so data which is too small is set to 0.1 units above the bottom value. 
-// Arguments:
-//   data = This is either the 2D rectangular array of heights, or a function literal that takes X and Y arguments.
-//   size = The [X,Y] size of the surface to create.  If given as a scalar, use it for both X and Y sizes. Default: `[100,100]`
-//   bottom = The Z coordinate for the bottom of the heightfield object to create.  Any heights lower than this will be truncated to very slightly (0.1) above this height.  Default: -20
-//   maxz = The maximum height to model.  Truncates anything taller to this height.  Set to INF for no truncation.  Default: 100
-//   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
-//   yrange = A range of values to iterate Y over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
-//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".  Default: "default"
-//   ---
-//   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example:
-//   heightfield(size=[100,100], bottom=-20, data=[
-//       for (y=[-180:4:180]) [
-//           for(x=[-180:4:180])
-//           10*cos(3*norm([x,y]))
-//       ]
-//   ]);
-// Example:
-//   intersection() {
-//       heightfield(size=[100,100], data=[
-//           for (y=[-180:5:180]) [
-//               for(x=[-180:5:180])
-//               10+5*cos(3*x)*sin(3*y)
-//           ]
-//       ]);
-//       cylinder(h=50,d=100);
-//   }
-// Example: Heightfield by Function
-//   fn = function (x,y) 10*sin(x*360)*cos(y*360);
-//   heightfield(size=[100,100], data=fn);
-// Example: Heightfield by Function, with Specific Ranges
-//   fn = function (x,y) 2*cos(5*norm([x,y]));
-//   heightfield(
-//       size=[100,100], bottom=-20, data=fn,
-//       xrange=[-180:2:180], yrange=[-180:2:180]
-//   );
+/// Function&Module: heightfield()
+/// Synopsis: Generates a 3D surface from a 2D grid of values.
+/// SynTags: Geom, VNF
+/// Topics: Textures, Heightfield
+/// See Also: cylindrical_heightfield()
+/// Usage: As Module
+///   heightfield(data, [size], [bottom], [maxz], [xrange], [yrange], [style], [convexity], ...) [ATTACHMENTS];
+/// Usage: As Function
+///   vnf = heightfield(data, [size], [bottom], [maxz], [xrange], [yrange], [style], ...);
+/// Description:
+///   Given a regular rectangular 2D grid of scalar values, or a function literal, generates a 3D
+///   surface where the height at any given point is the scalar value for that position.
+///   One script to convert a grayscale image to a heightfield array in a .scad file can be found at:
+///   https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py
+///   The bottom value defines a planar base for the resulting shape and it must be strictly less than
+///   the model data to produce valid geometry, so data which is too small is set to 0.1 units above the bottom value. 
+/// Arguments:
+///   data = This is either the 2D rectangular array of heights, or a function literal that takes X and Y arguments.
+///   size = The [X,Y] size of the surface to create.  If given as a scalar, use it for both X and Y sizes. Default: `[100,100]`
+///   bottom = The Z coordinate for the bottom of the heightfield object to create.  Any heights lower than this will be truncated to very slightly (0.1) above this height.  Default: -20
+///   maxz = The maximum height to model.  Truncates anything taller to this height.  Set to INF for no truncation.  Default: 100
+///   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
+///   yrange = A range of values to iterate Y over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
+///   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".  Default: "default"
+///   ---
+///   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
+///   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+///   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+///   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+/// Example:
+///   heightfield(size=[100,100], bottom=-20, data=[
+///       for (y=[-180:4:180]) [
+///           for(x=[-180:4:180])
+///           10*cos(3*norm([x,y]))
+///       ]
+///   ]);
+/// Example:
+///   intersection() {
+///       heightfield(size=[100,100], data=[
+///           for (y=[-180:5:180]) [
+///               for(x=[-180:5:180])
+///               10+5*cos(3*x)*sin(3*y)
+///           ]
+///       ]);
+///       cylinder(h=50,d=100);
+///   }
+/// Example: Heightfield by Function
+///   fn = function (x,y) 10*sin(x*360)*cos(y*360);
+///   heightfield(size=[100,100], data=fn);
+/// Example: Heightfield by Function, with Specific Ranges
+///   fn = function (x,y) 2*cos(5*norm([x,y]));
+///   heightfield(
+///       size=[100,100], bottom=-20, data=fn,
+///       xrange=[-180:2:180], yrange=[-180:2:180]
+///   );
 
 module heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04:1], yrange=[-1:0.04:1], style="default", convexity=10, anchor=CENTER, spin=0, orient=UP)
 {
@@ -4372,6 +4388,10 @@ module heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04:1
 
 
 function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04:1], yrange=[-1:0.04:1], style="default", anchor=CENTER, spin=0, orient=UP) =
+    let(
+        dummy=is_function(data) ? echo("***** heightfield() is deprecated and will be removed in a future version.  For displaying functions use plot3d().  *****")
+                                : echo("***** heightfield() is deprecated and will be removed in a future version.  For displaying arrays use textured_tile() *****")
+    )
     assert(is_list(data) || is_function(data))
     let(
         size = is_num(size)? [size,size] : point2d(size),
