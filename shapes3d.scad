@@ -4212,6 +4212,98 @@ module fillet(l, r, ang, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor
 }  
 
 
+
+
+// Function&Module: plot3d()
+// Synopsis: Generates a surface by evaluating a function on a 2D grid
+// SynTags: Geom, VNF
+// Topics: Function Plotting
+// See Also: cylindrical_heightfield()
+// Usage: As Module
+//   plot3d(f, xrange, yrange, [zclip=], [zspan=], [base=], [convexity=], [style=]) [ATTACHMENTS];
+// Usage: As Function
+//   vnf = plot3d(f, xrange, yrange, [zclip=], [zspan=], [base=], [style=]);
+// Arguments:
+//   f = function literal accepting two arguments (x and y) that defines the function to compute
+//   xrange = A list or range of values for x
+//   yrange = A list or range of values for y
+//   ---
+//   zclip = Constrain the function to these bounds.  
+//   zspan = Rescale and shift the function values so the minimum value of f appears at zspan[0] and the maximum at zspan[1].  
+//   base = Amount of extra thickness to add at the bottom of the model.  If set to zero, produce a non-manifold zero-thickness VNF.  Default: 1
+//   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "default"
+//   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   atype = Select "hull" or "intersect" anchor type.  Default: "hull"
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+// Anchor Types:
+//   "hull" = Anchors to the virtual convex hull of the shape.
+//   "intersect" = Anchors to the surface of the shape.
+// Named Anchors:
+//   "origin" = Anchor at the origin, oriented UP.
+// Example(NoScales):  A basic function calculation
+//    func = function (x,y) 35*cos(3*norm([x,y]));
+//    plot3d(func, [-180:4:180], [-180:4:180]);
+// Example(NoScales):  Here we give the function inline and since it blows up we add clipping
+//    plot3d(function (x,y) 1/norm([x,y]), [-2:.1:2], [-2:.1:2], zclip=[0,2],style="default");
+// Example(NoScales):  Clipped edges often don't look very good and may be improved somewhat with more points.  Here we give lists with varying point spacing to improve the point density around the clipped top of the shape.
+//    range = concat( 
+//             lerpn(-2,-1,10,endpoint=false),
+//             lerpn(-1,1,75,endpoint=false),
+//             lerpn(1,2,10)
+//            );
+//    plot3d(function (x,y) 1/norm([x,y]), range, range, zclip=[0,2],style="default");
+// Example(3D,NoAxes,VPR=[76.70,0.00,18.70],VPD=325.23,VPT=[-8.47,27.30,50.84]): Making a zero thickness VNF
+//   fn = function (x,y) (x^2+y^2)/50;
+//   plot3d(fn, [-50:5:50], [-50:5:50], base=0);
+// Example(3D,NoScales): Use `zspan` to fit the plot vertically to a range and use anchoring to center it on the origin.  
+//   f = function(x,y) 10*(sin(20*x)^2+cos(20*y)^2)/norm([2*x,y]);
+//   plot3d(f, [10:.3:40], [4:.3:37],zspan=[0,25],anchor=BOT);
+
+module plot3d(f,xrange,yrange,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, atype="hull", cp="box", convexity=4, style="default")
+   vnf_polyhedron(plot3d(f,xrange,yrange,zclip, zspan,base, style=style), atype=atype, orient=orient, anchor=anchor, cp=cp, convexity=convexity) children();
+   
+function plot3d(f,xrange,yrange,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, atype="hull", cp="box", style="default") =
+   assert(is_finite(base) && base>=0, "base must be a nonnegative number")
+   assert(is_vector(xrange) || valid_range(xrange), "xrange must be a vector or nonempty range")
+   assert(is_vector(yrange) || valid_range(yrange), "yrange must be a vector or nonempty range")
+   assert(is_range(xrange) || is_increasing(xrange, strict=true), "xrange must be strictly increasing")
+   assert(is_range(yrange) || is_increasing(yrange, strict=true), "yrange must be strictly increasing")
+   assert(num_defined([zclip,zspan])<2, "Cannot give both zclip and zspan")
+   assert(is_undef(zclip) || (is_list(zclip) && len(zclip)==2 && is_num(zclip[0]) && is_num(zclip[1])), "zclip must be a list of two values (which may be infinite)")
+   assert(is_undef(zspan) || (is_vector(zspan,2) && zspan[0]<zspan[1]) ,"zspan must be a 2-vector whose first entry is smaller than the second")
+   let(
+       zclip = default(zclip, [-INF,INF]), 
+       data = [for(x=xrange) [for(y=yrange) [x,y,min(max(f(x,y),zclip[0]),zclip[1])]]],
+       dummy=assert(len(data[0])>1 && len(data)>1, "xrange and yrange must both provide at least 2 points"),
+       minval = min(column(flatten(data),2)),
+       maxval = max(column(flatten(data),2)),
+       sdata = is_undef(zspan) ? data
+             : let(
+                    scale = (zspan[1]-zspan[0])/(maxval-minval)
+               )
+               [for(row=data) [for (entry=row) [entry.x,entry.y,scale*(entry.z-minval)+zspan[0]]]]
+   )
+   base==0 ? vnf_vertex_array(sdata,style=style)
+ : 
+   let(
+            minval = min(column(flatten(sdata),2)),
+       maxval = max(column(flatten(sdata),2)),
+       bottom = is_def(zspan) ? zspan[0]-base : minval-base,
+       data = [ [for(p=sdata[0]) [p.x,p.y,bottom]],
+                each sdata,
+                [for(p=last(sdata)) [p.x,p.y,bottom]]
+              ],
+       vnf = vnf_vertex_array(transpose(data), col_wrap=true, caps=true, style=style)
+   )
+   reorient(anchor,spin,orient, vnf=vnf, p=vnf);
+
+
+
 // Function&Module: heightfield()
 // Synopsis: Generates a 3D surface from a 2D grid of values.
 // SynTags: Geom, VNF
