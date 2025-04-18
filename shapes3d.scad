@@ -4218,11 +4218,11 @@ module fillet(l, r, ang, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor
 // Synopsis: Generates a surface by evaluating a function on a 2D grid
 // SynTags: Geom, VNF
 // Topics: Function Plotting
-// See Also: cylindrical_heightfield()
+// See Also: plot_revolution()
 // Usage: As Module
-//   plot3d(f, xrange, yrange, [zclip=], [zspan=], [base=], [convexity=], [style=]) [ATTACHMENTS];
+//   plot3d(f, x, y, [zclip=], [zspan=], [base=], [convexity=], [style=]) [ATTACHMENTS];
 // Usage: As Function
-//   vnf = plot3d(f, xrange, yrange, [zclip=], [zspan=], [base=], [style=]);
+//   vnf = plot3d(f, x, y, [zclip=], [zspan=], [base=], [style=]);
 // Description:
 //   Given a function literal taking 2 parameters and a 2d grid, generate a surface where the height at any point is
 //   the value of the function.  You can specify the grid using a range or using a list of points that
@@ -4241,11 +4241,11 @@ module fillet(l, r, ang, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor
 //   in `zspan`.  
 // Arguments:
 //   f = function literal accepting two arguments (x and y) that defines the function to compute
-//   xrange = A list or range of values for x
-//   yrange = A list or range of values for y
+//   x = A list or range of values for x
+//   y = A list or range of values for y
 //   ---
-//   zclip = Constrain the function to these bounds.  
-//   zspan = Rescale and shift the function values so the minimum value of f appears at zspan[0] and the maximum at zspan[1].  
+//   zclip = A vector `[zmin,zmax]' that constrains the output of function to these bounds. Cannot be used with `zspan`.
+//   zspan = Rescale and shift the function values so the minimum value of f appears at zspan[0] and the maximum at zspan[1].  Cannot be used with `zclip`.
 //   base = Amount of extra thickness to add at the bottom of the model.  If set to zero, produce a non-manifold zero-thickness VNF.  Default: 1
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "default"
 //   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
@@ -4280,22 +4280,22 @@ module fillet(l, r, ang, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor
 //   f = function(x,y) 10*(sin(20*x)^2+cos(20*y)^2)/norm([2*x,y]);
 //   plot3d(f, [10:.3:40], [4:.3:37],zspan=[0,25],anchor=BOT);
 
-module plot3d(f,xrange,yrange,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, atype="hull", cp="box", convexity=4, style="default")
-   vnf_polyhedron(plot3d(f,xrange,yrange,zclip, zspan,base, style=style), atype=atype, orient=orient, anchor=anchor, cp=cp, convexity=convexity) children();
+module plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, atype="hull", cp="box", convexity=4, style="default")
+   vnf_polyhedron(plot3d(f,x,y,zclip, zspan,base, style=style), atype=atype, orient=orient, anchor=anchor, cp=cp, convexity=convexity) children();
    
-function plot3d(f,xrange,yrange,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, atype="hull", cp="box", style="default") =
+function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, atype="hull", cp="box", style="default") =
    assert(is_finite(base) && base>=0, "base must be a nonnegative number")
-   assert(is_vector(xrange) || valid_range(xrange), "xrange must be a vector or nonempty range")
-   assert(is_vector(yrange) || valid_range(yrange), "yrange must be a vector or nonempty range")
-   assert(is_range(xrange) || is_increasing(xrange, strict=true), "xrange must be strictly increasing")
-   assert(is_range(yrange) || is_increasing(yrange, strict=true), "yrange must be strictly increasing")
+   assert(is_vector(x) || valid_range(x), "x must be a vector or nonempty range")
+   assert(is_vector(y) || valid_range(y), "y must be a vector or nonempty range")
+   assert(is_range(x) || is_increasing(x, strict=true), "x must be strictly increasing")
+   assert(is_range(y) || is_increasing(y, strict=true), "y must be strictly increasing")
    assert(num_defined([zclip,zspan])<2, "Cannot give both zclip and zspan")
    assert(is_undef(zclip) || (is_list(zclip) && len(zclip)==2 && is_num(zclip[0]) && is_num(zclip[1])), "zclip must be a list of two values (which may be infinite)")
    assert(is_undef(zspan) || (is_vector(zspan,2) && zspan[0]<zspan[1]) ,"zspan must be a 2-vector whose first entry is smaller than the second")
    let(
        zclip = default(zclip, [-INF,INF]), 
-       data = [for(x=xrange) [for(y=yrange) [x,y,min(max(f(x,y),zclip[0]),zclip[1])]]],
-       dummy=assert(len(data[0])>1 && len(data)>1, "xrange and yrange must both provide at least 2 points"),
+       data = [for(x=x) [for(y=y) [x,y,min(max(f(x,y),zclip[0]),zclip[1])]]],
+       dummy=assert(len(data[0])>1 && len(data)>1, "x and y must both provide at least 2 points"),
        minval = min(column(flatten(data),2)),
        maxval = max(column(flatten(data),2)),
        sdata = is_undef(zspan) ? data
@@ -4317,6 +4317,140 @@ function plot3d(f,xrange,yrange,zclip, zspan, base=1, anchor="origin", orient=UP
        vnf = vnf_vertex_array(transpose(data), col_wrap=true, caps=true, style=style)
    )
    reorient(anchor,spin,orient, vnf=vnf, p=vnf);
+
+
+
+// Function&Module: plot_revolution()
+// Synopsis: Generates a surface by evaluating a of z and theta and putting the result on a surface of revolution
+// SynTags: Geom, VNF
+// Topics: Function Plotting
+// See Also: plot3d()
+// Usage: To create a cylinder or cone (by angle)
+//   plot_revolution(f, angle, z, [r=/d=] [r1=/d1], [r2=/d2=], [rclip=], [rspan=], [horiz=], [style=], [convexity=], ...) [ATTACHMENTS];
+// Usage: To create a cylinder or cone (by arclength)
+//   plot_revolution(f, arclength=, z=, [r=/d=] [r1=/d1], [r2=/d2=], [rclip=], [rspan=], [horiz=], [style=], [convexity=], ...) [ATTACHMENTS];
+// Usage: To create a surface of revolution
+//   plot_revolution(f, [angle], [arclength=], path=, [rclip=], [rspan=], [horiz=], [style=], [convexity=], ...) [ATTACHMENTS];
+// Usage: As Function
+//   vnf = plot_revolution(...);
+// Description:
+//   Given a function literal, `f`, sets `r=f(theta,z)` over a range of theta and z values, and uses the
+//   computed r values to define the offset from a cylinder or surface of revolution.  You can specify
+//   the theta range as an angle or based on arc length.  If the computed value produces a radius smaller
+//   than zero it will be rounded up to 0.01.  You can specify the cylinder using the usual length and
+//   radius or diameter parameters, or you can give `path`, a path which whose x values are strictly positive
+//   to define the textured surface of revolution.  
+//   .
+//   Your function may have have excessively large values at some points, or you may not know exactly 
+//   what its extreme values are.  To manage these situations you can use either the `rclip` or `rspan`
+//   parameter (but not both).  The `rclip` parameter is a 2-vector giving a minimum and maximum
+//   value, either of which can be infinite.  If the function falls below the minimum it is set
+//   equal to the minimum, and if it rises above the maximum it is set equal to the maximum.  The
+//   `rspan` parameter is a 2-vector giving a minum and maximum value which must both be finite.
+//   The function's values will be scaled and shifted to exactly cover the range you specifiy
+//   in `rspan`.
+//   .
+//   The default is to erect the function normal to the surface.  You can also set `horiz=true` to
+//   erect the function perpendicular to the rotation axis.  In the former case, the caps of the
+//   model are likely to be irregularly shaped and not exactly the requested size, unless the function
+//   evaluates to zero at the top and bottom of the path.  When `horiz=true` the top and bottom will
+//   be flat.  
+// Arguments:
+//   f = function literal accepting two arguments (x and y) that defines the function to compute
+//   ---
+//   r / d = radius or diameter of cylinder
+//   r1 / d1 = radius or diameter of bottom end
+//   r2 / d2 = radius or diameter of top end
+//   path = path to revolve to produce the shape
+//   rclip = A vector `[rmin,rmax]' that constrains the output of function to these bounds. Cannot be used with `rspan`.
+//   rspan = Rescale and shift the function values so the minimum value of f appears at rspan[0] and the maximum at rspan[1].  Cannot be used with `rclip`.
+//   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "default"
+//   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   atype = Select "hull" or "intersect" anchor type.  Default: "hull"
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+// Anchor Types:
+//   "hull" = Anchors to the virtual convex hull of the shape.
+//   "intersect" = Anchors to the surface of the shape.
+// Named Anchors:
+//   "origin" = Anchor at the origin, oriented UP.
+// Example(3D,NoScale): 
+//   f = function (x,y) 5*cos(5*norm([x*180/50,y*180/50]))+5;
+//   plot_revolution(f, arclength=[-50:1:50], z=[-50:1:50], r=30); 
+// Example(3D,NoScale): When specifying angle, the pattern shrinks at the top of the cone. 
+//   g = function (x,y) 5*sin(4*x)*cos(6*y)+5;
+//   plot_revolution(g, z=[-60:2:60], angle=[-180:4:180], r1=30, r2=16);
+// Example(3D,NoScale): When specifying arc length, the shape wraps around more cone at the top
+//   g = function (x,y) 5*sin(8*x)*cos(6*y)+5;
+//   plot_revolution(g, z=[-60:.5:60], arclength=[-45:.5:45], r1=30,r2=16);
+
+module plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1,r2,r,d1,d2,d,convexity=4, 
+                         anchor="origin", orient=UP, spin=0, atype="hull", cp="centroid", style="min_edge")
+  vnf_polyhedron(plot_revolution(f=f,angle=angle,z=z,arclength=arclength,path=path, rclip=rclip, rspan=rspan, horiz=horiz, style=style,
+                                 r=r,d=d,r1=r1,d1=d1,r2=r2,d2=d2), anchor=anchor, orient=orient, spin=spin, atype=atype, cp=cp);
+  
+
+function plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1,r2,r,d1,d2,d,
+                         anchor="origin", orient=UP, spin=0, atype="hull", cp="centroid", style="min_edge") =
+   assert(num_defined([angle,arclength])==1, "must define exactly one of angle and arclength")
+   assert(is_vector(z) || valid_range(z), "z must be a vector or nonempty range")
+   assert(is_range(z) || is_increasing(z, strict=true), "z must be strictly increasing")
+   assert(is_undef(path) || num_defined([r1,r2,d1,d2,r,d,z])==0, "Cannot define the z parameter or any radius or diameter parameters in combination with path")
+   assert(num_defined([rclip,rspan])<2, "Cannot give both rclip and rspan")
+   assert(is_undef(rclip) || (is_list(rclip) && len(rclip)==2 && is_finite(rclip[0]) && rclip[0]>0 && is_num(rclip[1])),
+          "rclip must be a list of two values (r[1] may be infinite)")
+   assert(is_undef(rspan) || (is_vector(rspan,2) && rspan[0]>0 && rspan[0]<rspan[1]) ,"rspan must be a 2-vector whose first entry is smaller than the second")
+   let(
+       r1 = get_radius(r1=r1, r=r, d1=d1, d=d),
+       r2 = get_radius(r1=r2, r=r, d1=d2, d=d),
+       rmin=0.01,
+       z = list(z),
+       thetarange = list(first_defined([angle,arclength])),
+       dummy = assert(is_vector(thetarange) && len(thetarange)>1 && is_increasing(thetarange,strict=true),
+                      "angle/arclength must be a strictly increasing array or range with at least 2 elements")
+               assert(is_def(arclength) || (last(thetarange)-thetarange[0])<=360, "angle span exceeds 360 degrees"), 
+       path = is_def(path) ? path
+            : let(
+                   rvals = add_scalar(add_scalar(z,-z[0]) / (last(z)-z[0]) * (r2-r1) ,r1)
+              )
+              hstack([rvals,z]),
+       normals = horiz ? repeat([1,0], len(path))
+               : path_normals(path),
+       rclip = default(rclip, [0.01,INF]),
+       rdata = [for(pt=path)
+                  let(
+                       angscale = is_def(angle) ? 1 : 360/2/PI/pt.x
+                  )
+                  [for(theta=thetarange) min(max(f(theta /*angscale*/,pt.y),rclip[0]),rclip[1])]],
+       dummy2=assert(len(rdata[0])>1 && len(rdata)>1, "xrange and yrange must both provide at least 2 points"),
+       minval = min(flatten(rdata)),
+       maxval = max(flatten(rdata)),
+       sdata = is_undef(rspan) && minval>0 ? rdata
+             : is_undef(rspan) ? [for(row=rdata) [for (entry=row) max(rmin,entry)]]
+             : let(
+                    scale = (rspan[1]-rspan[0])/(maxval-minval)
+               )
+               [for(row=rdata) [for (entry=row) scale*(entry.z-minval)+rspan[0]]],
+       closed = is_def(angle) && last(thetarange)-thetarange[0]==360, 
+       final = [for(i=idx(path))
+                  let(
+                      angscale = is_def(angle) ? 1
+                               : 360/2/PI/path[i].x
+                      
+                  )
+                  assert(angscale*(last(thetarange)-thetarange[0])<=360, str("arclength span is more than 360 degrees at profile index ",i," with radius ",path[i].x))
+                  [
+                   if (!closed) [0,0,path[i].y],
+                   for(j=idx(sdata[0]))
+                       cylindrical_to_xyz(path[i].x+sdata[i][j]*normals[i].x, angscale*thetarange[j], path[i].y+sdata[i][j]*normals[i].y)
+                   ]
+               ]
+   )
+   vnf_vertex_array(final, col_wrap=true, caps=true);
 
 
 
@@ -4461,7 +4595,6 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
 // Synopsis: Generates a cylindrical 3d surface from a 2D grid of values.
 // SynTags: Geom, VNF
 // Topics: Extrusion, Textures, Knurling, Heightfield
-// See Also: heightfield()
 // Usage: As Function
 //   vnf = cylindrical_heightfield(data, l|length=|h=|height=, r|d=, [base=], [transpose=], [aspect=]);
 // Usage: As Module
