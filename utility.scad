@@ -877,6 +877,22 @@ module deprecate(new_name)
 }   
 
 
+
+// Module: echo_viewport()
+// Synopsis: Display the current viewport parameters. 
+// Usage:
+//   echo_viewport();
+// Description:
+//   Display the current viewport parameters so that they can be pasted into examples for the wiki.
+//   The viewport should have a 4:3 aspect ratio to ensure proper framing of the object.  
+
+module echo_viewport()
+{
+    echo(format("VPR=[{:.2f},{:.2f},{:.2f}],VPD={:.2f},VPT=[{:.2f},{:.2f},{:.2f}]", [each $vpr, $vpd, each $vpt]));
+}    
+
+
+
 // Section: Testing Helpers
 
 
