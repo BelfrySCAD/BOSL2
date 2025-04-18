@@ -3417,7 +3417,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Topics: Textures, Knurling
 // Synopsis: Produce a standard texture. 
 // Topics: Extrusion, Textures
-// See Also: linear_sweep(), rotate_sweep(), heightfield(), cylindrical_heightfield()
+// See Also: linear_sweep(), rotate_sweep(), cyl(), vnf_vertex_array(), sweep(), path_sweep(), textured_tile()
 // Usage:
 //   tx = texture(tex, [n=], [inset=], [gap=], [roughness=]);
 // Description:

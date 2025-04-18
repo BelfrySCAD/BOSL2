@@ -883,7 +883,8 @@ module deprecate(new_name)
 // Usage:
 //   echo_viewport();
 // Description:
-//   Display the current viewport parameters so that they can be pasted into examples for the wiki.  
+//   Display the current viewport parameters so that they can be pasted into examples for the wiki.
+//   The viewport should have a 4x3 aspect ratio to ensure proper framing of the object.  
 
 module echo_viewport()
 {

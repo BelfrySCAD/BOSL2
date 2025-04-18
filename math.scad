@@ -142,7 +142,7 @@ function lerpn(a,b,n,endpoint=true) =
 // Function: bilerp()
 // Synopsis: Bi-linear interpolation between four values
 // Topics: Interpolation, Math
-// See Also: lerpn()
+// See Also: lerp()
 // Usage:
 //   x = bilerp(pts, x, y);
 // Description:

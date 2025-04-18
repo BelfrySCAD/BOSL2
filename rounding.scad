@@ -2579,7 +2579,9 @@ function _circle_mask(r) =
 //   same dimensions that is has on the plane, with y axis mapping to the z axis and the x axis bending
 //   around the curve of the cylinder.  The angular span of the path on the cylinder must be somewhat
 //   less than 180 degrees, and the path shouldn't have closely spaced points at concave points of high curvature because
-//   this causes self-intersection in the mask polyhedron, resulting in CGAL failures.
+//   this causes self-intersection in the mask polyhedron, resulting in CGAL failures.  The path also cannot include
+//   sharp corners, because it internally uses {{offset()}} which will expand those sharp corners into very long single
+//   segments that produce incorrect result.  
 // Arguments:
 //   r / radius = center radius of the cylindrical shell to cut a hole in
 //   thickness = thickness of cylindrical shell (may need to be slighly oversized)
@@ -4535,6 +4537,10 @@ function _find_center_anchor(desc1, desc2, anchor2, flip) =
 
 
 
+function _is_anchor(a) = is_string(a) || is_vector(a,2) || is_vector(a,3);
+
+function _is_anchor_list(list) = is_list(list) && [for(a=list) if (!_is_anchor(a)) a]==[];
+
 
 module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2=0, spin_align=1,
                        scale=1,
@@ -4545,155 +4551,173 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2
                        smooth_normals, smooth_normals1, smooth_normals2, 
                        debug=false, debug_pos=false)
 {
-    base_fillet = first_defined([fillet1,fillet,0]);
-    aux_fillet = first_defined([fillet2,fillet,0]);
-
-    base_overlap = first_defined([overlap1,overlap,1]);
-    aux_overlap = first_defined([overlap2,overlap,1]);
-
-    base_n = first_defined([n1,n,15]);
-    aux_n = first_defined([n2,n,15]);
-
-    base_uniform = first_defined([uniform1, uniform, true]);
-    aux_uniform = first_defined([uniform2, uniform, true]);
-    
-    base_k = first_defined([k1,k,0.7]);
-    aux_k = first_defined([k2,k,0.7]);
-
-    profile = force_path(profile,"profile");
-    dummy0 = assert(is_path(profile,2), "profile must be a 2d path");
-
-    corrected_base_anchor = is_vector(anchor1) && norm(anchor1)==0 ? _find_center_anchor(desc1,desc2,anchor2,true) : undef;
-    corrected_aux_anchor = is_vector(anchor2) && norm(anchor2)==0 ? _find_center_anchor(desc2,desc1,anchor1,false) : undef;      
-
-
-    base_anchor=is_string(anchor1) ? anchor1
-               : is_def(corrected_base_anchor) ? corrected_base_anchor[0]
-               : point3d(anchor1);
-    aux_anchor=is_string(anchor2) ? anchor2
-               : is_def(corrected_aux_anchor) ? corrected_aux_anchor[0]
-               : point3d(anchor2);
-    
-    base=desc1;
-    aux=desc2;
-
-    current = parent();
-    tobase = current==base ? ident(4) : linear_solve(current[0],base[0]);   // Maps from current frame into the base frame
-    auxmap = linear_solve(base[0], aux[0]);   // Map from the base (desc1) coordinate frame into the aux (desc2) coordinate frame
-
-    dummy = assert(is_vector(base_anchor) || is_string(base_anchor), "anchor1 must be a string or a 3-vector")
-            assert(is_vector(aux_anchor) || is_string(aux_anchor), "anchor2 must be a string or a 3-vector")    
-            assert(is_rotation(auxmap), "desc1 and desc2 are not related to each other by a rotation (and translation)");
-
-    base_type = _get_obj_type(1,base[1],base_anchor,profile);
-    base_axis = base_type=="cyl" ? base[1][5] : RIGHT;
-    base_edge = _is_geom_an_edge(base[1],base_anchor);
-    base_r = in_list(base_type,["cyl","sphere"]) ? base[1][1] : 1;
-    base_anch = _find_anchor(base_anchor, base[1]);
-    base_spin = base_anch[3];
-    base_anch_pos = base_anch[1];
-    base_anch_dir = base_anch[2];
-
-    prelim_shift1 = _check_join_shift(1,base_type,shift1,true);
-    shift1 = corrected_base_anchor ? corrected_base_anchor[1] + prelim_shift1 : prelim_shift1;
-    aux_type = _get_obj_type(2,aux[1],aux_anchor,profile);
-    aux_anch = _find_anchor(aux_anchor, aux[1]);
-    aux_edge = _is_geom_an_edge(aux[1],aux_anchor);
-    aux_r = in_list(aux_type,["cyl","sphere"]) ? aux[1][1] : 1;
-    aux_anch_pos = aux_anch[1];
-    aux_anch_dir = aux_anch[2];
-    aux_spin = aux_anch[3];
-    aux_spin_dir = apply(rot(from=UP,to=aux_anch[2])*zrot(aux_spin),BACK);
-    aux_axis = aux_type=="cyl" ? aux[1][5] : RIGHT;
-    prelim_shift2 = _check_join_shift(2,aux_type,shift2,false);
-    shift2 = corrected_aux_anchor ? corrected_aux_anchor[1] + prelim_shift2 : prelim_shift2;
-    
-
-    base_smooth_normals = first_defined([smooth_normals1, smooth_normals,!base_edge]);
-    aux_smooth_normals = first_defined([smooth_normals2, smooth_normals,!aux_edge]);    
-    
-    backdir = base_type=="cyl" ? base_axis
-            : apply(rot(from=UP,to=base_anch_dir)*zrot(base_spin),BACK);
-    anch_shift = base_type=="plane" || is_list(base_type) ? base_anch_pos : CENTER;
-
-    
-    // Map from the starting position for a join_prism object to
-    // the standard position for the object.
-    // If the aux object is an edge (type is a list) then the starting position
-    // of the prism is with the edge lying on the X axis and the object below.  
-    aux_to_canonical = aux_type=="sphere" ? IDENT
-                     : aux_type=="cyl" ? frame_map(x=aux_axis, z=aux_anch[2])
-                     : aux_type=="plane" ? move(aux_anch_pos) * rot(from=UP, to=aux_anch[2])*zrot(aux_spin)
-                     : /* list */  move(aux_anch_pos) * frame_map(z=aux_anch[2],x=aux_spin_dir) ;
-
-    // aux_T is the map that maps the auxiliary object from its initial position to
-    // the position for the prism.  The initial position is centered for a sphere,
-    // with the axis X aligned for a cylinder, and with the face of a polyhedron
-    // laying in the XY plane for polyhedra.  
-    aux_T =    move(-shift1)
-            * frame_map(x=backdir, z=base_anch_dir, reverse=true)
-            * move(-anch_shift)
-            * auxmap
-            * aux_to_canonical
-            * move(shift2);
-    aux_root = aux_type=="plane" || is_list(aux_type) || aux_anchor==CTR ? apply(aux_T,CTR)
-             : apply(aux_T * matrix_inverse(aux_to_canonical), aux_anch_pos);
-
-    base_root = base_type=="plane" || is_list(base_type) || base_anchor==CTR ? CENTER : base_r*UP;
-
-    prism_axis = aux_root-base_root;
-
-    base_inside = prism_axis.z<0 ? -1 : 1;
-
-    aux_normal = aux_type=="cyl" || aux_type=="sphere" ? apply(aux_T*matrix_inverse(aux_to_canonical), aux_anch[2]) - apply(aux_T*matrix_inverse(aux_to_canonical), CTR) 
-               : apply(aux_T, UP) - apply(aux_T,CTR);  // Is this right?  Added second term
-    aux_inside = aux_normal*(base_root-aux_root) < 0 ? -1 : 1;
-    
-    shaft = rot(from=UP,to=prism_axis, p=zrot(base_spin,BACK));
-
-    obj1_back = apply(frame_map(x=backdir,z=base_anch_dir,reverse=true)*rot(from=UP,to=base_anch_dir)*zrot(base_spin),BACK);
-    obj2_back = aux_type=="plane" ? apply(aux_T,BACK)-apply(aux_T,CTR)
-              : is_list(aux_type) ? apply(aux_T*matrix_inverse(frame_map(z=aux_anch[2],x=aux_spin_dir)),aux_spin_dir)-apply(aux_T,CTR)
-              : aux_type=="sphere"? apply(aux_T,aux_spin_dir)-apply(aux_T,CTR)
-                /*cyl*/           :  apply(aux_T*matrix_inverse(aux_to_canonical),aux_spin_dir)-apply(aux_T,CTR);
-
-    v1 = vector_perp(prism_axis, shaft);
-    v2 = vector_perp(prism_axis, obj1_back);  
-    v3 = vector_perp(prism_axis, obj2_back);
-    sign1 = cross(v1,v2)*prism_axis < 0 ? 1 : -1;
-    sign2 = cross(v3,v1)*prism_axis < 0 ? 1 : -1;
-
-    spin1 =  sign1 * vector_angle(v1,v2);
-    spin2 = -sign2 * vector_angle(v3,v1);
-    spin = spin_align==1 ? spin1
-         : spin_align==2 ? spin2
-         : spin_align==12 ? mean_angle(spin1,spin2)
-         : spin_align==21 ? mean_angle(spin2,spin1)
-         : assert(false, str("spin_align must be one of 1, 2, 12, or 21 but was ",spin_align));
-    multmatrix(tobase)
-      move(anch_shift)
-      frame_map(x=backdir, z=base_anch_dir)
-      move(shift1){
-        //  For debugging spin, shows line in the spin direction
-        //stroke([aux_root,aux_root+unit(obj2_back)*15], width=1,color="lightblue");
-        //stroke([base_root,base_root+unit(obj1_back)*15], width=1,color="lightgreen");
-
-        if (debug_pos)
-          move(base_root)rot(from=UP,to=prism_axis) 
-            linear_extrude(height=norm(base_root-aux_root))zrot(base_spin-spin)polygon(profile);
-        else{
-          join_prism(zrot(base_spin-spin,profile),
-                     base=base_type, base_r=u_mul(base_r,base_inside),
-                     aux=aux_type, aux_T=aux_T, aux_r=u_mul(aux_r,aux_inside),
-                     scale=scale, 
-                     start=base_root, end=aux_root,
-                     base_k=base_k, aux_k=aux_k, base_overlap=base_overlap, aux_overlap=aux_overlap,
-                     base_n=base_n, aux_n=aux_n, base_fillet=base_fillet, aux_fillet=aux_fillet,
-                     base_smooth_normals = base_smooth_normals, aux_smooth_normals=aux_smooth_normals, 
-                     debug=debug,
-                     _name1="desc1", _name2="desc2") children();
+    dummy1 = assert(_is_anchor(anchor1) || _is_anchor_list(anchor1) , "anchor1 must be an anchor (string or a 3-vector) or a list of anchors")
+             assert(_is_anchor(anchor2) || _is_anchor_list(anchor2) , "anchor2 must be an anchor (string or a 3-vector) or a list of anchors");
+    if (_is_anchor_list(anchor1) || _is_anchor_list(anchor2)) {
+      anchor1_list=_is_anchor(anchor1) ? [anchor1] : anchor1;
+      anchor2_list=_is_anchor(anchor2) ? [anchor2] : anchor2;
+      for(i = idx(anchor1_list))
+        for(j= idx(anchor2_list))
+          {
+            $anchor1 = anchor1_list[i];
+            $anchor2 = anchor2_list[j];
+            $idx = [i,j];
+            prism_connector(profile=profile, desc1=desc1, anchor1=$anchor1, desc2=desc2, anchor2=$anchor2, shift1=shift1, shift2=shift2, spin_align=spin_align,
+                            scale=scale, fillet=fillet, fillet1=fillet1, fillet2=fillet2, overlap=overlap, overlap1=overlap1, overlap2=overlap2,
+                            k=k, k1=k1, k2=k2, n=n, n1=n1, n2=n2, uniform=uniform, uniform1=uniform1, uniform2=uniform2,
+                            smooth_normals=smooth_normals, smooth_normals1=smooth_normals1, smooth_normals2=smooth_normals2,
+                            debug=debug, debug_pos=debug_pos) children();
           }
-      }
+    }
+    else {
+      base_fillet = first_defined([fillet1,fillet,0]);
+      aux_fillet = first_defined([fillet2,fillet,0]);
+
+      base_overlap = first_defined([overlap1,overlap,1]);
+      aux_overlap = first_defined([overlap2,overlap,1]);
+
+      base_n = first_defined([n1,n,15]);
+      aux_n = first_defined([n2,n,15]);
+
+      base_uniform = first_defined([uniform1, uniform, true]);
+      aux_uniform = first_defined([uniform2, uniform, true]);
+      
+      base_k = first_defined([k1,k,0.7]);
+      aux_k = first_defined([k2,k,0.7]);
+
+      profile = force_path(profile,"profile");
+      dummy0 = assert(is_path(profile,2), "profile must be a 2d path");
+
+      corrected_base_anchor = is_vector(anchor1) && norm(anchor1)==0 ? _find_center_anchor(desc1,desc2,anchor2,true) : undef;
+      corrected_aux_anchor = is_vector(anchor2) && norm(anchor2)==0 ? _find_center_anchor(desc2,desc1,anchor1,false) : undef;      
+
+
+      base_anchor=is_string(anchor1) ? anchor1
+                 : is_def(corrected_base_anchor) ? corrected_base_anchor[0]
+                 : point3d(anchor1);
+      aux_anchor=is_string(anchor2) ? anchor2
+                 : is_def(corrected_aux_anchor) ? corrected_aux_anchor[0]
+                 : point3d(anchor2);
+      
+      base=desc1;
+      aux=desc2;
+
+      current = parent();
+      tobase = current==base ? ident(4) : linear_solve(current[0],base[0]);   // Maps from current frame into the base frame
+      auxmap = linear_solve(base[0], aux[0]);   // Map from the base (desc1) coordinate frame into the aux (desc2) coordinate frame
+
+      dummy = 
+              assert(is_rotation(auxmap), "desc1 and desc2 are not related to each other by a rotation (and translation)");
+
+      base_type = _get_obj_type(1,base[1],base_anchor,profile);
+      base_axis = base_type=="cyl" ? base[1][5] : RIGHT;
+      base_edge = _is_geom_an_edge(base[1],base_anchor);
+      base_r = in_list(base_type,["cyl","sphere"]) ? base[1][1] : 1;
+      base_anch = _find_anchor(base_anchor, base[1]);
+      base_spin = base_anch[3];
+      base_anch_pos = base_anch[1];
+      base_anch_dir = base_anch[2];
+
+      prelim_shift1 = _check_join_shift(1,base_type,shift1,true);
+      shift1 = corrected_base_anchor ? corrected_base_anchor[1] + prelim_shift1 : prelim_shift1;
+      aux_type = _get_obj_type(2,aux[1],aux_anchor,profile);
+      aux_anch = _find_anchor(aux_anchor, aux[1]);
+      aux_edge = _is_geom_an_edge(aux[1],aux_anchor);
+      aux_r = in_list(aux_type,["cyl","sphere"]) ? aux[1][1] : 1;
+      aux_anch_pos = aux_anch[1];
+      aux_anch_dir = aux_anch[2];
+      aux_spin = aux_anch[3];
+      aux_spin_dir = apply(rot(from=UP,to=aux_anch[2])*zrot(aux_spin),BACK);
+      aux_axis = aux_type=="cyl" ? aux[1][5] : RIGHT;
+      prelim_shift2 = _check_join_shift(2,aux_type,shift2,false);
+      shift2 = corrected_aux_anchor ? corrected_aux_anchor[1] + prelim_shift2 : prelim_shift2;
+      
+
+      base_smooth_normals = first_defined([smooth_normals1, smooth_normals,!base_edge]);
+      aux_smooth_normals = first_defined([smooth_normals2, smooth_normals,!aux_edge]);    
+      
+      backdir = base_type=="cyl" ? base_axis
+              : apply(rot(from=UP,to=base_anch_dir)*zrot(base_spin),BACK);
+      anch_shift = base_type=="plane" || is_list(base_type) ? base_anch_pos : CENTER;
+
+      
+      // Map from the starting position for a join_prism object to
+      // the standard position for the object.
+      // If the aux object is an edge (type is a list) then the starting position
+      // of the prism is with the edge lying on the X axis and the object below.  
+      aux_to_canonical = aux_type=="sphere" ? IDENT
+                       : aux_type=="cyl" ? frame_map(x=aux_axis, z=aux_anch[2])
+                       : aux_type=="plane" ? move(aux_anch_pos) * rot(from=UP, to=aux_anch[2])*zrot(aux_spin)
+                       : /* list */  move(aux_anch_pos) * frame_map(z=aux_anch[2],x=aux_spin_dir) ;
+
+      // aux_T is the map that maps the auxiliary object from its initial position to
+      // the position for the prism.  The initial position is centered for a sphere,
+      // with the axis X aligned for a cylinder, and with the face of a polyhedron
+      // laying in the XY plane for polyhedra.  
+      aux_T =    move(-shift1)
+              * frame_map(x=backdir, z=base_anch_dir, reverse=true)
+              * move(-anch_shift)
+              * auxmap
+              * aux_to_canonical
+              * move(shift2);
+      aux_root = aux_type=="plane" || is_list(aux_type) || aux_anchor==CTR ? apply(aux_T,CTR)
+               : apply(aux_T * matrix_inverse(aux_to_canonical), aux_anch_pos);
+
+      base_root = base_type=="plane" || is_list(base_type) || base_anchor==CTR ? CENTER : base_r*UP;
+
+      prism_axis = aux_root-base_root;
+
+      base_inside = prism_axis.z<0 ? -1 : 1;
+
+      aux_normal = aux_type=="cyl" || aux_type=="sphere" ? apply(aux_T*matrix_inverse(aux_to_canonical), aux_anch[2]) - apply(aux_T*matrix_inverse(aux_to_canonical), CTR) 
+                 : apply(aux_T, UP) - apply(aux_T,CTR);  // Is this right?  Added second term
+      aux_inside = aux_normal*(base_root-aux_root) < 0 ? -1 : 1;
+      
+      shaft = rot(from=UP,to=prism_axis, p=zrot(base_spin,BACK));
+
+      obj1_back = apply(frame_map(x=backdir,z=base_anch_dir,reverse=true)*rot(from=UP,to=base_anch_dir)*zrot(base_spin),BACK);
+      obj2_back = aux_type=="plane" ? apply(aux_T,BACK)-apply(aux_T,CTR)
+                : is_list(aux_type) ? apply(aux_T*matrix_inverse(frame_map(z=aux_anch[2],x=aux_spin_dir)),aux_spin_dir)-apply(aux_T,CTR)
+                : aux_type=="sphere"? apply(aux_T,aux_spin_dir)-apply(aux_T,CTR)
+                  /*cyl*/           :  apply(aux_T*matrix_inverse(aux_to_canonical),aux_spin_dir)-apply(aux_T,CTR);
+
+      v1 = vector_perp(prism_axis, shaft);
+      v2 = vector_perp(prism_axis, obj1_back);  
+      v3 = vector_perp(prism_axis, obj2_back);
+      sign1 = cross(v1,v2)*prism_axis < 0 ? 1 : -1;
+      sign2 = cross(v3,v1)*prism_axis < 0 ? 1 : -1;
+
+      spin1 =  sign1 * vector_angle(v1,v2);
+      spin2 = -sign2 * vector_angle(v3,v1);
+      spin = spin_align==1 ? spin1
+           : spin_align==2 ? spin2
+           : spin_align==12 ? mean_angle(spin1,spin2)
+           : spin_align==21 ? mean_angle(spin2,spin1)
+           : assert(false, str("spin_align must be one of 1, 2, 12, or 21 but was ",spin_align));
+      multmatrix(tobase)
+        move(anch_shift)
+        frame_map(x=backdir, z=base_anch_dir)
+        move(shift1){
+          //  For debugging spin, shows line in the spin direction
+          //stroke([aux_root,aux_root+unit(obj2_back)*15], width=1,color="lightblue");
+          //stroke([base_root,base_root+unit(obj1_back)*15], width=1,color="lightgreen");
+
+          if (debug_pos)
+            move(base_root)rot(from=UP,to=prism_axis) 
+              linear_extrude(height=norm(base_root-aux_root))zrot(base_spin-spin)polygon(profile);
+          else{
+            join_prism(zrot(base_spin-spin,profile),
+                       base=base_type, base_r=u_mul(base_r,base_inside),
+                       aux=aux_type, aux_T=aux_T, aux_r=u_mul(aux_r,aux_inside),
+                       scale=scale, 
+                       start=base_root, end=aux_root,
+                       base_k=base_k, aux_k=aux_k, base_overlap=base_overlap, aux_overlap=aux_overlap,
+                       base_n=base_n, aux_n=aux_n, base_fillet=base_fillet, aux_fillet=aux_fillet,
+                       base_smooth_normals = base_smooth_normals, aux_smooth_normals=aux_smooth_normals, 
+                       debug=debug,
+                       _name1="desc1", _name2="desc2") children();
+            }
+        }
 }
 
 
