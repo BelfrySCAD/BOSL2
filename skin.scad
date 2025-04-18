@@ -4052,7 +4052,6 @@ function texture(tex, n, border, gap, roughness, inset) =
 ///   _textured_linear_sweep(region, texture, tex_size, h, ...) [ATTACHMENTS];
 ///   _textured_linear_sweep(region, texture, counts=, h=, ...) [ATTACHMENTS];
 /// Topics: Sweep, Extrusion, Textures, Knurling
-/// See Also: heightfield(), cylindrical_heightfield(), texture()
 /// Description:
 ///   Given a [[Region|regions.scad]], creates a linear extrusion of it vertically, optionally twisted, scaled, and/or shifted,
 ///   with a given texture tiled evenly over the side surfaces.  The texture can be given in one of three ways:
@@ -4374,7 +4373,6 @@ function _tile_edge_path_list(vnf, axis, maxopen=1) =
 ///   _textured_revolution(shape, texture, tex_size, [tex_scale=], ...) [ATTACHMENTS];
 ///   _textured_revolution(shape, texture, counts=, [tex_scale=], ...) [ATTACHMENTS];
 /// Topics: Sweep, Extrusion, Textures, Knurling
-/// See Also: heightfield(), cylindrical_heightfield(), texture()
 /// Description:
 ///   Given a 2D region or path, fully in the X+ half-plane, revolves that shape around the Z axis (after rotating its Y+ to Z+).
 ///   This creates a solid from that surface of revolution, possibly capped top and bottom, with the sides covered in a given tiled texture.

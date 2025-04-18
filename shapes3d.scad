@@ -4336,8 +4336,15 @@ function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, 
 // Description:
 //   Given a function literal, `f`, sets `r=f(theta,z)` over a range of theta and z values, and uses the
 //   computed r values to define the offset from a cylinder or surface of revolution.  You can specify
-//   the theta range as an angle or based on arc length.  If the computed value produces a radius smaller
-//   than zero it will be rounded up to 0.01.  You can specify the cylinder using the usual length and
+//   the theta range as a `angle` to give an angle range in degrees or with `arclength` to give an arc length
+//   range in distance units.  Your function will receive its parameters in
+//   the form you specify, as angle or as arclength.  If you use `angle` then as the radius decreases, the
+//   function shrinks in the horizontal direction to fit.  If you use `arclength` distance is preserved for
+//   the function and as you move toward the top of a cone, the function will occupy a larger amount
+//   of total angle so that the arc length stays the same.  
+//   .
+//   If the computed value produces a radius smaller than zero it will be rounded up to 0.01.  You can
+//   specify a cylinder using the usual length and
 //   radius or diameter parameters, or you can give `path`, a path which whose x values are strictly positive
 //   to define the textured surface of revolution.  
 //   .
@@ -4356,13 +4363,16 @@ function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, 
 //   evaluates to zero at the top and bottom of the path.  When `horiz=true` the top and bottom will
 //   be flat.  
 // Arguments:
-//   f = function literal accepting two arguments (x and y) that defines the function to compute
+//   f = function literal accepting two arguments (angle and z) that defines the function to compute
+//   angle = a list or range of angle values where the function is calculated
+//   z = a list or range of z values to where the function is calculated, used only with cylinders and cones, not allowed with `path`.
 //   ---
-//   r / d = radius or diameter of cylinder
-//   r1 / d1 = radius or diameter of bottom end
-//   r2 / d2 = radius or diameter of top end
-//   path = path to revolve to produce the shape
-//   rclip = A vector `[rmin,rmax]' that constrains the output of function to these bounds. Cannot be used with `rspan`.
+//   r / d = radius or diameter of cylinder (not allowed with `path`)
+//   r1 / d1 = radius or diameter of bottom end (not allowed with `path`)
+//   r2 / d2 = radius or diameter of top end (not allowed with `path`)
+//   arclength = list or range of arc length values where the function is calculated 
+//   path = path to revolve to produce the shape.  (If omitted you must supply cylinder parameters.)
+//   rclip = A vector `[rmin,rmax]' that constrains the output of function to these bounds, which may be infinite. Cannot be used with `rspan`.
 //   rspan = Rescale and shift the function values so the minimum value of f appears at rspan[0] and the maximum at rspan[1].  Cannot be used with `rclip`.
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "default"
 //   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
@@ -4386,19 +4396,36 @@ function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, 
 //   plot_revolution(g, z=[-60:2:60], angle=[-180:4:180], r1=30, r2=16);
 // Example(3D,NoScale): When specifying arc length, the shape wraps around more cone at the top
 //   g = function (x,y) 5*sin(8*x)*cos(6*y)+5;
-//   plot_revolution(g, z=[-60:.5:60], arclength=[-45:.5:45], r1=30,r2=16);
+//   plot_revolution(g, z=[-60:.5:60], arclength=[-45:.5:45],r1=30,r2=16);
+// Example(3D,VPR=[60.60,0.00,100.60],VPD=100.87,VPT=[-1.84,-1.70,5.63]): Here we place a simple ridge function onto a cone using angle.  Note how the ribs narrow with the radius.  
+//   f = function(x,y) cos(20*x)+1;
+//   plot_revolution(f,z=[0:.1:20], angle=[-45:.1:45], r1=20,r2=10, horiz=true);
+//   cyl(h=20, r1=20,r2=10,anchor=BOT,$fn=64);
+// Example(3D,VPR=[60.60,0.00,100.60],VPD=100.87,VPT=[-1.84,-1.70,5.63]): Here using arc length to put the function on the cone results in relatively straight ridges that do not narrow at the top of the cone.  Note that we had to adjust the function to be properly scaled for the arc length parameter instead of angle.  
+//   f = function(x,y) cos(60*x)+1;
+//   plot_revolution(f,z=[0:.1:20], arclength=[-15:.1:15], r1=20,r2=10, horiz=true);
+//   cyl(h=20, r1=20,r2=10,anchor=BOT,$fn=64);
+// Example(3D,VPR=[57.10,0.00,148.90],VPD=100.87,VPT=[-1.40,-0.72,4.63]): Changing the arc length range position changes how the function maps onto the surface.  
+//   f = function(x,y) cos(60*x)+1;
+//   plot_revolution(f,z=[0:.1:20], arclength=[0:.1:30], r1=20,r2=10, horiz=true);
+//   cyl(h=20, r1=20,r2=10,anchor=BOT,$fn=64);
+// Example(3D,Med,NoAxes,VPR=[73.90,0.00,17.30],VPD=124.53,VPT=[-10.15,31.37,-9.82]): Here we construct a model using a circular arc for the path, resulting in a spherical shape.  The left model has `horiz=false` and the right hand one has `horiz=true`.  
+//   hcount=4;        // Number of ribs to create
+//   vcount=2;        // How periods of oscillation for each rib
+//   stretch_ang=200; // Angle extent of oscillations
+//   g = function(x,y) sin(hcount * x + stretch_ang * sin(18 * vcount * y));
+//   xcopies(spacing=30)
+//     plot_revolution(g, [0:3:360], path=arc(200, r=10, start=-89, angle=178),style="min_edge", horiz=$idx==1);
 
-module plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1,r2,r,d1,d2,d,convexity=4, 
-                         anchor="origin", orient=UP, spin=0, atype="hull", cp="centroid", style="min_edge")
-  vnf_polyhedron(plot_revolution(f=f,angle=angle,z=z,arclength=arclength,path=path, rclip=rclip, rspan=rspan, horiz=horiz, style=style,
+module plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1,r2,r,d1,d2,d,convexity=4,
+                         anchor="origin", orient=UP, spin=0, atype="hull", cp="centroid", style="min_edge", reverse=false)
+  vnf_polyhedron(plot_revolution(f=f,angle=angle,z=z,arclength=arclength,path=path, rclip=rclip, rspan=rspan, horiz=horiz, style=style, reverse=reverse,
                                  r=r,d=d,r1=r1,d1=d1,r2=r2,d2=d2), anchor=anchor, orient=orient, spin=spin, atype=atype, cp=cp);
-  
-
+ 
 function plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1,r2,r,d1,d2,d,
-                         anchor="origin", orient=UP, spin=0, atype="hull", cp="centroid", style="min_edge") =
+                         anchor="origin", orient=UP, spin=0, atype="hull", cp="centroid", style="min_edge", reverse=false) =
    assert(num_defined([angle,arclength])==1, "must define exactly one of angle and arclength")
-   assert(is_vector(z) || valid_range(z), "z must be a vector or nonempty range")
-   assert(is_range(z) || is_increasing(z, strict=true), "z must be strictly increasing")
+   assert(is_undef(z) || is_vector(z) || valid_range(z), "z must be a vector or nonempty range")
    assert(is_undef(path) || num_defined([r1,r2,d1,d2,r,d,z])==0, "Cannot define the z parameter or any radius or diameter parameters in combination with path")
    assert(num_defined([rclip,rspan])<2, "Cannot give both rclip and rspan")
    assert(is_undef(rclip) || (is_list(rclip) && len(rclip)==2 && is_finite(rclip[0]) && rclip[0]>0 && is_num(rclip[1])),
@@ -4407,12 +4434,14 @@ function plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1
    let(
        r1 = get_radius(r1=r1, r=r, d1=d1, d=d),
        r2 = get_radius(r1=r2, r=r, d1=d2, d=d),
+       dummy3=assert(is_def(path) || all_defined([r1,r2,z]), "\nMust give either path or both the 'z' and radius parameters."),
        rmin=0.01,
        z = list(z),
        thetarange = list(first_defined([angle,arclength])),
        dummy = assert(is_vector(thetarange) && len(thetarange)>1 && is_increasing(thetarange,strict=true),
                       "angle/arclength must be a strictly increasing array or range with at least 2 elements")
-               assert(is_def(arclength) || (last(thetarange)-thetarange[0])<=360, "angle span exceeds 360 degrees"), 
+               assert(is_def(path)|| (len(z)>1 && is_increasing(z, strict=true)),"z must be a strictly increasing array or range with at least 2 elements")
+               assert(is_def(arclength) || (last(thetarange)-thetarange[0])<=360, "angle span exceeds 360 degrees"),
        path = is_def(path) ? path
             : let(
                    rvals = add_scalar(add_scalar(z,-z[0]) / (last(z)-z[0]) * (r2-r1) ,r1)
@@ -4420,37 +4449,33 @@ function plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1
               hstack([rvals,z]),
        normals = horiz ? repeat([1,0], len(path))
                : path_normals(path),
-       rclip = default(rclip, [0.01,INF]),
+       rclip = default(rclip, [-INF,INF]),
        rdata = [for(pt=path)
-                  let(
-                       angscale = is_def(angle) ? 1 : 360/2/PI/pt.x
-                  )
-                  [for(theta=thetarange) min(max(f(theta /*angscale*/,pt.y),rclip[0]),rclip[1])]],
+                  [for(theta=thetarange) min(max(f(theta,pt.y),rclip[0]),rclip[1])]],
        dummy2=assert(len(rdata[0])>1 && len(rdata)>1, "xrange and yrange must both provide at least 2 points"),
        minval = min(flatten(rdata)),
        maxval = max(flatten(rdata)),
-       sdata = is_undef(rspan) && minval>0 ? rdata
-             : is_undef(rspan) ? [for(row=rdata) [for (entry=row) max(rmin,entry)]]
+       sdata = is_undef(rspan) ? rdata
              : let(
                     scale = (rspan[1]-rspan[0])/(maxval-minval)
                )
                [for(row=rdata) [for (entry=row) scale*(entry.z-minval)+rspan[0]]],
-       closed = is_def(angle) && last(thetarange)-thetarange[0]==360, 
+       closed = is_def(angle) && last(thetarange)-thetarange[0]==360,
        final = [for(i=idx(path))
                   let(
                       angscale = is_def(angle) ? 1
                                : 360/2/PI/path[i].x
-                      
                   )
                   assert(angscale*(last(thetarange)-thetarange[0])<=360, str("arclength span is more than 360 degrees at profile index ",i," with radius ",path[i].x))
                   [
                    if (!closed) [0,0,path[i].y],
                    for(j=idx(sdata[0]))
-                       cylindrical_to_xyz(path[i].x+sdata[i][j]*normals[i].x, angscale*thetarange[j], path[i].y+sdata[i][j]*normals[i].y)
+                       cylindrical_to_xyz(max(rmin,path[i].x+sdata[i][j]*normals[i].x), angscale*thetarange[j], path[i].y+sdata[i][j]*normals[i].y)
                    ]
                ]
    )
-   vnf_vertex_array(final, col_wrap=true, caps=true);
+   vnf_vertex_array(final, col_wrap=true, caps=true,reverse=!reverse, style=style);
+
 
 
 
@@ -4591,64 +4616,65 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
     ) reorient(anchor,spin,orient, vnf=vnf, p=vnf);
 
 
-// Function&Module: cylindrical_heightfield()
-// Synopsis: Generates a cylindrical 3d surface from a 2D grid of values.
-// SynTags: Geom, VNF
-// Topics: Extrusion, Textures, Knurling, Heightfield
-// Usage: As Function
-//   vnf = cylindrical_heightfield(data, l|length=|h=|height=, r|d=, [base=], [transpose=], [aspect=]);
-// Usage: As Module
-//   cylindrical_heightfield(data, l|length=|h=|height=, r|d=, [base=], [transpose=], [aspect=]) [ATTACHMENTS];
-// Description:
-//   Given a regular rectangular 2D grid of scalar values, or a function literal of signature (x,y), generates
-//   a cylindrical 3D surface where the height at any given point above the radius `r=`, is the scalar value
-//   for that position.
-//   One script to convert a grayscale image to a heightfield array in a .scad file can be found at:
-//   https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py
-// Arguments:
-//   data = This is either the 2D rectangular array of heights, or a function literal of signature `(x, y)`.
-//   l / length / h / height = The length of the cylinder to wrap around.
-//   r = The radius of the cylinder to wrap around.
-//   ---
-//   r1 = The radius of the bottom of the cylinder to wrap around.
-//   r2 = The radius of the top of the cylinder to wrap around.
-//   d = The diameter of the cylinder to wrap around.
-//   d1 = The diameter of the bottom of the cylinder to wrap around.
-//   d2 = The diameter of the top of the cylinder to wrap around.
-//   base = The radius for the bottom of the heightfield object to create.  Any heights smaller than this will be truncated to very slightly above this height.  Default: -20
-//   transpose = If true, swaps the radial and length axes of the data.  Default: false
-//   aspect = The aspect ratio of the generated heightfield at the surface of the cylinder.  Default: 1
-//   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
-//   yrange = A range of values to iterate Y over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
-//   maxh = The maximum height above the radius to model.  Truncates anything taller to this height.  Default: 99
-//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".  Default: "default"
-//   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-// Example(VPD=400;VPR=[55,0,150]):
-//   cylindrical_heightfield(l=100, r=30, base=5, data=[
-//       for (y=[-180:4:180]) [
-//           for(x=[-180:4:180])
-//           5*cos(5*norm([x,y]))+5
-//       ]
-//   ]);
-// Example(VPD=400;VPR=[55,0,150]):
-//   cylindrical_heightfield(l=100, r1=60, r2=30, base=5, data=[
-//       for (y=[-180:4:180]) [
-//           for(x=[-180:4:180])
-//           5*cos(5*norm([x,y]))+5
-//       ]
-//   ]);
-// Example(VPD=400;VPR=[55,0,150]): Heightfield by Function
-//   fn = function (x,y) 5*sin(x*360)*cos(y*360)+5;
-//   cylindrical_heightfield(l=100, r=30, data=fn);
-// Example(VPD=400;VPR=[55,0,150]): Heightfield by Function, with Specific Ranges
-//   fn = function (x,y) 2*cos(5*norm([x,y]));
-//   cylindrical_heightfield(
-//       l=100, r=30, base=5, data=fn,
-//       xrange=[-180:2:180], yrange=[-180:2:180]
-//   );
+/// Function&Module: cylindrical_heightfield()
+/// Synopsis: Generates a cylindrical 3d surface from a 2D grid of values.
+/// SynTags: Geom, VNF
+/// Topics: Extrusion, Textures, Knurling, Heightfield
+/// Usage: As Function
+///   vnf = cylindrical_heightfield(data, l|length=|h=|height=, r|d=, [base=], [transpose=], [aspect=]);
+/// Usage: As Module
+///   cylindrical_heightfield(data, l|length=|h=|height=, r|d=, [base=], [transpose=], [aspect=]) [ATTACHMENTS];
+/// Description:
+///   Given a regular rectangular 2D grid of scalar values, or a function literal of signature (x,y), generates
+///   a cylindrical 3D surface where the height at any given point above the radius `r=`, is the scalar value
+///   for that position.
+///   One script to convert a grayscale image to a heightfield array in a .scad file can be found at:
+///   https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py
+/// Arguments:
+///   data = This is either the 2D rectangular array of heights, or a function literal of signature `(x, y)`.
+///   l / length / h / height = The length of the cylinder to wrap around.
+///   r = The radius of the cylinder to wrap around.
+///   ---
+///   r1 = The radius of the bottom of the cylinder to wrap around.
+///   r2 = The radius of the top of the cylinder to wrap around.
+///   d = The diameter of the cylinder to wrap around.
+///   d1 = The diameter of the bottom of the cylinder to wrap around.
+///   d2 = The diameter of the top of the cylinder to wrap around.
+///   base = The radius for the bottom of the heightfield object to create.  Any heights smaller than this will be truncated to very slightly above this height.  Default: -20
+///   transpose = If true, swaps the radial and length axes of the data.  Default: false
+///   aspect = The aspect ratio of the generated heightfield at the surface of the cylinder.  Default: 1
+///   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
+///   yrange = A range of values to iterate Y over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
+///   maxh = The maximum height above the radius to model.  Truncates anything taller to this height.  Default: 99
+///   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".  Default: "default"
+///   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
+///   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+///   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+///   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+/// Example(VPD=400;VPR=[55,0,150]):
+///   cylindrical_heightfield(l=100, r=30, base=5, data=[
+///       for (y=[-180:4:180]) [
+///           for(x=[-180:4:180])
+///           5*cos(5*norm([x,y]))+5
+///       ]
+///   ]);
+/// Example(VPD=400;VPR=[55,0,150]):
+///   cylindrical_heightfield(l=100, r1=60, r2=30, base=5, data=[
+///       for (y=[-180:4:180]) [
+///           for(x=[-180:4:180])
+///           5*cos(5*norm([x,y]))+5
+///       ]
+///   ]);
+/// Example(VPD=400;VPR=[55,0,150]): Heightfield by Function
+///   fn = function (x,y) 5*sin(x*360)*cos(y*360)+5;
+///   cylindrical_heightfield(l=100, r=30, data=fn);
+/// Example(VPD=400;VPR=[55,0,150]): Heightfield by Function, with Specific Ranges
+///   fn = function (x,y) 2*cos(5*norm([x,y]));
+///   cylindrical_heightfield(
+///       l=100, r=30, base=5, data=fn,
+///       xrange=[-180:2:180], yrange=[-180:2:180]
+///   );
+
 
 function cylindrical_heightfield(
     data, l, r, base=1,
@@ -4660,6 +4686,9 @@ function cylindrical_heightfield(
     anchor=CTR, spin=0, orient=UP
 ) =
     let(
+        dummy=is_function(data)
+           ? echo("***** cylindrical_heightfield() is deprecated and will be removed in a future version.  For creating functions on cylinders use plot_revolution(). *****")
+           : echo("***** cylindrical_heightfield() is deprecated and will be removed in a future version.  For displaying arrays on a cylinder use rotate_sweep() *****"),
         l = one_defined([l, h, height, length], "l,h,height,l"),
         r1 = get_radius(r1=r1, r=r, d1=d1, d=d),
         r2 = get_radius(r1=r2, r=r, d1=d2, d=d)

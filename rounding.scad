@@ -2580,8 +2580,8 @@ function _circle_mask(r) =
 //   around the curve of the cylinder.  The angular span of the path on the cylinder must be somewhat
 //   less than 180 degrees, and the path shouldn't have closely spaced points at concave points of high curvature because
 //   this causes self-intersection in the mask polyhedron, resulting in CGAL failures.  The path also cannot include
-//   sharp corners, because it internally uses {{offset()}} which expands those sharp corners into long single
-//   segments that produce incorrect results.
+//   sharp corners: construction of the mask requires the use of {{offset()}}, which expands sharp corners into long single
+//   segments leading to incorrect results.  
 // Arguments:
 //   r / radius = center radius of the cylindrical shell to cut a hole in
 //   thickness = thickness of cylindrical shell (may need to be slighly oversized)
