@@ -246,7 +246,7 @@ module path_extrude(path, convexity=10, clipsize=100) {
 // Synopsis: Extrudes 2D children outwards around a cylinder.
 // SynTags: Geom
 // Topics: Miscellaneous, Extrusion, Rotation
-// See Also: heightfield(), cylindrical_heightfield(), cyl()
+// See Also: cyl(), plot_revolution()
 // Usage:
 //   cylindrical_extrude(ir|id=, or|od=, [size=], [convexity=], [spin=], [orient=]) 2D-CHILDREN;
 // Description:
