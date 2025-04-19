@@ -1213,7 +1213,7 @@ function regular_prism(n,
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   diff = if set to true then "remove" and "keep" tags are set to cut out a space for the texture so that inset textures can be attached.  Default: false
-//   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 0 if there is only one tile, 1 otherwise
+//   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 0 if `tex_reps=[1,1]`, 1 otherwise
 //   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -4415,7 +4415,7 @@ function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, 
 //   stretch_ang=200; // Angle extent of oscillations
 //   g = function(x,y) sin(hcount * x + stretch_ang * sin(18 * vcount * y));
 //   xcopies(spacing=30)
-//     plot_revolution(g, [0:3:360], path=arc(200, r=10, start=-89, angle=178),style="min_edge", horiz=$idx==1);
+//     plot_revolution(g, [0:3:360], path=arc(200, r=10, angle=[-89,89]),style="min_edge", horiz=$idx==1);
 
 module plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1,r2,r,d1,d2,d,convexity=4,
                          anchor="origin", orient=UP, spin=0, atype="hull", cp="centroid", style="min_edge", reverse=false)
