@@ -4720,7 +4720,7 @@ function _textured_revolution(
                                                  xyz = base - norm * texh
                                              ) zrot(adj_angle*uang, p=xyz)
                                          ],
-                                         pplen = default(texcnt.x+1,len(ppath)), 
+                                         pplen = is_def(texcnt) ? texcnt.x+1 : len(ppath), 
                                          last_len = len(ppath)-(tex_extra.x==0?1:0), 
                                          zed = j<0? max(column(ppath,2)): min(column(ppath,2)),
                                          slice_vnf = [
