@@ -4788,7 +4788,7 @@ module _textured_revolution(
 }
 
 
-function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, triangulate=false, 
+function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, triangulate=false, tex_scaling="default", 
                 col_wrap=false, tex_depth=1, row_wrap=false, caps, cap1, cap2, reverse=false, style="min_edge", tex_extra, tex_skip, sidecaps,sidecap1,sidecap2,normals) =
     assert(tex_reps==undef || is_int(tex_reps) || (all_integer(tex_reps) && len(tex_reps)==2), "tex_reps must be an integer or list of two integers")
     assert(tex_size==undef || is_num(tex_size) || is_vector(tex_size,2), "tex_size must be a scalar or 2-vector")
@@ -4814,7 +4814,9 @@ function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples,
                    )
                    [max(1,round(xsize/tex_size.x)), max(1,round(ysize/tex_size.y))],
         normals = default(normals,surface_normals(points, col_wrap=col_wrap, row_wrap=row_wrap)),
-        getscale = function(x,y) (x+y)/2
+        getscale = tex_scaling=="default" ? function(x,y) (x+y)/2
+                 : tex_scaling=="const" ? function(x,y) 1
+                 : assert(false, "Unknown tex_scaling value.  Must be either \"default\" or \"const\"")
     )
     !is_vnf(texture) ?  // heightmap case
         let(
