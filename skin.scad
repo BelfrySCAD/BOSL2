@@ -262,10 +262,10 @@ __vnf_no_n_mesg=" texture is a VNF so it does not accept n.  Set sample rate for
 // Example: rounding corners of a square.  Note that `$fn` makes the number of points constant, and avoiding the `rounding=0` case keeps everything simple.  In this case, the connections between profiles are linear, so there is no benefit to setting `slices` bigger than zero.
 //   shapes = [for(i=[.01:.045:2])zrot(-i*180/2,cp=[-8,0,0],p=xrot(90,p=path3d(regular_ngon(n=4, side=4, rounding=i, $fn=64))))];
 //   rotate(180) skin( shapes, slices=0);
-// Example: Here's a simplified version of the above, with `i=0` included.  That first layer doesn't look good.
+// Example(3D,Med,NoScales,VPR=[66.90,0.00,165.70],VPD=13.79,VPT=[1.43,6.15,4.13]): Here's a simplified version of the above, with `i=0` included.  That first layer has narrow triangles creating a stair step effect at the corners.  
 //   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
 //   skin(shapes, slices=0);
-// Example: You can fix it by specifying "tangent" for the first method, but you still need "direct" for the rest.
+// Example(3D,Med,NoScales,VPR=[66.90,0.00,165.70],VPD=13.79,VPT=[1.43,6.15,4.13]): You can fix it by specifying "tangent" for the first method, but you still need "direct" for the rest.
 //   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
 //   skin(shapes, slices=0, method=concat(["tangent"],repeat("direct",len(shapes)-2)));
 // Example(FlatSpin,VPD=35): Connecting square to pentagon using "direct" method.
@@ -942,11 +942,11 @@ function linear_sweep(
 //   rotate_sweep(path, texture="bricks_vnf", tex_size=[10,10], tex_depth=0.5, style="concave");
 // Example(NoAxes): The simplest way to create a cylinder with just a single line segment and `closed=false`.  Note that all cylinder models will require `closed=false` because otherwise a closing line segment lies on the Y axis.  With this cylinder, the top and bottom have no texture.  
 //   rotate_sweep([[20,-10],[20,10]], texture="dots", tex_reps=[6,2],closed=false);
-// Example(NoAxes): If we manually connect the top and bottom then they also receive texture.  Note that `closed` is still false, but the caps have zero area.  
+// Example(NoAxes): If we manually connect the top and bottom then they also receive texture.  Note that `closed` is still false, but the caps have zero area.
 //   rotate_sweep([[0,-10],[20,-10],[20,10],[0,10]], texture="dots", tex_reps=[6,6],closed=false,tex_depth=1.5);
 // Example(NoAxes,VPR=[95.60,0.00,69.80],VPD=74.40,VPT=[5.81,5.74,1.97]): You can connect just the top or bottom alone instead of both to get texture on one and a flat cap on the other.  Here you can see that the sloped top has texture but the bottom does not.  Also note that the texture doesn't fit neatly on the side and top like it did in the previous two examples, but makes a somewhat ugly transition across the corner.  You have to size your object carefully so that the tops and sides each fit an integer number of texture tiles to avoid this type of transition.  
 //   rotate_sweep([[15,-10],[15,10],[0,15]], texture="dots", tex_reps=[6,6],angle=90,closed=false,tex_depth=1.5);
-// Example:
+// Example: 
 //   tex = [
 //       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 //       [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -1079,6 +1079,48 @@ function linear_sweep(
 //     down(31)linear_extrude(height=1)arc(r=23,angle=[0,180], wedge=true);
 //     rotate_sweep(path, closed=false, texture=diag_weave_vnf, angle=180,
 //                  tex_size=[10,10], convexity=12, tex_depth=2);
+// Example(3D,VPR=[59.20,0.00,159.20],VPD=74.40,VPT=[7.45,6.83,1.54],NoAxes): Textures can be used to place images onto objects.  If you want to place an image onto a cylinder you probably don't want it to cover the whole cylinder, or to create many small copies.  To do this you can create a textured cylinder with an angle less than 360 degrees to hold the texture.  In this example we calculate the angle so that the output has the same aspect ratio.  The default `tex_extra` of zero for a single tile ensures that the image appears without an extra border.  
+//   img = [
+//      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0,.5,.5, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0,.5,.5, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+//      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//   ];
+//   h = 20;
+//   r = 15;
+//   ang = len(img[0])/len(img)*h/(2*PI*r)*360;
+//   rotate_sweep([[15,-10],[15,10]], texture=img,
+//                tex_reps=1,angle=ang, closed=false);
+//   
+// Example(3D,VPR=[80.20,0.00,138.40],VPD=82.67,VPT=[6.88,7.29,1.77],NoAxes): Here we have combined the above model with a suitable cylinder.  Note that with a coarse texture like this you need to either match the `$fn` of the cylinder to the texture, or choose a sufficiently fine cylinder to avoid conflicting facets.  
+//   img = [
+//      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0,.5,.5, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0,.5,.5, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+//      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//   ];
+//   h = 20;
+//   r = 15;
+//   ang = len(img[0])/len(img)*h/(2*PI*r)*360;
+//   rotate_sweep([[15,-10],[15,10]], texture=img,
+//                tex_reps=1,angle=ang, closed=false);
+//   cyl(r=r,h=27,$fn=128);
 
 
 function rotate_sweep(
@@ -4445,7 +4487,7 @@ function _textured_revolution(
     let( taper_is_ok = is_undef(taper) || (is_finite(taper) && taper>=0 && taper<50) || is_path(taper,2) )
     assert(taper_is_ok, "Bad taper= value.")
     assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
-    assert(is_finite(tex_extra) || is_vector(tex_extra,2), "tex_extra must be a number of 2-vector")
+    assert(is_undef(tex_extra) || is_finite(tex_extra) || is_vector(tex_extra,2), "tex_extra must be a number of 2-vector")
     let(
         regions = !is_path(shape,2)? region_parts(shape)
                 : closed? region_parts([shape]) 
@@ -4497,7 +4539,8 @@ function _textured_revolution(
         side_open_path = is_undef(side_paths) ? undef : len(side_paths[0])==0 ? [] : side_paths[0][0],
         side_closed_paths = is_undef(side_paths) ? [] : side_paths[1], 
         counts_x = is_def(counts)? counts.x : max(1,round(angle/360*circumf/tex_size.x)),
-        adj_angle = angle*(1-(tex_extra.x-1)/(texcnt.x*counts_x+tex_extra.x-1)),  // adjusted angle for strip positions taking tex_extra into account
+        adj_angle = is_vnf(texture)?angle
+                  : angle*(1-(tex_extra.x-1)/(texcnt.x*counts_x+tex_extra.x-1)),  // adjusted angle for strip positions taking tex_extra into account
         taper_lup = closed || is_undef(taper)? [[-1,1],[2,1]] :
             is_num(taper)? [[-1,0], [0,0], [taper/100+EPSILON,1], [1-taper/100-EPSILON,1], [1,0], [2,0]] :
             is_path(taper,2)? let(
@@ -4546,7 +4589,7 @@ function _textured_revolution(
                                            ]),
                                 full_wall = vnf_join([
                                               for (i = [0:1:counts_x-1])
-                                                 zrot(i*angle/counts_x, rgn_wall_vnf)
+                                                 zrot(i*angle/counts_x, strip)
                                             ])
                             )
                             full_wall
@@ -4640,7 +4683,7 @@ function _textured_revolution(
                         bases = xrot(90, p=path3d(obases)),
                         norms = xrot(90, p=path3d(onorms)),
                         bpath = is_def(edge_paths)
-                                   ? len(edge_paths[0])==0 ? [] : repeat(2,hstack([column(edge_paths[0][0],0), column(edge_paths[0][0],2)]))
+                                   ? len(edge_paths[0])==0 ? [] : repeat(hstack([column(edge_paths[0][0],0), column(edge_paths[0][0],2)]),2)
                                    :  
                                      [ for(j=[texcnt.y-1+tex_extra.y,0])
                                          [for (i = [0:1:texcnt.x-1+max(1,tex_extra.x)])
@@ -4677,7 +4720,7 @@ function _textured_revolution(
                                                  xyz = base - norm * texh
                                              ) zrot(adj_angle*uang, p=xyz)
                                          ],
-                                         pplen = texcnt.x+1,
+                                         pplen = default(texcnt.x+1,len(ppath)), 
                                          last_len = len(ppath)-(tex_extra.x==0?1:0), 
                                          zed = j<0? max(column(ppath,2)): min(column(ppath,2)),
                                          slice_vnf = [

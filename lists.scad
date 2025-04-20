@@ -390,7 +390,7 @@ function bselect(list,index) =
 //   e = repeat(4, -1);       // Returns []
 function repeat(val, n, i=0) =
     is_num(n)? [for(j=[1:1:n]) val] :
-    assert( is_list(n), "Invalid count number.")
+    assert( is_vector(n), "Invalid count number.")
     (i>=len(n))? val :
     [for (j=[1:1:n[i]]) repeat(val, n, i+1)];
 
