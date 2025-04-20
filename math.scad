@@ -139,6 +139,43 @@ function lerpn(a,b,n,endpoint=true) =
     let( d = n - (endpoint? 1 : 0) )
     [for (i=[0:1:n-1]) let(u=i/d) (1-u)*a + u*b];
 
+// Function: bilerp()
+// Synopsis: Bi-linear interpolation between four values
+// Topics: Interpolation, Math
+// See Also: lerp()
+// Usage:
+//   x = bilerp(pts, x, y);
+// Description:
+//   Compute bilinear interpolation between four values using two
+//   coordinates that are meant to lie in [0,1].  (If they are outside
+//   this range, the function will extrapolate values.)  The `pts`
+//   argument is a list of the four values at the for corners, `[A,B,C,D]`.
+//   These values are arranged on the corners as shown below.  The `x` and
+//   `y` parameters give the fraction of the distance from the left and bottom
+//   respectively.  
+// Figure(Med,2D,NoScales): The layout of the points for the bilinear interpolation.
+//  stroke(square(10),closed=true,width=.5);
+//  move([-1,-1])
+//  hide("thing")
+//  tag_this("thing") square(10)
+//    color("black")grid_copies(n=[2,2],spacing=14) text("ABCD"[$idx],size=3);
+//  pt=[.6,.7]*10;
+//  color("red")move(pt) circle(r=1/2,$fn=12);
+//  color("blue"){
+//    stroke([[-1.5,.3],[-1.5,pt.y]], width=1/2, color="blue",endcap2="arrow2");
+//    stroke([[0,-1.5],[pt.x,-1.5]], width=1/2, color="blue",endcap2="arrow2");
+//    fwd(4.5)right(3)text("x",size=2);
+//    back(2)left(4)text("y",size=2);
+//  }  
+// Arguments:
+//   points = Four point values at the corners
+//   x = First proportional distance
+//   y = Second proportional distance
+
+
+function bilerp(points,x,y) =
+     [1,y,x,x*y]*[[1, 0, 0, 0],[-1, 0, 1, 0],[-1,1,0,0],[1,-1,-1,1]]*points;
+
 
 
 // Section: Miscellaneous Functions 
