@@ -443,7 +443,7 @@ function vnf_vertex_array(
 // See Also: vnf_vertex_array(), vnf_join(), vnf_from_polygons(), vnf_merge_points()
 // Usage:
 //   vnf = vnf_tri_array(points, [caps=], [cap1=], [cap2=], [reverse=], [col_wrap=], [row_wrap=], [limit_bunching=])
-//   vnf_vertex_array(points, [caps=], [cap1=], [cap2=], [reverse=], [col_wrap=], [row_wrap=], [limit_bunching=],...) [ATTACHMENTS];
+//   vnf_tri_array(points, [caps=], [cap1=], [cap2=], [reverse=], [col_wrap=], [row_wrap=], [limit_bunching=],...) [ATTACHMENTS];
 // Description:
 //   Produces a VNF from an array of points where each row length can differ from the adjacent rows by
 //   any amount. This enables the construction of triangular or even irregular VNF patches. The
