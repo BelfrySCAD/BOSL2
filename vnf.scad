@@ -311,7 +311,7 @@ function vnf_vertex_array(
     texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, 
     tex_depth=1, tex_extra, tex_skip, sidecaps,sidecap1,sidecap2, normals
 ) =
-    assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area","flip1","flip2"]))
+    assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area","flip1","flip2","diagnormals"]))
     assert(is_matrix(points[0], n=3),"\nPoint array has the wrong shape or points are not 3d.")
     assert(is_consistent(points), "\nNon-rectangular or invalid point array.")
     assert(is_bool(triangulate))
@@ -347,6 +347,7 @@ function vnf_vertex_array(
                    )
                    mean([pts[i1], pts[i2], pts[i3], pts[i4]])
         ],
+        surfnorms = style=="diagnormals" ? surface_normals(points, row_wrap=row_wrap, col_wrap=col_wrap) : [],
         allfaces = [
             if (cap1) count(cols,reverse=!reverse),
             if (cap2) count(cols,(rows-1)*cols, reverse=reverse),
@@ -401,6 +402,16 @@ function vnf_vertex_array(
                                     : [[i1,i3,i2],[i1,i4,i3]]
                           )
                           concavefaces
+                      : style=="diagnormals"?
+                          let(
+                            ang13 = vector_angle(surfnorms[r][c],surfnorms[(r+1)%rows][(c+1)%cols]),
+                            ang24 = vector_angle(surfnorms[(r+1)%rows][c],surfnorms[r][(c+1)%cols]),
+                            smallang = ang24<ang13
+                                 ? [[i1,i4,i2],[i2,i4,i3]]
+                                 : [[i1,i3,i2],[i1,i4,i3]]
+
+                          )
+                          smallang
                       : [[i1,i3,i2],[i1,i4,i3]],
                    // remove degenerate faces
                    culled_faces= [for(face=faces)
@@ -518,7 +529,8 @@ function vnf_tri_array(
     caps, cap1, cap2,
     col_wrap=false,
     row_wrap=false,
-    reverse=false
+    reverse=false,
+    max_usage=INF
 ) =
     assert(!(any([caps,cap1,cap2]) && row_wrap), "\nCannot combine caps with row_wrap.")
     let(
@@ -542,12 +554,14 @@ function vnf_tri_array(
                 else [[ for(i=[rowstarts[0]-1-addcol:-1:0]) i ]],
             // triangulate between the two polygons
             for(i = [0:plen-2+(row_wrap?1:0)]) let(j = (i+1)%plen)
-                _lofttri(st[i], st[j], pcumlen[i], pcumlen[j], rowstarts[i], rowstarts[j], reverse),
+                _lofttri(st[i], st[j], pcumlen[i], pcumlen[j], rowstarts[i], rowstarts[j], reverse, trimax=max_usage),
             // close up the last end
             if (caplast)
                 if (reverse) [[ for(i=[pcumlen[plen]-1-addcol:-1:pcumlen[plen-1]]) i ]]
                 else [[ for(i=[pcumlen[plen-1]:pcumlen[plen]-1-addcol]) i ]]
         ]),
+dum=echo(flatten(st)),
+dum2=echo(faces),
         vnf = [flatten(st), faces]
     ) col_wrap ? vnf_merge_points(vnf) : vnf;
 
@@ -581,18 +595,26 @@ on which triangle is smaller.)
 Returns an array of triangles using vertex indices offset by
 i1offset and i2offset
 */
-function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[], i1=0, i2=0) = n1!=n2 ?
+function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[], i1=0, i2=0, tricount1=0, tricount2=0, trimax=INF) = n1!=n2 ?
     // unequal row lengths
     let(
     t1 = i1 < n1 ? i1+1 : n1,   // test point 1
     t2 = i2 < n2 ? i2+1 : n2,   // test point 2
+dum=echo(str("i1=",i1,"  i2=",i2,"  t1=",t1,"  t2=",t2,"  n1=",n1,"  n2=",n2, "  p1[t1]=",p1[t1],"  p2[i2]=",p2[i2])),
     d12 = t2>=n2 ? 9e+9 : norm(p2[t2]-p1[i1]), // distance from i1 to t2
     d21 = t1>=n1 ? 9e+9 : norm(p1[t1]-p2[i2]), // distance from i2 to t1
+dum2=echo(str("  d12=",d12,"  d21=",d21,"  tricounts=",tricount1,",",tricount2)),
+    userow = d12<d21 ? (tricount1<trimax ? 2 : 1) : (tricount2<trimax ? 1 : 2),
+    newt = userow==1 ? (t1<n1?t1:i1) : (t2<n2?t2:i2),
+    newofft = userow==2 ? i2offset+newt : i1offset+newt,
+    tc1 = d12<d21 && tricount1<trimax ? tricount1+1 : 0,
+    tc2 = d21<d12 && tricount2<trimax ? tricount2+1 : 0,
     triangle = reverse ?
-        [i1offset+i1, i2offset+i2, d12<d21 ? i2offset+t2 : i1offset+t1] :
-        [i2offset+i2, i1offset+i1, d12<d21 ? i2offset+t2 : i1offset+t1]
+        [i1offset+i1, i2offset+i2, newofft] :
+        [i2offset+i2, i1offset+i1, newofft]
 ) t1>=n1 && t2>=n2 ? trilist :
-    _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse, concat(trilist, [triangle]), d12<d21 ? i1 : t1, d12<d21 ? t2 : i2)
+    _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse, concat(trilist, [triangle]),
+        userow==1 ? (t1>=n1?i1:t1) : i1, userow==2 ? (t2>=n2?i2:t2) : i2, tc1, tc2, trimax)
 
     : // equal row lengths
     let(n=n1, i=i1,
@@ -606,7 +628,7 @@ function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[],
         [i2offset+t, i1offset+t, d12<d21 ? i1offset+i : i2offset+i] :
         [i1offset+t, i2offset+t, d12<d21 ? i1offset+i : i2offset+i]
 ) t>=n ? trilist :
-    _lofttri(p1, p2, i1offset, i2offset, n, n, reverse, concat(trilist, [triangle1, triangle2]), t, t);
+    _lofttri(p1, p2, i1offset, i2offset, n, n, reverse, concat(trilist, [triangle1, triangle2]), t, t, 0,0,trimax);
 
 
 // Function: vnf_join()
