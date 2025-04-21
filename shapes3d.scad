@@ -1213,7 +1213,7 @@ function regular_prism(n,
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   diff = if set to true then "remove" and "keep" tags are set to cut out a space for the texture so that inset textures can be attached.  Default: false
-//   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 0 if there is only one tile, 1 otherwise
+//   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 0 if `tex_reps=[1,1]`, 1 otherwise
 //   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1232,9 +1232,9 @@ function regular_prism(n,
 //       textured_tile("trunc_pyramids_vnf", [10,8],
 //                     tex_reps=[5,5], tex_inset=true, diff=true);
 // Example(3D,NoAxes,VPT=[5.86588,-0.107082,-0.311155],VPR=[17.2,0,9.6],VPD=32.4895): Tile shaped like a rhombic prism
-//   textured_tile("ribs", w1=10, w2=10,  shift=4,ysize=7);
+//   textured_tile("ribs", w1=10, w2=10, shift=4, ysize=7, tex_reps=[5,1]);
 // Example(3D,NoAxes,VPT=[-0.487417,-0.398897,-0.143258],VPR=[10.2,0,12.4],VPD=26.3165): A tile shaped like a trapezoidal prism.  Note that trapezoidal tiles will always distort the texture, resulting in curves
-//   textured_tile("diamonds", w1=10, w2=7, ysize=7);
+//   textured_tile("diamonds", w1=10, w2=7, ysize=7, tex_reps=5);
 // Example(3D,NoAxes,VPT=[-0.0889877,-0.31974,0.554444],VPR=[22.1,0,22.2],VPD=32.4895): An inset trapezoidal tile placed into a cube
 //   diff()cuboid([10,10,2])
 //     attach(TOP,BOT)
@@ -1245,8 +1245,24 @@ function regular_prism(n,
 // Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): This texture has an asymmetry even with the default `tex_extra=1`. 
 //     textured_tile("trunc_ribs", 10, tex_reps=[5,1]);
 // Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): It could be fixed by setting `tex_extra=2`, which would place an extra flat strip on the right.  But another option is to use the `tex_skip` parameter to trim the flat part from the left.  Note that we are also skipping in the y direction, but it doesn't make a difference for this texture, except that you need to have enough texture tiles to accommodate the skip, so we increased the Y reps value to 2.  You can also set `tex_skip` to a vector.
+// Example(3D,NoAxes): Textures can be used to place images onto objects.  Here we place a very simple image into a cube, leaving a border around the image.  
 //     textured_tile("trunc_ribs", 10, tex_reps=[5,2], tex_skip=1);
-
+//      img = [
+//         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+//         [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//         [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//         [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//         [0, 1, 0, 0, 0,.5,.5, 0, 0, 0, 1, 0],
+//         [0, 1, 0, 0, 0,.5,.5, 0, 0, 0, 1, 0],
+//         [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//         [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//         [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+//         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//      ];
+//      cuboid(25) attach([TOP,FWD,RIGHT],BOT)
+//        textured_tile(img, [20,20], tex_reps=1);  
 
 module textured_tile(
     texture,
@@ -1315,7 +1331,7 @@ function textured_tile(
     tex_skip=0,
     anchor=CENTER, spin=0, orient=UP,
     _return_anchor=false
-) = let(f=echo(size=tex_size))
+) = 
     assert(is_undef(tex_reps) || is_int(tex_reps) || (all_integer(tex_reps) && len(tex_reps)==2), "tex_reps must be an integer or list of two integers")
     assert(is_undef(tex_size) || is_vector(tex_size,2) || is_finite(tex_size))
     assert(num_defined([tex_size, tex_reps])<2, "Cannot give both tex_size and tex_reps")
@@ -4415,7 +4431,7 @@ function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, 
 //   stretch_ang=200; // Angle extent of oscillations
 //   g = function(x,y) sin(hcount * x + stretch_ang * sin(18 * vcount * y));
 //   xcopies(spacing=30)
-//     plot_revolution(g, [0:3:360], path=arc(200, r=10, start=-89, angle=178),style="min_edge", horiz=$idx==1);
+//     plot_revolution(g, [0:3:360], path=arc(200, r=10, angle=[-89,89]),style="min_edge", horiz=$idx==1);
 
 module plot_revolution(f,angle,z,arclength, path, rclip, rspan, horiz=false,r1,r2,r,d1,d2,d,convexity=4,
                          anchor="origin", orient=UP, spin=0, atype="hull", cp="centroid", style="min_edge", reverse=false)

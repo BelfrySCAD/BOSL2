@@ -57,7 +57,11 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   the meaning of `tex_size` and it also affects the vertical texture scale.  The size of the texture tiles is proportional to the point
 //   spacing of the location where they are placed, so if the points are closer together, you get small texture elements.  The specified `tex_depth`
 //   is correct at the `points[0][0]` but would be different at places in the point array where the scale is different.  This
-//   differs from {{rotate_sweep()}}, which uses a uniform resampling of the curve you specify.  
+//   differs from {{rotate_sweep()}}, which uses a uniform resampling of the curve you specify.
+//   .
+//   The vertical scale of texture elements adjusts based on the size of the grid square where it is placed.  By default, the height is scaled by the average
+//   of the width and height of the texture element.  You can disable this scaling by setting `tex_scaling="const"`, which results
+//   in a constant height that does not vary with the grid spacing.  
 //   .
 //   The point data for `vnf_vertex_array()` is resampled using bilinear interpolation to match the required point density of the tile count, but the
 //   sampling is based on the grid, not on the distance between points.  If you want to
@@ -93,6 +97,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   sidecaps = if `col_wrap==false` this controls whether to cap any floating ends of a VNF tile on the texture.  Does not affect the main texture surface.  Ignored it doesn't apply.  Default: false
 //   sidecap1 = set sidecap only for the `points[][0]` edge of the output
 //   sidecap2 = set sidecap only for the `points[][max]` edge of the output
+//   tex_scaling = set to "const" to disable grid size vertical scaling of the texture.  Default: "default"
 //   normals = array of normal vectors to each point in the point array for more accurate texture height calculation
 //   cp = (module) Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = (module) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
@@ -278,6 +283,20 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   ];
 //   vnf_polyhedron(vnf_vertex_array(polystack, col_wrap=true, caps=true,
 //       texture="dots", tex_samples=1));
+// Example(3D,Med,NoAxes,VPR=[0,0,0],VPD=126.00,VPT=[-0.35,-0.54,4.09]): This point array defines a square region but with a non-uniform grid. 
+//   pts = [for(x=[-1:.1:1])
+//             [for(y=[-1:.1:1])
+//                 zrot(45*min([abs(x-1),abs(x+1),abs(y-1),abs(y+1)]),
+//                      20*[x,y,0])]];
+//   vnf=vnf_vertex_array(pts);
+//   color("blue") vnf_wireframe(vnf,width=.2);
+// Example(3D,Med,NoAxes,VPR=[0,0,0],VPD=126.00,VPT=[-0.35,-0.54,4.09]): The non-uniform grid gives rise to a non-uniform texturing.  
+//   pts = [for(x=[-1:.1:1])
+//             [for(y=[-1:.1:1])
+//                 zrot(45*min([abs(x-1),abs(x+1),abs(y-1),abs(y+1)]),
+//                      20*[x,y,0])]];
+//   vnf_vertex_array(pts,texture="dots",tex_reps=15);
+
 
 module vnf_vertex_array(
     points,
@@ -288,11 +307,11 @@ module vnf_vertex_array(
     style="default",
     triangulate = false,
     texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, 
-    tex_depth=1, tex_extra, tex_skip, sidecaps,sidecap1,sidecap2,
+    tex_depth=1, tex_extra, tex_skip, sidecaps,sidecap1,sidecap2, tex_scaling="default",
     convexity=2, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") 
 {
     vnf = vnf_vertex_array(points=points, caps=caps, cap1=cap2, cap2=cap2,
-                           col_wrap=col_wrap, row_wrap=row_wrap, reverse=reverse, style=style,triangulate=triangulate,
+                           col_wrap=col_wrap, row_wrap=row_wrap, reverse=reverse, style=style,triangulate=triangulate, tex_scaling=tex_scaling, 
                            texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples, tex_inset=tex_inset, tex_rot=tex_rot, 
                            tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip, sidecaps=sidecaps,sidecap1=sidecap1,sidecap2=sidecap2
       );
@@ -308,7 +327,7 @@ function vnf_vertex_array(
     reverse=false,
     style="default",
     triangulate = false,
-    texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, 
+    texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, tex_scaling="default",
     tex_depth=1, tex_extra, tex_skip, sidecaps,sidecap1,sidecap2, normals
 ) =
     assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area","flip1","flip2","diagnormals"]))
@@ -317,7 +336,7 @@ function vnf_vertex_array(
     assert(is_bool(triangulate))
     is_def(texture) ?
           _textured_point_array(points=points, texture=texture, tex_reps=tex_reps, tex_size=tex_size,
-                               tex_inset=tex_inset, tex_samples=tex_samples, tex_rot=tex_rot,
+                               tex_inset=tex_inset, tex_samples=tex_samples, tex_rot=tex_rot, tex_scaling=tex_scaling,
                                col_wrap=col_wrap, row_wrap=row_wrap, tex_depth=tex_depth, caps=caps, cap1=cap1, cap2=cap2, reverse=reverse,
                                style=style, tex_extra=tex_extra, tex_skip=tex_skip, sidecaps=sidecaps, sidecap1=sidecap1, sidecap2=sidecap2,normals=normals,triangulate=triangulate)
   :           
