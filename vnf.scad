@@ -519,7 +519,7 @@ function vnf_vertex_array(
 //   vnf = vnf_tri_array(pts);
 //   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
-// Example(3D,Med,NoAxes,ShowEdges=true,VPR=[29,0,341],VPD=45,VPT=[11,5,2]): The default parameter `limit_bunching=true` prevents too many triangles from sharing a single vertex in one row, if several points of one row happen to be closest to a single point on another row. In the left figure, `limit_bunching=false`, causing an endpoint on each row to get many triangles from the other row, because the algorithm seeks the shortest triangle leg distance once the first two points of each row are connected. This doesn't happen if both rows are the same length. The figure on the right uses the default `limit_bunching=true`, forcing the triangulation to stop adding too many triangles to the same vertex.
+// Example(3D,Med,NoAxes,Edges,VPR=[29,0,341],VPD=45,VPT=[11,5,2]): The default parameter `limit_bunching=true` prevents too many triangles from sharing a single vertex in one row, if several points of one row happen to be closest to a single point on another row. In the left figure, `limit_bunching=false`, causing an endpoint on each row to get many triangles from the other row, because the algorithm seeks the shortest triangle leg distance once the first two points of each row are connected. This doesn't happen if both rows are the same length. The figure on the right uses the default `limit_bunching=true`, forcing the triangulation to stop adding too many triangles to the same vertex.
 //   pts = [
 //       [[5,0,0], [4,0,1.4], [3,0,2], [2,0,1.4], [1,0,0]],
 //       [[14,10,0], [12,9,5], [9,8,7], [6,7,7], [3,6,5], [0,5,0]]
