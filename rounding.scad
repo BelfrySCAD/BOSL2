@@ -1412,11 +1412,14 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   "chamfer".  Use the "chamfer" style offset only in cases where the number of steps is small or just one (such as when using
 //   the `os_chamfer` profile type).
 //   .
+//   The module form only can support a region as input.  You can provide different profiles for the cutouts in a region using the `bottom_hole`, `top_hole`
+//   or `ends_hole` parameters.  
+//   .
 //   This module offers four anchor types.  The default is "hull" in which VNF anchors are placed on the VNF of the **unrounded** object.  You
 //   can also use "intersect" to get the intersection anchors to the unrounded object. If you prefer anchors that respect the rounding
 //   then use "surf_hull" or "intersect_hull". 
 // Arguments:
-//   path = 2d path (list of points) to extrude
+//   path = 2d path (list of points) to extrude or a region for the module form
 //   height / length / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.
 //   bottom / bot = rounding spec for the bottom end
 //   top = rounding spec for the top end.
@@ -1434,6 +1437,9 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   angle = default angle for chamfers.  Default: 45
 //   joint = default joint value for smooth roundover.
 //   k = default curvature parameter value for "smooth" roundover
+//   ends_hole = (module only) rounding spec that applies to top and bottom of holes in a region
+//   bot_hole / bottom_hole = (module only) rounding spec for bottom end of holes in a region
+//   top_hole = (module only) rounding spec for top end of holes in a region
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
 //   anchor = Translate so anchor point is at the origin.  Default: "base"
 //   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
@@ -1573,6 +1579,84 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   star = star(5, r=220, ir=130);
 //   rounded_star = round_corners(star, cut=flatten(repeat([5,0],5)), $fn=24);
 //   offset_sweep(rounded_star, height=100, top=os_mask(ogee), bottom=os_mask(ogee,out=true));
+// Example(3D,NoAxes): Applying to a region, with different profiles for the outside in inside curves.  
+//   $fn = 32;
+//   rgn = difference(
+//       [
+//           rect(50, rounding=5),
+//           move([15,15], circle(d=10)),
+//           move([-15,-15], circle(d=10)),
+//           move([0,25], rect([10,7],anchor=BACK,
+//                             rounding=[-2,-2,2,2])),
+//           zrot(55, square([4, 100], center=true)),
+//           ellipse([12,4])
+//       ]
+//   );
+//   offset_sweep(rgn, height=12, steps=6, ends_hole=os_chamfer(width=2),
+//                                         ends=os_circle(r=1.7));
+
+
+module _offset_sweep_region(region, height, 
+                    bottom, top, 
+                    h, l, length, ends, bot, top_hole, bot_hole, bottom_hole, ends_hole, 
+                    offset="round", r=0, steps=16,
+                    quality=1, check_valid=true,
+                    extra=0,
+                    cut=undef, chamfer_width=undef, chamfer_height=undef,
+                    joint=undef, k=0.75, angle=45,
+                    convexity=10,anchor="base",cp="centroid",
+                    spin=0, orient=UP, atype="hull")
+{
+    connected_reg = region_parts(region);
+    vnf_h_list = [for(reg=connected_reg)
+                    offset_sweep(path=reg[0], height=height, h=h, l=l, length=length, bot=bot, top=top, bottom=bottom, ends=ends,
+                                 offset=offset, r=r, steps=steps,
+                                 quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
+                                 chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _return_height=true)];
+    vnf_list = column(vnf_h_list,0);
+    height = vnf_h_list[0][1];
+
+    holes = [for(reg=connected_reg, i=[1:1:len(reg)-1]) reg[i]];
+
+    anchors = [
+          named_anchor("zcenter", [0,0,0], UP),
+          named_anchor("base", [0,0,-height/2], UP),
+          named_anchor("top", [0,0,height/2], UP)          
+        ];
+    bottom_hole=first_defined([bottom_hole, bot_hole, ends_hole, bottom, ends]);
+    top_hole = first_defined([top_hole,ends_hole,top,ends]);
+    if (in_list(atype,["hull","intersect"]))
+        attachable(anchor,spin,orient,region=region,h=height,cp=cp,anchors=anchors,extent=atype=="hull"){
+            down(height/2)
+              difference(){
+                 for(vnf=vnf_list)
+                     polyhedron(vnf[0],vnf[1],convexity=convexity);
+                 for(path=holes)
+                     offset_sweep(path=path, height=height, h=h, l=l, length=length, bot=bot, top=top_hole, bottom=bottom_hole, 
+                                  offset=offset, r=r, steps=steps,
+                                  quality=quality, check_valid=check_valid, extra=extra+0.1, cut=cut, chamfer_width=chamfer_width,
+                                  chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _flipdir=true,convexity=convexity);
+              }
+            children();
+        }
+    else {
+        allvnf=vnf_join(vnf_list);
+        attachable(anchor,spin.orient,vnf=allvnf, cp=cp,anchors=anchors, extent = atype=="surf_hull"){
+              difference(){
+                 for(vnf=vnf_list)
+                     vnf_polyhedron(vnf,convexity=convexity);
+                 for(path=holes)
+                     offset_sweep(path=path, height=height, h=h, l=l, length=length, bot=bot, top=top_hole, bottom=bottom_hole, 
+                                  offset=offset, r=r, steps=steps,
+                                  quality=quality, check_valid=check_valid, extra=extra+0.1, cut=cut, chamfer_width=chamfer_width,
+                                  chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _flipdir=true,convexity=convexity);
+              }
+            children();
+        }
+    }
+}   
+
+
 
 
 // This function does the actual work of repeatedly calling offset() and concatenating the resulting face and vertex lists to produce
@@ -1630,7 +1714,7 @@ function offset_sweep(
                        extra=0, caps=true, 
                        cut=undef, chamfer_width=undef, chamfer_height=undef,
                        joint=undef, k=0.75, angle=45, anchor="base", orient=UP, spin=0,atype="hull", cp="centroid",
-                       _return_height=false
+                       _return_height=false, _flipdir=false
                       ) =
     let(
         argspec = [
@@ -1668,8 +1752,9 @@ function offset_sweep(
     )
     assert(offsetsok,"Offsets must be one of \"round\", \"delta\", or \"chamfer\"")
     let(
-        offsets_bot = _rounding_offsets(bottom, -1),
-        offsets_top = _rounding_offsets(top, 1),
+        do_flip = _flipdir ? function(x) xflip(x) : function(x) x , 
+        offsets_bot = do_flip(_rounding_offsets(bottom, -1)),
+        offsets_top = do_flip(_rounding_offsets(top, 1)),
         dummy = (struct_val(top,"offset")=="chamfer" && len(offsets_top)>5)
                         || (struct_val(bottom,"offset")=="chamfer" && len(offsets_bot)>5)
                 ? echo("WARNING: You have selected offset=\"chamfer\", which leads to exponential growth in the vertex count and requested more than 5 layers.  This can be slow or run out of recursion depth.")
@@ -1722,39 +1807,48 @@ function offset_sweep(
                   : reorient(anchor,spin,orient, vnf=vnf, p=vnf, extent=atype=="surf_hull", cp=cp, anchors=anchors)
      ) _return_height ? [final_vnf,height] : final_vnf;
 
+
 module offset_sweep(path, height, 
                     bottom, top, 
                     h, l, length, ends, bot,
                     offset="round", r=0, steps=16,
                     quality=1, check_valid=true,
-                    extra=0,
+                    extra=0, top_hole, bot_hole, bottom_hole, ends_hole,
                     cut=undef, chamfer_width=undef, chamfer_height=undef,
                     joint=undef, k=0.75, angle=45,
                     convexity=10,anchor="base",cp="centroid",
-                    spin=0, orient=UP, atype="hull")
+                    spin=0, orient=UP, atype="hull", _flipdir)
 {
     assert(in_list(atype, ["intersect","hull","surf_hull","surf_intersect"]), "Anchor type must be \"hull\" or \"intersect\"");
-    vnf_h = offset_sweep(path=path, height=height, h=h, l=l, length=length, bot=bot, top=top, bottom=bottom, ends=ends,
-                         offset=offset, r=r, steps=steps,
-                         quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
-                         chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _return_height=true);
-    vnf = vnf_h[0];
-    height = vnf_h[1];
-    anchors = [
-          named_anchor("zcenter", [0,0,0], UP),
-          named_anchor("base", [0,0,-height/2], UP),
-          named_anchor("top", [0,0,height/2], UP)          
-        ];
-    if (in_list(atype,["hull","intersect"]))
-        attachable(anchor,spin,orient,region=force_region(path),h=height,cp=cp,anchors=anchors,extent=atype=="hull"){
-            down(height/2)polyhedron(vnf[0],vnf[1],convexity=convexity);
-            children();
-        }
-    else
-        attachable(anchor,spin.orient,vnf=vnf, cp=cp,anchors=anchors, extent = atype=="surf_hull"){
-            vnf_polyhedron(vnf,convexity=convexity);
-            children();
-        }
+    if (is_region(path) && len(path)>1)
+       _offset_sweep_region(region=path, height=height, bottom=bottom, top=top, h=h, l=l, length=length, ends=ends, bot=bot,
+                            offset=offset, r=r, steps=steps, quality=quality, check_valid=check_valid, extra=extra,
+                            cut=cut, chamfer_width=chamfer_width, chamfer_height=chamfer_height, joint=joint, k=k, angle=angle,
+                            bot_hole=bot_hole,top_hole=top_hole,bottom_hole=bottom_hole,ends_hole=ends_hole,
+                            convexity=convexity, anchor=anchor, cp=cp, spin=spin, orient=orient, atype=atype) children();
+    else {
+        vnf_h = offset_sweep(path=path, height=height, h=h, l=l, length=length, bot=bot, top=top, bottom=bottom, ends=ends,
+                             offset=offset, r=r, steps=steps,
+                             quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
+                             chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _return_height=true, _flipdir=_flipdir);
+        vnf = vnf_h[0];
+        height = vnf_h[1];
+        anchors = [
+              named_anchor("zcenter", [0,0,0], UP),
+              named_anchor("base", [0,0,-height/2], UP),
+              named_anchor("top", [0,0,height/2], UP)          
+            ];
+        if (in_list(atype,["hull","intersect"]))
+            attachable(anchor,spin,orient,region=force_region(path),h=height,cp=cp,anchors=anchors,extent=atype=="hull"){
+                down(height/2)polyhedron(vnf[0],vnf[1],convexity=convexity);
+                children();
+            }
+        else
+            attachable(anchor,spin.orient,vnf=vnf, cp=cp,anchors=anchors, extent = atype=="surf_hull"){
+                vnf_polyhedron(vnf,convexity=convexity);
+                children();
+            }
+    }
 }   
 
 

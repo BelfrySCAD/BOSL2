@@ -903,9 +903,11 @@ function linear_sweep(
 //   .
 //   If you want to place just one or a few copies of a texture onto an object rather than texturing the entire object you can do that by using
 //   and angle smaller than 360.  However, if you want to control the aspect ratio of the resulting texture you will have to carefully calculate the proper
-//   angle to use.  To simplify this process you can use `pixel_aspect` or `tex_aspect`.  You can set `tex_aspect` for any type of tile and it specifies
+//   angle to use to ensure that the arc length in the horizontal direction is the proper length compared to the arc length in the vertical direction.
+//   To simplify this process you can use `pixel_aspect` or `tex_aspect`.  You can set `tex_aspect` for any type of tile and it specifies
 //   the desired aspect ratio (width/height) for the tiles.  You must specify `tex_reps` in order to use this feature.  For heightfields you can instead provide
-//   a pixel aspect ratio, which is suited to the case where your texture is a non-square image that you want to place on a curved object.  
+//   a pixel aspect ratio, which is suited to the case where your texture is a non-square image that you want to place on a curved object.  For a simple cylinder
+//   it is obvious what the horizontal arc length is; for other objects this is computed based on the average radius of the longest path in `shape`.  
 // Arguments:
 //   shape = The polygon or [region](regions.scad) to sweep around the Z axis.
 //   angle = If given, specifies the number of degrees to sweep the region around the Z axis, counterclockwise from the X+ axis.  Default: 360 (full rotation)
