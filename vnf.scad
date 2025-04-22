@@ -435,20 +435,39 @@ function vnf_vertex_array(
     ) triangulate? vnf_triangulate(vnf) : vnf;
 
 
+
 // Function&Module: vnf_tri_array()
 // Synopsis: Returns a VNF from an array of points. The array need not be rectangular.
 // SynTags: VNF
 // Topics: VNF Generators, Lists
 // See Also: vnf_vertex_array(), vnf_join(), vnf_from_polygons(), vnf_merge_points()
 // Usage:
-//   vnf = vnf_tri_array(points, [caps=], [cap1=], [cap2=], [reverse=], [col_wrap=], [row_wrap=])
+//   vnf = vnf_tri_array(points, [caps=], [cap1=], [cap2=], [reverse=], [col_wrap=], [row_wrap=], [limit_bunching=])
+//   vnf_tri_array(points, [caps=], [cap1=], [cap2=], [reverse=], [col_wrap=], [row_wrap=], [limit_bunching=],...) [ATTACHMENTS];
 // Description:
-//   Produces a VNF from an array of points where each row length can differ from the adjacent rows by any amount. This enables the construction of triangular or even irregular VNF patches. The resulting VNF can be wrapped along the rows by setting `row_wrap` to true, and wrapped along columns by setting `col_wrap` to true. It is possible to do both at once.
+//   Produces a VNF from an array of points where each row length can differ from the adjacent rows by
+//   any amount. This enables the construction of triangular or even irregular VNF patches. The
+//   resulting VNF can be wrapped along the rows by setting `row_wrap` to true, and wrapped along
+//   columns by setting `col_wrap` to true. It is possible to do both at once.
 //   If `row_wrap` is false or not provided, end caps can be generated across the top and/or bottom rows.
 //   .
-//   The algorithm starts with the first point on each row and recursively walks around finding the minimum-length edge to make each new triangle face. This may result in several triangles being connected to one vertex. When triangulating two rows that happen to be equal length, the result is equivalent to {{vnf_vertex_array()}} using the "min_edge" style. If you already have a rectangular vertex list (equal length rows), you should use `vnf_vertex_array()` if you need a different triangulation style.
+//   The algorithm starts with the first point on each row and recursively walks around finding the
+//   minimum-length edge to make each new triangle face. This may result in several triangles being
+//   connected to one vertex. When triangulating two rows that happen to be equal length, the result is
+//   equivalent to {{vnf_vertex_array()}} using the "min_edge" style. If you already have a rectangular
+//   vertex list (equal length rows), you should use `vnf_vertex_array()` if you need a different
+//   triangulation style.
 //   .
-//   If you need to merge two VNF arrays that share edges using `vnf_join()` you can remove the duplicated vertices using `vnf_merge_points()`.
+//   Because the algorithm seeks the minimum-length new edge to generate triangles between two
+//   unequal-lengthy rows of vertices, there are cases where this can causing bunching of several
+//   triangles sharing a single vertex, if several successive points of one row are closest to a single
+//   point on the other row. Example 6 demonstrates this. If the two rows are equal in length, this
+//   doesn't happen. The `limit_bunching` parameter, by default, limits the number of *additional*
+//   triangles that would normally be generated to the difference between the row lengths. Example 6
+//   demonstrates the effect of disabling this limit.
+//   .
+//   If you need to merge two VNF arrays that share edges using `vnf_join()` you can remove the
+//   duplicated vertices using `vnf_merge_points()`.
 // Arguments:
 //   points = List of point lists for each row.
 //   ---
@@ -458,6 +477,7 @@ function vnf_vertex_array(
 //   col_wrap = If true, add faces to connect the last column to the first.
 //   row_wrap = If true, add faces to connect the last row to the first.
 //   reverse = If true, reverse all face normals.
+//   limit_buncthing = If true, when triangulating between two rows of unequal length, then limit the number of additional triangles that would normally share a vertex. Ignored when the two row lengths are equal. If false, a vertex can be shared by unlimited triangles. Default: true
 //   convexity = (module) Max number of times a line could intersect a wall of the shape.
 //   cp = (module) Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = (module) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
@@ -499,6 +519,13 @@ function vnf_vertex_array(
 //   vnf = vnf_tri_array(pts);
 //   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
+// Example(3D,Med,NoAxes,Edges,VPR=[29,0,341],VPD=45,VPT=[11,5,2]): The default parameter `limit_bunching=true` prevents too many triangles from sharing a single vertex in one row, if several points of one row happen to be closest to a single point on another row. In the left figure, `limit_bunching=false`, causing an endpoint on each row to get many triangles from the other row, because the algorithm seeks the shortest triangle leg distance once the first two points of each row are connected. This doesn't happen if both rows are the same length. The figure on the right uses the default `limit_bunching=true`, forcing the triangulation to stop adding too many triangles to the same vertex.
+//   pts = [
+//       [[5,0,0], [4,0,1.4], [3,0,2], [2,0,1.4], [1,0,0]],
+//       [[14,10,0], [12,9,5], [9,8,7], [6,7,7], [3,6,5], [0,5,0]]
+//   ];
+//   vnf_tri_array(pts, limit_bunching=false);
+//   right(10) vnf_tri_array(pts);
 // Example(3D,NoAxes,Edges,VPR=[65,0,25],VPD=380,Med): Model of a cymbal with roughly same-size facets, using a different number of points for each concentric ring of vertices.
 //   bez = [
 //       [[0,26], [35,26], [29,0], [80,16], [102,0]], //top
@@ -524,11 +551,12 @@ module vnf_tri_array(
     col_wrap=false,
     row_wrap=false,
     reverse=false,
+    limit_bunching=true,
     convexity=2, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") 
 {
     vnf = vnf_tri_array(points=points, caps=caps, cap1=cap2, cap2=cap2,
-                           col_wrap=col_wrap, row_wrap=row_wrap, reverse=reverse
-      );
+        col_wrap=col_wrap, row_wrap=row_wrap, reverse=reverse,
+        limit_bunching = limit_bunching);
     vnf_polyhedron(vnf, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype) children();
 }    
 
@@ -537,7 +565,8 @@ function vnf_tri_array(
     caps, cap1, cap2,
     col_wrap=false,
     row_wrap=false,
-    reverse=false
+    reverse=false,
+    limit_bunching=true
 ) =
     assert(!(any([caps,cap1,cap2]) && row_wrap), "\nCannot combine caps with row_wrap.")
     let(
@@ -560,8 +589,11 @@ function vnf_tri_array(
                 if (reverse) [[ for(i=[0:rowstarts[0]-1-addcol]) i ]]
                 else [[ for(i=[rowstarts[0]-1-addcol:-1:0]) i ]],
             // triangulate between the two polygons
-            for(i = [0:plen-2+(row_wrap?1:0)]) let(j = (i+1)%plen)
-                _lofttri(st[i], st[j], pcumlen[i], pcumlen[j], rowstarts[i], rowstarts[j], reverse),
+            for(i = [0:plen-2+(row_wrap?1:0)])
+                let(
+                    j = (i+1)%plen,
+                    max_extra_edges = limit_bunching ? max(1, abs(len(st[i])-len(st[j]))) : INF
+                ) _lofttri(st[i], st[j], pcumlen[i], pcumlen[j], rowstarts[i], rowstarts[j], reverse, trimax=max_extra_edges),
             // close up the last end
             if (caplast)
                 if (reverse) [[ for(i=[pcumlen[plen]-1-addcol:-1:pcumlen[plen-1]]) i ]]
@@ -594,24 +626,35 @@ Other parameters are for internal use:
     trilist[] = array of triangles to return
     i1 = vertex index on p1 of the next triangle
     i2 = vertex index on p2 of the next triangle
+    tricount1 = number extra triangles generated on vertex i2 to row p1
+    tricount2 = number extra triangles generated on vertex i1 to row p2
+    trimax = max number of extra triangles that can be created on any point in a row
 (next triangle vertex found can be on either p1 or p2, depending
 on which triangle is smaller.)
 
 Returns an array of triangles using vertex indices offset by
 i1offset and i2offset
 */
-function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[], i1=0, i2=0) = n1!=n2 ?
+function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[], i1=0, i2=0, tricount1=0, tricount2=0, trimax=INF) = n1!=n2 ?
     // unequal row lengths
     let(
     t1 = i1 < n1 ? i1+1 : n1,   // test point 1
     t2 = i2 < n2 ? i2+1 : n2,   // test point 2
+//dum=echo(str("i1=",i1,"  i2=",i2,"  t1=",t1,"  t2=",t2,"  n1=",n1,"  n2=",n2, "  p1[t1]=",p1[t1],"  p2[i2]=",p2[i2])),
     d12 = t2>=n2 ? 9e+9 : norm(p2[t2]-p1[i1]), // distance from i1 to t2
     d21 = t1>=n1 ? 9e+9 : norm(p1[t1]-p2[i2]), // distance from i2 to t1
+//dum2=echo(str("  d12=",d12,"  d21=",d21,"  tricounts=",tricount1,",",tricount2)),
+    userow = d12<d21 ? (tricount1<trimax ? 2 : 1) : (tricount2<trimax ? 1 : 2),
+    newt = userow==1 ? (t1<n1?t1:i1) : (t2<n2?t2:i2),
+    newofft = userow==2 ? i2offset+newt : i1offset+newt,
+    tc1 = d12<d21 && tricount1<trimax ? tricount1+1 : 0,
+    tc2 = d21<d12 && tricount2<trimax ? tricount2+1 : 0,
     triangle = reverse ?
-        [i1offset+i1, i2offset+i2, d12<d21 ? i2offset+t2 : i1offset+t1] :
-        [i2offset+i2, i1offset+i1, d12<d21 ? i2offset+t2 : i1offset+t1]
+        [i1offset+i1, i2offset+i2, newofft] :
+        [i2offset+i2, i1offset+i1, newofft]
 ) t1>=n1 && t2>=n2 ? trilist :
-    _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse, concat(trilist, [triangle]), d12<d21 ? i1 : t1, d12<d21 ? t2 : i2)
+    _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse, concat(trilist, [triangle]),
+        userow==1 ? (t1>=n1?i1:t1) : i1, userow==2 ? (t2>=n2?i2:t2) : i2, tc1, tc2, trimax)
 
     : // equal row lengths
     let(n=n1, i=i1,
@@ -625,7 +668,8 @@ function _lofttri(p1, p2, i1offset, i2offset, n1, n2, reverse=false, trilist=[],
         [i2offset+t, i1offset+t, d12<d21 ? i1offset+i : i2offset+i] :
         [i1offset+t, i2offset+t, d12<d21 ? i1offset+i : i2offset+i]
 ) t>=n ? trilist :
-    _lofttri(p1, p2, i1offset, i2offset, n, n, reverse, concat(trilist, [triangle1, triangle2]), t, t);
+    _lofttri(p1, p2, i1offset, i2offset, n, n, reverse, concat(trilist, [triangle1, triangle2]), t, t, 0,0,trimax);
+
 
 
 // Function: vnf_join()
