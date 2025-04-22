@@ -260,7 +260,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //           path3d(
 //               smooth_path(
 //                   zrot(ridgeamp*sin(360*z/ridgepd), p=star(11, or=r+ridgeamp, ir=r-ridgeamp)),
-//                   relsize=0.6, splinesteps=5, method="corners", closed=true, tex_size=5),
+//                   relsize=0.6, splinesteps=5, method="corners", closed=true),
 //               z)
 //   ];
 //   vnf_polyhedron(vnf_vertex_array(polystack, col_wrap=true, caps=true));
@@ -278,11 +278,11 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //           path3d(
 //               smooth_path(
 //                   zrot(ridgeamp*sin(360*z/ridgepd), p=star(11, or=r+ridgeamp, ir=r-ridgeamp)),
-//                   relsize=0.6, splinesteps=5, method="corners", closed=true, tex_size=5),
+//                   relsize=0.6, splinesteps=5, method="corners", closed=true),
 //               z)
 //   ];
 //   vnf_polyhedron(vnf_vertex_array(polystack, col_wrap=true, caps=true,
-//       texture="dots", tex_samples=1));
+//       texture="dots", tex_samples=1, tex_size=5));
 // Example(3D,Med,NoAxes,VPR=[0,0,0],VPD=126.00,VPT=[-0.35,-0.54,4.09]): This point array defines a square region but with a non-uniform grid. 
 //   pts = [for(x=[-1:.1:1])
 //             [for(y=[-1:.1:1])

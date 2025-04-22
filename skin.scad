@@ -4541,7 +4541,7 @@ function _textured_revolution(
     assert(num_defined([tex_aspect, pixel_aspect])<=1, "Cannot give both tex_aspect and pixel_aspect")
     //assert(num_defined([tex_aspect, pixel_aspect])==0 || is_undef(angle), "Cannot give tex_aspect or pixel_aspect if you give angle") 
     let(
-        inhibit_y_slicing = default(inhibit_y_slicing, is_path(shape) && len(path)==2 ? true : false), 
+        inhibit_y_slicing = default(inhibit_y_slicing, is_path(shape) && len(shape)==2 ? true : false), 
         regions = !is_path(shape,2)? region_parts(shape)
                 : closed? region_parts([shape]) 
                 : let(
