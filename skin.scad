@@ -4583,7 +4583,7 @@ function _textured_revolution(
                      h = path_length(rpath), 
                      r = mean(column(rpath,0)),
                      width = counts.x/counts.y * (is_def(pixel_aspect) ? (texcnt.x+tex_extra.x-1)/(texcnt.y+tex_extra.y-1) : tex_aspect) * h + (is_def(pixel_aspect)?1:0),
-                     ang = 360 * width / (2*PI*r),
+                     ang = 360 * width / (2*PI*r)
                 )
                 assert(ang<=360, str("Angle required for requested tile counts and aspect is ",ang, " which exceeds 360 degrees."))
                 360 * width / (2*PI*r),
