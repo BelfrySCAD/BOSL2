@@ -1125,6 +1125,8 @@ function linear_sweep(
 //      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
 //      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 //   ];
+//   h = 20;
+//   r = 15;
 //   ang = len(img[0])/len(img)*h/(2*PI*r)*360;
 //   rotate_sweep([[r,-h/2],[r,h/2]], texture=img,
 //                tex_reps=1,angle=ang, closed=false);
