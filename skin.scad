@@ -724,7 +724,9 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //      cyl(d=14.5,h=1,anchor=BOT,rounding=1/3,$fa=1,$fs=.5);
 //      linear_sweep(circle(d=12), h=12, scale=1.3, texture=diag_weave_vnf,
 //                   tex_size=[5,5], convexity=12);
-//    }  
+//    }
+
+
 
 module linear_sweep(
     region, height, center,
@@ -897,7 +899,13 @@ function linear_sweep(
 //   (Regions are always composed of closed polygons.)  If you give a path and specify `closed=false` then the path will be connected to the Y axis by
 //   a horizontal segment at each end, resulting in flat faces at the top and bottom.  These flat faces do not receive any applied texture.  No segment of of the
 //   region---including the closing segments added to polygons---can lie on the Y axis.  When `closed=false` you can terminate one or both ends of the path
-//   on the Y axis if you want texturing to continue all the way to the center.  
+//   on the Y axis if you want texturing to continue all the way to the center.
+//   .
+//   If you want to place just one or a few copies of a texture onto an object rather than texturing the entire object you can do that by using
+//   and angle smaller than 360.  However, if you want to control the aspect ratio of the resulting texture you will have to carefully calculate the proper
+//   angle to use.  To simplify this process you can use `pixel_aspect` or `tex_aspect`.  You can set `tex_aspect` for any type of tile and it specifies
+//   the desired aspect ratio (width/height) for the tiles.  You must specify `tex_reps` in order to use this feature.  For heightfields you can instead provide
+//   a pixel aspect ratio, which is suited to the case where your texture is a non-square image that you want to place on a curved object.  
 // Arguments:
 //   shape = The polygon or [region](regions.scad) to sweep around the Z axis.
 //   angle = If given, specifies the number of degrees to sweep the region around the Z axis, counterclockwise from the X+ axis.  Default: 360 (full rotation)
@@ -911,6 +919,8 @@ function linear_sweep(
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
 //   tex_taper = If given as a number, tapers the texture height to zero over the first and last given percentage of the path.  If given as a lookup table with indices between 0 and 100, uses the percentage lookup table to ramp the texture heights.  Default: `undef` (no taper)
+//   tex_aspect = Choose the angle of the revolution to maintain this aspect ratio for the tiles.  You must specify tex_reps.  Overrides any angle specified.  
+//   pixel_aspect = Choose the angle of the revolution to maintain this apsect ratio for pixels in a heightfield texture.  You must specify tex_reps.  Overrides any angle specified.
 //   style = {{vnf_vertex_array()}} style.  Default: "min_edge"
 //   closed = If false, and `shape` is a path, then the revolved path is connected to the axis of rotation with untextured caps.  Ignored if `shape` is not a path.   Default: `true`
 //   convexity = (Module only) Convexity setting for use with polyhedron.  Default: 10
@@ -1097,7 +1107,7 @@ function linear_sweep(
 //   h = 20;
 //   r = 15;
 //   ang = len(img[0])/len(img)*h/(2*PI*r)*360;
-//   rotate_sweep([[15,-10],[15,10]], texture=img,
+//   rotate_sweep([[r,-h/2],[r,h/2]], texture=img,
 //                tex_reps=1,angle=ang, closed=false);
 //   
 // Example(3D,VPR=[80.20,0.00,138.40],VPD=82.67,VPT=[6.88,7.29,1.77],NoAxes): Here we have combined the above model with a suitable cylinder.  Note that with a coarse texture like this you need to either match the `$fn` of the cylinder to the texture, or choose a sufficiently fine cylinder to avoid conflicting facets.  
@@ -1115,19 +1125,55 @@ function linear_sweep(
 //      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
 //      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 //   ];
-//   h = 20;
-//   r = 15;
 //   ang = len(img[0])/len(img)*h/(2*PI*r)*360;
-//   rotate_sweep([[15,-10],[15,10]], texture=img,
+//   rotate_sweep([[r,-h/2],[r,h/2]], texture=img,
 //                tex_reps=1,angle=ang, closed=false);
 //   cyl(r=r,h=27,$fn=128);
+// Example(3D,VPR=[68.30,0.00,148.90],VPD=91.85,VPT=[-0.56,5.78,-0.90],NoAxes): Above we explicitly calculated the required angle to produce the correct aspect ratio.  Here we use `pixel_aspect` which produces an output whose average width has the desired aspect ratio.  
+//   img = [
+//      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0,.5,.5, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0,.5,.5, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+//      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//   ];
+//   rotate_sweep([[15,-10],[5,10]], texture=img,
+//                tex_reps=[1,1], closed=false, pixel_aspect=1);
+//   cyl(r1=16,r2=4,h=24,$fn=128);
+// Example(3D,VPR=[96.30,0.00,133.50],VPD=54.24,VPT=[1.94,2.85,-0.47]): Here we apply the texture to a sphere using the automatic `pixel_aspect` to determine the angle.  Note that using {{spheroid()}} with the circum option eliminates artifacts arising due to mimatched faceting.  
+//   img = [
+//      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0,.5,.5, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0,.5,.5, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+//      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+//      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//   ];
+//   arc = arc(r=10, angle=[-44,44],n=100);
+//   rotate_sweep(arc, texture=img, tex_reps=[1,1],
+//                closed=false, pixel_aspect=1);
+//   spheroid(10,$fn=64,circum=true);
+
 
 
 function rotate_sweep(
     shape, angle=360,
     texture, tex_size=[5,5], tex_counts, tex_reps, 
     tex_inset=false, tex_rot=0,
-    tex_scale, tex_depth, tex_samples,
+    tex_scale, tex_depth, tex_samples, tex_aspect, pixel_aspect, 
     tex_taper, shift=[0,0], closed=true,
     style="min_edge", cp="centroid",
     atype="hull", anchor="origin",
@@ -1163,7 +1209,7 @@ function rotate_sweep(
         rot=tex_rot,
         samples=tex_samples,
         inhibit_y_slicing=_tex_inhibit_y_slicing,
-        taper=tex_taper,
+        taper=tex_taper, tex_aspect=tex_aspect, pixel_aspect=pixel_aspect, 
         shift=shift,
         closed=closed,
         angle=angle,
@@ -1197,7 +1243,7 @@ module rotate_sweep(
     tex_scale, tex_depth, tex_samples,
     tex_taper, shift=[0,0],
     style="min_edge",
-    closed=true, tex_extra,
+    closed=true, tex_extra, tex_aspect, pixel_aspect,
     cp="centroid",
     convexity=10,
     atype="hull",
@@ -1234,12 +1280,12 @@ module rotate_sweep(
             rot=tex_rot,
             samples=tex_samples,
             taper=tex_taper,
-            shift=shift,tex_extra=tex_extra,
+            shift=shift,tex_extra=tex_extra,tex_aspect=tex_aspect, pixel_aspect=pixel_aspect, 
             closed=closed,
             inhibit_y_slicing=_tex_inhibit_y_slicing,
             angle=angle,
             style=style,
-            atype=atype, anchor=anchor,
+            atype=atype, anchor=anchor, 
             spin=spin, orient=orient, start=start
         ) children();
     } else {
@@ -4472,7 +4518,7 @@ function _textured_revolution(
     shape, texture, tex_size, tex_scale=1,
     inset=false, rot=false, shift=[0,0],
     taper, closed=true, angle=360,
-    inhibit_y_slicing=false,
+    inhibit_y_slicing=false,tex_aspect, pixel_aspect, 
     counts, samples, start=0,tex_extra,
     style="min_edge", atype="intersect",
     anchor=CENTER, spin=0, orient=UP
@@ -4488,6 +4534,8 @@ function _textured_revolution(
     assert(taper_is_ok, "Bad taper= value.")
     assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
     assert(is_undef(tex_extra) || is_finite(tex_extra) || is_vector(tex_extra,2), "tex_extra must be a number of 2-vector")
+    assert(num_defined([tex_aspect, pixel_aspect])<=1, "Cannot give both tex_aspect and pixel_aspect")
+    //assert(num_defined([tex_aspect, pixel_aspect])==0 || is_undef(angle), "Cannot give tex_aspect or pixel_aspect if you give angle") 
     let(
         regions = !is_path(shape,2)? region_parts(shape)
                 : closed? region_parts([shape]) 
@@ -4512,10 +4560,13 @@ function _textured_revolution(
                   : is_def(tex_extra) ? force_list(tex_extra,2)
                   : counts==[1,1] ? [0,0]
                   : [1,1], 
-        dummy = assert(is_undef(samples) || is_vnf(texture), "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
+        dummy = assert(is_def(counts) || num_defined([pixel_aspect,tex_aspect])==0, "Must specify tex_counts (not tex_size) when using pixel_aspect or tex_aspect")
+                assert(is_undef(pixel_aspect) || !is_vnf(texture), "Cannot give pixel aspect with a VNF texture")
+                assert(is_undef(samples) || is_vnf(texture), "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
         inset = is_num(inset)? inset : inset? 1 : 0,
-        samples = !is_vnf(texture)? len(texture) :
-            is_num(samples)? samples : 8,
+        samples = !is_vnf(texture)? len(texture)
+                : is_num(samples)? samples
+                : 8,
         bounds = pointlist_bounds(flatten(flatten(regions))),
         maxx = bounds[1].x,
         miny = bounds[0].y,
@@ -4523,6 +4574,20 @@ function _textured_revolution(
         h = maxy - miny,
         circumf = 2 * PI * maxx,
         texcnt = is_vnf(texture) ? undef : [len(texture[0]), len(texture)],
+        angle = num_defined([tex_aspect,pixel_aspect])==0 ? angle
+              : let(
+                     paths = flatten(regions),
+                     lengths = [for(path=paths) path_length(path,closed=closed)],
+                     ind = max_index(lengths),
+                     rpath = resample_path(paths[ind], n=counts.y * samples + (closed?0:tex_extra.y), closed=closed),
+                     h = path_length(rpath), 
+                     r = mean(column(rpath,0)),
+                     width = counts.x/counts.y * (is_def(pixel_aspect) ? (texcnt.x+tex_extra.x-1)/(texcnt.y+tex_extra.y-1) : tex_aspect) * h + (is_def(pixel_aspect)?1:0),
+                     ang = 360 * width / (2*PI*r),
+                )
+                assert(ang<=360, str("Angle required for requested tile counts and aspect is ",ang, " which exceeds 360 degrees."))
+                360 * width / (2*PI*r),
+
         tile = !is_vnf(texture) || samples==1 ? texture
              :
               let(
@@ -4764,7 +4829,7 @@ module _textured_revolution(
     shape, texture, tex_size, tex_scale=1,
     inset=false, rot=false, shift=[0,0],
     taper, closed=true, angle=360,
-    style="min_edge", atype="intersect",
+    style="min_edge", atype="intersect",tex_aspect, pixel_aspect, 
     inhibit_y_slicing=false,tex_extra,
     convexity=10, counts, samples, start=0,
     anchor=CENTER, spin=0, orient=UP
@@ -4773,7 +4838,7 @@ module _textured_revolution(
     vnf = _textured_revolution(
         shape, texture, tex_size=tex_size,
         tex_scale=tex_scale, inset=inset, rot=rot,
-        taper=taper, closed=closed, style=style,
+        taper=taper, closed=closed, style=style,tex_aspect=tex_aspect, pixel_aspect=pixel_aspect, 
         shift=shift, angle=angle,tex_extra=tex_extra,
         samples=samples, counts=counts, start=start, 
         inhibit_y_slicing=inhibit_y_slicing
