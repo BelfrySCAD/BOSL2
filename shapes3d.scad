@@ -1334,10 +1334,9 @@ function textured_tile(
 ) = 
     assert(is_undef(tex_reps) || is_int(tex_reps) || (all_integer(tex_reps) && len(tex_reps)==2), "tex_reps must be an integer or list of two integers")
     assert(is_undef(tex_size) || is_vector(tex_size,2) || is_finite(tex_size))
-    assert(num_defined([tex_size, tex_reps])<2, "Cannot give both tex_size and tex_reps")
+    assert(num_defined([tex_size, tex_reps])==1, "Must give exactly one of tex_size and tex_reps")
     assert(is_undef(size) || is_num(size) || is_vector(size,2) || is_vector(size,3), "size must be a 2-vector or 3-vector")
     assert(is_undef(size) || num_defined([ysize,h, height, thickness, w1,w2,ang])==0, "Cannot combine size with any other dimensional specifications")
-  
     let(
         inset = is_num(tex_inset)? tex_inset : tex_inset? 1 : 0,
         default_thick = inset>0 ? 0.1+abs(tex_depth)*inset : 0.1,
@@ -1362,7 +1361,7 @@ function textured_tile(
         texture = _get_texture(texture, tex_rot),
         
         tex_reps = is_def(tex_reps) ? force_list(tex_reps,2)
-                 : let(tex_size=is_undef(tex_size)? [5,5] : force_list(tex_size,2))
+                 : let(tex_size=force_list(tex_size,2))
                    [round(size.x/tex_size.x), round(size.y/tex_size.y)],
         extra = is_undef(extra)? tex_reps == [1,1] ? [0,0] : [1,1]
                                : force_list(tex_extra,2), 
