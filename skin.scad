@@ -903,9 +903,11 @@ function linear_sweep(
 //   .
 //   If you want to place just one or a few copies of a texture onto an object rather than texturing the entire object you can do that by using
 //   and angle smaller than 360.  However, if you want to control the aspect ratio of the resulting texture you will have to carefully calculate the proper
-//   angle to use.  To simplify this process you can use `pixel_aspect` or `tex_aspect`.  You can set `tex_aspect` for any type of tile and it specifies
+//   angle to use to ensure that the arc length in the horizontal direction is the proper length compared to the arc length in the vertical direction.
+//   To simplify this process you can use `pixel_aspect` or `tex_aspect`.  You can set `tex_aspect` for any type of tile and it specifies
 //   the desired aspect ratio (width/height) for the tiles.  You must specify `tex_reps` in order to use this feature.  For heightfields you can instead provide
-//   a pixel aspect ratio, which is suited to the case where your texture is a non-square image that you want to place on a curved object.  
+//   a pixel aspect ratio, which is suited to the case where your texture is a non-square image that you want to place on a curved object.  For a simple cylinder
+//   it is obvious what the horizontal arc length is; for other objects this is computed based on the average radius of the longest path in `shape`.  
 // Arguments:
 //   shape = The polygon or [region](regions.scad) to sweep around the Z axis.
 //   angle = If given, specifies the number of degrees to sweep the region around the Z axis, counterclockwise from the X+ axis.  Default: 360 (full rotation)
@@ -1180,7 +1182,7 @@ function rotate_sweep(
     style="min_edge", cp="centroid",
     atype="hull", anchor="origin",
     spin=0, orient=UP, start=0, 
-    _tex_inhibit_y_slicing=false
+    _tex_inhibit_y_slicing
 ) =
     assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
     assert(num_defined([tex_scale,tex_depth])<2, "In linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
@@ -4496,7 +4498,7 @@ function _tile_edge_path_list(vnf, axis, maxopen=1) =
 /// Arguments:
 ///   shape = The path or region to sweep/extrude.
 ///   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to the revolution surface.  See {{texture()}} for what named textures are supported.
-///   tex_size = An optional 2D target size for the textures.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+///   tex_size = An optional 2D target size for the textures.  Actual texture sizes are scaled somewhat to evenly fit the available surface. 
 ///   tex_scale = Scaling multiplier for the texture depth.
 ///   ---
 ///   inset = If numeric, lowers the texture into the surface by that amount, before the tex_scale multiplier is applied.  If `true`, insets by exactly `1`.  Default: `false`
@@ -4520,7 +4522,7 @@ function _textured_revolution(
     shape, texture, tex_size, tex_scale=1,
     inset=false, rot=false, shift=[0,0],
     taper, closed=true, angle=360,
-    inhibit_y_slicing=false,tex_aspect, pixel_aspect, 
+    inhibit_y_slicing,tex_aspect, pixel_aspect, 
     counts, samples, start=0,tex_extra,
     style="min_edge", atype="intersect",
     anchor=CENTER, spin=0, orient=UP
@@ -4539,6 +4541,7 @@ function _textured_revolution(
     assert(num_defined([tex_aspect, pixel_aspect])<=1, "Cannot give both tex_aspect and pixel_aspect")
     //assert(num_defined([tex_aspect, pixel_aspect])==0 || is_undef(angle), "Cannot give tex_aspect or pixel_aspect if you give angle") 
     let(
+        inhibit_y_slicing = default(inhibit_y_slicing, is_path(shape) && len(shape)==2 ? true : false), 
         regions = !is_path(shape,2)? region_parts(shape)
                 : closed? region_parts([shape]) 
                 : let(
@@ -4859,7 +4862,7 @@ function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples,
                 col_wrap=false, tex_depth=1, row_wrap=false, caps, cap1, cap2, reverse=false, style="min_edge", tex_extra, tex_skip, sidecaps,sidecap1,sidecap2,normals) =
     assert(tex_reps==undef || is_int(tex_reps) || (all_integer(tex_reps) && len(tex_reps)==2), "tex_reps must be an integer or list of two integers")
     assert(tex_size==undef || is_num(tex_size) || is_vector(tex_size,2), "tex_size must be a scalar or 2-vector")
-    assert(num_defined([tex_size, tex_reps])<2, "Cannot give both tex_size and tex_reps")
+    assert(num_defined([tex_size, tex_reps])==1, "Must give exactly one of tex_size and tex_reps")
     assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area","flip1","flip2"]))
     assert(is_matrix(points[0], n=3),"Point array has the wrong shape or points are not 3d")
     assert(is_consistent(points), "Non-rectangular or invalid point array")
@@ -4875,7 +4878,7 @@ function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples,
         ptsize=[len(points[0]), len(points)],
         tex_reps = is_def(tex_reps) ? force_list(tex_reps,2)
                  : let(
-                       tex_size = is_undef(tex_size) ? [5,5] : force_list(tex_size,2),
+                       tex_size = force_list(tex_size,2),
                        xsize = norm(points[0][0]-points[0][1])*(ptsize.x+(col_wrap?1:0)),
                        ysize = norm(points[0][0]-points[1][0])*(ptsize.y+(row_wrap?1:0))
                    )

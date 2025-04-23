@@ -86,8 +86,8 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   triangulate = If true, triangulates endcaps to resolve possible CGAL issues.  This can be an expensive operation if the endcaps are complex.  Default: false
 //   convexity = (module) Max number of times a line could intersect a wall of the shape.
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
-//   tex_size = An optional 2D target size (scalar or 2-vector) for the textures at `points[0][0]`. This size is approximate; the actual texture sizes are scaled as needed for whole tiles to fit the available surface. Default: `[5,5]`
-//   tex_reps = If given instead of tex_size, an integer scalar or 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
+//   tex_size = An optional 2D target size for the textures at `points[0][0]`.  Actual texture sizes are scaled somewhat to evenly fit the available surface.
+//   tex_reps = If given instead of tex_size, a 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
 //   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  
@@ -282,7 +282,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //               z)
 //   ];
 //   vnf_polyhedron(vnf_vertex_array(polystack, col_wrap=true, caps=true,
-//       texture="dots", tex_samples=1));
+//       texture="dots", tex_samples=1, tex_size=5));
 // Example(3D,Med,NoAxes,VPR=[0,0,0],VPD=126.00,VPT=[-0.35,-0.54,4.09]): This point array defines a square region but with a non-uniform grid. 
 //   pts = [for(x=[-1:.1:1])
 //             [for(y=[-1:.1:1])
