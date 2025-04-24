@@ -3621,17 +3621,17 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   color("blue") down(1)
 //       square((len(field)-1)*pixsize, true);
 // Example(3D,NoAxes): You can pass a function literal taking x,y arguments, in which case the center value of each pixel is computed in addition to the corners for somewhat greater resolution than the specified pixel size. By default, two smoothing passes are performed on the output paths when making contours from a function.
-   wavelen=42;
-   wave2d = function(x,y)
-       40*cos(180/wavelen*norm([x,y]));
-   isoval=-30;
-   pixsize = 10;
-   translate([0,0,isoval]) color("green") zrot(-90)
-       contour(wave2d, 
-           bounding_box=[[-50,-50],[50,50]],
-           isovalue=[isoval,INF], pixel_size=pixsize);
-   %plot3d(wave2d, [-50:pixsize:50],[-50:pixsize:50],
-          style="quincunx",base=5);
+//   wavelen=42;
+//   wave2d = function(x,y)
+//       40*cos(180/wavelen*norm([x,y]));
+//   isoval=-30;
+//   pixsize = 10;
+//   translate([0,0,isoval]) color("green") zrot(-90)
+//       contour(wave2d, 
+//           bounding_box=[[-50,-50],[50,50]],
+//           isovalue=[isoval,INF], pixel_size=pixsize);
+//   %plot3d(wave2d, [-50:pixsize:50],[-50:pixsize:50],
+//          style="quincunx",base=5);
 // Example(2D,NoAxes): Here's a simple function that produces a contour in the shape of a flower with some petals. Note that the function has smaller values inside the shape so we choose a `-INF` bound for the isovalue.  
 //   f = function (x, y, petals=5)
 //       sin(petals*atan2(y,x)) + norm([x,y]);
