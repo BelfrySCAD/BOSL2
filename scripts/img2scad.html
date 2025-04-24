@@ -4,8 +4,9 @@
 <!--
 Standalone web app to convert an image file to an OpenSCAD array, for use with BOSL2 textures.
 Versions 1-5: 22 April 2025 - by Alex Matulich
+Version 6: 23 April 2025 - added cropping UI
 -->
-  <title>Image to OpenSCAD array, v5</title>
+  <title>Image to OpenSCAD array, v6</title>
   <meta charset="UTF-8">
   <style>
     body { font-family: sans-serif; padding-left:1em; padding-right:1em;}
@@ -60,11 +61,68 @@ Versions 1-5: 22 April 2025 - by Alex Matulich
     .tooltip:hover .tooltiptext {
       visibility: visible;
     }
+
+    /* cropping control panel stuff */
+
+    .crop-container {
+      display: grid;
+      grid-template-areas:
+        "top top top"
+        "left center right"
+        "bottom bottom bottom";
+      grid-template-columns: auto 60px auto;
+      grid-template-rows: auto 60px auto;
+      gap: 4px;
+      padding: 2px;
+      box-sizing: border-box;
+      width: fit-content;
+      height: fit-content;
+      margin-top: 8px;
+    }
+    .crop-center {
+      grid-area: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 60px;
+      border: 2px dashed #ccc;
+      background-color: #eee;
+      font-weight: bold;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    .crop-control {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+    .crop-control input[type="number"] {
+      width: 6ch;
+      padding: 2px;
+      font-size: 1rem;
+      text-align: right;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    .crop-top    { grid-area: top; }
+    .crop-left   { grid-area: left; }
+    .crop-right  { grid-area: right; }
+    .crop-bottom {
+      grid-area: bottom;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
 <h1>Convert image to OpenSCAD array</h1>
-<p>This utility accepts any raster image and converts it to grayscale expanded to use the maximum possible luminance range. Alpha channel is ignored. After resizing, rotating, or reflecting the image as desired, you may save it as an OpenSCAD array.</p>
+<p>This utility accepts any image that can be displayed in your browser, and converts it to grayscale expanded to use the maximum
+possible luminance range. Alpha channel is ignored. After processing the image as desired, you may save it as an OpenSCAD array.</p>
 <hr>
 <div id="content">
   <div class="uiContainer" id="inputArea" tabindex="0">
@@ -82,17 +140,35 @@ Versions 1-5: 22 April 2025 - by Alex Matulich
 
   <div class="uiContainer" id="outputArea">
     <div>
-
       <h3>Transformations</h3>
       <label for="resizeWidth">Rescale original width (px):</label>
-      <input type="number" id="resizeWidth" size="6" min="1" placeholder="e.g. 200" value="200"><br>
+      <input type="number" id="resizeWidth" size="5" min="1" max="9000" value="100"><br>
       <button id="rotateLeft">⟲ Rotate left</button>
       <button id="rotateRight">⟳ Rotate right</button><br>
       <button id="flipHorizontal">⇋ Flip horizontal</button>
       <button id="flipVertical">⇵ Flip vertical</button>
 
-      <h3>Appearance</h3>
+      <div class="crop-container">
+        <div class="crop-control crop-top">
+          <label for="crop-top">Top</label>
+          <input type="number" id="cropTop" min="0" max="9999" value="0">
+        </div>
+        <div class="crop-control crop-left">
+          <label for="crop-left">Left</label>
+          <input type="number" id="cropLeft" min="0" max="9999" value="0">
+        </div>
+        <div class="crop-center">Crop</div>
+        <div class="crop-control crop-right">
+          <label for="crop-right">Right</label>
+          <input type="number" id="cropRight" min="0" max="9999" value="0">
+        </div>
+        <div class="crop-control crop-bottom">
+          <input type="number" id="cropBottom" min="0" max="9999" value="0">
+          <label for="crop-bottom">Bottom</label>
+        </div>
+      </div>
 
+      <h3>Appearance</h3>
       <input type="radio" name="grayModel" value="ntsc" checked><label for "grayModel" class="tooltip"> NTSC grayscale formula
       <span class="tooltiptext">0.299R + 0.587G + 0.114B<br>Based on average human perception of color luminance</span></label><br>
       <input type="radio" name="grayModel" value="linear"><label for="grayModel" class="tooltip"> Linear luminance
@@ -127,8 +203,10 @@ Versions 1-5: 22 April 2025 - by Alex Matulich
 
 </div>
 <hr>
- 
+
   <script>
+    // get page element handles
+
     const imageInput = document.getElementById('imageInput');
     const downloadButton = document.getElementById('downloadButton');
     const resizeWidthInput = document.getElementById('resizeWidth');
@@ -140,21 +218,43 @@ Versions 1-5: 22 April 2025 - by Alex Matulich
     const rotateRightBtn = document.getElementById('rotateRight');
     const flipHorizontalBtn = document.getElementById('flipHorizontal');
     const flipVerticalBtn = document.getElementById('flipVertical');
+    const cropTop = document.getElementById('cropTop');
+    const cropLeft = document.getElementById('cropLeft');
+    const cropRight = document.getElementById('cropRight');
+    const cropBottom = document.getElementById('cropBottom');
     const blurRadiusInput = document.getElementById('blurRadius');
     const arrayName = document.getElementById('arrayName');
     const inputArea = document.getElementById('inputArea');
     const originalCanvas = document.getElementById('originalCanvas');
     const grayscaleCanvas = document.getElementById('grayscaleCanvas');
 
+    // other initializations
+
     const originalCtx = originalCanvas.getContext('2d');
     const grayscaleCtx = grayscaleCanvas.getContext('2d');
 
+    const cropID = [ cropRight, cropTop, cropLeft, cropBottom ]; // counterclockwise from right
+    let edgeID = [ 0, 1, 2 ,3 ]; // counterclockwise from right: right, top, left, bottom
+    const edgeconfig = [
+	// IDs of crop gadgets corresponding to image edges, from right edge counterclockwise,
+	// in all combinations of rotations and flips.
+    //        no flip     flipH      flipV     flipV+H
+    /*  0*/ [[0,1,2,3], [2,1,0,3], [0,3,2,1], [2,3,0,1]],
+    /* 90*/ [[3,0,1,2], [1,0,3,2], [3,2,1,0], [1,2,3,0]],
+    /*180*/ [[2,3,0,1], [0,3,2,1], [2,1,0,3], [0,1,2,3]],
+    /*270*/ [[1,2,3,0], [3,2,1,0], [1,0,3,2], [3,0,1,2]]
+    ];
     let grayscaleMatrix = [];
     let currentImage = new Image();
     let rotation = 0;
     let flipH = false;
     let flipV = false;
     let fileSuffix = "";
+    let origDim = { width:0, height:0 };
+    let uncropDim = { width:0, height:0 };
+    let cropDim = { width:0, height:0 };
+
+    // image processing functions
 
     function getGrayscaleModel() {
       return document.querySelector('input[name="grayModel"]:checked').value;
@@ -216,44 +316,44 @@ Versions 1-5: 22 April 2025 - by Alex Matulich
     function processImage() {
       if (!currentImage.src) return;
 
-      const origWidth = currentImage.naturalWidth;
-      const origHeight = currentImage.naturalHeight;
+      origDim.width = currentImage.naturalWidth;
+      origDim.height = currentImage.naturalHeight;
 
+      // display thumbnail original image
       const thumbWidth = 200;
-      const thumbHeight = Math.round((origHeight / origWidth) * thumbWidth);
+      const thumbHeight = Math.round((origDim.height / origDim.width) * thumbWidth);
       originalCanvas.width = thumbWidth;
       originalCanvas.height = thumbHeight;
       originalCtx.clearRect(0, 0, thumbWidth, thumbHeight);
       originalCtx.drawImage(currentImage, 0, 0, thumbWidth, thumbHeight);
-      originalSizeText.textContent = `Original size: ${origWidth}×${origHeight}`;
+      originalSizeText.textContent = `Original size: ${origDim.width}×${origDim.height}`;
 
-      let width = origWidth;
-      let height = origHeight;
+      // get output image dimensions
+      uncropDim.width = origDim.width;
+      uncropDim.height = origDim.height;
       const newWidth = parseInt(resizeWidthInput.value);
       if (!isNaN(newWidth) && newWidth > 0) {
-        const aspectRatio = height / width;
-        width = newWidth;
-        height = Math.round(newWidth * aspectRatio);
+        uncropDim.width = newWidth;
+        uncropDim.height = Math.round(newWidth * origDim.height / origDim.width);
       }
 
+      // put original image in a temporary canvas with output dimensions and get image data
       const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = width;
-      tempCanvas.height = height;
+      tempCanvas.width = uncropDim.width;
+      tempCanvas.height = uncropDim.height;
       const tempCtx = tempCanvas.getContext('2d');
-      tempCtx.drawImage(currentImage, 0, 0, width, height);
-
-      const imgData = tempCtx.getImageData(0, 0, width, height);
+      tempCtx.drawImage(currentImage, 0, 0, uncropDim.width, uncropDim.height);
+      const imgData = tempCtx.getImageData(0, 0, uncropDim.width, uncropDim.height);
       const data = imgData.data;
 
+      // convert image data to grayscale
       const brightnessMatrix = [];
-
       const model = getGrayscaleModel();
       const weights = model === 'linear' ? [0.2126, 0.7152, 0.0722] : [0.299, 0.587, 0.114];
-
-      for (let y = 0; y < height; y++) {
+      for (let y = 0; y < uncropDim.height; y++) {
         const row = [];
-        for (let x = 0; x < width; x++) {
-          const i = (y * width + x) * 4;
+        for (let x = 0; x < uncropDim.width; x++) {
+          const i = (y * uncropDim.width + x) * 4;
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
@@ -263,49 +363,63 @@ Versions 1-5: 22 April 2025 - by Alex Matulich
         brightnessMatrix.push(row);
       }
 
+      // apply blurring to the grayscale image
       const blurRadius = parseInt(blurRadiusInput.value) || 0;
       const blurredMatrix = applyGaussianBlur(brightnessMatrix, blurRadius);
 
+      // crop the blurred matrix, gather min and max values in crop area
+      const cropMatrix = [];
+      let cropx1 = parseInt(cropID[edgeID[2]].value) || 0;
+      let cropx2 = parseInt(cropID[edgeID[0]].value) || 0;
+      let cropy1 = parseInt(cropID[edgeID[1]].value) || 0;
+      let cropy2 = parseInt(cropID[edgeID[3]].value) || 0;
       let min = 255;
       let max = 0;
-      for (let y=0; y<height; y++) {
-        for(let x=0; x<width; x++) {
+      for (let y=cropy1; y<uncropDim.height-cropy2; y++) {
+        const row = [];
+        for(let x=cropx1; x<uncropDim.width-cropx2; x++) {
+          row.push(blurredMatrix[y][x]);
           min = Math.min(min, blurredMatrix[y][x]);
           max = Math.max(max, blurredMatrix[y][x]);
         }
+        cropMatrix.push(row);
       }
+      cropDim.width = uncropDim.width - cropx1 - cropx2;
+      cropDim.height = uncropDim.height - cropy1 - cropy2;
+
+      // normalize cropped image brightness to 0-255 range, invert brightness if checkbox is selected
       const range = max - min || 1;
       grayscaleMatrix = [];
-      const grayImgData = grayscaleCtx.createImageData(width, height);
+      const grayImgData = grayscaleCtx.createImageData(cropDim.width, cropDim.height);
       const grayData = grayImgData.data;
-
-      for (let y = 0; y < height; y++) {
+      for (let y = 0; y < cropDim.height; y++) {
         const row = [];
-        for (let x = 0; x < width; x++) {
-          let brightness = blurredMatrix[y][x];
+        for (let x = 0; x < cropDim.width; x++) {
+          let brightness = cropMatrix[y][x];
           brightness = ((brightness - min) / range) * 255;
           brightness = Math.round(brightness);
           brightness = Math.max(0, Math.min(255, brightness));
           if (invertBrightnessCheckbox.checked) {
             brightness = 255 - brightness;
           }
-          const i = (y * width + x) * 4;
-          grayData[i] = grayData[i + 1] = grayData[i + 2] = brightness;
+          const i = (y * cropDim.width + x) * 4;
+          grayData[i] = grayData[i+1] = grayData[i+2] = brightness;
           grayData[i + 3] = 255;
           row.push(brightness);
         }
         grayscaleMatrix.push(row);
       }
 
+      // rotate and flip image
       const rotated = (rotation % 180 !== 0);
-      const finalWidth = rotated ? height : width;
-      const finalHeight = rotated ? width : height;
+      const finalWidth = rotated ? cropDim.height : cropDim.width;
+      const finalHeight = rotated ? cropDim.width : cropDim.height;
       grayscaleCanvas.width = finalWidth;
       grayscaleCanvas.height = finalHeight;
 
       const tempDrawCanvas = document.createElement('canvas');
-      tempDrawCanvas.width = width;
-      tempDrawCanvas.height = height;
+      tempDrawCanvas.width = cropDim.width;
+      tempDrawCanvas.height = cropDim.height;
       const tempDrawCtx = tempDrawCanvas.getContext('2d');
       tempDrawCtx.putImageData(grayImgData, 0, 0);
 
@@ -315,19 +429,35 @@ Versions 1-5: 22 April 2025 - by Alex Matulich
       grayscaleCtx.translate(finalWidth / 2, finalHeight / 2);
       grayscaleCtx.rotate(rotation * Math.PI / 180);
       grayscaleCtx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
-      grayscaleCtx.drawImage(tempDrawCanvas, -width / 2, -height / 2);
+      grayscaleCtx.drawImage(tempDrawCanvas, -cropDim.width / 2, -cropDim.height / 2);
       grayscaleCtx.restore();
 
       grayscaleSizeText.textContent = `Output size: ${finalWidth}×${finalHeight}`;
       fileSuffix = finalWidth.toString()+"x"+finalHeight.toString();
     }
 
+	// loading an image
+
+    function resetInputs() { // executed after an image loads
+      cropLeft.value="0";
+      cropRight.value="0";
+      cropTop.value="0";
+      cropBottom.value="0";
+      rotation = 0;
+      flipV = flipH = false;
+      resizeWidthInput.value = "100";
+      blurRadiusInput.value = "0";
+	  invertBrightnessCheckbox.checked = false;
+    }
+
+    // user pressed button to load image from disk
     imageInput.addEventListener('change', function () {
       const file = this.files[0];
       if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = function (e) {
           currentImage.onload = function () {
+            resetInputs();
             processImage();
           };
           currentImage.src = e.target.result;
@@ -336,6 +466,7 @@ Versions 1-5: 22 April 2025 - by Alex Matulich
       }
     });
 
+    // user pasted an image from the clipboard into the input area
     inputArea.addEventListener('paste', function (event) {
       const items = (event.clipboardData || event.originalEvent.clipboardData).items;
       for (const item of items) {
@@ -344,6 +475,7 @@ Versions 1-5: 22 April 2025 - by Alex Matulich
           const reader = new FileReader();
           reader.onload = function (e) {
             currentImage.onload = function () {
+			  resetInputs();
               processImage();
             };
             currentImage.src = e.target.result;
@@ -353,18 +485,96 @@ Versions 1-5: 22 April 2025 - by Alex Matulich
       }
     });
 
-    [resizeWidthInput, invertBrightnessCheckbox, normalizeToUnitCheckbox, blurRadiusInput, ...document.querySelectorAll('input[name="grayModel"]')].forEach(el => el.addEventListener('input', processImage));
+    // set up events for all the input gadgets
 
-    rotateLeftBtn.addEventListener('click', () => { rotation = (rotation - 90 + 360) % 360; processImage(); });
-    rotateRightBtn.addEventListener('click', () => { rotation = (rotation + 90) % 360; processImage(); });
-    flipHorizontalBtn.addEventListener('click', () => { flipH = !flipH; processImage(); });
-    flipVerticalBtn.addEventListener('click', () => { flipV = !flipV; processImage(); });
+    [resizeWidthInput, invertBrightnessCheckbox, normalizeToUnitCheckbox, blurRadiusInput,
+        ...document.querySelectorAll('input[name="grayModel"]')].forEach(el => el.addEventListener('input', processImage));
+
+    cropLeft.addEventListener('input', () => {
+        if (!currentImage.src) { cropLeft.value="0"; return; }
+        const cl = parseInt(cropLeft.value) || 0;
+        const cr = parseInt(cropRight.value) || 0;
+        if(uncropDim.width - cl - cr < 2) cropLeft.value = (uncropDim.width - cr - 2).toString();
+        processImage();
+    });
+    cropTop.addEventListener('input', () => {
+        if (!currentImage.src) { cropTop.value="0"; return; }
+        const ct = parseInt(cropTop.value) || 0;
+        const cb = parseInt(cropBottom.value) || 0;
+        if(uncropDim.width - ct - cb < 2) cropTop.value = (uncropDim.height - cb - 2).toString();
+        processImage();
+    });
+    cropRight.addEventListener('input', () => {
+        if (!currentImage.src) { cropRight.value="0"; return; }
+        const cl = parseInt(cropLeft.value) || 0;
+        const cr = parseInt(cropRight.value) || 0;
+        if(uncropDim.width - cl - cr < 2) cropRight.value = (uncropDim.width - cl - 2).toString();
+        processImage();
+    });
+    cropBottom.addEventListener('input', () => {
+        if (!currentImage.src) { cropBottom.value="0"; return; }
+        const ct = parseInt(cropTop.value) || 0;
+        const cb = parseInt(cropBottom.value) || 0;
+        if(uncropDim.width - ct - cb < 2) cropBottom.value = (uncropDim.height - ct - 2).toString();
+        processImage();
+    });
+
+    function updateEdgeID(out="") {
+        const fi = (flipH ? 1 : 0) + (flipV ? 2 : 0);
+        const ri = Math.round(rotation/90);
+        edgeID = edgeconfig[ri][fi];
+        if (out.length>0) console.log(out, rotation, flipH, flipV, edgeID);
+    }
+
+    rotateLeftBtn.addEventListener('click', () => {
+        if (!currentImage.src) return;
+        rotation = (rotation - 90 + 360) % 360;
+        const tmp = cropTop.value;
+        cropTop.value = cropRight.value;
+        cropRight.value = cropBottom.value;
+        cropBottom.value = cropLeft.value;
+        cropLeft.value = tmp;
+        updateEdgeID();
+        processImage();
+    });
+    rotateRightBtn.addEventListener('click', () => {
+        if (!currentImage.src) return;
+        rotation = (rotation + 90) % 360;
+        const tmp = cropTop.value;
+        cropTop.value = cropLeft.value;
+        cropLeft.value = cropBottom.value;
+        cropBottom.value = cropRight.value;
+        cropRight.value = tmp;
+        updateEdgeID();
+        processImage();
+    });
+    flipHorizontalBtn.addEventListener('click', () => {
+        if (!currentImage.src) return;
+        flipH = !flipH;
+        let tmp = cropRight.value;
+        cropRight.value = cropLeft.value;
+        cropLeft.value = tmp;
+        updateEdgeID();
+        processImage();
+    });
+    flipVerticalBtn.addEventListener('click', () => {
+        if (!currentImage.src) return;
+        flipV = !flipV;
+        let tmp = cropTop.value;
+        cropTop.value = cropBottom.value;
+        cropBottom.value = tmp;
+        updateEdgeID();
+        processImage();
+    });
+
+    // saving the file - try to use "Save As" file picker, 
+	// fall back to saving with a default name to browser's downloads directory.
 
     downloadButton.addEventListener('click', () => {
-      if (grayscaleMatrix.length === 0) return alert("No grayscale data to save.");
+      if (grayscaleMatrix.length === 0) return alert("No data to save.");
       const useUnit = normalizeToUnitCheckbox.checked;
       const arrayContent = grayscaleMatrix.map(row => {
-        return " [" + row.map(val => useUnit ? (0.001 * Math.round((val / 255) * 1000)).toString().substring(0,5) : val).join(",") + "]";
+        return " [" + row.map(val => useUnit ? parseFloat(val/255).toFixed(3) : val).join(",") + "]";
       }).join(",\n");
       const openscadArray = (arrayName.value.length>0 ? arrayName.value : 'image_array')+" = [\n" + arrayContent + "\n];";
       const blob = new Blob([openscadArray], { type: "text/plain" });
