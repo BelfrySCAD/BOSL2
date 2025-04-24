@@ -4114,7 +4114,7 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
             frame_map(
               x=point3d(tangent-adjustment),
               y=point3d(usetop ? toppts[i] : -normpts[i])
-            ) left(lsize[0]/2) {
+            ) left(lsize[i]/2) {
                 text(text[i], font=font, size=size, language=language, script=script);
             }
         }
