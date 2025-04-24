@@ -1245,6 +1245,7 @@ function regular_prism(n,
 // Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): This texture has an asymmetry even with the default `tex_extra=1`. 
 //     textured_tile("trunc_ribs", 10, tex_reps=[5,1]);
 // Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): It could be fixed by setting `tex_extra=2`, which would place an extra flat strip on the right.  But another option is to use the `tex_skip` parameter to trim the flat part from the left.  Note that we are also skipping in the y direction, but it doesn't make a difference for this texture, except that you need to have enough texture tiles to accommodate the skip, so we increased the Y reps value to 2.  You can also set `tex_skip` to a vector.
+//     textured_tile("trunc_ribs", 10, tex_reps=[5,2], tex_skip=1);
 // Example(3D,NoAxes): Textures can be used to place images onto objects.  Here we place a very simple image into a cube, leaving a border around the image.  
 //     textured_tile("trunc_ribs", 10, tex_reps=[5,2], tex_skip=1);
 //      img = [
@@ -2181,7 +2182,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //       texture="trunc_ribs", tex_taper=10,
 //       tex_size=[5,1]);
 //
-// Example: Making a Clay Pattern Roller
+// Example(3D,Med,NoAxes): Making a Clay Pattern Roller
 //   tex = [
 //       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],
 //       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],
@@ -4403,13 +4404,13 @@ function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, 
 //   "intersect" = Anchors to the surface of the shape.
 // Named Anchors:
 //   "origin" = Anchor at the origin, oriented UP.
-// Example(3D,NoScale): 
+// Example(3D,NoScale,VPR=[85.10,0.00,127.90],VPD=292.71,VPT=[21.15,13.27,0.90): 
 //   f = function (x,y) 5*cos(5*norm([x*180/50,y*180/50]))+5;
 //   plot_revolution(f, arclength=[-50:1:50], z=[-50:1:50], r=30); 
-// Example(3D,NoScale): When specifying angle, the pattern shrinks at the top of the cone. 
+// Example(3D,NoScale,VPR=[69.00,0.00,96.40],VPD=361.36,VPT=[14.10,5.03,4.53]): When specifying angle, the pattern shrinks at the top of the cone. 
 //   g = function (x,y) 5*sin(4*x)*cos(6*y)+5;
 //   plot_revolution(g, z=[-60:2:60], angle=[-180:4:180], r1=30, r2=16);
-// Example(3D,NoScale): When specifying arc length, the shape wraps around more cone at the top
+// Example(3D,NoScale,VPR=[69.00,0.00,96.40],VPD=361.36,VPT=[14.10,5.03,4.53]): When specifying arc length, the shape wraps around more cone at the top
 //   g = function (x,y) 5*sin(8*x)*cos(6*y)+5;
 //   plot_revolution(g, z=[-60:.5:60], arclength=[-45:.5:45],r1=30,r2=16);
 // Example(3D,VPR=[60.60,0.00,100.60],VPD=100.87,VPT=[-1.84,-1.70,5.63]): Here we place a simple ridge function onto a cone using angle.  Note how the ribs narrow with the radius.  
