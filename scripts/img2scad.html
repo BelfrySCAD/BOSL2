@@ -5,12 +5,48 @@
 Standalone web app to convert an image file to an OpenSCAD array, for use with BOSL2 textures.
 Versions 1-5: 22 April 2025 - by Alex Matulich
 Version 6: 23 April 2025 - added cropping UI
+Version 7: 25 April 2025 - added contrast and threshold sliders
 -->
-  <title>Image to OpenSCAD array, v6</title>
+  <title>Image to OpenSCAD array, v7</title>
   <meta charset="UTF-8">
   <style>
     body { font-family: sans-serif; padding-left:1em; padding-right:1em;}
     h1,h2,h3,h4 { font-family: serif; }
+    fieldset {
+      border: 2px ridge silver;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      min-width: 300px;
+    }
+    legend {
+      font-weight: bold;
+      font-family: Serif;
+      font-size: larger;
+      padding: 0 6px;
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+    }
+    .slider-label {
+      width: 9ch;
+    }
+    .slider-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 1ch;
+      min-width: 0;
+    }
+    input[type="range"] {
+      flex: 1;
+      min-width: 0;
+    }
+    .slider-value {
+      width: 4ch;
+      text-align: right;
+    }
+
     .uiContainer {
       display: flex;
       flex-wrap: wrap;
@@ -121,16 +157,17 @@ Version 6: 23 April 2025 - added cropping UI
 </head>
 <body>
 <h1>Convert image to OpenSCAD array</h1>
-<p>This utility accepts any image that can be displayed in your browser, and converts it to grayscale expanded to use the maximum
-possible luminance range. Alpha channel is ignored. After processing the image as desired, you may save it as an OpenSCAD array.</p>
+<p>This utility accepts an image that can be displayed in your browser, and converts it to grayscale
+expanded to use the maximum possible luminance range. The file types supported depend on your browser.
+Alpha channel is ignored. After processing the image as desired, you may save it as an OpenSCAD array.</p>
 <hr>
 <div id="content">
   <div class="uiContainer" id="inputArea" tabindex="0">
-    <div>
-      <h3>Select an image</h2>
+    <fieldset>
+      <legend>Select an image</legend>
       <input type="file" id="imageInput" accept="image/*">
       <p><em>You can also paste an image (Ctrl+V) into this section from your clipboard.</em></p>
-    </div>
+    </fieldset>
     <!-- Original image canvas -->
     <div class="canvasWrapper">
       <p id="originalSize"></p>
@@ -140,7 +177,8 @@ possible luminance range. Alpha channel is ignored. After processing the image a
 
   <div class="uiContainer" id="outputArea">
     <div>
-      <h3>Transformations</h3>
+      <fieldset>
+      <legend>Transformations</legend>
       <label for="resizeWidth">Rescale original width (px):</label>
       <input type="number" id="resizeWidth" size="5" min="1" max="9000" value="100"><br>
       <button id="rotateLeft">⟲ Rotate left</button>
@@ -167,8 +205,10 @@ possible luminance range. Alpha channel is ignored. After processing the image a
           <label for="crop-bottom">Bottom</label>
         </div>
       </div>
+      </fieldset>
 
-      <h3>Appearance</h3>
+      <fieldset>
+      <legend>Appearance</legend>
       <input type="radio" name="grayModel" value="ntsc" checked><label for "grayModel" class="tooltip"> NTSC grayscale formula
       <span class="tooltiptext">0.299R + 0.587G + 0.114B<br>Based on average human perception of color luminance</span></label><br>
       <input type="radio" name="grayModel" value="linear"><label for="grayModel" class="tooltip"> Linear luminance
@@ -177,13 +217,32 @@ possible luminance range. Alpha channel is ignored. After processing the image a
       <div style="margin-top:8px;">
         <label><input type="checkbox" id="invertBrightness"> Invert brightness</label>
       </div>
-      <div style="margin-top:8px;">
-        <label for="blurRadius">Blur radius (pixels):</label>
+      <div style="margin:8px 0;">
+        <label for="blurRadius">Gaussian blur radius (pixels):</label>
         <input type="number" id="blurRadius" size="5" min="0" max="20" value="0">
       </div>
 
-      <h3>Output</h3>
-      <label><input type="checkbox" id="normalizeToUnit" checked> Normalize to [0,1] range &mdash; [0,255] if unset</label>
+      <div class="slider-row">
+        <label for="contrast" class="slider-label tooltip">Contrast
+        <span class="tooltiptext">Compress brightness above and below threshold<br>to maximum and minimum brightness.</span></label>
+        <div class="slider-container">
+          <input type="range" id="contrast" min="0" max="100" value="0">
+          <span id="contrastValue" class="slider-value">0</span>
+        </div>
+      </div>
+      <div class="slider-row">
+        <label for="threshold" class="slider-label tooltip">Threshold
+        <span class="tooltiptext">Level between black (-128) and white (128)<br>around which to adjust contrast..</span></label>
+        <div class="slider-container">
+          <input type="range" id="threshold" min="-128" max="127" value="0">
+          <span id="thresholdValue" class="slider-value">0</span>
+        </div>
+      </div>
+      </fieldset>
+
+      <fieldset>
+      <legend>Output</legend>
+      <label><input type="checkbox" id="normalizeToUnit" checked> Normalize range to [0,1] &mdash; uses [0,255] if unset</label>
       <div style="margin-top:8px;">
         <label for="arrayName">Name of array:</label>
         <input type="text" id="arrayName" value="image_array" onkeypress="return event.charCode != 32">
@@ -191,6 +250,7 @@ possible luminance range. Alpha channel is ignored. After processing the image a
           <button id="downloadButton">Save as OpenSCAD array</button>
         </div>
       </div>
+      </fieldset>
     </div>
     <!-- Grayscale output image canvas -->
     <div class="canvasWrapper">
@@ -223,6 +283,10 @@ possible luminance range. Alpha channel is ignored. After processing the image a
     const cropRight = document.getElementById('cropRight');
     const cropBottom = document.getElementById('cropBottom');
     const blurRadiusInput = document.getElementById('blurRadius');
+    const contrastInput = document.getElementById('contrast');
+    const contrastValue = document.getElementById('contrastValue');
+    const thresholdInput = document.getElementById('threshold');
+    const thresholdValue = document.getElementById('thresholdValue');
     const arrayName = document.getElementById('arrayName');
     const inputArea = document.getElementById('inputArea');
     const originalCanvas = document.getElementById('originalCanvas');
@@ -236,8 +300,8 @@ possible luminance range. Alpha channel is ignored. After processing the image a
     const cropID = [ cropRight, cropTop, cropLeft, cropBottom ]; // counterclockwise from right
     let edgeID = [ 0, 1, 2 ,3 ]; // counterclockwise from right: right, top, left, bottom
     const edgeconfig = [
-	// IDs of crop gadgets corresponding to image edges, from right edge counterclockwise,
-	// in all combinations of rotations and flips.
+    // IDs of crop gadgets corresponding to image edges, from right edge counterclockwise,
+    // in all combinations of rotations and flips.
     //        no flip     flipH      flipV     flipV+H
     /*  0*/ [[0,1,2,3], [2,1,0,3], [0,3,2,1], [2,3,0,1]],
     /* 90*/ [[3,0,1,2], [1,0,3,2], [3,2,1,0], [1,2,3,0]],
@@ -253,12 +317,11 @@ possible luminance range. Alpha channel is ignored. After processing the image a
     let origDim = { width:0, height:0 };
     let uncropDim = { width:0, height:0 };
     let cropDim = { width:0, height:0 };
+    let invertBrightness = false;
+    let contrast = 0.0001; // ranges from 0.0001 to 100.0001
+    let threshold = 128.0/255.0; // ranges from 0. to 1.0
 
     // image processing functions
-
-    function getGrayscaleModel() {
-      return document.querySelector('input[name="grayModel"]:checked').value;
-    }
 
     function applyGaussianBlur(matrix, radius) {
       if (radius <= 0) return matrix;
@@ -313,6 +376,15 @@ possible luminance range. Alpha channel is ignored. After processing the image a
       return output;
     }
 
+    function sigmoid(z) { return 1.0 / (1+Math.exp(-z)); } // used by contrastAdj
+
+    function contrastAdj(brightness) { // return an adjusted brightness based on contrast and threshold
+        const x = brightness/255.0;
+        const sigterm = sigmoid(-contrast*threshold);
+        const adj = (sigmoid(contrast*(x-threshold)) - sigterm) / (sigmoid(contrast*(1.0-threshold)) - sigterm);
+        return adj * 255.0;
+    }
+
     function processImage() {
       if (!currentImage.src) return;
 
@@ -348,7 +420,7 @@ possible luminance range. Alpha channel is ignored. After processing the image a
 
       // convert image data to grayscale
       const brightnessMatrix = [];
-      const model = getGrayscaleModel();
+      const model = document.querySelector('input[name="grayModel"]:checked').value;
       const weights = model === 'linear' ? [0.2126, 0.7152, 0.0722] : [0.299, 0.587, 0.114];
       for (let y = 0; y < uncropDim.height; y++) {
         const row = [];
@@ -388,6 +460,7 @@ possible luminance range. Alpha channel is ignored. After processing the image a
       cropDim.height = uncropDim.height - cropy1 - cropy2;
 
       // normalize cropped image brightness to 0-255 range, invert brightness if checkbox is selected
+      // adjust contrast if needed
       const range = max - min || 1;
       grayscaleMatrix = [];
       const grayImgData = grayscaleCtx.createImageData(cropDim.width, cropDim.height);
@@ -397,11 +470,11 @@ possible luminance range. Alpha channel is ignored. After processing the image a
         for (let x = 0; x < cropDim.width; x++) {
           let brightness = cropMatrix[y][x];
           brightness = ((brightness - min) / range) * 255;
-          brightness = Math.round(brightness);
-          brightness = Math.max(0, Math.min(255, brightness));
-          if (invertBrightnessCheckbox.checked) {
+          if (contrast>0.0002)
+            brightness = contrastAdj(brightness);
+          if (invertBrightness)
             brightness = 255 - brightness;
-          }
+          brightness = Math.max(0, Math.min(255, Math.round(brightness)));
           const i = (y * cropDim.width + x) * 4;
           grayData[i] = grayData[i+1] = grayData[i+2] = brightness;
           grayData[i + 3] = 255;
@@ -436,7 +509,7 @@ possible luminance range. Alpha channel is ignored. After processing the image a
       fileSuffix = finalWidth.toString()+"x"+finalHeight.toString();
     }
 
-	// loading an image
+    // loading an image
 
     function resetInputs() { // executed after an image loads
       cropLeft.value="0";
@@ -447,7 +520,11 @@ possible luminance range. Alpha channel is ignored. After processing the image a
       flipV = flipH = false;
       resizeWidthInput.value = "100";
       blurRadiusInput.value = "0";
-	  invertBrightnessCheckbox.checked = false;
+      invertBrightnessCheckbox.checked = invertBrightness = false;
+      contrastInput.value = contrastValue.textContent = "0";
+      contrast = 0.0001;
+      thresholdInput.value = thresholdValue.textContent = "0";
+      threshold = 128.0/255.0;
     }
 
     // user pressed button to load image from disk
@@ -475,7 +552,7 @@ possible luminance range. Alpha channel is ignored. After processing the image a
           const reader = new FileReader();
           reader.onload = function (e) {
             currentImage.onload = function () {
-			  resetInputs();
+              resetInputs();
               processImage();
             };
             currentImage.src = e.target.result;
@@ -485,16 +562,25 @@ possible luminance range. Alpha channel is ignored. After processing the image a
       }
     });
 
-    // set up events for all the input gadgets
+    // set up event listeners for all the input gadgets
 
-    [resizeWidthInput, invertBrightnessCheckbox, normalizeToUnitCheckbox, blurRadiusInput,
+    [normalizeToUnitCheckbox, blurRadiusInput,
+        contrastInput, thresholdInput,
         ...document.querySelectorAll('input[name="grayModel"]')].forEach(el => el.addEventListener('input', processImage));
+
+    resizeWidthInput.addEventListener('input', function () {
+        let min = parseInt(this.min);
+        if (parseInt(this.value) < min) this.value = min;
+        processImage();
+    });
 
     cropLeft.addEventListener('input', () => {
         if (!currentImage.src) { cropLeft.value="0"; return; }
         const cl = parseInt(cropLeft.value) || 0;
         const cr = parseInt(cropRight.value) || 0;
-        if(uncropDim.width - cl - cr < 2) cropLeft.value = (uncropDim.width - cr - 2).toString();
+        const newcl = uncropDim.width - cl - cr < 2 ? uncropDim.width - cr - 2 : cl;
+        cropLeft.value = newcl.toString();
+        resizeWidthInput.min = newcl + cr + 2;
         processImage();
     });
     cropTop.addEventListener('input', () => {
@@ -508,7 +594,9 @@ possible luminance range. Alpha channel is ignored. After processing the image a
         if (!currentImage.src) { cropRight.value="0"; return; }
         const cl = parseInt(cropLeft.value) || 0;
         const cr = parseInt(cropRight.value) || 0;
-        if(uncropDim.width - cl - cr < 2) cropRight.value = (uncropDim.width - cl - 2).toString();
+        const newcr = uncropDim.width - cl - cr < 2 ? uncropDim.width - cl - 2 : cr;
+        cropRight.value = newcr.toString();
+        resizeWidthInput.min = cl + newcr + 2;
         processImage();
     });
     cropBottom.addEventListener('input', () => {
@@ -567,14 +655,36 @@ possible luminance range. Alpha channel is ignored. After processing the image a
         processImage();
     });
 
-    // saving the file - try to use "Save As" file picker, 
-	// fall back to saving with a default name to browser's downloads directory.
+    invertBrightnessCheckbox.addEventListener('input', () => {
+       if (invertBrightness != invertBrightnessCheckbox.checked) {
+         const t = Math.min(127, -parseInt(thresholdInput.value));
+         threshold = (128.0+t)/255.0;
+         thresholdInput.value = thresholdValue.textContent = t.toString();
+       }
+       invertBrightness = invertBrightnessCheckbox.checked;
+       processImage();
+    });
+
+    contrastInput.addEventListener('input', function() {
+        contrastValue.textContent = this.value;
+        const c = parseFloat(this.value);
+        contrast = c*c/100.0 + 0.0001;
+        processImage();
+    });
+    thresholdInput.addEventListener('input', function() {
+        thresholdValue.textContent = this.value;
+        threshold = (parseFloat(this.value) + 128.0) / 255.0;
+        processImage();
+    });
+
+    // saving the file - try to use "Save As" file picker,
+    // fall back to saving with a default name to browser's downloads directory.
 
     downloadButton.addEventListener('click', () => {
       if (grayscaleMatrix.length === 0) return alert("No data to save.");
       const useUnit = normalizeToUnitCheckbox.checked;
       const arrayContent = grayscaleMatrix.map(row => {
-        return " [" + row.map(val => useUnit ? parseFloat(val/255).toFixed(3) : val).join(",") + "]";
+        return " [" + row.map(val => useUnit ? parseFloat(val/255.0).toFixed(3) : val).join(",") + "]";
       }).join(",\n");
       const openscadArray = (arrayName.value.length>0 ? arrayName.value : 'image_array')+" = [\n" + arrayContent + "\n];";
       const blob = new Blob([openscadArray], { type: "text/plain" });
