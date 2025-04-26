@@ -3,19 +3,19 @@
 changelog:
   exclude:
     labels:
-      - ignore-for-release
+      - Ignore-For-Release
   categories:
     - title: Breaking Changes
       labels:
         - Semver-Major
-        - breaking-change
+        - Breaking-Change
     - title: New Features
       labels:
         - Semver-Minor
-        - enhancement
+        - Enhancement
     - title: Bugfixes
       labels:
-        - bug
+        - Bug
     - title: Other Changes
       labels:
         - "*"
