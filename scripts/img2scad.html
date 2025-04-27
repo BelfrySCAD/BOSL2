@@ -3,11 +3,12 @@
 <head>
 <!--
 Standalone web app to convert an image file to an OpenSCAD array, for use with BOSL2 textures.
-Versions 1-5: 22 April 2025 - by Alex Matulich
+Versions 1-5: 22 April 2025 - by Alex Matulich (collaborating with ChatGPT for crop panel CSS, file loading and saving, and Gaussian blur)
 Version 6: 23 April 2025 - added cropping UI
 Version 7: 25 April 2025 - added contrast and threshold sliders
+Version 8: 26 April 2025 - added file size estimate to output section
 -->
-  <title>Image to OpenSCAD array, v7</title>
+  <title>Image to OpenSCAD array, v8</title>
   <meta charset="UTF-8">
   <style>
     body { font-family: sans-serif; padding-left:1em; padding-right:1em;}
@@ -24,6 +25,11 @@ Version 7: 25 April 2025 - added contrast and threshold sliders
       font-size: larger;
       padding: 0 6px;
     }
+
+    input[type="range"] {
+      flex: 1;
+      min-width: 0;
+    }
     .slider-row {
       display: flex;
       align-items: center;
@@ -36,10 +42,6 @@ Version 7: 25 April 2025 - added contrast and threshold sliders
       display: flex;
       align-items: center;
       gap: 1ch;
-      min-width: 0;
-    }
-    input[type="range"] {
-      flex: 1;
       min-width: 0;
     }
     .slider-value {
@@ -160,6 +162,7 @@ Version 7: 25 April 2025 - added contrast and threshold sliders
 <p>This utility accepts an image that can be displayed in your browser, and converts it to grayscale
 expanded to use the maximum possible luminance range. The file types supported depend on your browser.
 Alpha channel is ignored. After processing the image as desired, you may save it as an OpenSCAD array.</p>
+<p>Keep the output image width small! A large size results in a huge output file when converting an image to text data.</p>
 <hr>
 <div id="content">
   <div class="uiContainer" id="inputArea" tabindex="0">
@@ -232,7 +235,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       </div>
       <div class="slider-row">
         <label for="threshold" class="slider-label tooltip">Threshold
-        <span class="tooltiptext">Level between black (-128) and white (128)<br>around which to adjust contrast..</span></label>
+        <span class="tooltiptext">Level between black (-128) and white (127)<br>around which to adjust contrast.</span></label>
         <div class="slider-container">
           <input type="range" id="threshold" min="-128" max="127" value="0">
           <span id="thresholdValue" class="slider-value">0</span>
@@ -247,7 +250,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
         <label for="arrayName">Name of array:</label>
         <input type="text" id="arrayName" value="image_array" onkeypress="return event.charCode != 32">
         <div style="margin-top:8px;">
-          <button id="downloadButton">Save as OpenSCAD array</button>
+          <button id="downloadButton">Save as OpenSCAD array</button> &nbsp;&approx; <strong><span id="kbytes">0 bytes</span></strong>
         </div>
       </div>
       </fieldset>
@@ -291,6 +294,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
     const inputArea = document.getElementById('inputArea');
     const originalCanvas = document.getElementById('originalCanvas');
     const grayscaleCanvas = document.getElementById('grayscaleCanvas');
+    const kbytes = document.getElementById('kbytes');
 
     // other initializations
 
@@ -325,12 +329,10 @@ Alpha channel is ignored. After processing the image as desired, you may save it
 
     function applyGaussianBlur(matrix, radius) {
       if (radius <= 0) return matrix;
-
-      const kernelSize = 2 * radius + 1;
       const sigma = radius > 0 ? radius / 3 : 1;
       const kernel = [];
       let sum = 0;
-      for (let i = -radius; i <= radius; i++) {
+      for (let i = -radius; i <= radius; i++) { // kernel size = 2 * radius + 1;
         const value = Math.exp(-(i * i) / (2 * sigma * sigma));
         kernel.push(value);
         sum += value;
@@ -340,7 +342,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       const width = matrix[0].length;
       const height = matrix.length;
       const horizontalBlur = [];
-
+      // blur pixels horizontally, put in horizontalBlur[]
       for (let y = 0; y < height; y++) {
         horizontalBlur[y] = [];
         for (let x = 0; x < width; x++) {
@@ -356,7 +358,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
           horizontalBlur[y][x] = val / weightSum;
         }
       }
-
+      // blur pixels vertically in horizontalBlur[], return result in output[]
       const output = [];
       for (let y = 0; y < height; y++) {
         output[y] = [];
@@ -380,8 +382,10 @@ Alpha channel is ignored. After processing the image as desired, you may save it
 
     function contrastAdj(brightness) { // return an adjusted brightness based on contrast and threshold
         const x = brightness/255.0;
-        const sigterm = sigmoid(-contrast*threshold);
-        const adj = (sigmoid(contrast*(x-threshold)) - sigterm) / (sigmoid(contrast*(1.0-threshold)) - sigterm);
+        const c = 2.0*contrast; // attempt to balance the sigmoid response to the contrast control
+        const sigterm = sigmoid(-c*threshold);
+        const adj = contrast>100.0 ? (x<threshold ? 0 : x>threshold ? 1 : threshold) // jump to 100% contrast at max contrast
+            : (sigmoid(c*(x-threshold)) - sigterm) / (sigmoid(c*(1.0-threshold)) - sigterm);
         return adj * 255.0;
     }
 
@@ -470,7 +474,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
         for (let x = 0; x < cropDim.width; x++) {
           let brightness = cropMatrix[y][x];
           brightness = ((brightness - min) / range) * 255;
-          if (contrast>0.0002)
+          if (contrast>0.0002) // adjust contrast if contrast control > 0
             brightness = contrastAdj(brightness);
           if (invertBrightness)
             brightness = 255 - brightness;
@@ -507,9 +511,10 @@ Alpha channel is ignored. After processing the image as desired, you may save it
 
       grayscaleSizeText.textContent = `Output size: ${finalWidth}×${finalHeight}`;
       fileSuffix = finalWidth.toString()+"x"+finalHeight.toString();
+      updateKbytes();
     }
 
-    // loading an image
+    // image loading functions
 
     function resetInputs() { // executed after an image loads
       cropLeft.value="0";
@@ -564,8 +569,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
 
     // set up event listeners for all the input gadgets
 
-    [normalizeToUnitCheckbox, blurRadiusInput,
-        contrastInput, thresholdInput,
+    [blurRadiusInput, contrastInput, thresholdInput,
         ...document.querySelectorAll('input[name="grayModel"]')].forEach(el => el.addEventListener('input', processImage));
 
     resizeWidthInput.addEventListener('input', function () {
@@ -677,7 +681,32 @@ Alpha channel is ignored. After processing the image as desired, you may save it
         processImage();
     });
 
-    // saving the file - try to use "Save As" file picker,
+	const Gbyte = 1073741824.0;
+	const Mbyte = 1048576.0;
+	const Kbyte = 1024.0;
+	// update file size estimate based on normalize type and size of output image
+    function updateKbytes() {
+	    // length of a number for [0,1] range: mostly 6 characters "0.xxx," but occasionally less, using 5.99.
+		// length of a number for [0,255] range: assume 0-255 are uniformly distributed, use weighted average of digits plus comma
+        const avglen = normalizeToUnitCheckbox.checked ? 5.99 : (10.0+90.0*2.0+156.0*3.0)/256.0+1.0;
+		// each row has 6 extra characters " [],\r\n" at most, plus 5 characters after array name and 4 characters at the end
+        const estsize = (avglen*cropDim.width + 6.0) * cropDim.height + 9 + arrayName.value.length;
+		let unitName = "bytes";
+		let unit = 1.0;
+		if (estsize > Gbyte) { unit = Gbyte; unitName = "GiB"; }
+		else if (estsize > Mbyte) { unit = Mbyte; unitName = "MiB"; }
+		else if (estsize > 10.0*Kbyte) { unit = Kbyte; unitName = "KiB"; }
+        const sizeOut = (estsize/unit).toFixed(unit==1.0?0:1);
+        kbytes.textContent = `${sizeOut} ${unitName}`;
+    }
+
+    normalizeToUnitCheckbox.addEventListener('input', () => {
+        updateKbytes();
+    });
+
+    // file output functions
+
+    // try to use "Save As" file picker,
     // fall back to saving with a default name to browser's downloads directory.
 
     downloadButton.addEventListener('click', () => {
