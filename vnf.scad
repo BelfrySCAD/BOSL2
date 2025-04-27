@@ -310,7 +310,7 @@ module vnf_vertex_array(
     tex_depth=1, tex_extra, tex_skip, sidecaps,sidecap1,sidecap2, tex_scaling="default",
     convexity=2, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") 
 {
-    vnf = vnf_vertex_array(points=points, caps=caps, cap1=cap2, cap2=cap2,
+    vnf = vnf_vertex_array(points=points, caps=caps, cap1=cap1, cap2=cap2,
                            col_wrap=col_wrap, row_wrap=row_wrap, reverse=reverse, style=style,triangulate=triangulate, tex_scaling=tex_scaling, 
                            texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples, tex_inset=tex_inset, tex_rot=tex_rot, 
                            tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip, sidecaps=sidecaps,sidecap1=sidecap1,sidecap2=sidecap2
@@ -339,7 +339,7 @@ function vnf_vertex_array(
                                tex_inset=tex_inset, tex_samples=tex_samples, tex_rot=tex_rot, tex_scaling=tex_scaling,
                                col_wrap=col_wrap, row_wrap=row_wrap, tex_depth=tex_depth, caps=caps, cap1=cap1, cap2=cap2, reverse=reverse,
                                style=style, tex_extra=tex_extra, tex_skip=tex_skip, sidecaps=sidecaps, sidecap1=sidecap1, sidecap2=sidecap2,normals=normals,triangulate=triangulate)
-  :           
+  :
     assert(!(any([caps,cap1,cap2]) && !col_wrap), "\ncol_wrap must be true if caps are requested (without texture).")
     assert(!(any([caps,cap1,cap2]) && row_wrap), "\nCannot combine caps with row_wrap (without texture).")
     let(

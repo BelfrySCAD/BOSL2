@@ -949,16 +949,24 @@ function linear_sweep(
 // Example:
 //   rgn = right(30, p=union([for (a = [0, 90]) rot(a, p=rect([15,5]))]));
 //   rotate_sweep(rgn);
-// Example:
+// Example(3D,NoAxes,VPR=[55.00,0.00,25.00],VPD=292.71,VPT=[1.59,1.80,-1.35]): Torus with bricks texture
 //   path = right(50, p=circle(d=40));
-//   rotate_sweep(path, texture="bricks_vnf", tex_size=[10,10], tex_depth=0.5, style="concave");
+//   rotate_sweep(path, texture="bricks_vnf",tex_size=10,
+//                  tex_depth=0.5, style="concave");
 // Example(NoAxes): The simplest way to create a cylinder with just a single line segment and `closed=false`.  Note that all cylinder models will require `closed=false` because otherwise a closing line segment lies on the Y axis.  With this cylinder, the top and bottom have no texture.  
-//   rotate_sweep([[20,-10],[20,10]], texture="dots", tex_reps=[6,2],closed=false);
+//   rotate_sweep([[20,-10],[20,10]], texture="dots",
+//                tex_reps=[6,2],closed=false);
 // Example(NoAxes): If we manually connect the top and bottom then they also receive texture.  Note that `closed` is still false, but the caps have zero area.
-//   rotate_sweep([[0,-10],[20,-10],[20,10],[0,10]], texture="dots", tex_reps=[6,6],closed=false,tex_depth=1.5);
+//   rotate_sweep([[0,-10],[20,-10],[20,10],[0,10]], texture="dots",
+//                tex_reps=[6,6],closed=false,tex_depth=1.5);
 // Example(NoAxes,VPR=[95.60,0.00,69.80],VPD=74.40,VPT=[5.81,5.74,1.97]): You can connect just the top or bottom alone instead of both to get texture on one and a flat cap on the other.  Here you can see that the sloped top has texture but the bottom does not.  Also note that the texture doesn't fit neatly on the side and top like it did in the previous two examples, but makes a somewhat ugly transition across the corner.  You have to size your object carefully so that the tops and sides each fit an integer number of texture tiles to avoid this type of transition.  
-//   rotate_sweep([[15,-10],[15,10],[0,15]], texture="dots", tex_reps=[6,6],angle=90,closed=false,tex_depth=1.5);
-// Example: 
+//   rotate_sweep([[15,-10],[15,10],[0,15]], texture="dots", tex_reps=[6,6],
+//                angle=90,closed=false,tex_depth=1.5);
+// Example(NoAxes,VPR=[55.00,0.00,25.00],VPD=126.00,VPT=[1.37,0.06,-0.75]): Ribbed sphere.  Must set `closed=false` because the arcs terminate on the Z axis.n
+//   path = arc(r=20, $fn=64, angle=[-90, 90]);
+//   rotate_sweep(path, 360, texture = texture("wave_ribs",n=15),
+//                tex_size=[8,1.5],closed=false);
+// Example: For this model we use `closed=false` to create the flat, untextured caps.  
 //   tex = [
 //       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 //       [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -2612,7 +2620,8 @@ module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=
 //   Note that {{path_sweep2d()}} does not support `sweep_attach()` because it doesn't compute the transform list, which is
 //   the input used to calculate the attachment transform.  
 // Arguments:
-//   anchor = 2d anchor to the shape used in the path_sweep parent
+//   parent = 2d anchor to the shape used in the path_sweep parent
+//   child = optional 3d anchor for anchoring the child to the parent
 //   frac = position along the path_sweep path as a fraction of total length
 //   ---
 //   idx = index into the path_sweep path (use instead of frac)
@@ -4526,7 +4535,7 @@ function _textured_revolution(
     counts, samples, start=0,tex_extra,
     style="min_edge", atype="intersect",
     anchor=CENTER, spin=0, orient=UP
-) = 
+) =
     assert(angle>0 && angle<=360)
     assert(is_path(shape,[2]) || is_region(shape))
     assert(is_undef(samples) || is_int(samples))
