@@ -103,7 +103,7 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //     back(82)rect([45, 20],anchor=BACK);
 //   }
 //   color("black"){
-//     stroke(arc(r=_root_radius(mod=5,teeth=30),angle=[70,110]),width=.25);
+//     stroke(arc(r=_root_radius_basic(mod=5,teeth=30),angle=[70,110]),width=.25);
 //     stroke(arc(r=pitch_radius(mod=5,teeth=30),angle=[70,110]),width=.25);
 //     stroke(arc(r=outer_radius(mod=5,teeth=30),angle=[70,110]),width=.25);
 //     back(63.5)right(24.2)text("root circle",size=2.5);
@@ -935,7 +935,7 @@ function spur_gear(
         profile_shift = auto_profile_shift(teeth,PA,helical,profile_shift=profile_shift),
         pr = pitch_radius(circ_pitch, teeth, helical),
         or = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal,shorten=shorten),
-        rr = _root_radius(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=internal),
+        rr = _root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=internal),
         anchor_rad = atype=="pitch" ? pr
                    : atype=="tip" ? or
                    : atype=="root" ? rr
@@ -1016,7 +1016,7 @@ module spur_gear(
     profile_shift = auto_profile_shift(teeth,PA,helical,profile_shift=profile_shift);
     pr = pitch_radius(circ_pitch, teeth, helical);
     or = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal,shorten=shorten);
-    rr = _root_radius(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=internal);
+    rr = _root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=internal);
     anchor_rad = atype=="pitch" ? pr
                : atype=="tip" ? or
                : atype=="root" ? rr
@@ -1243,7 +1243,7 @@ function spur_gear2d(
         profile_shift = auto_profile_shift(teeth,PA,helical,profile_shift=profile_shift),
         pr = pitch_radius(circ_pitch, teeth, helical=helical),
         or = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal,shorten=shorten),
-        rr = _root_radius(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=internal),
+        rr = _root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=internal),
         anchor_rad = atype=="pitch" ? pr
                    : atype=="tip" ? or
                    : atype=="root" ? rr
@@ -1323,7 +1323,7 @@ module spur_gear2d(
     );
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
     or = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal,shorten=shorten);
-    rr = _root_radius(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=internal);
+    rr = _root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=internal);
     anchor_rad = atype=="pitch" ? pr
                : atype=="tip" ? or
                : atype=="root" ? rr
@@ -1434,7 +1434,7 @@ module ring_gear(
         assert(is_finite(gear_spin));
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
     ar = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=true);
-    rr=_root_radius(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=true);
+    rr=_root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=true);
     or = is_def(or) ?
             assert(is_finite(or) && or>ar, "or is invalid or too small for teeth")
             or
@@ -1580,7 +1580,7 @@ module ring_gear2d(
         assert(is_finite(gear_spin));
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
     ar = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=true);
-    rr=_root_radius(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=true);
+    rr=_root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=true);
     or = is_def(or) ?
             assert(is_finite(or) && or>ar, "or is invalid or too small for teeth")
             or
@@ -2505,7 +2505,7 @@ function bevel_gear(
         slices = cutter_radius==0? 1 : slices,
         pitch_angle = posmod(atan(sin(shaft_angle)/((mate_teeth/teeth)+cos(shaft_angle))),180),
         pr = pitch_radius(circ_pitch, teeth),
-        rr = _root_radius(circ_pitch, teeth, clearance),
+        rr = _root_radius_basic(circ_pitch, teeth, clearance),
         pitchoff = (pr-rr) * sin(pitch_angle),
         ocone_rad = pitch_angle<90 ? opp_ang_to_hyp(pr, pitch_angle)
                                    : opp_ang_to_hyp(pitch_radius(circ_pitch,mate_teeth), shaft_angle-pitch_angle),
@@ -3354,7 +3354,7 @@ function _gear_tooth_profile(
     arad = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal, shorten=shorten),
     prad = pitch_radius(circ_pitch, teeth, helical=helical),
     brad = _base_radius(circ_pitch, teeth, pressure_angle, helical=helical),
-    rrad = _root_radius(circ_pitch, teeth, clear, helical=helical, profile_shift=profile_shift, internal=internal),
+    rrad = _root_radius_basic(circ_pitch, teeth, clear, helical=helical, profile_shift=profile_shift, internal=internal),
     srad = max(rrad,brad),
     tthick = circ_pitch/PI / cos(helical) * (PI/2 + 2*profile_shift * tan(pressure_angle)) + (internal?backlash:-backlash),
     tang = tthick / prad / 2 * 180 / PI,
@@ -3910,8 +3910,10 @@ function pitch_radius(
 //   or = outer_radius(mod=, teeth=, [helical=], [clearance=], [internal=], [profile_shift=], [shorten=]);
 //   or = outer_radius(diam_pitch=, teeth=, [helical=], [clearance=], [internal=], [profile_shift=], [shorten=]);
 // Description:
-//   Calculates the outer radius for the gear. The gear fits entirely within a cylinder of this radius, unless
-//   it has been strongly profile shifted, in which case it will be undersized due to tip clipping.
+//   Calculates the standard outer radius for the gear. The gear fits entirely within a cylinder of this radius.  The gear
+//   will fit exactly in the cylinder except in two cases:
+//      1.  It has been strongly profile shifted, in which case it will be undersized due to tip clipping.
+//      2.  The pressure angle is very high, in which case the tips meet in points before the standard radius, also resulting in undersized teeth
 // Arguments:
 //   circ_pitch = The circular pitch, the distance between teeth centers around the pitch circle.
 //   teeth = The number of teeth on the gear.
@@ -3955,11 +3957,55 @@ function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, p
     );
 
 
-/// Function: _root_radius()
+
+// Function: root_radius()
+// Synopsis: Returns the radius of the roots of the teeth
+// Topics: Gears, Parts
+// See Also: spur_gear(), diametral_pitch(), circular_pitch(), module_value(), pitch_radius(), outer_radius()
+// Usage:
+//   rr = outer_radius(mod=|circ_pitch=|diam_pitch=, teeth, [helical], [pressure_angle=], [clearance=], [internal=], [profile_shift=], [backlash=]);
+// Description:
+//   Calculates the actual radius of the roots of the teeth.  The root radius is usually given as a straight forward calcluation, but
+//   when large pressure-angle teeth are clipped, it is more difficult to determine this radius.  This function calculates the actual
+//   root radius so that you can, for example, place a partial tooth gear onto a matching circle.   The `backlash` parameter may seem
+//   unnecessary, but when large pressure angle teeth are clipped, the value of backlash changes the clipping radius.  For regular
+//   gear teeth, `backlash` has no effect on the radius.    
+
+// Arguments:
+//   teeth = The number of teeth on the gear.
+//   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
+//   ---
+//   mod = The module of the gear (pitch diameter / teeth)
+//   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
+//   circ_pitch = The circular pitch, the distance between teeth centers around the pitch circle.
+//   profile_shift = Profile shift factor x.  Default: "auto"
+//   pressure_angle = Pressure angle.  Default: 20
+//   clearance = If given, sets the clearance between meshing teeth.  Default: module/4
+//   backlash = Add extra space to produce a total of 2*backlash between the two gears. 
+//   internal = If true, calculate for an internal gear.
+// Example(2D,NoAxes): A partial gear with its circle added to complete it.  
+//   teeth=5;
+//   mod=5;
+//   rr = root_radius(mod=mod, teeth);
+//   spur_gear2d(mod=mod, teeth=teeth, hide=floor(teeth/2));
+//   circle(r=rr, $fn=64);
+
+function root_radius(teeth, helical=0, clearance, internal=false, profile_shift="auto", pressure_angle=20, mod, pitch, diam_pitch, backlash=0) =
+  let(
+      profile_shift = auto_profile_shift(teeth, pressure_angle, helical, profile_shift=profile_shift),
+      tooth = _gear_tooth_profile(teeth=teeth, pressure_angle=pressure_angle, clearance=clearance, backlash=backlash, helical=helical,
+                                  internal=internal, profile_shift=profile_shift, mod=mod, diam_pitch=diam_pitch, pitch=pitch),
+      miny = norm(tooth[0])
+  )
+  miny;
+      
+
+
+/// Function: _root_radius_basic()
 /// Usage:
-///   rr = _root_radius(circ_pitch, teeth, [helical], [clearance=], [internal=], [profile_shift=]);
-///   rr = _root_radius(diam_pitch=, teeth=, [helical=], [clearance=], [internal=], [profile_shift=]);
-///   rr = _root_radius(mod=, teeth=, [helical=], [clearance=], [internal=], [profile_shift=]);
+///   rr = _root_radius_basic(circ_pitch, teeth, [helical], [clearance=], [internal=], [profile_shift=]);
+///   rr = _root_radius_basic(diam_pitch=, teeth=, [helical=], [clearance=], [internal=], [profile_shift=]);
+///   rr = _root_radius_basic(mod=, teeth=, [helical=], [clearance=], [internal=], [profile_shift=]);
 /// Topics: Gears
 /// Description:
 ///   Calculates the root radius for the gear, at the base of the dedendum.  Does not apply auto profile shifting. 
@@ -3974,17 +4020,17 @@ function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, p
 ///   mod = The module of the gear (pitch diameter / teeth)
 ///   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 /// Example:
-///   rr = _root_radius(circ_pitch=5, teeth=11);
-///   rr = _root_radius(circ_pitch=5, teeth=16, helical=30);
-///   rr = _root_radius(diam_pitch=10, teeth=11);
-///   rr = _root_radius(mod=2, teeth=16);
+///   rr = _root_radius_basic(circ_pitch=5, teeth=11);
+///   rr = _root_radius_basic(circ_pitch=5, teeth=16, helical=30);
+///   rr = _root_radius_basic(diam_pitch=10, teeth=11);
+///   rr = _root_radius_basic(mod=2, teeth=16);
 /// Example(2D):
-///   pr = _root_radius(circ_pitch=5, teeth=11);
+///   pr = _root_radius_basic(circ_pitch=5, teeth=11);
 ///   #spur_gear2d(pitch=5, teeth=11);
 ///   color("black")
 ///       stroke(circle(r=pr),width=0.1,closed=true);
 
-function _root_radius(circ_pitch, teeth, clearance, internal=false, helical=0, profile_shift=0, diam_pitch, mod, pitch) =
+function _root_radius_basic(circ_pitch, teeth, clearance, internal=false, helical=0, profile_shift=0, diam_pitch, mod, pitch) =
     let( circ_pitch = circular_pitch(pitch, mod, circ_pitch, diam_pitch) )
     pitch_radius(circ_pitch, teeth, helical) - (
         internal
@@ -4433,7 +4479,7 @@ function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_
 //   right(d)
 //     spur_gear2d(mod=mod,teeth=teeth2,profile_shift=ps2,shorten=shorten,gear_spin=-90,shaft_diam=5);
 //   stroke([rect([desired,40], anchor=LEFT)],color="red");
-// Example(2D,Med,NoAxes,VPT=[37.0558,0.626722,9.78411],VPR=[0,0,0],VPD=496): For the same pair of module 4 gears with 19, and 37 teeth, suppose we want a closer spacing of 110 instead of 112.  A positive profile shift does the job, as shown by the red rectangle with width 110.  More of the negative shift is assigned to the large gear, to avoid undercutting the smaller gear.  
+// Example(2D,Med,NoAxes,VPT=[37.0558,0.626722,9.78411],VPR=[0,0,0],VPD=496): For the same pair of module 4 gears with 19, and 37 teeth, suppose we want a closer spacing of 110 instead of 112.  A negative profile shift does the job, as shown by the red rectangle with width 110.  More of the negative shift is assigned to the large gear, to avoid undercutting the smaller gear.  
 //   teeth1=37;
 //   teeth2=19;
 //   mod=4;
@@ -4593,7 +4639,7 @@ module _show_gear_tooth_profile(
     profile_shift = default(profile_shift, auto_profile_shift(teeth, pressure_angle, helical));
     or = outer_radius(mod=mod, teeth=teeth, clearance=clearance, helical=helical, profile_shift=profile_shift, internal=internal);
     pr = pitch_radius(mod=mod, teeth=teeth, helical=helical);
-    rr = _root_radius(mod=mod, teeth=teeth, helical=helical, profile_shift=profile_shift, clearance=clearance, internal=internal);
+    rr = _root_radius_basic(mod=mod, teeth=teeth, helical=helical, profile_shift=profile_shift, clearance=clearance, internal=internal);
     br = _base_radius(mod=mod, teeth=teeth, helical=helical, pressure_angle=pressure_angle);
     tang = 360/teeth;
     rang = tang * 1.075;
