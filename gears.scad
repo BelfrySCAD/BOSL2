@@ -177,6 +177,15 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //       fwd(6.4) right(22) text("clearance", size=2.5);
 //   }    
 // Continues:
+//   If the clearance is too large it can lead to a self-intersecting gear profile.  When this occurs, you
+//   will see a message indicating that the profile was clipped, and what the required clearance is to
+//   avoid the clipping.  This can be a starting point for adjusting the clipping.  Typical gear pressure angles,
+//   as noted above, are 14.5, 20, or sometimes 25 degrees, but in some cases, larger pressure angles
+//   may be useful.  These large pressure angles can give rise to self-intersecting gear geometry even
+//   with a zero clearance.  To get a valid model, such gears need a **negative** clearance value.
+// Figure(2D,NoAxes): This gear has a 55 degree pressure angle. If you don't specify clearance, the message tells you it clipped at -2.2.  Here we have used -2.3 to avoid a sharp corner in the valleys between teeth.  
+//   spur_gear2d(mod=5, teeth=7, profile_shift=0, pressure_angle=55,clearance=-2.3);
+// Continues:
 //   Another clearance requirement can present a serious problem when the number of teeth is low.  As the gear rotates, the
 //   teeth may interfere with each other.  This may require undercutting the gear teeth to create space, which weakens the teeth.
 //   Is is best to avoid gears with very small numbers of teeth when possible.  
@@ -751,6 +760,7 @@ function _inherit_gear_thickness(thickness,dflt=10) =
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: mod/4
 //   slices = Number of vertical layers to divide gear into.  Useful for refining gears with `helical`.
 //   internal = If true, create a mask for difference()ing from something else.
+//   $gear_steps = Number of points to sample gear profile.  Default: 16
 //   atype = Set to "root", "tip" or "pitch" to determine anchoring circle.  Default: "pitch"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -1126,6 +1136,7 @@ module spur_gear(
 //   gear_spin = Rotate gear and children around the gear center, regardless of how gear is anchored.  Default: 0
 //   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear.  Default: mod/4
 //   internal = If true, create a mask for difference()ing from something else.
+//   $gear_steps = Number of points to sample gear profile.  Default: 16
 //   shaft_diam = If given, the diameter of the central shaft hole.
 //   atype = Set to "root", "tip" or "pitch" to determine anchoring circle.  Default: "pitch"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1224,7 +1235,7 @@ function spur_gear2d(
     assert(is_finite(shaft_diam) && shaft_diam>=0)
     assert(is_integer(hide) && hide>=0 && hide<teeth)
     assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
-    assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+    assert(clearance==undef || is_finite(clearance))
     assert(is_finite(backlash) && backlash>=0)
     assert(is_finite(helical) && abs(helical)<90)
     assert(is_finite(gear_spin))
@@ -1292,7 +1303,7 @@ module spur_gear2d(
         assert(is_finite(shaft_diam) && shaft_diam>=0)
         assert(is_integer(hide) && hide>=0 && hide<teeth)
         assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
-        assert(clearance==undef || (is_finite(clearance) && clearance>=0))
+        assert(clearance==undef || is_finite(clearance))
         assert(is_finite(backlash) && backlash>=0)
         assert(is_finite(helical) && abs(helical)<90)
         assert(is_finite(gear_spin));
@@ -1365,6 +1376,7 @@ module spur_gear2d(
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The module of the gear (pitch diameter / teeth)
+//   $gear_steps = Number of points to sample gear profile.  Default: 16
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -1512,6 +1524,7 @@ module ring_gear(
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  Note that the diametral pitch is a completely different thing than the pitch diameter.
 //   mod = The module of the gear (pitch diameter / teeth)
+//   $gear_steps = Number of points to sample gear profile.  Default: 16
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Anchor Types:
@@ -2455,7 +2468,6 @@ module crown_gear(
 //     xrot(ang,cp=[0,-pitch_radius(mod=3,teeth=15),0])
 //         bevel_gear(mod=3,15,35,ang,right_handed=true);
 
-echo(VPT=$vpt,VPR=$vpr,VPD=$vpd);
 
 
 
@@ -3333,7 +3345,7 @@ function _gear_tooth_profile(
     _involute = function(base_r,a)
         let(b=a*PI/180) base_r * [cos(a)+b*sin(a), sin(a)-b*cos(a)],
 
-    steps = 16,
+    steps = !is_undef($gear_steps) ? $gear_steps : 16,
     circ_pitch = circular_pitch(pitch=pitch, circ_pitch=circ_pitch, diam_pitch=diam_pitch, mod=mod),
     mod = module_value(circ_pitch=circ_pitch),
     clear = default(clearance, 0.25 * mod),
@@ -3342,7 +3354,7 @@ function _gear_tooth_profile(
     arad = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal, shorten=shorten),
     prad = pitch_radius(circ_pitch, teeth, helical=helical),
     brad = _base_radius(circ_pitch, teeth, pressure_angle, helical=helical),
-    rrad = _root_radius(circ_pitch, teeth, clearance, helical=helical, profile_shift=profile_shift, internal=internal),
+    rrad = _root_radius(circ_pitch, teeth, clear, helical=helical, profile_shift=profile_shift, internal=internal),
     srad = max(rrad,brad),
     tthick = circ_pitch/PI / cos(helical) * (PI/2 + 2*profile_shift * tan(pressure_angle)) + (internal?backlash:-backlash),
     tang = tthick / prad / 2 * 180 / PI,
@@ -3426,7 +3438,6 @@ function _gear_tooth_profile(
     // Round out the clearance valley
     rcircum = 2 * PI * (internal? ma_rad : rrad),
     rpart = (180/teeth-tang)/360,
-    round_r = min(clear, rcircum*rpart),
     line1 = internal
           ? select(tooth_half_raw,-2,-1)
           : select(tooth_half_raw,0,1),
@@ -3437,6 +3448,8 @@ function _gear_tooth_profile(
     rcorner = internal
       ? [last(line1), isect_pt, line2[0]]
       : [line2[0], isect_pt, line1[0]],
+    maxr =  norm(rcorner[0]-rcorner[1])*tan(vector_angle(rcorner)/2),  // Max radius that will actually fit on the corner
+    round_r = min(maxr, clear, rcircum*rpart),
     rounded_tooth_half = deduplicate([
         if (!internal && round_r>0) each arc(n=8, r=round_r, corner=rcorner),
         if (!internal && round_r<=0) isect_pt,
@@ -3464,17 +3477,29 @@ function _gear_tooth_profile(
     tooth_half = !undercut_max? rounded_tooth_half :
         strip_left(rounded_tooth_half, 0),
 
+    // look for self-intersections in the gear profile.  If found, clip them off
+    invalid = [for(i=idx(tooth_half)) if (atan2(tooth_half[i].y,tooth_half[i].x)>90+180/teeth) i],
+    clipped = invalid==[] ? tooth_half
+            : let(
+                   ind = last(invalid),
+                   ipt = line_intersection([[0,0],polar_to_xy(1,90+180/teeth)], select(tooth_half,ind,ind+1)),
+                   c = prad - mod*(1-profile_shift) - norm(ipt)
+              )
+              echo(str(teeth, " tooth gear profile clipped at clearance = ",c))
+              [
+                 ipt,
+                 each slice(tooth_half, ind+1,-1)
+              ], 
+    
     // Mirror the tooth to complete it.
     full_tooth = deduplicate([
-        each tooth_half,
-        each reverse(xflip(tooth_half)),
+        each clipped, 
+        each reverse(xflip(clipped)),
     ]),
-
     // Reduce number of vertices.
     tooth = path_merge_collinear(
         resample_path(full_tooth, n=ceil(2*steps), keep_corners=30, closed=false)
     ),
-
     out = center? fwd(prad, p=tooth) : tooth
 ) out;
 
