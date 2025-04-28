@@ -686,9 +686,9 @@ Alpha channel is ignored. After processing the image as desired, you may save it
 	const Kbyte = 1024.0;
 	// update file size estimate based on normalize type and size of output image
     function updateKbytes() {
-	    // length of a number for [0,1] range: mostly 6 characters "0.xxx," but occasionally less, using 5.99.
+	    // length of a number for [0,1] range: mostly 6 characters "0.xxx," but occasionally less, using 5.95.
 		// length of a number for [0,255] range: assume 0-255 are uniformly distributed, use weighted average of digits plus comma
-        const avglen = normalizeToUnitCheckbox.checked ? 5.99 : (10.0+90.0*2.0+156.0*3.0)/256.0+1.0;
+        const avglen = normalizeToUnitCheckbox.checked ? 5.95 : (10.0+90.0*2.0+156.0*3.0)/256.0+1.0;
 		// each row has 6 extra characters " [],\r\n" at most, plus 5 characters after array name and 4 characters at the end
         const estsize = (avglen*cropDim.width + 6.0) * cropDim.height + 9 + arrayName.value.length;
 		let unitName = "bytes";
@@ -713,7 +713,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       if (grayscaleMatrix.length === 0) return alert("No data to save.");
       const useUnit = normalizeToUnitCheckbox.checked;
       const arrayContent = grayscaleMatrix.map(row => {
-        return " [" + row.map(val => useUnit ? parseFloat(val/255.0).toFixed(3) : val).join(",") + "]";
+        return " [" + row.map(val => useUnit ? parseFloat((val/255.0).toFixed(3)) : val).join(",") + "]";
       }).join(",\n");
       const openscadArray = (arrayName.value.length>0 ? arrayName.value : 'image_array')+" = [\n" + arrayContent + "\n];";
       const blob = new Blob([openscadArray], { type: "text/plain" });
