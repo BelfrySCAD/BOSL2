@@ -58,7 +58,7 @@ function is_vector(v, length, zero, all_nonzero=false, eps=EPSILON) =
 // Function: add_scalar()
 // Synopsis: Adds a scalar value to every item in a vector.
 // Topics: Vectors, Math
-// See Also: add_scalar(), v_mul(), v_div()
+// See Also: v_mul(), v_div()
 // Usage:  
 //   v_new = add_scalar(v, s);
 // Description:
@@ -77,7 +77,7 @@ function add_scalar(v,s) =
 // Function: v_mul()
 // Synopsis: Returns the element-wise multiplication of two equal-length vectors.
 // Topics: Vectors, Math
-// See Also: add_scalar(), v_mul(), v_div()
+// See Also: add_scalar(), v_div()
 // Usage:
 //   v3 = v_mul(v1, v2);
 // Description:
@@ -97,7 +97,7 @@ function v_mul(v1, v2) =
 // Function: v_div()
 // Synopsis: Returns the element-wise division of two equal-length vectors.
 // Topics: Vectors, Math
-// See Also: add_scalar(), v_mul(), v_div()
+// See Also: add_scalar(), v_mul()
 // Usage:
 //   v3 = v_div(v1, v2);
 // Description:
@@ -116,7 +116,7 @@ function v_div(v1, v2) =
 // Function: v_abs()
 // Synopsis: Returns the absolute values of the given vector.
 // Topics: Vectors, Math
-// See Also: v_abs(), v_floor(), v_ceil()
+// See Also: v_ceil(), v_floor(), v_round()
 // Usage:
 //   v2 = v_abs(v);
 // Description: Returns a vector of the absolute value of each element of vector `v`.
@@ -132,7 +132,7 @@ function v_abs(v) =
 // Function: v_ceil()
 // Synopsis: Returns the values of the given vector, rounded up.
 // Topics: Vectors, Math
-// See Also: v_abs(), v_floor()
+// See Also: v_abs(), v_floor(), v_round()
 // Usage:
 //   v2 = v_ceil(v);
 // Description:
@@ -145,7 +145,7 @@ function v_ceil(v) =
 // Function: v_floor()
 // Synopsis: Returns the values of the given vector, rounded down.
 // Topics: Vectors, Math
-// See Also: v_abs(), v_ceil()
+// See Also: v_abs(), v_ceil(), v_round()
 // Usage:
 //   v2 = v_floor(v);
 // Description:
@@ -162,7 +162,7 @@ function v_floor(v) =
 // Usage:
 //   v2 = v_round(v);
 // Description:
-//   Returns the given vector after performing a `floor()` on all items.
+//   Returns the given vector after performing a `round()` on all items.
 function v_round(v) =
     assert(is_vector(v), "\nInvalid vector." ) 
     [for (x=v) round(x)];
@@ -171,7 +171,7 @@ function v_round(v) =
 // Function: v_lookup()
 // Synopsis: Like `lookup()`, but it can interpolate between vector results.
 // Topics: Vectors, Math
-// See Also: v_abs(), v_floor(), v_ceil()
+// See Also: v_abs(), v_floor(), v_ceil(), v_round()
 // Usage:
 //   v2 = v_lookup(x, v);
 // Description:
@@ -204,7 +204,7 @@ function v_lookup(x, v) =
 // Function: unit()
 // Synopsis: Returns the unit length of a given vector.
 // Topics: Vectors, Math
-// See Also: v_abs(), v_floor(), v_ceil()
+// See Also: v_abs(), v_floor(), v_ceil(), v_round()
 // Usage:
 //   v = unit(v, [error]);
 // Description:
@@ -383,7 +383,7 @@ function vector_perp(v,w) =
 // Function: pointlist_bounds()
 // Synopsis: Returns the min and max bounding coordinates for the given list of points.
 // Topics: Geometry, Bounding Boxes, Bounds
-// See Also: closest_point(), vnf_bounds()
+// See Also: closest_point(), furthest_point(), vnf_bounds()
 // Usage:
 //   pt_pair = pointlist_bounds(pts);
 // Description:
@@ -408,7 +408,7 @@ function pointlist_bounds(pts) =
 // Function: closest_point()
 // Synopsis: Finds the closest point in a list of points.
 // Topics: Geometry, Points, Distance
-// See Also: pointlist_bounds(), furthest_point(), closest_point()
+// See Also: pointlist_bounds(), furthest_point()
 // Usage:
 //   index = closest_point(pt, points);
 // Description:
@@ -425,7 +425,7 @@ function closest_point(pt, points) =
 // Function: furthest_point()
 // Synopsis: Finds the furthest point in a list of points.
 // Topics: Geometry, Points, Distance
-// See Also: pointlist_bounds(), furthest_point(), closest_point()
+// See Also: pointlist_bounds(), closest_point()
 // Usage:
 //   index = furthest_point(pt, points);
 // Description:
