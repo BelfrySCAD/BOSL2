@@ -1188,13 +1188,13 @@ function rotate_sweep(
     texture, tex_size=[5,5], tex_counts, tex_reps, 
     tex_inset=false, tex_rot=0,
     tex_scale, tex_depth, tex_samples, tex_aspect, pixel_aspect, 
-    tex_taper, shift=[0,0], caps, 
+    tex_taper, shift=[0,0], caps, closed, 
     style="min_edge", cp="centroid",
     atype="hull", anchor="origin",
     spin=0, orient=UP, start=0, 
     _tex_inhibit_y_slicing
 ) =
-    assert(num_defined([closed,caps]<2, "In rotate_sweep the `closed` paramter has been replaced by `caps` with the opposite meaning.  You cannot give both.")
+    assert(num_defined([closed,caps])<2, "In rotate_sweep the `closed` paramter has been replaced by `caps` with the opposite meaning.  You cannot give both.")
     assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
     assert(num_defined([tex_scale,tex_depth])<2, "In linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
     assert(!is_path(shape) || caps || len(path)>=3, "'shape' is a path and caps=false, but a closed path requires three points")
@@ -1262,7 +1262,7 @@ module rotate_sweep(
     tex_scale, tex_depth, tex_samples,
     tex_taper, shift=[0,0],
     style="min_edge",
-    caps, tex_extra, tex_aspect, pixel_aspect,
+    caps, closed, tex_extra, tex_aspect, pixel_aspect,
     cp="centroid",
     convexity=10,
     atype="hull",
@@ -1272,7 +1272,7 @@ module rotate_sweep(
     _tex_inhibit_y_slicing=false
 ) {
     dummy =
-       assert(num_defined([closed,caps]<2, "In rotate_sweep the `closed` paramter has been replaced by `caps` with the opposite meaning.  You cannot give both.")
+       assert(num_defined([closed,caps])<2, "In rotate_sweep the `closed` paramter has been replaced by `caps` with the opposite meaning.  You cannot give both.")
        assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
        assert(num_defined([tex_scale,tex_depth])<2, "In rotate_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
        assert(!is_path(shape) || caps || len(shape)>=3, "'shape' is a path and caps=false, but a closed path requires three points");
