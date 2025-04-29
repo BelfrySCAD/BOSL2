@@ -501,7 +501,7 @@ function reverse(list) =
 // Description:
 //   Rotates the contents of a list by `n` positions left, so that list[n] becomes the first entry of the list.
 //   If `n` is negative, then the rotation is `abs(n)` positions to the right.
-//   If `list` is a string, then a string is returned with the characters rotates within the string.
+//   If `list` is a string, then a string is returned with the characters rotated within the string.
 // Arguments:
 //   list = The list to rotate.
 //   n = The number of positions to rotate by.  If negative, rotated to the right.  Positive rotates to the left.  Default: 1

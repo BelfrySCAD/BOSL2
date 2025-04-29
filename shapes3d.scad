@@ -1077,7 +1077,7 @@ function regular_prism(n,
                           [0,height/2],
                       ]
                 )
-                rotate_sweep(path,closed=false,$fn=n)
+                rotate_sweep(path,caps=true,$fn=n)
               : is_undef(texture) ? cylinder(h=height, r1=r1, r2=r2, center=true, $fn=n)
               : linear_sweep(regular_ngon(n=n,r=r1),scale=r2/r1,height=height,center=true,
                              texture=texture, tex_reps=tex_reps, tex_size=tex_size,
@@ -2366,7 +2366,7 @@ function cyl(
                 texture=texture, tex_reps=tex_reps, tex_size=tex_size,
                 tex_inset=tex_inset, tex_rot=tex_rot,
                 tex_depth=tex_depth, tex_samples=tex_samples,
-                tex_taper=tex_taper, style=style, closed=false,
+                tex_taper=tex_taper, style=style, caps=true, 
                 _tex_inhibit_y_slicing=true
             ),
         skmat = down(l/2) *
