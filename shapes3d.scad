@@ -2366,7 +2366,7 @@ function cyl(
                 texture=texture, tex_reps=tex_reps, tex_size=tex_size,
                 tex_inset=tex_inset, tex_rot=tex_rot,
                 tex_depth=tex_depth, tex_samples=tex_samples,
-                tex_taper=tex_taper, style=style, closed=false,
+                tex_taper=tex_taper, style=style, caps=true, 
                 _tex_inhibit_y_slicing=true
             ),
         skmat = down(l/2) *

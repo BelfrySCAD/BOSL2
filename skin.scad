@@ -1233,7 +1233,6 @@ function rotate_sweep(
     let(
         region = is_path(shape) && caps ? [deduplicate([[0,shape[0].y], each shape, [0,last(shape).y]])]
                : region,
-        echo(region=region), 
         steps = ceil(segs(max_x) * angle / 360) + (angle<360? 1 : 0),
         skmat = down(min_y) * skew(sxz=shift.x/h, syz=shift.y/h) * up(min_y),
         transforms = [
