@@ -1188,7 +1188,7 @@ function rotate_sweep(
     texture, tex_size=[5,5], tex_counts, tex_reps, 
     tex_inset=false, tex_rot=0,
     tex_scale, tex_depth, tex_samples, tex_aspect, pixel_aspect, 
-    tex_taper, shift=[0,0], caps=false, 
+    tex_taper, shift=[0,0], caps, 
     style="min_edge", cp="centroid",
     atype="hull", anchor="origin",
     spin=0, orient=UP, start=0, 
@@ -1199,7 +1199,9 @@ function rotate_sweep(
     assert(num_defined([tex_scale,tex_depth])<2, "In linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
     assert(!is_path(shape) || caps || len(path)>=3, "'shape' is a path and caps=false, but a closed path requires three points")
     let(
-         caps = is_def(caps) ? caps : !closed,
+         caps = is_def(caps) ? caps
+              : is_def(closed) ? !closed
+              : false,
          tex_reps = is_def(tex_counts)? echo("In rotate_sweep() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
                   : tex_reps,
          tex_depth = is_def(tex_scale)? echo("In rotate_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
@@ -1274,7 +1276,9 @@ module rotate_sweep(
        assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
        assert(num_defined([tex_scale,tex_depth])<2, "In rotate_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
        assert(!is_path(shape) || caps || len(shape)>=3, "'shape' is a path and caps=false, but a closed path requires three points");
-    caps = is_def(caps) ? caps : !closed;
+    caps = is_def(caps) ? caps
+         : is_def(closed) ? !closed
+         : false;
     tex_reps = is_def(tex_counts)? echo("In rotate_sweep() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
              : tex_reps;
     tex_depth = is_def(tex_scale)? echo("In rotate_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
