@@ -1194,10 +1194,13 @@ function rotate_sweep(
     spin=0, orient=UP, start=0, 
     _tex_inhibit_y_slicing
 ) =
+    assert(num_defined([closed,caps]<2, "In rotate_sweep the `closed` paramter has been replaced by `caps` with the opposite meaning.  You cannot give both.")
     assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
     assert(num_defined([tex_scale,tex_depth])<2, "In linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
     assert(!is_path(shape) || caps || len(path)>=3, "'shape' is a path and caps=false, but a closed path requires three points")
-    let( tex_reps = is_def(tex_counts)? echo("In rotate_sweep() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
+    let(
+         caps = is_def(caps) ? caps : !closed,
+         tex_reps = is_def(tex_counts)? echo("In rotate_sweep() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
                   : tex_reps,
          tex_depth = is_def(tex_scale)? echo("In rotate_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
                    : default(tex_depth,1),
@@ -1257,7 +1260,7 @@ module rotate_sweep(
     tex_scale, tex_depth, tex_samples,
     tex_taper, shift=[0,0],
     style="min_edge",
-    caps=false, tex_extra, tex_aspect, pixel_aspect,
+    caps, tex_extra, tex_aspect, pixel_aspect,
     cp="centroid",
     convexity=10,
     atype="hull",
@@ -1267,9 +1270,11 @@ module rotate_sweep(
     _tex_inhibit_y_slicing=false
 ) {
     dummy =
+       assert(num_defined([closed,caps]<2, "In rotate_sweep the `closed` paramter has been replaced by `caps` with the opposite meaning.  You cannot give both.")
        assert(num_defined([tex_reps,tex_counts])<2, "In rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
        assert(num_defined([tex_scale,tex_depth])<2, "In rotate_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
        assert(!is_path(shape) || caps || len(shape)>=3, "'shape' is a path and caps=false, but a closed path requires three points");
+    caps = is_def(caps) ? caps : !closed;
     tex_reps = is_def(tex_counts)? echo("In rotate_sweep() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
              : tex_reps;
     tex_depth = is_def(tex_scale)? echo("In rotate_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
