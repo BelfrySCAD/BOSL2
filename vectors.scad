@@ -667,7 +667,7 @@ function _insert_many(list, k, newlist,i=0) =
 
 // Function: pointlist_bounds()
 // Synopsis: Returns the min and max bounding coordinates for the given list of points.
-// Topics: Geometry, Bounding Boxes, Bounds
+// Topics: Geometry, Bounding Boxes, Bounds, Scaling
 // See Also: closest_point(), furthest_point(), vnf_bounds()
 // Usage:
 //   pt_pair = pointlist_bounds(pts);
@@ -691,7 +691,7 @@ function pointlist_bounds(pts) =
 
 // Function: fit_to_box()
 // Synopsis: Scale the x, y, and/or z coordinantes of a list of points to span a range.
-// Topics: Geometry, Bounding Boxes, Bounds, VNF
+// Topics: Geometry, Bounding Boxes, Bounds, VNF Manipulation
 // See Also: fit_to_range()
 // Usage:
 //   new_pts = fit_to_box(pts, [x=], [y=], [z=]);

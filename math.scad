@@ -678,7 +678,7 @@ function mean_angle(angle1,angle2) =
 
 // Function: fit_to_range()
 // Synopsis: Scale the values in an array to span a range.
-// Topics: Math
+// Topics: Math, Bounds, Scaling
 // See Also: fit_to_box()
 // Usage:
 //   a = fit_to_range(M, minval, maxval);
