@@ -832,7 +832,7 @@ function mask2d_dovetail(edge, angle, slope, shelf=0, inset=0, mask_angle=90, ex
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Usage: As Module
-//   mask2d_ogee(pattern, [excess], ...) [ATTAHCMENTS];
+//   mask2d_ogee(pattern, [excess], ...) [ATTACHMENTS];
 // Usage: As Function
 //   path = mask2d_ogee(pattern, [excess], ...);
 // Description:
