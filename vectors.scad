@@ -708,6 +708,17 @@ function pointlist_bounds(pts) =
 //   x = `[min,max]` of rescaled x coordinates. Default: undef
 //   y = `[min,max]` of rescaled y coordinates. Default: undef
 //   z = `[min,max]` of rescaled z coordinates. Default: undef
+// Example(2D): A 2D bezier path (red) rescaled (blue) to fit in a square box centered on the origin.
+//   bez = [
+//       [10,60], [-5,30],
+//       [20,60], [50,50], [100,30],
+//       [50,30], [70,20]
+//   ];
+//   path = bezpath_curve(bez);
+//   newpath = fit_to_box(path, x=[0,40], y=[0,40]);
+//   stroke(path, width=2, color="red");
+//   stroke(square(40), width=1, closed=true);
+//   stroke(newpath, width=2, color="blue");
 // Example(3D): A prismoid (left) is rescaled to fit new x and z bounds. The z bounds minimum and maximum values are reversed, resulting in the new object on the right having inverted z coordinates.
 //   vnf = prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]);
 //   vnf_boxed = fit_to_box(vnf, x=[30,55], z=[5,-15]);
@@ -721,20 +732,18 @@ function fit_to_box(pts, x, y, z) =
     assert(is_undef(z) || is_vector(z,2), "\nx must be a 2-vector [min,max].")
     let(
         isvnf = is_vnf(pts),
-        p = isvnf ? vnf_vertices(pts) : pts,
-        dim = len(p[0]),
-        dum = assert(dim<3 || (dim==3 && is_def(z)), "\n2D data detected with z range specified."),
-        whichdim = [is_def(x), is_def(y), is_def(z)], // extract only the columns needed
-        xcol = whichdim.x ? column(p,0) : [0],
-        ycol = whichdim.y ? column(p,1) : [0],
-        zcol = whichdim.z ? column(p,2) : [0],
-        xmin = min(xcol),
-        ymin = min(ycol),
-        zmin = min(zcol),
+        p = isvnf ? pts[0] : pts,
+        bounds = isvnf ? vnf_bounds(pts) : pointlist_bounds(pts),
+        dim = len(bounds[0]),
+        err = assert(is_undef(z) || (dim>2 && is_def(z)), "\n2D data detected with z range specified."),
+        whichdim = [is_def(x), is_def(y), is_def(z)],
+        xmin = bounds[0][0],
+        ymin = bounds[0][1],
+        zmin = dim>2 ? bounds[0][2] : 0,
         // new scales
-        xscale = whichdim.x ? (x[1]-x[0]) / (max(xcol)-xmin) : 1,
-        yscale = whichdim.y ? (y[1]-y[0]) / (max(ycol)-ymin) : 1,
-        zscale = whichdim.z ? (z[1]-z[0]) / (max(zcol)-zmin) : 1,
+        xscale = whichdim.x ? (x[1]-x[0]) / (bounds[1][0]-xmin) : 1,
+        yscale = whichdim.y ? (y[1]-y[0]) / (bounds[1][1]-ymin) : 1,
+        zscale = whichdim.z ? (z[1]-z[0]) / (bounds[1][2]-zmin) : 1,
         // new offsets
         xo = whichdim.x ? x[0] : 0,
         yo = whichdim.y ? y[0] : 0,
