@@ -1081,7 +1081,7 @@ function linear_sweep(
 //       style="convex",
 //       convexity=10);
 // Example(3D,NoAxes,VPR=[106.10,0.00,158.30],VPD=155.56,VPT=[-2.68,-0.92,1.07]): Here we use a cosine function (lifted so it stays nonnegative) to scale the texture.  Since the taper function rises as high as 2 the effective texture depth is 4 at the peaks.
-//   rotate_sweep([[20,-20],[20,20]],texture="trunc_diamonds"
+//   rotate_sweep([[20,-20],[20,20]],texture="trunc_diamonds",
 //                caps=true, tex_reps=[20,16], tex_depth=2,
 //                tex_taper=function(x) 1-cos(360*3*x));
 // Example(3D,NoAxes,VPR=[83.70,0.00,195.40],VPD=82.67,VPT=[-1.69,4.43,0.46]): Here we use a sine function that goes below zero in the top half of the object.  This inverts the texture and the result is that the inverted texture bulges outward with the change in the texture depth that the taper applies.  In the bottom section, the scaling applies directly.  
