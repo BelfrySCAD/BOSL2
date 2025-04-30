@@ -900,9 +900,19 @@ function linear_sweep(
 //   If you give a path whose endpoints are not on the Y axis and specify `caps=true` then the path
 //   endpoints are connected to the Y axis by a horizontal segment at each end, and the corresponding top and bottom surfaces in the revolution do not receive texture.
 //   You can terminate just one end of the path on the Y axis and in this case, you get a single untextured cap.  If your texture is not zero at the
-//   edges, the endcaps may appear textured: they will not be flat because the top perimeter will follow the texture.  You can use the `tex_taper` parameter to
-//   taper the texture to zero at the top and bottom and therefore produce flat caps.  If taper is set to a percentage strictly between 0 and 50 it tapers
-//   over that percentage of the path to zero at the end, resulting in flat faces at the top and bottom.
+//   edges, the endcaps may appear textured: they will not be flat because the top perimeter will follow the texture.  
+//   .
+//   When `caps=true` you can use `tex_taper` to change the depth of the texture along the length of the path given in `shape`.  This
+//   can be useful for forcing flat caps on a textured object by forcing the texture depth to zero at the ends.  
+//   The simplest option is to set `tex_taper` to a value between 0 and 0.5.  In this case, the texture depth linearly falls to zero
+//   at both ends, starting at the specified fraction from the end.  For example, if `tex_taper=1/3` then the center third of the object
+//   will have the normal texture depth, and the texture will fall to zero over the top and bottom thirds.  For more control over the texture
+//   tapering you can also set `tex_taper` to a lookup table suited to the `lookup()` function.  The lookup table will be evaluated at 0 to
+//   determine the texture depth multiplier at the bottom and at 1 to determine the texture depth multiplier at the top.  The final option is
+//   to set `tex_taper` to a function which takes one parameter and is defined on [0,1].  Using these more sophisticated methods you can actually
+//   change the shape of the object.  If you want to ensure flat caps, simply make sure that your lookup table or function maps both zero and one to zero.
+//   Texture multipliers can be any number.  If the multiplier is negative it will invert the texture, and if the multiplier exceeds one, the texture will
+//   scale to larger than your specified `tex_depth` value.  
 //   .
 //   If you want to place just one or a few copies of a texture onto an object rather than texturing the entire object you can do that by using
 //   and angle smaller than 360.  However, if you want to control the aspect ratio of the resulting texture you will have to carefully calculate the proper
@@ -923,7 +933,7 @@ function linear_sweep(
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
-//   tex_taper = If given as a number, tapers the texture height to zero over the first and last given percentage of the path.  If given as a lookup table with indices between 0 and 100, uses the percentage lookup table to ramp the texture heights.  Default: `undef` (no taper)
+//   tex_taper = If `caps=true`, scales the texture depth along the path given in `shape`.  If set to a scalar between 0 and 0.5, adjusts the specfied top and bottom fraction of the path linearly to zero depth.  You can also provide a lookup table or function defining the scala factor over the range [0,1].  Default: no taper
 //   tex_aspect = Choose the angle of the revolution to maintain this aspect ratio for the tiles.  You must specify tex_reps.  Overrides any angle specified.  
 //   pixel_aspect = Choose the angle of the revolution to maintain this apsect ratio for pixels in a heightfield texture.  You must specify tex_reps.  Overrides any angle specified.
 //   style = {{vnf_vertex_array()}} style.  Default: "min_edge"
@@ -1012,7 +1022,7 @@ function linear_sweep(
 //       texture="trunc_pyramids",
 //       tex_size=[5,5], tex_depth=1,
 //       style="convex");
-//   vnf_polyhedron(vnf, convexity=10);  //!!!!!
+//   vnf_polyhedron(vnf, convexity=10); 
 // Example:
 //   rgn = [
 //       right(40, p=circle(d=50)),
@@ -1022,7 +1032,42 @@ function linear_sweep(
 //       rgn, texture="diamonds",
 //       tex_size=[10,10], tex_depth=1,
 //       angle=240, style="concave");
-// Example: Tapering off the ends of the texturing.
+// Example(3D,NoAxes): Tapering the ends of the texturing to zero produces flat caps. 
+//   path = [
+//       [20, 30], [20, 20],
+//       each arc(r=20, corner=[[20,20],[10,0],[20,-20]]),
+//       [20,-20], [20,-30],
+//   ];
+//   rotate_sweep(
+//       path, caps=true, 
+//       texture="diamonds",
+//       tex_size=[5,5], tex_depth=1,
+//       tex_taper=undef,
+//       style="flip2",
+//       convexity=10);
+// Example(3D,NoAxes,VPR=[59.20,0.00,226.90],VPD=113.40,VPT=[-4.53,3.03,3.84]): The top cap is definite not flat.  
+//   rotate_sweep(
+//       arc(r=20,angle=[-45,45],n=45),
+//       caps=true, texture="diamonds",
+//       tex_size=[5,5], tex_depth=2,
+//       convexity=10);
+// Example(3D,NoAxes,VPR=[59.20,0.00,226.90],VPD=113.40,VPT=[-4.53,3.03,3.84]): Setting `tex_taper=0` abruptly tapers right the the caps so that the cap is flat:
+//   rotate_sweep(
+//       arc(r=20,angle=[-45,45],n=45),
+//       caps=true, texture="diamonds",
+//       tex_size=[5,5], tex_depth=2,
+//       tex_taper=0, convexity=10);
+// Example(3D,NoAxes,VPR=[59.20,0.00,226.90],VPD=113.40,VPT=[-4.53,3.03,3.84]): Setting `tex_taper=0.5` tapers gradually across the entire shape:
+//   rotate_sweep(
+//       arc(r=20,angle=[-45,45],n=45),
+//       caps=true, texture="diamonds",
+//       tex_size=[5,5], tex_depth=2,
+//       tex_taper=.5, convexity=10);
+// Example(3D,VPR=[59.20,0.00,91.10],VPD=126.00,VPT=[4.29,2.29,2.31],NoAxes): The path given here starts and ends on the Y axis, but you can still request (zero size) caps so that you can use tapering, which is only permitted when caps are enabled.  
+//   rotate_sweep(
+//      arc(r=20, angle=[-90,90], n=45), texture="dots",
+//      caps=true, tex_reps=[15,10], tex_taper=0.5, tex_depth=2);
+// Example(3D, NoAxes): Tapering of textures via lookup table to be maximal at the bottom and 0 at the top.  
 //   path = [
 //       [20, 30], [20, 20],
 //       each arc(r=20, corner=[[20,20],[10,0],[20,-20]]),
@@ -1032,22 +1077,25 @@ function linear_sweep(
 //       path, caps=true, 
 //       texture="trunc_pyramids",
 //       tex_size=[5,5], tex_depth=1,
-//       tex_taper=20,
+//       tex_taper=[[0,1], [1,0]],
 //       style="convex",
 //       convexity=10);
-// Example: Tapering of textures via lookup table.
-//   path = [
-//       [20, 30], [20, 20],
-//       each arc(r=20, corner=[[20,20],[10,0],[20,-20]]),
-//       [20,-20], [20,-30],
-//   ];
-//   rotate_sweep(
-//       path, caps=true, 
-//       texture="trunc_pyramids",
-//       tex_size=[5,5], tex_depth=1,
-//       tex_taper=[[0,0], [10,0], [10.1,1], [100,1]],
-//       style="convex",
-//       convexity=10);
+// Example(3D,NoAxes,VPR=[106.10,0.00,158.30],VPD=155.56,VPT=[-2.68,-0.92,1.07]): Here we use a cosine function (lifted so it stays nonnegative) to scale the texture.  Since the taper function rises as high as 2 the effective texture depth is 4 at the peaks.
+//   rotate_sweep([[20,-20],[20,20]],texture="trunc_diamonds",
+//                caps=true, tex_reps=[20,16], tex_depth=2,
+//                tex_taper=function(x) 1-cos(360*3*x));
+// Example(3D,NoAxes,VPR=[83.70,0.00,195.40],VPD=82.67,VPT=[-1.69,4.43,0.46]): Here we use a sine function that goes below zero in the top half of the object.  This inverts the texture and the result is that the inverted texture bulges outward with the change in the texture depth that the taper applies.  In the bottom section, the scaling applies directly.  
+//   rotate_sweep([[10,-12],[10,12]], caps=true, tex_reps=[16,6],
+//                tex_taper=function(x) sin(360*x),tex_depth=2,
+//                texture="dots");
+// Example(3D,NoAxes,VPR=[83.70,0.00,195.40],VPD=82.67,VPT=[-1.69,4.43,0.46]): We adjust the VNF texture from the previous example so its "zero" level is at 1/2.  This makes the result symmetric between the positive and negative taperings.  
+//      tex = up(1/2,zscale(1/2,texture("dots")));
+//      rotate_sweep([[10,-12],[10,12]], caps=true, tex_reps=[16,6],
+//                   tex_taper=function(x) sin(360*x),tex_depth=2,
+//                   texture=tex);
+// Example(3D,NoAxes,VPR=[72.50,0.00,119.10],VPD=155.56,VPT=[7.95,8.65,3.01]): Here we create a texture effect entirely with tapering using a constant "texture" of 3/4.  The inverted texture is 1-3/4 = 1/4, so the negative regions of the function create shallower bands.  
+//    rotate_sweep([[20,-20],[20,20]], caps=true, tex_reps=[30,45], texture=[[3/4]],
+//                 tex_taper=function(x) sin(2.5*360*x),tex_depth=4);
 // Example(3D,NoAxes,Med,VPT=[-2.92656,1.26781,0.102897],VPR=[62.7,0,222.4],VPD=216.381): This VNF tile makes a closed shape and the actual main extrusion is not created.  We give `caps=true` to prevent the shape from being closed on the outside, but because the VNF tile has no edges, no actual cap is created.  
 //   shape = skin([rect(2/5),
 //                 rect(2/3),
@@ -4554,11 +4602,10 @@ function _textured_revolution(
     assert(counts==undef || is_int(counts) || (all_integer(counts) && len(counts)==2), "tex_reps must be an integer or list of two integers")
     assert(tex_size==undef || is_vector(tex_size,2) || is_finite(tex_size))
     assert(is_bool(rot) || in_list(rot,[0,90,180,270]))
-    let( taper_is_ok = is_undef(taper) || (is_finite(taper) && taper>=0 && taper<50) || is_path(taper,2) )
-    assert(taper_is_ok, "Bad taper= value.")
     assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
     assert(is_undef(tex_extra) || is_finite(tex_extra) || is_vector(tex_extra,2), "tex_extra must be a number of 2-vector")
     assert(num_defined([tex_aspect, pixel_aspect])<=1, "Cannot give both tex_aspect and pixel_aspect")
+    assert(is_undef(taper) || !closed, "Cannot give tex_taper if caps=false")
     //assert(num_defined([tex_aspect, pixel_aspect])==0 || is_undef(angle), "Cannot give tex_aspect or pixel_aspect if you give angle") 
     let(
         inhibit_y_slicing = default(inhibit_y_slicing, is_path(shape) && len(shape)==2 ? true : false), 
@@ -4576,7 +4623,7 @@ function _textured_revolution(
             //                     str("The shape cannot have any edges on the axis of rotation",closed?" (including the segment that closes the shape)":""))
         ]
     )
-    assert(closed || is_path(shape,2), "closed=false is only allowed with paths")
+    assert(closed || is_path(shape,2), "caps=true is only allowed with paths")
     let(
         counts = is_undef(counts) ? undef : force_list(counts,2),
         tex_size = force_list(tex_size,2),
@@ -4587,7 +4634,7 @@ function _textured_revolution(
                       : [1,1],
         tex_extra = angle==360 ? [1,tex_extra_try.y] : tex_extra_try,
         dummy = assert(is_def(counts) || num_defined([pixel_aspect,tex_aspect])==0, "Must specify tex_counts (not tex_size) when using pixel_aspect or tex_aspect")
-                assert(is_undef(pixel_aspect) || !is_vnf(texture), "Cannot give pixel aspect with a VNF texture")
+                assert(is_undef(pixel_aspect) || !is_vnf(texture), "Cannot give pixel_aspect with a VNF texture")
                 assert(is_undef(samples) || is_vnf(texture), "You gave the tex_samples argument with a heightfield texture, which is not permitted.  Use the n= argument to texture() instead"),
         inset = is_num(inset)? inset : inset? 1 : 0,
         samples = !is_vnf(texture)? len(texture)
@@ -4632,18 +4679,27 @@ function _textured_revolution(
         counts_x = is_def(counts)? counts.x : max(1,round(angle/360*circumf/tex_size.x)),
         adj_angle = is_vnf(texture)?angle
                   : angle*(1-(tex_extra.x-1)/(texcnt.x*counts_x+tex_extra.x-1)),  // adjusted angle for strip positions taking tex_extra into account
-        taper_lup = closed || is_undef(taper)? [[-1,1],[2,1]] :
-            is_num(taper)? [[-1,0], [0,0], [taper/100+EPSILON,1], [1-taper/100-EPSILON,1], [1,0], [2,0]] :
-            is_path(taper,2)? let(
-                retaper = [
-                    for (t=taper)
-                    assert(t[0]>=0 && t[0]<=100, "taper lookup indices must be between 0 and 100 inclusive.")
-                    [t[0]/100, t[1]]
-                ],
-                taperout = [[-1,retaper[0][1]], each retaper, [2,last(retaper)[1]]]
-            ) taperout :
-            assert(false, "Bad taper= argument value."),
-
+        taperfunc = closed || is_undef(taper)? function (x) 1
+                  : is_finite(taper)?
+                         let(
+                              taper = taper<=1 ? taper
+                                    : echo("The tex_taper now uses a value from 0-1.  Your entry was larger than 1 and has been scaled by 1/100.")
+                                      taper/100
+                         )
+                         assert(taper>=0 && taper<=0.5, str("tex_taper must be between 0 and 0.5 but was ",taper))
+                         function (x) lookup(x, [[0,0],
+                                                 if (taper==0.5) [taper,1]
+                                                 else each [[taper+EPSILON,1],[1-taper-EPSILON,1]],
+                                                 [1,0]])
+                  : is_path(taper,2) ?
+                         let(
+                             taper = max(column(taper,0)) <= 1 ? taper
+                                   : assert("The tex_taper table now uses values from 0-1.  Your entry was larger than 1 and has been scaled by 1/100.")
+                                     xscale(1/100,taper)
+                         )
+                         function(x) lookup(x,taper)
+                  : is_function(taper) ? taper
+                  : assert(false,"tex_taper must be a function, scalar or list of pairs"),
         // Checks a path to see if it has segments on the Y axis.  More than 1 is an error.  If no segments return
         // path unchanged with closed=true.  If there is 1 segment, delete that segment (by rotating the path so it's
         // at the end) and return closed=false.  This prevents textures from continuing into the inside of a shape.  
@@ -4663,7 +4719,7 @@ function _textured_revolution(
                                  frac = part - ind,
                                  base = lerp(select(bases,ind), select(bases,ind+1), frac),
                                  norm = unit(lerp(select(norms,ind), select(norms,ind+1), frac)),
-                                 scale = tex_scale * lookup(tileind/counts_y, taper_lup) * base.x/maxx,
+                                 scale = tex_scale * taperfunc(1-tileind/counts_y) * base.x/maxx,
                                  texh = scale<0 ? -(1-tilez - inset) * scale
                                                 :  (tilez - inset) * scale
                              )
@@ -4795,7 +4851,7 @@ function _textured_revolution(
                         closed = path_closed[1], 
                         plen = path_length(path, closed=closed),
                         counts_y = is_def(counts) ? counts.y : max(1,round(plen/tex_size.y)),
-                        obases = resample_path(path, n=counts_y * samples + (closed?0:1), closed=closed),
+                        obases = resample_path(path, n=counts_y * samples + (closed?0:tex_extra.y), closed=closed),
                         onorms = path_normals(obases, closed=closed),
                         bases = xrot(90, p=path3d(obases)),
                         norms = xrot(90, p=path3d(onorms)),
@@ -4813,7 +4869,7 @@ function _textured_revolution(
                                         ppath = [
                                             for (vert = epath) let(
                                                 uang = vert.x / counts_x,
-                                                tex_scale = tex_scale * lookup(j+1, taper_lup),
+                                                tex_scale = tex_scale * taperfunc(j+1),
                                                 texh = tex_scale<0 ? -(1-vert.z - inset) * tex_scale * (base.x / maxx)
                                                                    : (vert.z - inset) * tex_scale * (base.x / maxx),
                                                 xyz = base - norm * texh
@@ -4831,7 +4887,7 @@ function _textured_revolution(
                                          ppath = [
                                              for (vert = bpath[j+1]) let(
                                                  uang = vert.x / counts_x,
-                                                 tex_scale = tex_scale * lookup(j+1, taper_lup),
+                                                 tex_scale = tex_scale * taperfunc(j+1),
                                                  texh = tex_scale<0 ? -(1-vert.y - inset) * tex_scale * (base.x / maxx)
                                                                     : (vert.y - inset) * tex_scale * (base.x / maxx),
                                                  xyz = base - norm * texh

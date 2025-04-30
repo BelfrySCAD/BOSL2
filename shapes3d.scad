@@ -2085,7 +2085,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
-//   tex_taper = If given as a number, tapers the texture height to zero over the first and last given percentage of the path.  If given as a lookup table with indices between 0 and 100, uses the percentage lookup table to ramp the texture heights.  Default: `undef` (no taper)
+//   tex_taper = The `tex_taper` parameter to {{rotate_sweep()}}.  If given as a number, tapers the texture depth to zero at the ends over the specified fraction of the height.  You can also give a lookup table or function to create custom depth taperings across the height of the cylinder.  The lookup table or function should be defined on the interval [0,1] where 0 gives the depth multiplier at the bottom and 1 the depth multiplier at the top.  Default: no taper
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -2179,7 +2179,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //
 // Example: Taper Texture over First and Last 10%
 //   cyl(d1=25, d2=20, h=30, rounding=5,
-//       texture="trunc_ribs", tex_taper=10,
+//       texture="trunc_ribs", tex_taper=0.1,
 //       tex_size=[5,1]);
 //
 // Example(3D,Med,NoAxes): Making a Clay Pattern Roller
@@ -2205,7 +2205,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   diff()
 //   cyl(d=20*10/PI, h=10, chamfer=0,
 //       texture=tex, tex_reps=[20,1], tex_depth=-1,
-//       tex_taper=undef, style="concave") {
+//       style="concave") {
 //           attach([TOP,BOT]) {
 //               cyl(d1=20*10/PI, d2=30, h=5, anchor=BOT)
 //                   attach(TOP) {
