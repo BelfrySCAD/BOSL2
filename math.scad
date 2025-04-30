@@ -56,7 +56,7 @@ NAN = acos(2);
 //   Creates a list of `n` numbers, starting at `s`, incrementing by `step` each time.
 //   You can also pass a list for n and then the length of the input list is used.  
 // Arguments:
-//   n = The length of the list of numbers to create, or a list to match the length of
+//   n = The length of the list of numbers to create, or a list to match the length of.
 //   s = The starting value of the list of numbers.
 //   step = The amount to increment successive numbers in the list.
 //   reverse = Reverse the list.  Default: false.
@@ -80,11 +80,12 @@ function count(n,s=0,step=1,reverse=false) = let(n=is_list(n) ? len(n) : n)
 //   l = lerp(a, b, LIST);
 // Description:
 //   Interpolate between two values or vectors.
-//   If `u` is given as a number, returns the single interpolated value.
-//   If `u` is 0.0, then the value of `a` is returned.
-//   If `u` is 1.0, then the value of `b` is returned.
-//   If `u` is a range, or list of numbers, returns a list of interpolated values.
-//   It is valid to use a `u` value outside the range 0 to 1.  The result will be an extrapolation
+//   * If `u` is given as a number, returns the single interpolated value.
+//   * If `u` is 0.0, then the value of `a` is returned.
+//   * If `u` is 1.0, then the value of `b` is returned.
+//   * If `u` is a range, or list of numbers, returns a list of interpolated values.
+//   .
+//   It is valid to use a `u` value outside the range 0 to 1 to extrapolate
 //   along the slope formed by `a` and `b`.
 // Arguments:
 //   a = First value or vector.
@@ -105,9 +106,9 @@ function count(n,s=0,step=1,reverse=false) = let(n=is_list(n) ? len(n) : n)
 //   // Points colored in ROYGBIV order.
 //   rainbow(pts) translate($item) circle(d=3,$fn=8);
 function lerp(a,b,u) =
-    assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
+    assert(same_shape(a,b), "\nBad or inconsistent inputs to lerp.")
     is_finite(u)? (1-u)*a + u*b :
-    assert(is_finite(u) || is_vector(u) || valid_range(u), "Input u to lerp must be a number, vector, or valid range.")
+    assert(is_finite(u) || is_vector(u) || valid_range(u), "\nInput u to lerp must be a number, vector, or valid range.")
     [for (v = u) (1-v)*a + v*b ];
 
 
@@ -133,7 +134,7 @@ function lerp(a,b,u) =
 //   l = lerpn(0,1,6);         // Returns: [0, 0.2, 0.4, 0.6, 0.8, 1]
 //   l = lerpn(0,1,5,false);   // Returns: [0, 0.2, 0.4, 0.6, 0.8]
 function lerpn(a,b,n,endpoint=true) =
-    assert(same_shape(a,b), "Bad or inconsistent inputs to lerpn")
+    assert(same_shape(a,b), "\nBad or inconsistent inputs to lerpn.")
     assert(is_int(n))
     assert(is_bool(endpoint))
     let( d = n - (endpoint? 1 : 0) )
@@ -148,7 +149,7 @@ function lerpn(a,b,n,endpoint=true) =
 // Description:
 //   Compute bilinear interpolation between four values using two
 //   coordinates that are meant to lie in [0,1].  (If they are outside
-//   this range, the function will extrapolate values.)  The `pts`
+//   this range, the function extrapolates values.)  The `pts`
 //   argument is a list of the four values at the for corners, `[A,B,C,D]`.
 //   These values are arranged on the corners as shown below.  The `x` and
 //   `y` parameters give the fraction of the distance from the left and bottom
@@ -196,7 +197,7 @@ function bilerp(points,x,y) =
 //   sqr([2,3,4]); // Returns: 29
 //   sqr([[1,2],[3,4]]);  // Returns [[7,10],[15,22]]
 function sqr(x) = 
-    assert(is_finite(x) || is_vector(x) || is_matrix(x), "Input is not a number nor a list of numbers.")
+    assert(is_finite(x) || is_vector(x) || is_matrix(x), "\nInput is not a number nor a list of numbers.")
     x*x;
 
 
@@ -213,7 +214,7 @@ function sqr(x) =
 //   log2(16);     // Returns: 4
 //   log2(256);    // Returns: 8
 function log2(x) = 
-    assert( is_finite(x), "Input is not a number.")
+    assert( is_finite(x), "\nInput is not a number.")
     ln(x)/ln(2);
 
 // this may return NAN or INF; should it check x>0 ?
@@ -234,7 +235,7 @@ function log2(x) =
 //   l = hypot(3,4);  // Returns: 5
 //   l = hypot(3,4,5);  // Returns: ~7.0710678119
 function hypot(x,y,z=0) = 
-    assert( is_vector([x,y,z]), "Improper number(s).")
+    assert( is_vector([x,y,z]), "\nImproper number(s).")
     norm([x,y,z]);
 
 
@@ -248,14 +249,14 @@ function hypot(x,y,z=0) =
 //   Returns the factorial of the given integer value, or n!/d! if d is given.  
 // Arguments:
 //   n = The integer number to get the factorial of.  (n!)
-//   d = If given, the returned value will be (n! / d!)
+//   d = If given, the returned value is (n! / d!)
 // Example:
 //   x = factorial(4);  // Returns: 24
 //   y = factorial(6);  // Returns: 720
 //   z = factorial(9);  // Returns: 362880
 function factorial(n,d=0) =
-    assert(is_int(n) && is_int(d) && n>=0 && d>=0, "Factorial is defined only for non negative integers")
-    assert(d<=n, "d cannot be larger than n")
+    assert(is_int(n) && is_int(d) && n>=0 && d>=0, "\nFactorial is defined only for non negative integers.")
+    assert(d<=n, "\nd cannot be larger than n.")
     product([1,for (i=[n:-1:d+1]) i]);
 
 
@@ -274,7 +275,7 @@ function factorial(n,d=0) =
 //   y = binomial(4);  // Returns: [1,4,6,4,1]
 //   z = binomial(6);  // Returns: [1,6,15,20,15,6,1]
 function binomial(n) =
-    assert( is_int(n) && n>0, "Input is not an integer greater than 0.")
+    assert( is_int(n) && n>0, "\nInput must be an integer greater than 0.")
     [for( c = 1, i = 0; 
         i<=n; 
          c = c*(n-i)/(i+1), i = i+1
@@ -296,7 +297,7 @@ function binomial(n) =
 //   x = binomial_coefficient(3,2);  // Returns: 3
 //   y = binomial_coefficient(10,6); // Returns: 210
 function binomial_coefficient(n,k) =
-    assert( is_int(n) && is_int(k), "Some input is not a number.")
+    assert( is_int(n) && is_int(k), "\nSome input is not a number.")
     k < 0 || k > n ? 0 :
     k ==0 || k ==n ? 1 :
     let( k = min(k, n-k),
@@ -316,14 +317,14 @@ function binomial_coefficient(n,k) =
 // Description:
 //   Computes the Greatest Common Divisor/Factor of `a` and `b`.  
 function gcd(a,b) =
-    assert(is_int(a) && is_int(b),"Arguments to gcd must be integers")
+    assert(is_int(a) && is_int(b),"\nArguments to gcd must be integers.")
     b==0 ? abs(a) : gcd(b,a % b);
 
 
 // Computes lcm for two integers
 function _lcm(a,b) =
-    assert(is_int(a) && is_int(b), "Invalid non-integer parameters to lcm")
-    assert(a!=0 && b!=0, "Arguments to lcm should not be zero")
+    assert(is_int(a) && is_int(b), "\nInvalid non-integer parameters to lcm.")
+    assert(a!=0 && b!=0, "\nArguments to lcm must be non-zero.")
     abs(a*b) / gcd(a,b);
 
 
@@ -348,7 +349,7 @@ function lcm(a,b=[]) =
     !is_list(a) && !is_list(b) 
     ?   _lcm(a,b) 
     :   let( arglist = concat(force_list(a),force_list(b)) )
-        assert(len(arglist)>0, "Invalid call to lcm with empty list(s)")
+        assert(len(arglist)>0, "\nInvalid call to lcm with empty list(s).")
         _lcmlist(arglist);
 
 // Function rational_approx()
@@ -392,7 +393,7 @@ function _cfrac_to_pq(cfrac,p=0,q=1,ind) =
 //   a = sinh(x);
 // Description: Takes a value `x`, and returns the hyperbolic sine of it.
 function sinh(x) =
-    assert(is_finite(x), "The input must be a finite number.")
+    assert(is_finite(x), "\nThe input must be a finite number.")
     (exp(x)-exp(-x))/2;
 
 // Function: cosh()
@@ -403,7 +404,7 @@ function sinh(x) =
 //   a = cosh(x);
 // Description: Takes a value `x`, and returns the hyperbolic cosine of it.
 function cosh(x) =
-    assert(is_finite(x), "The input must be a finite number.")
+    assert(is_finite(x), "\nThe input must be a finite number.")
     (exp(x)+exp(-x))/2;
 
 
@@ -416,7 +417,7 @@ function cosh(x) =
 // Description: Takes a value `x`, and returns the hyperbolic tangent of it.
 
 function tanh(x) =
-    assert(is_finite(x), "The input must be a finite number.")
+    assert(is_finite(x), "\nThe input must be a finite number.")
     let (e = exp(2*x) + 1)
     e == INF ? 1 : (e-2)/e;
 
@@ -428,7 +429,7 @@ function tanh(x) =
 //   a = asinh(x);
 // Description: Takes a value `x`, and returns the inverse hyperbolic sine of it.
 function asinh(x) =
-    assert(is_finite(x), "The input must be a finite number.")
+    assert(is_finite(x), "\nThe input must be a finite number.")
     ln(x+sqrt(x*x+1));
 
 
@@ -440,7 +441,7 @@ function asinh(x) =
 //   a = acosh(x);
 // Description: Takes a value `x`, and returns the inverse hyperbolic cosine of it.
 function acosh(x) =
-    assert(is_finite(x), "The input must be a finite number.")
+    assert(is_finite(x), "\nThe input must be a finite number.")
     ln(x+sqrt(x*x-1));
 
 
@@ -452,7 +453,7 @@ function acosh(x) =
 //   a = atanh(x);
 // Description: Takes a value `x`, and returns the inverse hyperbolic tangent of it.
 function atanh(x) =
-    assert(is_finite(x), "The input must be a finite number.")
+    assert(is_finite(x), "\nThe input must be a finite number.")
     ln((1+x)/(1-x))/2;
 
 
@@ -467,7 +468,7 @@ function atanh(x) =
 // Description:
 //   Quantize a value `x` to an integer multiple of `y`, rounding to the nearest multiple.
 //   The value of `y` does NOT have to be an integer.  If `x` is a list, then every item
-//   in that list will be recursively quantized.
+//   in that list is recursively quantized.
 // Arguments:
 //   x = The value or list to quantize.
 //   y = Positive quantum to quantize to
@@ -491,7 +492,7 @@ function atanh(x) =
 //   q = quant([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,12,12,12]
 //   r = quant([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[12,12,12]]
 function quant(x,y) =
-    assert( is_finite(y) && y>0, "The quantum `y` must be a positive value.")
+    assert( is_finite(y) && y>0, "\nThe quantum `y` must be a positive value.")
     is_num(x) ? round(x/y)*y 
               : _roundall(x/y)*y;
 
@@ -508,7 +509,7 @@ function _roundall(data) =
 // Description:
 //   Quantize a value `x` to an integer multiple of `y`, rounding down to the previous multiple.
 //   The value of `y` does NOT have to be an integer.  If `x` is a list, then every item in that
-//   list will be recursively quantized down.
+//   list is recursively quantized down.
 // Arguments:
 //   x = The value or list to quantize.
 //   y = Postive quantum to quantize to. 
@@ -532,7 +533,7 @@ function _roundall(data) =
 //   q = quantdn([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,9,9,12]
 //   r = quantdn([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[9,9,12]]
 function quantdn(x,y) =
-    assert( is_finite(y) && y>0, "The quantum `y` must be a positive value.")
+    assert( is_finite(y) && y>0, "\nThe quantum `y` must be a positive value.")
     is_num(x) ? floor(x/y)*y 
               : _floorall(x/y)*y;
 
@@ -549,7 +550,7 @@ function _floorall(data) =
 // Description:
 //   Quantize a value `x` to an integer multiple of `y`, rounding up to the next multiple.
 //   The value of `y` does NOT have to be an integer.  If `x` is a list, then every item in
-//   that list will be recursively quantized up.
+//   that list is recursively quantized up.
 // Arguments:
 //   x = The value or list to quantize.
 //   y = Positive quantum to quantize to.
@@ -573,7 +574,7 @@ function _floorall(data) =
 //   q = quantup([9,10,10.4,10.5,11,12],3);      // Returns: [9,12,12,12,12,12]
 //   r = quantup([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,12,12],[12,12,12]]
 function quantup(x,y) =
-    assert( is_finite(y) && y>0, "The quantum `y` must be a positive value.")
+    assert( is_finite(y) && y>0, "\nThe quantum `y` must be a positive value.")
     is_num(x) ? ceil(x/y)*y 
               : _ceilall(x/y)*y;
 
@@ -602,7 +603,7 @@ function _ceilall(data) =
 //   d = constrain(9.1, 0, 9);   // Returns: 9
 //   e = constrain(-0.1, 0, 9);  // Returns: 0
 function constrain(v, minval, maxval) = 
-    assert( is_finite(v+minval+maxval), "Input must be finite number(s).")
+    assert( is_finite(v+minval+maxval), "\nInput must be finite number(s).")
     min(maxval, max(minval, v));
 
 
@@ -613,7 +614,7 @@ function constrain(v, minval, maxval) =
 // Usage:
 //   mod = posmod(x, m)
 // Description:
-//   Returns the positive modulo `m` of `x`.  Value returned will be satisfy `0 <= mod < m`.  
+//   Returns the positive modulo `m` of `x`. The value returned satisfies `0 <= mod < m`.  
 // Arguments:
 //   x = The value to constrain.
 //   m = Modulo value.
@@ -626,7 +627,7 @@ function constrain(v, minval, maxval) =
 //   f = posmod(700,360);   // Returns: 340
 //   g = posmod(3,2.5);     // Returns: 0.5
 function posmod(x,m) = 
-    assert( is_finite(x) && is_finite(m) && !approx(m,0) , "Input must be finite numbers. The divisor cannot be zero.")
+    assert( is_finite(x) && is_finite(m) && !approx(m,0) , "\nInput must be finite numbers. The divisor cannot be zero.")
     (x%m+m)%m;
 
 
@@ -646,7 +647,7 @@ function posmod(x,m) =
 //   a5 = modang(270);   // Returns: -90
 //   a6 = modang(700);   // Returns: -20
 function modang(x) =
-    assert( is_finite(x), "Input must be a finite number.")
+    assert( is_finite(x), "\nInput must be a finite number.")
     let(xx = posmod(x,360)) xx<180? xx : xx-360;
 
 
@@ -660,12 +661,12 @@ function modang(x) =
 //   Takes two angles (degrees) in any range and finds the angle halfway between
 //   the given angles, where halfway is interpreted using the shorter direction.
 //   In the case where the angles are exactly 180 degrees apart,
-//   it will return `angle1+90`.  The returned angle is always in the interval [0,360).  
+//   it returns `angle1+90`.  The returned angle is always in the interval [0,360).  
 // Arguments:
 //   angle1 = first angle
 //   angle2 = second angle
 function mean_angle(angle1,angle2) =
-    assert(is_vector([angle1,angle2]), "Inputs must be finite numbers.")
+    assert(is_vector([angle1,angle2]), "\nInputs must be finite numbers.")
     let(
         ang1 = posmod(angle1,360),
         ang2 = posmod(angle2,360)
@@ -674,6 +675,62 @@ function mean_angle(angle1,angle2) =
   : abs(ang1-ang2)<=180 ? (ang1+ang2)/2
   : posmod((ang1+ang2-360)/2,360);
 
+
+// Function: fit_to_range()
+// Synopsis: Scale the values in an array to span a range.
+// Topics: Math, Bounds, Scaling
+// See Also: fit_to_box()
+// Usage:
+//   a = fit_to_range(M, minval, maxval);
+// Description:
+//   Given a vector or list of vectors, scale the values so that they span the full range from `minval` to
+//   `maxval`. If `minval>maxval`, then the output is a rescaled mirror image of the input.
+// Arguments:
+//   M = vector or list of vectors to scale. A list of vectors needn't be a rectangular matrix; the vectors can have different lengths.
+//   minval = Minimum value of the rescaled data range.
+//   maxval = Maximum value of the rescaled data range.
+// Example:
+//   a =  [0.0066, 0.194, 0.598, 0.194, 0.0066];
+//   v = fit_to_range(a,5,10);
+//   // Returns: [5, 6.584, 10, 6.584, 5]
+//   
+//   b = [ [20,20,0], [40,80,20], [60,40,20] ];
+//   m = fit_to_range(b,-10,10);
+//   // Returns:  [[-5,-5,-10], [0,10,-5], [5,0,-5]]
+//   
+//   c = [2,3,4,5,6];
+//   inv = fit_to_range(c, 20, 8); // inverted range!
+//   // Returns:  [20, 17, 14, 11, 8]
+// Example(3D): A texture tile that spans the range [-1,1] is rescaled to span [0,1], resulting in the edges of the texture (which were at z=0) to be raised due to raising the minimu from -1 to 0.
+//   tex = [
+//       [0,0,0, 0, 0, 0,0,0,0],
+//       [0,1,1, 1, 1, 1,1,1,0],
+//       [0,1,0, 0, 0, 0,0,1,0],
+//       [0,1,0,-1,-1,-1,0,1,0],
+//       [0,1,0,-1, 0,-1,0,1,0],
+//       [0,1,0,-1,-1,-1,0,1,0],
+//       [0,1,0, 0, 0, 0,0,1,0],
+//       [0,1,1, 1, 1, 1,1,1,0],
+//       [0,0,0, 0, 0, 0,0,0,0]
+//   ];
+//   left(5) textured_tile(tex,
+//       [9,9,2],tex_reps=1, anchor=BOTTOM);
+//   right(5) textured_tile(fit_to_range(tex,0,1),
+//       [9,9,2],tex_reps=1, anchor=BOTTOM);
+
+function fit_to_range(M, minval, maxval) =
+    let(
+        is_vec = is_vector(M),
+        dum = assert(is_vec || (is_list(M) && is_vector(M[0])), "\nParameter M must be a vector or list of vectors."),
+        rowlen = len(is_vec ? M : M[0]),
+        v = is_vec ? M : flatten(M),
+        a = min(v),
+        b = max(v)
+    ) a==b ? M
+    : is_vec ? add_scalar(add_scalar(M,-a) * ((maxval-minval)/(b-a)), minval)
+    : [ for(row=M)
+        add_scalar(add_scalar(row, -a) * ((maxval-minval)/(b-a)), + minval)
+    ];
 
 
 // Section: Operations on Lists (Sums, Mean, Products)
@@ -688,7 +745,7 @@ function mean_angle(angle1,angle2) =
 //   Returns the sum of all entries in the given consistent list.
 //   If passed an array of vectors, returns the sum the vectors.
 //   If passed an array of matrices, returns the sum of the matrices.
-//   If passed an empty list, the value of `dflt` will be returned.
+//   If passed an empty list, the value of `dflt` is returned.
 // Arguments:
 //   v = The list to get the sum of.
 //   dflt = The default value to return if `v` is an empty list.  Default: 0
@@ -697,7 +754,7 @@ function mean_angle(angle1,angle2) =
 //   sum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [9, 12, 15]
 function sum(v, dflt=0) =
     v==[]? dflt :
-    assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
+    assert(is_consistent(v), "\nInput to sum is non-numeric or inconsistent.")
     is_finite(v[0]) || is_vector(v[0]) ? [for(i=v) 1]*v :
     _sum(v,v[0]*0);
 
@@ -721,7 +778,7 @@ function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
 //   mean([2,3,4]);  // returns 3.
 //   mean([[1,2,3], [3,4,5], [5,6,7]]);  // returns [3, 4, 5]
 function mean(v) = 
-    assert(is_list(v) && len(v)>0, "Invalid list.")
+    assert(is_list(v) && len(v)>0, "\nInvalid list.")
     sum(v)/len(v);
 
 
@@ -735,7 +792,7 @@ function mean(v) =
 // Description:
 //   Returns the median of the given vector.  
 function median(v) =
-    assert(is_vector(v), "Input to median must be a vector")
+    assert(is_vector(v), "\nInput to median must be a vector.")
     len(v)%2 ? max( list_smallest(v, ceil(len(v)/2)) ) :
     let( lowest = list_smallest(v, len(v)/2 + 1),
          max  = max(lowest),
@@ -762,7 +819,7 @@ function median(v) =
 //   deltas([2,5,9,17]);  // returns [3,4,8].
 //   deltas([[1,2,3], [3,6,8], [4,8,11]]);  // returns [[2,4,5], [1,2,3]]
 function deltas(v, wrap=false) = 
-    assert( is_consistent(v) && len(v)>1 , "Inconsistent list or with length<=1.")
+    assert( is_consistent(v) && len(v)>1 , "\nInconsistent list or with length<=1.")
     [for (p=pair(v,wrap)) p[1]-p[0]] ;
 
 
@@ -784,7 +841,7 @@ function deltas(v, wrap=false) =
 //   cumsum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [[1,2,3], [4,6,8], [9,12,15]]
 function cumsum(v) =
     v==[] ? [] :
-    assert(is_consistent(v), "The input is not consistent." )
+    assert(is_consistent(v), "\nThe input is not consistent." )
     [for (a = v[0],
           i = 1
             ;
@@ -822,7 +879,7 @@ function product(list,right=true) =
                     if (i==len(list)) a][0]
    :  
     assert(is_vector(list) || (is_matrix(list[0],square=true) && is_consistent(list)),
-           "Input must be a vector, a list of vectors, or a list of matrices.")
+           "\nInput must be a vector, a list of vectors, or a list of matrices.")
     [for (a = list[0],
           i = 1
             ;
@@ -842,8 +899,8 @@ function product(list,right=true) =
 // Description:
 //   Returns a list where each item is the cumulative product of all items up to and including the corresponding entry in the input list.
 //   If passed an array of vectors, returns a list of elementwise vector products.  If passed a list of square matrices by default returns matrix
-//   products multiplying on the left, so a list `[A,B,C]` will produce the output `[A,BA,CBA]`.  If you set `right=true` then it returns
-//   the product of multiplying on the right, so a list `[A,B,C]` will produce the output `[A,AB,ABC]` in that case.
+//   products multiplying on the left, so a list `[A,B,C]` produces the output `[A,BA,CBA]`.  If you set `right=true` then it returns
+//   the product of multiplying on the right, so a list `[A,B,C]` produces the output `[A,AB,ABC]` in that case.
 // Arguments:
 //   list = The list to get the cumulative product of.
 //   right = if true multiply matrices on the right
@@ -865,7 +922,7 @@ function cumprod(list,right=false) =
                     a]
    :  
     assert(is_vector(list) || (is_matrix(list[0],square=true) && is_consistent(list)),
-           "Input must be a listector, a list of listectors, or a list of matrices.")
+           "\nInput must be a listector, a list of listectors, or a list of matrices.")
     [for (a = list[0],
           i = 1
             ;
@@ -903,7 +960,7 @@ function convolve(p,q) =
     p==[] || q==[] ? [] :
     assert( (is_vector(p) || is_matrix(p))
             && ( is_vector(q) || (is_matrix(q) && ( !is_vector(p[0]) || (len(p[0])==len(q[0])) ) ) ) ,
-            "The inputs should be vectors or paths all of the same dimension.")
+            "\nThe inputs should be vectors or paths all of the same dimension.")
     let( n = len(p),
          m = len(q))
     [for(i=[0:n+m-2], k1 = max(0,i-n+1), k2 = min(i,m-1) )
@@ -959,8 +1016,8 @@ function sum_of_sines(a, sines) =
 //   ints = rand_int(0,100,3);
 //   int = rand_int(-10,10,1)[0];
 function rand_int(minval, maxval, n, seed=undef) =
-    assert( is_finite(minval+maxval+n) && (is_undef(seed) || is_finite(seed) ), "Input must be finite numbers.")
-    assert(maxval >= minval, "Max value cannot be smaller than minval")
+    assert( is_finite(minval+maxval+n) && (is_undef(seed) || is_finite(seed) ), "\nInput must be finite numbers.")
+    assert(maxval >= minval, "\nMax value cannot be smaller than minval.")
     let (rvect = is_def(seed) ? rands(minval,maxval+1,n,seed) : rands(minval,maxval+1,n))
     [for(entry = rvect) floor(entry)];
 
@@ -981,9 +1038,9 @@ function rand_int(minval, maxval, n, seed=undef) =
 //    scale = the scale of the point coordinates. Default: 1
 //    seed = an optional seed for the random generation.
 function random_points(n, dim, scale=1, seed) =
-    assert( is_int(n) && n>=0, "The number of points should be a non-negative integer.")
-    assert( is_int(dim) && dim>=1, "The point dimensions should be an integer greater than 1.")
-    assert( is_finite(scale) || is_vector(scale,dim), "The scale should be a number or a vector with length equal to d.")
+    assert( is_int(n) && n>=0, "\nThe number of points should be a non-negative integer.")
+    assert( is_int(dim) && dim>=1, "\nThe point dimensions should be an integer greater than 1.")
+    assert( is_finite(scale) || is_vector(scale,dim), "\nThe scale should be a number or a vector with length equal to d.")
     let( 
         rnds =   is_undef(seed) 
                 ? rands(-1,1,n*dim)
@@ -1011,18 +1068,18 @@ function gaussian_rands(n=1, mean=0, cov=1, seed=undef) =
     let(
         dim = is_num(mean) ? 1 : len(mean)
     )
-    assert((dim==1 && is_num(cov)) || is_matrix(cov,dim,dim),"mean and covariance matrix not compatible")
+    assert((dim==1 && is_num(cov)) || is_matrix(cov,dim,dim),"\nmean and covariance matrix not compatible.")
     assert(is_undef(seed) || is_finite(seed))
     let(
          nums = is_undef(seed)? rands(0,1,dim*n*2) : rands(0,1,dim*n*2,seed),
          rdata = [for (i = count(dim*n,0,2)) sqrt(-2*ln(nums[i]))*cos(360*nums[i+1])]
     )
     dim==1 ? add_scalar(sqrt(cov)*rdata,mean) :
-    assert(is_matrix_symmetric(cov),"Supplied covariance matrix is not symmetric")
+    assert(is_matrix_symmetric(cov),"\nSupplied covariance matrix is not symmetric.")
     let(
         L = cholesky(cov)
     )
-    assert(is_def(L), "Supplied covariance matrix is not positive definite")
+    assert(is_def(L), "\nSupplied covariance matrix is not positive definite.")
     move(mean,list_to_matrix(rdata,dim)*transpose(L));
 
 
@@ -1117,7 +1174,7 @@ function random_polygon(n=3,size=1, seed) =
 //   uses a two point method if sufficient points are available: f'(t) = (3*(f(t+h)-f(t)) - (f(t+2*h)-f(t+h)))/2h.
 //   .
 //   If `h` is a vector then it is assumed to be nonuniform, with h[i] giving the sampling distance
-//   between data[i+1] and data[i], and the data values will be linearly resampled at each corner
+//   between data[i+1] and data[i], and the data values are linearly resampled at each corner
 //   to produce a uniform spacing for the derivative estimate.  At the endpoints a single point method
 //   is used: f'(t) = (f(t+h)-f(t))/h.  
 // Arguments:
@@ -1287,7 +1344,7 @@ function complex(list) =
 //   c = c_mul(z1,z2)
 // Description:
 //   Multiplies two complex numbers, vectors or matrices, where complex numbers
-//   or entries are represented as vectors: [REAL, IMAGINARY].  Note that all
+//   or entries are represented as vectors: [REAL, IMAGINARY].  All
 //   entries in both arguments must be complex.  
 // Arguments:
 //   z1 = First complex number, vector or matrix
@@ -1411,7 +1468,7 @@ function c_norm(z) = norm_fro(z);
 //    roots = quadratic_roots(a, b, c, [real])
 // Description:
 //    Computes roots of the quadratic equation a*x^2+b*x+c==0, where the
-//    coefficients are real numbers.  If real is true then returns only the
+//    coefficients are real numbers.  If real is true, then returns only the
 //    real roots.  Otherwise returns a pair of complex values.  This method
 //    may be more reliable than the general root finder at distinguishing
 //    real roots from complex roots.  
@@ -1491,7 +1548,7 @@ function poly_mult(p,q) =
 //    Computes division of the numerator polynomial by the denominator polynomial and returns
 //    a list of two polynomials, [quotient, remainder].  If the division has no remainder then
 //    the zero polynomial [0] is returned for the remainder.  Similarly if the quotient is zero
-//    the returned quotient will be [0].  
+//    the returned quotient is [0].  
 function poly_div(n,d) =
     assert( is_vector(n) && is_vector(d) , "Invalid polynomials." )
     let( d = _poly_trim(d), 
@@ -1664,7 +1721,7 @@ function real_roots(p,eps=undef,tol=1e-14) =
 //    argument.  You must have a version of OpenSCAD that supports function literals
 //    (2021.01 or newer).  The tolerance (tol) specifies the accuracy of the solution:
 //    abs(f(x)) < tol * yrange, where yrange is the range of observed function values.
-//    This function can only find roots that cross the x axis:  it cannot find the
+//    This function can find only those roots that *cross* the x axis: it cannot find the
 //    the root of x^2.
 // Arguments:
 //    f = function literal for a scalar-valued single variable function
