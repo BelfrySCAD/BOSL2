@@ -121,7 +121,8 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   edges = Edges to mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: all edges.
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: No edges.
 //   trimcorners = If true, rounds or chamfers corners where three chamfered/rounded edges meet.  Default: `true`
-//   teardrop = If given as a number, rounding around the bottom edge of the cuboid won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
+//   teardrop = If given as a number, rounding around the bottom edge of the cuboid won't exceed this many degrees from vertical, altering to a chamfer at that angle.  If true, the limit angle is 45 degrees.  Default: `false`
+//   clip_roundings = If given as a number, rounding around the bottom edge of the cuboid won't exceed this many degrees from vertical, with the rounding stopping at the bottom of the cuboid.  If true, the limit angle is 45 degrees.  Default: `false`
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=FRONT+LEFT+BOTTOM`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -147,6 +148,8 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   cuboid([30,40,50], rounding=10);
 // Example(VPR=[100,0,25],VPD=180): Rounded Edges and Corners with Teardrop Bottoms
 //   cuboid([30,40,50], rounding=10, teardrop=true);
+// Example(VPR=[100,0,25],VPD=180): Rounded Edges and Corners with Clipped Bottoms
+//   cuboid([30,40,50], rounding=10, clip_roundings=true);
 // Example: Rounded Edges, Untrimmed Corners
 //   cuboid([30,40,50], rounding=10, trimcorners=false);
 // Example: Chamferring Selected Edges
@@ -200,6 +203,7 @@ module cuboid(
     except_edges,
     trimcorners=true,
     teardrop=false,
+    clip_roundings=false,
     anchor=CENTER,
     spin=0,
     orient=UP
@@ -219,6 +223,9 @@ module cuboid(
     module xtcyl(l,r) {
         if (teardrop) {
             teardrop(r=r, l=l, cap_h=r, ang=teardrop, spin=90, orient=DOWN);
+        } else if (clip_roundings) {
+            cap_h = r * sin(clip_roundings);
+            down(r-cap_h) teardrop(r=r, l=l, cap_h=cap_h, ang=clip_roundings, spin=90, orient=DOWN);
         } else {
             yrot(90) cyl(l=l, r=r);
         }
@@ -226,6 +233,9 @@ module cuboid(
     module ytcyl(l,r) {
         if (teardrop) {
             teardrop(r=r, l=l, cap_h=r, ang=teardrop, spin=0, orient=DOWN);
+        } else if (clip_roundings) {
+            cap_h = r * sin(clip_roundings);
+            down(r-cap_h) teardrop(r=r, l=l, cap_h=cap_h, ang=clip_roundings, spin=0, orient=DOWN);
         } else {
             zrot(90) yrot(90) cyl(l=l, r=r);
         }
@@ -233,6 +243,9 @@ module cuboid(
     module tsphere(r) {
         if (teardrop) {
             onion(r=r, cap_h=r, ang=teardrop, orient=DOWN);
+        } else if (clip_roundings) {
+            cap_h = r * sin(clip_roundings);
+            down(r-cap_h) onion(r=r, cap_h=cap_h, ang=clip_roundings, orient=DOWN);
         } else {
             spheroid(r=r, style="octa", orient=DOWN);
         }
@@ -335,6 +348,7 @@ module cuboid(
     size = force_list(default(size,1),3);
     edges = _edges(edges, except=first_defined([except_edges,except]));
     teardrop = is_bool(teardrop)&&teardrop? 45 : teardrop;
+    clip_roundings = is_bool(clip_roundings)&&clip_roundings? 45 : clip_roundings;
     chamfer = approx(chamfer,0) ? undef : chamfer;
     rounding = approx(rounding,0) ? undef : rounding;
     checks =
@@ -344,6 +358,8 @@ module cuboid(
         assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value")
         assert(is_undef(rounding) || is_undef(chamfer), "Cannot specify nonzero value for both chamfer and rounding")
         assert(teardrop==false || (is_finite(teardrop) && teardrop>0 && teardrop<=90), "teardrop must be either false or an angle number between 0 and 90")
+        assert(clip_roundings==false || (is_finite(clip_roundings) && clip_roundings>0 && clip_roundings<=90), "clip_roundings must be either false or an angle number between 0 and 90")
+        assert(!teardrop || !clip_roundings, "teardrop= and clip_roundings= are mutually exclusive features.")
         assert(is_undef(p1) || is_vector(p1,3), "p1 must be a 3-vector")
         assert(is_undef(p2) || is_vector(p2,3), "p2 must be a 3-vector")
         assert(is_bool(trimcorners));
