@@ -547,6 +547,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
                 r = struct_val(edgespec,"r"),
                 cut = struct_val(edgespec,"cut"),
                 k = struct_val(edgespec,"k"),
+                angle = struct_val(edgespec, "angle"), 
                 radius = in_list(edgetype,["circle","teardrop"])
                             ? (is_def(cut) ? cut/(sqrt(2)-1) : r)
                          :edgetype=="chamfer"
@@ -584,7 +585,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
                                         [[-2*radius*(1-sqrt(2)/2), z_dir*abs(radius)]]
                                 )
                         ) :
-                        edgetype == "circle"? radius==0? [] : [for(i=[1:N]) [radius*(cos(i*90/N)-1), z_dir*abs(radius)*sin(i*90/N)]] :
+                        edgetype == "circle"? radius==0? [] : [for(i=[1:N]) [radius*(cos(i*angle/N)-1), z_dir*abs(radius)*sin(i*angle/N)]] :
                         /* smooth */ joint==0 ? [] :
                         list_tail(
                                 _bezcorner([[0,0],[0,z_dir*abs(joint)],[-joint,z_dir*abs(joint)]], k, $fn=N+2)
@@ -1370,7 +1371,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   .
 //   - profile: os_profile(points)
 //     Define the offset profile with a list of points.  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  If the y value ever decreases then you might create a self-intersecting polyhedron, which is invalid.  Such invalid polyhedra create cryptic assertion errors when you render your model and it is your responsibility to avoid creating them.  Note that the starting point of the profile is the center of the extrusion.  If you use a profile as the top, it rises upward.  If you use it as the bottom, it is inverted and goes downward.
-//   - circle: os_circle(r|cut).  Define circular rounding either by specifying the radius or cut distance.
+//   - circle: os_circle(r|cut=,height=|h=,[clip_angle=],).  Define circular rounding or clipped circle rounding.  You specify a full circle rounding by giving the radius, cut distance or height (which is equivalent to radius in this case).  For a clipped circle rounding you can use two methods.  You can specify the clip angle and then give a radius, cut, or height.  (The cut distance in this case is the usual cut for a full circular arc.)  Alternatively you can give a height and radius (or cut) and the appropriate clip angle is chosen for you.  
 //   - smooth: os_smooth(cut|joint, [k]).  Define continuous curvature rounding, with `cut` and `joint` as for round_corners. The k parameter controls how fast the curvature changes and should be between 0 and 1.  
 //   - teardrop: os_teardrop(r|cut).  Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
 //   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle is ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
@@ -1478,6 +1479,12 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //    star = star(5, r=22, ir=13);
 //    rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //    offset_sweep(rounded_star, height=20, bottom=os_teardrop(r=4), top=os_chamfer(width=4),$fn=64);
+// Example(3D,NoAxes,VPR=[99.80,0.00,62.10],VPD=155.56,VPT=[-2.78,0.61,14.66]): Clipped circle rounding on the bottom (for 3d printability and regular circular rounding on the top, both with the same radius.  The clipped circle rounding takes up less vertical space.  
+//   $fn=64;
+//   offset_sweep(rect(50,rounding=6), h=30,bot=os_circle(r=6, clip_angle=50), top=os_circle(r=6));
+// Example(3D,NoAxes,VPR=[99.80,0.00,62.10],VPD=155.56,VPT=[-2.78,0.61,14.66]): The same as the previous example but with roundings specified by height.  This means that they have different radii, but the height maches.  
+//   $fn=64;
+//   offset_sweep(rect(50,rounding=6), h=30,bot=os_circle(h=6, clip_angle=50), top=os_circle(h=6));
 // Example: We round a cube using the continous curvature rounding profile.  But note that the corners are not smooth because the curved square collapses into a square with corners.    When a collapse like this occurs, we cannot turn `check_valid` off.  For a better result use {{rounded_prism()}} instead.
 //   square = square(1);
 //   rsquare = round_corners(square, method="smooth", cut=0.1, k=0.7, $fn=36);
@@ -1852,19 +1859,37 @@ module offset_sweep(path, height,
 }   
 
 
-function os_circle(r,cut,extra,check_valid, quality,steps, offset) =
-        assert(num_defined([r,cut])==1, "Must define exactly one of `r` and `cut`")
+function os_circle(r,cut,h,height,clip_angle,extra,check_valid, quality,steps, offset) =
+        assert(is_undef(clip_angle) || is_finite(clip_angle) && clip_angle>0 && clip_angle<=90, "clip angle must a number be in the interval (0,90]")
+        let(
+             h = one_defined([h,height],"h,height",dflt=undef),
+             r_ang = is_def(clip_angle) ?
+                         assert(num_defined([r,h,cut])==1, "When clip_angle is given must give exactly one of r, h/height, or cut")
+                           is_def(r) ? [r,clip_angle]
+                         : is_def(cut) ? [cut/(sqrt(2)-1),clip_angle]
+                         : [h / sin(clip_angle),clip_angle]
+                   :
+                         assert(num_defined([r,cut])<=1, "Cannot give both r and cut")
+                         let(
+                              r = is_def(r) ? r
+                                : is_def(cut) ?  cut/(sqrt(2)-1)
+                                : undef
+                         )
+                         is_def(r) ? [r, is_def(h) ? assert(h<=r, "height cannot be larger than radius") asin(h/r) : 90]
+                                   : [h, 90]
+        )
         _remove_undefined_vals([
                 "for", "offset_sweep",
                 "type", "circle",
-                "r",r,
-                "cut",cut,
+                "r",r_ang[0],
+                "angle",r_ang[1],
                 "extra",extra,
                 "check_valid",check_valid,
                 "quality", quality,
                 "steps", steps,
                 "offset", offset
         ]);
+
 
 function os_teardrop(r,cut,extra,check_valid, quality,steps, offset) =
         assert(num_defined([r,cut])==1, "Must define exactly one of `r` and `cut`")
@@ -1968,7 +1993,7 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 //   .
 //   - profile: os_profile(points)
 //     Define the offset profile with a list of points.  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  If the y value ever decreases then you might create a self-intersecting polyhedron, which is invalid.  Such invalid polyhedra create cryptic assertion errors when you render your model and it is your responsibility to avoid creating them.  Note that the starting point of the profile is the center of the extrusion.  If you use a profile as the top, it rises upward. If you use it as the bottom, it is inverted and goes downward.
-//   - circle: os_circle(r|cut).  Define circular rounding either by specifying the radius or cut distance.
+//   - circle: os_circle(r|cut=,height=|h=,[clip_angle=],).  Define circular rounding or clipped circle rounding.  You specify a full circle rounding by giving the radius, cut distance or height (which is equivalent to radius in this case).  For a clipped circle rounding you can use two methods.  You can specify the clip angle and then give a radius, cut, or height.  (The cut distance in this case is the usual cut for a full circular arc.)  Alternatively you can give a height and radius (or cut) and the appropriate clip angle is chosen for you.  
 //   - smooth: os_smooth(cut|joint, [k]).  Define continuous curvature rounding, with `cut` and `joint` as for round_corners.  The k parameter controls how fast the curvature changes and should be between 0 and 1.
 //   - teardrop: os_teardrop(r|cut).  Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
 //   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle is ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
