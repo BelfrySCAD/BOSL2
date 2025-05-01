@@ -949,7 +949,12 @@ function linear_sweep(
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
-// Example:
+// Example(3D,NoAxes,VPR=[60.20,0.00,41.80],VPD=151.98,VPT=[0.85,-2.95,3.10]): Sweeping a shape that looks like a plus sign
+//   rgn = right(30,
+//           union([for (a = [0, 90])
+//                    zrot(a, rect([15,5]))]));
+//   rotate_sweep(rgn);
+// Example(3D,NoAxes,VPR=[50.40,0.00,28.50],VPD=208.48,VPT=[0.23,-1.89,5.20]): Sweeping a region with multiple components
 //   rgn = [
 //       for (a = [0, 120, 240]) let(
 //           cp = polar_to_xy(15, a) + [30,0]
@@ -959,27 +964,35 @@ function linear_sweep(
 //       ]
 //   ];
 //   rotate_sweep(rgn, angle=240);
-// Example:
-//   rgn = right(30, p=union([for (a = [0, 90]) rot(a, p=rect([15,5]))]));
-//   rotate_sweep(rgn);
 // Example(3D,NoAxes,VPR=[55.00,0.00,25.00],VPD=292.71,VPT=[1.59,1.80,-1.35]): Torus with bricks texture
 //   path = right(50, p=circle(d=40));
 //   rotate_sweep(path, texture="bricks_vnf",tex_size=10,
 //                  tex_depth=0.5, style="concave");
+// Example(3D,NoAxes,VPR=[76.30,0.00,44.60],VPD=257.38,VPT=[2.58,-5.21,0.37]): Applying a texture to a region.  Both the inside and outside receive texture.
+//   rgn = [
+//       right(40, p=circle(d=50)),
+//       right(40, p=circle(d=40,$fn=6)),
+//   ];
+//   rotate_sweep(
+//       rgn, texture="diamonds",
+//       tex_size=[10,10], tex_depth=1,
+//       angle=240, style="concave");
 // Example(NoAxes): The simplest way to create a cylinder with just a single line segment and `caps=true`.  With this cylinder, the top and bottom have no texture.  
 //   rotate_sweep([[20,-10],[20,10]], texture="dots",
 //                tex_reps=[6,2],caps=true);
 // Example(NoAxes): If we manually connect the top and bottom then they also receive texture.  
-//   rotate_sweep([[0,-10],[20,-10],[20,10],[0,10]], texture="dots",
-//                tex_reps=[6,6],tex_depth=1.5);
+//   rotate_sweep([[0,-10],[20,-10],[20,10],[0,10]], 
+//                tex_reps=[6,6],tex_depth=1.5,
+//                texture="dots");
 // Example(NoAxes,VPR=[95.60,0.00,69.80],VPD=74.40,VPT=[5.81,5.74,1.97]): You can connect just the top or bottom alone instead of both to get texture on one and a flat cap on the other.  Here you can see that the sloped top has texture but the bottom does not.  Also note that the texture doesn't fit neatly on the side and top like it did in the previous two examples, but makes a somewhat ugly transition across the corner.  You have to size your object carefully so that the tops and sides each fit an integer number of texture tiles to avoid this type of transition.  
-//   rotate_sweep([[15,-10],[15,10],[0,15]], texture="dots", tex_reps=[6,6],
+//   rotate_sweep([[15,-10],[15,10],[0,15]],
+//                texture="dots", tex_reps=[6,6],
 //                angle=90,caps=true,tex_depth=1.5);
 // Example(NoAxes,VPR=[55.00,0.00,25.00],VPD=126.00,VPT=[1.37,0.06,-0.75]): Ribbed sphere. 
 //   path = arc(r=20, $fn=64, angle=[-90, 90]);
 //   rotate_sweep(path, 360, texture = texture("wave_ribs",n=15),
 //                tex_size=[8,1.5]);
-// Example: For this model we use `closed=false` to create the flat, untextured caps.  
+// Example(3D,NoAxes,VPR=[60.20,0.00,56.50],VPD=231.64,VPT=[4.18,-2.66,1.31]): This model uses `caps=true` to create the untextured caps with a user supplied texture.  They are flat because the texture is zero at its edges.
 //   tex = [
 //       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 //       [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -999,7 +1012,7 @@ function linear_sweep(
 //       path, caps=true, 
 //       texture=tex, tex_size=[20,20],
 //       tex_depth=1, style="concave");
-// Example:
+// Example(3D,NoAxes,VPR=[60.20,0.00,56.50],VPD=187.63,VPT=[2.07,-4.53,2.58]):  An example with a more complicated path.  Here the caps are not flat because the diamonds texture is not zero at the edges.  
 //   bezpath = [
 //       [15, 30], [10,15],
 //       [10,  0], [20, 10], [30,12],
@@ -1011,28 +1024,7 @@ function linear_sweep(
 //       path, caps=true, 
 //       texture="diamonds", tex_size=[10,10],
 //       tex_depth=1, style="concave");
-// Example:
-//   path = [
-//       [20, 30], [20, 20],
-//       each arc(r=20, corner=[[20,20],[10,0],[20,-20]]),
-//       [20,-20], [20,-30],
-//   ];
-//   vnf = rotate_sweep(
-//       path, caps=true, 
-//       texture="trunc_pyramids",
-//       tex_size=[5,5], tex_depth=1,
-//       style="convex");
-//   vnf_polyhedron(vnf, convexity=10); 
-// Example:
-//   rgn = [
-//       right(40, p=circle(d=50)),
-//       right(40, p=circle(d=40,$fn=6)),
-//   ];
-//   rotate_sweep(
-//       rgn, texture="diamonds",
-//       tex_size=[10,10], tex_depth=1,
-//       angle=240, style="concave");
-// Example(3D,NoAxes): Tapering the ends of the texturing to zero produces flat caps. 
+// Example(3D,NoAxes,VPR=[70.00,0.00,58.60],VPD=208.48,VPT=[1.92,-3.81,2.21]): The normal direction at the ends is perpendicular to the Z axis, so even though the texture is not zero, the caps are flat, unlike the previous example.
 //   path = [
 //       [20, 30], [20, 20],
 //       each arc(r=20, corner=[[20,20],[10,0],[20,-20]]),
@@ -1042,16 +1034,15 @@ function linear_sweep(
 //       path, caps=true, 
 //       texture="diamonds",
 //       tex_size=[5,5], tex_depth=1,
-//       tex_taper=undef,
-//       style="flip2",
+//       style="concave",
 //       convexity=10);
-// Example(3D,NoAxes,VPR=[59.20,0.00,226.90],VPD=113.40,VPT=[-4.53,3.03,3.84]): The top cap is definite not flat.  
+// Example(3D,NoAxes,VPR=[59.20,0.00,226.90],VPD=113.40,VPT=[-4.53,3.03,3.84]): The top cap is definitely not flat.  
 //   rotate_sweep(
 //       arc(r=20,angle=[-45,45],n=45),
 //       caps=true, texture="diamonds",
 //       tex_size=[5,5], tex_depth=2,
 //       convexity=10);
-// Example(3D,NoAxes,VPR=[59.20,0.00,226.90],VPD=113.40,VPT=[-4.53,3.03,3.84]): Setting `tex_taper=0` abruptly tapers right the the caps so that the cap is flat:
+// Example(3D,NoAxes,VPR=[59.20,0.00,226.90],VPD=113.40,VPT=[-4.53,3.03,3.84]): Setting `tex_taper=0` abruptly tapers right at the caps so that the cap is flat:
 //   rotate_sweep(
 //       arc(r=20,angle=[-45,45],n=45),
 //       caps=true, texture="diamonds",

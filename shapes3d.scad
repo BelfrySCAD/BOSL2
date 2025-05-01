@@ -1167,7 +1167,7 @@ function regular_prism(n,
 // Synopsis: Creates a cube or trapezoidal prism with a textured top face for attaching to objects.
 // SynTags: Geom, VNF
 // Topics: Shapes (3D), Attachable, VNF Generators, Textures
-// See Also: cuboid(), prismoid(), texture(), cyl(), rotate_sweep(), linear_sweep()
+// See Also: cuboid(), prismoid(), texture(), cyl(), rotate_sweep(), linear_sweep(), plot3d()
 // Usage:
 //   textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [diff=], [tex_extra=], [tex_skip=], ...) [ATTACHMENTS];
 //   vnf = textured_tile(texture, [size], [w1=], [w2=], [ang=], [shift=], [h=/height=/thickness=], [atype=], [tex_extra=], [tex_skip=], ...);
@@ -1182,6 +1182,10 @@ function regular_prism(n,
 //   then the texture actually sinks into its base, so the default is set to the 0.1 more than the inset depth.  To ensure a valid geometry, with a positive
 //   `inset` or a texture that has negative values you must select a thickness strictly **larger** than the depth the texture extends below zero.
 //   .
+//   Textures are meant to be between 0 and 1 so that `tex_depth` and `tex_inset` behave as expected.  If you have a custom textures that
+//   has a different range you can still use it directly, but you may find it more convenient to rescale a height map texture using {{fit_to_range()}]
+//   or a VNF texture using {{fit_to_box()}}.  
+//   .
 //   You can also specify a trapzoidal prism using parameters equivalent to those accepted by {{trapezoid()}}, with one change:  
 //   `ysize` specifies the width of the prism in the Y direction, and `h`, `height` or `thickness` are used to specify the height
 //   in the Z direction.  When you texture a trapezoid the texture will be scaled to the `w1` length if you specify it by size using `tex_size`.  The
@@ -1190,7 +1194,7 @@ function regular_prism(n,
 //   Two anchor types are available.  The default atype is "tex" which assumes you want to place the texture on another object using
 //   {{attach()}}.  It provides anchors that ignore the base object and place the BOTTOM anchor at the bottom of the texture.  The TOP anchor
 //   will be at the top face of the texture.  Note that if your texture doesn't span the range from [0,1] these anchors won't be correctly located. 
-//   For an inset texture, the "tex" anchors are all at the top of the texture.  This anchor type works with `anchor(face,BOT)` where `face` is some
+//   For an inset texture, the "tex" anchors are all at the top of the texture.  This anchor type works with `attach(face,BOT)` where `face` is some
 //   face on a parent object that needs a texture. If you want to use the textured object directly the "std" anchors are probably more useful.
 //   These anchors are the usual anchors for the base object, ignoring the applied texture.  If you want the anchors to be on top of the texture,
 //   set `tex_inset=true`.
@@ -1232,33 +1236,37 @@ function regular_prism(n,
 //   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 0 if `tex_reps=[1,1]`, 1 otherwise
 //   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
 //   style = {{vnf_vertex_array()}} style used to triangulate heightfield textures.  Default: "min_edge"
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM` if `astyle` is "tex", `CENTER` otherwise
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example(3D,NoScales,VPT=[-0.257402,0.467403,-0.648606],VPR=[46.6,0,16.6],VPD=29.2405): Basic textured tile
 //   textured_tile("trunc_diamonds", 10, tex_reps=[5,5]);
 // Example(3D,NoAxes,VPT=[-0.0852782,0.259593,0.139667],VPR=[58.5,0,345.1],VPD=36.0994): Attaching a tile to a cube
 //   cuboid([12,12,4]) attach(TOP,BOT)
-//     textured_tile("trunc_pyramids", 10, tex_reps=[5,5], style="convex");
+//     textured_tile("trunc_pyramids", 10, tex_reps=[5,5],
+//                   style="convex");
 // Example(3D,NoScales,VPT = [-0.0788193, 0.10015, -0.0938629], VPR = [57.8, 0, 34.1], VPD = 29.2405): This inset texture doesn't look obviously different, but you can see that the object is below the XY plane.
-//     textured_tile("trunc_pyramids_vnf", 10, tex_reps=[5,5], tex_inset=true);
+//     textured_tile("trunc_pyramids_vnf", 10, tex_reps=[5,5],
+//                   tex_inset=true);
 // Example(3D,NoAxes,VPT=[0.242444,0.170054,-0.0714754],VPR=[67.6,0,33.4],VPD=36.0994): Here we use the `diff` option combined with {{diff()}} to attach the inset texture to the front of a parent cuboid.  
 //   diff()
 //     cuboid([12,5,10]) attach(FRONT, BOT)
 //       textured_tile("trunc_pyramids_vnf", [10,8],
 //                     tex_reps=[5,5], tex_inset=true, diff=true);
 // Example(3D,NoAxes,VPT=[5.86588,-0.107082,-0.311155],VPR=[17.2,0,9.6],VPD=32.4895): Tile shaped like a rhombic prism
-//   textured_tile("ribs", w1=10, w2=10, shift=4, ysize=7, tex_reps=[5,1]);
+//   textured_tile("ribs", w1=10, w2=10, shift=4, ysize=7,
+//                 tex_reps=[5,1]);
 // Example(3D,NoAxes,VPT=[-0.487417,-0.398897,-0.143258],VPR=[10.2,0,12.4],VPD=26.3165): A tile shaped like a trapezoidal prism.  Note that trapezoidal tiles will always distort the texture, resulting in curves
 //   textured_tile("diamonds", w1=10, w2=7, ysize=7, tex_reps=5);
 // Example(3D,NoAxes,VPT=[-0.0889877,-0.31974,0.554444],VPR=[22.1,0,22.2],VPD=32.4895): An inset trapezoidal tile placed into a cube
 //   diff()cuboid([10,10,2])
 //     attach(TOP,BOT)
-//       textured_tile("trunc_diamonds", tex_reps=[5,5], tex_inset=true,
-//                     w1=8, w2=4, ysize=8, diff=true);
+//       textured_tile("trunc_diamonds", tex_reps=[5,5],
+//                     tex_inset=true, diff=true,
+//                     w1=8, w2=4, ysize=8);
 // Example(3D,NoAxes,VPT=[-0.0889877,-0.31974,0.554444],VPR=[58.5,0,21.5],VPD=32.4895): This example shows what happens if you set `tex_extra` to zero for the "pyramids" texture.  Note that the texture doesn't finish.  The default of `tex_extra=1` produces the correct result.  
 //     textured_tile("pyramids", 10, tex_reps=[5,5], tex_extra=0);
-// Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): This texture has an asymmetry even with the default `tex_extra=1`. 
+// Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): This texture has an asymmetry with the default `tex_extra=1`. 
 //     textured_tile("trunc_ribs", 10, tex_reps=[5,1]);
 // Example(3D,NoAxes,VPT=[-0.212176,-0.651766,0.124004],VPR=[58.5,0,21.5],VPD=29.2405): It could be fixed by setting `tex_extra=2`, which would place an extra flat strip on the right.  But another option is to use the `tex_skip` parameter to trim the flat part from the left.  Note that we are also skipping in the y direction, but it doesn't make a difference for this texture, except that you need to have enough texture tiles to accommodate the skip, so we increased the Y reps value to 2.  You can also set `tex_skip` to a vector.
 //     textured_tile("trunc_ribs", 10, tex_reps=[5,2], tex_skip=1);
@@ -1295,10 +1303,10 @@ module textured_tile(
     tex_skip=0,
     style="min_edge",
     atype="tex",
-    anchor=CENTER, spin=0, orient=UP
+    anchor, spin=0, orient=UP
 )
 {
-
+    anchor = default(anchor, atype=="tex" ? BOTTOM : CENTER);
     vnf_data = textured_tile(size=size,
                         ysize=ysize, height=height, w1=w1, w2=w2, ang=ang, h=h, shift=shift, 
                         texture=texture, tex_size=tex_size, tex_reps=tex_reps,tex_extra=tex_extra, 
@@ -1346,15 +1354,17 @@ function textured_tile(
     atype="tex",
     tex_extra,
     tex_skip=0,
-    anchor=CENTER, spin=0, orient=UP,
+    anchor, spin=0, orient=UP,
     _return_anchor=false
-) = 
+) =
+    assert(in_list(atype,["tex","std"]), "atype must be \"tex\" or \"std\"")
     assert(is_undef(tex_reps) || is_int(tex_reps) || (all_integer(tex_reps) && len(tex_reps)==2), "tex_reps must be an integer or list of two integers")
     assert(is_undef(tex_size) || is_vector(tex_size,2) || is_finite(tex_size))
     assert(num_defined([tex_size, tex_reps])==1, "Must give exactly one of tex_size and tex_reps")
     assert(is_undef(size) || is_num(size) || is_vector(size,2) || is_vector(size,3), "size must be a 2-vector or 3-vector")
     assert(is_undef(size) || num_defined([ysize,h, height, thickness, w1,w2,ang])==0, "Cannot combine size with any other dimensional specifications")
     let(
+        anchor = default(anchor, atype=="tex" ? BOTTOM : CENTER), 
         inset = is_num(tex_inset)? tex_inset : tex_inset? 1 : 0,
         default_thick = inset>0 ? 0.1+abs(tex_depth)*inset : 0.1,
         extra_ht = max(0,abs(tex_depth)*(1-inset)),
@@ -1380,8 +1390,8 @@ function textured_tile(
         tex_reps = is_def(tex_reps) ? force_list(tex_reps,2)
                  : let(tex_size=force_list(tex_size,2))
                    [round(size.x/tex_size.x), round(size.y/tex_size.y)],
-        extra = is_undef(extra)? tex_reps == [1,1] ? [0,0] : [1,1]
-                               : force_list(tex_extra,2), 
+        extra = is_undef(tex_extra)? tex_reps == [1,1] ? [0,0] : [1,1]
+                                   : force_list(tex_extra,2), 
         skip = force_list(tex_skip,2), 
         scale = [size.x/tex_reps.x, size.y/tex_reps.y],
         setz=function (v,z)  [v.x,v.y,z], 
@@ -1397,7 +1407,7 @@ function textured_tile(
                         scaled_tex = tex_depth < 0 ? [for(row=texture) [for(p=row) -(1-p-inset)*tex_depth]]
                                                    : [for(row=texture) [for(p=row)  (p-inset)*tex_depth]],
                         check = [for(row=scaled_tex, p=row) if (p<=-height) p],
-                        dummy=assert(check==[], str("texture extends too far below zero (",min([each check,0]),") to fit in cube with height ",height)),
+                        dummy=assert(check==[], str("texture extends too far below zero (",min([each check,0]),") to fit entirely within height ",height)),
                         pts=[for(y=idx(ypts))
                                [ [xpts[0],ypts[y],-height/2],
                                  for(x=idx(xpts))
@@ -1410,9 +1420,12 @@ function textured_tile(
             :
                 let(
                     zadj_vnf = [
-                                  [for(p=texture[0]) [p.x, p.y, tex_depth<0 ? height/2-(1-p.z-inset)*tex_depth : height/2+(p.z-inset)*tex_depth]],
+                                  [for(p=texture[0]) [p.x, p.y, height/2 + _tex_height(tex_depth,inset,p.z)]],
                                   texture[1]
                                ],
+                    minz = min(column(zadj_vnf[0],2)),
+                    dummy=assert(minz>-height/2, str("texture extends too far below zero (",minz-height/2,") to fit entirely within height ",height)),
+                    
                     scaled_vnf = scale(scale, zadj_vnf), 
                     tiled_vnf = [for(i=[0:1:tex_reps.x-1], j=[0:1:tex_reps.y-1]) move([scale.x*i,scale.y*j], scaled_vnf)],
 
@@ -1794,12 +1807,12 @@ function rect_tube(
 //   wedge([20, 40, 15], center=true);
 // Example: *Non*-Centered
 //   wedge([20, 40, 15]);
-// Example: Standard Anchors
+// Example(3D,Med,VPR=[59.50,0.00,36.90],VPD=257.38,VPT=[5.60,-1.98,3.65]): Standard Anchors
 //   wedge([40, 80, 30], center=true)
 //       show_anchors(custom=false);
 //   color([0.5,0.5,0.5,0.1])
 //       cube([40, 80, 30], center=true);
-// Example: Named Anchors
+// Example(3D,Med,VPR=[55.00,0.00,25.00],VPD=151.98,VPT=[2.30,-11.81,-5.66]): Named Anchors
 //   wedge([40, 80, 30], center=true)
 //       show_anchors(std=false);
 
@@ -4250,7 +4263,7 @@ module fillet(l, r, ang, r1, r2, excess=0.01, d1, d2,d,length, h, height, anchor
 // Synopsis: Generates a surface by evaluating a function on a 2D grid
 // SynTags: Geom, VNF
 // Topics: Function Plotting
-// See Also: plot_revolution()
+// See Also: plot_revolution(), textured_tile()
 // Usage: As Module
 //   plot3d(f, x, y, [zclip=], [zspan=], [base=], [convexity=], [style=]) [ATTACHMENTS];
 // Usage: As Function
