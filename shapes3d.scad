@@ -1287,10 +1287,10 @@ module textured_tile(
     tex_skip=0,
     style="min_edge",
     atype="tex",
-    anchor=CENTER, spin=0, orient=UP
+    anchor, spin=0, orient=UP
 )
 {
-
+    anchor = default(anchor, atype=="tex" ? BOTTOM : CENTER);
     vnf_data = textured_tile(size=size,
                         ysize=ysize, height=height, w1=w1, w2=w2, ang=ang, h=h, shift=shift, 
                         texture=texture, tex_size=tex_size, tex_reps=tex_reps,tex_extra=tex_extra, 
