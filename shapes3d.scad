@@ -1059,6 +1059,11 @@ function regular_prism(n,
                           assert(is_finite(teardrop))
                           assert(teardrop>=0 && teardrop<=90)
                           teardrop,
+                      clip_ang = clip_roundings == true? 45 :
+                          clip_roundings == false? 90 :
+                          assert(is_finite(clip_roundings))
+                          assert(clip_roundings>=0 && clip_roundings<=90)
+                          clip_roundings,
 
                       checks2 =
                           assert(is_finite(round1), "rounding1 must be a number if given.")
@@ -1068,6 +1073,7 @@ function regular_prism(n,
                           assert(roundlen1 <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
                           assert(roundlen2 <= r2, "size of rounding2 is larger than the r2 radius of the cylinder.")
                           assert(dy1+dy2 <= facelen, "Chamfers/roundings don't fit on the cylinder/cone.  They exceed the length of the cylinder/cone face.")
+                          assert(td_ang==90 || clip_ang==90, "teardrop= and clip_roundings= are mutually exclusive features.")
                           undef,
                       path = [
                           [0,-height/2],
@@ -1078,6 +1084,8 @@ function regular_prism(n,
                               ]
                           else if (!approx(round1,0) && td_ang < 90)
                               each _teardrop_corner(r=round1, corner=[[max(0,r1-2*roundlen1),-height/2],[r1,-height/2],[r2,height/2]], ang=td_ang)
+                          else if (!approx(round1,0) && clip_ang < 90)
+                              each _clipped_corner(r=round1, corner=[[max(0,r1-2*roundlen1),-height/2],[r1,-height/2],[r2,height/2]], ang=clip_ang)
                           else if (!approx(round1,0) && td_ang >= 90)
                               each arc(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-height/2],[r1,-height/2],[r2,height/2]])
                           else [r1,-height/2],
@@ -2236,7 +2244,7 @@ function _cyl_path(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     from_end, from_end1, from_end2,
-    teardrop=false,
+    teardrop=false, clip_roundings=false
 ) =
     let(  
         vang = atan2(r1-r2,l),
@@ -2284,7 +2292,13 @@ function _cyl_path(
             teardrop == false? 90 :
             assert(is_finite(teardrop))
             assert(teardrop>=0 && teardrop<=90)
-            teardrop
+            teardrop,
+
+        clip_ang = clip_roundings == true? 45 :
+            clip_roundings == false? 90 :
+            assert(is_finite(clip_roundings))
+            assert(clip_roundings>=0 && clip_roundings<=90)
+            clip_roundings,
     ) 
     assert(is_finite(round1), "rounding1 must be a number if given.")
     assert(is_finite(round2), "rounding2 must be a number if given.")
@@ -2293,6 +2307,7 @@ function _cyl_path(
     assert(roundlen1 <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
     assert(roundlen2 <= r2, "size of rounding2 is larger than the r2 radius of the cylinder.")
     assert(dy1+dy2 <= facelen, "Chamfers/roundings don't fit on the cylinder/cone.  They exceed the length of the cylinder/cone face.")
+    assert(td_ang==90 || clip_ang==90, "teardrop= and clip_roundings= are mutually exclusive features.")
     [
        if (!approx(chamf1r,0))
            each [
@@ -2301,6 +2316,8 @@ function _cyl_path(
            ]
        else if (!approx(round1,0) && td_ang < 90)
            each _teardrop_corner(r=round1, corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]], ang=td_ang)
+       else if (!approx(round1,0) && clip_ang < 90)
+           each _clipped_corner(r=round1, corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]], ang=clip_ang)
        else if (!approx(round1,0) && td_ang >= 90)
            each arc(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]])
        else [r1,-l/2],
@@ -2326,7 +2343,7 @@ function cyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign=false, shift=[0,0],
-    teardrop=false,
+    teardrop=false, clip_roundings=false,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
@@ -2370,7 +2387,7 @@ function cyl(
                                    chamfang, chamfang1, chamfang2,
                                    rounding, rounding1, rounding2,
                                    from_end, from_end1, from_end2,
-                                   teardrop),
+                                   teardrop, clip_roundings),
                  path = [
                           if (texture==undef) [0,-l/2-extra1],
                           if (extra1>0) cpath[0]-[0,extra1],
@@ -2414,6 +2431,25 @@ function _teardrop_corner(r, corner, ang=45) =
     ) path;
 
 
+function _clipped_corner(r, corner, ang=45) =
+    let(
+        check = assert(len(corner)==3)
+            assert(is_finite(r))
+            assert(is_finite(ang)),
+        vec1 = unit(corner[0] - corner[1]),
+        vec2 = unit(corner[2] - corner[1]),
+        off = r * (1-cos(ang)) * rot(90, p=vec1),
+        line1 = [corner[0], corner[1]] + [off, off],
+        line2 = [corner[1], corner[2]],
+        corn_pt = line_intersection(line1,line2),
+        cp = circle_2tangents(abs(r), [line1[0],corn_pt,line2[1]])[0],
+        vec3 = rot(sign(r)*(90+ang), p=vec1),
+        vec4 = rot(-sign(r)*90, p=vec2),
+        dang = vector_angle(vec3,vec4),
+        path = arc(r=abs(r), cp=cp, start=v_theta(vec3), angle=sign(r)*dang)
+    ) path;
+
+
 module cyl(
     h, r, center,
     l, r1, r2,
@@ -2422,7 +2458,7 @@ module cyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign=false, shift=[0,0],
-    teardrop=false,
+    teardrop=false, clip_roundings=false,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
@@ -2462,7 +2498,7 @@ module cyl(
                     chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
                     rounding=rounding, rounding1=rounding1, rounding2=rounding2,
                     from_end=from_end, from_end1=from_end1, from_end2=from_end2,
-                    teardrop=teardrop,
+                    teardrop=teardrop, clip_roundings=clip_roundings,
                     texture=texture, tex_size=tex_size,
                     tex_reps=tex_reps, tex_depth=tex_depth,
                     tex_inset=tex_inset, tex_rot=tex_rot,
@@ -2916,7 +2952,7 @@ module tube(
                each _cyl_path(r1,r2,h, 
                               chamfer1=ochamfer1, chamfer2=ochamfer2,
                               rounding1=orounding1, rounding2=orounding2,
-                              teardrop=teardrop),
+                              teardrop=teardrop, clip_roundings=clip_roundings),
                [0,h/2]
              ];
     ipath = _cyl_path(adj_ir1,adj_ir2,h, 
