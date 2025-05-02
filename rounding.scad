@@ -1375,7 +1375,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   - smooth: os_smooth(cut|joint, [k]).  Define continuous curvature rounding, with `cut` and `joint` as for round_corners. The k parameter controls how fast the curvature changes and should be between 0 and 1.  
 //   - teardrop: os_teardrop(r|cut).  Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
 //   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle is ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
-//   - mask: os_mask(mask, [out]).  Create a profile from one of the [2d masking shapes](shapes2d.scad#section-2d-masking-shapes).  The `out` parameter specifies that the mask should flare outward (like crown molding or baseboard).  This is set false by default.  
+//   - mask: os_mask(mask, [out]).  Create a profile from one of the [2d masking shapes](masks2d.scad#section-2d-masking-shapes).  The `out` parameter specifies that the mask should flare outward (like crown molding or baseboard).  This is set false by default.  
 //   .
 //   The general settings that you can use with all of the helper functions are mostly used to control how offset_sweep() calls the offset() function.
 //   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step extends the resulting object beyond the height you specify.  It is ignored by anchoring.  Default: 0
@@ -1569,7 +1569,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   sq = [[0,0],[20,0],[20,20],[0,20]];
 //   sinwave = os_profile(points=[for(theta=[0:5:720]) [4*sin(theta), theta/700*15]]);
 //   offset_sweep(sq, height=20, top=sinwave, offset="delta");
-// Example: a box with a flared top.  A nice roundover on the top requires a profile edge, but we can use "extra" to create a small chamfer.
+// Example(3D,NoAxes,VPR=[59.20,0.00,24.80],VPD=54.24,VPT=[-4.12,10.66,0.96]): a box with a flared top.  A nice roundover on the top requires a profile edge, but we can use "extra" to create a small chamfer.
 //   rhex = round_corners(hexagon(side=10), method="smooth", joint=2, $fs=0.2);
 //   back_half()
 //     difference(){
@@ -1577,15 +1577,15 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //       up(1)
 //         offset_sweep(offset(rhex,r=-1), height=9.5, bottom=os_circle(r=2), top=os_teardrop(r=-4));
 //     }
-// Example: Using os_mask to create ogee profiles:
+// Example(3D,NoAxes,VPR=[53.60,0.00,190.20],VPD=1036.38,VPT=[6.09,5.67,59.25]): Using os_mask to create ogee profiles:
 //   ogee = mask2d_ogee([
-//       "xstep",1,  "ystep",1,  // Starting shoulder.
-//       "fillet",5, "round",5,  // S-curve.
-//       "ystep",1,              // Ending shoulder.
+//       "xstep",3,  "ystep",3,  // Starting shoulder.
+//       "fillet",15, "round",15,  // S-curve.
+//       "ystep",3,              // Ending shoulder.
 //   ]);
 //   star = star(5, r=220, ir=130);
 //   rounded_star = round_corners(star, cut=flatten(repeat([5,0],5)), $fn=24);
-//   offset_sweep(rounded_star, height=100, top=os_mask(ogee), bottom=os_mask(ogee,out=true));
+//   offset_sweep(rounded_star, height=150, top=os_mask(ogee), bottom=os_mask(ogee,out=true));
 // Example(3D,NoAxes): Applying to a region, with different profiles for the outside in inside curves.  
 //   $fn = 32;
 //   rgn = difference(
