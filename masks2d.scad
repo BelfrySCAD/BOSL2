@@ -35,9 +35,9 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile(), fillet()
 // Usage: As module
-//   mask2d_roundover(r|d=|h=|height=|cut=|joint=, [inset], [mask_angle], [excess], [flat_top=], [quarter_round=]) [ATTACHMENTS];
+//   mask2d_roundover(r|d=|h=|height=|cut=|joint=, [inset], [mask_angle], [excess], [flat_top=], [quarter_round=], [clip_angle=]) [ATTACHMENTS];
 // Usage: As function
-//   path = mask2d_roundover(r|d=|h=|height=|cut=|joint=, [inset], [mask_angle], [excess], [flat_top=], [quarter_round=]);
+//   path = mask2d_roundover(r|d=|h=|height=|cut=|joint=, [inset], [mask_angle], [excess], [flat_top=], [quarter_round=], [clip_angle=]);
 // Description:
 //   Creates a 2D roundover/bead mask shape that is useful for extruding into a 3D mask for an edge.
 //   Conversely, you can use that same extruded shape to make an interior fillet between two walls.
@@ -52,7 +52,12 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 //   in different directions.)  You can get the same height by setting the `height` parameter, which is an alternate way to control the size of the rounding.
 //   You can also set `quarter_round=true`, which creates a rounding that uses a quarter circle of the specified radius for all mask angles.  If you have set inset
 //   you will need `flat_top=true` as well.  Note that this is the default if you use `quarter_round=true` but not otherwise.  Generally if you want a roundover
-//   results are best using the `height` option but if you want a bead as you get using `inset` the results are often best using the `quarter_round=true` option. 
+//   results are best using the `height` option but if you want a bead as you get using `inset` the results are often best using the `quarter_round=true` option.
+//   .
+//   If you set the `clip_angle` option then the bottom of the arc is clipped at the specified angle from vertical.  This
+//   can be useful for creating bottom roundings for 3d printing.  If you specify the radius either directly or indirectly
+//   using `cut` or `joint` and combine that with a height specification using `h` or `height`, then `clip_angle` is automatically
+//   calculated and a clipped circle of the specified height and radius is produced.  
 // Arguments:
 //   r = Radius of the roundover.
 //   inset = Optional bead inset size, perpendicular to the two edges.  Scalar or 2-vector.  Default: 0
@@ -65,6 +70,7 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 //   joint = Joint distance.  IE: How far from the edge the roundover should start.  See [Types of Roundovers](rounding.scad#section-types-of-roundovers).
 //   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  Default: true if quarter_round is set, false otherwise.
 //   quarter_round = If true, make a roundover independent of the mask_angle, defined based on a quarter circle of the specified size.  Creates mask with angle-independent height.  Default: false.
+//   clip_angle = Clip the bottom of the rounding where the circle is this angle from the vertical.  Must be between mask_angle-90 and 90 degrees.  Default: 90 (no clipping)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //
@@ -88,6 +94,12 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 //   mask2d_roundover(r=10, inset=2, mask_angle=50, quarter_round=true);
 // Example(2D): quarter_round bead on an obtuse angle
 //   mask2d_roundover(r=10, inset=2, mask_angle=135, quarter_round=true);
+// Example(2D): clipping a circle to a 50 deg angle 
+//   mask2d_roundover(r=10, inset=1/2, clip_angle=50);
+// Example(2D): clipping a circle to a 50 deg angle.  The bottom of the arc is not tangent to the x axis.   
+//   mask2d_roundover(r=10, inset=1/2, clip_angle=50);
+// Example(2D): clipping the arc by specifying `r` and `h`
+//   mask2d_roundover(mask_angle=66, r=10, h=12, inset=1);
 // Example: Masking by Edge Attachment
 //   diff()
 //   cube([50,60,70],center=true)
@@ -126,8 +138,8 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 //     prismoid([30,20], [50,60], h=20, shift=[40,50])
 //        edge_profile(TOP, excess=27)
 //           mask2d_roundover(r=5, mask_angle=$edge_angle, quarter_round=true, inset=1.5, $fn=128);
-module mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, height, cut, quarter_round=false, joint, anchor=CENTER,spin=0) {
-    path = mask2d_roundover(r=r, d=d, h=h, height=height, cut=cut, joint=joint, inset=inset,
+module mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, height, cut, quarter_round=false, joint, anchor=CENTER,spin=0, clip_angle) {
+    path = mask2d_roundover(r=r, d=d, h=h, height=height, cut=cut, joint=joint, inset=inset, clip_angle=clip_angle, 
                             flat_top=flat_top, mask_angle=mask_angle, excess=excess, quarter_round=quarter_round);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -136,36 +148,51 @@ module mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, 
 }
 
 
-function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, quarter_round=false, d, h, height, cut, joint, anchor=CENTER, spin=0) =
-    assert(one_defined([r,height,d,h,cut,joint],"r,height,d,h,cut,joint"))
+
+function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, flat_top, quarter_round=false, d, h, height, cut, joint, anchor=CENTER, spin=0) =
+    assert(num_defined([r,d,cut,joint])<=1, "Must define at most one of r, d, cut and joint")
+    assert(num_defined([h,height])<=1, "Must define at most one of h and height")
     assert(all_nonnegative([excess]), "excess must be a nonnegative value")
     assert(is_finite(mask_angle) && mask_angle>0 && mask_angle<180)
     assert(is_finite(inset)||is_vector(inset,2))
     assert(is_bool(quarter_round))
     let(flat_top=default(flat_top, quarter_round))
     assert(is_bool(flat_top))
+    assert(is_undef(clip_angle) || (is_finite(clip_angle) && clip_angle<=90 && clip_angle>(quarter_round?90:mask_angle)-90),
+           str("\nclip_angle must be between ",(quarter_round?90:mask_angle)-90," and 90"))
     let(
         inset = is_list(inset)? inset : [inset,inset],
         r = get_radius(r=r,d=d,dflt=undef),
         dummy2=assert(is_def(r) || !quarter_round,"Must give r / d when quarter_round is true"),
-        h = u_add(one_defined([h,height],"h,hight",dflt=undef),flat_top || mask_angle>=90?0:-inset.x*cos(mask_angle)),        
+        h = u_add(one_defined([h,height],"h,hight",dflt=undef),flat_top || mask_angle>=90?0:-inset.x*cos(mask_angle)),
         // compute [joint length, radius] for different types of input
-        jr = is_def(h) ? assert(all_positive([h]), "height / h must be larger than y inset")
-                         h/sin(mask_angle)*[1,tan(mask_angle/2)]
-           : is_def(r) ?  assert(all_positive([r]), "r / d must be a positive value")
-                          [r/tan(mask_angle/2), r]
-           : is_def(joint) ? assert(all_positive([joint]), "joint must be a positive value")
-                             joint*[1, tan(mask_angle/2)]
-           : assert(all_positive([cut]),"cut must be a positive value")
-             let(circ_radius=cut/(1/sin(mask_angle/2)-1))
-             [circ_radius/tan(mask_angle/2), circ_radius],
-        dist=jr[0],
-        radius=jr[1],
+        rcalc = is_def(r) ?  assert(all_positive([r]), "r / d must be a positive value") r
+              : is_def(joint) ? assert(all_positive([joint]), "joint must be a positive value") joint*tan(mask_angle/2)
+              : is_def(cut) ? assert(all_positive([cut]),"cut must be a positive value") cut/(1/sin(mask_angle/2)-1)
+              : undef,
+        jra = is_def(clip_angle)?
+                      assert(num_defined([rcalc,h])==1, "When clip_angle is given must give exactly one of r, joint, h/height, or cut")
+                      let(  r = is_def(rcalc) ? rcalc
+                              : h/(sin(mask_angle)/tan(mask_angle/2)-1+sin(clip_angle))
+                         )
+                      [r/tan(mask_angle/2), r, clip_angle]
+            : num_defined([rcalc,h])==2 ? let( a=-sin(mask_angle)/tan(mask_angle/2)+1)
+                                           assert(h/rcalc + a <= 1,str("\nheight cannot be larger than ", rcalc*(1-a)))
+                                          [rcalc/tan(mask_angle/2) ,rcalc, asin(h/rcalc + a)]
+            : is_def(rcalc) ? [rcalc/tan(mask_angle/2), rcalc, 90]
+            : [ each h/sin(mask_angle)*[1,tan(mask_angle/2)], 90],
+        dist=jra[0],
+        radius=jra[1],
+        clip_angle = jra[2], 
+        
+        clipshift = clip_angle==90 ? [0,0]
+                  : let( v=1-cos(90-clip_angle))
+                    radius*[v/tan(mask_angle),v],
         quarter_round_top = approx(mask_angle,90) ? 0
-                  : radius/tan(mask_angle),
+                          : radius/tan(mask_angle),
         extra = radius/20,  // Exact solution is tangent, which will make bad geometry, so insert an offset factor
         quarter_round_shift = !quarter_round || mask_angle<=90 ? 0
-                    : radius/sin(180-mask_angle)-radius+extra,
+                            : radius/sin(180-mask_angle)-radius+extra,
         outside_corner = _inset_corner(
                             quarter_round ?
                             [
@@ -188,15 +215,24 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, quar
                        outside_corner[1][2]
                      ],
         dummy=assert(last(cornerpath).x>=0,str("inset.y is too large to fit roundover at angle ",mask_angle)),
-        path = deduplicate([
-                             each outside_corner[0],
-                             outside_corner[1][0],
-                             each arc(corner=cornerpath, r=radius),
-                             outside_corner[1][2]
+        arcpath = let (basic = arc(corner=cornerpath, r=radius))
+                  clip_angle==90 ? basic
+                :
+                  let(
+                       cutind = [for(i=idx(basic)) if (basic[i].y-inset.y < clipshift.y) i],
+,dsa=                       echo(cutind=cutind),
+                       ipt = line_intersection([basic[cutind[0]-1],basic[cutind[0]]], [[0,clipshift.y+inset.y],[1,clipshift.y+inset.y]])
+                  )
+                  move(-clipshift, [ each select(basic, 0,cutind[0]), ipt]),
+          path = deduplicate([
+                             [last(arcpath).x,-excess],
+                             outside_corner[0][1],
+                             move(-clipshift, outside_corner[0][2]),
+                             each arcpath,
+                             [last(arcpath).x,inset.y]
                            ]
                           ,closed=true)
     ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
-
 
 
 
