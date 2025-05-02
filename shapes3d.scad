@@ -2311,7 +2311,7 @@ function _cyl_path(
             clip_roundings == false? 90 :
             assert(is_finite(clip_roundings))
             assert(clip_roundings>=0 && clip_roundings<=90)
-            clip_roundings,
+            clip_roundings
     ) 
     assert(is_finite(round1), "rounding1 must be a number if given.")
     assert(is_finite(round2), "rounding2 must be a number if given.")
