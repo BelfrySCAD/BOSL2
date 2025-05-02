@@ -380,31 +380,6 @@ function vector_perp(v,w) =
 // Section: Vector Searching
 
 
-// Function: pointlist_bounds()
-// Synopsis: Returns the min and max bounding coordinates for the given list of points.
-// Topics: Geometry, Bounding Boxes, Bounds
-// See Also: closest_point(), furthest_point(), vnf_bounds()
-// Usage:
-//   pt_pair = pointlist_bounds(pts);
-// Description:
-//   Finds the bounds containing all the points in `pts` which can be a list of points in any dimension.
-//   Returns a list of two items: a list of the minimums and a list of the maximums.  For example, with
-//   3d points `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
-// Arguments:
-//   pts = List of points.
-function pointlist_bounds(pts) =
-    assert(is_path(pts,dim=undef,fast=true) , "\nInvalid pointlist." )
-    let(
-        select = ident(len(pts[0])),
-        spread = [
-            for(i=[0:len(pts[0])-1])
-            let( spreadi = pts*select[i] )
-            [ min(spreadi), max(spreadi) ]
-        ]
-    ) transpose(spread);
-
-
-
 // Function: closest_point()
 // Synopsis: Finds the closest point in a list of points.
 // Topics: Geometry, Points, Distance
@@ -417,7 +392,7 @@ function pointlist_bounds(pts) =
 //   pt = The point to find the closest point to.
 //   points = The list of points to search.
 function closest_point(pt, points) =
-    assert( is_vector(pt), "\nInvalid point." )
+    assert(is_vector(pt), "\nInvalid point." )
     assert(is_path(points,dim=len(pt)), "\nInvalid pointlist or incompatible dimensions." )
     min_index([for (p=points) norm(p-pt)]);
 
@@ -685,6 +660,99 @@ function _insert_many(list, k, newlist,i=0) =
     : assert(is_vector(newlist[i],2), "\nThe tree is invalid.")
       _insert_many(_insert_sorted(list,k,newlist[i]),k,newlist,i+1);
 
+
+
+// Section: Bounds
+
+
+// Function: pointlist_bounds()
+// Synopsis: Returns the min and max bounding coordinates for the given list of points.
+// Topics: Geometry, Bounding Boxes, Bounds, Scaling
+// See Also: closest_point(), furthest_point(), vnf_bounds()
+// Usage:
+//   pt_pair = pointlist_bounds(pts);
+// Description:
+//   Finds the bounds containing all the points in `pts`, which can be a list of points in any dimension.
+//   Returns a list of two items: a list of the minimums and a list of the maximums.  For example, with
+//   3d points `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
+// Arguments:
+//   pts = List of points.
+function pointlist_bounds(pts) =
+    assert(is_path(pts,dim=undef,fast=true) , "\nInvalid pointlist." )
+    let(
+        select = ident(len(pts[0])),
+        spread = [
+            for(i=[0:len(pts[0])-1])
+            let( spreadi = pts*select[i] )
+            [ min(spreadi), max(spreadi) ]
+        ]
+    ) transpose(spread);
+
+
+// Function: fit_to_box()
+// Synopsis: Scale the x, y, and/or z coordinantes of a list of points to span a range.
+// Topics: Geometry, Bounding Boxes, Bounds, VNF Manipulation
+// See Also: fit_to_range()
+// Usage:
+//   new_pts = fit_to_box(pts, [x=], [y=], [z=]);
+//   new_vnf = fit_to_box(vnf, [x=], [y=], [z=]);
+// Description:
+//   Given a list of 2D or 3D points, or a VNF structure, rescale and position one or more of the coordinates
+//   to fit within specified ranges. At least one range (`x`, `y`, or `z`) must be specified. A normal use case
+//   for this function is to rescale a VNF texture to fit within `0 <= z <= 1`.
+//   .
+//   While a range is typically `[min_value,max_value]`, the minimum and maximum values can be reversed,
+//   resulting in new coordinates being a rescaled mirror image of the original coordinates.
+// Arguments:
+//   pts = List of points, or a VNF structure.
+//   x = `[min,max]` of rescaled x coordinates. Default: undef
+//   y = `[min,max]` of rescaled y coordinates. Default: undef
+//   z = `[min,max]` of rescaled z coordinates. Default: undef
+// Example(2D): A 2D bezier path (red) rescaled (blue) to fit in a square box centered on the origin.
+//   bez = [
+//       [10,60], [-5,30],
+//       [20,60], [50,50], [100,30],
+//       [50,30], [70,20]
+//   ];
+//   path = bezpath_curve(bez);
+//   newpath = fit_to_box(path, x=[0,40], y=[0,40]);
+//   stroke(path, width=2, color="red");
+//   stroke(square(40), width=1, closed=true);
+//   stroke(newpath, width=2, color="blue");
+// Example(3D): A prismoid (left) is rescaled to fit new x and z bounds. The z bounds minimum and maximum values are reversed, resulting in the new object on the right having inverted z coordinates.
+//   vnf = prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]);
+//   vnf_boxed = fit_to_box(vnf, x=[30,55], z=[5,-15]);
+//   vnf_polyhedron(vnf);
+//   vnf_polyhedron(vnf_boxed);
+function fit_to_box(pts, x, y, z) =
+    assert(is_path(pts) || is_vnf(pts), "\npts must be a valid 2D or 3D path, or a VNF structure.")
+    assert(any_defined([x,y,z]), "\nAt least one [min,max] range x, y, or z must be defined.")
+    assert(is_undef(x) || is_vector(x,2), "\nx must be a 2-vector [min,max].")
+    assert(is_undef(y) || is_vector(y,2), "\nx must be a 2-vector [min,max].")
+    assert(is_undef(z) || is_vector(z,2), "\nx must be a 2-vector [min,max].")
+    let(
+        isvnf = is_vnf(pts),
+        p = isvnf ? pts[0] : pts,
+        bounds = isvnf ? vnf_bounds(pts) : pointlist_bounds(pts),
+        dim = len(bounds[0]),
+        err = assert(is_undef(z) || (dim>2 && is_def(z)), "\n2D data detected with z range specified."),
+        whichdim = [is_def(x), is_def(y), is_def(z)],
+        xmin = bounds[0][0],
+        ymin = bounds[0][1],
+        zmin = dim>2 ? bounds[0][2] : 0,
+        // new scales
+        xscale = whichdim.x ? (x[1]-x[0]) / (bounds[1][0]-xmin) : 1,
+        yscale = whichdim.y ? (y[1]-y[0]) / (bounds[1][1]-ymin) : 1,
+        zscale = whichdim.z ? (z[1]-z[0]) / (bounds[1][2]-zmin) : 1,
+        // new offsets
+        xo = whichdim.x ? x[0] : 0,
+        yo = whichdim.y ? y[0] : 0,
+        zo = whichdim.z ? z[0] : 0,
+        // shift original min to 0, rescale to new scale, shift back to new min
+        newpts = move(dim>2 ? [xo,yo,zo] : [xo,yo],
+                      scale(dim>2 ? [xscale,yscale,zscale] : [xscale,yscale],
+                             move(dim>2 ? -[xmin,ymin,zmin] : -[xmin,ymin], pts)))
+    ) isvnf ? [newpts[0], pts[1]] : newpts;
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
