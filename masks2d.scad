@@ -220,7 +220,6 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, fl
                 :
                   let(
                        cutind = [for(i=idx(basic)) if (basic[i].y-inset.y < clipshift.y) i],
-,dsa=                       echo(cutind=cutind),
                        ipt = line_intersection([basic[cutind[0]-1],basic[cutind[0]]], [[0,clipshift.y+inset.y],[1,clipshift.y+inset.y]])
                   )
                   move(-clipshift, [ each select(basic, 0,cutind[0]), ipt]),
@@ -651,7 +650,7 @@ function mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle=90, flat_t
            : is_def(x) ? assert(num_defined([y,edge,angle])<=1, "Conflicting values of x, y, height, edge and angle given")
                          (
                              is_def(y) ? [x,y]
-                           : is_def(edge) ? let(yopt=quadratic_roots(1,-2*x*cos(mask_angle), x^2-edge^2,real=true),fff=echo(yopt))
+                           : is_def(edge) ? let(yopt=quadratic_roots(1,-2*x*cos(mask_angle), x^2-edge^2,real=true))
                                            assert(yopt!=[] && max(yopt)>0, "edge too short for x value")
                                            [x,max(yopt)]
                            : let(angle=default(angle,mask_angle/2))
