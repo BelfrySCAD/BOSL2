@@ -547,6 +547,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
                 r = struct_val(edgespec,"r"),
                 cut = struct_val(edgespec,"cut"),
                 k = struct_val(edgespec,"k"),
+                angle = struct_val(edgespec, "angle"), 
                 radius = in_list(edgetype,["circle","teardrop"])
                             ? (is_def(cut) ? cut/(sqrt(2)-1) : r)
                          :edgetype=="chamfer"
@@ -584,7 +585,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
                                         [[-2*radius*(1-sqrt(2)/2), z_dir*abs(radius)]]
                                 )
                         ) :
-                        edgetype == "circle"? radius==0? [] : [for(i=[1:N]) [radius*(cos(i*90/N)-1), z_dir*abs(radius)*sin(i*90/N)]] :
+                        edgetype == "circle"? radius==0? [] : [for(i=[1:N]) [radius*(cos(i*angle/N)-1), z_dir*abs(radius)*sin(i*angle/N)]] :
                         /* smooth */ joint==0 ? [] :
                         list_tail(
                                 _bezcorner([[0,0],[0,z_dir*abs(joint)],[-joint,z_dir*abs(joint)]], k, $fn=N+2)
@@ -1370,11 +1371,11 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   .
 //   - profile: os_profile(points)
 //     Define the offset profile with a list of points.  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  If the y value ever decreases then you might create a self-intersecting polyhedron, which is invalid.  Such invalid polyhedra create cryptic assertion errors when you render your model and it is your responsibility to avoid creating them.  Note that the starting point of the profile is the center of the extrusion.  If you use a profile as the top, it rises upward.  If you use it as the bottom, it is inverted and goes downward.
-//   - circle: os_circle(r|cut).  Define circular rounding either by specifying the radius or cut distance.
+//   - circle: os_circle(r|cut=,height=|h=,[clip_angle=],).  Define circular rounding or clipped circle rounding.  You specify a full circle rounding by giving the radius, cut distance or height (which is equivalent to radius in this case).  For a clipped circle rounding you can use two methods.  You can specify the clip angle and then give a radius, cut, or height.  (The cut distance in this case is the usual cut for a full circular arc.)  Alternatively you can give a height and radius (or cut) and the appropriate clip angle is chosen for you.  
 //   - smooth: os_smooth(cut|joint, [k]).  Define continuous curvature rounding, with `cut` and `joint` as for round_corners. The k parameter controls how fast the curvature changes and should be between 0 and 1.  
 //   - teardrop: os_teardrop(r|cut).  Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
 //   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle is ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
-//   - mask: os_mask(mask, [out]).  Create a profile from one of the [2d masking shapes](shapes2d.scad#section-2d-masking-shapes).  The `out` parameter specifies that the mask should flare outward (like crown molding or baseboard).  This is set false by default.  
+//   - mask: os_mask(mask, [out]).  Create a profile from one of the [2d masking shapes](masks2d.scad#section-2d-masking-shapes).  The `out` parameter specifies that the mask should flare outward (like crown molding or baseboard).  This is set false by default.  
 //   .
 //   The general settings that you can use with all of the helper functions are mostly used to control how offset_sweep() calls the offset() function.
 //   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step extends the resulting object beyond the height you specify.  It is ignored by anchoring.  Default: 0
@@ -1412,11 +1413,14 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   "chamfer".  Use the "chamfer" style offset only in cases where the number of steps is small or just one (such as when using
 //   the `os_chamfer` profile type).
 //   .
+//   The module form only can support a region as input.  You can provide different profiles for the cutouts in a region using the `bottom_hole`, `top_hole`
+//   or `ends_hole` parameters.  
+//   .
 //   This module offers four anchor types.  The default is "hull" in which VNF anchors are placed on the VNF of the **unrounded** object.  You
 //   can also use "intersect" to get the intersection anchors to the unrounded object. If you prefer anchors that respect the rounding
 //   then use "surf_hull" or "intersect_hull". 
 // Arguments:
-//   path = 2d path (list of points) to extrude
+//   path = 2d path (list of points) to extrude or a region for the module form
 //   height / length / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.
 //   bottom / bot = rounding spec for the bottom end
 //   top = rounding spec for the top end.
@@ -1434,6 +1438,9 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   angle = default angle for chamfers.  Default: 45
 //   joint = default joint value for smooth roundover.
 //   k = default curvature parameter value for "smooth" roundover
+//   ends_hole = (module only) rounding spec that applies to top and bottom of holes in a region
+//   bot_hole / bottom_hole = (module only) rounding spec for bottom end of holes in a region
+//   top_hole = (module only) rounding spec for top end of holes in a region
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
 //   anchor = Translate so anchor point is at the origin.  Default: "base"
 //   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
@@ -1472,6 +1479,12 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //    star = star(5, r=22, ir=13);
 //    rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //    offset_sweep(rounded_star, height=20, bottom=os_teardrop(r=4), top=os_chamfer(width=4),$fn=64);
+// Example(3D,NoAxes,VPR=[99.80,0.00,62.10],VPD=155.56,VPT=[-2.78,0.61,14.66]): Clipped circle rounding on the bottom (for 3d printability and regular circular rounding on the top, both with the same radius.  The clipped circle rounding takes up less vertical space.  
+//   $fn=64;
+//   offset_sweep(rect(50,rounding=6), h=30,bot=os_circle(r=6, clip_angle=50), top=os_circle(r=6));
+// Example(3D,NoAxes,VPR=[99.80,0.00,62.10],VPD=155.56,VPT=[-2.78,0.61,14.66]): The same as the previous example but with roundings specified by height.  This means that they have different radii, but the height maches.  
+//   $fn=64;
+//   offset_sweep(rect(50,rounding=6), h=30,bot=os_circle(h=6, clip_angle=50), top=os_circle(h=6));
 // Example: We round a cube using the continous curvature rounding profile.  But note that the corners are not smooth because the curved square collapses into a square with corners.    When a collapse like this occurs, we cannot turn `check_valid` off.  For a better result use {{rounded_prism()}} instead.
 //   square = square(1);
 //   rsquare = round_corners(square, method="smooth", cut=0.1, k=0.7, $fn=36);
@@ -1556,7 +1569,7 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //   sq = [[0,0],[20,0],[20,20],[0,20]];
 //   sinwave = os_profile(points=[for(theta=[0:5:720]) [4*sin(theta), theta/700*15]]);
 //   offset_sweep(sq, height=20, top=sinwave, offset="delta");
-// Example: a box with a flared top.  A nice roundover on the top requires a profile edge, but we can use "extra" to create a small chamfer.
+// Example(3D,NoAxes,VPR=[59.20,0.00,24.80],VPD=54.24,VPT=[-4.12,10.66,0.96]): a box with a flared top.  A nice roundover on the top requires a profile edge, but we can use "extra" to create a small chamfer.
 //   rhex = round_corners(hexagon(side=10), method="smooth", joint=2, $fs=0.2);
 //   back_half()
 //     difference(){
@@ -1564,15 +1577,93 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 //       up(1)
 //         offset_sweep(offset(rhex,r=-1), height=9.5, bottom=os_circle(r=2), top=os_teardrop(r=-4));
 //     }
-// Example: Using os_mask to create ogee profiles:
+// Example(3D,NoAxes,VPR=[53.60,0.00,190.20],VPD=1036.38,VPT=[6.09,5.67,59.25]): Using os_mask to create ogee profiles:
 //   ogee = mask2d_ogee([
-//       "xstep",1,  "ystep",1,  // Starting shoulder.
-//       "fillet",5, "round",5,  // S-curve.
-//       "ystep",1,              // Ending shoulder.
+//       "xstep",3,  "ystep",3,  // Starting shoulder.
+//       "fillet",15, "round",15,  // S-curve.
+//       "ystep",3,              // Ending shoulder.
 //   ]);
 //   star = star(5, r=220, ir=130);
 //   rounded_star = round_corners(star, cut=flatten(repeat([5,0],5)), $fn=24);
-//   offset_sweep(rounded_star, height=100, top=os_mask(ogee), bottom=os_mask(ogee,out=true));
+//   offset_sweep(rounded_star, height=150, top=os_mask(ogee), bottom=os_mask(ogee,out=true));
+// Example(3D,NoAxes): Applying to a region, with different profiles for the outside in inside curves.  
+//   $fn = 32;
+//   rgn = difference(
+//       [
+//           rect(50, rounding=5),
+//           move([15,15], circle(d=10)),
+//           move([-15,-15], circle(d=10)),
+//           move([0,25], rect([10,7],anchor=BACK,
+//                             rounding=[-2,-2,2,2])),
+//           zrot(55, square([4, 100], center=true)),
+//           ellipse([12,4])
+//       ]
+//   );
+//   offset_sweep(rgn, height=12, steps=6, ends_hole=os_chamfer(width=2),
+//                                         ends=os_circle(r=1.7));
+
+
+module _offset_sweep_region(region, height, 
+                    bottom, top, 
+                    h, l, length, ends, bot, top_hole, bot_hole, bottom_hole, ends_hole, 
+                    offset="round", r=0, steps=16,
+                    quality=1, check_valid=true,
+                    extra=0,
+                    cut=undef, chamfer_width=undef, chamfer_height=undef,
+                    joint=undef, k=0.75, angle=45,
+                    convexity=10,anchor="base",cp="centroid",
+                    spin=0, orient=UP, atype="hull")
+{
+    connected_reg = region_parts(region);
+    vnf_h_list = [for(reg=connected_reg)
+                    offset_sweep(path=reg[0], height=height, h=h, l=l, length=length, bot=bot, top=top, bottom=bottom, ends=ends,
+                                 offset=offset, r=r, steps=steps,
+                                 quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
+                                 chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _return_height=true)];
+    vnf_list = column(vnf_h_list,0);
+    height = vnf_h_list[0][1];
+
+    holes = [for(reg=connected_reg, i=[1:1:len(reg)-1]) reg[i]];
+
+    anchors = [
+          named_anchor("zcenter", [0,0,0], UP),
+          named_anchor("base", [0,0,-height/2], UP),
+          named_anchor("top", [0,0,height/2], UP)          
+        ];
+    bottom_hole=first_defined([bottom_hole, bot_hole, ends_hole, bottom, ends]);
+    top_hole = first_defined([top_hole,ends_hole,top,ends]);
+    if (in_list(atype,["hull","intersect"]))
+        attachable(anchor,spin,orient,region=region,h=height,cp=cp,anchors=anchors,extent=atype=="hull"){
+            down(height/2)
+              difference(){
+                 for(vnf=vnf_list)
+                     polyhedron(vnf[0],vnf[1],convexity=convexity);
+                 for(path=holes)
+                     offset_sweep(path=path, height=height, h=h, l=l, length=length, bot=bot, top=top_hole, bottom=bottom_hole, 
+                                  offset=offset, r=r, steps=steps,
+                                  quality=quality, check_valid=check_valid, extra=extra+0.1, cut=cut, chamfer_width=chamfer_width,
+                                  chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _flipdir=true,convexity=convexity);
+              }
+            children();
+        }
+    else {
+        allvnf=vnf_join(vnf_list);
+        attachable(anchor,spin.orient,vnf=allvnf, cp=cp,anchors=anchors, extent = atype=="surf_hull"){
+              difference(){
+                 for(vnf=vnf_list)
+                     vnf_polyhedron(vnf,convexity=convexity);
+                 for(path=holes)
+                     offset_sweep(path=path, height=height, h=h, l=l, length=length, bot=bot, top=top_hole, bottom=bottom_hole, 
+                                  offset=offset, r=r, steps=steps,
+                                  quality=quality, check_valid=check_valid, extra=extra+0.1, cut=cut, chamfer_width=chamfer_width,
+                                  chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _flipdir=true,convexity=convexity);
+              }
+            children();
+        }
+    }
+}   
+
+
 
 
 // This function does the actual work of repeatedly calling offset() and concatenating the resulting face and vertex lists to produce
@@ -1630,7 +1721,7 @@ function offset_sweep(
                        extra=0, caps=true, 
                        cut=undef, chamfer_width=undef, chamfer_height=undef,
                        joint=undef, k=0.75, angle=45, anchor="base", orient=UP, spin=0,atype="hull", cp="centroid",
-                       _return_height=false
+                       _return_height=false, _flipdir=false
                       ) =
     let(
         argspec = [
@@ -1668,8 +1759,9 @@ function offset_sweep(
     )
     assert(offsetsok,"Offsets must be one of \"round\", \"delta\", or \"chamfer\"")
     let(
-        offsets_bot = _rounding_offsets(bottom, -1),
-        offsets_top = _rounding_offsets(top, 1),
+        do_flip = _flipdir ? function(x) xflip(x) : function(x) x , 
+        offsets_bot = do_flip(_rounding_offsets(bottom, -1)),
+        offsets_top = do_flip(_rounding_offsets(top, 1)),
         dummy = (struct_val(top,"offset")=="chamfer" && len(offsets_top)>5)
                         || (struct_val(bottom,"offset")=="chamfer" && len(offsets_bot)>5)
                 ? echo("WARNING: You have selected offset=\"chamfer\", which leads to exponential growth in the vertex count and requested more than 5 layers.  This can be slow or run out of recursion depth.")
@@ -1722,55 +1814,82 @@ function offset_sweep(
                   : reorient(anchor,spin,orient, vnf=vnf, p=vnf, extent=atype=="surf_hull", cp=cp, anchors=anchors)
      ) _return_height ? [final_vnf,height] : final_vnf;
 
+
 module offset_sweep(path, height, 
                     bottom, top, 
                     h, l, length, ends, bot,
                     offset="round", r=0, steps=16,
                     quality=1, check_valid=true,
-                    extra=0,
+                    extra=0, top_hole, bot_hole, bottom_hole, ends_hole,
                     cut=undef, chamfer_width=undef, chamfer_height=undef,
                     joint=undef, k=0.75, angle=45,
                     convexity=10,anchor="base",cp="centroid",
-                    spin=0, orient=UP, atype="hull")
+                    spin=0, orient=UP, atype="hull", _flipdir)
 {
     assert(in_list(atype, ["intersect","hull","surf_hull","surf_intersect"]), "Anchor type must be \"hull\" or \"intersect\"");
-    vnf_h = offset_sweep(path=path, height=height, h=h, l=l, length=length, bot=bot, top=top, bottom=bottom, ends=ends,
-                         offset=offset, r=r, steps=steps,
-                         quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
-                         chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _return_height=true);
-    vnf = vnf_h[0];
-    height = vnf_h[1];
-    anchors = [
-          named_anchor("zcenter", [0,0,0], UP),
-          named_anchor("base", [0,0,-height/2], UP),
-          named_anchor("top", [0,0,height/2], UP)          
-        ];
-    if (in_list(atype,["hull","intersect"]))
-        attachable(anchor,spin,orient,region=force_region(path),h=height,cp=cp,anchors=anchors,extent=atype=="hull"){
-            down(height/2)polyhedron(vnf[0],vnf[1],convexity=convexity);
-            children();
-        }
-    else
-        attachable(anchor,spin.orient,vnf=vnf, cp=cp,anchors=anchors, extent = atype=="surf_hull"){
-            vnf_polyhedron(vnf,convexity=convexity);
-            children();
-        }
+    if (is_region(path) && len(path)>1)
+       _offset_sweep_region(region=path, height=height, bottom=bottom, top=top, h=h, l=l, length=length, ends=ends, bot=bot,
+                            offset=offset, r=r, steps=steps, quality=quality, check_valid=check_valid, extra=extra,
+                            cut=cut, chamfer_width=chamfer_width, chamfer_height=chamfer_height, joint=joint, k=k, angle=angle,
+                            bot_hole=bot_hole,top_hole=top_hole,bottom_hole=bottom_hole,ends_hole=ends_hole,
+                            convexity=convexity, anchor=anchor, cp=cp, spin=spin, orient=orient, atype=atype) children();
+    else {
+        vnf_h = offset_sweep(path=path, height=height, h=h, l=l, length=length, bot=bot, top=top, bottom=bottom, ends=ends,
+                             offset=offset, r=r, steps=steps,
+                             quality=quality, check_valid=check_valid, extra=extra, cut=cut, chamfer_width=chamfer_width,
+                             chamfer_height=chamfer_height, joint=joint, k=k, angle=angle, _return_height=true, _flipdir=_flipdir);
+        vnf = vnf_h[0];
+        height = vnf_h[1];
+        anchors = [
+              named_anchor("zcenter", [0,0,0], UP),
+              named_anchor("base", [0,0,-height/2], UP),
+              named_anchor("top", [0,0,height/2], UP)          
+            ];
+        if (in_list(atype,["hull","intersect"]))
+            attachable(anchor,spin,orient,region=force_region(path),h=height,cp=cp,anchors=anchors,extent=atype=="hull"){
+                down(height/2)polyhedron(vnf[0],vnf[1],convexity=convexity);
+                children();
+            }
+        else
+            attachable(anchor,spin.orient,vnf=vnf, cp=cp,anchors=anchors, extent = atype=="surf_hull"){
+                vnf_polyhedron(vnf,convexity=convexity);
+                children();
+            }
+    }
 }   
 
 
-function os_circle(r,cut,extra,check_valid, quality,steps, offset) =
-        assert(num_defined([r,cut])==1, "Must define exactly one of `r` and `cut`")
+function os_circle(r,cut,h,height,clip_angle,extra,check_valid, quality,steps, offset) =
+        assert(is_undef(clip_angle) || is_finite(clip_angle) && clip_angle>0 && clip_angle<=90, "clip angle must a number be in the interval (0,90]")
+        let(
+             h = one_defined([h,height],"h,height",dflt=undef),
+             r_ang = is_def(clip_angle) ?
+                         assert(num_defined([r,h,cut])==1, "When clip_angle is given must give exactly one of r, h/height, or cut")
+                           is_def(r) ? [r,clip_angle]
+                         : is_def(cut) ? [cut/(sqrt(2)-1),clip_angle]
+                         : [h / sin(clip_angle),clip_angle]
+                   :
+                         assert(num_defined([r,cut])<=1, "Cannot give both r and cut")
+                         let(
+                              r = is_def(r) ? r
+                                : is_def(cut) ?  cut/(sqrt(2)-1)
+                                : undef
+                         )
+                         is_def(r) ? [r, is_def(h) ? assert(h<=r, "height cannot be larger than radius") asin(h/r) : 90]
+                                   : [h, 90]
+        )
         _remove_undefined_vals([
                 "for", "offset_sweep",
                 "type", "circle",
-                "r",r,
-                "cut",cut,
+                "r",r_ang[0],
+                "angle",r_ang[1],
                 "extra",extra,
                 "check_valid",check_valid,
                 "quality", quality,
                 "steps", steps,
                 "offset", offset
         ]);
+
 
 function os_teardrop(r,cut,extra,check_valid, quality,steps, offset) =
         assert(num_defined([r,cut])==1, "Must define exactly one of `r` and `cut`")
@@ -1874,7 +1993,7 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
 //   .
 //   - profile: os_profile(points)
 //     Define the offset profile with a list of points.  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  If the y value ever decreases then you might create a self-intersecting polyhedron, which is invalid.  Such invalid polyhedra create cryptic assertion errors when you render your model and it is your responsibility to avoid creating them.  Note that the starting point of the profile is the center of the extrusion.  If you use a profile as the top, it rises upward. If you use it as the bottom, it is inverted and goes downward.
-//   - circle: os_circle(r|cut).  Define circular rounding either by specifying the radius or cut distance.
+//   - circle: os_circle(r|cut=,height=|h=,[clip_angle=],).  Define circular rounding or clipped circle rounding.  You specify a full circle rounding by giving the radius, cut distance or height (which is equivalent to radius in this case).  For a clipped circle rounding you can use two methods.  You can specify the clip angle and then give a radius, cut, or height.  (The cut distance in this case is the usual cut for a full circular arc.)  Alternatively you can give a height and radius (or cut) and the appropriate clip angle is chosen for you.  
 //   - smooth: os_smooth(cut|joint, [k]).  Define continuous curvature rounding, with `cut` and `joint` as for round_corners.  The k parameter controls how fast the curvature changes and should be between 0 and 1.
 //   - teardrop: os_teardrop(r|cut).  Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
 //   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle is ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.

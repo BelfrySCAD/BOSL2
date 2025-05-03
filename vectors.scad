@@ -58,7 +58,7 @@ function is_vector(v, length, zero, all_nonzero=false, eps=EPSILON) =
 // Function: add_scalar()
 // Synopsis: Adds a scalar value to every item in a vector.
 // Topics: Vectors, Math
-// See Also: add_scalar(), v_mul(), v_div()
+// See Also: v_mul(), v_div()
 // Usage:  
 //   v_new = add_scalar(v, s);
 // Description:
@@ -69,35 +69,35 @@ function is_vector(v, length, zero, all_nonzero=false, eps=EPSILON) =
 // Example:
 //   a = add_scalar([1,2,3],3);            // Returns: [4,5,6]
 function add_scalar(v,s) =
-    assert(is_vector(v), "Input v must be a vector")
-    assert(is_finite(s), "Input s must be a finite scalar")
+    assert(is_vector(v), "\nInput v must be a vector.")
+    assert(is_finite(s), "\nInput s must be a finite scalar.")
     [for(entry=v) entry+s];
 
 
 // Function: v_mul()
 // Synopsis: Returns the element-wise multiplication of two equal-length vectors.
 // Topics: Vectors, Math
-// See Also: add_scalar(), v_mul(), v_div()
+// See Also: add_scalar(), v_div()
 // Usage:
 //   v3 = v_mul(v1, v2);
 // Description:
 //   Element-wise multiplication.  Multiplies each element of `v1` by the corresponding element of `v2`.
-//   Both `v1` and `v2` must be the same length.  Returns a vector of the products.  Note that
-//   the items in `v1` and `v2` can be anything that OpenSCAD will multiply.  
+//   Both `v1` and `v2` must be the same length.  Returns a vector of the products. 
+//   The items in `v1` and `v2` can be anything that OpenSCAD can multiply together.  
 // Arguments:
 //   v1 = The first vector.
 //   v2 = The second vector.
 // Example:
 //   v_mul([3,4,5], [8,7,6]);  // Returns [24, 28, 30]
 function v_mul(v1, v2) = 
-    assert( is_list(v1) && is_list(v2) && len(v1)==len(v2), "Incompatible input")
+    assert( is_list(v1) && is_list(v2) && len(v1)==len(v2), "\nIncompatible input.")
     [for (i = [0:1:len(v1)-1]) v1[i]*v2[i]];
     
 
 // Function: v_div()
 // Synopsis: Returns the element-wise division of two equal-length vectors.
 // Topics: Vectors, Math
-// See Also: add_scalar(), v_mul(), v_div()
+// See Also: add_scalar(), v_mul()
 // Usage:
 //   v3 = v_div(v1, v2);
 // Description:
@@ -109,14 +109,14 @@ function v_mul(v1, v2) =
 // Example:
 //   v_div([24,28,30], [8,7,6]);  // Returns [3, 4, 5]
 function v_div(v1, v2) = 
-    assert( is_vector(v1) && is_vector(v2,len(v1)), "Incompatible vectors")
+    assert( is_vector(v1) && is_vector(v2,len(v1)), "\nIncompatible vectors.")
     [for (i = [0:1:len(v1)-1]) v1[i]/v2[i]];
 
 
 // Function: v_abs()
 // Synopsis: Returns the absolute values of the given vector.
 // Topics: Vectors, Math
-// See Also: v_abs(), v_floor(), v_ceil()
+// See Also: v_ceil(), v_floor(), v_round()
 // Usage:
 //   v2 = v_abs(v);
 // Description: Returns a vector of the absolute value of each element of vector `v`.
@@ -125,40 +125,53 @@ function v_div(v1, v2) =
 // Example:
 //   v_abs([-1,3,-9]);  // Returns: [1,3,9]
 function v_abs(v) =
-    assert( is_vector(v), "Invalid vector" ) 
+    assert( is_vector(v), "\nInvalid vector." ) 
     [for (x=v) abs(x)];
-
-
-// Function: v_floor()
-// Synopsis: Returns the values of the given vector, rounded down.
-// Topics: Vectors, Math
-// See Also: v_abs(), v_floor(), v_ceil()
-// Usage:
-//   v2 = v_floor(v);
-// Description:
-//   Returns the given vector after performing a `floor()` on all items.
-function v_floor(v) =
-    assert( is_vector(v), "Invalid vector" ) 
-    [for (x=v) floor(x)];
 
 
 // Function: v_ceil()
 // Synopsis: Returns the values of the given vector, rounded up.
 // Topics: Vectors, Math
-// See Also: v_abs(), v_floor(), v_ceil()
+// See Also: v_abs(), v_floor(), v_round()
 // Usage:
 //   v2 = v_ceil(v);
 // Description:
 //   Returns the given vector after performing a `ceil()` on all items.
 function v_ceil(v) =
-    assert( is_vector(v), "Invalid vector" ) 
+    assert(is_vector(v), "\nInvalid vector." ) 
     [for (x=v) ceil(x)];
+
+
+// Function: v_floor()
+// Synopsis: Returns the values of the given vector, rounded down.
+// Topics: Vectors, Math
+// See Also: v_abs(), v_ceil(), v_round()
+// Usage:
+//   v2 = v_floor(v);
+// Description:
+//   Returns the given vector after performing a `floor()` on all items.
+function v_floor(v) =
+    assert(is_vector(v), "\nInvalid vector." ) 
+    [for (x=v) floor(x)];
+
+
+// Function: v_round()
+// Synopsis: Returns the values of the given vector, rounded to the nearest whole number.
+// Topics: Vectors, Math
+// See Also: v_abs(), v_floor(), v_ceil()
+// Usage:
+//   v2 = v_round(v);
+// Description:
+//   Returns the given vector after performing a `round()` on all items.
+function v_round(v) =
+    assert(is_vector(v), "\nInvalid vector." ) 
+    [for (x=v) round(x)];
 
 
 // Function: v_lookup()
 // Synopsis: Like `lookup()`, but it can interpolate between vector results.
 // Topics: Vectors, Math
-// See Also: v_abs(), v_floor(), v_ceil()
+// See Also: v_abs(), v_floor(), v_ceil(), v_round()
 // Usage:
 //   v2 = v_lookup(x, v);
 // Description:
@@ -178,8 +191,8 @@ function v_lookup(x, v) =
         hi = vhi[1]
     )
     assert(is_vector(lo) && is_vector(hi),
-        "Result values must all be numbers, or all be vectors.")
-    assert(len(lo) == len(hi), "Vector result values must be the same length")
+        "\nResult values must all be numbers, or all be vectors.")
+    assert(len(lo) == len(hi), "\nVector result values must be the same length.")
     vlo.x == vhi.x? vlo[1] :
     let( u = (x - vlo.x) / (vhi.x - vlo.x) )
     lerp(lo,hi,u);
@@ -191,7 +204,7 @@ function v_lookup(x, v) =
 // Function: unit()
 // Synopsis: Returns the unit length of a given vector.
 // Topics: Vectors, Math
-// See Also: v_abs(), v_floor(), v_ceil()
+// See Also: v_abs(), v_floor(), v_ceil(), v_round()
 // Usage:
 //   v = unit(v, [error]);
 // Description:
@@ -208,8 +221,8 @@ function v_lookup(x, v) =
 //   v5 = unit([0,0,0],[1,2,3]);    // Returns: [1,2,3]
 //   v6 = unit([0,0,0]);    // Asserts an error.
 function unit(v, error=[[["ASSERT"]]]) =
-    assert(is_vector(v), "Invalid vector")
-    norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON,"Cannot normalize a zero vector") : error) :
+    assert(is_vector(v), "\nInvalid vector.")
+    norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON,"\nCannot normalize a zero vector.") : error) :
     v/norm(v);
 
 
@@ -222,7 +235,7 @@ function unit(v, error=[[["ASSERT"]]]) =
 // Description:
 //   Given a vector, returns the angle in degrees counter-clockwise from X+ on the XY plane.
 function v_theta(v) =
-    assert( is_vector(v,2) || is_vector(v,3) , "Invalid vector")
+    assert( is_vector(v,2) || is_vector(v,3) , "\nInvalid vector.")
     atan2(v.y,v.x);
 
 
@@ -255,19 +268,19 @@ function v_theta(v) =
 function vector_angle(v1,v2,v3) =
     assert( ( is_undef(v3) && ( is_undef(v2) || same_shape(v1,v2) ) )
             || is_consistent([v1,v2,v3]) ,
-            "Bad arguments.")
-    assert( is_vector(v1) || is_consistent(v1), "Bad arguments.") 
+            "\nBad arguments.")
+    assert( is_vector(v1) || is_consistent(v1), "\nBad arguments.") 
     let( vecs = ! is_undef(v3) ? [v1-v2,v3-v2] :
                 ! is_undef(v2) ? [v1,v2] :
                 len(v1) == 3   ? [v1[0]-v1[1], v1[2]-v1[1]] 
                                : v1
     )
-    assert(is_vector(vecs[0],2) || is_vector(vecs[0],3), "Bad arguments.")
+    assert(is_vector(vecs[0],2) || is_vector(vecs[0],3), "\nBad arguments.")
     let(
         norm0 = norm(vecs[0]),
         norm1 = norm(vecs[1])
     )
-    assert(norm0>0 && norm1>0, "Zero length vector.")
+    assert(norm0>0 && norm1>0, "\nZero length vector.")
     // NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
     acos(constrain((vecs[0]*vecs[1])/(norm0*norm1), -1, 1));
     
@@ -299,16 +312,16 @@ function vector_angle(v1,v2,v3) =
 //   axis6 = vector_axis([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: [-0.57735, -0.57735, 0.57735]
 function vector_axis(v1,v2=undef,v3=undef) =
     is_vector(v3)
-    ?   assert(is_consistent([v3,v2,v1]), "Bad arguments.")
+    ?   assert(is_consistent([v3,v2,v1]), "\nBad arguments.")
         vector_axis(v1-v2, v3-v2)
-    :   assert( is_undef(v3), "Bad arguments.")
+    :   assert( is_undef(v3), "\nBad arguments.")
         is_undef(v2)
-        ?   assert( is_list(v1), "Bad arguments.")
+        ?   assert( is_list(v1), "\nBad arguments.")
             len(v1) == 2 
             ?   vector_axis(v1[0],v1[1]) 
             :   vector_axis(v1[0],v1[1],v1[2])
         :   assert( is_vector(v1,zero=false) && is_vector(v2,zero=false) && is_consistent([v1,v2])
-                    , "Bad arguments.")  
+                    , "\nBad arguments.")  
             let(
               eps = 1e-6,
               w1 = point3d(v1/norm(v1)),
@@ -331,9 +344,9 @@ function vector_axis(v1,v2=undef,v3=undef) =
 function vector_bisect(v1,v2) =
     assert(is_vector(v1))
     assert(is_vector(v2))
-    assert(!approx(norm(v1),0), "Zero length vector.")
-    assert(!approx(norm(v2),0), "Zero length vector.")
-    assert(len(v1)==len(v2), "Vectors are of different sizes.")
+    assert(!approx(norm(v1),0), "\nZero length vector.")
+    assert(!approx(norm(v2),0), "\nZero length vector.")
+    assert(len(v1)==len(v2), "\nVectors are of different sizes.")
     let( v1 = unit(v1), v2 = unit(v2) )
     approx(v1,-v2)? undef :
     let(
@@ -360,42 +373,17 @@ function vector_bisect(v1,v2) =
 //   stroke([[0,0],w],endcap2="arrow2",color="red");
 //   stroke([[0,0],vector_perp(v,w)], endcap2="arrow2", color="blue");
 function vector_perp(v,w) =
-    assert(is_vector(v) && is_vector(w) && len(v)==len(w), "Invalid or mismatched inputs")
+    assert(is_vector(v) && is_vector(w) && len(v)==len(w), "\nInvalid or mismatched inputs")
     w - w*v*v/(v*v);
 
 
 // Section: Vector Searching
 
 
-// Function: pointlist_bounds()
-// Synopsis: Returns the min and max bounding coordinates for the given list of points.
-// Topics: Geometry, Bounding Boxes, Bounds
-// See Also: closest_point(), vnf_bounds()
-// Usage:
-//   pt_pair = pointlist_bounds(pts);
-// Description:
-//   Finds the bounds containing all the points in `pts` which can be a list of points in any dimension.
-//   Returns a list of two items: a list of the minimums and a list of the maximums.  For example, with
-//   3d points `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
-// Arguments:
-//   pts = List of points.
-function pointlist_bounds(pts) =
-    assert(is_path(pts,dim=undef,fast=true) , "Invalid pointlist." )
-    let(
-        select = ident(len(pts[0])),
-        spread = [
-            for(i=[0:len(pts[0])-1])
-            let( spreadi = pts*select[i] )
-            [ min(spreadi), max(spreadi) ]
-        ]
-    ) transpose(spread);
-
-
-
 // Function: closest_point()
 // Synopsis: Finds the closest point in a list of points.
 // Topics: Geometry, Points, Distance
-// See Also: pointlist_bounds(), furthest_point(), closest_point()
+// See Also: pointlist_bounds(), furthest_point()
 // Usage:
 //   index = closest_point(pt, points);
 // Description:
@@ -404,15 +392,15 @@ function pointlist_bounds(pts) =
 //   pt = The point to find the closest point to.
 //   points = The list of points to search.
 function closest_point(pt, points) =
-    assert( is_vector(pt), "Invalid point." )
-    assert(is_path(points,dim=len(pt)), "Invalid pointlist or incompatible dimensions." )
+    assert(is_vector(pt), "\nInvalid point." )
+    assert(is_path(points,dim=len(pt)), "\nInvalid pointlist or incompatible dimensions." )
     min_index([for (p=points) norm(p-pt)]);
 
 
 // Function: furthest_point()
 // Synopsis: Finds the furthest point in a list of points.
 // Topics: Geometry, Points, Distance
-// See Also: pointlist_bounds(), furthest_point(), closest_point()
+// See Also: pointlist_bounds(), closest_point()
 // Usage:
 //   index = furthest_point(pt, points);
 // Description:
@@ -421,8 +409,8 @@ function closest_point(pt, points) =
 //   pt = The point to find the farthest point from.
 //   points = The list of points to search.
 function furthest_point(pt, points) =
-    assert( is_vector(pt), "Invalid point." )
-    assert(is_path(points,dim=len(pt)), "Invalid pointlist or incompatible dimensions." )
+    assert( is_vector(pt), "\nInvalid point." )
+    assert(is_path(points,dim=len(pt)), "\nInvalid pointlist or incompatible dimensions." )
     max_index([for (p=points) norm(p-pt)]);
 
 
@@ -436,7 +424,7 @@ function furthest_point(pt, points) =
 //   Given a list of query points `query` and a `target` to search, 
 //   finds the points in `target` that match each query point. A match holds when the 
 //   distance between a point in `target` and a query point is less than or equal to `r`. 
-//   The returned list will have a list for each query point containing, in arbitrary 
+//   The returned list contains a list for each query point containing, in arbitrary 
 //   order, the indices of all points that match that query point. 
 //   The `target` may be a simple list of points or a search tree.
 //   When `target` is a large list of points, a search tree is constructed to 
@@ -444,8 +432,8 @@ function furthest_point(pt, points) =
 //   For small point lists, a direct search is done dispensing a tree construction. 
 //   Alternatively, `target` may be a search tree built with `vector_search_tree()`.
 //   In that case, that tree is parsed looking for matches.
-//   An empty list of query points will return a empty output list.
-//   An empty list of target points will return a output list with an empty list for each query point.
+//   An empty list of query points returns a empty output list.
+//   An empty list of target points returns a output list with an empty list for each query point.
 // Arguments:
 //   query = list of points to find matches for.
 //   r = the search radius.
@@ -485,7 +473,7 @@ function vector_search(query, r, target) =
     query==[] ? [] :
     is_list(query) && target==[] ? is_vector(query) ? [] : [for(q=query) [] ] :
     assert( is_finite(r) && r>=0, 
-            "The query radius should be a positive number." )
+            "\nThe query radius should be a positive number." )
     let(
         tgpts  = is_matrix(target),   // target is a point list
         tgtree = is_list(target)      // target is a tree
@@ -495,13 +483,13 @@ function vector_search(query, r, target) =
                  && (len(target[1])==4 || (len(target[1])==1 && is_list(target[1][0])) )
     )
     assert( tgpts || tgtree, 
-            "The target should be a list of points or a search tree compatible with the query." )
+            "\nThe target should be a list of points or a search tree compatible with the query." )
     let( 
         dim    = tgpts ? len(target[0]) : len(target[0][0]),
         simple = is_vector(query, dim)
         )
     assert( simple || is_matrix(query,undef,dim), 
-            "The query points should be a list of points compatible with the target point list.")
+            "\nThe query points should be a list of points compatible with the target point list.")
     tgpts 
     ?   len(target)<=400
         ?   simple ? [for(i=idx(target)) if(norm(target[i]-query)<=r) i ] :
@@ -518,9 +506,9 @@ function _bt_search(query, r, points, tree) =
     assert( is_list(tree) 
             && (   ( len(tree)==1 && is_list(tree[0]) )
                 || ( len(tree)==4 && is_num(tree[0]) && is_num(tree[1]) ) ), 
-            "The tree is invalid.")
+            "\nThe tree is invalid.")
     len(tree)==1 
-    ?   assert( tree[0]==[] || is_vector(tree[0]), "The tree is invalid." )
+    ?   assert( tree[0]==[] || is_vector(tree[0]), "\nThe tree is invalid." )
         [for(i=tree[0]) if(norm(points[i]-query)<=r) i ]
     :   norm(query-points[tree[0]]) > r+tree[1] ? [] :
         concat( 
@@ -541,14 +529,14 @@ function _bt_search(query, r, points, tree) =
 //    search process. The tree construction stops branching when 
 //    a tree node represents a number of points less or equal to `leafsize`.
 //    Search trees are ball trees. Constructing the
-//    tree should be O(n log n) and searches should be O(log n), though real life
-//    performance depends on how the data is distributed, and it will deteriorate
-//    for high data dimensions.  This data structure is useful when you will be
+//    tree should be O(n log n) and searches should be O(log n), although real life
+//    performance depends on how the data is distributed, and it deteriorates
+//    for high data dimensions.  This data structure is useful when you are
 //    performing many searches of the same data, so that the cost of constructing 
 //    the tree is justified. (See https://en.wikipedia.org/wiki/Ball_tree)
 //    For a small lists of points, the search with a tree may be more expensive
 //    than direct comparisons. The argument `treemin` sets the minimum length of 
-//    point set for which a tree search will be done by `vector_search`.
+//    the point set for which a tree search will be done by `vector_search`.
 //    For an empty list of points it returns an empty list.
 // Arguments:
 //    points = list of points to store in the search tree.
@@ -568,9 +556,9 @@ function _bt_search(query, r, points, tree) =
 //   }
 function vector_search_tree(points, leafsize=25, treemin=400) =
     points==[] ? [] :
-    assert( is_matrix(points), "The input list entries should be points." )
+    assert( is_matrix(points), "\nThe input list entries should be points." )
     assert( is_int(leafsize) && leafsize>=1,
-            "The tree leaf size should be an integer greater than zero.")
+            "\nThe tree leaf size should be an integer greater than zero.")
     len(points)<treemin ? points :
     [ points, _bt_tree(points, count(len(points)), leafsize) ];
 
@@ -621,7 +609,7 @@ function _bt_tree(points, ind, leafsize=25) =
 //    }
 function vector_nearest(query, k, target) =
     assert(is_int(k) && k>0)
-    assert(is_vector(query), "Query must be a vector.")
+    assert(is_vector(query), "\nQuery must be a vector.")
     let(
         tgpts  = is_matrix(target,undef,len(query)), // target is a point list
         tgtree = is_list(target)      // target is a tree
@@ -630,9 +618,9 @@ function vector_nearest(query, k, target) =
                  && (len(target[1])==4 || (len(target[1])==1 && is_list(target[1][0])) )
     )
     assert( tgpts || tgtree, 
-            "The target should be a list of points or a search tree compatible with the query." )
+            "\nThe target should be a list of points or a search tree compatible with the query." )
     assert((tgpts && (k<=len(target))) || (tgtree && (k<=len(target[0]))), 
-            "More results are requested than the number of points.")
+            "\nMore results are requested than the number of points.")
     tgpts
     ?   let( tree = _bt_tree(target, count(len(target))) )
         column(_bt_nearest( query, k, target,  tree),0)
@@ -644,7 +632,7 @@ function _bt_nearest(p, k, points, tree, answers=[]) =
     assert( is_list(tree) 
             && (   ( len(tree)==1 && is_list(tree[0]) )
                 || ( len(tree)==4 && is_num(tree[0]) && is_num(tree[1]) ) ), 
-            "The tree is invalid.")
+            "\nThe tree is invalid.")
     len(tree)==1
     ?   _insert_many(answers, k, [for(entry=tree[0]) [entry, norm(points[entry]-p)]])
     :   let( d = norm(p-points[tree[0]]) )
@@ -669,9 +657,102 @@ function _insert_sorted(list, k, new) =
 function _insert_many(list, k, newlist,i=0) =
   i==len(newlist) 
     ? list
-    : assert(is_vector(newlist[i],2), "The tree is invalid.")
+    : assert(is_vector(newlist[i],2), "\nThe tree is invalid.")
       _insert_many(_insert_sorted(list,k,newlist[i]),k,newlist,i+1);
 
+
+
+// Section: Bounds
+
+
+// Function: pointlist_bounds()
+// Synopsis: Returns the min and max bounding coordinates for the given list of points.
+// Topics: Geometry, Bounding Boxes, Bounds, Scaling
+// See Also: closest_point(), furthest_point(), vnf_bounds()
+// Usage:
+//   pt_pair = pointlist_bounds(pts);
+// Description:
+//   Finds the bounds containing all the points in `pts`, which can be a list of points in any dimension.
+//   Returns a list of two items: a list of the minimums and a list of the maximums.  For example, with
+//   3d points `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
+// Arguments:
+//   pts = List of points.
+function pointlist_bounds(pts) =
+    assert(is_path(pts,dim=undef,fast=true) , "\nInvalid pointlist." )
+    let(
+        select = ident(len(pts[0])),
+        spread = [
+            for(i=[0:len(pts[0])-1])
+            let( spreadi = pts*select[i] )
+            [ min(spreadi), max(spreadi) ]
+        ]
+    ) transpose(spread);
+
+
+// Function: fit_to_box()
+// Synopsis: Scale the x, y, and/or z coordinantes of a list of points to span a range.
+// Topics: Geometry, Bounding Boxes, Bounds, VNF Manipulation
+// See Also: fit_to_range()
+// Usage:
+//   new_pts = fit_to_box(pts, [x=], [y=], [z=]);
+//   new_vnf = fit_to_box(vnf, [x=], [y=], [z=]);
+// Description:
+//   Given a list of 2D or 3D points, or a VNF structure, rescale and position one or more of the coordinates
+//   to fit within specified ranges. At least one range (`x`, `y`, or `z`) must be specified. A normal use case
+//   for this function is to rescale a VNF texture to fit within `0 <= z <= 1`.
+//   .
+//   While a range is typically `[min_value,max_value]`, the minimum and maximum values can be reversed,
+//   resulting in new coordinates being a rescaled mirror image of the original coordinates.
+// Arguments:
+//   pts = List of points, or a VNF structure.
+//   x = `[min,max]` of rescaled x coordinates. Default: undef
+//   y = `[min,max]` of rescaled y coordinates. Default: undef
+//   z = `[min,max]` of rescaled z coordinates. Default: undef
+// Example(2D): A 2D bezier path (red) rescaled (blue) to fit in a square box centered on the origin.
+//   bez = [
+//       [10,60], [-5,30],
+//       [20,60], [50,50], [100,30],
+//       [50,30], [70,20]
+//   ];
+//   path = bezpath_curve(bez);
+//   newpath = fit_to_box(path, x=[0,40], y=[0,40]);
+//   stroke(path, width=2, color="red");
+//   stroke(square(40), width=1, closed=true);
+//   stroke(newpath, width=2, color="blue");
+// Example(3D): A prismoid (left) is rescaled to fit new x and z bounds. The z bounds minimum and maximum values are reversed, resulting in the new object on the right having inverted z coordinates.
+//   vnf = prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]);
+//   vnf_boxed = fit_to_box(vnf, x=[30,55], z=[5,-15]);
+//   vnf_polyhedron(vnf);
+//   vnf_polyhedron(vnf_boxed);
+function fit_to_box(pts, x, y, z) =
+    assert(is_path(pts) || is_vnf(pts), "\npts must be a valid 2D or 3D path, or a VNF structure.")
+    assert(any_defined([x,y,z]), "\nAt least one [min,max] range x, y, or z must be defined.")
+    assert(is_undef(x) || is_vector(x,2), "\nx must be a 2-vector [min,max].")
+    assert(is_undef(y) || is_vector(y,2), "\nx must be a 2-vector [min,max].")
+    assert(is_undef(z) || is_vector(z,2), "\nx must be a 2-vector [min,max].")
+    let(
+        isvnf = is_vnf(pts),
+        p = isvnf ? pts[0] : pts,
+        bounds = isvnf ? vnf_bounds(pts) : pointlist_bounds(pts),
+        dim = len(bounds[0]),
+        err = assert(is_undef(z) || (dim>2 && is_def(z)), "\n2D data detected with z range specified."),
+        whichdim = [is_def(x), is_def(y), is_def(z)],
+        xmin = bounds[0][0],
+        ymin = bounds[0][1],
+        zmin = dim>2 ? bounds[0][2] : 0,
+        // new scales
+        xscale = whichdim.x ? (x[1]-x[0]) / (bounds[1][0]-xmin) : 1,
+        yscale = whichdim.y ? (y[1]-y[0]) / (bounds[1][1]-ymin) : 1,
+        zscale = whichdim.z ? (z[1]-z[0]) / (bounds[1][2]-zmin) : 1,
+        // new offsets
+        xo = whichdim.x ? x[0] : 0,
+        yo = whichdim.y ? y[0] : 0,
+        zo = whichdim.z ? z[0] : 0,
+        // shift original min to 0, rescale to new scale, shift back to new min
+        newpts = move(dim>2 ? [xo,yo,zo] : [xo,yo],
+                      scale(dim>2 ? [xscale,yscale,zscale] : [xscale,yscale],
+                             move(dim>2 ? -[xmin,ymin,zmin] : -[xmin,ymin], pts)))
+    ) isvnf ? [newpts[0], pts[1]] : newpts;
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

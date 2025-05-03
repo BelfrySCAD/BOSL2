@@ -3621,23 +3621,17 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   color("blue") down(1)
 //       square((len(field)-1)*pixsize, true);
 // Example(3D,NoAxes): You can pass a function literal taking x,y arguments, in which case the center value of each pixel is computed in addition to the corners for somewhat greater resolution than the specified pixel size. By default, two smoothing passes are performed on the output paths when making contours from a function.
-//   function wave2d(x,y,wavelen) =
+//   wavelen=42;
+//   wave2d = function(x,y)
 //       40*cos(180/wavelen*norm([x,y]));
-//   
 //   isoval=-30;
 //   pixsize = 10;
-//   wavelen=42;
 //   translate([0,0,isoval]) color("green") zrot(-90)
-//       contour(function(x,y) wave2d(x,y,wavelen),
+//       contour(wave2d, 
 //           bounding_box=[[-50,-50],[50,50]],
 //           isovalue=[isoval,INF], pixel_size=pixsize);
-//   
-//   %heightfield(size=[100,100], bottom=-45, data=[
-//       for (y=[-50:pixsize:50]) [
-//           for(x=[-50:pixsize:50])
-//               wave2d(x,y,wavelen)
-//       ]
-//   ], style="quincunx");
+//   %plot3d(wave2d, [-50:pixsize:50],[-50:pixsize:50],
+//          style="quincunx",base=5);
 // Example(2D,NoAxes): Here's a simple function that produces a contour in the shape of a flower with some petals. Note that the function has smaller values inside the shape so we choose a `-INF` bound for the isovalue.  
 //   f = function (x, y, petals=5)
 //       sin(petals*atan2(y,x)) + norm([x,y]);
@@ -3665,13 +3659,8 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 //   bbox = 720;
 //   up(isovalue) color("red") linear_extrude(1)
 //       contour(f, [isovalue,INF], bbox, pixel_size);
-//   %heightfield(size=[720,720], data = [
-//           for (y=[-360:pixel_size/2:360]) [
-//               for(x=[-360:pixel_size/2:360])
-//                   f(x,y)
-//           ]
-//       ],
-//       bottom=-70, maxz=70, style="quincunx");
+//   %plot3d(f, [-360:pixel_size/2:360],
+//           [-360:pixel_size/2:360], style="quincunx");
 // Example(2D,NoAxes): A [Cassini oval](https://en.wikipedia.org/wiki/Cassini_oval) is a curve drawn such that for any point on the perimeter, the product of the distances from two fixed points is constant. The curve resembles two circular [metaballs](#functionmodule-metaballs2d) interacting. When the ratio `b/a=1`, there is a cusp where two contours meet at the origin, although the contour algorithm doesn't allow the two contours to touch.
 //   a=4;  b=4.1;
 //   f = function(x,y) (x^2+y^2)^2 - 2*a^2*(x^2-y^2) + a^4;
