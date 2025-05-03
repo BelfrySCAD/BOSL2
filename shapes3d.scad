@@ -1017,102 +1017,26 @@ function regular_prism(n,
     assert(is_vector(shift,2), "shift must be a 2D vector.")
     let(
         vnf = any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2])
-              ? assert(is_undef(texture), "Cannot combine roundings or chamfers with texturing")
-                let(
-                      vang = atan2(r1-r2,height),
-                      _chamf1 = first_defined([chamfer1, if (is_undef(rounding1)) chamfer, 0]),
-                      _chamf2 = first_defined([chamfer2, if (is_undef(rounding2)) chamfer, 0]),
-                      _fromend1 = first_defined([from_end1, from_end, false]),
-                      _fromend2 = first_defined([from_end2, from_end, false]),
-                      chang1 = first_defined([chamfang1, chamfang, 45+sign(_chamf1)*vang/2]),
-                      chang2 = first_defined([chamfang2, chamfang, 45-sign(_chamf2)*vang/2]),
-                      round1 = first_defined([rounding1, if (is_undef(chamfer1)) rounding, 0]),
-                      round2 = first_defined([rounding2, if (is_undef(chamfer2)) rounding, 0]),
-                      checks1 =
-                          assert(is_finite(_chamf1), "chamfer1 must be a finite number if given.")
-                          assert(is_finite(_chamf2), "chamfer2 must be a finite number if given.")
-                          assert(is_finite(chang1) && chang1>0, "chamfang1 must be a positive number if given.")
-                          assert(is_finite(chang2) && chang2>0, "chamfang2 must be a positive number if given.")
-                          assert(chang1<90+sign(_chamf1)*vang, "chamfang1 must be smaller than the cone face angle")
-                          assert(chang2<90-sign(_chamf2)*vang, "chamfang2 must be smaller than the cone face angle")
-                          assert(num_defined([chamfer1,rounding1])<2, "cannot define both chamfer1 and rounding1")
-                          assert(num_defined([chamfer2,rounding2])<2, "cannot define both chamfer2 and rounding2")
-                          assert(num_defined([chamfer,rounding])<2, "cannot define both chamfer and rounding")                                
-                          undef,
-                      chamf1r = !_chamf1? 0
-                              : !_fromend1? _chamf1
-                              : law_of_sines(a=_chamf1, A=chang1, B=180-chang1-(90-sign(_chamf2)*vang)),
-                      chamf2r = !_chamf2? 0
-                              : !_fromend2? _chamf2
-                              : law_of_sines(a=_chamf2, A=chang2, B=180-chang2-(90+sign(_chamf2)*vang)),
-                      chamf1l = !_chamf1? 0
-                              : _fromend1? abs(_chamf1)
-                              : abs(law_of_sines(a=_chamf1, A=180-chang1-(90-sign(_chamf1)*vang), B=chang1)),
-                      chamf2l = !_chamf2? 0
-                              : _fromend2? abs(_chamf2)
-                              : abs(law_of_sines(a=_chamf2, A=180-chang2-(90+sign(_chamf2)*vang), B=chang2)),
-                      facelen = adj_ang_to_hyp(height, abs(vang)),
-
-                      roundlen1 = round1 >= 0 ? round1/tan(45-vang/2)
-                                              : round1/tan(45+vang/2),
-                      roundlen2 = round2 >=0 ? round2/tan(45+vang/2)
-                                             : round2/tan(45-vang/2),
-                      dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1 : 0), 
-                      dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0),
-                      td_ang = teardrop == true? 45 :
-                          teardrop == false? 90 :
-                          assert(is_finite(teardrop))
-                          assert(teardrop>=0 && teardrop<=90)
-                          teardrop,
-                      clip_ang = clip_roundings == true? 45 :
-                          clip_roundings == false? 90 :
-                          assert(is_finite(clip_roundings))
-                          assert(clip_roundings>=0 && clip_roundings<=90)
-                          clip_roundings,
-
-                      checks2 =
-                          assert(is_finite(round1), "rounding1 must be a number if given.")
-                          assert(is_finite(round2), "rounding2 must be a number if given.")
-                          assert(chamf1r <= r1, "chamfer1 is larger than the r1 radius of the cylinder.")
-                          assert(chamf2r <= r2, "chamfer2 is larger than the r2 radius of the cylinder.")
-                          assert(roundlen1 <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
-                          assert(roundlen2 <= r2, "size of rounding2 is larger than the r2 radius of the cylinder.")
-                          assert(dy1+dy2 <= facelen, "Chamfers/roundings don't fit on the cylinder/cone.  They exceed the length of the cylinder/cone face.")
-                          assert(td_ang==90 || clip_ang==90, "teardrop= and clip_roundings= are mutually exclusive features.")
-                          undef,
-                      path = [
-                          [0,-height/2],
-                          if (!approx(chamf1r,0))
-                              each [
-                                  [r1, -height/2] + polar_to_xy(chamf1r,180),
-                                  [r1, -height/2] + polar_to_xy(chamf1l,90+vang),
-                              ]
-                          else if (!approx(round1,0) && td_ang < 90)
-                              each _teardrop_corner(r=round1, corner=[[max(0,r1-2*roundlen1),-height/2],[r1,-height/2],[r2,height/2]], ang=td_ang)
-                          else if (!approx(round1,0) && clip_ang < 90)
-                              each _clipped_corner(r=round1, corner=[[max(0,r1-2*roundlen1),-height/2],[r1,-height/2],[r2,height/2]], ang=clip_ang)
-                          else if (!approx(round1,0) && td_ang >= 90)
-                              each arc(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-height/2],[r1,-height/2],[r2,height/2]])
-                          else [r1,-height/2],
-
-                          if (is_finite(chamf2r) && !approx(chamf2r,0))
-                              each [
-                                  [r2, height/2] + polar_to_xy(chamf2l,270+vang),
-                                  [r2, height/2] + polar_to_xy(chamf2r,180),
-                              ]
-                          else if (is_finite(round2) && !approx(round2,0))
-                              each arc(r=abs(round2), corner=[[r1,-height/2],[r2,height/2],[max(0,r2-2*roundlen2),height/2]])
-                          else [r2,height/2],
-                          [0,height/2],
-                      ]
-                )
-                rotate_sweep(path,caps=true,$fn=n)
-              : is_undef(texture) ? cylinder(h=height, r1=r1, r2=r2, center=true, $fn=n)
-              : linear_sweep(regular_ngon(n=n,r=r1),scale=r2/r1,height=height,center=true,
-                             texture=texture, tex_reps=tex_reps, tex_size=tex_size,
-                             tex_inset=tex_inset, tex_rot=tex_rot,
-                             tex_depth=tex_depth, tex_samples=tex_samples,
-                             style=style),
+            ? assert(is_undef(texture), "Cannot combine roundings or chamfers with texturing")
+              let(
+                  path = [
+                           [0,-height/2],
+                           each _cyl_path(r1, r2, height, 
+                                          chamfer, chamfer1, chamfer2,
+                                          chamfang, chamfang1, chamfang2,
+                                          rounding, rounding1, rounding2,
+                                          from_end, from_end1, from_end2,
+                                          teardrop, clip_roundings),
+                           [0,height/2]
+                         ]
+              )
+              rotate_sweep(path,caps=true,$fn=n)
+            : is_undef(texture) ? cylinder(h=height, r1=r1, r2=r2, center=true, $fn=n)
+            : linear_sweep(regular_ngon(n=n,r=r1),scale=r2/r1,height=height,center=true,
+                           texture=texture, tex_reps=tex_reps, tex_size=tex_size,
+                           tex_inset=tex_inset, tex_rot=tex_rot,
+                           tex_depth=tex_depth, tex_samples=tex_samples,
+                           style=style),
         skmat = down(height/2) *
             skew(sxz=shift.x/height, syz=shift.y/height) *
             up(height/2) *
