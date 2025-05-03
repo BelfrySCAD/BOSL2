@@ -122,7 +122,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: No edges.
 //   trimcorners = If true, rounds or chamfers corners where three chamfered/rounded edges meet.  Default: `true`
 //   teardrop = If given as a number, rounding around the bottom edge of the cuboid won't exceed this many degrees from vertical, altering to a chamfer at that angle.  If true, the limit angle is 45 degrees.  Default: `false`
-//   clip_roundings = If given as a number, rounding around the bottom edge of the cuboid won't exceed this many degrees from vertical, with the rounding stopping at the bottom of the cuboid.  If true, the limit angle is 45 degrees.  Default: `false`
+//   clip_angle = If given as a number, rounding around the bottom edge of the cuboid won't exceed this many degrees from vertical, with the rounding stopping at the bottom of the cuboid.  Default: (no clipping)
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=FRONT+LEFT+BOTTOM`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -149,7 +149,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 // Example(VPR=[100,0,25],VPD=180): Rounded Edges and Corners with Teardrop Bottoms
 //   cuboid([30,40,50], rounding=10, teardrop=true);
 // Example(VPR=[100,0,25],VPD=180): Rounded Edges and Corners with Clipped Bottoms
-//   cuboid([30,40,50], rounding=10, clip_roundings=40);
+//   cuboid([30,40,50], rounding=10, clip_angle=40);
 // Example: Rounded Edges, Untrimmed Corners
 //   cuboid([30,40,50], rounding=10, trimcorners=false);
 // Example: Chamferring Selected Edges
@@ -203,7 +203,7 @@ module cuboid(
     except_edges,
     trimcorners=true,
     teardrop=false,
-    clip_roundings=false,
+    clip_angle,
     anchor=CENTER,
     spin=0,
     orient=UP
@@ -223,9 +223,9 @@ module cuboid(
     module xtcyl(l,r) {
         if (teardrop) {
             teardrop(r=r, l=l, cap_h=r, ang=teardrop, spin=90, orient=DOWN);
-        } else if (clip_roundings) {
-            cap_h = r * sin(clip_roundings);
-            down(r-cap_h) teardrop(r=r, l=l, cap_h=cap_h, ang=clip_roundings, spin=90, orient=DOWN);
+        } else if (is_finite(clip_angle)) {
+            cap_h = r * sin(clip_angle);
+            down(r-cap_h) teardrop(r=r, l=l, cap_h=cap_h, ang=clip_angle, spin=90, orient=DOWN);
         } else {
             yrot(90) cyl(l=l, r=r);
         }
@@ -233,9 +233,9 @@ module cuboid(
     module ytcyl(l,r) {
         if (teardrop) {
             teardrop(r=r, l=l, cap_h=r, ang=teardrop, spin=0, orient=DOWN);
-        } else if (clip_roundings) {
-            cap_h = r * sin(clip_roundings);
-            down(r-cap_h) teardrop(r=r, l=l, cap_h=cap_h, ang=clip_roundings, spin=0, orient=DOWN);
+        } else if (is_finite(clip_angle)) {
+            cap_h = r * sin(clip_angle);
+            down(r-cap_h) teardrop(r=r, l=l, cap_h=cap_h, ang=clip_angle, spin=0, orient=DOWN);
         } else {
             zrot(90) yrot(90) cyl(l=l, r=r);
         }
@@ -243,9 +243,9 @@ module cuboid(
     module tsphere(r) {
         if (teardrop) {
             onion(r=r, cap_h=r, ang=teardrop, orient=DOWN);
-        } else if (clip_roundings) {
-            cap_h = r * sin(clip_roundings);
-            down(r-cap_h) onion(r=r, cap_h=cap_h, ang=clip_roundings, orient=DOWN);
+        } else if (is_finite(clip_angle)) {
+            cap_h = r * sin(clip_angle);
+            down(r-cap_h) onion(r=r, cap_h=cap_h, ang=clip_angle, orient=DOWN);
         } else {
             spheroid(r=r, style="octa", orient=DOWN);
         }
@@ -348,7 +348,6 @@ module cuboid(
     size = force_list(default(size,1),3);
     edges = _edges(edges, except=first_defined([except_edges,except]));
     teardrop = is_bool(teardrop)&&teardrop? 45 : teardrop;
-    clip_roundings = is_bool(clip_roundings)&&clip_roundings? 45 : clip_roundings;
     chamfer = approx(chamfer,0) ? undef : chamfer;
     rounding = approx(rounding,0) ? undef : rounding;
     checks =
@@ -358,8 +357,8 @@ module cuboid(
         assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value")
         assert(is_undef(rounding) || is_undef(chamfer), "Cannot specify nonzero value for both chamfer and rounding")
         assert(teardrop==false || (is_finite(teardrop) && teardrop>0 && teardrop<=90), "teardrop must be either false or an angle number between 0 and 90")
-        assert(clip_roundings==false || (is_finite(clip_roundings) && clip_roundings>0 && clip_roundings<=90), "clip_roundings must be either false or an angle number between 0 and 90")
-        assert(!teardrop || !clip_roundings, "teardrop= and clip_roundings= are mutually exclusive features.")
+        assert(clip_angle==undef || (is_finite(clip_angle) && clip_angle>0 && clip_angle<=90), "clip_angle must be either false or an angle number between 0 and 90")
+        assert(!teardrop || clip_angle==undef, "teardrop= and clip_angle= are mutually exclusive features.")
         assert(is_undef(p1) || is_vector(p1,3), "p1 must be a 3-vector")
         assert(is_undef(p2) || is_vector(p2,3), "p2 must be a 3-vector")
         assert(is_bool(trimcorners));
@@ -892,7 +891,7 @@ function prismoid(
 //   rounding2 = The radius of the rounding on the top end of the prism.
 //   realign = If true, rotate the prism by half the angle of one face so that a face points in the X+ direction.  Default: false
 //   teardrop = If given as a number, rounding around the bottom edge of the prism won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
-//   clip_roundings = If given as a number, rounding around the bottom edge of the prism won't exceed this many degrees from vertical, with the rounding stopping at the bottom of the prism.  If true, the limit angle is 45 degrees.  Default: `false`
+//   clip_angle = If given as a number, rounding around the bottom edge of the prism won't exceed this many degrees from vertical, with the rounding stopping at the bottom of the prism.  Default: (no clipping)
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
@@ -911,7 +910,7 @@ function prismoid(
 // Example:  With teardrop end rounding
 //   regular_prism(5,r=10,h=25,rounding=3,teardrop=40,$fn=32);
 // Example:  With clipped end rounding
-//   regular_prism(5,r=10,h=25,rounding=3,clip_roundings=40,$fn=32);
+//   regular_prism(5,r=10,h=25,rounding=3,clip_angle=40,$fn=32);
 // Example:  By side length at bottom, inner radius at top, shallow chamfer
 //   regular_prism(7, side1=10, ir2=7, height=20,chamfer2=2,chamfang2=20);
 // Example: With shift
@@ -940,7 +939,7 @@ module regular_prism(n,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     realign=false, shift=[0,0],
-    teardrop=false, clip_roundings=false,
+    teardrop=false, clip_angle,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps,
     tex_inset=false, tex_rot=0,
@@ -956,7 +955,7 @@ module regular_prism(n,
                                   chamfang=chamfang,chamfang1=chamfang1,chamfang2=chamfang2,
                                   rounding=rounding,rounding1=rounding1, rounding2=rounding2,
                                   realign=realign, shift=shift,
-                                  teardrop=teardrop, clip_roundings=clip_roundings,
+                                  teardrop=teardrop, clip_angle=clip_angle,
                                   from_end=from_end, from_end1=from_end1, from_end2=from_end2,
                                   texture=texture, tex_size=tex_size, tex_reps=tex_reps,
                                   tex_inset=tex_inset, tex_rot=tex_rot,
@@ -979,7 +978,7 @@ function regular_prism(n,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign=false, shift=[0,0],
-    teardrop=false, clip_roundings=false,
+    teardrop=false, clip_angle,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps,
     tex_inset=false, tex_rot=0,
@@ -1026,7 +1025,7 @@ function regular_prism(n,
                                           chamfang, chamfang1, chamfang2,
                                           rounding, rounding1, rounding2,
                                           from_end, from_end1, from_end2,
-                                          teardrop, clip_roundings),
+                                          teardrop, clip_angle),
                            [0,height/2]
                          ]
               )
@@ -1959,10 +1958,10 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   cyl(l|h|length|height, r|d, chamfer1=, chamfer2=, [chamfang1=], [chamfang2=], [from_end=], ...);
 //
 // Usage: Rounded End Cylinders
-//   cyl(l|h|length|height, r|d, rounding=, [teardrop=], [clip_roundings=], ...);
-//   cyl(l|h|length|height, r|d, rounding1=, [teardrop=], [clip_roundings=], ...);
-//   cyl(l|h|length|height, r|d, rounding2=, [teardrop=], [clip_roundings=], ...);
-//   cyl(l|h|length|height, r|d, rounding1=, rounding2=, [teardrop=], [clip_roundings=], ...);
+//   cyl(l|h|length|height, r|d, rounding=, [teardrop=], [clip_angle=], ...);
+//   cyl(l|h|length|height, r|d, rounding1=, [teardrop=], [clip_angle=], ...);
+//   cyl(l|h|length|height, r|d, rounding2=, [teardrop=], [clip_angle=], ...);
+//   cyl(l|h|length|height, r|d, rounding1=, rounding2=, [teardrop=], [clip_angle=], ...);
 //
 // Usage: Textured Cylinders
 //   cyl(l|h|length|height, r|d, texture=, [tex_size=]|[tex_reps=], [tex_depth=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
@@ -2044,7 +2043,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   extra2 = Add extra height to the top end.  
 //   realign = If true, rotate the cylinder by half the angle of one face.
 //   teardrop = If given as a number, rounding around the bottom edge of the cylinder won't exceed this many degrees from horizontal.  If true, the limit angle is 45 degrees.  Default: `false`
-//   clip_roundings = If given as a number, rounding around the bottom edge of the cylinder won't exceed this many degrees from horizontal, with the rounding stopping at the bottom of the cylinder.  If true, the limit angle is 45 degrees.  Default: `false`
+//   clip_angle = If given as a number, rounding around the bottom edge of the cylinder won't exceed this many degrees from horizontal, with the rounding stopping at the bottom of the cylinder.  Default: (no clipping)
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
@@ -2086,7 +2085,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   cyl(l=40, d=40, rounding=10, teardrop=true);
 //
 // Example(VPD=175;VPR=[90,0,0]): Clipped Bottom Rounding
-//   cyl(l=40, d=40, rounding=10, clip_roundings=40);
+//   cyl(l=40, d=40, rounding=10, clip_angle=40);
 //
 // Example: Heterogenous Chamfers and Rounding
 //   ydistribute(80) {
@@ -2190,7 +2189,7 @@ function _cyl_path(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     from_end, from_end1, from_end2,
-    teardrop=false, clip_roundings=false
+    teardrop=false, clip_angle
 ) =
     let(  
         vang = atan2(r1-r2,l),
@@ -2240,11 +2239,10 @@ function _cyl_path(
             assert(teardrop>=0 && teardrop<=90)
             teardrop,
 
-        clip_ang = clip_roundings == true? 45 :
-            clip_roundings == false? 90 :
-            assert(is_finite(clip_roundings))
-            assert(clip_roundings>=0 && clip_roundings<=90)
-            clip_roundings
+        clip_ang = clip_angle == undef? 90 :
+            assert(is_finite(clip_angle))
+            assert(clip_angle>=0 && clip_angle<=90)
+            clip_angle
     ) 
     assert(is_finite(round1), "rounding1 must be a number if given.")
     assert(is_finite(round2), "rounding2 must be a number if given.")
@@ -2253,7 +2251,7 @@ function _cyl_path(
     assert(roundlen1 <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
     assert(roundlen2 <= r2, "size of rounding2 is larger than the r2 radius of the cylinder.")
     assert(dy1+dy2 <= facelen, "Chamfers/roundings don't fit on the cylinder/cone.  They exceed the length of the cylinder/cone face.")
-    assert(td_ang==90 || clip_ang==90, "teardrop= and clip_roundings= are mutually exclusive options.")
+    assert(td_ang==90 || clip_ang==90, "teardrop= and clip_angle= are mutually exclusive options.")
     [
        if (!approx(chamf1r,0))
            each [
@@ -2289,7 +2287,7 @@ function cyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign=false, shift=[0,0],
-    teardrop=false, clip_roundings=false,
+    teardrop=false, clip_angle,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
@@ -2333,7 +2331,7 @@ function cyl(
                                    chamfang, chamfang1, chamfang2,
                                    rounding, rounding1, rounding2,
                                    from_end, from_end1, from_end2,
-                                   teardrop, clip_roundings),
+                                   teardrop, clip_angle),
                  path = [
                           if (texture==undef) [0,-l/2-extra1],
                           if (extra1>0) cpath[0]-[0,extra1],
@@ -2404,7 +2402,7 @@ module cyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign=false, shift=[0,0],
-    teardrop=false, clip_roundings=false,
+    teardrop=false, clip_angle,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
@@ -2444,7 +2442,7 @@ module cyl(
                     chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
                     rounding=rounding, rounding1=rounding1, rounding2=rounding2,
                     from_end=from_end, from_end1=from_end1, from_end2=from_end2,
-                    teardrop=teardrop, clip_roundings=clip_roundings,
+                    teardrop=teardrop, clip_angle=clip_angle,
                     texture=texture, tex_size=tex_size,
                     tex_reps=tex_reps, tex_depth=tex_depth,
                     tex_inset=tex_inset, tex_rot=tex_rot,
@@ -2729,7 +2727,7 @@ module zcyl(
 //   tube(h|l, ir1=|id1=, ir2=|id2=, or1=|od1=, or2=|od2=, ...) [ATTACHMENTS];
 //   tube(h|l, or1=|od1=, or2=|od2=, wall=, ...) [ATTACHMENTS];
 // Usage: Rounded and chamfered tubes
-//   tube(..., [rounding=], [irounding=], [orounding=], [rounding1=], [rounding2=], [irounding1=], [irounding2=], [orounding1=], [orounding2=], [teardrop=], [clip_roundings=]);
+//   tube(..., [rounding=], [irounding=], [orounding=], [rounding1=], [rounding2=], [irounding1=], [irounding2=], [orounding1=], [orounding2=], [teardrop=], [clip_angle=]);
 //   tube(..., [chamfer=], [ichamfer=], [ochamfer=], [chamfer1=], [chamfer2=], [ichamfer1=], [ichamfer2=], [ochamfer1=], [ochamfer2=]);
 // Arguments:
 //   h / l / height / length = height of tube. Default: 1
@@ -2771,7 +2769,7 @@ module zcyl(
 //   ochamfer1 = The size of the chamfer on the bottom outside end of the tube.
 //   ochamfer2 = The size of the chamfer on the top outside end of the tube.
 //   teardrop = If given as a number, rounding around the bottom edges won't exceed this many degrees from the endcap, altering to a chamfer at that angle.  If true, the limit angle is 45 degrees.  Default: `false`
-//   clip_roundings = If given as a number, rounding around the bottom edges won't exceed this many degrees from the endcap, with the rounding stopping at the bottom of the shape.  If true, the limit angle is 45 degrees.  Default: `false`
+//   clip_angle = If given as a number, rounding around the bottom edges won't exceed this many degrees from the endcap, with the rounding stopping at the bottom of the shape.  Default: (no clipping)
 //   realign = If true, rotate the inner and outer parts tube by half the angle of one face so that a face is aligned at the X+ axis.  Default: False
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -2807,7 +2805,7 @@ module zcyl(
 // Example: Clipped bottom rounding
 //   back_half()
 //     tube(ir=10,or=20,or2=5,ir2=2, h=30,
-//         rounding1=5, rounding2=1.5, clip_roundings=true);
+//         rounding1=5, rounding2=1.5, clip_angle=40);
 // Example: Mixing chamfers and roundings
 //   back_half()
 //     tube(ir=10,or=20,h=30, ochamfer1=-5,irounding1=-3, orounding2=6, ichamfer2=2);
@@ -2825,7 +2823,7 @@ function tube(
     realign=false, l, length, height,
     anchor, spin=0, orient=UP, orounding1,irounding1,orounding2,irounding2,rounding1,rounding2,rounding,
     ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer,
-    teardrop=false, clip_roundings=false, shift=[0,0],
+    teardrop=false, clip_angle, shift=[0,0],
     ifn, rounding_fn, circum=false
 ) = no_function("tube");
 
@@ -2839,7 +2837,7 @@ module tube(
     realign=false, l, length, height,
     anchor, spin=0, orient=UP, orounding1,irounding1,orounding2,irounding2,rounding1,rounding2,rounding,
     ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer,
-    teardrop=false, clip_roundings=false, shift=[0,0],
+    teardrop=false, clip_angle, shift=[0,0],
     ifn, rounding_fn, circum=false
 ) {
     h = one_defined([h,l,height,length],"h,l,height,length",dflt=1);
@@ -2913,7 +2911,7 @@ module tube(
                each _cyl_path(r1,r2,h, 
                               chamfer1=ochamfer1, chamfer2=ochamfer2,
                               rounding1=orounding1, rounding2=orounding2,
-                              teardrop=teardrop, clip_roundings=clip_roundings),
+                              teardrop=teardrop, clip_angle=clip_angle),
                [0,h/2]
              ];
     ipath = _cyl_path(adj_ir1,adj_ir2,h, 
