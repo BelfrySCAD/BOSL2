@@ -228,8 +228,8 @@ function xy_to_polar(x, y) =
 //   to 3D with `lift_plane()`.  You could also use this to force approximately coplanar data to be exactly coplanar.
 //   The parameter p can be a point, path, region, bezier patch or VNF.
 //   The plane can be specified as
-//   - A list of three points.  The planar coordinate system will have [0,0] at plane[0], with plane[1] lying on the Y+ axis.
-//   - A list of non-collinear points that define a plane. The points need not be coplanar.
+//   - A list of three points.  The planar coordinate system should have [0,0] at plane[0], with plane[1] lying on the Y+ axis.
+//   - A list of non-collinear, coplanar points that define a plane.
 //   - A plane definition `[A,B,C,D]` where `Ax+By+CZ=D`.  The closest point on that plane to the origin maps to the origin in the new coordinate system.
 //   .
 //   If you omit the point specification then `project_plane()` returns a rotation matrix that maps the specified plane to the XY plane.
@@ -270,8 +270,8 @@ function project_plane(plane,p) =
           rot(from=n, to=UP) * move(-cp)
     : is_path(plane,3) && is_undef(p) ?               // no data, generic point list plane
           assert(len(plane)>=3, "\nNeed three points to define a plane.")
-          let(plane = plane_from_points(plane))
-          //assert(is_def(plane), "\nPoint list is not coplanar.") //plane_from_points returns best fit plane by default
+          let(plane = plane_from_points(plane, check_coplanar=true))
+          assert(is_def(plane), "\nPoint list is not coplanar.")
           project_plane(plane)
     : assert(is_def(p), str("Invalid plane specification: ",plane))
       is_vnf(p) ? [project_plane(plane,p[0]), p[1]] 
@@ -304,7 +304,7 @@ function project_plane(plane,p) =
 //   The parameter p can be a point, path, region, bezier patch or VNF.
 //   The plane can be specified as
 //   - A list of three points.  The planar coordinate system will have [0,0] at plane[0], with plane[1] lying on the Y+ axis.
-//   - A list of coplanar points that define a plane (not-collinear)
+//   - A list of non-collinear, coplanar points that define a plane.
 //   - A plane definition `[A,B,C,D]` where `Ax+By+CZ=D`.  The closest point on that plane to the origin maps to the origin in the new coordinate system.
 //   .
 //   If you do not supply `p` then you get a transformation matrix that operates in 3D, assuming that the Z coordinate of the points is zero.
@@ -329,8 +329,8 @@ function lift_plane(plane, p) =
           move(cp) * rot(from=UP, to=n)
     : is_path(plane,3) && is_undef(p) ?               // no data, generic point list plane
           assert(len(plane)>=3, "\nNeed three points to define a plane.")
-          let(plane = plane_from_points(plane))
-          //assert(is_def(plane), "Point list is not coplanar")
+          let(plane = plane_from_points(plane, check_coplanar=true))
+          assert(is_def(plane), "Point list is not coplanar")
           lift_plane(plane)
     : is_vnf(p) ? [lift_plane(plane,p[0]), p[1]] 
     : is_list(p) && is_list(p[0]) && is_vector(p[0][0],3) ?  // bezier patch or region
