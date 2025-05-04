@@ -982,7 +982,7 @@ function linear_sweep(
 //                tex_reps=[6,2],caps=true);
 // Example(NoAxes): If we manually connect the top and bottom then they also receive texture.  
 //   rotate_sweep([[0,-10],[20,-10],[20,10],[0,10]], 
-//                tex_reps=[6,6],,tex_depth=1.5,
+//                tex_reps=[6,6],tex_depth=1.5,
 //                texture="dots");
 // Example(NoAxes,VPR=[95.60,0.00,69.80],VPD=74.40,VPT=[5.81,5.74,1.97]): You can connect just the top or bottom alone instead of both to get texture on one and a flat cap on the other.  Here you can see that the sloped top has texture but the bottom does not.  Also note that the texture doesn't fit neatly on the side and top like it did in the previous two examples, but makes a somewhat ugly transition across the corner.  You have to size your object carefully so that the tops and sides each fit an integer number of texture tiles to avoid this type of transition.  
 //   rotate_sweep([[15,-10],[15,10],[0,15]],
