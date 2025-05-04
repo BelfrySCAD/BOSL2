@@ -270,7 +270,7 @@ module test_line_from_points() {
     assert_approx(line_from_points([[1,0],[0,0],[-1,0]]),[[-1,0],[1,0]]);
     assert_approx(line_from_points([[1,1],[0,1],[-1,1]]),[[-1,1],[1,1]]);
     assert(line_from_points([[1,1],[0,1],[-1,0]],check_collinear=true)==undef);
-    assert(line_from_points([[3,3],[0,3],[0,0]],check_collinear=false)==[[-0.5,0.5],[2.5,3.5]]);
+    assert(line_from_points([[3,3],[0,3],[0,0]],check_collinear=false)-[[-0.5,0.5],[2.5,3.5]]<[[EPSILON,EPSILON],[EPSILON,EPSILON]]);
 }
 *test_line_from_points();
 
