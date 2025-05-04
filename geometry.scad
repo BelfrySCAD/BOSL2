@@ -446,7 +446,7 @@ function line_from_points(points, check_collinear=false, eps=EPSILON) =
             evec   = unit(covmix[1]), // normalized eigenvector corresponding to largest eigenvalue
             maxext = let(b=pointlist_bounds(points)) norm(b[1]-b[0])/2,
             line3d = [pm-evec*maxext, pm+evec*maxext],
-            line = twod ? path2d(line3d) : line
+            line = twod ? path2d(line3d) : line3d
         )
         check_collinear && _line_greatest_distance(points,line)>eps ? undef
         : line;
