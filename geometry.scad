@@ -434,12 +434,12 @@ function _line_greatest_distance(points,line) = // internal function
         max(d);
 
 function line_from_points(points, check_collinear=false, eps=EPSILON) =
-    assert( is_path(points,dim=3), "\nImproper 3d point list." )
+    assert( is_path(points), "\nInvalid point list." )
     assert( is_finite(eps) && (eps>=0), "\nThe tolerance should be a non-negative value." )
     len(points) == 2
       ? points 
       : let(
-            covmix = _covariance_evec_eval(points,0), // pass 0 to use largest eigenvalue
+            covmix = _covariance_evec_eval(path3d(points), 0), // pass 0 to use largest eigenvalue
             pm     = covmix[0], // point mean
             evec   = unit(covmix[1]), // normalized eigenvector corresponding to largest eigenvalue
             maxext = let(b=pointlist_bounds(points)) norm(b[1]-b[0])/2,
