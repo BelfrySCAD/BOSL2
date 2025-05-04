@@ -434,12 +434,14 @@ function _line_greatest_distance(points,line) = // internal function
     : let(d = [ for(p=points) point_line_distance(p, line) ])
         max(d);
 
-function line_from_points(points, check_collinear=false, eps=EPSILON) =
+function line_from_points(points, check_collinear=false, eps=EPSILON, fast) =
     assert( is_path(points), "\nInvalid point list." )
     assert( is_finite(eps) && (eps>=0), "\nThe tolerance should be a non-negative value." )
     len(points) == 2
       ? points 
       : let(
+            dep = is_def(fast) ? echo("In line_from_points() the 'fast' parameter is deprecated; use 'check_collinear' instead.") true : false,
+            check = dep ? fast : check_collinear,
             twod = is_path(points,2),
             covmix = _covariance_evec_eval(path3d(points), 0), // pass 0 to use largest eigenvalue
             pm     = covmix[0], // point mean
@@ -448,7 +450,7 @@ function line_from_points(points, check_collinear=false, eps=EPSILON) =
             line3d = [pm-evec*maxext, pm+evec*maxext],
             line = twod ? path2d(line3d) : line3d
         )
-        check_collinear && _line_greatest_distance(points,line)>eps ? undef
+        check && _line_greatest_distance(points,line)>eps ? undef
         : line;
 
 
@@ -624,19 +626,21 @@ function _covariance_evec_eval(points, eigenvalue_id) =
 //       color("#06f") anchor_arrow(50, flag=false);
 //       %linear_extrude(0.1) square(100, center=true);
 //   }
-function plane_from_points(points, check_coplanar=false, eps=EPSILON) =
+function plane_from_points(points, check_coplanar=false, eps=EPSILON, fast) =
     assert( is_path(points,dim=3), "\nImproper 3d point list." )
     assert( is_finite(eps) && (eps>=0), "\nThe tolerance should be a non-negative value." )
     len(points) == 3
       ? plane3pt(points[0],points[1],points[2]) 
       : let(
+            dep = is_def(fast) ? echo("In plane_from_points() the 'fast' parameter is deprecated; use 'check_coplanar' instead.") true : false,
+            check = dep ? fast : check_coplanar,
             covmix = _covariance_evec_eval(points,2),
             pm     = covmix[0], // point mean
             evec   = covmix[1], // eigenvector corresponding to smallest eigenvalue
             eval0  = covmix[2], // smallest eigenvalue
             plane  = [ each evec, pm*evec]
         )
-        check_coplanar && _pointlist_greatest_distance(points,plane)>eps*eval0 ? undef :
+        check && _pointlist_greatest_distance(points,plane)>eps*eval0 ? undef :
         plane ;
 
 
@@ -663,17 +667,19 @@ function plane_from_points(points, check_coplanar=false, eps=EPSILON) =
 //   #stroke(xyzpath,closed=true,width=3);
 //   cp = centroid(xyzpath);
 //   move(cp) rot(from=UP,to=plane_normal(plane)) anchor_arrow(45);
-function plane_from_polygon(poly, check_coplanar=true, eps=EPSILON) =
+function plane_from_polygon(poly, check_coplanar=true, eps=EPSILON, fast) =
     assert( is_path(poly,dim=3), "\nInvalid polygon." )
     assert( is_finite(eps) && (eps>=0), "\nThe tolerance should be a non-negative value." )
     let(
+        dep = is_def(fast) ? echo("In plane_from_polygon() the 'fast' parameter is deprecated; use 'check_coplanar' instead.") true : false,
+        check = dep ? fast : check_coplanar,
         poly_normal = polygon_normal(poly)
     )
     is_undef(poly_normal) ? undef :
     let(
         plane = plane_from_normal(poly_normal, poly[0])
     )
-    !check_coplanar ? plane : are_points_on_plane(poly, plane, eps=eps) ? plane : undef;
+    !check ? plane : are_points_on_plane(poly, plane, eps=eps) ? plane : undef;
 
 
 // Function: plane_normal()
