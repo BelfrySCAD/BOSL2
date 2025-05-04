@@ -39,9 +39,9 @@ function point2d(p, fill=0) = assert(is_list(p)) [for (i=[0:1]) (p[i]==undef)? f
 // Arguments:
 //   points = A list of 2D or 3D points/vectors.
 function path2d(points) =
-    assert(is_path(points,dim=undef,fast=true),"Input to path2d is not a path")
+    assert(is_path(points,dim=undef,fast=true),"\nInput to path2d is not a path.")
     let (result = points * concat(ident(2), repeat([0,0], len(points[0])-2)))
-    assert(is_def(result), "Invalid input to path2d")
+    assert(is_def(result), "\nInvalid input to path2d.")
     result;
 
 
@@ -76,14 +76,14 @@ function point3d(p, fill=0) =
 //   fill = Value to fill missing values in vectors with (in the 2D case).  Default: 0
 function path3d(points, fill=0) =
     assert(is_num(fill))
-    assert(is_path(points, dim=undef, fast=true), "Input to path3d is not a path")
+    assert(is_path(points, dim=undef, fast=true), "\nInput to path3d is not a path.")
     let (
         change = len(points[0])-3,
         M = change < 0? [[1,0,0],[0,1,0]] : 
             concat(ident(3), repeat([0,0,0],change)),
         result = points*M
     )
-    assert(is_def(result), "Input to path3d is invalid")
+    assert(is_def(result), "\nInput to path3d is invalid.")
     fill == 0 || change>=0 ? result : result + repeat([0,0,fill], len(result));
 
 
@@ -116,20 +116,20 @@ function point4d(p, fill=0) = assert(is_list(p))
 //   fill = Value to fill missing values in vectors with.  Default: 0 
 function path4d(points, fill=0) = 
    assert(is_num(fill) || is_vector(fill))
-   assert(is_path(points, dim=undef, fast=true), "Input to path4d is not a path")
+   assert(is_path(points, dim=undef, fast=true), "\nInput to path4d is not a path.")
    let (
       change = len(points[0])-4,
       M = change < 0 ? select(ident(4), 0, len(points[0])-1) :
                        concat(ident(4), repeat([0,0,0,0],change)),
       result = points*M
    ) 
-   assert(is_def(result), "Input to path4d is invalid")
+   assert(is_def(result), "\nInput to path4d is invalid.")
    fill == 0 || change >= 0 ? result :
     let(
       addition = is_list(fill) ? concat(0*points[0],fill) :
                                  concat(0*points[0],repeat(fill,-change))
     )
-    assert(len(addition) == 4, "Fill is the wrong length")
+    assert(len(addition) == 4, "\nFill is the wrong length.")
     result + repeat(addition, len(result));
 
 
@@ -167,9 +167,9 @@ function path4d(points, fill=0) =
 //   color("red") move(pt) circle(d=3);
 function polar_to_xy(r,theta) =
     theta != undef
-      ? assert(is_num(r) && is_num(theta), "Bad Arguments.")
+      ? assert(is_num(r) && is_num(theta), "\nBad arguments.")
         [r*cos(theta), r*sin(theta)]
-      : assert(is_list(r), "Bad Arguments")
+      : assert(is_list(r), "\nBad arguments.")
         is_num(r.x)
           ? polar_to_xy(r.x, r.y)
           : [for(p = r) polar_to_xy(p.x, p.y)];
@@ -204,9 +204,9 @@ function polar_to_xy(r,theta) =
 //   color("red") move(pt) circle(d=3);
 function xy_to_polar(x, y) =
     y != undef
-      ? assert(is_num(x) && is_num(y), "Bad Arguments.")
+      ? assert(is_num(x) && is_num(y), "\nBad arguments.")
         [norm([x, y]), atan2(y, x)]
-      : assert(is_list(x), "Bad Arguments")
+      : assert(is_list(x), "\nBad arguments.")
         is_num(x.x)
           ? xy_to_polar(x.x, x.y)
           : [for(p = x) xy_to_polar(p.x, p.y)];
@@ -223,17 +223,17 @@ function xy_to_polar(x, y) =
 //   M = project_plane(plane)
 // Description:
 //   Maps the provided 3D point(s) from 3D coordinates to a 2D coordinate system defined by `plane`.  Points that are not
-//   on the specified plane will be projected orthogonally onto the plane.  This coordinate system is useful if you need
+//   on the specified plane are projected orthogonally onto the plane.  This coordinate system is useful if you need
 //   to perform 2D operations on a coplanar set of data.  After those operations are done you can return the data
 //   to 3D with `lift_plane()`.  You could also use this to force approximately coplanar data to be exactly coplanar.
 //   The parameter p can be a point, path, region, bezier patch or VNF.
 //   The plane can be specified as
-//   - A list of three points.  The planar coordinate system will have [0,0] at plane[0], and plane[1] will lie on the Y+ axis.
-//   - A list of coplanar points that define a plane (not-collinear)
-//   - A plane definition `[A,B,C,D]` where `Ax+By+CZ=D`.  The closest point on that plane to the origin will map to the origin in the new coordinate system.
+//   - A list of three points.  The planar coordinate system will have [0,0] at plane[0], with plane[1] lying on the Y+ axis.
+//   - A list of non-collinear points that define a plane. The points need not be coplanar.
+//   - A plane definition `[A,B,C,D]` where `Ax+By+CZ=D`.  The closest point on that plane to the origin maps to the origin in the new coordinate system.
 //   .
 //   If you omit the point specification then `project_plane()` returns a rotation matrix that maps the specified plane to the XY plane.
-//   Note that if you apply this transformation to data lying on the plane it will produce 3D points with the Z coordinate of zero.
+//   Note that if you apply this transformation to data lying on the plane, it produces 3D points with the Z coordinate of zero.
 // Arguments:
 //   plane = plane specification or point list defining the plane
 //   p = 3D point, path, region, VNF or bezier patch to project
@@ -254,7 +254,7 @@ function xy_to_polar(x, y) =
 //   stroke(xypath,closed=true);
 function project_plane(plane,p) =
       is_matrix(plane,3,3) && is_undef(p) ? // no data, 3 points given
-          assert(!is_collinear(plane),"Points defining the plane must not be collinear")
+          assert(!is_collinear(plane),"\nPoints defining the plane must not be collinear.")
           let(
               v = plane[2]-plane[0],
               y = unit(plane[1]-plane[0]),        // y axis goes to point b
@@ -262,24 +262,24 @@ function project_plane(plane,p) =
           )            
           frame_map(x,y) * move(-plane[0])
     : is_vector(plane,4) && is_undef(p) ?            // no data, plane given in "plane"
-          assert(_valid_plane(plane), "Plane is not valid")
+          assert(_valid_plane(plane), "\nPlane is not valid.")
           let(
                n = point3d(plane),
                cp = n * plane[3] / (n*n)
           )
           rot(from=n, to=UP) * move(-cp)
     : is_path(plane,3) && is_undef(p) ?               // no data, generic point list plane
-          assert(len(plane)>=3, "Need three points to define a plane")
+          assert(len(plane)>=3, "\nNeed three points to define a plane.")
           let(plane = plane_from_points(plane))
-          assert(is_def(plane), "Point list is not coplanar")
+          //assert(is_def(plane), "\nPoint list is not coplanar.") //plane_from_points returns best fit plane by default
           project_plane(plane)
     : assert(is_def(p), str("Invalid plane specification: ",plane))
       is_vnf(p) ? [project_plane(plane,p[0]), p[1]] 
     : is_list(p) && is_list(p[0]) && is_vector(p[0][0],3) ?  // bezier patch or region
            [for(plist=p) project_plane(plane,plist)]
-    : assert(is_vector(p,3) || is_path(p,3),str("Data must be a 3D point, path, region, vnf or bezier patch",p))
+    : assert(is_vector(p,3) || is_path(p,3), str("\nData must be a 3D point, path, region, vnf, or bezier patch."))
       is_matrix(plane,3,3) ?
-          assert(!is_collinear(plane),"Points defining the plane must not be collinear")
+          assert(!is_collinear(plane),"\nPoints defining the plane must not be collinear.")
           let(
               v = plane[2]-plane[0],
               y = unit(plane[1]-plane[0]),        // y axis goes to point b
@@ -303,11 +303,11 @@ function project_plane(plane,p) =
 //   Converts the given 2D point on the plane to 3D coordinates of the specified plane.
 //   The parameter p can be a point, path, region, bezier patch or VNF.
 //   The plane can be specified as
-//   - A list of three points.  The planar coordinate system will have [0,0] at plane[0], and plane[1] will lie on the Y+ axis.
+//   - A list of three points.  The planar coordinate system will have [0,0] at plane[0], with plane[1] lying on the Y+ axis.
 //   - A list of coplanar points that define a plane (not-collinear)
-//   - A plane definition `[A,B,C,D]` where `Ax+By+CZ=D`.  The closest point on that plane to the origin will map to the origin in the new coordinate system.
+//   - A plane definition `[A,B,C,D]` where `Ax+By+CZ=D`.  The closest point on that plane to the origin maps to the origin in the new coordinate system.
 //   .
-//   If you do not supply `p` then you get a transformation matrix which operates in 3D, assuming that the Z coordinate of the points is zero.
+//   If you do not supply `p` then you get a transformation matrix that operates in 3D, assuming that the Z coordinate of the points is zero.
 //   This matrix is a rotation, the inverse of the one produced by project_plane.
 // Arguments:
 //   plane = Plane specification or list of points to define a plane
@@ -321,21 +321,21 @@ function lift_plane(plane, p) =
           )            
           move(plane[0]) * frame_map(x,y,reverse=true)
     : is_vector(plane,4) && is_undef(p) ?            // no data, plane given in "plane"
-          assert(_valid_plane(plane), "Plane is not valid")
+          assert(_valid_plane(plane), "\nPlane is not valid.")
           let(
                n = point3d(plane),
                cp = n * plane[3] / (n*n)
           )
           move(cp) * rot(from=UP, to=n)
     : is_path(plane,3) && is_undef(p) ?               // no data, generic point list plane
-          assert(len(plane)>=3, "Need three p to define a plane")
+          assert(len(plane)>=3, "\nNeed three points to define a plane.")
           let(plane = plane_from_points(plane))
-          assert(is_def(plane), "Point list is not coplanar")
+          //assert(is_def(plane), "Point list is not coplanar")
           lift_plane(plane)
     : is_vnf(p) ? [lift_plane(plane,p[0]), p[1]] 
     : is_list(p) && is_list(p[0]) && is_vector(p[0][0],3) ?  // bezier patch or region
            [for(plist=p) lift_plane(plane,plist)]
-    : assert(is_vector(p,2) || is_path(p,2),"Data must be a 2D point, path, region, vnf or bezier patch")
+    : assert(is_vector(p,2) || is_path(p,2),"\nData must be a 2D point, path, region, vnf, or bezier patch.")
       is_matrix(plane,3,3) ?
           let(
               v = plane[2]-plane[0],
@@ -368,9 +368,9 @@ function lift_plane(plane, p) =
 //   xyz = cylindrical_to_xyz([40,60,50]);
 function cylindrical_to_xyz(r,theta,z) =
     theta != undef
-      ? assert(is_num(r) && is_num(theta) && is_num(z), "Bad Arguments.")
+      ? assert(is_num(r) && is_num(theta) && is_num(z), "\nBad arguments.")
         [r*cos(theta), r*sin(theta), z]
-      : assert(is_list(r), "Bad Arguments")
+      : assert(is_list(r), "\nBad arguments.")
         is_num(r.x)
           ? cylindrical_to_xyz(r.x, r.y, r.z)
           : [for(p = r) cylindrical_to_xyz(p.x, p.y, p.z)];
@@ -399,9 +399,9 @@ function cylindrical_to_xyz(r,theta,z) =
 //   cyls = xyz_to_cylindrical([[40,50,70], [-10,15,-30]]);
 function xyz_to_cylindrical(x,y,z) =
     y != undef
-      ? assert(is_num(x) && is_num(y) && is_num(z), "Bad Arguments.")
+      ? assert(is_num(x) && is_num(y) && is_num(z), "\nBad arguments.")
         [norm([x,y]), atan2(y,x), z]
-      : assert(is_list(x), "Bad Arguments")
+      : assert(is_list(x), "\nBad arguments.")
         is_num(x.x)
           ? xyz_to_cylindrical(x.x, x.y, x.z)
           : [for(p = x) xyz_to_cylindrical(p.x, p.y, p.z)];
@@ -431,9 +431,9 @@ function xyz_to_cylindrical(x,y,z) =
 //   xyzs = spherical_to_xyz([[40,60,50], [50,120,100]]);
 function spherical_to_xyz(r,theta,phi) =
     theta != undef
-      ? assert(is_num(r) && is_num(theta) && is_num(phi), "Bad Arguments.")
+      ? assert(is_num(r) && is_num(theta) && is_num(phi), "\nBad arguments.")
         r*[cos(theta)*sin(phi), sin(theta)*sin(phi), cos(phi)]
-      : assert(is_list(r), "Bad Arguments")
+      : assert(is_list(r), "\nBad arguments.")
         is_num(r.x)
           ? spherical_to_xyz(r.x, r.y, r.z)
           : [for(p = r) spherical_to_xyz(p.x, p.y, p.z)];
@@ -462,9 +462,9 @@ function spherical_to_xyz(r,theta,phi) =
 //   sphs = xyz_to_spherical([[40,50,70], [25,-14,27]]);
 function xyz_to_spherical(x,y,z) =
     y != undef
-      ? assert(is_num(x) && is_num(y) && is_num(z), "Bad Arguments.")
+      ? assert(is_num(x) && is_num(y) && is_num(z), "\nBad arguments.")
         [norm([x,y,z]), atan2(y,x), atan2(norm([x,y]),z)]
-      : assert(is_list(x), "Bad Arguments")
+      : assert(is_list(x), "\nBad arguments.")
         is_num(x.x)
           ? xyz_to_spherical(x.x, x.y, x.z)
           : [for(p = x) xyz_to_spherical(p.x, p.y, p.z)];
@@ -494,9 +494,9 @@ function xyz_to_spherical(x,y,z) =
 //   xyz = altaz_to_xyz([40,60,50]);
 function altaz_to_xyz(alt,az,r) =
     az != undef
-      ? assert(is_num(alt) && is_num(az) && is_num(r), "Bad Arguments.")
+      ? assert(is_num(alt) && is_num(az) && is_num(r), "\nBad arguments.")
         r*[cos(90-az)*cos(alt), sin(90-az)*cos(alt), sin(alt)]
-      : assert(is_list(alt), "Bad Arguments")
+      : assert(is_list(alt), "\nBad arguments.")
         is_num(alt.x)
           ? altaz_to_xyz(alt.x, alt.y, alt.z)
           : [for(p = alt) altaz_to_xyz(p.x, p.y, p.z)];
@@ -526,9 +526,9 @@ function altaz_to_xyz(alt,az,r) =
 //   aa = xyz_to_altaz([40,50,70]);
 function xyz_to_altaz(x,y,z) =
     y != undef
-      ? assert(is_num(x) && is_num(y) && is_num(z), "Bad Arguments.")
+      ? assert(is_num(x) && is_num(y) && is_num(z), "\nBad arguments.")
         [atan2(z,norm([x,y])), atan2(x,y), norm([x,y,z])]
-      : assert(is_list(x), "Bad Arguments")
+      : assert(is_list(x), "Bad arguments.")
         is_num(x.x)
           ? xyz_to_altaz(x.x, x.y, x.z)
           : [for(p = x) xyz_to_altaz(p.x, p.y, p.z)];
