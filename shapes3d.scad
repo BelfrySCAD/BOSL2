@@ -2362,14 +2362,15 @@ function _teardrop_corner(r, corner, ang=45) =
             assert(is_finite(r))
             assert(is_finite(ang)),
         cp = circle_2tangents(abs(r), corner)[0],
+        pvec = rot(sign(r)*90,p=corner[0]-corner[1]),
         path1 = arc(r=abs(r), corner=corner),
         path2 = [
             for (p = select(path1,0,-2))
-                if (abs(modang(v_theta(p-cp)-90)) <= 180-ang) p,
+                if (vector_angle(p-cp, pvec) > ang) p,
             last(path1)
         ],
         path = [
-            line_intersection([corner[0],corner[1]],[path2[0],path2[0]+polar_to_xy(1,-90-ang*sign(r))]),
+            line_intersection([corner[0],corner[1]],[path2[0],path2[0]+polar_to_xy(1,270-(90-ang)*sign(r))]),
             each path2
         ]
     ) path;
