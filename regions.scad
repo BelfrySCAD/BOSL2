@@ -865,13 +865,13 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   r = offset radius.  Distance to offset, rounds over corners.
 //   delta = Distance to offset with pointed corners.
 //   chamfer = Chamfer corners when you specify `delta`.  Default: false
-//   closed = If true, path is treated as a polygon. Default: True.
-//   check_valid = Perform segment validity check.  Default: True.
-//   quality = Validity check quality parameter, a small integer.  Default: 1.
-//   error = If true, assert an error if offset path is degenerate. If false, return an empty list `[]` for a degenerate path. Default: true
+//   closed = If true, path is treated as a polygon. Default: true
+//   check_valid = Perform segment validity check.  Default: true
+//   quality = Validity check quality parameter, a small integer.  Default: 1
+//   error = If true, assert an error if offset path is degenerate. If false, return an empty list `[]` for a degenerate path. You must check the result yourself before passing it into another function. Default: true
 //   same_length = Return a path with the same length as the input.  Only compatible with `delta=`.  Default: false
-//   return_faces = Return face list.  Default: False.
-//   firstface_index = Starting index for face list.  Default: 0.
+//   return_faces = Return face list.  Default: false
+//   firstface_index = Starting index for face list.  Default: 0
 //   flip_faces = Flip face direction.  Default: false
 // Example(2D,NoAxes): Offset the red star out by 10 units.
 //   star = star(5, r=100, ir=30);
@@ -1028,8 +1028,8 @@ function offset(
         goodpath = bselect(path,good),
         degenerate = (len(goodsegs)-(!closed && select(good,-1)?1:0) <= 0)
     )
-    degenerate && error ? assert(false, "\nOffset of path is degenerate.")
-    : degenerate && !error ? [] // return empty path
+    assert(!(degenerate && error), "\nOffset of path is degenerate.")
+    : degenerate ? [] // return empty path
     : let(
         // Extend the shifted segments to their intersection points.  For open curves the endpoints
         // are simply the endpoints of the shifted segments.  If segments are parallel then the intersection
