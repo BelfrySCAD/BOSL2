@@ -1029,7 +1029,7 @@ function offset(
         degenerate = (len(goodsegs)-(!closed && select(good,-1)?1:0) <= 0)
     )
     assert(!(degenerate && error), "\nOffset of path is degenerate.")
-    : degenerate ? [] // return empty path
+    degenerate ? [] // return empty path
     : let(
         // Extend the shifted segments to their intersection points.  For open curves the endpoints
         // are simply the endpoints of the shifted segments.  If segments are parallel then the intersection
