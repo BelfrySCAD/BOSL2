@@ -430,7 +430,8 @@ function line_closest_point(line, pt, bounded=false) =
 //   %move_copies(points) sphere(d=2, $fn=12);
 
 function _line_greatest_distance(points,line) = // internal function
-    let(d = [ for(p=points) point_line_distance(p, line) ])
+    is_undef(line) ? INF
+    : let(d = [ for(p=points) point_line_distance(p, line) ])
         max(d);
 
 function line_from_points(points, check_collinear=false, eps=EPSILON) =
@@ -444,10 +445,11 @@ function line_from_points(points, check_collinear=false, eps=EPSILON) =
             pm     = covmix[0], // point mean
             evec   = unit(covmix[1]), // normalized eigenvector corresponding to largest eigenvalue
             maxext = let(b=pointlist_bounds(points)) norm(b[1]-b[0])/2,
-            line = [pm-evec*maxext, pm+evec*maxext]
+            line3d = [pm-evec*maxext, pm+evec*maxext],
+            line = twod ? path2d(line3d) : line
         )
-        check_collinear && _line_greatest_distance(points,line)>eps ? undef :
-        twod ? path2d(line) : line ;
+        check_collinear && _line_greatest_distance(points,line)>eps ? undef
+        : line;
 
 
 
