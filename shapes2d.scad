@@ -1321,23 +1321,29 @@ module jittered_poly(path, dist=1/512) {
 // Section: Curved 2D Shapes
 
 
+//   When called as a module, makes a 2D teardrop shape. Useful for extruding into 3D printable holes as it limits overhang to a desired angle.
+//   Uses "intersect" style anchoring.
+
+
 // Function&Module: teardrop2d()
 // Synopsis: Creates a 2D teardrop shape.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: teardrop(), onion(), keyhole()
 // Description:
-//   When called as a module, makes a 2D teardrop shape. Useful for extruding into 3D printable holes as it limits overhang to a desired angle.
-//   Uses "intersect" style anchoring.  
-//   The cap_h parameter truncates the top of the teardrop at the specified distance from the center.  If cap_h is taller than the untruncated form then
-//   the result will be the full, untruncated shape.  The segments of the round section of the teardrop 
-//   the same as a circle or cylinder when rotated 90 degrees.  (Note that this agreement is poor when `$fn=6` or `$fn=7`.)
-//   The number of facets is only approximately equal to `$fn`, and may also change if you set `realign=true`, which produces a flat base on the teardrop.  
+//   A teardrop shape is a circle that comes to a point at the top.  This shape is useful for extruding into 3d printable holes as it
+//   limits the overhang angle.  A bottom point can also help ensure a 3d printable hole.  This module can make a teardrop shape
+//   or produce the path for a teardrop with a point at the top or with the top truncated to create a flat cap.  It also provides the option to add a bottom point.
+//   .
+//   The default teardrop has a pointed top and round bottom.  The `ang` parameter specifies the angle away from vertical of the two flat segments at the
+//   top of the shape.  The cap_h parameter truncates the top of the teardrop at the specified
+//   distance from the center.  If `cap_h` is taller than the untruncated form then
+//   the result will be the full, untruncated shape.  You can set `cap_h` smaller than the radius to produce a truncated circle.  The segments of the round section of the teardrop 
+//   are the same as a circle or cylinder with matching `$fn` when rotated 90 degrees.  The number of facets in the teardrop is only approximately
+//   equal to `$fn`, and may also change if you set `realign=true`, which adjusts the facets so the bottom of the teardrop has a flat base.  
 //   If `$fn` is a multiple of four then the teardrop will reach its extremes on all four axes.  The circum option
-//   produces a teardrop that circumscribes the circle; in this case set `realign=true` to get a teardrop that meets its internal extremes
-//   on the axes.  To ensure sufficient room in 3d printing applications a bottom corner may also be desirable.  You can add this using
-//   the `bot_corner` parameter, which specifies the length that the corner protrudes from the ideal circle.  
-//   When called as a function, returns a 2D path for the shape, starting at the top corner or top right corner.  
+//   produces a teardrop that circumscribes the circle; in this, `realign=true` produces a teardrop that meets its internal extremes
+//   on the axes.  You can add a bottom corner using the `bot_corner` parameter, which specifies the length that the corner protrudes from the ideal circle.
 // Usage: As Module
 //   teardrop2d(r/d=, [ang], [cap_h], [circum=], [realign=], [bot_corner=]) [ATTACHMENTS];
 // Usage: As Function
@@ -1379,7 +1385,7 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
         r = get_radius(r=r, d=d, dflt=1)
     )  
     bot_corner!=0 ?
-       assert(all_positive([bot_corner]), "bot_corner must be nonnegative")
+       assert(all_nonnegative([bot_corner]),"bot_corner must be nonnegative")
        let(
            path = teardrop2d(r=r,ang=ang, cap_h=cap_h, circum=circum, realign=realign),
            corner = -r-bot_corner,

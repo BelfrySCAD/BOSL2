@@ -3564,19 +3564,21 @@ function torus(
 // Topics: Shapes (3D), Attachable, VNF Generators, FDM Optimized
 // See Also: onion(), teardrop2d()
 // Description:
-//   Makes a teardrop shape in the XZ plane. Useful for 3D printable holes.
+//   Makes a teardrop extrusion along the Y axis, which is useful for 3D printable holes.
 //   Optional chamfers can be added with positive or negative distances.  A positive distance
 //   specifies the amount to inset the chamfer along the front/back faces of the shape.
 //   The chamfer will extend the same y distance into the shape.  If the radii are the same
 //   then the chamfer will be a 45 degree chamfer, but in other cases it will not.
-//   Note that with caps, the chamfer must not be so big that it makes the cap height illegal.  
-//
+//   With caps, the chamfer must not be so big that it makes the cap height illegal.
+//   Similarly the chamfer cannot be larger than `bot_corner` if it is set, and if you do
+//   set chamfer exactly equal to bottom corner, then `$fn` must be even if `realign` is false
+//   and odd otherwise.  
 // Usage: Typical
-//   teardrop(h|l=|length=|height=, r, [ang], [cap_h], [chamfer=], ...) [ATTACHMENTS];
-//   teardrop(h|l=|length=|height=, d=, [ang=], [cap_h=], [chamfer=], ...) [ATTACHMENTS];
+//   teardrop(h|l=|length=|height=, r, [ang], [cap_h], [chamfer=], [bot_corner=], ...) [ATTACHMENTS];
+//   teardrop(h|l=|length=|height=, d=, [ang=], [cap_h=], [chamfer=], [bot_corner=], ...) [ATTACHMENTS];
 // Usage: Psuedo-Conical
-//   teardrop(h|l=|height=|length=, r1=, r2=, [ang=], [cap_h1=], [cap_h2=], ...)  [ATTACHMENTS];
-//   teardrop(h|l=|height=|length=, d1=, d2=, [ang=], [cap_h1=], [cap_h2=], ...)  [ATTACHMENTS];
+//   teardrop(h|l=|height=|length=, r1=, r2=, [ang=], [cap_h1=], [cap_h2=], [bot_corner1=], [bot_corner2=], ...)  [ATTACHMENTS];
+//   teardrop(h|l=|height=|length=, d1=, d2=, [ang=], [cap_h1=], [cap_h2=], [bot_corner1=], [bot_corner2=], ...)  [ATTACHMENTS];
 // Usage: As Function
 //   vnf = teardrop(h|l=|height=|length=, r|d=, [ang=], [cap_h=], ...);
 //   vnf = teardrop(h|l=|height=|length=, r1=|d1=, r2=|d2=, [ang=], [cap_h=], ...);
@@ -3619,6 +3621,8 @@ function torus(
 //   teardrop(r1=20, r2=30, h=40, cap_h1=25, cap_h2=35);
 // Example: Adding chamfers can be useful for a teardrop hole mask
 //   teardrop(r=10, l=50, chamfer1=2, chamfer2=-1.5);
+// Example: This teardrop has a 1 unit clearance at the top and bottom using the cap and the bottom corner:
+//   teardrop(r=10, l=50, cap_h=11, bot_corner=1);
 // Example: Getting a VNF
 //   vnf = teardrop(r1=25, r2=30, l=20, cap_h1=25, cap_h2=35);
 //   vnf_polyhedron(vnf);
@@ -3630,7 +3634,7 @@ function torus(
 //       show_anchors(std=false);
 
 module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, length, height, circum=false, realign=false,
-                chamfer, chamfer1, chamfer2,anchor=CENTER, spin=0, orient=UP)
+                chamfer, chamfer1, chamfer2,anchor=CENTER, spin=0, orient=UP, bot_corner1, bot_corner2, bot_corner=0)
 {
     length = one_defined([l, h, length, height],"l,h,length,height");
     dummy=assert(is_finite(length) && length>0, "length must be positive");
@@ -3649,13 +3653,13 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, lengt
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=length, axis=BACK, anchors=anchors)
     {
         vnf_polyhedron(teardrop(ang=ang,cap_h=cap_h,r1=r1,r2=r2,cap_h1=cap_h1,cap_h2=cap_h2,circum=circum,realign=realign,
-                                length=length, chamfer1=chamfer1,chamfer2=chamfer2,chamfer=chamfer));
+                                length=length, chamfer1=chamfer1,chamfer2=chamfer2,chamfer=chamfer,bot_corner1=bot_corner1, bot_corner2=bot_corner2,bot_corner=bot_corner));
         children();
     }
 }
 
 
-function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamfer, chamfer1, chamfer2, circum=false, realign=false,
+function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamfer, chamfer1, chamfer2, circum=false, realign=false, bot_corner1, bot_corner2, bot_corner=0,
                   l, length, height, anchor=CENTER, spin=0, orient=UP) =
     let(
         r1 = get_radius(r=r, r1=r1, d=d, d1=d1, dflt=1),
@@ -3664,11 +3668,13 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
         dummy0=assert(is_finite(length) && length>0, "length must be positive"),
         cap_h1 = first_defined([cap_h1, cap_h]),
         cap_h2 = first_defined([cap_h2, cap_h]),
+        bot_corner1 = first_defined([bot_corner1, bot_corner]),
+        bot_corner2 = first_defined([bot_corner2, bot_corner]),         
         chamfer1 = first_defined([chamfer1,chamfer,0]),
         chamfer2 = first_defined([chamfer2,chamfer,0]),    
         sides = segs(max(r1,r2)),
-        profile1 = teardrop2d(r=r1, ang=ang, cap_h=cap_h1, $fn=sides, circum=circum, realign=realign,_extrapt=true),
-        profile2 = teardrop2d(r=r2, ang=ang, cap_h=cap_h2, $fn=sides, circum=circum, realign=realign,_extrapt=true),
+        profile1 = teardrop2d(r=r1, ang=ang, cap_h=cap_h1, $fn=sides, circum=circum, realign=realign,_extrapt=true, bot_corner=bot_corner1),
+        profile2 = teardrop2d(r=r2, ang=ang, cap_h=cap_h2, $fn=sides, circum=circum, realign=realign,_extrapt=true, bot_corner=bot_corner2),
         tip_y1 = r1/cos(90-ang),
         tip_y2 = r2/cos(90-ang),
         _cap_h1 = min(default(cap_h1, tip_y1), tip_y1),
@@ -3677,12 +3683,18 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
         dummy=
           assert(abs(chamfer1)+abs(chamfer2) <= length,"chamfers are too big to fit in the length")
           assert(chamfer1<=r1 && chamfer2<=r2, "Chamfers cannot be larger than raduis")
+          assert(bot_corner1==0 || bot_corner1>=chamfer1, "\nchamfer1 doesn't work with bottom corner: must have chamfer1 <= bot_corner1")
+          assert(bot_corner2==0 || bot_corner2>=chamfer2, "\nchamfer2 doesn't work with bottom corner: must have chamfer2 <= bot_corner2")
+          assert(bot_corner1==0 || bot_corner1>chamfer1 || sides%2==(realign?1:0), 
+                 str("\nWith chamfer1==bot_corner1 and realign=",realign," must have ",realign?"odd":"even"," number of sides, but sides=",sides))
           assert(is_undef(cap_h1) || cap_h1-chamfer1 > r1*sin(ang), "chamfer1 is too big to work with the specified cap_h1")
           assert(is_undef(cap_h2) || cap_h2-chamfer2 > r2*sin(ang), "chamfer2 is too big to work with the specified cap_h2"),
         cprof1 = r1==chamfer1 ? repeat([0,0],len(profile1))
-                              : teardrop2d(r=r1-chamfer1, ang=ang, cap_h=u_add(cap_h1,-chamfer1), $fn=sides, circum=circum, realign=realign,_extrapt=true),
+                              : teardrop2d(r=r1-chamfer1, ang=ang, cap_h=u_add(cap_h1,-chamfer1), bot_corner=bot_corner1==0?0:bot_corner1-chamfer1,
+                                           $fn=sides, circum=circum, realign=realign,_extrapt=true),
         cprof2 = r2==chamfer2 ? repeat([0,0],len(profile2))
-                              : teardrop2d(r=r2-chamfer2, ang=ang, cap_h=u_add(cap_h2,-chamfer2), $fn=sides, circum=circum, realign=realign,_extrapt=true),
+                              : teardrop2d(r=r2-chamfer2, ang=ang, cap_h=u_add(cap_h2,-chamfer2), bot_corner=bot_corner2==0?0:bot_corner2-chamfer2,
+                                           $fn=sides, circum=circum, realign=realign,_extrapt=true),
         anchors = [
             named_anchor("cap",      [0,0,(_cap_h1+_cap_h2)/2], capvec),
             named_anchor("cap_fwd",  [0,-length/2,_cap_h1],         unit((capvec+FWD)/2)),
