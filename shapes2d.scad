@@ -1321,26 +1321,33 @@ module jittered_poly(path, dist=1/512) {
 // Section: Curved 2D Shapes
 
 
+//   When called as a module, makes a 2D teardrop shape. Useful for extruding into 3D printable holes as it limits overhang to a desired angle.
+//   Uses "intersect" style anchoring.
+
+
 // Function&Module: teardrop2d()
 // Synopsis: Creates a 2D teardrop shape.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: teardrop(), onion(), keyhole()
 // Description:
-//   When called as a module, makes a 2D teardrop shape. Useful for extruding into 3D printable holes as it limits overhang to 45 degrees.  Uses "intersect" style anchoring.  
-//   The cap_h parameter truncates the top of the teardrop.  If cap_h is taller than the untruncated form then
-//   the result will be the full, untruncated shape.  The segments of the bottom section of the teardrop are
-//   calculated to be the same as a circle or cylinder when rotated 90 degrees.  (Note that this agreement is poor when `$fn=6` or `$fn=7`.  
+//   A teardrop shape is a circle that comes to a point at the top.  This shape is useful for extruding into 3d printable holes as it
+//   limits the overhang angle.  A bottom point can also help ensure a 3d printable hole.  This module can make a teardrop shape
+//   or produce the path for a teardrop with a point at the top or with the top truncated to create a flat cap.  It also provides the option to add a bottom point.
+//   .
+//   The default teardrop has a pointed top and round bottom.  The `ang` parameter specifies the angle away from vertical of the two flat segments at the
+//   top of the shape.  The cap_h parameter truncates the top of the teardrop at the specified
+//   distance from the center.  If `cap_h` is taller than the untruncated form then
+//   the result will be the full, untruncated shape.  You can set `cap_h` smaller than the radius to produce a truncated circle.  The segments of the round section of the teardrop 
+//   are the same as a circle or cylinder with matching `$fn` when rotated 90 degrees.  The number of facets in the teardrop is only approximately
+//   equal to `$fn`, and may also change if you set `realign=true`, which adjusts the facets so the bottom of the teardrop has a flat base.  
 //   If `$fn` is a multiple of four then the teardrop will reach its extremes on all four axes.  The circum option
-//   produces a teardrop that circumscribes the circle; in this case set `realign=true` to get a teardrop that meets its internal extremes
-//   on the axes.  
-//   When called as a function, returns a 2D path to for a teardrop shape.
-//
+//   produces a teardrop that circumscribes the circle; in this, `realign=true` produces a teardrop that meets its internal extremes
+//   on the axes.  You can add a bottom corner using the `bot_corner` parameter, which specifies the length that the corner protrudes from the ideal circle.
 // Usage: As Module
-//   teardrop2d(r/d=, [ang], [cap_h]) [ATTACHMENTS];
+//   teardrop2d(r/d=, [ang], [cap_h], [circum=], [realign=], [bot_corner=]) [ATTACHMENTS];
 // Usage: As Function
-//   path = teardrop2d(r|d=, [ang], [cap_h]);
-//
+//   path = teardrop2d(r|d=, [ang], [cap_h], [circum=], [realign=], [bot_corner=]);
 // Arguments:
 //   r = radius of circular part of teardrop.  (Default: 1)
 //   ang = angle of hat walls from the Y axis (half the angle of the peak).  (Default: 45 degrees)
@@ -1348,19 +1355,22 @@ module jittered_poly(path, dist=1/512) {
 //   ---
 //   d = diameter of circular portion of bottom. (Use instead of r)
 //   circum = if true, create a circumscribing teardrop.  Default: false
+//   bot_corner = create a bottom corner the specified distance below the given radius.  Default: 0
 //   realign = if true, change whether bottom of teardrop is a point or a flat.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//
 // Example(2D): Typical Shape
 //   teardrop2d(r=30, ang=30);
 // Example(2D): Crop Cap
 //   teardrop2d(r=30, ang=30, cap_h=40);
 // Example(2D): Close Crop
 //   teardrop2d(r=30, ang=30, cap_h=20);
-module teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CENTER, spin=0)
+// Example(2D): Add bottom corner.  Here the bottom corner is quite large.  Guidance for 3d printing suggests that `bot_corner` should equal the layer thickness.
+//   teardrop2d(r=30, cap_h=35, bot_corner=5);
+
+module teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, bot_corner=0, anchor=CENTER, spin=0)
 {
-    path = teardrop2d(r=r, d=d, ang=ang, circum=circum, realign=realign, cap_h=cap_h);
+    path = teardrop2d(r=r, d=d, ang=ang, circum=circum, realign=realign, cap_h=cap_h, bot_corner=bot_corner);
     attachable(anchor,spin, two_d=true, path=path, extent=false) {
         polygon(path);
         children();
@@ -1370,9 +1380,32 @@ module teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CENTE
 // _extrapt = true causes the point to be duplicated so a teardrop with no cap
 // has the same point count as one with a cap.  
 
-function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CENTER, spin=0, _extrapt=false) =
+function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CENTER, spin=0, bot_corner=0, _extrapt=false) =
     let(
-        r = get_radius(r=r, d=d, dflt=1),
+        r = get_radius(r=r, d=d, dflt=1)
+    )  
+    bot_corner!=0 ?
+       assert(all_nonnegative([bot_corner]),"bot_corner must be nonnegative")
+       let(
+           path = teardrop2d(r=r,ang=ang, cap_h=cap_h, circum=circum, realign=realign),
+           corner = -r-bot_corner,
+           alpha = acos(r/corner),
+           joint = r*[sin(alpha),cos(alpha)],
+           table = [[0,corner],joint],
+           halfpath = [for(pt=path) if (pt.x>=0)
+                          let(proj=lookup(pt.x,table))
+                          pt.x>joint.x || pt.y>0 || pt.y<=proj ? pt : [pt.x,proj]],
+           fullpath = deduplicate(
+                                   [
+                                     each halfpath,
+                                     if (last(halfpath).x>0) [0,corner],
+                                     each reverse(xflip(halfpath))
+                                   ], closed=!_extrapt
+                                 )
+       )
+       reorient(anchor,spin,two_d=true, path=fullpath, p=fullpath, extent=false)
+  :
+    let(
         minheight = r*sin(ang),
         maxheight = r/sin(ang), //cos(90-ang),
         pointycap = is_undef(cap_h) || cap_h>=maxheight
