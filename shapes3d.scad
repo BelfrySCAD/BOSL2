@@ -3632,6 +3632,19 @@ function torus(
 // Example(Spin,VPD=150,Med): Named Conical Connectors
 //   teardrop(d1=20, d2=30, h=20, cap_h1=11, cap_h2=16)
 //       show_anchors(std=false);
+// Example: Creating holes using attachment
+//   $fn=32;
+//   diff()
+//     cuboid(15)
+//     attach([FWD,RIGHT],FWD,inside=true, shiftout=.1)
+//       tag("remove")teardrop(d=4, l=10);
+// Example: You can rotate the point using the `spin` option to {{attach()}}.  Don't use the `spin` parameter to `teardrop()`.  
+//   $fn=32;
+//   diff()
+//     cuboid(15)
+//     attach(FWD,FWD,align=[TOP,BOT], inset=2,
+//            inside=true, shiftout=.1, spin=90)
+//       tag("remove")teardrop(d=4, l=10);
 
 module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, length, height, circum=false, realign=false,
                 chamfer, chamfer1, chamfer2,anchor=CENTER, spin=0, orient=UP, bot_corner1, bot_corner2, bot_corner=0)
