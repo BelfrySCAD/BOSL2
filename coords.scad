@@ -65,7 +65,7 @@ function point3d(p, fill=0) =
 // Synopsis: Convert a path to 3D. 
 // SynTags: Path
 // Topics: Coordinates, Points, Paths
-// See Also: point2d(), path2d(), point3d()
+// See Also: point2d(), path2d(), point3d(), point4d(), path4d(), hstack()
 // Usage:
 //   pts = path3d(points, [fill]);
 // Description:
@@ -73,7 +73,7 @@ function point3d(p, fill=0) =
 //   by removing extra coordinates or adding the z coordinate.  
 // Arguments:
 //   points = A list of 2D, 3D or higher dimensional points/vectors.
-//   fill = Value to fill missing values in vectors with (in the 2D case).  Default: 0
+//   fill = Scalar value to fill missing values in vectors with (in the 2D case).  Default: 0
 function path3d(points, fill=0) =
     assert(is_num(fill))
     assert(is_path(points, dim=undef, fast=true), "\nInput to path3d is not a path.")
@@ -97,7 +97,7 @@ function path3d(points, fill=0) =
 //   Returns a 4D vector/point from a 2D or 3D vector.
 // Arguments:
 //   p = The coordinates to force into a 4D vector/point.
-//   fill = Value to fill missing values in vector with.  Default: 0
+//   fill = Scalar value to fill missing values in vector with.  Default: 0
 function point4d(p, fill=0) = assert(is_list(p))
                               [for (i=[0:3]) (p[i]==undef)? fill : p[i]];
 
@@ -106,14 +106,14 @@ function point4d(p, fill=0) = assert(is_list(p))
 // Synopsis: Convert a path to 4d.  
 // SynTags: Path
 // Topics: Coordinates, Points, Paths
-// See Also: point2d(), path2d(), point3d(), path3d(), point4d()
+// See Also: point2d(), path2d(), point3d(), path3d(), point4d(), hstack()
 // Usage:
 //   pt = path4d(points, [fill]);
 // Description:
 //   Returns a list of 4D vectors/points from a list of 2D or 3D vectors/points.
 // Arguments:
 //   points = A list of 2D or 3D points/vectors.
-//   fill = Value to fill missing values in vectors with.  Default: 0 
+//   fill = Scalar value to fill missing values in vectors with.  Default: 0 
 function path4d(points, fill=0) = 
    assert(is_num(fill) || is_vector(fill))
    assert(is_path(points, dim=undef, fast=true), "\nInput to path4d is not a path.")
