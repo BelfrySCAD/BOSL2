@@ -554,7 +554,7 @@ module vnf_tri_array(
     limit_bunching=true,
     convexity=2, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") 
 {
-    vnf = vnf_tri_array(points=points, caps=caps, cap1=cap2, cap2=cap2,
+    vnf = vnf_tri_array(points=points, caps=caps, cap1=cap1, cap2=cap2,
         col_wrap=col_wrap, row_wrap=row_wrap, reverse=reverse,
         limit_bunching = limit_bunching);
     vnf_polyhedron(vnf, convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype) children();
