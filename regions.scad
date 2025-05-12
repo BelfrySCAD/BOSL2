@@ -62,9 +62,9 @@
 //   ];
 //   region(rgn);
 //
-// Definitions:
-//   Region|Regions = A list of zero or more non-intersecting {{polygons}}, representing possibly disjointed shape perimeters with enclosed holes.
 
+// Definitions:
+//   Region|Regions = A list of one or more non-intersecting {{polygons}} representing a union of one or more disconnected polygons that may have internal holes.
 
 // Function: is_region()
 // Synopsis: Returns true if the input appears to be a {{region}}.
