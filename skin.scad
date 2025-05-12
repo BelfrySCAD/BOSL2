@@ -2587,7 +2587,7 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge",
     assert(is_consistent(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
     assert(is_path(shape,2) || is_region(shape), "Input shape must be a 2d path or a region.")
     let(
-        caps = select(caps,0,1)==["for","offset_sweep"] ? [caps,caps]
+        caps = is_list(caps) && select(caps,0,1)==["for","offset_sweep"] ? [caps,caps]
              : is_bool(caps) || is_num(caps) ? [caps,caps]
              : is_undef(caps) ? closed ? [false,false] : [true,true]
              : caps, 
