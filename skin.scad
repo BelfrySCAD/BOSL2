@@ -1731,7 +1731,15 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   You can also apply scaling to the profile along the path.  You can give a list of scalar scale factors or a list of 2-vector scale. 
 //   In the latter scale the x and y scales of the profile are scaled separately before the profile is placed onto the path.  For non-closed
 //   paths you can also give a single scale value or a 2-vector, which is treated as the final scale.  The intermediate sections
-//   are then scaled by linear interpolation either relative to length (if scale_by_length is true) or by point count otherwise.  
+//   are then scaled by linear interpolation either relative to length (if scale_by_length is true) or by point count otherwise.
+//   .
+//   The `caps` parameter controls what happens at the ends of the polyhedron.  If `closed=true` the shape links to itself and has no
+//   ends, but when `closed` is false, the two ends are, by default capped with flat faces.  If you set `caps=false` then the ends
+//   receive no faces and the resulting non-manifold polyhedron has exposed edges.  You can also set caps to a number, which adds a
+//   rounded cap with the specified radius, or you can set caps to an {{offset_sweep()}} end treatment, and the specified sweep will
+//   be attached as a cap.  Note that you are **adding** a rounded cap, not rounding the specified shape as is common for many other
+//   library modules.  The rounded cap is attached to the end face and may not blend neatly with the swept shape unless the sides of
+//   the swept shape are perpendicular to the end cap.  
 //   .
 //   You can use set `transforms` to true to return a list of transformation matrices instead of the swept shape.  In this case, you can
 //   often omit shape entirely.  The exception is when `closed=true` and you are using the "incremental" method.  In this case, `path_sweep`
@@ -1764,7 +1772,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   uniform = if set to false then compute tangents using the uniform=false argument, which may give better results when your path is non-uniformly sampled.  This argument is passed to {{path_tangents()}}.  Default: true
 //   tangent = a list of tangent vectors in case you need more accuracy (particularly at the end points of your curve)
 //   relaxed = set to true with the "manual" method to relax the orthogonality requirement of cross sections to the path tangent.  Default: false
-//   caps = Can be a boolean or vector of two booleans.  Set to false to disable caps at the two ends.  Default: true
+//   caps = if closed is false, set caps to false to leave the ends open.  Other values are true to create a flat cap, a number a rounded cap, or an {{offset_sweep()}} end treatment to create the specified offset sweep.  Can be a single value or pair of values to control the caps independently at each end.  Default: true
 //   style = vnf_vertex_array style.  Default: "min_edge"
 //   profiles = if true then display all the cross section profiles instead of the solid shape.  Can help debug a sweep.  (module only) Default: false
 //   width = the width of lines used for profile display.  (module only) Default: 1
@@ -2101,6 +2109,15 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //              closed=true, twist=360*2/5,symmetry=5,
 //              texture="bricks_vnf",tex_reps=[10,40],
 //              tex_depth=.1);
+// Example(NoScales): Applying rounded end caps to a sweep
+//   $fs=1;$fa=1;
+//   path_sweep(circle(r=5), arc(r=15, angle=[0,230]),caps=2.5);
+// Example(NoScales): Using a small `$fn` creates a chamfer on the endcap
+//   $fs=1;$fa=1;
+//   path_sweep(circle(r=5), arc(r=15, angle=[0,230]),caps=1, $fn=4);
+// Example(NoScales): One flat endcap and one rounding with a negative radius
+//   $fs=1;$fa=1;
+//   path_sweep(circle(r=5), arc(r=15, angle=[180,330]),caps=[true, -3]);
 
 
 module path_sweep(shape, path, method="incremental", normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true,
@@ -2113,9 +2130,6 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
             assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
     trans_scale = path_sweep(shape, path, method, normal, closed, twist, twist_by_length, scale, scale_by_length,
                             symmetry, last_normal, tangent, uniform, relaxed, caps, style, transforms=true,_return_scales=true);
-    caps = is_def(caps) ? caps :
-           closed ? false : true;
-    fullcaps = is_bool(caps) ? [caps,caps] : caps;
     transforms = trans_scale[0];
     scales = trans_scale[1];
     firstscale = is_num(scales[0]) ? 1/scales[0] : [1/scales[0].x, 1/scales[0].y];
@@ -2125,7 +2139,7 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
                        shape_normals = -path3d(path_normals(clockwise_polygon(shape), closed=true))
                   )
                   [for(T=transforms) apply(_force_rot(T),shape_normals)];
-    vnf = sweep(is_path(shape)?clockwise_polygon(shape):shape, transforms, closed=false, _closed_for_normals=closed, caps=fullcaps,style=style,
+    vnf = sweep(is_path(shape)?clockwise_polygon(shape):shape, transforms, closed=false, _closed_for_normals=closed, caps=caps,style=style,
                          texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples, normals=tex_normals,
                          tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip);
     shapecent = point3d(centroid(shape));
@@ -2181,10 +2195,6 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
   assert((is_region(shape) || is_path(shape,2)) || (transforms && !(closed && method=="incremental")),"shape must be a 2d path or region")
   let(
     path = path3d(path),
-    caps = is_def(caps) ? caps :
-           closed ? false : true,
-    capsOK = is_bool(caps) || is_bool_list(caps,2),
-    fullcaps = is_bool(caps) ? [caps,caps] : caps,
     normalOK = is_undef(normal) || (method!="natural" && is_vector(normal,3))
                                 || (method=="manual" && same_shape(normal,path)),
     scaleOK = scale==1 || ((is_num(scale) || is_vector(scale,2)) && !closed) || is_vector(scale,len(path)) || is_matrix(scale,len(path),2)
@@ -2193,8 +2203,6 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
   assert(normalOK,  method=="natural" ? "Cannot specify normal with the \"natural\" method"
                   : method=="incremental" ? "Normal with \"incremental\" method must be a 3-vector"
                   : str("Incompatible normal given.  Must be a 3-vector or a list of ",len(path)," 3-vectors"))
-  assert(capsOK, "caps must be boolean or a list of two booleans")
-  assert(!closed || !caps, "Cannot make closed shape with caps")
   assert(is_undef(normal) || (is_vector(normal) && len(normal)==3) || (is_path(normal) && len(normal)==len(path) && len(normal[0])==3), "Invalid normal specified")
   assert(is_undef(tangent) || (is_path(tangent) && len(tangent)==len(path) && len(tangent[0])==3), "Invalid tangent specified")
   assert(scaleOK,str("Incompatible or invalid scale",closed?" for closed path":"",": must be ", closed?"":"a scalar, a 2-vector, ",
@@ -2330,7 +2338,7 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
   transforms && _return_scales
              ? [transform_list,scale]
 : transforms ? transform_list
-             : sweep(is_path(shape)?clockwise_polygon(shape):shape, transform_list, closed=false, caps=fullcaps,style=style,
+             : sweep(is_path(shape)?clockwise_polygon(shape):shape, transform_list, closed=false, caps=caps,style=style,
                        anchor=anchor,cp=cp,spin=spin,orient=orient,atype=atype,
                        texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples,
                        tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip,
@@ -2485,8 +2493,15 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   is a list of 4x4 transformation matrices.  The sweep algorithm applies each transformation in sequence
 //   to the shape input and links the resulting polygons together to form a polyhedron.
 //   If `closed=true` then the first and last transformation are linked together.
-//   The `caps` parameter controls whether the ends of the shape are closed.
 //   As a function, returns the VNF for the polyhedron.  As a module, computes the polyhedron.
+//   .
+//   The `caps` parameter controls what happens at the ends of the polyhedron.  If `closed=true` the shape links to itself and has no
+//   ends, but when `closed` is false, the two ends are, by default capped with flat faces.  If you set `caps=false` then the ends
+//   receive no faces and the resulting non-manifold polyhedron has exposed edges.  You can also set caps to a number, which adds a
+//   rounded cap with the specified radius, or you can set caps to an {{offset_sweep()}} end treatment, and the specified sweep will
+//   be attached as a cap.  Note that you are **adding** a rounded cap, not rounding the specified shape as is common for many other
+//   library modules.  The rounded cap is attached to the end face and may not blend neatly with the swept shape unless the sides of
+//   the swept shape are perpendicular to the end cap.  
 //   .
 //   This is a powerful, general framework for producing polyhedra.  It is important
 //   to ensure that your resulting polyhedron does not include any self-intersections, or it will
@@ -2500,11 +2515,13 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   This works by passing through to {{vnf_vertex_array()}}, which also has more details on
 //   texturing.  Note that textures work only when the shape is a path; you cannot apply a texture to a region.
 //   The texture tiles are oriented on the path sweep so that the Y axis of the tile is aligned with the sweep direction.
+//   .
+//   
 // Arguments:
 //   shape = 2d path or region, describing the shape to be swept.
 //   transforms = list of 4x4 matrices to apply
 //   closed = set to true to form a closed (torus) model.  Default: false
-//   caps = true to create endcap faces when closed is false.  Can be a singe boolean to specify endcaps at both ends, or a length 2 boolean array.  Default is true if closed is false.
+//   caps = if closed is false, set caps to false to leave the ends open.  Other values are true to create a flat cap, a number a rounded cap, or an {{offset_sweep()}} end treatment to create the specified offset sweep.  Can be a single value or pair of values to control the caps independently at each end.  Default: true
 //   style = vnf_vertex_array style.  Default: "min_edge"
 //   ---
 //   convexity = convexity setting for use with polyhedron. (module only) Default: 10
@@ -2570,15 +2587,26 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge",
     assert(is_consistent(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
     assert(is_path(shape,2) || is_region(shape), "Input shape must be a 2d path or a region.")
     let(
-        caps = is_def(caps) ? caps :
-            closed ? false : true,
-        capsOK = is_bool(caps) || is_bool_list(caps,2),
-        fullcaps = is_bool(caps) ? [caps,caps] : caps
+        caps = is_struct(caps) ? [caps,caps]
+             : is_bool(caps) || is_num(caps) ? [caps,caps]
+             : is_undef(caps) ? closed ? [false,false] : [true,true]
+             : caps, 
+      
+        
+        capsOK = is_list(caps) && len(caps)==2
+                    &&
+                      [] == [for(cap=caps)
+                               if (!(is_bool(cap) || is_num(cap) || (is_struct(cap) && struct_val(cap,"for")=="offset_sweep"))) 1],
+        flatcaps = [for(cap=caps) is_bool(cap) ? cap : false],
+        fancycaps = [for(cap=caps) is_bool(cap) ? false
+                                 : is_num(cap) ? os_circle(r=cap,steps=ceil(segs(cap)/4))
+                                 : cap]
     )
     assert(len(transforms)>=2, "transformation must be length 2 or more")
-    assert(capsOK, "caps must be boolean or a list of two booleans")
-    assert(!closed || !caps, "Cannot make closed shape with caps")
+    assert(capsOK, "caps must be boolean, number, an offset_sweep specification, or a list of two of those")
+    assert(!closed || caps==[false,false], "Cannot make closed shape with caps")
     is_region(shape)?
+        assert(fancycaps==[false,false], "rounded caps are not supported for regions")
         assert(is_undef(texture), "textures are not supported for regions, only paths")
         let(
             regions = region_parts(shape),
@@ -2587,8 +2615,8 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge",
                 for (rgn=regions) each [
                     for (path=rgn)
                         sweep(path, transforms, closed=closed, caps=false, style=style),
-                    if (fullcaps[0]) vnf_from_region(rgn, transform=transforms[0], reverse=true),
-                    if (fullcaps[1]) vnf_from_region(rgn, transform=last(transforms)),
+                    if (flatcaps[0]) vnf_from_region(rgn, transform=transforms[0], reverse=true),
+                    if (flatcaps[1]) vnf_from_region(rgn, transform=last(transforms)),
                 ],
             ],
             vnf = vnf_join(vnfs)
@@ -2603,12 +2631,22 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge",
                  : let(
                         n = surface_normals(select(points,0,-2), col_wrap=true, row_wrap=true)
                    )
-                   [each n, n[0]]
-    )
-    vnf_vertex_array(points, normals=normals, 
-                     cap1=fullcaps[0],cap2=fullcaps[1],col_wrap=true,style=style,
-                     texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples,
-                     tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip);
+                   [each n, n[0]],
+         vva_result = vnf_vertex_array(points, normals=normals, 
+                               cap1=flatcaps[0],cap2=flatcaps[1],col_wrap=true,style=style, return_edges=fancycaps!=[false,false],
+                               texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples,
+                               tex_inset=tex_inset, tex_rot=tex_rot, tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip),
+         vnf = fancycaps==[false,false] ? vva_result
+             : vnf_join(
+                   [ vva_result[0], 
+                     for(ind=[0,1]) 
+                          if (fancycaps[ind]) let(
+                              polygon = vva_result[1][ind+2],
+                              plane = plane_from_polygon(ind==0? reverse(polygon) : polygon)
+                          )
+                          apply(lift_plane(plane),offset_sweep(project_plane(plane, polygon), top=fancycaps[ind], caps=[false,true]))
+                    ])
+    ) vnf;
 
 
 module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=10,
@@ -4952,7 +4990,7 @@ module _textured_revolution(
 }
 
 
-function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, triangulate=false, tex_scaling="default", 
+function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, triangulate=false, tex_scaling="default",return_edges=false, 
                 col_wrap=false, tex_depth=1, row_wrap=false, caps, cap1, cap2, reverse=false, style="min_edge", tex_extra, tex_skip, sidecaps,sidecap1,sidecap2,normals) =
     assert(tex_reps==undef || is_int(tex_reps) || (all_integer(tex_reps) && len(tex_reps)==2), "tex_reps must be an integer or list of two integers")
     assert(tex_size==undef || is_num(tex_size) || is_vector(tex_size,2), "tex_size must be a scalar or 2-vector")
@@ -5016,7 +5054,8 @@ function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples,
                   ]
               ]
         )  
-        vnf_vertex_array(tex_surf, row_wrap=row_wrap, col_wrap=col_wrap, reverse=reverse,style=style, caps=caps, cap1=cap1, cap2=cap2, triangulate=triangulate)
+        vnf_vertex_array(tex_surf, row_wrap=row_wrap, col_wrap=col_wrap, reverse=reverse,style=style,
+                         caps=caps, cap1=cap1, cap2=cap2, triangulate=triangulate, return_edges=return_edges)
    : // VNF case
         let(
             local_scale = [for(y=[-1:1:ptsize.y])
@@ -5068,7 +5107,7 @@ function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples,
                )
                base + _tex_height(tex_depth,tex_inset,pt.z) * normal*(reverse?-1:1) * scale,
             fullvnf = vnf_join([
-                           for(y=[0:1:tex_reps.y-1], x=[0:1:tex_reps.x-1])
+                           for(y=[0:1:tex_reps.y-1], x=[0:1:tex_reps.x-1])   // Main body of the textured shape
                              [
                               [for(pt=vnf[0]) trans_pt(x,y,pt)],
                               vnf[1]
@@ -5092,9 +5131,27 @@ function _textured_point_array(points, texture, tex_reps, tex_size, tex_samples,
                                                    [for(pt = closed_path) trans_pt(x,y,[x?1:0,pt.y,pt.z])]]
                                 )
                                 for(path=cap_paths) [path, [count(path,reverse=x!=0)]]
-                      ])
+                      ]),
+            edgepaths = !return_edges ? undef
+                      : [
+                          if (!col_wrap)
+                             for(x=[0, tex_reps.x-1])
+                                   [for(y=[0:1:tex_reps.y-1],pt=xedge_paths[0][0])
+                                                   trans_pt(x,y,[x?1:0,pt.y,pt.z])]
+                          else each [[],[]],
+                                 
+                          if (!row_wrap && len(yedge_paths[0])>0)
+                             for(ind=[0,1])
+                               if ([cap1,cap2][ind]) []
+                               else let(y=[0,tex_reps.y-1][ind])
+                               [for(x=[0:1:tex_reps.x-1], pt=yedge_paths[0][0])
+                                                     trans_pt(x,y,[pt.x,y?0:1,pt.z])]
+                          else each [[],[]]
+                        ],
+            revvnf = reverse ? vnf_reverse_faces(fullvnf) : fullvnf
+                          
        )
-       reverse ? vnf_reverse_faces(fullvnf) : fullvnf;
+       !return_edges ? revvnf : [revvnf, edgepaths];
 
 
 // Resamples a point array to the specified size.

@@ -1267,7 +1267,6 @@ function bezier_vnf(patches=[], splinesteps=16, style="default") =
         : assert(false,"\nInvalid patch list.")
       ]
     );
-          
 
 
 // Function: bezier_vnf_degenerate_patch()
@@ -1283,7 +1282,8 @@ function bezier_vnf(patches=[], splinesteps=16, style="default") =
 //   equal.  If the resulting patch has no faces then returns an empty VNF.  Note that due to the degeneracy,
 //   the shape of the surface can be triangular even though the underlying patch is a rectangle.  
 //   If you specify return_edges then the return is a list whose first element is the VNF and whose second
-//   element lists the edges in the order [left, right, top, bottom], where each list is a list of the actual
+//   element lists the edges in the order [left (index zero of rows), right (last index of rows), top (first row), bottom (last row)],
+//   where each list is a list of the actual
 //   point values, but possibly only a single point if that edge is degenerate.
 //   The method checks for various types of degeneracy and uses a triangular or partly triangular array of sample points. 
 //   See examples below for the types of degeneracy detected and how the patch is sampled for those cases.
@@ -1292,7 +1292,7 @@ function bezier_vnf(patches=[], splinesteps=16, style="default") =
 //   patch = Patch to process
 //   splinesteps = Number of segments to produce on each side.  Default: 16
 //   reverse = reverse direction of faces.  Default: false
-//   return_edges = if true return the points on the four edges: [left, right, top, bottom].  Default: false
+//   return_edges = if true return the points on the four edges of the array: [left (index zero of rows), right (last index of rows)  , top (first row), bottom (last row)].  Default: false
 // Example(3D,NoAxes): This quartic patch is degenerate at one corner, where a row of control points are equal.  Processing this degenerate patch normally produces excess triangles near the degenerate point. 
 //   splinesteps=8;
 //   patch=[

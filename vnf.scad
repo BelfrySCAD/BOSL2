@@ -73,6 +73,12 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   For creating the texture, `vnf_vertex_array()` uses normals to the surface that it estimates from the surface data itself.
 //   If you have more accurate normals or need the normals to take particular values, you can pass an array of normals
 //   using the `normals` parameter.
+//   .
+//   You can set `return_edges=true` to return the paths of the four edges of the output.  In this case the return value
+//   is `[vnf,edgelist]` where edgelist is [left (column 0 of points), right (last column of points), top (points[0]), bottom (last(points)]. If a given
+//   edge does not exist then it will be the empty list in the output.  An edge only exists it is not capped and not wrapped.  The main
+//   need for this feature is when you have added a texture and need a way to interface the shape with something else.  In this case you cannot
+//   easily determine the edges yourself from the input point list. edges are not easily 
 // Arguments:
 //   points = A list of vertices to divide into columns and rows.
 //   ---
@@ -99,6 +105,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   sidecap2 = set sidecap only for the `points[][max]` edge of the output
 //   tex_scaling = set to "const" to disable grid size vertical scaling of the texture.  Default: "default"
 //   normals = array of normal vectors to each point in the point array for more accurate texture height calculation
+//   return_edges = if true return [vnf,edgelist] where edgelist is the paths of four edges, [left (column 0 of points), right (last column of points), top (points[0]), bottom (last(points)].  Default: false
 //   cp = (module) Centerpoint for determining intersection anchors or centering the shape.  Determines the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   anchor = (module) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `"origin"`
 //   spin = (module) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -326,7 +333,7 @@ function vnf_vertex_array(
     row_wrap=false,
     reverse=false,
     style="default",
-    triangulate = false,
+    triangulate = false, return_edges=false, 
     texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, tex_scaling="default",
     tex_depth=1, tex_extra, tex_skip, sidecaps,sidecap1,sidecap2, normals
 ) =
@@ -336,7 +343,7 @@ function vnf_vertex_array(
     assert(is_bool(triangulate))
     is_def(texture) ?
           _textured_point_array(points=points, texture=texture, tex_reps=tex_reps, tex_size=tex_size,
-                               tex_inset=tex_inset, tex_samples=tex_samples, tex_rot=tex_rot, tex_scaling=tex_scaling,
+                               tex_inset=tex_inset, tex_samples=tex_samples, tex_rot=tex_rot, tex_scaling=tex_scaling, return_edges=return_edges, 
                                col_wrap=col_wrap, row_wrap=row_wrap, tex_depth=tex_depth, caps=caps, cap1=cap1, cap2=cap2, reverse=reverse,
                                style=style, tex_extra=tex_extra, tex_skip=tex_skip, sidecaps=sidecaps, sidecap1=sidecap1, sidecap2=sidecap2,normals=normals,triangulate=triangulate)
   :
@@ -431,10 +438,17 @@ function vnf_vertex_array(
                )
                rfaces,
         ],
-        vnf = [verts, allfaces]
-    ) triangulate? vnf_triangulate(vnf) : vnf;
-
-
+        vnf = [verts, allfaces],
+        tvnf = triangulate? vnf_triangulate(vnf) : vnf
+    )
+    !return_edges ? tvnf
+                  : [tvnf, [
+                              if (!col_wrap) deduplicate(column(points,0)) else [],
+                              if (!col_wrap) deduplicate(column(points, len(points[0])-1)) else [],
+                              if (!cap1 && !row_wrap) deduplicate(points[0]) else [],
+                              if (!cap2 && !row_wrap) deduplicate(last(points)) else []
+                           ]
+                    ];
 
 // Function&Module: vnf_tri_array()
 // Synopsis: Returns a VNF from an array of points. The array need not be rectangular.

@@ -7,11 +7,9 @@
 //   two prisms together with a rounded fillet at the joint.  
 // Includes:
 //   include <BOSL2/std.scad>
-//   include <BOSL2/rounding.scad>
 // FileGroup: Advanced Modeling
 // FileSummary: Round path corners, rounded prisms, rounded cutouts in tubes, filleted prism joints
 //////////////////////////////////////////////////////////////////////
-include <structs.scad>
 
 // Section: Types of Roundovers
 //   The functions and modules in this file support two different types of roundovers and some different mechanisms for specifying

@@ -767,6 +767,7 @@ function _make_anchor_legal(anchor,geom) =
 //   This module differs from {{position()}} and {{align()}} in that it rotates the children to
 //   the anchor direction, which generally means it places the children on the surface of a parent.
 //   There are two modes of operation, parent anchor (single argument) and parent-child anchor (double argument).
+//   In most cases you should use the parent-child (double argument) version of `attach()`.  
 //   .
 //   The parent-child anchor (double argument) version is usually easier to use, and it is more powerful because it supports
 //   alignment.  You provide an anchor on the parent (`parent`) and an anchor on the child (`child`).
@@ -810,17 +811,6 @@ function _make_anchor_legal(anchor,geom) =
 //   ignored** with the **double argument** version of `attach()`.  As noted above, you can give `spin=` to the
 //   child but using the `spin=` parameter to `attach()` is more likely to be useful.
 //   .
-//   For the single parameter version of `attach()` you give only the `parent` anchor.  The `align` direction
-//   is not permitted.  In this case the child is placed at the specified parent anchor point
-//   and rotated to the anchor direction.  For example, `attach(TOP) cuboid(2);` will place a small
-//   cube **with its center** located at the TOP anchor of the parent, so just half the cube will project
-//   from the parent.  If you want the cube sitting on the parent you need to anchor the cube to its bottom:
-//   `attach(TOP) cuboid(2,anchor=BOT);`.
-//   .
-//   The **single argument** version of `attach()` **respects `anchor=` and `orient=` given to the child.**
-//   These options will probably be necessary, in fact, to get the child correctly positioned.  Note that
-//   giving `spin=` to `attach()` in this case is the same as applying `zrot()` to the child. 
-//   .
 //   You can overlap attached children into the parent by giving the `$overlap` value
 //   which is 0 by default, or by the `overlap=` argument.    This is to prevent OpenSCAD
 //   from making non-manifold objects.  You can define `$overlap=` as an argument in a parent
@@ -832,6 +822,17 @@ function _make_anchor_legal(anchor,geom) =
 //   placed inside the parent.  It will shift the child outward along every direction where it is aligned with
 //   the parent.  For an inside child this is equivalent to giving a positive overlap and negative inset value.
 //   For a child with `inside=false` it is equivalent to a negative overlap and negative inset.  
+//   .
+//   The single parameter version of `attach()` is rarely needed; to use it, you give only the `parent` anchor.  The `align` direction
+//   is not permitted.  In this case the child is placed at the specified parent anchor point
+//   and rotated to the anchor direction.  For example, `attach(TOP) cuboid(2);` will place a small
+//   cube **with its center** located at the TOP anchor of the parent, so just half the cube will project
+//   from the parent.  If you want the cube sitting on the parent you need to anchor the cube to its bottom:
+//   `attach(TOP) cuboid(2,anchor=BOT);`.
+//   .
+//   The **single argument** version of `attach()` **respects `anchor=` and `orient=` given to the child.**
+//   These options will probably be necessary, in fact, to get the child correctly positioned.  Note that
+//   giving `spin=` to `attach()` in this case is the same as applying `zrot()` to the child. 
 //   .
 //   For a step-by-step explanation of
 //   attachments, see the [Attachments Tutorial](Tutorial-Attachments).
