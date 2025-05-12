@@ -24,10 +24,29 @@
 # Some planetary datasets use planetocentric or planetographic projections — still usable for 2D mapping.
 
 
+import sys
+
+def require_module(name, alias=None, install_hint=None):
+    try:
+        module = __import__(name)
+        if alias:
+            globals()[alias] = module
+        else:
+            globals()[name] = module
+    except ImportError:
+        print(f"Error: This script requires the '{name}' package.")
+        if install_hint:
+            print(f"Install it using: {install_hint}")
+        else:
+            print(f"Try: pip install {name}")
+        sys.exit(1)
+
+# Require necessary modules
+require_module('rasterio', install_hint='pip install rasterio')
+require_module('numpy', alias='np', install_hint='pip install numpy')
+
+# Standard, should always be available:
 import argparse
-import numpy as np
-import rasterio
-from rasterio.enums import Resampling
 import json
 
 # ----------------------------
