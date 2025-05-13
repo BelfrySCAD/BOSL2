@@ -75,21 +75,25 @@ args = parser.parse_args()
 # ----------------------------
 # Parse resize dimensions
 # ----------------------------
-def parse_resize(resize_str):
+def parse_resize(resize_str, aspect):
     if "x" in resize_str:
         w, h = map(int, resize_str.lower().split("x"))
-    else:
+    else: # use aspect ratio to get height
         w = int(resize_str)
-        h = int(w / 2)  # Assume 2:1 equirectangular aspect ratio
+        h = int(round(w * aspect))
     return w, h
 
-output_width, output_height = parse_resize(args.resize)
+output_width = 0
+output_height = 0
 
 # ----------------------------
 # Load GeoTIFF and downsample
 # ----------------------------
-print(f"Reading data from {args.input_file} and resampling to {output_width}×{output_height}")
 with rasterio.open(args.input_file) as src:
+    input_width = src.width
+    input_height = src.height
+    output_width, output_height = parse_resize(args.resize, input_width/input_height)
+    print(f"Reading data from {args.input_file} and resampling to {output_width}×{output_height}")
     data = src.read(1, out_shape=(1, output_height, output_width), resampling=Resampling.bilinear)
     print("Processing data")
     # Replace nodata values
