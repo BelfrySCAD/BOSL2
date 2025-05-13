@@ -1523,4 +1523,48 @@ module hull_region(region)
 }
 
 
+// Function: fill()
+// Synopsis: Remove holes from a {{region}}
+// SynTags: Geom, Path
+// Topics: Regions, Polygons, Shapes2D
+// Usage:
+//    filled = fill(region);
+// Description:
+//   Given a {{region}}, fill in any internal holes in the components of the region.  This returns the outside border of each region component, and
+//   is equivalent to {{hull()}} for region components whose outside boundary is convex.  
+// Arguments:
+//   region = region to fill
+// Example(2D, NoAxes):  The original region in green has internal holes and subparts that are all filled in on the yellow filled region.  
+//   $fs=.5;$fa=1;
+//   reg=[circle(r=10),right(5.5,circle(r=1)),
+//        circle(r=8), circle(r=3),
+//        right(5.5,rect([3,4]))];
+//   color("green")region(reg);
+//   right(25)region(fill(reg));
+// Example(2D, NoAxes): Here the input region in green has two components:
+//   reg = [circle(8), circle(6)];
+//   reg2 = union([reg, fwd(18,reg)]);
+//   color("green")region(reg2);
+//   right(18) region(fill(reg2));
+
+function fill(region) =
+   let(
+       region = force_region(region)
+   )
+   assert(is_region(region), "\nInput is not a region.")
+   let(
+       inside = [for(i=idx(region))
+                    let(pt = mean([region[i][0], region[i][1]]))
+                    [for(j=idx(region))  i==j ? 0
+                                       : point_in_polygon(pt,region[j]) >=0 ? 1 : 0]
+                ],
+       level = inside*repeat(1,len(region))
+   )
+   [ for(i=idx(region))
+      if(level[i]==0) clockwise_polygon(region[i])];
+
+
+
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

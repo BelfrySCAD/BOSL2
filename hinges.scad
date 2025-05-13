@@ -98,8 +98,8 @@ include <screws.scad>
 //   right(.5)fwd(-3)color("blue")text("round_bot=1.5",size=1);
 // Arguments:
 //   length = total length of the entire hinge
-//   offset = horizontal offset of the hinge pin center from the mount point
 //   segs = number of hinge segments
+//   offset = horizontal offset of the hinge pin center from the mount point
 //   inner = set to true for the "inner" hinge.  Default: false
 //   ---
 //   arm_height = vertical height of the arm that holds the hinge barrel.  Default: 0
@@ -216,6 +216,22 @@ include <screws.scad>
 //     cuboid([4,40,15])
 //       position(TOP+RIGHT) orient(anchor=RIGHT)
 //         knuckle_hinge(length=35, segs=5, offset=2, inner=true, knuckle_clearance=1);
+// Example(3D,NoScales,VPR=[57.80,0.00,308.00],VPD=54.24,VPT=[2.34,0.76,0.15]): If you want the hinge leaves to fold flat together, pick a hinge configuration that places the centerline of the hinge pin on the plane of the hinge leaf.  Hinges that fold entirely flat probably won't work, so we add some clearance between the leaves.
+//   $fn=32;
+//   thickness=2;
+//   clearance=.2;
+//   yflip_copy()
+//     color(["green","red"][$idx])
+//     diff()
+//       fwd(clearance/2)
+//         cuboid([20,thickness,7],anchor=BACK)
+//           back(clearance/2)
+//           down(thickness/3)
+//           position(TOP+BACK)
+//             knuckle_hinge(20, segs=5, offset=thickness+clearance,
+//                           inner=$orig, knuckle_clearance=clearance,
+//                           knuckle_diam=2*thickness+clearance,
+//                           arm_angle=90, arm_height=0, clear_top=true);
 
 function knuckle_hinge(length, segs, offset, inner=false, arm_height=0, arm_angle=45, gap=0.2,
              seg_ratio=1, knuckle_diam=4, pin_diam=1.75, fill=true, clear_top=false,
