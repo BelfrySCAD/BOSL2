@@ -45,6 +45,8 @@ def require_module(name, alias=None, install_hint=None):
 require_module('rasterio', install_hint='pip install rasterio')
 require_module('numpy', alias='np', install_hint='pip install numpy')
 
+from rasterio.enums import Resampling
+
 # Standard, should always be available:
 import argparse
 import json
