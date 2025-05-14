@@ -71,6 +71,9 @@ parser.add_argument("-s", "--scale", default="cbrt", choices=["cbrt", "sqrt"], h
 parser.add_argument("--min_land_value", type=float, default=0.03, help="Minimum scaled land value, default=0.03, use 0 for planets/moons")
 parser.add_argument("--json", action="store_true", help="Output a .json file instead of a .scad file")
 args = parser.parse_args()
+if len(sys.argv) == 1:
+    parser.print_help()
+    sys.exit(0)
 
 # ----------------------------
 # Parse resize dimensions
@@ -80,7 +83,7 @@ def parse_resize(resize_str, aspect):
         w, h = map(int, resize_str.lower().split("x"))
     else: # use aspect ratio to get height
         w = int(resize_str)
-        h = int(round(w * aspect))
+        h = int(round(w / aspect))
     return w, h
 
 output_width = 0
@@ -157,7 +160,9 @@ def format_json_array(data_array):
 # Compact formatter for OpenSCAD (no unnecessary whitespace)
 def format_val(val):
     # Omit leading 0 and trailing zeros
-    return f"{val:.2f}".lstrip("0").rstrip("0").rstrip(".") if val >= 0 else f"-{abs(val):.2f}".lstrip("0").rstrip("0").rstrip(".")
+    out = f"{val:.2f}".lstrip("0").rstrip("0").rstrip(".") if val >= 0 else f"-{abs(val):.2f}".lstrip("0").rstrip("0").rstrip(".")
+    if (len(out) == 0): return "0"
+    else: return out
 
 output_filename = ""
 print("Writing output file")
