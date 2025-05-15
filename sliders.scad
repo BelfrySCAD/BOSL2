@@ -42,8 +42,8 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, chamfer=2, anchor=BOTTO
     full_width = w + 2*wall;
     full_height = h + base;
 
-    attachable(anchor,spin,orient, size=[l, full_width, full_height], offset=[0,0,-h/2]) {
-        zrot(90)
+    attachable(anchor,spin,orient, size=[full_width, l, full_height], offset=[0,0,-h/2]) {
+        zrot(0)
         down(base+h/2) {
             // Base
             cuboid([full_width, l, base-get_slop()], chamfer=chamfer, edges=[FRONT,BACK], except_edges=BOT, anchor=BOTTOM);
