@@ -1,6 +1,6 @@
-# Utility to convert GeoTIFF data to OpenSCAD or JSON formats.
+# Utility to convert GeoTIFF data to OpenSCAD, JSON, or PNG grayscale formats.
 # Written with a lot of back-and-forth collaboration with ChatGPT
-# May 2025
+# 14 May 2025
 
 # Sources of Planetary/Moon GeoTIFF Data (information below may be out of date)
 #
@@ -23,8 +23,11 @@
 # Files may be large (100–500 MB)! Some are .IMG or .JP2 and must be converted to .tif using GDAL.
 # Some planetary datasets use planetocentric or planetographic projections — still usable for 2D mapping.
 
-
+# builtin modules that should always be available
+import os
 import sys
+import argparse
+import json
 
 def require_module(name, alias=None, install_hint=None):
     try:
@@ -41,15 +44,12 @@ def require_module(name, alias=None, install_hint=None):
             print(f"Try: pip install {name}")
         sys.exit(1)
 
-# Require necessary modules
+# Require necessary other modules
 require_module('rasterio', install_hint='pip install rasterio')
 require_module('numpy', alias='np', install_hint='pip install numpy')
+require_module('PIL.Image', alias='Image', install_hint='pip install pillow')
 
 from rasterio.enums import Resampling
-
-# Standard, should always be available:
-import argparse
-import json
 
 # ----------------------------
 # Command-line argument parsing
@@ -64,16 +64,22 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter
 )
 parser.add_argument("input_file", nargs='?', default="geotiff.tif", help="Input GeoTIFF filename (default=geotiff.tif)")
-parser.add_argument("-o", "--output", default="terrain.scad", help="Output OpenSCAD file (default=terrain.scad)")
+parser.add_argument("-o", "--output", default="terrain.scad", help="Output file (.scad, .json, or .png) (default=terrain.scad)")
 parser.add_argument("-v", "--varname", default="elevation_data", help="Variable name for SCAD array (default=elevation_data)")
 parser.add_argument("-r", "--resize", default="360", help="Resize to WxH or W; e.g. 300x150, or 300 width preserving aspect; default=360)")
 parser.add_argument("-s", "--scale", default="cbrt", choices=["cbrt", "sqrt"], help="Scaling method (cube root or sqare root, default=cbrt)")
-parser.add_argument("--min_land_value", type=float, default=0.03, help="Minimum scaled land value, default=0.03, use 0 for planets/moons")
-parser.add_argument("--json", action="store_true", help="Output a .json file instead of a .scad file")
+parser.add_argument("--min_land_value", type=float, default=0.03, help="Minimum scaled value for coastlines, default=0.03, use 0 for planets/moons")
 args = parser.parse_args()
 if len(sys.argv) == 1:
     parser.print_help()
     sys.exit(0)
+
+output_ext = os.path.splitext(args.output)[1].lower()
+if output_ext not in [".scad", ".json", ".png"]:
+    print(f"Error: Filename '{args.output}' requires an extension .scad, .json, or .png to specify output type.")
+    sys.exit(1)
+output_type = output_ext[1:]  # Removes the dot, e.g., 'json', 'png', 'scad'
+output_filename = args.output
 
 # ----------------------------
 # Parse resize dimensions
@@ -164,23 +170,21 @@ def format_val(val):
     if (len(out) == 0): return "0"
     else: return out
 
-output_filename = ""
 print("Writing output file")
-if args.json or args.output.endswith(".json"):
-    if not args.output.endswith(".json"):
-        output_filename = args.output.rsplit('.', 1)[0] + ".json"
-    else:
-        output_filename = args.output
+if output_type=="json":
     formatted_array = [
         [format_val(val) for val in row] for row in scaled.tolist()
     ]
     with open(output_filename, "w") as f:
         json.dump({args.varname: formatted_array}, f, separators=(",", ":"))
-else:
-    if not args.output.endswith(".scad"):
-        output_filename = args.output.rsplit('.', 1)[0] + ".scad"
-    else:
-        output_filename = args.output
+elif output_type=="png":
+    from PIL import Image
+    # Normalize to 0–255 for 8-bit grayscale
+    scaled_normalized = (scaled - scaled.min()) / (scaled.max() - scaled.min())
+    img_array = (scaled_normalized * 255).astype(np.uint8)
+    img = Image.fromarray(img_array, mode='L')
+    img.save(output_filename)
+else: # output .scad
     with open(output_filename, "w") as f:
         f.write(f"// Auto-generated terrain data\n")
         f.write(f"// Source file: {args.input_file}\n")
