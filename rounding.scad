@@ -9,6 +9,7 @@
 //   include <BOSL2/std.scad>
 // FileGroup: Advanced Modeling
 // FileSummary: Round path corners, rounded prisms, rounded cutouts in tubes, filleted prism joints
+// FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
 // Section: Types of Roundovers
@@ -2875,7 +2876,6 @@ function _circle_mask(r) =
 function bent_cutout_mask(r, thickness, path, radius, convexity=10) = no_function("bent_cutout_mask");
 module bent_cutout_mask(r, thickness, path, radius, convexity=10)
 {
-  no_children($children);
   r = get_radius(r1=r, r2=radius);
   dummy1=assert(is_def(r) && r>0,"Radius of the cylinder to bend around must be positive");
   path2 = force_path(path);
@@ -2894,7 +2894,7 @@ module bent_cutout_mask(r, thickness, path, radius, convexity=10)
   innerzero = repeat([0,0,zmean], len(fixpath));
   outerpt = repeat( [1.5*mindist*cos((maxangle+minangle)/2),1.5*mindist*sin((maxangle+minangle)/2),zmean], len(fixpath));
   default_tag("remove")
-    vnf_polyhedron(vnf_vertex_array([innerzero, each profiles, outerpt],col_wrap=true),convexity=convexity);
+    vnf_polyhedron(vnf_vertex_array([innerzero, each profiles, outerpt],col_wrap=true),convexity=convexity) children();
 }
 
 
