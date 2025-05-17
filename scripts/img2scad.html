@@ -317,7 +317,6 @@ Alpha channel is ignored. After processing the image as desired, you may save it
     let rotation = 0;
     let flipH = false;
     let flipV = false;
-    let fileSuffix = "";
     let origDim = { width:0, height:0 };
     let uncropDim = { width:0, height:0 };
     let cropDim = { width:0, height:0 };
@@ -510,7 +509,6 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       grayscaleCtx.restore();
 
       grayscaleSizeText.textContent = `Output size: ${finalWidth}×${finalHeight}`;
-      fileSuffix = finalWidth.toString()+"x"+finalHeight.toString();
       updateKbytes();
     }
 
@@ -715,10 +713,11 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       const arrayContent = grayscaleMatrix.map(row => {
         return " [" + row.map(val => useUnit ? parseFloat((val/255.0).toFixed(3)) : val).join(",") + "]";
       }).join(",\n");
-      const openscadArray = (arrayName.value.length>0 ? arrayName.value : 'image_array')+" = [\n" + arrayContent + "\n];";
+	  const introcomment = " = [ // " + cropDim.width + "×" + cropDim.height + "\n";
+	  const dimSuffix = "_"+cropDim.width + "x" + cropDim.height
+      const openscadArray = (arrayName.value.length>0 ? arrayName.value : 'image_array') + introcomment + arrayContent + "\n];";
       const blob = new Blob([openscadArray], { type: "text/plain" });
-      let suffix = fileSuffix.length>0 ? (arrayName.value.length>0 ? fileSuffix : "image"+fileSuffix) : "image";
-      let filename = arrayName.value.length>0 ? arrayName.value+'_'+suffix+'.scad' : suffix+'.scad';
+      let filename = (arrayName.value.length>0 ? arrayName.value : "image_array") + dimSuffix + '.scad';
       if (window.showSaveFilePicker) {
         saveWithFilePicker(blob, filename);
       } else {

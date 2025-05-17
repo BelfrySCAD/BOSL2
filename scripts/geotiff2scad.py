@@ -1,6 +1,6 @@
 # Utility to convert GeoTIFF data to OpenSCAD, JSON, or PNG grayscale formats.
-# Written with a lot of back-and-forth collaboration with ChatGPT
-# 14 May 2025
+# Written with some back-and-forth collaboration with ChatGPT
+# 16 May 2025
 
 # Sources of Planetary/Moon GeoTIFF Data (information below may be out of date)
 #
@@ -23,12 +23,17 @@
 # Files may be large (100–500 MB)! Some are .IMG or .JP2 and must be converted to .tif using GDAL.
 # Some planetary datasets use planetocentric or planetographic projections — still usable for 2D mapping.
 
+# ----------------------------
+# Required modules
+# ----------------------------
+
 # builtin modules that should always be available
 import os
 import sys
 import argparse
 import json
 
+# Require necessary other modules
 def require_module(name, alias=None, install_hint=None):
     try:
         module = __import__(name)
@@ -44,7 +49,6 @@ def require_module(name, alias=None, install_hint=None):
             print(f"Try: pip install {name}")
         sys.exit(1)
 
-# Require necessary other modules
 require_module('rasterio', install_hint='pip install rasterio')
 require_module('numpy', alias='np', install_hint='pip install numpy')
 require_module('PIL.Image', alias='Image', install_hint='pip install pillow')
@@ -54,6 +58,7 @@ from rasterio.enums import Resampling
 # ----------------------------
 # Command-line argument parsing
 # ----------------------------
+
 parser = argparse.ArgumentParser(
     description="Convert a GeoTIFF elevation file to an OpenSCAD 2D array using nonlinear elevation scaling.",
     epilog="""Examples:
@@ -81,9 +86,8 @@ if output_ext not in [".scad", ".json", ".png"]:
 output_type = output_ext[1:]  # Removes the dot, e.g., 'json', 'png', 'scad'
 output_filename = args.output
 
-# ----------------------------
+
 # Parse resize dimensions
-# ----------------------------
 def parse_resize(resize_str, aspect):
     if "x" in resize_str:
         w, h = map(int, resize_str.lower().split("x"))
@@ -102,21 +106,18 @@ with rasterio.open(args.input_file) as src:
     input_width = src.width
     input_height = src.height
     output_width, output_height = parse_resize(args.resize, input_width/input_height)
-    print(f"Reading data from {args.input_file} and resampling to {output_width}×{output_height}")
+    print(f"Reading data from {args.input_file} and resampling")
     data = src.read(1, out_shape=(1, output_height, output_width), resampling=Resampling.bilinear)
-    print("Processing data")
     # Replace nodata values
     nodata = src.nodata
     if nodata is not None:
         data[data == nodata] = 0
     data = np.nan_to_num(data, nan=0)
 
-# ----------------------------
 # Basic elevation stats
-# ----------------------------
+
 raw_min = np.min(data)
 raw_max = np.max(data)
-print(f"Elevations after resampling: min={raw_min}, max={raw_max}")
 
 min_land_value = args.min_land_value            # e.g. 0.04
 land_mask = data > 0                            # positive elevations
@@ -157,45 +158,55 @@ if np.any(sea_mask):
     # Map sea to [ -min_land_value … more negative ]
     scaled[sea_mask] = -((sea_data - min_sea) * scale_factor + min_land_value)
 
-# -----------------------------------------------------------------
+# ----------------------------
+# Output
+# ----------------------------
 
-# Compact formatter for json (no unnecessary whitespace)
-def format_json_array(data_array):
-    return json.dumps(data_array, separators=(',', ':'))
-
-# Compact formatter for OpenSCAD (no unnecessary whitespace)
+# Compact formatter for OpenSCAD (no unnecessary whitespace, no leading zero before decimal point)
 def format_val(val):
     # Omit leading 0 and trailing zeros
     out = f"{val:.2f}".lstrip("0").rstrip("0").rstrip(".") if val >= 0 else f"-{abs(val):.2f}".lstrip("0").rstrip("0").rstrip(".")
     if (len(out) == 0): return "0"
     else: return out
 
-print("Writing output file")
+# Compact formatter for json (no unnecessary whitespace, but has leading zeros for json standards compliance)
+def format_json_array(data_array):
+    return json.dumps(data_array, separators=(',', ':'))
+
+print(f"Original resolution: {src.width}×{src.height}")
+print(f"Output resolution:   {output_width}×{output_height}")
+print(f"Resampled elevation range: {raw_min} to {raw_max}")
+scel_min = np.min(scaled)
+scel_max = np.max(scaled)
+if output_type=="png":
+    # Normalize to 0–255 for 8-bit grayscale
+    scaled = (scaled - scaled.min()) / (scaled.max() - scaled.min())
+    scel_min = np.min(scaled*255).astype(np.uint8)
+    scel_max = np.max(scaled*255).astype(np.uint8)
+print(f"Scaled elevation range:    {format_val(scel_min)} to {format_val(scel_max)}")
+print(f"Writing output file {output_filename}")
+
 if output_type=="json":
     formatted_array = [
-        [format_val(val) for val in row] for row in scaled.tolist()
+        [round(val, 2) for val in row] for row in scaled.tolist()
     ]
     with open(output_filename, "w") as f:
         json.dump({args.varname: formatted_array}, f, separators=(",", ":"))
 elif output_type=="png":
     from PIL import Image
-    # Normalize to 0–255 for 8-bit grayscale
-    scaled_normalized = (scaled - scaled.min()) / (scaled.max() - scaled.min())
-    img_array = (scaled_normalized * 255).astype(np.uint8)
+    img_array = (scaled * 255).astype(np.uint8)
     img = Image.fromarray(img_array, mode='L')
     img.save(output_filename)
 else: # output .scad
     with open(output_filename, "w") as f:
         f.write(f"// Auto-generated terrain data\n")
         f.write(f"// Source file: {args.input_file}\n")
-        f.write(f"// Original resolution: {src.width}x{src.height}\n")
-        f.write(f"// Output resolution: {output_width}x{output_height}\n")
-        f.write(f"// Raw elevation range: {raw_min:.2f} to {raw_max:.2f} meters\n")
-        f.write(f"// Scaled value range: {np.min(scaled):.4f} to {np.max(scaled):.4f}\n")
+        f.write(f"// Original resolution: {src.width}×{src.height}\n")
+        f.write(f"// Output resolution:   {output_width}×{output_height}\n")
+        f.write(f"// Resampled elevation range: {raw_min} to {raw_max} meters\n")
+        f.write(f"// Scaled elevation range:    {scel_min} to {scel_max}\n")
         f.write(f"{args.varname} = [\n")
         for row in scaled:
             line = "[" + ",".join(format_val(val) for val in row) + "],\n"
             f.write(line)
         f.write("];\n")
-
-print(f"✅ Done: Output saved to {output_filename}")
