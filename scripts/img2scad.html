@@ -212,10 +212,11 @@ Alpha channel is ignored. After processing the image as desired, you may save it
 
       <fieldset>
       <legend>Appearance</legend>
+	  <div style="float:right; border:1px solid green; padding:4px; text-align:center; font-size:smaller;">See:<br><a href="https://en.wikipedia.org/wiki/Luma_(video)" target="_blank">Luma</a></div>
       <input type="radio" name="grayModel" value="ntsc" checked><label for "grayModel" class="tooltip"> NTSC grayscale formula
-      <span class="tooltiptext">0.299R + 0.587G + 0.114B<br>Based on average human perception of color luminance</span></label><br>
-      <input type="radio" name="grayModel" value="linear"><label for="grayModel" class="tooltip"> Linear luminance
-      <span class="tooltiptext">0.2126R + 0.7152G + 0.0722B<br>Used by OpenSCAD surface()</span></label>
+      <span class="tooltiptext">NTSC Y&prime; = 0.299R + 0.587G + 0.114B<br>Rec. 601: Average human perception of color luminance</span></label><br>
+      <input type="radio" name="grayModel" value="linear"><label for="grayModel" class="tooltip"> sRGB linear luminance
+      <span class="tooltiptext">sRGB Y&prime; = 0.2126R + 0.7152G + 0.0722B<br>Rec. 709: Digital HD, used by OpenSCAD surface()</span></label>
 
       <div style="margin-top:8px;">
         <label><input type="checkbox" id="invertBrightness"> Invert brightness</label>
