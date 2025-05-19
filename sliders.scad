@@ -35,15 +35,17 @@
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value to make parts fit just right.
 // Example:
-//   slider(l=30, base=10, wall=4, $slop=0.2, spin=90);
+//   slider(l=30, base=10, wall=4, $slop=0.2);
+// Example(VPD=190;VPR=[75,0,350]): Vertically centered anchors are aligned with the slider V tips.
+//   slider(l=30, base=10, wall=4) show_anchors();
 function slider(l=30, w=10, h=10, base=10, wall=5, ang=30, chamfer=2, anchor=BOTTOM, spin=0, orient=UP) = no_function("slider");
 module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, chamfer=2, anchor=BOTTOM, spin=0, orient=UP)
 {
     full_width = w + 2*wall;
     full_height = h + base;
 
-    attachable(anchor,spin,orient, size=[l, full_width, full_height], offset=[0,0,-h/2]) {
-        zrot(90)
+    attachable(anchor,spin,orient, size=[full_width, l, full_height], offset=[0,0,-h/2]) {
+        zrot(0)
         down(base+h/2) {
             // Base
             cuboid([full_width, l, base-get_slop()], chamfer=chamfer, edges=[FRONT,BACK], except_edges=BOT, anchor=BOTTOM);
@@ -88,6 +90,8 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, chamfer=2, anchor=BOTTO
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example:
 //   rail(l=100, w=10, h=10);
+// Example(VPD=325;VPR=[80,0,25]): Anchors
+//   rail(l=100, w=10, h=10) show_anchors();
 function rail(l=30, w=10, h=10, chamfer=1.0, ang=30, anchor=BOTTOM, spin=0, orient=UP) = no_function("rail");
 module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, anchor=BOTTOM, spin=0, orient=UP)
 {

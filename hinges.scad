@@ -21,19 +21,28 @@ include <screws.scad>
 // Usage:
 //   knuckle_hinge(length, offset, segs, [inner], [arm_height=], [arm_angle=], [fill=], [clear_top=], [gap=], [round_top=], [round_bot=], [knuckle_diam=], [pin_diam=], [pin_fn=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
-//   Construct standard knuckle hinge in two parts using a hinge pin that must be separately supplied.
-//   The default is configured to use a piece of 1.75 mm filament as the hinge pin, but you can select
-//   any dimensions you like to use a screw or other available pin material.  The BOTTOM of the hinge
-//   is its mount point, which is aligned with the hinge pin centersurface, and the hinge pin hole is
-//   the CENTER of the hinge.  The offset is the distance from a vertical mounting point to the center
-//   of the hinge pin.  The hinge barrel is held by an angled support and vertical support.  The
+//   Construct standard knuckle hinge in two parts using a hinge pin that must be separately supplied,
+//   or a print-in-place knuckle hinge.  The default is configured to use a piece of 1.75 mm filament
+//   as the hinge pin, but you can select any dimensions you like to use a screw or other available pin material.
+//   The hinge appears with what is typically the mounting surface restong on the XY plane with the hinge rotational axis
+//   parallel to the X axis.  The BOTTOM
+//   of the hinge is its mount point, which, if clearance is not set, is in line with the hinge pin rotational center.
+//   In this case the hinge pin hole is the CENTER of the hinge. 
+//   The offset is the distance the base (the mounting point) to the center
+//   of the hinge pin.  The offset cannot be smaller than the knuckle diameter.
+//   The hinge barrel is held by an angled support and vertical support.  The
 //   length of the angled support is determined by its angle and the offset.  You specify the length
 //   of the vertical support with the arm_height parameter.
 //   .
 //   A hinge requires clearance so its parts don't interfere.  If the hinge pin is exactly centered on
 //   the top of your part, then the hinge may not close all the way due to interference at the edge.
-//   A small clearance, specified with `clearance=`, raises the hinge up and can ease this
-//   interference.  It should probably be equal to a layer thickness or two.  If the hinge knuckle is
+//   A small clearance, specified with `clearance=`, move the hinge in the Y direction (which would be UP if
+//   it were mounted on the side of a cube).  This shifts the rotation slightly and can ease the interference. 
+//   It should probably be equal to a layer thickness or two.  Note that clearance moves the rotational center
+//   but the CENTER, BOTTOM and TOP anchors stay fixed, so if you give a nonzero clearance, the center of rotation
+//   will be offset by the clearance from the center anchor.  
+//   .
+//   If the hinge knuckle is
 //   close to the hinged part then the mating part may interfere.  You can create clearance to address
 //   this problem by increasing the offset to move the hinge knuckles farther away.  Another method is
 //   to cut out a curved recess on the parts to allow space for the other hinges.  This is possible
@@ -41,6 +50,13 @@ include <screws.scad>
 //   room for the hinge knuckles.  It must be positive for any space to be cut, and to use this option
 //   you must make the hinge a child of some object and specify {{diff()}} for the parent object of
 //   the hinge.
+//   .
+//   To create a print-in-place hinge set `in_place=true` to create a hinge with interlocking cones
+//   instead of leaving a hole for an inserted pin.  In this case, `pin_diam` gives the diameter of
+//   the base of the cones and defaults to 1 less than the knuckle diameter.  You can also set `in_place`
+//   to a cone angle.  This is the angle of the bottom edge of the cone, measured from the vertical---the overhang
+//   angle for printing.  A larger angle produces a pointier cone that is more difficult to print and has
+//   a smaller clearance gap inside.  
 // Figure(2D,Med,NoScales):  The basic hinge form appears on the left.  If fill is set to true the gap between the mount surface and hinge arm is filled as shown on the right. 
 //   _knuckle_hinge_profile(4, 5, $fn=32, fill=false);
 //   right(13)_knuckle_hinge_profile(4, 5, $fn=32, fill=true);
@@ -85,8 +101,26 @@ include <screws.scad>
 //   a clearance hole is created through most of the hinge with a self-tap hole for the last segment.
 //   If the last segment is very long you may shrink the self-tap portion using the tap_depth parameter.
 //   The pin hole diameter is enlarged by the `2*$slop` for numerically specified holes.
-//   Screw holes are made using {{screw_hole()}} which enlarges the hole by `4*$slop`.  
+//   Screw holes are made using {{screw_hole()}} which enlarges the hole by `4*$slop`.
 //   .
+//   Instead of a hinge pin you can set `in_place=true` to produce a print-in-place hinge that uses
+//   cones to interlock the hinge segments.  The default cones are 45 degrees; you can set `in_place` to an
+//   angle from the vertical to adjust the cone angle.  (This means larger angles are pointier, and also less likely to print successfully.)
+//   Use `gap` to adjust the clearance in the hinge
+//   to get something that separates after printing.  When you adjust the cone hangle, higher angles result in a smaller
+//   clearance where the cones meet for the same gap size, so you can somewhat adjust the tightness of the hinge
+//   by changing the cone angle.  The default cone diameter, which is controlled by `pin_diam` is 1 unit smaller than the knuckle diameter, which should work well
+//   for larger hinges, but for small hinges you may want to specify a larger `pin_diam`.  
+// Figure(3D,Small,NoScales): A print-in-place hinge with part of the hinge cut away so you can see the interlocking cones that hold it together:  
+//   difference()
+//   {
+//      union(){
+//        knuckle_hinge(length=35, segs=9, offset=3.1, in_place=true,$fn=32);
+//        zrot(180)knuckle_hinge(length=35, inner=true, segs=9, offset=3.1, in_place=true,$fn=32);
+//      }
+//      up(3)cuboid(100, anchor=LEFT+BOT);
+//   }
+// Continues:
 //   To blend hinges better with a model you can round off the joint with the mounting surface using
 //   the `round_top` and `round_bot` parameters, which specify the cut distance, the amount of material to add.
 //   They make a continuous curvature "smooth" roundover with `k=0.8`.  See [smooth roundovers](rounding.scad#section-types-of-roundovers) for more
@@ -98,8 +132,8 @@ include <screws.scad>
 //   right(.5)fwd(-3)color("blue")text("round_bot=1.5",size=1);
 // Arguments:
 //   length = total length of the entire hinge
-//   offset = horizontal offset of the hinge pin center from the mount point
 //   segs = number of hinge segments
+//   offset = horizontal offset of the hinge pin center from the mount point
 //   inner = set to true for the "inner" hinge.  Default: false
 //   ---
 //   arm_height = vertical height of the arm that holds the hinge barrel.  Default: 0
@@ -110,15 +144,16 @@ include <screws.scad>
 //   round_top = rounding amount to add where top of hinge arm joins the mount surface.  Generally only useful when fill=false.  Default: 0
 //   round_bot = rounding amount to add where bottom of hinge arm joins the mount surface.  Default: 0
 //   knuckle_diam = diameter of hinge barrel.  Default: 4
-//   pin_diam = diameter of hinge pin hole as a number of screw specification.  Default: 1.75
+//   pin_diam = for regular hinges, diameter of hinge pin hole as a numerical dimension or as a screw specification.  For print-in-place hinges, the diameter of the base of the interlocking cones inside the hinge.  Default: 1.75 for regular hinges, 1 less than knuckle_diameter for print-in-place hinges. 
 //   pin_fn = $fn value to use for the pin.
 //   teardrop = Set to true or UP/DOWN/FWD/BACK to specify teardrop shape for the pin hole.  Default: false
 //   screw_head = screw head to use for countersink
 //   screw_tolerance = screw hole tolerance.  Default: "close"
-//   tap_depth = Don't make the tapped part of the screw hole larger than this. 
+//   tap_depth = Don't make the tapped part of the screw hole larger than this.
+//   in_place = If true create a print-in-place hinge with 45 deg angle interlocking cones.  If set to an angle, measures the angle from the vertical to the lower cone angle.  Default: false
 //   $slop = increases pin hole diameter
 //   clearance = raises pin hole to create clearance at the edge of the mounted surface.  Default: 0.15
-//   clear_knuckle = clear space for hinge knuckle of mating part.  Must use with {{diff()}}.  Default: 0 
+//   knuckle_clearance = clear space to create specified clearance for hinge knuckle of mating part.  Must use with {{diff()}}.  Default: 0 
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -216,19 +251,88 @@ include <screws.scad>
 //     cuboid([4,40,15])
 //       position(TOP+RIGHT) orient(anchor=RIGHT)
 //         knuckle_hinge(length=35, segs=5, offset=2, inner=true, knuckle_clearance=1);
+// Example(3D,NoScales,VPR=[57.80,0.00,308.00],VPD=54.24,VPT=[2.34,0.76,0.15]): If you want the hinge leaves to fold flat together, pick a hinge configuration that places the centerline of the hinge pin on the plane of the hinge leaf.  Hinges that fold entirely flat probably won't work, so we add some clearance between the leaves.
+//    $fn=32;
+//    thickness=2;
+//    clearance=0.2;
+//    zrot_copies([0,180])
+//      color(["green","gold"][$idx])
+//      diff()
+//        fwd(clearance/2)
+//          cuboid([20,thickness,7],anchor=BACK)
+//            down(thickness/3)
+//            position(TOP+BACK)
+//              knuckle_hinge(20, segs=5, offset=thickness+clearance,
+//                            inner=$idx==0, knuckle_clearance=clearance,
+//                            clearance=clearance/2, arm_angle=90, 
+//                            knuckle_diam=2*thickness+clearance,
+//                            clear_top=true);
+// Example(3D,NoScales,VPR=[55.00,0.00,25.00],VPD=82.67,VPT=[9.42,-0.23,1.39]): Here's a print-in-place hinge positioned for printing.  The next three examples show some different ways to position a hinge like this.  In this case, we create the hinge leaf, put the hinge on it, put the second hinge leaf next to it, and put the hinge on that.  It would be hard to rotate this hinge.  This hinge works with a 0.2mm layer height on a Prusa MK3S.  
+//   $fn=64;
+//   leaf_gap = 0.4;
+//   seg_gap = 0.2;
+//   module myhinge(inner)
+//      knuckle_hinge(length=25, segs=7, offset=3.1, inner=inner, in_place=true,
+//                    clearance=leaf_gap/2, round_bot=0.5, gap=seg_gap, seg_ratio=1/3);
+//   cuboid([20,25,2],rounding=7,edges=[LEFT+FWD,LEFT+BACK]){
+//     position(TOP+RIGHT) orient(UP,-90) 
+//       myhinge(false);
+//     align(RIGHT) right(leaf_gap) cuboid([20,25,2],rounding=7,edges=[RIGHT+FWD,RIGHT+BACK])
+//       position(TOP+LEFT) orient(UP,90) 
+//         myhinge(true);
+//   }
+// Example(3D,VPR=[66.20,0.00,66.30],VPD=60.27,VPT=[0.01,-0.19,-0.36],NoAxes): A very small print-in-place hinge with a 2mm hinge barrel that printed successfully on a Prusa MK3S with 0.15 mm layer height.  The 0.15 clearance places the rotation axis above the hinge leaves which enables the hinge to close all the way.  This construction makes the hinge leaf a child of the hinge, which enables easy rotation of hinge leaf and anything connected to it.  We do have to adjust the rotation center for the clearance.  This construction also makes the leaves symmetrically so they can be made with identical code, instead of needing to round opposite ends.  
+//   $fn = 64;
+//   diam = 2;       // Hinge knuckle diameter
+//   seg_gap = 0.15; // Gap between hinge segments
+//   clear = 0.15;   // Clearance so hinge will close all the way
+//   ang=0;          // Hinge rotation angle
+//   module myhinge(inner)
+//      knuckle_hinge(length=25, segs=11,offset=1.2, inner=inner, clearance=clear, knuckle_diam=diam,
+//                    pin_diam=1.8, arm_angle=28, gap=seg_gap, in_place=true, anchor=CTR,clip=2+clear)
+//         children();
+//   module leaf() cuboid([25,2,12],anchor=TOP+BACK,rounding=7,edges=[BOT+LEFT,BOT+RIGHT]);
+//   xrot(90){    // Rotate to printing orientation
+//     myhinge(true) position(BOT) leaf();
+//     color("lightblue")
+//       xrot(180-ang,cp=[0,clear,0])
+//       zrot(180,cp=[0,clear,0]) 
+//       myhinge(false) position(BOT) leaf();
+//   }
+// Example(3D,NoAxes,VPR=[72.50,0.00,117.40],VPD=113.40,VPT=[5.64,1.70,6.16]): Here is a print-in-place hinge where the hinge barrel matches the thickness of the leaves.  In this hinge we show another way to mate the parts where we {{attach()}} one hinge section to the other and the leaves are children of the hinges.  This hinge printed successfully (with ang=0) on a Prusa MK3S with a 0.2mm layer thickness.  This hinge is shown folded at an angle; for printing, set `ang=0`.  
+//   $fn=64;
+//   thickness=4;
+//   seg_gap = 0.2;
+//   end_space = 0.6;
+//   ang=35;
+//   module myhinge(inner)
+//      knuckle_hinge(length=25, segs=13,offset=thickness/2+end_space, inner=inner, clearance=-thickness/2, knuckle_diam=thickness,
+//                    arm_angle=45, gap=seg_gap, in_place=true, clip=thickness/2)
+//                    children();
+//   module leaf() cuboid([25,thickness,25],anchor=TOP+BACK, rounding=7, edges=[BOT+LEFT,BOT+RIGHT]);
+//   xrot(90)
+//     myhinge(true){
+//       position(BOT) leaf();
+//       color("lightblue")
+//         up(end_space) attach(BOT,TOP,inside=true)
+//         tag("")  // cancel default "remove" tag
+//         xrot(-ang,cp=[0,-thickness/2,thickness/2]) myhinge(false)
+//           position(BOT) leaf();
+//     }
 
 function knuckle_hinge(length, segs, offset, inner=false, arm_height=0, arm_angle=45, gap=0.2,
              seg_ratio=1, knuckle_diam=4, pin_diam=1.75, fill=true, clear_top=false,
-             round_bot=0, round_top=0, pin_fn, clearance,
+             round_bot=0, round_top=0, pin_fn, clearance, in_place=false, clip, 
              tap_depth, screw_head, screw_tolerance="close", 
              anchor=BOT,orient,spin) = no_function("hinge");
 
 module knuckle_hinge(length, segs, offset, inner=false, arm_height=0, arm_angle=45, gap=0.2,
-             seg_ratio=1, knuckle_diam=4, pin_diam=1.75, fill=true, clear_top=false,
-             round_bot=0, round_top=0, pin_fn, clearance=0, teardrop,
+             seg_ratio=1, knuckle_diam=4, pin_diam, fill=true, clear_top=false,
+             round_bot=0, round_top=0, pin_fn, clearance=0, teardrop, in_place=false, clip, 
              tap_depth, screw_head, screw_tolerance="close", knuckle_clearance, 
              anchor=BOT,orient,spin)
 {
+  pin_diam = default(pin_diam, in_place==false ? 1.75 : knuckle_diam-1);
   dummy =
     assert(is_str(pin_diam) || all_positive([pin_diam]), "pin_diam must be a screw spec string or a positive number")
     assert(all_positive(length), "length must be a postive number")
@@ -239,6 +343,7 @@ module knuckle_hinge(length, segs, offset, inner=false, arm_height=0, arm_angle=
   segs2 = floor(segs/2);
   seglen1 = gap + (length-(segs-1)*gap) / (segs1 + segs2*seg_ratio);
   seglen2 = gap + (length-(segs-1)*gap) / (segs1 + segs2*seg_ratio) * seg_ratio;
+  numsegs = inner?segs2:segs1;
   z_adjust = segs%2==1 ? 0
            : inner? seglen1/2
            : seglen2/2;
@@ -289,11 +394,32 @@ module knuckle_hinge(length, segs, offset, inner=false, arm_height=0, arm_angle=
   {
     multmatrix(transform)
       force_tag() difference() {
-        zcopies(n=inner?segs2:segs1, spacing=seglen1+seglen2)
-          linear_extrude((inner?seglen2:seglen1)-gap,center=true)
-            _knuckle_hinge_profile(offset=offset, arm_height=arm_height, arm_angle=arm_angle, knuckle_diam=knuckle_diam, pin_diam=pin_diam,
+        zcopies(n=numsegs, spacing=seglen1+seglen2){
+          linear_extrude((inner?seglen2:seglen1)-gap,center=true,convexity=4)
+            _knuckle_hinge_profile(offset=offset, arm_height=arm_height, arm_angle=arm_angle, knuckle_diam=knuckle_diam, pin_diam=pin_diam,clip=clip,
                                    fill=fill, clear_top=clear_top, round_bot=round_bot, round_top=round_top, pin_fn=pin_fn,clearance=clearance,tearspin=tearspin);
-        if (is_str(pin_diam)) back(clearance)right(offset) up(length/2-(inner?1:1)*z_adjust) zrot(default(tearspin,0)){
+
+          if (in_place!=false){
+            angle = is_bool(in_place) ? 45 : in_place;
+            doflip = inner?yflip():IDENT;
+            len = (inner?seglen2:seglen1)-gap;
+            cone_h = pin_diam/2*tan(angle);
+            tag("keep")back(clearance)right(offset)
+              rotate_extrude() polygon(apply(doflip,[
+                                         [0,-len/2 + ((!inner && segs%2==1 && $idx==0) || ($idx==numsegs-1 && inner && segs%2==0) ? 0:cone_h)],
+                                         [pin_diam/2, -len/2],
+                                         [pin_diam/2+.01, -len/2],
+                                         [pin_diam/2+.01, len/2],                                                                                                          
+                                         [pin_diam/2, len/2],
+                                         if ($idx==numsegs-1 && !inner) [0,len/2]
+                                         else each [
+                                           [pin_diam*.1, len/2+cone_h*.8],
+                                           [0,len/2+cone_h*.8]
+                                         ]
+                                       ]));
+          }
+        }
+        if (!in_place && is_str(pin_diam)) back(clearance)right(offset) up(length/2-(inner?1:1)*z_adjust) zrot(default(tearspin,0)){
           $fn = default(pin_fn,$fn);
           tap_depth = min(segs%2==1?seglen1-gap/2:seglen2-gap/2, default(tap_depth, length));
           screw_hole(pin_diam, length=length+.01, tolerance="self tap", bevel=false, anchor=TOP, teardrop=is_def(tearspin));
@@ -311,7 +437,8 @@ module knuckle_hinge(length, segs, offset, inner=false, arm_height=0, arm_angle=
 }  
 
 
-module _knuckle_hinge_profile(offset, arm_height, arm_angle=45, knuckle_diam=4, pin_diam=1.75, fill=true, clear_top=false, round_bot=0, round_top=0, pin_fn, clearance=0, tearspin)
+module _knuckle_hinge_profile(offset, arm_height, arm_angle=45, knuckle_diam=4, pin_diam=1.75, fill=true, clear_top=false, 
+                              round_bot=0, round_top=0, pin_fn, clearance=0, tearspin, clip)
 {
   extra = .01;
   skel = turtle(["left", 90-arm_angle, "untilx", offset+extra, "left", arm_angle,
@@ -329,6 +456,7 @@ module _knuckle_hinge_profile(offset, arm_height, arm_angle=45, knuckle_diam=4, 
         }
         if (clear_top==true || clear_top=="all") left(.1)fwd(clearance) rect([offset+knuckle_diam,knuckle_diam+1+clearance],anchor=BOT+LEFT);
         if (is_num(clear_top)) left(.1)fwd(clearance) rect([.1+clear_top, knuckle_diam+1+clearance], anchor=BOT+LEFT);
+        if (is_def(clip)) fwd(clip) left(.1) rect([offset+knuckle_diam, ofs+round_bot+knuckle_diam+abs(clip)],anchor=BACK+LEFT);
       }
       right(offset)ellipse(d=knuckle_diam,realign=true,circum=true);
     }
