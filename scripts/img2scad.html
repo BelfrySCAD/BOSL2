@@ -8,8 +8,9 @@ Version 6: 23 April 2025 - added cropping UI
 Version 7: 25 April 2025 - added contrast and threshold sliders
 Version 8: 26 April 2025 - added file size estimate to output section
 Version 9: 20 May 2025 - improved appearance UI, added Sobel edge detection
+Verskl  10: 21 May 2025 - Added array_name_size value at top of output file
 -->
-  <title>Image to OpenSCAD array, v9</title><!-- REMEMBER TO CHANGE VERSION -->
+  <title>Image to OpenSCAD array, v10</title><!-- REMEMBER TO CHANGE VERSION -->
   <meta charset="UTF-8">
   <style>
     body { font-family: sans-serif; padding-left:1em; padding-right:1em;}
@@ -772,9 +773,10 @@ Alpha channel is ignored. After processing the image as desired, you may save it
         return " [" + row.map(val => useUnit ? parseFloat((val/255.0).toFixed(3)) : val).join(",") + "]";
       }).join(",\n");
       const introcomment = " = [ // " + cropDim.width + "×" + cropDim.height + "\n";
-      const dimSuffix = "_"+cropDim.width + "x" + cropDim.height
-      const openscadArray = (arrayName.value.length>0 ? arrayName.value : 'image_array') + introcomment + arrayContent + "\n];";
+	  const sizevar = (arrayName.value.length>0 ? arrayName.value : 'image_array')+"_size = [" + cropDim.width + "," + cropDim.height + "];\n";
+      const openscadArray = sizevar + (arrayName.value.length>0 ? arrayName.value : 'image_array') + introcomment + arrayContent + "\n];";
       const blob = new Blob([openscadArray], { type: "text/plain" });
+      const dimSuffix = "_"+cropDim.width + "x" + cropDim.height;
       let filename = (arrayName.value.length>0 ? arrayName.value : "image_array") + dimSuffix + '.scad';
       if (window.showSaveFilePicker) {
         saveWithFilePicker(blob, filename);
