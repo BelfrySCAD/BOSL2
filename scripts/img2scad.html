@@ -7,8 +7,9 @@ Versions 1-5: 22 April 2025 - by Alex Matulich (collaborating with ChatGPT for c
 Version 6: 23 April 2025 - added cropping UI
 Version 7: 25 April 2025 - added contrast and threshold sliders
 Version 8: 26 April 2025 - added file size estimate to output section
+Version 9: 20 May 2025 - improved appearance UI, added Sobel edge detection
 -->
-  <title>Image to OpenSCAD array, v8</title>
+  <title>Image to OpenSCAD array, v9</title><!-- REMEMBER TO CHANGE VERSION -->
   <meta charset="UTF-8">
   <style>
     body { font-family: sans-serif; padding-left:1em; padding-right:1em;}
@@ -212,7 +213,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
 
       <fieldset>
       <legend>Appearance</legend>
-	  <div style="float:right; border:1px solid green; padding:4px; text-align:center; font-size:smaller;">See:<br><a href="https://en.wikipedia.org/wiki/Luma_(video)" target="_blank">Luma</a></div>
+      <div style="float:right; border:1px solid green; padding:4px; text-align:center; font-size:smaller;">See:<br><a href="https://en.wikipedia.org/wiki/Luma_(video)" target="_blank">Luma</a></div>
       <input type="radio" name="grayModel" value="ntsc" checked><label for "grayModel" class="tooltip"> NTSC grayscale formula
       <span class="tooltiptext">NTSC Y&prime; = 0.299R + 0.587G + 0.114B<br>Rec. 601: Average human perception of color luminance</span></label><br>
       <input type="radio" name="grayModel" value="linear"><label for="grayModel" class="tooltip"> sRGB linear luminance
@@ -223,7 +224,10 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       </div>
       <div style="margin:8px 0;">
         <label for="blurRadius">Gaussian blur radius (pixels):</label>
-        <input type="number" id="blurRadius" size="5" min="0" max="20" value="0">
+        <input type="number" id="blurRadius" size="5" min="0" max="20" value="0"><br>
+        <label for="sobelRadius" class="tooltip">Edge detect radius (pixels):
+        <span class="tooltiptext">Sobel filter uses own radius if Gaussian blur=0</span></label>
+        <input type="number" id="sobelRadius" size="5" min="0" max="20" value="0">
       </div>
 
       <div class="slider-row">
@@ -287,6 +291,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
     const cropRight = document.getElementById('cropRight');
     const cropBottom = document.getElementById('cropBottom');
     const blurRadiusInput = document.getElementById('blurRadius');
+    const sobelRadiusInput = document.getElementById('sobelRadius');
     const contrastInput = document.getElementById('contrast');
     const contrastValue = document.getElementById('contrastValue');
     const thresholdInput = document.getElementById('threshold');
@@ -327,66 +332,113 @@ Alpha channel is ignored. After processing the image as desired, you may save it
 
     // image processing functions
 
-    function applyGaussianBlur(matrix, radius) {
-      if (radius <= 0) return matrix;
+    function gaussianKernel1D(radius) {
       const sigma = radius > 0 ? radius / 3 : 1;
       const kernel = [];
       let sum = 0;
-      for (let i = -radius; i <= radius; i++) { // kernel size = 2 * radius + 1;
-        const value = Math.exp(-(i * i) / (2 * sigma * sigma));
+      for (let i = -radius; i <= radius; i++) {
+        const value = Math.exp(- (i * i) / (2 * sigma * sigma));
         kernel.push(value);
         sum += value;
       }
-      kernel.forEach((v, i) => kernel[i] = v / sum);
+      return kernel.map(v => v / sum);
+    }
 
+    function sobelDerivativeKernel(size) {
+      const half = Math.floor(size / 2);
+      const kernel = [];
+      for (let i = -half; i <= half; i++) {
+        kernel.push(i);
+      }
+      const norm = kernel.reduce((acc, val) => acc + Math.abs(val), 0) || 1;
+      return kernel.map(v => v / norm);
+    }
+
+    function convolve1DHorizontal(matrix, kernel, normalize=true) {
       const width = matrix[0].length;
       const height = matrix.length;
-      const horizontalBlur = [];
-      // blur pixels horizontally, put in horizontalBlur[]
+      const r = Math.floor(kernel.length / 2);
+      const result = [];
       for (let y = 0; y < height; y++) {
-        horizontalBlur[y] = [];
+        result[y] = [];
         for (let x = 0; x < width; x++) {
-          let val = 0;
+          let sum = 0;
           let weightSum = 0;
-          for (let k = -radius; k <= radius; k++) {
+          for (let k = -r; k <= r; k++) {
             const nx = x + k;
             if (nx >= 0 && nx < width) {
-              val += matrix[y][nx] * kernel[k + radius];
-              weightSum += kernel[k + radius];
+                sum += matrix[y][nx] * kernel[k+r];
+                weightSum += kernel[k+r];
             }
           }
-          horizontalBlur[y][x] = val / weightSum;
+          result[y][x] = normalize ? (weightSum !== 0 ? sum / weightSum : 0) : sum;
         }
       }
-      // blur pixels vertically in horizontalBlur[], return result in output[]
-      const output = [];
+      return result;
+    }
+
+    function convolve1DVertical(matrix, kernel, normalize=true) {
+      const width = matrix[0].length;
+      const height = matrix.length;
+      const r = Math.floor(kernel.length / 2);
+      const result = [];
       for (let y = 0; y < height; y++) {
-        output[y] = [];
+        result[y] = [];
         for (let x = 0; x < width; x++) {
-          let val = 0;
+          let sum = 0;
           let weightSum = 0;
-          for (let k = -radius; k <= radius; k++) {
+          for (let k = -r; k <= r; k++) {
             const ny = y + k;
             if (ny >= 0 && ny < height) {
-              val += horizontalBlur[ny][x] * kernel[k + radius];
-              weightSum += kernel[k + radius];
+                sum += matrix[ny][x] * kernel[k+r];
+                weightSum += kernel[k+r];
             }
           }
-          output[y][x] = val / weightSum;
+          result[y][x] = normalize ? (weightSum !== 0 ? sum / weightSum : 0) : sum;
         }
       }
-      return output;
+      return result;
+    }
+
+    function computeEdgeMagnitude(gx, gy) {
+      const height = gx.length;
+      const width = gx[0].length;
+      const result = [];
+      for (let y = 0; y < height; y++) {
+        result[y] = [];
+        for (let x = 0; x < width; x++) {
+          const mag = Math.sqrt(gx[y][x] ** 2 + gy[y][x] ** 2);
+          result[y][x] = mag;
+        }
+      }
+      return result;
+    }
+
+    function applyGaussianBlur(matrix, blurRadius) {
+      const gKernel = gaussianKernel1D(blurRadius)
+      g1 = convolve1DVertical(matrix, gKernel);
+      return convolve1DHorizontal(g1, gKernel);
+    }
+
+    function applySobel(matrix, sobelRadius, blurRadius) {
+      if (sobelRadius <= 0) return matrix; // No edge detection
+      const sobelSize = 2 * sobelRadius + 1;
+      const dKernel = sobelDerivativeKernel(sobelSize);
+      let gblur = blurRadius === 0 ? applyGaussianBlur(matrix, sobelRadius) : matrix;
+      gx = convolve1DHorizontal(gblur, dKernel, false);
+      gy = convolve1DVertical(gblur, dKernel, false);
+      return computeEdgeMagnitude(gx, gy);
     }
 
     function sigmoid(z) { return 1.0 / (1+Math.exp(-z)); } // used by contrastAdj
 
     function contrastAdj(brightness) { // return an adjusted brightness based on contrast and threshold
-        const x = brightness/255.0;
-        const c = 2.0*contrast; // attempt to balance the sigmoid response to the contrast control
-        const sigterm = sigmoid(-c*threshold);
-        const adj = contrast>100.0 ? (x<threshold ? 0 : x>threshold ? 1 : threshold) // jump to 100% contrast at max contrast
-            : (sigmoid(c*(x-threshold)) - sigterm) / (sigmoid(c*(1.0-threshold)) - sigterm);
-        return adj * 255.0;
+      const x = brightness/255.0;
+      const c = 2.0*contrast; // attempt to balance the sigmoid response to the contrast control
+      const sigterm = sigmoid(-c*threshold);
+      const adj = contrast>100.0 ? (x<threshold ? 0 : x>threshold ? 1 : threshold) // jump to 100% contrast at max contrast
+          : (sigmoid(c*(x-threshold)) - sigterm) / (sigmoid(c*(1.0-threshold)) - sigterm);
+      return adj * 255.0;
     }
 
     function processImage() {
@@ -443,7 +495,11 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       const blurRadius = parseInt(blurRadiusInput.value) || 0;
       const blurredMatrix = applyGaussianBlur(brightnessMatrix, blurRadius);
 
-      // crop the blurred matrix, gather min and max values in crop area
+      // apply Sobel edge detection
+      const sobelRadius = parseInt(sobelRadiusInput.value) || 0;
+      const sobelMatrix = applySobel(blurredMatrix, sobelRadius, blurRadius);
+
+      // crop the matrix, gather min and max values in crop area
       const cropMatrix = [];
       let cropx1 = parseInt(cropID[edgeID[2]].value) || 0;
       let cropx2 = parseInt(cropID[edgeID[0]].value) || 0;
@@ -454,9 +510,9 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       for (let y=cropy1; y<uncropDim.height-cropy2; y++) {
         const row = [];
         for(let x=cropx1; x<uncropDim.width-cropx2; x++) {
-          row.push(blurredMatrix[y][x]);
-          min = Math.min(min, blurredMatrix[y][x]);
-          max = Math.max(max, blurredMatrix[y][x]);
+          row.push(sobelMatrix[y][x]);
+          min = Math.min(min, sobelMatrix[y][x]);
+          max = Math.max(max, sobelMatrix[y][x]);
         }
         cropMatrix.push(row);
       }
@@ -524,6 +580,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       flipV = flipH = false;
       resizeWidthInput.value = "100";
       blurRadiusInput.value = "0";
+      sobelRadiusInput.value = "0";
       invertBrightnessCheckbox.checked = invertBrightness = false;
       contrastInput.value = contrastValue.textContent = "0";
       contrast = 0.0001;
@@ -568,7 +625,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
 
     // set up event listeners for all the input gadgets
 
-    [blurRadiusInput, contrastInput, thresholdInput,
+    [blurRadiusInput, sobelRadiusInput, contrastInput, thresholdInput,
         ...document.querySelectorAll('input[name="grayModel"]')].forEach(el => el.addEventListener('input', processImage));
 
     resizeWidthInput.addEventListener('input', function () {
@@ -680,21 +737,21 @@ Alpha channel is ignored. After processing the image as desired, you may save it
         processImage();
     });
 
-	const Gbyte = 1073741824.0;
-	const Mbyte = 1048576.0;
-	const Kbyte = 1024.0;
-	// update file size estimate based on normalize type and size of output image
+    const Gbyte = 1073741824.0;
+    const Mbyte = 1048576.0;
+    const Kbyte = 1024.0;
+    // update file size estimate based on normalize type and size of output image
     function updateKbytes() {
-	    // length of a number for [0,1] range: mostly 6 characters "0.xxx," but occasionally less, using 5.95.
-		// length of a number for [0,255] range: assume 0-255 are uniformly distributed, use weighted average of digits plus comma
+        // length of a number for [0,1] range: mostly 6 characters "0.xxx," but occasionally less, using 5.95.
+        // length of a number for [0,255] range: assume 0-255 are uniformly distributed, use weighted average of digits plus comma
         const avglen = normalizeToUnitCheckbox.checked ? 5.95 : (10.0+90.0*2.0+156.0*3.0)/256.0+1.0;
-		// each row has 6 extra characters " [],\r\n" at most, plus 5 characters after array name and 4 characters at the end
+        // each row has 6 extra characters " [],\r\n" at most, plus 5 characters after array name and 4 characters at the end
         const estsize = (avglen*cropDim.width + 6.0) * cropDim.height + 9 + arrayName.value.length;
-		let unitName = "bytes";
-		let unit = 1.0;
-		if (estsize > Gbyte) { unit = Gbyte; unitName = "GiB"; }
-		else if (estsize > Mbyte) { unit = Mbyte; unitName = "MiB"; }
-		else if (estsize > 10.0*Kbyte) { unit = Kbyte; unitName = "KiB"; }
+        let unitName = "bytes";
+        let unit = 1.0;
+        if (estsize > Gbyte) { unit = Gbyte; unitName = "GiB"; }
+        else if (estsize > Mbyte) { unit = Mbyte; unitName = "MiB"; }
+        else if (estsize > 10.0*Kbyte) { unit = Kbyte; unitName = "KiB"; }
         const sizeOut = (estsize/unit).toFixed(unit==1.0?0:1);
         kbytes.textContent = `${sizeOut} ${unitName}`;
     }
@@ -714,8 +771,8 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       const arrayContent = grayscaleMatrix.map(row => {
         return " [" + row.map(val => useUnit ? parseFloat((val/255.0).toFixed(3)) : val).join(",") + "]";
       }).join(",\n");
-	  const introcomment = " = [ // " + cropDim.width + "×" + cropDim.height + "\n";
-	  const dimSuffix = "_"+cropDim.width + "x" + cropDim.height
+      const introcomment = " = [ // " + cropDim.width + "×" + cropDim.height + "\n";
+      const dimSuffix = "_"+cropDim.width + "x" + cropDim.height
       const openscadArray = (arrayName.value.length>0 ? arrayName.value : 'image_array') + introcomment + arrayContent + "\n];";
       const blob = new Blob([openscadArray], { type: "text/plain" });
       let filename = (arrayName.value.length>0 ? arrayName.value : "image_array") + dimSuffix + '.scad';
