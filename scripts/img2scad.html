@@ -8,9 +8,10 @@ Version 6: 23 April 2025 - added cropping UI
 Version 7: 25 April 2025 - added contrast and threshold sliders
 Version 8: 26 April 2025 - added file size estimate to output section
 Version 9: 20 May 2025 - improved appearance UI, added Sobel edge detection
-Verskl  10: 21 May 2025 - Added array_name_size value at top of output file
+Version 10: 21 May 2025 - Added array_name_size value at top of output file
+Version 11: 22 May 2025 - Fixed filter artifacts at image edges, added sharpening filter
 -->
-  <title>Image to OpenSCAD array, v10</title><!-- REMEMBER TO CHANGE VERSION -->
+  <title>Image to OpenSCAD array, v11</title><!-- REMEMBER TO CHANGE VERSION -->
   <meta charset="UTF-8">
   <style>
     body { font-family: sans-serif; padding-left:1em; padding-right:1em;}
@@ -223,13 +224,15 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       <div style="margin-top:8px;">
         <label><input type="checkbox" id="invertBrightness"> Invert brightness</label>
       </div>
-      <div style="margin:8px 0;">
+      <fieldset style="margin:8px 0;">
+	  <legend style="font-size:medium;">Filter cascade</legend>
         <label for="blurRadius">Gaussian blur radius (pixels):</label>
         <input type="number" id="blurRadius" size="5" min="0" max="20" value="0"><br>
-        <label for="sobelRadius" class="tooltip">Edge detect radius (pixels):
-        <span class="tooltiptext">Sobel filter uses own radius if Gaussian blur=0</span></label>
+        <label for="sharpenRadius">Sharpen radius (pixels):
+        <input type="number" id="sharpenRadius" size="5" min="0" max="20" value="0"><br>
+        <label for="sobelRadius">Edge detect radius (pixels):
         <input type="number" id="sobelRadius" size="5" min="0" max="20" value="0">
-      </div>
+      </fieldset>
 
       <div class="slider-row">
         <label for="contrast" class="slider-label tooltip">Contrast
@@ -293,6 +296,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
     const cropBottom = document.getElementById('cropBottom');
     const blurRadiusInput = document.getElementById('blurRadius');
     const sobelRadiusInput = document.getElementById('sobelRadius');
+    const sharpenRadiusInput = document.getElementById('sharpenRadius');
     const contrastInput = document.getElementById('contrast');
     const contrastValue = document.getElementById('contrastValue');
     const thresholdInput = document.getElementById('threshold');
@@ -355,47 +359,47 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       return kernel.map(v => v / norm);
     }
 
-    function convolve1DHorizontal(matrix, kernel, normalize=true) {
+    function convolve1DHorizontal(matrix, kernel) {
       const width = matrix[0].length;
       const height = matrix.length;
       const r = Math.floor(kernel.length / 2);
       const result = [];
+	  let indx, nx;
       for (let y = 0; y < height; y++) {
         result[y] = [];
         for (let x = 0; x < width; x++) {
           let sum = 0;
-          let weightSum = 0;
           for (let k = -r; k <= r; k++) {
-            const nx = x + k;
+			indx = x+k;
+            nx = indx<0 ? -indx : (indx>=width ? 2*(width-1)-indx : indx); // reflect edges
             if (nx >= 0 && nx < width) {
                 sum += matrix[y][nx] * kernel[k+r];
-                weightSum += kernel[k+r];
             }
           }
-          result[y][x] = normalize ? (weightSum !== 0 ? sum / weightSum : 0) : sum;
+          result[y][x] = sum;
         }
       }
       return result;
     }
 
-    function convolve1DVertical(matrix, kernel, normalize=true) {
+    function convolve1DVertical(matrix, kernel) {
       const width = matrix[0].length;
       const height = matrix.length;
       const r = Math.floor(kernel.length / 2);
       const result = [];
+	  let indx, ny;
       for (let y = 0; y < height; y++) {
         result[y] = [];
         for (let x = 0; x < width; x++) {
           let sum = 0;
-          let weightSum = 0;
           for (let k = -r; k <= r; k++) {
-            const ny = y + k;
+		    indx = y+k;
+            ny = indx<0 ? -indx : (indx >= height ? 2*(height-1)-indx : indx); // reflect edges
             if (ny >= 0 && ny < height) {
                 sum += matrix[ny][x] * kernel[k+r];
-                weightSum += kernel[k+r];
             }
           }
-          result[y][x] = normalize ? (weightSum !== 0 ? sum / weightSum : 0) : sum;
+          result[y][x] = sum;
         }
       }
       return result;
@@ -416,18 +420,34 @@ Alpha channel is ignored. After processing the image as desired, you may save it
     }
 
     function applyGaussianBlur(matrix, blurRadius) {
+	  if (blurRadius <= 0) return matrix;
       const gKernel = gaussianKernel1D(blurRadius)
       g1 = convolve1DVertical(matrix, gKernel);
       return convolve1DHorizontal(g1, gKernel);
     }
 
-    function applySobel(matrix, sobelRadius, blurRadius) {
+    function applySharpen(original, blurMatrix, radius, blurRadius, k) {
+	  if (radius <= 0) return blurMatrix;
+      const height = original.length;
+      const width = original[0].length;
+	  blurred = blurRadius === 0 ? applyGaussianBlur(original, radius) : blurMatrix;
+      const result = [];
+      for (let y = 0; y < height; y++) {
+        result[y] = [];
+        for (let x = 0; x < width; x++) {
+          result[y][x] = original[y][x] + k * (original[y][x] - blurred[y][x]);
+        }
+      }
+      return result;
+	}
+
+    function applySobel(matrix, sobelRadius, sharpenRadius, blurRadius) {
       if (sobelRadius <= 0) return matrix; // No edge detection
       const sobelSize = 2 * sobelRadius + 1;
       const dKernel = sobelDerivativeKernel(sobelSize);
-      let gblur = blurRadius === 0 ? applyGaussianBlur(matrix, sobelRadius) : matrix;
-      gx = convolve1DHorizontal(gblur, dKernel, false);
-      gy = convolve1DVertical(gblur, dKernel, false);
+      let gblur = blurRadius === 0 && sharpenRadius === 0 ? applyGaussianBlur(matrix, sobelRadius) : matrix;
+      gx = convolve1DHorizontal(gblur, dKernel);
+      gy = convolve1DVertical(gblur, dKernel);
       return computeEdgeMagnitude(gx, gy);
     }
 
@@ -492,13 +512,13 @@ Alpha channel is ignored. After processing the image as desired, you may save it
         brightnessMatrix.push(row);
       }
 
-      // apply blurring to the grayscale image
+      // apply filter cascade
       const blurRadius = parseInt(blurRadiusInput.value) || 0;
-      const blurredMatrix = applyGaussianBlur(brightnessMatrix, blurRadius);
-
-      // apply Sobel edge detection
+	  const sharpenRadius = parseInt(sharpenRadiusInput.value) || 0;
       const sobelRadius = parseInt(sobelRadiusInput.value) || 0;
-      const sobelMatrix = applySobel(blurredMatrix, sobelRadius, blurRadius);
+      const blurMatrix = applyGaussianBlur(brightnessMatrix, blurRadius);
+	  let filteredMatrix = applySharpen(brightnessMatrix, blurMatrix, sharpenRadius, blurRadius, 1.0);
+      filteredMatrix = applySobel(filteredMatrix, sobelRadius, sharpenRadius, blurRadius);
 
       // crop the matrix, gather min and max values in crop area
       const cropMatrix = [];
@@ -506,14 +526,14 @@ Alpha channel is ignored. After processing the image as desired, you may save it
       let cropx2 = parseInt(cropID[edgeID[0]].value) || 0;
       let cropy1 = parseInt(cropID[edgeID[1]].value) || 0;
       let cropy2 = parseInt(cropID[edgeID[3]].value) || 0;
-      let min = 255;
-      let max = 0;
+      let min = 32000;
+      let max = -32000;
       for (let y=cropy1; y<uncropDim.height-cropy2; y++) {
         const row = [];
         for(let x=cropx1; x<uncropDim.width-cropx2; x++) {
-          row.push(sobelMatrix[y][x]);
-          min = Math.min(min, sobelMatrix[y][x]);
-          max = Math.max(max, sobelMatrix[y][x]);
+          row.push(filteredMatrix[y][x]);
+          min = Math.min(min, filteredMatrix[y][x]);
+          max = Math.max(max, filteredMatrix[y][x]);
         }
         cropMatrix.push(row);
       }
@@ -626,7 +646,7 @@ Alpha channel is ignored. After processing the image as desired, you may save it
 
     // set up event listeners for all the input gadgets
 
-    [blurRadiusInput, sobelRadiusInput, contrastInput, thresholdInput,
+    [blurRadiusInput, sobelRadiusInput, sharpenRadiusInput, contrastInput, thresholdInput,
         ...document.querySelectorAll('input[name="grayModel"]')].forEach(el => el.addEventListener('input', processImage));
 
     resizeWidthInput.addEventListener('input', function () {
