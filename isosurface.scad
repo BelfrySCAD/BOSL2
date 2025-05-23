@@ -3523,7 +3523,7 @@ function _showstats_isosurface(voxsize, bbox, isoval, cubes, triangles, faces) =
 // Function&Module: contour()
 // Synopsis: Creates a 2D contour from a function or array of values.
 // SynTags: Geom,Path,Region
-// Topics: Isosurfaces, Path Generators (2D), Regions
+// Topics: Contours, Path Generators (2D), Regions
 // Usage: As a module
 //   contour(f, isovalue, bounding_box, pixel_size, [pixel_count=], [use_centers=], [smoothing=], [exact_bounds=], [show_stats=], [show_box=], ...) [ATTACHMENTS];
 // Usage: As a function
