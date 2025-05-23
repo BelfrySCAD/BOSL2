@@ -17,10 +17,10 @@
 
 // Section: Utility Functions
 // Definitions:
-//   Point|Points = A numeric vector of length 2 or 3 that represents either a 2D or 3D vertex.
-//   Pointlist|Pointlists|Point List|Point Lists = An unordered list of points.
-//   Path|Paths = A list of two or more 2D {{point}} coordinates that specify a route on the XY plane.
-//   Polygon|Polygons = A {{path}} where the first and last {{point}} coordinates are considered to be connected.
+//   Point|Points = A list of numbers, also called a vector.  Usually has length 2 or 3 to represent points in the place on points in space.  
+//   Pointlist|Pointlists|Point List|Point Lists = An unordered list of {{points}}.
+//   Path|Paths = An ordered list of two or more {{points}} specifying a path through space.  Usually points are 2D.  
+//   Polygon|Polygons = A {{path}}, usually 2D, that describes a polygon by asuming that the first and last point are connected.
 
 // Function: is_path()
 // Synopsis: Returns True if 'list' is a {{path}}.
