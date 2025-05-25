@@ -46,8 +46,9 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   The "min_edge" style picks the shorter edge to
 //   subdivide for each quadrilateral, so the division may not be uniform across the shape.  The "quincunx" style
 //   adds a vertex in the center of each quadrilateral and creates four triangles, and the "convex" and "concave" styles
-//   choose the locally convex/concave subdivision.  The "min_area" option creates the triangulation with the minimal area.  Degenerate faces
-//   are not included in the output, but if this results in unused vertices they still appear in the output.
+//   choose the locally convex/concave subdivision.  The "min_area" option creates the triangulation with the minimal area.
+//   The "quad" style makes quadrilateral edges, which may not be coplanar, relying on OpensCAD to decide how to handle them.  Degenerate faces
+//   are not included in the output, but if this results in unused vertices, those unused vertices do still appear in the output.
 //   .
 //   You can apply a texture to the vertex array VNF using the usual texture parameters.
 //   See [Texturing](skin.scad#section-texturing) for more details on how textures work.  
@@ -337,7 +338,7 @@ function vnf_vertex_array(
     texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, tex_scaling="default",
     tex_depth=1, tex_extra, tex_skip, sidecaps,sidecap1,sidecap2, normals
 ) =
-    assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area","flip1","flip2"]))
+    assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area","flip1","flip2","quad"]))
     assert(is_matrix(points[0], n=3),"\nPoint array has the wrong shape or points are not 3d.")
     assert(is_consistent(points), "\nNon-rectangular or invalid point array.")
     assert(is_bool(triangulate))
@@ -389,6 +390,7 @@ function vnf_vertex_array(
                           [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
                       : style=="alt" || (style=="flip1" && ((r+c)%2==0)) || (style=="flip2" && ((r+c)%2==1)) || (style=="random" && rands(0,1,1)[0]<.5)?
                           [[i1,i4,i2],[i2,i4,i3]]
+                      : style=="default" ? [[i1,i3,i2],[i1,i4,i3]]
                       : style=="min_area"?
                           let(
                                area42 = norm(cross(pts[i2]-pts[i1], pts[i4]-pts[i1]))+norm(cross(pts[i4]-pts[i3], pts[i2]-pts[i3])),
@@ -427,7 +429,7 @@ function vnf_vertex_array(
                                     : [[i1,i3,i2],[i1,i4,i3]]
                           )
                           concavefaces
-                      : [[i1,i3,i2],[i1,i4,i3]],
+                      : [[i1,i2,i3,i4]],
                    // remove degenerate faces
                    culled_faces= [for(face=faces)
                        if (norm(cross(verts[face[1]]-verts[face[0]],
@@ -2743,28 +2745,41 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, opacity=0.
 }
 
 
+// Given a single edge (pair of vertex indices) or list of them, find faces
+// that contain that edge.  You must not supply two edges that could appear in
+// the same face.  The use-case for more than one edge is when a single geometric edge
+// has multiple representations in the VNF.  Return is a pair of face indices.
+
 function _vnf_find_edge_faces(vnf,edge) =
   let(
+      edge = unique(flatten(edge)),
       faces = vnf[1],
       goodind = [for(i=idx(faces))
-                    let(result=search(edge,faces[i]))
+                    let(result=flatten(search(edge,faces[i])))
                     if (result*0==[0,0] && 
                           (abs(result[0]-result[1])==1
                            || (min(result)==0 && max(result)==len(faces[i])-1)))
                        i
                 ]
   )
-  goodind;
+  unique(goodind);
 
+
+
+// Given a VNF and an index list of vertices, return all the
+// faces (as indices into the face array) which include an item
+// from the corner list.  The idea is that corner will hold all
+// the indices that correspond to a single geometric point in
+// the VNF and return just the faces for that single corner.  
 
 function _vnf_find_corner_faces(vnf,corner) =
   let(
-      faces = vnf[1]
+      faces = vnf[1],
+      corner = force_list(corner),
+      nomatch = repeat([],len(corner))
   )
-  [for(i=idx(faces))
-     let(result=search([corner],faces[i])[0])
-     if (result!=[])
-        i];
+  unique([for(i=idx(faces))
+     if (search(corner,faces[i])!=nomatch) i]);
 
 
 
