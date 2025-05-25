@@ -2263,10 +2263,10 @@ function _cyl_path(
     ) 
     assert(is_finite(round1), "rounding1 must be a number if given.")
     assert(is_finite(round2), "rounding2 must be a number if given.")
-    assert(chamf1r <= r1, "chamfer1 is larger than the r1 radius of the cylinder.")
-    assert(chamf2r <= r2, "chamfer2 is larger than the r2 radius of the cylinder.")
-    assert(roundlen1 <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
-    assert(roundlen2 <= r2, "size of rounding2 is larger than the r2 radius of the cylinder.")
+    assert(chamf1r/scale <= r1, "chamfer1 is larger than the r1 radius of the cylinder.")
+    assert(chamf2r/scale <= r2, "chamfer2 is larger than the r2 radius of the cylinder.")
+    assert(roundlen1*unscale/scale <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
+    assert(roundlen2*unscale/scale <= r2, "size of rounding2 is larger than the r2 radius of the cylinder.")
     assert(dy1+dy2 <= facelen, "Chamfers/roundings don't fit on the cylinder/cone.  They exceed the length of the cylinder/cone face.")
     assert(td_ang==90 || clip_ang==90, "teardrop= and clip_angle= are mutually exclusive options.")
     [
@@ -2276,11 +2276,11 @@ function _cyl_path(
                [r1, -l/2] + xscale(1/scale,polar_to_xy(chamf1l,90+vang)),
            ]
        else if (!approx(round1,0) && td_ang < 90)
-           each xscale(1/scale,_teardrop_corner(r=round1*unscale, corner=[[max(0,r1*scale-2*roundlen1),-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=td_ang))
+           each xscale(1/scale,_teardrop_corner(r=round1*unscale, corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=td_ang))
        else if (!approx(round1,0) && clip_ang < 90)
-           each xscale(1/scale,_clipped_corner(r=round1*unscale, corner=[[max(0,r1*scale-2*roundlen1),-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=clip_ang))
+           each xscale(1/scale,_clipped_corner(r=round1*unscale, corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=clip_ang))
        else if (!approx(round1,0) && td_ang >= 90)
-           each xscale(1/scale,arc(r=abs(round1*unscale), corner=[[max(0,r1*scale-2*roundlen1),-l/2],[r1*scale,-l/2],[r2*scale,l/2]]))
+           each xscale(1/scale,arc(r=abs(round1*unscale), corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]]))
        else [r1,-l/2],
 
        if (is_finite(chamf2r) && !approx(chamf2r,0))
@@ -2289,7 +2289,7 @@ function _cyl_path(
                [r2-chamf2r/scale, l/2]
            ]
        else if (is_finite(round2) && !approx(round2,0))
-           each xscale(1/scale,arc(r=abs(round2), corner=[[r1*scale,-l/2],[r2*scale,l/2],[max(0,r2*scale-2*roundlen2),l/2]]))
+           each xscale(1/scale,arc(r=abs(round2*unscale), corner=[[r1*scale,-l/2],[r2*scale,l/2],[r2*scale-2*roundlen2,l/2]]))
        else [r2,l/2],
     ];
 
@@ -2455,7 +2455,7 @@ module cyl(
                 cylinder(h=l, r1=r1, r2=r2, center=true, $fn=sides);
             } else {
                 vnf = cyl(
-                    l=l, r1=r1, r2=r2, center=true, 
+                    l=l, r1=_r1, r2=_r2, center=true,  circum=circum,
                     chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
                     chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
                     rounding=rounding, rounding1=rounding1, rounding2=rounding2,
