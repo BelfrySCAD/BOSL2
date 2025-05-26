@@ -401,7 +401,7 @@ function _partition_subpath(type) =
     assert(false, str("Unsupported cutpath type: ", type));
 
 
-function _partition_cutpath(l, h, cutsize, cutpath, gap) =
+function _partition_cutpath(l, h, cutsize, cutpath, gap, cutpath_centered) =
     let(
         check = assert(is_finite(l))
             assert(is_finite(h))
@@ -411,7 +411,8 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
         cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize],
         cutpath = is_path(cutpath)? cutpath :
             _partition_subpath(cutpath),
-        reps = ceil(l/(cutsize.x+gap)),
+        reps_raw = ceil(l/(cutsize.x+gap)),
+        reps = reps_raw%2==0 && cutpath_centered ? reps_raw+1 : reps_raw,
         cplen = (cutsize.x+gap) * reps,
         path = deduplicate(concat(
             [[-l/2, cutpath[0].y*cutsize.y]],
@@ -443,16 +444,18 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 //   cutsize = The width of the cut pattern to be used.
 //   cutpath = The cutpath to use.  Standard named paths are "flat", "sawtooth", "sinewave", "comb", "finger", "dovetail", "hammerhead", and "jigsaw".  Alternatively, you can give a cutpath as a 2D path, where X is between 0 and 1, and Y is between -0.5 and 0.5.
 //   gap = Empty gaps between cutpath iterations.  Default: 0
+//   cutpath_centered = Ensures the cutpath is always centered.  Default: true
 //   inverse = If true, create a cutpath that is meant to mate to a non-inverted cutpath.
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The amount to shrink the mask by, to correct for printer-specific fitting.
 // Examples:
 //   partition_mask(w=50, gap=0, cutpath="jigsaw");
-//   partition_mask(w=50, gap=30, cutpath="jigsaw");
-//   partition_mask(w=50, gap=30, cutpath="jigsaw", inverse=true);
-//   partition_mask(w=50, gap=30, cutsize=15, cutpath="jigsaw");
-//   partition_mask(w=50, cutsize=[20,20], gap=30, cutpath="jigsaw");
+//   partition_mask(w=50, gap=10, cutpath="jigsaw");
+//   partition_mask(w=50, gap=10, cutpath="jigsaw", inverse=true);
+//   partition_mask(w=50, gap=10, cutsize=4, cutpath="jigsaw");
+//   partition_mask(w=50, gap=10, cutsize=4, cutpath="jigsaw", cutpath_centered=false);
+//   partition_mask(w=50, gap=10, cutsize=[4,20], cutpath="jigsaw");
 // Examples(2D):
 //   partition_mask(w=20, cutpath="sawtooth");
 //   partition_mask(w=20, cutpath="sinewave");
@@ -461,10 +464,10 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 //   partition_mask(w=20, cutpath="dovetail");
 //   partition_mask(w=20, cutpath="hammerhead");
 //   partition_mask(w=20, cutpath="jigsaw");
-module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, inverse=false, anchor=CENTER, spin=0, orient=UP)
+module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cutpath_centered=true, inverse=false, anchor=CENTER, spin=0, orient=UP)
 {
     cutsize = is_vector(cutsize)? point2d(cutsize) : [cutsize*2, cutsize];
-    path = _partition_cutpath(l, h, cutsize, cutpath, gap);
+    path = _partition_cutpath(l, h, cutsize, cutpath, gap, cutpath_centered);
     midpath = select(path,1,-2);
     sizepath = concat([path[0]+[-get_slop(),0]], midpath, [last(path)+[get_slop(),0]], [[+(l/2+get_slop()), (w+get_slop())*(inverse?-1:1)], [-(l/2+get_slop()), (w+get_slop())*(inverse?-1:1)]]);
     bnds = pointlist_bounds(sizepath);
@@ -498,14 +501,16 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
 //   cutsize = The width of the cut pattern to be used.  Default: 10
 //   cutpath = The cutpath to use.  Standard named paths are "flat", "sawtooth", "sinewave", "comb", "finger", "dovetail", "hammerhead", and "jigsaw".  Alternatively, you can give a cutpath as a 2D path, where X is between 0 and 1, and Y is between -0.5 and 0.5.  Default: "jigsaw"
 //   gap = Empty gaps between cutpath iterations.  Default: 0
+//   cutpath_centered = Ensures the cutpath is always centered.  Default: true
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The width of the cut mask, to correct for printer-specific fitting. 
 // Examples:
 //   partition_cut_mask(gap=0, cutpath="dovetail");
-//   partition_cut_mask(gap=30, cutpath="dovetail");
-//   partition_cut_mask(gap=30, cutsize=15, cutpath="dovetail");
-//   partition_cut_mask(gap=30, cutsize=[20,20], cutpath="dovetail");
+//   partition_cut_mask(gap=10, cutpath="dovetail");
+//   partition_cut_mask(gap=10, cutsize=15, cutpath="dovetail");
+//   partition_cut_mask(gap=10, cutsize=[15,15], cutpath="dovetail");
+//   partition_cut_mask(gap=10, cutsize=[15,15], cutpath="dovetail", cutpath_centered=false);
 // Examples(2DMed):
 //   partition_cut_mask(cutpath="sawtooth",$slop=0.5);
 //   partition_cut_mask(cutpath="sinewave",$slop=0.5);
@@ -514,10 +519,10 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
 //   partition_cut_mask(cutpath="dovetail",$slop=1);
 //   partition_cut_mask(cutpath="hammerhead",$slop=1);
 //   partition_cut_mask(cutpath="jigsaw",$slop=0.5);
-module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anchor=CENTER, spin=0, orient=UP)
+module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cutpath_centered=true, anchor=CENTER, spin=0, orient=UP)
 {
     cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
-    path = _partition_cutpath(l, h, cutsize, cutpath, gap);
+    path = _partition_cutpath(l, h, cutsize, cutpath, gap, cutpath_centered);
     attachable(anchor,spin,orient, size=[l,cutsize.y,h]) {
         linear_extrude(height=h, center=true, convexity=10) {
             stroke(path, width=max(0.1, get_slop()*2));
@@ -542,14 +547,16 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
 //   cutsize = The width of the cut pattern to be used.
 //   cutpath = The cutpath to use.  Standard named paths are "flat", "sawtooth", "sinewave", "comb", "finger", "dovetail", "hammerhead", and "jigsaw".  Alternatively, you can give a cutpath as a 2D path, where X is between 0 and 1, and Y is between -0.5 and 0.5.
 //   gap = Empty gaps between cutpath iterations.  Default: 0
+//   cutpath_centered = Ensures the cutpath is always centered.  Default: true
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   ---
 //   $slop = Extra gap to leave to correct for printer-specific fitting. 
 // Examples(Med):
 //   partition(spread=12, cutpath="dovetail") cylinder(h=50, d=80, center=false);
-//   partition(spread=12, gap=30, cutpath="dovetail") cylinder(h=50, d=80, center=false);
-//   partition(spread=20, gap=20, cutsize=15, cutpath="dovetail") cylinder(h=50, d=80, center=false);
-//   partition(spread=25, gap=15, cutsize=[20,20], cutpath="dovetail") cylinder(h=50, d=80, center=false);
+//   partition(spread=12, gap=10, cutpath="dovetail") cylinder(h=50, d=80, center=false);
+//   partition(spread=12, gap=10, cutpath="dovetail", cutpath_centered=false) cylinder(h=50, d=80, center=false);
+//   partition(spread=20, gap=10, cutsize=15, cutpath="dovetail") cylinder(h=50, d=80, center=false);
+//   partition(spread=25, gap=10, cutsize=[20,20], cutpath="dovetail") cylinder(h=50, d=80, center=false);
 // Side Effects:
 //   `$idx` is set to 0 on the back part and 1 on the front part.
 // Examples(2DMed):
@@ -560,7 +567,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
 //   partition(spread=12, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=12, cutpath="hammerhead") cylinder(h=50, d=80, center=false);
 //   partition(cutpath="jigsaw") cylinder(h=50, d=80, center=false);
-module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, spin=0)
+module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpath_centered=true, spin=0)
 {
     req_children($children);
     size = is_vector(size)? size : [size,size,size];
@@ -571,14 +578,14 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, spin=
         $idx = 0;
         intersection() {
             children();
-            partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, spin=spin);
+            partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, cutpath_centered=cutpath_centered, spin=spin);
         }
     }
     move(-vec) {
         $idx = 1;
         intersection() {
             children();
-            partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, inverse=true, spin=spin);
+            partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, cutpath_centered=cutpath_centered, inverse=true, spin=spin);
         }
     }
 }
