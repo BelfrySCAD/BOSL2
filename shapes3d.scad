@@ -849,7 +849,8 @@ function prismoid(
 //   .
 //   This module is very similar to {{cyl()}}.  It differs in the following ways:  you can specify side length or inner radius/diameter, you can apply roundings with
 //   different `$fn` than the number of prism faces, you can apply texture to the flat faces without forcing a high facet count,
-//   anchors are located on the true object instead of the ideal cylinder and you can anchor to the edges and faces.  
+//   anchors are located on the true object instead of the ideal cylinder and you can anchor to the edges and faces.  Chamfers and roundings
+//   for this module are **always** evaluated relative to the faces of the prism and never at corners as is done by default in {{cyl()}}.  
 // Named Anchors:
 //   "edge0", "edge1", etc. = Center of each side edge, spin pointing up along the edge.  Can access with EDGE(i)
 //   "face0", "face1", etc. = Center of each side face, spin pointing up.  Can access with FACE(i)
@@ -1025,7 +1026,7 @@ function regular_prism(n,
                                           chamfang, chamfang1, chamfang2,
                                           rounding, rounding1, rounding2,
                                           from_end, from_end1, from_end2,
-                                          teardrop, clip_angle),
+                                          teardrop, clip_angle,n),
                            [0,height/2]
                          ]
               )
@@ -1985,6 +1986,11 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   When creating a textured cylinder, the number of facets is determined by the sampling of the texture.  Any `$fn`, `$fa` or `$fs` values in
 //   effect are ignored.  To create a textured prism with a specified number of flat facets use {{regular_prism()}}.  Anchors for cylinders
 //   appear on the ideal cylinder, not on actual discretized shape the module produces. For anchors on the shape surface, use {{regular_prism()}}.  
+//   .
+//   Note that when chamfering or rounding, the angle of chamfers is done at the face of the facets of the shape.
+//   If `circum=false` (the default) then the radius or chamfer length is measured at the corner of the shape.  If `circum=true`
+//   then the radius or chamfer length applies in the more usual way in the center of a facet.  For cylinders with a large `$fn`
+//   the difference between these two things is negligible, but it can be quite sigificant when `$fn` is small.  
 // Figure(2D,Big,NoAxes,VPR = [0, 0, 0], VPT = [0,0,0], VPD = 82): Chamfers on cones can be tricky.  This figure shows chamfers of the same size and same angle, A=30 degrees.  Note that the angle is measured on the inside, and produces a quite different looking chamfer at the top and bottom of the cone.  Straight black arrows mark the size of the chamfers, which may not even appear the same size visually.  When you do not give an angle, the triangle that is cut off will be isoceles, like the triangle at the top, with two equal angles.
 //  color("lightgray")
 //  projection()
@@ -2183,16 +2189,27 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //           }
 //   }
 
+
+// This function produces a path to rotate_extrude to make a "cylinder".  The extrusion
+// produces the extreme points, and so the path is the path of a "corner" of the resulting
+// object.  But things like chamfer angle and roundings should be relative to FACES.  So
+// the code corrects the path to account for this, which is why it needs n, the number of
+// sides.  If n is omitted, no correction occurs.  If you give n and set noscale=true then
+// it corrects for the angle but still makes the chamfer lengths or rounding lengths along
+// the corner edge.  This makes cylinders stack as expected (e.g. if you make a cyl with
+// radius 5 and chamfer 1 then a radius 4 cyl fits on top.)  
+
 function _cyl_path(
     r1, r2, l, 
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     from_end, from_end1, from_end2,
-    teardrop=false, clip_angle
+    teardrop=false, clip_angle, n, noscale=false
 ) =
-    let(  
-        vang = atan2(r1-r2,l),
+    let(
+        scale= is_def(n) ? cos(180/n) : 1, 
+        vang = atan2(scale*(r1-r2),l),
         _chamf1 = first_defined([chamfer1, if (is_undef(rounding1)) chamfer, 0]),
         _chamf2 = first_defined([chamfer2, if (is_undef(rounding2)) chamfer, 0]),
         _fromend1 = first_defined([from_end1, from_end, false]),
@@ -2212,12 +2229,13 @@ function _cyl_path(
             assert(num_defined([chamfer2,rounding2])<2, "cannot define both chamfer2 and rounding2")
             assert(num_defined([chamfer,rounding])<2, "cannot define both chamfer and rounding")                                
             undef,
+        unscale = noscale ? scale : 1, 
         chamf1r = !_chamf1? 0
-                : !_fromend1? _chamf1
-                : law_of_sines(a=_chamf1, A=chang1, B=180-chang1-(90-sign(_chamf2)*vang)),
+                : !_fromend1? unscale * _chamf1
+                : unscale * law_of_sines(a=_chamf1, A=chang1, B=180-chang1-(90-sign(_chamf2)*vang)),
         chamf2r = !_chamf2? 0
-                : !_fromend2? _chamf2
-                : law_of_sines(a=_chamf2, A=chang2, B=180-chang2-(90+sign(_chamf2)*vang)),
+                : !_fromend2? unscale * _chamf2
+                : unscale * law_of_sines(a=_chamf2, A=chang2, B=180-chang2-(90+sign(_chamf2)*vang)),
         chamf1l = !_chamf1? 0
                 : _fromend1? abs(_chamf1)
                 : abs(law_of_sines(a=_chamf1, A=180-chang1-(90-sign(_chamf1)*vang), B=chang1)),
@@ -2233,46 +2251,45 @@ function _cyl_path(
         dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1 : 0), 
         dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0),
 
-        td_ang = teardrop == true? 45 :
-            teardrop == false? 90 :
-            assert(is_finite(teardrop))
-            assert(teardrop>=0 && teardrop<=90)
-            teardrop,
-
-        clip_ang = clip_angle == undef? 90 :
-            assert(is_finite(clip_angle))
-            assert(clip_angle>=0 && clip_angle<=90)
-            clip_angle
+        td_ang = teardrop == true? 45
+               : teardrop == false? 90
+               : assert(is_finite(teardrop))
+                 assert(teardrop>=0 && teardrop<=90)
+                 teardrop,
+        clip_ang = clip_angle == undef? 90
+                 : assert(is_finite(clip_angle))
+                   assert(clip_angle>=0 && clip_angle<=90)
+                   clip_angle
     ) 
     assert(is_finite(round1), "rounding1 must be a number if given.")
     assert(is_finite(round2), "rounding2 must be a number if given.")
-    assert(chamf1r <= r1, "chamfer1 is larger than the r1 radius of the cylinder.")
-    assert(chamf2r <= r2, "chamfer2 is larger than the r2 radius of the cylinder.")
-    assert(roundlen1 <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
-    assert(roundlen2 <= r2, "size of rounding2 is larger than the r2 radius of the cylinder.")
+    assert(chamf1r/scale <= r1, "chamfer1 is larger than the r1 radius of the cylinder.")
+    assert(chamf2r/scale <= r2, "chamfer2 is larger than the r2 radius of the cylinder.")
+    assert(roundlen1*unscale/scale <= r1, "size of rounding1 is larger than the r1 radius of the cylinder.")
+    assert(roundlen2*unscale/scale <= r2, "size of rounding2 is larger than the r2 radius of the cylinder.")
     assert(dy1+dy2 <= facelen, "Chamfers/roundings don't fit on the cylinder/cone.  They exceed the length of the cylinder/cone face.")
     assert(td_ang==90 || clip_ang==90, "teardrop= and clip_angle= are mutually exclusive options.")
     [
        if (!approx(chamf1r,0))
            each [
-               [r1, -l/2] + polar_to_xy(chamf1r,180),
-               [r1, -l/2] + polar_to_xy(chamf1l,90+vang),
+               [r1-chamf1r/scale, -l/2], // + [-chamf1r/scale,0],//polar_to_xy(chamf1r,180)),
+               [r1, -l/2] + xscale(1/scale,polar_to_xy(chamf1l,90+vang)),
            ]
        else if (!approx(round1,0) && td_ang < 90)
-           each _teardrop_corner(r=round1, corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]], ang=td_ang)
+           each xscale(1/scale,_teardrop_corner(r=round1*unscale, corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=td_ang))
        else if (!approx(round1,0) && clip_ang < 90)
-           each _clipped_corner(r=round1, corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]], ang=clip_ang)
+           each xscale(1/scale,_clipped_corner(r=round1*unscale, corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=clip_ang))
        else if (!approx(round1,0) && td_ang >= 90)
-           each arc(r=abs(round1), corner=[[max(0,r1-2*roundlen1),-l/2],[r1,-l/2],[r2,l/2]])
+           each xscale(1/scale,arc(r=abs(round1*unscale), corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]]))
        else [r1,-l/2],
 
        if (is_finite(chamf2r) && !approx(chamf2r,0))
            each [
-               [r2, l/2] + polar_to_xy(chamf2l,270+vang),
-               [r2, l/2] + polar_to_xy(chamf2r,180),
+               [r2, l/2] + xscale(1/scale,polar_to_xy(chamf2l,270+vang)),
+               [r2-chamf2r/scale, l/2]
            ]
        else if (is_finite(round2) && !approx(round2,0))
-           each arc(r=abs(round2), corner=[[r1,-l/2],[r2,l/2],[max(0,r2-2*roundlen2),l/2]])
+           each xscale(1/scale,arc(r=abs(round2*unscale), corner=[[r1*scale,-l/2],[r2*scale,l/2],[r2*scale-2*roundlen2,l/2]]))
        else [r2,l/2],
     ];
 
@@ -2331,7 +2348,7 @@ function cyl(
                                    chamfang, chamfang1, chamfang2,
                                    rounding, rounding1, rounding2,
                                    from_end, from_end1, from_end2,
-                                   teardrop, clip_angle),
+                                   teardrop, clip_angle, sides, !circum),
                  path = [
                           if (texture==undef) [0,-l/2-extra1],
                           if (extra1>0) cpath[0]-[0,extra1],
@@ -2438,7 +2455,7 @@ module cyl(
                 cylinder(h=l, r1=r1, r2=r2, center=true, $fn=sides);
             } else {
                 vnf = cyl(
-                    l=l, r1=r1, r2=r2, center=true, 
+                    l=l, r1=_r1, r2=_r2, center=true,  circum=circum,
                     chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
                     chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
                     rounding=rounding, rounding1=rounding1, rounding2=rounding2,
@@ -2718,7 +2735,10 @@ module zcyl(
 // See Also: rect_tube()
 // Description:
 //   Makes a hollow tube that can be cylindrical or conical by specifying inner and outer dimensions or by giving one dimension and
-//   wall thickness. 
+//   wall thickness.
+//   .
+//   Chamfering and rounding lengths are measured based on the corners of the object except for the inner diameter when `circum=true`, in
+//   which case chamfers and roundings are measured from the facets.  This only matters when `$fn` is small.  
 // Usage: Basic cylindrical tube, specifying inner and outer radius or diameter
 //   tube(h|l, or, ir, [center], [realign=], [anchor=], [spin=],[orient=]) [ATTACHMENTS];
 //   tube(h|l, od=, id=, ...)  [ATTACHMENTS];
@@ -2912,12 +2932,12 @@ module tube(
                each _cyl_path(r1,r2,h, 
                               chamfer1=ochamfer1, chamfer2=ochamfer2,
                               rounding1=orounding1, rounding2=orounding2,
-                              teardrop=teardrop, clip_angle=clip_angle),
+                              teardrop=teardrop, clip_angle=clip_angle,n=osides, noscale=true),
                [0,h/2]
              ];
     ipath = _cyl_path(adj_ir1,adj_ir2,h, 
                       chamfer1=ichamfer1, chamfer2=ichamfer2,
-                      rounding1=irounding1,rounding2=irounding2);
+                      rounding1=irounding1,rounding2=irounding2,n=isides, noscale=!circum);
     inside = [
                [0,-h/2-1],
                ipath[0]-[0,1],

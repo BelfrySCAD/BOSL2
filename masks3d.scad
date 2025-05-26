@@ -173,7 +173,7 @@ module chamfer_cylinder_mask(r, chamfer, d, ang=45, from_end=false, anchor=CENTE
 // Section: Rounding Masks
 
 // Module: rounding_edge_mask()
-// Synopsis: Creates a shape to round a 90° edge.
+// Synopsis: Creates a shape to round an arbitrary 3d edge.
 // SynTags: Geom
 // Topics: Masks, Rounding, Shapes (3D)
 // See Also: edge_profile(), rounding_corner_mask(), default_tag(), diff() 
