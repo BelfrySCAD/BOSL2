@@ -4079,81 +4079,94 @@ function _find_anchor(anchor, geom)=
         let(
             rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
             maxx = max(column(rpts,0)),
-            idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
-            // We want to catch the case where the points lie on an edge.  The complication is that the edge
-            // may appear twice WITH DIFFERENT VERTEX INDICES if repeated points appear in the vnf.  
-            edges_faces = len(idxs)==2 ?  // Simple case, no repeated points, [idxs] gives the edge
-                               approx(vnf[0][idxs[0]],vnf[0][idxs[1]]) ? []   // Are edge points identical?
-                             : let( facelist = _vnf_find_edge_faces(vnf,idxs))
-                               len(facelist)==2 ? [[idxs], facelist] : []
-                        : len(idxs)!=4 ? []       // If we don't have four points it's not an edge pair
-                        : let(
-                              pts = select(vnf[0],idxs),
-                              matchind = [for(i=[1:3]) if (approx(pts[i],pts[0])) i]   // indices where actual vertex point is the same as point zero
-                          )
-                          len(matchind)!=1 ? []
-                        : let(   // After this runs we have two edges as index pairs, and their associated faces as index values
-                              match1 = select(idxs,[0,matchind[0]]),
-                              match2 = list_remove(idxs,[0,matchind[0]]),
-                              facelists = [for(i=[0:1], j=[0:1])
-                                              let(
-                                                   ed = [match1[i],match2[j]],
-                                                   fl = _vnf_find_edge_faces(vnf,ed)
-                                              )
-                                              if (fl!=[]) [ed,fl]
-                                          ],
-                              final = [column(facelists,0), flatten(column(facelists,1))]
-                          )
-                          assert(len(final[1])==2, "invalid!")
-                          final,
-            dir = len(idxs)>2 && edges_faces==[] ? [anchor,oang]
-                : edges_faces!=[] ?
-                    let( 
-                        faces = edges_faces[1],
-                        edge = select(vnf[0],edges_faces[0][0]),
-                        facenormals = [for(face=faces) polygon_normal(select(vnf[0],vnf[1][face]))],
-                        direction= unit(mean(facenormals)),
-                        projnormals = project_plane(point4d(cross(facenormals[0],facenormals[1])), facenormals),
-                        ang = 180- posmod(v_theta(projnormals[1])-v_theta(projnormals[0]),360),
-                        horiz_face = [for(i=[0:1]) if (approx(v_abs(facenormals[i]),UP)) i],
-                        spin = horiz_face==[] ?
-                                   let(  
-                                       edgedir = edge[1]-edge[0],
-                                       nz = [for(i=[0:2]) if (!approx(edgedir[i],0)) i],
-                                       flip = edgedir[last(nz)] < 0 ? -1 : 1
-                                   )
-                                   _compute_spin(direction, flip*edgedir)
-                            :
-                                let(
-                                       hedge = len(edges_faces[0])==1 ? edges_faces[0][0]
-                                                                      : edges_faces[0][horiz_face[0]],
-                                       face = select(vnf[1],faces[horiz_face[0]]),
-                                       edgeind = search([hedge[0]], face)[0],
-                                       flip = select(face,edgeind+1)== hedge[1] ? 1 : -1, 
-                                       edgedir = edge[1]-edge[0]
-                                   )
-                                   _compute_spin(direction, flip*edgedir)
-                    ) 
-                    [direction,spin,[["edge_angle",ang],["edge_length",norm(edge[0]-edge[1])]]]
-                :   let(   // This section handles corner anchors, currently spins just point up
-                       vertices = vnf[0],
-                       faces = vnf[1],
-                       cornerfaces = _vnf_find_corner_faces(vnf,idxs[0]),    // faces = [3,9,12] indicating which faces
-                       normals = [for(faceind=cornerfaces) polygon_normal(select(vnf[0], faces[faceind]))],
-                       angles = [for(faceind=cornerfaces)
-                                    let(
-                                        thisface = faces[faceind],
-                                        vind = search(idxs[0],thisface)[0]
-                                    )
-                                    vector_angle(select(vertices, select(thisface,vind-1,vind+1)))
-                                 ],
-                       direc = unit(angles*normals)
-                    )
-                    [direc, atan2(direc.y,direc.x)+90],
-            avep = sum(select(rpts,idxs))/len(idxs),
-            mpt = approx(point2d(anchor),[0,0])? [maxx,0,0] : avep,
-            pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
-        ) [anchor, default(override[0],pos),default(override[1],dir[0]),default(override[2],dir[1]),if (len(dir)==3) dir[2]]
+
+            idxmax = [for (i = idx(rpts)) approx(rpts[i].x, maxx)],
+            idxs = [for (i = idx(rpts)) if(approx(rpts[i].x, maxx)) i],
+            veflist=[
+                     for(face=vnf[1])
+                       let(
+                           facemax = [for(vertind=face) if (idxmax[vertind]) vertind],
+                           flip = facemax[0]==face[0] && facemax[1]==last(face)
+                       )
+                       [
+                         if (len(facemax)==1) facemax else [],
+                         if (len(facemax)==2) (flip ? reverse(facemax):facemax) else [],
+                         if (len(facemax)>2) facemax else []
+                       ]],
+            vlist = [for(i=idx(veflist)) if (veflist[i][0]!=[]) veflist[i][0]],
+            elist = [for(i=idx(veflist)) if (veflist[i][1]!=[] && !approx(rpts[veflist[i][1][0]],rpts[veflist[i][1][1]])) veflist[i][1]],
+            flist = [for(i=idx(veflist)) if (veflist[i][2]!=[])  veflist[i][2]],
+            faceinfo = [for(face=flist) let(poly=select(vnf[0],face)) [polygon_area(poly), centroid(poly)]],  //[ area, centroid]
+            facearea = len(faceinfo)==0 ? 0 : sum(column(faceinfo,0)),
+            basic_spin = _compute_spin(anchor, v_abs(anchor)==UP ? BACK: UP),
+            res = len(flist)>0 && !approx(facearea,0) ?
+                      let(
+                          center = column(faceinfo,0)*column(faceinfo,1)/facearea
+                      )
+                      [center,anchor,basic_spin]
+                : len(elist)==2 ?  // One edge (which appears twice, once in each direction)
+                      let(
+                          edge = select(vnf[0],elist[0]),
+                          center = mean(edge),
+                          edgefaces = _vnf_find_edge_faces(vnf,elist), //unique([for(e=elist) each _vnf_find_edge_faces(vnf,e)]),
+                          facenormals = [for(face=edgefaces) polygon_normal(select(vnf[0],vnf[1][face]))],
+                          direction = unit(mean(facenormals)),
+                          projnormals = project_plane(point4d(cross(facenormals[0],facenormals[1])), facenormals),
+                          ang = 180- posmod(v_theta(projnormals[1])-v_theta(projnormals[0]),360),
+                          horiz_face = [for(i=[0:1]) if (approx(v_abs(facenormals[i]),UP)) i],  // index of horizontal face, at most one exists
+                          spin = horiz_face==[] ?
+                                     let(
+                                         edgedir = edge[1]-edge[0],
+                                         nz = [for(i=[0:2]) if (!approx(edgedir[i],0)) i],
+                                         flip = edgedir[last(nz)] < 0 ? -1 : 1
+                                     )
+                                     _compute_spin(direction, flip*edgedir)
+                                  :
+                                     let(  // Determine whether the edge is the right or wrong direction compared to the horizongal face
+                                           // which will determine what clockwise means so we can assign spin
+                                         face = select(vnf[1],edgefaces[horiz_face[0]]),
+                                         endptidx=search(column(elist,0),face),
+                                         hedge = elist[endptidx[0]!=[] ? 0:1],
+                                         edgedir = deltas(select(vnf[0],hedge))[0],
+                                         flip = select(face,flatten(endptidx)[0]+1)== hedge[1] ? 1 : -1
+                                     )
+                                     _compute_spin(direction, flip*edgedir)
+                      )
+                      [center,direction,spin,[["edge_angle",ang],["edge_length",norm(edge[1]-edge[0])]]]
+                : len(elist)>2 ?   // multiple edges, which must be coplanar, use average of edge endpoints
+                      let(
+                           plist = select(vnf[0],flatten(edge)),
+                           center = mean(plist)
+                      )
+                      [center,anchor,basic_spin]
+                : len(vlist)==0 ? assert(false,"Cannot find anchor on the VNF")
+                : let(
+                      vlist = flatten(vlist),
+                      uind = unique_approx_indexed(select(vnf[0],vlist)),
+                      ulist = select(vlist,uind)
+                  )
+                  len(ulist)>1 ?   // Multiple vertices: return average
+                      let(
+                           center = mean(select(vnf[0],ulist))
+                      )
+                      [center, anchor, basic_spin]
+                : let(    // one vertex case
+                      vuniq = unique(vlist),
+                      vertices = vnf[0],
+                      faces = vnf[1],
+                      cornerfaces = _vnf_find_corner_faces(vnf,vuniq),    // faces = [3,9,12] indicating which faces
+                      normals = [for(faceind=cornerfaces) polygon_normal(select(vertices, faces[faceind]))],
+                      angles = [for(faceind=cornerfaces)
+                                  let(
+                                       thisface = faces[faceind],
+                                       vind = flatten(search(vuniq,thisface))[0]
+                                  )
+                                  vector_angle(select(vertices, select(thisface,vind-1,vind+1)))
+                               ],
+                             direc = unit(angles*normals)
+                   )
+                   [vnf[0][ulist[0]], direc, atan2(direc.y,direc.x)+90]
+        ) [anchor, default(override[0],res[0]),default(override[1],res[1]),default(override[2],res[2]),if (len(res)==3) res[2]]        
     ) : type == "trapezoid"? ( //size, size2, shift, override
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "All components of an anchor for a rectangle/trapezoid must be -1, 0, or 1")
