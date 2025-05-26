@@ -289,7 +289,7 @@ include <screws.scad>
 //   ang=0;          // Hinge rotation angle
 //   module myhinge(inner)
 //      knuckle_hinge(length=25, segs=11,offset=1.2, inner=inner, clearance=clear, knuckle_diam=diam,
-//                    pin_diam=1.8, arm_angle=28, gap=seg_gap, in_place=true, anchor=CTR,clip=2+clear)
+//                    pin_diam=diam-0.2, arm_angle=28, gap=seg_gap, in_place=true, anchor=CTR,clip=2+clear)
 //         children();
 //   module leaf() cuboid([25,2,12],anchor=TOP+BACK,rounding=7,edges=[BOT+LEFT,BOT+RIGHT]);
 //   xrot(90){    // Rotate to printing orientation

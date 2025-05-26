@@ -619,6 +619,46 @@ function unique_count(list) =
         [ select(list,ind), deltas( concat(ind,[len(list)]) ) ];
 
 
+// Function: unique_approx()
+// Usage:
+//   ulist = unique_approx(data, [eps]);
+// Description:
+//   Returns a subset of items that differ by more thatn eps.  
+function unique_approx(data,eps=EPSILON) =
+  is_vector(data) ?
+    let(
+        sdata = sort(data)
+    )
+    [sdata[0],
+     for(i=[1:1:len(data)-1]) if (abs(sdata[i]-sdata[i-1])>eps) sdata[i]
+    ]
+  :  
+  let(
+      dups = vector_search(data,eps,data)
+  )
+  [for(i=idx(data)) if (min(dups[i])==i) data[i]];
+
+// Function: unique_approx_indexed()
+// Usage:
+//   ulist = unique_approx(data, [eps]);
+// Description:
+//   Returns the indices of a subset of items that differ by more thatn eps.  
+function unique_approx_indexed(data,eps=EPSILON) =
+  is_vector(data) ?
+    let(
+        sind = sortidx(data)
+    )
+    [sind[0], 
+     for(i=[1:1:len(data)-1]) if (abs(data[sind[i]]-data[sind[i-1]])>eps) sind[i]
+    ]
+  :  
+  let(
+      dups = vector_search(data,eps,data)
+  )
+  [for(i=idx(data)) if (min(dups[i])==i) i];
+  
+
+
 
 // Section: Sorting
 
