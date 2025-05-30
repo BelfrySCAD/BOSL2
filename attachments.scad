@@ -4233,12 +4233,22 @@ function _find_anchor(anchor, geom)=
         approx(anchor,[0,0])? [anchor, cp, BACK, 0] :   // CENTER anchors anchor on cp, "origin" anchors on [0,0]
         let(
             rgn = force_region(geom[1]),
-            rpts = rot(from=anchor, to=RIGHT, p=flatten(rgn)),
+            indexed_pts = [for(i=idx(rgn), j=idx(rgn[i])) [i,j,rgn[i][j]]],
+            rpts = rot(from=anchor, to=RIGHT, p=column(indexed_pts,2)), 
             maxx = max(column(rpts,0)),
-            ys = [for (pt=rpts) if (approx(pt.x, maxx)) pt.y],
+            index = [for (i=idx(rpts)) if (approx(rpts[i].x, maxx)) i],
+            ys = [for (i=index) rpts[i].y],
             midy = (min(ys)+max(ys))/2,
-            pos = rot(from=RIGHT, to=anchor, p=[maxx,midy])
-        ) [anchor, pos, unit(anchor,BACK), 0]
+            pos = rot(from=RIGHT, to=anchor, p=[maxx,midy]),
+            dir = len(ys) > 1 ? [unit(anchor)]
+                : let(
+                       path = rgn[indexed_pts[index[0]][0]],
+                       ctr = indexed_pts[index[0]][1],
+                       corner = select(path, [ctr-1,ctr,ctr+1]),
+                       normal = unit(unit(corner[0]-corner[1])+unit(corner[2]-corner[1]))
+                  )
+                  [is_polygon_clockwise(path) ? -normal : normal, vector_angle(corner)]
+        ) [anchor, pos, dir[0], 0, if(len(dir)>1) [["corner_angle",dir[1]]]]
     ) : type=="extrusion_extent" || type=="extrusion_isect" ? (  // extruded region
         assert(in_list(anchor.z,[-1,0,1]), "The Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
         let(
