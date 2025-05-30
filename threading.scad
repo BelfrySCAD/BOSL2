@@ -174,7 +174,7 @@
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Example(2D):
 //   projection(cut=true)
 //       threaded_rod(d=10, l=15, pitch=1.5, orient=BACK);
@@ -327,7 +327,7 @@ module threaded_rod(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Examples(Med):
 //   threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, $slop=0.05, $fa=1, $fs=1);
 //   threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, left_handed=true, bevel=false, $slop=0.1, $fa=1, $fs=1);
@@ -500,7 +500,7 @@ module threaded_nut(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Example(2D):
 //   projection(cut=true)
 //       trapezoidal_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
@@ -647,7 +647,7 @@ module trapezoidal_threaded_rod(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Examples(Med):
 //   trapezoidal_threaded_nut(nutwidth=16, id=8, h=8, pitch=2, $slop=0.1, anchor=UP);
 //   trapezoidal_threaded_nut(nutwidth=16, id=8, h=8, pitch=2, bevel=false, $slop=0.05, anchor=UP);
@@ -769,7 +769,7 @@ module trapezoidal_threaded_nut(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Example(2D):
 //   projection(cut=true)
 //       acme_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
@@ -881,7 +881,7 @@ module acme_threaded_rod(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Examples(Med):
 //   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=8, tpi=8, $slop=0.05);
 //   acme_threaded_nut(nutwidth=16, id=3/8*INCH, h=10, tpi=12, starts=3, $slop=0.1, $fa=1, $fs=1, ibevel=false);
@@ -968,7 +968,7 @@ module acme_threaded_nut(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Example(2D): The straight gray rectangle reveals the tapered threads.  
 //   projection(cut=true) npt_threaded_rod(size=1/4, orient=BACK);
 //   right(.533*INCH/2) color("gray") rect([2,0.5946*INCH],anchor=LEFT);
@@ -1108,7 +1108,7 @@ module npt_threaded_rod(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Example(2D):
 //   projection(cut=true)
 //       buttress_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
@@ -1223,7 +1223,7 @@ module buttress_threaded_rod(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Examples(Med):
 //   buttress_threaded_nut(nutwidth=16, id=8, h=8, pitch=1.25, left_handed=true, $slop=0.05, $fa=1, $fs=1);
 function buttress_threaded_nut(
@@ -1324,7 +1324,7 @@ module buttress_threaded_nut(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Example(2D):
 //   projection(cut=true)
 //       square_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
@@ -1432,7 +1432,7 @@ module square_threaded_rod(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Examples(Med):
 //   square_threaded_nut(nutwidth=16, id=10, h=10, pitch=2, starts=2, $slop=0.1, $fn=32);
 function square_threaded_nut(
@@ -1527,7 +1527,7 @@ module square_threaded_nut(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Example(2D): Thread Profile, ball_diam=4, ball_arc=100
 //   projection(cut=true) ball_screw_rod(d=10, l=15, pitch=5, ball_diam=4, ball_arc=100, orient=BACK, $fn=24, blunt_start=false);
 // Example(2D): Thread Profile, ball_diam=4, ball_arc=120
@@ -1616,8 +1616,8 @@ module ball_screw_rod(
 //   .
 //   If internal is true then produce a thread mask to difference from an object.  When internal is true the rod
 //   diameter is enlarged to correct for the polygonal nature of circles to ensure that the internal diameter is the
-//   specified size.  The diameter is also increased by `4 * $slop` to create clearance for threading by allowing a `2 *
-//   $slop` gap on each side.  If bevel is set to true and internal is false then the ends of the rod will be beveled.
+//   specified size.  The diameter is also increased by `2 * $slop` to create clearance for threading by allowing a
+//   `$slop` gap on each side.  If bevel is set to true and internal is false then the ends of the rod will be beveled.
 //   When bevel is true and internal is true the ends of the rod will be filled in so that the rod mask will create a
 //   bevel when subtracted from an object.  The bevel is at 45 deg and is the depth of the threads.
 //   .
@@ -1661,7 +1661,7 @@ module ball_screw_rod(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 // Example(2DMed): Example Tooth Profile
 //   pitch = 2;
 //   depth = pitch * cos(30) * 5/8;
@@ -1741,7 +1741,7 @@ module generic_threaded_rod(
       assert(is_undef(bevel2) || is_num(bevel2) || is_bool(bevel2) || bevel2=="reverse", "bevel2/bevel must be a number, boolean or \"reverse\"");
     sides = quantup(segs(max(r1,r2)), starts);
     rsc = internal? (1/cos(180/sides)) : 1;    // Internal radius adjusted for faceting
-    islop = internal? 2*get_slop() : 0;
+    islop = internal? get_slop() : 0;
     r1adj = r1 * rsc + islop;
     r2adj = r2 * rsc + islop;
 
@@ -2004,7 +2004,7 @@ module generic_threaded_rod(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+//   $slop = The printer-specific slop value, which adds clearance (`2*$slop`) to internal threads.
 function generic_threaded_nut(
     nutwidth,
     id,
@@ -2068,7 +2068,7 @@ module generic_threaded_nut(
         difference() {
             _nutshape(nutwidth,h, shape,bevel1,bevel2);
             if (pitch==0) 
-               cyl(l=h+extra, d1=full_id1+4*get_slop(), d2=full_id2+4*get_slop(),
+               cyl(l=h+extra, d1=full_id1+2*get_slop(), d2=full_id2+2*get_slop(),
                    chamfer1=ibevel1?-IBEV*full_id1:undef,
                    chamfer2=ibevel2?-IBEV*full_id2:undef);
             else
