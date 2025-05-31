@@ -2340,7 +2340,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   rounded_prism(pentagon(3), apply(rot(45),pentagon(3)), height=3,
 //                 joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
 // Example: skew top
-//   rounded_prism(path3d(pentagon(3)), apply(affine3d_skew_yz(0,-20),path3d(pentagon(3),3)),
+//   rounded_prism(path3d(pentagon(3)), apply(skew(azy=-20),path3d(pentagon(3),3)),
 //                 joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
 // Example: this rotation gives coplanar sides
 //   rounded_prism(path3d(square(4)), apply(yrot(-100)*right(2),path3d(square(4),3)),
