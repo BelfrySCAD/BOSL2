@@ -1575,17 +1575,23 @@ function vnf_bounds(vnf,fast=false) =
 // Topics: VNF Manipulation
 // See Also: vnf_halfspace()
 // Usage:
-//   region = projection(vnf, [cut]);
+//   region = projection(vnf, [cut], [z]);
 // Description:
-//   When `cut=false`, which is the default, projects the input VNF
-//   onto the XY plane, returning a region.  As currently implemented,  this operation
+//   Project a VNF object onto the xy plane at position `z`, returning a region.
+//   .
+//   The default action (`cut=false`) is to projects the input VNF
+//   onto the XY plane, returning a region.  As currently implemented, this operation
 //   involves the 2D union of all the projected faces and can be
 //   slow if the VNF has many faces.  Minimize the face count of the VNF for best performance. 
 //   .
 //   When `cut=true`, returns the intersection of the VNF with the
-//   XY plane, which is again a region.  If the VNF does not intersect
-//   the XY plane then returns the empty set.  This operation is
+//   XY plane at the position given by `z` (default `z=0`), which is again a region.
+//   If the VNF does not intersect the plane, then returns the empty set.  This operation is
 //   much faster than `cut=false`.
+// Arguments:
+//   vnf = The VNF object to project to a plane.
+//   cut = When true, returns a region containing intersection of the VNF with the plane. When false, projects the entire VNF onto the plane. Default: false
+//   z = Optional z position of the XY plane, useful when `cut=true` to get a specific slice position. Ignored if `cut=false`. Default: 0
 // Example(3D): Here's a VNF with two linked toruses and a small cube
 //   vnf = vnf_join([
 //            xrot(90,torus(id=15,od=24,$fn=5)),
@@ -1608,12 +1614,16 @@ function vnf_bounds(vnf,fast=false) =
 //   vnf = xrot(35,torus(id=4,od=12,$fn=32));
 //   reg = projection(vnf,cut=true);
 //   region(reg);
+// Example(2D): Projection of tilted torus using `cut=true` at a different z position for the XY plane.
+//   vnf = xrot(35,torus(id=4,od=12,$fn=32));
+//   reg = projection(vnf,cut=true,z=0.3);
+//   region(reg);
 
-function projection(vnf,cut=false,eps=EPSILON) =
+function projection(vnf,cut=false,z=0,eps=EPSILON) =
    assert(is_vnf(vnf))
    cut ?
          let(
-              vnf_bdy = vnf_halfspace([0,0,1,0],vnf, boundary=true),
+              vnf_bdy = vnf_halfspace([0,0,1,cut?z:0],vnf, boundary=true),
               ind = vnf_bdy[1],
               pts = path2d(vnf_bdy[0][0])
          )
