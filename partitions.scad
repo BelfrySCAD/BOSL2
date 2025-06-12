@@ -568,6 +568,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cut
 //   partition(spread=12, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=12, cutpath="hammerhead") cylinder(h=50, d=80, center=false);
 //   partition(cutpath="jigsaw") cylinder(h=50, d=80, center=false);
+//   partition(cutpath="jigsaw", keep=[FRONT]) cylinder(h=50, d=80, center=false);
 module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpath_centered=true, spin=0, keep=[FRONT,BACK])
 {
     req_children($children);
