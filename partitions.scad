@@ -538,7 +538,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cut
 // Topics: Partitions, Masking, Paths
 // See Also: partition_cut_mask(), partition_mask(), dovetail()
 // Usage:
-//   partition(size, [spread], [cutsize], [cutpath], [gap], [spin], [$slop=]) CHILDREN;
+//   partition(size, [spread], [cutsize], [cutpath], [gap], [spin], [keep=], [$slop=]) CHILDREN;
 // Description:
 //   Partitions an object into two parts, spread apart a small distance, with matched joining edges.
 // Arguments:
@@ -549,6 +549,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cut
 //   gap = Empty gaps between cutpath iterations.  Default: 0
 //   cutpath_centered = Ensures the cutpath is always centered.  Default: true
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   keep = Which halves of the partition to keep. Default: [FRONT,BACK]
 //   ---
 //   $slop = Extra gap to leave to correct for printer-specific fitting. 
 // Examples(Med):
@@ -567,21 +568,23 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cut
 //   partition(spread=12, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=12, cutpath="hammerhead") cylinder(h=50, d=80, center=false);
 //   partition(cutpath="jigsaw") cylinder(h=50, d=80, center=false);
-module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpath_centered=true, spin=0)
+module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpath_centered=true, spin=0, keep=[FRONT,BACK])
 {
     req_children($children);
+    assert(len(keep)>0, "keep must be a list with at least one element");
+    assert(len(list_remove_values(keep,[FRONT,BACK],all=true))==0, "Only allowable values for keep are ⊆ [FRONT,BACK]");
     size = is_vector(size)? size : [size,size,size];
     cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
     rsize = v_abs(rot(spin,p=size));
     vec = rot(spin,p=BACK)*spread/2;
-    move(vec) {
+    if(in_list(BACK,keep)) move(vec) {
         $idx = 0;
         intersection() {
             children();
             partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, cutpath_centered=cutpath_centered, spin=spin);
         }
     }
-    move(-vec) {
+    if(in_list(FRONT,keep)) move(-vec) {
         $idx = 1;
         intersection() {
             children();
