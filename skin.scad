@@ -1235,7 +1235,7 @@ function rotate_sweep(
     assert(num_defined([closed,caps])<2, "\nIn rotate_sweep the `closed` paramter has been replaced by `caps` with the opposite meaning. You cannot give both.")
     assert(num_defined([tex_reps,tex_counts])<2, "\nIn rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'. You cannot give both.")
     assert(num_defined([tex_scale,tex_depth])<2, "\nIn linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'. You cannot give both.")
-    assert(!is_path(shape) || caps || len(path)>=3, "\n'shape' is a path and caps=false, but a closed path requires three points.")
+    assert(!is_path(shape) || caps || len(shape)>=3, "\n'shape' is a path and caps=false, but a closed path requires three points.")
     let(
          caps = is_def(caps) ? caps
               : is_def(closed) ? !closed
