@@ -58,7 +58,11 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   as it traces out the path.  Similarly the "grow" and "shrink" options allow you to change the size of the swept
 //   polygon without any effect on the turtle.  The "roll" command differs from "twist" in that it both rotates the swept
 //   polygon but also changes the turtle's orientation, so it will alter subsequent operations of the turtle.  Note that
-//   when making a path, "twist" will have no effect, but "roll" may have an effect because of how it changes the path.  
+//   when making a path, "twist" will have no effect, but "roll" may have an effect because of how it changes the path.
+//   After arcs it may be very confusing to understand exactly how the turtle is oriented in space.  The "rollto" option
+//   lets you specify an "up" direction; the turtle will roll so its up matches, as well as possible, the direction you give.
+//   (It will be the projection of your direction perpendicular to the turtle's direction of travel.)  The "lrollto" and "rrollto"
+//   options are similar but force the rotational direction to be left or right respectively.  
 //   .
 //   The compound "move" command accepts a "reverse" argument.  If you specify "reverse" it reflects the
 //   turtle direction to point backwards.  This enables you to back out to create a hollow shape.  But be
@@ -92,7 +96,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   "xyzmove"  |  | vector             | Move turtle by the specified vector.  Does not change turtle direction. 
 //   "untilx"   |x | xtarget            | Move turtle in turtle direction until x==xtarget.  Produces an error if xtarget is not reachable.
 //   "untily"   |x | ytarget            | Move turtle in turtle direction until y==ytarget.  Produces an error if ytarget is not reachable.
-//   "untilz"   |x | ytarget            | Move turtle in turtle direction until y==ytarget.  Produces an error if ztarget is not reachable.
+//   "untilz"   |x | ztarget            | Move turtle in turtle direction until z==ztarget.  Produces an error if ztarget is not reachable.
 //   "jump"     |  | point              | Move the turtle to the specified point
 //   "xjump"    |  | x                  | Move the turtle's x position to the specified value
 //   "yjump     |  | y                  | Move the turtle's y position to the specified value
@@ -135,8 +139,11 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   "grow"       | factor             | Increase size by specified factor (e.g. 2 doubles the size); factor can be a 2-vector
 //   "shrink"     | factor             | Decrease size by specified factor (e.g. 2 halves the size); factor can be a 2-vector
 //   "twist"      | angle              | Twist by the specified angle over the arc or segment (does not change frame orientation)
-//   "roll"       | angle              | Roll by the specified angle over the arc or segment (changes the orientation of the frame)
-//   "steps"      | count              | Divide arc or segment into this many steps.  Default is 1 for segments, arcsteps for arcs
+//   "roll"       | angle              | Roll (right) by the specified angle over the arc or segment (changes the orientation of the frame)
+//   "rollto"     | vector             | Roll by the shortest direction until the UP direction of the turtle is aligned as much as possible with the given vector direction
+//   "lrollto"    | vector             | Roll left until the UP direction of the turtle is aligned as much as possible with the given vector direction
+//   "rrollto"    | vector             | Roll right until the UP direction of the turtle is aligned as much as possible with the given vector direction
+//   "steps"      | count              | Divide arc or segment into this many steps.  Default is 1 for segments without roll or twist, arcsteps otherwise
 //   "reverse"    |                    | For "move" only: If given then reverses the turtle after the move
 //   "right"      | angle              | For "arc" only: Turn to the right by specified angle
 //   "left"       | angle              | For "arc" only: Turn to the left by specified angle
@@ -665,8 +672,11 @@ function _turtle3d_list_command(command,arcsteps,movescale, lastT,lastPre,index)
                            ["twist",0],
                            ["grow",1],
                            ["shrink",1],
-                           ["steps",1],
+                           ["steps",0],
                            ["roll",0],
+                           ["lrollto", 0],
+                           ["rrollto", 0],
+                           ["rollto", 0]
                           ],
                           command, grow=false)
           :command[0]=="arc" ?
@@ -681,6 +691,9 @@ function _turtle3d_list_command(command,arcsteps,movescale, lastT,lastPre,index)
                            ["shrink",1],
                            ["steps",0],
                            ["roll",0],
+                           ["lrollto", 0],
+                           ["rrollto", 0],
+                           ["rollto", 0],
                            ["rot", 0],
                            ["todir", 0],
                            ["xrot", 0],
@@ -702,7 +715,6 @@ function _turtle3d_list_command(command,arcsteps,movescale, lastT,lastPre,index)
    let(
        scaling = point3d(v_div(grow,shrink),1),
        usersteps = struct_val(keys,"steps"),
-       roll = struct_val(keys,"roll"),
        ////////////////////////////////////////////////////////////////////////////////////////
        ////  Next section is computations for relative rotations: "left", "right", "up" or "down"
        right = default(struct_val(keys,"right"),0),
@@ -765,11 +777,40 @@ function _turtle3d_list_command(command,arcsteps,movescale, lastT,lastPre,index)
     //               absangle is defined if and only if an absolute angle command was given
     assert(is_undef(absangle) || absangle!=0, str("Arc rotation with zero angle at index ",index))
     assert(angle==0 || is_undef(absangle), str("Mixed relative and absolute rotations at index ",index))
-    assert(is_int(usersteps) && usersteps>=0 && (command[0]=="arc" || usersteps>=1),
-           str("Steps value ",usersteps," invalid at index ",index))
+    assert(is_int(usersteps) && usersteps>=0, str("Steps value ",usersteps," invalid at index ",index))
     assert(is_undef(absangle) || !all_zero(projv), str("Rotation acts as twist, which does not produce a valid arc at index ",index))
-    let( 
-        steps = usersteps != 0 ? usersteps
+    let(
+        rollval = struct_val(keys,"roll"),
+        rrollto = struct_val(keys,"rrollto"),
+        lrollto = struct_val(keys,"lrollto"),
+        rollto = struct_val(keys,"rollto"),
+        dummy = assert(num_true([rollval!=0, rrollto!=0, lrollto!=0, rollto!=0])<=1,
+                       str("Cannot set more than one of roll, rollto, rrollto and lrollto at index ",index))
+                assert((rrollto==0 || is_vector(rrollto,3)) && (lrollto==0 || is_vector(lrollto,3)) && (rollto==0 || is_vector(rollto,3)),
+                       str("rollto, rrollto and lrollto must be 3-vectors at index ",index))
+                assert(rollval==0 || is_finite(rollval), "roll must be a finite value"),
+        finalT = is_undef(absangle) ? lastT * flip * right(move) * (angle==0?ident(4):rot(angle,v=relaxis,cp=center))
+               : move(shift+vshift) * rot(absangle,v=absaxis,cp=abscenter)*Trot,
+        finaldir = unit(apply(_rotpart(finalT),RIGHT)),
+        finalup = apply(_rotpart(finalT),UP),
+        roll = rollval!=0 ? rollval
+             : rrollto==0 && lrollto==0 && rollto==0? 0 
+             : let(
+                    desired = rollto!=0 ? rollto : rrollto!=0 ? rrollto : lrollto,
+                    dummy = assert(!approx(abs(unit(desired)*finaldir),1),
+                                   str("\nRequested roll is impossible because roll direction is parallel to the turtle travel direction at index ",index)),
+                    fe=echo(finalup=finalup),
+                    
+                    startang = _compute_spin(finaldir, finalup),
+                    finalang = _compute_spin(finaldir, desired),
+                    delta_ang = posmod(finalang-startang,360),
+                    signed_ang = rrollto!=0 || delta_ang==0 ? delta_ang
+                               : lrollto!=0 || delta_ang>180 ? delta_ang-360
+                               : delta_ang
+,                    ffe=echo(signed_ang=signed_ang, startang=startang, finalang=finalang)
+               ) signed_ang,
+        steps = usersteps==0 && command[0]=="move" && roll==0 && twist==0 ? 1
+              : usersteps != 0 ? usersteps
               : arcsteps != 0 ? arcsteps
               : ceil(segs(abs(radius)) * abs(first_defined([absangle,angle]))/360),
         // The next line computes a list of pairs [trans,pretrans] for the segment or arc
