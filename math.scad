@@ -585,7 +585,7 @@ function _ceilall(data) =
 // Section: Constraints and Modulos
 
 // Function: constrain()
-// Summary: Limit (clamp) a number or array of numbers to a specified range of values.
+// Synopsis: Limit (clamp) a number or array of numbers to a specified range of values.
 // Topics: Math
 // See Also: posmod(), modang()
 // Usage:
