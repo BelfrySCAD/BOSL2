@@ -605,9 +605,9 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 //   grid_copies(spacing=10, n=[13,7], stagger=true) cylinder(d=6, h=5);
 //   grid_copies(spacing=10, n=[13,7], stagger="alt") cylinder(d=6, h=5);
 //   grid_copies(size=50, n=11, stagger=true) cylinder(d=5, h=1);
-// Example: Setting the axes to "xz"
+// Example(3D,VPR=[66.90,0.00,36.90],VPD=199.87,VPT=[4.05,9.59,-0.91]): Setting the axes to "xz"
 //   grid_copies(size=50, n=[13,7], stagger=true, axes="xz") cylinder(d=5, h=4);
-// Example: The layout is different with axes="zx"
+// Example(3D,VPR=[66.90,0.00,36.90],VPD=199.87,VPT=[4.05,9.59,-0.91]): The layout is different with axes="zx"
 //   grid_copies(size=50, n=[13,7], stagger=true, axes="zx") cylinder(d=5, h=4);
 //
 // Example:
