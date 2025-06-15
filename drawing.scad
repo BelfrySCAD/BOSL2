@@ -40,25 +40,26 @@
 //   long paths due to the 3d unions, and the faces on sequential cylinders may not line up.  In many cases, {{path_sweep()}} is
 //   a better choice, both running faster and producing superior output, when working in three dimensions. 
 // Figure(Med,NoAxes,2D,VPR=[0,0,0],VPD=250): Endcap Types
-//   cap_pairs = [
-//       ["butt",  "chisel" ],
-//       ["round", "square" ],
-//       ["line",  "cross"  ],
-//       ["x",     "diamond"],
-//       ["dot",   "block"  ],
-//       ["tail",  "arrow"  ],
-//       ["tail2", "arrow2" ]
-//   ];
-//   for (i = idx(cap_pairs)) {
-//       fwd((i-len(cap_pairs)/2+0.5)*13) {
-//           stroke([[-20,0], [20,0]], width=3, endcap1=cap_pairs[i][0], endcap2=cap_pairs[i][1]);
-//           color("black") {
-//               stroke([[-20,0], [20,0]], width=0.25, endcaps=false);
-//               left(28) text(text=cap_pairs[i][0], size=5, halign="right", valign="center");
-//               right(28) text(text=cap_pairs[i][1], size=5, halign="left", valign="center");
-//           }
-//       }
-//   }
+   cap_pairs = [
+       ["butt",  "chisel" ],
+       ["round", "square" ],
+       ["line",  "cross"  ],
+       ["x",     "diamond"],
+       ["dot",   "block"  ],
+       ["tail",  "arrow"  ],
+       ["tail2", "arrow2" ],
+       [undef, "arrow3" ]
+   ];
+   for (i = idx(cap_pairs)) {
+       fwd((i-len(cap_pairs)/2+0.5)*13) {
+           stroke([[-20,0], [20,0]], width=3, endcap1=cap_pairs[i][0], endcap2=cap_pairs[i][1]);
+           color("black") {
+               stroke([[-20,0], [20,0]], width=0.25, endcaps=false);
+               left(28) text(text=cap_pairs[i][0], size=5, halign="right", valign="center");
+               right(28) text(text=cap_pairs[i][1], size=5, halign="left", valign="center");
+           }
+       }
+   }
 // Arguments:
 //   path = The path to draw along.
 //   width = The width of the line to draw.  If given as a list of widths, (one for each path point), draws the line with varying thickness to each point.
@@ -221,6 +222,7 @@ module stroke(
         cap=="line"?    [3.50, 0.22, 0.00] :
         cap=="arrow"?   [3.50, 0.40, 0.50] :
         cap=="arrow2"?  [3.50, 1.00, 0.14] :
+        cap=="arrow3"?  [3.50, 1.00, 0.00] :
         cap=="tail"?    [3.50, 0.47, 0.50] :
         cap=="tail2"?   [3.50, 0.28, 0.50] :
         is_path(cap)?   [0.00, 0.00, 0.00] :
@@ -239,6 +241,7 @@ module stroke(
         cap=="line"?    scale([w,l], p=square(1,center=true)) :
         cap=="arrow"?   [[0,0], [w/2,-l2], [w/2,-l2-l], [0,-l], [-w/2,-l2-l], [-w/2,-l2]] :
         cap=="arrow2"?  [[0,0], [w/2,-l2-l], [0,-l], [-w/2,-l2-l]] :
+        cap=="arrow3"?  [[0,0], [w/2,-l], [-w/2,-l]] :
         cap=="tail"?    [[0,0], [w/2,l2], [w/2,l2-l], [0,-l], [-w/2,l2-l], [-w/2,l2]] :
         cap=="tail2"?   [[w/2,0], [w/2,-l], [0,-l-l2], [-w/2,-l], [-w/2,0]] :
         is_path(cap)? cap :
@@ -318,14 +321,14 @@ module stroke(
 
           trim1 = width[0] * first_defined([
               trim1, trim,
-              (endcap1=="arrow")? endcap_length1-0.01 :
+              (endcap1=="arrow" || endcap1=="arrow3")? endcap_length1-0.01 :
               (endcap1=="arrow2")? endcap_length1*3/4 :
               0
           ]);
 
           trim2 = last(width) * first_defined([
               trim2, trim,
-              (endcap2=="arrow")? endcap_length2-0.01 :
+              (endcap2=="arrow" || endcap2=="arrow3")? endcap_length2-0.01 :
               (endcap2=="arrow2")? endcap_length2*3/4 :
               0
           ]);
