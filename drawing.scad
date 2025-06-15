@@ -40,26 +40,26 @@
 //   long paths due to the 3d unions, and the faces on sequential cylinders may not line up.  In many cases, {{path_sweep()}} is
 //   a better choice, both running faster and producing superior output, when working in three dimensions. 
 // Figure(Med,NoAxes,2D,VPR=[0,0,0],VPD=250): Endcap Types
-   cap_pairs = [
-       ["butt",  "chisel" ],
-       ["round", "square" ],
-       ["line",  "cross"  ],
-       ["x",     "diamond"],
-       ["dot",   "block"  ],
-       ["tail",  "arrow"  ],
-       ["tail2", "arrow2" ],
-       [undef, "arrow3" ]
-   ];
-   for (i = idx(cap_pairs)) {
-       fwd((i-len(cap_pairs)/2+0.5)*13) {
-           stroke([[-20,0], [20,0]], width=3, endcap1=cap_pairs[i][0], endcap2=cap_pairs[i][1]);
-           color("black") {
-               stroke([[-20,0], [20,0]], width=0.25, endcaps=false);
-               left(28) text(text=cap_pairs[i][0], size=5, halign="right", valign="center");
-               right(28) text(text=cap_pairs[i][1], size=5, halign="left", valign="center");
-           }
-       }
-   }
+//   cap_pairs = [
+//       ["butt",  "chisel" ],
+//       ["round", "square" ],
+//       ["line",  "cross"  ],
+//       ["x",     "diamond"],
+//       ["dot",   "block"  ],
+//       ["tail",  "arrow"  ],
+//       ["tail2", "arrow2" ],
+//       [undef, "arrow3" ]
+//   ];
+//   for (i = idx(cap_pairs)) {
+//       fwd((i-len(cap_pairs)/2+0.5)*13) {
+//           stroke([[-20,0], [20,0]], width=3, endcap1=cap_pairs[i][0], endcap2=cap_pairs[i][1]);
+//           color("black") {
+//               stroke([[-20,0], [20,0]], width=0.25, endcaps=false);
+//               left(28) text(text=cap_pairs[i][0], size=5, halign="right", valign="center");
+//               right(28) text(text=cap_pairs[i][1], size=5, halign="left", valign="center");
+//           }
+//       }
+//   }
 // Arguments:
 //   path = The path to draw along.
 //   width = The width of the line to draw.  If given as a list of widths, (one for each path point), draws the line with varying thickness to each point.
