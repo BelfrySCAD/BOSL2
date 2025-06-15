@@ -574,6 +574,13 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 //   When called as a module, makes a square or hexagonal grid of copies of children, with an optional masking polygon or region.
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
 //   When called as a function, *with* a `p=` argument, returns a list of transformed copies of `p=`.
+//   .
+//   The `stagger` parameter causes each row to be offset from the one below.  
+//   By default the layout is in the xy plane where a row runs in the x direction.  You can choose
+//   any pair of axes for the layout using the `axes` parameter, which is a two letter parameter
+//   where the first letter gives the direction o a row.  The default is "xy".  The order matters because
+//   whichever axis is first will correspond to the first entry in `size`, and if you set `stagger=true` that
+//   operates on rows, so interchanging the axes will produce a different result.  
 //
 // Arguments:
 //   spacing = Distance between copies in [X,Y] or scalar distance.
@@ -583,6 +590,7 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 //   stagger = If true, make a staggered (hexagonal) grid.  If false, make square grid.  If `"alt"`, makes alternate staggered pattern.  Default: false
 //   inside = If given a list of polygon points, or a region, only creates copies whose center would be inside the polygon or region.  Polygon can be concave and/or self crossing.
 //   nonzero = If inside is set to a polygon with self-crossings then use the nonzero method for deciding if points are in the polygon.  Default: false
+//   axes = Specify the axes to use for the row and column directions as a 2 character string.  Default: "xy"
 //   p = Either a point, pointlist, VNF or Bezier patch to be translated when used as a function.
 //
 // Side Effects:
@@ -597,6 +605,10 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 //   grid_copies(spacing=10, n=[13,7], stagger=true) cylinder(d=6, h=5);
 //   grid_copies(spacing=10, n=[13,7], stagger="alt") cylinder(d=6, h=5);
 //   grid_copies(size=50, n=11, stagger=true) cylinder(d=5, h=1);
+// Example(3D,VPR=[66.90,0.00,36.90],VPD=199.87,VPT=[4.05,9.59,-0.91]): Setting the axes to "xz"
+//   grid_copies(size=50, n=[13,7], stagger=true, axes="xz") cylinder(d=5, h=4);
+// Example(3D,VPR=[66.90,0.00,36.90],VPD=199.87,VPT=[4.05,9.59,-0.91]): The layout is different with axes="zx"
+//   grid_copies(size=50, n=[13,7], stagger=true, axes="zx") cylinder(d=5, h=4);
 //
 // Example:
 //   poly = [[-25,-25], [25,25], [-25,25], [25,-25]];
@@ -625,10 +637,17 @@ module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero)
    grid_copies(spacing, n, size, stagger, inside, nonzero) children();
 }   
 
-module grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero)
+module grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, axes="xy")
 {
     req_children($children);    
-    dummy = assert(in_list(stagger, [false, true, "alt"]));
+    dummy = assert(in_list(stagger, [false, true, "alt"]))
+            assert(is_string(axes) && search(axes[0], "xyz")!=[] && search(axes[1], "xyz")!=[] && axes[0]!=axes[1], "Invalid axes specification");
+    xind = search("x",axes);
+    yind = search("y",axes);
+    zind = search("z",axes);        
+    permax = function(pt) [xind==[] ? 0 : pt[xind[0]],
+                           yind==[] ? 0 : pt[yind[0]],
+                           zind==[] ? 0 : pt[zind[0]]];
     bounds = is_undef(inside)? undef :
         is_path(inside)? pointlist_bounds(inside) :
         assert(is_region(inside))
@@ -697,17 +716,24 @@ module grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero)
         ];
     for(i=idx(poslist)){
       $idx=i;
-      $pos=poslist[i][0];
+      $pos=permax(poslist[i][0]);
       $row=poslist[i][1];
       $col=poslist[i][2];
-      translate(poslist[i][0])children();
+      translate(permax(poslist[i][0]))children();
     }
 }
 
 
-function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, p=_NO_ARG) =
+function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, axes="xy", p=_NO_ARG) =
     let(
-        dummy = assert(in_list(stagger, [false, true, "alt"])),
+        dummy = assert(in_list(stagger, [false, true, "alt"]))
+                assert(is_string(axes) && search(axes[0], "xyz")!=[] && search(axes[1], "xyz")!=[] && axes[0]!=axes[1], "Invalid axes specification"),
+        xind = search("x",axes),
+        yind = search("y",axes),
+        zind = search("z",axes),        
+        permax = function(pt) [xind==[] ? 0 : pt[xind[0]],
+                               yind==[] ? 0 : pt[yind[0]],
+                               zind==[] ? 0 : pt[zind[0]]],
         bounds = is_undef(inside)? undef :
             is_path(inside)? pointlist_bounds(inside) :
             assert(is_region(inside))
@@ -745,7 +771,7 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, p=_
                     (is_path(inside) && point_in_polygon(pos, inside, nonzero=nonzero)>=0) ||
                     (is_region(inside) && point_in_region(pos, inside)>=0)
                 )
-                translate(pos)
+                translate(permax(pos))
             ]
           : // stagger == true or stagger == "alt"
             let(
@@ -767,7 +793,7 @@ function grid_copies(spacing, n, size, stagger=false, inside=undef, nonzero, p=_
                     (is_path(inside) && point_in_polygon(pos, inside, nonzero=nonzero)>=0) ||
                     (is_region(inside) && point_in_region(pos, inside)>=0)
                 )
-                translate(pos)
+                translate(permax(pos))
             ]
     )
     p==_NO_ARG? mats : [for (m = mats) apply(m, p)];
