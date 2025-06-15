@@ -556,20 +556,20 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
 // See Also: move_copies(), xcopies(), ycopies(), zcopies(), line_copies(), rot_copies(), xrot_copies(), yrot_copies(), zrot_copies(), arc_copies(), sphere_copies()
 //
 // Usage:
-//   grid_copies(spacing, size=, [stagger=], [scale=], [inside=]) CHILDREN;
-//   grid_copies(n=, size=, [stagger=], [scale=], [inside=]) CHILDREN;
-//   grid_copies(spacing, [n], [stagger=], [scale=], [inside=]) CHILDREN;
-//   grid_copies(n=, inside=, [stagger], [scale]) CHILDREN;
+//   grid_copies(spacing, size=, [stagger=], [scale=], [inside=], [axes=]) CHILDREN;
+//   grid_copies(n=, size=, [stagger=], [scale=], [inside=], [axes=]) CHILDREN;
+//   grid_copies(spacing, [n], [stagger=], [scale=], [inside=], [axes=]) CHILDREN;
+//   grid_copies(n=, inside=, [stagger], [scale], [axes=]) CHILDREN;
 // Usage: As a function to translate points, VNF, or Bezier patches
-//   copies = grid_copies(spacing, size=, [stagger=], [scale=], [inside=], p=);
-//   copies = grid_copies(n=, size=, [stagger=], [scale=], [inside=], p=);
-//   copies = grid_copies(spacing, [n], [stagger=], [scale=], [inside=], p=);
-//   copies = grid_copies(n=, inside=, [stagger], [scale], p=);
+//   copies = grid_copies(spacing, size=, [stagger=], [scale=], [inside=], [axes=], p=);
+//   copies = grid_copies(n=, size=, [stagger=], [scale=], [inside=], [axes=], p=);
+//   copies = grid_copies(spacing, [n], [stagger=], [scale=], [inside=], [axes=], p=);
+//   copies = grid_copies(n=, inside=, [stagger], [scale], [axes=], p=);
 // Usage: Get Translation Matrices
-//   mats = grid_copies(spacing, size=, [stagger=], [scale=], [inside=]);
-//   mats = grid_copies(n=, size=, [stagger=], [scale=], [inside=]);
-//   mats = grid_copies(spacing, [n], [stagger=], [scale=], [inside=]);
-//   mats = grid_copies(n=, inside=, [stagger], [scale]);
+//   mats = grid_copies(spacing, size=, [stagger=], [scale=], [inside=], [axes=]);
+//   mats = grid_copies(n=, size=, [stagger=], [scale=], [inside=], [axes=]);
+//   mats = grid_copies(spacing, [n], [stagger=], [scale=], [inside=], [axes=]);
+//   mats = grid_copies(n=, inside=, [stagger], [scale], [axes=]);
 // Description:
 //   When called as a module, makes a square or hexagonal grid of copies of children, with an optional masking polygon or region.
 //   When called as a function, *without* a `p=` argument, returns a list of transformation matrices, one for each copy.
