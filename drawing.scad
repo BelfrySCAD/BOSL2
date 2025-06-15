@@ -39,7 +39,7 @@
 //   creates a cylinders (or cones) and fills the gaps with rounded wedges made using rotate_extrude.  This process is slow for
 //   long paths due to the 3d unions, and the faces on sequential cylinders may not line up.  In many cases, {{path_sweep()}} is
 //   a better choice, both running faster and producing superior output, when working in three dimensions. 
-// Figure(Med,NoAxes,2D,VPR=[0,0,0],VPD=250): Endcap Types
+// Figure(Med,NoAxes,2D,VPR=[0,0,0],VPD=255): Endcap Types
 //   cap_pairs = [
 //       ["butt",  "chisel" ],
 //       ["round", "square" ],
