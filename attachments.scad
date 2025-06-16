@@ -3168,6 +3168,8 @@ module _show_ghost()
 //   that use the parent geometry such as {{attach()}}, {{align()}}, {{position()}} or {{parent()}}
 //   will reference the geometry for the specified part.  This allows you to access the inner wall
 //   of tubes, for example.
+//  Argument:
+//   name = name of part to use for subsequent attachments.  
 // Example: This example shows attaching the light blue cube normally, on the outside of the tube, and the pink cube using the "inside" attachment part.  
 //   tube(ir1=10,ir2=20,h=20, wall=3){
 //     color("lightblue")attach(RIGHT,BOT) cuboid(4);
@@ -3590,6 +3592,11 @@ function attach_geom(
 // Description:
 //   Create a named attachable part that can be passed in the `parts` parameter of {{attachable()}}
 //   and then selected using {{attach_part()}}.
+// Arguments:
+//   name = name of part
+//   geom = geometry of part produced by {{attach_geom()}}
+//   inside = if true, reverse the attachment direction for children.  Default: false
+//   T = Transformation to apply to children.  Default: IDENT
 // Example(3D): This example shows how to create a custom object with two different parts that are both transformed away from the origin.  The basic object is two cylinders with a cube shaped attachment geometry that doesn't match the object very well.  The "left" and "right" parts attach to each of the two cylinders.  
 //   module twocyl(d, sep, h, ang=20) 
 //   {
