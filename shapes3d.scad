@@ -1689,7 +1689,7 @@ module rect_tube(
     ichamfer2 = _rect_tube_rounding(1/sqrt(2),ichamfer2_temp, chamfer2, irounding2_temp, size2, isize2);
     anchor = get_anchor(anchor, center, BOT, BOT);
     parts = [
-              attachable_part("inside", attach_geom(size=[each isize1, h], size2=isize2, shift=shift), inside=true)
+              part_geometry("inside", attach_geom(size=[each isize1, h], size2=isize2, shift=shift), inside=true)
             ];
     attachable(anchor,spin,orient, size=[each size1, h], size2=size2, shift=shift, parts=parts) {
         down(h/2) {
@@ -2971,7 +2971,7 @@ module tube(
                [0,h/2+1]
              ];
     parts = [
-               attachable_part("inside", attach_geom(r1=ir1, r2=ir2, l=h), inside=true)
+               part_geometry("inside", attach_geom(r1=ir1, r2=ir2, l=h), inside=true)
             ];
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h, parts=parts) {
         down(h/2) skew(sxz=shift.x/h, syz=shift.y/h) up(h/2) 

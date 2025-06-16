@@ -3160,7 +3160,7 @@ module _show_ghost()
 // Module: attach_part()
 // Synopsis: Select a named attachable part for subsequent attachment operations
 // Topics: Attachment
-// See Also: attach(), align(), attachable(), attachable_part()
+// See Also: attach(), align(), attachable(), part_geometry()
 // Usage:
 //   PARENT() attach_part(name) CHILDREN;
 // Description:
@@ -3581,12 +3581,12 @@ function attach_geom(
     : ["point", cp, offset, anchors];
 
 
-// Function: attachable_part()
+// Function: part_geometry()
 // Synopsis: Creates an attachable part data structure.
 // Topics: Attachments
 // See Also: attachable()
 // Usage:
-//   part = attachable_part(name, geom, [inside=], [T=]);
+//   part = part_geometry(name, geom, [inside=], [T=]);
 // Description:
 //   Create a named attachable part that can be passed in the `parts` parameter of {{attachable()}}
 //   and then selected using {{attach_part()}}.
@@ -3594,8 +3594,8 @@ function attach_geom(
 //   module twocyl(d, sep, h, ang=20) 
 //   {
 //      parts = [
-//                attachable_part("left", attach_geom(r=d/2,h=h), T=left(sep/2)*yrot(-ang)),
-//                attachable_part("right", attach_geom(r=d/2,h=h), T=right(sep/2)*yrot(ang)),
+//                part_geometry("left", attach_geom(r=d/2,h=h), T=left(sep/2)*yrot(-ang)),
+//                part_geometry("right", attach_geom(r=d/2,h=h), T=right(sep/2)*yrot(ang)),
 //              ];
 //      attachable(size=[sep+d,d,h], parts=parts){
 //        union(){
@@ -3611,7 +3611,7 @@ function attach_geom(
 //     color("green")attach_part("right")attach(TOP,BOT) cuboid(3);    
 //   }
 
-function attachable_part(name, geom, inside=false, T=IDENT) =
+function part_geometry(name, geom, inside=false, T=IDENT) =
   assert(is_string(name), "name must be a string")
   assert(_is_geometry(geom), "geometry appears invalid")
   assert(is_bool(inside), "inside must be boolean")
