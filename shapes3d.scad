@@ -1478,7 +1478,11 @@ function textured_tile(
 //   more general ones, so `rounding2` is determined from `rounding`.  The constant
 //   width default will apply when the inner rounding and chamfer are both undef.
 //   You can give an inner chamfer or rounding as a list with undef entries if you want to specify
-//   some corner roundings and allow others to be computed.  
+//   some corner roundings and allow others to be computed.
+//   .
+//   Attachment to the rectangular tube will place objects on the **outside** of the tube.
+//   If you need to anchor to the inside of a tube, use {{attach_part()}} with the part name "inside"
+//   to switch goeomtry to the inside.  
 // Arguments:
 //   h/l/height/length = The height or length of the rectangular tube.  Default: 1
 //   size = The outer [X,Y] size of the rectangular tube.
@@ -1565,7 +1569,14 @@ function textured_tile(
 //       size=100, wall=10, h=30,
 //       rounding=[0,10,20,30], ichamfer=[8,8,undef,undef]
 //   );
-
+// Example: An example from above with a cube attached to the inside using {{attach_part()}}.  
+//   rect_tube(
+//          size=100, wall=10, h=30,
+//          chamfer=[0,10,0,20], 
+//          rounding=[10,0,20,0]
+//      )
+//      attach_part("inside")
+//      attach(BACK,BOT) cuboid(20);
 
 
 function _rect_tube_rounding(factor,ir,r,alternative,size,isize) =
@@ -1677,7 +1688,10 @@ module rect_tube(
     ichamfer1 = _rect_tube_rounding(1/sqrt(2),ichamfer1_temp, chamfer1, irounding1_temp, size1, isize1);
     ichamfer2 = _rect_tube_rounding(1/sqrt(2),ichamfer2_temp, chamfer2, irounding2_temp, size2, isize2);
     anchor = get_anchor(anchor, center, BOT, BOT);
-    attachable(anchor,spin,orient, size=[each size1, h], size2=size2, shift=shift) {
+    parts = [
+              attachable_part("inside", attach_geom(size=[each isize1, h], size2=isize2, shift=shift), inside=true)
+            ];
+    attachable(anchor,spin,orient, size=[each size1, h], size2=size2, shift=shift, parts=parts) {
         down(h/2) {
             difference() {
                 prismoid(
@@ -2739,6 +2753,10 @@ module zcyl(
 //   .
 //   Chamfering and rounding lengths are measured based on the corners of the object except for the inner diameter when `circum=true`, in
 //   which case chamfers and roundings are measured from the facets.  This only matters when `$fn` is small.  
+//   .
+//   Attachment to the tube will place objects on the **outside** of the tube.
+//   If you need to anchor to the inside of a tube, use {{attach_part()}} with the part name "inside"
+//   to switch goeomtry to the inside.  
 // Usage: Basic cylindrical tube, specifying inner and outer radius or diameter
 //   tube(h|l, or, ir, [center], [realign=], [anchor=], [spin=],[orient=]) [ATTACHMENTS];
 //   tube(h|l, od=, id=, ...)  [ATTACHMENTS];
@@ -2835,6 +2853,13 @@ module zcyl(
 //   half_of(v=[-1,1]) color("lightblue") cyl(d=9, h=12, $fn=32);
 // Example: Round ended hexagonal tube using `rounding_fn` to get sufficient facets on the roundings
 //   tube(or=10, ir=7, h=10, $fn=6, rounding_fn=64, rounding=1.3, teardrop=true);
+// Example: This example shows a regular attachment to the outside of the tube in light blue and then using {{attach_part()}} to attach the pink cube to the inside of the tube.  
+//   tube(ir1=10,ir2=20,h=20, wall=3){
+//     color("lightblue")attach(RIGHT,BOT) cuboid(4);
+//     color("pink")
+//        attach_part("inside")
+//        attach(BACK,BOT) cuboid(4);
+//   }  
 
 function tube(
     h, or, ir, center,
@@ -2945,7 +2970,10 @@ module tube(
                last(ipath)+[0,1],
                [0,h/2+1]
              ];
-    attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
+    parts = [
+               attachable_part("inside", attach_geom(r1=ir1, r2=ir2, l=h), inside=true)
+            ];
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=h, parts=parts) {
         down(h/2) skew(sxz=shift.x/h, syz=shift.y/h) up(h/2) 
           difference(){
             zrot(realign? 180/osides : 0)rotate_extrude($fn=osides,angle=360) polygon(outside);
