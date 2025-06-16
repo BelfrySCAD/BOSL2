@@ -3916,7 +3916,7 @@ module text3d(text, h, size=10, font, spacing=1.0, direction="ltr", language="en
         $parent_size   = _attach_geom_size(geom);
         $attach_to   = undef;
         if (_is_shown()) {
-            _color($color) {
+            _color($color) _show_ghost() {
                 linear_extrude(height=h, center=true)
                     _text(
                         text=text, size=size, font=font,
