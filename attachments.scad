@@ -33,6 +33,8 @@ $parent_orient = UP;
 $parent_size = undef;
 $parent_geom = undef;
 
+$attach_inside = false;  // If true, flip the meaning of the inside parameter for align() and attach()
+
 $edge_angle = undef;
 $edge_length = undef;
 
@@ -700,12 +702,10 @@ module align(anchor,align=CENTER,inside=false,inset=0,shiftout=0,overlap)
     overlap = (overlap!=undef)? overlap : $overlap;
     dummy1=assert($parent_geom != undef, "No object to align to.")
            assert(is_undef($attach_to), "Cannot use align() as a child of attach()");
-    if (is_undef($align_msg) || $align_msg)
-        echo("ALERT: align() has changed, May 1, 2024.  See the wiki and attach(align=). $align_msg=false disables this message");
     anchor = is_vector(anchor) ? [anchor] : anchor;
     align = is_vector(align) ? [align] : align;
     two_d = _attach_geom_2d($parent_geom);
-    factor = inside?-1:1;
+    factor = ($anchor_inside ? -1 : 1)*(inside?-1:1);
     for (i = idx(anchor)) {
         $align_msg=false;     // Remove me when removing the message above
         face = anchor[i];
@@ -938,6 +938,8 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
       assert(is_finite(spin) || spin=="align", "Spin must be a number (unless align is given)")
       assert((is_undef(overlap) || is_finite(overlap)) && (is_def(overlap) || is_undef($overlap) || is_finite($overlap)),
              str("Provided ",is_def(overlap)?"":"$","overlap is not valid."));
+    removetag = inside;
+    inside = $anchor_inside ? !inside : inside;
     if (is_def(to))
       echo("The 'to' option to attach() is deprecated and will be removed in the future.  Use 'child' instead.");
     if (is_def(from))
@@ -1059,13 +1061,13 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
             spinaxis = two_d? UP : anchor_dir;
             olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference);
             if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) 
-                translate(pos) rot(v=spinaxis,a=factor*spin) translate(olap) default_tag("remove",inside) children();
+                translate(pos) rot(v=spinaxis,a=factor*spin) translate(olap) default_tag("remove",removetag) children();
             else  
                 translate(pos)
                     rot(v=spinaxis,a=factor*spin)
                     rot(anchor_spin,from=reference,to=anchor_dir)
                     translate(olap)
-                    default_tag("remove",inside) children();
+                    default_tag("remove",removetag) children();
         }
     }
 }
@@ -3065,6 +3067,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   right(75) plug();
 
 
+
 module attachable(
     anchor, spin, orient,
     size, size2, shift,
@@ -3077,6 +3080,7 @@ module attachable(
     two_d=false,
     axis=UP,override,
     geom,
+    parts=[],
     expose_tags=false, keep_color=false
 ) {
     dummy1 =
@@ -3110,6 +3114,8 @@ module attachable(
         $attach_to   = undef;
         $anchor_override=undef;
         $attach_alignment=undef;
+        $parent_parts = parts;
+        $anchor_inside = false;
         if (expose_tags || _is_shown()){
             if (!keep_color)
                 _color($color)
@@ -3149,6 +3155,44 @@ module _show_ghost()
         }
     else _show_highlight()children();
 }
+
+
+// Module: attach_part()
+// Synopsis: Select a named attachable part for subsequent attachment operations
+// Topics: Attachment
+// See Also: attach(), align(), attachable(), part_geometry()
+// Usage:
+//   PARENT() attach_part(name) CHILDREN;
+// Description:
+//   Selects an attachable part using a name defined by the parent object.  Any operations
+//   that use the parent geometry such as {{attach()}}, {{align()}}, {{position()}} or {{parent()}}
+//   will reference the geometry for the specified part.  This allows you to access the inner wall
+//   of tubes, for example.
+//  Argument:
+//   name = name of part to use for subsequent attachments.  
+// Example: This example shows attaching the light blue cube normally, on the outside of the tube, and the pink cube using the "inside" attachment part.  
+//   tube(ir1=10,ir2=20,h=20, wall=3){
+//     color("lightblue")attach(RIGHT,BOT) cuboid(4);
+//     color("pink")
+//        attach_part("inside")
+//        attach(BACK,BOT) cuboid(4);
+//   }  
+
+module attach_part(name)
+{
+  req_children($children);
+  dummy=assert(!is_undef($parent_parts), "Parent does not exist or does not have any parts");
+  ind = search([name], $parent_parts, 1,0)[0];
+  dummy2 = assert(ind!=[], str("Parent does not have a part named ",name));
+  $parent_geom = $parent_parts[ind][1];
+  $anchor_inside = $parent_parts[ind][2];
+  multmatrix($parent_parts[ind][3])
+    children();
+}
+
+ 
+
+function _is_geometry(entry) = is_list(entry) && is_string(entry[0]);
 
 
 // Function: reorient()
@@ -3538,6 +3582,48 @@ function attach_geom(
     two_d?     ["point2d", cp, offset, anchors]
     : ["point", cp, offset, anchors];
 
+
+// Function: part_geometry()
+// Synopsis: Creates an attachable part data structure.
+// Topics: Attachments
+// See Also: attachable()
+// Usage:
+//   part = part_geometry(name, geom, [inside=], [T=]);
+// Description:
+//   Create a named attachable part that can be passed in the `parts` parameter of {{attachable()}}
+//   and then selected using {{attach_part()}}.
+// Arguments:
+//   name = name of part
+//   geom = geometry of part produced by {{attach_geom()}}
+//   inside = if true, reverse the attachment direction for children.  Default: false
+//   T = Transformation to apply to children.  Default: IDENT
+// Example(3D): This example shows how to create a custom object with two different parts that are both transformed away from the origin.  The basic object is two cylinders with a cube shaped attachment geometry that doesn't match the object very well.  The "left" and "right" parts attach to each of the two cylinders.  
+//   module twocyl(d, sep, h, ang=20) 
+//   {
+//      parts = [
+//                part_geometry("left", attach_geom(r=d/2,h=h), T=left(sep/2)*yrot(-ang)),
+//                part_geometry("right", attach_geom(r=d/2,h=h), T=right(sep/2)*yrot(ang)),
+//              ];
+//      attachable(size=[sep+d,d,h], parts=parts){
+//        union(){
+//            left(sep/2) yrot(-ang) cyl(d=d,h=h);
+//            right(sep/2) yrot(ang) cyl(d=d,h=h);
+//        }
+//        children();
+//      }  
+//   }
+//   twocyl(d=10,sep=30,h=10){
+//     attach(TOP,TOP) cuboid(3);
+//     color("pink")attach_part("left")attach(TOP,BOT) cuboid(3);
+//     color("green")attach_part("right")attach(TOP,BOT) cuboid(3);    
+//   }
+
+function part_geometry(name, geom, inside=false, T=IDENT) =
+  assert(is_string(name), "name must be a string")
+  assert(_is_geometry(geom), "geometry appears invalid")
+  assert(is_bool(inside), "inside must be boolean")
+  assert(is_matrix(T,4), "T must be a 4x4 transformation matrix")
+  [name, geom, inside, T];
 
 
 
