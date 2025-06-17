@@ -542,8 +542,8 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cut
 // Description:
 //   Partitions an object into two parts, spread apart a small distance, with matched joining edges.
 //   If only one side of the parition is desired, $idx can be used on the children i.e.
-//   `partition() if($idx==0) cube()` will only give the back partition. This breaks with Lazy Union
-//   active, so a workaround is providing a front child at least `size` away i.e. `partition() $idx==0 ? cube() : up(200) cube()`.
+//   `partition() if ($idx==0) cube();` will only give the back partition. This breaks with Lazy Union
+//   active, so a workaround is providing a front child at least `size` away i.e. `partition() if ($idx==0) cube(); else up(200) cube();`.
 // Arguments:
 //   size = The [X,Y,Z] size of the object to partition.
 //   spread = The distance to spread the two parts by.
@@ -570,7 +570,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cut
 //   partition(spread=12, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=12, cutpath="hammerhead") cylinder(h=50, d=80, center=false);
 //   partition(cutpath="jigsaw") cylinder(h=50, d=80, center=false);
-//   partition(cutpath="jigsaw") if($idx==0) cylinder(h=50, d=80, center=false);
+//   partition(cutpath="jigsaw") if ($idx==0) cylinder(h=50, d=80, center=false);
 module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpath_centered=true, spin=0)
 {
     req_children($children);
