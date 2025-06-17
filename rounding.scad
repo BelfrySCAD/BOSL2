@@ -4360,7 +4360,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //       tag("remove") cyl(d=75,h=40,$fn=128)
 //       tag("keep") zrot_copies(n=4)
 //         prism_connector(circ,parent(),[-1,.2],parent(),[1,.4],shift1=12,shift2=-12,fillet=2);
-// Example(3D): You can also make a connection between the "inside" part of a tube and the outside of a tube
+// Example(3D,Med,NoAxes): You can also make a connection between the "inside" part of a tube and the outside of a tube
 //    diff()
 //    tube(or=10,wall=2,h=10,rounding=1,$fn=40)
 //      let(outside=parent())
