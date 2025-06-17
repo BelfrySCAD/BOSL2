@@ -1073,6 +1073,45 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
 }
 
 
+
+// Module: attach_part()
+// Synopsis: Select a named attachable part for subsequent attachment operations
+// Topics: Attachment
+// See Also: attach(), align(), attachable(), define_part(), parent_part()
+// Usage:
+//   PARENT() attach_part(name) CHILDREN;
+// Description:
+//   Most attachable objects have a single geometry defined that is used by the attachment commands,
+//   but some objects also define attachable parts.  This module selects 
+//   an attachable part using a name defined by the parent object.  Any operations
+//   that use the parent geometry such as {{attach()}}, {{align()}}, {{position()}} or {{parent()}}
+//   will reference the geometry for the specified part.  This allows you to access the inner wall
+//   of tubes, for example.  Note that you cannot call `attach_part()` as a child of another `attach_part()`.  
+// Arguments:
+//   name = name of part to use for subsequent attachments.  
+// Example: This example shows attaching the light blue cube normally, on the outside of the tube, and the pink cube using the "inside" attachment part.  
+//   tube(ir1=10,ir2=20,h=20, wall=3){
+//     color("lightblue")attach(RIGHT,BOT) cuboid(4);
+//     color("pink")
+//        attach_part("inside")
+//        attach(BACK,BOT) cuboid(4);
+//   }  
+
+module attach_part(name)
+{
+  req_children($children);
+  dummy=assert(!is_undef($parent_parts), "Parent does not exist or does not have any parts");
+  ind = search([name], $parent_parts, 1,0)[0];
+  dummy2 = assert(ind!=[], str("Parent does not have a part named ",name));
+  $parent_geom = $parent_parts[ind][1];
+  $anchor_inside = $parent_parts[ind][2];
+  T = $parent_parts[ind][3];
+  $parent_parts = [];
+  multmatrix(T)
+    children();
+}
+
+ 
 // Section: Tagging
 
 // Module: tag()
@@ -1350,7 +1389,7 @@ module tag_scope(scope){
 }
 
 
-// Section: Attachment Modifiers
+// Section: Tagged Operations with Attachable Objects
 
 // Module: diff()
 // Synopsis: Performs a differencing operation using tags rather than hierarchy to control what happens.
@@ -3157,40 +3196,6 @@ module _show_ghost()
 }
 
 
-// Module: attach_part()
-// Synopsis: Select a named attachable part for subsequent attachment operations
-// Topics: Attachment
-// See Also: attach(), align(), attachable(), part_geometry()
-// Usage:
-//   PARENT() attach_part(name) CHILDREN;
-// Description:
-//   Selects an attachable part using a name defined by the parent object.  Any operations
-//   that use the parent geometry such as {{attach()}}, {{align()}}, {{position()}} or {{parent()}}
-//   will reference the geometry for the specified part.  This allows you to access the inner wall
-//   of tubes, for example.
-// Arguments:
-//   name = name of part to use for subsequent attachments.  
-// Example: This example shows attaching the light blue cube normally, on the outside of the tube, and the pink cube using the "inside" attachment part.  
-//   tube(ir1=10,ir2=20,h=20, wall=3){
-//     color("lightblue")attach(RIGHT,BOT) cuboid(4);
-//     color("pink")
-//        attach_part("inside")
-//        attach(BACK,BOT) cuboid(4);
-//   }  
-
-module attach_part(name)
-{
-  req_children($children);
-  dummy=assert(!is_undef($parent_parts), "Parent does not exist or does not have any parts");
-  ind = search([name], $parent_parts, 1,0)[0];
-  dummy2 = assert(ind!=[], str("Parent does not have a part named ",name));
-  $parent_geom = $parent_parts[ind][1];
-  $anchor_inside = $parent_parts[ind][2];
-  multmatrix($parent_parts[ind][3])
-    children();
-}
-
- 
 
 function _is_geometry(entry) = is_list(entry) && is_string(entry[0]);
 
@@ -3583,12 +3588,12 @@ function attach_geom(
     : ["point", cp, offset, anchors];
 
 
-// Function: part_geometry()
+// Function: define_part()
 // Synopsis: Creates an attachable part data structure.
 // Topics: Attachments
 // See Also: attachable()
 // Usage:
-//   part = part_geometry(name, geom, [inside=], [T=]);
+//   part = define_part(name, geom, [inside=], [T=]);
 // Description:
 //   Create a named attachable part that can be passed in the `parts` parameter of {{attachable()}}
 //   and then selected using {{attach_part()}}.
@@ -3602,8 +3607,8 @@ function attach_geom(
 //   module twocyl(d, sep, h, ang=20) 
 //   {
 //      parts = [
-//                part_geometry("left", attach_geom(r=d/2,h=h), T=left(sep/2)*yrot(-ang)),
-//                part_geometry("right", attach_geom(r=d/2,h=h), T=right(sep/2)*yrot(ang)),
+//                define_part("left", attach_geom(r=d/2,h=h), T=left(sep/2)*yrot(-ang)),
+//                define_part("right", attach_geom(r=d/2,h=h), T=right(sep/2)*yrot(ang)),
 //              ];
 //      attachable(size=[sep+d,d,h], parts=parts){
 //        union(){
@@ -3619,7 +3624,7 @@ function attach_geom(
 //     color("green")attach_part("right")attach(TOP,BOT) cuboid(3);    
 //   }
 
-function part_geometry(name, geom, inside=false, T=IDENT) =
+function define_part(name, geom, inside=false, T=IDENT) =
   assert(is_string(name), "name must be a string")
   assert(_is_geometry(geom), "geometry appears invalid")
   assert(is_bool(inside), "inside must be boolean")
@@ -5143,7 +5148,7 @@ function _canonical_edge(edge) =
 
 // Function: parent()
 // Topics: Transforms, Attachments, Descriptions
-// See Also: restore()
+// See Also: restore(), parent_part()
 // Synopsis: Returns a description (transformation state and attachment geometry) of the parent
 // Usage:
 //   PARENT() let( desc = parent() ) CHILDREN;
@@ -5162,6 +5167,56 @@ function parent() =
         geom = default($parent_geom, attach_geom([0,0,0]))
     )                 
     [$transform, geom];
+
+
+
+// Function: parent_part()
+// Topics: Transforms, Attachments, Descriptions
+// See Also: restore(), parent()
+// Synopsis: Returns a description (transformation state and attachment geometry) of a part defined by the parent
+// Usage:
+//   PARENT() let( desc = parent_part(name) ) CHILDREN;
+// Usage: in development releases only
+//   PARENT() { desc=parent_part(name); CHILDREN; }
+// Description:
+//   Returns a description of the parent part with the specified name.  You can use this
+//   description to create new objects based on the described object or perform computations based on the described object.  You can also use it to
+//   restore the context of the parent object and transformation state using {{restore()}}.  Note that with OpenSCAD 2021.01 you need to use `let` for
+//   this function to work, and the definition of the variable is scoped to the children of the let module.
+//   (In development versions the use of let is no longer necessary.)  Note that if OpenSCAD displays any warnings
+//   related to transformation operations then the transformation that parent_part() returns is likely to be incorrect, even if OpenSCAD
+//   continues to run and produces a valid result.
+// Example(3D): This example defines an object with two parts and then uses `parent_part()` to create a {{prism_connector()}} between the two parts of the object.
+//   $fn=48;
+//   module twocyl(d, sep, h, ang=20) 
+//   {
+//      parts = [
+//                define_part("left", attach_geom(r=d/2,h=h),
+//                                    T=left(sep/2)*yrot(-ang)),
+//                define_part("right", attach_geom(r=d/2,h=h),
+//                                     T=right(sep/2)*yrot(ang)),
+//              ];
+//      attachable(size=[sep+d,d,h], parts=parts){
+//        union(){
+//            left(sep/2) yrot(-ang) cyl(d=d,h=h);
+//            right(sep/2) yrot(ang) cyl(d=d,h=h);
+//        }
+//        children();
+//      }  
+//   }
+//   twocyl(d=10,sep=20,h=10) 
+//     prism_connector(circle(r=2,$fn=32),
+//                     parent_part("left"), RIGHT,
+//                     parent_part("right"), LEFT,
+//                     fillet=1);
+
+function parent_part(name) =
+    assert(!is_undef($parent_parts), "Parent does not exist or does not have any parts")
+    let(
+        ind = search([name], $parent_parts, 1,0)[0]
+    )
+    assert(ind!=[], str("Parent does not have a part named ",name))    
+    [$transform * $parent_parts[ind][3], $parent_parts[ind][1]];
 
 
 // Module: restore()
