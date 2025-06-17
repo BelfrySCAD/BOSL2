@@ -4361,16 +4361,16 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //       tag("keep") zrot_copies(n=4)
 //         prism_connector(circ,parent(),[-1,.2],parent(),[1,.4],shift1=12,shift2=-12,fillet=2);
 // Example(3D): You can also make a connection between the "inside" part of a tube and the outside of a tube
-//   diff()
-//   tube(or=10,wall=2,h=10,rounding=1,$fn=40)
-//     let(outside=parent())
-//     attach_part("inside")
-//     tag("remove")
-//       for(where = [LEFT,RIGHT,FRONT,BACK])
-//         prism_connector(circle(3,$fn=100),
-//                         outside, where,
-//                         parent(), where,
-//                         fillet=1);
+//    diff()
+//    tube(or=10,wall=2,h=10,rounding=1,$fn=40)
+//      let(outside=parent())
+//      attach_part("inside")
+//      tag("remove")
+//        for(where = [LEFT,RIGHT,FRONT,BACK])
+//          prism_connector(circle(3,$fn=100),
+//                          outside, where,
+//                          parent(), where,
+//                          fillet=1);
 // Example(3D,Med,NoAxes,VPT=[1.42957,2.47871,-3.63111],VPR=[40.3,0,29.2],VPD=263.435): Here we use the {{zrot_copies()}} distributor to create copies of objects and create a connector to a non-symmetrically placed object.  All all the connectors are different because we change the anchor point that goes with the second description.
 //   circ = circle(r=3, $fn=64);
 //   right(4)up(25)xrot(15) cyl(r=20,h=30,circum=true,$fn=64) let(cyl=parent())
