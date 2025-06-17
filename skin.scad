@@ -1235,7 +1235,7 @@ function rotate_sweep(
     assert(num_defined([closed,caps])<2, "\nIn rotate_sweep the `closed` paramter has been replaced by `caps` with the opposite meaning. You cannot give both.")
     assert(num_defined([tex_reps,tex_counts])<2, "\nIn rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'. You cannot give both.")
     assert(num_defined([tex_scale,tex_depth])<2, "\nIn linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'. You cannot give both.")
-    assert(!is_path(shape) || caps || len(path)>=3, "\n'shape' is a path and caps=false, but a closed path requires three points.")
+    assert(!is_path(shape) || caps || len(shape)>=3, "\n'shape' is a path and caps=false, but a closed path requires three points.")
     let(
          caps = is_def(caps) ? caps
               : is_def(closed) ? !closed
@@ -2037,7 +2037,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   knot_path   = [ for (i=[0:k-1]) knot(360*i/k/gcd(p,q),R,r,p,q) ];
 //   normals = [ for (i=[0:k-1]) knot_normal(360*i/k/gcd(p,q),R,r,p,q) ];
 //   path_sweep(ushape,knot_path,normal=normals, method="manual", closed=true);
-// Example(Med,NoScales,VPR=[0.0,0.00,0.00],VPD=28.82,VPT=[0.00,0.00,0.00],): The left hand example uses the automatically computed derivatives.  The example on the right uses a user-supplied tangent to ensure that the ends are aligned with the coordinate system.  Even with a simple circular arc you may find that the ends are not aligned as expedted by the automatically computed approximate tangent vectors.
+// Example(Med,NoScales,VPR=[0,0.00,0],VPD=30,VPT=[5.26,1.53,0.20]): The left hand example uses the automatically computed derivatives.  The example on the right uses a user-supplied tangent to ensure that the ends are aligned with the coordinate system.  Even with a simple circular arc you may find that the ends are not aligned as expedted by the automatically computed approximate tangent vectors.
 //   $fa=1; $fs=0.5;
 //   theta_range=[180:2:450];
 //   path = [for (theta = theta_range)

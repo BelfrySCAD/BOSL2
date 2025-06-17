@@ -33,6 +33,8 @@ $parent_orient = UP;
 $parent_size = undef;
 $parent_geom = undef;
 
+$attach_inside = false;  // If true, flip the meaning of the inside parameter for align() and attach()
+
 $edge_angle = undef;
 $edge_length = undef;
 
@@ -534,7 +536,7 @@ module position(at,from)
 //   PARENT() orient(anchor, [spin]) CHILDREN;
 // Description:
 //   Orients children such that their top is tilted in the direction of the specified parent anchor point. 
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   anchor = The anchor on the parent which you want to match the orientation of.
 //   spin = The spin to add to the children.  (Overrides anchor spin.)
@@ -700,12 +702,10 @@ module align(anchor,align=CENTER,inside=false,inset=0,shiftout=0,overlap)
     overlap = (overlap!=undef)? overlap : $overlap;
     dummy1=assert($parent_geom != undef, "No object to align to.")
            assert(is_undef($attach_to), "Cannot use align() as a child of attach()");
-    if (is_undef($align_msg) || $align_msg)
-        echo("ALERT: align() has changed, May 1, 2024.  See the wiki and attach(align=). $align_msg=false disables this message");
     anchor = is_vector(anchor) ? [anchor] : anchor;
     align = is_vector(align) ? [align] : align;
     two_d = _attach_geom_2d($parent_geom);
-    factor = inside?-1:1;
+    factor = ($anchor_inside ? -1 : 1)*(inside?-1:1);
     for (i = idx(anchor)) {
         $align_msg=false;     // Remove me when removing the message above
         face = anchor[i];
@@ -938,6 +938,8 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
       assert(is_finite(spin) || spin=="align", "Spin must be a number (unless align is given)")
       assert((is_undef(overlap) || is_finite(overlap)) && (is_def(overlap) || is_undef($overlap) || is_finite($overlap)),
              str("Provided ",is_def(overlap)?"":"$","overlap is not valid."));
+    removetag = inside;
+    inside = $anchor_inside ? !inside : inside;
     if (is_def(to))
       echo("The 'to' option to attach() is deprecated and will be removed in the future.  Use 'child' instead.");
     if (is_def(from))
@@ -1059,18 +1061,57 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
             spinaxis = two_d? UP : anchor_dir;
             olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference);
             if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) 
-                translate(pos) rot(v=spinaxis,a=factor*spin) translate(olap) default_tag("remove",inside) children();
+                translate(pos) rot(v=spinaxis,a=factor*spin) translate(olap) default_tag("remove",removetag) children();
             else  
                 translate(pos)
                     rot(v=spinaxis,a=factor*spin)
                     rot(anchor_spin,from=reference,to=anchor_dir)
                     translate(olap)
-                    default_tag("remove",inside) children();
+                    default_tag("remove",removetag) children();
         }
     }
 }
 
 
+
+// Module: attach_part()
+// Synopsis: Select a named attachable part for subsequent attachment operations
+// Topics: Attachment
+// See Also: attach(), align(), attachable(), define_part(), parent_part()
+// Usage:
+//   PARENT() attach_part(name) CHILDREN;
+// Description:
+//   Most attachable objects have a single geometry defined that is used by the attachment commands,
+//   but some objects also define attachable parts.  This module selects 
+//   an attachable part using a name defined by the parent object.  Any operations
+//   that use the parent geometry such as {{attach()}}, {{align()}}, {{position()}} or {{parent()}}
+//   will reference the geometry for the specified part.  This allows you to access the inner wall
+//   of tubes, for example.  Note that you cannot call `attach_part()` as a child of another `attach_part()`.  
+// Arguments:
+//   name = name of part to use for subsequent attachments.  
+// Example: This example shows attaching the light blue cube normally, on the outside of the tube, and the pink cube using the "inside" attachment part.  
+//   tube(ir1=10,ir2=20,h=20, wall=3){
+//     color("lightblue")attach(RIGHT,BOT) cuboid(4);
+//     color("pink")
+//        attach_part("inside")
+//        attach(BACK,BOT) cuboid(4);
+//   }  
+
+module attach_part(name)
+{
+  req_children($children);
+  dummy=assert(!is_undef($parent_parts), "Parent does not exist or does not have any parts");
+  ind = search([name], $parent_parts, 1,0)[0];
+  dummy2 = assert(ind!=[], str("Parent does not have a part named ",name));
+  $parent_geom = $parent_parts[ind][1];
+  $anchor_inside = $parent_parts[ind][2];
+  T = $parent_parts[ind][3];
+  $parent_parts = [];
+  multmatrix(T)
+    children();
+}
+
+ 
 // Section: Tagging
 
 // Module: tag()
@@ -1085,7 +1126,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
 //   This works by setting the `$tag` variable, but it provides extra error checking and
 //   handling of scopes.  You may set `$tag` directly yourself, but this is not recommended.
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   tag = tag string, which must not contain any spaces.
 // Side Effects:
@@ -1122,7 +1163,7 @@ module tag(tag)
 //   Assigns the specified tag to the children at the current level only, with tags reverting to
 //   the previous tag in force for deeper descendents.  This works using `$tag` and `$save_tag`.  
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   tag = tag string, which must not contain any spaces.
 // Side Effects:
@@ -1176,7 +1217,7 @@ module tag_this(tag)
 //   get the correct behavior, every non-attachable module needs an invocation of force_tag, even ones
 //   that are not tagged.
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic Positioning).
 // Arguments:
 //   tag = tag string, which must not contain any spaces
 // Side Effects:
@@ -1223,7 +1264,7 @@ module force_tag(tag)
 //   specified tag from a parent, which can be very confusing to a user trying to change the tag on a module.
 //   The `do_tag` parameter allows you to apply a default tag conditionally without having to repeat the children.  
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   tag = tag string, which must not contain any spaces.
 //   do_tag = if false do not set the tag.  
@@ -1348,7 +1389,7 @@ module tag_scope(scope){
 }
 
 
-// Section: Attachment Modifiers
+// Section: Tagged Operations with Attachable Objects
 
 // Module: diff()
 // Synopsis: Performs a differencing operation using tags rather than hierarchy to control what happens.
@@ -1378,7 +1419,7 @@ module tag_scope(scope){
 //   .
 //   Note that `diff()` invokes its children three times.
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   remove = String containing space delimited set of tag names of children to difference away.  Default: `"remove"`
 //   keep = String containing space delimited set of tag names of children to keep; that is, to union into the model after differencing is completed.  Default: `"keep"`
@@ -1554,7 +1595,7 @@ module diff(remove="remove", keep="keep")
 //   but if you have kept objects and want to operate on this difference object as a whole object using
 //   more tag operations, you will probably not get the results you want if you simply use {{tag()}}.
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   tag = Tag string to apply to this difference object.  Default: `""` (no tag)
 //   remove = String containing space delimited set of tag names of children to difference away.  Default: `"remove"`
@@ -1634,7 +1675,7 @@ module tag_diff(tag="",remove="remove", keep="keep")
 //   .
 //   Note that `intersect()` invokes its children three times.
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   intersect = String containing space delimited set of tag names of children to intersect.  Default: "intersect"
 //   keep = String containing space delimited set of tag names of children to keep whole.  Default: "keep"
@@ -1697,7 +1738,7 @@ module intersect(intersect="intersect",keep="keep")
 //   but if you have kept objects and want to operate on this difference object as a whole object using
 //   more tag operations, you will probably not get the results you want if you simply use {{tag()}}.
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   tag = Tag to set for the intersection.  Default: `""` (no tag)
 //   intersect = String containing space delimited set of tag names of children to intersect.  Default: "intersect"
@@ -1753,7 +1794,7 @@ module tag_intersect(tag="",intersect="intersect",keep="keep")
 //   .
 //   Note that `conv_hull()` invokes its children twice.  
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   keep = String containing space delimited set of tag names of children to keep out of the hull.  Default: "keep"
 // Example:
@@ -1792,7 +1833,7 @@ module conv_hull(keep="keep")
 //   but if you have kept objects and want to operate on the hull object as a whole object using
 //   more tag operations, you will probably not get the results you want if you simply use {{tag()}}.
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   tag = Tag string to apply to this convex hull object.  Default: `""` (no tag)
 //   keep = String containing space delimited set of tag names of children to keep out of the hull.  Default: "keep"
@@ -1839,7 +1880,7 @@ module tag_conv_hull(tag="",keep="keep")
 //   hide(tags) CHILDREN;
 // Description:
 //   Hides all attachable children with the given tags, which you supply as a space separated string. Previously hidden objects remain hidden, so hiding is cumulative, unlike `show_only()`.
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Side Effects:
 //   Sets `$tags_hidden` to include the tags you specify.
 // Example:  Hides part of the model.
@@ -1874,7 +1915,7 @@ module hide(tags)
 //   hide_this() CHILDREN;
 // Description:
 //   Hides all attachable children at the current level, while still displaying descendants.  
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Side Effects:
 //   Sets `$tag` and `$save_tag`
 // Example: Use an invisible parent to position children.  Unlike with {{hide()}} we do not need to explicitly use any tags.  
@@ -1907,7 +1948,7 @@ module hide_this()
 //   show_only(tags) CHILDREN;
 // Description:
 //   Show only the children with the listed tags, which you supply as a space separated string.  Only unhidden objects will be shown, so if an object is hidden either before or after the `show_only()` call then it will remain hidden.  This overrides any previous `show_only()` calls.  Unlike `hide()`, calls to `show_only()` are not cumulative.
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Side Effects:
 //   Sets `$tags_shown` to the tag you specify.
 // Example:  Display the attachments but not the parent
@@ -1986,7 +2027,7 @@ module show_int(tags)
 //   (Z-) shaped to be diffed away from the face of parent attachable shape.  If no tag is set then
 //   `face_mask()` sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.
 //   For details on specifying the faces to mask see [Specifying Faces](attachments.scad#subsection-specifying-faces).
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   edges = Faces to mask.  See  [Specifying Faces](attachments.scad#subsection-specifying-faces) for information on specifying faces.  Default: All faces
 // Side Effects:
@@ -2029,7 +2070,7 @@ module face_mask(faces=[LEFT,RIGHT,FRONT,BACK,BOT,TOP]) {
 //   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.  If no tag is set
 //   then `edge_mask` sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.
 //   For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Figure: A Typical Edge Rounding Mask
 //   module roundit(l,r) difference() {
 //       translate([-1,-1,-l/2])
@@ -2092,7 +2133,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 //   be differenced away.  The 3D corner mask shape should be designed to mask away the X+Y+Z+ octant.  If no tag is set
 //   then `corner_mask` sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.
 //   See [Specifying Corners](attachments.scad#subsection-specifying-corners) for information on how to specify corner sets.
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   corners = Corners to mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: All corners.
 //   except = Corners to explicitly NOT mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: No corners.
@@ -2140,7 +2181,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 //   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face. If no tag is set
 //   then `face_profile` sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.
 //   See  [Specifying Faces](attachments.scad#subsection-specifying-faces) for information on specifying faces.
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   faces = Faces to mask edges and corners of.
 //   r = Radius of corner mask.
@@ -2277,7 +2318,7 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 //   orientation and extruded length to be `diff()`ed away, to give the edges and corners a matching profile.
 //   If no tag is set then `edge_profile_asym()` sets the tag for children to "remove" so that it will work
 //   with the default {{diff()}} tag.  For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 //   .
 //   The asymmetric profiles are joined consistently at the corners.  This is impossible if all three edges at a corner use the profile, hence
 //   this situation is not permitted.  The profile orientation can be inverted using the `flip=true` parameter.
@@ -2629,7 +2670,7 @@ module edge_profile_asym(
 //   to the selected corners with the appropriate orientation. If no tag is set then `corner_profile()`
 //   sets the tag for children to "remove" so that it will work with the default {{diff()}} tag.
 //   See [Specifying Corners](attachments.scad#subsection-specifying-corners) for information on how to specify corner sets.
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 // Arguments:
 //   corners = Corners to mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: All corners.
 //   except = Corners to explicitly NOT mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: No corners.
@@ -2772,7 +2813,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   Note that anchors created by attachable() are generally intended for use by the user-supplied children of the attachable object, but they
 //   are available internally and can be used in the object's definition.  
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 //
 // Arguments:
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -3065,6 +3106,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   right(75) plug();
 
 
+
 module attachable(
     anchor, spin, orient,
     size, size2, shift,
@@ -3077,6 +3119,7 @@ module attachable(
     two_d=false,
     axis=UP,override,
     geom,
+    parts=[],
     expose_tags=false, keep_color=false
 ) {
     dummy1 =
@@ -3110,6 +3153,8 @@ module attachable(
         $attach_to   = undef;
         $anchor_override=undef;
         $attach_alignment=undef;
+        $parent_parts = parts;
+        $anchor_inside = false;
         if (expose_tags || _is_shown()){
             if (!keep_color)
                 _color($color)
@@ -3149,6 +3194,10 @@ module _show_ghost()
         }
     else _show_highlight()children();
 }
+
+
+
+function _is_geometry(entry) = is_list(entry) && is_string(entry[0]);
 
 
 // Function: reorient()
@@ -3212,7 +3261,7 @@ module _show_ghost()
 //   * Rotates this part so its anchor direction vector exactly opposes the parent's anchor direction vector.
 //   * Rotates this part so its anchor spin matches the parent's anchor spin.
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachments).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
 //
 // Arguments:
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -3538,6 +3587,49 @@ function attach_geom(
     two_d?     ["point2d", cp, offset, anchors]
     : ["point", cp, offset, anchors];
 
+
+// Function: define_part()
+// Synopsis: Creates an attachable part data structure.
+// Topics: Attachments
+// See Also: attachable()
+// Usage:
+//   part = define_part(name, geom, [inside=], [T=]);
+// Description:
+//   Create a named attachable part that can be passed in the `parts` parameter of {{attachable()}}
+//   and then selected using {{attach_part()}}.
+// Arguments:
+//   name = name of part
+//   geom = geometry of part produced by {{attach_geom()}}
+//   ---
+//   inside = if true, reverse the attachment direction for children.  Default: false
+//   T = Transformation to apply to children.  Default: IDENT
+// Example(3D): This example shows how to create a custom object with two different parts that are both transformed away from the origin.  The basic object is two cylinders with a cube shaped attachment geometry that doesn't match the object very well.  The "left" and "right" parts attach to each of the two cylinders.  
+//   module twocyl(d, sep, h, ang=20) 
+//   {
+//      parts = [
+//                define_part("left", attach_geom(r=d/2,h=h), T=left(sep/2)*yrot(-ang)),
+//                define_part("right", attach_geom(r=d/2,h=h), T=right(sep/2)*yrot(ang)),
+//              ];
+//      attachable(size=[sep+d,d,h], parts=parts){
+//        union(){
+//            left(sep/2) yrot(-ang) cyl(d=d,h=h);
+//            right(sep/2) yrot(ang) cyl(d=d,h=h);
+//        }
+//        children();
+//      }  
+//   }
+//   twocyl(d=10,sep=30,h=10){
+//     attach(TOP,TOP) cuboid(3);
+//     color("pink")attach_part("left")attach(TOP,BOT) cuboid(3);
+//     color("green")attach_part("right")attach(TOP,BOT) cuboid(3);    
+//   }
+
+function define_part(name, geom, inside=false, T=IDENT) =
+  assert(is_string(name), "name must be a string")
+  assert(_is_geometry(geom), "geometry appears invalid")
+  assert(is_bool(inside), "inside must be boolean")
+  assert(is_matrix(T,4), "T must be a 4x4 transformation matrix")
+  [name, geom, inside, T];
 
 
 
@@ -5056,7 +5148,7 @@ function _canonical_edge(edge) =
 
 // Function: parent()
 // Topics: Transforms, Attachments, Descriptions
-// See Also: restore()
+// See Also: restore(), parent_part()
 // Synopsis: Returns a description (transformation state and attachment geometry) of the parent
 // Usage:
 //   PARENT() let( desc = parent() ) CHILDREN;
@@ -5075,6 +5167,56 @@ function parent() =
         geom = default($parent_geom, attach_geom([0,0,0]))
     )                 
     [$transform, geom];
+
+
+
+// Function: parent_part()
+// Topics: Transforms, Attachments, Descriptions
+// See Also: restore(), parent()
+// Synopsis: Returns a description (transformation state and attachment geometry) of a part defined by the parent
+// Usage:
+//   PARENT() let( desc = parent_part(name) ) CHILDREN;
+// Usage: in development releases only
+//   PARENT() { desc=parent_part(name); CHILDREN; }
+// Description:
+//   Returns a description of the parent part with the specified name.  You can use this
+//   description to create new objects based on the described object or perform computations based on the described object.  You can also use it to
+//   restore the context of the parent object and transformation state using {{restore()}}.  Note that with OpenSCAD 2021.01 you need to use `let` for
+//   this function to work, and the definition of the variable is scoped to the children of the let module.
+//   (In development versions the use of let is no longer necessary.)  Note that if OpenSCAD displays any warnings
+//   related to transformation operations then the transformation that parent_part() returns is likely to be incorrect, even if OpenSCAD
+//   continues to run and produces a valid result.
+// Example(3D): This example defines an object with two parts and then uses `parent_part()` to create a {{prism_connector()}} between the two parts of the object.
+//   $fn=48;
+//   module twocyl(d, sep, h, ang=20) 
+//   {
+//      parts = [
+//                define_part("left", attach_geom(r=d/2,h=h),
+//                                    T=left(sep/2)*yrot(-ang)),
+//                define_part("right", attach_geom(r=d/2,h=h),
+//                                     T=right(sep/2)*yrot(ang)),
+//              ];
+//      attachable(size=[sep+d,d,h], parts=parts){
+//        union(){
+//            left(sep/2) yrot(-ang) cyl(d=d,h=h);
+//            right(sep/2) yrot(ang) cyl(d=d,h=h);
+//        }
+//        children();
+//      }  
+//   }
+//   twocyl(d=10,sep=20,h=10) 
+//     prism_connector(circle(r=2,$fn=32),
+//                     parent_part("left"), RIGHT,
+//                     parent_part("right"), LEFT,
+//                     fillet=1);
+
+function parent_part(name) =
+    assert(!is_undef($parent_parts), "Parent does not exist or does not have any parts")
+    let(
+        ind = search([name], $parent_parts, 1,0)[0]
+    )
+    assert(ind!=[], str("Parent does not have a part named ",name))    
+    [$transform * $parent_parts[ind][3], $parent_parts[ind][1]];
 
 
 // Module: restore()

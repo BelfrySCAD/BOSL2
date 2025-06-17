@@ -585,26 +585,35 @@ function _ceilall(data) =
 // Section: Constraints and Modulos
 
 // Function: constrain()
-// Synopsis: Returns a value constrained between `minval` and `maxval`, inclusive.
+// Synopsis: Limit (clamp) a number or array of numbers to a specified range of values.
 // Topics: Math
 // See Also: posmod(), modang()
 // Usage:
-//   val = constrain(v, minval, maxval);
+//   vals = constrain(v, minval, maxval);
 // Description:
-//   Constrains value to a range of values between minval and maxval, inclusive.
+//   Returns the value(s) in `v` limited to the range defined by `minval` and `maxval`.
+//   This operation is also known as "clamping" in other computer languages.
 // Arguments:
-//   v = value to constrain.
-//   minval = minimum value to return, if out of range.
-//   maxval = maximum value to return, if out of range.
+//   m = Value(s) to constrain. Can be a numerical value, a 1D vector, a 2D rectangular matrix, or a list of different-length vectors.
+//   minval = Minimum value to return. Set to `-INF` to unrestrict the minimum.
+//   maxval = Maximum value to return. Set to `INF` to unrestrict the maximum.
 // Example:
 //   a = constrain(-5, -1, 1);   // Returns: -1
 //   b = constrain(5, -1, 1);    // Returns: 1
 //   c = constrain(0.3, -1, 1);  // Returns: 0.3
 //   d = constrain(9.1, 0, 9);   // Returns: 9
-//   e = constrain(-0.1, 0, 9);  // Returns: 0
-function constrain(v, minval, maxval) = 
-    assert( is_finite(v+minval+maxval), "\nInput must be finite number(s).")
-    min(maxval, max(minval, v));
+//   e = constrain([1,2,3,4,5,6,7,8,9], 3, 7);          // Returns: [3,3,3,4,5,6,7,7,7]
+//   f = constrain([[1,2,3], [4,5,6], [7,8,9]], 3, 7);  // Returns: [[3,3,3], [4,5,6], [7,7,7]]
+//   g = constrain([[1,2,3,4], [5,6,7], [8,9]], 3, 7);  // Returns: [[3,3,3,4], [5,6,7], [7,7]]
+function constrain(v, minval, maxval) =
+    is_num(v) ? max(minval, min(v, maxval))
+    : is_vector(v) ? [for(f=v) max(minval, min(f, maxval))]
+    : is_matrix(v) ? let( // for a matrix, this should be more efficient than indexing
+        mflat = flatten(v),
+        clamped = [ for(f=mflat) max(minval, min(f, maxval)) ] 
+    ) list_to_matrix(clamped, len(v[0]), 0)
+    : is_list(v) ? [ for(vec=v) [ for(f=vec) max(minval, min(f, maxval)) ] ]
+    : assert(false, "\nIn constrain(), v must be a number, 1D vector, rectangular matrix, or list of vectors.");
 
 
 // Function: posmod()
