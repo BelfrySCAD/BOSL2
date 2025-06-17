@@ -3595,6 +3595,7 @@ function attach_geom(
 // Arguments:
 //   name = name of part
 //   geom = geometry of part produced by {{attach_geom()}}
+//   ---
 //   inside = if true, reverse the attachment direction for children.  Default: false
 //   T = Transformation to apply to children.  Default: IDENT
 // Example(3D): This example shows how to create a custom object with two different parts that are both transformed away from the origin.  The basic object is two cylinders with a cube shaped attachment geometry that doesn't match the object very well.  The "left" and "right" parts attach to each of the two cylinders.  
