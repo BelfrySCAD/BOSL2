@@ -3168,7 +3168,7 @@ module _show_ghost()
 //   that use the parent geometry such as {{attach()}}, {{align()}}, {{position()}} or {{parent()}}
 //   will reference the geometry for the specified part.  This allows you to access the inner wall
 //   of tubes, for example.
-//  Argument:
+// Argument:
 //   name = name of part to use for subsequent attachments.  
 // Example: This example shows attaching the light blue cube normally, on the outside of the tube, and the pink cube using the "inside" attachment part.  
 //   tube(ir1=10,ir2=20,h=20, wall=3){
