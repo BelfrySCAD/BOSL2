@@ -61,7 +61,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   - Orientation is rotating an object so that its top is pointed towards a given vector.
 //   .
 //   An object will first be translated to its anchor position, then spun, then oriented.
-//   For a detailed step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
+//   For a detailed step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Relative-Positioning).
 //   .
 //   For describing directions, faces, edges, and corners the library provides a set of shortcuts
 //   all based on combinations of unit direction vectors.  You can use these for anchoring and orienting
@@ -490,7 +490,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   PARENT() position(at) CHILDREN;
 // Description:
 //   Attaches children to a parent object at an anchor point.  For a step-by-step explanation
-//   of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
+//   of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Relative-Positioning).
 // Arguments:
 //   at = The vector, or name of the parent anchor point to attach to.
 // Side Effects:
@@ -536,7 +536,7 @@ module position(at,from)
 //   PARENT() orient(anchor, [spin]) CHILDREN;
 // Description:
 //   Orients children such that their top is tilted in the direction of the specified parent anchor point. 
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Relative-Positioning).
 // Arguments:
 //   anchor = The anchor on the parent which you want to match the orientation of.
 //   spin = The spin to add to the children.  (Overrides anchor spin.)
@@ -834,7 +834,7 @@ function _make_anchor_legal(anchor,geom) =
 //   These options will probably be necessary, in fact, to get the child correctly positioned.  Note that
 //   giving `spin=` to `attach()` in this case is the same as applying `zrot()` to the child. 
 //   .
-//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Basic-Positioning).
+//   For a step-by-step explanation of attachments, see the [Attachments Tutorial](Tutorial-Attachment-Relative-Positioning).
 // Arguments:
 //   parent = The parent anchor point to attach to or a list of parent anchor points.
 //   child = Optional child anchor point.  If given, orients the child to connect this anchor point to the parent anchor.
