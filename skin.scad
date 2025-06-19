@@ -3629,7 +3629,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   up(7)fwd(-3)right(15)cyl(d=10,h=15,texture=vnf_triangulate(tex), tex_reps=[4,2],tex_samples=5,rounding=2);
 // Subsection: Textures from Graphic Images
 //   The BOSL2 scripts folder contains three scripts for creating texture arrays from graphic images.
-//   img2scad.py is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
+//   **img2scad.py** is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
 //   **img2scad.html** contains a javascript creates a texture array from any image your browser can render.  
 //   **geotiff2scad.py** is a python script creates a texture array from geotiff depth maps.
 // .
