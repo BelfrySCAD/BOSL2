@@ -3634,7 +3634,11 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   **geotiff2scad.py** is a python script creates a texture array from geotiff depth maps.
 // .
 //   All three of these scripts place a named array in an .scad file with names specified at run time.  These files should be included in your model. 
-//      Null Test
+//   Figure(3D,Big,NoAxes,VPR=[140.9,0,345.7],VPT=[9.48289,-0.88709,5.7837],VPD=39.5401): The left shows a normal bricks_vnf texture.  The right shows a texture that was first passed through {{vnf_triangulate()}}.  Note the extra triangle artifacts visible at the ends on the brick faces.
+//   tex = texture("bricks_vnf");
+//   cyl(d=10,h=15,texture=tex, tex_reps=[4,2],tex_samples=5,rounding=2);
+//   up(7)fwd(-3)right(15)cyl(d=10,h=15,texture=vnf_triangulate(tex), tex_reps=[4,2],tex_samples=5,rounding=2);
+// Continues:
 
 
 // Function: texture()
