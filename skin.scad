@@ -3634,12 +3634,10 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   **geotiff2scad.py** is a python script creates a texture array from geotiff depth maps.
 // .
 //   All three of these scripts place a named array in an .scad file with names specified at run time.  These files should be included in your model. 
-//   Figure(3D,Big,NoAxes,VPR=[140.9,0,345.7],VPT=[9.48289,-0.88709,5.7837],VPD=39.5401): A globe made by texturing the rotate sweep of a 180 degree arc.
+//   Figure(3D,Med,NoAxes,VPR=[140.9,0,345.7],VPT=[9.48289,-0.88709,5.7837],VPD=39.5401): A globe made by texturing the rotate sweep of a 180 degree arc.
 //   include<BOSL2/examples/worldmap_360x180.scad>
 //   $fn = 288;
-//   style = "aligned";  //[orig,aligned,stagger,octa,icosa]
-//   fudge = 0.001;      //[0.001:0.001:0.01]
-//   color("blue") spheroid(20 + fudge, style = style, $fn = 180);
+//   color("blue") spheroid(20.006, style = "aligned", $fn = 180);
 //   rotate_sweep(arc(r = 20, n = 180, start = -90, angle = 180), 360, 
 //   texture = worldmap, tex_depth = 0.5, tex_reps = [1,1]);
 // Continues:
