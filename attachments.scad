@@ -1879,7 +1879,7 @@ module tag_conv_hull(tag="",keep="keep")
 //   hide(tags) CHILDREN;
 // Description:
 //   Hides all attachable children with the given tags, which you supply as a space separated string. Previously hidden objects remain hidden, so hiding is cumulative, unlike `show_only()`.
-//  For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
+//   For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
 // Side Effects:
 //   Sets `$tags_hidden` to include the tags you specify.
 // Example:  Hides part of the model.
