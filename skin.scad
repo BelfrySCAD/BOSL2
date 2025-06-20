@@ -541,6 +541,15 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   correct only for twisted objects, and corner anchors may point in unexpected directions in some cases.  These anchors also ignore any applied texture.
 //   If you need anchors directly computed from the surface you can pass the vnf from linear_sweep
 //   to {{vnf_polyhedron()}}, which computes anchors directly from the full VNF.
+//   Additional named face and edge anchors are located on the side faces and vertical edges of the prism.
+//   When you sweep a polygon you can use `EDGE(i)`, `EDGE(TOP,i)` and `EDGE(BOT,i)` as a shorthand for
+//   accessing the named edge anchors, and `FACE(i)` for the face anchors.
+//   The "edge0" anchor identifies an edge located along the X+ axis, and then edges
+//   are labeled counting up in the clockwise direction.  Similarly "face0" is the face immediately clockwise from "edge0", and face
+//   labeling proceeds clockwise.  The top and bottom edge anchors label edges directly above and below the face with the same label.
+//   When you sweep a region, the region is decomposed using {{region_parts()}} and the anchors are generated for the region components
+//   in the order produced by the decomposition, working entirely through each component and then on to the next component.  
+//   The anchors for twisted shapes may be inaccurate.
 // Arguments:
 //   region = The 2D [Region](regions.scad) or polygon that is to be extruded.
 //   h / height / l / length = The height to extrude the region.  Default: 1
@@ -574,6 +583,12 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   "origin" = Centers the extruded shape vertically only, but keeps the original path positions in the X and Y.  Oriented UP.
 //   "original_base" = Keeps the original path positions in the X and Y, but at the bottom of the extrusion.  Oriented DOWN.
 //   "original_top" = Keeps the original path positions in the X and Y, but at the top of the extrusion.  Oriented UP.
+//   "edge0", "edge1", etc. = Center of each side edge, spin pointing up along the edge.  Can access with EDGE(i)
+//   "face0", "face1", etc. = Center of each side face, spin pointing up.  Can access with FACE(i)
+//   "top_edge0", "top_edge1", etc = Center of each top edge, spin pointing clockwise (from top). Can access with EDGE(TOP,i)
+//   "bot_edge0", "bot_edge1", etc = Center of each bottom edge, spin pointing clockwise (from bottom).  Can access with EDGE(BOT,i)
+//   "top_corner0", "top_corner1", etc = Top corner, pointing in direction of associated edge anchor, spin up along associated edge
+//   "bot_corner0", "bot_corner1", etc = Bottom corner, pointing in direction of associated edge anchor, spin up along associated edge
 // Example: Extruding a Compound Region.
 //   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
 //   rgn2 = [square(30,center=false)];
@@ -743,7 +758,7 @@ module linear_sweep(
     anchor = center==true? "origin" :
         center == false? "original_base" :
         default(anchor, "original_base");
-    vnf = linear_sweep(
+    vnf_geom = linear_sweep(
         region, height=h, style=style, caps=caps, 
         twist=twist, scale=scale, shift=shift,
         texture=texture,
@@ -755,29 +770,71 @@ module linear_sweep(
         tex_depth=tex_depth,
         tex_samples=tex_samples,
         slices=slices,
-        maxseg=maxseg,
-        anchor="origin"
+        maxseg=maxseg, atype=atype, 
+        anchor="origin", _return_geom=true
     );
-    anchors = [
-        named_anchor("original_base", [0,0,-h/2], DOWN),
-        named_anchor("original_top", [0,0,h/2], UP),
-    ];
-    cp = default(cp, "centroid");
-    geom = atype=="hull"?  attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
-        atype=="intersect"?  attach_geom(cp=cp, region=region, h=h, extent=false, shift=shift, scale=scale, twist=twist, anchors=anchors) :
-        atype=="bbox"?
-            let(
-                bounds = pointlist_bounds(flatten(region)),
-                size = bounds[1] - bounds[0],
-                midpt = (bounds[0] + bounds[1])/2
-            )
-            attach_geom(cp=[0,0,0], size=point3d(size,h), offset=point3d(midpt), shift=shift, scale=scale, twist=twist, anchors=anchors) :
-        assert(in_list(atype, ["hull","intersect","bbox"]), "\nAnchor type must be \"hull\", \"intersect\", or \"bbox\".");
-    attachable(anchor,spin,orient, geom=geom) {
-        vnf_polyhedron(vnf, convexity=convexity);
+    attachable(anchor,spin,orient, geom=vnf_geom[1]) {
+        vnf_polyhedron(vnf_geom[0], convexity=convexity);
         children();
     }
 }
+
+
+function _make_all_prism_anchors(bot, top, startind=0) =
+  let(
+        facenormal= [
+                     for(i=idx(bot))
+                        let(
+                            edge0 = [top[i],bot[i]],                   // vertical edge at i
+                            edge1 = [select(top,i+1),select(bot,i+1)], // vertical edge at i+1
+                            facenormal = unit(unit(cross(edge1[1]-edge0[0], edge0[1]-edge0[0]))+
+                                              unit(cross(edge0[0]-edge1[1], edge1[0]-edge1[1])))
+                        )
+                        facenormal
+                    ],
+        anchors = [for(i=idx(bot))
+                      let(
+
+                           edge1 = [top[i],bot[i]],                   // vertical edge at i
+                           edge2 = [select(top,i+1),select(bot,i+1)], // vertical edge at i+1
+
+                           facecenter = mean(concat(edge1,edge2)),
+                           facespin = _compute_spin(facenormal[i], UP),
+
+                           side_edge_center = mean(edge1),
+                           side_edge_dir = top[i]-bot[i],
+                           side_edge_normal = unit(vector_bisect(facenormal[i],select(facenormal,i-1))),
+                           side_edge_spin = _compute_spin(side_edge_normal, side_edge_dir),
+                           side_edge_angle = 180-vector_angle(facenormal[i], select(facenormal,i-1)),
+                           side_edge_len = norm(side_edge_dir),
+
+                           top_edge_center = (edge2[0]+edge1[0])/2,
+                           top_edge_dir = edge2[0]-edge1[0],
+                           bot_edge_center = (edge1[1]+edge2[1])/2,
+                           bot_edge_dir = edge1[1]-edge2[1],
+                           topnormal = unit(facenormal[i]+UP),
+                           botnormal = unit(facenormal[i]+DOWN),
+                           topedgespin = _compute_spin(topnormal, top_edge_dir),
+                           botedgespin = _compute_spin(botnormal, bot_edge_dir),
+                           topedgeangle = 180-vector_angle(UP,facenormal[i])
+                      )
+                      each [
+                          named_anchor(str("face",i+startind), facecenter, facenormal[i], facespin),
+                          named_anchor(str("edge",i+startind), side_edge_center, side_edge_normal, side_edge_spin,
+                                       info=[["edge_angle",side_edge_angle], ["edge_length",side_edge_len]]),
+                          named_anchor(str("top_edge",i+startind), top_edge_center, topnormal, topedgespin,
+                                       info=[["edge_angle",topedgeangle],["edge_length",norm(top_edge_dir)]]),
+                          named_anchor(str("bot_edge",i+startind), bot_edge_center, botnormal, botedgespin,
+                                       info=[["edge_angle",180-topedgeangle],["edge_length",norm(bot_edge_dir)]]),
+                          named_anchor(str("top_corner",i+startind), top[i], unit(side_edge_normal+UP),
+                                       _compute_spin(unit(side_edge_normal+UP),side_edge_dir)),
+                          named_anchor(str("bot_corner",i+startind), bot[i], unit(side_edge_normal+DOWN),
+                                       _compute_spin(unit(side_edge_normal+DOWN),side_edge_dir))
+                      ]
+                  ]
+  )
+  anchors;
+
 
 
 function linear_sweep(
@@ -788,7 +845,7 @@ function linear_sweep(
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
     tex_scale, tex_depth, tex_samples, h, l, length, 
-    anchor, spin=0, orient=UP
+    anchor, spin=0, orient=UP, _return_geom=false
 ) =
     assert(num_defined([tex_reps,tex_counts])<2, "\nIn linear_sweep() the 'tex_counts' parameter has been replaced by 'tex_reps'.  You cannot give both.")
     assert(num_defined([tex_scale,tex_depth])<2, "\nIn linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
@@ -858,9 +915,20 @@ function linear_sweep(
             if (caps[0]) for (rgn = regions) vnf_from_region(rgn, down(h/2), reverse=true),
             if (caps[1]) for (rgn = trgns) vnf_from_region(rgn, up(h/2), reverse=false)
         ]),
+        regparts = flatten(regions),
+        sizes = [0,each cumsum([for(entry=regparts) len(entry)])],
+        ganchors = [
+          for(i=idx(regparts))
+            let(
+                bot = path3d(regparts[i],-h/2),
+                top = path3d(move(shift,scale(scale, zrot(-twist, regparts[i]))),h/2)
+            )
+            each _make_all_prism_anchors(bot,top, startind=sizes[i])
+        ],    
         anchors = [
             named_anchor("original_base", [0,0,-h/2], DOWN),
             named_anchor("original_top", [0,0,h/2], UP),
+            each ganchors
         ],
         cp = default(cp, "centroid"),
         geom = atype=="hull"?  attach_geom(cp=cp, region=region, h=h, extent=true, shift=shift, scale=scale, twist=twist, anchors=anchors) :
@@ -873,7 +941,7 @@ function linear_sweep(
                 )
                 attach_geom(cp=[0,0,0], size=point3d(size,h), offset=point3d(midpt), shift=shift, scale=scale, twist=twist, anchors=anchors) :
             assert(in_list(atype, ["hull","intersect","bbox"]), "\nAnchor type must be \"hull\", \"intersect\", or \"bbox\".")
-    ) reorient(anchor,spin,orient, geom=geom, p=vnf);
+    ) _return_geom ? [vnf,geom] : reorient(anchor,spin,orient, geom=geom, p=vnf);
 
 
 // Function&Module: rotate_sweep()
