@@ -3985,14 +3985,20 @@ function _find_anchor(anchor, geom)=
             axy = point2d(anch),
             bot = point3d(v_mul(point2d(size )/2, axy), -h/2),
             top = point3d(v_mul(point2d(size2)/2, axy) + shift, h/2),
+            degenerate = sum(v_abs(point2d(anch)))==1 && (point2d(bot)==[0,0] || v_mul(point2d(size2)/2, axy)==[0,0]),
             edge = top-bot,
+            other_edge = degenerate ? move(shift,mirror(axy, move(-shift,top))) - mirror(point3d(point2d(anch)), p=bot):CTR,
             pos = point3d(cp) + lerp(bot,top,u) + offset,
                // Find vectors of the faces involved in the anchor
-            facevecs = 
+            facevecs =
                 [
                     if (anch.x!=0) unit(rot(from=UP, to=[edge.x,0,max(0.01,h)], p=[axy.x,0,0]), UP),
                     if (anch.y!=0) unit(rot(from=UP, to=[0,edge.y,max(0.01,h)], p=[0,axy.y,0]), UP),
-                    if (anch.z!=0) unit([0,0,anch.z],UP)
+                    if (anch.z!=0 && !degenerate) unit([0,0,anch.z],UP),
+                    if (anch.z!=0 && degenerate && anch.y!=0)
+                       unit(rot(from=UP, to=[0,other_edge.y,max(0.01,h)], p=[0,-axy.y,0]), UP),
+                    if (anch.z!=0 && degenerate && anch.x!=0)
+                       unit(rot(from=UP, to=[other_edge.x,0,max(0.01,h)], p=[-axy.x,0,0]), UP),
                 ],
             dir = anch==CENTER? UP
                 : len(facevecs)==1? unit(facevecs[0],UP)
@@ -4031,8 +4037,8 @@ function _find_anchor(anchor, geom)=
             //     with a correction for top/bottom (anchor.z).  
             // Otherwise use the standard BACK/UP definition
             // The precomputed oang value seems to be wrong, at least when axis!=UP
-
-            spin = is_def(edgedir) && !approx(edgedir.z,0) ? _compute_spin(final_dir, edgedir * (edgedir*UP>0?1:-1))
+            spin = is_def(edgedir) && degenerate ? _compute_spin(final_dir, unit(((BACK+RIGHT)*edgedir)*edgedir))
+                 : is_def(edgedir) && !approx(edgedir.z,0) ? _compute_spin(final_dir, edgedir * (edgedir*UP>0?1:-1))
                  : is_def(edgedir) ? _compute_spin(final_dir,
                                                    edgedir * (approx(unit(cross(UP,edgedir)),unit([final_dir.x,final_dir.y,0])*anchor.z) ? 1 : -1))
                  : _compute_spin(final_dir, final_dir==DOWN || final_dir==UP ? BACK : UP)
