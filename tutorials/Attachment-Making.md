@@ -666,7 +666,7 @@ the cylinder is located relative to the part's overall geometry.
 If you create an "inside" part for a tube, the inside object will
 naturally have its anchors on the inner cylinder **pointing
 outward**.  You can anchor on the inside by setting `inside=true` when
-invoking `attach()` or `align()`, but another option set `inside=true`
-when creating the part with `define_part()`.  This cause `align()` and
+invoking `attach()` or `align()`, but another option is to set `inside=true`
+with `define_part()`.  This marks the geometry as an inside geometry, which cause `align()` and
 `attach()` to invert the meaning of the `inside` parameter so that
 objects will attach on the inside by default.
