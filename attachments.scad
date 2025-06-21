@@ -1046,6 +1046,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
             // used when attachable() places the child
             $anchor_override = all_zero(child_adjustment)? inside?child:undef
                              : child+child_adjustment;
+
             reference = two_d? BACK : UP;
             // inset_dir is the direction for insetting when alignment is in effect
             inset_dir = is_undef(align) ? CTR
@@ -1058,7 +1059,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
 
             
             spinaxis = two_d? UP : anchor_dir;
-            olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference);
+            olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference*($anchor_inside?-1:1));
             if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) 
                 translate(pos) rot(v=spinaxis,a=factor*spin) translate(olap) default_tag("remove",removetag) children();
             else  
@@ -3985,14 +3986,20 @@ function _find_anchor(anchor, geom)=
             axy = point2d(anch),
             bot = point3d(v_mul(point2d(size )/2, axy), -h/2),
             top = point3d(v_mul(point2d(size2)/2, axy) + shift, h/2),
+            degenerate = sum(v_abs(point2d(anch)))==1 && (point2d(bot)==[0,0] || v_mul(point2d(size2)/2, axy)==[0,0]),
             edge = top-bot,
+            other_edge = degenerate ? move(shift,mirror(axy, move(-shift,top))) - mirror(point3d(point2d(anch)), p=bot):CTR,
             pos = point3d(cp) + lerp(bot,top,u) + offset,
                // Find vectors of the faces involved in the anchor
-            facevecs = 
+            facevecs =
                 [
                     if (anch.x!=0) unit(rot(from=UP, to=[edge.x,0,max(0.01,h)], p=[axy.x,0,0]), UP),
                     if (anch.y!=0) unit(rot(from=UP, to=[0,edge.y,max(0.01,h)], p=[0,axy.y,0]), UP),
-                    if (anch.z!=0) unit([0,0,anch.z],UP)
+                    if (anch.z!=0 && !degenerate) unit([0,0,anch.z],UP),
+                    if (anch.z!=0 && degenerate && anch.y!=0)
+                       unit(rot(from=UP, to=[0,other_edge.y,max(0.01,h)], p=[0,-axy.y,0]), UP),
+                    if (anch.z!=0 && degenerate && anch.x!=0)
+                       unit(rot(from=UP, to=[other_edge.x,0,max(0.01,h)], p=[-axy.x,0,0]), UP),
                 ],
             dir = anch==CENTER? UP
                 : len(facevecs)==1? unit(facevecs[0],UP)
@@ -4031,8 +4038,8 @@ function _find_anchor(anchor, geom)=
             //     with a correction for top/bottom (anchor.z).  
             // Otherwise use the standard BACK/UP definition
             // The precomputed oang value seems to be wrong, at least when axis!=UP
-
-            spin = is_def(edgedir) && !approx(edgedir.z,0) ? _compute_spin(final_dir, edgedir * (edgedir*UP>0?1:-1))
+            spin = is_def(edgedir) && degenerate ? _compute_spin(final_dir, unit(((BACK+RIGHT)*edgedir)*edgedir))
+                 : is_def(edgedir) && !approx(edgedir.z,0) ? _compute_spin(final_dir, edgedir * (edgedir*UP>0?1:-1))
                  : is_def(edgedir) ? _compute_spin(final_dir,
                                                    edgedir * (approx(unit(cross(UP,edgedir)),unit([final_dir.x,final_dir.y,0])*anchor.z) ? 1 : -1))
                  : _compute_spin(final_dir, final_dir==DOWN || final_dir==UP ? BACK : UP)
@@ -4162,6 +4169,7 @@ function _find_anchor(anchor, geom)=
         let(
             vnf=geom[1],
             override = geom[2](anchor)
+            ,fd=echo(cp=cp)
         )                                                   // CENTER anchors anchor on cp, "origin" anchors on [0,0]
         approx(anchor,CTR)? [anchor, default(override[0],cp),default(override[1],UP),default(override[2], 0)] :     
         vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor,UP), 0] :
@@ -4442,15 +4450,15 @@ module show_anchors(s=10, std=true, custom=true) {
     if (std) {
         for (anchor=_standard_anchors(two_d=two_d)) {
             if(two_d) {
-                attach(anchor) anchor_arrow2d(s);
+                attach(anchor,BOT) anchor_arrow2d(s);
             } else {
-                attach(anchor) anchor_arrow(s);
+                attach(anchor,BOT) anchor_arrow(s);
             }
         }
     }
     if (custom) {
         for (anchor=last($parent_geom)) {
-            attach(anchor[0]) {
+            attach(anchor[0],BOT) {
                 if(two_d) {
                     anchor_arrow2d(s, color="cyan");
                 } else {

@@ -190,7 +190,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   );
 // Example: Roundings and Chamfers can be as large as the full size of the cuboid, so long as the edges would not interfere.
 //   cuboid([40,20,10], rounding=20, edges=[FWD+RIGHT,BACK+LEFT]);
-// Example: Standard Connectors
+// Example: Standard anchors
 //   cuboid(40) show_anchors();
 
 module cuboid(
@@ -616,6 +616,11 @@ function cuboid(
 //   The anchors on the top and bottom faces have spin pointing back.  The anchors on the side faces have spin point UP.
 //   The anchors on the top and bottom edges also have anchors that point clockwise as viewed from outside the shapep.
 //   The anchors on the side edges and the corners have spin with positive Z component, pointing along the edge where the anchor is located.
+//   A degenerate prismoid with a line segment for the top or bottom has its top or bottom edge anchors set to provide an anchor for that top
+//   or bottom edge.  So for example, if the top is `[0,10]` then the top edge is parallel to the Y axis and you can anchor to that
+//   edge using the `TOP+RIGHT` or `TOP+LEFT` anchors; these anchors point in the direction that divides the edge in half and provide
+//   the `$edge_angle` and `$edge_length` values generally provided by edge anchors.  The UP or DOWN anchor is in the same location but always points
+//   in the Z direction and provides no edge data. 
 // Arguments:
 //   size1 = [width, length] of the bottom end of the prism.
 //   size2 = [width, length] of the top end of the prism.
@@ -689,9 +694,14 @@ function cuboid(
 //           mask2d_roundover(h=5,mask_angle=$edge_angle);
 //       }
 //   }
-// Example(Spin,VPD=160,VPT=[0,0,10]): Standard Connectors
+// Example(Spin,VPD=160,VPT=[0,0,10]): Standard anchors
 //   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5])
 //       show_anchors();
+// Example(3D): When the top or bottom is degenerate, you can anchor to and round the degenerate edge by using either one of the edge anchors that correspond to that edge.  But note that {{edge_profile()}} does not work for this degenerate case.  We used `TOP+RIGHT` below as the anchor point, but `TOP+LEFT` will produce an identical result.   
+//   diff()
+//   prismoid([10,14],[0,8], shift=[4,3], h=7)
+//     attach(TOP+RIGHT, FWD+LEFT, inside=true)
+//       rounding_edge_mask(r=2,l=$edge_length+6);
 
 module prismoid(
     size1=undef, size2=undef, h, shift=[undef,undef],
@@ -841,8 +851,7 @@ function prismoid(
 //   being located at the bottom of the shape, so confirm anchor positions before use.  
 //   Additional named face and edge anchors are located on the side faces and vertical edges of the prism.
 //   You can use `EDGE(i)`, `EDGE(TOP,i)` and `EDGE(BOT,i)` as a shorthand for accessing the named edge anchors, and `FACE(i)` for the face anchors.
-//   When you use `shift`, which moves the top face of the prism, the spin for the side face and edges anchors will align
-//   the child with the edge or face direction.  The "edge0" anchor identifies an edge located along the X+ axis, and then edges
+//   The "edge0" anchor identifies an edge located along the X+ axis, and then edges
 //   are labeled counting up in the clockwise direction.  Similarly "face0" is the face immediately clockwise from "edge0", and face
 //   labeling proceeds clockwise.  The top and bottom edge anchors label edges directly above and below the face with the same label.
 //   If you set `realign=true` then "face0" is oriented in the X+ direction.  
@@ -1753,6 +1762,7 @@ function rect_tube(
 //   "hypot" = Center of angled wedge face, perpendicular to that face.
 //   "hypot_left" = Left side of angled wedge face, bisecting the angle between the left side and angled faces.
 //   "hypot_right" = Right side of angled wedge face, bisecting the angle between the right side and angled faces.
+//   "top_edge" = Top edge anchor which, unlike the UP anchor, points in direction that bisects the edge, and provides `$edge_length` and `$edge_angle`.  
 //
 // Example: Centered
 //   wedge([20, 40, 15], center=true);
@@ -1766,6 +1776,11 @@ function rect_tube(
 // Example(3D,Med,VPR=[55.00,0.00,25.00],VPD=151.98,VPT=[2.30,-11.81,-5.66]): Named Anchors
 //   wedge([40, 80, 30], center=true)
 //       show_anchors(std=false);
+// Example(3D): Rounding the top of the wedge using the "top_edge" anchor
+//   diff()
+//     wedge([10,15,7])
+//       attach("top_edge", FWD+LEFT, inside=true)
+//       rounding_edge_mask(r=2, l=$edge_length+1);
 
 module wedge(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
 {
@@ -1778,10 +1793,13 @@ module wedge(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
     left_dir = unit(hypot_dir+LEFT);
     right_dir = unit(hypot_dir+RIGHT);
     hedge_spin=vector_angle(spindir,rot(from=UP,to=left_dir, p=BACK));
+    topedge_dir = [0, each unit(unit([size.z,size.y])+[-1,0])];
     anchors = [
         named_anchor("hypot", CTR, hypot_dir, 180),
         named_anchor("hypot_left", [-size.x/2,0,0], left_dir,-hedge_spin),
         named_anchor("hypot_right", [size.x/2,0,0], right_dir,hedge_spin),
+        named_anchor("top_edge", [0,-size.y/2,size.z/2], topedge_dir, _compute_spin(topedge_dir,RIGHT),
+                     info=[["edge_angle",atan2(size.y,size.z)],["edge_length",size.x]])
     ];
     attachable(anchor,spin,orient, size=size, anchors=anchors) {
         if (size.z > 0) {
@@ -1811,10 +1829,13 @@ function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
         left_dir = unit(hypot_dir+LEFT),
         right_dir = unit(hypot_dir+RIGHT),
         hedge_spin=vector_angle(spindir,rot(from=UP,to=left_dir, p=BACK)),
+        topedge_dir = [0, each unit(unit([size.z,size.y])+[-1,0])],
         anchors = [
             named_anchor("hypot", CTR, hypot_dir, 180),
             named_anchor("hypot_left", [-size.x/2,0,0], left_dir,-hedge_spin),
             named_anchor("hypot_right", [size.x/2,0,0], right_dir,hedge_spin),
+            named_anchor("top_edge", [0,-size.y/2,size.z/2], topedge_dir, _compute_spin(topedge_dir,RIGHT),
+                         info=[["edge_angle",atan2(size.y,size.z)],["edge_length",size.x]])
         ]
     )
     reorient(anchor,spin,orient, size=size, anchors=anchors, p=vnf);

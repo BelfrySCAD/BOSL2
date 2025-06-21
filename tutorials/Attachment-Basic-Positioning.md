@@ -1,3 +1,5 @@
+[Previous: Attachments Overview](Tutorial-Attachment-Overview)
+
 # Basic Object Positioning: Anchor, Spin and Orient
 
 When you create attachable objects using BOSL2 you have some options
@@ -320,3 +322,5 @@ For 2D shapes, you can mix `anchor=` with `spin=`, but not with `orient=`.
 include <BOSL2/std.scad>
 square([40,30], anchor=BACK+LEFT, spin=30);
 ```
+
+[Next: Relative Positioning of Children](Tutorial-Attachment-Relative-Positioning)

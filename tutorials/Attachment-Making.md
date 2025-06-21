@@ -1,3 +1,5 @@
+[Prev: Edge Profiling with Attachment](Tutorial-Attachment-Edge-Profiling)
+
 # Making Attachables
 
 To make a shape attachable, you just need to wrap it with an `attachable()` module with a
@@ -531,3 +533,140 @@ module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
 }
 cubic_barbell(100) show_anchors(30);
 ```
+
+## Making Gometry With attach_geom()
+
+Sometimes it may be advantageous to create the attachable geometry as
+a data structure.  This can be particularly useful if you want to
+implement anchor types with an object, because it allows for an easy
+way to create different anchor options without having to repeat code.
+
+Suppose we create a simple tetrahedron object:
+
+```openscad-3D
+include<BOSL2/std.scad>
+module tetrahedron(base, height, spin=0, anchor=FWD+LEFT+BOT, orient=UP)
+{
+   base_poly = path3d([[0,0],[0,base],[base,0]]);
+   top = [0,0,height];
+   vnf = vnf_vertex_array([base_poly, repeat(top,3)],col_wrap=true,cap1=true);
+   attachable(anchor=anchor,orient=orient,spin=spin,vnf=vnf,cp="centroid"){
+     vnf_polyhedron(vnf);
+     children();
+   }
+}   
+tetrahedron(20,18) show_anchors();
+```
+
+For this module we have used VNF anchors, but this tetrahedron is the
+corner of a cuboid, so maybe sometimes you prefer to use anchors
+based on the corresponding cuboid (its bounding box).  You can create a module with bounding
+box anchors like this, where we have explicitly centered the VNF
+to make it work with the prismoid type anchoring:
+
+```openscad-3D
+include<BOSL2/std.scad>
+module tetrahedron(base, height, spin=0, anchor=FWD+LEFT+BOT, orient=UP)
+{
+   base_poly = path3d([[0,0],[0,base],[base,0]]);
+   top = [0,0,height];
+   vnf = move([-base/2,-base/2,-height/2],
+              vnf_vertex_array([base_poly, repeat(top,3)],col_wrap=true,cap1=true));
+   attachable(anchor=anchor,orient=orient,spin=spin,size=[base,base,height]){
+     vnf_polyhedron(vnf);
+     children();
+   }
+}   
+tetrahedron(20,18) show_anchors();
+```
+
+The arguments needed to attachable are different in this case.  If you
+want to conditionally switch between these two modes of operation,
+this presents a complication.  While it is possible to work around
+this by conditionally setting parameters to `undef`, the resulting
+code will be more complex and harder to read.  A better solution is to
+compute the geometry conditionally.  Then the geometry can be passed
+to `attachable()`.
+
+```openscad-3D;Big
+include<BOSL2/std.scad>
+module tetrahedron(base, height, atype="vnf", spin=0, anchor=FWD+LEFT+BOT, orient=UP)
+{
+   assert(atype=="vnf" || atype=="box");
+   base_poly = path3d([[0,0],[0,base],[base,0]]);
+   top = [0,0,height];
+   vnf = move([-base/2,-base/2,-height/2],
+              vnf_vertex_array([base_poly, repeat(top,3)],col_wrap=true,cap1=true));
+   geom = atype=="vnf" ? attach_geom(vnf=vnf,cp="centroid")
+                       : attach_geom(size=[base,base,height]);
+   attachable(anchor=anchor,orient=orient,spin=spin,geom=geom){
+     vnf_polyhedron(vnf);
+     children();
+   }
+}   
+tetrahedron(20,18,atype="vnf")
+  color("green")attach(TOP,BOT) cuboid(4);
+right(25)
+  tetrahedron(20,18,atype="box")
+    color("lightblue")attach(TOP,BOT) cuboid(4);
+```
+
+Here we have created an `atype` argument that accepts two attachment
+types and we compute the geometry conditionally based on the atype
+setting.  We can then invoke `attachable()` once with the `geom`
+parameter to specify the geometry.  
+
+
+## Creating Attachable Parts
+
+If your object has multiple distinct parts you may wish to create
+attachble parts for your object.  In the library, `tube()` create
+an attachable part called "inside" that lets you attach to the inside
+of the tube.
+
+Below we create an example where an object is made from two
+cylindrical parts, and we want to be able to attach to either
+one.  In order to create attchable parts you must pass a list of the parts
+to `attachable()`.  You create a part using the `define_part()`
+function which requires the part's name and its geometry.  You can
+optionally provide a transformation using the `T=` parameter and give
+a flat with the `inside=` parameter.  
+
+```openscad-3D;Big
+include<BOSL2/std.scad>
+module twocyl(d1, d2, sep, h, ang=20) 
+{
+   parts = [
+             define_part("left", attach_geom(r=d1/2,h=h),
+                                 T=left(sep/2)*yrot(-ang)),
+             define_part("right", attach_geom(r=d2/2,h=h),
+                                  T=right(sep/2)*yrot(ang)),
+           ];
+   attachable(size=[sep+d1/2+d2/2,max(d1,d2),h], parts=parts){
+     union(){
+         left(sep/2) yrot(-ang) cyl(d=d1,h=h);
+         right(sep/2) yrot(ang) cyl(d=d2,h=h);
+     }
+     children();
+   }  
+}
+twocyl(d1=10,d2=13,sep=20,h=10){
+  attach_part("left") attach(FWD,BOT)
+     color("lightblue") cuboid(3);
+  attach_part("right") attach(RIGHT,BOT)
+     color("green") cuboid(3);
+}  
+```
+
+In the above example we create a parts list containing two parts named
+"left" and "right".  Each part has its own geometry corresponding to
+the size of the cylinder, and it has a transformation specifying where
+the cylinder is located relative to the part's overall geometry.
+
+If you create an "inside" part for a tube, the inside object will
+naturally have its anchors on the inner cylinder **pointing
+outward**.  You can anchor on the inside by setting `inside=true` when
+invoking `attach()` or `align()`, but another option is to set `inside=true`
+with `define_part()`.  This marks the geometry as an inside geometry, which cause `align()` and
+`attach()` to invert the meaning of the `inside` parameter so that
+objects will attach on the inside by default.

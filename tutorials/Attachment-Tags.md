@@ -1,3 +1,5 @@
+[Prev: Using Color with Attachments](Tutorial-Attachment-Color)
+
 # Tagged Operations
 
 BOSL2 introduces the concept of tags.  Tags are names that can be given to attachables, so that
@@ -183,3 +185,5 @@ cube(50, center=true) {
     tag("keep")xcyl(h=100, d=20);
 }
 ```
+
+[Next: Edge Profiling with Attachment](Tutorial-Attachment-Edge-Profiling)

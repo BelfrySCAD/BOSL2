@@ -1082,7 +1082,7 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 function mirror(v, p=_NO_ARG) =
     assert(is_vector(v))
     assert(p==_NO_ARG || is_list(p),"Invalid pointlist")
-    let(m = len(v)==2? affine2d_mirror(v) : affine3d_mirror(v))
+    let(m = affine3d_mirror(v))
     p==_NO_ARG? m : apply(m,p);
 
 

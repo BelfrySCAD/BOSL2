@@ -577,14 +577,14 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpa
     move(vec) {
         $idx = 0;
         intersection() {
-            children();
+            if ($children>0) children();
             partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, cutpath_centered=cutpath_centered, spin=spin);
         }
     }
     move(-vec) {
         $idx = 1;
         intersection() {
-            children();
+            if ($children>0) children();
             partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, cutpath_centered=cutpath_centered, inverse=true, spin=spin);
         }
     }

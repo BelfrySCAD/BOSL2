@@ -1,3 +1,5 @@
+[Prev: Basic Positioning](Tutorial-Attachment-Basic-Positioning)
+
 # Relative Positioning: Placing Children using position(), align(), and attach()
 
 Relative positioning is one of the most useful and powerful features
@@ -17,3 +19,5 @@ Relative positioning means that since objects are positioned relative
 to other objects, you do not need to keep track of absolute positions
 and orientations of objects in your model.  This makes models simpler,
 more intuitive, and easier to maintain.
+
+[Next: Using position()](Tutorial-Attachment-Position)
