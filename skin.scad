@@ -861,60 +861,60 @@ function linear_sweep(
     assert(is_vector(shift, 2), str(shift))
     assert(is_bool(caps) || is_bool_list(caps,2), "\ncaps must be boolean or a list of two booleans.")
     let(
-        h = one_defined([h, height,l,length],"h,height,l,length",dflt=1)
-    )
-    !is_undef(texture)? _textured_linear_sweep(
-        region, h=h, caps=caps, 
-        texture=texture, tex_size=tex_size,
-        counts=tex_reps, inset=tex_inset,
-        rot=tex_rot, tex_scale=tex_depth,
-        twist=twist, scale=scale, shift=shift,
-        style=style, samples=tex_samples,
-        anchor=anchor, spin=spin, orient=orient
-    ) :
-    let(
-        caps = is_bool(caps) ? [caps,caps] : caps, 
-        anchor = center==true? "origin" :
-            center == false? "original_base" :
-            default(anchor, "original_base"),
+        h = one_defined([h, height,l,length],"h,height,l,length",dflt=1),
         regions = region_parts(region),
-        slices = default(slices, max(1,ceil(abs(twist)/5))),
-        scale = is_num(scale)? [scale,scale] : point2d(scale),
-        topmat = move(shift) * scale(scale) * rot(-twist),
-        trgns = [
-            for (rgn = regions) [
-                for (path = rgn) let(
-                    p = list_unwrap(path),
-                    path = is_undef(maxseg)? p : [
-                        for (seg = pair(p,true)) each
-                        let( steps = ceil(norm(seg.y - seg.x) / maxseg) )
-                        lerpn(seg.x, seg.y, steps, false)
-                    ]
-                ) apply(topmat, path)
-            ]
-        ],
-        vnf = vnf_join([
-            for (rgn = regions)
-            for (pathnum = idx(rgn)) let(
-                p = list_unwrap(rgn[pathnum]),
-                path = is_undef(maxseg)? p : [
-                    for (seg=pair(p,true)) each
-                    let(steps=ceil(norm(seg.y-seg.x)/maxseg))
-                    lerpn(seg.x, seg.y, steps, false)
-                ],
-                verts = [
-                    for (i=[0:1:slices]) let(
-                        u = i / slices,
-                        scl = lerp([1,1], scale, u),
-                        ang = lerp(0, -twist, u),
-                        off = lerp([0,0,-h/2], point3d(shift,h/2), u),
-                        m = move(off) * scale(scl) * rot(ang)
-                    ) apply(m, path3d(path))
-                ]
-            ) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
-            if (caps[0]) for (rgn = regions) vnf_from_region(rgn, down(h/2), reverse=true),
-            if (caps[1]) for (rgn = trgns) vnf_from_region(rgn, up(h/2), reverse=false)
-        ]),
+        vnf = !is_undef(texture)?
+                        _textured_linear_sweep(
+                                               region, h=h, caps=caps, 
+                                               texture=texture, tex_size=tex_size,
+                                               counts=tex_reps, inset=tex_inset,
+                                               rot=tex_rot, tex_scale=tex_depth,
+                                               twist=twist, scale=scale, shift=shift,
+                                               style=style, samples=tex_samples)
+            : let(
+                  caps = is_bool(caps) ? [caps,caps] : caps, 
+                  anchor = center==true? "origin" :
+                      center == false? "original_base" :
+                      default(anchor, "original_base"),
+                  slices = default(slices, max(1,ceil(abs(twist)/5))),
+                  scale = is_num(scale)? [scale,scale] : point2d(scale),
+                  topmat = move(shift) * scale(scale) * rot(-twist),
+                  trgns = [
+                      for (rgn = regions) [
+                          for (path = rgn) let(
+                              p = list_unwrap(path),
+                              path = is_undef(maxseg)? p : [
+                                  for (seg = pair(p,true)) each
+                                  let( steps = ceil(norm(seg.y - seg.x) / maxseg) )
+                                  lerpn(seg.x, seg.y, steps, false)
+                              ]
+                          ) apply(topmat, path)
+                      ]
+                  ],        
+                  vnf = vnf_join([
+                      for (rgn = regions)
+                      for (pathnum = idx(rgn)) let(
+                          p = list_unwrap(rgn[pathnum]),
+                          path = is_undef(maxseg)? p : [
+                              for (seg=pair(p,true)) each
+                              let(steps=ceil(norm(seg.y-seg.x)/maxseg))
+                              lerpn(seg.x, seg.y, steps, false)
+                          ],
+                          verts = [
+                              for (i=[0:1:slices]) let(
+                                  u = i / slices,
+                                  scl = lerp([1,1], scale, u),
+                                  ang = lerp(0, -twist, u),
+                                  off = lerp([0,0,-h/2], point3d(shift,h/2), u),
+                                  m = move(off) * scale(scl) * rot(ang)
+                              ) apply(m, path3d(path))
+                          ]
+                      ) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
+                      if (caps[0]) for (rgn = regions) vnf_from_region(rgn, down(h/2), reverse=true),
+                      if (caps[1]) for (rgn = trgns) vnf_from_region(rgn, up(h/2), reverse=false)
+                  ])
+              )
+              vnf,
         regparts = flatten(regions),
         sizes = [0,each cumsum([for(entry=regparts) len(entry)])],
         ganchors = [
