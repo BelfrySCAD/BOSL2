@@ -1046,6 +1046,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
             // used when attachable() places the child
             $anchor_override = all_zero(child_adjustment)? inside?child:undef
                              : child+child_adjustment;
+
             reference = two_d? BACK : UP;
             // inset_dir is the direction for insetting when alignment is in effect
             inset_dir = is_undef(align) ? CTR
@@ -1058,7 +1059,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
 
             
             spinaxis = two_d? UP : anchor_dir;
-            olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference);
+            olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference*($anchor_inside?-1:1));
             if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) 
                 translate(pos) rot(v=spinaxis,a=factor*spin) translate(olap) default_tag("remove",removetag) children();
             else  
@@ -4168,6 +4169,7 @@ function _find_anchor(anchor, geom)=
         let(
             vnf=geom[1],
             override = geom[2](anchor)
+            ,fd=echo(cp=cp)
         )                                                   // CENTER anchors anchor on cp, "origin" anchors on [0,0]
         approx(anchor,CTR)? [anchor, default(override[0],cp),default(override[1],UP),default(override[2], 0)] :     
         vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor,UP), 0] :
@@ -4448,15 +4450,15 @@ module show_anchors(s=10, std=true, custom=true) {
     if (std) {
         for (anchor=_standard_anchors(two_d=two_d)) {
             if(two_d) {
-                attach(anchor) anchor_arrow2d(s);
+                attach(anchor,BOT) anchor_arrow2d(s);
             } else {
-                attach(anchor) anchor_arrow(s);
+                attach(anchor,BOT) anchor_arrow(s);
             }
         }
     }
     if (custom) {
         for (anchor=last($parent_geom)) {
-            attach(anchor[0]) {
+            attach(anchor[0],BOT) {
                 if(two_d) {
                     anchor_arrow2d(s, color="cyan");
                 } else {

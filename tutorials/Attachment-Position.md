@@ -1,3 +1,5 @@
+[Previous: Relative Positioning of Children](Tutorial-Attachment-Relative-Positioning)
+
 # Placing Children using position()
 
 If you make an object a child of another object then the child object
@@ -203,3 +205,5 @@ prismoid([50,50],[30,30],h=40)
      orient(RIGHT)
         anchor_arrow(40);
 ```
+
+[Next: Using align()](Tutorial-Attachment-Align)

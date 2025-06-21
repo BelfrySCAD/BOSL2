@@ -1,3 +1,5 @@
+[Previous: Using position()](Tutorial-Attachment-Position)
+
 # Aligning children with align()
 
 You may have noticed that with position() and orient(), specifying the
@@ -125,3 +127,5 @@ cyl(h=20,d=10,$fn=128)
   align([1,.3],TOP)
     color("lightblue")cuboid(5);
 ```
+
+[Next: Using attach()](Tutorial-Attachment-Attach)

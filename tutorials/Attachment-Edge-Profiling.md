@@ -1,3 +1,5 @@
+[Prev: Tagged Operations with Attachments](Tutorial-Attachment-Tags)
+
 # Using Attachment for Edge Profiling
 
 You can use attachment in various ways to create edge profiles on
@@ -163,4 +165,4 @@ cube([50,60,70],center=true)
        mask2d_roundover(10);
 ```
 
-
+[Next: Making Attachable Objects](Tutorial-Attachment-Making)

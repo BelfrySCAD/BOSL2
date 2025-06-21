@@ -24,4 +24,6 @@ tutorial.  The non-attachables are `polyhedron()`, `linear_extrude()`,
 Some of these have attachable alternatives: `vnf_polyhedron()`,
 `linear_sweep()`, `rotate_sweep()`, and `region()`.  
 
+[Next: Basic Positioning](Tutorial-Attachment-Basic-Positioning)
+
 

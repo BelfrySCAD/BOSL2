@@ -1,3 +1,5 @@
+[Prev: Attachable Parts](Tutorial-Attachment-Parts)
+
 ## Coloring Attachables
 Usually, when coloring a shape with the `color()` module, the parent color overrides the colors of
 all children.  This is often not what you want:
@@ -57,3 +59,5 @@ affecting its descendents.
 As with all of the attachable features, these color, highlight and ghost modules only work
 on attachable objects, so they will have no effect on objects you
 create using `linear_extrude()` or `rotate_extrude()`.  
+
+[Next: Tagged Operations with Attachments](Tutorial-Attachment-Tags)
