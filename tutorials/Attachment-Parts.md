@@ -1,3 +1,5 @@
+[Prev: Using attach()](Tutorial-Attachment-Attach)
+
 # Attachment Parts
 
 Some objects provide named attachable parts that you can select
@@ -10,13 +12,12 @@ Here is a tube with its anchors shown:
 include<BOSL2/std.scad>
 tube(id=20,h=15,wall=3)
   show_anchors();
-```  
+```
 
 The anchors are all on the outside wall of the tube and give you no
 method for placing a child **inside** the tube.  In order to attach
 inside the tube, we select the "inside" part using the `attach_part()`
 module.
-
 
 ```openscad-3D
 include<BOSL2/std.scad>
@@ -24,7 +25,7 @@ tube(id=20,h=15,wall=3)
   attach_part("inside")
     align(BACK,TOP)
       color("lightblue") cuboid(4);
-```  
+```
 
 Now when we align the cube to the BACK wall of the tube it appears on
 the inside of the tube.  If you need to attach to both the inside and
@@ -46,5 +47,4 @@ tube(id=20,h=15,wall=3){
 }
 ```
 
-
-
+[Next: Using Color with Attachments](Tutorial-Attachment-Color)
