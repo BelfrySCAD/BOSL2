@@ -625,8 +625,8 @@ an attachable part called "inside" that lets you attach to the inside
 of the tube.
 
 Below we create an example where an object is made from two
-cylindrical parts, and we want to be able to attach to either one.  
-In order to create attchable parts you must pass a list of the parts
+cylindrical parts, and we want to be able to attach to either
+one.  In order to create attchable parts you must pass a list of the parts
 to `attachable()`.  You create a part using the `define_part()`
 function which requires the part's name and its geometry.  You can
 optionally provide a transformation using the `T=` parameter and give
