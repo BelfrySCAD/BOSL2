@@ -1,3 +1,5 @@
+[Prev: Using align()](Tutorial-Attachment-Align)
+
 # Attachment using attach()
 
 The `attach()` module can stick the child object to the parent object
@@ -674,3 +676,5 @@ circle(d=50){
         trapezoid(w1=30,w2=0,h=30);
 }        
 ```
+
+[Next: Attachable Parts](Tutorial-Attachment-Parts)
