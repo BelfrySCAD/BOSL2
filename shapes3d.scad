@@ -851,8 +851,7 @@ function prismoid(
 //   being located at the bottom of the shape, so confirm anchor positions before use.  
 //   Additional named face and edge anchors are located on the side faces and vertical edges of the prism.
 //   You can use `EDGE(i)`, `EDGE(TOP,i)` and `EDGE(BOT,i)` as a shorthand for accessing the named edge anchors, and `FACE(i)` for the face anchors.
-//   When you use `shift`, which moves the top face of the prism, the spin for the side face and edges anchors will align
-//   the child with the edge or face direction.  The "edge0" anchor identifies an edge located along the X+ axis, and then edges
+//   The "edge0" anchor identifies an edge located along the X+ axis, and then edges
 //   are labeled counting up in the clockwise direction.  Similarly "face0" is the face immediately clockwise from "edge0", and face
 //   labeling proceeds clockwise.  The top and bottom edge anchors label edges directly above and below the face with the same label.
 //   If you set `realign=true` then "face0" is oriented in the X+ direction.  

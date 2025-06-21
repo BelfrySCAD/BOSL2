@@ -4145,7 +4145,9 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   The prism will connect anchor points described by the two descriptions you supply.  The supported object
 //   types are prismoids, VNFs, cylinders, spheres, and linear sweeps.  For prismoids and VNFs you can use any anchor on a face
 //   or edge anchors that include edge geometry.  For spheres you can use any anchor.  In the case of cylinders and linear sweeps you can
-//   attach to the flat top or bottom in any case, but for side attachments, the shape must not have scaling (so it cannot
+//   attach to the flat top or bottom, or to named face anchors in any case.  When you do this, the attachment is treated as an infinite plane.
+//   You can attach to the side of the extrusion and follow the shape of the extrusion using the standard anchors only, but the
+//   shape must not have scaling (so it cannot
 //   be conical) and it must not have any shift.  Only right angle cylinders and extrusions are supported.
 //   Anchors on the top and bottom edges are also not supported.  When connecting to an extrusion the selected anchor
 //   point must lie on the surface of the shape.  This may requires setting `atype="intersect"` when creating the extrusion.
@@ -4479,7 +4481,7 @@ function _get_obj_type(ind,geom,anchor,prof) =
                                 )
                                 [[x,-y],[0,0], [x,y]]
    : starts_with(geom[0], "extrusion") ?
-                   anchor==UP || anchor==DOWN ? "plane"
+                   anchor==UP || anchor==DOWN || starts_with(anchor,"face") ? "plane"
                  :
                    assert(geom[3]==0, str("Extrusion in desc", ind, " has nonzero twist, which is not supported."))
                    assert(geom[5]==[0,0], str("Extrusion in desc", ind, " has nonzero shift, which is not supported."))
