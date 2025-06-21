@@ -558,10 +558,10 @@ module tetrahedron(base, height, spin=0, anchor=FWD+LEFT+BOT, orient=UP)
 tetrahedron(20,18) show_anchors();
 ```
 
-For this module we have used VNF anchors, but this tetrahedron is half
-related to a cuboid, so maybe sometimes you prefer to use anchors
-based on the bounding box.  You could create a module with bounding
-box anchors like this, where we have had to explicitly center the VNF
+For this module we have used VNF anchors, but this tetrahedron is the
+corner of a cuboid, so maybe sometimes you prefer to use anchors
+based on the corresponding cuboid (its bounding box).  You can create a module with bounding
+box anchors like this, where we have explicitly centered the VNF
 to make it work with the prismoid type anchoring:
 
 ```openscad-3D
@@ -625,8 +625,8 @@ an attachable part called "inside" that lets you attach to the inside
 of the tube.
 
 Below we create an example where an object is made from two
-cylindrical parts, and we want to be able to attach to either one.  
-In order to create attchable parts you must pass a list of the parts
+cylindrical parts, and we want to be able to attach to either
+one.  In order to create attchable parts you must pass a list of the parts
 to `attachable()`.  You create a part using the `define_part()`
 function which requires the part's name and its geometry.  You can
 optionally provide a transformation using the `T=` parameter and give
@@ -666,7 +666,7 @@ the cylinder is located relative to the part's overall geometry.
 If you create an "inside" part for a tube, the inside object will
 naturally have its anchors on the inner cylinder **pointing
 outward**.  You can anchor on the inside by setting `inside=true` when
-invoking `attach()` or `align()`, but another option set `inside=true`
-when creating the part with `define_part()`.  This cause `align()` and
+invoking `attach()` or `align()`, but another option is to set `inside=true`
+with `define_part()`.  This marks the geometry as an inside geometry, which cause `align()` and
 `attach()` to invert the meaning of the `inside` parameter so that
 objects will attach on the inside by default.
