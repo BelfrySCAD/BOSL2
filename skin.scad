@@ -3458,10 +3458,6 @@ function associate_vertices(polygons, split, curpoly=0) =
     )
    associate_vertices(newpoly, split, curpoly+1);
 
-
-
-
-
 // Section: Texturing
 //   Some operations are able to add texture to the objects they create.  A texture can be any regularly repeated variation in the height of the surface.
 //   To define a texture you need to specify how the height should vary over a rectangular block that is repeated to tile the object.  Because textures
@@ -3543,12 +3539,15 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   dots together.  But in 3D example we need to triangulate the points on a grid, and this triangulation is not unique.
 //   The `style` argument lets you specify how the points are triangulated using the styles supported by {{vnf_vertex_array()}}.
 //   In the example below we have expanded the 2D example into 3D:
+//   
 //   ```openscad
 //       [[0,0,0,0],
 //        [0,1,1,0],
 //        [0,1,1,0],
 //        [0,0,0,0]]
 //   ```
+//
+// Continues:
 //   and we show the 3D triangulations produced by the different styles:
 // Figure(3D,Big,NoAxes,VPR=[45.5,0,18.2],VPT=[2.3442,-6.25815,3.91529],VPD=35.5861):
 //   tex = [
@@ -3623,7 +3622,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   extra points can be introduced in the interior of faces leading to unexpected irregularities in the textures, which appear
 //   as extra triangles.  These artifacts can be minimized by making the VNF texture's faces as large as possible rather than using
 //   a triangulated VNF, but depending on the specific VNF texture, it may be impossible to entirely eliminate them.
-// Figure(3D,Big,NoAxes,VPR=[140.9,0,345.7],VPT=[9.48289,-0.88709,5.7837],VPD=39.5401): The left shows a normal bricks_vnf texture.  The right shows a texture that was first passed through {{vnf_triangulate()}}.  Note the extra triangle artifacts visible at the ends on the brick faces.
+// Figure(3D,Med,NoAxes,VPR=[140.9,0,345.7],VPT=[9.48289,-0.88709,5.7837],VPD=39.5401): The left shows a normal bricks_vnf texture.  The right shows a texture that was first passed through {{vnf_triangulate()}}.  Note the extra triangle artifacts visible at the ends on the brick faces.
 //   tex = texture("bricks_vnf");
 //   cyl(d=10,h=15,texture=tex, tex_reps=[4,2],tex_samples=5,rounding=2);
 //   up(7)fwd(-3)right(15)cyl(d=10,h=15,texture=vnf_triangulate(tex), tex_reps=[4,2],tex_samples=5,rounding=2);
@@ -3632,18 +3631,18 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   **img2scad.py** is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
 //   **img2scad.html** contains a javascript creates a texture array from any image your browser can render.  
 //   **geotiff2scad.py** is a python script creates a texture array from geotiff depth maps.
-// .
-//   All three of these scripts place a named array in an .scad file with names specified at run time.  These files should be included in your model. 
-//   Figure(3D,Med,NoAxes): On the left the `tex_samples` value is small and the texture is blocky.  On the right, the default value of 8 allows a reasonable fit to the cylinder. 
-//   xdistribute(spacing=5){
-//      cyl(d=10/PI, h=5, chamfer=0,
-//         texture=texture("bricks_vnf"), tex_samples=1, tex_reps=[6,3], tex_depth=.2);
-//      cyl(d=10/PI, h=5, chamfer=0,
-//         texture=texture("bricks_vnf"), tex_samples=8, tex_reps=[6,3], tex_depth=.2);
-//   }
+//   .
+//   Each of these scripts places a named array in an .scad file with names specified at run time.  Use include<> to add the array to your model. 
+//   .
+//   This is some text before the test image.
+//   .
+//   Here is a globe created using geotiff2scad.py to generate the texture array.
+//
+//   ![Geotiff Example](images/skin/globe_animation.png)
+//   <img align="left" alt="Geotiff Example" src="images/skin/globe_animation.png" width="320" height="240">
+//
 // Continues:
-
-
+//   This is some text after the test image. 
 // Function: texture()
 // Topics: Textures, Knurling
 // Synopsis: Produce a standard texture. 
