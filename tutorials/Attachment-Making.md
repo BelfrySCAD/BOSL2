@@ -558,10 +558,10 @@ module tetrahedron(base, height, spin=0, anchor=FWD+LEFT+BOT, orient=UP)
 tetrahedron(20,18) show_anchors();
 ```
 
-For this module we have used VNF anchors, but this tetrahedron is half
-related to a cuboid, so maybe sometimes you prefer to use anchors
-based on the bounding box.  You could create a module with bounding
-box anchors like this, where we have had to explicitly center the VNF
+For this module we have used VNF anchors, but this tetrahedron is the
+corner of a cuboid, so maybe sometimes you prefer to use anchors
+based on the corresponding cuboid (its bounding box).  You can create a module with bounding
+box anchors like this, where we have explicitly centered the VNF
 to make it work with the prismoid type anchoring:
 
 ```openscad-3D
