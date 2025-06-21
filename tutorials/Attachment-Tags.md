@@ -1,4 +1,4 @@
-[Prev: Using color with attachments](Tutorial-Attachment-Color)
+[Prev: Using Color with Attachments](Tutorial-Attachment-Color)
 
 # Tagged Operations
 
