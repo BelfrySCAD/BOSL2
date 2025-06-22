@@ -73,7 +73,8 @@ For cylindrical type attachables, the Z component of the anchor vector must be â
 to the bottom rim, the middle side, or the top rim of the cylindrical or conical shape.
 The X and Y components can be any value, pointing towards the circular perimeter of the cone.
 These combined let you point at any place on the bottom or top rims, or at an arbitrary
-side wall. 
+side wall.  When the Z component is zero you can omit it and pass just
+an [X,Y] vector.  
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -90,6 +91,14 @@ Here we convert a 30 deg angle into an anchor using [cylindrical_to_xyz()](https
 ```openscad-3D
 include <BOSL2/std.scad>
 cylinder(r1=25, r2=15, h=60, anchor=cylindrical_to_xyz(1,30,1));
+```
+
+Here we anchor using a 2D XY vector where the Z value is assumed to be
+zero:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cylinder(r=25, h=6, anchor=[-1,-2]);
 ```
 
 ---

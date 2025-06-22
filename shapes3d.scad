@@ -1762,8 +1762,8 @@ function rect_tube(
 //   "hypot" = Center of angled wedge face, perpendicular to that face.
 //   "hypot_left" = Left side of angled wedge face, bisecting the angle between the left side and angled faces.
 //   "hypot_right" = Right side of angled wedge face, bisecting the angle between the right side and angled faces.
-//   "top_edge" = Top edge anchor which, unlike the UP anchor, points in direction that bisects the edge, and provides `$edge_length` and `$edge_angle`.  
-//
+//   "top_edge" = Top edge anchor which, unlike the UP anchor, points in direction that bisects the edge, and provides `$edge_length` and `$edge_angle`.
+//   "bot_edge" = The bottom tip edge with an anchor direction that properly bisects the edge and the `$edge_length` and `$edge_angle` parameters set. 
 // Example: Centered
 //   wedge([20, 40, 15], center=true);
 // Example: *Non*-Centered
@@ -1794,12 +1794,16 @@ module wedge(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
     right_dir = unit(hypot_dir+RIGHT);
     hedge_spin=vector_angle(spindir,rot(from=UP,to=left_dir, p=BACK));
     topedge_dir = [0, each unit(unit([size.z,size.y])+[-1,0])];
+    botedge_dir = [0, each unit(unit([size.z,size.y])+[0,-1])];    
     anchors = [
         named_anchor("hypot", CTR, hypot_dir, 180),
         named_anchor("hypot_left", [-size.x/2,0,0], left_dir,-hedge_spin),
         named_anchor("hypot_right", [size.x/2,0,0], right_dir,hedge_spin),
         named_anchor("top_edge", [0,-size.y/2,size.z/2], topedge_dir, _compute_spin(topedge_dir,RIGHT),
-                     info=[["edge_angle",atan2(size.y,size.z)],["edge_length",size.x]])
+                     info=[["edge_angle",atan2(size.y,size.z)],["edge_length",size.x]]),
+        named_anchor("bot_edge", [0,size.y/2, -size.z/2], botedge_dir, _compute_spin(botedge_dir,RIGHT),
+                     info=[["edge_angle",atan2(size.z,size.y)],["edge_length",size.x]]), 
+                     
     ];
     attachable(anchor,spin,orient, size=size, anchors=anchors) {
         if (size.z > 0) {
