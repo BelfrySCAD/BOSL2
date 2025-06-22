@@ -3278,7 +3278,7 @@ module worm_gear(
         profile_shift = profile_shift,
         slices = slices
     );
-    thickness = pointlist_bounds(vnf[0])[1].z;
+    thickness = 2*pointlist_bounds(vnf[0])[1].z;
     attachable(anchor,spin,orient, r=pr, l=thickness) {
         zrot(gear_spin)
         difference() {
