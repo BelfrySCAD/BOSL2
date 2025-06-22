@@ -5285,7 +5285,14 @@ function _resample_point_array(data, size, col_wrap=false, row_wrap=false) =
 //   .
 //   AI image processing tool and workflows are changing quite rapidly. See the [discussion](https://github.com/BelfrySCAD/BOSL2/discussions/1731) on depth map workflows for current best practices.
 //   .
-//   Geotiff data from 
+//   Sources of whole planet GeoTIFF Data include:
+//      * [USGS Astrogeology Science Center](https://astrogeology.usgs.gov/search)
+//      * [NASA PDS (Planetary Data System)](https://pds.nasa.gov)
+//      * [OpenPlanetaryMap / OpenPlanetary](https://github.com/OpenPlanetary/opm)
+//   .
+//   GeoTIFF data for smaller areas comes from the Space Shuttle Radar Topography Mission. Data covering about 80% of the Earth's surface
+//   is at [Earthdata](https://www.earthdata.nasa.gov/data/instruments/srtm/data-access-tools) 
+//   .
 //   A globe created using the geotiff2scad.py script to generate the texture array:
 //   .
 //   ![Geotiff Example](images/skin/globe_animation.gif)
