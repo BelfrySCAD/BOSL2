@@ -5271,11 +5271,24 @@ function _resample_point_array(data, size, col_wrap=false, row_wrap=false) =
 //   .
 //   Each of these scripts places a named array in an .scad file with names specified at run time.  Use include<> to add the array to your model. 
 //   .
+//   Both **img2scad.py** and **img2scad.html** provide similar capabilities, but the html script has a few additional capabilities
+//   as well as providing a graphical user interface.
+//   .
+//   On the right is a {{textured_tile()}} with the texture array created by **img2scad.html** from the .png file on the left:
+//   .
+//   ![Textured Tile](images/skin/WilburTex01.png)
+//   .
+//   The image luminance is directly translated into texture depth in the example above.  Better results can be obtained by passing 
+//   the original image through an AI image processor to produce a depth map from the image before creating the texture array.
+//   .
+//   ![Texture Tile](images/skin/WilburTex02.png)
+//   .
+//   AI image processing tool and workflows are changing quite rapidly. See the [discussion](https://github.com/BelfrySCAD/BOSL2/discussions/1731) on depth map workflows for current best practices.
+//   .
+//   Geotiff data from 
 //   A globe created using the geotiff2scad.py script to generate the texture array:
 //   .
 //   ![Geotiff Example](images/skin/globe_animation.gif)
 //   .
-
-
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
