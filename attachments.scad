@@ -409,7 +409,7 @@ _ANCHOR_TYPES = ["intersect","hull"];
 //   Things get difficult when the objects are curved, or even when their edges are not neatly aligned with the coordinate axes.
 //   In these cases, the library may provide multiple different anchoring schemes, called the anchor types.  When a module supports
 //   multiple anchor types, use the `atype=` parameter to select the anchor type you need.
-// .
+//   .
 //   First consider the case of a simple rectangle whose corners have been rounded.  Where should the anchors lie?
 //   The default anchor type puts them in the same location as the anchors of an unrounded rectangle, which means that for
 //   positive rounding radii, they are not even located on the perimeter of the object.
