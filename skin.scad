@@ -5291,9 +5291,9 @@ function _resample_point_array(data, size, col_wrap=false, row_wrap=false) =
 //      * [OpenPlanetaryMap / OpenPlanetary](https://github.com/OpenPlanetary/opm)
 //   .
 //   GeoTIFF data for smaller areas comes from the Space Shuttle Radar Topography Mission. Data covering about 80% of the Earth's surface
-//   is at [Earthdata](https://www.earthdata.nasa.gov/data/instruments/srtm/data-access-tools) 
+//   is available from [Earthdata](https://www.earthdata.nasa.gov/data/instruments/srtm/data-access-tools) 
 //   .
-//   A globe created using the geotiff2scad.py script to generate the texture array:
+//   A globe created using the **geotiff2scad.py** script to generate the texture array:
 //   .
 //   ![Geotiff Example](images/skin/globe_animation.gif)
 //   .
