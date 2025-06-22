@@ -5273,7 +5273,7 @@ function _resample_point_array(data, size, col_wrap=false, row_wrap=false) =
 //   .
 //   A globe created using the geotiff2scad.py script to generate the texture array:
 //   .
-//   ![Geotiff Example](images/skin/globe_animation.png)
+//   ![Geotiff Example](images/skin/globe_animation.gif)
 //   .
 
 
