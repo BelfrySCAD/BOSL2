@@ -3696,21 +3696,19 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   up(7)fwd(-3)right(15)cyl(d=10,h=15,texture=vnf_triangulate(tex), tex_reps=[4,2],tex_samples=5,rounding=2);
 // Subsection: Textures from Graphic Images
 //   The BOSL2 scripts folder contains three scripts for creating texture arrays from graphic images.
+//   .
 //   **img2scad.py** is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
+//   .
 //   **img2scad.html** contains a javascript creates a texture array from any image your browser can render.  
+//   .
 //   **geotiff2scad.py** is a python script creates a texture array from geotiff depth maps.
 //   .
 //   Each of these scripts places a named array in an .scad file with names specified at run time.  Use include<> to add the array to your model. 
 //   .
-//   This is some text before the test image.
+//   A globe created using the geotiff2scad.py script to generate the texture array:
 //   .
-//   Here is a globe created using geotiff2scad.py to generate the texture array.
-//
 //   ![Geotiff Example](images/skin/globe_animation.png)
-//   <img align="left" alt="Geotiff Example" src="images/skin/globe_animation.png" width="320" height="240">
-//
-// Continues:
-//   This is some text after the test image. 
+//   .
 // Function: texture()
 // Topics: Textures, Knurling
 // Synopsis: Produce a standard texture. 
