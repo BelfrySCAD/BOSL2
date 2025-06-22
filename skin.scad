@@ -3694,21 +3694,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   tex = texture("bricks_vnf");
 //   cyl(d=10,h=15,texture=tex, tex_reps=[4,2],tex_samples=5,rounding=2);
 //   up(7)fwd(-3)right(15)cyl(d=10,h=15,texture=vnf_triangulate(tex), tex_reps=[4,2],tex_samples=5,rounding=2);
-// Subsection: Textures from Graphic Images
-//   The BOSL2 scripts folder contains three scripts for creating texture arrays from graphic images.
-//   .
-//   **img2scad.py** is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
-//   .
-//   **img2scad.html** contains a javascript creates a texture array from any image your browser can render.  
-//   .
-//   **geotiff2scad.py** is a python script creates a texture array from geotiff depth maps.
-//   .
-//   Each of these scripts places a named array in an .scad file with names specified at run time.  Use include<> to add the array to your model. 
-//   .
-//   A globe created using the geotiff2scad.py script to generate the texture array:
-//   .
-//   ![Geotiff Example](images/skin/globe_animation.png)
-//   .
+//
 // Function: texture()
 // Topics: Textures, Knurling
 // Synopsis: Produce a standard texture. 
@@ -5274,7 +5260,21 @@ function _resample_point_array(data, size, col_wrap=false, row_wrap=false) =
       ]
   ];
 
-
+// Subsection: Textures from Graphic Images
+//   The BOSL2 scripts folder contains three scripts for creating texture arrays from graphic images.
+//   .
+//      - **img2scad.py** is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
+//   .
+//      - **img2scad.html** contains a javascript creates a texture array from any image your browser can render.  
+//   .
+//      - **geotiff2scad.py** is a python script creates a texture array from geotiff depth maps.
+//   .
+//   Each of these scripts places a named array in an .scad file with names specified at run time.  Use include<> to add the array to your model. 
+//   .
+//   A globe created using the geotiff2scad.py script to generate the texture array:
+//   .
+//   ![Geotiff Example](images/skin/globe_animation.png)
+//   .
 
 
 
