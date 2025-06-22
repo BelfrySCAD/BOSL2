@@ -5283,7 +5283,7 @@ function _resample_point_array(data, size, col_wrap=false, row_wrap=false) =
 //   .
 //   ![Texture Tile](images/skin/WilburTex02.png)
 //   .
-//   AI image processing tool and workflows are changing quite rapidly. See the [discussion](https://github.com/BelfrySCAD/BOSL2/discussions/1731) on depth map workflows for current best practices.
+//   AI image processing tool and workflows are still evolving rapidly. See the [discussion](https://github.com/BelfrySCAD/BOSL2/discussions/1731) on depth map workflows for current best practices.
 //   .
 //   Sources of whole planet GeoTIFF Data include:
 //      * [USGS Astrogeology Science Center](https://astrogeology.usgs.gov/search)
