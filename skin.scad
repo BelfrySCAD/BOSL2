@@ -3738,7 +3738,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   .
 //   A globe created using the **geotiff2scad.py** script to generate the texture array:
 //   .
-//   ![Geotiff Example](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/globe_animation.gif)
+//   ![Geotiff Example](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/globe_animation.png)
 //   .
 // Section: Texturing 
 // Function: texture()
