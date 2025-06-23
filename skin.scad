@@ -17,7 +17,6 @@
 __vnf_no_n_mesg=" texture is a VNF so it does not accept n. Set sample rate for VNF textures using the tex_samples parameter to cyl(), linear_sweep(), or rotate_sweep().";
 
 // Section: Skin and sweep
-
 // Function&Module: skin()
 // Synopsis: Connect a sequence of arbitrary polygons into a 3D object. 
 // SynTags: VNF, Geom
@@ -3526,7 +3525,7 @@ function associate_vertices(polygons, split, curpoly=0) =
     )
    associate_vertices(newpoly, split, curpoly+1);
 
-// Section: Texturing
+// Section: Introduction to Texturing
 //   Some operations are able to add texture to the objects they create.  A texture can be any regularly repeated variation in the height of the surface.
 //   To define a texture you need to specify how the height should vary over a rectangular block that is repeated to tile the object.  Because textures
 //   are based on rectangular tiling, this means adding textures to curved shapes may result in distortion of the basic texture unit.  For example, if you
@@ -3695,6 +3694,47 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   cyl(d=10,h=15,texture=tex, tex_reps=[4,2],tex_samples=5,rounding=2);
 //   up(7)fwd(-3)right(15)cyl(d=10,h=15,texture=vnf_triangulate(tex), tex_reps=[4,2],tex_samples=5,rounding=2);
 //
+// Subsection: Textures from Graphic Images
+//   The BOSL2 scripts folder contains three scripts for creating texture arrays from graphic images.
+//   .
+//      - [**img2scad.py**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py)
+//   is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
+//   .
+//      - [**img2scad.html**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.html)
+//   contains a javascript creates a texture array from any image your browser can render.  
+//   .
+//      - [**geotiff2scad.py**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/geotiff2scad.py)
+//   is a python script creates a texture array from geotiff depth maps.
+//   .
+//   Each of these scripts places a named array in an .scad file with names specified at run time.  Use include<> to add the array to your model. 
+//   .
+//   Both **img2scad.py** and **img2scad.html** provide similar capabilities, but the html script has a few additional capabilities
+//   and it provides a graphical user interface..
+//   .
+//   On the right is a {{textured_tile()}} with the texture array created by **img2scad.html** from the .png file on the left:
+//   .
+//   ![Textured Tile](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/WilburTex01.png)
+//   .
+//   The image luminance is directly translated into texture depth in the example above.  Better results can be obtained by passing 
+//   the original image through an AI image processor to produce a depth map from the image before creating the texture array.
+//   .
+//   ![Texture Tile](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/WilburTex02.png)
+//   .
+//   AI image processing tool and workflows are still evolving rapidly. See the [discussion](https://github.com/BelfrySCAD/BOSL2/discussions/1731) on depth map workflows for current best practices.
+//   .
+//   Sources of whole planet GeoTIFF Data include:
+//      * [USGS Astrogeology Science Center](https://astrogeology.usgs.gov/search)
+//      * [NASA PDS (Planetary Data System)](https://pds.nasa.gov)
+//      * [OpenPlanetaryMap / OpenPlanetary](https://github.com/OpenPlanetary/opm)
+//   .
+//   GeoTIFF data for smaller areas comes from the Space Shuttle Radar Topography Mission. Data covering about 80% of the Earth's surface
+//   is available from [Earthdata](https://www.earthdata.nasa.gov/data/instruments/srtm/data-access-tools) 
+//   .
+//   A globe created using the **geotiff2scad.py** script to generate the texture array:
+//   .
+//   ![Geotiff Example](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/globe_animation.gif)
+//   .
+// Section: Texturing 
 // Function: texture()
 // Topics: Textures, Knurling
 // Synopsis: Produce a standard texture. 
@@ -5259,43 +5299,5 @@ function _resample_point_array(data, size, col_wrap=false, row_wrap=false) =
                   sy-yind, sx-xind)
       ]
   ];
-
-// Subsection: Textures from Graphic Images
-//   The BOSL2 scripts folder contains three scripts for creating texture arrays from graphic images.
-//   .
-//      - **img2scad.py** is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
-//   .
-//      - **img2scad.html** contains a javascript creates a texture array from any image your browser can render.  
-//   .
-//      - **geotiff2scad.py** is a python script creates a texture array from geotiff depth maps.
-//   .
-//   Each of these scripts places a named array in an .scad file with names specified at run time.  Use include<> to add the array to your model. 
-//   .
-//   Both **img2scad.py** and **img2scad.html** provide similar capabilities, but the html script has a few additional capabilities
-//   as well as providing a graphical user interface.
-//   .
-//   On the right is a {{textured_tile()}} with the texture array created by **img2scad.html** from the .png file on the left:
-//   .
-//   ![Textured Tile](images/skin/WilburTex01.png)
-//   .
-//   The image luminance is directly translated into texture depth in the example above.  Better results can be obtained by passing 
-//   the original image through an AI image processor to produce a depth map from the image before creating the texture array.
-//   .
-//   ![Texture Tile](images/skin/WilburTex02.png)
-//   .
-//   AI image processing tool and workflows are still evolving rapidly. See the [discussion](https://github.com/BelfrySCAD/BOSL2/discussions/1731) on depth map workflows for current best practices.
-//   .
-//   Sources of whole planet GeoTIFF Data include:
-//      * [USGS Astrogeology Science Center](https://astrogeology.usgs.gov/search)
-//      * [NASA PDS (Planetary Data System)](https://pds.nasa.gov)
-//      * [OpenPlanetaryMap / OpenPlanetary](https://github.com/OpenPlanetary/opm)
-//   .
-//   GeoTIFF data for smaller areas comes from the Space Shuttle Radar Topography Mission. Data covering about 80% of the Earth's surface
-//   is available from [Earthdata](https://www.earthdata.nasa.gov/data/instruments/srtm/data-access-tools) 
-//   .
-//   A globe created using the **geotiff2scad.py** script to generate the texture array:
-//   .
-//   ![Geotiff Example](images/skin/globe_animation.gif)
-//   .
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
