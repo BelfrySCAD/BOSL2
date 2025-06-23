@@ -3700,14 +3700,14 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   using a single repetition of a very large texture array. In order to do this, you'll need a way to import your image into OpenSCAD.
 //   .
 //   The BOSL2 scripts folder contains three scripts for creating texture arrays from graphic images.
-//   Right-click the links below to download the scripts to your local system. Run the python scripts from the command line, 
-//   and use the **File** menu of your browser to open img2scad.html.
-//   .
-//      - [**img2scad.py**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py)
-//   is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
+//   Right-click the links to the python scripts to download them to your local system, then run them from the command line.
+//   The html link will open in your browser.
 //   .
 //      - [**img2scad.html**](https://htmlpreview.github.io/?https://github.com/BelfrySCAD/BOSL2/blob/master/scripts/img2scad.html)
 //   contains a javascript creates a texture array from any image your browser can render.  
+//   .
+//      - [**img2scad.py**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py)
+//   is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
 //   .
 //      - [**geotiff2scad.py**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/geotiff2scad.py)
 //   is a python script creates a texture array from geotiff depth maps.
