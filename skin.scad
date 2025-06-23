@@ -3695,21 +3695,27 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   up(7)fwd(-3)right(15)cyl(d=10,h=15,texture=vnf_triangulate(tex), tex_reps=[4,2],tex_samples=5,rounding=2);
 //
 // Subsection: Textures from Graphic Images
+//   .
+//   In additional to creating textured surfaces, the texturing feature of BOSL2 can be used to place relief images onto objects, 
+//   using a single repetition of a very large texture array. In order to do this, you'll need a way to import your image into OpenSCAD.
+//   .
 //   The BOSL2 scripts folder contains three scripts for creating texture arrays from graphic images.
+//   Right-click the links below to download the scripts to your local system. Run the python scripts from the command line, 
+//   and use the **File** menu of your browser to open img2scad.html.
 //   .
 //      - [**img2scad.py**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py)
 //   is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
 //   .
-//      - [**img2scad.html**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.html)
+//      - [**img2scad.html**](https://htmlpreview.github.io/?https://github.com/BelfrySCAD/BOSL2/blob/master/scripts/img2scad.html)
 //   contains a javascript creates a texture array from any image your browser can render.  
 //   .
 //      - [**geotiff2scad.py**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/geotiff2scad.py)
 //   is a python script creates a texture array from geotiff depth maps.
 //   .
-//   Each of these scripts places a named array in an .scad file with names specified at run time.  Use include<> to add the array to your model. 
+//   Each of these scripts places a named array in an .scad file with names specified at run time.   Use include<> to add the array to your model. 
 //   .
-//   Both **img2scad.py** and **img2scad.html** provide similar capabilities, but the html script has a few additional capabilities
-//   and it provides a graphical user interface..
+//   Both **img2scad.py** and **img2scad.html** create texture arrays from graphics, but the html script has a few additional capabilities
+//   and it provides a graphical user interface.
 //   .
 //   On the right is a {{textured_tile()}} with the texture array created by **img2scad.html** from the .png file on the left:
 //   .
@@ -3732,7 +3738,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   .
 //   A globe created using the **geotiff2scad.py** script to generate the texture array:
 //   .
-//   ![Geotiff Example](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/globe_animation.gif)
+//   ![Geotiff Example](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/images/globe_animation.png)
 //   .
 // Section: Texturing 
 // Function: texture()
