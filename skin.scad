@@ -3714,7 +3714,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   .
 //   Each of these scripts places a named array in an .scad file with names specified at run time.   Use include<> to add the array to your model. 
 //   .
-//   Both **img2scad.py** and **img2scad.html** provide similar capabilities, but the html script has a few additional capabilities
+//   Both **img2scad.py** and **img2scad.html** create texture arrays from graphics, but the html script has a few additional capabilities
 //   and it provides a graphical user interface..
 //   .
 //   On the right is a {{textured_tile()}} with the texture array created by **img2scad.html** from the .png file on the left:
