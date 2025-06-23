@@ -3706,7 +3706,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //      - [**img2scad.py**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py)
 //   is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
 //   .
-//      - [**img2scad.html**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.html)
+//      - [**img2scad.html**](https://htmlpreview.github.io/?https://github.com/BelfrySCAD/BOSL2/blob/master/scripts/img2scad.html)
 //   contains a javascript creates a texture array from any image your browser can render.  
 //   .
 //      - [**geotiff2scad.py**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/geotiff2scad.py)
