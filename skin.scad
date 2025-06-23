@@ -3695,6 +3695,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   up(7)fwd(-3)right(15)cyl(d=10,h=15,texture=vnf_triangulate(tex), tex_reps=[4,2],tex_samples=5,rounding=2);
 //
 // Subsection: Textures from Graphic Images
+//   .
 //   In additional to creating textured surfaces, the texturing feature of BOSL2 can be used to place relief images onto objects, 
 //   using a single repetition of a very large texture array. In order to do this, you'll need a way to import your image into OpenSCAD.
 //   .
