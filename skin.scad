@@ -3697,7 +3697,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 // Subsection: Textures from Graphic Images
 //   In additional to creating textured surfaces, the texturing feature of BOSL2 can be used to place relief images onto objects, 
 //   using a single repetition of a very large texture array. In order to do this, you'll need a way to import your image into OpenSCAD.
-//.
+//   .
 //   The BOSL2 scripts folder contains three scripts for creating texture arrays from graphic images.
 //   Right-click the links below to download the scripts to your local system. Run the python scripts from the command line, 
 //   and use the **File** menu of your browser to open img2scad.html.
