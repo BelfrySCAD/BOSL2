@@ -3704,7 +3704,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   The html link will open in your browser.
 //   .
 //      - [**img2scad.html**](https://htmlpreview.github.io/?https://github.com/BelfrySCAD/BOSL2/blob/master/scripts/img2scad.html)
-//   contains a javascript creates a texture array from any image your browser can render.  
+//   can create a texture array from any image your browser can render.  
 //   .
 //      - [**img2scad.py**](https://raw.githubusercontent.com/BelfrySCAD/BOSL2/master/scripts/img2scad.py)
 //   is a python script that creates a texture array from most common raster image formats, including gif, png, jpeg.
@@ -3714,7 +3714,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   .
 //   Each of these scripts places a named array in an .scad file with names specified at run time.   Use include<> to add the array to your model. 
 //   .
-//   Both **img2scad.py** and **img2scad.html** create texture arrays from graphics, but the html script has a few additional capabilities
+//   Both **img2scad.py** and **img2scad.html** create texture arrays from graphics, but the html page has a few additional capabilities
 //   and it provides a graphical user interface.
 //   .
 //   On the right is a {{textured_tile()}} with the texture array created by **img2scad.html** from the .png file on the left:
