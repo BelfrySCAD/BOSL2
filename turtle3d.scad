@@ -31,10 +31,16 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 // Description:
 //   Like the classic two dimensional turtle, the 3d turtle flies through space following a sequence
 //   of turtle graphics commands to generate either a sequence of transformations (suitable for input
-//   to {{sweep()}}) or a 3d path.  The turtle state keeps track of the position and orientation (including twist)
+//   to {{sweep()}}) or a 3d path.
+//   .
+//   The turtle state keeps track of the position and orientation (including twist)
 //   and scale of the turtle.  By default the turtle begins pointing along the X axis with the "right" direction
 //   along the -Y axis and the "up" direction aligned with the Z axis.  You can give a direction vector
-//   for the state input to change the starting direction.  Because of the complexity of object positioning
+//   for the state input to change the starting direction.  You can also give a transformation for the state.
+//   For example, if you want the turtle to start its trajectory at the coordinate [3,4,5] you could
+//   give `state=move([3,4,5])`.
+//   .
+//   Because of the complexity of object positioning
 //   in three space, some types of movement require compound commands.  These compound commands are lists that specify several operations
 //   all applied to one turtle step.  For example:  ["move", 4, "twist", 25] executes a twist while moving, and
 //   the command ["arc", 4, "grow", 2, "right", 45, "up", 30] turns to the right and up while also growing the object.
@@ -163,7 +169,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   the results are very strange if larger angles are permitted.)
 // Arguments:
 //   commands = List of turtle3d commands
-//   state = Starting turtle direction or full turtle state (from a previous call).  Default: RIGHT
+//   state = Starting turtle direction, starting turtle transformation (e.g. move(pt)), or full turtle state (from a previous call).  Default: RIGHT
 //   transforms = If true teturn list of transformations instead of points.  Default: false
 //   full_state = If true return full turtle state for continuing the path in subsequent turtle calls.  Default: false
 //   repeat = Number of times to repeat the command list.  Default: 1
