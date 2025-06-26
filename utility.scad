@@ -952,7 +952,7 @@ module assert_approx(got, expected, info) {
 //   expected = The value that was expected.
 //   info = Extra info to print out to make the error clearer.
 // Example:
-//   assert_approx(3*9, 27, str("a=",3,", b=",9));
+//   assert_equal(3*9, 27, str("a=",3,", b=",9));
 module assert_equal(got, expected, info) {
     no_children($children);
     if (got != expected || (is_nan(got) && is_nan(expected))) {
