@@ -1311,7 +1311,7 @@ function rotate_sweep(
                   : tex_reps,
          tex_depth = is_def(tex_scale)? echo("In rotate_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
                    : default(tex_depth,1),
-         region = force_region(shape)
+         region = _force_xplus(force_region(shape))
     )
     assert(is_region(region), "\nshape is not a region or path.")
     let(
@@ -1360,6 +1360,9 @@ function rotate_sweep(
     ) vnf;
 
 
+function _force_xplus(data) =
+  [for(part=data) [for(pt=part) approx(pt.x,0) ? [0,pt.y] : pt]];
+
 module rotate_sweep(
     shape, angle=360,
     texture, tex_size=[5,5], tex_counts, tex_reps,
@@ -1388,7 +1391,7 @@ module rotate_sweep(
              : tex_reps;
     tex_depth = is_def(tex_scale)? echo("In rotate_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
               : default(tex_depth,1);
-    region = force_region(shape);
+    region = _force_xplus(force_region(shape));
     check = assert(is_region(region), "\nInput is not a region or polygon.");
     bounds = pointlist_bounds(flatten(region));
     min_x = bounds[0].x;
