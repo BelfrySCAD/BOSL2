@@ -1,6 +1,6 @@
 [Prev: Using attach()](Tutorial-Attachment-Attach)
 
-# Attachment Parts
+# Attachable Parts
 
 Some objects provide named attachable parts that you can select
 instead of using the main geometry for the object.  One important kind
