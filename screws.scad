@@ -593,7 +593,7 @@ module screw(spec, head, drive, thread, drive_size,
             assert(is_undef(user_thread_len) || (is_finite(user_thread_len) && user_thread_len>=0), "Must specify nonnegative thread length");
    sides = max(pitch==0 ? 3 : 12, segs(nominal_diam/2));
    rad_scale = _internal? (1/cos(180/sides)) : 1;
-   islop = _internal ? 4*get_slop() : 0;
+   islop = _internal ? 2*get_slop() : 0;
    head_height = headless || flathead ? 0 
                : counterbore==true || is_undef(counterbore) || counterbore==0 ? struct_val(spec, "head_height")
                : counterbore;
@@ -746,7 +746,7 @@ module screw(spec, head, drive, thread, drive_size,
 //   The screw hole can be threaded to receive a screw or it can be an unthreaded clearance hole.  
 //   The tolerance determines the dimensions of the screw
 //   based on ISO and ASME standards.  Screws fabricated at those dimensions will mate properly with standard hardware.
-//   The $slop argument makes the hole larger by 4*$slop to account for printing overextrusion.  It defaults to 0.
+//   The $slop argument makes the hole larger by 2*$slop to account for printing overextrusion.  It defaults to 0.
 //   .
 //   You can generate a screw specification from {{screw_info()}}, possibly create a modified version, and pass that in rather than giving the parameters.
 //   .
