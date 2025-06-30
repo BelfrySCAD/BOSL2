@@ -1,17 +1,32 @@
 # 3d2scad.py - convert STL or 3MF to OpenSCAD polyhedron arrays.
 #
 # This utility does these things (in this order):
-#  - removes invalid triangles
-#  - optionally simplifies mesh (reduces polygon count) using quadric decimation
-#  - quantizes coordinates to nearest 0.001 (or whatever you specify) for more compact output
-#  - removes zero-area triangles
-#  - removes duplicate vertices for significant size reduction (often a STL vertex is repeated six times)
-#  - removes shared edges from coplanar polygons
+# - creates list of vertices and faces as the mesh is loaded
+# - separates object into shells if multiple objects are detected
+# - removes invalid triangles
+# - optionally simplifies mesh (reduces polygon count) using quadric decimation (a robust method of simplification)
+# - attempts repairs if a shell is detected as non-watertight (fill holes, remove unreferenced vertices, fix inversion and winding order, remove duplicate faces)
+# - ensure normals are consistently pointing outward
+# - quantizes coordinates to nearest 0.001 (or whatever you specify) for more compact output
+# - removes zero-area triangles
+# - removes duplicate vertices for significant size reduction (often a STL vertex is repeated six times)
+# - another pass of removing unreferenced vertices
+# - removes shared edges from coplanar polygons
+# - outputs a text file with a raw list of polyhedron structures (NOT an .scad file); see below for usage.
 #
 # In some cases, the operations above can result in non-manifold shapes, such as when two objects
 # share an edge, the resulting edge may be shared by more than two faces.
 #
 # June 2025
+
+# TO USE IN OPENSCAD WITH BOLS2 LIBRARY:
+# See VNF documentation at https://github.com/BelfrySCAD/BOSL2/wiki/vnf.scad
+# If your output file is "model.txt" then use it this way:
+#
+# include <BOSL2/std.scad>
+# vnf_list = include <model.txt>; // end with semicolon
+# // vnf_list now contains a list of VNF (OpenSCAD polyhedron) structures
+# vnf_polyhedron(vnf_list);
 
 import sys
 REQUIRED = ["numpy", "scipy", "trimesh", "open3d", "networkx", "lxml"]   # required libraries not typically included in Python
@@ -216,20 +231,25 @@ def format_number(n, precision):
         s = "0"
     return s
 
-def export_openscad_structure(vertices, polygons, name, shell_index, precision, f):
-    varname = f"{name}{shell_index}"
-    f.write(f"{varname}=[\n[")
+def export_openscad_structure(vertices, polygons, nshells, shell_index, precision, f):
+    if shell_index == 0:
+        f.write("[ ")
+    f.write("\n[[")
     f.write(",".join("[" + ",".join(format_number(c, precision) for c in v) + "]" for v in vertices))
     f.write("],\n[")
     f.write(",".join("[" + ",".join(str(i) for i in poly) + "]" for poly in polygons))
-    f.write("]];\n")
+    f.write("]]")
+    if shell_index < nshells-1:
+        f.write(",\n")
+    else:
+        f.write(f"\n// shells: {nshells}\n]\n")
     print(f" Wrote shell {shell_index+1} with {len(vertices)} vertices and {len(polygons)} faces", flush=True)
 
 def main():
     parser = argparse.ArgumentParser(description="3D model to OpenSCAD polyhedron converter", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("input", help="Input STL or 3MF file")
-    parser.add_argument("output", help="Output OpenSCAD file")
-    parser.add_argument("--tolerance", type=float, metavar="FRAC", default=0.0,
+    parser.add_argument("output", help="Output data file (list of VNF structures)")
+    parser.add_argument("--polycount", type=float, metavar="FRAC", default=0.0,
                         help="Fraction of faces to remove via quadric decimation (0-0.9)")
     parser.add_argument("--quantize", type=float, metavar="GRIDUNIT", default=0.001,
                         help="Grid size to quantize vertices")
@@ -244,6 +264,7 @@ def main():
 
     mesh = load_mesh(args.input)
     shells = split_into_shells(mesh)
+    nshells = len(shells)
 
     if args.merge_shells:
         merged = []
@@ -274,8 +295,8 @@ def main():
         for i, shell in enumerate(shells):
             print(f"Processing shell {i + 1}:", flush=True)
             shell = remove_invalid_triangles(shell)
-            if args.tolerance > 0:
-                shell = decimate_mesh(shell, args.tolerance)
+            if args.polycount > 0:
+                shell = decimate_mesh(shell, args.polycount)
 
             if not shell.is_watertight:
                 print("  Mesh is not watertight after simplification; attempting repair...", flush=True)
@@ -296,6 +317,7 @@ def main():
 
             if len(shell.faces) < args.min_faces:
                 print(f" Skipping shell with only {len(shell.faces)} face{'s' if len(shell.faces) != 1 else ''}", flush=True)
+                nshells = nshells-1
                 continue
 
             print(f"  Diagnostics:")
@@ -306,7 +328,7 @@ def main():
                 print(f"   - Genus: {int(genus)}")
 
             polygons = merge_coplanar_triangles(shell.vertices, shell.faces)
-            export_openscad_structure(shell.vertices.tolist(), polygons, name, i, precision, f)
+            export_openscad_structure(shell.vertices.tolist(), polygons, nshells, i, precision, f)
 
 if __name__ == "__main__":
     main()
