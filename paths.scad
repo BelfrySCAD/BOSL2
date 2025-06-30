@@ -32,7 +32,7 @@
 //   Returns true if `list` is a {{path}}.  A path is a list of two or more numeric vectors (AKA {{points}}).
 //   All vectors must of the same size, and may only contain numbers that are not inf or nan.
 //   By default the vectors in a path must be 2D or 3D.  Set the `dim` parameter to specify a list
-//   of allowed dimensions, or set it to `undef` to allow any dimension.  (Note that this function
+//   of allowed dimensions, or set it to `undef` to allow any dimension.  (This function
 //   returns `false` on 1-regions.)  
 // Example:
 //   bool1 = is_path([[3,4],[5,6]]);    // Returns true
@@ -77,7 +77,7 @@ function is_path(list, dim=[2,3], fast=false) =
 //   name = name of parameter to use in error message.  Default: "path"
 function is_1region(path, name="path") = 
      !is_region(path)? false
-    :assert(len(path)==1,str("Parameter \"",name,"\" must be a path or singleton region, but is a multicomponent region"))
+    :assert(len(path)==1,str("\nParameter \"",name,"\" must be a path or singleton region, but is a multicomponent region."))
      true;
 
 
@@ -98,7 +98,7 @@ function is_1region(path, name="path") =
 //   name = name of parameter to use in error message.  Default: "path"
 function force_path(path, name="path") =
    is_region(path) ?
-       assert(len(path)==1, str("Parameter \"",name,"\" must be a path or singleton region, but is a multicomponent region"))
+       assert(len(path)==1, str("\nParameter \"",name,"\" must be a path or singleton region, but is a multicomponent region."))
        path[0]
    : path;
 
@@ -139,7 +139,7 @@ function _path_select(path, s1, u1, s2, u2, closed=false) =
 // SynTags: Path
 // Topics: Paths, Regions
 // Description:
-//   Takes a {{path}} and removes unnecessary sequential collinear {{points}}.  Note that when `closed=true` either of the path
+//   Takes a {{path}} and removes unnecessary sequential collinear {{points}}.  When `closed=true` either of the path
 //   endpoints may be removed.  
 // Usage:
 //   path_merge_collinear(path, [eps])
@@ -151,8 +151,8 @@ function path_merge_collinear(path, closed, eps=EPSILON) =
     is_1region(path) ? path_merge_collinear(path[0], default(closed,true), eps) :
     let(closed=default(closed,false))
     assert(is_bool(closed))
-    assert( is_path(path), "Invalid path in path_merge_collinear." )
-    assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "Invalid tolerance." )
+    assert( is_path(path), "\nInvalid path in path_merge_collinear.")
+    assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "\nInvalid tolerance.")
     len(path)<=2 ? path :
     let(path = deduplicate(path, closed=closed))
     [
@@ -182,7 +182,7 @@ function path_merge_collinear(path, closed, eps=EPSILON) =
 //   echo(path_length(path));
 function path_length(path,closed) =
     is_1region(path) ? path_length(path[0], default(closed,true)) :
-    assert(is_path(path), "Invalid path in path_length")
+    assert(is_path(path), "\nInvalid path in path_length.")
     let(closed=default(closed,false))
     assert(is_bool(closed))
     len(path)<2? 0 :
@@ -203,7 +203,7 @@ function path_length(path,closed) =
 function path_segment_lengths(path, closed) =
     is_1region(path) ? path_segment_lengths(path[0], default(closed,true)) :
     let(closed=default(closed,false))
-    assert(is_path(path),"Invalid path in path_segment_lengths.")
+    assert(is_path(path),"\nInvalid path in path_segment_lengths.")
     assert(is_bool(closed))
     [
         for (i=[0:1:len(path)-2]) norm(path[i+1]-path[i]),
@@ -219,7 +219,7 @@ function path_segment_lengths(path, closed) =
 //   fracs = path_length_fractions(path, [closed]);
 // Description:
 //    Returns the distance fraction of each point in the {{path}} along the path, so the first
-//    point is zero and the final point is 1.  If the path is closed the length of the output
+//    point is zero and the final point is 1.  If the path is closed, the length of the output
 //    will have one extra point because of the final connecting segment that connects the last
 //    point of the path to the first point.
 // Arguments:
@@ -253,7 +253,7 @@ function path_length_fractions(path, closed) =
 ///   of how far along those segments they intersect at.  A proportion of 0.0 indicates the start
 ///   of the segment, and a proportion of 1.0 indicates the end of the segment.
 ///   .
-///   Note that this function does not return self-intersecting segments, only the points
+///   This function does not return self-intersecting segments, only the points
 ///   where non-parallel segments intersect.  
 /// Arguments:
 ///   path = The path to find self intersections of.
@@ -301,6 +301,7 @@ function _path_self_intersections(path, closed=true, eps=EPSILON) =
                 [isect[0], i, isect[1], j, isect[2]]
     ];
 
+
 // Section: Resampling - changing the number of points in a path
 
 
@@ -309,7 +310,7 @@ function _path_self_intersections(path, closed=true, eps=EPSILON) =
 // entry is rounded to an integer and the sum is the same as
 // that of the input.  Works by rounding an entry in the list
 // and passing the rounding error forward to the next entry.
-// This will generally distribute the error in a uniform manner. 
+// This generally distributes the error in a uniform manner. 
 function _sum_preserving_round(data, index=0) =
     index == len(data)-1 ? list_set(data, len(data)-1, round(data[len(data)-1])) :
     let(
@@ -346,9 +347,9 @@ function _sum_preserving_round(data, index=0) =
 //   exactly as requested.  For example, if you subdivide a four point square and request `n=13` then one edge will have
 //   an extra point compared to the others.  
 //   If you set `exact=false` then the
-//   algorithm will favor uniformity and the output path may have a different number of
-//   points than you requested, but the sampling will be uniform.   In our example of the
-//   square with `n=13`, you will get only 12 points output, with the same number of points on each edge.
+//   algorithm favors uniformity and the output path may have a different number of
+//   points than you requested, but the sampling is still uniform.  In our example of the
+//   square with `n=13`, you get only 12 points output, with the same number of points on each edge.
 //   .
 //   The points are always distributed uniformly on each segment.  The `method="length"` option does
 //   means that the number of points on a segment is based on its length, but the points are still
@@ -357,8 +358,8 @@ function _sum_preserving_round(data, index=0) =
 //   specifies the desired point count on each segment: with vector valued `n` the `subdivide_path`
 //   function places `n[i]-1` points on segment `i`.  The reason for the -1 is to avoid
 //   double counting the endpoints, which are shared by pairs of segments, so that for
-//   a closed polygon the total number of points will be sum(n).  Note that with an open
-//   path there is an extra point at the end, so the number of points will be sum(n)+1.
+//   a closed polygon the total number of points is sum(n).  With an open
+//   path there is an extra point at the end, so the number of points is sum(n)+1.
 //   .
 //   If you use the `maxlen` option then you specify the maximum length segment allowed in the output.
 //   Each segment is subdivided into the largest number of segments meeting your requirement.  As above,
@@ -400,10 +401,10 @@ function _sum_preserving_round(data, index=0) =
 // Example(2D): With `exact=false` you can also get extra points, here 20 instead of requested 18
 //   mypath = subdivide_path(pentagon(side=2), 18, exact=false);
 //   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): Using refine in this example multiplies the point count by 3 by adding 2 points to each edge
+// Example(2D): Using refine in this example multiplies the point count by 3 by adding 2 points to each edge.
 //   mypath = subdivide_path(pentagon(side=2), refine=3);
 //   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): But note that refine doesn't distribute evenly by segment unless you change the method.  with the default method set to `"length"`, the points are distributed with more on the long segments in this example using refine.  
+// Example(2D): However, refine doesn't distribute evenly by segment unless you change the method.  With the default method set to `"length"`, the points are distributed with more on the long segments in this example using refine.  
 //   mypath = subdivide_path(square([8,2],center=true), refine=3);
 //   move_copies(mypath)circle(r=.2,$fn=32);
 // Example(2D): In this example with maxlen, every side gets a different number of new points
@@ -416,11 +417,11 @@ function _sum_preserving_round(data, index=0) =
 function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
     let(path = force_path(path))
     assert(is_path(path))
-    assert(num_defined([n,refine,maxlen]),"Must give exactly one of n, refine, and maxlen")
+    assert(num_defined([n,refine,maxlen]), "\nMust give exactly one of n, refine, and maxlen.")
     refine==1 || n==len(path) ? path :
     is_def(maxlen) ?
-        assert(is_undef(method), "Cannot give method with maxlen")
-        assert(is_undef(exact), "Cannot give exact with maxlen")
+        assert(is_undef(method), "\nCannot give method with maxlen.")
+        assert(is_undef(exact), "\nCannot give exact with maxlen.")
         [
          for (p=pair(path,closed))
            let(steps = ceil(norm(p[1]-p[0])/maxlen))
@@ -438,18 +439,18 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
             !is_undef(refine)? len(path) * refine :
             undef
     )
-    assert((is_num(n) && n>0) || is_vector(n),"Parameter n to subdivide_path must be postive number or vector")
+    assert((is_num(n) && n>0) || is_vector(n), "\nParameter n to subdivide_path must be postive number or vector.")
     let(
         count = len(path) - (closed?0:1), 
         add_guess = method=="segment"?
                        (
                           is_list(n)
-                          ? assert(len(n)==count,"Vector parameter n to subdivide_path has the wrong length")
+                          ? assert(len(n)==count, "\nVector parameter n to subdivide_path has the wrong length.")
                             add_scalar(n,-1)
                           : repeat((n-len(path)) / count, count)
                        )
                   : // method=="length"
-                    assert(is_num(n),"Parameter n to subdivide path must be a number when method=\"length\"")
+                    assert(is_num(n), "\nParameter n to subdivide path must be a number when method=\"length\".")
                     let(
                         path_lens = path_segment_lengths(path,closed),
                         add_density = (n - len(path)) / sum(path_lens)
@@ -475,13 +476,14 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 // Usage:
 //   newpath = resample_path(path, n|spacing=, [closed=]);
 // Description:
-//   Compute a uniform resampling of the input {{path}}.  If you specify `n` then the output path will have n
+//   Compute a uniform resampling of the input {{path}}.  If you specify `n` then the output path has `n`
 //   {{points}} spaced uniformly (by linear interpolation along the input path segments).  The only points of the
 //   input path that are guaranteed to appear in the output path are the starting and ending points, and any
 //   points that have an angular deflection of at least the number of degrees given in `keep_corners`.
-//   If you specify `spacing` then the length you give will be rounded to the nearest spacing that gives
+//   If you specify `spacing` then the length you give is rounded to the nearest spacing that gives
 //   a uniform sampling of the path and the resulting uniformly sampled path is returned.
-//   Note that because this function operates on a discrete input path the quality of the output depends on
+//   .
+//   Because this function operates on a discrete input path the quality of the output depends on
 //   the sampling of the input.  If you want very accurate output, use a lot of points for the input.
 // Arguments:
 //   path = path in any dimension or a 1-region
@@ -519,7 +521,7 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 function resample_path(path, n, spacing, keep_corners, closed=true) =
     let(path = force_path(path))
     assert(is_path(path))
-    assert(num_defined([n,spacing])==1,"Must define exactly one of n and spacing")
+    assert(num_defined([n,spacing])==1,"\nMust define exactly one of n and spacing.")
     assert(n==undef || (is_integer(n) && n>0))
     assert(spacing==undef || (is_finite(spacing) && spacing>0))
     assert(is_bool(closed))
@@ -538,7 +540,7 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
         subpaths = [ for (p = pair(corners)) [for(i = [p.x:1:p.y]) path[i%pcnt]] ],
         n = is_undef(n)? undef : closed? n+1 : n
     )
-    assert(n==undef || n >= len(corners), "There are nore than `n=` corners whose angle is greater than `keep_corners=`.")
+    assert(n==undef || n >= len(corners), "\nThere are nore than `n=` corners whose angle is greater than `keep_corners=`.")
     let(
         lens = [for (subpath = subpaths) path_length(subpath)],
         part_ns = is_undef(n)
@@ -563,6 +565,108 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
     ) out;
 
 
+// Function: reduce_path()
+// Synopsis: Removes points from an irregular path, preserving dominant features.
+// SynTags: Path
+// Topics: Paths
+// See Also:
+// Usage:
+//   newpath = reduce_path(path, maxerr, [closed=]);
+// Description:
+//   This is intended for irregular paths such as coastlines, or paths having fractal self-similarity.
+//   The original path is simplified by removing points that fall within a specified margin of error,
+//   leaving behind those points that contribute to dominant features of the path. This operation has the
+//   effect of making the point spacing somewhat more uniform. For coastlines, up to 80% reduction in path
+//   length is possible with small degradation of the original shape. The input path may be 2D or 3D.
+//   .
+//   The `maxerr` parameter determines which points of the original path are kept. A point is kept if it
+//   deviates beyond `maxerr` distance from a straight line between the last kept point and a point further
+//   along the path. When a new deviation is found, that deviating point is kept and the process repeats from
+//   that new kept point. For paths such as coastlines, a `maxerr` value less than 1% of the maximum bounding
+//   box dimension is a good starting value.
+//   .
+//   For unclosed paths (where `closed=false`) the endpoints of the path are preserved. When `closed=true`,
+//   the path is treated as continuous and only dominant features that happen to be near the endpoints are
+//   included.
+// Arguments:
+//   path = Path in any dimension
+//   maxerr = Maximum deviation from line connecting last kept point to a further point; points beyond this deviation are kept.
+//   ---
+//   closed = Set to true if path is closed.  Default: false
+// Example(2D,Med,VPD=34900,VPT=[5702,6507,0]): A map of California, originally a 262-point polygon (yellow, on left), reduced to 39 points (green, on right).
+//   calif = [
+//   [225,12681], [199,12544], [180,12490], [221,12435], [300,12342], [310,12315], [320,12263], [350,12154],
+//   [374,11968], [350,11820], [328,11707], [291,11586], [259,11553], [275,11499], [304,11420], [312,11321],
+//   [273,11189], [233,11066], [200,10995], [160,10942], [104,10820], [0,10568], [25,10510], [50,10420],
+//   [65,10312], [271,10108], [368,10004], [438,9909], [517,9809], [569,9741], [600,9666], [615,9600],
+//   [630,9567], [649,9526], [679,9385], [670,9245], [650,9187], [635,9113], [644,8985], [673,8938], [694,8846],
+//   [740,8745], [770,8678], [780,8635], [771,8528], [745,8449], [738,8403], [807,8364], [872,8298], [894,8264],
+//   [1090,8076], [1270,7877], [1366,7798], [1440,7679], [1495,7596], [1543,7541], [1560,7487], [1575,7447],
+//   [1576,7350], [1536,7234], [1521,7168], [1587,7184], [1761,7129], [1838,7050], [1893,7050], [1995,6995],
+//   [2081,6940], [2109,7006], [2100,7045], [2100,7090], [2109,7155], [2115,7210], [2100,7269], [2124,7334],
+//   [2179,7365], [2209,7391], [2242,7362], [2308,7311], [2280,7215], [2220,7164], [2210,7150], [2200,7095],
+//   [2200,7040], [2234,7040], [2274,6932], [2415,6775], [2459,6691], [2483,6578], [2558,6497], [2610,6449],
+//   [2598,6430], [2490,6475], [2444,6500], [2410,6515], [2406,6530], [2375,6570], [2305,6610], [2224,6638],
+//   [2225,6806], [2211,6867], [2159,6913], [2109,6912], [2075,6810], [2074,6583], [2068,6521], [2104,6503],
+//   [2140,6454], [2153,6417], [2184,6336], [2187,6243], [2173,6158], [2213,6065], [2250,6005], [2283,5970],
+//   [2343,5928], [2370,5875], [2428,5822], [2485,5779], [2606,5782], [2728,5785], [2772,5725], [2850,5561],
+//   [2839,5472], [2820,5391], [2797,5322], [2734,5321], [2676,5330], [2640,5289], [2656,5236], [2661,5205],
+//   [2671,5144], [2712,5083], [2720,4973], [2738,4882], [2806,4819], [2891,4780], [2966,4737], [3004,4662],
+//   [3043,4604], [3080,4542], [3128,4491], [3170,4453], [3294,4262], [3370,4150], [3384,4090], [3402,4057],
+//   [3442,4029], [3602,3909], [3753,3777], [3855,3600], [3830,3521], [3900,3425], [3957,3394], [4000,3390],
+//   [4045,3393], [4109,3315], [4121,3235], [4089,3125], [4074,3085], [4081,3019], [4098,2923], [4116,2848],
+//   [4160,2774], [4135,2734], [4116,2697], [4100,2645], [4123,2585], [4208,2558], [4272,2478], [4367,2441],
+//   [4453,2461], [4533,2485], [4635,2488], [4795,2472], [4875,2450], [4896,2425], [4933,2402], [4988,2404],
+//   [5036,2409], [5124,2401], [5388,2338], [5479,2252], [5552,2199], [5610,2121], [5658,2051], [5802,1986],
+//   [5858,1955], [5994,1930], [6110,1905], [6122,1880], [6174,1895], [6309,1910], [6447,1875], [6510,1797],
+//   [6532,1730], [6525,1594], [6531,1521], [6615,1490], [6697,1525], [6729,1555], [6812,1543], [6901,1506],
+//   [7084,1351], [7193,1305], [7250,1205], [7255,1155], [7305,1152], [7420,1087], [7522,995], [7751,608],
+//   [7771,455], [7780,278], [7856,218], [7914,192], [7928,143], [7860,170], [7910,80], [7931,39], [7944,-2],
+//   [8009,4], [8490,46], [10165,189], [10542,220], [10575,240], [10654,239], [10701,218], [10735,242],
+//   [10776,308], [10811,372], [10834,527], [10781,598], [10685,625], [10595,763], [10588,913], [10553,965],
+//   [10572,995], [10585,1062], [10617,1120], [10672,1153], [10755,1340], [10781,1436], [10811,1637],
+//   [10791,1768], [10771,1807], [10824,1852], [10927,2015], [10995,2073], [11184,2212], [11204,2270],
+//   [11174,2312], [11045,2430], [10931,2585], [10881,2678], [10806,2818], [10739,2936], [10670,3102],
+//   [10670,3166], [4823,8540], [4804,12775], [4798,12800], [2515,12800], [232,12800]
+//   ];
+//   newpoly = reduce_path(calif, 120, closed=true);
+//   left(4000) polygon(calif);
+//   right(4000) color("lightgreen") polygon(newpoly);
+
+function reduce_path(path, maxerr, closed=false) =
+    assert(is_path(path), "\nInvalid path.")
+    assert(is_num(maxerr) && maxerr>0, "\nParameter 'maxerr' must be a positive number.")
+    let(
+        n = len(path),
+        unclosed = _err_resample(path, maxerr, n)
+    ) closed ? let( // search for new corners between the corners found on either side of the end points
+        nu = len(unclosed),
+        cornerpath = [
+            for(i=[unclosed[nu-2]:n-1]) path[i],
+            for(i=[0:unclosed[1]]) path[i]
+        ],
+        corner_resample = _err_resample(cornerpath, maxerr, len(cornerpath)),
+        nc = len(corner_resample)
+    ) [
+        for(i=[1:nu-2]) path[unclosed[i]], // exclude endpoints
+        if(nc>2) for(i=[1:nc-2]) cornerpath[corner_resample[i]] // insert new corners if any
+    ]
+    : [ for(i=unclosed) path[i] ];
+
+/// return a resampled path based on error deviation, retaining path endpoints (i.e. assume path is not closed)
+function _err_resample(path, maxerr, n, i1=0, i2=2, resultidx=[0], iter=0) =
+    n <= 2 ? path :
+    i2 >= n || i2-i1<2 ? concat(resultidx, [n-1]) : let(
+        dists = [ for(i=[i1+1:i2-1]) let(j=i%n) point_line_distance(path[j], [path[i1], path[i2%n]]) ],
+        imaxdist = max_index(dists),
+        newfound = dists[imaxdist] >= maxerr,
+        newidx1 = newfound ? i1+imaxdist+1 : i1,
+        newidx2 = newfound ? min(newidx1+2, n) : min(i2+1,n)
+    )
+    _err_resample(path, maxerr, n, newidx1, newidx2, newfound ? concat(resultidx, [newidx1]) : resultidx, iter+1);
+
+
+
 // Section: Path Geometry
 
 // Function: is_path_simple()
@@ -583,7 +687,7 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
 function is_path_simple(path, closed, eps=EPSILON) =
     is_1region(path) ? is_path_simple(path[0], default(closed,true), eps) :
     let(closed=default(closed,false))
-    assert(is_path(path, 2),"Must give a 2D path")
+    assert(is_path(path, 2),"\nMust give a 2D path.")
     assert(is_bool(closed))
     let(
         path = deduplicate(path,closed=closed,eps=eps)
@@ -623,8 +727,8 @@ function is_path_simple(path, closed, eps=EPSILON) =
 //   color("red") translate(closest[1]) circle(d=3, $fn=12);
 function path_closest_point(path, pt, closed=true) =
     let(path = force_path(path))
-    assert(is_path(path), "Input must be a path")
-    assert(is_vector(pt, len(path[0])), "Input pt must be a compatible vector")
+    assert(is_path(path), "\nInput must be a path.")
+    assert(is_vector(pt, len(path[0])), "\nInput pt must be a compatible vector.")
     assert(is_bool(closed))
     let(
         pts = [for (seg=pair(path,closed)) line_closest_point(seg,pt,SEGMENT)],
@@ -641,7 +745,7 @@ function path_closest_point(path, pt, closed=true) =
 //   tangs = path_tangents(path, [closed], [uniform]);
 // Description:
 //   Compute the tangent vector to the input {{path}}.  The derivative approximation is described in deriv().
-//   The returns vectors will be normalized to length 1.  If any derivatives are zero then
+//   The returned vectors are normalized to length 1.  If any derivatives are zero then
 //   the function fails with an error.  If you set `uniform` to false then the sampling is
 //   assumed to be non-uniform and the derivative is computed with adjustments to produce corrected
 //   values.
@@ -649,7 +753,7 @@ function path_closest_point(path, pt, closed=true) =
 //   path = path of any dimension or a 1-region
 //   closed = set to true of the path is closed.  Default: false
 //   uniform = set to false to correct for non-uniform sampling.  Default: true
-// Example(2D): A shape with non-uniform sampling gives distorted derivatives that may be undesirable.  Note that derivatives tilt towards the long edges of the rectangle.  
+// Example(2D): A shape with non-uniform sampling gives distorted derivatives that may be undesirable.  Derivatives tilt toward the long edges of the rectangle.  
 //   rect = square([10,3]);
 //   tangents = path_tangents(rect,closed=true);
 //   stroke(rect,closed=true, width=0.25);
@@ -683,7 +787,7 @@ function path_tangents(path, closed, uniform=true) =
 //   path tangent and lies in the plane of the curve.  For 3d paths we define the plane of the curve
 //   at path {{point}} i to be the plane defined by point i and its two neighbors.  At the endpoints of open paths
 //   we use the three end points.  For 3d paths the computed normal is the one lying in this plane that points
-//   towards the center of curvature at that path point.  For 2D paths, which lie in the xy plane, the normal
+//   toward the center of curvature at that path point.  For 2D paths, which lie in the xy plane, the normal
 //   is the path pointing to the right of the direction the path is traveling.  If points are collinear then
 //   a 3d path has no center of curvature, and hence the 
 //   normal is not uniquely defined.  In this case the function issues an error.
@@ -702,7 +806,7 @@ function path_normals(path, tangents, closed) =
          tangents = default(tangents, path_tangents(path,closed)),
          dim=len(path[0])
     )
-    assert(is_path(tangents) && len(tangents[0])==dim,"Dimensions of path and tangents must match")
+    assert(is_path(tangents) && len(tangents[0])==dim,"\nDimensions of path and tangents must match.")
     [
      for(i=idx(path))
          let(
@@ -712,7 +816,7 @@ function path_normals(path, tangents, closed) =
         )
         dim == 2 ? [tangents[i].y,-tangents[i].x]
                  : let( v=cross(cross(pts[1]-pts[0], pts[2]-pts[0]),tangents[i]))
-                   assert(norm(v)>EPSILON, "3D path contains collinear points")
+                   assert(norm(v)>EPSILON, "\n3D path contains collinear points.")
                    unit(v)
     ];
 
@@ -757,7 +861,7 @@ function path_curvature(path, closed) =
 //   path = 3D path
 //   closed = if true then treat path as a polygon.  Default: false
 function path_torsion(path, closed=false) =
-    assert(is_path(path,3), "Input path must be a 3d path")
+    assert(is_path(path,3), "\nInput path must be a 3d path.")
     assert(is_bool(closed))
     let(
         d1 = deriv(path,closed=closed),
@@ -810,12 +914,12 @@ function surface_normals(surf, col_wrap=false, row_wrap=false) =
 // Description:
 //   Given a list of distances in `cutdist`, cut the {{path}} into
 //   subpaths at those lengths, returning a list of paths.
-//   If the input path is closed then the final path will include the
+//   If the input path is closed then the final path includes the
 //   original starting {{point}}.  The list of cut distances must be
 //   in ascending order and should not include the endpoints: 0 
-//   or `len(path)`.  If you repeat a distance you will get an
+//   or `len(path)`.  If you repeat a distance, you get an
 //   empty list in that position in the output.  If you give an
-//   empty cutdist array you will get the input path as output
+//   empty cutdist array, you get the input path as output
 //   (without the final vertex doubled in the case of a closed path).
 // Arguments:
 //   path = path of any dimension or a 1-region
@@ -831,8 +935,8 @@ function path_cut(path,cutdist,closed) =
   let(closed=default(closed,false))
   assert(is_bool(closed))
   assert(is_vector(cutdist))
-  assert(last(cutdist)<path_length(path,closed=closed)-EPSILON,"Cut distances must be smaller than the path length")
-  assert(cutdist[0]>EPSILON, "Cut distances must be strictly positive")
+  assert(last(cutdist)<path_length(path,closed=closed)-EPSILON,"\nCut distances must be smaller than the path length.")
+  assert(cutdist[0]>EPSILON, "\nCut distances must be strictly positive.")
   let(
       cutlist = path_cut_points(path,cutdist,closed=closed)
   )
@@ -874,15 +978,15 @@ function _path_cut_getpaths(path, cutlist, closed) =
 //   points and indices of the next point in the path after that point.  So for example, a return
 //   value entry of [[2,3], 5] means that the cut point was [2,3] and the next point on the path after
 //   this point is path[5].  If the path is too short then path_cut_points returns undef.  If you set
-//   `direction` to true then `path_cut_points` will also return the tangent vector to the path and a normal
+//   `direction` to true then `path_cut_points` also returns the tangent vector to the path and a normal
 //   vector to the path.  It tries to find a normal vector that is coplanar to the path near the cut
-//   point.  If this fails it will return a normal vector parallel to the xy plane.  The output with
-//   direction vectors will be `[point, next_index, tangent, normal]`.
+//   point.  If this fails, it returns a normal vector parallel to the xy plane.  The output with
+//   direction vectors are in the form `[point, next_index, tangent, normal]`.
 //   .
-//   If you give the very last point of the path as a cut point then the returned index will be
-//   one larger than the last index (so it will not be a valid index).  If you use the closed
-//   option then the returned index will be equal to the path length for cuts along the closing
-//   path segment, and if you give a point equal to the path length you will get an
+//   If you give the very last point of the path as a cut point, then the returned index is
+//   one larger than the last index (so it would not be a valid index).  If you use the closed
+//   option then the returned index is equal to the path length for cuts along the closing
+//   path segment, and if you give a point equal to the path length you get an
 //   index of len(path)+1 for the index.  
 //
 // Arguments:
@@ -900,10 +1004,10 @@ function _path_cut_getpaths(path, cutlist, closed) =
 //   path_cut_points(square, [0,0.8,1.6,2.4,3.2]);               // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], undef]
 function path_cut_points(path, cutdist, closed=false, direction=false) =
     let(long_enough = len(path) >= (closed ? 3 : 2))
-    assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")
+    assert(long_enough,len(path)<2 ? "\nTwo points needed to define a path." : "\nClosed path must include three points.")
     is_num(cutdist) ? path_cut_points(path, [cutdist],closed, direction)[0] :
     assert(is_vector(cutdist))
-    assert(is_increasing(cutdist), "Cut distances must be an increasing list")
+    assert(is_increasing(cutdist), "\nCut distances must be an increasing list.")
     let(cuts = path_cut_points_recurse(path,cutdist,closed))
     !direction
        ? cuts
@@ -931,7 +1035,7 @@ function _path_cut_single(path, dist, closed=false, ind=0, eps=1e-7) =
     // If we get to the very end of the path (ind is last point or wraparound for closed case) then
     // check if we are within epsilon of the final path point.  If not we're out of path, so we fail
     ind==len(path)-(closed?0:1) ?
-       assert(dist<eps,"Path is too short for specified cut distance")
+       assert(dist<eps,"\nPath is too short for specified cut distance.")
        [select(path,ind),ind+1]
     :let(d = norm(path[ind]-select(path,ind+1))) d > dist ?
         [lerp(path[ind],select(path,ind+1),dist/d), ind+1] :
@@ -1009,7 +1113,7 @@ function _cut_to_seg_u_form(pathcut, path, closed) =
 //   paths = split_path_at_self_crossings(path, [closed], [eps]);
 // Description:
 //   Splits a 2D {{path}} into sub-paths wherever the original path crosses itself.
-//   Splits may occur mid-segment, so new vertices will be created at the intersection points.
+//   Splits may occur mid-segment, so new vertices are created at the intersection points.
 //   Returns a list of the resulting subpaths.  
 // Arguments:
 //   path = A 2D path or a 1-region.
@@ -1021,7 +1125,7 @@ function _cut_to_seg_u_form(pathcut, path, closed) =
 //   rainbow(paths) stroke($item, closed=false, width=3);
 function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
     let(path = force_path(path))
-    assert(is_path(path,2), "Must give a 2D path")
+    assert(is_path(path,2), "\nMust give a 2D path.")
     assert(is_bool(closed))
     let(
         path = list_unwrap(path, eps=eps),
@@ -1081,7 +1185,7 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 // Description:
 //   Given a possibly self-intersecting 2D {{polygon}}, constructs a representation of the original polygon as a list of
 //   non-intersecting simple polygons.  If nonzero is set to true then it uses the nonzero method for defining polygon membership.
-//   For simple cases, such as the pentagram, this will produce the outer perimeter of a self-intersecting polygon.  
+//   For simple cases, such as the pentagram, this produces the outer perimeter of a self-intersecting polygon.  
 // Arguments:
 //   poly = a 2D polygon or 1-region
 //   nonzero = If true use the nonzero method for checking if a point is in a polygon.  Otherwise use the even-odd method.  Default: false
@@ -1136,7 +1240,7 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 //   move([16,-14])rainbow(polygon_parts(poly,nonzero=true)) polygon($item);
 function polygon_parts(poly, nonzero=false, eps=EPSILON) =
     let(poly = force_path(poly))
-    assert(is_path(poly,2), "Must give 2D polygon")
+    assert(is_path(poly,2), "\nMust give 2D polygon.")
     assert(is_bool(nonzero))    
     let(
         poly = list_unwrap(poly, eps=eps),
@@ -1242,7 +1346,7 @@ function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0,
 ///   _assemble_path_fragments(subpaths);
 /// Description:
 ///   Given a list of paths, assembles them together into complete closed polygon paths if it can.
-///   Polygons with area < eps will be discarded and not returned.  
+///   Polygons with area < eps are discarded and not returned.  
 /// Arguments:
 ///   fragments = List of paths to be assembled into complete polygons.
 ///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
@@ -1282,10 +1386,10 @@ function _assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
 ///
 /// Takes a list of paths that are in the correct direction and assembles
 /// them into a list of paths.  Returns a list of assembled paths.
-/// If closed is false then any paths that are closed will have duplicate
-/// endpoints, and open paths will not have duplicate endpoints.
-/// If closed=true then all paths are assumed closed and none of the returned
-/// paths will have duplicate endpoints.
+/// If `closed=false` then any paths that are closed have duplicate
+/// endpoints, and open paths do not have duplicate endpoints.
+/// If `closed=true` then all paths are assumed closed and none of the returned
+/// paths have duplicate endpoints.
 ///
 /// It is assumed that the paths do not intersect each other.
 /// Paths can be in any dimension
