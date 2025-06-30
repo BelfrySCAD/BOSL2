@@ -179,7 +179,7 @@ function bilerp(points,x,y) =
 
 
 // Function: slerp()
-// Summary: Spherical lerp(), great-circle interpolation on a unit sphere.
+// Synopsis: Spherical lerp(), great-circle interpolation on a unit sphere.
 // Topics: Interpolation, Math
 // See Also: slerpn(), lerp()
 // Usage:
