@@ -569,7 +569,6 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
 // Synopsis: Removes points from an irregular path, preserving dominant features.
 // SynTags: Path
 // Topics: Paths
-// See Also:
 // Usage:
 //   newpath = reduce_path(path, maxerr, [closed=]);
 // Description:
