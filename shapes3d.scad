@@ -1890,6 +1890,53 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
     ) reorient(anchor,spin,orient, vnf=vnf, extent=true, p=vnf);
 
 
+// Module: u_shape()
+// Synopsis: Creates the shape of a 'U' or rotated-C character, such as might be used in a C-clamp.
+// SynTags: Geom
+// Topics: Shapes (3D), Attachable
+// See Also: prismoid()
+// Usage: As Module
+//   u_shape(width, height, ...) [ATTACHMENTS];
+// Description:
+//   When called as a module, creates the shape of a 'U' with the specified gap width and height.
+// Arguments:
+//   width = The space between either side of the U.
+//   height = The vertical space from top of the bottom bar of the U, to the top of the part.
+//   thickness = The thickness of the U shape in all dimensions not constrained by width or height.  Default: `8`
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   rounding = Radius of the edge rounding.  Default: No rounding.
+//   edges = Edges to mask.  See [Specifying Edges](attachments.scad#section-specifying-edges).  Default: No edges.
+// Named Anchors:
+//   "bore_left", "bore_right" = Left/Right-facing center of the gap formed by the 'U'.
+// Example:
+//   u_shape(20, 20);
+// Example: With rounding
+//   u_shape(20, 20, rounding=4, edges=BOTTOM);
+// Example: C-clamp for 2020 extrusion
+//   diff()
+//   u_shape(20, 20) {
+//     attach("bore_left", TOP, inside=true, shiftout=1) cyl(r=2, h=10);
+//     attach("bore_right", TOP, inside=true, shiftout=1) cyl(r=2, h=10);
+//   };
+
+module u_shape(width, height, thickness = 8, anchor=CENTER, spin=0, orient=UP, rounding=0, edges=[]) {
+    anchors = [
+        named_anchor("bore_right", [width/2 + thickness, 0, (height+thickness)/2 - height/2], RIGHT, 0),
+        named_anchor("bore_left", [-width/2 - thickness, 0, (height+thickness)/2 - height/2], LEFT, 0)
+    ];
+    attachable(anchor, spin, orient, anchors=anchors, size=[2*thickness + width, thickness, height + thickness]) {
+        down(height/2)
+        cuboid([2*thickness + width, thickness, thickness], rounding=rounding, edges=edges) {
+             align(TOP, LEFT) cuboid([thickness, thickness, height]);
+             align(TOP, RIGHT) cuboid([thickness, thickness, height]);
+        }
+        children();
+    }
+}
+
 
 // Section: Cylinders
 
