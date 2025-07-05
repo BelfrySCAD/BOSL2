@@ -541,9 +541,8 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cut
 //   partition(size, [spread], [cutsize], [cutpath], [gap], [spin], [$slop=]) CHILDREN;
 // Description:
 //   Partitions an object into two parts, spread apart a small distance, with matched joining edges.
-//   If only one side of the parition is desired, $idx can be used on the children i.e.
-//   `partition() if ($idx==0) cube();` will only give the back partition. This breaks with Lazy Union
-//   active, so a workaround is providing a front child at least `size` away i.e. `partition() if ($idx==0) cube(); else up(200) cube();`.
+//   If only one side of the partition is desired, $idx can be used on the children i.e.
+//   `partition() if ($idx==0) cube();` will only give the back partition.
 // Arguments:
 //   size = The [X,Y,Z] size of the object to partition.
 //   spread = The distance to spread the two parts by.
