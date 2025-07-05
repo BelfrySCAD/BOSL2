@@ -646,8 +646,8 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //     cuboid([50,30,10])
 //       tag("remove")position(TOP+BACK) xcopies(10,5) dovetail("female", slide=10, width=7, taper=4, height=4, anchor=BOTTOM+FRONT,spin=180);
 // Example: Blind housed sliding dovetail (similar to okuri ari).  If the left piece is rotated 90 degrees clockwise, it can be inserted downward with the male dovetail entering the insertion opening, then slid backward, making a 40x40x20 cube with no visible connectors. In this case, the opening is made slightly longer than the male dovetail (17 vs 15) so it's easier to assemble; with tapered dovetails, it's sometimes possible to make it shorter than the length (slide) of the male dovetail.
-//   left(30) cuboid([10,40,40]) fwd(5) attach(RIGHT,BOT,align=BACK,spin=90) dovetail("male", slide=15, width=20, height=8, slope=2);
-//   right(30) diff() cuboid([40,40,10]) fwd(5) attach(TOP,BOT,align=BACK,inside=true) tag("remove") dovetail("female", slide=15, width=20, height=8, slope=2, insertion_mask_slide=17);
+//   left(30) cuboid([10,40,40]) attach(RIGHT,BOT,align=BACK,spin=90,inset=5) dovetail("male", slide=15, width=20, height=8, slope=2);
+//   right(30) diff() cuboid([40,40,10]) attach(TOP,BOT,align=BACK,inside=true,inset=5) tag("remove") dovetail("female", slide=15, width=20, height=8, slope=2, insertion_mask_slide=17);
 function dovetail(gender, width, height, slide, h, w, angle, slope, thickness, taper, back_width, chamfer, extra=0.01, insertion_mask_slide=0, r, radius, round=false, anchor=BOTTOM, spin=0, orient) = no_function("dovetail");
 module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, taper, back_width, chamfer, extra=0.01, insertion_mask_slide=0, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
 {
