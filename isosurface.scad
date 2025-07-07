@@ -1232,7 +1232,7 @@ function _contour_vertices(pxlist, pxsize, isovalmin, isovalmax, segtablemin, se
             else if(f1<=isovalmin && isovalmin<=f0 && f0<=isovalmax) [p0, midptmin]
             else if(f0<isovalmin && f1>isovalmax) [midptmin, midptmax]
             else if(f0>isovalmax && f1<isovalmin) [midptmax, midptmin]
-            else if((f0<f1 && isovalmin<=f0 && isovalmax>=f1) || (f1<f0 && isovalmin<=f1 && isovalmax>=f0))
+            else if((f0<=f1 && isovalmin<=f0 && isovalmax>=f1) || (f1<=f0 && isovalmin<=f1 && isovalmax>=f0))
                 [p0, p1]
     ]
 ];
