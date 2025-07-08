@@ -1757,7 +1757,6 @@ function rect_tube(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `FRONT+LEFT+BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//
 // Named Anchors:
 //   "hypot" = Center of angled wedge face, perpendicular to that face.
 //   "hypot_left" = Left side of angled wedge face, bisecting the angle between the left side and angled faces.
@@ -2101,20 +2100,16 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//
-//
-// Example: By Radius
+// Example: By radius
 //   xdistribute(30) {
 //       cyl(l=40, r=10);
 //       cyl(l=40, r1=10, r2=5);
 //   }
-//
-// Example: By Diameter
+// Example: By diameter
 //   xdistribute(30) {
 //       cyl(l=40, d=25);
 //       cyl(l=40, d1=25, d2=10);
 //   }
-//
 // Example: Chamferring
 //   xdistribute(60) {
 //       // Shown Left to right.
@@ -2122,16 +2117,12 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //       cyl(l=40, d=40, chamfer=7, chamfang=30, from_end=false);
 //       cyl(l=40, d=40, chamfer=7, chamfang=30, from_end=true);
 //   }
-//
 // Example: Rounding
 //   cyl(l=40, d=40, rounding=10);
-//
 // Example(VPD=175;VPR=[90,0,0]): Teardrop Bottom Rounding
 //   cyl(l=40, d=40, rounding=10, teardrop=true);
-//
 // Example(VPD=175;VPR=[90,0,0]): Clipped Bottom Rounding
 //   cyl(l=40, d=40, rounding=10, clip_angle=40);
-//
 // Example: Heterogenous Chamfers and Rounding
 //   ydistribute(80) {
 //       // Shown Front to Back.
@@ -2139,63 +2130,50 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //       cyl(l=40, d=40, chamfer2=5, orient=UP);
 //       cyl(l=40, d=40, chamfer1=12, rounding2=10, orient=UP);
 //   }
-//
 // Example: Putting it all together
 //   cyl(
 //       l=20, d1=25, d2=15,
 //       chamfer1=5, chamfang1=60,
 //       from_end=true, rounding2=5
 //   );
-//
-// Example: External Chamfers
+// Example: External chamfers
 //   cyl(l=50, r=30, chamfer=-5, chamfang=30, $fa=1, $fs=1);
-//
 // Example: External Roundings
 //   cyl(l=50, r=30, rounding1=-5, rounding2=5, $fa=1, $fs=1);
-//
 // Example(Med): Standard Connectors
 //   xdistribute(40) {
 //       cyl(l=30, d=25) show_anchors();
 //       cyl(l=30, d1=25, d2=10) show_anchors();
 //   }
-//
 // Example: Texturing with heightfield diamonds
 //   cyl(h=40, r=20, texture="diamonds", tex_size=[5,5]);
-//
 // Example: Texturing with heightfield pyramids
 //   cyl(h=40, r1=20, r2=15,
 //       texture="pyramids", tex_size=[5,5],
 //       style="convex");
-//
 // Example: Texturing with heightfield truncated pyramids
 //   cyl(h=40, r1=20, r2=15, chamfer=5,
 //       texture="trunc_pyramids",
 //       tex_size=[5,5], style="convex");
-//
 // Example: Texturing with VNF tile "dots"
 //   cyl(h=40, r1=20, r2=15, rounding=9,
 //       texture="dots", tex_size=[5,5],
 //       tex_samples=6);
-//
 // Example: Texturing with VNF tile "bricks_vnf"
 //   cyl(h=50, r1=25, r2=20, shift=[0,10], rounding1=-10,
 //       texture="bricks_vnf", tex_size=[10,10],
 //       tex_depth=0.5, style="concave");
-//
 // Example: No Texture Taper
 //   cyl(d1=25, d2=20, h=30, rounding=5,
 //       texture="trunc_ribs", tex_size=[5,1]);
-//
 // Example: Taper Texure at Extreme Ends
 //   cyl(d1=25, d2=20, h=30, rounding=5,
 //       texture="trunc_ribs", tex_taper=0,
 //       tex_size=[5,1]);
-//
 // Example: Taper Texture over First and Last 10%
 //   cyl(d1=25, d2=20, h=30, rounding=5,
 //       texture="trunc_ribs", tex_taper=0.1,
 //       tex_size=[5,1]);
-//
 // Example(3D,Med,NoAxes): Making a Clay Pattern Roller
 //   tex = [
 //       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],
@@ -2347,7 +2325,7 @@ function cyl(
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
-    tex_scale, tex_depth, tex_samples, length, height, 
+    tex_scale, tex_depth, tex_samples, 
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0, orient=UP
@@ -2455,6 +2433,7 @@ module cyl(
     h, r, center,
     l, r1, r2,
     d, d1, d2,
+    length, height,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
@@ -2463,7 +2442,7 @@ module cyl(
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
-    tex_scale, tex_depth, tex_samples, length, height, 
+    tex_scale, tex_depth, tex_samples, 
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0, orient=UP
@@ -2530,12 +2509,12 @@ module cyl(
 //   This is a shortcut for `cyl()` with `orient=RIGHT`, but otherwise using the same arguments.
 //   .
 //   See [cyl()] for more detailed usage and arguments.
-// Example: By Radius
+// Example: By radius
 //   ydistribute(50) {
 //       xcyl(l=35, r=10);
 //       xcyl(l=35, r1=15, r2=5);
 //   }
-// Example: By Diameter
+// Example: By diameter
 //   ydistribute(50) {
 //       xcyl(l=35, d=20);
 //       xcyl(l=35, d1=30, d2=10);
@@ -2554,31 +2533,32 @@ function xcyl(
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
-    tex_scale, tex_depth, tex_samples, length, height, 
+    tex_scale, tex_depth, tex_samples, 
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0
-) = cyl(h, r, center,
-    l, r1, r2,
-    d, d1, d2,
-    length, height,
-    chamfer, chamfer1, chamfer2,
-    chamfang, chamfang1, chamfang2,
-    rounding, rounding1, rounding2,
-    circum, realign, shift,
-    teardrop, clip_angle,
-    from_end, from_end1, from_end2,
-    texture, tex_size, tex_reps, tex_counts,
-    tex_inset, tex_rot,
-    tex_scale, tex_depth, tex_samples, length, height, 
-    tex_taper, style, tex_style,
-    extra, extra1, extra2, 
-    anchor, spin, orient=RIGHT);
+) = cyl(h=h, r=r, center=center,
+    l=l, r1=r1, r2=r2,
+    d=d, d1=d1, d2=d2,
+    length=length, height=height,
+    chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+    chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+    rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+    circum=circum, realign=realign, shift=shift,
+    teardrop=teardrop, clip_angle=clip_angle,
+    from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+    texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+    tex_inset=tex_inset, tex_rot=tex_rot,
+    tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+    tex_taper=tex_taper, style=style, tex_style=tex_style,
+    extra=extra, extra1=extra1, extra2=extra2, 
+    anchor=anchor, spin=spin, orient=RIGHT);
 
 module xcyl(
     h, r, center,
     l, r1, r2,
     d, d1, d2,
+    length, height,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
@@ -2587,7 +2567,7 @@ module xcyl(
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
-    tex_scale, tex_depth, tex_samples, length, height, 
+    tex_scale, tex_depth, tex_samples,
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0
@@ -2597,21 +2577,20 @@ module xcyl(
     l = one_defined([l,h,length,height],"l,h,length,height",1);
     attachable(anchor,spin,orient=UP, r1=r1, r2=r2, l=l, axis=RIGHT) {
         cyl(
-            undef, undef, center, // h,r,center
-            l, r1, r2,
-            undef, undef, undef,  // d,d1,d2
-            chamfer, chamfer1, chamfer2,
-            chamfang, chamfang1, chamfang2,
-            rounding, rounding1, rounding2,
-            circum, realign, shift,
-            teardrop, clip_angle,
-            from_end, from_end1, from_end2,
-            texture, tex_size, tex_reps, tex_counts,
-            tex_inset, tex_rot,
-            tex_scale, tex_depth, tex_samples, length, height, 
-            tex_taper, style, tex_style,
-            extra, extra1, extra2, 
-            anchor, spin, orient=RIGHT
+            center=center,
+            l=l, r1=r1, r2=r2,
+            chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+            chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+            rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+            circum=circum, realign=realign, shift=shift,
+            teardrop=teardrop, clip_angle=clip_angle,
+            from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+            texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+            tex_inset=tex_inset, tex_rot=tex_rot,
+            tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+            tex_taper=tex_taper, style=style, tex_style=tex_style,
+            extra=extra, extra1=extra1, extra2=extra2, 
+            anchor=anchor, spin=spin, orient=RIGHT
         );
         children();
     }
@@ -2629,12 +2608,12 @@ module xcyl(
 //   This is a shortcut for `cyl()` with `orient=BACK`, but otherwise using the same arguments.
 //   .
 //   See [cyl()] for more detailed usage and arguments.
-// Example: By Radius
+// Example: By radius
 //   xdistribute(50) {
 //       ycyl(l=35, r=10);
 //       ycyl(l=35, r1=15, r2=5);
 //   }
-// Example: By Diameter
+// Example: By diameter
 //   xdistribute(50) {
 //       ycyl(l=35, d=20);
 //       ycyl(l=35, d1=30, d2=10);
@@ -2657,28 +2636,29 @@ function ycyl(
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0
-) = cyl(h, r, center,
-    l, r1, r2,
-    d, d1, d2,
-    length, height,
-    chamfer, chamfer1, chamfer2,
-    chamfang, chamfang1, chamfang2,
-    rounding, rounding1, rounding2,
-    circum, realign, shift,
-    teardrop, clip_angle,
-    from_end, from_end1, from_end2,
-    texture, tex_size, tex_reps, tex_counts,
-    tex_inset, tex_rot,
-    tex_scale, tex_depth, tex_samples, length, height, 
-    tex_taper, style, tex_style,
-    extra, extra1, extra2, 
-    anchor, spin, orient=BACK);
+) = cyl(h=h, r=r, center=center,
+    l=l, r1=r1, r2=r2,
+    d=d, d1=d1, d2=d2,
+    length=length, height=height,
+    chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+    chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+    rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+    circum=circum, realign=realign, shift=shift,
+    teardrop=teardrop, clip_angle=clip_angle,
+    from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+    texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+    tex_inset=tex_inset, tex_rot=tex_rot,
+    tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+    tex_taper=tex_taper, style=style, tex_style=tex_style,
+    extra=extra, extra1=extra1, extra2=extra2, 
+    anchor=anchor, spin=spin, orient=BACK);
 
 
 module ycyl(
     h, r, center,
     l, r1, r2,
     d, d1, d2,
+    length, height,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
@@ -2687,7 +2667,7 @@ module ycyl(
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
-    tex_scale, tex_depth, tex_samples, length, height, 
+    tex_scale, tex_depth, tex_samples,
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0
@@ -2697,21 +2677,20 @@ module ycyl(
     l = one_defined([l,h,length,height],"l,h,length,height",1);
     attachable(anchor,spin,orient=UP, r1=r1, r2=r2, l=l, axis=BACK) {
         cyl(
-            undef, undef, center, // h,r,center
-            l, r1, r2,
-            undef, undef, undef,  // d,d1,d2
-            chamfer, chamfer1, chamfer2,
-            chamfang, chamfang1, chamfang2,
-            rounding, rounding1, rounding2,
-            circum, realign, shift,
-            teardrop, clip_angle,
-            from_end, from_end1, from_end2,
-            texture, tex_size, tex_reps, tex_counts,
-            tex_inset, tex_rot,
-            tex_scale, tex_depth, tex_samples, length, height, 
-            tex_taper, style, tex_style,
-            extra, extra1, extra2, 
-            anchor, orient=BACK
+            center=center,
+            l=l, r1=r1, r2=r2,
+            chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+            chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+            rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+            circum=circum, realign=realign, shift=shift,
+            teardrop=teardrop, clip_angle=clip_angle,
+            from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+            texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+            tex_inset=tex_inset, tex_rot=tex_rot,
+            tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+            tex_taper=tex_taper, style=style, tex_style=tex_style,
+            extra=extra, extra1=extra1, extra2=extra2, 
+            anchor=anchor, spin=spin, orient=BACK
         );
         children();
     }
@@ -2729,12 +2708,12 @@ module ycyl(
 //   This is a shortcut for `cyl()` with `orient=UP` (which is also the default for [cyl()]), but otherwise using the same arguments.
 //   .
 //   See [cyl()] for more detailed usage and arguments.
-// Example: By Radius
+// Example: By radius
 //   xdistribute(50) {
 //       zcyl(l=35, r=10);
 //       zcyl(l=35, r1=15, r2=5);
 //   }
-// Example: By Diameter
+// Example: By diameter
 //   xdistribute(50) {
 //       zcyl(l=35, d=20);
 //       zcyl(l=35, d1=30, d2=10);
@@ -2757,22 +2736,22 @@ function zcyl(
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0
-) = cyl(h, r, center,
-    l, r1, r2,
-    d, d1, d2,
-    length, height,
-    chamfer, chamfer1, chamfer2,
-    chamfang, chamfang1, chamfang2,
-    rounding, rounding1, rounding2,
-    circum, realign, shift,
-    teardrop, clip_angle,
-    from_end, from_end1, from_end2,
-    texture, tex_size, tex_reps, tex_counts,
-    tex_inset, tex_rot,
-    tex_scale, tex_depth, tex_samples, length, height, 
-    tex_taper, style, tex_style,
-    extra, extra1, extra2, 
-    anchor, spin, orient=UP);
+) = cyl(h=h, r=r, center=center,
+    l=l, r1=r1, r2=r2,
+    d=d, d1=d1, d2=d2,
+    length=length, height=height,
+    chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+    chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+    rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+    circum=circum, realign=realign, shift=shift,
+    teardrop=teardrop, clip_angle=clip_angle,
+    from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+    texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+    tex_inset=tex_inset, tex_rot=tex_rot,
+    tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+    tex_taper=tex_taper, style=style, tex_style=tex_style,
+    extra=extra, extra1=extra1, extra2=extra2, 
+    anchor=anchor, spin=spin, orient=UP);
 
 module zcyl(
     h, r, center,
@@ -2796,21 +2775,20 @@ module zcyl(
     l = one_defined([l,h,length,height],"l,h,length,height",1);
     attachable(anchor,spin,orient=UP, r1=r1, r2=r2, l=l) {
         cyl(
-            undef, undef, center, // h,r,center
-            l, r1, r2,
-            undef, undef, undef,  // d,d1,d2
-            chamfer, chamfer1, chamfer2,
-            chamfang, chamfang1, chamfang2,
-            rounding, rounding1, rounding2,
-            circum, realign, shift,
-            teardrop, clip_angle,
-            from_end, from_end1, from_end2,
-            texture, tex_size, tex_reps, tex_counts,
-            tex_inset, tex_rot,
-            tex_scale, tex_depth, tex_samples, length, height, 
-            tex_taper, style, tex_style,
-            extra, extra1, extra2, 
-            anchor, orient=UP
+            center=center,
+            l=l, r1=r1, r2=r2,
+            chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+            chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+            rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+            circum=circum, realign=realign, shift=shift,
+            teardrop=teardrop, clip_angle=clip_angle,
+            from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+            texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+            tex_inset=tex_inset, tex_rot=tex_rot,
+            tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+            tex_taper=tex_taper, style=style, tex_style=tex_style,
+            extra=extra, extra1=extra1, extra2=extra2, 
+            anchor=anchor, spin=spin, orient=UP
         );
         children();
     }
