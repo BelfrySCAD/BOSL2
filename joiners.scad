@@ -687,7 +687,7 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
 
     type = is_def(chamfer) && chamfer>0 ? "chamfer" : "circle";
 
-    smallend_half = round_corners(
+    bigend_half = round_corners(
         move(
             [0,-slide/2-extra,0],
             p=[
@@ -700,13 +700,13 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
         method=type, cut = fullsize, closed=false
     );
 
-    smallend_points = concat(select(smallend_half, 1, -2), [down(extra,p=select(smallend_half, -2))]);
+    bigend_points = concat(select(bigend_half, 1, -2), [down(extra,p=select(bigend_half, -2))]);
     offset = is_def(taper) ? -slide * tan(taper)
            : is_def(back_width) ? (back_width-width) / 2
            : 0;
-    bigend_points = move([offset+2*extra_offset,slide+2*extra,0], p=smallend_points);
+    smallend_points = move([offset+2*extra_offset,slide+2*extra,0], p=bigend_points);
 
-    bigenough = all_nonnegative(column(smallend_half,0)) && all_nonnegative(column(bigend_points,0));
+    bigenough = all_nonnegative(column(bigend_half,0)) && all_nonnegative(column(smallend_points,0));
 
     assert(bigenough, "Width (or back_width) of dovetail is not large enough for its geometry (angle and taper");
 
@@ -715,7 +715,7 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
 
     // This code computes the true normal from which the exact width factor can be obtained
     // as the x component.  Comparing to wfactor above shows that they agree.
-    //   pts = [smallend_points[0], smallend_points[1], bigend_points[1],bigend_points[0]];
+    //   pts = [bigend_points[0], bigend_points[1], smallend_points[1],smallend_points[0]];
     //   n = -polygon_normal(pts);
     //   echo(n=n);
     //   echo(invwfactor = 1/wfactor, error = n.x-1/wfactor);
@@ -726,8 +726,8 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
 
             skin(
                 [
-                    reverse(concat(smallend_points, xflip(p=reverse(smallend_points)))),
-                    reverse(concat(bigend_points, xflip(p=reverse(bigend_points))))
+                    reverse(concat(bigend_points, xflip(p=reverse(bigend_points)))),
+                    reverse(concat(smallend_points, xflip(p=reverse(smallend_points))))
                 ],
                 slices=0, convexity=4
             );
