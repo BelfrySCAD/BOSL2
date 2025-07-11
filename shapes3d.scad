@@ -2506,13 +2506,20 @@ module cyl(
 // Description:
 //   Creates an attachable cylinder with roundovers, chamfering, and optional texture, oriented along the X axis.
 //   .
-//   This is a shortcut for `cyl()` with `orient=RIGHT`, but otherwise using the same arguments.
+//   Used as a function, this is a shortcut for `cyl()` with `orient=RIGHT`, but otherwise using the same arguments.
+//   Used as a module, the difference from cyl() is in the anchors, which don't get reoriented with the cylinder but maintain
+//   the orientations you specify.
+//   For example, top and right anchors on xcyl() would be on the top curved surface and the right (positive x) end,
+//   respectively, whereas with cyl() these anchors would be associated with the top end and right side.
 //   .
 //   See [cyl()] for more detailed usage and arguments.
-// Example: By radius
+// Example: By radius. The cone shows anchor arrows for `TOP` and `RIGHT`.
 //   ydistribute(50) {
 //       xcyl(l=35, r=10);
-//       xcyl(l=35, r1=15, r2=5);
+//       xcyl(l=35, r1=15, r2=5) {
+//           attach(TOP) anchor_arrow();
+//           attach(RIGHT) anchor_arrow();
+//       }
 //   }
 // Example: By diameter
 //   ydistribute(50) {
@@ -2605,13 +2612,20 @@ module xcyl(
 // Description:
 //   Creates an attachable cylinder with roundovers, chamfering, and optional texture, oriented along the Y axis.
 //   .
-//   This is a shortcut for `cyl()` with `orient=BACK`, but otherwise using the same arguments.
+//   Used as a function, this is a shortcut for `cyl()` with `orient=BACK`, but otherwise using the same arguments.
+//   Used as a module, the difference from cyl() is in the anchors, which don't get reoriented with the cylinder but maintain
+//   the orientations you specify.
+//   For example, top and right anchors on ycyl() would be on the top and right of the curved cylinder surface,
+//   respectively, whereas with cyl() these anchors would be associated with the top end and right side.
 //   .
 //   See [cyl()] for more detailed usage and arguments.
-// Example: By radius
+// Example: By radius. The cone shows anchor arrows for `TOP` and `RIGHT`.
 //   xdistribute(50) {
 //       ycyl(l=35, r=10);
-//       ycyl(l=35, r1=15, r2=5);
+//       ycyl(l=35, r1=15, r2=5) {
+//           attach(TOP) anchor_arrow();
+//           attach(RIGHT) anchor_arrow();
+//       }
 //   }
 // Example: By diameter
 //   xdistribute(50) {
@@ -2705,13 +2719,16 @@ module ycyl(
 // Description:
 //   Pass-through to [cyl()]. Creates an attachable cylinder with roundovers, chamfering, and optional texture, oriented along the Z axis.
 //   .
-//   This is a shortcut for `cyl()` with `orient=UP` (which is also the default for [cyl()]), but otherwise using the same arguments.
+//   This is a shortcut for `cyl()` with `orient=UP` (which is also the default for [cyl()]), but otherwise using the same arguments. Unlike `xcyl()` and `ycyl()`, anchoring for `zcyl()` works the same as for `cyl()`.
 //   .
 //   See [cyl()] for more detailed usage and arguments.
-// Example: By radius
+// Example: By radius. The cone shows anchor arrows for `TOP` and `RIGHT`, which for `zcyl()` work the same as for `cyl()`.
 //   xdistribute(50) {
 //       zcyl(l=35, r=10);
-//       zcyl(l=35, r1=15, r2=5);
+//       zcyl(l=35, r1=15, r2=5) {
+//           attach(TOP) anchor_arrow();
+//           attach(RIGHT) anchor_arrow();
+//       }
 //   }
 // Example: By diameter
 //   xdistribute(50) {
