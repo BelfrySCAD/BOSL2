@@ -659,7 +659,7 @@ function cuboid(
 //   prismoid(size1=[100,75], h=30, xang=50, yang=70);
 // Example: Specifying top, height and angle, with asymmetric angles
 //   prismoid(size2=[100,75], h=30, xang=[50,60], yang=[70,40]);
-// Example: Specifying top, bottom and angle for X and using that to define height.  Note that giving yang here would likely give a conflicting height calculation, which is not allowed.  
+// Example: Specifying top, bottom and angle for X and using that to define height. Giving yang here would likely give a conflicting height calculation, which is not allowed.  
 //   prismoid(size1=[100,75], size2=[75,35], xang=50);
 // Example: The same as the previous example but we give a shift in Y.  Note that shift.x must be undef because you cannot give combine an angle with a shift, so a shift.x value would conflict with xang being defined.  
 //   prismoid(size1=[100,75], size2=[75,35], xang=50, shift=[undef,20]);
@@ -2091,7 +2091,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
-//   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
+//   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it halfway into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
@@ -2506,11 +2506,11 @@ module cyl(
 // Description:
 //   Creates an attachable cylinder with roundovers, chamfering, and optional texture, oriented along the X axis.
 //   .
-//   Used as a function, this is a shortcut for `cyl()` with `orient=RIGHT`, but otherwise using the same arguments.
+//   Used as a function, this is a shortcut for `cyl()` with `orient=RIGHT`, but otherwise using the same arguments excluding `orient`, which is not accepted.
 //   Used as a module, the difference from cyl() is in the anchors, which don't get reoriented with the cylinder but maintain
 //   the orientations you specify.
-//   For example, top and right anchors on xcyl() would be on the top curved surface and the right (positive x) end,
-//   respectively, whereas with cyl() these anchors would be associated with the top end and right side.
+//   For example, top and right anchors on xcyl() are on the top curved surface and the right (positive x) end,
+//   respectively, whereas with cyl() these anchors are associated with the top end and right side.
 //   .
 //   See [cyl()] for more detailed usage and arguments.
 // Example: By radius. The cone shows anchor arrows for `TOP` and `RIGHT`.
@@ -2612,11 +2612,11 @@ module xcyl(
 // Description:
 //   Creates an attachable cylinder with roundovers, chamfering, and optional texture, oriented along the Y axis.
 //   .
-//   Used as a function, this is a shortcut for `cyl()` with `orient=BACK`, but otherwise using the same arguments.
+//   Used as a function, this is a shortcut for `cyl()` with `orient=BACK`, but otherwise using the same arguments excluding `orient`, which is not accepted.
 //   Used as a module, the difference from cyl() is in the anchors, which don't get reoriented with the cylinder but maintain
 //   the orientations you specify.
-//   For example, top and right anchors on ycyl() would be on the top and right of the curved cylinder surface,
-//   respectively, whereas with cyl() these anchors would be associated with the top end and right side.
+//   For example, top and right anchors on ycyl() are on the top and right of the curved cylinder surface,
+//   respectively, whereas with cyl() these anchors are associated with the top end and right side.
 //   .
 //   See [cyl()] for more detailed usage and arguments.
 // Example: By radius. The cone shows anchor arrows for `TOP` and `RIGHT`.
@@ -2719,7 +2719,7 @@ module ycyl(
 // Description:
 //   Pass-through to [cyl()]. Creates an attachable cylinder with roundovers, chamfering, and optional texture, oriented along the Z axis.
 //   .
-//   This is a shortcut for `cyl()` with `orient=UP` (which is also the default for [cyl()]), but otherwise using the same arguments. Unlike `xcyl()` and `ycyl()`, anchoring for `zcyl()` works the same as for `cyl()`.
+//   This is a shortcut for `cyl()` with `orient=UP` (which is also the default for [cyl()]), but otherwise using the same arguments excluding `orient`, which is not accepted. Unlike `xcyl()` and `ycyl()`, anchoring for `zcyl()` works the same as for `cyl()`.
 //   .
 //   See [cyl()] for more detailed usage and arguments.
 // Example: By radius. The cone shows anchor arrows for `TOP` and `RIGHT`, which for `zcyl()` work the same as for `cyl()`.
@@ -3238,7 +3238,7 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 //   With style="align", the circumscribed sphere has its maximum radius on the X and Y axes
 //   but is undersized on the Z axis.  With style="octa" the circumscribed sphere has faces at each axis, so
 //   the radius on the axes is equal to the specified radius, which is the *minimum* radius of the circumscribed sphere.
-//   The same thing is true for style="icosa" when $fn is a multiple of 10.  This would enable you to create spherical
+//   The same thing is true for style="icosa" when $fn is a multiple of 10. This enables you to create spherical
 //   holes with guaranteed on-axis dimensions.
 // Arguments:
 //   r = Radius of the spheroid.
@@ -3870,7 +3870,7 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 //
 // Named Anchors:
 //   "cap" = The center of the top of the cap, oriented with the cap face normal.
-//   "tip" = The position where an un-capped onion would come to a point, oriented in the direction the point is from the center.
+//   "tip" = The position where an un-capped onion comes to a point, oriented in the direction the point is from the center.
 //
 // Example: Typical Shape
 //   onion(r=30, ang=30);
