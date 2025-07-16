@@ -509,10 +509,10 @@ module position(at,from)
     if (is_def(from)){
       echo("'from' argument of position() has changed to 'at' and will be removed in a future version");
     }
-    dummy0=assert(num_defined([at,from])==1, "Cannot give both `at` argument and the deprectated `from` argument to position()");
+    dummy0=assert(num_defined([at,from])==1, "\nCannot give both `at` argument and the deprectated `from` argument to position().");
     at = first_defined([at,from]);
     req_children($children);
-    dummy1=assert($parent_geom != undef, "No object to position relative to.");
+    dummy1=assert($parent_geom != undef, "\nNo object to position relative to.");
     anchors = (is_vector(at)||is_string(at))? [at] : at;
     two_d = _attach_geom_2d($parent_geom);
     for (anchr = anchors) {
@@ -563,7 +563,7 @@ module position(at,from)
 module orient(anchor, spin) {
     req_children($children);
     check=
-      assert($parent_geom != undef, "No parent to orient from!")
+      assert($parent_geom != undef, "\nNo parent to orient from!")
       assert(is_string(anchor) || is_vector(anchor));
     anch = _find_anchor(anchor, $parent_geom);
     two_d = _attach_geom_2d($parent_geom);
@@ -700,8 +700,8 @@ module align(anchor,align=CENTER,inside=false,inset=0,shiftout=0,overlap)
 {
     req_children($children);
     overlap = (overlap!=undef)? overlap : $overlap;
-    dummy1=assert($parent_geom != undef, "No object to align to.")
-           assert(is_undef($attach_to), "Cannot use align() as a child of attach()");
+    dummy1=assert($parent_geom != undef, "\nNo object to align to.")
+           assert(is_undef($attach_to), "\nCannot use align() as a child of attach().");
     anchor = is_vector(anchor) ? [anchor] : anchor;
     align = is_vector(align) ? [align] : align;
     two_d = _attach_geom_2d($parent_geom);
@@ -712,19 +712,19 @@ module align(anchor,align=CENTER,inside=false,inset=0,shiftout=0,overlap)
         $anchor=face;
         dummy=
           assert(!is_string(face),
-                 str("Named anchor \"",face,"\" given for anchor, but align() does not support named anchors"))
+                 str("\nNamed anchor \"",face,"\" given for anchor, but align() does not support named anchors."))
           assert(is_vector(face) && (len(face)==2 || len(face)==3),
-                 str("Invalid face ",face, ".  Must be a 2-vector or 3-vector"));
+                 str("\nInvalid face ",face, ". Must be a 2-vector or 3-vector."));
         thisface = two_d? _force_anchor_2d(face) : point3d(face);
         for(j = idx(align)) {
           edge=align[j];
           $idx = j+len(align)*i;
           $align=edge;
           dummy1=assert(is_vector(edge) && (len(edge)==2 || len(edge)==3),
-                        "align direction must be a 2-vector or 3-vector");
+                        "\nalign direction must be a 2-vector or 3-vector.");
           thisedge = two_d? _force_anchor_2d(edge) : point3d(edge);
           dummy=assert(all_zero(v_mul(thisedge,thisface)),
-                       str("align (",thisedge,") cannot include component parallel to anchor ",thisface));
+                       str("\nalign (",thisedge,") cannot include component parallel to anchor ",thisface,"."));
           thisface_anch = _find_anchor(thisface, $parent_geom);
           inset_dir = two_d ? -thisface
                     : unit(thisface_anch[1]-_find_anchor([thisedge.x,0,0]+thisface, $parent_geom)[1],CTR)
@@ -931,10 +931,10 @@ function _make_anchor_legal(anchor,geom) =
 module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0, inside=false, from, to)
 {
     dummy3=
-      assert(num_defined([to,child])<2, "Cannot combine deprecated 'to' argument with 'child' parameter")
-      assert(num_defined([from,parent])<2, "Cannot combine deprecated 'from' argument with 'parent' parameter")
-      assert(spin!="align" || is_def(align), "Can only set spin to \"align\" when the 'align' parameter is given")
-      assert(is_finite(spin) || spin=="align", "Spin must be a number (unless align is given)")
+      assert(num_defined([to,child])<2, "\nCannot combine deprecated 'to' argument with 'child' parameter.")
+      assert(num_defined([from,parent])<2, "\nCannot combine deprecated 'from' argument with 'parent' parameter.")
+      assert(spin!="align" || is_def(align), "\nCan only set spin to \"align\" when the 'align' parameter is given.")
+      assert(is_finite(spin) || spin=="align", "\nSpin must be a number (unless align is given).")
       assert((is_undef(overlap) || is_finite(overlap)) && (is_def(overlap) || is_undef($overlap) || is_finite($overlap)),
              str("Provided ",is_def(overlap)?"":"$","overlap is not valid."));
     removetag = inside;
@@ -947,10 +947,10 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
       echo("The 'norot' option to attach() is deprecated and will be removed in the future.  Use position() instead.");
     req_children($children);
     
-    dummy=assert($parent_geom != undef, "No object to attach to!")
+    dummy=assert($parent_geom != undef, "\nNo object to attach to!")
           assert(is_undef(child) || is_string(child) || (is_vector(child) && (len(child)==2 || len(child)==3)),
-                 "child must be a named anchor (a string) or a 2-vector or 3-vector")
-          assert(is_undef(align) || !is_string(child), "child is a named anchor.  Named anchors are not supported with align=");
+                 "\nChild must be a named anchor (a string) or a 2-vector or 3-vector.")
+          assert(is_undef(align) || !is_string(child), "\nChild is a named anchor. Named anchors are not supported with align=.");
 
     two_d = _attach_geom_2d($parent_geom);
     basegeom = $parent_geom[0]=="conoid" ? attach_geom(r=2,h=2,axis=$parent_geom[5])
@@ -963,22 +963,22 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
     anchors = is_vector(parent) || is_string(parent) ? [parent] : parent;
     align_list = is_undef(align) ? [undef]
                : is_vector(align) || is_string(align) ? [align] : align;
-    dummy4 = assert(is_string(parent) || is_list(parent), "Invalid parent anchor or anchor list")
-             assert(spin==0 || (!two_d || is_undef(child)), "spin is not allowed for 2d objects when 'child' is given");
+    dummy4 = assert(is_string(parent) || is_list(parent), "\nInvalid parent anchor or anchor list.")
+             assert(spin==0 || (!two_d || is_undef(child)), "\nspin is not allowed for 2d objects when 'child' is given.");
     child_temp = first_defined([child,to]);
     child = two_d ? _force_anchor_2d(child_temp) : child_temp;
-    dummy2=assert(align_list==[undef] || is_def(child), "Cannot use 'align' without 'child'")
-           assert(!inside || is_def(child), "Cannot use 'inside' without 'child'")
-           assert(inset==0 || is_def(child), "Cannot specify 'inset' without 'child'")
-           assert(inset==0 || is_def(align), "Cannot specify 'inset' without 'align'")
-           assert(shiftout==0 || is_def(child), "Cannot specify 'shiftout' without 'child'");
+    dummy2=assert(align_list==[undef] || is_def(child), "\nCannot use 'align' without 'child'.")
+           assert(!inside || is_def(child), "\nCannot use 'inside' without 'child'.")
+           assert(inset==0 || is_def(child), "\nCannot specify 'inset' without 'child'.")
+           assert(inset==0 || is_def(align), "\nCannot specify 'inset' without 'align'.")
+           assert(shiftout==0 || is_def(child), "\nCannot specify 'shiftout' without 'child'.");
     factor = inside?-1:1;
     $attach_to = child;
     for (anch_ind = idx(anchors)) {
         dummy=assert(is_string(anchors[anch_ind]) || (is_vector(anchors[anch_ind]) && (len(anchors[anch_ind])==2 || len(anchors[anch_ind])==3)),
-                     str("parent[",anch_ind,"] is ",anchors[anch_ind]," but it must be a named anchor (string) or a 2-vector or 3-vector"))
+                     str("\nParent[",anch_ind,"] is ",anchors[anch_ind]," but it must be a named anchor (string), a 2-vector, or 3-vector."))
               assert(align_list==[undef] || !is_string(anchors[anch_ind]),
-                     str("parent[",anch_ind,"] is a named anchor (",anchors[anch_ind],"), but named anchors are not supported with align="));
+                     str("\nParent[",anch_ind,"] is a named anchor (",anchors[anch_ind],"), but named anchors are not supported with align=."));
         anchor = is_string(anchors[anch_ind])? anchors[anch_ind]
                : two_d?_force_anchor_2d(anchors[anch_ind])
                : point3d(anchors[anch_ind]);
@@ -995,7 +995,7 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
         parent_abstract_anchor = is_vector(anchor) && !two_d ? _find_anchor(_make_anchor_legal(anchor,basegeom),basegeom) : undef;
         for(align_ind = idx(align_list)){
             align = is_undef(align_list[align_ind]) ? undef
-                  : assert(is_vector(align_list[align_ind],2) || is_vector(align_list[align_ind],3), "align direction must be a 2-vector or 3-vector")
+                  : assert(is_vector(align_list[align_ind],2) || is_vector(align_list[align_ind],3), "\nAlign direction must be a 2-vector or 3-vector.")
                     two_d ? _force_anchor_2d(align_list[align_ind])
                   : point3d(align_list[align_ind]);
             spin = is_num(spin) ? spin
@@ -1024,10 +1024,10 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
             badcorner = !in_list($parent_geom[0],["conoid","spheroid"]) && !is_undef(align) && align!=CTR && sum(v_abs(anchor))==3;
             badsphere = $parent_geom[0]=="spheroid" && !is_undef(align) && align!=CTR;
             dummy=assert(is_undef(align) || all_zero(v_mul(anchor,align)),
-                         str("Invalid alignment: align value (",align,") includes component parallel to parent anchor (",anchor,")"))
-                  assert(goodcyl, str("Cannot use align with an anchor on a curved edge or surface of a cylinder at parent anchor (",anchor,")"))
-                  assert(!badcorner, str("Cannot use align at a corner anchor (",anchor,")"))
-                  assert(!badsphere, "Cannot use align on spheres.");
+                         str("\nInvalid alignment: align value (",align,") includes component parallel to parent anchor (",anchor,")."))
+                  assert(goodcyl, str("\nCannot use align with an anchor on a curved edge or surface of a cylinder at parent anchor (",anchor,")."))
+                  assert(!badcorner, str("\nCannot use align at a corner anchor (",anchor,")."))
+                  assert(!badsphere, "\nCannot use align on spheres.");
             // Now compute position on the parent (including alignment but not inset) where the child will be anchored
             pos = is_undef(align) ? anchor_data[1] : _find_anchor(anchor+align, $parent_geom)[1];
             $attach_anchor = list_set(anchor_data, 1, pos);      // Never used;  For user informational use?  Should this be set at all?
@@ -1100,9 +1100,9 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
 module attach_part(name)
 {
   req_children($children);
-  dummy=assert(!is_undef($parent_parts), "Parent does not exist or does not have any parts");
+  dummy=assert(!is_undef($parent_parts), "\nParent does not exist or does not have any parts.");
   ind = search([name], $parent_parts, 1,0)[0];
-  dummy2 = assert(ind!=[], str("Parent does not have a part named ",name));
+  dummy2 = assert(ind!=[], str("\nParent does not have a part named \"",name,"\"."));
   $parent_geom = $parent_parts[ind][1];
   $anchor_inside = $parent_parts[ind][2];
   T = $parent_parts[ind][3];
@@ -1145,8 +1145,8 @@ module tag(tag)
 {
     req_children($children);
     check=
-      assert(is_string(tag),"tag must be a string")
-      assert(undef==str_find(tag," "),str("Tag string \"",tag,"\" contains a space, which is not allowed"));
+      assert(is_string(tag),"\n'tag' must be a string.")
+      assert(undef==str_find(tag," "),str("\nTag string \"",tag,"\" contains a space, which is not allowed."));
     $tag = str($tag_prefix,tag);
     children();
 }
@@ -1178,8 +1178,8 @@ module tag_this(tag)
 {
     req_children($children);
     check=
-      assert(is_string(tag),"tag must be a string")
-      assert(undef==str_find(tag," "),str("Tag string \"",tag,"\" contains a space, which is not allowed"));
+      assert(is_string(tag),"\n'tag' must be a string.")
+      assert(undef==str_find(tag," "),str("\nTag string \"",tag,"\" contains a space, which is not allowed."));
     $save_tag=default($tag,"");
     $tag = str($tag_prefix,tag);
     children();
@@ -1239,9 +1239,9 @@ module tag_this(tag)
 module force_tag(tag)
 {
     req_children($children);
-    check1=assert(is_undef(tag) || is_string(tag),"tag must be a string");
+    check1=assert(is_undef(tag) || is_string(tag),"\n'tag' must be a string.");
     $tag = str($tag_prefix,default(tag,$tag));
-    assert(undef==str_find($tag," "),str("Tag string \"",$tag,"\" contains a space, which is not allowed"));
+    assert(undef==str_find($tag," "),str("\nTag string \"",$tag,"\" contains a space, which is not allowed."));
     if(_is_shown())
       show_all()
         children();
@@ -1382,8 +1382,8 @@ module default_tag(tag,do_tag=true)
 module tag_scope(scope){
   req_children($children);
   scope = is_undef(scope) ? rand_str(20) : scope;
-  assert(is_string(scope), "scope must be a string");
-  assert(undef==str_find(scope," "),str("Scope string \"",scope,"\" contains a space, which is not allowed"));
+  assert(is_string(scope), "\n'scope' must be a string.");
+  assert(undef==str_find(scope," "),str("\nScope string \"",scope,"\" contains a space, which is not allowed."));
   $tag_prefix=scope;
   children();
 }
@@ -1569,8 +1569,8 @@ module tag_scope(scope){
 module diff(remove="remove", keep="keep")
 {
     req_children($children);
-    assert(is_string(remove),"remove must be a string of tags");
-    assert(is_string(keep),"keep must be a string of tags");
+    assert(is_string(remove),"\n'remove' must be a string of tags.");
+    assert(is_string(keep),"\n'keep' must be a string of tags.");
     if (_is_shown())
     {
         difference() {
@@ -1637,10 +1637,10 @@ module diff(remove="remove", keep="keep")
 module tag_diff(tag="",remove="remove", keep="keep")
 {
     req_children($children);
-    assert(is_string(remove),"remove must be a string of tags");
-    assert(is_string(keep),"keep must be a string of tags");
-    assert(is_string(tag),"tag must be a string");
-    assert(undef==str_find(tag," "),str("Tag string \"",tag,"\" contains a space, which is not allowed"));
+    assert(is_string(remove),"\n'remove' must be a string of tags.");
+    assert(is_string(keep),"\n'keep' must be a string of tags.");
+    assert(is_string(tag),"\n'tag' must be a string.");
+    assert(undef==str_find(tag," "),str("\nTag string \"",tag,"\" contains a space, which is not allowed."));
     $tag=str($tag_prefix,tag);
     if (_is_shown())
       show_all(){
@@ -1715,8 +1715,8 @@ module tag_diff(tag="",remove="remove", keep="keep")
 //       }
 module intersect(intersect="intersect",keep="keep")
 {
-   assert(is_string(intersect),"intersect must be a string of tags");
-   assert(is_string(keep),"keep must be a string of tags");
+   assert(is_string(intersect),"\n'intersect' must be a string of tags.");
+   assert(is_string(keep),"\n'keep' must be a string of tags.");
    intersection(){
       show_only(intersect) children();
       hide(str(intersect," ",keep)) children();
@@ -1765,10 +1765,10 @@ module intersect(intersect="intersect",keep="keep")
 //       }
 module tag_intersect(tag="",intersect="intersect",keep="keep")
 {
-   assert(is_string(intersect),"intersect must be a string of tags");
-   assert(is_string(keep),"keep must be a string of tags");
-   assert(is_string(tag),"tag must be a string");
-   assert(undef==str_find(tag," "),str("Tag string \"",tag,"\" contains a space, which is not allowed"));
+   assert(is_string(intersect),"\n'intersect' must be a string of tags.");
+   assert(is_string(keep),"\n'keep' must be a string of tags.");
+   assert(is_string(tag),"\n'tag' must be a string.");
+   assert(undef==str_find(tag," "),str("\nTag string \"",tag,"\" contains a space, which is not allowed."));
    $tag=str($tag_prefix,tag);
    if (_is_shown())
      show_all(){
@@ -1813,7 +1813,7 @@ module tag_intersect(tag="",intersect="intersect",keep="keep")
 module conv_hull(keep="keep")
 {
     req_children($children);
-    assert(is_string(keep),"keep must be a string of tags");
+    assert(is_string(keep),"\n'keep' must be a string of tags.");
     if (_is_shown())
         hull() hide(keep) children();
     show_int(keep) children();
@@ -1860,9 +1860,9 @@ module conv_hull(keep="keep")
 module tag_conv_hull(tag="",keep="keep")
 {
     req_children($children);
-    assert(is_string(keep),"keep must be a string of tags");
-    assert(is_string(tag),"tag must be a string");
-    assert(undef==str_find(tag," "),str("Tag string \"",tag,"\" contains a space, which is not allowed"));
+    assert(is_string(keep),"\n'keep' must be a string of tags.");
+    assert(is_string(tag),"\n'tag' must be a string.");
+    assert(undef==str_find(tag," "),str("\nTag string \"",tag,"\" contains a space, which is not allowed."));
     $tag=str($tag_prefix,tag);
     if (_is_shown())
       show_all(){
@@ -1900,7 +1900,7 @@ module tag_conv_hull(tag="",keep="keep")
 module hide(tags)
 {
     req_children($children);
-    dummy=assert(is_string(tags), "tags must be a string");
+    dummy=assert(is_string(tags), "\n'tags' must be a string.");
     taglist = [for(s=str_split(tags," ",keep_nulls=false)) str($tag_prefix,s)];
     $tags_hidden = concat($tags_hidden,taglist);
     children();
@@ -1961,7 +1961,7 @@ module hide_this()
 module show_only(tags)
 {
     req_children($children);
-    dummy=assert(is_string(tags), str("tags must be a string",tags));
+    dummy=assert(is_string(tags), str("\n'tags' must be a string.",tags));
     taglist = [for(s=str_split(tags," ",keep_nulls=false)) str($tag_prefix,s)];
     $tags_shown = taglist;
     children();
@@ -2004,7 +2004,7 @@ module show_all()
 module show_int(tags)
 {
     req_children($children);
-    dummy=assert(is_string(tags), str("tags must be a string",tags));
+    dummy=assert(is_string(tags), str("\n'tags' must be a string.",tags));
     taglist = [for(s=str_split(tags," ",keep_nulls=false)) str($tag_prefix,s)];
     $tags_shown = $tags_shown == "ALL" ? taglist : set_intersection($tags_shown,taglist);
     children();
@@ -2049,8 +2049,8 @@ module show_int(tags)
 module face_mask(faces=[LEFT,RIGHT,FRONT,BACK,BOT,TOP]) {
     req_children($children);
     faces = is_vector(faces)? [faces] : faces;
-    assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "Vector in faces doesn't point at a face.");
-    assert($parent_geom != undef, "No object to attach to!");
+    assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "\nVector in faces doesn't point at a face.");
+    assert($parent_geom != undef, "\nNo object to attach to!");
     attach(faces) {
        default_tag("remove") children();
     }
@@ -2094,7 +2094,7 @@ module face_mask(faces=[LEFT,RIGHT,FRONT,BACK,BOT,TOP]) {
 //           rounding_edge_mask(l=71,r=10);
 module edge_mask(edges=EDGES_ALL, except=[]) {
     req_children($children);
-    assert($parent_geom != undef, "No object to attach to!");
+    assert($parent_geom != undef, "\nNo object to attach to!");
     edges = _edges(edges, except=except);
     vecs = [
         for (i = [0:3], axis=[0:2])
@@ -2104,7 +2104,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
     for ($idx = idx(vecs)) {
         vec = vecs[$idx];
         vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        dummy=assert(vcount == 2, "Not an edge vector!");
+        dummy=assert(vcount == 2, "\nNot an edge vector!");
         anch = _find_anchor(vec, $parent_geom);
         $edge_angle = len(anch)==5 ? struct_val(anch[4],"edge_angle") : undef;
         $edge_length = len(anch)==5 ? struct_val(anch[4],"edge_length") : undef;
@@ -2151,13 +2151,13 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 //           }
 module corner_mask(corners=CORNERS_ALL, except=[]) {
     req_children($children);
-    assert($parent_geom != undef, "No object to attach to!");
+    assert($parent_geom != undef, "\nNo object to attach to!");
     corners = _corners(corners, except=except);
     vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
     for ($idx = idx(vecs)) {
         vec = vecs[$idx];
         vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        dummy=assert(vcount == 3, "Not an edge vector!");
+        dummy=assert(vcount == 3, "\nNot an edge vector!");
         anch = _find_anchor(vec, $parent_geom);
         $attach_to = undef;
         $attach_anchor = anch;
@@ -2202,7 +2202,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
     req_children($children);
     faces = is_vector(faces)? [faces] : faces;
-    assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "Vector in faces doesn't point at a face.");
+    assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "\nVector in faces doesn't point at a face.");
     r = get_radius(r=r, d=d, dflt=undef);
     assert(is_num(r) && r>=0);
     edge_profile(faces, excess=excess) children();
@@ -2256,11 +2256,11 @@ module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
 
 module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
     req_children($children);
-    check1 = assert($parent_geom != undef, "No object to attach to!");
+    check1 = assert($parent_geom != undef, "\nNo object to attach to!");
     conoid = $parent_geom[0] == "conoid";
     edges = !conoid? _edges(edges, except=except) :
         edges==EDGES_ALL? [TOP,BOT] :
-        assert(all([for (e=edges) in_list(e,[TOP,BOT])]), "Invalid conoid edge spec.")
+        assert(all([for (e=edges) in_list(e,[TOP,BOT])]), "\nInvalid conoid edge spec.")
         edges;
     vecs = conoid
       ? [for (e=edges) e+FWD]
@@ -2270,7 +2270,7 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
             EDGE_OFFSETS[axis][i]
         ];
     all_vecs_are_edges = all([for (vec = vecs) sum(v_abs(vec))==2]);
-    check2 = assert(all_vecs_are_edges, "All vectors must be edges.");
+    check2 = assert(all_vecs_are_edges, "\nAll vectors must be edges.");
     default_tag("remove")
     for ($idx = idx(vecs)) {
         vec = vecs[$idx];
@@ -2452,7 +2452,7 @@ module edge_profile_asym(
                 [BACK+RIGHT, [TOP+BACK, BOT+BACK]],
             ],
             i = search([from], flip_edges, num_returns_per_match=1)[0],
-            check = assert(i!=[], "Bad edge vector.")
+            check = assert(i!=[], "\nBad edge vector.")
         ) in_list(to,flip_edges[i][1]);
 
     function _edge_corner_numbers(vec) =
@@ -2467,7 +2467,7 @@ module edge_profile_asym(
     function _gather_contiguous_edges(edge_corners) =
         let(
             no_tri_corners = all([for(cn = [0:7]) len([for (ec=edge_corners) if(in_list(cn,ec[1])) 1])<3]),
-            check = assert(no_tri_corners, "Cannot have three edges that meet at the same corner.")
+            check = assert(no_tri_corners, "\nCannot have three edges that meet at the same corner.")
         )
         _gather_contiguous_edges_r(
             [for (i=idx(edge_corners)) if(i) edge_corners[i]],
@@ -2552,7 +2552,7 @@ module edge_profile_asym(
         [for (i=[0:2]) if (abs(e1[i])==1 && e1[i]==e2[i]) -e1[i] else 0];
 
     req_children($children);
-    check1 = assert($parent_geom != undef, "No object to attach to!")
+    check1 = assert($parent_geom != undef, "\nNo object to attach to!")
         assert(in_list(corner_type, ["none", "round", "chamfer", "sharp"]))
         assert(is_bool(flip));
     edges = _edges(edges, except=except);
@@ -2562,7 +2562,7 @@ module edge_profile_asym(
         EDGE_OFFSETS[axis][i]
     ];
     all_vecs_are_edges = all([for (vec = vecs) sum(v_abs(vec))==2]);
-    check2 = assert(all_vecs_are_edges, "All vectors must be edges.");
+    check2 = assert(all_vecs_are_edges, "\nAll vectors must be edges.");
     edge_corners = [for (vec = vecs) [vec, _edge_corner_numbers(vec)]];
     edge_strings = _gather_contiguous_edges(edge_corners);
     default_tag("remove")
@@ -2688,13 +2688,13 @@ module edge_profile_asym(
 //           mask2d_teardrop(r=10, angle=40);
 //   }
 module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
-    check1 = assert($parent_geom != undef, "No object to attach to!");
+    check1 = assert($parent_geom != undef, "\nNo object to attach to!");
     r = max(0.01, get_radius(r=r, d=d, dflt=undef));
-    check2 = assert(is_num(r), "Bad r/d argument.");
+    check2 = assert(is_num(r), "\nBad r/d argument.");
     corners = _corners(corners, except=except);
     vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
     all_vecs_are_corners = all([for (vec = vecs) sum(v_abs(vec))==3]);
-    check3 = assert(all_vecs_are_corners, "All vectors must be corners.");
+    check3 = assert(all_vecs_are_corners, "\nAll vectors must be corners.");
     for ($idx = idx(vecs)) {
         vec = vecs[$idx];
         anch = _find_anchor(vec, $parent_geom);
@@ -3121,11 +3121,11 @@ module attachable(
     expose_tags=false, keep_color=false
 ) {
     dummy1 =
-        assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
+        assert($children==2, "\nattachable() expects exactly two children: the shape to manage, and the union of all attachment candidates.")
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
-        assert(is_undef(spin) || is_finite(spin), str("Invalid spin: ",spin))
-        assert(is_undef(orient) || is_vector(orient,3), str("Invalid orient: ",orient));
-        assert(in_list(v_abs(axis),[UP,RIGHT,BACK]), "axis must be a coordinate direction");
+        assert(is_undef(spin) || is_finite(spin), str("\nInvalid spin: ",spin))
+        assert(is_undef(orient) || is_vector(orient,3), str("\nInvalid orient: ",orient));
+        assert(in_list(v_abs(axis),[UP,RIGHT,BACK]), "\n'axis' must be a coordinate direction.");
     anchor = default(anchor,CENTER);
     spin = default(spin,0); 
     orient = is_def($anchor_override)? UP : default(orient, UP);
@@ -3300,9 +3300,9 @@ function reorient(
     geom,
     p=undef
 ) = 
-    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
-    assert(is_undef(spin) || is_finite(spin), str("Invalid spin: ",spin))
-    assert(is_undef(orient) || is_vector(orient,3), str("Invalid orient: ",orient))
+    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("\nInvalid anchor: ",anchor))
+    assert(is_undef(spin) || is_finite(spin), str("\nInvalid spin: ",spin))
+    assert(is_undef(orient) || is_vector(orient,3), str("\nInvalid orient: ",orient))
     let(
         anchor = default(anchor, CENTER),
         spin =   default(spin,   0),
@@ -3348,15 +3348,15 @@ function reorient(
 //   rot = A 4x4 rotations matrix, which may include a translation
 //   flip = If true, flip the anchor the opposite direction.  Default: false
 function named_anchor(name, pos, orient, spin, rot, flip, info) =
-  assert(num_defined([orient,spin])==0 || num_defined([rot,flip])==0, "Cannot mix orient or spin with rot or flip")
-  assert(num_defined([pos,rot])>0, "Must give pos or rot")
+  assert(num_defined([orient,spin])==0 || num_defined([rot,flip])==0, "\nCannot mix orient or spin with rot or flip.")
+  assert(num_defined([pos,rot])>0, "\nMust give pos or rot")
   is_undef(rot) ? [name, pos, default(orient,UP), default(spin,0), if (info) info]
  : 
   let(
       flip = default(flip,false),
       pos = default(pos,apply(rot,CTR)),
       rotpart = _force_rot(rot),
-      dummy = assert(approx(det4(rotpart),1), "Input rotation is not a rotation matrix"),
+      dummy = assert(approx(det4(rotpart),1), "\nInput rotation is not a rotation matrix."),
       dir = flip ? apply(rotpart,DOWN)
                  : apply(rotpart,UP),
       rot = flip? affine3d_rot_by_axis(apply(rotpart,BACK),180)*rot
@@ -3540,11 +3540,11 @@ function attach_geom(
         assert(is_region(region),2)
         let( l = default(l, h) )
         two_d==true
-          ? assert(is_undef(l), "Cannot give l/h with region anchor types (when two_d is set)")
+          ? assert(is_undef(l), "\nCannot give l/h with region anchor types (when two_d is set).")
             extent==true
               ? ["rgn_extent", region, cp, offset, anchors]
               : ["rgn_isect",  region, cp, offset, anchors]
-          : assert(is_finite(l), "Must give l/h with extrusion anchor types (did you forget to set two_d?)")
+          : assert(is_finite(l), "\nMust give l/h with extrusion anchor types (did you forget to set two_d?).")
             let(
                 shift = default(shift, [0,0]),
                 scale = is_num(scale)? [scale,scale] : default(scale, [1,1]),
@@ -3623,10 +3623,10 @@ function attach_geom(
 //   }
 
 function define_part(name, geom, inside=false, T=IDENT) =
-  assert(is_string(name), "name must be a string")
-  assert(_is_geometry(geom), "geometry appears invalid")
-  assert(is_bool(inside), "inside must be boolean")
-  assert(is_matrix(T,4), "T must be a 4x4 transformation matrix")
+  assert(is_string(name), "\n'name' must be a string.")
+  assert(_is_geometry(geom), "\ngeometry appears invalid.")
+  assert(is_bool(inside), "\n'inside' must be boolean.")
+  assert(is_matrix(T,4), "\nT must be a 4×4 transformation matrix.")
   [name, geom, inside, T];
 
 
@@ -3714,7 +3714,7 @@ function _attach_geom_size(geom) =
             delt = mm[1]-mm[0]
         ) [delt.x, delt.y]
     ) :
-    assert(false, "Unknown attachment geometry type.");
+    assert(false, "\nUnknown attachment geometry type.");
 
 
 
@@ -3727,7 +3727,7 @@ function _attach_geom_size(geom) =
 ///   Returns the path and post-transform matrix of the indicated edge.
 ///   If the edge is invalid for the geometry, returns `undef`.
 function _attach_geom_edge_path(geom, edge) =
-    assert(is_vector(edge),str("Invalid edge: edge=",edge))
+    assert(is_vector(edge),str("\nInvalid edge: ",edge))
     let(
         type = geom[0],
         cp = _get_cp(geom),
@@ -3737,9 +3737,9 @@ function _attach_geom_edge_path(geom, edge) =
     )
     type == "prismoid"? ( //size, size2, shift, axis
         let(all_comps_good = [for (c=edge) if (c!=sign(c)) 1]==[])
-        assert(all_comps_good, "All components of an edge for a cuboid/prismoid must be -1, 0, or 1")
+        assert(all_comps_good, "\nAll components of an edge for a cuboid/prismoid must be -1, 0, or 1.")
         let(edge_good = len([for (c=edge) if(c) 1])==2)
-        assert(edge_good, "Invalid edge.")
+        assert(edge_good, "\nInvalid edge.")
         let(
             size = geom[1],
             size2 = geom[2],
@@ -3776,7 +3776,7 @@ function _attach_geom_edge_path(geom, edge) =
             m = rot(from=UP,to=axis) * move(offset)
         ) [path, [vecs], m]
     ) : type == "conoid"? ( //r1, r2, l, shift, axis
-        assert(edge.z && edge.z == sign(edge.z), "The Z component of an edge for a cylinder/cone must be -1 or 1")
+        assert(edge.z && edge.z == sign(edge.z), "\nThe Z component of an edge for a cylinder/cone must be -1 or 1.")
         let(
             rr1 = geom[1],
             rr2 = geom[2],
@@ -3830,9 +3830,9 @@ function _attach_geom_edge_path(geom, edge) =
 ///   p = If given as a VNF, path, or point, applies the affine3d transformation matrix to it and returns the result.
 
 function _attach_transform(anchor, spin, orient, geom, p) =
-    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
-    assert(is_undef(spin) || is_finite(spin), str("Invalid spin: ",spin))
-    assert(is_undef(orient) || is_vector(orient,3), str("Invalid orient: ",orient))
+    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("\nInvalid anchor: ",anchor))
+    assert(is_undef(spin) || is_finite(spin), str("\nInvalid spin: ",spin))
+    assert(is_undef(orient) || is_vector(orient,3), str("\nInvalid orient: ",orient))
     let(
         anchor=default(anchor,CENTER),
         spin=default(spin,0),
@@ -3888,7 +3888,7 @@ function _get_cp(geom) =
              : in_list(geom[0],["extrusion_extent","extrusion_isect"]) ? "xpath"
              : "other"
     )
-    assert(type!="other", "Invalid cp value")
+    assert(type!="other", "\nInvalid cp value.")
     cp=="centroid" ? (
        type=="vnf" && (len(geom[1][0])==0 || len(geom[1][1])==0) ? [0,0,0] :
        [each centroid(geom[1]), if (type=="xpath") 0]
@@ -3896,7 +3896,7 @@ function _get_cp(geom) =
   : let(points = type=="vnf"?geom[1][0]:flatten(force_region(geom[1])))
     cp=="mean" ? [each mean(points), if (type=="xpath") 0]
   : cp=="box" ?[each  mean(pointlist_bounds(points)), if (type=="xpath") 0]
-  : assert(false,"Invalid cp specification");
+  : assert(false,"\nInvalid cp specification.");
 
 
 function _get_cp(geom) =
@@ -3913,7 +3913,7 @@ function _get_cp(geom) =
   : let(points = is_vnf?geom[1][0]:flatten(force_region(geom[1])))
     cp=="mean" ? mean(points)
   : cp=="box" ? mean(pointlist_bounds(points))
-  : assert(false,"Invalid cp specification");
+  : assert(false,"\nInvalid cp specification.");
 
 
 
@@ -3949,7 +3949,7 @@ function _find_anchor(anchor, geom)=
               anchors = last(geom),
               found = search([anchor], anchors, num_returns_per_match=1)[0]
           )
-          assert(found!=[], str("Unknown anchor: ",anchor))
+          assert(found!=[], str("\nUnknown anchor: ",anchor))
           anchors[found]
     ) :
     let(
@@ -3958,7 +3958,7 @@ function _find_anchor(anchor, geom)=
         offset = [for (i=[0:2]) anchor[i]==0? 0 : offset_raw[i]],  // prevents bad centering.
         type = geom[0]
     )
-    assert(is_vector(anchor),str("Invalid anchor: anchor=",anchor))
+    assert(is_vector(anchor),str("\nInvalid anchor: ",anchor))
     let(
         anchor = point3d(anchor),
         oang = (
@@ -3968,7 +3968,7 @@ function _find_anchor(anchor, geom)=
     )
     type == "prismoid"? ( //size, size2, shift, axis
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
-        assert(all_comps_good, "All components of an anchor for a cuboid/prismoid must be -1, 0, or 1")
+        assert(all_comps_good, "\nAll components of an anchor for a cuboid/prismoid must be -1, 0, or 1.")
         let(
             size=geom[1],
             size2=geom[2],
@@ -4059,7 +4059,7 @@ function _find_anchor(anchor, geom)=
                      : axis==RIGHT ? "X"
                      : axis==BACK ? "Y"
                      : "",
-            dummy = assert(anch.z == sign(anch.z), str("The ",axisname," component of an anchor for the cylinder/cone must be -1, 0, or 1")),
+            dummy = assert(anch.z == sign(anch.z), str("\nThe ",axisname," component of an anchor for the cylinder/cone must be -1, 0, or 1.")),
             offset = rot(from=axis, to=UP, p=offset),
             u = (anch.z+1)/2,
             // Returns [point,tangent_dir]
@@ -4144,7 +4144,7 @@ function _find_anchor(anchor, geom)=
                         for(pt=ptlist) [anchor * (pt-cp), n, pt]
             ]
         )
-        assert(len(hits)>0, "Anchor vector does not intersect with the shape.  Attachment failed.")
+        assert(len(hits)>0, "\nAnchor vector does not intersect with the shape. Attachment failed.")
         let(
             furthest = max_index(column(hits,0)),
             dist = hits[furthest][0],
@@ -4169,8 +4169,8 @@ function _find_anchor(anchor, geom)=
         let(
             vnf=geom[1],
             override = geom[2](anchor)
-            ,fd=echo(cp=cp)
-        )                                                   // CENTER anchors anchor on cp, "origin" anchors on [0,0]
+            //,fd=echo(cp=cp)
+        ) // CENTER anchors anchor on cp, "origin" anchors on [0,0]
         approx(anchor,CTR)? [anchor, default(override[0],cp),default(override[1],UP),default(override[2], 0)] :     
         vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor,UP), 0] :
         let(
@@ -4236,7 +4236,7 @@ function _find_anchor(anchor, geom)=
                            center = mean(plist)
                       )
                       [center,anchor,basic_spin]
-                : len(vlist)==0 ? assert(false,"Cannot find anchor on the VNF")
+                : len(vlist)==0 ? assert(false,"\nCannot find anchor on the VNF.")
                 : let(
                       vlist = flatten(vlist),
                       uind = unique_approx_indexed(select(vnf[0],vlist)),
@@ -4266,7 +4266,7 @@ function _find_anchor(anchor, geom)=
         ) [anchor, default(override[0],res[0]),default(override[1],res[1]),default(override[2],res[2]),if (len(res)==3) res[2]]        
     ) : type == "trapezoid"? ( //size, size2, shift, override
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
-        assert(all_comps_good, "All components of an anchor for a rectangle/trapezoid must be -1, 0, or 1")
+        assert(all_comps_good, "\nAll components of an anchor for a rectangle/trapezoid must be -1, 0, or 1.")
         let(
             anchor=_force_anchor_2d(anchor),
             size=geom[1], size2=geom[2], shift=geom[3],
@@ -4318,7 +4318,7 @@ function _find_anchor(anchor, geom)=
                 if(!is_undef(isect) && !approx(isect,t[0])) [norm(isect), isect, n2]
             ]
         )
-        assert(len(isects)>0, "Anchor vector does not intersect with the shape.  Attachment failed.")
+        assert(len(isects)>0, "\nAnchor vector does not intersect with the shape. Attachment failed.")
         let(
             maxidx = max_index(column(isects,0)),
             isect = isects[maxidx],
@@ -4347,7 +4347,7 @@ function _find_anchor(anchor, geom)=
                   [is_polygon_clockwise(path) ? -normal : normal, vector_angle(corner)]
         ) [anchor, pos, dir[0], 0, if(len(dir)>1) [["corner_angle",dir[1]]]]
     ) : type=="extrusion_extent" || type=="extrusion_isect" ? (  // extruded region
-        assert(in_list(anchor.z,[-1,0,1]), "The Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
+        assert(in_list(anchor.z,[-1,0,1]), "\nThe Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
         let(
             anchor_xy = point2d(anchor),
             rgn = geom[1],
@@ -4379,7 +4379,7 @@ function _find_anchor(anchor, geom)=
         )
         [anchor, pos, vec, oang]
     ) :
-    assert(false, "Unknown attachment geometry type.");
+    assert(false, "\nUnknown attachment geometry type.");
 
 
 /// Internal Function: _is_shown()
@@ -4396,8 +4396,8 @@ function _is_shown() =
         dummy=is_undef($tags) ? 0 : echo("Use tag() instead of $tags for specifying an object's tag."),
         $tag = default($tag,$tags)
     )
-    assert(is_string($tag), str("Tag value (",$tag,") is not a string"))
-    assert(undef==str_find($tag," "),str("Tag string \"",$tag,"\" contains a space, which is not allowed"))
+    assert(is_string($tag), str("\nTag value (",$tag,") is not a string"))
+    assert(undef==str_find($tag," "),str("\nTag string \"",$tag,"\" contains a space, which is not allowed."))
     let(
         shown  = $tags_shown=="ALL" || in_list($tag,$tags_shown),
         hidden = in_list($tag, $tags_hidden)
@@ -4822,7 +4822,7 @@ function _edge_set(v) =
                 let(valid_values = ["X", "Y", "Z", "ALL", "NONE"])
                 assert(
                     in_list(v, valid_values),
-                    str(v, " must be a vector, edge array, or one of ", valid_values)
+                    str("\n", v, " must be a vector, edge array, or one of ", valid_values, ".")
                 ) v
             ) :
             let(nonz = sum(v_abs(v)))
@@ -4983,7 +4983,7 @@ function _corner_set(v) =
             let(valid_values = ["ALL", "NONE"])
             assert(
                 in_list(v, valid_values),
-                str(v, " must be a vector, corner array, or one of ", valid_values)
+                str("\n", v, " must be a vector, corner array, or one of ", valid_values, ".")
             ) v
         ) :
         all([for (i=[0:2]) !v[i] || (v[i]==v2[i])])
@@ -5114,14 +5114,14 @@ function _force_rot(T) =
                        : 0]];
 
 function _local_struct_val(struct, key)=
-    assert(is_def(key),"key is missing")
+    assert(is_def(key),"\nkey is missing.")
     let(ind = search([key],struct)[0])
     ind == [] ? undef : struct[ind][1];
 
 
 function _force_anchor_2d(anchor) =
   is_undef(anchor) || len(anchor)==2 || is_string(anchor) ? anchor :
-  assert(anchor.y==0 || anchor.z==0, "Anchor for a 2D shape cannot be fully 3D.  It must have either Y or Z component equal to zero.")
+  assert(anchor.y==0 || anchor.z==0, "\nAnchor for a 2D shape cannot be fully 3D.  It must have either Y or Z component equal to zero.")
   anchor.y==0 ? [anchor.x,anchor.z] : point2d(anchor);
 
 // Compute spin angle based on a anchor direction and desired spin direction
@@ -5132,7 +5132,7 @@ function _compute_spin(anchor_dir, spin_dir) =
    let(
         native_dir = rot(from=UP, to=anchor_dir, p=BACK),
         spin_dir = spin_dir - (spin_dir*anchor_dir)*anchor_dir,  // component of spin_dir perpendicular to anchor_dir
-        dummy = assert(!approx(spin_dir,[0,0,0]),"spin direction is parallel to anchor"),
+        dummy = assert(!approx(spin_dir,[0,0,0]),"\nSpin direction is parallel to anchor."),
         angle = vector_angle(native_dir,spin_dir),
         sign = cross(native_dir,spin_dir)*anchor_dir<0 ? -1 : 1
    )
@@ -5216,11 +5216,11 @@ function parent() =
 //                     fillet=1);
 
 function parent_part(name) =
-    assert(!is_undef($parent_parts), "Parent does not exist or does not have any parts")
+    assert(!is_undef($parent_parts), "\nParent does not exist or does not have any parts.")
     let(
         ind = search([name], $parent_parts, 1,0)[0]
     )
-    assert(ind!=[], str("Parent does not have a part named ",name))    
+    assert(ind!=[], str("\nParent does not have a part named \"",name,"\"."))    
     [$transform * $parent_parts[ind][3], $parent_parts[ind][1]];
 
 
@@ -5251,7 +5251,7 @@ module restore(desc)
      multmatrix(T) children();
    }
    else{
-     check=assert(is_description(desc), "Invalid description");
+     check=assert(is_description(desc), "\nInvalid description.");
      T = linear_solve($transform, desc[0]);
      $parent_geom = desc[1];
      multmatrix(T) children();
@@ -5286,13 +5286,13 @@ module restore(desc)
 //    stroke([[0,0,0], desc_point(desc,anchor=TOP+FWD+RIGHT)],width=.5,color="red");
 function desc_point(desc, p, anchor) =
     is_undef(desc) ?
-       assert(is_undef(anchor), "Cannot give anchor withot desc")
+       assert(is_undef(anchor), "\nCannot give 'anchor' withot 'desc'.")
        let(
             T = matrix_inverse($transform)
        )
        apply(T, default(p,UP))
-  : assert(is_description(desc), "Invalid description")
-    assert(num_defined([anchor,p])<2, "Cannot give both anchor and p")
+  : assert(is_description(desc), "\nInvalid description.")
+    assert(num_defined([anchor,p])<2, "\nCannot give both anchor and p")
     let (
          T = linear_solve($transform, desc[0]),
          p = is_def(p) ? p
@@ -5328,14 +5328,14 @@ function desc_point(desc, p, anchor) =
 //      position(TOP) cyl(d=2,h=15,orient=desc_dir(pris,anchor=FWD),anchor=LEFT);
 function desc_dir(desc, dir, anchor) =
     is_undef(desc) ?
-       assert(is_undef(anchor), "Cannot give anchor without desc")
+       assert(is_undef(anchor), "\nCannot give 'anchor' without 'desc'.")
        let(
             T = matrix_inverse($transform)
        )
        move(-apply(T,CENTER), apply(T, default(dir,UP)))
   :
     assert(is_description(desc), "Invalid description")
-    assert(num_defined([dir,anchor])<2, "Cannot give both dir and anchor")
+    assert(num_defined([dir,anchor])<2, "\nCannot give both dir and anchor.")
     let(
          T = linear_solve($transform, desc[0]),
          dir = is_def(dir) ? dir
@@ -5347,7 +5347,7 @@ function desc_dir(desc, dir, anchor) =
     move(-apply(T,CENTER),apply(T, dir));
 
 function desc_attach(desc, anchor=UP, p, reverse=false) =
-    assert(is_description(desc), "Invalid description")
+    assert(is_description(desc), "\nInvalid description.")
     let(
          T = linear_solve($transform, desc[0]),
          anch = _find_anchor(anchor,desc[1]),
@@ -5385,8 +5385,8 @@ function desc_attach(desc, anchor=UP, p, reverse=false) =
 //  }
 
 function desc_dist(desc1,anchor1=CENTER, desc2, anchor2=CENTER)=
-   assert(is_description(desc1),"Invalid description: desc1")
-   assert(is_description(desc2),"Invalid description: desc2")
+   assert(is_description(desc1),str("\nInvalid description: desc1=",desc1))
+   assert(is_description(desc2),str("\nInvalid description: desc2=",desc2))
    let(
          anch1 = _find_anchor(anchor1, desc1[1]),
          anch2 = _find_anchor(anchor2, desc2[1]),         
@@ -5415,10 +5415,10 @@ function desc_dist(desc1,anchor1=CENTER, desc2, anchor2=CENTER)=
 //   desc = description to transform
 
 function transform_desc(T,desc) =
-    assert(is_description(desc), "Invalid description")
+    assert(is_description(desc), "\nInvalid description.")
     is_consistent(T, ident(4)) ? [for(t=T) [t*desc[0], desc[1]]]
   : is_matrix(T,4,4) ? [T*desc[0], desc[1]]
-  : assert(false,"T must be a 4x4 matrix or list of 4x4 matrices");
+  : assert(false,"\nT must be a 4×4 matrix or list of 4×4 matrices.");
 
 
 // Module: desc_copies()

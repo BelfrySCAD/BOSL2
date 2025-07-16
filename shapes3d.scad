@@ -2544,22 +2544,27 @@ function xcyl(
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0
-) = cyl(h=h, r=r, center=center,
-    l=l, r1=r1, r2=r2,
-    d=d, d1=d1, d2=d2,
-    length=length, height=height,
-    chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
-    chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
-    rounding=rounding, rounding1=rounding1, rounding2=rounding2,
-    circum=circum, realign=realign, shift=shift,
-    teardrop=teardrop, clip_angle=clip_angle,
-    from_end=from_end, from_end1=from_end1, from_end2=from_end2,
-    texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
-    tex_inset=tex_inset, tex_rot=tex_rot,
-    tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
-    tex_taper=tex_taper, style=style, tex_style=tex_style,
-    extra=extra, extra1=extra1, extra2=extra2, 
-    anchor=anchor, spin=spin, orient=RIGHT);
+) = let(
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
+    l = one_defined([l,h,length,height],"l,h,length,height",1),
+    vnf=cyl(h=h, r=r, center=center,
+        l=l, r1=r1, r2=r2,
+        d=d, d1=d1, d2=d2,
+        length=length, height=height,
+        chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+        chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+        rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+        circum=circum, realign=realign, shift=shift,
+        teardrop=teardrop, clip_angle=clip_angle,
+        from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+        texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+        tex_inset=tex_inset, tex_rot=tex_rot,
+        tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+        tex_taper=tex_taper, style=style, tex_style=tex_style,
+        extra=extra, extra1=extra1, extra2=extra2, 
+        anchor=CENTER, spin=0, orient=RIGHT)
+    ) reorient(anchor, spin, UP, p=vnf, r1=r1, r2=r2, l=l, axis=RIGHT);
 
 module xcyl(
     h, r, center,
@@ -2577,7 +2582,7 @@ module xcyl(
     tex_scale, tex_depth, tex_samples,
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
-    anchor, spin=0
+    anchor=CENTER, spin=0
 ) {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
@@ -2597,7 +2602,7 @@ module xcyl(
             tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
             tex_taper=tex_taper, style=style, tex_style=tex_style,
             extra=extra, extra1=extra1, extra2=extra2, 
-            anchor=anchor, spin=spin, orient=RIGHT
+            anchor=CENTER, spin=0, orient=RIGHT
         );
         children();
     }
@@ -2650,22 +2655,28 @@ function ycyl(
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0
-) = cyl(h=h, r=r, center=center,
-    l=l, r1=r1, r2=r2,
-    d=d, d1=d1, d2=d2,
-    length=length, height=height,
-    chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
-    chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
-    rounding=rounding, rounding1=rounding1, rounding2=rounding2,
-    circum=circum, realign=realign, shift=shift,
-    teardrop=teardrop, clip_angle=clip_angle,
-    from_end=from_end, from_end1=from_end1, from_end2=from_end2,
-    texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
-    tex_inset=tex_inset, tex_rot=tex_rot,
-    tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
-    tex_taper=tex_taper, style=style, tex_style=tex_style,
-    extra=extra, extra1=extra1, extra2=extra2, 
-    anchor=anchor, spin=spin, orient=BACK);
+) = let(
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
+    l = one_defined([l,h,length,height],"l,h,length,height",1),
+    vnf=cyl(h=h, r=r, center=center,
+        l=l, r1=r1, r2=r2,
+        d=d, d1=d1, d2=d2,
+        length=length, height=height,
+        chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+        chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+        rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+        circum=circum, realign=realign, shift=shift,
+        teardrop=teardrop, clip_angle=clip_angle,
+        from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+        texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+        tex_inset=tex_inset, tex_rot=tex_rot,
+        tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+        tex_taper=tex_taper, style=style, tex_style=tex_style,
+        extra=extra, extra1=extra1, extra2=extra2, 
+        anchor=CENTER, spin=0, orient=BACK)
+    ) reorient(anchor, spin, UP, p=vnf, r1=r1, r2=r2, l=l, axis=BACK);
+
 
 
 module ycyl(
@@ -2704,7 +2715,7 @@ module ycyl(
             tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
             tex_taper=tex_taper, style=style, tex_style=tex_style,
             extra=extra, extra1=extra1, extra2=extra2, 
-            anchor=anchor, spin=spin, orient=BACK
+            anchor=CENTER, spin=0, orient=BACK
         );
         children();
     }
@@ -2753,22 +2764,28 @@ function zcyl(
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0
-) = cyl(h=h, r=r, center=center,
-    l=l, r1=r1, r2=r2,
-    d=d, d1=d1, d2=d2,
-    length=length, height=height,
-    chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
-    chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
-    rounding=rounding, rounding1=rounding1, rounding2=rounding2,
-    circum=circum, realign=realign, shift=shift,
-    teardrop=teardrop, clip_angle=clip_angle,
-    from_end=from_end, from_end1=from_end1, from_end2=from_end2,
-    texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
-    tex_inset=tex_inset, tex_rot=tex_rot,
-    tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
-    tex_taper=tex_taper, style=style, tex_style=tex_style,
-    extra=extra, extra1=extra1, extra2=extra2, 
-    anchor=anchor, spin=spin, orient=UP);
+) = let(
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
+    l = one_defined([l,h,length,height],"l,h,length,height",1),
+    vnf=cyl(h=h, r=r, center=center,
+        l=l, r1=r1, r2=r2,
+        d=d, d1=d1, d2=d2,
+        length=length, height=height,
+        chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+        chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+        rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+        circum=circum, realign=realign, shift=shift,
+        teardrop=teardrop, clip_angle=clip_angle,
+        from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+        texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+        tex_inset=tex_inset, tex_rot=tex_rot,
+        tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+        tex_taper=tex_taper, style=style, tex_style=tex_style,
+        extra=extra, extra1=extra1, extra2=extra2, 
+        anchor=CENTER, spin=0, orient=UP)
+    ) reorient(anchor, spin, UP, p=vnf, r1=r1, r2=r2, l=l, axis=UP);
+
 
 module zcyl(
     h, r, center,
@@ -2805,7 +2822,7 @@ module zcyl(
             tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
             tex_taper=tex_taper, style=style, tex_style=tex_style,
             extra=extra, extra1=extra1, extra2=extra2, 
-            anchor=anchor, spin=spin, orient=UP
+            anchor=CENTER, spin=0, orient=UP
         );
         children();
     }
