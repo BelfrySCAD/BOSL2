@@ -569,9 +569,13 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   parallel to the Y axis and projecting upwards, so in its default orientation it will slide together with a translation
 //   in the positive Y direction.  The gender determines whether the shape is meant to be added to your model or
 //   differenced, and it also changes the anchor and orientation.  The default anchor for dovetails is BOTTOM;
-//   the default orientation depends on the gender, with male dovetails oriented UP and female ones DOWN.  For a male
-//   untapered dovetail of length X to slide into a female dovetail, there must be at least X free space past the
-//   end of the dovetail; setting entry_slot_length to X will add a mask sticking out X forward to provide it.
+//   the default orientation depends on the gender, with male dovetails oriented UP and female ones DOWN.
+//   .
+//   For a male dovetail of length X to slide into a female dovetail, there must be a space of length X at the
+//   end of the dovetail.  In many cases, this space is naturally present, but if you want to create dovetails
+//   in the middle of a surface, you need cut cut out an additional space to allow the male dovetail space to enter.
+//   Setting `entry_slot_length=X` for a female dovetail will add an entry slot of length X, projecting forward
+//   from the dovetail mask.  Anchoring is done on the dovetail itself: the slot is ignored by anchoring.
 //   .
 //   The dovetails by default have extra extension of 0.01 for unions and differences.
 //   You should ensure that attachment is done with overlap=0 to ensure
@@ -645,9 +649,17 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   diff("remove")
 //     cuboid([50,30,10])
 //       tag("remove")position(TOP+BACK) xcopies(10,5) dovetail("female", slide=10, width=7, taper=4, height=4, anchor=BOTTOM+FRONT,spin=180);
-// Example: Housed sliding dovetail (similar to okuri ari).  If the left piece is rotated 90 degrees clockwise, it can be inserted downward with the male dovetail entering the entry slot, then slid backward, making a 40x40x20 cuboid with no visible connectors. In this case, the opening is made slightly longer than the male dovetail (17 vs 15) so it's easier to assemble.
-//   left(30) cuboid([10,40,40]) attach(RIGHT,BOT,align=BACK,spin=90,inset=5) dovetail("male", slide=15, width=20, height=8, slope=2);
-//   right(30) diff() cuboid([40,40,10]) attach(TOP,BOT,align=BACK,inside=true,inset=5) tag("remove") dovetail("female", slide=15, width=20, height=8, slope=2, entry_slot_length=17);
+// Example: Housed sliding dovetail (similar to okuri ari).  If the left piece is rotated 90 degrees clockwise, it can be inserted downward with the male dovetail entering the entry slot, then sliding backward, making a 40x40x20 cuboid with no visible connectors. The opening is 2 units longer than the male dovetail so it's easier to assemble.
+//   xdistribute(spacing=60){
+//     cuboid([10,40,40])
+//       attach(RIGHT,BOT,align=BACK,spin=90,inset=5)
+//       dovetail("male", slide=15, width=20, height=8, slope=2);
+//     diff()
+//       cuboid([40,40,10])
+//         attach(TOP,BOT,align=BACK,inside=true,inset=5)
+//           tag("remove") dovetail("female", slide=15, width=20,
+//                                  height=8, slope=2, entry_slot_length=17);
+//   }
 function dovetail(gender, width, height, slide, h, w, angle, slope, thickness, taper, back_width, chamfer, extra=0.01, entry_slot_length=0, r, radius, round=false, anchor=BOTTOM, spin=0, orient) = no_function("dovetail");
 module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, taper, back_width, chamfer, extra=0.01, entry_slot_length=0, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
 {
@@ -738,7 +750,9 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
                     reverse(concat(smallend_points, xflip(p=reverse(smallend_points))))
                 ],
                 slices=0, convexity=4
-            ) if(entry_slot_length>0 && gender=="female") align(FWD,TOP) cuboid([width-2*extra_offset,entry_slot_length+get_slop(),height]);
+            )
+            if(entry_slot_length>0 && gender=="female")
+                down(extra) align(FWD,TOP,overlap=extra) cuboid([width-2*extra_offset,entry_slot_length+extra+get_slop(),height+extra]);
         }
         children();
     }
