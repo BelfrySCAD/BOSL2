@@ -151,7 +151,7 @@
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default: 1
-//   bevel = See bevel argument of generic_threaded_rod for options and default.
+//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
 //   bevel1 = Set bevel for bottom end.
 //   bevel2 = Set bevel for top end.
 //   internal = If true, make this a mask for making internal threads.
@@ -477,7 +477,7 @@ module threaded_nut(
 //   flank_angle = Angle of thread faces to plane perpendicular to screw. 
 //   left_handed = If true, create left-handed threads.  Default: false
 //   starts = The number of lead starts.  Default: 1
-//   bevel = See bevel argument of generic_threaded_rod for options and default.
+//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
 //   bevel1 = Set bevel for bottom end.
 //   bevel2 = Set bevel for top end. 
 //   internal = If true, make this a mask for making internal threads.  Default: false
@@ -748,7 +748,7 @@ module trapezoidal_threaded_nut(
 //   pitch = thread spacing (alternative to tpi)
 //   starts = The number of lead starts.  Default = 1
 //   left_handed = if true, create left-handed threads.  Default = false
-//   bevel = See bevel argument of generic_threaded_rod for options and default.
+//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
 //   bevel1 = Set bevel for bottom end.
 //   bevel2 = Set bevel for top end. 
 //   internal = If true, this is a mask for making internal threads.
@@ -960,7 +960,7 @@ module acme_threaded_nut(
 //   size = NPT standard pipe size in inches.  1/16", 1/8", 1/4", 3/8", 1/2", 3/4", 1", 1+1/4", 1+1/2", or 2".  Default: 1/2"
 //   ---
 //   left_handed = If true, create left-handed threads.  Default = false
-//   bevel = See bevel argument of generic_threaded_rod for options and default.
+//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
 //   bevel1 = Set bevel for bottom end.
 //   bevel2 = Set bevel for top end. 
 //   hollow = If true, create a pipe with the correct internal diameter.
@@ -1085,7 +1085,7 @@ module npt_threaded_rod(
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = Number of lead starts.  Default: 1
-//   bevel = See bevel argument of generic_threaded_rod for options and default.
+//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
 //   bevel1 = Set bevel for bottom end.
 //   bevel2 = Set bevel for top end. 
 //   internal = If true, this is a mask for making internal threads.
@@ -1301,7 +1301,7 @@ module buttress_threaded_nut(
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
-//   bevel = See bevel argument of generic_threaded_rod for options and default.
+//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
 //   bevel1 = Set bevel for bottom end.
 //   bevel2 = Set bevel for top end. 
 //   internal = If true, this is a mask for making internal threads.
@@ -1507,7 +1507,7 @@ module square_threaded_nut(
 //   ---
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
-//   bevel = See bevel argument of generic_threaded_rod for options and default.
+//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
 //   bevel1 = Set bevel for bottom end.
 //   bevel2 = Set bevel for top end. 
 //   internal = If true, make this a mask for making internal threads.
@@ -1641,7 +1641,7 @@ module ball_screw_rod(
 //   internal = If true, make this a mask for making internal threads.  Default: false
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
-//   bevel = Sets bevel for both ends. Set to true for default, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. When not provided, bevels are disabled for blunt_start ends and enabled otherwise.
+//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
 //   bevel1 = Set bevel for bottom end. Overrides bevel=.
 //   bevel2 = Set bevel for top end. Overrides bevel=.
 //   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
