@@ -1055,7 +1055,7 @@ module npt_threaded_rod(
                 left_handed=left_handed,
                 bevel=bevel,bevel1=bevel1,bevel2=bevel2,
                 internal=internal,
-                blunt_start=true
+                blunt_start=!internal
             );
             if (hollow) cylinder(h=l+1, d=size*INCH, center=true);
         }
