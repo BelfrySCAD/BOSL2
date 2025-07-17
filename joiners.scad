@@ -559,7 +559,7 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 // See Also: joiner(), snap_pin(), rabbit_clip(), partition(), partition_mask(), partition_cut_mask()
 //
 // Usage:
-//   dovetail(gender, w=|width, h=|height, slide|thickness=, [slope=|angle=], [taper=|back_width=], [chamfer=], [r=|radius=], [round=], [extra=], [$slop=])
+//   dovetail(gender, w=|width, h=|height, slide|thickness=, [slope=|angle=], [taper=|back_width=], [chamfer=], [r=|radius=], [round=], [extra=], [entry_slot_length=], [$slop=])
 //
 // Description:
 //   Produces a possibly tapered dovetail joint shape to attach to or subtract from two parts you wish to join together.
@@ -569,9 +569,13 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   parallel to the Y axis and projecting upwards, so in its default orientation it will slide together with a translation
 //   in the positive Y direction.  The gender determines whether the shape is meant to be added to your model or
 //   differenced, and it also changes the anchor and orientation.  The default anchor for dovetails is BOTTOM;
-//   the default orientation depends on the gender, with male dovetails oriented UP and female ones DOWN.  The dovetails by default
-//   have extra extension of 0.01 for unions and differences.  You should ensure that attachment is done with overlap=0 to ensure that
-//   the sizing and positioning is correct.  To adjust the fit, use the $slop variable, which increases the depth and width of
+//   the default orientation depends on the gender, with male dovetails oriented UP and female ones DOWN.  For a male
+//   untapered dovetail of length X to slide into a female dovetail, there must be at least X free space past the
+//   end of the dovetail; setting entry_slot_length to X will add a mask sticking out X forward to provide it.
+//   .
+//   The dovetails by default have extra extension of 0.01 for unions and differences.
+//   You should ensure that attachment is done with overlap=0 to ensure
+//   sizing and positioning is correct.  To adjust the fit, use the $slop variable, which increases the depth and width of
 //   the female part of the joint to allow a clearance gap of $slop on each of the three sides.
 //
 // Arguments:
@@ -589,6 +593,7 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   round = true to round both corners of the dovetail and give it a puzzle piece look.  Default: false.
 //   $slop = Increase the width of socket by double this amount and depth by this amount to allow adjustment of the fit.
 //   extra = amount of extra length and base extension added to dovetails for unions and differences.  Default: 0.01
+//   entry_slot_length = length of a mask of sufficient width and depth for a male dovetail to fit ahead of the female dovetail. Ignored when gender == "male".
 // Example: Ordinary straight dovetail, male version (sticking up) and female version (below the xy plane)
 //   dovetail("male", width=15, height=8, slide=30);
 //   right(20) dovetail("female", width=15, height=8, slide=30);
@@ -640,8 +645,11 @@ module joiner(l=40, w=10, base=10, ang=30, screwsize, anchor=CENTER, spin=0, ori
 //   diff("remove")
 //     cuboid([50,30,10])
 //       tag("remove")position(TOP+BACK) xcopies(10,5) dovetail("female", slide=10, width=7, taper=4, height=4, anchor=BOTTOM+FRONT,spin=180);
-function dovetail(gender, width, height, slide, h, w, angle, slope, thickness, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient) = no_function("dovetail");
-module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
+// Example: Housed sliding dovetail (similar to okuri ari).  If the left piece is rotated 90 degrees clockwise, it can be inserted downward with the male dovetail entering the entry slot, then slid backward, making a 40x40x20 cuboid with no visible connectors. In this case, the opening is made slightly longer than the male dovetail (17 vs 15) so it's easier to assemble.
+//   left(30) cuboid([10,40,40]) attach(RIGHT,BOT,align=BACK,spin=90,inset=5) dovetail("male", slide=15, width=20, height=8, slope=2);
+//   right(30) diff() cuboid([40,40,10]) attach(TOP,BOT,align=BACK,inside=true,inset=5) tag("remove") dovetail("female", slide=15, width=20, height=8, slope=2, entry_slot_length=17);
+function dovetail(gender, width, height, slide, h, w, angle, slope, thickness, taper, back_width, chamfer, extra=0.01, entry_slot_length=0, r, radius, round=false, anchor=BOTTOM, spin=0, orient) = no_function("dovetail");
+module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, taper, back_width, chamfer, extra=0.01, entry_slot_length=0, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
 {
     radius = get_radius(r1=radius,r2=r);
     slide = one_defined([slide,thickness],"slide,thickness");
@@ -730,7 +738,7 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, thickness, tap
                     reverse(concat(smallend_points, xflip(p=reverse(smallend_points))))
                 ],
                 slices=0, convexity=4
-            );
+            ) if(entry_slot_length>0 && gender=="female") align(FWD,TOP) cuboid([width-2*extra_offset,entry_slot_length+get_slop(),height]);
         }
         children();
     }
