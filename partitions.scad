@@ -541,6 +541,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cut
 //   partition(size, [spread], [cutsize], [cutpath], [gap], [spin], [$slop=]) CHILDREN;
 // Description:
 //   Partitions an object into two parts, spread apart a small distance, with matched joining edges.
+//   If you only need one side of the partition you can use `$idx` in the children.  
 // Arguments:
 //   size = The [X,Y,Z] size of the object to partition.
 //   spread = The distance to spread the two parts by.
@@ -567,6 +568,10 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, cut
 //   partition(spread=12, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=12, cutpath="hammerhead") cylinder(h=50, d=80, center=false);
 //   partition(cutpath="jigsaw") cylinder(h=50, d=80, center=false);
+// Example(2D,Med): Using `$idx` to display only the back piece of the partition
+//   partition(cutpath="jigsaw")
+//     if ($idx==0) cylinder(h=50, d=80, center=false);
+
 module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpath_centered=true, spin=0)
 {
     req_children($children);
