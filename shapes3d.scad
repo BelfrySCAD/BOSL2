@@ -659,7 +659,7 @@ function cuboid(
 //   prismoid(size1=[100,75], h=30, xang=50, yang=70);
 // Example: Specifying top, height and angle, with asymmetric angles
 //   prismoid(size2=[100,75], h=30, xang=[50,60], yang=[70,40]);
-// Example: Specifying top, bottom and angle for X and using that to define height.  Note that giving yang here would likely give a conflicting height calculation, which is not allowed.  
+// Example: Specifying top, bottom and angle for X and using that to define height. Giving yang here would likely give a conflicting height calculation, which is not allowed.  
 //   prismoid(size1=[100,75], size2=[75,35], xang=50);
 // Example: The same as the previous example but we give a shift in Y.  Note that shift.x must be undef because you cannot give combine an angle with a shift, so a shift.x value would conflict with xang being defined.  
 //   prismoid(size1=[100,75], size2=[75,35], xang=50, shift=[undef,20]);
@@ -1757,7 +1757,6 @@ function rect_tube(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `FRONT+LEFT+BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//
 // Named Anchors:
 //   "hypot" = Center of angled wedge face, perpendicular to that face.
 //   "hypot_left" = Left side of angled wedge face, bisecting the angle between the left side and angled faces.
@@ -2092,7 +2091,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes will be scaled somewhat to evenly fit the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
-//   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
+//   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it halfway into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
 //   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
 //   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  
 //   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
@@ -2101,20 +2100,16 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//
-//
-// Example: By Radius
+// Example: By radius
 //   xdistribute(30) {
 //       cyl(l=40, r=10);
 //       cyl(l=40, r1=10, r2=5);
 //   }
-//
-// Example: By Diameter
+// Example: By diameter
 //   xdistribute(30) {
 //       cyl(l=40, d=25);
 //       cyl(l=40, d1=25, d2=10);
 //   }
-//
 // Example: Chamferring
 //   xdistribute(60) {
 //       // Shown Left to right.
@@ -2122,16 +2117,12 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //       cyl(l=40, d=40, chamfer=7, chamfang=30, from_end=false);
 //       cyl(l=40, d=40, chamfer=7, chamfang=30, from_end=true);
 //   }
-//
 // Example: Rounding
 //   cyl(l=40, d=40, rounding=10);
-//
 // Example(VPD=175;VPR=[90,0,0]): Teardrop Bottom Rounding
 //   cyl(l=40, d=40, rounding=10, teardrop=true);
-//
 // Example(VPD=175;VPR=[90,0,0]): Clipped Bottom Rounding
 //   cyl(l=40, d=40, rounding=10, clip_angle=40);
-//
 // Example: Heterogenous Chamfers and Rounding
 //   ydistribute(80) {
 //       // Shown Front to Back.
@@ -2139,63 +2130,50 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //       cyl(l=40, d=40, chamfer2=5, orient=UP);
 //       cyl(l=40, d=40, chamfer1=12, rounding2=10, orient=UP);
 //   }
-//
 // Example: Putting it all together
 //   cyl(
 //       l=20, d1=25, d2=15,
 //       chamfer1=5, chamfang1=60,
 //       from_end=true, rounding2=5
 //   );
-//
-// Example: External Chamfers
+// Example: External chamfers
 //   cyl(l=50, r=30, chamfer=-5, chamfang=30, $fa=1, $fs=1);
-//
 // Example: External Roundings
 //   cyl(l=50, r=30, rounding1=-5, rounding2=5, $fa=1, $fs=1);
-//
 // Example(Med): Standard Connectors
 //   xdistribute(40) {
 //       cyl(l=30, d=25) show_anchors();
 //       cyl(l=30, d1=25, d2=10) show_anchors();
 //   }
-//
 // Example: Texturing with heightfield diamonds
 //   cyl(h=40, r=20, texture="diamonds", tex_size=[5,5]);
-//
 // Example: Texturing with heightfield pyramids
 //   cyl(h=40, r1=20, r2=15,
 //       texture="pyramids", tex_size=[5,5],
 //       style="convex");
-//
 // Example: Texturing with heightfield truncated pyramids
 //   cyl(h=40, r1=20, r2=15, chamfer=5,
 //       texture="trunc_pyramids",
 //       tex_size=[5,5], style="convex");
-//
 // Example: Texturing with VNF tile "dots"
 //   cyl(h=40, r1=20, r2=15, rounding=9,
 //       texture="dots", tex_size=[5,5],
 //       tex_samples=6);
-//
 // Example: Texturing with VNF tile "bricks_vnf"
 //   cyl(h=50, r1=25, r2=20, shift=[0,10], rounding1=-10,
 //       texture="bricks_vnf", tex_size=[10,10],
 //       tex_depth=0.5, style="concave");
-//
 // Example: No Texture Taper
 //   cyl(d1=25, d2=20, h=30, rounding=5,
 //       texture="trunc_ribs", tex_size=[5,1]);
-//
 // Example: Taper Texure at Extreme Ends
 //   cyl(d1=25, d2=20, h=30, rounding=5,
 //       texture="trunc_ribs", tex_taper=0,
 //       tex_size=[5,1]);
-//
 // Example: Taper Texture over First and Last 10%
 //   cyl(d1=25, d2=20, h=30, rounding=5,
 //       texture="trunc_ribs", tex_taper=0.1,
 //       tex_size=[5,1]);
-//
 // Example(3D,Med,NoAxes): Making a Clay Pattern Roller
 //   tex = [
 //       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],
@@ -2347,7 +2325,7 @@ function cyl(
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
-    tex_scale, tex_depth, tex_samples, length, height, 
+    tex_scale, tex_depth, tex_samples, 
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0, orient=UP
@@ -2455,6 +2433,7 @@ module cyl(
     h, r, center,
     l, r1, r2,
     d, d1, d2,
+    length, height,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
@@ -2463,7 +2442,7 @@ module cyl(
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
-    tex_scale, tex_depth, tex_samples, length, height, 
+    tex_scale, tex_depth, tex_samples, 
     tex_taper, style, tex_style,
     extra, extra1, extra2, 
     anchor, spin=0, orient=UP
@@ -2516,251 +2495,334 @@ module cyl(
 
 
 
-// Module: xcyl()
-// Synopsis: creates a cylinder oriented along the X axis.
-// SynTags: Geom
+// Function&Module: xcyl()
+// Synopsis: Creates a cylinder oriented along the X axis.
+// SynTags: Geom, VNF
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
-// Description:
-//   Creates an attachable cylinder with roundovers and chamfering oriented along the X axis.
-//
 // Usage: Typical
 //   xcyl(l|h|length|height, r|d=, [anchor=], ...) [ATTACHMENTS];
 //   xcyl(l|h|length|height, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
-//
-// Arguments:
-//   l / h / length / height = Length of cylinder along oriented axis. Default: 1
-//   r = Radius of cylinder.  Default: 1
-//   ---
-//   r1 = Optional radius of left (X-) end of cylinder.
-//   r2 = Optional radius of right (X+) end of cylinder.
-//   d = Optional diameter of cylinder. (use instead of `r`)
-//   d1 = Optional diameter of left (X-) end of cylinder.
-//   d2 = Optional diameter of right (X+) end of cylinder.
-//   circum = If true, cylinder should circumscribe the circle of the given size.  Otherwise inscribes.  Default: `false`
-//   chamfer = The size of the chamfers on the ends of the cylinder.  Default: none.
-//   chamfer1 = The size of the chamfer on the left end of the cylinder.  Default: none.
-//   chamfer2 = The size of the chamfer on the right end of the cylinder.  Default: none.
-//   chamfang = The angle in degrees of the chamfers on the ends of the cylinder.
-//   chamfang1 = The angle in degrees of the chamfer on the left end of the cylinder.
-//   chamfang2 = The angle in degrees of the chamfer on the right end of the cylinder.
-//   from_end = If true, chamfer is measured from the end of the cylinder, instead of inset from the edge.  Default: `false`.
-//   rounding = The radius of the rounding on the ends of the cylinder.  Default: none.
-//   rounding1 = The radius of the rounding on the left end of the cylinder.
-//   rounding2 = The radius of the rounding on the right end of the cylinder.
-//   realign = If true, rotate the cylinder by half the angle of one face.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//
-// Example: By Radius
+// Description:
+//   Creates an attachable cylinder with roundovers, chamfering, and optional texture, oriented along the X axis.
+//   .
+//   Used as a function, this is a shortcut for `cyl()` with `orient=RIGHT`, but otherwise using the same arguments excluding `orient`, which is not accepted.
+//   Used as a module, the difference from cyl() is in the anchors, which don't get reoriented with the cylinder but maintain
+//   the orientations you specify.
+//   For example, top and right anchors on xcyl() are on the top curved surface and the right (positive x) end,
+//   respectively, whereas with cyl() these anchors are associated with the top end and right side.
+//   .
+//   See [cyl()] for more detailed usage and arguments.
+// Example: By radius. The cone shows anchor arrows for `TOP` and `RIGHT`.
 //   ydistribute(50) {
 //       xcyl(l=35, r=10);
-//       xcyl(l=35, r1=15, r2=5);
+//       xcyl(l=35, r1=15, r2=5) {
+//           attach(TOP) anchor_arrow();
+//           attach(RIGHT) anchor_arrow();
+//       }
 //   }
-//
-// Example: By Diameter
+// Example: By diameter
 //   ydistribute(50) {
 //       xcyl(l=35, d=20);
 //       xcyl(l=35, d1=30, d2=10);
 //   }
 
 function xcyl(
-    h, r, d, r1, r2, d1, d2, l, 
+    h, r, center,
+    l, r1, r2,
+    d, d1, d2,
+    length, height,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, from_end=false, length, height,
-    anchor=CENTER, spin=0, orient=UP
-) = no_function("xcyl");
+    circum=false, realign=false, shift=[0,0],
+    teardrop=false, clip_angle,
+    from_end, from_end1, from_end2,
+    texture, tex_size=[5,5], tex_reps, tex_counts,
+    tex_inset=false, tex_rot=0,
+    tex_scale, tex_depth, tex_samples, 
+    tex_taper, style, tex_style,
+    extra, extra1, extra2, 
+    anchor, spin=0
+) = let(
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
+    l = one_defined([l,h,length,height],"l,h,length,height",1),
+    vnf=cyl(h=h, r=r, center=center,
+        l=l, r1=r1, r2=r2,
+        d=d, d1=d1, d2=d2,
+        length=length, height=height,
+        chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+        chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+        rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+        circum=circum, realign=realign, shift=shift,
+        teardrop=teardrop, clip_angle=clip_angle,
+        from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+        texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+        tex_inset=tex_inset, tex_rot=tex_rot,
+        tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+        tex_taper=tex_taper, style=style, tex_style=tex_style,
+        extra=extra, extra1=extra1, extra2=extra2, 
+        anchor=CENTER, spin=0, orient=RIGHT)
+    ) reorient(anchor, spin, UP, p=vnf, r1=r1, r2=r2, l=l, axis=RIGHT);
 
 module xcyl(
-    h, r, d, r1, r2, d1, d2, l, 
+    h, r, center,
+    l, r1, r2,
+    d, d1, d2,
+    length, height,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, from_end=false, length, height,
-    anchor=CENTER, spin=0, orient=UP
+    circum=false, realign=false, shift=[0,0],
+    teardrop=false, clip_angle,
+    from_end, from_end1, from_end2,
+    texture, tex_size=[5,5], tex_reps, tex_counts,
+    tex_inset=false, tex_rot=0,
+    tex_scale, tex_depth, tex_samples,
+    tex_taper, style, tex_style,
+    extra, extra1, extra2, 
+    anchor=CENTER, spin=0
 ) {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     l = one_defined([l,h,length,height],"l,h,length,height",1);
-    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=RIGHT) {
+    attachable(anchor,spin,orient=UP, r1=r1, r2=r2, l=l, axis=RIGHT) {
         cyl(
+            center=center,
             l=l, r1=r1, r2=r2,
             chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
             chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
             rounding=rounding, rounding1=rounding1, rounding2=rounding2,
-            circum=circum, realign=realign, from_end=from_end,
-            anchor=CENTER, orient=RIGHT
+            circum=circum, realign=realign, shift=shift,
+            teardrop=teardrop, clip_angle=clip_angle,
+            from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+            texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+            tex_inset=tex_inset, tex_rot=tex_rot,
+            tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+            tex_taper=tex_taper, style=style, tex_style=tex_style,
+            extra=extra, extra1=extra1, extra2=extra2, 
+            anchor=CENTER, spin=0, orient=RIGHT
         );
         children();
     }
 }
 
 
-// Module: ycyl()
+// Function&Module: ycyl()
 // Synopsis: Creates a cylinder oriented along the y axis.
-// SynTags: Geom
+// SynTags: Geom, VNF
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
 // Description:
-//   Creates an attachable cylinder with roundovers and chamfering oriented along the y axis.
-//
-// Usage: Typical
-//   ycyl(l|h|length|height, r|d=, [anchor=], ...) [ATTACHMENTS];
-//   ycyl(l|h|length|height, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
-//
-// Arguments:
-//   l / h / length / height = Length of cylinder along oriented axis. (Default: `1.0`)
-//   r = Radius of cylinder.
-//   ---
-//   r1 = Radius of front (Y-) end of cone.
-//   r2 = Radius of back (Y+) end of one.
-//   d = Diameter of cylinder.
-//   d1 = Diameter of front (Y-) end of one.
-//   d2 = Diameter of back (Y+) end of one.
-//   circum = If true, cylinder should circumscribe the circle of the given size.  Otherwise inscribes.  Default: `false`
-//   chamfer = The size of the chamfers on the ends of the cylinder.  Default: none.
-//   chamfer1 = The size of the chamfer on the front end of the cylinder.  Default: none.
-//   chamfer2 = The size of the chamfer on the back end of the cylinder.  Default: none.
-//   chamfang = The angle in degrees of the chamfers on the ends of the cylinder.
-//   chamfang1 = The angle in degrees of the chamfer on the front end of the cylinder.
-//   chamfang2 = The angle in degrees of the chamfer on the back end of the cylinder.
-//   from_end = If true, chamfer is measured from the end of the cylinder, instead of inset from the edge.  Default: `false`.
-//   rounding = The radius of the rounding on the ends of the cylinder.  Default: none.
-//   rounding1 = The radius of the rounding on the front end of the cylinder.
-//   rounding2 = The radius of the rounding on the back end of the cylinder.
-//   realign = If true, rotate the cylinder by half the angle of one face.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//
-// Example: By Radius
+//   Creates an attachable cylinder with roundovers, chamfering, and optional texture, oriented along the Y axis.
+//   .
+//   Used as a function, this is a shortcut for `cyl()` with `orient=BACK`, but otherwise using the same arguments excluding `orient`, which is not accepted.
+//   Used as a module, the difference from cyl() is in the anchors, which don't get reoriented with the cylinder but maintain
+//   the orientations you specify.
+//   For example, top and right anchors on ycyl() are on the top and right of the curved cylinder surface,
+//   respectively, whereas with cyl() these anchors are associated with the top end and right side.
+//   .
+//   See [cyl()] for more detailed usage and arguments.
+// Example: By radius. The cone shows anchor arrows for `TOP` and `RIGHT`.
 //   xdistribute(50) {
 //       ycyl(l=35, r=10);
-//       ycyl(l=35, r1=15, r2=5);
+//       ycyl(l=35, r1=15, r2=5) {
+//           attach(TOP) anchor_arrow();
+//           attach(RIGHT) anchor_arrow();
+//       }
 //   }
-//
-// Example: By Diameter
+// Example: By diameter
 //   xdistribute(50) {
 //       ycyl(l=35, d=20);
 //       ycyl(l=35, d1=30, d2=10);
 //   }
 
 function ycyl(
-    h, r, d, r1, r2, d1, d2, l,
+    h, r, center,
+    l, r1, r2,
+    d, d1, d2,
+    length, height,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, from_end=false,height,length,
-    anchor=CENTER, spin=0, orient=UP
-) = no_function("ycyl");
+    circum=false, realign=false, shift=[0,0],
+    teardrop=false, clip_angle,
+    from_end, from_end1, from_end2,
+    texture, tex_size=[5,5], tex_reps, tex_counts,
+    tex_inset=false, tex_rot=0,
+    tex_scale, tex_depth, tex_samples, length, height, 
+    tex_taper, style, tex_style,
+    extra, extra1, extra2, 
+    anchor, spin=0
+) = let(
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
+    l = one_defined([l,h,length,height],"l,h,length,height",1),
+    vnf=cyl(h=h, r=r, center=center,
+        l=l, r1=r1, r2=r2,
+        d=d, d1=d1, d2=d2,
+        length=length, height=height,
+        chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+        chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+        rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+        circum=circum, realign=realign, shift=shift,
+        teardrop=teardrop, clip_angle=clip_angle,
+        from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+        texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+        tex_inset=tex_inset, tex_rot=tex_rot,
+        tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+        tex_taper=tex_taper, style=style, tex_style=tex_style,
+        extra=extra, extra1=extra1, extra2=extra2, 
+        anchor=CENTER, spin=0, orient=BACK)
+    ) reorient(anchor, spin, UP, p=vnf, r1=r1, r2=r2, l=l, axis=BACK);
+
 
 
 module ycyl(
-    h, r, d, r1, r2, d1, d2, l,
+    h, r, center,
+    l, r1, r2,
+    d, d1, d2,
+    length, height,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, from_end=false,height,length,
-    anchor=CENTER, spin=0, orient=UP
+    circum=false, realign=false, shift=[0,0],
+    teardrop=false, clip_angle,
+    from_end, from_end1, from_end2,
+    texture, tex_size=[5,5], tex_reps, tex_counts,
+    tex_inset=false, tex_rot=0,
+    tex_scale, tex_depth, tex_samples,
+    tex_taper, style, tex_style,
+    extra, extra1, extra2, 
+    anchor, spin=0
 ) {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     l = one_defined([l,h,length,height],"l,h,length,height",1);
-    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=BACK) {
+    attachable(anchor,spin,orient=UP, r1=r1, r2=r2, l=l, axis=BACK) {
         cyl(
+            center=center,
             l=l, r1=r1, r2=r2,
             chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
             chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
             rounding=rounding, rounding1=rounding1, rounding2=rounding2,
-            circum=circum, realign=realign, from_end=from_end,
-            anchor=CENTER, orient=BACK
+            circum=circum, realign=realign, shift=shift,
+            teardrop=teardrop, clip_angle=clip_angle,
+            from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+            texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+            tex_inset=tex_inset, tex_rot=tex_rot,
+            tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+            tex_taper=tex_taper, style=style, tex_style=tex_style,
+            extra=extra, extra1=extra1, extra2=extra2, 
+            anchor=CENTER, spin=0, orient=BACK
         );
         children();
     }
 }
 
 
-
 // Module: zcyl()
-// Synopsis: Creates a cylinder oriented along the Z axis.
-// SynTags: Geom
+// Synopsis: Creates a cylinder oriented along the y axis.
+// SynTags: Geom, VNF
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
 // Description:
-//   Creates an attachable cylinder with roundovers and chamfering oriented along the Z axis.
-//
-// Usage: Typical
-//   zcyl(l|h|length|height, r|d=, [anchor=],...) [ATTACHMENTS];
-//   zcyl(l|h|length|height, r1=|d1=, r2=|d2=, [anchor=],...);
-//
-// Arguments:
-//   l / h / length / height = Length of cylinder along oriented axis. (Default: 1.0)
-//   r = Radius of cylinder.
-//   ---
-//   r1 = Radius of front (Y-) end of cone.
-//   r2 = Radius of back (Y+) end of one.
-//   d = Diameter of cylinder.
-//   d1 = Diameter of front (Y-) end of one.
-//   d2 = Diameter of back (Y+) end of one.
-//   circum = If true, cylinder should circumscribe the circle of the given size.  Otherwise inscribes.  Default: `false`
-//   chamfer = The size of the chamfers on the ends of the cylinder.  Default: none.
-//   chamfer1 = The size of the chamfer on the bottom end of the cylinder.  Default: none.
-//   chamfer2 = The size of the chamfer on the top end of the cylinder.  Default: none.
-//   chamfang = The angle in degrees of the chamfers on the ends of the cylinder.
-//   chamfang1 = The angle in degrees of the chamfer on the bottom end of the cylinder.
-//   chamfang2 = The angle in degrees of the chamfer on the top end of the cylinder.
-//   from_end = If true, chamfer is measured from the end of the cylinder, instead of inset from the edge.  Default: `false`.
-//   rounding = The radius of the rounding on the ends of the cylinder.  Default: none.
-//   rounding1 = The radius of the rounding on the bottom end of the cylinder.
-//   rounding2 = The radius of the rounding on the top end of the cylinder.
-//   realign = If true, rotate the cylinder by half the angle of one face.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
-//
-// Example: By Radius
+//   Pass-through to [cyl()]. Creates an attachable cylinder with roundovers, chamfering, and optional texture, oriented along the Z axis.
+//   .
+//   This is a shortcut for `cyl()` with `orient=UP` (which is also the default for [cyl()]), but otherwise using the same arguments excluding `orient`, which is not accepted. Unlike `xcyl()` and `ycyl()`, anchoring for `zcyl()` works the same as for `cyl()`.
+//   .
+//   See [cyl()] for more detailed usage and arguments.
+// Example: By radius. The cone shows anchor arrows for `TOP` and `RIGHT`, which for `zcyl()` work the same as for `cyl()`.
 //   xdistribute(50) {
 //       zcyl(l=35, r=10);
-//       zcyl(l=35, r1=15, r2=5);
+//       zcyl(l=35, r1=15, r2=5) {
+//           attach(TOP) anchor_arrow();
+//           attach(RIGHT) anchor_arrow();
+//       }
 //   }
-//
-// Example: By Diameter
+// Example: By diameter
 //   xdistribute(50) {
 //       zcyl(l=35, d=20);
 //       zcyl(l=35, d1=30, d2=10);
 //   }
 
 function zcyl(
-    h, r, d, r1, r2, d1, d2, l,
+    h, r, center,
+    l, r1, r2,
+    d, d1, d2,
+    length, height,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, from_end=false, length, height,
-    anchor=CENTER, spin=0, orient=UP
-) = no_function("zcyl");
+    circum=false, realign=false, shift=[0,0],
+    teardrop=false, clip_angle,
+    from_end, from_end1, from_end2,
+    texture, tex_size=[5,5], tex_reps, tex_counts,
+    tex_inset=false, tex_rot=0,
+    tex_scale, tex_depth, tex_samples, length, height, 
+    tex_taper, style, tex_style,
+    extra, extra1, extra2, 
+    anchor, spin=0
+) = let(
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
+    l = one_defined([l,h,length,height],"l,h,length,height",1),
+    vnf=cyl(h=h, r=r, center=center,
+        l=l, r1=r1, r2=r2,
+        d=d, d1=d1, d2=d2,
+        length=length, height=height,
+        chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+        chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
+        rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+        circum=circum, realign=realign, shift=shift,
+        teardrop=teardrop, clip_angle=clip_angle,
+        from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+        texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+        tex_inset=tex_inset, tex_rot=tex_rot,
+        tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+        tex_taper=tex_taper, style=style, tex_style=tex_style,
+        extra=extra, extra1=extra1, extra2=extra2, 
+        anchor=CENTER, spin=0, orient=UP)
+    ) reorient(anchor, spin, UP, p=vnf, r1=r1, r2=r2, l=l, axis=UP);
+
 
 module zcyl(
-    h, r, d, r1, r2, d1, d2, l,
+    h, r, center,
+    l, r1, r2,
+    d, d1, d2,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, from_end=false, length, height,
-    anchor=CENTER, spin=0, orient=UP
+    circum=false, realign=false, shift=[0,0],
+    teardrop=false, clip_angle,
+    from_end, from_end1, from_end2,
+    texture, tex_size=[5,5], tex_reps, tex_counts,
+    tex_inset=false, tex_rot=0,
+    tex_scale, tex_depth, tex_samples, length, height, 
+    tex_taper, style, tex_style,
+    extra, extra1, extra2, 
+    anchor, spin=0
 ) {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     l = one_defined([l,h,length,height],"l,h,length,height",1);
-    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
+    attachable(anchor,spin,orient=UP, r1=r1, r2=r2, l=l) {
         cyl(
+            center=center,
             l=l, r1=r1, r2=r2,
             chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
             chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
             rounding=rounding, rounding1=rounding1, rounding2=rounding2,
-            circum=circum, realign=realign, from_end=from_end,
-            anchor=CENTER
+            circum=circum, realign=realign, shift=shift,
+            teardrop=teardrop, clip_angle=clip_angle,
+            from_end=from_end, from_end1=from_end1, from_end2=from_end2,
+            texture=texture, tex_size=tex_size, tex_reps=tex_reps, tex_counts=tex_counts,
+            tex_inset=tex_inset, tex_rot=tex_rot,
+            tex_scale=tex_scale, tex_depth=tex_depth, tex_samples=tex_samples,
+            tex_taper=tex_taper, style=style, tex_style=tex_style,
+            extra=extra, extra1=extra1, extra2=extra2, 
+            anchor=CENTER, spin=0, orient=UP
         );
         children();
     }
@@ -3193,7 +3255,7 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 //   With style="align", the circumscribed sphere has its maximum radius on the X and Y axes
 //   but is undersized on the Z axis.  With style="octa" the circumscribed sphere has faces at each axis, so
 //   the radius on the axes is equal to the specified radius, which is the *minimum* radius of the circumscribed sphere.
-//   The same thing is true for style="icosa" when $fn is a multiple of 10.  This would enable you to create spherical
+//   The same thing is true for style="icosa" when $fn is a multiple of 10. This enables you to create spherical
 //   holes with guaranteed on-axis dimensions.
 // Arguments:
 //   r = Radius of the spheroid.
@@ -3825,7 +3887,7 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 //
 // Named Anchors:
 //   "cap" = The center of the top of the cap, oriented with the cap face normal.
-//   "tip" = The position where an un-capped onion would come to a point, oriented in the direction the point is from the center.
+//   "tip" = The position where an un-capped onion comes to a point, oriented in the direction the point is from the center.
 //
 // Example: Typical Shape
 //   onion(r=30, ang=30);
