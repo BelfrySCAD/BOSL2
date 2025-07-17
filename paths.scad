@@ -30,7 +30,7 @@
 //   is_path(list, [dim], [fast])
 // Description:
 //   Returns true if `list` is a {{path}}.  A path is a list of two or more numeric vectors (AKA {{points}}).
-//   All vectors must of the same size, and may only contain numbers that are not inf or nan.
+//   All vectors must of the same size, and must contain numbers that are not inf or nan.
 //   By default the vectors in a path must be 2D or 3D.  Set the `dim` parameter to specify a list
 //   of allowed dimensions, or set it to `undef` to allow any dimension.  (This function
 //   returns `false` on 1-regions.)  
@@ -53,7 +53,7 @@
 // Arguments:
 //   list = list to check
 //   dim = list of allowed dimensions of the vectors in the path.  Default: [2,3]
-//   fast = set to true for fast check that only looks at first entry.  Default: false
+//   fast = set to true for fast check that looks at only the first entry.  Default: false
 function is_path(list, dim=[2,3], fast=false) =
     fast
     ?   is_list(list) && is_vector(list[0]) 
@@ -302,6 +302,7 @@ function _path_self_intersections(path, closed=true, eps=EPSILON) =
     ];
 
 
+
 // Section: Resampling - changing the number of points in a path
 
 
@@ -344,8 +345,8 @@ function _sum_preserving_round(data, index=0) =
 //   (`method="segment"`).  If the extra points don't fit evenly on the path then the
 //   algorithm attempts to distribute them as uniformly as possible, but the result may be uneven.
 //   The `exact` option, which is true by default, requires that the final point count is
-//   exactly as requested.  For example, if you subdivide a four point square and request `n=13` then one edge will have
-//   an extra point compared to the others.  
+//   exactly as requested.  For example, if you subdivide a four point square and request `n=13` then one
+//   edge will have an extra point compared to the others.  
 //   If you set `exact=false` then the
 //   algorithm favors uniformity and the output path may have a different number of
 //   points than you requested, but the sampling is still uniform.  In our example of the
@@ -369,8 +370,8 @@ function _sum_preserving_round(data, index=0) =
 //   path = path in any dimension or a 1-region
 //   n = scalar total number of points desired or with `method="segment"` can be a vector requesting `n[i]-1` new points added to segment i.
 //   ---
-//   refine = increase total number of points by this factor (Specify only one of n, refine and maxlen)
-//   maxlen = maximum length segment in the output (Specify only one of n, refine and maxlen)
+//   refine = increase total number of points by this factor (specify only one of n, refine and maxlen)
+//   maxlen = maximum length segment in the output (specify only one of n, refine and maxlen)
 //   closed = set to false if the path is open.  Default: True
 //   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  (Not allowed with maxlen.) Default: true
 //   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices in proportion to segment length, so short segments get fewer points.  If `"segment"`, add points evenly among the segments, so all segments get the same number of points.  (Not allowed with maxlen.) Default: `"length"`
@@ -416,7 +417,7 @@ function _sum_preserving_round(data, index=0) =
 //   move_copies(mypath)sphere(r=.1,$fn=32);
 function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
     let(path = force_path(path))
-    assert(is_path(path))
+    assert(is_path(path), "\nInvalid path or 1-region.")
     assert(num_defined([n,refine,maxlen]), "\nMust give exactly one of n, refine, and maxlen.")
     refine==1 || n==len(path) ? path :
     is_def(maxlen) ?
@@ -472,7 +473,7 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 // Synopsis: Returns an equidistant set of points along a path.
 // SynTags: Path
 // Topics: Paths
-// See Also: subdivide_path()
+// See Also: simplify_path(), subdivide_path()
 // Usage:
 //   newpath = resample_path(path, n|spacing=, [closed=]);
 // Description:
@@ -484,7 +485,7 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 //   a uniform sampling of the path and the resulting uniformly sampled path is returned.
 //   .
 //   Because this function operates on a discrete input path the quality of the output depends on
-//   the sampling of the input.  If you want very accurate output, use a lot of points for the input.
+//   the sampling of the input.  If you want accurate output, use many points for the input.
 // Arguments:
 //   path = path in any dimension or a 1-region
 //   n = Number of points in output
@@ -520,7 +521,7 @@ function subdivide_path(path, n, refine, maxlen, closed=true, exact, method) =
 
 function resample_path(path, n, spacing, keep_corners, closed=true) =
     let(path = force_path(path))
-    assert(is_path(path))
+    assert(is_path(path), "\nInvalid path or 1-region.")
     assert(num_defined([n,spacing])==1,"\nMust define exactly one of n and spacing.")
     assert(n==undef || (is_integer(n) && n>0))
     assert(spacing==undef || (is_finite(spacing) && spacing>0))
@@ -565,12 +566,13 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
     ) out;
 
 
-// Function: reduce_path()
+// Function: simplify_path()
 // Synopsis: Removes points from an irregular path, preserving dominant features.
 // SynTags: Path
 // Topics: Paths
+// See Also: resample_path()
 // Usage:
-//   newpath = reduce_path(path, maxerr, [closed=]);
+//   newpath = simplify_path(path, maxerr, [closed=]);
 // Description:
 //   This is intended for irregular paths such as coastlines, or paths having fractal self-similarity.
 //   The original path is simplified by removing points that fall within a specified margin of error,
@@ -581,17 +583,19 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
 //   The `maxerr` parameter determines which points of the original path are kept. A point is kept if it
 //   deviates beyond `maxerr` distance from a straight line between the last kept point and a point further
 //   along the path. When a new deviation is found, that deviating point is kept and the process repeats from
-//   that new kept point. For paths such as coastlines, a `maxerr` value less than 1% of the maximum bounding
-//   box dimension is a good starting value.
+//   that new kept point. The best value of `maxerr` depends on the geometry of the path and the amount of
+//   reduction you want. A smaller value of `maxerr` returns more detail in the output, and a larger value
+//   causes details to be lost. For paths such as coastlines, a `maxerr` value less than 1% of the maximum
+//   bounding box dimension is a good starting value.
 //   .
 //   For unclosed paths (where `closed=false`) the endpoints of the path are preserved. When `closed=true`,
 //   the path is treated as continuous and only dominant features that happen to be near the endpoints are
-//   included.
+//   included in the output.
 // Arguments:
-//   path = Path in any dimension
+//   path = Path in any dimension or 1-region
 //   maxerr = Maximum deviation from line connecting last kept point to a further point; points beyond this deviation are kept.
 //   ---
-//   closed = Set to true if path is closed.  Default: false
+//   closed = Set to true if path is closed. If false, endpoints are retained in the output. Default: false
 // Example(2D,Med,VPD=34900,VPT=[5702,6507,0]): A map of California, originally a 262-point polygon (yellow, on left), reduced to 39 points (green, on right).
 //   calif = [
 //   [225,12681], [199,12544], [180,12490], [221,12435], [300,12342], [310,12315], [320,12263], [350,12154],
@@ -628,16 +632,17 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
 //   [11174,2312], [11045,2430], [10931,2585], [10881,2678], [10806,2818], [10739,2936], [10670,3102],
 //   [10670,3166], [4823,8540], [4804,12775], [4798,12800], [2515,12800], [232,12800]
 //   ];
-//   newpoly = reduce_path(calif, 120, closed=true);
+//   newpoly = simplify_path(calif, 120, closed=true);
 //   left(4000) polygon(calif);
 //   right(4000) color("lightgreen") polygon(newpoly);
 
-function reduce_path(path, maxerr, closed=false) =
-    assert(is_path(path), "\nInvalid path.")
+function simplify_path(path, maxerr, closed=false) =
+    let(path = force_path(path))
+    assert(is_path(path), "\nInvalid path or 1-region.")
     assert(is_num(maxerr) && maxerr>0, "\nParameter 'maxerr' must be a positive number.")
     let(
         n = len(path),
-        unclosed = _err_resample(path, maxerr, n)
+        unclosed = _err_resample(path, maxerr, n) // get simplified path including original endpoints
     ) closed ? let( // search for new corners between the corners found on either side of the end points
         nu = len(unclosed),
         cornerpath = [
@@ -982,7 +987,7 @@ function _path_cut_getpaths(path, cutlist, closed) =
 //   point.  If this fails, it returns a normal vector parallel to the xy plane.  The output with
 //   direction vectors are in the form `[point, next_index, tangent, normal]`.
 //   .
-//   If you give the very last point of the path as a cut point, then the returned index is
+//   If you give the last point of the path as a cut point, then the returned index is
 //   one larger than the last index (so it would not be a valid index).  If you use the closed
 //   option then the returned index is equal to the path length for cuts along the closing
 //   path segment, and if you give a point equal to the path length you get an
@@ -1031,7 +1036,7 @@ function path_cut_points_recurse(path, dists, closed=false, pind=0, dtotal=0, di
 
 // Search for a single cut point in the path
 function _path_cut_single(path, dist, closed=false, ind=0, eps=1e-7) =
-    // If we get to the very end of the path (ind is last point or wraparound for closed case) then
+    // If we get to the end of the path (ind is last point or wraparound for closed case) then
     // check if we are within epsilon of the final path point.  If not we're out of path, so we fail
     ind==len(path)-(closed?0:1) ?
        assert(dist<eps,"\nPath is too short for specified cut distance.")
@@ -1196,7 +1201,7 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 //   ];
 //   splitpolys = polygon_parts(poly);
 //   rainbow(splitpolys) stroke($item, closed=true, width=3);
-// Example(2D,NoAxes): With nonzero=false you get even-odd mode which matches OpenSCAD, so the pentagram breaks apart into its five points.
+// Example(2D,NoAxes): With nonzero=false you get even-odd mode that matches OpenSCAD, so the pentagram breaks apart into its five points.
 //   pentagram = turtle(["move",100,"left",144], repeat=4);
 //   left(100)polygon(pentagram);
 //   rainbow(polygon_parts(pentagram,nonzero=false))
