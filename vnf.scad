@@ -1370,28 +1370,31 @@ function _slice_3dpolygons(polys, dir, cuts) =
     )
     flatten([
         for (poly = polys)
-            if (polygon_area(poly)>EPSILON)   // Discard zero area polygons
-            let( 
-                 plane = plane_from_polygon(poly,1e-4))
-            assert(plane,"\nFound non-coplanar face.")
             let(
-                normal = point3d(plane),
-                pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
+                polyarea = polygon_area(poly),
+                err = assert(!is_undef(polyarea), "\nFound non-coplanar face.")
             )
-            approx(pnormal,[0,0,0]) ? [poly]     // Polygons parallel to cut plane just pass through
-          : let(
-                pind = max_index(v_abs(pnormal)),  // project along this direction
-                otherind = 3-pind-dir_ind,         // keep dir_ind and this direction
-                keep = [I[dir_ind], I[otherind]],  // dir ind becomes the x dir
-                poly2d = poly*transpose(keep),     // project to 2d, putting selected direction in the X position
-                poly_list = [for(p=_split_2dpolygons_at_each_x([poly2d], cuts))
-                                let(
-                                    a = p*keep,    // unproject, but pind dimension data is missing
-                                    ofs = outer_product((repeat(plane[3], len(a))-a*normal)/plane[pind],I[pind])
-                                 )
-                                 a+ofs]    // ofs computes the missing pind dimension data and adds it back in
-            )
-            poly_list
+            if (polygon_area(poly)>EPSILON)   // Discard zero area polygons
+                let(
+                    plane = plane_from_polygon(poly,1e-4),
+                    err2 = assert(plane,"\nFound non-coplanar face."), // possibly redundant
+                    normal = point3d(plane),
+                    pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
+                )
+                approx(pnormal,[0,0,0]) ? [poly]     // Polygons parallel to cut plane just pass through
+                : let(
+                    pind = max_index(v_abs(pnormal)),  // project along this direction
+                    otherind = 3-pind-dir_ind,         // keep dir_ind and this direction
+                    keep = [I[dir_ind], I[otherind]],  // dir ind becomes the x dir
+                    poly2d = poly*transpose(keep),     // project to 2d, putting selected direction in the X position
+                    poly_list = [
+                        for(p=_split_2dpolygons_at_each_x([poly2d], cuts))
+                            let(
+                                a = p*keep,    // unproject, but pind dimension data is missing
+                                ofs = outer_product((repeat(plane[3], len(a))-a*normal)/plane[pind],I[pind])
+                            ) a+ofs
+                    ]    // ofs computes the missing pind dimension data and adds it back in
+                ) poly_list
     ]);
 
 
