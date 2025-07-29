@@ -2406,12 +2406,13 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   ------- | -------- | ------------ | ---------------------------------
 //   WARNING | Yellow   | BIG_FACE     | Face has more than 3 vertices, and may confuse CGAL.
 //   WARNING | Blue     | NULL_FACE    | Face has zero area.
+//   ERROR   | Green    | BAD_INDEX    | Invalid face vertex index.
 //   ERROR   | Cyan     | NONPLANAR    | Face vertices are not coplanar.
 //   ERROR   | Brown    | DUP_FACE     | Multiple instances of the same face.
 //   ERROR   | Orange   | MULTCONN     | Multiply Connected Geometry. Too many faces attached at Edge.
 //   ERROR   | Violet   | REVERSAL     | Faces reverse across edge.
 //   ERROR   | Red      | T_JUNCTION   | Vertex is mid-edge on another Face.
-//   ERROR   | Brown    | FACE_ISECT   | Faces intersect.
+//   ERROR   | Pink     | FACE_ISECT   | Faces intersect.
 //   ERROR   | Magenta  | HOLE_EDGE    | Edge bounds Hole.
 //   .
 //   Still to implement:
@@ -2663,16 +2664,16 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false) =
 
 
 _vnf_validate_errs = [
-    ["BIG_FACE",    "WARNING", "cyan",    "Face has more than 3 vertices, and may confuse CGAL"],
+    ["BIG_FACE",    "WARNING", "yellow",  "Face has more than 3 vertices, and may confuse CGAL"],
     ["NULL_FACE",   "WARNING", "blue",    "Face has zero area."],
-    ["BAD_INDEX",   "ERROR",   "cyan",    "Invalid face vertex index."],
-    ["NONPLANAR",   "ERROR",   "yellow",  "Face vertices are not coplanar"],
+    ["BAD_INDEX",   "ERROR",   "green",   "Invalid face vertex index."],
+    ["NONPLANAR",   "ERROR",   "cyan",    "Face vertices are not coplanar"],
     ["DUP_FACE",    "ERROR",   "brown",   "Multiple instances of the same face."],
     ["MULTCONN",    "ERROR",   "orange",  "Multiply Connected Geometry. Too many faces attached at Edge"],
     ["REVERSAL",    "ERROR",   "violet",  "Faces Reverse Across Edge"],
-    ["T_JUNCTION",  "ERROR",   "magenta", "Vertex is mid-edge on another Face"],
-    ["FACE_ISECT",  "ERROR",   "brown",   "Faces intersect"],
-    ["HOLE_EDGE",   "ERROR",   "red",     "Edge bounds Hole"]
+    ["T_JUNCTION",  "ERROR",   "red",     "Vertex is mid-edge on another Face"],
+    ["FACE_ISECT",  "ERROR",   "pink",    "Faces intersect"],
+    ["HOLE_EDGE",   "ERROR",   "magenta", "Edge bounds Hole"]
 ];
 
 
