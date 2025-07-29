@@ -1370,28 +1370,31 @@ function _slice_3dpolygons(polys, dir, cuts) =
     )
     flatten([
         for (poly = polys)
-            if (polygon_area(poly)>EPSILON)   // Discard zero area polygons
-            let( 
-                 plane = plane_from_polygon(poly,1e-4))
-            assert(plane,"\nFound non-coplanar face.")
             let(
-                normal = point3d(plane),
-                pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
+                polyarea = polygon_area(poly),
+                err = assert(!is_undef(polyarea), "\nFound non-coplanar face.")
             )
-            approx(pnormal,[0,0,0]) ? [poly]     // Polygons parallel to cut plane just pass through
-          : let(
-                pind = max_index(v_abs(pnormal)),  // project along this direction
-                otherind = 3-pind-dir_ind,         // keep dir_ind and this direction
-                keep = [I[dir_ind], I[otherind]],  // dir ind becomes the x dir
-                poly2d = poly*transpose(keep),     // project to 2d, putting selected direction in the X position
-                poly_list = [for(p=_split_2dpolygons_at_each_x([poly2d], cuts))
-                                let(
-                                    a = p*keep,    // unproject, but pind dimension data is missing
-                                    ofs = outer_product((repeat(plane[3], len(a))-a*normal)/plane[pind],I[pind])
-                                 )
-                                 a+ofs]    // ofs computes the missing pind dimension data and adds it back in
-            )
-            poly_list
+            if (polyarea > EPSILON)   // Discard zero area polygons
+                let(
+                    plane = plane_from_polygon(poly,1e-4),
+                    err2 = assert(plane,"\nFound non-coplanar face."), // possibly redundant
+                    normal = point3d(plane),
+                    pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
+                )
+                approx(pnormal,[0,0,0]) ? [poly]     // Polygons parallel to cut plane just pass through
+                : let(
+                    pind = max_index(v_abs(pnormal)),  // project along this direction
+                    otherind = 3-pind-dir_ind,         // keep dir_ind and this direction
+                    keep = [I[dir_ind], I[otherind]],  // dir ind becomes the x dir
+                    poly2d = poly*transpose(keep),     // project to 2d, putting selected direction in the X position
+                    poly_list = [
+                        for(p=_split_2dpolygons_at_each_x([poly2d], cuts))
+                            let(
+                                a = p*keep,    // unproject, but pind dimension data is missing
+                                ofs = outer_product((repeat(plane[3], len(a))-a*normal)/plane[pind],I[pind])
+                            ) a+ofs
+                    ]    // ofs computes the missing pind dimension data and adds it back in
+                ) poly_list
     ]);
 
 
@@ -2403,12 +2406,13 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   ------- | -------- | ------------ | ---------------------------------
 //   WARNING | Yellow   | BIG_FACE     | Face has more than 3 vertices, and may confuse CGAL.
 //   WARNING | Blue     | NULL_FACE    | Face has zero area.
+//   ERROR   | Green    | BAD_INDEX    | Invalid face vertex index.
 //   ERROR   | Cyan     | NONPLANAR    | Face vertices are not coplanar.
 //   ERROR   | Brown    | DUP_FACE     | Multiple instances of the same face.
 //   ERROR   | Orange   | MULTCONN     | Multiply Connected Geometry. Too many faces attached at Edge.
 //   ERROR   | Violet   | REVERSAL     | Faces reverse across edge.
 //   ERROR   | Red      | T_JUNCTION   | Vertex is mid-edge on another Face.
-//   ERROR   | Brown    | FACE_ISECT   | Faces intersect.
+//   ERROR   | Pink     | FACE_ISECT   | Faces intersect.
 //   ERROR   | Magenta  | HOLE_EDGE    | Edge bounds Hole.
 //   .
 //   Still to implement:
@@ -2660,16 +2664,16 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false) =
 
 
 _vnf_validate_errs = [
-    ["BIG_FACE",    "WARNING", "cyan",    "Face has more than 3 vertices, and may confuse CGAL"],
+    ["BIG_FACE",    "WARNING", "yellow",  "Face has more than 3 vertices, and may confuse CGAL"],
     ["NULL_FACE",   "WARNING", "blue",    "Face has zero area."],
-    ["BAD_INDEX",   "ERROR",   "cyan",    "Invalid face vertex index."],
-    ["NONPLANAR",   "ERROR",   "yellow",  "Face vertices are not coplanar"],
+    ["BAD_INDEX",   "ERROR",   "green",   "Invalid face vertex index."],
+    ["NONPLANAR",   "ERROR",   "cyan",    "Face vertices are not coplanar"],
     ["DUP_FACE",    "ERROR",   "brown",   "Multiple instances of the same face."],
     ["MULTCONN",    "ERROR",   "orange",  "Multiply Connected Geometry. Too many faces attached at Edge"],
     ["REVERSAL",    "ERROR",   "violet",  "Faces Reverse Across Edge"],
-    ["T_JUNCTION",  "ERROR",   "magenta", "Vertex is mid-edge on another Face"],
-    ["FACE_ISECT",  "ERROR",   "brown",   "Faces intersect"],
-    ["HOLE_EDGE",   "ERROR",   "red",     "Edge bounds Hole"]
+    ["T_JUNCTION",  "ERROR",   "red",     "Vertex is mid-edge on another Face"],
+    ["FACE_ISECT",  "ERROR",   "pink",    "Faces intersect"],
+    ["HOLE_EDGE",   "ERROR",   "magenta", "Edge bounds Hole"]
 ];
 
 
