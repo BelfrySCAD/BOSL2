@@ -1374,7 +1374,7 @@ function _slice_3dpolygons(polys, dir, cuts) =
                 polyarea = polygon_area(poly),
                 err = assert(!is_undef(polyarea), "\nFound non-coplanar face.")
             )
-            if (polygon_area(poly)>EPSILON)   // Discard zero area polygons
+            if (polyarea > EPSILON)   // Discard zero area polygons
                 let(
                     plane = plane_from_polygon(poly,1e-4),
                     err2 = assert(plane,"\nFound non-coplanar face."), // possibly redundant
