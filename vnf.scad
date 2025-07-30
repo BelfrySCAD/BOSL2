@@ -1372,7 +1372,7 @@ function _slice_3dpolygons(polys, dir, cuts) =
         for (poly = polys)
             let(
                 polyarea = polygon_area(poly),
-                err = assert(!is_undef(polyarea), "\nFound non-coplanar face.")
+                err=assert(!is_undef(polyarea), "\nvnf_slice encountered non-coplanar face.")
             )
             if (polyarea > EPSILON)   // Discard zero area polygons
                 let(
@@ -2395,7 +2395,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 // See Also: debug_vnf()
 // 
 // Usage: 
-//   vnf_validate(vnf, [size], [show_warns=], [check_isects=], [opacity=], [adjacent=], [label_verts=], [label_faces=], [wireframe=]);
+//   vnf_validate(vnf, [size], [show_warns=], [check_isects=], [big_face=], [opacity=], [adjacent=], [label_verts=], [label_faces=], [wireframe=]);
 // Description:
 //   When called as a module, echoes the non-manifold errors to the console, and color hilites the
 //   bad edges and vertices, overlaid on a transparent gray polyhedron of the VNF.
@@ -2423,6 +2423,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   ---
 //   show_warns = If true show warnings for non-triangular faces.  Default: true
 //   check_isects = If true, performs slow checks for intersecting faces.  Default: false
+//   big_false = If true report faces with more than 3 vertices even though these may not cause problems.  Default: true
 //   opacity = The opacity level to show the polyhedron itself with.    Default: 0.67
 //   label_verts = If true, shows labels at each vertex that show the vertex number.    Default: false
 //   label_faces = If true, shows labels at the center of each face that show the face number.    Default: false
@@ -2488,7 +2489,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 
 //   Returns a list of non-manifold errors with the given VNF.
 //   Each error has the format `[ERR_OR_WARN,CODE,MESG,POINTS,COLOR]`.
-function _vnf_validate(vnf, show_warns=true, check_isects=false) =
+function _vnf_validate(vnf, show_warns=true, check_isects=false, big_face=false) =
     assert(is_vnf(vnf), "\nInvalid VNF.")
     let(
         varr = vnf[0],
@@ -2515,9 +2516,10 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false) =
     )
     let(
         big_faces = !show_warns? [] : [
-            for (face = faces)
-            if (len(face) > 3)
-            _vnf_validate_err("BIG_FACE", face)
+            for (i = idx(faces))
+              if (len(faces[i]) > 3)
+                if(is_undef(face_areas[i])) _vnf_validate_err("NONPLANAR",faces[i])
+                else if(big_face) _vnf_validate_err("BIG_FACE", faces[i])
         ],
         null_faces = !show_warns? [] : [
             for (i = idx(faces)) let(
@@ -2652,7 +2654,9 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false) =
             _vnf_validate_err("HOLE_EDGE", uniq_edges[i])
         ]),
         issues = concat(issues, hole_edges)
-    ) hole_edges? issues :
+    ) issues;
+
+/*:
     let(
         nonplanars = unique([
             for (i = idx(faces))
@@ -2661,7 +2665,7 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false) =
         ]),
         issues = concat(issues, nonplanars)
     ) issues;
-
+*/
 
 _vnf_validate_errs = [
     ["BIG_FACE",    "WARNING", "yellow",  "Face has more than 3 vertices, and may confuse CGAL"],
@@ -2700,14 +2704,15 @@ function _edge_not_reported(edge, varr, reports) =
     ] == [];
 
 
-module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, opacity=0.67, adjacent=false, label_verts=false, label_faces=false, wireframe=false) {
+module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, big_face=true, opacity=0.67, adjacent=false, label_verts=false, label_faces=false, wireframe=false) {
     no_children($children);
     vcount = len(vnf[0]);
     fcount = len(vnf[1]);
     vnf = vnf_merge_points(vnf);
     faults = _vnf_validate(
         vnf, show_warns=show_warns,
-        check_isects=check_isects
+        check_isects=check_isects,
+        big_face=big_face
     );
     verts = vnf[0];
     vnf_changed = len(verts)!=vcount || len(vnf[1])!=fcount;
