@@ -4232,7 +4232,7 @@ function _find_anchor(anchor, geom)=
                       [center,direction,spin,[["edge_angle",ang],["edge_length",norm(edge[1]-edge[0])]]]
                 : len(elist)>2 ?   // multiple edges, which must be coplanar, use average of edge endpoints
                       let(
-                           plist = select(vnf[0],flatten(edge)),
+                           plist = select(vnf[0],flatten(elist)),
                            center = mean(plist)
                       )
                       [center,anchor,basic_spin]

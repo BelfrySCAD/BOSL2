@@ -1370,28 +1370,31 @@ function _slice_3dpolygons(polys, dir, cuts) =
     )
     flatten([
         for (poly = polys)
-            if (polygon_area(poly)>EPSILON)   // Discard zero area polygons
-            let( 
-                 plane = plane_from_polygon(poly,1e-4))
-            assert(plane,"\nFound non-coplanar face.")
             let(
-                normal = point3d(plane),
-                pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
+                polyarea = polygon_area(poly),
+                err=assert(!is_undef(polyarea), "\nvnf_slice encountered non-coplanar face.")
             )
-            approx(pnormal,[0,0,0]) ? [poly]     // Polygons parallel to cut plane just pass through
-          : let(
-                pind = max_index(v_abs(pnormal)),  // project along this direction
-                otherind = 3-pind-dir_ind,         // keep dir_ind and this direction
-                keep = [I[dir_ind], I[otherind]],  // dir ind becomes the x dir
-                poly2d = poly*transpose(keep),     // project to 2d, putting selected direction in the X position
-                poly_list = [for(p=_split_2dpolygons_at_each_x([poly2d], cuts))
-                                let(
-                                    a = p*keep,    // unproject, but pind dimension data is missing
-                                    ofs = outer_product((repeat(plane[3], len(a))-a*normal)/plane[pind],I[pind])
-                                 )
-                                 a+ofs]    // ofs computes the missing pind dimension data and adds it back in
-            )
-            poly_list
+            if (polyarea > EPSILON)   // Discard zero area polygons
+                let(
+                    plane = plane_from_polygon(poly,1e-4),
+                    err2 = assert(plane,"\nFound non-coplanar face."), // possibly redundant
+                    normal = point3d(plane),
+                    pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
+                )
+                approx(pnormal,[0,0,0]) ? [poly]     // Polygons parallel to cut plane just pass through
+                : let(
+                    pind = max_index(v_abs(pnormal)),  // project along this direction
+                    otherind = 3-pind-dir_ind,         // keep dir_ind and this direction
+                    keep = [I[dir_ind], I[otherind]],  // dir ind becomes the x dir
+                    poly2d = poly*transpose(keep),     // project to 2d, putting selected direction in the X position
+                    poly_list = [
+                        for(p=_split_2dpolygons_at_each_x([poly2d], cuts))
+                            let(
+                                a = p*keep,    // unproject, but pind dimension data is missing
+                                ofs = outer_product((repeat(plane[3], len(a))-a*normal)/plane[pind],I[pind])
+                            ) a+ofs
+                    ]    // ofs computes the missing pind dimension data and adds it back in
+                ) poly_list
     ]);
 
 
@@ -2392,7 +2395,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 // See Also: debug_vnf()
 // 
 // Usage: 
-//   vnf_validate(vnf, [size], [show_warns=], [check_isects=], [opacity=], [adjacent=], [label_verts=], [label_faces=], [wireframe=]);
+//   vnf_validate(vnf, [size], [show_warns=], [check_isects=], [big_face=], [opacity=], [adjacent=], [label_verts=], [label_faces=], [wireframe=]);
 // Description:
 //   When called as a module, echoes the non-manifold errors to the console, and color hilites the
 //   bad edges and vertices, overlaid on a transparent gray polyhedron of the VNF.
@@ -2403,12 +2406,13 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   ------- | -------- | ------------ | ---------------------------------
 //   WARNING | Yellow   | BIG_FACE     | Face has more than 3 vertices, and may confuse CGAL.
 //   WARNING | Blue     | NULL_FACE    | Face has zero area.
+//   ERROR   | Green    | BAD_INDEX    | Invalid face vertex index.
 //   ERROR   | Cyan     | NONPLANAR    | Face vertices are not coplanar.
 //   ERROR   | Brown    | DUP_FACE     | Multiple instances of the same face.
 //   ERROR   | Orange   | MULTCONN     | Multiply Connected Geometry. Too many faces attached at Edge.
 //   ERROR   | Violet   | REVERSAL     | Faces reverse across edge.
 //   ERROR   | Red      | T_JUNCTION   | Vertex is mid-edge on another Face.
-//   ERROR   | Brown    | FACE_ISECT   | Faces intersect.
+//   ERROR   | Pink     | FACE_ISECT   | Faces intersect.
 //   ERROR   | Magenta  | HOLE_EDGE    | Edge bounds Hole.
 //   .
 //   Still to implement:
@@ -2419,6 +2423,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   ---
 //   show_warns = If true show warnings for non-triangular faces.  Default: true
 //   check_isects = If true, performs slow checks for intersecting faces.  Default: false
+//   big_false = If true report faces with more than 3 vertices even though these may not cause problems.  Default: true
 //   opacity = The opacity level to show the polyhedron itself with.    Default: 0.67
 //   label_verts = If true, shows labels at each vertex that show the vertex number.    Default: false
 //   label_faces = If true, shows labels at the center of each face that show the face number.    Default: false
@@ -2484,7 +2489,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 
 //   Returns a list of non-manifold errors with the given VNF.
 //   Each error has the format `[ERR_OR_WARN,CODE,MESG,POINTS,COLOR]`.
-function _vnf_validate(vnf, show_warns=true, check_isects=false) =
+function _vnf_validate(vnf, show_warns=true, check_isects=false, big_face=false) =
     assert(is_vnf(vnf), "\nInvalid VNF.")
     let(
         varr = vnf[0],
@@ -2511,9 +2516,10 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false) =
     )
     let(
         big_faces = !show_warns? [] : [
-            for (face = faces)
-            if (len(face) > 3)
-            _vnf_validate_err("BIG_FACE", face)
+            for (i = idx(faces))
+              if (len(faces[i]) > 3)
+                if(is_undef(face_areas[i])) _vnf_validate_err("NONPLANAR",faces[i])
+                else if(big_face) _vnf_validate_err("BIG_FACE", faces[i])
         ],
         null_faces = !show_warns? [] : [
             for (i = idx(faces)) let(
@@ -2648,7 +2654,9 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false) =
             _vnf_validate_err("HOLE_EDGE", uniq_edges[i])
         ]),
         issues = concat(issues, hole_edges)
-    ) hole_edges? issues :
+    ) issues;
+
+/*:
     let(
         nonplanars = unique([
             for (i = idx(faces))
@@ -2657,19 +2665,19 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false) =
         ]),
         issues = concat(issues, nonplanars)
     ) issues;
-
+*/
 
 _vnf_validate_errs = [
-    ["BIG_FACE",    "WARNING", "cyan",    "Face has more than 3 vertices, and may confuse CGAL"],
+    ["BIG_FACE",    "WARNING", "yellow",  "Face has more than 3 vertices, and may confuse CGAL"],
     ["NULL_FACE",   "WARNING", "blue",    "Face has zero area."],
-    ["BAD_INDEX",   "ERROR",   "cyan",    "Invalid face vertex index."],
-    ["NONPLANAR",   "ERROR",   "yellow",  "Face vertices are not coplanar"],
+    ["BAD_INDEX",   "ERROR",   "green",   "Invalid face vertex index."],
+    ["NONPLANAR",   "ERROR",   "cyan",    "Face vertices are not coplanar"],
     ["DUP_FACE",    "ERROR",   "brown",   "Multiple instances of the same face."],
     ["MULTCONN",    "ERROR",   "orange",  "Multiply Connected Geometry. Too many faces attached at Edge"],
     ["REVERSAL",    "ERROR",   "violet",  "Faces Reverse Across Edge"],
-    ["T_JUNCTION",  "ERROR",   "magenta", "Vertex is mid-edge on another Face"],
-    ["FACE_ISECT",  "ERROR",   "brown",   "Faces intersect"],
-    ["HOLE_EDGE",   "ERROR",   "red",     "Edge bounds Hole"]
+    ["T_JUNCTION",  "ERROR",   "red",     "Vertex is mid-edge on another Face"],
+    ["FACE_ISECT",  "ERROR",   "pink",    "Faces intersect"],
+    ["HOLE_EDGE",   "ERROR",   "magenta", "Edge bounds Hole"]
 ];
 
 
@@ -2696,14 +2704,15 @@ function _edge_not_reported(edge, varr, reports) =
     ] == [];
 
 
-module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, opacity=0.67, adjacent=false, label_verts=false, label_faces=false, wireframe=false) {
+module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, big_face=true, opacity=0.67, adjacent=false, label_verts=false, label_faces=false, wireframe=false) {
     no_children($children);
     vcount = len(vnf[0]);
     fcount = len(vnf[1]);
     vnf = vnf_merge_points(vnf);
     faults = _vnf_validate(
         vnf, show_warns=show_warns,
-        check_isects=check_isects
+        check_isects=check_isects,
+        big_face=big_face
     );
     verts = vnf[0];
     vnf_changed = len(verts)!=vcount || len(vnf[1])!=fcount;
