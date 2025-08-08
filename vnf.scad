@@ -51,7 +51,12 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   * "convex" &mdash; choose the locally convex division
 //   * "concave" &mdash; choose the locally concave division
 //   * "quad" &mdash; makes quadrilateral edges, which may not be coplanar, relying on OpensCAD to decide how to handle them.
-// Degenerate faces are not included in the output, but if this results in unused vertices, those unused vertices do still appear in the output.
+//   Degenerate faces are not included in the output, but if this results in unused vertices, those unused vertices do still appear in the output.
+//   .
+//   The vertex list *must* be a rectangular array. If rows of points are generated based on a radius and one of
+//   special variables `$fs` or `$fa`, the number of points may not be constant from row to row, causing the
+//   array to be non-rectangular. Consider using `$fn` instead, or use {{vnf_tri_array()}} to create a VNF
+//   object from a non-rectangular array.
 //   .
 //   You can apply a texture to the vertex array VNF using the usual texture parameters.
 //   See [Texturing](skin.scad#section-texturing) for more details on how textures work.  
@@ -343,7 +348,7 @@ function vnf_vertex_array(
 ) =
     assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge","min_area","flip1","flip2","quad"]))
     assert(is_matrix(points[0], n=3),"\nPoint array has the wrong shape or points are not 3d.")
-    assert(is_consistent(points), "\nNon-rectangular or invalid point array.")
+    assert(is_consistent(points), "\nNon-rectangular or invalid point array (vnf_tri_array() may work).")
     assert(is_bool(triangulate))
     is_def(texture) ?
           _textured_point_array(points=points, texture=texture, tex_reps=tex_reps, tex_size=tex_size,
