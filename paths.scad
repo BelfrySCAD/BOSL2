@@ -596,7 +596,7 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
 //   maxerr = Maximum deviation from line connecting last kept point to a further point; points beyond this deviation are kept.
 //   ---
 //   closed = Set to true if path is closed. If false, endpoints are retained in the output. Default: false
-// Example(2D,Med,VPD=34900,VPT=[5702,6507,0]): A map of California, originally a 262-point polygon (yellow, on left), reduced to 39 points (green, on right).
+// Example(2D,Med,VPD=38000,VPT=[5600,6500,0]): A map of California, originally a 262-point polygon (yellow, on left), reduced to 39 points (green, on right).
 //   calif = [
 //   [225,12681], [199,12544], [180,12490], [221,12435], [300,12342], [310,12315], [320,12263], [350,12154],
 //   [374,11968], [350,11820], [328,11707], [291,11586], [259,11553], [275,11499], [304,11420], [312,11321],
