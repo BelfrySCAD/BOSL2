@@ -622,9 +622,8 @@ function vnf_tri_array(
             if (caplast)
                 if (reverse) [ for(i=[pcumlen[plen]-1-addcol:-1:pcumlen[plen-1]]) i ]
                 else [ for(i=[pcumlen[plen-1]:pcumlen[plen]-1-addcol]) i ]
-        ],
-        vnf = [flatten(st), faces]
-    ) col_wrap ? vnf_merge_points(vnf) : vnf;
+        ]
+    ) [flatten(st), faces];
 
 /*
 Recursively triangulate between two 3D paths (which can be different
