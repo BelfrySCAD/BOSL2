@@ -598,31 +598,31 @@ function vnf_tri_array(
         // append first vertex of each polygon to its end if wrapping columns
         st = col_wrap ? [
             for(i=[0:plen-1])
-            points[i][0] != points[i][len(points[i])-1]
-                ? concat(points[i], [points[i][0]])
-                : points[i]
-        ] : points,
+                points[i][0] != points[i][len(points[i])-1]
+                    ? concat(points[i], [points[i][0]])
+                    : points[i]
+            ] : points,
         addcol = col_wrap ? len(st[0])-len(points[0]) : 0,
         rowstarts = [ for(i=[0:plen-1]) len(st[i]) ],
         capfirst = first_defined([cap1,caps,false]),
         caplast = first_defined([cap2,caps,false]),
         pcumlen = [0, each cumsum(rowstarts)],
-        faces = flatten([
+        faces = [
             // close first end
             if (capfirst)
-                if (reverse) [[ for(i=[0:rowstarts[0]-1-addcol]) i ]]
-                else [[ for(i=[rowstarts[0]-1-addcol:-1:0]) i ]],
+                if (reverse) [ for(i=[0:rowstarts[0]-1-addcol]) i ]
+                else [ for(i=[rowstarts[0]-1-addcol:-1:0]) i ],
             // triangulate between the two polygons
             for(i = [0:plen-2+(row_wrap?1:0)])
                 let(
                     j = (i+1)%plen,
                     max_extra_edges = limit_bunching ? max(1, abs(len(st[i])-len(st[j]))) : INF
-                ) _lofttri(st[i], st[j], pcumlen[i], pcumlen[j], rowstarts[i], rowstarts[j], reverse, trimax=max_extra_edges),
+                ) each _lofttri(st[i], st[j], pcumlen[i], pcumlen[j], rowstarts[i], rowstarts[j], reverse, trimax=max_extra_edges),
             // close up the last end
             if (caplast)
-                if (reverse) [[ for(i=[pcumlen[plen]-1-addcol:-1:pcumlen[plen-1]]) i ]]
-                else [[ for(i=[pcumlen[plen-1]:pcumlen[plen]-1-addcol]) i ]]
-        ]),
+                if (reverse) [ for(i=[pcumlen[plen]-1-addcol:-1:pcumlen[plen-1]]) i ]
+                else [ for(i=[pcumlen[plen-1]:pcumlen[plen]-1-addcol]) i ]
+        ],
         vnf = [flatten(st), faces]
     ) col_wrap ? vnf_merge_points(vnf) : vnf;
 
