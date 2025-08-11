@@ -412,6 +412,8 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
   assert(in_list(atype, _ANCHOR_TYPES), "\nAnchor type must be \"hull\" or \"intersect\".")
   assert(is_def(slices),"\nThe slices argument must be specified.")
   assert(is_list(profiles) && len(profiles)>1, "\nMust provide at least two profiles.")
+  // If the user forgets the first element should be a list, the other messages aren't as precisely helpful
+  assert(is_list(profiles)&&is_list(profiles[0])&&is_list(profiles[0][0]), "\nThe first argument to `skin` must be a list of paths")
   let(
        profiles = [for(p=profiles) if (is_region(p) && len(p)==1) p[0] else p]
   )
