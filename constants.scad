@@ -19,15 +19,36 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 // Synopsis: The slop amount to make printed items fit closely. `0.0` by default.
 // Topics: Constants
 // Description:
-//   A number of printers, particularly FDM/FFF printers, tend to be a bit sloppy in their printing.
-//   This has made it so that some parts won't fit together without adding a bit of extra slop space.
-//   That is what the `$slop` value is for.  The value for this will vary from printer to printer.
-//   By default, we use a value of 0.00 so that parts should fit exactly for resin and other precision
-//   printers.  This value is measured in millimeters.  When making your own parts, you should add
-//   `$slop` to both sides of a hole that another part is to fit snugly into. For a loose fit, add
-//   `2*$slop` to each side.  This should be done for both X and Y axes.  The Z axis will require a
-//   slop that depends on your layer height and bridging settings, and hole sizes.  We leave that as
-//   a more complicated exercise for the user.
+//   Engineering drawings always include allowable tolerance. You cannot ask for a 10mm hole and
+//   a 10mm cylinder and expect them to always fit together; instead you could say the hole must
+//   be _at least_ 10mm and the cylinder must be _no more than_ 10mm and you would expect them to
+//   always fit together. `$slop` is currently used [many libraries](https://github.com/search?q=repo%3ABelfrySCAD%2FBOSL2%20get_slop&type=code) to increase hole and internal
+//   feature sizes so joiners, partitions, and threaded parts can mate even though 3D printing
+//   is imperfect.
+//   .
+//   Slop has some limitations:
+//     1. Slop generally works for a wide range of shapes and sizes, but problems like bulging corners,
+//        shrinkage, arc compensation, under- or over-extrusion, etc. means the ideal value for a large
+//        square peg and socket may not be the same as a small cylinder and hole without further
+//        changes (like filleting, changing print orientation, calibrating slicer settings, etc).
+//     2. It only affects "internal" parts. If you were using the `screws.scad` library to produce a
+//        bolt intended to mate with a mass-manufactured nut, and your screw is printing smaller than
+//        expected, you cannot use `$slop` to help increase the size.
+//     3. For smaller 3d-printed holes, `$slop` becomes inaccurate and varies based on printing
+//        orientation. See [issue#1679](https://github.com/BelfrySCAD/BOSL2/issues/1679) for a discussion on this point and a [design you can print](https://github.com/BelfrySCAD/BOSL2/issues/1679#issuecomment-2871104521)
+//        to measure the effect. The intended workaround is to pass `$slop` with a customized value as
+//        a keyword argument (i.e. `threaded_nut(..., $slop=0.17)`) to any functions or modules
+//        creating small internal features or by altering the requested internal diameter.
+//     4. It may vary by printer and material type, along with slicer settings like wall order,
+//        seam settings, wall generator, etc.
+//     5. It varies some depending on the final printing orientation. As this information isn't
+//        knowable at module instantiation, it's not possible to do better than a single constant. 
+//   .
+//   Your own part libraries should add a single `$slop` to every mating surface. For holes, increase
+//   the hole radius by {{get_slop()}} or diameter by `2*`{{get_slop()}}. A shiplap pattern would reduce
+//   the tab thickness on only one end by {{get_slop()}} and the overall length by {{get_slop()}}, while
+//   a tongue-and-groove joint would increase the size of the groove thickness by `2*`{{get_slop()}}
+//   and reduce the overall length by {{get_slop()}}.
 //   .
 //   Note that the slop value is accessed using the {{get_slop()}} function.  This function provides
 //   the default value of 0 if you have not set `$slop`. This approach makes it possible for you to
@@ -35,7 +56,7 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 //   definitions of the variable.  If you write code that uses `$slop` be sure to reference it using {{get_slop()}}. 
 // DefineHeader(NumList): Calibration
 // Calibration: To calibrate the `$slop` value for your printer, follow this procedure:
-//   Print the Slop Calibration part from the example below.
+//   Print the Slop Calibration part from the example below. By default it uses cubes and that usually works well enough, but if you want to test cylinders, then adjust the code as the comments suggest. Suggest using 2 walls, 5% infill, and minimal top/bottom (3/2?) layers to save filament.
 //   Take the long block and orient it so the numbers are upright, facing you.
 //   Take the plug and orient it so that the arrow points down, facing you.
 //   Starting with the hole with the largest number in front of it, insert the small end of the plug into the hole.
@@ -44,25 +65,36 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 //   The correct hole should hold the plug when the long block is turned upside-down.
 //   The number in front of that hole will indicate the `$slop` value that is ideal for your printer.
 //   Remember to set that slop value in your scripts after you include the BOSL2 library:  ie: `$slop = 0.15;`
-//   .
-//   Note that the `$slop` value may be different using different materials even on the same printer.  
+//   If trying to test the proper `$slop` value for a mating cube and matching socket without any filleting or chamfers, you can turn the plug 180 degrees and follow the above procedure again.
 // Example(3D,Med): Slop Calibration Part.
 //   min_slop = 0.00;
 //   slop_step = 0.05;
-//   holes = 8;
-//   holesize = [15,15,15];
-//   height = 20;
+//   holes = 6;
+//   holesize = [10,10,10];
 //   gap = 5;
 //   l = holes * (holesize.x + gap) + gap;
 //   w = holesize.y + 2*gap;
 //   h = holesize.z + 5;
+//
+//   // To test cylinders instead, comment out the cuboid (add "//" to the beginning) and
+//   // remove the comment in front of the cyl in both hole() and plug().
+//   module hole(s) {
+//     cuboid([holesize.x + 2*s, holesize.y + 2*s, h+0.2]) position([BACK+LEFT,BACK+RIGHT]) cylinder(h+0.2,r=1, center=true, $fn=16);
+//   //  cyl(d=holesize.x + 2*s, h=h+0.2, $fn=48);
+//   }
+//
+//   module plug() {
+//     cuboid([holesize.x, holesize.y, holesize.z], anchor=BOT, rounding=1, edges="Z", except=BACK);
+//   //  cyl(d=holesize.x, h=holesize.z, anchor=BOT, $fn=48);
+//   }
+//
 //   diff("holes")
 //   cuboid([l, w, h], anchor=BOT) {
 //     for (i=[0:holes-1]) {
 //       right((i-holes/2+0.5)*(holesize.x+gap)) {
 //         s = min_slop + slop_step * i;
 //         tag("holes") {
-//           cuboid([holesize.x + 2*s, holesize.y + 2*s, h+0.2]);
+//           hole(s);
 //           fwd(w/2-1) xrot(90) linear_extrude(1.1) {
 //             text(
 //               text=format_fixed(s,2),
@@ -76,13 +108,13 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 //     }
 //   }
 //   back(holesize.y*2.5) {
-//     difference() {
-//       union() {
-//         cuboid([holesize.x+10, holesize.y+10, 15], anchor=BOT);
-//         cuboid([holesize.x, holesize.y, 15+holesize.z], anchor=BOT);
+//     diff() {
+//       cuboid([holesize.x+10, holesize.y+10, 15], anchor=BOT) {
+//         position(TOP) plug();
+//         tag("remove") position(BOT) cylinder(h=15+holesize.z,d=min(holesize.x, holesize.y)*.6); // Reinforce the plug end so you can use weaker infill.
 //       }
 //       up(3) fwd((holesize.y+10)/2) {
-//         prismoid([holesize.x/2,1], [0,1], h=holesize.y-6);
+//         tag("remove") prismoid([holesize.x/2,1], [0,1], h=holesize.y-6); // Arrow
 //       }
 //     }
 //   }
@@ -114,7 +146,7 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 //    slop = get_slop();
 // Description:
 //    Returns the current $slop value, or the default value if the user did not set $slop.
-//    Always acess the `$slop` variable using this function.  
+//    Always access the `$slop` variable using this function.  
 function get_slop() = is_undef($slop) ? 0 : $slop;
 
 
