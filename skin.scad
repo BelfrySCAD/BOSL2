@@ -2276,6 +2276,9 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
   assert(!closed || !approx(path[0],last(path)), "\nClosed path includes start point at the end.")
   assert((is_region(shape) || is_path(shape,2)) || (transforms && !(closed && method=="incremental")),"\nshape must be a 2d path or region.")
   let(
+    caps = !closed ? caps
+         : assert(is_undef(caps) || caps==false || caps==[false,false], "Cannot specify caps when closed=true")
+           false, 
     path = path3d(path),
     normalOK = is_undef(normal) || (method!="natural" && is_vector(normal,3))
                                 || (method=="manual" && same_shape(normal,path)),

@@ -2572,8 +2572,9 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
         vnf = vnf_join([ each column(top_samples,0),
                           each column(bot_samples,0),
                           for(pts=edge_points) vnf_vertex_array(pts),
-                          debug ? vnf_from_polygons(faces,fast=true) 
-                                : vnf_triangulate(vnf_from_polygons(faces))
+                          vnf_from_polygons(faces,fast=true) 
+                          // debug ? vnf_from_polygons(faces,fast=true) 
+                          //      : vnf_triangulate(vnf_from_polygons(faces))
                        ]),
 
         topnormal = unit(cross(top[0]-top[1],top[2]-top[1])),
