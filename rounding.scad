@@ -4180,6 +4180,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   ---
 //   shift1 = shift connection point on object1, a scalar for cylinders, extrusions, or edges, a 2-vector for faces, not permitted for spheres
 //   shift2 = shift connection point on object2, a scalar for cylinders, extrusions, or edges, a 2-vector for faces, not permitted for spheres
+//   shift = shift connection point on both objects; the shift must be valid for both object types
 //   spin_align = align the spin of the connecting prism to specified object (1 or 2) or if you give 12 or 21, the average of the two spins.  Default: 1
 //   scale = scale the profile by this factor at anchor2.  Default: 1
 //   n = number of facets to use for the fillets.  Default: 15
@@ -4658,7 +4659,7 @@ function _find_center_anchor(desc1, desc2, anchor2, flip) =
 
 
 
-module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2=0, spin_align=1,
+module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, shift, spin_align=1,
                        scale=1,
                        fillet, fillet1, fillet2,
                        overlap, overlap1, overlap2,
@@ -4667,6 +4668,8 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2
                        smooth_normals, smooth_normals1, smooth_normals2, 
                        debug=false, debug_pos=false)
 {
+    shift1_input = first_defined([shift1,shift,0]);
+    shift2_input = first_defined([shift2,shift,0]);
     base_fillet = first_defined([fillet1,fillet,0]);
     aux_fillet = first_defined([fillet2,fillet,0]);
 
@@ -4716,7 +4719,7 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2
     base_anch_pos = base_anch[1];
     base_anch_dir = base_anch[2];
 
-    prelim_shift1 = _check_join_shift(1,base_type,shift1,true);
+    prelim_shift1 = _check_join_shift(1,base_type,shift1_input,true);
     shift1 = corrected_base_anchor ? corrected_base_anchor[1] + prelim_shift1 : prelim_shift1;
     aux_type = _get_obj_type(2,aux[1],aux_anchor,profile);
     aux_anch = _find_anchor(aux_anchor, aux[1]);
@@ -4727,7 +4730,7 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1=0, shift2
     aux_spin = aux_anch[3];
     aux_spin_dir = apply(rot(from=UP,to=aux_anch[2])*zrot(aux_spin),BACK);
     aux_axis = aux_type=="cyl" ? aux[1][5] : RIGHT;
-    prelim_shift2 = _check_join_shift(2,aux_type,shift2,false);
+    prelim_shift2 = _check_join_shift(2,aux_type,shift2_input,false);
     shift2 = corrected_aux_anchor ? corrected_aux_anchor[1] + prelim_shift2 : prelim_shift2;
     
 
