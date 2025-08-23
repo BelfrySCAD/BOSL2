@@ -700,9 +700,10 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   If called as a module, creates a 2D arc polygon or pie slice shape.  Numerous methods are available to specify the arc.
 //   .
 //   The `rounding` parameter is permitted only when `wedge=true` and applies specified radius roundings at each of the corners, with `rounding[0]` giving
-//   the rounding at the center point, and then the other two the two outer corners in the direction that the arc travels.  If you don't need to control
-//   the exact point count, you should use `$fs` and `$fa` to control the number of points on the roundings and arc.  If you give `n` then each arc
-//   section in your curve uses `n` points, so the total number of points is `n` times one plus the number of non-zero roundings you specified.
+//   the rounding at the center point, and then the other two the two outer corners in the direction that the arc travels.
+//   If you give `n` then each arc section in your curve uses `n` points, so the total number of points is `n` times one plus the number of non-zero roundings
+//   you specified.  If you don't need to control the exact point count, you should use `$fs` and `$fa` to control the number of points on the roundings and arc.
+//   When you do not give the `n` argument, the minimum number of points on the arc is two `wedge` is true but three if `wedge` is false.  
 // Arguments:
 //   n = Number of vertices to use in the arc.  If `wedge=true` you will get `n+1` points.  
 //   r = Radius of the arc.
@@ -791,7 +792,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
         is_def(rounding) ? assert(wedge,"rounding is only supportd with wedge=true") move(cp,zrot(start,_rounded_arc(r, rounding, angle, n)))
      :
         let(
-            n = is_def(n) ? n : max(3, ceil(segs(r)*abs(angle)/360)),
+            n = is_def(n) ? n : max(wedge?2:3,1+segs(r,angle)), //max(3, ceil(segs(r)*abs(angle)/360)),
             arcpoints = [for(i=[0:n-1]) let(theta = start + i*angle/(n-1)) r*[cos(theta),sin(theta)]+cp]
         )
         [
