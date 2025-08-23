@@ -1439,4 +1439,110 @@ module hirth(n, ir, or, id, od, tooth_angle=60, cone_angle=0, chamfer, rounding,
   }
 }
 
+// Asserts a solution exists when called
+function _dist2inner_for_cylindrical_clamp(angle_from_tangent, or, ir) =
+    is_undef(angle_from_tangent)?sqrt(pow(or,2)-pow(ir,2)):
+    assert(angle_from_tangent<90)
+    assert(angle_from_tangent>=0)
+    let(
+        // The line leaving the circumference is the tangent line of some concentric circle with radius:
+        tangent_circle_radius = or * sin(angle_from_tangent),
+        length_from_starting_point_to_tangent_circle = or * cos(angle_from_tangent)
+    )
+    assert(tangent_circle_radius<=ir, "The angle given for cylindrical clamp fins does not allow it to intersect with the inner circle radius")
+    let(
+        length_from_tangent_circle_tangent_to_intersection_of_inner_circle = sqrt(pow(ir,2)-pow(tangent_circle_radius,2)),
+        fin_length=length_from_starting_point_to_tangent_circle-length_from_tangent_circle_tangent_to_intersection_of_inner_circle
+    )
+    echo(tangent_circle_radius=tangent_circle_radius,length_from_starting_point_to_tangent_circle=length_from_starting_point_to_tangent_circle,length_from_tangent_circle_tangent_to_intersection_of_inner_circle=length_from_tangent_circle_tangent_to_intersection_of_inner_circle,fin_length=fin_length)
+    fin_length;
+
+assert(_dist2inner_for_cylindrical_clamp(0,8,5)==3);
+
+// Module: cylindrical_clamp()
+// Synopsis: Builds a finned clamp for circular objects.
+// SynTags: Geom
+// Topics: Joiners, Parts
+// Usage:
+//   cylindrical_clamp(h, od, id, [fin_thick=0.4], [num=3], [fin_angle=30]);
+//   cylindrical_clamp(h, od1=, od2=, id1=, id2=, ...);
+//   cylindrical_clamp(h, od, id, [shift=[dx,dy]], ...);
+// Description:
+//   Generate a clamp designed to hold a cylindrical or slightly-conical object.
+//   It uses an arrangement of fins which deform to apply pressure when the cylindrical object is inserted; thus the inner diameter must be less than the diameter of the intended object, but how much less is dependent on many factors.
+//   This is intended to be placed within a cylindrical opening.
+//   Only works when printed within overhang tolerance of vertical. Horizontally-printed should use a series of conical washer shapes.
+// Arguments:
+//   h = Length of fins along oriented axis. Default: 1
+//   od = Diameter fins will attach to on their outer length. Should be at least the inserted object's OD + 2*fin_thick or the fins will have nowhere to bend. Default: 10
+//   id = Diameter fins will leave open in the middle. Default: 6
+//   ---
+//   ir1,id1,or1,od1 = Set the inner or outer radius or diameter for the bottom fin circle. Follows same rules as `cyl`.
+//   ir2,id2,or2,od2 = Set the inner or outer radius or diameter for the top fin circle. Follows same rules as `cyl`.
+//   ir,or = Alternatives to id and od.  Follows same rules as `cyl`.
+//   fin_angle = Degrees away from the radius line (0 is straight in to center, 90 is tangent). If left unset, will pick the largest possible angle (which yields the longest possible fin). Default: undef
+//   $slop = Increase the inner radius by $slop.
+//   fin_thick = How thick the fin will be. Must be at least the minimum line width of your printer, but that often results in a single unstable wall. Better is to be at least 2xline width (for classic wall) or 1.75xline width (for Arachne). Default: 0.4
+//   TODO: document the rest
+// TODO: implement orient and anchor and attachables
+// TODO: allow other fin direction by expanding fin angle past 90
+module cylindrical_clamp(h=1,od=undef,id=undef,od1=undef,od2=undef,id1=undef,id2=undef,or=undef,ir=undef,or1=undef,or2=undef,ir1=undef,ir2=undef,num=3,fin_thick=0.4,fin_angle=undef,shift=[0,0]) {
+    //
+    if(!is_undef(fin_angle)) {
+        assert(fin_angle>0);
+        assert(fin_angle<=90);
+    }
+    or1 = get_radius(r1=or1, r=or, d1=od1, d=od, dflt=5);
+    or2 = get_radius(r1=or2, r=or, d1=od2, d=od, dflt=5);
+    ir1 = get_radius(r1=ir1, r=ir, d1=id1, d=id, dflt=3)+get_slop();
+    ir2 = get_radius(r1=ir2, r=ir, d1=id2, d=id, dflt=3)+get_slop();
+    dist1 = _dist2inner_for_cylindrical_clamp(fin_angle, or1, ir1);
+    dist2 = _dist2inner_for_cylindrical_clamp(fin_angle, or2, ir2);
+    fin_length1 = dist1; //sqrt(pow(dist1,2)-pow(fin_thick/2,2));
+    fin_length2 = dist2; //sqrt(pow(dist2,2)-pow(fin_thick/2,2));
+//    fin_length1 = dist1;
+//    fin_length2 = _dist2inner_for_cylindrical_clamp(fin_angle, or2, ir2);
+    actual_angle = (is_undef(fin_angle)?asin(ir1/or1):fin_angle)/*-asin(fin_thick/2/dist1)*/;
+    echo(fin_length1=fin_length1,actual_angle=actual_angle);
+    /*down(h/2)*/ skew(sxz=shift.x/h, syz=shift.y/h) /*up(h/2)*/
+    // If sharing, this tag should probably be a uuid per invocation
+//    diff("circ_clamp") cylinder(h,r1=or1,r2=or2) {
+//        tag("circ_clamp") position(BOT) cylinder(h,r1=or1,r2=or2);
+        zrot_copies(n=num)
+            fwd(or1) zrot(-actual_angle) prismoid([fin_thick,fin_length1],[fin_thick,fin_length2],h,[0,(fin_length2-fin_length1)/2],rounding=[fin_thick/2,fin_thick/2,0,0], anchor=BOT+LEFT+FRONT);
+//    }
+}
+
+xdistribute(10) {
+  union() {
+  cylindrical_clamp(h=5,od=2,id=1.5,fin_thick=0.4,shift=[2,-1],$fn=10);
+  #cyl(h=5,d=1.5,shift=[2,-1],$fn=30, anchor=BOT);
+  }
+
+  union() {
+  cylindrical_clamp(h=5,od=4.5,id=3.8,fin_thick=0.4,num=10,shift=[2,-1],$fn=10);
+  #cyl(h=5,d=3.8,shift=[2,-1],$fn=30, anchor=BOT);
+  }
+
+  union() {
+  cylindrical_clamp(h=5,od=4.5,id=3.8,fin_thick=0.2,num=10,$fn=10);
+  #tube(h=5,od=4.5,id=3.8,$fn=48, anchor=BOT);
+  }
+
+  union() {
+  cylindrical_clamp(h=5,od=4.5,id=3.8,fin_thick=0.2,num=10,fin_angle=20,$fn=10);
+  #tube(h=5,od=4.5,id=3.8,$fn=48, anchor=BOT);
+  }
+
+  union() {
+  cylindrical_clamp(h=5,od=4.5,id=3,fin_thick=0.2,num=10,$fn=10);
+  #tube(h=5,od=4.5,id=3,$fn=48, anchor=BOT);
+  }
+
+//  union() {
+//  grip_fins(h=5,od=4.5,id=3.8,fin_thick=0.2,num=10,fin_angle=20,$fn=32);
+//  #tube(h=5,od=4.5,id=3.8,$fn=48, anchor=BOT);
+//  }
+}
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
