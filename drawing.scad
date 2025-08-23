@@ -703,7 +703,8 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   the rounding at the center point, and then the other two the two outer corners in the direction that the arc travels.
 //   If you give `n` then each arc section in your curve uses `n` points, so the total number of points is `n` times one plus the number of non-zero roundings
 //   you specified.  If you don't need to control the exact point count, you should use `$fs` and `$fa` to control the number of points on the roundings and arc.
-//   When you do not give the `n` argument, the minimum number of points on the arc is two `wedge` is true but three if `wedge` is false.  
+//   When you do not give the `n` argument, the minimum number of points on the arc is two if `wedge` is true but three if `wedge` is false.
+//   Recall that if you do use `$fn` it specifies the number of **segments** not points on the whole circle.  
 // Arguments:
 //   n = Number of vertices to use in the arc.  If `wedge=true` you will get `n+1` points.  
 //   r = Radius of the arc.
