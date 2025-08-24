@@ -1679,7 +1679,7 @@ function _make_offset_polyhedron(path,offsets, offset_type, flip_faces, quality,
                     check_valid=check_valid, quality=quality,
                     return_faces=true,
                     firstface_index=vertexcount,
-                    flip_faces=flip_faces
+                    flip_faces=flip_faces, _reduce_output_count=true
             )
         )
         _make_offset_polyhedron(
