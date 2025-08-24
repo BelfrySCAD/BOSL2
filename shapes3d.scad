@@ -3361,29 +3361,34 @@ function _dual_vertices(vnf) =
 
 function _make_octa_sphere(r) =
     let(
+        // Get number of triangles on each side of each octant.
         subdivs = quantup(segs(r),4)/4,
+        // Get octant edge vertices, on sphere surface, for all three octant edges.
         edge1 = [for (p = [0:1:subdivs]) spherical_to_xyz(r,0,p/subdivs*90)],
         edge2 = zrot(90, p=edge1),
         edge3 = xrot(-90, p=edge1),
+        // Given two edges, calculate interior vertices by rotating along greater circles.
         get_pts = function(e1, e2) [
-            [ e1[0] ],
+            [ e1[0] ], // shared vertex where edges meet.
             for (p = [1:1:subdivs])
                 let(
-                    p1 = e1[p],
+                    p1 = e1[p],  // for each matching pair of edge vertices...
                     p2 = e2[p],
-                    vec = vector_axis(p1, p2),
-                    ang = vector_angle(p1, p2)
+                    vec = vector_axis(p1, p2), // get rotation axis...
+                    ang = vector_angle(p1, p2)  // and angle between them, WRT the origin.
                 ) [
-                    for (t = [0:1:p])
+                    for (t = [0:1:p])  // Subdivide this greater circle
                     let(
                         subang = lerp(0, ang, t/p),
                         pt = rot(a=subang, v=vec, p=p1)
                     ) pt
                 ]
         ],
+        // Calculate all the triangular vertex arrays for all three edge pairings.
         pts1 = get_pts(edge1, edge2),
         pts2 = get_pts(reverse(edge3), reverse(edge1)),
         pts3 = get_pts(reverse(edge2), edge3),
+        // Rotate the calculated triangular arrays to match up.
         rot_tri = function(tri)
             let(
                 ll = len(last(tri)) - 1
@@ -3396,6 +3401,7 @@ function _make_octa_sphere(r) =
         ],
         pts2b = rot_tri(rot_tri(pts2)),
         pts3b = rot_tri(pts3),
+        // Average the respecive vertices from each triangular array, and normalize them to the radius.
         pts = [
             for (u = [0:1:subdivs]) [
                 for (v = [0:1:u])
@@ -3403,21 +3409,25 @@ function _make_octa_sphere(r) =
                     p1 = pts1[u][v],
                     p2 = pts2b[u][v],
                     p3 = pts3b[u][v],
-                    mean = (p1 + p2 + p3) / 3
+                    mean = p1 + p2 + p3
                 ) unit(mean) * r
             ]
         ],
+        // Calculate the triangulations of the averaged octant vertices.
         octant_vnf = vnf_tri_array(pts),
+        // Make 4 rotated copies of the octant to get the top of the sphere.
         top_vnf = vnf_join([
             for (a=[0:90:359])
             zrot(a, p=octant_vnf)
         ]),
+        // Copy the top, flipped on the Z axis to get the bottom, and put them together into one VNF.
         bot_vnf = zflip(p=top_vnf),
         full_vnf = vnf_join([top_vnf, bot_vnf])
     ) full_vnf;
 
 
 function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orient=UP) =
+    assert(in_list(style, ["orig", "aligned", "stagger", "octa", "icosa"]))
     let(
         r = get_radius(r=r, d=d, dflt=1),
         hsides = segs(r),
@@ -3547,7 +3557,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                                  ]
                            )
                      ]
-              : /*style=="orig"?*/
+              : style=="orig"?
                   [
                       [for (i=[0:1:hsides-1]) hsides-i-1],
                       [for (i=[0:1:hsides-1]) lv-hsides+i],
@@ -3556,6 +3566,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                           [(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
                       ]
                   ]
+              : assert(in_list(style,["orig","aligned","stagger","octa","icosa"]))
     ) [reorient(anchor,spin,orient, r=r, p=verts), faces];
 
 
