@@ -3152,7 +3152,7 @@ function worm_gear(
     let(
         gear_arc = 2 * PA,
         helical = asin(worm_starts * circ_pitch / PI / worm_diam),
-        fee=echo(helical=helical), 
+        //fee=echo(helical=helical), 
         full_tooth = apply(
             zrot(90) * scale(0.99),
             _gear_tooth_profile(
@@ -3167,13 +3167,11 @@ function worm_gear(
         ftl = len(full_tooth),
         tooth_half1 = (select(full_tooth, 0, ftl/2-1)),
         tooth_half2 = (select(full_tooth, ftl/2, -1)),
-fda=        echo(th1=tooth_half1, th2=tooth_half2),
         tang = 360 / teeth,
         rteeth = (quantdn(teeth * gear_arc / 360, 2) / 2 + 0.5),
         pr = pitch_radius(circ_pitch, teeth, helical=helical),
-        feee=echo(pr_worm = pr, circ_pitch, teeth, helical), 
+        //feee=echo(pr_worm = pr, circ_pitch, teeth, helical), 
         circum = 2*PI*pr,
-fdsa=        echo(pr=pr),
         tan_helical = tan(helical),
         oslices = slices * 4,
         rows = [
