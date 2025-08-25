@@ -3359,67 +3359,56 @@ function _dual_vertices(vnf) =
   ];
 
 
+
 function _make_octa_sphere(r) =
     let(
         // Get number of triangles on each side of each octant.
         subdivs = quantup(segs(r),4)/4,
-        // Get octant edge vertices, on sphere surface, for all three octant edges.
+
+        // Get known exact octant edge vertices, on sphere surface, for all three octant edges.
         edge1 = [for (p = [0:1:subdivs]) spherical_to_xyz(r,0,p/subdivs*90)],
         edge2 = zrot(90, p=edge1),
         edge3 = xrot(-90, p=edge1),
-        // Given two edges, calculate interior vertices by rotating along greater circles.
-        get_pts = function(e1, e2) [
-            [ e1[0] ], // shared vertex where edges meet.
-            for (p = [1:1:subdivs])
-                let(
-                    p1 = e1[p],  // for each matching pair of edge vertices...
-                    p2 = e2[p],
-                    vec = vector_axis(p1, p2), // get rotation axis...
-                    ang = vector_angle(p1, p2)  // and angle between them, WRT the origin.
-                ) [
-                    for (t = [0:1:p])  // Subdivide this greater circle
-                    let(
-                        subang = lerp(0, ang, t/p),
-                        pt = rot(a=subang, v=vec, p=p1)
-                    ) pt
-                ]
-        ],
-        // Calculate all the triangular vertex arrays for all three edge pairings.
-        pts1 = get_pts(edge1, edge2),
-        pts2 = get_pts(reverse(edge3), reverse(edge1)),
-        pts3 = get_pts(reverse(edge2), edge3),
-        // Rotate the calculated triangular arrays to match up.
-        rot_tri = function(tri)
+
+        // Function to calculate greater arc point between two points
+        greater_arc_point = function(p1, p2, u)
             let(
-                ll = len(last(tri)) - 1
-            ) [
-            for (u = [0:1:ll]) [
-                for (v = [0:1:u])
-                let(col = u-v, row = ll-v)
-                tri[row][col]
-            ]
-        ],
-        pts2b = rot_tri(rot_tri(pts2)),
-        pts3b = rot_tri(pts3),
-        // Average the respecive vertices from each triangular array, and normalize them to the radius.
+                vec = vector_axis(p1, p2),
+                ang = vector_angle(p1, p2),
+                subang = lerp(0, ang, u),
+                pt = rot(a=subang, v=vec, p=p1)
+            ) pt,
+
+        // Calculate greater circle subdivisions between octant edges to get vertices.
         pts = [
-            for (u = [0:1:subdivs]) [
-                for (v = [0:1:u])
-                let(
-                    p1 = pts1[u][v],
-                    p2 = pts2b[u][v],
-                    p3 = pts3b[u][v],
-                    mean = p1 + p2 + p3
-                ) unit(mean) * r
+            for (row = [0:1:subdivs]) [
+                for (col = [0:1:row])
+                    if (col == 0)
+                        edge1[row]  // Point on first edge is exact. (± FP rounding)
+                    else if (col == row)
+                        edge2[row]  // Point on second edge is exact. (± FP rounding)
+                    else if (row == subdivs)
+                        edge3[subdivs-col]  // Point on third edge is exact. (± FP rounding)
+                    else  // Calculating interior point.
+                        let(
+                            u1 = col / row,
+                            u2 = subdivs-row+col,
+                            p1 = greater_arc_point(edge1[row], edge2[row], col/row),
+                            p2 = greater_arc_point(edge1[row-col], edge3[row-col], col/(subdivs-row+col)),
+                            p3 = greater_arc_point(edge2[col], edge3[subdivs-col], (row-col)/(subdivs-col)),
+                        ) unit(p1 + p2 + p3) * r  // Average greater circle points beween the three edge pairs.
             ]
         ],
+
         // Calculate the triangulations of the averaged octant vertices.
         octant_vnf = vnf_tri_array(pts),
+
         // Make 4 rotated copies of the octant to get the top of the sphere.
         top_vnf = vnf_join([
             for (a=[0:90:359])
             zrot(a, p=octant_vnf)
         ]),
+
         // Copy the top, flipped on the Z axis to get the bottom, and put them together into one VNF.
         bot_vnf = zflip(p=top_vnf),
         full_vnf = vnf_join([top_vnf, bot_vnf])
