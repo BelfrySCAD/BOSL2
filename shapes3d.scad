@@ -3370,7 +3370,7 @@ function _make_octa_sphere(r) =
         edge2 = zrot(90, p=edge1),
         edge3 = xrot(-90, p=edge1),
 
-        // Precache edge points, axes, and angles
+        // Precache edge points
         edge_pts1 = [for (i = [0:1:subdivs]) [edge1[i], edge2[i]]],
         edge_pts2 = [for (i = [0:1:subdivs]) [edge1[subdivs-i], edge3[subdivs-i]]],
         edge_pts3 = [for (i = [0:1:subdivs]) [edge2[subdivs-i], edge3[i]]],
