@@ -3370,14 +3370,20 @@ function _make_octa_sphere(r) =
         edge2 = zrot(90, p=edge1),
         edge3 = xrot(-90, p=edge1),
 
-        // Function to calculate greater arc point between two points
-        greater_arc_point = function(p1, p2, u)
-            let(
-                vec = vector_axis(p1, p2),
-                ang = vector_angle(p1, p2),
-                subang = lerp(0, ang, u),
-                pt = rot(a=subang, v=vec, p=p1)
-            ) pt,
+        // Precache edge points, axes, and angles
+        edge_pts1 = [for (i = [0:1:subdivs]) [edge1[i], edge2[i]]],
+        edge_pts2 = [for (i = [0:1:subdivs]) [edge1[subdivs-i], edge3[subdivs-i]]],
+        edge_pts3 = [for (i = [0:1:subdivs]) [edge2[subdivs-i], edge3[i]]],
+
+        // Precache greater circle axes
+        edge_axis1 = [UP, for (i = [1:1:subdivs]) vector_axis(edge_pts1[i][0], edge_pts1[i][1])],
+        edge_axis2 = [UP, for (i = [1:1:subdivs]) vector_axis(edge_pts2[i][0], edge_pts2[i][1])],
+        edge_axis3 = [UP, for (i = [1:1:subdivs]) vector_axis(edge_pts3[i][0], edge_pts3[i][1])],
+ 
+        // Precache greater circle angles
+        edge_ang1 = [0, for (i = [1:1:subdivs]) vector_angle(edge_pts1[i][0], edge_pts1[i][1])],
+        edge_ang2 = [0, for (i = [1:1:subdivs]) vector_angle(edge_pts2[i][0], edge_pts2[i][1])],
+        edge_ang3 = [0, for (i = [1:1:subdivs]) vector_angle(edge_pts3[i][0], edge_pts3[i][1])],
 
         // Calculate greater circle subdivisions between octant edges to get vertices.
         pts = [
@@ -3391,26 +3397,90 @@ function _make_octa_sphere(r) =
                         edge3[subdivs-col]  // Point on third edge is exact. (± FP rounding)
                     else  // Calculating interior point.
                         let(
-                            p1 = greater_arc_point(edge1[row], edge2[row], col/row),
-                            p2 = greater_arc_point(edge1[row-col], edge3[row-col], col/(subdivs-row+col)),
-                            p3 = greater_arc_point(edge2[col], edge3[subdivs-col], (row-col)/(subdivs-col))
+                            i1 = row,
+                            i2 = subdivs - row + col,
+                            i3 = subdivs - col,
+                            u1 = col / i1,
+                            u2 = col / i2,
+                            u3 = (row - col) / i3,
+                            p1 = rot(a=lerp(0, edge_ang1[i1], u1), v=edge_axis1[i1], p=edge_pts1[i1][0]),
+                            p2 = rot(a=lerp(0, edge_ang2[i2], u2), v=edge_axis2[i2], p=edge_pts2[i2][0]),
+                            p3 = rot(a=lerp(0, edge_ang3[i3], u3), v=edge_axis3[i3], p=edge_pts3[i3][0])
                         ) unit(p1 + p2 + p3) * r  // Average greater circle points beween the three edge pairs.
             ]
         ],
 
-        // Calculate the triangulations of the averaged octant vertices.
-        octant_vnf = vnf_tri_array(pts),
+        rows = [
+            [ pts[0][0] ],
 
-        // Make 4 rotated copies of the octant to get the top of the sphere.
-        top_vnf = vnf_join([
-            for (a=[0:90:359])
-            zrot(a, p=octant_vnf)
-        ]),
+            for (row = [1:1:subdivs]) [
+                for (a = [0:90:359])
+                each zrot(a, p=select(pts[row], [0:1:row-1]))
+            ],
 
-        // Copy the top, flipped on the Z axis to get the bottom, and put them together into one VNF.
-        bot_vnf = zflip(p=top_vnf),
-        full_vnf = vnf_join([top_vnf, bot_vnf])
-    ) full_vnf;
+            for (row = [subdivs-1:-1:1]) [
+                for (a = [0:90:359])
+                each zrot(a, p=zflip(p=select(pts[row], [0:1:row-1])))
+            ],
+
+            [ zflip(p=pts[0][0]) ]
+        ],
+        verts = flatten(rows),
+        offsets = cumsum([0, for (row = rows) len(row)]),
+        faces = [
+            for (i = [0:1:3])
+                let(
+                    l1 = len(rows[1]),
+                    o1 = offsets[1]
+                )
+                [i+o1, 0, (i+1)%l1+o1],
+
+            for (j = [1:1:subdivs-1])
+                let(
+                    l1 = len(rows[j]),
+                    l2 = len(rows[j+1]),
+                    o1 = offsets[j],
+                    o2 = offsets[j+1],
+                    q1 = len(rows[j])/4,
+                    q2 = len(rows[j+1])/4
+                )
+                for (n = [0:1:3])
+                    each [
+                        [o2+q2*n, o1+q1*n, o2+(q2*n+1)%l2],
+                        for (i = [0:1:q1-1]) each [
+                            [o2+(i+q2*n+1)%l2, o1+(i+q1*n+1)%l1, o2+(i+q2*n+2)%l2],
+                            [o2+(i+q2*n+1)%l2, o1+(i+q1*n)%l1, o1+(i+q1*n+1)%l1]
+                        ]
+                    ],
+
+            for (j = [subdivs:1:2*subdivs-2])
+                let(
+                    l1 = len(rows[j]),
+                    l2 = len(rows[j+1]),
+                    o1 = offsets[j],
+                    o2 = offsets[j+1],
+                    q1 = len(rows[j])/4,
+                    q2 = len(rows[j+1])/4
+                )
+                for (n = [0:1:3])
+                    each [
+                        [o2+q2*n, o1+q1*n, o1+(q1*n+1)%l1],
+                        for (i = [0:1:q1-2]) each [
+                            [o2+(i+q2*n)%l2, o1+(i+q1*n+1)%l1, o2+(i+q2*n+1)%l2],
+                            [o1+(i+q1*n+2)%l1, o2+(i+q2*n+1)%l2, o1+(i+q1*n+1)%l1]
+                        ]
+                    ],
+
+            for (i = [0:1:3])
+                let(
+                    row = len(rows) -2,
+                    l1 = len(rows[row]),
+                    o1 = offsets[row],
+                    o2 = offsets[row+1]
+                )
+                [o2, o1+i, o1+(i+1)%l1]
+        ]
+    ) [verts, faces];
 
 
 function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orient=UP) =
