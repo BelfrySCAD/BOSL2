@@ -297,7 +297,7 @@ module rounding_edge_mask(l, r, ang, r1, r2, excess=0.01, d1, d2,d,r,length, h, 
             assert(all_positive([length]), "length/l/h/height must be a positive value")
             assert(is_finite(ang) && ang>0 && ang<180, "ang must be a number between 0 and 180")
             assert(all_nonnegative([chamfer1,chamfer2,rounding1,rounding2]), "chamfers and roundings must be nonnegative");
-    steps = ceil(segs(max(r1,r2))*(180-ang)/360);
+    steps = max(2,segs(max(r1,r2), 180-ang)); 
     function make_path(r) =
          r==0 ? repeat([0,0],steps+1)
               : arc(n=steps+1, r=r, corner=[polar_to_xy(r,ang),[0,0],[r,0]]);

@@ -772,17 +772,21 @@ function scalar_vec3(v, dflt) =
 // Topics: Geometry
 // See Also: circle(), cyl()
 // Usage:
-//   sides = segs(r);
+//   sides = segs(r, [angle]);
 // Description:
 //   Calculate the standard number of sides OpenSCAD would give a circle based on `$fn`, `$fa`, and `$fs`.
+//   If angle is given, calculate for an arc of the given angle.
 // Arguments:
-//   r = Radius of circle to get the number of segments for.
+//   r = Radius of circle/arc to get the number of segments for.
+//   angle = Angle of arc to get the get the number of segments for.
 // Example:
-//   $fn=12; sides=segs(10);  // Returns: 12
-//   $fa=2; $fs=3; sides=segs(10);  // Returns: 21
-function segs(r) = 
-    $fn>0? ($fn>3? $fn : 3) :
-    let( r = is_finite(r)? r : 0 )
+//   $fn=12; sides=segs(10);           // Returns: 12
+//   $fa=2; $fs=3; sides=segs(10);     // Returns: 21
+//   $fa=2; $fs=3; sides=segs(10,180); // Returns: 11
+function segs(r,angle) =
+    is_def(angle) ? ceil(segs(r)*abs(angle)/360-2e-15)  // 2e-15 needed in case angle is slightly large due to rounding error
+  : $fn>0? ($fn>3? $fn : 3)
+  : let( r = is_finite(r)? r : 0 )
     ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs)));
 
 

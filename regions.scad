@@ -1016,7 +1016,7 @@ function offset(
     path, r=undef, delta=undef, chamfer=false,
     closed=true, check_valid=true,
     quality=1, error=true, return_faces=false, firstface_index=0,
-    flip_faces=false, same_length=false
+    flip_faces=false, same_length=false, _reduce_output_count=false
 ) =
     assert(!(same_length && return_faces), "\nCannot combine return_faces with same_length.")
     is_region(path)?
@@ -1097,7 +1097,7 @@ function offset(
                                             goodsegs[i][0]-goodpath[i]))
                     assert(!outsidecorner[i] || vang!=0,    // If outsidecorner[i] is true then vang>0 needed to give valid step count
                            "\nOffset computation failed, probably because validity check mistakenly removed a valid segment.  Increasing quality might fix this.")
-                    1+floor(segs(r)*vang/360)
+                    segs(r,vang)+(_reduce_output_count ? 0 : 1)
                 ],
         // newcorners is a list where each entry is a list of the points that correspond to a single point in the sharpcorners 
         // list: newcorners[i] is the point list that replaces goodpath[i].  Without rounding or chamfering (or reversals),
@@ -1134,7 +1134,7 @@ function offset(
                   )
                   arc(cp=goodpath[i], cw=cw, ccw=ccw,
                       points=basepts,
-                      n=steps[i]+3)
+                      n=steps[i])
               ],
         pointcount = [for(entry=newcorners) len(entry)],
         edges = flatten(newcorners),

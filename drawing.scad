@@ -696,13 +696,20 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 // Usage: as module
 //   arc(...) [ATTACHMENTS];
 // Description:
-//   If called as a function, returns a 2D or 3D path forming an arc.  If `wedge` is true, the centerpoint of the arc appears as the first point in the result.
-//   If called as a module, creates a 2D arc polygon or pie slice shape.  Numerous methods are available to specify the arc.
+//   If called as a function, returns a 2D or 3D path forming an arc.  Numerous methods are available to specify the arc as listed in the Arguments section.
+//   If `wedge` is true, the centerpoint of the arc appears as the first point in the result.
+//   If called as a module, the arc must be 2D and the module creates the 2D arc polygon or pie slice shape.  
 //   .
-//   The `rounding` parameter is permitted only when `wedge=true` and applies specified radius roundings at each of the corners, with `rounding[0]` giving
-//   the rounding at the center point, and then the other two the two outer corners in the direction that the arc travels.  If you don't need to control
-//   the exact point count, you should use `$fs` and `$fa` to control the number of points on the roundings and arc.  If you give `n` then each arc
-//   section in your curve uses `n` points, so the total number of points is `n` times one plus the number of non-zero roundings you specified.
+//   If `endpoint=false`, which is only accepted by the functional form, then the arc stops one step before the final point.  
+//   The `rounding` parameter, which is permitted only when `wedge=true`, applies specified radius roundings at each of the corners, with `rounding[0]` giving
+//   the rounding at the center point, and then the other two the two outer corners in the direction that the arc travels.  
+//   .
+//   If you give `n` for an arc without roundings then the curve of the arc will use `n` points.  If `endpoint=false` the arc still has `n` points, but
+//   they are closer together.  When wedge is true the output has an extra point.  If you use rounding on a wedge then each rounding will have the specified
+//   number of points, but note that the points of adjacent rounded areas overlap.  It may be easier to think that each curve in the output has n-1 facets.  With rounding,
+//   the total number of points on a wedge will be $n + 1 + (n-1) k$ where $k$ is the number of roundings that are nonzero.  
+//   To get enough points on corner roundings you may need an `n` that is very large and produces more points than needed on the main curved portion of the arc.
+//   Using `$fs` and `$fa` makes it possible to have differing numbers of points on the various roundings in your arc based on their radius and angle.
 // Arguments:
 //   n = Number of vertices to use in the arc.  If `wedge=true` you will get `n+1` points.  
 //   r = Radius of the arc.
@@ -791,7 +798,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
         is_def(rounding) ? assert(wedge,"rounding is only supportd with wedge=true") move(cp,zrot(start,_rounded_arc(r, rounding, angle, n)))
      :
         let(
-            n = is_def(n) ? n : max(3, ceil(segs(r)*abs(angle)/360)),
+            n = is_def(n) ? n : max(wedge?2:3,1+segs(r,angle)), //max(3, ceil(segs(r)*abs(angle)/360)),
             arcpoints = [for(i=[0:n-1]) let(theta = start + i*angle/(n-1)) r*[cos(theta),sin(theta)]+cp]
         )
         [
@@ -892,14 +899,15 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
 module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, rounding, anchor=CENTER, spin=0)
 {
     path = arc(n=n, r=r, angle=angle, d=d, cp=cp, points=points, corner=corner, width=width, thickness=thickness, start=start, wedge=wedge, rounding=rounding);
-    attachable(anchor,spin, two_d=true, path=path, extent=false) {
-        polygon(path);
+    assert(len(path[0])==2 || sum(v_abs(column(path,2)))==0, "Module form of arc() only works with 2D inputs.");
+    path2d = path2d(path);
+    attachable(anchor,spin, two_d=true, path=path2d, extent=false) {
+        polygon(path2d);
         children();
     }
 }
 
 
-                        
 
 function _rounded_arc(radius, rounding=0, angle, n) =
     assert(is_finite(angle) && abs(angle)<360, "angle must be strictly between -360 and 360")
@@ -928,7 +936,6 @@ function _rounded_arc(radius, rounding=0, angle, n) =
         
         edge_gap1=radius-arc1_cut-radius_of_ctrpt_edge,
         edge_gap2=radius-arc2_cut-radius_of_ctrpt_edge,
-
         angle_span1 = rounding[1]>0 ? [-dir*90, dir*arc1_angle] : -[dir*90, dir*180 - arc1_angle],
         angle_span2 = [angle-dir*arc2_angle + (rounding[2]<0 ? dir*180 : 0), angle+dir*90]
     )
@@ -942,10 +949,12 @@ function _rounded_arc(radius, rounding=0, angle, n) =
                                    polar_to_xy(r=radius_of_ctrpt_edge, theta=0)],
                                    endpoint=edge_gap1!=0,n=n)
            else repeat([0,0],rounding[0]>0 && abs(angle)==180 && is_def(n) ? n : 1),                        
-      each if (rounding[1]!=0) arc(r=abs(rounding[1]),cp=pt1,angle=angle_span1,endpoint=dir*arc1_angle==angle,n=n), // first corner
+      each if (rounding[1]!=0) arc(r=abs(rounding[1]),cp=pt1,angle=angle_span1,
+                                   endpoint=dir*arc1_angle==angle,n=u_add(n,dir*arc1_angle==angle?0:-1)),            // first corner
       each if (arc1_angle+arc2_angle<abs(angle))
-                      arc(r=radius, angle=[dir*arc1_angle,angle - dir*arc2_angle], endpoint=rounding[2]==0, n=n),   // main arc section
-      each if (rounding[2]!=0) arc(r=abs(rounding[2]),cp=pt3,  angle=angle_span2, endpoint=edge_gap2!=0, n=n)       // second corner
+                      arc(r=radius, angle=[dir*arc1_angle,angle - dir*arc2_angle], endpoint=rounding[2]==0,    // main arc section
+                          n=u_add(n,rounding[2]==0?0:-1)),   
+      each if (rounding[2]!=0) arc(r=abs(rounding[2]),cp=pt3,  angle=angle_span2, endpoint=edge_gap2!=0, n=n)  // second corner
     ];
 
 
