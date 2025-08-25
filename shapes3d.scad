@@ -3395,7 +3395,7 @@ function _make_octa_sphere(r) =
                             u2 = subdivs-row+col,
                             p1 = greater_arc_point(edge1[row], edge2[row], col/row),
                             p2 = greater_arc_point(edge1[row-col], edge3[row-col], col/(subdivs-row+col)),
-                            p3 = greater_arc_point(edge2[col], edge3[subdivs-col], (row-col)/(subdivs-col)),
+                            p3 = greater_arc_point(edge2[col], edge3[subdivs-col], (row-col)/(subdivs-col))
                         ) unit(p1 + p2 + p3) * r  // Average greater circle points beween the three edge pairs.
             ]
         ],
