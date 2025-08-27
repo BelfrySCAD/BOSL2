@@ -1013,7 +1013,9 @@ function linear_sweep(
 //   spin = Rotate this many degrees around Z axis after anchor. Default: 0
 //   orient = Vector to rotate top toward after spin (module only)
 // Named Anchors:
-//   "origin" = The native position of the shape.  
+//   "origin" = The native position of the shape.
+//   "start-centroid" = (module only) When `angle<360`, the centroid of the shape, on the face at the starting face of the object
+//   "end-centroid" = (module only) When `angle<360`, the centroid of the shape, on the face at the ending face of the object
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
@@ -1301,6 +1303,7 @@ function rotate_sweep(
     spin=0, orient=UP, start=0, 
     _tex_inhibit_y_slicing
 ) =
+    assert(is_num(angle) && angle>0 && angle<=360,"\nangle must be a positive number not more than 360")
     assert(num_defined([closed,caps])<2, "\nIn rotate_sweep the `closed` paramter has been replaced by `caps` with the opposite meaning. You cannot give both.")
     assert(num_defined([tex_reps,tex_counts])<2, "\nIn rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'. You cannot give both.")
     assert(num_defined([tex_scale,tex_depth])<2, "\nIn linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'. You cannot give both.")
@@ -1382,7 +1385,8 @@ module rotate_sweep(
     _tex_inhibit_y_slicing=false
 ) {
     dummy =
-       assert(num_defined([closed,caps])<2, "\nIn rotate_sweep the `closed` paramter has been replaced by `caps` with the opposite meaning.  You cannot give both.")
+       assert(is_num(angle) && angle>0 && angle<=360,"\nangle must be a positive number not more than 360")      
+       assert(num_defined([closed,caps])<2, "\nIn rotate_sweep the `closed` parameter has been replaced by `caps` with the opposite meaning.  You cannot give both.")
        assert(num_defined([tex_reps,tex_counts])<2, "\nIn rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
        assert(num_defined([tex_scale,tex_depth])<2, "\nIn rotate_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
        assert(!is_path(shape) || caps || len(shape)>=3, "\n'shape' is a path and caps=false, but a closed path requires three points.");
@@ -1402,6 +1406,13 @@ module rotate_sweep(
     max_y = bounds[1].y;
     h = max_y - min_y;
     check2 = assert(min_x>=0, "\nInput region must exist entirely in the X+ half-plane.");
+    ctr2d = centroid(shape);
+    ctr3d = [ctr2d.x, 0, ctr2d.y];
+    namedanch = angle==360 ? []
+              :[
+                 named_anchor("start-centroid", ctr3d, FWD),
+                 named_anchor("end-centroid", rot = zrot(angle)*move(ctr3d)*xrot(-90)*zrot(180))
+               ];
     if (!is_undef(texture)) {
         _textured_revolution(
             shape,
@@ -1420,7 +1431,8 @@ module rotate_sweep(
             style=style,
             atype=atype, anchor=anchor, 
             spin=spin, orient=orient, start=start
-        ) children();
+        )
+        change_anchors(named=namedanch) children();
     } else {
         region = is_path(shape) && caps ? [deduplicate([[0,shape[0].y], each shape, [0,last(shape).y]])]
                : region;
@@ -1430,15 +1442,15 @@ module rotate_sweep(
             if (angle==360) for (i=[0:1:steps-1]) skmat * rot([90,0,start+360-i*360/steps]),
             if (angle<360) for (i=[0:1:steps-1]) skmat * rot([90,0,start+angle-i*angle/(steps-1)]),
         ];
-        sweep(
-            region, transforms,
-            closed=angle==360,
-            caps=angle!=360,
-            style=style, cp=cp,
-            convexity=convexity,
-            atype=atype, anchor=anchor,
-            spin=spin, orient=orient
-        ) children();
+        sweep(region, transforms,
+              closed=angle==360,
+              caps=angle!=360,
+              style=style, cp=cp,
+              convexity=convexity,
+              atype=atype, anchor=anchor,
+              spin=spin, orient=orient)
+                 change_anchors(named=namedanch)
+                   children();
     }
 }
 
@@ -4752,7 +4764,6 @@ function _textured_revolution(
     style="min_edge", atype="intersect",
     anchor=CENTER, spin=0, orient=UP
 ) =
-    assert(angle>0 && angle<=360)
     assert(is_path(shape,[2]) || is_region(shape))
     assert(is_undef(samples) || is_int(samples))
     assert(is_bool(closed))
