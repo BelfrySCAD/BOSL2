@@ -3367,6 +3367,45 @@ function named_anchor(name, pos, orient, spin, rot, flip, info) =
   [name, pos, dir, spin, if (info) info];
   
 
+// Module: change_anchors()
+// Synopsis: Changes the named anchors inherited from the parent
+// Topics: Attachments
+// See Also: named_anchor(), attachable()
+// Usage:
+//   PARENT() change_anchors([named],[alias=],[remove=]) CHILDREN;
+// Description:
+//   Modifies the named anchors inherited from the parent object.  The `named` parameter gives a list
+//   of new or replacement named anchors, specified in the usual way with {{named_anchor()}}.
+//   The `alias` parameter specifies a list of string pairs of the form `[newname, oldname]` where
+//   `newname` is a new anchor name and `oldname` is an existing named anchor for the parent.  The
+//   existing parent anchor will be propagated to the child under the new name.  The old name is not changed,
+//   and will also be propagated to the child.   The `remove` parameter removes named anchors inherited from
+//   the parent so they are not propagated to the child.  You can use it to remove an anchor that you have
+//   aliased so that only the new name propagates to the child. 
+// Arguments:
+//   named = list of named anchors to add
+//   ---
+//   alias = list of string pairs of the form [newname,oldname] creating named anchor aliases
+//   remove = list of strings giving anchors to remove
+ 
+module change_anchors(named=[], alias=[], remove=[])
+{
+  oldanch = last($parent_geom);
+  allremove = concat(column(named,0), remove);
+  keepanch = [for(anch=oldanch) if (!in_list(anch[0],allremove)) anch];
+  aliasanch = [for(name=alias)
+                  let(
+                      found = search([name[1]], oldanch, num_returns_per_match=1)[0]
+                  )
+                  assert(found!=[], str("Alias references unknown anchor: ",name[1]))
+                  list_set(oldanch[found],0,name[0])
+              ];
+  newanch = concat(keepanch, aliasanch, named);
+  $parent_geom = list_set($parent_geom,-1,newanch);
+  children();
+}
+
+
 // Function: attach_geom()
 // Synopsis: Returns the internal geometry description of an attachable object.
 // Topics: Attachments

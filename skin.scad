@@ -1013,7 +1013,9 @@ function linear_sweep(
 //   spin = Rotate this many degrees around Z axis after anchor. Default: 0
 //   orient = Vector to rotate top toward after spin (module only)
 // Named Anchors:
-//   "origin" = The native position of the shape.  
+//   "origin" = The native position of the shape.
+//   "start-centroid" = (module only) When `angle<360`, the centroid of the shape, on the face at the starting face of the object
+//   "end-centroid" = (module only) When `angle<360`, the centroid of the shape, on the face at the ending face of the object
 // Anchor Types:
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
@@ -1301,6 +1303,7 @@ function rotate_sweep(
     spin=0, orient=UP, start=0, 
     _tex_inhibit_y_slicing
 ) =
+    assert(is_num(angle) && angle>0 && angle<=360,"\nangle must be a positive number not more than 360")
     assert(num_defined([closed,caps])<2, "\nIn rotate_sweep the `closed` paramter has been replaced by `caps` with the opposite meaning. You cannot give both.")
     assert(num_defined([tex_reps,tex_counts])<2, "\nIn rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'. You cannot give both.")
     assert(num_defined([tex_scale,tex_depth])<2, "\nIn linear_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'. You cannot give both.")
@@ -1382,7 +1385,8 @@ module rotate_sweep(
     _tex_inhibit_y_slicing=false
 ) {
     dummy =
-       assert(num_defined([closed,caps])<2, "\nIn rotate_sweep the `closed` paramter has been replaced by `caps` with the opposite meaning.  You cannot give both.")
+       assert(is_num(angle) && angle>0 && angle<=360,"\nangle must be a positive number not more than 360")      
+       assert(num_defined([closed,caps])<2, "\nIn rotate_sweep the `closed` parameter has been replaced by `caps` with the opposite meaning.  You cannot give both.")
        assert(num_defined([tex_reps,tex_counts])<2, "\nIn rotate_sweep() the 'tex_counts' parameters has been replaced by 'tex_reps'.  You cannot give both.")
        assert(num_defined([tex_scale,tex_depth])<2, "\nIn rotate_sweep() the 'tex_scale' parameter has been replaced by 'tex_depth'.  You cannot give both.")
        assert(!is_path(shape) || caps || len(shape)>=3, "\n'shape' is a path and caps=false, but a closed path requires three points.");
@@ -1393,7 +1397,15 @@ module rotate_sweep(
              : tex_reps;
     tex_depth = is_def(tex_scale)? echo("In rotate_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
               : default(tex_depth,1);
-    region = _force_xplus(force_region(shape));
+    region = is_path(shape) && caps ? _force_xplus([deduplicate([[0,shape[0].y], each shape, [0,last(shape).y]])])
+                                    : _force_xplus(force_region(shape));
+    ctr2d = centroid(region);
+    ctr3d = [ctr2d.x, 0, ctr2d.y];
+    namedanch = angle==360 ? []
+              :[
+                 named_anchor("start-centroid", ctr3d, FWD),
+                 named_anchor("end-centroid", rot = zrot(angle)*move(ctr3d)*xrot(-90)*zrot(180))
+               ];
     check = assert(is_region(region), "\nInput is not a region or polygon.");
     bounds = pointlist_bounds(flatten(region));
     min_x = bounds[0].x;
@@ -1420,25 +1432,24 @@ module rotate_sweep(
             style=style,
             atype=atype, anchor=anchor, 
             spin=spin, orient=orient, start=start
-        ) children();
+        )
+        change_anchors(named=namedanch) children();
     } else {
-        region = is_path(shape) && caps ? [deduplicate([[0,shape[0].y], each shape, [0,last(shape).y]])]
-               : region;
         steps = ceil(segs(max_x) * angle / 360) + (angle<360? 1 : 0);
         skmat = down(min_y) * skew(sxz=shift.x/h, syz=shift.y/h) * up(min_y);
         transforms = [
             if (angle==360) for (i=[0:1:steps-1]) skmat * rot([90,0,start+360-i*360/steps]),
             if (angle<360) for (i=[0:1:steps-1]) skmat * rot([90,0,start+angle-i*angle/(steps-1)]),
         ];
-        sweep(
-            region, transforms,
-            closed=angle==360,
-            caps=angle!=360,
-            style=style, cp=cp,
-            convexity=convexity,
-            atype=atype, anchor=anchor,
-            spin=spin, orient=orient
-        ) children();
+        sweep(region, transforms,
+              closed=angle==360,
+              caps=angle!=360,
+              style=style, cp=cp,
+              convexity=convexity,
+              atype=atype, anchor=anchor,
+              spin=spin, orient=orient)
+                 change_anchors(named=namedanch)
+                   children();
     }
 }
 
@@ -2698,8 +2709,8 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge",
                 for (rgn=regions) each [
                     for (path=rgn)
                         sweep(path, transforms, closed=closed, caps=false, style=style),
-                    if (flatcaps[0]) vnf_from_region(rgn, transform=transforms[0], reverse=true),
-                    if (flatcaps[1]) vnf_from_region(rgn, transform=last(transforms)),
+                    if (flatcaps[0]) vnf_from_region(rgn, transform=transforms[0], reverse=true, triangulate=true),  // triangulation needed?
+                    if (flatcaps[1]) vnf_from_region(rgn, transform=last(transforms), triangulate=true),
                 ],
             ],
             vnf = vnf_join(vnfs)
@@ -4752,7 +4763,6 @@ function _textured_revolution(
     style="min_edge", atype="intersect",
     anchor=CENTER, spin=0, orient=UP
 ) =
-    assert(angle>0 && angle<=360)
     assert(is_path(shape,[2]) || is_region(shape))
     assert(is_undef(samples) || is_int(samples))
     assert(is_bool(closed))
@@ -4772,6 +4782,10 @@ function _textured_revolution(
                       testpoly = [[0,shape[0].y], each shape, [0,last(shape).y]]
                   )
                   [[is_polygon_clockwise(testpoly) ? shape : reverse(shape)]],
+
+
+
+        
         checks = [
             for (rgn=regions, path=rgn)
                 assert(all(path, function(pt) pt.x>=0),"\nAll points in the shape must have non-negative x value."),
