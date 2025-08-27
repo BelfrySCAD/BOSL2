@@ -986,7 +986,7 @@ module assert_equal(got, expected, info) {
 //   Returns the differential geometry if they are not quite the same shape and size.
 // Arguments:
 //   eps = The surface of the two shapes must be within this size of each other.  Default: 1/1024
-// Example:
+// Example(NORENDER):  (Example disabled because OpenSCAD bug prevents it from displaying)
 //   $fn=36;
 //   shape_compare() {
 //       sphere(d=100);

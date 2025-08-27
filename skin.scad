@@ -1397,7 +1397,15 @@ module rotate_sweep(
              : tex_reps;
     tex_depth = is_def(tex_scale)? echo("In rotate_sweep() the 'tex_scale' parameter is deprecated and has been replaced by 'tex_depth'")tex_scale
               : default(tex_depth,1);
-    region = _force_xplus(force_region(shape));
+    region = is_path(shape) && caps ? _force_xplus([deduplicate([[0,shape[0].y], each shape, [0,last(shape).y]])])
+                                    : _force_xplus(force_region(shape));
+    ctr2d = centroid(region);
+    ctr3d = [ctr2d.x, 0, ctr2d.y];
+    namedanch = angle==360 ? []
+              :[
+                 named_anchor("start-centroid", ctr3d, FWD),
+                 named_anchor("end-centroid", rot = zrot(angle)*move(ctr3d)*xrot(-90)*zrot(180))
+               ];
     check = assert(is_region(region), "\nInput is not a region or polygon.");
     bounds = pointlist_bounds(flatten(region));
     min_x = bounds[0].x;
@@ -1406,13 +1414,6 @@ module rotate_sweep(
     max_y = bounds[1].y;
     h = max_y - min_y;
     check2 = assert(min_x>=0, "\nInput region must exist entirely in the X+ half-plane.");
-    ctr2d = centroid(shape);
-    ctr3d = [ctr2d.x, 0, ctr2d.y];
-    namedanch = angle==360 ? []
-              :[
-                 named_anchor("start-centroid", ctr3d, FWD),
-                 named_anchor("end-centroid", rot = zrot(angle)*move(ctr3d)*xrot(-90)*zrot(180))
-               ];
     if (!is_undef(texture)) {
         _textured_revolution(
             shape,
@@ -1434,8 +1435,6 @@ module rotate_sweep(
         )
         change_anchors(named=namedanch) children();
     } else {
-        region = is_path(shape) && caps ? [deduplicate([[0,shape[0].y], each shape, [0,last(shape).y]])]
-               : region;
         steps = ceil(segs(max_x) * angle / 360) + (angle<360? 1 : 0);
         skmat = down(min_y) * skew(sxz=shift.x/h, syz=shift.y/h) * up(min_y);
         transforms = [
@@ -2710,8 +2709,8 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge",
                 for (rgn=regions) each [
                     for (path=rgn)
                         sweep(path, transforms, closed=closed, caps=false, style=style),
-                    if (flatcaps[0]) vnf_from_region(rgn, transform=transforms[0], reverse=true),
-                    if (flatcaps[1]) vnf_from_region(rgn, transform=last(transforms)),
+                    if (flatcaps[0]) vnf_from_region(rgn, transform=transforms[0], reverse=true, triangulate=true),  // triangulation needed?
+                    if (flatcaps[1]) vnf_from_region(rgn, transform=last(transforms), triangulate=true),
                 ],
             ],
             vnf = vnf_join(vnfs)
@@ -4783,6 +4782,10 @@ function _textured_revolution(
                       testpoly = [[0,shape[0].y], each shape, [0,last(shape).y]]
                   )
                   [[is_polygon_clockwise(testpoly) ? shape : reverse(shape)]],
+
+
+
+        
         checks = [
             for (rgn=regions, path=rgn)
                 assert(all(path, function(pt) pt.x>=0),"\nAll points in the shape must have non-negative x value."),
