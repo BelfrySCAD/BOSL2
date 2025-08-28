@@ -85,7 +85,7 @@ module color_this(c="default")
 // Module: rainbow()
 // Synopsis: Iterates through a list, displaying children in different colors.
 // SynTags: Trans
-// Topics: List Handling
+// Topics: List Handling, Debugging
 // See Also: hsl(), hsv()
 // Usage:
 //   rainbow(list,[stride],[maxhues],[shuffle],[seed]) CHILDREN;
@@ -169,7 +169,7 @@ module color_overlaps(color="red") {
 // Module: highlight()
 // Synopsis: Sets # modifier for attachable children and their descendents.
 // SynTags: Trans
-// Topics: Attachments, Modifiers
+// Topics: Attachments, Modifiers, Debugging
 // See Also: highlight_this(), ghost(), ghost_this(), recolor(), color_this()
 // Usage:
 //   highlight([highlight]) CHILDREN;
@@ -194,7 +194,7 @@ module highlight(highlight=true)
 // Module: highlight_this()
 // Synopsis: Apply # modifier to children at a single level.
 // SynTags: Trans
-// Topics: Attachments, Modifiers
+// Topics: Attachments, Modifiers, Debugging
 // See Also: highlight(), ghost(), ghost_this(), recolor(), color_this()
 // Usage:
 //   highlight_this() CHILDREN;
@@ -218,7 +218,7 @@ module highlight_this()
 // Module: ghost()
 // Synopsis: Sets % modifier for attachable children and their descendents.
 // SynTags: Trans
-// Topics: Attachments, Modifiers
+// Topics: Attachments, Modifiers, Debugging
 // See Also: ghost_this(), recolor(), color_this()
 // Usage:
 //   ghost([ghost]) CHILDREN;
@@ -243,7 +243,7 @@ module ghost(ghost=true)
 // Module: ghost_this()
 // Synopsis: Apply % modifier to children at a single level.
 // SynTags: Trans
-// Topics: Attachments, Modifiers
+// Topics: Attachments, Modifiers, Debugging
 // See Also: ghost(), recolor(), color_this()
 // Usage:
 //   ghost_this() CHILDREN;
