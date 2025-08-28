@@ -1367,7 +1367,7 @@ function _turtle_command(command, parm, parm2, state, index) =
 // Module: debug_polygon()
 // Synopsis: Draws an annotated polygon.
 // SynTags: Geom
-// Topics: Shapes (2D)
+// Topics: Shapes (2D), Debugging
 // See Also: debug_region(), debug_vnf(), debug_bezier()
 //
 // Usage:

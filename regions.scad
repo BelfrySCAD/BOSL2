@@ -371,7 +371,7 @@ module region(r, anchor="origin", spin=0, cp="centroid", atype="hull")
 // Module: debug_region()
 // Synopsis: Draws an annotated {{region}}.
 // SynTags: Geom
-// Topics: Shapes (2D)
+// Topics: Shapes (2D), Debugging
 // See Also: region(), debug_polygon(), debug_vnf(), debug_bezier()
 //
 // Usage:
