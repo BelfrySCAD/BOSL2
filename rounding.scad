@@ -3722,7 +3722,8 @@ function join_prism(polygon, base, base_r, base_d, base_T=IDENT,
           : apply(aux_T,CENTER),
       flip = short ? -1 : 1,
       axisline = [CENTER, flip*dir] +  repeat(default(start,CENTER),2), 
-      start = base=="sphere" ?
+      start = is_def(start) ? start
+            : base=="sphere" ?
                 let( answer = _sphere_line_isect_best(abs(base_r),axisline, sign(base_r)*flip*dir))
                 assert(answer,"Prism center doesn't intersect sphere (base)")
                 answer
@@ -4442,6 +4443,19 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //                          leftpipe, RIGHT, rightpipe, LEFT, fillet=fillet,
 //                          shift1=-shift_fix,shift2=shift+shift_fix);
 //    }
+// Example(3D,NoAxes): Here we use attachable parts of the tube to create a connector that makes a hole from the outside to the inside of the tube
+//   $fn=64;
+//   diff()
+//   tube(or=10,wall=2,h=10,rounding=1)
+//     let(outside=parent())
+//     attach_part("inside")
+//     let(inside=parent())
+//     for(angle = [0:120:359])
+//       let(where = polar_to_xy(1,angle))
+//       tag("remove")
+//          prism_connector(circle(3,$fn=32),
+//                          outside, where, parent(), where,
+//                          fillet=0.5);
 
 
 // Get the object type from the specified geometry and anchor point
