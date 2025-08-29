@@ -4470,7 +4470,7 @@ function _standard_anchors(two_d=false) = [
 // Module: show_anchors()
 // Synopsis: Shows anchors for the parent object.
 // SynTags: Geom
-// Topics: Attachments
+// Topics: Attachments, Debugging
 // See Also: expose_anchors(), anchor_arrow(), anchor_arrow2d(), frame_ref()
 // Usage:
 //   PARENT() show_anchors([s], [std=], [custom=]);
@@ -4534,7 +4534,7 @@ module show_anchors(s=10, std=true, custom=true) {
 // Module: anchor_arrow()
 // Synopsis: Shows a 3d anchor orientation arrow.
 // SynTags: Geom
-// Topics: Attachments
+// Topics: Attachments, Debugging
 // See Also: anchor_arrow2d(), show_anchors(), expose_anchors(), frame_ref(), generic_airplane()
 // Usage:
 //   anchor_arrow([s], [color], [flag], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
@@ -4573,7 +4573,7 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow",
 // Module: anchor_arrow2d()
 // Synopsis: Shows a 2d anchor orientation arrow.
 // SynTags: Geom
-// Topics: Attachments
+// Topics: Attachments, Debugging
 // See Also: anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
 // Usage:
 //   anchor_arrow2d([s], [color]);
@@ -4592,7 +4592,7 @@ module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tag="anchor-arrow") {
 
 // Module: expose_anchors()
 // Synopsis: Used to show a transparent object with solid color anchor arrows.
-// Topics: Attachments
+// Topics: Attachments, Debugging
 // See Also: anchor_arrow2d(), show_anchors(), show_anchors(), frame_ref()
 // Usage:
 //   expose_anchors(opacity) {child1() show_anchors(); child2() show_anchors(); ...}
@@ -4619,7 +4619,7 @@ module expose_anchors(opacity=0.2) {
 // Module: show_transform_list()
 // Synopsis: Shows a list of transforms and how they connect.
 // SynTags: Geom
-// Topics: Attachments
+// Topics: Attachments, Debugging
 // See Also: generic_airplane(), anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
 // Usage:
 //   show_transform_list(tlist, [s]);
@@ -4666,7 +4666,7 @@ module show_transform_list(tlist, s=5) {
 // Module: generic_airplane()
 // Synopsis: Shows a generic airplane shape, useful for viewing orientations.
 // SynTags: Geom
-// Topics: Attachments
+// Topics: Attachments, Debugging
 // See Also: anchor_arrow(), show_anchors(), expose_anchors(), frame_ref()
 // Usage:
 //   generic_airplane([s]);
@@ -4703,7 +4703,7 @@ module generic_airplane(s=5) {
 // Module: frame_ref()
 // Synopsis: Shows axis orientation arrows.
 // SynTags: Geom
-// Topics: Attachments
+// Topics: Attachments, Debugging
 // See Also: anchor_arrow(), anchor_arrow2d(), show_anchors(), expose_anchors()
 // Usage:
 //   frame_ref(s, opacity);
