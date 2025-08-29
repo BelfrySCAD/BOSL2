@@ -859,7 +859,13 @@ function prismoid(
 //   This module is similar to {{cyl()}}.  It differs in the following ways:  you can specify side length or inner radius/diameter, you can apply roundings with
 //   different `$fn` than the number of prism faces, you can apply texture to the flat faces without forcing a high facet count,
 //   anchors are located on the true object instead of the ideal cylinder and you can anchor to the edges and faces.  Chamfers and roundings
-//   for this module are **always** evaluated relative to the faces of the prism and never at corners as is done by default in {{cyl()}}.  
+//   for this module are **always** evaluated relative to the faces of the prism and never at corners as is done by default in {{cyl()}}.
+//   .
+//   Fully specifying the shape requires a height and the radius at each end.  You can replace one of those three parameters with
+//   an angle.  If you give the height, angle, and one radius then the other radius is calculated so that the internal angle at the base of
+//   the prism is the specified angle.  If you give the angle and the radius at each end then the height is calculated so that the internal
+//   angle at one of the ends is the angle you specified. Which end gets the specified angle depends on the relative sizes of the ends
+//   and whether the angle is smaller or larger than 90 degrees.  
 // Named Anchors:
 //   "edge0", "edge1", etc. = Center of each side edge, spin pointing up along the edge.  Can access with EDGE(i)
 //   "face0", "face1", etc. = Center of each side face, spin pointing up.  Can access with FACE(i)
@@ -886,6 +892,7 @@ function prismoid(
 //   side = Side length of prism faces
 //   side1 = Side length of prism faces at the bottom
 //   side2 = Side length of prism faces at the top
+//   ang = specify the prism angle instead of height or instead of the dimension at one of the two ends.  
 //   shift = [X,Y] amount to shift the center of the top end with respect to the center of the bottom end.
 //   chamfer = The size of the chamfers on the ends of the prism.  (Also see: `from_end=`)  Default: none.
 //   chamfer1 = The size of the chamfer on the bottom end of the prism.  (Also see: `from_end1=`)  Default: none.
@@ -923,6 +930,14 @@ function prismoid(
 //   regular_prism(5,r=10,h=25,rounding=3,clip_angle=40,$fn=32);
 // Example:  By side length at bottom, inner radius at top, shallow chamfer
 //   regular_prism(7, side1=10, ir2=7, height=20,chamfer2=2,chamfang2=20);
+// Example:  By angle and base radius
+//   regular_prism(4, r1=10, height=7, ang=45);
+// Example:  By angle and top radius
+//   regular_prism(4, r2=10, height=7, ang=45);
+// Example:  By angle with height omitted; the specified 70 deg agle appears at the bottom in this case
+//   regular_prism(4, r1=10, r2=7, ang=70);
+// Example:  By angle with height omitted; we interchanged r1 and r2 and now the specified 70 deg angle is at the top
+//   regular_prism(4, r1=7, r2=10, ang=70);
 // Example: With shift
 //   regular_prism(4, d=12, h=10, shift=[12,7]);
 // Example: Attaching child to face
@@ -944,7 +959,7 @@ module regular_prism(n,
     h, r, center,
     l, length, height,
     r1,r2,ir,ir1,ir2,or,or1,or2,side,side1,side2, 
-    d, d1, d2,id,id1,id2,od,od1,od2,
+    d, d1, d2,id,id1,id2,od,od1,od2,ang,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
@@ -960,7 +975,7 @@ module regular_prism(n,
 { 
     vnf_anchors_ovr = regular_prism(n=n,h=h,r=r,center=center, l=l,length=length,height=height,
                                   r1=r1,r2=r2,ir=ir,ir1=ir1,ir2=ir2,or=or,or1=or1,or2=or2,side=side,side1=side1,side2=side2,
-                                  d=d,d1=d1,d2=d2,id=id,id1=id1,id2=id2,od=od,od1=od1,od2=od2,
+                                  d=d,d1=d1,d2=d2,id=id,id1=id1,id2=id2,od=od,od1=od1,od2=od2,ang=ang,
                                   chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
                                   chamfang=chamfang,chamfang1=chamfang1,chamfang2=chamfang2,
                                   rounding=rounding,rounding1=rounding1, rounding2=rounding2,
@@ -983,7 +998,7 @@ function regular_prism(n,
     h, r, center,
     l, length, height,
     r1,r2,ir,ir1,ir2,or,or1,or2,side,side1,side2, 
-    d, d1, d2,id,id1,id2,od,od1,od2,
+    d, d1, d2,id,id1,id2,od,od1,od2,ang,
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
@@ -1000,8 +1015,11 @@ function regular_prism(n,
     let(
         style = default(style,"min_edge"),
         tex_depth = default(tex_depth,1),
-        height = one_defined([l, h, length, height],"l,h,length,height"),
+        height = one_defined([l, h, length, height],"l,h,length,height",dflt=undef),
         sc = 1/cos(180/n),
+        rgen_def = num_defined([side,od,id,or,ir,r,d])==1,
+        r1def = num_defined([side1,od1,id1,or1,ir1,r1,d1])==1,
+        r2def = num_defined([side2,od2,id2,or2,ir2,r2,d2])==1,
         ir1 = u_mul(default(ir1,ir), sc),
         ir2 = u_mul(default(ir2,ir), sc),
         id1 = u_mul(default(id1,id), sc),
@@ -1019,10 +1037,32 @@ function regular_prism(n,
         r2 = get_radius(r1=ir2,r2=or2,r=default(r2,r),d=d2,d1=id2,d2=od2,dflt=side2),
         anchor = get_anchor(anchor,center,BOT,CENTER)
     )
+
+    assert(is_undef(ang) || (is_finite(ang) && ang>0 && ang<180), "\nang must be a number between 0 and 180")
+    assert(num_defined([ang,shift]), "\nCannot give both shift and ang")
+    assert(is_undef(ang) || num_true([is_def(height), r1def, r2def])<3, "\nCannot give ang with specification for r1, r2 and height")
     assert(num_defined([side,od,id,or,ir])<=1, "\nCan define only one of side, id, od, ir, and or.")
+    let(
+         hgiven = is_def(height),
+         height = !hgiven && is_def(ang) && r1def && r2def ?
+                       let(
+fdase=                         echo("hot here"),
+                         dr=r1-r2,
+                         height=abs(tan(ang)*dr)
+                       )
+                       height
+                : height
+,         f=echo(height=height, r1,r2,ang,r1def,r2def,hgiven)
+    )
+    assert(is_finite(height), "\nl/h/length/height must be a finite number")
+    let(
+         r1 = !hgiven || is_undef(ang) || r1def || rgen_def ? r1 : u_add(r2,height/tan(ang)),
+         r2 = !hgiven || is_undef(ang) || r2def ? r2 : u_add(r1, - height/tan(ang))
+         ,fee=echo(r1=r1,r2=r2)
+    )
     assert(is_finite(r1), "\nMust specify finite number for prism bottom radius / diameter / side length.")
     assert(is_finite(r2), "\nMust specify finite number for prism top radius / diameter / side length.")
-    assert(is_finite(height), "\nl/h/length/height must be a finite number.")
+    assert(is_undef(ang) || (r1>0 && r2>0), "\nSpecified angle produces a negative radius")
     assert(is_vector(shift,2), "\nshift must be a 2D vector.")
     let(
         vnf = any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2])
