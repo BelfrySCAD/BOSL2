@@ -4355,14 +4355,13 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //       tag("keep") zrot_copies(n=4)
 //         prism_connector(circ,parent(),[-1,.2],parent(),[1,.4],shift1=12,shift2=-12,fillet=2);
 // Example(3D,Med,NoAxes): A connection between the "inside" part of a tube and the outside of a tube
-//   $fn=64;
 //   diff()
 //   tube(or=10,wall=2,h=10,rounding=1,$fn=40)
 //     let(outside=parent())
 //     attach_part("inside")
 //     let(inside=parent())
 //     for(angle = [0:120:359])
-//       let(where = polar_to_xy(1,angle))
+//       let(where = zrot(angle,RIGHT))
 //       tag("remove")
 //          prism_connector(circle(3,$fn=32),
 //                          outside, where,
