@@ -4347,24 +4347,27 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //     cyl(d=40,h=50,$fn=32)
 //        tag("remove") prism_connector(circ,parent(),LEFT,parent(),RIGHT,
 //                                      shift1=-8,shift2=7,fillet=6,overlap=3);
-// Example(3D,NoAxes,VPT=[1.42957,2.47871,-3.63111],VPR=[40.3,0,29.2],VPD=263.435): You can also use interior connectors to bridge across holes as shown in this example.  Note also that you can apply operations like rotation to the connector.
+// Example(3D,NoAxes,VPT=[1.42957,2.47871,-3.63111],VPR=[40.3,0,29.2],VPD=263.435): Using interior connectors to bridge across holes. You can apply operations like rotation to the connector.
 //   circ = circle(r=3, $fn=64);
 //   diff()
 //     highlight_this() cyl(d=85,h=39)
 //       tag("remove") cyl(d=75,h=40,$fn=128)
 //       tag("keep") zrot_copies(n=4)
 //         prism_connector(circ,parent(),[-1,.2],parent(),[1,.4],shift1=12,shift2=-12,fillet=2);
-// Example(3D,Med,NoAxes): You can also make a connection between the "inside" part of a tube and the outside of a tube
-//    diff()
-//    tube(or=10,wall=2,h=10,rounding=1,$fn=40)
-//      let(outside=parent())
-//      attach_part("inside")
-//      tag("remove")
-//        for(where = [LEFT,RIGHT,FRONT,BACK])
-//          prism_connector(circle(3,$fn=100),
+// Example(3D,Med,NoAxes): A connection between the "inside" part of a tube and the outside of a tube
+//   $fn=64;
+//   diff()
+//   tube(or=10,wall=2,h=10,rounding=1,$fn=40)
+//     let(outside=parent())
+//     attach_part("inside")
+//     let(inside=parent())
+//     for(angle = [0:120:359])
+//       let(where = polar_to_xy(1,angle))
+//       tag("remove")
+//          prism_connector(circle(3,$fn=32),
 //                          outside, where,
-//                          parent(), where,
-//                          fillet=1);
+//                          inside, where,
+//                          fillet=0.5);
 // Example(3D,Med,NoAxes,VPT=[1.42957,2.47871,-3.63111],VPR=[40.3,0,29.2],VPD=263.435): Here we use the {{zrot_copies()}} distributor to create copies of objects and create a connector to a non-symmetrically placed object.  All all the connectors are different because we change the anchor point that goes with the second description.
 //   circ = circle(r=3, $fn=64);
 //   right(4)up(25)xrot(15) cyl(r=20,h=30,circum=true,$fn=64) let(cyl=parent())
@@ -4443,19 +4446,6 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //                          leftpipe, RIGHT, rightpipe, LEFT, fillet=fillet,
 //                          shift1=-shift_fix,shift2=shift+shift_fix);
 //    }
-// Example(3D,NoAxes): Here we use attachable parts of the tube to create a connector that makes a hole from the outside to the inside of the tube
-//   $fn=64;
-//   diff()
-//   tube(or=10,wall=2,h=10,rounding=1)
-//     let(outside=parent())
-//     attach_part("inside")
-//     let(inside=parent())
-//     for(angle = [0:120:359])
-//       let(where = polar_to_xy(1,angle))
-//       tag("remove")
-//          prism_connector(circle(3,$fn=32),
-//                          outside, where, parent(), where,
-//                          fillet=0.5);
 
 
 // Get the object type from the specified geometry and anchor point

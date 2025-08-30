@@ -4381,9 +4381,9 @@ function _find_anchor(anchor, geom)=
                        path = rgn[indexed_pts[index[0]][0]],
                        ctr = indexed_pts[index[0]][1],
                        corner = select(path, [ctr-1,ctr,ctr+1]),
-                       normal = unit(unit(corner[0]-corner[1])+unit(corner[2]-corner[1]))
+                       normal = unit(line_normal(select(corner,0,1))+line_normal(select(corner,1,2)))
                   )
-                  [is_polygon_clockwise(path) ? -normal : normal, vector_angle(corner)]
+                  [is_polygon_clockwise(path) ? normal : -normal, vector_angle(corner)]
         ) [anchor, pos, dir[0], 0, if(len(dir)>1) [["corner_angle",dir[1]]]]
     ) : type=="extrusion_extent" || type=="extrusion_isect" ? (  // extruded region
         assert(in_list(anchor.z,[-1,0,1]), "\nThe Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
