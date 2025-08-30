@@ -3399,12 +3399,136 @@ function _dual_vertices(vnf) =
   ];
 
 
+
+function _make_octa_sphere(r) =
+    let(
+        // Get number of triangles on each side of each octant.
+        subdivs = quantup(segs(r),4)/4,
+
+        // Get known exact octant edge vertices, on sphere surface, for all three octant edges.
+        edge1 = [for (p = [0:1:subdivs]) spherical_to_xyz(r,0,p/subdivs*90)],
+        edge2 = zrot(90, p=edge1),
+        edge3 = xrot(-90, p=edge1),
+
+        // Precache edge points
+        edge_pts1 = [for (i = [0:1:subdivs]) [edge1[i], edge2[i]]],
+        edge_pts2 = [for (i = [0:1:subdivs]) [edge1[subdivs-i], edge3[subdivs-i]]],
+        edge_pts3 = [for (i = [0:1:subdivs]) [edge2[subdivs-i], edge3[i]]],
+
+        // Precache greater circle axes
+        edge_axis1 = [UP, for (i = [1:1:subdivs]) vector_axis(edge_pts1[i][0], edge_pts1[i][1])],
+        edge_axis2 = [UP, for (i = [1:1:subdivs]) vector_axis(edge_pts2[i][0], edge_pts2[i][1])],
+        edge_axis3 = [UP, for (i = [1:1:subdivs]) vector_axis(edge_pts3[i][0], edge_pts3[i][1])],
+ 
+        // Precache greater circle angles
+        edge_ang1 = [0, for (i = [1:1:subdivs]) vector_angle(edge_pts1[i][0], edge_pts1[i][1])],
+        edge_ang2 = [0, for (i = [1:1:subdivs]) vector_angle(edge_pts2[i][0], edge_pts2[i][1])],
+        edge_ang3 = [0, for (i = [1:1:subdivs]) vector_angle(edge_pts3[i][0], edge_pts3[i][1])],
+
+        // Calculate greater circle subdivisions between octant edges to get vertices.
+        pts = [
+            for (row = [0:1:subdivs]) [
+                for (col = [0:1:row])
+                    if (col == 0)
+                        edge1[row]  // Point on first edge is exact. (± FP rounding)
+                    else if (col == row)
+                        edge2[row]  // Point on second edge is exact. (± FP rounding)
+                    else if (row == subdivs)
+                        edge3[subdivs-col]  // Point on third edge is exact. (± FP rounding)
+                    else  // Calculating interior point.
+                        let(
+                            i1 = row,
+                            i2 = subdivs - row + col,
+                            i3 = subdivs - col,
+                            u1 = col / i1,
+                            u2 = col / i2,
+                            u3 = (row - col) / i3,
+                            p1 = rot(a=lerp(0, edge_ang1[i1], u1), v=edge_axis1[i1], p=edge_pts1[i1][0]),
+                            p2 = rot(a=lerp(0, edge_ang2[i2], u2), v=edge_axis2[i2], p=edge_pts2[i2][0]),
+                            p3 = rot(a=lerp(0, edge_ang3[i3], u3), v=edge_axis3[i3], p=edge_pts3[i3][0])
+                        ) unit(p1 + p2 + p3) * r  // Average greater circle points beween the three edge pairs.
+            ]
+        ],
+
+        rows = [
+            [ pts[0][0] ],
+
+            for (row = [1:1:subdivs]) [
+                for (a = [0:90:359])
+                each zrot(a, p=select(pts[row], [0:1:row-1]))
+            ],
+
+            for (row = [subdivs-1:-1:1]) [
+                for (a = [0:90:359])
+                each zrot(a, p=zflip(p=select(pts[row], [0:1:row-1])))
+            ],
+
+            [ zflip(p=pts[0][0]) ]
+        ],
+        verts = flatten(rows),
+        offsets = cumsum([0, for (row = rows) len(row)]),
+        faces = [
+            for (i = [0:1:3])
+                let(
+                    l1 = len(rows[1]),
+                    o1 = offsets[1]
+                )
+                [i+o1, 0, (i+1)%l1+o1],
+
+            for (j = [1:1:subdivs-1])
+                let(
+                    l1 = len(rows[j]),
+                    l2 = len(rows[j+1]),
+                    o1 = offsets[j],
+                    o2 = offsets[j+1],
+                    q1 = len(rows[j])/4,
+                    q2 = len(rows[j+1])/4
+                )
+                for (n = [0:1:3])
+                    each [
+                        [o2+q2*n, o1+q1*n, o2+(q2*n+1)%l2],
+                        for (i = [0:1:q1-1]) each [
+                            [o2+(i+q2*n+1)%l2, o1+(i+q1*n+1)%l1, o2+(i+q2*n+2)%l2],
+                            [o2+(i+q2*n+1)%l2, o1+(i+q1*n)%l1, o1+(i+q1*n+1)%l1]
+                        ]
+                    ],
+
+            for (j = [subdivs:1:2*subdivs-2])
+                let(
+                    l1 = len(rows[j]),
+                    l2 = len(rows[j+1]),
+                    o1 = offsets[j],
+                    o2 = offsets[j+1],
+                    q1 = len(rows[j])/4,
+                    q2 = len(rows[j+1])/4
+                )
+                for (n = [0:1:3])
+                    each [
+                        [o2+q2*n, o1+q1*n, o1+(q1*n+1)%l1],
+                        for (i = [0:1:q1-2]) each [
+                            [o2+(i+q2*n)%l2, o1+(i+q1*n+1)%l1, o2+(i+q2*n+1)%l2],
+                            [o1+(i+q1*n+2)%l1, o2+(i+q2*n+1)%l2, o1+(i+q1*n+1)%l1]
+                        ]
+                    ],
+
+            for (i = [0:1:3])
+                let(
+                    row = len(rows) -2,
+                    l1 = len(rows[row]),
+                    o1 = offsets[row],
+                    o2 = offsets[row+1]
+                )
+                [o2, o1+i, o1+(i+1)%l1]
+        ]
+    ) [verts, faces];
+
+
 function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orient=UP) =
+    assert(in_list(style, ["orig", "aligned", "stagger", "octa", "icosa"]))
     let(
         r = get_radius(r=r, d=d, dflt=1),
         hsides = segs(r),
         vsides = max(2,ceil(hsides/2)),
-        octa_steps = round(max(4,hsides)/4),
         icosa_steps = round(max(5,hsides)/5),
         stagger = style=="stagger"
      )
@@ -3429,6 +3553,10 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
               faces = hull(dualvert)
          )
          [reorient(anchor,spin,orient, r=r, p=dualvert), faces]
+     :
+     style=="octa" ?
+         let( vnf = _make_octa_sphere(r) )
+         reorient(anchor,spin,orient, r=r, p=vnf)
      :
      style=="icosa" ?    // subdivide faces of an icosahedron and project them onto a sphere
          let(
@@ -3485,19 +3613,6 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                                    spherical_to_xyz(r, theta, phi),
                            spherical_to_xyz(r, 0, 180)
                          ]
-              : style=="octa"?
-                      let(
-                           meridians = [
-                                        1,
-                                        for (i = [1:1:octa_steps]) i*4,
-                                        for (i = [octa_steps-1:-1:1]) i*4,
-                                        1,
-                                       ]
-                      )
-                      [
-                       for (i=idx(meridians), j=[0:1:meridians[i]-1])
-                           spherical_to_xyz(r, j*360/meridians[i], i*180/(len(meridians)-1))
-                      ]
               : assert(in_list(style,["orig","aligned","stagger","octa","icosa"])),
         lv = len(verts),
         faces = circum && style=="stagger" ?
@@ -3539,52 +3654,16 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                                  ]
                            )
                      ]
-              : style=="orig"? [
-                                [for (i=[0:1:hsides-1]) hsides-i-1],
-                                [for (i=[0:1:hsides-1]) lv-hsides+i],
-                                for (i=[0:1:vsides-2], j=[0:1:hsides-1])
-                                    each [
-                                          [(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
-                                          [(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
-                                    ]
-                               ]
-              : /*style=="octa"?*/
-                     let(
-                         meridians = [
-                                      0, 1,
-                                      for (i = [1:1:octa_steps]) i*4,
-                                      for (i = [octa_steps-1:-1:1]) i*4,
-                                      1,
-                                     ],
-                         offs = cumsum(meridians),
-                         pc = last(offs)-1,
-                         os = octa_steps * 2
-                     )
-                     [
-                      for (i=[0:1:3]) [0, 1+(i+1)%4, 1+i],
-                      for (i=[0:1:3]) [pc-0, pc-(1+(i+1)%4), pc-(1+i)],
-                      for (i=[1:1:octa_steps-1])
-                          let(m = meridians[i+2]/4)
-                          for (j=[0:1:3], k=[0:1:m-1])
-                              let(
-                                  m1 = meridians[i+1],
-                                  m2 = meridians[i+2],
-                                  p1 = offs[i+0] + (j*m1/4 + k+0) % m1,
-                                  p2 = offs[i+0] + (j*m1/4 + k+1) % m1,
-                                  p3 = offs[i+1] + (j*m2/4 + k+0) % m2,
-                                  p4 = offs[i+1] + (j*m2/4 + k+1) % m2,
-                                  p5 = offs[os-i+0] + (j*m1/4 + k+0) % m1,
-                                  p6 = offs[os-i+0] + (j*m1/4 + k+1) % m1,
-                                  p7 = offs[os-i-1] + (j*m2/4 + k+0) % m2,
-                                  p8 = offs[os-i-1] + (j*m2/4 + k+1) % m2
-                              )
-                              each [
-                                    [p1, p4, p3],
-                                    if (k<m-1) [p1, p2, p4],
-                                    [p5, p7, p8],
-                                    if (k<m-1) [p5, p8, p6],
-                                   ],
-                     ]
+              : style=="orig"?
+                  [
+                      [for (i=[0:1:hsides-1]) hsides-i-1],
+                      [for (i=[0:1:hsides-1]) lv-hsides+i],
+                      for (i=[0:1:vsides-2], j=[0:1:hsides-1]) each [
+                          [(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
+                          [(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
+                      ]
+                  ]
+              : assert(in_list(style,["orig","aligned","stagger","octa","icosa"]))
     ) [reorient(anchor,spin,orient, r=r, p=verts), faces];
 
 
