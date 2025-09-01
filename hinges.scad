@@ -458,7 +458,7 @@ module _knuckle_hinge_profile(offset, arm_height, arm_angle=45, knuckle_diam=4, 
         if (is_num(clear_top)) left(.1)fwd(clearance) rect([.1+clear_top, knuckle_diam+1+clearance], anchor=BOT+LEFT);
         if (is_def(clip)) fwd(clip) left(.1) rect([offset+knuckle_diam, ofs+round_bot+knuckle_diam+abs(clip)],anchor=BACK+LEFT);
       }
-      right(offset)ellipse(d=knuckle_diam,realign=true,circum=true);
+      right(offset)ellipse(d=knuckle_diam, circum=true);
     }
     if (is_num(pin_diam) && pin_diam>0){
       $fn = default(pin_fn,$fn);
@@ -466,7 +466,7 @@ module _knuckle_hinge_profile(offset, arm_height, arm_angle=45, knuckle_diam=4, 
         if (is_def(tearspin)){
           teardrop2d(d=pin_diam+2*get_slop(), realign=true, circum=true, spin=tearspin);
         }
-        else ellipse(d=pin_diam+2*get_slop(), realign=true, circum=true);
+        else ellipse(d=pin_diam+2*get_slop(), circum=true);
     }
   }
 } 
