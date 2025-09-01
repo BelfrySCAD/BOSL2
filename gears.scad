@@ -4473,13 +4473,20 @@ function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_
 //   Compute the total profile shift, split between two gears, needed to place those gears with a specified separation.
 //   If the requested separation is too small, returns NaN.  The profile shift returned may also be impractically
 //   large or small and does not necessarily lead to a valid gear configuration.  You will need to split the profile shift
-//   between the two gears.  Note that for helical gears, much more adjustment is available by modifying the helical angle.  
+//   between the two gears.  Note that for helical gears, much more adjustment is available by modifying the helical angle.
+//   . 
+//   For a ring gear you can specify internal teeth.  The computed profile shift must equal the **difference** of the ring gear
+//   profile shift and its mated spur gear profile shift.  You can only increase the spacing using profile shifting, because
+//   decreasing spacing would require that the profile shift of the ring gear is smaller than that of the spur gear, and
+//   that is not a valid configuration.  
 // Arguments:
 //   desired = desired gear center separation
 //   teeth1 = number of teeth on first gear
 //   teeth2 = number of teeth on second gear
 //   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
 //   ---
+//   internal1 = first gear is a ring gear with internal teeth.  Default: false
+//   internal2 = second gear is a ring gear with internal teeth.  Default: false
 //   mod = The module of the gear (pitch diameter / teeth)
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
 //   circ_pitch = The circular pitch, the distance between teeth centers around the pitch circle.
@@ -4512,8 +4519,33 @@ function gear_skew_angle(teeth1,teeth2,helical1,helical2,profile_shift1,profile_
 //   right(d)
 //     spur_gear2d(mod=mod,teeth=teeth2,profile_shift=ps2,shorten=shorten,gear_spin=-90,shaft_diam=5);
 //   stroke([rect([desired,40], anchor=LEFT)],color="red");
-function get_profile_shift(desired,teeth1,teeth2,helical=0,pressure_angle=20,mod,diam_pitch,circ_pitch) =
+// Example(2D,Med,NoAxes,VPR=[0.00,0.00,0.00],VPD=237.09,VPT=[0.16,24.60,28.81]): The natural center distance between these gears is 32.  Using profile shifting we increase this to 34. With a ring gear and spur gear the **difference** in profile shifts must equal the computed value.  The only way to divide the profile shift is hence to place negative shift onto the spur gear, which is only acceptable for large tooth count spur gears.  It is not possible to use profile shifting to decrease the distance, because that would requires the ring gear profile shift to be less than the spur gear profile shift.  
+//   teeth_ring = 57;
+//   teeth_spur = 25;
+//   mod = 2;
+//   desired = 34;     
+//   ps = 0*get_profile_shift(desired, teeth1=teeth_ring, internal1=true,  // Returns 1.2
+//                                   teeth2=teeth_spur, mod=mod);
+//   ps_spur = -0.4;       // The biggest negative profile shift that looks reasonable
+//   ps_ring = ps+ps_spur; // Must have ps_ring - ps_spur = ps
+//   d = gear_dist(mod=mod, teeth1=teeth_ring, internal1=true, profile_shift1=ps_ring,
+//                          teeth2=teeth_spur, profile_shift2=ps_spur);
+//   ring_gear2d(mod=mod, teeth=teeth_ring, profile_shift=ps_ring)
+//   back(d)
+//     spur_gear2d(mod=mod, teeth=teeth_spur, profile_shift=ps_spur, shaft_diam=3);
+//   stroke([[0,0],[0,desired]], endcaps="arrow2", color="red");
+
+function get_profile_shift(desired,teeth1,teeth2,helical=0,pressure_angle=20,internal1=false, internal2=false,mod,diam_pitch,circ_pitch) =
+  assert(all_nonnegative([teeth1,teeth2]),"Must give nonnegative values for teeth")
+  assert(teeth1>0 || teeth2>0, "One of the teeth counts must be nonzero")
+  assert(is_bool(internal1))
+  assert(is_bool(internal2))
+  assert(is_finite(helical))
+  assert(!(internal1&&internal2), "Cannot specify both gears as internal")
+  assert(!(internal1 || internal2) || (teeth1>0 && teeth2>0), "Cannot specify internal gear with rack (zero tooth count)")
   let(
+       teeth1 = internal2? -teeth1 : teeth1,
+       teeth2 = internal1? -teeth2 : teeth2,
        mod = module_value(mod=mod, circ_pitch=circ_pitch, diam_pitch=diam_pitch),
        teethsum = teeth1+teeth2,
        pressure_angle_trans = atan(tan(pressure_angle)/cos(helical)),
