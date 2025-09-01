@@ -4359,7 +4359,7 @@ function texture(tex, n, border, gap, roughness, inset) =
         ) [
             [
                 each hex,
-                each move([0.5,0.5], p=yscale(sc, p=path3d(ellipse(d=1-2*border, circum=true, spin=-30,$fn=6),1))),
+                each move([0.5,0.5], p=yscale(sc, p=path3d(ellipse(d=1-2*border, circum=true, realign=true, spin=-30,$fn=6),1))),
                 hex[0]-[0,diag*sc,-1],
                 for (ang=[270+60,270-60]) hex[1]+yscale(sc, p=cylindrical_to_xyz(diag,ang,1)),
                 hex[2]-[0,diag*sc,-1],

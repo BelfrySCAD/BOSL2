@@ -1448,7 +1448,7 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
                [
                  cap[0],
                  p,
-                 each select(fullcircle,i+1,-i-1-(realign?1:0)),
+                 each select(fullcircle,i+1,-i-1-(realign!=circum?1:0)),
                  xflip(p),
                  if(_extrapt || !pointycap) xflip(cap[0])
                ]
