@@ -225,7 +225,10 @@ module cuboid(
             teardrop(r=r, l=l, cap_h=r, ang=teardrop, spin=90, orient=DOWN);
         } else if (is_finite(clip_angle)) {
             cap_h = r * sin(clip_angle);
-            down(r-cap_h) teardrop(r=r, l=l, cap_h=cap_h, ang=clip_angle, spin=90, orient=DOWN);
+            hull() {
+                teardrop(r=r, l=l, cap_h=cap_h, ang=clip_angle, spin=90, orient=DOWN);
+                down(r-cap_h) teardrop(r=r, l=l, cap_h=cap_h, ang=clip_angle, spin=90, orient=DOWN);
+            }
         } else {
             yrot(90) cyl(l=l, r=r);
         }
@@ -235,7 +238,10 @@ module cuboid(
             teardrop(r=r, l=l, cap_h=r, ang=teardrop, spin=0, orient=DOWN);
         } else if (is_finite(clip_angle)) {
             cap_h = r * sin(clip_angle);
-            down(r-cap_h) teardrop(r=r, l=l, cap_h=cap_h, ang=clip_angle, spin=0, orient=DOWN);
+            hull() {
+                teardrop(r=r, l=l, cap_h=cap_h, ang=clip_angle, spin=0, orient=DOWN);
+                down(r-cap_h) teardrop(r=r, l=l, cap_h=cap_h, ang=clip_angle, spin=0, orient=DOWN);
+            }
         } else {
             zrot(90) yrot(90) cyl(l=l, r=r);
         }
@@ -245,7 +251,10 @@ module cuboid(
             onion(r=r, cap_h=r, ang=teardrop, orient=DOWN);
         } else if (is_finite(clip_angle)) {
             cap_h = r * sin(clip_angle);
-            down(r-cap_h) onion(r=r, cap_h=cap_h, ang=clip_angle, orient=DOWN);
+            hull() {
+                onion(r=r, cap_h=cap_h, ang=clip_angle, orient=DOWN);
+                down(r-cap_h) onion(r=r, cap_h=cap_h, ang=clip_angle, orient=DOWN);
+            }
         } else {
             spheroid(r=r, style="octa", orient=DOWN);
         }
@@ -2423,7 +2432,8 @@ function cyl(
         skmat = down(l/2) *
             skew(sxz=shift.x/l, syz=shift.y/l) *
             up(l/2) *
-            zrot(realign? 180/sides : 0),
+            zrot(realign? 180/sides : 0) *
+            zrot(circum? 180/sides : 0),
         ovnf = apply(skmat, vnf)
     )
     reorient(anchor,spin,orient, r1=r1, r2=r2, l=l, shift=shift, p=ovnf);
@@ -2507,13 +2517,15 @@ module cyl(
     anchor = get_anchor(anchor,center,BOT,CENTER);
     skmat = down(l/2) * skew(sxz=shift.x/l, syz=shift.y/l) * up(l/2);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, shift=shift) {
-        multmatrix(skmat)
-        zrot(realign? 180/sides : 0) {
+        multmatrix(skmat) {
             if (!any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2, texture, extra1, extra2, extra])) {
-                cylinder(h=l, r1=r1, r2=r2, center=true, $fn=sides);
+                realign = circum? !realign : realign;
+                zrot(realign? 180/sides : 0) {
+                    cylinder(h=l, r1=r1, r2=r2, center=true, $fn=sides);
+                }
             } else {
                 vnf = cyl(
-                    l=l, r1=_r1, r2=_r2, center=true,  circum=circum,
+                    l=l, r1=_r1, r2=_r2, center=true,  circum=circum, realign=realign,
                     chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
                     chamfang=chamfang, chamfang1=chamfang1, chamfang2=chamfang2,
                     rounding=rounding, rounding1=rounding1, rounding2=rounding2,
@@ -3399,12 +3411,172 @@ function _dual_vertices(vnf) =
   ];
 
 
+function _vector_planes_intersection(A, B, C, D) =
+    let(
+        // Normal vectors to the planes containing each great circle
+        n1 = cross(A, B),
+        n2 = cross(C, D),
+
+        // The intersection line direction
+        line_dir = cross(n1, n2),
+        line_len = norm(line_dir),
+
+        // Normalize to get point on unit sphere
+        isect = line_dir / line_len
+    )
+    isect;
+
+
+function _make_octa_sphere(r) =
+let(
+    // Get number of triangles on each side of each octants.
+    subdivs = quantup(segs(r),4)/4,
+
+    pts = [
+        for (row = [subdivs:-1:0]) [
+            for (col = [0:1:subdivs-row])
+            let(
+                // row corresponds to x index, col to y index
+                z_idx = row,
+                y_idx = col,
+                x_idx = subdivs - row - col,
+
+                yu = 90 * y_idx / subdivs,
+                zu = 90 * z_idx / subdivs,
+
+                ycos = cos(yu),
+                ysin = sin(yu),
+                zcos = cos(zu),
+                zsin = sin(zu),
+
+                // Special cases: edges
+                pt = (x_idx == 0) ? [0, zcos, zsin] :  // Y-Z edge
+                     (y_idx == 0) ? [zcos, 0, zsin] :  // X-Z edge
+                     (z_idx == 0) ? [ycos, ysin, 0] :  // X-Y edge
+
+                     // Interior points
+                     let(
+                         yu2 = 90 - yu,
+                         xu2 = 90 * (subdivs - x_idx) / subdivs,
+
+                         ysin2 = sin(yu2),
+                         ycos2 = cos(yu2),
+                         xsin2 = sin(xu2),
+                         xcos2 = cos(xu2),
+
+                         // For the arc with constant z-ratio (in the "z-plane")
+                         // This arc goes from the X-Z edge to the Y-Z edge
+                         // At the X-Z edge (y=0), we have the point at z_idx
+                         xz_edge_pt = [zcos, 0, zsin],
+                         // At the Y-Z edge (x=0), we have the point at z_idx
+                         yz_edge_pt = [0, zcos, zsin],
+
+                         // For the arc with constant y-ratio (in the "y-plane")
+                         // This arc goes from the X-Y edge to the Y-Z edge
+                         // At the X-Y edge (z=0), we have the point at y_idx
+                         xy_edge_pt = [ycos, ysin, 0],
+                         // At the Y-Z edge (x=0), we have the point at y_idx
+                         yz_edge_pt2 = [0, ycos2, ysin2],
+
+                         // For the arc with constant x-ratio (in the "x-plane")
+                         // This arc goes from the X-Y edge to the X-Z edge
+                         // At the X-Y edge (z=0), we have the point at x_idx
+                         xy_edge_pt2 = [xcos2, xsin2, 0],
+                         // At the X-Z edge (y=0), we have the point at x_idx
+                         xz_edge_pt2 = [xcos2, 0, xsin2],
+
+                         // Find all three intersections
+                         int_z_y = _vector_planes_intersection(xz_edge_pt, yz_edge_pt, xy_edge_pt, yz_edge_pt2),
+                         int_z_x = _vector_planes_intersection(xz_edge_pt, yz_edge_pt, xy_edge_pt2, xz_edge_pt2),
+                         int_y_x = _vector_planes_intersection(xy_edge_pt, yz_edge_pt2, xy_edge_pt2, xz_edge_pt2),
+
+                         // Average and normalize
+                         isect = unit(int_z_y + int_z_x + int_y_x)
+                     )
+                     isect
+            )
+            pt
+        ]
+    ] * r,
+    rows = [
+        [ pts[0][0] ],
+
+        for (row = [1:1:subdivs]) [
+            for (a = [0:90:359])
+            each zrot(a, p=select(pts[row], [0:1:row-1]))
+        ],
+
+        for (row = [subdivs-1:-1:1]) [
+            for (a = [0:90:359])
+            each zrot(a, p=zflip(p=select(pts[row], [0:1:row-1])))
+        ],
+
+        [ zflip(p=pts[0][0]) ]
+    ],
+    verts = flatten(rows),
+    offsets = cumsum([0, for (row = rows) len(row)]),
+    faces = [
+        for (i = [0:1:len(rows[1])-1])
+            let(
+                l1 = len(rows[1]),
+                o1 = offsets[1]
+            )
+            [i+o1, 0, (i+1)%l1+o1],
+
+        for (j = [1:1:subdivs-1])
+            let(
+                l1 = len(rows[j]),
+                l2 = len(rows[j+1]),
+                o1 = offsets[j],
+                o2 = offsets[j+1],
+                q1 = len(rows[j])/4,
+                q2 = len(rows[j+1])/4
+            )
+            for (n = [0:1:3])
+                each [
+                    [o2+q2*n, o1+q1*n, o2+(q2*n+1)%l2],
+                    for (i = [0:1:q1-1]) each [
+                        [o2+(i+q2*n+1)%l2, o1+(i+q1*n+1)%l1, o2+(i+q2*n+2)%l2],
+                        [o2+(i+q2*n+1)%l2, o1+(i+q1*n)%l1, o1+(i+q1*n+1)%l1]
+                    ]
+                ],
+
+        for (j = [subdivs:1:2*subdivs-2])
+            let(
+                l1 = len(rows[j]),
+                l2 = len(rows[j+1]),
+                o1 = offsets[j],
+                o2 = offsets[j+1],
+                q1 = len(rows[j])/4,
+                q2 = len(rows[j+1])/4
+            )
+            for (n = [0:1:3])
+                each [
+                    [o2+q2*n, o1+q1*n, o1+(q1*n+1)%l1],
+                    for (i = [0:1:q1-2]) each [
+                        [o2+(i+q2*n)%l2, o1+(i+q1*n+1)%l1, o2+(i+q2*n+1)%l2],
+                        [o1+(i+q1*n+2)%l1, o2+(i+q2*n+1)%l2, o1+(i+q1*n+1)%l1]
+                    ]
+                ],
+
+        for (i = [0:1:3])
+            let(
+                row = len(rows) -2,
+                l1 = len(rows[row]),
+                o1 = offsets[row],
+                o2 = offsets[row+1]
+            )
+            [o2, o1+i, o1+(i+1)%l1]
+    ]
+) [verts, faces];
+
+
 function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orient=UP) =
+    assert(in_list(style, ["orig", "aligned", "stagger", "octa", "icosa"]))
     let(
         r = get_radius(r=r, d=d, dflt=1),
         hsides = segs(r),
         vsides = max(2,ceil(hsides/2)),
-        octa_steps = round(max(4,hsides)/4),
         icosa_steps = round(max(5,hsides)/5),
         stagger = style=="stagger"
      )
@@ -3429,6 +3601,10 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
               faces = hull(dualvert)
          )
          [reorient(anchor,spin,orient, r=r, p=dualvert), faces]
+     :
+     style=="octa" ?
+         let( vnf = _make_octa_sphere(r) )
+         reorient(anchor,spin,orient, r=r, p=vnf)
      :
      style=="icosa" ?    // subdivide faces of an icosahedron and project them onto a sphere
          let(
@@ -3485,19 +3661,6 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                                    spherical_to_xyz(r, theta, phi),
                            spherical_to_xyz(r, 0, 180)
                          ]
-              : style=="octa"?
-                      let(
-                           meridians = [
-                                        1,
-                                        for (i = [1:1:octa_steps]) i*4,
-                                        for (i = [octa_steps-1:-1:1]) i*4,
-                                        1,
-                                       ]
-                      )
-                      [
-                       for (i=idx(meridians), j=[0:1:meridians[i]-1])
-                           spherical_to_xyz(r, j*360/meridians[i], i*180/(len(meridians)-1))
-                      ]
               : assert(in_list(style,["orig","aligned","stagger","octa","icosa"])),
         lv = len(verts),
         faces = circum && style=="stagger" ?
@@ -3539,52 +3702,16 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                                  ]
                            )
                      ]
-              : style=="orig"? [
-                                [for (i=[0:1:hsides-1]) hsides-i-1],
-                                [for (i=[0:1:hsides-1]) lv-hsides+i],
-                                for (i=[0:1:vsides-2], j=[0:1:hsides-1])
-                                    each [
-                                          [(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
-                                          [(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
-                                    ]
-                               ]
-              : /*style=="octa"?*/
-                     let(
-                         meridians = [
-                                      0, 1,
-                                      for (i = [1:1:octa_steps]) i*4,
-                                      for (i = [octa_steps-1:-1:1]) i*4,
-                                      1,
-                                     ],
-                         offs = cumsum(meridians),
-                         pc = last(offs)-1,
-                         os = octa_steps * 2
-                     )
-                     [
-                      for (i=[0:1:3]) [0, 1+(i+1)%4, 1+i],
-                      for (i=[0:1:3]) [pc-0, pc-(1+(i+1)%4), pc-(1+i)],
-                      for (i=[1:1:octa_steps-1])
-                          let(m = meridians[i+2]/4)
-                          for (j=[0:1:3], k=[0:1:m-1])
-                              let(
-                                  m1 = meridians[i+1],
-                                  m2 = meridians[i+2],
-                                  p1 = offs[i+0] + (j*m1/4 + k+0) % m1,
-                                  p2 = offs[i+0] + (j*m1/4 + k+1) % m1,
-                                  p3 = offs[i+1] + (j*m2/4 + k+0) % m2,
-                                  p4 = offs[i+1] + (j*m2/4 + k+1) % m2,
-                                  p5 = offs[os-i+0] + (j*m1/4 + k+0) % m1,
-                                  p6 = offs[os-i+0] + (j*m1/4 + k+1) % m1,
-                                  p7 = offs[os-i-1] + (j*m2/4 + k+0) % m2,
-                                  p8 = offs[os-i-1] + (j*m2/4 + k+1) % m2
-                              )
-                              each [
-                                    [p1, p4, p3],
-                                    if (k<m-1) [p1, p2, p4],
-                                    [p5, p7, p8],
-                                    if (k<m-1) [p5, p8, p6],
-                                   ],
-                     ]
+              : style=="orig"?
+                  [
+                      [for (i=[0:1:hsides-1]) hsides-i-1],
+                      [for (i=[0:1:hsides-1]) lv-hsides+i],
+                      for (i=[0:1:vsides-2], j=[0:1:hsides-1]) each [
+                          [(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
+                          [(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
+                      ]
+                  ]
+              : assert(in_list(style,["orig","aligned","stagger","octa","icosa"]))
     ) [reorient(anchor,spin,orient, r=r, p=verts), faces];
 
 
@@ -3875,8 +4002,8 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
           assert(bot_corner2==0 || bot_corner2>=chamfer2, "\nchamfer2 doesn't work with bottom corner: must have chamfer2 <= bot_corner2")
           assert(bot_corner1==0 || bot_corner1>chamfer1 || sides%2==(realign?1:0), 
                  str("\nWith chamfer1==bot_corner1 and realign=",realign," must have ",realign?"odd":"even"," number of sides, but sides=",sides))
-          assert(is_undef(cap_h1) || cap_h1-chamfer1 > r1*sin(ang), "\nchamfer1 is too big to work with the specified cap_h1.")
-          assert(is_undef(cap_h2) || cap_h2-chamfer2 > r2*sin(ang), "\nchamfer2 is too big to work with the specified cap_h2."),
+          assert(is_undef(cap_h1) || cap_h1-chamfer1 > r1*sin(ang)-EPSILON, "chamfer1 is too big to work with the specified cap_h1")
+          assert(is_undef(cap_h2) || cap_h2-chamfer2 > r2*sin(ang)-EPSILON, "chamfer2 is too big to work with the specified cap_h2"),
         cprof1 = r1==chamfer1 ? repeat([0,0],len(profile1))
                               : teardrop2d(r=r1-chamfer1, ang=ang, cap_h=u_add(cap_h1,-chamfer1), bot_corner=bot_corner1==0?0:bot_corner1-chamfer1,
                                            $fn=sides, circum=circum, realign=realign,_extrapt=true),

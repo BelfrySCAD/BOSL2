@@ -432,16 +432,18 @@ module ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER, 
     attachable(anchor,spin, two_d=true, r=[rx,ry]) {
         if (uniform) {
             check = assert(!circum, "Circum option not allowed when \"uniform\" is true");
-            polygon(ellipse(r,realign=realign, circum=circum, uniform=true));
+            polygon(ellipse(r, realign=realign, circum=circum, uniform=true));
         }
         else if (rx < ry) {
             xscale(rx/ry) {
+                realign = circum? !realign : realign;
                 zrot(realign? 180/sides : 0) {
                     circle(r=ry, $fn=sides);
                 }
             }
         } else {
             yscale(ry/rx) {
+                realign = circum? !realign : realign;
                 zrot(realign? 180/sides : 0) {
                     circle(r=rx, $fn=sides);
                 }
@@ -504,7 +506,8 @@ function _ellipse_refine_realign(a,b,N, _theta=[],i=0) =
 function ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER, spin=0) =
     let(
         r = force_list(get_radius(r=r, d=d, dflt=1),2),
-        sides = segs(max(r))
+        sides = segs(max(r)),
+        realign = circum? !realign : realign
     )
     assert(all_positive(r), "All components of the radius must be positive.")
     uniform
