@@ -3309,6 +3309,9 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 //   the radius on the axes is equal to the specified radius, which is the *minimum* radius of the circumscribed sphere.
 //   The same thing is true for style="icosa" when $fn is a multiple of 10. This enables you to create spherical
 //   holes with guaranteed on-axis dimensions.
+//   .
+//   The "octa" style has the property that it blends neatly with a cylinder of the same $fn along any of the coordinate axes.
+//   This is true for both the regular and circumscribed "octa" spheroid.  
 // Arguments:
 //   r = Radius of the spheroid.
 //   style = The style of the spheroid's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "aligned"
@@ -3338,6 +3341,14 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 //   spheroid(d=100, style="icosa", $fn=10);
 // Example: style="icosa", circum=true.  This style has hexagons and 12 pentagons, similar to (but not the same as) a soccer ball.
 //   spheroid(d=100, style="icosa", circum=true, $fn=10);
+// Example: Joining "octa" style spheroid to a x-aligned cylinder
+//   $fn=16;
+//   spheroid(r=10, style="octa");
+//   xcyl(r=10, h=15, anchor=RIGHT);
+// Example: Joining "octa" style spheroid to a x-aligned cylinder with `circum=true`.  Here the sphere is green and the cylinder a tiny bit oversized to prevent z-fighting where the faces of the cylinder and sphere overlap.  
+//   $fn=16;
+//   color("lightblue")spheroid(r=10, style="octa", circum=true);
+//   xcyl(r=10.01, h=15, anchor=RIGHT, circum=true);
 // Example: Anchoring
 //   spheroid(d=100, anchor=FRONT);
 // Example: Spin
@@ -3349,7 +3360,7 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 // Example: Called as Function
 //   vnf = spheroid(d=100, style="icosa");
 //   vnf_polyhedron(vnf);
-// Example: With "orig" the circumscribing sphere has the same form.  The green sphere is a tiny bit oversized so it pokes through the low points in the circumscribed sphere with low $fn.  This demonstrates that these spheres are in fact circumscribing.
+// Example: With "orig" the circumscribing sphere has the same form.  The green sphere has a very high `$fn` so it is very close to spherical, and it is a tiny bit oversized so it pokes through the low points in the circumscribed sphere with low `$fn`.  An equal sized green dot in the middle of every face demonstrates that these spheres are in fact circumscribing.
 //   color("green")spheroid(r=10.01, $fn=256);
 //   spheroid(r=10, style="orig", circum=true, $fn=16);
 // Example: With "aligned" the same is true: the circumscribing sphere is also aligned, if $fn is divisible by 4.
