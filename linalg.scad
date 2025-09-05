@@ -382,7 +382,7 @@ function submatrix_set(M,A,m=0,n=0) =
 //   A = hstack(M1, M2, M3)
 //   A = hstack([M1, M2, M3, ...])
 // Description:
-//   Constructs a matrix by horizontally "stacking" together compatible matrices or vectors.  Vectors are treated as columsn in the stack.
+//   Constructs a matrix by horizontally "stacking" together compatible matrices or vectors.  Vectors are treated as columns in the stack.
 //   This command is the inverse of `column`.  Note: strings given in vectors are broken apart into lists of characters.  Strings given
 //   in matrices are preserved as strings.  If you need to combine vectors of strings use {{list_to_matrix()}} as shown below to convert the
 //   vector into a column matrix.  Also note that vertical stacking can be done directly with concat.  
