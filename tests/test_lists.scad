@@ -409,6 +409,17 @@ module test_full_flatten() {
 test_full_flatten();
 
 
+module test_zip() {
+    assert(zip([])==[]);
+    assert(zip([1,2,3],["A","B","C"])==[[1,"A"],[2,"B"],[3,"C"]]);
+    assert(zip([[0,1,2],[-1,0,1],[-2,-1,0]])==[[0,-1,-2],[1,0,-1],[2,1,0]]);
+    assert(zip([[1,2,3]])==[[1],[2],[3]]);
+    assert(zip([[1,2,3],[4,5],[6],[]])==[[1,4,6,undef],[2,5,undef,undef],[3,undef,undef,undef]]);
+    assert(zip(zip([1,2,3],[4,5,6]))==[[1,2,3],[4,5,6]]);
+}
+test_zip();
+
+
 module test_list_shape() {
     assert(list_shape([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]]) == [2,2,3]);
     assert(list_shape([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 0) == 2);

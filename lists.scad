@@ -1074,6 +1074,30 @@ function full_flatten(l) =
     [for (a=l) if (is_list(a)) (each full_flatten(a)) else a];
 
 
+// Function: zip()
+// Synopsis: Group elements from multiple lists by index.
+// Topics: List Handling, Iteration
+// See Also: pair(), triplet(), transpose()
+// Usage:
+//   list = zip(lists);
+//   list = zip(LIST1,LIST2);
+// Description:
+//   Returns a list composed of elements from the given lists. Each entry in the new list is composed of elements at that corresponding index from each input. If any list run out of elements before others, "undef" will be used.
+//   The primary use case is iterating over elements from two lists in pairs. It can also be used to transpose a matrix.
+// Arguments:
+//   lists = List of lists to iterate over
+// Example:
+//   l1 = zip([1,2,3],["A","B","C"]);        // returns [[1,"A"],[2,"B"],[3,"C"]]
+//   l2 = zip([[0,1,2],[-1,0,1],[-2,-1,0]]); // returns [[0,-1,-2],[1,0,-1],[2,1,0]]
+// Example(2D):
+//   p = circle(20,$fn=13);
+//   for(c=zip(p,path_normals(p,closed=true)))
+//        stroke([c[0],c[0]-c[1]*10],endcap2="arrow2");
+function zip(lists,l1=undef) =
+    !is_undef(l1) ? zip([lists,l1]) :
+    assert(all(lists,function(l) is_list(l)),"every argument must be a list")
+    lists ? [for(i=[0:max_length(lists)-1]) [for(l=lists) l[i]]] : [];
+
 
 // Section: Set Manipulation
 
