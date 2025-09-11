@@ -4398,7 +4398,8 @@ function _find_anchor(anchor, geom)=
             shmat = move(lerp([0,0], shift, u)),
             scmat = scale(lerp([1,1], scale, u)),
             twmat = zrot(lerp(0, -twist, u)),
-            mat = shmat * scmat * twmat
+            mat = shmat * scmat * twmat,
+            cp=point2d(cp)
         )
         approx(anchor_xy,[0,0]) ? [anchor, apply(mat, point3d(cp,anchor.z*L/2)), unit(anchor, UP), oang] :
         let(
