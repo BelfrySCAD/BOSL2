@@ -3394,11 +3394,7 @@ module change_anchors(named=[], alias=[], remove=[])
   allremove = concat(column(named,0), remove);
   keepanch = [for(anch=oldanch) if (!in_list(anch[0],allremove)) anch];
   aliasanch = [for(name=alias)
-                  let(
-                      found = search([name[1]], oldanch, num_returns_per_match=1)[0]
-                  )
-                  assert(found!=[], str("Alias references unknown anchor: ",name[1]))
-                  list_set(oldanch[found],0,name[0])
+                  list_set(_find_anchor(name[1],$parent_geom),0,name[0])
               ];
   newanch = concat(keepanch, aliasanch, named);
   $parent_geom = list_set($parent_geom,-1,newanch);
