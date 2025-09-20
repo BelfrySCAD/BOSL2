@@ -2598,8 +2598,12 @@ module edge_profile_asym(
                                             left_half(planar=true, $fn=fn)
                                                 zrot(-90) fwd(size.y) children();
                                     }
-                                    linear_extrude(height=size.x) {
-                                        mask2d_roundover(size.y, inset=0.01, $fn=4);
+                                    difference() {
+                                        down(0.01) cube([size.x, size.x, size.y+0.01]);
+                                        move([size.x+0.01, size.x+0.01])
+                                            zrot(180)
+                                                rotate_extrude(angle=90, $fn=4)
+                                                    square([size.x+0.01, size.y+0.01]);
                                     }
                                 } else if (corner_type=="round") {
                                     move([size.y,size.y]) {
@@ -2607,8 +2611,12 @@ module edge_profile_asym(
                                             left_half(planar=true)
                                                 zrot(-90) fwd(size.y) children();
                                     }
-                                    linear_extrude(height=size.x) {
-                                        mask2d_roundover(size.y, inset=0.01);
+                                    difference() {
+                                        down(0.01) cube([size.x, size.x, size.y+0.01]);
+                                        move([size.x+0.01, size.x+0.01])
+                                            zrot(180)
+                                                rotate_extrude(angle=90)
+                                                    square([size.x+0.01, size.y+0.01]);
                                     }
                                 }
                             }
