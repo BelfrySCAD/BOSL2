@@ -2610,10 +2610,10 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
                 named_anchor(EDGE(UP,i),top_edge_ctr, top_edge_normal, _compute_spin(top_edge_normal,  top_edge),
                              info=[["edge_angle",180-vector_angle(topnormal,sidenormal[i])], ["edge_length",norm(top_edge)]]),
                 named_anchor(EDGE(DOWN,i),bot_edge_ctr, bot_edge_normal, _compute_spin(bot_edge_normal,  bot_edge),
-                             info=[["edge_angle",180-vector_angle(botnormal,sidenormal[i])], ["edge_length",norm(bot_edge)]]), 
-                named_anchor(FACE(i),mean(face), sidenormal[i], _compute_spin(sidenormal[i],UP)),
-                named_anchor(str("top_corner",i),top[i], top_corner_dir, _compute_spin(top_corner_dir,UP)), 
-                named_anchor(str("bot_corner",i),bottom[i], bot_corner_dir, _compute_spin(bot_corner_dir,UP)) 
+                             info=[["edge_angle",180-vector_angle(botnormal,sidenormal[i])], ["edge_length",norm(bot_edge)]]),
+                named_anchor(FACE(i),mean(face), sidenormal[i], _compute_spin(sidenormal[i],UP,BACK)),
+                named_anchor(str("top_corner",i),top[i], top_corner_dir, _compute_spin(top_corner_dir,UP,BACK)), 
+                named_anchor(str("bot_corner",i),bottom[i], bot_corner_dir, _compute_spin(bot_corner_dir,UP,BACK)) 
               ],
             named_anchor("top", mean(top), topnormal, _compute_spin(topnormal, approx(v_abs(topnormal),UP)?BACK:UP)),
             named_anchor("bot", mean(bottom), botnormal, _compute_spin(botnormal, approx(v_abs(botnormal),UP)?BACK:UP)),
