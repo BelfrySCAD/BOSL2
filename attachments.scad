@@ -2782,14 +2782,14 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   }
 //   ```
 //   .
-//   If this is *not* run as a child of `attach()` with the `to` argument
+//   If this is *not* run as a child of `attach()` with the `child` argument
 //   given, then the following transformations are performed in order:
 //   * Translates so the `anchor` point is at the origin (0,0,0).
 //   * Rotates around the Z axis by `spin` degrees counter-clockwise.
 //   * Rotates so the top of the part points toward the vector `orient`.
 //   .
-//   If this is called as a child of `attach(from,to)`, then the info
-//   for the anchor points referred to by `from` and `to` are fetched,
+//   If this is called as a child of `attach(parent,child)`, then the info
+//   for the anchor points referred to by `parent` and `child` are fetched,
 //   which includes position, direction, and spin.  With that info,
 //   the following transformations are performed:
 //   * Translates this part so its anchor position matches the parent's anchor position.
@@ -2840,8 +2840,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   path = The path to generate a polygon from.
 //   region = The region to generate a shape from.
 //   extent = If true, calculate anchors by extents, rather than intersection, for VNFs and paths.  Default: true.
-//   cp = If given, specifies the centerpoint of the volume.  Default: `[0,0,0]`
-//   offset = If given, offsets the perimeter of the volume around the centerpoint.
+//   cp = If given, specifies the centerpoint of the volume.  For VNF and region attachment, changes the reference for determining the other anchors.  For other geometry types, this only changes the CENTER anchor.  If you need to change the other anchors combine this with `offset`.  Default: `[0,0,0]`
+//   offset = If given, offsets the perimeter of the volume around the centerpoint.  This leaves the CENTER anchor unchanged but changes the other anchors.  If you need to also change the CENTER anchor then combine this with `cp`.  
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
@@ -5170,11 +5170,14 @@ function _force_anchor_2d(anchor) =
 // Compute spin angle based on a anchor direction and desired spin direction
 // anchor_dir assumed to be a unit vector; no assumption on spin_dir
 // Takes the component of the spin direction perpendicular to the anchor
-// direction and gives the spin angle that achieves it.  
-function _compute_spin(anchor_dir, spin_dir) =
+// direction and gives the spin angle that achieves it.
+// backup_dir will be used instead of spin_dir if anchor_dir is parallel to spin_dir
+function _compute_spin(anchor_dir, spin_dir, backup_dir) =
    let(
         native_dir = rot(from=UP, to=anchor_dir, p=BACK),
-        spin_dir = spin_dir - (spin_dir*anchor_dir)*anchor_dir,  // component of spin_dir perpendicular to anchor_dir
+        spin_dir1 = spin_dir - (spin_dir*anchor_dir)*anchor_dir,     // component of spin_dir perpendicular to anchor_dir
+        spin_dir = !approx(spin_dir1,[0,0,0]) || is_undef(backup_dir) ? spin_dir1
+                 : backup_dir - (backup_dir*anchor_dir)*anchor_dir,  // component of backup_dir perpendicular to anchor_dir
         dummy = assert(!approx(spin_dir,[0,0,0]),"\nSpin direction is parallel to anchor."),
         angle = vector_angle(native_dir,spin_dir),
         sign = cross(native_dir,spin_dir)*anchor_dir<0 ? -1 : 1
