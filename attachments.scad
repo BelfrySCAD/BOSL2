@@ -3382,10 +3382,10 @@ function named_anchor(name, pos, orient, spin, rot, flip, info) =
 // Usage:
 //   PARENT() change_anchors([named],[alias=],[remove=]) CHILDREN;
 // Description:
-//   Modifies the named anchors inherited from the parent object.  The `named` parameter gives a list
+//   Modifies the named anchors inherited from the parent object or adds new named anchors.  The `named` parameter gives a list
 //   of new or replacement named anchors, specified in the usual way with {{named_anchor()}}.
-//   The `alias` parameter specifies a list of string pairs of the form `[newname, oldname]` where
-//   `newname` is a new anchor name and `oldname` is an existing named anchor for the parent.  The
+//   The `alias` parameter specifies a list of pairs of the form `[newname, anchor]` where
+//   `newname` is a new anchor name and `anchor` is an existing anchor for the parent, either a named anchor or a regular anchor.  The
 //   existing parent anchor will be propagated to the child under the new name.  The old name is not changed,
 //   and will also be propagated to the child.   The `remove` parameter removes named anchors inherited from
 //   the parent so they are not propagated to the child.  You can use it to remove an anchor that you have
@@ -3398,16 +3398,11 @@ function named_anchor(name, pos, orient, spin, rot, flip, info) =
  
 module change_anchors(named=[], alias=[], remove=[])
 {
+  dummy=assert($parent_geom != undef, "\nNo object with anchors to change!");
   oldanch = last($parent_geom);
   allremove = concat(column(named,0), remove);
   keepanch = [for(anch=oldanch) if (!in_list(anch[0],allremove)) anch];
-  aliasanch = [for(name=alias)
-                  let(
-                      found = search([name[1]], oldanch, num_returns_per_match=1)[0]
-                  )
-                  assert(found!=[], str("Alias references unknown anchor: ",name[1]))
-                  list_set(oldanch[found],0,name[0])
-              ];
+  aliasanch = [for(name=alias) list_set(_find_anchor(name[1],$parent_geom),0,name[0])];
   newanch = concat(keepanch, aliasanch, named);
   $parent_geom = list_set($parent_geom,-1,newanch);
   children();
@@ -5532,7 +5527,7 @@ module desc_copies(transforms)
 
            
 // Function: is_description()
-// Synopsis: Check if its argument is a descriptioni
+// Synopsis: Check if its argument is a description
 // Topics: Descriptions
 // Usage:
 //   bool = is_description(desc);
