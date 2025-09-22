@@ -1540,7 +1540,9 @@ function textured_tile(
 //   .
 //   Attachment to the rectangular tube places objects on the **outside** of the tube.
 //   If you need to anchor to the inside of a tube, use {{attach_part()}} with the part name "inside"
-//   to switch goeomtry to the inside.  
+//   to switch goeomtry to the inside.
+// Attachable Parts:
+//   "inside" = The inside of the tube
 // Arguments:
 //   h/l/height/length = The height or length of the rectangular tube.  Default: 1
 //   size = The outer [X,Y] size of the rectangular tube.
@@ -2907,6 +2909,8 @@ module zcyl(
 // Usage: Rounded and chamfered tubes
 //   tube(..., [rounding=], [irounding=], [orounding=], [rounding1=], [rounding2=], [irounding1=], [irounding2=], [orounding1=], [orounding2=], [teardrop=], [clip_angle=]);
 //   tube(..., [chamfer=], [ichamfer=], [ochamfer=], [chamfer1=], [chamfer2=], [ichamfer1=], [ichamfer2=], [ochamfer1=], [ochamfer2=]);
+// Attachable Parts:
+//   "inside" = The inside of the tube
 // Arguments:
 //   h / l / height / length = height of tube. Default: 1
 //   or = Outer radius of tube. Default: 1
