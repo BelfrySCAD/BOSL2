@@ -1056,8 +1056,6 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
                                 * rot(from=parent_abstract_anchor[2],to=UP)
                                 * rot(v=anchor,-spin),
                               align);
-
-            
             spinaxis = two_d? UP : anchor_dir;
             olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference*($anchor_inside?-1:1));
             if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) 
@@ -1073,22 +1071,27 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
 }
 
 
-
 // Module: attach_part()
 // Synopsis: Select a named attachable part for subsequent attachment operations
 // Topics: Attachment
 // See Also: attach(), align(), attachable(), define_part(), parent_part()
 // Usage:
-//   PARENT() attach_part(name) CHILDREN;
+//   PARENT() attach_part(name, [ind]) CHILDREN;
 // Description:
 //   Most attachable objects have a single geometry defined that is used by the attachment commands,
 //   but some objects also define attachable parts.  This module selects 
 //   an attachable part using a name defined by the parent object.  Any operations
 //   that use the parent geometry such as {{attach()}}, {{align()}}, {{position()}} or {{parent()}}
 //   references the geometry for the specified part.  This allows you to access the inner wall
-//   of tubes, for example.  Note that you cannot call `attach_part()` as a child of another `attach_part()`.  
+//   of tubes, for example.  Note that you cannot call `attach_part()` as a child of another `attach_part()`.
+//   .
+//   If you select a compound part then you can also provide an index to select the desired component
+//   of that part.  The index wraps around in both directions so for example, -1 gives the last component, and
+//   the selection cannot fail due to being out of bounds.  The default index is zero.   The `ind`
+//   parameter has no effect on simple parts.  
 // Arguments:
-//   name = name of part to use for subsequent attachments.  
+//   name = name of part to use for subsequent attachments.
+//   ind = index for use with compount parts.  Default: 0
 // Example: This example shows attaching the light blue cube normally, on the outside of the tube, and the pink cube using the "inside" attachment part.  
 //   tube(ir1=10,ir2=20,h=20, wall=3){
 //     color("lightblue")attach(RIGHT,BOT) cuboid(4);
@@ -1097,19 +1100,26 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
 //        attach(BACK,BOT) cuboid(4);
 //   }  
 
-module attach_part(name)
+module attach_part(name, ind=0)
 {
   req_children($children);
-  dummy=assert(!is_undef($parent_parts), "\nParent does not exist or does not have any parts.");
-  ind = search([name], $parent_parts, 1,0)[0];
-  dummy2 = assert(ind!=[], str("\nParent does not have a part named \"",name,"\"."));
-  $parent_geom = $parent_parts[ind][1];
-  $anchor_inside = $parent_parts[ind][2];
-  T = $parent_parts[ind][3];
+  part = _get_part(name,ind);
+  $parent_geom = part[0];
+  $anchor_inside = part[1];
+  T = part[2];
   $parent_parts = [];
   multmatrix(T)
     children();
 }
+
+
+function _get_part(name, ind) =
+   assert(!is_undef($parent_parts), "\nParent does not exist or does not have any parts.")
+   let(
+        pind = search([name], $parent_parts, 1,0)[0]
+   )
+   assert(pind!=[], str("\nParent does not have a part named \"",name,"\"."))
+   select($parent_parts[pind][1],ind);
 
  
 // Section: Tagging
@@ -3631,18 +3641,22 @@ function attach_geom(
 // Function: define_part()
 // Synopsis: Creates an attachable part data structure.
 // Topics: Attachments
-// See Also: attachable()
+// See Also: attachable(), attach_part(), parent_part()
 // Usage:
 //   part = define_part(name, geom, [inside=], [T=]);
 // Description:
 //   Create a named attachable part that can be passed in the `parts` parameter of {{attachable()}}
-//   and then selected using {{attach_part()}}.
+//   and then selected using {{attach_part()}}.  You can create a simple part or a compound part.
+//   A simple part has a single geometry and associated transformation matrix and `inside` flag.
+//   A compound part is a part with multiple components that can be indexed numerically.  To create
+//   a compound part either `geom` should be a list of geometries or `T` a list of transformations,
+//   or they should both be lists of compatible length.  
 // Arguments:
 //   name = name of part
-//   geom = geometry of part produced by {{attach_geom()}}
+//   geom = geometry of part (or list for compound parts) produced by {{attach_geom()}}
 //   ---
 //   inside = if true, reverse the attachment direction for children.  Default: false
-//   T = Transformation to apply to children.  Default: IDENT
+//   T = Transformation to apply to children (or list for compound parts).  Default: IDENT
 // Example(3D): This example shows how to create a custom object with two different parts that are both transformed away from the origin.  The basic object is two cylinders with a cube shaped attachment geometry that doesn't match the object well.  The "left" and "right" parts attach to each of the two cylinders.  
 //   module twocyl(d, sep, h, ang=20) 
 //   {
@@ -3663,15 +3677,49 @@ function attach_geom(
 //     color("pink")attach_part("left")attach(TOP,BOT) cuboid(3);
 //     color("green")attach_part("right")attach(TOP,BOT) cuboid(3);    
 //   }
+// Example(3D): This example shows a custom object with a compound part.  The "cube" part provides access to all the cubes in the ring by index number.  
+//  $fn=18;
+//  module cube_ring(size, r, n)
+//  {
+//    size = force_list(size,3);
+//    Tlist = zrot_copies(n=n, r=r);
+//    parts = [ define_part("cube",
+//                          attach_geom(size=size),
+//                          T=Tlist)];
+//    attachable(r=r, h=size.z, parts=parts){
+//      for(T=Tlist) multmatrix(T) cuboid(size);
+//      children();
+//    }
+//  }
+//  cube_ring(14, 30, 7){
+//     color("orange")
+//       attach(TOP,BOT) cuboid([3,52,1]);
+//     color("lightblue")
+//       attach_part("cube",1) attach(TOP,BOT) cyl(d1=9,d2=4,h=5);
+//     color("pink")
+//       attach_part("cube",-1) attach(TOP,TOP) cyl(d1=9,d2=4,h=5);
+//  }   
 
 function define_part(name, geom, inside=false, T=IDENT) =
-  assert(is_string(name), "\n'name' must be a string.")
-  assert(_is_geometry(geom), "\ngeometry appears invalid.")
-  assert(is_bool(inside), "\n'inside' must be boolean.")
-  assert(is_matrix(T,4), "\nT must be a 4×4 transformation matrix.")
-  [name, geom, inside, T];
-
-
+  let(
+       geom_n = _is_geometry(geom) ? 1 : assert(is_list(geom), "\ngeom is invalid") len(geom),
+       T_n = is_matrix(T) ? 1
+           : assert(is_consistent(T, ident(4)), "\nT must be a transformation or list of transformations")
+             len(T)
+  )
+  assert(geom_n==T_n || geom_n==1 || T_n==1, "\ngeom and T have inconsistent lengths")
+  let(
+       n = max(T_n,geom_n),
+       geom_list = _is_geometry(geom) ? repeat(geom,n) : geom,
+       T = is_matrix(T) ? repeat(T,n) : T,
+       inside = is_bool(inside) ? repeat(inside,n)
+              : assert(is_bool_list(inside,n), str("\ninside must be a boolean list with length ",n))
+                inside
+  )
+  let(
+       partlist = [for(i=[0:n-1]) [geom_list[i], inside[i], T[i]]]
+  )
+  [name, partlist];
 
 
 
@@ -5223,12 +5271,12 @@ function parent() =
 
 // Function: parent_part()
 // Topics: Transforms, Attachments, Descriptions
-// See Also: restore(), parent()
+// See Also: restore(), parent(), attach_part(), define_part()
 // Synopsis: Returns a description (transformation state and attachment geometry) of a part defined by the parent
 // Usage:
-//   PARENT() let( desc = parent_part(name) ) CHILDREN;
+//   PARENT() let( desc = parent_part(name, [ind]) ) CHILDREN;
 // Usage: in development releases only
-//   PARENT() { desc=parent_part(name); CHILDREN; }
+//   PARENT() { desc=parent_part(name, [ind]); CHILDREN; }
 // Description:
 //   Returns a description of the parent part with the specified name.  You can use this
 //   description to create new objects based on the described object or perform computations based on the described object.  You can also use it to
@@ -5236,7 +5284,12 @@ function parent() =
 //   this function to work, and the definition of the variable is scoped to the children of the let module.
 //   (In development versions the use of let is no longer necessary.)  Note that if OpenSCAD displays any warnings
 //   related to transformation operations then the transformation that parent_part() returns is likely to be incorrect, even if OpenSCAD
-//   continues to run and produces a valid result.
+//   continues to run and produces a valid result.  If the chosen part is a compound part then you select which component you want by giving the index, `ind`.
+//   The index wraps around in both directions, so it will always select some component.  
+//   The default index is zero; the index has no effect for simple parts
+// Arguments:
+//   name = name of part whose description is returned
+//   ind = index for use with compount parts.  Default: 0
 // Example(3D): This example defines an object with two parts and then uses `parent_part()` to create a {{prism_connector()}} between the two parts of the object.
 //   $fn=48;
 //   module twocyl(d, sep, h, ang=20) 
@@ -5261,13 +5314,9 @@ function parent() =
 //                     parent_part("right"), LEFT,
 //                     fillet=1);
 
-function parent_part(name) =
-    assert(!is_undef($parent_parts), "\nParent does not exist or does not have any parts.")
-    let(
-        ind = search([name], $parent_parts, 1,0)[0]
-    )
-    assert(ind!=[], str("\nParent does not have a part named \"",name,"\"."))    
-    [$transform * $parent_parts[ind][3], $parent_parts[ind][1]];
+function parent_part(name,ind=0) =
+    let(part = _get_part(name, ind))
+    [$transform * part[2], part[0]];
 
 
 // Module: restore()
