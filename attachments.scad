@@ -2332,11 +2332,28 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 //   this situation is not permitted.  The profile orientation can be inverted using the `flip=true` parameter.
 //   .
 //   The standard profiles are located in the first quadrant and have positive X values.  If you provide a profile located in the second quadrant,
-//   where the X values are negative, then it produces a fillet.  You can flip any of the standard profiles using {{xflip()}}.  
+//   where the X values are negative, then it produces a fillet.  You can flip any of the standard profiles using {{xflip()}}.
+//   Do **not** flip one of the standard first quadrant masks into the 3rd quadrant $(y<0)$ using {{yflip()}}, as this will not work correctly.  
 //   Fillets are always asymmetric because at a given edge, they can blend in two different directions, so even for symmetric profiles,
 //   the asymmetric logic is required.  You can set the `corner_type` parameter to select rounded, chamfered or sharp corners.
 //   However, when the corners are inside (concave) corners, you must provide the size of the profile ([width,height]), because the
-//   this information is required to produce the correct corner and cannot be obtain from the profile itself, which is a child object.  
+//   this information is required to produce the correct corner and cannot be obtain from the profile itself, which is a child object.
+//   .
+//   Because the profiles are asymmetric they can be placed on a given edge in two different orientations.  It is easiest to understand
+//   the orientation by thinking about fillets and in which direction a filleted cube will make a smooth joint.  Given a string of connected
+//   edges, we must identify the orientation of the fillet at just one edge; the orentation of the fillets on the remaining edges is forced
+//   to maintain consistency across the string of edges.  The module uses a set of priority rules as follows:
+//     1. Bottom
+//     2. Top
+//     3. Front or Back
+//   What this means is that if an edge string contains any edge on the bottom then the bottom edges will be oriented to joint the bottom face
+//   to something, and the rest of the string consistently oriented.  If no bottom edges are present but top edges are present then the
+//   string will be oriented so that it can join its top face to something.  If no top or bottom edges are present, then the edge (which must
+//   be just a single edge) will be oriented so that either the front or back face of the cube can make a smooth joint.
+//   If the edge orientation is reversed from what you need, set `flip=true`.  If these rules seem complicated, just create your model,
+//   examine the edges, and flip them as required.  Note that creating fillets with {{yflip()}} may partially work but is **not** the correct
+//   way to flip edges and can produce incomplete results.  
+//   
 // Arguments:
 //   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
@@ -2423,6 +2440,20 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 //           corner_type="round", size=[10,10]
 //        ) xflip() mask2d_roundover(10);
 //   }
+// Example(3D,NoScales): This string of 3 edges rounds so that the cuboid joins smoothly to the bottom
+//   color_this("lightblue")cuboid([70,70,10])
+//     attach(TOP,BOT,align=RIGHT+BACK)
+//       cuboid(50) 
+//         edge_profile_asym([BOT+FRONT, RIGHT+FRONT, TOP+RIGHT],corner_type="round")
+//            xflip()mask2d_roundover(10);
+// Example(3D,NoScales): No top or bottom edges appear in the edge set, so the edges are oriented to joint smoothly to the FRONT and BACK
+//   color_this("lightblue") cuboid([90,10,50])
+//     align(FWD) cuboid(50){
+//       edge_profile_asym("Z",corner_type="round")
+//         xflip() mask2d_roundover(10);
+//       align(FWD)
+//         color_this("lightblue") cuboid([90,10,50]);
+//     }
 
 module edge_profile_asym(
     edges=EDGES_ALL, except=[],

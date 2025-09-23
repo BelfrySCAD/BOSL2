@@ -73,7 +73,7 @@ PrioritizeFiles:
 DefineHeader(BulletList): Side Effects
 DefineHeader(Table;Headers=Anchor Name|Position): Named Anchors
 DefineHeader(Table;Headers=Anchor Type|What it is): Anchor Types
-DefineHeader(Table;Headers=Attachable_Part|What it is): Attachable Parts
+DefineHeader(Table;Headers=Attachable Part|What it is): Attachable Parts
 DefineHeader(Table;Headers=Name|Definition): Terminology
 DefineHeader(BulletList): Requirements
 DefineSynTags:
