@@ -2343,9 +2343,11 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 //   the orientation by thinking about fillets and in which direction a filleted cube will make a smooth joint.  Given a string of connected
 //   edges, we must identify the orientation of the fillet at just one edge; the orentation of the fillets on the remaining edges is forced
 //   to maintain consistency across the string of edges.  The module uses a set of priority rules as follows:
+//   .
 //     1. Bottom
 //     2. Top
 //     3. Front or Back
+//   . 
 //   What this means is that if an edge string contains any edge on the bottom then the bottom edges will be oriented to joint the bottom face
 //   to something, and the rest of the string consistently oriented.  If no bottom edges are present but top edges are present then the
 //   string will be oriented so that it can join its top face to something.  If no top or bottom edges are present, then the edge (which must
