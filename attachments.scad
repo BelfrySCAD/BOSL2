@@ -2724,6 +2724,7 @@ module edge_profile_asym(
 //   ---
 //   r = Radius of corner mask.
 //   d = Diameter of corner mask.
+//   axis = Can be set to "X", "Y", or "Z" to specify the axis that the corner mask will be rotated around.  Default: "Z"
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
@@ -2736,7 +2737,13 @@ module edge_profile_asym(
 //       corner_profile(TOP,r=10)
 //           mask2d_teardrop(r=10, angle=40);
 //   }
-module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
+// Example: Rotate the mask around the X axis instead.
+//   diff()
+//   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
+//       corner_profile(TOP,r=10,axis="X")
+//           mask2d_teardrop(r=10, angle=40);
+//   }
+module corner_profile(corners=CORNERS_ALL, except=[], r, d, axis="Z", convexity=10) {
     check1 = assert($parent_geom != undef, "\nNo object to attach to!");
     r = max(0.01, get_radius(r=r, d=d, dflt=undef));
     check2 = assert(is_num(r), "\nBad r/d argument.");
@@ -2744,35 +2751,60 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
     vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
     all_vecs_are_corners = all([for (vec = vecs) sum(v_abs(vec))==3]);
     check3 = assert(all_vecs_are_corners, "\nAll vectors must be corners.");
+    module rot_to_axis(axis) {
+        if (axis == "X")
+            rot(120, v=[1,1,1]) children();
+        else if (axis == "Y")
+            rot(-120, v=[1,1,1]) children();
+        else
+            children();
+    }
+    module mirror_if(cond,plane) {
+        if (cond) mirror(plane) children();
+        else children();
+    }
+    module mirror_to_corner(corner) {
+        mirror_if(corner.x > 0, RIGHT)
+            mirror_if(corner.y > 0, BACK)
+                mirror_if(corner.z > 0, UP)
+                    children();
+    }
+    module corner_round_mask2d(r) {
+        excess = 0.01;
+        path = [
+            [-excess,-excess],
+            [-excess, r],
+            each arc(cp=[r,r], r=r, start=180, angle=90),
+            [r, -excess]
+        ];
+        polygon(path);
+    }
     for ($idx = idx(vecs)) {
         vec = vecs[$idx];
         anch = _find_anchor(vec, $parent_geom);
         $attach_to = undef;
         $attach_anchor = anch;
         $profile_type = "corner";
-        rotang = vec.z<0?
-            [  0,0,180+v_theta(vec)-45] :
-            [180,0,-90+v_theta(vec)-45];
-        default_tag("remove"){
+        default_tag("remove") attachable() {
             translate(anch[1]) {
-                rot(rotang) {
-                    down(0.01) {
-                        linear_extrude(height=r+0.01, center=false) {
-                            difference() {
-                                translate(-[0.01,0.01]) square(r);
-                                translate([r,r]) circle(r=r*0.999);
+                mirror_to_corner(vec) {
+                    rot_to_axis(axis) {
+                        down(0.01) {
+                            linear_extrude(height=r+0.01, center=false, convexity=convexity) {
+                                corner_round_mask2d(r);
                             }
                         }
-                    }
-                    translate([r,r]) zrot(180) {
-                        rotate_extrude(angle=90, convexity=convexity) {
-                            right(r) xflip() {
-                                children();
+                        translate([r,r]) zrot(180) {
+                            rotate_extrude(angle=90, convexity=convexity) {
+                                right(r) xflip() {
+                                    children();
+                                }
                             }
                         }
                     }
                 }
             }
+            union();
         }
     }
 }
