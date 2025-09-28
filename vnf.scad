@@ -1418,6 +1418,18 @@ function _slice_3dpolygons(polys, dir, cuts) =
 //   vnf_polyhedron([VNF, VNF, VNF, ...]) [ATTACHMENTS];
 // Description:
 //   Given a VNF structure, or a list of VNF structures, creates a polyhedron from them.
+//   .
+//   An arbitrary VNF may not have a geometry that matches well with the anchoring system.  The anchors are
+//   automatically generated using one of two methods, the "hull" anchor type and the "intersect" anchor type.  
+//   The "hull" method is the default.  It finds an anchor point on the convex hull of the shape.  It does this
+//   by taking a plane normal to the anchor direction and and shifting it to the most distant point on the VNF.
+//   This plane may intersect the VNF in one point, several points, or even a face.  If it intersects in a face
+//   the anchor is the face centroid.  Otherwise the anchor is the mean of the vertices of VNF that intersect the
+//   plane.  The anchor direction will be the direction you originally specified.  
+//   .
+//   The "intersect" method creates a ray based at the VNF center point that points in the anchor direction and
+//   chooses the most distant intersection point as the anchor.  In this case, the anchor direction is
+//   computed from the VNF geometry based on the face or edge where that intersection point lies.  
 // Arguments:
 //   vnf = A VNF structure, or list of VNF structures.
 //   convexity = Max number of times a line could intersect a wall of the shape.

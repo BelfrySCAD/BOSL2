@@ -2348,13 +2348,13 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 //     2. Top
 //     3. Front or Back
 //   . 
-//   What this means is that if an edge string contains any edge on the bottom then the bottom edges will be oriented to joint the bottom face
-//   to something, and the rest of the string consistently oriented.  If no bottom edges are present but top edges are present then the
-//   string will be oriented so that it can join its top face to something.  If no top or bottom edges are present, then the edge (which must
-//   be just a single edge) will be oriented so that either the front or back face of the cube can make a smooth joint.
+//   What this means is that if an edge string contains any edge on the bottom then the bottom edges will be oriented to join the bottom face
+//   to something, and the rest of the string consistently oriented.  If the string contains no bottom edges but it has top edges then 
+//   the edge string will be oriented so that the object can join its top face to something.  If the string has no top or bottom edges then it
+//   must be just a single edge and it will be is oriented so that either the front or back face of the cube can make a smooth joint.
 //   If the edge orientation is reversed from what you need, set `flip=true`.  If these rules seem complicated, just create your model,
-//   examine the edges, and flip them as required.  Note that creating fillets with {{yflip()}} may partially work but is **not** the correct
-//   way to flip edges and can produce incomplete results.  
+//   examine the edges, and flip them as required.  Note that creating fillets with {{yflip()}} may seem similar to setting `flip=true` and
+//   may partially work but is **not** the correct way to flip edge profile; it can produce incomplete results.  
 //   
 // Arguments:
 //   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
