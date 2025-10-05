@@ -1811,6 +1811,17 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
 //    }  
 // Arguments:
 //   r = The radius or diameter of the end circles.
+//   spread = The distance between the centers of the end circles.  Default: 10
+//   ---
+//   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the X- axis, a positive or negative value.  Default: 30
+//   bulge = Deviation of the blending arc from a straight line connection, positive for a convex shape or negative for a concave shape.
+//   blendR / blendD = The radius or diameter of the blending arc, a positive for a convex shape, negative for a concave shape.  
+//   width = width of the narrowest or widest point of the shape.  A positive value.  
+//   d = The diameter of the end circles.
+//   r1 / d1 = Radius or diameter of left circle.
+//   r2 / d2 = Radius or diameter of right circle.  
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Examples(2D):
 //   glued_circles(r=15, spread=40, tangent=45);
 //   glued_circles(d=30, spread=30, tangent=30);
