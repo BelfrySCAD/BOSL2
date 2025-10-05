@@ -1811,18 +1811,6 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
 //    }  
 // Arguments:
 //   r = The radius or diameter of the end circles.
-//   spread = The distance between the centers of the end circles.  Default: 10
-//   ---
-//   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the X- axis, a positive or negative value.  Default: 30
-//   bulge = Deviation of the blending arc from a straight line connection, positive for a convex shape or negative for a concave shape.
-//   blendR / blendD = The radius or diameter of the blending arc, a positive for a convex shape, negative for a concave shape.  
-//   width = width of the narrowest or widest point of the shape.  A positive value.  
-//   ---
-//   d = The diameter of the end circles.
-//   r1 / d1 = Radius or diameter of left circle.
-//   r2 / d2 = Radius or diameter of right circle.  
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Examples(2D):
 //   glued_circles(r=15, spread=40, tangent=45);
 //   glued_circles(d=30, spread=30, tangent=30);
@@ -1849,6 +1837,8 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
 // Example(2D): Overlapping circles
 //   $fa=1;$fs=1;
 //   glued_circles(r1=25, r2=20, spread=25, blendR=-4);
+// Example(2D): Overlapping circles with no blending arc
+//   glued_circles(r1=25, r2=20, spread=25, blendR=0);
 // Example(2D): Giving a small width
 //   glued_circles(r1=25, r2=10, spread=40, width=8);
 // Example(2D): Giving a large width
@@ -1900,6 +1890,8 @@ function glued_circles(r,spread=10, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD
       pts = blendR==0 ? let(    // No joining arc case
                             result = circle_circle_intersection(r1,cp1,r2,cp2)
                         )
+                        assert(len(result)!=0, "Circles expected to intersect but don't")
+                        assert(len(result)!=1, "When circles are tangent, must have blendR nonzero")
                         [result[1],result[1]]
           : is_finite(blendR) ?
                  let(
@@ -1919,7 +1911,7 @@ function glued_circles(r,spread=10, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD
                    pts[1],
                  each arc(r=r1, cp=cp1, points=[pts[0],left(r1,cp1)], endpoint=false)],
       toppath = yflip(reverse(botpath)),
-      path = [each botpath, left(r1,cp1), each toppath]
+      path = [each botpath, left(r1,cp1), each select(toppath,0,-2)]
   )
   reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
 
