@@ -1875,15 +1875,17 @@ function glued_circles(r,spread=10, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD
                                     max_indent = spread<=r1+r2 ? 0 : -_gs_waist_R(r1,r2,spread,0),
                                     max_bulge = (r1+r2+spread)/2
                                 )
-                                assert(blendR>max_bulge || blendR<max_indent,
-                                       str("For this geometry blendR must be smaller than ",max_indent," or larger than ",max_bulge," but was ",blendR))
+                                assert(blendR>max_bulge || blendR<=max_indent,
+                                       str("For this geometry must have blendR <= ",max_indent," or blendR > ",max_bulge," but blendR = ",blendR))
                                 -blendR
              : is_def(tangent) ? gs_get_tangent_R(r1,r2,spread,tangent)
              : is_def(width) ? let(
                                    pts = circle_circle_intersection(r1,cp1,r2,cp2),
-                                   minwidth = len(pts)==0 ? 0 : 2*pts[0].y
+                                   minwidth = len(pts)==0 ? 0 : 2*pts[0].y,
+                                   maxwidth = (r1+r2)+spread
                                )
                                assert(width>=minwidth, str("For this geometry must have width >= ",minwidth," but width is ",width))
+                               assert(width<maxwidth, str("For this geometry must have width < ",maxwidth," but width is ",width))
                                assert(width <= 2*min(r1,r2) || width >= 2*max(r1,r2),"The width parameter cannot be between 2*r1 and 2*r2")
                                let( fact=width>=2*max(r1,r2) ? -1 : 1)
                                fact*_gs_waist_R(fact*r1,fact*r2,spread,fact*width)
@@ -1894,21 +1896,26 @@ function glued_circles(r,spread=10, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD
                      )
                      pts[blendR<0?0:1]
                : undef,
-      pts = is_finite(blendR) ?
+      // The endpoints of the arcs of the left and right circles
+      pts = blendR==0 ? let(    // No joining arc case
+                            result = circle_circle_intersection(r1,cp1,r2,cp2)
+                        )
+                        [result[1],result[1]]
+          : is_finite(blendR) ?
                  let(
                      result = [ cp1 + sign(blendR)*r1*unit(cp_blend-cp1),
                                 cp2 + sign(blendR)*r2*unit(cp_blend-cp2)]
                  )
                  result
-          : let(
+          : let(           // Flat joint case
                  tan_pts = circle_circle_tangents(r1,cp1,r2,cp2)
             )
             tan_pts[1],
       botpath = [
                  each arc(r=r2, cp=cp2, points=[right(r2,cp2),pts[1]],endpoint=false),
-                 if (is_finite(blendR))
+                 if (is_finite(blendR) && blendR!=0)
                    each arc(r=r2, cp=cp_blend, points=reverse(pts),endpoint=false)
-                 else
+                 else if (blendR!=0)
                    pts[1],
                  each arc(r=r1, cp=cp1, points=[pts[0],left(r1,cp1)], endpoint=false)],
       toppath = yflip(reverse(botpath)),
@@ -1949,13 +1956,13 @@ function gs_get_tangent_R(r1,r2,s,ang) =
                                    pts=circle_circle_intersection(r1+minr,[-s/2,0], r2+minr, [s/2,0]))
                               atan2(pts[0].y, pts[0].x+s/2)
               : atan2(pts[0].y, pts[0].x+s/2),
-       dummy = assert(ang>-90 && ang<90-minang, 
-                      str("Tangent angle must be between -90 and ", 90-minang, " for this geometry but was ",ang)),
+       dummy = assert(ang>-90 && ang<=90-minang, 
+                      str("Tangent angle must be > -90 and <= ", 90-minang, " for this geometry but was ",ang)),
        A = (r1^2-r2^2)/2/s+s/2,
        B = (r1-r2)/s,
        flatang = acos(B)
   )
-  approx(90-ang,flatang,eps=1e-3) ? echo("force")INF
+  approx(90-ang,flatang,eps=1e-3) ? INF
   :
   let(
        alpha = 90-ang > flatang ? 90+ang : 90-ang,
@@ -1993,73 +2000,6 @@ function _gs_indent_R(r1,r2,s,h) =
         goodR = root_find(error, minR, maxR, tol=1e-7)
     )
     goodR;
-
-
-// Function&Module: old_glued_circles()
-// Synopsis: Creates a shape of two circles joined by a curved waist.
-// SynTags: Geom, Path
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), ellipse(), egg(), keyhole()
-// Usage: As Module
-//   glued_circles(r/d=, [spread], [tangent], ...) [ATTACHMENTS];
-// Usage: As Function
-//   path = glued_circles(r/d=, [spread], [tangent], ...);
-// Description:
-//   When called as a function, returns a 2D path forming a shape of two circles joined by curved waist.
-//   When called as a module, creates a 2D shape of two circles joined by curved waist.  Uses "hull" style anchoring.  
-// Arguments:
-//   r = The radius of the end circles.
-//   spread = The distance between the centers of the end circles.  Default: 10
-//   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the Y axis.  Default: 30
-//   ---
-//   d = The diameter of the end circles.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-// Examples(2D):
-//   glued_circles(r=15, spread=40, tangent=45);
-//   glued_circles(d=30, spread=30, tangent=30);
-//   glued_circles(d=30, spread=30, tangent=15);
-//   glued_circles(d=30, spread=30, tangent=-30);
-// Example(2D): Called as Function
-//   stroke(closed=true, glued_circles(r=15, spread=40, tangent=45));
-function glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) =
-    let(
-        r = get_radius(r=r, d=d, dflt=10),
-        r2 = (spread/2 / sin(tangent)) - r,
-        cp1 = [spread/2, 0],
-        cp2 = [0, (r+r2)*cos(tangent)],
-        sa1 = 90-tangent,
-        ea1 = 270+tangent,
-        lobearc = ea1-sa1,
-        lobesegs = ceil(segs(r)*lobearc/360),
-        sa2 = 270-tangent,
-        ea2 = 270+tangent,
-        subarc = ea2-sa2,
-        arcsegs = ceil(segs(r2)*abs(subarc)/360),
-        // In the tangent zero case the inner curves are missing so we need to complete the two
-        // outer curves.  In the other case the inner curves are present and endpoint=false
-        // prevents point duplication.  
-        path = tangent==0 ?
-                    concat(arc(n=lobesegs+1, r=r, cp=-cp1, angle=[sa1,ea1]),
-                           arc(n=lobesegs+1, r=r, cp=cp1, angle=[sa1+180,ea1+180]))
-                :
-                    concat(arc(n=lobesegs, r=r, cp=-cp1, angle=[sa1,ea1], endpoint=false),
-                           [for(theta=lerpn(ea2+180,ea2-subarc+180,arcsegs,endpoint=false))  r2*[cos(theta),sin(theta)] - cp2],
-                           arc(n=lobesegs, r=r, cp=cp1, angle=[sa1+180,ea1+180], endpoint=false),
-                           [for(theta=lerpn(ea2,ea2-subarc,arcsegs,endpoint=false))  r2*[cos(theta),sin(theta)] + cp2]),
-        maxx_idx = max_index(column(path,0)),
-        path2 = reverse_polygon(list_rotate(path,maxx_idx))
-    ) reorient(anchor,spin, two_d=true, path=path2, extent=true, p=path2);
-
-
-module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
-    path = glued_circles(r=r, d=d, spread=spread, tangent=tangent);
-    attachable(anchor,spin, two_d=true, path=path, extent=true) {
-        polygon(path);
-        children();
-    }
-}
-
 
 
 // Function&Module: squircle()
