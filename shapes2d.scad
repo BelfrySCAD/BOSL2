@@ -1761,7 +1761,7 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
 //   Finally you can give `width=`.  When `width` is smaller than either circle diameter it specifies the width of the waist of the shape (the
 //   narrowest point).  In this case the shape is concave.  When `width` is larger than either circle diameter it specifies the maximum width of
 //   shape.  In this case the shape is convex.  The width parameter cannot be in between the diameters of the two circles.  
-// Figure(2D,Med,NoScales): This figure shows width and bulge on a concave shape, when width is smaller than the smallest circle or bulge is negative.  The black line shows the flat connection between the two circles, which is the bulge=0 case. 
+// Figure(2D,Med,NoScales,VPD=155.5,VPT=[-5.3,0,0]): This figure shows width and bulge on a concave shape, when width is smaller than the smallest circle or bulge is negative.  The black line shows the flat connection between the two circles, which is the bulge=0 case. 
 //   r1=25;
 //   r2=15;
 //   s=35;
@@ -1785,7 +1785,7 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
 //     stroke([[cp.x,-width],[cp.x,width]], endcaps="arrow2", width=.5);
 //     fwd(4)right(cp.x+2)text("width", size=4, anchor=LEFT);
 //   }
-// Figure(2D,Med,NoScales): This figure shows width and bulge on a convexe shape, when width is larger than the largest circle or bulge is positive.  The black line shows the flat connection between the two circles, which is the bulge=0 case. 
+// Figure(2D,Med,NoScales,VPD=155.5,VPT=[-5.3,0,0]): This figure shows width and bulge on a convexe shape, when width is larger than the largest circle or bulge is positive.  The black line shows the flat connection between the two circles, which is the bulge=0 case. 
 //    r1=25;
 //    r2=15;
 //    s=35;
@@ -1811,7 +1811,7 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
 //    }  
 // Arguments:
 //   r = The radius or diameter of the end circles.
-//   spread = The distance between the centers of the end circles.  Default: 10
+//   spread = The distance between the centers of the end circles.
 //   ---
 //   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the X- axis, a positive or negative value.  Default: 30
 //   bulge = Deviation of the blending arc from a straight line connection, positive for a convex shape or negative for a concave shape.
@@ -1847,12 +1847,12 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
 //   glued_circles(r1=25, r2=10, spread=40, blendR=45);
 // Example(2D): Overlapping circles
 //   $fa=1;$fs=1;
-//   glued_circles(r1=25, r2=20, spread=25, blendR=-4);
+//   glued_circles(r1=25, r2=20, spread=30, blendR=-10);
 // Example(2D): Overlapping circles with no blending arc
-//   glued_circles(r1=25, r2=20, spread=25, blendR=0);
-// Example(2D): Giving a small width
+//   glued_circles(r1=25, r2=20, spread=30, blendR=0);
+// Example(2D): Giving a width smaller than either circle diameter
 //   glued_circles(r1=25, r2=10, spread=40, width=8);
-// Example(2D): Giving a large width
+// Example(2D): Giving a width larger than either circle diameter
 //   $fs=1;$fa=1;
 //   glued_circles(r1=25, r2=10, spread=40, width=58);
 // Example(2D): Largest possible concave width is the diameter of the smaller circle
@@ -1860,8 +1860,10 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
 // Example(2D): Smallest possible convex width is the diameter of the larger circle
 //   glued_circles(r1=25, r2=10, spread=40, width=50);
 
-function glued_circles(r,spread=10, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD, width, anchor=CENTER, spin=0) =
+function glued_circles(r, spread, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD, width, anchor=CENTER, spin=0) =
   let(
+      spread = is_undef(spread) ? echo("Setting default spread=10.  This legacy default value is deprecated and will be removed.") 10
+             : spread,
       r1 = get_radius(r=r,r1=r1,d=d,d1=d1),
       r2 = get_radius(r=r,r2=r2,d=d,d2=d2),
       blendR = get_radius(r=blendR, d=blendD)
@@ -1869,7 +1871,9 @@ function glued_circles(r,spread=10, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD
   assert(num_defined([tangent,bulge,blendR,width])<=1, "Can define at most one of tangent, bulge, width, and blendR/blendD")
   assert(spread>abs(r1-r2), "Spread is too small: one circle is inside the other one")
   let(
-      tangent = num_defined([tangent,bulge,blendR,width])==0 ? 30 : tangent,
+      tangent = num_defined([tangent,bulge,blendR,width])==0 ?
+                    echo("Setting default tangent=30.  This legacy default value is deprecated and will be removed")
+                    echo("Explicitly specify tangent= or instead use bulge=, width= or blendR=") 30 : tangent,
       cp1 = [-spread/2,0],
       cp2 = [spread/2,0],
       blendR = is_def(blendR) ? let(
