@@ -1552,7 +1552,10 @@ function c_norm(z) = norm_fro(z);
 //    coefficients are real numbers.  If real is true, then returns only the
 //    real roots.  Otherwise returns a pair of complex values.  This method
 //    may be more reliable than the general root finder at distinguishing
-//    real roots from complex roots.  
+//    real roots from complex roots.  If the input is a linear equation the
+//    function returns a single root, and it returns the empty list when no
+//    appropriate roots exist (such as when all the roots are complex and real=true).
+
 //    Algorithm from: https://people.csail.mit.edu/bkph/articles/Quadratics.pdf
 function quadratic_roots(a,b,c,real=false) =
   real ? [for(root = quadratic_roots(a,b,c,real=false)) if (root.y==0) root.x]
@@ -1561,7 +1564,8 @@ function quadratic_roots(a,b,c,real=false) =
   assert(is_num(a) && is_num(b) && is_num(c))
   assert(a!=0 || b!=0 || c!=0, "\nQuadratic must have a nonzero coefficient.")
   a==0 && b==0 ? [] :     // No solutions
-  a==0 ? [[-c/b,0]] : 
+  a==0 ? [[-c/b,0]] :     // linear case, only one root
+  b==0 && c==0 ? [[0,0],[0,0]] :   // a*x^2=0, zero is a double root
   let(
       descrim = b*b-4*a*c,
       sqrt_des = sqrt(abs(descrim))
