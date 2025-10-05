@@ -697,8 +697,10 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   arc(...) [ATTACHMENTS];
 // Description:
 //   If called as a function, returns a 2D or 3D path forming an arc.  Numerous methods are available to specify the arc as listed in the Arguments section.
-//   If `wedge` is true, the centerpoint of the arc appears as the first point in the result.
-//   If called as a module, the arc must be 2D and the module creates the 2D arc polygon or pie slice shape.  
+//   If called as a module, the arc must be 2D and the module creates the segment of the circle obtained by adding
+//   the closing segment to the arc.  
+//   If `wedge` is true, the centerpoint of the arc appears as the first point in the result, which is now a sector of a circle.
+//   The module produces the sector of the circle, or pie shape, bounded by the arc.  
 //   .
 //   If `endpoint=false`, which is only accepted by the functional form, then the arc stops one step before the final point.  
 //   The `rounding` parameter, which is permitted only when `wedge=true`, applies specified radius roundings at each of the corners, with `rounding[0]` giving
