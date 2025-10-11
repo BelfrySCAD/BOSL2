@@ -1740,7 +1740,9 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
 //   Computes a shape created by joining two circles with arcs.  The arcs can join the circles to create a convex, egg shape
 //   or they can join the circles to create a concave shape.  The circles being joined are permitted to overlap each other.  
 //   When called a function returns the path describing shape with its first point on the X+ axis.  This module uses "hull" style anchoring.
-//   When the circles are different sizes, the circle on the left has radius `r1` and the right hand circle has radius `r2`.  
+//   When the circles are different sizes, the circle on the left has radius `r1` and the right hand circle has radius `r2`, and both
+//   circles always have an exact point on the X axis.  
+//   This construction can join arcs of widely varying radius, so it is better to use `$fa` and `$fs` instead of $fn to specify the number of arc segments.
 //   .
 //   The joining arcs can be specified in four different ways.  You can simply specify the radius of the arc using `blendR=` or `blendD=`.
 //   In this case a positive radius results in a convex shape and a negative radius results in a concave shape.  A forbidden radius range exists
@@ -1862,7 +1864,7 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
 
 function glued_circles(r, spread, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD, width, anchor=CENTER, spin=0) =
   let(
-      spread = is_undef(spread) ? echo("Setting default spread=10.  This legacy default value is deprecated and will be removed.") 10
+      spread = is_undef(spread) ? echo("In glued_circles: setting spread=10.  This legacy default value is deprecated and will be removed.") 10
              : spread,
       r1 = get_radius(r=r,r1=r1,d=d,d1=d1),
       r2 = get_radius(r=r,r2=r2,d=d,d2=d2),
@@ -1872,7 +1874,7 @@ function glued_circles(r, spread, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD, 
   assert(spread>abs(r1-r2), "Spread is too small: one circle is inside the other one")
   let(
       tangent = num_defined([tangent,bulge,blendR,width])==0 ?
-                    echo("Setting default tangent=30.  This legacy default value is deprecated and will be removed")
+                    echo("In glued_circles: setting tangent=30.  This legacy default value is deprecated and will be removed")
                     echo("Explicitly specify tangent= or instead use bulge=, width= or blendR=") 30 : tangent,
       cp1 = [-spread/2,0],
       cp2 = [spread/2,0],
@@ -1931,7 +1933,7 @@ function glued_circles(r, spread, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD, 
   reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
 
 
-module glued_circles(r,spread=10, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD, width, anchor=CENTER, spin=0)
+module glued_circles(r,spread, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD, width, anchor=CENTER, spin=0)
 {  
     path = glued_circles(r=r, spread=spread, tangent=tangent, r1=r1, r2=r2, d=d, d1=d1, d2=d2,
                          bulge=bulge, blendR=blendR, blendD=blendD,width=width);

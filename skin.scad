@@ -2534,10 +2534,10 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edg
    reorient(anchor,spin,orient,vnf=vnf,p=vnf,extent=atype=="hull",cp=cp);
 
 
-module path_sweep2d(profile, path, closed=false, caps, quality=1, style="min_edge", convexity=10,
+module path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edge", convexity=10,
                     anchor="origin", cp="centroid", spin=0, orient=UP, atype="hull")
 {
-   vnf = path_sweep2d(profile, path, closed, caps, quality, style);
+   vnf = path_sweep2d(shape, path, closed, caps, quality, style);
    vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
         children();
 }
