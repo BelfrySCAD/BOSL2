@@ -179,7 +179,7 @@ cuboid(50){
    } 
 ```
 
-See [mask2d_roundover()](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_roundover) for additional mask parameters.  Here we use the *inset* parameter to produce a bead.
+See [mask2d_roundover()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#functionmodule-mask2d_roundover) for additional mask parameters.  Here we use the *inset* parameter to produce a bead.
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -189,7 +189,7 @@ diff()
         mask2d_roundover(h=12, inset=4);
 ```
 
-You can use [edge-profile()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile) to round the top or bottom of a [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid).  Because the side faces of a [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid) are not strictly vertical, it's is necessary to increase the length of the masks using the *excess* parameter in [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile), and to set the mask\_angle to $edge\_angle in [mask2d\_roundover()](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_roundover).
+You can use [edge-profile()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile) to round the top or bottom of a [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid).  Because the side faces of a [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid) are not strictly vertical, it's is necessary to increase the length of the masks using the *excess* parameter in [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile), and to set the mask\_angle to $edge\_angle in [mask2d\_roundover()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#functionmodule-mask2d_roundover).
 
 ```openscad-3D
 include<BOSL2/std.scad>
@@ -219,7 +219,7 @@ diff()
          mask2d_roundover(h = 20, $fn = 64);
 ```
 
-The [mask2d_teardrop()](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_teardrop) mask can be used to round the bottom of a cube-like object.  It limits the overhang angle to 45° or a value you specify in with the **angle** argument.
+The [mask2d_teardrop()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#functionmodule-mask2d_teardrop) mask can be used to round the bottom of a cube-like object.  It limits the overhang angle to 45° or a value you specify in with the **angle** argument.
 
 ```
 include<BOSL2/std.scad>
@@ -237,7 +237,7 @@ diff()
          mask2d_teardrop(h = 5, angle = 50, mask_angle = $edge_angle, $fn = 64);
 ```
 
-In addition to the simple [roundover](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_roundover) mask, and the [teardrop](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_teardrop) mask, there are masks for [cove](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_cove), [chamfer](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_chamfer), [rabbet](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_rabbet), [dovetail](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_dovetail) and [ogee](https://github.com/BelfrySCAD/BOSL2/wiki/masks2d.scad#functionmodule-mask2d_ogee) edges.  
+In addition to the simple [roundover](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#functionmodule-mask2d_roundover) mask, and the [teardrop](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#functionmodule-mask2d_teardrop) mask, there are masks for [cove](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#functionmodule-mask2d_cove), [chamfer](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#functionmodule-mask2d_chamfer), [rabbet](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#functionmodule-mask2d_rabbet), [dovetail](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#functionmodule-mask2d_dovetail) and [ogee](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#functionmodule-mask2d_ogee) edges.  
 
 The mask2d_ogee() only works on [cube()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-cube) and [cuboid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#module-cuboid) shapes, or a [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid) where size2 >= size1 in both the X and Y dimensions.
 
