@@ -20,8 +20,7 @@ include <beziers.scad>
 include <shapes3d.scad>
 include <shapes2d.scad>
 include <drawing.scad>
-include <masks3d.scad>
-include <masks2d.scad>
+include <masks.scad>
 include <math.scad>
 include <paths.scad>
 include <lists.scad>

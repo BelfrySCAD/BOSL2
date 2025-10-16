@@ -2788,7 +2788,7 @@ function worm(
                 helical=helical,
                 profile_shift=0
             ), 1, -2),
-        ff=echo(tooth=tooth, rack_profile=rack_profile,nrp=nrp), 
+//        ff=echo(tooth=tooth, rack_profile=rack_profile,nrp=nrp), 
         steps = max(36, segs(d/2)),
         step = 360 / steps,
         zsteps = ceil(l / trans_pitch / starts * steps),
@@ -3142,7 +3142,7 @@ function worm_gear(
     )
     assert(is_finite(worm_diam) && worm_diam>0)
     assert(is_integer(teeth) && teeth>7)
-    assert(is_finite(worm_arc) && worm_arc>0 && worm_arc <= 60)
+//    assert(is_finite(worm_arc) && worm_arc>0 && worm_arc <= 60)
     assert(is_integer(worm_starts) && worm_starts>0)
     assert(is_bool(left_handed))
     assert(is_finite(backlash))
@@ -3153,31 +3153,43 @@ function worm_gear(
         gear_arc = 2 * PA,
         helical = asin(worm_starts * circ_pitch / PI / worm_diam),
         //fee=echo(helical=helical), 
-        full_tooth = apply(
-            zrot(90) * scale(0.99),
-            _gear_tooth_profile(
-                circ_pitch, teeth=teeth,
-                pressure_angle=PA,
-                profile_shift=-profile_shift,
-                clearance=clearance,
-                helical=helical, internal=false,
-                center=true
-            )
-        ),
+        full_tooth = path3d(reverse(zrot(90, _gear_tooth_profile(
+                                                 circ_pitch, teeth=teeth,
+                                                 pressure_angle=PA,
+                                                 profile_shift=profile_shift,
+                                                 clearance=clearance,shorten=.3,
+                                                 helical=helical, internal=false,
+                                                 center=true)))),
+        bnd = pointlist_bounds(full_tooth),
+fdeewqqq=        echo(toothbounds = bnd)echo(toothlength = bnd[1].x-bnd[0].x),
+        tooth_bot = pointlist_bounds(full_tooth)[1].x,
         ftl = len(full_tooth),
-        tooth_half1 = (select(full_tooth, 0, ftl/2-1)),
-        tooth_half2 = (select(full_tooth, ftl/2, -1)),
+        tooth_half1 = select(full_tooth, 0, ftl/2-1),
+        tooth_half2 = select(full_tooth, ftl/2, -1),
+//eer=        echo(full_tooth=full_tooth), 
+//fdewq=        echo(tooth_half1=tooth_half1)echo(tooth_half2=tooth_half2),
         tang = 360 / teeth,
-        rteeth = (quantdn(teeth * gear_arc / 360, 2) / 2 + 0.5),
+
         pr = pitch_radius(circ_pitch, teeth, helical=helical),
-        //feee=echo(pr_worm = pr, circ_pitch, teeth, helical), 
-        circum = 2*PI*pr,
-        tan_helical = tan(helical),
+
+        // Compute thickness based on tooth form and worm_arc for no crowning
+        half_thickness = sin(worm_arc/2)*(worm_diam/2+tooth_bot),
+        // Update worm_arc to account for crowning and produce same thickness
+        worm_arc = 2*asin(half_thickness / (worm_diam/2 + crowning + tooth_bot)),
+        feee=echo(pr_worm = pr, teeth=teeth ,helical= helical),
+
+        // When multiplied by z this gives the spin required to rotationally shear
+        // a straight tooth so that it follows the specified helical angle.  
+        shear_angle_per_z = (left_handed?-1:1) * 360 * tan(helical) / (2*PI*pr),
+        
         oslices = slices * 4,
+        // Tooth is in xy plane, centered, pointing in Y+ direction
+        // 
+        
         rows = [
             for (data = [[tooth_half1,1], [tooth_half2,-1]])
             let (
-                tooth_half = (data[0]),
+                tooth_half = data[0],
                 dir = data[1]
             )
             for (pt = tooth_half) [
@@ -3185,16 +3197,17 @@ function worm_gear(
                 let (
                     u = i / oslices,
                     w_ang = worm_arc * (u - 0.5),
-                    g_ang_delta = w_ang/360 * tang * worm_starts * (left_handed?1:-1) *0 ,
-                    m = //zrot(dir*rteeth*tang+g_ang_delta, cp=[worm_diam/2+pr,0,0]) *
-                        left(crowning) *
+                    m = left(crowning) *
                         yrot(w_ang) *
-                        right(worm_diam/2+crowning) *
-                        //zrot(-dir*rteeth*tang+g_ang_delta, cp=[pr,0,0]) *
-                        xrot(180),
-                   pt = apply(m, point3d(pt)),
-                   angled_pt = zrot((left_handed?-1:1)*360*pt.z*tan_helical/circum,pt,cp=[worm_diam/2+pr,0,0])
-                ) angled_pt
+                        right(worm_diam/2+crowning), 
+                   pt = apply(m, pt),
+                   L = 2*PI*worm_diam/2*w_ang/360 * tan(helical),
+//                   zang = -360*L/(2*PI*pr),
+//                    zang = -asin(L/pr),
+//                   angled_pt = zrot(shear_angle_per_z * pt.z, pt, cp=[worm_diam/2+pr,0,0])
+//                   angled_pt = zrot(zang, pt, cp=[worm_diam/2+pr,0,0])
+                    angled_pt = back(L,pt)
+                  ) angled_pt
             ]
         ],
         midrow = len(rows)/2,
@@ -3226,6 +3239,7 @@ function worm_gear(
     )
     get_thickness? zmax*2 :
     let(
+        feef=echo(actual_thick=zmax*2, est=half_thickness*2), 
         gear_rows = [
             for (i = [0:1:teeth-1])
             let(
@@ -3271,7 +3285,7 @@ module worm_gear(
         assert(is_integer(teeth) && teeth>10)
         assert(is_finite(worm_diam) && worm_diam>0)
         assert(is_integer(worm_starts) && worm_starts>0)
-        assert(is_finite(worm_arc) && worm_arc>0 && worm_arc<90)
+//        assert(is_finite(worm_arc) && worm_arc>0 && worm_arc<90)
         assert(is_finite(crowning) && crowning>=0)
         assert(is_bool(left_handed))
         assert(is_finite(PA) && PA>=0 && PA<90, "Bad pressure_angle value.")
@@ -3371,6 +3385,7 @@ function _gear_tooth_profile(
 
     // Calculate the important circle radii
     arad = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal, shorten=shorten),
+    ffe=echo(arad=arad),
     prad = pitch_radius(circ_pitch, teeth, helical=helical),
     brad = _base_radius(circ_pitch, teeth, pressure_angle, helical=helical),
     rrad = _root_radius_basic(circ_pitch, teeth, clear, helical=helical, profile_shift=profile_shift, internal=internal),
@@ -3989,7 +4004,6 @@ function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, p
 //   root radius so that you can, for example, place a partial tooth gear onto a matching circle.   The `backlash` parameter may seem
 //   unnecessary, but when large pressure angle teeth are clipped, the value of backlash changes the clipping radius.  For regular
 //   gear teeth, `backlash` has no effect on the radius.    
-
 // Arguments:
 //   teeth = The number of teeth on the gear.
 //   helical = The helical angle (from vertical) of the teeth on the gear.  Default: 0
