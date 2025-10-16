@@ -1975,7 +1975,7 @@ module teardrop_edge_mask(l, r, angle=45, excess=0.1, d, anchor=CTR, spin=0, ori
 
 
 // Module: polygon_edge_mask()
-// Symopsis: Converts a 2d mask to 3d mask suitable for a 3d edge
+// Synopsis: Extrudes a 2d mask polygon to an edge mask with a correct corner anchor
 // SynTags: Geom
 // Topics: Masks, Shapes (3D)
 // See Also: edge_profile(), edge_profile_asym(), diff()
