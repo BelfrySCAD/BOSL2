@@ -62,7 +62,7 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 // Arguments:
 //   r = Radius of the roundover.
 //   inset = Optional bead inset size, perpendicular to the two edges.  Scalar or 2-vector.  Default: 0
-//   mask_angle = Number of degrees in the corner angle to mask.  Default: 90
+//   mask_angle = Number of degrees in the corner angle to mask.  Default: $edge_angle if defined, otherwise 90
 //   excess = Extra amount of mask shape to creates on the X and quasi-Y sides of the shape.  Default: 0.01
 //   ---
 //   d = Diameter of the roundover.
@@ -139,7 +139,7 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 //     prismoid([30,20], [50,60], h=20, shift=[40,50])
 //        edge_profile(TOP, excess=27)
 //           mask2d_roundover(r=5, mask_angle=$edge_angle, quarter_round=true, inset=1.5, $fn=128);
-module mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, height, cut, quarter_round=false, joint, anchor=CENTER,spin=0, clip_angle) {
+module mask2d_roundover(r, inset=0, mask_angle, excess=0.01, flat_top, d, h, height, cut, quarter_round=false, joint, anchor=CENTER,spin=0, clip_angle) {
     path = mask2d_roundover(r=r, d=d, h=h, height=height, cut=cut, joint=joint, inset=inset, clip_angle=clip_angle, 
                             flat_top=flat_top, mask_angle=mask_angle, excess=excess, quarter_round=quarter_round);
     attachable(anchor,spin, two_d=true, path=path) {
@@ -151,6 +151,7 @@ module mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, 
 
 
 function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, flat_top, quarter_round=false, d, h, height, cut, joint, anchor=CENTER, spin=0) =
+    let(mask_angle = first_defined([mask_angle, $edge_angle, 90]))
     assert(num_defined([r,d,cut,joint])<=1, "Must define at most one of r, d, cut and joint")
     assert(num_defined([h,height])<=1, "Must define at most one of h and height")
     assert(all_nonnegative([excess]), "excess must be a nonnegative value")
@@ -257,7 +258,7 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, fl
 //   r = Radius of the rounding.
 //   angle = The angle from vertical of the flat section.  Must be between mask_angle-90 and 90 degrees.  Default: 45.  
 //   inset = Optional bead inset size perpendicular to edges.  Default: 0
-//   mask_angle = Number of degrees in the corner angle to mask.  Default: 90
+//   mask_angle = Number of degrees in the corner angle to mask.  Default: $edge_angle if defined, otherwise 90
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape. Default: 0.01
 //   ---
 //   d = Diameter of the rounding.
@@ -299,7 +300,8 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, fl
 //       linear_extrude(height=30, center=true)
 //           mask2d_teardrop(r=10);
 
-function mask2d_teardrop(r, angle=45, inset=[0,0], mask_angle=90, excess=0.01, flat_top=false, d, h, height, cut, joint, anchor=CENTER, spin=0) =  
+function mask2d_teardrop(r, angle=45, inset=[0,0], mask_angle=90, excess=0.01, flat_top=false, d, h, height, cut, joint, anchor=CENTER, spin=0) =
+    let(mask_angle = first_defined([mask_angle, $edge_angle, 90]))
     assert(one_defined([r,height,d,h,cut,joint],"r,height,d,h,cut,joint"))
     assert(is_finite(angle) && angle>mask_angle-90 && angle<90)
     assert(is_finite(mask_angle) && mask_angle>0 && mask_angle<180)
@@ -350,7 +352,7 @@ function mask2d_teardrop(r, angle=45, inset=[0,0], mask_angle=90, excess=0.01, f
     
 
 
-module mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, inset=0, flat_top=false, height, d, h, cut, joint, anchor=CENTER, spin=0) {
+module mask2d_teardrop(r, angle=45, mask_angle, excess=0.01, inset=0, flat_top=false, height, d, h, cut, joint, anchor=CENTER, spin=0) {
     path = mask2d_teardrop(r=r, d=d, h=h, height=height, flat_top=flat_top, cut=cut, joint=joint, angle=angle,inset=inset, mask_angle=mask_angle, excess=excess);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -385,7 +387,7 @@ module mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, inset=0, flat_to
 // Arguments:
 //   r = Radius of the cove.
 //   inset = Optional amount to inset in the perpendicular direction from the edges.  Scalar or 2-vector.  Default: 0
-//   mask_angle = Number of degrees in the corner angle to mask.  Default: 90
+//   mask_angle = Number of degrees in the corner angle to mask.  Default: $edge_angle if defined, otherwise 90
 //   excess = Extra amount of mask shape to creates on the X and quasi-Y sides of the shape.  Default: 0.01
 //   ---
 //   d = Diameter of the cove.
@@ -442,7 +444,8 @@ module mask2d_teardrop(r, angle=45, mask_angle=90, excess=0.01, inset=0, flat_to
 //       edge_profile(TOP, excess=20)
 //           mask2d_cove(r=5, inset=0, mask_angle=$edge_angle, quarter_round=true, $fn=128);
 
-module mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, bulge, d, h, height, quarter_round=false, anchor=CENTER, spin=0) {
+module mask2d_cove(r, inset=0, mask_angle, excess=0.01, flat_top, bulge, d, h, height, quarter_round=false, anchor=CENTER, spin=0)
+{
     path = mask2d_cove(r=r, d=d, h=h, height=height, bulge=bulge, flat_top=flat_top, quarter_round=quarter_round, inset=inset, mask_angle=mask_angle, excess=excess);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -452,6 +455,7 @@ module mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, bulge, d, h
 
 
 function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, height,bulge, quarter_round=false, anchor=CENTER, spin=0) =
+    let(mask_angle = first_defined([mask_angle, $edge_angle, 90]))
     assert(one_defined([r,d,h,height],"r,d,h,height"))
     assert(is_finite(mask_angle) && mask_angle>0 && mask_angle<180)
     assert(is_finite(excess))
@@ -537,7 +541,7 @@ function mask2d_cove(r, inset=0, mask_angle=90, excess=0.01, flat_top, d, h, hei
 //   edge = The length of the edge of the chamfer.
 //   angle = The angle of the chamfer edge, away from vertical.  Default: mask_angle/2.
 //   inset = Optional amount to inset perpendicular to each edge.  Scalar or 2-vector.  Default: 0
-//   mask_angle = Number of degrees in the corner angle to mask.  Default: 90
+//   mask_angle = Number of degrees in the corner angle to mask.  Default: $edge_angle if defined, otherwise 90
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.  Default: 0.01
 //   ---
 //   x = The width of the chamfer (joint distance in x direction)
@@ -621,6 +625,7 @@ module mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle=90, flat_top
 }
 
 function mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle=90, flat_top=false, x, y, h, w, width, height, anchor=CENTER,spin=0) =
+    let(mask_angle = first_defined([mask_angle, $edge_angle, 90]))
     assert(is_undef(x) || all_positive([x]))
     assert(is_undef(y) || all_positive([y]))
     assert(is_undef(w) || all_positive([w]))
@@ -704,7 +709,7 @@ function mask2d_chamfer(edge, angle, inset=0, excess=0.01, mask_angle=90, flat_t
 //   If called as a function, returns a 2D path of the outline of the mask shape.
 // Arguments:
 //   size = The size of the rabbet, either as a scalar or an [X,Y] list.
-//   mask_angle = Number of degrees in the corner angle to mask.  Default: 90
+//   mask_angle = Number of degrees in the corner angle to mask.  Default: $edge_angle if defined, otherwise 90
 //   excess = Extra amount of mask shape to creates on the X and quasi-Y sides of the shape. Default: 0.01
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -741,6 +746,7 @@ module mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) {
 
 
 function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
+    let(mask_angle = first_defined([mask_angle, $edge_angle, 90]))
     assert(is_finite(size)||is_vector(size,2))
     assert(is_finite(mask_angle) && mask_angle>0 && mask_angle<180)
     assert(all_nonnegative([excess]))
@@ -781,7 +787,7 @@ function mask2d_rabbet(size, mask_angle=90, excess=0.01, anchor=CTR, spin=0) =
 //   angle = The angle of the chamfer edge, away from vertical.  
 //   shelf = The extra height to add to the inside corner of the dovetail.  Default: 0
 //   inset = Optional amount to inset in perpendicular direction from each edge.  Default: 0
-//   mask_angle = Number of degrees in the corner angle to mask.  Default: 90
+//   mask_angle = Number of degrees in the corner angle to mask.  Default: $edge_angle if defined, otherwise 90
 //   excess = Extra amount of mask shape to creates on the X and quasi-Y sides of the shape.  Default: 0.01
 //   ---
 //   width = The width of the dovetail (excluding any inset)
@@ -825,6 +831,7 @@ module mask2d_dovetail(edge, angle, shelf=0, inset=0, mask_angle=90, excess=0.01
 }
 
 function mask2d_dovetail(edge, angle, slope, shelf=0, inset=0, mask_angle=90, excess=0.01, flat_top=true, w,width,h,height, anchor=CENTER, spin=0,x,y) =
+    let(mask_angle = first_defined([mask_angle, $edge_angle, 90]))
     assert(num_defined([slope,angle])<=1, "Cannot give both slope and angle")
     assert(is_finite(excess))
     assert(is_undef(w) || all_positive([w]))
