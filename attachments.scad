@@ -3628,7 +3628,12 @@ function _find_anchor(anchor, geom)=
                              direc = unit(angles*normals)
                    )
                    [vnf[0][ulist[0]], direc, atan2(direc.y,direc.x)+90]
-        ) [anchor, default(override[0],res[0]),default(override[1],res[1]),default(override[2],res[2]),if (len(res)==3) res[2]]        
+        ) [anchor,
+           default(override[0],res[0]),
+           default(override[1],res[1]),
+           default(override[2],res[2]),
+           if (len(res)==4) res[3]
+          ]        
     ) : type == "trapezoid"? ( //size, size2, shift, override
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "\nAll components of an anchor for a rectangle/trapezoid must be -1, 0, or 1.")

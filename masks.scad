@@ -1793,6 +1793,13 @@ module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CEN
 //   cuboid(20)
 //     attach(RIGHT+TOP,LEFT+FWD,inside=true,inset=-.1,align=FWD)
 //       rounding_edge_mask(r1=0,r2=10,length=10);
+// Example(3D, NoScales): Here we blend a tapered mask applied with `rounding_edge_mask()` with {{cuboid()}} rounding and a 2d mask applied with {{edge_profile()}}.
+//    diff()
+//    cuboid(25,rounding=2,edges=[TOP+RIGHT,TOP+FRONT]){
+//      attach(RIGHT+FRONT, LEFT+FWD, inside=true)
+//         rounding_edge_mask(r1=5, r2=9, rounding2=2, rounding1=3);
+//      edge_profile([BOT+RIGHT,BOT+FRONT]) mask2d_roundover(r=3);
+//    }   
 
 
 function rounding_angled_edge_mask(h, r, r1, r2, d, d1, d2, ang=90, anchor=CENTER, spin=0, orient=UP,l,height,length) = no_function("rounding_angled_edge_mask");

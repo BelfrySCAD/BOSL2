@@ -142,13 +142,13 @@ prismoid(100, 80, rounding1=[0,50,0,50], rounding2=[40,0,40,0], h=50);
 
 ## Masking Edges of the Cuboid, Cube and Prismoid
 
-### 2D Edge Masking with [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile) and [edge_profile_asym()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile_asym)
+### 2D Edge Masking with [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#module-edge_profile) and [edge_profile_asym()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#module-edge_profile_asym)
 
 One limitation of using rounding arguments in [cuboid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#module-cuboid) is that all the rounded edges must have the same rounding radius.  Using masking we have the flexibility to apply different edge treatments to the same cube.  Masking can also be used on the [cube()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-cube) and [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid) shapes.
 
-2D edge masks are attached to edges using [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile). They have a default tag of "remove" to enable differencing them away from your cube using [diff()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-diff).
+2D edge masks are attached to edges using [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#module-edge_profile). They have a default tag of "remove" to enable differencing them away from your cube using [diff()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-diff).
 
-We can use a negative rounding value to fillet the bottom of a cuboid and [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile) to round the top.  Here [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile) applies a 2d roundover mask to the top edges of the cuboid.
+We can use a negative rounding value to fillet the bottom of a cuboid and [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/maskss.scad#module-edge_profile) to round the top.  Here [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/maskss.scad#module-edge_profile) applies a 2d roundover mask to the top edges of the cuboid.
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -158,7 +158,7 @@ diff()
             mask2d_roundover(r=10);
 ```
 
-We could also fillet the bottom of the cube using [edge_profile_asym()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile_asym) and [xflip()](https://github.com/BelfrySCAD/BOSL2/wiki/transforms.scad#functionmodule-xflip)
+We could also fillet the bottom of the cube using [edge_profile_asym()](https://github.com/BelfrySCAD/BOSL2/wiki/maskss.scad#module-edge_profile_asym) and [xflip()](https://github.com/BelfrySCAD/BOSL2/wiki/transforms.scad#functionmodule-xflip)
 
 ```openscad-3D
 include<BOSL2/std.scad>
@@ -167,7 +167,7 @@ cuboid(50)
   xflip() mask2d_roundover(10);
 ```
 
-The flip argumet in [edge_profile_asym()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile_asym) determines whether the fillet flares out or up.  The corner_type argument is used to shape the corners of external fillets.
+The flip argumet in [edge_profile_asym()](https://github.com/BelfrySCAD/BOSL2/wiki/maskss.scad#module-edge_profile_asym) determines whether the fillet flares out or up.  The corner_type argument is used to shape the corners of external fillets.
 
 ```openscad-3D
 include<BOSL2/std.scad>
@@ -189,7 +189,7 @@ diff()
         mask2d_roundover(h=12, inset=4);
 ```
 
-You can use [edge-profile()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile) to round the top or bottom of a [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid).  Because the side faces of a [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid) are not strictly vertical, it's is necessary to increase the length of the masks using the *excess* parameter in [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_profile), and to set the mask\_angle to $edge\_angle in [mask2d\_roundover()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#functionmodule-mask2d_roundover).
+You can use [edge-profile()](https://github.com/BelfrySCAD/BOSL2/wiki/maskss.scad#module-edge_profile) to round the top or bottom of a [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid).  Because the side faces of a [prismoid()](https://github.com/BelfrySCAD/BOSL2/wiki/shapes3d.scad#functionmodule-prismoid) are not strictly vertical, it's is necessary to increase the length of the masks using the *excess* parameter in [edge_profile()](https://github.com/BelfrySCAD/BOSL2/wiki/maskss.scad#module-edge_profile), and to set the mask\_angle to $edge\_angle in [mask2d\_roundover()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#functionmodule-mask2d_roundover).
 
 ```openscad-3D
 include<BOSL2/std.scad>
@@ -329,7 +329,7 @@ diff()
 
 BOSL2 contains a number of 3d edge and corner masks in addition to the 2d edge profiles shown above.
 
-The 3d edge masks have the advantage of being able to vary the rounding radius along the edge.  3d edge masks, such as[rounding_edge_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks3d.scad#module-rounding_edge_mask), can be attached using [edge_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_mask). The 3D edge masks have a default tag of "remove" to enable differencing them away from your cube using [diff()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-diff).
+The 3d edge masks have the advantage of being able to vary the rounding radius along the edge.  3d edge masks, such as[rounding_edge_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#module-rounding_edge_mask), can be attached using [edge_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#module-edge_mask). The 3D edge masks have a default tag of "remove" to enable differencing them away from your cube using [diff()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-diff).
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -339,7 +339,7 @@ diff()
    rounding_edge_mask(r1 = 40, r2 = 0, l = 80);
 ```
 
-While you can specify the length of the mask with the l or h argument, [edge_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_mask) sets a special variable, `$parent_size`, to the size of the parent object.  In the case where the parent is not a perfect cube, you need to mask each edge individually:
+While you can specify the length of the mask with the l or h argument, [edge_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#module-edge_mask) sets a special variable, `$parent_size`, to the size of the parent object.  In the case where the parent is not a perfect cube, you need to mask each edge individually:
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -354,7 +354,7 @@ diff()
  } 
 ```
 
-As you can see above, using only [rounding\_edge_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks3d.scad#module-rounding_edge_mask) to round the top of the cube leaves the corners unrounded.  Use [corner_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-corner_mask) and [rounding\_corner_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks3d.scad#module-rounding_corner_mask) for a smoother corner.
+As you can see above, using only [rounding\_edge_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#module-rounding_edge_mask) to round the top of the cube leaves the corners unrounded.  Use [corner_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#module-corner_mask) and [rounding\_corner_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#module-rounding_corner_mask) for a smoother corner.
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -372,7 +372,7 @@ diff()
  
 ```
 
-As with the built-in rounding arguments, you can use [edge\_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-edge_mask) and [corner\_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/attachments.scad#module-corner_mask) to apply teardrop roundings using [teardrop\_edge_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks3d.scad#module-teardrop_edge_mask) and [teardrop\_corner_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks3d.scad#module-teardrop_corner_mask) to limit the overhang angle for better printing on FDM printers. Note that the vertical mask on the RIGHT_FWD edge is a [rounding\_edge\_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks3d.scad#module-rounding_edge_mask).
+As with the built-in rounding arguments, you can use [edge\_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/maskss.scad#module-edge_mask) and [corner\_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/maskss.scad#module-corner_mask) to apply teardrop roundings using [teardrop\_edge_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#module-teardrop_edge_mask) and [teardrop\_corner_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#module-teardrop_corner_mask) to limit the overhang angle for better printing on FDM printers. Note that the vertical mask on the RIGHT_FWD edge is a [rounding\_edge\_mask()](https://github.com/BelfrySCAD/BOSL2/wiki/masks.scad#module-rounding_edge_mask).
 
 ```openscad-3D
 include <BOSL2/std.scad>
