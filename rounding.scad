@@ -4171,7 +4171,13 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   Adjsting the points on your prism profile so that a point falls close to the corner will achieve the best result, and make sure
 //   that `smooth_normals` is disabled (the default for edges) because it results in a completely incorrect fillet in this case.
 //   If you connect to an extrusion object, the default value for `smooth_normals` is true, which generally works better when
-//   for a uniformly sampled smooth object, but if your object has corners you may get better results by setting `smooth_normals=false`.  
+//   for a uniformly sampled smooth object, but if your object has corners you may get better results by setting `smooth_normals=false`.
+//   .
+//   You can use two named anchors, "end1" and "end2", that provide anchors at the connecting points on the end faces of the connector prism.  These anchors
+//   point **along the prism axis**, which means they are not necessarily perpendicular to the end face of the prism.  If you need
+//   an anchor perpendicular to the end face of the prism you can use the anchor from the description at that end that you used
+//   to construct the prism by using {{restore()}}. If you have shifted the connector point you will need to apply a similar transformation
+//   to the anchor point based on the description.  
 // Arguments:
 //   profile = path giving cross section to extrude to create the connecting prism
 //   desc1 = description of first object to connect
@@ -4205,8 +4211,8 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   debug = pass-through to the {{join_prism()}} debug parameter.  If true then various cases where the fillet self intersects will be displayed instead of creating an error.  Default: false
 //   debug_pos = if set to true display an unfilleted prism instead of invoking {{join_prism()}} so that you can diagnose errors about the prism not intersecting the object.  Default: false
 // Named Anchors:
-//   "root" = Root point of the connector prism at the desc1 end, pointing out in the direction of the prism axis (anchor inherited from {{join_prism()}}
-//   "end" = Root point of the connector prism at the desc2 end, pointing out in the direction of the prism axis (anchor inherited from {{join_prism()}}
+//   "end1" = Root point of the connector prism at the desc1 end, pointing out in the direction of the prism axis (not necessarily perpendicular to the end of the prism connector!)
+//   "end2" = Root point of the connector prism at the desc2 end, pointing out in the direction of the prism axis (not necessarily perpendicular to the end of the prism connector!)
 // Example(3D,NoAxes,VPT=[11.5254,0.539284,6.44131],VPR=[71.8,0,29.2],VPD=113.4): A circular prism connects a prismoid to a sphere.  Note different fillet sizes at each length.  
 //   circ = circle(r=3, $fn=48);
 //   prismoid(20,13,shift=[-2,1],h=15) let(prism=parent())
@@ -4819,7 +4825,9 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
                      base_n=base_n, aux_n=aux_n, base_fillet=base_fillet, aux_fillet=aux_fillet,
                      base_smooth_normals = base_smooth_normals, aux_smooth_normals=aux_smooth_normals, 
                      debug=debug,
-                     _name1="desc1", _name2="desc2") children();
+                     _name1="desc1", _name2="desc2")
+                         change_anchors(alias=[["end1","root"],["end2","end"]], remove=["root","end"])
+                           children();
           }
       }
 }
