@@ -236,6 +236,128 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, fl
     ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
 
 
+// Function&Module: mask2d_smooth()
+// Synopsis: Creates a continuous curvature mask for rounding edges.
+// SynTags: Geom, Path
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
+// Usage: As module
+//   mask2d_smooth([mask_angle], [cut=], [joint=], [inset=], [excess=], [flat_top=], [anchor=], [spin=]) [ATTACHMENTS];
+// Usage: As function
+//   path = mask2d_smooth([mask_angle], [cut=], [joint=], [inset=], [excess=], [flat_top=], [anchor=], [spin=]);
+// Description:
+//   Creates a 2D continuous curvature rounding mask shape that is useful for extruding into a 3D mask for an edge.
+//   Conversely, you can use that same extruded shape to make an interior fillet between two walls.
+//   As a 2D mask, this is designed to be differenced away from the edge of a shape that with its corner at the
+//   origin and one edge on the X+ axis and the other mask_angle degrees counterclockwise from the X+ axis.  
+//   If called as a function, returns a 2D path of the outline of the mask shape.
+//   .
+//   The roundover can be specified by joint length or cut distance.  (Radius is not meaningful for this type of mask.)  You must also specify the
+//   continuous curvature smoothness parameter, `k`, which defaults to 0.5.  This diagram shows a roundover for the default k value.  
+//   ![Types of Roundovers](images/rounding/figure_1_2.png)
+//   .
+//   With `k=0.75` the transition into the roundover is shorter and faster.  The cut length is bigger for the same joint length.
+//   ![Types of Roundovers](images/rounding/figure_1_3.png)
+//   .
+//   The diagrams above show symmetric roundovers, but you can also create asymmetric roundovers by giving a list of two values for `joint`.  In this
+//   case the first one is the horizontal joint length and the second one is the joint length along the other side of the rounding.  
+//   .
+//   If you need roundings to agree on edges of different mask_angle, e.g. to round the base of a prismoid, then you need all of the
+//   masks used to have the same height.  (Note that it may appear that matching joint would also work, but it does not because the joint distances are measured
+//   in different directions.)  You can get the same height by setting the joint parameter to a scalar to define the joint length in the horizontal direction and then setting
+//   the `height` parameter, which determines the length of the other joint so that it has the desired height.  
+// Arguments:
+//   mask_angle = Number of degrees in the corner angle to mask.  Default: $edge_angle if set, 90 otherwise
+//   ---
+//   inset = Optional bead inset size, perpendicular to the two edges.  Scalar or 2-vector.  Default: 0
+//   excess = Extra amount of mask shape to creates on the X and quasi-Y sides of the shape.  Default: 0.01
+//   cut = Cut distance.  IE: How much of the corner to cut off.  See [Types of Roundovers](rounding.scad#section-types-of-roundovers).
+//   joint = Joint distance.  IE: How far from the edge the roundover should start.  See [Types of Roundovers](rounding.scad#section-types-of-roundovers).
+//   h / height = Mask height excluding inset and excess.  This determines the height of the mask when you want a consistent mask height, no matter what the mask angle.  You must provide a scalar joint value to define the mask width, and you cannot give cut.  
+//   flat_top = If true, the top inset of the mask will be horizontal instead of angled by the mask_angle.  Default: false
+//   splinesteps = Numbers of segments to create on the roundover.  Default: 16
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+// Example(2D): Mask defined by cut
+//   mask2d_smooth(cut=3);
+// Example(2D): Mask defined by symmetric joint length
+//   mask2d_smooth(joint=10);
+// Example(2D): Asymmetric mask by joint length with different lengths and a larger excess
+//   mask2d_smooth(joint=[10,7],excess=0.5);
+// Example(2D): Acute angle mask by cut
+//   mask2d_smooth(mask_angle=66,cut=3,excess=0.5);
+// Example(2D): Acute angle mask by cut, but large k value
+//   mask2d_smooth(mask_angle=66,cut=3,excess=0.5, k=.9);
+// Example(2D): Acute angle mask by cut, but small k value
+//   mask2d_smooth(mask_angle=66,cut=3,excess=0.5, k=.2);
+// Example(2D): Obtuse angle mask
+//   mask2d_smooth(mask_angle=116,joint=12,excess=0.5);
+// Example(2D): Inset mask
+//   mask2d_smooth(mask_angle=75,joint=12,inset=2);
+// Example(2D): Inset mask, flat top
+//   mask2d_smooth(mask_angle=75,joint=12,inset=2, flat_top=true);
+// Example(3D): Masking by Edge Attachment
+//   diff()
+//   cube([50,60,70],center=true)
+//       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
+//           mask2d_smooth(cut=3);
+// Example(3D): Masking a cylinder by edge attachment
+//   diff()
+//   cyl(h=25,d=15)
+//       edge_profile()
+//           mask2d_smooth(joint=5);
+// Example(3D,Med,VPT=[25,30,12],VPR=[68,0,12],VPD=180): Rounding over top of an extreme prismoid using height option
+//   diff()
+//     prismoid([30,20], [50,60], h=20, shift=[40,50])
+//        edge_profile(TOP, excess=27)
+//           mask2d_smooth(height=5, joint=5);
+
+function mask2d_smooth( mask_angle,  cut, joint, height, h, k=0.5, excess=.01, inset=0,flat_top=false,splinesteps=16,anchor=CENTER,spin=0) =
+    let(
+         mask_angle=first_defined([mask_angle, $edge_angle, 90]),
+         inset = is_list(inset)? inset : [inset,inset],
+         height = one_defined([h,height], "h,height",dflt=undef)
+    )
+    assert(num_defined([cut,joint])==1, "Must define exactly one of cut and joint")
+    assert(num_defined([height,cut])<2, "With height cannot give a cut value")
+    assert(is_undef(cut) || all_positive([cut]), "cut must be a positive value")
+    assert(is_undef(joint) || (is_finite(joint) && joint>0) || (is_vector(joint) && all_positive(joint)),
+           "joint must be a positive value or list of two positive values")
+    assert(is_undef(height) || is_finite(joint), "With height must give a scalar joint value")
+    assert(all_nonnegative([excess]), "excess must be a nonnegative value")
+    assert(is_finite(mask_angle) && mask_angle>0 && mask_angle<180)
+    assert(is_finite(k) && k>=0 && k<=1, "k must be a number between 0 and 1")
+    assert(is_vector(inset,2) && all_nonnegative(inset), "inset must be a nonnegative value or a list of two such values")
+    let(
+
+         joint = is_def(cut)? 8*cut/cos(mask_angle/2)/(1+4*k)*[1,1]
+               : is_def(height) ? [joint, height/sin(mask_angle)]
+               : force_list(joint,2),
+         angle_path = [
+                        zrot(mask_angle, [joint[1],0]),
+                        [0,0],
+                        [joint[0],0],
+                      ],
+         outside_corner = _inset_corner(angle_path, mask_angle, inset, excess, flat_top),
+         bez = _smooth_bez_fill(outside_corner[1],k),
+         path = deduplicate([
+                              each outside_corner[0],
+                              each bezier_curve(bez, splinesteps=splinesteps)
+                            ],
+                            closed=true)
+     )
+     reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
+
+module mask2d_smooth(mask_angle, cut, joint, height, h, k=0.5, excess=.01, inset=0, flat_top=false, splinesteps=16, anchor=CENTER, spin=0)
+{
+    path = mask2d_smooth(mask_angle=mask_angle, cut=cut, joint=joint, height=height, h=h, k=k, excess=excess, inset=inset,
+                         flat_top=flat_top, splinesteps=splinesteps,anchor=anchor, spin=spin);
+    attachable(anchor,spin, two_d=true, path=path) {
+        polygon(path);
+        children();
+    }
+}
+
 
 // Function&Module: mask2d_teardrop()
 // Synopsis: Creates a 2D teardrop shape with specified max angle from vertical.
@@ -1794,6 +1916,7 @@ module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CEN
 //     attach(RIGHT+TOP,LEFT+FWD,inside=true,inset=-.1,align=FWD)
 //       rounding_edge_mask(r1=0,r2=10,length=10);
 // Example(3D, NoScales): Here we blend a tapered mask applied with `rounding_edge_mask()` with {{cuboid()}} rounding and a 2d mask applied with {{edge_profile()}}.
+//    $fa=5;$fs=0.5;
 //    diff()
 //    cuboid(25,rounding=2,edges=[TOP+RIGHT,TOP+FRONT]){
 //      attach(RIGHT+FRONT, LEFT+FWD, inside=true)
