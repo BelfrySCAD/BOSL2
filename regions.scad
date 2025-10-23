@@ -858,8 +858,10 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   The erroneous removal of segments is more common when your input
 //   contains very small segments and in this case can result in an invalid situation where the remaining
 //   valid segments are parallel and cannot be connected to form an offset curve.  If this happens, you
-//   get an error message to this effect.  The only solutions are either to remove the small segments with {{deduplicate()}},
-//   or if your path permits it, to set check_valid to false.  
+//   get an error message to this effect.  The only solutions are either to remove small segments with {{resample_path()}} or
+//   generate your data with fewer points (e.g. by using a smaller `$fn` or larger `$fa` and `$fs` when constructing your input).
+//   Be aware that chamfer and rounding increase the length of the path, so iterated offsets can lead to exponential
+//   growth in the path length. 
 //   .
 //   Another situation that can arise with validity testing is that the test is not sufficiently thorough and some
 //   segments persist that should be eliminated.  In this case, increase `quality` from its default of 1 to a value of 2 or 3.
@@ -869,7 +871,7 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   .
 //   When invalid segments are eliminated, the path length decreases, and multiple points on the input path map to the same point
 //   on the offset path.  If you use chamfering or rounding, then
-//   the chamfers and roundings can increase the length of the output path.  Hence points in the output may be 
+//   the chamfers and roundings increase the length of the output path.  Hence points in the output may be 
 //   difficult to associate with the input.  If you want to maintain alignment between the points you
 //   can use the `same_length` option.  This option requires that you use `delta=` with `chamfer=false` to ensure
 //   that no points are added.  with `same_length`, when points collapse to a single point in the offset, the output includes
@@ -1067,7 +1069,11 @@ function offset(
         cornercheck = [for(i=idx(goodsegs)) (!closed && (i==0 || i==len(goodsegs)-1))
                                           || is_def(sharpcorners[i])
                                           || approx(unit(deltas(select(goodsegs,i-1))[0]) * unit(deltas(goodsegs[i])[0]),-1)],
-        dummyA = assert(len(sharpcorners)==2 || all(cornercheck),"\nTwo consecutive valid offset segments are parallel but do not meet at their ends, maybe because path contains very short segments that were mistakenly flagged as invalid; unable to compute offset. If you get this error from offset_sweep() try setting ofset=\"delta\"."),
+        dummyA = assert(len(sharpcorners)==2 || all(cornercheck),
+                    str("\nUnable to compute offset due to segments that are very close to parallel but not exactly parallel. \n",
+                        "This is usually caused by too many points or points that are too close together. \n",
+                        "Use fewer points (lower $fn, larger $fa/$fs) or use resample_path(). \n",
+                        "If you get this error from offset_sweep() using offset=\"delta\" may help")),
         reversecheck = 
             !same_length 
               || !(is_def(delta) && !chamfer)            // Reversals only a problem in delta mode without chamfers

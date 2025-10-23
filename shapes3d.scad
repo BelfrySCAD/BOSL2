@@ -1827,6 +1827,7 @@ function rect_tube(
 //   wedge([40, 80, 30], center=true)
 //       show_anchors(std=false);
 // Example(3D): Rounding the top of the wedge using the "top_edge" anchor
+//   $fn=32;
 //   diff()
 //     wedge([10,15,7])
 //       attach("top_edge", FWD+LEFT, inside=true)
