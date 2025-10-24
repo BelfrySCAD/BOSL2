@@ -3,6 +3,7 @@
 //   Functions and modules for creating hooks and hook like parts.
 //   At the moment only one part is supported, a ring hook.  
 // Includes:
+//   include <BOSL2/std.scad>
 //   include <BOSL2/hooks.scad>
 // FileGroup: Parts
 // FileSummary: Hooks and hook-like parts. 
