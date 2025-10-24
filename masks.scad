@@ -280,9 +280,9 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, fl
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): Mask defined by cut
 //   mask2d_smooth(cut=3);
-// Example(2D): Mask defined by symmetric joint length
-//   mask2d_smooth(joint=10);
-// Example(2D): Asymmetric mask by joint length with different lengths and a larger excess
+// Example(2D): Mask defined by symmetric joint length with larger excess (which helps show the ends of the mask)
+//   mask2d_smooth(joint=10,excess=0.5);
+// Example(2D): Asymmetric mask by joint length with different lengths
 //   mask2d_smooth(joint=[10,7],excess=0.5);
 // Example(2D): Acute angle mask by cut
 //   mask2d_smooth(mask_angle=66,cut=3,excess=0.5);

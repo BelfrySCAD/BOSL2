@@ -23,9 +23,8 @@ PrioritizeFiles:
   attachments.scad
   shapes2d.scad
   shapes3d.scad
+  masks.scad  
   drawing.scad
-  masks2d.scad
-  masks3d.scad
   distributors.scad
   color.scad
   partitions.scad
@@ -70,6 +69,7 @@ PrioritizeFiles:
   tripod_mounts.scad
   walls.scad
   wiring.scad
+  hooks.scad
 DefineHeader(BulletList): Side Effects
 DefineHeader(Table;Headers=Anchor Name|Position): Named Anchors
 DefineHeader(Table;Headers=Anchor Type|What it is): Anchor Types

@@ -598,7 +598,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 // Synopsis: Create a smoothed path passing through all the points of a given path, or passing through all the segment midpoint tangents.
 // SynTags: Path
 // Topics: Rounding, Paths
-// See Also: round_corners(), smooth_path(), path_join(), offset_stroke()
+// See Also: round_corners(), smooth_path(), path_join(), offset_stroke(), squircle()
 // Usage: "edges" method
 //   smoothed = smooth_path(path, [tangents], [size=|relsize=], [method="edges"], [splinesteps=], [closed=], [uniform=]);
 // Usage: "corners" method
