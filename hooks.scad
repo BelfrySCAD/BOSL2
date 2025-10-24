@@ -1,4 +1,3 @@
-include<BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 // LibFile: hooks.scad
 //   Functions and modules for creating hooks and hook like parts.
@@ -25,21 +24,26 @@ include<BOSL2/std.scad>
 //   In order to calculate a tangent where the base joins the cylinder, 
 //   the lower corners of the base must be outside the cylinder (see Example 3).  This scenario occurs when
 //   the base is narrower than the Y-cylinder and hole_z is less than Y-cylinder radius.  Also, hole_z must 
-//   be large enough to accommodate hole rounding and base rounding. 
+//   be large enough to accommodate hole rounding and base rounding.
+//   .
+//   The roundings use `$fn`, `$fa` and `$fs`, but if you want to explicitly control the outer shape of the hook
+//   you can separately specify a facet count for the curved portion using `outside_segments`.  
 // Arguments:
 //   base_size = 2-vector specifying x and y sizes of the base
 //   hole_z = distance in the z direction from the base to the center of the hole
 //   or = radius of the cylindrical portion of the part (or zero to create no hole)
 //   ---
 //   od = diameter of the cylindrical portion of the part
-//   ir, id = optional radius/diameter of the center hole
+//   ir / id = optional radius/diameter of the center hole
+//   wall = set thickness of the wall around the central hole
 //   hole = Set to "circle" for a circle hole, "D" for a D-shaped (semicircular) hole or a path to create a custom hole.  Default: "circle"
-//   rounding = rounding of the vertical-ish edges of the prismoid and the exposed edges of the cylinder
-//   fillet = base rounding, set negative to form a rounded edge instead of fillet
-//   hole_rounding = rounding of the optional hole
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   rounding = rounding of the vertical-ish edges of the prismoid and the exposed edges of the cylinder.  Default: 0
+//   fillet = base fillet.  If negative produces a rounded edge instead of a fillet.  Default: 0
+//   hole_rounding = rounding of the optional hole.  Default: 0
+//   outside_segments = number of segments to use for the outer curved part of the hook instead of using `$fn`, `$fa` and `$fs`.  
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: CENTER
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#subsection-spin).  Default: 0
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#subsection-orient).  Default: UP
 // Named anchors:
 //   hole_front = front, center of the cylindrical portion of the part (same as the part FRONT if hole_z=or)
 //   hole_back = back, center of the cylindrical portion of the part (same as the part BACK if hole_z=or)
@@ -50,9 +54,14 @@ include<BOSL2/std.scad>
 // Example: Ring connector
 //   ring_hook([50, 10], 25, 25, ir=20);
 // Example: Widen the base, add base fillet, no hole
+//   $fa=4;$fs=1/2;
 //   ring_hook([70, 10], 25, or=25, ir=0, fillet=3, rounding=1.5);
 // Example: Narrow base
+//   $fa=4;$fs=1/2;
 //   ring_hook([40, 10], 25, or=25, ir=0, fillet=3, rounding=1.5);
+// Example: Negative fillet value
+//   $fa=4;$fs=1/2;
+//   ring_hook([40, 10], 25, or=25, ir=0, fillet=-3, rounding=1.5);
 // Example(3D,VPR=[90,0,0]): If the base is narrower than the cylinder diameter then its corners have to be outside the cylinder for this shape to be defined because it requires a tangent line to the cylinder.  This example shows a valid base corner point in blue.  An invalid corner point appears in red: no tangent to the circle exists through the red point.  
 //   hole_z = 20;
 //   base_size = [40, 10];
@@ -77,13 +86,18 @@ include<BOSL2/std.scad>
 //     ring_hook([50, 10], 1, 25, ir=0);
 //     ring_hook([50, 10], 1, 25, ir=15, hole="D");
 //   }
-// Example: hole_z must be greater than ir + hole_rounding + fillet when hole="circle".  Here hole_z is only 1 larger than the minimum.  
+// Example: hole_z must be greater than ir + hole_rounding + fillet when hole="circle".  Here hole_z is only 1 larger than the minimum.
+//    $fs=1;$fa=5;
 //    ring_hook([50, 10], hole_z=27, or=25, ir=20, hole_rounding=3, fillet=3);
 // Example: Rounding all edges
 //   ring_hook([50, 10], 40, 25, ir=15, rounding=5, hole_rounding=5, fillet=5);
 // Example: Giving an arbitrary path for the hole, in this case an octagon to make the object printable without support.  
-//   ring_hook([50, 20],30, 25, ir=10, hole=octagon(side=10,realign=true), hole_rounding=3, rounding=4) ;
-// Example: The ring_hook includes 4 custom anchors: front & back at the center of the cylinder component and left & right at the tangent points.
+//   ring_hook([50, 20],30, 25, hole=octagon(side=10,realign=true), hole_rounding=3, rounding=4) ;
+// Example: Using `outside_segments`
+//   $fs=.2;$fa=2;
+//   ring_hook(base_size=[40,10],hole_z=14, od=29,hole=rect(12),
+//             rounding=1,hole_rounding=1,fillet=1,outside_segments=3);
+// Example(3D,Med): The ring_hook includes 4 custom anchors: front & back at the center of the cylinder component and left & right at the tangent points.
 //   ring_hook([55, 10], 12, 25, ir=0) show_anchors(std=false);
 // Example: Use the custom anchor to place a screw hole
 //   include <BOSL2/screws.scad>
@@ -105,18 +119,27 @@ include<BOSL2/std.scad>
 //        parent(), RIGHT, fillet=1);
 
 
+function ring_hook(base_size, hole_z, or, ir, od, id, wall, hole="circle",
+            rounding=0, fillet=0, hole_rounding=0, outside_segments,
+            anchor=BOTTOM, spin=0, orient=UP) = no_function("ring_hook");
 module ring_hook(base_size, hole_z, or, ir, od, id, wall, hole="circle",
-            rounding=0, fillet=0, hole_rounding=0,
-            anchor=BOTTOM, spin=0, orient=UP) {
-
+            rounding=0, fillet=0, hole_rounding=0, outside_segments,
+            anchor=BOTTOM, spin=0, orient=UP)
+{
     or_tmp = get_radius(r=or, d=od);
     ir_tmp = get_radius(r=ir, d=id);
-    dummy = assert(num_defined([ir_tmp, or_tmp, wall])==2, "Must define exactly two of r/d, ir/id and wall");
-    ir = is_def(ir_tmp) ? ir_tmp : or_tmp - wall;
+    dummy = assert(is_path(hole) || num_defined([ir_tmp, or_tmp, wall])==2,
+                   "Must define exactly two of or/od, ir/id and wall (unless you give a custom hole)")
+            assert(!is_path(hole) || num_defined([ir_tmp, wall])==0,
+                   "Canot define ir/id or wall with a custom hole");
+    ir = is_path(hole) ? 0
+        : is_def(ir_tmp) ? ir_tmp
+        : or_tmp - wall;
     or = is_def(or_tmp) ? or_tmp : ir + wall;
-    dummy2 = assert(ir <= or, "Hole doesn't fit or wall size is negative")
+    dummy2 = assert(is_path(hole) || ir <= or, "Hole doesn't fit or wall size is negative")
              assert(sqrt((0.5*base_size.x)^2 + hole_z^2) > or, "Base corners must be outside the cylinder")
              assert(in_list(hole,["circle","D"]) || is_path(hole,2), "hole must be \"circle\", \"D\" or a 2d path")
+             assert(is_undef(outside_segments) || outside_segments>=2, "outside_segments must be at least 2")
              assert(all_nonnegative([hole_rounding]), "hole_rounding must be greater than or equal to 0");
     
     if (ir > 0 && hole=="circle")
@@ -147,7 +170,10 @@ module ring_hook(base_size, hole_z, or, ir, od, id, wall, hole="circle",
 
     right_tang_dir = unit([tangent.x, 0, tangent.y-hole_z]);
     left_tang_dir =  unit([-tangent.x,0, tangent.y-hole_z]);
-    
+
+    prism_steps = segs(max(rounding,abs(fillet)),90);
+    hole_rounding_steps = segs(hole_rounding,90);
+
     anchors = [
         named_anchor("hole_front", [0, -w/2, z_offset], FRONT, 0),
         named_anchor("hole_back", [0, w/2, z_offset], BACK, 180),
@@ -171,16 +197,17 @@ module ring_hook(base_size, hole_z, or, ir, od, id, wall, hole="circle",
     ];
 
 
-    profile = is_path(hole) ? hole
+
+    hole = is_path(hole) ? hole
             : hole=="D" ? arc(angle=180, r=ir, rounding=hole_rounding, wedge=true)
             : ir > 0 ? circle(ir)
             : undef;
     
-    parts = is_undef(profile) ? undef
+    parts = is_undef(hole) ? undef
           :[
             define_part("inner",
                         attach_geom(
-                                    region=[ymove(z_offset,profile)], l=size.y), 
+                                    region=[ymove(z_offset,hole)], l=size.y), 
                                     T=xrot(90),
                                     inside=true)
            ];
@@ -197,7 +224,7 @@ module ring_hook(base_size, hole_z, or, ir, od, id, wall, hole="circle",
             union() {
                 startangle = atan2(tangent.y-hole_z, tangent.x);
                 endangle = posmod(atan2(tangent.y-hole_z, -tangent.x),360);
-                steps = segs(or,endangle-startangle)+1;
+                steps = 1+first_defined([outside_segments,segs(or,endangle-startangle)]);
                 delta = (endangle-startangle)/(steps-1);
 
                 
@@ -209,7 +236,7 @@ module ring_hook(base_size, hole_z, or, ir, od, id, wall, hole="circle",
                                                        [or-rounding,0,-base_size.y/2],
                                                        [or,0,-base_size.y/2],
                                                        [or,0,-base_size.y/2+rounding]],0.92),
-                               pts = bezier_curve(bez)
+                               pts = bezier_curve(bez,splinesteps=prism_steps)
                           )
                           concat(pts, reverse(zflip(pts)));
                 
@@ -224,7 +251,7 @@ module ring_hook(base_size, hole_z, or, ir, od, id, wall, hole="circle",
                 intersection(){
                   up(hole_z)xrot(90)
                      vnf_vertex_array(transpose(toplist),caps=true,col_wrap=true,reverse=true,triangulate=true);
-                  cuboid([max(base_size.x,2*or),w+1, or+hole_z+1],anchor=BOT);
+                  up(abs(fillet))cuboid([max(base_size.x,2*or),w+1, or+hole_z+1],anchor=BOT);
                 }
 
                 // When base is outside the circle the base needs to be clipped so the roundings don't interfere
@@ -245,7 +272,7 @@ module ring_hook(base_size, hole_z, or, ir, od, id, wall, hole="circle",
                       joint_bot=-fillet, 
                       joint_sides=rounding, 
                       k_sides=0.92, k_bot=0.92,
-                      anchor=BOT );
+                      anchor=BOT,splinesteps=prism_steps);
                   if (startangle>0)
                       xflip_copy()
                         vnf_vertex_array([fwd(w/2+1, maskpath), back(w/2+1, maskpath)],
@@ -253,13 +280,13 @@ module ring_hook(base_size, hole_z, or, ir, od, id, wall, hole="circle",
                 }
             }
             
-            if (ir > 0) {
+            if (is_def(hole)) {
                 up(hole_z) 
                 prism_connector( 
-                    profile, 
+                    hole, 
                     parent(), FRONT, 
                     parent(), BACK, 
-                    fillet=hole_rounding);
+                    fillet=hole_rounding, n=hole_rounding_steps);
             }
         }
         children();
