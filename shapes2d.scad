@@ -2021,6 +2021,10 @@ function _gs_indent_R(r1,r2,s,h) =
 // Usage: As Function
 //   path = squircle(size, [squareness], [style=]);
 // Description:
+//   When called as a module, creates a 2D squircle with the specified squareness.    
+//   When called as a function, returns a 2D path for a squircle.
+
+//   .
 //   A [squircle](https://en.wikipedia.org/wiki/Squircle) is a shape intermediate between a square/rectangle and a
 //   circle/ellipse. Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard
 //   buttons, and smartphone icons. Old CRT television screens also resembled elongated squircles.
@@ -2040,8 +2044,9 @@ function _gs_indent_R(r1,r2,s,h) =
 //   Unlike the other styles, when the `size` parameter defines a rectangle, the bezier style retains the the corner
 //   proportions for the short side of the corner rather than stretching the entire corner.
 //   .
-//   When called as a module, creates a 2D squircle with the specified squareness.    
-//   When called as a function, returns a 2D path for a squircle.
+//   By design, the squircle segments generated are neither constant-length nor constant-angle spacing. The number of
+//   segments is $fn rounded to the nearest multiple of 4, and the length of each segment is dependent on its proximity
+//   to the corner, with the segments at the corner being the shortest.
 // Arguments:
 //   size = Same as the `size` parameter in `square()`, can be a single number or a vector `[xsize,ysize]`.
 //   squareness = Value between 0 and 1. Controls the shape, setting the location of a squircle "corner" at the specified interpolated position between a circle and a square. When `squareness=0` the shape is a circle, and when `squareness=1` the shape is a square. Default: 0.5

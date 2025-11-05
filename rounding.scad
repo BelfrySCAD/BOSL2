@@ -650,7 +650,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   stroke(smooth_path(square(4),size=0.4), width=0.1);
 //   stroke(smooth_path(square(4),method="corners",size=0.4),
 //          color="red", width=0.1);
-// Example(2D): Closing the path changes the end tangents. Original path in green, "edges" path in yellow, "corners" in red.
+// Example(2D): Closing the path changes the end tangents. Original path in green, "edges" path in yellow, "corners" in red. For a shape like this, you may find it simpler to use {{squircle()}} instead.
 //   polygon(smooth_path(square(4),method="edges",size=0.4,closed=true));
 //   color("red")
 //     polygon(smooth_path(square(4),method="corners",size=0.4,closed=true));
