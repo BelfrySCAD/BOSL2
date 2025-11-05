@@ -2906,7 +2906,7 @@ Access to the derivative smoothing parameter?
 // Synopsis: Join an arbitrary prism to a plane, sphere, cylinder or another arbitrary prism with a fillet.
 // SynTags: Geom, VNF
 // Topics: Rounding, Offsets
-// See Also: offset_sweep(), convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), join_prism()
+// See Also: offset_sweep(), convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), prism_connector()
 // Usage: The two main forms with most common options
 //   join_prism(polygon, base, length=|height=|l=|h=, fillet=, [base_T=], [scale=], [prism_end_T=], [short=], ...) [ATTACHMENTS];
 //   join_prism(polygon, base, aux=, fillet=, [base_T=], [aux_T=], [scale=], [prism_end_T=], [short=], ...) [ATTACHMENTS];
@@ -2917,6 +2917,8 @@ Access to the derivative smoothing parameter?
 //   or another arbitrary prism.  The fillet is a continuous curvature rounding with a specified width/height.  This module is general
 //   and therefore has a complex interface.  The examples below form a tutorial on how to use `join_prism` that steps
 //   through the various options and how they affect the results.  Be sure to check the examples for help understanding how the various options work.
+//   The {{prism_connector()}} module provides an alternative interface to `join_prism()` which is a little less flexible but 
+//   **much** easier to use.
 //   .
 //   When joining between planes this function produces similar results to {{rounded_prism()}}.  This function works best when the prism
 //   cross section is a continuous shape with a high sampling rate and without sharp corners.  If you have sharp corners you should consider
@@ -4122,7 +4124,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 // Topics: Rounding, Extrusion, Sweep, Descriptions
 // See Also: parent(), join_prism(), linear_sweep()
 // Usage:
-//   prism_connector(desc1, anchor1, desc2, anchor2, [spin_align=]);
+//   prism_connector(profile, desc1, anchor1, desc2, anchor2, [fillet=], [fillet1=], [fillet2=], [spin_align=], [scale=], [shift1=], [shift2]=, [shift=], [n=], [n1=], [n2=], [k=], [k1=], [k2=], [uniform=], [uniform1=], [uniform2=], [overlap=], [overlap1=], [overlap2=], [smooth_normals=], [smooth_normals=], [smooth_normals1]=, [smooth_normals2=], [debug=], [debug_pos=]);
 // Description:
 //   Given descriptions and anchors for two objects, construct a filleted prism that connects the
 //   anchor points on those objects, with a filleted joint at each end.  This is an alternative interface
@@ -4131,7 +4133,12 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   at different levels in the object tree.  You can also connect an object with itself, for example to
 //   create a hole through an object, or to create an interior connection through a hole.
 //   If you specify a CENTER anchor for an object then the prism will be aimed at the object's CENTER anchor
-//   and joined at a shifted anchor located on the object's surface.  
+//   and joined at a shifted anchor located on the object's surface.
+//   .
+//   The `profile` parameter gives the cross section of the prism that the module constructs.
+//   This function works best when the prism cross section is a continuous shape with a high sampling rate and without sharp corners.
+//   If you have sharp corners you should consider giving them a small rounding first.  Make sure that any rectangle is resampled to have
+//   enough points to follow the parent shape.  When the prism cross section has concavities the fillet size is limited by the curvature of those concavities.
 //   .
 //   The prism will connect anchor points described by the two descriptions you supply.  The supported object
 //   types are prismoids, VNFs, cylinders, spheres, and linear sweeps.  For prismoids and VNFs you can use any anchor on a face
