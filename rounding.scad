@@ -4947,7 +4947,7 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
 // Example(3D): Attaching to sphere with scaling of the prism
 //  sphere(d=20)
 //    attach_prism(circle(r=4,$fn=64), RIGHT+TOP+FWD, fillet=2, rounding=1.5, l=7, scale=.5);
-// Exampel(3D): Attaching to an extrusion.  Here we used a rounded rectangle and resample it to ensure enough points to match the curve of the ellipse.  
+// Example(3D): Attaching to an extrusion.  Here we used a rounded rectangle and resample it to ensure enough points to match the curve of the ellipse.  
 //  rr = subdivide_path(rect(7,rounding=2), maxlen=.5);
 //  linear_sweep(ellipse([15,7]),h=19)
 //    attach_prism(rr, [.5,-1], fillet=2, rounding=1.5, length=7);
