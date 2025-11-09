@@ -4465,7 +4465,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 // Get the object type from the specified geometry and anchor point
 
 // Note that profile is needed just to find its dimensions for making a big enough edge profile
-function _get_obj_type(ind,geom,anchor,prof,edger) =
+function _get_obj_type(ind,geom,anchor,prof,edger=0) =
      geom[0]=="spheroid" ? "sphere"
    : geom[0]=="conoid" ? let(
                              axis = geom[5],

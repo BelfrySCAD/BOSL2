@@ -1055,19 +1055,16 @@ function regular_prism(n,
          hgiven = is_def(height),
          height = !hgiven && is_def(ang) && r1def && r2def ?
                        let(
-fdase=                         echo("hot here"),
                          dr=r1-r2,
                          height=abs(tan(ang)*dr)
                        )
                        height
                 : height
-,         f=echo(height=height, r1,r2,ang,r1def,r2def,hgiven)
     )
     assert(is_finite(height), "\nl/h/length/height must be a finite number")
     let(
          r1 = !hgiven || is_undef(ang) || r1def || rgen_def ? r1 : u_add(r2,height/tan(ang)),
          r2 = !hgiven || is_undef(ang) || r2def ? r2 : u_add(r1, - height/tan(ang))
-         ,fee=echo(r1=r1,r2=r2)
     )
     assert(is_finite(r1), "\nMust specify finite number for prism bottom radius / diameter / side length.")
     assert(is_finite(r2), "\nMust specify finite number for prism top radius / diameter / side length.")
