@@ -75,19 +75,16 @@ _UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 //   l = holes * (holesize.x + gap) + gap;
 //   w = holesize.y + 2*gap;
 //   h = holesize.z + 5;
-//
 //   // To test cylinders instead, comment out the cuboid (add "//" to the beginning) and
 //   // remove the comment in front of the cyl in both hole() and plug().
 //   module hole(s) {
 //     cuboid([holesize.x + 2*s, holesize.y + 2*s, h+0.2]) position([BACK+LEFT,BACK+RIGHT]) cylinder(h+0.2,r=1, center=true, $fn=16);
 //   //  cyl(d=holesize.x + 2*s, h=h+0.2, $fn=48);
 //   }
-//
 //   module plug() {
 //     cuboid([holesize.x, holesize.y, holesize.z], anchor=BOT, rounding=1, edges="Z", except=BACK);
 //   //  cyl(d=holesize.x, h=holesize.z, anchor=BOT, $fn=48);
 //   }
-//
 //   diff("holes")
 //   cuboid([l, w, h], anchor=BOT) {
 //     for (i=[0:holes-1]) {
