@@ -46,6 +46,7 @@ function _inset_corner(corner, mask_angle, inset, excess, flat_top) =
 //   If called as a function, returns a 2D path of the outline of the mask shape.
 //   .
 //   The roundover can be specified by radius, diameter, height, cut, or joint length.
+//   .
 //   ![Types of Roundovers](images/rounding/figure_1_1.png)
 //   .
 //   If you need roundings to agree on edges of different mask_angle, e.g. to round the base of a prismoid, then you need all of the
@@ -253,10 +254,12 @@ function mask2d_roundover(r, inset=0, mask_angle=90, excess=0.01, clip_angle, fl
 //   If called as a function, returns a 2D path of the outline of the mask shape.
 //   .
 //   The roundover can be specified by joint length or cut distance.  (Radius is not meaningful for this type of mask.)  You must also specify the
-//   continuous curvature smoothness parameter, `k`, which defaults to 0.5.  This diagram shows a roundover for the default k value.  
+//   continuous curvature smoothness parameter, `k`, which defaults to 0.5.  This diagram shows a roundover for the default k value.
+//   .
 //   ![Types of Roundovers](images/rounding/figure_1_2.png)
 //   .
 //   With `k=0.75` the transition into the roundover is shorter and faster.  The cut length is bigger for the same joint length.
+//   .
 //   ![Types of Roundovers](images/rounding/figure_1_3.png)
 //   .
 //   The diagrams above show symmetric roundovers, but you can also create asymmetric roundovers by giving a list of two values for `joint`.  In this
@@ -375,6 +378,7 @@ module mask2d_smooth(mask_angle, cut, joint, height, h, k=0.5, excess=.01, inset
 //   If called as a function, returns a 2D path of the outline of the mask shape.
 //   This is particularly useful to make partially rounded bottoms, that don't need support to print.
 //   The roundover can be specified by radius, diameter, height, cut, or joint length.
+//   .
 //   ![Types of Roundovers](images/rounding/figure_1_1.png)
 // Arguments:
 //   r = Radius of the rounding.

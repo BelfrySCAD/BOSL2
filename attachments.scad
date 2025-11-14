@@ -779,22 +779,20 @@ function _make_anchor_legal(anchor,geom) =
 //   do `attach(RIGHT,BOT)` this puts the bottom of the child onto the right anchor of the parent.
 //   When an object is attached to the top or bottom, its BACK direction remains pointing BACK.
 //   When an object is attached to one of the other anchors its FRONT is pointed DOWN and its
-//   BACK pointed UP.  You can change this using the `spin=` argument to attach().  Note that this spin
+//   BACK pointed UP.  You can change this using the `spin=` argument to attach().  This spin
 //   rotates around the attachment vector and is not the same as the spin argument to the child, which
-//   will usually rotate around some other direction that may be hard to predict.  For 2D objects you cannot
-//   give spin because it is not possible to spin around the attachment vector; spinning the object around the Z axis
-//   would change the child orientation so that the anchors are no longer parallel.  Furthermore, any spin
+//   will usually rotate around some other direction that may be hard to predict.  Any spin
 //   parameter you give to the child is ignored so that the attachment condition of parallel anchors is preserved.  
+//   For 2D objects you cannot give spin because it is not possible to spin around the attachment vector;
+//   spinning the object around the Z axis would change the child orientation so that the anchors are no longer parallel.
 //   .
 //   As with {{align()}} you can use the `align=` parameter to align the child to an edge or corner of the
 //   face where that child is attached.  For example, `attach(TOP,BOT,align=RIGHT)` would stand the child
 //   up on the top while aligning it with the right edge of the top face, and `attach(RIGHT,BOT,align=TOP)`, which
 //   stand the object on the right face while aligning with the top edge.  If you apply spin using the
-//   argument to `attach()`, then it is taken into account for the alignment. However, if you apply spin with
+//   argument to `attach()`, then it is taken into account for the alignment. However, if you apply spin as
 //   a parameter to the child, it is **not** taken into account.  The special spin value "align"
 //   spins the child so that the child's BACK direction is pointed toward the aligned edge on the parent. 
-//   Note that spin is not permitted for
-//   2D objects because it would change the child orientation so that the anchors are no longer parallel.  
 //   When you use `align=` you can also adjust the position using `inset=`, which shifts the child
 //   away from the edge or corner it is aligned to.
 //   .
@@ -845,7 +843,7 @@ function _make_anchor_legal(anchor,geom) =
 //   overlap = Amount to sink child into the parent.  Equivalent to `down(X)` after the attach.  This defaults to the value in `$overlap`, which is `0` by default.
 //   inside = If `child` is given you can set `inside=true` to attach the child to the inside of the parent for diff() operations.  Default: false
 //   shiftout = Shift an inside object outward so that it overlaps all the aligned faces.  Default: 0
-//   spin = Amount to rotate the parent around the axis of the parent anchor.  Can set to "align" to align the child's BACK with the parent aligned edge.  (Permitted only in 3D.)
+//   spin = Angle to rotate the child around the axis of the parent anchor.  Can set to "align" to align the child's BACK with the parent aligned edge.  (Permitted only in 3D.)
 // Side Effects:
 //   `$anchor` set to the parent anchor value used for the child.
 //   `$align` set to the align value used for the child.  

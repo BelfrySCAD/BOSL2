@@ -2226,7 +2226,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   value and the rounding is symmetric around each edge.  However, you can specify a 2-vector for the joint distance to produce asymmetric
 //   rounding which is different on the two sides of the edge.  This may be useful when one one edge in your polygon is much larger than another.
 //   For the top and bottom you can specify negative joint distances.  If you give a scalar negative value, then the roundover flares
-//   outward.  If you give a vector value then a negative value, then if `joint_top[0]` is negative the shape flares outward, but if
+//   outward.  If you give a vector value then if `joint_top[0]` is negative the shape flares outward, but if
 //   `joint_top[1]` is negative, the shape flares upward.  At least one value must be non-negative.  The same rules apply for joint_bot.
 //   The joint_sides parameter must be entirely nonnegative.
 //   .
@@ -4878,7 +4878,7 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
 //   when the anchor point is not on the surface.
 //   .
 //   If you specify a length or height then he prism normally appears in the anchor direction, perpendicular to the parent object.  You can
-//   adjust its angle by setting the transoformation.  For example, `T=xrot(20)` will rotate the prism so it is a 20 deg angle.  It will shift
+//   adjust its angle by setting the transformation.  For example, `T=xrot(20)` will rotate the prism so it is a 20 deg angle.  It will shift
 //   to the right as seen from above.  The transformation applies in the anchored coordinate system where Z is perpendicular to the parent
 //   and Y points in the spin direction.  When `T` is a rotation the face of the prism will be perpendicular to the prism axis.
 //   You can also specify the prism endpoint as a point in space, again in the anchored coordinate system.  In this case you cannot give
@@ -4900,6 +4900,11 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
 //   Normally {{join_prism()}} will issue an error in this situation.  The `debug` parameter is passed through to {{join_prism()}} and
 //   tells that module to display invalid self-intersecting geometry to help you understand the problem.
 //   .
+//   The `overlap` parameter creates an extension of the prism into the parent object.  Unlike `overlap` for {{attach()}} it actually extends
+//   the prism rather than shifting it by the overlap.  When connecting to curved parent objects, be sure the overlap is sufficient or you may
+//   create a hole in between the prism and its parent.  When subtracting a prism to create a hole, insufficient overlap will leave parts of
+//   the parent object behind, blocking the hole.  
+//   .
 //   When connecting to an edge, artifacts may occur at the corners where the prism doesn't meet the object in the ideal fashion.
 //   Adjsting the points on your prism profile so that a point falls close to the corner will achieve the best result, and make sure
 //   that `smooth_normals` is disabled (the default for edges) because it results in a completely incorrect fillet in this case.
@@ -4920,6 +4925,7 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
 //   inside = if true attach the prism on the inside of the parent for diff() operations.  Default: false
 //   shift = shift anchor point, a scalar for cylinders, extrusions, or edges, a 2-vector for faces, not permitted for spheres
 //   scale = scale the profile by this factor at the end.  Default: 1
+//   spin = angle to rotate the prism around its axis before attaching it.  Default: 0
 //   edge_r = when attaching to an edge, assume it has a circular rounding with this radius
 //   n = number of facets to use for fillets and roundings
 //   n_base = number of facets to use for fillets at the base
@@ -4947,6 +4953,9 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
 // Example(3D): Attaching to sphere with scaling of the prism
 //  sphere(d=20)
 //    attach_prism(circle(r=4,$fn=64), RIGHT+TOP+FWD, fillet=2, rounding=1.5, l=7, scale=.5);
+// Example(3D): Here we've attached a rectangular prism to a cylinder.  It makes a nice joint at the sides but the top doesn't look right.  This is because {{rect()}} only provides four points, which is not sufficient to match the curvature of the cylinder.  You need to resample with {{subdivide_path()}} or some other reampling method as shown in the next example.  
+//   cyl(d=10,h=8)
+//     attach_prism(rect(4), FWD+RIGHT, 1/2, rounding=1/2, l=4, edge_r=2); 
 // Example(3D): Attaching to an extrusion.  Here we used a rounded rectangle and resample it to ensure enough points to match the curve of the ellipse.
 //  $fn=128;
 //  rr = subdivide_path(rect(7,rounding=2), maxlen=.5);
@@ -4968,14 +4977,14 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
 // Example(3D): Adjusting prism angle with a transformation.  The prism end is perpendicular to the prism axis.  
 //  cuboid(20)
 //    attach_prism(circle(r=4,$fn=32), FWD, fillet=1, rounding=1.5, l=10, T=xrot(-20));
-// Example(3D): Creating a hole
+// Example(3D): Creating a hole.  The default overlap is too small to fully clear out the hole.  
 //  diff()
 //  cyl(d=20,h=22,$fn=128*2)
 //    attach_prism(circle(r=6,$fn=64), RIGHT+FWD, inside=true,
 //                 fillet=2, rounding=3, l=8, overlap=2);
 
 module attach_prism(profile, anchor, fillet=0, rounding=0, inside=false, l, length, h, height, endpoint, T=IDENT, shift=0, overlap=1,
-                    n,n_base, n_end, k, k_base, k_end, uniform=true, smooth_normals, edge_r, debug=false, scale=1)
+                    n,n_base, n_end, k, k_base, k_end, uniform=true, smooth_normals, edge_r, debug=false, scale=1, spin=0)
 {
     length = one_defined([l, h, length, height],"l,h,length,height",dflt=undef);
     profile = force_path(profile,"profile");
@@ -4999,7 +5008,7 @@ module attach_prism(profile, anchor, fillet=0, rounding=0, inside=false, l, leng
     type = _get_obj_type(undef,$parent_geom,anchor,profile,edge_r);
     offset = in_list(type,["cyl","sphere"]) ? (inside?-1:1)*$parent_geom[1] : 0;
     base_r = (inside?-1:1)*(in_list(type,["cyl","sphere"]) ? $parent_geom[1] : 1);
-    spin = -90;
+    spinfix = -90;
     base_edge = _is_geom_an_edge($parent_geom,anchor);
     smooth_normals = default(smooth_normals, !base_edge);
 
@@ -5009,13 +5018,13 @@ module attach_prism(profile, anchor, fillet=0, rounding=0, inside=false, l, leng
           : assert(is_finite(shift) || is_vector(shift,2), "Value for shift for a planar face must be a scalar or 2-vector")
             force_list(shift,2,0);
     T = is_def(endpoint) ? move([endpoint.y-shift.y,-endpoint.x-shift.x]) 
-                         : zrot(spin)*T;
+                         : zrot(spinfix)*T;
     mod_type = is_list(type) && inside ? zrot(180,type) : type;
-    anchors = [named_anchor("end", is_def(endpoint) ? yrot(inside?180:0,endpoint) : point3d(shift)+apply(yrot(inside?180:0)*zrot(-spin)*T,[0,0,(inside?1:1)*length]),
-                                   is_def(endpoint) ? (inside?-1:1)*UP : unit( apply(yrot(inside?180:0)*zrot(-spin)*T,[0,0,length])-apply(zrot(-spin)*T,CTR)),
+    anchors = [named_anchor("end", is_def(endpoint) ? yrot(inside?180:0,endpoint) : point3d(shift)+apply(yrot(inside?180:0)*zrot(-spinfix)*T,[0,0,(inside?1:1)*length]),
+                                   is_def(endpoint) ? (inside?-1:1)*UP : unit( apply(yrot(inside?180:0)*zrot(-spinfix)*T,[0,0,length])-apply(zrot(-spinfix)*T,CTR)),
                                    inside && is_undef(endpoint) ? 180 : 0)
       ];
-    vnf=        join_prism(zrot(spin,profile), mod_type, base_r=base_r,
+    vnf=        join_prism(zrot(spin+spinfix,profile), mod_type, base_r=base_r,
                  l=is_def(endpoint)?endpoint.z:length,
                  prism_end_T=T,
                  base_fillet=fillet,
@@ -5028,7 +5037,7 @@ module attach_prism(profile, anchor, fillet=0, rounding=0, inside=false, l, leng
         translate(shift)
         yrot(inside?180:0)
         down(offset)
-        zrot(-spin)
+        zrot(-spinfix)
            vnf_polyhedron(vnf);
          children();
          }
