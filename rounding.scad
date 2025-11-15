@@ -4492,7 +4492,7 @@ function _get_obj_type(ind,geom,anchor,prof,edge_r,edge_joint,edge_k) =
                                     corner=[[x,-y],[0,0], [x,y]]
                                 )
                                 is_def(edge_r)? round_corners(corner, r=edge_r, closed=false)
-                              : is_def(edge_joint) ? round_corners(corner, method="smooth",joint=edge_joint, k=edge_k, closed=false)
+                              : is_def(edge_joint) ? echo(jk=edge_joint,edge_k)round_corners(corner, method="smooth",joint=edge_joint, k=edge_k, closed=false)
                               : corner
    : starts_with(geom[0], "extrusion") ?
                    anchor==UP || anchor==DOWN || starts_with(anchor,"face") ? "plane"
@@ -4997,10 +4997,10 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
 // Example(3D): Attaching to a rounded cuboid edge (circular rounding)
 //   cuboid([12,12,15],rounding=2, $fn=32)
 //     attach_prism(circle(r=3,$fn=128),RIGHT+FWD, length=4, fillet=2, edge_r=2);
-// Example(3D): Attaching the the edge on a {{rounded_prism()}}
+// Example(3D): Attaching the the edge on a {{rounded_prism()}}.  The `$fn` value given to `attach_prism()` controls the number of facets used to model the curved edge that the prism mates to.  
 //   joint = 3;
 //   rounded_prism(rect(12), rect(8), h=15, joint_sides=joint,atype="prismoid")
-//     attach_prism(circle(r=3,$fn=128),RIGHT+FWD, length=4, fillet=2, edge_joint=joint);
+//     attach_prism(circle(r=3,$fn=128),RIGHT+FWD, length=4, fillet=2, edge_joint=joint, $fn=32);
 
 
 
