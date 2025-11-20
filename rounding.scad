@@ -1118,6 +1118,7 @@ function offset_stroke(path, width=1, rounded=true, start, end, check_valid=true
                        atype="hull", anchor="origin", spin, cp="centroid") =
         let(path = force_path(path))
         assert(is_path(path,2),"path is not a 2d path")
+        assert(is_vector(width,2) || is_finite(width), "width must be a scalar or a 2-vector")
         let(
             closedok = !closed || (is_undef(start) && is_undef(end)),
             start = default(start,"flat"),
@@ -1236,7 +1237,7 @@ function _stroke_end(width,left, right, spec) =
                 normal_dir = unit(normal_seg[1]-normal_seg[0]),
                 width_dir = sign(width[0]-width[1])
         )
-        type == "round"? [arc(points=[right[0],normal_pt,left[0]],n=1+ceil(segs(width/2)/2)),1,1]  :
+        type == "round"? [arc(points=[right[0],normal_pt,left[0]],n=1+ceil(segs((width[1]-width[0])/2)/2)),1,1]  :
         type == "pointed"? [[normal_pt],0,0] :
         type == "shifted_point"? (
                 let(shiftedcenter = center + width_dir * parallel_dir * struct_val(spec, "loc"))
