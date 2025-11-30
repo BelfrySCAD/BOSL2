@@ -2221,6 +2221,9 @@ module path_sweep(shape, path, method="incremental", normal, closed, twist=0, tw
 {
     dummy = assert(is_region(shape) || is_path(shape,2), "\nshape must be a 2D path or region.")
             assert(in_list(atype, _ANCHOR_TYPES), "\nAnchor type must be \"hull\" or \"intersect\".");
+    caps = !closed ? caps
+         : assert(is_undef(caps) || caps==false || caps==[false,false], "Cannot specify caps when closed=true")
+           false; 
     trans_scale = path_sweep(shape, path, method, normal, closed, twist, twist_by_length, scale, scale_by_length,
                             symmetry, last_normal, tangent, uniform, relaxed, caps, style, transforms=true,_return_scales=true);
     transforms = trans_scale[0];
