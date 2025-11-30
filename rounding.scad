@@ -4522,9 +4522,10 @@ function _get_obj_type(ind,geom,anchor,prof,edge_r,edge_joint,edge_k) =
 ///   shift = given shift parameter
 
 function _check_join_shift(ind,type,shift,flip) = 
-    type=="sphere" ? assert(shift==0, str("Cannot give a (nonzero) shift",ind," for joining to a spherical object")) [0,0,0]
-  : type=="cyl" ? assert(is_finite(shift), str("Value shift",ind," for cylinder object must be a scalar")) shift*RIGHT
-  : is_list(type) ? assert(is_finite(shift), str("Value shift",ind," for an edge must be a scalar")) shift*RIGHT
+    type=="sphere" ? assert(shift==0 || shift==[0,0], str("Cannot give a (nonzero) shift",ind," for joining to a spherical object")) [0,0,0]
+  : let(fixshift=function(s) is_vector(s,2) && s[0]==0 ? s[1] : s)
+    type=="cyl" ? assert(is_finite(fixshift(shift)), str("Value shift",ind," for cylinder object must be a scalar or vector of the form [0,s]")) fixshift(shift)*RIGHT
+  : is_list(type) ? assert(is_finite(fixshift(shift)), str("Value shift",ind," for an edge must be a scalar or vector of the form [0,s]")) fixshift(shift)*RIGHT
   : /*type==plane*/ assert(is_finite(shift) || is_vector(shift,2), str("Value for shift",ind," for planar face of object must be a scalar or 2-vector"))
     is_list(shift)? flip ? [shift.y,-shift.x]: shift
                   : flip ? [0,-shift] : [shift,0];
