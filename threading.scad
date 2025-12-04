@@ -388,7 +388,7 @@ module threaded_nut(
         pitch=pitch,
         profile=profile,starts=starts,shape=shape, 
         left_handed=left_handed,
-        bevel=bevel,bevel1=bevel1,bevel2=bevel2,
+        bevel=bevel,bevel1=bevel1,bevel2=bevel2,bevang=bevang,
         ibevel1=ibevel1, ibevel2=ibevel2, ibevel=ibevel,
         blunt_start=blunt_start, blunt_start1=blunt_start1, blunt_start2=blunt_start2,
         lead_in=lead_in, lead_in1=lead_in1, lead_in2=lead_in2, lead_in_shape=lead_in_shape,
@@ -2066,7 +2066,7 @@ module generic_threaded_nut(
     vnf = linear_sweep(hexagon(id=nutwidth), height=h, center=true);
     attachable(anchor,spin,orient, size=shape=="square" ? [nutwidth,nutwidth,h] : undef, vnf=shape=="hex" ? vnf : undef) {
         difference() {
-            _nutshape(nutwidth,h, shape,bevel1,bevel2);
+            _nutshape(nutwidth,h, shape,bevel1,bevel2,bevang=bevang);
             if (pitch==0) 
                cyl(l=h+extra, d1=full_id1+4*get_slop(), d2=full_id2+4*get_slop(),
                    chamfer1=ibevel1?-IBEV*full_id1:undef,
@@ -2092,7 +2092,7 @@ module generic_threaded_nut(
 }
 
 
-module _nutshape(nutwidth, h, shape, bevel1, bevel2)
+module _nutshape(nutwidth, h, shape, bevel1, bevel2, bevang)
 {
    bevel_d=0.9;
    intersection(){
@@ -2103,7 +2103,7 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
        fn = quantup(segs(r=nutwidth/2),shape=="hex"?6:4);
        d = shape=="hex" ? 2*nutwidth/sqrt(3) : sqrt(2)*nutwidth;
        chamfsize = (d-nutwidth)/2/bevel_d;
-       cyl(d=d*.99,h=h+.01,realign=true,circum=true,$fn=fn,chamfer1=bevel1?chamfsize:0,chamfer2=bevel2?chamfsize:0,chamfang=30);
+       cyl(d=d*.99,h=h+.01,realign=true,circum=true,$fn=fn,chamfer1=bevel1?chamfsize:0,chamfer2=bevel2?chamfsize:0,chamfang=bevang);
    }
 }
 
