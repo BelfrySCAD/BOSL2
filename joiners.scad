@@ -999,7 +999,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 // Topics: Joiners, Parts
 // See Also: snap_pin(), joiner(), dovetail(), snap_pin(), rabbit_clip()
 // Usage:
-//   rabbit_clip(type, length, width, snap, thickness, depth, [compression=], [clearance=], [lock=], [half_lock=], [double_single_lock=], [double_flip_half_lock=], [lock_clearance=], [splineteps=], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
+//   rabbit_clip(type, length, width, snap, thickness, depth, [compression=], [clearance=], [lock=], [lock_clearance=], [splineteps=], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
 //   Creates a clip with two flexible ears to lock into a mating socket, or create a mask to produce the appropriate
 //   mating socket.  The clip can be made to insert and release easily, or to hold much better, or it can be
@@ -1024,9 +1024,8 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //   .
 //   The first figure shows the dimensions of the rabbit clip.  The second figure shows the clip in red overlayed on
 //   its socket in yellow.  The left clip has a nonzero clearance, so its socket is bigger than the clip all around.
-//   The center locking clip has no clearance, but it has a lock clearance, which provides some space behind
+//   The right hand locking clip has no clearance, but it has a lock clearance, which provides some space behind
 //   the lock to allow the clip to fit.  (Note that depending on your printer, this can be set to zero.)
-//   The right clip is half-locking that uses the same clearances as the center clip.
 // Figure(2DMed,NoAxes):
 //   snap=1.5;
 //   comp=0.75;
@@ -1058,13 +1057,6 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 // Figure(2DMed,NoAxes):
 //   snap=1.5;
 //   comp=0;
-//   translate([49,3]){
-//   back_half()
-//      rabbit_clip("socket", width=12, length=18, depth=1, thickness = 1, compression=comp, snap=snap, orient=BACK,half_lock=true);
-//   color("red")back_half()
-//      rabbit_clip("pin",width=12, length=18, depth=1, thickness = 1, compression=comp, snap=snap,
-//               orient=BACK,half_lock=true,lock_clearance=1);
-//   }
 //   translate([29,3]){
 //   back_half()
 //      rabbit_clip("socket", width=12, length=18, depth=1, thickness = 1, compression=comp, snap=snap, orient=BACK,lock=true);
@@ -1090,10 +1082,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //   ---
 //   compression = excess width at the "ears" to lock more tightly.  Default: 0.1
 //   clearance = extra space in the socket for easier insertion.  Default: 0.1
-//   lock = set to true to make a locking clip that may be irreversible.  Default: false
-//   half_lock = set to true to make a clip where only the RIGHT side locks. Default: false
-//   double_single_lock = for "double" type, set to true to enable lock or half_lock for one pin. Default: false
-//   double_flip_half_lock = for "double", set to true to make TOP_RIGHT and BOTTOM_LEFT sides lock. Default: false
+//   lock = set to true to make a locking clip that may be irreversible. LEFT or RIGHT may be specified for all types to add a locking latch to just that side. For "double" type, TOP or BOTTOM is valid as well as a single corner (e.g. TOP+LEFT) or an array of corners or sides (e.g. [TOP, BOTTOM+RIGHT]). Default: false
 //   lock_clearance = give clearance for the lock.  Default: 0
 //   splinesteps = number of samples in the curves of the clip.  Default: 8
 //   anchor = anchor point for clip
@@ -1142,13 +1131,19 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //         tag("remove")zcyl(l=20,r=13.5, $fn=64);
 //   }
 
-function rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1,  clearance=.1, lock=false, half_lock=false, double_single_lock=false, double_flip_half_lock=false, lock_clearance=0,
+function rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1,  clearance=.1, lock=false, lock_clearance=0,
                    splinesteps=8, anchor, orient, spin=0) = no_function("rabbit_clip");
 
-module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1,  clearance=.1, lock=false, half_lock=false, double_single_lock=false, double_flip_half_lock=false, lock_clearance=0,
+module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1,  clearance=.1, lock=false, lock_clearance=0,
                    splinesteps=8, anchor, orient, spin=0)
 {
   legal_types = ["pin","socket","male","female","double"];
+
+  // TOP, BOTTOM, LEFT, RIGHT, or any corner thereof
+  function valid_edge_or_corner(v) = same_shape(v, TOP) && v[1] == 0 && (abs(v[0]) == 1 || abs(v[2]) == 1);
+  function valid_edge_or_corner_vector(v) = is_consistent(v, TOP) && all( [for (i = v) valid_edge_or_corner(i)] );
+  function valid_double_lock() = valid_edge_or_corner(lock) || valid_edge_or_corner_vector(lock);
+  function valid_lock() = is_bool(lock) || lock == LEFT || lock == RIGHT || (type == "double" && valid_double_lock());
   check =
     assert(is_num(width) && width>0,"Width must be a positive value")
     assert(is_num(length) && length>0, "Length must be a positive value")
@@ -1156,39 +1151,44 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
     assert(is_num(snap) && snap>=0, "Snap must be a non-negative value")
     assert(is_num(depth) && depth>0, "Depth must be a positive value")
     assert(is_num(compression) && compression >= 0, "Compression must be a nonnegative value")
-    assert(is_bool(lock))
-    assert(is_bool(half_lock))
-    assert(!(lock && half_lock), "Only one of lock and half_lock can be set")
-    assert(is_bool(double_single_lock))
-    assert(is_bool(double_flip_half_lock))
-    assert(!(double_single_lock && double_flip_half_lock), "Only one of double_single_lock and double_flip_half_lock can be set")
-    assert(!(lock && double_flip_half_lock), "double_flip_half_lock can not be used with lock")
     assert(is_num(lock_clearance))
+    assert(valid_lock(), "Invalid lock value")
     assert(in_list(type,legal_types),str("type must be one of ",legal_types));
-    assert(!double_single_lock || type == "double", "double_single_lock can only be used with double");
-    assert(!double_flip_half_lock || type == "double", "double_single_lock can only be used with double");
-  module double_lock() {
-    if( half_lock )
+
+  module apply_lock() {
+    if( lock == RIGHT )
       children();
-    else
+    else if( lock == LEFT )
+      xflip()
+        children();
+    else if( lock )
       xflip_copy()
         children();
+    // ignore children otherwise
   }
-  module double_pin() {
-    if( half_lock && !double_flip_half_lock )
-      zrot(180)
-        children();
-    else
-      children();
-  }
+
+  function is_edge_or_corner(v, e1, e2) = v == e1 || v == e2 || v == e1 + e2;
+  function relative_lock_vector_value(edge) = let(left = len([for (v = lock) if(is_edge_or_corner(v, LEFT, edge)) v]) > 0,
+          right = len([for (v = lock) if (is_edge_or_corner(v, RIGHT, edge)) v]) > 0)
+      left && right ? true :
+      left ? LEFT :
+      right ? RIGHT :
+      false;
+  function relative_lock_value(edge) = is_bool(lock) ? lock :
+      lock == TOP || lock == BOTTOM ? lock == edge :
+      lock == LEFT || lock == RIGHT ? lock :
+      same_shape(lock, TOP) && lock * edge == 1 ? lock - edge :
+      relative_lock_vector_value(edge);
+
   if (type=="double") {
     attachable(size=[width+2*compression, depth, 2*length], anchor=default(anchor,BACK), spin=spin, orient=default(orient,BACK)){
       union(){
         rabbit_clip("pin", length=length, width=width, snap=snap, thickness=thickness, depth=depth, compression=compression,
-                    lock=lock || double_single_lock, half_lock=half_lock || double_flip_half_lock, lock_clearance=lock_clearance, anchor=BOTTOM, orient=UP);
-        double_pin()
+                    lock=relative_lock_value(TOP), lock_clearance=lock_clearance, anchor=BOTTOM, orient=UP);
+        bottom_lock = relative_lock_value(BOTTOM);
+        // the bottom pin is rotated when it is attached, so it needs to be flipped when applying LEFT or RIGHT
         rabbit_clip("pin", length=length, width=width, snap=snap, thickness=thickness, depth=depth, compression=compression,
-                    lock=lock && !double_single_lock, half_lock=half_lock || double_flip_half_lock, lock_clearance=lock_clearance, anchor=BOTTOM, orient=DOWN);
+                    lock=is_bool(bottom_lock) ? bottom_lock : xflip(bottom_lock), lock_clearance=lock_clearance, anchor=BOTTOM, orient=DOWN);
         cuboid([width-thickness, depth, thickness]);
       }
       children();
@@ -1257,8 +1257,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
       xrot(90)
         translate([0,-(bounds[1].y-bounds[0].y)/2+default_overlap,-depth/2])
         linear_extrude(height=depth, convexity=10) {
-            if (lock || half_lock)
-              double_lock()
+            apply_lock()
               right(clearance)
               polygon([sidepath[1]+[-thickness/10,lock_clearance],
                        sidepath[2]-[thickness*.75,0],
