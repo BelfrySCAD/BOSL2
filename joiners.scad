@@ -1152,7 +1152,8 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
     assert(is_num(depth) && depth>0, "Depth must be a positive value")
     assert(is_num(compression) && compression >= 0, "Compression must be a nonnegative value")
     assert(is_num(lock_clearance))
-    assert(valid_lock(), "Invalid lock value")
+    assert(valid_lock(), type != "double" ? str("lock must be either true, false, LEFT, or RIGHT for type \"", type, "\"")
+            : "for type \"double\", lock must be either true, false, TOP, BOTTOM, LEFT, RIGHT, a corner (e.g. TOP+LEFT), or a vector of edges and/or corners")
     assert(in_list(type,legal_types),str("type must be one of ",legal_types));
 
   module apply_lock() {
