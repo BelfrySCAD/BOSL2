@@ -1001,14 +1001,14 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 // Usage:
 //   rabbit_clip(type, length, width, snap, thickness, depth, [compression=], [clearance=], [lock=], [lock_clearance=], [splineteps=], [anchor=], [orient=], [spin=]) [ATTACHMENTS];
 // Description:
-//   Creates a clip with two flexible ears to lock into a mating socket, or create a mask to produce the appropriate
+//   Creates a clip with two flexible ears to snap into a mating socket, or create a mask to produce the appropriate
 //   mating socket.  The clip can be made to insert and release easily, or to hold much better, or it can be
 //   created with locking flanges that will make it very hard or impossible to remove.  Unlike the snap pin, this clip
 //   is rectangular and can be made at any height, so a suitable clip could be very thin.  It's also possible to get a
 //   solid connection with a short pin.
 //   .
 //   The type parameters specifies whether to make a clip, a socket mask, or a double clip.  The length is the
-//   total nominal length of the clip.  (The actual length will be very close, but not equal to this.)  The width
+//   total nominal length of the (single) clip.  (The actual length will be very close, but not equal to this.)  The width
 //   gives the nominal width of the clip, which is the actual width of the clip at its base.  The snap parameter
 //   gives the depth of the clip sides, which controls how easy the clip is to insert and remove.  The clip "ears" are
 //   made over-wide by the compression value.  A nonzero compression helps make the clip secure in its socket.
@@ -1018,9 +1018,17 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //   make the socket with a larger depth than the clip (try 0.4 mm) to allow ease of insertion of the clip.  The clearance
 //   value does not apply to the depth.  The splinesteps parameter increases the sampling of the clip curves.
 //   .
-//   By default clips appear with orient=UP and sockets with orient=DOWN.  The clips and sockets extend 0.02 units below
+//   By default clips appear with orient=UP and sockets with orient=DOWN.  With double clips the default is orient=BACK, the
+//   proper position for stand-alone printing.  The clips and sockets extend 0.02 units below
 //   their base so that unions and differences will work without trouble, but be sure that the attach overlap is smaller
 //   than 0.02.
+//   .
+//   When you set `lock=true` the clip has locking flanges that allow it to be easily inserted but block removal of the clip.
+//   You you leave an access point in the socket wall this can allow a clip that locks in place but can be released by pressing
+//   on the ears of the clip.  You can also set lock to a direction like LEFT or RIGHT to create just one locking clip.
+//   When you make a double clip, setting `lock=LEFT` will create a locking flange on the left side of both clips, and
+//   setting `lock=TOP` will create locking flanges at the top end (which points along the Y axis by default because of the
+//   default BACK orientation).  You can also use corners like `BACK+LEFT` or give a list like `[BACK+LEFT,FWD+RIGHT]`
 //   .
 //   The first figure shows the dimensions of the rabbit clip.  The second figure shows the clip in red overlayed on
 //   its socket in yellow.  The left clip has a nonzero clearance, so its socket is bigger than the clip all around.
@@ -1053,7 +1061,6 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //      stroke([[tip.x+2, 19.3], tip+[.1,.1]], width=.15, endcap2="arrow2");
 //   }
 //   }
-//
 // Figure(2DMed,NoAxes):
 //   snap=1.5;
 //   comp=0;
@@ -1114,10 +1121,11 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //   right(17)ydistribute(spacing=28){
 //     test_pair(length=12, width=10, snap=1, thickness=1.2, compression=0.2);
 //     test_pair(length=8, width=7, snap=0.75, thickness=0.8, compression=0.2, lock=true); // With lock, very firm and irreversible
-//     test_pair(length=8, width=7, snap=0.75, thickness=0.8, compression=0.2, lock=true); // With lock, very firm and irreversible
 //   }
 // Example: Double clip to connect two sockets
 //   rabbit_clip("double",length=8, width=7, snap=0.75, thickness=0.8, compression=0.2,depth=5);
+// Example: Double clip with locking top
+//   rabbit_clip("double",length=8, width=7, snap=0.75, thickness=0.8, compression=0.2,depth=5,lock=TOP);
 // Example:  A modified version of the clip that acts like a backpack strap clip, where it locks tightly but you can squeeze to release.
 //   cuboid([25,15,5],anchor=BOTTOM)
 //       attach(BACK)rabbit_clip("pin", length=25, width=25, thickness=1.5, snap=2, compression=0, lock=true, depth=5, lock_clearance=3);
@@ -1130,6 +1138,8 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //         xscale(0.8)
 //         tag("remove")zcyl(l=20,r=13.5, $fn=64);
 //   }
+// Example: Clip that locks only on the right side
+//   rabbit_clip("double",length=8, width=7, snap=0.75, thickness=0.8, compression=0.2,depth=5,lock=RIGHT);
 
 function rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1,  clearance=.1, lock=false, lock_clearance=0,
                    splinesteps=8, anchor, orient, spin=0) = no_function("rabbit_clip");
@@ -1152,8 +1162,8 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
     assert(is_num(depth) && depth>0, "Depth must be a positive value")
     assert(is_num(compression) && compression >= 0, "Compression must be a nonnegative value")
     assert(is_num(lock_clearance))
-    assert(valid_lock(), type != "double" ? str("lock must be either true, false, LEFT, or RIGHT for type \"", type, "\"")
-            : "for type \"double\", lock must be either true, false, TOP, BOTTOM, LEFT, RIGHT, a corner (e.g. TOP+LEFT), or a vector of edges and/or corners")
+    assert(valid_lock(), type != "double" ? str("lock must be one of true, false, LEFT, or RIGHT for type \"", type, "\"")
+            : "for type \"double\", lock must be either true, false, a direction with no Y component (no FWD or BACK), or a list of such directions (e.g. [LEFT,RIGHT+TOP])")
     assert(in_list(type,legal_types),str("type must be one of ",legal_types));
 
   module apply_lock() {
