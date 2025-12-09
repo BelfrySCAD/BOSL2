@@ -107,7 +107,7 @@ include <screws.scad>
 //   cones to interlock the hinge segments.  The default cones are 45 degrees; you can set `in_place` to an
 //   angle from the vertical to adjust the cone angle.  (This means larger angles are pointier, and also less likely to print successfully.)
 //   Use `gap` to adjust the clearance in the hinge
-//   to get something that separates after printing.  When you adjust the cone hangle, higher angles result in a smaller
+//   to get something that separates after printing.  When you adjust the cone angle, higher angles result in a smaller
 //   clearance where the cones meet for the same gap size, so you can somewhat adjust the tightness of the hinge
 //   by changing the cone angle.  The default cone diameter, which is controlled by `pin_diam` is 1 unit smaller than the knuckle diameter, which should work well
 //   for larger hinges, but for small hinges you may want to specify a larger `pin_diam`.  
