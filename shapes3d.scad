@@ -858,7 +858,7 @@ function prismoid(
 //   .
 //   Anchors are based on the VNF of the prism.  Especially for tapered or shifted prisms, this may give unexpected anchor positions, such as top side anchors
 //   being located at the bottom of the shape, so confirm anchor positions before use.  
-//   Additional named face and edge anchors are located on the side faces and vertical edges of the prism.
+//   Additional named face and edge anchors are located on the side faces and edges of the prism.
 //   You can use `EDGE(i)`, `EDGE(TOP,i)` and `EDGE(BOT,i)` as a shorthand for accessing the named edge anchors, and `FACE(i)` for the face anchors.
 //   The "edge0" anchor identifies an edge located along the X+ axis, and then edges
 //   are labeled counting up in the clockwise direction.  Similarly "face0" is the face immediately clockwise from "edge0", and face

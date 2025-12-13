@@ -128,8 +128,8 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 // Example(3D):
 //   vnf = vnf_vertex_array(
 //       points=[
-//           for (h = [0:5:180-EPSILON]) [
-//               for (t = [0:5:360-EPSILON])
+//           for (h = [0:5:179]) [
+//               for (t = [0:5:359])
 //                   cylindrical_to_xyz(100 + 12 * cos((h/2 + t)*6), t, h)
 //           ]
 //       ],
@@ -171,7 +171,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 // Example(3D): Both `col_wrap` and `row_wrap` are true to make a torus.
 //   vnf = vnf_vertex_array(
 //       points=[
-//           for (a=[0:5:360-EPSILON])
+//           for (a=[0:5:359])
 //               apply(
 //                   zrot(a) * right(30) * xrot(90),
 //                   path3d(circle(d=20))
