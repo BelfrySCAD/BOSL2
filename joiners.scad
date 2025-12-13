@@ -1139,7 +1139,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //         tag("remove")zcyl(l=20,r=13.5, $fn=64);
 //   }
 // Example: Clip that locks only on the right side
-//   rabbit_clip("double",length=8, width=7, snap=0.75, thickness=0.8, compression=0.2,depth=5,lock=RIGHT);
+//   rabbit_clip("pin",length=8, width=7, snap=0.75, thickness=0.8, compression=0.2,depth=5,lock=RIGHT);
 
 function rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1,  clearance=.1, lock=false, lock_clearance=0,
                    splinesteps=8, anchor, orient, spin=0) = no_function("rabbit_clip");
