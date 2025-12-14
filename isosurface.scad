@@ -54,6 +54,9 @@
 // FileSummary: Isosurfaces and metaballs.
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_ISOSURFACE = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: isosurface.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 
 //////////////////// 3D initializations and support functions ////////////////////
 
