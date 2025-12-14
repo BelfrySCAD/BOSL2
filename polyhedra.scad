@@ -9,6 +9,9 @@
 // FileSummary: Platonic, Archimidean, Catalan, and stellated polyhedra
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_POLYHEDRA = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: polyhedra.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 
 // CommonCode:
 //   $fn=96;
