@@ -1,3 +1,7 @@
+_BOSL2_BOSL1COMPAT = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: bosl2compat.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 module translate_copies(a=[[0,0,0]]) move_copies(a) children();
 
 module xspread(spacing, n, l, sp) xcopies(spacing=spacing, n=n, l=l, sp=sp) children();

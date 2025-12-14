@@ -13,6 +13,11 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_BEZIERS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: beziers.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
+
 // Terminology:
 //   Path = A series of points joined by straight line segements.
 //   Bezier Curve = A polynomial curve defined by a list of control points.  The curve starts at the first control point and ends at the last one.  The other control points define the shape of the curve and they are often *NOT* on the curve
@@ -1376,8 +1381,8 @@ function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, retur
     assert(is_bezier_patch(patch), "\nInput is not a Bezier patch.")
     assert(is_int(splinesteps) && splinesteps>0, "\nsplinesteps must be a positive integer.")
     let(
-        row_degen = [for(row=patch) all_equal(row,eps=EPSILON)],
-        col_degen = [for(col=transpose(patch)) all_equal(col,eps=EPSILON)],
+        row_degen = [for(row=patch) all_equal(row,eps=_EPSILON)],
+        col_degen = [for(col=transpose(patch)) all_equal(col,eps=_EPSILON)],
         top_degen = row_degen[0],
         bot_degen = last(row_degen),
         left_degen = col_degen[0],

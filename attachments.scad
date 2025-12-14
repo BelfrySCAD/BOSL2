@@ -12,6 +12,10 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_ATTACHMENTS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: attachments.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 // Default values for attachment code.
 $tags=undef;      // for backward compatibility
 $tag = "";
@@ -3452,7 +3456,7 @@ function _find_anchor(anchor, geom)=
             vec2 = anch==CENTER? UP : rot(from=UP, to=axis, p=vec),
                // Set spin for top/bottom to be clockwise
             spin = anch.z!=0 && (!approx(anch.x,0) || !approx(anch.y,0)) ? _compute_spin(vec2,rot(from=UP,to=axis,p=point3d(tangent)*anch.z))
-                 : anch.z==0 && norm(anch)>EPSILON ? _compute_spin(vec2, (approx(vec2,DOWN) || approx(vec2,UP))?BACK:UP)
+                 : anch.z==0 && norm(anch)>_EPSILON ? _compute_spin(vec2, (approx(vec2,DOWN) || approx(vec2,UP))?BACK:UP)
                  : oang
         ) [anchor, pos2, vec2, spin]
     ) : type == "point"? (

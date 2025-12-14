@@ -9,6 +9,11 @@
 //////////////////////////////////////////////////////////////////////
 
 
+_BOSL2_BOTTLECAPS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: bottlecaps.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
+
 include <threading.scad>
 include <structs.scad>
 include <rounding.scad>
