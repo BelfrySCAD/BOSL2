@@ -8,6 +8,10 @@
 // FileSummary: Modular open-framed trusses and joiners.
 //////////////////////////////////////////////////////////////////////////
 
+_BOSL2_CUBETRUSS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: cubetruss.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 $cubetruss_size = 30;
 $cubetruss_strut_size = 4;
 $cubetruss_bracing = true;
