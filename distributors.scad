@@ -10,6 +10,10 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_DISTRIBUTORS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: distributors.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 // Section: Adaptive Children Using `$` Variables
 //   The distributor methods create multiple copies of their children and place them in various ways.  While many models 
 //   require multiple identical copies of an object, this framework is more powerful than
@@ -529,7 +533,7 @@ function line_copies(spacing, n, l, p1, p2, p=_NO_ARG) =
     assert(is_undef(p2) || is_undef(l), "Cannot give both p2 and l")
     assert(is_undef(n) || num_defined([l,spacing,p2])==1,"If n is given then must give exactly one of 'l', 'spacing', or the 'p1'/'p2' pair")
     assert(is_def(n) || num_defined([l,spacing,p2])>=1,"If n is not given then must give at least one of 'l', 'spacing', or the 'p1'/'p2' pair")
-    assert(!(is_vector(spacing) && is_vector(l) && vector_angle(spacing,l)>EPSILON), "Cannot give conflicting vector 'spacing' and vector 'l' value.")
+    assert(!(is_vector(spacing) && is_vector(l) && vector_angle(spacing,l)>_EPSILON), "Cannot give conflicting vector 'spacing' and vector 'l' value.")
     assert(!(is_vector(spacing) && is_def(p2)), "Cannot combine vector 'spacing' with the 'p1'/'p2' pair")
     let(
         ll = is_def(l)? scalar_vec3(l, 0)
