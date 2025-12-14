@@ -13,6 +13,9 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_DRAWING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: drawing.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 
 // Section: Line Drawing
 
@@ -646,7 +649,7 @@ function dashed_stroke(path, dashpat=[3,3], closed=false, fit=true, mindash=0.5)
         cuts = [
             for (i = [0:1:reps], off = doff*sc)
               let (x = i*dlen*sc + off)
-              if (x > 0 && x < plen-EPSILON) x
+              if (x > 0 && x < plen-_EPSILON) x
         ],
         dashes = path_cut(path, cuts, closed=false),
         dcnt = len(dashes),
@@ -1425,7 +1428,7 @@ module _debug_poly_verts(points, size)
      labels=is_vector(points[0]) ? [for(i=idx(points)) str(i)]
            :[for(j=idx(points), i=idx(points[j])) str(chr(97+j),i)];
      points = is_vector(points[0]) ? points : flatten(points);
-     dups = vector_search(points, EPSILON, points);
+     dups = vector_search(points, _EPSILON, points);
      color("red") {
         for (ind=dups){
             numstr = str_join(select(labels,ind),",");
