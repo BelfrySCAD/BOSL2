@@ -11,33 +11,38 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+
+_BOSL2_MATH = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: math.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 // Section: Math Constants
 
 // Constant: PHI
 // Synopsis: The golden ratio φ (phi).  Approximately 1.6180339887
 // Topics: Constants, Math
-// See Also: EPSILON, INF, NAN
+// See Also: _EPSILON, INF, NAN
 // Description: The golden ratio φ (phi).  Approximately 1.6180339887
 PHI = (1+sqrt(5))/2;
 
-// Constant: EPSILON
+// Constant: _EPSILON
 // Synopsis: A tiny value to compare floating point values.  `1e-9`
 // Topics: Constants, Math
-// See Also: PHI, EPSILON, INF, NAN
-// Description: A really small value useful in comparing floating point numbers.  ie: abs(a-b)<EPSILON  `1e-9`
-EPSILON = 1e-9;
+// See Also: PHI, INF, NAN
+// Description: A really small value useful in comparing floating point numbers.  ie: abs(a-b)<_EPSILON  `1e-9`
+_EPSILON = 1e-9;
 
 // Constant: INF
 // Synopsis: The floating point value for Infinite.
 // Topics: Constants, Math
-// See Also: PHI, EPSILON, INF, NAN
+// See Also: PHI, _EPSILON, NAN
 // Description: The value `inf`, useful for comparisons.
 INF = 1/0;
 
 // Constant: NAN
 // Synopsis: The floating point value for Not a Number.
 // Topics: Constants, Math
-// See Also: PHI, EPSILON, INF, NAN
+// See Also: PHI, _EPSILON, INF
 // Description: The value `nan`, useful for comparisons.
 NAN = acos(2);
 
@@ -200,12 +205,12 @@ function slerp(v1, v2, u) =
         a = unit(v1),
         b = unit(v2),
         theta = acos(max(-1, min(1, a*b))),
-        err = assert(abs(theta-180)>EPSILON, "\nNo solution when vectors v1 and v2 are 180° apart."),
+        err = assert(abs(theta-180)>_EPSILON, "\nNo solution when vectors v1 and v2 are 180° apart."),
         sin_theta = sin(theta)
-    ) sin_theta < EPSILON ? unit(a+b) // fallback
-    : is_finite(u) ? (sin_theta < EPSILON ? unit(a+b)
+    ) sin_theta < _EPSILON ? unit(a+b) // fallback
+    : is_finite(u) ? (sin_theta < _EPSILON ? unit(a+b)
         : (a * sin((1 - u) * theta) + b * sin(u * theta)) / sin_theta)
-    : [for(t=u) sin_theta < EPSILON ? unit(a+b)
+    : [for(t=u) sin_theta < _EPSILON ? unit(a+b)
         : (a * sin((1 - t) * theta) + b * sin(t * theta)) / sin_theta];
 
 
@@ -236,12 +241,12 @@ function slerpn(v1, v2, n, endpoint=true) =
         a = unit(v1),
         b = unit(v2),
         theta = acos(max(-1, min(1, a*b))),
-        err = assert(abs(theta-180)>EPSILON, "\nNo solution when vectors v1 and v2 are 180° apart."),
+        err = assert(abs(theta-180)>_EPSILON, "\nNo solution when vectors v1 and v2 are 180° apart."),
         sin_theta = sin(theta),
         d = n - (endpoint ? 1 : 0)
     ) [
     for(i=[0:n-1]) let(u=i/d)
-        sin_theta < EPSILON ? unit(a+b) // fallback
+        sin_theta < _EPSILON ? unit(a+b) // fallback
         : (a * sin((1 - u) * theta) + b * sin(u * theta)) / sin_theta
 ];
 
