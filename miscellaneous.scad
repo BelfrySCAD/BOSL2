@@ -10,6 +10,10 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_MISCELLANEOUS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: miscellaneous.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 // Section: Extrusion
 
 // Module: extrude_from_to()
