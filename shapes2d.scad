@@ -15,8 +15,11 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
-use <builtins.scad>
+BOSL2_SHAPES2D = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: shapes2d.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
+
+use <builtins.scad>
 
 
 // Section: 2D Primitives
@@ -465,7 +468,7 @@ function _ellipse_refine(a,b,N, _theta=[]) =
        meanlen = mean(lenlist),
        error = lenlist/meanlen
    )
-   all_equal(error,EPSILON) ? pts
+   all_equal(error,_EPSILON) ? pts
    :
    let(
         dtheta = [each deltas(_theta),
@@ -489,7 +492,7 @@ function _ellipse_refine_realign(a,b,N, _theta=[],i=0) =
        meanlen = mean(lenlist),
        error = lenlist/meanlen
    )
-   all_equal(error,EPSILON) ? pts
+   all_equal(error,_EPSILON) ? pts
    :
    let(
         dtheta = [each deltas(_theta),
@@ -1431,7 +1434,7 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
                    each cap,
                    for (p=fullcircle)
                           if (
-                               p.y<last(cap).y-EPSILON
+                               p.y<last(cap).y-_EPSILON
                                  && norm([abs(p.x)-last(cap).x,p.y-last(cap.y)])>seglen/skipfactor
                              ) p,
                    xflip(cap[1]),
