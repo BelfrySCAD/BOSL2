@@ -9,6 +9,8 @@
 // FileSummary: Various types of threaded rods and nuts.
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_THREADING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: threading.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 // Section: Thread Ends and Options
 //   A standard process for making machine screws is to begin with round stock that has
