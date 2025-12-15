@@ -14,6 +14,10 @@
 //////////////////////////////////////////////////////////////////////
 
 
+_BOSL2_VNF = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: vnf.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 // Section: Creating Polyhedrons with VNF Structures
 //   VNF stands for "Vertices'N'Faces".  VNF structures are 2-item lists, `[VERTICES,FACES]` where the
 //   first item is a list of vertex points, and the second is a list of face indices into the vertex
@@ -199,7 +203,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //       )
 //   ];
 //   cap = [
-//       for (a = [0:0.01:1+EPSILON]) apply(
+//       for (a = [0:0.01:1+_EPSILON]) apply(
 //           up(90-5*sin(a*360*2)) * scale([a,a,1]),
 //           wall_points[0]
 //       )
@@ -400,7 +404,7 @@ function vnf_vertex_array(
                           let(
                                area42 = norm(cross(pts[i2]-pts[i1], pts[i4]-pts[i1]))+norm(cross(pts[i4]-pts[i3], pts[i2]-pts[i3])),
                                area13 = norm(cross(pts[i1]-pts[i4], pts[i3]-pts[i4]))+norm(cross(pts[i3]-pts[i2], pts[i1]-pts[i2])),
-                               minarea_edge = area42 < area13 + EPSILON
+                               minarea_edge = area42 < area13 + _EPSILON
                                  ? [[i1,i4,i2],[i2,i4,i3]]
                                  : [[i1,i3,i2],[i1,i4,i3]]
                           )
@@ -409,7 +413,7 @@ function vnf_vertex_array(
                           let(
                                d42=norm(pts[i4]-pts[i2]),
                                d13=norm(pts[i1]-pts[i3]),
-                               shortedge = d42<d13+EPSILON
+                               shortedge = d42<d13+_EPSILON
                                  ? [[i1,i4,i2],[i2,i4,i3]]
                                  : [[i1,i3,i2],[i1,i4,i3]]
                           )
@@ -441,7 +445,7 @@ function vnf_vertex_array(
                    // remove degenerate faces
                    culled_faces= [for(face=faces)
                        if (norm(cross(verts[face[1]]-verts[face[0]],
-                                      verts[face[2]]-verts[face[0]]))>EPSILON)
+                                      verts[face[2]]-verts[face[0]]))>_EPSILON)
                            face
                    ],
                    rfaces = reverse? [for (face=culled_faces) reverse(face)] : culled_faces
@@ -799,7 +803,7 @@ function vnf_join(vnfs) =
 // Arguments:
 //   polygons = The list of 3D polygons to turn into a VNF
 //   fast = Set to true to skip area and coplanarity checks for increased speed.  Default: false
-//   eps = Polygons with area smaller than this are discarded.  Default: EPSILON
+//   eps = Polygons with area smaller than this are discarded.  Default: _EPSILON
 // Example(3D,VPR=[60,0,40]): Construction of a dodecahedron from pentagon faces.
 //   dihedral = 2*atan(PHI);   // dodecahedron face dihedral
 //   rpenta = 10;              // pentagon face radius
@@ -815,7 +819,7 @@ function vnf_join(vnfs) =
 //   vnf = vnf_from_polygons(facepoints, fast=true);
 //   vnf_polyhedron(vnf);
 
-function vnf_from_polygons(polygons,fast=false,eps=EPSILON) =
+function vnf_from_polygons(polygons,fast=false,eps=_EPSILON) =
    assert(is_list(polygons) && is_path(polygons[0]),"\nInput should be a list of polygons.")
    let(
        offs = cumsum([0, for(p=polygons) len(p)]),
@@ -867,7 +871,7 @@ function _join_paths_at_vertices(path1,path2,v1,v2) =
 ///   no crossings. It may return `undef` if these conditions are not met.
 ///   This function implements an extension of the algorithm discussed in:
 ///   https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-function _cleave_connected_region(region, eps=EPSILON) =
+function _cleave_connected_region(region, eps=_EPSILON) =
     len(region)==1 ? region[0] :
     let(
         outer   = deduplicate(region[0]),             //
@@ -883,7 +887,7 @@ function _cleave_connected_region(region, eps=EPSILON) =
 // connect the hole paths one at a time to the outer path.
 // 'extremes' is the list of the right extreme vertex of each hole sorted by decreasing abscissas
 // see: _cleave_connected_region(region, eps)
-function _polyHoles(outer, holes, extremes, eps=EPSILON, n=0) =
+function _polyHoles(outer, holes, extremes, eps=_EPSILON, n=0) =
     let(
         extr = extremes[n],    //
         hole = holes[extr[0]], // hole path to bridge to the outer path
@@ -1110,8 +1114,8 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
 //   To remove such vertices uses {{vnf_drop_unused_points()}}.
 // Arguments:
 //   vnf = a VNF to consolidate
-//   eps = the tolerance in finding duplicates. Default: EPSILON
-function vnf_merge_points(vnf,eps=EPSILON) =
+//   eps = the tolerance in finding duplicates. Default: _EPSILON
+function vnf_merge_points(vnf,eps=_EPSILON) =
     let(
         verts = vnf[0],
         dedup  = vector_search(verts,eps,verts),                 // collect vertex duplicates
@@ -1246,7 +1250,7 @@ function _detri_combine_faces(edgelist,faces,normals,facelist,curface) =
                            edgepair = search([sort(select(thisface,i,i+1))],edgelist,0)[0],
                            choices = select(edgelist,edgepair),
                            good_choice=[for(choice=choices)
-                              if (choice[1]!=curface && in_list(choice[1],facelist) && normals[choice[1]]*normals[curface]>1-EPSILON)
+                              if (choice[1]!=curface && in_list(choice[1],facelist) && normals[choice[1]]*normals[curface]>1-_EPSILON)
                                 choice],
                            d=assert(len(good_choice)<=1)
                        )
@@ -1337,8 +1341,8 @@ function _split_polygon_at_x(poly, x) =
         out1 = [for (p = poly2) if(p.x <= x) p],
         out2 = [for (p = poly2) if(p.x >= x) p],
         out3 = [
-            if (len(out1)>=3 && polygon_area(out1)>EPSILON) each split_path_at_self_crossings(out1),
-            if (len(out2)>=3 && polygon_area(out2)>EPSILON) each split_path_at_self_crossings(out2),
+            if (len(out1)>=3 && polygon_area(out1)>_EPSILON) each split_path_at_self_crossings(out1),
+            if (len(out2)>=3 && polygon_area(out2)>_EPSILON) each split_path_at_self_crossings(out2),
         ],
         out = [for (p=out3) if (len(p) > 2) list_unwrap(p)]
     ) out;
@@ -1378,7 +1382,7 @@ function _slice_3dpolygons(polys, dir, cuts) =
                 polyarea = polygon_area(poly),
                 err=assert(!is_undef(polyarea), "\nvnf_slice encountered non-coplanar face.")
             )
-            if (polyarea > EPSILON)   // Discard zero area polygons
+            if (polyarea > _EPSILON)   // Discard zero area polygons
                 let(
                     plane = plane_from_polygon(poly,1e-4),
                     err2 = assert(plane,"\nFound non-coplanar face."), // possibly redundant
@@ -1550,7 +1554,7 @@ function vnf_area(vnf) =
 /// Divide the solid up into tetrahedra with the origin as one vertex.
 /// The centroid of a tetrahedron is the average of its vertices.
 /// The centroid of the total is the volume weighted average.
-function _vnf_centroid(vnf,eps=EPSILON) =
+function _vnf_centroid(vnf,eps=_EPSILON) =
     assert(is_vnf(vnf) && len(vnf[0])!=0 && len(vnf[1])!=0,"\nInvalid or empty VNF given to centroid.")
     let(
         verts = vnf[0],
@@ -1641,7 +1645,7 @@ function vnf_bounds(vnf,fast=false) =
 //   reg = projection(vnf,cut=true,z=0.3);
 //   region(reg);
 
-function projection(vnf,cut=false,z=0,eps=EPSILON) =
+function projection(vnf,cut=false,z=0,eps=_EPSILON) =
    assert(is_vnf(vnf))
    cut ?
          let(
@@ -1775,7 +1779,7 @@ function vnf_halfspace(plane, vnf, closed=true, boundary=false) =
     assert(_valid_plane(plane), "\nInvalid plane.")
     assert(is_vnf(vnf), "\nInvalid VNF.")
     let(
-         inside = [for(x=vnf[0]) plane*[each x,-1] >= -EPSILON ? 1 : 0],
+         inside = [for(x=vnf[0]) plane*[each x,-1] >= -_EPSILON ? 1 : 0],
          vertexmap = [0,each cumsum(inside)],
          faces_edges_vertices = _vnfcut(plane, vnf[0],vertexmap,inside, vnf[1], last(vertexmap)),
          newvert = concat(bselect(vnf[0],inside), faces_edges_vertices[2])
@@ -1798,7 +1802,7 @@ function vnf_halfspace(plane, vnf, closed=true, boundary=false) =
 
 function _assemble_paths(vertices, edges, paths=[],i=0) =
      i==len(edges) ? paths :
-     norm(vertices[edges[i][0]]-vertices[edges[i][1]])<EPSILON ? _assemble_paths(vertices,edges,paths,i+1) :
+     norm(vertices[edges[i][0]]-vertices[edges[i][1]])<_EPSILON ? _assemble_paths(vertices,edges,paths,i+1) :
      let(    // Find paths that connects on left side and right side of the edges (if one exists)
          left = [for(j=idx(paths)) if (approx(vertices[last(paths[j])],vertices[edges[i][0]])) j],
          right = [for(j=idx(paths)) if (approx(vertices[edges[i][1]],vertices[paths[j][0]])) j]
@@ -2291,7 +2295,7 @@ function vnf_sheet(vnf, delta, style="default", merge=true, thickness=undef) =
 ///   }
 module _show_vertices(vertices, size=1, filter) {
     color("blue") {
-        dups = vector_search(vertices, EPSILON, vertices);
+        dups = vector_search(vertices, _EPSILON, vertices);
         for (ind = dups) {
             if (is_undef(filter) || any(ind, filter)) {
                 numstr = str_join([for(i=ind) str(i)],",");
@@ -2542,7 +2546,7 @@ function _vnf_validate(vnf, show_warns=true, check_isects=false, big_face=false)
                 face = faces[i],
                 area = face_areas[i]
             )
-            if (is_num(area) && abs(area) < EPSILON)
+            if (is_num(area) && abs(area) < _EPSILON)
             _vnf_validate_err("NULL_FACE", face)
         ],
         issues = concat(big_faces, null_faces)
