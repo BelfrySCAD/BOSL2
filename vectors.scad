@@ -11,6 +11,8 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_VECTORS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: vectors.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 // Section: Vector Testing
 
@@ -29,7 +31,7 @@
 //   ---
 //   zero = If false, require that the `norm()` of the vector is not approximately zero.  If true, require the `norm()` of the vector to be approximately zero.  Default: `undef` (don't check vector `norm()`.)
 //   all_nonzero = If true, requires all elements of the vector to be more than `eps` different from zero.  Default: `false`
-//   eps = The minimum vector length that is considered non-zero.  Default: `EPSILON` (`1e-9`)
+//   eps = The minimum vector length that is considered non-zero.  Default: `_EPSILON` (`1e-9`)
 // Example:
 //   is_vector(4);                          // Returns false
 //   is_vector([4,true,false]);             // Returns false
@@ -45,7 +47,7 @@
 //   is_vector([0,1,0],all_nonzero=false);  // Returns false
 //   is_vector([1,1,1],all_nonzero=false);  // Returns true
 //   is_vector([],zero=false);              // Returns false
-function is_vector(v, length, zero, all_nonzero=false, eps=EPSILON) =
+function is_vector(v, length, zero, all_nonzero=false, eps=_EPSILON) =
     is_list(v) && len(v)>0 && []==[for(vi=v) if(!is_finite(vi)) 0] 
     && (is_undef(length) || (assert(is_num(length))len(v)==length))
     && (is_undef(zero) || ((norm(v) >= eps) == !zero))
@@ -222,7 +224,7 @@ function v_lookup(x, v) =
 //   v6 = unit([0,0,0]);    // Asserts an error.
 function unit(v, error=[[["ASSERT"]]]) =
     assert(is_vector(v), "\nInvalid vector.")
-    norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON,"\nCannot normalize a zero vector.") : error) :
+    norm(v)<_EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=_EPSILON,"\nCannot normalize a zero vector.") : error) :
     v/norm(v);
 
 
