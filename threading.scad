@@ -1857,10 +1857,10 @@ module generic_threaded_rod(
                     for (turns = [turns1:1:turns2]) 
                         let(
                             tang = turns/starts * 360 + ang,
-                            // EPSILON offset prevents funny looking extensions of the thread from its very tip
+                            // _EPSILON offset prevents funny looking extensions of the thread from its very tip
                             // by forcing values near the tip to evaluate as less than zero = beyond the tip end
-                            hsc = tang < cut_ang1 ? lead_in_func(-EPSILON+1-(cut_ang1-tang)/lead_in_ang1,PI*2*r1adj*lead_in_ang1/360 )
-                                : tang > cut_ang2 ? lead_in_func(-EPSILON+1-(tang-cut_ang2)/lead_in_ang2,PI*2*r2adj*lead_in_ang2/360 )
+                            hsc = tang < cut_ang1 ? lead_in_func(-_EPSILON+1-(cut_ang1-tang)/lead_in_ang1,PI*2*r1adj*lead_in_ang1/360 )
+                                : tang > cut_ang2 ? lead_in_func(-_EPSILON+1-(tang-cut_ang2)/lead_in_ang2,PI*2*r2adj*lead_in_ang2/360 )
                                 : [1,1],
                             shift_and_scale = [[hsc.x, 0], [0,hsc.y], [dz+turns,(1-hsc.y)*extreme]]
                         )
