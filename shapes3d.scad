@@ -12,6 +12,10 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_SHAPES3D = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: shapes3d.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 use <builtins.scad>
 
 
@@ -3211,7 +3215,7 @@ function pie_slice(
                     h = lerp(-l/2,l/2,u),
                     r = lerp(r1,r2,u)
                 ) [
-                    for (theta = [0:step:ang+EPSILON])
+                    for (theta = [0:step:ang+_EPSILON])
                         cylindrical_to_xyz(r,theta,h),
                     [0,0,h]
                 ]
@@ -3867,7 +3871,7 @@ function torus(
         right_half(p=right(maj_rad, p=circle(r=min_rad)))[0],
     profile = xrot(90, p=path3d(xyprofile)),
     vnf = vnf_vertex_array(
-        points=[for (a=[0:maj_step:360-EPSILON]) zrot(a, p=profile)],
+        points=[for (a=[0:maj_step:360-_EPSILON]) zrot(a, p=profile)],
         caps=false, col_wrap=true, row_wrap=true, reverse=true
     )
 ) reorient(anchor,spin,orient, r=(maj_rad+min_rad), l=min_rad*2, p=vnf);
@@ -4015,8 +4019,8 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
           assert(bot_corner2==0 || bot_corner2>=chamfer2, "\nchamfer2 doesn't work with bottom corner: must have chamfer2 <= bot_corner2")
           assert(bot_corner1==0 || bot_corner1>chamfer1 || sides%2==(realign?1:0), 
                  str("\nWith chamfer1==bot_corner1 and realign=",realign," must have ",realign?"odd":"even"," number of sides, but sides=",sides))
-          assert(is_undef(cap_h1) || cap_h1-chamfer1 > r1*sin(ang)-EPSILON, "chamfer1 is too big to work with the specified cap_h1")
-          assert(is_undef(cap_h2) || cap_h2-chamfer2 > r2*sin(ang)-EPSILON, "chamfer2 is too big to work with the specified cap_h2"),
+          assert(is_undef(cap_h1) || cap_h1-chamfer1 > r1*sin(ang)-_EPSILON, "chamfer1 is too big to work with the specified cap_h1")
+          assert(is_undef(cap_h2) || cap_h2-chamfer2 > r2*sin(ang)-_EPSILON, "chamfer2 is too big to work with the specified cap_h2"),
         cprof1 = r1==chamfer1 ? repeat([0,0],len(profile1))
                               : teardrop2d(r=r1-chamfer1, ang=ang, cap_h=u_add(cap_h1,-chamfer1), bot_corner=bot_corner1==0?0:bot_corner1-chamfer1,
                                            $fn=sides, circum=circum, realign=realign,_extrapt=true),
@@ -4122,7 +4126,7 @@ function onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP) =
         sides = segs(r),
         step = 360 / sides,
         vnf = vnf_vertex_array(
-            points=[for (a = [0:step:360-EPSILON]) zrot(a, p=profile)],
+            points=[for (a = [0:step:360-_EPSILON]) zrot(a, p=profile)],
             caps=false, col_wrap=true, row_wrap=true, reverse=true
         )
     ) reorient(anchor,spin,orient, r=r, anchors=anchors, p=vnf);
@@ -5180,7 +5184,7 @@ module ruler(length=100, width, thickness=1, depth=3, labels=false, pipscale=1/3
             assert(len(colors)==2, "\n'colors' must contain a list of exactly two colors.");
         length = inch ? INCH * length : length;
         unit = inch ? INCH*unit : unit;
-        maxscale = is_def(maxscale)? maxscale : floor(log(length/unit-EPSILON));
+        maxscale = is_def(maxscale)? maxscale : floor(log(length/unit-_EPSILON));
         scales = unit * [for(logsize = [maxscale:-1:maxscale-depth+1]) pow(10,logsize)];
         widthfactor = (1-pipscale) / (1-pow(pipscale,depth));
         width = default(width, scales[0]);
@@ -5215,7 +5219,7 @@ module ruler(length=100, width, thickness=1, depth=3, labels=false, pipscale=1/3
                                 }
                             }
                         }
-                        if (labels && scales[i]/unit+EPSILON >= 1) {
+                        if (labels && scales[i]/unit+_EPSILON >= 1) {
                             color(colors[($idx+1)%2], alpha=alpha) {
                                 linear_extrude(height=thickness+scales[i]/100, convexity=2, center=true) {
                                     back(scales[i]*.02) {

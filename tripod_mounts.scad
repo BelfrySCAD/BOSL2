@@ -8,6 +8,9 @@
 // FileSummary: Tripod mount plates: RC2
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+_BOSL2_TRIPOD_MOUNTS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: tripod_mounts.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 
 // Module: manfrotto_rc2_plate()
 // Synopsis: Creates a Manfrotto RC2 tripod quick release mount plate.

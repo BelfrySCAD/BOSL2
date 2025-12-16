@@ -362,7 +362,7 @@ test_str_find();
 module test_format() {
     assert(format("The value of {} is {:.14f}.", ["pi", PI]) == "The value of pi is 3.14159265358979.");
     assert(format("The value {1:f} is known as {0}.", ["pi", PI]) == "The value 3.141593 is known as pi.");
-    assert(format("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]) == "We use a very small value 1e-9 as EPSILON.");
+    assert(format("We use a very small value {1:.6g} as {0}.", ["_EPSILON", _EPSILON]) == "We use a very small value 1e-9 as _EPSILON.");
     assert(format("{:-5s}{:i}{:b}", ["foo", 12e3, 5]) == "foo  12000true");
     assert(format("{:-10s}{:.3f}", ["plecostamus",27.43982]) == "plecostamus27.440");
     assert(format("{:-10.9s}{:.3f}", ["plecostamus",27.43982]) == "plecostam 27.440");

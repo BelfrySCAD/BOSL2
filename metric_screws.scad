@@ -8,9 +8,11 @@
 // FileSummary: Metric screws, nuts, and screwholes.
 //////////////////////////////////////////////////////////////////////
 
-
 include <threading.scad>
 include <screw_drive.scad>
+
+_BOSL2_METRIC_SCREWS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: metric_screws.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 warn = echo("*** WARNING: metric_screws.scad is deprecated and may be removed in the future.  Use screws.scad instead. ***");
 

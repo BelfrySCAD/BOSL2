@@ -14,7 +14,8 @@
 // FileSummary: NURBS and B-spline curves and surfaces.
 //////////////////////////////////////////////////////////////////////
 
-include<BOSL2/std.scad>
+_BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: nurbs.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 // Section: NURBS Curves
 

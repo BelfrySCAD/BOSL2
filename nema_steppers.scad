@@ -8,6 +8,9 @@
 // FileSummary: NEMA motor mounts and stepper motor models.
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_NEMA_STEPPERS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: nema_steppers.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 
 // Section: Motor Models
 

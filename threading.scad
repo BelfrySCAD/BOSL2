@@ -9,6 +9,8 @@
 // FileSummary: Various types of threaded rods and nuts.
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_THREADING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: threading.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 // Section: Thread Ends and Options
 //   A standard process for making machine screws is to begin with round stock that has
@@ -1855,10 +1857,10 @@ module generic_threaded_rod(
                     for (turns = [turns1:1:turns2]) 
                         let(
                             tang = turns/starts * 360 + ang,
-                            // EPSILON offset prevents funny looking extensions of the thread from its very tip
+                            // _EPSILON offset prevents funny looking extensions of the thread from its very tip
                             // by forcing values near the tip to evaluate as less than zero = beyond the tip end
-                            hsc = tang < cut_ang1 ? lead_in_func(-EPSILON+1-(cut_ang1-tang)/lead_in_ang1,PI*2*r1adj*lead_in_ang1/360 )
-                                : tang > cut_ang2 ? lead_in_func(-EPSILON+1-(tang-cut_ang2)/lead_in_ang2,PI*2*r2adj*lead_in_ang2/360 )
+                            hsc = tang < cut_ang1 ? lead_in_func(-_EPSILON+1-(cut_ang1-tang)/lead_in_ang1,PI*2*r1adj*lead_in_ang1/360 )
+                                : tang > cut_ang2 ? lead_in_func(-_EPSILON+1-(tang-cut_ang2)/lead_in_ang2,PI*2*r2adj*lead_in_ang2/360 )
                                 : [1,1],
                             shift_and_scale = [[hsc.x, 0], [0,hsc.y], [dz+turns,(1-hsc.y)*extreme]]
                         )

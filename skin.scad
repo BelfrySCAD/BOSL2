@@ -14,6 +14,10 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_SKIN = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: skin.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 __vnf_no_n_mesg=" texture is a VNF so it does not accept n. Set sample rate for VNF textures using the tex_samples parameter to cyl(), linear_sweep(), or rotate_sweep().";
 
 // Section: Skin and sweep
@@ -1608,16 +1612,16 @@ function spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fa
         // regardless of what kind of subsampling occurs for tapers.
         orig_anglist = [
             if (minang<0) minang,
-            each reverse([for(ang = [-ang_step:-ang_step:minang+EPSILON]) ang]),
-            for(ang = [0:ang_step:maxang-EPSILON]) ang,
+            each reverse([for(ang = [-ang_step:-ang_step:minang+_EPSILON]) ang]),
+            for(ang = [0:ang_step:maxang-_EPSILON]) ang,
             maxang
         ],
         anglist = [
-           for(a=orig_anglist) if (a<cut_ang1-EPSILON) a,
+           for(a=orig_anglist) if (a<cut_ang1-_EPSILON) a,
            cut_ang1,
-           for(a=orig_anglist) if (a>cut_ang1+EPSILON && a<cut_ang2-EPSILON) a,
+           for(a=orig_anglist) if (a>cut_ang1+_EPSILON && a<cut_ang2-_EPSILON) a,
            cut_ang2,
-           for(a=orig_anglist) if (a>cut_ang2+EPSILON) a
+           for(a=orig_anglist) if (a>cut_ang2+_EPSILON) a
         ],
         interp_ang = [
                       for(i=idx(anglist,e=-2)) 
@@ -4054,8 +4058,8 @@ function texture(tex, n, border, gap, roughness, inset) =
                each path3d(square(1)),
             ], [
                 [4,7,3,0], [1,2,6,5],
-                if (gap+border < 1-EPSILON) [4,5,6,7],
-                if (gap > EPSILON) each [[1,9,10,2], [0,3,11,8]],
+                if (gap+border < 1-_EPSILON) [4,5,6,7],
+                if (gap > _EPSILON) each [[1,9,10,2], [0,3,11,8]],
             ]
         ] :
     tex=="wave_ribs"?
@@ -4063,7 +4067,7 @@ function texture(tex, n, border, gap, roughness, inset) =
         let(
             n = max(6,default(n,8))
         ) [[
-            for(a=[0:360/n:360-EPSILON])
+            for(a=[0:360/n:360-_EPSILON])
             (cos(a)+1)/2
         ]] :
     tex=="diamonds"?
@@ -4863,7 +4867,7 @@ function _textured_revolution(
                          assert(taper>=0 && taper<=0.5, str("\ntex_taper must be between 0 and 0.5 but was ",taper,"."))
                          function (x) lookup(x, [[0,0],
                                                  if (taper==0.5) [taper,1]
-                                                 else each [[taper+EPSILON,1],[1-taper-EPSILON,1]],
+                                                 else each [[taper+_EPSILON,1],[1-taper-_EPSILON,1]],
                                                  [1,0]])
                   : is_path(taper,2) ?
                          let(

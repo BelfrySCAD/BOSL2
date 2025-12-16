@@ -8,6 +8,8 @@
 // FileSummary: Models for standard ball bearing cartridges.
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_BALL_BEARINGS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: ball_bearings.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 
 // Section: Ball Bearing Models

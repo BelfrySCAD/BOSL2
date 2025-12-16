@@ -10,6 +10,10 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_LINALG = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: linalg.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 // Section: Matrices
 //   The matrix, a rectangular array of numbers which represents a linear transformation,
 //   is the fundamental object in linear algebra.  In OpenSCAD a matrix is a list of lists of numbers

@@ -12,6 +12,9 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_ROUNDING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: rounding.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 // Section: Types of Roundovers
 //   The functions and modules in this file support two different types of roundovers and some different mechanisms for specifying
 //   the size of the roundover.  The usual circular roundover can produce a tactile "bump" where the curvature changes from flat to
@@ -2475,21 +2478,21 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
      bot_patch = _rp_compute_patches(bottom, top, joint_bot, joint_sides_vec, k_bot, k_sides_vec, concave),
 
      vertbad = [for(i=[0:N-1])
-                   if (norm(top[i]-top_patch[i][4][2]) + norm(bottom[i]-bot_patch[i][4][2]) > EPSILON + norm(bottom[i]-top[i])) i],
+                   if (norm(top[i]-top_patch[i][4][2]) + norm(bottom[i]-bot_patch[i][4][2]) > _EPSILON + norm(bottom[i]-top[i])) i],
      // Check that the patch fits on the polygon edge
      topbad = [for(i=[0:N-1])
                    if (norm(top_patch[i][2][4]-top_patch[i][2][2]) + norm(select(top_patch,i+1)[2][0]-select(top_patch,i+1)[2][2])
-                  > EPSILON + norm(top_patch[i][2][2] - select(top_patch,i+1)[2][2]))   [i,(i+1)%N]],
+                  > _EPSILON + norm(top_patch[i][2][2] - select(top_patch,i+1)[2][2]))   [i,(i+1)%N]],
      botbad = [for(i=[0:N-1])
                    if (norm(bot_patch[i][2][4]-bot_patch[i][2][2]) + norm(select(bot_patch,i+1)[2][0]-select(bot_patch,i+1)[2][2])
-                  > EPSILON + norm(bot_patch[i][2][2] - select(bot_patch,i+1)[2][2]))   [i,(i+1)%N]],
+                  > _EPSILON + norm(bot_patch[i][2][2] - select(bot_patch,i+1)[2][2]))   [i,(i+1)%N]],
      // If top/bot is L-shaped, check that arms of L from adjacent patches don't cross
      topLbad = [for(i=[0:N-1])
                    if (norm(top_patch[i][0][2]-top_patch[i][0][4]) + norm(select(top_patch,i+1)[0][0]-select(top_patch,i+1)[0][2])
-                          > EPSILON + norm(top_patch[i][0][2]-select(top_patch,i+1)[0][2])) [i,(i+1)%N]],
+                          > _EPSILON + norm(top_patch[i][0][2]-select(top_patch,i+1)[0][2])) [i,(i+1)%N]],
      botLbad = [for(i=[0:N-1])
                    if (norm(bot_patch[i][0][2]-bot_patch[i][0][4]) + norm(select(bot_patch,i+1)[0][0]-select(bot_patch,i+1)[0][2])
-                          > EPSILON + norm(bot_patch[i][0][2]-select(bot_patch,i+1)[0][2])) [i,(i+1)%N]],
+                          > _EPSILON + norm(bot_patch[i][0][2]-select(bot_patch,i+1)[0][2])) [i,(i+1)%N]],
      // Check that the inner edges of the patch don't cross
      topinbad = [for(i=[0:N-1]) 
                      let(
@@ -3865,7 +3868,7 @@ function _prism_line_isect(poly_pairs, line, ref) =
        ref=point2d(ref),
        ilist = [for(j=idx(poly_pairs)) 
                  let(segisect = _general_line_intersection(poly_pairs[j],line2d))
-                 if (segisect && segisect[1]>=-EPSILON && segisect[1]<=1+EPSILON)
+                 if (segisect && segisect[1]>=-_EPSILON && segisect[1]<=1+_EPSILON)
                     [segisect[0],j,segisect[1],segisect[0]*ref]]
    )
    len(ilist)==0 ? [] :
@@ -3952,7 +3955,7 @@ function _prism_fillet_cyl(name, R, bot, top, d, k, N, overlap, uniform, debug) 
                d_step = abs(d)*unit(top[i]-isect[i])+(uniform?isect[i]:corner)
            )
            assert(is_vector(corner,3),str("Fillet does not fit.  Decrease size of fillet (",name,")."))
-           assert(debug || R<0 || (d_step-corner)*(corner-isect[i])>=-EPSILON,
+           assert(debug || R<0 || (d_step-corner)*(corner-isect[i])>=-_EPSILON,
                  str("Unable to fit fillet, probably due to steep curvature of the cylinder (",name,")."))
            let(
                 bez = _smooth_bez_fill([d_step,corner,edgepoint], k)

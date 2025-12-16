@@ -20,6 +20,9 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_TRANSFORMS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: transforms.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 // Section: Affine Transformations
 //   OpenSCAD provides various built-in modules to transform geometry by
 //   translation, scaling, rotation, and mirroring.  All of these operations

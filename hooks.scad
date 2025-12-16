@@ -9,6 +9,9 @@
 // FileSummary: Hooks and hook-like parts. 
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_HOOKS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: hooks.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 
 // Module: ring_hook()
 // Synopsis: A hook with a circular hole or attached cylinder
