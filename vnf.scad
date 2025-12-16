@@ -203,7 +203,7 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //       )
 //   ];
 //   cap = [
-//       for (a = [0:0.01:1+_EPSILON]) apply(
+//       for (a = [0:0.01:1+EPSILON]) apply(
 //           up(90-5*sin(a*360*2)) * scale([a,a,1]),
 //           wall_points[0]
 //       )
@@ -803,7 +803,7 @@ function vnf_join(vnfs) =
 // Arguments:
 //   polygons = The list of 3D polygons to turn into a VNF
 //   fast = Set to true to skip area and coplanarity checks for increased speed.  Default: false
-//   eps = Polygons with area smaller than this are discarded.  Default: _EPSILON
+//   eps = Polygons with area smaller than this are discarded.  Default: 1e-9
 // Example(3D,VPR=[60,0,40]): Construction of a dodecahedron from pentagon faces.
 //   dihedral = 2*atan(PHI);   // dodecahedron face dihedral
 //   rpenta = 10;              // pentagon face radius
@@ -1114,7 +1114,7 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
 //   To remove such vertices uses {{vnf_drop_unused_points()}}.
 // Arguments:
 //   vnf = a VNF to consolidate
-//   eps = the tolerance in finding duplicates. Default: _EPSILON
+//   eps = the tolerance in finding duplicates. Default: 1e-9
 function vnf_merge_points(vnf,eps=_EPSILON) =
     let(
         verts = vnf[0],

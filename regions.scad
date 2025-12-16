@@ -97,7 +97,7 @@ function is_region(x) = is_list(x) && is_path(x.x);
 //   a region.  
 // Arguments:
 //   region = region to check
-//   eps = tolerance for geometric comparisons.  Default: `_EPSILON` = 1e-9
+//   eps = tolerance for geometric comparisons.  Default: 1e-9
 // Example(2D,NoAxes):  In all of the examples each polygon in the region appears in a different color.  Two non-intersecting squares make a valid region.
 //   region = [square(10), right(11,square(8))];
 //   rainbow(region)stroke($item, width=.2,closed=true);
@@ -255,7 +255,7 @@ function _polygon_crosses_region(region, poly, eps=_EPSILON) =
 //   should not create problems with CGAL.  
 // Arguments:
 //   region = region to check
-//   eps = tolerance for geometric comparisons.  Default: `_EPSILON` = 1e-9
+//   eps = tolerance for geometric comparisons.  Default: 1e-9
 // Example(2D,NoAxes):  Corner contact means it's not simple
 //   region = [move([-2,-2],square(14)), [[0,0],[10,0],[5,5]], [[5,5],[0,10],[10,10]]];
 //   rainbow(region)stroke($item, width=.2,closed=true);
@@ -288,7 +288,7 @@ function is_region_simple(region, eps=_EPSILON) =
 // Arguments:
 //   polys = list of polygons to use
 //   nonzero = set to true to use nonzero rule for polygon membership.  Default: false
-//   eps = Epsilon for geometric comparisons.  Default: `_EPSILON` (1e-9)
+//   eps = Epsilon for geometric comparisons.  Default: 1e-9
 // Example(2D,NoAxes):  The pentagram is self-intersecting, so it is not a region.  Here it becomes five triangles:
 //   pentagram = turtle(["move",100,"left",144], repeat=4);
 //   region = make_region(pentagram);
@@ -433,7 +433,7 @@ module debug_region(region, vertices=true, edges=true, convexity=2, size=1)
 // Arguments:
 //   point = The point to test.
 //   region = The region to test against, as a list of polygon paths.
-//   eps = Acceptable variance.  Default: `_EPSILON` (1e-9)
+//   eps = Acceptable variance.  Default: 1e-9
 // Example(2D,Med):  Red points are in the region.
 //   region = [for(i=[2:4:10]) hexagon(r=i)];
 //   color("#ff7") region(region);
@@ -611,7 +611,7 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
 //   region2 = second region
 //   closed1 = if false then treat region1 as list of open paths.  Default: true
 //   closed2 = if false then treat region2 as list of open paths.  Default: true
-//   eps = Acceptable variance.  Default: `_EPSILON` (1e-9)
+//   eps = Acceptable variance.  Default: 1e-9
 // Example(2D): 
 //   path = square(50,center=false);
 //   region = [circle(d=80), circle(d=40)];
