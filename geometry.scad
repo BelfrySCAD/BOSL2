@@ -32,7 +32,7 @@ _BOSL2_GEOMETRY = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BO
 //   point = The point to test.
 //   line = Array of two points defining the line, ray, or segment to test against.
 //   bounded = boolean or list of two booleans defining endpoint conditions for the line. If false treat the line as an unbounded line.  If true treat it as a segment.  If [true,false] treat as a ray, based at the first endpoint.  Default: false
-//   eps = Tolerance in geometric comparisons.  Default: `_EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: 1e-9
 function is_point_on_line(point, line, bounded=false, eps=_EPSILON) =
     assert(is_finite(eps) && (eps>=0), "\nThe tolerance should be a non-negative value." )
     assert(is_vector(point), "\nPoint must be a vector.")
@@ -156,7 +156,7 @@ function _point_left_of_line2d(point, line, eps=_EPSILON) =
 //   a = First point or list of points.
 //   b = Second point or undef; it should be undef if `c` is undef
 //   c = Third point or undef.
-//   eps = Tolerance in geometric comparisons.  Default: `_EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: 1e-9
 function is_collinear(a, b, c, eps=_EPSILON) =
     assert( is_path([a,b,c],dim=undef)
             || ( is_undef(b) && is_undef(c) && is_path(a,dim=undef) ),
@@ -284,7 +284,7 @@ function _general_line_intersection(s1,s2,eps=_EPSILON) =
 //    bounded2 = boolean or list of two booleans defining which ends are bounded for line2.  Default: [false,false]
 //    ---
 //    bounded = boolean or list of two booleans defining which ends are bounded for both lines.  The bounded1 and bounded2 parameters override this if both are given.
-//    eps = tolerance for geometric comparisons.  Default: `_EPSILON` (1e-9)
+//    eps = tolerance for geometric comparisons.  Default: 1e-9
 // Example(2D):  The segments do not intersect but the lines do in this example. 
 //    line1 = 10*[[9, 4], [5, 7]];
 //    line2 = 10*[[2, 3], [6, 5]];
@@ -424,7 +424,7 @@ function line_closest_point(line, pt, bounded=false) =
 // Arguments:
 //   points = The list of points to find the line through.
 //   check_collinear = If true, don't verify that all points are collinear.  Default: false
-//   eps = How much variance is allowed in testing each point against the line.  Default: `_EPSILON` (1e-9)
+//   eps = How much variance is allowed in testing each point against the line.  Default: 1e-9
 // Example(FlatSpin,VPD=250): A line fitted to a cloud of points.
 //   points = rot(45, v=[-0.5,1,0],
 //       p=random_points(100,3,scale=[5,5,50],seed=47));
@@ -471,7 +471,7 @@ function line_from_points(points, check_collinear=false, eps=_EPSILON, fast) =
 //   Returns true if the given 3D points are non-collinear and are on a plane.
 // Arguments:
 //   points = The points to test.
-//   eps = Tolerance in geometric comparisons.  Default: `_EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: 1e-9
 function is_coplanar(points, eps=_EPSILON) =
     assert( is_path(points,dim=3) , "\nInput should be a list of 3D points." )
     assert( is_finite(eps) && eps>=0, "\nThe tolerance should be a non-negative value." )
@@ -618,7 +618,7 @@ function _covariance_evec_eval(points, eigenvalue_id) =
 // Arguments:
 //   points = The list of points to find the best-fit plane.
 //   check_coplanar = If true, verify the point coplanarity within `eps` tolerance.  Default: false
-//   eps = Tolerance in geometric comparisons.  Default: `_EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: 1e-9
 // Example(FlatSpin,VPD=320,VPT=[-2,5,-2]): 100 non-coplanar random points (yellow spheres) distributed in a volume, showing the best-fit plane (transparent square) with its normal vector.
 //   points = rot(45, v=[-0.3,1,0],
 //       p=random_points(100,3,scale=[50,50,15],seed=47));
@@ -663,7 +663,7 @@ function plane_from_points(points, check_coplanar=false, eps=_EPSILON, fast) =
 // Arguments:
 //   poly = The planar 3D polygon to find the plane of.
 //   check_coplanar = If false, doesn't verify that all points in the polygon are coplanar.  Default: true
-//   eps = Tolerance in geometric comparisons.  Default: `_EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: 1e-9
 // Example(3D):
 //   xyzpath = rot(45, v=[0,1,0], p=path3d(star(n=5,step=2,d=100), 70));
 //   plane = plane_from_polygon(xyzpath);
@@ -759,7 +759,7 @@ function _normalize_plane(plane) =
 //   plane = The [A,B,C,D] values for the equation of the plane.
 //   line = A list of two distinct 3D points that are on the line.
 //   bounded = If false, the line is considered unbounded.  If true, it is treated as a bounded line segment.  If given as `[true, false]` or `[false, true]`, the boundedness of the points are specified individually, allowing the line to be treated as a half-bounded ray.  Default: false (unbounded)
-//   eps = Tolerance in geometric comparisons.  Default: `_EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: 1e-9
 function plane_line_intersection(plane, line, bounded=false, eps=_EPSILON) =
     assert( is_finite(eps) && eps>=0, "\nThe tolerance should be a positive number." )
     assert(_valid_plane(plane,eps=eps) && _valid_line(line,dim=3,eps=eps), "\nInvalid plane and/or 3d line.")
@@ -915,7 +915,7 @@ function _pointlist_greatest_distance(points,plane) =
 // Arguments:
 //   plane = The plane to test the points on.
 //   points = The list of 3D points to test.
-//   eps = Tolerance in geometric comparisons.  Default: `_EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: 1e-9
 function are_points_on_plane(points, plane, eps=_EPSILON) =
     assert( _valid_plane(plane), "\nInvalid plane." )
     assert( is_matrix(points,undef,3) && len(points)>0, "\nInvalid pointlist." ) // using is_matrix it accepts len(points)==1
@@ -1074,7 +1074,7 @@ function _circle_or_sphere_line_intersection(r, cp, line, bounded=false, d, eps=
 //   cp1 = Centerpoint of the first circle.
 //   r2 = Radius of the second circle.
 //   cp2 = Centerpoint of the second circle.
-//   eps = Tolerance for detecting tangent circles.  Default: _EPSILON
+//   eps = Tolerance for detecting tangent circles.  Default: 1e-9
 //   ---
 //   d1 = Diameter of the first circle.
 //   d2 = Diameter of the second circle.
@@ -1421,7 +1421,7 @@ function circle_circle_tangents(r1, cp1, r2, cp2, d1, d2) =
 /// Arguments:
 ///   points = List of input points.
 ///   error = Defines the behaviour for collinear input points. When `true`, produces an error, otherwise returns []. Default: `true`.
-///   eps = Tolerance for collinearity test. Default: _EPSILON.
+///   eps = Tolerance for collinearity test. Default: 1e-9.
 function _noncollinear_triple(points,error=true,eps=_EPSILON) =
     assert( is_path(points), "\nInvalid input points." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
@@ -1581,7 +1581,7 @@ function _region_centroid(region,eps=_EPSILON) =
 ///   polygons or an error is produced.
 /// Arguments:
 ///   poly = Points of the polygon from which the centroid is calculated.
-///   eps = Tolerance in geometric comparisons.  Default: `_EPSILON` (1e-9)
+///   eps = Tolerance in geometric comparisons.  Default: 1e-9
 function _polygon_centroid(poly, eps=_EPSILON) =
     assert( is_path(poly,dim=[2,3]), "\nThe input must be a 2D or 3D polygon." )
     let(
@@ -1683,7 +1683,7 @@ function polygon_normal(poly) =
 //   point = The 2D point to check
 //   poly = The list of 2D points forming the perimeter of the polygon.
 //   nonzero = The rule to use: true for "Nonzero" rule and false for "Even-Odd". Default: false (Even-Odd)
-//   eps = Tolerance in geometric comparisons.  Default: `_EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: 1e-9
 // Example(2D): With nonzero set to false (the default), we get this result. Green dots are inside the polygon and red are outside:
 //   a=20*2/3;
 //   b=30*2/3;
@@ -1805,7 +1805,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=_EPSILON) =
 //   line = A list of two distinct 3D points on the line.
 //   bounded = If false, the line is considered unbounded.  If true, it is treated as a bounded line segment.  If given as `[true, false]` or `[false, true]`, the boundedness of the points are specified individually, allowing the line to be treated as a half-bounded ray.  Default: false (unbounded)
 //   nonzero = set to true to use the nonzero rule for determining it points are in a polygon.  See point_in_polygon.  Default: false.
-//   eps = Tolerance in geometric comparisons.  Default: `_EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: 1e-9
 // Example(3D): The line intersects the 3d hexagon in a single point. 
 //   hex = zrot(140,p=rot([-45,40,20],p=path3d(hexagon(r=15))));
 //   line = [[5,0,-13],[-3,-5,13]];
@@ -2003,7 +2003,7 @@ function _merge_segments(insegs,outsegs, eps, i=1) =
 //   poly = Array of the polygon vertices.
 //   ind = If given, a list of indices indexing the vertices of the polygon in `poly`.  Default: use all the points of poly
 //   error = If false, returns `undef` when the polygon cannot be triangulated; otherwise, issues an assert error. Default: true.
-//   eps = A maximum tolerance in geometrical tests. Default: _EPSILON
+//   eps = A maximum tolerance in geometrical tests. Default: 1e-9
 // Example(2D,NoAxes): a simple polygon; see from above
 //   poly = star(id=10, od=15,n=11);
 //   tris =  polygon_triangulate(poly);
@@ -2695,7 +2695,7 @@ function _find_first_noncoplanar(plane, points, i=0) =
 //   If the points are collinear or not coplanar an error may be generated.
 // Arguments:
 //   poly = Polygon to check.
-//   eps = Tolerance for the collinearity and coplanarity tests. Default: _EPSILON.
+//   eps = Tolerance for the collinearity and coplanarity tests. Default: 1e-9.
 // Example:
 //   test1 = is_polygon_convex(circle(d=50));                                 // Returns: true
 //   test2 = is_polygon_convex(rot([50,120,30], p=path3d(circle(1,$fn=50)))); // Returns: true
@@ -2744,7 +2744,7 @@ function is_polygon_convex(poly,eps=_EPSILON) =
 // Arguments:
 //   points1 = first list of 2d or 3d points.
 //   points2 = second list of 2d or 3d points.
-//   eps = tolerance in distance evaluations. Default: _EPSILON.
+//   eps = tolerance in distance evaluations. Default: 1e-9.
 // Example(2D):
 //    pts1 = move([-3,0], p=square(3,center=true));
 //    pts2 = rot(a=45, p=square(2,center=true));
@@ -2804,7 +2804,7 @@ function _GJK_distance(points1, points2, eps=_EPSILON, lbd, d, simplex=[]) =
 // Arguments:
 //   points1 = first list of 2d or 3d points.
 //   points2 = second list of 2d or 3d points.
-//   eps - tolerance for the intersection tests. Default: _EPSILON.
+//   eps - tolerance for the intersection tests. Default: 1e-9.
 // Example(2D):
 //    pts1 = move([-3,0], p=square(3,center=true));
 //    pts2 = rot(a=45, p=square(2,center=true));

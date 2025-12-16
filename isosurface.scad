@@ -3355,10 +3355,10 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
 //           *exp(-((y+4)/3)^2-x^2-0.5*z^2);
 //   
 //   left(6) isosurface(function(x,y,z) shape(x,y,z),
-//       isovalue = [_EPSILON,INF],
+//       isovalue = [EPSILON,INF],
 //       bounding_box=bbox, voxel_size=0.25);
 //   right(6) isosurface(function(x,y,z) log(shape(x,y,z)),
-//       isovalue = [log(_EPSILON),INF],
+//       isovalue = [log(EPSILON),INF],
 //       bounding_box=bbox, voxel_size=0.25);
 // Example(3D): Using an array for the `f` argument instead of a function literal. Each row of the array represents an X index for a YZ plane with the array Z indices changing fastest in each plane. The final object may need rotation to get the orientation you want. You don't pass the `bounding_box` argument here; it is implied by the array size and voxel size, and centered on the origin.
 //   field = [

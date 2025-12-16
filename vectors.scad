@@ -31,7 +31,7 @@ _BOSL2_VECTORS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
 //   ---
 //   zero = If false, require that the `norm()` of the vector is not approximately zero.  If true, require the `norm()` of the vector to be approximately zero.  Default: `undef` (don't check vector `norm()`.)
 //   all_nonzero = If true, requires all elements of the vector to be more than `eps` different from zero.  Default: `false`
-//   eps = The minimum vector length that is considered non-zero.  Default: `_EPSILON` (`1e-9`)
+//   eps = The minimum vector length that is considered non-zero.  Default: 1e-9
 // Example:
 //   is_vector(4);                          // Returns false
 //   is_vector([4,true,false]);             // Returns false

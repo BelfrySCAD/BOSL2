@@ -150,7 +150,7 @@ function _path_select(path, s1, u1, s2, u2, closed=false) =
 // Arguments:
 //   path = A path of any dimension or a 1-region
 //   closed = treat as closed polygon.  Default: false
-//   eps = Largest positional variance allowed.  Default: `_EPSILON` (1-e9)
+//   eps = Largest positional variance allowed.  Default: 1e-9
 function path_merge_collinear(path, closed, eps=_EPSILON) =
     is_1region(path) ? path_merge_collinear(path[0], default(closed,true), eps) :
     let(closed=default(closed,false))
@@ -262,7 +262,7 @@ function path_length_fractions(path, closed) =
 /// Arguments:
 ///   path = The path to find self intersections of.
 ///   closed = If true, treat path like a closed polygon.  Default: true
-///   eps = The epsilon error value to determine whether two points coincide.  Default: `_EPSILON` (1e-9)
+///   eps = The epsilon error value to determine whether two points coincide.  Default: 1e-9
 /// Example(2D):
 ///   path = [
 ///       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
@@ -691,7 +691,7 @@ function _err_resample(path, maxerr, n, i1=0, i2=2, resultidx=[0], iter=0) =
 // Arguments:
 //   path = 2D path or 1-region
 //   closed = set to true to treat path as a polygon.  Default: false
-//   eps = Epsilon error value used for determine if points coincide.  Default: `_EPSILON` (1e-9)
+//   eps = Epsilon error value used for determine if points coincide.  Default: 1e-9
 function is_path_simple(path, closed, eps=_EPSILON) =
     is_1region(path) ? is_path_simple(path[0], default(closed,true), eps) :
     let(closed=default(closed,false))
@@ -1126,7 +1126,7 @@ function _cut_to_seg_u_form(pathcut, path, closed) =
 // Arguments:
 //   path = A 2D path or a 1-region.
 //   closed = If true, treat path as a closed polygon.  Default: true
-//   eps = Acceptable variance.  Default: `_EPSILON` (1e-9)
+//   eps = Acceptable variance.  Default: 1e-9
 // Example(2D,NoAxes):
 //   path = [ [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100] ];
 //   paths = split_path_at_self_crossings(path);
@@ -1197,7 +1197,7 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=_EPSILON) =
 // Arguments:
 //   poly = a 2D polygon or 1-region
 //   nonzero = If true use the nonzero method for checking if a point is in a polygon.  Otherwise use the even-odd method.  Default: false
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `_EPSILON` (1e-9)
+//   eps = The epsilon error value to determine whether two points coincide.  Default: 1e-9
 // Example(2D,NoAxes):  This cross-crossing polygon breaks up into its 3 components (regardless of the value of nonzero).
 //   poly = [
 //       [-100,100], [0,-50], [100,100],
@@ -1302,7 +1302,7 @@ function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=_EPSILON) =
 ///   fragments = List of paths to be assembled into complete polygons.
 ///   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
 ///   startfrag = The fragment to start with.  Default: 0
-///   eps = The epsilon error value to determine whether two points coincide.  Default: `_EPSILON` (1e-9)
+///   eps = The epsilon error value to determine whether two points coincide.  Default: 1e-9
 function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, eps=_EPSILON) =
     len(fragments)==0? [[],[]] :
     len(fragments)==1? [fragments[0],[]] :
@@ -1357,7 +1357,7 @@ function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0,
 ///   Polygons with area < eps are discarded and not returned.  
 /// Arguments:
 ///   fragments = List of paths to be assembled into complete polygons.
-///   eps = The epsilon error value to determine whether two points coincide.  Default: `_EPSILON` (1e-9)
+///   eps = The epsilon error value to determine whether two points coincide.  Default: 1e-9
 function _assemble_path_fragments(fragments, eps=_EPSILON, _finished=[]) =
     len(fragments)==0? _finished :
     let(

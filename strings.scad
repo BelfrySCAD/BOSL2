@@ -785,7 +785,7 @@ function _format_matrix(M, sig=4, sep=1, eps=1e-9) =
 // Example(NORENDER):
 //   format("The value of {} is {:.14f}.", ["pi", PI]);  // Returns: "The value of pi is 3.14159265358979."
 //   format("The value {1:f} is known as {0}.", ["pi", PI]);  // Returns: "The value 3.141593 is known as pi."
-//   format("We use a very small value {1:.6g} as {0}.", ["_EPSILON", _EPSILON]);  // Returns: "We use a very small value 1e-9 as _EPSILON."
+//   format("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]);  // Returns: "We use a very small value 1e-9 as EPSILON."
 //   format("{:-5s}{:i}{:b}", ["foo", 12e3, 5]);  // Returns: "foo  12000true"
 //   format("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostamus27.440"
 //   format("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostam 27.440"

@@ -21,28 +21,29 @@ _BOSL2_MATH = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_
 // Constant: PHI
 // Synopsis: The golden ratio φ (phi).  Approximately 1.6180339887
 // Topics: Constants, Math
-// See Also: _EPSILON, INF, NAN
+// See Also: EPSILON, INF, NAN
 // Description: The golden ratio φ (phi).  Approximately 1.6180339887
 PHI = (1+sqrt(5))/2;
 
-// Constant: _EPSILON
-// Synopsis: A tiny value to compare floating point values.  `1e-9`
+// Constant: EPSILON
+// Synopsis: A tiny value to compare floating point values.  1e-9
 // Topics: Constants, Math
 // See Also: PHI, INF, NAN
-// Description: A really small value useful in comparing floating point numbers.  ie: abs(a-b)<_EPSILON  `1e-9`
-_EPSILON = 1e-9;
+// Description: A really small value useful in comparing floating point numbers.  ie: abs(a-b)<EPSILON.  This is set to 1e-9, which is larger than machine epsilon, but generally works well in geometric computations.  
+EPSILON = 1e-9;
+_EPSILON = 1e-9;  // This is the private library version
 
 // Constant: INF
 // Synopsis: The floating point value for Infinite.
 // Topics: Constants, Math
-// See Also: PHI, _EPSILON, NAN
+// See Also: PHI, EPSILON, NAN
 // Description: The value `inf`, useful for comparisons.
 INF = 1/0;
 
 // Constant: NAN
 // Synopsis: The floating point value for Not a Number.
 // Topics: Constants, Math
-// See Also: PHI, _EPSILON, INF
+// See Also: PHI, EPSILON, INF
 // Description: The value `nan`, useful for comparisons.
 NAN = acos(2);
 
