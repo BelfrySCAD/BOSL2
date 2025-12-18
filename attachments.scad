@@ -36,6 +36,7 @@ $parent_orient = UP;
 
 $parent_size = undef;
 $parent_geom = undef;
+$parent_parts = undef;
 
 $attach_inside = false;  // If true, flip the meaning of the inside parameter for align() and attach()
 
@@ -4547,7 +4548,7 @@ function parent() =
     let(
         geom = default($parent_geom, attach_geom([0,0,0]))
     )                 
-    [$transform, geom];
+    [$transform, geom, $parent_parts];
 
 
 
@@ -4598,7 +4599,7 @@ function parent() =
 
 function parent_part(name,ind=0) =
     let(part = _get_part(name, ind))
-    [$transform * part[2], part[0]];
+    [$transform * part[2], part[0],undef];
 
 
 // Module: restore()
@@ -4625,12 +4626,14 @@ module restore(desc)
    if (is_undef(desc)){
      T = matrix_inverse($transform);
      $parent_geom = attach_geom([0,0,0]);
+     $parent_parts = undef;
      multmatrix(T) children();
    }
    else{
      check=assert(is_description(desc), "\nInvalid description.");
      T = linear_solve($transform, desc[0]);
      $parent_geom = desc[1];
+     $parent_parts = desc[2];
      multmatrix(T) children();
    }
 }
@@ -4870,7 +4873,7 @@ module desc_copies(transforms)
 // Arguments:
 //   desc = argument to check
 function is_description(desc) =
-  is_list(desc) && len(desc)==2 && is_matrix(desc[0],4,4) && is_list(desc[1]) && is_string(desc[1][0]);
+  is_list(desc) && len(desc)==3 && is_matrix(desc[0],4,4) && is_list(desc[1]) && is_string(desc[1][0]);
 
 
 
