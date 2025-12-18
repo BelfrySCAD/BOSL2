@@ -4796,8 +4796,8 @@ function desc_dist(desc1,anchor1=CENTER, desc2, anchor2=CENTER)=
 
 function transform_desc(T,desc) =
     assert(is_description(desc), "\nInvalid description.")
-    is_consistent(T, ident(4)) ? [for(t=T) [t*desc[0], desc[1]]]
-  : is_matrix(T,4,4) ? [T*desc[0], desc[1]]
+    is_consistent(T, ident(4)) ? [for(t=T) [t*desc[0], desc[1],desc[2]]]
+  : is_matrix(T,4,4) ? [T*desc[0], desc[1],desc[2]]
   : assert(false,"\nT must be a 4×4 matrix or list of 4×4 matrices.");
 
 
