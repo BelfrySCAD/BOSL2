@@ -139,7 +139,7 @@ function _path_select(path, s1, u1, s2, u2, closed=false) =
 
 
 // Function: path_merge_collinear()
-// Synopsis: Removes unnecessary points from a path.
+// Synopsis: Removes unnecessary collinear points from a path.
 // SynTags: Path
 // Topics: Paths, Regions
 // Description:
@@ -149,7 +149,7 @@ function _path_select(path, s1, u1, s2, u2, closed=false) =
 //   path_merge_collinear(path, [eps])
 // Arguments:
 //   path = A path of any dimension or a 1-region
-//   closed = treat as closed polygon.  Default: false
+//   closed = treat as closed polygon.  Default: false for lists, true for 1-regions
 //   eps = Largest positional variance allowed.  Default: 1e-9
 function path_merge_collinear(path, closed, eps=_EPSILON) =
     is_1region(path) ? path_merge_collinear(path[0], default(closed,true), eps) :
@@ -157,14 +157,55 @@ function path_merge_collinear(path, closed, eps=_EPSILON) =
     assert(is_bool(closed))
     assert( is_path(path), "\nInvalid path in path_merge_collinear.")
     assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "\nInvalid tolerance.")
-    len(path)<=2 ? path :
     let(path = deduplicate(path, closed=closed))
+    len(path)<=2 ? path :
     [
       if(!closed) path[0],
       for(triple=triplet(path,wrap=closed))
         if (!is_collinear(triple,eps=eps)) triple[1],
       if(!closed) last(path)
     ];
+
+
+
+// Function: path_merge_collinear_indexed()
+// Synopsis: Removes unnecessary collinear points from a path specified as an index list into a list
+// SynTags: Path
+// Topics: Paths, Regions
+// Description:
+//   Given a {{path}} and a list of indices, removes unnecessary sequential collinear points found in `path[indices]` and returns
+//   the list of indices corresponding to the simplified path.  When `closed=true` either of the path
+//   endpoints may be removed.  If you don't provide `indices` then the default is the consecutive index
+//   list `[0,...,len(list)-1]`.  This is useful if you need to remove collinear points from list A and then
+//   remove corresponding points from list B.  
+// Usage:
+//   path_merge_collinear(path, [eps])
+// Arguments:
+//   path = A path of any dimension or a 1-region
+//   indices = Index list that indexes into `path`.  Default: `count(path)`
+//   closed = treat as closed polygon.  Default: false for lists, true for 1-regions
+//   eps = Largest positional variance allowed.  Default: 1e-9
+function path_merge_collinear_indexed(path, indices, closed, eps=_EPSILON) =
+    is_1region(path) ? path_merge_collinear_indexed(path[0], indices, default(closed,true), eps) :
+    let(
+      closed=default(closed,false),
+      indices=default(indices,count(path))
+    )
+    assert(is_bool(closed))
+    assert( is_path(path), "\nInvalid path in path_merge_collinear.")
+    assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "\nInvalid tolerance.")
+    assert( is_vector(indices), "\nindices must be a list of indices values")
+    assert( min(indices)>=0, "\nIndices list has negative entry")
+    assert( max(indices)<len(path), "\nIndices list has entry beyond the end of the list")
+    let(indices = deduplicate_indexed(path, indices, closed=closed))
+    len(indices)<=2 ? indices :
+    [
+      if(!closed) indices[0],
+      for(triple=triplet(indices,wrap=closed))
+        if (!is_collinear(select(path,triple),eps=eps)) triple[1],
+      if(!closed) last(indices)
+    ];
+
 
 
 // Section: Path length calculation
