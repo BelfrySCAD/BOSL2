@@ -468,11 +468,13 @@ function deduplicate(list, closed=false, eps=_EPSILON) =
 //   new_idxs = deduplicate_indexed(list, indices, [closed], [eps]);
 // Description:
 //   Given a list, and a list of indices, removes consecutive indices corresponding to list values that are equal
-//   or approximately equal.  
+//   or approximately equal.  If you omit the `indices` parameter then it defaults to the list `[0,...,len(list)-1]` so
+//   the return value is the indices of the deduplication of the entire input list.  This is useful if you need to
+//   remove the duplicates from list A and then remove the corresponding points from list B.  
 // Arguments:
 //   list = The list that the indices index into.
-//   indices = The list of indices to deduplicate.
-//   closed = If true, drops trailing indices if their list value matches the list value corresponding to the first index. 
+//   indices = The list of indices to deduplicate.  Default: `count(list)`
+//   closed = If true, drops trailing indices if their list value matches the list value corresponding to the first index. Default: false
 //   eps = The maximum difference to allow between numbers or vectors.
 // Example:
 //   a = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]);  // Returns: [1,4,3,2,0,1]

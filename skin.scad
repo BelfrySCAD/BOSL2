@@ -1693,7 +1693,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 // Synopsis: Sweep a 2d polygon path along a 2d or 3d path. 
 // SynTags: VNF, Geom
 // Topics: Extrusion, Sweep, Paths, Textures
-// See Also: sweep_attach(), linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep2d(), offset_sweep()
+// See Also: sweep_attach(), linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep2d(), offset_sweep(), bezier_sweep()
 // Usage: As module
 //   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [tangent=], [uniform=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
 // Usage: As function
@@ -1879,7 +1879,7 @@ module spiral_sweep(poly, h, r, turns=1, taper, r1, r2, d, d1, d2, internal=fals
 //   atype  = Select "hull" or "intersect" anchor types.  Default: "hull"
 //   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Side Effects:
-//   `$sweep_path` is set to the path thd defining the swept object
+//   `$sweep_path` is set to the path defining the swept object
 //   `$sweep_shape` is set to the shape being swept
 //   `$sweep_closed` is true if the sweep is closed and false otherwise
 //   `$sweep_transforms` is set to the array of transformation matrices that define the swept object.
@@ -2290,7 +2290,8 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
   assert(closed || symmetry==1, "\nsymmetry must be 1 when closed=false.")
   assert(is_integer(symmetry) && symmetry>0, "\nsymmetry must be a positive integer.")
   let(path = force_path(path))
-  assert(is_path(path,[2,3]), "\ninput path is not a 2D or 3D path.")
+  assert(is_path(path,[2,3]), "\nInput path is not a 2D or 3D path.")
+  assert(len(path)==len(deduplicate(path)),"\nInput path contains duplicate points (consider using deduplicate)")
   assert(!closed || !approx(path[0],last(path)), "\nClosed path includes start point at the end.")
   assert((is_region(shape) || is_path(shape,2)) || (transforms && !(closed && method=="incremental")),"\nshape must be a 2d path or region.")
   let(
