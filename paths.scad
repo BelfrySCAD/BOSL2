@@ -146,7 +146,7 @@ function _path_select(path, s1, u1, s2, u2, closed=false) =
 //   Takes a {{path}} and removes unnecessary sequential collinear {{points}}.  When `closed=true` either of the path
 //   endpoints may be removed.  
 // Usage:
-//   path_merge_collinear(path, [eps])
+//   newpath = path_merge_collinear(path, [eps]);
 // Arguments:
 //   path = A path of any dimension or a 1-region
 //   closed = treat as closed polygon.  Default: false for lists, true for 1-regions
@@ -179,7 +179,7 @@ function path_merge_collinear(path, closed, eps=_EPSILON) =
 //   list `[0,...,len(list)-1]`.  This is useful if you need to remove collinear points from list A and then
 //   remove corresponding points from list B.  
 // Usage:
-//   path_merge_collinear(path, [eps])
+//   ind = path_merge_collinear(path, [eps]);
 // Arguments:
 //   path = A path of any dimension or a 1-region
 //   indices = Index list that indexes into `path`.  Default: `count(path)`

@@ -2308,7 +2308,7 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
                   : method=="incremental" ? "\nNormal with \"incremental\" method must be a 3-vector."
                   : str("Incompatible normal given.  Must be a 3-vector or a list of ",len(path)," 3-vectors"))
   assert(is_undef(normal) || (is_vector(normal) && len(normal)==3) || (is_path(normal) && len(normal)==len(path) && len(normal[0])==3), "\nInvalid normal specified.")
-  assert(is_undef(tangent) || (is_path(tangent) && len(tangent)==len(path) && len(tangent[0])==3), "\nInvalid tangent specified.")
+  assert(is_undef(tangent) || (is_path(tangent) && len(tangent)==len(path)), "\nInvalid tangent specified.")
   assert(scaleOK,str("\nIncompatible or invalid scale",closed?" for closed path":"",": must be ", closed?"":"a scalar, a 2-vector, ",
         "a vector of length ",len(path)," or a ",len(path),"x2 matrix of scales."))
   let(
@@ -2317,7 +2317,7 @@ function path_sweep(shape, path, method="incremental", normal, closed, twist=0, 
             !scale_by_length ? lerpn([1,1],s,len(path))
           : lerp([1,1],s, path_length_fractions(path,false)),
     scale_list = [for(s=scale) scale(s),if (closed) scale(scale[0])],
-    tangents = is_undef(tangent) ? path_tangents(path,uniform=uniform,closed=closed) : [for(t=tangent) unit(t)],
+    tangents = is_undef(tangent) ? path_tangents(path,uniform=uniform,closed=closed) : [for(t=path3d(tangent)) unit(t)],
     normal = is_path(normal) ? [for(n=normal) unit(n)] :
              is_def(normal) ? unit(normal) :
              method =="incremental" && abs(tangents[0].z) > 1/sqrt(2) ? BACK : UP,

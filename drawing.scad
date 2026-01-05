@@ -251,6 +251,8 @@ module stroke(
         assert(false, str("Invalid endcap: ",cap))
     ) * linewidth;
 
+    
+
     closed = default(closed, is_region(path));
     check1 = assert(is_bool(closed))
              assert(!closed || num_defined([endcaps,endcap1,endcap2])==0, "Cannot give endcap parameter(s) with closed path or region");
@@ -284,6 +286,13 @@ module stroke(
     endcap_angle1 = first_defined([endcap_angle1, endcap_angle, dots_angle]);
     endcap_angle2 = first_defined([endcap_angle2, endcap_angle, dots_angle]);
     joint_angle = first_defined([joint_angle, dots_angle]);
+
+    endcap_color1 = first_defined([endcap_color1, endcap_color, dots_color, color]);
+    endcap_color2 = first_defined([endcap_color2, endcap_color, dots_color, color]);
+    joint_color = first_defined([joint_color, dots_color, color]);
+
+    // We want to allow "paths" with length 1, so we can't use the normal path/region checks
+    paths = is_matrix(path) ? [path] : path;
     
     check3 =
       assert(all_nonnegative([endcap_length1]))
@@ -296,23 +305,21 @@ module stroke(
       assert(is_undef(endcap_angle2)||is_finite(endcap_angle2))
       assert(is_undef(joint_angle)||is_finite(joint_angle))
       assert(all_positive([singleton_scale]))
-      assert(all_positive(width));
-      
-    endcap_color1 = first_defined([endcap_color1, endcap_color, dots_color, color]);
-    endcap_color2 = first_defined([endcap_color2, endcap_color, dots_color, color]);
-    joint_color = first_defined([joint_color, dots_color, color]);
+      assert(all_positive(width))
+      assert(is_list(paths),"The path argument must be a list of 2D or 3D points, or a region.");
 
-    // We want to allow "paths" with length 1, so we can't use the normal path/region checks
-    paths = is_matrix(path) ? [path] : path;
-    assert(is_list(paths),"The path argument must be a list of 2D or 3D points, or a region.");
+    // Checks inside attachable() give a long cascade in the traceback, so do them before if we can
+        
+    check4=
+        [for (path=paths)
+                   let(pathvalid = is_path(path,[2,3]) || same_shape(path,[[0,0]]) || same_shape(path,[[0,0,0]]))
+                   assert(pathvalid,"The path argument must be a list of 2D or 3D points, or a region.")
+                   assert(is_num(width) || len(width)==len(path),
+                          "width must be a number or a vector the same length as the path (or all components of a region)")];
+
     attachable(two_d=len(path[0])==2)
     {
       for (path = paths) {
-          pathvalid = is_path(path,[2,3]) || same_shape(path,[[0,0]]) || same_shape(path,[[0,0,0]]);
-
-          check4 = assert(pathvalid,"The path argument must be a list of 2D or 3D points, or a region.")
-                   assert(is_num(width) || len(width)==len(path),
-                          "width must be a number or a vector the same length as the path (or all components of a region)");
           path = deduplicate( closed? list_wrap(path) : path );
           width = is_num(width)? [for (x=path) width]
                 : closed? list_wrap(width)
