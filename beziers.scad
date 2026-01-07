@@ -1750,16 +1750,7 @@ function bezier_sheet(patch, delta, splinesteps=16, style="default", thickness=u
 //   "end" = When `closed==false`, the origin point of the shape, on the ending face of the object
 //   "start-centroid" = When `closed==false`, the centroid of the shape, on the starting face of the object
 //   "end-centroid" = When `closed==false`, the centroid of the shape, on the ending face of the object
-// Example(3D,Med,VPR=[82.30,0.00,340.20],VPD=39.54,VPT=[7.64,1.09,5.33]): This example uses {{path_sweep()}} but the end derivatives are wrong, resulting in a gap.  The gap is highly visible because of the small splinesteps value, but it will be present, albeit smaller, even for large values of splinesteps.
-//   bez = [[0,0,5],
-//          [0,0,10],
-//          [15,7,9],
-//          [17,2,4],       
-//         ];
-//   color("lightblue")
-//     cyl(r=2,h=5,anchor=BOT);
-//   path_sweep(circle(r=2,$fn=32), bezier_curve(bez, 6));
-// Example(3D,Med,VPR=[82.30,0.00,340.20],VPD=39.54,VPT=[7.64,1.09,5.33]):  This bezier is perpendicular to the cylinder top, but {{path_sweep()}} approximates the derivative at the end, resulting in a gap.  The gap is highly visible because of the small splinesteps value, but it will be present, albeit smaller, even for large values of splinesteps.
+// Example(3D,Med,VPR=[95,0.00,354],VPD=39.54,VPT=[7.64,1.09,5.33],NoAxes):  This bezier is perpendicular to the cylinder top, but {{path_sweep()}} approximates the derivative at the end, resulting in a gap.  The gap is highly visible because of the small splinesteps value, but it will be present, albeit smaller, even for large values of splinesteps.
 //   $fn=32;   
 //   bez = [[0,0,5],
 //          [0,0,10],
@@ -1768,8 +1759,9 @@ function bezier_sheet(patch, delta, splinesteps=16, style="default", thickness=u
 //         ];
 //   color("lightblue")
 //     cyl(r=2,h=5,anchor=BOT);
-//   path_sweep(circle(r=2,$fn=32), bezier_curve(bez, 6));
-// Example(3D,Med,VPR=[82.30,0.00,340.20],VPD=39.54,VPT=[7.64,1.09,5.33]): Using `bezier_curve()` instead produces the correct derivatives at the ends and the swept object mates correctly with the cylinder. 
+//   path_sweep(circle(r=2),
+//           bezier_curve(bez, 6));
+// Example(3D,Med,VPR=[95,0.00,354],VPD=39.54,VPT=[7.64,1.09,5.33],NoAxes): Using `bezier_curve()` instead produces the correct derivatives at the ends and the swept object mates correctly with the cylinder. 
 //   $fn=32;   
 //   bez = [[0,0,5],
 //          [0,0,10],
@@ -1882,8 +1874,24 @@ module bezier_sweep(shape, bezier, splinesteps=16, method="incremental", endpoin
 //   "end" = When `closed==false`, the origin point of the shape, on the ending face of the object
 //   "start-centroid" = When `closed==false`, the centroid of the shape, on the starting face of the object
 //   "end-centroid" = When `closed==false`, the centroid of the shape, on the ending face of the object
-
-
+// Example(3D,Med,NoAxes): In this case the bezier path is constructed so that its end faces in the Z direction, but you can see a gap appears when the shape is mated to a cylinder because the angle at the end is not accurate.
+//    bezpath = flatten([
+//        bez_begin([0,0,0], UP, 3),
+//        bez_tang([0,0,1],UP,8,p=52),
+//        bez_end  ([8,9,3], FWD,10)
+//    ]);
+//    cyl(d=4,h=3,anchor=TOP,$fn=12);
+//    path_sweep(circle(r=2,$fn=12),
+//            bezpath_curve(bezpath));
+// Example(3D,Med,NoAxes): When the above example is implemented using `bezpath_sweep` the gap vanishes.
+//    bezpath = flatten([
+//        bez_begin([0,0,0], UP, 3),
+//        bez_tang([0,0,1],UP,8,p=52),
+//        bez_end  ([8,9,3], FWD,10)
+//    ]);
+//    cyl(d=4,h=3,anchor=TOP,$fn=12);
+//    bezpath_sweep(circle(r=2,$fn=12),
+//                  bezpath);
 
 function bezpath_sweep(shape, bezpath, splinesteps=16, N=3, method="incremental", endpoint=true, normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true, 
                       symmetry=1, last_normal, caps, style="min_edge", transforms=false,

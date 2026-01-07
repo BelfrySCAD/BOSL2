@@ -470,7 +470,8 @@ function deduplicate(list, closed=false, eps=_EPSILON) =
 //   Given a list, and a list of indices, removes consecutive indices corresponding to list values that are equal
 //   or approximately equal.  If you omit the `indices` parameter then it defaults to the list `[0,...,len(list)-1]` so
 //   the return value is the indices of the deduplication of the entire input list.  This is useful if you need to
-//   remove the duplicates from list A and then remove the corresponding points from list B.  
+//   remove the duplicates from list A and then remove the corresponding points from list B.  When duplicates appear
+//   the returned index corresponds to the **last** duplicate.  
 // Arguments:
 //   list = The list that the indices index into.
 //   indices = The list of indices to deduplicate.  Default: `count(list)`
@@ -480,9 +481,15 @@ function deduplicate(list, closed=false, eps=_EPSILON) =
 //   a = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]);  // Returns: [1,4,3,2,0,1]
 //   b = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1], closed=true);  // Returns: [1,4,3,2,0]
 //   c = deduplicate_indexed([[7,undef],[7,undef],[1,4],[1,4],[1,4+1e-12]],eps=0);    // Returns: [0,2,4]
+// Example: Remove duplicates from `a` and then remove corresponding points from `b`.
+//   a = [1, 1, 2, 3, 4, 4, 5, 5, 5];
+//   b = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
+//   ind = deduplicate_indexed(a,count(len(a)));  // Returns: [1,2,3,5,8]
+//   echo(select(b,ind));         // Displays:  ["B", "C", "D", "F", "I"]
 function deduplicate_indexed(list, indices, closed=false, eps=_EPSILON) =
     assert(is_list(list)||is_string(list), "Improper list or string.")
     indices==[]? [] :
+    let(indices=default(indices, count(len(list))))
     assert(is_vector(indices), "Indices must be a list of numbers.")
     let(
         ll = len(list),
