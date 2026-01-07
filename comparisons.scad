@@ -485,6 +485,7 @@ function deduplicate(list, closed=false, eps=_EPSILON) =
 //   a = [1, 1, 2, 3, 4, 4, 5, 5, 5];
 //   b = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
 //   ind = deduplicate_indexed(a,count(len(a)));  // Returns: [1,2,3,5,8]
+//   echo(select(a,ind));         // Displays:  [1,2,3,4,5]
 //   echo(select(b,ind));         // Displays:  ["B", "C", "D", "F", "I"]
 function deduplicate_indexed(list, indices, closed=false, eps=_EPSILON) =
     assert(is_list(list)||is_string(list), "Improper list or string.")
