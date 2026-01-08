@@ -1664,7 +1664,7 @@ module ball_screw_rod(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
-// Example(2DMed): Example Tooth Profile
+// Example(2DMed,VPD=1.92,VPT=[0.00,-0.30,2.50]): Example Tooth Profile.  Note that the X range of the profile must be in [-1/2,1/2] because the profile will be scaled up by the pitch in order to produce the final thread profile.  
 //   pitch = 2;
 //   depth = pitch * cos(30) * 5/8;
 //   profile = [
@@ -1676,7 +1676,7 @@ module ball_screw_rod(
 //       [ 7/16, -depth/pitch*1.07]
 //   ];
 //   stroke(profile, width=0.02);
-// Example:
+// Example:  Here is the screw produced by the profile from Example 1.  
 //   pitch = 2;
 //   depth = pitch * cos(30) * 5/8;
 //   profile = [
@@ -1741,25 +1741,29 @@ module generic_threaded_rod(
       assert(all_positive([r1,r2]), "Must give d or both d1 and d2 as positive values")
       assert(is_undef(bevel1) || is_num(bevel1) || is_bool(bevel1) || bevel1=="reverse", "bevel1/bevel must be a number, boolean or \"reverse\"")
       assert(is_undef(bevel2) || is_num(bevel2) || is_bool(bevel2) || bevel2=="reverse", "bevel2/bevel must be a number, boolean or \"reverse\"");
+
     sides = quantup(segs(max(r1,r2)), starts);
     rsc = internal? (1/cos(180/sides)) : 1;    // Internal radius adjusted for faceting
     islop = internal? 2*get_slop() : 0;
     r1adj = r1 * rsc + islop;
     r2adj = r2 * rsc + islop;
-
-    extreme = internal? max(column(profile,1)) : min(column(profile,1));
+    profbounds = pointlist_bounds(profile);
+    dummy4 = assert(profbounds[0].x>=-1/2 && profbounds[1].x<=1/2,
+                    "profile's x values must lie in the interval [-1/2,1/2]")
+             assert(profile[0].x<last(profile).x, "profile's first point must have smaller x value than its last point");
+    extreme = internal? profbounds[1].y : profbounds[0].y;
     profile = !internal ? profile
             : let(
-                 maxidx = [for(i=idx(profile)) if (profile[i].y==extreme) i],
-                 cutpt = len(maxidx)==1 ? profile(maxidx[0]).x
+                 maxidx = [for(i=idx(profile)) if (approx(profile[i].y,extreme)) i],
+                 cutpt = len(maxidx)==1 ? profile[maxidx[0]].x
                        : mean([profile[maxidx[0]].x, profile[maxidx[1]].x])
               )
               [
                  for(entry=profile) if (entry.x>=cutpt) [entry.x-cutpt-1/2,entry.y], 
                  for(entry=profile) if (entry.x<cutpt) [entry.x-cutpt+1/2,entry.y]
               ];
-    profmin = pitch * min(column(profile,1));
-    pmax = pitch * max(column(profile,1));
+    profmin = pitch * profbounds[0].y;
+    pmax = pitch * profbounds[1].y;
     rmax = max(r1adj,r2adj)+pmax;
 
     // These parameters give the size of the bevel, negative for an outward bevel (e.g. on internal thread mask)  
