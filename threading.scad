@@ -1731,7 +1731,6 @@ module generic_threaded_rod(
                    let(ind = search([lead_in_shape], _lead_in_table,0)[0])
                    assert(ind!=[],str("Unknown lead_in_shape, \"",lead_in_shape,"\""))
                    _lead_in_table[ind[0]][1];
-    profbound = pointlist_bounds(profile);
     dummy0 = 
       assert(all_positive([pitch]),"Thread pitch must be a positive value")
       assert(all_positive([len]),"Length must be a postive value")
@@ -1752,7 +1751,7 @@ module generic_threaded_rod(
     dummy4 = assert(profbounds[0].x>=-1/2 && profbounds[1].x<=1/2,
                     "profile's x values must lie in the interval [-1/2,1/2]")
              assert(profile[0].x<last(profile).x, "profile's first point must have smaller x value than its last point");
-    extreme = internal? max(column(profile,1)) : min(column(profile,1));
+    extreme = internal? profbounds[1].y : profbounds[0].y;
     profile = !internal ? profile
             : let(
                  maxidx = [for(i=idx(profile)) if (approx(profile[i].y,extreme)) i],
@@ -1763,8 +1762,8 @@ module generic_threaded_rod(
                  for(entry=profile) if (entry.x>=cutpt) [entry.x-cutpt-1/2,entry.y], 
                  for(entry=profile) if (entry.x<cutpt) [entry.x-cutpt+1/2,entry.y]
               ];
-    profmin = pitch * min(column(profile,1));
-    pmax = pitch * max(column(profile,1));
+    profmin = pitch * profbounds[0].y;
+    pmax = pitch * profbounds[1].y;
     rmax = max(r1adj,r2adj)+pmax;
 
     // These parameters give the size of the bevel, negative for an outward bevel (e.g. on internal thread mask)  
