@@ -1044,6 +1044,158 @@ module npt_threaded_rod(
 
 
 
+// Module: bspp_threaded_rod()
+// Synopsis: Creates British Standard Parallel Pipe (BSPP) threading.
+// SynTags: Geom
+// Topics: Threading, Screws
+// See Also: npt_threaded_rod()
+// Usage:
+//   bspp_threaded_rod(size, [internal=], ...) [ATTACHMENTS];
+// Description:
+//   British Standard Pipe (BSP) is a set of screw thread standards used internationally (except in the USA)
+//   for connecting pipes.  This module implements British STandard Pipe Parallel (BSPP) thread, where the
+//   threads are paralell, rather than tapered, and the joint is achieved by compression of an O-ring seal or washer.   
+//   Constructs a BSPP end threading. If `internal=true`, creates a mask for making internal pipe threads.
+//   .
+//   The size was originally based on the inner diameter (in inches) of the pipe, but contemporary pipes have
+//   thinner walls, and hence an inner diameter larger than the nominal size.  
+// Arguments:
+//   size = BSP standard pipe size.  1/16, 1/8, 1/4, 3/8, 1/2, 5/8, 3/4, 7/8, 1, 1+1/8, 1+1/4, 1+3/8, 1+1/2, 1+5/8, 1+3/4, 1+7/8 or 2.
+//   l / length / h / height = Length of threaded rod.
+//   ---
+//   left_handed = If true, create left-handed threads.  Default: false
+//   starts = The number of lead starts.  Default: 1
+//   internal = If true, make this a mask for making internal threads.  Default: false
+//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
+//   bevel1 = Set bevel for bottom end. Overrides bevel=.
+//   bevel2 = Set bevel for top end. Overrides bevel=.
+//   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
+//   blunt_start1 = If true apply truncated blunt start threads bottom end.
+//   blunt_start2 = If true apply truncated blunt start threads top end.
+//   end_len = Specify the unthreaded length at the end after blunt start threads.  Default: 0
+//   end_len1 = Specify unthreaded length at the bottom
+//   end_len2 = Specify unthreaded length at the top
+//   lead_in = Specify linear length of the lead in section of the threading with blunt start threads
+//   lead_in1 = Specify linear length of the lead in section of the threading at the bottom with blunt start threads
+//   lead_in2 = Specify linear length of the lead in section of the threading at the top with blunt start threads
+//   lead_in_ang = Specify angular length in degrees of the lead in section of the threading with blunt start threads
+//   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
+//   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
+//   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+// Examples(Med):
+//   bspp_threaded_rod(size=3/8, length = 10, $fn=72);
+//   bspp_threaded_rod(size=1/2, length = 10, $fn=72, bevel=true);
+//   bspp_threaded_rod(size=1/2, length = 10, left_handed=true, $fn=72);
+//   bspp_threaded_rod(size=3/4, length = 10, internal=true, $fn=96);
+// Example:
+//   diff("remove"){
+//      cuboid([30,30,30])
+//      tag("remove"){
+//        up(.01)position(TOP)
+//            bspp_threaded_rod(size=1/2, length=30, $fn=96, internal=true, $slop=0.1, anchor=TOP);
+//        cyl(d=3/4*INCH, l=42, $fn=32);
+//     }
+//   }
+bspp_dimensions = [
+        // Size      TPI OD
+        [ 1/16,  [ 28, 0.3041 ]],
+        [ 1/8,   [ 28, 0.3372 ]],
+        [ 1/4,   [ 19, 0.4506 ]],
+        [ 3/8,   [ 19, 0.5886 ]],
+        [ 1/2,   [ 14, 0.8250 ]],
+        [ 5/8,   [ 14, 0.8105 ]],
+        [ 3/4,   [ 14, 0.9495 ]],
+        [ 7/8,   [ 14, 1.0975 ]],
+        [ 1,     [ 11, 1.3090 ]],
+        [ 1+1/8, [ 11, 1.3756 ]],
+        [ 1+1/4, [ 11, 1.5335 ]],
+        [ 1+3/8, [ 11, 1.6285 ]],
+        [ 1+1/2, [ 11, 1.7656 ]],
+        [ 1+5/8, [ 11, 1.9656 ]],
+        [ 1+3/4, [ 11, 1.9995 ]],
+        [ 1+7/8, [ 11, 2.1276 ]],
+        [ 2,     [ 11, 2.2306 ]],
+        ];
+function bspp_threaded_rod(
+    size,
+    left_handed=false, starts=1,
+    bevel,bevel1,bevel2,
+    internal=false,
+    length, height,
+    blunt_start, blunt_start1, blunt_start2,
+    lead_in, lead_in1, lead_in2,
+    lead_in_ang, lead_in_ang1, lead_in_ang2,
+    end_len, end_len1, end_len2,
+    lead_in_shape="default",
+    anchor, spin, orient
+) = no_function("bspp_threaded_rod");
+
+module bspp_threaded_rod(
+    size, l, h, 
+    left_handed=false, starts=1,
+    bevel,bevel1,bevel2,
+    internal=false,
+    length, height,
+    blunt_start, blunt_start1, blunt_start2,
+    lead_in, lead_in1, lead_in2,
+    lead_in_ang, lead_in_ang1, lead_in_ang2,
+    end_len, end_len1, end_len2,
+    lead_in_shape="default",
+    anchor, spin, orient
+)
+{
+    assert(!is_undef(size), "undefined size");
+    assert(is_num(size), "size is not a number");
+    _pitch = 0;
+    _diameter = 1;
+    index = search(size, bspp_dimensions);
+    forcefuncall = assert(len(index), str("Unsupported BSPP size ", size, "."));
+    p = INCH / bspp_dimensions[index[0]][1][_pitch];
+    d = INCH * bspp_dimensions[index[0]][1][_diameter];
+    theta = 55 / 2;
+    H = p / (2 * tan(theta));     // : fundamental triangle height
+    hh = 2 * H / 3;               // : actual depth of the thread
+    e = H * sin(theta) / 6;       // : rounding arc's height
+    r = e / (1 - sin(theta));     // : rounding arc's radius
+    s = hh - 2 * e;              // : straight flank depth
+    c = tan(theta) * (H / 6 + e); // : crest's half width
+    pStart = [-c, -e];
+    pEnd = [c, -e];
+    vStart = [(p / 2 - tan(theta) * (H / 6 + e)), -hh + e];
+    vEnd = [p / 2, -hh];
+    segments = 4;
+    // right valley rounding:
+    valley = arc(n = segments, cp = [p / 2, -(hh - r)], points = [vStart, vEnd]);
+    //stroke(valley, width = 0.01, color = "cyan");
+    // peak rounding:
+    peak = arc(n = 2 * segments, cp = [0, -r], points = [pStart, pEnd]);
+    //stroke(peak, width = 0.01, color = "cyan");
+    profile = scale(1 / p, concat(reverse(xflip(valley)), peak, valley));
+    //stroke(profile, width = 0.01, color = "cyan");
+    generic_threaded_rod(
+            d = d, length = length, height = height, h=h, l=l, 
+            pitch = p, profile = profile,
+            left_handed=left_handed,
+            bevel=bevel,bevel1=bevel1,bevel2=bevel2,
+            internal=internal,
+            blunt_start=blunt_start, blunt_start1=blunt_start1, blunt_start2=blunt_start2,
+            lead_in=lead_in, lead_in1=lead_in1, lead_in2=lead_in2, lead_in_shape=lead_in_shape,
+            lead_in_ang=lead_in_ang, lead_in_ang1=lead_in_ang1, lead_in_ang2=lead_in_ang2,
+            end_len=end_len, end_len1=end_len1, end_len2=end_len2,
+            anchor=anchor,
+            spin=spin,starts=starts,
+            orient=orient
+    )
+    children();
+}
+
+
+
+
 // Section: Buttress Threading
 
 // Module: buttress_threaded_rod()
