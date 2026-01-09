@@ -1158,18 +1158,18 @@ module bspp_threaded_rod(
     d = INCH * bspp_dimensions[index[0]][1][_diameter];
     theta = 55 / 2;
     H = p / (2 * tan(theta));     // : fundamental triangle height
-    h = 2 * H / 3;                // : actual depth of the thread
+    hh = 2 * H / 3;               // : actual depth of the thread
     e = H * sin(theta) / 6;       // : rounding arc's height
     r = e / (1 - sin(theta));     // : rounding arc's radius
-    s = h - 2 * e;                // : straight flank depth
+    s = hh - 2 * e;              // : straight flank depth
     c = tan(theta) * (H / 6 + e); // : crest's half width
     pStart = [-c, -e];
     pEnd = [c, -e];
-    vStart = [(p / 2 - tan(theta) * (H / 6 + e)), -h + e];
-    vEnd = [p / 2, -h];
+    vStart = [(p / 2 - tan(theta) * (H / 6 + e)), -hh + e];
+    vEnd = [p / 2, -hh];
     segments = 4;
     // right valley rounding:
-    valley = arc(n = segments, cp = [p / 2, -(h - r)], points = [vStart, vEnd]);
+    valley = arc(n = segments, cp = [p / 2, -(hh - r)], points = [vStart, vEnd]);
     //stroke(valley, width = 0.01, color = "cyan");
     // peak rounding:
     peak = arc(n = 2 * segments, cp = [0, -r], points = [pStart, pEnd]);
