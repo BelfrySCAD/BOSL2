@@ -1664,7 +1664,7 @@ module ball_screw_rod(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
-// Example(2DMed,VPD=1.92,VPT=[0.00,-0.30,2.50]): Example Tooth Profile.  Note that the X range of the profile must be in [-1/2,1/2] because the profile will be scaled up by the pitch in order to produce the final thread profile.  
+// Example(2DMed,VPD=1.92,VPT=[0.00,-0.30,2.5]): Example Tooth Profile.  Note that the X range of the profile must be in [-1/2,1/2] because the profile will be scaled up by the pitch in order to produce the final thread profile.  
 //   pitch = 2;
 //   depth = pitch * cos(30) * 5/8;
 //   profile = [

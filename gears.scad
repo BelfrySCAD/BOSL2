@@ -1021,7 +1021,9 @@ module spur_gear(
     profile_shift = auto_profile_shift(teeth,PA,helical,profile_shift=profile_shift);
     pr = pitch_radius(circ_pitch, teeth, helical);
     or = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal,shorten=shorten);
-    rr = _root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=internal);
+    rr = root_radius(circ_pitch=circ_pitch, teeth=teeth, helical=helical, clearance=clearance, internal=internal,
+                     profile_shift=profile_shift, pressure_angle=PA,  backlash=backlash);
+    convexity = ceil(2 * teeth * hyp_adj_to_ang(or,rr)/180);
     anchor_rad = atype=="pitch" ? pr
                : atype=="tip" ? or
                : atype=="root" ? rr
@@ -1037,7 +1039,7 @@ module spur_gear(
                 linear_extrude(
                     height=thickness/2+0.01, center=false,
                     twist=twist/2, slices=ceil(slices/2),
-                    convexity=teeth/2
+                    convexity=convexity
                 ) {
                     spur_gear2d(
                         circ_pitch = circ_pitch,
@@ -1058,7 +1060,7 @@ module spur_gear(
                 linear_extrude(
                     height=thickness, center=true,
                     twist=twist, slices=slices,
-                    convexity=teeth/2
+                    convexity=convexity
                 ) {
                     spur_gear2d(
                         circ_pitch = circ_pitch,
@@ -1328,7 +1330,8 @@ module spur_gear2d(
     );
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
     or = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal,shorten=shorten);
-    rr = _root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=internal);
+    rr = root_radius(circ_pitch=circ_pitch, teeth=teeth, helical=helical, clearance=clearance, internal=internal,
+                     profile_shift=profile_shift, pressure_angle=PA,  backlash=backlash);
     anchor_rad = atype=="pitch" ? pr
                : atype=="tip" ? or
                : atype=="root" ? rr
@@ -1439,7 +1442,9 @@ module ring_gear(
         assert(is_finite(gear_spin));
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
     ar = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=true);
-    rr=_root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=true);
+    //rr=_root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=true, helical=helical);
+    rr = root_radius(circ_pitch=circ_pitch, teeth=teeth, helical=helical, clearance=clearance, internal=true,
+                     profile_shift=profile_shift);
     or = is_def(or) ?
             assert(is_finite(or) && or>ar, "or is invalid or too small for teeth")
             or
@@ -1460,7 +1465,7 @@ module ring_gear(
         zrot(gear_spin)
         if (herringbone) {
             zflip_copy() down(0.01)
-            linear_extrude(height=thickness/2, center=false, twist=twist/2, slices=ceil(slices/2), convexity=teeth/4) {
+            linear_extrude(height=thickness/2, center=false, twist=twist/2, slices=ceil(slices/2), convexity=12) {
                 difference() {
                     circle(r=or);
                     spur_gear2d(
@@ -1477,7 +1482,7 @@ module ring_gear(
             }
         } else {
             zrot(twist/2)
-            linear_extrude(height=thickness,center=true, twist=twist, convexity=teeth/4) {
+            linear_extrude(height=thickness,center=true, twist=twist, convexity=12) {
                 difference() {
                     circle(r=or);
                     spur_gear2d(
@@ -1585,7 +1590,9 @@ module ring_gear2d(
         assert(is_finite(gear_spin));
     pr = pitch_radius(circ_pitch, teeth, helical=helical);
     ar = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=true);
-    rr=_root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=true);
+    //rr=_root_radius_basic(circ_pitch, teeth, clearance, profile_shift=profile_shift, internal=true);
+    rr = root_radius(circ_pitch=circ_pitch, teeth=teeth, helical=helical, clearance=clearance, internal=true,
+                     profile_shift=profile_shift);
     or = is_def(or) ?
             assert(is_finite(or) && or>ar, "or is invalid or too small for teeth")
             or
@@ -2317,7 +2324,7 @@ module crown_gear(
         gear_spin=gear_spin
     );
     attachable(anchor,spin,orient, r=pr+face_width, h=2*bottom) {
-        vnf_polyhedron(vnf, convexity=teeth/2);
+        vnf_polyhedron(vnf, convexity=12);
         children();
     }
 }
@@ -2689,7 +2696,7 @@ module bevel_gear(
     thickness = vnf_anchors[2];
     attachable(anchor,spin,orient, vnf=vnf, extent=true, anchors=anchors) {        
         difference() {
-           vnf_polyhedron(vnf, convexity=teeth/2);
+           vnf_polyhedron(vnf, convexity=12);
            if (shaft_diam > 0)
                cylinder(h=2*thickness, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
         }
@@ -3318,7 +3325,7 @@ module worm_gear(
     attachable(anchor,spin,orient, r=pr, l=thickness) {
         zrot(gear_spin)
         difference() {
-            vnf_polyhedron(vnf, convexity=teeth/2);
+            vnf_polyhedron(vnf, convexity=12);
             if (shaft_diam > 0) {
                 cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
             }
@@ -3388,7 +3395,6 @@ function _gear_tooth_profile(
 
     // Calculate the important circle radii
     arad = outer_radius(circ_pitch, teeth, helical=helical, profile_shift=profile_shift, internal=internal, shorten=shorten),
-    ffe=echo(arad=arad),
     prad = pitch_radius(circ_pitch, teeth, helical=helical),
     brad = _base_radius(circ_pitch, teeth, pressure_angle, helical=helical),
     rrad = _root_radius_basic(circ_pitch, teeth, clear, helical=helical, profile_shift=profile_shift, internal=internal),
@@ -3522,7 +3528,7 @@ function _gear_tooth_profile(
                    ipt = line_intersection([[0,0],polar_to_xy(1,90+180/teeth)], select(tooth_half,ind,ind+1)),
                    c = prad - mod*(1-profile_shift) - norm(ipt)
               )
-              echo(str(teeth, " tooth gear profile clipped at clearance = ",c))
+              //echo(str(teeth, " tooth gear profile clipped at clearance = ",c))
               [
                  ipt,
                  each slice(tooth_half, ind+1,-1)
@@ -4026,11 +4032,11 @@ function outer_radius(circ_pitch, teeth, clearance, internal=false, helical=0, p
 //   spur_gear2d(mod=mod, teeth=teeth, hide=floor(teeth/2));
 //   circle(r=rr, $fn=64);
 
-function root_radius(teeth, helical=0, clearance, internal=false, profile_shift="auto", pressure_angle=20, mod, pitch, diam_pitch, backlash=0) =
+function root_radius(teeth, helical=0, clearance, internal=false, profile_shift="auto", pressure_angle=20, mod, circ_pitch, diam_pitch, backlash=0) =
   let(
       profile_shift = auto_profile_shift(teeth, pressure_angle, helical, profile_shift=profile_shift),
       tooth = _gear_tooth_profile(teeth=teeth, pressure_angle=pressure_angle, clearance=clearance, backlash=backlash, helical=helical,
-                                  internal=internal, profile_shift=profile_shift, mod=mod, diam_pitch=diam_pitch, pitch=pitch),
+                                  internal=internal, profile_shift=profile_shift, mod=mod, diam_pitch=diam_pitch, pitch=circ_pitch),
       miny = norm(tooth[0])
   )
   miny;
