@@ -252,21 +252,6 @@ module threaded_rod(
                   [               crestwidth/2,      0],
                   [ depth/sqrt(3)+crestwidth/2, -depth]
                  ];
-    oprofile = internal? [
-        [-6/16, -depth],
-        [-1/16,  0],
-        [-1/32,  0.02],
-        [ 1/32,  0.02],
-        [ 1/16,  0],
-        [ 6/16, -depth]
-    ] : [
-        [-7/16, -depth*1.07],
-        [-6/16, -depth],
-        [-1/16,  0],
-        [ 1/16,  0],
-        [ 6/16, -depth],
-        [ 7/16, -depth*1.07]
-    ];
     generic_threaded_rod(
         d=basic ? d : d[2], d1=d1, d2=d2, l=l,
         pitch=pitch,
@@ -375,14 +360,6 @@ module threaded_nut(
                   [               crestwidth/2,      0],
                   [ depth/sqrt(3)+crestwidth/2, -depth]
                  ];
-    oprofile = [
-        [-6/16, -depth/pitch],
-        [-1/16,  0],
-        [-1/32,  0.02],
-        [ 1/32,  0.02],
-        [ 1/16,  0],
-        [ 6/16, -depth/pitch]
-    ];
     generic_threaded_nut(
         nutwidth=nutwidth,
         id=basic ? id : id[2], id1=id1, id2=id2,
@@ -1155,7 +1132,6 @@ module buttress_threaded_rod(
     teardrop=false,
     anchor, spin, orient
 ) {
-    depth = pitch * 3/4;
     profile = [
         [  -1/2, -0.77],
         [ -7/16, -0.75],
@@ -1254,7 +1230,6 @@ module buttress_threaded_nut(
     lead_in_shape="default",
     anchor, spin, orient
 ) {
-    depth = pitch * 3/4;
     profile = [
         [  -1/2, -0.77],
         [ -7/16, -0.75],
