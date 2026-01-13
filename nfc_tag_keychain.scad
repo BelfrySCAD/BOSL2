@@ -9,10 +9,18 @@
  * - Set keychain_shape = "square" for rectangular design with rounded corners
  * - Set nfc_tag_hole = true/false to include/exclude NFC tag recess
  *
- * PRINT PAUSE FEATURE:
- * - When you open this file, the CONSOLE displays the exact pause height
- * - Set a pause in your slicer to insert the NFC tag mid-print
- * - The tag gets sealed inside as printing continues
+ * THREE ASSEMBLY METHODS:
+ * 1. Mid-Print Pause: Single piece with pause to insert NFC tag
+ *    - Console displays exact pause height
+ *    - Tag gets sealed during print
+ *
+ * 2. Two-Halves Assembly: Print top and bottom separately
+ *    - Set print_mode = "bottom_half" then "top_half"
+ *    - Built-in alignment pins for perfect fit
+ *    - Glue halves together with NFC tag inside
+ *    - Easiest method for consistent results
+ *
+ * 3. Post-Print: Glue tag in after printing
  *
  * To use your own photo/logo:
  * 1. Save your image file in the same directory as this .scad file
@@ -33,7 +41,10 @@ tag_color = "#FFFFFF";  // color
 // Keychain shape style
 keychain_shape = "oval"; // [oval, square]
 
-// Create a recessed hole for embedding NFC tag
+// Print mode: single piece or two halves for gluing
+print_mode = "single"; // [single, top_half, bottom_half, both_halves]
+
+// Create a recessed hole for embedding NFC tag (only for single piece mode)
 nfc_tag_hole = true;
 
 /* [Logo 1 Options - Front Side] */
@@ -143,6 +154,19 @@ square_corner_radius = 3;
 
 // Distance from bottom to center of hanging hole (only used if keychain_shape = "square")
 square_hole_distance = 43;
+
+/* [Two-Halves Print Options] */
+// Height at which to split the keychain (default is middle of total height)
+split_height = 0;  // 0 = auto-calculate to middle
+
+// Add alignment pin holes for easier assembly
+add_alignment_pins = true;
+
+// Diameter of alignment pins
+alignment_pin_diameter = 2;
+
+// Number of alignment pins (2 or 3 recommended)
+alignment_pin_count = 3;
 
 
 // ============================================================
@@ -299,80 +323,224 @@ module nfc_hole() {
     }
 }
 
+/*
+ * Creates alignment pin holes for two-halves assembly
+ */
+module alignment_pins(pin_height, is_socket = false) {
+    if (add_alignment_pins) {
+        pin_radius = alignment_pin_diameter / 2;
+        // Clearance for socket holes
+        socket_radius = is_socket ? pin_radius + 0.2 : pin_radius;
+
+        for (i = [0:alignment_pin_count-1]) {
+            angle = 360 / alignment_pin_count * i;
+            // Position pins around the perimeter
+            rotate([0, 0, angle])
+                translate([0, diameter1/2 - 5, 0])
+                    cylinder(h = pin_height, r = socket_radius, $fn=20);
+        }
+    }
+}
+
+/*
+ * Main keychain assembly (full or split)
+ */
+module keychain_full() {
+    difference() {
+        // Main body
+        union() {
+            if (keychain_shape == "oval") {
+                keychain_oval_with_ends();
+            } else if (keychain_shape == "square") {
+                keychain_square();
+            }
+
+            // Add alignment pins for bottom half
+            if (print_mode == "bottom_half" && add_alignment_pins) {
+                calculated_split = split_height > 0 ? split_height : (keychain_thickness + bevel_radius * 2) / 2;
+                translate([0, 0, 0])
+                    alignment_pins(calculated_split, false);
+            }
+        }
+
+        // Subtract NFC hole (only in single piece mode)
+        if (print_mode == "single") {
+            nfc_hole();
+        }
+
+        // Add alignment pin sockets for top half
+        if (print_mode == "top_half" && add_alignment_pins) {
+            calculated_split = split_height > 0 ? split_height : (keychain_thickness + bevel_radius * 2) / 2;
+            translate([0, 0, 0])
+                alignment_pins(calculated_split, true);
+        }
+    }
+}
+
 // ============================================================
 // RENDERING - Final Assembly
 // ============================================================
 
-// Calculate and display pause height for NFC tag insertion
+// Calculate dimensions
 pause_height = nfc_tag_height;
 total_height = keychain_thickness + bevel_radius * 2;
+calculated_split = split_height > 0 ? split_height : total_height / 2;
 
-// Display pause information in console
+// Display information in console
 echo(str("=============================================="));
-echo(str("PRINT PAUSE INFORMATION:"));
-echo(str("=============================================="));
-if (nfc_tag_hole) {
-    echo(str("✓ NFC tag recess is ENABLED"));
-    echo(str("Pause Height: ", pause_height, " mm"));
-    echo(str("Total Height: ", total_height, " mm"));
-    echo(str(""));
-    echo(str("SLICER SETUP INSTRUCTIONS:"));
-    echo(str("1. Slice this model normally"));
-    echo(str("2. Add a pause at height: ", pause_height, " mm"));
-    echo(str("   - PrusaSlicer: Right-click layer → Add pause print"));
-    echo(str("   - Cura: Extensions → Post Processing → Modify G-Code → Pause at height"));
-    echo(str("   - Bambu Studio: Right-click layer → Add pause"));
-    echo(str("3. When printer pauses, place NFC tag in recess"));
-    echo(str("4. Resume print to cover the tag"));
+if (print_mode == "single") {
+    echo(str("PRINT MODE: Single Piece"));
+    echo(str("=============================================="));
+    if (nfc_tag_hole) {
+        echo(str("✓ NFC tag recess is ENABLED"));
+        echo(str("Pause Height: ", pause_height, " mm"));
+        echo(str("Total Height: ", total_height, " mm"));
+        echo(str(""));
+        echo(str("SLICER SETUP INSTRUCTIONS:"));
+        echo(str("1. Slice this model normally"));
+        echo(str("2. Add a pause at height: ", pause_height, " mm"));
+        echo(str("   - PrusaSlicer: Right-click layer → Add pause print"));
+        echo(str("   - Cura: Extensions → Post Processing → Modify G-Code → Pause at height"));
+        echo(str("   - Bambu Studio: Right-click layer → Add pause"));
+        echo(str("3. When printer pauses, place NFC tag in recess"));
+        echo(str("4. Resume print to cover the tag"));
+    } else {
+        echo(str("✗ NFC tag recess is DISABLED"));
+        echo(str("Total Height: ", total_height, " mm"));
+    }
 } else {
-    echo(str("✗ NFC tag recess is DISABLED"));
+    echo(str("PRINT MODE: Two-Halves Assembly"));
+    echo(str("=============================================="));
+    echo(str("Split Height: ", calculated_split, " mm"));
     echo(str("Total Height: ", total_height, " mm"));
+    echo(str("Alignment Pins: ", add_alignment_pins ? "ENABLED" : "DISABLED"));
+    if (add_alignment_pins) {
+        echo(str("Pin Count: ", alignment_pin_count));
+        echo(str("Pin Diameter: ", alignment_pin_diameter, " mm"));
+    }
+    echo(str(""));
+    echo(str("ASSEMBLY INSTRUCTIONS:"));
+    echo(str("1. Print both halves (set print_mode to 'bottom_half' then 'top_half')"));
+    echo(str("2. Place NFC tag in the bottom half"));
+    echo(str("3. Apply glue (CA glue or epoxy) to the mating surface"));
+    echo(str("4. Align the halves using the pins"));
+    echo(str("5. Press together and let cure"));
 }
 echo(str("=============================================="));
 
-// Main keychain body with NFC tag recess
-color(tag_color)
-    difference() {
-        // Render selected shape
-        if (keychain_shape == "oval") {
-            keychain_oval_with_ends();
-        } else if (keychain_shape == "square") {
-            keychain_square();
-        }
-        nfc_hole();
+// Main rendering based on print mode
+if (print_mode == "single") {
+    // Single piece with optional NFC recess
+    color(tag_color) {
+        keychain_full();
     }
 
-// Calculate logo Y offset based on shape (square needs vertical centering)
-logo1YPosition = keychain_shape == "square"
-    ? logo1OffsetY + square_height/2 - 5  // Center on square body
-    : logo1OffsetY;
+    // Add logos
+    logo1YPosition = keychain_shape == "square" ? logo1OffsetY + square_height/2 - 5 : logo1OffsetY;
+    logo1ZOffset = logo1Type == "svg" ? keychain_thickness + bevel_radius - logo1Thickness/2 : keychain_thickness + bevel_radius - logo1Thickness + 0.01;
 
-// Front side logo (Logo 1)
-logo1ZOffset = logo1Type == "svg"
-    ? keychain_thickness + bevel_radius - logo1Thickness/2
-    : keychain_thickness + bevel_radius - logo1Thickness + 0.01;
+    color(logo1Color)
+        translate([0, 0, logo1ZOffset])
+            logo(logo1Type, logo1OffsetX, logo1YPosition, logo1Width, logo1Height, logo1Thickness, svgFile1, pngFile1, stlFile1);
 
-color(logo1Color)
-    translate([0, 0, logo1ZOffset])
-        logo(logo1Type, logo1OffsetX, logo1YPosition, logo1Width, logo1Height,
-             logo1Thickness, svgFile1, pngFile1, stlFile1);
+    if(logo2Enabled) {
+        logo2YPosition = keychain_shape == "square" ? logo2OffsetY + square_height/2 - 5 : logo2OffsetY;
+        logo2ZOffset = logo2Type == "svg" ? -bevel_radius + logo2Thickness/2 : -bevel_radius - 0.01 + logo2Thickness;
+        color(logo2Color)
+            translate([0, 0, logo2ZOffset])
+                rotate([0, 180, 0])
+                    logo(logo2Type, logo2OffsetX, logo2YPosition, logo2Width, logo2Height, logo2Thickness, svgFile2, pngFile2, stlFile2);
+    }
+} else if (print_mode == "bottom_half") {
+    // Bottom half
+    color(tag_color) {
+        intersection() {
+            keychain_full();
+            translate([-100, -100, -0.1])
+                cube([200, 200, calculated_split + 0.1]);
+        }
+    }
 
-// Back side logo (Logo 2) - Optional
-if(logo2Enabled) {
-    // Calculate logo2 Y offset based on shape
-    logo2YPosition = keychain_shape == "square"
-        ? logo2OffsetY + square_height/2 - 5
-        : logo2OffsetY;
+    // Add logo to bottom half (back side)
+    if(logo2Enabled) {
+        logo2YPosition = keychain_shape == "square" ? logo2OffsetY + square_height/2 - 5 : logo2OffsetY;
+        logo2ZOffset = logo2Type == "svg" ? -bevel_radius + logo2Thickness/2 : -bevel_radius - 0.01 + logo2Thickness;
+        intersection() {
+            color(logo2Color)
+                translate([0, 0, logo2ZOffset])
+                    rotate([0, 180, 0])
+                        logo(logo2Type, logo2OffsetX, logo2YPosition, logo2Width, logo2Height, logo2Thickness, svgFile2, pngFile2, stlFile2);
+            translate([-100, -100, -0.1])
+                cube([200, 200, calculated_split + 0.1]);
+        }
+    }
+} else if (print_mode == "top_half") {
+    // Top half
+    color(tag_color) {
+        intersection() {
+            keychain_full();
+            translate([-100, -100, calculated_split])
+                cube([200, 200, total_height]);
+        }
+    }
 
-    logo2ZOffset = logo2Type == "svg"
-        ? -bevel_radius + logo2Thickness/2
-        : -bevel_radius - 0.01 + logo2Thickness;
+    // Add logo to top half (front side)
+    logo1YPosition = keychain_shape == "square" ? logo1OffsetY + square_height/2 - 5 : logo1OffsetY;
+    logo1ZOffset = logo1Type == "svg" ? keychain_thickness + bevel_radius - logo1Thickness/2 : keychain_thickness + bevel_radius - logo1Thickness + 0.01;
 
-    color(logo2Color)
-        translate([0, 0, logo2ZOffset])
-            rotate([0, 180, 0])
-                logo(logo2Type, logo2OffsetX, logo2YPosition, logo2Width, logo2Height,
-                     logo2Thickness, svgFile2, pngFile2, stlFile2);
+    intersection() {
+        color(logo1Color)
+            translate([0, 0, logo1ZOffset])
+                logo(logo1Type, logo1OffsetX, logo1YPosition, logo1Width, logo1Height, logo1Thickness, svgFile1, pngFile1, stlFile1);
+        translate([-100, -100, calculated_split])
+            cube([200, 200, total_height]);
+    }
+} else if (print_mode == "both_halves") {
+    // Show both halves side by side for preview
+    spacing = keychain_shape == "oval" ? diameter1 + 5 : square_width + 5;
+
+    // Bottom half
+    translate([-spacing/2, 0, 0]) {
+        color(tag_color) {
+            intersection() {
+                keychain_full();
+                translate([-100, -100, -0.1])
+                    cube([200, 200, calculated_split + 0.1]);
+            }
+        }
+        if(logo2Enabled) {
+            logo2YPosition = keychain_shape == "square" ? logo2OffsetY + square_height/2 - 5 : logo2OffsetY;
+            logo2ZOffset = logo2Type == "svg" ? -bevel_radius + logo2Thickness/2 : -bevel_radius - 0.01 + logo2Thickness;
+            intersection() {
+                color(logo2Color)
+                    translate([0, 0, logo2ZOffset])
+                        rotate([0, 180, 0])
+                            logo(logo2Type, logo2OffsetX, logo2YPosition, logo2Width, logo2Height, logo2Thickness, svgFile2, pngFile2, stlFile2);
+                translate([-100, -100, -0.1])
+                    cube([200, 200, calculated_split + 0.1]);
+            }
+        }
+    }
+
+    // Top half
+    translate([spacing/2, 0, 0]) {
+        color(tag_color) {
+            intersection() {
+                keychain_full();
+                translate([-100, -100, calculated_split])
+                    cube([200, 200, total_height]);
+            }
+        }
+        logo1YPosition = keychain_shape == "square" ? logo1OffsetY + square_height/2 - 5 : logo1OffsetY;
+        logo1ZOffset = logo1Type == "svg" ? keychain_thickness + bevel_radius - logo1Thickness/2 : keychain_thickness + bevel_radius - logo1Thickness + 0.01;
+        intersection() {
+            color(logo1Color)
+                translate([0, 0, logo1ZOffset])
+                    logo(logo1Type, logo1OffsetX, logo1YPosition, logo1Width, logo1Height, logo1Thickness, svgFile1, pngFile1, stlFile1);
+            translate([-100, -100, calculated_split])
+                cube([200, 200, total_height]);
+        }
+    }
 }
 
 // ============================================================
@@ -384,19 +552,31 @@ if(logo2Enabled) {
  * SELECT YOUR VERSION:
  *    Version 1 - Oval with NFC recess:
  *       keychain_shape = "oval"
+ *       print_mode = "single"
  *       nfc_tag_hole = true
  *
  *    Version 2 - Oval without NFC recess:
  *       keychain_shape = "oval"
+ *       print_mode = "single"
  *       nfc_tag_hole = false
  *
  *    Version 3 - Square with NFC recess:
  *       keychain_shape = "square"
+ *       print_mode = "single"
  *       nfc_tag_hole = true
  *
  *    Version 4 - Square without NFC recess:
  *       keychain_shape = "square"
+ *       print_mode = "single"
  *       nfc_tag_hole = false
+ *
+ *    Version 5 - Two-Halves Assembly (Oval):
+ *       keychain_shape = "oval"
+ *       print_mode = "bottom_half" or "top_half" or "both_halves"
+ *
+ *    Version 6 - Two-Halves Assembly (Square):
+ *       keychain_shape = "square"
+ *       print_mode = "bottom_half" or "top_half" or "both_halves"
  *
  * 1. PREPARE YOUR IMAGE:
  *    - For photos: Convert to SVG using online tools like:
@@ -419,11 +599,12 @@ if(logo2Enabled) {
  *    - Enable supports if needed for hanging hole
  *    - Consider pause at layer for multi-color printing
  *
- * 5. NFC TAG INSERTION (IMPORTANT!):
+ * 5. NFC TAG INSERTION (THREE METHODS):
+ *
+ *    METHOD 1 - Mid-Print Pause (Best for single piece):
  *    When you open this file in OpenSCAD, check the CONSOLE window.
  *    It will display the exact pause height for your settings.
  *
- *    TO INSERT NFC TAG DURING PRINT:
  *    a) In your slicer, add a pause at the height shown in console
  *       - PrusaSlicer: Right-click on the layer → "Add pause print (M601)"
  *       - Cura: Extensions → Post Processing → Modify G-Code → "Pause at height"
@@ -431,7 +612,21 @@ if(logo2Enabled) {
  *    b) When the print pauses, place your NFC tag in the recess
  *    c) Resume printing - the remaining layers will seal the tag inside
  *
- *    ALTERNATIVE METHOD:
+ *    METHOD 2 - Two-Halves Assembly (Easiest alignment):
+ *    a) Set print_mode = "bottom_half" and export/print
+ *    b) Set print_mode = "top_half" and export/print
+ *    c) Place NFC tag in the bottom half
+ *    d) Apply CA glue (super glue) or epoxy to the mating surface
+ *    e) Align using the built-in alignment pins
+ *    f) Press together firmly and let cure (60 seconds for CA glue)
+ *
+ *    TIPS for Two-Halves:
+ *    - Set print_mode = "both_halves" to preview alignment
+ *    - Alignment pins ensure perfect registration
+ *    - Use thin CA glue for fastest assembly
+ *    - Apply glue sparingly to avoid squeeze-out
+ *
+ *    METHOD 3 - Post-Print Glue:
  *    - Print the keychain normally without pause
  *    - Glue NFC tag into recess after printing
  *    - Cover with thin layer of epoxy or clear nail polish if desired
