@@ -9,6 +9,11 @@
  * - Set keychain_shape = "square" for rectangular design with rounded corners
  * - Set nfc_tag_hole = true/false to include/exclude NFC tag recess
  *
+ * PRINT PAUSE FEATURE:
+ * - When you open this file, the CONSOLE displays the exact pause height
+ * - Set a pause in your slicer to insert the NFC tag mid-print
+ * - The tag gets sealed inside as printing continues
+ *
  * To use your own photo/logo:
  * 1. Save your image file in the same directory as this .scad file
  * 2. Update the svgFile1, pngFile1, or stlFile1 parameter below with your filename
@@ -121,6 +126,10 @@ nfc_tag_diameter = 26;
 
 // NFC tag recess depth
 nfc_tag_height = 1.25;
+
+/* [Print Settings Helper] */
+// Show pause height marker for NFC insertion (displays calculated height in console)
+show_pause_info = true;
 
 /* [Square Shape Dimensions] */
 // Width of square keychain body (only used if keychain_shape = "square")
@@ -294,6 +303,33 @@ module nfc_hole() {
 // RENDERING - Final Assembly
 // ============================================================
 
+// Calculate and display pause height for NFC tag insertion
+pause_height = nfc_tag_height;
+total_height = keychain_thickness + bevel_radius * 2;
+
+// Display pause information in console
+echo(str("=============================================="));
+echo(str("PRINT PAUSE INFORMATION:"));
+echo(str("=============================================="));
+if (nfc_tag_hole) {
+    echo(str("✓ NFC tag recess is ENABLED"));
+    echo(str("Pause Height: ", pause_height, " mm"));
+    echo(str("Total Height: ", total_height, " mm"));
+    echo(str(""));
+    echo(str("SLICER SETUP INSTRUCTIONS:"));
+    echo(str("1. Slice this model normally"));
+    echo(str("2. Add a pause at height: ", pause_height, " mm"));
+    echo(str("   - PrusaSlicer: Right-click layer → Add pause print"));
+    echo(str("   - Cura: Extensions → Post Processing → Modify G-Code → Pause at height"));
+    echo(str("   - Bambu Studio: Right-click layer → Add pause"));
+    echo(str("3. When printer pauses, place NFC tag in recess"));
+    echo(str("4. Resume print to cover the tag"));
+} else {
+    echo(str("✗ NFC tag recess is DISABLED"));
+    echo(str("Total Height: ", total_height, " mm"));
+}
+echo(str("=============================================="));
+
 // Main keychain body with NFC tag recess
 color(tag_color)
     difference() {
@@ -306,6 +342,11 @@ color(tag_color)
         nfc_hole();
     }
 
+// Calculate logo Y offset based on shape (square needs vertical centering)
+logo1YPosition = keychain_shape == "square"
+    ? logo1OffsetY + square_height/2 - 5  // Center on square body
+    : logo1OffsetY;
+
 // Front side logo (Logo 1)
 logo1ZOffset = logo1Type == "svg"
     ? keychain_thickness + bevel_radius - logo1Thickness/2
@@ -313,11 +354,16 @@ logo1ZOffset = logo1Type == "svg"
 
 color(logo1Color)
     translate([0, 0, logo1ZOffset])
-        logo(logo1Type, logo1OffsetX, logo1OffsetY, logo1Width, logo1Height,
+        logo(logo1Type, logo1OffsetX, logo1YPosition, logo1Width, logo1Height,
              logo1Thickness, svgFile1, pngFile1, stlFile1);
 
 // Back side logo (Logo 2) - Optional
 if(logo2Enabled) {
+    // Calculate logo2 Y offset based on shape
+    logo2YPosition = keychain_shape == "square"
+        ? logo2OffsetY + square_height/2 - 5
+        : logo2OffsetY;
+
     logo2ZOffset = logo2Type == "svg"
         ? -bevel_radius + logo2Thickness/2
         : -bevel_radius - 0.01 + logo2Thickness;
@@ -325,7 +371,7 @@ if(logo2Enabled) {
     color(logo2Color)
         translate([0, 0, logo2ZOffset])
             rotate([0, 180, 0])
-                logo(logo2Type, logo2OffsetX, logo2OffsetY, logo2Width, logo2Height,
+                logo(logo2Type, logo2OffsetX, logo2YPosition, logo2Width, logo2Height,
                      logo2Thickness, svgFile2, pngFile2, stlFile2);
 }
 
@@ -372,9 +418,26 @@ if(logo2Enabled) {
  *    - Layer height: 0.1-0.2mm recommended
  *    - Enable supports if needed for hanging hole
  *    - Consider pause at layer for multi-color printing
- *    - Insert NFC tag into recess before final layers (if desired)
+ *
+ * 5. NFC TAG INSERTION (IMPORTANT!):
+ *    When you open this file in OpenSCAD, check the CONSOLE window.
+ *    It will display the exact pause height for your settings.
+ *
+ *    TO INSERT NFC TAG DURING PRINT:
+ *    a) In your slicer, add a pause at the height shown in console
+ *       - PrusaSlicer: Right-click on the layer → "Add pause print (M601)"
+ *       - Cura: Extensions → Post Processing → Modify G-Code → "Pause at height"
+ *       - Bambu Studio: Right-click on layer → "Add pause"
+ *    b) When the print pauses, place your NFC tag in the recess
+ *    c) Resume printing - the remaining layers will seal the tag inside
+ *
+ *    ALTERNATIVE METHOD:
+ *    - Print the keychain normally without pause
+ *    - Glue NFC tag into recess after printing
+ *    - Cover with thin layer of epoxy or clear nail polish if desired
  *
  * NFC TAG COMPATIBILITY:
  *    - NTAG213/215/216 tags typically 25mm diameter, 0.5mm thick
  *    - Adjust nfc_tag_diameter and nfc_tag_height if needed
+ *    - Common NFC tag types: NTAG213 (180 bytes), NTAG215 (540 bytes), NTAG216 (924 bytes)
  */
