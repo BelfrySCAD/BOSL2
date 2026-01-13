@@ -1,8 +1,13 @@
 /*
- * NFC Tag Keychain with Custom Logo
+ * NFC Tag Keychain with Custom Logo - Parametric Design
  *
  * This OpenSCAD file creates a custom keychain designed to hold an NFC tag
  * with support for adding custom logos/images on one or both sides.
+ *
+ * AVAILABLE VERSIONS:
+ * - Set keychain_shape = "oval" for classic teardrop design
+ * - Set keychain_shape = "square" for rectangular design with rounded corners
+ * - Set nfc_tag_hole = true/false to include/exclude NFC tag recess
  *
  * To use your own photo/logo:
  * 1. Save your image file in the same directory as this .scad file
@@ -19,6 +24,9 @@
 /* [Basic Parameters] */
 // Keychain base color
 tag_color = "#FFFFFF";  // color
+
+// Keychain shape style
+keychain_shape = "oval"; // [oval, square]
 
 // Create a recessed hole for embedding NFC tag
 nfc_tag_hole = true;
@@ -114,6 +122,19 @@ nfc_tag_diameter = 26;
 // NFC tag recess depth
 nfc_tag_height = 1.25;
 
+/* [Square Shape Dimensions] */
+// Width of square keychain body (only used if keychain_shape = "square")
+square_width = 35;
+
+// Height of square keychain body (only used if keychain_shape = "square")
+square_height = 50;
+
+// Corner radius for rounded corners (only used if keychain_shape = "square")
+square_corner_radius = 3;
+
+// Distance from bottom to center of hanging hole (only used if keychain_shape = "square")
+square_hole_distance = 43;
+
 
 // ============================================================
 // MODULES - Main Construction Code
@@ -159,10 +180,64 @@ module keychain_oval_with_ends() {
 }
 
 /*
- * Creates a pill-shaped (obround) hole for hanging the keychain
+ * Main keychain body with square/rectangular shape and rounded corners
+ */
+module keychain_square() {
+    // Apply minkowski to create smooth, beveled edges
+    minkowski() {
+        difference() {
+            // Main square body with rounded corners
+            translate([-square_width/2, 0, 0])
+                hull() {
+                    // Four corners with rounded edges
+                    translate([square_corner_radius, square_corner_radius, 0])
+                        cylinder(h = keychain_thickness, r = square_corner_radius, $fn=50);
+
+                    translate([square_width - square_corner_radius, square_corner_radius, 0])
+                        cylinder(h = keychain_thickness, r = square_corner_radius, $fn=50);
+
+                    translate([square_corner_radius, square_height - square_corner_radius, 0])
+                        cylinder(h = keychain_thickness, r = square_corner_radius, $fn=50);
+
+                    translate([square_width - square_corner_radius, square_height - square_corner_radius, 0])
+                        cylinder(h = keychain_thickness, r = square_corner_radius, $fn=50);
+                }
+
+            // Cut out the hanging hole at top
+            pill_hole_square();
+        }
+
+        // Sphere used for rounding/beveling all edges
+        sphere(r = bevel_radius, $fn=50);
+    }
+}
+
+/*
+ * Creates a pill-shaped (obround) hole for hanging the keychain (oval version)
  */
 module pill_hole() {
     translate([0, distance_hole, -0.1]) {
+        union() {
+            // Left rounded end
+            translate([-hole_length / 2, 0, 0])
+                cylinder(h = keychain_thickness + 3, r = hole_diameter / 2, $fn=50);
+
+            // Right rounded end
+            translate([hole_length / 2, 0, 0])
+                cylinder(h = keychain_thickness + 3, r = hole_diameter / 2, $fn=50);
+
+            // Connecting rectangle
+            translate([-hole_length / 2, -hole_diameter / 2, 0])
+                cube([hole_length, hole_diameter, keychain_thickness + 3]);
+        }
+    }
+}
+
+/*
+ * Creates a pill-shaped (obround) hole for hanging the keychain (square version)
+ */
+module pill_hole_square() {
+    translate([0, square_hole_distance, -0.1]) {
         union() {
             // Left rounded end
             translate([-hole_length / 2, 0, 0])
@@ -222,7 +297,12 @@ module nfc_hole() {
 // Main keychain body with NFC tag recess
 color(tag_color)
     difference() {
-        keychain_oval_with_ends();
+        // Render selected shape
+        if (keychain_shape == "oval") {
+            keychain_oval_with_ends();
+        } else if (keychain_shape == "square") {
+            keychain_square();
+        }
         nfc_hole();
     }
 
@@ -255,6 +335,23 @@ if(logo2Enabled) {
 /*
  * QUICK START GUIDE:
  *
+ * SELECT YOUR VERSION:
+ *    Version 1 - Oval with NFC recess:
+ *       keychain_shape = "oval"
+ *       nfc_tag_hole = true
+ *
+ *    Version 2 - Oval without NFC recess:
+ *       keychain_shape = "oval"
+ *       nfc_tag_hole = false
+ *
+ *    Version 3 - Square with NFC recess:
+ *       keychain_shape = "square"
+ *       nfc_tag_hole = true
+ *
+ *    Version 4 - Square without NFC recess:
+ *       keychain_shape = "square"
+ *       nfc_tag_hole = false
+ *
  * 1. PREPARE YOUR IMAGE:
  *    - For photos: Convert to SVG using online tools like:
  *      * vectorizer.io
@@ -268,7 +365,8 @@ if(logo2Enabled) {
  *
  * 3. ADJUST SIZE:
  *    - Modify logo1Width and logo1Height to fit
- *    - Default 22mm x 22mm fits well on 30mm diameter tag
+ *    - Oval: Default 22mm x 22mm fits well on 30mm diameter
+ *    - Square: Default 22mm x 22mm fits well on 35mm width
  *
  * 4. PRINT SETTINGS:
  *    - Layer height: 0.1-0.2mm recommended
