@@ -387,6 +387,7 @@ module knuckle_hinge(length, segs, offset, inner=false, arm_height=0, arm_angle=
         union(){}
     }
   }
+  default_tag("keep", do_tag=in_place != false && knuckle_clearance)
   attachable(anchor,spin,orient,
              size=[length,
                    arm_height+offset/tan(arm_angle)+knuckle_diam/2+knuckle_diam/2/sin(arm_angle),
