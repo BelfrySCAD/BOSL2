@@ -48,6 +48,8 @@ _BOSL2_PARTITIONS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !
 //   half_of([1,1], planar=true) circle(d=50);
 module half_of(v=UP, cp, s=100, planar=false)
 {
+    assert(all_positive[s],"s must be a positive value");
+    assert(s<1e9, "s must be smaller than 1e9");
     req_children($children);
     cp = is_vector(v,4)? assert(cp==undef, "Don't use cp with plane definition.") plane_normal(v) * v[3] :
         is_vector(cp)? cp :
