@@ -1264,11 +1264,11 @@ module force_tag(tag)
 
 
 // Module: default_tag()
-// Synopsis: Sets a default tag for all children.
+// Synopsis: Conditionally set a default tag for all children.
 // Topics: Attachments
 // See Also: force_tag(), recolor(), hide(), show_only(), diff(), intersect()
 // Usage:
-//   PARENT() default_tag(tag) CHILDREN;
+//   PARENT() default_tag(tag, [do_tag]) CHILDREN;
 // Description:
 //   Sets a default tag for all of the children.  This is intended to be used to set a tag for a whole module
 //   that is then used outside the module, such as setting the tag to "remove" for easy operation with {{diff()}}.
@@ -1281,7 +1281,7 @@ module force_tag(tag)
 //   For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
 // Arguments:
 //   tag = tag string, which must not contain any spaces.
-//   do_tag = if false do not set the tag.  
+//   do_tag = if false do not set the tag.  Default: true
 // Side Effects:
 //   Sets `$tag` to the tag you specify, possibly with a scope prefix.
 // Example(3D):  The module thing() is defined with {{tag()}} and the user applied tag of "keep_it" is ignored, leaving the user puzzled.
