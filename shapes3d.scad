@@ -1179,7 +1179,7 @@ function regular_prism(n,
 //   `inset` or a texture that has negative values you must select a thickness strictly **larger** than the depth the texture extends below zero.
 //   .
 //   Textures are meant to be between 0 and 1 so that `tex_depth` and `tex_inset` behave as expected.  If you have a custom textures that
-//   has a different range you can still use it directly, but you may find it more convenient to rescale a height map texture using {{fit_to_range()}]
+//   has a different range you can still use it directly, but you may find it more convenient to rescale a height map texture using {{fit_to_range()}}
 //   or a VNF texture using {{fit_to_box()}}.  
 //   .
 //   You can also specify a trapzoidal prism using parameters equivalent to those accepted by {{trapezoid()}}, with one change:  
