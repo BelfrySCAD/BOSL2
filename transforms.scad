@@ -981,9 +981,9 @@ function yscale(y=1, p=_NO_ARG, cp=0) =
 //   zscale(3) sphere(r=10);
 //
 // Example: Scaling Points
-//   path = xrot(90,p=path3d(circle(d=50,$fn=12)));
+//   path = xrot(90,path3d(circle(d=50,$fn=12)));
 //   #stroke(path,closed=true);
-//   stroke(zscale(path),closed=true);
+//   stroke(zscale(2,path),closed=true);
 module zscale(z=1, p, cp=0) {
     req_children($children);      
     assert(is_undef(p), "Module form `zscale()` does not accept p= argument.");
