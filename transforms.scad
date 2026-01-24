@@ -90,13 +90,11 @@ _NO_ARG = [true,[123232345],false];
 // Usage: Get Translation Matrix
 //   mat = move(v);
 // Description:
-//   Translates position by the given amount.
-//   * Called as a module, moves/translates all children.
-//   * Called as a function with the `p` argument, returns the translated point or list of points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the translated patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the translated VNF.
-//   * Called as a function with the `p` argument set to a VNF or a polygon and `v` set to "centroid", "mean" or "box", translates the argument to the centroid, mean, or bounding box center respectively.
-//   * Called as a function without a `p` argument, returns a 4x4 transformation matrix.
+//   Translates geometry position or point position by the given vector.
+//   * If called as a module, moves/translates all children.
+//   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns a 4x4 transformation matrix.
+//   .
 //   The functional form of `move()` can also be invoked as `translate()`.  
 // Arguments:
 //   v = An [X,Y,Z] vector to translate by.  For function form with `p` a point list or VNF, can be "centroid", "mean" or "box".  
@@ -175,9 +173,10 @@ function translate(v=[0,0,0], p=_NO_ARG) = move(v=v, p=p);
 //   mat = left(x);
 //
 // Description:
-//   If called as a module, moves/translates all children left (in the X- direction) by the given amount.
-//   If called as a function with the `p` argument, returns the translated VNF, point or list of points.
-//   If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
+//   Moves geometry or data to the left (in the X- direction) by the specified amount.  (If `x` is negative motion will be to the right.)
+//   * If called as a module, moves all children left.
+//   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
 //
 // Arguments:
 //   x = Scalar amount to move left.
@@ -220,9 +219,11 @@ function left(x=0, p=_NO_ARG) =
 //   mat = right(x);
 //
 // Description:
-//   If called as a module, moves/translates all children right (in the X+ direction) by the given amount.
-//   If called as a function with the `p` argument, returns the translated VNF point or list of points.
-//   If called as a function without the `p` argument, returns a 4x4 tranformation matrix. 
+//   Moves geometry or data to the right (in the X+ direction) by the specified amount.  (If `x` is negative motion will be to the left.)
+//   * If called as a module, moves all children right.
+//   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without the `p` argument, returns a 4x4 tranformation matrix.
+//   . 
 //   You can also call this as `xmove()`.  
 // Arguments:
 //   x = Scalar amount to move right.
@@ -276,9 +277,10 @@ function xmove(x=0, p=_NO_ARG) =
 //   mat = fwd(y);
 //
 // Description:
-//   If called as a module, moves/translates all children forward (in the Y- direction) by the given amount.
-//   If called as a function with the `p` argument, returns the translated VNF, point or list of points.
-//   If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
+//   Moves geometry or data forward (in the Y- direction) by the specified amount.  (If `y` is negative motion will be to the back.)
+//   * If called as a module, moves all children forward.
+//   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
 // Arguments:
 //   y = Scalar amount to move forward.
 //   p = (function only) A point, list of points or VNF to be translated.
@@ -320,9 +322,11 @@ function fwd(y=0, p=_NO_ARG) =
 //   mat = back(y);
 //
 // Description:
-//   If called as a module, moves/translates all children back (in the Y+ direction) by the given amount.
-//   If called as a function with the `p` argument, returns the translated VNF, point or list of points.
-//   If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
+//   Moves geometry or data forward (in the Y+ direction) by the specified amount.  (If `y` is negative motion will be forward.)
+//   * If called as a module, moves all children forward.
+//   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without the `p` argument, returns a 4x4 transformation matrix.
+//   .
 //   You can also call this as `ymove()`.  
 // Arguments:
 //   y = Scalar amount to move back.
@@ -376,9 +380,10 @@ function ymove(y=0,p=_NO_ARG) =
 //   mat = down(z);
 //
 // Description:
-//   If called as a module, moves/translates all children down (in the Z- direction) by the given amount.
-//   If called as a function with the `p` argument, returns the translated VNF, point or list of points.
-//   If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
+//   Moves geometry or data dwon (in the Z- direction) by the specified amount.  (If `z` is negative motion will be upward.)
+//   * If called as a module, moves all children down.
+//   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
 //
 // Arguments:
 //   z = Scalar amount to move down
@@ -419,9 +424,11 @@ function down(z=0, p=_NO_ARG) =
 //   mat = up(z);
 //
 // Description:
-//   If called as a module, moves/translates all children up (in the Z+ direction) by the given amount.
-//   If called as a function with the `p` argument, returns the translated VNF, point or list of points.
-//   If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
+//   Moves geometry or data up (in the Z+ direction) by the specified amount.  (If `z` is negative motion will be downward.)
+//   * If called as a module, moves all children up
+//   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without the `p` argument, returns a 4x4 transformation matrix.
+//   .
 //   You can also call this as `zmove()`.  
 // Arguments:
 //   z = Scalar amount to move up.
@@ -501,14 +508,12 @@ function zmove(z=0, p=_NO_ARG) =
 //   * If the `reverse` argument is true, then the rotations performed will be exactly reversed.
 //   .
 //   The behavior and return value varies depending on how `rot()` is called:
-//   * Called as a module, rotates all children.
-//   * Called as a function with a `p` argument containing a point, returns the rotated point.
-//   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, returns the 4x4 rotation matrix. 
-//   This function (and sometimes {{frame_map()}} are the two transformations that require
-//   that the `p=` argument must be given as a named argument rather than a positional argument.  
+//   * If called as a module, rotates all children.
+//   * If called as a function with the `p=` argument, returns the rotated version of that `p=` argument.  The `p=` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns the 4x4 rotation matrix.
+//   .
+//   This function (and sometimes {{frame_map()}} are the only two transformations that require
+//   that the `p=` argument be given as a named argument rather than a positional argument.  
 //
 // Arguments:
 //   a = Scalar angle or vector of XYZ rotation angles to rotate by, in degrees.  If you use the `from` and `to` arguments then `a` must be a scalar.  Default: `0`
@@ -588,19 +593,16 @@ function rot(a=0, v, cp, from, to, reverse=false, p=_NO_ARG) =
 //   mat = xrot(a, [cp=]);
 //
 // Description:
-//   Rotates around the X axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
-//   * Called as a module, rotates all children.
-//   * Called as a function with a `p` argument containing a point, returns the rotated point.
-//   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, returns the 4x4 rotation matrix.
+//   Rotates around the X+ axis by the given number of degrees.  If `cp` is given, rotate around that center point.
+//   * If called as a module, rotates all children.
+//   * If called as a function with the `p` argument, returns the rotated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns the 4x4 rotation matrix.
 //
 // Arguments:
-//   a = angle to rotate by in degrees.
+//   a = Rotation angle in degrees. 
 //   p = (function only) A point, list of points, Bezier patch or VNF to be rotated. 
 //   ---
-//   cp = centerpoint to rotate around. Default: [0,0,0]
+//   cp = center point to rotate around. Default: [0,0,0]
 //
 // Example:
 //   #cylinder(h=50, r=10, center=true);
@@ -636,19 +638,16 @@ function xrot(a=0, p=_NO_ARG, cp) = rot([a,0,0], cp=cp, p=p);
 //   mat = yrot(a, [cp=]);
 //
 // Description:
-//   Rotates around the Y axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
-//   * Called as a module, rotates all children.
-//   * Called as a function with a `p` argument containing a point, returns the rotated point.
-//   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, returns the 4x4 rotation matrix.
+//   Rotates around the Y+ axis by the given number of degrees.  If `cp` is given, rotate around that center point. 
+//   * If called as a module, rotates all children.
+//   * If called as a function with the `p` argument, returns the rotated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns the 4x4 rotation matrix.
 //
 // Arguments:
-//   a = angle to rotate by in degrees.
+//   a = Rotation angle in degrees.
 //   p = (function only) A point, list of points, Bezier patch or VNF to be rotated. 
 //   ---
-//   cp = centerpoint to rotate around. Default: [0,0,0]
+//   cp = center point to rotate around. Default: [0,0,0]
 //
 // Example:
 //   #cylinder(h=50, r=10, center=true);
@@ -684,16 +683,13 @@ function yrot(a=0, p=_NO_ARG, cp) = rot([0,a,0], cp=cp, p=p);
 //   mat = zrot(a, [cp=]);
 //
 // Description:
-//   Rotates around the Z axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
-//   * Called as a module, rotates all children.
-//   * Called as a function with a `p` argument containing a point, returns the rotated point.
-//   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, returns the 4x4 rotation matrix.
+//   Rotates around the Z+ axis by the given number of degrees.  If `cp` is given, rotate around that center point.
+//   * If called as a module, rotates all children.
+//   * If called as a function with the `p` argument, returns the rotated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns the 4x4 rotation matrix.
 //
 // Arguments:
-//   a = angle to rotate by in degrees.
+//   a = Rotation angle in degrees.
 //   p = (function only) A point, list of points, Bezier patch or VNF to be rotated. 
 //   ---
 //   cp = centerpoint to rotate around. Default: [0,0,0]
@@ -737,12 +733,9 @@ function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
 //   * If the `reverse` argument is true, then the tilt/rotation will be reversed. 
 //   .
 //   The behavior and return value varies depending on how `tilt()` is called:
-//   * Called as a module, tilts all children.
-//   * Called as a function with a `p` argument containing a point, returns the tilted/rotated point.
-//   * Called as a function with a `p` argument containing a list of points, returns the list of tilted/rotated points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the tilted/rotated patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the tilted/rotated VNF.
-//   * Called as a function without a `p` argument, returns a 4x4 transformation matrix.
+//   * Ifc called as a module, tilts all children.
+//   * If called as a function with the `p` argument, returns the tilted version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns a 4x4 transformation matrix.
 //
 // Arguments:
 //   to = Target vector for vector-based rotations.
@@ -789,22 +782,23 @@ function tilt(to, p=_NO_ARG, cp, reverse=false) =
 // Topics: Affine, Matrices, Transforms, Scaling
 // See Also: xscale(), yscale(), zscale()
 //
-// Usage: As Module
+// Usage: As Module (native OpenSCAD)
 //   scale(SCALAR) CHILDREN;
 //   scale([X,Y,Z]) CHILDREN;
+// Usage: As module with center point (BOSL2 extension)
+//   scale(v, cp) CHILDREN;
 // Usage: Scale Points
 //   pts = scale(v, p, [cp=]);
 // Usage: Get Scaling Matrix
 //   mat = scale(v, [cp=]);
 //
 // Description:
-//   Scales by the [X,Y,Z] scaling factors given in `v`.  If `v` is given as a scalar number, all axes are scaled uniformly by that amount.
-//   * Called as the built-in module, scales all children.
-//   * Called as a function with a point in the `p` argument, returns the scaled point.
-//   * Called as a function with a list of points in the `p` argument, returns the list of scaled points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the scaled patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the scaled VNF.
-//   * Called as a function without a `p` argument, returns a 4x4 transformation matrix. 
+//   Scales by the [X,Y,Z] scaling factors given in `v`.  If `v` is given as a scalar number, all axes are scaled uniformly by that amount.  
+//   If `v` has fewer than three dimensions, it is padded with 1 values, so scaling by [4] is the same as [4,1,1].  If you give `cp` a 
+//   vector value then the scaling is done relative to that specified center point.  
+//   * If called as the built-in module, scales all children.
+//   * If called as a function with the `p` argument, returns the scaled version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns a 4x4 transformation matrix. 
 //
 // Arguments:
 //   v = Either a numeric uniform scaling factor, or a list of [X,Y,Z] scaling factors.  Default: 1
@@ -822,7 +816,7 @@ function tilt(to, p=_NO_ARG, cp, reverse=false) =
 // Example(2D):
 //   path = circle(d=50,$fn=12);
 //   #stroke(path,closed=true);
-//   stroke(scale([1.5,3],p=path),closed=true);
+//   stroke(scale([1.5,3],path),closed=true);
 function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
     assert(is_num(v) || is_vector(v),"Invalid scale")
     assert(p==_NO_ARG || is_list(p),"Invalid point list")
@@ -853,13 +847,10 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
 //   mat = xscale(x, [cp=]);
 //
 // Description:
-//   Scales along the X axis by the scaling factor `x`.
-//   * Called as the built-in module, scales all children.
-//   * Called as a function with a point in the `p` argument, returns the scaled point.
-//   * Called as a function with a list of points in the `p` argument, returns the list of scaled points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the scaled patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the scaled VNF.
-//   * Called as a function without a `p` argument, returns a 4x4 transformation matrix. 
+//   Scales in the X direction by the scale factor `x`. If `cp` is given either as a scalar X value or as an [X,Y,Z] value then X is used as the center for the scaling.
+//   * If called as the built-in module, scales all children.
+//   * If called as a function with the `p` argument, returns the scaled version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns a 4x4 transformation matrix. 
 //
 // Arguments:
 //   x = Factor to scale by, along the X axis.
@@ -908,13 +899,11 @@ function xscale(x=1, p=_NO_ARG, cp=0) =
 //   mat = yscale(y, [cp=]);
 //
 // Description:
-//   Scales along the Y axis by the scaling factor `y`.
-//   * Called as the built-in module, scales all children.
-//   * Called as a function with a point in the `p` argument, returns the scaled point.
-//   * Called as a function with a list of points in the `p` argument, returns the list of scaled points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the scaled patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the scaled VNF.
-//   * Called as a function without a `p` argument, returns a 4x4 transformation matrix. 
+//   Scales in the Y direction by the scale factor `y`.  If `cp` is given either as a scalar Y value or as an [X,Y,Z] value then Y is used
+//   as the center for the scaling.
+//   * If called as the built-in module, scales all children.
+//   * If called as a function with the `p` argument, returns the scaled version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns a 4x4 transformation matrix. 
 //
 // Arguments:
 //   y = Factor to scale by, along the Y axis.
@@ -963,13 +952,11 @@ function yscale(y=1, p=_NO_ARG, cp=0) =
 //   mat = zscale(z, [cp=]);
 //
 // Description:
-//   Scales along the Z axis by the scaling factor `z`.
-//   * Called as the built-in module, scales all children.
-//   * Called as a function with a point in the `p` argument, returns the scaled point.
-//   * Called as a function with a list of points in the `p` argument, returns the list of scaled points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the scaled patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the scaled VNF.
-//   * Called as a function without a `p` argument, returns a 4x4 transformation matrix.
+//   Scales along the Z axis by the scaling factor `z`.  If `cp` is given either as a scalar Z value or as an [X,Y,Z] value then Z is used
+//   as the center for the scaling.
+//   * If called as the built-in module, scales all children.
+//   * If called as a function with the `p` argument, returns the scaled version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns a 4x4 transformation matrix.
 //
 // Arguments:
 //   z = Factor to scale by, along the Z axis.
@@ -1023,11 +1010,8 @@ function zscale(z=1, p=_NO_ARG, cp=0) =
 //
 // Description:
 //   Mirrors/reflects across the plane or line whose normal vector is given in `v`.
-//   * Called as the built-in module, mirrors all children across the line/plane.
-//   * Called as a function with a point in the `p` argument, returns the point mirrored across the line/plane.
-//   * Called as a function with a list of points in the `p` argument, returns the list of points, with each one mirrored across the line/plane.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the mirrored patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the mirrored VNF.
+//   * Called as the built-in module, mirrors all children.
+//   * If called as a function with the `p` argument, returns the mirrored version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * Called as a function without a `p` argument, returns a 4x4 transformation matrix. 
 //
 // Arguments:
@@ -1102,13 +1086,10 @@ function mirror(v, p=_NO_ARG) =
 //   mat = xflip([x=]);
 //
 // Description:
-//   Mirrors/reflects across the origin [0,0,0], along the X axis.  If `x` is given, reflects across [x,0,0] instead.
-//   * Called as the built-in module, mirrors all children across the line/plane.
-//   * Called as a function with a point in the `p` argument, returns the point mirrored across the line/plane.
-//   * Called as a function with a list of points in the `p` argument, returns the list of points, with each one mirrored across the line/plane.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the mirrored patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the mirrored VNF.
-//   * Called as a function without a `p` argument, returns a 4x4 transformation matrix.
+//   Mirrors/reflects across the origin [0,0,0], along the X axis.  If `x` is given as a scalar, reflects across [x,0,0].  
+//   * If called as a module, mirrors all children.
+//   * If called as a function with the `p` argument, returns the reflected version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns a 4x4 transformation matrix.
 //
 // Arguments:
 //   p = (function only) A point, list of points, Bezier patch or VNF to reflect.
@@ -1158,13 +1139,10 @@ function xflip(p=_NO_ARG, x=0) =
 //   mat = yflip([y=]);
 //
 // Description:
-//   Mirrors/reflects across the origin [0,0,0], along the Y axis.  If `y` is given, reflects across [0,y,0] instead.
-//   * Called as the built-in module, mirrors all children across the line/plane.
-//   * Called as a function with a point in the `p` argument, returns the point mirrored across the line/plane.
-//   * Called as a function with a list of points in the `p` argument, returns the list of points, with each one mirrored across the line/plane.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the mirrored patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the mirrored VNF.
-//   * Called as a function without a `p` argument, returns a 4x4 transformation matrix.
+//   Mirrors/reflects across the origin [0,0,0], along the Y axis.  If `y` is given as a scalar, reflects across [0,y,0] instead.
+//   * If called as a module, mirrors all children.
+//   * If called as a function with the `p` argument, returns the reflected version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns a 4x4 transformation matrix.
 //
 // Arguments:
 //   p = (function only) A point, list of points, Bezier patch or VNF to reflect.
@@ -1214,13 +1192,10 @@ function yflip(p=_NO_ARG, y=0) =
 //   mat = zflip([z=]);
 //
 // Description:
-//   Mirrors/reflects across the origin [0,0,0], along the Z axis.  If `z` is given, reflects across [0,0,z] instead.
-//   * Called as the built-in module, mirrors all children across the line/plane.
-//   * Called as a function with a point in the `p` argument, returns the point mirrored across the line/plane.
-//   * Called as a function with a list of points in the `p` argument, returns the list of points, with each one mirrored across the line/plane.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the mirrored patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the mirrored VNF.
-//   * Called as a function without a `p` argument, returns a 4x4 transformation matrix.
+//   Mirrors/reflects across the origin [0,0,0], along the Z axis.  If `z` is given as a scalar, reflects across [0,0,z] instead.
+//   * If called as a module, mirrors all children.
+//   * If called as a function with the `p` argument, returns the reflected version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
+//   * If called as a function without a `p` argument, returns a 4x4 transformation matrix.
 //
 // Arguments:
 //   p = (function only) A point, list of points, Bezier patch or VNF to reflect.
@@ -1374,12 +1349,10 @@ module frame_map(x,y,z,p,reverse=false)
 //
 // Description:
 //   Skews geometry by the given skew factors.  Skewing is also referred to as shearing.  
-//   * Called as the built-in module, skews all children.
-//   * Called as a function with a point in the `p` argument, returns the skewed point.
-//   * Called as a function with a list of points in the `p` argument, returns the list of skewed points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the skewed patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the skewed VNF.
+//   * If called as a module, skews all the children.
+//   * If called as a function with the `p` argument, returns the skewed version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * Called as a function without a `p` argument, returns the 4x4 transformation skew matrix.
+//   .
 //   Each skew factor is a multiplier.  For example, if `sxy=2`, then it will skew along the X axis by 2x the value of the Y axis.
 // Arguments:
 //   p = (function only) The point, path, Bezier patch, or VNF to skew. 
@@ -1606,13 +1579,18 @@ module rotate(a,v)
   _rotate(a=a,v=v) children();
 }  
 
-module scale(v)
+module scale(v,cp)
 {
-  s3 = is_finite(v) ? affine3d_scale([v,v,v])
-     : is_vector(v) ? affine3d_scale(v)
-     : IDENT;
-  $transform = $transform * s3;
-  _scale(v) children();
+  if (!is_undef(cp)){
+    multmatrix(scale(v,cp=cp)) children();
+  }  
+  else {
+    s3 = is_finite(v) ? affine3d_scale([v,v,v])
+       : is_vector(v) ? affine3d_scale(v)
+       : IDENT;
+    $transform = $transform * s3;
+    _scale(v) children();
+  }  
 }
 
 
