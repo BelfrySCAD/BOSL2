@@ -786,16 +786,19 @@ function tilt(to, p=_NO_ARG, cp, reverse=false) =
 //   scale(SCALAR) CHILDREN;
 //   scale([X,Y,Z]) CHILDREN;
 // Usage: As module with center point (BOSL2 extension)
-//   scale(v, cp) CHILDREN;
+//   scale(v, cp=) CHILDREN;
+// Usage: As module with with scaling direction vector (BOSL2 extension)
+//   scale(v, dir=, [cp=]) CHILDREN;
 // Usage: Scale Points
-//   pts = scale(v, p, [cp=]);
+//   pts = scale(v, p, [cp=], [dir=]);
 // Usage: Get Scaling Matrix
-//   mat = scale(v, [cp=]);
+//   mat = scale(v, [cp=], [dir=]);
 //
 // Description:
 //   Scales by the [X,Y,Z] scaling factors given in `v`.  If `v` is given as a scalar number, all axes are scaled uniformly by that amount.  
 //   If `v` has fewer than three dimensions, it is padded with 1 values, so scaling by [4] is the same as [4,1,1].  If you give `cp` a 
-//   vector value then the scaling is done relative to that specified center point.  
+//   vector value then the scaling is done relative to that specified center point.  If you give the vector `dir` then the scale factor, `v`, must
+//   be a scalar and the scaling occurs along the direction of `v`.  
 //   * If called as the built-in module, scales all children.
 //   * If called as a function with the `p` argument, returns the scaled version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * If called as a function without a `p` argument, returns a 4x4 transformation matrix. 
@@ -805,6 +808,7 @@ function tilt(to, p=_NO_ARG, cp, reverse=false) =
 //   p = (function only) A point, list of points, Bezier patch or VNF to scale.
 //   ---
 //   cp = If given, centers the scaling on the point `cp`.
+//   dir = If given as a vector, scale along the direction of the vector.
 //
 // Example(NORENDER):
 //   pt1 = scale(3, [3,1,4]);        // Returns: [9,3,12]
@@ -817,11 +821,17 @@ function tilt(to, p=_NO_ARG, cp, reverse=false) =
 //   path = circle(d=50,$fn=12);
 //   #stroke(path,closed=true);
 //   stroke(scale([1.5,3],path),closed=true);
-function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
+function scale(v=1, p=_NO_ARG, cp=[0,0,0],dir) =
     assert(is_num(v) || is_vector(v),"Invalid scale")
     assert(p==_NO_ARG || is_list(p),"Invalid point list")
+    assert(is_undef(dir) || is_vector(dir),"Invalid dir vector")
     assert(is_vector(cp))
-    let(
+    is_def(dir)? assert(is_num(v),"v must be a scalar when dir is given")
+                 assert(len(dir)<=3 && norm(dir)>0, "dir must be a nonzero vector with length 3 or less")
+                 rot(from=dir,to=RIGHT,reverse=true)
+               * xscale(v,p=p,cp=rot(from=dir,to=RIGHT,p=cp))
+               * rot(from=dir,to=RIGHT)
+  : let(
         v = is_num(v)? [v,v,v] : v,
         m = cp==[0,0,0]
           ? affine3d_scale(v)
@@ -1579,11 +1589,10 @@ module rotate(a,v)
   _rotate(a=a,v=v) children();
 }  
 
-module scale(v,cp)
+module scale(v,cp=[0,0,0],dir)
 {
-  if (!is_undef(cp)){
-    multmatrix(scale(v,cp=cp)) children();
-  }  
+  if (cp!=[0,0,0] || is_def(dir))
+    multmatrix(scale(v,cp=cp,dir=dir)) children();
   else {
     s3 = is_finite(v) ? affine3d_scale([v,v,v])
        : is_vector(v) ? affine3d_scale(v)
