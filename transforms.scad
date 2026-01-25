@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: transforms.scad
 //   Functions and modules that provide shortcuts for translation,
-//   rotation and mirror operations.  Also provided are skew and frame_map
+//   rotation and mirror operations.  Also provided are skew and frame_map,
 //   which remaps the coordinate axes.  The shortcuts can act on
 //   geometry, like the usual OpenSCAD rotate() and translate(). They
 //   also work as functions that operate on lists of points in various
@@ -57,8 +57,8 @@ _BOSL2_TRANSFORMS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !
 //   transformation to apply to the data.  For example, it could be a rotation or scaling, or combination of both.
 //   The 3x1 column at the top right gives the translation to apply.  The bottom row should be `[0,0,0,1]`.  That
 //   bottom row is only present to enable
-//   the matrices to be multiplied together.  OpenSCAD ignores it and in fact `multmatrix` will
-//   accept a 3x4 matrix, where that row is missing.  In order for a matrix to act on a point you have to
+//   the matrices to be multiplied together.  OpenSCAD ignores it and in fact `multmatrix` 
+//   accepts a 3x4 matrix, where that row is missing.  In order for a matrix to act on a point you have to
 //   augment the point with an extra 1, making it a length 4 vector.  In OpenSCAD you can then compute the
 //   the affine transformed point as `tran_point = M * point`.  However, this syntax hides a complication that
 //   arises if you have a list of points.  A list of points like `[[1,2,3,1],[4,5,6,1],[7,8,9,1]]` has the augmented points
@@ -160,7 +160,7 @@ function translate(v=[0,0,0], p=_NO_ARG) = move(v=v, p=p);
 
 // Function&Module: left()
 //
-// Synopsis: Translates children leftwards (X-).
+// Synopsis: Translates children leftward (X-).
 // SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: move(), right(), fwd(), back(), down(), up()
@@ -173,7 +173,7 @@ function translate(v=[0,0,0], p=_NO_ARG) = move(v=v, p=p);
 //   mat = left(x);
 //
 // Description:
-//   Moves geometry or data to the left (in the X- direction) by the specified amount.  (If `x` is negative motion will be to the right.)
+//   Moves geometry or data to the left (in the X- direction) by the specified amount.  (If `x` is negative motion is to the right.)
 //   * If called as a module, moves all children left.
 //   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
@@ -206,7 +206,7 @@ function left(x=0, p=_NO_ARG) =
 // Function&Module: right()
 // Aliases: xmove()
 //
-// Synopsis: Translates children rightwards (X+).
+// Synopsis: Translates children rightward (X+).
 // SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: move(), left(), fwd(), back(), down(), up()
@@ -219,7 +219,7 @@ function left(x=0, p=_NO_ARG) =
 //   mat = right(x);
 //
 // Description:
-//   Moves geometry or data to the right (in the X+ direction) by the specified amount.  (If `x` is negative motion will be to the left.)
+//   Moves geometry or data to the right (in the X+ direction) by the specified amount.  (If `x` is negative motion is to the left.)
 //   * If called as a module, moves all children right.
 //   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * If called as a function without the `p` argument, returns a 4x4 tranformation matrix.
@@ -264,7 +264,7 @@ function xmove(x=0, p=_NO_ARG) =
 
 // Function&Module: fwd()
 //
-// Synopsis: Translates children forwards (Y-).
+// Synopsis: Translates children forward (Y-).
 // SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: move(), left(), right(), back(), down(), up()
@@ -277,7 +277,7 @@ function xmove(x=0, p=_NO_ARG) =
 //   mat = fwd(y);
 //
 // Description:
-//   Moves geometry or data forward (in the Y- direction) by the specified amount.  (If `y` is negative motion will be to the back.)
+//   Moves geometry or data forward (in the Y- direction) by the specified amount.  (If `y` is negative motion is to the back.)
 //   * If called as a module, moves all children forward.
 //   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
@@ -309,7 +309,7 @@ function fwd(y=0, p=_NO_ARG) =
 // Function&Module: back()
 // Aliases: ymove()
 //
-// Synopsis: Translates children backwards (Y+).
+// Synopsis: Translates children backward (Y+).
 // SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: move(), left(), right(), fwd(), down(), up()
@@ -322,7 +322,7 @@ function fwd(y=0, p=_NO_ARG) =
 //   mat = back(y);
 //
 // Description:
-//   Moves geometry or data forward (in the Y+ direction) by the specified amount.  (If `y` is negative motion will be forward.)
+//   Moves geometry or data forward (in the Y+ direction) by the specified amount.  (If `y` is negative motion is forward.)
 //   * If called as a module, moves all children forward.
 //   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * If called as a function without the `p` argument, returns a 4x4 transformation matrix.
@@ -367,7 +367,7 @@ function ymove(y=0,p=_NO_ARG) =
 
 // Function&Module: down()
 //
-// Synopsis: Translates children downwards (Z-).
+// Synopsis: Translates children downward (Z-).
 // SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: move(), left(), right(), fwd(), back(), up()
@@ -380,7 +380,7 @@ function ymove(y=0,p=_NO_ARG) =
 //   mat = down(z);
 //
 // Description:
-//   Moves geometry or data dwon (in the Z- direction) by the specified amount.  (If `z` is negative motion will be upward.)
+//   Moves geometry or data dwon (in the Z- direction) by the specified amount.  (If `z` is negative motion is upward.)
 //   * If called as a module, moves all children down.
 //   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * If called as a function without the `p` argument, returns a 4x4 transformation matrix. 
@@ -411,7 +411,7 @@ function down(z=0, p=_NO_ARG) =
 // Function&Module: up()
 // Aliases: zmove()
 //
-// Synopsis: Translates children upwards (Z+).
+// Synopsis: Translates children upward (Z+).
 // SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: move(), left(), right(), fwd(), back(), down()
@@ -424,7 +424,7 @@ function down(z=0, p=_NO_ARG) =
 //   mat = up(z);
 //
 // Description:
-//   Moves geometry or data up (in the Z+ direction) by the specified amount.  (If `z` is negative motion will be downward.)
+//   Moves geometry or data up (in the Z+ direction) by the specified amount.  (If `z` is negative motion is downward.)
 //   * If called as a module, moves all children up
 //   * If called as a function with the `p` argument, returns the translated version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * If called as a function without the `p` argument, returns a 4x4 transformation matrix.
@@ -496,7 +496,7 @@ function zmove(z=0, p=_NO_ARG) =
 //   M = rot(from=, to=, [a=], [reverse=]);
 //
 // Description:
-//   This is an expanded version of the built-in `rotate()`, which behaves identically to the built-in with the same arguments,
+//   This is an expanded version of the built-in `rotate()` that behaves identically to the built-in with the same arguments,
 //   but offers additional capabilities.  
 //   You can specify the rotation to perform in one of several ways:
 //   * `rot(30)` or `rot(a=30)` rotates 30 degrees around the Z axis.
@@ -505,7 +505,7 @@ function zmove(z=0, p=_NO_ARG) =
 //   * `rot(from=[0,0,1], to=[1,0,0])` rotates the `from` vector to line up with the `to` vector, in this case the top to the right and hence equivalent to `rot(a=90,v=[0,1,0]`.  The axis of rotation is perpendicular to the two given vectors.  
 //   * `rot(from=[0,1,1], to=[1,1,0], a=45)` rotates 45 degrees around the `from` vector ([0,1,1]) and then rotates the `from` vector to align with the `to` vector.  Equivalent to `rot(from=[0,1,1],to=[1,1,0]) rot(a=45,v=[0,1,1])`.  You can also regard `a` as as post-rotation around the `to` vector.  For this form, `a` must be a scalar.
 //   * If the `cp` centerpoint argument is given, then rotations are performed around that centerpoint.  So `rot(args...,cp=[1,2,3])` is equivalent to `move(-[1,2,3])rot(args...)move([1,2,3])`.
-//   * If the `reverse` argument is true, then the rotations performed will be exactly reversed.
+//   * If the `reverse` argument is true, then the rotations performed is exactly reversed.
 //   .
 //   The behavior and return value varies depending on how `rot()` is called:
 //   * If called as a module, rotates all children.
@@ -715,7 +715,7 @@ function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
 
 // Function&Module: tilt()
 //
-// Synopsis: Tilts children towards a direction
+// Synopsis: Tilts children toward a direction
 // SynTags: Trans, Path, VNF, Mat
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: rot(), xrot(), yrot(), zrot()
@@ -728,9 +728,9 @@ function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
 //   M = tilt(to, [reverse=], [cp=]);
 //
 // Description:
-//   This is shorthand for `rot(from=UP,to=x)` and operates similarly.  It tilts that which is pointing UP until it is pointing at the given direction vector.
+//   This is shorthand for `rot(from=UP,to=x)` and operates similarly.  It tilts things that point UP until they point in the direction of the given `to` vector.
 //   * If the `cp` centerpoint argument is given, then the tilt/rotation is performed around that centerpoint.  So `tilt(...,cp=[1,2,3])` is equivalent to `move([1,2,3]) tilt(...) move([-1,-2,-3])`.
-//   * If the `reverse` argument is true, then the tilt/rotation will be reversed. 
+//   * If the `reverse` argument is true, then the tilt/rotation is reversed. 
 //   .
 //   The behavior and return value varies depending on how `tilt()` is called:
 //   * Ifc called as a module, tilts all children.
@@ -798,7 +798,7 @@ function tilt(to, p=_NO_ARG, cp, reverse=false) =
 //   Scales by the [X,Y,Z] scaling factors given in `v`.  If `v` is given as a scalar number, all axes are scaled uniformly by that amount.  
 //   If `v` has fewer than three dimensions, it is padded with 1 values, so scaling by [4] is the same as [4,1,1].  If you give `cp` a 
 //   vector value then the scaling is done relative to that specified center point.  If you give the vector `dir` then the scale factor, `v`, must
-//   be a scalar and the scaling occurs along the direction of `v`.  
+//   be a scalar and the scaling occurs along the direction of `dir`.  (The sign and magnitude of `dir` don't matter.)
 //   * If called as the built-in module, scales all children.
 //   * If called as a function with the `p` argument, returns the scaled version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * If called as a function without a `p` argument, returns a 4x4 transformation matrix. 
@@ -808,7 +808,7 @@ function tilt(to, p=_NO_ARG, cp, reverse=false) =
 //   p = (function only) A point, list of points, Bezier patch or VNF to scale.
 //   ---
 //   cp = If given, centers the scaling on the point `cp`.
-//   dir = If given as a vector, scale along the direction of the vector.
+//   dir = If given as a vector, scale along the direction of that vector.
 //
 // Example(NORENDER):
 //   pt1 = scale(3, [3,1,4]);        // Returns: [9,3,12]
@@ -827,7 +827,7 @@ function scale(v=1, p=_NO_ARG, cp=[0,0,0],dir) =
     assert(is_undef(dir) || is_vector(dir),"Invalid dir vector")
     assert(is_vector(cp))
     is_def(dir)? assert(is_num(v),"v must be a scalar when dir is given")
-                 assert(len(dir)<=3 && norm(dir)>0, "dir must be a nonzero vector with length 3 or less")
+                 assert(len(dir)<=3 && norm(dir)>0, "dir must be a nonzero vector with 3 or fewer entries")
                  rot(from=dir,to=RIGHT,reverse=true)
                * xscale(v,p=p,cp=rot(from=dir,to=RIGHT,p=cp))
                * rot(from=dir,to=RIGHT)
@@ -1260,17 +1260,18 @@ function zflip(p=_NO_ARG, z=0) =
 // Description:
 //   Maps one coordinate frame to another.  You must specify two or
 //   three of `x`, `y`, and `z`.  The specified axes are mapped to the vectors you supplied, so if you
-//   specify x=[1,1] then the x axis will be mapped to the line y=x.  If you
+//   specify x=[1,1] then the x axis is mapped to the line y=x.  If you
 //   give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand
-//   coordinate system.  If the vectors you give are orthogonal the result will be a rotation and the
-//   `reverse` parameter will supply the inverse map, which enables you to map two arbitrary
+//   coordinate system.  If the vectors you give are orthogonal the result is a rotation and the
+//   `reverse` parameter supplies the inverse map, which enables you to map two arbitrary
 //   coordinate systems to each other by using the canonical coordinate system as an intermediary.
 //   You cannot use the `reverse` option with non-orthogonal inputs.  Note that only the direction
-//   of the specified vectors matters: the transformation will not apply scaling, though it can
+//   of the specified vectors matters: the transformation does not apply scaling, though it can
 //   skew if your provide non-orthogonal axes.
 //   .
-//   You can use `frame_map()` as a module, or as a function.  In the functional form, you will usually
-//   need to provide the points to be transformed with the `p=` named argument, unless you give all three of `x`, `y`, and `z`.
+//   You can use `frame_map()` as a module, or as a function.  In the functional form, you 
+//   need to provide the points to be transformed with the `p=` named argument (except in the
+//   less common situation where you give all three of `x`, `y`, and `z`).
 //   The functional form with no `p=` argument returns a 4x4 transformation matrix.  
 // Arguments:
 //   x = Destination 3D vector for x axis.
@@ -1363,7 +1364,7 @@ module frame_map(x,y,z,p,reverse=false)
 //   * If called as a function with the `p` argument, returns the skewed version of that `p` argument.  The `p` argument can be a point, list of points, [bezier patch](beziers.scad) or [VNF structure](vnf.scad).
 //   * Called as a function without a `p` argument, returns the 4x4 transformation skew matrix.
 //   .
-//   Each skew factor is a multiplier.  For example, if `sxy=2`, then it will skew along the X axis by 2x the value of the Y axis.
+//   Each skew factor is a multiplier.  For example, if `sxy=2`, then it skews along the X axis by 2x the value of the Y axis.
 // Arguments:
 //   p = (function only) The point, path, Bezier patch, or VNF to skew. 
 //   ---
@@ -1459,7 +1460,7 @@ function skew(p=_NO_ARG, sxy, sxz, syx, syz, szx, szy, axy, axz, ayx, ayz, azx, 
 /// See Also: is_affine(), is_matrix()
 /// Description:
 ///   Checks if the input is a 3D transform that does not act on the z coordinate, except possibly
-///   for a simple scaling of z.  Note that an input which is only a zscale returns false.
+///   for a simple scaling of Z.  An input that is a pure scaling of Z returns false.
 /// Arguments:
 ///   t = The transformation matrix to check.
 /// Example:
@@ -1492,7 +1493,7 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 //   except possibly by scaling it.  When points contains 2D data you can also supply the transform as
 //   a 3x3 affine transformation matrix or the corresponding 2x3 matrix with the last row deleted.
 //   .
-//   Any other combination of matrices will produce an error, including acting with a 2D matrix (3x3) on 3D data.
+//   Any other combination of matrices produces an error, including acting with a 2D matrix (3x3) on 3D data.
 //   The output of apply is always the same dimension as the input&mdash;projections are not supported.
 //   .
 //   Note that a matrix with a negative determinant such as any mirror reflection flips the orientation of faces.
