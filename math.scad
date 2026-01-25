@@ -1099,7 +1099,7 @@ function sum_of_sines(a, sines) =
 //   ints = rand_int(0,100,3);
 //   int = rand_int(-10,10,1)[0];
 function rand_int(minval, maxval, n, seed=undef) =
-    assert( is_finite(minval+maxval+n) && (is_undef(seed) || is_finite(seed) ), "\nInput must be finite numbers.")
+    assert( is_vector([minval,maxval,n]) && (is_undef(seed) || is_finite(seed) ), "\nInput must be finite numbers.")
     assert(maxval >= minval, "\nMax value cannot be smaller than minval.")
     let (rvect = is_def(seed) ? rands(minval,maxval+1,n,seed) : rands(minval,maxval+1,n))
     [for(entry = rvect) floor(entry)];
