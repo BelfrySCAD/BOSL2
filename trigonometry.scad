@@ -337,13 +337,11 @@ function ang_adj_to_opp(ang,adj) = adj_ang_to_opp(adj,ang);
 
 
 // Function: adj_opp_to_hyp()
-// Alias: opp_adj_to_hyp()
 // Synopsis: Returns the hypotenuse length from the lengths of the adjacent and opposite sides.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
 // Usage:
 //   hyp = adj_opp_to_hyp(adj,opp);
-//   hyp = opp_adj_to_hyp(opp,adj);
 // Description:
 //   Given the length of the adjacent and opposite sides of a right triangle, returns the length of the hypotenuse.
 // Arguments:
@@ -356,6 +354,20 @@ function adj_opp_to_hyp(adj,opp) =
            "Triangle side lengths should be a positive numbers." )
     norm([opp,adj]);
 
+
+// Function: opp_adj_to_hyp()
+// Synopsis: Returns the hypotenuse length from the lengths of the opposite and adjacent sides.
+// Topics: Geometry, Trigonometry, Triangles
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// Usage:
+//   hyp = opp_adj_to_hyp(opp,adj);
+// Description:
+//   Given the length of the opposite and adjacent sides of a right triangle, returns the length of the hypotenuse.
+// Arguments:
+//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+// Example:
+//   hyp = opp_adj_to_hyp(4,3);  // Returns: 5
 function opp_adj_to_hyp(opp,adj) = adj_opp_to_hyp(adj,opp);
 
 
