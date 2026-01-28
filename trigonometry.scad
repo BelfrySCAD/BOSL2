@@ -303,15 +303,13 @@ function ang_hyp_to_opp(ang,hyp) = hyp_ang_to_opp(hyp,ang);
 
 
 // Function: adj_ang_to_opp()
-// Alias: ang_adj_to_opp()
-// Synopsis: Returns the opposite side length from the length of the adjacent side and the angle.
+// Synopsis: Returns the opposite side length from the length of the adjacent side and the primary angle.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
 // Usage:
 //   opp = adj_ang_to_opp(adj,ang);
-//   opp = ang_adj_to_opp(ang,adj);
 // Description:
-//   Given the length of the adjacent side of a right triangle, and the angle of the corner, returns the length of the opposite side.
+//   Given the length of the adjacent side of a right triangle, and the angle of the primary corner, returns the length of the opposite side.
 // Arguments:
 //   adj = The length of the side of the right triangle that is adjacent to the primary angle.
 //   ang = The angle in degrees of the primary corner of the right triangle.
@@ -322,6 +320,19 @@ function adj_ang_to_opp(adj,ang) =
     assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     adj*tan(ang);
 
+// Function: ang_adj_to_opp()
+// Synopsis: Returns the opposite side length from the length of the adjacent side and the primary angle.
+// Topics: Geometry, Trigonometry, Triangles
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// Usage:
+//   opp = ang_adj_to_opp(ang,adj);
+// Description:
+//   Given the angle of the primary corner and the length of the adjacent side of a right triangle, returns the length of the opposite side.
+// Arguments:
+//   ang = The angle in degrees of the primary corner of the right triangle.
+//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+// Example:
+//   opp = ang_adj_to_opp(45,8);  // Returns: 8
 function ang_adj_to_opp(ang,adj) = adj_ang_to_opp(adj,ang);
 
 
