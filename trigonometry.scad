@@ -217,15 +217,13 @@ function ang_opp_to_adj(ang,opp) = opp_ang_to_adj(opp,ang);
 
 
 // Function: hyp_adj_to_opp()
-// Alias: adj_hyp_to_opp()
 // Synopsis: Returns the opposite side length from the lengths of the hypotenuse and the adjacent side.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
 // Usage:
 //   opp = hyp_adj_to_opp(hyp,adj);
-//   opp = adj_hyp_to_opp(adj,hyp);
 // Description:
-//   Given the length of the hypotenuse and the adjacent side, returns the length of the opposite side.
+//   Given the lengths of the hypotenuse and the adjacent side, returns the length of the opposite side.
 // Arguments:
 //   hyp = The length of the hypotenuse of the right triangle.
 //   adj = The length of the side of the right triangle that is adjacent to the primary angle.
@@ -236,7 +234,24 @@ function hyp_adj_to_opp(hyp,adj) =
            "Triangle side lengths should be a positive numbers." )
     sqrt(hyp*hyp-adj*adj);
 
+
+
+// Function: adj_hyp_to_opp()
+// Synopsis: Returns the opposite side length from the lengths of the adjacent side and the hypotenuse.
+// Topics: Geometry, Trigonometry, Triangles
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// Usage:
+//   opp = adj_hyp_to_opp(adj,hyp);
+// Description:
+//   Given the lengths of the adjacent side and the hypotenuse, returns the length of the opposite side.
+// Arguments:
+//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   hyp = The length of the hypotenuse of the right triangle.
+// Example:
+//   opp = adj_hyp_to_opp(4,5);  // Returns: 3
+
 function adj_hyp_to_opp(adj,hyp) = hyp_adj_to_opp(hyp,adj);
+
 
 
 // Function: hyp_ang_to_opp()
