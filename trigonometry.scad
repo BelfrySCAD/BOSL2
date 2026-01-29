@@ -122,7 +122,7 @@ function law_of_sines(a, A, b, B) =
 // Function: hyp_opp_to_adj()
 // Synopsis: Returns the adjacent side length from the lengths of the hypotenuse and the opposite side.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: opp_hyp_to_adj(), adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   adj = hyp_opp_to_adj(hyp,opp);
 // Description:
@@ -142,7 +142,7 @@ function hyp_opp_to_adj(hyp,opp) =
 // Function: opp_hyp_to_adj()
 // Synopsis: Returns the adjacent side length from the lengths of the hypotenuse and the opposite side.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: hyp_opp_to_adj(), adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   adj = opp_hyp_to_adj(opp,hyp);
 // Description:
@@ -159,7 +159,7 @@ function opp_hyp_to_adj(opp,hyp) = hyp_opp_to_adj(hyp,opp);
 // Function: hyp_ang_to_adj()
 // Synopsis: Returns the adjacent side length from the length of the hypotenuse and the angle.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   adj = hyp_ang_to_adj(hyp,ang);
 // Description:
@@ -178,7 +178,7 @@ function hyp_ang_to_adj(hyp,ang) =
 // Function: ang_hyp_to_adj()
 // Synopsis: Returns the adjacent side length from the angle and the length of the hypotenuse.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   adj = ang_hyp_to_adj(ang,hyp);
 // Description:
@@ -195,7 +195,7 @@ function ang_hyp_to_adj(ang,hyp) = hyp_ang_to_adj(hyp, ang);
 // Function: opp_ang_to_adj()
 // Synopsis: Returns the adjacent side length from the length of the opposite side and the primary angle.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   adj = opp_ang_to_adj(opp,ang);
 // Description:
@@ -214,7 +214,7 @@ function opp_ang_to_adj(opp,ang) =
 // Function: ang_opp_to_adj()
 // Synopsis: Returns the adjacent side length from the primary angle and the length of the opposite side.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   adj = ang_opp_to_adj(ang,opp);
 // Description:
@@ -231,7 +231,7 @@ function ang_opp_to_adj(ang,opp) = opp_ang_to_adj(opp,ang);
 // Function: hyp_adj_to_opp()
 // Synopsis: Returns the opposite side length from the lengths of the hypotenuse and the adjacent side.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   opp = hyp_adj_to_opp(hyp,adj);
 // Description:
@@ -251,7 +251,7 @@ function hyp_adj_to_opp(hyp,adj) =
 // Function: adj_hyp_to_opp()
 // Synopsis: Returns the opposite side length from the lengths of the adjacent side and the hypotenuse.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   opp = adj_hyp_to_opp(adj,hyp);
 // Description:
@@ -269,7 +269,7 @@ function adj_hyp_to_opp(adj,hyp) = hyp_adj_to_opp(hyp,adj);
 // Function: hyp_ang_to_opp()
 // Synopsis: Returns the opposite side length from the length of the hypotenuse and the primary angle.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   opp = hyp_ang_to_opp(hyp,ang);
 // Description:
@@ -288,7 +288,7 @@ function hyp_ang_to_opp(hyp,ang) =
 // Function: ang_hyp_to_opp()
 // Synopsis: Returns the opposite side length from the primary angle and the length of the hypotenuse.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   opp = ang_hyp_to_opp(ang,hyp);
 // Description:
@@ -304,7 +304,7 @@ function ang_hyp_to_opp(ang,hyp) = hyp_ang_to_opp(hyp,ang);
 // Function: adj_ang_to_opp()
 // Synopsis: Returns the opposite side length from the length of the adjacent side and the primary angle.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   opp = adj_ang_to_opp(adj,ang);
 // Description:
@@ -322,7 +322,7 @@ function adj_ang_to_opp(adj,ang) =
 // Function: ang_adj_to_opp()
 // Synopsis: Returns the opposite side length from the length of the adjacent side and the primary angle.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   opp = ang_adj_to_opp(ang,adj);
 // Description:
@@ -338,7 +338,7 @@ function ang_adj_to_opp(ang,adj) = adj_ang_to_opp(adj,ang);
 // Function: adj_opp_to_hyp()
 // Synopsis: Returns the hypotenuse length from the lengths of the adjacent and opposite sides.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   hyp = adj_opp_to_hyp(adj,opp);
 // Description:
@@ -357,7 +357,7 @@ function adj_opp_to_hyp(adj,opp) =
 // Function: opp_adj_to_hyp()
 // Synopsis: Returns the hypotenuse length from the lengths of the opposite and adjacent sides.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   hyp = opp_adj_to_hyp(opp,adj);
 // Description:
@@ -373,7 +373,7 @@ function opp_adj_to_hyp(opp,adj) = adj_opp_to_hyp(adj,opp);
 // Function: adj_ang_to_hyp()
 // Synopsis: Returns the hypotenuse length from the length of the adjacent side and the primary angle.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   hyp = adj_ang_to_hyp(adj,ang);
 // Description:
@@ -392,7 +392,7 @@ function adj_ang_to_hyp(adj,ang) =
 // Function: ang_adj_to_hyp()
 // Synopsis: Returns the hypotenuse length from the primary angle and length of the adjacent side.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   hyp = ang_adj_to_hyp(ang,adj);
 // Description:
@@ -408,7 +408,7 @@ function ang_adj_to_hyp(ang,adj) = adj_ang_to_hyp(adj,ang);
 // Function: opp_ang_to_hyp()
 // Synopsis: Returns the hypotenuse length from the length of the opposite side and the primary angle.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   hyp = opp_ang_to_hyp(opp,ang);
 // Description:
@@ -426,7 +426,7 @@ function opp_ang_to_hyp(opp,ang) =
 // Function: ang_opp_to_hyp()
 // Synopsis: Returns the hypotenuse length from the primary angle and the length of the opposite side.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   hyp = ang_opp_to_hyp(ang,opp);
 // Description:
@@ -443,7 +443,7 @@ function ang_opp_to_hyp(ang,opp) = opp_ang_to_hyp(opp,ang);
 // Function: hyp_adj_to_ang()
 // Synopsis: Returns the angle from the lengths of the hypotenuse and the adjacent side.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   ang = hyp_adj_to_ang(hyp,adj);
 // Description:
@@ -462,7 +462,7 @@ function hyp_adj_to_ang(hyp,adj) =
 // Function: adj_hyp_to_ang()
 // Synopsis: Returns the angle from the lengths of the adjacent side and the hypotenuse.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   ang = adj_hyp_to_ang(adj,hyp);
 // Description:
@@ -478,7 +478,7 @@ function adj_hyp_to_ang(adj,hyp) = hyp_adj_to_ang(hyp,adj);
 // Function: hyp_opp_to_ang()
 // Synopsis: Returns the primary angle from the lengths of the hypotenuse and the opposite side.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   ang = hyp_opp_to_ang(hyp,opp);
 // Description:
@@ -496,7 +496,7 @@ function hyp_opp_to_ang(hyp,opp) =
 // Function: opp_hyp_to_ang()
 // Synopsis: Returns the primary angle from the lengths of the opposite side and the hypotenuse.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   ang = opp_hyp_to_ang(opp,hyp);
 // Description:
@@ -512,7 +512,7 @@ function opp_hyp_to_ang(opp,hyp) = hyp_opp_to_ang(hyp,opp);
 // Function: adj_opp_to_ang()
 // Synopsis: Returns the angle from the lengths of the adjacent and opposite sides.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   ang = adj_opp_to_ang(adj,opp);
 // Description:
@@ -531,7 +531,7 @@ function adj_opp_to_ang(adj,opp) =
 // Function: opp_adj_to_ang()
 // Synopsis: Returns the primary angle from the lengths of the opposite and adjacent sides.
 // Topics: Geometry, Trigonometry, Triangles
-// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp()
+// See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   ang = opp_adj_to_ang(opp,adj);
 // Description:
