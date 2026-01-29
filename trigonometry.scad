@@ -205,7 +205,7 @@ function ang_hyp_to_adj(ang,hyp) = hyp_ang_to_adj(hyp, ang);
 //   opp = The length of the side of the right triangle that is opposite from the primary angle.
 //   ang = The angle in degrees of the primary corner of the right triangle.
 // Example:
-//   adj = opp_ang_to_adj(8,30);  // Returns: 4
+//   adj = opp_ang_to_adj(8,45);  // Returns: 8
 function opp_ang_to_adj(opp,ang) =
     assert(is_finite(opp) && opp>=0, "Triangle side length should be a positive number." )
     assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
@@ -224,7 +224,7 @@ function opp_ang_to_adj(opp,ang) =
 //   ang = The angle in degrees of the primary corner of the right triangle.
 //   opp = The length of the side of the right triangle that is opposite from the primary angle.
 // Example:
-//   adj = ang_opp_to_adj(30,8);  // Returns: 4
+//   adj = ang_opp_to_adj(45,8);  // Returns: 8
 function ang_opp_to_adj(ang,opp) = opp_ang_to_adj(opp,ang);
 
 
