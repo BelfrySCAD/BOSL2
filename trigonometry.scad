@@ -210,7 +210,6 @@ function opp_ang_to_adj(opp,ang) =
     assert(is_finite(opp) && opp>=0, "Triangle side length should be a positive number." )
     assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     opp/tan(ang);
-function ang_opp_to_adj(ang,opp) = opp_ang_to_adj(opp,ang);
 
 // Function: ang_opp_to_adj()
 // Synopsis: Returns the adjacent side length from the primary angle and the length of the opposite side.
@@ -579,6 +578,9 @@ function adj_opp_to_ang(adj,opp) =
 // Example:
 //   ang = opp_adj_to_ang(0.5,sqrt(3)/2);  // Returns: 30 degrees
 function opp_adj_to_ang(opp,adj) = adj_opp_to_ang(adj,opp);
+
+
+
 
 
 
