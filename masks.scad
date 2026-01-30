@@ -1178,7 +1178,7 @@ module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
 
 
 // Module: edge_profile()
-// Synopsis: Extrudes a 2d edge profile into a mask on the given edges of the parent.
+// Synopsis: Extrudes a 2d edge profile into a mask on edges of the parent cuboid, prismoid or cone.
 // SynTags: Geom
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile_asym(), corner_profile(), edge_mask(), face_mask(), corner_mask()
@@ -1275,14 +1275,14 @@ module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
 
 
 // Module: edge_profile_asym()
-// Synopsis: Extrudes an asymmetric 2D profile into a mask on the given edges and corners of the parent.
+// Synopsis: Extrudes an asymmetric 2D profile into a mask on edges and corners of the parent cuboid.
 // SynTags: Geom
 // Topics: Attachments, Masking
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_profile(), edge_mask(), face_mask(), corner_mask()
 // Usage:
 //   PARENT() edge_profile([edges], [except], [convexity=], [flip=], [corner_type=]) CHILDREN;
 // Description:
-//   Takes an asymmetric 2D mask shape and attaches it to the selected edges and corners, with the appropriate
+//   Takes an asymmetric 2D mask shape and attaches it to the selected edges and corners of a parent cuboid, with the appropriate
 //   orientation and extruded length to be `diff()`ed away, to give the edges and corners a matching profile.
 //   If no tag is set then `edge_profile_asym()` sets the tag for children to "remove" so that it works
 //   with the default {{diff()}} tag.  For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
