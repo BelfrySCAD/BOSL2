@@ -1185,7 +1185,8 @@ module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
 // Usage:
 //   PARENT() edge_profile([edges], [except], [convexity]) CHILDREN;
 // Description:
-//   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation and
+//   Takes a 2D mask shape and attaches it to the selected edges of a cuboid, prismoid or cone, with the
+//   appropriate orientation and
 //   extruded length to be `diff()`ed away, to give the edge a matching profile.  If no tag is set
 //   then `edge_profile` sets the tag for children to "remove" so that it works with the default {{diff()}} tag.
 //   For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
@@ -1223,7 +1224,8 @@ module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
 
 module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
     req_children($children);
-    check1 = assert($parent_geom != undef, "\nNo object to attach to!");
+    check1 = assert($parent_geom != undef, "\nNo object to attach to!")
+             assert(in_list($parent_geom[0],["conoid","prismoid"]), "Parent must be a cyl, cuboid or prismoid");
     conoid = $parent_geom[0] == "conoid";
     edges = !conoid? _edges(edges, except=except) :
         edges==EDGES_ALL? [TOP,BOT] :
@@ -1552,9 +1554,14 @@ module edge_profile_asym(
         [for (i=[0:2]) if (abs(e1[i])==1 && e1[i]==e2[i]) -e1[i] else 0];
 
     req_children($children);
+
+    is_cuboid = is_def($parent_geom) && $parent_geom[0]=="prismoid"
+                  && point2d($parent_geom[1])==$parent_geom[2]
+                  && $parent_geom[3]==[0,0];
     check1 = assert($parent_geom != undef, "\nNo object to attach to!")
-        assert(in_list(corner_type, ["none", "round", "chamfer", "sharp"]))
-        assert(is_bool(flip));
+             assert(is_cuboid, "Parent must be a cuboid")      
+             assert(in_list(corner_type, ["none", "round", "chamfer", "sharp"]))
+             assert(is_bool(flip));
     edges = _edges(edges, except=except);
     vecs = [
         for (i = [0:3], axis=[0:2])
@@ -2164,7 +2171,6 @@ module polygon_edge_mask(mask, length, height, l, h, scale=1, anchor="origin", a
   angle = vector_angle(select(mask,corner-1,corner+1));
   anchor_dir = -zrot(angle/2,RIGHT);
   anchors = [named_anchor("corner", CTR,anchor_dir, _compute_spin(anchor_dir, UP))];
-  echo(anchors=anchors);
   default_tag("remove")
      attachable(anchor=anchor, spin=spin, orient=orient, h=length, scale=scale, path=mask, extent=atype=="hull", anchors=anchors){
        linear_sweep(mask,h=length,anchor="origin", scale=scale);

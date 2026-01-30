@@ -455,7 +455,7 @@ function deduplicate(list, closed=false, eps=_EPSILON) =
         l = len(list),
         end = l-(closed?0:1)
     )
-    is_string(list) ? str_join([for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]]) :
+    is_string(list) ? chr([for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) ord(list[i]])) :
     eps==0 ? [for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]] :
     [for (i=[0:1:l-1]) if (i==end || !approx(list[i], list[(i+1)%l], eps)) list[i]];
 
@@ -580,7 +580,7 @@ function list_unwrap(list, eps=_EPSILON) =
 //   sorted = unique([true,2,"xba",[1,0],true,[0,0],3,"a",[0,0],2]); // Returns: [true,2,3,"a","xba",[0,0],[1,0]]
 function unique(list) =
     assert(is_list(list)||is_string(list), "Invalid input." )
-    is_string(list)? str_join(unique([for (x = list) x])) :
+    is_string(list)? chr(unique([for (x = list) ord(x)])) :
     len(list)<=1? list : 
     is_homogeneous(list,1) && ! is_list(list[0])
     ?   _unique_sort(list)
@@ -840,7 +840,7 @@ function _indexed_sort(arrind) =
 //   sorted3 = sort(l3); // Returns: [20,[3,1],[3,9],[4],[4,0],[7],[8]]
 function sort(list, idx=undef) = 
     assert(is_list(list)||is_string(list), "Invalid input." )
-    is_string(list)? str_join(sort([for (x = list) x],idx)) :
+    is_string(list)? chr(sort([for (x = list) ord(x)])) :
     !is_list(list) || len(list)<=1 ? list :
     is_homogeneous(list,1)
     ?   let(size = list_shape(list[0]))

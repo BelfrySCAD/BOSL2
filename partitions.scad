@@ -201,6 +201,7 @@ function left_half(p,x=0) = half_of(p, LEFT, [x,0,0]);
 //   right_half(planar=true) circle(r=20);
 module right_half(s=100, x=0, planar=false)
 {
+    req_children($children);
     dir = RIGHT;
     difference() {
         children();
