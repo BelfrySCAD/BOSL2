@@ -13,7 +13,7 @@ _BOSL2_TRIGONOMETRY = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) ||
        echo("Warning: triginometry.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 
-// Section: 2D General Triangle Functions
+// Section: General Triangle Functions
 
 
 // Function: law_of_cosines()
@@ -93,7 +93,7 @@ function law_of_sines(a, A, b, B) =
 
 
 
-// Section: 2D Right Triangle Functions
+// Section: Right Triangle Functions
 //   This is a set of functions to make it easier to perform trig calculations on right triangles.
 //   In general, all these functions are named using these abbreviations:
 //   - **hyp**: The length of the Hypotenuse.
