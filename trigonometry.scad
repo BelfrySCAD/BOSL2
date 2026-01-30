@@ -27,8 +27,8 @@ _BOSL2_TRIGONOMETRY = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) ||
 //   Applies the Law of Cosines for an arbitrary triangle.  Given three side lengths, returns the
 //   angle in degrees for the corner opposite of the third side.  Given two side lengths, and the
 //   angle between them, returns the length of the third side.
-// Figure(2D):
-//   stroke([[-50,0], [10,60], [50,0]], closed=true);
+// Figure(2D;NoAxes;VPD=200;VPT=[0,25,20]):
+//   stroke([[-50,0], [10,60], [50,0]], closed=true, width=2);
 //   color("black") {
 //       translate([ 33,35]) text(text="a", size=8, halign="center", valign="center");
 //       translate([  0,-6]) text(text="b", size=8, halign="center", valign="center");
@@ -65,8 +65,8 @@ function law_of_cosines(a, b, c, C) =
 //   angle between them, returns the angle of the corner opposite of the second side.  Given a side
 //   length, the opposing angle, and a second angle, returns the length of the side opposite of the
 //   second angle.
-// Figure(2D):
-//   stroke([[-50,0], [10,60], [50,0]], closed=true);
+// Figure(2D;NoAxes;VPD=200;VPT=[0,25,0]):
+//   stroke([[-50,0], [10,60], [50,0]], closed=true, width=2);
 //   color("black") {
 //       translate([ 33,35]) text(text="a", size=8, halign="center", valign="center");
 //       translate([  0,-6]) text(text="b", size=8, halign="center", valign="center");
@@ -96,24 +96,24 @@ function law_of_sines(a, A, b, B) =
 // Section: Right Triangle Functions
 //   This is a set of functions to make it easier to perform trig calculations on right triangles.
 //   In general, all these functions are named using these abbreviations:
+//   - **ang**: The reference angle size in degrees.
 //   - **hyp**: The length of the Hypotenuse.
-//   - **adj**: The length of the side adjacent to the angle.
-//   - **opp**: The length of the side opposite to the angle.
-//   - **ang**: The angle size in degrees.
+//   - **adj**: The length of the side adjacent to the reference angle.
+//   - **opp**: The length of the side opposite to the reference angle.
 //   .
 //   If you know two of those, and want to know the value of a third, you will need to call a
 //   function named like `AAA_BBB_to_CCC()`.  For example, if you know the length of the hypotenuse,
-//   and the length of the side adjacent to the angle, and want to learn the length of the side
-//   opposite to the angle, you will call `opp = hyp_adj_to_opp(hyp,adj);`.
-// Figure(2D):
+//   and the length of the side adjacent to the reference angle, and want to learn the length of the side
+//   opposite to the reference angle, you will call `opp = hyp_adj_to_opp(hyp,adj);`.
+// Figure(2D;NoAxes;VPD=250:VPT=[10,25,0]):
 //   color("brown") {
 //       stroke([[40,0], [40,10], [50,10]]);
 //       left(50) stroke(arc(r=37,angle=30));
 //   }
-//   color("lightgreen") stroke([[-50,0], [50,60], [50,0]], closed=true);
+//   color("lightgreen") stroke([[-50,0], [50,60], [50,0]], closed=true, width=2);
 //   color("black") {
 //       translate([ 62,25]) text(text="opp", size=8, halign="center", valign="center");
-//       translate([  0,-6]) text(text="adj", size=8, halign="center", valign="center");
+//       translate([  0,-7]) text(text="adj", size=8, halign="center", valign="center");
 //       translate([  0,40]) text(text="hyp", size=8, halign="center", valign="center");
 //       translate([-25, 5]) text(text="ang", size=7, halign="center", valign="center");
 //   }
