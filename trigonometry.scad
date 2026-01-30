@@ -130,7 +130,7 @@ function law_of_sines(a, A, b, B) =
 //   of the adjacent side.
 // Arguments:
 //   hyp = The length of the hypotenuse of the right triangle.
-//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+//   opp = The length of the side of the right triangle that is opposite from the reference angle.
 // Example:
 //   adj = hyp_opp_to_adj(5,3);  // Returns: 4
 function hyp_opp_to_adj(hyp,opp) =
@@ -140,7 +140,7 @@ function hyp_opp_to_adj(hyp,opp) =
 
 
 // Function: opp_hyp_to_adj()
-// Synopsis: Returns the adjacent side length from the lengths of the hypotenuse and the opposite side.
+// Synopsis: Returns the adjacent side length from the lengths of the opposite side and the hypotenuse.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
@@ -149,7 +149,7 @@ function hyp_opp_to_adj(hyp,opp) =
 //   Given the lengths of the opposite side and hypotenuse of a right triangle, returns the length
 //   of the adjacent side.
 // Arguments:
-//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+//   opp = The length of the side of the right triangle that is opposite from the reference angle.
 //   hyp = The length of the hypotenuse of the right triangle.
 // Example:
 //   adj = opp_hyp_to_adj(3,5);  // Returns: 4
@@ -163,11 +163,11 @@ function opp_hyp_to_adj(opp,hyp) = hyp_opp_to_adj(hyp,opp);
 // Usage:
 //   adj = hyp_ang_to_adj(hyp,ang);
 // Description:
-//   Given the length of the hypotenuse and the angle of the primary corner of a right triangle,
+//   Given the length of the hypotenuse and the reference angle of a right triangle,
 //   returns the length of the adjacent side.
 // Arguments:
 //   hyp = The length of the hypotenuse of the right triangle.
-//   ang = The angle in degrees of the primary corner of the right triangle.
+//   ang = The reference angle of the right triangle in degrees
 // Example:
 //   adj = hyp_ang_to_adj(8,60);  // Returns: 4
 function hyp_ang_to_adj(hyp,ang) =
@@ -182,10 +182,10 @@ function hyp_ang_to_adj(hyp,ang) =
 // Usage:
 //   adj = ang_hyp_to_adj(ang,hyp);
 // Description:
-//   Given  the angle of the primary corner and the length of the hypotenuse of a right triangle,
+//   Given  the reference angle and the length of the hypotenuse of a right triangle,
 //   returns the length of the adjacent side.
 // Arguments:
-//   ang = The angle in degrees of the primary corner of the right triangle.
+//   ang = The reference angle of the right triangle in degrees
 //   hyp = The length of the hypotenuse of the right triangle.
 // Example:
 //   adj = ang_hyp_to_adj(60,8);  // Returns: 4
@@ -193,17 +193,17 @@ function ang_hyp_to_adj(ang,hyp) = hyp_ang_to_adj(hyp, ang);
 
 
 // Function: opp_ang_to_adj()
-// Synopsis: Returns the adjacent side length from the length of the opposite side and the primary angle.
+// Synopsis: Returns the adjacent side length from the length of the opposite side and the reference angle.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   adj = opp_ang_to_adj(opp,ang);
 // Description:
-//   Given the length of the side opposite the primary corner, and the angle of the primary corner of a right triangle,
+//   Given the length of the opposite side and the reference angle of a right triangle,
 //   returns the length of the adjacent side.
 // Arguments:
-//   opp = The length of the side of the right triangle that is opposite from the primary angle.
-//   ang = The angle in degrees of the primary corner of the right triangle.
+//   opp = The length of the side of the right triangle that is opposite from the reference angle.
+//   ang = The reference angle of the right triangle in degrees
 // Example:
 //   adj = opp_ang_to_adj(8,45);  // Returns: 8
 function opp_ang_to_adj(opp,ang) =
@@ -212,17 +212,17 @@ function opp_ang_to_adj(opp,ang) =
     opp/tan(ang);
 
 // Function: ang_opp_to_adj()
-// Synopsis: Returns the adjacent side length from the primary angle and the length of the opposite side.
+// Synopsis: Returns the adjacent side length from the reference angle and the length of the opposite side.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   adj = ang_opp_to_adj(ang,opp);
 // Description:
-//   Given the angle of the primary corner of a right triangle, and the length of the side opposite of it,
+//   Given the reference angle of a right triangle, and the length of the side opposite of it,
 //   returns the length of the adjacent side.
 // Arguments:
-//   ang = The angle in degrees of the primary corner of the right triangle.
-//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+//   ang = The reference angle of the right triangle in degrees
+//   opp = The length of the side of the right triangle that is opposite from the reference angle.
 // Example:
 //   adj = ang_opp_to_adj(45,8);  // Returns: 8
 function ang_opp_to_adj(ang,opp) = opp_ang_to_adj(opp,ang);
@@ -238,7 +238,7 @@ function ang_opp_to_adj(ang,opp) = opp_ang_to_adj(opp,ang);
 //   Given the lengths of the hypotenuse and the adjacent side, returns the length of the opposite side.
 // Arguments:
 //   hyp = The length of the hypotenuse of the right triangle.
-//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   adj = The length of the side of the right triangle that is adjacent to the reference angle.
 // Example:
 //   opp = hyp_adj_to_opp(5,4);  // Returns: 3
 function hyp_adj_to_opp(hyp,adj) =
@@ -257,7 +257,7 @@ function hyp_adj_to_opp(hyp,adj) =
 // Description:
 //   Given the lengths of the adjacent side and the hypotenuse, returns the length of the opposite side.
 // Arguments:
-//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   adj = The length of the side of the right triangle that is adjacent to the reference angle.
 //   hyp = The length of the hypotenuse of the right triangle.
 // Example:
 //   opp = adj_hyp_to_opp(4,5);  // Returns: 3
@@ -267,16 +267,16 @@ function adj_hyp_to_opp(adj,hyp) = hyp_adj_to_opp(hyp,adj);
 
 
 // Function: hyp_ang_to_opp()
-// Synopsis: Returns the opposite side length from the length of the hypotenuse and the primary angle.
+// Synopsis: Returns the opposite side length from the length of the hypotenuse and the reference angle.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   opp = hyp_ang_to_opp(hyp,ang);
 // Description:
-//   Given the length of the hypotenuse of a right triangle and the angle of the primary corner, returns the length of the opposite side.
+//   Given the length of the hypotenuse of a right triangle and the reference angle, returns the length of the opposite side.
 // Arguments:
 //   hyp = The length of the hypotenuse of the right triangle.
-//   ang = The angle in degrees of the primary corner of the right triangle.
+//   ang = The reference angle of the right triangle in degrees
 // Example:
 //   opp = hyp_ang_to_opp(8,30);  // Returns: 4
 function hyp_ang_to_opp(hyp,ang) =
@@ -286,15 +286,15 @@ function hyp_ang_to_opp(hyp,ang) =
 
 
 // Function: ang_hyp_to_opp()
-// Synopsis: Returns the opposite side length from the primary angle and the length of the hypotenuse.
+// Synopsis: Returns the opposite side length from the reference angle and the length of the hypotenuse.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   opp = ang_hyp_to_opp(ang,hyp);
 // Description:
-//   Given the the angle of the primary corner and the length of the hypotenuse of a right triangle, returns the length of the opposite side.
+//   Given the the reference angle and the length of the hypotenuse of a right triangle, returns the length of the opposite side.
 // Arguments:
-//   ang = The angle in degrees of the primary corner of the right triangle.
+//   ang = The reference angle of the right triangle in degrees
 //   hyp = The length of the hypotenuse of the right triangle.
 // Example:
 //   opp = ang_hyp_to_opp(30,8);  // Returns: 4
@@ -302,16 +302,16 @@ function ang_hyp_to_opp(ang,hyp) = hyp_ang_to_opp(hyp,ang);
 
 
 // Function: adj_ang_to_opp()
-// Synopsis: Returns the opposite side length from the length of the adjacent side and the primary angle.
+// Synopsis: Returns the opposite side length from the length of the adjacent side and the reference angle.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   opp = adj_ang_to_opp(adj,ang);
 // Description:
-//   Given the length of the adjacent side of a right triangle, and the angle of the primary corner, returns the length of the opposite side.
+//   Given the length of the adjacent side of a right triangle, and the reference angle, returns the length of the opposite side.
 // Arguments:
-//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
-//   ang = The angle in degrees of the primary corner of the right triangle.
+//   adj = The length of the side of the right triangle that is adjacent to the reference angle.
+//   ang = The reference angle of the right triangle in degrees
 // Example:
 //   opp = adj_ang_to_opp(8,45);  // Returns: 8
 function adj_ang_to_opp(adj,ang) =
@@ -320,16 +320,16 @@ function adj_ang_to_opp(adj,ang) =
     adj*tan(ang);
 
 // Function: ang_adj_to_opp()
-// Synopsis: Returns the opposite side length from the length of the adjacent side and the primary angle.
+// Synopsis: Returns the opposite side length from the reference angle and the length of the adjacent side.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   opp = ang_adj_to_opp(ang,adj);
 // Description:
-//   Given the angle of the primary corner and the length of the adjacent side of a right triangle, returns the length of the opposite side.
+//   Given the reference angle and the length of the adjacent side of a right triangle, returns the length of the opposite side.
 // Arguments:
-//   ang = The angle in degrees of the primary corner of the right triangle.
-//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   ang = The reference angle of the right triangle in degrees
+//   adj = The length of the side of the right triangle that is adjacent to the reference angle.
 // Example:
 //   opp = ang_adj_to_opp(45,8);  // Returns: 8
 function ang_adj_to_opp(ang,adj) = adj_ang_to_opp(adj,ang);
@@ -344,8 +344,8 @@ function ang_adj_to_opp(ang,adj) = adj_ang_to_opp(adj,ang);
 // Description:
 //   Given the length of the adjacent and opposite sides of a right triangle, returns the length of the hypotenuse.
 // Arguments:
-//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
-//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+//   adj = The length of the side of the right triangle that is adjacent to the reference angle.
+//   opp = The length of the side of the right triangle that is opposite from the reference angle.
 // Example:
 //   hyp = adj_opp_to_hyp(3,4);  // Returns: 5
 function adj_opp_to_hyp(adj,opp) =
@@ -363,15 +363,15 @@ function adj_opp_to_hyp(adj,opp) =
 // Description:
 //   Given the length of the opposite and adjacent sides of a right triangle, returns the length of the hypotenuse.
 // Arguments:
-//   opp = The length of the side of the right triangle that is opposite from the primary angle.
-//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   opp = The length of the side of the right triangle that is opposite from the reference angle.
+//   adj = The length of the side of the right triangle that is adjacent to the reference angle.
 // Example:
 //   hyp = opp_adj_to_hyp(4,3);  // Returns: 5
 function opp_adj_to_hyp(opp,adj) = adj_opp_to_hyp(adj,opp);
 
 
 // Function: adj_ang_to_hyp()
-// Synopsis: Returns the hypotenuse length from the length of the adjacent side and the primary angle.
+// Synopsis: Returns the hypotenuse length from the length of the adjacent side and the reference angle.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
@@ -379,8 +379,8 @@ function opp_adj_to_hyp(opp,adj) = adj_opp_to_hyp(adj,opp);
 // Description:
 //   For a right triangle, given the length of the adjacent side, and the corner angle, returns the length of the hypotenuse.
 // Arguments:
-//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
-//   ang = The angle in degrees of the primary corner of the right triangle.
+//   adj = The length of the side of the right triangle that is adjacent to the reference angle.
+//   ang = The reference angle of the right triangle in degrees
 // Example:
 //   hyp = adj_ang_to_hyp(4,60);  // Returns: 8
 function adj_ang_to_hyp(adj,ang) =
@@ -390,32 +390,32 @@ function adj_ang_to_hyp(adj,ang) =
 
 
 // Function: ang_adj_to_hyp()
-// Synopsis: Returns the hypotenuse length from the primary angle and length of the adjacent side.
+// Synopsis: Returns the hypotenuse length from the reference angle and length of the adjacent side.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   hyp = ang_adj_to_hyp(ang,adj);
 // Description:
-//   For a right triangle, given the primary angle and length of the adjacent side, returns the length of the hypotenuse.
+//   For a right triangle, given the reference angle and length of the adjacent side, returns the length of the hypotenuse.
 // Arguments:
-//   ang = The angle in degrees of the primary corner of the right triangle.
-//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   ang = The reference angle of the right triangle in degrees
+//   adj = The length of the side of the right triangle that is adjacent to the reference angle.
 // Example:
 //   hyp = ang_adj_to_hyp(60,4);  // Returns: 8
 function ang_adj_to_hyp(ang,adj) = adj_ang_to_hyp(adj,ang);
 
 
 // Function: opp_ang_to_hyp()
-// Synopsis: Returns the hypotenuse length from the length of the opposite side and the primary angle.
+// Synopsis: Returns the hypotenuse length from the length of the opposite side and the reference angle.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   hyp = opp_ang_to_hyp(opp,ang);
 // Description:
-//   For a right triangle, given the length of the opposite side, and the primary corner angle, returns the length of the hypotenuse.
+//   For a right triangle, given the length of the opposite side, and the reference angle, returns the length of the hypotenuse.
 // Arguments:
-//   opp = The length of the side of the right triangle that is opposite from the primary angle.
-//   ang = The angle in degrees of the primary corner of the right triangle.
+//   opp = The length of the side of the right triangle that is opposite from the reference angle.
+//   ang = The reference angle of the right triangle in degrees
 // Example:
 //   hyp = opp_ang_to_hyp(4,30);  // Returns: 8
 function opp_ang_to_hyp(opp,ang) =
@@ -424,16 +424,16 @@ function opp_ang_to_hyp(opp,ang) =
     opp/sin(ang);
 
 // Function: ang_opp_to_hyp()
-// Synopsis: Returns the hypotenuse length from the primary angle and the length of the opposite side.
+// Synopsis: Returns the hypotenuse length from the reference angle and the length of the opposite side.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   hyp = ang_opp_to_hyp(ang,opp);
 // Description:
-//   For a right triangle, given the primary corner angle and the length of the opposite side, returns the length of the hypotenuse.
+//   For a right triangle, given the reference angle and the length of the opposite side, returns the length of the hypotenuse.
 // Arguments:
-//   ang = The angle in degrees of the primary corner of the right triangle.
-//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+//   ang = The reference angle of the right triangle in degrees
+//   opp = The length of the side of the right triangle that is opposite from the reference angle.
 // Example:
 //   hyp = opp_ang_to_hyp(30,4);  // Returns: 8
 function ang_opp_to_hyp(ang,opp) = opp_ang_to_hyp(opp,ang);
@@ -447,10 +447,10 @@ function ang_opp_to_hyp(ang,opp) = opp_ang_to_hyp(opp,ang);
 // Usage:
 //   ang = hyp_adj_to_ang(hyp,adj);
 // Description:
-//   For a right triangle, given the lengths of the hypotenuse and the adjacent side, returns the angle of the primary corner.
+//   For a right triangle, given the lengths of the hypotenuse and the adjacent side, returns the reference angle.
 // Arguments:
 //   hyp = The length of the hypotenuse of the right triangle.
-//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   adj = The length of the side of the right triangle that is adjacent to the reference angle.
 // Example:
 //   ang = hyp_adj_to_ang(8,4);  // Returns: 60 degrees
 function hyp_adj_to_ang(hyp,adj) =
@@ -466,9 +466,9 @@ function hyp_adj_to_ang(hyp,adj) =
 // Usage:
 //   ang = adj_hyp_to_ang(adj,hyp);
 // Description:
-//   For a right triangle, given the lengths of the adjacent side and the hypotenuse, returns the angle of the primary corner.
+//   For a right triangle, given the lengths of the adjacent side and the hypotenuse, returns the reference angle.
 // Arguments:
-//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   adj = The length of the side of the right triangle that is adjacent to the reference angle.
 //   hyp = The length of the hypotenuse of the right triangle.
 // Example:
 //   ang = adj_hyp_to_ang(4,8);  // Returns: 60 degrees
@@ -476,16 +476,16 @@ function adj_hyp_to_ang(adj,hyp) = hyp_adj_to_ang(hyp,adj);
 
 
 // Function: hyp_opp_to_ang()
-// Synopsis: Returns the primary angle from the lengths of the hypotenuse and the opposite side.
+// Synopsis: Returns the reference angle from the lengths of the hypotenuse and the opposite side.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   ang = hyp_opp_to_ang(hyp,opp);
 // Description:
-//   For a right triangle, given the lengths of the hypotenuse and the opposite sides, returns the angle of the primary corner.
+//   For a right triangle, given the lengths of the hypotenuse and the opposite sides, returns the reference angle.
 // Arguments:
 //   hyp = The length of the hypotenuse of the right triangle.
-//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+//   opp = The length of the side of the right triangle that is opposite from the reference angle.
 // Example:
 //   ang = hyp_opp_to_ang(8,4);  // Returns: 30 degrees
 function hyp_opp_to_ang(hyp,opp) =
@@ -494,15 +494,15 @@ function hyp_opp_to_ang(hyp,opp) =
     asin(opp/hyp);
 
 // Function: opp_hyp_to_ang()
-// Synopsis: Returns the primary angle from the lengths of the opposite side and the hypotenuse.
+// Synopsis: Returns the reference angle from the lengths of the opposite side and the hypotenuse.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   ang = opp_hyp_to_ang(opp,hyp);
 // Description:
-//   For a right triangle, given the lengths of the opposite side and the hypotenuse, returns the angle of the primary corner.
+//   For a right triangle, given the lengths of the opposite side and the hypotenuse, returns the reference angle.
 // Arguments:
-//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+//   opp = The length of the side of the right triangle that is opposite from the reference angle.
 //   hyp = The length of the hypotenuse of the right triangle.
 // Example:
 //   ang = opp_hyp_to_ang(4,8);  // Returns: 30 degrees
@@ -518,8 +518,8 @@ function opp_hyp_to_ang(opp,hyp) = hyp_opp_to_ang(hyp,opp);
 // Description:
 //   For a right triangle, given the lengths of the adjacent and opposite sides, returns the angle of the corner.
 // Arguments:
-//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
-//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+//   adj = The length of the side of the right triangle that is adjacent to the reference angle.
+//   opp = The length of the side of the right triangle that is opposite from the reference angle.
 // Example:
 //   ang = adj_opp_to_ang(sqrt(3)/2,0.5);  // Returns: 30 degrees
 function adj_opp_to_ang(adj,opp) =
@@ -529,16 +529,16 @@ function adj_opp_to_ang(adj,opp) =
 
 
 // Function: opp_adj_to_ang()
-// Synopsis: Returns the primary angle from the lengths of the opposite and adjacent sides.
+// Synopsis: Returns the reference angle from the lengths of the opposite and adjacent sides.
 // Topics: Geometry, Trigonometry, Triangles
 // See Also: adj_ang_to_hyp(), adj_ang_to_opp(), adj_opp_to_ang(), adj_opp_to_hyp(), hyp_adj_to_ang(), hyp_adj_to_opp(), hyp_ang_to_adj(), hyp_ang_to_opp(), hyp_opp_to_adj(), hyp_opp_to_ang(), opp_ang_to_adj(), opp_ang_to_hyp(), ang_adj_to_hyp(), ang_adj_to_opp(), opp_adj_to_ang(), opp_adj_to_hyp(), adj_hyp_to_ang(), adj_hyp_to_opp(), ang_hyp_to_adj(), ang_hyp_to_opp(), opp_hyp_to_adj(), opp_hyp_to_ang(), ang_opp_to_adj(), ang_opp_to_hyp()
 // Usage:
 //   ang = opp_adj_to_ang(opp,adj);
 // Description:
-//   For a right triangle, given the lengths of the opposite and adjacent sides, returns the angle of the primary corner.
+//   For a right triangle, given the lengths of the opposite and adjacent sides, returns the reference angle.
 // Arguments:
-//   opp = The length of the side of the right triangle that is opposite from the primary angle.
-//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   opp = The length of the side of the right triangle that is opposite from the reference angle.
+//   adj = The length of the side of the right triangle that is adjacent to the reference angle.
 // Example:
 //   ang = opp_adj_to_ang(0.5,sqrt(3)/2);  // Returns: 30 degrees
 function opp_adj_to_ang(opp,adj) = adj_opp_to_ang(adj,opp);
