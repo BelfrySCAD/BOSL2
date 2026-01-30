@@ -455,7 +455,7 @@ function deduplicate(list, closed=false, eps=_EPSILON) =
         l = len(list),
         end = l-(closed?0:1)
     )
-    is_string(list) ? chr([for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) ord(list[i]])) :
+    is_string(list) ? chr([for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) ord(list[i])]) :
     eps==0 ? [for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]] :
     [for (i=[0:1:l-1]) if (i==end || !approx(list[i], list[(i+1)%l], eps)) list[i]];
 
