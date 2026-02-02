@@ -360,7 +360,7 @@ module stroke(
                       translate(path[0]) {
                           $fn = segs(width[0]/2);
                           if (is_undef(endcap_angle1)) {
-                              rotate_extrude(convexity=convexity) {
+                              rotate_extrude(convexity=convexity,angle=360) {
                                   right_half(planar=true) {
                                       polygon(endcap_shape1);
                                   }
