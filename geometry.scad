@@ -1784,27 +1784,28 @@ function point_in_polygon(point, poly, nonzero=false, eps=_EPSILON) =
 // Topics: Geometry, Polygons, Lines, Intersection
 // See Also: polygon_area(), centroid(), polygon_normal(), point_in_polygon(), polygon_line_intersection()
 // Usage:
-//   pt = polygon_line_intersection(poly, line, [bounded], [nonzero], [eps]);
+//   pt_or_segments = polygon_line_intersection(poly, line, [bounded], [nonzero], [eps]);
 // Description:
-//   Takes a possibly bounded line, and a 2D or 3D planar polygon, and finds their intersection.  Note the polygon is
-//   treated as its boundary and interior, so the intersection may include both points and line segments.  
-//   If the line does not intersect the polygon then returns `undef`.  
-//   In 3D if the line is not on the plane of the polygon but intersects it then you get a single intersection point.
-//   Otherwise the polygon and line are in the same plane, or when your input is 2D, you get a list of segments and 
-//   single point lists.  Use `is_vector` to distinguish these two cases.
+//   Takes a possibly bounded line, and a 2D or 3D planar polygon, and finds their intersection.  The polygon is
+//   treated as its boundary and interior, so the intersection may include both points and line segments.
+//   Returns:
+//     * If the line does not intersect the polygon: `undef`.
+//     * In 3D if the line is not coplanar with the polygon but intersects it: the intersection point as a 3-vector, `[x,y,z]`.
+//     * In the 2D case or the 3D case when the line is coplanar with the polygon: list of segments or degenerate single point "segments".
 //   .
-//   In the 2D case, a common result is a list containing a single segment, which lists the two intersection points
-//   with the boundary of the polygon.
-//   When single points are in the intersection (the line just touches a polygon corner) they appear on the segment
-//   list as lists of a single point
-//   (like single point segments) so a single point intersection in 2D has the form `[[[x,y,z]]]` as compared
-//   to a single point intersection in 3D, which has the form `[x,y,z]`.  You can identify whether an entry in the
-//   segment list is a true segment by checking its length, which is 2 for a segment and 1 for a point.  
+//   In 3D, you can distinguish output cases using {{is_vector()}}.  When run on the output it returns `true` when the output is a single
+//   intersection point from a non-coplanar line.
+//   .
+//   In the 2D or coplanar case, the result is a **list** of segments, so the common case of a single segment will be a
+//   singleton list of the form `[[p1,p2]]`.  A single point appears on the segment list as a degenerate segment or the form `[p]`,
+//   so this means in 3D a single point will appears as `[[[x,y,z]]]` in the coplanar case.  This makes it possible to distinguish
+//   the coplanar and non-coplanar cases.  An intersection featuring two segments and a point could look like `[[p1,p2], [q], [r1,r2]]`.
+//   To determine if an entry in the segment list is a true segment, check its length, which is 2 for a segment and 1 for a point. 
 // Arguments:
 //   poly = The 3D planar polygon to find the intersection with.
 //   line = A list of two distinct 3D points on the line.
 //   bounded = If false, the line is considered unbounded.  If true, it is treated as a bounded line segment.  If given as `[true, false]` or `[false, true]`, the boundedness of the points are specified individually, allowing the line to be treated as a half-bounded ray.  Default: false (unbounded)
-//   nonzero = set to true to use the nonzero rule for determining it points are in a polygon.  See point_in_polygon.  Default: false.
+//   nonzero = set to true to use the nonzero rule for determining it points are in a polygon.  See {{point_in_polygon()}}.  Default: false.
 //   eps = Tolerance in geometric comparisons.  Default: 1e-9
 // Example(3D): The line intersects the 3d hexagon in a single point. 
 //   hex = zrot(140,p=rot([-45,40,20],p=path3d(hexagon(r=15))));

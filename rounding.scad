@@ -5045,9 +5045,37 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
 //   joint = 3;
 //   rounded_prism(rect(12), rect(8), h=15, joint_sides=joint,atype="prismoid")
 //     attach_prism(circle(r=3,$fn=128),RIGHT+FWD, length=4, fillet=2, edge_joint=joint, $fn=32);
-
-
-
+// Example(3D,Big): Complicated example where we use attach_prism() to create attachments and then connect a bezier sweep to those attachments using descriptions.  The blue line segments show the bezier control points.  Note that we use {{bezier_sweep()}} rather than {{path_sweep()}} to ensure that the ends of the sweep mate properly, and setting `last_normal` ensures that the points on the attached prisms line up with the sweep.  
+//   sq = subdivide_path(circle(r=3,$fn=7),maxlen=.5);
+//   vspace=20;
+//   bezlen=40;
+//   cylr=20;
+//   cylh=65;
+//   straightlen=5;
+//   smoothcurve=true;  // true for C2 joint
+//   k=0.6;
+//   cyl(r=cylr,h=cylh, rounding=2, circum=true, $fn=256)
+//     let(cylinder=parent())
+//        attach_prism(sq,FWD,length=straightlen,shift=-vspace,fillet=2,spin=90)
+//        let(front=parent())
+//     restore(cylinder)
+//        attach_prism(sq, RIGHT, length=straightlen, shift=vspace, fillet=2,spin=90)
+//        let(right=parent())
+//     restore(cylinder)
+//       let(avg_dir = desc_dir(front,anchor="end") + desc_dir(right,anchor="end"),
+//           path=[
+//             desc_point(front,anchor="end"),
+//             if (smoothcurve) desc_point(front,anchor="end")+bezlen*(1-k)*desc_dir(front,anchor="end"),
+//             desc_point(front,anchor="end")+bezlen*desc_dir(front,anchor="end"),
+//             down(vspace/2,desc_point(cylinder,CTR)+ (cylr+straightlen+bezlen)*avg_dir),
+//             desc_point(right,anchor="end")+bezlen*desc_dir(right,anchor="end"),
+//             if (smoothcurve) desc_point(right,anchor="end")+bezlen*(1-k)*desc_dir(right,anchor="end"),
+//             desc_point(right,anchor="end")]
+//       )
+//       {
+//         bezier_sweep(zrot(90,sq), path, 40, last_normal=UP);
+//         color("lightblue")stroke(path);
+//       }
 
 
 module attach_prism(profile, anchor, fillet=0, rounding=0, inside=false, l, length, h, height, endpoint, T=IDENT, shift=0, overlap=1,
