@@ -29,7 +29,7 @@ use <builtins.scad>
 // Usage: As Module (as in native OpenSCAD)
 //   cube(size, [center]);
 // Usage: With BOSL2 Attachment extensions
-//   cube(size, [center], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   cube(size, [center|anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Usage: As Function (BOSL2 extension)
 //   vnf = cube(size, ...);
 // Description:
@@ -38,7 +38,7 @@ use <builtins.scad>
 //   When called as a function, returns a [VNF](vnf.scad) for a cube.
 // Arguments:
 //   size = The size of the cube.
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=FRONT+LEFT+BOTTOM`.
+//   center = A true value sets `anchor=CENTER`, false sets `anchor=FRONT+LEFT+BOTTOM`.  Default: `anchor=CENTER`
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -61,6 +61,7 @@ use <builtins.scad>
 
 module cube(size=1, center, anchor, spin=0, orient=UP)
 {
+    dummy = assert(num_defined([center,anchor])<2, "\nCannot give both center and anchor");
     anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
     size = force_list(size,3);      // Native cube prints a warning and gives a unit cube when parameters are bogus
     attachable(anchor,spin,orient, size=is_vector(size,3)?size:[1,1,1]) {
@@ -73,6 +74,8 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
     let(
         size = force_list(size,3)
     )
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+    assert(num_defined([center,anchor])<2, "\nCannot give both center and anchor")
     assert(is_vector(size,3), "\nSize parameter cannot be converted to a 3-vector.")
     assert(all_positive(size), "\nAll size components must be positive.")
     let(
@@ -835,7 +838,7 @@ function prismoid(
 // Topics: Textures, Rounding, Chamfers, Shapes (3D), Attachable 
 // See Also: cyl(), rounded_prism(), texture(), linear_sweep(), EDGE(), FACE()
 // Usage: Normal prisms
-//   regular_prism(n, h|l=|height=|length=, r, [center=], [realign=]) [ATTACHMENTS];
+//   regular_prism(n, h|l=|height=|length=, r, [center=|anchor=], [realign=]) [ATTACHMENTS];
 //   regular_prism(n, h|l=|height=|length=, d=|id=|od=|ir=|or=|side=, ...) [ATTACHMENTS];
 //   regular_prism(n, h|l=|height=|length=, r1=|d1=|id1=|od1=|ir1=|or1=|side1=,r2=|d2=|id2=|od2=|ir2=|or2=|side2=, ...) [ATTACHMENTS];
 // Usage: Chamferred end prisms
@@ -889,7 +892,7 @@ function prismoid(
 // Arguments:
 //   l / h / length / height = Length of prism
 //   r = Outer radius of prism.  
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
+//   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.  Default is `anchor=CENTER`.
 //   ---
 //   r1/or1 = Outer radius of the bottom of prism
 //   r2/or2 = Outer radius of the top end of prism
@@ -1025,6 +1028,8 @@ function regular_prism(n,
     anchor, spin=0, orient=UP,_return_anchors=false
 ) = 
     assert(is_integer(n) && n>2, "\nn must be an integer 3 or greater.")
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+    assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center")
     let(
         style = default(style,"min_edge"),
         tex_depth = default(tex_depth,1),
@@ -1501,9 +1506,9 @@ function textured_tile(
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See Also: tube()
 // Usage: Typical Rectangular Tubes
-//   rect_tube(h, size, isize, [center], [shift]);
-//   rect_tube(h, size, wall=, [center=]);
-//   rect_tube(h, isize=, wall=, [center=]);
+//   rect_tube(h, size, isize, [center|anchor=], [shift]);
+//   rect_tube(h, size, wall=, [center=|anchor=]);
+//   rect_tube(h, isize=, wall=, [center=|anchor=]);
 // Usage: Tapering Rectangular Tubes
 //   rect_tube(h, size1=, size2=, wall=, ...);
 //   rect_tube(h, isize1=, isize2=, wall=, ...);
@@ -1548,7 +1553,7 @@ function textured_tile(
 //   h/l/height/length = The height or length of the rectangular tube.  Default: 1
 //   size = The outer [X,Y] size of the rectangular tube.
 //   isize = The inner [X,Y] size of the rectangular tube.
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
+//   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.  Default is `anchor=CENTER`.
 //   shift = [X,Y] amount to shift the center of the top end with respect to the center of the bottom end.
 //   ---
 //   wall = The thickness of the rectangular tube wall.
@@ -1660,6 +1665,8 @@ module rect_tube(
 ) {
     h = one_defined([h,l,length,height],"h,l,length,height");
     checks =
+        assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+        assert(num_defined([anchor,center])<2, "\nCannot give both center and anchor")
         assert(is_num(h), "\nl or h argument required.")
         assert(is_vector(shift,2));
     s1 = is_num(size1)? [size1, size1] :
@@ -1791,9 +1798,9 @@ function rect_tube(
 // Topics: Shapes (3D), Attachable, VNF Generators
 // See also: prismoid(), rounded_prism(), pie_slice()
 // Usage: As Module
-//   wedge(size, [center], ...) [ATTACHMENTS];
+//   wedge(size, [center|anchor=], ...) [ATTACHMENTS];
 // Usage: As Function
-//   vnf = wedge(size, [center], ...);
+//   vnf = wedge(size, [center|anchor=], ...);
 //
 // Description:
 //   When called as a module, creates a 3D triangular wedge with the hypotenuse in the X+Z+ quadrant.
@@ -1804,7 +1811,7 @@ function rect_tube(
 //
 // Arguments:
 //   size = [width, thickness, height].  Default: [1,1,1]
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
+//   center = A true value sets `anchor=CENTER`, false sets `anchor=FRONT+LEFT+BOTTOM`.  Default: anchor = `FRONT+LEFT+BOTTOM`
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `FRONT+LEFT+BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -1837,7 +1844,9 @@ function rect_tube(
 module wedge(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
 {
     size = force_list(size,3);
-    check=assert(is_vector(size,3) && all_positive(size), "\nsize must be a positive scalar or 3-vector.");
+    check=assert(is_vector(size,3) && all_positive(size), "\nsize must be a positive scalar or 3-vector.")
+          assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+          assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center");
     anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
     vnf = wedge(size, anchor="origin");
     spindir = unit([0,-size.y,size.z]);
@@ -1955,8 +1964,8 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   cylinder(h, r=/d=, [center=]);
 //   cylinder(h, r1/d1=, r2/d2=, [center=]);
 // Usage: With BOSL2 anchoring and attachment extensions
-//   cylinder(h, r=/d=, [center=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
-//   cylinder(h, r1/d1=, r2/d2=, [center=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   cylinder(h, r=/d=, [center=|anchor=], [spin=], [orient=]) [ATTACHMENTS];
+//   cylinder(h, r1/d1=, r2/d2=, [center=|anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Usage: As Function (BOSL2 extension)
 //   vnf = cylinder(h, r=/d=, ...);
 //   vnf = cylinder(h, r1/d1=, r2/d2=, ...);
@@ -1968,13 +1977,13 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 //   h = The height of the cylinder.
 //   r1 = The bottom radius of the cylinder.  (Before orientation.)
 //   r2 = The top radius of the cylinder.  (Before orientation.)
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.  Default: false
+//   center = A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.  Default: false (`anchor=BOTTOM`)
 //   ---
 //   d1 = The bottom diameter of the cylinder.  (Before orientation.)
 //   d2 = The top diameter of the cylinder.  (Before orientation.)
 //   r = The radius of the cylinder.
 //   d = The diameter of the cylinder.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example: By Radius
@@ -2001,6 +2010,7 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 
 module cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP)
 {
+    dummy = assert(num_defined([anchor,center])<2, "\nCannot give both center and anchor.");
     anchor = get_anchor(anchor, center, BOTTOM, BOTTOM);
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
@@ -2012,6 +2022,8 @@ module cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP)
 }
 
 function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+    assert(num_defined([anchor,center])<2, "\nCannot give both center and anchor.")
     let(
         anchor = get_anchor(anchor, center, BOTTOM, BOTTOM),
         r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
@@ -2038,7 +2050,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: regular_prism(), texture(), rotate_sweep(), cylinder()
 // Usage: Normal Cylinders
-//   cyl(l|h|length|height, r, [center], [circum=], [realign=]) [ATTACHMENTS];
+//   cyl(l|h|length|height, r, [center|anchor=], [circum=], [realign=]) [ATTACHMENTS];
 //   cyl(l|h|length|height, d=, ...) [ATTACHMENTS];
 //   cyl(l|h|length|height, r1=, r2=, ...) [ATTACHMENTS];
 //   cyl(l|h|length|height, d1=, d2=, ...) [ATTACHMENTS];
@@ -2114,7 +2126,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 // Arguments:
 //   l / h / length / height = Length of cylinder along oriented axis.  Default: 1
 //   r = Radius of cylinder.  Default: 1
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
+//   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
 //   ---
 //   r1 = Radius of the negative (X-, Y-, Z-) end of cylinder.
 //   r2 = Radius of the positive (X+, Y+, Z+) end of cylinder.
@@ -2383,6 +2395,8 @@ function cyl(
     extra, extra1, extra2, 
     anchor, spin=0, orient=UP
 ) =
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+    assert(num_defined([center,anchor])<2, "\nCannot give both center and anchor")
     assert(num_defined([style,tex_style])<2, "\nIn cyl() the 'tex_style' parameter has been replaced by 'style'. You cannot give both.")
     assert(num_defined([tex_reps,tex_counts])<2, "\nIn cyl() the 'tex_counts' parameter has been replaced by 'tex_reps'. You cannot give both.")    
     assert(num_defined([tex_scale,tex_depth])<2, "\nIn cyl() the 'tex_scale' parameter has been replaced by 'tex_depth'. You cannot give both.")
@@ -2502,6 +2516,8 @@ module cyl(
     anchor, spin=0, orient=UP
 ) {
     dummy=
+      assert(num_defined([anchor,center])<2, "\nCannot give both `anchor` and `center` to cyl()")
+      assert(is_undef(center) || is_bool(center), "\ncenter must be boolean")
       assert(num_defined([style,tex_style])<2, "\nIn cyl() the 'tex_style' parameters has been replaced by 'style'. You cannot give both.")
       assert(num_defined([tex_reps,tex_counts])<2, "\nIn cyl() the 'tex_counts' parameters has been replaced by 'tex_reps'. You cannot give both.")
       assert(num_defined([tex_scale,tex_depth])<2, "\nIn cyl() the 'tex_scale' parameter has been replaced by 'tex_depth'. You cannot give both.");
@@ -2901,7 +2917,7 @@ module zcyl(
 //   If you need to anchor to the inside of a tube, use {{attach_part()}} with the part name "inside"
 //   to switch goeomtry to the inside.  
 // Usage: Basic cylindrical tube, specifying inner and outer radius or diameter
-//   tube(h|l, or, ir, [center], [realign=], [anchor=], [spin=],[orient=]) [ATTACHMENTS];
+//   tube(h|l, or, ir, [center|anchor=], [realign=], [spin=],[orient=]) [ATTACHMENTS];
 //   tube(h|l, od=, id=, ...)  [ATTACHMENTS];
 // Usage: Specify wall thickness
 //   tube(h|l, or|od=|ir=|id=, wall=, ...) [ATTACHMENTS];
@@ -2917,7 +2933,7 @@ module zcyl(
 //   h / l / height / length = height of tube. Default: 1
 //   or = Outer radius of tube. Default: 1
 //   ir = Inner radius of tube.
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
+//   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.  Default: `anchor=CENTER`
 //   ---
 //   od = Outer diameter of tube.
 //   id = Inner diameter of tube.
@@ -3042,6 +3058,8 @@ module tube(
     ir1 = default(irr1, u_sub(orr1,wall));
     ir2 = default(irr2, u_sub(orr2,wall));
     checks =
+        assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+        assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center.")
         assert(is_vector(shift,2), "\n'shift' must be a 2D vector.")
         assert(all_defined([r1, r2, ir1, ir2]), "\nMust specify two of inner radius/diam, outer radius/diam, and wall width.")
         assert(num_defined([rounding,chamfer])<2, "\nCannot give both rounding and chamfer.")
@@ -3153,7 +3171,7 @@ module tube(
 //   h / l / height / length = height of pie slice.
 //   r = radius of pie slice.
 //   ang = pie slice angle in degrees.
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
+//   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.  Default: `anchor=CENTER`
 //   ---
 //   r1 = bottom radius of pie slice.
 //   r2 = top radius of pie slice.
@@ -3179,6 +3197,9 @@ module pie_slice(
     r1, r2, d, d1, d2, l, length, height,
     anchor, spin=0, orient=UP
 ) {
+    dummy =
+      assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+      assert(num_defined([anchor,center])<2,"\nCannot give both anchor and center.");
     l = one_defined([l, h,height,length],"l,h,height,length",dflt=1);
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
@@ -3787,7 +3808,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 // Arguments:
 //   r_maj = major radius of torus ring. (use with 'r_min', or 'd_min')
 //   r_min = minor radius of torus ring. (use with 'r_maj', or 'd_maj')
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
+//   center = A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.  Default: `anchor=CENTER`
 //   ---
 //   d_maj  = major diameter of torus ring. (use with 'r_min', or 'd_min')
 //   d_min = minor diameter of torus ring. (use with 'r_maj', or 'd_maj')
@@ -3818,6 +3839,9 @@ module torus(
     or, od, ir, id,
     anchor, spin=0, orient=UP
 ) {
+    dummy =
+      assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+      assert(num_defined([anchor,center])<2,"\nCannot give both anchor and center");
     _or = get_radius(r=or, d=od, dflt=undef);
     _ir = get_radius(r=ir, d=id, dflt=undef);
     _r_maj = get_radius(r=r_maj, d=d_maj, dflt=undef);
@@ -3848,7 +3872,9 @@ function torus(
     d_maj, d_min,
     or, od, ir, id,
     anchor, spin=0, orient=UP
-) = let(
+) = assert(num_defined([anchor,center])<2,"\nCannot give both anchor and center")
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+    let(
     _or = get_radius(r=or, d=od, dflt=undef),
     _ir = get_radius(r=ir, d=id, dflt=undef),
     _r_maj = get_radius(r=r_maj, d=d_maj, dflt=undef),
