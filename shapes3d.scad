@@ -74,6 +74,8 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
     let(
         size = force_list(size,3)
     )
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+    assert(num_defined([center,anchor])<2, "\nCannot give both center and anchor")
     assert(is_vector(size,3), "\nSize parameter cannot be converted to a 3-vector.")
     assert(all_positive(size), "\nAll size components must be positive.")
     let(
@@ -1026,6 +1028,7 @@ function regular_prism(n,
     anchor, spin=0, orient=UP,_return_anchors=false
 ) = 
     assert(is_integer(n) && n>2, "\nn must be an integer 3 or greater.")
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
     assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center")
     let(
         style = default(style,"min_edge"),
@@ -1662,6 +1665,7 @@ module rect_tube(
 ) {
     h = one_defined([h,l,length,height],"h,l,length,height");
     checks =
+        assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
         assert(num_defined([anchor,center])<2, "\nCannot give both center and anchor")
         assert(is_num(h), "\nl or h argument required.")
         assert(is_vector(shift,2));
@@ -1841,6 +1845,7 @@ module wedge(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
 {
     size = force_list(size,3);
     check=assert(is_vector(size,3) && all_positive(size), "\nsize must be a positive scalar or 3-vector.")
+          assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
           assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center");
     anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
     vnf = wedge(size, anchor="origin");
@@ -2005,8 +2010,7 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 
 module cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP)
 {
-    f=echo(center=center,anchor=anchor,num_defined([anchor,center])<2);
-eef=    assert(num_defined([anchor,center])<2, str("\nCannot give both center and anchor.",center,anchor));    
+    dummy = assert(num_defined([anchor,center])<2, "\nCannot give both center and anchor.");
     anchor = get_anchor(anchor, center, BOTTOM, BOTTOM);
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
@@ -2018,7 +2022,8 @@ eef=    assert(num_defined([anchor,center])<2, str("\nCannot give both center an
 }
 
 function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
-    assert(num_defined([anchor,center])<2, str("\nCannot give both center and anchor.",center,anchor))
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+    assert(num_defined([anchor,center])<2, "\nCannot give both center and anchor.")
     let(
         anchor = get_anchor(anchor, center, BOTTOM, BOTTOM),
         r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
@@ -2390,6 +2395,7 @@ function cyl(
     extra, extra1, extra2, 
     anchor, spin=0, orient=UP
 ) =
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
     assert(num_defined([center,anchor])<2, "\nCannot give both center and anchor")
     assert(num_defined([style,tex_style])<2, "\nIn cyl() the 'tex_style' parameter has been replaced by 'style'. You cannot give both.")
     assert(num_defined([tex_reps,tex_counts])<2, "\nIn cyl() the 'tex_counts' parameter has been replaced by 'tex_reps'. You cannot give both.")    
@@ -3052,6 +3058,7 @@ module tube(
     ir1 = default(irr1, u_sub(orr1,wall));
     ir2 = default(irr2, u_sub(orr2,wall));
     checks =
+        assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
         assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center.")
         assert(is_vector(shift,2), "\n'shift' must be a 2D vector.")
         assert(all_defined([r1, r2, ir1, ir2]), "\nMust specify two of inner radius/diam, outer radius/diam, and wall width.")
@@ -3190,7 +3197,9 @@ module pie_slice(
     r1, r2, d, d1, d2, l, length, height,
     anchor, spin=0, orient=UP
 ) {
-    dummy = assert(num_defined([anchor,center])<2,"\nCannot give both anchor and center.");
+    dummy =
+      assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+      assert(num_defined([anchor,center])<2,"\nCannot give both anchor and center.");
     l = one_defined([l, h,height,length],"l,h,height,length",dflt=1);
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
@@ -3830,7 +3839,9 @@ module torus(
     or, od, ir, id,
     anchor, spin=0, orient=UP
 ) {
-    dummy = assert(num_defined([anchor,center])<2,"\nCannot give both anchor and center");
+    dummy =
+      assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
+      assert(num_defined([anchor,center])<2,"\nCannot give both anchor and center");
     _or = get_radius(r=or, d=od, dflt=undef);
     _ir = get_radius(r=ir, d=id, dflt=undef);
     _r_maj = get_radius(r=r_maj, d=d_maj, dflt=undef);
@@ -3862,6 +3873,7 @@ function torus(
     or, od, ir, id,
     anchor, spin=0, orient=UP
 ) = assert(num_defined([anchor,center])<2,"\nCannot give both anchor and center")
+    assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
     let(
     _or = get_radius(r=or, d=od, dflt=undef),
     _ir = get_radius(r=ir, d=id, dflt=undef),
