@@ -1043,14 +1043,15 @@ function ptn_sect(type, length=25, width=25, invert=false) =
 // Topics: Partitions, Masking, Paths
 // See Also: ptn_sect(), partition_cut_mask(), partition()
 // Usage:
-//   path = partition_path(pathdesc, [repeat=], [y=]);
+//   path = partition_path(pathdesc, [repeat=], [y=], [altpath=]);
 // Description:
 //   Creates a partition path based on a list of section descriptors, as would be passed to {{ptn_sect()}}.
 // Arguments:
-//   pathdesc = The list of partition section descriptors.
+//   pathdesc = A list describing one or more partition path segments. Each item is either a numeric length, a string naming a segment pattern, or a full explicit path.
 //   ---
-//   repeat = The number of times to repeat path in the pathdesc.  Default: 1
-//   y = If given a Y coordinate, closes the path to that Y position.  Default: Don't close the path.
+//   repeat = Number of times to repeat the full `pathdesc` sequence along the path.  Default: 1
+//   y = If given, closes the generated path by connecting its ends at this Y coordinate, and orients the closed path based on the sign of `y`.
+//   altpath = Optional alternate base path which the generated partition pattern will be aligned to.  Default: `[[-9999,0], [+9999,0]]`
 // Example(2D): You can {{stroke()}} an unclosed partition path with a given width= to make a wall that you can use to divide a part into two pieces.
 //   linear_extrude(height=100)
 //       stroke(
