@@ -110,7 +110,7 @@ module half_of(v=UP, cp, s=100, planar=false, cut_path, cut_angle=0, offset=0, s
         is_vector(cp)? cp :
         is_num(cp)? cp*unit(v) :
         [0,0,0];
-    v = is_vector(v,4)? plane_normal(v) : v;
+    v = is_vector(v,4)? plane_normal(v) : is_vector(v,2)? point3d(v) : v;
     ppath = is_undef(cut_path)
       ? [[-s/2,0], [+s/2,0]]
       : assert(is_path(cut_path), "The cut_path= argument must be either undef or a horizontal path.")
