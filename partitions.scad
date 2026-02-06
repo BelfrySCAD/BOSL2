@@ -595,7 +595,7 @@ function bottom_half(p,z=0, planar=false, cut_path, cut_angle=0, offset=0) =
         dir = planar? FRONT : BOTTOM,
         cp = planar? [0,z,0] : [0,0,z]
     )
-    half_of(p, dir, cp=cp, planar=planar, cut_path=cut_path, cut_angle=cut_angle, offset=offset);
+    half_of(p, dir, cp=cp, cut_path=cut_path, cut_angle=cut_angle, offset=offset);
 
 
 
