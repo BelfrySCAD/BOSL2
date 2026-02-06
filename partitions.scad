@@ -955,7 +955,7 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpa
 //   stroke(ptn_sect("halfsine addflip yflip 40x30 3x"));
 // Example(2D): Suffix ordering can matter, since they are applied in order.
 //   stroke(ptn_sect("halfsine 3x addflip yflip 40x30"));
-// Example(2D): Giving a scalar is a shorcut for a "flat" section of the given length.
+// Example(2D): Giving a scalar is a shortcut for a "flat" section of the given length.
 //   stroke(ptn_sect(30));
 // Example(2D): Using a custom section shape.  Input is expected to start at `[0,0]`, and end at `[1,0]`.  It is scaled by length= and width=.
 //   cust_path = yscale(2, p=arc(n=15, r=0.5, cp=[0.5,0], start=180, angle=-180));
