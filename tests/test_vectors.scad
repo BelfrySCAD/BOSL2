@@ -153,11 +153,11 @@ module test_unit() {
     assert(unit([10,0,0]) == [1,0,0]);
     assert(unit([0,10,0]) == [0,1,0]);
     assert(unit([0,0,10]) == [0,0,1]);
-    assert(abs(norm(unit([10,10,10]))-1) < EPSILON);
-    assert(abs(norm(unit([-10,-10,-10]))-1) < EPSILON);
-    assert(abs(norm(unit([-10,0,0]))-1) < EPSILON);
-    assert(abs(norm(unit([0,-10,0]))-1) < EPSILON);
-    assert(abs(norm(unit([0,0,-10]))-1) < EPSILON);
+    assert(abs(norm(unit([10,10,10]))-1) < _EPSILON);
+    assert(abs(norm(unit([-10,-10,-10]))-1) < _EPSILON);
+    assert(abs(norm(unit([-10,0,0]))-1) < _EPSILON);
+    assert(abs(norm(unit([0,-10,0]))-1) < _EPSILON);
+    assert(abs(norm(unit([0,0,-10]))-1) < _EPSILON);
 }
 test_unit();
 
@@ -176,29 +176,29 @@ module test_vector_angle() {
             assert(vector_angle([a,b])==90);
         }
     }
-    assert(abs(vector_angle([10,10,0],[10,0,0])-45) < EPSILON);
-    assert(abs(vector_angle([[10,10,0],[10,0,0]])-45) < EPSILON);
-    assert(abs(vector_angle([11,11,1],[1,1,1],[11,-9,1])-90) < EPSILON);
-    assert(abs(vector_angle([[11,11,1],[1,1,1],[11,-9,1]])-90) < EPSILON);
+    assert(abs(vector_angle([10,10,0],[10,0,0])-45) < _EPSILON);
+    assert(abs(vector_angle([[10,10,0],[10,0,0]])-45) < _EPSILON);
+    assert(abs(vector_angle([11,11,1],[1,1,1],[11,-9,1])-90) < _EPSILON);
+    assert(abs(vector_angle([[11,11,1],[1,1,1],[11,-9,1]])-90) < _EPSILON);
 }
 test_vector_angle();
 
 
 module test_vector_axis() {
-    assert(norm(vector_axis([10,0,0],[10,10,0]) - [0,0,1]) < EPSILON);
-    assert(norm(vector_axis([[10,0,0],[10,10,0]]) - [0,0,1]) < EPSILON);
-    assert(norm(vector_axis([10,0,0],[0,10,0]) - [0,0,1]) < EPSILON);
-    assert(norm(vector_axis([[10,0,0],[0,10,0]]) - [0,0,1]) < EPSILON);
-    assert(norm(vector_axis([0,10,0],[10,0,0]) - [0,0,-1]) < EPSILON);
-    assert(norm(vector_axis([[0,10,0],[10,0,0]]) - [0,0,-1]) < EPSILON);
-    assert(norm(vector_axis([0,0,10],[10,0,0]) - [0,1,0]) < EPSILON);
-    assert(norm(vector_axis([[0,0,10],[10,0,0]]) - [0,1,0]) < EPSILON);
-    assert(norm(vector_axis([10,0,0],[0,0,10]) - [0,-1,0]) < EPSILON);
-    assert(norm(vector_axis([[10,0,0],[0,0,10]]) - [0,-1,0]) < EPSILON);
-    assert(norm(vector_axis([10,0,10],[0,-10,0]) - [sin(45),0,-sin(45)]) < EPSILON);
-    assert(norm(vector_axis([[10,0,10],[0,-10,0]]) - [sin(45),0,-sin(45)]) < EPSILON);
-    assert(norm(vector_axis([11,1,11],[1,1,1],[1,-9,1]) - [sin(45),0,-sin(45)]) < EPSILON);
-    assert(norm(vector_axis([[11,1,11],[1,1,1],[1,-9,1]]) - [sin(45),0,-sin(45)]) < EPSILON);
+    assert(norm(vector_axis([10,0,0],[10,10,0]) - [0,0,1]) < _EPSILON);
+    assert(norm(vector_axis([[10,0,0],[10,10,0]]) - [0,0,1]) < _EPSILON);
+    assert(norm(vector_axis([10,0,0],[0,10,0]) - [0,0,1]) < _EPSILON);
+    assert(norm(vector_axis([[10,0,0],[0,10,0]]) - [0,0,1]) < _EPSILON);
+    assert(norm(vector_axis([0,10,0],[10,0,0]) - [0,0,-1]) < _EPSILON);
+    assert(norm(vector_axis([[0,10,0],[10,0,0]]) - [0,0,-1]) < _EPSILON);
+    assert(norm(vector_axis([0,0,10],[10,0,0]) - [0,1,0]) < _EPSILON);
+    assert(norm(vector_axis([[0,0,10],[10,0,0]]) - [0,1,0]) < _EPSILON);
+    assert(norm(vector_axis([10,0,0],[0,0,10]) - [0,-1,0]) < _EPSILON);
+    assert(norm(vector_axis([[10,0,0],[0,0,10]]) - [0,-1,0]) < _EPSILON);
+    assert(norm(vector_axis([10,0,10],[0,-10,0]) - [sin(45),0,-sin(45)]) < _EPSILON);
+    assert(norm(vector_axis([[10,0,10],[0,-10,0]]) - [sin(45),0,-sin(45)]) < _EPSILON);
+    assert(norm(vector_axis([11,1,11],[1,1,1],[1,-9,1]) - [sin(45),0,-sin(45)]) < _EPSILON);
+    assert(norm(vector_axis([[11,1,11],[1,1,1],[1,-9,1]]) - [sin(45),0,-sin(45)]) < _EPSILON);
 }
 test_vector_axis();
 

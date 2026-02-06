@@ -54,6 +54,9 @@
 // FileSummary: Isosurfaces and metaballs.
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_ISOSURFACE = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: isosurface.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 
 //////////////////// 3D initializations and support functions ////////////////////
 
@@ -790,12 +793,12 @@ function _bbox_faces(v0, voxsize, bbox) = let(
     bb1 = bbox[1] - voxsize,
     b = v0-bb1
 ) [
-    if(a[0]<EPSILON) 1,
-    if(a[1]<EPSILON) 2,
-    if(a[2]<EPSILON) 3,
-    if(b[0]>=-EPSILON) 4,
-    if(b[1]>=-EPSILON) 5,
-    if(b[2]>=-EPSILON) 6
+    if(a[0]<_EPSILON) 1,
+    if(a[1]<_EPSILON) 2,
+    if(a[2]<_EPSILON) 3,
+    if(b[0]>=-_EPSILON) 4,
+    if(b[1]>=-_EPSILON) 5,
+    if(b[2]>=-_EPSILON) 6
 ];
 /// End of bounding-box face-clipping stuff
 /// -----------------------------------------------------------
@@ -1111,10 +1114,10 @@ function _bbox_sides(pc, pixsize, bbox) = let(
     bb1 = bbox[1] - pixsize,
     b = pc-bb1
 ) [
-    if(a[0]<EPSILON) 0,
-    if(a[1]<EPSILON) 3,
-    if(b[0]>=-EPSILON) 2,
-    if(b[1]>=-EPSILON) 1
+    if(a[0]<_EPSILON) 0,
+    if(a[1]<_EPSILON) 3,
+    if(b[0]>=-_EPSILON) 2,
+    if(b[1]>=-_EPSILON) 1
 ];
 
 
@@ -1142,10 +1145,10 @@ function _contour_pixels(pixsize, bbox, fieldarray, fieldfunc, pixcenters, isova
             let(i1=i+1, j1=j+1,
                 pf = let(
                     // clamp corner values to ±1e9, make sure no corner=isovalmin or isovalmax
-                    f0=let(c=min(1e9,max(-1e9,field[i][j]))) abs(c-isovalmin)<EPSILON ? isocorrectmin : abs(c-isovalmax)<EPSILON ? isocorrectmax : c,
-                    f1=let(c=min(1e9,max(-1e9,field[i][j1]))) abs(c-isovalmin)<EPSILON ? isocorrectmin : abs(c-isovalmax)<EPSILON ? isocorrectmax : c,
-                    f2=let(c=min(1e9,max(-1e9,field[i1][j]))) abs(c-isovalmin)<EPSILON ? isocorrectmin : abs(c-isovalmax)<EPSILON ? isocorrectmax : c,
-                    f3=let(c=min(1e9,max(-1e9,field[i1][j1]))) abs(c-isovalmin)<EPSILON ? isocorrectmin : abs(c-isovalmax)<EPSILON ? isocorrectmax : c
+                    f0=let(c=min(1e9,max(-1e9,field[i][j]))) abs(c-isovalmin)<_EPSILON ? isocorrectmin : abs(c-isovalmax)<_EPSILON ? isocorrectmax : c,
+                    f1=let(c=min(1e9,max(-1e9,field[i][j1]))) abs(c-isovalmin)<_EPSILON ? isocorrectmin : abs(c-isovalmax)<_EPSILON ? isocorrectmax : c,
+                    f2=let(c=min(1e9,max(-1e9,field[i1][j]))) abs(c-isovalmin)<_EPSILON ? isocorrectmin : abs(c-isovalmax)<_EPSILON ? isocorrectmax : c,
+                    f3=let(c=min(1e9,max(-1e9,field[i1][j1]))) abs(c-isovalmin)<_EPSILON ? isocorrectmin : abs(c-isovalmax)<_EPSILON ? isocorrectmax : c
                 ) [  // pixel corner field values
                     f0, f1, f2, f3,
                     // get center value of pixel
@@ -1335,7 +1338,7 @@ function _revsurf_basic(point, path, coef, neg, maxdist) =
                       : t>1 ? norm(seg[1]-pt)
                       : norm(s0+t*c)]),
          inside = [] == [for(seg=segs)
-                          if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+                          if (cross(seg[1]-seg[0], pt-seg[0]) > _EPSILON) 1]
                   ? -1 : 1
     )
     neg * coef / (max(0,inside*dist+maxdist));
@@ -1354,7 +1357,7 @@ function _revsurf_influence(point, path, coef, exp, neg, maxdist) =
                       : t>1 ? norm(seg[1]-pt)
                       : norm(s0+t*c)]),
          inside = [] == [for(seg=segs)
-                          if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+                          if (cross(seg[1]-seg[0], pt-seg[0]) > _EPSILON) 1]
                   ? -1 : 1
     )
     neg * (coef / (max(0,inside*dist+maxdist)))^exp;
@@ -1373,7 +1376,7 @@ function _revsurf_cutoff(point, path, coef, cutoff, neg, maxdist) =
                       : t>1 ? norm(seg[1]-pt)
                       : norm(s0+t*c)]),
          inside = [] == [for(seg=segs)
-                          if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+                          if (cross(seg[1]-seg[0], pt-seg[0]) > _EPSILON) 1]
                   ? -1 : 1,
          d=max(0,inside*dist+maxdist)
     )
@@ -1393,7 +1396,7 @@ function _revsurf_full(point, path, coef, cutoff, exp, neg, maxdist) =
             : t>1 ? norm(seg[1]-pt)
             : norm(s0+t*c)]),
          inside = [] == [for(seg=segs)
-                          if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+                          if (cross(seg[1]-seg[0], pt-seg[0]) > _EPSILON) 1]
                   ? -1 : 1,
          d=max(0,inside*dist+maxdist)
     )
@@ -2157,7 +2160,7 @@ function debug_tetra(r) = let(size=r/norm([1,1,1])) [
 //       ],
 //       bounding_box = [[-16,-13,-5],[18,13,6]],
 //       voxel_size=0.4);
-// Example(3D): Next we show how to create a function that works like the built-ins. **This is a full implementation** that allows you to specify the function directly by name in the `spec` argument without needing the function literal syntax, and without needing the `point` argument in `spec`, as in the prior examples. Here, `noisy_sphere_calcs() is the calculation function that accepts the `point` position argument and any other parameters needed (here `r` and `noise_level`), and returns a single value. Then there is a "master" function `noisy_sphere() that does some error checking and returns an array consisting of (a) a function literal expression that sets all of your parameters, and (b) another array containing the metaball sign and a simple "debug" VNF representation of the metaball for viewing when `debug=true` is passed to `metaballs()`. The call to `mb_cutoff()` at the end handles the cutoff function for the noisy ball consistent with the other internal metaball functions; it requires `dist` and `cutoff` as arguments. You are not required to use this implementation in your own custom functions; in fact it's easier simply to declare the function literal in your `spec` argument, but this example shows how to do it all.
+// Example(3D): Next we show how to create a function that works like the built-ins. **This is a full implementation** that allows you to specify the function directly by name in the `spec` argument without needing the function literal syntax, and without needing the `point` argument in `spec`, as in the prior examples. Here, `noisy_sphere_calcs()` is the calculation function that accepts the `point` position argument and any other parameters needed (here `r` and `noise_level`), and returns a single value. Then there is a "master" function `noisy_sphere()` that does some error checking and returns an array consisting of (a) a function literal expression that sets all of your parameters, and (b) another array containing the metaball sign and a simple "debug" VNF representation of the metaball for viewing when `debug=true` is passed to `metaballs()`. The call to `mb_cutoff()` at the end handles the cutoff function for the noisy ball consistent with the other internal metaball functions; it requires `dist` and `cutoff` as arguments. You are not required to use this implementation in your own custom functions; in fact it's easier simply to declare the function literal in your `spec` argument, but this example shows how to do it all.
 //   //
 //   // noisy sphere internal calculation function 
 //   
@@ -2538,7 +2541,7 @@ function metaballs(spec, bounding_box, voxel_size, voxel_count, isovalue=1, clos
         allpts = [for(x=xset, y=yset, z=zset) [x,y,z,1]],
         trans_pts = [for(i=[0:nballs-1]) allpts*transmatrix[i]],
         allvals = [for(i=[0:nballs-1]) [for(pt=trans_pts[i]) funclist[2*i+1][0](pt)]],
-        //total = _sum(allvals,allvals[0]*EPSILON),
+        //total = _sum(allvals,allvals[0]*_EPSILON),
         total = _sum(slice(allvals,1,-1), allvals[0]),
         fieldarray = list_to_matrix(list_to_matrix(total,len(zset)),len(yset)),
         surface = isosurface(fieldarray, isoval, newbbox, voxsize, closed=closed, exact_bounds=true, show_stats=show_stats, _mball=true)
@@ -2640,7 +2643,7 @@ function _trapsurf_full(point, path, coef, cutoff, exp, neg, maxdist) =
             : t>1 ? norm(seg[1]-pt)
             : norm(s0+t*c)]),
          inside = [] == [for(seg=segs)
-                          if (cross(seg[1]-seg[0], pt-seg[0]) > EPSILON) 1]
+                          if (cross(seg[1]-seg[0], pt-seg[0]) > _EPSILON) 1]
                   ? -1 : 1,
          d=max(0,inside*dist+maxdist)
     )
@@ -2710,10 +2713,10 @@ function mb_stadium(size, cutoff=INF, influence=1, negative=false, hide_debug=fa
         sl = length-2*r, // straight side length
         //dum3 = assert(sl>=0, "\nTotal length must accommodate rounded ends of rectangle."),
         neg = negative ? -1 : 1,
-        poly = abs(shape)<=EPSILON ? [neg, hide_debug ? circle(r=0.02, $fn=3) : circle(r=r, $fn=20)]
+        poly = abs(shape)<=_EPSILON ? [neg, hide_debug ? circle(r=0.02, $fn=3) : circle(r=r, $fn=20)]
         : shape>0 ? [neg, hide_debug ? square(0.02,center=true) : rect([2*r,length], rounding=0.999*r, $fn=20)]
         : [neg, hide_debug ? square(0.02,center=true) : rect([length,2*r], rounding=0.999*r, $fn=20)]
-   ) abs(shape)<EPSILON ?
+   ) abs(shape)<_EPSILON ?
     [function (dv) _mb_circle_full(dv, r, cutoff, 1/influence, neg), poly]
     : shape>0 ? [function (dv) _mb_stadium_full(dv, sl/2, r, cutoff, 1/influence, neg), poly]
     : [function (dv) _mb_stadium_sideways_full(dv, sl/2, r, cutoff, 1/influence, neg), poly];
@@ -3102,7 +3105,7 @@ function _metaballs2dfield(funclist, transmatrix, bbox, pixsize, nballs) = let(
     allpts = [for(x=xset, y=yset) [x,y,0,1]],
     trans_pts = [for(i=[0:nballs-1]) allpts*transmatrix[i]],
     allvals = [for(i=[0:nballs-1]) [for(pt=trans_pts[i]) funclist[2*i+1][0](pt)]],
-    //total = _sum(allvals,allvals[0]*EPSILON),
+    //total = _sum(allvals,allvals[0]*_EPSILON),
     total = _sum(slice(allvals,1,-1), allvals[0])
 ) list_to_matrix(total,len(yset));
 
@@ -3442,7 +3445,7 @@ function isosurface(f, isovalue, bounding_box, voxel_size, voxel_count=undef, re
             for(i=[0:3:len(trianglepoints)-1])
                 let(i1=i+1, i2=i+2)
                     if (norm(cross(trianglepoints[i1]-trianglepoints[i],
-                        trianglepoints[i2]-trianglepoints[i])) > EPSILON)
+                        trianglepoints[i2]-trianglepoints[i])) > _EPSILON)
                             [i,i1,i2]
         ],
         dum2 = show_stats ? _showstats_isosurface(voxsize, bbox, isovalue, cubes, trianglepoints, faces) : 0
@@ -3752,11 +3755,11 @@ function _region_smooth(reg, passes, bbox, count=0) =
     ) _region_smooth(sm, passes, bbox, count+1);
 
 
-/// internal function: return true if a point is within EPSILON of the bounding box edge
+/// internal function: return true if a point is within _EPSILON of the bounding box edge
 function _is_pt_on_bbox(p, bbox) = let(
     a = v_abs(p-bbox[0]),
     b = v_abs(p-bbox[1])
-) a[0]<EPSILON || a[1]<EPSILON || b[0]<EPSILON || b[1]<EPSILON;
+) a[0]<_EPSILON || a[1]<_EPSILON || b[0]<_EPSILON || b[1]<_EPSILON;
 
 
 /// internal function: return number of path points that fall on the bounding box edge

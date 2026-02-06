@@ -8,6 +8,10 @@
 // FileSummary: Modular flexible hose segments.
 //////////////////////////////////////////////////////////////////////////
 
+_BOSL2_MODULAR_HOSE = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: modular_hose.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 // Section: Modular Hose Parts
 
 _modhose_small_end = [

@@ -9,6 +9,8 @@
 // FileSummary: Various types of threaded rods and nuts.
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_THREADING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: threading.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 // Section: Thread Ends and Options
 //   A standard process for making machine screws is to begin with round stock that has
@@ -250,21 +252,6 @@ module threaded_rod(
                   [               crestwidth/2,      0],
                   [ depth/sqrt(3)+crestwidth/2, -depth]
                  ];
-    oprofile = internal? [
-        [-6/16, -depth],
-        [-1/16,  0],
-        [-1/32,  0.02],
-        [ 1/32,  0.02],
-        [ 1/16,  0],
-        [ 6/16, -depth]
-    ] : [
-        [-7/16, -depth*1.07],
-        [-6/16, -depth],
-        [-1/16,  0],
-        [ 1/16,  0],
-        [ 6/16, -depth],
-        [ 7/16, -depth*1.07]
-    ];
     generic_threaded_rod(
         d=basic ? d : d[2], d1=d1, d2=d2, l=l,
         pitch=pitch,
@@ -373,14 +360,6 @@ module threaded_nut(
                   [               crestwidth/2,      0],
                   [ depth/sqrt(3)+crestwidth/2, -depth]
                  ];
-    oprofile = [
-        [-6/16, -depth/pitch],
-        [-1/16,  0],
-        [-1/32,  0.02],
-        [ 1/32,  0.02],
-        [ 1/16,  0],
-        [ 6/16, -depth/pitch]
-    ];
     generic_threaded_nut(
         nutwidth=nutwidth,
         id=basic ? id : id[2], id1=id1, id2=id2,
@@ -388,7 +367,7 @@ module threaded_nut(
         pitch=pitch,
         profile=profile,starts=starts,shape=shape, 
         left_handed=left_handed,
-        bevel=bevel,bevel1=bevel1,bevel2=bevel2,
+        bevel=bevel,bevel1=bevel1,bevel2=bevel2,bevang=bevang,
         ibevel1=ibevel1, ibevel2=ibevel2, ibevel=ibevel,
         blunt_start=blunt_start, blunt_start1=blunt_start1, blunt_start2=blunt_start2,
         lead_in=lead_in, lead_in1=lead_in1, lead_in2=lead_in2, lead_in_shape=lead_in_shape,
@@ -1065,6 +1044,160 @@ module npt_threaded_rod(
 
 
 
+// Module: bspp_threaded_rod()
+// Synopsis: Creates British Standard Parallel Pipe (BSPP) threading.
+// SynTags: Geom
+// Topics: Threading, Screws
+// See Also: npt_threaded_rod()
+// Usage:
+//   bspp_threaded_rod(size, [internal=], ...) [ATTACHMENTS];
+// Description:
+//   British Standard Pipe (BSP) is a set of screw thread standards used internationally (except in the USA)
+//   for connecting pipes.  This module implements British STandard Pipe Parallel (BSPP) thread, where the
+//   threads are paralell, rather than tapered, and the joint is achieved by compression of an O-ring seal or washer.   
+//   Constructs a BSPP end threading. If `internal=true`, creates a mask for making internal pipe threads.
+//   .
+//   The size was originally based on the inner diameter (in inches) of the pipe, but contemporary pipes have
+//   thinner walls, and hence an inner diameter larger than the nominal size.  
+// Arguments:
+//   size = BSP standard pipe size.  1/16, 1/8, 1/4, 3/8, 1/2, 5/8, 3/4, 7/8, 1, 1+1/8, 1+1/4, 1+3/8, 1+1/2, 1+5/8, 1+3/4, 1+7/8 or 2.
+//   l / length / h / height = Length of threaded rod.
+//   ---
+//   left_handed = If true, create left-handed threads.  Default: false
+//   starts = The number of lead starts.  Default: 1
+//   internal = If true, make this a mask for making internal threads.  Default: false
+//   bevel = Sets bevel for both ends. Set to true for default size, a number to specify a bevel size, false for no bevel, and "reverse" for an inverted bevel. Default: false for blunt start ends, true otherwise
+//   bevel1 = Set bevel for bottom end. Overrides bevel=.
+//   bevel2 = Set bevel for top end. Overrides bevel=.
+//   blunt_start = If true apply truncated blunt start threads at both ends.  Default: true
+//   blunt_start1 = If true apply truncated blunt start threads bottom end.
+//   blunt_start2 = If true apply truncated blunt start threads top end.
+//   end_len = Specify the unthreaded length at the end after blunt start threads.  Default: 0
+//   end_len1 = Specify unthreaded length at the bottom
+//   end_len2 = Specify unthreaded length at the top
+//   lead_in = Specify linear length of the lead in section of the threading with blunt start threads
+//   lead_in1 = Specify linear length of the lead in section of the threading at the bottom with blunt start threads
+//   lead_in2 = Specify linear length of the lead in section of the threading at the top with blunt start threads
+//   lead_in_ang = Specify angular length in degrees of the lead in section of the threading with blunt start threads
+//   lead_in_ang1 = Specify angular length in degrees of the lead in section of the threading at the bottom with blunt start threads
+//   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
+//   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+// Examples(Med):
+//   bspp_threaded_rod(size=3/8, length = 10, $fn=72);
+//   bspp_threaded_rod(size=1/2, length = 10, $fn=72, bevel=true);
+//   bspp_threaded_rod(size=1/2, length = 10, left_handed=true, $fn=72);
+//   bspp_threaded_rod(size=3/4, length = 10, internal=true, $fn=96);
+// Example:
+//   diff("remove"){
+//      cuboid([30,30,30])
+//      tag("remove"){
+//        up(.01)position(TOP)
+//            bspp_threaded_rod(size=1/2, length=30, $fn=96, internal=true, $slop=0.1, anchor=TOP);
+//        cyl(d=3/4*INCH, l=42, $fn=32);
+//     }
+//   }
+
+bspp_dimensions = [
+        // Size  TPI   OD
+        [ 1/16,  [ 28, 0.3041 ]],
+        [ 1/8,   [ 28, 0.3830 ]],
+        [ 1/4,   [ 19, 0.5180 ]],
+        [ 3/8,   [ 19, 0.6560 ]],
+        [ 1/2,   [ 14, 0.8250 ]],
+        [ 5/8,   [ 14, 0.9020 ]],
+        [ 3/4,   [ 14, 1.0410 ]],
+        [ 7/8,   [ 14, 1.1890 ]],
+        [ 1,     [ 11, 1.3090 ]],
+        [ 1+1/8, [ 11, 1.4920 ]],
+        [ 1+1/4, [ 11, 1.6500 ]],
+        [ 1+3/8, [ 11, 1.7450 ]],
+        [ 1+1/2, [ 11, 1.8820 ]],
+        [ 1+5/8, [ 11, 2.0820 ]],
+        [ 1+3/4, [ 11, 2.1160 ]],
+        [ 1+7/8, [ 11, 2.2440 ]],
+        [ 2,     [ 11, 2.3470 ]],
+        ];
+
+function bspp_threaded_rod(
+    size,
+    left_handed=false, starts=1,
+    bevel,bevel1,bevel2,
+    internal=false,
+    length, height,
+    blunt_start, blunt_start1, blunt_start2,
+    lead_in, lead_in1, lead_in2,
+    lead_in_ang, lead_in_ang1, lead_in_ang2,
+    end_len, end_len1, end_len2,
+    lead_in_shape="default",
+    anchor, spin, orient
+) = no_function("bspp_threaded_rod");
+
+module bspp_threaded_rod(
+    size, l, h, 
+    left_handed=false, starts=1,
+    bevel,bevel1,bevel2,
+    internal=false,
+    length, height,
+    blunt_start, blunt_start1, blunt_start2,
+    lead_in, lead_in1, lead_in2,
+    lead_in_ang, lead_in_ang1, lead_in_ang2,
+    end_len, end_len1, end_len2,
+    lead_in_shape="default",
+    anchor, spin, orient
+)
+{
+    assert(!is_undef(size), "undefined size");
+    assert(is_num(size), "size is not a number");
+    _pitch = 0;
+    _diameter = 1;
+    index = search(size, bspp_dimensions);
+    forcefuncall = assert(len(index), str("Unsupported BSPP size ", size, "."));
+    p = INCH / bspp_dimensions[index[0]][1][_pitch];
+    d = INCH * bspp_dimensions[index[0]][1][_diameter];
+    theta = 55 / 2;
+    H = p / (2 * tan(theta));     // : fundamental triangle height
+    hh = 2 * H / 3;               // : actual depth of the thread
+    e = H * sin(theta) / 6;       // : rounding arc's height
+    r = e / (1 - sin(theta));     // : rounding arc's radius
+    s = hh - 2 * e;              // : straight flank depth
+    c = tan(theta) * (H / 6 + e); // : crest's half width
+    pStart = [-c, -e];
+    pEnd = [c, -e];
+    vStart = [(p / 2 - tan(theta) * (H / 6 + e)), -hh + e];
+    vEnd = [p / 2, -hh];
+    segments = 4;
+    // right valley rounding:
+    valley = arc(n = segments, cp = [p / 2, -(hh - r)], points = [vStart, vEnd]);
+    //stroke(valley, width = 0.01, color = "cyan");
+    // peak rounding:
+    peak = arc(n = 2 * segments, cp = [0, -r], points = [pStart, pEnd]);
+    //stroke(peak, width = 0.01, color = "cyan");
+    profile = scale(1 / p, concat(reverse(xflip(valley)), peak, valley));
+    //stroke(profile, width = 0.01, color = "cyan");
+    generic_threaded_rod(
+            d = d, length = length, height = height, h=h, l=l, 
+            pitch = p, profile = profile,
+            left_handed=left_handed,
+            bevel=bevel,bevel1=bevel1,bevel2=bevel2,
+            internal=internal,
+            blunt_start=blunt_start, blunt_start1=blunt_start1, blunt_start2=blunt_start2,
+            lead_in=lead_in, lead_in1=lead_in1, lead_in2=lead_in2, lead_in_shape=lead_in_shape,
+            lead_in_ang=lead_in_ang, lead_in_ang1=lead_in_ang1, lead_in_ang2=lead_in_ang2,
+            end_len=end_len, end_len1=end_len1, end_len2=end_len2,
+            anchor=anchor,
+            spin=spin,starts=starts,
+            orient=orient
+    )
+    children();
+}
+
+
+
+
 // Section: Buttress Threading
 
 // Module: buttress_threaded_rod()
@@ -1153,7 +1286,6 @@ module buttress_threaded_rod(
     teardrop=false,
     anchor, spin, orient
 ) {
-    depth = pitch * 3/4;
     profile = [
         [  -1/2, -0.77],
         [ -7/16, -0.75],
@@ -1252,7 +1384,6 @@ module buttress_threaded_nut(
     lead_in_shape="default",
     anchor, spin, orient
 ) {
-    depth = pitch * 3/4;
     profile = [
         [  -1/2, -0.77],
         [ -7/16, -0.75],
@@ -1662,7 +1793,7 @@ module ball_screw_rod(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
-// Example(2DMed): Example Tooth Profile
+// Example(2DMed,VPD=1.92,VPT=[0.00,-0.30,2.5]): Example Tooth Profile.  Note that the X range of the profile must be in [-1/2,1/2] because the profile will be scaled up by the pitch in order to produce the final thread profile.  
 //   pitch = 2;
 //   depth = pitch * cos(30) * 5/8;
 //   profile = [
@@ -1674,7 +1805,7 @@ module ball_screw_rod(
 //       [ 7/16, -depth/pitch*1.07]
 //   ];
 //   stroke(profile, width=0.02);
-// Example:
+// Example:  Here is the screw produced by the profile from Example 1.  
 //   pitch = 2;
 //   depth = pitch * cos(30) * 5/8;
 //   profile = [
@@ -1739,25 +1870,29 @@ module generic_threaded_rod(
       assert(all_positive([r1,r2]), "Must give d or both d1 and d2 as positive values")
       assert(is_undef(bevel1) || is_num(bevel1) || is_bool(bevel1) || bevel1=="reverse", "bevel1/bevel must be a number, boolean or \"reverse\"")
       assert(is_undef(bevel2) || is_num(bevel2) || is_bool(bevel2) || bevel2=="reverse", "bevel2/bevel must be a number, boolean or \"reverse\"");
+
     sides = quantup(segs(max(r1,r2)), starts);
     rsc = internal? (1/cos(180/sides)) : 1;    // Internal radius adjusted for faceting
     islop = internal? 2*get_slop() : 0;
     r1adj = r1 * rsc + islop;
     r2adj = r2 * rsc + islop;
-
-    extreme = internal? max(column(profile,1)) : min(column(profile,1));
+    profbounds = pointlist_bounds(profile);
+    dummy4 = assert(profbounds[0].x>=-1/2 && profbounds[1].x<=1/2,
+                    "profile's x values must lie in the interval [-1/2,1/2]")
+             assert(profile[0].x<last(profile).x, "profile's first point must have smaller x value than its last point");
+    extreme = internal? profbounds[1].y : profbounds[0].y;
     profile = !internal ? profile
             : let(
-                 maxidx = [for(i=idx(profile)) if (profile[i].y==extreme) i],
-                 cutpt = len(maxidx)==1 ? profile(maxidx[0]).x
+                 maxidx = [for(i=idx(profile)) if (approx(profile[i].y,extreme)) i],
+                 cutpt = len(maxidx)==1 ? profile[maxidx[0]].x
                        : mean([profile[maxidx[0]].x, profile[maxidx[1]].x])
               )
               [
                  for(entry=profile) if (entry.x>=cutpt) [entry.x-cutpt-1/2,entry.y], 
                  for(entry=profile) if (entry.x<cutpt) [entry.x-cutpt+1/2,entry.y]
               ];
-    profmin = pitch * min(column(profile,1));
-    pmax = pitch * max(column(profile,1));
+    profmin = pitch * profbounds[0].y;
+    pmax = pitch * profbounds[1].y;
     rmax = max(r1adj,r2adj)+pmax;
 
     // These parameters give the size of the bevel, negative for an outward bevel (e.g. on internal thread mask)  
@@ -1855,10 +1990,10 @@ module generic_threaded_rod(
                     for (turns = [turns1:1:turns2]) 
                         let(
                             tang = turns/starts * 360 + ang,
-                            // EPSILON offset prevents funny looking extensions of the thread from its very tip
+                            // _EPSILON offset prevents funny looking extensions of the thread from its very tip
                             // by forcing values near the tip to evaluate as less than zero = beyond the tip end
-                            hsc = tang < cut_ang1 ? lead_in_func(-EPSILON+1-(cut_ang1-tang)/lead_in_ang1,PI*2*r1adj*lead_in_ang1/360 )
-                                : tang > cut_ang2 ? lead_in_func(-EPSILON+1-(tang-cut_ang2)/lead_in_ang2,PI*2*r2adj*lead_in_ang2/360 )
+                            hsc = tang < cut_ang1 ? lead_in_func(-_EPSILON+1-(cut_ang1-tang)/lead_in_ang1,PI*2*r1adj*lead_in_ang1/360 )
+                                : tang > cut_ang2 ? lead_in_func(-_EPSILON+1-(tang-cut_ang2)/lead_in_ang2,PI*2*r2adj*lead_in_ang2/360 )
                                 : [1,1],
                             shift_and_scale = [[hsc.x, 0], [0,hsc.y], [dz+turns,(1-hsc.y)*extreme]]
                         )
@@ -2066,7 +2201,7 @@ module generic_threaded_nut(
     vnf = linear_sweep(hexagon(id=nutwidth), height=h, center=true);
     attachable(anchor,spin,orient, size=shape=="square" ? [nutwidth,nutwidth,h] : undef, vnf=shape=="hex" ? vnf : undef) {
         difference() {
-            _nutshape(nutwidth,h, shape,bevel1,bevel2);
+            _nutshape(nutwidth,h, shape,bevel1,bevel2,bevang=bevang);
             if (pitch==0) 
                cyl(l=h+extra, d1=full_id1+4*get_slop(), d2=full_id2+4*get_slop(),
                    chamfer1=ibevel1?-IBEV*full_id1:undef,
@@ -2092,7 +2227,7 @@ module generic_threaded_nut(
 }
 
 
-module _nutshape(nutwidth, h, shape, bevel1, bevel2)
+module _nutshape(nutwidth, h, shape, bevel1, bevel2, bevang)
 {
    bevel_d=0.9;
    intersection(){
@@ -2103,7 +2238,7 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2)
        fn = quantup(segs(r=nutwidth/2),shape=="hex"?6:4);
        d = shape=="hex" ? 2*nutwidth/sqrt(3) : sqrt(2)*nutwidth;
        chamfsize = (d-nutwidth)/2/bevel_d;
-       cyl(d=d*.99,h=h+.01,realign=true,circum=true,$fn=fn,chamfer1=bevel1?chamfsize:0,chamfer2=bevel2?chamfsize:0,chamfang=30);
+       cyl(d=d*.99,h=h+.01,realign=true,circum=true,$fn=fn,chamfer1=bevel1?chamfsize:0,chamfer2=bevel2?chamfsize:0,chamfang=bevang);
    }
 }
 

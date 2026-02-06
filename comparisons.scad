@@ -8,6 +8,9 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_COMPARISONS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: comparisons.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 
 // Section: List comparison operations
 
@@ -31,7 +34,7 @@
 //   test4 = approx(0.3333,1/3,eps=1e-3); // Returns: true
 //   test5 = approx(PI,3.1415926536);     // Returns: true
 //   test6 = approx([0,0,sin(45)],[0,0,sqrt(2)/2]);  // Returns: true
-function approx(a,b,eps=EPSILON) = 
+function approx(a,b,eps=_EPSILON) = 
     a == b? is_bool(a) == is_bool(b) :
     is_num(a) && is_num(b)? abs(a-b) <= eps :
     is_list(a) && is_list(b) && len(a) == len(b)? (
@@ -58,13 +61,13 @@ function approx(a,b,eps=EPSILON) =
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
-//   eps = The maximum allowed variance.  Default: `EPSILON` (1e-9)
+//   eps = The maximum allowed variance.  Default: 1e-9
 // Example:
 //   a = all_zero(0);  // Returns: true.
 //   b = all_zero(1e-3);  // Returns: false.
 //   c = all_zero([0,0,0]);  // Returns: true.
 //   d = all_zero([0,0,1e-3]);  // Returns: false.
-function all_zero(x, eps=EPSILON) =
+function all_zero(x, eps=_EPSILON) =
     is_finite(x)? abs(x)<eps :
     is_vector(x) && [for (xx=x) if(abs(xx)>eps) 1] == [];
 
@@ -81,14 +84,14 @@ function all_zero(x, eps=EPSILON) =
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
-//   eps = The maximum allowed variance.  Default: `EPSILON` (1e-9)
+//   eps = The maximum allowed variance.  Default: 1e-9
 // Example:
 //   a = all_nonzero(0);  // Returns: false.
 //   b = all_nonzero(1e-3);  // Returns: true.
 //   c = all_nonzero([0,0,0]);  // Returns: false.
 //   d = all_nonzero([0,0,1e-3]);  // Returns: false.
 //   e = all_nonzero([1e-3,1e-3,1e-3]);  // Returns: true.
-function all_nonzero(x, eps=EPSILON) =
+function all_nonzero(x, eps=_EPSILON) =
     is_finite(x)? abs(x)>eps :
     is_vector(x) && [for (xx=x) if(abs(xx)<eps) 1] == [];
 
@@ -228,8 +231,8 @@ function all_equal(vec,eps=0) =
 //   Returns true if the first and last points in the given list are equal to within epsilon.
 // Arguments:
 //   list = list to check
-//   eps = Tolerance for approximate equality.  Default: `EPSILON` (1e-9)
-function are_ends_equal(list, eps=EPSILON) =
+//   eps = Tolerance for approximate equality.  Default: 1e-9
+function are_ends_equal(list, eps=_EPSILON) =
   assert(is_list(list) && len(list)>0, "Must give a nonempty list")
   approx(list[0], list[len(list)-1], eps=eps);
 
@@ -405,13 +408,13 @@ function max_index(vals, all=false) =
 //   ---
 //   start = The index to start searching from.  Default: 0
 //   all = If true, returns a list of all matching item indices.  Default: false
-//   eps = The maximum allowed floating point rounding error for numeric comparisons.  Default: EPSILON (1e-9)
+//   eps = The maximum allowed floating point rounding error for numeric comparisons.  Default: 1e-9 (1e-9)
 // Example:
 //   find_approx(3,[4,5,3.01,2,2.99], eps=0.1);  // Returns 2
 //   find_approx(9,[4,5,3.01,2,2.99], eps=0.1);  // Returns undef
 //   find_approx(3,[4,5,3.01,2,2.99], all=true, eps=0.1);  // Returns [2,4]
 //   find_approx(9,[4,5,3.01,2,2.99], all=true, eps=0.1);  // Returns []
-function find_approx(val, list, start=0, all=false, eps=EPSILON) =
+function find_approx(val, list, start=0, all=false, eps=_EPSILON) =
     all ? [for (i=[start:1:len(list)-1]) if (approx(val, list[i], eps=eps)) i]
         :  __find_approx(val, list, eps=eps, i=start);
 
@@ -439,20 +442,20 @@ function __find_approx(val, list, eps, i=0) =
 // Arguments:
 //   list = The list to deduplicate.
 //   closed = If true, treats first and last list entry as adjacent.  Default: false
-//   eps = The maximum tolerance between items.  Default: EPSILON
+//   eps = The maximum tolerance between items.  Default: 1e-9
 // Example:
 //   a = deduplicate([8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3,8]
 //   b = deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3]
 //   c = deduplicate("Hello");  // Returns: "Helo"
 //   d = deduplicate([[3,4],[7,2],[7,1.99],[1,4]],eps=0.1);  // Returns: [[3,4],[7,2],[1,4]]
 //   e = deduplicate([[7,undef],[7,undef],[1,4],[1,4+1e-12]],eps=0);    // Returns: [[7,undef],[1,4],[1,4+1e-12]]
-function deduplicate(list, closed=false, eps=EPSILON) =
+function deduplicate(list, closed=false, eps=_EPSILON) =
     assert(is_list(list)||is_string(list))
     let(
         l = len(list),
         end = l-(closed?0:1)
     )
-    is_string(list) ? str_join([for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]]) :
+    is_string(list) ? chr([for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) ord(list[i])]) :
     eps==0 ? [for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]] :
     [for (i=[0:1:l-1]) if (i==end || !approx(list[i], list[(i+1)%l], eps)) list[i]];
 
@@ -465,19 +468,29 @@ function deduplicate(list, closed=false, eps=EPSILON) =
 //   new_idxs = deduplicate_indexed(list, indices, [closed], [eps]);
 // Description:
 //   Given a list, and a list of indices, removes consecutive indices corresponding to list values that are equal
-//   or approximately equal.  
+//   or approximately equal.  If you omit the `indices` parameter then it defaults to the list `[0,...,len(list)-1]` so
+//   the return value is the indices of the deduplication of the entire input list.  This is useful if you need to
+//   remove the duplicates from list A and then remove the corresponding points from list B.  When duplicates appear
+//   the returned index corresponds to the **last** duplicate.  
 // Arguments:
 //   list = The list that the indices index into.
-//   indices = The list of indices to deduplicate.
-//   closed = If true, drops trailing indices if their list value matches the list value corresponding to the first index. 
+//   indices = The list of indices to deduplicate.  Default: `count(list)`
+//   closed = If true, drops trailing indices if their list value matches the list value corresponding to the first index. Default: false
 //   eps = The maximum difference to allow between numbers or vectors.
 // Example:
 //   a = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]);  // Returns: [1,4,3,2,0,1]
 //   b = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1], closed=true);  // Returns: [1,4,3,2,0]
 //   c = deduplicate_indexed([[7,undef],[7,undef],[1,4],[1,4],[1,4+1e-12]],eps=0);    // Returns: [0,2,4]
-function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
+// Example: Remove duplicates from `a` and then remove corresponding points from `b`.
+//   a = [1, 1, 2, 3, 4, 4, 5, 5, 5];
+//   b = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
+//   ind = deduplicate_indexed(a,count(len(a)));  // Returns: [1,2,3,5,8]
+//   echo(select(a,ind));         // Displays:  [1,2,3,4,5]
+//   echo(select(b,ind));         // Displays:  ["B", "C", "D", "F", "I"]
+function deduplicate_indexed(list, indices, closed=false, eps=_EPSILON) =
     assert(is_list(list)||is_string(list), "Improper list or string.")
     indices==[]? [] :
+    let(indices=default(indices, count(len(list))))
     assert(is_vector(indices), "Indices must be a list of numbers.")
     let(
         ll = len(list),
@@ -516,18 +529,18 @@ function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
 //   1 are returned unchanged.  
 // Arguments:
 //   list = list to unwrap
-//   eps = epsilon for comparison.  Default: EPSILON (1e-9)
+//   eps = epsilon for comparison.  Default: 1e-9 (1e-9)
 
-function list_wrap(list, eps=EPSILON) =
+function list_wrap(list, eps=_EPSILON) =
     assert(is_list(list))
     len(list)<2 || are_ends_equal(list,eps=eps)? list : [each list, list[0]];
 
 
-function cleanup_path(list,eps=EPSILON) =
+function cleanup_path(list,eps=_EPSILON) =
   echo("***** Function cleanup_path() has been replaced by list_unwrap() and will be removed in a future version *****")
   list_unwrap(list,eps);
 
-function close_path(list,eps=EPSILON) =
+function close_path(list,eps=_EPSILON) =
   echo("***** Function close_path() has been replaced by list_wrap() and will be removed in a future version *****")
   list_wrap(list,eps);
 
@@ -543,8 +556,8 @@ function close_path(list,eps=EPSILON) =
 //   length 0 or 1 it is returned unchanged.  
 // Arguments:
 //   list = list to unwrap
-//   eps = epsilon for comparison.  Default: EPSILON (1e-9)
-function list_unwrap(list, eps=EPSILON) =
+//   eps = epsilon for comparison.  Default: 1e-9
+function list_unwrap(list, eps=_EPSILON) =
     assert(is_list(list))
     len(list)>=2 && are_ends_equal(list,eps=eps)? [for (i=[0:1:len(list)-2]) list[i]] : list;
 
@@ -567,7 +580,7 @@ function list_unwrap(list, eps=EPSILON) =
 //   sorted = unique([true,2,"xba",[1,0],true,[0,0],3,"a",[0,0],2]); // Returns: [true,2,3,"a","xba",[0,0],[1,0]]
 function unique(list) =
     assert(is_list(list)||is_string(list), "Invalid input." )
-    is_string(list)? str_join(unique([for (x = list) x])) :
+    is_string(list)? chr(unique([for (x = list) ord(x)])) :
     len(list)<=1? list : 
     is_homogeneous(list,1) && ! is_list(list[0])
     ?   _unique_sort(list)
@@ -624,7 +637,7 @@ function unique_count(list) =
 //   ulist = unique_approx(data, [eps]);
 // Description:
 //   Returns a subset of items that differ by more thatn eps.  
-function unique_approx(data,eps=EPSILON) =
+function unique_approx(data,eps=_EPSILON) =
   is_vector(data) ?
     let(
         sdata = sort(data)
@@ -643,7 +656,7 @@ function unique_approx(data,eps=EPSILON) =
 //   ulist = unique_approx(data, [eps]);
 // Description:
 //   Returns the indices of a subset of items that differ by more thatn eps.  
-function unique_approx_indexed(data,eps=EPSILON) =
+function unique_approx_indexed(data,eps=_EPSILON) =
   is_vector(data) ?
     let(
         sind = sortidx(data)
@@ -827,7 +840,7 @@ function _indexed_sort(arrind) =
 //   sorted3 = sort(l3); // Returns: [20,[3,1],[3,9],[4],[4,0],[7],[8]]
 function sort(list, idx=undef) = 
     assert(is_list(list)||is_string(list), "Invalid input." )
-    is_string(list)? str_join(sort([for (x = list) x],idx)) :
+    is_string(list)? chr(sort([for (x = list) ord(x)])) :
     !is_list(list) || len(list)<=1 ? list :
     is_homogeneous(list,1)
     ?   let(size = list_shape(list[0]))

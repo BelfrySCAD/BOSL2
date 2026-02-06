@@ -14,6 +14,10 @@
 //////////////////////////////////////////////////////////////////////
 
 
+_BOSL2_REGIONS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: regions.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 // CommonCode:
 //   include <BOSL2/rounding.scad>
 
@@ -93,7 +97,7 @@ function is_region(x) = is_list(x) && is_path(x.x);
 //   a region.  
 // Arguments:
 //   region = region to check
-//   eps = tolerance for geometric comparisons.  Default: `EPSILON` = 1e-9
+//   eps = tolerance for geometric comparisons.  Default: 1e-9
 // Example(2D,NoAxes):  In all of the examples each polygon in the region appears in a different color.  Two non-intersecting squares make a valid region.
 //   region = [square(10), right(11,square(8))];
 //   rainbow(region)stroke($item, width=.2,closed=true);
@@ -192,7 +196,7 @@ function is_region(x) = is_list(x) && is_path(x.x);
 //   region = difference(poly1,poly2);
 //   rainbow(region)stroke($item, width=.25,closed=true);
 //   move([-5,11.4])text(is_valid_region(region) ? "region" : "non-region", size=3);
-function is_valid_region(region, eps=EPSILON) =
+function is_valid_region(region, eps=_EPSILON) =
    let(region=force_region(region))
    assert(is_region(region), "\nInput is not a region.")
    // no short paths
@@ -221,7 +225,7 @@ function is_valid_region(region, eps=EPSILON) =
 // internal function:
 // returns true if the polygon crosses the region so that part of the 
 // polygon is inside the region and part is outside.  
-function _polygon_crosses_region(region, poly, eps=EPSILON) =
+function _polygon_crosses_region(region, poly, eps=_EPSILON) =
     let(  
         subpaths = flatten(split_region_at_region_crossings(region,[poly],eps=eps)[1])
     )
@@ -251,7 +255,7 @@ function _polygon_crosses_region(region, poly, eps=EPSILON) =
 //   should not create problems with CGAL.  
 // Arguments:
 //   region = region to check
-//   eps = tolerance for geometric comparisons.  Default: `EPSILON` = 1e-9
+//   eps = tolerance for geometric comparisons.  Default: 1e-9
 // Example(2D,NoAxes):  Corner contact means it's not simple
 //   region = [move([-2,-2],square(14)), [[0,0],[10,0],[5,5]], [[5,5],[0,10],[10,10]]];
 //   rainbow(region)stroke($item, width=.2,closed=true);
@@ -260,7 +264,7 @@ function _polygon_crosses_region(region, poly, eps=EPSILON) =
 //   region = [move([-2,-2],square(14)), [[0,0],[10,0],[5,4.5]], [[5,5.5],[0,10],[10,10]]];
 //   rainbow(region)stroke($item, width=.2,closed=true);
 //   move([1,13])text(is_region_simple(region) ? "simple" : "not-simple", size=2);
-function is_region_simple(region, eps=EPSILON) =
+function is_region_simple(region, eps=_EPSILON) =
    let(region=force_region(region))
    assert(is_region(region), "\nInput is not a region.")
    [for(p=region) if (!is_path_simple(p,closed=true,eps=eps)) 1] == []
@@ -284,7 +288,7 @@ function is_region_simple(region, eps=EPSILON) =
 // Arguments:
 //   polys = list of polygons to use
 //   nonzero = set to true to use nonzero rule for polygon membership.  Default: false
-//   eps = Epsilon for geometric comparisons.  Default: `EPSILON` (1e-9)
+//   eps = Epsilon for geometric comparisons.  Default: 1e-9
 // Example(2D,NoAxes):  The pentagram is self-intersecting, so it is not a region.  Here it becomes five triangles:
 //   pentagram = turtle(["move",100,"left",144], repeat=4);
 //   region = make_region(pentagram);
@@ -297,7 +301,7 @@ function is_region_simple(region, eps=EPSILON) =
 //   region = make_region([square(10), move([5,5],square(8))]);
 //   rainbow(region)stroke($item, width=.3,closed=true);
 
-function make_region(polys,nonzero=false,eps=EPSILON) =
+function make_region(polys,nonzero=false,eps=_EPSILON) =
      let(polys=force_region(polys))
      assert(is_region(polys), "\nInput is not a region.")
      exclusive_or(
@@ -429,7 +433,7 @@ module debug_region(region, vertices=true, edges=true, convexity=2, size=1)
 // Arguments:
 //   point = The point to test.
 //   region = The region to test against, as a list of polygon paths.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+//   eps = Acceptable variance.  Default: 1e-9
 // Example(2D,Med):  Red points are in the region.
 //   region = [for(i=[2:4:10]) hexagon(r=i)];
 //   color("#ff7") region(region);
@@ -438,13 +442,13 @@ module debug_region(region, vertices=true, edges=true, convexity=2, size=1)
 //       move([x,y]) color("red") circle(0.15, $fn=12);
 //     else
 //       move([x,y]) color("#ddf") circle(0.1, $fn=12);
-function point_in_region(point, region, eps=EPSILON) =
+function point_in_region(point, region, eps=_EPSILON) =
     let(region=force_region(region))
     assert(is_region(region), "\nRegion given to point_in_region is not a region.")
     assert(is_vector(point,2), "\nPoint must be a 2D point in point_in_region.")
     _point_in_region(point, region, eps);
 
-function _point_in_region(point, region, eps=EPSILON, i=0, cnt=0) =
+function _point_in_region(point, region, eps=_EPSILON, i=0, cnt=0) =
       i >= len(region) ? ((cnt%2==1)? 1 : -1)
     : let(
           pip = point_in_polygon(point, region[i], eps=eps)
@@ -518,7 +522,7 @@ function __are_regions_equal(region1, region2, i) =
 ///    Included as intersection points are points where region1 touches itself at a vertex or
 ///    region2 touches itself at a vertex.  (The paths are assumed to have no self crossings.
 ///    Self crossings of the paths in the regions are not returned.)
-function _region_region_intersections(region1, region2, closed1=true,closed2=true, eps=EPSILON) =
+function _region_region_intersections(region1, region2, closed1=true,closed2=true, eps=_EPSILON) =
    let(
        intersections =   [
            for(p1=idx(region1))
@@ -607,7 +611,7 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
 //   region2 = second region
 //   closed1 = if false then treat region1 as list of open paths.  Default: true
 //   closed2 = if false then treat region2 as list of open paths.  Default: true
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+//   eps = Acceptable variance.  Default: 1e-9
 // Example(2D): 
 //   path = square(50,center=false);
 //   region = [circle(d=80), circle(d=40)];
@@ -618,7 +622,7 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
 //     color("#aaa") region([path]);
 //     rainbow(flatten(paths[1])) stroke($item, width=2);
 //   }
-function split_region_at_region_crossings(region1, region2, closed1=true, closed2=true, eps=EPSILON) = 
+function split_region_at_region_crossings(region1, region2, closed1=true, closed2=true, eps=_EPSILON) = 
     let(
         region1=force_region(region1),
         region2=force_region(region2)
@@ -858,8 +862,10 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   The erroneous removal of segments is more common when your input
 //   contains very small segments and in this case can result in an invalid situation where the remaining
 //   valid segments are parallel and cannot be connected to form an offset curve.  If this happens, you
-//   get an error message to this effect.  The only solutions are either to remove the small segments with {{deduplicate()}},
-//   or if your path permits it, to set check_valid to false.  
+//   get an error message to this effect.  The only solutions are either to remove small segments with {{resample_path()}} or
+//   generate your data with fewer points (e.g. by using a smaller `$fn` or larger `$fa` and `$fs` when constructing your input).
+//   Be aware that chamfer and rounding increase the length of the path, so iterated offsets can lead to exponential
+//   growth in the path length. 
 //   .
 //   Another situation that can arise with validity testing is that the test is not sufficiently thorough and some
 //   segments persist that should be eliminated.  In this case, increase `quality` from its default of 1 to a value of 2 or 3.
@@ -869,7 +875,7 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   .
 //   When invalid segments are eliminated, the path length decreases, and multiple points on the input path map to the same point
 //   on the offset path.  If you use chamfering or rounding, then
-//   the chamfers and roundings can increase the length of the output path.  Hence points in the output may be 
+//   the chamfers and roundings increase the length of the output path.  Hence points in the output may be 
 //   difficult to associate with the input.  If you want to maintain alignment between the points you
 //   can use the `same_length` option.  This option requires that you use `delta=` with `chamfer=false` to ensure
 //   that no points are added.  with `same_length`, when points collapse to a single point in the offset, the output includes
@@ -1067,7 +1073,11 @@ function offset(
         cornercheck = [for(i=idx(goodsegs)) (!closed && (i==0 || i==len(goodsegs)-1))
                                           || is_def(sharpcorners[i])
                                           || approx(unit(deltas(select(goodsegs,i-1))[0]) * unit(deltas(goodsegs[i])[0]),-1)],
-        dummyA = assert(len(sharpcorners)==2 || all(cornercheck),"\nTwo consecutive valid offset segments are parallel but do not meet at their ends, maybe because path contains very short segments that were mistakenly flagged as invalid; unable to compute offset. If you get this error from offset_sweep() try setting ofset=\"delta\"."),
+        dummyA = assert(len(sharpcorners)==2 || all(cornercheck),
+                    str("\nUnable to compute offset due to segments that are very close to parallel but not exactly parallel. \n",
+                        "This is usually caused by too many points or points that are too close together. \n",
+                        "Use fewer points (lower $fn, larger $fa/$fs) or use resample_path(). \n",
+                        "If you get this error from offset_sweep() using offset=\"delta\" may help")),
         reversecheck = 
             !same_length 
               || !(is_def(delta) && !chamfer)            // Reversals only a problem in delta mode without chamfers
@@ -1165,7 +1175,7 @@ function offset(
 ///    "S" - the subpath is on the 2nd region's border and the two regions interiors are on the same side of the subpath
 ///    "U" - the subpath is on the 2nd region's border and the two regions meet at the subpath from opposite sides
 /// You specify which type of subpaths to keep with a string of the desired types such as "OS".  
-function _filter_region_parts(region1, region2, keep, eps=EPSILON) = 
+function _filter_region_parts(region1, region2, keep, eps=_EPSILON) = 
     // We have to compute common vertices between paths in the region because
     // they can be places where the path must be cut, even though they aren't
     // found my the split_path function.  
@@ -1237,7 +1247,7 @@ function _list_three(a,b,c) =
 //   color("green") region(union(shape1,shape2));
 //   for (shape = [shape1,shape2])
 //       stroke(shape, width=0.5, closed=true, color="red");
-function union(regions=[],b=undef,c=undef,eps=EPSILON) =
+function union(regions=[],b=undef,c=undef,eps=_EPSILON) =
     let(regions=_list_three(regions,b,c))
     len(regions)==0? [] :
     len(regions)==1? regions[0] :
@@ -1275,7 +1285,7 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   for (shape = [shape1,shape2])
 //       stroke(shape, width=0.5, color="red", closed=true);
 //   color("green") region(difference(shape1,shape2));
-function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
+function difference(regions=[],b=undef,c=undef,eps=_EPSILON) =
      let(regions = _list_three(regions,b,c))
      len(regions)==0? []
    : len(regions)==1? regions[0]
@@ -1311,7 +1321,7 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   for (shape = [shape1,shape2])
 //       stroke(shape,width=0.5, color="red", closed=true);
 //   color("green") region(intersection(shape1,shape2));
-function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
+function intersection(regions=[],b=undef,c=undef,eps=_EPSILON) =
      let(regions = _list_three(regions,b,c))
      len(regions)==0 ? []
    : len(regions)==1? regions[0]
@@ -1356,7 +1366,7 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 //       square(40,center=false);
 //       circle(d=40);
 //   }
-function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
+function exclusive_or(regions=[],b=undef,c=undef,eps=_EPSILON) =
      let(regions = _list_three(regions,b,c))
      len(regions)==0? []
    : len(regions)==1? force_region(regions[0])

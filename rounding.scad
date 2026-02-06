@@ -12,6 +12,9 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_ROUNDING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: rounding.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 // Section: Types of Roundovers
 //   The functions and modules in this file support two different types of roundovers and some different mechanisms for specifying
 //   the size of the roundover.  The usual circular roundover can produce a tactile "bump" where the curvature changes from flat to
@@ -598,7 +601,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 // Synopsis: Create a smoothed path passing through all the points of a given path, or passing through all the segment midpoint tangents.
 // SynTags: Path
 // Topics: Rounding, Paths
-// See Also: round_corners(), smooth_path(), path_join(), offset_stroke()
+// See Also: round_corners(), smooth_path(), path_join(), offset_stroke(), squircle()
 // Usage: "edges" method
 //   smoothed = smooth_path(path, [tangents], [size=|relsize=], [method="edges"], [splinesteps=], [closed=], [uniform=]);
 // Usage: "corners" method
@@ -650,7 +653,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   stroke(smooth_path(square(4),size=0.4), width=0.1);
 //   stroke(smooth_path(square(4),method="corners",size=0.4),
 //          color="red", width=0.1);
-// Example(2D): Closing the path changes the end tangents. Original path in green, "edges" path in yellow, "corners" in red.
+// Example(2D): Closing the path changes the end tangents. Original path in green, "edges" path in yellow, "corners" in red. For a shape like this, you may find it simpler to use {{squircle()}} instead.
 //   polygon(smooth_path(square(4),method="edges",size=0.4,closed=true));
 //   color("red")
 //     polygon(smooth_path(square(4),method="corners",size=0.4,closed=true));
@@ -1118,6 +1121,7 @@ function offset_stroke(path, width=1, rounded=true, start, end, check_valid=true
                        atype="hull", anchor="origin", spin, cp="centroid") =
         let(path = force_path(path))
         assert(is_path(path,2),"path is not a 2d path")
+        assert(is_vector(width,2) || is_finite(width), "width must be a scalar or a 2-vector")
         let(
             closedok = !closed || (is_undef(start) && is_undef(end)),
             start = default(start,"flat"),
@@ -1236,7 +1240,7 @@ function _stroke_end(width,left, right, spec) =
                 normal_dir = unit(normal_seg[1]-normal_seg[0]),
                 width_dir = sign(width[0]-width[1])
         )
-        type == "round"? [arc(points=[right[0],normal_pt,left[0]],n=ceil(segs(width/2)/2)),1,1]  :
+        type == "round"? [arc(points=[right[0],normal_pt,left[0]],n=1+ceil(segs((width[1]-width[0])/2)/2)),1,1]  :
         type == "pointed"? [[normal_pt],0,0] :
         type == "shifted_point"? (
                 let(shiftedcenter = center + width_dir * parallel_dir * struct_val(spec, "loc"))
@@ -2226,7 +2230,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   value and the rounding is symmetric around each edge.  However, you can specify a 2-vector for the joint distance to produce asymmetric
 //   rounding which is different on the two sides of the edge.  This may be useful when one one edge in your polygon is much larger than another.
 //   For the top and bottom you can specify negative joint distances.  If you give a scalar negative value, then the roundover flares
-//   outward.  If you give a vector value then a negative value, then if `joint_top[0]` is negative the shape flares outward, but if
+//   outward.  If you give a vector value then if `joint_top[0]` is negative the shape flares outward, but if
 //   `joint_top[1]` is negative, the shape flares upward.  At least one value must be non-negative.  The same rules apply for joint_bot.
 //   The joint_sides parameter must be entirely nonnegative.
 //   .
@@ -2243,7 +2247,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   can also use "intersect" to get the intersection anchors to the unrounded object. If you prefer anchors that respect the rounding
 //   then use "surf_hull" or "intersect_hull".  Lastly, in the special case of a prism with four sides, you can use "prismoid" anchoring
 //   which attempts to assign standard prismoid anchors to the shape by assigning as RIGHT the face that is closest to the RIGHT direction,
-//   and defining the other anchors around the shape baesd on that choice.  
+//   and defining the other anchors around the shape based on that choice.  
 //   .
 //   Note that rounded_prism() is not well suited to rounding shapes that have already been rounded, or that have many points.
 //   It works best when the top and bottom are polygons with well-defined corners.  When the polygons have been rounded already,
@@ -2474,21 +2478,21 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
      bot_patch = _rp_compute_patches(bottom, top, joint_bot, joint_sides_vec, k_bot, k_sides_vec, concave),
 
      vertbad = [for(i=[0:N-1])
-                   if (norm(top[i]-top_patch[i][4][2]) + norm(bottom[i]-bot_patch[i][4][2]) > EPSILON + norm(bottom[i]-top[i])) i],
+                   if (norm(top[i]-top_patch[i][4][2]) + norm(bottom[i]-bot_patch[i][4][2]) > _EPSILON + norm(bottom[i]-top[i])) i],
      // Check that the patch fits on the polygon edge
      topbad = [for(i=[0:N-1])
                    if (norm(top_patch[i][2][4]-top_patch[i][2][2]) + norm(select(top_patch,i+1)[2][0]-select(top_patch,i+1)[2][2])
-                  > EPSILON + norm(top_patch[i][2][2] - select(top_patch,i+1)[2][2]))   [i,(i+1)%N]],
+                  > _EPSILON + norm(top_patch[i][2][2] - select(top_patch,i+1)[2][2]))   [i,(i+1)%N]],
      botbad = [for(i=[0:N-1])
                    if (norm(bot_patch[i][2][4]-bot_patch[i][2][2]) + norm(select(bot_patch,i+1)[2][0]-select(bot_patch,i+1)[2][2])
-                  > EPSILON + norm(bot_patch[i][2][2] - select(bot_patch,i+1)[2][2]))   [i,(i+1)%N]],
+                  > _EPSILON + norm(bot_patch[i][2][2] - select(bot_patch,i+1)[2][2]))   [i,(i+1)%N]],
      // If top/bot is L-shaped, check that arms of L from adjacent patches don't cross
      topLbad = [for(i=[0:N-1])
                    if (norm(top_patch[i][0][2]-top_patch[i][0][4]) + norm(select(top_patch,i+1)[0][0]-select(top_patch,i+1)[0][2])
-                          > EPSILON + norm(top_patch[i][0][2]-select(top_patch,i+1)[0][2])) [i,(i+1)%N]],
+                          > _EPSILON + norm(top_patch[i][0][2]-select(top_patch,i+1)[0][2])) [i,(i+1)%N]],
      botLbad = [for(i=[0:N-1])
                    if (norm(bot_patch[i][0][2]-bot_patch[i][0][4]) + norm(select(bot_patch,i+1)[0][0]-select(bot_patch,i+1)[0][2])
-                          > EPSILON + norm(bot_patch[i][0][2]-select(bot_patch,i+1)[0][2])) [i,(i+1)%N]],
+                          > _EPSILON + norm(bot_patch[i][0][2]-select(bot_patch,i+1)[0][2])) [i,(i+1)%N]],
      // Check that the inner edges of the patch don't cross
      topinbad = [for(i=[0:N-1]) 
                      let(
@@ -2610,10 +2614,10 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
                 named_anchor(EDGE(UP,i),top_edge_ctr, top_edge_normal, _compute_spin(top_edge_normal,  top_edge),
                              info=[["edge_angle",180-vector_angle(topnormal,sidenormal[i])], ["edge_length",norm(top_edge)]]),
                 named_anchor(EDGE(DOWN,i),bot_edge_ctr, bot_edge_normal, _compute_spin(bot_edge_normal,  bot_edge),
-                             info=[["edge_angle",180-vector_angle(botnormal,sidenormal[i])], ["edge_length",norm(bot_edge)]]), 
-                named_anchor(FACE(i),mean(face), sidenormal[i], _compute_spin(sidenormal[i],UP)),
-                named_anchor(str("top_corner",i),top[i], top_corner_dir, _compute_spin(top_corner_dir,UP)), 
-                named_anchor(str("bot_corner",i),bottom[i], bot_corner_dir, _compute_spin(bot_corner_dir,UP)) 
+                             info=[["edge_angle",180-vector_angle(botnormal,sidenormal[i])], ["edge_length",norm(bot_edge)]]),
+                named_anchor(FACE(i),mean(face), sidenormal[i], _compute_spin(sidenormal[i],UP,BACK)),
+                named_anchor(str("top_corner",i),top[i], top_corner_dir, _compute_spin(top_corner_dir,UP,BACK)), 
+                named_anchor(str("bot_corner",i),bottom[i], bot_corner_dir, _compute_spin(bot_corner_dir,UP,BACK)) 
               ],
             named_anchor("top", mean(top), topnormal, _compute_spin(topnormal, approx(v_abs(topnormal),UP)?BACK:UP)),
             named_anchor("bot", mean(bottom), botnormal, _compute_spin(botnormal, approx(v_abs(botnormal),UP)?BACK:UP)),
@@ -2906,7 +2910,7 @@ Access to the derivative smoothing parameter?
 // Synopsis: Join an arbitrary prism to a plane, sphere, cylinder or another arbitrary prism with a fillet.
 // SynTags: Geom, VNF
 // Topics: Rounding, Offsets
-// See Also: offset_sweep(), convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), join_prism()
+// See Also: offset_sweep(), convex_offset_extrude(), rounded_prism(), bent_cutout_mask(), prism_connector()
 // Usage: The two main forms with most common options
 //   join_prism(polygon, base, length=|height=|l=|h=, fillet=, [base_T=], [scale=], [prism_end_T=], [short=], ...) [ATTACHMENTS];
 //   join_prism(polygon, base, aux=, fillet=, [base_T=], [aux_T=], [scale=], [prism_end_T=], [short=], ...) [ATTACHMENTS];
@@ -2917,6 +2921,8 @@ Access to the derivative smoothing parameter?
 //   or another arbitrary prism.  The fillet is a continuous curvature rounding with a specified width/height.  This module is general
 //   and therefore has a complex interface.  The examples below form a tutorial on how to use `join_prism` that steps
 //   through the various options and how they affect the results.  Be sure to check the examples for help understanding how the various options work.
+//   The {{prism_connector()}} module provides an alternative interface to `join_prism()` which is a little less flexible but 
+//   **much** easier to use.
 //   .
 //   When joining between planes this function produces similar results to {{rounded_prism()}}.  This function works best when the prism
 //   cross section is a continuous shape with a high sampling rate and without sharp corners.  If you have sharp corners you should consider
@@ -3862,7 +3868,7 @@ function _prism_line_isect(poly_pairs, line, ref) =
        ref=point2d(ref),
        ilist = [for(j=idx(poly_pairs)) 
                  let(segisect = _general_line_intersection(poly_pairs[j],line2d))
-                 if (segisect && segisect[1]>=-EPSILON && segisect[1]<=1+EPSILON)
+                 if (segisect && segisect[1]>=-_EPSILON && segisect[1]<=1+_EPSILON)
                     [segisect[0],j,segisect[1],segisect[0]*ref]]
    )
    len(ilist)==0 ? [] :
@@ -3949,7 +3955,7 @@ function _prism_fillet_cyl(name, R, bot, top, d, k, N, overlap, uniform, debug) 
                d_step = abs(d)*unit(top[i]-isect[i])+(uniform?isect[i]:corner)
            )
            assert(is_vector(corner,3),str("Fillet does not fit.  Decrease size of fillet (",name,")."))
-           assert(debug || R<0 || (d_step-corner)*(corner-isect[i])>=-EPSILON,
+           assert(debug || R<0 || (d_step-corner)*(corner-isect[i])>=-_EPSILON,
                  str("Unable to fit fillet, probably due to steep curvature of the cylinder (",name,")."))
            let(
                 bez = _smooth_bez_fill([d_step,corner,edgepoint], k)
@@ -4061,7 +4067,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
          basepoly = clockwise_polygon(basepoly),
          segpairs = pair(basepoly,wrap=true),
          isect_ind = [for (i=idx(top))
-                         let(isect = _prism_line_isect(segpairs, [top[i], bot[i]], inside*top[i]))
+                         let(isect = _prism_line_isect(segpairs, [top[i], bot[i]], inside*(top[i]-bot[i])))
                          assert(isect, str("Prism doesn't fully intersect prism (",name,")"))
                          isect
                      ],
@@ -4122,7 +4128,7 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 // Topics: Rounding, Extrusion, Sweep, Descriptions
 // See Also: parent(), join_prism(), linear_sweep()
 // Usage:
-//   prism_connector(desc1, anchor1, desc2, anchor2, [spin_align=]);
+//   prism_connector(profile, desc1, anchor1, desc2, anchor2, [fillet=], [fillet1=], [fillet2=], [spin_align=], [scale=], [shift1=], [shift2]=, [shift=], [n=], [n1=], [n2=], [k=], [k1=], [k2=], [uniform=], [uniform1=], [uniform2=], [overlap=], [overlap1=], [overlap2=], [smooth_normals=], [smooth_normals=], [smooth_normals1]=, [smooth_normals2=], [debug=], [debug_pos=]);
 // Description:
 //   Given descriptions and anchors for two objects, construct a filleted prism that connects the
 //   anchor points on those objects, with a filleted joint at each end.  This is an alternative interface
@@ -4131,7 +4137,12 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   at different levels in the object tree.  You can also connect an object with itself, for example to
 //   create a hole through an object, or to create an interior connection through a hole.
 //   If you specify a CENTER anchor for an object then the prism will be aimed at the object's CENTER anchor
-//   and joined at a shifted anchor located on the object's surface.  
+//   and joined at a shifted anchor located on the object's surface.
+//   .
+//   The `profile` parameter gives the cross section of the prism that the module constructs.
+//   This function works best when the prism cross section is a continuous shape with a high sampling rate and without sharp corners.
+//   If you have sharp corners you should consider giving them a small rounding first.  Make sure that any rectangle is resampled to have
+//   enough points to follow the parent shape.  When the prism cross section has concavities the fillet size is limited by the curvature of those concavities.
 //   .
 //   The prism will connect anchor points described by the two descriptions you supply.  The supported object
 //   types are prismoids, VNFs, cylinders, spheres, and linear sweeps.  For prismoids and VNFs you can use any anchor on a face
@@ -4167,11 +4178,23 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   Normally {{join_prism()}} will issue an error in this situation.  The `debug` parameter is passed through to {{join_prism()}} and
 //   tells that module to display invalid self-intersecting geometry to help you understand the problem.
 //   .
-//   When connecting to an edge, artifacts may occur at the corners where the prism doesn't meet the object in the ideal fashion.
+//   When connecting to an unrounded edge, artifacts may occur at the corners where the prism doesn't meet the object in the ideal fashion.
 //   Adjsting the points on your prism profile so that a point falls close to the corner will achieve the best result, and make sure
 //   that `smooth_normals` is disabled (the default for edges) because it results in a completely incorrect fillet in this case.
 //   If you connect to an extrusion object, the default value for `smooth_normals` is true, which generally works better when
-//   for a uniformly sampled smooth object, but if your object has corners you may get better results by setting `smooth_normals=false`.  
+//   for a uniformly sampled smooth object, but if your object has corners you may get better results by setting `smooth_normals=false`.
+//   .
+//   When connecting to a rounded edge, the edge geometry must be circular or a smooth bezier rounding.  In the circular case
+//   provide the `edge_r` parameter to specify the radius of the circular rounding.  In the case of smooth bezier roundings you
+//   must give `edge_joint` to specify the size of the rounding, and you may optionally provide `edge_k` as required.  The default
+//   of `edge_k=0.5` matches the default for {{rounded_prism()}}.  These parameters are ignored for objects that are not edges.
+//   If you need to connect two differently rounded edges, you can used edge_r1, edge_joint2, etc.  
+//   .
+//   You can use two named anchors, "end1" and "end2", that provide anchors at the connecting points on the end faces of the connector prism.  These anchors
+//   point **along the prism axis**, which means they are not necessarily perpendicular to the end face of the prism.  If you need
+//   an anchor perpendicular to the end face of the prism you can use the anchor from the description at that end that you used
+//   to construct the prism by using {{restore()}}. If you have shifted the connector point you will need to apply a similar transformation
+//   to the anchor point based on the description.  
 // Arguments:
 //   profile = path giving cross section to extrude to create the connecting prism
 //   desc1 = description of first object to connect
@@ -4199,14 +4222,25 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   overlap = amount of overlap of the prism fillet into both objects.  Default: 1
 //   overlap1 = amount of overlap of the prism fillet into object1
 //   overlap2 = amount of overlap of the prism fillet into object2
-//   smooth_normals = controls whether normals are smoothed when the object is a prism or edge; no effect otherwise.  Default: false if object is an edge, true otherwise
+//   edge_r = when attaching to an edge, assume it has a circular rounding with this radius
+//   edge_joint = when attaching to an edge, assume it has a smooth bezier rounding with this joint length
+//   edge_k = when attaching to an edge with a bezier rounding, use this k parameter value.  Default: 0.5 (matches rounded_prism)
+//   edge_r1 = when attaching to an edge on object1, assume it has a circular rounding with this radius
+//   edge_joint1 = when attaching to an edge on object1, assume it has a smooth bezier rounding with this joint length
+//   edge_k = when attaching to an edge on object1 with a bezier rounding, use this k parameter value.  Default: 0.5 (matches rounded_prism)
+//   edge_r2 = when attaching to an edge, on object2 assume it has a circular rounding with this radius
+//   edge_joint2 = when attaching to an edge on object2, assume it has a smooth bezier rounding with this joint length
+//   edge_k2 = when attaching to an edge on object2 with a bezier rounding, use this k parameter value.  Default: 0.5 (matches rounded_prism)
+//   smooth_normals = controls whether normals are smoothed when the object is a prism or edge; no effect otherwise.  Default: false if object is an unrounded edge, true otherwise
 //   smooth_normals1 = controls whether normals are smoothed when the object1 is a prism or edge; no effect otherwise. 
 //   smooth_normals2 = controls whether normals are smoothed when the object2 is a prism or edge; no effect otherwise. 
 //   debug = pass-through to the {{join_prism()}} debug parameter.  If true then various cases where the fillet self intersects will be displayed instead of creating an error.  Default: false
 //   debug_pos = if set to true display an unfilleted prism instead of invoking {{join_prism()}} so that you can diagnose errors about the prism not intersecting the object.  Default: false
+// Side Effects:
+//   if inside is true then set default tag to "remove"
 // Named Anchors:
-//   "root" = Root point of the connector prism at the desc1 end, pointing out in the direction of the prism axis (anchor inherited from {{join_prism()}}
-//   "end" = Root point of the connector prism at the desc2 end, pointing out in the direction of the prism axis (anchor inherited from {{join_prism()}}
+//   "end1" = Root point of the connector prism at the desc1 end, pointing out in the direction of the prism axis (not necessarily perpendicular to the end of the prism connector!)
+//   "end2" = Root point of the connector prism at the desc2 end, pointing out in the direction of the prism axis (not necessarily perpendicular to the end of the prism connector!)
 // Example(3D,NoAxes,VPT=[11.5254,0.539284,6.44131],VPR=[71.8,0,29.2],VPD=113.4): A circular prism connects a prismoid to a sphere.  Note different fillet sizes at each length.  
 //   circ = circle(r=3, $fn=48);
 //   prismoid(20,13,shift=[-2,1],h=15) let(prism=parent())
@@ -4322,6 +4356,14 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //   cuboid(20) let(edge=parent())
 //     move([30,-30,-8]) zrot(-45) cuboid(20) let(extra=parent())
 //       #prism_connector(circ, edge, RIGHT+FWD, extra, LEFT, fillet=2);
+// Example: If you specify the rounding parameters you can attach to rounded edges, which eliminates many of the difficulties listed above
+//   cuboid(10,rounding=4,edges=RIGHT+FWD)
+//     let(cube=parent())
+//     move([20,-15]) sphere(r=5)
+//     prism_connector(circle(r=3,$fn=64),
+//                     cube, RIGHT+FWD,
+//                     parent(), CENTER,
+//                     fillet=1.5, edge_r=4);
 // Example(3D,NoAxes): We can attach to the top surface of a shifted cone, but when attaching to the curved surface, only a right angle cylinder is supported.
 //   $fn=32;
 //   flower = scale(.6,[for(theta=lerpn(0,360,90,endpoint=false)) (15+1.3*sin(6*theta))*[cos(theta),sin(theta)]]);
@@ -4354,15 +4396,14 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 //       tag("remove") cyl(d=75,h=40,$fn=128)
 //       tag("keep") zrot_copies(n=4)
 //         prism_connector(circ,parent(),[-1,.2],parent(),[1,.4],shift1=12,shift2=-12,fillet=2);
-// Example(3D,Med,NoAxes): A connection between the "inside" part of a tube and the outside of a tube
-//   $fn=64;
+// Example(3D,Med,NoScales): A connection between the "inside" part of a tube and the outside of a tube
 //   diff()
 //   tube(or=10,wall=2,h=10,rounding=1,$fn=40)
 //     let(outside=parent())
 //     attach_part("inside")
 //     let(inside=parent())
 //     for(angle = [0:120:359])
-//       let(where = polar_to_xy(1,angle))
+//       let(where = zrot(angle,RIGHT))
 //       tag("remove")
 //          prism_connector(circle(3,$fn=32),
 //                          outside, where,
@@ -4451,16 +4492,18 @@ function _prism_fillet_prism(name, basepoly, bot, top, d, k, N, overlap, uniform
 // Get the object type from the specified geometry and anchor point
 
 // Note that profile is needed just to find its dimensions for making a big enough edge profile
-function _get_obj_type(ind,geom,anchor,prof) =
+function _get_obj_type(ind,geom,anchor,prof,edge_r,edge_joint,edge_k) =
      geom[0]=="spheroid" ? "sphere"
    : geom[0]=="conoid" ? let(
                              axis = geom[5],
-                             anchor = rot(from=axis, to=UP, p=anchor)
+                             anchor = rot(from=axis, to=UP, p=anchor),
+                             errtxt = is_undef(ind) ? ""
+                                    : str(" from desc",ind)
                          )
                          anchor==UP || anchor==DOWN ? "plane"
-                       : assert(geom[1]==geom[2], str("For anchors other than TOP/BOTTOM, cylinder from desc",ind," must be non-conical, with same size at each end"))
-                         assert(geom[4]==[0,0], str("For anchors other than TOP/BOTTOM, cylinder from desc",ind," must be a right-angle cylinder with zero shift"))
-                         assert(anchor.z==0,str("Anchor for cylinder for desc",ind," is on the cylinder's edge.  This is not supported."))
+                       : assert(geom[1]==geom[2], str("For anchors other than TOP/BOTTOM, cylinder",errtxt," must be non-conical, with same size at each end"))
+                         assert(geom[4]==[0,0], str("For anchors other than TOP/BOTTOM, cylinder",errtxt," must be a right-angle cylinder with zero shift"))
+                         assert(anchor.z==0,str("Anchor for cylinder",errtxt," is on the cylinder's edge.  This is not supported."))
                          "cyl"
    : in_list(geom[0],["prismoid","vnf_extent","vnf_isect"]) ?
                            assert(geom[0]!="prismoid" || sum(v_abs(anchor))<3, "Cannot give a corner anchor for prismoid geometry")
@@ -4472,16 +4515,23 @@ function _get_obj_type(ind,geom,anchor,prof) =
                               ? "plane"
                               : let(
                                     y = 20*max(v_abs(full_flatten(prof))),
-                                    x = y/tan(edge_angle/2)
+                                    x = y/tan(edge_angle/2),
+                                    corner=[[x,-y],[0,0], [x,y]]
                                 )
-                                [[x,-y],[0,0], [x,y]]
+                                is_def(edge_r) && edge_r>0 ? round_corners(corner, r=edge_r, closed=false)
+                              : is_def(edge_joint) && edge_joint>0 ? round_corners(corner, method="smooth",joint=edge_joint, k=edge_k, closed=false)
+                              : corner
    : starts_with(geom[0], "extrusion") ?
                    anchor==UP || anchor==DOWN || starts_with(anchor,"face") ? "plane"
                  :
-                   assert(geom[3]==0, str("Extrusion in desc", ind, " has nonzero twist, which is not supported."))
-                   assert(geom[5]==[0,0], str("Extrusion in desc", ind, " has nonzero shift, which is not supported."))
-                   assert(geom[4]==[1,1], str("Extrusion in desc",ind, " is conical, which is not supported."))
-                   assert(anchor.z==0,str("Anchor for extrusion for desc",ind," is on the extrusions top/bottom edge.  This is not supported."))   
+                   let(
+                       errtxt = is_undef(ind) ? ""
+                              : str(" in desc",ind)
+                   )
+                   assert(geom[3]==0, str("Extrusion", errtxt, " has nonzero twist, which is not supported."))
+                   assert(geom[5]==[0,0], str("Extrusion", errtxt, " has nonzero shift, which is not supported."))
+                   assert(geom[4]==[1,1], str("Extrusion", errtxt, " is conical, which is not supported."))
+                   assert(anchor.z==0,str("Anchor for extrusion",errtxt," is on the extrusions top/bottom edge.  This is not supported."))   
                    let(reg = region_parts(geom[1]))
                    assert(len(reg)==1, "Region has multiple disconnected components, which is not supported")
                    let(     // Here we shift the region so that the anchor point is at the origin
@@ -4498,9 +4548,10 @@ function _get_obj_type(ind,geom,anchor,prof) =
 ///   shift = given shift parameter
 
 function _check_join_shift(ind,type,shift,flip) = 
-    type=="sphere" ? assert(shift==0, str("Cannot give a (nonzero) shift",ind," for joining to a spherical object")) [0,0,0]
-  : type=="cyl" ? assert(is_finite(shift), str("Value shift",ind," for cylinder object must be a scalar")) shift*RIGHT
-  : is_list(type) ? assert(is_finite(shift), str("Value shift",ind," for an edge must be a scalar")) shift*RIGHT
+    type=="sphere" ? assert(shift==0 || shift==[0,0], str("Cannot give a (nonzero) shift",ind," for joining to a spherical object")) [0,0,0]
+  : let(fixshift=function(s) is_vector(s,2) && s[0]==0 ? s[1] : s)
+    type=="cyl" ? assert(is_finite(fixshift(shift)), str("Value shift",ind," for cylinder object must be a scalar or vector of the form [0,s]")) fixshift(shift)*RIGHT
+  : is_list(type) ? assert(is_finite(fixshift(shift)), str("Value shift",ind," for an edge must be a scalar or vector of the form [0,s]")) fixshift(shift)*RIGHT
   : /*type==plane*/ assert(is_finite(shift) || is_vector(shift,2), str("Value for shift",ind," for planar face of object must be a scalar or 2-vector"))
     is_list(shift)? flip ? [shift.y,-shift.x]: shift
                   : flip ? [0,-shift] : [shift,0];
@@ -4669,7 +4720,10 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
                        overlap, overlap1, overlap2,
                        k, k1, k2, n, n1, n2,
                        uniform, uniform1, uniform2,
-                       smooth_normals, smooth_normals1, smooth_normals2, 
+                       smooth_normals, smooth_normals1, smooth_normals2,
+                       edge_r, edge_joint, edge_k=0.5,
+                       edge_r1, edge_joint1, edge_k1,
+                       edge_r2, edge_joint2, edge_k2,
                        debug=false, debug_pos=false)
 {
     shift1_input = first_defined([shift1,shift,0]);
@@ -4685,16 +4739,29 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
 
     base_uniform = first_defined([uniform1, uniform, true]);
     aux_uniform = first_defined([uniform2, uniform, true]);
-    
+
     base_k = first_defined([k1,k,0.7]);
     aux_k = first_defined([k2,k,0.7]);
 
+    edge_r1 = default(edge_r1,edge_r);
+    edge_r2 = default(edge_r2,edge_r);
+    edge_joint1 = default(edge_joint1, edge_joint);
+    edge_joint2 = default(edge_joint2, edge_joint);
+    edge_k1 = default(edge_k1,edge_k);
+    edge_k2 = default(edge_k2,edge_k);
+
     profile = force_path(profile,"profile");
-    dummy0 = assert(is_path(profile,2), "profile must be a 2d path");
+    dummy0 = assert(is_path(profile,2), "profile must be a 2d path")
+             assert(num_defined([edge_r1,edge_joint1])<=1, "Cannot give both edge_r1 (edge_r) and edge_joint1 (edge_joint)")
+             assert(num_defined([edge_r2,edge_joint2])<=2, "Cannot give both edge_r2 (edge_r) and edge_joint2 (edge_joint)")
+             assert(is_undef(edge_r1) || all_nonnegative([edge_r1]), "edge_r1 (edge_r) must be nonnegative")
+             assert(is_undef(edge_r2) || all_nonnegative([edge_r2]), "edge_r2 (edge_r) must be nonnegative")      
+             assert(is_undef(edge_joint1) || all_nonnegative([edge_joint1]), "edge_joint1 (edge_joint) must be nonnegative")
+             assert(is_undef(edge_joint2) || all_nonnegative([edge_joint2]), "edge_joint2 (edge_joint) must be nonnegative")
+             assert(all_nonnegative([edge_k1,edge_k2]), "edge_k1, edge_k2, and edge_k must be nonnegative");
 
     corrected_base_anchor = is_vector(anchor1) && norm(anchor1)==0 ? _find_center_anchor(desc1,desc2,anchor2,true) : undef;
     corrected_aux_anchor = is_vector(anchor2) && norm(anchor2)==0 ? _find_center_anchor(desc2,desc1,anchor1,false) : undef;      
-
 
     base_anchor=is_string(anchor1) ? anchor1
                : is_def(corrected_base_anchor) ? corrected_base_anchor[0]
@@ -4714,7 +4781,7 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
             assert(is_vector(aux_anchor) || is_string(aux_anchor), "anchor2 must be a string or a 3-vector")    
             assert(is_rotation(auxmap), "desc1 and desc2 are not related to each other by a rotation (and translation)");
 
-    base_type = _get_obj_type(1,base[1],base_anchor,profile);
+    base_type = _get_obj_type(1,base[1],base_anchor,profile,edge_r1,edge_joint1,edge_k1);
     base_axis = base_type=="cyl" ? base[1][5] : RIGHT;
     base_edge = _is_geom_an_edge(base[1],base_anchor);
     base_r = in_list(base_type,["cyl","sphere"]) ? base[1][1] : 1;
@@ -4725,7 +4792,7 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
 
     prelim_shift1 = _check_join_shift(1,base_type,shift1_input,true);
     shift1 = corrected_base_anchor ? corrected_base_anchor[1] + prelim_shift1 : prelim_shift1;
-    aux_type = _get_obj_type(2,aux[1],aux_anchor,profile);
+    aux_type = _get_obj_type(2,aux[1],aux_anchor,profile,edge_r2,edge_joint2,edge_k2);
     aux_anch = _find_anchor(aux_anchor, aux[1]);
     aux_edge = _is_geom_an_edge(aux[1],aux_anchor);
     aux_r = in_list(aux_type,["cyl","sphere"]) ? aux[1][1] : 1;
@@ -4738,8 +4805,8 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
     shift2 = corrected_aux_anchor ? corrected_aux_anchor[1] + prelim_shift2 : prelim_shift2;
     
 
-    base_smooth_normals = first_defined([smooth_normals1, smooth_normals,!base_edge]);
-    aux_smooth_normals = first_defined([smooth_normals2, smooth_normals,!aux_edge]);    
+    base_smooth_normals = first_defined([smooth_normals1, smooth_normals,!base_edge || default(edge_r1,0)>0 || default(edge_joint1,0)>0]);
+    aux_smooth_normals = first_defined([smooth_normals2, smooth_normals,!aux_edge || default(edge_r2,0)>0 || default(edge_joint2,0)>0]);
     
     backdir = base_type=="cyl" ? base_axis
             : apply(rot(from=UP,to=base_anch_dir)*zrot(base_spin),BACK);
@@ -4820,9 +4887,259 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
                      base_n=base_n, aux_n=aux_n, base_fillet=base_fillet, aux_fillet=aux_fillet,
                      base_smooth_normals = base_smooth_normals, aux_smooth_normals=aux_smooth_normals, 
                      debug=debug,
-                     _name1="desc1", _name2="desc2") children();
+                     _name1="desc1", _name2="desc2")
+                         change_anchors(alias=[["end1","root"],["end2","end"]], remove=["root","end"])
+                           children();
           }
       }
+}
+
+
+
+
+// Module: attach_prism()
+// Synopsis: Attach a filleted prism with optional rounded end
+// SynTags: Geom
+// Topics: Rounding, Extrusion, Sweep
+// See Also: join_prism(), prism_connector()
+// Usage:
+//   PARENT() attach_prism(profile, anchor, [fillet], [rounding], [l=/h=/length=/height=], [endpoint=], [T=], [shift=], [scale=], [inside=], [n=], [n_base=], [n_end=], [k=], [k_base=], [k_end=], [overlap=], [uniform=], [smooth_normals=], [edge_r=], [edge_joint=], [edge_k=], [debug=] ) CHILDREN;
+// Description:
+//   Constructs a filleted prism that attaches to the specified anchor point of the parent object, with an optional rounded free end.
+//   This is an alternative interface to {{join_prism()}}.  The `profile` parameter gives the cross section of the prism the module constructions.
+//   This function works best when the prism cross section is a continuous shape with a high sampling rate and without sharp corners.
+//   If you have sharp corners you should consider giving them a small rounding first.  Make sure that any rectangle is resampled to have
+//   enough points to follow the parent shape.  When the prism cross section has concavities the fillet size is limited by the curvature of those concavities.
+//   .
+//   The supported parent object types are prismoids, VNFs, cylinders, spheres, and linear sweeps.  For prismoids and VNFs you can use any anchor on a face
+//   or edge anchors that include edge geometry.  For spheres you can use any anchor.  In the case of cylinders and linear sweeps you can
+//   attach to the flat top or bottom, or to named face anchors in any case.  When you do this, the attachment is treated as an infinite plane.
+//   You can attach to the side of the extrusion and follow the shape of the extrusion using the standard anchors only, but the
+//   shape must not have scaling (so it cannot
+//   be conical) and it must not have any shift.  Only right angle cylinders and extrusions are supported.
+//   Anchors on the top and bottom edges are also not supported.  When connecting to an extrusion the selected anchor
+//   point must lie on the surface of the shape.  This may requires setting `atype="intersect"` when creating the extrusion.
+//   Because of how {{join_prism()}} works, the prism will always make a joint to the shape, but it may be in the wrong location
+//   when the anchor point is not on the surface.
+//   .
+//   If you specify a length or height then he prism normally appears in the anchor direction, perpendicular to the parent object.  You can
+//   adjust its angle by setting the transformation.  For example, `T=xrot(20)` will rotate the prism so it is a 20 deg angle.  It will shift
+//   to the right as seen from above.  The transformation applies in the anchored coordinate system where Z is perpendicular to the parent
+//   and Y points in the spin direction.  When `T` is a rotation the face of the prism will be perpendicular to the prism axis.
+//   You can also specify the prism endpoint as a point in space, again in the anchored coordinate system.  In this case you cannot give
+//   the length or `T` and the prism's end will be perpendicular to the anchor direction of the parent.  
+//   .
+//   If you want to shift the prism away from the anchor point you can do that using the `shift` parameter.
+//   For anchoring to a flat face, the shift is a 2-vector where the y direction corresponds to the direction of the anchor's spin.
+//   For a cylinder or extrusion the shift must be a scalar and shifts along the axis.  For spheres, shift is not permitted.
+//   .
+//   If you set `inside=true` then the prism will be anchored on the inside of the parent object and a default "remove" tag
+//   is set for use with {{diff()}} so that you can create rounded holes.  
+//   .
+//   When you connect to a flat surface, the prism may extend beyond the edge of the surface if it doesn't fit, and the same thing happens if
+//   a connector runs off either end of a cylinder.  But if you connect to a sphere the prism must fully intersect it and if you connect to the curved side
+//   of a cylinder or extrusion the prism must fully intersect the infinite extension of that object.  If the prism doesn't intersect
+//   the curved surface in that required fashion, it will not be displayed and you will get an error.
+//   Another failure can occur if your fillet is too large to accomodate the requested fillet size.  The fillet is constructed by offsetting every point
+//   in the profile separately and for a large enough fillet size, concave profiles will cross each other, resulting in an invalid self-intersecting fillet.
+//   Normally {{join_prism()}} will issue an error in this situation.  The `debug` parameter is passed through to {{join_prism()}} and
+//   tells that module to display invalid self-intersecting geometry to help you understand the problem.
+//   .
+//   The `overlap` parameter creates an extension of the prism into the parent object.  Unlike `overlap` for {{attach()}} it actually extends
+//   the prism rather than shifting it by the overlap.  When connecting to curved parent objects, be sure the overlap is sufficient or you may
+//   create a hole in between the prism and its parent.  When subtracting a prism to create a hole, insufficient overlap will leave parts of
+//   the parent object behind, blocking the hole.  
+//   .
+//   When connecting to an unrounded edge, artifacts may occur at the corners where the prism doesn't meet the object in the ideal fashion.
+//   Adjsting the points on your prism profile so that a point falls close to the corner will achieve the best result, and make sure
+//   that `smooth_normals` is disabled (the default for edges) because it results in a completely incorrect fillet in this case.
+//   If you connect to an extrusion object, the default value for `smooth_normals` is true, which generally works better when
+//   for a uniformly sampled smooth object, but if your object has corners you may get better results by setting `smooth_normals=false`.
+//   For this reason, the default is false when connecting to an edge that is not rounded.  
+//   .
+//   When connecting to a rounded edge, the edge geometry must be circular or a smooth bezier rounding.  In the circular case
+//   provide the `edge_r` parameter to specify the radius of the circular rounding.  In the case of smooth bezier roundings you
+//   must give `edge_joint` to specify the size of the rounding, and you may optionally provide `edge_k` as required.  The default
+//   of `edge_k=0.5` matches the default for {{rounded_prism()}}. 
+//   .
+//   The "end" named anchor is located at the end face of the prism and (unlike {{join_prism()}}) provides a normal anchor
+//   that is perpendicular to the end face of the prism.  
+// Arguments:
+//   profile = path giving cross section to extrude to create the connecting prism
+//   anchor = parent anchor where prism will be attached or a list of anchors
+//   fillet = fillet size.  Default: 0
+//   rounding = end rounding of prism.  Default: 0
+//   ---
+//   l / length / h / height = length/height of prism
+//   T = transformation to apply to prism in the anchor coordinate system.  (Must specify length.)
+//   endpoint = endpoint of prism in the anchor coordinate system.  (Not compatible with length.)
+//   inside = if true attach the prism on the inside of the parent for diff() operations.  Default: false
+//   shift = shift anchor point, a scalar for cylinders, extrusions, or edges, a 2-vector for faces, not permitted for spheres
+//   scale = scale the profile by this factor at the end.  Default: 1
+//   spin = angle to rotate the prism around its axis before attaching it.  Default: 0
+//   edge_r = when attaching to an edge, assume it has a circular rounding with this radius
+//   edge_joint = when attaching to an edge, assume it has a smooth bezier rounding with this joint length
+//   edge_k = when attaching to an edge with a bezier rounding, use this k parameter value.  Default: 0.5 (matches rounded_prism)
+//   n = number of facets to use for fillets and roundings
+//   n_base = number of facets to use for fillets at the base
+//   n_end = number of facets to use for roundings at the end
+//   k = rounding curvature parameter for base and end.  Default: 0.7
+//   k_base = rounding curvature parameter for base.  Default: 0.7
+//   k_end = rounding curvature parameter for end.  Default: 0.7
+//   uniform = set to false to get non-uniform filleting.  Default: true
+//   overlap = the amount of overlap of the prism fillet into the parent object.  Default: 1
+//   smooth_normals = controls whether normals are smoothed when the parent is a prism or edge; no effect otherwise.  Default: false if object is an unrounded edge, true otherwise
+//   debug = pass-through to the {{join_prism()}} debug parameter.  If true then various cases where the fillet self intersects will be displayed instead of creating an error.  Default: false
+// Named Anchors:
+//   "end" = End of the attached prism.  (A normal anchor that is perpendicular to the end face of the prism.)
+// Side Effects:
+//   if inside is true then set default tag to "remove"
+// Example(3D):  Attaching to face of cube
+//  cuboid(20)
+//    attach_prism(circle(r=4,$fn=32), TOP, fillet=2, rounding=1.5, l=7);
+// Example(3D):  Attaching to top of cylinder
+//  cyl(d=20,h=8)
+//    attach_prism(circle(r=4,$fn=32), TOP, fillet=2, rounding=1.5, l=7);
+// Example(3D):  Attaching to side of cylinder
+//  cyl(d=20,h=18)
+//    attach_prism(circle(r=4,$fn=32), RIGHT, fillet=2, rounding=1.5, l=7);
+// Example(3D): Attaching to sphere with scaling of the prism
+//  sphere(d=20)
+//    attach_prism(circle(r=4,$fn=64), RIGHT+TOP+FWD, fillet=2, rounding=1.5, l=7, scale=.5);
+// Example(3D): Here we've attached a rectangular prism to a cylinder.  It makes a nice joint at the sides but the top doesn't look right.  This is because {{rect()}} only provides four points, which is not sufficient to match the curvature of the cylinder.  You need to resample with {{subdivide_path()}} or some other reampling method as shown in the next example.  
+//   cyl(d=10,h=8)
+//     attach_prism(rect(4), FWD+RIGHT, 1/2, rounding=1/2, l=4, edge_r=2); 
+// Example(3D): Attaching to an extrusion.  Here we used a rounded rectangle and resample it to ensure enough points to match the curve of the ellipse.
+//  $fn=128;
+//  rr = subdivide_path(rect(7,rounding=2), maxlen=.5);
+//  linear_sweep(ellipse([15,7]),h=19)
+//    attach_prism(rr, [.5,-1], fillet=2, rounding=1.5, length=7);
+// Example(3D):  Attaching to face of cube with shift.  The gray attachment is the unshifted version.  
+//  cuboid(20){
+//    attach_prism(circle(r=2,$fn=32), TOP, fillet=1, rounding=1.5, l=7, shift=[6,0]);
+//    %attach_prism(circle(r=2,$fn=32), TOP, fillet=1, rounding=1.5, l=7);
+//  }
+// Example(3D):  For attachment to a cylinder shift is a scalar 
+//  cyl(d=20,h=22){
+//    attach_prism(circle(r=2,$fn=32), RIGHT+FWD, fillet=1, rounding=1.5, l=7, shift=6);
+//    %attach_prism(circle(r=2,$fn=32), RIGHT+FWD, fillet=1, rounding=1.5, l=7);
+//  }
+// Example(3D): Specifying prism by endpoint.  The endpoint coordinates are in the coordinate system of the anchor, so the Y value of 7 applies in the coordinate system of the front face.  The end of the prism is perpendicular to the anchor direction.  
+//  cuboid(20)
+//    attach_prism(circle(r=4,$fn=32), FWD, fillet=1, rounding=1.5, endpoint=[0,7,12]);
+// Example(3D): Adjusting prism angle with a transformation.  The prism end is perpendicular to the prism axis.  
+//  cuboid(20)
+//    attach_prism(circle(r=4,$fn=32), FWD, fillet=1, rounding=1.5, l=10, T=xrot(-20));
+// Example(3D): Creating a hole.  The default overlap is too small to fully clear out the hole.  
+//  diff()
+//  cyl(d=20,h=22,$fn=128*2)
+//    attach_prism(circle(r=6,$fn=64), RIGHT+FWD, inside=true,
+//                 fillet=2, rounding=3, l=8, overlap=2);
+// Example(3D): Attaching with multiple anchor points
+//   cuboid(12)
+//     attach_prism(circle(r=3,$fn=32), [TOP, RIGHT+FWD],length=4,fillet=2);
+// Example(3D): Attaching to a rounded cuboid edge (circular rounding)
+//   cuboid([12,12,15],rounding=2, $fn=32)
+//     attach_prism(circle(r=3,$fn=128),RIGHT+FWD, length=4, fillet=2, edge_r=2);
+// Example(3D): Attaching the the edge on a {{rounded_prism()}}.  The `$fn` value given to `attach_prism()` controls the number of facets used to model the curved edge that the prism mates to.  
+//   joint = 3;
+//   rounded_prism(rect(12), rect(8), h=15, joint_sides=joint,atype="prismoid")
+//     attach_prism(circle(r=3,$fn=128),RIGHT+FWD, length=4, fillet=2, edge_joint=joint, $fn=32);
+// Example(3D,Big): Complicated example where we use attach_prism() to create attachments and then connect a bezier sweep to those attachments using descriptions.  The blue line segments show the bezier control points.  Note that we use {{bezier_sweep()}} rather than {{path_sweep()}} to ensure that the ends of the sweep mate properly, and setting `last_normal` ensures that the points on the attached prisms line up with the sweep.  
+//   sq = subdivide_path(circle(r=3,$fn=7),maxlen=.5);
+//   vspace=20;
+//   bezlen=40;
+//   cylr=20;
+//   cylh=65;
+//   straightlen=5;
+//   smoothcurve=true;  // true for C2 joint
+//   k=0.6;
+//   cyl(r=cylr,h=cylh, rounding=2, circum=true, $fn=256)
+//     let(cylinder=parent())
+//        attach_prism(sq,FWD,length=straightlen,shift=-vspace,fillet=2,spin=90)
+//        let(front=parent())
+//     restore(cylinder)
+//        attach_prism(sq, RIGHT, length=straightlen, shift=vspace, fillet=2,spin=90)
+//        let(right=parent())
+//     restore(cylinder)
+//       let(avg_dir = desc_dir(front,anchor="end") + desc_dir(right,anchor="end"),
+//           path=[
+//             desc_point(front,anchor="end"),
+//             if (smoothcurve) desc_point(front,anchor="end")+bezlen*(1-k)*desc_dir(front,anchor="end"),
+//             desc_point(front,anchor="end")+bezlen*desc_dir(front,anchor="end"),
+//             down(vspace/2,desc_point(cylinder,CTR)+ (cylr+straightlen+bezlen)*avg_dir),
+//             desc_point(right,anchor="end")+bezlen*desc_dir(right,anchor="end"),
+//             if (smoothcurve) desc_point(right,anchor="end")+bezlen*(1-k)*desc_dir(right,anchor="end"),
+//             desc_point(right,anchor="end")]
+//       )
+//       {
+//         bezier_sweep(zrot(90,sq), path, 40, last_normal=UP);
+//         color("lightblue")stroke(path);
+//       }
+
+
+module attach_prism(profile, anchor, fillet=0, rounding=0, inside=false, l, length, h, height, endpoint, T=IDENT, shift=0, overlap=1,
+                    n,n_base, n_end, k, k_base, k_end, uniform=true, smooth_normals, edge_r, edge_joint, edge_k=0.5, debug=false, scale=1, spin=0)
+{
+    length = one_defined([l, h, length, height],"l,h,length,height",dflt=undef);
+    profile = force_path(profile,"profile");
+    dummy = assert(is_path(profile,2), "\nprofile must be a 2d path")
+            assert($parent_geom != undef, "\nNo object to attach to!")
+            assert(num_defined([length,endpoint])==1, "Must define either length of endpoint")
+            assert(T==IDENT || is_undef(endpoint), "Cannot define endpoint and T")
+            assert(is_undef(endpoint) || is_vector(endpoint,3), "endpoint must be a 3d point")
+            assert(is_matrix(T,4,4), "T must be a 4x4 transformation matrix")
+            assert(is_undef(length) || all_positive([length]), "length/height must be a positive value")
+            assert(point3d(anchor)!=CTR, "CENTER anchor is not permitted")
+            assert(num_defined([edge_r,edge_joint])<=1, "Cannot give both edge_r and edge_joint")
+            ;
+    n_base = first_defined([n_base,n,15]);
+    n_end = first_defined([n_end,n,15]);
+    k_base = first_defined([k_base, k, 0.7]);
+    k_end = first_defined([k_end,k,0.7]);
+    
+    anchor_list = is_string(anchor) || is_vector(anchor)  ? [anchor] : anchor;
+
+
+    for(anchor=anchor_list){
+      anchor = is_string(anchor) ? anchor : point3d(anchor);
+      type = _get_obj_type(undef,$parent_geom,anchor,profile,edge_r,edge_joint,edge_k);
+      offset = in_list(type,["cyl","sphere"]) ? (inside?-1:1)*$parent_geom[1] : 0;
+      base_r = (inside?-1:1)*(in_list(type,["cyl","sphere"]) ? $parent_geom[1] : 1);
+      spinfix = -90;
+      base_edge = _is_geom_an_edge($parent_geom,anchor);
+      smooth_normals = default(smooth_normals, !base_edge || default(edge_r,0)>0 || default(edge_joint,0)>0);
+
+      shift = type=="sphere" ? assert(shift==0, "Cannot give a (nonzero) shift for attaching to a spherical object") [0,0]
+            : type=="cyl" ? assert(is_finite(shift), "Value shift for a cylindrical object must be a scalar") [0,shift]
+            : is_list(type) ? assert(is_finite(shift), "Value shift for an edge must be a scalar") [0,shift]
+            : assert(is_finite(shift) || is_vector(shift,2), "Value for shift for a planar face must be a scalar or 2-vector")
+              force_list(shift,2,0);
+      T = is_def(endpoint) ? move([endpoint.y-shift.y,-endpoint.x-shift.x]) 
+                           : zrot(spinfix)*T;
+      mod_type = is_list(type) && inside ? zrot(180,type) : type;
+      anchors = [named_anchor("end", is_def(endpoint) ? yrot(inside?180:0,endpoint) : point3d(shift)+apply(yrot(inside?180:0)*zrot(-spinfix)*T,[0,0,(inside?1:1)*length]),
+                                     is_def(endpoint) ? (inside?-1:1)*UP : unit( apply(yrot(inside?180:0)*zrot(-spinfix)*T,[0,0,length])-apply(zrot(-spinfix)*T,CTR)),
+                                     inside && is_undef(endpoint) ? 180 : 0)
+        ];
+      vnf=        join_prism(zrot(spin+spinfix,profile), mod_type, base_r=base_r,
+                   l=is_def(endpoint)?endpoint.z:length,
+                   prism_end_T=T,
+                   base_fillet=fillet,
+                   end_round=rounding,
+                   base_overlap=overlap, uniform=uniform, smooth_normals=smooth_normals,
+                   base_n=n_base, aux_n=n_end, base_k=k_base, aux_k=k_end,debug=debug,scale=scale);
+      attach(anchor)
+        default_tag("remove", inside)
+        attachable(vnf=vnf, anchors=anchors) {
+          translate(shift)
+          yrot(inside?180:0)
+          down(offset)
+          zrot(-spinfix)
+             vnf_polyhedron(vnf);
+           children();
+           }
+    }  
 }
 
 

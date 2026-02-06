@@ -8,6 +8,8 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_STRINGS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: strings.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 function _is_liststr(s) = is_list(s) || is_str(s);
 
@@ -35,14 +37,16 @@ function _is_liststr(s) = is_list(s) || is_str(s);
 //   s5=substr("abcdefg",len=-2);  // Returns ""
 function substr(str, pos=0, len=undef) =
     assert(is_string(str))
-    is_list(pos) ? _substr(str, pos[0], pos[1]-pos[0]+1) :
-    len == undef ? _substr(str, pos, len(str)-pos) :
-    _substr(str,pos,len);
+    is_list(pos) ? _substr(str, pos[0], pos[1]-pos[0]+1) 
+  : len == undef ? _substr(str, pos, len(str)-pos) 
+                 : _substr(str,pos,len);
 
-function _substr(str,pos,len,substr="") =
-    len <= 0 || pos>=len(str) ? substr :
-    _substr(str, pos+1, len-1, str(substr, str[pos]));
-
+function _substr(str,pos,len) =
+    assert(pos>=0,"pos value for substr() must be nonnegative")
+    len <= 0 || pos>=len(str) ? ""
+  :
+    chr([for(i=[pos:pos+len-1]) ord(str[i])]);
+                              
 
 // Function: suffix()
 // Synopsis: Returns the last few characters of a string.
@@ -346,7 +350,7 @@ function str_pad(str,length,char=" ",left=false) =
   assert(is_str(char) && len(char)==1, "char must be a single character string")
   assert(is_bool(left))
   let(
-    padding = str_join(repeat(char,length-len(str)))
+    padding = chr(repeat(ord(char),length-len(str)))
   )
   left ? str(padding,str) : str(str,padding);
 
@@ -391,7 +395,7 @@ function str_replace_char(str,char,replace) =
 //   s=downcase("ABCdef");   // Returns "abcdef"
 function downcase(str) =
     assert(is_string(str))
-    str_join([for(char=str) let(code=ord(char)) code>=65 && code<=90 ? chr(code+32) : char]);
+    chr([for(char=str) let(code=ord(char)) code>=65 && code<=90 ? code+32 : code]);
 
 
 // Function: upcase()
@@ -409,7 +413,7 @@ function downcase(str) =
 //   s=upcase("ABCdef");   // Returns "ABCDEF"
 function upcase(str) =
     assert(is_string(str))
-    str_join([for(char=str) let(code=ord(char)) code>=97 && code<=122 ? chr(code-32) : char]);
+    chr([for(char=str) let(code=ord(char)) code>=97 && code<=122 ? code-32 : code]);
 
 
 // Section: Random strings
@@ -431,8 +435,8 @@ function upcase(str) =
 //    charset = string to draw the characters from.  Default: characters from "0" to "z".
 //    seed = random number seed
 function rand_str(n, charset, seed) =
-  is_undef(charset)? str_join([for(c=rand_int(48,122,n,seed)) chr(c)])
-                   : str_join([for(i=rand_int(0,len(charset)-1,n,seed)) charset[i]]);
+  is_undef(charset)? chr(rand_int(48,122,n,seed))
+                   : chr([for(i=rand_int(0,len(charset)-1,n,seed)) ord(charset[i])]);
 
 
 
@@ -607,17 +611,16 @@ function parse_num(str) =
 // Example:
 //   str(123456789012345);  // Returns "1.23457e+14"
 //   format_int(123456789012345);  // Returns "123456789012345"
-//   format_int(-123456789012345);  // Returns "-123456789012345"
+//   format_int(-123456789012345); // Returns "-123456789012345"
+//   format_int(12,3);             // Returns 012
 function format_int(i,mindigits=1) =
     i<0? str("-", format_int(-i,mindigits)) :
     let(i=floor(i), e=floor(log(i)))
-    i==0? str_join([for (j=[0:1:mindigits-1]) "0"]) :
-    str_join(
-        concat(
-            [for (j=[0:1:mindigits-e-2]) "0"],
-            [for (j=[e:-1:0]) str(floor(i/pow(10,j)%10))]
-        )
-    );
+    i==0? chr([for (j=[0:1:mindigits-1]) 48]) :
+    chr([
+          for (j=[0:1:mindigits-e-2]) 48,
+          for (j=[e:-1:0]) 48+(floor(i/pow(10,j)%10))
+        ]);
 
 
 // Function: format_fixed()
@@ -713,7 +716,7 @@ function _format_matrix(M, sig=4, sep=1, eps=1e-9) =
        figure_dash = chr(8210),
        space_punc = chr(8200),
        space_figure = chr(8199),
-       sep = is_num(sep) && sep>=0 ? str_join(repeat(space_figure,sep))
+       sep = is_num(sep) && sep>=0 ? chr(repeat(ord(space_figure),sep))
            : is_string(sep) ? sep
            : assert(false,"Invalid separator: must be a string or positive integer giving number of spaces"),
        strarr=
@@ -830,7 +833,7 @@ function format(fmt, vals) =
                     typ=="G"? upcase(format_float(val,default(prec,6))) :
                     assert(false,str("Unknown format type: ",typ)),
                 padlen = max(0,wid-len(unpad)),
-                padfill = str_join([for (i=[0:1:padlen-1]) zero? "0" : " "]),
+                padfill = chr([for (i=[0:1:padlen-1]) zero? 48 : 32]),
                 out = left? str(unpad, padfill) : str(padfill, unpad)
             )
             out, raw

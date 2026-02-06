@@ -7,6 +7,7 @@
 
 assert(version_num()>=20190500, "BOSL2 requires OpenSCAD version 2019.05 or later.");
 
+_BOSL2_STD = true;
 
 include <version.scad>
 
@@ -20,8 +21,7 @@ include <beziers.scad>
 include <shapes3d.scad>
 include <shapes2d.scad>
 include <drawing.scad>
-include <masks3d.scad>
-include <masks2d.scad>
+include <masks.scad>
 include <math.scad>
 include <paths.scad>
 include <lists.scad>

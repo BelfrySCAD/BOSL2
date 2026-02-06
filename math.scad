@@ -11,6 +11,11 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+
+_BOSL2_MATH = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: math.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 // Section: Math Constants
 
 // Constant: PHI
@@ -21,23 +26,24 @@
 PHI = (1+sqrt(5))/2;
 
 // Constant: EPSILON
-// Synopsis: A tiny value to compare floating point values.  `1e-9`
+// Synopsis: A tiny value to compare floating point values.  1e-9
 // Topics: Constants, Math
-// See Also: PHI, EPSILON, INF, NAN
-// Description: A really small value useful in comparing floating point numbers.  ie: abs(a-b)<EPSILON  `1e-9`
+// See Also: PHI, INF, NAN
+// Description: A really small value useful in comparing floating point numbers.  ie: abs(a-b)<EPSILON.  This is set to 1e-9, which is larger than machine epsilon, but generally works well in geometric computations.  
 EPSILON = 1e-9;
+_EPSILON = 1e-9;  // This is the private library version
 
 // Constant: INF
 // Synopsis: The floating point value for Infinite.
 // Topics: Constants, Math
-// See Also: PHI, EPSILON, INF, NAN
+// See Also: PHI, EPSILON, NAN
 // Description: The value `inf`, useful for comparisons.
 INF = 1/0;
 
 // Constant: NAN
 // Synopsis: The floating point value for Not a Number.
 // Topics: Constants, Math
-// See Also: PHI, EPSILON, INF, NAN
+// See Also: PHI, EPSILON, INF
 // Description: The value `nan`, useful for comparisons.
 NAN = acos(2);
 
@@ -200,12 +206,12 @@ function slerp(v1, v2, u) =
         a = unit(v1),
         b = unit(v2),
         theta = acos(max(-1, min(1, a*b))),
-        err = assert(abs(theta-180)>EPSILON, "\nNo solution when vectors v1 and v2 are 180° apart."),
+        err = assert(abs(theta-180)>_EPSILON, "\nNo solution when vectors v1 and v2 are 180° apart."),
         sin_theta = sin(theta)
-    ) sin_theta < EPSILON ? unit(a+b) // fallback
-    : is_finite(u) ? (sin_theta < EPSILON ? unit(a+b)
+    ) sin_theta < _EPSILON ? unit(a+b) // fallback
+    : is_finite(u) ? (sin_theta < _EPSILON ? unit(a+b)
         : (a * sin((1 - u) * theta) + b * sin(u * theta)) / sin_theta)
-    : [for(t=u) sin_theta < EPSILON ? unit(a+b)
+    : [for(t=u) sin_theta < _EPSILON ? unit(a+b)
         : (a * sin((1 - t) * theta) + b * sin(t * theta)) / sin_theta];
 
 
@@ -236,12 +242,12 @@ function slerpn(v1, v2, n, endpoint=true) =
         a = unit(v1),
         b = unit(v2),
         theta = acos(max(-1, min(1, a*b))),
-        err = assert(abs(theta-180)>EPSILON, "\nNo solution when vectors v1 and v2 are 180° apart."),
+        err = assert(abs(theta-180)>_EPSILON, "\nNo solution when vectors v1 and v2 are 180° apart."),
         sin_theta = sin(theta),
         d = n - (endpoint ? 1 : 0)
     ) [
     for(i=[0:n-1]) let(u=i/d)
-        sin_theta < EPSILON ? unit(a+b) // fallback
+        sin_theta < _EPSILON ? unit(a+b) // fallback
         : (a * sin((1 - u) * theta) + b * sin(u * theta)) / sin_theta
 ];
 
@@ -1093,7 +1099,7 @@ function sum_of_sines(a, sines) =
 //   ints = rand_int(0,100,3);
 //   int = rand_int(-10,10,1)[0];
 function rand_int(minval, maxval, n, seed=undef) =
-    assert( is_finite(minval+maxval+n) && (is_undef(seed) || is_finite(seed) ), "\nInput must be finite numbers.")
+    assert( is_vector([minval,maxval,n]) && (is_undef(seed) || is_finite(seed) ), "\nInput must be finite numbers.")
     assert(maxval >= minval, "\nMax value cannot be smaller than minval.")
     let (rvect = is_def(seed) ? rands(minval,maxval+1,n,seed) : rands(minval,maxval+1,n))
     [for(entry = rvect) floor(entry)];
@@ -1552,7 +1558,10 @@ function c_norm(z) = norm_fro(z);
 //    coefficients are real numbers.  If real is true, then returns only the
 //    real roots.  Otherwise returns a pair of complex values.  This method
 //    may be more reliable than the general root finder at distinguishing
-//    real roots from complex roots.  
+//    real roots from complex roots.  If the input is a linear equation the
+//    function returns a single root, and it returns the empty list when no
+//    appropriate roots exist (such as when all the roots are complex and real=true).
+
 //    Algorithm from: https://people.csail.mit.edu/bkph/articles/Quadratics.pdf
 function quadratic_roots(a,b,c,real=false) =
   real ? [for(root = quadratic_roots(a,b,c,real=false)) if (root.y==0) root.x]
@@ -1561,7 +1570,8 @@ function quadratic_roots(a,b,c,real=false) =
   assert(is_num(a) && is_num(b) && is_num(c))
   assert(a!=0 || b!=0 || c!=0, "\nQuadratic must have a nonzero coefficient.")
   a==0 && b==0 ? [] :     // No solutions
-  a==0 ? [[-c/b,0]] : 
+  a==0 ? [[-c/b,0]] :     // linear case, only one root
+  b==0 && c==0 ? [[0,0],[0,0]] :   // a*x^2=0, zero is a double root
   let(
       descrim = b*b-4*a*c,
       sqrt_des = sqrt(abs(descrim))

@@ -295,41 +295,4 @@ include <BOSL2/std.scad>
 square([40,30], anchor=BACK+LEFT, spin=30);
 ```
 
-## Mixing Anchoring, Spin, and Orientation
-When giving `anchor=`, `spin=`, and `orient=`, they are applied anchoring first, spin second,
-then orient last.  For example, here's a cube:
-
-```openscad-3D
-include <BOSL2/std.scad>
-cube([20,20,50]);
-```
-
-You can center it with an `anchor=CENTER` argument:
-
-```openscad-3D
-include <BOSL2/std.scad>
-cube([20,20,50], anchor=CENTER);
-```
-
-Add a 45 degree spin:
-
-```openscad-3D
-include <BOSL2/std.scad>
-cube([20,20,50], anchor=CENTER, spin=45);
-```
-
-Now tilt the top up and forward:
-
-```openscad-3D
-include <BOSL2/std.scad>
-cube([20,20,50], anchor=CENTER, spin=45, orient=UP+FWD);
-```
-
-For 2D shapes, you can mix `anchor=` with `spin=`, but not with `orient=`.
-
-```openscad-2D
-include <BOSL2/std.scad>
-square([40,30], anchor=BACK+LEFT, spin=30);
-```
-
 [Next: Relative Positioning of Children](Tutorial-Attachment-Relative-Positioning)

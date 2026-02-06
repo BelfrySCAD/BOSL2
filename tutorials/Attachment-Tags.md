@@ -61,12 +61,14 @@ tag("keep")cube(100, center=true)
 You can apply a tag that is not propagated to the children using
 `tag_this()`.  The above example could then be redone:
 
+```openscad-3D
 diff("hole", "keep")
 tag_this("keep")cube(100, center=true)
     attach([RIGHT,TOP]) {
         cylinder(d=95, h=5);
         tag("hole") cylinder(d=50, h=11, anchor=CTR);
     }
+```    
 
 
 You can of course apply `tag()` to several children.

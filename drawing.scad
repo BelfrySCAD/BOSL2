@@ -13,6 +13,9 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_DRAWING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: drawing.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 
 // Section: Line Drawing
 
@@ -248,6 +251,8 @@ module stroke(
         assert(false, str("Invalid endcap: ",cap))
     ) * linewidth;
 
+    
+
     closed = default(closed, is_region(path));
     check1 = assert(is_bool(closed))
              assert(!closed || num_defined([endcaps,endcap1,endcap2])==0, "Cannot give endcap parameter(s) with closed path or region");
@@ -281,6 +286,13 @@ module stroke(
     endcap_angle1 = first_defined([endcap_angle1, endcap_angle, dots_angle]);
     endcap_angle2 = first_defined([endcap_angle2, endcap_angle, dots_angle]);
     joint_angle = first_defined([joint_angle, dots_angle]);
+
+    endcap_color1 = first_defined([endcap_color1, endcap_color, dots_color, color]);
+    endcap_color2 = first_defined([endcap_color2, endcap_color, dots_color, color]);
+    joint_color = first_defined([joint_color, dots_color, color]);
+
+    // We want to allow "paths" with length 1, so we can't use the normal path/region checks
+    paths = is_matrix(path) ? [path] : path;
     
     check3 =
       assert(all_nonnegative([endcap_length1]))
@@ -293,23 +305,21 @@ module stroke(
       assert(is_undef(endcap_angle2)||is_finite(endcap_angle2))
       assert(is_undef(joint_angle)||is_finite(joint_angle))
       assert(all_positive([singleton_scale]))
-      assert(all_positive(width));
-      
-    endcap_color1 = first_defined([endcap_color1, endcap_color, dots_color, color]);
-    endcap_color2 = first_defined([endcap_color2, endcap_color, dots_color, color]);
-    joint_color = first_defined([joint_color, dots_color, color]);
+      assert(all_positive(width))
+      assert(is_list(paths),"The path argument must be a list of 2D or 3D points, or a region.");
 
-    // We want to allow "paths" with length 1, so we can't use the normal path/region checks
-    paths = is_matrix(path) ? [path] : path;
-    assert(is_list(paths),"The path argument must be a list of 2D or 3D points, or a region.");
+    // Checks inside attachable() give a long cascade in the traceback, so do them before if we can
+        
+    check4=
+        [for (path=paths)
+                   let(pathvalid = is_path(path,[2,3]) || same_shape(path,[[0,0]]) || same_shape(path,[[0,0,0]]))
+                   assert(pathvalid,"The path argument must be a list of 2D or 3D points, or a region.")
+                   assert(is_num(width) || len(width)==len(path),
+                          "width must be a number or a vector the same length as the path (or all components of a region)")];
+
     attachable(two_d=len(path[0])==2)
     {
       for (path = paths) {
-          pathvalid = is_path(path,[2,3]) || same_shape(path,[[0,0]]) || same_shape(path,[[0,0,0]]);
-
-          check4 = assert(pathvalid,"The path argument must be a list of 2D or 3D points, or a region.")
-                   assert(is_num(width) || len(width)==len(path),
-                          "width must be a number or a vector the same length as the path (or all components of a region)");
           path = deduplicate( closed? list_wrap(path) : path );
           width = is_num(width)? [for (x=path) width]
                 : closed? list_wrap(width)
@@ -350,7 +360,7 @@ module stroke(
                       translate(path[0]) {
                           $fn = segs(width[0]/2);
                           if (is_undef(endcap_angle1)) {
-                              rotate_extrude(convexity=convexity) {
+                              rotate_extrude(convexity=convexity,angle=360) {
                                   right_half(planar=true) {
                                       polygon(endcap_shape1);
                                   }
@@ -646,7 +656,7 @@ function dashed_stroke(path, dashpat=[3,3], closed=false, fit=true, mindash=0.5)
         cuts = [
             for (i = [0:1:reps], off = doff*sc)
               let (x = i*dlen*sc + off)
-              if (x > 0 && x < plen-EPSILON) x
+              if (x > 0 && x < plen-_EPSILON) x
         ],
         dashes = path_cut(path, cuts, closed=false),
         dcnt = len(dashes),
@@ -697,8 +707,10 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   arc(...) [ATTACHMENTS];
 // Description:
 //   If called as a function, returns a 2D or 3D path forming an arc.  Numerous methods are available to specify the arc as listed in the Arguments section.
-//   If `wedge` is true, the centerpoint of the arc appears as the first point in the result.
-//   If called as a module, the arc must be 2D and the module creates the 2D arc polygon or pie slice shape.  
+//   If called as a module, the arc must be 2D and the module creates the segment of the circle obtained by adding
+//   the closing segment to the arc.  
+//   If `wedge` is true, the centerpoint of the arc appears as the first point in the result, which is now a sector of a circle.
+//   The module produces the sector of the circle, or pie shape, bounded by the arc.  
 //   .
 //   If `endpoint=false`, which is only accepted by the functional form, then the arc stops one step before the final point.  
 //   The `rounding` parameter, which is permitted only when `wedge=true`, applies specified radius roundings at each of the corners, with `rounding[0]` giving
@@ -710,6 +722,8 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   the total number of points on a wedge will be $n + 1 + (n-1) k$ where $k$ is the number of roundings that are nonzero.  
 //   To get enough points on corner roundings you may need an `n` that is very large and produces more points than needed on the main curved portion of the arc.
 //   Using `$fs` and `$fa` makes it possible to have differing numbers of points on the various roundings in your arc based on their radius and angle.
+//   .
+//   The module form with `wedge=false` must have 3 points on the arc to produce non-empty geometry.  If you specify `n=2` in this case it is an error.  If you use `$fn`, `$fa` and/or `$fs` to control the faceting the point count will be rounded up so that the output always has at least 3 points (2 facets).  The functional form does **not** round the point count up to 3, so this means that for small point counts, the module and function will produce different results.  
 // Arguments:
 //   n = Number of vertices to use in the arc.  If `wedge=true` you will get `n+1` points.  
 //   r = Radius of the arc.
@@ -763,11 +777,11 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false, fit=true, round
 //   arc(r=25, angle=[-30,45], rounding=[0,-12, -27], wedge=true);
 //   stroke(arc(r=25, angle=[-30,45], wedge=true), color="red",closed=true, width=.5);
 
-function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true, rounding) =
+function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true, rounding, _minpts=2) =
     assert(is_bool(endpoint))
     !endpoint ?
         assert(!wedge, "endpoint cannot be false if wedge is true")
-        list_head(arc(u_add(n,1),r,angle,d,cp,points,corner,width,thickness,start,wedge,long,cw,ccw,true,rounding))
+        list_head(arc(u_add(n,1),r,angle,d,cp,points,corner,width,thickness,start,wedge,long,cw,ccw,true,rounding,_minpts))
   :
     assert(is_undef(start) || is_def(angle), "start requires angle")
     assert(is_undef(angle) || !any_defined([thickness,width,points,corner]), "Cannot give angle with points, corner, width or thickness")
@@ -779,7 +793,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
         assert(!any_defined([r,cp,points,angle,start]),"Conflicting or invalid parameters to arc")
         assert(width>0, "Width must be postive")
         assert(thickness>0, "Thickness must be positive")
-        arc(n,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge,rounding=rounding)
+        arc(n,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge,rounding=rounding,_minpts=_minpts)
   : is_def(angle)? 
         let(
             parmok = !any_defined([points,width,thickness]) &&
@@ -798,7 +812,8 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
         is_def(rounding) ? assert(wedge,"rounding is only supportd with wedge=true") move(cp,zrot(start,_rounded_arc(r, rounding, angle, n)))
      :
         let(
-            n = is_def(n) ? n : max(wedge?2:3,1+segs(r,angle)), //max(3, ceil(segs(r)*abs(angle)/360)),
+            n = is_def(n) ? assert(n>=_minpts,str("\nThe n parameter must be at least ",_minpts)) n
+                          : max(wedge?2:_minpts,1+segs(r,angle)), 
             arcpoints = [for(i=[0:n-1]) let(theta = start + i*angle/(n-1)) r*[cos(theta),sin(theta)]+cp]
         )
         [
@@ -814,7 +829,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
                 plane = [corner[2], corner[0], corner[1]],
                 points2d = project_plane(plane, corner)
             )
-            lift_plane(plane,arc(n,corner=points2d,wedge=wedge,r=r, d=d,rounding=rounding))
+            lift_plane(plane,arc(n,corner=points2d,wedge=wedge,r=r, d=d,rounding=rounding,_minpts=_minpts))
         ) :
         assert(is_path(corner) && len(corner) == 3)
         let(col = is_collinear(corner[0],corner[1],corner[2]))
@@ -832,7 +847,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             ang_range = dir ? [theta_start, theta_start+angle]
                             : [theta_start+angle, theta_start]
         )
-        arc(n,cp=cp,r=r,angle=ang_range,wedge=wedge,rounding=rounding)
+        arc(n,cp=cp,r=r,angle=ang_range,wedge=wedge,rounding=rounding,_minpts=_minpts)
   : assert(is_def(points), "Arc not specified: must give points, angle, or width and thickness")
     assert(is_path(points,[2,3]),"Point list is invalid")
          // If arc is 3D, transform points to 2D and make a recursive call, then remap back to 3D
@@ -844,7 +859,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             center2d = is_def(cp) ? project_plane(plane,cp) : undef,
             points2d = project_plane(plane, points)
         )
-        lift_plane(plane,arc(n,cp=center2d,points=points2d,wedge=wedge,long=long,rounding=rounding))
+        lift_plane(plane,arc(n,cp=center2d,points=points2d,wedge=wedge,long=long,rounding=rounding,_minpts=_minpts))
   : len(points)==2?  
         // Arc defined by center plus two points, will have radius defined by center and points[0]
         // and extent defined by direction of point[1] from the center
@@ -867,7 +882,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
                 dir*angle,
             sa = atan2(v1.y,v1.x)
         )
-        arc(n,cp=cp,r=r,start=sa,angle=final_angle,wedge=wedge,rounding=rounding)
+        arc(n,cp=cp,r=r,start=sa,angle=final_angle,wedge=wedge,rounding=rounding,_minpts=_minpts)
   : // Final case is arc passing through three points, starting at point[0] and ending at point[3]
         let(col = is_collinear(points[0],points[1],points[2]))
         assert(!col, "Collinear inputs do not define an arc")
@@ -885,11 +900,11 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
             // generate the proper number of points.
             ang_range = dir ? [theta_start, theta_start+angle]
                             : [theta_start+angle, theta_start],
-            arcpts = is_def(rounding)? arc(n,cp=cp,r=r,angle=ang_range,wedge=wedge,rounding=rounding)
+            arcpts = is_def(rounding)? arc(n,cp=cp,r=r,angle=ang_range,wedge=wedge,rounding=rounding,_minpts=_minpts)
                    : [
                        if (wedge) cp, 
                        points[dir ? 0 : 1],
-                       each select(arc(n,cp=cp,r=r,angle=ang_range),1,-2),
+                       each select(arc(n,cp=cp,r=r,angle=ang_range,_minpts=_minpts),1,-2),
                        points[dir ? 1 : 0]
                      ]
         )
@@ -898,7 +913,7 @@ function arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=
 
 module arc(n, r, angle, d, cp, points, corner, width, thickness, start, wedge=false, rounding, anchor=CENTER, spin=0)
 {
-    path = arc(n=n, r=r, angle=angle, d=d, cp=cp, points=points, corner=corner, width=width, thickness=thickness, start=start, wedge=wedge, rounding=rounding);
+    path = arc(n=n, r=r, angle=angle, d=d, cp=cp, points=points, corner=corner, width=width, thickness=thickness, start=start, wedge=wedge, rounding=rounding, _minpts=3);
     assert(len(path[0])==2 || sum(v_abs(column(path,2)))==0, "Module form of arc() only works with 2D inputs.");
     path2d = path2d(path);
     attachable(anchor,spin, two_d=true, path=path2d, extent=false) {
@@ -1420,7 +1435,7 @@ module _debug_poly_verts(points, size)
      labels=is_vector(points[0]) ? [for(i=idx(points)) str(i)]
            :[for(j=idx(points), i=idx(points[j])) str(chr(97+j),i)];
      points = is_vector(points[0]) ? points : flatten(points);
-     dups = vector_search(points, EPSILON, points);
+     dups = vector_search(points, _EPSILON, points);
      color("red") {
         for (ind=dups){
             numstr = str_join(select(labels,ind),",");

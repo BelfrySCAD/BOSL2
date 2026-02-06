@@ -13,6 +13,11 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_BEZIERS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: beziers.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
+
 // Terminology:
 //   Path = A series of points joined by straight line segements.
 //   Bezier Curve = A polynomial curve defined by a list of control points.  The curve starts at the first control point and ends at the last one.  The other control points define the shape of the curve and they are often *NOT* on the curve
@@ -448,14 +453,25 @@ function bezpath_points(bezpath, curveind, u, N=3) =
 // Topics: Bezier Paths
 // See Also: bezier_points(), bezier_curve(), bezpath_points()
 // Usage:
-//   path = bezpath_curve(bezpath, [splinesteps], [N], [endpoint])
+//   path = bezpath_curve(bezpath, [splinesteps], [N], [endpoint], [order=])
 // Description:
-//   Computes a number of uniformly distributed points along a bezier path.
+//   Computes a number of uniformly distributed points along a bezier path.  Optionally also compute derivatives along the path.
+//   If order is not given, returns a list of points on the bezier path, with splinesteps segments in each bezier portion, but
+//   with collinear and duplicate points removed. Even if `endpoint=true`, if the curve's first and last points are equal
+//   then the last point is not returned.  Points are always returned at the locations where the individual beziers join,
+//   where corners may be located.
+//   .
+//   If order is a number or list of numbers then compute derivatives of the specified order(s) and return a list of paths, where
+//   the first entry in the list is the bezier curve and subsequent entries are derivatives of the specified orders.  At the points
+//   where beziers join, returns an average derivative, `(unit(a)+unit(b))*(norm(a)+norm(b))/4`, which has the average direction
+//   and average length of the derivatives from two two curves.  
 // Arguments:
 //   bezpath = A bezier path to approximate.
 //   splinesteps = Number of straight lines to split each bezier curve into. default=16
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
 //   endpoint = If true, include the last point of the bezier path.  Default: true
+//   ---
+//   order = Orders of derivative to compute.  Default: []
 // Example(2D):
 //   bez = [
 //       [0,0], [-5,30],
@@ -465,12 +481,15 @@ function bezpath_points(bezpath, curveind, u, N=3) =
 //   ];
 //   path = bezpath_curve(bez);
 //   stroke(path,dots=true,dots_color="red");
-function bezpath_curve(bezpath, splinesteps=16, N=3, endpoint=true) =
+
+
+function bezpath_curve(bezpath, splinesteps=16, N=3, endpoint=true, order=[]) =
     assert(is_path(bezpath))
     assert(is_int(N))
     assert(is_int(splinesteps) && splinesteps>0)
     assert(len(bezpath)%N == 1, str("\nA degree ",N," bezier path should have a multiple of ",N," points in it, plus 1."))
     let(
+        order = force_list(order),
         segs = (len(bezpath)-1) / N,
         step = 1 / splinesteps,
         path = [
@@ -479,8 +498,35 @@ function bezpath_curve(bezpath, splinesteps=16, N=3, endpoint=true) =
             if (endpoint) last(bezpath)
         ],
         is_closed = approx(path[0], last(path)),
-        out = path_merge_collinear(path, closed=is_closed)
-    ) out;
+        keep_ind = path_merge_collinear_indexed(path, closed=is_closed),
+        curve = select(path, keep_ind),
+        derivatives = order==[] ? []
+          : let(
+                avg = function(a,b) (unit(a,a*0)+unit(b,b*0))*(norm(a)+norm(b))/4,
+                //avg = function(a,b) echo(a=a,b=b)(a+b)/2,
+                uvals = lerpn(0,1,splinesteps+1),
+                pathlist=
+                  [for(ord=order)
+                    let(
+                        sections = [for (seg = [0:1:segs-1])
+                                       bezier_derivative(select(bezpath, seg*N, (seg+1)*N), uvals, ord)],
+                        dpath = [for(i=idx(sections))
+                                   each [
+                                     if (i==0) is_closed ? avg(last(last(sections)),sections[0][0]) : sections[0][0],
+                                     if (i==0) each select(sections[0],1,-2),
+                                     if (i>0)  each select(sections[i],1,-2),
+                                     if (i<len(sections)-1) avg(last(sections[i]),sections[i+1][0]),
+                                     if (i==len(sections)-1 && endpoint) is_closed ? avg(last(last(sections)),sections[0][0]) : last(last(sections))
+                                   ]
+                                ]
+                    )
+                    select(dpath, keep_ind)
+                   ]
+            )
+            pathlist
+    ) order==[] ? curve
+              : concat([curve],derivatives);
+
 
 
 // Function: bezpath_closest_point()
@@ -1376,8 +1422,8 @@ function bezier_vnf_degenerate_patch(patch, splinesteps=16, reverse=false, retur
     assert(is_bezier_patch(patch), "\nInput is not a Bezier patch.")
     assert(is_int(splinesteps) && splinesteps>0, "\nsplinesteps must be a positive integer.")
     let(
-        row_degen = [for(row=patch) all_equal(row,eps=EPSILON)],
-        col_degen = [for(col=transpose(patch)) all_equal(col,eps=EPSILON)],
+        row_degen = [for(row=patch) all_equal(row,eps=_EPSILON)],
+        col_degen = [for(col=transpose(patch)) all_equal(col,eps=_EPSILON)],
         top_degen = row_degen[0],
         bot_degen = last(row_degen),
         left_degen = col_degen[0],
@@ -1638,7 +1684,251 @@ function bezier_sheet(patch, delta, splinesteps=16, style="default", thickness=u
   del[0]<del[1] ? vnf_reverse_faces(vnf) : vnf;
 
 
+// Function&Module: bezier_sweep()
+// Synopsis: Sweep a 2d polygon path along a bezier with exact tangents
+// SynTags: VNF, Geom
+// Topics: Extrusion, Sweep, Paths, Textures, Bezier Curves
+// See Also: sweep_attach(), linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep2d(), offset_sweep(), path_sweep(), bezpath_sweep()
+// Usage: As module
+//   bezier_sweep(shape, bezier, [splinesteps], [method], [endpoint=], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
+// Usage: As function
+//   vnf = path_sweep(shape, bezier, [splinesteps], [method], [endpoint=], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [caps=], [style=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [atype=]);
+// Description:
+//   Takes as input `shape`, a 2D polygon path (list of points), and `bezier`, a list of bezier control points (2d or 3d), and 
+//   constructs a polyhedron by sweeping the shape along the bezier curve. The bezier curve is sampled into `splinesteps` segments.
+//   This is a passthrough to {{path_sweep()}}.  The reason it exists is that it uses the exact derivative computed from the bezier
+//   instead of an approximation.  This can be crucial for joints at the ends of your curve, where the approximate derivative is often incorrect.
+//   For full information about the operation and parameters of `bezier_sweep` see {{path_sweep()}}.   If you have a bezier path instead of a bezier
+//   use {{bezpath_sweep()}}.                                           
+// Arguments:
+//   shape = A 2D polygon path or region describing the shape to be swept.
+//   bezier = The list of control points that define the Bezier curve to sweep over
+//   splinesteps = number of segments to create on the bezier curve.  Default: 16
+//   method = one of "incremental", "natural" or "manual".  Default: "incremental"
+//   ---
+//   normal = normal vector for initializing the incremental method, or for setting normals with method="manual".  Default: UP if the path makes an angle lower than 45 degrees to the xy plane, BACK otherwise.
+//   closed = path is a closed loop.  Default: false
+//   twist = amount of twist to add in degrees.  For closed sweeps must be a multiple of 360/symmetry.  Default: 0
+//   twist_by_length = if true then interpolate twist based on the path length of the path. If false interoplate based on point count.  Default: true
+//   symmetry = symmetry of the shape when closed=true.  Allows the shape to join with a 360/symmetry rotation instead of a full 360 rotation.  Default: 1
+//   scale = Amount to scale the profiles.  If you give a scalar the scale starts at 1 and ends at your specified value. The same is true for a 2-vector, but x and y are scaled separately.   You can also give a vector of values, one for each path point, and you can give a list of 2-vectors that give the x and y scales of your profile for every point on the path (a Nx2 matrix for a path of length N.  Default: 1 (no scaling)
+//   scale_by_length = if true then interpolate scale based on the path length of the path. If false interoplate based on point count.  Default: true
+//   last_normal = normal to last point in the path for the "incremental" method.  Constrains the orientation of the last cross section if you supply it.
+//   caps = if closed is false, set caps to false to leave the ends open.  Other values are true to create a flat cap, a number a rounded cap, or an {{offset_sweep()}} end treatment to create the specified offset sweep.  Can be a single value or pair of values to control the caps independently at each end.  Default: true
+//   style = vnf_vertex_array style.  Default: "min_edge"
+//   profiles = if true then display all the cross section profiles instead of the solid shape.  Can help debug a sweep.  (module only) Default: false
+//   width = the width of lines used for profile display.  (module only) Default: 1
+//   transforms = set to true to return transforms instead of a VNF.  These transforms can be manipulated and passed to sweep().  (function only)  Default: false.
+//   convexity = convexity parameter for polyhedron().  (module only)  Default: 10
+//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
+//   tex_size = An optional 2D target size (2-vector or scalar) for the texture at the first point of your shape and first path point.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
+//   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
+//   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
+//   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  
+//   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
+//   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 1
+//   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
+//   anchor = Translate so anchor point is at the origin. Default: "origin"
+//   spin = Rotate this many degrees around Z axis after anchor. Default: 0
+//   orient = Vector to rotate top toward after spin
+//   atype  = Select "hull" or "intersect" anchor types.  Default: "hull"
+//   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+// Side Effects:
+//   `$sweep_path` is set to the path defining the swept object
+//   `$sweep_shape` is set to the shape being swept
+//   `$sweep_closed` is true if the sweep is closed and false otherwise
+//   `$sweep_transforms` is set to the array of transformation matrices that define the swept object.
+//   `$sweep_scales` is set to the array of scales that were applied at each point to create the swept object.
+//   `$sweep_twist` set to a scalar value giving the total twist across the path sweep object.
+// Anchor Types:
+//   "hull" = Anchors to the virtual convex hull of the shape.
+//   "intersect" = Anchors to the surface of the shape.
+// Named Anchors:
+//   "origin" = The native position of the shape
+//   "start" = When `closed==false`, the origin point of the shape, on the starting face of the object
+//   "end" = When `closed==false`, the origin point of the shape, on the ending face of the object
+//   "start-centroid" = When `closed==false`, the centroid of the shape, on the starting face of the object
+//   "end-centroid" = When `closed==false`, the centroid of the shape, on the ending face of the object
+// Example(3D,Med,VPR=[95.00,0.00,354.00],VPD=43.93,VPT=[8.26,1.02,5.36],NoAxes):  This bezier is perpendicular to the cylinder top, but {{path_sweep()}} approximates the derivative at the end, resulting in a gap.  The gap is highly visible because of the small splinesteps value, but it will be present, albeit smaller, even for large values of splinesteps.
+//   $fn=32;   
+//   bez = [[0,0,5],
+//          [0,0,10],
+//          [15,7,9],
+//          [17,2,4],       
+//         ];
+//   color("lightblue")
+//     cyl(r=2,h=5,anchor=BOT);
+//   path_sweep(circle(r=2),
+//           bezier_curve(bez, 6));
+// Example(3D,Med,VPR=[95.00,0.00,354.00],VPD=43.93,VPT=[8.26,1.02,5.36],NoAxes): Using `bezier_curve()` instead produces the correct derivatives at the ends and the swept object mates correctly with the cylinder. 
+//   $fn=32;   
+//   bez = [[0,0,5],
+//          [0,0,10],
+//          [15,7,9],
+//          [17,2,4],       
+//         ];
+//   color("lightblue")
+//     cyl(r=2,h=5,anchor=BOT);
+//   bezier_sweep(circle(r=2,$fn=32), bez, 6);
 
+
+function bezier_sweep(shape, bezier, splinesteps=16, method="incremental", endpoint=true, normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true, 
+                      symmetry=1, last_normal, caps, style="min_edge", transforms=false,
+                      texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, 
+                      tex_depth=1, tex_extra, tex_skip,
+                      anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull",_return_scales=false) =
+     let(
+          path = bezier_curve(bezier, splinesteps, endpoint),
+          tang = bezier_derivative(bezier, lerpn(0,1,splinesteps+1, endpoint))
+     )
+     path_sweep(shape, path, method=method, normal=normal, closed=closed, twist=twist, twist_by_length=twist_by_length, scale=scale, scale_by_length=scale_by_length,
+                symmetry=symmetry, last_normal=last_normal, tangent=tang, caps=caps, style=style, transforms=transforms,
+                texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples, tex_inset=tex_inset, tex_rot=tex_rot,
+                tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip,
+                anchor=anchor, cp=cp, spin=spin, orient=orient, atype=atype, _return_scales=_return_scales);
+
+module bezier_sweep(shape, bezier, splinesteps=16, method="incremental", endpoint=true, normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true,
+                    symmetry=1, last_normal, caps, style="min_edge", convexity=10,
+                    anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull",profiles=false,width=1,
+                    texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, 
+                    tex_depth=1, tex_extra, tex_skip)
+{
+  path = bezier_curve(bezier, splinesteps, endpoint);
+  tang = bezier_derivative(bezier, lerpn(0,1,splinesteps+1, endpoint));
+  path_sweep(shape, path, method=method, normal=normal, closed=closed, twist=twist, twist_by_length=twist_by_length, scale=scale, scale_by_length=scale_by_length,
+             symmetry=symmetry, last_normal=last_normal, tangent=tang, caps=caps, style=style,
+             texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples, tex_inset=tex_inset, tex_rot=tex_rot,
+             tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip,
+             anchor=anchor, cp=cp, spin=spin, orient=orient, atype=atype, profiles=profiles,width=width
+  )
+    children();
+}  
+
+
+
+
+// Function&Module: bezpath_sweep()
+// Synopsis: Sweep a 2d polygon path along a bezier path with exact tangents
+// SynTags: VNF, Geom
+// Topics: Extrusion, Sweep, Paths, Textures, Bezier Curves
+// See Also: sweep_attach(), linear_sweep(), rotate_sweep(), sweep(), spiral_sweep(), path_sweep2d(), offset_sweep(), path_sweep(), bezier_sweep()
+// Usage: As module
+//   bezier_sweep(shape, bezier, [splinesteps], [method], [endpoint=], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) [ATTACHMENTS];
+// Usage: As function
+//   vnf = path_sweep(shape, bezier, [splinesteps], [method], [endpoint=], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [scale=], [scale_by_length=], [last_normal=], [caps=], [style=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [atype=]);
+// Description:
+//   Takes as input `shape` (a 2D polygon path) and `bezpath`, a bezier path in 2d or 3d, and
+//   constructs a polyhedron by sweeping the shape along the bezier path. The bezier curve is sampled into `splinesteps` segments.
+//   This is a passthrough to {{path_sweep()}}.  The reason it exists is that it uses the exact derivative computed from the beziers in the bezier path
+//   instead of an approximation.  This can be crucial for joints at the ends of your curve, where the approximate derivative is often incorrect.
+//   For full information about the operation and parameters of `bezpath_sweep` see {{path_sweep()}}.  If you have a bezier instead of a bezier path use {{bezier_sweep()}}.  
+// Arguments:
+//   shape = A 2D polygon path or region describing the shape to be swept.
+//   bezpath = A 2D or 3D bezier path giving the path to sweep over
+//   splinesteps = number of segments to create on each section of the bezier path.  Default: 16
+//   N = Degree of the bezier path.  Default: 3
+//   method = one of "incremental", "natural" or "manual".  Default: "incremental"
+//   ---
+//   normal = normal vector for initializing the incremental method, or for setting normals with method="manual".  Default: UP if the path makes an angle lower than 45 degrees to the xy plane, BACK otherwise.
+//   closed = path is a closed loop.  Default: false
+//   twist = amount of twist to add in degrees.  For closed sweeps must be a multiple of 360/symmetry.  Default: 0
+//   twist_by_length = if true then interpolate twist based on the path length of the path. If false interoplate based on point count.  Default: true
+//   symmetry = symmetry of the shape when closed=true.  Allows the shape to join with a 360/symmetry rotation instead of a full 360 rotation.  Default: 1
+//   scale = Amount to scale the profiles.  If you give a scalar the scale starts at 1 and ends at your specified value. The same is true for a 2-vector, but x and y are scaled separately.   You can also give a vector of values, one for each path point, and you can give a list of 2-vectors that give the x and y scales of your profile for every point on the path (a Nx2 matrix for a path of length N.  Default: 1 (no scaling)
+//   scale_by_length = if true then interpolate scale based on the path length of the path. If false interoplate based on point count.  Default: true
+//   last_normal = normal to last point in the path for the "incremental" method.  Constrains the orientation of the last cross section if you supply it.
+//   caps = if closed is false, set caps to false to leave the ends open.  Other values are true to create a flat cap, a number a rounded cap, or an {{offset_sweep()}} end treatment to create the specified offset sweep.  Can be a single value or pair of values to control the caps independently at each end.  Default: true
+//   style = vnf_vertex_array style.  Default: "min_edge"
+//   profiles = if true then display all the cross section profiles instead of the solid shape.  Can help debug a sweep.  (module only) Default: false
+//   width = the width of lines used for profile display.  (module only) Default: 1
+//   transforms = set to true to return transforms instead of a VNF.  These transforms can be manipulated and passed to sweep().  (function only)  Default: false.
+//   convexity = convexity parameter for polyhedron().  (module only)  Default: 10
+//   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
+//   tex_size = An optional 2D target size (2-vector or scalar) for the texture at the first point of your shape and first path point.  Actual texture sizes are scaled somewhat to evenly fit the available surface. Default: `[5,5]`
+//   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
+//   tex_inset = If numeric, lowers the texture into the surface by the specified proportion, e.g. 0.5 would lower it half way into the surface.  If `true`, insets by exactly its full depth.  Default: `false`
+//   tex_rot = Rotate texture by specified angle, which must be a multiple of 90 degrees.  Default: 0
+//   tex_depth = Specify texture depth; if negative, invert the texture.  Default: 1.  
+//   tex_samples = Minimum number of "bend points" to have in VNF texture tiles.  Default: 8
+//   tex_extra = number of extra lines of a hightfield texture to add at the end.  Can be a scalar or 2-vector to give x and y values.  Default: 1
+//   tex_skip = number of lines of a heightfield texture to skip when starting.  Can be a scalar or two vector to give x and y values.  Default: 0
+//   anchor = Translate so anchor point is at the origin. Default: "origin"
+//   spin = Rotate this many degrees around Z axis after anchor. Default: 0
+//   orient = Vector to rotate top toward after spin
+//   atype  = Select "hull" or "intersect" anchor types.  Default: "hull"
+//   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
+// Side Effects:
+//   `$sweep_path` is set to the path defining the swept object
+//   `$sweep_shape` is set to the shape being swept
+//   `$sweep_closed` is true if the sweep is closed and false otherwise
+//   `$sweep_transforms` is set to the array of transformation matrices that define the swept object.
+//   `$sweep_scales` is set to the array of scales that were applied at each point to create the swept object.
+//   `$sweep_twist` set to a scalar value giving the total twist across the path sweep object.
+// Anchor Types:
+//   "hull" = Anchors to the virtual convex hull of the shape.
+//   "intersect" = Anchors to the surface of the shape.
+// Named Anchors:
+//   "origin" = The native position of the shape
+//   "start" = When `closed==false`, the origin point of the shape, on the starting face of the object
+//   "end" = When `closed==false`, the origin point of the shape, on the ending face of the object
+//   "start-centroid" = When `closed==false`, the centroid of the shape, on the starting face of the object
+//   "end-centroid" = When `closed==false`, the centroid of the shape, on the ending face of the object
+// Example(3D,Med,NoAxes,VPR=[55.00,0.00,25.00],VPD=29.7,VPT=[7.86,-4.31,7.11]): In this case the bezier path is constructed so that its end faces in the Z direction, but you can see a gap appears when the shape is mated to a cylinder because the angle at the end is not accurate.
+//    bezpath = flatten([
+//        bez_begin([0,0,0], UP, 3),
+//        bez_tang([0,0,1],UP,8,p=52),
+//        bez_end  ([8,9,3], FWD,10)
+//    ]);
+//    cyl(d=4,h=3,anchor=TOP,$fn=12);
+//    path_sweep(circle(r=2,$fn=12),
+//            bezpath_curve(bezpath));
+// Example(3D,Med,NoAxes,VPR=[55.00,0.00,25.00],VPD=29.7,VPT=[7.86,-4.31,7.11]): When the above example is implemented using `bezpath_sweep` the gap vanishes.
+//    bezpath = flatten([
+//        bez_begin([0,0,0], UP, 3),
+//        bez_tang([0,0,1],UP,8,p=52),
+//        bez_end  ([8,9,3], FWD,10)
+//    ]);
+//    cyl(d=4,h=3,anchor=TOP,$fn=12);
+//    bezpath_sweep(circle(r=2,$fn=12),
+//                  bezpath);
+
+function bezpath_sweep(shape, bezpath, splinesteps=16, N=3, method="incremental", endpoint=true, normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true, 
+                      symmetry=1, last_normal, caps, style="min_edge", transforms=false,
+                      texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, 
+                      tex_depth=1, tex_extra, tex_skip,
+                      anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull",_return_scales=false) =
+     let(
+          bezdata = bezpath_curve(bezpath, splinesteps, N, endpoint, order=1),
+          path = bezdata[0],
+          tang = bezdata[1]
+     )
+     path_sweep(shape, path, method=method, normal=normal, closed=closed, twist=twist, twist_by_length=twist_by_length, scale=scale, scale_by_length=scale_by_length,
+                symmetry=symmetry, last_normal=last_normal, tangent=tang, caps=caps, style=style, transforms=transforms,
+                texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples, tex_inset=tex_inset, tex_rot=tex_rot,
+                tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip,
+                anchor=anchor, cp=cp, spin=spin, orient=orient, atype=atype, _return_scales=_return_scales);
+
+module bezpath_sweep(shape, bezpath, splinesteps=16, N=3, method="incremental", endpoint=true, normal, closed, twist=0, twist_by_length=true, scale=1, scale_by_length=true,
+                    symmetry=1, last_normal, caps, style="min_edge", convexity=10,
+                    anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull",profiles=false,width=1,
+                    texture, tex_reps, tex_size, tex_samples, tex_inset=false, tex_rot=0, 
+                    tex_depth=1, tex_extra, tex_skip)
+{
+  bezdata = bezpath_curve(bezpath, splinesteps, N, endpoint, order=1);
+  path = bezdata[0];
+  tang = bezdata[1];
+  path_sweep(shape, path, method=method, normal=normal, closed=closed, twist=twist, twist_by_length=twist_by_length, scale=scale, scale_by_length=scale_by_length,
+             symmetry=symmetry, last_normal=last_normal, tangent=tang, caps=caps, style=style,
+             texture=texture, tex_reps=tex_reps, tex_size=tex_size, tex_samples=tex_samples, tex_inset=tex_inset, tex_rot=tex_rot,
+             tex_depth=tex_depth, tex_extra=tex_extra, tex_skip=tex_skip,
+             anchor=anchor, cp=cp, spin=spin, orient=orient, atype=atype, profiles=profiles,width=width
+  )
+    children();
+}  
+
+
+                                         
 // Section: Debugging Beziers
 
 

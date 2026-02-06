@@ -15,6 +15,10 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_PATHS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: paths.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 // Section: Utility Functions
 // Definitions:
 //   Point|Points = A list of numbers, also called a vector.  Usually has length 2 or 3 to represent points in the place on points in space.  
@@ -135,32 +139,73 @@ function _path_select(path, s1, u1, s2, u2, closed=false) =
 
 
 // Function: path_merge_collinear()
-// Synopsis: Removes unnecessary points from a path.
+// Synopsis: Removes unnecessary collinear points from a path.
 // SynTags: Path
 // Topics: Paths, Regions
 // Description:
 //   Takes a {{path}} and removes unnecessary sequential collinear {{points}}.  When `closed=true` either of the path
 //   endpoints may be removed.  
 // Usage:
-//   path_merge_collinear(path, [eps])
+//   newpath = path_merge_collinear(path, [eps]);
 // Arguments:
 //   path = A path of any dimension or a 1-region
-//   closed = treat as closed polygon.  Default: false
-//   eps = Largest positional variance allowed.  Default: `EPSILON` (1-e9)
-function path_merge_collinear(path, closed, eps=EPSILON) =
+//   closed = treat as closed polygon.  Default: false for lists, true for 1-regions
+//   eps = Largest positional variance allowed.  Default: 1e-9
+function path_merge_collinear(path, closed, eps=_EPSILON) =
     is_1region(path) ? path_merge_collinear(path[0], default(closed,true), eps) :
     let(closed=default(closed,false))
     assert(is_bool(closed))
     assert( is_path(path), "\nInvalid path in path_merge_collinear.")
     assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "\nInvalid tolerance.")
-    len(path)<=2 ? path :
     let(path = deduplicate(path, closed=closed))
+    len(path)<=2 ? path :
     [
       if(!closed) path[0],
       for(triple=triplet(path,wrap=closed))
         if (!is_collinear(triple,eps=eps)) triple[1],
       if(!closed) last(path)
     ];
+
+
+
+// Function: path_merge_collinear_indexed()
+// Synopsis: Removes unnecessary collinear points from a path specified as an index list into a list
+// SynTags: Path
+// Topics: Paths, Regions
+// Description:
+//   Given a {{path}} and a list of indices, removes unnecessary sequential collinear points found in `path[indices]` and returns
+//   the list of indices corresponding to the simplified path.  When `closed=true` either of the path
+//   endpoints may be removed.  If you don't provide `indices` then the default is the consecutive index
+//   list `[0,...,len(list)-1]`.  This is useful if you need to remove collinear points from list A and then
+//   remove corresponding points from list B.  
+// Usage:
+//   ind = path_merge_collinear(path, [eps]);
+// Arguments:
+//   path = A path of any dimension or a 1-region
+//   indices = Index list that indexes into `path`.  Default: `count(path)`
+//   closed = treat as closed polygon.  Default: false for lists, true for 1-regions
+//   eps = Largest positional variance allowed.  Default: 1e-9
+function path_merge_collinear_indexed(path, indices, closed, eps=_EPSILON) =
+    is_1region(path) ? path_merge_collinear_indexed(path[0], indices, default(closed,true), eps) :
+    let(
+      closed=default(closed,false),
+      indices=default(indices,count(path))
+    )
+    assert(is_bool(closed))
+    assert( is_path(path), "\nInvalid path in path_merge_collinear.")
+    assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "\nInvalid tolerance.")
+    assert( is_vector(indices), "\nindices must be a list of indices values")
+    assert( min(indices)>=0, "\nIndices list has negative entry")
+    assert( max(indices)<len(path), "\nIndices list has entry beyond the end of the list")
+    let(indices = deduplicate_indexed(path, indices, closed=closed))
+    len(indices)<=2 ? indices :
+    [
+      if(!closed) indices[0],
+      for(triple=triplet(indices,wrap=closed))
+        if (!is_collinear(select(path,triple),eps=eps)) triple[1],
+      if(!closed) last(indices)
+    ];
+
 
 
 // Section: Path length calculation
@@ -258,7 +303,7 @@ function path_length_fractions(path, closed) =
 /// Arguments:
 ///   path = The path to find self intersections of.
 ///   closed = If true, treat path like a closed polygon.  Default: true
-///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+///   eps = The epsilon error value to determine whether two points coincide.  Default: 1e-9
 /// Example(2D):
 ///   path = [
 ///       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
@@ -267,7 +312,7 @@ function path_length_fractions(path, closed) =
 ///   // isects == [[[-33.3333, 0], 0, 0.666667, 4, 0.333333], [[33.3333, 0], 1, 0.333333, 3, 0.666667]]
 ///   stroke(path, closed=true, width=1);
 ///   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
-function _path_self_intersections(path, closed=true, eps=EPSILON) =
+function _path_self_intersections(path, closed=true, eps=_EPSILON) =
     let(
         path = closed ? list_wrap(path,eps=eps) : path,
         plen = len(path)
@@ -687,8 +732,8 @@ function _err_resample(path, maxerr, n, i1=0, i2=2, resultidx=[0], iter=0) =
 // Arguments:
 //   path = 2D path or 1-region
 //   closed = set to true to treat path as a polygon.  Default: false
-//   eps = Epsilon error value used for determine if points coincide.  Default: `EPSILON` (1e-9)
-function is_path_simple(path, closed, eps=EPSILON) =
+//   eps = Epsilon error value used for determine if points coincide.  Default: 1e-9
+function is_path_simple(path, closed, eps=_EPSILON) =
     is_1region(path) ? is_path_simple(path[0], default(closed,true), eps) :
     let(closed=default(closed,false))
     assert(is_path(path, 2),"\nMust give a 2D path.")
@@ -820,7 +865,7 @@ function path_normals(path, tangents, closed) =
         )
         dim == 2 ? [tangents[i].y,-tangents[i].x]
                  : let( v=cross(cross(pts[1]-pts[0], pts[2]-pts[0]),tangents[i]))
-                   assert(norm(v)>EPSILON, "\n3D path contains collinear points.")
+                   assert(norm(v)>_EPSILON, "\n3D path contains collinear points.")
                    unit(v)
     ];
 
@@ -939,8 +984,8 @@ function path_cut(path,cutdist,closed) =
   let(closed=default(closed,false))
   assert(is_bool(closed))
   assert(is_vector(cutdist))
-  assert(last(cutdist)<path_length(path,closed=closed)-EPSILON,"\nCut distances must be smaller than the path length.")
-  assert(cutdist[0]>EPSILON, "\nCut distances must be strictly positive.")
+  assert(last(cutdist)<path_length(path,closed=closed)-_EPSILON,"\nCut distances must be smaller than the path length.")
+  assert(cutdist[0]>_EPSILON, "\nCut distances must be strictly positive.")
   let(
       cutlist = path_cut_points(path,cutdist,closed=closed)
   )
@@ -1122,12 +1167,12 @@ function _cut_to_seg_u_form(pathcut, path, closed) =
 // Arguments:
 //   path = A 2D path or a 1-region.
 //   closed = If true, treat path as a closed polygon.  Default: true
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+//   eps = Acceptable variance.  Default: 1e-9
 // Example(2D,NoAxes):
 //   path = [ [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100] ];
 //   paths = split_path_at_self_crossings(path);
 //   rainbow(paths) stroke($item, closed=false, width=3);
-function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
+function split_path_at_self_crossings(path, closed=true, eps=_EPSILON) =
     let(path = force_path(path))
     assert(is_path(path,2), "\nMust give a 2D path.")
     assert(is_bool(closed))
@@ -1160,7 +1205,7 @@ function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
     ];
 
 
-function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
+function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=_EPSILON) =
     let(
         subpaths = split_path_at_self_crossings(
             path, closed=true, eps=eps
@@ -1193,7 +1238,7 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 // Arguments:
 //   poly = a 2D polygon or 1-region
 //   nonzero = If true use the nonzero method for checking if a point is in a polygon.  Otherwise use the even-odd method.  Default: false
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+//   eps = The epsilon error value to determine whether two points coincide.  Default: 1e-9
 // Example(2D,NoAxes):  This cross-crossing polygon breaks up into its 3 components (regardless of the value of nonzero).
 //   poly = [
 //       [-100,100], [0,-50], [100,100],
@@ -1242,7 +1287,7 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 //   polygon(poly);
 //   right(27)rainbow(polygon_parts(poly)) polygon($item);
 //   move([16,-14])rainbow(polygon_parts(poly,nonzero=true)) polygon($item);
-function polygon_parts(poly, nonzero=false, eps=EPSILON) =
+function polygon_parts(poly, nonzero=false, eps=_EPSILON) =
     let(poly = force_path(poly))
     assert(is_path(poly,2), "\nMust give 2D polygon.")
     assert(is_bool(nonzero))    
@@ -1254,7 +1299,7 @@ function polygon_parts(poly, nonzero=false, eps=EPSILON) =
     ) outregion;
 
 
-function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
+function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=_EPSILON) =
     !fragments? [undef, []] :
     let(
         delta = seg[1] - seg[0],
@@ -1298,8 +1343,8 @@ function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
 ///   fragments = List of paths to be assembled into complete polygons.
 ///   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
 ///   startfrag = The fragment to start with.  Default: 0
-///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, eps=EPSILON) =
+///   eps = The epsilon error value to determine whether two points coincide.  Default: 1e-9
+function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, eps=_EPSILON) =
     len(fragments)==0? [[],[]] :
     len(fragments)==1? [fragments[0],[]] :
     let(
@@ -1353,8 +1398,8 @@ function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0,
 ///   Polygons with area < eps are discarded and not returned.  
 /// Arguments:
 ///   fragments = List of paths to be assembled into complete polygons.
-///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-function _assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
+///   eps = The epsilon error value to determine whether two points coincide.  Default: 1e-9
+function _assemble_path_fragments(fragments, eps=_EPSILON, _finished=[]) =
     len(fragments)==0? _finished :
     let(
         minxidx = min_index([

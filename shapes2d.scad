@@ -15,8 +15,11 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
-use <builtins.scad>
+BOSL2_SHAPES2D = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: shapes2d.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
+
+use <builtins.scad>
 
 
 // Section: 2D Primitives
@@ -465,7 +468,7 @@ function _ellipse_refine(a,b,N, _theta=[]) =
        meanlen = mean(lenlist),
        error = lenlist/meanlen
    )
-   all_equal(error,EPSILON) ? pts
+   all_equal(error,_EPSILON) ? pts
    :
    let(
         dtheta = [each deltas(_theta),
@@ -489,7 +492,7 @@ function _ellipse_refine_realign(a,b,N, _theta=[],i=0) =
        meanlen = mean(lenlist),
        error = lenlist/meanlen
    )
-   all_equal(error,EPSILON) ? pts
+   all_equal(error,_EPSILON) ? pts
    :
    let(
         dtheta = [each deltas(_theta),
@@ -1431,7 +1434,7 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
                    each cap,
                    for (p=fullcircle)
                           if (
-                               p.y<last(cap).y-EPSILON
+                               p.y<last(cap).y-_EPSILON
                                  && norm([abs(p.x)-last(cap).x,p.y-last(cap.y)])>seglen/skipfactor
                              ) p,
                    xflip(cap[1]),
@@ -1726,24 +1729,102 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
      ) new_r>r_actual ? concat(arc2, reverse(arc1)) : concat(arc1,reverse(arc2));
 
 
+
 // Function&Module: glued_circles()
 // Synopsis: Creates a shape of two circles joined by a curved waist.
 // SynTags: Geom, Path
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), ellipse(), egg(), keyhole()
 // Usage: As Module
-//   glued_circles(r/d=, [spread], [tangent], ...) [ATTACHMENTS];
+//   glued_circles(r/d=, [spread], [r1=/d1=], [r2=/d2=], [tangent=], [bulge=], [width=], [blendR=/blendD=], anchor=, spin=) [ATTACHMENTS];
 // Usage: As Function
-//   path = glued_circles(r/d=, [spread], [tangent], ...);
+//   path = glued_circles(r/d=, [spread], [r1=/d1=], [r2=/d2=], [tangent=], [bulge=], [width=], [blendR=/blendD=], anchor=, spin=) [ATTACHMENTS];
 // Description:
-//   When called as a function, returns a 2D path forming a shape of two circles joined by curved waist.
-//   When called as a module, creates a 2D shape of two circles joined by curved waist.  Uses "hull" style anchoring.  
+//   Computes a shape created by joining two circles with arcs.  The arcs can join the circles to create a convex, egg shape
+//   or they can join the circles to create a concave shape.  The circles being joined are permitted to overlap each other.  
+//   When called a function returns the path describing shape with its first point on the X+ axis.  This module uses "hull" style anchoring.
+//   When the circles are different sizes, the circle on the left has radius `r1` and the right hand circle has radius `r2`, and both
+//   circles always have an exact point on the X axis.  
+//   This construction can join arcs of widely varying radius, so it is better to use `$fa` and `$fs` instead of $fn to specify the number of arc segments.
+//   .
+//   The joining arcs can be specified in four different ways.  You can simply specify the radius of the arc using `blendR=` or `blendD=`.
+//   In this case a positive radius results in a convex shape and a negative radius results in a concave shape.  A forbidden radius range exists
+//   where the requested configuration is impossible; the exact bounds of this range depend on the specific geometry.
+//   When `abs(blendR)` is very large the connection will be nearly a straight line.
+//   .
+//   You can specify the angle of the tangent line at the point where the blending arc meets the left hand circle.  This angle is 
+//   measured between the tangent line and the X- axis, so an angle of zero gives a horizontal tangent, which will produces a straight
+//   joining "arc" if the circles are the same size.  A positive angle will rotate the tangent point to the right around the circle
+//   and a negative one will rotate it around the left.  When the tangent angle approaches -90 the shape approaches a circle that covers the
+//   two circles being joined.  The degenerate case of `tangent=-90` is not permitted.  A maximum legal tangent angle exists that depends on
+//   the geometry.
+//   .
+//   You can specify the `bulge=` parameter, which measures how the blending arc deviates from a straight line.  A positive value means
+//   it deviates by the specified distance to create a convex, bulging shape.  A negative value means it deviates by the specified distance
+//   to create a concave shape.  A value of zero produces a flat connection.
+//   .
+//   Finally you can give `width=`.  When `width` is smaller than either circle diameter it specifies the width of the waist of the shape (the
+//   narrowest point).  In this case the shape is concave.  When `width` is larger than either circle diameter it specifies the maximum width of
+//   shape.  In this case the shape is convex.  The width parameter cannot be in between the diameters of the two circles.  
+// Figure(2D,Med,NoScales,VPD=155.5,VPT=[-5.3,0,0]): This figure shows width and bulge on a concave shape, when width is smaller than the smallest circle or bulge is negative.  The black line shows the flat connection between the two circles, which is the bulge=0 case. 
+//   r1=25;
+//   r2=15;
+//   s=35;
+//   h=7;
+//   $fa=5;$fs=1;
+//   path = glued_circles(r1=r1,r2=r2,spread=s, bulge=-h);
+//   pathflat = glued_circles(r1=r1,r2=r2,spread=s, bulge=0);
+//   stroke(pathflat,width=.5,color="black");
+//   stroke(path,width=.5);
+//   rr=_gs_indent_R(r1,r2,s,h);
+//   pts=circle_circle_intersection( abs(r1+rr),[-s/2,0], abs(r2+rr), [s/2,0]);
+//   cp = pts[rr<0?1:0];
+//   tan_pts = circle_circle_tangents(r1,[-s/2,0],r2,[s/2,0])[0];
+//   dir = unit(zrot(-90,tan_pts[1]-tan_pts[0]));
+//   stroke(tan_pts, width=.1, color="black");
+//   isect = line_intersection([cp,cp+dir], tan_pts, LINE, LINE);
+//   stroke([isect, cp+rr*dir], endcaps="arrow2", width=.5, color="blue");
+//   left(2)back(15)color("blue")text("bulge < 0", size=4,anchor=RIGHT);
+//   width=11.6;
+//   color("green"){
+//     stroke([[cp.x,-width],[cp.x,width]], endcaps="arrow2", width=.5);
+//     fwd(4)right(cp.x+2)text("width", size=4, anchor=LEFT);
+//   }
+// Figure(2D,Med,NoScales,VPD=155.5,VPT=[-5.3,0,0]): This figure shows width and bulge on a convexe shape, when width is larger than the largest circle or bulge is positive.  The black line shows the flat connection between the two circles, which is the bulge=0 case. 
+//    r1=25;
+//    r2=15;
+//    s=35;
+//    h=-5.5;
+//    $fa=5;$fs=1;
+//    path = glued_circles(r1=r1,r2=r2,spread=s, bulge=-h);
+//    pathflat = glued_circles(r1=r1,r2=r2,spread=s, bulge=0);
+//    stroke(pathflat,width=.5,color="black");
+//    stroke(path,width=.5);
+//    rr=_gs_indent_R(r1,r2,s,h);
+//    pts=circle_circle_intersection( abs(r1+rr),[-s/2,0], abs(r2+rr), [s/2,0]);
+//    cp = pts[rr<0?1:0];
+//    tan_pts = circle_circle_tangents(r1,[-s/2,0],r2,[s/2,0])[0];
+//    dir = unit(zrot(-90,tan_pts[1]-tan_pts[0]));
+//    stroke(tan_pts, width=.1, color="black");
+//    isect = line_intersection([cp,cp+dir], tan_pts, LINE, LINE);
+//    stroke([isect, cp+rr*dir], endcaps="arrow2", width=.5, color="blue");
+//    left(3.2)back(12)color("blue")text("bulge > 0", size=4,anchor=LEFT);
+//    width=27;
+//    color("green"){
+//      stroke([[cp.x,-width],[cp.x,width]], endcaps="arrow2", width=.5);
+//      fwd(4)right(cp.x-2)text("width", size=4, anchor=RIGHT);
+//    }  
 // Arguments:
-//   r = The radius of the end circles.
-//   spread = The distance between the centers of the end circles.  Default: 10
-//   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the Y axis.  Default: 30
+//   r = The radius or diameter of the end circles.
+//   spread = The distance between the centers of the end circles.
 //   ---
+//   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the X- axis, a positive or negative value.  Default: 30
+//   bulge = Deviation of the blending arc from a straight line connection, positive for a convex shape or negative for a concave shape.
+//   blendR / blendD = The radius or diameter of the blending arc, a positive for a convex shape, negative for a concave shape.  
+//   width = width of the narrowest or widest point of the shape.  A positive value.  
 //   d = The diameter of the end circles.
+//   r1 / d1 = Radius or diameter of left circle.
+//   r2 / d2 = Radius or diameter of right circle.  
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Examples(2D):
@@ -1753,44 +1834,184 @@ function ring(n,ring_width,r,r1,r2,angle,d,d1,d2,cp,points,corner, width,thickne
 //   glued_circles(d=30, spread=30, tangent=-30);
 // Example(2D): Called as Function
 //   stroke(closed=true, glued_circles(r=15, spread=40, tangent=45));
-function glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) =
-    let(
-        r = get_radius(r=r, d=d, dflt=10),
-        r2 = (spread/2 / sin(tangent)) - r,
-        cp1 = [spread/2, 0],
-        cp2 = [0, (r+r2)*cos(tangent)],
-        sa1 = 90-tangent,
-        ea1 = 270+tangent,
-        lobearc = ea1-sa1,
-        lobesegs = ceil(segs(r)*lobearc/360),
-        sa2 = 270-tangent,
-        ea2 = 270+tangent,
-        subarc = ea2-sa2,
-        arcsegs = ceil(segs(r2)*abs(subarc)/360),
-        // In the tangent zero case the inner curves are missing so we need to complete the two
-        // outer curves.  In the other case the inner curves are present and endpoint=false
-        // prevents point duplication.  
-        path = tangent==0 ?
-                    concat(arc(n=lobesegs+1, r=r, cp=-cp1, angle=[sa1,ea1]),
-                           arc(n=lobesegs+1, r=r, cp=cp1, angle=[sa1+180,ea1+180]))
-                :
-                    concat(arc(n=lobesegs, r=r, cp=-cp1, angle=[sa1,ea1], endpoint=false),
-                           [for(theta=lerpn(ea2+180,ea2-subarc+180,arcsegs,endpoint=false))  r2*[cos(theta),sin(theta)] - cp2],
-                           arc(n=lobesegs, r=r, cp=cp1, angle=[sa1+180,ea1+180], endpoint=false),
-                           [for(theta=lerpn(ea2,ea2-subarc,arcsegs,endpoint=false))  r2*[cos(theta),sin(theta)] + cp2]),
-        maxx_idx = max_index(column(path,0)),
-        path2 = reverse_polygon(list_rotate(path,maxx_idx))
-    ) reorient(anchor,spin, two_d=true, path=path2, extent=true, p=path2);
+// Example(2D): Circles with different sizes
+//   glued_circles(r1=15, r2=25, spread=40, tangent=30);
+// Example(2D): Setting negative bulge value
+//   $fa=1;$fs=1;
+//   glued_circles(r1=15, r2=25, spread=40, bulge=-4);
+// Example(2D): Setting positive bulge value
+//   $fa=1;$fs=1;
+//   glued_circles(r1=15, r2=25, spread=40, bulge=4);
+// Example(2D): Zero bulge gives a flat connection
+//   glued_circles(r1=15, r2=25, spread=40, bulge=0);
+// Example(2D): Specifying negative blending radius
+//   $fa=1;$fs=1;
+//   glued_circles(r1=25, r2=10, spread=40, blendR=-15);
+// Example(2D): Giving positive blending radius
+//   $fa=1;$fs=1;
+//   glued_circles(r1=25, r2=10, spread=40, blendR=45);
+// Example(2D): Overlapping circles
+//   $fa=1;$fs=1;
+//   glued_circles(r1=25, r2=20, spread=30, blendR=-10);
+// Example(2D): Overlapping circles with no blending arc
+//   glued_circles(r1=25, r2=20, spread=30, blendR=0);
+// Example(2D): Giving a width smaller than either circle diameter
+//   glued_circles(r1=25, r2=10, spread=40, width=8);
+// Example(2D): Giving a width larger than either circle diameter
+//   $fs=1;$fa=1;
+//   glued_circles(r1=25, r2=10, spread=40, width=58);
+// Example(2D): Largest possible concave width is the diameter of the smaller circle
+//   glued_circles(r1=25, r2=10, spread=40, width=20);
+// Example(2D): Smallest possible convex width is the diameter of the larger circle
+//   glued_circles(r1=25, r2=10, spread=40, width=50);
+
+function glued_circles(r, spread, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD, width, anchor=CENTER, spin=0) =
+  let(
+      spread = is_undef(spread) ? echo("In glued_circles: setting spread=10.  This legacy default value is deprecated and will be removed.") 10
+             : spread,
+      r1 = get_radius(r=r,r1=r1,d=d,d1=d1),
+      r2 = get_radius(r=r,r2=r2,d=d,d2=d2),
+      blendR = get_radius(r=blendR, d=blendD)
+  )
+  assert(num_defined([tangent,bulge,blendR,width])<=1, "Can define at most one of tangent, bulge, width, and blendR/blendD")
+  assert(spread>abs(r1-r2), "Spread is too small: one circle is inside the other one")
+  let(
+      tangent = num_defined([tangent,bulge,blendR,width])==0 ?
+                    echo("In glued_circles: setting tangent=30.  This legacy default value is deprecated and will be removed")
+                    echo("Explicitly specify tangent= or instead use bulge=, width= or blendR=") 30 : tangent,
+      cp1 = [-spread/2,0],
+      cp2 = [spread/2,0],
+      blendR = is_def(blendR) ? let(
+                                    max_indent = spread<=r1+r2 ? 0 : -_gs_waist_R(r1,r2,spread,0),
+                                    max_bulge = (r1+r2+spread)/2
+                                )
+                                assert(blendR>max_bulge || blendR<=max_indent,
+                                       str("For this geometry must have blendR <= ",max_indent," or blendR > ",max_bulge," but blendR = ",blendR))
+                                -blendR
+             : is_def(tangent) ? gs_get_tangent_R(r1,r2,spread,tangent)
+             : is_def(width) ? let(
+                                   pts = circle_circle_intersection(r1,cp1,r2,cp2),
+                                   minwidth = len(pts)==0 ? 0 : 2*pts[0].y,
+                                   maxwidth = (r1+r2)+spread
+                               )
+                               assert(width>=minwidth, str("For this geometry must have width >= ",minwidth," but width is ",width))
+                               assert(width<maxwidth, str("For this geometry must have width < ",maxwidth," but width is ",width))
+                               assert(width <= 2*min(r1,r2) || width >= 2*max(r1,r2),"The width parameter cannot be between 2*r1 and 2*r2")
+                               let( fact=width>=2*max(r1,r2) ? -1 : 1)
+                               fact*_gs_waist_R(fact*r1,fact*r2,spread,fact*width)
+             : _gs_indent_R(r1,r2,spread,-bulge),
+      cp_blend = is_finite(blendR) ?
+                     let(
+                        pts=circle_circle_intersection(abs(r1+blendR), cp1, abs(r2+blendR), cp2)
+                     )
+                     pts[blendR<0?0:1]
+               : undef,
+      // The endpoints of the arcs of the left and right circles
+      pts = blendR==0 ? let(    // No joining arc case
+                            result = circle_circle_intersection(r1,cp1,r2,cp2)
+                        )
+                        assert(len(result)!=0, "Circles expected to intersect but don't")
+                        assert(len(result)!=1, "When circles are tangent, must have blendR nonzero")
+                        [result[1],result[1]]
+          : is_finite(blendR) ?
+                 let(
+                     result = [ cp1 + sign(blendR)*r1*unit(cp_blend-cp1),
+                                cp2 + sign(blendR)*r2*unit(cp_blend-cp2)]
+                 )
+                 result
+          : let(           // Flat joint case
+                 tan_pts = circle_circle_tangents(r1,cp1,r2,cp2)
+            )
+            tan_pts[1],
+      botpath = [
+                 each arc(r=r2, cp=cp2, points=[right(r2,cp2),pts[1]],endpoint=false),
+                 if (is_finite(blendR) && blendR!=0)
+                   each arc(r=r2, cp=cp_blend, points=reverse(pts),endpoint=false)
+                 else if (blendR!=0)
+                   pts[1],
+                 each arc(r=r1, cp=cp1, points=[pts[0],left(r1,cp1)], endpoint=false)],
+      toppath = yflip(reverse(botpath)),
+      path = [each botpath, left(r1,cp1), each select(toppath,0,-2)]
+  )
+  reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
 
 
-module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
-    path = glued_circles(r=r, d=d, spread=spread, tangent=tangent);
+module glued_circles(r,spread, tangent, r1,r2,d,d1,d2, bulge, blendR,blendD, width, anchor=CENTER, spin=0)
+{  
+    path = glued_circles(r=r, spread=spread, tangent=tangent, r1=r1, r2=r2, d=d, d1=d1, d2=d2,
+                         bulge=bulge, blendR=blendR, blendD=blendD,width=width);
     attachable(anchor,spin, two_d=true, path=path, extent=true) {
         polygon(path);
         children();
     }
 }
 
+
+
+function _gs_waist_R(r1,r2,s,waist) =
+  let(
+       A = (r1^2-r2^2)/2/s+s/2,
+       B = (r1-r2)/s,
+       coefs = [B^2,
+                2*A*B-2*r1+waist,
+                A^2+(waist/2)^2 - r1^2],
+       rts = waist<0 && approx(waist, 2*min(r1,r2))
+                ? [-coefs[1]/2/coefs[0]]
+                : quadratic_roots(coefs,real=true)
+  )
+  min(rts);
+
+function gs_get_tangent_R(r1,r2,s,ang) =
+  let(
+       pts = circle_circle_intersection(r1,[-s/2,0],r2,[s/2,0]),
+       minang = len(pts)==0 ? let( minr=_gs_waist_R(r1,r2,s,0),
+                                   pts=circle_circle_intersection(r1+minr,[-s/2,0], r2+minr, [s/2,0]))
+                              atan2(pts[0].y, pts[0].x+s/2)
+              : atan2(pts[0].y, pts[0].x+s/2),
+       dummy = assert(ang>-90 && ang<=90-minang, 
+                      str("Tangent angle must be > -90 and <= ", 90-minang, " for this geometry but was ",ang)),
+       A = (r1^2-r2^2)/2/s+s/2,
+       B = (r1-r2)/s,
+       flatang = acos(B)
+  )
+  approx(90-ang,flatang,eps=1e-3) ? INF
+  :
+  let(
+       alpha = 90-ang > flatang ? 90+ang : 90-ang,
+       rts = quadratic_roots(B^2-cos(alpha)^2,
+                             2*A*B-2*cos(alpha)^2*r1,
+                             A^2-cos(alpha)^2*r1^2,real=true)
+  )
+  90-ang>flatang ? alpha>=90 ? rts[0] : rts[1]
+                :  alpha<=90 ? rts[0] : rts[1];
+
+
+function _gs_indent_R(r1,r2,s,h) =
+   let(
+        tan_pts = circle_circle_tangents(r1,[-s/2,0],r2,[s/2,0])[0],
+        circ_int = circle_circle_intersection(r1,[-s/2,0],r2,[s/2,0]),
+        minR = h<0 ? -2500 : len(circ_int)==0 ? _gs_waist_R(r1,r2,s,0) : 0,
+        maxR = h>=0 ? 2500 : -(r1+r2+s)/2,
+        dir = unit(zrot(-90,tan_pts[1]-tan_pts[0])),
+        gap = function(rr)
+                 let(
+                     pts=circle_circle_intersection( abs(r1+rr),[-s/2,0], abs(r2+rr), [s/2,0]),
+                     cp = len(pts)==1 ? pts[0] : pts[rr<0?1:0],
+                     isect = line_intersection([cp,cp+dir], tan_pts, LINE, LINE)
+                 )
+                 norm(isect - cp-rr*dir)
+    )
+    h==0 || abs(h) < min(gap(minR),gap(maxR)) ? INF
+    :
+    let(
+        maxh = gap(minR),
+        minh = gap(maxR),
+        dummy = assert(h<0 || h<=maxh, str("For this geometry must have h < ",maxh," but h=",h))
+                assert(h>0 || abs(h)<minh, str("For this geometry must have abs(h) < ",minh," but h=",h)),
+        error = function(r) gap(r)-abs(h),
+        goodR = root_find(error, minR, maxR, tol=1e-7)
+    )
+    goodR;
 
 
 // Function&Module: squircle()
@@ -1803,6 +2024,10 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 // Usage: As Function
 //   path = squircle(size, [squareness], [style=]);
 // Description:
+//   When called as a module, creates a 2D squircle with the specified squareness.    
+//   When called as a function, returns a 2D path for a squircle.
+
+//   .
 //   A [squircle](https://en.wikipedia.org/wiki/Squircle) is a shape intermediate between a square/rectangle and a
 //   circle/ellipse. Squircles are sometimes used to make dinner plates (more area for the same radius as a circle), keyboard
 //   buttons, and smartphone icons. Old CRT television screens also resembled elongated squircles.
@@ -1822,8 +2047,9 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 //   Unlike the other styles, when the `size` parameter defines a rectangle, the bezier style retains the the corner
 //   proportions for the short side of the corner rather than stretching the entire corner.
 //   .
-//   When called as a module, creates a 2D squircle with the specified squareness.    
-//   When called as a function, returns a 2D path for a squircle.
+//   By design, the squircle segments generated are neither constant-length nor constant-angle spacing. The number of
+//   segments is $fn rounded to the nearest multiple of 4, and the length of each segment is dependent on its proximity
+//   to the corner, with the segments at the corner being the shortest.
 // Arguments:
 //   size = Same as the `size` parameter in `square()`, can be a single number or a vector `[xsize,ysize]`.
 //   squareness = Value between 0 and 1. Controls the shape, setting the location of a squircle "corner" at the specified interpolated position between a circle and a square. When `squareness=0` the shape is a circle, and when `squareness=1` the shape is a square. Default: 0.5

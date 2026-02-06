@@ -10,6 +10,10 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_LINALG = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: linalg.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 // Section: Matrices
 //   The matrix, a rectangular array of numbers which represents a linear transformation,
 //   is the fundamental object in linear algebra.  In OpenSCAD a matrix is a list of lists of numbers
@@ -122,9 +126,9 @@ function is_rotation(A,dim,centered=false) =
 //    eps = numbers smaller than this display as zero.  Default: 1e-9
 function echo_matrix(M,description,sig=4,sep=1,eps=1e-9) =
   let(
-      horiz_line = chr(8213),
+      horiz_line = 8213,
       matstr = _format_matrix(M,sig=sig,sep=sep,eps=eps),
-      separator = str_join(repeat(horiz_line,10)),
+      separator = chf(repeat(horiz_line,10)),
       dummy=echo(str(separator,is_def(description) ? str("  ",description) : ""))
             [for(row=matstr) echo(row)]
   )
@@ -382,7 +386,7 @@ function submatrix_set(M,A,m=0,n=0) =
 //   A = hstack(M1, M2, M3)
 //   A = hstack([M1, M2, M3, ...])
 // Description:
-//   Constructs a matrix by horizontally "stacking" together compatible matrices or vectors.  Vectors are treated as columsn in the stack.
+//   Constructs a matrix by horizontally "stacking" together compatible matrices or vectors.  Vectors are treated as columns in the stack.
 //   This command is the inverse of `column`.  Note: strings given in vectors are broken apart into lists of characters.  Strings given
 //   in matrices are preserved as strings.  If you need to combine vectors of strings use {{list_to_matrix()}} as shown below to convert the
 //   vector into a column matrix.  Also note that vertical stacking can be done directly with concat.  

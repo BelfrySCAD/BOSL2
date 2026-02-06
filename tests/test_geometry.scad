@@ -270,7 +270,7 @@ module test_line_from_points() {
     assert_approx(line_from_points([[1,0],[0,0],[-1,0]]),[[-1,0],[1,0]]);
     assert_approx(line_from_points([[1,1],[0,1],[-1,1]]),[[-1,1],[1,1]]);
     assert(line_from_points([[1,1],[0,1],[-1,0]],check_collinear=true)==undef);
-    assert(line_from_points([[3,3],[0,3],[0,0]],check_collinear=false)-[[-0.5,0.5],[2.5,3.5]]<[[EPSILON,EPSILON],[EPSILON,EPSILON]]);
+    assert(line_from_points([[3,3],[0,3],[0,0]],check_collinear=false)-[[-0.5,0.5],[2.5,3.5]]<[[_EPSILON,_EPSILON],[_EPSILON,_EPSILON]]);
 }
 *test_line_from_points();
 
@@ -768,9 +768,9 @@ module test_polygon_area() {
     assert(approx(polygon_area(rot([13,27,75],
                                p=path3d(circle(r=50,$fn=1000),fill=23)),
                                signed=true), PI*50*50, eps=0.1));
-    assert(abs(polygon_area([[0,0], [0,10], [10,0]],signed=true) + 50) < EPSILON);
-    assert(abs(polygon_area([[0,0], [0,10], [0,15]],signed=true)) < EPSILON);
-    assert(abs(polygon_area([[0,0], [10,0], [0,10]],signed=true) - 50) < EPSILON);
+    assert(abs(polygon_area([[0,0], [0,10], [10,0]],signed=true) + 50) < _EPSILON);
+    assert(abs(polygon_area([[0,0], [0,10], [0,15]],signed=true)) < _EPSILON);
+    assert(abs(polygon_area([[0,0], [10,0], [0,10]],signed=true) - 50) < _EPSILON);
 }
 *test_polygon_area();
 
@@ -902,7 +902,7 @@ module test_point_in_polygon() {
     assert(point_in_polygon([-5,5], poly) == 1);
     assert(point_in_polygon([-5,-5], poly) == 1);
     assert(point_in_polygon([5,-5], poly) == 1);
-    assert(point_in_polygon([5,-5], poly,nonzero=false,eps=EPSILON) == 1);
+    assert(point_in_polygon([5,-5], poly,nonzero=false,eps=_EPSILON) == 1);
     assert(point_in_polygon([-10,-10], poly) == -1);
     assert(point_in_polygon([10,0], poly) == 0);
     assert(point_in_polygon([0,10], poly) == 0);
@@ -912,7 +912,7 @@ module test_point_in_polygon() {
     assert(point_in_polygon([0,1], poly2,nonzero=true) == 0);
     assert(point_in_polygon([0,1], poly2,nonzero=false) == 0);
     assert(point_in_polygon([1,0], poly2,nonzero=false) == 0);
-    assert(point_in_polygon([0,0], poly2,nonzero=false,eps=EPSILON) == -1);
+    assert(point_in_polygon([0,0], poly2,nonzero=false,eps=_EPSILON) == -1);
 }
 *test_point_in_polygon();
 

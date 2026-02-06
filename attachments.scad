@@ -12,6 +12,10 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_ATTACHMENTS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: attachments.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
 // Default values for attachment code.
 $tags=undef;      // for backward compatibility
 $tag = "";
@@ -32,6 +36,7 @@ $parent_orient = UP;
 
 $parent_size = undef;
 $parent_geom = undef;
+$parent_parts = undef;
 
 $attach_inside = false;  // If true, flip the meaning of the inside parameter for align() and attach()
 
@@ -748,7 +753,8 @@ function _quant_anch(x) = approx(x,0) ? 0 : sign(x);
 
 // Make arbitrary anchor legal for a given geometry
 function _make_anchor_legal(anchor,geom) =
-   in_list(geom[0], ["prismoid","trapezoid"]) ? [for(v=anchor) _quant_anch(v)]
+   is_string(anchor) ? anchor
+ : in_list(geom[0], ["prismoid","trapezoid"]) ? [for(v=anchor) _quant_anch(v)]
  : in_list(geom[0], ["conoid", "extrusion_extent"]) ? [anchor.x,anchor.y, _quant_anch(anchor.z)]
  : anchor;
     
@@ -778,22 +784,20 @@ function _make_anchor_legal(anchor,geom) =
 //   do `attach(RIGHT,BOT)` this puts the bottom of the child onto the right anchor of the parent.
 //   When an object is attached to the top or bottom, its BACK direction remains pointing BACK.
 //   When an object is attached to one of the other anchors its FRONT is pointed DOWN and its
-//   BACK pointed UP.  You can change this using the `spin=` argument to attach().  Note that this spin
+//   BACK pointed UP.  You can change this using the `spin=` argument to attach().  This spin
 //   rotates around the attachment vector and is not the same as the spin argument to the child, which
-//   will usually rotate around some other direction that may be hard to predict.  For 2D objects you cannot
-//   give spin because it is not possible to spin around the attachment vector; spinning the object around the Z axis
-//   would change the child orientation so that the anchors are no longer parallel.  Furthermore, any spin
+//   will usually rotate around some other direction that may be hard to predict.  Any spin
 //   parameter you give to the child is ignored so that the attachment condition of parallel anchors is preserved.  
+//   For 2D objects you cannot give spin because it is not possible to spin around the attachment vector;
+//   spinning the object around the Z axis would change the child orientation so that the anchors are no longer parallel.
 //   .
 //   As with {{align()}} you can use the `align=` parameter to align the child to an edge or corner of the
 //   face where that child is attached.  For example, `attach(TOP,BOT,align=RIGHT)` would stand the child
 //   up on the top while aligning it with the right edge of the top face, and `attach(RIGHT,BOT,align=TOP)`, which
 //   stand the object on the right face while aligning with the top edge.  If you apply spin using the
-//   argument to `attach()`, then it is taken into account for the alignment. However, if you apply spin with
+//   argument to `attach()`, then it is taken into account for the alignment. However, if you apply spin as
 //   a parameter to the child, it is **not** taken into account.  The special spin value "align"
 //   spins the child so that the child's BACK direction is pointed toward the aligned edge on the parent. 
-//   Note that spin is not permitted for
-//   2D objects because it would change the child orientation so that the anchors are no longer parallel.  
 //   When you use `align=` you can also adjust the position using `inset=`, which shifts the child
 //   away from the edge or corner it is aligned to.
 //   .
@@ -844,7 +848,7 @@ function _make_anchor_legal(anchor,geom) =
 //   overlap = Amount to sink child into the parent.  Equivalent to `down(X)` after the attach.  This defaults to the value in `$overlap`, which is `0` by default.
 //   inside = If `child` is given you can set `inside=true` to attach the child to the inside of the parent for diff() operations.  Default: false
 //   shiftout = Shift an inside object outward so that it overlaps all the aligned faces.  Default: 0
-//   spin = Amount to rotate the parent around the axis of the parent anchor.  Can set to "align" to align the child's BACK with the parent aligned edge.  (Permitted only in 3D.)
+//   spin = Angle to rotate the child around the axis of the parent anchor.  Can set to "align" to align the child's BACK with the parent aligned edge.  (Permitted only in 3D.)
 // Side Effects:
 //   `$anchor` set to the parent anchor value used for the child.
 //   `$align` set to the align value used for the child.  
@@ -1056,8 +1060,6 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
                                 * rot(from=parent_abstract_anchor[2],to=UP)
                                 * rot(v=anchor,-spin),
                               align);
-
-            
             spinaxis = two_d? UP : anchor_dir;
             olap = - overlap * reference - inset*inset_dir + shiftout * (inset_dir + factor*reference*($anchor_inside?-1:1));
             if (norot || (approx(anchor_dir,reference) && anchor_spin==0)) 
@@ -1073,22 +1075,27 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
 }
 
 
-
 // Module: attach_part()
 // Synopsis: Select a named attachable part for subsequent attachment operations
 // Topics: Attachment
 // See Also: attach(), align(), attachable(), define_part(), parent_part()
 // Usage:
-//   PARENT() attach_part(name) CHILDREN;
+//   PARENT() attach_part(name, [ind]) CHILDREN;
 // Description:
 //   Most attachable objects have a single geometry defined that is used by the attachment commands,
 //   but some objects also define attachable parts.  This module selects 
 //   an attachable part using a name defined by the parent object.  Any operations
 //   that use the parent geometry such as {{attach()}}, {{align()}}, {{position()}} or {{parent()}}
 //   references the geometry for the specified part.  This allows you to access the inner wall
-//   of tubes, for example.  Note that you cannot call `attach_part()` as a child of another `attach_part()`.  
+//   of tubes, for example.  Note that you cannot call `attach_part()` as a child of another `attach_part()`.
+//   .
+//   If you select a compound part then you can also provide an index to select the desired component
+//   of that part.  The index wraps around in both directions so for example, -1 gives the last component, and
+//   the selection cannot fail due to being out of bounds.  The default index is zero.   The `ind`
+//   parameter has no effect on simple parts.  
 // Arguments:
-//   name = name of part to use for subsequent attachments.  
+//   name = name of part to use for subsequent attachments.
+//   ind = index for use with compount parts.  Default: 0
 // Example: This example shows attaching the light blue cube normally, on the outside of the tube, and the pink cube using the "inside" attachment part.  
 //   tube(ir1=10,ir2=20,h=20, wall=3){
 //     color("lightblue")attach(RIGHT,BOT) cuboid(4);
@@ -1097,19 +1104,26 @@ module attach(parent, child, overlap, align, spin=0, norot, inset=0, shiftout=0,
 //        attach(BACK,BOT) cuboid(4);
 //   }  
 
-module attach_part(name)
+module attach_part(name, ind=0)
 {
   req_children($children);
-  dummy=assert(!is_undef($parent_parts), "\nParent does not exist or does not have any parts.");
-  ind = search([name], $parent_parts, 1,0)[0];
-  dummy2 = assert(ind!=[], str("\nParent does not have a part named \"",name,"\"."));
-  $parent_geom = $parent_parts[ind][1];
-  $anchor_inside = $parent_parts[ind][2];
-  T = $parent_parts[ind][3];
+  part = _get_part(name,ind);
+  $parent_geom = part[0];
+  $anchor_inside = part[1];
+  T = part[2];
   $parent_parts = [];
   multmatrix(T)
     children();
 }
+
+
+function _get_part(name, ind) =
+   assert(!is_undef($parent_parts), "\nParent does not exist or does not have any parts.")
+   let(
+        pind = search([name], $parent_parts, 1,0)[0]
+   )
+   assert(pind!=[], str("\nParent does not have a part named \"",name,"\"."))
+   select($parent_parts[pind][1],ind);
 
  
 // Section: Tagging
@@ -1250,11 +1264,11 @@ module force_tag(tag)
 
 
 // Module: default_tag()
-// Synopsis: Sets a default tag for all children.
+// Synopsis: Conditionally set a default tag for all children.
 // Topics: Attachments
 // See Also: force_tag(), recolor(), hide(), show_only(), diff(), intersect()
 // Usage:
-//   PARENT() default_tag(tag) CHILDREN;
+//   PARENT() default_tag(tag, [do_tag]) CHILDREN;
 // Description:
 //   Sets a default tag for all of the children.  This is intended to be used to set a tag for a whole module
 //   that is then used outside the module, such as setting the tag to "remove" for easy operation with {{diff()}}.
@@ -1267,7 +1281,7 @@ module force_tag(tag)
 //   For a step-by-step explanation of tagged attachments, see the [Attachments Tutorial](Tutorial-Attachment-Tags).
 // Arguments:
 //   tag = tag string, which must not contain any spaces.
-//   do_tag = if false do not set the tag.  
+//   do_tag = if false do not set the tag.  Default: true
 // Side Effects:
 //   Sets `$tag` to the tag you specify, possibly with a scope prefix.
 // Example(3D):  The module thing() is defined with {{tag()}} and the user applied tag of "keep_it" is ignored, leaving the user puzzled.
@@ -2011,764 +2025,6 @@ module show_int(tags)
 }
 
 
-// Section: Mask Attachment
-
-
-// Module: face_mask()
-// Synopsis: Ataches a 3d mask shape to the given faces of the parent.
-// SynTags: Trans
-// Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), edge_mask(), corner_mask(), face_profile(), edge_profile(), corner_profile()
-// Usage:
-//   PARENT() face_mask(faces) CHILDREN;
-// Description:
-//   Takes a 3D mask shape, and attaches it to the given faces, with the appropriate orientation to be
-//   differenced away.  The mask shape should be vertically oriented (Z-aligned) with the bottom half
-//   (Z-) shaped to be diffed away from the face of parent attachable shape.  If no tag is set then
-//   `face_mask()` sets the tag for children to "remove" so that it works with the default {{diff()}} tag.
-//   For details on specifying the faces to mask see [Specifying Faces](attachments.scad#subsection-specifying-faces).
-//   For a step-by-step explanation of masking attachments, see the [Attachments Tutorial](Tutorial-Attachment-Edge-Profiling).
-// Arguments:
-//   edges = Faces to mask.  See  [Specifying Faces](attachments.scad#subsection-specifying-faces) for information on specifying faces.  Default: All faces
-// Side Effects:
-//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
-//   `$idx` is set to the index number of each face in the list of faces given.
-//   `$attach_anchor` is set for each face given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
-// Example:
-//   diff()
-//   cylinder(r=30, h=60)
-//       face_mask(TOP) {
-//           rounding_cylinder_mask(r=30,rounding=5);
-//           cuboid([5,61,10]);
-//       }
-// Example: Using `$idx`
-//   diff()
-//   cylinder(r=30, h=60)
-//       face_mask([TOP, BOT])
-//           zrot(45*$idx) zrot_copies([0,90]) cuboid([5,61,10]);
-module face_mask(faces=[LEFT,RIGHT,FRONT,BACK,BOT,TOP]) {
-    req_children($children);
-    faces = is_vector(faces)? [faces] : faces;
-    assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "\nVector in faces doesn't point at a face.");
-    assert($parent_geom != undef, "\nNo object to attach to!");
-    attach(faces) {
-       default_tag("remove") children();
-    }
-}
-
-
-// Module: edge_mask()
-// Synopsis: Attaches a 3D mask shape to the given edges of the parent.
-// SynTags: Trans
-// Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), face_mask(), corner_mask(), face_profile(), edge_profile(), corner_profile()
-// Usage:
-//   PARENT() edge_mask([edges], [except]) CHILDREN;
-// Description:
-//   Takes a 3D mask shape, and attaches it to the given edges of a cuboid parent, with the appropriate orientation to be
-//   differenced away.  The mask shape should be vertically oriented (Z-aligned) with the back-right
-//   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.  If no tag is set
-//   then `edge_mask` sets the tag for children to "remove" so that it works with the default {{diff()}} tag.
-//   For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
-//   For a step-by-step explanation of masking attachments, see the [Attachments Tutorial](Tutorial-Attachment-Edge-Profiling).
-// Figure: A Typical Edge Rounding Mask
-//   module roundit(l,r) difference() {
-//       translate([-1,-1,-l/2])
-//           cube([r+1,r+1,l]);
-//       translate([r,r])
-//           cylinder(h=l+1,r=r,center=true, $fn=quantup(segs(r),4));
-//   }
-//   roundit(l=30,r=10);
-// Arguments:
-//   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
-//   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
-// Side Effects:
-//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
-//   `$idx` is set to the index number of each edge.
-//   `$attach_anchor` is set for each edge given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
-//   `$parent_size` is set to the size of the parent object.
-// Example:
-//   diff()
-//   cube([50,60,70],center=true)
-//       edge_mask([TOP,"Z"],except=[BACK,TOP+LEFT])
-//           rounding_edge_mask(l=71,r=10);
-module edge_mask(edges=EDGES_ALL, except=[]) {
-    req_children($children);
-    assert($parent_geom != undef, "\nNo object to attach to!");
-    edges = _edges(edges, except=except);
-    vecs = [
-        for (i = [0:3], axis=[0:2])
-        if (edges[axis][i]>0)
-        EDGE_OFFSETS[axis][i]
-    ];
-    for ($idx = idx(vecs)) {
-        vec = vecs[$idx];
-        vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        dummy=assert(vcount == 2, "\nNot an edge vector!");
-        anch = _find_anchor(vec, $parent_geom);
-        $edge_angle = len(anch)==5 ? struct_val(anch[4],"edge_angle") : undef;
-        $edge_length = len(anch)==5 ? struct_val(anch[4],"edge_length") : undef;
-        $attach_to = undef;
-        $attach_anchor = anch;
-        rotang =
-            vec.z<0? [90,0,180+v_theta(vec)] :
-            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
-            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
-            [-90,0,180+v_theta(vec)];
-        translate(anch[1]) rot(rotang)
-           default_tag("remove") children();
-    }
-}
-
-
-// Module: corner_mask()
-// Synopsis: Attaches a 3d mask shape to the given corners of the parent.
-// SynTags: Trans
-// Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), face_mask(), edge_mask(), face_profile(), edge_profile(), corner_profile()
-// Usage:
-//   PARENT() corner_mask([corners], [except]) CHILDREN;
-// Description:
-//   Takes a 3D mask shape, and attaches it to the specified corners, with the appropriate orientation to
-//   be differenced away.  The 3D corner mask shape should be designed to mask away the X+Y+Z+ octant.  If no tag is set
-//   then `corner_mask` sets the tag for children to "remove" so that it works with the default {{diff()}} tag.
-//   See [Specifying Corners](attachments.scad#subsection-specifying-corners) for information on how to specify corner sets.
-//   For a step-by-step explanation of masking attachments, see the [Attachments Tutorial](Tutorial-Attachment-Edge-Profiling).
-// Arguments:
-//   corners = Corners to mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: All corners.
-//   except = Corners to explicitly NOT mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: No corners.
-// Side Effects:
-//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
-//   `$idx` is set to the index number of each corner.
-//   `$attach_anchor` is set for each corner given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
-// Example:
-//   diff()
-//   cube(100, center=true)
-//       corner_mask([TOP,FRONT],LEFT+FRONT+TOP)
-//           difference() {
-//               translate(-0.01*[1,1,1]) cube(20);
-//               translate([20,20,20]) sphere(r=20);
-//           }
-module corner_mask(corners=CORNERS_ALL, except=[]) {
-    req_children($children);
-    assert($parent_geom != undef, "\nNo object to attach to!");
-    corners = _corners(corners, except=except);
-    vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
-    for ($idx = idx(vecs)) {
-        vec = vecs[$idx];
-        vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        dummy=assert(vcount == 3, "\nNot an edge vector!");
-        anch = _find_anchor(vec, $parent_geom);
-        $attach_to = undef;
-        $attach_anchor = anch;
-        rotang = vec.z<0?
-            [  0,0,180+v_theta(vec)-45] :
-            [180,0,-90+v_theta(vec)-45];
-        translate(anch[1]) rot(rotang)
-            default_tag("remove") children();
-    }
-}
-
-
-// Module: face_profile()
-// Synopsis: Extrudes a 2D edge profile into a mask for all edges and corners of the given faces on the parent.
-// SynTags: Geom
-// Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), edge_profile(), corner_profile(), face_mask(), edge_mask(), corner_mask()
-// Usage:
-//   PARENT() face_profile(faces, r|d=, [convexity=]) CHILDREN;
-// Description:
-//   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face. If no tag is set
-//   then `face_profile` sets the tag for children to "remove" so that it works with the default {{diff()}} tag.
-//   See  [Specifying Faces](attachments.scad#subsection-specifying-faces) for information on specifying faces.
-//   For a step-by-step explanation of masking attachments, see the [Attachments Tutorial](Tutorial-Attachment-Edge-Profiling).
-// Arguments:
-//   faces = Faces to mask edges and corners of.
-//   r = Radius of corner mask.
-//   ---
-//   d = Diameter of corner mask.
-//   excess = Excess length to extrude the profile to make edge masks.  Default: 0.01
-//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
-// Side Effects:
-//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
-//   `$idx` is set to the index number of each face.
-//   `$attach_anchor` is set for each edge or corner given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
-//   `$profile_type` is set to `"edge"` or `"corner"`, depending on what is being masked.
-// Example:
-//   diff()
-//   cube([50,60,70],center=true)
-//       face_profile(TOP,r=10)
-//           mask2d_roundover(r=10);
-module face_profile(faces=[], r, d, excess=0.01, convexity=10) {
-    req_children($children);
-    faces = is_vector(faces)? [faces] : faces;
-    assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "\nVector in faces doesn't point at a face.");
-    r = get_radius(r=r, d=d, dflt=undef);
-    assert(is_num(r) && r>=0);
-    edge_profile(faces, excess=excess) children();
-    corner_profile(faces, convexity=convexity, r=r) children();
-}
-
-
-// Module: edge_profile()
-// Synopsis: Extrudes a 2d edge profile into a mask on the given edges of the parent.
-// SynTags: Geom
-// Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), face_profile(), edge_profile_asym(), corner_profile(), edge_mask(), face_mask(), corner_mask()
-// Usage:
-//   PARENT() edge_profile([edges], [except], [convexity]) CHILDREN;
-// Description:
-//   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation and
-//   extruded length to be `diff()`ed away, to give the edge a matching profile.  If no tag is set
-//   then `edge_profile` sets the tag for children to "remove" so that it works with the default {{diff()}} tag.
-//   For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
-//   For a step-by-step explanation of masking attachments, see the [Attachments Tutorial](Tutorial-Attachment-Edge-Profiling).
-// Arguments:
-//   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
-//   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
-//   excess = Excess length to extrude the profile to make edge masks.  Default: 0.01
-//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
-// Side Effects:
-//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
-//   `$idx` is set to the index number of each edge.
-//   `$attach_anchor` is set for each edge given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
-//   `$profile_type` is set to `"edge"`.
-//   `$edge_angle` is set to the inner angle of the current edge.
-// Example:
-//   diff()
-//   cube([50,60,70],center=true)
-//       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
-//           mask2d_roundover(r=10, inset=2);
-// Example: Using $edge_angle on a conoid
-//   diff()
-//   cyl(d1=50, d2=30, l=40, anchor=BOT) {
-//       edge_profile([TOP,BOT], excess=10, convexity=6) {
-//           mask2d_roundover(r=8, inset=1, excess=1, mask_angle=$edge_angle);
-//       }
-//   }
-// Example: Using $edge_angle on a prismoid
-//   diff()
-//   prismoid([60,50],[30,20],h=40,shift=[-25,15]) {
-//       edge_profile(excess=10, convexity=20) {
-//           mask2d_roundover(r=5,inset=1,mask_angle=$edge_angle,$fn=32);
-//       }
-//   }
-
-module edge_profile(edges=EDGES_ALL, except=[], excess=0.01, convexity=10) {
-    req_children($children);
-    check1 = assert($parent_geom != undef, "\nNo object to attach to!");
-    conoid = $parent_geom[0] == "conoid";
-    edges = !conoid? _edges(edges, except=except) :
-        edges==EDGES_ALL? [TOP,BOT] :
-        assert(all([for (e=edges) in_list(e,[TOP,BOT])]), "\nInvalid conoid edge spec.")
-        edges;
-    vecs = conoid
-      ? [for (e=edges) e+FWD]
-      : [
-            for (i = [0:3], axis=[0:2])
-            if (edges[axis][i]>0)
-            EDGE_OFFSETS[axis][i]
-        ];
-    all_vecs_are_edges = all([for (vec = vecs) sum(v_abs(vec))==2]);
-    check2 = assert(all_vecs_are_edges, "\nAll vectors must be edges.");
-    default_tag("remove")
-    for ($idx = idx(vecs)) {
-        vec = vecs[$idx];
-        anch = _find_anchor(vec, $parent_geom);
-        path_angs_T = _attach_geom_edge_path($parent_geom, vec);
-        path = path_angs_T[0];
-        vecs = path_angs_T[1];
-        post_T = path_angs_T[2];
-        $attach_to = undef;
-        $attach_anchor = anch;
-        $profile_type = "edge";
-        multmatrix(post_T) {
-            for (i = idx(path,e=-2)) {
-                pt1 = select(path,i);
-                pt2 = select(path,i+1);
-                cp = (pt1 + pt2) / 2;
-                v1 = vecs[i][0];
-                v2 = vecs[i][1];
-                $edge_angle = 180 - vector_angle(v1,v2);
-                if (!approx(pt1,pt2)) {
-                    seglen = norm(pt2-pt1) + 2 * excess;
-                    move(cp) {
-                        frame_map(x=-v2, z=unit(pt2-pt1)) {
-                            linear_extrude(height=seglen, center=true, convexity=convexity)
-                                mirror([-1,1]) children();
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-// Module: edge_profile_asym()
-// Synopsis: Extrudes an asymmetric 2D profile into a mask on the given edges and corners of the parent.
-// SynTags: Geom
-// Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_profile(), edge_mask(), face_mask(), corner_mask()
-// Usage:
-//   PARENT() edge_profile([edges], [except], [convexity=], [flip=], [corner_type=]) CHILDREN;
-// Description:
-//   Takes an asymmetric 2D mask shape and attaches it to the selected edges and corners, with the appropriate
-//   orientation and extruded length to be `diff()`ed away, to give the edges and corners a matching profile.
-//   If no tag is set then `edge_profile_asym()` sets the tag for children to "remove" so that it works
-//   with the default {{diff()}} tag.  For details on specifying the edges to mask see [Specifying Edges](attachments.scad#subsection-specifying-edges).
-//   For a step-by-step explanation of masking attachments, see the [Attachments Tutorial](Tutorial-Attachment-Edge-Profiling).
-//   The asymmetric profiles are joined consistently at the corners.  This is impossible if all three edges at a corner use the profile, hence
-//   this situation is not permitted.  The profile orientation can be inverted using the `flip=true` parameter.
-//   .
-//   The standard profiles are located in the first quadrant and have positive X values.  If you provide a profile located in the second quadrant,
-//   where the X values are negative, then it produces a fillet.  You can flip any of the standard profiles using {{xflip()}}.  
-//   Fillets are always asymmetric because at a given edge, they can blend in two different directions, so even for symmetric profiles,
-//   the asymmetric logic is required.  You can set the `corner_type` parameter to select rounded, chamfered or sharp corners.
-//   However, when the corners are inside (concave) corners, you must provide the size of the profile ([width,height]), because the
-//   this information is required to produce the correct corner and cannot be obtain from the profile itself, which is a child object.  
-// Arguments:
-//   edges = Edges to mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: All edges.
-//   except = Edges to explicitly NOT mask.  See [Specifying Edges](attachments.scad#subsection-specifying-edges).  Default: No edges.
-//   ---
-//   excess = Excess length to extrude the profile to make edge masks.  Default: 0.01
-//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
-//   flip = If true, reverses the orientation of any external profile parts at each edge.  Default false
-//   corner_type = Specifies how exterior corners should be formed.  Must be one of `"none"`, `"chamfer"`, `"round"`, or `"sharp"`.  Default: `"none"`
-//   size = If given the width and height of the 2D profile, enable rounding and chamfering of internal corners when given a negative profile.
-// Side Effects:
-//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
-//   `$idx` is set to the index number of each edge.
-//   `$attach_anchor` is set for each edge given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
-//   `$profile_type` is set to `"edge"`.
-//   `$edge_angle` is set to the inner angle of the current edge.
-// Example:
-//   ogee = [
-//       "xstep",1,  "ystep",1,  // Starting shoulder.
-//       "fillet",5, "round",5,  // S-curve.
-//       "ystep",1,  "xstep",1   // Ending shoulder.
-//   ];
-//   diff()
-//   cuboid(50) {
-//       edge_profile_asym(FRONT)
-//          mask2d_ogee(ogee);
-//   }
-// Example: Flipped
-//   ogee = [
-//       "xstep",1,  "ystep",1,  // Starting shoulder.
-//       "fillet",5, "round",5,  // S-curve.
-//       "ystep",1,  "xstep",1   // Ending shoulder.
-//   ];
-//   diff()
-//   cuboid(50) {
-//       edge_profile_asym(FRONT, flip=true)
-//          mask2d_ogee(ogee);
-//   }
-// Example: Negative Chamfering
-//   cuboid(50) {
-//       edge_profile_asym(FWD, flip=false)
-//           xflip() mask2d_chamfer(10);
-//       edge_profile_asym(BACK, flip=true, corner_type="sharp")
-//           xflip() mask2d_chamfer(10);
-//   }
-// Example: Negative Roundings
-//   cuboid(50) {
-//       edge_profile_asym(FWD, flip=false)
-//           xflip() mask2d_roundover(10);
-//       edge_profile_asym(BACK, flip=true, corner_type="round")
-//           xflip() mask2d_roundover(10);
-//   }
-// Example: Cornerless
-//   cuboid(50) {
-//       edge_profile_asym(
-//           "ALL", except=[TOP+FWD+RIGHT, BOT+BACK+LEFT]
-//        ) xflip() mask2d_roundover(10);
-//   }
-// Example: More complicated edge sets
-//   cuboid(50) {
-//       edge_profile_asym(
-//           [FWD,BACK,BOT+RIGHT], except=[FWD+RIGHT,BOT+BACK],
-//           corner_type="round"
-//        ) xflip() mask2d_roundover(10);
-//   }
-// Example: Mixing it up a bit.
-//   diff()
-//   cuboid(60) {
-//       tag("keep") edge_profile_asym(LEFT, flip=true, corner_type="chamfer")
-//           xflip() mask2d_chamfer(10);
-//       edge_profile_asym(RIGHT)
-//           mask2d_roundover(10);
-//   }
-// Example: Chamfering internal corners.
-//   cuboid(40) {
-//       edge_profile_asym(
-//           [FWD+DOWN,FWD+LEFT],
-//           corner_type="chamfer", size=[10,10]/sqrt(2)
-//        ) xflip() mask2d_chamfer(10);
-//   }
-// Example: Rounding internal corners.
-//   cuboid(40) {
-//       edge_profile_asym(
-//           [FWD+DOWN,FWD+LEFT],
-//           corner_type="round", size=[10,10]
-//        ) xflip() mask2d_roundover(10);
-//   }
-
-module edge_profile_asym(
-    edges=EDGES_ALL, except=[],
-    excess=0.01, convexity=10,
-    flip=false, corner_type="none",
-    size=[0,0]
-) {
-    function _corner_orientation(pos,pvec) =
-        let(
-            j = [for (i=[0:2]) if (pvec[i]) i][0],
-            T = (pos.x>0? xflip() : ident(4)) *
-                (pos.y>0? yflip() : ident(4)) *
-                (pos.z>0? zflip() : ident(4)) *
-                rot(-120*(2-j), v=[1,1,1])
-        ) T;
-
-    function _default_edge_orientation(edge) =
-        edge.z < 0? [[-edge.x,-edge.y,0], UP] :
-        edge.z > 0? [[-edge.x,-edge.y,0], DOWN] :
-        edge.y < 0? [[-edge.x,0,0], BACK] :
-        [[-edge.x,0,0], FWD] ;
-
-    function _edge_transition_needs_flip(from,to) =
-        let(
-            flip_edges = [
-                [BOT+FWD, [FWD+LEFT, FWD+RIGHT]],
-                [BOT+BACK, [BACK+LEFT, BACK+RIGHT]],
-                [BOT+LEFT, []],
-                [BOT+RIGHT, []],
-                [TOP+FWD, [FWD+LEFT, FWD+RIGHT]],
-                [TOP+BACK, [BACK+LEFT, BACK+RIGHT]],
-                [TOP+LEFT, []],
-                [TOP+RIGHT, []],
-                [FWD+LEFT, [TOP+FWD, BOT+FWD]],
-                [FWD+RIGHT, [TOP+FWD, BOT+FWD]],
-                [BACK+LEFT, [TOP+BACK, BOT+BACK]],
-                [BACK+RIGHT, [TOP+BACK, BOT+BACK]],
-            ],
-            i = search([from], flip_edges, num_returns_per_match=1)[0],
-            check = assert(i!=[], "\nBad edge vector.")
-        ) in_list(to,flip_edges[i][1]);
-
-    function _edge_corner_numbers(vec) =
-        let(
-            v2 = [for (i=idx(vec)) vec[i]? (vec[i]+1)/2*pow(2,i) : 0],
-            off = v2.x + v2.y + v2.z,
-            xs = [0, if (!vec.x) 1],
-            ys = [0, if (!vec.y) 2],
-            zs = [0, if (!vec.z) 4]
-        ) [for (x=xs, y=ys, z=zs) x+y+z + off];
-
-    function _gather_contiguous_edges(edge_corners) =
-        let(
-            no_tri_corners = all([for(cn = [0:7]) len([for (ec=edge_corners) if(in_list(cn,ec[1])) 1])<3]),
-            check = assert(no_tri_corners, "\nCannot have three edges that meet at the same corner.")
-        )
-        _gather_contiguous_edges_r(
-            [for (i=idx(edge_corners)) if(i) edge_corners[i]],
-            edge_corners[0][1],
-            [edge_corners[0][0]], []);
-
-    function _gather_contiguous_edges_r(edge_corners, ecns, curr, out) =
-        len(edge_corners)==0? [each out, curr] :
-        let(
-            i1 = [
-                for (i = idx(edge_corners))
-                if (in_list(ecns[0], edge_corners[i][1]))
-                i
-            ],
-            i2 = [
-                for (i = idx(edge_corners))
-                if (in_list(ecns[1], edge_corners[i][1]))
-                i
-            ]
-        ) !i1 && !i2? _gather_contiguous_edges_r(
-            [for (i=idx(edge_corners)) if(i) edge_corners[i]],
-            edge_corners[0][1],
-            [edge_corners[0][0]],
-            [each out, curr]
-        ) : let(
-            nu_curr = [
-                if (i1) edge_corners[i1[0]][0],
-                each curr,
-                if (i2) edge_corners[i2[0]][0],
-            ],
-            nu_ecns = [
-                if (!i1) ecns[0] else [
-                    for (ecn = edge_corners[i1[0]][1])
-                    if (ecn != ecns[0]) ecn
-                ][0],
-                if (!i2) ecns[1] else [
-                    for (ecn = edge_corners[i2[0]][1])
-                    if (ecn != ecns[1]) ecn
-                ][0],
-            ],
-            rem = [
-                for (i = idx(edge_corners))
-                if (i != i1[0] && i != i2[0])
-                edge_corners[i]
-            ]
-        )
-        _gather_contiguous_edges_r(rem, nu_ecns, nu_curr, out);
-
-    function _edge_transition_inversions(edge_string) =
-        let(
-            // boolean cumulative sum
-            bcs = function(list, i=0, inv=false, out=[])
-                    i>=len(list)? out :
-                    let( nu_inv = list[i]? !inv : inv )
-                    bcs(list, i+1, nu_inv, [each out, nu_inv]),
-            inverts = bcs([
-                false,
-                for(i = idx(edge_string)) if (i)
-                    _edge_transition_needs_flip(
-                        edge_string[i-1],
-                        edge_string[i]
-                    )
-            ]),
-            boti = [for(i = idx(edge_string)) if (edge_string[i].z<0) i],
-            topi = [for(i = idx(edge_string)) if (edge_string[i].z>0) i],
-            lfti = [for(i = idx(edge_string)) if (edge_string[i].x<0) i],
-            rgti = [for(i = idx(edge_string)) if (edge_string[i].x>0) i],
-            idx = [for (m = [boti, topi, lfti, rgti]) if(m) m[0]][0],
-            rinverts = inverts[idx] == false? inverts : [for (x = inverts) !x]
-        ) rinverts;
-
-    function _is_closed_edge_loop(edge_string) =
-        let(
-            e1 = edge_string[0],
-            e2 = last(edge_string)
-        )
-        len([for (i=[0:2]) if (abs(e1[i])==1 && e1[i]==e2[i]) 1]) == 1 &&
-        len([for (i=[0:2]) if (e1[i]==0 && abs(e2[i])==1) 1]) == 1 &&
-        len([for (i=[0:2]) if (e2[i]==0 && abs(e1[i])==1) 1]) == 1;
-
-    function _edge_pair_perp_vec(e1,e2) =
-        [for (i=[0:2]) if (abs(e1[i])==1 && e1[i]==e2[i]) -e1[i] else 0];
-
-    req_children($children);
-    check1 = assert($parent_geom != undef, "\nNo object to attach to!")
-        assert(in_list(corner_type, ["none", "round", "chamfer", "sharp"]))
-        assert(is_bool(flip));
-    edges = _edges(edges, except=except);
-    vecs = [
-        for (i = [0:3], axis=[0:2])
-        if (edges[axis][i]>0)
-        EDGE_OFFSETS[axis][i]
-    ];
-    all_vecs_are_edges = all([for (vec = vecs) sum(v_abs(vec))==2]);
-    check2 = assert(all_vecs_are_edges, "\nAll vectors must be edges.");
-    edge_corners = [for (vec = vecs) [vec, _edge_corner_numbers(vec)]];
-    edge_strings = _gather_contiguous_edges(edge_corners);
-    default_tag("remove")
-    for (edge_string = edge_strings) {
-        inverts = _edge_transition_inversions(edge_string);
-        flipverts = [for (x = inverts) flip? !x : x];
-        vecpairs = [
-            for (i = idx(edge_string))
-            let (p = _default_edge_orientation(edge_string[i]))
-            flipverts[i]? [p.y,p.x] : p
-        ];
-        is_loop = _is_closed_edge_loop(edge_string);
-        for (i = idx(edge_string)) {
-            if (corner_type!="none" && (i || is_loop)) {
-                e1 = select(edge_string,i-1);
-                e2 = select(edge_string,i);
-                vp1 = select(vecpairs,i-1);
-                vp2 = select(vecpairs,i);
-                pvec = _edge_pair_perp_vec(e1,e2);
-                pos = [for (i=[0:2]) e1[i]? e1[i] : e2[i]];
-                mirT = _corner_orientation(pos, pvec);
-                $attach_to = undef;
-                $attach_anchor = _find_anchor(pos, $parent_geom);
-                $profile_type = "corner";
-                position(pos) {
-                    multmatrix(mirT) {
-                        if (vp1.x == vp2.x && size.y > 0) {
-                            zflip() {
-                                if (corner_type=="chamfer") {
-                                    fn = $fn;
-                                    move([size.y,size.y]) {
-                                        rotate_extrude(angle=90, $fn=4)
-                                            left_half(planar=true, $fn=fn)
-                                                zrot(-90) fwd(size.y) children();
-                                    }
-                                    difference() {
-                                        down(0.01) cube([size.x, size.x, size.y+0.01]);
-                                        move([size.x+0.01, size.x+0.01])
-                                            zrot(180)
-                                                rotate_extrude(angle=90, $fn=4)
-                                                    square([size.x+0.01, size.y+0.01]);
-                                    }
-                                } else if (corner_type=="round") {
-                                    move([size.y,size.y]) {
-                                        rotate_extrude(angle=90)
-                                            left_half(planar=true)
-                                                zrot(-90) fwd(size.y) children();
-                                    }
-                                    difference() {
-                                        down(0.01) cube([size.x, size.x, size.y+0.01]);
-                                        move([size.x+0.01, size.x+0.01])
-                                            zrot(180)
-                                                rotate_extrude(angle=90)
-                                                    square([size.x+0.01, size.y+0.01]);
-                                    }
-                                }
-                            }
-                        } else if (vp1.y == vp2.y) {
-                            if (corner_type=="chamfer") {
-                                fn = $fn;
-                                rotate_extrude(angle=90, $fn=4)
-                                    right_half(planar=true, $fn=fn)
-                                        children();
-                                rotate_extrude(angle=90, $fn=4)
-                                    left_half(planar=true, $fn=fn)
-                                        children();
-                            } else if (corner_type=="round") {
-                                rotate_extrude(angle=90)
-                                    right_half(planar=true)
-                                        children();
-                                rotate_extrude(angle=90)
-                                    left_half(planar=true)
-                                        children();
-                            } else { //corner_type == "sharp"
-                                intersection() {
-                                    rot([90,0, 0]) linear_extrude(height=100,center=true,convexity=convexity) children();
-                                    rot([90,0,90]) linear_extrude(height=100,center=true,convexity=convexity) children();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        for (i = idx(edge_string)) {
-            $attach_to = undef;
-            $attach_anchor = _find_anchor(edge_string[i], $parent_geom);
-            $profile_type = "edge";
-            edge_profile(edge_string[i], excess=excess, convexity=convexity) {
-                if (flipverts[i]) {
-                    mirror([-1,1]) children();
-                } else {
-                    children();
-                }
-            }
-        }
-    }
-}
-
-
-
-// Module: corner_profile()
-// Synopsis: Rotationally extrudes a 2d edge profile into corner mask on the given corners of the parent.
-// SynTags: Geom
-// Topics: Attachments, Masking
-// See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask(), face_mask(), edge_mask()
-// Usage:
-//   PARENT() corner_profile([corners], [except], [r=|d=], [convexity=]) CHILDREN;
-// Description:
-//   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
-//   to the selected corners with the appropriate orientation. If no tag is set then `corner_profile()`
-//   sets the tag for children to "remove" so that it works with the default {{diff()}} tag.
-//   See [Specifying Corners](attachments.scad#subsection-specifying-corners) for information on how to specify corner sets.
-//   For a step-by-step explanation of masking attachments, see the [Attachments Tutorial](Tutorial-Attachment-Edge-Profiling).
-// Arguments:
-//   corners = Corners to mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: All corners.
-//   except = Corners to explicitly NOT mask.  See [Specifying Corners](attachments.scad#subsection-specifying-corners).  Default: No corners.
-//   ---
-//   r = Radius of corner mask.
-//   d = Diameter of corner mask.
-//   axis = Can be set to "X", "Y", or "Z" to specify the axis that the corner mask will be rotated around.  Default: "Z"
-//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
-// Side Effects:
-//   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
-//   `$idx` is set to the index number of each corner.
-//   `$attach_anchor` is set for each corner given, to the `[ANCHOR, POSITION, ORIENT, SPIN]` information for that anchor.
-//   `$profile_type` is set to `"corner"`.
-// Example:
-//   diff()
-//   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
-//       corner_profile(TOP,r=10)
-//           mask2d_teardrop(r=10, angle=40);
-//   }
-// Example: Rotate the mask around the X axis instead.
-//   diff()
-//   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
-//       corner_profile(TOP,r=10,axis="X")
-//           mask2d_teardrop(r=10, angle=40);
-//   }
-module corner_profile(corners=CORNERS_ALL, except=[], r, d, axis="Z", convexity=10) {
-    check1 = assert($parent_geom != undef, "\nNo object to attach to!");
-    r = max(0.01, get_radius(r=r, d=d, dflt=undef));
-    check2 = assert(is_num(r), "\nBad r/d argument.");
-    corners = _corners(corners, except=except);
-    vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
-    all_vecs_are_corners = all([for (vec = vecs) sum(v_abs(vec))==3]);
-    check3 = assert(all_vecs_are_corners, "\nAll vectors must be corners.");
-    module rot_to_axis(axis) {
-        if (axis == "X")
-            rot(120, v=[1,1,1]) children();
-        else if (axis == "Y")
-            rot(-120, v=[1,1,1]) children();
-        else
-            children();
-    }
-    module mirror_if(cond,plane) {
-        if (cond) mirror(plane) children();
-        else children();
-    }
-    module mirror_to_corner(corner) {
-        mirror_if(corner.x > 0, RIGHT)
-            mirror_if(corner.y > 0, BACK)
-                mirror_if(corner.z > 0, UP)
-                    children();
-    }
-    module corner_round_mask2d(r) {
-        excess = 0.01;
-        path = [
-            [-excess,-excess],
-            [-excess, r],
-            each arc(cp=[r,r], r=r, start=180, angle=90),
-            [r, -excess]
-        ];
-        polygon(path);
-    }
-    for ($idx = idx(vecs)) {
-        vec = vecs[$idx];
-        anch = _find_anchor(vec, $parent_geom);
-        $attach_to = undef;
-        $attach_anchor = anch;
-        $profile_type = "corner";
-        default_tag("remove") attachable() {
-            translate(anch[1]) {
-                mirror_to_corner(vec) {
-                    rot_to_axis(axis) {
-                        down(0.01) {
-                            linear_extrude(height=r+0.01, center=false, convexity=convexity) {
-                                corner_round_mask2d(r);
-                            }
-                        }
-                        translate([r,r]) zrot(180) {
-                            rotate_extrude(angle=90, convexity=convexity) {
-                                right(r) xflip() {
-                                    children();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            union();
-        }
-    }
-}
-
-
 // Section: Making your objects attachable
 
 
@@ -2814,14 +2070,14 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, axis="Z", convexity=
 //   }
 //   ```
 //   .
-//   If this is *not* run as a child of `attach()` with the `to` argument
+//   If this is *not* run as a child of `attach()` with the `child` argument
 //   given, then the following transformations are performed in order:
 //   * Translates so the `anchor` point is at the origin (0,0,0).
 //   * Rotates around the Z axis by `spin` degrees counter-clockwise.
 //   * Rotates so the top of the part points toward the vector `orient`.
 //   .
-//   If this is called as a child of `attach(from,to)`, then the info
-//   for the anchor points referred to by `from` and `to` are fetched,
+//   If this is called as a child of `attach(parent,child)`, then the info
+//   for the anchor points referred to by `parent` and `child` are fetched,
 //   which includes position, direction, and spin.  With that info,
 //   the following transformations are performed:
 //   * Translates this part so its anchor position matches the parent's anchor position.
@@ -2872,8 +2128,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, axis="Z", convexity=
 //   path = The path to generate a polygon from.
 //   region = The region to generate a shape from.
 //   extent = If true, calculate anchors by extents, rather than intersection, for VNFs and paths.  Default: true.
-//   cp = If given, specifies the centerpoint of the volume.  Default: `[0,0,0]`
-//   offset = If given, offsets the perimeter of the volume around the centerpoint.
+//   cp = If given, specifies the centerpoint of the volume.  For VNF and region attachment, changes the reference for determining the other anchors.  For other geometry types, this only changes the CENTER anchor.  If you need to change the other anchors combine this with `offset`.  Default: `[0,0,0]`
+//   offset = If given, offsets the perimeter of the volume around the centerpoint.  This leaves the CENTER anchor unchanged but changes the other anchors.  If you need to also change the CENTER anchor then combine this with `cp`.  
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   axis = The vector pointing along the axis of a geometry.  Default: UP
@@ -2951,14 +2207,14 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, axis="Z", convexity=
 //   }
 //
 // Example(NORENDER): Extruded Polygon Shape, by Extents
-//   attachable(anchor, spin, orient, path=path, l=length) {
+//   attachable(anchor, spin, orient, path=path, l=length, scale=scale) {
 //       linear_extrude(height=length, center=true)
 //           polygon(path);
 //       children();
 //   }
 //
 // Example(NORENDER): Extruded Polygon Shape, by Intersection
-//   attachable(anchor, spin, orient, path=path, l=length, extent=false) {
+//   attachable(anchor, spin, orient, path=path, l=length, extent=false, scale=scale) {
 //       linear_extrude(height=length, center=true)
 //           polygon(path);
 //       children();
@@ -3149,7 +2405,7 @@ module attachable(
     anchor, spin, orient,
     size, size2, shift,
     r,r1,r2, d,d1,d2, l,h,
-    vnf, path, region,
+    vnf, path, region, scale,
     extent=true,
     cp=[0,0,0],
     offset=[0,0,0],
@@ -3176,7 +2432,7 @@ module attachable(
         attach_geom(
             size=size, size2=size2, shift=shift,
             r=r, r1=r1, r2=r2, h=h,
-            d=d, d1=d1, d2=d2, l=l,
+            d=d, d1=d1, d2=d2, l=l, scale=scale,
             vnf=vnf, region=region, extent=extent,
             cp=cp, offset=offset, anchors=anchors,
             two_d=two_d, axis=axis, override=override
@@ -3414,10 +2670,10 @@ function named_anchor(name, pos, orient, spin, rot, flip, info) =
 // Usage:
 //   PARENT() change_anchors([named],[alias=],[remove=]) CHILDREN;
 // Description:
-//   Modifies the named anchors inherited from the parent object.  The `named` parameter gives a list
+//   Modifies the named anchors inherited from the parent object or adds new named anchors.  The `named` parameter gives a list
 //   of new or replacement named anchors, specified in the usual way with {{named_anchor()}}.
-//   The `alias` parameter specifies a list of string pairs of the form `[newname, oldname]` where
-//   `newname` is a new anchor name and `oldname` is an existing named anchor for the parent.  The
+//   The `alias` parameter specifies a list of pairs of the form `[newname, anchor]` where
+//   `newname` is a new anchor name and `anchor` is an existing anchor for the parent, either a named anchor or a regular anchor.  The
 //   existing parent anchor will be propagated to the child under the new name.  The old name is not changed,
 //   and will also be propagated to the child.   The `remove` parameter removes named anchors inherited from
 //   the parent so they are not propagated to the child.  You can use it to remove an anchor that you have
@@ -3430,16 +2686,11 @@ function named_anchor(name, pos, orient, spin, rot, flip, info) =
  
 module change_anchors(named=[], alias=[], remove=[])
 {
+  dummy=assert($parent_geom != undef, "\nNo object with anchors to change!");
   oldanch = last($parent_geom);
   allremove = concat(column(named,0), remove);
   keepanch = [for(anch=oldanch) if (!in_list(anch[0],allremove)) anch];
-  aliasanch = [for(name=alias)
-                  let(
-                      found = search([name[1]], oldanch, num_returns_per_match=1)[0]
-                  )
-                  assert(found!=[], str("Alias references unknown anchor: ",name[1]))
-                  list_set(oldanch[found],0,name[0])
-              ];
+  aliasanch = [for(name=alias) list_set(_find_anchor(name[1],$parent_geom),0,name[0])];
   newanch = concat(keepanch, aliasanch, named);
   $parent_geom = list_set($parent_geom,-1,newanch);
   children();
@@ -3668,18 +2919,22 @@ function attach_geom(
 // Function: define_part()
 // Synopsis: Creates an attachable part data structure.
 // Topics: Attachments
-// See Also: attachable()
+// See Also: attachable(), attach_part(), parent_part()
 // Usage:
 //   part = define_part(name, geom, [inside=], [T=]);
 // Description:
 //   Create a named attachable part that can be passed in the `parts` parameter of {{attachable()}}
-//   and then selected using {{attach_part()}}.
+//   and then selected using {{attach_part()}}.  You can create a simple part or a compound part.
+//   A simple part has a single geometry and associated transformation matrix and `inside` flag.
+//   A compound part is a part with multiple components that can be indexed numerically.  To create
+//   a compound part either `geom` should be a list of geometries or `T` a list of transformations,
+//   or they should both be lists of compatible length.  
 // Arguments:
 //   name = name of part
-//   geom = geometry of part produced by {{attach_geom()}}
+//   geom = geometry of part (or list for compound parts) produced by {{attach_geom()}}
 //   ---
 //   inside = if true, reverse the attachment direction for children.  Default: false
-//   T = Transformation to apply to children.  Default: IDENT
+//   T = Transformation to apply to children (or list for compound parts).  Default: IDENT
 // Example(3D): This example shows how to create a custom object with two different parts that are both transformed away from the origin.  The basic object is two cylinders with a cube shaped attachment geometry that doesn't match the object well.  The "left" and "right" parts attach to each of the two cylinders.  
 //   module twocyl(d, sep, h, ang=20) 
 //   {
@@ -3700,15 +2955,49 @@ function attach_geom(
 //     color("pink")attach_part("left")attach(TOP,BOT) cuboid(3);
 //     color("green")attach_part("right")attach(TOP,BOT) cuboid(3);    
 //   }
+// Example(3D): This example shows a custom object with a compound part.  The "cube" part provides access to all the cubes in the ring by index number.  
+//  $fn=18;
+//  module cube_ring(size, r, n)
+//  {
+//    size = force_list(size,3);
+//    Tlist = zrot_copies(n=n, r=r);
+//    parts = [ define_part("cube",
+//                          attach_geom(size=size),
+//                          T=Tlist)];
+//    attachable(r=r, h=size.z, parts=parts){
+//      for(T=Tlist) multmatrix(T) cuboid(size);
+//      children();
+//    }
+//  }
+//  cube_ring(14, 30, 7){
+//     color("orange")
+//       attach(TOP,BOT) cuboid([3,52,1]);
+//     color("lightblue")
+//       attach_part("cube",1) attach(TOP,BOT) cyl(d1=9,d2=4,h=5);
+//     color("pink")
+//       attach_part("cube",-1) attach(TOP,TOP) cyl(d1=9,d2=4,h=5);
+//  }   
 
 function define_part(name, geom, inside=false, T=IDENT) =
-  assert(is_string(name), "\n'name' must be a string.")
-  assert(_is_geometry(geom), "\ngeometry appears invalid.")
-  assert(is_bool(inside), "\n'inside' must be boolean.")
-  assert(is_matrix(T,4), "\nT must be a 4×4 transformation matrix.")
-  [name, geom, inside, T];
-
-
+  let(
+       geom_n = _is_geometry(geom) ? 1 : assert(is_list(geom), "\ngeom is invalid") len(geom),
+       T_n = is_matrix(T) ? 1
+           : assert(is_consistent(T, ident(4)), "\nT must be a transformation or list of transformations")
+             len(T)
+  )
+  assert(geom_n==T_n || geom_n==1 || T_n==1, "\ngeom and T have inconsistent lengths")
+  let(
+       n = max(T_n,geom_n),
+       geom_list = _is_geometry(geom) ? repeat(geom,n) : geom,
+       T = is_matrix(T) ? repeat(T,n) : T,
+       inside = is_bool(inside) ? repeat(inside,n)
+              : assert(is_bool_list(inside,n), str("\ninside must be a boolean list with length ",n))
+                inside
+  )
+  let(
+       partlist = [for(i=[0:n-1]) [geom_list[i], inside[i], T[i]]]
+  )
+  [name, partlist];
 
 
 
@@ -4168,7 +3457,7 @@ function _find_anchor(anchor, geom)=
             vec2 = anch==CENTER? UP : rot(from=UP, to=axis, p=vec),
                // Set spin for top/bottom to be clockwise
             spin = anch.z!=0 && (!approx(anch.x,0) || !approx(anch.y,0)) ? _compute_spin(vec2,rot(from=UP,to=axis,p=point3d(tangent)*anch.z))
-                 : anch.z==0 && norm(anch)>EPSILON ? _compute_spin(vec2, (approx(vec2,DOWN) || approx(vec2,UP))?BACK:UP)
+                 : anch.z==0 && norm(anch)>_EPSILON ? _compute_spin(vec2, (approx(vec2,DOWN) || approx(vec2,UP))?BACK:UP)
                  : oang
         ) [anchor, pos2, vec2, spin]
     ) : type == "point"? (
@@ -4342,7 +3631,12 @@ function _find_anchor(anchor, geom)=
                              direc = unit(angles*normals)
                    )
                    [vnf[0][ulist[0]], direc, atan2(direc.y,direc.x)+90]
-        ) [anchor, default(override[0],res[0]),default(override[1],res[1]),default(override[2],res[2]),if (len(res)==3) res[2]]        
+        ) [anchor,
+           default(override[0],res[0]),
+           default(override[1],res[1]),
+           default(override[2],res[2]),
+           if (len(res)==4) res[3]
+          ]        
     ) : type == "trapezoid"? ( //size, size2, shift, override
         let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
         assert(all_comps_good, "\nAll components of an anchor for a rectangle/trapezoid must be -1, 0, or 1.")
@@ -4438,7 +3732,8 @@ function _find_anchor(anchor, geom)=
             shmat = move(lerp([0,0], shift, u)),
             scmat = scale(lerp([1,1], scale, u)),
             twmat = zrot(lerp(0, -twist, u)),
-            mat = shmat * scmat * twmat
+            mat = shmat * scmat * twmat,
+            cp=point2d(cp)
         )
         approx(anchor_xy,[0,0]) ? [anchor, apply(mat, point3d(cp,anchor.z*L/2)), unit(anchor, UP), oang] :
         let(
@@ -5206,11 +4501,14 @@ function _force_anchor_2d(anchor) =
 // Compute spin angle based on a anchor direction and desired spin direction
 // anchor_dir assumed to be a unit vector; no assumption on spin_dir
 // Takes the component of the spin direction perpendicular to the anchor
-// direction and gives the spin angle that achieves it.  
-function _compute_spin(anchor_dir, spin_dir) =
+// direction and gives the spin angle that achieves it.
+// backup_dir will be used instead of spin_dir if anchor_dir is parallel to spin_dir
+function _compute_spin(anchor_dir, spin_dir, backup_dir) =
    let(
         native_dir = rot(from=UP, to=anchor_dir, p=BACK),
-        spin_dir = spin_dir - (spin_dir*anchor_dir)*anchor_dir,  // component of spin_dir perpendicular to anchor_dir
+        spin_dir1 = spin_dir - (spin_dir*anchor_dir)*anchor_dir,     // component of spin_dir perpendicular to anchor_dir
+        spin_dir = !approx(spin_dir1,[0,0,0]) || is_undef(backup_dir) ? spin_dir1
+                 : backup_dir - (backup_dir*anchor_dir)*anchor_dir,  // component of backup_dir perpendicular to anchor_dir
         dummy = assert(!approx(spin_dir,[0,0,0]),"\nSpin direction is parallel to anchor."),
         angle = vector_angle(native_dir,spin_dir),
         sign = cross(native_dir,spin_dir)*anchor_dir<0 ? -1 : 1
@@ -5250,18 +4548,18 @@ function parent() =
     let(
         geom = default($parent_geom, attach_geom([0,0,0]))
     )                 
-    [$transform, geom];
+    [$transform, geom, $parent_parts];
 
 
 
 // Function: parent_part()
 // Topics: Transforms, Attachments, Descriptions
-// See Also: restore(), parent()
+// See Also: restore(), parent(), attach_part(), define_part()
 // Synopsis: Returns a description (transformation state and attachment geometry) of a part defined by the parent
 // Usage:
-//   PARENT() let( desc = parent_part(name) ) CHILDREN;
+//   PARENT() let( desc = parent_part(name, [ind]) ) CHILDREN;
 // Usage: in development releases only
-//   PARENT() { desc=parent_part(name); CHILDREN; }
+//   PARENT() { desc=parent_part(name, [ind]); CHILDREN; }
 // Description:
 //   Returns a description of the parent part with the specified name.  You can use this
 //   description to create new objects based on the described object or perform computations based on the described object.  You can also use it to
@@ -5269,7 +4567,12 @@ function parent() =
 //   this function to work, and the definition of the variable is scoped to the children of the let module.
 //   (In development versions the use of let is no longer necessary.)  Note that if OpenSCAD displays any warnings
 //   related to transformation operations then the transformation that parent_part() returns is likely to be incorrect, even if OpenSCAD
-//   continues to run and produces a valid result.
+//   continues to run and produces a valid result.  If the chosen part is a compound part then you select which component you want by giving the index, `ind`.
+//   The index wraps around in both directions, so it will always select some component.  
+//   The default index is zero; the index has no effect for simple parts
+// Arguments:
+//   name = name of part whose description is returned
+//   ind = index for use with compount parts.  Default: 0
 // Example(3D): This example defines an object with two parts and then uses `parent_part()` to create a {{prism_connector()}} between the two parts of the object.
 //   $fn=48;
 //   module twocyl(d, sep, h, ang=20) 
@@ -5294,13 +4597,9 @@ function parent() =
 //                     parent_part("right"), LEFT,
 //                     fillet=1);
 
-function parent_part(name) =
-    assert(!is_undef($parent_parts), "\nParent does not exist or does not have any parts.")
-    let(
-        ind = search([name], $parent_parts, 1,0)[0]
-    )
-    assert(ind!=[], str("\nParent does not have a part named \"",name,"\"."))    
-    [$transform * $parent_parts[ind][3], $parent_parts[ind][1]];
+function parent_part(name,ind=0) =
+    let(part = _get_part(name, ind))
+    [$transform * part[2], part[0],undef];
 
 
 // Module: restore()
@@ -5327,12 +4626,14 @@ module restore(desc)
    if (is_undef(desc)){
      T = matrix_inverse($transform);
      $parent_geom = attach_geom([0,0,0]);
+     $parent_parts = undef;
      multmatrix(T) children();
    }
    else{
      check=assert(is_description(desc), "\nInvalid description.");
      T = linear_solve($transform, desc[0]);
      $parent_geom = desc[1];
+     $parent_parts = desc[2];
      multmatrix(T) children();
    }
 }
@@ -5495,8 +4796,8 @@ function desc_dist(desc1,anchor1=CENTER, desc2, anchor2=CENTER)=
 
 function transform_desc(T,desc) =
     assert(is_description(desc), "\nInvalid description.")
-    is_consistent(T, ident(4)) ? [for(t=T) [t*desc[0], desc[1]]]
-  : is_matrix(T,4,4) ? [T*desc[0], desc[1]]
+    is_consistent(T, ident(4)) ? [for(t=T) [t*desc[0], desc[1],desc[2]]]
+  : is_matrix(T,4,4) ? [T*desc[0], desc[1],desc[2]]
   : assert(false,"\nT must be a 4×4 matrix or list of 4×4 matrices.");
 
 
@@ -5563,7 +4864,7 @@ module desc_copies(transforms)
 
            
 // Function: is_description()
-// Synopsis: Check if its argument is a descriptioni
+// Synopsis: Check if its argument is a description
 // Topics: Descriptions
 // Usage:
 //   bool = is_description(desc);
@@ -5572,7 +4873,7 @@ module desc_copies(transforms)
 // Arguments:
 //   desc = argument to check
 function is_description(desc) =
-  is_list(desc) && len(desc)==2 && is_matrix(desc[0],4,4) && is_list(desc[1]) && is_string(desc[1][0]);
+  is_list(desc) && len(desc)==3 && is_matrix(desc[0],4,4) && is_list(desc[1]) && is_string(desc[1][0]);
 
 
 

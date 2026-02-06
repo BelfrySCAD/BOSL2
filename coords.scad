@@ -8,6 +8,9 @@
 // FileFootnotes: STD=Included in std.scad
 //////////////////////////////////////////////////////////////////////
 
+_BOSL2_COORDS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: coords.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
 
 // Section: Coordinate Manipulation
 
@@ -29,7 +32,7 @@ function point2d(p, fill=0) = assert(is_list(p)) [for (i=[0:1]) (p[i]==undef)? f
 // Synopsis: Convert a path to 2D. 
 // SynTags: Path
 // Topics: Coordinates, Points, Paths
-// See Also: point2d(), point3d(), path3d()
+// See Also: point2d(), point3d(), path3d(), point4d(), path4d(), hstack()
 // Usage:
 //   pts = path2d(points);
 // Description:
