@@ -196,7 +196,7 @@ function half_of(p, v=UP, cp, cut_path, cut_angle=0, offset=0) =
                 cut_path[0].x < last(cut_path).x
                   ? cut_path
                   : reverse(cut_path),
-            M = move(cp) * zrot(from=BACK, to=[v.x,v.y,0]),
+            M = move(cp) * rot(from=BACK, to=[v.x,v.y,0]),
             raw_path = [
                 [min(-s/2, ppath[0].x), +s],
                 [min(-s/2, ppath[0].x), ppath[0].y],
