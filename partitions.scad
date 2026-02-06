@@ -939,7 +939,7 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpa
 //   stroke(ptn_sect("sawtooth 5x"));
 // Example(2D): Suffixing the name with a string like `" 40x20"` will scale the pattern to a size of 40 by 30.  By default a pattern will be 20 by 20 in size.
 //   stroke(ptn_sect("jigsaw 40x20"));
-// Example(2D): You can add multiple space delimited suffixes to apply multiple affects.
+// Example(2D): You can add multiple space delimited suffixes to apply multiple effects.
 //   stroke(ptn_sect("halfsine addflip yflip 40x30 3x"));
 // Example(2D): Suffix ordering can matter, since they are applied in order.
 //   stroke(ptn_sect("halfsine 3x addflip yflip 40x30"));
