@@ -553,7 +553,7 @@ function back_half(p,y=0, cut_path, cut_angle=0, offset=0) =
 //   bottom_half() sphere(r=20);
 //   bottom_half(z=-10) sphere(r=20);
 // Example(2D): Working in 2D
-//   bottom_half(z=5) circle(r=20);
+//   bottom_half(z=5,planar=true) circle(r=20);
 // Example(2D): Using a cut path in 2D
 //   ppath = partition_path([
 //           40, "jigsaw", "dovetail yflip", 40,
@@ -629,7 +629,7 @@ function bottom_half(p,z=0, planar=false, cut_path, cut_angle=0, offset=0) =
 //   top_half() sphere(r=20);
 //   top_half(z=5) sphere(r=20);
 // Example(2D): Working in 2D
-//   top_half(z=5) circle(r=20);
+//   top_half(z=5,planar=true) circle(r=20);
 // Example(2D): Using a cut path in 2D
 //   ppath = partition_path([
 //           40, "jigsaw", "dovetail yflip", 40,
