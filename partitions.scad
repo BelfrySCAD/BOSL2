@@ -962,7 +962,7 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpa
 //   stroke(ptn_sect(cust_path, length=40, width=30));
 
 function ptn_sect(type, length=25, width=25, invert=false) =
-    // NOTE: these patterns are NOT quite the same as those in _partition_submask().
+    // NOTE: these patterns are NOT quite the same as those in _partition_subpath().
     // They are positioned and sometimes formed differently for better alignment, though
     // the overall shapes are nearly the same.
     is_num(type)? assert(is_finite(type) && type>0) [[0,0], [type,0]] :
