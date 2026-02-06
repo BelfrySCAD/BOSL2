@@ -913,7 +913,7 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpa
 //   path = ptn_sect(type, [length], [width], [invert=]);
 // Description:
 //   Creates a partition path section based on a name or description.  The result is intended to be fed to {{partition_path()}}.
-//   If the `type=` argument is given as a scalar, the pattern returned will be for a "flat" sectiob of that given length.
+//   If the `type=` argument is given as a scalar, the pattern returned will be for a "flat" section of that given length.
 //   If the `type=` argument is given as a string, it it expected to be the name of a standard section pattern to return.
 //   Accepted pattern names are: `"flat"`, `"sawtooth"`, `"sinewave"`, `"comb"`, `"finger"`, `"dovetail"`, `"hammerhead"`, or `"jigsaw"`.
 //   If the given pattern name string is suffixed by `" yflip"`, then the returned pattern is flipped back-to-front, across the X axis.
