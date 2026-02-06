@@ -125,7 +125,19 @@ module half_of(v=UP, cp, s=100, planar=false, cut_path, cut_angle=0, offset=0, s
             [max(+s/2, last(ppath).x), +s],
         ];
     if (cp != [0,0,0]) {
-        translate(cp) half_of(v=v, s=s, planar=planar) translate(-cp) children();
+        translate(cp)
+            half_of(
+                v=v,
+                cp=[0,0,0],
+                s=s,
+                planar=planar,
+                cut_path=cut_path,
+                cut_angle=cut_angle,
+                offset=offset,
+                show_frameref=show_frameref,
+                convexity=convexity
+            )
+            translate(-cp) children();
     } else if (planar) {
         v = (v==UP)? BACK : (v==DOWN)? FWD : v;
         ang = atan2(v.y, v.x) - 90;
