@@ -37,7 +37,7 @@ use <builtins.scad>
 //   This module extends the built-in cube()` module by providing support for attachments and a function form.  
 //   When called as a function, returns a [VNF](vnf.scad) for a cube.
 // Arguments:
-//   size = The size of the cube.
+//   size = The size of the cube.  Default: 1
 //   center = A true value sets `anchor=CENTER`, false sets `anchor=FRONT+LEFT+BOTTOM`.  Default: `anchor=CENTER`
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
@@ -1972,15 +1972,15 @@ function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
 // Description:
 //   Creates a 3D cylinder or conic object.
 //   This modules extends the built-in `cylinder()` module by adding support for attachment and by adding a function version.   
-//   When called as a function, returns a [VNF](vnf.scad) for a cylinder.  
+//   When called as a function, returns a [VNF](vnf.scad) for a cylinder.  The defaults 
 // Arguments:
-//   h = The height of the cylinder.
-//   r1 = The bottom radius of the cylinder.  (Before orientation.)
-//   r2 = The top radius of the cylinder.  (Before orientation.)
+//   h = The height of the cylinder. Default: 1
+//   r1 = The bottom radius of the cylinder. Default: 1
+//   r2 = The top radius of the cylinder.  Default: 1
 //   center = A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.  Default: false (`anchor=BOTTOM`)
 //   ---
-//   d1 = The bottom diameter of the cylinder.  (Before orientation.)
-//   d2 = The top diameter of the cylinder.  (Before orientation.)
+//   d1 = The bottom diameter of the cylinder. 
+//   d2 = The top diameter of the cylinder. 
 //   r = The radius of the cylinder.
 //   d = The diameter of the cylinder.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
@@ -2045,32 +2045,25 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 
 
 // Function&Module: cyl()
-// Synopsis: Creates an attachable cylinder with roundovers and chamfering.
+// Synopsis: Creates an attachable cylinder with roundovers, chamfering or texturing.
 // SynTags: Geom, VNF
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: regular_prism(), texture(), rotate_sweep(), cylinder()
 // Usage: Normal Cylinders
-//   cyl(l|h|length|height, r, [center|anchor=], [circum=], [realign=]) [ATTACHMENTS];
+//   cyl(l|h|length|height, r, [r2], [center|anchor=], [circum=], [realign=]) [ATTACHMENTS];
 //   cyl(l|h|length|height, d=, ...) [ATTACHMENTS];
-//   cyl(l|h|length|height, r1=, r2=, ...) [ATTACHMENTS];
-//   cyl(l|h|length|height, d1=, d2=, ...) [ATTACHMENTS];
+//   cyl(l|h|length|height, r1=|d1=, r2=|d2=, ...) [ATTACHMENTS];
 //
 // Usage: Chamferred Cylinders
-//   cyl(l|h|length|height, r|d, chamfer=, [chamfang=], [from_end=], ...);
-//   cyl(l|h|length|height, r|d, chamfer1=, [chamfang1=], [from_end=], ...);
-//   cyl(l|h|length|height, r|d, chamfer2=, [chamfang2=], [from_end=], ...);
-//   cyl(l|h|length|height, r|d, chamfer1=, chamfer2=, [chamfang1=], [chamfang2=], [from_end=], ...);
+//   cyl(..., chamfer=, [chamfang=], [from_end=], ...);
+//   cyl(..., [chamfer1=], [chamfer2=], [chamfang1=], [chamfang2=], [from_end=], ...);
 //
 // Usage: Rounded End Cylinders
-//   cyl(l|h|length|height, r|d, rounding=, [teardrop=], [clip_angle=], ...);
-//   cyl(l|h|length|height, r|d, rounding1=, [teardrop=], [clip_angle=], ...);
-//   cyl(l|h|length|height, r|d, rounding2=, [teardrop=], [clip_angle=], ...);
-//   cyl(l|h|length|height, r|d, rounding1=, rounding2=, [teardrop=], [clip_angle=], ...);
+//   cyl(..., rounding=, [teardrop=], [clip_angle=], ...);
+//   cyl(..., [rounding1=], [rounding2=], [teardrop=], [clip_angle=], ...);
 //
 // Usage: Textured Cylinders
-//   cyl(l|h|length|height, r|d, texture=, [tex_size=]|[tex_reps=], [tex_depth=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
-//   cyl(l|h|length|height, r1=, r2=, texture=, [tex_size=]|[tex_reps=], [tex_depth=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
-//   cyl(l|h|length|height, d1=, d2=, texture=, [tex_size=]|[tex_reps=], [tex_depth=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
+//   cyl(..., texture=, [tex_size=]|[tex_reps=], [tex_depth=], [tex_rot=], [tex_samples=], [style=], [tex_taper=], [tex_inset=], ...);
 //
 // Usage: Called as a function to get a VNF
 //   vnf = cyl(...);
@@ -2078,11 +2071,11 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 // Description:
 //   Creates cylinders in various anchorings and orientations, with optional rounding, chamfers, or textures.
 //   You can use `h` and `l` interchangably, and all variants allow specifying size by either `r`|`d`,
-//   or `r1`|`d1` and `r2`|`d2`.  Note: the chamfers and rounding cannot be cumulatively longer than
+//   or `r1`|`d1` and `r2`|`d2`.  The chamfers and rounding cannot be cumulatively longer than
 //   the cylinder or cone's sloped side.  The more specific parameters like chamfer1 or rounding2 override the more
 //   general ones like chamfer or rounding, so if you specify `rounding=3, chamfer2=3` you get a chamfer at the top and
-//   rounding at the bottom.  You can specify extra height at either end for use with difference(); the extra height is ignored by
-//   anchoring.
+//   rounding at the bottom.  You can specify extra height at either end (e.g. with `extra=`) for use with difference(); the extra
+//   height is ignored by anchoring.
 //   .
 //   You can apply a texture to the cylinder using the usual texture parameters.   
 //   See [Texturing](skin.scad#section-texturing) for more details on how textures work.  
@@ -2090,10 +2083,13 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   effect are ignored.  To create a textured prism with a specified number of flat facets use {{regular_prism()}}.  Anchors for cylinders
 //   appear on the ideal cylinder, not on actual discretized shape the module produces. For anchors on the shape surface, use {{regular_prism()}}.  
 //   .
-//   Note that when chamfering or rounding, the angle of chamfers is done at the face of the facets of the shape.
+//   When chamfering or rounding, the angle of chamfers is done at the face of the facets of the shape.
 //   If `circum=false` (the default) then the radius or chamfer length is measured at the corner of the shape.  If `circum=true`
 //   then the radius or chamfer length applies in the more usual way in the center of a facet.  For cylinders with a large `$fn`
-//   the difference between these two things is negligible, but it can be quite sigificant when `$fn` is small.  
+//   the difference between these two things is negligible, but it can be quite sigificant when `$fn` is small.
+//   .
+//   If you use the positional parameters, this module has an inconsistency with the native {{cylinder()}} module.  The `cylinder()` module
+//   has a default of `r2=1` so `cylinder(10,5)` produces a cone with radius 1 at the top, but `cyl()` defaults to a right angle cylinder in this case.  
 // Figure(2D,Big,NoAxes,VPR = [0, 0, 0], VPT = [0,0,0], VPD = 82): Chamfers on cones can be tricky.  This figure shows chamfers of the same size and same angle, A=30 degrees.  Note that the angle is measured on the inside, and produces a quite different looking chamfer at the top and bottom of the cone.  Straight black arrows mark the size of the chamfers, which may not even appear the same size visually.  When you do not give an angle, the triangle that is cut off will be isoceles, like the triangle at the top, with two equal angles.
 //  color("lightgray")
 //  projection()
@@ -2378,8 +2374,8 @@ function _cyl_path(
 
 
 function cyl(
-    h, r, center,
-    l, r1, r2,
+    h, r, r2, center,
+    l, r1, 
     d, d1, d2,
     length, height,
     chamfer, chamfer1, chamfer2,
@@ -2395,6 +2391,15 @@ function cyl(
     extra, extra1, extra2, 
     anchor, spin=0, orient=UP
 ) =
+    let(
+        legacy = is_bool(r2) && is_undef(center),
+        edummy = !legacy?0:
+          echo("You gave a boolean value for r2.  Assuming you gave this value as the 3rd positional parameter.")
+          echo("cyl() has changed and has parameters (height, r, r2, center) for improved consistency with")
+          echo("cylinder().  Support for the legacy calling style cyl(height, r, center) will be eliminated")
+          echo("and this will become an error."),
+        center = legacy ? r2 : center
+    )
     assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
     assert(num_defined([center,anchor])<2, "\nCannot give both center and anchor")
     assert(num_defined([style,tex_style])<2, "\nIn cyl() the 'tex_style' parameter has been replaced by 'style'. You cannot give both.")
@@ -2409,7 +2414,7 @@ function cyl(
                   : default(tex_depth,1),
         l = one_defined([l, h, length, height],"l,h,length,height",dflt=1),
         _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
-        _r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
+        _r2 = get_radius(r1=legacy ? undef : r2, r=r, d1=d2, d=d, dflt=1),
         sides = segs(max(_r1,_r2)),
         sc = circum? 1/cos(180/sides) : 1,
         r1 = _r1 * sc,
@@ -2498,8 +2503,8 @@ function _clipped_corner(r, corner, ang=45) =
 
 
 module cyl(
-    h, r, center,
-    l, r1, r2,
+    h, r, r2, center,
+    l, r1, 
     d, d1, d2,
     length, height,
     chamfer, chamfer1, chamfer2,
@@ -2515,6 +2520,13 @@ module cyl(
     extra, extra1, extra2, 
     anchor, spin=0, orient=UP
 ) {
+    legacy = is_bool(r2) && is_undef(center);
+    edummy = !legacy?0:
+      echo("You gave a boolean value for r2.  Assuming you gave this value as the 3rd positional parameter.")
+      echo("cyl() has changed and has parameters (height, r, r2, center) for improved consistency with")
+      echo("cylinder().  Support for the legacy calling style cyl(height, r, center) will be eliminated")
+      echo("and this will become an error.");
+    center = legacy ? r2 : center;
     dummy=
       assert(num_defined([anchor,center])<2, "\nCannot give both `anchor` and `center` to cyl()")
       assert(is_undef(center) || is_bool(center), "\ncenter must be boolean")
@@ -2529,7 +2541,7 @@ module cyl(
               : default(tex_depth,1);
     l = one_defined([l, h, length, height],"l,h,length,height",dflt=1);
     _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
-    _r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
+    _r2 = get_radius(r1=legacy ? undef : r2, r=r, d1=d2, d=d, dflt=1);
     sides = segs(max(_r1,_r2));
     sc = circum? 1/cos(180/sides) : 1;
     r1 = _r1 * sc;
