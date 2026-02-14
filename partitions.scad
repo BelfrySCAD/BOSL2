@@ -942,8 +942,8 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpa
 //   If `invert=true`, behaves as if a " yflip" modifier was added to the end.
 // Arguments:
 //   type = The general description of the partition path section.  This can be a string name, a 2D path, or a scalar length for a flat section.  Valid names are listed in the section description above.
-//   length = The X axis length of the section. Default: 30
-//   width = The Y axis length of the section. Default: 20
+//   length = The X axis length of the section. Default: 25
+//   width = The Y axis length of the section. Default: 25
 //   ---
 //   invert = If true, the returned section is flipped back-to-front.  Default: false
 // Examples(2D):
