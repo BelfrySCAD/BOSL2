@@ -4724,7 +4724,7 @@ function plot3d(f,x,y,zclip, zspan, base=1, anchor="origin", orient=UP, spin=0, 
                 each sdata,
                 [for(p=last(sdata)) [p.x,p.y,bottom]]
               ],
-       vnf = vnf_vertex_array(transpose(data), col_wrap=true, caps=true, style=style)
+       vnf = vnf_vertex_array(transpose(data), col_wrap=true, caps=true, style=style, reverse=true)
    )
    reorient(anchor,spin,orient, vnf=vnf, p=vnf);
 
