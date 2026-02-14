@@ -933,7 +933,7 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpa
 //   - `"sawtooth 3x"`: repeats the sawtooth wave 3 times.
 //   - `"triangle 20x30"`: Resize the triangle wave to be 20x30 in size.
 //   - `"sawtooth xflip"`: Mirrors the sawtooth wave along the X axis.
-//   - `"sawtooth yflip": Mirrors the sawtooth wave along the Y axis.
+//   - `"sawtooth yflip"`: Mirrors the sawtooth wave along the Y axis.
 //   - `"sawtooth addflip"`: Equivalent to a combination of "sawtooth" and "sawtooth xflip yflip".
 //   - `"sawtooth wave"`: Same as "sawtooth addflip".
 //   - `"square skew:15"`: Skews the squarewave shape by 15 degrees.
