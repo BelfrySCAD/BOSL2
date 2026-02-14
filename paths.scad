@@ -1057,7 +1057,7 @@ function path_cut_points(path, cutdist, closed=false, direction=false) =
     is_num(cutdist) ? path_cut_points(path, [cutdist],closed, direction)[0] :
     assert(is_vector(cutdist))
     assert(is_increasing(cutdist), "\nCut distances must be an increasing list.")
-    assert(cutdist[0]>=0, str("Cut distances must be positive.  Got: ", cutdist[0]))
+    assert(cutdist[0]>=0, str("Cut distances must be non-negative.  Got: ", cutdist[0]))
     let(cuts = path_cut_points_recurse(path,cutdist,closed))
     !direction
        ? cuts

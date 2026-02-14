@@ -915,7 +915,7 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpa
 //   Creates a partition path section based on a name or description.  The result is intended to be fed to {{partition_path()}}.
 //   If the `type=` argument is given as a scalar, the pattern returned will be for a "flat" section of that given length.
 //   If the `type=` argument is given as a 2D path, the pattern returned will be scaled from the input path by length= and width=.
-//   If the `type=` argument is given as a string, it it expected to be the name of a standard section pattern:
+//   If the `type=` argument is given as a string, it is expected to be the name of a standard section pattern:
 //   Accepted section pattern names are:
 //   - `"flat"`: A flat section.
 //   - `"sawtooth"`: A sawtooth halfwave, with the peak to the left.
@@ -932,16 +932,16 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpa
 //   Section pattern names can be suffixed by one or more modifiers, separated by spaces.  Accepted modifier forms are:
 //   - `"sawtooth 3x"`: repeats the sawtooth wave 3 times.
 //   - `"triangle 20x30"`: Resize the triangle wave to be 20x30 in size.
-//   - `"sawtooth xflip": Mirrors the sawtooth wave along the X axis.
+//   - `"sawtooth xflip"`: Mirrors the sawtooth wave along the X axis.
 //   - `"sawtooth yflip": Mirrors the sawtooth wave along the Y axis.
-//   - `"sawtooth addflip": Equivalent to a combination of "sawtooth" and "sawtooth xflip yflip".
-//   - `"sawtooth wave": Same as "sawtooth addflip".
+//   - `"sawtooth addflip"`: Equivalent to a combination of "sawtooth" and "sawtooth xflip yflip".
+//   - `"sawtooth wave"`: Same as "sawtooth addflip".
 //   - `"square skew:15"`: Skews the squarewave shape by 15 degrees.
-//   - `"square pinch:33"`: Pinches the top of the squarewave shape by to 33% the size of the bottom.
+//   - `"square pinch:33"`: Pinches the top of the squarewave shape to 33% the size of the bottom.
 //   Modifiers are processed left to right in order.
 //   If `invert=true`, behaves as if a " yflip" modifier was added to the end.
 // Arguments:
-//   type = The general description of the partition path section.  This can be a string name, a 2D path, or a scalar length for a flat section.  Valid names are "flat", "sawtooth", "sinewave", "comb", "finger", "dovetail", "hammerhead", or "jigsaw".
+//   type = The general description of the partition path section.  This can be a string name, a 2D path, or a scalar length for a flat section.  Valid names are listed in the section description above.
 //   length = The X axis length of the section. Default: 30
 //   width = The Y axis length of the section. Default: 20
 //   ---
@@ -980,7 +980,7 @@ module partition(size=100, spread=10, cutsize=10, cutpath="jigsaw", gap=0, cutpa
 //   stroke(ptn_sect(30));
 // Example(2D): Suffixing the name with a string like `" skew:15"` will skew the waveform by 15 degrees.
 //   stroke(ptn_sect("square skew:15"));
-// Example(2D): Suffixing the name with a string like `" pinch:30"` will pinch the top of the waveform in to 30% os the size of the bottom.
+// Example(2D): Suffixing the name with a string like `" pinch:30"` will pinch the top of the waveform in to 30% of the size of the bottom.
 //   stroke(ptn_sect("square pinch:30"));
 // Example(2D): Using a custom section shape.  Input is expected to start at `[0,0]`, and end at `[1,0]`.  It is scaled by length= and width=.
 //   cust_path = yscale(2, p=arc(n=15, r=0.5, cp=[0.5,0], start=180, angle=-180));
@@ -1050,14 +1050,16 @@ function ptn_sect(type, length=25, width=25, invert=false) =
                 parts = str_split(opt, ":"),
                 pcnt = parse_float(parts[1]),
                 checks =
-                    assert(len(parts) == 2, "Pinch option expected to be in the form pinch:PERCENT.  ie: \"skew:15\"")
+                    assert(len(parts) == 2, "Pinch option expected to be in the form pinch:PERCENT.  ie: \"pinch:50%\"")
                     assert(is_finite(pcnt) && pcnt>=0 && pcnt<=200, "Bad pinch option."),
                 raw_sect = ptn_sect(type, length, width),
                 minx = min([for (p = raw_sect) abs(p.x)]),
                 maxx = max([for (p = raw_sect) abs(p.x)]),
                 midx = (minx + maxx) / 2,
                 maxy = max([for (p = raw_sect) abs(p.y)]),
-                sect = [for (p = raw_sect) let(u = abs(p.y)/maxy) [(p.x-midx)*lerp(1,pcnt/100,u)+midx, p.y]]
+                sect = maxy == 0
+                    ? raw_sect
+                    : [for (p = raw_sect) let(u = abs(p.y)/maxy) [(p.x-midx)*lerp(1,pcnt/100,u)+midx, p.y]]
             ) sect :
         assert(false, str("Bad section option: '",opt,"'"))
       : type == "sinewave"? ptn_sect("halfsine addflip", length, width)
