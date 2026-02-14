@@ -1037,7 +1037,7 @@ function ptn_sect(type, length=25, width=25, invert=false) =
                     assert(is_finite(length) && is_finite(width) && length>0 && width>0, "Size option expected to be in the form LENGTHxWIDTH.  ie: \"30x25\""),
                 sect = ptn_sect(type, length, width)
             ) sect :
-        starts_with(opt, "skew:") && (is_digit(opt[5]) || (opt[5]=="-" && is_digit(opt[6])))? let(  // skew:15 (Skewing)
+        len(opt)>5 && starts_with(opt, "skew:") && (is_digit(opt[5]) || (opt[5]=="-" && is_digit(opt[6])))? let(  // skew:15 (Skewing)
                 parts = str_split(opt, ":"),
                 angle = parse_float(parts[1]),
                 checks =
@@ -1046,11 +1046,11 @@ function ptn_sect(type, length=25, width=25, invert=false) =
                 raw_sect = ptn_sect(type, length, width),
                 sect = skew(axy=angle, p=raw_sect)
             ) sect :
-        starts_with(opt, "pinch:") && is_digit(opt[6])? let(  // pinch:50% (Perpective pinch from bottom to top.)
+        len(opt)>6 && starts_with(opt, "pinch:") && is_digit(opt[6])? let(  // pinch:50 (Perspective pinch from bottom to top.)
                 parts = str_split(opt, ":"),
                 pcnt = parse_float(parts[1]),
                 checks =
-                    assert(len(parts) == 2, "Pinch option expected to be in the form pinch:PERCENT.  ie: \"pinch:50%\"")
+                    assert(len(parts) == 2, "Pinch option expected to be in the form pinch:PERCENT.  ie: \"pinch:50\"")
                     assert(is_finite(pcnt) && pcnt>=0 && pcnt<=200, "Bad pinch option."),
                 raw_sect = ptn_sect(type, length, width),
                 minx = min([for (p = raw_sect) abs(p.x)]),
