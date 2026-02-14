@@ -1054,9 +1054,11 @@ function _path_cut_getpaths(path, cutlist, closed) =
 function path_cut_points(path, cutdist, closed=false, direction=false) =
     let(long_enough = len(path) >= (closed ? 3 : 2))
     assert(long_enough,len(path)<2 ? "\nTwo points needed to define a path." : "\nClosed path must include three points.")
-    is_num(cutdist) ? path_cut_points(path, [cutdist],closed, direction)[0] :
+    is_num(cutdist) ? path_cut_points(path, [cutdist], closed, direction)[0] :
+    cutdist == []? [] :
     assert(is_vector(cutdist))
     assert(is_increasing(cutdist), "\nCut distances must be an increasing list.")
+    assert(cutdist[0]>=0, str("Cut distances must be non-negative.  Got: ", cutdist[0]))
     let(cuts = path_cut_points_recurse(path,cutdist,closed))
     !direction
        ? cuts
