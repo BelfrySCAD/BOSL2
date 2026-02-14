@@ -1052,10 +1052,10 @@ function _path_cut_getpaths(path, cutlist, closed) =
 //   path_cut_points(square, [0,0.8,1.6,2.4,3.2], closed=true);  // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], [[0, 0.8], 4]]
 //   path_cut_points(square, [0,0.8,1.6,2.4,3.2]);               // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], undef]
 function path_cut_points(path, cutdist, closed=false, direction=false) =
-    len(cutdist) == 0? [] :
     let(long_enough = len(path) >= (closed ? 3 : 2))
     assert(long_enough,len(path)<2 ? "\nTwo points needed to define a path." : "\nClosed path must include three points.")
-    is_num(cutdist) ? path_cut_points(path, [cutdist],closed, direction)[0] :
+    is_num(cutdist) ? path_cut_points(path, [cutdist], closed, direction)[0] :
+    cutdist == []? [] :
     assert(is_vector(cutdist))
     assert(is_increasing(cutdist), "\nCut distances must be an increasing list.")
     assert(cutdist[0]>=0, str("Cut distances must be non-negative.  Got: ", cutdist[0]))
