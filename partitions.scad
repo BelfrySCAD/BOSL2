@@ -1053,8 +1053,8 @@ function ptn_sect(type, length=25, width=25, invert=false) =
                     assert(len(parts) == 2, "Pinch option expected to be in the form pinch:PERCENT.  ie: \"pinch:50\"")
                     assert(is_finite(pcnt) && pcnt>=0 && pcnt<=200, "Bad pinch option."),
                 raw_sect = ptn_sect(type, length, width),
-                minx = min([for (p = raw_sect) abs(p.x)]),
-                maxx = max([for (p = raw_sect) abs(p.x)]),
+                minx = min([for (p = raw_sect) p.x]),
+                maxx = max([for (p = raw_sect) p.x]),
                 midx = (minx + maxx) / 2,
                 maxy = max([for (p = raw_sect) abs(p.y)]),
                 sect = maxy == 0
