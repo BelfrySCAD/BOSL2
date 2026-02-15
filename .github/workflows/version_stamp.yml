@@ -1,0 +1,54 @@
+name: Daily Version Stamp
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  version-stamp:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ref: master
+        fetch-depth: 0
+
+    - name: Check for changes in the previous day
+      id: check_changes
+      run: |
+        YESTERDAY=$(date -u -d "yesterday" +%Y-%m-%d)
+        TODAY=$(date -u +%Y-%m-%d)
+
+        # Count commits on master from the previous day, excluding bot version-stamp commits
+        COMMIT_COUNT=$(git log --oneline --after="${YESTERDAY}T00:00:00Z" --before="${TODAY}T00:00:00Z" --first-parent origin/master --invert-grep --author="github-actions\[bot\]" | wc -l)
+
+        echo "Checking for commits on ${YESTERDAY}: found ${COMMIT_COUNT}"
+
+        if [ "$COMMIT_COUNT" -gt 0 ]; then
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "has_changes=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Increment version
+      if: steps.check_changes.outputs.has_changes == 'true'
+      id: version
+      run: |
+        ./scripts/increment_version.sh
+        NEW_VERSION=$(grep -oP 'BOSL_VERSION = \[\K[0-9]+,[0-9]+,[0-9]+' version.scad | tr ',' '.')
+        echo "new_version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+
+    - name: Commit and push
+      if: steps.check_changes.outputs.has_changes == 'true'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add version.scad
+        git commit -m "Version bump to v${{ steps.version.outputs.new_version }}"
+        git tag "v${{ steps.version.outputs.new_version }}"
+        git push origin master "v${{ steps.version.outputs.new_version }}"
+
