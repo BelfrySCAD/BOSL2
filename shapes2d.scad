@@ -184,9 +184,10 @@ function rect(size=1, rounding=0, chamfer=0, atype="box", anchor=CENTER, spin=0,
                  [-size.x/2, -size.y/2],
                  [-size.x/2,  size.y/2],
                  [ size.x/2,  size.y/2],
-             ]
+             ],
+             rotpath = rot(spin, p=move(-v_mul(anchor,size/2), p=path))
         )
-        rot(spin, p=move(-v_mul(anchor,size/2), p=path))
+        _return_override ? [rotpath,undef] : rotpath
     :
     assert(all_zero(v_mul(chamfer,rounding),0), "Cannot specify chamfer and rounding at the same corner")
     let(
