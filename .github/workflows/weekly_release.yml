@@ -1,0 +1,54 @@
+name: Weekly Release
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ref: master
+        fetch-depth: 0
+
+    - name: Find latest version tag
+      id: find_tag
+      run: |
+        LATEST_TAG=$(git tag --sort=-v:refname --list 'v*' | head -1)
+        echo "Latest tag: ${LATEST_TAG}"
+
+        if [ -z "$LATEST_TAG" ]; then
+          echo "No version tag found, skipping release."
+          echo "has_tag=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "tag=${LATEST_TAG}" >> "$GITHUB_OUTPUT"
+          echo "has_tag=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Check if release already exists
+      if: steps.find_tag.outputs.has_tag == 'true'
+      id: check_release
+      run: |
+        TAG="${{ steps.find_tag.outputs.tag }}"
+        if gh release view "$TAG" > /dev/null 2>&1; then
+          echo "Release for ${TAG} already exists, skipping."
+          echo "exists=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "exists=false" >> "$GITHUB_OUTPUT"
+        fi
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    - name: Create release
+      if: steps.find_tag.outputs.has_tag == 'true' && steps.check_release.outputs.exists == 'false'
+      run: |
+        TAG="${{ steps.find_tag.outputs.tag }}"
+        gh release create "$TAG" --title "$TAG" --generate-notes
+      env:
+        GH_TOKEN: ${{ github.token }}
