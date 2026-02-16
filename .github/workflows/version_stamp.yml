@@ -17,23 +17,13 @@ jobs:
         ref: master
         fetch-depth: 0
 
-    - name: Check for changes since last version bump
+    - name: Check if latest commit is a merged PR
       id: check_changes
       run: |
-        # Find the most recent version bump commit by this bot
-        LAST_BUMP=$(git log --first-parent origin/master --author="github-actions\[bot\]" --grep="Version bump to" --format="%H" -1)
+        LATEST_MSG=$(git log --first-parent origin/master --format="%s" -1)
+        echo "Latest commit: ${LATEST_MSG}"
 
-        if [ -n "$LAST_BUMP" ]; then
-          # Count non-bot commits since the last version bump
-          COMMIT_COUNT=$(git log --oneline --first-parent origin/master "${LAST_BUMP}..HEAD" --invert-grep --author="github-actions\[bot\]" | wc -l)
-          echo "Commits since last version bump (${LAST_BUMP:0:8}): ${COMMIT_COUNT}"
-        else
-          # No previous version bump found; count all non-bot commits
-          COMMIT_COUNT=$(git log --oneline --first-parent origin/master --invert-grep --author="github-actions\[bot\]" | wc -l)
-          echo "No previous version bump found. Total non-bot commits: ${COMMIT_COUNT}"
-        fi
-
-        if [ "$COMMIT_COUNT" -gt 0 ]; then
+        if echo "$LATEST_MSG" | grep -q "^Merged pull request #"; then
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
         else
           echo "has_changes=false" >> "$GITHUB_OUTPUT"
