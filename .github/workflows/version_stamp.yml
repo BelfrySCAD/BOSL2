@@ -17,18 +17,13 @@ jobs:
         ref: master
         fetch-depth: 0
 
-    - name: Check for changes in the previous day
+    - name: Check if latest commit is a merged PR
       id: check_changes
       run: |
-        YESTERDAY=$(date -u -d "yesterday" +%Y-%m-%d)
-        TODAY=$(date -u +%Y-%m-%d)
+        LATEST_MSG=$(git log --first-parent origin/master --format="%s" -1)
+        echo "Latest commit: ${LATEST_MSG}"
 
-        # Count commits on master from the previous day, excluding bot version-stamp commits
-        COMMIT_COUNT=$(git log --oneline --after="${YESTERDAY}T00:00:00Z" --before="${TODAY}T00:00:00Z" --first-parent origin/master --invert-grep --author="github-actions\[bot\]" | wc -l)
-
-        echo "Checking for commits on ${YESTERDAY}: found ${COMMIT_COUNT}"
-
-        if [ "$COMMIT_COUNT" -gt 0 ]; then
+        if echo "$LATEST_MSG" | grep -q "^Merged pull request #"; then
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
         else
           echo "has_changes=false" >> "$GITHUB_OUTPUT"
