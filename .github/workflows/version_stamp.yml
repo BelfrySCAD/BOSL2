@@ -23,7 +23,7 @@ jobs:
         LATEST_MSG=$(git log --first-parent origin/master --format="%s" -1)
         echo "Latest commit: ${LATEST_MSG}"
 
-        if echo "$LATEST_MSG" | grep -q "^Merged pull request #"; then
+        if echo "$LATEST_MSG" | grep -q "^Merge pull request #"; then
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
         else
           echo "has_changes=false" >> "$GITHUB_OUTPUT"
