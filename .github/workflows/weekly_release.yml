@@ -49,6 +49,8 @@ jobs:
       if: steps.find_tag.outputs.has_tag == 'true' && steps.check_release.outputs.exists == 'false'
       run: |
         TAG="${{ steps.find_tag.outputs.tag }}"
-        gh release create "$TAG" --title "$TAG" --generate-notes
+        # Try with auto-generated notes; fall back to simple notes if body is too long
+        gh release create "$TAG" --title "$TAG" --generate-notes || \
+          gh release create "$TAG" --title "$TAG" --notes "Release ${TAG}"
       env:
         GH_TOKEN: ${{ github.token }}
