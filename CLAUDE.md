@@ -125,6 +125,6 @@ See `WRITING_DOCS.md` for the full documentation syntax reference. Configuration
 ## CI Pipeline
 
 Pull requests run three checks:
-1. **Regressions**: Runs `scripts/run_tests.sh`
-2. **CheckTutorials**: Validates tutorial markdown and images
-3. **CheckDocs**: Validates all documentation blocks with `openscad-docsgen -Tmf`
+1. **Regressions**: Runs `scripts/run_tests.sh` (fast, under a minute)
+2. **CheckTutorials**: Validates tutorial markdown and images (~8 minutes)
+3. **CheckDocs**: Validates all documentation blocks with `openscad-docsgen -Tmf` (35-40 minutes)
