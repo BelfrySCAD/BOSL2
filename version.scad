@@ -13,7 +13,7 @@ _BOSL2_VERSION = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOS
        echo("Warning: version.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
 
 
-BOSL_VERSION = [2,0,717];
+BOSL_VERSION = [2,0,718];
 
 
 // Section: BOSL Library Version Functions
