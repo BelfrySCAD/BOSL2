@@ -2,7 +2,7 @@ name: Daily Version Stamp
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '8 0 * * *'
   workflow_dispatch:
 
 jobs:
