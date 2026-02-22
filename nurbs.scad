@@ -28,29 +28,41 @@ _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   pts = nurbs_curve(control, degree, splinesteps, [mult=], [weights=], [type=], [knots=]);
 //   pts = nurbs_curve(control, degree, u=, [mult=], [weights=], [type=], [knots=]);
 // Description:
-//   Compute the points specified by a NURBS curve.  You specify the NURBS by supplying the control points, knots and weights.  and knots.
+//   Compute the points specified by a NURBS curve.  You specify the NURBS by supplying the control points, knots and weights.  
 //   Only the control points are required.  The knots and weights default to uniform, in which case you get a uniform B-spline.
+//   The length of `weights`, if given, must match the length of `control`.  
 //   You can specify endpoint behavior using the `type` parameter.  The default, "clamped", gives a curve which starts and
 //   ends at the first and last control points and moves in the tangent direction to the first and last control point segments.
-//   If you request an "open" spline you get a curve which starts somewhere in the middle of the control points.
-//   Finally, a "closed" curve is a one that starts where it ends.  Note that each of these types of curve require
-//   a different number of knots.
+//   A "closed" curve is a one that starts where it ends.  An "open" spline is a generic curve that starts somewhere
+//   in the middle of the control points. The "open" curve is less common; you only need this if you are managing the
+//   knots and control points yourself to create your own clamped or closed curve, so avoid this type unless you know what you're doing.  
+//   Each of these types of curve require a different number of knots as described below.  
 //   .
 //   The control points are the most important control over the shape
-//   of the curve.  You must have at least p+1 control points for clamped and open NURBS.  Unlike a bezier, there is no maximum
+//   of the curve.  You must have at least degree+1 control points for clamped and open NURBS.  Don't confuse the degree of a
+//   NURBS with its *order*:  the order of a NURBS, often called $p$, is degree+1.  Unlike a bezier, there is no maximum
 //   number of control points.  A single NURBS is more like a bezier **path** than like a single bezier spline.
 //   .
 //   A NURBS or B-spline is a curve made from a moving average of several Bezier curves.  The knots specify when one Bezier fades
-//   away to be replaced by the next one.  At generic points, the curves are differentiable, but by increasing knot multiplicity, you
-//   can decrease smoothness, or even produce a sharp corner.  The knots must be an ascending sequence of values, but repeating values
-//   is OK and controls the smoothness at the knots.  The easiest way to specify the knots is to take the default of uniform knots,
-//   and simply set the multiplicity to create repeated knots as needed.  The total number of knots is then the sum of the multiplicity
-//   vector.  Alternatively you can simply list the knots yourself.  Note that regardless of knot values, the domain of evaluation
+//   away to be replaced by the next one.  The knot list is a non-increasing list of values that you specify using two parameters,
+//   `knots` and `mult`.  In practice changing the knot values doesn't have a strong effect on the curve, so it usually suffices
+//   to use a uniform knot vector, which is the default.  The major exception to this is repeated knot values.  
+//   At generic points in the NURBS, the curve is infinitely differentiable, but at a point that
+//   corresponds to a knot, a NURBS with degree $d$ will have a $(d-1)$th derivative that is continuous.
+//   However, if a value repeats in the knot vector that creates a knot with a multiplicity larger than 1, and each
+//   repetition decreases the smoothness of the curve at the corresponding NURBS point by 1.  This means that
+//   if the multiplicity equals the degree then the curve has a corner at the knot point.  Using the `mult` parameter
+//   without giving `knots` allows you to give a vector of multiplicities, which produces a knot vector that is uniform
+//   except it has some repeated knots.  A value of 1 in the `mult` vector means the knot is not repeated; a value of 2 means it is
+//   repeated twice.  The multiplicity can be as large as the degree but no larger.  (A special exception is at the ends for open
+//   NURBS.)  When you specify the multiplicity vector the total number of knots is the sum of that vector.  You can also list
+//   the knots explicitly yourself.  The knot values you give can cover any range; they will be scaled to correspond properly
+//   to the NURBS parameter space: rgardless of the knot values you give, the domain of evaluation
 //   for u is always the interval [0,1], and it will be scaled to give the entire valid portion of the curve you have chosen.
-//   If you give both a knot vector and multiplicity then the multiplicity vector is appled to the provided knots.
-//   For an open spline the number of knots must be `len(control)+p+1`.  For a clamped spline the number of knots is `len(control)-p+1`,
+//   . 
+//   For an open spline the number of knots must be `len(control)+degree+1`.  For a clamped spline the number of knots is `len(control)-degree+1`,
 //   and for a closed spline you need `len(control)+1` knots.  If you are using the default uniform knots then the way to
-//   ensure that you have the right number is to check that `sum(mult)` is either not set or equal to the correct value.
+//   ensure that you have the right number is to check that mult is not set or `sum(mult)` equals the correct value.
 //   .
 //   You can use this function to evaluate the NURBS at `u`, which can be a single point or a list of points.  You can also
 //   use it to evaluate the NURBS over its entire domain by giving a splinesteps value.  This specifies the number of segments
@@ -236,7 +248,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
               : uniform ? [for(i=idx(mult)) each repeat(i/(len(mult)-1),mult[i])]
               : let(
                     xknots = is_undef(mult)? knots
-                           : assert(len(mult) == len(knots), "If knot vector and mult vector must be the same length")
+                           : assert(len(mult) == len(knots), "Knot vector and mult vector must be the same length")
                              [for(i=idx(mult)) each repeat(knots[i], mult[i])]
                 )
                 type=="open" ? assert(len(xknots)==len(control)+degree+1, str("For open spline, knot vector with multiplicity must have length ",

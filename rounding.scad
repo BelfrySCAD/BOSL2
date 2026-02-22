@@ -612,7 +612,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   For `method="edges"` (default), every segment (edge) of the path is replaced by a cubic curve with `splinesteps`
 //   points, and the cubic interpolation passes through every input point on the path, matching the tangents at every
 //   point. If you do not specify `tangents`, they are computed using {{path_tangents()}} with `uniform=false` by
-//   default. Only the dirction of a tangent vector matters, not the vector length.
+//   default. Only the direction of a tangent vector matters, not the vector length.
 //   Setting `uniform=true` with non-uniform sampling may be desirable in some cases but tends to
 //   produces curves that overshoot the point on the path.  
 //   .
@@ -621,17 +621,21 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   are tangent to the midpoint of every segment. The `tangents` and `uniform` parameters don't apply to the
 //   "corners" method. Using either one with "corners" causes an error.
 //   .
-//   The `size` or `relsize` parameters apply to both methods. They determine how far the curve can bend away
-//   from the input path. In the case where the path has three non-collinear points, the size specifies the
-//   exact distance between the specified path and the curve (maximum distance from edge if for the "edges"
-//   method, or distance from corner with the "corners" method).
-//   In 2D when the spline may make an S-curve, for the "edges" method the size parameter specifies the sum
-//   of the deviations of the two peaks of the curve. In 3-space the bezier curve may have three extrema: two
-//   maxima and one minimum.  In this case the size specifies the sum of the maxima minus the minimum.
+//   If the input is collinear, including the case of a 2 point path, then the output is the same as the input
+//   for the "corners" method and for the "edges" method the output is also the same as the input unless you specify
+//   tangents that are not aligned with the input path.  
 //   .
-//   If you give `relsize` instead, then for the "edges" method, the maximum deviation from the segment is
-//   relative to  the segment length (e.g. 0.05 means 5% of the segment length). For the "corners" method,
-//   `relsize` determines where the curve intersects the corner bisector, relative to the maximum deviation
+//   The `size` and `relsize` parameters apply to both methods. They determine how far the curve can deviate
+//   from the input path.  With the "edges" method each segment is replaced by a bezier.  Three things can happen.
+//   The bezier may bulge to one side or the other of the input segemnt.  In this case `size` specifies the exact (maximum) distance
+//   between the path segment and the output curve.  Another possibility is that the spline makes an S-curve.
+//   In this case, `size` specifies the sum of the deviations at the two peaks of the curve.  In 3-space the bezier
+//   curve may have three extrema: two maxima and one minimum.  In this case `size` specifies the sum of the maxima minus the minimum.
+//   If you give `relsize` instead then `size` is set for each segment of the path relative to the length of that segment,
+//   so if a segment has length 10 then `relsize=0.05` would choose `size=0.5` for that segment.
+//   .
+//   For the "corners" method, `size` specifies the maximum distance from the corner of the original path to the bezier that replaces the corner, 
+//   and `relsize` determines where the curve intersects the corner bisector, relative to the maximum deviation
 //   possible (which corresponds to a circle rounding from the shortest leg of the corner). For example,
 //   `relsize=1` is the maximum deviation from the corner (a circle arc from the shortest leg), and `relsize=0.5`
 //   causes the curve to intersect the corner bisector halfway between that maximum and the tip of the corner.
@@ -737,21 +741,21 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   color("red")move_copies(pts)circle(r=.15,$fn=12);
 module smooth_path(path, tangents, size, relsize, method="edges", splinesteps=10, uniform, closed=false) {no_module();}
 function smooth_path(path, tangents, size, relsize, method="edges", splinesteps=10, uniform, closed) =
-is_1region(path)
-    ? smooth_path(path[0], tangents, size, relsize, method, splinesteps, uniform, default(closed,true))
-    : assert(method=="edges" || method=="corners", "method must be \"edges\" or \"corners\".")
-assert(method=="edges" || (is_undef(tangents) && is_undef(uniform)), "The tangents and uniform parameters are incompatible with method=\"corners\".")
-let (
-    uniform = default(uniform,false),
-    bez = method=="edges"
-        ? path_to_bezpath(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=default(closed,false))
-        : path_to_bezcornerpath(path, size=size, relsize=relsize, closed=default(closed,false)),
-    smoothed = bezpath_curve(bez,splinesteps=splinesteps)
-)
-closed ? list_unwrap(smoothed) : smoothed;
+    is_1region(path)
+      ? smooth_path(path[0], tangents, size, relsize, method, splinesteps, uniform, default(closed,true))
+      : assert(method=="edges" || method=="corners", "method must be \"edges\" or \"corners\".")
+        assert(method=="edges" || (is_undef(tangents) && is_undef(uniform)), "The tangents and uniform parameters are incompatible with method=\"corners\".")
+        method=="corners" && len(path)==2 ? path
+      : let(
+            uniform = default(uniform,false),
+            bez = method=="edges"
+              ? path_to_bezpath(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=default(closed,false))
+              : path_to_bezcornerpath(path, size=size, relsize=relsize, closed=default(closed,false)),
+            smoothed = bezpath_curve(bez,splinesteps=splinesteps)
+        )
+        closed ? list_unwrap(smoothed) : smoothed;
 
-
-
+                                       
 function _scalar_to_vector(value,length,varname) = 
   is_vector(value)
     ? assert(len(value)==length, str(varname," must be length ",length))
