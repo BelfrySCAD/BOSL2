@@ -357,14 +357,21 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
 //   attachments to the ellipse will retain their dimensions, whereas scaling a circle with attachments will also scale the attachments.
 //   If you set `uniform` to true then you will get a polygon with congruent sides whose vertices lie on the ellipse.  The `circum` option
 //   requests a polygon that circumscribes the requested ellipse (so the specified ellipse will fit into the resulting polygon).  Note that
-//   you cannot gives `circum=true` and `uniform=true`.  
+//   you cannot gives `circum=true` and `uniform=true`.
+//   .
+//   When the `realign` parameter is false the shape appears with its first vertex on the X+ axis and points moving counterclockwise from there.
+//   If `realign` is true then the midpoint of an edge is on the X+ axis and the first point of the polygon is below the X+ axis.  By default,
+//   `realign` is false when `circum` is false and true if `circum` is true.  This means that when `$fn` is a multiple of four the ellipse always
+//   has exactly correct dimensions on the X and Y axes regardless of the setting for circum, and it also means that circles match "octa"
+//   style spheroids on any of the coordinate planes.  For circles, `realign` just rotates the circle.  But for noncircular ellipses with `uniform=true`
+//   setting `realign=true` completely changes the shape compared to `realign=false`.  
 // Arguments:
 //   r = Radius of the circle or pair of semiaxes of ellipse 
 //   ---
-//   d = Diameter of the circle or a pair giving the full X and Y axis lengths.  
-//   realign = If false starts the approximate ellipse with a point on the X+ axis.  If true the midpoint of a side is on the X+ axis and the first point of the polygon is below the X+ axis.  This can result in a very different polygon when $fn is small.  Default: false
-//   uniform = If true, the polygon that approximates the circle will have segments of equal length.  Only works if `circum=false`.  Default: false
-//   circum = If true, the polygon that approximates the circle will be upsized slightly to circumscribe the theoretical circle.  If false, it inscribes the theoretical circle.  If this is true then `uniform` must be false.  Default: false
+//   d = Diameter of the circle or a pair giving the width and height of the ellipse.
+//   realign = If false a vertex is on the X+ axis.  If true the midpoint of an edge is on the X+ axis.  Default: false if `circum=false` and true if `circum=true`
+//   uniform = If true, the polygon that approximates the ellipse will have segments of equal length.  Only supported when `circum=false`.  Default: false
+//   circum = If true, the polygon that approximates the ellipse will circumscribe the ideal ellipse.  If false, it inscribes the ideal ellipse.  If this is true then `uniform` must be false.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): By Radius
@@ -425,10 +432,13 @@ module circle(r, d, points, corner, anchor=CENTER, spin=0) {
 //       stroke([ellipse(r=r, $fn=5,realign=false,uniform=true)],width=0.2,color="red");
 //     }
 //   }
-module ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER, spin=0)
+module ellipse(r, d, realign, circum=false, uniform=false, anchor=CENTER, spin=0)
 {
+    realign = assert(is_bool(circum))
+              default(realign,circum);
     r = force_list(get_radius(r=r, d=d, dflt=1),2);
-    dummy = assert(is_vector(r,2) && all_positive(r), "Invalid radius or diameter for ellipse");
+    dummy = assert(is_bool(realign))
+            assert(is_vector(r,2) && all_positive(r), "Invalid radius or diameter for ellipse");
     sides = segs(max(r));
     sc = circum? (1 / cos(180/sides)) : 1;
     rx = r.x * sc;
@@ -440,14 +450,12 @@ module ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER, 
         }
         else if (rx < ry) {
             xscale(rx/ry) {
-                realign = circum? !realign : realign;
                 zrot(realign? 180/sides : 0) {
                     circle(r=ry, $fn=sides);
                 }
             }
         } else {
             yscale(ry/rx) {
-                realign = circum? !realign : realign;
                 zrot(realign? 180/sides : 0) {
                     circle(r=rx, $fn=sides);
                 }
@@ -505,14 +513,15 @@ function _ellipse_refine_realign(a,b,N, _theta=[],i=0) =
    )
    _ellipse_refine_realign(a,b,N,adjusted, i+1);
 
-
-
-function ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER, spin=0) =
+                             
+function ellipse(r, d, realign, circum=false, uniform=false, anchor=CENTER, spin=0) =
+    assert(is_bool(circum))
     let(
         r = force_list(get_radius(r=r, d=d, dflt=1),2),
         sides = segs(max(r)),
-        realign = circum? !realign : realign
+        realign = default(realign,circum)
     )
+    assert(is_bool(realign))  
     assert(all_positive(r), "All components of the radius must be positive.")
     uniform
       ? assert(!circum, "Circum option not allowed when \"uniform\" is true")
@@ -1152,9 +1161,9 @@ module trapezoid(h, w1, w2, ang, shift, chamfer=0, rounding=0, flip=false, ancho
 //   d/od = The diameter to the tips of the star.
 //   id = The diameter to the inner corners of the star.
 //   step = Calculates the radius of the inner star corners by virtually drawing a straight line `step` tips around the star.  2 <= step < n/2
-//   realign = If false, vertex 0 will lie on the X+ axis.  If true then the midpoint of the last edge will lie on the X+ axis, and vertex 0 will be below the X axis.    Default: false
-//   align_tip = If given as a 2D vector, rotates the whole shape so that the first star tip points in that direction.  This occurs before spin.
-//   align_pit = If given as a 2D vector, rotates the whole shape so that the first inner corner is pointed towards that direction.  This occurs before spin.
+//   realign = If false, the shape starts with a star point on the X+ axis.  If true then a star pit (the last vertex) will be on the X+ axis and the first vertex will be a point below the X+ axis.  Default: false
+//   align_tip = If given as a 2D vector, rotates the whole shape so that the first star tip points in that direction.  This occurs before spin.  If realign is true this aligns a pit instead. 
+//   align_pit = If given as a 2D vector, rotates the whole shape so that the first inner corner is pointed towards that direction.  This occurs before spin.  If realign is true this aligns a tip instead.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   atype = Choose "hull" or "intersect" anchor methods.  Default: "hull"
@@ -1348,9 +1357,12 @@ module jittered_poly(path, dist=1/512) {
 //   the result will be the full, untruncated shape.  You can set `cap_h` smaller than the radius to produce a truncated circle.  The segments of the round section of the teardrop 
 //   are the same as a circle or cylinder with matching `$fn` when rotated 90 degrees.  The number of facets in the teardrop is only approximately
 //   equal to `$fn`, and may also change if you set `realign=true`, which adjusts the facets so the bottom of the teardrop has a flat base.  
-//   If `$fn` is a multiple of four then the teardrop will reach its extremes on all four axes.  The circum option
-//   produces a teardrop that circumscribes the circle; in this, `realign=true` produces a teardrop that meets its internal extremes
-//   on the axes.  You can add a bottom corner using the `bot_corner` parameter, which specifies the length that the corner protrudes from the ideal circle.
+//   If `$fn` is a multiple of four then the teardrop will always reach its extremes on all four axes.  The `circum` option
+//   produces a teardrop that circumscribes the circle.  Unlike {{cyl()}} and {{ellipse()}}, the default for `realign` is always false for teardrops.  This is to
+//   optimize for 3d printing, where it's best to have a corner at the bottom when `circum=true` to ensure space for the hole.  To be certain of sufficient
+//   space you can add a bottom corner using the `bot_corner` parameter, which specifies the length that the corner protrudes from the ideal circle.
+//   .
+//   When `circum` and `realign` have the same values a teardrop and {{cyl()}} or {{ellipse()}} will have edges that match each other.  
 // Usage: As Module
 //   teardrop2d(r/d=, [ang], [cap_h], [circum=], [realign=], [bot_corner=]) [ATTACHMENTS];
 // Usage: As Function
@@ -1363,7 +1375,7 @@ module jittered_poly(path, dist=1/512) {
 //   d = diameter of circular portion of bottom. (Use instead of r)
 //   circum = if true, create a circumscribing teardrop.  Default: false
 //   bot_corner = create a bottom corner the specified distance below the given radius.  Default: 0
-//   realign = if true, change whether bottom of teardrop is a point or a flat.  Default: false
+//   realign = if true, bottom of teardrop is flat; if false, bottom of teardrop is a point.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 // Example(2D): Typical Shape
@@ -1426,7 +1438,7 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
         fullcircle = ellipse(r=r, realign=realign, circum=circum,spin=90),        
         
         // Chose the point on the circle that is lower than the cap but also creates a segment bigger than
-        // seglen/skipfactor so we don't have a teeny tiny segment at the end of the cap, except for the hexagoin
+        // seglen/skipfactor so we don't have a teeny tiny segment at the end of the cap, except for the hexagon
         // case which is treated specially
         skipfactor = len(fullcircle)==6 ? 15 : 3,
         path = !circum ?
@@ -1452,7 +1464,7 @@ function teardrop2d(r, ang=45, cap_h, d, circum=false, realign=false, anchor=CEN
                [
                  cap[0],
                  p,
-                 each select(fullcircle,i+1,-i-1-(realign!=circum?1:0)),
+                 each select(fullcircle,i+1,-i-1-(realign==true && circum==true?1:0)),
                  xflip(p),
                  if(_extrapt || !pointycap) xflip(cap[0])
                ]

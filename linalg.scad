@@ -128,7 +128,7 @@ function echo_matrix(M,description,sig=4,sep=1,eps=1e-9) =
   let(
       horiz_line = 8213,
       matstr = _format_matrix(M,sig=sig,sep=sep,eps=eps),
-      separator = chf(repeat(horiz_line,10)),
+      separator = chr(repeat(horiz_line,10)),
       dummy=echo(str(separator,is_def(description) ? str("  ",description) : ""))
             [for(row=matstr) echo(row)]
   )
