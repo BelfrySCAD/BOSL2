@@ -870,7 +870,7 @@ function prismoid(
 //   The "edge0" anchor identifies an edge located along the X+ axis, and then edges
 //   are labeled counting up in the clockwise direction.  Similarly "face0" is the face immediately clockwise from "edge0", and face
 //   labeling proceeds clockwise.  The top and bottom edge anchors label edges directly above and below the face with the same label.
-//   If you set `realign=true` then "face0" is oriented in the X+ direction.  
+//   If you set `realign=true` then "face0" has its normal pointing in the X+ direction.  
 //   .
 //   This module is similar to {{cyl()}}.  It differs in the following ways:  you can specify side length or inner radius/diameter, you can apply roundings with
 //   different `$fn` than the number of prism faces, you can apply texture to the flat faces without forcing a high facet count,
@@ -922,7 +922,7 @@ function prismoid(
 //   rounding = The radius of the rounding on the ends of the prism.  Default: none.
 //   rounding1 = The radius of the rounding on the bottom end of the prism.
 //   rounding2 = The radius of the rounding on the top end of the prism.
-//   realign = If true, rotate the prism by half the angle of one face so that a face points in the X+ direction.  Default: false
+//   realign = If true, rotate the prism by half the angle of one face so that face0's normal points in the X+ direction.  Default: false
 //   teardrop = If given as a number, rounding around the bottom edge of the prism won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
 //   clip_angle = If given as a number, rounding around the bottom edge of the prism won't exceed this many degrees from vertical, with the rounding stopping at the bottom of the prism.  Default: (no clipping)
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
@@ -2088,6 +2088,12 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   then the radius or chamfer length applies in the more usual way in the center of a facet.  For cylinders with a large `$fn`
 //   the difference between these two things is negligible, but it can be quite sigificant when `$fn` is small.
 //   .
+//   When the `realign` parameter is false the shape's has an edge aligned with the X+ axis. 
+//   If `realign` is true then a face is aligned with the X+ axis.  By default
+//   `realign` is false when `circum` is false and true if `circum` is true.  This means that when `$fn` is a multiple of four the approximate cylinder always
+//   has exactly correct dimensions on the X and Y axes regardless of the setting for circum, and it also means that cylinders match "octa"
+//   style spheroids on any of the coordinate planes. 
+//   .
 //   If you use the positional parameters, this module has an inconsistency with the native {{cylinder()}} module.  The `cylinder()` module
 //   has a default of `r2=1` so `cylinder(10,5)` produces a cone with radius 1 at the top, but `cyl()` defaults to a right angle cylinder in this case.  
 // Figure(2D,Big,NoAxes,VPR = [0, 0, 0], VPT = [0,0,0], VPD = 82): Chamfers on cones can be tricky.  This figure shows chamfers of the same size and same angle, A=30 degrees.  Note that the angle is measured on the inside, and produces a quite different looking chamfer at the top and bottom of the cone.  Straight black arrows mark the size of the chamfers, which may not even appear the same size visually.  When you do not give an angle, the triangle that is cut off will be isoceles, like the triangle at the top, with two equal angles.
@@ -2145,8 +2151,8 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   rounding2 = The radius of the rounding on the top end of the cylinder.
 //   extra = Add extra height at both ends that is invisible to anchoring for use with differencing.  Default: 0
 //   extra1 = Add extra height to the bottom end
-//   extra2 = Add extra height to the top end.  
-//   realign = If true, rotate the cylinder by half the angle of one face.
+//   extra2 = Add extra height to the top end.
+//   realign = If false a vertical edge is aligned to the X+ axis.  If true a vertical face is aligned to the X+ axis.  Default: false if `circum=false` and true if `circum=true`
 //   teardrop = If given as a number, rounding around the bottom edge of the cylinder won't exceed this many degrees from horizontal.  If true, the limit angle is 45 degrees.  Default: `false`
 //   clip_angle = If given as a number, rounding around the bottom edge of the cylinder won't exceed this many degrees from horizontal, with the rounding stopping at the bottom of the cylinder.  Default: (no clipping)
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
@@ -2381,7 +2387,7 @@ function cyl(
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, shift=[0,0],
+    circum=false, realign, shift=[0,0],
     teardrop=false, clip_angle,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
@@ -2400,12 +2406,14 @@ function cyl(
           echo("and this will become an error."),
         center = legacy ? r2 : center
     )
+    assert(is_bool(circum))
     assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
     assert(num_defined([center,anchor])<2, "\nCannot give both center and anchor")
     assert(num_defined([style,tex_style])<2, "\nIn cyl() the 'tex_style' parameter has been replaced by 'style'. You cannot give both.")
     assert(num_defined([tex_reps,tex_counts])<2, "\nIn cyl() the 'tex_counts' parameter has been replaced by 'tex_reps'. You cannot give both.")    
     assert(num_defined([tex_scale,tex_depth])<2, "\nIn cyl() the 'tex_scale' parameter has been replaced by 'tex_depth'. You cannot give both.")
     let(
+        realign = default(realign,circum),
         style = is_def(tex_style)? echo("In cyl() the 'tex_style' parameter is deprecated and has been replaced by 'style'")tex_style
               : default(style,"min_edge"),
         tex_reps = is_def(tex_counts)? echo("In cyl() the 'tex_counts' parameter is deprecated and has been replaced by 'tex_reps'")tex_counts
@@ -2423,6 +2431,7 @@ function cyl(
         extra1 = first_defined([extra1,extra,0]),
         extra2 = first_defined([extra2,extra,0])
     )
+    assert(is_bool(realign))    
     assert(all_nonnegative([extra1,extra2]), "\nextra/extra1/extra2 must be positive.")
     assert(is_finite(l), "\nl/h/length/height must be a finite number.")
     assert(is_finite(r1) && r1>=0, "\nr/r1/d/d1 must be a non-negative number.")
@@ -2510,7 +2519,7 @@ module cyl(
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, shift=[0,0],
+    circum=false, realign, shift=[0,0],
     teardrop=false, clip_angle,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
@@ -2527,7 +2536,10 @@ module cyl(
       echo("cylinder().  Support for the legacy calling style cyl(height, r, center) will be eliminated")
       echo("and this will become an error.");
     center = legacy ? r2 : center;
+    realign = assert(is_bool(circum))
+              default(realign,circum);
     dummy=
+      assert(is_bool(realign))
       assert(num_defined([anchor,center])<2, "\nCannot give both `anchor` and `center` to cyl()")
       assert(is_undef(center) || is_bool(center), "\ncenter must be boolean")
       assert(num_defined([style,tex_style])<2, "\nIn cyl() the 'tex_style' parameters has been replaced by 'style'. You cannot give both.")
@@ -2551,7 +2563,6 @@ module cyl(
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, shift=shift) {
         multmatrix(skmat) {
             if (!any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2, texture, extra1, extra2, extra])) {
-                realign = circum? !realign : realign;
                 zrot(realign? 180/sides : 0) {
                     cylinder(h=l, r1=r1, r2=r2, center=true, $fn=sides);
                 }
@@ -2596,7 +2607,7 @@ module cyl(
 //   For example, top and right anchors on xcyl() are on the top curved surface and the right (positive x) end,
 //   respectively, whereas with cyl() these anchors are associated with the top end and right side.
 //   .
-//   See [cyl()] for more detailed usage and arguments.
+//   See {{cyl()}} for more detailed usage and arguments.  The `realign` parameter is referenced to the Z- axis.  
 // Example: By radius. The cone shows anchor arrows for `TOP` and `RIGHT`.
 //   ydistribute(50) {
 //       xcyl(l=35, r=10);
@@ -2658,7 +2669,7 @@ module xcyl(
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, shift=[0,0],
+    circum=false, realign, shift=[0,0],
     teardrop=false, clip_angle,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
@@ -2707,7 +2718,7 @@ module xcyl(
 //   For example, top and right anchors on ycyl() are on the top and right of the curved cylinder surface,
 //   respectively, whereas with cyl() these anchors are associated with the top end and right side.
 //   .
-//   See [cyl()] for more detailed usage and arguments.
+//   See {{cyl()}} for more detailed usage and arguments.  
 // Example: By radius. The cone shows anchor arrows for `TOP` and `RIGHT`.
 //   xdistribute(50) {
 //       ycyl(l=35, r=10);
@@ -2771,7 +2782,7 @@ module ycyl(
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, shift=[0,0],
+    circum=false, realign, shift=[0,0],
     teardrop=false, clip_angle,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
@@ -2878,7 +2889,7 @@ module zcyl(
     chamfer, chamfer1, chamfer2,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
-    circum=false, realign=false, shift=[0,0],
+    circum=false, realign, shift=[0,0],
     teardrop=false, clip_angle,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
@@ -2923,11 +2934,17 @@ module zcyl(
 //   wall thickness.
 //   .
 //   Chamfering and rounding lengths are measured based on the corners of the object except for the inner diameter when `circum=true`, in
-//   which case chamfers and roundings are measured from the facets.  This matters only when `$fn` is small.  
+//   which case chamfers and roundings are measured from the facets.  This matters only when `$fn` is small.
 //   .
 //   Attachment to the tube places objects on the **outside** of the tube.
 //   If you need to anchor to the inside of a tube, use {{attach_part()}} with the part name "inside"
-//   to switch goeomtry to the inside.  
+//   to switch goeomtry to the inside.
+//   .
+//   When the `realign` parameter is false the inner and outer cylinders each have an edge aligned with the X+ axis. 
+//   If `realign` is true then the inner and outer cylindres each have a face is aligned with the X+ axis.  By default
+//   `realign` is false when `circum` is false and true if `circum` is true.  This means that when `$fn` is a multiple of four the approximate cylinder always
+//   has exactly correct dimensions on the X and Y axes regardless of the setting for circum, and it also means that cylinders match "octa"
+//   style spheroids on any of the coordinate planes. 
 // Usage: Basic cylindrical tube, specifying inner and outer radius or diameter
 //   tube(h|l, or, ir, [center|anchor=], [realign=], [spin=],[orient=]) [ATTACHMENTS];
 //   tube(h|l, od=, id=, ...)  [ATTACHMENTS];
@@ -2982,7 +2999,8 @@ module zcyl(
 //   ochamfer2 = The size of the chamfer on the top outside end of the tube.
 //   teardrop = If given as a number, rounding around the bottom edges won't exceed this many degrees from the endcap, altering to a chamfer at that angle.  If true, the limit angle is 45 degrees.  Default: `false`
 //   clip_angle = If given as a number, rounding around the bottom edges won't exceed this many degrees from the endcap, with the rounding stopping at the bottom of the shape.  Default: (no clipping)
-//   realign = If true, rotate the inner and outer parts tube by half the angle of one face so that a face is aligned at the X+ axis.  Default: False
+//   realign = If false a vertical edge is aligned to the X+ axis.  If true a vertical face is aligned to the X+ axis. The inner and out parts of the tube are always aligned the same way.  Default: false if `circum=false` and true if `circum=true`
+//   realign = If true, rotate the inner and outer parts tube by half the angle of one face so that a face is aligned at the X+ axis.  Default: false if `circum=false` and true if `circum=true`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -3039,7 +3057,7 @@ function tube(
     od, id, wall,
     or1, or2, od1, od2,
     ir1, ir2, id1, id2,
-    realign=false, l, length, height,
+    realign, l, length, height,
     anchor, spin=0, orient=UP, orounding1,irounding1,orounding2,irounding2,rounding1,rounding2,rounding,
     ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer,
     teardrop=false, clip_angle, shift=[0,0],
@@ -3053,12 +3071,14 @@ module tube(
     od, id, wall,
     or1, or2, od1, od2,
     ir1, ir2, id1, id2,
-    realign=false, l, length, height,
+    realign, l, length, height,
     anchor, spin=0, orient=UP, orounding1,irounding1,orounding2,irounding2,rounding1,rounding2,rounding,
     ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer,
     teardrop=false, clip_angle, shift=[0,0],
     ifn, rounding_fn, circum=false
 ) {
+    realign = assert(is_bool(circum))
+              default(realign,circum);
     h = one_defined([h,l,height,length],"h,l,height,length",dflt=1);
     orr1 = get_radius(r1=or1, r=or, d1=od1, d=od, dflt=undef);
     orr2 = get_radius(r1=or2, r=or, d1=od2, d=od, dflt=undef);
@@ -3070,6 +3090,7 @@ module tube(
     ir1 = default(irr1, u_sub(orr1,wall));
     ir2 = default(irr2, u_sub(orr2,wall));
     checks =
+        assert(is_bool(realign))      
         assert(is_undef(center) || is_bool(center), "\ncenter must be boolean.")
         assert(num_defined([anchor,center])<2, "\nCannot give both anchor and center.")
         assert(is_vector(shift,2), "\n'shift' must be a 2D vector.")
@@ -3870,9 +3891,9 @@ module torus(
     anchor = get_anchor(anchor, center, BOT, CENTER);
     attachable(anchor,spin,orient, r=(maj_rad+min_rad), l=min_rad*2) {
         rotate_extrude(convexity=4) {
-            right_half(s=min_rad*2, planar=true)
-                right(maj_rad)
-                    circle(r=min_rad);
+            if (min_rad <= maj_rad) right(maj_rad) circle(r=min_rad);
+            else right_half(s=2*(maj_rad+min_rad), planar=true)
+                   right(maj_rad) circle(r=min_rad);
         }
         children();
     }
@@ -3948,6 +3969,7 @@ function torus(
 //   cap_h = If given, height above center where the shape will be truncated. Default: `undef` (no truncation)
 //   ---
 //   circum = produce a circumscribing teardrop shape.  Default: false
+//   bot_corner = create a bottom corner the specified distance below the given radius.  Default: 0
 //   r1 = Radius of circular portion of the front end of the teardrop shape.
 //   r2 = Radius of circular portion of the back end of the teardrop shape.
 //   d = Diameter of circular portion of the teardrop shape.
@@ -3958,7 +3980,7 @@ function torus(
 //   chamfer = Specifies size of chamfer as distance along the bottom and top faces.  Default: 0
 //   chamfer1 = Specifies size of chamfer on bottom as distance along bottom face.  Default: 0
 //   chamfer2 = Specifies size of chamfer on top as distance along top face.  Default: 0
-//   realign = Passes realign option to teardrop2d, which shifts face alignment.  Default: false
+//   realign = if true, bottom of teardrop is flat; if false, bottom of teardrop is a point.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
@@ -4101,7 +4123,7 @@ function teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2,  chamf
 //   cap_h = If given, height above sphere center to truncate teardrop shape.  Default: `undef` (no truncation)
 //   ---
 //   circum = set to true to circumscribe the specified radius/diameter.  Default: False
-//   realign = adjust point alignment to determine if bottom is flat or pointy.  Default: False
+//   realign = if false then the bottom is a point.  If true then the bottom is a flat face.  Default: False
 //   d = diameter of spherical portion of bottom.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
