@@ -48,16 +48,16 @@ _BOSL2_NURBS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2
 //   `knots` and `mult`.  In practice changing the knot values doesn't have a strong effect on the curve, so it usually suffices
 //   to use a uniform knot vector, which is the default.  The major exception to this is repeated knot values.  
 //   At generic points in the NURBS, the curve is infinitely differentiable, but at a point that
-//   corresponds to a knot, a NURBS with degree $d$ will have a $(d-1)$th derivative that is continuous.
+//   corresponds to a knot, a NURBS with degree $d$ will have a $(d-1)\mathrm{th}$ derivative that is continuous.
 //   However, if a value repeats in the knot vector that creates a knot with a multiplicity larger than 1, and each
 //   repetition decreases the smoothness of the curve at the corresponding NURBS point by 1.  This means that
-//   if the multiplicity equals the degree then the curve has a corner at the knot point.  Using the `mult` parameter
+//   if the multiplicity equals the degree then the curve is not differentiable: it has a corner at the knot point.  Using the `mult` parameter
 //   without giving `knots` allows you to give a vector of multiplicities, which produces a knot vector that is uniform
 //   except it has some repeated knots.  A value of 1 in the `mult` vector means the knot is not repeated; a value of 2 means it is
 //   repeated twice.  The multiplicity can be as large as the degree but no larger.  (A special exception is at the ends for open
-//   NURBS.)  When you specify the multiplicity vector the total number of knots is the sum of that vector.  You can also list
-//   the knots explicitly yourself.  The knot values you give can cover any range; they will be scaled to correspond properly
-//   to the NURBS parameter space: rgardless of the knot values you give, the domain of evaluation
+//   NURBS, where multiplicity degree+1 is permitted.)  When you specify the multiplicity vector the total number of knots is the sum of that vector.  You can also list
+//   the knots explicitly yourself.  The knots exist in the parameter space of the NURBS, but the knot values you give can cover any range;
+//   they will be scaled to correspond properly to the NURBS parameter space: regardless of the knot values you give, the domain of evaluation
 //   for u is always the interval [0,1], and it will be scaled to give the entire valid portion of the curve you have chosen.
 //   . 
 //   For an open spline the number of knots must be `len(control)+degree+1`.  For a clamped spline the number of knots is `len(control)-degree+1`,
@@ -455,7 +455,9 @@ function is_nurbs_patch(x) =
 //   parameter between the knots, ensuring that a sample appears at every knot.  If you instead give u and v then
 //   the values at those points in parameter space will be returned.  The various NURBS parameters can all be
 //   single values, if the NURBS has the same parameters in both directions, or pairs listing the value for the
-//   two directions.  
+//   two directions.  If you want uniform knots in one direction and specified knots in the other you can
+//   give `undef` as the knot vector, e.g., `[undef,vknots]` to have uniform knots in the first dimension and
+//   specified knots in the second one.  You can do the same thing with the `mult` parameter.   
 // Arguments:
 //   patch = rectangular list of control points in any dimension
 //   degree = a scalar or 2-vector giving the degree of the NURBS in the two directions
@@ -464,8 +466,8 @@ function is_nurbs_patch(x) =
 //   u = evaluation points in the u direction of the patch
 //   v = evaluation points in the v direction of the patch
 //   mult = a single list or pair of lists giving the knot multiplicity in the two directions. Default: all 1
-//   knots = a single list of pair of lists giving the knot vector in each of the two directions.  Default: uniform
-//   weights = a single list or pair of lists giving the weight at each control point in the patch.  Default: all 1
+//   knots = a single list or pair of lists giving the knot vector in each of the two directions.  Default: uniform
+//   weights = a matrix whose size corresponds to `patch` giving the weight at each control point in the patch.  Default: all 1
 //   type = a single string or pair of strings giving the NURBS type, where each entry is one of "clamped", "open" or "closed".  Default: "clamped"
 // Example(3D,NoScale): Computing points on a patch using ranges
 //   patch = [
