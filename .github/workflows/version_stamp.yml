@@ -29,8 +29,43 @@ jobs:
           echo "has_changes=false" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Increment version
+    - name: Check if changes are comment-only since last version bump
+      id: check_comments
       if: steps.check_changes.outputs.has_changes == 'true'
+      run: |
+        LAST_BUMP=$(git log --first-parent origin/master --format="%H %s" | grep " Version bump to v" | head -1 | awk '{print $1}')
+        echo "Last version bump commit: ${LAST_BUMP}"
+
+        if [ -z "$LAST_BUMP" ]; then
+          echo "No previous version bump found; treating as having real changes."
+          echo "only_comments=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        # Get all added/removed lines since last version bump, excluding version.scad
+        CHANGED_LINES=$(git diff "${LAST_BUMP}"..origin/master -- ':!version.scad' \
+          | grep -E '^[+-]' \
+          | grep -Ev '^(\+\+\+|---)')
+
+        if [ -z "$CHANGED_LINES" ]; then
+          echo "No non-version changes found."
+          echo "only_comments=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        # Strip leading +/- and check for any non-comment, non-blank lines
+        NON_COMMENT=$(echo "$CHANGED_LINES" | sed 's/^[+-]//' | grep -Ev '^[[:space:]]*//' | grep -Ev '^[[:space:]]*$')
+
+        if [ -z "$NON_COMMENT" ]; then
+          echo "All changes are comment-only; skipping version bump."
+          echo "only_comments=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "Real code changes detected; proceeding with version bump."
+          echo "only_comments=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Increment version
+      if: steps.check_changes.outputs.has_changes == 'true' && steps.check_comments.outputs.only_comments != 'true'
       id: version
       run: |
         ./scripts/increment_version.sh
@@ -38,7 +73,7 @@ jobs:
         echo "new_version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
 
     - name: Commit and push
-      if: steps.check_changes.outputs.has_changes == 'true'
+      if: steps.check_changes.outputs.has_changes == 'true' && steps.check_comments.outputs.only_comments != 'true'
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
