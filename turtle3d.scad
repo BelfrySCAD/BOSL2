@@ -95,7 +95,9 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //     - a list of object transformations, the transformations that twist or scale the cross section as the turtle moves
 //     - the current movement step size (scalar)
 //     - the current default angle
-//     - the current default arcsteps  
+//     - the current default arcsteps
+//   .
+//   If `state` is the turtle's returned state then the transformation matrix at step i is `state[0][i]*state[1][i]`.  
 //   .
 //   Commands   |T | Arguments          | What it does
 //   ---------- |--| ------------------ | -------------------------------
@@ -433,6 +435,14 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //       color("blue")
 //         sweep(circle(torusr,$fn=24), torus);
 //   }
+// Example(3D,Med): This example shows chaining of several invocations using `full_state=true`.  We extract the end state from the first section and use it to put a star ring at that spot in the path.  
+//   state1 = turtle3d(["arcright", 25,17, ["move",20,"steps",25,"roll",55,"shrink", 2]],full_state=true);
+//   state2 = turtle3d(["arcleft", 20],state=state1,full_state=true);
+//   final = turtle3d(["move", 10], state=state2, transforms=true);
+//   multmatrix(last(state1[0])*last(state1[1]))
+//     color("red")stroke(star(n=5, r=8,ir=6));
+//   sweep(circle(r=6,$fn=5), final);
+
 
 /*
 turtle state: sequence of transformations ("path") so far
@@ -785,10 +795,12 @@ function _turtle3d_list_command(command,arcsteps,movescale, lastT,lastPre,index)
     )
     // At this point angle is nonzero if and only if a relative angle command (left, right, up down) was given,
     //               absangle is defined if and only if an absolute angle command was given
+
     assert(is_undef(absangle) || absangle!=0, str("Arc rotation with zero angle at index ",index))
     assert(angle==0 || is_undef(absangle), str("Mixed relative and absolute rotations at index ",index))
     assert(is_int(usersteps) && usersteps>=0, str("Steps value ",usersteps," invalid at index ",index))
     assert(is_undef(absangle) || !all_zero(projv), str("Rotation acts as twist, which does not produce a valid arc at index ",index))
+    assert(command[0]!="arc" || first_defined([absangle,angle])!=0, "\"arc\" given without specifying the type and angle of rotation of the arc")
     let(
         rollval = struct_val(keys,"roll"),
         rrollto = struct_val(keys,"rrollto"),
@@ -809,20 +821,19 @@ function _turtle3d_list_command(command,arcsteps,movescale, lastT,lastPre,index)
                     desired = rollto!=0 ? rollto : rrollto!=0 ? rrollto : lrollto,
                     dummy = assert(!approx(abs(unit(desired)*finaldir),1),
                                    str("\nRequested roll is impossible because roll direction is parallel to the turtle travel direction at index ",index)),
-                    fe=echo(finalup=finalup),
-                    
                     startang = _compute_spin(finaldir, finalup),
                     finalang = _compute_spin(finaldir, desired),
                     delta_ang = posmod(finalang-startang,360),
                     signed_ang = rrollto!=0 || delta_ang==0 ? delta_ang
                                : lrollto!=0 || delta_ang>180 ? delta_ang-360
                                : delta_ang
-,                    ffe=echo(signed_ang=signed_ang, startang=startang, finalang=finalang)
                ) signed_ang,
+        effective_angle = first_defined([absangle,angle]), 
         steps = usersteps==0 && command[0]=="move" && roll==0 && twist==0 ? 1
               : usersteps != 0 ? usersteps
               : arcsteps != 0 ? arcsteps
-              : ceil(segs(abs(radius)) * abs(first_defined([absangle,angle]))/360),
+              : radius>0 && effective_angle!=0 ? segs(radius,effective_angle)
+              : max($fn,5),
         // The next line computes a list of pairs [trans,pretrans] for the segment or arc
         result =  is_undef(absangle)
                   ? [for(n=[1:1:steps]) let(frac=n/steps)

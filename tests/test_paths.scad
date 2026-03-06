@@ -251,8 +251,16 @@ test_resample_path();
 module test_path_closest_point(){
    path = circle(d=100,$fn=6);
    pt = [20,10];
-   closest = path_closest_point(path, pt);
-   assert_approx(closest, [5, [38.1698729811, 20.4903810568]]);
+   closest_t = path_closest_point(path, pt, closed=true);
+   closest_f = path_closest_point(path, pt, closed=false);
+   closest = path_closest_point(path, pt);      
+   assert_approx(closest_t, [5, [38.1698729811, 20.4903810568]]);
+   assert_approx(closest_f, [0, [46.8301270189, -5.49038105677]]);
+   assert_approx(closest, [0, [46.8301270189, -5.49038105677]]);
+   path3=hstack(path,[66,55,22,44,77,66]);
+   pt3 = [20,10,0];
+   closest3 = path_closest_point(path3, pt3, closed=false);
+   assert_approx(closest3,[1, [-3.76845918083, -43.3012701892, 36.0128169407]]);
 }
 test_path_closest_point();
 
