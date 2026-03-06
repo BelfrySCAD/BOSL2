@@ -2,7 +2,7 @@ name: Weekly Release
 
 on:
   schedule:
-    - cron: '18 0 * * 0'
+    - cron: '18 6 * * 0'
   workflow_dispatch:
 
 jobs:
