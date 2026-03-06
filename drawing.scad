@@ -1233,6 +1233,12 @@ function _normal_segment(p1,p2) =
 //       );
 //   koch=concat(["angle",60,"repeat",3],[concat(koch_unit(3),["left","left"])]);
 //   polygon(turtle(koch));
+// Example(3D): Here we use `full_state=true` to create the turtle path using two calls to `turtle()`.  We extract the partial path from the state data to display that partial path with a dashed line.
+//   state = turtle(["move", 10, "arcright", 40], full_state=true);
+//   final = turtle(["move", 13, "arcleft", 33], state=state);
+//   stroke(final,width=2);
+//   color("black")dashed_stroke(state[0],width=2);
+
 module turtle(commands, state=[[[0,0]],[1,0],90,0], full_state=false, repeat=1) {no_module();}
 function turtle(commands, state=[[[0,0]],[1,0],90,0], full_state=false, repeat=1) =
     let( state = is_vector(state) ? [[state],[1,0],90,0] : state )
