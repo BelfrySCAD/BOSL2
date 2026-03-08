@@ -20,7 +20,7 @@ jobs:
     - name: Check if latest commit is a merged PR
       id: check_changes
       run: |
-        LATEST_MSG=$(git log --first-parent origin/master --format="%s" -1)
+        LATEST_MSG=$(git log --first-parent origin/master --format="%s" -50 | grep -E '^(Merge pull request #\d+|Version bump to v\d+)' | head -1)
         echo "Latest commit: ${LATEST_MSG}"
 
         if echo "$LATEST_MSG" | grep -q "^Merge pull request #"; then
