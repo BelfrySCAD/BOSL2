@@ -1222,14 +1222,20 @@ function spherical_random_points(n=1, radius=1, seed) =
 //    points = random_polygon([n], [size], [angle_sep], [seed]);
 // Description:
 //   Generate the `n` vertices of a random clockwise star-shaped 2d polygon 
-//   inside a circle centered at the origin with radius `size`.  If size is a vector, then
+//   inside a circle centered at the origin with radius `size`.
+//   The polygons have the property that they always contain the origin and a line segment connecting
+//   the origin to a vertex is always contained in the polygon.
+//   .
+//   If size is a vector, then
 //   The polygon lies inside a circle of radius `size[1]` and also contains a circle whose
 //   radius is `size[0]`.  The first vertex of the polygon will be the first vertex below the X+ axis.  
 //   .
 //   The angular position of the vertices are randomly chosen.  
 //   The `angle_sep` parameter controls the separation in angle required between vertices.  If you set it
 //   to zero, no separation is required.  If you set it to 1 then the angular separation is maximal,
-//   which means the angles are spread uniformly without any randomness.  
+//   which means the angles are spread uniformly without any randomness.
+//   .
+
 // Arguments:
 //   n = number of vertices of the polygon. Default: 3
 //   size = the [min,max] radius of a ring centered at the origin containing the polygon's vertices. If you give a single number `s` then that is equivalent to `[s/2,s]`.  Default: [0.5,1]
