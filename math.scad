@@ -1233,10 +1233,11 @@ function spherical_random_points(n=1, radius=1, seed) =
 // Arguments:
 //   n = number of vertices of the polygon. Default: 3
 //   size = the [min,max] radius of a ring centered at the origin containing the polygon's vertices. If you give a single number `s` then that is equivalent to `[s/2,s]`.  Default: [0.5,1]
+//   ---
 //   angle_sep = values in [0,1] specifying minimum angular separation between adjacent points, where 0 means none and 1 is maximal (points are uniform in angle).  Default: 0.2
 //   seed = an optional seed for the random generation.
 // Example(2D): A 17-sided polygon with vertices between radii 10 and 20.
-//   polygon(random_polygon(17, [10,20], 888));
+//   polygon(random_polygon(17, [10,20], seed=888));
 function random_polygon(n=3,size=1, angle_sep=0.2, seed) =
     assert( is_int(n) && n>2, "\nPolygon vertex count must be an integer larger than 2.")
     assert(all_positive(size) && (is_vector(size,2) || is_num(size)), "\nsize must be a positive value or list of two positive values.")
