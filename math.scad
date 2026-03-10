@@ -1219,29 +1219,45 @@ function spherical_random_points(n=1, radius=1, seed) =
 // Topics: Random, Polygon
 // See Also: random_points(), spherical_random_points()
 // Usage:
-//    points = random_polygon([n], [size], [seed]);
+//    points = random_polygon([n], [size], [angle_sep], [seed]);
 // Description:
-//   Generate the `n` vertices of a random counter-clockwise simple 2d polygon 
-//   inside a circle centered at the origin with radius `size`.
+//   Generate the `n` vertices of a random clockwise star-shaped 2d polygon 
+//   inside a circle centered at the origin with radius `size`.  If size is a vector, then
+//   The polygon lies inside a circle of radius `size[1]` and also contains a circle whose
+//   radius is `size[0]`.  The first vertex of the polygon will be the first vertex below the X+ axis.  
+//   .
+//   The angular position of the vertices are randomly chosen.  
+//   The `angle_sep` parameter controls the separation in angle required between vertices.  If you set it
+//   to zero, no separation is required.  If you set it to 1 then the angular separation is maximal,
+//   which means the angles are spread uniformly without any randomness.  
 // Arguments:
 //   n = number of vertices of the polygon. Default: 3
-//   size = the [min,max] radius of a circle centered at the origin containing the polygon. A single number specifies the max radius. Default: [0.01,1]
+//   size = the [min,max] radius of a ring centered at the origin containing the polygon's vertices. If you give a single number `s` then that is equivalent to `[s/2,s]`.  Default: [0.5,1]
+//   angle_sep = values in [0,1] specifying minimum angular separation between adjacent points, where 0 means none and 1 is maximal (points are uniform in angle).  Default: 0.2
 //   seed = an optional seed for the random generation.
 // Example(2D): A 17-sided polygon with vertices between radii 10 and 20.
 //   polygon(random_polygon(17, [10,20], 888));
-function random_polygon(n=3,size=1, seed) =
-    assert( is_int(n) && n>2, "\nImproper number of polygon vertices.")
-    assert(all_positive(size) && (is_vector(size,2) || is_num(size)), "\nImproper size.")
+function random_polygon(n=3,size=1, angle_sep=0.2, seed) =
+    assert( is_int(n) && n>2, "\nPolygon vertex count must be an integer larger than 2.")
+    assert(all_positive(size) && (is_vector(size,2) || is_num(size)), "\nsize must be a positive value or list of two positive values.")
+    assert(is_finite(angle_sep) && angle_sep>=0 && angle_sep<=1, "\nangle_sep must be a number in [0,1]")
     let(
-        rmin = is_num(size) ? 0.01 : size[0],
+        rmin = is_num(size) ? size/2 : size[0],
         rmax = is_num(size) ? size : size[1],
-        seed = is_undef(seed) ? rands(0,1000,1)[0] : seed,
-        cumm = cumsum(rands(0.1,10,n+1,seed)),
-        angs = 360*cumm/cumm[n-1],
-        rads = rands(rmin,rmax,n,seed+cumm[0])
+        angsep = 0.1,  // 0 means no separation, max angle space; 1 means max separation=> uniformly spaced
+        ang_space = (1-angsep)*360,
+        // Create random angle list where angles are separated based on ang_sep but all angular differences < 180
+        randang = function(seed)
+                     let (
+                          rand = is_undef(seed) ? rands(0,ang_space,n) : rands(0,ang_space,n,seed=seed),
+                          angs = sort(rand)+lerpn(0,1,n)*(360-ang_space),
+                          dang = [each deltas(angs),angs[0]-last(angs)+360]
+                     )
+                     max(dang)<180 ? angs : randang(seed=u_add(seed,angs[0])),
+        angs = randang(seed), 
+        rads = is_undef(seed) ? rands(rmin,rmax,n) : rands(rmin,rmax,n,seed+angs[0])
       )
-    [for(i=count(n)) rads[i]*[cos(angs[i]), sin(angs[i])] ];
-
+      [for(i=count(n)) rads[i]*[cos(angs[i]), -sin(angs[i])]];
 
 
 // Section: Calculus
