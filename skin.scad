@@ -756,7 +756,7 @@ module linear_sweep(
     tex_depth, tex_scale, tex_samples,
     cp, atype="hull", h,l,length,
     anchor, spin=0, orient=UP
-) {
+) { 
     h = one_defined([h, height,l,length],"h,height,l,length",dflt=1);
     region = force_region(region);
     check = assert(is_region(region),"\nInput is not a region");
@@ -1419,6 +1419,7 @@ module rotate_sweep(
     h = max_y - min_y;
     check2 = assert(min_x>=0, "\nInput region must exist entirely in the X+ half-plane.");
     if (!is_undef(texture)) {
+        change_anchors(named=namedanch) 
         _textured_revolution(
             shape,
             texture=texture,
@@ -1437,7 +1438,7 @@ module rotate_sweep(
             atype=atype, anchor=anchor, 
             spin=spin, orient=orient, start=start
         )
-        change_anchors(named=namedanch) children();
+        children();
     } else {
         steps = ceil(segs(max_x) * angle / 360) + (angle<360? 1 : 0);
         skmat = down(min_y) * skew(sxz=shift.x/h, syz=shift.y/h) * up(min_y);
@@ -1445,6 +1446,7 @@ module rotate_sweep(
             if (angle==360) for (i=[0:1:steps-1]) skmat * rot([90,0,start+360-i*360/steps]),
             if (angle<360) for (i=[0:1:steps-1]) skmat * rot([90,0,start+angle-i*angle/(steps-1)]),
         ];
+        change_anchors(named=namedanch)
         sweep(region, transforms,
               closed=angle==360,
               caps=angle!=360,
@@ -1452,7 +1454,6 @@ module rotate_sweep(
               convexity=convexity,
               atype=atype, anchor=anchor,
               spin=spin, orient=orient)
-                 change_anchors(named=namedanch)
                    children();
     }
 }

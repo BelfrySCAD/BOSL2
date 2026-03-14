@@ -1800,6 +1800,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, axis="Z", convexity=
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
+// Named Anchors:
+//   "corner" = The center point of the mask with the correct direiction to anchor to an edge
 // Example:
 //   chamfer_edge_mask(l=50, chamfer=10);
 // Example:
@@ -1817,8 +1819,9 @@ function chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=C
 module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CENTER, spin=0, orient=UP) {
     l = is_def($edge_length) && !any_defined([l,length,h,height]) ? $edge_length
       : one_defined([l,length,h,height],"l,length,h,height");
+    anchors=[named_anchor("corner", CTR, -[1,1],_compute_spin(-[1,1,0], UP))];
     default_tag("remove") {
-        attachable(anchor,spin,orient, size=[chamfer*2, chamfer*2, l]) {
+        attachable(anchor,spin,orient, size=[chamfer*2, chamfer*2, l],anchors=anchors) {
             cylinder(r=chamfer, h=l+excess, center=true, $fn=4);
             children();
         }
@@ -1871,6 +1874,8 @@ module chamfer_edge_mask(l, chamfer=1, excess=0.1, h, length, height, anchor=CEN
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
+// Named Anchors:
+//   "corner" = Corner point of the mask with the correct direction to anchor to an edge
 // Example(VPD=200,VPR=[55,0,120]):
 //   rounding_edge_mask(l=50, r=15);
 // Example(VPD=200,VPR=[55,0,120]): With different radii at each end
@@ -2026,11 +2031,10 @@ module rounding_edge_mask(l, r, ang, r1, r2, excess=0.01, d1, d2,d,r,length, h, 
     left_dir = cylindrical_to_xyz(1,ang,0);
     zdir = unit([length, 0,-(r2-r1)/tan(ang/2)]);
     cutfact = 1/sin(ang/2)-1;
-
     v=unit(zrot(ang,zdir)+left_normal);
     ref = UP - (v*UP)*v;
     backleft_spin=-vector_angle(rot(from=UP,to=v,p=BACK),ref);
-
+    anchors=[named_anchor("corner",CENTER, left_normal+FWD,ang/2-90)];
     override = [
        [CENTER, [CENTER,UP]],
        [TOP, [[0,0,length/2]]],
@@ -2062,7 +2066,7 @@ module rounding_edge_mask(l, r, ang, r1, r2, excess=0.01, d1, d2,d,r,length, h, 
        ];
     vnf = vnf_vertex_array(reverse(pathlist), col_wrap=true,caps=true);
     default_tag("remove", _remove_tag)
-      attachable(anchor,spin,orient,size=[1,1,length],override=override){
+      attachable(anchor,spin,orient,size=[1,1,length],override=override,anchors=anchors){
         vnf_polyhedron(vnf);
         children();
       }
@@ -2070,14 +2074,16 @@ module rounding_edge_mask(l, r, ang, r1, r2, excess=0.01, d1, d2,d,r,length, h, 
 
 
 // Module: teardrop_edge_mask()
-// Synopsis: Creates a shape to round a 90° edge but limit the angle of overhang.
+// Synopsis: Creates a shape to round an edge while limiting the angle of overhang.
 // SynTags: Geom
 // Topics: Masking, Rounding, Shapes (3D), FDM Optimized
 // See Also: teardrop_corner_mask(), teardrop_edge_mask(), default_tag(), diff()
 // Usage:
 //   teardrop_edge_mask(l|h=|length=|height=, r|d=, [angle], [excess], [anchor], [spin], [orient]) [ATTACHMENTS];
 // Description:
-//   Makes an apropriate 3D edge rounding mask that keeps within `angle` degrees of vertical.
+//   Makes an apropriate 3D edge rounding mask that keeps within `angle` degrees of vertical.  Don't confuse `angle`
+//   with `ang`, the parameter which specifies the angle of the corner being rounded.  If the flat section ends up
+//   on the wrong side you can fix this with `spin=180`.  
 // Arguments:
 //   l/h/length/height = length of mask
 //   r = Radius of the mask rounding.
@@ -2085,11 +2091,14 @@ module rounding_edge_mask(l, r, ang, r1, r2, excess=0.01, d1, d2,d,r,length, h, 
 //   excess = Excess mask size.  Default: 0.1
 //   ---
 //   d = Diameter of the mask rounding.
+//   ang = Angle between faces for rounding.  Default: $edge_angle if defined, otherwise 90
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
+// Named Anchors:
+//   "corner" = Corner point of the mask with the correct direction to anchor to an edge
 // Example(VPD=50,VPR=[55,0,120]):
 //   teardrop_edge_mask(l=20, r=10, angle=40);
 // Example(VPD=300,VPR=[75,0,25]):
@@ -2100,8 +2109,8 @@ module rounding_edge_mask(l, r, ang, r1, r2, excess=0.01, d1, d2,d,r,length, h, 
 //       corner_mask(BOT)
 //           teardrop_corner_mask(r=10, angle=40);
 //   }
-function teardrop_edge_mask(l, r, angle=45, excess=0.1, d, anchor, spin, orient,h,height,length) = no_function("teardrop_edge_mask");
-module teardrop_edge_mask(l, r, angle=45, excess=0.1, d, anchor=CTR, spin=0, orient=UP,h,height,length)
+function teardrop_edge_mask(l, r, angle=45, excess=0.1, ang, d, anchor, spin, orient,h,height,length) = no_function("teardrop_edge_mask");
+module teardrop_edge_mask(l, r, angle=45, excess=0.1, ang, d, anchor=CTR, spin=0, orient=UP,h,height,length)
 {
     l = one_defined([l, h, height, length], "l,h,height,length");
     check = 
@@ -2109,13 +2118,16 @@ module teardrop_edge_mask(l, r, angle=45, excess=0.1, d, anchor=CTR, spin=0, ori
       assert(is_num(angle) && angle>0 && angle<90, "Angle must be a number between 0 and 90")
       assert(is_num(excess));
     r = get_radius(r=r, d=d, dflt=1);
-    path = mask2d_teardrop(r=r, angle=angle, excess=excess);
-    default_tag("remove") {
-        linear_sweep(path, height=l, center=true, atype="bbox", anchor=anchor, spin=spin, orient=orient) children();
+    ang = first_defined([ang,$edge_angle,90]);
+    corner = cylindrical_to_xyz(1,90+ang,0)+FWD;
+    anchors=[named_anchor("corner",CENTER, corner, ang/2-90)]; 
+    path = mask2d_teardrop(r=r, angle=angle, mask_angle=ang, excess=excess);
+    default_tag("remove") {  
+        change_anchors(named=anchors) 
+        linear_sweep(path, height=l, atype="bbox", anchor=anchor, spin=spin, orient=orient)
+           children();
     }
 }
-
-
 
 
 // Module: polygon_edge_mask()
@@ -2155,7 +2167,7 @@ module teardrop_edge_mask(l, r, angle=45, excess=0.1, d, anchor=CTR, spin=0, ori
 //   "hull" = Anchors to the virtual convex hull of the shape.
 //   "intersect" = Anchors to the surface of the shape.
 // Named Anchors:
-//   "corner" = The center point of the mask with the correct direiction to anchor to an edge
+//   "corner" = Corner point of the mask with the correct direction to anchor to an edge
 // Side Effects:
 //   Tags the children with "remove" (and hence sets `$tag`) if no tag is already set.
 function polygon_edge_mask(mask, length, height, l, h, scale=1, anchor="origin", atype="hull", spin=0, orient=UP) = no_function("polygon_edge_mask");
