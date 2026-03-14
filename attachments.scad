@@ -2699,9 +2699,9 @@ function _change_anchors(geom) =
     is_undef($change_anchors) || geom==[] ? geom
   :
     let(
-         named=$change_anchors[0],
-         alias=$change_anchors[1],
-         remove=$change_anchors[2],
+         named=default($change_anchors[0],[]),
+         alias=default($change_anchors[1],[]),
+         remove=default($change_anchors[2],[]),
          oldanch = last(geom),
          allremove = concat(column(named,0), remove),
          keepanch = [for(anch=oldanch) if (!in_list(anch[0],allremove)) anch],
