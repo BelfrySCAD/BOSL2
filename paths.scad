@@ -349,7 +349,9 @@ function _path_self_intersections(path, closed=true, eps=_EPSILON) =
 
 
 // Section: Resampling - changing the number of points in a path
-
+//   Unlike other path related functions, the resampling functions in this section
+//   default to `closed=true`, which means they assume the input path represents
+//   a polygon.  
 
 // Input `data` is a list that sums to an integer. 
 // Returns rounded version of input data so that every 
@@ -623,10 +625,11 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
 //   newpath = simplify_path(path, maxerr, [closed=]);
 // Description:
 //   This is intended for irregular paths such as coastlines, or paths having fractal self-similarity.
+//   By default the path is assumed to describe a closed polygon (`closed=true`).
 //   The original path is simplified by removing points that fall within a specified margin of error,
 //   leaving behind those points that contribute to dominant features of the path. This operation has the
 //   effect of making the point spacing somewhat more uniform. For coastlines, up to 80% reduction in path
-//   length is possible with small degradation of the original shape. The input path may be 2D or 3D.
+//   length is possible with small degradation of the original shape.
 //   .
 //   The `maxerr` parameter determines which points of the original path are kept. A point is kept if it
 //   deviates beyond `maxerr` distance from a straight line between the last kept point and a point further
@@ -643,7 +646,7 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
 //   path = Path in any dimension or 1-region
 //   maxerr = Maximum deviation from line connecting last kept point to a further point; points beyond this deviation are kept.
 //   ---
-//   closed = Set to true if path is closed.  Default: false for paths, true for 1-regions
+//   closed = Set to true if path is closed.  Default: true
 // Example(2D,Med,VPD=38000,VPT=[5600,6500,0]): A map of California, originally a 262-point polygon (yellow, on left), reduced to 39 points (green, on right).
 //   calif = [
 //   [225,12681], [199,12544], [180,12490], [221,12435], [300,12342], [310,12315], [320,12263], [350,12154],
@@ -684,11 +687,10 @@ function resample_path(path, n, spacing, keep_corners, closed=true) =
 //   left(4000) polygon(calif);
 //   right(4000) color("lightgreen") polygon(newpoly);
 
-function simplify_path(path, maxerr, closed=false) =
-    is_1region(path) ? simplify_path(path[0], maxerr, default(closed,true)) :
-    let(closed=default(closed,false))
+function simplify_path(path, maxerr, closed=true) =
+    let(path = force_path(path))
     assert(is_bool(closed))
-    assert(is_path(path), "\nInvalid 2D or 3D path or 1-region.")
+    assert(is_path(path,undef), "\nInvalid path or 1-region.")
     assert(is_num(maxerr) && maxerr>0, "\nParameter 'maxerr' must be a positive number.")
     let(
         n = len(path),

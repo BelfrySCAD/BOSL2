@@ -1215,7 +1215,7 @@ function spherical_random_points(n=1, radius=1, seed) =
 
 
 // Function: random_polygon()
-// Synopsis: Returns the CCW path of a simple random polygon.
+// Synopsis: Returns the clockwise path of a simple random polygon.
 // Topics: Random, Polygon
 // See Also: random_points(), spherical_random_points()
 // Usage:

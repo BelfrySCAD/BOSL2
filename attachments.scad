@@ -38,6 +38,8 @@ $parent_size = undef;
 $parent_geom = undef;
 $parent_parts = undef;
 
+$change_anchors = undef; // Anchor changes to propagate; processed by attachable() 
+
 $attach_inside = false;  // If true, flip the meaning of the inside parameter for align() and attach()
 
 $edge_angle = undef;
@@ -753,11 +755,12 @@ function _quant_anch(x) = approx(x,0) ? 0 : sign(x);
 
 // Make arbitrary anchor legal for a given geometry
 function _make_anchor_legal(anchor,geom) =
-   is_string(anchor) ? anchor
- : in_list(geom[0], ["prismoid","trapezoid"]) ? [for(v=anchor) _quant_anch(v)]
- : in_list(geom[0], ["conoid", "extrusion_extent"]) ? [anchor.x,anchor.y, _quant_anch(anchor.z)]
- : anchor;
-    
+    is_string(anchor) ? anchor
+  : in_list(geom[0], ["prismoid","trapezoid"]) ? [for(v=anchor) _quant_anch(v)]
+  : in_list(geom[0], ["conoid", "extrusion_extent"]) ? [anchor.x,anchor.y, _quant_anch(point3d(anchor).z)]
+  : anchor;
+
+  
 
 
 // Module: attach()
@@ -2417,7 +2420,7 @@ module attachable(
     expose_tags=false, keep_color=false
 ) {
     dummy1 =
-        assert($children==2, "\nattachable() expects exactly two children: the shape to manage, and the union of all attachment candidates.")
+        assert($children==2, "\nattachable() expects exactly two children: the shape to manage, and the union of all attachments.")
         assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Invalid anchor: ",anchor))
         assert(is_undef(spin) || is_finite(spin), str("\nInvalid spin: ",spin))
         assert(is_undef(orient) || is_vector(orient,3), str("\nInvalid orient: ",orient));
@@ -2437,18 +2440,20 @@ module attachable(
             cp=cp, offset=offset, anchors=anchors,
             two_d=two_d, axis=axis, override=override
         );
-    m = _attach_transform(anchor,spin,orient,geom);
+    final_geom=_change_anchors(geom);
+    m = _attach_transform(anchor,spin,orient,final_geom);
     multmatrix(m) {
         $parent_anchor = anchor;
         $parent_spin   = spin;
         $parent_orient = orient;
-        $parent_geom   = geom;
-        $parent_size   = _attach_geom_size(geom);
+        $parent_geom   = final_geom;
+        $parent_size   = _attach_geom_size(final_geom);
         $attach_to   = undef;
         $anchor_override=undef;
         $attach_alignment=undef;
         $parent_parts = parts;
         $anchor_inside = false;
+        $change_anchors = undef;
         if (expose_tags || _is_shown()){
             if (!keep_color)
                 _color($color)
@@ -2644,9 +2649,11 @@ function reorient(
 //   rot = A 4×4 rotations matrix, which may include a translation
 //   flip = If true, flip the anchor the opposite direction.  Default: false
 function named_anchor(name, pos, orient, spin, rot, flip, info) =
+  assert(is_vector(orient) || is_undef(orient), "\norient must be a vector")
   assert(num_defined([orient,spin])==0 || num_defined([rot,flip])==0, "\nCannot mix orient or spin with rot or flip.")
   assert(num_defined([pos,rot])>0, "\nMust give pos or rot")
-  is_undef(rot) ? [name, pos, default(orient,UP), default(spin,0), if (info) info]
+  let(orient=point3d(default(orient,UP)))
+  is_undef(rot) ? [name, pos, orient, default(spin,0), if (info) info]
  : 
   let(
       flip = default(flip,false),
@@ -2668,33 +2675,49 @@ function named_anchor(name, pos, orient, spin, rot, flip, info) =
 // Topics: Attachments
 // See Also: named_anchor(), attachable()
 // Usage:
-//   PARENT() change_anchors([named],[alias=],[remove=]) CHILDREN;
+//   change_anchors([named],[alias=],[remove=]) PARENT() CHILDREN;
 // Description:
-//   Modifies the named anchors inherited from the parent object or adds new named anchors.  The `named` parameter gives a list
+//   Modifies the named anchors propagated an object or adds new named anchors.  The `named` parameter gives a list
 //   of new or replacement named anchors, specified in the usual way with {{named_anchor()}}.
 //   The `alias` parameter specifies a list of pairs of the form `[newname, anchor]` where
-//   `newname` is a new anchor name and `anchor` is an existing anchor for the parent, either a named anchor or a regular anchor.  The
-//   existing parent anchor will be propagated to the child under the new name.  The old name is not changed,
-//   and will also be propagated to the child.   The `remove` parameter removes named anchors inherited from
-//   the parent so they are not propagated to the child.  You can use it to remove an anchor that you have
-//   aliased so that only the new name propagates to the child. 
+//   `newname` is a new anchor name and `anchor` is an existing anchor for the object, either a named anchor or a regular anchor.  The
+//   existing anchor will be propagated to the child under the new name.  The old name is not changed,
+//   and will also be propagated to the child.   The `remove` parameter removes named anchors defined by the object
+//   so they are not propagated to the child.  You can use it to remove an anchor that you have
+//   aliased so that only the new name propagates to the child.
+//   .
+//   This works by setting a `$change_anchors` which will be interpreted by the first `attachable()` child invocation.                  
 // Arguments:
 //   named = list of named anchors to add
 //   ---
 //   alias = list of string pairs of the form [newname,oldname] creating named anchor aliases
 //   remove = list of strings giving anchors to remove
- 
-module change_anchors(named=[], alias=[], remove=[])
+// Side Effects:
+//   Sets `$change_anchors`.  
+
+function _change_anchors(geom) = 
+    is_undef($change_anchors) || geom==[] ? geom
+  :
+    let(
+         named=$change_anchors[0],
+         alias=$change_anchors[1],
+         remove=$change_anchors[2],
+         oldanch = last(geom),
+         allremove = concat(column(named,0), remove),
+         keepanch = [for(anch=oldanch) if (!in_list(anch[0],allremove)) anch],
+         aliasanch = [for(name=alias) list_set(_find_anchor(name[1],geom),0,name[0])],
+         newanch = concat(keepanch, aliasanch, named),
+         new_geom = list_set(geom,-1,newanch)
+    )
+    new_geom;
+
+
+
+module change_anchors(named=undef, alias=undef, remove=undef)
 {
-  dummy=assert($parent_geom != undef, "\nNo object with anchors to change!");
-  oldanch = last($parent_geom);
-  allremove = concat(column(named,0), remove);
-  keepanch = [for(anch=oldanch) if (!in_list(anch[0],allremove)) anch];
-  aliasanch = [for(name=alias) list_set(_find_anchor(name[1],$parent_geom),0,name[0])];
-  newanch = concat(keepanch, aliasanch, named);
-  $parent_geom = list_set($parent_geom,-1,newanch);
+  $change_anchors = [named, alias, remove];
   children();
-}
+}  
 
 
 // Function: attach_geom()
@@ -3208,7 +3231,7 @@ function _attach_transform(anchor, spin, orient, geom, p) =
         two_d = _attach_geom_2d(geom),
         m = is_def($attach_to) ?   // $attach_to is the attachment point on this object
               (                       // which will attach to the parent
-                   let(                           
+                   let(
                         anch = _find_anchor($attach_to, geom),
                         // if $anchor_override is set it defines the object position anchor (but note not direction or spin).  
                         // Otherwise we use the provided anchor for the object.  
@@ -3537,7 +3560,6 @@ function _find_anchor(anchor, geom)=
         let(
             vnf=geom[1],
             override = geom[2](anchor)
-            //,fd=echo(cp=cp)
         ) // CENTER anchors anchor on cp, "origin" anchors on [0,0]
         approx(anchor,CTR)? [anchor, default(override[0],cp),default(override[1],UP),default(override[2], 0)] :     
         vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor,UP), 0] :

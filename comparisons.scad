@@ -533,6 +533,7 @@ function deduplicate_indexed(list, indices, closed=false, eps=_EPSILON) =
 
 function list_wrap(list, eps=_EPSILON) =
     assert(is_list(list))
+    assert(is_finite(eps) && eps>=0)
     len(list)<2 || are_ends_equal(list,eps=eps)? list : [each list, list[0]];
 
 

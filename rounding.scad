@@ -4882,6 +4882,7 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
           move(base_root)rot(from=UP,to=prism_axis) 
             linear_extrude(height=norm(base_root-aux_root))zrot(base_spin-spin)polygon(profile);
         else{
+          change_anchors(alias=[["end1","root"],["end2","end"]], remove=["root","end"])
           join_prism(zrot(base_spin-spin,profile),
                      base=base_type, base_r=u_mul(base_r,base_inside),
                      aux=aux_type, aux_T=aux_T, aux_r=u_mul(aux_r,aux_inside),
@@ -4892,7 +4893,6 @@ module prism_connector(profile, desc1, anchor1, desc2, anchor2, shift1, shift2, 
                      base_smooth_normals = base_smooth_normals, aux_smooth_normals=aux_smooth_normals, 
                      debug=debug,
                      _name1="desc1", _name2="desc2")
-                         change_anchors(alias=[["end1","root"],["end2","end"]], remove=["root","end"])
                            children();
           }
       }
