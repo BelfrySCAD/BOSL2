@@ -80,7 +80,7 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 //   caps = If true, caps each end of the path with a rounded copy of the children.  Children must by symmetric across the Y axis, or results are wrong.  Default: false
 //   closed = If true, connect the starting point of the path to the ending point.  Default: false
 //   convexity = The max number of times a line could pass though a wall.  Default: 10
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: The length of the diagonal of the path's bounding box.
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view. If it is too small you will see cracks in your extrusion.  Default: The length of the diagonal of the path's bounding box.
 // Example:
 //   path = [
 //       each right(50, p=arc(d=100,angle=[90,180])),
@@ -160,9 +160,9 @@ module path_extrude2d(path, caps=false, closed=false, s, convexity=10) {
                         rotate(-sign(ang)*extra_ang/2)
                             rotate_extrude(angle=ang+sign(ang)*extra_ang)
                                 if (ang<0)
-                                    right_half(planar=true) children();
+                                    right_half(planar=true,s=s) children();
                                 else
-                                    left_half(planar=true) children();                          
+                                    left_half(planar=true,s=s) children();                          
                 }
                     
         }
@@ -171,12 +171,12 @@ module path_extrude2d(path, caps=false, closed=false, s, convexity=10) {
             move(bseg[0])
                 rot(from=BACK, to=bseg[0]-bseg[1])
                     rotate_extrude(angle=180)
-                        right_half(planar=true) children();
+                        right_half(planar=true,s=s) children();
             eseg = select(path,-2,-1);
             move(eseg[1])
                 rot(from=BACK, to=eseg[1]-eseg[0])
                     rotate_extrude(angle=180)
-                        right_half(planar=true) children();
+                        right_half(planar=true,s=s) children();
         }
       }
       union();
