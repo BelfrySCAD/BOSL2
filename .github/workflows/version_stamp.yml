@@ -12,7 +12,7 @@ jobs:
       contents: write
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: master
         fetch-depth: 0
@@ -45,7 +45,7 @@ jobs:
         # Get all added/removed lines since last version bump, excluding version.scad
         CHANGED_LINES=$(git diff "${LAST_BUMP}"..origin/master -- ':!version.scad' \
           | grep -E '^[+-]' \
-          | grep -Ev '^(\+\+\+|---)')
+          | grep -Ev '^(\+\+\+|---)') || true
 
         if [ -z "$CHANGED_LINES" ]; then
           echo "No non-version changes found."
@@ -54,7 +54,7 @@ jobs:
         fi
 
         # Strip leading +/- and check for any non-comment, non-blank lines
-        NON_COMMENT=$(echo "$CHANGED_LINES" | sed 's/^[+-]//' | grep -Ev '^[[:space:]]*//' | grep -Ev '^[[:space:]]*$')
+        NON_COMMENT=$(echo "$CHANGED_LINES" | sed 's/^[+-]//' | grep -Ev '^[[:space:]]*//' | grep -Ev '^[[:space:]]*$') || true
 
         if [ -z "$NON_COMMENT" ]; then
           echo "All changes are comment-only; skipping version bump."

@@ -5,8 +5,8 @@
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
-assert(version_num()>=20190500, "BOSL2 requires OpenSCAD version 2019.05 or later.");
-
+assert(version_num()>=20210100, "BOSL2 requires OpenSCAD version 2021.01 or later.");
+                      
 _BOSL2_STD = true;
 
 include <version.scad>
@@ -42,4 +42,5 @@ include <utility.scad>
 include <partitions.scad>
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+
 
