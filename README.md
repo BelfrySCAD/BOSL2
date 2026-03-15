@@ -43,6 +43,10 @@ You can find the full BOSL2 library documentation at: https://github.com/BelfryS
     - Mac OS X: `$HOME/Documents/OpenSCAD/libraries/`
 5. Restart OpenSCAD.
 
+### Fedora Linux
+Users on Fedora Linux can install directly from their package repository by runnning:
+
+```sudo dnf install openscad-bosl2```
 
 ## Examples
 A lot of the features of this library are to allow shorter, easier-to-read, intent-based coding.  For example:
