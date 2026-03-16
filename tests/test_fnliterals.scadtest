@@ -5660,18 +5660,18 @@ test_hashmap();
 '''
 
 [[test]]
-name = "test_f_is_patch"
+name = "test_f_is_bezier_patch"
 script = '''
 include <../std.scad>
 include <../beziers.scad>
 include <../fnliterals.scad>
 
-module test_f_is_patch() {
-    fn = f_is_patch();
+module test_f_is_bezier_patch() {
+    fn = f_is_bezier_patch();
     patch = [for(i=[0:3]) [for(j=[0:3]) [i,j,0]]];
     assert(fn(patch));
     assert(!fn([[1,2,3]]));
     assert(!fn(42));
 }
-test_f_is_patch();
+test_f_is_bezier_patch();
 '''

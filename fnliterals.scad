@@ -1754,17 +1754,17 @@ function f_is_region(a) = f_1arg(function (a) is_region(a))(a);
 function f_is_vnf(a) = f_1arg(function (a) is_vnf(a))(a);
 
 
-// Function: f_is_patch()
+// Function: f_is_bezier_patch()
 // Synopsis: Returns a function to determine if a value is a Bezier Patch structure.
 // Topics: Function Literals, Type Queries
 // See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_int(), f_is_string(), f_is_list()
 // Usage:
-//   fn = f_is_patch();
+//   fn = f_is_bezier_patch();
 // Description:
 //   A factory that returns function literals equivalent to `is_bezier_patch(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_patch(a) = f_1arg(function (a) is_bezier_patch(a))(a);
+function f_is_bezier_patch(a) = f_1arg(function (a) is_bezier_patch(a))(a);
 
 
 
