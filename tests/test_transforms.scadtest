@@ -564,3 +564,27 @@ module test_is_2d_transform() {
 }
 test_is_2d_transform();
 '''
+
+[[test]]
+name = "test_left_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_left_errors() {
+    left(x="bad");  // x must be a finite number
+}
+test_left_errors();
+'''
+
+[[test]]
+name = "test_move_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_move_errors() {
+    move(v=42);  // v must be a 2- or 3-vector
+}
+test_move_errors();
+'''

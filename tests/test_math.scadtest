@@ -1142,3 +1142,51 @@ module test_root_find(){
 }
 test_root_find();
 '''
+
+[[test]]
+name = "test_lerp_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_lerp_errors() {
+    x = lerp(1, [1,2], 0.5);  // scalar and vector shapes don't match
+}
+test_lerp_errors();
+'''
+
+[[test]]
+name = "test_factorial_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_factorial_errors() {
+    x = factorial(-1);  // must be non-negative
+}
+test_factorial_errors();
+'''
+
+[[test]]
+name = "test_gcd_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_gcd_errors() {
+    x = gcd(1.5, 2);  // arguments must be integers
+}
+test_gcd_errors();
+'''
+
+[[test]]
+name = "test_lcm_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_lcm_errors() {
+    x = lcm(0, 5);  // arguments must be non-zero
+}
+test_lcm_errors();
+'''

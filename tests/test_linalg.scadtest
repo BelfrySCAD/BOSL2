@@ -423,3 +423,27 @@ module test_transpose() {
 }
 test_transpose();
 '''
+
+[[test]]
+name = "test_transpose_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_transpose_errors() {
+    x = transpose([[1,2],[3,4,5]]);  // rows must have consistent lengths
+}
+test_transpose_errors();
+'''
+
+[[test]]
+name = "test_outer_product_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_outer_product_errors() {
+    x = outer_product([1,2], "bad");  // both inputs must be vectors
+}
+test_outer_product_errors();
+'''

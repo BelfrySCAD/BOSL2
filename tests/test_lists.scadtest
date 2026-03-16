@@ -578,3 +578,39 @@ module test_list_shape() {
 }
 test_list_shape();
 '''
+
+[[test]]
+name = "test_reverse_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_reverse_errors() {
+    x = reverse(42);  // must be a list or string
+}
+test_reverse_errors();
+'''
+
+[[test]]
+name = "test_list_rotate_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_list_rotate_errors() {
+    x = list_rotate([1,2,3], n=1.5);  // n must be an integer
+}
+test_list_rotate_errors();
+'''
+
+[[test]]
+name = "test_select_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_select_errors() {
+    x = select(42, 0);  // input must be a list or string, not a number
+}
+test_select_errors();
+'''

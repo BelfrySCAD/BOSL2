@@ -526,3 +526,27 @@ module test_str_replace_char() {
 }
 test_str_replace_char();
 '''
+
+[[test]]
+name = "test_substr_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_substr_errors() {
+    x = substr("hello", pos=-1);  // pos must be non-negative
+}
+test_substr_errors();
+'''
+
+[[test]]
+name = "test_str_replace_char_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_str_replace_char_errors() {
+    x = str_replace_char("hello", "xx", "y");  // char must be a single character
+}
+test_str_replace_char_errors();
+'''

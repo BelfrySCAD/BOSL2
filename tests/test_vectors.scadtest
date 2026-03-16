@@ -405,3 +405,27 @@ module test_furthest_point() {
 }
 test_furthest_point();
 '''
+
+[[test]]
+name = "test_unit_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_unit_errors() {
+    x = unit([0,0,0]);  // cannot normalize a zero vector
+}
+test_unit_errors();
+'''
+
+[[test]]
+name = "test_vector_angle_errors"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_vector_angle_errors() {
+    x = vector_angle([1,2], [1,2,3]);  // vectors must have the same length
+}
+test_vector_angle_errors();
+'''
