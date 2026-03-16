@@ -5527,3 +5527,134 @@ module test_f_is_path() {
 }
 test_f_is_path();
 '''
+
+[[test]]
+name = "test_f_2arg_simple"
+script = '''
+include <../std.scad>
+include <../fnliterals.scad>
+
+module test_f_2arg_simple() {
+    factory = f_2arg_simple(function(a,b) a+b);
+    assert_equal(str(factory()), "function(x, y) target_func(x, y)");
+    assert_equal(factory(3,4)(), 7);
+    assert_equal(factory(3)(4), 7);
+    assert_equal(factory()(3,4), 7);
+}
+test_f_2arg_simple();
+'''
+
+[[test]]
+name = "test_f_is_function"
+script = '''
+include <../std.scad>
+include <../fnliterals.scad>
+
+module test_f_is_function() {
+    fn = f_is_function();
+    assert(fn(function(x) x));
+    assert(!fn(42));
+    assert(!fn("hello"));
+}
+test_f_is_function();
+'''
+
+[[test]]
+name = "test_f_is_range"
+script = '''
+include <../std.scad>
+include <../fnliterals.scad>
+
+module test_f_is_range() {
+    fn = f_is_range();
+    assert(fn([1:5]));
+    assert(!fn([1,2,3]));
+    assert(!fn(5));
+}
+test_f_is_range();
+'''
+
+[[test]]
+name = "test_f_is_vector"
+script = '''
+include <../std.scad>
+include <../fnliterals.scad>
+
+module test_f_is_vector() {
+    fn = f_is_vector();
+    assert(fn([1,2,3]));
+    assert(!fn("hello"));
+    fn3 = f_is_vector(b=3);
+    assert(fn3([1,2,3]));
+    assert(!fn3([1,2]));
+}
+test_f_is_vector();
+'''
+
+[[test]]
+name = "test_f_is_vnf"
+script = '''
+include <../std.scad>
+include <../fnliterals.scad>
+
+module test_f_is_vnf() {
+    fn = f_is_vnf();
+    assert(fn([[[0,0,0],[1,0,0],[0,1,0]],[[0,1,2]]]));
+    assert(!fn(42));  // not a list-of-two-lists
+    assert(!fn(42));
+}
+test_f_is_vnf();
+'''
+
+[[test]]
+name = "test_f_is_region"
+script = '''
+include <../std.scad>
+include <../fnliterals.scad>
+
+module test_f_is_region() {
+    fn = f_is_region();
+    assert(fn([[[0,0],[1,0],[1,1],[0,1]]]));
+    assert(!fn([[0,0],[1,0],[1,1]]));  // path not region
+    assert(!fn(42));
+}
+test_f_is_region();
+'''
+
+
+[[test]]
+name = "test_find_all"
+script = '''
+include <../std.scad>
+include <../fnliterals.scad>
+
+module test_find_all() {
+    idx = find_all(function(x) x > 3, [1,2,3,4,5,6]);
+    assert(idx == [3,4,5]);
+    idx2 = find_all(function(x) x < 0, [1,2,3]);
+    assert(idx2 == []);
+    idx3 = find_all(function(x) is_string(x), ["a",1,"b",2]);
+    assert(idx3 == [0,2]);
+}
+test_find_all();
+'''
+
+[[test]]
+name = "test_hashmap"
+script = '''
+include <../std.scad>
+include <../fnliterals.scad>
+
+module test_hashmap() {
+    hm = hashmap(items=[["foo",37],["bar",42],["baz",99]]);
+    assert(hm("foo") == 37);
+    assert(hm("bar") == 42);
+    assert(hm("baz") == 99);
+    assert(is_undef(hm("missing")));
+    // add a key and retrieve
+    hm2 = hm("newkey", 123);
+    assert(hm2("newkey") == 123);
+    assert(hm2("foo") == 37);  // old keys preserved
+}
+test_hashmap();
+'''

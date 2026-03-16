@@ -550,3 +550,22 @@ module test_str_replace_char_errors() {
 }
 test_str_replace_char_errors();
 '''
+
+[[test]]
+name = "test_rand_str"
+script = '''
+include <../std.scad>
+
+module test_rand_str() {
+    s1 = rand_str(5, seed=42);
+    assert(is_string(s1) && len(s1) == 5);
+    s2 = rand_str(10, seed=42);
+    assert(is_string(s2) && len(s2) == 10);
+    s3 = rand_str(4, charset="abc", seed=1);
+    assert(is_string(s3) && len(s3) == 4);
+    // Same seed produces same string
+    s4 = rand_str(5, seed=42);
+    assert(s1 == s4);
+}
+test_rand_str();
+'''

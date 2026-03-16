@@ -51,3 +51,251 @@ module test_adj_opp_to_ang() nil();  // Covered in test_tri_functions()
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
 test_hyp_opp_to_adj();
 '''
+
+[[test]]
+name = "test_law_of_cosines"
+script = '''
+include <../std.scad>
+
+module test_law_of_cosines() {
+    // 3-4-5 right triangle: find side c given a=3, b=4, C=90
+    assert_approx(law_of_cosines(a=3, b=4, C=90), 5);
+    // find angle C given a=3, b=4, c=5
+    assert_approx(law_of_cosines(a=3, b=4, c=5), 90);
+    // equilateral triangle: all sides=1, all angles=60
+    assert_approx(law_of_cosines(a=1, b=1, c=1), 60);
+}
+test_law_of_cosines();
+'''
+
+[[test]]
+name = "test_law_of_sines"
+script = '''
+include <../std.scad>
+
+module test_law_of_sines() {
+    // 30-60-90 triangle: a=1 (opp 30°), b=sqrt(3) (opp 60°)
+    // find angle B opposite b given a,A,b
+    assert_approx(law_of_sines(a=1, A=30, b=sqrt(3)), 60);
+    // find side b opposite B given a,A,B
+    assert_approx(law_of_sines(a=1, A=30, B=60), sqrt(3));
+    // equilateral: all sides equal, all angles 60
+    assert_approx(law_of_sines(a=5, A=60, b=5), 60);
+}
+test_law_of_sines();
+'''
+
+[[test]]
+name = "test_hyp_adj_to_opp"
+script = '''
+include <../std.scad>
+
+module test_hyp_adj_to_opp() {
+    assert_approx(hyp_adj_to_opp(5, 4), 3);   // 3-4-5
+    assert_approx(hyp_adj_to_opp(10, 0), 10); // adj=0 → opp=hyp
+}
+test_hyp_adj_to_opp();
+'''
+
+[[test]]
+name = "test_hyp_ang_to_adj"
+script = '''
+include <../std.scad>
+
+module test_hyp_ang_to_adj() {
+    assert_approx(hyp_ang_to_adj(5, 0), 5);
+    assert_approx(hyp_ang_to_adj(10, 60), 5);
+    assert_approx(hyp_ang_to_adj(10, 30), 5*sqrt(3));
+}
+test_hyp_ang_to_adj();
+'''
+
+[[test]]
+name = "test_hyp_ang_to_opp"
+script = '''
+include <../std.scad>
+
+module test_hyp_ang_to_opp() {
+    assert_approx(hyp_ang_to_opp(5, 0), 0);
+    assert_approx(hyp_ang_to_opp(10, 30), 5);
+    assert_approx(hyp_ang_to_opp(10, 60), 5*sqrt(3));
+}
+test_hyp_ang_to_opp();
+'''
+
+[[test]]
+name = "test_adj_opp_to_hyp"
+script = '''
+include <../std.scad>
+
+module test_adj_opp_to_hyp() {
+    assert_approx(adj_opp_to_hyp(3, 4), 5);
+    assert_approx(adj_opp_to_hyp(0, 5), 5);
+    assert_approx(adj_opp_to_hyp(5, 0), 5);
+}
+test_adj_opp_to_hyp();
+'''
+
+[[test]]
+name = "test_adj_ang_to_opp"
+script = '''
+include <../std.scad>
+
+module test_adj_ang_to_opp() {
+    assert_approx(adj_ang_to_opp(4, atan(3/4)), 3);
+    assert_approx(adj_ang_to_opp(1, 45), 1);
+    assert_approx(adj_ang_to_opp(5, 0), 0);
+}
+test_adj_ang_to_opp();
+'''
+
+[[test]]
+name = "test_adj_ang_to_hyp"
+script = '''
+include <../std.scad>
+
+module test_adj_ang_to_hyp() {
+    assert_approx(adj_ang_to_hyp(4, atan(3/4)), 5);
+    assert_approx(adj_ang_to_hyp(1, 60), 2);
+    assert_approx(adj_ang_to_hyp(5, 0), 5);
+}
+test_adj_ang_to_hyp();
+'''
+
+[[test]]
+name = "test_opp_ang_to_adj"
+script = '''
+include <../std.scad>
+
+module test_opp_ang_to_adj() {
+    assert_approx(opp_ang_to_adj(3, atan(3/4)), 4);
+    assert_approx(opp_ang_to_adj(1, 45), 1);
+    assert_approx(opp_ang_to_adj(0, 30), 0);
+}
+test_opp_ang_to_adj();
+'''
+
+[[test]]
+name = "test_opp_ang_to_hyp"
+script = '''
+include <../std.scad>
+
+module test_opp_ang_to_hyp() {
+    assert_approx(opp_ang_to_hyp(3, atan(3/4)), 5);
+    assert_approx(opp_ang_to_hyp(1, 30), 2);
+    assert_approx(opp_ang_to_hyp(0, 45), 0);
+}
+test_opp_ang_to_hyp();
+'''
+
+[[test]]
+name = "test_opp_adj_to_hyp"
+script = '''
+include <../std.scad>
+
+module test_opp_adj_to_hyp() {
+    assert_approx(opp_adj_to_hyp(3, 4), 5);
+    assert_approx(opp_adj_to_hyp(0, 5), 5);
+}
+test_opp_adj_to_hyp();
+'''
+
+[[test]]
+name = "test_hyp_adj_to_ang"
+script = '''
+include <../std.scad>
+
+module test_hyp_adj_to_ang() {
+    assert_approx(hyp_adj_to_ang(5, 4), atan(3/4));
+    assert_approx(hyp_adj_to_ang(5, 5), 0);
+    assert_approx(hyp_adj_to_ang(5, 0), 90);
+}
+test_hyp_adj_to_ang();
+'''
+
+[[test]]
+name = "test_hyp_opp_to_ang"
+script = '''
+include <../std.scad>
+
+module test_hyp_opp_to_ang() {
+    assert_approx(hyp_opp_to_ang(5, 3), atan(3/4));
+    assert_approx(hyp_opp_to_ang(5, 0), 0);
+    assert_approx(hyp_opp_to_ang(5, 5), 90);
+}
+test_hyp_opp_to_ang();
+'''
+
+[[test]]
+name = "test_adj_opp_to_ang"
+script = '''
+include <../std.scad>
+
+module test_adj_opp_to_ang() {
+    assert_approx(adj_opp_to_ang(4, 3), atan(3/4));
+    assert_approx(adj_opp_to_ang(1, 1), 45);
+    assert_approx(adj_opp_to_ang(1, 0), 0);
+}
+test_adj_opp_to_ang();
+'''
+
+[[test]]
+name = "test_opp_adj_to_ang"
+script = '''
+include <../std.scad>
+
+module test_opp_adj_to_ang() {
+    assert_approx(opp_adj_to_ang(3, 4), atan(3/4));
+    assert_approx(opp_adj_to_ang(1, 1), 45);
+    assert_approx(opp_adj_to_ang(0, 5), 0);
+}
+test_opp_adj_to_ang();
+'''
+
+[[test]]
+name = "test_adj_hyp_to_ang"
+script = '''
+include <../std.scad>
+
+module test_adj_hyp_to_ang() {
+    assert_approx(adj_hyp_to_ang(4, 5), atan(3/4));
+    assert_approx(adj_hyp_to_ang(5, 5), 0);
+}
+test_adj_hyp_to_ang();
+'''
+
+[[test]]
+name = "test_opp_hyp_to_ang"
+script = '''
+include <../std.scad>
+
+module test_opp_hyp_to_ang() {
+    assert_approx(opp_hyp_to_ang(3, 5), atan(3/4));
+    assert_approx(opp_hyp_to_ang(0, 5), 0);
+}
+test_opp_hyp_to_ang();
+'''
+
+[[test]]
+name = "test_opp_hyp_to_adj"
+script = '''
+include <../std.scad>
+
+module test_opp_hyp_to_adj() {
+    assert_approx(opp_hyp_to_adj(3, 5), 4);
+    assert_approx(opp_hyp_to_adj(0, 5), 5);
+}
+test_opp_hyp_to_adj();
+'''
+
+[[test]]
+name = "test_adj_hyp_to_opp"
+script = '''
+include <../std.scad>
+
+module test_adj_hyp_to_opp() {
+    assert_approx(adj_hyp_to_opp(4, 5), 3);
+    assert_approx(adj_hyp_to_opp(5, 5), 0);
+}
+test_adj_hyp_to_opp();
+'''

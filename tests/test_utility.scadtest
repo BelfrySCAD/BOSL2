@@ -692,3 +692,35 @@ module test_all() {
 test_all();
 '''
 
+
+[[test]]
+name = "test_is_bool_list"
+script = '''
+include <../std.scad>
+
+module test_is_bool_list() {
+    assert(is_bool_list([true, false, true]));
+    assert(is_bool_list([]));
+    assert(!is_bool_list([true, false, 1]));
+    assert(!is_bool_list([true, "false"]));
+    assert(is_bool_list([true, false], length=2));
+    assert(!is_bool_list([true, false], length=3));
+}
+test_is_bool_list();
+'''
+
+[[test]]
+name = "test_is_func"
+script = '''
+include <../std.scad>
+
+module test_is_func() {
+    assert(is_func(function(x) x));
+    assert(is_func(function(a,b) a+b));
+    assert(!is_func(42));
+    assert(!is_func("hello"));
+    assert(!is_func([1,2,3]));
+    assert(!is_func(undef));
+}
+test_is_func();
+'''

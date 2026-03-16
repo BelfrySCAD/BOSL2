@@ -447,3 +447,86 @@ module test_outer_product_errors() {
 }
 test_outer_product_errors();
 '''
+
+[[test]]
+name = "test_det4"
+script = '''
+include <../std.scad>
+
+module test_det4() {
+    assert_approx(det4(ident(4)), 1);
+    // 4×4 diagonal matrix with 2,3,4,5 → det = 120
+    M = [[2,0,0,0],[0,3,0,0],[0,0,4,0],[0,0,0,5]];
+    assert_approx(det4(M), 120);
+    // Singular matrix → det = 0
+    S = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
+    assert_approx(det4(S), 0);
+}
+test_det4();
+'''
+
+[[test]]
+name = "test_is_matrix_symmetric"
+script = '''
+include <../std.scad>
+
+module test_is_matrix_symmetric() {
+    assert(is_matrix_symmetric([[1,2,3],[2,4,5],[3,5,6]]));
+    assert(!is_matrix_symmetric([[1,2],[3,4]]));
+    assert(is_matrix_symmetric(ident(4)));
+    assert(is_matrix_symmetric([[7]]));
+}
+test_is_matrix_symmetric();
+'''
+
+[[test]]
+name = "test_is_rotation"
+script = '''
+include <../std.scad>
+
+module test_is_rotation() {
+    assert(is_rotation(ident(3)));
+    assert(is_rotation(rot(45)));
+    assert(is_rotation(xrot(30)));
+    // Scale matrix is not a rotation
+    assert(!is_rotation([[2,0,0,0],[0,2,0,0],[0,0,2,0],[0,0,0,1]]));
+}
+test_is_rotation();
+'''
+
+[[test]]
+name = "test_linear_solve3"
+script = '''
+include <../std.scad>
+
+module test_linear_solve3() {
+    // Identity system: x = b
+    A1 = ident(3);
+    x1 = linear_solve3(A1, [1,2,3]);
+    assert_approx(x1, [1,2,3]);
+    // 2x=6, 3y=9, 4z=12 → x=3,y=3,z=3
+    A2 = [[2,0,0],[0,3,0],[0,0,4]];
+    x2 = linear_solve3(A2, [6,9,12]);
+    assert_approx(x2, [3,3,3]);
+}
+test_linear_solve3();
+'''
+
+[[test]]
+name = "test_rot_inverse"
+script = '''
+include <../std.scad>
+
+module test_rot_inverse() {
+    // rot_inverse of rot(45) should ≈ rot(-45)
+    R = rot(45);
+    Ri = rot_inverse(R);
+    prod = Ri * R;
+    assert_approx(prod, ident(4));
+    // Works for axis rotations too
+    R2 = xrot(30);
+    R2i = rot_inverse(R2);
+    assert_approx(R2i * R2, ident(4));
+}
+test_rot_inverse();
+'''

@@ -1048,3 +1048,92 @@ module test_count() {
 test_count();
 '''
 
+
+[[test]]
+name = "test_lerpn"
+script = '''
+include <../std.scad>
+
+module test_lerpn() {
+    assert_approx(lerpn(0, 4, 5), [0,1,2,3,4]);
+    assert_approx(lerpn(0, 1, 3), [0, 0.5, 1]);
+    // endpoint=false excludes endpoint
+    v = lerpn(0, 1, 4, endpoint=false);
+    assert(len(v) == 4);
+    assert_approx(v[0], 0);
+    assert_approx(v[3], 0.75);
+}
+test_lerpn();
+'''
+
+[[test]]
+name = "test_bilerp"
+script = '''
+include <../std.scad>
+
+module test_bilerp() {
+    // corners: [f(0,0), f(1,0), f(0,1), f(1,1)]
+    pts = [0, 1, 0, 1];  // linear in x, independent of y
+    assert_approx(bilerp(pts, 0, 0), 0);
+    assert_approx(bilerp(pts, 1, 0), 1);
+    assert_approx(bilerp(pts, 0.5, 0.5), 0.5);
+    // uniform corners → constant
+    assert_approx(bilerp([3,3,3,3], 0.3, 0.7), 3);
+}
+test_bilerp();
+'''
+
+[[test]]
+name = "test_fit_to_range"
+script = '''
+include <../std.scad>
+
+module test_fit_to_range() {
+    v = fit_to_range([1,2,3,4,5], 0, 1);
+    assert_approx(v[0], 0);
+    assert_approx(v[4], 1);
+    assert_approx(v[2], 0.5);
+    // constant input → returned unchanged (no range to normalize)
+    v2 = fit_to_range([3,3,3], 0, 10);
+    assert_approx(v2[0], 3);
+}
+test_fit_to_range();
+'''
+
+[[test]]
+name = "test_slerp"
+script = '''
+include <../std.scad>
+
+module test_slerp() {
+    v1 = [1,0,0];
+    v2 = [0,1,0];
+    // endpoints
+    assert_approx(slerp(v1, v2, 0), [1,0,0]);
+    assert_approx(slerp(v1, v2, 1), [0,1,0]);
+    // midpoint should be unit vector at 45°
+    mid = slerp(v1, v2, 0.5);
+    assert_approx(norm(mid), 1);
+    assert_approx(mid, unit([1,1,0]));
+}
+test_slerp();
+'''
+
+[[test]]
+name = "test_slerpn"
+script = '''
+include <../std.scad>
+
+module test_slerpn() {
+    pts = slerpn([1,0,0], [0,1,0], 3);
+    assert(len(pts) == 3);
+    assert_approx(pts[0], [1,0,0]);
+    assert_approx(pts[2], [0,1,0]);
+    for (p = pts) assert_approx(norm(p), 1);
+    // endpoint=false
+    pts2 = slerpn([1,0,0], [0,1,0], 4, endpoint=false);
+    assert(len(pts2) == 4);
+    assert_approx(pts2[0], [1,0,0]);
+}
+test_slerpn();
+'''

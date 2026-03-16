@@ -429,3 +429,61 @@ module test_vector_angle_errors() {
 }
 test_vector_angle_errors();
 '''
+
+[[test]]
+name = "test_v_round"
+script = '''
+include <../std.scad>
+
+module test_v_round() {
+    assert(v_round([1.2, 2.7, 3.5]) == [1, 3, 4]);
+    assert(v_round([0.4, -0.6, 1.0]) == [0, -1, 1]);
+    assert(v_round([0, 0, 0]) == [0, 0, 0]);
+}
+test_v_round();
+'''
+
+[[test]]
+name = "test_vector_bisect"
+script = '''
+include <../std.scad>
+
+module test_vector_bisect() {
+    b = vector_bisect([1,0,0], [0,1,0]);
+    assert(approx(norm(b), 1));                        // unit vector
+    assert(approx(b, unit([1,1,0])));                  // bisects at 45°
+    b2 = vector_bisect([1,0,0], [1,0,0]);
+    assert(approx(b2, [1,0,0]));                       // same vector → itself
+}
+test_vector_bisect();
+'''
+
+[[test]]
+name = "test_vector_perp"
+script = '''
+include <../std.scad>
+
+module test_vector_perp() {
+    p = vector_perp([1,0,0], [1,1,0]);
+    assert(approx(p, [0,1,0]));          // component of [1,1,0] perp to X
+    p2 = vector_perp([0,1,0], [0,1,0]);
+    assert(approx(p2, [0,0,0]));         // parallel → zero
+}
+test_vector_perp();
+'''
+
+[[test]]
+name = "test_fit_to_box"
+script = '''
+include <../std.scad>
+
+module test_fit_to_box() {
+    pts = [[0,0], [10,0], [10,5], [0,5]];
+    scaled = fit_to_box(pts, x=[0,1], y=[0,1]);
+    assert(approx(scaled[0], [0,0]));
+    assert(approx(scaled[1], [1,0]));
+    assert(approx(scaled[2], [1,1]));
+    assert(approx(scaled[3], [0,1]));
+}
+test_fit_to_box();
+'''

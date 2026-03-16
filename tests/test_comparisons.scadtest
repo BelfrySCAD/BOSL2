@@ -577,3 +577,50 @@ module test_max_index() {
 }
 test_max_index();
 '''
+
+[[test]]
+name = "test_unique_approx"
+script = '''
+include <../std.scad>
+
+module test_unique_approx() {
+    assert_equal(unique_approx([1, 1, 2, 2, 3]), [1, 2, 3]);
+    assert_equal(unique_approx([1, 1.0000001, 2], eps=1e-4), [1, 2]);
+    assert_equal(unique_approx([3, 1, 2, 1]), [1, 2, 3]);
+    assert_equal(unique_approx([]), []);
+}
+test_unique_approx();
+'''
+
+[[test]]
+name = "test_unique_approx_indexed"
+script = '''
+include <../std.scad>
+
+module test_unique_approx_indexed() {
+    idx = unique_approx_indexed([1, 1, 2, 3]);
+    assert(idx == [0, 2, 3]);
+    idx2 = unique_approx_indexed([5, 5, 5]);
+    assert(idx2 == [0]);
+    idx3 = unique_approx_indexed([1, 2, 3]);
+    assert(idx3 == [0, 1, 2]);
+}
+test_unique_approx_indexed();
+'''
+
+[[test]]
+name = "test_list_smallest"
+script = '''
+include <../std.scad>
+
+module test_list_smallest() {
+    l = [5, 2, 8, 1, 9, 3];
+    // k=0 → empty list; k=3 → 3 smallest values
+    v0 = list_smallest(l, 0);
+    assert(v0 == []);
+    v3 = list_smallest(l, 3);
+    assert(len(v3) == 3);
+    assert_equal(sort(v3), [1, 2, 3]);
+}
+test_list_smallest();
+'''

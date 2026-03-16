@@ -600,3 +600,55 @@ module test_select_errors() {
 }
 test_select_errors();
 '''
+
+[[test]]
+name = "test_is_homogenous"
+script = '''
+include <../std.scad>
+
+module test_is_homogenous() {
+    assert(is_homogenous([1, 2, 3]));
+    assert(is_homogenous(["a", "b", "c"]));
+    assert(!is_homogenous([1, "a", 3]));
+    assert(is_homogenous([[1,2],[3,4]]));
+    assert(!is_homogenous([[1,2],[3,"a"]]));
+    assert(is_homogenous([[1,["a"]], [2,["b"]]]));
+    assert(!is_homogenous([[1,["a"]], [2,[true]]]));
+    // depth=1 only checks outer level
+    assert(is_homogenous([[1,["a"]], [2,[true]]], 1));
+}
+test_is_homogenous();
+'''
+
+[[test]]
+name = "test_list"
+script = '''
+include <../std.scad>
+
+module test_list() {
+    assert(list([3:2:9]) == [3,5,7,9]);
+    assert(list([3,4,5]) == [3,4,5]);
+    assert(list("Foo") == ["F","o","o"]);
+    assert(list([]) == []);
+}
+test_list();
+'''
+
+[[test]]
+name = "test_permutations"
+script = '''
+include <../std.scad>
+
+module test_permutations() {
+    p2 = permutations([1,2,3], n=2);
+    assert(len(p2) == 6);
+    assert(in_list([1,2], p2));
+    assert(in_list([2,1], p2));
+    assert(in_list([1,3], p2));
+    p3 = permutations([1,2,3]);
+    assert(len(p3) == 6);
+    p1 = permutations([1,2,3], n=1);
+    assert(len(p1) == 3);
+}
+test_permutations();
+'''

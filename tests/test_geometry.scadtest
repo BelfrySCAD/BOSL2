@@ -1628,3 +1628,80 @@ module test_hull3d_faces() {
 }
 test_hull3d_faces();
 '''
+
+[[test]]
+name = "test_are_polygons_equal"
+script = '''
+include <../std.scad>
+
+module test_are_polygons_equal() {
+    p1 = [[0,0],[1,0],[1,1],[0,1]];
+    // rotated version
+    p2 = [[1,0],[1,1],[0,1],[0,0]];
+    assert(are_polygons_equal(p1, p2));
+    // reversed (different winding)
+    p3 = [[0,1],[1,1],[1,0],[0,0]];
+    assert(!are_polygons_equal(p1, p3));
+    // different polygon
+    p4 = [[0,0],[2,0],[1,1]];
+    assert(!are_polygons_equal(p1, p4));
+    assert(are_polygons_equal(p1, p1));
+}
+test_are_polygons_equal();
+'''
+
+[[test]]
+name = "test_circle_circle_intersection"
+script = '''
+include <../std.scad>
+
+module test_circle_circle_intersection() {
+    // Two intersecting circles
+    pts = circle_circle_intersection(5, [0,0], 5, [6,0]);
+    assert(len(pts) == 2);
+    // Non-intersecting circles (too far apart)
+    pts2 = circle_circle_intersection(1, [0,0], 1, [10,0]);
+    assert(pts2 == []);
+    // Tangent circles
+    pts3 = circle_circle_intersection(3, [0,0], 3, [6,0]);
+    assert(len(pts3) == 1);
+}
+test_circle_circle_intersection();
+'''
+
+[[test]]
+name = "test_circle_line_intersection"
+script = '''
+include <../std.scad>
+
+module test_circle_line_intersection() {
+    // Line through center → 2 intersections
+    pts = circle_line_intersection(5, [0,0], [[0,-10],[0,10]]);
+    assert(len(pts) == 2);
+    assert_approx(sort(pts), [[0,-5],[0,5]]);
+    // Tangent line
+    pts2 = circle_line_intersection(5, [0,0], [[-10,5],[10,5]]);
+    assert(len(pts2) == 1);
+    // Non-intersecting
+    pts3 = circle_line_intersection(5, [0,0], [[-10,10],[10,10]]);
+    assert(pts3 == []);
+}
+test_circle_line_intersection();
+'''
+
+[[test]]
+name = "test_sphere_line_intersection"
+script = '''
+include <../std.scad>
+
+module test_sphere_line_intersection() {
+    // Line through center → 2 intersections
+    pts = sphere_line_intersection(10, [0,0,0], [[-20,0,0],[20,0,0]]);
+    assert(len(pts) == 2);
+    assert_approx(sort(pts), [[-10,0,0],[10,0,0]]);
+    // Non-intersecting
+    pts2 = sphere_line_intersection(5, [0,0,0], [[10,10,-20],[10,10,20]]);
+    assert(pts2 == []);
+}
+test_sphere_line_intersection();
+'''
