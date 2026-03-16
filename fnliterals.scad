@@ -1761,10 +1761,10 @@ function f_is_vnf(a) = f_1arg(function (a) is_vnf(a))(a);
 // Usage:
 //   fn = f_is_patch();
 // Description:
-//   A factory that returns function literals equivalent to `is_patch(a)`.
+//   A factory that returns function literals equivalent to `is_bezier_patch(a)`.
 // Arguments:
 //   a = If given, replaces the argument.
-function f_is_patch(a) = f_1arg(function (a) is_patch(a))(a);
+function f_is_patch(a) = f_1arg(function (a) is_bezier_patch(a))(a);
 
 
 
