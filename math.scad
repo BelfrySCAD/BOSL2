@@ -1227,8 +1227,8 @@ function spherical_random_points(n=1, radius=1, seed) =
 //   the origin to a vertex is always contained in the polygon.
 //   .
 //   If size is a vector, then
-//   The polygon lies inside a circle of radius `size[1]` and also contains a circle whose
-//   radius is `size[0]`.  The first vertex of the polygon will be the first vertex below the X+ axis.  
+//   The polygon's vertices lie inside a ring with inner radius `size[0]` and outer radius `size[1]`.  
+//   The first vertex of the polygon will be the first vertex below the X+ axis.  
 //   .
 //   The angular position of the vertices are randomly chosen.  
 //   The `angle_sep` parameter controls the separation in angle required between vertices.  If you set it
@@ -1251,8 +1251,7 @@ function random_polygon(n=3,size=1, angle_sep=0.2, seed) =
     let(
         rmin = is_num(size) ? size/2 : size[0],
         rmax = is_num(size) ? size : size[1],
-        angsep = 0.1,  // 0 means no separation, max angle space; 1 means max separation=> uniformly spaced
-        ang_space = (1-angsep)*360,
+        ang_space = (1-angle_sep)*360,
         // Create random angle list where angles are separated based on ang_sep but all angular differences < 180
         randang = function(seed)
                      let (
@@ -1263,6 +1262,7 @@ function random_polygon(n=3,size=1, angle_sep=0.2, seed) =
                      max(dang)<180 ? angs : randang(seed=u_add(seed,angs[0])),
         angs = randang(seed), 
         rads = is_undef(seed) ? rands(rmin,rmax,n) : rands(rmin,rmax,n,seed+angs[0])
+        ,f=echo(rads=rads)
       )
       [for(i=count(n)) rads[i]*[cos(angs[i]), -sin(angs[i])]];
 
