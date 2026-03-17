@@ -781,13 +781,15 @@ function _scalar_to_vector(value,length,varname) =
 //   back by the joint length.  Rounding is using continous curvature 4th order bezier splines and
 //   the parameter `k` specifies how smooth the curvature match is.  This parameter ranges from 0 to 1 with
 //   a default of 0.5.  Use a larger k value to get a curve that is bigger for the same joint value.  When
-//   k=1 the curve may be similar to a circle if your curves are symmetric.  As the path is built up, the joint
+//   k=0.9 the curve may be similar to a circle if your curves are symmetric.  As the path is built up, the joint
 //   parameter applies to the growing path, so if you pick a large joint parameter it may interact with the
 //   previous path sections.  See [Types of Roundover](rounding.scad#subsection-types-of-roundover) for more details
 //   on continuous curvature rounding. 
 //   .
 //   The rounding is created by extending the two clipped paths to define a corner point.  If the extensions of
-//   the paths do not intersect, the function issues an error.  When closed=true the final path should actually close
+//   the paths do not intersect they will be capped by a curve resembling a semi-circle if this is possible.  But sometimes
+//   the connecting path will need to be S-shaped, which is not supported.  If this situation arises, the function issues an error.
+//   When closed=true the final path should actually close
 //   the shape, repeating the starting point of the shape.  If it does not, then the rounding fills the gap.
 //   .
 //   The number of segments in the roundovers is set based on $fn and $fs.  If you use $fn it specifies the number of
@@ -881,6 +883,16 @@ function _scalar_to_vector(value,length,varname) =
 //   tri = regular_ngon(n=3, r=7);
 //   stroke(path_join([tri], joint=3,closed=true,$fn=12),
 //          closed=true,width=.5);
+// Example(2D): Here lines are joined that do not intersect when they are extended, so the joint is sort of like a semi-circle.  We show the effect of the `k` parameter at its default value of 0.5 or at 0.92 which is close to a circle. 
+//   p=path_join([
+//                [[1,3],[15,8]],
+//                [[17,0],[0,0]],
+//                [[0,-8],[15,-3]]
+//               ],
+//               k=[.5,.9],
+//               relocate=false);
+//   stroke(p);            
+
 module path_join(paths,joint=0,k=0.5,relocate=true,closed=false) { no_module();}
 function path_join(paths,joint=0,k=0.5,relocate=true,closed=false)=
   assert(is_list(paths),"Input paths must be a list of paths")
@@ -935,14 +947,21 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
      corner = approx(firstcut[0],nextcut[0]) ? firstcut[0]
             : line_intersection([firstcut[0], firstcut[0]-first_dir], [nextcut[0], nextcut[0]-next_dir],RAY,RAY)
   )
-  assert(is_def(corner), str("Curve directions at cut points don't intersect in a corner when ",
-                             loop?"closing the path":str("adding path ",i+1)))
   let(
-      bezpts = _smooth_bez_fill([firstcut[0], corner, nextcut[0]],k[i]),
-      N = max(3,$fn>0 ?$fn : ceil(bezier_length(bezpts)/$fs)),
-      bezpath = approx(firstcut[0],corner) && approx(corner,nextcut[0])
-                  ? []
-                  : bezier_curve(bezpts,N),
+      bezpath =
+         is_def(corner) ? let(
+                               bezpts = _smooth_bez_fill([firstcut[0], corner, nextcut[0]],k[i]),
+                               N = max(3,$fn>0 ?$fn : ceil(bezier_length(bezpts)/$fs)),
+                               bezpath = approx(firstcut[0],corner) && approx(corner,nextcut[0])
+                                       ? []
+                                       : bezier_curve(bezpts,N)
+                          )
+                          bezpath
+                        : let(bezpath = _smooth_bezier_cap([firstcut[0]+first_dir, firstcut[0]],
+                                                           [nextcut[0]+next_dir, nextcut[0]], k[i]))
+                          assert(is_def(bezpath),str("Curve directions at cut points requires an S-curve joint (which is not supported) when ",
+                                                     loop?"closing the path":str("adding path ",i+1)))
+                          bezpath,
       new_result = [each select(result,loop?nextcut[1]:0,len(revresult)-1-firstcut[1]),
                     each bezpath,
                     nextcut[0],
@@ -952,6 +971,30 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
   i==len(paths)-(closed?1:2)
      ? new_result
      : _path_join(paths,joint,k,i+1,new_result, relocate,closed);
+
+
+
+// connect tails of v1 and v2, starting at v1
+// returns undef if an S curve is needed instead of a cap
+function _smooth_bezier_cap(v1,v2,k=0.8,r) =
+   let(
+        r=default(r,norm(v1[1]-v2[1])/2),
+        n=line_normal(v1[1],v2[1]),
+        sign = (v1[1]-v1[0])*n>0 ? 1 : -1,
+        check= (v2[1]-v2[0])*n>0 ? 1 : -1
+   )
+   check != sign ? undef
+  :
+   let(
+        tangent = move(sign*n*r, [(v1[1]+v2[1])/2,v2[1]]),
+        corner1 = line_intersection(tangent, v1, LINE),
+        corner2 = line_intersection(tangent, v2, LINE)
+   )
+   concat(
+     list_head(_bezcorner([v1[1],corner1, tangent[0]],k)),
+     _bezcorner([tangent[0], corner2, v2[1]],k)
+   );
+
 
 
 
