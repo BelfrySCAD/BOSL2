@@ -224,3 +224,86 @@ module test_squircle_radius_se() {
 }
 test_squircle_radius_se();
 '''
+
+[[test]]
+name = "test_right_triangle"
+script = '''
+include <../std.scad>
+
+module test_right_triangle() {
+    path = right_triangle([3,4]);
+    assert(is_path(path, 2));
+    assert(len(path) == 3);
+    // Hypotenuse length = 5
+    assert_approx(norm(path[0] - path[2]), 5);
+}
+test_right_triangle();
+'''
+
+[[test]]
+name = "test_egg"
+script = '''
+include <../std.scad>
+
+module test_egg() {
+    $fn = 24;
+    // R must be > length/2=10; r1+r2=5+3=8 < 20; 2*r2=6 < 20; 2*r1=10 < 20
+    path = egg(length=20, r1=5, r2=3, R=15);
+    assert(is_path(path, 2));
+    assert(len(path) >= 4);
+    // Should span roughly -length/2 to +length/2 in x
+    xs = column(path, 0);
+    assert(min(xs) <= -5);
+    assert(max(xs) >= 5);
+}
+test_egg();
+'''
+
+[[test]]
+name = "test_ring"
+script = '''
+include <../std.scad>
+
+module test_ring() {
+    $fn = 24;
+    // ring() with ring_width returns a region (two-boundary annulus)
+    result = ring(r=10, ring_width=2);
+    assert(is_region(result) || is_path(result, 2));
+    // Should produce a non-empty result
+    assert(len(result) > 0);
+}
+test_ring();
+'''
+
+[[test]]
+name = "test_squircle"
+script = '''
+include <../std.scad>
+
+module test_squircle() {
+    $fn = 24;
+    path = squircle(size=[10,10], squareness=0.5);
+    assert(is_path(path, 2));
+    assert(len(path) >= 4);
+    // All points within the bounding box
+    for (p = path) {
+        assert(abs(p.x) <= 5.001);
+        assert(abs(p.y) <= 5.001);
+    }
+}
+test_squircle();
+'''
+
+[[test]]
+name = "test_keyhole"
+script = '''
+include <../std.scad>
+
+module test_keyhole() {
+    $fn = 24;
+    path = keyhole(l=10, r1=3, r2=5);
+    assert(is_path(path, 2));
+    assert(len(path) >= 4);
+}
+test_keyhole();
+'''

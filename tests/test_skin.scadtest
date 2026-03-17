@@ -37,3 +37,122 @@ module test_sweep() {
 }
 test_sweep();
 '''
+
+[[test]]
+name = "test_slice_profiles"
+script = '''
+include <../std.scad>
+
+module test_slice_profiles() {
+    prof1 = circle(r=5, $fn=8);
+    prof2 = circle(r=10, $fn=8);
+    // 2 slices between the two profiles: lerpn gives 3 points (not including end),
+    // then concat adds the final profile → 4 total
+    result = slice_profiles([prof1, prof2], slices=2);
+    assert(len(result) == 4);
+    assert(len(result[0]) == len(prof1));
+}
+test_slice_profiles();
+'''
+
+[[test]]
+name = "test_subdivide_and_slice"
+script = '''
+include <../std.scad>
+
+module test_subdivide_and_slice() {
+    prof1 = circle(r=5, $fn=6);
+    prof2 = circle(r=8, $fn=12);
+    result = subdivide_and_slice([prof1, prof2], slices=1);
+    assert(is_list(result));
+    assert(len(result) >= 2);
+    // All profiles should have the same number of points
+    n = len(result[0]);
+    for (p = result) assert(len(p) == n);
+}
+test_subdivide_and_slice();
+'''
+
+[[test]]
+name = "test_associate_vertices"
+script = '''
+include <../std.scad>
+
+module test_associate_vertices() {
+    // Triangle and square: triangle has 3 vertices, square has 4
+    // Split vertex 1 of the triangle to align with the 4-vertex square
+    tri = [[0,0],[1,0],[0.5,1]];
+    sq  = [[0,0],[0.5,0],[1,0],[0.5,1]];
+    result = associate_vertices([tri, sq], [[1]]);
+    // After association the triangle should also have 4 entries (one duplicated)
+    assert(len(result[0]) == 4);
+    assert(len(result[1]) == 4);
+}
+test_associate_vertices();
+'''
+
+[[test]]
+name = "test_linear_sweep"
+script = '''
+include <../std.scad>
+
+module test_linear_sweep() {
+    $fn = 8;
+    shape = circle(r=5);
+    v = linear_sweep(shape, height=10);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_linear_sweep();
+'''
+
+[[test]]
+name = "test_rotate_sweep"
+script = '''
+include <../std.scad>
+
+module test_rotate_sweep() {
+    $fn = 12;
+    // Shape must be in positive-x half plane for rotate_sweep
+    shape = right(5, p=circle(r=2, $fn=8));
+    v = rotate_sweep(shape, angle=360);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_rotate_sweep();
+'''
+
+[[test]]
+name = "test_path_sweep"
+script = '''
+include <../std.scad>
+
+module test_path_sweep() {
+    $fn = 8;
+    shape = circle(r=2);
+    path = [[0,0,0],[10,0,0],[10,10,0]];
+    v = path_sweep(shape, path);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_path_sweep();
+'''
+
+[[test]]
+name = "test_rot_resample"
+script = '''
+include <../std.scad>
+
+module test_rot_resample() {
+    // Pure rotations have zero translation → use method="count" to avoid length check
+    r1 = rot(0);
+    r2 = rot(90);
+    result = rot_resample([r1, r2], n=4, method="count", closed=false);
+    assert(is_list(result));
+    // Each entry should be a 4x4 matrix
+    for (m = result) assert(is_matrix(m, 4, 4));
+}
+test_rot_resample();
+'''

@@ -319,3 +319,49 @@ module test_region_parts() {
 }
 test_region_parts();
 '''
+
+[[test]]
+name = "test_offset"
+script = '''
+include <../std.scad>
+
+module test_offset() {
+    // Expanding a square by delta=2 should give a larger polygon
+    sq = square(10, center=true);
+    expanded = offset(sq, delta=2, closed=true);
+    assert(is_path(expanded, 2));
+    // All points should be further from origin than the original
+    orig_max = max([for(p=sq) norm(p)]);
+    exp_max = max([for(p=expanded) norm(p)]);
+    assert(exp_max > orig_max);
+    // Shrinking: delta=-2
+    shrunk = offset(sq, delta=-2, closed=true);
+    assert(is_path(shrunk, 2));
+    shr_max = max([for(p=shrunk) norm(p)]);
+    assert(shr_max < orig_max);
+}
+test_offset();
+'''
+
+[[test]]
+name = "test_split_region_at_region_crossings"
+script = '''
+include <../std.scad>
+
+module test_split_region_at_region_crossings() {
+    // Two squares that partially overlap
+    sq1 = [square(10, center=true)];
+    sq2 = [move([5,0,0], p=square(10, center=true))];
+    // Returns [split_of_region1, split_of_region2], each indexed by polygon
+    // Each element is a list of subpaths for that polygon
+    result = split_region_at_region_crossings(sq1, sq2);
+    assert(is_list(result));
+    assert(len(result) == 2);
+    // result[0] has one entry per polygon in sq1 (1 polygon)
+    assert(len(result[0]) == 1);
+    // Each polygon's entry is a list of subpaths (split at crossings)
+    assert(is_list(result[0][0]));
+    assert(len(result[0][0]) >= 1);
+}
+test_split_region_at_region_crossings();
+'''

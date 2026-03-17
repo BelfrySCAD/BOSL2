@@ -8,3 +8,51 @@ module test__standard_anchors() {
 }
 test__standard_anchors();
 '''
+
+[[test]]
+name = "test_is_description"
+script = '''
+include <../std.scad>
+
+module test_is_description() {
+    // Not a description: wrong types
+    assert(!is_description(42));
+    assert(!is_description([1,2,3]));
+    assert(!is_description("foo"));
+    // A list of length 3 where [0] is a 4x4 matrix and [1] is a list with a string first element
+    mat = ident(4);
+    valid = [mat, ["name", [0,0,0]], CTR];
+    assert(is_description(valid));
+}
+test_is_description();
+'''
+
+[[test]]
+name = "test_named_anchor"
+script = '''
+include <../std.scad>
+
+module test_named_anchor() {
+    a = named_anchor("top", [0,0,5], UP, 0);
+    assert(a[0] == "top");
+    assert_approx(a[1], [0,0,5]);
+    assert_approx(a[2], UP);
+    assert_approx(a[3], 0);
+}
+test_named_anchor();
+'''
+
+[[test]]
+name = "test_reorient"
+script = '''
+include <../std.scad>
+
+module test_reorient() {
+    // With a point, reorient translates by the anchor offset
+    pt = [1,2,3];
+    r = reorient(CENTER, 0, UP, size=[10,10,10], p=pt);
+    // CENTER anchor → no translation, so result should equal input
+    assert_approx(r, pt);
+}
+test_reorient();
+'''

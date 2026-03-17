@@ -485,3 +485,33 @@ module test_polygon_parts() {
 }
 test_polygon_parts();
 '''
+
+[[test]]
+name = "test_path_merge_collinear_indexed"
+script = '''
+include <../std.scad>
+
+module test_path_merge_collinear_indexed() {
+    // Middle point is collinear → should be merged away
+    path = [[0,0],[5,0],[10,0],[10,10]];
+    merged = path_merge_collinear_indexed(path, closed=false);
+    // The collinear middle vertex [5,0] should be removed
+    assert(len(merged) < len(path));
+}
+test_path_merge_collinear_indexed();
+'''
+
+[[test]]
+name = "test_split_path_at_self_crossings"
+script = '''
+include <../std.scad>
+
+module test_split_path_at_self_crossings() {
+    // A figure-8 path that crosses itself
+    fig8 = [[0,0],[5,5],[5,-5],[0,0]];
+    parts = split_path_at_self_crossings(fig8, closed=false);
+    assert(is_list(parts));
+    assert(len(parts) >= 1);
+}
+test_split_path_at_self_crossings();
+'''
