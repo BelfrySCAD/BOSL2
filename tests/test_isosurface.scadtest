@@ -1,0 +1,322 @@
+[[test]]
+name = "test_mb_cutoff"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_cutoff() {
+    // At dist=0: full strength = 1
+    assert_approx(mb_cutoff(0, 10), 1);
+    // At dist >= cutoff: zero
+    assert_approx(mb_cutoff(10, 10), 0);
+    assert_approx(mb_cutoff(15, 10), 0);
+    // Mid-range: between 0 and 1
+    v = mb_cutoff(5, 10);
+    assert(v > 0 && v < 1);
+}
+test_mb_cutoff();
+'''
+
+[[test]]
+name = "test_debug_tetra"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_debug_tetra() {
+    // Returns a VNF (tetrahedron) for debugging display
+    v = debug_tetra(1);
+    assert(is_vnf(v));
+    assert(len(v[0]) == 4);   // 4 vertices
+    assert(len(v[1]) == 4);   // 4 triangular faces
+}
+test_debug_tetra();
+'''
+
+[[test]]
+name = "test_mb_sphere"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_sphere() {
+    spec = mb_sphere(r=5);
+    // Returns [function_literal, [sign, debug_vnf]]
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+    // The function returns a field value at a point
+    val = spec[0]([0,0,0]);
+    assert(is_num(val));
+    assert(val > 0);  // positive metaball at origin
+}
+test_mb_sphere();
+'''
+
+[[test]]
+name = "test_mb_cuboid"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_cuboid() {
+    spec = mb_cuboid(size=10);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_cuboid();
+'''
+
+[[test]]
+name = "test_mb_cyl"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_cyl() {
+    spec = mb_cyl(h=10, r=3);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_cyl();
+'''
+
+[[test]]
+name = "test_mb_disk"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_disk() {
+    spec = mb_disk(h=2, r=8);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_disk();
+'''
+
+[[test]]
+name = "test_mb_capsule"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_capsule() {
+    spec = mb_capsule(h=10, r=3);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_capsule();
+'''
+
+[[test]]
+name = "test_mb_connector"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_connector() {
+    spec = mb_connector(p1=[0,0,0], p2=[10,0,0], r=2);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_connector();
+'''
+
+[[test]]
+name = "test_mb_torus"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_torus() {
+    spec = mb_torus(r_maj=8, r_min=2);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_torus();
+'''
+
+[[test]]
+name = "test_mb_octahedron"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_octahedron() {
+    spec = mb_octahedron(size=10);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_octahedron();
+'''
+
+[[test]]
+name = "test_mb_circle"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_circle() {
+    spec = mb_circle(r=5);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_circle();
+'''
+
+[[test]]
+name = "test_mb_rect"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_rect() {
+    spec = mb_rect(size=[8,4]);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_rect();
+'''
+
+[[test]]
+name = "test_mb_trapezoid"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_trapezoid() {
+    spec = mb_trapezoid(h=6, w1=8, w2=4);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_trapezoid();
+'''
+
+[[test]]
+name = "test_mb_stadium"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_stadium() {
+    spec = mb_stadium(size=8);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_stadium();
+'''
+
+[[test]]
+name = "test_mb_connector2d"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_connector2d() {
+    spec = mb_connector2d(p1=[0,0], p2=[10,0], r=2);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_connector2d();
+'''
+
+[[test]]
+name = "test_mb_ring"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_mb_ring() {
+    spec = mb_ring(r1=8, r2=3);
+    assert(is_list(spec));
+    assert(len(spec) == 2);
+    assert(is_function(spec[0]));
+}
+test_mb_ring();
+'''
+
+[[test]]
+name = "test_metaballs"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_metaballs() {
+    // Two spheres with large voxels for fast computation
+    spec = [IDENT, mb_sphere(r=5)];
+    v = metaballs(spec, bounding_box=[[-10,-10,-10],[10,10,10]], voxel_size=4);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_metaballs();
+'''
+
+[[test]]
+name = "test_metaballs2d"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_metaballs2d() {
+    spec = [IDENT, mb_circle(r=5)];
+    result = metaballs2d(spec, bounding_box=[[-10,-10],[10,10]], pixel_size=3);
+    assert(is_region(result) || is_path(result, 2));
+    assert(len(result) > 0);
+}
+test_metaballs2d();
+'''
+
+[[test]]
+name = "test_isosurface"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_isosurface() {
+    // Sphere: f(x,y,z) = x^2+y^2+z^2; isovalue=[0,25] gives solid sphere of radius 5
+    v = isosurface(
+        function(x,y,z) x*x + y*y + z*z,
+        isovalue = [0, 25],
+        bounding_box = [[-8,-8,-8],[8,8,8]],
+        voxel_size = 4
+    );
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_isosurface();
+'''
+
+[[test]]
+name = "test_contour"
+script = '''
+include <../std.scad>
+include <../isosurface.scad>
+
+module test_contour() {
+    // Circle: f(x,y) = x^2+y^2; isovalue=[0,25] gives filled circle of radius 5
+    result = contour(
+        function(x,y) x*x + y*y,
+        isovalue = [0, 25],
+        bounding_box = [[-8,-8],[8,8]],
+        pixel_size = 3
+    );
+    assert(is_region(result) || is_path(result, 2));
+    assert(len(result) > 0);
+}
+test_contour();
+'''

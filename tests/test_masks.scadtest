@@ -123,3 +123,160 @@ module test_mask2d_ogee() {
 }
 test_mask2d_ogee();
 '''
+
+[[test]]
+name = "test_mask2d_smooth"
+script = '''
+include <../std.scad>
+
+module test_mask2d_smooth() {
+    $fn = 8;
+    path = mask2d_smooth(cut=2);
+    assert(is_path(path, 2));
+    assert(len(path) > 2);
+}
+test_mask2d_smooth();
+'''
+
+[[test]]
+name = "test_chamfer_edge_mask"
+script = '''
+include <../std.scad>
+
+module test_chamfer_edge_mask() {
+    chamfer_edge_mask(l=10, chamfer=2);
+}
+test_chamfer_edge_mask();
+'''
+
+[[test]]
+name = "test_rounding_edge_mask"
+script = '''
+include <../std.scad>
+
+module test_rounding_edge_mask() {
+    $fn = 8;
+    rounding_edge_mask(l=10, r=2);
+}
+test_rounding_edge_mask();
+'''
+
+[[test]]
+name = "test_rounding_angled_edge_mask"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+
+module test_rounding_angled_edge_mask() {
+    $fn = 8;
+    rounding_angled_edge_mask(l=10, r=2);
+}
+test_rounding_angled_edge_mask();
+'''
+
+[[test]]
+name = "test_rounding_angled_corner_mask"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+
+module test_rounding_angled_corner_mask() {
+    $fn = 8;
+    rounding_angled_corner_mask(r=3);
+}
+test_rounding_angled_corner_mask();
+'''
+
+[[test]]
+name = "test_teardrop_edge_mask"
+script = '''
+include <../std.scad>
+
+module test_teardrop_edge_mask() {
+    $fn = 8;
+    teardrop_edge_mask(l=10, r=3);
+}
+test_teardrop_edge_mask();
+'''
+
+[[test]]
+name = "test_polygon_edge_mask"
+script = '''
+include <../std.scad>
+
+module test_polygon_edge_mask() {
+    polygon_edge_mask(mask2d_chamfer(x=3), l=10);
+}
+test_polygon_edge_mask();
+'''
+
+[[test]]
+name = "test_chamfer_corner_mask"
+script = '''
+include <../std.scad>
+
+module test_chamfer_corner_mask() {
+    chamfer_corner_mask(chamfer=3);
+}
+test_chamfer_corner_mask();
+'''
+
+[[test]]
+name = "test_rounding_corner_mask"
+script = '''
+include <../std.scad>
+
+module test_rounding_corner_mask() {
+    $fn = 8;
+    rounding_corner_mask(r=3);
+}
+test_rounding_corner_mask();
+'''
+
+[[test]]
+name = "test_teardrop_corner_mask"
+script = '''
+include <../std.scad>
+
+module test_teardrop_corner_mask() {
+    $fn = 8;
+    teardrop_corner_mask(r=3);
+}
+test_teardrop_corner_mask();
+'''
+
+[[test]]
+name = "test_chamfer_cylinder_mask"
+script = '''
+include <../std.scad>
+
+module test_chamfer_cylinder_mask() {
+    $fn = 8;
+    chamfer_cylinder_mask(r=10, chamfer=2);
+}
+test_chamfer_cylinder_mask();
+'''
+
+[[test]]
+name = "test_rounding_cylinder_mask"
+script = '''
+include <../std.scad>
+
+module test_rounding_cylinder_mask() {
+    $fn = 8;
+    rounding_cylinder_mask(r=10, rounding=2);
+}
+test_rounding_cylinder_mask();
+'''
+
+[[test]]
+name = "test_rounding_hole_mask"
+script = '''
+include <../std.scad>
+
+module test_rounding_hole_mask() {
+    $fn = 8;
+    rounding_hole_mask(r=10, rounding=2);
+}
+test_rounding_hole_mask();
+'''

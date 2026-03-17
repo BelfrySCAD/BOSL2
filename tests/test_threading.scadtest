@@ -1,0 +1,210 @@
+[[test]]
+name = "test_threaded_rod"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_threaded_rod() {
+    $fn = 8;
+    threaded_rod(d=8, l=5, pitch=2, blunt_start=false);
+}
+test_threaded_rod();
+'''
+
+[[test]]
+name = "test_threaded_nut"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_threaded_nut() {
+    $fn = 8;
+    threaded_nut(nutwidth=14, id=8, h=5, pitch=2);
+}
+test_threaded_nut();
+'''
+
+[[test]]
+name = "test_trapezoidal_threaded_rod"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_trapezoidal_threaded_rod() {
+    $fn = 8;
+    trapezoidal_threaded_rod(d=8, l=5, pitch=2, blunt_start=false);
+}
+test_trapezoidal_threaded_rod();
+'''
+
+[[test]]
+name = "test_trapezoidal_threaded_nut"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_trapezoidal_threaded_nut() {
+    $fn = 8;
+    trapezoidal_threaded_nut(nutwidth=14, id=8, h=5, pitch=2);
+}
+test_trapezoidal_threaded_nut();
+'''
+
+[[test]]
+name = "test_acme_threaded_rod"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_acme_threaded_rod() {
+    $fn = 8;
+    acme_threaded_rod(d=8, l=5, pitch=2, blunt_start=false);
+}
+test_acme_threaded_rod();
+'''
+
+[[test]]
+name = "test_acme_threaded_nut"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_acme_threaded_nut() {
+    $fn = 8;
+    acme_threaded_nut(nutwidth=14, id=8, h=5, pitch=2);
+}
+test_acme_threaded_nut();
+'''
+
+[[test]]
+name = "test_npt_threaded_rod"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_npt_threaded_rod() {
+    $fn = 8;
+    npt_threaded_rod(size=1/4);
+}
+test_npt_threaded_rod();
+'''
+
+[[test]]
+name = "test_bspp_threaded_rod"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_bspp_threaded_rod() {
+    $fn = 8;
+    bspp_threaded_rod(size=1/4, l=10);
+}
+test_bspp_threaded_rod();
+'''
+
+[[test]]
+name = "test_buttress_threaded_rod"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_buttress_threaded_rod() {
+    $fn = 8;
+    buttress_threaded_rod(d=8, l=5, pitch=2, blunt_start=false);
+}
+test_buttress_threaded_rod();
+'''
+
+[[test]]
+name = "test_buttress_threaded_nut"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_buttress_threaded_nut() {
+    $fn = 8;
+    buttress_threaded_nut(nutwidth=14, id=8, h=5, pitch=2);
+}
+test_buttress_threaded_nut();
+'''
+
+[[test]]
+name = "test_square_threaded_rod"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_square_threaded_rod() {
+    $fn = 8;
+    square_threaded_rod(d=8, l=5, pitch=2, blunt_start=false);
+}
+test_square_threaded_rod();
+'''
+
+[[test]]
+name = "test_square_threaded_nut"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_square_threaded_nut() {
+    $fn = 8;
+    square_threaded_nut(nutwidth=14, id=8, h=5, pitch=2);
+}
+test_square_threaded_nut();
+'''
+
+[[test]]
+name = "test_ball_screw_rod"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_ball_screw_rod() {
+    $fn = 8;
+    ball_screw_rod(d=10, l=5, pitch=2, ball_diam=2);
+}
+test_ball_screw_rod();
+'''
+
+[[test]]
+name = "test_generic_threaded_rod"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_generic_threaded_rod() {
+    $fn = 8;
+    // Triangular profile: X in [-0.5, 0.5], Y=0 at peak, -0.5 at valley
+    profile = [[-0.5, -0.5], [0, 0], [0.5, -0.5]];
+    generic_threaded_rod(d=8, l=5, pitch=2, profile=profile, blunt_start=false);
+}
+test_generic_threaded_rod();
+'''
+
+[[test]]
+name = "test_generic_threaded_nut"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_generic_threaded_nut() {
+    $fn = 8;
+    profile = [[-0.5, -0.5], [0, 0], [0.5, -0.5]];
+    generic_threaded_nut(nutwidth=14, id=8, h=5, pitch=2, profile=profile);
+}
+test_generic_threaded_nut();
+'''
+
+[[test]]
+name = "test_thread_helix"
+script = '''
+include <../std.scad>
+include <../threading.scad>
+
+module test_thread_helix() {
+    $fn = 8;
+    thread_helix(d=8, pitch=2, turns=1, thread_depth=1, flank_angle=30);
+}
+test_thread_helix();
+'''
