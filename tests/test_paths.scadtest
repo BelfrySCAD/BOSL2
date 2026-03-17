@@ -418,3 +418,70 @@ module test_path_normals() {
 }
 test_path_normals();
 '''
+
+[[test]]
+name = "test_surface_normals"
+script = '''
+include <../std.scad>
+
+module test_surface_normals() {
+    // Flat grid on z=0 plane: normals should all point in +Z or -Z
+    surf = [for (y=[0:2]) [for (x=[0:2]) [x*5, y*5, 0]]];
+    norms = surface_normals(surf);
+    assert(len(norms) == 3);
+    assert(len(norms[0]) == 3);
+    // All normals perpendicular to x and y axes (z component non-zero)
+    for (row=norms, n=row) assert(abs(n[2]) > abs(n[0]) + abs(n[1]) - 0.001);
+}
+test_surface_normals();
+'''
+
+[[test]]
+name = "test_path_cut"
+script = '''
+include <../std.scad>
+
+module test_path_cut() {
+    // Line from [0,0] to [10,0] — cut at distance 4
+    path = [[0,0],[10,0]];
+    segs = path_cut(path, [4], closed=false);
+    assert(len(segs) == 2);
+    assert_approx(last(segs[0]), [4,0]);
+    assert_approx(segs[1][0],    [4,0]);
+}
+test_path_cut();
+'''
+
+[[test]]
+name = "test_path_cut_points"
+script = '''
+include <../std.scad>
+
+module test_path_cut_points() {
+    path = [[0,0],[10,0],[10,10]];
+    cuts = path_cut_points(path, [5, 15], closed=false);
+    assert(len(cuts) == 2);
+    // First cut at dist=5 should land at [5,0]
+    assert_approx(cuts[0][0], [5,0]);
+}
+test_path_cut_points();
+'''
+
+[[test]]
+name = "test_polygon_parts"
+script = '''
+include <../std.scad>
+
+module test_polygon_parts() {
+    // A simple convex polygon has one part
+    sq = square(10, center=true);
+    parts = polygon_parts(sq);
+    assert(is_region(parts));
+    assert(len(parts) == 1);
+    // A self-intersecting figure-8 might produce two parts
+    fig8 = [[0,0],[5,5],[5,-5],[0,0],[-5,-5],[-5,5]];
+    fig8_parts = polygon_parts(fig8);
+    assert(len(fig8_parts) >= 1);
+}
+test_polygon_parts();
+'''

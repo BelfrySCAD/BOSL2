@@ -1,0 +1,180 @@
+[[test]]
+name = "test_get_metric_bolt_head_size"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../metric_screws.scad>
+
+module test_get_metric_bolt_head_size() {
+    assert_approx(get_metric_bolt_head_size(4),  7.0);
+    assert_approx(get_metric_bolt_head_size(6), 10.0);
+    assert_approx(get_metric_bolt_head_size(10), 17.0);
+}
+test_get_metric_bolt_head_size();
+'''
+
+[[test]]
+name = "test_get_metric_bolt_head_height"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../metric_screws.scad>
+
+module test_get_metric_bolt_head_height() {
+    assert_approx(get_metric_bolt_head_height(4),  2.93);
+    assert_approx(get_metric_bolt_head_height(8),  5.45);
+    assert_approx(get_metric_bolt_head_height(16), 10.18);
+}
+test_get_metric_bolt_head_height();
+'''
+
+[[test]]
+name = "test_get_metric_socket_cap_diam"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../metric_screws.scad>
+
+module test_get_metric_socket_cap_diam() {
+    assert_approx(get_metric_socket_cap_diam(4),  7.0);
+    assert_approx(get_metric_socket_cap_diam(6), 10.0);
+    assert_approx(get_metric_socket_cap_diam(10), 16.0);
+}
+test_get_metric_socket_cap_diam();
+'''
+
+[[test]]
+name = "test_get_metric_socket_cap_height"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../metric_screws.scad>
+
+module test_get_metric_socket_cap_height() {
+    assert_approx(get_metric_socket_cap_height(4),  4.0);
+    assert_approx(get_metric_socket_cap_height(6),  6.0);
+    assert_approx(get_metric_socket_cap_height(10), 10.0);
+}
+test_get_metric_socket_cap_height();
+'''
+
+[[test]]
+name = "test_get_metric_socket_cap_socket_size"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../metric_screws.scad>
+
+module test_get_metric_socket_cap_socket_size() {
+    assert_approx(get_metric_socket_cap_socket_size(4), 3.0);
+    assert_approx(get_metric_socket_cap_socket_size(6), 5.0);
+    assert_approx(get_metric_socket_cap_socket_size(10), 8.0);
+}
+test_get_metric_socket_cap_socket_size();
+'''
+
+[[test]]
+name = "test_get_metric_socket_cap_socket_depth"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../metric_screws.scad>
+
+module test_get_metric_socket_cap_socket_depth() {
+    assert_approx(get_metric_socket_cap_socket_depth(4), 2.0);
+    assert_approx(get_metric_socket_cap_socket_depth(6), 3.0);
+    assert_approx(get_metric_socket_cap_socket_depth(10), 5.0);
+}
+test_get_metric_socket_cap_socket_depth();
+'''
+
+[[test]]
+name = "test_get_metric_iso_coarse_thread_pitch"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../metric_screws.scad>
+
+module test_get_metric_iso_coarse_thread_pitch() {
+    assert_approx(get_metric_iso_coarse_thread_pitch(4),  0.7);
+    assert_approx(get_metric_iso_coarse_thread_pitch(6),  1.0);
+    assert_approx(get_metric_iso_coarse_thread_pitch(10), 1.5);
+}
+test_get_metric_iso_coarse_thread_pitch();
+'''
+
+[[test]]
+name = "test_get_metric_iso_fine_thread_pitch"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../metric_screws.scad>
+
+module test_get_metric_iso_fine_thread_pitch() {
+    assert_approx(get_metric_iso_fine_thread_pitch(8),  1.0);
+    assert_approx(get_metric_iso_fine_thread_pitch(10), 1.25);
+    assert_approx(get_metric_iso_fine_thread_pitch(12), 1.50);
+}
+test_get_metric_iso_fine_thread_pitch();
+'''
+
+[[test]]
+name = "test_get_metric_iso_superfine_thread_pitch"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../metric_screws.scad>
+
+module test_get_metric_iso_superfine_thread_pitch() {
+    assert_approx(get_metric_iso_superfine_thread_pitch(10), 1.0);
+    assert_approx(get_metric_iso_superfine_thread_pitch(12), 1.25);
+    assert_approx(get_metric_iso_superfine_thread_pitch(14), 1.50);
+}
+test_get_metric_iso_superfine_thread_pitch();
+'''
+
+[[test]]
+name = "test_get_metric_jis_thread_pitch"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../metric_screws.scad>
+
+module test_get_metric_jis_thread_pitch() {
+    assert_approx(get_metric_jis_thread_pitch(4),  0.7);
+    assert_approx(get_metric_jis_thread_pitch(6),  1.0);
+    assert_approx(get_metric_jis_thread_pitch(10), 1.25);
+}
+test_get_metric_jis_thread_pitch();
+'''
+
+[[test]]
+name = "test_get_metric_nut_size"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../metric_screws.scad>
+
+module test_get_metric_nut_size() {
+    assert_approx(get_metric_nut_size(4),  7.0);
+    assert_approx(get_metric_nut_size(6), 10.0);
+    assert_approx(get_metric_nut_size(10), 17.0);
+}
+test_get_metric_nut_size();
+'''
+
+[[test]]
+name = "test_get_metric_nut_thickness"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../metric_screws.scad>
+
+module test_get_metric_nut_thickness() {
+    assert_approx(get_metric_nut_thickness(4),  3.2);
+    assert_approx(get_metric_nut_thickness(6),  5.0);
+    assert_approx(get_metric_nut_thickness(10), 8.0);
+    assert_approx(get_metric_nut_thickness(12), 10.0);
+}
+test_get_metric_nut_thickness();
+'''

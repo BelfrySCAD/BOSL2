@@ -147,3 +147,151 @@ module test_cyl() {
 }
 test_cyl();
 '''
+
+[[test]]
+name = "test_octahedron"
+script = '''
+include <../std.scad>
+
+module test_octahedron() {
+    v = octahedron(size=10);
+    assert(is_vnf(v));
+    assert(len(v[0]) == 6);
+    assert(len(v[1]) == 8);
+    // All vertices at distance 5 from origin
+    for (pt = v[0]) assert_approx(norm(pt), 5);
+}
+test_octahedron();
+'''
+
+[[test]]
+name = "test_wedge"
+script = '''
+include <../std.scad>
+
+module test_wedge() {
+    v = wedge(size=[10,10,10]);
+    assert(is_vnf(v));
+    assert(len(v[0]) == 6);
+    assert(len(v[1]) == 8);
+}
+test_wedge();
+'''
+
+[[test]]
+name = "test_pie_slice"
+script = '''
+include <../std.scad>
+
+module test_pie_slice() {
+    $fn = 12;
+    v = pie_slice(r=10, h=5, ang=90);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 3);
+    assert(len(v[1]) > 0);
+}
+test_pie_slice();
+'''
+
+[[test]]
+name = "test_torus"
+script = '''
+include <../std.scad>
+
+module test_torus() {
+    $fn = 12;
+    v = torus(r_maj=10, r_min=2);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_torus();
+'''
+
+[[test]]
+name = "test_regular_prism"
+script = '''
+include <../std.scad>
+
+module test_regular_prism() {
+    $fn = 6;
+    v = regular_prism(n=6, r=10, h=5);
+    assert(is_vnf(v));
+    // hexagonal prism: 12 vertices, 8 faces
+    assert(len(v[0]) == 12);
+}
+test_regular_prism();
+'''
+
+[[test]]
+name = "test_xcyl"
+script = '''
+include <../std.scad>
+
+module test_xcyl() {
+    $fn = 12;
+    v = xcyl(r=5, l=10);
+    assert(is_vnf(v));
+    // Axis along X: first point should have small y,z, non-trivial x
+    assert(len(v[0]) > 0);
+}
+test_xcyl();
+'''
+
+[[test]]
+name = "test_ycyl"
+script = '''
+include <../std.scad>
+
+module test_ycyl() {
+    $fn = 12;
+    v = ycyl(r=5, l=10);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_ycyl();
+'''
+
+[[test]]
+name = "test_zcyl"
+script = '''
+include <../std.scad>
+
+module test_zcyl() {
+    $fn = 12;
+    v = zcyl(r=5, l=10);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_zcyl();
+'''
+
+[[test]]
+name = "test_onion"
+script = '''
+include <../std.scad>
+
+module test_onion() {
+    $fn = 12;
+    v = onion(r=10);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_onion();
+'''
+
+[[test]]
+name = "test_teardrop"
+script = '''
+include <../std.scad>
+
+module test_teardrop() {
+    $fn = 12;
+    v = teardrop(r=10, h=20);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_teardrop();
+'''

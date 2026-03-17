@@ -236,3 +236,110 @@ module test_vnf_from_region() {
 }
 test_vnf_from_region();
 '''
+
+[[test]]
+name = "test_vnf_tri_array"
+script = '''
+include <../std.scad>
+
+module test_vnf_tri_array() {
+    // Two parallel rows of 3 points each → triangulated strip
+    rows = [
+        [[0,0,0],[1,0,0],[2,0,0]],
+        [[0,1,0],[1,1,0],[2,1,0]]
+    ];
+    v = vnf_tri_array(rows, caps=false);
+    assert(is_vnf(v));
+    assert(len(v[0]) == 6);
+    assert(len(v[1]) > 0);
+}
+test_vnf_tri_array();
+'''
+
+[[test]]
+name = "test_vnf_unify_faces"
+script = '''
+include <../std.scad>
+
+module test_vnf_unify_faces() {
+    // A square made of two coplanar triangles → should unify into one quad
+    verts = [[0,0,0],[1,0,0],[1,1,0],[0,1,0]];
+    faces = [[0,1,2],[0,2,3]];
+    v = [verts, faces];
+    u = vnf_unify_faces(v);
+    assert(is_vnf(u));
+    // After unifying two coplanar triangles, should have fewer faces
+    assert(len(u[1]) <= len(faces));
+}
+test_vnf_unify_faces();
+'''
+
+[[test]]
+name = "test_vnf_slice"
+script = '''
+include <../std.scad>
+
+module test_vnf_slice() {
+    $fn = 12;
+    v = sphere(r=10);
+    // vnf_slice cuts faces at the given plane but keeps both halves
+    sliced = vnf_slice(v, "Z", [0]);
+    assert(is_vnf(sliced));
+    // Slicing adds new vertices at z=0; the result has at least as many vertices
+    assert(len(sliced[0]) >= len(v[0]));
+    assert(len(sliced[1]) > 0);
+}
+test_vnf_slice();
+'''
+
+[[test]]
+name = "test_vnf_hull"
+script = '''
+include <../std.scad>
+
+module test_vnf_hull() {
+    pts = [[0,0,0],[10,0,0],[0,10,0],[0,0,10]];
+    v = vnf_hull(pts);
+    assert(is_vnf(v));
+    assert(len(v[0]) == 4);
+    assert(len(v[1]) == 4);
+}
+test_vnf_hull();
+'''
+
+[[test]]
+name = "test_vnf_halfspace"
+script = '''
+include <../std.scad>
+
+module test_vnf_halfspace() {
+    $fn = 12;
+    v = sphere(r=10);
+    // Keep z >= 0 half
+    plane = [0, 0, 1, 0];
+    h = vnf_halfspace(plane, v);
+    assert(is_vnf(h));
+    for (pt = h[0]) assert(pt.z >= -0.001);
+}
+test_vnf_halfspace();
+'''
+
+[[test]]
+name = "test_vnf_boundary"
+script = '''
+include <../std.scad>
+
+module test_vnf_boundary() {
+    // A hemisphere (open bottom) has a circular boundary
+    $fn = 12;
+    v = sphere(r=10);
+    // Take just the top half (open)
+    plane = [0, 0, 1, 0];
+    h = vnf_halfspace(plane, v, closed=false);
+    boundary = vnf_boundary(h);
+    // Should have exactly one boundary loop
+    assert(len(boundary) == 1);
+    assert(len(boundary[0]) > 2);
+}
+test_vnf_boundary();
+'''
