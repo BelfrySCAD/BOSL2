@@ -295,3 +295,66 @@ module test_teardrop() {
 }
 test_teardrop();
 '''
+
+[[test]]
+name = "test_plot3d"
+script = '''
+include <../std.scad>
+
+module test_plot3d() {
+    v = plot3d(function(x,y) x+y, x=[-1:0.5:1], y=[-1:0.5:1]);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_plot3d();
+'''
+
+[[test]]
+name = "test_plot_revolution"
+script = '''
+include <../std.scad>
+
+module test_plot_revolution() {
+    // Simple cone-like surface: r goes from 3 to 5 along z=0 to 10
+    v = plot_revolution(f=function(r,z) 0, angle=[0:10:90], z=[0:2:10], r1=3, r2=5);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_plot_revolution();
+'''
+
+[[test]]
+name = "test_heightfield"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+
+module test_heightfield() {
+    // heightfield with a 2D data array
+    data = [[0,1,2],[1,2,3],[2,3,4]];
+    v = heightfield(data, size=[10,10]);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_heightfield();
+'''
+
+[[test]]
+name = "test_cylindrical_heightfield"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+
+module test_cylindrical_heightfield() {
+    // cylindrical_heightfield with a 2D data array (deprecated, produces echo)
+    data = [[0,1,2],[1,2,3],[2,3,4]];
+    v = cylindrical_heightfield(data, l=10, r=5);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_cylindrical_heightfield();
+'''

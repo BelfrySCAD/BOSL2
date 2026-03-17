@@ -343,3 +343,72 @@ module test_vnf_boundary() {
 }
 test_vnf_boundary();
 '''
+
+[[test]]
+name = "test_projection"
+script = '''
+include <../std.scad>
+
+module test_projection() {
+    $fn = 12;
+    // Project a cube onto the XY plane (z=0 plane, cut=false)
+    v = cube(10, center=true);
+    proj = projection(v, cut=false);
+    // Projection returns a region (list of 2D paths)
+    assert(is_region(proj));
+    assert(len(proj) > 0);
+}
+test_projection();
+'''
+
+[[test]]
+name = "test_vnf_bend"
+script = '''
+include <../std.scad>
+
+module test_vnf_bend() {
+    $fn = 12;
+    // Shape must be entirely in positive y (strictly) for Z-axis bend
+    // Centered cube shifted to y in [1,6]
+    v = move([0,3.5,0], p=cube([20,5,1], center=true));
+    bent = vnf_bend(v, r=10, axis="Z");
+    assert(is_vnf(bent));
+    assert(len(bent[0]) > 0);
+    assert(len(bent[1]) > 0);
+}
+test_vnf_bend();
+'''
+
+[[test]]
+name = "test_vnf_small_offset"
+script = '''
+include <../std.scad>
+
+module test_vnf_small_offset() {
+    $fn = 12;
+    v = sphere(r=5);
+    expanded = vnf_small_offset(v, delta=0.5);
+    assert(is_vnf(expanded));
+    // Expanding should increase average vertex distance from origin
+    avg_orig = mean([for(p = v[0]) norm(p)]);
+    avg_exp  = mean([for(p = expanded[0]) norm(p)]);
+    assert(avg_exp > avg_orig - 0.001);
+}
+test_vnf_small_offset();
+'''
+
+[[test]]
+name = "test_vnf_sheet"
+script = '''
+include <../std.scad>
+
+module test_vnf_sheet() {
+    $fn = 12;
+    v = sphere(r=5);
+    sheet = vnf_sheet(v, delta=[0, -1]);
+    assert(is_vnf(sheet));
+    assert(len(sheet[0]) > 0);
+    assert(len(sheet[1]) > 0);
+}
+test_vnf_sheet();
+'''

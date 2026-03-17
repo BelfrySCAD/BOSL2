@@ -1,0 +1,20 @@
+[[test]]
+name = "test_turtle3d"
+script = '''
+include <../std.scad>
+include <../turtle3d.scad>
+
+module test_turtle3d() {
+    // Move forward twice → 3D path of 3 points
+    path = turtle3d(["move", 10, "move", 5]);
+    assert(is_path(path, 3));
+    assert(len(path) == 3);
+    // Start at origin
+    assert_approx(path[0], [0,0,0]);
+    // After moving 10 along X (default direction RIGHT)
+    assert_approx(path[1], [10,0,0]);
+    // After moving 5 more
+    assert_approx(path[2], [15,0,0]);
+}
+test_turtle3d();
+'''

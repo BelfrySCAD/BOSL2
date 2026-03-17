@@ -53,3 +53,51 @@ module test_hsv() {
 }
 test_hsv();
 '''
+
+[[test]]
+name = "test_highlight"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_highlight() {
+    x = highlight(true);
+}
+test_highlight();
+'''
+
+[[test]]
+name = "test_highlight_this"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_highlight_this() {
+    x = highlight_this();
+}
+test_highlight_this();
+'''
+
+[[test]]
+name = "test_ghost"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_ghost() {
+    x = ghost(true);
+}
+test_ghost();
+'''
+
+[[test]]
+name = "test_ghost_this"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_ghost_this() {
+    x = ghost_this();
+}
+test_ghost_this();
+'''

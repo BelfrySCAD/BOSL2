@@ -39,3 +39,104 @@ module test_round_corners() {
 }
 test_round_corners();
 '''
+
+[[test]]
+name = "test_smooth_path"
+script = '''
+include <../std.scad>
+
+module test_smooth_path() {
+    path = [[0,0],[5,0],[10,5],[15,0]];
+    s = smooth_path(path, size=1, closed=false);
+    assert(is_path(s, 2));
+    assert(len(s) >= len(path));
+    // Endpoints should be preserved
+    assert_approx(s[0], path[0]);
+    assert_approx(last(s), last(path));
+}
+test_smooth_path();
+'''
+
+[[test]]
+name = "test_path_join"
+script = '''
+include <../std.scad>
+
+module test_path_join() {
+    p1 = [[0,0],[5,0],[10,0]];
+    p2 = [[10,0],[10,5],[10,10]];
+    joined = path_join([p1, p2], joint=0);
+    assert(is_path(joined, 2));
+    assert(len(joined) >= 5);
+}
+test_path_join();
+'''
+
+[[test]]
+name = "test_offset_stroke"
+script = '''
+include <../std.scad>
+
+module test_offset_stroke() {
+    path = [[0,0],[20,0]];
+    // offset_stroke returns a region (the stroke outline)
+    result = offset_stroke(path, width=2, closed=false);
+    assert(is_region(result) || is_path(result, 2));
+    assert(len(result) > 0);
+}
+test_offset_stroke();
+'''
+
+[[test]]
+name = "test_os_pointed"
+script = '''
+include <../std.scad>
+
+module test_os_pointed() {
+    spec = os_pointed(dist=3, loc=0);
+    assert(is_list(spec));
+    assert(len(spec) > 0);
+}
+test_os_pointed();
+'''
+
+[[test]]
+name = "test_os_round"
+script = '''
+include <../std.scad>
+
+module test_os_round() {
+    spec = os_round(cut=1, angle=45);
+    assert(is_list(spec));
+}
+test_os_round();
+'''
+
+[[test]]
+name = "test_os_flat"
+script = '''
+include <../std.scad>
+
+module test_os_flat() {
+    spec = os_flat(angle=0);
+    assert(is_list(spec));
+}
+test_os_flat();
+'''
+
+[[test]]
+name = "test_angle_between_lines"
+script = '''
+include <../std.scad>
+
+module test_angle_between_lines() {
+    // angle_between_lines takes 2D direction vectors
+    // Perpendicular → 90 degrees
+    assert_approx(angle_between_lines([1,0], [0,1]), 90);
+    // Parallel → 0
+    assert_approx(angle_between_lines([1,0], [1,0]), 0);
+    // 45 degrees
+    assert_approx(angle_between_lines([1,0], [1,1]), 45);
+}
+test_angle_between_lines();
+'''
