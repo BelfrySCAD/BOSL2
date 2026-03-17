@@ -22,16 +22,19 @@ for filename in os.listdir("."):
 covered = {}
 uncovered = funcs.copy()
 for filename in os.listdir("tests"):
-    if filename.startswith("test_") and filename.endswith(".scad"):
+    if filename.startswith("test_") and filename.endswith(".scadtest"):
         filepath = os.path.join("tests",filename)
         with open(filepath, "r") as f:
             for linenum,line in enumerate(f.readlines()):
-                if line.startswith("module "):
-                    testmodule = line[7:].strip().split("(")[0].strip()
+                line = line.strip()
+                if line.startswith("name = \"test_") and line.endswith("\""):
+                    testmodule = line[8:].strip('"')
                     if testmodule.startswith("test_"):
                         funcname = testmodule.split("_",1)[1]
                         if funcname in uncovered:
-                            if filename != "test_" + uncovered[funcname][0]:
+                            scadfile = "test_" + uncovered[funcname][0]
+                            scadtestfile = scadfile.replace(".scad", ".scadtest")
+                            if filename != scadtestfile:
                                 print("WARNING!!! Function {} defined at {}:{}".format(funcname, *uncovered[funcname]));
                                 print("           but tested at {}:{}".format(filename, linenum+1));
                             covered[funcname] = (filename,linenum+1)

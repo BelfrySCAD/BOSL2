@@ -1,0 +1,42 @@
+[[test]]
+name = "test_get_slop"
+script = '''
+include <../std.scad>
+
+module test_get_slop() {
+    s = get_slop();
+    assert(is_num(s) && s >= 0);
+    // With $slop set
+    $slop = 0.5;
+    assert(get_slop() == 0.5);
+}
+test_get_slop();
+'''
+
+[[test]]
+name = "test_EDGE"
+script = '''
+include <../std.scad>
+
+module test_EDGE() {
+    assert(EDGE(0) == "edge0");
+    assert(EDGE(1) == "edge1");
+    assert(EDGE(TOP, 0) == "top_edge0");
+    assert(EDGE(BOT, 2) == "bot_edge2");
+    assert(EDGE(CTR, 1) == "edge1");
+}
+test_EDGE();
+'''
+
+[[test]]
+name = "test_FACE"
+script = '''
+include <../std.scad>
+
+module test_FACE() {
+    assert(FACE(0) == "face0");
+    assert(FACE(1) == "face1");
+    assert(FACE(5) == "face5");
+}
+test_FACE();
+'''
