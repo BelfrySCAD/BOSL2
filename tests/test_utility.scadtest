@@ -724,3 +724,60 @@ module test_is_func() {
 }
 test_is_func();
 '''
+
+[[test]]
+name = "test_looping"
+script = '''
+include <../std.scad>
+
+module test_looping() {
+    assert(looping(0) == true);   // 0 < 2 → running
+    assert(looping(1) == true);   // 1 < 2 → finishing
+    assert(looping(2) == false);  // 2 < 2 → done
+}
+test_looping();
+'''
+
+[[test]]
+name = "test_loop_while"
+script = '''
+include <../std.scad>
+
+module test_loop_while() {
+    // Not yet stopping, still continuing → stay at 0
+    assert(loop_while(0, true) == 0);
+    // Not yet stopping, now stopping → advance to 1
+    assert(loop_while(0, false) == 1);
+    // Already stopping (state>0) → advance to 2
+    assert(loop_while(1, true) == 2);
+    assert(loop_while(1, false) == 2);
+    // Already done → stay at 2
+    assert(loop_while(2, true) == 2);
+}
+test_loop_while();
+'''
+
+[[test]]
+name = "test_loop_done"
+script = '''
+include <../std.scad>
+
+module test_loop_done() {
+    assert(loop_done(0) == false);  // 0 > 0 → false
+    assert(loop_done(1) == true);   // 1 > 0 → true
+    assert(loop_done(2) == true);   // 2 > 0 → true
+}
+test_loop_done();
+'''
+
+[[test]]
+name = "test_no_function"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_no_function() {
+    x = no_function("mymod");  // always asserts false
+}
+test_no_function();
+'''

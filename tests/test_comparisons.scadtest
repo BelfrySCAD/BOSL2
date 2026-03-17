@@ -624,3 +624,34 @@ module test_list_smallest() {
 }
 test_list_smallest();
 '''
+
+[[test]]
+name = "test_cleanup_path"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+
+module test_cleanup_path() {
+    // cleanup_path is deprecated list_unwrap: removes last point when equal to first
+    assert_equal(cleanup_path([[1,2,3],[4,5,6],[1,8,9]]),          [[1,2,3],[4,5,6],[1,8,9]]);
+    assert_equal(cleanup_path([[1,2,3],[4,5,6],[1,8,9],[1,2,3]]),  [[1,2,3],[4,5,6],[1,8,9]]);
+    assert_equal(cleanup_path([]), []);
+    assert_equal(cleanup_path([[0,0]]), [[0,0]]);
+}
+test_cleanup_path();
+'''
+
+[[test]]
+name = "test_close_path"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+
+module test_close_path() {
+    // close_path is deprecated list_wrap: appends first point when not already equal to last
+    assert_equal(close_path([[1,2,3],[4,5,6],[1,8,9]]),         [[1,2,3],[4,5,6],[1,8,9],[1,2,3]]);
+    assert_equal(close_path([[1,2,3],[4,5,6],[1,8,9],[1,2,3]]), [[1,2,3],[4,5,6],[1,8,9],[1,2,3]]);
+    assert_equal(close_path([]), []);
+}
+test_close_path();
+'''

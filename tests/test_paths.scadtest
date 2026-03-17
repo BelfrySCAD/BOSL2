@@ -363,8 +363,58 @@ include <../std.scad>
 module test_is_path_simple(){
     assert(is_path_simple([[0,0],[1,1],[1,1],[2,1]]));
     assert(is_path_simple([[0,0],[10,0],[0,20],[10,20]],closed=false));
-    assert(!is_path_simple([[0,0],[10,0],[0,20],[10,20]],closed=true));    
+    assert(!is_path_simple([[0,0],[10,0],[0,20],[10,20]],closed=true));
     assert(is_path_simple(circle($fn=20, r=10)));
-}    
+}
 test_is_path_simple();
+'''
+
+[[test]]
+name = "test_force_path"
+script = '''
+include <../std.scad>
+
+module test_force_path() {
+    path = [[0,0],[1,0],[1,1],[0,1]];
+    // plain path → returned unchanged
+    assert_equal(force_path(path), path);
+    // singleton region → extract the inner path
+    assert_equal(force_path([path]), path);
+}
+test_force_path();
+'''
+
+[[test]]
+name = "test_simplify_path"
+script = '''
+include <../std.scad>
+
+module test_simplify_path() {
+    // Collinear points on a straight line → simplified to just the two endpoints
+    path = [[0,0],[1,0],[2,0],[3,0],[4,0]];
+    s = simplify_path(path, maxerr=0.01, closed=false);
+    assert(len(s) == 2);
+    assert_equal(s[0],       [0,0]);
+    assert_equal(s[len(s)-1],[4,0]);
+    // A right-angle corner: all three vertices are kept
+    corner = [[0,0],[5,0],[5,5]];
+    sc = simplify_path(corner, maxerr=0.01, closed=false);
+    assert(len(sc) == 3);
+}
+test_simplify_path();
+'''
+
+[[test]]
+name = "test_path_normals"
+script = '''
+include <../std.scad>
+
+module test_path_normals() {
+    // Square path – one normal per vertex, each unit length
+    path = [[1,0],[0,1],[-1,0],[0,-1]];
+    norms = path_normals(path, closed=true);
+    assert(len(norms) == len(path));
+    for (n = norms) assert_approx(norm(n), 1);
+}
+test_path_normals();
 '''

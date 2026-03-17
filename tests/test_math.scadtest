@@ -1137,3 +1137,58 @@ module test_slerpn() {
 }
 test_slerpn();
 '''
+
+[[test]]
+name = "test_random_points"
+script = '''
+include <../std.scad>
+
+module test_random_points() {
+    pts = random_points(n=10, dim=3, scale=1, seed=42);
+    assert(len(pts) == 10);
+    assert(len(pts[0]) == 3);
+    pts2 = random_points(n=20, dim=2, scale=2, seed=7);
+    assert(len(pts2) == 20);
+    assert(len(pts2[0]) == 2);
+}
+test_random_points();
+'''
+
+[[test]]
+name = "test_exponential_rands"
+script = '''
+include <../std.scad>
+
+module test_exponential_rands() {
+    v = exponential_rands(n=50, lambda=1, seed=99);
+    assert(len(v) == 50);
+    assert(all_positive(v));  // exponential distribution is always positive
+}
+test_exponential_rands();
+'''
+
+[[test]]
+name = "test_spherical_random_points"
+script = '''
+include <../std.scad>
+
+module test_spherical_random_points() {
+    pts = spherical_random_points(n=10, radius=5, seed=123);
+    assert(len(pts) == 10);
+    for (p = pts) assert_approx(norm(p), 5);
+}
+test_spherical_random_points();
+'''
+
+[[test]]
+name = "test_random_polygon"
+script = '''
+include <../std.scad>
+
+module test_random_polygon() {
+    poly = random_polygon(n=6, size=10, seed=77);
+    assert(len(poly) == 6);
+    assert(is_path(poly, 2));
+}
+test_random_polygon();
+'''

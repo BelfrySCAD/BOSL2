@@ -530,3 +530,36 @@ module test_rot_inverse() {
 }
 test_rot_inverse();
 '''
+
+[[test]]
+name = "test_cholesky"
+script = '''
+include <../std.scad>
+
+module test_cholesky() {
+    // 2×2 positive definite matrix: A = L*L^T
+    A = [[4, 2], [2, 3]];
+    L = cholesky(A);
+    assert_approx(L * transpose(L), A);
+    // L must be lower triangular: upper-right entry is zero
+    assert_approx(L[0][1], 0);
+    // Identity matrix: cholesky(I) = I
+    assert_approx(cholesky(ident(3)), ident(3));
+    // Non-positive-definite → undef
+    assert(is_undef(cholesky([[-1,0],[0,1]])));
+}
+test_cholesky();
+'''
+
+[[test]]
+name = "test_echo_matrix"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+
+module test_echo_matrix() {
+    // echo_matrix always produces ECHO output; just verify it doesn't error
+    echo_matrix([[1,2],[3,4]], description="test matrix");
+}
+test_echo_matrix();
+'''

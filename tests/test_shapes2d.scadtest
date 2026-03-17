@@ -191,3 +191,36 @@ module test_reuleaux_polygon() {
 }
 test_reuleaux_polygon();
 '''
+
+[[test]]
+name = "test_squircle_radius_fg"
+script = '''
+include <../std.scad>
+
+module test_squircle_radius_fg() {
+    // At angle=0 or 90, sin(2*angle)=0 → returns r
+    assert_approx(squircle_radius_fg(squareness=0.8, r=5, angle=0), 5);
+    assert_approx(squircle_radius_fg(squareness=0.5, r=3, angle=90), 3);
+    // At angle=45, result is a positive number
+    r45 = squircle_radius_fg(squareness=0.5, r=4, angle=45);
+    assert(r45 > 0);
+    assert(is_num(r45));
+}
+test_squircle_radius_fg();
+'''
+
+[[test]]
+name = "test_squircle_radius_se"
+script = '''
+include <../std.scad>
+
+module test_squircle_radius_se() {
+    // n=2 (circle): (cos^2+sin^2)^(1/2)=1 → result = 1/r
+    assert_approx(squircle_radius_se(2, 1, 45), 1);
+    assert_approx(squircle_radius_se(2, 2, 45), 0.5);
+    // At angle=0: cos(0)=1, sin(0)=0 → (1^n)^(1/n)/r = 1/r
+    assert_approx(squircle_radius_se(4, 3, 0), 1/3);
+    assert(squircle_radius_se(4, 1, 45) > 0);
+}
+test_squircle_radius_se();
+'''

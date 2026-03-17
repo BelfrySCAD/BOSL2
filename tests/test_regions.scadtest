@@ -195,3 +195,104 @@ module test_region_area(){
 }
 test_region_area();
 '''
+
+[[test]]
+name = "test_force_region"
+script = '''
+include <../std.scad>
+
+module test_force_region() {
+    sq = square(10, center=true);
+    // path → singleton region
+    r = force_region(sq);
+    assert(is_region(r));
+    assert(len(r) == 1);
+    assert_equal(r[0], sq);
+    // already a region → unchanged
+    r2 = force_region([sq]);
+    assert_equal(r2, [sq]);
+}
+test_force_region();
+'''
+
+[[test]]
+name = "test_is_valid_region"
+script = '''
+include <../std.scad>
+
+module test_is_valid_region() {
+    sq = square(10, center=true);
+    assert(is_valid_region([sq]));
+    // path with only 2 points is not a valid region component
+    assert(!is_valid_region([[sq[0], sq[1]]]));
+}
+test_is_valid_region();
+'''
+
+[[test]]
+name = "test_is_region_simple"
+script = '''
+include <../std.scad>
+
+module test_is_region_simple() {
+    sq = square(10, center=true);
+    assert(is_region_simple([sq]));
+    // self-intersecting path is not simple
+    cross = [[0,0],[10,10],[10,0],[0,10]];
+    assert(!is_region_simple([cross]));
+}
+test_is_region_simple();
+'''
+
+[[test]]
+name = "test_are_regions_equal"
+script = '''
+include <../std.scad>
+
+module test_are_regions_equal() {
+    r1 = [square(10, center=true)];
+    r2 = [square(10, center=true)];
+    assert(are_regions_equal(r1, r2));
+    r3 = [square(20, center=true)];
+    assert(!are_regions_equal(r1, r3));
+    // different number of components
+    assert(!are_regions_equal(r1, [r1[0], r1[0]]));
+}
+test_are_regions_equal();
+'''
+
+[[test]]
+name = "test_hull_region"
+script = '''
+include <../std.scad>
+
+module test_hull_region() {
+    sq = square(10, center=true);
+    h = hull_region([sq]);
+    // hull of a convex polygon is itself (same vertices, possibly rotated)
+    assert(len(h) == len(sq));
+    // hull of a path
+    h2 = hull_region([[0,0],[5,0],[5,5],[0,5],[2,2]]);
+    // interior point is removed
+    assert(len(h2) == 4);
+}
+test_hull_region();
+'''
+
+[[test]]
+name = "test_fill"
+script = '''
+include <../std.scad>
+
+module test_fill() {
+    // Region with a hole: outer CCW, inner CW → fill returns just the outer boundary
+    outer = square(10, center=true);
+    inner = square(4, center=true);
+    // make inner a hole (opposite winding)
+    reg = [outer, clockwise_polygon(inner)];
+    filled = fill(reg);
+    assert(len(filled) == 1);  // hole removed
+    assert(len(filled[0]) == len(outer));
+}
+test_fill();
+'''
