@@ -202,7 +202,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
                       let(
                            dim = len(control[0]),
                            control = [for(i=idx(control)) [each control[i]*weights[i],weights[i]]],
-                           curve = nurbs_curve(control,degree,u=u,splinesteps=splinesteps, mult=mult,type=type)
+                           curve = nurbs_curve(control,degree,u=u,splinesteps=splinesteps, mult=mult, knots=knots, type=type)
                       )
                       [for(pt=curve) select(pt,0,-2)/last(pt)]
   :
