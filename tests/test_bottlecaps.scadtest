@@ -1,0 +1,156 @@
+[[test]]
+name = "test_pco1810_neck"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_pco1810_neck() {
+    $fn = 8;
+    pco1810_neck();
+}
+test_pco1810_neck();
+'''
+
+[[test]]
+name = "test_pco1810_cap"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_pco1810_cap() {
+    $fn = 8;
+    pco1810_cap();
+}
+test_pco1810_cap();
+'''
+
+[[test]]
+name = "test_pco1881_neck"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_pco1881_neck() {
+    $fn = 8;
+    pco1881_neck();
+}
+test_pco1881_neck();
+'''
+
+[[test]]
+name = "test_pco1881_cap"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_pco1881_cap() {
+    $fn = 8;
+    pco1881_cap();
+}
+test_pco1881_cap();
+'''
+
+[[test]]
+name = "test_generic_bottle_neck"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_generic_bottle_neck() {
+    $fn = 8;
+    generic_bottle_neck();
+}
+test_generic_bottle_neck();
+'''
+
+[[test]]
+name = "test_generic_bottle_cap"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_generic_bottle_cap() {
+    $fn = 8;
+    generic_bottle_cap(thread_depth=2, neck_od=25, height=10);
+}
+test_generic_bottle_cap();
+'''
+
+[[test]]
+name = "test_bottle_adapter_neck_to_cap"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_bottle_adapter_neck_to_cap() {
+    $fn = 8;
+    bottle_adapter_neck_to_cap();
+}
+test_bottle_adapter_neck_to_cap();
+'''
+
+[[test]]
+name = "test_bottle_adapter_cap_to_cap"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_bottle_adapter_cap_to_cap() {
+    $fn = 8;
+    bottle_adapter_cap_to_cap();
+}
+test_bottle_adapter_cap_to_cap();
+'''
+
+[[test]]
+name = "test_bottle_adapter_neck_to_neck"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_bottle_adapter_neck_to_neck() {
+    $fn = 8;
+    bottle_adapter_neck_to_neck();
+}
+test_bottle_adapter_neck_to_neck();
+'''
+
+[[test]]
+name = "test_sp_neck"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_sp_neck() {
+    $fn = 8;
+    sp_neck(48, 400, 2);
+}
+test_sp_neck();
+'''
+
+[[test]]
+name = "test_sp_cap"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_sp_cap() {
+    $fn = 8;
+    sp_cap(48, 400, 2);
+}
+test_sp_cap();
+'''
+
+[[test]]
+name = "test_sp_diameter"
+script = '''
+include <../std.scad>
+include <../bottlecaps.scad>
+
+module test_sp_diameter() {
+    d = sp_diameter(48, 400);
+    assert(is_num(d));
+    assert(d > 0);
+}
+test_sp_diameter();
+'''

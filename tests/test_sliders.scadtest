@@ -1,0 +1,25 @@
+[[test]]
+name = "test_slider"
+script = '''
+include <../std.scad>
+include <../sliders.scad>
+
+module test_slider() {
+    $fn = 8;
+    slider(l=10, w=10, h=5);
+}
+test_slider();
+'''
+
+[[test]]
+name = "test_rail"
+script = '''
+include <../std.scad>
+include <../sliders.scad>
+
+module test_rail() {
+    $fn = 8;
+    rail(l=20, w=10, h=5);
+}
+test_rail();
+'''

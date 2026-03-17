@@ -56,3 +56,161 @@ module test_reorient() {
 }
 test_reorient();
 '''
+
+[[test]]
+name = "test_attach_geom"
+script = '''
+include <../std.scad>
+
+module test_attach_geom() {
+    geom = attach_geom(size=[10,10,10]);
+    assert(is_list(geom));
+    assert(len(geom) > 0);
+    // Cylindrical geometry
+    geom2 = attach_geom(r=5, h=10);
+    assert(is_list(geom2));
+}
+test_attach_geom();
+'''
+
+[[test]]
+name = "test_define_part"
+script = '''
+include <../std.scad>
+
+module test_define_part() {
+    geom = attach_geom(r=5, h=10);
+    part = define_part("mypart", geom);
+    assert(is_list(part));
+    assert(len(part) > 0);
+}
+test_define_part();
+'''
+
+[[test]]
+name = "test_parent"
+script = '''
+include <../std.scad>
+
+module test_parent() {
+    $fn = 8;
+    // parent() returns a description of the closest attachable ancestor
+    cyl(r=5, h=10)
+      let(desc = parent()) {
+          assert(is_list(desc));
+          assert(len(desc) == 3);
+      }
+}
+test_parent();
+'''
+
+[[test]]
+name = "test_parent_part"
+script = '''
+include <../std.scad>
+
+module _test_myobj(d=10, h=10) {
+    // Custom attachable object with a named part
+    parts = [define_part("cap", attach_geom(size=[d, d, 1]))];
+    attachable(size=[d, d, h], parts=parts) {
+        cyl(d=d, h=h, $fn=8);
+        children();
+    }
+}
+
+module test_parent_part() {
+    $fn = 8;
+    // parent_part returns a description for a named part of the parent
+    _test_myobj()
+      let(desc = parent_part("cap")) {
+          assert(is_list(desc));
+          assert(len(desc) == 3);
+      }
+}
+test_parent_part();
+'''
+
+[[test]]
+name = "test_desc_point"
+script = '''
+include <../std.scad>
+
+module test_desc_point() {
+    $fn = 8;
+    cyl(r=5, h=10)
+      let(desc = parent()) {
+          pt = desc_point(desc, anchor=TOP);
+          assert(is_vector(pt, 3));
+      }
+}
+test_desc_point();
+'''
+
+[[test]]
+name = "test_desc_dir"
+script = '''
+include <../std.scad>
+
+module test_desc_dir() {
+    $fn = 8;
+    cyl(r=5, h=10)
+      let(desc = parent()) {
+          d = desc_dir(desc, anchor=TOP);
+          assert(is_vector(d, 3));
+          assert_approx(norm(d), 1);
+      }
+}
+test_desc_dir();
+'''
+
+[[test]]
+name = "test_desc_attach"
+script = '''
+include <../std.scad>
+
+module test_desc_attach() {
+    $fn = 8;
+    // desc_attach returns a transformed point; needs a point argument p
+    cyl(r=5, h=10)
+      let(desc = parent()) {
+          pt = desc_attach(desc, anchor=TOP, p=[0,0,0]);
+          assert(is_vector(pt, 3));
+      }
+}
+test_desc_attach();
+'''
+
+[[test]]
+name = "test_desc_dist"
+script = '''
+include <../std.scad>
+
+module test_desc_dist() {
+    $fn = 8;
+    cyl(r=5, h=10)
+      let(desc = parent()) {
+          d = desc_dist(desc, anchor1=TOP, desc2=desc, anchor2=BOT);
+          assert(is_num(d));
+          assert(d > 0);
+      }
+}
+test_desc_dist();
+'''
+
+[[test]]
+name = "test_transform_desc"
+script = '''
+include <../std.scad>
+
+module test_transform_desc() {
+    $fn = 8;
+    cyl(r=5, h=10)
+      let(desc = parent()) {
+          T = up(5);
+          tdesc = transform_desc(T, desc);
+          assert(is_list(tdesc));
+          assert(len(tdesc) == 3);
+      }
+}
+test_transform_desc();
+'''

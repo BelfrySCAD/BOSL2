@@ -1,0 +1,105 @@
+[[test]]
+name = "test_screw_info"
+script = '''
+include <../std.scad>
+include <../screws.scad>
+
+module test_screw_info() {
+    info = screw_info("M3");
+    assert(is_list(info));
+}
+test_screw_info();
+'''
+
+[[test]]
+name = "test_screw"
+script = '''
+include <../std.scad>
+include <../screws.scad>
+
+module test_screw() {
+    $fn = 8;
+    screw("M3", length=10);
+}
+test_screw();
+'''
+
+[[test]]
+name = "test_screw_hole"
+script = '''
+include <../std.scad>
+include <../screws.scad>
+
+module test_screw_hole() {
+    $fn = 8;
+    screw_hole("M3", length=10, thread=false);
+}
+test_screw_hole();
+'''
+
+[[test]]
+name = "test_screw_head"
+script = '''
+include <../std.scad>
+include <../screws.scad>
+
+module test_screw_head() {
+    $fn = 8;
+    info = screw_info("M3");  // default: socket head
+    screw_head(info);
+}
+test_screw_head();
+'''
+
+[[test]]
+name = "test_nut"
+script = '''
+include <../std.scad>
+include <../screws.scad>
+
+module test_nut() {
+    $fn = 8;
+    nut("M3");
+}
+test_nut();
+'''
+
+[[test]]
+name = "test_nut_info"
+script = '''
+include <../std.scad>
+include <../screws.scad>
+
+module test_nut_info() {
+    info = nut_info("M3");
+    assert(is_list(info));
+}
+test_nut_info();
+'''
+
+[[test]]
+name = "test_shoulder_screw"
+script = '''
+include <../std.scad>
+include <../screws.scad>
+
+module test_shoulder_screw() {
+    $fn = 8;
+    shoulder_screw("iso", 10, length=20);
+}
+test_shoulder_screw();
+'''
+
+[[test]]
+name = "test_thread_specification"
+script = '''
+include <../std.scad>
+include <../screws.scad>
+
+module test_thread_specification() {
+    info = screw_info("M3");
+    tspec = thread_specification(info);
+    assert(is_list(tspec));
+}
+test_thread_specification();
+'''

@@ -307,3 +307,17 @@ module test_keyhole() {
 }
 test_keyhole();
 '''
+
+[[test]]
+name = "test_gs_get_tangent_R"
+script = '''
+include <../std.scad>
+
+module test_gs_get_tangent_R() {
+    // gs_get_tangent_R(r1, r2, spread, tangent_angle)
+    // Used internally by grip_shape(). r1=3, r2=3, s=10, ang=30
+    r = gs_get_tangent_R(3, 3, 10, 30);
+    assert(is_num(r));
+}
+test_gs_get_tangent_R();
+'''

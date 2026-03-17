@@ -1,0 +1,68 @@
+[[test]]
+name = "test_modular_hose_radius"
+script = '''
+include <../std.scad>
+include <../modular_hose.scad>
+
+module test_modular_hose_radius() {
+    r = modular_hose_radius(size=1/4);
+    assert(is_num(r));
+    assert(r > 0);
+    r2 = modular_hose_radius(size=1/2, outer=true);
+    assert(is_num(r2));
+    assert(r2 > r);
+}
+test_modular_hose_radius();
+'''
+
+[[test]]
+name = "test_modular_hose"
+script = '''
+include <../std.scad>
+include <../modular_hose.scad>
+
+module test_modular_hose() {
+    $fn = 8;
+    modular_hose(size=1/4, type="ball");
+}
+test_modular_hose();
+'''
+
+[[test]]
+name = "test_modular_hose_ball"
+script = '''
+include <../std.scad>
+include <../modular_hose.scad>
+
+module test_modular_hose_ball() {
+    $fn = 8;
+    modular_hose(size=1/4, type="ball");
+}
+test_modular_hose_ball();
+'''
+
+[[test]]
+name = "test_modular_hose_socket"
+script = '''
+include <../std.scad>
+include <../modular_hose.scad>
+
+module test_modular_hose_socket() {
+    $fn = 8;
+    modular_hose(size=1/4, type="socket");
+}
+test_modular_hose_socket();
+'''
+
+[[test]]
+name = "test_modular_hose_segment"
+script = '''
+include <../std.scad>
+include <../modular_hose.scad>
+
+module test_modular_hose_segment() {
+    $fn = 8;
+    modular_hose(size=1/4, type="segment");
+}
+test_modular_hose_segment();
+'''

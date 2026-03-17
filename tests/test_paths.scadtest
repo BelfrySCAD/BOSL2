@@ -515,3 +515,18 @@ module test_split_path_at_self_crossings() {
 }
 test_split_path_at_self_crossings();
 '''
+
+[[test]]
+name = "test_path_cut_points_recurse"
+script = '''
+include <../std.scad>
+
+module test_path_cut_points_recurse() {
+    // path_cut_points_recurse is the recursive helper for path_cut_points
+    path = [[0,0],[10,0],[10,10],[0,10]];
+    cuts = path_cut_points_recurse(path, [5, 15, 25]);
+    assert(is_list(cuts));
+    assert(len(cuts) == 3);
+}
+test_path_cut_points_recurse();
+'''

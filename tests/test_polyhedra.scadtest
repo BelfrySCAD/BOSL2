@@ -1,0 +1,30 @@
+[[test]]
+name = "test_regular_polyhedron"
+script = '''
+include <../std.scad>
+include <../polyhedra.scad>
+
+module test_regular_polyhedron() {
+    $fn = 8;
+    regular_polyhedron("tetrahedron", r=5);
+}
+test_regular_polyhedron();
+'''
+
+[[test]]
+name = "test_regular_polyhedron_info"
+script = '''
+include <../std.scad>
+include <../polyhedra.scad>
+
+module test_regular_polyhedron_info() {
+    r = regular_polyhedron_info("in_radius", name="tetrahedron", r=5);
+    assert(is_num(r));
+    assert(r > 0);
+    nm = regular_polyhedron_info("name", name="tetrahedron");
+    assert(is_string(nm));
+    vnf = regular_polyhedron_info("vnf", name="tetrahedron", r=5);
+    assert(is_vnf(vnf));
+}
+test_regular_polyhedron_info();
+'''

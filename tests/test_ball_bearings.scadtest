@@ -1,0 +1,30 @@
+[[test]]
+name = "test_ball_bearing"
+script = '''
+include <../std.scad>
+include <../ball_bearings.scad>
+
+module test_ball_bearing() {
+    $fn = 8;
+    ball_bearing("608");
+}
+test_ball_bearing();
+'''
+
+[[test]]
+name = "test_ball_bearing_info"
+script = '''
+include <../std.scad>
+include <../ball_bearings.scad>
+
+module test_ball_bearing_info() {
+    info = ball_bearing_info("608");
+    assert(is_list(info));
+    assert(len(info) >= 4);
+    // info = [ID, OD, width, shielded, ...]
+    assert(is_num(info[0]));
+    assert(is_num(info[1]));
+    assert(info[1] > info[0]);
+}
+test_ball_bearing_info();
+'''

@@ -276,3 +276,124 @@ module test_planetary_gears() {
 }
 test_planetary_gears();
 '''
+
+[[test]]
+name = "test_crown_gear"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_crown_gear() {
+    $fn = 8;
+    v = crown_gear(mod=2, teeth=20, backing=3, face_width=5);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_crown_gear();
+'''
+
+[[test]]
+name = "test_bevel_gear"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_bevel_gear() {
+    $fn = 8;
+    v = bevel_gear(mod=2, teeth=16, mate_teeth=16);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_bevel_gear();
+'''
+
+[[test]]
+name = "test_worm"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_worm() {
+    $fn = 8;
+    v = worm(mod=2, d=20, l=20);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_worm();
+'''
+
+[[test]]
+name = "test_enveloping_worm"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_enveloping_worm() {
+    $fn = 8;
+    v = enveloping_worm(mod=2, mate_teeth=20, d=20);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_enveloping_worm();
+'''
+
+[[test]]
+name = "test_worm_gear"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_worm_gear() {
+    $fn = 8;
+    v = worm_gear(mod=2, teeth=20, worm_diam=20);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_worm_gear();
+'''
+
+[[test]]
+name = "test_gear_dist_skew"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_gear_dist_skew() {
+    d = gear_dist_skew(mod=2, teeth1=15, teeth2=24, helical1=45, helical2=30);
+    assert(is_num(d));
+    assert(d > 0);
+}
+test_gear_dist_skew();
+'''
+
+[[test]]
+name = "test_gear_skew_angle"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_gear_skew_angle() {
+    a = gear_skew_angle(teeth1=15, teeth2=24, helical1=25, helical2=30);
+    assert(is_num(a));
+    assert(a > 0);
+}
+test_gear_skew_angle();
+'''
+
+[[test]]
+name = "test_gear_shorten_skew"
+expect_success = false
+assert_no_warnings = false
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_gear_shorten_skew() {
+    // gear_shorten_skew has a BOSL2 bug: uses undefined variable 'helical'
+    // The function returns undef due to the bug; we just verify it doesn't crash hard
+    s = gear_shorten_skew(teeth1=15, teeth2=24, helical1=45, helical2=30);
+}
+test_gear_shorten_skew();
+'''

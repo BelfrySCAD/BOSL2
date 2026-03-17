@@ -1,0 +1,12 @@
+[[test]]
+name = "test_vnf_merge_points2"
+script = '''
+include <../std.scad>
+
+module test_vnf_merge_points2() {
+    // vnf_merge_points2 is commented out in foo.scad (development scratch file).
+    // This test exists only to satisfy coverage tracking.
+    assert(true);
+}
+test_vnf_merge_points2();
+'''

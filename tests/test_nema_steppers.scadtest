@@ -1,0 +1,39 @@
+[[test]]
+name = "test_nema_stepper_motor"
+script = '''
+include <../std.scad>
+include <../nema_steppers.scad>
+
+module test_nema_stepper_motor() {
+    $fn = 8;
+    nema_stepper_motor(size=17, h=34);
+}
+test_nema_stepper_motor();
+'''
+
+[[test]]
+name = "test_nema_motor_info"
+script = '''
+include <../std.scad>
+include <../nema_steppers.scad>
+
+module test_nema_motor_info() {
+    info = nema_motor_info(size=17);
+    assert(is_list(info));
+    assert(len(info) > 0);
+}
+test_nema_motor_info();
+'''
+
+[[test]]
+name = "test_nema_mount_mask"
+script = '''
+include <../std.scad>
+include <../nema_steppers.scad>
+
+module test_nema_mount_mask() {
+    $fn = 8;
+    nema_mount_mask(size=17, depth=5, l=0);
+}
+test_nema_mount_mask();
+'''

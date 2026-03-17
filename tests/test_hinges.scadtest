@@ -1,0 +1,12 @@
+[[test]]
+name = "test_knuckle_hinge"
+script = '''
+include <../std.scad>
+include <../hinges.scad>
+
+module test_knuckle_hinge() {
+    $fn = 8;
+    knuckle_hinge(length=30, offset=4, segs=5);
+}
+test_knuckle_hinge();
+'''

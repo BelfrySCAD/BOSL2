@@ -93,3 +93,14 @@ module test_phillips_diam() {
 }
 test_phillips_diam();
 '''
+
+[[test]]
+name = "test_hex_drive_mask"
+script = '''
+include <../std.scad>
+
+module test_hex_drive_mask() {
+    hex_drive_mask(size=3, length=5);
+}
+test_hex_drive_mask();
+'''

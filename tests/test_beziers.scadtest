@@ -432,3 +432,41 @@ module test_bezpath_sweep() {
 }
 test_bezpath_sweep();
 '''
+
+[[test]]
+name = "test_bezier_vnf_degenerate_patch"
+script = '''
+include <../std.scad>
+include <../beziers.scad>
+
+module test_bezier_vnf_degenerate_patch() {
+    // A patch degenerate at one corner (all points in first row are equal)
+    patch = [
+        [[-12.5, 12.5, 5], [-12.5, 12.5, 5], [-12.5, 12.5, 5]],
+        [[-6.25, 8.75, 5], [-6.25, 6.25, 5], [-8.75, 6.25, 5]],
+        [[0, 5, 5],        [0, 0, 5],         [-5, 0, 5]]
+    ];
+    v = bezier_vnf_degenerate_patch(patch, splinesteps=4);
+    assert(is_vnf(v));
+}
+test_bezier_vnf_degenerate_patch();
+'''
+
+[[test]]
+name = "test_bezier_sheet"
+script = '''
+include <../std.scad>
+include <../beziers.scad>
+
+module test_bezier_sheet() {
+    patch = [
+        [[-10,-10, 0], [0,-10, 5], [10,-10, 0]],
+        [[-10,  0, 5], [0,  0,10], [10,  0, 5]],
+        [[-10, 10, 0], [0, 10, 5], [10, 10, 0]]
+    ];
+    v = bezier_sheet(patch, delta=[0,-2], splinesteps=4);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_bezier_sheet();
+'''

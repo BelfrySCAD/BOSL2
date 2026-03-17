@@ -1,0 +1,12 @@
+[[test]]
+name = "test_ring_hook"
+script = '''
+include <../std.scad>
+include <../hooks.scad>
+
+module test_ring_hook() {
+    $fn = 8;
+    ring_hook([50,10], 25, 25, ir=20);
+}
+test_ring_hook();
+'''
