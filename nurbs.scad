@@ -208,7 +208,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
   :
     let(
          uniform = is_undef(knots), 
-         dum=assert(in_list(type, ["closed","open","clamped"]), str("Unknown nurbs spline type", type))
+         dum=assert(in_list(type, ["closed","open","clamped"]), str("Unknown nurbs spline type: ", type))
              assert(type=="closed" || len(control)>=degree+1, str(type," nurbs requires at least degree+1 control points"))
              assert(is_undef(mult) || is_vector(mult), "mult must be a vector"),
          badmult = is_undef(mult) ? []
@@ -496,6 +496,7 @@ function is_nurbs_patch(x) =
 //   move_copies(flatten(pts)) sphere(r=2,$fn=16);
 
 function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["clamped","clamped"], mult=[undef,undef], knots=[undef,undef]) =
+let(fo=echo(intype=type))
     is_list(patch) && _valid_surface_type(patch[0]) ?
        assert(len(patch)>=5, "NURBS parameter list is invalid")
        assert(num_defined([degree,weights])==0 && mult==[undef,undef] && knots==[undef,undef],
@@ -516,8 +517,10 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
     let(
         u=is_range(u) ? list(u) : u,
         v=is_range(v) ? list(v) : v,
-        degree = force_list(degree,2), 
+        degree = force_list(degree,2),
+        feee=echo(type=type),
         type = force_list(type,2),
+fda=        echo(type=type, force_list(type,2)),
         splinesteps = is_undef(splinesteps) ? [undef,undef] : force_list(splinesteps,2),
         mult = is_vector(mult) || is_undef(mult) ? [mult,mult]
              : assert((is_undef(mult[0]) || is_vector(mult[0])) && (is_undef(mult[1]) || is_vector(mult[1])), "mult must be a vector or list of two vectors")
@@ -634,7 +637,7 @@ function nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult,
    assert(!havecaps || type==["clamped","closed"] || type==["closed","clamped"],
                     "Surface must be [\"closed\",\"clamped\"] or [\"clamped\",\"closed\"] to for caps to be created")
    let(
-        type = force_list(type),
+        type = force_list(type,2),
         havecaps = num_true([caps,cap1,cap2])>0,
         flip = havecaps && type[0]=="closed",
         pts = nurbs_patch_points(patch=patch, degree=degree, splinesteps=splinesteps, type=type, mult=mult, knots=knots, weights=weights),
@@ -662,7 +665,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
                  convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype, caps=caps, cap1=cap1, cap2=cap2) children();
    }
    else {
-       type = force_list(type);
+       type = force_list(type,2);
        havecaps = num_true([caps,cap1,cap2])>0;
        dummy = 
                assert(is_nurbs_patch(patch),"Input patch is not a rectangular aray of points")
