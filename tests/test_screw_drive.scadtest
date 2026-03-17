@@ -98,6 +98,7 @@ test_phillips_diam();
 name = "test_hex_drive_mask"
 script = '''
 include <../std.scad>
+include <../screw_drive.scad>
 
 module test_hex_drive_mask() {
     hex_drive_mask(size=3, length=5);
