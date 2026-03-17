@@ -1,0 +1,434 @@
+[[test]]
+name = "test_bezier_points"
+script = '''
+include <../std.scad>
+
+module test_bezier_points() {
+    // Degree-1 Bezier (linear): at u=0 → first ctrl pt, u=1 → last
+    bez = [[0,0],[10,10]];
+    assert_approx(bezier_points(bez, 0), [0,0]);
+    assert_approx(bezier_points(bez, 1), [10,10]);
+    assert_approx(bezier_points(bez, 0.5), [5,5]);
+}
+test_bezier_points();
+'''
+
+[[test]]
+name = "test_bezier_curve"
+script = '''
+include <../std.scad>
+
+module test_bezier_curve() {
+    bez = [[0,0],[5,10],[10,0]];
+    curve = bezier_curve(bez, splinesteps=10);
+    assert(is_path(curve, 2));
+    assert(len(curve) == 11);
+    // Endpoints match control points
+    assert_approx(curve[0],    [0,0]);
+    assert_approx(last(curve), [10,0]);
+}
+test_bezier_curve();
+'''
+
+[[test]]
+name = "test_bezier_derivative"
+script = '''
+include <../std.scad>
+
+module test_bezier_derivative() {
+    // Linear bezier: derivative is constant = endpoint - startpoint
+    bez = [[0,0],[10,0]];
+    d = bezier_derivative(bez, 0.5);
+    assert_approx(d, [10,0]);
+}
+test_bezier_derivative();
+'''
+
+[[test]]
+name = "test_bezier_tangent"
+script = '''
+include <../std.scad>
+
+module test_bezier_tangent() {
+    // Linear bezier: tangent is unit vector in direction of travel
+    bez = [[0,0],[10,0]];
+    t = bezier_tangent(bez, 0.5);
+    assert_approx(norm(t), 1);
+    assert_approx(t, [1,0]);
+}
+test_bezier_tangent();
+'''
+
+[[test]]
+name = "test_bezier_curvature"
+script = '''
+include <../std.scad>
+
+module test_bezier_curvature() {
+    // Quadratic bezier straight line: zero curvature
+    bez = [[0,0],[5,0],[10,0]];
+    k = bezier_curvature(bez, 0.5);
+    assert(abs(k) < 1e-6);
+    // Curved bezier: non-zero curvature at peak
+    bez2 = [[0,0],[5,10],[10,0]];
+    k2 = bezier_curvature(bez2, 0.5);
+    assert(k2 > 0);
+}
+test_bezier_curvature();
+'''
+
+[[test]]
+name = "test_bezier_closest_point"
+script = '''
+include <../std.scad>
+
+module test_bezier_closest_point() {
+    // Straight line bezier: closest point to [5,2] should be near [5,0]
+    bez = [[0,0],[10,0]];
+    u = bezier_closest_point(bez, [5,2]);
+    pt = bezier_points(bez, u);
+    assert(norm(pt - [5,0]) < 0.1);
+}
+test_bezier_closest_point();
+'''
+
+[[test]]
+name = "test_bezier_length"
+script = '''
+include <../std.scad>
+
+module test_bezier_length() {
+    // Straight line from [0,0] to [10,0]: length = 10
+    bez = [[0,0],[10,0]];
+    l = bezier_length(bez);
+    assert(abs(l - 10) < 0.01);
+}
+test_bezier_length();
+'''
+
+[[test]]
+name = "test_bezier_line_intersection"
+script = '''
+include <../std.scad>
+
+module test_bezier_line_intersection() {
+    // Parabola bezier intersecting y=5 line
+    bez = [[0,0],[5,10],[10,0]];
+    line = [[0,5],[10,5]];
+    us = bezier_line_intersection(bez, line);
+    assert(is_list(us));
+    assert(len(us) > 0);
+    // Points should be near y=5
+    for (u=us) assert(abs(bezier_points(bez, u).y - 5) < 0.01);
+}
+test_bezier_line_intersection();
+'''
+
+[[test]]
+name = "test_bezpath_points"
+script = '''
+include <../std.scad>
+
+module test_bezpath_points() {
+    bezpath = [
+        [0,0], [5,5], [10,5], [15,0]
+    ];
+    pt = bezpath_points(bezpath, 0, 0);
+    assert_approx(pt, [0,0]);
+    pt2 = bezpath_points(bezpath, 0, 1);
+    assert_approx(pt2, [15,0]);
+}
+test_bezpath_points();
+'''
+
+[[test]]
+name = "test_bezpath_curve"
+script = '''
+include <../std.scad>
+
+module test_bezpath_curve() {
+    bezpath = [
+        [0,0], [5,5], [10,5], [15,0]
+    ];
+    curve = bezpath_curve(bezpath, splinesteps=8);
+    assert(is_path(curve, 2));
+    assert(len(curve) > 2);
+    assert_approx(curve[0],    [0,0]);
+    assert_approx(last(curve), [15,0]);
+}
+test_bezpath_curve();
+'''
+
+[[test]]
+name = "test_bezpath_closest_point"
+script = '''
+include <../std.scad>
+
+module test_bezpath_closest_point() {
+    bezpath = [[0,0],[5,5],[10,5],[15,0]];
+    result = bezpath_closest_point(bezpath, [7.5, 5]);
+    // result is [seg, u]
+    assert(is_list(result));
+    assert(len(result) == 2);
+}
+test_bezpath_closest_point();
+'''
+
+[[test]]
+name = "test_bezpath_length"
+script = '''
+include <../std.scad>
+
+module test_bezpath_length() {
+    // Single cubic segment spanning 10 in x: length should be close to 10
+    bezpath = [[0,0],[3,0],[7,0],[10,0]];
+    l = bezpath_length(bezpath);
+    assert(abs(l - 10) < 0.1);
+}
+test_bezpath_length();
+'''
+
+[[test]]
+name = "test_path_to_bezpath"
+script = '''
+include <../std.scad>
+
+module test_path_to_bezpath() {
+    path = [[0,0],[5,0],[10,5],[15,0]];
+    bpath = path_to_bezpath(path, closed=false, size=0.5);
+    // Each segment is 4 control points; n segments → 3*n+1 points
+    assert(is_list(bpath));
+    assert(len(bpath) > len(path));
+}
+test_path_to_bezpath();
+'''
+
+[[test]]
+name = "test_path_to_bezcornerpath"
+script = '''
+include <../std.scad>
+
+module test_path_to_bezcornerpath() {
+    path = [[0,0],[10,0],[10,10],[0,10]];
+    bpath = path_to_bezcornerpath(path, closed=true, size=1);
+    assert(is_list(bpath));
+    assert(len(bpath) > len(path));
+}
+test_path_to_bezcornerpath();
+'''
+
+[[test]]
+name = "test_bezpath_close_to_axis"
+script = '''
+include <../std.scad>
+
+module test_bezpath_close_to_axis() {
+    // Simple bezpath above the x-axis
+    bezpath = [[0,1],[5,1],[10,1],[15,1]];
+    closed = bezpath_close_to_axis(bezpath, axis="X");
+    assert(is_list(closed));
+    assert(len(closed) > len(bezpath));
+}
+test_bezpath_close_to_axis();
+'''
+
+[[test]]
+name = "test_bezpath_offset"
+script = '''
+include <../std.scad>
+
+module test_bezpath_offset() {
+    bezpath = [[0,0],[5,0],[10,0],[15,0]];
+    // Offset upward by 2
+    offset_path = bezpath_offset([0,2], bezpath);
+    assert(is_list(offset_path));
+    // Offset version should be higher in y
+    orig_curve = bezpath_curve(bezpath);
+    off_curve  = bezpath_curve(offset_path);
+    assert(mean(column(off_curve, 1)) > mean(column(orig_curve, 1)) - 0.01);
+}
+test_bezpath_offset();
+'''
+
+[[test]]
+name = "test_is_bezier_patch"
+script = '''
+include <../std.scad>
+
+module test_is_bezier_patch() {
+    // A 2×2 patch is valid
+    patch = [[[0,0,0],[1,0,0]],[[0,1,0],[1,1,0]]];
+    assert(is_bezier_patch(patch));
+    // Not a patch
+    assert(!is_bezier_patch(42));
+    assert(!is_bezier_patch([1,2,3]));
+}
+test_is_bezier_patch();
+'''
+
+[[test]]
+name = "test_bezier_patch_flat"
+script = '''
+include <../std.scad>
+
+module test_bezier_patch_flat() {
+    patch = bezier_patch_flat(size=[10,10], N=2);
+    assert(is_bezier_patch(patch));
+    // 3×3 control points (N=2 → degree 2)
+    assert(len(patch) == 3);
+    assert(len(patch[0]) == 3);
+}
+test_bezier_patch_flat();
+'''
+
+[[test]]
+name = "test_bezier_patch_reverse"
+script = '''
+include <../std.scad>
+
+module test_bezier_patch_reverse() {
+    patch = [[[0,0,0],[1,0,0],[2,0,0]],
+             [[0,1,0],[1,1,0],[2,1,0]],
+             [[0,2,0],[1,2,0],[2,2,0]]];
+    rev = bezier_patch_reverse(patch);
+    assert(is_bezier_patch(rev));
+    // Reversing twice should give original
+    assert_approx(bezier_patch_reverse(rev), patch);
+}
+test_bezier_patch_reverse();
+'''
+
+[[test]]
+name = "test_bezier_patch_points"
+script = '''
+include <../std.scad>
+
+module test_bezier_patch_points() {
+    // Flat patch on z=0: any u,v → z=0
+    patch = [[[0,0,0],[5,0,0],[10,0,0]],
+             [[0,5,0],[5,5,0],[10,5,0]],
+             [[0,10,0],[5,10,0],[10,10,0]]];
+    pt = bezier_patch_points(patch, 0.5, 0.5);
+    assert_approx(pt.z, 0);
+    // Corner point at u=0,v=0
+    pt00 = bezier_patch_points(patch, 0, 0);
+    assert_approx(pt00, [0,0,0]);
+}
+test_bezier_patch_points();
+'''
+
+[[test]]
+name = "test_bezier_patch_normals"
+script = '''
+include <../std.scad>
+
+module test_bezier_patch_normals() {
+    // Flat patch on z=0: normals should point in ±Z
+    patch = [[[0,0,0],[5,0,0],[10,0,0]],
+             [[0,5,0],[5,5,0],[10,5,0]],
+             [[0,10,0],[5,10,0],[10,10,0]]];
+    n = bezier_patch_normals(patch, 0.5, 0.5);
+    assert_approx(abs(n.z), 1);
+}
+test_bezier_patch_normals();
+'''
+
+[[test]]
+name = "test_bezier_vnf"
+script = '''
+include <../std.scad>
+
+module test_bezier_vnf() {
+    patch = bezier_patch_flat(size=[10,10], N=2);
+    v = bezier_vnf([patch], splinesteps=4);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_bezier_vnf();
+'''
+
+[[test]]
+name = "test_bez_begin"
+script = '''
+include <../std.scad>
+
+module test_bez_begin() {
+    // bez_begin creates start control points for a bezier path
+    spec = bez_begin([0,0], 0, r=5);
+    assert(is_list(spec));
+    assert(len(spec) > 0);
+}
+test_bez_begin();
+'''
+
+[[test]]
+name = "test_bez_end"
+script = '''
+include <../std.scad>
+
+module test_bez_end() {
+    spec = bez_end([10,0], 180, r=5);
+    assert(is_list(spec));
+    assert(len(spec) > 0);
+}
+test_bez_end();
+'''
+
+[[test]]
+name = "test_bez_tang"
+script = '''
+include <../std.scad>
+
+module test_bez_tang() {
+    spec = bez_tang([5,5], 0, r1=3, r2=3);
+    assert(is_list(spec));
+    assert(len(spec) > 0);
+}
+test_bez_tang();
+'''
+
+[[test]]
+name = "test_bez_joint"
+script = '''
+include <../std.scad>
+
+module test_bez_joint() {
+    spec = bez_joint([5,5], a1=0, a2=90, r1=3, r2=3);
+    assert(is_list(spec));
+    assert(len(spec) > 0);
+}
+test_bez_joint();
+'''
+
+[[test]]
+name = "test_bezier_sweep"
+script = '''
+include <../std.scad>
+
+module test_bezier_sweep() {
+    $fn = 8;
+    shape = circle(r=2);
+    bez = [[0,0,0],[5,0,0],[10,0,0],[15,0,0]];
+    v = bezier_sweep(shape, bez);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_bezier_sweep();
+'''
+
+[[test]]
+name = "test_bezpath_sweep"
+script = '''
+include <../std.scad>
+
+module test_bezpath_sweep() {
+    $fn = 8;
+    shape = circle(r=2);
+    bezpath = [[0,0,0],[5,0,0],[10,0,0],[15,0,0]];
+    v = bezpath_sweep(shape, bezpath);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_bezpath_sweep();
+'''

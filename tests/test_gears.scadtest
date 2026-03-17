@@ -1,0 +1,278 @@
+[[test]]
+name = "test_circular_pitch"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_circular_pitch() {
+    // circular_pitch from mod: mod * PI
+    assert_approx(circular_pitch(mod=2), 2*PI);
+    // circular_pitch from circ_pitch: identity
+    assert_approx(circular_pitch(circ_pitch=5), 5);
+}
+test_circular_pitch();
+'''
+
+[[test]]
+name = "test_diametral_pitch"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_diametral_pitch() {
+    // diametral pitch from circ_pitch: PI/circ_pitch * INCH
+    cp = 5;
+    dp = diametral_pitch(circ_pitch=cp);
+    assert(dp > 0);
+    // from mod: PI/(mod*PI)*INCH = INCH/mod
+    dp2 = diametral_pitch(mod=2);
+    assert(dp2 > 0);
+}
+test_diametral_pitch();
+'''
+
+[[test]]
+name = "test_module_value"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_module_value() {
+    // module from circ_pitch: circ_pitch / PI
+    assert_approx(module_value(circ_pitch=PI), 1);
+    assert_approx(module_value(mod=3), 3);
+}
+test_module_value();
+'''
+
+[[test]]
+name = "test_pitch_radius"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_pitch_radius() {
+    // pitch_radius = circ_pitch * teeth / (2*PI)
+    pr = pitch_radius(mod=2, teeth=20);
+    assert_approx(pr, 20);  // mod*teeth/2 = 2*20/2 = 20
+}
+test_pitch_radius();
+'''
+
+[[test]]
+name = "test_outer_radius"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_outer_radius() {
+    // outer_radius > pitch_radius for external gears
+    pr = pitch_radius(mod=2, teeth=20);
+    or = outer_radius(mod=2, teeth=20);
+    assert(or > pr);
+}
+test_outer_radius();
+'''
+
+[[test]]
+name = "test_root_radius"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_root_radius() {
+    // root_radius < pitch_radius for external gears
+    pr = pitch_radius(mod=2, teeth=20);
+    rr = root_radius(mod=2, teeth=20);
+    assert(rr < pr);
+}
+test_root_radius();
+'''
+
+[[test]]
+name = "test_bevel_pitch_angle"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_bevel_pitch_angle() {
+    // Equal teeth → 45° pitch angle at 90° drive angle
+    angle = bevel_pitch_angle(teeth=20, mate_teeth=20);
+    assert_approx(angle, 45);
+    // More mate teeth → smaller pitch angle
+    angle2 = bevel_pitch_angle(teeth=10, mate_teeth=20);
+    assert(angle2 < 45);
+}
+test_bevel_pitch_angle();
+'''
+
+[[test]]
+name = "test_gear_dist"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_gear_dist() {
+    // Standard center distance = sum of pitch radii
+    d = gear_dist(mod=2, teeth1=20, teeth2=20);
+    pr = pitch_radius(mod=2, teeth=20);
+    assert_approx(d, 2*pr);
+}
+test_gear_dist();
+'''
+
+[[test]]
+name = "test_auto_profile_shift"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_auto_profile_shift() {
+    // Large tooth count → zero shift
+    ps = auto_profile_shift(teeth=30);
+    assert(is_num(ps));
+    assert(ps <= 1);
+}
+test_auto_profile_shift();
+'''
+
+[[test]]
+name = "test_get_profile_shift"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_get_profile_shift() {
+    // Use ring+spur example from docs: ring=57 teeth, spur=25 teeth, mod=2, desired=34
+    // internal1=true means ring gear; returns ~1.2
+    ps = get_profile_shift(desired=34, teeth1=57, teeth2=25, mod=2, internal1=true);
+    assert(is_num(ps));
+    assert(ps > 0);
+}
+test_get_profile_shift();
+'''
+
+[[test]]
+name = "test_gear_shorten"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_gear_shorten() {
+    // gear_shorten doesn't take a pitch parameter — uses teeth only
+    gs = gear_shorten(teeth1=20, teeth2=20);
+    assert(is_num(gs));
+}
+test_gear_shorten();
+'''
+
+[[test]]
+name = "test_worm_dist"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_worm_dist() {
+    d = worm_dist(d=10, starts=1, teeth=20, mod=2);
+    assert(d > 0);
+}
+test_worm_dist();
+'''
+
+[[test]]
+name = "test_worm_gear_thickness"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_worm_gear_thickness() {
+    t = worm_gear_thickness(mod=2, teeth=20, worm_diam=10);
+    assert(t > 0);
+}
+test_worm_gear_thickness();
+'''
+
+[[test]]
+name = "test_spur_gear2d"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_spur_gear2d() {
+    $fn = 4;
+    v = spur_gear2d(mod=2, teeth=12);
+    assert(is_region(v) || is_path(v, 2));
+    assert(len(v) > 0);
+}
+test_spur_gear2d();
+'''
+
+[[test]]
+name = "test_spur_gear"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_spur_gear() {
+    $fn = 4;
+    v = spur_gear(mod=2, teeth=12, thickness=5);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_spur_gear();
+'''
+
+[[test]]
+name = "test_rack2d"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_rack2d() {
+    // rack2d uses 'backing' for underside height, not 'height'
+    v = rack2d(mod=2, teeth=5, backing=5);
+    assert(is_path(v, 2) || is_region(v));
+}
+test_rack2d();
+'''
+
+[[test]]
+name = "test_rack"
+assert_no_echoes = false
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_rack() {
+    // rack uses 'backing' for underside height
+    // herringbone=true uses sweep() instead of linear_sweep(), avoiding anchor bug
+    v = rack(mod=2, teeth=10, thickness=5, backing=5, helical=20, herringbone=true);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_rack();
+'''
+
+[[test]]
+name = "test_planetary_gears"
+script = '''
+include <../std.scad>
+include <../gears.scad>
+
+module test_planetary_gears() {
+    // Returns [["sun", z, ps, spin], ["ring", ...], ["planets", ...], ["ratio", ...]]
+    result = planetary_gears(n=3, max_teeth=50, mod=2, ring_carrier=1.5);
+    assert(is_list(result));
+    assert(len(result) == 4);
+    // First entry is sun gear info, second is ring, third is planets, fourth is ratio
+    assert(result[0][0] == "sun");
+    assert(result[1][0] == "ring");
+    assert(result[3][0] == "ratio");
+    // Tooth counts are positive integers
+    assert(is_int(result[0][1]) && result[0][1] > 0);
+    assert(is_int(result[1][1]) && result[1][1] > 0);
+}
+test_planetary_gears();
+'''
