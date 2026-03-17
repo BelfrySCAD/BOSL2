@@ -140,3 +140,153 @@ module test_angle_between_lines() {
 }
 test_angle_between_lines();
 '''
+
+[[test]]
+name = "test_os_circle"
+script = '''
+include <../std.scad>
+
+module test_os_circle() {
+    spec = os_circle(r=3);
+    assert(is_list(spec));
+    assert(len(spec) > 0);
+}
+test_os_circle();
+'''
+
+[[test]]
+name = "test_os_teardrop"
+script = '''
+include <../std.scad>
+
+module test_os_teardrop() {
+    spec = os_teardrop(r=3);
+    assert(is_list(spec));
+    assert(len(spec) > 0);
+}
+test_os_teardrop();
+'''
+
+[[test]]
+name = "test_os_chamfer"
+script = '''
+include <../std.scad>
+
+module test_os_chamfer() {
+    spec = os_chamfer(height=2, width=2);
+    assert(is_list(spec));
+    assert(len(spec) > 0);
+}
+test_os_chamfer();
+'''
+
+[[test]]
+name = "test_os_smooth"
+script = '''
+include <../std.scad>
+
+module test_os_smooth() {
+    spec = os_smooth(cut=1);
+    assert(is_list(spec));
+    assert(len(spec) > 0);
+}
+test_os_smooth();
+'''
+
+[[test]]
+name = "test_os_profile"
+script = '''
+include <../std.scad>
+
+module test_os_profile() {
+    // Points must be a valid 2D path
+    spec = os_profile(points=[[0,0],[1,0],[1,1]]);
+    assert(is_list(spec));
+    assert(len(spec) > 0);
+}
+test_os_profile();
+'''
+
+[[test]]
+name = "test_os_mask"
+script = '''
+include <../std.scad>
+
+module test_os_mask() {
+    mask = mask2d_roundover(r=3);
+    spec = os_mask(mask);
+    assert(is_list(spec));
+    assert(len(spec) > 0);
+}
+test_os_mask();
+'''
+
+[[test]]
+name = "test_offset_sweep"
+script = '''
+include <../std.scad>
+
+module test_offset_sweep() {
+    $fn = 8;
+    path = square(10, center=true);
+    v = offset_sweep(path, height=5, bottom=os_circle(r=1), top=os_chamfer(height=1, width=1));
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+    assert(len(v[1]) > 0);
+}
+test_offset_sweep();
+'''
+
+[[test]]
+name = "test_rounded_prism"
+script = '''
+include <../std.scad>
+
+module test_rounded_prism() {
+    $fn = 8;
+    v = rounded_prism(square(10, center=true), height=5,
+                      joint_top=1, joint_bot=1, joint_sides=1);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_rounded_prism();
+'''
+
+[[test]]
+name = "test_convex_offset_extrude"
+script = '''
+include <../std.scad>
+
+module test_convex_offset_extrude() {
+    $fn = 8;
+    convex_offset_extrude(height=5, bottom=os_circle(r=1), top=os_chamfer(height=1, width=1))
+        square(10, center=true);
+}
+test_convex_offset_extrude();
+'''
+
+[[test]]
+name = "test_join_prism"
+script = '''
+include <../std.scad>
+
+module test_join_prism() {
+    $fn = 12;
+    v = join_prism(circle(r=5, $fn=12), base="plane", length=8, fillet=2);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_join_prism();
+'''
+
+[[test]]
+name = "test_bent_cutout_mask"
+script = '''
+include <../std.scad>
+
+module test_bent_cutout_mask() {
+    $fn = 32;
+    bent_cutout_mask(r=20, thickness=2, path=apply(xscale(2), circle(r=3, $fn=32)));
+}
+test_bent_cutout_mask();
+'''

@@ -358,3 +358,65 @@ module test_cylindrical_heightfield() {
 }
 test_cylindrical_heightfield();
 '''
+
+[[test]]
+name = "test_cuboid"
+script = '''
+include <../std.scad>
+
+module test_cuboid() {
+    // Module-only: just verify no crash
+    cuboid([10,8,6]);
+}
+test_cuboid();
+'''
+
+[[test]]
+name = "test_rect_tube"
+script = '''
+include <../std.scad>
+
+module test_rect_tube() {
+    rect_tube(size=[20,20], wall=2, h=10);
+}
+test_rect_tube();
+'''
+
+[[test]]
+name = "test_tube"
+script = '''
+include <../std.scad>
+
+module test_tube() {
+    $fn = 8;
+    tube(h=10, or=10, wall=2);
+}
+test_tube();
+'''
+
+[[test]]
+name = "test_fillet"
+script = '''
+include <../std.scad>
+
+module test_fillet() {
+    $fn = 8;
+    fillet(l=10, r=3);
+}
+test_fillet();
+'''
+
+[[test]]
+name = "test_textured_tile"
+script = '''
+include <../std.scad>
+
+module test_textured_tile() {
+    $fn = 4;
+    tex = [[0,1],[1,0]];  // simple 2D height array
+    v = textured_tile(tex, size=[10,10,1], tex_reps=[2,2]);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_textured_tile();
+'''

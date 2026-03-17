@@ -156,3 +156,48 @@ module test_rot_resample() {
 }
 test_rot_resample();
 '''
+
+[[test]]
+name = "test_spiral_sweep"
+script = '''
+include <../std.scad>
+
+module test_spiral_sweep() {
+    $fn = 8;
+    poly = square([2,1], center=true);
+    v = spiral_sweep(poly, h=10, r=5, turns=1);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_spiral_sweep();
+'''
+
+[[test]]
+name = "test_path_sweep2d"
+script = '''
+include <../std.scad>
+
+module test_path_sweep2d() {
+    $fn = 8;
+    shape = square([2,1], center=true);
+    path = [[0,0],[5,0],[10,5],[15,0]];
+    v = path_sweep2d(shape, path);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_path_sweep2d();
+'''
+
+[[test]]
+name = "test_texture"
+script = '''
+include <../std.scad>
+
+module test_texture() {
+    // texture() returns a heightfield or VNF for a named texture
+    tx = texture("bricks");
+    assert(is_list(tx));
+    assert(len(tx) > 0);
+}
+test_texture();
+'''

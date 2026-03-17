@@ -1,0 +1,119 @@
+[[test]]
+name = "test_half_joiner_clear"
+script = '''
+include <../std.scad>
+include <../joiners.scad>
+
+module test_half_joiner_clear() {
+    $fn = 8;
+    v = half_joiner_clear(l=10, w=8);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_half_joiner_clear();
+'''
+
+[[test]]
+name = "test_half_joiner"
+script = '''
+include <../std.scad>
+include <../joiners.scad>
+
+module test_half_joiner() {
+    $fn = 8;
+    v = half_joiner(l=10, w=8, base=5);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_half_joiner();
+'''
+
+[[test]]
+name = "test_half_joiner2"
+script = '''
+include <../std.scad>
+include <../joiners.scad>
+
+module test_half_joiner2() {
+    $fn = 8;
+    v = half_joiner2(l=10, w=8, base=5);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);
+}
+test_half_joiner2();
+'''
+
+[[test]]
+name = "test_joiner_clear"
+script = '''
+include <../std.scad>
+include <../joiners.scad>
+
+module test_joiner_clear() {
+    $fn = 8;
+    joiner_clear(l=20, w=8);
+}
+test_joiner_clear();
+'''
+
+[[test]]
+name = "test_joiner"
+script = '''
+include <../std.scad>
+include <../joiners.scad>
+
+module test_joiner() {
+    $fn = 8;
+    joiner(l=20, w=8, base=5);
+}
+test_joiner();
+'''
+
+[[test]]
+name = "test_dovetail"
+script = '''
+include <../std.scad>
+include <../joiners.scad>
+
+module test_dovetail() {
+    dovetail("male", w=10, h=5, slide=10);
+}
+test_dovetail();
+'''
+
+[[test]]
+name = "test_snap_pin"
+script = '''
+include <../std.scad>
+include <../joiners.scad>
+
+module test_snap_pin() {
+    snap_pin("standard");
+}
+test_snap_pin();
+'''
+
+[[test]]
+name = "test_snap_pin_socket"
+script = '''
+include <../std.scad>
+include <../joiners.scad>
+
+module test_snap_pin_socket() {
+    snap_pin_socket("standard");
+}
+test_snap_pin_socket();
+'''
+
+[[test]]
+name = "test_rabbit_clip"
+script = '''
+include <../std.scad>
+include <../joiners.scad>
+
+module test_rabbit_clip() {
+    $fn = 8;
+    rabbit_clip("pin", length=10, width=8, snap=1, thickness=1, depth=3);
+}
+test_rabbit_clip();
+'''
