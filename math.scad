@@ -1262,7 +1262,6 @@ function random_polygon(n=3,size=1, angle_sep=0.2, seed) =
                      max(dang)<180 ? angs : randang(seed=u_add(seed,angs[0])),
         angs = randang(seed), 
         rads = is_undef(seed) ? rands(rmin,rmax,n) : rands(rmin,rmax,n,seed+angs[0])
-        ,f=echo(rads=rads)
       )
       [for(i=count(n)) rads[i]*[cos(angs[i]), -sin(angs[i])]];
 
