@@ -1705,3 +1705,26 @@ module test_sphere_line_intersection() {
 }
 test_sphere_line_intersection();
 '''
+
+[[test]]
+name = "test_circle_circle_tangents"
+script = '''
+include <../std.scad>
+
+module test_circle_circle_tangents() {
+    // Non-overlapping, different radii → 4 tangents
+    tans = circle_circle_tangents(r1=3, cp1=[0,0], r2=1, cp2=[10,0]);
+    assert(len(tans) == 4);
+    for (t = tans) {
+        assert(len(t) == 2);
+        assert(is_path(t, 2));
+    }
+    // Same-radius circles overlapping → only 2 external tangents
+    tans2 = circle_circle_tangents(r1=5, cp1=[0,0], r2=5, cp2=[5,0]);
+    assert(len(tans2) == 2);
+    // One circle entirely inside the other → 0 tangents
+    tans3 = circle_circle_tangents(r1=10, cp1=[0,0], r2=1, cp2=[2,0]);
+    assert(tans3 == []);
+}
+test_circle_circle_tangents();
+'''

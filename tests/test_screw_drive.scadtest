@@ -31,3 +31,65 @@ module test_torx_depth() {
 }
 test_torx_depth();
 '''
+
+[[test]]
+name = "test_torx_info"
+script = '''
+include <../std.scad>
+include <../screw_drive.scad>
+
+module test_torx_info() {
+    info10 = torx_info(10);
+    assert(is_list(info10));
+    assert(len(info10) == 5);
+    assert_approx(info10[0], 2.80);  // OD
+    assert_approx(info10[1], 2.05);  // ID
+    assert_approx(info10[2], 1.142); // H (depth)
+
+    info25 = torx_info(25);
+    assert_approx(info25[0], 4.50);
+    assert_approx(info25[2], 1.61);
+}
+test_torx_info();
+'''
+
+[[test]]
+name = "test_phillips_depth"
+script = '''
+include <../std.scad>
+include <../screw_drive.scad>
+
+module test_phillips_depth() {
+    // phillips_depth returns depth for a given diameter
+    // For size #2 (num=2), shaft=6, g=2.29
+    // Valid diameters are between g and shaft
+    d2 = phillips_depth("#2", 4);
+    assert(is_num(d2));
+    assert(d2 > 0);
+    // Out-of-range diameters return undef
+    assert(is_undef(phillips_depth("#2", 0)));
+    assert(is_undef(phillips_depth("#2", 10)));
+}
+test_phillips_depth();
+'''
+
+[[test]]
+name = "test_phillips_diam"
+script = '''
+include <../std.scad>
+include <../screw_drive.scad>
+
+module test_phillips_diam() {
+    // phillips_diam returns diameter at a given depth
+    d2 = phillips_diam("#2", 1);
+    assert(is_num(d2));
+    assert(d2 > 0);
+    // Out-of-range depths return undef
+    assert(is_undef(phillips_diam("#2", 0)));
+    // round-trip: depth at diameter d → diameter should be close to d
+    d = 4;
+    depth = phillips_depth("#2", d);
+    assert_approx(phillips_diam("#2", depth), d);
+}
+test_phillips_diam();
+'''

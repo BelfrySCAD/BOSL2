@@ -1,0 +1,140 @@
+[[test]]
+name = "test_half_of"
+script = '''
+include <../std.scad>
+
+module test_half_of() {
+    // half_of applied to a path: keep only points in the specified half
+    sq = square(10, center=true);
+    // Keep back half (y>0)
+    top = half_of(sq, v=BACK);
+    assert(is_path(top) || is_region(top));
+    for (p = (is_region(top) ? flatten(top) : top))
+        assert(p.y >= -0.001);
+}
+test_half_of();
+'''
+
+[[test]]
+name = "test_left_half"
+script = '''
+include <../std.scad>
+
+module test_left_half() {
+    sq = square(10, center=true);
+    h = left_half(sq);
+    assert(is_path(h) || is_region(h));
+    for (p = (is_region(h) ? flatten(h) : h))
+        assert(p.x <= 0.001);
+}
+test_left_half();
+'''
+
+[[test]]
+name = "test_right_half"
+script = '''
+include <../std.scad>
+
+module test_right_half() {
+    sq = square(10, center=true);
+    h = right_half(sq);
+    assert(is_path(h) || is_region(h));
+    for (p = (is_region(h) ? flatten(h) : h))
+        assert(p.x >= -0.001);
+}
+test_right_half();
+'''
+
+[[test]]
+name = "test_front_half"
+script = '''
+include <../std.scad>
+
+module test_front_half() {
+    sq = square(10, center=true);
+    h = front_half(sq);
+    assert(is_path(h) || is_region(h));
+    for (p = (is_region(h) ? flatten(h) : h))
+        assert(p.y <= 0.001);
+}
+test_front_half();
+'''
+
+[[test]]
+name = "test_back_half"
+script = '''
+include <../std.scad>
+
+module test_back_half() {
+    sq = square(10, center=true);
+    h = back_half(sq);
+    assert(is_path(h) || is_region(h));
+    for (p = (is_region(h) ? flatten(h) : h))
+        assert(p.y >= -0.001);
+}
+test_back_half();
+'''
+
+[[test]]
+name = "test_top_half"
+script = '''
+include <../std.scad>
+
+module test_top_half() {
+    // top_half on a VNF: keeps z>=0 part
+    vnf = cube(10, center=true);
+    h = top_half(vnf);
+    assert(is_vnf(h));
+    for (pt = h[0]) assert(pt.z >= -0.001);
+}
+test_top_half();
+'''
+
+[[test]]
+name = "test_bottom_half"
+script = '''
+include <../std.scad>
+
+module test_bottom_half() {
+    vnf = cube(10, center=true);
+    h = bottom_half(vnf);
+    assert(is_vnf(h));
+    for (pt = h[0]) assert(pt.z <= 0.001);
+}
+test_bottom_half();
+'''
+
+[[test]]
+name = "test_ptn_sect"
+script = '''
+include <../std.scad>
+
+module test_ptn_sect() {
+    // Numeric type: returns a straight segment
+    seg = ptn_sect(5);
+    assert(is_path(seg, 2));
+    assert_approx(seg[0], [0,0]);
+    assert_approx(seg[1], [5,0]);
+
+    // String type: "flat"
+    flat = ptn_sect("flat");
+    assert(is_path(flat, 2));
+}
+test_ptn_sect();
+'''
+
+[[test]]
+name = "test_partition_path"
+script = '''
+include <../std.scad>
+
+module test_partition_path() {
+    // Simple numeric pathdesc
+    path = partition_path([10]);
+    assert(is_path(path, 2));
+    assert(len(path) >= 2);
+    // Path extends symmetrically around x=0
+    assert(abs(path[0].x + last(path).x) < 0.01);
+}
+test_partition_path();
+'''

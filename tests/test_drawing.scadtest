@@ -70,3 +70,55 @@ module test_dashed_stroke() {
 }
 test_dashed_stroke();
 '''
+
+[[test]]
+name = "test_catenary"
+script = '''
+include <../std.scad>
+
+module test_catenary() {
+    // catenary(width, droop, n) → a 2D path of n points
+    path = catenary(width=100, droop=20, n=11);
+    assert(len(path) == 11);
+    assert(is_path(path, 2));
+    // Endpoints at x = ±width/2
+    assert_approx(path[0].x, -50);
+    assert_approx(last(path).x, 50);
+    // Center point is at x=0 and sags by droop=20
+    assert_approx(path[5].x, 0);
+    assert(abs(path[5].y - path[0].y + 20) < 0.1);
+}
+test_catenary();
+'''
+
+[[test]]
+name = "test_helix"
+script = '''
+include <../std.scad>
+
+module test_helix() {
+    // helix(r=5, l=10, turns=2) → a 3D path
+    path = helix(r=5, l=10, turns=2);
+    assert(is_path(path, 3));
+    assert(len(path) >= 3);
+    // First point should be on the XY plane at radius 5
+    assert_approx(norm([path[0].x, path[0].y]), 5);
+    // Z should go from 0 to l=10
+    assert_approx(path[0].z, 0);
+    assert_approx(last(path).z, 10);
+}
+test_helix();
+'''
+
+[[test]]
+name = "test_stroke"
+expect_success = false
+script = '''
+include <../std.scad>
+
+module test_stroke() {
+    // stroke() as a function is no_function() — always asserts false
+    x = stroke([[0,0],[1,0]]);
+}
+test_stroke();
+'''

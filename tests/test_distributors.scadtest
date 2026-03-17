@@ -16,3 +16,238 @@ module test_line_copies() {
 }
 test_line_copies();
 '''
+
+[[test]]
+name = "test_move_copies"
+script = '''
+include <../std.scad>
+
+module test_move_copies() {
+    // function form: returns list of translation matrices
+    mats = move_copies([[0,0,0],[10,0,0],[20,0,0]]);
+    assert(len(mats) == 3);
+    // with p=: applies matrices to point
+    pts = move_copies([[0,0,0],[10,0,0],[20,0,0]], p=[0,0,0]);
+    assert_equal(pts, [[0,0,0],[10,0,0],[20,0,0]]);
+}
+test_move_copies();
+'''
+
+[[test]]
+name = "test_xcopies"
+script = '''
+include <../std.scad>
+
+module test_xcopies() {
+    // function form: returns translation matrices
+    mats = xcopies(10, n=3);
+    assert(len(mats) == 3);
+    // with p=: transforms a point
+    pts = xcopies(10, n=3, p=[0,0,0]);
+    assert_equal(pts, [[-10,0,0],[0,0,0],[10,0,0]]);
+}
+test_xcopies();
+'''
+
+[[test]]
+name = "test_ycopies"
+script = '''
+include <../std.scad>
+
+module test_ycopies() {
+    mats = ycopies(10, n=3);
+    assert(len(mats) == 3);
+    pts = ycopies(10, n=3, p=[0,0,0]);
+    assert_equal(pts, [[0,-10,0],[0,0,0],[0,10,0]]);
+}
+test_ycopies();
+'''
+
+[[test]]
+name = "test_zcopies"
+script = '''
+include <../std.scad>
+
+module test_zcopies() {
+    mats = zcopies(10, n=3);
+    assert(len(mats) == 3);
+    pts = zcopies(10, n=3, p=[0,0,0]);
+    assert_equal(pts, [[0,0,-10],[0,0,0],[0,0,10]]);
+}
+test_zcopies();
+'''
+
+[[test]]
+name = "test_xflip_copy"
+script = '''
+include <../std.scad>
+
+module test_xflip_copy() {
+    mats = xflip_copy();
+    assert(len(mats) == 2);
+    pts = xflip_copy(p=[[5,3,0]]);
+    assert(len(pts) == 2);
+    // original and mirrored
+    assert_approx(pts[0][0], [5,3,0]);
+    assert_approx(pts[1][0], [-5,3,0]);
+}
+test_xflip_copy();
+'''
+
+[[test]]
+name = "test_yflip_copy"
+script = '''
+include <../std.scad>
+
+module test_yflip_copy() {
+    mats = yflip_copy();
+    assert(len(mats) == 2);
+    pts = yflip_copy(p=[[3,5,0]]);
+    assert(len(pts) == 2);
+    assert_approx(pts[0][0], [3,5,0]);
+    assert_approx(pts[1][0], [3,-5,0]);
+}
+test_yflip_copy();
+'''
+
+[[test]]
+name = "test_zflip_copy"
+script = '''
+include <../std.scad>
+
+module test_zflip_copy() {
+    mats = zflip_copy();
+    assert(len(mats) == 2);
+    pts = zflip_copy(p=[[3,0,7]]);
+    assert(len(pts) == 2);
+    assert_approx(pts[0][0], [3,0,7]);
+    assert_approx(pts[1][0], [3,0,-7]);
+}
+test_zflip_copy();
+'''
+
+[[test]]
+name = "test_mirror_copy"
+script = '''
+include <../std.scad>
+
+module test_mirror_copy() {
+    mats = mirror_copy(v=[1,0,0]);
+    assert(len(mats) == 2);
+    pts = mirror_copy(v=[1,0,0], p=[[5,0,0]]);
+    assert(len(pts) == 2);
+    assert_approx(pts[0][0], [5,0,0]);
+    assert_approx(pts[1][0], [-5,0,0]);
+}
+test_mirror_copy();
+'''
+
+[[test]]
+name = "test_rot_copies"
+script = '''
+include <../std.scad>
+
+module test_rot_copies() {
+    // n rotations of 360/n each around Z
+    mats = rot_copies(n=4);
+    assert(len(mats) == 4);
+    // with p=: transforms a point
+    pts = rot_copies(n=4, p=[[10,0,0]]);
+    assert(len(pts) == 4);
+    // first copy at 0°, second at 90°, etc.
+    assert_approx(pts[0][0], [10,0,0]);
+    assert_approx(pts[1][0], [0,10,0]);
+}
+test_rot_copies();
+'''
+
+[[test]]
+name = "test_xrot_copies"
+script = '''
+include <../std.scad>
+
+module test_xrot_copies() {
+    mats = xrot_copies(n=4);
+    assert(len(mats) == 4);
+}
+test_xrot_copies();
+'''
+
+[[test]]
+name = "test_yrot_copies"
+script = '''
+include <../std.scad>
+
+module test_yrot_copies() {
+    mats = yrot_copies(n=4);
+    assert(len(mats) == 4);
+}
+test_yrot_copies();
+'''
+
+[[test]]
+name = "test_zrot_copies"
+script = '''
+include <../std.scad>
+
+module test_zrot_copies() {
+    mats = zrot_copies(n=6);
+    assert(len(mats) == 6);
+}
+test_zrot_copies();
+'''
+
+[[test]]
+name = "test_arc_copies"
+script = '''
+include <../std.scad>
+
+module test_arc_copies() {
+    mats = arc_copies(n=6, r=10);
+    assert(len(mats) == 6);
+    // with p=: 6 copies around a circle of radius 10
+    pts = arc_copies(n=4, r=5, p=[[0,0,0]]);
+    assert(len(pts) == 4);
+}
+test_arc_copies();
+'''
+
+[[test]]
+name = "test_grid_copies"
+script = '''
+include <../std.scad>
+
+module test_grid_copies() {
+    mats = grid_copies(spacing=10, n=[3,2]);
+    assert(len(mats) == 6);
+    pts = grid_copies(spacing=10, n=[2,2], p=[0,0,0]);
+    assert(len(pts) == 4);
+    assert_equal(pts, [[-5,-5,0],[5,-5,0],[-5,5,0],[5,5,0]]);
+}
+test_grid_copies();
+'''
+
+[[test]]
+name = "test_path_copies"
+script = '''
+include <../std.scad>
+
+module test_path_copies() {
+    path = [[0,0,0],[10,0,0],[20,0,0]];
+    mats = path_copies(path, n=3);
+    assert(len(mats) == 3);
+}
+test_path_copies();
+'''
+
+[[test]]
+name = "test_sphere_copies"
+script = '''
+include <../std.scad>
+
+module test_sphere_copies() {
+    mats = sphere_copies(n=10, r=5);
+    assert(len(mats) == 10);
+}
+test_sphere_copies();
+'''

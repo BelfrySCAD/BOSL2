@@ -1,0 +1,73 @@
+[[test]]
+name = "test_is_nurbs_patch"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_is_nurbs_patch() {
+    // A 2×2 grid of 3D control points is a NURBS patch
+    patch = [[[0,0,0],[1,0,0]],[[0,1,0],[1,1,0]]];
+    assert(is_nurbs_patch(patch));
+    // Not a patch: not a list of lists of vectors
+    assert(!is_nurbs_patch(42));
+    assert(!is_nurbs_patch([1,2,3]));
+    assert(!is_nurbs_patch([[1,2,3]]));  // only one row → len first row != len last row ambiguous, but not a 2D grid
+}
+test_is_nurbs_patch();
+'''
+
+[[test]]
+name = "test_nurbs_curve"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_curve() {
+    // Degree-1 clamped NURBS through 3 control points = polyline
+    ctrl = [[0,0],[5,5],[10,0]];
+    pts = nurbs_curve(ctrl, degree=1, splinesteps=4);
+    assert(is_path(pts, 2));
+    assert(len(pts) >= 3);
+    // Endpoints should equal first and last control points
+    assert_approx(pts[0], ctrl[0]);
+    assert_approx(last(pts), last(ctrl));
+}
+test_nurbs_curve();
+'''
+
+[[test]]
+name = "test_nurbs_patch_points"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_patch_points() {
+    // Flat 3×3 patch of control points on the XY plane
+    patch = [for (i=[0:2]) [for (j=[0:2]) [i*5, j*5, 0]]];
+    pts = nurbs_patch_points(patch, degree=2, splinesteps=3);
+    // Result is a 2D grid of 3D points
+    assert(is_list(pts));
+    assert(is_list(pts[0]));
+    assert(len(pts[0][0]) == 3);
+    // All points should be on the z=0 plane
+    for (row = pts, pt = row) assert_approx(pt[2], 0);
+}
+test_nurbs_patch_points();
+'''
+
+[[test]]
+name = "test_nurbs_vnf"
+script = '''
+include <../std.scad>
+include <../nurbs.scad>
+
+module test_nurbs_vnf() {
+    // Flat 3×3 patch
+    patch = [for (i=[0:2]) [for (j=[0:2]) [i*5, j*5, 0]]];
+    v = nurbs_vnf(patch, degree=2, splinesteps=3);
+    assert(is_vnf(v));
+    assert(len(v[0]) > 0);  // has vertices
+    assert(len(v[1]) > 0);  // has faces
+}
+test_nurbs_vnf();
+'''

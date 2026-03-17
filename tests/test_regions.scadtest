@@ -296,3 +296,26 @@ module test_fill() {
 }
 test_fill();
 '''
+
+[[test]]
+name = "test_region_parts"
+script = '''
+include <../std.scad>
+
+module test_region_parts() {
+    // A simple single-polygon region → one part with no holes
+    sq = square(10, center=true);
+    parts = region_parts([sq]);
+    assert(len(parts) == 1);
+    assert(len(parts[0]) == 1);  // outer boundary only, no holes
+
+    // Region with an outer square and inner hole
+    outer = square(10, center=true);
+    inner = square(4, center=true);
+    reg = [outer, clockwise_polygon(inner)];
+    parts2 = region_parts(reg);
+    assert(len(parts2) == 1);         // one connected part
+    assert(len(parts2[0]) == 2);      // outer + 1 hole
+}
+test_region_parts();
+'''
