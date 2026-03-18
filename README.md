@@ -48,6 +48,8 @@ Users on Fedora Linux can install directly from their package repository by runn
 
 ```sudo dnf install openscad-bosl2```
 
+ - NOTE: The version might be older than the current release.
+
 ## Examples
 A lot of the features of this library are to allow shorter, easier-to-read, intent-based coding.  For example:
 
