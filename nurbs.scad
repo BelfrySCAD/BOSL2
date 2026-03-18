@@ -360,7 +360,6 @@ function _calc_mult(knots) =
   deltas(ind);
 
 
-
 // Module: debug_nurbs()
 // Synopsis: Shows a NURBS curve and its control points, knots and weights
 // SynTags: Geom
@@ -370,9 +369,10 @@ function _calc_mult(knots) =
 //   debug_nurbs(control, degree, [width], [splinesteps=], [type=], [mult=], [knots=], [size=], [show_weights=], [show_knots=], [show_idx=]);
 // Description:
 //   Displays a 2D or 3D NURBS and the associated control points to help debug NURBS curves.  You can display the
-//   control point indices and weights, and can also display the knot points.  
+//   control point indices and weights, and can also display the knot points.
+//   Instead of providing separate parameters you can give a first parameter of the form of a NURBS parameter list: `[type degree, control, knots, weights]`.  
 // Arguments:
-//   control = control points for NURBS
+//   control = list of control points in any dimension or a NURBS parameter list
 //   degree = degree of NURBS
 //   splinesteps = number of segments between each pair of knots.  Default: 16
 //   width = width of the line.  Default: 1
@@ -395,42 +395,50 @@ function _calc_mult(knots) =
 //   debug_nurbs(pts,4,type="closed",weights=weights);
 
 module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,type="clamped",knots, show_weights, show_knots=false, show_index=true)
-{  
-  $fn=8;
-  size = default(size, 3*width);
-  show_weights = default(show_weights, is_def(weights));
-  N=len(control);
-  twodim = len(control[0])==2;
-  curve = nurbs_curve(control=control,degree=degree,splinesteps=splinesteps, mult=mult,weights=weights, type=type, knots=knots);
-  stroke(curve, width=width, closed=type=="closed");//, color="green");
-  stroke(control, width=width/2, color="lightblue", closed=type=="closed");
-  if (show_knots){
-    knotpts = nurbs_curve(control=control, degree=degree, splinesteps=1, mult=mult, weights=weights, type=type, knots=knots);
-    echo(knotpts);
-    color([1,.5,1])
-      move_copies(knotpts)
-        if (twodim)circle(r=width);
-        else sphere(r=width);
+{
+  if (is_list(control) && in_list(control[0], ["closed","open","clamped"])) {
+    assert(len(control)>=5, "Invalid NURBS parameter list")
+    assert(num_defined([degree,mult,weights,knots])==0,
+           "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
+    debug_nurbs(control[2], control[1], splinesteps, width, size, weights=control[4], type=control[0], knots=control[3],
+                show_weights=show_weights, show_knots=false, show_index=true);
   }
-  color("blue")
-    if (show_index)
-      move_copies(control){
-        let(label = str($idx),
-            anch = show_weights && is_def(weights[$idx]) && weights[$idx]!=1 ? FWD : CENTER)
-          if (twodim) text(text=label, size=size, anchor=anch);
-          else rot($vpr) text3d(text=label, size=size, anchor=anch);
+  else {
+    $fn=8;
+    size = default(size, 3*width);
+    show_weights = default(show_weights, is_def(weights));
+    N=len(control);
+    twodim = len(control[0])==2;
+    curve = nurbs_curve(control=control,degree=degree,splinesteps=splinesteps, mult=mult,weights=weights, type=type, knots=knots);
+    stroke(curve, width=width, closed=type=="closed");//, color="green");
+    stroke(control, width=width/2, color="lightblue", closed=type=="closed");
+    if (show_knots){
+      knotpts = nurbs_curve(control=control, degree=degree, splinesteps=1, mult=mult, weights=weights, type=type, knots=knots);
+      echo(knotpts);
+      color([1,.5,1])
+        move_copies(knotpts)
+          if (twodim)circle(r=width);
+          else sphere(r=width);
     }
-  color("blue")
-    if ( show_weights)
-      move_copies(control){
-        if(is_def(weights[$idx]) && weights[$idx]!=1)
-          let(label = str("w=",weights[$idx]), 
-              anch = show_index ? BACK : CENTER
-              )
-          if (twodim) fwd(size/2*0)text(text=label, size=size, anchor=anch);
-          else rot($vpr) text3d(text=label, size=size, anchor=anch);
-    }
-  
+    color("blue")
+      if (show_index)
+        move_copies(control){
+          let(label = str($idx),
+              anch = show_weights && is_def(weights[$idx]) && weights[$idx]!=1 ? FWD : CENTER)
+            if (twodim) text(text=label, size=size, anchor=anch);
+            else rot($vpr) text3d(text=label, size=size, anchor=anch);
+      }
+    color("blue")
+      if ( show_weights)
+        move_copies(control){
+          if(is_def(weights[$idx]) && weights[$idx]!=1)
+            let(label = str("w=",weights[$idx]), 
+                anch = show_index ? BACK : CENTER
+                )
+            if (twodim) fwd(size/2*0)text(text=label, size=size, anchor=anch);
+            else rot($vpr) text3d(text=label, size=size, anchor=anch);
+      }
+  }
 }  
 
 
@@ -496,7 +504,6 @@ function is_nurbs_patch(x) =
 //   move_copies(flatten(pts)) sphere(r=2,$fn=16);
 
 function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["clamped","clamped"], mult=[undef,undef], knots=[undef,undef]) =
-let(fo=echo(intype=type))
     is_list(patch) && _valid_surface_type(patch[0]) ?
        assert(len(patch)>=5, "NURBS parameter list is invalid")
        assert(num_defined([degree,weights])==0 && mult==[undef,undef] && knots==[undef,undef],
@@ -518,9 +525,7 @@ let(fo=echo(intype=type))
         u=is_range(u) ? list(u) : u,
         v=is_range(v) ? list(v) : v,
         degree = force_list(degree,2),
-        feee=echo(type=type),
         type = force_list(type,2),
-fda=        echo(type=type, force_list(type,2)),
         splinesteps = is_undef(splinesteps) ? [undef,undef] : force_list(splinesteps,2),
         mult = is_vector(mult) || is_undef(mult) ? [mult,mult]
              : assert((is_undef(mult[0]) || is_vector(mult[0])) && (is_undef(mult[1]) || is_vector(mult[1])), "mult must be a vector or list of two vectors")
@@ -535,11 +540,11 @@ fda=        echo(type=type, force_list(type,2)),
   : is_num(v) ? column(nurbs_patch_points(patch, degree, u=u, v=[v], knots=knots, mult=mult, type=type),0)
   :                                      
     let(
-        
         vsplines = [for (i = idx(patch[0])) nurbs_curve(column(patch,i), degree[0], splinesteps=splinesteps[0],u=u, type=type[0],mult=mult[0],knots=knots[0])]
     )
     [for (i = idx(vsplines[0])) nurbs_curve(column(vsplines,i), degree[1], splinesteps=splinesteps[1], u=v, mult=mult[1], knots=knots[1], type=type[1])];
 
+    
 // Function&Module: nurbs_vnf()
 // Synopsis: Generates a (possibly non-manifold) VNF for a single NURBS surface patch.
 // SynTags: VNF
