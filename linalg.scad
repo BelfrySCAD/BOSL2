@@ -561,10 +561,14 @@ function linear_solve(A,b,pivot=true,method="qr") =
     method=="cholesky" ? let(
                              U=cholesky(A,transpose=true)
                          )
+                         is_undef(U) ? []
+                       :
                          back_substitute(U,back_substitute(U,b,transpose=true))
   : method=="lu" ? let(
                         LUP = lu_factor(A)
                    )
+                   is_undef(LUP) ? []
+                 :
                    back_substitute(LUP[1],
                                    back_substitute(LUP[0],
                                                    select(b,LUP[2]),transpose=true)
