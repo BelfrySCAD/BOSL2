@@ -336,6 +336,48 @@ function transpose(M, reverse=false) =
     :  assert( is_vector(M), "Input to transpose must be a vector or list of lists.")
            M;
 
+// Function: swap_columns()
+// Synopsis: Swap two columns of a matrix
+// Topics: Linear Algebra, Matrices
+// See Also: submatrix(), block_matrix(), hstack(), flatten()
+// Usage:
+//    M = swap_columns(M, i, j);
+// Description:
+//    Returns a matrix where columns i and j are swapped.  The input must be a list of lists where each row has the same length.  
+// Arguments:
+//    M = matrix to transpose
+//    reverse = if true reflect across secondary diagonal.  Default: false
+// Example:
+//    M = [
+//          [1, 2, 3, 0, 1], 
+//          [4, 5, 6, 0, 1], 
+//          [7, 8, 9, 0, 1]
+//    ];
+//    S = swap_columns(M,1,3);
+//    // Returns
+//    // [  
+//    //   [1, 0, 3, 2, 1], 
+//    //   [4, 0, 6, 5, 1], 
+//    //   [7, 0, 9, 8, 1]
+//    // ]
+
+function swap_columns(M,i,j) =
+  assert( is_list(M) && len(M)>0, "Input to swap_columns must be a nonempty list")
+  assert( is_list(M[0]), "Input to swap_columns must be a list of lists")
+  let(
+      m=len(M),
+      n=len(M[0])
+  )  
+  assert( [for(row=M) if (!is_list(row) || len(row)!=n) 1]==[], "Input to swap_columns has inconsistent row lengths.")
+  [for(p=[0:m-1])
+      [for(q=[0:n-1])
+            q==i ? M[p][j]
+          : q==j ? M[p][i]
+          : M[p][q]
+      ]
+  ];
+
+
 
 // Function: outer_product()
 // Synopsis: Compute the outer product of two vectors. 
@@ -499,8 +541,7 @@ function block_matrix(M) =
 //   transpose the returned value.  If `pivot` is set to true (the default) then
 //   pivoting is used in the QR factorization, which is slower but expected to be more accurate.
 //   .
-//   If `A` is a square matrix you can select `method="lu"` to use LU decomposition, which is faster than QR.
-//   (Currently about 30x faster on large problems.)
+//   If `A` is a square matrix you can select `method="lu"` to use LU decomposition, which may be slightly faster than QR on small problems.
 //   .
 //   If `A` is symmetric and positive definite then `method="cholesky"` is faster than LU decomposition.
 //   (About 5x faster than LU decomposition on large problems.)
@@ -647,29 +688,59 @@ function qr_factor(A, pivot=false) =
         n = len(A[0])
     )
     let(
-        qr = _qr_factor(A, Q=ident(m),P=ident(n), pivot=pivot, col=0, m = m, n = n),
-        Rzero = let( R = qr[1]) [
+        qr = _qr_factor(transpose(A), Q=ident(m),p=count(n), pivot=pivot, col=0, m = m, n = n),
+        Rzero = let( R = transpose(qr[1])) [
             for(i=[0:m-1]) [
                 let( ri = R[i] )
                 for(j=[0:n-1]) i>j ? 0 : ri[j]
             ]
         ]
-    ) [qr[0], Rzero, qr[2]];
+    ) [transpose(qr[0]), Rzero, _makeP(qr[2])];
 
-function _qr_factor(A,Q,P, pivot, col, m, n) =
-    col >= min(m-1,n) ? [Q,A,P] :
+
+
+// make permutation matrix, multiply on the right to permute columns
+function _makeP(p) =
+  [
+   for(i=[0:len(p)-1])
+     [for(j=[0:len(p)-1])
+        p[j]==i ? 1 : 0]];
+
+
+
+function _qr_factor(A, Q, p, pivot, col, m, n) =
+    col >= min(m-1, n) ? [Q, A, p] :
     let(
-        swap = !pivot ? 1
-             : _swap_matrix(n,col,col+max_index([for(i=[col:n-1]) sqr([for(j=[col:m-1]) A[j][i]])])),
-        A = pivot ? A*swap : A,
-        x = [for(i=[col:1:m-1]) A[i][col]],
-        alpha = (x[0]<=0 ? 1 : -1) * norm(x),
-        u = x - concat([alpha],repeat(0,m-1)),
-        v = alpha==0 ? u : u / norm(u),
-        Qc = ident(len(x)) - 2*outer_product(v,v),
-        Qf = [for(i=[0:m-1]) [for(j=[0:m-1]) i<col || j<col ? (i==j ? 1 : 0) : Qc[i-col][j-col]]]
+        swapind = !pivot ? undef
+                : col+max_index([for(i=[col:n-1]) norm(slice(A[i],col,m-1))]),
+        A = pivot ? list_swap(A,col,swapind) : A,
+        p = pivot ? list_swap(p,col,swapind) : p,
+        x = slice(A[col],col,m-1),
+        alpha = (x[0] <= 0 ? 1 : -1) * norm(x),
+        u = x - concat([alpha], repeat(0, len(x)-1)),
+        nrm = norm(u),
+        v = nrm == 0 ? u : u/nrm, 
+
+        // Apply H to submatrix of A: Hsub*Asub = Asub - 2*v*(v^T*Asub)
+        Asub = submatrix(A,[col:n-1],[col:m-1]),
+        vtA = Asub*v,
+        Asub_new = Asub - 2*outer_product(vtA,v),
+        // Write updated submatrix back into A
+        Anew = [for(j=[0:n-1])
+                  j < col ? A[j]
+                        : [
+                            for(i=[0:1:col-1]) A[j][i],
+                            each Asub_new[j-col]
+                            ]
+                  ],
+        // Accumulate Q: Q = Q*H = Q - 2*(Q*v)*v^T  (only columns col: matter)
+        Qvsub = v * slice(Q,col,-1),
+        Qnew =  [for(j=[0:m-1])
+                   j < col ? Q[j]
+                           : Q[j] - 2*Qvsub*v[j-col]]
     )
-    _qr_factor(Qf*A, Q*Qf, P*swap, pivot, col+1, m, n);
+    _qr_factor(Anew, Qnew, p, pivot, col+1, m, n);
+
 
 
 // Produces an n x n matrix that swaps column i and j (when multiplied on the right)
