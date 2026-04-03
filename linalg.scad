@@ -264,8 +264,11 @@ function diagonal_matrix(diag, offdiag=0) =
 // Description:
 //    Returns the transpose of the given input matrix.  The input can be a matrix with arbitrary entries or
 //    a numerical vector.  If you give a vector then transpose returns it unchanged.  
-//    When reverse=true, the transpose is done across to the secondary diagonal.  (See example below.)
+//    When reverse=true, the transpose is done across the secondary diagonal.  (See example below.)
 //    By default, reverse=false.
+// Arguments:
+//    M = matrix to transpose
+//    reverse = if true reflect across secondary diagonal.  Default: false
 // Example:
 //   M = [
 //       [1, 2, 3],
@@ -487,24 +490,45 @@ function block_matrix(M) =
 // Usage:
 //   solv = linear_solve(A,b,[pivot])
 // Description:
-//   Solves the linear system Ax=b.  If `A` is square and non-singular the unique solution is returned.  If `A` is overdetermined
+//   Solves the linear system Ax=b.  By default, uses the QR factorization, which is the slowest but most flexible
+//   solution method.  If `A` is square and non-singular the unique solution is returned.  If `A` is overdetermined
 //   the least squares solution is returned. If `A` is underdetermined, the minimal norm solution is returned.
 //   If `A` is rank deficient or singular then linear_solve returns `[]`.  If `b` is a matrix that is compatible with `A`
 //   then the problem is solved for the matrix valued right hand side and a matrix is returned.  Note that if you 
 //   want to solve Ax=b1 and Ax=b2 that you need to form the matrix `transpose([b1,b2])` for the right hand side and then
-//   transpose the returned value.  The solution is computed using QR factorization.  If `pivot` is set to true (the default) then
+//   transpose the returned value.  If `pivot` is set to true (the default) then
 //   pivoting is used in the QR factorization, which is slower but expected to be more accurate.
+//   .
+//   If `A` is a square matrix you can select `method="lu"` to use LU decomposition, which is faster than QR.
+//   (Currently about 30x faster on large problems.)
+//   .
+//   If `A` is symmetric and positive definite then `method="cholesky"` is faster than LU decomposition.
+//   (About 5x faster than LU decomposition on large problems.)
 // Arguments:
 //   A = Matrix describing the linear system, which need not be square
 //   b = right hand side for linear system, which can be a matrix to solve several cases simultaneously.  Must be consistent with A.
 //   pivot = if true use pivoting when computing the QR factorization.  Default: true
-function linear_solve(A,b,pivot=true) =
+//   method = Set to "qr", "lu" or "cholesky" to choose the solution method.  Default: "qr"
+function linear_solve(A,b,pivot=true,method="qr") =
     assert(is_matrix(A), "Input should be a matrix.")
+    assert(in_list(method,["qr","cholesky","lu"]))
     let(
         m = len(A),
         n = len(A[0])
     )
     assert(is_vector(b,m) || is_matrix(b,m),"Invalid right hand side or incompatible with the matrix")
+    method=="cholesky" ? let(
+                             U=cholesky(A,transpose=true)
+                         )
+                         back_substitute(U,back_substitute(U,b,transpose=true))
+  : method=="lu" ? let(
+                        LUP = lu_factor(A)
+                   )
+                   back_substitute(LUP[1],
+                                   back_substitute(LUP[0],
+                                                   select(b,LUP[2]),transpose=true)
+                   )
+  :
     let (
         qr = m<n? qr_factor(transpose(A),pivot) : qr_factor(A,pivot),
         maxdim = max(n,m),
@@ -647,6 +671,7 @@ function _qr_factor(A,Q,P, pivot, col, m, n) =
     )
     _qr_factor(Qf*A, Q*Qf, P*swap, pivot, col+1, m, n);
 
+
 // Produces an n x n matrix that swaps column i and j (when multiplied on the right)
 function _swap_matrix(n,i,j) =
   assert(i<n && j<n && i>=0 && j>=0, "Swap indices out of bounds")
@@ -656,7 +681,64 @@ function _swap_matrix(n,i,j) =
    : x==y ? 1 : 0]];
 
 
+// Function: lu_factor()
+// Synopsis: Compute LU factorization of a matrix with pivoting.
+// Topics: Matrices, Linear Algebra
+// See Also: linear_solve(), linear_solve3(), matrix_inverse(), rot_inverse(), back_substitute(), cholesky()
+// Usage:
+//   lt_u_p = lu_factor(A);
+// Description:
+//   Calculates the LU factorization of the input matrix A with pivoting [LT,U,p].  This factorization can be
+//   used to solve linear systems of equations and is equivalent to Gaussian elimination.
+//   The factorization is `select(A,p) = transpose(LT) * U`. The permutation `p` is an index list, not a matrix.
+//   The LU decomposition only works on square,  nonsingular matrices.  If `A` is singular then returns undef.  
+                        
+function lu_factor(A) =
+   assert(is_matrix(A,square=true), "Input must be a square matrix." )
+   let(n=len(A))
+   _lu_factor([], A, count(n), 0);
 
+
+function _lu_factor(L,U,perm,k)=
+   let(
+       n = len(U)
+   )
+   k==n-1? [[each L,[each repeat(0,n-1),1]],U,perm]
+ :
+   let(
+       p = k==0 ? 0 : k + max_index([for(i=[k:n-1]) abs(U[i][k])]),
+       U = _swap_entries(U,p,k),
+       L = p==k ? L : L * _swap_matrix(n,p,k),
+       perm = _swap_entries(perm,p,k)
+   )
+   abs(U[k][k]) < _EPSILON ? undef
+ :
+  let(
+      Lnew = [ each L,
+               [each repeat(0,k),
+                1,
+                for(i=[k+1:n-1]) U[i][k] / U[k][k]
+               ]
+             ],
+      Unew = [for(i=[0:n-1])
+               i<=k ? U[i]
+                    : [for (j=[0:n-1])
+                             j<=k ? 0
+                                  : U[i][j] - Lnew[k][i] * U[k][j]
+                      ]
+             ]
+   )
+   _lu_factor(Lnew,Unew,perm,k+1);
+
+
+function _swap_entries(v,i,j) =
+  i==j ? v : 
+  [for(k=[0:len(v)-1]) k==i ? v[j]
+                  : k==j ? v[i]
+                  : v[k]
+  ];
+
+                        
 // Function: back_substitute()
 // Synopsis: Solve an upper triangular system, Rx=b.  
 // Topics: Matrices, Linear Algebra
@@ -702,29 +784,28 @@ function _back_substitute(R, b, x=[]) =
 //   The matrix L is lower triangular and `L * transpose(L) = A`.  If the A is
 //   not symmetric then an error is displayed.  If the matrix is symmetric but
 //   not positive definite then undef is returned.  
-function cholesky(A) =
+function cholesky(A,transpose=false) =
   assert(is_matrix(A,square=true),"A must be a square matrix")
   assert(is_matrix_symmetric(A),"Cholesky factorization requires a symmetric matrix")
-  _cholesky(A,ident(len(A)), len(A));
+  let (U=_cholesky(A))
+  transpose ? U : transpose(U);
 
-function _cholesky(A,L,n) = 
-    A[0][0]<0 ? undef :     // Matrix not positive definite
-    len(A) == 1 ? submatrix_set(L,[[sqrt(A[0][0])]], n-1,n-1):
+
+function _cholesky(A,j=0) =
+    let(n=len(A))
+    j==n ? A
+  :
     let(
-        i = n+1-len(A)
+       newrow = j==0 ? A[j]
+              : select(A[j],j,n-1) - ([[for(i=[0:j-1]) A[i][j]]] * submatrix(A,[0:j-1],[j:n-1]))[0]
     )
+    newrow[0]<=0 ? undef   // Matrix not positive definite
+  :
     let(
-        sqrtAii = sqrt(A[0][0]),
-        Lnext = [for(j=[0:n-1])
-                  [for(k=[0:n-1])
-                      j<i-1 || k<i-1 ?  (j==k ? 1 : 0)
-                     : j==i-1 && k==i-1 ? sqrtAii
-                     : j==i-1 ? 0
-                     : k==i-1 ? A[j-(i-1)][0]/sqrtAii
-                     : j==k ? 1 : 0]],
-        Anext = submatrix(A,[1:n-1], [1:n-1]) - outer_product(list_tail(A[0]), list_tail(A[0]))/A[0][0]
+       newA = [for(i=[0:n-1]) i!=j ? A[i]
+                                   : concat(repeat(0,j),newrow/sqrt(newrow[0]))]
     )
-    _cholesky(Anext,L*Lnext,n);
+    _cholesky(newA,j+1);
 
 
 // Section: Matrix Properties: Determinants, Norm, Trace
