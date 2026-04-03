@@ -788,7 +788,7 @@ function cholesky(A,transpose=false) =
   assert(is_matrix(A,square=true),"A must be a square matrix")
   assert(is_matrix_symmetric(A),"Cholesky factorization requires a symmetric matrix")
   let (U=_cholesky(A))
-  transpose ? U : transpose(U);
+  transpose || is_undef(U) ? U : transpose(U);
 
 
 function _cholesky(A,j=0) =
