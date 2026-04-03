@@ -850,6 +850,8 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
              bevel, bevel1, bevel2, blunt_start, blunt_start1, blunt_start2, 
              atype="screw",anchor=CENTER,spin=0, orient=UP)
 {
+   checkt = assert(thread != true || (!is_string(tolerance) || !in_list(downcase(tolerance),["tap","self tap"])),
+                   "Cannot specify thread=true with tolerance of \"tap\" or \"self tap\"");
    screwspec = _get_spec(spec, "screw_info", "screw_hole", 
                         thread=thread, head=head);
    bevel1 = first_defined([bevel1,bevel,false]);
@@ -859,7 +861,8 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
    default_counterbore = checkhead=="none" || starts_with(checkhead,"flat") ? 0 : true;
    counterbore = default(counterbore, default_counterbore);
    dummy = _validate_screw_spec(screwspec);
-   threaded = thread==true || (is_finite(thread) && thread>0) || (is_undef(thread) && struct_val(screwspec,"pitch")>0);
+   threaded = (thread==true || (is_finite(thread) && thread>0) || (is_undef(thread) && struct_val(screwspec,"pitch")>0)) &&
+                     (!is_string(tolerance) || !in_list(downcase(tolerance),["tap","self tap"]));
    oversize = force_list(oversize,2);
    hole_oversize = first_defined([hole_oversize, oversize[0],struct_val(screwspec,"shaft_oversize")]);
    head_oversize = first_defined([head_oversize, oversize[1],struct_val(screwspec,"head_oversize")]);
@@ -876,7 +879,7 @@ module screw_hole(spec, head, thread, oversize, hole_oversize, head_oversize,
      tolerance = default(tolerance, "normal");
      pitch = struct_val(screwspec,"pitch");
      dummy3 = assert((downcase(tolerance) != "tap" && downcase(tolerance)!="self tap") || pitch!=0,
-                     "\"tap\" clearance requires a pitch size, but pitch is set to zero");
+                     "\"tap\" and \"self tap\" clearances requires a pitch size, but pitch is set to zero or thread is false");
      // UTS clearances from ASME B18.2.8
      UTS_clearance = [
        [ // Close fit
