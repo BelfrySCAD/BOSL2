@@ -117,3 +117,39 @@ module test_rabbit_clip() {
 }
 test_rabbit_clip();
 '''
+
+[[test]]
+name = "test_bayonet_mount"
+script = '''
+include <../std.scad>
+include <../joiners.scad>
+
+module test_bayonet_mount() {
+    $fn = 8;
+    // Basico: 3 pinos padrao
+    bayonet_mount(d=30, h=8, pin_h=2);
+    // 4 pinos com taper
+    bayonet_mount(d=30, h=8, pin_h=2, pins=4, taper_ang=5);
+    // 2 pinos com angulo largo
+    bayonet_mount(d=40, h=10, pin_h=3, pin_ang=45, pins=2);
+}
+test_bayonet_mount();
+'''
+
+[[test]]
+name = "test_bayonet_socket"
+script = '''
+include <../std.scad>
+include <../joiners.scad>
+
+module test_bayonet_socket() {
+    $fn = 8;
+    // Socket padrao
+    bayonet_socket(d=30, h=12, pin_h=2);
+    // 4 slots
+    bayonet_socket(d=30, h=12, pin_h=2, pins=4);
+    // Clearance customizado
+    bayonet_socket(d=40, h=15, pin_h=3, clearance=0.3, wall=3);
+}
+test_bayonet_socket();
+'''
