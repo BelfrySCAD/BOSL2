@@ -63,7 +63,8 @@ module cube(size=1, center, anchor, spin=0, orient=UP)
 {
     dummy = assert(num_defined([center,anchor])<2, "\nCannot give both center and anchor");
     anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
-    size = force_list(size,3);      // Native cube prints a warning and gives a unit cube when parameters are bogus
+    size = force_list(size,3);
+    dummy2 = assert(is_vector(size,3) && all_nonnegative(size), "\nsize must be a positive scalar or 3-vector.");
     attachable(anchor,spin,orient, size=is_vector(size,3)?size:[1,1,1]) {
         _cube(size, center=true);
         children();
@@ -2015,6 +2016,9 @@ module cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP)
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     h = default(h,1);
+    dummy2 = assert(is_finite(h) && h>0, "\nh must be a positive number.")
+             assert(is_finite(r1) && r1>=0, "\nr1 must be a non-negative number.")
+             assert(is_finite(r2) && r2>=0, "\nr2 must be a non-negative number.");
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
         _cylinder(h=h, r1=r1, r2=r2, center=true);
         children();
@@ -3320,6 +3324,7 @@ function pie_slice(
 
 module sphere(r, d, anchor=CENTER, spin=0, orient=UP) {
     r = get_radius(r=r, d=d, dflt=1);
+    dummy = assert(is_finite(r) && r>=0, "\nr must be a non-negative number.");
     attachable(anchor,spin,orient, r=r) {
             _sphere(r=r);
             children();
