@@ -619,4 +619,78 @@ module round3d(r, or, ir, size=1000)
 
 
 
+// Section: 3D Printing Helpers
+
+
+// Module: bridged_hole()
+// Synopsis: Creates bridging geometry for unsupported holes in FDM printing.
+// SynTags: Geom
+// Topics: 3D Printing, FDM, Holes
+// See Also: cyl(), cylinder()
+// Usage:
+//   bridged_hole(r|d=, layer_height, [layers=], [spin=], [anchor=], [orient=]) [ATTACHMENTS];
+// Description:
+//   Creates a set of progressively rounder polygonal layers at the bottom of a
+//   hole to provide bridging support for FDM 3D printing without external
+//   supports. The first layer is a rectangle (2 bridges), the second is
+//   rotated 90 degrees, and subsequent layers are regular polygons with
+//   increasing sides (8, 16, 32...) that gradually approximate the circle.
+//   .
+//   This module generates only the bridging geometry. Use it inside a
+//   {{diff()}} together with the actual hole geometry.
+// Arguments:
+//   r = Radius of the hole to bridge.
+//   layer_height = Height of each bridging layer. Required.
+//   ---
+//   d = Diameter of the hole to bridge.
+//   layers = Number of bridging layers. Default: 3
+//   spin = Rotation angle for the first bridge direction. Default: 0
+//   anchor = Translate so anchor point is at origin. Default: `BOTTOM`
+//   orient = Vector to rotate top toward. Default: `UP`
+// Example(3D): Basic bridged hole in a cube
+//   diff()
+//     cuboid([30,30,10], anchor=BOTTOM)
+//       attach(TOP, inside=true, shiftout=0.01)
+//         bridged_hole(r=8, layer_height=0.2, layers=4);
+// Example(3D): With a cylinder hole underneath
+//   diff()
+//     cuboid([30,30,10], anchor=BOTTOM) {
+//       attach(TOP, inside=true, shiftout=0.01)
+//         bridged_hole(r=8, layer_height=0.2, layers=5);
+//       attach(TOP, inside=true, shiftout=0.01)
+//         cyl(h=10, r=8);
+//     }
+module bridged_hole(r, layer_height, d, layers=3, spin=0, anchor=BOTTOM, orient=UP) {
+    r = get_radius(r=r, d=d);
+    assert(is_finite(r) && r>0, "\nr or d must be a positive number.");
+    assert(is_finite(layer_height) && layer_height>0, "\nlayer_height must be a positive number.");
+    assert(is_integer(layers) && layers>=1, "\nlayers must be a positive integer.");
+    total_h = layer_height * layers;
+    attachable(anchor, spin, orient, r=r, l=total_h) {
+        down(total_h/2)
+        zrot(spin)
+        union() {
+            // Layer 1: rectangle (2 bridges)
+            linear_extrude(height=layer_height)
+                rect([r*2, r*2]);
+            // Layer 2: rectangle rotated 90 degrees
+            if (layers >= 2)
+                up(layer_height)
+                linear_extrude(height=layer_height)
+                    zrot(90) rect([r*2, r*2]);
+            // Layers 3+: polygons with increasing sides
+            for (i = [2:1:layers-1])
+                let(
+                    sides = pow(2, i+1),
+                    h_off = i * layer_height
+                )
+                up(h_off)
+                linear_extrude(height=layer_height)
+                    zrot(180/sides) circle(r=r, $fn=sides);
+        }
+        children();
+    }
+}
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
