@@ -3070,7 +3070,7 @@ module enveloping_worm(
 //   worm_diam = The pitch diameter of the worm gear to match to.  Default: 30
 //   worm_starts = The number of lead starts on the worm gear to match to.  Default: 1
 //   worm_arc = The arc of the worm to mate with, in degrees. Default: 45 degrees
-//   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fit the work easier.  Default: 1
+//   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fit the work easier.  Default: 0.1
 //   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
@@ -4166,7 +4166,7 @@ function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
 //   ---
 //   worm_arc = The arc of the worm to mate with, in degrees. Default: 45 degrees
 //   pressure_angle = Pressure angle in degrees.  Controls how straight or bulged the tooth sides are.  Default: 20º
-//   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fit the work easier.  Default: 1
+//   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fit the work easier.  Default: 0.1
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.  Default: module/4
 //   mod = The module of the gear (pitch diameter / teeth)
 //   diam_pitch = The diametral pitch, or number of teeth per inch of pitch diameter.  The diametral pitch is a completely different thing than the pitch diameter.
