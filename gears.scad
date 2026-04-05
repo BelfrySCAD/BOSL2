@@ -3002,7 +3002,7 @@ function enveloping_worm(
         vnf1 = vnf_vertex_array(transpose(rows), col_wrap=true, caps=true),
         m = product([
             zrot(gear_spin),
-            if (!left_handed) xflip(),
+            if (left_handed) xflip(),
             zrot(90),
         ]),
         vnf = apply(m, vnf1)
