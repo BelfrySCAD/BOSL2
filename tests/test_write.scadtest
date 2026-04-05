@@ -1,0 +1,120 @@
+[[test]]
+name = "test_get_font_size"
+script = '''
+include <../std.scad>
+include <../write.scad>
+
+module test_get_font_size() {
+    // font_size: divide por 0.72 para obter OpenSCAD size
+    sz1 = get_font_size(font_size=12);
+    assert_approx(sz1, 12/0.72);
+
+    // em_size: multiplica por 0.72
+    sz2 = get_font_size(em_size=10);
+    assert_approx(sz2, 10*0.72);
+
+    // cap_height: cap / ratio / 0.72
+    sz3 = get_font_size(cap_height=5);
+    assert_approx(sz3, 5/0.7/0.72);
+
+    // cap_height com ratio customizado
+    sz4 = get_font_size(cap_height=5, cap_ratio=0.65);
+    assert_approx(sz4, 5/0.65/0.72);
+}
+test_get_font_size();
+'''
+
+[[test]]
+name = "test_write_basic"
+script = '''
+include <../std.scad>
+include <../write.scad>
+
+module test_write_basic() {
+    $fn = 8;
+    // Texto basico com font_size
+    write("Hello", font_size=10, h=2);
+}
+test_write_basic();
+'''
+
+[[test]]
+name = "test_write_multiline"
+script = '''
+include <../std.scad>
+include <../write.scad>
+
+module test_write_multiline() {
+    $fn = 8;
+    // Multi-line via array
+    write(["Line 1", "Line 2"], font_size=8, h=1);
+    // Multi-line via centro
+    write(["A", "B", "C"], font_size=6, h=1, align="center");
+}
+test_write_multiline();
+'''
+
+[[test]]
+name = "test_write_autosize"
+script = '''
+include <../std.scad>
+include <../write.scad>
+
+module test_write_autosize() {
+    $fn = 8;
+    // Auto-size com box
+    write("Fit!", box=[40,15], h=1);
+    // Auto-size com width e height separados
+    write("AB", width=30, height=10, h=1);
+}
+test_write_autosize();
+'''
+
+[[test]]
+name = "test_write_wrapping"
+script = '''
+include <../std.scad>
+include <../write.scad>
+
+module test_write_wrapping() {
+    $fn = 8;
+    // Wrapping com font_size + width
+    write("Wrap this text please", font_size=5, width=40, h=1);
+}
+test_write_wrapping();
+'''
+
+[[test]]
+name = "test_write_alignment"
+script = '''
+include <../std.scad>
+include <../write.scad>
+
+module test_write_alignment() {
+    $fn = 8;
+    // Alinhamentos horizontais
+    write("Left", font_size=8, h=1, align="left");
+    write("Center", font_size=8, h=1, align="center");
+    write("Right", font_size=8, h=1, align="right");
+    // Alinhamentos verticais com box
+    write("Top", box=[40,20], h=1, valign="top");
+    write("Bottom", box=[40,20], h=1, valign="bottom");
+}
+test_write_alignment();
+'''
+
+[[test]]
+name = "test_write_attachment"
+script = '''
+include <../std.scad>
+include <../write.scad>
+
+module test_write_attachment() {
+    $fn = 8;
+    // Attachment a um cubo
+    cuboid(50)
+        attach(TOP)
+        write("Label", font_size=6, h=1, anchor=BOTTOM);
+}
+test_write_attachment();
+'''
