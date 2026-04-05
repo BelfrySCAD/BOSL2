@@ -214,6 +214,81 @@ include <BOSL2/std.scad>
 zrot_copies(n=6) yrot(90) cylinder(h=50,d1=0,d2=20);
 ```
 
-To Be Completed
+The `rot_copies()` command is the general form.  You give it either a list of
+rotation angles, or a count `n=` to space copies evenly.  You can also specify
+the axis of rotation with `v=`:
+```openscad-3D
+include <BOSL2/std.scad>
+rot_copies(n=6, v=DOWN+BACK)
+    yrot(90) cylinder(h=20, r1=5, r2=0);
+```
+
+To make a ring of objects, use `delta=` to offset each child before rotating:
+```openscad-3D
+include <BOSL2/std.scad>
+rot_copies(n=8, delta=[20,0,0])
+    sphere(d=8);
+```
+
+The `xrot_copies()` and `yrot_copies()` commands work like `zrot_copies()`,
+but rotate around the X and Y axes respectively.  Use `r=` to make a ring:
+```openscad-3D
+include <BOSL2/std.scad>
+xrot_copies(n=5, r=20)
+    sphere(d=6);
+```
+
+```openscad-3D
+include <BOSL2/std.scad>
+yrot_copies(n=5, r=20)
+    sphere(d=6);
+```
+
+To distribute copies along an arc instead of a full circle, use `arc_copies()`.
+You specify the radius and the number of copies.  By default it makes a full
+circle, but you can give a start angle `sa=` and end angle `ea=`:
+```openscad-3D
+include <BOSL2/std.scad>
+arc_copies(n=8, r=30, sa=45, ea=315)
+    cube([8,2,2], center=true);
+```
+
+You can also use elliptical arcs with `rx=` and `ry=`:
+```openscad-2D
+include <BOSL2/std.scad>
+arc_copies(n=12, rx=40, ry=20)
+    rect(4);
+```
+
+To spread children over the surface of a sphere, use `sphere_copies()`:
+```openscad-3D
+include <BOSL2/std.scad>
+sphere_copies(n=50, d=80)
+    cylinder(d=5, h=5);
+```
+
+You can limit the distribution to a cone using `cone_ang=`:
+```openscad-3D
+include <BOSL2/std.scad>
+sphere_copies(n=30, d=80, cone_ang=60)
+    cylinder(d=5, h=5);
+```
+
+Finally, `path_copies()` distributes copies along an arbitrary path:
+```openscad-2D
+include <BOSL2/std.scad>
+spiral = [for(theta=[0:360*5]) theta * [cos(theta), sin(theta)]]/100;
+stroke(spiral, width=.25);
+color("red") path_copies(spiral, n=40) circle(r=1);
+```
+
+You can also use `path_copies()` with a 3D path.  The `spacing=` argument
+controls the distance between copies along the path:
+```openscad-3D
+include <BOSL2/std.scad>
+path = [for(t=[0:360]) [30*cos(t), 30*sin(t), t/12]];
+path_copies(path, n=20)
+    sphere(d=4);
+```
 
 

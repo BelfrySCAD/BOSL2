@@ -28,7 +28,7 @@ cube([50,40,20], center=true);
 
 It is also enhanced to allow you to anchor, spin, orient, and attach it.
 
-You can use `anchor=` similarly to how you use it with `rect()` or `oval()`,
+You can use `anchor=` similarly to how you use it with `rect()` or `ellipse()`,
 except you can also anchor vertically in 3D, allowing anchoring to faces, edges,
 and corners:
 
