@@ -2709,6 +2709,9 @@ module xcyl(
 // SynTags: Geom, VNF
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
+// Usage: Typical
+//   ycyl(l|h|length|height, r|d=, [anchor=], ...) [ATTACHMENTS];
+//   ycyl(l|h|length|height, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
 // Description:
 //   Creates an attachable cylinder with roundovers, chamfering, and optional texture, oriented along the Y axis.
 //   .
@@ -2822,6 +2825,9 @@ module ycyl(
 // SynTags: Geom, VNF
 // Topics: Cylinders, Textures, Rounding, Chamfers
 // See Also: texture(), rotate_sweep(), cyl()
+// Usage: Typical
+//   zcyl(l|h|length|height, r|d=, [anchor=], ...) [ATTACHMENTS];
+//   zcyl(l|h|length|height, r1=|d1=, r2=|d2=, [anchor=], ...) [ATTACHMENTS];
 // Description:
 //   Pass-through to [cyl()]. Creates an attachable cylinder with roundovers, chamfering, and optional texture, oriented along the Z axis.
 //   .
