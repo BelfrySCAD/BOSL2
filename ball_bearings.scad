@@ -19,6 +19,8 @@ _BOSL2_BALL_BEARINGS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) |
 // SynTags: Geom
 // Topics: Parts, Bearings
 // See Also: linear_bearing(), lmXuu_bearing(), lmXuu_housing()
+// Usage:
+//   ball_bearing(trade_size, [id=], [od=], [width=], [shield=], [flange=], [fd=], [fw=], [rounding=], [anchor=], [spin=], [orient=]) [ATTACHMENTS];
 // Description:
 //   Creates a model of a ball bearing assembly.
 // Arguments:
@@ -103,6 +105,8 @@ module ball_bearing(trade_size, id, od, width, shield=true, flange=false, fd, fw
 // Synopsis: Returns size info for a standardized ball bearing assembly.
 // Topics: Parts, Bearings
 // See Also: ball_bearing(), linear_bearing(), lmXuu_info()
+// Usage:
+//   info = ball_bearing_info(trade_size);
 // Description:
 //   Get dimensional info for a standard metric ball bearing cartridge.
 //   Returns `[SHAFT_DIAM, OUTER_DIAM, WIDTH, SHIELDED, FLANGED, FLANGE_DIAM, FLANGE_WIDTH]` for the cylindrical cartridge.
