@@ -181,7 +181,6 @@ test_worm_dist();
 
 [[test]]
 name = "test_worm_gear_thickness"
-assert_no_echoes = false
 script = '''
 include <../std.scad>
 include <../gears.scad>
@@ -339,7 +338,6 @@ test_enveloping_worm();
 
 [[test]]
 name = "test_worm_gear"
-assert_no_echoes = false
 script = '''
 include <../std.scad>
 include <../gears.scad>
