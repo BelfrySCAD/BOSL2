@@ -21,6 +21,7 @@ warn = echo("*** WARNING: metric_screws.scad is deprecated and may be removed in
 
 
 // Function: get_metric_bolt_head_size()
+// Synopsis: Returns the diameter of a metric bolt head.
 // Description: Returns the diameter of a typical metric bolt's head, based on the bolt `size`.
 function get_metric_bolt_head_size(size) = lookup(size, [
         [ 3.0,  5.5],
@@ -46,6 +47,7 @@ function get_metric_bolt_head_size(size) = lookup(size, [
 
 
 // Function: get_metric_bolt_head_height()
+// Synopsis: Returns the height of a metric bolt head.
 // Description: Returns the height of a typical metric bolt's head, based on the bolt `size`.
 function get_metric_bolt_head_height(size) = lookup(size, [
         [ 1.6,  1.23],
@@ -72,6 +74,7 @@ function get_metric_bolt_head_height(size) = lookup(size, [
 
 
 // Function: get_metric_socket_cap_diam()
+// Synopsis: Returns the diameter of a metric socket cap bolt head.
 // Description: Returns the diameter of a typical metric socket cap bolt's head, based on the bolt `size`.
 function get_metric_socket_cap_diam(size) = lookup(size, [
         [ 1.6,  3.0],
@@ -102,6 +105,7 @@ function get_metric_socket_cap_diam(size) = lookup(size, [
 
 
 // Function: get_metric_socket_cap_height()
+// Synopsis: Returns the height of a metric socket cap bolt head.
 // Description: Returns the height of a typical metric socket cap bolt's head, based on the bolt `size`.
 function get_metric_socket_cap_height(size) = lookup(size, [
         [ 1.6,  1.7],
@@ -132,6 +136,7 @@ function get_metric_socket_cap_height(size) = lookup(size, [
 
 
 // Function: get_metric_socket_cap_socket_size()
+// Synopsis: Returns the hex drive socket diameter of a metric socket cap bolt.
 // Description: Returns the diameter of a typical metric socket cap bolt's hex drive socket, based on the bolt `size`.
 function get_metric_socket_cap_socket_size(size) = lookup(size, [
         [ 1.6,  1.5],
@@ -162,6 +167,7 @@ function get_metric_socket_cap_socket_size(size) = lookup(size, [
 
 
 // Function: get_metric_socket_cap_socket_depth()
+// Synopsis: Returns the hex drive socket depth of a metric socket cap bolt.
 // Description: Returns the depth of a typical metric socket cap bolt's hex drive socket, based on the bolt `size`.
 function get_metric_socket_cap_socket_depth(size) = lookup(size, [
         [ 1.6,  0.7],
@@ -192,6 +198,7 @@ function get_metric_socket_cap_socket_depth(size) = lookup(size, [
 
 
 // Function: get_metric_iso_coarse_thread_pitch()
+// Synopsis: Returns the ISO metric coarse thread pitch for a given bolt size.
 // Description: Returns the ISO metric standard coarse threading pitch for a given bolt `size`.
 function get_metric_iso_coarse_thread_pitch(size) = lookup(size, [
         [ 1.6, 0.35],
@@ -225,6 +232,7 @@ function get_metric_iso_coarse_thread_pitch(size) = lookup(size, [
 
 
 // Function: get_metric_iso_fine_thread_pitch()
+// Synopsis: Returns the ISO metric fine thread pitch for a given bolt size.
 // Description: Returns the ISO metric standard fine threading pitch for a given bolt `size`.
 function get_metric_iso_fine_thread_pitch(size) = lookup(size, [
         [ 1.6, 0.35],
@@ -258,6 +266,7 @@ function get_metric_iso_fine_thread_pitch(size) = lookup(size, [
 
 
 // Function: get_metric_iso_superfine_thread_pitch()
+// Synopsis: Returns the ISO metric superfine thread pitch for a given bolt size.
 // Description: Returns the ISO metric standard superfine threading pitch for a given bolt `size`.
 function get_metric_iso_superfine_thread_pitch(size) = lookup(size, [
         [ 1.6, 0.35],
@@ -291,6 +300,7 @@ function get_metric_iso_superfine_thread_pitch(size) = lookup(size, [
 
 
 // Function: get_metric_jis_thread_pitch()
+// Synopsis: Returns the JIS metric thread pitch for a given bolt size.
 // Description: Returns the JIS metric standard threading pitch for a given bolt `size`.
 function get_metric_jis_thread_pitch(size) = lookup(size, [
         [ 2.0, 0.40],
@@ -311,6 +321,7 @@ function get_metric_jis_thread_pitch(size) = lookup(size, [
 
 
 // Function: get_metric_nut_size()
+// Synopsis: Returns the flat-to-flat diameter of a metric nut.
 // Description: Returns the typical metric nut flat-to-flat diameter for a given bolt `size`.
 function get_metric_nut_size(size) = lookup(size, [
         [ 2.0,  4.0],
@@ -331,6 +342,7 @@ function get_metric_nut_size(size) = lookup(size, [
 
 
 // Function: get_metric_nut_thickness()
+// Synopsis: Returns the thickness of a metric nut.
 // Description: Returns the typical metric nut thickness for a given bolt `size`.
 function get_metric_nut_thickness(size) = lookup(size, [
         [ 1.6,  1.3],
@@ -363,6 +375,7 @@ function get_metric_nut_thickness(size) = lookup(size, [
 
 
 // Module: generic_screw()
+// Synopsis: Creates a simple screw model, useful for making screwholes.
 // Description:
 //   Makes a very simple screw model, useful for making screwholes.
 // Usage:
@@ -628,6 +641,7 @@ module metric_bolt(
 
 
 // Module: metric_nut()
+// Synopsis: Creates a standard metric nut model.
 // Description:
 //   Makes a model of a standard nut for a standard metric screw.
 // Arguments:
