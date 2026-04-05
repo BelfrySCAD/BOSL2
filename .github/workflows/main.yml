@@ -1,9 +1,13 @@
 name: Checks
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches: [master]
 
 jobs:
   Regressions:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -14,7 +18,7 @@ jobs:
     - name: Install OpenSCAD
       run: |
         cd $GITHUB_WORKSPACE
-        wget https://github.com/openscad/openscad/releases/download/openscad-2021.01/OpenSCAD-2021.01-x86_64.AppImage
+        wget -q https://github.com/openscad/openscad/releases/download/openscad-2021.01/OpenSCAD-2021.01-x86_64.AppImage
         sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
         sudo chmod +x /usr/local/bin/openscad
 
@@ -26,8 +30,34 @@ jobs:
         cd $GITHUB_WORKSPACE
         ./scripts/run_tests.sh
 
+  FuncCoverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Check Function Test Coverage
+      run: |
+        cd $GITHUB_WORKSPACE
+        OUTPUT=$(python3 scripts/func_coverage.py)
+        echo "$OUTPUT"
+        # Extrair percentual de cobertura
+        COVERAGE=$(echo "$OUTPUT" | grep "Total coverage:" | grep -oP '[0-9]+\.[0-9]+(?=%)')
+        echo "Coverage: ${COVERAGE}%"
+        # Falha se cobertura caiu abaixo de 99%
+        python3 -c "
+        coverage = float('${COVERAGE}')
+        if coverage < 99.0:
+            print(f'::error::Function test coverage dropped to {coverage}% (minimum: 99%)')
+            exit(1)
+        else:
+            print(f'Coverage OK: {coverage}%')
+        "
+
   CheckTutorials:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -50,7 +80,7 @@ jobs:
     - name: Install OpenSCAD
       run: |
         cd $GITHUB_WORKSPACE
-        wget https://github.com/openscad/openscad/releases/download/openscad-2021.01/OpenSCAD-2021.01-x86_64.AppImage
+        wget -q https://github.com/openscad/openscad/releases/download/openscad-2021.01/OpenSCAD-2021.01-x86_64.AppImage
         sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
         sudo chmod +x /usr/local/bin/openscad
 
@@ -69,6 +99,7 @@ jobs:
 
   CheckDocs:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -91,7 +122,7 @@ jobs:
     - name: Install OpenSCAD
       run: |
         cd $GITHUB_WORKSPACE
-        wget https://github.com/openscad/openscad/releases/download/openscad-2021.01/OpenSCAD-2021.01-x86_64.AppImage
+        wget -q https://github.com/openscad/openscad/releases/download/openscad-2021.01/OpenSCAD-2021.01-x86_64.AppImage
         sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
         sudo chmod +x /usr/local/bin/openscad
 
@@ -101,4 +132,3 @@ jobs:
         echo "::add-matcher::.github/openscad_docsgen.json"
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
         openscad-docsgen -Tmf
-
