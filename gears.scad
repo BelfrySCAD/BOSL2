@@ -2798,7 +2798,6 @@ function worm(
                 helical=helical,
                 profile_shift=0
             ), 1, -2),
-//        ff=echo(tooth=tooth, rack_profile=rack_profile,nrp=nrp), 
         steps = max(36, segs(d/2)),
         step = 360 / steps,
         zsteps = ceil(l / trans_pitch / starts * steps),
@@ -3162,7 +3161,6 @@ function worm_gear(
     let(
         gear_arc = 2 * PA,
         helical = asin(worm_starts * circ_pitch / PI / worm_diam),
-        //fee=echo(helical=helical), 
         full_tooth = path3d(reverse(zrot(90, _gear_tooth_profile(
                                                  circ_pitch, teeth=teeth,
                                                  pressure_angle=PA,
@@ -3172,13 +3170,10 @@ function worm_gear(
                                                  helical=helical, internal=false,
                                                  center=true)))),
         bnd = pointlist_bounds(full_tooth),
-fdeewqqq=        echo(toothbounds = bnd)echo(toothlength = bnd[1].x-bnd[0].x),
         tooth_bot = pointlist_bounds(full_tooth)[1].x,
         ftl = len(full_tooth),
         tooth_half1 = select(full_tooth, 0, ftl/2-1),
         tooth_half2 = select(full_tooth, ftl/2, -1),
-//eer=        echo(full_tooth=full_tooth), 
-//fdewq=        echo(tooth_half1=tooth_half1)echo(tooth_half2=tooth_half2),
         tang = 360 / teeth,
 
         pr = pitch_radius(circ_pitch, teeth, helical=helical),
@@ -3187,7 +3182,6 @@ fdeewqqq=        echo(toothbounds = bnd)echo(toothlength = bnd[1].x-bnd[0].x),
         half_thickness = sin(worm_arc/2)*(worm_diam/2+tooth_bot),
         // Update worm_arc to account for crowning and produce same thickness
         worm_arc = 2*asin(half_thickness / (worm_diam/2 + crowning + tooth_bot)),
-        feee=echo(pr_worm = pr, teeth=teeth ,helical= helical),
 
         // When multiplied by z this gives the spin required to rotationally shear
         // a straight tooth so that it follows the specified helical angle.  
@@ -3250,7 +3244,6 @@ fdeewqqq=        echo(toothbounds = bnd)echo(toothlength = bnd[1].x-bnd[0].x),
     )
     get_thickness? zmax*2 :
     let(
-        feef=echo(actual_thick=zmax*2, est=half_thickness*2), 
         gear_rows = [
             for (i = [0:1:teeth-1])
             let(
