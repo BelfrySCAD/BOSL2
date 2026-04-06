@@ -704,20 +704,16 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap, cutpath_centered) =
         cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize],
         cutpath = is_path(cutpath)? cutpath :
             _partition_subpath(cutpath),
-        reps_raw = ceil(l/(cutsize.x+gap)),
-        reps = reps_raw%2==0 && cutpath_centered ? reps_raw+1 : reps_raw,
-        cplen = (cutsize.x+gap) * reps,
+        reps_raw = 1 + floor((l - cutsize.x) / (cutsize.x + gap)),
+        _reps = reps_raw%2==0 && cutpath_centered ? reps_raw-1 : reps_raw,
+        reps = max(1, _reps),
+        cplen = reps*cutsize.x + max(0, reps-1)*gap,
         path = deduplicate(concat(
             [[-l/2, cutpath[0].y*cutsize.y]],
-            [for (i=[0:1:reps-1], pt=cutpath) v_mul(pt,cutsize)+[i*(cutsize.x+gap)+gap/2-cplen/2,0]],
-            [[ l/2, cutpath[len(cutpath)-1].y*cutsize.y]]
-        )),
-        stidxs = [for (i = idx(path)) if (path[i].x < -l/2) i],
-        enidxs = [for (i = idx(path)) if (path[i].x > +l/2) i],
-        stidx = stidxs? last(stidxs) : 0,
-        enidx = enidxs? enidxs[0] : -1,
-        trunc = select(path, stidx, enidx)
-    ) trunc;
+            [for (i=[0:1:reps-1], pt=cutpath) v_mul(pt,cutsize)+[i*(cutsize.x+gap) - cplen/2, 0]],
+            [[ cplen/2, cutpath[len(cutpath)-1].y*cutsize.y]]
+        ))
+    ) path;
 
 
 // Module: partition_mask()
