@@ -55,6 +55,13 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   * "convex" &mdash; choose the locally convex division
 //   * "concave" &mdash; choose the locally concave division
 //   * "quad" &mdash; makes quadrilateral edges, which may not be coplanar, relying on OpensCAD to decide how to handle them.
+//   .
+//   **Choosing a style:** For smooth surfaces like spheres or swept profiles, "default" or "alt" are
+//   usually fine.  Use "min_edge" to avoid long thin triangles on surfaces with varying curvature.
+//   Use "convex" or "concave" when you need consistent surface bowing direction (e.g. for textures).
+//   The "quincunx" style doubles the triangle count by adding center vertices&mdash;useful for
+//   heightfield textures that need sub-quad detail, but avoid it for smooth surfaces as the center
+//   points create saddle artifacts.  The "quad" style is fastest but faces may be non-coplanar.
 //   Degenerate faces are not included in the output, but if this results in unused vertices, those unused vertices do still appear in the output.
 //   .
 //   The vertex list *must* be a rectangular array. If rows of points are generated based on a radius and one of
@@ -129,6 +136,16 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   "intersect" = Anchors to the surface of the shape.
 // Named Anchors:
 //   "origin" = Anchor at the origin, oriented UP.
+// Example(3D,Med,NoAxes,VPD=310): Triangulation style comparison on a wavy surface.  From left to right: "default", "alt", "min_edge", "convex", "quincunx".
+//   function wavy(u,v) = [20*u-50, 20*v-10, 8*sin(u*72)*cos(v*72)];
+//   pts = [for(u=[0:5]) [for(v=[0:5]) wavy(u,v)]];
+//   styles = ["default","alt","min_edge","convex","quincunx"];
+//   for (i=idx(styles))
+//       right(i*25) {
+//           vnf = vnf_vertex_array(pts, style=styles[i]);
+//           color("lightblue",0.5) vnf_polyhedron(vnf);
+//           color("black") vnf_wireframe(vnf, width=0.3);
+//       }
 // Example(3D):
 //   vnf = vnf_vertex_array(
 //       points=[
