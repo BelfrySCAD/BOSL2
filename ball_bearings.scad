@@ -49,20 +49,19 @@ _BOSL2_BALL_BEARINGS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) |
 // Example: With flange, shield, and rounded edges.
 //   ball_bearing(id=12,od=24,width=6,shield=true, flange=true, fd=26.5, fw=1.5, rounding=0.6, $fn=72);
 module ball_bearing(trade_size, id, od, width, shield=true, flange=false, fd, fw, rounding, anchor=CTR, spin=0, orient=UP) {
-    info = is_undef(trade_size)? [id, od, width, shield, flange, fd, fw] :
-        ball_bearing_info(trade_size);
-    check = assert(all_defined(select(info, 0,4)), "Bad Input");
+    info = is_undef(trade_size) ? undef : ball_bearing_info(trade_size);
+    id = is_undef(info) ? id : struct_val(info, "id");
+    od = is_undef(info) ? od : struct_val(info, "od");
+    width = is_undef(info) ? width : struct_val(info, "width");
+    shield = is_undef(info) ? shield : struct_val(info, "shielded");
+    flange = is_undef(info) ? flange : struct_val(info, "flanged");
+    fd = is_undef(info) ? fd : struct_val(info, "flange_diameter");
+    fw = is_undef(info) ? fw : struct_val(info, "flange_width");
+    check = assert(all_defined([id, od, width]), "Bad Input: id, od, and width are required");
     if(flange){
         assert(!is_undef(fd), "If flange is set you must specify its diameter");
         assert(!is_undef(fw), "If flange is set you must specify its width");
     }
-    id = info[0];
-    od = info[1];
-    width = info[2];
-    shield = info[3];
-    flange = info[4];
-    fd = info[5];
-    fw = info[6];
     mid_d = (id+od)/2;
     wall = (od-id)/2/3;
     color("silver")
@@ -105,9 +104,15 @@ module ball_bearing(trade_size, id, od, width, shield=true, flange=false, fd, fw
 // See Also: ball_bearing(), linear_bearing(), lmXuu_info()
 // Description:
 //   Get dimensional info for a standard metric ball bearing cartridge.
-//   Returns `[SHAFT_DIAM, OUTER_DIAM, WIDTH, SHIELDED, FLANGED, FLANGE_DIAM, FLANGE_WIDTH]` for the cylindrical cartridge.
+//   Returns a struct with the following keys, accessible via {{struct_val()}}:
+//   `"id"` (inner diameter), `"od"` (outer diameter), `"width"`,
+//   `"shielded"`, `"flanged"`, `"flange_diameter"`, `"flange_width"`,
+//   and `"trade_size"`.
+//   .
+//   For backward compatibility, the returned struct can also be indexed
+//   as a list: `info[0]` = id, `info[1]` = od, etc.
 // Arguments:
-//   size = Inner diameter of lmXuu bearing, in mm.
+//   trade_size = Trade size string (e.g. "608", "608ZZ", "R8").
 function ball_bearing_info(trade_size) =
     assert(is_string(trade_size))
     let(
@@ -299,7 +304,18 @@ function ball_bearing_info(trade_size) =
         found = search([trade_size], data, 1)[0]
     )
     assert(found!=[], str("Unsupported ball bearing trade size: ", trade_size))
-    select(data[found], 1, -1);
+    let(d = data[found])
+    [
+        ["type", "ball_bearing_info"],
+        ["trade_size", d[0]],
+        ["id", d[1]],
+        ["od", d[2]],
+        ["width", d[3]],
+        ["shielded", d[4]],
+        ["flanged", d[5]],
+        ["flange_diameter", d[6]],
+        ["flange_width", d[7]]
+    ];
 
 
 
