@@ -386,7 +386,7 @@ function _calc_mult(knots) =
 //   show_index = if true then display index of each control point vertex.  Default: true
 //   show_weights = if true then display any non-unity weights.  Default: true if weights vector is supplied, false otherwise
 //   show_knots = If true then show the knots on the spline curve.  Default: false
-//   show_contro = If true then show the control points and its polygon.  Default: true
+//   show_control = If true then show the control points and its polygon.  Default: true
 // Example(2D,Med,NoAxes): The default display includes the control point polygon with its vertices numbered, and the NURBS curve
 //   pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
 //   debug_nurbs(pts,4,type="closed");
