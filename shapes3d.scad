@@ -529,7 +529,7 @@ module cuboid(
                     checks = assert(edges == EDGES_ALL || edges[2] == [0,0,0,0], "\nCannot use negative rounding with Z aligned edges.");
                     ard = abs(rounding);
                     cube(size, center=true);
-
+                    $fn = quantup(segs(rounding),4);
                     // External-Rounding mask edges
                     difference() {
                         union() {
