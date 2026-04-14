@@ -233,12 +233,12 @@ module stroke(
 
     function _shape_path(cap,linewidth,w,l,l2) = (
         cap=="butt" || cap==false || cap==undef ? [] : 
-        cap=="round" || cap==true ? scale([w,l], p=circle(d=1, $fn=max(8, segs(w/2)))) :
+        cap=="round" || cap==true ? scale([w,l], p=circle(d=1, $fn=max(8, segs(w*linewidth/2)))) :
         cap=="chisel"?  scale([w,l], p=circle(d=1,$fn=4)) :
         cap=="diamond"? circle(d=w,$fn=4) :
         cap=="square"?  scale([w,l], p=square(1,center=true)) :
         cap=="block"?   scale([w,l], p=square(1,center=true)) :
-        cap=="dot"?     circle(d=w, $fn=max(12, segs(w*3/2))) :
+        cap=="dot"?     circle(d=w, $fn=max(8, segs(w*linewidth))) :
         cap=="x"?       [for (a=[0:90:270]) each rot(a,p=[[w+l/2,w-l/2]/2, [w-l/2,w+l/2]/2, [0,l/2]]) ] :
         cap=="cross"?   [for (a=[0:90:270]) each rot(a,p=[[l,w]/2, [-l,w]/2, [-l,l]/2]) ] :
         cap=="line"?    scale([w,l], p=square(1,center=true)) :
