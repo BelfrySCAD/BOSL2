@@ -420,7 +420,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
     if (show_knots){
       knotpts = nurbs_curve(control=control, degree=degree, splinesteps=1, mult=mult, weights=weights, type=type, knots=knots);
       echo(knotpts);
-        color([193,131,214]/255) 
+        color([0,.8,0])
         move_copies(knotpts)
           if (twodim) union(){rect([3*width,width]); rect([width,3*width]);} //circle(r=width);
           else for(i=[0:2]) cuboid(list_rotate([3*width,width,width],i));
