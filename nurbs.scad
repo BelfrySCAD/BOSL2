@@ -405,7 +405,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
     assert(num_defined([degree,mult,weights,knots])==0,
            "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
     debug_nurbs(control[2], control[1], splinesteps, width, size, weights=control[5],mult=control[4], type=control[0], knots=control[3],
-                show_weights=show_weights, show_knots=show_knots, show_index=show_index);
+                show_weights=show_weights, show_knots=show_knots, show_index=show_index, show_control=show_control);
   }
   else {
     $fn=8;
