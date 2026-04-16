@@ -44,6 +44,21 @@ include <../std.scad>
 module test_v_floor() {
     assert_equal(v_floor([2.0, 3.14, 18.9, 7]), [2,3,18,7]);
     assert_equal(v_floor([-2.0, -3.14, -18.9, -7]), [-2,-4,-19,-7]);
+    // Vetor zero
+    assert_equal(v_floor([0, 0, 0]), [0, 0, 0]);
+    assert_equal(v_floor([0.0, 0.0]), [0, 0]);
+    // Valores inteiros (sem mudanca)
+    assert_equal(v_floor([1, -1, 5, -5]), [1, -1, 5, -5]);
+    // Valores proximos de inteiros
+    assert_equal(v_floor([0.999, -0.001]), [0, -1]);
+    assert_equal(v_floor([1.001, -1.999]), [1, -2]);
+    // Vetor 2D
+    assert_equal(v_floor([3.7, -2.3]), [3, -3]);
+    // Valores grandes
+    assert_equal(v_floor([99999.9, -99999.1]), [99999, -100000]);
+    // Vetor unitario com componentes fracionarios
+    assert_equal(v_floor([0.5, 0.5, 0.5]), [0, 0, 0]);
+    assert_equal(v_floor([-0.5, -0.5, -0.5]), [-1, -1, -1]);
 }
 test_v_floor();
 '''
@@ -56,6 +71,21 @@ include <../std.scad>
 module test_v_ceil() {
     assert_equal(v_ceil([2.0, 3.14, 18.9, 7]), [2,4,19,7]);
     assert_equal(v_ceil([-2.0, -3.14, -18.9, -7]), [-2,-3,-18,-7]);
+    // Vetor zero
+    assert_equal(v_ceil([0, 0, 0]), [0, 0, 0]);
+    assert_equal(v_ceil([0.0, 0.0]), [0, 0]);
+    // Valores inteiros (sem mudanca)
+    assert_equal(v_ceil([1, -1, 5, -5]), [1, -1, 5, -5]);
+    // Valores proximos de inteiros
+    assert_equal(v_ceil([0.001, -0.999]), [1, 0]);
+    assert_equal(v_ceil([1.001, -1.999]), [2, -1]);
+    // Vetor 2D
+    assert_equal(v_ceil([3.2, -2.7]), [4, -2]);
+    // Valores grandes
+    assert_equal(v_ceil([99999.1, -99999.9]), [100000, -99999]);
+    // Vetor unitario com componentes fracionarios
+    assert_equal(v_ceil([0.5, 0.5, 0.5]), [1, 1, 1]);
+    assert_equal(v_ceil([-0.5, -0.5, -0.5]), [0, 0, 0]);
 }
 test_v_ceil();
 '''
@@ -91,6 +121,20 @@ module test_v_mul() {
     assert_equal(v_mul([3,4,5], [8,7,6]), [24,28,30]);
     assert_equal(v_mul([1,2,3], [4,5,6]), [4,10,18]);
     assert_equal(v_mul([[1,2,3],[4,5,6],[7,8,9]], [[4,5,6],[3,2,1],[5,9,3]]), [32,28,134]);
+    // Multiplicacao por vetor zero
+    assert_equal(v_mul([1,2,3], [0,0,0]), [0,0,0]);
+    assert_equal(v_mul([0,0,0], [5,6,7]), [0,0,0]);
+    // Valores negativos
+    assert_equal(v_mul([-1,-2,-3], [4,5,6]), [-4,-10,-18]);
+    assert_equal(v_mul([-1,-2], [-3,-4]), [3,8]);
+    // Vetor unitario (identidade)
+    assert_equal(v_mul([5,10,15], [1,1,1]), [5,10,15]);
+    // Valores grandes
+    assert_equal(v_mul([1000,2000], [3000,4000]), [3000000,8000000]);
+    // Vetor 2D
+    assert_equal(v_mul([3,4], [5,6]), [15,24]);
+    // Multiplicacao com valores fracionarios
+    assert_approx(v_mul([0.5, 0.25], [2, 4]), [1, 1]);
 }
 test_v_mul();
 '''
@@ -102,6 +146,22 @@ include <../std.scad>
 
 module test_v_div() {
     assert(v_div([24,28,30], [8,7,6]) == [3, 4, 5]);
+    // Divisao com valores negativos
+    assert_equal(v_div([-24,28,-30], [8,-7,6]), [-3,-4,-5]);
+    assert_equal(v_div([-10,-20], [-2,-5]), [5,4]);
+    // Divisao de zero por nao-zero
+    assert_equal(v_div([0,0,0], [1,2,3]), [0,0,0]);
+    // Vetor unitario como divisor (identidade)
+    assert_equal(v_div([5,10,15], [1,1,1]), [5,10,15]);
+    // Valores grandes
+    assert_equal(v_div([9000000,8000000], [3000,4000]), [3000,2000]);
+    // Vetor 2D
+    assert_equal(v_div([10,20], [2,5]), [5,4]);
+    // Divisao com resultado fracionario
+    assert_approx(v_div([1,1,1], [3,3,3]), [1/3, 1/3, 1/3]);
+    assert_approx(v_div([1,2], [4,8]), [0.25, 0.25]);
+    // Dividir por si mesmo
+    assert_approx(v_div([7,13,29], [7,13,29]), [1,1,1]);
 }
 test_v_div();
 '''
@@ -117,6 +177,22 @@ module test_v_abs() {
     assert(v_abs([-2,4,8]) == [2,4,8]);
     assert(v_abs([2,-4,8]) == [2,4,8]);
     assert(v_abs([2,4,-8]) == [2,4,8]);
+    // Vetor zero
+    assert(v_abs([0,0,0]) == [0,0,0]);
+    assert(v_abs([0,0]) == [0,0]);
+    // Vetor 2D
+    assert(v_abs([-3,4]) == [3,4]);
+    assert(v_abs([3,-4]) == [3,4]);
+    // Valores unitarios
+    assert(v_abs([1,0,0]) == [1,0,0]);
+    assert(v_abs([-1,0,0]) == [1,0,0]);
+    assert(v_abs([0,-1,0]) == [0,1,0]);
+    // Valores grandes
+    assert(v_abs([-100000, 100000, -99999]) == [100000, 100000, 99999]);
+    // Valores fracionarios
+    assert_approx(v_abs([-0.5, 0.25, -0.125]), [0.5, 0.25, 0.125]);
+    // Vetor longo
+    assert(v_abs([-1,-2,-3,-4,-5]) == [1,2,3,4,5]);
 }
 test_v_abs();
 '''
@@ -147,6 +223,25 @@ module test_v_theta() {
     assert_approx(v_theta([0,1,1]), 90);
     assert_approx(v_theta([0,-1,1]), -90);
     assert_approx(v_theta([1,1,1]), 45);
+    // Vetores unitarios nos eixos com magnitude variada
+    assert_approx(v_theta([100,0]), 0);
+    assert_approx(v_theta([0,100]), 90);
+    assert_approx(v_theta([-100,0]), 180);
+    assert_approx(v_theta([0,-100]), -90);
+    // Angulos em 2D com valores negativos
+    assert_approx(v_theta([-1,-1]), -135);
+    assert_approx(v_theta([1,-1]), -45);
+    // Valores grandes em 3D
+    assert_approx(v_theta([1000, 1000, 0]), 45);
+    assert_approx(v_theta([-1000, 1000, 500]), 135);
+    // Vetores com componente Z grande (Z nao afeta theta)
+    assert_approx(v_theta([1, 0, 99999]), 0);
+    assert_approx(v_theta([0, 1, -99999]), 90);
+    // Angulos de 30, 60 graus em 2D
+    assert_approx(v_theta([cos(30), sin(30)]), 30);
+    assert_approx(v_theta([cos(60), sin(60)]), 60);
+    assert_approx(v_theta([cos(-60), sin(-60)]), -60);
+    assert_approx(v_theta([cos(150), sin(150)]), 150);
 }
 test_v_theta();
 '''
@@ -206,6 +301,30 @@ module test_unit() {
     assert(abs(norm(unit([-10,0,0]))-1) < _EPSILON);
     assert(abs(norm(unit([0,-10,0]))-1) < _EPSILON);
     assert(abs(norm(unit([0,0,-10]))-1) < _EPSILON);
+    // Vetores negativos nos eixos
+    assert_approx(unit([-10,0,0]), [-1,0,0]);
+    assert_approx(unit([0,-10,0]), [0,-1,0]);
+    assert_approx(unit([0,0,-10]), [0,0,-1]);
+    // Vetores ja unitarios (devem retornar o mesmo)
+    assert_approx(unit([1,0,0]), [1,0,0]);
+    assert_approx(unit([0,1,0]), [0,1,0]);
+    assert_approx(unit([0,0,1]), [0,0,1]);
+    // Vetor 2D
+    assert_approx(unit([3,4]), [0.6, 0.8]);
+    assert_approx(unit([-3,4]), [-0.6, 0.8]);
+    assert(abs(norm(unit([3,4]))-1) < _EPSILON);
+    // Valores grandes
+    assert(abs(norm(unit([100000,0,0]))-1) < _EPSILON);
+    assert_approx(unit([100000,0,0]), [1,0,0]);
+    // Valores pequenos (mas nao zero)
+    assert(abs(norm(unit([0.001, 0, 0]))-1) < _EPSILON);
+    assert_approx(unit([0.001, 0, 0]), [1, 0, 0]);
+    // Direcao preservada para vetores diagonais
+    assert_approx(unit([1,1,0]), [1/sqrt(2), 1/sqrt(2), 0]);
+    assert_approx(unit([1,1,1]), [1/sqrt(3), 1/sqrt(3), 1/sqrt(3)]);
+    // Parametro error para vetor zero
+    assert_equal(unit([0,0,0], error=[0,0,0]), [0,0,0]);
+    assert_equal(unit([0,0,0], error=[1,2,3]), [1,2,3]);
 }
 test_unit();
 '''
@@ -331,6 +450,20 @@ include <../std.scad>
 
 module test_add_scalar() {
     assert(add_scalar([1,2,3],3) == [4,5,6]);
+    // Somar zero (identidade)
+    assert(add_scalar([1,2,3],0) == [1,2,3]);
+    // Somar valor negativo
+    assert(add_scalar([1,2,3],-3) == [-2,-1,0]);
+    // Vetor zero
+    assert(add_scalar([0,0,0],5) == [5,5,5]);
+    // Vetor 2D
+    assert(add_scalar([10,20],5) == [15,25]);
+    // Valores negativos no vetor
+    assert(add_scalar([-1,-2,-3],3) == [2,1,0]);
+    // Valores grandes
+    assert(add_scalar([100000,200000],1) == [100001,200001]);
+    // Valores fracionarios
+    assert_approx(add_scalar([0.1, 0.2, 0.3], 0.5), [0.6, 0.7, 0.8]);
 }
 test_add_scalar();
 '''
