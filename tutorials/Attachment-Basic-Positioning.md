@@ -2,7 +2,7 @@
 
 # Basic Object Positioning: Anchor, Spin and Orient
 
-When you create attachable objects using BOSL2 you have some options
+When you create attachable objects using BOSL2 you have some 
 options for controling how that object is positioned relative to the
 origin and the coordinate axes.  The basic object positioning
 parameters are optional named parameters supported by attachable
