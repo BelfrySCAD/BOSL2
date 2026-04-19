@@ -228,7 +228,7 @@ module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
 // Topics: FDM Optimized, Walls
 // See Also: sparse_wall(), hex_panel(), corrugated_wall(), thinning_wall(), thinning_triangle(), narrowing_strut()
 // Usage:
-//   hex_panel(shape, wall, spacing, [frame=], [bevel=], [bevel_frame=], [h=|height=|l=|length=], [anchor=], [orient=], [spin=])
+//   hex_panel(shape, wall, spacing, [frame=], [bevel=], [bevel_frame=], [shift=], [h=|height=|l=|length=], [anchor=], [orient=], [spin=])
 // Description:
 //   Produces a panel with a honeycomb interior that can be rectangular with optional beveling, or
 //   an arbitrary polygon shape without beveling. The panel consists of a frame containing
@@ -245,6 +245,10 @@ module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
 //   defaults to the frame thickness.  Note also that `frame` and `bevel_frame` can be set to zero
 //   to produce just the honeycomb.  
 //   . 
+//   The `shift=` parameter lets you shift the hex grid pattern by an [x,y] vector.  This is useful
+//   when you need to align the hex pattern across adjacent panels that share an edge, or to
+//   control the starting position of the honeycomb pattern within the panel.
+//   .
 //   The other option is to provide a 2D path as the shape argument. The path must not intersect
 //   itself.  You must give the height argument in this case and you cannot give the bevel argument.
 //   The panel is made from a linear extrusion of the specified shape.  In this case, anchoring
@@ -258,6 +262,7 @@ module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
 //   frame = width of the frame around the honeycomb.  Default: same as strut
 //   bevel = list of edges to bevel on rectangular case when shape is a size vector; allowed options are RIGHT, LEFT, BACK, or FRONT, or those directions with BOTTOM added.  Default: []
 //   bevel_frame = width of the frame applied at bevels.  Default: same as frame
+//   shift = 2D vector [x,y] to shift the hex grid pattern.  Useful for aligning hex patterns across adjacent panels.  Default: [0,0]
 //   h / height / l / length = thickness of the panel when shape is a path 
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER` for rectangular panels, `"zcenter"` for extrusions.  
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -307,19 +312,22 @@ module sparse_cuboid(size, dir=RIGHT, strut=5, maxang=30, max_bridge=20,
 //     hex_panel([50, 100, 10], 1.5, 10, frame = 5, bevel_frame=0, bevel = [FWD, BACK], anchor = BACK + RIGHT + BOTTOM, orient = RIGHT)
 //       attach(BACK,FRONT) 
 //          hex_panel([50, 100, 10], 1.5, 10, frame = 5, bevel_frame=0, bevel = [FWD, BACK]);
-// Example: Joining panels with {{attach()}}.  Attaching BACK to BACK aligns the hex structure which looks better.  
+// Example: Joining panels with {{attach()}}.  Attaching BACK to BACK aligns the hex structure which looks better.
 //     hex_panel([50, 100, 10], 1.5, 10, frame = 1, bevel = [FWD, BACK], anchor = BACK + RIGHT + BOTTOM, orient = RIGHT)
-//       attach(BACK,BACK) 
+//       attach(BACK,BACK)
 //          hex_panel([50, 100, 10], 1.5, 10, frame = 1, bevel = [FWD, BACK]);
+// Example: Using `shift=` to offset the hex grid pattern.
+//     hex_panel([80, 60, 5], 1.5, 10, frame=3, shift=[5,5]);
 module hex_panel(
     shape,
     strut,
     spacing,
     frame,
     bevel_frame,
-    h, height, l, length, 
+    h, height, l, length,
     bevel = [],
-    anchor, 
+    shift = [0,0],
+    anchor,
     orient = UP, cp="centroid", atype="hull",
     spin = 0) 
 {
@@ -341,7 +349,8 @@ module hex_panel(
       assert(!(in_list(BACK,  bevel) && in_list(BACK+BOTTOM,  bevel)), "conflicting BACK bevels")
       assert(!(in_list(RIGHT, bevel) && in_list(RIGHT+BOTTOM, bevel)), "conflicting RIGHT bevels")
       assert(!(in_list(LEFT,  bevel) && in_list(LEFT+BOTTOM,  bevel)), "conflicting LEFT bevels")
-      assert(is_undef(h) || is_path(shape), "cannot give h with a size vector");
+      assert(is_undef(h) || is_path(shape), "cannot give h with a size vector")
+      assert(is_vector(shift,2), "shift must be a 2D vector");
     shp = is_path(shape) ? shape : square([shape.x, shape.y], center = true);
     ht = is_path(shape) ? one_defined([h,l,height,length],"height,length,l,h")
        : shape.z;
@@ -363,7 +372,7 @@ module hex_panel(
                  intersection() {
                      union() {
                          linear_extrude(height = ht, convexity=8) {
-                             _honeycomb(shp, spacing = spacing, hex_wall = strut);
+                             _honeycomb(shp, spacing = spacing, hex_wall = strut, shift = shift);
                              offset_stroke(shp, width=[-frame, 0], closed=true);
                          }
                          for (b = bevel) _bevelWall(shape, b, bevel_frame);
@@ -377,7 +386,7 @@ module hex_panel(
          attachable(anchor = anchor, spin = spin, orient = orient, size = shape) {        
              down(ht/2) 
                  linear_extrude(height = ht, convexity=8) {
-                     _honeycomb(shp, spacing = spacing, hex_wall = strut);
+                     _honeycomb(shp, spacing = spacing, hex_wall = strut, shift = shift);
                      offset_stroke(shp, width=[-frame, 0], closed=true);
                  }
              children();
@@ -392,7 +401,7 @@ module hex_panel(
          attachable(anchor = default(anchor,"zcenter"), spin = spin, orient = orient, path=shp, h=ht, cp=cp, extent=atype=="hull",anchors=anchors) {        
               down(ht/2) 
                  linear_extrude(height = ht, convexity=8) {
-                     _honeycomb(shp, spacing = spacing, hex_wall = strut);
+                     _honeycomb(shp, spacing = spacing, hex_wall = strut, shift = shift);
                      offset_stroke(shp, width=[-frame, 0], closed=true);
                  }
              children();
@@ -402,14 +411,14 @@ module hex_panel(
 }
 
 
-module _honeycomb(shape, spacing=10, hex_wall=1) 
+module _honeycomb(shape, spacing=10, hex_wall=1, shift=[0,0])
 {
         hex = hexagon(id=spacing-hex_wall, spin=180/6);
         bounds = pointlist_bounds(shape);
-        size = bounds[1] - bounds[0];
+        size = bounds[1] - bounds[0] + 2*[spacing,spacing];
         hex_rgn2 = grid_copies(spacing=spacing, size=size, stagger=true, p=hex);
         center = (bounds[0] + bounds[1]) / 2;
-        hex_rgn = move(center, p=hex_rgn2);
+        hex_rgn = move(center + shift, p=hex_rgn2);
         difference(){
             polygon(shape);
             region(hex_rgn);
