@@ -2424,7 +2424,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   .
 //   Type    | Color    | Code         | Message
 //   ------- | -------- | ------------ | ---------------------------------
-//   WARNING | Yellow   | BIG_FACE     | Face has more than 3 vertices, and may confuse CGAL.
+//   WARNING | Yellow   | BIG_FACE     | Face has more than 3 vertices (off by default; enable with `big_face=true`).
 //   WARNING | Blue     | NULL_FACE    | Face has zero area.
 //   ERROR   | Green    | BAD_INDEX    | Invalid face vertex index.
 //   ERROR   | Cyan     | NONPLANAR    | Face vertices are not coplanar.
@@ -2443,7 +2443,7 @@ module debug_vnf(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   ---
 //   show_warns = If true show warnings for non-triangular faces.  Default: true
 //   check_isects = If true, performs slow checks for intersecting faces.  Default: false
-//   big_false = If true report faces with more than 3 vertices even though these may not cause problems.  Default: true
+//   big_face = If true report faces with more than 3 vertices.  In practice, large faces (even non-planar) render correctly in both CGAL and Manifold, so this is off by default.  Default: false
 //   opacity = The opacity level to show the polyhedron itself with.    Default: 0.67
 //   label_verts = If true, shows labels at each vertex that show the vertex number.    Default: false
 //   label_faces = If true, shows labels at the center of each face that show the face number.    Default: false
@@ -2724,7 +2724,7 @@ function _edge_not_reported(edge, varr, reports) =
     ] == [];
 
 
-module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, big_face=true, opacity=0.67, adjacent=false, label_verts=false, label_faces=false, wireframe=false) {
+module vnf_validate(vnf, size=1, show_warns=true, check_isects=false, big_face=false, opacity=0.67, adjacent=false, label_verts=false, label_faces=false, wireframe=false) {
     no_children($children);
     vcount = len(vnf[0]);
     fcount = len(vnf[1]);
