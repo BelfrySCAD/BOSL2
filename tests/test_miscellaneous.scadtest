@@ -1,0 +1,19 @@
+[[test]]
+name = "test_bridged_hole"
+script = '''
+include <../std.scad>
+
+module test_bridged_hole() {
+    // Basic usage with radius
+    bridged_hole(r=5, layer_height=0.2);
+    // With diameter
+    bridged_hole(d=10, layer_height=0.3, layers=5);
+    // With spin rotation
+    bridged_hole(r=8, layer_height=0.2, layers=4, spin=45);
+    // Minimum layers (just one rectangle)
+    bridged_hole(r=3, layer_height=0.2, layers=1);
+    // Two layers
+    bridged_hole(r=4, layer_height=0.15, layers=2);
+}
+test_bridged_hole();
+'''
