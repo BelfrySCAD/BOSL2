@@ -859,6 +859,29 @@ function nurbs_interp(points, degree, method="centripetal", closed=false,
 //   show_knots      = Show knot position markers on the curve.  Default: `false`
 //   show_deriv      = Show derivative-constraint arrows.  Default: `true`
 //   show_curvature  = Show curvature-constraint circles / disks.  Default: `true`
+//
+//
+// Example(2D,NoAxes): Keyhole Shape: Simply interpolating a NURBS through the data points yields disappointing results.
+//   data = [[0,0],[0,10],[-5,20],[5,30],[15,20],[10,10],[10,0],[0,0]];
+//   debug_nurbs_interp(data,3, method="centripetal");
+//
+// Example(2D,NoAxes,VPT=[3,15,0],VPD=130): Keyhole Shap: Adding derivative constraints causes unwanted oscillation.
+//   data = [[0,0],[0,10],[-5,20],[5,30],[15,20],[10,10],[10,0],[0,0]];
+//      debug_nurbs_interp(data,3, method="centripetal",
+//      deriv=[undef,NAN,UP,RIGHT*1.3,DOWN,NAN,NAN,undef]);
+//
+// Example(2D,NoAxes): Keyhole Shape: Adding extra points calms oscillations.
+//   data = [[0,0],[0,10],[-5,20],[5,30],[15,20],[10,10],[10,0],[0,0]];
+//   debug_nurbs_interp(data,3, method="centripetal",
+//      deriv=[undef,NAN,UP,RIGHT*1.3,DOWN,NAN,NAN,undef],
+//      extra_pts = 1, smooth = 3);
+//
+// Example(2D,NoAxes): Keyhole Shape: Constrained curvature at point 3 improves the shape.
+//   data = [[0,0],[0,10],[-5,20],[5,30],[15,20],[10,10],[10,0],[0,0]];
+//   debug_nurbs_interp(data,3, method="centripetal",
+//      deriv=[undef,NAN,UP,RIGHT*1.3,DOWN,NAN,NAN,undef],
+//      curvature=[undef,undef,undef,-.1,undef,undef,undef,undef],
+//      extra_pts = 1, smooth = 3);
 
 module debug_nurbs_interp(points, degree, splinesteps=16, method="centripetal",
                           closed=false, deriv=undef,
@@ -1592,25 +1615,25 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //    nurbs_interp_surface(shape, 3, normal1 = DOWN, normal2 = UP, col_wrap = true, row_edges = 7);
 //
 // Example(3D): Handle Grip
-//    data = [[[0,7],[15,10],[30,10],[40,0],[30,-10],[15,-10],[0,-7]],
-//      [[0.5,6],[12,9],[30,8],[35,0],[30,-8],[12,-9],[0.5,-6]]];
-//    path1 = nurbs_curve(nurbs_interp(data[0],3,closed=true, 
-//    deriv = [undef,undef,undef,FWD,undef,undef,undef],
-//    curvature = [undef,undef,undef,-.1,undef,undef,undef],
-//    extra_pts = 6, smooth = 3));
-//    path2 = nurbs_curve(nurbs_interp(data[1],3,closed=true, 
-//        deriv = [undef,undef,undef,FWD,undef,undef,undef],
-//        curvature = [undef,undef,undef,-.2,undef,undef,undef],
-//        extra_pts = 6, smooth = 3));
-//    // The 2 NURBS curves have different path lengths, so we resample them.
-//    samples = 20;
-//    paths = [resample_path(path2,samples), resample_path(path1,samples)];
-//    shape = [ 
-//    repeat([15,0,0],samples), 
-//    for(i=[0:10]) path3d(paths[i%2],i*10),
-//    repeat([15,0,100],samples)
-//    ];
-//    nurbs_interp_surface(shape, 3, col_wrap = true, normal1 = [0,0,-3], normal2 = [0,0,3]);
+//   data = [[[0.5,6],[12,9],[30,8],[35,0],[30,-8],[12,-9],[0.5,-6]],
+//      [[0,9],[15,12],[30,12],[40,0],[30,-12],[15,-12],[0,-9]]];
+//   path1 = nurbs_curve(nurbs_interp(data[0],3,closed=true, 
+//       deriv = [undef,undef,undef,FWD,undef,undef,undef],
+//       curvature = [undef,undef,undef,-.1,undef,undef,undef],
+//       extra_pts = 6, smooth = 3));
+//   path2 = nurbs_curve(nurbs_interp(data[1],3,closed=true, 
+//       deriv = [undef,undef,undef,FWD,undef,undef,undef],
+//       curvature = [undef,undef,undef,-.2,undef,undef,undef],
+//       extra_pts = 6, smooth = 3));
+//   //The 2 NURBS curves have different path lengths, so we resample them.
+//   samples = 20;
+//   paths = [resample_path(path1,samples), resample_path(path2,samples)];
+//   shape = [ 
+//      repeat([15,0,-2],samples), 
+//      for(i=[0:10]) path3d(paths[i%2],i*12),
+//      repeat([15,0,124],samples)
+//   ];
+//   nurbs_interp_surface(shape, 3, col_wrap = true, normal1 = [0,0,-3], normal2 = [0,0,3]);
 
 
 function nurbs_interp_surface(points, degree, method="centripetal",
