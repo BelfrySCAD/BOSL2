@@ -4304,20 +4304,4 @@ function _surface_params_v(points, method, periodic) =
         sum([for (k = [0:1:n_rows-1]) row_params[k][l]]) / n_rows
     ];
 
-<<<<<<< Updated upstream
 
-
-
-
-//
-// Example(2D): Clamped curve (default)
-//   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
-//   debug_nurbs_interp(data, 3);
-//
-// Example(2D): Closed curve (debug view)
-//   // Do NOT repeat the first point at the end.
-//   data = [[0,0], [30,50], [60,40], [80,10], [50,-20], [20,-10]];
-//   debug_nurbs_interp(data, 3, closed=true);
-//
-=======
->>>>>>> Stashed changes
