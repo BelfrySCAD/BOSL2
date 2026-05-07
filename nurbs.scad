@@ -4304,6 +4304,7 @@ function _surface_params_v(points, method, periodic) =
         sum([for (k = [0:1:n_rows-1]) row_params[k][l]]) / n_rows
     ];
 
+<<<<<<< Updated upstream
 
 
 
@@ -4318,3 +4319,5 @@ function _surface_params_v(points, method, periodic) =
 //   data = [[0,0], [30,50], [60,40], [80,10], [50,-20], [20,-10]];
 //   debug_nurbs_interp(data, 3, closed=true);
 //
+=======
+>>>>>>> Stashed changes
