@@ -11,41 +11,18 @@ This tutorial explains how to specify which edges and faces you want to operate 
 
 ## Faces
 
-A face on a cube-like shape is identified by a single direction vector pointing
-toward that face. The six faces and their vector names are:
+A face on a cube-like shape is identified by a single direction unit vector pointing toward that face.
+For convenience, all six faces of a cube have easy to remember names associated with them.
+The six faces and their vector names are:
 
-| Vector       | Aliases           | Description       |
-|--------------|-------------------|-------------------|
-| `TOP` / `UP`    | `[0,0,1]`     | Top face (+Z)     |
-| `BOT` / `DOWN`  | `[0,0,-1]`    | Bottom face (-Z)  |
+| Name            | Vector        | Description       |
+|-----------------|---------------|-------------------|
+| `LEFT`          | `[-1,0,0]`    | Left face (-X)    |
+| `RIGHT`         | `[1,0,0]`     | Right face (+X)   |
 | `FRONT` / `FWD` | `[0,-1,0]`    | Front face (-Y)   |
-| `BACK`           | `[0,1,0]`     | Back face (+Y)    |
-| `LEFT`           | `[-1,0,0]`    | Left face (-X)    |
-| `RIGHT`          | `[1,0,0]`     | Right face (+X)   |
-
-Face vectors are used with modules like `face_profile()` to apply a 2D mask
-profile to all edges and corners of a given face:
-
-```openscad-3D
-include <BOSL2/std.scad>
-diff()
-cube([50,60,70], center=true)
-    face_profile(TOP, r=10)
-        mask2d_roundover(10);
-```
-
-You can also pass a list of faces:
-
-```openscad-3D
-include <BOSL2/std.scad>
-diff()
-cube([50,60,70], center=true) {
-    face_profile(TOP, r=10)
-        mask2d_roundover(10);
-    face_profile(FRONT, r=10)
-        mask2d_roundover(10);
-}
-```
+| `BACK`          | `[0,1,0]`     | Back face (+Y)    |
+| `BOTTOM` / `BOT` / `DOWN`  | `[0,0,-1]`    | Bottom face (-Z)  |
+| `TOP` / `UP`    | `[0,0,1]`     | Top face (+Z)     |
 
 
 ## Edges
@@ -53,16 +30,7 @@ cube([50,60,70], center=true) {
 A cube has 12 edges. BOSL2 identifies each edge by combining two face direction
 vectors. For example, the edge where the TOP and FRONT faces meet is `TOP+FRONT`.
 
-### Single Edge Selection
-
-You select a single edge by summing two adjacent face vectors:
-
-```openscad-3D
-include <BOSL2/std.scad>
-cuboid([50,60,70], rounding=10, edges=[TOP+FRONT]);
-```
-
-The 12 edges of a cube, grouped by level:
+The 12 edges of a cube, grouped by level are:
 
 **Top edges:**
 - `TOP+FRONT`
@@ -82,6 +50,33 @@ The 12 edges of a cube, grouped by level:
 - `BACK+LEFT`
 - `BACK+RIGHT`
 
+
+### Individual Edge Selection
+
+Some shapes in BOSL2 offer rounding or chamfering of their edges.  In `cuboid()`, for example, you can add a `rounding=10` argument,
+to cause the cuboid's edges to be rounded to 10 units radius.  By default, all edges will be rounded, but you may only want to round
+one of the edges.  Using the `edges=` argument, you can specify which edge by summing two adjacent face vectors:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cuboid([50,60,70], rounding=10, edges=TOP+FRONT);
+```
+
+If you want to specify more than one edge, you can make a list of edges:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cuboid([50,60,70], rounding=10, edges=[TOP+FRONT, RIGHT+FRONT]);
+```
+
+You can select as many edges as you want:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cuboid([50,60,70], rounding=10, edges=[TOP+FRONT, RIGHT+FRONT, BOTTOM+FRONT]);
+```
+
+
 ### Selecting All Edges Around a Face
 
 A single face vector selects all four edges surrounding that face:
@@ -94,6 +89,14 @@ cuboid([50,60,70], rounding=10, edges=TOP);
 This rounds all four edges around the top face. Similarly, `edges=FRONT` selects
 the four edges around the front face.
 
+You can also specify multiple faces in a list, to select all edges around any of them:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cuboid([50,60,70], rounding=10, edges=[TOP,RIGHT]);
+```
+
+
 ### Selecting Edges Around a Corner
 
 A corner vector (sum of three face vectors) selects the three edges meeting at
@@ -101,8 +104,16 @@ that corner:
 
 ```openscad-3D
 include <BOSL2/std.scad>
-cuboid([50,60,70], rounding=5, edges=FRONT+RIGHT+TOP);
+cuboid([50,60,70], rounding=10, edges=FRONT+RIGHT+TOP);
 ```
+
+Again, you can make a list of corners to select all edges around any of the corners.
+
+```openscad-3D
+include <BOSL2/std.scad>
+cuboid([50,60,70], rounding=10, edges=[FRONT+RIGHT+TOP, FRONT+LEFT+TOP]);
+```
+
 
 ### Axis-Aligned Edge Sets
 
@@ -123,11 +134,17 @@ cuboid([50,60,70], rounding=10, edges="Z");
 
 This rounds only the four vertical edges.
 
+Again, you can use a list to select multiple of these:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cuboid([50,60,70], rounding=10, edges=["Y","Z"]);
+```
+
 
 ## Combining Edge Selections
 
-The `edges` parameter accepts a list of edge descriptors. BOSL2 combines them
-into a union:
+You can mix and match any or all of the above described edge descriptors in a list, and BOSL2 will combine them in a union:
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -136,6 +153,15 @@ cuboid([50,60,70], rounding=5, edges=[TOP, FRONT+RIGHT]);
 
 This rounds all edges around the top face, plus the single vertical edge
 at the front-right.
+
+This can even be done with the axis aligned edge descriptors:
+
+```openscad-3D
+include <BOSL2/std.scad>
+cuboid([50,60,70], rounding=5, edges=[TOP, "Z"]);
+```
+
+This rounds all the edges around the top face, and all the vertical edges.
 
 
 ## The `except` Parameter
@@ -151,7 +177,7 @@ cuboid([50,60,70], rounding=10, edges="ALL", except=[BOT, FRONT+LEFT]);
 This rounds all edges except those around the bottom face and the front-left
 vertical edge.
 
-The `except` parameter accepts the same descriptors as `edges`: single edges,
+The `except` parameter accepts the same descriptors as `edges`: individual edges,
 face vectors, corner vectors, and axis strings.
 
 ```openscad-3D
@@ -179,7 +205,7 @@ to control which edges receive a mask.
 
 ### `edge_profile()`
 
-Extrudes a 2D profile along selected edges:
+Extrudes a 2D profile along selected edges.  Here, we're diffing the resulting extruded mask away:
 
 ```openscad-3D
 include <BOSL2/std.scad>
@@ -205,6 +231,19 @@ diff()
 cube([50,60,70], center=true)
     edge_mask([TOP, "Z"], except=[BACK, TOP+LEFT])
         round_edge(l=71, r=10);
+```
+
+### `face_profile()`
+
+Face vectors can be used with modules like `face_profile()` to apply a 2D mask
+profile to all edges and corners of a given face:
+
+```openscad-3D
+include <BOSL2/std.scad>
+diff()
+cube([50,60,70], center=true)
+    face_profile(TOP, r=10)
+        mask2d_roundover(10);
 ```
 
 
