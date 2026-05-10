@@ -144,6 +144,7 @@ Combine `path_sweep()` with a Bezier path for smooth flowing shapes:
 
 ```openscad-3D
 include <BOSL2/std.scad>
+include <BOSL2/beziers.scad>
 bez = bezpath_curve(
     [[0,0,0], [20,30,0], [40,-10,20], [60,0,40]],
     splinesteps=64
