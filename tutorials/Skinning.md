@@ -71,10 +71,13 @@ Setting `closed=true` connects the last profile back to the first, creating a to
 ```openscad-3D
 include <BOSL2/std.scad>
 skin(
-    [ move([20,0, 0], circle(r=5,$fn=32)),
-      move([0,20, 5], circle(r=8,$fn=32)),
-      move([-20,0,0], circle(r=5,$fn=32)),
-      move([0,-20,-5], circle(r=8,$fn=32)) ],
+    [
+        for (a = [0:45:359])
+        apply(
+            yrot(a) * right(20),
+            path3d(circle(r=5+a/60, $fn=32))
+        )
+    ],
     closed=true,
     slices=20
 );
@@ -143,7 +146,7 @@ Combine `path_sweep()` with a Bezier path for smooth flowing shapes:
 include <BOSL2/std.scad>
 bez = bezpath_curve(
     [[0,0,0], [20,30,0], [40,-10,20], [60,0,40]],
-    n=64
+    splinesteps=64
 );
 path_sweep(circle(r=3, $fn=16), bez);
 ```
@@ -187,7 +190,7 @@ include <BOSL2/std.scad>
 profiles = [
     for (z=[0:5:60])
     let(r = 15 + 5*sin(z*6))
-    move([0,0,z], circle(r=r, $fn=48))
+    move([0,0,z], path3d(circle(r=r, $fn=48)))
 ];
 skin(profiles, slices=2);
 ```
