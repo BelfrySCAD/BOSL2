@@ -1483,10 +1483,10 @@ assert(_dist2inner_for_cylindrical_clamp(0,8,5)==3);
 //   fin_angle = Degrees away from the radius line (0 is straight in to center, 90 is tangent). If left unset, will pick the largest possible angle (which yields the longest possible fin). Default: undef
 //   $slop = Increase the inner radius by $slop.
 //   fin_thick = How thick the fin will be. Must be at least the minimum line width of your printer, but that often results in a single unstable wall. Better is to be at least 2xline width (for classic wall) or 1.75xline width (for Arachne). Default: 0.4
-//   TODO: document the rest
-// TODO: implement orient and anchor and attachables
-// TODO: allow other fin direction by expanding fin angle past 90
-module cylindrical_clamp(h=1,od=undef,id=undef,od1=undef,od2=undef,id1=undef,id2=undef,or=undef,ir=undef,or1=undef,or2=undef,ir1=undef,ir2=undef,num=3,fin_thick=0.4,fin_angle=undef,shift=[0,0]) {
+///  TODO: document the rest of the arguments
+/// TODO: implement orient and anchor and attachables
+/// TODO: allow other fin direction by expanding fin angle past 90
+module cylindrical_clamp(h=1,od,id,od1,od2,id1,id2,or,ir,or1,or2,ir1,ir2,num=3,fin_thick=0.4,fin_angle,shift=[0,0]) {
     //
     if(!is_undef(fin_angle)) {
         assert(fin_angle>0);
