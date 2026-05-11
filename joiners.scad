@@ -1195,7 +1195,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
     snapmargin = -snap + last(sidepath).x;// - compression;
     if (is_pin){
       if (snapmargin<0) echo("WARNING: The snap is too large for the clip to squeeze to fit its socket")
-      echo(snapmargin=snapmargin);
+      //echo(snapmargin=snapmargin);
     }
     // Force tangent to be vertical at the outer edge of the clip to avoid overshoot
     fulltangent = list_set(path_tangents(fullpath, uniform=false),[2,8], [[0,1],[0,-1]]);
@@ -1454,7 +1454,7 @@ function _dist2inner_for_cylindrical_clamp(angle_from_tangent, or, ir) =
         length_from_tangent_circle_tangent_to_intersection_of_inner_circle = sqrt(pow(ir,2)-pow(tangent_circle_radius,2)),
         fin_length=length_from_starting_point_to_tangent_circle-length_from_tangent_circle_tangent_to_intersection_of_inner_circle
     )
-    echo(tangent_circle_radius=tangent_circle_radius,length_from_starting_point_to_tangent_circle=length_from_starting_point_to_tangent_circle,length_from_tangent_circle_tangent_to_intersection_of_inner_circle=length_from_tangent_circle_tangent_to_intersection_of_inner_circle,fin_length=fin_length)
+    //echo(tangent_circle_radius=tangent_circle_radius,length_from_starting_point_to_tangent_circle=length_from_starting_point_to_tangent_circle,length_from_tangent_circle_tangent_to_intersection_of_inner_circle=length_from_tangent_circle_tangent_to_intersection_of_inner_circle,fin_length=fin_length)
     fin_length;
 
 assert(_dist2inner_for_cylindrical_clamp(0,8,5)==3);
@@ -1503,7 +1503,7 @@ module cylindrical_clamp(h=1,od,id,od1,od2,id1,id2,or,ir,or1,or2,ir1,ir2,num=3,f
 //    fin_length1 = dist1;
 //    fin_length2 = _dist2inner_for_cylindrical_clamp(fin_angle, or2, ir2);
     actual_angle = (is_undef(fin_angle)?asin(ir1/or1):fin_angle)/*-asin(fin_thick/2/dist1)*/;
-    echo(fin_length1=fin_length1,actual_angle=actual_angle);
+    //echo(fin_length1=fin_length1,actual_angle=actual_angle);
     /*down(h/2)*/ skew(sxz=shift.x/h, syz=shift.y/h) /*up(h/2)*/
     // If sharing, this tag should probably be a uuid per invocation
 //    diff("circ_clamp") cylinder(h,r1=or1,r2=or2) {
