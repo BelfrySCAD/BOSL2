@@ -42,10 +42,10 @@ jobs:
         cd $GITHUB_WORKSPACE
         OUTPUT=$(python3 scripts/func_coverage.py)
         echo "$OUTPUT"
-        # Extrair percentual de cobertura
+        # Extract coverage percentage
         COVERAGE=$(echo "$OUTPUT" | grep "Total coverage:" | grep -oP '[0-9]+\.[0-9]+(?=%)')
         echo "Coverage: ${COVERAGE}%"
-        # Falha se cobertura caiu abaixo de 99%
+        # Fail if coverage dropped below 99%
         python3 -c "
         coverage = float('${COVERAGE}')
         if coverage < 99.0:
