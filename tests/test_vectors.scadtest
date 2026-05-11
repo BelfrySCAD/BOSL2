@@ -44,19 +44,19 @@ include <../std.scad>
 module test_v_floor() {
     assert_equal(v_floor([2.0, 3.14, 18.9, 7]), [2,3,18,7]);
     assert_equal(v_floor([-2.0, -3.14, -18.9, -7]), [-2,-4,-19,-7]);
-    // Vetor zero
+    // Zero vector
     assert_equal(v_floor([0, 0, 0]), [0, 0, 0]);
     assert_equal(v_floor([0.0, 0.0]), [0, 0]);
-    // Valores inteiros (sem mudanca)
+    // Integer values (unchanged)
     assert_equal(v_floor([1, -1, 5, -5]), [1, -1, 5, -5]);
-    // Valores proximos de inteiros
+    // Values close to integers
     assert_equal(v_floor([0.999, -0.001]), [0, -1]);
     assert_equal(v_floor([1.001, -1.999]), [1, -2]);
-    // Vetor 2D
+    // 2D vector
     assert_equal(v_floor([3.7, -2.3]), [3, -3]);
-    // Valores grandes
+    // Large values
     assert_equal(v_floor([99999.9, -99999.1]), [99999, -100000]);
-    // Vetor unitario com componentes fracionarios
+    // Unit vector with fractional components
     assert_equal(v_floor([0.5, 0.5, 0.5]), [0, 0, 0]);
     assert_equal(v_floor([-0.5, -0.5, -0.5]), [-1, -1, -1]);
 }
