@@ -55,6 +55,13 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   * "convex" &mdash; choose the locally convex division
 //   * "concave" &mdash; choose the locally concave division
 //   * "quad" &mdash; makes quadrilateral edges, which may not be coplanar, relying on OpensCAD to decide how to handle them.
+//   .
+//   **Choosing a style:** For smooth surfaces like spheres or swept profiles, "default" or "alt" are
+//   usually fine.  Use "min_edge" to avoid long thin triangles on surfaces with varying curvature.
+//   Use "convex" or "concave" when you need consistent surface bowing direction (e.g. for textures).
+//   The "quincunx" style doubles the triangle count by adding center vertices&mdash;useful for
+//   heightfield textures that need sub-quad detail, but avoid it for smooth surfaces as the center
+//   points create saddle artifacts.  The "quad" style is fastest but faces may be non-coplanar.
 //   Degenerate faces are not included in the output, but if this results in unused vertices, those unused vertices do still appear in the output.
 //   .
 //   The vertex list *must* be a rectangular array. If rows of points are generated based on a radius and one of
@@ -129,6 +136,146 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   "intersect" = Anchors to the surface of the shape.
 // Named Anchors:
 //   "origin" = Anchor at the origin, oriented UP.
+// Example(3D): Triangulating using `style="default"`.  Triangulates the same direction for every quad.
+//   module show_triangulation(fn, style, steps) {
+//     pts = [for(u=[0:100/steps:100]) [for(v=[0:100/steps:100]) fn(u,v)]];
+//     vnf = vnf_vertex_array(pts, style=style);
+//     grid_vnf = vnf_vertex_array(pts, style="quad");
+//     color("#ccf") vnf_polyhedron(vnf);
+//     color("#0dd") vnf_wireframe(vnf, width=0.4);
+//     color("black") vnf_wireframe(grid_vnf, width=0.5);
+//     txt = str("style = ", style);
+//     move([50,0,-20]) rot($vpr) color("black")
+//       text(txt, size=5, halign="center", valign="top");
+//   }
+//   fn = function(u,v) [u, v, 16*sin(u*1.8)*-cos(v*1.8)];
+//   show_triangulation(fn, "default", steps=4);
+// Example(3D): Triangulating using `style="alt"`.  The opposite triangulation from "default".
+//   module show_triangulation(fn, style, steps) {
+//     pts = [for(u=[0:100/steps:100]) [for(v=[0:100/steps:100]) fn(u,v)]];
+//     vnf = vnf_vertex_array(pts, style=style);
+//     grid_vnf = vnf_vertex_array(pts, style="quad");
+//     color("#ccf") vnf_polyhedron(vnf);
+//     color("#0dd") vnf_wireframe(vnf, width=0.4);
+//     color("black") vnf_wireframe(grid_vnf, width=0.5);
+//     txt = str("style = ", style);
+//     move([50,0,-20]) rot($vpr) color("black")
+//       text(txt, size=5, halign="center", valign="top");
+//   }
+//   fn = function(u,v) [u, v, 16*sin(u*1.8)*-cos(v*1.8)];
+//   show_triangulation(fn, "alt", steps=4);
+// Example(3D): Triangulating using `style="flip1"`.  Alternates triangulation direction in a grid.
+//   module show_triangulation(fn, style, steps) {
+//     pts = [for(u=[0:100/steps:100]) [for(v=[0:100/steps:100]) fn(u,v)]];
+//     vnf = vnf_vertex_array(pts, style=style);
+//     grid_vnf = vnf_vertex_array(pts, style="quad");
+//     color("#ccf") vnf_polyhedron(vnf);
+//     color("#0dd") vnf_wireframe(vnf, width=0.4);
+//     color("black") vnf_wireframe(grid_vnf, width=0.5);
+//     txt = str("style = ", style);
+//     move([50,0,-20]) rot($vpr) color("black")
+//       text(txt, size=5, halign="center", valign="top");
+//   }
+//   fn = function(u,v) [u, v, 16*sin(u*1.8)*-cos(v*1.8)];
+//   show_triangulation(fn, "flip1", steps=4);
+// Example(3D): Triangulating using `style="flip2"`.  The opposite pattern from "flip1".
+//   module show_triangulation(fn, style, steps) {
+//     pts = [for(u=[0:100/steps:100]) [for(v=[0:100/steps:100]) fn(u,v)]];
+//     vnf = vnf_vertex_array(pts, style=style);
+//     grid_vnf = vnf_vertex_array(pts, style="quad");
+//     color("#ccf") vnf_polyhedron(vnf);
+//     color("#0dd") vnf_wireframe(vnf, width=0.4);
+//     color("black") vnf_wireframe(grid_vnf, width=0.5);
+//     txt = str("style = ", style);
+//     move([50,0,-20]) rot($vpr) color("black")
+//       text(txt, size=5, halign="center", valign="top");
+//   }
+//   fn = function(u,v) [u, v, 16*sin(u*1.8)*-cos(v*1.8)];
+//   show_triangulation(fn, "flip2", steps=4);
+// Example(3D,Med): Triangulating using `style="quad"`.  Lets OpenSCAD do its own internal triangulation.  This may error out on older OpenSCAD versions.
+//   module show_triangulation(fn, style, steps) {
+//     pts = [for(u=[0:100/steps:100]) [for(v=[0:100/steps:100]) fn(u,v)]];
+//     vnf = vnf_vertex_array(pts, style=style);
+//     grid_vnf = vnf_vertex_array(pts, style="quad");
+//     color("#ccf") vnf_polyhedron(vnf);
+//     color("#0dd") vnf_wireframe(vnf, width=0.4);
+//     color("black") vnf_wireframe(grid_vnf, width=0.5);
+//     txt = str("style = ", style);
+//     move([50,0,-20]) rot($vpr) color("black")
+//       text(txt, size=5, halign="center", valign="top");
+//   }
+//   fn = function(u,v) [u, v, 16*sin(u*1.8)*-cos(v*1.8)];
+//   show_triangulation(fn, "quad", steps=4);
+// Example(3D): Triangulating using `style="quincunx"`.  This artificially adds interpolated points, which may or may not be useful.
+//   module show_triangulation(fn, style, steps) {
+//     pts = [for(u=[0:100/steps:100]) [for(v=[0:100/steps:100]) fn(u,v)]];
+//     vnf = vnf_vertex_array(pts, style=style);
+//     grid_vnf = vnf_vertex_array(pts, style="quad");
+//     color("#ccf") vnf_polyhedron(vnf);
+//     color("#0dd") vnf_wireframe(vnf, width=0.4);
+//     color("black") vnf_wireframe(grid_vnf, width=0.5);
+//     txt = str("style = ", style);
+//     move([50,0,-20]) rot($vpr) color("black")
+//       text(txt, size=5, halign="center", valign="top");
+//   }
+//   fn = function(u,v) [u, v, 16*sin(u*1.8)*-cos(v*1.8)];
+//   show_triangulation(fn, "quincunx", steps=4);
+// Example(3D): Triangulating using `style="convex"`.  This is useful for raised hill surfaces.
+//   module show_triangulation(fn, style, steps) {
+//     pts = [for(u=[0:100/steps:100]) [for(v=[0:100/steps:100]) fn(u,v)]];
+//     vnf = vnf_vertex_array(pts, style=style);
+//     grid_vnf = vnf_vertex_array(pts, style="quad");
+//     color("#ccf") vnf_polyhedron(vnf);
+//     color("#0dd") vnf_wireframe(vnf, width=0.4);
+//     color("black") vnf_wireframe(grid_vnf, width=0.5);
+//     txt = str("style = ", style);
+//     move([50,0,-20]) rot($vpr) color("black")
+//       text(txt, size=5, halign="center", valign="top");
+//   }
+//   fn = function(u,v) [u, v, 16*sin(u*1.8)*-cos(v*1.8)];
+//   show_triangulation(fn, "convex", steps=4);
+// Example(3D): Triangulating using `style="concave"`.  This is useful for dished surfaces.
+//   module show_triangulation(fn, style, steps) {
+//     pts = [for(u=[0:100/steps:100]) [for(v=[0:100/steps:100]) fn(u,v)]];
+//     vnf = vnf_vertex_array(pts, style=style);
+//     grid_vnf = vnf_vertex_array(pts, style="quad");
+//     color("#ccf") vnf_polyhedron(vnf);
+//     color("#0dd") vnf_wireframe(vnf, width=0.4);
+//     color("black") vnf_wireframe(grid_vnf, width=0.5);
+//     txt = str("style = ", style);
+//     move([50,0,-20]) rot($vpr) color("black")
+//       text(txt, size=5, halign="center", valign="top");
+//   }
+//   fn = function(u,v) [u, v, 16*sin(u*1.8)*-cos(v*1.8)];
+//   show_triangulation(fn, "concave", steps=4);
+// Example(3D): Triangulating using `style="min_edge"`.  This triangulates in a way that minimizes face edge lengths.
+//   module show_triangulation(fn, style, steps) {
+//     pts = [for(u=[0:100/steps:100]) [for(v=[0:100/steps:100]) fn(u,v)]];
+//     vnf = vnf_vertex_array(pts, style=style);
+//     grid_vnf = vnf_vertex_array(pts, style="quad");
+//     color("#ccf") vnf_polyhedron(vnf);
+//     color("#0dd") vnf_wireframe(vnf, width=0.4);
+//     color("black") vnf_wireframe(grid_vnf, width=0.5);
+//     txt = str("style = ", style);
+//     move([50,0,-20]) rot($vpr) color("black")
+//       text(txt, size=5, halign="center", valign="top");
+//   }
+//   fn = function(u,v) [u, v, 16*sin(u*1.8)*-cos(v*1.8)];
+//   show_triangulation(fn, "concave", steps=4);
+// Example(3D): Triangulating using `style="min_area"`.  This triangulates in a way that minimizes face areas.
+//   module show_triangulation(fn, style, steps) {
+//     pts = [for(u=[0:100/steps:100]) [for(v=[0:100/steps:100]) fn(u,v)]];
+//     vnf = vnf_vertex_array(pts, style=style);
+//     grid_vnf = vnf_vertex_array(pts, style="quad");
+//     color("#ccf") vnf_polyhedron(vnf);
+//     color("#0dd") vnf_wireframe(vnf, width=0.4);
+//     color("black") vnf_wireframe(grid_vnf, width=0.5);
+//     txt = str("style = ", style);
+//     move([50,0,-20]) rot($vpr) color("black")
+//       text(txt, size=5, halign="center", valign="top");
+//   }
+//   fn = function(u,v) [u, v, 16*sin(u*1.8)*-cos(v*1.8)];
+//   show_triangulation(fn, "concave", steps=4);
 // Example(3D):
 //   vnf = vnf_vertex_array(
 //       points=[
