@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 // LibFile: joiners.scad
 //   Modules for joining separately printed parts including screw together, snap-together and dovetails.
 // Includes:
@@ -1194,8 +1194,9 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
 
     snapmargin = -snap + last(sidepath).x;// - compression;
     if (is_pin){
-      if (snapmargin<0) echo("WARNING: The snap is too large for the clip to squeeze to fit its socket")
-      //echo(snapmargin=snapmargin);
+      if (snapmargin<0)
+        echo("WARNING: The snap is too large for the clip to squeeze to fit its socket")
+          echo(snapmargin=snapmargin);
     }
     // Force tangent to be vertical at the outer edge of the clip to avoid overshoot
     fulltangent = list_set(path_tangents(fullpath, uniform=false),[2,8], [[0,1],[0,-1]]);
