@@ -860,12 +860,45 @@ function nurbs_interp(points, degree, method="centripetal", closed=false,
 //   show_deriv      = Show derivative-constraint arrows.  Default: `true`
 //   show_curvature  = Show curvature-constraint circles / disks.  Default: `true`
 //
+// Example(2D,NoAxes,Med): Unconstrained NURBS through the same data points vary depending on the paramaterization method chosen
+//   data = [[0,0], [20,30], [35,120], [50,30], [70,0]];
+//   method = ["length", "centripetal", "dynamic", "foley", "fang"];
+//   color = ["blue","lime","yellow","orange","red"]; 
+//   for (i = [0:4]) {
+//      color(color[i]) {
+//      debug_nurbs_interp(data, 3, closed = true, method = method[i], size = 5, data_size = 3);
+//      move([80,100-i*15]) text(method[i]);
+//    }
+//   }
+//
+//
+// Example(2D,NoAxes,Med): Adding extra points reduces the differences between the methods.
+//   data = [[0,0], [20,30], [35,120], [50,30], [70,0]];
+//   method = ["length", "centripetal", "dynamic", "foley", "fang"];
+//   color = ["blue","lime","yellow","orange","red"]; 
+//   for (i = [0:4]) {
+//      color(color[i]) {
+//      debug_nurbs_interp(data, 3, closed = true, method = method[i], extra_pts = 3, size = 5, data_size = 3);
+//      move([80,100-i*15]) text(method[i]);
+//    }
+//   }
+//
+// Example(2D,NoAxes,Med): Switching from the default to smooth = 1 improves things further. 
+//   data = [[0,0], [20,30], [35,120], [50,30], [70,0]];
+//   method = ["length", "centripetal", "dynamic", "foley", "fang"];
+//   color = ["blue","lime","yellow","orange","red"]; 
+//   for (i = [0:4]) {
+//      color(color[i]) {
+//      debug_nurbs_interp(data, 3, closed = true, method = method[i], extra_pts = 3, smooth = 1, size = 5, data_size = 3);
+//      move([80,100-i*15]) text(method[i]);
+//    }
+//   }
 //
 // Example(2D,NoAxes): Keyhole Shape: Simply interpolating a NURBS through the data points yields disappointing results.
 //   data = [[0,0],[0,10],[-5,20],[5,30],[15,20],[10,10],[10,0],[0,0]];
 //   debug_nurbs_interp(data,3, method="centripetal");
 //
-// Example(2D,NoAxes,VPT=[3,15,0],VPD=130): Keyhole Shap: Adding derivative constraints causes unwanted oscillation.
+// Example(2D,NoAxes,VPT=[3,15,0],VPD=130): Keyhole Shape: Adding derivative constraints causes unwanted oscillation.
 //   data = [[0,0],[0,10],[-5,20],[5,30],[15,20],[10,10],[10,0],[0,0]];
 //      debug_nurbs_interp(data,3, method="centripetal",
 //      deriv=[undef,NAN,UP,RIGHT*1.3,DOWN,NAN,NAN,undef]);
@@ -1558,6 +1591,89 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //       for (row = data) for (pt = row)
 //           translate(pt) sphere(r=1, $fn=16);
 //
+// Example(3D,VPD=320,VPT=[8,10,13]): Basic surface interpolation with flat edges
+//   // Same derivitive for all four edges
+//   surface = [
+//   [[-50, 50, 0], [-16, 50,  0], [ 16, 50,  0], [50, 50,  0], [80, 50, 0]],
+//   [[-50, 25, 0], [-16, 25, 40], [ 16, 25, 30], [50, 25, 20], [80, 25, 0]],
+//   [[-50,  0, 0], [-16,  0, 40], [ 16,  0, 30], [50,  0, 30], [80,  0, 0]],
+//   [[-50,-25, 0], [-16,-25, 35], [ 16,-25, 40], [50,-25, 15], [80,-25, 0]],
+//   [[-50,-50, 0], [-16,-50,  0], [ 16,-50,  0], [50,-50,  0], [80,-50, 0]],
+//   ];
+//   nurbs_interp_surface(surface,3, flat_edges = 0);
+//
+// Example(3D,VPD=320,VPT=[8,10,13]): Different derivitives for each edge
+//   // Edge specification is [first row, last row, first col, last col] 
+//   surface = [
+//   [[-50, 50, 0], [-16, 50,  0], [ 16, 50,  0], [50, 50,  0], [80, 50, 0]],
+//   [[-50, 25, 0], [-16, 25, 40], [ 16, 25, 30], [50, 25, 20], [80, 25, 0]],
+//   [[-50,  0, 0], [-16,  0, 40], [ 16,  0, 30], [50,  0, 30], [80,  0, 0]],
+//   [[-50,-25, 0], [-16,-25, 35], [ 16,-25, 40], [50,-25, 15], [80,-25, 0]],
+//   [[-50,-50, 0], [-16,-50,  0], [ 16,-50,  0], [50,-50,  0], [80,-50, 0]],
+//   ];
+//   nurbs_interp_surface(surface,3, flat_edges = [1,0,2,1]);
+//
+// Example(3D,VPD=320,VPT=[8,10,13]): Constraining only column edges.
+//   surface = [
+//   [[-50, 50, 0], [-16, 50,  0], [ 16, 50,  0], [50, 50,  0], [80, 50, 0]],
+//   [[-50, 25, 0], [-16, 25, 40], [ 16, 25, 30], [50, 25, 20], [80, 25, 0]],
+//   [[-50,  0, 0], [-16,  0, 40], [ 16,  0, 30], [50,  0, 30], [80,  0, 0]],
+//   [[-50,-25, 0], [-16,-25, 35], [ 16,-25, 40], [50,-25, 15], [80,-25, 0]],
+//   [[-50,-50, 0], [-16,-50,  0], [ 16,-50,  0], [50,-50,  0], [80,-50, 0]],
+//   ];
+//   nurbs_interp_surface(surface,3, flat_edges = [undef,undef,1,1]);
+//
+// Example(3D,VPD=320,VPT=[8,10,13]):Constraining only row edges.
+//   surface = [
+//   [[-50, 50, 0], [-16, 50,  0], [ 16, 50,  0], [50, 50,  0], [80, 50, 0]],
+//   [[-50, 25, 0], [-16, 25, 40], [ 16, 25, 30], [50, 25, 20], [80, 25, 0]],
+//   [[-50,  0, 0], [-16,  0, 40], [ 16,  0, 30], [50,  0, 30], [80,  0, 0]],
+//   [[-50,-25, 0], [-16,-25, 35], [ 16,-25, 40], [50,-25, 15], [80,-25, 0]],
+//   [[-50,-50, 0], [-16,-50,  0], [ 16,-50,  0], [50,-50,  0], [80,-50, 0]],
+//   ];
+//   nurbs_interp_surface(surface,3, flat_edges = [1,1,undef,undef]);
+//
+// Example(3D,VPD=320,VPT=[8,10,13]): Individual constraints for each point on last row
+//   surface = [
+//   [[-50, 50, 0], [-16, 50,  0], [ 16, 50,  0], [50, 50,  0], [80, 50, 0]],
+//   [[-50, 25, 0], [-16, 25, 40], [ 16, 25, 30], [50, 25, 20], [80, 25, 0]],
+//   [[-50,  0, 0], [-16,  0, 40], [ 16,  0, 30], [50,  0, 30], [80,  0, 0]],
+//   [[-50,-25, 0], [-16,-25, 35], [ 16,-25, 40], [50,-25, 15], [80,-25, 0]],
+//   [[-50,-50, 0], [-16,-50,  0], [ 16,-50,  0], [50,-50,  0], [80,-50, 0]],
+//   ];
+//   nurbs_interp_surface(surface,3, flat_edges = [undef,[3,2,4,2,3],undef,undef]);
+//
+// Example(3D,VPD=320,VPT=[8,10,13]): Corner seam in column 3
+//   surface = [
+//   [[-50, 50, 0], [-16, 50,  0], [ 16, 50,  0], [50, 50,  0], [80, 50, 0]],
+//   [[-50, 25, 0], [-16, 25, 40], [ 16, 25, 30], [50, 25, 20], [80, 25, 0]],
+//   [[-50,  0, 0], [-16,  0, 40], [ 16,  0, 30], [50,  0, 30], [80,  0, 0]],
+//   [[-50,-25, 0], [-16,-25, 35], [ 16,-25, 40], [50,-25, 15], [80,-25, 0]],
+//   [[-50,-50, 0], [-16,-50,  0], [ 16,-50,  0], [50,-50,  0], [80,-50, 0]],
+//   ];
+//   nurbs_interp_surface(surface,3, col_edges = 3);
+//
+// Example(3D,VPD=320,VPT=[8,10,13]): Corner seam in row 3
+//   surface = [
+//   [[-50, 50, 0], [-16, 50,  0], [ 16, 50,  0], [50, 50,  0], [80, 50, 0]],
+//   [[-50, 25, 0], [-16, 25, 40], [ 16, 25, 30], [50, 25, 20], [80, 25, 0]],
+//   [[-50,  0, 0], [-16,  0, 40], [ 16,  0, 30], [50,  0, 30], [80,  0, 0]],
+//   [[-50,-25, 0], [-16,-25, 35], [ 16,-25, 40], [50,-25, 15], [80,-25, 0]],
+//   [[-50,-50, 0], [-16,-50,  0], [ 16,-50,  0], [50,-50,  0], [80,-50, 0]],
+//   ];
+//   nurbs_interp_surface(surface,3, row_edges = 3);
+//
+// Example(3D,VPD=320,VPT=[8,10,13]): Setting first and last row/column derivitives
+//   surface = [
+//   [[-50, 50, 0], [-16, 50,  0], [ 16, 50,  0], [50, 50,  0], [80, 50, 0]],
+//   [[-50, 25, 0], [-16, 25, 40], [ 16, 25, 30], [50, 25, 20], [80, 25, 0]],
+//   [[-50,  0, 0], [-16,  0, 40], [ 16,  0, 30], [50,  0, 30], [80,  0, 0]],
+//   [[-50,-25, 0], [-16,-25, 35], [ 16,-25, 40], [50,-25, 15], [80,-25, 0]],
+//   [[-50,-50, 0], [-16,-50,  0], [ 16,-50,  0], [50,-50,  0], [80,-50, 0]],
+//   ];
+//   nurbs_interp_surface(surface,3, first_row_deriv = UP+FWD, last_row_deriv = DOWN+FWD, 
+//     first_col_deriv = UP+RIGHT/2, last_col_deriv = DOWN+RIGHT/2);
+//
 // Example(3D): Tube (surface closed in one direction)
 //   // Closed around the column direction (the rings), clamped along rows
 //   // (the axis).  Uses 5 rings: a cubic closed direction needs at least
@@ -1569,26 +1685,24 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //           [r*cos(a), r*sin(a), u]]
 //   ];
 //   nurbs_interp_surface(data, 3, splinesteps=8, col_wrap=true);
-//
-// Example(3D): Torus (surface closed in both directions)
-//   // Both directions sample a full 360 circle with even angular spacing,
-//   // so the closing segment equals the inter-point spacing and
-//   // parameterization is uniform.  Each direction uses N=6 > p+1=4
-//   // points to ensure interior knot freedom.
-//   R = 30; r = 10;
-//   N = 6;
-//   data = [for (i = [0:1:N-1])
-//       let(phi = i * 360/N)
-//       [for (j = [0:1:N-1])
-//           let(theta = j * 360/N)
-//           [(R + r*cos(theta))*cos(phi),
-//            (R + r*cos(theta))*sin(phi),
-//            r*sin(theta)]]
+// 
+// Example(3D,VPR=[80,0,45],VPT=[0,0,20],VPD = 320): Rotated star cross section surface closed in one direction.
+//   // Degenerate end rows close the shape in the other direction.
+//   surface = [ repeat([0,0,-15],14),
+//      for(i=[0:4]) zrot(i*15,path3d(star(or=15,ir=13, n=7),i*15)),
+//      repeat([0,0,5*15],14)
 //   ];
-//   nurbs_interp_surface(data, 3, splinesteps=12,
-//       row_wrap=true, col_wrap=true);
+//   nurbs_interp_surface(surface, 3, col_wrap = true);
+//   
+// Example(3D,VPR=[80,0,45],VPT=[0,0,20],VPD = 320): Controlling end shape with normals.
+//   surface = [ repeat([0,0,-15],14),
+//      for(i=[0:4]) zrot(i*15,path3d(star(or=15,ir=13, n=7),i*15)),
+//      repeat([0,0,5*15],14)
+//   ];
+//   nurbs_interp_surface(surface, 3, col_wrap = true, normal1 = DOWN*4, normal2 = UP*2);
+//   
 //
-// Example(3D): EGG 
+// Example(3D): EGG (surface closed in both directions)
 //   // ~103 long, ~82 wide.  Smooth parametric ovoid.
 //   // Blunt at +z, pointed at -z.
 //   // Profile: r = 40·sin(φ)·(1 − 0.25·cos(φ)),  z = −52·cos(φ)
@@ -1605,7 +1719,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   ];
 //   nurbs_interp_surface(egg, 3, col_wrap = true);
 //
-// Example(3D,VPT=[10,-25,60],VPR=[100,0,30],VPD=375): A Mushroom
+// Example(3D,VPT=[10,-25,60],VPR=[100,0,30],VPD=375): A Mushroom (surface closed in both directions)
 //    shape = [ repeat([0,0,-1],8),
 //          for(i=[0:5]) path3d(regular_ngon(n = 8, side = 15),i*15),
 //            path3d(regular_ngon(n = 8, side = 50), 5 * 15),
@@ -1614,26 +1728,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //            ];
 //    nurbs_interp_surface(shape, 3, normal1 = DOWN, normal2 = UP, col_wrap = true, row_edges = 7);
 //
-// Example(3D): Handle Grip
-//   data = [[[0.5,6],[12,9],[30,8],[35,0],[30,-8],[12,-9],[0.5,-6]],
-//      [[0,9],[15,12],[30,12],[40,0],[30,-12],[15,-12],[0,-9]]];
-//   path1 = nurbs_curve(nurbs_interp(data[0],3,closed=true, 
-//       deriv = [undef,undef,undef,FWD,undef,undef,undef],
-//       curvature = [undef,undef,undef,-.1,undef,undef,undef],
-//       extra_pts = 6, smooth = 3));
-//   path2 = nurbs_curve(nurbs_interp(data[1],3,closed=true, 
-//       deriv = [undef,undef,undef,FWD,undef,undef,undef],
-//       curvature = [undef,undef,undef,-.2,undef,undef,undef],
-//       extra_pts = 6, smooth = 3));
-//   //The 2 NURBS curves have different path lengths, so we resample them.
-//   samples = 20;
-//   paths = [resample_path(path1,samples), resample_path(path2,samples)];
-//   shape = [ 
-//      repeat([15,0,-2],samples), 
-//      for(i=[0:10]) path3d(paths[i%2],i*12),
-//      repeat([15,0,124],samples)
-//   ];
-//   nurbs_interp_surface(shape, 3, col_wrap = true, normal1 = [0,0,-3], normal2 = [0,0,3]);
+
 
 
 function nurbs_interp_surface(points, degree, method="centripetal",
