@@ -642,14 +642,12 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   path = nurbs_curve(nurbs_interp(data, 3));
 //   stroke(path);
 //
-// Example(2D): Closed curve 
-//   // Do NOT repeat the first point at the end.
+// Example(2D): Closed curve - Do NOT repeat the first point at the end.
 //   data = [[0,0], [30,50], [60,40], [80,10], [50,-20], [20,-10]];
 //   path = nurbs_curve(nurbs_interp(data, 3, closed = true));
 //   stroke(path, closed = true);
 //
-// Example(2D): Closed polygon
-//   // All data points lie exactly on the polygon boundary.
+// Example(2D): Closed polygon - All data points lie exactly on the polygon boundary.
 //   data = [[0,0], [30,50], [60,40], [80,10], [50,-20], [20,-10]];
 //   path = nurbs_curve(nurbs_interp(data, 3, closed=true), splinesteps=16);
 //   polygon(path);
@@ -661,9 +659,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   stroke(path, width=0.5);
 //   color("red") move_copies(data) circle(r=0.25, $fn=16);
 //
-// Example(2D): Low-level NURBS parameter list
-//   // nurbs_interp() returns a BOSL2 NURBS parameter list compatible
-//   // with nurbs_curve(), debug_nurbs(), etc.
+// Example(2D): Low-level NURBS parameter list - nurbs_interp() returns a BOSL2 NURBS parameter list compatible with nurbs_curve(), debug_nurbs(), etc.
 //   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
 //   result = nurbs_interp(data, 3);
 //   curve = nurbs_curve(result, splinesteps=24);
@@ -674,11 +670,24 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   path = nurbs_curve(nurbs_interp(data3d, 3, closed=true));
 //   stroke(path, width=1, closed=true);
 //   color("red") move_copies(data3d) sphere(r=0.25, $fn=16);
+
+// Example(2D): Corner added at data point 3
+//   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
+//   path = nurbs_curve(nurbs_interp(data, 3, corners = [3]));
+//   stroke(path);
 //
-// Example(2D,Med): Endpoint tangent control
-//   // Specify start and/or end tangent vectors.  Each vector is automatically
-//   // scaled by the total chord length; a unit vector produces natural
-//   // arc-length speed.  Magnitude > 1 increases pull, < 1 weakens it.
+// Example(2D): Clamped curve (default)
+//   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
+//   path = nurbs_curve(nurbs_interp(data, 3));
+//   stroke(path);
+//
+// Example(2D): Clamped curve (default)
+//   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
+//   path = nurbs_curve(nurbs_interp(data, 3));
+//   stroke(path);
+//
+//
+// Example(2D,Med): Endpoint tangent control - Specify start and/or end tangent vectors.  Each vector is automatically scaled by the total chord length; a unit vector produces natural arc-length speed.  Magnitude > 1 increases pull, < 1 weakens it.
 //   data = [[0,0], [20,30], [50,25], [80,0]];
 //   // No tangent control (natural):
 //   color("gray") stroke(nurbs_curve(nurbs_interp(data, 3)), width=0.3);
@@ -702,7 +711,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   path = nurbs_curve(nurbs_interp(data, 3, closed = true, method = "centripetal", corners = [0,4]));
 //   right(75) stroke(path, closed = true);
 //
-// Example(2D,NoAxes,Med,VPT=[37.5,0,0],VPD=275): For better shape control we can add derivitive constraints and curvature control at data points 1 and 6 
+// Example(2D,NoAxes,Med,VPT=[37.5,0,0],VPD=275): For better shape control we can add derivitive constraints and curvature control at data points 1 and 7
 //   data = [[0,10], [25,20], [30,0], [20,-15], [0,-30], [-20,-15], [-30,0], [-25,20]];
 //   debug_nurbs_interp(data, 3, closed = true, method = "centripetal", 
 //      deriv = [NAN,[1,-1]*0.8,undef,undef,NAN,undef,undef,[1,1]*0.8],
@@ -722,10 +731,8 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //      curvature = [undef,-0.06,undef,undef,undef,undef,undef,-0.06]));
 //   right(75) stroke(path3, closed = true);
 //
-// Example(2D,Big): Parameterization methods for sharp turns
+// Example(2D,Big): Parameterization methods for sharp turns. For data with sudden direction changes or uneven chord spacing, "centripetal" and "dynamic" reduce unwanted oscillations.
 //   // "length" (blue), "centripetal" (red), "dynamic" (orange) compared.
-//   // For data with sudden direction changes or uneven chord spacing,
-//   // "centripetal" and "dynamic" reduce unwanted oscillations.
 //   sharp = [[0,0], [5,40],[6,40], [10,0], [50,0], [55,40],[56,42], [60,0]];
 //   color("blue")   stroke(nurbs_curve(nurbs_interp(sharp, 3, method = "centripetal"), splinesteps=32), width=0.1);
 //   color("red")    stroke(nurbs_curve(nurbs_interp(sharp, 3, method="foley"),         splinesteps=32), width=0.1);
@@ -1576,9 +1583,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   ];
 //   nurbs_interp_surface(data, [2,3], splinesteps=8);
 //
-// Example(3D): Low-level surface access
-//   // nurbs_interp_surface() returns a BOSL2 NURBS parameter list
-//   // compatible with nurbs_vnf(), debug_nurbs(), etc.
+// Example(3D): Low-level surface access - nurbs_interp_surface() returns a BOSL2 NURBS parameter list compatible with nurbs_vnf(), debug_nurbs(), etc.
 //   data = [
 //       [[-30,30,0], [0,30,20], [30,30,0]],
 //       [[-30, 0,10],[0, 0,30], [30, 0,10]],
@@ -1591,8 +1596,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //       for (row = data) for (pt = row)
 //           translate(pt) sphere(r=1, $fn=16);
 //
-// Example(3D,VPD=320,VPT=[8,10,13]): Basic surface interpolation with flat edges
-//   // Same derivitive for all four edges
+// Example(3D,VPD=320,VPT=[8,10,13]): Basic surface interpolation with flat edges, using the same derivitive for all four edges
 //   surface = [
 //   [[-50, 50, 0], [-16, 50,  0], [ 16, 50,  0], [50, 50,  0], [80, 50, 0]],
 //   [[-50, 25, 0], [-16, 25, 40], [ 16, 25, 30], [50, 25, 20], [80, 25, 0]],
@@ -1602,7 +1606,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   ];
 //   nurbs_interp_surface(surface,3, flat_edges = 0);
 //
-// Example(3D,VPD=320,VPT=[8,10,13]): Different derivitives for each edge
+// Example(3D,VPD=320,VPT=[8,10,13]): Different derivitives for each edge.
 //   // Edge specification is [first row, last row, first col, last col] 
 //   surface = [
 //   [[-50, 50, 0], [-16, 50,  0], [ 16, 50,  0], [50, 50,  0], [80, 50, 0]],
@@ -1674,10 +1678,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   nurbs_interp_surface(surface,3, first_row_deriv = UP+FWD, last_row_deriv = DOWN+FWD, 
 //     first_col_deriv = UP+RIGHT/2, last_col_deriv = DOWN+RIGHT/2);
 //
-// Example(3D): Tube (surface closed in one direction)
-//   // Closed around the column direction (the rings), clamped along rows
-//   // (the axis).  Uses 5 rings: a cubic closed direction needs at least
-//   // p+2 = 5 data points to have interior knot freedom.
+// Example(3D): Tube - Surface closed around the column direction (the rings), clamped along rows (the axis).  Uses 5 rings: a cubic closed direction needs at least p+2 = 5 data points to have interior knot freedom.
 //   r = 20;
 //   data = [for (u = [0:15:60])
 //       [for (i = [0:1:5])
@@ -1686,8 +1687,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   ];
 //   nurbs_interp_surface(data, 3, splinesteps=8, col_wrap=true);
 // 
-// Example(3D,VPR=[80,0,45],VPT=[0,0,20],VPD = 320): Rotated star cross section surface closed in one direction.
-//   // Degenerate end rows close the shape in the other direction.
+// Example(3D,VPR=[80,0,45],VPT=[0,0,20],VPD = 320): Rotated star cross section surface closed in one direction.  Degenerate end rows close the shape in the other direction.
 //   surface = [ repeat([0,0,-15],14),
 //      for(i=[0:4]) zrot(i*15,path3d(star(or=15,ir=13, n=7),i*15)),
 //      repeat([0,0,5*15],14)
@@ -1702,12 +1702,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   nurbs_interp_surface(surface, 3, col_wrap = true, normal1 = DOWN*4, normal2 = UP*2);
 //   
 //
-// Example(3D): EGG (surface closed in both directions)
-//   // ~103 long, ~82 wide.  Smooth parametric ovoid.
-//   // Blunt at +z, pointed at -z.
-//   // Profile: r = 40·sin(φ)·(1 − 0.25·cos(φ)),  z = −52·cos(φ)
-//   // The asymmetry term shifts the belly toward the blunt end.
-//   // Grid: 9 rings × 8 angles
+// Example(3D): EGG  Smooth parametric ovoid.  ~103 long, ~82 wide. Blunt at +z, pointed at -z. Profile: r = 40·sin(φ)·(1 − 0.25·cos(φ)),  z = −52·cos(φ) The asymmetry term shifts the belly toward the blunt end. Grid: 9 rings × 8 angles
 //   egg = [for (i = [0:8])
 //      let(phi = i * 180/8,
 //      r   = 40 * sin(phi) * (1 - 0.25*cos(phi)),
@@ -1718,8 +1713,8 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //      ]
 //   ];
 //   nurbs_interp_surface(egg, 3, col_wrap = true);
-//
-// Example(3D,VPT=[10,-25,60],VPR=[100,0,30],VPD=375): A Mushroom (surface closed in both directions)
+// 
+// Example(3D,VPT=[10,-25,60],VPR=[100,0,30],VPD=375): A Mushroom
 //    shape = [ repeat([0,0,-1],8),
 //          for(i=[0:5]) path3d(regular_ngon(n = 8, side = 15),i*15),
 //            path3d(regular_ngon(n = 8, side = 50), 5 * 15),
