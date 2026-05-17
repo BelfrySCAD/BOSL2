@@ -676,7 +676,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   path = nurbs_curve(nurbs_interp(data, 3, corners = [3]));
 //   stroke(path);
 //
-// Example(2D): Clamped curve (default)
+// Example(2D): Controlling the curvature at data point 3
 //   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
 //   path = nurbs_curve(nurbs_interp(data, 3));
 //   stroke(path);
@@ -1709,7 +1709,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //      z   = -52 * cos(phi))
 //      [for (j = [0:7])
 //      let(theta = j * 45)
-//      [r*cos(theta), r*sin(theta), z]
+//      [r*cos(theta), r*sin(theta), z] 
 //      ]
 //   ];
 //   nurbs_interp_surface(egg, 3, col_wrap = true);
@@ -1722,6 +1722,30 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //            repeat([0,0,8*15],8)
 //            ];
 //    nurbs_interp_surface(shape, 3, normal1 = DOWN, normal2 = UP, col_wrap = true, row_edges = 7);
+//
+// Example(3D,VPR[80,0,40]): A 3d Heart Shape
+//  data = [[0,10], [25,20], [30,0], [20,-15], [0,-30], [-20,-15], [-30,0], [-25,20]];
+//  depth = function(x) 0.5 + sin(180 * x / 31) * 6;
+//  heart_shape_2d = nurbs_curve(nurbs_interp(data, 3, closed = true,  
+//    deriv = [NAN,polar_to_xy(1.1,-40),undef,undef,NAN,undef,undef,polar_to_xy(1.1,40)],
+//    curvature = [undef,-0.06,undef,undef,undef,undef,undef,-0.06]));
+//  points = [
+//    for (i = [-31:2:31]) 
+//       flatten(polygon_line_intersection(heart_shape_2d,[[i,25],[i,-30]])), 
+//  ];
+//  span = [
+//    for (i = [0:len(points)-1]) 
+//      abs(points[i][1].y-points[i][0].y),
+//  ];
+//  samples = 11; 
+//  surface = [
+//    repeat([-31.1,7,0], samples),
+//    for (i = [0:len(points)-1]) 
+//       move(points[i][0]-[0,span[i]/2], yrot(90, path3d(resample_path(ellipse([depth(i),span[i]/2]),samples),0))),
+//    repeat([31.1,7,0], samples),
+//  ];
+//  xrot(90)
+//  nurbs_interp_surface(surface,3, method = "foley", col_wrap = true, splinesteps = 3, extra_pts = 5, smooth = 1, normal1 = RIGHT/2, normal2 = LEFT/2);
 //
 
 
