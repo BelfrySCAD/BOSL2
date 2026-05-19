@@ -670,7 +670,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   path = nurbs_curve(nurbs_interp(data3d, 3, closed=true));
 //   stroke(path, width=1, closed=true);
 //   color("red") move_copies(data3d) sphere(r=0.25, $fn=16);
-
+//
 // Example(2D): Corner added at data point 3
 //   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
 //   path = nurbs_curve(nurbs_interp(data, 3, corners = [3]));
@@ -685,7 +685,6 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
 //   path = nurbs_curve(nurbs_interp(data, 3));
 //   stroke(path);
-//
 //
 // Example(2D,Med): Endpoint tangent control - Specify start and/or end tangent vectors.  Each vector is automatically scaled by the total chord length; a unit vector produces natural arc-length speed.  Magnitude > 1 increases pull, < 1 weakens it.
 //   data = [[0,0], [20,30], [50,25], [80,0]];
@@ -1723,7 +1722,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //            ];
 //    nurbs_interp_surface(shape, 3, normal1 = DOWN, normal2 = UP, col_wrap = true, row_edges = 7);
 //
-// Example(3D,VPR[80,0,40]): A 3d Heart Shape
+// Example(3D,VPR[80,0,40]): A 3d Heart Shape - Based on the 2d Shape from nurbs_interp() example 14.
 //  data = [[0,10], [25,20], [30,0], [20,-15], [0,-30], [-20,-15], [-30,0], [-25,20]];
 //  depth = function(x) 0.5 + sin(180 * x / 31) * 6;
 //  heart_shape_2d = nurbs_curve(nurbs_interp(data, 3, closed = true,  
