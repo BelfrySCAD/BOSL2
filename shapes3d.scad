@@ -925,7 +925,7 @@ function prismoid(
 //   rounding2 = The radius of the rounding on the top end of the prism.
 //   realign = If true, rotate the prism by half the angle of one face so that face0's normal points in the X+ direction.  Default: false
 //   teardrop = If given as a number, rounding around the bottom edge of the prism won't exceed this many degrees from vertical.  If true, the limit angle is 45 degrees.  Default: `false`
-//   clip_angle = If given as a number, rounding around the bottom edge of the prism won't exceed this many degrees from vertical, with the rounding stopping at the bottom of the prism.  Default: (no clipping)
+//   clip_angle = Clip the rounding arc at the bottom of the prism at this angle away from vertical, with a corner at the base of the cylinder and a smooth joint at the side.  An angle of 90 gives a complete circle and an angle of zero clips away the entire rounding.  Default: 90 (no clipping)
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes are scaled somewhat to fit evenly on the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the number of texture tile repetitions in the horizontal and vertical directions.
@@ -981,7 +981,7 @@ module regular_prism(n,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     realign=false, shift=[0,0],
-    teardrop=false, clip_angle,
+    teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps,
     tex_inset=false, tex_rot=0,
@@ -1020,7 +1020,7 @@ function regular_prism(n,
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign=false, shift=[0,0],
-    teardrop=false, clip_angle,
+    teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps,
     tex_inset=false, tex_rot=0,
@@ -2091,6 +2091,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   If `circum=false` (the default) then the radius or chamfer length is measured at the corner of the shape.  If `circum=true`
 //   then the radius or chamfer length applies in the more usual way in the center of a facet.  For cylinders with a large `$fn`
 //   the difference between these two things is negligible, but it can be quite sigificant when `$fn` is small.
+//   This means that when `circum=false` the size of chamfers and roundings (and whether they fit) can depend on current `$fn`.
 //   .
 //   When the `realign` parameter is false the shape's has an edge aligned with the X+ axis. 
 //   If `realign` is true then a face is aligned with the X+ axis.  By default
@@ -2158,7 +2159,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   extra2 = Add extra height to the top end.
 //   realign = If false a vertical edge is aligned to the X+ axis.  If true a vertical face is aligned to the X+ axis.  Default: false if `circum=false` and true if `circum=true`
 //   teardrop = If given as a number, rounding around the bottom edge of the cylinder won't exceed this many degrees from horizontal.  If true, the limit angle is 45 degrees.  Default: `false`
-//   clip_angle = If given as a number, rounding around the bottom edge of the cylinder won't exceed this many degrees from horizontal, with the rounding stopping at the bottom of the cylinder.  Default: (no clipping)
+//   clip_angle = Clip the rounding arc at the bottom of the cylinder at this angle away from vertical, with a corner at the base of the cylinder and a smooth joint at the side.  An angle of 90 gives a complete circle and an angle of zero clips away the entire rounding.  Default: 90 (no clipping)
 //   texture = A texture name string, or a rectangular array of scalar height values (0.0 to 1.0), or a VNF tile that defines the texture to apply to vertical surfaces.  See {{texture()}} for what named textures are supported.
 //   tex_size = An optional 2D target size (2-vector or scalar) for the textures.  Actual texture sizes are scaled somewhat to fit evenly on the available surface. Default: `[5,5]`
 //   tex_reps = If given instead of tex_size, a scalar or 2-vector giving the integer number of texture tile repetitions in the horizontal and vertical directions.
@@ -2293,7 +2294,7 @@ function _cyl_path(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     from_end, from_end1, from_end2,
-    teardrop=false, clip_angle, n, noscale=false
+    teardrop=false, clip_angle=90, n, noscale=false
 ) =
     let(
         scale= is_def(n) ? cos(180/n) : 1, 
@@ -2316,6 +2317,8 @@ function _cyl_path(
             assert(num_defined([chamfer1,rounding1])<2, "\nCannot define both chamfer1 and rounding1.")
             assert(num_defined([chamfer2,rounding2])<2, "\nCannot define both chamfer2 and rounding2.")
             assert(num_defined([chamfer,rounding])<2, "\nCannot define both chamfer and rounding.")
+            assert(is_finite(clip_angle) && clip_angle>=-vang && clip_angle<=90,
+                   str("\nclip_angle must less than 90 and more than the base angle from vertical (",-vang,")"))
             undef,
         unscale = noscale ? scale : 1, 
         chamf1r = !_chamf1? 0
@@ -2330,57 +2333,49 @@ function _cyl_path(
         chamf2l = !_chamf2? 0
                 : _fromend2? abs(_chamf2)
                 : abs(law_of_sines(a=_chamf2, A=180-chang2-(90+sign(_chamf2)*vang), B=chang2)),
-        facelen = adj_ang_to_hyp(l, abs(vang)),
-
-        roundlen1 = round1 >= 0 ? round1/tan(45-vang/2)
-                                : round1/tan(45+vang/2),
-        roundlen2 = round2 >=0 ? round2/tan(45+vang/2)
-                               : round2/tan(45-vang/2),
-        dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1 : 0), 
-        dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0),
-
         td_ang = teardrop == true? 45
                : teardrop == false? 90
                : assert(is_finite(teardrop))
                  assert(teardrop>=0 && teardrop<=90)
                  teardrop,
-        clip_ang = clip_angle == undef? 90
-                 : assert(is_finite(clip_angle))
-                   assert(clip_angle>=0 && clip_angle<=90)
-                   clip_angle
+        roundlen1 = round1 >= 0 ? round1/tan(45-vang/2)
+                                : round1/tan(45+vang/2),
+        roundlen2 = round2 >=0 ? round2/tan(45+vang/2)
+                               : round2/tan(45-vang/2),
+        dy1 = abs(_chamf1 ? chamf1l : round1 ? roundlen1*sin(clip_angle) : 0), 
+        dy2 = abs(_chamf2 ? chamf2l : round2 ? roundlen2 : 0)
     ) 
     assert(is_finite(round1), "\nrounding1 must be a number if given.")
     assert(is_finite(round2), "\nrounding2 must be a number if given.")
     assert(chamf1r/scale <= r1, "\nchamfer1 is larger than the r1 radius of the cylinder.")
     assert(chamf2r/scale <= r2, "\nchamfer2 is larger than the r2 radius of the cylinder.")
-    assert(roundlen1*unscale/scale <= r1, "\nSize of rounding1 is larger than the r1 radius of the cylinder.")
-    assert(roundlen2*unscale/scale <= r2, "\nSize of rounding2 is larger than the r2 radius of the cylinder.")
-    assert(dy1+dy2 <= facelen, "\nChamfers/roundings don't fit on the cylinder/cone. They exceed the length of the cylinder/cone face.")
-    assert(td_ang==90 || clip_ang==90, "\nteardrop= and clip_angle= are mutually exclusive options.")
-    [
-       if (!approx(chamf1r,0))
-           each [
-               [r1-chamf1r/scale, -l/2], // + [-chamf1r/scale,0],//polar_to_xy(chamf1r,180)),
-               [r1, -l/2] + xscale(1/scale,polar_to_xy(chamf1l,90+vang)),
-           ]
-       else if (!approx(round1,0) && td_ang < 90)
-           each xscale(1/scale,_teardrop_corner(r=round1*unscale, corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=td_ang))
-       else if (!approx(round1,0) && clip_ang < 90)
-           each xscale(1/scale,_clipped_corner(r=round1*unscale, corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=clip_ang))
-       else if (!approx(round1,0) && td_ang >= 90)
-           each xscale(1/scale,arc(r=abs(round1*unscale), corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]]))
-       else [r1,-l/2],
-
-       if (is_finite(chamf2r) && !approx(chamf2r,0))
-           each [
-               [r2, l/2] + xscale(1/scale,polar_to_xy(chamf2l,270+vang)),
-               [r2-chamf2r/scale, l/2]
-           ]
-       else if (is_finite(round2) && !approx(round2,0))
-           each xscale(1/scale,arc(r=abs(round2*unscale), corner=[[r1*scale,-l/2],[r2*scale,l/2],[r2*scale-2*roundlen2,l/2]]))
-       else [r2,l/2],
-    ];
-
+    assert(td_ang==90 || clip_angle==90, "\nteardrop= and clip_angle= are mutually exclusive options.")
+    let(
+        bottom = !approx(chamf1r,0) ?
+                     [
+                      [r1-chamf1r/scale, -l/2], // + [-chamf1r/scale,0],//polar_to_xy(chamf1r,180)),
+                      [r1, -l/2] + xscale(1/scale,polar_to_xy(chamf1l,90+vang)),
+                     ]
+               : !approx(round1,0) && td_ang < 90 ?
+                     xscale(1/scale,_teardrop_corner(r=round1*unscale, corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=td_ang))
+               : !approx(round1,0) && clip_angle < 90 ?
+                     xscale(1/scale,_clipped_corner(r=round1*unscale, corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=clip_angle))
+               : !approx(round1,0) && clip_angle > -vang ? 
+                     xscale(1/scale,arc(r=abs(round1*unscale), corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]]))
+               : [[r1,-l/2]],
+        top = !approx(chamf2r,0) ?
+                     [
+                      [r2, l/2] + xscale(1/scale,polar_to_xy(chamf2l,270+vang)),
+                      [r2-chamf2r/scale, l/2]
+                     ]
+            : !approx(round2,0) ?
+                     xscale(1/scale,arc(r=abs(round2*unscale), corner=[[r1*scale,-l/2],[r2*scale,l/2],[r2*scale-2*roundlen2,l/2]]))
+            : [[r2,l/2]]
+    )
+    assert(bottom[0].x>=0, str("\nHorizontal size of rounding1 is larger (by ",-bottom[0].x,") than the r1 radius of the cylinder."))
+    assert(last(bottom).y<=top[0].y, str("Chamfers/roundings don't fit on the cylinder. Together they exceed the cylinder height by ",last(bottom).y-top[0].y))
+    assert(last(top).x>=0, str("\nSize of rounding2 is larger (by ",-last(top).x,") than the r2 radius of the cylinder."))
+    deduplicate(concat(bottom,top));
 
 
 function cyl(
@@ -2392,7 +2387,7 @@ function cyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign, shift=[0,0],
-    teardrop=false, clip_angle,
+    teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
@@ -2435,7 +2430,7 @@ function cyl(
         extra1 = first_defined([extra1,extra,0]),
         extra2 = first_defined([extra2,extra,0])
     )
-    assert(is_bool(realign))    
+    assert(is_bool(realign))
     assert(all_nonnegative([extra1,extra2]), "\nextra/extra1/extra2 must be positive.")
     assert(is_finite(l), "\nl/h/length/height must be a finite number.")
     assert(is_finite(r1) && r1>=0, "\nr/r1/d/d1 must be a non-negative number.")
@@ -2443,7 +2438,7 @@ function cyl(
     assert(is_vector(shift,2), "\nshift must be a 2D vector.")
     let(
         vnf = !any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2, texture, extra1, extra2])
-          ? cylinder(h=l+extra1+extra2, r1=r1, r2=r2, center=true, $fn=sides)
+          ? zrot(circum?180/sides/2:0,cylinder(h=l+extra1+extra2, r1=r1, r2=r2, center=true, $fn=sides))
           : let(
                  cpath = _cyl_path(r1, r2, l, 
                                    chamfer, chamfer1, chamfer2,
@@ -2468,8 +2463,7 @@ function cyl(
         skmat = down(l/2) *
             skew(sxz=shift.x/l, syz=shift.y/l) *
             up(l/2) *
-            zrot(realign? 180/sides : 0) *
-            zrot(circum? 180/sides : 0),
+            zrot(realign? 180/sides : 0),
         ovnf = apply(skmat, vnf)
     )
     reorient(anchor,spin,orient, r1=r1, r2=r2, l=l, shift=shift, p=ovnf);
@@ -2503,16 +2497,17 @@ function _clipped_corner(r, corner, ang=45) =
             assert(is_finite(ang)),
         vec1 = unit(corner[0] - corner[1]),
         vec2 = unit(corner[2] - corner[1]),
-        off = r * (1-cos(ang)) * rot(90, p=vec1),
+        off = r * (1-cos(90-ang)) * rot(90, p=vec1),
         line1 = [corner[0], corner[1]] + [off, off],
         line2 = [corner[1], corner[2]],
         corn_pt = line_intersection(line1,line2),
         cp = circle_2tangents(abs(r), [line1[0],corn_pt,line2[1]])[0],
-        vec3 = rot(sign(r)*(90+ang), p=vec1),
+        vec3 = rot(sign(r)*(180-ang), p=vec1),
         vec4 = rot(-sign(r)*90, p=vec2),
         dang = vector_angle(vec3,vec4),
         path = arc(r=abs(r), cp=cp, start=v_theta(vec3), angle=sign(r)*dang)
     ) path;
+
 
 
 module cyl(
@@ -2524,7 +2519,7 @@ module cyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign, shift=[0,0],
-    teardrop=false, clip_angle,
+    teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
@@ -2635,7 +2630,7 @@ function xcyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign=false, shift=[0,0],
-    teardrop=false, clip_angle,
+    teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
@@ -2674,7 +2669,7 @@ module xcyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign, shift=[0,0],
-    teardrop=false, clip_angle,
+    teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
@@ -2749,7 +2744,7 @@ function ycyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign=false, shift=[0,0],
-    teardrop=false, clip_angle,
+    teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
@@ -2790,7 +2785,7 @@ module ycyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign, shift=[0,0],
-    teardrop=false, clip_angle,
+    teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
@@ -2861,7 +2856,7 @@ function zcyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign=false, shift=[0,0],
-    teardrop=false, clip_angle,
+    teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
@@ -2900,7 +2895,7 @@ module zcyl(
     chamfang, chamfang1, chamfang2,
     rounding, rounding1, rounding2,
     circum=false, realign, shift=[0,0],
-    teardrop=false, clip_angle,
+    teardrop=false, clip_angle=90,
     from_end, from_end1, from_end2,
     texture, tex_size=[5,5], tex_reps, tex_counts,
     tex_inset=false, tex_rot=0,
@@ -3084,7 +3079,7 @@ module tube(
     realign, l, length, height,
     anchor, spin=0, orient=UP, orounding1,irounding1,orounding2,irounding2,rounding1,rounding2,rounding,
     ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer,
-    teardrop=false, clip_angle, shift=[0,0],
+    teardrop=false, clip_angle=90, shift=[0,0],
     ifn, rounding_fn, circum=false
 ) {
     realign = assert(is_bool(circum))
