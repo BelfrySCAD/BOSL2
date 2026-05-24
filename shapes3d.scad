@@ -2091,6 +2091,7 @@ function cylinder(h, r1, r2, center, r, d, d1, d2, anchor, spin=0, orient=UP) =
 //   If `circum=false` (the default) then the radius or chamfer length is measured at the corner of the shape.  If `circum=true`
 //   then the radius or chamfer length applies in the more usual way in the center of a facet.  For cylinders with a large `$fn`
 //   the difference between these two things is negligible, but it can be quite sigificant when `$fn` is small.
+//   This means that when `circum=false` the size of chamfers and roundings (and whether they fit) can depend on current `$fn`.
 //   .
 //   When the `realign` parameter is false the shape's has an edge aligned with the X+ axis. 
 //   If `realign` is true then a face is aligned with the X+ axis.  By default
@@ -2316,7 +2317,8 @@ function _cyl_path(
             assert(num_defined([chamfer1,rounding1])<2, "\nCannot define both chamfer1 and rounding1.")
             assert(num_defined([chamfer2,rounding2])<2, "\nCannot define both chamfer2 and rounding2.")
             assert(num_defined([chamfer,rounding])<2, "\nCannot define both chamfer and rounding.")
-            assert(is_finite(clip_angle) && clip_angle>=0 && clip_angle<=90, "\nclip_angle must be a number between 0 and 90")
+            assert(is_finite(clip_angle) && clip_angle>=-vang && clip_angle<=90,
+                   str("\nclip_angle must less than 90 and more than the base angle from vertical (",-vang,")"))
             undef,
         unscale = noscale ? scale : 1, 
         chamf1r = !_chamf1? 0
@@ -2331,7 +2333,6 @@ function _cyl_path(
         chamf2l = !_chamf2? 0
                 : _fromend2? abs(_chamf2)
                 : abs(law_of_sines(a=_chamf2, A=180-chang2-(90+sign(_chamf2)*vang), B=chang2)),
-        facelen = adj_ang_to_hyp(l, abs(vang)),
         td_ang = teardrop == true? 45
                : teardrop == false? 90
                : assert(is_finite(teardrop))
@@ -2348,34 +2349,33 @@ function _cyl_path(
     assert(is_finite(round2), "\nrounding2 must be a number if given.")
     assert(chamf1r/scale <= r1, "\nchamfer1 is larger than the r1 radius of the cylinder.")
     assert(chamf2r/scale <= r2, "\nchamfer2 is larger than the r2 radius of the cylinder.")
-    assert(roundlen1*unscale/scale*(1-cos(clip_angle)) <= r1, "\nSize of rounding1 is larger than the r1 radius of the cylinder.")
-    assert(roundlen2*unscale/scale <= r2, "\nSize of rounding2 is larger than the r2 radius of the cylinder.")
-    assert(dy1+dy2 <= facelen, "\nChamfers/roundings don't fit on the cylinder/cone. They exceed the length of the cylinder/cone face.")
-    assert(td_ang==90 || clip_ang==90, "\nteardrop= and clip_angle= are mutually exclusive options.")
-    [
-       if (!approx(chamf1r,0))
-           each [
-               [r1-chamf1r/scale, -l/2], // + [-chamf1r/scale,0],//polar_to_xy(chamf1r,180)),
-               [r1, -l/2] + xscale(1/scale,polar_to_xy(chamf1l,90+vang)),
-           ]
-       else if (!approx(round1,0) && td_ang < 90)
-           each xscale(1/scale,_teardrop_corner(r=round1*unscale, corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=td_ang))
-       else if (!approx(round1,0) && clip_angle < 90)
-           each xscale(1/scale,_clipped_corner(r=round1*unscale, corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=clip_angle))
-       else if (!approx(round1,0) && td_ang >= 90)
-           each xscale(1/scale,arc(r=abs(round1*unscale), corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]]))
-       else [r1,-l/2],
-
-       if (is_finite(chamf2r) && !approx(chamf2r,0))
-           each [
-               [r2, l/2] + xscale(1/scale,polar_to_xy(chamf2l,270+vang)),
-               [r2-chamf2r/scale, l/2]
-           ]
-       else if (is_finite(round2) && !approx(round2,0))
-           each xscale(1/scale,arc(r=abs(round2*unscale), corner=[[r1*scale,-l/2],[r2*scale,l/2],[r2*scale-2*roundlen2,l/2]]))
-       else [r2,l/2],
-    ];
-
+    assert(td_ang==90 || clip_angle==90, "\nteardrop= and clip_angle= are mutually exclusive options.")
+    let(
+        bottom = !approx(chamf1r,0) ?
+                     [
+                      [r1-chamf1r/scale, -l/2], // + [-chamf1r/scale,0],//polar_to_xy(chamf1r,180)),
+                      [r1, -l/2] + xscale(1/scale,polar_to_xy(chamf1l,90+vang)),
+                     ]
+               : !approx(round1,0) && td_ang < 90 ?
+                     xscale(1/scale,_teardrop_corner(r=round1*unscale, corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=td_ang))
+               : !approx(round1,0) && clip_angle < 90 ?
+                     xscale(1/scale,_clipped_corner(r=round1*unscale, corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]], ang=clip_angle))
+               : !approx(round1,0) && clip_angle > -vang ? 
+                     xscale(1/scale,arc(r=abs(round1*unscale), corner=[[r1*scale-2*roundlen1,-l/2],[r1*scale,-l/2],[r2*scale,l/2]]))
+               : [[r1,-l/2]],
+        top = !approx(chamf2r,0) ?
+                     [
+                      [r2, l/2] + xscale(1/scale,polar_to_xy(chamf2l,270+vang)),
+                      [r2-chamf2r/scale, l/2]
+                     ]
+            : !approx(round2,0) ?
+                     xscale(1/scale,arc(r=abs(round2*unscale), corner=[[r1*scale,-l/2],[r2*scale,l/2],[r2*scale-2*roundlen2,l/2]]))
+            : [[r2,l/2]]
+    )
+    assert(bottom[0].x>=0, str("\nHorizontal size of rounding1 is larger (by ",-bottom[0].x,") than the r1 radius of the cylinder."))
+    assert(last(bottom).y<=top[0].y, str("Chamfers/roundings don't fit on the cylinder. Together they exceed the cylinder height by ",last(bottom).y-top[0].y))
+    assert(last(top).x>=0, str("\nSize of rounding2 is larger (by ",-last(top).x,") than the r2 radius of the cylinder."))
+    deduplicate(concat(bottom,top));
 
 
 function cyl(
@@ -2430,7 +2430,7 @@ function cyl(
         extra1 = first_defined([extra1,extra,0]),
         extra2 = first_defined([extra2,extra,0])
     )
-    assert(is_bool(realign))    
+    assert(is_bool(realign))
     assert(all_nonnegative([extra1,extra2]), "\nextra/extra1/extra2 must be positive.")
     assert(is_finite(l), "\nl/h/length/height must be a finite number.")
     assert(is_finite(r1) && r1>=0, "\nr/r1/d/d1 must be a non-negative number.")
@@ -2438,7 +2438,7 @@ function cyl(
     assert(is_vector(shift,2), "\nshift must be a 2D vector.")
     let(
         vnf = !any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2, texture, extra1, extra2])
-          ? cylinder(h=l+extra1+extra2, r1=r1, r2=r2, center=true, $fn=sides)
+          ? zrot(circum?180/sides/2:0,cylinder(h=l+extra1+extra2, r1=r1, r2=r2, center=true, $fn=sides))
           : let(
                  cpath = _cyl_path(r1, r2, l, 
                                    chamfer, chamfer1, chamfer2,
@@ -2463,8 +2463,7 @@ function cyl(
         skmat = down(l/2) *
             skew(sxz=shift.x/l, syz=shift.y/l) *
             up(l/2) *
-            zrot(realign? 180/sides : 0) *
-            zrot(circum? 180/sides : 0),
+            zrot(realign? 180/sides : 0),
         ovnf = apply(skmat, vnf)
     )
     reorient(anchor,spin,orient, r1=r1, r2=r2, l=l, shift=shift, p=ovnf);
@@ -2492,7 +2491,6 @@ function _teardrop_corner(r, corner, ang=45) =
 
 
 function _clipped_corner(r, corner, ang=45) =
-    ang==0 ? [corner[1]] :
     let(
         check = assert(len(corner)==3)
             assert(is_finite(r))
