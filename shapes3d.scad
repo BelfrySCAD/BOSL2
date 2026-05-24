@@ -3081,7 +3081,7 @@ module tube(
     realign, l, length, height,
     anchor, spin=0, orient=UP, orounding1,irounding1,orounding2,irounding2,rounding1,rounding2,rounding,
     ochamfer1,ichamfer1,ochamfer2,ichamfer2,chamfer1,chamfer2,chamfer,irounding,ichamfer,orounding,ochamfer,
-    teardrop=false, clip_angle, shift=[0,0],
+    teardrop=false, clip_angle=90, shift=[0,0],
     ifn, rounding_fn, circum=false
 ) {
     realign = assert(is_bool(circum))
