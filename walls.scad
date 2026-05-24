@@ -533,13 +533,13 @@ module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, anchor=CENTER, spi
 //   thinning_wall(h, l, thick, [ang=], [braces=], [strut=], [wall=]) [ATTACHMENTS];
 //
 // Description:
-//   Makes a rectangular wall which thins to a smaller width in the center,
-//   with angled supports to prevent critical overhangs.
+//   Makes a rectangular wall along the Y axis which thins to a smaller width in the center,
+//   with angled supports to prevent critical overhangs.  
 //
 // Arguments:
 //   h = Height of wall.
-//   l = Length of wall.  If given as a vector of two numbers, specifies bottom and top lengths, respectively.
-//   thick = Thickness of wall.
+//   l = Length of wall (y dimension).  If given as a vector of two numbers, specifies bottom and top lengths, respectively.
+//   thick = Thickness of wall (x dimension).
 //   ---
 //   ang = Maximum overhang angle of diagonal brace.
 //   braces = If true, adds diagonal crossbraces for strength.
@@ -588,8 +588,8 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut, wall, an
     corner2 = [-x5, 0, -z2];
     brace_len = norm(corner1-corner2);
 
-    size = [l1, thick, h];
-    attachable(anchor,spin,orient, size=size, size2=[l2,thick]) {
+    size = [thick, l1, h];
+    attachable(anchor,spin,orient, size=size, size2=[thick, l2]) {
         zrot(90) {
             polyhedron(
                 points=[
