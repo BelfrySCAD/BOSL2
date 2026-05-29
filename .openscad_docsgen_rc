@@ -1,7 +1,7 @@
 DocsDirectory: BOSL2.wiki/
 TargetProfile: githubwiki
 ProjectName: The Belfry OpenScad Library, v2. (BOSL2)
-GenerateDocs: Files, TOC, Index, Topics, CheatSheet, Sidebar, Glossary
+GenerateDocs: Files, TOC, Index, Topics, CheatSheet, Sidebar
 SidebarHeader:
   ## Indices
   .
