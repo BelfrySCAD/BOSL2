@@ -641,50 +641,56 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
 //   path = nurbs_curve(nurbs_interp(data, 3));
 //   stroke(path);
+//   color("red") move_copies(data) circle(r=1, $fn=16);
 //
 // Example(2D): Closed curve - Do NOT repeat the first point at the end.
 //   data = [[0,0], [30,50], [60,40], [80,10], [50,-20], [20,-10]];
 //   path = nurbs_curve(nurbs_interp(data, 3, closed = true));
 //   stroke(path, closed = true);
+//   color("red") move_copies(data) circle(r=0.25, $fn=16);
 //
 // Example(2D): Closed polygon - All data points lie exactly on the polygon boundary.
 //   data = [[0,0], [30,50], [60,40], [80,10], [50,-20], [20,-10]];
 //   path = nurbs_curve(nurbs_interp(data, 3, closed=true), splinesteps=16);
 //   polygon(path);
-//   color("red") move_copies(data) circle(r=0.25, $fn=16);
+//   color("red") move_copies(data) circle(r=1, $fn=16);
 //
 // Example(2D): Get just the path
 //   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
 //   path = nurbs_curve(nurbs_interp(data, 3), splinesteps=16);
 //   stroke(path, width=0.5);
-//   color("red") move_copies(data) circle(r=0.25, $fn=16);
+//   color("red") move_copies(data) circle(r=1, $fn=16);
 //
 // Example(2D): Low-level NURBS parameter list - nurbs_interp() returns a BOSL2 NURBS parameter list compatible with nurbs_curve(), debug_nurbs(), etc.
 //   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
 //   result = nurbs_interp(data, 3);
 //   curve = nurbs_curve(result, splinesteps=24);
 //   stroke(curve, width=0.5);
+//   color("red") move_copies(data) circle(r=1, $fn=16);
 //
 // Example(3D): 3D closed curve
 //   data3d = [[20,0,0],[0,20,10],[-20,0,20],[0,-20,10]];
 //   path = nurbs_curve(nurbs_interp(data3d, 3, closed=true));
 //   stroke(path, width=1, closed=true);
-//   color("red") move_copies(data3d) sphere(r=0.25, $fn=16);
+//   color("red") move_copies(data3d) sphere(r=1, $fn=16);
 //
 // Example(2D): Corner added at data point 3
 //   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
 //   path = nurbs_curve(nurbs_interp(data, 3, corners = [3]));
 //   stroke(path);
+//   color("red") move_copies(data) circle(r=1, $fn=16);
 //
 // Example(2D): Controlling the curvature at data point 3
 //   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
 //   path = nurbs_curve(nurbs_interp(data, 3));
 //   stroke(path);
+//   color("red") move_copies(data) circle(r=1, $fn=16);
 //
 // Example(2D): Clamped curve (default)
 //   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
 //   path = nurbs_curve(nurbs_interp(data, 3));
 //   stroke(path);
+//   color("red") move_copies(data) circle(r=1, $fn=16);
 //
 // Example(2D,Med): Endpoint tangent control - Specify start and/or end tangent vectors.  Each vector is automatically scaled by the total chord length; a unit vector produces natural arc-length speed.  Magnitude > 1 increases pull, < 1 weakens it.
 //   data = [[0,0], [20,30], [50,25], [80,0]];
@@ -1038,7 +1044,7 @@ module debug_nurbs_interp(points, degree, splinesteps=16, method="centripetal",
 
 
 // Function: nurbs_elevate_degree()
-// Synopsis: Raises the degree of a closed or open NURBS.
+// Synopsis: Raises the degree of a clamped or open NURBS.
 // Topics: NURBS Curves
 // See Also: nurbs_interp(), nurbs_curve()
 //
@@ -1047,7 +1053,7 @@ module debug_nurbs_interp(points, degree, splinesteps=16, method="centripetal",
 //   result = nurbs_elevate_degree(nurbs_param_list, [times=]);
 //
 // Description:
-//   Raises the degree of a "closed" or "open" NURBS by `times` steps, producing
+//   Raises the degree of a "clamped" or "open" NURBS by `times` steps, producing
 //   a geometrically identical curve at the higher degree.  Returns a NURBS parameter list
 //   of the form `[type, degree, control_points, knots, undef, weights]` that can be
 //   passed directly to {{nurbs_curve()}} and other NURBS functions.  The returned `mult`
