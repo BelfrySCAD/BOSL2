@@ -637,23 +637,23 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   extra_pts = Number of extra control points to add to provide additional freedom to control undesirable oscillations.  Default: 0
 //   smooth    = Smoothness criterion used with extra control points.  Set to 1 (minimize control-polygon length), 2 (minimize control-polygon bending) or 3 (minimize curve bending energy).   Default: 3
 //
-// Example(2D): Clamped curve (default)
+// Example(2D): 2D Clamped curve (default)
 //   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
-//   path = nurbs_curve(nurbs_interp(data, 3));
-//   stroke(path);
-//   color("red") move_copies(data) circle(r=1, $fn=16);
+//   debug_nurbs_interp(data, 3);
 //
-// Example(2D): Closed curve - Do NOT repeat the first point at the end.
+// Example(2D,VPT=[40,12,0],VPD = 200): Closed curve - Do NOT repeat the first point at the end.
 //   data = [[0,0], [30,50], [60,40], [80,10], [50,-20], [20,-10]];
-//   path = nurbs_curve(nurbs_interp(data, 3, closed = true));
-//   stroke(path, closed = true);
-//   color("red") move_copies(data) circle(r=1, $fn=16);
+//   debug_nurbs_interp(data, 3, closed = true);
 //
-// Example(2D): Closed polygon - All data points lie exactly on the polygon boundary.
+// Example(2D, VPT=[40,12,0],VPD = 200): Closed polygon - All data points lie exactly on the polygon boundary.
 //   data = [[0,0], [30,50], [60,40], [80,10], [50,-20], [20,-10]];
 //   path = nurbs_curve(nurbs_interp(data, 3, closed=true), splinesteps=16);
 //   polygon(path);
 //   color("red") move_copies(data) circle(r=1, $fn=16);
+//
+// Example(3D,VPT=[0,0,10],VPR=[60,0,330],VPD=120): 3D closed curve
+//   data3d = [[20,0,0],[0,20,20],[-20,0,0],[0,-20,10]];
+//   debug_nurbs_interp(data3d, 3, splinesteps=32, closed=true);
 //
 // Example(2D): Get just the path
 //   data = [[0,0], [10,30], [25,15], [40,35], [60,10], [80,25]];
@@ -668,17 +668,17 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   stroke(curve, width=0.5);
 //   color("red") move_copies(data) circle(r=1, $fn=16);
 //
-// Example(2D,Med): Endpoint tangent control - Specify start and/or end tangent vectors.  Each vector is automatically scaled by the total chord length; a unit vector produces natural arc-length speed.  Magnitude > 1 increases pull, < 1 weakens it.
+// Example(2D,Med,VPT=[40,20,0],VPD=160): Endpoint tangent control - Specify start and/or end tangent vectors.  Each vector is automatically scaled by the total chord length; a unit vector produces natural arc-length speed.  Magnitude > 1 increases pull, < 1 weakens it.
 //   data = [[0,0], [20,30], [50,25], [80,0]];
 //   // No tangent control (natural):
-//   color("gray") stroke(nurbs_curve(nurbs_interp(data, 3)), width=0.3);
+//   color("lime") stroke(nurbs_curve(nurbs_interp(data, 3)), width=0.3);
 //   // Start going straight up, end going straight down:
 //   color("blue") stroke(
 //     nurbs_curve(nurbs_interp(data, 3, start_deriv=[0,1], end_deriv=[0,-1])), width=0.3);
 //   // Start going right, end going right:
 //   color("red") stroke(
 //     nurbs_curve(nurbs_interp(data, 3, start_deriv=[1,0], end_deriv=[1,0])), width=0.3);
-//   color("black") move_copies(data) circle(r=0.5, $fn=16);
+//   color("black") move_copies(data) circle(r=0.75, $fn=16);
 //
 // Example(2D,Huge,NoAxes,VPT=[55,50,0],VPR=[0,0,0],VPD=600): Controlling the start and end of an otherwise unconstrained NURBS curve using derivitives.
 //   data = [[0,0], [20,30], [30,90], [36,111],[50,25], [80,0]];
@@ -702,7 +702,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 // Example(2D,Huge,NoAxes,VPT=[45,50,0],VPR=[0,0,0],VPD=600): Controlling the shape with derivatives and corners
 //   data = [[0,0], [20,30], [30,90], [36,111],[50,25], [80,0]];
 //   xdistribute(110){
-//      union(){
+//      back(20) union(){
 //          debug_nurbs_interp(data,3, splinesteps=32, data_size=1,
 //             deriv=[2*RIGHT,[0,1],undef,undef,undef,RIGHT],
 //          );
@@ -714,7 +714,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //          );
 //          fwd(15)text("derivs at pts 1, 4",size=6);
 //      }
-//      union(){
+//      fwd(20) union(){
 //          debug_nurbs_interp(data,3, splinesteps=32, data_size=1,
 //             deriv=[undef,[0,1],undef,undef,NAN,undef],
 //          );
@@ -722,10 +722,10 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //      }
 //   }
 //
-// Example(2D,Huge,NoAxes,VPT=[70,50,0],VPR=[0,0,0],VPD=725): 
+// Example(2D,Huge,NoAxes,VPT=[70,50,0],VPR=[0,0,0],VPD=725): Specifying the curvature at select points.  In the middle example shows continuous curvature joins to arcs at each end.
 //   data = [[0,0], [20,30], [30,90], [36,111],[50,25], [80,0]];
 //   xdistribute(110){
-//      union(){
+//      back(30) union(){
 //          debug_nurbs_interp(data,3, splinesteps=32, data_size=1,
 //             start_deriv=RIGHT,end_deriv=RIGHT, start_curvature=0,end_curvature=0
 //          );
@@ -741,12 +741,51 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //          }
 //          fwd(15)text("ends curvature>0",size=6);
 //      }
-//      union(){
+//      fwd(30) union(){
 //          debug_nurbs_interp(data,3, splinesteps=32, data_size=1,
 //             deriv=[undef,[0,1],undef,[1,0],undef,undef],
 //             curvature=[undef,-1/10,undef,0,undef,undef]
 //          );
 //          fwd(15)text("curvature at points 1 and 3",size=6);
+//      }
+//   }
+//
+// Example(2D,Huge,NoAxes,VPT=[45,50,0],VPR=[0,0,0],VPD=700): Closed NURBS curves
+//   data = [[0,0], [20,30], [30,90], [36,111],[50,25], [80,0]];
+//   xdistribute(120){
+//     union(){
+//          debug_nurbs_interp(data,3, splinesteps=32, data_size=1, closed = true
+//          );
+//          fwd(22)text("unconstrained",size=6);
+//      }
+//      union(){
+//          debug_nurbs_interp(data,3, splinesteps=32, data_size=1, closed = true,
+//                              deriv=[[0,1]/4, undef, undef, undef, undef, [0,-1]/3]
+//          );
+//          fwd(15)text("deriv at pts 0 and 5",size=6);
+//      }
+//      union(){
+//          debug_nurbs_interp(data,3, splinesteps=32, data_size=1, closed = true,
+//                             deriv=[undef,undef,undef,[1,0],undef,undef]
+//          );
+//          fwd(15)text("deriv at point 4",size=6);
+//      }
+//   }
+//
+// Example(2D,Huge,NoAxes,VPT=[45,50,0],VPR=[0,0,0],VPD=500): Closed NURBS curves with corners
+//   data = [[0,0], [20,30], [30,90], [36,111],[50,25], [80,0]];
+//   xdistribute(120){
+//     union(){
+//          debug_nurbs_interp(data,3, splinesteps=32, data_size=1, closed = true,
+//                            deriv=[undef,[0,1],undef,undef,NAN,undef]
+//          );
+//          fwd(20)text("pt 1 deriv and pt 4 corner",size=6);
+//      }
+//      union(){
+//          debug_nurbs_interp(data,3, splinesteps=32, data_size=1, closed = true,
+//                              deriv=[undef,NAN,undef,undef,NAN,undef]
+//          );
+//          fwd(20)text("corners at pts 1 and 4", size=6);
 //      }
 //   }
 //
@@ -815,13 +854,13 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //      curvature = [undef,-0.06,undef,undef,undef,undef,undef,-0.06]));
 //   right(75) stroke(path3, closed = true);
 //
-// Example(2D,Big): Parameterization methods for sharp turns. For data with sudden direction changes or uneven chord spacing, "centripetal" and "dynamic" reduce unwanted oscillations.
-//   // "length" (blue), "centripetal" (red), "dynamic" (orange) compared.
+// Example(2D,Med,VPT=[30,15,0],VPD=147): Parameterization methods for sharp turns. For data with sudden direction changes or uneven chord spacing, "centripetal" and "dynamic" reduce unwanted oscillations.
+//   // "length" (blue), "centripetal" (red), "dynamic" (green) compared.
 //   sharp = [[0,0], [5,40],[6,40], [10,0], [50,0], [55,40],[56,42], [60,0]];
 //   color("blue")   stroke(nurbs_curve(nurbs_interp(sharp, 3, method = "centripetal"), splinesteps=32), width=0.25);
 //   color("red")    stroke(nurbs_curve(nurbs_interp(sharp, 3, method="foley"),         splinesteps=32), width=0.25);
-//   color("orange") stroke(nurbs_curve(nurbs_interp(sharp, 3, method="dynamic"),       splinesteps=32), width=0.25);
-//   color("green") move_copies(sharp) circle(r=.5, $fn=16);
+//   color("lime") stroke(nurbs_curve(nurbs_interp(sharp, 3, method="dynamic"),       splinesteps=32), width=0.25);
+//   color("black") move_copies(sharp) circle(r=.6, $fn=16);
 
  
 function nurbs_interp(points, degree, method="centripetal", closed=false,
