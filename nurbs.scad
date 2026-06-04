@@ -704,19 +704,19 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   xdistribute(110){
 //      back(20) union(){
 //          debug_nurbs_interp(data,3, splinesteps=32, data_size=1,
-//             deriv=[2*RIGHT,[0,1],undef,undef,undef,RIGHT],
+//             deriv=[2*RIGHT,[0,1],undef,undef,undef,RIGHT]
 //          );
 //          fwd(15)text("derivs at 0, 1, 5",size=6);
 //      }
 //      union(){
 //          debug_nurbs_interp(data,3, splinesteps=32, data_size=1,
-//             deriv=[undef,[0,1],undef,undef,RIGHT,undef],
+//             deriv=[undef,[0,1],undef,undef,RIGHT,undef]
 //          );
 //          fwd(15)text("derivs at pts 1, 4",size=6);
 //      }
 //      fwd(20) union(){
 //          debug_nurbs_interp(data,3, splinesteps=32, data_size=1,
-//             deriv=[undef,[0,1],undef,undef,NAN,undef],
+//             deriv=[undef,[0,1],undef,undef,NAN,undef]
 //          );
 //          fwd(15)text("corner and pt 1 deriv",size=6);
 //      }
