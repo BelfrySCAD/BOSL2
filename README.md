@@ -32,7 +32,12 @@ The BOSL2 library is an enormous library that provides many different kinds of c
 You can find the full BOSL2 library documentation at: https://github.com/BelfrySCAD/BOSL2/wiki
 
 
-## Installation
+## Automated Install/Update with Git
+
+`curl -sSL https://raw.githubusercontent.com/BelfrySCAD/BOSL2/refs/heads/master/get_bosl2.sh | bash`
+
+
+## Manual Installation
 
 1. Download the .zip or .tar.gz release file for this library.  Currently you should be able to find this at https://github.com/BelfrySCAD/BOSL2/archive/refs/heads/master.zip
 2. Unpack it. Make sure that you unpack the whole file structure. Some zipfile unpackers call this option "Use folder names". It should create either a `BOSL-v2.0` or `BOSL2-master` directory with the library files within it.  You should see "examples", "scripts", "tests", and other subdirectories.
