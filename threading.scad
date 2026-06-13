@@ -2099,7 +2099,7 @@ module generic_threaded_rod(
 
 module __rot_if_old()
 {  
-  if (version_num()>=20250314) children();
+  if (version_num()>=20250106) children();
   else zrot(180) children();
 }
 
