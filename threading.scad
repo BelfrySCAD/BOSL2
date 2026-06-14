@@ -2029,26 +2029,29 @@ module generic_threaded_rod(
       assert(r1adj+pmax-clip_bev1>0, "bevel1 is too large to fit screw diameter")
       assert(r2adj+pmax-clip_bev2>0, "bevel2 is too large to fit screw diameter")
       assert(abs(clip_bev1)+abs(clip_bev2)<len, "Combined bevel size exceeds length of screw");
+    
     attachable(anchor,spin,orient, r1=r1adj, r2=r2adj, l=len) {
         union(){
           difference() {
-              vnf_polyhedron(thread_vnf,convexity=10);              
-              if (clip_bev1>0)
-                  rotate_extrude()
-                      polygon([[                         0,-len/2],
-                               [r1adj+pmax-clip_bev1      ,-len/2],
-                               [r1adj+pmax-slope*clip_bev1,-len/2+clip_bev1],
-                               [                    rmax+1,-len/2+clip_bev1],
-                               [                    rmax+1, len1-1],
-                               [                         0, len1-1]]);
-              if (clip_bev2>0)
-                  rotate_extrude()
-                      polygon([[                         0, len/2],
-                               [r2adj+pmax-clip_bev2      , len/2],
-                               [r2adj+pmax+slope*clip_bev2, len/2-clip_bev2],
-                               [                    rmax+1, len/2-clip_bev2],
-                               [                    rmax+1, len2+1],
-                               [                         0, len2+1]]);
+              vnf_polyhedron(thread_vnf,convexity=10);
+              __rot_if_old(){    // works around change in rotate_extrude starting point
+                  if (clip_bev1>0)
+                      rotate_extrude(angle=360)
+                          polygon([[                         0,-len/2],
+                                   [r1adj+pmax-clip_bev1      ,-len/2],
+                                   [r1adj+pmax-slope*clip_bev1,-len/2+clip_bev1],
+                                   [                    rmax+1,-len/2+clip_bev1],
+                                   [                    rmax+1, len1-1],
+                                   [                         0, len1-1]]);
+                  if (clip_bev2>0)
+                      rotate_extrude(angle=360)
+                          polygon([[                         0, len/2],
+                                   [r2adj+pmax-clip_bev2      , len/2],
+                                   [r2adj+pmax+slope*clip_bev2, len/2-clip_bev2],
+                                   [                    rmax+1, len/2-clip_bev2],
+                                   [                    rmax+1, len2+1],
+                                   [                         0, len2+1]]);
+              }
               if (!blunt_start1 && clip_bev1<=0)
                   down(len/2) cuboid([2*rmax+1,2*rmax+1, -len1+1], anchor=TOP);                     
               if (!blunt_start2 && clip_bev2<=0)
@@ -2092,6 +2095,13 @@ module generic_threaded_rod(
     }
 }
 
+
+
+module __rot_if_old()
+{  
+  if (version_num()>=20250106) children();
+  else zrot(180) children();
+}
 
 
 // Module: generic_threaded_nut()

@@ -3347,7 +3347,10 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 //   vnf = spheroid(r|d, [circum], [style]);
 // Description:
 //   Creates a spheroid object, with support for anchoring and attachments.
-//   This is a drop-in replacement for the built-in `sphere()` module.
+//   This is a drop-in replacement for the built-in `sphere()` module.  The `r` or `d` value can
+//   be a 3-vector to produce an ellipsoid.  This differs from scaling the ellipsoid manually because
+//   it doesn't rescale children that you attach to the ellipsoid.
+//   . 
 //   When called as a function, returns a [VNF](vnf.scad) for a spheroid.
 //   The exact triangulation of this spheroid can be controlled via the `style=`
 //   argument, where the value can be one of `"orig"`, `"aligned"`, `"stagger"`,
@@ -3379,10 +3382,10 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 //   The "octa" style has the property that it blends neatly with a cylinder of the same $fn along any of the coordinate axes.
 //   This is true for both the regular and circumscribed "octa" spheroid.  
 // Arguments:
-//   r = Radius of the spheroid.
+//   r = Radius of the spheroid or 3-vector giving the 3 semiaxes.
 //   style = The style of the spheroid's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "aligned"
 //   ---
-//   d = Diameter of the spheroid.
+//   d = Diameter of the spheroid or 3-vector giving three axes lengths.
 //   circum = If true, the approximate sphere circumscribes the true sphere of the requested size.  Otherwise inscribes.  Note that for some styles, the circumscribed sphere looks different than the inscribed sphere.  Default: false (inscribes)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
@@ -3415,6 +3418,8 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 //   $fn=16;
 //   color("lightblue")spheroid(r=10, style="octa", circum=true);
 //   xcyl(r=10.01, h=15, anchor=RIGHT, circum=true);
+// Example: Ellipsoid
+//   spheroid(r=[100,50,35]);
 // Example: Anchoring
 //   spheroid(d=100, anchor=FRONT);
 // Example: Spin
@@ -3445,10 +3450,11 @@ function sphere(r, d, anchor=CENTER, spin=0, orient=UP) =
 module spheroid(r, style="aligned", d, circum=false, dual=false, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
-    sides = segs(r);
-    vsides = ceil(sides/2);
+    assert((is_finite(r) && r>=0) || (is_vector(r,3) && all_positive(r)),"\nr/d must be a nonnegative value or a positive 3-vector");
     attachable(anchor,spin,orient, r=r) {
         if (style=="orig" && !circum) {
+            sides = segs(min(r));
+            vsides = ceil(sides/2);
             merids = [ for (i=[0:1:vsides-1]) 90-(i+0.5)*180/vsides ];
             path = [
                 let(a = merids[0]) [0, sin(a)],
@@ -3460,9 +3466,11 @@ module spheroid(r, style="aligned", d, circum=false, dual=false, anchor=CENTER, 
         // Don't now how to construct faces for these efficiently, so use hull_points, which
         // is much faster than using hull() as happens in the spheroid() function
         else if (circum && (style=="octa" || style=="icosa")) {
-            orig_sphere = spheroid(r,style,circum=false);
+            minr = min(r);
+            scale = r/minr;
+            orig_sphere = spheroid(minr,style,circum=false);
             dualvert = _dual_vertices(orig_sphere);
-            hull_points(dualvert,fast=true);
+            hull_points(scale(scale,dualvert),fast=true);
         } else {
             vnf = spheroid(r=r, circum=circum, style=style);
             vnf_polyhedron(vnf, convexity=2);
@@ -3651,8 +3659,16 @@ let(
 function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orient=UP) =
     assert(in_list(style, ["orig", "aligned", "stagger", "octa", "icosa"]))
     let(
-        r = get_radius(r=r, d=d, dflt=1),
-        hsides = segs(r),
+        r = get_radius(r=r, d=d, dflt=1)
+    )
+    is_vector(r,3) ? let(
+                         minr = min(r),
+                         scale = r/minr
+                     )
+                     scale(scale,spheroid(minr, style=style, circum=circum, anchor=anchor,
+                                          spin=spin, orient=orient))
+  : let(
+        hsides = segs(min(r)),
         vsides = max(2,ceil(hsides/2)),
         icosa_steps = round(max(5,hsides)/5),
         stagger = style=="stagger"
