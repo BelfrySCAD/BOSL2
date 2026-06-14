@@ -3871,34 +3871,37 @@ module show_anchors(s=10, std=true, custom=true) {
             }
         }
     }
+    textsize = s/4;
     if (custom) {
         for (anchor=last($parent_geom)) {
-            attach(anchor[0],BOT) {
+            attach(anchor[0]) {
                 if(two_d) {
                     anchor_arrow2d(s, color="cyan");
                 } else {
                     anchor_arrow(s, color="cyan");
                 }
+
+                color("white")
+                tag("anchor-arrow") {
+                    if(two_d)
+                        back(s/2)
+                        square([s/4.5*len(anchor[0]), s*.37], center=true);
+                    else
+                        up(s*.45)
+                        xrot(90)
+                        cube([s/4.5*len(anchor[0]), s*.37, 0.01], center=true);
+                }
                 color("black")
                 tag("anchor-arrow") {
-                    xrot(two_d? 0 : 90) {
-                        back(s/3) {
-                            yrot_copies(n=2)
-                            up(two_d? 0.51 : s/30) {
-                                linear_extrude(height=0.01, convexity=12, center=true) {
-                                    text(text=anchor[0], size=s/4, halign="center", valign="center", font="Helvetica", $fn=36);
-                                }
-                            }
-                        }
-                    }
-                }
-                color([1, 1, 1, 1])
-                tag("anchor-arrow") {
-                    xrot(two_d? 0 : 90) {
-                        back(s/3) {
-                             cube([s/4.5*len(anchor[0]), s/3, 0.01], center=true);
-                        }
-                   }
+                    if(two_d)
+                        back(s/2)
+                            text(text=anchor[0], size=textsize, halign="center", valign="center", font="Helvetica", $fn=36);
+                    else
+                        up(s*.45)
+                        xrot(90)
+                        yrot_copies(n=2)
+                        up(s/30)
+                              text3d(text=anchor[0],h=.01, size=textsize, center=true, font="Helvetica", $fn=36);
                 }
             }
         }
@@ -3956,12 +3959,12 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tag="anchor-arrow",
 // Description:
 //   Show an anchor orientation arrow.
 // Arguments:
-//   s = Length of the arrows.
+//   s = Length of the arrows.  Default: 10
 //   color = Color of the arrow.
 // Example:
 //   anchor_arrow2d(s=20);
-module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tag="anchor-arrow") {
-    color(color) stroke([[0,0],[0,s]], width=s/10, endcap1="butt", endcap2="arrow2");
+module anchor_arrow2d(s=10, color=[0.333,0.333,1], $tag="anchor-arrow") {
+    color(color) stroke([[0,0],[0,s]], width=s/15, endcap1="butt", endcap2="arrow2");
 }
 
 
