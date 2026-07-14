@@ -2348,7 +2348,7 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   "prismoid" = For four sided prisms only, defined standard prismsoid anchors, with RIGHT set to the face closest to the RIGHT direction.  
 // Example: Uniformly rounded pentagonal prism
 //   rounded_prism(pentagon(3), height=3,
-//                 joint_top=0.5, joint_bot=0.5, joint_sides=0.5) position(FWD) cube(1);
+//                 joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
 // Example: Maximum possible rounding.
 //   rounded_prism(pentagon(3), height=3,
 //                 joint_top=1.5, joint_bot=1.5, joint_sides=1.5);
