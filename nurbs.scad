@@ -312,7 +312,7 @@ function nurbs_curve(control,degree,splinesteps,u,  mult,weights,type="clamped",
               : type=="clamped" ? assert(len(xknots) == len(control)+1-degree, str("For clamped spline of degree ",degree,", knot vector with multiplicity must have length ",
                                                                         len(control)+1-degree," but has length ", len(xknots)))
                                   assert(xknots[0]!=xknots[1] && last(xknots)!=select(xknots,-2),
-                                         "For clamped spline, first and last knots cannot repeat (must have multiplicity one")
+                                         "For clamped spline, first and last knots cannot repeat (must have multiplicity one)")
                                   concat(repeat(xknots[0],degree), xknots, repeat(last(xknots),degree))
               : /*type=="closed"*/ assert(len(xknots) == len(control)+1-degree,  str("For closed spline, knot vector (including multiplicity) must have length ",
                                                                         len(control)+1-degree," but has length ", len(xknots),control))
@@ -522,7 +522,7 @@ function _calc_mult(knots) =
 // Topics: NURBS, Debugging
 // See Also: nurbs_curve()
 // Usage:
-//   debug_nurbs(control, degree, [width], [splinesteps=], [type=], [mult=], [knots=], [size=], [show_weights=], [show_knots=], [show_idx=]);
+//   debug_nurbs(control, degree, [width], [splinesteps=], [type=], [mult=], [knots=], [size=], [show_weights=], [show_knots=], [show_index=]);
 // Description:
 //   Displays a 2D or 3D NURBS and the associated control points to help debug NURBS curves.  You can display the
 //   control point indices and weights, and can also display the knot points.
@@ -540,8 +540,6 @@ function _calc_mult(knots) =
 //   show_weights = if true then display any non-unity weights.  Default: true if weights vector is supplied, false otherwise
 //   show_knots = If true then show the knots on the spline curve.  Default: false
 //   show_control = If true then show the control points and its polygon.  Default: true
-//
-//       nurbs_curve(nurbs_interp(data, 3, start_deriv=[0,1]), splinesteps=32),
 //
 // Example(2D,Med,NoAxes): If you want to see the knots set `show_knots=true`:
 //   pts = [[5,0],[0,20],[33,43],[37,88],[60,62],[44,22],[77,44],[79,22],[44,3],[22,7]];
@@ -574,7 +572,6 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
       stroke(control, width=width/2, color="white", closed=type=="closed");
     if (show_knots){
       knotpts = nurbs_curve(control=control, degree=degree, splinesteps=1, mult=mult, weights=weights, type=type, knots=knots);
-      echo(knotpts);
         color([0,.8,0])
         move_copies(knotpts)
           if (twodim) union(){rect([3*width,width]); rect([width,3*width]);} //circle(r=width);
@@ -595,7 +592,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
             let(label = str("w=",weights[$idx]), 
                 anch = show_index ? BACK : CENTER
                 )
-            if (twodim) fwd(size/2*0)text(text=label, size=size, anchor=anch);
+            if (twodim) text(text=label, size=size, anchor=anch);
             else rot($vpr) text3d(text=label, size=size, anchor=anch);
       }
   }
@@ -713,7 +710,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   If you place corners close together, the effective degree of the short segment
 //   in between the corners may be reduced.  These curve sections are assembled into a single
 //   NURBS so this process is transparent to the user.  A limitation is that you cannot control
-//   the dervatives of the two segments that meet at a corner.  If you need to do this you
+//   the derivatives of the two segments that meet at a corner.  If you need to do this you
 //   must construct your own sequence of clamped interpolations.  
 //   .
 //   **Extra control points** (`extra_pts=`, `smooth=`)
@@ -760,7 +757,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   these are points where the curve is not differentiable; corners may
 //   also divide the curve into small segments that lack sufficient points
 //   to support an interpolation at your requested degree: a degree $p$ interpolation
-//   requires $p+1$ points.  In this case, the intepolation is performed at a lower
+//   requires $p+1$ points.  In this case, the interpolation is performed at a lower
 //   degree and elevated, which means it will be less smooth at knots.  
 //
 // Arguments:
@@ -826,22 +823,22 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   data = [[0,0], [20,30], [30,90], [36,111], [50,25], [80,0]];
 //      debug_nurbs_interp(data, degree=3, splinesteps=32, width=2, data_size=1);
 //
-// Example(2D,Med): Controlling the start using derivitives. Note the effect of the starting derivative on the end of the curve.
+// Example(2D,Med): Controlling the start using derivatives. Note the effect of the starting derivative on the end of the curve.
 //   data = [[0,0], [20,30], [30,90], [36,111], [50,25], [80,0]];
 //   debug_nurbs_interp(data, degree=3, splinesteps=32, width=2, data_size=1,
 //      start_deriv=RIGHT);
 //
-// Example(2D,Med): Increasing the start derivative and adding an end derivitive.
+// Example(2D,Med): Increasing the start derivative and adding an end derivative.
 //   data = [[0,0], [20,30], [30,90], [36,111], [50,25], [80,0]];
 //   debug_nurbs_interp(data, degree=3, splinesteps=32, width=2, data_size=1,
 //      start_deriv=2*RIGHT,end_deriv=RIGHT);
 //
-// Example(2D,Med): Adding an additional derivitive at data point 1.
+// Example(2D,Med): Adding an additional derivative at data point 1.
 //   data = [[0,0], [20,30], [30,90], [36,111], [50,25], [80,0]];
 //   debug_nurbs_interp(data, degree=3, splinesteps=32, width=2, data_size=1,
 //      deriv=[2*RIGHT,[0,1],undef,undef,undef,RIGHT]);
 //
-// Example(2D,Med): Unconstrained ends, but derivitive control of the data points adjacent to the ends.
+// Example(2D,Med): Unconstrained ends, but derivative control of the data points adjacent to the ends.
 //   data = [[0,0], [20,30], [30,90], [36,111], [50,25], [80,0]];
 //   debug_nurbs_interp(data, degree=3, splinesteps=32, width=2, data_size=1,
 //      deriv=[undef,[0,1],undef,undef,RIGHT,undef]);
@@ -925,7 +922,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //      curvature=[undef,undef,undef,-.1,undef,undef,undef,undef],
 //      extra_pts = 1, smooth = 3);
 //
-// Example(2D,NoAxes,Big): Unconstrained NURBS through the same data points vary depending on the paramaterization method chosen
+// Example(2D,NoAxes,Big): Unconstrained NURBS through the same data points vary depending on the parameterization method chosen
 //   data = [[0,0], [20,30], [35,120], [50,30], [70,0]];
 //   method = ["length", "centripetal", "dynamic", "foley", "fang"];
 //   color = ["blue","lime","yellow","orange","red"]; 
@@ -970,7 +967,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //   path = nurbs_curve(nurbs_interp(data, 3, closed = true, method = "centripetal", corners = [0,4]));
 //   right(75) stroke(path, closed = true);
 //
-// Example(2D,NoAxes,Med,VPT=[37.5,0,0],VPD=275): For better shape control we can add derivitive constraints and curvature control at data points 1 and 7
+// Example(2D,NoAxes,Med,VPT=[37.5,0,0],VPD=275): For better shape control we can add derivative constraints and curvature control at data points 1 and 7
 //   data = [[0,10], [25,20], [30,0], [20,-15], [0,-30], [-20,-15], [-30,0], [-25,20]];
 //   debug_nurbs_interp(data, 3, closed = true, method = "centripetal", 
 //      deriv = [NAN,[1,-1]*0.8,undef,undef,NAN,undef,undef,[1,1]*0.8],
@@ -980,7 +977,7 @@ module debug_nurbs(control,degree,splinesteps=16,width=1, size, mult,weights,typ
 //      curvature = [undef,-0.06,undef,undef,undef,undef,undef,-0.06]));
 //   right(75) stroke(path, closed = true);
 //
-// Example(2D,NoAxes,Med,VPT=[37.5,0,0],VPD=275): Finer control of derivitive direction made easier by specifying the angle.
+// Example(2D,NoAxes,Med,VPT=[37.5,0,0],VPD=275): Finer control of derivative direction made easier by specifying the angle.
 //   data = [[0,10], [25,20], [30,0], [20,-15], [0,-30], [-20,-15], [-30,0], [-25,20]];
 //   debug_nurbs_interp(data, 3, closed = true, method = "centripetal", 
 //      deriv = [NAN,polar_to_xy(1.1,-40),undef,undef,NAN,undef,undef,polar_to_xy(1.1,40)],
@@ -1024,7 +1021,11 @@ function nurbs_interp(points, degree, method="centripetal", closed=false,
     assert(is_undef(curvature) || len(curvature) == len(points),
            str("nurbs_interp: curvature= must have same length as points (",
                len(points), " points, ", is_undef(curvature) ? 0 : len(curvature), " curvature)"))
-    assert(is_undef(corners) || (
+    assert(is_undef(corners) || is_list(corners),
+           "nurbs_interp: corners= must be a list of point indices")
+    assert(is_undef(corners) || [for (c = corners) if (!is_int(c)) c] == [],
+           str("nurbs_interp: corners= indices must be integers, got ", corners))
+    assert(is_undef(corners) || len(corners) == 0 || (
                !closed
                  ? (min(corners) >= 1 && max(corners) <= len(points)-2)
                  : (min(corners) >= 0 && max(corners) <= len(points)-1)),
@@ -1401,7 +1402,8 @@ function nurbs_elevate_degree(control, degree, knots=undef,
 // Arguments:
 //   x = The value to check the type of.
 function is_nurbs_patch(x) =
-    is_list(x) && is_list(x[0]) && is_vector(x[0][0]) && len(x[0]) == len(x[len(x)-1]);  
+    is_list(x) && is_list(x[0]) && is_vector(x[0][0])
+      && [for (row = x) if (!is_list(row) || len(row) != len(x[0])) 1] == [];
 
 
 
@@ -1458,6 +1460,7 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
   : assert(is_undef(splinesteps) || !any_defined([u,v]), "Cannot combine splinesteps with u and v")
     is_def(weights) ?
        assert(is_matrix(weights,len(patch),len(patch[0])), "The weights parameter must be a matrix that matches the size of the patch array")
+       assert(all_positive(flatten(weights)), "The weights must all be positive: a zero weight makes the surface undefined at that point, and negative weights are not supported")
        let(
             patch = [for(i=idx(patch)) [for (j=idx(patch[0])) [each patch[i][j]*weights[i][j], weights[i][j]]]],
             pts = nurbs_patch_points(patch=patch, degree=degree, splinesteps=splinesteps, u=u, v=v, type=type, mult=mult, knots=knots)
@@ -1497,9 +1500,9 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
 // Topics: NURBS Patches
 // See Also: nurbs_patch_points()
 // Usage: (as a function)
-//   vnf = nurbs_vnf(patch, degree, [splinesteps], [mult=], [knots=], [weights=], [type=], [style=], [reverse=], [triangulate=], [caps=], [caps1=], [caps2=]);
+//   vnf = nurbs_vnf(patch, degree, [splinesteps], [mult=], [knots=], [weights=], [type=], [style=], [reverse=], [triangulate=], [caps=], [cap1=], [cap2=]);
 // Usage: (as a module)
-//   nurbs_vnf(patch, degree, [splinesteps], [mult=], [knots=], [weights=], [type=], [style=], [reverse=], [triangulate=], [caps=], [caps1=], [caps2=], [convexity=],[atype=],[cp=], [cp=], [atype=], ...) CHILDREN;
+//   nurbs_vnf(patch, degree, [splinesteps], [mult=], [knots=], [weights=], [type=], [style=], [reverse=], [triangulate=], [caps=], [cap1=], [cap2=], [convexity=], [cp=], [anchor=], [spin=], [orient=], [atype=], ...) CHILDREN;
 // Description:
 //   Compute a (possibly non-manifold) VNF for a NURBS.  The input patch must be an array of control points or a NURBS parameter list.  If weights is given it
 //   must be an array of weights that matches the size of the control points.  The style parameter
@@ -1515,7 +1518,7 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
 //   ---
 //   mult = a single list or pair of lists giving the knot multiplicity in the two directions.  Default: all 1
 //   knots = a single list of pair of lists giving the knot vector in each of the two directions.  Default: uniform
-//   weights = a single list or pair of lists giving the weight at each control point in the.  Default: all 1
+//   weights = a matrix, matching the dimensions of the patch array, giving the weight at each control point.  Default: all 1
 //   type = a single string or pair of strings giving the NURBS type, where each entry is one of "clamped", "open" or "closed".  Default: "clamped"
 //   caps = If true, add endcap faces to both ends.  The type must be ["clamped","closed"] or ["closed","clamped"] to enable caps.  
 //   cap1 = If true, add an endcap face to the first end.
@@ -1583,15 +1586,15 @@ function nurbs_patch_points(patch, degree, splinesteps, u, v, weights, type=["cl
 function nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, knots, style="default", reverse=false, triangulate=false, caps,cap1,cap2) =
    is_list(patch) && _valid_surface_type(patch[0]) ?
       assert(len(patch)>=6, "NURBS parameter list is invalid")
-      assert(num_defined([degree,mult,weights,knots]==0),
+      assert(num_defined([degree,mult,weights,knots])==0,
               "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list")
       nurbs_vnf(patch[2], patch[1], splinesteps, patch[5], patch[0], knots=patch[3], mult=patch[4], style=style,caps=caps,cap1=cap1,cap2=cap2,
                                                                reverse=reverse, triangulate=triangulate)
- : assert(is_nurbs_patch(patch),"Input patch is not a rectangular aray of points")
+ : assert(is_nurbs_patch(patch),"Input patch is not a rectangular array of points")
    assert(_valid_surface_type(type), "type must be one of or a list of two of: \"closed\", \"clamped\" and \"open\"")
    let(havecaps = num_true([caps,cap1,cap2])>0)
    assert(!havecaps || type==["clamped","closed"] || type==["closed","clamped"],
-                    "Surface must be [\"closed\",\"clamped\"] or [\"clamped\",\"closed\"] to for caps to be created")
+                    "Surface must be [\"closed\",\"clamped\"] or [\"clamped\",\"closed\"] for caps to be created")
    let(
         type = force_list(type,2),
         havecaps = num_true([caps,cap1,cap2])>0,
@@ -1615,7 +1618,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 {
    if (is_list(patch) && _valid_surface_type(patch[0])){
        assert(len(patch)>=6, "NURBS parameter list is invalid");
-       assert(num_defined([degree,mult,weights,knots]==0),
+       assert(num_defined([degree,mult,weights,knots])==0,
               "Cannot give degree, mult, weights or knots when you provide a NURBS parameter list");
        nurbs_vnf(patch[2], patch[1], splinesteps, patch[5], patch[0], mult=patch[4], knots=patch[3], style=style, reverse=reverse, triangulate=triangulate,
                  convexity=convexity, cp=cp, anchor=anchor, spin=spin, orient=orient, atype=atype, caps=caps, cap1=cap1, cap2=cap2) children();
@@ -1624,10 +1627,10 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
        type = force_list(type,2);
        havecaps = num_true([caps,cap1,cap2])>0;
        dummy = 
-               assert(is_nurbs_patch(patch),"Input patch is not a rectangular aray of points")
+               assert(is_nurbs_patch(patch),"Input patch is not a rectangular array of points")
                assert(_valid_surface_type(type), "type must be one of or a list of two of: \"closed\", \"clamped\" and \"open\"")
                assert(!havecaps || type==["clamped","closed"] || type==["closed","clamped"],
-                      "Surface must be [\"closed\",\"clamped\"] or [\"clamped\",\"closed\"] to for caps to be created");
+                      "Surface must be [\"closed\",\"clamped\"] or [\"clamped\",\"closed\"] for caps to be created");
        flip = havecaps && type[0]=="closed";
        pts = nurbs_patch_points(patch=patch, degree=degree, splinesteps=splinesteps, type=type, mult=mult, knots=knots, weights=weights);
        tpts = flip ? (transpose(pts)) : pts;
@@ -1821,7 +1824,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   color_this("skyblue")cuboid([160,130,20])
 //      align(TOP) nurbs_interp_surface(surface,3, flat_edges = 1);   
 //
-// Example(3D,VPD=320,VPT=[8,10,13]): Different derivitives for each edge.
+// Example(3D,VPD=320,VPT=[8,10,13]): Different derivatives for each edge.
 //   // Edge specification is [first row, last row, first col, last col] 
 //   surface = [
 //   [[-50, 50, 0], [-16, 50,  0], [ 16, 50,  0], [50, 50,  0], [80, 50, 0]],
@@ -1883,7 +1886,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   ];
 //   nurbs_interp_surface(surface,3, col_edges = 2);
 //
-// Example(3D,VPD=320,VPT=[8,10,13],VPR= [72,1,62): Corner seam in row 2
+// Example(3D,VPD=320,VPT=[8,10,13],VPR=[72,1,62]): Corner seam in row 2
 //   surface = [
 //   [[-50, 50, 0], [-16, 50,  0], [ 16, 50,  0], [50, 50,  0], [80, 50, 0]],
 //   [[-50, 25, 0], [-16, 25, 40], [ 16, 25, 30], [50, 25, 20], [80, 25, 0]],
@@ -1916,7 +1919,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //   ];
 //   nurbs_interp_surface(surface, 3, col_wrap = true, normal1 = DOWN*4, normal2 = UP*2);
 //   
-// Example(3D,Med,VPR=[80,0,45],VPT=[0,0,30],VPD = 250): A more extreme example of controlling end shape with normals.
+// Example(3D,Med,VPR=[80,0,45],VPT=[0,0,30],VPD = 270): A more extreme example of controlling end shape with normals.
 //   surface = [ repeat([0,0,-15],14),
 //      for(i=[0:4]) zrot(i*15,path3d(star(or=15,ir=13, n=7),i*15)),
 //      repeat([0,0,5*15],14)
@@ -1952,7 +1955,7 @@ module nurbs_vnf(patch, degree, splinesteps=16, weights, type="clamped", mult, k
 //      }
 //   }
 //
-// Example(3D,VPR[80,0,40]): A 3d Heart Shape - Based on the 2d Shape from nurbs_interp() example 14.
+// Example(3D,VPR=[80,0,40]): A 3d Heart Shape - Based on the 2d Shape from nurbs_interp() example 14.
 //  data = [[0,10], [25,20], [30,0], [20,-15], [0,-30], [-20,-15], [-30,0], [-25,20]];
 //  depth = function(x) 0.5 + sin(180 * x / 31) * 6;
 //  heart_shape_2d = nurbs_curve(nurbs_interp(data, 3, closed = true,  
@@ -4651,3 +4654,4 @@ function _surface_params_v(points, method, periodic) =
     ];
 
 
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
