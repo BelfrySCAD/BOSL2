@@ -33,17 +33,17 @@ include <rounding.scad>
 // Arguments:
 //   wall = Wall thickness in mm.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Named Anchors:
 //   "tamper-ring" = Centered at the top of the anti-tamper ring channel.
 //   "support-ring" = Centered at the bottom of the support ring.
 // Example:
 //   pco1810_neck();
-// Example: Standard Anchors
+// Example: Standard anchors
 //   pco1810_neck() show_anchors(custom=false);
-// Example: Custom Named Anchors
+// Example: Custom named anchors
 //   expose_anchors(0.3)
 //       pco1810_neck()
 //           show_anchors(std=false);
@@ -162,9 +162,9 @@ function  pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 //   wall = Wall thickness in mm.
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
-//   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
+//   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin)  Default: 0
+//   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient). Default: `UP`
 // Named Anchors:
 //   "inside-top" = Centered on the inside top of the cap.
 // Examples:
@@ -190,8 +190,8 @@ module pco1810_cap(h, r, d, wall, texture="none", anchor=BOTTOM, spin=0, orient=
     wwall = default(u_sub(rr,cap_id/2), default(wall, 2));
     hh = default(h, tamper_ring_h + wwall);
     checks =
-        assert(wwall >= 0, "wall can't be negative.")
-        assert(hh >= tamper_ring_h, str("height can't be less than ", tamper_ring_h, "."));
+        assert(wwall >= 0, "\nwall can't be negative.")
+        assert(hh >= tamper_ring_h, str("\nheight can't be less than ", tamper_ring_h, "."));
 
     $fn = segs(33/2);
     w = cap_id + 2*wwall;
@@ -240,8 +240,8 @@ function pco1810_cap(h, r, d, wall, texture="none", anchor=BOTTOM, spin=0, orien
 // Arguments:
 //   wall = Wall thickness in mm.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: "support_ring"
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Named Anchors:
 //   "tamper-ring" = Centered at the top of the anti-tamper ring channel.
@@ -366,8 +366,8 @@ function pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 //   wall = Wall thickness in mm.
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
+//   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Named Anchors:
 //   "inside-top" = Centered on the inside top of the cap.
@@ -375,9 +375,9 @@ function pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 //   pco1881_cap();
 //   pco1881_cap(texture="knurled");
 //   pco1881_cap(texture="ribbed");
-// Example: Standard Anchors
+// Example: Standard anchors
 //   pco1881_cap(texture="ribbed") show_anchors(custom=false);
-// Example: Custom Named Anchors
+// Example: Custom named anchors
 //   expose_anchors(0.5)
 //       pco1881_cap(texture="ribbed")
 //           show_anchors(std=false);
@@ -437,7 +437,7 @@ function pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
 //   support_d = Outer diameter of support ring. Set to 0 for no support. Default: 33
 //   pitch = Thread pitch. Default: 2.7
 //   round_supp = True to round the lower edge of the support ring. Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: `"support-ring"`
+//   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: "support-ring"
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Named Anchors:
@@ -466,7 +466,7 @@ module generic_bottle_neck(
     diamMagMult = neck_d / 26.19;
     heightMagMult = height / 17.00;
 
-    assert(all_nonnegative([support_d]),"support_d must be a nonnegative number");
+    assert(all_nonnegative([support_d]),"\nsupport_d must be a nonnegative number.");
     sup_r = 0.30 * (heightMagMult > 1 ? heightMagMult : 1);
     support_r = floor(((supp_d == neck_d) ? sup_r : min(sup_r, (supp_d - neck_d) / 2)) * 5000) / 10000;
     support_rad = (wall == undef || !round_supp) ? support_r :
@@ -593,14 +593,14 @@ module generic_bottle_cap(
     orient = UP
 ) {
     $fn = segs(33 / 2);
-    dummy = assert(num_defined([thread_od,neck_od,thread_depth])==2, "Must define exactly two of thread_od, neck_od and thread_depth")
-            assert(is_def(thread_depth) || (all_positive([neck_od,thread_od]) && thread_od>neck_od), "thread_od must be larger than neck_od")
-            assert(is_undef(thread_depth) || all_positive([thread_depth,first_defined([neck_od,thread_od])]), "thread_depth, and neck_od/thread_od must be positive");
-    thread_depth = !is_undef(thread_depth) ? thread_depth :  (thread_od - neck_od)/2;
+    dummy = assert(num_defined([thread_od,neck_od,thread_depth])==2, "\nMust define exactly two of thread_od, neck_od and thread_depth.")
+            assert(is_def(thread_depth) || (all_positive([neck_od,thread_od]) && thread_od>neck_od), "\nthread_od must be larger than neck_od.")
+            assert(is_undef(thread_depth) || all_positive([thread_depth,first_defined([neck_od,thread_od])]), "\nthread_depth, and neck_od/thread_od must be positive.");
+    thread_depth = !is_undef(thread_depth) ? thread_depth : (thread_od - neck_od)/2;
     neck_od = !is_undef(neck_od) ? neck_od : thread_od-2*thread_depth;
     thread_od = !is_undef(thread_od) ? thread_od : neck_od+2*thread_depth;
     threadOuterDTol = thread_od + 2*tolerance;
-    w = threadOuterDTol + 2 * wall;                               
+    w = threadOuterDTol + 2 * wall;
     h = height + wall;
     neckOuterDTol = neck_od + 2 * tolerance;
 
@@ -672,7 +672,7 @@ function generic_bottle_cap(
 //   d = Distance between bottom of neck and top of cap. Default: 0
 //   taper_lead_in = Length to leave straight before tapering on tube between neck and cap if exists. Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   bottle_adapter_neck_to_cap();
@@ -708,7 +708,7 @@ module bottle_adapter_neck_to_cap(
 
     top_h = neck_h + max(1,neck_h/17)*sign(neck_support_od);
     bot_h = cap_h + cap_wall;
-    attachable(anchor=anchor,orient=orient,spin=spin, r=max([neck_id/2+wallt1, cap_neck_id/2+wallt2, neck_support_od/2]), h=top_h+bot_h+d) {      
+    attachable(anchor=anchor,orient=orient,spin=spin, r=max([neck_id/2+wallt1, cap_neck_id/2+wallt2, neck_support_od/2]), h=top_h+bot_h+d) {
       zmove((bot_h-top_h)/2)
         difference(){
             union(){
@@ -797,7 +797,7 @@ function bottle_adapter_neck_to_cap(
 //   neck_id2 = Inner diameter of cutout in bottom cap.
 //   taper_lead_in = Length to leave straight before tapering on tube between caps if exists.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   bottle_adapter_cap_to_cap();
@@ -909,7 +909,7 @@ function bottle_adapter_cap_to_cap(
 //   d = Distance between bottoms of necks. Default: 0
 //   neck_od1 = Outer diameter of top neck without threads. Default: 24.8
 //   neck_id1 = Inner diameter of top neck. Default 21.4
-//   thread_od1 = Outer diameter of threads on top neck. Default: 27.4
+//   thread_od1 = Outer diameter of threads on top neck. Default: 27.6
 //   height1 =  Height of top neck above support ring. Default: 17
 //   support_od1 = Outer diameter of the support ring on the top neck. Set to 0 for no ring. Default: 33
 //   thread_pitch1 = Thread pitch of top neck.
@@ -922,7 +922,7 @@ function bottle_adapter_cap_to_cap(
 //   taper_lead_in = Length to leave straight before tapering on tube between necks if exists.
 //   wall = Thickness of tube wall between necks.  Leave undefined to match outer diameters with the neckODs/supportODs.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   bottle_adapter_neck_to_neck();
@@ -937,7 +937,7 @@ module bottle_adapter_neck_to_neck(
     neck_od2, neck_id2,
     thread_od2, height2,
     support_od2,  pitch2,
-    taper_lead_in = 0, wall, anchor, spin, orient
+    taper_lead_in = 0, wall, anchor=CENTER, spin, orient
 ) {
     neck_od2 = (neck_od2 == undef) ? neck_od1 : neck_od2;
     neck_id2 = (neck_id2 == undef) ? neck_id1 : neck_id2;
@@ -1057,7 +1057,7 @@ function bottle_adapter_neck_to_neck(
 //   style = Either "L" or "M" to specify the thread style.  Default: "L"
 //   bead = if true apply a bead to the neck.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   sp_neck(48,400,2);
@@ -1175,10 +1175,10 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
     assert(num_defined([wall,id])==1, "\nMust define exactly one of wall and id.");
     
     table = struct_val(_sp_specs,type);
-    dum1=assert(is_def(table),"\nUnknown SP closure type.  Type must be one of 400, 410, or 415.");
+    dum1=assert(is_def(table),"\nUnknown SP closure type. Must be one of 400, 410, or 415.");
     entry = struct_val(table, diam);
     dum2=assert(is_def(entry), str("\nUnknown closure nominal diameter. Allowed diameters for SP",type,": ",struct_keys(table)))
-         assert(style=="L" || style=="M", "style must be \"L\" or \"M\"");
+         assert(style=="L" || style=="M", "\nstyle must be \"L\" or \"M\".");
 
     T = entry[0];
     I = entry[1];
@@ -1278,20 +1278,20 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 //   texture = texture for outside of cap, one of "knurled", "ribbed" or "none.  Default: "none"
 //   $slop = Increase inner diameter by `2 * $slop`.  
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   sp_cap(48,400,2);
 //   sp_cap(22,400,2);
 //   sp_cap(22,410,2);
 //   sp_cap(28,415,1.5,style="M");
-module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, texture="none", anchor, spin, orient)
+module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, texture="none", anchor=CENTER, spin=0, orient=UP)
 {
     table = struct_val(_sp_specs,type);
-    dum1=assert(is_def(table),"\nUnknown SP closure type. Type must be one of 400, 410, or 415");
+    dum1=assert(is_def(table),"\nUnknown SP closure type. Must be one of 400, 410, or 415.");
     entry = struct_val(table, diam);
     dum2=assert(is_def(entry), str("\nUnknown closure nominal diameter. Allowed diameters for SP",type,": ",struct_keys(table)))
-         assert(style=="L" || style=="M", "style must be \"L\" or \"M\"");
+         assert(style=="L" || style=="M", "\nstyle must be \"L\" or \"M\".");
 
     T = entry[0];
     I = entry[1];
@@ -1302,7 +1302,7 @@ module sp_cap(diam,type,wall,style="L",top_adj=0, bot_adj=0, texture="none", anc
 
     twist = struct_val(_sp_twist, type);
 
-    dum3=assert(top_adj<S+0.75*a, str("\nThe top_adj value is too large so the thread cannot fit. It must be smaller than ",S+0.75*a));
+    dum3=assert(top_adj<S+0.75*a, str("\nThe top_adj value is too large so the thread cannot fit. It must be smaller than ",S+0.75*a,"."));
     oprofile = _sp_thread_profile(tpi,a,S+0.75*a-top_adj,style,flip=true);
     bounds=pointlist_bounds(oprofile);
     profile = fwd(-bounds[0].y,yflip(oprofile));
@@ -1347,7 +1347,7 @@ function sp_diameter(diam,type) =
   let(
       table = struct_val(_sp_specs,type)
   )
-  assert(is_def(table),"\nUnknown SP closure type. Type must be one of 400, 410, or 415.")
+  assert(is_def(table),"\nUnknown SP closure type. Must be one of 400, 410, or 415.")
   let(
       entry = struct_val(table, diam)
   )
@@ -1389,7 +1389,7 @@ function sp_diameter(diam,type) =
 //   style = Either "L" or "M" to specify the thread style.  Default: "L"
 //   bead = if true apply a bead to the neck.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   mason_neck(70,400,2);
@@ -1455,15 +1455,15 @@ function _gl_thread_profile(tpi, a, S, style, flip=false) =
 
 
 function mason_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient) = no_function("mason_neck");
-module mason_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
+module mason_neck(diam,type,wall,id,style="L", bead=false, anchor=CENTER, spin=0, orient=UP)
 {
     assert(num_defined([wall,id])==1, "\nMust define exactly one of wall and id.");
     
     table = struct_val(_gl_specs,type);
-    dum1=assert(is_def(table),"\nUnknown glass jar closure type. Type must be 400 or 450.");
+    dum1=assert(is_def(table),"\nUnknown glass jar closure type. Must be 400 or 450.");
     entry = struct_val(table, diam);
-    dum2=assert(is_def(entry), str("\nUnknown closure nominal diameter. Allowed diameters for glass ",type,": ",struct_keys(table)))
-         assert(style=="L" || style=="M", "style must be \"L\" or \"M\"");
+    dum2=assert(is_def(entry), str("\nUnknown closure nominal diameter. Allowed diameters for type ",type,": ",struct_keys(table)))
+         assert(style=="L" || style=="M", "\nstyle must be \"L\" or \"M\".");
 
     T = entry[0];
     I = entry[1];
@@ -1517,18 +1517,18 @@ module mason_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 //   Make a GPI (Glass Packaging Institute) threaded mason jar cap. You must
 //   supply the nominal outer diameter of the threads and the thread type, 
 //   400 or 450. While the 400 type neck has 370° of thread, and the 450
-//   neck has 460° of thread, the cap thread is increased by 1.35 times.
+//   neck has 460° of thread, the cap thread is increased by 1.35 times these amounts.
 //   You can also choose between the symmetric L style thread and the asymmetric
 //   M style buttress thread.  The M style may be good for 3d printing if printed with the flat face up.  
 //   It is OK to mix styles, so you can put an L-style cap onto an M-style neck.  
 //   .
 //   The bot_adj parameter specifies an amount to reduce that bottom extension, which might be
 //   necessary if the cap bottoms out on the bead.  Be careful that you don't shrink past the threads,
-//   especially if making adjustments to 400 caps that have a small bottom extension.  
+//   especially if making adjustments to type 400 caps that have a small bottom extension.  
 //   These caps often contain a cardboard or foam sealer disk, which can be as much as 1mm thick, and
 //   would cause the cap to stop in a higher position.
 //   .
-//   You can also adjust the space between the top of the cap and the threads using top_adj. This
+//   You can also adjust the space between the top of the cap and the threads using `top_adj`. This
 //   changes how the threads engage when the cap is fully seated.
 //   .
 //   The inner diameter of the cap is set to allow 10% of the thread depth in clearance.  The diameter
@@ -1544,19 +1544,19 @@ module mason_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 //   texture = texture for outside of cap, one of "knurled", "ribbed" or "none.  Default: "none"
 //   $slop = Increase inner diameter by `2 * $slop`.  
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Examples:
 //   mason_cap(70,450,2);
 //   mason_cap(86,400,2);
 
 function mason_cap(diam,type,wall,style="L",top_adj=3, bot_adj=0, texture="none", anchor, spin, orient) = no_function("mason_cap");
-module mason_cap(diam,type,wall,style="L",top_adj=3, bot_adj=0, texture="none", anchor, spin, orient)
+module mason_cap(diam,type,wall,style="L",top_adj=3, bot_adj=0, texture="none", anchor=CENTER, spin=0, orient=UP)
 {
     table = struct_val(_gl_specs,type);
-    dum1=assert(is_def(table),"\nUnknown glass jar closure type. Type must be 400 or 450.");
+    dum1=assert(is_def(table),"\nUnknown glass jar closure type. Must be 400 or 450.");
     entry = struct_val(table, diam);
-    dum2=assert(is_def(entry), str("\nUnknown closure nominal diameter. Allowed diameters for glass ",type,": ",struct_keys(table)))
+    dum2=assert(is_def(entry), str("\nUnknown closure nominal diameter. Allowed diameters for type ",type,": ",struct_keys(table)))
          assert(style=="L" || style=="M", "\nstyle must be \"L\" or \"M\"");
 
     T = entry[0];
@@ -1567,7 +1567,7 @@ module mason_cap(diam,type,wall,style="L",top_adj=3, bot_adj=0, texture="none", 
     a = struct_val(_gl_thread_width,tpi);
     twist = struct_val(_gl_twist, type) * 1.35;
 
-    dum3=assert(top_adj<S+0.75*a, str("\nThe top_adj value is too large so the thread cannot fit. It must be smaller than ",S+0.75*a));
+    dum3=assert(top_adj<S+0.75*a, str("\nThe top_adj value is too large so the thread cannot fit. It must be smaller than ",S+0.75*a,"."));
     oprofile = _sp_thread_profile(tpi,a,S+0.75*a-top_adj,style,flip=true);
     bounds=pointlist_bounds(oprofile);
     profile = fwd(-bounds[0].y,yflip(oprofile));
