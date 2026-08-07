@@ -174,7 +174,7 @@ _BOSL2_THREADING = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !B
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D):
@@ -312,7 +312,7 @@ module threaded_rod(
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
@@ -477,7 +477,7 @@ module threaded_nut(
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D): A threaded rod profile.
@@ -546,52 +546,6 @@ module threaded_nut(
 //         teardrop=true, orient=FWD
 //     );
 //   }
-// Example(Med): Garden hose threads on male and female connectors (cross section view) using specifications from ASME B1.20.7-1991
-//   tpi = 11.5;  // threads per inch
-//   pitch = 1/tpi * INCH;
-//   thread_depth = 0.649519*pitch;
-//   $fn=64;
-//   
-//   // make nipple (male end)
-//   
-//   dia_male = (1 + 1/16) * INCH; // 1.0625"
-//   pilot = 1/8 * INCH;
-//   nipple_len = 9/16 * INCH;
-//   nipple_inside_dia = 25/32 * INCH;
-//   
-//   color("gold") down(pitch) difference() {
-//       zrot(195) trapezoidal_threaded_rod(d=dia_male,
-//           l=nipple_len, pitch=pitch,
-//           thread_depth=thread_depth, thread_angle=60,
-//           end_len2=pilot, bevel2=0.2, lead_in_ang2=44,
-//           anchor=BOTTOM);
-//       down(0.1) cylinder(nipple_len+0.2, d=nipple_inside_dia);
-//       translate([0.1,-20.1,-1]) cube(25); // cut section
-//   }
-//   
-//   // make coupling (female end)
-//   
-//   dia_female = (1 + 1/16 + 0.01) * INCH; // 1.0725"
-//   coupling_len = 17/32 * INCH;
-//   coupling_thread_len = 3/8 * INCH;
-//   gasket_space = coupling_len - coupling_thread_len;
-//   wall = 5;  // arbitrary, make bigger, add knurl, etc.
-//   gasket_seat_thickness = 6; // arbitrary
-//   coupling_total_len = coupling_len + gasket_seat_thickness;
-//   
-//   color("silver") difference() {
-//       cylinder(coupling_len+gasket_seat_thickness,
-//           d=dia_female+2*wall);
-//       down(0.2) cylinder(coupling_total_len+0.4,
-//           d=nipple_inside_dia+1);
-//       down(0.1) trapezoidal_threaded_rod(d=dia_female,
-//           l=coupling_len+0.1, pitch=pitch,
-//           thread_depth=thread_depth, thread_angle=60,
-//           internal=true, end_len1=0.1, end_len2=gasket_space,
-//           lead_in_ang1=38, anchor=BOTTOM);
-//       translate([0,-20,-1]) cube(25); // cut section
-//   }
-
 function trapezoidal_threaded_rod(
     d, l, pitch,
     thread_angle,
@@ -703,7 +657,7 @@ module trapezoidal_threaded_rod(
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
@@ -825,7 +779,7 @@ module trapezoidal_threaded_nut(
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop. Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D):
@@ -937,7 +891,7 @@ module acme_threaded_rod(
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
@@ -1000,6 +954,116 @@ module acme_threaded_nut(
 
 
 
+// Section: Garden hose connectors
+//   The GHT ("garden hose thread") standard in the United States, its territories, and Canada uses the NH ("National Hose") designation. Specifically, the 3/4-11.5NH threads are full form threads produced by cutting threads in metal. A compatible standard 3/4-11.5NHR designates thin-walled couplers produced by rolling thin material, usually brass, typically found on cheaper hoses.
+//   .
+//   For the 3/4-11.5NH garden hose threads, ANSI-ASME B1.20.7 specifies a non-tapered thread 1+1/16 inches (27 mm) in diameter with a pitch of 11.5 threads per inch (TPI).
+//   In other countries, a British Standard Pipe (BSP) thread is used, which is 14 TPI, not compatible with the GHT standard. These modules implement the GHT standard.
+
+
+// Module: male_garden_hose()
+// Synopsis: Creates a male garden hose coupler
+// SynTags: Geom
+// Topics: Threading
+// See Also: female_garden_hose()
+// Usage:
+//   male_garden_hose([wall], ...) [ATTACHMENTS];
+// Description:
+//   Constructs a standard male coupler compatible with a standard North American garden hose, using ANSI-ASME B1.20.7 specifications.
+//   The `wall` thickness default is set to give the coupler an inner diameter of 25/32" according to the spec.
+//   This results in a wall thickness sligtly over 2 mm, creating a ring-shaped surface that compresses a rubber gasket in the mating female coupler.
+//   For structural integrity when 3D printing, you may want to make the wall thickness thicker, which would reduce the inner diameter and flow rate through the coupler.
+// Arguments:
+//   wall = wall thickness inside the inner thread diameter. Default = 2.13729
+//   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
+//   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin).  Default: 0
+//   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient). Default: `UP`
+// Example:
+//   male_garden_hose();
+
+module male_garden_hose(wall=2.13729, anchor=BOTTOM, spin=0, orient=UP) {
+    tpi = 11.5;
+    pitch = 1/tpi * INCH;
+    thread_depth = 0.649519*pitch;
+
+    // make nipple (male end)
+
+    dia_male = (1 + 1/16) * INCH; // 1.0625"
+    pilot = 1/8 * INCH;
+    nipple_len = 9/16 * INCH;
+    thread_inside_dia = dia_male - 2*thread_depth;
+    nipple_inside_dia = thread_inside_dia - 2*wall; // should default 25/32 * INCH;
+
+    attachable(anchor, spin, orient, d=dia_male, l=nipple_len) {
+        difference() {
+            trapezoidal_threaded_rod(d=dia_male, l=nipple_len, pitch=pitch,
+                thread_depth=thread_depth, thread_angle=60,
+                end_len2=pilot, bevel2=0.2, lead_in_ang2=44, anchor=CENTER);
+            cylinder(nipple_len+0.2, d=nipple_inside_dia, center=true);
+        }
+        children();
+    }
+}
+
+
+// Module: female_garden_hose()
+// Synopsis: Creates a female garden hose coupler with textured surface
+// SynTags: Geom
+// Topics: Threading
+// See Also: male_garden_hose()
+// Usage:
+//   female_garden_hose([gasket_seat], [wall=], [texture=], ...) [ATTACHMENTS];
+// Description:
+//   Constructs a female hose coupler compatible with a standard North American garden hose, using ANSI-ASME B1.20.7 specifications for the threads, with space to accommodate a rubber gasket assuming a standard 25/32" inner diameter.
+//   The mating male coupler, if created with `male_garden_hose()`, may have a smaller inner diameter, which would still completely cover the gasket.
+//   .
+//   For structural integrity when 3D printing, the `wall` and `gasket_seat` parameters have arbitrary but reasonable default values. The larger these values, the stronger the part.
+//   .
+//   This design does not include a slip joint between the rotating collar and the pipe that seals against the gasket. The coupler consists of only a rotating collar that seals against the gasket, which should be lubricated with silicone grease to allow the gasket to slide between the male and female coupler while tightening.
+// Arguments:
+//   gasket_seat = thickness of structure that the rubber sealing gasket rests on. Default: 5
+//   wall = wall thickness around the thread outer diameter. Default: 5
+//   texture = texture for outside of coupler, one of "knurled", "ribbed" or "none.  Default: "none"
+//   anchor = Translate so anchor point is at origin (0,0,0). See [anchor](attachments.scad#subsection-anchor).  Default: `BOTTOM`
+//   spin = Rotate this many degrees around the Z axis after anchor. See [spin](attachments.scad#subsection-spin).  Default: 0
+//   orient = Vector to rotate top toward, after spin. See [orient](attachments.scad#subsection-orient). Default: `UP`
+// Example:
+//   female_garden_hose(texture="ribbed");
+
+
+module female_garden_hose(gasket_seat=5, wall=5, texture="none", anchor=BOTTOM, spin=0, orient=UP) {
+    tpi = 11.5;
+    pitch = 1/tpi * INCH;
+    thread_depth = 0.649519*pitch;
+    nipple_inside_dia = 25/32 * INCH;
+    dia_female = (1 + 1/16 + 0.01) * INCH; // 1.0725" in the spec
+    coupling_len = 17/32 * INCH;
+    coupling_thread_len = 3/8 * INCH;
+    gasket_space = coupling_len - coupling_thread_len;
+    coupling_total_len = coupling_len + gasket_seat;
+    total_dia = dia_female + 2*wall;
+
+    attachable(anchor, spin, orient, d=total_dia, l=coupling_total_len) {
+        xrot(180) down(coupling_total_len/2) difference() {
+            if (texture=="knurled")
+                cyl(d=total_dia, l=coupling_total_len, center=false, texture="trunc_pyramids", tex_size=[3,3], style="convex");
+            else if (texture == "ribbed")
+                cyl(d=total_dia, l=coupling_total_len, center=false, chamfer2=.8, tex_taper=0, texture="trunc_ribs", tex_size=[3,3], style="min_edge");
+            else
+                cyl(d=total_dia, l=coupling_total_len, center=false);
+            //cylinder(coupling_total_len, d=total_dia);
+            down(0.2) cylinder(coupling_total_len+0.4, d=nipple_inside_dia+1);
+            down(0.1) trapezoidal_threaded_rod(d=dia_female, l=coupling_len+0.1, pitch=pitch,
+                thread_depth=thread_depth, thread_angle=60, internal=true,
+                end_len1=0.1, end_len2=gasket_space, lead_in_ang1=38, anchor=BOTTOM);
+        }
+        children();
+    }
+}
+
+
+
+
 // Section: Pipe Threading
 
 // Module: npt_threaded_rod()
@@ -1024,7 +1088,7 @@ module acme_threaded_nut(
 //   hollow = If true, create a pipe with the correct internal diameter.
 //   internal = If true, make this a mask for making internal threads.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D): The straight gray rectangle reveals the tapered threads.  
@@ -1162,7 +1226,7 @@ module npt_threaded_rod(
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
@@ -1318,7 +1382,7 @@ module bspp_threaded_rod(
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D):
@@ -1432,7 +1496,7 @@ module buttress_threaded_rod(
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
@@ -1532,7 +1596,7 @@ module buttress_threaded_nut(
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D):
@@ -1640,7 +1704,7 @@ module square_threaded_rod(
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Examples(Med):
@@ -1735,7 +1799,7 @@ module square_threaded_nut(
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D): Thread Profile, ball_diam=4, ball_arc=100
@@ -1869,7 +1933,7 @@ module ball_screw_rod(
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   teardrop = If true, adds a teardrop profile to the back (Y+) side of the threaded rod, for 3d printability of horizontal holes. If numeric, specifies the proportional extra distance of the teardrop flat top from the screw center, or set to "max" for a pointed teardrop (see above). Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2DMed,VPD=1.92,VPT=[0.00,-0.30,2.5]): Example Tooth Profile.  Note that the X range of the profile must be in [-1/2,1/2] because the profile is scaled up by the pitch to produce the final thread profile.  
@@ -2226,7 +2290,7 @@ module __rot_if_old()
 //   lead_in_ang2 = Specify angular length in degrees of the lead in section of the threading at the top with blunt start threads
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "default"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 function generic_threaded_nut(
@@ -2441,7 +2505,7 @@ module _nutshape(nutwidth, h, shape, bevel1, bevel2, bevang)
 //   lead_in_shape = Specify the shape of the thread lead in by giving a text string or function.  Default: "sqrt"
 //   lead_in_sample = Factor to increase sample rate in the lead-in section.  Default: 10
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin). Default: 0
 //   orient = Vector to rotate top toward, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
 // Example(2DMed): Typical Tooth Profile
 //   pitch = 2;
