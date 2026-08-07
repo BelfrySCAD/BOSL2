@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: threading.scad
 //   Provides generic threading support and specialized support for standard triangular (UTS/ISO) threading,
-//   trapezoidal threading (ACME), pipe threading, buttress threading, square threading and ball screws.  
+//   trapezoidal threading (ACME), hose couplers, pipe threading, buttress threading, square threading and ball screws.  
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/threading.scad>
