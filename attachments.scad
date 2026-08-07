@@ -4655,6 +4655,10 @@ function parent_part(name,ind=0) =
 // Description:
 //   Restores the transformation and parent geometry contained in the specified description that you obtained with {{parent()}}.  
 //   If you don't give a description then restores the global world coordinate system with a zero size cuboid object as the parent.
+// .
+//   Be careful not to use restore() as a descendent of code that duplicates its children such as {{attach()}} or {{align()}} with anchor or alignment lists, or
+//   any of the distributors such as {{move_copies()}}.  This will result in the entire restored
+//   geometry being duplicated multiple times onto itself, which will look identical, but make your model less efficient.  
 // Arguments:
 //   desc = saved description to restore.  Default: restore to world coordinates
 // Example(3D):  The pink cube is a child of the green cube, but {{restore()}} restores the state to the yellow parent cube, so the pink cube attaches to the yellow cube
